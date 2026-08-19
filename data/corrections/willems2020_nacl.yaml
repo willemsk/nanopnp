@@ -1,0 +1,168 @@
+# ePNP-NS empirical correction parameters for NaCl at 298.15 K
+#
+# Source: Willems K. et al., Nanoscale 12, 16775-16795 (2020), DOI 10.1039/D0NR03114C
+#         PhD thesis "willemsk/phdthesis-text" (CC-BY-4.0), ch. 5 (An improved PNP-NS framework),
+#         Table 5.1 (tab:corrections_equations) and Table 5.2 (tab:corrections_parameters).
+#
+# CONVENTIONS
+#   cbar = <c> / (1 mol/L)    dimensionless; <c> = (1/n) * sum_i c_i  is the AVERAGE ION
+#                             CONCENTRATION over the n species -- NOT the ionic strength.
+#                             (For a symmetric 1:1 salt the two coincide; they do not in general.)
+#   dbar = d / (1 nm)         dimensionless distance to the NEAREST PORE BOUNDARY.
+#                             The membrane is deliberately EXCLUDED from the distance field:
+#                             electrolyte properties near the bilayer do not affect the pore
+#                             figures of merit. Confirmed by the author, 2026-08.
+#
+# All property values are  X(<c>,d) = X0 * fc(cbar) * fw(dbar).
+#
+# !! Four transcription traps, all verified numerically against the check values stated in the
+# !! thesis text. See knowledge/01-physics-epnpns.md section "Errata" for the arithmetic.
+#   1. The D/mu wall function uses (dbar + P2), NOT (dbar - P2). Thesis eq. 5.11 prints a minus
+#      sign; Table 5.1 prints a plus. The PLUS is correct.
+#   2. mu0 is in units of 1e-8 m^2/(V s), not 1e-4. Table 5.1 misprints the exponent.
+#   3. The viscosity cap above 5.3 M is 1.75e-3 Pa s, not the 1.75e-4 printed in the text.
+#   4. eta0 = 8.904e-4 Pa s. Table 5.2 lists P0 = 0.8904 with a "1e-4" scaling note, which would
+#      give 8.904e-5; the scaling is 1e-3.
+#
+# PROVENANCE OF THE NUMBERS BELOW
+#   All fit coefficients are taken from the COMSOL model report (npgrid_clya_v8_NaCl_report.mph,
+#   COMSOL 5.4 build 388, report dated 2020-05-22), NOT from the rounded thesis tables. The model
+#   is the authority: it is what produced the published results. Two coefficients differ by more
+#   than rounding -- rho1 (0.04047 vs 4.06e-2) and rho2 (-6.149e-4 vs -6.39e-4, 3.8% apart).
+#
+#   The ESI writes the wall-function coefficient as "0.62e1", which is 6.2. That notation is the
+#   likely origin of both the "62" and the "0.62" misreadings in circulation.
+
+schema: nanopnp/corrections/v1
+name: willems2020_nacl
+electrolyte: NaCl
+temperature_K: 298.15
+concentration_validity_M: [0.0, 5.3]     # beyond 5.3 M all properties are CAPPED at their 5.3 M value
+notes: >
+  Concentration fits are to bulk experimental data and are therefore of unknown accuracy inside
+  the electrical double layer, where local electroneutrality is violated. This is the model's
+  main acknowledged approximation.
+
+species:
+  Na+:
+    z: +1
+    diffusivity:
+      D0: 1.334e-9            # m^2/s, infinite dilution, Mills 1989
+      fc:
+        form: inverse_poly_half            # (1 + P1 c^0.5 + P2 c + P3 c^1.5 + P4 c^2)^-1
+        P1:  0.202            # +/- 0.014   [COMSOL d1_cpos]
+        P2: -0.3048           # +/- 0.041   [COMSOL d2_cpos]
+        P3:  0.219            # +/- 0.038   [COMSOL d3_cpos]
+        P4: -0.03124          # +/- 0.0108  [COMSOL d4_cpos]
+        r_squared: 0.99
+      cap_above_validity: 0.81e-9          # m^2/s
+    mobility:
+      mu0: 5.192e-8           # m^2/(V s), infinite dilution, Bianchi 1989.  NOTE the e-8.
+      fc:
+        form: inverse_poly_half
+        P1:  0.7907           # +/- 0.006   [COMSOL l1_cpos]
+        P2: -0.3529           # +/- 0.017   [COMSOL l2_cpos]
+        P3:  0.1459           # +/- 0.015   [COMSOL l3_cpos]
+        P4:  0.009241         # +/- 0.00389 [COMSOL l4_cpos]
+        r_squared: 0.99
+      cap_above_validity: 1.74e-8          # m^2/(V s)
+    steric_diameter_nm: 0.5   # a_i; max packing 13.3 M
+  Cl-:
+    z: -1
+    diffusivity:
+      D0: 2.032e-9
+      fc:
+        form: inverse_poly_half
+        P1:  0.149            # +/- 0.030   [COMSOL d1_cneg]
+        P2: -0.04933          # +/- 0.0904  [COMSOL d2_cneg]
+        P3:  0.03392          # +/- 0.0826  [COMSOL d3_cneg]
+        P4:  0.01431          # +/- 0.0230  [COMSOL d4_cneg]
+        r_squared: 0.99
+      cap_above_validity: 1.07e-9
+    mobility:
+      mu0: 7.909e-8
+      fc:
+        form: inverse_poly_half
+        P1:  0.6289           # +/- 0.006   [COMSOL l1_cneg]
+        P2: -0.4286           # +/- 0.017   [COMSOL l2_cneg]
+        P3:  0.2123           # +/- 0.014   [COMSOL l3_cneg]
+        P4: -0.01068          # +/- 0.0037  [COMSOL l4_cneg]
+        r_squared: 0.99
+      cap_above_validity: 3.21e-8
+    steric_diameter_nm: 0.5
+
+solvent:
+  water_steric_diameter_nm: 0.311          # a_0; max packing 55.2 M
+  viscosity:
+    eta0: 8.904e-4            # Pa s, Hai-Lang 1996
+    fc:
+      form: poly_jones_dole                # 1 + P1 c^0.5 + P2 c + P3 c^2 + P4 c^3.5
+      P1: 0.007558            # [COMSOL eta1]
+      P2: 0.07769             # [COMSOL eta2]
+      P3: 0.01192             # [COMSOL eta3]
+      P4: 5.951e-4            # [COMSOL eta4]
+      r_squared: 0.99
+    cap_above_validity: 1.75e-3            # Pa s  (NOT 1.75e-4 as printed in the thesis text)
+    fw:
+      form: logistic_plus                  # 1 + exp(-P1 (dbar - P2))   <-- MINUS here
+      P1: 3.36                # +/- 0.23   [1/nm]
+      P2: 1.47e-1             # +/- 0.23e-1 [nm]
+      r_squared: 0.97
+      check: "eta0/eta_w(0 nm) = 0.37 ; eta0/eta_w(1.45 nm) = 0.99"
+  density:
+    rho0: 997.0               # kg/m^3
+    fc:
+      form: poly_quadratic                 # 1 + P1 c + P2 c^2
+      P1:  0.04047            # [COMSOL rho1]  NOTE: thesis prints 4.06e-2
+      P2: -6.149e-4           # [COMSOL rho2]  NOTE: thesis prints -6.39e-4 (3.8% apart)
+      r_squared: 0.99
+    cap_above_validity: 1.19e3             # kg/m^3
+  permittivity:
+    eps_r0: 78.15             # infinite dilution, Gavish 2016
+    fc:
+      form: gavish_langevin                # 1 - (1 - P1/P0) * L(3 P2 c / (P0 - P1)),  L = coth(x) - 1/x
+      P0: 78.15
+      P1: 30.08               # limiting permittivity eps_r,ms  [COMSOL epsr_ms]
+      P2: 11.5                # total excess polarisation alpha  [COMSOL epsr_alpha]
+      note: >
+        SETTLED from the COMSOL model report (2026-08): the model parameter table and the solver
+        log both record epsr_ms = 30.08 and epsr_alpha = 11.5, i.e. Gavish's published NaCl
+        values. The thesis text is therefore correct and the printed 5.3 M cap of 42.12 is the
+        stale number -- it corresponds to the authors' own Buchner fit (29.50, 11.74), which the
+        model did not use. Recomputed cap with the Gavish parameters: 42.67. An earlier author
+        recollection favouring the Buchner fit is superseded by the model file.
+      alternative_own_buchner_fit: {P1: 29.50, P2: 11.74}   # NOT used in the published model
+    cap_above_validity: 42.67   # recomputed with the Gavish parameters actually used
+
+# Shared wall function for BOTH ion diffusivity and mobility.
+# fw(dbar) = 1 - exp(-P1 * (dbar + P2))          <-- PLUS. See trap 1 above.
+ion_wall_function:
+  form: exponential_saturation_plus
+  P1: 6.2                     # 1/nm.  Simakov 2010, fitted to Makarov 1998 MD data.
+  P2: 0.01                    # nm. Deliberately reduced from Simakov's 0.22 nm -- see rationale below.
+  applies_to: [diffusivity, mobility]
+  check: "fw(0 nm) = 0.06 ; fw(0.75 nm) = 0.99"
+  rationale: >
+    Simakov's original offset of 0.22 nm makes the function negative over the first 0.22 nm from
+    the wall, creating a ~0.2 nm dead zone of near-zero diffusivity. That would drive the current
+    of any pore narrower than ~0.5 nm to zero, which is contradicted by experiment (Rigo 2019).
+    The authors instead assign the full offset to the heavy atom, assuming ion-inaccessible space
+    is already excluded by the geometry itself.
+
+# Fixed dielectric constants of the solid domains
+dielectrics:
+  protein: 20.0               # Li/Li/Zhang/Alexov 2013 -- a MODEL PARAMETER, not a measured constant
+  membrane: 3.2               # Gramse 2013 (DPhPC bilayer)
+
+# Auxiliary fit, used to derive ionic mobilities from molar conductivity data.
+# Not required at solve time, but needed to re-derive mobilities for a different salt.
+transport_number_Na:
+  t0: 0.3963
+  fc:
+    form: inverse_poly_half
+    P1:  9.38e-2              # +/- 1.64e-2
+    P2:  2.86e-3              # +/- 3.24e-3
+    P3: -1.88e-2              # +/- 6.52e-2
+    P4:  4.51e-3              # +/- 2.75e-3
+    r_squared: 0.98
+  note: "t_Cl(c) = 1 - t_Na(c);  mu_i(c) = Lambda(c) t_i(c) / (z_i F)"
