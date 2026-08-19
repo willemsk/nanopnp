@@ -179,6 +179,21 @@ ion radius to pore radius. Willems et al. **chose not to include this**, on the 
 extrapolating it to ions whose hydrodynamic radius is comparable to a solvent molecule is
 questionable. Do not add it silently; if ever added, it must be an opt-in experimental model.
 
+### 3.0 The Einstein ratio, measured
+
+`D_i/μ_i` in units of `kT/e`, evaluated from the shipped coefficients far from any wall
+(`f^w = 1`), computed with the implementation in `nanopnp.materials`. **[tested]**
+
+| `⟨c⟩` | 0.15 M | 1 M | 3 M | 5.3 M |
+|---|---|---|---|---|
+| Na⁺ | 1.208 | 1.468 | 1.665 | 1.818 |
+| Cl⁻ | 1.132 | 1.221 | 1.279 | 1.300 |
+
+The frequently quoted "1.2–1.7 × kT/e between 0.15 and 3 M" describes **Na⁺**; Cl⁻ drifts far
+less, reaching only 1.28 at 3 M. Both rise monotonically with concentration, because `D` is fitted
+to self-diffusion data and `μ` to conductivity data and the two fits differ. A regression test
+should assert monotonicity plus per-ion bounds rather than a single shared range.
+
 ### 3.1 ePNP-NS → PNP-NS
 
 The classical equations are recovered exactly by setting

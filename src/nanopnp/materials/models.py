@@ -1,0 +1,301 @@
+"""The correction-model registry (FR-16, ADR-005, section 5.4.2).
+
+A correction model is named by string in the case file and resolved here. Its
+coefficients live in a versioned data file under ``data/corrections``; adding an
+electrolyte is therefore a data file, never a code change.
+
+Disabling a correction selects the registered ``none`` model rather than taking
+a code branch (PHY-22). That is what makes classical PNP-NS a *configuration* of
+ePNP-NS (PHY-21) and what makes correction-by-correction ablation a sweep rather
+than a rebuild.
+
+Every model returns the **dimensionless** factor ``f_c(c_bar) * f_w(d_bar)``.
+The reference value ``X0`` that it multiplies belongs to the electrolyte, not to
+the correction, so that ``none`` reproduces ``X = X0`` exactly.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass, field
+from functools import cache
+from typing import Any, Literal, Protocol, TypeAlias
+
+from nanopnp.materials.corrections import load_corrections
+from nanopnp.materials.forms import NUMPY_OPS, MathOps, Numeric, get_form
+
+PropertyKind: TypeAlias = Literal["diffusivity", "mobility", "viscosity", "density", "permittivity"]
+"""The five corrected properties of PHY-11."""
+
+SPECIES_PROPERTIES: frozenset[str] = frozenset({"diffusivity", "mobility"})
+"""Properties whose coefficients are per ion; the rest belong to the solvent."""
+
+
+class CorrectionModel(Protocol):
+    """One property's correction, as section 5.4.2 requires it.
+
+    Implementations are immutable and carry their own provenance, so that a
+    result can record which parameter file and which model version produced it
+    (FR-25).
+    """
+
+    @property
+    def name(self) -> str:
+        """Registered name of the model."""
+        ...
+
+    @property
+    def parameters(self) -> Mapping[str, float]:
+        """Fit coefficients in force, flattened for reporting."""
+        ...
+
+    @property
+    def provenance(self) -> Mapping[str, str]:
+        """Where the coefficients came from."""
+        ...
+
+    def evaluate(self, c_avg: Numeric, wall_distance: Numeric, ops: MathOps = NUMPY_OPS) -> Numeric:
+        """Return the dimensionless correction factor.
+
+        Parameters
+        ----------
+        c_avg
+            Correction driver ``<c>`` in mol/L, the unit the fits are stated in.
+        wall_distance
+            Distance to the nearest pore boundary in nm (PHY-02).
+        ops
+            Operation namespace: NumPy for diagnostics and tests, NGSolve for
+            assembly.
+        """
+        ...
+
+
+@dataclass(frozen=True)
+class NoCorrection:
+    """The ``none`` model: the property keeps its reference value everywhere.
+
+    Selecting this for every property, together with ``beta_i = 0``, recovers
+    classical PNP-NS exactly (PHY-21).
+    """
+
+    property_kind: PropertyKind
+    species: str | None = None
+
+    @property
+    def name(self) -> str:  # noqa: D102 - documented on the protocol
+        return "none"
+
+    @property
+    def parameters(self) -> Mapping[str, float]:  # noqa: D102
+        return {}
+
+    @property
+    def provenance(self) -> Mapping[str, str]:  # noqa: D102
+        return {"model": "none", "note": "correction disabled; factor is identically 1"}
+
+    def evaluate(  # noqa: D102
+        self, c_avg: Numeric, wall_distance: Numeric, ops: MathOps = NUMPY_OPS
+    ) -> Numeric:
+        del c_avg, wall_distance, ops
+        return 1.0
+
+
+@dataclass(frozen=True)
+class FittedCorrection:
+    """A correction read from a versioned parameter file.
+
+    The concentration and wall parts are independently switchable, matching the
+    case-file vocabulary ``{model: ..., wall: true, concentration: true}``.
+    """
+
+    name: str
+    property_kind: PropertyKind
+    species: str | None
+    concentration_form: str | None
+    concentration_params: Mapping[str, float]
+    wall_form: str | None
+    wall_params: Mapping[str, float]
+    validity_M: tuple[float, float]
+    use_concentration: bool = True
+    use_wall: bool = True
+    source: str = ""
+    _extra_provenance: Mapping[str, str] = field(default_factory=dict)
+
+    @property
+    def parameters(self) -> Mapping[str, float]:  # noqa: D102
+        flat: dict[str, float] = {}
+        if self.use_concentration:
+            flat.update({f"fc.{k}": v for k, v in self.concentration_params.items()})
+        if self.use_wall:
+            flat.update({f"fw.{k}": v for k, v in self.wall_params.items()})
+        return flat
+
+    @property
+    def provenance(self) -> Mapping[str, str]:  # noqa: D102
+        record = {
+            "model": self.name,
+            "property": self.property_kind,
+            "source": self.source,
+            "concentration_form": self.concentration_form or "off",
+            "wall_form": self.wall_form or "off",
+        }
+        if self.species is not None:
+            record["species"] = self.species
+        record.update(self._extra_provenance)
+        return record
+
+    def evaluate(  # noqa: D102
+        self, c_avg: Numeric, wall_distance: Numeric, ops: MathOps = NUMPY_OPS
+    ) -> Numeric:
+        factor: Numeric = 1.0
+        if self.use_concentration and self.concentration_form is not None:
+            # PHY-13: the fits hold to 5.3 M and every property is capped at its
+            # value there. Clamping the driver is how that cap is applied, and it
+            # also keeps the half-integer powers away from negative arguments.
+            lower, upper = self.validity_M
+            clamped = ops.clip(c_avg, lower, upper)
+            factor = get_form(self.concentration_form)(self.concentration_params, clamped, ops)
+        if self.use_wall and self.wall_form is not None:
+            factor = factor * get_form(self.wall_form)(self.wall_params, wall_distance, ops)
+        return factor
+
+
+ModelBuilder: TypeAlias = Callable[[PropertyKind, str | None, bool, bool], CorrectionModel]
+"""Builds one property's model: ``(property, species, concentration, wall)``."""
+
+_REGISTRY: dict[str, ModelBuilder] = {}
+
+
+def register(name: str, builder: ModelBuilder) -> None:
+    """Register a correction model under ``name``.
+
+    Raises
+    ------
+    ValueError
+        If the name is already registered, which would silently change the
+        meaning of existing case files.
+    """
+    if name in _REGISTRY:
+        raise ValueError(f"correction model {name!r} is already registered")
+    _REGISTRY[name] = builder
+
+
+def registered_models() -> tuple[str, ...]:
+    """Return the registered model names, sorted."""
+    return tuple(sorted(_REGISTRY))
+
+
+def create(
+    name: str,
+    property_kind: PropertyKind,
+    species: str | None = None,
+    *,
+    concentration: bool = True,
+    wall: bool = True,
+) -> CorrectionModel:
+    """Build the model registered as ``name`` for one property.
+
+    Parameters
+    ----------
+    name
+        Registered model name, ``"none"`` to disable the correction.
+    property_kind
+        Which property the model is being built for.
+    species
+        Ion name for ``diffusivity`` and ``mobility``; ``None`` otherwise.
+    concentration, wall
+        Whether the respective part of the correction is active.
+
+    Raises
+    ------
+    KeyError
+        If no such model is registered; the message lists the known names.
+    ValueError
+        If ``species`` is given for a solvent property or omitted for an ionic
+        one.
+    """
+    if (species is not None) != (property_kind in SPECIES_PROPERTIES):
+        expected = "an ion name" if property_kind in SPECIES_PROPERTIES else "no species"
+        raise ValueError(f"property {property_kind!r} takes {expected}, got species={species!r}")
+    try:
+        builder = _REGISTRY[name]
+    except KeyError:
+        known = ", ".join(registered_models())
+        raise KeyError(
+            f"unknown correction model {name!r}; registered models are {known}"
+        ) from None
+    return builder(property_kind, species, concentration, wall)
+
+
+def _build_none(
+    property_kind: PropertyKind, species: str | None, concentration: bool, wall: bool
+) -> CorrectionModel:
+    del concentration, wall
+    return NoCorrection(property_kind=property_kind, species=species)
+
+
+@cache
+def _document(model_name: str) -> dict[str, Any]:
+    """Return the parsed parameter file, read once per model name."""
+    return load_corrections(model_name)
+
+
+def _property_node(
+    document: Mapping[str, Any], kind: PropertyKind, species: str | None
+) -> dict[str, Any]:
+    """Return the parameter subtree for one property.
+
+    Raises
+    ------
+    KeyError
+        If the file carries no coefficients for that property or species.
+    """
+    if kind not in SPECIES_PROPERTIES:
+        return dict(document["solvent"][kind])
+    table = document["species"]
+    if species not in table:
+        known = ", ".join(sorted(table))
+        raise KeyError(f"no species {species!r} in the parameter file; it has {known}")
+    return dict(table[species][kind])
+
+
+def _file_backed_builder(model_name: str) -> ModelBuilder:
+    """Return a builder reading its coefficients from a packaged parameter file."""
+
+    def build(
+        property_kind: PropertyKind, species: str | None, concentration: bool, wall: bool
+    ) -> CorrectionModel:
+        document = _document(model_name)
+        node = _property_node(document, property_kind, species)
+        fc = node.get("fc")
+        # Diffusivity and mobility share one ion wall function (PHY-11); the
+        # solvent properties carry their own, or none at all.
+        if property_kind in SPECIES_PROPERTIES:
+            fw = document.get("ion_wall_function")
+        else:
+            fw = node.get("fw")
+        validity = document.get("concentration_validity_M", [0.0, 5.3])
+        return FittedCorrection(
+            name=model_name,
+            property_kind=property_kind,
+            species=species,
+            concentration_form=None if fc is None else str(fc["form"]),
+            concentration_params={} if fc is None else _coefficients(fc),
+            wall_form=None if fw is None else str(fw["form"]),
+            wall_params={} if fw is None else _coefficients(fw),
+            validity_M=(float(validity[0]), float(validity[1])),
+            use_concentration=concentration,
+            use_wall=wall,
+            source=str(document.get("name", model_name)),
+        )
+
+    return build
+
+
+def _coefficients(node: Mapping[str, Any]) -> dict[str, float]:
+    """Extract the numeric fit coefficients, dropping metadata keys."""
+    return {k: float(v) for k, v in node.items() if isinstance(v, int | float)}
+
+
+register("none", _build_none)
+register("willems2020_nacl", _file_backed_builder("willems2020_nacl"))
