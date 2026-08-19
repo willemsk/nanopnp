@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite both the software and the paper it implements."
+title: nanopnp
+abstract: >-
+  Open-source Python continuum simulation of biological nanopores with the extended
+  Poisson-Nernst-Planck / Navier-Stokes (ePNP-NS) framework.
+type: software
+authors:
+  - family-names: Willems
+    given-names: Kherim
+    email: kherimwillems@gmail.com
+license: BSD-3-Clause
+repository-code: "https://github.com/willemsk/nanopnp"
+version: 0.1.0.dev0
+references:
+  - type: article
+    title: Accurate modeling of a biological nanopore with an extended continuum framework
+    doi: 10.1039/D0NR03114C
+    journal: Nanoscale
+    volume: 12
+    start: 16775
+    end: 16795
+    year: 2020
+    authors:
+      - {family-names: Willems, given-names: Kherim}
+      - {family-names: Ruić, given-names: Dino}
+      - {family-names: Lucas, given-names: Florian L. R.}
+      - {family-names: Barman, given-names: Ujjal}
+      - {family-names: Verellen, given-names: Niels}
+      - {family-names: Hofkens, given-names: Johan}
+      - {family-names: Maglia, given-names: Giovanni}
+      - {family-names: Van Dorpe, given-names: Pol}
