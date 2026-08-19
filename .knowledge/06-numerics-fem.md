@@ -264,6 +264,70 @@ target that is a pore average must state which convention it uses.
 
 ---
 
+## 8.1 NGSolve traps found by implementing this — all silent
+
+Three ways this project's own code was wrong while raising nothing. All reproduced on NGSolve
+6.2.2606. **[tested]**
+
+**1. A nonlinear form must be written in the trial function, not the grid function.**
+`AssembleLinearization(gfu.vec)` differentiates the form with respect to the *trial* function and
+substitutes the state vector. Written the intuitive way —
+
+```python
+a += (grad(gfu)*grad(v) + sinh(gfu)*v)*dx      # WRONG: Jacobian is identically zero
+a += (grad(u)*grad(v)   + sinh(u)*v)*dx        # right, with u = V.TrialFunction()
+```
+
+— the assembled Jacobian is **all zeros**, with no warning. Newton then fails inside the linear
+solver with `UmfpackInverse: Numeric factorization failed` / "matrix is singular", pointing at the
+solver rather than at the form. Cost of diagnosis: an hour.
+
+**2. The higher-order basis is hierarchical, so its shape functions are not a partition of unity.**
+Building a boundary indicator by setting the boundary DOFs of a P2 space to 1 gives a function whose
+integral over that boundary is **11/12 of its length**, not its length. A reaction flux normalised
+on the assumption gives a clean, stable, mesh-independent **8.33 % error** — which reads as a
+modelling difference, not a bug. Build the indicator by interpolation instead:
+`psi.Set(CF(1.0), definedon=mesh.Boundaries(name))`.
+
+**3. `GridFunction.Set` projects element-wise, so Dirichlet data comes back approximate.**
+Interpolating `-sqrt(t)*log(w)` for the wall-distance field left `d ≈ -4e-4 nm` *on* the wall
+instead of 0. Small, but `f^w_D(0) = 0.0601` is 6 % of its bulk value, so a slightly negative `d`
+shifts the near-wall diffusivity by percent. Zero the constrained DOFs explicitly afterwards.
+
+### 8.2 Measured: the reaction flux really is worth it
+
+Gouy-Chapman at 0.1 M, ζ̃ = 2, P2, planar slab. Wall gradient recovered two ways and compared with
+the analytic `-φ̃'(0) = (2/λ_D) sinh(ζ̃/2)`. **[tested]**
+
+| mesh | variational reaction flux | pointwise `grad(u)` at the wall |
+|---|---|---|
+| `h = λ/4` | +0.004 % | −0.84 % |
+| `h = λ/8` | +0.0001 % | −0.28 % |
+| `h = λ/16` | +0.00003 % | −0.08 % |
+
+Two hundred times better on the coarsest mesh, and it is *already converged* where the pointwise
+gradient still has percent-level error. This is the quantitative case for NUM-24/NUM-25 over any
+gradient- or cross-section-based extraction.
+
+### 8.3 Convergence and solver facts
+
+- **P2 gives clean O(h³) in L² on the r-weighted axisymmetric form.** Debye-Hückel in a cylinder,
+  relative weighted L² error against `ζ I₀(r/λ)/I₀(a/λ)`: 1.12e-3 → 1.48e-4 → 1.99e-5 → 2.46e-6 for
+  `maxh` 0.4 → 0.05 nm, i.e. rates 2.92, 2.90, 3.01. The axisymmetric weak form and the natural
+  axis condition are correct. **[tested]**
+- **UMFPACK *is* built into the pip wheel**: `ngsolve.config.USE_UMFPACK` is True and
+  `mat.Inverse(freedofs, inverse="umfpack")` works. `USE_MUMPS`, `USE_PARDISO` and `USE_MKL` remain
+  False, and `inverse="pardiso"` raises "MKL Pardiso is not available". So the default direct path
+  of NUM-21 is available out of the box; only the GPL-2+ licensing of UMFPACK is at issue, not its
+  presence. **[tested]**
+- **Varadhan screened-Poisson distance is accurate enough.** `w - t Δw = 0`, `w = 1` on the source,
+  `d = -√t ln w`, solved **planar** in (r, z) — for a surface of revolution the meridian-plane
+  distance *is* the 3D distance. Against the exact `a - r` of a cylinder, within 1.5 nm of the
+  wall: √t = 0.1 nm → 0.6 pm worst error, 1.1 % gradient jump; √t = 0.2 → 1.4 pm, 0.17 %; √t = 0.3
+  → 10 pm, 0.08 %. **[tested]**
+
+---
+
 ## 9. Unverified / to measure
 
 - Whether UMFPACK factorises the five-field axisymmetric system at production mesh sizes in
