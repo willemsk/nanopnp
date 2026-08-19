@@ -22,15 +22,26 @@ arithmetic.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from typing import Any, Protocol, TypeAlias
+from typing import Protocol, TypeAlias
 
-Numeric: TypeAlias = Any
-"""A float, a NumPy array or an NGSolve ``CoefficientFunction``.
+from nanopnp.core.typing import Numeric
 
-These three share no common protocol, so the annotation is deliberately loose;
-the ``MathOps`` implementation, not the type checker, is what keeps a form
-consistent across the numeric and symbolic paths.
-"""
+__all__ = [
+    "FORMS",
+    "NUMPY_OPS",
+    "MathOps",
+    "NGSolveOps",
+    "Numeric",
+    "NumpyOps",
+    "exponential_saturation_plus",
+    "gavish_langevin",
+    "get_form",
+    "inverse_poly_half",
+    "langevin",
+    "logistic_plus",
+    "poly_jones_dole",
+    "poly_quadratic",
+]
 
 _LANGEVIN_SERIES_CUTOFF = 3e-4
 """Below this argument the Langevin function is taken as its ``x/3`` limit.
