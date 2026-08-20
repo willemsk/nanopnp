@@ -14,14 +14,40 @@ contain (CON-11) but not on the library itself.
 ``sparsecholesky`` is rejected rather than merely discouraged: it is SPD-only,
 and the coupled five-field system is unsymmetric, so it would either fail or
 return a wrong answer.
+
+The scipy SuperLU path exists for licensing rather than for performance
+(CON-08, CON-11). UMFPACK is SuiteSparse and GPL-2+; a redistributable bundle
+that must not carry a copyleft dependency needs a BSD-licensed factorisation,
+and SuperLU is it. It is slower, so it is a fallback and not the default.
+
+Scaling (NUM-10) is the third concern here. Even after nondimensionalisation the
+five diagonal blocks of the Jacobian do not have comparable norms — the Poisson
+block scales as ``1/lambda~^2``, which is 130 at 3 M and a pore radius of 2 nm,
+while the continuity block has no scale of its own at all. A direct solver's
+pivoting is not scale-invariant, so the spread shows up as a loss of digits.
+``field_row_scaling`` measures the spread and ``report_block_scaling`` warns
+when it is large enough to matter.
 """
 
 from __future__ import annotations
 
-from nanopnp.core.typing import Expression, GridFunction, Mesh
+import logging
+from typing import TYPE_CHECKING
+
+import numpy as np
+
+if TYPE_CHECKING:
+    from scipy.sparse import csr_matrix
+
+from nanopnp.core.typing import Expression, FESpace, GridFunction, Mesh, Option
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_SOLVER = "umfpack"
 """Direct solver used unless a case says otherwise."""
+
+BLOCK_SCALING_WARNING = 1.0e3
+"""Ratio of largest to smallest diagonal-block norm above which to warn (NUM-10)."""
 
 _REJECTED = {
     "sparsecholesky": (
@@ -31,6 +57,10 @@ _REJECTED = {
     "unavailable on the default path (NUM-21)",
     "mumps": "MUMPS is absent from the NGSolve wheel and needs a source build with MPI (NUM-21)",
 }
+
+
+AVAILABLE_SOLVERS = frozenset({"umfpack", "superlu"})
+"""Solvers this build can actually use."""
 
 
 def check_solver(name: str) -> str:
@@ -44,13 +74,10 @@ def check_solver(name: str) -> str:
     """
     if name in _REJECTED:
         raise ValueError(f"linear solver {name!r} is not usable: {_REJECTED[name]}")
-    if name == "superlu":
-        raise NotImplementedError(
-            "the scipy SuperLU path is the BSD-licensed fallback of CON-08/CON-11 and is not "
-            "wired up yet; use umfpack"
+    if name not in AVAILABLE_SOLVERS:
+        raise ValueError(
+            f"unknown linear solver {name!r}; this build offers {sorted(AVAILABLE_SOLVERS)}"
         )
-    if name != "umfpack":
-        raise ValueError(f"unknown linear solver {name!r}; this build offers umfpack")
     return name
 
 
@@ -80,8 +107,173 @@ def solve_linear(
     space = solution.space
     residual = linear.vec.CreateVector()
     residual.data = linear.vec - bilinear.mat * solution.vec
+    if solver == "superlu":
+        correction = solve_superlu(bilinear.mat, residual, space.FreeDofs())
+        solution.vec.FV().NumPy()[:] += correction
+        return
     inverse = bilinear.mat.Inverse(space.FreeDofs(), inverse=solver)
     solution.vec.data += inverse * residual
+
+
+def to_scipy(matrix: Expression) -> csr_matrix:
+    """Return an assembled NGSolve sparse matrix as a scipy CSR matrix.
+
+    NGSolve's ``COO`` export lists duplicate entries for the same position;
+    scipy's COO constructor sums them, which is the correct assembly semantics.
+    """
+    from scipy import sparse
+
+    rows, cols, values = matrix.COO()
+    shape = (matrix.height, matrix.width)
+    return sparse.coo_matrix(
+        (np.asarray(values), (np.asarray(rows), np.asarray(cols))), shape=shape
+    ).tocsr()
+
+
+def solve_superlu(
+    matrix: Expression, rhs: Expression, freedofs: Option, *, equilibrate: bool = True
+) -> np.ndarray:
+    """Solve one linear system on the free degrees of freedom with scipy's SuperLU.
+
+    The BSD-licensed fallback of CON-08/CON-11. The constrained rows and columns
+    are dropped rather than zeroed, so the submatrix that reaches SuperLU is the
+    one that is actually non-singular; the returned correction is zero on the
+    constrained degrees of freedom.
+
+    Parameters
+    ----------
+    matrix
+        Assembled system matrix.
+    rhs
+        Right-hand-side vector.
+    freedofs
+        ``BitArray`` of degrees of freedom to solve for.
+    equilibrate
+        Apply row equilibration before factorising (NUM-10). Each row is divided
+        by its largest magnitude, which costs one pass over the matrix and
+        removes the block-scale spread that pivoting would otherwise pay for.
+
+    Returns
+    -------
+    numpy.ndarray
+        The correction over all degrees of freedom.
+
+    Raises
+    ------
+    RuntimeError
+        If the factorisation fails, with the matrix size in the message so the
+        failure is attributable.
+    """
+    from scipy import sparse
+    from scipy.sparse.linalg import splu
+
+    free = np.asarray(list(freedofs), dtype=bool)
+    system = to_scipy(matrix)[free][:, free]
+    right = np.asarray(rhs.FV().NumPy())[free].astype(float)
+
+    if equilibrate:
+        scale = np.asarray(abs(system).max(axis=1).todense()).ravel()
+        scale[scale == 0.0] = 1.0
+        system = sparse.diags(1.0 / scale) @ system
+        right = right / scale
+
+    try:
+        factorisation = splu(system.tocsc())
+    except RuntimeError as error:  # pragma: no cover - depends on the input matrix
+        raise RuntimeError(
+            f"SuperLU factorisation failed on a {system.shape[0]}x{system.shape[1]} system "
+            f"with {system.nnz} nonzeros: {error}"
+        ) from error
+
+    correction = np.zeros(matrix.height)
+    correction[free] = factorisation.solve(right)
+    return correction
+
+
+def diagonal_block_norms(matrix: Expression, space: FESpace) -> dict[str, float]:
+    """Return the norm of each diagonal Jacobian block of a compound space (NUM-10).
+
+    The norm is the largest absolute row sum of the block restricted to its own
+    rows and columns, which is the quantity NUM-10 wants to be O(1) for every
+    field.
+
+    Parameters
+    ----------
+    matrix
+        Assembled system matrix.
+    space
+        Compound finite-element space whose components name the fields. A
+        non-compound space is reported as one block named ``field``.
+
+    Returns
+    -------
+    dict
+        Component index (as ``field_0``, ``field_1``, ...) to block norm.
+    """
+    system = abs(to_scipy(matrix))
+    ranges = _component_ranges(space)
+    norms: dict[str, float] = {}
+    for name, (start, stop) in ranges.items():
+        block = system[start:stop, start:stop]
+        norms[name] = float(block.sum(axis=1).max()) if block.nnz else 0.0
+    return norms
+
+
+def field_row_scaling(matrix: Expression, space: FESpace) -> dict[str, float]:
+    """Return the reciprocal diagonal-block norms, the NUM-10 row scaling factors.
+
+    A block with a zero norm — a pure constraint block, such as the pressure
+    diagonal of a Taylor-Hood system — is left unscaled at 1.0 rather than
+    producing an infinity.
+    """
+    return {
+        name: (1.0 / norm if norm > 0.0 else 1.0)
+        for name, norm in diagonal_block_norms(matrix, space).items()
+    }
+
+
+def report_block_scaling(
+    matrix: Expression, space: FESpace, *, threshold: float = BLOCK_SCALING_WARNING
+) -> dict[str, float]:
+    """Log the diagonal-block norms and warn if their spread exceeds ``threshold``.
+
+    Returns the norms, so a caller can put them in the provenance manifest.
+    """
+    norms = diagonal_block_norms(matrix, space)
+    nonzero = [value for value in norms.values() if value > 0.0]
+    if not nonzero:
+        return norms
+    spread = max(nonzero) / min(nonzero)
+    logger.debug("diagonal block norms: %s (spread %.3g)", norms, spread)
+    if spread > threshold:
+        logger.warning(
+            "diagonal Jacobian block norms span a factor of %.3g (%s); NUM-10 asks for O(1) "
+            "blocks, so check the nondimensionalisation before trusting the factorisation",
+            spread,
+            norms,
+        )
+    return norms
+
+
+def _component_ranges(space: FESpace) -> dict[str, tuple[int, int]]:
+    """Return the degree-of-freedom range of each component of a compound space.
+
+    ``FESpace.components`` *raises* on a non-compound space rather than being
+    absent, so ``getattr(space, "components", None)`` does not protect against
+    it: the default only applies when the attribute is missing, not when the
+    property itself throws.
+    """
+    try:
+        components = space.components
+    except Exception:
+        return {"field": (0, space.ndof)}
+    if not components:
+        return {"field": (0, space.ndof)}
+    ranges = {}
+    for index in range(len(components)):
+        dof_range = space.Range(index)
+        ranges[f"field_{index}"] = (int(dof_range.start), int(dof_range.stop))
+    return ranges
 
 
 def mesh_size_report(mesh: Mesh) -> str:

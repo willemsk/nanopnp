@@ -43,6 +43,7 @@ before committing or CI will fail.
 | `uv run pytest` | Tiers 1 and 2 — the default selection, and the push gate |
 | `uv run pytest -m tier1` | Unit and property tests only (seconds) |
 | `uv run pytest -m tier3` | COMSOL comparison; nightly, not a push gate |
+| `uv run pytest -m slow --log-cli-level=INFO` | Benchmarks and envelope runs; measured, never gated |
 | `uv run pytest tests/tier1/test_corrections.py::test_ver03_ion_wall_function_check_values -v` | One test |
 | `uv run pytest --cov=src/nanopnp --cov-report=term-missing` | Coverage |
 | `uv run ruff check . && uv run ruff format .` | Lint and format |
@@ -119,6 +120,10 @@ CLI, the GUI and the sweep runner all depend on.
 - **Never compute the ionic current from a cross-section integral of the CG flux.** Use the
   domain/indicator form or the variational reaction flux, and check the two routes against each
   other (FR-23, QR-04). See `.knowledge/06-numerics-fem.md` §7.
+- **A Newton convergence test on the residual alone breaks warm starts.** Relative to the entry
+  residual, re-solving a converged state demands another six orders of magnitude — and that is what
+  every rung of the continuation ladder does. Test the relative update on the *undamped* direction
+  as well, and never call a step that raised the residual convergence.
 - **Reach hard cases by continuation, not by a cold solve.** The ladder is how the 0.005–5 M ×
   ±200 mV envelope converges (FR-17); warm-start sweeps from a converged neighbour.
 - **Record the stabilisation mode with every number.** The reference COMSOL model had streamline and

@@ -93,6 +93,7 @@ ignore = [
     "N803",   # physics notation: D0, P1, V_T are the published symbol names
     "N806",
     "N815",   # unit suffixes on attributes are required: validity_M, temperature_K
+    "N802",   # likewise on functions and properties: potential_V, maximum_packing_M
 ]
 
 [tool.ruff.lint.pydocstyle]
@@ -130,7 +131,7 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-m 'tier1 or tier2' --strict-markers --strict-config"
+addopts = "-m '(tier1 or tier2) and not slow' --strict-markers --strict-config"
 markers = [
     "tier1: unit and property tests, seconds, every push (SPECIFICATION.md section 7.2)",
     "tier2: analytic benchmarks, minutes, every push (section 7.3)",

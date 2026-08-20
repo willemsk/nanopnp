@@ -69,6 +69,11 @@ class Measures:
         return self.symmetry == "axisymmetric"
 
     @property
+    def coordinate_names(self) -> tuple[str, str]:
+        """Names of the two mesh coordinates, for diagnostics naming a location."""
+        return ("r", "z") if self.is_axisymmetric else ("x", "y")
+
+    @property
     def radial_weight(self) -> Numeric:
         """The ``r`` weight itself: the radial coordinate, or 1 in planar geometry."""
         if not self.is_axisymmetric:
