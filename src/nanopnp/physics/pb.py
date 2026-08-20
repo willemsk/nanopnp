@@ -32,10 +32,9 @@ from nanopnp.core.constants import (
 from nanopnp.core.typing import Expression, GridFunction, IntegralTerm, Mesh
 from nanopnp.physics.measures import Measures
 from nanopnp.physics.poisson import poisson_operator
+from nanopnp.solve.gates import FieldSampler, PotentialIncrementGate
 from nanopnp.solve.linear import DEFAULT_SOLVER, solve_linear
-
-NEWTON_MAX_ITERATIONS = 50
-"""Iteration cap for the interim nonlinear driver below."""
+from nanopnp.solve.newton import DEFAULT_SETTINGS, NewtonSettings, damped_newton
 
 ELECTROLYTE_PERMITTIVITY = 78.15
 """``eps_r,f0``, the infinite-dilution relative permittivity of the electrolyte.
@@ -129,6 +128,7 @@ def solve_pb(
     nonlinear: bool = True,
     order: int = 2,
     solver: str = DEFAULT_SOLVER,
+    settings: NewtonSettings = DEFAULT_SETTINGS,
 ) -> GridFunction:
     """Solve Poisson-Boltzmann and return the nondimensional potential.
 
@@ -152,6 +152,8 @@ def solve_pb(
         Lagrange element order.
     solver
         Direct linear solver.
+    settings
+        Damping and tolerance policy for the nonlinear branch.
 
     Returns
     -------
@@ -167,12 +169,18 @@ def solve_pb(
 
     Notes
     -----
-    The nonlinear branch uses NGSolve's own damped Newton as an interim driver.
-    The project's damped Newton with the gates of NUM-17 arrives in WP3 and
-    replaces this call without changing the forms.
+    The nonlinear branch runs the project's own damped Newton (NUM-16) with the
+    potential-increment gate of NUM-17 active. That gate is a real constraint
+    here rather than a formality: ``sinh`` grows exponentially, so an undamped
+    step from ``phi~ = 0`` at a large zeta potential overshoots by orders of
+    magnitude, and capping the increment at one thermal voltage is what keeps
+    the first few steps inside the range where the linearisation means anything.
+
+    The concentration and packing gates do not apply — Poisson-Boltzmann carries
+    no independent concentration field, its ion densities being slaved to the
+    potential by construction.
     """
     import ngsolve as ngs
-    from ngsolve.solvers import Newton
 
     if measures.element_order != order:
         raise ValueError(
@@ -197,17 +205,15 @@ def solve_pb(
     trial, test = space.TnT()
     residual = ngs.BilinearForm(space)
     residual += nonlinear_pb_residual(trial, test, measures, debye_length_nm=debye_length_nm)
-    converged, _ = Newton(
+
+    increment = ngs.GridFunction(space, name="delta_phi_tilde")
+    sampler = FieldSampler(mesh, coordinates=measures.coordinate_names)
+    damped_newton(
         residual,
         potential,
-        freedofs=space.FreeDofs(),
-        maxit=NEWTON_MAX_ITERATIONS,
-        inverse=solver,
-        printing=False,
+        settings=settings,
+        solver=solver,
+        increment=increment,
+        increment_gates=[PotentialIncrementGate(sampler, increment)],
     )
-    if converged != 0:
-        raise RuntimeError(
-            f"nonlinear Poisson-Boltzmann did not converge in {NEWTON_MAX_ITERATIONS} iterations "
-            f"at lambda_D = {debye_length_nm} nm"
-        )
     return potential

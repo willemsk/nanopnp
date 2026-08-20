@@ -1,4 +1,4 @@
-"""VER-07 and VER-08: 1/r forms must be integrated at order >= 3.
+"""VER-07: 1/r forms must be integrated at order >= 3.
 
 Gauss rules on triangles do sample r = 0. NGSolve's order-2 rule puts its three
 points at the edge midpoints (0, 1/2), (1/2, 0), (1/2, 1/2), so an element with
@@ -39,7 +39,7 @@ def test_ver07_order_two_returns_nan_on_an_axis_touching_mesh(axis_mesh: ngs.Mes
     assert math.isnan(naive), "order 2 no longer samples the axis; revisit NUM-07 and this test"
 
 
-def test_ver08_singular_integral_is_correct_at_the_guaranteed_order(axis_mesh: ngs.Mesh) -> None:
+def test_ver07_singular_integral_is_correct_at_the_guaranteed_order(axis_mesh: ngs.Mesh) -> None:
     """The integral of (f^2/r^2) r dr dz over the unit square is 1/2, obtained exactly."""
     gf = _radial_gridfunction(axis_mesh)
     measures = Measures(symmetry="axisymmetric", element_order=2)

@@ -1207,6 +1207,14 @@ than the solve aborted. The reference settings SHALL be the starting point for t
 | Maximum iterations | 100 |
 | Relative tolerance | 1 × 10⁻⁶ |
 
+NOTE on the relative tolerance. A criterion measured on the residual alone, relative to the
+residual on entry, makes a warm start onto an already-converged state demand a further six orders of
+magnitude from a residual already at its floor — which is the operation every rung of the ladder in
+NUM-18 performs. The implementation therefore converges on **either** the residual test **or** a
+relative-update test `‖δu‖ / max(‖u‖, 1) ≤ rtol` evaluated on the *undamped* Newton direction, the
+latter being the criterion the reference itself used. A step that failed to reduce the residual
+never counts as convergence.
+
 **NUM-17.** The following SHALL be asserted at every Newton step, and a violation SHALL abort the
 solve with a diagnostic naming the field and the spatial location:
 
@@ -1264,6 +1272,27 @@ become impractical in 3D at 10⁵ to 10⁶ DOF. The NGSolve pip wheel reports `U
 (likewise `USE_HYPRE`, `USE_PARDISO`, `USE_MKL`) and `inverse="mumps"` raises
 `SparseMatrix::InverseMatrix: no inverse available for type mumps`, so MUMPS requires a source
 build with MPI.
+
+NOTE: measured on the development laptop (WSL2, 24 cores, 15 GB) on the five-field system of
+NUM-01 over the analytic cylindrical pore, one configuration per process. This discharges §8.2
+criterion 3 and closes the measurement RSK-10 asked for.
+
+| Cells | DOF | Nonzeros | UMFPACK | Peak RSS | scipy SuperLU | Peak RSS |
+|---|---|---|---|---|---|---|
+| 1.50 × 10⁴ | 1.43 × 10⁵ | 8.4 × 10⁶ | 4.4 s | 855 MB | 24.0 s | 2593 MB |
+| 3.84 × 10⁴ | 3.68 × 10⁵ | 2.2 × 10⁷ | 14.0 s | 2157 MB | 140.3 s | 8656 MB |
+| 1.09 × 10⁵ | 1.04 × 10⁶ | 6.2 × 10⁷ | 41.1 s | 6171 MB | OOM-killed | > 15.4 GB |
+
+UMFPACK meets criterion 3 with margin, at 41 s and 6.2 GB for the reference mesh size. scipy
+SuperLU costs about 3.4 × the memory and 6–10 × the time, both gaps widening with problem size, and
+**did not complete the reference-sized factorisation at all**, being killed by the kernel at
+15.4 GB on two separate runs.
+
+> **This conflicts with CON-11**, which says the bundled build SHOULD default to scipy SuperLU with
+> UMFPACK opt-in. On this evidence that default would ship a bundle unable to run the reference
+> problem. The conflict is recorded rather than resolved here: resolving it means either accepting
+> the GPL-2+ obligation for the bundle, restricting the bundled build to smaller meshes, or bringing
+> the iterative fallback of NUM-22 forward as the BSD-licensed path. That is an ADR-003 decision.
 
 NOTE: the reference used PARDISO with pivoting perturbation 1 × 10⁻¹³ and sparsity-pattern reuse.
 PARDISO is likewise absent from the NGSolve wheel, so the reference linear solver cannot be
@@ -1806,10 +1835,10 @@ needed.
 | CON-05 | VAL-07 (residual discrepancy below 0.05 M) |
 | CON-06 | None yet |
 | CON-07 | None yet |
-| CON-08 | None yet (§8.2 criterion 3) |
+| CON-08 | §6.6 measurement table (§8.2 criterion 3, discharged) |
 | CON-09 | None yet |
 | CON-10 | None yet |
-| CON-11 | None yet |
+| CON-11 | §6.6 measurement table — measured, and in conflict with the stated default |
 | CON-12 | None yet |
 | CON-13 | None yet |
 | CON-14 | None yet |
