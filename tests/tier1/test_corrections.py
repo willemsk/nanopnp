@@ -9,10 +9,12 @@ is the whole failure mode the shared `materials.forms` module exists to prevent.
 
 import logging
 
+import numpy as np
 import pytest
 
 from nanopnp.core.constants import thermal_voltage
 from nanopnp.materials import models
+from nanopnp.materials.corrections import load_corrections
 from nanopnp.materials.electrolyte import (
     CorrectionSwitches,
     Electrolyte,
@@ -163,12 +165,75 @@ def test_phy13_clamp_activation_is_logged_with_its_location(
         count = log_clamp_activations(
             [1.0, 5.9, 6.4],
             label="diffusivity driver",
+            limit=5.3,
             coordinates=[(0.0, 0.0), (1.0, 2.0), (0.5, 3.0)],
         )
     assert count == 2
     assert "diffusivity driver" in caplog.text
     assert "(0.5, 3.0)" in caplog.text
-    assert log_clamp_activations([1.0, 5.29], label="quiet") == 0
+    assert log_clamp_activations([1.0, 5.29], label="quiet", limit=5.3) == 0
+
+
+def test_phy13_per_species_clamp_is_what_actually_activates(
+    epnpns: Electrolyte, caplog: pytest.LogCaptureFixture
+) -> None:
+    """The driver is clamped per species, so the driver itself never exceeds the limit.
+
+    A diagnostic run over driver samples alone would therefore report nothing
+    even when the fits were extrapolated; PHY-13 is only discharged by checking
+    the species concentrations that went into the average.
+    """
+    c_na = [1000.0, 8000.0]  # mol/m^3: the second sample is 8 M, well past 5.3 M
+    c_cl = [1000.0, 100.0]
+    driver = epnpns.average_concentration([np.asarray(c_na), np.asarray(c_cl)])
+    assert (np.asarray(driver) <= 5.3).all(), "the driver can never report the clamp itself"
+    assert log_clamp_activations(driver, label="driver", limit=5.3) == 0
+
+    with caplog.at_level(logging.WARNING):
+        count = epnpns.report_clamp_activations([c_na, c_cl], coordinates=[(0.0, 0.0), (0.0, 1.5)])
+    assert count == 1
+    assert "Na+ concentration" in caplog.text
+    assert "(0.0, 1.5)" in caplog.text
+
+
+def test_parameter_file_mobilities_and_caps_agree_with_the_evaluated_model() -> None:
+    """The tabulated `mu0` and `cap_above_validity` entries are data the tests must gate.
+
+    Neither is read by the solver -- `mu0` is derived from `D0` per PHY-14 and
+    the caps are applied by clamping the driver -- so without this test a
+    mistranscribed exponent (erratum 2) or a stale cap would go unnoticed.
+    """
+    document = load_corrections("willems2020_nacl")
+    electrolyte = Electrolyte.from_parameter_file("willems2020_nacl")
+    for ion in electrolyte.species:
+        tabulated = float(document["species"][ion.name]["mobility"]["mu0"])
+        assert ion.mobility_0 == pytest.approx(tabulated, rel=REL_TOL)
+
+    solvent, species = document["solvent"], document["species"]
+    at_cap = {
+        "viscosity": (
+            electrolyte.viscosity(5.3, FAR_FROM_WALL_NM),
+            solvent["viscosity"]["cap_above_validity"],
+        ),
+        "density": (electrolyte.mass_density(5.3), solvent["density"]["cap_above_validity"]),
+        "permittivity": (
+            electrolyte.relative_permittivity(5.3),
+            solvent["permittivity"]["cap_above_validity"],
+        ),
+    }
+    for ion in electrolyte.species:
+        at_cap[f"D_{ion.name}"] = (
+            electrolyte.diffusivity(ion.name, 5.3, FAR_FROM_WALL_NM),
+            species[ion.name]["diffusivity"]["cap_above_validity"],
+        )
+    # The tabulated caps are the published, rounded values -- the density one is
+    # quoted to three figures (1.19e3 against the fit's 1193.6) -- so the
+    # tolerance is set by their precision, not by the fit's. It is still tight
+    # enough to catch a wrong exponent or a mistranscribed coefficient.
+    for name, (evaluated, tabulated) in at_cap.items():
+        assert evaluated == pytest.approx(float(tabulated), rel=5e-3), (
+            f"{name}: the fit at 5.3 M disagrees with the tabulated cap"
+        )
 
 
 def test_provenance_records_what_produced_each_property(epnpns: Electrolyte) -> None:
@@ -178,3 +243,22 @@ def test_provenance_records_what_produced_each_property(epnpns: Electrolyte) -> 
     assert record["driver"] == "average"
     assert record["corrections"]["viscosity"]["model"] == "willems2020_nacl"
     assert record["corrections"]["diffusivity:Na+"]["species"] == "Na+"
+
+
+def test_provenance_distinguishes_an_ablated_run_from_the_full_one() -> None:
+    """FR-25: every switch set away from the validated default must be recorded."""
+    full = dict(models.create("willems2020_nacl", "viscosity").provenance)
+    ablated = dict(models.create("willems2020_nacl", "viscosity", concentration=False).provenance)
+    assert full != ablated
+    assert full["concentration_form"] == "poly_jones_dole"
+    assert ablated["concentration_form"] == "off"
+    assert ablated["concentration_enabled"] == "false"
+    assert ablated["wall_enabled"] == "true"
+
+
+def test_fit_metadata_is_not_reported_as_a_coefficient() -> None:
+    """`r_squared` is a goodness-of-fit metric, not a coefficient any form reads."""
+    parameters = models.create("willems2020_nacl", "viscosity").parameters
+    assert "fc.r_squared" not in parameters
+    assert "fw.r_squared" not in parameters
+    assert parameters["fc.P1"] == pytest.approx(0.007558)

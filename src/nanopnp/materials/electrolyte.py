@@ -150,6 +150,26 @@ class Electrolyte:
     ``0.5 * sum z_i^2 c_i``. The two coincide for a symmetric 1:1 salt."""
     parameter_file: str = ""
 
+    def __post_init__(self) -> None:
+        """Reject a species whose temperature disagrees with the electrolyte's.
+
+        ``mu_i^0`` is derived from ``D_i^0 / V_T(T_i)`` on the species while
+        every other property is evaluated at the electrolyte temperature, so a
+        mismatch is a silent error in every mobility rather than a failure.
+
+        Raises
+        ------
+        ValueError
+            If any species carries a different temperature.
+        """
+        mismatched = [ion.name for ion in self.species if ion.temperature_K != self.temperature_K]
+        if mismatched:
+            raise ValueError(
+                f"species {', '.join(mismatched)} carry a temperature different from the "
+                f"electrolyte's {self.temperature_K} K; mu_i^0 = D_i^0 / V_T(T) would then be "
+                "evaluated at the wrong temperature"
+            )
+
     @classmethod
     def from_parameter_file(
         cls,
@@ -196,7 +216,6 @@ class Electrolyte:
             for name in names
         )
         solvent = document["solvent"]
-        validity = document.get("concentration_validity_M", [0.0, 5.3])
         resolved: dict[str, models.CorrectionModel] = {
             "viscosity": active.viscosity.build("viscosity"),
             "density": active.density.build("density"),
@@ -215,7 +234,7 @@ class Electrolyte:
             water_steric_diameter=float(solvent["water_steric_diameter_nm"]) * 1e-9,
             protein_permittivity=float(document["dielectrics"]["protein"]),
             membrane_permittivity=float(document["dielectrics"]["membrane"]),
-            validity_M=(float(validity[0]), float(validity[1])),
+            validity_M=models.validity_range(document),
             driver=driver,
             parameter_file=model,
             corrections=resolved,
@@ -261,6 +280,12 @@ class Electrolyte:
         ops
             Operation namespace.
 
+        Note that the clamp applied here is the one that actually activates: the
+        driver returned can never exceed the validity limit, so a diagnostic run
+        over driver samples alone would report nothing. Use
+        ``report_clamp_activations`` on the *species* concentrations to satisfy
+        PHY-13's logging requirement.
+
         Raises
         ------
         ValueError
@@ -281,15 +306,23 @@ class Electrolyte:
         return total / len(clamped)
 
     def diffusivity(
-        self, species: str, c_avg: Numeric, wall_distance: Numeric, ops: MathOps = NUMPY_OPS
+        self,
+        species: str,
+        c_avg_M: Numeric,
+        wall_distance_nm: Numeric,
+        ops: MathOps = NUMPY_OPS,
     ) -> Numeric:
         """Return ``D_i(<c>, d)`` in m^2/s."""
         ion = self.ion(species)
-        factor = self.correction("diffusivity", species).evaluate(c_avg, wall_distance, ops)
+        factor = self.correction("diffusivity", species).evaluate(c_avg_M, wall_distance_nm, ops)
         return ion.diffusivity_0 * factor
 
     def mobility(
-        self, species: str, c_avg: Numeric, wall_distance: Numeric, ops: MathOps = NUMPY_OPS
+        self,
+        species: str,
+        c_avg_M: Numeric,
+        wall_distance_nm: Numeric,
+        ops: MathOps = NUMPY_OPS,
     ) -> Numeric:
         """Return ``mu_i(<c>, d)`` in m^2/(V s).
 
@@ -299,27 +332,80 @@ class Electrolyte:
         why ``D_i/mu_i`` drifts away from ``kT/e`` with concentration.
         """
         ion = self.ion(species)
-        factor = self.correction("mobility", species).evaluate(c_avg, wall_distance, ops)
+        factor = self.correction("mobility", species).evaluate(c_avg_M, wall_distance_nm, ops)
         return ion.mobility_0 * factor
 
     def viscosity(
-        self, c_avg: Numeric, wall_distance: Numeric, ops: MathOps = NUMPY_OPS
+        self, c_avg_M: Numeric, wall_distance_nm: Numeric, ops: MathOps = NUMPY_OPS
     ) -> Numeric:
         """Return ``eta(<c>, d)`` in Pa s."""
-        return self.viscosity_0 * self.correction("viscosity").evaluate(c_avg, wall_distance, ops)
+        return self.viscosity_0 * self.correction("viscosity").evaluate(
+            c_avg_M, wall_distance_nm, ops
+        )
 
     def mass_density(
-        self, c_avg: Numeric, wall_distance: Numeric = 0.0, ops: MathOps = NUMPY_OPS
+        self, c_avg_M: Numeric, wall_distance_nm: Numeric = 0.0, ops: MathOps = NUMPY_OPS
     ) -> Numeric:
         """Return ``rho(<c>)`` in kg/m^3; there is no wall correction on density."""
-        return self.mass_density_0 * self.correction("density").evaluate(c_avg, wall_distance, ops)
+        return self.mass_density_0 * self.correction("density").evaluate(
+            c_avg_M, wall_distance_nm, ops
+        )
 
     def relative_permittivity(
-        self, c_avg: Numeric, wall_distance: Numeric = 0.0, ops: MathOps = NUMPY_OPS
+        self, c_avg_M: Numeric, wall_distance_nm: Numeric = 0.0, ops: MathOps = NUMPY_OPS
     ) -> Numeric:
         """Return the electrolyte ``eps_r,f(<c>)``; there is no wall correction."""
-        factor = self.correction("permittivity").evaluate(c_avg, wall_distance, ops)
+        factor = self.correction("permittivity").evaluate(c_avg_M, wall_distance_nm, ops)
         return self.permittivity_0 * factor
+
+    def report_clamp_activations(
+        self,
+        concentrations: Sequence[Numeric],
+        *,
+        coordinates: Sequence[tuple[float, ...]] | None = None,
+    ) -> int:
+        """Log every per-species clamp activation and return how many there were.
+
+        PHY-13 requires each activation to be logged with its location and
+        property. ``average_concentration`` clamps each ``c_i`` *before* the
+        average is taken, so by construction the driver it returns never exceeds
+        the limit; the extrapolation has to be detected on the species
+        concentrations that went in, which is what this does.
+
+        Parameters
+        ----------
+        concentrations
+            Sampled species concentrations in mol/m^3, ordered as
+            ``self.species``, one array or sequence per species.
+        coordinates
+            Optional sample locations, shared by every species.
+
+        Returns
+        -------
+        int
+            Total number of samples clamped, summed over species.
+
+        Raises
+        ------
+        ValueError
+            If the number of concentrations does not match the species count.
+        """
+        if len(concentrations) != len(self.species):
+            raise ValueError(
+                f"expected {len(self.species)} concentrations, got {len(concentrations)}"
+            )
+        import numpy as np
+
+        limit = self.validity_M[1]
+        return sum(
+            log_clamp_activations(
+                np.asarray(values, dtype=float) * MOLAR_PER_SI,
+                label=f"{ion.name} concentration",
+                limit=limit,
+                coordinates=coordinates,
+            )
+            for ion, values in zip(self.species, concentrations, strict=True)
+        )
 
     @property
     def provenance(self) -> Mapping[str, Any]:
@@ -330,6 +416,7 @@ class Electrolyte:
             "driver": self.driver,
             "species": [ion.name for ion in self.species],
             "steric": self.switches.steric,
+            "validity_M": list(self.validity_M),
             "corrections": {
                 key: dict(model.provenance) for key, model in sorted(self.corrections.items())
             },
@@ -340,7 +427,7 @@ def log_clamp_activations(
     values_M: Numeric,
     *,
     label: str,
-    limit: float = 5.3,
+    limit: float,
     coordinates: Sequence[tuple[float, ...]] | None = None,
 ) -> int:
     """Log where the concentration fits were extrapolated past their validity range.
@@ -356,7 +443,9 @@ def log_clamp_activations(
     label
         What was clamped, named in the log line.
     limit
-        Upper end of the fit validity range.
+        Upper end of the fit validity range, in mol/L. Required rather than
+        defaulted: the range belongs to the parameter file, not to this module
+        (see ``Electrolyte.validity_M``).
     coordinates
         Optional sample locations, in the same order as ``values_M``.
 

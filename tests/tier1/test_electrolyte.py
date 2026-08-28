@@ -1,9 +1,11 @@
 """The electrolyte layer: the correction driver, ablation switches, and both math paths."""
 
+from dataclasses import replace
+
 import numpy as np
 import pytest
 
-from nanopnp.materials.electrolyte import CorrectionSwitches, Electrolyte
+from nanopnp.materials.electrolyte import CorrectionSwitches, Electrolyte, IonSpecies
 from nanopnp.materials.forms import NGSolveOps, NumpyOps
 
 
@@ -31,8 +33,15 @@ def test_ionic_strength_is_available_as_a_named_option(epnpns: Electrolyte) -> N
     assert ionic.average_concentration([1000.0, 1000.0]) == pytest.approx(
         epnpns.average_concentration([1000.0, 1000.0])
     )
-    # They diverge as soon as the electrolyte is not symmetric.
+    # For a 1:1 salt they agree at *any* concentrations, symmetric or not ...
     assert ionic.average_concentration([2000.0, 1000.0]) == pytest.approx(1.5)
+    assert epnpns.average_concentration([2000.0, 1000.0]) == pytest.approx(1.5)
+    # ... so only a multivalent species separates them: I = 0.5 * (4*2 + 1*1) M.
+    divalent = replace(ionic, species=(replace(ionic.species[0], valence=2), ionic.species[1]))
+    assert divalent.average_concentration([2000.0, 1000.0]) == pytest.approx(4.5)
+    assert replace(divalent, driver="average").average_concentration(
+        [2000.0, 1000.0]
+    ) == pytest.approx(1.5)
     with pytest.raises(ValueError, match="unknown correction driver"):
         Electrolyte.from_parameter_file("willems2020_nacl", driver="ionic-strength")
 
@@ -115,3 +124,34 @@ def test_langevin_limit_is_finite_at_zero_concentration(epnpns: Electrolyte) -> 
     """The permittivity form has a removable singularity at c = 0; it must not divide by zero."""
     assert epnpns.relative_permittivity(0.0) == pytest.approx(78.15)
     assert np.isfinite(epnpns.relative_permittivity(np.array([0.0, 1e-12, 1.0]))).all()
+
+
+def test_langevin_is_accurate_across_the_series_cutoff() -> None:
+    """Neither branch may fall into the cancellation of `coth(x) - 1/x`.
+
+    The difference is of size `x/3` between two terms of size `1/x`, so a cutoff
+    chosen too small hands the coth branch an argument at which it has no
+    significant digits left: at 1e-8 the function returned exactly zero.
+    """
+    from nanopnp.materials.forms import langevin
+
+    x = np.geomspace(1e-9, 1e-1, 400)
+    series = x / 3.0 - x**3 / 45.0 + 2.0 * x**5 / 945.0
+    assert np.allclose(langevin(x), series, rtol=1e-7)
+
+
+def test_species_temperature_must_match_the_electrolyte(epnpns: Electrolyte) -> None:
+    """A species at a different temperature would silently mis-derive mu_i^0."""
+    warm = IonSpecies(name="Na+", valence=1, diffusivity_0=1.334e-9, steric_diameter=0.5e-9)
+    with pytest.raises(ValueError, match="different from the electrolyte"):
+        replace(epnpns, temperature_K=310.0, species=(warm, epnpns.species[1]))
+
+
+def test_a_parameter_file_becomes_selectable_without_a_code_change() -> None:
+    """FR-16: the selectable models are whatever is installed under data/corrections."""
+    from nanopnp.core.paths import available_corrections
+    from nanopnp.materials import models
+
+    assert "willems2020_nacl" in available_corrections()
+    for name in available_corrections():
+        assert name in models.registered_models()

@@ -21,6 +21,7 @@ from dataclasses import dataclass, field
 from functools import cache
 from typing import Any, Literal, Protocol, TypeAlias
 
+from nanopnp.core.paths import available_corrections
 from nanopnp.materials.corrections import load_corrections
 from nanopnp.materials.forms import NUMPY_OPS, MathOps, Numeric, get_form
 
@@ -54,15 +55,20 @@ class CorrectionModel(Protocol):
         """Where the coefficients came from."""
         ...
 
-    def evaluate(self, c_avg: Numeric, wall_distance: Numeric, ops: MathOps = NUMPY_OPS) -> Numeric:
+    def evaluate(
+        self, c_avg_M: Numeric, wall_distance_nm: Numeric, ops: MathOps = NUMPY_OPS
+    ) -> Numeric:
         """Return the dimensionless correction factor.
 
         Parameters
         ----------
-        c_avg
+        c_avg_M
             Correction driver ``<c>`` in mol/L, the unit the fits are stated in.
-        wall_distance
-            Distance to the nearest pore boundary in nm (PHY-02).
+            The suffix is part of the name because this is *not* the solver's
+            SI unit: passing mol/m^3 here would silently clamp to the 5.3 M cap.
+        wall_distance_nm
+            Distance to the nearest pore boundary in nm (PHY-02), likewise the
+            unit the fits are stated in rather than the SI one.
         ops
             Operation namespace: NumPy for diagnostics and tests, NGSolve for
             assembly.
@@ -94,9 +100,9 @@ class NoCorrection:
         return {"model": "none", "note": "correction disabled; factor is identically 1"}
 
     def evaluate(  # noqa: D102
-        self, c_avg: Numeric, wall_distance: Numeric, ops: MathOps = NUMPY_OPS
+        self, c_avg_M: Numeric, wall_distance_nm: Numeric, ops: MathOps = NUMPY_OPS
     ) -> Numeric:
-        del c_avg, wall_distance, ops
+        del c_avg_M, wall_distance_nm, ops
         return 1.0
 
 
@@ -132,20 +138,33 @@ class FittedCorrection:
 
     @property
     def provenance(self) -> Mapping[str, str]:  # noqa: D102
+        # FR-25 requires every switch set away from the validated default to be
+        # recorded. Reporting the form a file *offers* rather than the one in
+        # force would make an ablated run indistinguishable from the full one.
         record = {
             "model": self.name,
             "property": self.property_kind,
             "source": self.source,
-            "concentration_form": self.concentration_form or "off",
-            "wall_form": self.wall_form or "off",
+            "concentration_form": self._active_form(
+                self.concentration_form, self.use_concentration
+            ),
+            "wall_form": self._active_form(self.wall_form, self.use_wall),
+            "concentration_enabled": str(self.use_concentration).lower(),
+            "wall_enabled": str(self.use_wall).lower(),
+            "validity_M": f"{self.validity_M[0]:g}-{self.validity_M[1]:g}",
         }
         if self.species is not None:
             record["species"] = self.species
         record.update(self._extra_provenance)
         return record
 
+    @staticmethod
+    def _active_form(form: str | None, enabled: bool) -> str:
+        """Return the form actually evaluated, or ``"off"`` if it is switched out."""
+        return form if enabled and form is not None else "off"
+
     def evaluate(  # noqa: D102
-        self, c_avg: Numeric, wall_distance: Numeric, ops: MathOps = NUMPY_OPS
+        self, c_avg_M: Numeric, wall_distance_nm: Numeric, ops: MathOps = NUMPY_OPS
     ) -> Numeric:
         factor: Numeric = 1.0
         if self.use_concentration and self.concentration_form is not None:
@@ -153,10 +172,10 @@ class FittedCorrection:
             # value there. Clamping the driver is how that cap is applied, and it
             # also keeps the half-integer powers away from negative arguments.
             lower, upper = self.validity_M
-            clamped = ops.clip(c_avg, lower, upper)
+            clamped = ops.clip(c_avg_M, lower, upper)
             factor = get_form(self.concentration_form)(self.concentration_params, clamped, ops)
         if self.use_wall and self.wall_form is not None:
-            factor = factor * get_form(self.wall_form)(self.wall_params, wall_distance, ops)
+            factor = factor * get_form(self.wall_form)(self.wall_params, wall_distance_nm, ops)
         return factor
 
 
@@ -181,8 +200,33 @@ def register(name: str, builder: ModelBuilder) -> None:
 
 
 def registered_models() -> tuple[str, ...]:
-    """Return the registered model names, sorted."""
-    return tuple(sorted(_REGISTRY))
+    """Return every selectable model name, sorted.
+
+    That is the explicitly registered builders plus every parameter file
+    installed under ``data/corrections``: a new electrolyte becomes selectable
+    by shipping its YAML, with no edit to this module (FR-16, ADR-005).
+    """
+    return tuple(sorted(set(_REGISTRY) | set(available_corrections())))
+
+
+def _resolve(name: str) -> ModelBuilder:
+    """Return the builder for ``name``, registering a file-backed one on demand.
+
+    Raises
+    ------
+    KeyError
+        If neither a builder nor a parameter file of that name exists; the
+        message lists the names that are selectable.
+    """
+    builder = _REGISTRY.get(name)
+    if builder is not None:
+        return builder
+    if name in available_corrections():
+        builder = _file_backed_builder(name)
+        _REGISTRY[name] = builder
+        return builder
+    known = ", ".join(registered_models())
+    raise KeyError(f"unknown correction model {name!r}; registered models are {known}")
 
 
 def create(
@@ -217,14 +261,7 @@ def create(
     if (species is not None) != (property_kind in SPECIES_PROPERTIES):
         expected = "an ion name" if property_kind in SPECIES_PROPERTIES else "no species"
         raise ValueError(f"property {property_kind!r} takes {expected}, got species={species!r}")
-    try:
-        builder = _REGISTRY[name]
-    except KeyError:
-        known = ", ".join(registered_models())
-        raise KeyError(
-            f"unknown correction model {name!r}; registered models are {known}"
-        ) from None
-    return builder(property_kind, species, concentration, wall)
+    return _resolve(name)(property_kind, species, concentration, wall)
 
 
 def _build_none(
@@ -238,6 +275,27 @@ def _build_none(
 def _document(model_name: str) -> dict[str, Any]:
     """Return the parsed parameter file, read once per model name."""
     return load_corrections(model_name)
+
+
+def validity_range(document: Mapping[str, Any]) -> tuple[float, float]:
+    """Return a parameter file's concentration validity range, in mol/L.
+
+    Raises
+    ------
+    KeyError
+        If the file does not declare one. There is deliberately no default: the
+        range is a property of the fits in *that* file, and silently borrowing
+        NaCl's 0-5.3 M would extrapolate another electrolyte past its own limit
+        with no gate failure (PHY-13, QR-12).
+    """
+    try:
+        low, high = document["concentration_validity_M"]
+    except KeyError:
+        raise KeyError(
+            f"correction file {document.get('name', '<unnamed>')!r} declares no "
+            "'concentration_validity_M'; the validity range of the fits is required"
+        ) from None
+    return (float(low), float(high))
 
 
 def _property_node(
@@ -274,7 +332,6 @@ def _file_backed_builder(model_name: str) -> ModelBuilder:
             fw = document.get("ion_wall_function")
         else:
             fw = node.get("fw")
-        validity = document.get("concentration_validity_M", [0.0, 5.3])
         return FittedCorrection(
             name=model_name,
             property_kind=property_kind,
@@ -283,7 +340,7 @@ def _file_backed_builder(model_name: str) -> ModelBuilder:
             concentration_params={} if fc is None else _coefficients(fc),
             wall_form=None if fw is None else str(fw["form"]),
             wall_params={} if fw is None else _coefficients(fw),
-            validity_M=(float(validity[0]), float(validity[1])),
+            validity_M=validity_range(document),
             use_concentration=concentration,
             use_wall=wall,
             source=str(document.get("name", model_name)),
@@ -292,10 +349,22 @@ def _file_backed_builder(model_name: str) -> ModelBuilder:
     return build
 
 
+NON_COEFFICIENT_KEYS: frozenset[str] = frozenset({"r_squared"})
+"""Numeric keys a fit block may carry that are metadata, not fit coefficients."""
+
+
 def _coefficients(node: Mapping[str, Any]) -> dict[str, float]:
-    """Extract the numeric fit coefficients, dropping metadata keys."""
-    return {k: float(v) for k, v in node.items() if isinstance(v, int | float)}
+    """Extract the numeric fit coefficients, dropping metadata keys.
+
+    Filtering by type alone is not enough: ``r_squared`` is a float and ``bool``
+    is a subclass of ``int``, so both would be reported as fit coefficients in
+    the FR-25 record even though no correction form reads them.
+    """
+    return {
+        k: float(v)
+        for k, v in node.items()
+        if isinstance(v, int | float) and not isinstance(v, bool) and k not in NON_COEFFICIENT_KEYS
+    }
 
 
 register("none", _build_none)
-register("willems2020_nacl", _file_backed_builder("willems2020_nacl"))

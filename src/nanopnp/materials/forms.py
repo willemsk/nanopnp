@@ -32,8 +32,17 @@ the ``MathOps`` implementation, not the type checker, is what keeps a form
 consistent across the numeric and symbolic paths.
 """
 
-_LANGEVIN_SERIES_CUTOFF = 1e-8
-"""Below this argument the Langevin function is taken as its ``x/3`` limit."""
+_LANGEVIN_SERIES_CUTOFF = 3e-4
+"""Below this argument the Langevin function is taken as its ``x/3`` limit.
+
+Chosen where the two branches are equally accurate rather than as small as
+possible. ``coth(x) - 1/x`` subtracts two quantities of size ``1/x`` to leave a
+result of size ``x/3``, so its relative error grows like ``3 eps / x^2``; the
+truncated series ``x/3`` has relative error ``x^2/15``. The two cross near
+``3e-4``, where both are accurate to about 7e-9. A cutoff of 1e-8 sits deep
+inside the cancellation region: ``L(1.1e-8)`` then evaluates to exactly zero
+instead of 3.667e-9.
+"""
 
 
 class MathOps(Protocol):
