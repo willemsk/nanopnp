@@ -1517,7 +1517,7 @@ solver settings, stabilisation mode and correction parameter file versions (FR-2
 
 | Phase | Deliverable | Gate | Estimate |
 |---|---|---|---|
-| 0. Spike | Coupled ePNP-NS on an analytic cylindrical pore; continuation ladder; Tier 1 and Tier 2 suites; one COMSOL comparison | §8.2 exit criteria | 3–5 weeks |
+| 0. Spike | Coupled ePNP-NS on an analytic cylindrical pore; continuation ladder; Tier 1 and Tier 2 suites (§8.2.1) | §8.2 exit criteria, as amended by §8.2.1 | 3–5 weeks |
 | 1. Solver core | Production solver on an externally supplied mesh, full QoI extraction, frozen case-file schema, sweep runner | Tier 1 and Tier 2 pass; Tier 3 enabled and differences attributed | 6–10 weeks |
 | 2. Geometry pipeline | Structure and trajectory ingestion, density, symmetry reduction, contour, CAD, mesh | VAL-05: the auto-generated mesh reproduces the hand-conditioned reference geometry | 8–12 weeks |
 | 3. Charge pipeline | PDB2PQR to smeared volumetric `ρ_fixed` and dielectric field | VER-01, VER-02 and VAL-06 pass | 3–5 weeks |
@@ -1554,6 +1554,16 @@ All four SHALL be met.
 
 COMSOL comparison is not a Phase 0 gate. Tier 3 runs once criterion 1 is met, and early
 disagreement at the per-cent level is expected for the reasons in §7.4.
+
+#### 8.2.1 Amendments to Phase 0, agreed 19 August 2026
+
+| # | Amendment | Consequence |
+|---|---|---|
+| A1 | Criterion 1 stands in full, including VER-19 to VER-22. Those four benchmarks require an embedded body, so Phase 0 SHALL implement a rigid analyte body of revolution and the domain-form force integral of NUM-28 to the extent the benchmarks exercise them | Brings part of FR-21 and FR-22 forward from v1.0 into the spike, and verifies RSK-04 — a near-cancellation of two approximately 10 pN terms — against analytic results at the earliest point at which it can be verified at all. The case-file surface for analytes remains v1.0 work |
+| A2 | Criterion 4, the PySide6 and `webgui` Windows bundle, is deferred out of Phase 0 and is recorded as deliberately unmet | RSK-13 (desktop packaging defeated by a binary dependency) stays open and undetected for longer than ADR-004 intends. The GUI track of §8.1 resumes at Phase 1 |
+| A3 | The Phase 0 COMSOL comparison is deferred in full to Phase 1, together with the Tier 3 harness, the export contract and reference-set generation (VAL-03) | Phase 0 verifies against analytic solutions only. This tightens rather than weakens the gate, criterion 1 being the criterion that localises an error to a single term; §8.2 already excluded the comparison from the gate |
+
+Phase 0 is therefore met by criteria 1 to 3 as written, with criterion 4 explicitly outstanding.
 
 ### 8.3 Effort estimate
 

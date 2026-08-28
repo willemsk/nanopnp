@@ -24,6 +24,17 @@ CORRECTIONS_DIR: Path = DATA_DIR / "corrections"
 """Versioned ePNP-NS correction parameter files (FR-16)."""
 
 
+def available_corrections() -> tuple[str, ...]:
+    """Return the names of every installed correction parameter file, sorted.
+
+    Adding an electrolyte is a data file, never a code change (FR-16, ADR-005),
+    so the set of selectable correction models is whatever is on disk here.
+    """
+    if not CORRECTIONS_DIR.is_dir():
+        return ()
+    return tuple(sorted(path.stem for path in CORRECTIONS_DIR.glob("*.yaml")))
+
+
 def correction_file(name: str) -> Path:
     """Return the path of a named correction parameter file.
 

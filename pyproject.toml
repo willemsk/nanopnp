@@ -92,6 +92,7 @@ ignore = [
     "D213",   # incompatible with D212
     "N803",   # physics notation: D0, P1, V_T are the published symbol names
     "N806",
+    "N815",   # unit suffixes on attributes are required: validity_M, temperature_K
 ]
 
 [tool.ruff.lint.pydocstyle]
@@ -101,7 +102,10 @@ convention = "numpy"
 "tests/*" = ["D100", "D103", "ANN201", "ANN001"]
 
 [tool.mypy]
-python_version = "3.10"
+# The development pin, not the 3.10 support floor: NumPy's shipped stubs use
+# `type` statements that only parse under 3.12+. Ruff's target-version = py310
+# is what keeps the source itself compatible with the floor.
+python_version = "3.12"
 files = ["src"]
 strict = true
 warn_unreachable = true
