@@ -55,6 +55,10 @@ Before committing, run the whole gate:
 uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv run pytest
 ```
 
+`.claude/hooks/gate.sh` runs that gate automatically before any `git commit` Claude Code
+makes, and refuses the commit with the failing output if a stage fails. `git commit
+--no-verify` skips it. It does not fire for commits you make yourself in a terminal.
+
 ## Project structure
 
 `src/` layout: the package is `src/nanopnp/`, one subpackage per module of SPECIFICATION.md §5.1.

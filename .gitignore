@@ -216,3 +216,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Claude Code worktrees live inside .claude/ but are checkouts, not config.
+.claude/worktrees/
