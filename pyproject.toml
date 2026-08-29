@@ -110,7 +110,9 @@ files = ["src"]
 strict = true
 warn_unreachable = true
 
-# Scientific packages that ship no type information.
+# Scientific packages with no type information a checker can use: most ship none,
+# and NGSolve's stubs are unreachable without a py.typed marker and do not parse
+# with one (see src/nanopnp/core/typing.py).
 [[tool.mypy.overrides]]
 module = [
     "ngsolve.*",
