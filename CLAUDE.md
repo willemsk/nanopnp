@@ -138,6 +138,13 @@ CLI, the GUI and the sweep runner all depend on.
 - `logging`, never `print()`, outside the CLI's own output.
 - Cite the source of every physical constant and fit coefficient in a comment, pointing at the
   `.knowledge/` file or the specification section it came from.
+- **Imports go at the top of the module. `ngsolve`, `netgen` and `numpy` are the exceptions**, and
+  are imported inside the function that uses them. `import ngsolve` costs ~370 ms and `import numpy`
+  ~67 ms, and the CLI, the GUI and the sweep runner all import stage modules purely to introspect a
+  stage (FR-27) without ever assembling a form — so a sweep dispatching a job array pays that per
+  process. Deferring keeps `import nanopnp.cli` at ~70 ms; at module scope the physics and mesh
+  modules alone would cost 424 ms rather than 56 ms. Defer nothing else: a stdlib import buys
+  microseconds and just makes the module harder to read.
 
 ## Testing
 

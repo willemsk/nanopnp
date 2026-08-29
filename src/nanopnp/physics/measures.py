@@ -21,6 +21,7 @@ guarantees an integration order of at least 3 (NUM-07, VER-07).
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from typing import Literal, TypeAlias
 
@@ -185,8 +186,6 @@ class Measures:
         ValueError
             If the result is NaN or infinite.
         """
-        import math
-
         import ngsolve as ngs
 
         order = self.integration_order(singular=singular, extra=extra_order)
