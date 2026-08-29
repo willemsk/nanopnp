@@ -19,7 +19,7 @@ Hughes, Engel, Mazzei & Larson, *J. Comput. Phys.* **163**, 467 (2000).
 
 from __future__ import annotations
 
-from nanopnp.core.typing import Expression, FESpace, GridFunction
+from nanopnp.core.typing import AssembledForm, FESpace, GridFunction
 
 
 def boundary_indicator(space: FESpace, boundary: str) -> GridFunction:
@@ -41,32 +41,64 @@ def boundary_indicator(space: FESpace, boundary: str) -> GridFunction:
 
 
 def boundary_reaction_flux(
-    residual_form: Expression,
+    residual_form: AssembledForm,
     solution: GridFunction,
     boundary: str,
+    *,
+    load_form: AssembledForm | None = None,
 ) -> float:
     """Return the reaction flux of a converged solution through one boundary.
 
     Parameters
     ----------
     residual_form
-        An assembled ``BilinearForm`` holding the residual of the solved
-        problem, written in the trial function.
+        A ``BilinearForm`` holding the operator of the solved problem, written
+        in the trial function.
     solution
         The converged solution.
     boundary
         Boundary-name regular expression to integrate over. Its degrees of
-        freedom must be the constrained ones of the solve.
+        freedom must be the constrained ones of the solve, which is checked.
+    load_form
+        The assembled ``LinearForm`` of the problem, if it has one. The residual
+        is ``a(u, v) - f(v)``; omitting ``f`` where the problem has a source
+        biases the flux by ``int f psi`` over the boundary-adjacent elements.
+        Pass ``None`` only for a form written with a zero right-hand side, as
+        the nonlinear Poisson-Boltzmann residual is.
 
     Returns
     -------
     float
         ``int_boundary (grad u . n) ds`` in the units of the form, with ``n``
         the outward normal.
+
+    Raises
+    ------
+    ValueError
+        If ``boundary`` matches nothing in the mesh, or if any of its degrees of
+        freedom are free. The identity holds only where the solve constrained
+        them; on a free boundary the residual is not the boundary flux and this
+        would otherwise return a plausible wrong number (NUM-25, QR-12).
     """
     import ngsolve as ngs
 
+    space = solution.space
+    mesh = space.mesh
+    on_boundary = space.GetDofs(mesh.Boundaries(boundary))
+    if on_boundary.NumSet() == 0:
+        known = ", ".join(sorted(set(mesh.GetBoundaries())))
+        raise ValueError(f"no boundary matching {boundary!r} in this mesh; it has {known}")
+    still_free = on_boundary & space.FreeDofs()
+    if still_free.NumSet() != 0:
+        raise ValueError(
+            f"{still_free.NumSet()} of the {on_boundary.NumSet()} degrees of freedom on "
+            f"{boundary!r} are free, so the residual there is not the boundary flux; the "
+            "reaction flux of NUM-25 needs a boundary the solve constrained"
+        )
+
     residual = solution.vec.CreateVector()
     residual_form.Apply(solution.vec, residual)
-    indicator = boundary_indicator(solution.space, boundary)
+    if load_form is not None:
+        residual.data = residual - load_form.vec
+    indicator = boundary_indicator(space, boundary)
     return float(ngs.InnerProduct(residual, indicator.vec))

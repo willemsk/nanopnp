@@ -21,7 +21,7 @@ from nanopnp.physics.measures import SINGULAR_MIN_ORDER, Measures
 @pytest.fixture(scope="module")
 def axis_mesh() -> ngs.Mesh:
     """Return a mesh with elements touching r = 0."""
-    return CylinderGeometry(radius=1.0, length=1.0).generate(maxh=0.25)
+    return CylinderGeometry(radius_nm=1.0, length_nm=1.0).generate(maxh_nm=0.25)
 
 
 def _radial_gridfunction(mesh: ngs.Mesh) -> ngs.GridFunction:
@@ -59,11 +59,16 @@ def test_singular_forms_are_integrated_at_order_three_or_better() -> None:
 
 
 def test_a_non_finite_integral_aborts_with_the_quantity_named(axis_mesh: ngs.Mesh) -> None:
-    """QR-12: a gate failure names the gate and the offending quantity."""
+    """QR-12: a gate failure names the gate and the offending quantity.
+
+    The integrand is non-finite at every quadrature point rather than only on the
+    axis, because ``integrate`` floors its order above the order-2 rule that
+    samples ``r = 0``. VER-07 above pins that rule itself.
+    """
     measures = Measures(symmetry="axisymmetric", element_order=2)
     with pytest.raises(ValueError, match=r"hoop-strain term.*NUM-07"):
         measures.integrate(
-            ngs.CF(1.0) / (ngs.x * ngs.x),
+            ngs.CF(1.0) / (ngs.x - ngs.x),
             axis_mesh,
             singular=False,
             what="hoop-strain term",
@@ -77,7 +82,18 @@ def test_bonus_intorder_cannot_be_passed_behind_the_guarantee() -> None:
         measures.volume(ngs.CF(1.0), bonus_intorder=5)
 
 
-def test_planar_measures_carry_no_radial_weight() -> None:
-    """The 1D benchmarks are genuinely planar; weighting them would be wrong."""
+def test_num04_the_measure_applies_the_radial_weight(axis_mesh: ngs.Mesh) -> None:
+    """The r weight is applied by the measure, not by the call site (NUM-04).
+
+    Over the unit square in (r, z) the axisymmetric measure of 1 is
+    ``int_0^1 int_0^1 r dr dz = 1/2`` and the planar one is 1. The 1D benchmarks
+    are genuinely planar, so weighting them would be wrong in the other
+    direction.
+    """
     assert Measures(symmetry="planar").radial_weight == 1.0
-    assert Measures(symmetry="axisymmetric").radial_weight is not None
+    assert Measures(symmetry="planar").integrate(ngs.CF(1.0), axis_mesh) == pytest.approx(
+        1.0, rel=1e-12
+    )
+    assert Measures(symmetry="axisymmetric").integrate(ngs.CF(1.0), axis_mesh) == pytest.approx(
+        0.5, rel=1e-12
+    )

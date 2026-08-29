@@ -20,6 +20,10 @@ Expression: TypeAlias = Any
 IntegralTerm: TypeAlias = Any
 """One assembled integral term, NGSolve's ``SumOfIntegrals``."""
 
+AssembledForm: TypeAlias = Any
+"""An ``ngsolve.BilinearForm`` or ``ngsolve.LinearForm``, carrying a matrix or a
+vector rather than an unevaluated expression."""
+
 Mesh: TypeAlias = Any
 """An ``ngsolve.Mesh``."""
 

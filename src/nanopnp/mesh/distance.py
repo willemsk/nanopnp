@@ -23,7 +23,7 @@ sources, the Dirichlet condition making ``ln w`` vanish there.
 
 Far from the wall ``w`` underflows, and the correction functions have long since
 saturated - ``f^w_D`` is within 1 % of 1 by 0.75 nm - so the field is capped at
-``max_distance`` rather than chasing an exponent to zero.
+``max_distance_nm`` rather than chasing an exponent to zero.
 """
 
 from __future__ import annotations
@@ -56,9 +56,9 @@ def wall_distance(
     sources: str,
     *,
     order: int = 2,
-    diffusion_length: float | None = None,
-    max_distance: float = DEFAULT_MAX_DISTANCE_NM,
-    smoothing_length: float | None = None,
+    diffusion_length_nm: float | None = None,
+    max_distance_nm: float = DEFAULT_MAX_DISTANCE_NM,
+    smoothing_length_nm: float | None = None,
     solver: str = DEFAULT_SOLVER,
 ) -> GridFunction:
     """Return the mollified distance to ``sources`` as a finite-element field.
@@ -73,13 +73,13 @@ def wall_distance(
         (PHY-02).
     order
         Element order of the returned field.
-    diffusion_length
-        ``sqrt(t)`` of the screened-Poisson solve, in mesh units. Smaller is
-        more accurate and worse conditioned. Defaults to one tenth of
-        ``max_distance``.
-    max_distance
-        Cap on the returned distance, in mesh units.
-    smoothing_length
+    diffusion_length_nm
+        ``sqrt(t)`` of the screened-Poisson solve, in nm. Smaller is more
+        accurate and worse conditioned. Defaults to
+        ``DEFAULT_DIFFUSION_LENGTH_NM``.
+    max_distance_nm
+        Cap on the returned distance, in nm.
+    smoothing_length_nm
         If given, the field is additionally smoothed by one screened-Poisson
         pass of this length, trading a little accuracy for smaller gradient
         jumps.
@@ -89,13 +89,14 @@ def wall_distance(
     Returns
     -------
     GridFunction
-        The distance field, zero on ``sources`` and capped at ``max_distance``.
+        The distance field, zero on ``sources`` and capped at ``max_distance_nm``.
 
     Raises
     ------
     ValueError
         If the source boundary does not exist in the mesh, which would silently
-        return a distance to nothing.
+        return a distance to nothing, or if the two lengths are so far apart
+        that the exponential floor underflows.
     """
     import ngsolve as ngs
 
@@ -103,7 +104,7 @@ def wall_distance(
         known = ", ".join(sorted(set(mesh.GetBoundaries())))
         raise ValueError(f"no boundary matching {sources!r} in this mesh; it has {known}")
 
-    scale = diffusion_length if diffusion_length is not None else DEFAULT_DIFFUSION_LENGTH_NM
+    scale = diffusion_length_nm if diffusion_length_nm is not None else DEFAULT_DIFFUSION_LENGTH_NM
     # The distance is planar in (r, z) even in an axisymmetric problem; see the
     # module docstring.
     planar = Measures(symmetry="planar", element_order=order)
@@ -119,7 +120,13 @@ def wall_distance(
     f = ngs.LinearForm(space).Assemble()
     solve_linear(a, f, decayed, solver=solver)
 
-    floor = math.exp(-max_distance / scale)
+    floor = math.exp(-max_distance_nm / scale)
+    if floor <= 0.0:
+        raise ValueError(
+            f"diffusion_length_nm = {scale} nm is too small for max_distance_nm = "
+            f"{max_distance_nm} nm: exp(-{max_distance_nm / scale:.0f}) underflows to zero, the "
+            "lower clamp becomes a no-op and log(0) would return an infinite distance"
+        )
     clamped = ngs.IfPos(decayed - floor, ngs.IfPos(decayed - 1.0, 1.0, decayed), floor)
     distance = ngs.GridFunction(space, name="wall_distance")
     distance.Set(-scale * ngs.log(clamped))
@@ -128,18 +135,16 @@ def wall_distance(
     # slightly negative d would shift f^w at the wall by percent - so the
     # constrained degrees of freedom are zeroed outright.
     on_sources = space.GetDofs(mesh.Boundaries(sources))
-    for dof in range(len(distance.vec)):
-        if on_sources[dof]:
-            distance.vec[dof] = 0.0
+    distance.vec.data = ngs.Projector(on_sources, False) * distance.vec
 
-    if smoothing_length is None:
+    if smoothing_length_nm is None:
         return distance
-    return mollify(distance, smoothing_length, sources=sources, solver=solver)
+    return mollify(distance, smoothing_length_nm, sources=sources, solver=solver)
 
 
 def mollify(
     field: GridFunction,
-    smoothing_length: float,
+    smoothing_length_nm: float,
     *,
     sources: str | None = None,
     solver: str = DEFAULT_SOLVER,
@@ -148,6 +153,27 @@ def mollify(
 
     Solves ``(1 - delta^2 laplacian) g = field``, which damps the facet-to-facet
     gradient jumps of an interpolated field while preserving its value scale.
+
+    Parameters
+    ----------
+    field
+        The field to smooth. The smoothed field is built on its own space, so
+        ``sources`` can only be held to zero if that space was constructed with
+        ``dirichlet=sources``.
+    smoothing_length_nm
+        ``delta`` of the pass, in nm.
+    sources
+        Boundary-name regular expression to hold at zero.
+    solver
+        Direct linear solver.
+
+    Raises
+    ------
+    ValueError
+        If ``sources`` is given but ``field``'s space leaves those degrees of
+        freedom free. The smoothing would then run unconstrained and return a
+        field that is non-zero on the very boundary the caller asked to pin -
+        the defect the explicit zeroing in ``wall_distance`` exists to prevent.
     """
     import ngsolve as ngs
 
@@ -156,11 +182,18 @@ def mollify(
     planar = Measures(symmetry="planar", element_order=space.globalorder)
     smoothed = ngs.GridFunction(space, name=f"{field.name}_mollified")
     if sources is not None:
+        still_free = space.GetDofs(mesh.Boundaries(sources)) & space.FreeDofs()
+        if still_free.NumSet() != 0:
+            raise ValueError(
+                f"{still_free.NumSet()} degrees of freedom on {sources!r} are free in this "
+                "field's space; build it with dirichlet=sources, or the smoothing pass will "
+                "not hold the boundary at zero"
+            )
         smoothed.Set(ngs.CF(0.0), definedon=mesh.Boundaries(sources))
 
     trial, test = space.TnT()
     a = ngs.BilinearForm(
-        planar.volume(trial * test + smoothing_length**2 * ngs.grad(trial) * ngs.grad(test))
+        planar.volume(trial * test + smoothing_length_nm**2 * ngs.grad(trial) * ngs.grad(test))
     ).Assemble()
     f = ngs.LinearForm(planar.volume(field * test)).Assemble()
     solve_linear(a, f, smoothed, solver=solver)

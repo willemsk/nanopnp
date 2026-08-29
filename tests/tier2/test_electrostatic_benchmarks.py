@@ -16,17 +16,23 @@ from itertools import pairwise
 import ngsolve as ngs
 import numpy as np
 import pytest
-from ngsolve.solvers import Newton
 from scipy.special import i0
 
-from nanopnp.core.constants import GAS_CONSTANT, VACUUM_PERMITTIVITY, thermal_voltage
+from nanopnp.core.constants import (
+    GAS_CONSTANT,
+    REFERENCE_TEMPERATURE_K,
+    VACUUM_PERMITTIVITY,
+    thermal_voltage,
+)
 from nanopnp.mesh.primitives import CylinderGeometry, SlabGeometry
-from nanopnp.physics.measures import Measures
-from nanopnp.physics.pb import debye_length, nonlinear_pb_residual, solve_pb
+from nanopnp.physics.measures import AXISYMMETRIC, PLANAR
+from nanopnp.physics.pb import (
+    ELECTROLYTE_PERMITTIVITY,
+    debye_length_nm,
+    nonlinear_pb_residual,
+    solve_pb,
+)
 from nanopnp.post.reaction_flux import boundary_reaction_flux
-
-AXI = Measures(symmetry="axisymmetric", element_order=2)
-PLANAR = Measures(symmetry="planar", element_order=2)
 
 
 def _weighted_error(
@@ -58,10 +64,10 @@ def test_ver13_debye_huckel_in_a_cylinder() -> None:
 
     errors = []
     for maxh in (0.4, 0.2, 0.1):
-        mesh = CylinderGeometry(radius=radius, length=length).generate(maxh=maxh)
+        mesh = CylinderGeometry(radius_nm=radius, length_nm=length).generate(maxh_nm=maxh)
         solution = solve_pb(
             mesh,
-            AXI,
+            AXISYMMETRIC,
             debye_length_nm=lam,
             dirichlet="wall",
             boundary_values=ngs.CF(zeta),
@@ -82,10 +88,10 @@ def test_ver13_axis_condition_is_natural_not_dirichlet() -> None:
     a test rather than a comment.
     """
     radius, lam, zeta = 2.0, 0.5, 1.0
-    mesh = CylinderGeometry(radius=radius, length=4.0).generate(maxh=0.1)
+    mesh = CylinderGeometry(radius_nm=radius, length_nm=4.0).generate(maxh_nm=0.1)
     natural = solve_pb(
         mesh,
-        AXI,
+        AXISYMMETRIC,
         debye_length_nm=lam,
         dirichlet="wall",
         boundary_values=ngs.CF(zeta),
@@ -93,7 +99,7 @@ def test_ver13_axis_condition_is_natural_not_dirichlet() -> None:
     )
     pinned = solve_pb(
         mesh,
-        AXI,
+        AXISYMMETRIC,
         debye_length_nm=lam,
         dirichlet="wall|axis",
         boundary_values=mesh.BoundaryCF({"wall": zeta, "axis": 0.0}),
@@ -107,7 +113,7 @@ def test_ver13_axis_condition_is_natural_not_dirichlet() -> None:
 def test_ver12_gouy_chapman_profile() -> None:
     """phi~(x) = 4 artanh( tanh(zeta~/4) exp(-x/lambda) ), the nonlinear 1:1 solution."""
     concentration_M = 0.1
-    lam = debye_length(concentration_M)
+    lam = debye_length_nm(concentration_M)
     width, zeta = 20.0 * lam, 2.0
     samples = np.linspace(0.0, width, 401)
     exact = 4.0 * np.arctanh(math.tanh(0.25 * zeta) * np.exp(-samples / lam))
@@ -115,7 +121,7 @@ def test_ver12_gouy_chapman_profile() -> None:
 
     errors = []
     for maxh in (lam / 2.0, lam / 4.0, lam / 8.0):
-        mesh = SlabGeometry(width=width, height=lam).generate(maxh=maxh)
+        mesh = SlabGeometry(width_nm=width, height_nm=lam).generate(maxh_nm=maxh)
         solution = solve_pb(
             mesh,
             PLANAR,
@@ -147,33 +153,38 @@ def test_ver12_grahame_surface_charge() -> None:
     instead of fixing an extraction.
     """
     concentration_M, zeta = 0.1, 2.0
-    lam = debye_length(concentration_M)
-    height = lam
-    mesh = SlabGeometry(width=20.0 * lam, height=height).generate(maxh=lam / 8.0)
-    space = ngs.H1(mesh, order=2, dirichlet="wall|bulk")
-    solution = ngs.GridFunction(space)
-    solution.Set(
-        mesh.BoundaryCF({"wall": zeta, "bulk": 0.0}), definedon=mesh.Boundaries("wall|bulk")
+    lam = debye_length_nm(concentration_M)
+    height_nm = lam
+    mesh = SlabGeometry(width_nm=20.0 * lam, height_nm=height_nm).generate(maxh_nm=lam / 8.0)
+    solution = solve_pb(
+        mesh,
+        PLANAR,
+        debye_length_nm=lam,
+        dirichlet="wall|bulk",
+        boundary_values=mesh.BoundaryCF({"wall": zeta, "bulk": 0.0}),
+        nonlinear=True,
     )
+
+    # The reaction flux needs the residual form on the space the solve used,
+    # which solve_pb owns; it is rebuilt here from the same term rather than
+    # duplicating the driver, so WP3's damped Newton replaces it in one place.
+    space = solution.space
     trial, test = space.TnT()
     residual = ngs.BilinearForm(space)
     residual += nonlinear_pb_residual(trial, test, PLANAR, debye_length_nm=lam)
-    converged, _ = Newton(
-        residual, solution, freedofs=space.FreeDofs(), maxit=50, inverse="umfpack", printing=False
-    )
-    assert converged == 0
 
-    permittivity = VACUUM_PERMITTIVITY * 78.15
+    permittivity = VACUUM_PERMITTIVITY * ELECTROLYTE_PERMITTIVITY
     concentration_SI = concentration_M * 1e3
-    grahame = math.sqrt(8.0 * permittivity * GAS_CONSTANT * 298.15 * concentration_SI) * math.sinh(
-        0.5 * zeta
-    )
+    grahame = math.sqrt(
+        8.0 * permittivity * GAS_CONSTANT * REFERENCE_TEMPERATURE_K * concentration_SI
+    ) * math.sinh(0.5 * zeta)
 
     # The reaction flux is int_wall (grad phi~ . n) ds with n pointing out of
     # the electrolyte; sigma_s = -eps dphi/dx at the wall, and the field is in
-    # V_T and nm, so both scales come back in here.
+    # V_T and nm, so both scales come back in here. The PB residual has no
+    # right-hand side, so no load form is passed.
     flux = boundary_reaction_flux(residual, solution, "wall")
-    computed = permittivity * thermal_voltage() * (flux / height) * 1e9
+    computed = permittivity * thermal_voltage() * (flux / height_nm) * 1e9
 
     assert computed == pytest.approx(grahame, rel=1e-4)
     assert computed > 0.0, "a positive wall potential implies a positive surface charge"
