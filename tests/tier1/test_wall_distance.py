@@ -12,6 +12,18 @@ ACCURACY_TOL_NM = 5e-3
 JUMP_TOL = 1e-2
 """Stated C1 tolerance: the normalised facet jump of grad(d) (NUM-31)."""
 
+WALL_ZERO_TOL_NM = 1e-9
+"""Roundoff allowance on d evaluated on the wall itself.
+
+The constrained degrees of freedom are zeroed exactly, and that is asserted
+exactly below. Evaluating the field *at* a boundary point is a different thing:
+the point is located inside an element, and the reference coordinate it maps to
+is only zero to floating-point roundoff, so the interior shape functions
+contribute a platform-dependent residue - order 1e-16 or smaller here. This
+tolerance is five orders below the few times 1e-4 an unzeroed projection leaves
+behind, which is the defect the test exists to catch.
+"""
+
 
 @pytest.fixture(scope="module")
 def cylinder():
@@ -36,9 +48,21 @@ def test_ver06_distance_vanishes_on_the_wall_and_is_never_negative(cylinder) -> 
     constrained degrees of freedom are zeroed rather than left to the projection.
     """
     distance = wall_distance(cylinder, "wall")
-    assert distance(cylinder(2.0, 2.0)) == 0.0
+
+    # The exact guarantee: every degree of freedom on the wall is zeroed.
+    on_wall = distance.space.GetDofs(cylinder.Boundaries("wall"))
+    coefficients = np.asarray(distance.vec.FV())
+    wall_coefficients = coefficients[np.fromiter(on_wall, dtype=bool, count=len(coefficients))]
+    assert wall_coefficients.size > 0
+    assert np.all(wall_coefficients == 0.0)
+
+    # And the field those degrees of freedom carry vanishes along the whole wall,
+    # to the roundoff of evaluating at a point on it.
+    on_the_wall = [distance(cylinder(2.0, float(z))) for z in np.linspace(0.0, 4.0, 41)]
+    assert max(abs(value) for value in on_the_wall) < WALL_ZERO_TOL_NM
+
     sampled = [distance(cylinder(float(r), 2.0)) for r in np.linspace(0.0, 2.0, 81)]
-    assert min(sampled) >= 0.0
+    assert min(sampled) >= -WALL_ZERO_TOL_NM
 
 
 def test_ver06_gradient_is_continuous_to_the_stated_tolerance(cylinder) -> None:
