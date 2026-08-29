@@ -31,14 +31,26 @@ Symmetry: TypeAlias = Literal["axisymmetric", "planar"]
 SINGULAR_MIN_ORDER = 3
 """Minimum integration order for any form carrying a ``1/r`` factor (NUM-07)."""
 
+NGSOLVE_INTEGRATE_ORDER = 5
+"""The order ``ngsolve.Integrate`` uses when none is given.
+
+``integrate`` below passes an explicit order, which *replaces* NGSolve's default
+rather than adding to it, so the order it computes is floored here. Without the
+floor, routing an integral through this class would be less accurate than the
+bare ``ngsolve.Integrate`` it wraps: at ``element_order = 2`` the computed order
+is 2, and integrating ``x**3`` over the unit square then returns 0.20005 for an
+exact 0.2.
+"""
+
 
 def _gradient_default_order(element_order: int) -> int:
     """Return the integration order NGSolve uses for a gradient-gradient term.
 
-    Assumed conservatively as ``2 * (p - 1)``: two P2 gradients integrate at
-    order 2, which is *below* the singular minimum and is exactly how a ``1/r``
-    term ends up sampled at the axis. Being conservative here costs a few
-    quadrature points and buys the guarantee.
+    Assumed as ``2 * (p - 1)``: two P2 gradients integrate at order 2, which is
+    *below* the singular minimum and is exactly how a ``1/r`` term ends up
+    sampled at the axis. This is a model of NGSolve's own estimate and cannot be
+    relied on to be conservative, which is why the singular bonus of
+    ``bonus_order`` no longer measures a deficit against it.
     """
     return 2 * max(element_order - 1, 1)
 
@@ -77,15 +89,24 @@ class Measures:
         """
         bonus = extra
         if singular:
-            deficit = SINGULAR_MIN_ORDER - _gradient_default_order(self.element_order)
-            bonus = max(bonus, deficit, 0)
+            # The bonus alone must reach the minimum. ``bonus_intorder`` is added
+            # to the order NGSolve estimates for the integrand, and that estimate
+            # is not knowable here - for a quotient it can be as low as 2. A
+            # bonus computed as a deficit against ``_gradient_default_order``
+            # comes out zero for every ``element_order >= 3``, which would leave
+            # the NUM-07 guarantee resting entirely on that estimate.
+            bonus = max(bonus, SINGULAR_MIN_ORDER)
         return bonus
 
     def integration_order(self, *, singular: bool = False, extra: int = 0) -> int:
-        """Return the guaranteed lower bound on the integration order of a term."""
-        return _gradient_default_order(self.element_order) + self.bonus_order(
-            singular=singular, extra=extra
-        )
+        """Return the order :meth:`integrate` evaluates at.
+
+        Floored at ``NGSOLVE_INTEGRATE_ORDER`` so that going through this class
+        is never coarser than calling ``ngsolve.Integrate`` directly, and raised
+        by the bonus of :meth:`bonus_order` on top of that.
+        """
+        base = max(_gradient_default_order(self.element_order), NGSOLVE_INTEGRATE_ORDER)
+        return base + self.bonus_order(singular=singular, extra=extra)
 
     def volume(
         self,

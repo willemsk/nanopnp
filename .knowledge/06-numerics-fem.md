@@ -274,8 +274,8 @@ Three ways this project's own code was wrong while raising nothing. All reproduc
 substitutes the state vector. Written the intuitive way —
 
 ```python
-a += (grad(gfu)*grad(v) + sinh(gfu)*v)*dx      # WRONG: Jacobian is identically zero
-a += (grad(u)*grad(v)   + sinh(u)*v)*dx        # right, with u = V.TrialFunction()
+a += (grad(gfu) * grad(v) + sinh(gfu) * v) * dx  # WRONG: Jacobian is identically zero
+a += (grad(u) * grad(v) + sinh(u) * v) * dx  # right, with u = V.TrialFunction()
 ```
 
 — the assembled Jacobian is **all zeros**, with no warning. Newton then fails inside the linear
@@ -293,6 +293,27 @@ modelling difference, not a bug. Build the indicator by interpolation instead:
 Interpolating `-sqrt(t)*log(w)` for the wall-distance field left `d ≈ -4e-4 nm` *on* the wall
 instead of 0. Small, but `f^w_D(0) = 0.0601` is 6 % of its bulk value, so a slightly negative `d`
 shifts the near-wall diffusivity by percent. Zero the constrained DOFs explicitly afterwards.
+
+**4. `Integrate`'s `order=` replaces NGSolve's default of 5, it does not raise it.**
+`ngsolve.Integrate(cf, mesh)` uses order 5 when none is given. A helper that computes an order and
+passes it explicitly therefore *lowers* the accuracy of every integral that did not need raising:
+integrating `x^3` over the unit square at the order-2 rule returns 0.20005 for an exact 0.2, while
+the bare call returns 0.2 to machine precision. Any wrapper around `Integrate` must floor its
+computed order at 5. **[tested]**
+
+**5. `bonus_intorder` is added to NGSolve's own estimate for the integrand, which is not knowable.**
+So a minimum integration order cannot be guaranteed by passing the *deficit* between that minimum
+and an assumed base — the assumption is unverifiable, and for a quotient NGSolve's estimate can be
+as low as 2. A guarantee of order `n` has to come from a bonus of `n` on its own. Measured orders
+for the axis trap: order 2 gives NaN on `1/r`, orders 3, 4, 5 and 8 do not. **[tested]**
+
+**6. The reaction flux is the residual `a(u,v) - f(v)`, so the load form must be subtracted.**
+`BilinearForm.Apply` gives `a(u, ·)` alone. Omitting `f` on a problem with a source biases the flux
+by `int f psi` over the boundary-adjacent elements: for `-lap(phi) = 1` on the unit square with two
+constrained sides, the closed boundary integral of `dphi/dn` came back as −0.913 instead of the
+exact −1. Poisson-Boltzmann hides this, having a zero right-hand side. The identity also holds only
+where the solve *constrained* the boundary; asked for a free one, the residual returns a plausible
+non-zero number instead of the flux. **[tested]**
 
 ### 8.2 Measured: the reaction flux really is worth it
 

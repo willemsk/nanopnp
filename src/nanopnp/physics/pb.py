@@ -23,6 +23,12 @@ from __future__ import annotations
 
 import math
 
+from nanopnp.core.constants import (
+    FARADAY,
+    GAS_CONSTANT,
+    REFERENCE_TEMPERATURE_K,
+    VACUUM_PERMITTIVITY,
+)
 from nanopnp.core.typing import Expression, GridFunction, IntegralTerm, Mesh
 from nanopnp.physics.measures import Measures
 from nanopnp.physics.poisson import poisson_operator
@@ -31,12 +37,20 @@ from nanopnp.solve.linear import DEFAULT_SOLVER, solve_linear
 NEWTON_MAX_ITERATIONS = 50
 """Iteration cap for the interim nonlinear driver below."""
 
+ELECTROLYTE_PERMITTIVITY = 78.15
+"""``eps_r,f0``, the infinite-dilution relative permittivity of the electrolyte.
 
-def debye_length(
+Gavish 2016, via SPECIFICATION.md section 8.2 and
+``.knowledge/01-physics-epnpns.md`` section 4; it is the ``P0`` of the
+``permittivity`` correction in ``data/corrections/willems2020_nacl.yaml``.
+"""
+
+
+def debye_length_nm(
     concentration_M: float,
     *,
-    relative_permittivity: float = 78.15,
-    temperature_K: float = 298.15,
+    relative_permittivity: float = ELECTROLYTE_PERMITTIVITY,
+    temperature_K: float = REFERENCE_TEMPERATURE_K,
     valence: int = 1,
 ) -> float:
     """Return the Debye length in nm for a symmetric ``z:z`` electrolyte.
@@ -60,8 +74,6 @@ def debye_length(
     ValueError
         If the concentration is not positive.
     """
-    from nanopnp.core.constants import FARADAY, GAS_CONSTANT, VACUUM_PERMITTIVITY
-
     if concentration_M <= 0.0:
         raise ValueError(f"concentration must be positive, got {concentration_M} M")
     permittivity = VACUUM_PERMITTIVITY * relative_permittivity
@@ -125,8 +137,8 @@ def solve_pb(
     mesh
         Meshed domain.
     measures
-        Symmetry and quadrature policy; its ``element_order`` should match
-        ``order``.
+        Symmetry and quadrature policy; its ``element_order`` must match
+        ``order``, which is checked.
     debye_length_nm
         Debye length in mesh units.
     dirichlet
@@ -146,6 +158,13 @@ def solve_pb(
     GridFunction
         The converged ``phi~``.
 
+    Raises
+    ------
+    ValueError
+        If ``measures.element_order`` does not match ``order``.
+    RuntimeError
+        If the nonlinear branch does not converge.
+
     Notes
     -----
     The nonlinear branch uses NGSolve's own damped Newton as an interim driver.
@@ -154,6 +173,13 @@ def solve_pb(
     """
     import ngsolve as ngs
     from ngsolve.solvers import Newton
+
+    if measures.element_order != order:
+        raise ValueError(
+            f"measures.element_order is {measures.element_order} but the space is order {order}; "
+            "the quadrature bonus of NUM-07 is computed from the element order, so a mismatch "
+            "under-integrates the forms it is meant to protect"
+        )
 
     space = ngs.H1(mesh, order=order, dirichlet=dirichlet)
     potential = ngs.GridFunction(space, name="phi_tilde")

@@ -16,14 +16,15 @@ JUMP_TOL = 1e-2
 @pytest.fixture(scope="module")
 def cylinder():
     """Return a cylinder mesh, where the exact distance is a - r."""
-    return CylinderGeometry(radius=2.0, length=4.0).generate(maxh=0.1)
+    return CylinderGeometry(radius_nm=2.0, length_nm=4.0).generate(maxh_nm=0.1)
 
 
 def test_ver06_distance_matches_the_exact_field_near_the_wall(cylinder) -> None:
     """The distance reproduces a - r, over the range where f^w actually varies."""
     distance = wall_distance(cylinder, "wall")
+    # 0.5 nm is the innermost radius of the 1.5 nm band where f^w still varies.
     radii = np.linspace(0.5, 2.0, 61)
-    errors = [abs(distance(cylinder(float(r), 2.0)) - (2.0 - r)) for r in radii if 2.0 - r <= 1.5]
+    errors = [abs(distance(cylinder(float(r), 2.0)) - (2.0 - r)) for r in radii]
     assert max(errors) < ACCURACY_TOL_NM
 
 
@@ -49,7 +50,7 @@ def test_ver06_gradient_is_continuous_to_the_stated_tolerance(cylinder) -> None:
 
 def test_ver06_further_mollification_reduces_the_jump(cylinder) -> None:
     """The smoothing pass does what it claims, so it is worth having on a real mesh."""
-    distance = wall_distance(cylinder, "wall", diffusion_length=0.1)
+    distance = wall_distance(cylinder, "wall", diffusion_length_nm=0.1)
     smoothed = mollify(distance, 0.2, sources="wall")
     assert gradient_jump(smoothed) < gradient_jump(distance)
 
@@ -62,8 +63,8 @@ def test_ver06_membrane_is_not_a_distance_source() -> None:
     the reference model measured from the pore boundaries only.
     """
     mesh = CylindricalPoreGeometry(
-        pore_radius=2.0, membrane_thickness=13.0, reservoir_radius=30.0
-    ).generate(maxh=2.0, wall_h=0.15)
+        pore_radius_nm=2.0, membrane_thickness_nm=13.0, reservoir_radius_nm=30.0
+    ).generate(maxh_nm=2.0, wall_h_nm=0.15)
     distance = wall_distance(mesh, "wall")
 
     at_pore_wall = distance(mesh(1.9, 0.0))
