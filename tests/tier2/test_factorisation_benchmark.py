@@ -25,7 +25,6 @@ from __future__ import annotations
 
 import gc
 import logging
-import resource
 import sys
 import time
 from dataclasses import dataclass
@@ -57,8 +56,18 @@ def peak_memory_MB() -> float:
     fit on a laptop", and it is why the scaling study behind these numbers ran
     one configuration per process.
 
-    ``ru_maxrss`` is in kilobytes on Linux and in bytes on macOS.
+    ``ru_maxrss`` is in kilobytes on Linux and in bytes on macOS. ``resource``
+    is a Unix module with no standard-library equivalent on Windows, so the
+    figure is NaN there rather than guessed at; nothing asserts on it, the
+    numbers go to the log. The import is deferred for the same reason: at module
+    scope it fails collection on Windows even though these tests are deselected,
+    because pytest imports a module before it reads its markers.
     """
+    if sys.platform == "win32":
+        return float("nan")
+
+    import resource
+
     raw = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
     return raw / (1024.0 * 1024.0) if sys.platform == "darwin" else raw / 1024.0
 
