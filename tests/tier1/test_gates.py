@@ -83,11 +83,19 @@ def test_ver08_positivity_gate_names_the_species_and_the_location(
 
 
 def test_ver08_positivity_gate_rejects_exactly_zero(sampler: FieldSampler) -> None:
-    """NUM-17 asks for ``min_i c_i > 0``, strictly: ``ln c`` is undefined at zero."""
-    concentration = ngs.GridFunction(_space(sampler))
-    concentration.Set(ngs.x)  # zero on the wall at x = 0
-    with pytest.raises(GateViolationError, match="positivity"):
-        PositivityGate(sampler, {"c_Cl": concentration}).check()
+    """NUM-17 asks for ``min_i c_i > 0``, strictly: ``ln c`` is undefined at zero.
+
+    The field is the coordinate itself and not a ``GridFunction`` projection of
+    it. ``Set`` projects element-wise, so the wall value comes back as round-off
+    rather than zero (about -3e-16 on Linux and a positive value of the same size
+    on macOS and Windows) and the test would then assert the sign of that
+    round-off rather than the strictness of the gate. Evaluating the coefficient
+    function samples ``x = 0`` exactly on every platform.
+    """
+    with pytest.raises(GateViolationError, match="positivity") as caught:
+        PositivityGate(sampler, {"c_Cl": ngs.x}).check()  # exactly zero on the wall
+
+    assert caught.value.value == 0.0
 
 
 def test_ver08_packing_gate_passes_at_a_realistic_concentration(

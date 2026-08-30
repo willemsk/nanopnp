@@ -341,6 +341,11 @@ modelling difference, not a bug. Build the indicator by interpolation instead:
 Interpolating `-sqrt(t)*log(w)` for the wall-distance field left `d ≈ -4e-4 nm` *on* the wall
 instead of 0. Small, but `f^w_D(0) = 0.0601` is 6 % of its bulk value, so a slightly negative `d`
 shifts the near-wall diffusivity by percent. Zero the constrained DOFs explicitly afterwards.
+**The sign of that round-off is platform-dependent**, so no test may assert it: projecting `x` onto
+P2 on the slab leaves −3.5e−16 at the wall on Linux and a positive value of the same size on macOS
+and Windows, which silently turned a strict `c > 0` gate test green on one platform and red on the
+other two. Sample the coefficient function itself when a test needs an exact boundary value.
+**[tested]**
 
 **4. `Integrate`'s `order=` replaces NGSolve's default of 5, it does not raise it.**
 `ngsolve.Integrate(cf, mesh)` uses order 5 when none is given. A helper that computes an order and
