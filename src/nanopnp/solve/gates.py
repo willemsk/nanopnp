@@ -29,9 +29,10 @@ from __future__ import annotations
 import logging
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
-import numpy as np
+if TYPE_CHECKING:
+    import numpy as np
 
 from nanopnp.core.constants import AVOGADRO
 from nanopnp.core.typing import Expression, Mesh
@@ -129,6 +130,7 @@ class FieldSampler:
     def _build_points(self) -> np.ndarray:
         """Collect vertices, edge midpoints and centroids of every element."""
         import ngsolve as ngs
+        import numpy as np
 
         corners = np.array(
             [[self.mesh[v].point for v in el.vertices] for el in self.mesh.Elements(ngs.VOL)]
@@ -144,24 +146,32 @@ class FieldSampler:
 
     def evaluate(self, expression: Expression) -> np.ndarray:
         """Return ``expression`` evaluated at every sample point, as a flat array."""
+        import numpy as np
+
         points = self.points
         mesh_points = self.mesh(points[:, 0], points[:, 1])
         return np.asarray(expression(mesh_points)).reshape(len(points), -1)[:, 0]
 
     def minimum(self, expression: Expression) -> tuple[float, tuple[float, float]]:
         """Return the smallest sampled value of ``expression`` and where it occurred."""
+        import numpy as np
+
         values = self.evaluate(expression)
         index = int(np.argmin(values))
         return float(values[index]), (float(self.points[index, 0]), float(self.points[index, 1]))
 
     def maximum(self, expression: Expression) -> tuple[float, tuple[float, float]]:
         """Return the largest sampled value of ``expression`` and where it occurred."""
+        import numpy as np
+
         values = self.evaluate(expression)
         index = int(np.argmax(values))
         return float(values[index]), (float(self.points[index, 0]), float(self.points[index, 1]))
 
     def maximum_magnitude(self, expression: Expression) -> tuple[float, tuple[float, float]]:
         """Return the largest sampled ``|expression|`` and where it occurred."""
+        import numpy as np
+
         values = np.abs(self.evaluate(expression))
         index = int(np.argmax(values))
         return float(values[index]), (float(self.points[index, 0]), float(self.points[index, 1]))
