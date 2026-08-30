@@ -22,7 +22,9 @@ from __future__ import annotations
 from nanopnp.core.typing import AssembledForm, FESpace, GridFunction
 
 
-def boundary_indicator(space: FESpace, boundary: str) -> GridFunction:
+def boundary_indicator(
+    space: FESpace, boundary: str, *, component: int | None = None
+) -> GridFunction:
     """Return the finite-element function equal to 1 on ``boundary`` and 0 elsewhere.
 
     It must be built by interpolation, never by setting the boundary degrees of
@@ -32,11 +34,21 @@ def boundary_indicator(space: FESpace, boundary: str) -> GridFunction:
     and a reaction flux normalised on that assumption is wrong by 8.3 % at every
     refinement level - a mesh-independent error that looks convincingly like a
     modelling difference rather than a bug.
+
+    On a product space, ``component`` selects the field whose flux is wanted and
+    leaves every other block at zero, so that the inner product picks out one
+    equation's residual rather than the sum over all of them. It is also the
+    only way to interpolate at all there: a compound space has no boundary
+    evaluator of its own, and ``Set`` on it raises.
     """
     import ngsolve as ngs
 
     indicator = ngs.GridFunction(space, name=f"psi_{boundary}")
-    indicator.Set(ngs.CF(1.0), definedon=space.mesh.Boundaries(boundary))
+    region = space.mesh.Boundaries(boundary)
+    if component is None:
+        indicator.Set(ngs.CF(1.0), definedon=region)
+    else:
+        indicator.components[component].Set(ngs.CF(1.0), definedon=region)
     return indicator
 
 
@@ -45,6 +57,7 @@ def boundary_reaction_flux(
     solution: GridFunction,
     boundary: str,
     *,
+    component: int | None = None,
     load_form: AssembledForm | None = None,
 ) -> float:
     """Return the reaction flux of a converged solution through one boundary.
@@ -59,6 +72,12 @@ def boundary_reaction_flux(
     boundary
         Boundary-name regular expression to integrate over. Its degrees of
         freedom must be the constrained ones of the solve, which is checked.
+    component
+        Index of the field to take the flux of, on a product space. The check
+        and the indicator are then made on that component's own space, so a
+        coupled solve whose *other* fields are free on the boundary — the
+        blocked anion of VER-16 is exactly that — still yields the flux of the
+        field that is constrained there.
     load_form
         The assembled ``LinearForm`` of the problem, if it has one. The residual
         is ``a(u, v) - f(v)``; omitting ``f`` where the problem has a source
@@ -84,11 +103,12 @@ def boundary_reaction_flux(
 
     space = solution.space
     mesh = space.mesh
-    on_boundary = space.GetDofs(mesh.Boundaries(boundary))
+    field_space = space if component is None else space.components[component]
+    on_boundary = field_space.GetDofs(mesh.Boundaries(boundary))
     if on_boundary.NumSet() == 0:
         known = ", ".join(sorted(set(mesh.GetBoundaries())))
         raise ValueError(f"no boundary matching {boundary!r} in this mesh; it has {known}")
-    still_free = on_boundary & space.FreeDofs()
+    still_free = on_boundary & field_space.FreeDofs()
     if still_free.NumSet() != 0:
         raise ValueError(
             f"{still_free.NumSet()} of the {on_boundary.NumSet()} degrees of freedom on "
@@ -100,5 +120,5 @@ def boundary_reaction_flux(
     residual_form.Apply(solution.vec, residual)
     if load_form is not None:
         residual.data = residual - load_form.vec
-    indicator = boundary_indicator(space, boundary)
+    indicator = boundary_indicator(space, boundary, component=component)
     return float(ngs.InnerProduct(residual, indicator.vec))

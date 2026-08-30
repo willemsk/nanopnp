@@ -54,6 +54,24 @@ WATER_DIAMETER_NM = 0.311
 PACKING_LIMIT = 1.0
 """``Phi`` at which ``beta_i`` is singular (PHY-06)."""
 
+INTERIOR_OFFSET = 1e-4
+"""How far a restricted sampler pulls its points towards their element's centroid.
+
+A vertex or edge midpoint on the fluid/solid interface belongs to elements on
+both sides, and NGSolve's point location may resolve it into the solid one. A
+concentration lives on the fluid alone, so evaluated there it comes back as
+**zero** — not positive — and the gate would abort on a membrane on every
+realistic mesh before Newton took a step. Contracting each element's sample
+points towards its own centroid by this fraction puts them strictly inside the
+element they came from.
+
+The value is measured rather than chosen for tidiness: at 1e-6 the shifted
+points still resolve into the solid on the analytic pore at both ``maxh`` 6 nm
+and 2 nm, and 1e-5 is the first that does not. 1e-4 keeps an order of margin.
+For a P2 field the sampled value then differs from the nodal one by 1e-4 of the
+field's variation across that element, which no gate threshold can notice.
+"""
+
 PACKING_WARNING = 0.8
 """Where to start logging that the steric term is approaching its singularity.
 
@@ -112,10 +130,17 @@ class FieldSampler:
         The mesh to sample.
     coordinates
         Names of the two coordinates, used only in diagnostics.
+    materials
+        Material-name regular expression restricting the sample set to those
+        domains. Required whenever the sampled field lives on a subdomain: a
+        finite-element function evaluated outside its own ``definedon`` region
+        comes back as zero, and a concentration gate sampling the membrane would
+        then abort on a solid, reporting a violation that does not exist.
     """
 
     mesh: Mesh
     coordinates: tuple[str, str] = ("r", "z")
+    materials: str | None = None
     _points: np.ndarray | None = field(default=None, init=False, repr=False, compare=False)
     _located: Expression | None = field(default=None, init=False, repr=False, compare=False)
 
@@ -142,18 +167,49 @@ class FieldSampler:
         return self._located
 
     def _build_points(self) -> np.ndarray:
-        """Collect vertices, edge midpoints and centroids of every element."""
+        """Collect vertices, edge midpoints and centroids of every element.
+
+        Raises
+        ------
+        ValueError
+            If ``materials`` selects no domain, which would leave the gate with
+            nothing to sample and its assertion vacuous.
+        """
         import ngsolve as ngs
         import numpy as np
 
-        corners = np.array(
-            [[self.mesh[v].point for v in el.vertices] for el in self.mesh.Elements(ngs.VOL)]
-        )
+        elements = self.mesh.Elements(ngs.VOL)
+        if self.materials is not None:
+            selected = self.mesh.Materials(self.materials).Mask()
+            if selected.NumSet() == 0:
+                known = ", ".join(sorted(set(self.mesh.GetMaterials())))
+                raise ValueError(
+                    f"no material matching {self.materials!r} in this mesh; it has {known}"
+                )
+            elements = [el for el in elements if selected[el.index]]
+        corners = np.array([[self.mesh[v].point for v in el.vertices] for el in elements])
         centroids = corners.mean(axis=1)
         midpoints = np.concatenate(
             [0.5 * (corners[:, a, :] + corners[:, b, :]) for a, b in ((0, 1), (1, 2), (2, 0))]
         )
-        stacked = np.concatenate([corners.reshape(-1, 2), midpoints, centroids])
+        if self.materials is None:
+            stacked = np.concatenate([corners.reshape(-1, 2), midpoints, centroids])
+        else:
+            # Keep every point inside the element that contributed it; see
+            # INTERIOR_OFFSET. Deduplication no longer merges the copies a shared
+            # vertex produces, which is the cost of the guarantee.
+            pull = np.concatenate([corners.reshape(-1, 2), midpoints, centroids])
+            owners = np.concatenate(
+                [
+                    # corners.reshape runs element by element; the midpoint
+                    # blocks run edge by edge over all elements. The two need
+                    # different repetitions of the centroid array to line up.
+                    np.repeat(centroids, corners.shape[1], axis=0),
+                    np.tile(centroids, (3, 1)),
+                    centroids,
+                ]
+            )
+            stacked = pull + INTERIOR_OFFSET * (owners - pull)
         rounded = np.round(stacked, 12)
         rounded[rounded == 0.0] = 0.0  # collapse -0.0, which reads as a bug in a diagnostic
         return np.unique(rounded, axis=0)

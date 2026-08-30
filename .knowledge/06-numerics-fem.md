@@ -314,7 +314,7 @@ target that is a pore average must state which convention it uses.
 
 ## 8.1 NGSolve traps found by implementing this — all silent
 
-Nine ways this project's own code was wrong while raising nothing. All reproduced on NGSolve
+Twelve ways this project's own code was wrong while raising nothing. All reproduced on NGSolve
 6.2.2606. **[tested]**
 
 **1. A nonlinear form must be written in the trial function, not the grid function.**
@@ -391,6 +391,31 @@ UMFPACK on the same 1.5e4-dof system, with residuals of 5e3 and 6e20. So `np.isf
 **not** evidence that a factorisation is usable; assert on the residual `‖Ax − b‖`, which is 1e-13
 once the reservoir caps are constrained. **[tested]**
 
+**10. `GridFunction.Set(cf, definedon=region)` zeroes every degree of freedom outside `region`.**
+It is an interpolation onto the whole function, not a write into part of it. So the natural order —
+write an initial guess over the domain, then apply the essential boundary data — silently discards
+the initial guess, and a coupled solve starts from `c_i = 0`, which the NUM-17 positivity gate then
+(correctly) aborts on before Newton takes a step. The same call on a warm start discards the state
+being warm-started from, which is worse, because that one converges to something plausible.
+Interpolate onto a scratch function and copy only the region's degrees of freedom:
+`gf.vec.data = Projector(dofs, False) * gf.vec + Projector(dofs, True) * scratch.vec`. **[tested]**
+
+**11. A point on a facet shared by two elements may be located in either of them, so a field
+defined on a subdomain reads zero there.** The NUM-17 gates sample the P2 nodal set; a node on the
+fluid/membrane interface belongs to elements on both sides, and `mesh(r, z)` may resolve it into
+the membrane, where `c_i` is not defined and evaluates to 0 — not positive. Filtering the *elements*
+by material is not enough, because the node still has the interface's coordinates. Pulling each
+element's sample points a small fraction towards that element's own centroid fixes it; the fraction
+has to be big enough to beat the location tolerance. Measured on the analytic pore at `maxh` 6 nm
+and 2 nm: 1e-6 still resolves into the solid, 1e-5 is the first that does not, and 1e-4 leaves an
+order of margin while moving a P2 value by 1e-4 of its variation across the element. **[tested]**
+
+**12. `GridFunction.Set` on a compound space raises rather than dispatching to the components.**
+`gf.Set(CF(1.0), definedon=mesh.Boundaries(name))` on a product space raises `CompoundFESpace does
+not have an evaluator for BND!`. Build the boundary indicator of NUM-25 on one component —
+`gf.components[i].Set(...)` — which is what you want anyway: the inner product with the residual
+then picks out one equation's flux rather than the sum over all of them. **[tested]**
+
 ### 8.2 Measured: the reaction flux really is worth it
 
 Gouy-Chapman at 0.1 M, ζ̃ = 2, P2, planar slab. Wall gradient recovered two ways and compared with
@@ -417,6 +442,20 @@ gradient- or cross-section-based extraction.
   False, and `inverse="pardiso"` raises "MKL Pardiso is not available". So the default direct path
   of NUM-21 is available out of the box; only the GPL-2+ licensing of UMFPACK is at issue, not its
   presence. **[tested]**
+- **The coupled axisymmetric system converges at the Taylor-Hood rates under MMS.** Manufactured
+  `φ, c_i, u, p` on a 2 × 4 nm cylinder, constant transport coefficients with the steric `β_i`
+  retained, `maxh` 0.4 → 0.2 → 0.1 nm (2 × 10⁴ DOF at the finest). Relative `r`-weighted L² rates:
+  2.9–3.6 for `φ`, 3.0–4.0 for `c_i`, 3.0–3.5 for `u`, and **2.7 for `p`**. The pressure rate is the
+  P1 half of the P2/P1 pair, not a shortfall — asserting O(h³) there would be asserting something
+  untrue of a correct solver. **[tested]**
+- **`CoefficientFunction.Diff` and `Operator("hesse")` both work on a component of a product
+  space**, and `Diff` works with respect to a `GridFunction` as well as a trial proxy. That is what
+  makes the PHY-23 dielectric terms expressible: `∇ε_r = Σ_i (∂ε_r/∂c_i) ∇c_i` by the chain rule,
+  with the sensitivities taken symbolically rather than by finite differences. **[tested]**
+- **A `BilinearForm` term carrying no trial function assembles and linearises correctly.**
+  `a += (-f*v)*dx` with `f` a coefficient function contributes to `Apply` and contributes nothing to
+  `AssembleLinearization`, which is exactly right for a manufactured or body source in a nonlinear
+  residual. There is no need for a separate `LinearForm` on the Newton path. **[tested]**
 - **Varadhan screened-Poisson distance is accurate enough.** `w - t Δw = 0`, `w = 1` on the source,
   `d = -√t ln w`, solved **planar** in (r, z) — for a surface of revolution the meridian-plane
   distance *is* the 3D distance. Against the exact `a - r` of a cylinder, within 1.5 nm of the

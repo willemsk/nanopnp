@@ -27,6 +27,7 @@ dependencies = [
     "pydantic>=2.7",
     "meshio>=5.3",
     "h5py>=3.10",
+    "sympy>=1.14.0",
 ]
 
 [project.optional-dependencies]
@@ -126,6 +127,7 @@ module = [
     "gridData.*",
     "pdb2pqr.*",
     "gmsh",
+    "sympy.*",
 ]
 ignore_missing_imports = true
 

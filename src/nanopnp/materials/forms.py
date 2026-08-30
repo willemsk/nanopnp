@@ -28,6 +28,7 @@ from nanopnp.core.typing import Numeric
 
 __all__ = [
     "FORMS",
+    "NGSOLVE_OPS",
     "NUMPY_OPS",
     "MathOps",
     "NGSolveOps",
@@ -167,7 +168,16 @@ class NGSolveOps:
 
 
 NUMPY_OPS: MathOps = NumpyOps()
-"""Default operation namespace; the symbolic one is built on demand."""
+"""Default operation namespace, for scalars, arrays and the VER-03 tests."""
+
+NGSOLVE_OPS: MathOps = NGSolveOps()
+"""Symbolic operation namespace, for assembly.
+
+Held as a module-level instance beside :data:`NUMPY_OPS` so that a call site
+selects a namespace rather than constructing one: two instances would be
+indistinguishable in behaviour but not in identity, and the forms are compared
+by the namespace they were evaluated with in the differential tests.
+"""
 
 
 def langevin(x: Numeric, ops: MathOps = NUMPY_OPS) -> Numeric:
