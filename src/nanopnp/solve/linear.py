@@ -102,16 +102,57 @@ def solve_linear(
     solver
         Direct solver name; see ``check_solver``.
     """
-    check_solver(solver)
     space = solution.space
     residual = linear.vec.CreateVector()
     residual.data = linear.vec - bilinear.mat * solution.vec
+    correction = linear.vec.CreateVector()
+    solve_correction(bilinear.mat, residual, correction, space.FreeDofs(), solver=solver)
+    solution.vec.data += correction
+
+
+def solve_correction(
+    matrix: Expression,
+    rhs: Expression,
+    correction: Expression,
+    freedofs: Option,
+    *,
+    solver: str = DEFAULT_SOLVER,
+) -> None:
+    """Solve ``matrix @ correction = rhs`` on the free degrees of freedom, in place.
+
+    The single point at which a solver name becomes a factorisation, so that
+    every caller — the linear driver and every Newton step alike — gets the same
+    implementation of the same name. Routing ``superlu`` through here rather than
+    through ``mat.Inverse(inverse="superlu")`` is what keeps the row
+    equilibration of NUM-10 on the coupled Jacobian, where the block-norm spread
+    that motivates it actually lives; NGSolve's own registered SuperLU does not
+    equilibrate.
+
+    The factorisation is a local: it is released on return rather than being held
+    while the next one is built. At the reference mesh size a single UMFPACK
+    factorisation of the five-field system is 6.2 GB (SPECIFICATION.md section
+    6.6), so holding two at once does not fit on the laptop the criterion is
+    measured against.
+
+    Parameters
+    ----------
+    matrix
+        Assembled system matrix.
+    rhs
+        Right-hand-side vector.
+    correction
+        Vector the solution is written into. Zero on the constrained degrees of
+        freedom.
+    freedofs
+        ``BitArray`` of degrees of freedom to solve for.
+    solver
+        Direct solver name; see :func:`check_solver`.
+    """
+    check_solver(solver)
     if solver == "superlu":
-        correction = solve_superlu(bilinear.mat, residual, space.FreeDofs())
-        solution.vec.FV().NumPy()[:] += correction
+        correction.FV().NumPy()[:] = solve_superlu(matrix, rhs, freedofs)
         return
-    inverse = bilinear.mat.Inverse(space.FreeDofs(), inverse=solver)
-    solution.vec.data += inverse * residual
+    correction.data = matrix.Inverse(freedofs, inverse=solver) * rhs
 
 
 def to_scipy(matrix: Expression) -> csr_matrix:
@@ -211,11 +252,14 @@ def diagonal_block_norms(matrix: Expression, space: FESpace) -> dict[str, float]
     dict
         Component index (as ``field_0``, ``field_1``, ...) to block norm.
     """
-    system = abs(to_scipy(matrix))
+    system = to_scipy(matrix)
     ranges = _component_ranges(space)
     norms: dict[str, float] = {}
     for name, (start, stop) in ranges.items():
-        block = system[start:stop, start:stop]
+        # abs() the block, not the whole matrix: the diagonal blocks are a small
+        # fraction of a coupled Jacobian that runs to 6e7 nonzeros at production
+        # size, and the full copy would dominate the cost of the diagnostic.
+        block = abs(system[start:stop, start:stop])
         norms[name] = float(block.sum(axis=1).max()) if block.nnz else 0.0
     return norms
 

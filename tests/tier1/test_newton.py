@@ -38,6 +38,16 @@ WALL_POTENTIAL = 4.0
 """Wall potential in thermal voltages: sinh(4) = 27, so the problem is genuinely nonlinear."""
 
 
+class _AlwaysFails:
+    """A gate that rejects every state, standing in for a positivity failure."""
+
+    name = "test gate"
+
+    def check(self) -> None:
+        """Reject the state unconditionally."""
+        raise GateViolationError(self.name, "c_test", -1.0, (0.5, 0.5), ("x", "y"))
+
+
 @pytest.fixture
 def problem() -> tuple[ngs.Mesh, ngs.FESpace, float]:
     """Return a slab mesh, a P2 space with the wall constrained, and the Debye length."""
@@ -208,17 +218,82 @@ def test_num16_state_gate_violation_stops_the_solve(
     mesh, space, screening_nm = problem
     state = _initial_state(space, mesh)
 
-    class AlwaysFails:
-        """A gate that rejects every state, standing in for a positivity failure."""
+    with pytest.raises(GateViolationError, match="c_test"):
+        damped_newton(_residual_form(space, screening_nm), state, state_gates=[_AlwaysFails()])
+
+
+def test_num17_state_gates_run_on_the_entry_state() -> None:
+    """NUM-17 holds of the state the caller handed in, not only of the steps taken.
+
+    A warm start whose entry residual is already at the floor returns without
+    taking a step (NUM-18 does exactly that at every rung), so a gate checked
+    only after an accepted step would never look at it.
+    """
+    mesh = SlabGeometry(width_nm=1.0).generate(maxh_nm=1.0)
+    space = ngs.H1(mesh, order=1)
+    trial, test = space.TnT()
+    form = ngs.BilinearForm(space)
+    form += trial * test * ngs.dx
+    state = ngs.GridFunction(space)
+    state.vec[:] = 0.0  # residual is exactly zero: no step will be taken
+
+    unconditional = _AlwaysFails()
+    assert damped_newton(form, state).converged
+    with pytest.raises(GateViolationError, match="c_test"):
+        damped_newton(form, state, state_gates=[unconditional])
+
+
+def test_num17_a_state_gate_abort_restores_the_last_admissible_iterate(
+    problem: tuple[ngs.Mesh, ngs.FESpace, float],
+) -> None:
+    """A state gate aborts on the same contract as an increment gate: the state rolls back.
+
+    A continuation driver catches the violation to retry the rung with a smaller
+    ramp; it can only do that if the grid function still holds an admissible
+    warm start rather than the iterate that failed the gate.
+    """
+    mesh, space, screening_nm = problem
+    state = _initial_state(space, mesh)
+    before = state.vec.CreateVector()
+    before.data = state.vec
+
+    class FailsAfterTheFirstStep:
+        """Passes on the entry state and rejects every iterate after it."""
 
         name = "test gate"
 
-        def check(self) -> None:
-            """Reject the state unconditionally."""
-            raise GateViolationError(self.name, "c_test", -1.0, (0.5, 0.5), ("x", "y"))
+        def __init__(self) -> None:
+            self.calls = 0
 
-    with pytest.raises(GateViolationError, match="c_test"):
-        damped_newton(_residual_form(space, screening_nm), state, state_gates=[AlwaysFails()])
+        def check(self) -> None:
+            """Reject every state but the first one seen."""
+            self.calls += 1
+            if self.calls > 1:
+                raise GateViolationError(self.name, "c_test", -1.0, (0.5, 0.5), ("x", "y"))
+
+    with pytest.raises(GateViolationError):
+        damped_newton(
+            _residual_form(space, screening_nm), state, state_gates=[FailsAfterTheFirstStep()]
+        )
+
+    assert ngs.Norm(state.vec - before) == pytest.approx(0.0, abs=1e-14)
+
+
+def test_num17_increment_gates_without_an_increment_are_refused(
+    problem: tuple[ngs.Mesh, ngs.FESpace, float],
+) -> None:
+    """A gate over a grid function the loop never writes would assert nothing."""
+    mesh, space, screening_nm = problem
+    state = _initial_state(space, mesh)
+    orphan = ngs.GridFunction(space)
+    sampler = FieldSampler(mesh, coordinates=("x", "y"))
+
+    with pytest.raises(ValueError, match="without an increment"):
+        damped_newton(
+            _residual_form(space, screening_nm),
+            state,
+            increment_gates=[PotentialIncrementGate(sampler, orphan)],
+        )
 
 
 def test_num16_iteration_cap_raises_with_the_residual_in_the_message(

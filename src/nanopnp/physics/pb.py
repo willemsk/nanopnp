@@ -21,14 +21,9 @@ continuation ladder are cheap and robust enough to initialise everything else.
 
 from __future__ import annotations
 
-import math
+import logging
 
-from nanopnp.core.constants import (
-    FARADAY,
-    GAS_CONSTANT,
-    REFERENCE_TEMPERATURE_K,
-    VACUUM_PERMITTIVITY,
-)
+from nanopnp.core.scaling import REFERENCE_PERMITTIVITY, debye_length_nm
 from nanopnp.core.typing import Expression, GridFunction, IntegralTerm, Mesh
 from nanopnp.physics.measures import Measures
 from nanopnp.physics.poisson import poisson_operator
@@ -36,54 +31,25 @@ from nanopnp.solve.gates import FieldSampler, PotentialIncrementGate
 from nanopnp.solve.linear import DEFAULT_SOLVER, solve_linear
 from nanopnp.solve.newton import DEFAULT_SETTINGS, NewtonSettings, damped_newton
 
-ELECTROLYTE_PERMITTIVITY = 78.15
+__all__ = [
+    "ELECTROLYTE_PERMITTIVITY",
+    "debye_length_nm",
+    "linear_pb_operator",
+    "nonlinear_pb_residual",
+    "solve_pb",
+]
+
+logger = logging.getLogger(__name__)
+
+ELECTROLYTE_PERMITTIVITY = REFERENCE_PERMITTIVITY
 """``eps_r,f0``, the infinite-dilution relative permittivity of the electrolyte.
 
 Gavish 2016, via SPECIFICATION.md section 8.2 and
 ``.knowledge/01-physics-epnpns.md`` section 4; it is the ``P0`` of the
-``permittivity`` correction in ``data/corrections/willems2020_nacl.yaml``.
+``permittivity`` correction in ``data/corrections/willems2020_nacl.yaml``. Held
+once, in ``core.scaling``, so the scaling layer and the forms cannot disagree
+about it.
 """
-
-
-def debye_length_nm(
-    concentration_M: float,
-    *,
-    relative_permittivity: float = ELECTROLYTE_PERMITTIVITY,
-    temperature_K: float = REFERENCE_TEMPERATURE_K,
-    valence: int = 1,
-) -> float:
-    """Return the Debye length in nm for a symmetric ``z:z`` electrolyte.
-
-    ``lambda_D^2 = eps R T / (2 F^2 z^2 c_0)``. Reference values it must
-    reproduce (NUM-09): 1.357 nm at 0.05 M, 0.304 nm at 1 M, 0.175 nm at 3 M.
-
-    Parameters
-    ----------
-    concentration_M
-        Bulk concentration in mol/L.
-    relative_permittivity
-        Electrolyte relative permittivity.
-    temperature_K
-        Absolute temperature.
-    valence
-        Ion valence magnitude.
-
-    Raises
-    ------
-    ValueError
-        If the concentration is not positive.
-    """
-    if concentration_M <= 0.0:
-        raise ValueError(f"concentration must be positive, got {concentration_M} M")
-    permittivity = VACUUM_PERMITTIVITY * relative_permittivity
-    concentration_SI = concentration_M * 1e3  # mol/L -> mol/m^3
-    squared = (
-        permittivity
-        * GAS_CONSTANT
-        * temperature_K
-        / (2.0 * FARADAY**2 * valence**2 * concentration_SI)
-    )
-    return math.sqrt(squared) * 1e9  # m -> nm
 
 
 def linear_pb_operator(
@@ -208,7 +174,7 @@ def solve_pb(
 
     increment = ngs.GridFunction(space, name="delta_phi_tilde")
     sampler = FieldSampler(mesh, coordinates=measures.coordinate_names)
-    damped_newton(
+    result = damped_newton(
         residual,
         potential,
         settings=settings,
@@ -216,4 +182,7 @@ def solve_pb(
         increment=increment,
         increment_gates=[PotentialIncrementGate(sampler, increment)],
     )
+    # The convergence record is what FR-25 asks the manifest to carry; until the
+    # case-file store exists it goes to the log rather than being discarded.
+    logger.debug("nonlinear Poisson-Boltzmann converged: %s", result.summary())
     return potential

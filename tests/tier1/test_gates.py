@@ -196,6 +196,23 @@ def test_sampler_covers_the_p2_nodal_set(sampler: FieldSampler) -> None:
     assert len(corners) == 1
 
 
+def test_ver08_packing_gate_refuses_an_empty_species_mapping(sampler: FieldSampler) -> None:
+    """A gate with nothing to sum asserts nothing; it is a configuration error, not a pass."""
+    with pytest.raises(ValueError, match="at least one species"):
+        PackingFractionGate(sampler, {})
+
+
+def test_sampler_refuses_a_vector_expression(sampler: FieldSampler) -> None:
+    """Keeping only the first component would gate one component and pass the others."""
+    with pytest.raises(ValueError, match="must be scalar"):
+        sampler.minimum(ngs.CF((ngs.x, ngs.y)))
+
+
+def test_sampler_locates_its_points_once(sampler: FieldSampler) -> None:
+    """The point location is cached: the gates re-evaluate at fixed points every step."""
+    assert sampler.located is sampler.located
+
+
 def test_check_all_stops_at_the_first_violation(sampler: FieldSampler) -> None:
     """Gates run in order and the first failure is the one reported."""
     negative = ngs.GridFunction(_space(sampler))

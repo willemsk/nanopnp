@@ -34,6 +34,7 @@ import numpy as np
 import pytest
 
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.physics.measures import AXISYMMETRIC
 from nanopnp.solve.linear import to_scipy
 
 logger = logging.getLogger(__name__)
@@ -46,6 +47,19 @@ SUPERLU_MAXH_NM = 0.9
 
 FLUID = "electrolyte|cis|trans"
 """Materials carrying the concentration, velocity and pressure fields (NUM-01)."""
+
+RESERVOIR = "cis|trans"
+"""Boundaries carrying the essential conditions: the two reservoir caps.
+
+Without them the block system is **singular** — pure-Neumann Poisson has the
+constant null mode and the Stokes block has no way to fix the pressure — and a
+direct solver factorises a singular matrix without complaint, returning a
+"solution" of norm 1e33 that passes any finiteness check. Constraining the caps,
+which is where the bias and the bulk concentrations are imposed in the real
+problem, is what lets these tests assert that the factorisation is *usable* and
+not merely that it completed. It costs under 1 % of the degrees of freedom at
+the reference mesh size, so the measured timings stand.
+"""
 
 
 def peak_memory_MB() -> float:
@@ -102,53 +116,47 @@ def build_coupled_system(maxh_nm: float) -> CoupledSystem:
     ``phi`` lives on all of ``Omega``; ``c_i``, ``u`` and ``p`` only on the
     fluid. That restriction is not cosmetic — it removes the membrane's degrees
     of freedom from four of the five fields, and with them a sixth of the
-    matrix.
+    matrix. The reservoir caps carry the essential conditions, without which the
+    system is singular; see :data:`RESERVOIR`.
     """
     mesh = CylindricalPoreGeometry().generate(maxh_nm=maxh_nm, wall_h_nm=maxh_nm / 8.0)
     space = ngs.FESpace(
         [
-            ngs.H1(mesh, order=2),  # phi, on all of Omega
-            ngs.H1(mesh, order=2, definedon=FLUID),  # c_+
-            ngs.H1(mesh, order=2, definedon=FLUID),  # c_-
-            ngs.VectorH1(mesh, order=2, definedon=FLUID),  # u, Taylor-Hood
+            ngs.H1(mesh, order=2, dirichlet=RESERVOIR),  # phi, on all of Omega
+            ngs.H1(mesh, order=2, definedon=FLUID, dirichlet=RESERVOIR),  # c_+
+            ngs.H1(mesh, order=2, definedon=FLUID, dirichlet=RESERVOIR),  # c_-
+            ngs.VectorH1(mesh, order=2, definedon=FLUID, dirichlet=RESERVOIR),  # u, Taylor-Hood
             ngs.H1(mesh, order=1, definedon=FLUID),  # p
         ]
     )
     (phi, cp, cm, u, p), (v_phi, v_cp, v_cm, v_u, v_p) = space.TnT()
-    radius = ngs.x
-    fluid = ngs.dx(definedon=mesh.Materials(FLUID))
+    # The r weight and the quadrature policy come from Measures rather than
+    # being written out here: NUM-04 and NUM-07 live in one place, and a
+    # benchmark that hand-rolled them would not exercise the production measure.
+    fluid = {"definedon": mesh.Materials(FLUID)}
 
     form = ngs.BilinearForm(space)
     # Poisson, coupled to both ion species.
-    form += (
-        (ngs.grad(phi) * ngs.grad(v_phi) - (cp - cm) * v_phi) * radius * ngs.dx(bonus_intorder=1)
-    )
+    form += AXISYMMETRIC.volume(ngs.grad(phi) * ngs.grad(v_phi) - (cp - cm) * v_phi, extra_order=1)
     # Nernst-Planck: diffusion, electromigration, convection.
-    form += (
-        (
-            ngs.grad(cp) * ngs.grad(v_cp)
-            + cp * ngs.grad(phi) * ngs.grad(v_cp)
-            + u * ngs.grad(cp) * v_cp
-        )
-        * radius
-        * fluid
+    form += AXISYMMETRIC.volume(
+        ngs.grad(cp) * ngs.grad(v_cp)
+        + cp * ngs.grad(phi) * ngs.grad(v_cp)
+        + u * ngs.grad(cp) * v_cp,
+        **fluid,
     )
-    form += (
-        (
-            ngs.grad(cm) * ngs.grad(v_cm)
-            - cm * ngs.grad(phi) * ngs.grad(v_cm)
-            + u * ngs.grad(cm) * v_cm
-        )
-        * radius
-        * fluid
+    form += AXISYMMETRIC.volume(
+        ngs.grad(cm) * ngs.grad(v_cm)
+        - cm * ngs.grad(phi) * ngs.grad(v_cm)
+        + u * ngs.grad(cm) * v_cm,
+        **fluid,
     )
     # Stokes, with the electrical body force closing the loop back to the ions.
-    form += (
-        (ngs.InnerProduct(ngs.Grad(u), ngs.Grad(v_u)) - ngs.div(v_u) * p - ngs.div(u) * v_p)
-        * radius
-        * fluid
+    form += AXISYMMETRIC.volume(
+        ngs.InnerProduct(ngs.Grad(u), ngs.Grad(v_u)) - ngs.div(v_u) * p - ngs.div(u) * v_p,
+        **fluid,
     )
-    form += ((cp - cm) * ngs.grad(phi) * v_u) * radius * fluid
+    form += AXISYMMETRIC.volume((cp - cm) * ngs.grad(phi) * v_u, **fluid)
     form.Assemble()
     return CoupledSystem(mesh=mesh, space=space, form=form)
 
@@ -182,10 +190,15 @@ def test_criterion3_umfpack_factorises_a_production_sized_problem() -> None:
     )
 
     assert system.cells > 1.0e5, "the criterion is about a production-sized mesh"
+    # "Usable" means the factorisation actually solves, not merely that it
+    # returned finite numbers: a singular system factorises without complaint.
     right = system.form.mat.CreateColVector()
     right[:] = 1.0
     solution = (inverse * right).Evaluate()
-    assert np.isfinite(np.asarray(solution.FV().NumPy())).all()
+    residual = system.form.mat.CreateColVector()
+    residual.data = right - system.form.mat * solution
+    free = np.asarray(list(system.space.FreeDofs()), dtype=bool)
+    assert np.abs(np.asarray(residual.FV().NumPy())[free]).max() < 1e-6
 
 
 @pytest.mark.slow
@@ -211,6 +224,8 @@ def test_criterion3_superlu_is_a_licence_fallback_not_a_performance_one() -> Non
     This test therefore runs at a size SuperLU can handle, and asserts only that
     the BSD path works and agrees with UMFPACK.
     """
+    from scipy.sparse.linalg import splu
+
     system = build_coupled_system(SUPERLU_MAXH_NM)
     free = np.asarray(list(system.space.FreeDofs()), dtype=bool)
 
@@ -218,27 +233,34 @@ def test_criterion3_superlu_is_a_licence_fallback_not_a_performance_one() -> Non
     matrix = to_scipy(system.form.mat)[free][:, free].tocsc()
     conversion = time.perf_counter() - start
 
-    from scipy.sparse.linalg import splu
-
     start = time.perf_counter()
     factorisation = splu(matrix)
     superlu_elapsed = time.perf_counter() - start
 
     gc.collect()
     start = time.perf_counter()
-    system.form.mat.Inverse(system.space.FreeDofs(), inverse="umfpack")
+    inverse = system.form.mat.Inverse(system.space.FreeDofs(), inverse="umfpack")
     umfpack_elapsed = time.perf_counter() - start
 
     logger.info(
         "criterion 3, superlu: %d cells, %d dof; superlu %.1f s (+%.1f s scipy conversion) "
-        "against umfpack %.1f s, a factor of %.1f",
+        "against umfpack %.1f s, a factor of %.1f; peak memory %.0f MB",
         system.cells,
         system.dofs,
         superlu_elapsed,
         conversion,
         umfpack_elapsed,
-        superlu_elapsed / umfpack_elapsed,
+        superlu_elapsed / max(umfpack_elapsed, 1e-9),
+        peak_memory_MB(),
     )
 
-    probe = np.ones(int(free.sum()))
-    assert np.isfinite(factorisation.solve(probe)).all()
+    right = system.form.mat.CreateColVector()
+    right[:] = 1.0
+    from_superlu = factorisation.solve(np.asarray(right.FV().NumPy())[free])
+    from_umfpack = np.asarray((inverse * right).Evaluate().FV().NumPy())[free]
+
+    # The licensing choice must not also be a numerical one: the two
+    # factorisations of the same system have to agree to round-off.
+    scale = max(float(np.abs(from_umfpack).max()), 1.0)
+    assert np.abs(matrix @ from_superlu - 1.0).max() < 1e-6 * scale
+    assert np.abs(from_superlu - from_umfpack).max() < 1e-8 * scale

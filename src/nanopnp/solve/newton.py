@@ -35,7 +35,7 @@ from dataclasses import dataclass, field
 
 from nanopnp.core.typing import Expression, GridFunction, Option
 from nanopnp.solve.gates import Gate, GateViolationError, check_all
-from nanopnp.solve.linear import DEFAULT_SOLVER, check_solver
+from nanopnp.solve.linear import DEFAULT_SOLVER, check_solver, solve_correction
 
 logger = logging.getLogger(__name__)
 
@@ -220,13 +220,19 @@ def damped_newton(
     solver
         Direct linear solver for the Jacobian.
     state_gates
-        NUM-17 gates checked on each accepted iterate: concentration positivity
-        and packing fraction. A violation propagates as
-        :class:`~nanopnp.solve.gates.GateViolationError` and stops the solve.
+        NUM-17 gates checked on the entry state and on each accepted iterate:
+        concentration positivity and packing fraction. A violation propagates as
+        :class:`~nanopnp.solve.gates.GateViolationError`, restores the last
+        admissible iterate and stops the solve. Checking on entry matters
+        because a warm start whose entry residual is already at the floor
+        returns without taking a step, and an unphysical state would otherwise
+        pass through unexamined (NUM-18).
     increment
-        Optional grid function that the *damped* increment is written into
-        before each acceptance test, so that ``increment_gates`` can inspect it.
-        One is allocated if omitted.
+        Grid function that the *damped* increment is written into before each
+        acceptance test, so that ``increment_gates`` can inspect it. One is
+        allocated if omitted, which is only valid when ``increment_gates`` is
+        empty: a gate built over a grid function this loop does not write would
+        assert nothing.
     increment_gates
         NUM-17 gates checked on the damped increment, namely the potential
         increment cap. These are treated as a step-length condition first: a
@@ -251,6 +257,8 @@ def damped_newton(
 
     Raises
     ------
+    ValueError
+        If ``increment_gates`` is given without the ``increment`` they inspect.
     NewtonDivergenceError
         If the iteration cap is reached and ``raise_on_failure``.
     nanopnp.solve.gates.GateViolationError
@@ -259,6 +267,11 @@ def damped_newton(
     import ngsolve as ngs
 
     check_solver(solver)
+    if increment_gates and increment is None:
+        raise ValueError(
+            "increment_gates were given without an increment; the gates would inspect a grid "
+            "function this loop never writes and the NUM-17 cap would pass unconditionally"
+        )
     space = solution.space
     if freedofs is None:
         freedofs = space.FreeDofs()
@@ -275,6 +288,7 @@ def damped_newton(
         projector.Project(residual)
         return float(ngs.Norm(residual))
 
+    check_all(state_gates)  # NUM-17 also holds of the state the caller handed in
     initial = residual_norm()
     target = max(settings.relative_tolerance * initial, settings.absolute_tolerance)
     result = NewtonResult(
@@ -289,8 +303,7 @@ def damped_newton(
 
     for iteration in range(1, settings.max_iterations + 1):
         residual_form.AssembleLinearization(solution.vec)
-        inverse = residual_form.mat.Inverse(freedofs, inverse=solver)
-        direction.data = inverse * residual
+        solve_correction(residual_form.mat, residual, direction, freedofs, solver=solver)
         previous.data = solution.vec
         relative_update = float(ngs.Norm(direction)) / max(
             float(ngs.Norm(solution.vec)), settings.reference_norm
@@ -329,7 +342,14 @@ def damped_newton(
                 current,
                 trial_residual,
             )
-        check_all(state_gates)
+        try:
+            check_all(state_gates)
+        except GateViolationError:
+            # Same contract as the increment gates: an abort leaves the caller
+            # holding the last admissible iterate, not the rejected one, so a
+            # continuation driver that catches this can still warm-start.
+            solution.vec.data = previous
+            raise
 
         current = trial_residual
         record = NewtonStep(
