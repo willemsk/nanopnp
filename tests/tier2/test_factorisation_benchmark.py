@@ -57,8 +57,14 @@ direct solver factorises a singular matrix without complaint, returning a
 "solution" of norm 1e33 that passes any finiteness check. Constraining the caps,
 which is where the bias and the bulk concentrations are imposed in the real
 problem, is what lets these tests assert that the factorisation is *usable* and
-not merely that it completed. It costs under 1 % of the degrees of freedom at
-the reference mesh size, so the measured timings stand.
+not merely that it completed.
+
+The constraints *remove* degrees of freedom — 4.50 % of them at the production
+size, 5.73 % at the SuperLU size, 8.96 % at maxh 3.0 (measured) — so the
+factorisation they are timed against is slightly smaller than the unconstrained
+one the recorded table was measured on. The published figures are therefore
+upper bounds on the constrained system, which is the safe direction for a
+criterion that asks whether the factorisation *fits*.
 """
 
 
