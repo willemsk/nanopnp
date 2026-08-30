@@ -34,9 +34,8 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-import numpy as np
-
 if TYPE_CHECKING:
+    import numpy as np
     from scipy.sparse import csr_matrix
 
 from nanopnp.core.typing import Expression, FESpace, GridFunction, Mesh, Option
@@ -121,6 +120,7 @@ def to_scipy(matrix: Expression) -> csr_matrix:
     NGSolve's ``COO`` export lists duplicate entries for the same position;
     scipy's COO constructor sums them, which is the correct assembly semantics.
     """
+    import numpy as np
     from scipy import sparse
 
     rows, cols, values = matrix.COO()
@@ -164,6 +164,7 @@ def solve_superlu(
         If the factorisation fails, with the matrix size in the message so the
         failure is attributable.
     """
+    import numpy as np
     from scipy import sparse
     from scipy.sparse.linalg import splu
 
