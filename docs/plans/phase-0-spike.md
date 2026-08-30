@@ -1,6 +1,6 @@
 # Phase 0 (Spike): coupled ePNP-NS on an analytic cylindrical pore
 
-**Status: WP1–WP3 merged, WP4–WP6 outstanding.** Last revised 30 August 2026, after the WP3 review.
+**Status: WP1–WP4 merged, WP5–WP6 outstanding.** Last revised 30 August 2026, after WP4.
 
 This is the delivery plan for Phase 0 of `SPECIFICATION.md` §8.1, as amended by §8.2.1. The
 specification remains normative: where this file and the specification disagree, the specification
@@ -41,7 +41,7 @@ RSK-13 open; and the COMSOL comparison moves to Phase 1 in full.
   freezing it against a spike's needs would be the wrong shape.
 - **New base dependency: `sympy`** (BSD, pure Python, wheels everywhere) for the manufactured
   solutions of VER-18. It is imported by `validation/`, a shipped module, so it belongs in the base
-  dependencies rather than the dev group. Still to be added, in WP4.
+  dependencies rather than the dev group. Added in WP4.
 
 ## Conventions established by WP1–WP3
 
@@ -114,39 +114,57 @@ phase. And **scipy SuperLU never completed that factorisation**, being killed by
 15.4 GB on two separate runs, which puts the measurement in conflict with CON-11. The full table and
 the conflict are recorded under §6.6 of the specification.
 
-### WP4 — Nernst–Planck, flow, the coupled model, MMS — *next*
+### WP4 — Nernst–Planck, flow, the coupled model, MMS — **merged**
 
-`physics/nernst_planck.py`, `physics/flow.py`, `physics/models.py`, `validation/mms.py`; adds
-`sympy` to the base dependencies.
+`physics/nernst_planck.py`, `physics/flow.py`, `physics/models.py`, `validation/mms.py`, and —
+beyond the plan — `physics/coefficients.py`; adds `sympy` to the base dependencies.
 
-- Nernst–Planck in primitive `c_i` (NUM-02), log-variable branch behind a flag, Slotboom rejected.
-  The steric flux `β_i` gets the sign discipline of PHY-05 with the warning comment the knowledge
-  base asks for: `+` inside the bracket, bracket negated, sum retained over all species, the
-  `a_i³/a_0³` prefactor kept — it is 4.16 for NaCl, not a droppable normalisation.
-- Flow: constant-density Stokes first (Taylor–Hood P2/P1, **with the hoop-strain term
-  `2η u_r v_r / r²`** — omitting it is a silent correctness bug), then the variable-density Axelsson
-  three-equation system as the default (PHY-07). Body force is `ρ_ion E` only;
-  `dielectric_gradient_forces` enables both the momentum and the Nernst–Planck term together,
-  default off (PHY-08, PHY-23).
-- `PhysicsModel` registry: `epnp-ns`, `pnp-ns`, `pnp`, `pb`, `pb-linear`, `poisson` (PHY-21, FR-20),
-  with `pnp-ns` a configuration of `epnp-ns`, not a second code path. Follows the
-  `materials/models.py` registry pattern.
-- Forms are written in the nondimensional variables of `core/scaling.Scales`, and take their
-  measures from `Measures` — `singular=True` wherever `1/r` appears, which includes the hoop-strain
-  term.
-- **Wire the WP3 state gates into the coupled solve.** `PositivityGate` and `PackingFractionGate`
-  exist but are exercised only on constructed states: `pb` carries no independent concentration
-  field, so WP4 is their first real use. A test SHALL drive a coupled solve into a violation and
-  assert the abort, not merely assert the gate in isolation.
-- MMS machinery: sympy-manufactured `φ, c_i, u, p` with consistent source terms on the full coupled
-  axisymmetric system, and a convergence-rate utility.
-- Tests: VER-14 Rice & Whitehead (thick and thin EDL), VER-15 Helmholtz–Smoluchowski limit, VER-16
-  1D PNP with the limiting-current plateau, VER-18 MMS at O(h³) in L² for P2 — the only route that
-  verifies the `u_r/r²` term and the axis treatment.
-- **Budget note, from the WP3 measurement.** A factorisation at 1.04 × 10⁶ DOF costs 41 s and 6.2 GB
-  on the development laptop, and memory is near-linear in DOF. An MMS refinement sequence SHALL
-  therefore state its finest level and stay inside that budget; three levels that fit are worth more
-  than five that swap. The observed rate, not the number of levels, is the deliverable.
+Delivered: Nernst–Planck in primitive `c_i` with the NUM-02 log branch behind a flag and Slotboom
+rejected in the docstring; the steric `β_i` with the PHY-05 sign discipline, the sum retained over
+all species and the `a_i³/a_0³` prefactor kept (4.16 for NaCl, asserted). Taylor–Hood P2/P1 flow
+with the hoop-strain term, the variable-density continuity of PHY-07 and the `ρ_ion E` body force
+of PHY-08; `dielectric_gradient_forces` enables the momentum and Nernst–Planck terms together and
+only together, default off (PHY-23). The `PhysicsModel` registry of §5.4.3 with `epnp-ns`,
+`pnp-ns`, `pnp`, `pb`, `pb-linear` and `poisson`, `pnp-ns` being the same class as `epnp-ns` with
+every correction resolving to `none`. MMS machinery on the full coupled axisymmetric system, and
+the WP3 state gates wired into the coupled solve. Discharges VER-14, VER-15, VER-16, VER-18 and
+implements FR-20, NUM-02, NUM-03, NUM-05.
+
+Five things settled by the work that WP5 and WP6 inherit.
+
+- **`physics/coefficients.py` is the single conversion to nondimensional material coefficients.**
+  It owns `D̃_i`, `μ̃_i`, `η̃`, `ϱ̃`, `ε̃_r` and the three groups `S = F c₀ L₀²/(ε V_T)`, `Pe` and
+  `Re`. **The reference length is the mesh unit**: `mesh_unit_scales` builds a `Scales` with
+  `length_nm = 1.0` and the constructor refuses anything else, because the mesh is in nm and
+  scaling lengths by a 2 nm pore radius instead would leave every gradient wrong by that factor
+  with no diagnostic. `S` is the `1/(2λ²)` of `physics/pb.py`, computed from its definition so an
+  asymmetric electrolyte is right too.
+- **`d̂iv u` is a `1/r` form in its own right.** The `u_r/r` piece is evaluated before the `r`
+  weight multiplies it, so the continuity and pressure blocks need the NUM-07 guarantee exactly as
+  the hoop term does. Every measure touching a divergence passes `singular=True`.
+- **Velocity continuity is assembled as `ϱ̃ d̂iv ũ`.** PHY-07's `∇·(ϱu) − u·∇ϱ` collapses to that
+  identically, so forming the two terms would add a symbolic derivative of the whole correction
+  chain to the Jacobian for no change in the answer. The consequence is worth stating: the
+  variable-density system leaves the velocity field satisfying `d̂iv ũ = 0` just as the
+  constant-density one does, and the density reaches the answer through the inertia term alone.
+- **`Set(cf, definedon=region)` zeroes everything outside the region**, so applying essential data
+  after an initial guess destroys the guess — and destroys the state a warm start is starting
+  from. `models._set_boundary_values` interpolates on a scratch function and copies only the
+  region's degrees of freedom. WP5's ladder depends on that.
+- **A gate sampling a subdomain field must sample only that subdomain, and strictly inside it.**
+  `FieldSampler` gained a `materials` filter, because a concentration evaluated outside its
+  `definedon` region returns zero and the positivity gate would abort on the membrane before Newton
+  took a step. Filtering elements is not enough: a node on the fluid/solid interface can still
+  resolve into the solid, so the points are pulled `1e-4` towards their own element's centroid —
+  measured, 1e-6 is too small and 1e-5 is the first that works.
+
+Two findings worth carrying forward. **The MMS rates are clean**: 3.0–3.6 for `φ`, `c_i` and `u`
+and 2.7 for the Taylor–Hood pressure, over `maxh` 0.4 → 0.1 nm on a 2 × 4 nm cylinder, about
+2 × 10⁴ DOF at the finest — three orders below the WP3 budget. The P1 pressure converging at O(h²)
+rather than O(h³) is the pair's own rate, not a shortfall. And **the envelope is going to need the
+ladder**: a cold `epnp-ns` solve at 5 M with a wall at −4 `V_T` aborts on the co-ion positivity
+gate, and the classical configuration aborts on packing. Both aborts are correct; both are exactly
+what NUM-18's warm start exists to avoid, and WP5 should not read them as defects.
 
 ### WP5 — Continuation ladder, QoI extraction, the envelope
 
@@ -207,7 +225,7 @@ Phase 0 is complete when, on the analytic cylindrical pore:
 
 1. **VER-12 … VER-22 all pass**, including MMS convergence at O(h³) in L² for P2 on the full coupled
    axisymmetric system, and the two force routes agreeing to better than 0.1 pN.
-   *Outstanding: VER-14 … VER-22. Discharged: VER-12, VER-13.*
+   *Outstanding: VER-17, VER-19 … VER-22. Discharged: VER-12 … VER-16, VER-18.*
 2. **The envelope converges**: 0.05–3 M × ±200 mV with all corrections active, reached through the
    continuation ladder, with no negative concentration at any Newton iterate. *Outstanding, WP5.*
 3. **The factorisation benchmark reports** time and peak memory for a production-sized problem on
