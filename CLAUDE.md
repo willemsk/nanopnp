@@ -83,6 +83,10 @@ makes, and refuses the commit with the failing output if a stage fails. `git com
 Outside the package: `data/corrections/*.yaml` (fitted parameters, shipped in the wheel),
 `.knowledge/` (verified domain knowledge), `tests/tier{1,2,3,4}/`, `docs/`.
 
+`docs/plans/` holds the delivery plan for the phase in progress — the work-package breakdown,
+what has merged, and the decisions still open. It is planning, not requirements: `SPECIFICATION.md`
+still governs, and a plan that disagrees with it is the thing that is wrong.
+
 A stage takes typed inputs and emits a typed, serialisable artefact carrying a content hash. Every
 stage must stay independently invocable, cancellable and introspectable (FR-27) — that is what the
 CLI, the GUI and the sweep runner all depend on.
