@@ -314,7 +314,7 @@ target that is a pore average must state which convention it uses.
 
 ## 8.1 NGSolve traps found by implementing this — all silent
 
-Seven ways this project's own code was wrong while raising nothing. All reproduced on NGSolve
+Nine ways this project's own code was wrong while raising nothing. All reproduced on NGSolve
 6.2.2606. **[tested]**
 
 **1. A nonlinear form must be written in the trial function, not the grid function.**
@@ -373,6 +373,23 @@ non-zero number instead of the flux. **[tested]**
 the attribute is missing, not when the property itself throws. On an `H1` space the access raises
 `NgException: components only available for ProductSpace`, so any code that branches on "is this a
 compound space" with `getattr` breaks the moment it is handed a single field. Use `try/except`.
+
+**8. NGSolve registers its own `superlu` inverse type, so `mat.Inverse(inverse="superlu")`
+silently succeeds.** `ngsolve/directsolvers.py` calls `ngsolve.la.RegisterInverseType("superlu",
+SuperLU)` at import, wrapping `scipy.sparse.linalg.factorized`. A project that also ships its own
+SuperLU path — because it wants row equilibration, or a specific error message — therefore ends up
+with **two implementations behind one name**, and which one a call site gets depends on whether it
+routes through the project helper or through `mat.Inverse`. Nothing raises; the answers agree to
+1e-14 on a well-scaled system, so the divergence only shows on the badly scaled one the
+equilibration was added for. Resolve a solver name in exactly one function. **[tested]**
+
+**9. A direct solver factorises a singular system without complaint.** A five-field block system
+assembled with no essential conditions anywhere — pure-Neumann Poisson has the constant null mode,
+and the Stokes block has nothing fixing the pressure — is factorised happily by both UMFPACK and
+scipy SuperLU. The "solutions" come back finite: `‖x‖_inf` of 2e16 from SuperLU and 8e33 from
+UMFPACK on the same 1.5e4-dof system, with residuals of 5e3 and 6e20. So `np.isfinite(x).all()` is
+**not** evidence that a factorisation is usable; assert on the residual `‖Ax − b‖`, which is 1e-13
+once the reservoir caps are constrained. **[tested]**
 
 ### 8.2 Measured: the reaction flux really is worth it
 

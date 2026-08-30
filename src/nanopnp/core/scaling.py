@@ -59,7 +59,63 @@ REFERENCE_VISCOSITY_PA_S: Final = 0.890e-3
 """Water viscosity at 298.15 K, in Pa s (NUM-09 note on the Peclet number)."""
 
 REFERENCE_PERMITTIVITY: Final = 78.15
-"""Relative permittivity of water at 298.15 K (``.knowledge/01-physics-epnpns.md``)."""
+"""``eps_r,f0``, the infinite-dilution relative permittivity of the electrolyte.
+
+Gavish 2016, via SPECIFICATION.md section 8.2 and
+``.knowledge/01-physics-epnpns.md`` section 4; it is the ``P0`` of the
+``permittivity`` correction in ``data/corrections/willems2020_nacl.yaml``. This
+is the single definition in the package: ``physics.pb.ELECTROLYTE_PERMITTIVITY``
+is an alias of it, so the two cannot drift apart.
+"""
+
+
+def debye_length_nm(
+    concentration_M: float,
+    *,
+    relative_permittivity: float = REFERENCE_PERMITTIVITY,
+    temperature_K: float = REFERENCE_TEMPERATURE_K,
+    valence: int = 1,
+) -> float:
+    """Return the Debye length in nm for a symmetric ``z:z`` electrolyte.
+
+    ``lambda_D^2 = eps R T / (2 F^2 z^2 c_0)``. Reference values it must
+    reproduce (NUM-09): 1.357 nm at 0.05 M, 0.304 nm at 1 M, 0.175 nm at 3 M.
+
+    This is the one implementation of the formula; :attr:`Scales.debye_length_nm`
+    and ``physics.pb.debye_length_nm`` both route through it.
+
+    Parameters
+    ----------
+    concentration_M
+        Bulk concentration in mol/L.
+    relative_permittivity
+        Electrolyte relative permittivity.
+    temperature_K
+        Absolute temperature.
+    valence
+        Ion valence magnitude.
+
+    Returns
+    -------
+    float
+        Debye length, in nm.
+
+    Raises
+    ------
+    ValueError
+        If the concentration is not positive.
+    """
+    if concentration_M <= 0.0:
+        raise ValueError(f"concentration must be positive, got {concentration_M} M")
+    permittivity = VACUUM_PERMITTIVITY * relative_permittivity
+    concentration_mol_m3 = concentration_M * MOL_PER_M3_PER_MOL_PER_L
+    squared = (
+        permittivity
+        * GAS_CONSTANT
+        * temperature_K
+        / (2.0 * FARADAY**2 * valence**2 * concentration_mol_m3)
+    )
+    return math.sqrt(squared) * NM_PER_M
 
 
 @dataclass(frozen=True)
@@ -161,15 +217,14 @@ class Scales:
         """``lambda_D`` for a symmetric monovalent electrolyte, in nm.
 
         ``lambda_D^2 = eps RT / (2 F^2 c_0)``. 1.357 nm at 0.05 M, 0.304 nm at
-        1 M, 0.175 nm at 3 M (NUM-09).
+        1 M, 0.175 nm at 3 M (NUM-09). Delegates to :func:`debye_length_nm` so
+        the formula exists once.
         """
-        squared = (
-            self.permittivity
-            * GAS_CONSTANT
-            * self.temperature_K
-            / (2.0 * FARADAY**2 * self.concentration_mol_m3)
+        return debye_length_nm(
+            self.concentration_M,
+            relative_permittivity=self.relative_permittivity,
+            temperature_K=self.temperature_K,
         )
-        return math.sqrt(squared) * NM_PER_M
 
     @property
     def debye_ratio(self) -> float:
@@ -248,15 +303,25 @@ class Scales:
         return bias_V / self.potential_V
 
     def summary(self) -> dict[str, float]:
-        """Return every scale and group, for the provenance manifest (FR-25)."""
+        """Return every defining input, scale and group, for the manifest (FR-25).
+
+        Every *defining* attribute appears, not only the derived scales: a
+        manifest that omits one cannot reconstruct the run (FR-25). The
+        viscosity in particular is the field the module docstring warns about,
+        0.890 mPa s at 25 degC against 1.00 mPa s at 20 degC being a per-cent
+        difference in ``u_0``, ``p_0`` and ``Pe`` that is invisible afterwards.
+        """
         return {
             "length_nm": self.length_nm,
             "concentration_M": self.concentration_M,
             "temperature_K": self.temperature_K,
+            "viscosity_Pa_s": self.viscosity_Pa_s,
+            "relative_permittivity": self.relative_permittivity,
             "potential_V": self.potential_V,
             "velocity_m_s": self.velocity_m_s,
             "pressure_Pa": self.pressure_Pa,
             "diffusivity_m2_s": self.diffusivity_m2_s,
+            "flux_mol_m2_s": self.flux_mol_m2_s,
             "current_A": self.current_A,
             "debye_length_nm": self.debye_length_nm,
             "debye_ratio": self.debye_ratio,

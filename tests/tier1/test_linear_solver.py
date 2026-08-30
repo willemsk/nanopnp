@@ -96,6 +96,30 @@ def test_con11_superlu_agrees_with_umfpack(slab: ngs.Mesh) -> None:
     assert difference < 1e-12
 
 
+def test_con11_superlu_agrees_with_umfpack_through_newton_too(slab: ngs.Mesh) -> None:
+    """The nonlinear path resolves the solver name the same way the linear one does.
+
+    Both routes have to reach the project's equilibrated SuperLU. Letting the
+    Newton path fall through to ``mat.Inverse(inverse="superlu")`` instead would
+    silently drop the row equilibration of NUM-10 on the one system whose block
+    norms actually spread — the coupled Jacobian.
+    """
+    screening_nm = debye_length_nm(CONCENTRATION_M)
+    arguments = {
+        "debye_length_nm": screening_nm,
+        "dirichlet": "wall|bulk",
+        "boundary_values": slab.BoundaryCF({"wall": 2.0, "bulk": 0.0}),
+        "nonlinear": True,
+    }
+    umfpack = solve_pb(slab, PLANAR, solver="umfpack", **arguments)
+    superlu = solve_pb(slab, PLANAR, solver="superlu", **arguments)
+
+    difference = np.abs(
+        np.asarray(umfpack.vec.FV().NumPy()) - np.asarray(superlu.vec.FV().NumPy())
+    ).max()
+    assert difference < 1e-10
+
+
 def test_superlu_returns_zero_on_the_constrained_degrees_of_freedom(slab: ngs.Mesh) -> None:
     """Constrained rows are dropped, not zeroed, so the correction leaves them alone."""
     space = ngs.H1(slab, order=1, dirichlet="wall")

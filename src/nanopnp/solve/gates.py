@@ -35,12 +35,10 @@ if TYPE_CHECKING:
     import numpy as np
 
 from nanopnp.core.constants import AVOGADRO
+from nanopnp.core.scaling import MOL_PER_M3_PER_MOL_PER_L, NM_PER_M
 from nanopnp.core.typing import Expression, Mesh
 
 logger = logging.getLogger(__name__)
-
-NM_TO_M = 1e-9
-"""Metres per nanometre; the steric diameters are quoted in nm."""
 
 ION_DIAMETER_NM = 0.5
 """Steric cubic diameter ``a_i`` of every ion, in nm (PHY-05, Bazant 2009).
@@ -118,7 +116,8 @@ class FieldSampler:
 
     mesh: Mesh
     coordinates: tuple[str, str] = ("r", "z")
-    _points: np.ndarray | None = field(default=None, init=False, repr=False)
+    _points: np.ndarray | None = field(default=None, init=False, repr=False, compare=False)
+    _located: Expression | None = field(default=None, init=False, repr=False, compare=False)
 
     @property
     def points(self) -> np.ndarray:
@@ -126,6 +125,21 @@ class FieldSampler:
         if self._points is None:
             self._points = self._build_points()
         return self._points
+
+    @property
+    def located(self) -> Expression:
+        """Return the sample points located in the mesh, computed once.
+
+        Locating a point is a search over the elements, and the gates evaluate
+        several coefficient functions at the same fixed points at every trial
+        step of every Newton iteration. Doing the search once per sampler rather
+        than once per evaluation takes it off the inner loop entirely; the mesh
+        does not move during a solve, so the located points stay valid.
+        """
+        if self._located is None:
+            points = self.points
+            self._located = self.mesh(points[:, 0], points[:, 1])
+        return self._located
 
     def _build_points(self) -> np.ndarray:
         """Collect vertices, edge midpoints and centroids of every element."""
@@ -145,12 +159,25 @@ class FieldSampler:
         return np.unique(rounded, axis=0)
 
     def evaluate(self, expression: Expression) -> np.ndarray:
-        """Return ``expression`` evaluated at every sample point, as a flat array."""
+        """Return ``expression`` evaluated at every sample point, as a flat array.
+
+        Raises
+        ------
+        ValueError
+            If ``expression`` is not scalar. Silently keeping the first
+            component would leave the gate reporting on one component of a
+            vector field and passing on the others, which is exactly the quiet
+            wrong answer the gates exist to prevent.
+        """
         import numpy as np
 
-        points = self.points
-        mesh_points = self.mesh(points[:, 0], points[:, 1])
-        return np.asarray(expression(mesh_points)).reshape(len(points), -1)[:, 0]
+        values = np.asarray(expression(self.located)).reshape(len(self.points), -1)
+        if values.shape[1] != 1:
+            raise ValueError(
+                f"gate expressions must be scalar, got {values.shape[1]} components; "
+                "sample each component separately"
+            )
+        return values[:, 0]
 
     def minimum(self, expression: Expression) -> tuple[float, tuple[float, float]]:
         """Return the smallest sampled value of ``expression`` and where it occurred."""
@@ -249,6 +276,14 @@ class PackingFractionGate:
     limit: float = PACKING_LIMIT
     name: str = "packing fraction"
 
+    def __post_init__(self) -> None:
+        """Reject a gate with nothing to sum, which would silently assert nothing."""
+        if not self.concentrations:
+            raise ValueError(
+                "the packing-fraction gate needs at least one species; an empty mapping "
+                "would make Phi undefined and the NUM-17 assertion vacuous"
+            )
+
     def diameter_nm(self, species: str) -> float:
         """Return the steric cubic diameter of a species, in nm."""
         if self.diameters_nm is None:
@@ -333,12 +368,12 @@ def excluded_volume_m3_per_mol(diameter_nm: float) -> float:
     7.528e-5 m^3/mol, so ``Phi = 1`` at 13.3 M; for water ``a_0 = 0.311 nm`` it
     is 1.811e-5 m^3/mol, so ``Phi = 1`` at 55.2 M (PHY-05).
     """
-    return AVOGADRO * (diameter_nm * NM_TO_M) ** 3
+    return AVOGADRO * (diameter_nm / NM_PER_M) ** 3
 
 
 def maximum_packing_M(diameter_nm: float = ION_DIAMETER_NM) -> float:
     """Return the concentration in mol/L at which one species alone reaches ``Phi = 1``."""
-    return 1.0 / (excluded_volume_m3_per_mol(diameter_nm) * 1e3)
+    return 1.0 / (excluded_volume_m3_per_mol(diameter_nm) * MOL_PER_M3_PER_MOL_PER_L)
 
 
 def check_all(gates: Sequence[Gate]) -> None:

@@ -122,8 +122,29 @@ def test_num09_debye_length_scales_as_inverse_square_root_of_concentration() -> 
 
 
 def test_num09_summary_carries_every_scale_for_the_manifest() -> None:
-    """The provenance summary is complete enough to reconstruct the scaling (FR-25)."""
-    summary = _scales(1.0).summary()
+    """The provenance summary is complete enough to reconstruct the scaling (FR-25).
+
+    "Complete" means every *defining* input is present, not only the derived
+    scales: a manifest that omits the viscosity cannot say whether the run took
+    it at 20 degC or 25 degC, which the module docstring calls out as a silent
+    per-cent error in ``u_0``, ``p_0`` and ``Pe``.
+    """
+    scales = _scales(1.0)
+    summary = scales.summary()
     for key in ("potential_V", "velocity_m_s", "pressure_Pa", "debye_ratio", "peclet"):
         assert key in summary
         assert math.isfinite(summary[key])
+
+    defining = {
+        field: getattr(scales, field)
+        for field in (
+            "length_nm",
+            "concentration_M",
+            "temperature_K",
+            "diffusivity_m2_s",
+            "viscosity_Pa_s",
+            "relative_permittivity",
+        )
+    }
+    assert defining.items() <= summary.items()
+    assert Scales(**defining).summary() == summary  # the manifest reconstructs the run
