@@ -1192,11 +1192,20 @@ class ElectrostaticModel:
         boundaries: CoupledBoundaries = DEFAULT_BOUNDARIES,
         potential_values: Expression = 0.0,
         debye_length_nm: float | None = None,
+        initial: ModelSolution | None = None,
         settings: NewtonSettings = DEFAULT_SETTINGS,
         solver: str = DEFAULT_SOLVER,
         **kwargs: Option,
     ) -> ModelSolution:
         """Solve the electrostatic model, delegating to :mod:`nanopnp.physics.pb`.
+
+        Parameters
+        ----------
+        initial
+            A previous solution to warm-start from, on the same mesh and at the
+            same order. Stage 2 of the NUM-18 ladder warm-starts nonlinear
+            Poisson-Boltzmann from the linear solution, which is why both stages
+            are on the ladder at all.
 
         Raises
         ------
@@ -1212,7 +1221,9 @@ class ElectrostaticModel:
         if self.screening == "none":
             space = self.space(mesh, boundaries)
             state = ngs.GridFunction(space, name="phi_tilde")
-            state.Set(potential_values, definedon=mesh.Boundaries(boundaries.potential))
+            if initial is not None:
+                state.vec.data = initial.state.vec
+            _set_boundary_values(state, potential_values, mesh.Boundaries(boundaries.potential))
             a = ngs.BilinearForm(self.residual_form(space, measures)).Assemble()
             f = ngs.LinearForm(space).Assemble()
             solve_linear(a, f, state, solver=solver)
@@ -1230,6 +1241,7 @@ class ElectrostaticModel:
             order=self.order,
             solver=solver,
             settings=settings,
+            initial=None if initial is None else initial.state,
         )
         # The residual is rebuilt rather than returned by ``solve_pb``, which
         # owns its own; it is written in the same trial function and on the same

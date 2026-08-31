@@ -95,6 +95,7 @@ def solve_pb(
     order: int = 2,
     solver: str = DEFAULT_SOLVER,
     settings: NewtonSettings = DEFAULT_SETTINGS,
+    initial: GridFunction | None = None,
 ) -> GridFunction:
     """Solve Poisson-Boltzmann and return the nondimensional potential.
 
@@ -120,6 +121,10 @@ def solve_pb(
         Direct linear solver.
     settings
         Damping and tolerance policy for the nonlinear branch.
+    initial
+        A previous potential to warm-start from, on the same mesh and at the
+        same order. NUM-18 stage 2 warm-starts the nonlinear branch from the
+        linear one, which is the whole reason both are on the ladder.
 
     Returns
     -------
@@ -157,7 +162,18 @@ def solve_pb(
 
     space = ngs.H1(mesh, order=order, dirichlet=dirichlet)
     potential = ngs.GridFunction(space, name="phi_tilde")
-    potential.Set(boundary_values, definedon=mesh.Boundaries(dirichlet))
+    if initial is not None:
+        potential.vec.data = initial.vec
+    # ``Set(..., definedon=)`` zeroes everything outside the region, so the
+    # essential data is written through the same projector split the coupled
+    # model uses; on a cold start the interior is zero either way.
+    scratch = ngs.GridFunction(space)
+    scratch.Set(boundary_values, definedon=mesh.Boundaries(dirichlet))
+    constrained = space.GetDofs(mesh.Boundaries(dirichlet))
+    potential.vec.data = (
+        ngs.Projector(constrained, False) * potential.vec
+        + ngs.Projector(constrained, True) * scratch.vec
+    )
 
     if not nonlinear:
         trial, test = space.TnT()
