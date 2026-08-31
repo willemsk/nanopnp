@@ -1346,8 +1346,18 @@ asked to resolve, which is the rectification signal `|RR − 1|` at the lowest e
 a ceiling on a bug rather than a numerical budget: `ψ` differs from the NUM-25 boundary indicator by
 a function vanishing on both electrodes, hence by a legitimate test function of the converged
 residual, so the two routes are the *same* integral and what remains between them is quadrature and
-the residual Newton left behind. Measured on the VER-17 configuration, that remainder is 6 × 10⁻⁶ on
-a 3 300-element mesh and 7 × 10⁻⁴ on a 1 100-element one.
+the residual Newton left behind. Measured: 4 × 10⁻⁶ on the VER-11 configuration (0.5 M,
+−0.05 C/m², ±50 mV) at every mesh from 3 400 to 7 300 degrees of freedom, and 5 × 10⁻⁷ on VER-17's
+uncharged pore. The remainder does not fall with the mesh because it is set by the Newton residual,
+not by the discretisation.
+
+NOTE (a precondition, not a detail): the identity above holds only where `ψ` is *exactly* 1 and 0 on
+the two electrodes. Interpolated over the whole mesh it is not — the membrane spans the transition
+band, and an element straddling the band shares its corner vertex with a reservoir cap, smearing
+about 8 × 10⁻³ of `ψ` onto an electrode where it must vanish. `ψ` SHALL therefore be built on the
+fluid domain alone. Over the whole mesh the measured route agreement on the VER-11 configuration
+degrades by a factor of 170, from 4 × 10⁻⁶ to 6 × 10⁻⁴, which would pass this tolerance while being
+a real error.
 
 NOTE: the reference computed `F*(z_cpos*tds.ntflux_cpos + z_cneg*tds.ntflux_cneg)` at integration
 order 4, `ntflux` being the variational reaction flux from the assembled weak residual, so the
