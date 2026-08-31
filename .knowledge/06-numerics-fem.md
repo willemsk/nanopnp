@@ -213,13 +213,15 @@ move with the salt. Note also that the charge scales `ε V_T/a²` and `ε V_T/a`
 so a fixed or surface charge ramped at one concentration keeps its dimensionless value at another.
 
 **The wall grading decides whether the charge ramp converges, not only how accurate it is.
-[tested]** The ladder raises `σ_s` while the model is still classical, and classical PNP has no
-steric limit — the counter-ion goes to whatever Gouy–Chapman asks for, tens of molar at
-−0.05 C/m². At `λ_D(3 M)/5` = 0.035 nm the ramp climbs; at 0.09 nm the packing-fraction gate aborts
-on the first sub-step. Both are correct: the coarse mesh does not resolve the layer, the Newton
-iterate overshoots into a state the model cannot represent, and the gate stops it. So a reduced wall
-mesh costs robustness at the charged end and not only accuracy, and a strongly charged pore wants the
-Poisson–Boltzmann initial guess the fallback list names for exactly this failure mode.
+[tested]** The ladder raises `σ_s` while the model is still classical, and the field that fails
+first is the **co-ion**, not the counter-ion: against a negative wall the anion is depleted as
+`exp(−|φ̃|)`, so a Newton step in the primitive variable of the concentration overshoots a small
+positive number straight through zero. At `λ_D(3 M)/5` = 0.035 nm the ramp climbs −0.05 C/m²; at
+0.09 nm the positivity gate aborts on the first sub-step with `c_Cl⁻ = −0.76` at `r = 2 nm`, on the
+wall. Both are correct: the coarse mesh does not resolve the layer, the step is too long, and the
+gate stops a negative concentration becoming a plausible wrong current. So a reduced wall mesh costs
+robustness at the charged end and not only accuracy; the log branch is the structural cure, and a
+strongly charged pore also wants the Poisson–Boltzmann initial guess the fallback list names.
 
 **Measured, on a charged 2 nm × 13 nm pore. [tested]** The only rungs needing damping below the
 0.2 initial value were the surface-charge ramp, at 0.08; every other rung of every ladder tried held

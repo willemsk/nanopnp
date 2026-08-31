@@ -254,12 +254,13 @@ Ten things settled by the work, which WP6 inherits.
   the depleted electrode. Measured convergence: 1.138 at L = 100 nm, 1.050 at 400, 1.026 at 1000,
   1.017 at 2000. The film is now 2000 nm at no extra cost.
 - **The wall grading of NUM-30 decides whether the ladder converges, not only how accurate it is.**
-  Stage 4 ramps `σ_s` while the model is still classical, and classical PNP has no steric limit — the
-  counter-ion goes to whatever Gouy–Chapman asks for, which at −0.05 C/m² is tens of molar. At the
-  full `λ_D(3 M)/5` grading the ladder climbs that; on a wall mesh 2.6 times coarser the NUM-17
-  packing gate aborts at the first charge sub-step. Both behaviours are correct: the coarse mesh does
-  not resolve the layer, so the Newton iterate overshoots into a state the model cannot represent,
-  and the gate is what stops it becoming a plausible wrong answer. The consequence for planning is
+  Stage 4 ramps `σ_s` while the model is still classical, and the field that fails first is the
+  *co-ion*: against a negative wall the anion is depleted as `exp(−|φ̃|)`, so a Newton step in the
+  primitive variable overshoots it through zero. At the full `λ_D(3 M)/5` grading the ladder climbs
+  −0.05 C/m²; on a wall mesh 2.6 times coarser the NUM-17 positivity gate aborts at the first charge
+  sub-step, naming `c_Cl⁻ = −0.76` at `r = 2 nm` — on the wall, exactly where it should look. Both
+  behaviours are correct: the coarse mesh does not resolve the layer, the step is too long, and the
+  gate is what stops a negative concentration becoming a plausible wrong current. The consequence for planning is
   that a reduced mesh buys less than its element count suggests — it costs robustness at the charged
   end — and that a strongly charged pore will want the Poisson–Boltzmann initial guess NUM-20 names
   for exactly this failure mode. `default_ladder` already takes a `wall_potential_V` for it.
