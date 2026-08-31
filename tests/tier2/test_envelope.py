@@ -60,6 +60,7 @@ from nanopnp.core.scaling import debye_length_nm
 from nanopnp.materials.electrolyte import CorrectionSwitches, Electrolyte
 from nanopnp.mesh.distance import wall_distance
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.physics.coefficients import SATURATED_WALL_DISTANCE_NM
 from nanopnp.physics.measures import AXISYMMETRIC
 from nanopnp.physics.models import CoupledModel, ModelSolution
 from nanopnp.post import qoi
@@ -151,6 +152,30 @@ def _model(concentration_M: float) -> CoupledModel:
         name="epnp-ns",
         solid_permittivities=MEMBRANE_PERMITTIVITY,
     )
+
+
+def _bulk_transport_number(concentration_M: float) -> float:
+    """Return ``t+`` of the *unconfined* electrolyte at one concentration.
+
+    The reference the pore's selectivity has to be measured against, and it is
+    not a constant. ``t+ = mu_Na / (mu_Na + mu_Cl)`` is 0.396 at infinite
+    dilution — NaCl is an **anion**-selective electrolyte, because ``D_Cl``
+    exceeds ``D_Na`` by 52 % — and the two ions carry *different* mobility
+    corrections, so it drifts further down with salt: 0.388 at 0.05 M to 0.356
+    at 3 M. Comparing every concentration against one number would charge the
+    wall for selectivity the electrolyte moved on its own, and "t+ > 1/2" would
+    be wrong outright: a weakly charged pore in NaCl stays anion-selective in
+    absolute terms, and only a strongly charged one overturns that.
+
+    Evaluated at the saturated wall distance, which is the bulk limit of the
+    PHY-02 wall corrections — there is no wall out here.
+    """
+    electrolyte = _electrolyte()
+    mobilities = {
+        ion.name: electrolyte.mobility(ion.name, concentration_M, SATURATED_WALL_DISTANCE_NM)
+        for ion in electrolyte.species
+    }
+    return float(mobilities["Na+"] / math.fsum(mobilities.values()))
 
 
 def _distance(mesh: object) -> object:
@@ -358,17 +383,35 @@ def test_82_criterion_two_the_whole_envelope_converges_through_the_ladder() -> N
         assert quantities.eof_m3_s is not None, "the envelope runs with the flow block on"
         assert math.isfinite(quantities.eof_m3_s), where
 
-    # A negatively charged pore is cation-selective at every point of the
-    # envelope, and least so at the top of the salt range where the double layer
-    # is thinnest against the pore radius.
+    # A negatively charged wall makes the pore more cation-selective than the
+    # electrolyte it is filled with, and screening walks that back towards the
+    # bulk value as the salt rises. The reference is the bulk transport number,
+    # derived rather than quoted: at infinite dilution mu_i is D_i^0/V_T, so
+    # t+ = D_Na/(D_Na + D_Cl) = 0.396 for NaCl -- an *anion*-selective
+    # electrolyte, which is why "t+ > 1/2" would be the wrong assertion and
+    # holds only while the wall charge is strong enough to overturn it.
+    bulk = {c: _bulk_transport_number(c) for c in CONCENTRATIONS_M}
     selectivity = {
         concentration_M: points[concentration_M, BIASES_V[0]].transport_number
         for concentration_M in CONCENTRATIONS_M
     }
-    logger.info("transport number against salt at %+.0f mV: %s", BIASES_V[0] * 1e3, selectivity)
-    assert all(value > 0.5 for value in selectivity.values()), selectivity
-    assert selectivity[CONCENTRATIONS_M[0]] > selectivity[CONCENTRATIONS_M[-1]], (
-        "screening must weaken the selectivity as the salt rises"
+    logger.info("transport number at %+.0f mV: %s", BIASES_V[0] * 1e3, selectivity)
+    logger.info("bulk transport number of the same electrolyte: %s", bulk)
+
+    for concentration_M, measured in selectivity.items():
+        assert measured > bulk[concentration_M], (
+            f"at {concentration_M:g} M a negatively charged wall must raise t+ above the bulk "
+            f"{bulk[concentration_M]:.4f}; got {measured:.4f}"
+        )
+    ordered = [selectivity[c] for c in CONCENTRATIONS_M]
+    assert ordered == sorted(ordered, reverse=True), (
+        f"screening must walk the selectivity monotonically back towards bulk: {selectivity}"
+    )
+    excess = {c: selectivity[c] - bulk[c] for c in CONCENTRATIONS_M}
+    logger.info("selectivity the wall charge buys, over bulk: %s", excess)
+    assert excess[CONCENTRATIONS_M[-1]] < 0.25 * excess[CONCENTRATIONS_M[0]], (
+        "at 3 M the double layer is a tenth of the pore radius, so almost all of the "
+        f"wall's selectivity should be screened away: {excess}"
     )
 
 
