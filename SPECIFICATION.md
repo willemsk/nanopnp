@@ -1316,18 +1316,38 @@ by per-cent-level amounts, which can exceed the rectification signal at low bias
 in the cis reservoir and 0 in the trans reservoir:
 
 ```
-I     = −F Σ_i z_i ∫_Ω J_i·∇ψ  r dr dz
-Q_EOF =              ∫_Ω u·∇ψ  r dr dz
+I     = F Σ_i z_i ∫_Ω J_i·∇ψ  r dr dz
+Q_EOF =           ∫_Ω u·∇ψ  r dr dz
 ```
 
 Rationale: it is superconvergent and cross-section independent.
+
+NOTE (sign): with `ψ = 1` on cis, `∫_Ω J_i·∇ψ r dr dz` is by the divergence theorem and
+`∇·J_i = 0` the flux of species `i` *out through the cis cap*, so the sign above references the
+current to the grounded cis electrode of §5.2.2 and a positive current flows trans → cis, in `+z`.
+That is the sign for which an uncharged ohmic pore has `G = I/V_bias > 0` at either sign of the
+bias, which is what VER-17 asserts; earlier revisions of this clause carried a minus, which
+references the trans electrode instead and negates every conductance. It is also the sign that
+makes this route agree with NUM-25 evaluated on `Γ_w,c`, whose reaction flux is the same
+`∮ ψ J_i·n` with the same outward normal — so a minus here would have made the NUM-26 agreement
+check fail on every solution.
 
 **NUM-25.** The variational reaction flux SHALL also be implemented: the assembled residual
 evaluated against a test function equal to 1 on a Dirichlet electrode (Hughes, Engel, Mazzei &
 Larson, *J. Comput. Phys.* **163**, 467, 2000).
 
 **NUM-26.** Both routes SHALL be exercised on the same solution in continuous integration and their
-agreement asserted against a declared tolerance.
+agreement asserted against a declared tolerance. **That tolerance is 1 × 10⁻³ relative**, on the
+total current, at every operating point of the FR-17 envelope.
+
+Rationale for the number: the tolerance has to sit well below the smallest signal the current is
+asked to resolve, which is the rectification signal `|RR − 1|` at the lowest envelope bias of
+±50 mV — of order 10⁻¹ for a charged pore. A tenth of a per cent leaves two orders of margin. It is
+a ceiling on a bug rather than a numerical budget: `ψ` differs from the NUM-25 boundary indicator by
+a function vanishing on both electrodes, hence by a legitimate test function of the converged
+residual, so the two routes are the *same* integral and what remains between them is quadrature and
+the residual Newton left behind. Measured on the VER-17 configuration, that remainder is 6 × 10⁻⁶ on
+a 3 300-element mesh and 7 × 10⁻⁴ on a 1 100-element one.
 
 NOTE: the reference computed `F*(z_cpos*tds.ntflux_cpos + z_cneg*tds.ntflux_cneg)` at integration
 order 4, `ntflux` being the variational reaction flux from the assembled weak residual, so the
@@ -1345,6 +1365,13 @@ published currents are unaffected by NUM-23.
 NOTE: any pore-averaged quantity reported as a regression target SHALL state whether the `2πr`
 Jacobian is included, because the source work's pore averages appear to omit it while being
 described as volume averages.
+
+NOTE (this implementation's convention): the axisymmetric weak forms of §6.2 carry the `r` weight
+only, the `2π` having cancelled from both sides, so every integral in the solver — including both
+current routes above — is `∫ f r dr dz`. The `2π` is restored **once**, in the quantity-of-interest
+extraction, so every SI quantity reported (`I`, `Q_EOF`, and everything derived from them) is a true
+three-dimensional quantity and includes the full Jacobian. Because both routes inherit the same
+convention, their NUM-26 agreement is independent of it while their SI values are not.
 
 **NUM-28.** The force on an embedded analyte SHALL be evaluated in domain form,
 
