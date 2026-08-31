@@ -44,6 +44,7 @@ from __future__ import annotations
 import math
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from functools import cached_property
 from typing import Any, TypeAlias
 
 import sympy as sp
@@ -252,9 +253,14 @@ class ManufacturedSolution:
 
     # -- the exact fields --------------------------------------------------
 
-    @property
+    @cached_property
     def constants(self) -> ConstantCoefficients:
-        """The model's dimensionless material constants."""
+        """The model's dimensionless material constants.
+
+        Cached: one source build reads it seven times, and each read would
+        otherwise rebuild two :class:`NondimensionalCoefficients` and re-run the
+        whole constant-coefficient scope check to return the same numbers.
+        """
         return constant_coefficients(self.model)
 
     def expressions(self) -> Mapping[str, Symbolic]:

@@ -286,7 +286,7 @@ def nernst_planck_residual(
 ) -> IntegralTerm:
     """Return ``int J~_i . grad(w) r``, the weak Nernst-Planck residual (NUM-04).
 
-    The boundary term this integration by parts leaves is ``-int_Gamma w n.J_i``,
+    The boundary term this integration by parts leaves is ``+int_Gamma w n.J_i``,
     so the no-flux condition of PHY-09 on the pore and membrane walls is natural
     and must not be imposed. Pass ``definedon=mesh.Materials(...)`` to restrict
     the equation to the fluid.

@@ -218,11 +218,10 @@ class NondimensionalCoefficients:
         Computed from the definition so that an asymmetric electrolyte, where
         the two differ, is right as well.
         """
-        length_m = MESH_LENGTH_UNIT_NM / NM_PER_M
         return (
             FARADAY
             * self.scales.concentration_mol_m3
-            * length_m**2
+            * self.scales.length_m**2
             / (self.scales.permittivity * self.scales.potential_V)
         )
 
@@ -295,13 +294,17 @@ class NondimensionalCoefficients:
 
 
 def species_concentrations_SI(
-    coefficients: NondimensionalCoefficients,
+    scales: Scales, concentrations: Mapping[str, Expression]
 ) -> Mapping[str, Numeric]:
     """Return the species concentrations in mol/m^3, for the NUM-17 gates.
 
     ``PackingFractionGate`` sums ``N_A a_j^3 c_j`` with ``c_j`` in mol/m^3, so
     the gate is fed SI concentrations while the solve carries dimensionless
     ones. Converting here keeps the factor in one place.
+
+    It takes the scale set rather than a :class:`NondimensionalCoefficients`
+    because ``c_0`` is all it needs: constructing the coefficients would
+    evaluate the whole correction chain, once per gate build, for one float.
     """
-    scale = coefficients.scales.concentration_mol_m3
-    return {name: value * scale for name, value in coefficients.concentrations.items()}
+    scale = scales.concentration_mol_m3
+    return {name: value * scale for name, value in concentrations.items()}

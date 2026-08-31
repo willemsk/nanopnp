@@ -32,6 +32,8 @@ term does. Every measure below that touches a divergence therefore passes
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from nanopnp.core.typing import Expression, IntegralTerm, Numeric, Option
 from nanopnp.physics.coefficients import NondimensionalCoefficients
 from nanopnp.physics.measures import Measures
@@ -48,6 +50,17 @@ __all__ = [
     "strain_rate",
     "viscous_operator",
 ]
+
+
+def _singular(kwargs: Mapping[str, Option]) -> dict[str, Option]:
+    """Return ``kwargs`` with the NUM-07 ``1/r`` flag forced on.
+
+    The flag is a property of the integrand, not of the call site, so a caller
+    routing ``singular`` through ``**kwargs`` must not be able to clear it - and
+    must not collide with it either, which passing it alongside ``**kwargs``
+    would do.
+    """
+    return {**kwargs, "singular": True}
 
 
 def strain_rate(velocity: Expression) -> Expression:
@@ -100,7 +113,7 @@ def viscous_operator(
     if not measures.is_axisymmetric:
         return deviatoric
     hoop = measures.volume(
-        2.0 * viscosity * velocity[0] * test[0] / (ngs.x * ngs.x), singular=True, **kwargs
+        2.0 * viscosity * velocity[0] * test[0] / (ngs.x * ngs.x), **_singular(kwargs)
     )
     return deviatoric + hoop
 
@@ -112,9 +125,7 @@ def pressure_term(
     **kwargs: Option,
 ) -> IntegralTerm:
     """Return ``-int p div^(v) r``, the pressure contribution to momentum."""
-    return measures.volume(
-        -pressure * axisymmetric_divergence(test, measures), singular=True, **kwargs
-    )
+    return measures.volume(-pressure * axisymmetric_divergence(test, measures), **_singular(kwargs))
 
 
 def continuity_term(
@@ -125,7 +136,7 @@ def continuity_term(
     mass_density: Numeric | None = None,
     **kwargs: Option,
 ) -> IntegralTerm:
-    """Return ``-int q div^(rho~ u~) - u~.grad(rho~) r``, the continuity residual.
+    """Return ``-int q rho~ div^(u~) r``, the continuity residual.
 
     With ``mass_density`` omitted this is the constant-density incompressible
     constraint ``-int q div^(u~) r``, which is what the ``variable_density_flow``
@@ -149,7 +160,7 @@ def continuity_term(
     divergence = axisymmetric_divergence(velocity, measures)
     if mass_density is not None:
         divergence = mass_density * divergence
-    return measures.volume(-test * divergence, singular=True, **kwargs)
+    return measures.volume(-test * divergence, **_singular(kwargs))
 
 
 def inertia_term(
