@@ -223,6 +223,27 @@ gate stops a negative concentration becoming a plausible wrong current. So a red
 robustness at the charged end and not only accuracy; the log branch is the structural cure, and a
 strongly charged pore also wants the Poisson–Boltzmann initial guess the fallback list names.
 
+**The whole 0.05-3 M x +/-200 mV envelope, measured. [tested]** Thirty operating points on a
+2 nm x 13 nm pore at -0.02 C/m^2, every correction active against a real distance field, reached by
+climbing the ladder once to the easiest corner and warm-starting every other point from a converged
+neighbour: 13 rungs and 51 iterations for the climb, then 205 iterations over 621 s for the grid, no
+gate violation and no rung below 0.1 damping. Conductance and selectivity against salt, at +50 mV:
+
+| salt | G (S) | t+ | bulk t+ | excess |
+|---|---|---|---|---|
+| 0.05 M | 4.80e-10 | 0.870 | 0.388 | 0.482 |
+| 0.15 M | 1.06e-9 | 0.662 | 0.383 | 0.280 |
+| 0.50 M | 3.11e-9 | 0.486 | 0.373 | 0.113 |
+| 1.0 M | 5.77e-9 | 0.432 | 0.366 | 0.066 |
+| 3.0 M | 1.33e-8 | 0.384 | 0.356 | 0.028 |
+
+Two things worth carrying. **The bulk transport number is not a constant**: the two ions carry
+different mobility corrections, so `t+` of the unconfined electrolyte drifts from 0.388 at 0.05 M to
+0.356 at 3 M, and a pore's selectivity has to be measured against the value at its own concentration
+or the wall gets credit for what the electrolyte did. And NaCl is **anion**-selective to begin with
+(`D_Cl` exceeds `D_Na` by 52 %), so "a negatively charged pore has `t+ > 1/2`" is false for any wall
+charge weak enough not to overturn that -- at -0.02 C/m^2 it holds only below about 0.3 M.
+
 **Measured, on a charged 2 nm × 13 nm pore. [tested]** The only rungs needing damping below the
 0.2 initial value were the surface-charge ramp, at 0.08; every other rung of every ladder tried held
 at 0.2. A full climb to the hard corner — 3 M, ±200 mV, every correction active, wall graded to

@@ -1,8 +1,8 @@
 # Phase 0 (Spike): coupled ePNP-NS on an analytic cylindrical pore
 
-**Status: WP1–WP5 merged, WP6 outstanding.** Last revised 31 August 2026, after WP5. The one thing
-WP5 has not yet reported is the thirty-point envelope record; the run is a `slow` measurement and is
-in progress. Everything gated — tiers 1 and 2, VER-11 and VER-17 included — is green.
+**Status: WP1–WP5 merged, WP6 outstanding.** Last revised 31 August 2026, after WP5. Everything
+gated — tiers 1 and 2, VER-11 and VER-17 included — is green, and the thirty-point envelope run is
+recorded under criterion 2 below.
 
 This is the delivery plan for Phase 0 of `SPECIFICATION.md` §8.1, as amended by §8.2.1. The
 specification remains normative: where this file and the specification disagree, the specification
@@ -311,12 +311,26 @@ Phase 0 is complete when, on the analytic cylindrical pore:
    0.15 % against the Maxwell–Hall form on a 50 nm reservoir and 0.39 % on a 100 nm one, `G` moving
    0.23 % between them — so the 2 % is measuring the discretisation, not the truncation of the domain.
 2. **The envelope converges**: 0.05–3 M × ±200 mV with all corrections active, reached through the
-   continuation ladder, with no negative concentration at any Newton iterate. `tests/tier2/test_envelope.py`
-   covers five concentrations × six biases on a reduced mesh, with the hard corner (3 M, ±200 mV)
-   also run from cold on the NUM-30 `λ_D/5` mesh and the classical ablation alongside it.
-   *Implemented; the full thirty-point run is in progress and its record is not yet in this file.*
-   The hard corner on its own is already established: 22 rungs, 106 Newton iterations, 500 s at
-   66 000 DOF, no gate violation.
+   continuation ladder, with no negative concentration at any Newton iterate. **Met in WP5.** All
+   thirty points of a five-concentration × six-bias grid, every correction genuinely active against a
+   real PHY-02 distance field, at −0.02 C/m² on a reduced mesh (3 236 elements, `maxh` 6 nm,
+   `wall_h` 0.09 nm): one climb of 13 rungs and 51 iterations, then 205 warm-started iterations over
+   621 s, **no gate violation and no rung below 0.1 damping**. The hard corner — 3 M, +200 mV,
+   −0.05 C/m² — is also climbed from cold on the full NUM-30 `λ_D(3 M)/5` mesh: 22 rungs, 114
+   iterations, 252 s at 64 784 degrees of freedom, minimum damping 0.051.
+
+   | salt | G (S) | t₊ | bulk t₊ | excess over bulk |
+   |---|---|---|---|---|
+   | 0.05 M | 4.80 × 10⁻¹⁰ | 0.870 | 0.388 | 0.482 |
+   | 0.15 M | 1.06 × 10⁻⁹ | 0.662 | 0.383 | 0.280 |
+   | 0.50 M | 3.11 × 10⁻⁹ | 0.486 | 0.373 | 0.113 |
+   | 1.0 M | 5.77 × 10⁻⁹ | 0.432 | 0.366 | 0.066 |
+   | 3.0 M | 1.33 × 10⁻⁸ | 0.384 | 0.356 | 0.028 |
+
+   The two current routes agree to between 5 × 10⁻⁹ and 1.4 × 10⁻⁶ at every one of the thirty points,
+   three to six orders inside NUM-26's declared 10⁻³. The selectivity the wall charge buys over the
+   bulk electrolyte is screened away as the salt rises — 94 % of it gone by 3 M, where the double
+   layer is a tenth of the pore radius — which is the physics the envelope exists to demonstrate.
 3. **The factorisation benchmark reports** time and peak memory for a production-sized problem on
    this laptop, with a verdict on whether UMFPACK or SuperLU is viable (RSK-10). **Met in WP3**:
    UMFPACK, 41 s and 6.2 GB at 1.04 × 10⁶ DOF; SuperLU not viable at that size.
@@ -327,9 +341,11 @@ Report at the end of the phase: the observed MMS convergence rates, the factoris
 ladder rungs needed damping below 0.1, and any benchmark whose tolerance had to be argued rather
 than met — the last being the one that matters most for Phase 1's COMSOL comparison.
 
-Two entries for that report are already in hand from WP5. **The only rungs that needed damping below
-0.1 are the stage-4 charge ramp**, at 0.08, on every configuration tried; every other rung of every
-ladder held at the initial 0.2. And **no WP5 tolerance had to be argued**: VER-17 came in at 0.15 %
-against 2 %, and the NUM-26 route agreement at 4 × 10⁻⁶ against a declared 10⁻³. The one number that
+Two entries for that report are in hand from WP5. **Damping below 0.1 is needed only by the stage-4
+charge ramp, and only at the charged end**: the thirty-point envelope at −0.02 C/m² never went below
+the initial 0.2 on any rung, and the hard corner at −0.05 C/m² reached 0.051 on the second
+charge sub-step and nowhere else. Every other rung of every ladder held at 0.2. And **no WP5
+tolerance had to be argued**: VER-17 came in at 0.15 % against 2 %, and the NUM-26 route agreement
+between 5 × 10⁻⁹ and 1.4 × 10⁻⁶ against a declared 10⁻³. The one number that
 *was* argued is the ψ-band leak — 6 × 10⁻⁴ would have passed the declared tolerance and was a genuine
 error — and it was fixed rather than accommodated.
