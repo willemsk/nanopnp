@@ -61,7 +61,11 @@ from nanopnp.physics.nernst_planck import (
     nernst_planck_residual,
     species_flux,
 )
-from nanopnp.physics.pb import linear_pb_operator, nonlinear_pb_residual, solve_pb
+from nanopnp.physics.pb import (
+    linear_pb_operator,
+    nonlinear_pb_residual,
+    solve_pb_recorded,
+)
 from nanopnp.physics.poisson import charge_source, poisson_operator, surface_charge_source
 from nanopnp.solve.gates import (
     FieldSampler,
@@ -1231,7 +1235,7 @@ class ElectrostaticModel:
 
         if debye_length_nm is None:
             raise ValueError(f"{self.name!r} needs a debye_length_nm; it screens with 1/lambda^2")
-        state = solve_pb(
+        state, record = solve_pb_recorded(
             mesh,
             measures,
             debye_length_nm=debye_length_nm,
@@ -1248,7 +1252,9 @@ class ElectrostaticModel:
         # space, so the two are the same operator.
         residual = ngs.BilinearForm(state.space)
         residual += self.residual_form(state.space, measures, debye_length_nm=debye_length_nm)
-        return ModelSolution(model=self, space=state.space, state=state, residual=residual)
+        return ModelSolution(
+            model=self, space=state.space, state=state, newton=record, residual=residual
+        )
 
 
 ModelBuilder: TypeAlias = Callable[..., PhysicsModel]

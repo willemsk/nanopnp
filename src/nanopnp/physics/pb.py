@@ -29,7 +29,12 @@ from nanopnp.physics.measures import Measures
 from nanopnp.physics.poisson import poisson_operator
 from nanopnp.solve.gates import FieldSampler, PotentialIncrementGate
 from nanopnp.solve.linear import DEFAULT_SOLVER, solve_linear
-from nanopnp.solve.newton import DEFAULT_SETTINGS, NewtonSettings, damped_newton
+from nanopnp.solve.newton import (
+    DEFAULT_SETTINGS,
+    NewtonResult,
+    NewtonSettings,
+    damped_newton,
+)
 
 __all__ = [
     "ELECTROLYTE_PERMITTIVITY",
@@ -37,6 +42,7 @@ __all__ = [
     "linear_pb_operator",
     "nonlinear_pb_residual",
     "solve_pb",
+    "solve_pb_recorded",
 ]
 
 logger = logging.getLogger(__name__)
@@ -99,6 +105,11 @@ def solve_pb(
 ) -> GridFunction:
     """Solve Poisson-Boltzmann and return the nondimensional potential.
 
+    A thin wrapper over :func:`solve_pb_recorded`, which returns the convergence
+    record as well. Use that one where the record is needed — a continuation rung
+    whose Newton history goes into the FR-25 manifest — and this one where it is
+    not.
+
     Parameters
     ----------
     mesh
@@ -151,6 +162,42 @@ def solve_pb(
     no independent concentration field, its ion densities being slaved to the
     potential by construction.
     """
+    return solve_pb_recorded(
+        mesh,
+        measures,
+        debye_length_nm=debye_length_nm,
+        dirichlet=dirichlet,
+        boundary_values=boundary_values,
+        nonlinear=nonlinear,
+        order=order,
+        solver=solver,
+        settings=settings,
+        initial=initial,
+    )[0]
+
+
+def solve_pb_recorded(
+    mesh: Mesh,
+    measures: Measures,
+    *,
+    debye_length_nm: float,
+    dirichlet: str,
+    boundary_values: Expression,
+    nonlinear: bool = True,
+    order: int = 2,
+    solver: str = DEFAULT_SOLVER,
+    settings: NewtonSettings = DEFAULT_SETTINGS,
+    initial: GridFunction | None = None,
+) -> tuple[GridFunction, NewtonResult | None]:
+    """Solve Poisson-Boltzmann, returning the potential and its convergence record.
+
+    The record is ``None`` for the linear branch, which is a single linear solve
+    and has no Newton history. Arguments are those of :func:`solve_pb`.
+
+    It exists because a rung of the NUM-18 ladder must be able to say how it
+    converged: a rung with no record has not been solved, whatever it returned,
+    and FR-25 asks the manifest to carry the history rather than the log.
+    """
     import ngsolve as ngs
 
     if measures.element_order != order:
@@ -182,7 +229,7 @@ def solve_pb(
         ).Assemble()
         f = ngs.LinearForm(space).Assemble()
         solve_linear(a, f, potential, solver=solver)
-        return potential
+        return potential, None
 
     trial, test = space.TnT()
     residual = ngs.BilinearForm(space)
@@ -198,7 +245,5 @@ def solve_pb(
         increment=increment,
         increment_gates=[PotentialIncrementGate(sampler, increment)],
     )
-    # The convergence record is what FR-25 asks the manifest to carry; until the
-    # case-file store exists it goes to the log rather than being discarded.
     logger.debug("nonlinear Poisson-Boltzmann converged: %s", result.summary())
-    return potential
+    return potential, result

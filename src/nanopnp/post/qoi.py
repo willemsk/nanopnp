@@ -69,7 +69,9 @@ __all__ = [
     "indicator_currents",
     "indicator_eof",
     "reaction_flux_currents",
+    "rectification",
     "rectification_ratio",
+    "summarise",
     "total_current",
     "transport_number",
 ]
