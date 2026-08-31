@@ -290,6 +290,23 @@ as the **25 % contour**. Do not confuse the two sharpness factors (0.93 for the 
   configuration claiming "every correction active" must be handed a real `d`, from the **pore wall
   only**; the membrane is deliberately not a source (PHY-02). The failure is silent because the
   answer is a perfectly reasonable one for a different model.
+- **An electrolyte's correction switches are a *record*; the resolved models are the behaviour.**
+  Resolve the switches to correction models once, at construction, and every property accessor reads
+  the resolved model — the switches are never consulted again. Swapping the switches alone therefore
+  produces an object that reports one configuration in its provenance and evaluates another, and the
+  run that follows calls itself PNP-NS, converges, and is ePNP-NS. That makes the PHY-21 ablation
+  compare a configuration against itself. Rebuild the resolved models whenever the switches change,
+  and refuse a pair that disagrees. **[tested]**
+- **Two errors can cancel and hide both.** The 1D limiting-current benchmark passed for a while at
+  the wrong film length *because* of the bug above: a 100 nm film is space-charge-limited and reads
+  14 % high against the electroneutral closed form, while the silently-active corrections broke the
+  Einstein relation (`mu/mu0` = 0.63 against `D/D0` = 0.92 at 1 M) and pulled the current down by
+  about as much. Fixing either alone turns a passing benchmark red. **[tested]**
+- **The screening length that matters at a depleted electrode is not the bulk one.** `lambda_D` goes
+  as `c^(-1/2)`, so at 1e-3 of bulk it is thirty-two times larger — 9.6 nm at 1 M. A benchmark that
+  justifies its geometry with the bulk value can be an order of magnitude out. The signature of a
+  space-charge-limited film is that the plateau current stops depending on the electrode
+  concentration at all. **[tested]**
 - **`d` is a discrete field, so it must travel with the solution, not be recomputed.** Two calls to
   the same distance solver return grid functions that differ at round-off, and a residual reassembled
   against the second is a *different operator* from the one that was solved. Any post-processing that

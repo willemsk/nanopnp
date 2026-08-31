@@ -34,6 +34,17 @@ kind of factor.
 Both ionic diffusivities are made equal for the benchmark, which is a property
 of the *test electrolyte* and not of the solver: the closed form above assumes
 it, and NaCl's ``D_Na`` and ``D_Cl`` differ by 52 %.
+
+The electrolyte must also be **genuinely classical**, which is a stronger
+statement than it looks. The factor of 2 above is the migration term doubling
+the diffusive one, and it holds only where ``mu~_i = D~_i`` - that is, only at
+infinite dilution (PHY-14, VER-05). With the concentration corrections active
+``mu/mu0`` is 0.63 at 1 M against ``D/D0`` = 0.92, the factor falls to about
+1.7, and the predicted current drops by some 15 %. This benchmark ran that way
+for a while without anyone noticing, because two errors cancelled: the film was
+short enough to be space-charge-limited, which raised the current by 14 %, and
+the corrections were silently active, which lowered it by about as much. Both
+are fixed here.
 """
 
 from dataclasses import replace
@@ -49,9 +60,26 @@ from nanopnp.physics import models
 from nanopnp.physics.measures import PLANAR
 from nanopnp.post.reaction_flux import boundary_reaction_flux
 
-LENGTH_NM = 100.0
-"""Film thickness ``L~``. The Debye length is 0.30 nm at 1 M, so the
-electroneutral core the derivation assumes is 300 screening lengths wide."""
+LENGTH_NM = 2000.0
+"""Film thickness ``L~``, and the number that decides whether the closed form
+above applies at all.
+
+The screening length that matters is **not** the bulk one. At 1 M
+``lambda_D`` = 0.30 nm, but the derivation's electroneutral core has to hold
+right up to the depleted electrode, and ``lambda_D`` goes as ``c^(-1/2)``: at
+the electrode's 1e-3 of bulk it is 9.6 nm, thirty-two times larger. A 100 nm
+film is then a tenth space charge, the profile is not linear from 1 to
+``delta``, and the measured plateau stops depending on ``delta`` at all - which
+is the signature of a space-charge-limited film rather than an electroneutral
+one.
+
+Measured, classical PNP, ``delta`` = 1e-3, current against the closed form:
+1.138 at L = 100 nm, 1.050 at 400 nm, 1.026 at 1000 nm, 1.017 at 2000 nm. The
+excess falls as the space-charge region shrinks against the film, so the solver
+converges to the electroneutral limit and the benchmark is run where that limit
+is the right thing to compare against. The element count is unchanged: ``maxh``
+is a fixed fraction of ``L``. **[tested]**
+"""
 
 HEIGHT_NM = 0.5
 """Transverse extent. The problem is one-dimensional; this is the slab it is
@@ -100,6 +128,10 @@ def sweep() -> tuple[list[float], float]:
     model = models.create(
         "pnp",
         electrolyte=electrolyte,
+        # Genuinely classical: ``create`` routes this through
+        # ``Electrolyte.with_switches``, which rebuilds the resolved corrections
+        # rather than only relabelling them. The factor of 2 in the closed form
+        # is the Einstein relation and it holds nowhere else.
         classical=True,
         concentration_M=CONCENTRATION_M,
         fluid="electrolyte",

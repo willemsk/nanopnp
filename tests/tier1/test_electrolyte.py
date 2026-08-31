@@ -155,3 +155,69 @@ def test_a_parameter_file_becomes_selectable_without_a_code_change() -> None:
     assert "willems2020_nacl" in available_corrections()
     for name in available_corrections():
         assert name in models.registered_models()
+
+
+def test_phy21_switches_and_corrections_cannot_disagree() -> None:
+    """``replace(..., switches=...)`` is refused; ``with_switches`` is the way.
+
+    The corrections are resolved once, at construction, and every property
+    accessor reads the resolved model; ``switches`` is never consulted again. So
+    swapping the switches alone produces an electrolyte that *reports* one
+    configuration in its FR-25 provenance and *evaluates* another — and a run
+    that calls itself PNP-NS, converges, and is ePNP-NS makes the PHY-21
+    ablation compare a configuration against itself.
+    """
+    from dataclasses import replace as dataclass_replace
+
+    full = Electrolyte.from_parameter_file()
+    with pytest.raises(ValueError, match="switches and its resolved corrections disagree"):
+        dataclass_replace(full, switches=CorrectionSwitches.classical())
+
+
+def test_phy21_with_switches_changes_the_behaviour_not_only_the_record() -> None:
+    """The classical reduction is a real reduction: every factor becomes 1.
+
+    At 3 M the reference mobility correction is a factor of about 0.5, so a
+    classical electrolyte that still evaluated the fitted model would be caught
+    here by a wide margin — which is exactly what a switches-only swap did.
+    """
+    full = Electrolyte.from_parameter_file()
+    classical = full.with_switches(CorrectionSwitches.classical())
+
+    assert classical.switches == CorrectionSwitches.classical()
+    for ion in classical.species:
+        assert classical.correction("mobility", ion.name).name == "none"
+        assert classical.mobility(ion.name, 3.0, 3.0) == pytest.approx(ion.mobility_0)
+        assert classical.diffusivity(ion.name, 3.0, 3.0) == pytest.approx(ion.diffusivity_0)
+        # ... and the full configuration really does correct it, so the test
+        # above is not passing because both are 1.
+        assert full.mobility(ion.name, 3.0, 3.0) < 0.6 * ion.mobility_0
+    assert classical.viscosity(3.0, 3.0) == pytest.approx(classical.viscosity_0)
+    assert full.viscosity(3.0, 3.0) > 1.1 * full.viscosity_0
+
+
+def test_phy21_with_switches_round_trips_back_to_the_full_configuration() -> None:
+    """Turning the corrections off and on again restores the validated model."""
+    full = Electrolyte.from_parameter_file()
+    there_and_back = full.with_switches(CorrectionSwitches.classical()).with_switches(full.switches)
+    for ion in full.species:
+        assert there_and_back.mobility(ion.name, 3.0, 3.0) == pytest.approx(
+            full.mobility(ion.name, 3.0, 3.0)
+        )
+
+
+def test_phy21_an_ablated_sub_switch_is_caught_too() -> None:
+    """Turning off only the wall part is as silent as turning off the model."""
+    from dataclasses import replace as dataclass_replace
+
+    full = Electrolyte.from_parameter_file()
+    ablated = dataclass_replace(
+        full.switches, mobility=dataclass_replace(full.switches.mobility, wall=False)
+    )
+    with pytest.raises(ValueError, match="wall="):
+        dataclass_replace(full, switches=ablated)
+
+    honest = full.with_switches(ablated)
+    for ion in honest.species:
+        assert honest.correction("mobility", ion.name).use_wall is False
+        assert honest.correction("diffusivity", ion.name).use_wall is True
