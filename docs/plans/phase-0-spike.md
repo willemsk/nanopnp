@@ -196,7 +196,7 @@ criterion 2, and retires RSK-03.
 - VER-11 and VER-17 as Tier-2 gates, and the §8.2 criterion 2 envelope as a `slow`, non-gating
   measurement that records the mesh it ran on.
 
-Ten things settled by the work, which WP6 inherits.
+Eleven things settled by the work, which WP6 inherits.
 
 - **`transfer` is the mechanism the plan identified as missing, and it was.** `CoupledModel.solve`
   warm-starts by reusing `initial.space`, which is right whenever the field set is unchanged; stage
@@ -233,6 +233,12 @@ Ten things settled by the work, which WP6 inherits.
   And because `d` is a *discrete* field, it travels with the solution rather than being recomputed:
   two calls to the distance solver differ at round-off, and a residual reassembled against the second
   is a different operator from the one that was solved.
+- **The ablation now measures what it is for.** ePNP-NS against PNP-NS at 3 M, +200 mV, same mesh,
+  same operating point, same code path: the corrections reduce the conductance by a factor **0.452**,
+  which is the mobility correction (`μ/μ⁰` = 0.465 for Na⁺, 0.552 for Cl⁻) showing through almost
+  undiluted. Before the fix below it measured 1.0009. The classical arm is also a free check on
+  VER-17 at the other end of the salt range: at 3 M with a double layer a tenth of the pore radius it
+  gives `G` = 2.9495 × 10⁻⁸ S against Maxwell–Hall's 2.95 × 10⁻⁸ S, four digits.
 - **An electrolyte's switches were a record, not the behaviour — and WP5's ablation is what caught
   it.** `Electrolyte` resolves its correction switches to correction models once, at construction,
   and every property accessor reads the resolved dict; `switches` is never consulted again. So

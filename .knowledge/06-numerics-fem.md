@@ -244,6 +244,13 @@ or the wall gets credit for what the electrolyte did. And NaCl is **anion**-sele
 (`D_Cl` exceeds `D_Na` by 52 %), so "a negatively charged pore has `t+ > 1/2`" is false for any wall
 charge weak enough not to overturn that -- at -0.02 C/m^2 it holds only below about 0.3 M.
 
+**The correction set is worth a factor of two in conductance at 3 M. [tested]** ePNP-NS against
+classical PNP-NS at 3 M, +200 mV, `-0.02 C/m^2`, same mesh and same code path: `G` falls by a factor
+0.452, which is the mobility correction (`mu/mu0` = 0.465 for Na+, 0.552 for Cl-) showing through
+almost undiluted, and `t+` moves 0.433 -> 0.384. The classical arm doubles as a Maxwell-Hall check at
+the top of the salt range: with the double layer a tenth of the pore radius it gives 2.9495e-8 S
+against the closed form's 2.95e-8 S.
+
 **Measured, on a charged 2 nm × 13 nm pore. [tested]** The only rungs needing damping below the
 0.2 initial value were the surface-charge ramp, at 0.08; every other rung of every ladder tried held
 at 0.2. A full climb to the hard corner — 3 M, ±200 mV, every correction active, wall graded to
