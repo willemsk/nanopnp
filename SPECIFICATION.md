@@ -1346,10 +1346,10 @@ asked to resolve, which is the rectification signal `|RR − 1|` at the lowest e
 a ceiling on a bug rather than a numerical budget: `ψ` differs from the NUM-25 boundary indicator by
 a function vanishing on both electrodes, hence by a legitimate test function of the converged
 residual, so the two routes are the *same* integral and what remains between them is quadrature and
-the residual Newton left behind. Measured: 4 × 10⁻⁶ on the VER-11 configuration (0.5 M,
-−0.05 C/m², ±50 mV) at every mesh from 3 400 to 7 300 degrees of freedom, and 5 × 10⁻⁷ on VER-17's
-uncharged pore. The remainder does not fall with the mesh because it is set by the Newton residual,
-not by the discretisation.
+the residual Newton left behind. Measured: 6 × 10⁻⁶ on the VER-11 configuration (0.5 M,
+−0.05 C/m², ±50 mV, classical PNP) and 5 × 10⁻⁷ on VER-17's uncharged pore. The remainder does not
+fall with the mesh — it is unchanged from 3 400 to 7 300 degrees of freedom — because it is set by
+the residual Newton leaves behind and not by the discretisation.
 
 NOTE (a precondition, not a detail): the identity above holds only where `ψ` is *exactly* 1 and 0 on
 the two electrodes. Interpolated over the whole mesh it is not — the membrane spans the transition
