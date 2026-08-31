@@ -29,7 +29,15 @@ from dataclasses import dataclass, field, replace
 from typing import Any, Literal, Protocol, TypeAlias
 
 from nanopnp.core.scaling import NM_PER_M, Scales
-from nanopnp.core.typing import Expression, FESpace, GridFunction, IntegralTerm, Mesh, Option
+from nanopnp.core.typing import (
+    AssembledForm,
+    Expression,
+    FESpace,
+    GridFunction,
+    IntegralTerm,
+    Mesh,
+    Option,
+)
 from nanopnp.materials.electrolyte import CorrectionSwitches, Electrolyte
 from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS
 from nanopnp.physics.coefficients import (
@@ -54,7 +62,7 @@ from nanopnp.physics.nernst_planck import (
     species_flux,
 )
 from nanopnp.physics.pb import linear_pb_operator, nonlinear_pb_residual, solve_pb
-from nanopnp.physics.poisson import charge_source, poisson_operator
+from nanopnp.physics.poisson import charge_source, poisson_operator, surface_charge_source
 from nanopnp.solve.gates import (
     FieldSampler,
     Gate,
@@ -63,7 +71,13 @@ from nanopnp.solve.gates import (
     PotentialIncrementGate,
 )
 from nanopnp.solve.linear import DEFAULT_SOLVER, solve_linear
-from nanopnp.solve.newton import DEFAULT_SETTINGS, NewtonResult, NewtonSettings, damped_newton
+from nanopnp.solve.newton import (
+    DEFAULT_SETTINGS,
+    NewtonResult,
+    NewtonSettings,
+    NewtonStep,
+    damped_newton,
+)
 
 __all__ = [
     "DEFAULT_BOUNDARIES",
@@ -204,12 +218,24 @@ class ModelSolution:
         The solution grid function.
     newton
         The convergence record, or ``None`` for a linear model.
+    residual
+        The assembled form the state solves, kept so the NUM-25 reaction flux
+        can be taken without rebuilding it. Rebuilding is not merely wasteful:
+        a coupled residual reassembled without the *same* ``wall_distance_nm``
+        is a different operator, and the flux taken against it is then wrong
+        with no diagnostic at all. Carrying the form removes that trap.
+    wall_distance_nm
+        The PHY-02 distance field the residual was assembled with, so that a
+        consumer rebuilding any part of the model — the NUM-24 indicator form
+        rebuilds ``J~_i`` — reproduces the coefficients exactly.
     """
 
     model: PhysicsModel
     space: FESpace
     state: GridFunction
     newton: NewtonResult | None = None
+    residual: AssembledForm | None = None
+    wall_distance_nm: Expression = SATURATED_WALL_DISTANCE_NM
 
     def component(self, name: str) -> Expression:
         """Return one field of the solution by name.
@@ -289,6 +315,22 @@ class PhysicsModel(Protocol):
 
     def space(self, mesh: Mesh, boundaries: CoupledBoundaries) -> FESpace:
         """Return the finite-element space the model is posed on."""
+        ...
+
+    def cold_state(
+        self,
+        mesh: Mesh,
+        boundaries: CoupledBoundaries,
+        *,
+        initial_concentrations: Mapping[str, float] | None = None,
+    ) -> GridFunction:
+        """Return an admissible fresh state on this model's space.
+
+        Part of the protocol because the continuation ladder (NUM-18) transfers
+        a solution onto a *larger* field set and must fill the new fields from
+        something the model itself calls admissible — a cold start at
+        ``c~_i = 0`` fails the NUM-17 positivity gate before Newton takes a step.
+        """
         ...
 
     def residual_form(self, space: FESpace, measures: Measures, **kwargs: Option) -> IntegralTerm:
@@ -595,6 +637,8 @@ class CoupledModel:
         *,
         wall_distance_nm: Expression = SATURATED_WALL_DISTANCE_NM,
         fixed_charge: Expression | None = None,
+        surface_charge: Expression | None = None,
+        surface_charge_boundary: str = "wall",
         sources: Mapping[str, Expression] | None = None,
         **kwargs: Option,
     ) -> IntegralTerm:
@@ -612,7 +656,19 @@ class CoupledModel:
             :data:`~nanopnp.physics.coefficients.SATURATED_WALL_DISTANCE_NM`
             when no wall correction is active.
         fixed_charge
-            The dimensionless protein space charge ``rho~_pore``, if any.
+            The dimensionless protein space charge ``rho~_pore``, if any. Its
+            SI scale is :attr:`~nanopnp.core.scaling.Scales.charge_density_C_m3`.
+        surface_charge
+            The dimensionless surface charge ``sigma~_s`` on
+            ``surface_charge_boundary``, if any. Its SI scale is
+            :attr:`~nanopnp.core.scaling.Scales.surface_charge_C_m2`. Rung 4 of
+            the NUM-18 ladder ramps this together with ``fixed_charge``, which is
+            why the term is here rather than folded into the wall's natural
+            condition.
+        surface_charge_boundary
+            Boundary-name regular expression the surface charge sits on. The
+            pore wall by default; the membrane faces carry zero charge in the
+            reference case (PHY-09).
         sources
             Body sources by field name, added to the right-hand side of each
             equation. This is what the manufactured solutions of VER-18 supply;
@@ -663,6 +719,16 @@ class CoupledModel:
         )
         if fixed_charge is not None:
             residual -= charge_source(fixed_charge, potential_test, measures)
+        if surface_charge is not None:
+            # The Poisson boundary term is +int_Gamma sigma_s v r ds on the
+            # right-hand side, so it is subtracted from the residual exactly as
+            # the volumetric source is.
+            residual -= surface_charge_source(
+                surface_charge,
+                potential_test,
+                measures,
+                definedon=mesh.Boundaries(surface_charge_boundary),
+            )
 
         for name in self.species:
             flux = species_flux(
@@ -805,10 +871,13 @@ class CoupledModel:
         velocity_values: Expression | None = None,
         wall_distance_nm: Expression = SATURATED_WALL_DISTANCE_NM,
         fixed_charge: Expression | None = None,
+        surface_charge: Expression | None = None,
+        surface_charge_boundary: str = "wall",
         sources: Mapping[str, Expression] | None = None,
         initial: ModelSolution | None = None,
         settings: NewtonSettings = DEFAULT_SETTINGS,
         solver: str = DEFAULT_SOLVER,
+        callback: Callable[[NewtonStep], None] | None = None,
         **kwargs: Option,
     ) -> ModelSolution:
         """Solve the coupled system by damped Newton, gated at every iterate.
@@ -836,13 +905,20 @@ class CoupledModel:
             boundary coefficient function, which has no meaning in the volume.
         velocity_values
             Essential data for ``u~``; zero (no-slip) by default.
-        wall_distance_nm, fixed_charge, sources
+        wall_distance_nm, fixed_charge, surface_charge, surface_charge_boundary, sources
             As :meth:`residual_form`.
         initial
             A previous solution to warm-start from. Its space is reused, so it
-            must have been produced on the same mesh by the same model.
+            must have been produced on the same mesh by the same model. A rung
+            of the ladder that *changes* the field set — adding ``c_i``, or
+            adding ``u`` and ``p`` — must be handed a solution already
+            transferred onto this model's space by
+            :func:`nanopnp.solve.continuation.transfer`.
         settings, solver
             Newton policy and the direct linear solver.
+        callback
+            Called with every accepted :class:`~nanopnp.solve.newton.NewtonStep`,
+            for continuation logging and progress reporting (FR-27).
 
         Returns
         -------
@@ -860,12 +936,13 @@ class CoupledModel:
         import ngsolve as ngs
 
         _reject_unknown(kwargs, f"{self.name!r}.solve")
-        space = initial.space if initial is not None else self.space(mesh, boundaries)
-        state = ngs.GridFunction(space, name=f"{self.name}_state")
         if initial is not None:
+            space = initial.space
+            state = ngs.GridFunction(space, name=f"{self.name}_state")
             state.vec.data = initial.state.vec
         else:
-            self._initialise(state, initial_concentrations)
+            state = self.cold_state(mesh, boundaries, initial_concentrations=initial_concentrations)
+            space = state.space
         self._apply_essential(
             state, mesh, boundaries, potential_values, concentration_values, velocity_values
         )
@@ -876,6 +953,8 @@ class CoupledModel:
             measures,
             wall_distance_nm=wall_distance_nm,
             fixed_charge=fixed_charge,
+            surface_charge=surface_charge,
+            surface_charge_boundary=surface_charge_boundary,
             sources=sources,
         )
         increment = ngs.GridFunction(space, name=f"{self.name}_increment")
@@ -888,31 +967,57 @@ class CoupledModel:
             state_gates=state_gates,
             increment=increment,
             increment_gates=increment_gates,
+            callback=callback,
         )
         logger.debug("%s converged: %s", self.name, result.summary())
-        return ModelSolution(model=self, space=space, state=state, newton=result)
+        return ModelSolution(
+            model=self,
+            space=space,
+            state=state,
+            newton=result,
+            residual=residual,
+            wall_distance_nm=wall_distance_nm,
+        )
 
-    def _initialise(
+    def cold_state(
         self,
-        state: GridFunction,
-        initial_concentrations: Mapping[str, float] | None,
-    ) -> None:
-        """Set the cold-start state: bulk concentrations, zero potential and flow.
+        mesh: Mesh,
+        boundaries: CoupledBoundaries = DEFAULT_BOUNDARIES,
+        *,
+        initial_concentrations: Mapping[str, float] | None = None,
+    ) -> GridFunction:
+        """Return a fresh state on this model's space: bulk ions, zero potential and flow.
 
         ``c~_i = 1`` *is* the bulk, by the definition of the concentration scale
         ``c_0``, so that is the default. It is written over the whole fluid
         rather than only on the boundary because a cold start at ``c~_i = 0``
         fails the NUM-17 positivity gate on entry, before Newton takes a step —
         and in the log branch ``log(0)`` is not even representable.
+
+        Public because the continuation ladder needs it: transferring a solution
+        onto a *larger* field set fills the fields the previous rung did not
+        solve for from a cold start, and only the model knows what admissible
+        means for them.
+
+        Parameters
+        ----------
+        mesh
+            The meshed domain.
+        boundaries
+            The boundary vocabulary the space is built on.
+        initial_concentrations
+            Interior values per species, 1 (bulk) by default.
         """
         import ngsolve as ngs
 
+        state = ngs.GridFunction(self.space(mesh, boundaries), name=f"{self.name}_state")
         values = initial_concentrations or {}
         fields = self._split(list(state.components))
         for name in self.species:
             bulk = float(values.get(name, 1.0))
             target = math.log(bulk) if self.log_variables else bulk
             fields[concentration_field_name(name)].Set(ngs.CF(target))
+        return state
 
     def _apply_essential(
         self,
@@ -1023,6 +1128,34 @@ class ElectrostaticModel:
 
         return ngs.H1(mesh, order=self.order, dirichlet=boundaries.potential)
 
+    def cold_state(
+        self,
+        mesh: Mesh,
+        boundaries: CoupledBoundaries = DEFAULT_BOUNDARIES,
+        *,
+        initial_concentrations: Mapping[str, float] | None = None,
+    ) -> GridFunction:
+        """Return a fresh state on this model's space: ``phi~ = 0`` everywhere.
+
+        The signature matches :meth:`CoupledModel.cold_state` so the continuation
+        ladder can cold-start any model through one call;
+        ``initial_concentrations`` has no meaning here and is rejected rather
+        than ignored, because a caller passing it has misunderstood the model.
+
+        Raises
+        ------
+        TypeError
+            If ``initial_concentrations`` is given.
+        """
+        import ngsolve as ngs
+
+        if initial_concentrations is not None:
+            raise TypeError(
+                f"{self.name!r} solves no concentrations, so initial_concentrations has no "
+                "meaning for it"
+            )
+        return ngs.GridFunction(self.space(mesh, boundaries), name="phi_tilde")
+
     def residual_form(
         self,
         space: FESpace,
@@ -1072,18 +1205,18 @@ class ElectrostaticModel:
         TypeError
             If a keyword this model does not understand is passed.
         """
+        import ngsolve as ngs
+
         _reject_unknown(kwargs, f"{self.name!r}.solve")
 
         if self.screening == "none":
-            import ngsolve as ngs
-
             space = self.space(mesh, boundaries)
             state = ngs.GridFunction(space, name="phi_tilde")
             state.Set(potential_values, definedon=mesh.Boundaries(boundaries.potential))
             a = ngs.BilinearForm(self.residual_form(space, measures)).Assemble()
             f = ngs.LinearForm(space).Assemble()
             solve_linear(a, f, state, solver=solver)
-            return ModelSolution(model=self, space=space, state=state)
+            return ModelSolution(model=self, space=space, state=state, residual=a)
 
         if debye_length_nm is None:
             raise ValueError(f"{self.name!r} needs a debye_length_nm; it screens with 1/lambda^2")
@@ -1098,7 +1231,12 @@ class ElectrostaticModel:
             solver=solver,
             settings=settings,
         )
-        return ModelSolution(model=self, space=state.space, state=state)
+        # The residual is rebuilt rather than returned by ``solve_pb``, which
+        # owns its own; it is written in the same trial function and on the same
+        # space, so the two are the same operator.
+        residual = ngs.BilinearForm(state.space)
+        residual += self.residual_form(state.space, measures, debye_length_nm=debye_length_nm)
+        return ModelSolution(model=self, space=state.space, state=state, residual=residual)
 
 
 ModelBuilder: TypeAlias = Callable[..., PhysicsModel]
