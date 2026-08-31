@@ -450,13 +450,19 @@ def transfer(
     return ModelSolution(model=model, space=state.space, state=state)
 
 
-def run_ladder(rungs: Sequence[Rung]) -> LadderResult:
+def run_ladder(rungs: Sequence[Rung], *, initial: ModelSolution | None = None) -> LadderResult:
     """Solve every rung in order, each warm-started from the one before (NUM-18).
 
     Parameters
     ----------
     rungs
         The ladder, from the easiest configuration to the target one.
+    initial
+        A converged solution to warm-start the *first* rung from, transferred
+        onto its space like any other. This is what makes a ladder resumable, and
+        it is how a sweep walks the FR-17 envelope: the ladder is climbed once to
+        one corner and every other operating point is one rung away from a
+        converged neighbour, rather than another climb from cold.
 
     Returns
     -------
@@ -475,14 +481,14 @@ def run_ladder(rungs: Sequence[Rung]) -> LadderResult:
     if not rungs:
         raise ValueError("a continuation ladder needs at least one rung")
 
-    previous: ModelSolution | None = None
+    previous: ModelSolution | None = initial
     records: list[RungResult] = []
     for rung in rungs:
         transferred_fields: tuple[str, ...] = ()
         cold_fields = tuple(_fields_of(rung.model))
-        initial: ModelSolution | None = None
+        carried: ModelSolution | None = None
         if previous is not None:
-            initial = transfer(previous, rung.model, rung.mesh, rung.boundaries)
+            carried = transfer(previous, rung.model, rung.mesh, rung.boundaries)
             source = _fields_of(previous.model)
             transferred_fields = tuple(name for name in _fields_of(rung.model) if name in source)
             cold_fields = tuple(
@@ -495,7 +501,7 @@ def run_ladder(rungs: Sequence[Rung]) -> LadderResult:
                 rung.mesh,
                 rung.measures,
                 boundaries=rung.boundaries,
-                **({"initial": initial} if initial is not None else {}),
+                **({"initial": carried} if carried is not None else {}),
                 **dict(rung.solve_kwargs),
             )
         except Exception:
@@ -693,6 +699,10 @@ def default_ladder(
     )
 
     # -- stage 4: ramp the fixed and surface charges together --------------
+    # Taken from the reference model and reused by every later rung, including
+    # the stage-9 sweep at other concentrations. That is correct rather than
+    # convenient: eps V_T / a^2 and eps V_T / a carry no c_0, so unlike the
+    # current and flux scales these two do not move with the salt.
     charge_scale = reference.scales.charge_density_C_m3
     surface_scale = reference.scales.surface_charge_C_m2
     if surface_charge_C_m2 != 0.0 or fixed_charge_C_m3 != 0.0:
