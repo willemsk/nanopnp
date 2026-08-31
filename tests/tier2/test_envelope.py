@@ -89,18 +89,23 @@ SURFACE_CHARGE_C_M2 = -0.02
 the packing and positivity gates watch — and a value the *reduced* mesh below can
 actually climb to.
 
-NUM-18 stage 4 raises ``sigma_s`` while the model is still classical, and
-classical PNP has no steric limit: the counter-ion goes to whatever
-Gouy-Chapman asks for, tens of molar at -0.05 C/m². At the full
-``lambda_D(3 M)/5`` grading the ramp climbs that; on this mesh, 2.6 times
-coarser at the wall, the NUM-17 packing gate aborts on the first sub-step. Both
-behaviours are correct — the coarse mesh does not resolve the layer, the Newton
-iterate overshoots into a state the model cannot represent, and the gate is what
-stops it becoming a plausible wrong answer — so the honest response is to run
-the reduced mesh at a charge it can support and say so, rather than to loosen
-the gate. §8.2 criterion 2 specifies the concentration and bias envelope; the
-wall charge is this benchmark's own choice. The hard-corner test below runs
--0.05 C/m² on the NUM-30 mesh, which is where that charge belongs. **[tested]**
+NUM-18 stage 4 raises ``sigma_s`` while the model is still classical, and the
+field that fails first is the **co-ion**. Against a negative wall the anion is
+depleted as ``exp(-|phi~|)``, so at -0.05 C/m² its wall value is a small
+fraction of bulk, and a Newton step in the primitive variable of NUM-02
+overshoots it straight through zero. At the full ``lambda_D(3 M)/5`` grading the
+ramp climbs; on this mesh, 2.6 times coarser at the wall, the layer is
+unresolved, the step is too long, and the NUM-17 positivity gate aborts on the
+first sub-step with ``c_Cl- = -0.76`` at ``r = 2 nm`` — on the wall, exactly
+where it should look.
+
+Both behaviours are correct, and the gate is what stops a negative concentration
+becoming a plausible wrong current. So the honest response is to run the reduced
+mesh at a charge it can support and say so, rather than to loosen the gate.
+§8.2 criterion 2 specifies the concentration and bias envelope; the wall charge
+is this benchmark's own choice. The hard-corner test below runs -0.05 C/m² on
+the NUM-30 mesh, which is where that charge belongs, and the NUM-02 log branch
+is the structural cure if a coarse mesh ever has to carry it. **[tested]**
 """
 
 HARD_CORNER_SURFACE_CHARGE_C_M2 = -0.05
