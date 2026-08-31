@@ -191,6 +191,33 @@ linear PB → nonlinear PB → equilibrium PNP (V=0, u=0)
 Warm-start each rung from the previous. Adapt the mesh *between* rungs, never within them.
 Enabling corrections last isolates their contribution to any convergence failure.
 
+**A warm start across a *changed field set* is not free.** Three transitions change it — PB to
+equilibrium PNP adds the concentrations, the Stokes rung adds `u` and `p`, and any change of element
+order — and a solver that warm-starts by reusing the previous space cannot cross them. The target
+space has to be built, cold-started so the new fields begin somewhere the positivity gate accepts,
+and the shared fields interpolated by name. Where the field sets match, copy the vector rather than
+interpolating: interpolation of a function already in the space is the identity only to round-off,
+and most rungs of the ladder are same-space.
+
+**Re-solving a converged rung costs one Newton iteration, not zero. [tested]** The update-based
+criterion cannot be evaluated without assembling the Jacobian and solving once; the entry-side
+residual test is measured relative to the entry residual, so a converged warm start never passes it.
+The state then moves by ~5 × 10⁻⁹ relative. This is the property to test a cross-space transfer with:
+a transfer that scrambles a component needs many iterations to recover.
+
+**Changing `c₀` between rungs is a vector copy, not an interpolation. [verified]** It changes the
+whole NUM-09 scale set — `S`, `Pe`, every nondimensional coefficient — but not the field set, and the
+previous solution stays a good guess because the nondimensionalisation leaves every field O(1) in the
+*new* scaling too: `c̃_i = 1` is bulk by the definition of `c₀`, and `φ̃` is in `V_T`, which does not
+move with the salt. Note also that the charge scales `ε V_T/a²` and `ε V_T/a` carry no `c₀` at all,
+so a fixed or surface charge ramped at one concentration keeps its dimensionless value at another.
+
+**Measured, on a charged 2 nm × 13 nm pore. [tested]** The only rungs needing damping below the
+0.2 initial value were the surface-charge ramp, at 0.08; every other rung of every ladder tried held
+at 0.2. A full climb to the hard corner — 3 M, ±200 mV, every correction active, wall graded to
+`λ_D(3 M)/5`, 66 000 DOF — is 22 rungs, 106 Newton iterations and 500 s. At `λ_D(3 M)/2` (25 000 DOF)
+the same climb is 74 iterations and 134 s, so the reduction costs nothing in convergence.
+
 ---
 
 ## 6. Linear solvers
@@ -259,10 +286,32 @@ Two correct routes; implement both and CI-check that they agree.
 
 **(a) Domain/indicator form — recommended.** Smooth `ψ` with `ψ = 1` in cis, `0` in trans:
 ```
-I     = −F Σ_i z_i ∫_Ω J_i·∇ψ  r dr dz
-Q_EOF =            ∫_Ω u·∇ψ    r dr dz
+I     = F Σ_i z_i ∫_Ω J_i·∇ψ  r dr dz
+Q_EOF =           ∫_Ω u·∇ψ    r dr dz
 ```
 Superconvergent and cross-section independent.
+
+**The sign is the one that references the current to the grounded cis electrode. [verified]**
+By the divergence theorem with `∇·J_i = 0`, `∫_Ω J_i·∇ψ r dr dz = ∮_{Γ_cis} J_i·n` with `n` the
+outward normal, so with `ψ = 1` on cis the integral *is* the efflux through the cis cap. With `φ = 0`
+on cis and `φ = V_bias` on trans (§5.2.2 of the specification), a positive bias drives positive
+charge trans → cis, i.e. out through cis, so the plus sign gives `G = I/V_bias > 0` — which VER-17
+asserts. A minus references the trans electrode instead, negates every conductance, *and* negates
+this route relative to (b) taken on the same electrode, so the two would never agree. Printed forms
+of this expression carry a minus; that pairs with the trans electrode, not with `ψ = 1` on cis.
+
+**ψ must be built on the fluid domain alone. [tested]** The two routes agree because `ψ` differs
+from the (b) boundary indicator by a function vanishing on both electrodes, hence by a legitimate
+test function of the converged residual — an identity that needs `ψ` to be *exactly* 1 and 0 there.
+Interpolated over the whole mesh it is not: the membrane spans the transition band, and an element
+straddling the band shares its corner vertex with a reservoir cap. Measured on a charged pore at
+0.5 M, ±50 mV: `ψ` reaches 7.7 × 10⁻³ at the trans cap, and the route agreement degrades from
+3.8 × 10⁻⁶ to 6.5 × 10⁻⁴ — a factor of 170, and still inside a 10⁻³ tolerance while being a real
+error. Restricting the interpolation to the fluid removes the membrane, and with it the only path
+from the band to a cap; the leak is then identically zero.
+
+**Use a C¹ transition, not a linear ramp.** `S(t) = t²(3 − 2t)` has `S'(0) = S'(1) = 0`, so `∇ψ` is
+continuous at both ends of the band and the integrand has no jump inside an element.
 
 **(b) Variational reaction flux.** Evaluate the assembled residual against a test function equal
 to 1 on a Dirichlet electrode (Hughes, Engel, Mazzei & Larson, *J. Comput. Phys.* **163**, 467,
@@ -270,6 +319,33 @@ to 1 on a Dirichlet electrode (Hughes, Engel, Mazzei & Larson, *J. Comput. Phys.
 
 **Derived QoIs.** `t₊ = I₊/(I₊ + I₋)` from the same `ψ` integrals. Rectification
 `α = |I(+V)|/|I(−V)|`. Conductance `G = I/V_b`.
+
+### 7.1 Measured: the two routes agree, and the band does not matter **[tested]**
+
+Charged pore (`a` = 2 nm, `L` = 13 nm, σ_s = −0.05 C/m²), 0.5 M, classical PNP, ±50 mV, reached
+through the continuation ladder.
+
+| quantity | measured |
+|---|---|
+| route agreement, total current | 3.8 × 10⁻⁶ at +50 mV, 4.0 × 10⁻⁶ at −50 mV |
+| ... at 3 400 to 7 300 DOF | 3.8 × 10⁻⁶ throughout — set by the Newton residual, not the mesh |
+| route agreement on VER-17's uncharged pore | 5 × 10⁻⁷ |
+| current across five `ψ` bands (moved ±2 nm, widths 0.3–0.98 of the lumen) | spread 9 × 10⁻⁶ |
+| spurious rectification on a pore symmetric in `z` | `RR` = 1.000021 |
+
+The last row is the one that matters for RSK-03. `CylindricalPoreGeometry` cannot rectify — it is
+symmetric about `z = 0` — so any `RR ≠ 1` it reports is manufactured by the extraction. A
+cross-section integral of a non-conservative CG flux is exactly an extraction whose error depends on
+the direction of the flux, which is how a percent-level flux error becomes a fabricated
+rectification signal.
+
+**Maxwell–Hall, measured. [tested]** Uncharged pore at 1 M, classical PNP,
+`G = σ[L/(πa²) + 1/(2a)]⁻¹` with `σ = F Σ z_i² μ_i⁰ c_i` = 12.64 S/m: 0.15 % error at a 50 nm
+reservoir and 0.39 % at 100 nm, with `G` moving 0.23 % between them, so the benchmark measures the
+discretisation and not the truncation of the domain. The transport number comes out 0.3963, the
+NaCl value `D_Na/(D_Na + D_Cl)`. This is the only Tier-2 benchmark that pins an *absolute* current,
+so it is what verifies the `2π` convention and the NUM-09 current scale `F D₀ c₀ a`; route agreement
+alone would not notice both routes being scaled by the same wrong constant.
 
 **Force on an embedded body.** `F = ∮_S (T_M + T_H)·n dS` with `T_M = ε(E⊗E − ½|E|²I)` and
 `T_H = −pI + η(∇u + ∇uᵀ)`, but **evaluate in domain form** for the same superconvergence reason:

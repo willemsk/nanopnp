@@ -1,6 +1,10 @@
 # WP5 — Continuation ladder, QoI extraction, the envelope
 
-**Status: planned, not started.** Written 31 August 2026, after WP4 merged.
+**Status: delivered.** Written 31 August 2026 after WP4 merged; annotated the same day with what
+the implementation actually found. Five predictions of this plan were wrong or incomplete, and each
+is corrected in place below under **Outcome**. The authoritative record of the finished work is the
+WP5 section of `phase-0-spike.md`; this file is kept because the reasoning that led into the work is
+worth being able to compare against what came out of it.
 
 The implementation plan for work package 5 of `phase-0-spike.md`. `SPECIFICATION.md` remains
 normative: where this file and the specification disagree, the specification governs and this file
@@ -136,8 +140,15 @@ loudly rather than returning a sign-flipped current.
   `physics.nernst_planck.species_flux`. `wall_distance_nm` defaults to the one carried on the
   solution, which is the whole reason for adding it. Integration goes through `Measures.integrate`,
   which floors the order at 5 and aborts on a non-finite result.
-- `I_i = −F z_i · 2π · scales.current_A · ∫ J̃_i·∇ψ r dr dz`;
+- `I_i = F z_i · 2π · scales.current_A · ∫ J̃_i·∇ψ r dr dz`;
   `Q_EOF = 2π · scales.volumetric_flow_m3_s · ∫ ũ·∇ψ r dr dz`.
+
+  > **Outcome — the sign.** This plan copied NUM-24's printed minus. It is wrong for the clause's own
+  > electrode convention: with `ψ = 1` on cis the integral is the efflux through the cis cap, so the
+  > minus references the *trans* electrode and makes `G = I/V_bias` negative for an ohmic pore,
+  > against VER-17 — and negates this route relative to NUM-25 on the same boundary, so NUM-26's
+  > agreement check could never have passed. The specification is amended, with the derivation, and
+  > the implementation carries the plus.
 - `reaction_flux_currents` wraps the existing `boundary_reaction_flux` component-wise, with each
   species' block index read off `model.fields`. Both routes carry the same `2π` and the same
   `current_A`, so their agreement is independent of the convention while their SI values are not.
@@ -161,7 +172,32 @@ every push, so per-test wall time is a design constraint; `slow` never runs in C
 | `tests/tier1/test_continuation.py` | 1 | NUM-18 | `bias_schedule` steps ≈10 mV to onset and hits the target exactly, both signs; `default_ladder` emits nine rungs in NUM-18's order with the corrections last; `transfer` raises on a mesh mismatch |
 | `tests/tier2/test_current_routes.py` | 2 | **VER-11**, FR-23, QR-04 | Charged pore, `pnp`, coarse mesh, ±50 mV — the lowest envelope bias. Both routes, both signs; route disagreement below the declared tolerance, which is below \|RR − 1\| there. **Plus cross-section independence**: move and widen the `ψ` band and assert the current is unchanged, which is the direct evidence for NUM-24 |
 | `tests/tier2/test_access_conductance.py` | 2 | **VER-17**, QR-01 | Uncharged pore at 1 M, `pnp` classical, small bias. `G = I/V_bias` against `σ[L/(πa²) + 1/(2a)]⁻¹` to better than 2 %, with `σ = F Σ z_i² μ_i⁰ c_i` derived in the docstring from the model's own mobilities |
-| `tests/tier2/test_ladder.py` | 2 | NUM-18, NUM-19 | Nine rungs on a deliberately tiny mesh at mild conditions: every rung completes and carries a `NewtonResult`; the transfer preserves `φ` across a space change; and **re-solving a converged rung from its own output takes zero iterations** — the warm-start idempotence WP3's update-based criterion buys, and the property the whole ladder rests on |
+| `tests/tier2/test_ladder.py` | 2 | NUM-18, NUM-19 | Nine rungs on a deliberately tiny mesh at mild conditions: every rung completes and carries a `NewtonResult`; the transfer preserves `φ` across a space change; and **re-solving a converged rung from its own output takes one iteration and moves the state by 5 × 10⁻⁹** — the warm-start idempotence WP3's update-based criterion buys, and the property the whole ladder rests on |
+
+> **Outcome — one iteration, not zero.** NUM-16's convergence test is on the relative *update*, and
+> an update is not knowable without assembling the Jacobian and solving once; the entry-side test is
+> on the residual, which a converged warm start does not pass because it is measured relative to
+> itself. So the floor is one iteration per rung, not zero, and that is a real cost of the criterion
+> rather than a defect. The alternative is worse: a residual-only test demands another six orders of
+> magnitude and the ladder never leaves stage 2.
+>
+> **Outcome — `ψ` must live on the fluid alone.** This plan did not anticipate it. Interpolated over
+> the whole mesh, `ψ` is not exactly 0 on the trans electrode — the membrane spans the transition
+> band and a straddling element shares its corner vertex with the reservoir cap — which breaks the
+> identity the two routes agree by. Cost: a factor of 170, 6 × 10⁻⁴ instead of 4 × 10⁻⁶, passing the
+> declared tolerance while being a genuine error.
+>
+> **Outcome — VER-11's rectification clause cannot be tested as written.** `CylindricalPoreGeometry`
+> is symmetric about `z = 0` and does not rectify, so its signal is not something a Tier-2 benchmark
+> can measure; the reference pore's is a property of *its* asymmetry. The benchmark measures the
+> spurious signal the extraction invents instead — `RR` = 1.000021 — which is the sharper test for
+> RSK-03 anyway.
+>
+> **Outcome — the envelope is walked, not re-climbed.** Thirty climbs from cold is four hours; the
+> hard corner alone costs 22 rungs, 106 iterations and 500 s. The ladder is climbed once to the
+> easiest corner and every other point is one rung from a converged neighbour, which is what
+> "warm-start sweeps from a converged neighbour" means. `run_ladder` gained an `initial` argument to
+> make that possible.
 | `tests/tier2/test_envelope.py` | 2, `slow` | **§8.2 criterion 2**, FR-17 | Five concentrations × six biases, every correction active, through the ladder. Asserts every point converged with no gate violation. Logs the mesh, the degrees of freedom, `maxh`, `wall_h`, and per-rung iterations and minimum damping |
 
 The idiom to follow is the one WP2–WP4 established: expensive work in one module-scoped fixture with

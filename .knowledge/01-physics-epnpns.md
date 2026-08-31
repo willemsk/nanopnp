@@ -283,6 +283,18 @@ as the **25 % contour**. Do not confuse the two sharpness factors (0.93 for the 
   monolithic Newton the primary strategy; keep segregated/Gummel as fallback.
 - **Clamping and packing.** Assert `Σ_j N_A a_j³ c_j < 1` every Newton step; a packing fraction
   reaching 1 makes `β_i` singular. Fail loudly with the offending location.
+- **A saturated distance field silently disables half the correction set.** Every correction is a
+  product of a concentration factor and a wall factor in `d`, so passing a constant `d` large enough
+  that `f^w = 1` — the honest way to say "no wall correction is active" at a call site — leaves the
+  run exercising the concentration half alone while looking, from the switches, fully corrected. A
+  configuration claiming "every correction active" must be handed a real `d`, from the **pore wall
+  only**; the membrane is deliberately not a source (PHY-02). The failure is silent because the
+  answer is a perfectly reasonable one for a different model.
+- **`d` is a discrete field, so it must travel with the solution, not be recomputed.** Two calls to
+  the same distance solver return grid functions that differ at round-off, and a residual reassembled
+  against the second is a *different operator* from the one that was solved. Any post-processing that
+  rebuilds the flux — the ψ-indicator current does — or any warm start that re-solves a converged
+  state must read `d` back off the solution. **[tested]**
 
 ---
 
