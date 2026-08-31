@@ -168,7 +168,7 @@ what NUM-18's warm start exists to avoid, and WP5 should not read them as defect
 
 ### WP5 — Continuation ladder, QoI extraction, the envelope
 
-`solve/continuation.py`, `post/qoi.py`, `post/indicator.py`.
+`solve/continuation.py`, `post/qoi.py`, `post/indicator.py`. Implementation plan: `wp5-continuation-qoi-envelope.md`.
 
 - The nine-rung ladder of NUM-18 with warm start between rungs, corrections enabled last (rungs 7–8)
   so that a convergence failure attributes to one term; mesh adaptation between rungs only (NUM-19).
