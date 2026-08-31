@@ -210,6 +210,36 @@ class Scales:
         """
         return FARADAY * self.diffusivity_m2_s * self.concentration_mol_m3 * self.length_m
 
+    @property
+    def volumetric_flow_m3_s(self) -> float:
+        """Volumetric-flow scale ``u_0 a^2``, in m^3/s.
+
+        The scale of the electro-osmotic flow rate ``Q_EOF`` of NUM-27: the
+        velocity scale through a pore-sized aperture.
+        """
+        return self.velocity_m_s * self.length_m**2
+
+    @property
+    def charge_density_C_m3(self) -> float:
+        """Space-charge scale ``eps V_T / a^2``, in C/m^3.
+
+        The scale of the fixed protein charge ``rho_pore``, fixed by requiring
+        that the source balance the Poisson operator ``div(eps grad phi)`` once
+        both are written in the nondimensional variables.
+        """
+        return self.permittivity * self.potential_V / self.length_m**2
+
+    @property
+    def surface_charge_C_m2(self) -> float:
+        """Surface-charge scale ``eps V_T / a``, in C/m^2.
+
+        The scale of ``sigma_s``, one power of the length larger than
+        :attr:`charge_density_C_m3` because the surface term is one integration
+        shallower. Rung 4 of the NUM-18 ladder ramps ``sigma_s`` and
+        ``rho_pore`` together, and this is what puts an SI value on that ramp.
+        """
+        return self.permittivity * self.potential_V / self.length_m
+
     # -- dimensionless groups --------------------------------------------
 
     @property
@@ -252,10 +282,11 @@ class Scales:
         ----------
         quantity
             One of ``length``, ``potential``, ``concentration``, ``velocity``,
-            ``pressure``, ``diffusivity``, ``flux``, ``current``.
+            ``pressure``, ``diffusivity``, ``flux``, ``current``,
+            ``volumetric_flow``, ``charge_density``, ``surface_charge``.
         value
             The quantity in SI units (m, V, mol/m^3, m/s, Pa, m^2/s,
-            mol/(m^2 s), A).
+            mol/(m^2 s), A, m^3/s, C/m^3, C/m^2).
 
         Returns
         -------
@@ -288,6 +319,9 @@ class Scales:
             "diffusivity": self.diffusivity_m2_s,
             "flux": self.flux_mol_m2_s,
             "current": self.current_A,
+            "volumetric_flow": self.volumetric_flow_m3_s,
+            "charge_density": self.charge_density_C_m3,
+            "surface_charge": self.surface_charge_C_m2,
         }
         if quantity not in scales:
             raise KeyError(
@@ -323,6 +357,7 @@ class Scales:
             "diffusivity_m2_s": self.diffusivity_m2_s,
             "flux_mol_m2_s": self.flux_mol_m2_s,
             "current_A": self.current_A,
+            "volumetric_flow_m3_s": self.volumetric_flow_m3_s,
             "debye_length_nm": self.debye_length_nm,
             "debye_ratio": self.debye_ratio,
             "peclet": self.peclet,

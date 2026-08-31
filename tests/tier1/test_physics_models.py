@@ -145,6 +145,7 @@ def test_fr20_a_model_declares_fields_boundaries_and_a_solve_strategy() -> None:
         assert set(model.boundary_conditions) <= {field.name for field in model.fields}
         assert model.provenance["model"] == name
         assert callable(model.space)
+        assert callable(model.cold_state)
         assert callable(model.residual_form)
         assert callable(model.solve)
 
@@ -164,3 +165,112 @@ def test_electrolyte_owns_the_steric_switch() -> None:
     model = CoupledModel(electrolyte=electrolyte)
     assert model.steric is True
     assert model.provenance["switches"]["steric"] is True
+
+
+def test_num18_cold_state_starts_the_ions_at_bulk_not_at_zero() -> None:
+    """``c~_i = 1``, so the NUM-17 positivity gate passes on entry.
+
+    Public because the ladder needs it: transferring a solution onto a larger
+    field set fills the fields the previous rung did not solve for from a cold
+    start, and only the model knows what admissible means for them.
+    """
+    import ngsolve as ngs
+
+    from nanopnp.mesh.primitives import CylinderGeometry
+
+    model = models.create("pnp", classical=True, fluid="electrolyte")
+    mesh = CylinderGeometry(radius_nm=2.0, length_nm=4.0).generate(maxh_nm=2.0)
+    boundaries = models.CoupledBoundaries(potential="end", concentration="end")
+    state = model.cold_state(mesh, boundaries)
+    fields = {f.name: c for f, c in zip(model.fields, state.components, strict=True)}
+    # Compared as *functions*, never coefficient by coefficient: the P2 basis is
+    # hierarchical, so the constant 1 has vertex coefficients 1 and edge
+    # coefficients 0 (see ``post/reaction_flux.py``).
+    for species in model.species:
+        concentration = fields[f"c_{species}"]
+        assert ngs.Integrate((concentration - 1.0) ** 2, mesh) == pytest.approx(0.0, abs=1e-20)
+    assert ngs.Integrate(fields[POTENTIAL] ** 2, mesh) == pytest.approx(0.0, abs=1e-20)
+
+
+def test_cold_state_rejects_concentrations_on_a_model_that_solves_none() -> None:
+    """A caller passing ion data to Poisson-Boltzmann has misunderstood it (PHY-24)."""
+    from nanopnp.mesh.primitives import CylinderGeometry
+
+    model = models.create("pb")
+    mesh = CylinderGeometry(radius_nm=2.0, length_nm=4.0).generate(maxh_nm=2.0)
+    boundaries = models.CoupledBoundaries(potential="end")
+    with pytest.raises(TypeError, match="initial_concentrations"):
+        model.cold_state(mesh, boundaries, initial_concentrations={"Na": 1.0})
+
+
+def test_num18_surface_charge_enters_poisson_as_its_boundary_term() -> None:
+    """``-int_Gamma sigma~_s v r ds`` is exactly what the term adds to the residual.
+
+    Rung 4 of the NUM-18 ladder ramps ``sigma_s`` and ``rho_pore`` together, so
+    the surface term has to be assembled rather than left to the wall's natural
+    condition. It carries no trial function, so the difference between the
+    residual with and without it is a constant vector, and that vector is the
+    load form of the same integrand — sign included. A flipped sign would put
+    the double layer on the wrong side of the wall and still converge.
+    """
+    import ngsolve as ngs
+
+    from nanopnp.mesh.primitives import CylinderGeometry
+    from nanopnp.physics.measures import AXISYMMETRIC
+
+    surface_density = 0.37
+    model = models.create("pnp", classical=True, fluid="electrolyte")
+    mesh = CylinderGeometry(radius_nm=2.0, length_nm=4.0).generate(maxh_nm=1.0)
+    boundaries = models.CoupledBoundaries(potential="end", concentration="end")
+    state = model.cold_state(mesh, boundaries)
+    space = state.space
+
+    def applied(**extra: object) -> ngs.BaseVector:
+        form = ngs.BilinearForm(space)
+        form += model.residual_form(space, AXISYMMETRIC, **extra)
+        out = state.vec.CreateVector()
+        form.Apply(state.vec, out)
+        return out
+
+    difference = applied(surface_charge=surface_density) - applied()
+
+    potential_test = space.TestFunction()[0]
+    load = ngs.LinearForm(space)
+    load += AXISYMMETRIC.surface(
+        surface_density * potential_test, definedon=mesh.Boundaries("wall")
+    )
+    load.Assemble()
+    residual_of_difference = (difference + load.vec).Norm()
+    assert residual_of_difference == pytest.approx(0.0, abs=1e-12 * max(load.vec.Norm(), 1.0))
+    assert load.vec.Norm() > 0.0, "the wall boundary must actually carry the term"
+
+
+def test_fr23_a_solve_carries_its_residual_and_distance_field_on_the_solution() -> None:
+    """``ModelSolution`` keeps what the NUM-25 reaction flux needs to be correct.
+
+    Rebuilding the residual by hand is not merely wasteful: a coupled residual
+    reassembled without the *same* ``wall_distance_nm`` is a different operator,
+    and the flux taken against it is wrong with no diagnostic. So the form and
+    the distance field travel with the solution.
+    """
+    import ngsolve as ngs
+
+    from nanopnp.mesh.primitives import CylinderGeometry
+    from nanopnp.physics.measures import AXISYMMETRIC
+
+    distance = ngs.x + 0.25
+    model = models.create("pnp", classical=True, fluid="electrolyte")
+    mesh = CylinderGeometry(radius_nm=2.0, length_nm=4.0).generate(maxh_nm=1.0)
+    boundaries = models.CoupledBoundaries(potential="end", concentration="end")
+    steps: list[object] = []
+    solution = model.solve(
+        mesh,
+        AXISYMMETRIC,
+        boundaries=boundaries,
+        wall_distance_nm=distance,
+        callback=steps.append,
+        potential_values=mesh.BoundaryCF({"end": 0.0}),
+    )
+    assert solution.residual is not None
+    assert solution.wall_distance_nm is distance
+    assert len(steps) == solution.newton.iterations

@@ -87,7 +87,18 @@ def test_num09_peclet_equals_advective_over_diffusive_rate() -> None:
 
 @pytest.mark.parametrize(
     "quantity",
-    ["length", "potential", "concentration", "velocity", "pressure", "diffusivity", "current"],
+    [
+        "length",
+        "potential",
+        "concentration",
+        "velocity",
+        "pressure",
+        "diffusivity",
+        "current",
+        "volumetric_flow",
+        "charge_density",
+        "surface_charge",
+    ],
 )
 def test_num09_conversions_round_trip(quantity: str) -> None:
     """Nondimensionalising and redimensionalising is the identity on every field."""
@@ -148,3 +159,33 @@ def test_num09_summary_carries_every_scale_for_the_manifest() -> None:
     }
     assert defining.items() <= summary.items()
     assert Scales(**defining).summary() == summary  # the manifest reconstructs the run
+
+
+def test_num09_volumetric_flow_scale_is_the_velocity_through_a_pore_aperture() -> None:
+    """``Q_0 = u_0 a^2``, the scale ``Q_EOF`` is reported in (NUM-27).
+
+    The electro-osmotic flow rate has no scale of its own in NUM-09; it is the
+    velocity scale carried through an area ``a^2``, and it is defined here
+    rather than at the call site so that ``post/`` never multiplies by a
+    hand-assembled product.
+    """
+    scales = _scales(1.0)
+    assert scales.volumetric_flow_m3_s == pytest.approx(
+        scales.velocity_m_s * scales.length_m**2, rel=1e-14
+    )
+
+
+def test_num09_charge_scales_balance_the_poisson_operator() -> None:
+    """``rho_0 = eps V_T / a^2`` and ``sigma_0 = eps V_T / a`` (rung 4 of NUM-18).
+
+    Both follow from requiring the source to balance ``div(eps grad phi)`` once
+    the operator is written in the nondimensional variables, which is why the
+    surface scale is one power of the length larger than the volumetric one: the
+    surface term is one integration shallower.
+    """
+    scales = _scales(1.0)
+    expected_volumetric = scales.permittivity * scales.potential_V / scales.length_m**2
+    assert scales.charge_density_C_m3 == pytest.approx(expected_volumetric, rel=1e-14)
+    assert scales.surface_charge_C_m2 == pytest.approx(
+        scales.charge_density_C_m3 * scales.length_m, rel=1e-14
+    )
