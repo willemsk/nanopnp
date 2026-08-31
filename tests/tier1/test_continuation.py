@@ -137,6 +137,34 @@ def test_num18_the_corrections_come_on_last_and_one_block_at_a_time(mesh: object
     assert type(by_stage[6].model) is type(by_stage[8].model)
 
 
+def test_phy21_the_ablation_ladder_omits_the_correction_stages(mesh: object) -> None:
+    """A classical ladder has no stages 7 and 8, because there is nothing to enable.
+
+    PHY-21 makes ``pnp-ns`` a configuration of ``epnp-ns`` rather than a second
+    code path, so the ablation is the same ladder to the same operating point on
+    the same mesh with the switches off — and the difference is attributable to
+    the corrections alone. Running stages 7 and 8 as no-ops would be the wrong
+    shape: it would claim to have enabled something.
+    """
+    rungs = default_ladder(
+        mesh,
+        concentration_M=1.0,
+        bias_V=0.05,
+        corrections_active=False,
+        solid_permittivities=MEMBRANE_PERMITTIVITY,
+    )
+    stages = {rung.stage for rung in rungs}
+    assert 7 not in stages
+    assert 8 not in stages
+    assert {1, 2, 3, 5, 6, 9} <= stages
+    top = rungs[-1].model
+    assert top.name == "pnp-ns"
+    assert top.flow is True
+    assert top.steric is False
+    assert top.electrolyte.switches.mobility.model == "none"
+    assert top.concentration_M == pytest.approx(1.0)
+
+
 def test_num18_stage_nine_sweeps_the_salt_to_the_target(mesh: object) -> None:
     """The ladder is built at the easy end and swept to the requested concentration."""
     rungs = default_ladder(

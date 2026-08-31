@@ -561,6 +561,7 @@ def default_ladder(
     charge_steps: int = 4,
     concentration_steps: int = 4,
     surface_charge_boundary: str = "wall",
+    corrections_active: bool = True,
 ) -> tuple[Rung, ...]:
     """Build the nine stages of NUM-18 for one target operating point.
 
@@ -607,6 +608,13 @@ def default_ladder(
         Number of sub-rungs in the stage-4 and stage-9 ramps.
     surface_charge_boundary
         Boundary the surface charge sits on.
+    corrections_active
+        Whether the ladder ends at ``epnp-ns`` or at classical ``pnp-ns``.
+        ``False`` **omits stages 7 and 8** rather than running them as no-ops —
+        there is nothing to enable — and sweeps stage 9 classically. It is what
+        makes the PHY-21 ablation a sweep over configurations rather than a
+        rebuild: the same ladder, the same mesh, the same operating point, and
+        the difference attributable to the corrections alone (section 7.4).
 
     Returns
     -------
@@ -749,11 +757,17 @@ def default_ladder(
         )
 
     # -- stages 6 to 8: turn the physics on, one block at a time -----------
-    for stage, label, name, switches in (
+    physics_stages: tuple[tuple[int, str, str, CorrectionSwitches], ...] = (
         (6, "flow", "pnp-ns", classical),
-        (7, "corrections", "epnp-ns", without_steric),
-        (8, "steric", "epnp-ns", corrected),
-    ):
+    )
+    if corrections_active:
+        physics_stages += (
+            (7, "corrections", "epnp-ns", without_steric),
+            (8, "steric", "epnp-ns", corrected),
+        )
+    target_switches = corrected if corrections_active else classical
+    target_name = "epnp-ns" if corrections_active else "pnp-ns"
+    for stage, label, name, switches in physics_stages:
         # The distance field is passed only where a wall correction can read it;
         # stage 6 is still classical and would carry it unused.
         extra: dict[str, Option] = {} if stage == 6 else {"wall_distance_nm": wall_distance_nm}
@@ -781,7 +795,7 @@ def default_ladder(
                 Rung(
                     name=f"9-salt-{salt:.4g}M",
                     stage=9,
-                    model=_coupled("epnp-ns", corrected, flow=True, salt=salt),
+                    model=_coupled(target_name, target_switches, flow=True, salt=salt),
                     mesh=mesh,
                     boundaries=boundaries,
                     measures=measures,
