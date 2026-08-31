@@ -1,6 +1,8 @@
 # Phase 0 (Spike): coupled ePNP-NS on an analytic cylindrical pore
 
-**Status: WP1–WP4 merged, WP5–WP6 outstanding.** Last revised 30 August 2026, after WP4.
+**Status: WP1–WP5 merged, WP6 outstanding.** Last revised 31 August 2026, after WP5. The one thing
+WP5 has not yet reported is the thirty-point envelope record; the run is a `slow` measurement and is
+in progress. Everything gated — tiers 1 and 2, VER-11 and VER-17 included — is green.
 
 This is the delivery plan for Phase 0 of `SPECIFICATION.md` §8.1, as amended by §8.2.1. The
 specification remains normative: where this file and the specification disagree, the specification
@@ -69,6 +71,17 @@ WP4–WP6 inherit them.
 - **`post/reaction_flux.py` landed in WP2**, ahead of the plan, because the WP2 review would not
   accept a quadrature guarantee that nothing exercised. NUM-25 is therefore done; WP5 is left with
   the ψ-indicator route and the QoIs derived from it.
+- **The `2π` is restored once, in `post/qoi.py`, and nowhere else.** `Measures` cancels it from both
+  sides of the weak form, so every integral in the solver is `∫ f r dr dz`; every SI quantity `post/`
+  reports is a true three-dimensional one. Recorded under NUM-27 in the specification, as its NOTE
+  requires. WP6's forces inherit the convention and must not apply the factor a second time.
+- **A converged solution carries the residual form it solves and the wall-distance field it was
+  assembled with.** Rebuilding the form to take a NUM-25 flux is not merely wasteful: a coupled
+  residual reassembled without the same `wall_distance_nm` is a *different operator*, and the flux
+  taken against it is wrong with no diagnostic.
+- **A model can be cold-started through `cold_state`, which is part of the `PhysicsModel` protocol.**
+  The ladder transfers a solution onto a larger field set and must fill the new fields from something
+  the model itself calls admissible; `c̃_i = 0` fails the NUM-17 positivity gate on entry.
 
 ## Work packages
 
@@ -166,27 +179,65 @@ ladder**: a cold `epnp-ns` solve at 5 M with a wall at −4 `V_T` aborts on the 
 gate, and the classical configuration aborts on packing. Both aborts are correct; both are exactly
 what NUM-18's warm start exists to avoid, and WP5 should not read them as defects.
 
-### WP5 — Continuation ladder, QoI extraction, the envelope
+### WP5 — Continuation ladder, QoI extraction, the envelope — **merged**
 
-`solve/continuation.py`, `post/qoi.py`, `post/indicator.py`. Implementation plan: `wp5-continuation-qoi-envelope.md`.
+`solve/continuation.py`, `post/qoi.py`, `post/indicator.py`. Implementation plan:
+`wp5-continuation-qoi-envelope.md`. Discharges FR-17, FR-23, QR-04, VER-11, VER-17 and §8.2
+criterion 2, and retires RSK-03.
 
-- The nine-rung ladder of NUM-18 with warm start between rungs, corrections enabled last (rungs 7–8)
-  so that a convergence failure attributes to one term; mesh adaptation between rungs only (NUM-19).
-  The warm start is safe to rely on: WP3's update-based convergence test is what makes re-solving a
-  converged state terminate.
-- The ψ-domain-indicator current (NUM-24) and the derived QoIs `t₊`, `RR`, `G`, `Q_EOF` from the
-  same ψ integrals (NUM-27). The variational reaction flux (NUM-25) already exists from WP2; this
-  package supplies the second route and the comparison. **Never a cross-section integral of the CG
-  flux** (NUM-23).
-- Tests: VER-11 (the two routes agree to better than the rectification signal at the lowest bias);
-  VER-17 Maxwell–Hall access conductance to better than 2 %, using the *diameter* form
-  `G = σ[4L/(πd²) + 1/d]⁻¹` — the widely-copied `1/a` variant is wrong by a factor of two in the
-  access term and would fail a correct solver.
-- Plus the §8.2 criterion 2 run as a slow, non-gating test: converged solutions across
-  0.05–3 M × ±200 mV with every correction active, no negative concentration at any Newton step.
-  **The envelope run SHALL record the mesh it ran on.** Nine rungs × the bias and concentration grid
-  × several Newton steps each, at 41 s per factorisation at reference size, is hours; running it at
-  a reduced mesh is legitimate and running it without saying which mesh is not.
+- The nine stages of NUM-18, warm-started rung to rung, corrections enabled last (stages 7–8) so
+  that a convergence failure attributes to one term. Stages 4, 5 and 9 are ramps and expand into
+  several rungs each, so every `Rung` carries the stage it belongs to and conformance to NUM-18's
+  order is a property of the sequence rather than of its length. NUM-19 is satisfied structurally:
+  the mesh is a rung's own property and nothing changes it during a solve.
+- The ψ-domain-indicator current (NUM-24), the variational reaction flux from WP2 (NUM-25), their
+  agreement checked before any number is returned (NUM-26), and `t₊`, `RR`, `G`, `Q_EOF` derived
+  from the same ψ integrals (NUM-27). Never a cross-section integral of the CG flux (NUM-23).
+- VER-11 and VER-17 as Tier-2 gates, and the §8.2 criterion 2 envelope as a `slow`, non-gating
+  measurement that records the mesh it ran on.
+
+Seven things settled by the work, which WP6 inherits.
+
+- **`transfer` is the mechanism the plan identified as missing, and it was.** `CoupledModel.solve`
+  warm-starts by reusing `initial.space`, which is right whenever the field set is unchanged; stage
+  2 → 3 adds the concentrations and stage 5 → 6 adds `u` and `p`. `continuation.transfer` builds the
+  target space, cold-starts it, and interpolates the shared fields by name — or copies the vector
+  verbatim where the field sets match, which is both faster and exact, and which stages 4, 5, 7, 8
+  and 9 all take.
+- **Warm-start idempotence costs one iteration, not zero.** NUM-16's convergence test is on the
+  relative update, and an update is not knowable without assembling the Jacobian and solving once;
+  the entry-side test is on the residual, which a converged warm start does not pass because it is
+  measured relative to itself. So every rung pays one assembly and one solve to establish that it
+  has nothing to do, and the re-solved state moves by 5 × 10⁻⁹ relative. The alternative is worse: a
+  residual-only criterion demands another six orders of magnitude and the ladder never leaves stage 2.
+- **NUM-24's printed sign was wrong for its own electrode convention, and the specification is
+  amended.** With `ψ = 1` on cis, `∫_Ω J_i·∇ψ` is the efflux through the cis cap, so the minus
+  references the *trans* electrode — which makes `G = I/V_bias` negative for an ohmic pore against
+  VER-17, and negates this route relative to NUM-25 on the same boundary, so NUM-26's agreement
+  check could never have passed. The clause now carries the plus, with the derivation.
+- **ψ must be built on the fluid domain alone, and this is load-bearing.** The two routes agree
+  because ψ differs from the NUM-25 boundary indicator by a function vanishing on both electrodes;
+  that needs ψ to be *exactly* 1 and 0 there. Over the whole mesh it is not — the membrane spans the
+  transition band and a straddling element shares its corner vertex with a reservoir cap, leaking
+  8 × 10⁻³ onto an electrode. Cost: a factor of 170 in the route agreement, 6 × 10⁻⁴ instead of
+  4 × 10⁻⁶, which would have passed the declared tolerance while being a real error.
+- **The surface-charge term was missing.** `physics/poisson.py` has had `surface_charge_source` since
+  WP2 and nothing called it, so NUM-18 stage 4 could not ramp `σ_s` as written. `CoupledModel`
+  now assembles it, and `Scales` gained the `charge_density` and `surface_charge` scales that put an
+  SI value on the ramp.
+- **A saturated distance field disables half the correction set, silently.** Every correction is a
+  concentration factor times a wall factor in `d`, so `SATURATED_WALL_DISTANCE_NM` — the honest way
+  to say "no wall correction is active" at a call site — leaves a run exercising the concentration
+  half alone while looking, from the switches, fully corrected. Every configuration in WP5 that
+  claims "every correction active" is handed a real PHY-02 distance field from the pore wall alone.
+  And because `d` is a *discrete* field, it travels with the solution rather than being recomputed:
+  two calls to the distance solver differ at round-off, and a residual reassembled against the second
+  is a different operator from the one that was solved.
+- **A symmetric pore is the sharp test for RSK-03, not a rectifying one.** VER-11 asks for agreement
+  finer than the rectification signal, but the reference pore's signal is a property of *its*
+  asymmetry and no Tier-2 geometry has it. `CylindricalPoreGeometry` cannot rectify at all, so any
+  `RR ≠ 1` it reports is manufactured by the extraction — which is exactly the failure mode. The
+  benchmark measures the spurious signal instead: `RR` = 1.000021.
 
 ### WP6 — Analyte body and force benchmarks
 
@@ -225,9 +276,16 @@ Phase 0 is complete when, on the analytic cylindrical pore:
 
 1. **VER-12 … VER-22 all pass**, including MMS convergence at O(h³) in L² for P2 on the full coupled
    axisymmetric system, and the two force routes agreeing to better than 0.1 pN.
-   *Outstanding: VER-17, VER-19 … VER-22. Discharged: VER-12 … VER-16, VER-18.*
+   *Outstanding: VER-19 … VER-22, all WP6's. Discharged: VER-11 … VER-18.* VER-17 met in WP5 at
+   0.15 % against the Maxwell–Hall form on a 50 nm reservoir and 0.39 % on a 100 nm one, `G` moving
+   0.23 % between them — so the 2 % is measuring the discretisation, not the truncation of the domain.
 2. **The envelope converges**: 0.05–3 M × ±200 mV with all corrections active, reached through the
-   continuation ladder, with no negative concentration at any Newton iterate. *Outstanding, WP5.*
+   continuation ladder, with no negative concentration at any Newton iterate. `tests/tier2/test_envelope.py`
+   covers five concentrations × six biases on a reduced mesh, with the hard corner (3 M, ±200 mV)
+   also run from cold on the NUM-30 `λ_D/5` mesh and the classical ablation alongside it.
+   *Implemented; the full thirty-point run is in progress and its record is not yet in this file.*
+   The hard corner on its own is already established: 22 rungs, 106 Newton iterations, 500 s at
+   66 000 DOF, no gate violation.
 3. **The factorisation benchmark reports** time and peak memory for a production-sized problem on
    this laptop, with a verdict on whether UMFPACK or SuperLU is viable (RSK-10). **Met in WP3**:
    UMFPACK, 41 s and 6.2 GB at 1.04 × 10⁶ DOF; SuperLU not viable at that size.
@@ -237,3 +295,10 @@ Phase 0 is complete when, on the analytic cylindrical pore:
 Report at the end of the phase: the observed MMS convergence rates, the factorisation timing, which
 ladder rungs needed damping below 0.1, and any benchmark whose tolerance had to be argued rather
 than met — the last being the one that matters most for Phase 1's COMSOL comparison.
+
+Two entries for that report are already in hand from WP5. **The only rungs that needed damping below
+0.1 are the stage-4 charge ramp**, at 0.08, on every configuration tried; every other rung of every
+ladder held at the initial 0.2. And **no WP5 tolerance had to be argued**: VER-17 came in at 0.15 %
+against 2 %, and the NUM-26 route agreement at 4 × 10⁻⁶ against a declared 10⁻³. The one number that
+*was* argued is the ψ-band leak — 6 × 10⁻⁴ would have passed the declared tolerance and was a genuine
+error — and it was fixed rather than accommodated.
