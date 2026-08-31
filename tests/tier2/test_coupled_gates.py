@@ -18,7 +18,7 @@ import pytest
 
 from nanopnp.core.scaling import REFERENCE_DIFFUSIVITY_M2_S, debye_length_nm
 from nanopnp.materials.electrolyte import Electrolyte, IonSpecies
-from nanopnp.mesh.primitives import CylinderGeometry, SlabGeometry
+from nanopnp.mesh.primitives import CylinderGeometry, CylindricalPoreGeometry, SlabGeometry
 from nanopnp.physics import models
 from nanopnp.physics.measures import PLANAR, Measures
 from nanopnp.solve.gates import GateViolationError, maximum_packing_M
@@ -145,8 +145,6 @@ def test_num17_gates_sample_the_fluid_only() -> None:
     the material restriction the positivity gate would abort on every mesh that
     has a membrane in it, before Newton took a step.
     """
-    from nanopnp.mesh.primitives import CylindricalPoreGeometry
-
     model = models.create("epnp-ns", concentration_M=0.1)
     mesh = CylindricalPoreGeometry(reservoir_radius_nm=20.0).generate(maxh_nm=6.0)
     space = model.space(mesh)
@@ -162,10 +160,7 @@ def test_num17_gates_sample_the_fluid_only() -> None:
     assert len(sampled) > 0
     # Every sample point must lie inside the fluid: the lumen, or either
     # reservoir. Nothing may fall in the membrane annulus.
-    half = CylindricalPoreGeometry().half_thickness_nm
-    inside_membrane = [
-        (r, z)
-        for r, z in sampled
-        if abs(z) < half - 1e-9 and r > CylindricalPoreGeometry().pore_radius_nm + 1e-9
-    ]
+    pore = CylindricalPoreGeometry()
+    half, lumen = pore.half_thickness_nm, pore.pore_radius_nm
+    inside_membrane = [(r, z) for r, z in sampled if abs(z) < half - 1e-9 and r > lumen + 1e-9]
     assert not inside_membrane, f"the gate sampled the membrane at {inside_membrane[:3]}"

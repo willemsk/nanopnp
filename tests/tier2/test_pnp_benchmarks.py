@@ -106,6 +106,9 @@ def sweep() -> tuple[list[float], float]:
         log_variables=True,
     )
     cation, anion = model.species
+    # The reaction flux is taken block-wise, so the cation's position in the
+    # product space is read off the model rather than assumed.
+    cation_block = [f.name for f in model.fields].index(f"c_{cation}")
     boundaries = models.CoupledBoundaries(
         potential="wall|bulk",
         concentration={cation: "wall|bulk", anion: "bulk"},
@@ -135,7 +138,7 @@ def sweep() -> tuple[list[float], float]:
         # NUM-25, not a cross-section integral of the CG flux (NUM-23): the
         # cation is the only field constrained at the electrode, so the flux is
         # taken component-wise.
-        flux = boundary_reaction_flux(residual, solution.state, "wall", component=1)
+        flux = boundary_reaction_flux(residual, solution.state, "wall", component=cation_block)
         currents.append(flux / HEIGHT_NM)
         previous = solution
 

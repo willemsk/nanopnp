@@ -483,6 +483,8 @@ class CoupledModel:
             deviations.add("variable_density_flow=off")
         if not self.inertia:
             deviations.add("inertia=off")
+        if not self.steric:
+            deviations.add("steric=off")
         return deviations
 
     # -- discretisation ----------------------------------------------------
@@ -555,15 +557,34 @@ class CoupledModel:
         The fluid carries the corrected ``eps_r,f(<c>)/eps_r,f^0`` and each solid
         its own constant ratio (PHY-03). Poisson is solved over the whole domain,
         so a missing solid entry would leave the protein or the membrane at the
-        electrolyte's permittivity.
+        electrolyte's permittivity - a plausible, wrong answer with no solver
+        diagnostic, since ``eps_r`` is about 24 times too large there. Any
+        material that is neither fluid nor named in ``solid_permittivities`` is
+        therefore reported before the form is assembled.
         """
+        fluid_permittivity = coefficients.relative_permittivity()
+        fluid_mask = mesh.Materials(self.fluid).Mask()
+        unassigned = sorted(
+            {
+                material
+                for index, material in enumerate(mesh.GetMaterials())
+                if not fluid_mask[index] and material not in self.solid_permittivities
+            }
+        )
+        if unassigned:
+            logger.warning(
+                "%r has no solid_permittivities entry for %s, so Poisson carries the "
+                "electrolyte permittivity there (PHY-03)",
+                self.name,
+                ", ".join(unassigned),
+            )
         if not self.solid_permittivities:
-            return coefficients.relative_permittivity()
+            return fluid_permittivity
         reference = self.electrolyte.permittivity_0
         solids = {
             material: value / reference for material, value in self.solid_permittivities.items()
         }
-        return mesh.MaterialCF(solids, default=coefficients.relative_permittivity())
+        return mesh.MaterialCF(solids, default=fluid_permittivity)
 
     # -- weak form ---------------------------------------------------------
 
@@ -732,28 +753,45 @@ class CoupledModel:
     # -- gates and solve ---------------------------------------------------
 
     def gates(
-        self, mesh: Mesh, state: GridFunction, measures: Measures
+        self,
+        mesh: Mesh,
+        state: GridFunction,
+        measures: Measures,
+        *,
+        increment: GridFunction | None = None,
     ) -> tuple[Sequence[Gate], Sequence[Gate]]:
         """Return the NUM-17 state gates and increment gates for a solve.
 
         The concentration gates sample the fluid only: a field evaluated outside
         its ``definedon`` region comes back as zero, and a positivity gate
         sampling the membrane would abort on a solid every time.
+
+        Parameters
+        ----------
+        mesh, state, measures
+            The meshed domain, the iterate to gate and the symmetry policy.
+        increment
+            The Newton direction, when one exists. The increment gates are
+            returned only if it is given, so that the whole NUM-17 policy - both
+            halves of it - is owned by this method rather than half of it living
+            in :meth:`solve`.
         """
         fields = self._split(list(state.components))
         fluid_sampler = FieldSampler(
             mesh, coordinates=measures.coordinate_names, materials=self.fluid
         )
         variables = self.concentration_variables(fields)
-        concentrations_SI = species_concentrations_SI(
-            self.coefficients(variables, SATURATED_WALL_DISTANCE_NM)
-        )
+        concentrations_SI = species_concentrations_SI(self.scales, variables.values)
         diameters = {ion.name: ion.steric_diameter * NM_PER_M for ion in self.electrolyte.species}
         state_gates: list[Gate] = [
             PositivityGate(fluid_sampler, concentrations_SI),
             PackingFractionGate(fluid_sampler, concentrations_SI, diameters_nm=diameters),
         ]
-        return state_gates, []
+        if increment is None:
+            return state_gates, []
+        potential_sampler = FieldSampler(mesh, coordinates=measures.coordinate_names)
+        potential_increment = self._split(list(increment.components))[POTENTIAL]
+        return state_gates, [PotentialIncrementGate(potential_sampler, potential_increment)]
 
     def solve(
         self,
@@ -841,11 +879,7 @@ class CoupledModel:
             sources=sources,
         )
         increment = ngs.GridFunction(space, name=f"{self.name}_increment")
-        state_gates, _ = self.gates(mesh, state, measures)
-        potential_sampler = FieldSampler(mesh, coordinates=measures.coordinate_names)
-        increment_gates: list[Gate] = [
-            PotentialIncrementGate(potential_sampler, increment.components[0])
-        ]
+        state_gates, increment_gates = self.gates(mesh, state, measures, increment=increment)
         result = damped_newton(
             residual,
             state,
@@ -1185,7 +1219,7 @@ def _electrostatic_builder(name: str, screening: Literal["none", "linear", "sinh
     """Return a builder for one of the single-field electrostatic models."""
 
     def build(*, order: int = 2, **kwargs: Option) -> PhysicsModel:
-        del kwargs
+        _reject_unknown(kwargs, f"the {name!r} builder")
         return ElectrostaticModel(name=name, screening=screening, order=order)
 
     return build
