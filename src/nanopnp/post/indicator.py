@@ -34,8 +34,8 @@ from __future__ import annotations
 
 import logging
 
-from nanopnp.core.typing import Expression, GridFunction, Mesh, Option
-from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.core.typing import Expression, GridFunction, Mesh
+from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS, CylindricalPoreGeometry
 
 __all__ = [
     "IndicatorError",
@@ -125,13 +125,30 @@ def axial_indicator(
     lower_nm: float,
     upper_nm: float,
     order: int = 2,
-    definedon: Option = None,
+    fluid: str | None = ELECTROLYTE_DOMAINS,
+    cis: str = "cis",
+    trans: str = "trans",
+    check: bool = True,
 ) -> GridFunction:
     """Return ``psi``: 0 below ``lower_nm`` in ``z``, 1 above ``upper_nm``.
 
     ``cis`` lies at ``+z`` in :class:`~nanopnp.mesh.primitives.CylindricalPoreGeometry`,
     so ``psi`` increases with ``z`` and the sign convention of NUM-27 follows:
     a positive current flows trans to cis, in ``+z``.
+
+    **The indicator is built on the fluid alone, and that is not a tidiness
+    measure.** The two current routes agree because ``psi`` differs from the
+    NUM-25 boundary indicator by a function vanishing on both electrodes, hence
+    by a legitimate test function of the converged residual — an identity that
+    holds only if ``psi`` is *exactly* 1 and 0 on the two caps. Interpolated over
+    the whole mesh it is not: the membrane spans the transition band, and an
+    element straddling the band shares its corner vertex with the reservoir cap,
+    smearing a fraction of a per cent of ``psi`` onto an electrode where it must
+    be zero. Measured on the VER-11 configuration that leak is 7.7e-3 at the
+    trans cap and costs the route agreement a factor of 170: 6.5e-4 relative
+    over the whole mesh against 3.8e-6 over the fluid. Restricting removes the
+    membrane from the interpolation entirely, and with it the only path from the
+    band to a cap [tested].
 
     Parameters
     ----------
@@ -143,10 +160,16 @@ def axial_indicator(
         Element order. It must match the order of the fields the indicator is
         integrated against, or ``grad(psi)`` is represented in a coarser space
         than the flux and the two no longer test the same discretisation.
-    definedon
-        Region the indicator lives on, e.g. the fluid. ``None`` is the whole
-        mesh; the ion flux is zero outside the fluid in any case, but restricting
-        keeps the interpolation off the solid where it has no meaning.
+    fluid
+        Material-name regular expression the indicator lives on. ``None`` puts it
+        over the whole mesh, which is what the paragraph above says not to do;
+        it exists so that the difference can be measured.
+    cis, trans
+        Boundary-name regular expressions of the two caps, for the check.
+    check
+        Whether to verify the result with :func:`check_indicator`. On by default,
+        and skipped silently when the mesh does not carry both boundary names, so
+        that a geometry with another vocabulary is not refused outright.
 
     Returns
     -------
@@ -157,11 +180,15 @@ def axial_indicator(
 
     space = (
         ngs.H1(mesh, order=order)
-        if definedon is None
-        else ngs.H1(mesh, order=order, definedon=definedon)
+        if fluid is None
+        else ngs.H1(mesh, order=order, definedon=mesh.Materials(fluid))
     )
     indicator = ngs.GridFunction(space, name="psi")
     indicator.Set(smoothstep(ngs.y, lower_nm=lower_nm, upper_nm=upper_nm))
+    if check:
+        named = set(mesh.GetBoundaries())
+        if cis in named and trans in named:
+            check_indicator(indicator, mesh, cis=cis, trans=trans)
     return indicator
 
 
@@ -171,7 +198,7 @@ def check_indicator(
     *,
     cis: str = "cis",
     trans: str = "trans",
-    tolerance: float = 1e-4,
+    tolerance: float = 1e-12,
 ) -> None:
     """Assert that ``psi`` is 1 on the cis boundary and 0 on the trans boundary.
 
@@ -189,16 +216,13 @@ def check_indicator(
     cis, trans
         Boundary-name regular expressions of the two reservoir caps.
     tolerance
-        Mean-square departure permitted on each cap. The default is loose on
-        purpose. This is a check on *orientation and support*, the two failures
-        that are otherwise silent, and both of them put the mean square near 1.
-        It is not a check on interpolation accuracy: the reservoir meets the
-        membrane at ``z = +/- half_thickness``, so on a coarse mesh an element
-        that straddles the transition band shares a vertex with the reservoir
-        cap and leaks a fraction of a per cent of ``psi`` onto it. That leak is
-        harmless — the flux density on the far cap is negligible, and it shrinks
-        with the mesh — but it is not zero, and a tolerance that refused it would
-        be refusing the mesh rather than the indicator.
+        Mean-square departure permitted on each cap. The default is tight
+        because the requirement is exactness, not approximate separation: the
+        NUM-24 and NUM-25 routes agree only insofar as ``psi`` is exactly 1 and 0
+        on the two electrodes (see :func:`axial_indicator`). A fluid-restricted
+        indicator measures 1e-30 here; one interpolated over the whole mesh
+        measures 1e-6, and that difference is worth a factor of 170 in the route
+        agreement, so the check has to be able to tell them apart [tested].
 
     Raises
     ------

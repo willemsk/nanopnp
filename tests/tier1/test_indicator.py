@@ -97,19 +97,55 @@ def test_num24_an_inverted_band_fails_loudly(mesh: ngs.Mesh) -> None:
     Built here the way a miswiring would produce it — ``1 - S`` rather than
     ``S`` — because :func:`axial_indicator` cannot be asked for it directly.
     """
+    from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS
+
     lower, upper = lumen_band(PORE)
-    inverted = ngs.GridFunction(ngs.H1(mesh, order=2), name="psi")
+    space = ngs.H1(mesh, order=2, definedon=mesh.Materials(ELECTROLYTE_DOMAINS))
+    inverted = ngs.GridFunction(space, name="psi")
     inverted.Set(1.0 - smoothstep(ngs.y, lower_nm=lower, upper_nm=upper))
     with pytest.raises(IndicatorError, match="inverted band"):
         check_indicator(inverted, mesh)
 
 
 def test_num24_a_band_outside_the_domain_fails_loudly(mesh: ngs.Mesh) -> None:
-    """``grad(psi) = 0`` everywhere gives every current as zero, plausibly."""
+    """``grad(psi) = 0`` everywhere gives every current as zero, plausibly.
+
+    ``axial_indicator`` runs the check itself when the mesh names both caps, so
+    a band off the end of the domain never becomes a ``psi`` a caller can use.
+    """
     far = PORE.reservoir_radius_nm * 10.0
-    indicator = axial_indicator(mesh, lower_nm=far, upper_nm=far + 1.0)
     with pytest.raises(IndicatorError, match="psi must be 1"):
-        check_indicator(indicator, mesh)
+        axial_indicator(mesh, lower_nm=far, upper_nm=far + 1.0)
+
+
+def test_num24_the_indicator_is_built_on_the_fluid_and_that_is_load_bearing(
+    mesh: ngs.Mesh,
+) -> None:
+    """Over the whole mesh, ``psi`` leaks onto an electrode where it must be zero.
+
+    The two current routes agree because ``psi`` differs from the NUM-25 boundary
+    indicator by a function vanishing on both electrodes, hence by a legitimate
+    test function of the converged residual. That identity needs ``psi`` to be
+    *exactly* 1 and 0 there. Interpolated over the whole mesh it is not: the
+    membrane spans the transition band, and an element straddling the band shares
+    its corner vertex with the reservoir cap. On the VER-11 configuration the
+    leak costs a factor of 170 in the route agreement, so the default restricts
+    to the fluid and the check is tight enough to tell the two apart.
+    """
+    lower, upper = lumen_band(PORE)
+    over_the_solid = axial_indicator(mesh, lower_nm=lower, upper_nm=upper, fluid=None, check=False)
+    with pytest.raises(IndicatorError, match="psi must be 1"):
+        check_indicator(over_the_solid, mesh)
+
+    on_the_fluid = axial_indicator(mesh, lower_nm=lower, upper_nm=upper)
+    check_indicator(on_the_fluid, mesh)
+    trans_dofs = on_the_fluid.space.GetDofs(mesh.Boundaries("trans"))
+    leak = max(
+        abs(on_the_fluid.vec[index])
+        for index in range(on_the_fluid.space.ndof)
+        if trans_dofs[index]
+    )
+    assert leak == 0.0, f"psi must vanish identically on the trans electrode, got {leak:.3e}"
 
 
 def test_num24_check_indicator_names_the_boundaries_the_mesh_has(mesh: ngs.Mesh) -> None:
