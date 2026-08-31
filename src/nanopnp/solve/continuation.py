@@ -637,7 +637,10 @@ def default_ladder(
         than a change of code path (PHY-21).
         """
         return CoupledModel(
-            electrolyte=replace(base, switches=switches),
+            # ``with_switches`` rebuilds the resolved corrections; ``replace``
+            # would change only the record and leave every stage of the ladder
+            # evaluating whatever ``base`` was built with.
+            electrolyte=base.with_switches(switches),
             concentration_M=salt,
             name=name,
             flow=flow,

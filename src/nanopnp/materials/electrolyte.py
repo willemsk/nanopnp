@@ -125,9 +125,38 @@ class IonSpecies:
         return self.diffusivity_0 / thermal_voltage(self.temperature_K)
 
 
+def _resolve_corrections(
+    switches: CorrectionSwitches, species: Sequence[IonSpecies]
+) -> dict[str, models.CorrectionModel]:
+    """Return the correction model in force for each property, from the switches.
+
+    The single place the switch vocabulary becomes behaviour. Both
+    :meth:`Electrolyte.from_parameter_file` and :meth:`Electrolyte.with_switches`
+    route through it, so a configuration built either way resolves identically.
+    """
+    resolved: dict[str, models.CorrectionModel] = {
+        "viscosity": switches.viscosity.build("viscosity"),
+        "density": switches.density.build("density"),
+        "permittivity": switches.permittivity.build("permittivity"),
+    }
+    for ion in species:
+        resolved[f"diffusivity:{ion.name}"] = switches.diffusivity.build("diffusivity", ion.name)
+        resolved[f"mobility:{ion.name}"] = switches.mobility.build("mobility", ion.name)
+    return resolved
+
+
 @dataclass(frozen=True)
 class Electrolyte:
-    """A binary or multi-species electrolyte with its corrections resolved."""
+    """A binary or multi-species electrolyte with its corrections resolved.
+
+    **``corrections`` is the behaviour; ``switches`` is the record of how it was
+    built.** Every property accessor reads the resolved model out of
+    ``corrections`` and never consults ``switches`` again, so the two must agree
+    or the electrolyte reports one configuration and evaluates another. Use
+    :meth:`with_switches` to change the configuration; ``dataclasses.replace``
+    with a new ``switches`` alone leaves ``corrections`` untouched and is
+    refused by :meth:`__post_init__`.
+    """
 
     species: tuple[IonSpecies, ...]
     switches: CorrectionSwitches
@@ -169,6 +198,81 @@ class Electrolyte:
                 f"electrolyte's {self.temperature_K} K; mu_i^0 = D_i^0 / V_T(T) would then be "
                 "evaluated at the wrong temperature"
             )
+        self._reject_switches_that_disagree_with_the_corrections()
+
+    def _reject_switches_that_disagree_with_the_corrections(self) -> None:
+        """Raise if the resolved corrections are not the ones the switches name.
+
+        The failure this exists to stop is entirely silent. ``switches`` is
+        reported in the FR-25 provenance and read by ``CoupledModel.provenance``
+        to decide whether a run is classical, while ``corrections`` is what the
+        forms actually evaluate. A ``replace(electrolyte,
+        switches=CorrectionSwitches.classical())`` sets the record without
+        touching the behaviour, and the result is a run that calls itself
+        PNP-NS, converges, and is ePNP-NS -- which makes the PHY-21 ablation, the
+        project's primary differential-testing instrument, silently compare a
+        configuration against itself.
+
+        Raises
+        ------
+        ValueError
+            Naming every property whose resolved model disagrees with its
+            switch, and pointing at :meth:`with_switches`.
+        """
+        expected = {
+            "viscosity": self.switches.viscosity,
+            "density": self.switches.density,
+            "permittivity": self.switches.permittivity,
+        }
+        for ion in self.species:
+            expected[f"diffusivity:{ion.name}"] = self.switches.diffusivity
+            expected[f"mobility:{ion.name}"] = self.switches.mobility
+
+        disagreements: list[str] = []
+        for key, choice in expected.items():
+            resolved = self.corrections.get(key)
+            if resolved is None:
+                disagreements.append(f"{key}: no correction resolved at all")
+                continue
+            if resolved.name != choice.model:
+                disagreements.append(
+                    f"{key}: switches say {choice.model!r}, corrections hold {resolved.name!r}"
+                )
+                continue
+            # The concentration and wall parts are independently switchable, and
+            # an ablation that turns one off is exactly as silent as turning the
+            # whole model off. ``none`` carries neither flag and needs no check.
+            for part, wanted in (("concentration", choice.concentration), ("wall", choice.wall)):
+                actual = getattr(resolved, f"use_{part}", wanted)
+                if actual != wanted:
+                    disagreements.append(
+                        f"{key}: switches say {part}={wanted}, corrections hold {part}={actual}"
+                    )
+        if disagreements:
+            raise ValueError(
+                "this electrolyte's switches and its resolved corrections disagree, so it "
+                "would report one configuration and evaluate another:\n  "
+                + "\n  ".join(disagreements)
+                + "\nUse Electrolyte.with_switches() to change the configuration; "
+                "dataclasses.replace(..., switches=...) changes only the record."
+            )
+
+    def with_switches(self, switches: CorrectionSwitches) -> Electrolyte:
+        """Return the same electrolyte with a different correction configuration.
+
+        This is how PHY-21's reduction of ePNP-NS to PNP-NS is expressed: the
+        same electrolyte, the same reference properties, every correction
+        resolved to the registered ``none`` model. It rebuilds ``corrections``
+        from ``switches``, which is the part ``dataclasses.replace`` cannot do.
+
+        Parameters
+        ----------
+        switches
+            The configuration to resolve.
+        """
+        return replace(
+            self, switches=switches, corrections=_resolve_corrections(switches, self.species)
+        )
 
     @classmethod
     def from_parameter_file(
@@ -216,14 +320,7 @@ class Electrolyte:
             for name in names
         )
         solvent = document["solvent"]
-        resolved: dict[str, models.CorrectionModel] = {
-            "viscosity": active.viscosity.build("viscosity"),
-            "density": active.density.build("density"),
-            "permittivity": active.permittivity.build("permittivity"),
-        }
-        for ion in ions:
-            resolved[f"diffusivity:{ion.name}"] = active.diffusivity.build("diffusivity", ion.name)
-            resolved[f"mobility:{ion.name}"] = active.mobility.build("mobility", ion.name)
+        resolved = _resolve_corrections(active, ions)
         return cls(
             species=ions,
             switches=active,

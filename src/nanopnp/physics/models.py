@@ -25,7 +25,7 @@ from __future__ import annotations
 import logging
 import math
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
 from typing import Any, Literal, Protocol, TypeAlias
 
 from nanopnp.core.scaling import NM_PER_M, Scales
@@ -1316,11 +1316,13 @@ def _coupled_electrolyte(
     is applied to the *switches*, never by branching in the forms.
     """
     if electrolyte is not None:
-        return (
-            replace(electrolyte, switches=CorrectionSwitches.classical())
-            if classical
-            else electrolyte
-        )
+        # ``with_switches``, not ``replace``: the corrections are resolved at
+        # construction and every property reads the resolved model, so replacing
+        # the switches alone would return an electrolyte that calls itself
+        # classical and evaluates the full correction set.
+        if classical:
+            return electrolyte.with_switches(CorrectionSwitches.classical())
+        return electrolyte
     switches = (
         CorrectionSwitches.classical() if classical else CorrectionSwitches.for_model(corrections)
     )

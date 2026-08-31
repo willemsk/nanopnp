@@ -52,6 +52,7 @@ what it cost.
 
 import logging
 import math
+from collections.abc import Sequence
 
 import pytest
 
@@ -162,17 +163,28 @@ def _rung(
     )
 
 
-def _walk(start_V: float, end_V: float) -> tuple[float, ...]:
-    """Return the biases a monotone walk visits, from just past ``start_V`` to ``end_V``.
+def _walk(start_V: float, waypoints: Sequence[float]) -> tuple[tuple[float, bool], ...]:
+    """Return the biases a monotone walk visits, and whether each is a waypoint.
 
-    Empty when the walk has nowhere to go, which is what the reference bias
-    itself gets: it is already converged on the spine.
+    Built **from the waypoints outwards**, subdividing each gap that exceeds
+    ``BIAS_WALK_STEP_V``, rather than from a uniform step that the waypoints are
+    then matched against. The difference is not cosmetic: a uniform walk from
+    +50 mV to +200 mV has a span of 0.15000000000000002 in binary floating
+    point, so ``ceil(span / 0.05)`` is 4 rather than 3 and the walk lands on
+    0.0875, 0.125, 0.1625, 0.2 — passing straight over +100 mV, which is an
+    envelope point. Emitting each waypoint verbatim makes that impossible.
     """
-    span = end_V - start_V
-    if abs(span) < 1e-12:
-        return ()
-    steps = max(1, math.ceil(abs(span) / BIAS_WALK_STEP_V))
-    return tuple(start_V + span * (index + 1) / steps for index in range(steps))
+    visited: list[tuple[float, bool]] = []
+    current = start_V
+    for target in waypoints:
+        span = target - current
+        if abs(span) < 1e-12:
+            continue
+        steps = max(1, round(abs(span) / BIAS_WALK_STEP_V))
+        visited.extend((current + span * (index + 1) / steps, False) for index in range(steps - 1))
+        visited.append((target, True))  # verbatim, so the key is exact
+        current = target
+    return tuple(visited)
 
 
 def _record(
@@ -274,9 +286,11 @@ def test_82_criterion_two_the_whole_envelope_converges_through_the_ladder() -> N
         points[concentration_M, BIASES_V[0]] = _record(
             spine, concentration_M, BIASES_V[0], indicator
         )
-        for extreme_V in (max(BIASES_V), min(BIASES_V)):
+        upwards = sorted(v for v in BIASES_V if v > BIASES_V[0])
+        downwards = sorted((v for v in BIASES_V if v < BIASES_V[0]), reverse=True)
+        for waypoints in (upwards, downwards):
             walking = spine
-            for bias_V in _walk(BIASES_V[0], extreme_V):
+            for bias_V, is_waypoint in _walk(BIASES_V[0], waypoints):
                 name = f"{concentration_M:g}M-{bias_V * 1e3:+.0f}mV"
                 step = run_ladder(
                     [_rung(name, model, mesh, bias_V, stage=5, distance=distance)],
@@ -293,10 +307,9 @@ def test_82_criterion_two_the_whole_envelope_converges_through_the_ladder() -> N
                 )
                 # Record on the way past, rather than walking here again from
                 # the spine for each target: that is where the halving is.
-                wanted = [t for t in BIASES_V if math.isclose(bias_V, t)]
-                if wanted:
-                    points[concentration_M, wanted[0]] = _record(
-                        walking, concentration_M, wanted[0], indicator
+                if is_waypoint:
+                    points[concentration_M, bias_V] = _record(
+                        walking, concentration_M, bias_V, indicator
                     )
 
     # -- the record the end-of-phase report asks for ----------------------
