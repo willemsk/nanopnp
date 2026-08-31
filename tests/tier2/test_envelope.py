@@ -84,9 +84,27 @@ CONCENTRATIONS_M = (0.05, 0.15, 0.5, 1.0, 3.0)
 BIASES_V = (0.05, 0.10, 0.20, -0.05, -0.10, -0.20)
 """Both signs to +/-200 mV, the FR-17 envelope."""
 
-SURFACE_CHARGE_C_M2 = -0.05
+SURFACE_CHARGE_C_M2 = -0.02
 """A charged wall, because an uncharged pore does not exercise the double layer
-the packing and positivity gates watch."""
+the packing and positivity gates watch — and a value the *reduced* mesh below can
+actually climb to.
+
+NUM-18 stage 4 raises ``sigma_s`` while the model is still classical, and
+classical PNP has no steric limit: the counter-ion goes to whatever
+Gouy-Chapman asks for, tens of molar at -0.05 C/m². At the full
+``lambda_D(3 M)/5`` grading the ramp climbs that; on this mesh, 2.6 times
+coarser at the wall, the NUM-17 packing gate aborts on the first sub-step. Both
+behaviours are correct — the coarse mesh does not resolve the layer, the Newton
+iterate overshoots into a state the model cannot represent, and the gate is what
+stops it becoming a plausible wrong answer — so the honest response is to run
+the reduced mesh at a charge it can support and say so, rather than to loosen
+the gate. §8.2 criterion 2 specifies the concentration and bias envelope; the
+wall charge is this benchmark's own choice. The hard-corner test below runs
+-0.05 C/m² on the NUM-30 mesh, which is where that charge belongs. **[tested]**
+"""
+
+HARD_CORNER_SURFACE_CHARGE_C_M2 = -0.05
+"""The charge the hard-corner run carries, on the full NUM-30 wall grading."""
 
 MEMBRANE_PERMITTIVITY = {"membrane": 2.0}
 """An insulating membrane, as in the other Tier-2 benchmarks."""
@@ -366,7 +384,10 @@ def test_82_criterion_two_the_hard_corner_from_cold_costs_what_it_costs() -> Non
             mesh,
             concentration_M=3.0,
             bias_V=0.2,
-            surface_charge_C_m2=SURFACE_CHARGE_C_M2,
+            # More than the envelope sweep carries, and deliberately: this is the
+            # NUM-30 wall grading, which is what makes the classical charge ramp
+            # of stage 4 survivable at all. See SURFACE_CHARGE_C_M2 above.
+            surface_charge_C_m2=HARD_CORNER_SURFACE_CHARGE_C_M2,
             solid_permittivities=MEMBRANE_PERMITTIVITY,
             wall_distance_nm=_distance(mesh),
             charge_steps=2,

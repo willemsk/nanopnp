@@ -196,7 +196,7 @@ criterion 2, and retires RSK-03.
 - VER-11 and VER-17 as Tier-2 gates, and the §8.2 criterion 2 envelope as a `slow`, non-gating
   measurement that records the mesh it ran on.
 
-Seven things settled by the work, which WP6 inherits.
+Ten things settled by the work, which WP6 inherits.
 
 - **`transfer` is the mechanism the plan identified as missing, and it was.** `CoupledModel.solve`
   warm-starts by reusing `initial.space`, which is right whenever the field set is unchanged; stage
@@ -233,6 +233,36 @@ Seven things settled by the work, which WP6 inherits.
   And because `d` is a *discrete* field, it travels with the solution rather than being recomputed:
   two calls to the distance solver differ at round-off, and a residual reassembled against the second
   is a different operator from the one that was solved.
+- **An electrolyte's switches were a record, not the behaviour — and WP5's ablation is what caught
+  it.** `Electrolyte` resolves its correction switches to correction models once, at construction,
+  and every property accessor reads the resolved dict; `switches` is never consulted again. So
+  `replace(electrolyte, switches=classical())` returned an object that reported PNP-NS in its FR-25
+  provenance and evaluated the full ePNP-NS set. Two callers did exactly that — `models.create`'s
+  `classical=True` path whenever an electrolyte is passed explicitly, and `default_ladder` — so every
+  stage of every ladder ran fully corrected, the ones labelled classical included. The ablation
+  measured a conductance ratio of 1.0009 at 3 M where the mobility correction alone is a factor of
+  about 0.5, which is what exposed it. `Electrolyte.with_switches` now rebuilds the resolved models
+  and `__post_init__` refuses a pair that disagrees. **A configuration that cannot be trusted to be
+  the configuration it names makes §7.4's ablation compare a run against itself**, so WP6's force
+  ablations depend on this too.
+- **VER-16 was passing on two errors that cancelled**, and the fix above turned it red. It passes an
+  electrolyte explicitly, so it had never once run classically. Its 100 nm film is
+  space-charge-limited rather than electroneutral — the giveaway is that the plateau current does not
+  depend on the electrode concentration at all — which reads 14 % high against the closed form, while
+  the silently-active corrections broke the Einstein relation the factor of 2 rests on and pulled it
+  down by about as much. The screening length that governs is not the bulk 0.30 nm but the 9.6 nm at
+  the depleted electrode. Measured convergence: 1.138 at L = 100 nm, 1.050 at 400, 1.026 at 1000,
+  1.017 at 2000. The film is now 2000 nm at no extra cost.
+- **The wall grading of NUM-30 decides whether the ladder converges, not only how accurate it is.**
+  Stage 4 ramps `σ_s` while the model is still classical, and classical PNP has no steric limit — the
+  counter-ion goes to whatever Gouy–Chapman asks for, which at −0.05 C/m² is tens of molar. At the
+  full `λ_D(3 M)/5` grading the ladder climbs that; on a wall mesh 2.6 times coarser the NUM-17
+  packing gate aborts at the first charge sub-step. Both behaviours are correct: the coarse mesh does
+  not resolve the layer, so the Newton iterate overshoots into a state the model cannot represent,
+  and the gate is what stops it becoming a plausible wrong answer. The consequence for planning is
+  that a reduced mesh buys less than its element count suggests — it costs robustness at the charged
+  end — and that a strongly charged pore will want the Poisson–Boltzmann initial guess NUM-20 names
+  for exactly this failure mode. `default_ladder` already takes a `wall_potential_V` for it.
 - **A symmetric pore is the sharp test for RSK-03, not a rectifying one.** VER-11 asks for agreement
   finer than the rectification signal, but the reference pore's signal is a property of *its*
   asymmetry and no Tier-2 geometry has it. `CylindricalPoreGeometry` cannot rectify at all, so any
