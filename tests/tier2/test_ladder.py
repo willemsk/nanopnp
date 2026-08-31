@@ -27,6 +27,7 @@ import logging
 import ngsolve as ngs
 import pytest
 
+from nanopnp.mesh.distance import wall_distance
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
 from nanopnp.physics.measures import AXISYMMETRIC
 from nanopnp.physics.models import POTENTIAL, PRESSURE, VELOCITY
@@ -59,6 +60,10 @@ def ladder() -> LadderResult:
         bias_V=BIAS_V,
         surface_charge_C_m2=SURFACE_CHARGE_C_M2,
         solid_permittivities=MEMBRANE_PERMITTIVITY,
+        # A real PHY-02 distance field, from the pore wall alone: the saturated
+        # constant would make every wall factor identically 1 and leave stages 7
+        # and 8 exercising only the concentration half of the corrections.
+        wall_distance_nm=wall_distance(mesh, "wall", order=AXISYMMETRIC.element_order),
         charge_steps=2,
         concentration_steps=2,
     )
@@ -179,6 +184,11 @@ def test_num18_re_solving_a_converged_rung_costs_one_iteration_and_moves_nothing
         initial=carried,
         potential_values=mesh.BoundaryCF({"cis": 0.0, "trans": BIAS_V / thermal_V}),
         surface_charge=ngs.CF(SURFACE_CHARGE_C_M2 / scale.surface_charge_C_m2),
+        # Read off the solution rather than rebuilt. A distance field is a
+        # discrete grid function, so a second call to ``wall_distance`` would
+        # give a numerically different one and this would no longer be the same
+        # operator — which is precisely why ``ModelSolution`` carries it.
+        wall_distance_nm=solution.wall_distance_nm,
     )
     assert again.newton is not None
     logger.info("re-solving the converged top of the ladder: %s", again.newton.summary())
