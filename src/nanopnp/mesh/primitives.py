@@ -39,10 +39,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from nanopnp.core.typing import Mesh
+from nanopnp.core.typing import Mesh, Shape
 
-_TOL_NM = 1e-9
-"""Geometric tolerance for classifying an edge by its centre of mass."""
+TOL_NM = 1e-9
+"""Geometric tolerance for classifying an edge by its centre of mass.
+
+Public because :mod:`nanopnp.geometry.analyte` classifies against the same
+tolerance when it embeds a body in one of these geometries; two tolerances that
+can drift apart would put an edge in one geometry's vocabulary and not the
+other's.
+"""
 
 ELECTROLYTE_DOMAINS = "electrolyte|cis|trans"
 """Regular expression selecting every fluid domain of these geometries.
@@ -77,11 +83,11 @@ class SlabGeometry:
         face.name = "electrolyte"
         for edge in face.edges:
             centre = edge.center
-            if abs(centre[0]) < _TOL_NM:
+            if abs(centre[0]) < TOL_NM:
                 edge.name = "wall"
                 if wall_h_nm is not None:
                     edge.maxh = wall_h_nm
-            elif abs(centre[0] - self.width_nm) < _TOL_NM:
+            elif abs(centre[0] - self.width_nm) < TOL_NM:
                 edge.name = "bulk"
             else:
                 edge.name = "lateral"
@@ -109,9 +115,9 @@ class CylinderGeometry:
         face.name = "electrolyte"
         for edge in face.edges:
             centre = edge.center
-            if abs(centre[0]) < _TOL_NM:
+            if abs(centre[0]) < TOL_NM:
                 edge.name = "axis"
-            elif abs(centre[0] - self.radius_nm) < _TOL_NM:
+            elif abs(centre[0] - self.radius_nm) < TOL_NM:
                 edge.name = "wall"
                 if wall_h_nm is not None:
                     edge.maxh = wall_h_nm
@@ -146,19 +152,15 @@ class CylindricalPoreGeometry:
         """Half the membrane thickness; the lumen spans ``+/- half_thickness_nm``."""
         return 0.5 * self.membrane_thickness_nm
 
-    def generate(self, *, maxh_nm: float, wall_h_nm: float | None = None) -> Mesh:
-        """Return the meshed geometry with named domains and boundaries.
+    def faces(self) -> tuple[Shape, Shape, Shape, Shape]:
+        """Return the four named faces — lumen, membrane, cis, trans — unglued.
 
-        Parameters
-        ----------
-        maxh_nm
-            Global maximum element size, in nm.
-        wall_h_nm
-            Element size on the pore wall, in nm; NUM-30 asks for about
-            ``lambda_D / 5`` there.
+        Public so that a geometry embedding something *in* the lumen can cut the
+        body out of that face before the glue, rather than copying this
+        construction. :class:`nanopnp.geometry.analyte.PoreWithAnalyte` is the
+        only such caller in Phase 0; the lumen is returned first for it.
         """
         import netgen.occ as occ
-        import ngsolve as ngs
 
         half = self.half_thickness_nm
         radius = self.reservoir_radius_nm
@@ -184,26 +186,68 @@ class CylindricalPoreGeometry:
             half_disc = disc * box
             half_disc.name = side
             reservoirs.append(half_disc)
+        return lumen, membrane, reservoirs[0], reservoirs[1]
 
-        shape = occ.Glue([lumen, membrane, *reservoirs])
+    def name_edges(self, shape: Shape, *, wall_h_nm: float | None = None) -> None:
+        """Name every **unnamed** edge of ``shape`` by its centre of mass, in place.
+
+        An edge that already carries a name is left alone. The chain below is
+        unconditional and matches on position, so an edge belonging to something
+        this geometry does not know about — the surface of an embedded analyte —
+        would otherwise be swept into ``cis`` or dropped to NGSolve's
+        ``default``. Names survive an OCC boolean and a glue [tested], so
+        pre-naming the intruder and skipping it here is enough to keep the two
+        vocabularies apart.
+
+        The one edge deliberately left to this chain is the body's own segment
+        on ``r = 0``: it is part of the axis, and calling it anything else would
+        take it out of the ``axis`` region that NUM-06 imposes ``u_r = 0`` on.
+        """
+        half = self.half_thickness_nm
+        radius = self.reservoir_radius_nm
         for edge in shape.edges:
+            if edge.name is not None:
+                continue
             centre = edge.center
             r_c, z_c = centre[0], centre[1]
-            on_axis = abs(r_c) < _TOL_NM
-            inside_membrane_span = abs(z_c) < half - _TOL_NM
+            on_axis = abs(r_c) < TOL_NM
+            inside_membrane_span = abs(z_c) < half - TOL_NM
             if on_axis:
                 edge.name = "axis"
-            elif abs(r_c - self.pore_radius_nm) < _TOL_NM and inside_membrane_span:
+            elif abs(r_c - self.pore_radius_nm) < TOL_NM and inside_membrane_span:
                 edge.name = "wall"
                 if wall_h_nm is not None:
                     edge.maxh = wall_h_nm
-            elif abs(abs(z_c) - half) < _TOL_NM and r_c > self.pore_radius_nm + _TOL_NM:
+            elif abs(abs(z_c) - half) < TOL_NM and r_c > self.pore_radius_nm + TOL_NM:
                 edge.name = "membrane"
-            elif abs(r_c - radius) < _TOL_NM and inside_membrane_span:
+            elif abs(r_c - radius) < TOL_NM and inside_membrane_span:
                 edge.name = "membrane_outer"
             elif z_c > half:
                 edge.name = "cis"
             elif z_c < -half:
                 edge.name = "trans"
-        geometry = occ.OCCGeometry(shape, dim=2)
+
+    def shape(self, *, wall_h_nm: float | None = None) -> Shape:
+        """Return the glued, fully named shape, unmeshed."""
+        import netgen.occ as occ
+
+        glued = occ.Glue(list(self.faces()))
+        self.name_edges(glued, wall_h_nm=wall_h_nm)
+        return glued
+
+    def generate(self, *, maxh_nm: float, wall_h_nm: float | None = None) -> Mesh:
+        """Return the meshed geometry with named domains and boundaries.
+
+        Parameters
+        ----------
+        maxh_nm
+            Global maximum element size, in nm.
+        wall_h_nm
+            Element size on the pore wall, in nm; NUM-30 asks for about
+            ``lambda_D / 5`` there.
+        """
+        import netgen.occ as occ
+        import ngsolve as ngs
+
+        geometry = occ.OCCGeometry(self.shape(wall_h_nm=wall_h_nm), dim=2)
         return ngs.Mesh(geometry.GenerateMesh(maxh=maxh_nm, grading=0.2))

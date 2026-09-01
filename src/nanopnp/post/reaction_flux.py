@@ -19,13 +19,17 @@ Hughes, Engel, Mazzei & Larson, *J. Comput. Phys.* **163**, 467 (2000).
 
 from __future__ import annotations
 
-from nanopnp.core.typing import AssembledForm, FESpace, GridFunction
+from nanopnp.core.typing import AssembledForm, Expression, FESpace, GridFunction
 
 
 def boundary_indicator(
-    space: FESpace, boundary: str, *, component: int | None = None
+    space: FESpace,
+    boundary: str,
+    *,
+    component: int | None = None,
+    value: Expression = 1.0,
 ) -> GridFunction:
-    """Return the finite-element function equal to 1 on ``boundary`` and 0 elsewhere.
+    """Return the finite-element function equal to ``value`` on ``boundary``, 0 elsewhere.
 
     It must be built by interpolation, never by setting the boundary degrees of
     freedom to 1: NGSolve's higher-order basis is **hierarchical**, so its shape
@@ -40,15 +44,24 @@ def boundary_indicator(
     equation's residual rather than the sum over all of them. It is also the
     only way to interpolate at all there: a compound space has no boundary
     evaluator of its own, and ``Set`` on it raises.
+
+    ``value`` is 1 for a scalar field, which is the NUM-25 current. A **vector**
+    field needs a vector: ``ngsolve.CF(1.0)`` cannot fill a ``VectorH1`` block,
+    and the axial reaction force of NUM-28 pairs the momentum residual with
+    ``e_z``, that is with ``(0, 1)`` in the ``(r, z)`` half-plane. Written as a
+    coefficient function so that a direction varying along the boundary — which
+    a torque or a radial force would need — is expressible without a second
+    entry point.
     """
     import ngsolve as ngs
 
     indicator = ngs.GridFunction(space, name=f"psi_{boundary}")
     region = space.mesh.Boundaries(boundary)
+    target = ngs.CF(value)
     if component is None:
-        indicator.Set(ngs.CF(1.0), definedon=region)
+        indicator.Set(target, definedon=region)
     else:
-        indicator.components[component].Set(ngs.CF(1.0), definedon=region)
+        indicator.components[component].Set(target, definedon=region)
     return indicator
 
 
@@ -58,6 +71,7 @@ def boundary_reaction_flux(
     boundary: str,
     *,
     component: int | None = None,
+    value: Expression = 1.0,
     load_form: AssembledForm | None = None,
 ) -> float:
     """Return the reaction flux of a converged solution through one boundary.
@@ -78,6 +92,11 @@ def boundary_reaction_flux(
         coupled solve whose *other* fields are free on the boundary — the
         blocked anion of VER-16 is exactly that — still yields the flux of the
         field that is constrained there.
+    value
+        The value the test function takes on the boundary; see
+        :func:`boundary_indicator`. 1 for a scalar flux, ``(0, 1)`` for the
+        axial component of a vector field's reaction — which is the NUM-28
+        hydrodynamic force on a no-slip body.
     load_form
         The assembled ``LinearForm`` of the problem, if it has one. The residual
         is ``a(u, v) - f(v)``; omitting ``f`` where the problem has a source
@@ -88,8 +107,9 @@ def boundary_reaction_flux(
     Returns
     -------
     float
-        ``int_boundary (grad u . n) ds`` in the units of the form, with ``n``
-        the outward normal.
+        ``int_boundary (sigma.n) . value ds`` in the units of the form, with
+        ``n`` the outward normal and ``sigma.n`` the equation's own boundary
+        traction — ``grad u . n`` for a scalar diffusion operator.
 
     Raises
     ------
@@ -120,5 +140,5 @@ def boundary_reaction_flux(
     residual_form.Apply(solution.vec, residual)
     if load_form is not None:
         residual.data = residual - load_form.vec
-    indicator = boundary_indicator(space, boundary, component=component)
+    indicator = boundary_indicator(space, boundary, component=component, value=value)
     return float(ngs.InnerProduct(residual, indicator.vec))

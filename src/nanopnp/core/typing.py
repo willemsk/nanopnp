@@ -34,6 +34,9 @@ vector rather than an unevaluated expression."""
 Mesh: TypeAlias = Any
 """An ``ngsolve.Mesh``."""
 
+Shape: TypeAlias = Any
+"""A ``netgen.occ`` shape: a named face, or a glued compound of them."""
+
 FESpace: TypeAlias = Any
 """An ``ngsolve.FESpace`` or a product of them."""
 
