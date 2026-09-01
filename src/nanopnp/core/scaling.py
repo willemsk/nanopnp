@@ -358,6 +358,8 @@ class Scales:
             "flux_mol_m2_s": self.flux_mol_m2_s,
             "current_A": self.current_A,
             "volumetric_flow_m3_s": self.volumetric_flow_m3_s,
+            "charge_density_C_m3": self.charge_density_C_m3,
+            "surface_charge_C_m2": self.surface_charge_C_m2,
             "debye_length_nm": self.debye_length_nm,
             "debye_ratio": self.debye_ratio,
             "peclet": self.peclet,
