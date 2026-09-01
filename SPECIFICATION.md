@@ -320,10 +320,12 @@ model report governs and §4.6 records the divergence.
 | `Ω_w` | electrolyte: both reservoirs and the pore lumen | Poisson, Nernst–Planck, Navier–Stokes |
 | `Ω_p` | pore protein | Poisson |
 | `Ω_m` | lipid bilayer | Poisson |
-| `Ω` | `Ω_w ∪ Ω_p ∪ Ω_m` | Poisson |
+| `Ω_a` | analyte body, when one is present (FR-21) | Poisson |
+| `Ω` | `Ω_w ∪ Ω_p ∪ Ω_m ∪ Ω_a` | Poisson |
 | `Γ_w,c`, `Γ_w,t` | exterior reservoir boundaries, cis and trans | Dirichlet φ, c; stress-free |
 | `Γ_m` | exterior bilayer boundary | zero charge |
 | `Γ_p+m` | interior interface, fluid to protein and membrane | dielectric continuity, no-flux, no-slip |
+| `Γ_a` | analyte surface | dielectric continuity, no-flux, no-slip; the NUM-28 force is taken over it |
 | `r = 0` | symmetry axis | axis conditions |
 
 NOTE: reference geometry is a hemispherical reservoir of radius R = 250 nm on each side and a
@@ -563,6 +565,7 @@ which the per-slice check detects.
 | `Ω_p` (protein) | 20 | Li/Li/Zhang/Alexov 2013 | calibration parameter, reported in every output |
 | `Ω_m` (membrane) | 3.2 | Gramse 2013 (DPhPC) | fixed |
 | `Ω_w` (electrolyte) | `78.15 · f^c(c̄)` per PHY-11 and PHY-12 | Gavish 2016 | concentration-dependent |
+| `Ω_a` (analyte) | 20 by default, as for `Ω_p` | Li/Li/Zhang/Alexov 2013 | calibration parameter, reported in every output |
 
 The dielectric and ion-exclusion contours SHALL be built from the same Gaussian density field,
 with the transition to `ε_w` smoothed over 1–2 Å and the ion-exclusion contour offset outward by
@@ -1393,6 +1396,48 @@ T_M = ε ( E⊗E − ½|E|² I )        T_H = −p I + η ( ∇u + ∇uᵀ )
 with `w` a smooth extension of `e_z` from the body, rather than as the surface integral
 `F = ∮_S (T_M + T_H)·n dS`, for the superconvergence reason of NUM-24.
 
+NOTE: the form as printed is exact only where `∇·(T_M + T_H) = 0` in the fluid. The divergence
+theorem gives, in full,
+
+```
+F_z = ∮_∂B (T·n_B)·e_z dS = −∫_Ω T : ∇w dV − ∫_Ω (∇·T)·w dV
+```
+
+and in this model neither tensor is divergence-free: `∇·T_M = ρ_ion E − ½|E|²∇ε` and, from PHY-07
+and PHY-08, `∇·T_H = −f + Re ϱ(u·∇)u` with `f` the body force the momentum equation actually
+carries. Each contribution SHALL therefore carry its own consistency term,
+
+```
+F^em = −∫ T_M : ∇w − ∫ f_ion·w − ∫ f_KH·w
+F^hd = −∫ T_H : ∇w + ∫ f·w − Re ∫ ϱ (u·∇)u·w
+```
+
+with `f_ion = ρ_ion E` (PHY-08) and `f_KH = −½|E|²∇ε` the Korteweg–Helmholtz force. Written this
+way each contribution equals the traction of its own tensor over the body's surface, so the domain
+and surface routes agree contribution by contribution. Omitting the consistency terms leaves the
+*split* a function of where the transition shell of `w` was placed — `∫ f_ion·w` is the electrical
+force on all the fluid inside that shell, a quantity of the same order as the contributions
+themselves — while leaving the total almost unaffected, which is exactly the plausible wrong answer
+RSK-04 describes.
+
+NOTE: the two consistency terms cancel in the sum only when the momentum equation carries every
+force the Maxwell tensor implies, that is when `f = f_ion + f_KH`. The validated model omits `f_KH`
+(PHY-23), so wherever the permittivity correction is active the printed form above differs from the
+force by exactly `−∫ f_KH·w`. That term SHALL be reported alongside the force rather than absorbed
+into it, so that the omission is a recorded measurement and not an unexplained route discrepancy.
+It vanishes identically in a classical configuration and whenever the dielectric-gradient body force
+is enabled, which is why VER-22 gates classically.
+
+NOTE: the contraction carries no `1/r` factor. For an axial `w`, `(∇w)_φφ = w_r/r = 0`, so the hoop
+components of both tensors are contracted against zero and `T : ∇w = T_rz ∂_r w_z + T_zz ∂_z w_z`.
+The integrals still carry the `r` weight and the NUM-07 integration-order floor, but they are not
+singular forms.
+
+NOTE: `w` SHALL be built by interpolation on the fluid alone, for the reasons NUM-24 gives for `ψ`,
+and SHALL be verified to equal `e_z` on the body and zero on every other boundary before it is used;
+an inverted or leaking extension returns the force on a different body with no other symptom
+(QR-12).
+
 **NUM-29.** The electromechanical and hydrodynamic contributions SHALL each be resolved to well
 below 1 pN, the domain-form and surface-integral evaluations SHALL agree to better than 0.1 pN, and
 the force feature SHALL carry its own mesh convergence study.
@@ -1400,7 +1445,14 @@ the force feature SHALL carry its own mesh convergence study.
 Rationale: at `V_bias` = +50 mV, `q_Hb` = −4 e and 300 mM NaCl the reference analyte case has
 `|F^em| ≈ |F^hd| ≈ 10 pN` of opposite sign, so the net force is a near-cancellation of two
 approximately 10 pN terms; an error in either integral flips the sign of the total and with it the
-trapping landscape (RSK-17).
+trapping landscape (RSK-04).
+
+NOTE: agreement of the two routes on the *total* does not establish the split, and the split is what
+RSK-04 concerns. An implementation MAY take a third route for `F^hd` alone — the analyte surface is
+a Dirichlet boundary for `u`, so the assembled momentum residual paired with a test function equal
+to `e_z` there is the traction integral itself, by the NUM-25 argument. It is independent of `w`
+exactly, so it disagrees with the domain form precisely when a NUM-28 consistency term is missing or
+mis-signed, which no comparison of the two stress routes can detect.
 
 ### 6.8 Mesh resolution and adaptivity
 
