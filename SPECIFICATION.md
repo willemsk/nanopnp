@@ -1544,8 +1544,8 @@ discretisation or stabilisation.
 | **VER-18** | Method of manufactured solutions, full coupled axisymmetric system | manufactured `φ, c_i, u, p` with consistent source terms | Observed convergence O(h³) in L² for P2; the only route that verifies the `u_r/r²` term and the axis treatment |
 | **VER-19** | Stokes drag on a sphere | `F = −6πηaU` | Drag on the analyte body in creeping flow to better than **1 %** on the finest mesh, falling monotonically under refinement |
 | **VER-20** | Maxwell stress on a dielectric sphere in a uniform field | analytic potential for a sphere of permittivity `ε_p` in medium `ε_m`, and `F_z = qE₀` for a uniformly charged body at `ε_p = ε_m` | Field matched to the closed form, net force below **10⁻³ pN** by both routes, and the `qE₀` magnitude anchor to better than **1 %** |
-| **VER-21** | Electrophoretic mobility limits | Hückel `μ_e = 2εζ/3η` (κa ≪ 1) and Smoluchowski `μ_e = εζ/η` (κa ≫ 1) | Both limits recovered at the corresponding κa |
-| **VER-22** | Force-evaluation route agreement | domain form `F_z = −∫_Ω (T_M + T_H) : ∇w dV` against surface form `F = ∮_S (T_M + T_H)·n dS` | Agreement to better than 0.1 pN on the same solution |
+| **VER-21** | Electrophoretic mobility limits | Hückel `μ_e = 2εζ/3η` (κa ≪ 1) and Smoluchowski `μ_e = εζ/η` (κa ≫ 1), with Henry's `μ_e = (2εζ/3η) f(κa)` as the reference between them | Henry's function recovered to better than **5 %** at every κa tested and the Hückel limit to **5 %** at κa ≲ 0.5; `μ_e/(εζ/η)` rising monotonically towards 1 with the residual gap at the largest κa under **15 %** and no larger than Henry's own gap there |
+| **VER-22** | Force-evaluation route agreement | domain form `F_z = −∫_Ω (T_M + T_H) : ∇w dV` against surface form `F = ∮_S (T_M + T_H)·n dS`, with the variational reaction force on the no-slip surface as a third route for the hydrodynamic half | Agreement to better than **0.1 pN absolute** on the same solution, on a solution whose two halves are individually of order 10 pN and opposite in sign; the reaction route confirming `F^hd` to better than **10⁻³ pN** |
 
 NOTE: Hall's result is `R_access = ρ/(4a)` per side, so the two sides give `ρ/(2a)`. The form
 `G = σ[L/(πa²) + 1/a]⁻¹` substitutes radius for diameter in the access term and is wrong there by a
@@ -1565,6 +1565,34 @@ vanishes — and in the NUM-09 variables reads `F/(εV_T²) = ρ̃ Ṽ Ẽ₀`, 
 `r` weight and `Scales.force_N` together in one number. Neither VER-20 problem needs the NUM-28
 consistency term: the fluid is charge-free with a uniform permittivity in both, and the anchor's charge
 lies inside the body, where `w` is constant.
+
+NOTE (VER-21): the acceptance is stated against Henry's function rather than against the two limits
+alone, because the limits are limits. `μ_e = (2εζ/3η) f(κa)` with `f(0) = 1` and `f(∞) = 3/2` is the
+closed form at every κa in the low-ζ limit, and Ohshima's approximation to it,
+`f(x) = 1 + 1/(2[1 + 2.5/(x(1 + 2e^{−x}))]³)`, is the reference used. The approach to Smoluchowski goes
+as `1/κa` and is slow: at κa = 16.5, the largest a Tier-2 budget affords, Henry is still 11.5 % below
+`εζ/η`, so a 5 % gate against Smoluchowski there would be asserting something untrue. The 15 % gate is
+the honest one, and the monotone approach carries the rest of the claim. The Hückel end needs no such
+allowance: at κa = 0.5, `f = 1.014`.
+
+NOTE (VER-21): the far field for this benchmark SHALL be a uniform stream, reversing VER-19's rule, and
+the reversal is not an inconsistency. VER-19 measures one confined solve, where a uniform stream adds
+the `a/R` wall correction that NOTE (VER-19) quantifies. VER-21 measures the ratio of two solves, whose
+force-free combination has a far field that is uniform to `O((a/R)³)` — a force-free particle radiates
+no Stokeslet — so imposing the exact translating-sphere field would inject the `O(a/R)` Stokeslet the
+physical solution does not have. The wall corrections common to the field and drag solves divide out of
+the ratio. ζ SHALL be measured as the `r`-weighted mean of `φ` over the body surface rather than
+prescribed there: a prescribed potential makes the body an equipotential, which expels the applied
+field instead of refracting it through the dielectric, and solves a different problem with a different
+`f(κa)`.
+
+NOTE (VER-22): the third route is the oracle on the *split*, which is what RSK-04 is about. The analyte
+surface is a Dirichlet boundary for `u`, so the assembled momentum residual paired with a velocity-block
+test function equal to `e_z` there equals `∮_S (T_H·n)·e_z dS` discretely, and — because the residual
+vanishes on every free degree of freedom — it is exactly independent of `w`. It therefore disagrees with
+the domain route precisely when the NUM-28 consistency term is missing or mis-signed, which is the
+failure mode invisible in the total. The agreement threshold is **absolute**: the total is a small
+difference of two large numbers by construction, so a relative test on it measures nothing.
 
 ### 7.4 Tier 3 cross-implementation comparison
 
