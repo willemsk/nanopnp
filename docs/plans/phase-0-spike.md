@@ -278,7 +278,10 @@ Eleven things settled by the work, which WP6 inherits.
 
 ### WP6 — Analyte body and force benchmarks
 
-`geometry/analyte.py`, `post/forces.py`.
+`geometry/analyte.py`, `post/forces.py`. Implementation plan: `wp6-analyte-and-forces.md`, which
+records two corrections to the bullets below — the `∇w` contraction carries **no** `1/r` hoop
+component for an axial `w`, and the domain form of NUM-28 is exact only once the body-force
+consistency term is carried, without which the `F^em` / `F^hd` split depends on the choice of `w`.
 
 - Rigid body of revolution on the axis, subtracted from the fluid domain, treated as a hard
   dielectric: no ion flux, no-slip, dielectric jump (FR-21, author ruling 4).
