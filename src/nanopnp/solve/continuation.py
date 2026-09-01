@@ -577,6 +577,7 @@ def default_ladder(
     corrections: str = "willems2020_nacl",
     surface_charge_C_m2: float = 0.0,
     fixed_charge_C_m3: float = 0.0,
+    fixed_charge_domain: str | None = None,
     wall_potential_V: float = 0.0,
     wall_distance_nm: Expression = SATURATED_WALL_DISTANCE_NM,
     solid_permittivities: Mapping[str, float] | None = None,
@@ -609,6 +610,13 @@ def default_ladder(
     surface_charge_C_m2, fixed_charge_C_m3
         Targets of the stage-4 ramp, in SI. Converted to the nondimensional
         variables through the NUM-09 scale set of the model that carries them.
+    fixed_charge_domain
+        Material the fixed charge is confined to. ``None``, the default, spreads
+        it over the whole domain, which is what a uniformly charged medium means.
+        An *analyte* charge is not that: ``rho_part = q/V`` lives in the body and
+        nowhere else, so a body charge passed without this argument would also
+        charge the electrolyte it is suspended in and drive a space charge the
+        physical problem does not have.
     wall_potential_V
         Zeta potential imposed on the pore wall during the two Poisson-Boltzmann
         stages, in volts. Zero by default, and then those two stages are
@@ -752,7 +760,12 @@ def default_ladder(
         """
         charges: dict[str, Option] = {}
         if fixed_charge_C_m3 != 0.0:
-            charges["fixed_charge"] = ngs.CF(fraction * fixed_charge_C_m3 / charge_scale)
+            density = fraction * fixed_charge_C_m3 / charge_scale
+            charges["fixed_charge"] = (
+                ngs.CF(density)
+                if fixed_charge_domain is None
+                else mesh.MaterialCF({fixed_charge_domain: density}, default=0.0)
+            )
         if surface_charge_C_m2 != 0.0:
             charges["surface_charge"] = ngs.CF(fraction * surface_charge_C_m2 / surface_scale)
             charges["surface_charge_boundary"] = surface_charge_boundary
