@@ -85,6 +85,37 @@ def test_num09_peclet_equals_advective_over_diffusive_rate() -> None:
     )
 
 
+def test_num28_force_scale_is_the_permittivity_times_the_thermal_voltage_squared() -> None:
+    """``F_0 = p_0 a^2 = eps V_T^2`` is 0.4568 pN, and 0.1 pN is 0.219 of it.
+
+    The tolerance NUM-29 sets on the two force routes is quoted in piconewtons;
+    this is the arithmetic that turns it into the dimensionless number a
+    discretisation has to meet, so it is pinned rather than recomputed at the
+    call site.
+    """
+    scales = _scales(1.0)
+    assert scales.force_N == pytest.approx(4.568e-13, rel=1e-3)
+    assert 0.1e-12 / scales.force_N == pytest.approx(0.219, rel=1e-2)
+
+
+def test_num28_force_scale_does_not_depend_on_the_reference_length() -> None:
+    """``p_0 a^2`` cancels both powers of ``a``, unlike every other derived scale.
+
+    Worth asserting rather than reasoning about: it is what makes the 0.1 pN of
+    NUM-29 mean the same thing on a 2 nm pore and on a 20 nm one.
+    """
+    small = Scales(length_nm=1.0, concentration_M=1.0)
+    large = Scales(length_nm=20.0, concentration_M=1.0)
+    assert small.force_N == pytest.approx(large.force_N, rel=1e-15)
+    assert small.pressure_Pa != pytest.approx(large.pressure_Pa, rel=1e-3)
+
+
+def test_num28_force_scale_is_the_pressure_scale_through_a_pore_sized_area() -> None:
+    """``F_0 = p_0 a^2``: the two definitions are the same number, by construction."""
+    scales = _scales(1.0)
+    assert scales.force_N == pytest.approx(scales.pressure_Pa * scales.length_m**2, rel=1e-14)
+
+
 @pytest.mark.parametrize(
     "quantity",
     [
@@ -93,6 +124,7 @@ def test_num09_peclet_equals_advective_over_diffusive_rate() -> None:
         "concentration",
         "velocity",
         "pressure",
+        "force",
         "diffusivity",
         "current",
         "volumetric_flow",
@@ -142,7 +174,7 @@ def test_num09_summary_carries_every_scale_for_the_manifest() -> None:
     """
     scales = _scales(1.0)
     summary = scales.summary()
-    for key in ("potential_V", "velocity_m_s", "pressure_Pa", "debye_ratio", "peclet"):
+    for key in ("potential_V", "velocity_m_s", "pressure_Pa", "force_N", "debye_ratio", "peclet"):
         assert key in summary
         assert math.isfinite(summary[key])
 

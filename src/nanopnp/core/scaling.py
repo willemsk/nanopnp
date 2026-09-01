@@ -196,6 +196,22 @@ class Scales:
         return self.permittivity * self.potential_V**2 / self.length_m**2
 
     @property
+    def force_N(self) -> float:
+        """Force scale ``p_0 a^2 = eps V_T^2``, in N. 4.568e-13 N, that is 0.4568 pN.
+
+        A pressure through a pore-sized area, with the two powers of ``a``
+        cancelling exactly: **the force scale does not depend on the reference
+        length.** That is worth stating rather than rediscovering, because it
+        means the NUM-29 tolerance of 0.1 pN is the same 0.219 dimensionless
+        whatever pore the case is posed on.
+
+        NUM-28 integrals arrive here as ``int f r dr dz``, short of the ``2 pi``
+        that :class:`~nanopnp.physics.measures.Measures` cancelled from the weak
+        form; :mod:`nanopnp.post.forces` restores it, once (NUM-27 NOTE).
+        """
+        return self.permittivity * self.potential_V**2
+
+    @property
     def flux_mol_m2_s(self) -> float:
         """Ion-flux scale ``D_0 c_0 / a``, in mol/(m^2 s)."""
         return self.diffusivity_m2_s * self.concentration_mol_m3 / self.length_m
@@ -282,10 +298,10 @@ class Scales:
         ----------
         quantity
             One of ``length``, ``potential``, ``concentration``, ``velocity``,
-            ``pressure``, ``diffusivity``, ``flux``, ``current``,
+            ``pressure``, ``force``, ``diffusivity``, ``flux``, ``current``,
             ``volumetric_flow``, ``charge_density``, ``surface_charge``.
         value
-            The quantity in SI units (m, V, mol/m^3, m/s, Pa, m^2/s,
+            The quantity in SI units (m, V, mol/m^3, m/s, Pa, N, m^2/s,
             mol/(m^2 s), A, m^3/s, C/m^3, C/m^2).
 
         Returns
@@ -316,6 +332,7 @@ class Scales:
             "concentration": self.concentration_mol_m3,
             "velocity": self.velocity_m_s,
             "pressure": self.pressure_Pa,
+            "force": self.force_N,
             "diffusivity": self.diffusivity_m2_s,
             "flux": self.flux_mol_m2_s,
             "current": self.current_A,
@@ -354,6 +371,7 @@ class Scales:
             "potential_V": self.potential_V,
             "velocity_m_s": self.velocity_m_s,
             "pressure_Pa": self.pressure_Pa,
+            "force_N": self.force_N,
             "diffusivity_m2_s": self.diffusivity_m2_s,
             "flux_mol_m2_s": self.flux_mol_m2_s,
             "current_A": self.current_A,
