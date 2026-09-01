@@ -27,6 +27,7 @@ from nanopnp.core.scaling import REFERENCE_PERMITTIVITY, debye_length_nm
 from nanopnp.core.typing import Expression, GridFunction, IntegralTerm, Mesh
 from nanopnp.physics.measures import Measures
 from nanopnp.physics.poisson import poisson_operator
+from nanopnp.physics.spaces import set_boundary_values
 from nanopnp.solve.gates import FieldSampler, PotentialIncrementGate
 from nanopnp.solve.linear import DEFAULT_SOLVER, solve_linear
 from nanopnp.solve.newton import (
@@ -214,13 +215,7 @@ def solve_pb_recorded(
     # ``Set(..., definedon=)`` zeroes everything outside the region, so the
     # essential data is written through the same projector split the coupled
     # model uses; on a cold start the interior is zero either way.
-    scratch = ngs.GridFunction(space)
-    scratch.Set(boundary_values, definedon=mesh.Boundaries(dirichlet))
-    constrained = space.GetDofs(mesh.Boundaries(dirichlet))
-    potential.vec.data = (
-        ngs.Projector(constrained, False) * potential.vec
-        + ngs.Projector(constrained, True) * scratch.vec
-    )
+    set_boundary_values(potential, boundary_values, mesh.Boundaries(dirichlet))
 
     if not nonlinear:
         trial, test = space.TnT()

@@ -185,11 +185,20 @@ def axial_indicator(
     )
     indicator = ngs.GridFunction(space, name="psi")
     indicator.Set(smoothstep(ngs.y, lower_nm=lower_nm, upper_nm=upper_nm))
-    if check:
-        named = set(mesh.GetBoundaries())
-        if cis in named and trans in named:
-            check_indicator(indicator, mesh, cis=cis, trans=trans)
+    if check and _boundary_length(mesh, cis) > 0.0 and _boundary_length(mesh, trans) > 0.0:
+        # Matched by measure, not by literal name: ``cis`` and ``trans`` are
+        # regular expressions, and testing them against ``GetBoundaries()`` as
+        # strings would silently switch the QR-12 gate off for any pattern that
+        # is not itself a boundary name.
+        check_indicator(indicator, mesh, cis=cis, trans=trans)
     return indicator
+
+
+def _boundary_length(mesh: Mesh, boundary: str) -> float:
+    """Return the measure of a boundary-name regular expression; 0 if it matches nothing."""
+    import ngsolve as ngs
+
+    return float(ngs.Integrate(ngs.CF(1.0), mesh, definedon=mesh.Boundaries(boundary)))
 
 
 def check_indicator(
@@ -234,7 +243,7 @@ def check_indicator(
 
     def _mean_square(target: float, boundary: str) -> float:
         region = mesh.Boundaries(boundary)
-        length = float(ngs.Integrate(ngs.CF(1.0), mesh, definedon=region))
+        length = _boundary_length(mesh, boundary)
         if length <= 0.0:
             known = ", ".join(sorted(set(mesh.GetBoundaries())))
             raise IndicatorError(f"no boundary matching {boundary!r} in this mesh; it has {known}")

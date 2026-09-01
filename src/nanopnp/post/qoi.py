@@ -429,6 +429,10 @@ class QuantitiesOfInterest:
             "conductance_S": self.conductance_S,
             "eof_m3_s": self.eof_m3_s,
             "two_pi_included": True,
+            # FR-25 wants every switch set away from the validated default, and
+            # skipping NUM-26 is one. Absence of the ``route_agreement`` key
+            # would not say so: a hand-built record has none either.
+            "routes_checked": self.agreement is not None,
         }
         if self.agreement is not None:
             record["route_agreement"] = self.agreement.summary()
@@ -513,9 +517,16 @@ def rectification(forward: QuantitiesOfInterest, reverse: QuantitiesOfInterest) 
     Raises
     ------
     ValueError
-        If the two biases are not opposite in sign, where the ratio compares
-        unrelated operating points rather than the two directions of one.
+        If ``forward`` is not the positive bias, or if the two biases are not
+        opposite in sign, where the ratio compares unrelated operating points
+        rather than the two directions of one.
     """
+    if forward.bias_V <= 0.0:
+        raise ValueError(
+            f"'forward' must be the positive bias: RR is |I(+V)|/|I(-V)|, so a swapped pair "
+            f"returns the reciprocal and inverts the rectification direction with no other "
+            f"symptom. Got forward={forward.bias_V} V and reverse={reverse.bias_V} V"
+        )
     if forward.bias_V * reverse.bias_V >= 0.0:
         raise ValueError(
             f"a rectification ratio compares opposite biases, got {forward.bias_V} V and "

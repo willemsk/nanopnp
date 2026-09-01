@@ -332,6 +332,18 @@ def _fields_of(model: PhysicsModel) -> dict[str, int]:
     return {declared.name: declared.order for declared in model.fields}
 
 
+def _shared_fields(source: PhysicsModel, target: PhysicsModel) -> tuple[str, ...]:
+    """Return the fields two models hold in common *at the same element order*.
+
+    The one place the warm-start rule is written. A field carried at a different
+    order cannot be copied and is cold-started instead, so :func:`run_ladder`
+    asks here rather than restating the test: a record that counted it as
+    transferred would claim a warm start that did not happen (FR-25).
+    """
+    before = _fields_of(source)
+    return tuple(name for name, order in _fields_of(target).items() if before.get(name) == order)
+
+
 def _component(state: GridFunction, model: PhysicsModel, name: str) -> GridFunction:
     """Return one field of a state by name, single-field spaces included.
 
@@ -411,7 +423,7 @@ def transfer(
 
     source = _fields_of(previous.model)
     target = _fields_of(model)
-    shared = tuple(name for name in target if name in source and source[name] == target[name])
+    shared = _shared_fields(previous.model, model)
     cold = tuple(name for name in target if name not in shared)
 
     if not shared:
@@ -421,15 +433,20 @@ def transfer(
             "start from; solve the next rung cold instead of pretending otherwise"
         )
 
+    space = model.space(mesh, boundaries)
+    if tuple(target) == tuple(source) and space.ndof == previous.space.ndof:
+        # The cold start is not built at all here: every value it interpolated
+        # would be overwritten by the copy, and each one is a mass-matrix solve
+        # over the whole fluid. Most rungs of the default ladder take this path.
+        state = ngs.GridFunction(space, name=f"{model.name}_state")
+        state.vec.data = previous.state.vec
+        logger.debug("transfer to %r: copied %d fields verbatim", model.name, len(shared))
+        return ModelSolution(model=model, space=state.space, state=state)
+
     if isinstance(model, CoupledModel):
         state = model.cold_state(mesh, boundaries, initial_concentrations=initial_concentrations)
     else:
         state = model.cold_state(mesh, boundaries)
-
-    if tuple(target) == tuple(source) and state.space.ndof == previous.space.ndof:
-        state.vec.data = previous.state.vec
-        logger.debug("transfer to %r: copied %d fields verbatim", model.name, len(shared))
-        return ModelSolution(model=model, space=state.space, state=state)
 
     species = set(model.species) if isinstance(model, CoupledModel) else set()
     for name in shared:
@@ -488,9 +505,17 @@ def run_ladder(rungs: Sequence[Rung], *, initial: ModelSolution | None = None) -
         cold_fields = tuple(_fields_of(rung.model))
         carried: ModelSolution | None = None
         if previous is not None:
-            carried = transfer(previous, rung.model, rung.mesh, rung.boundaries)
-            source = _fields_of(previous.model)
-            transferred_fields = tuple(name for name in _fields_of(rung.model) if name in source)
+            # ``initial_concentrations`` is what a cold-started concentration
+            # field is filled with, so the rung's own value has to reach the
+            # transfer; ``solve`` ignores it once a warm start is supplied.
+            carried = transfer(
+                previous,
+                rung.model,
+                rung.mesh,
+                rung.boundaries,
+                initial_concentrations=rung.solve_kwargs.get("initial_concentrations"),
+            )
+            transferred_fields = _shared_fields(previous.model, rung.model)
             cold_fields = tuple(
                 name for name in _fields_of(rung.model) if name not in transferred_fields
             )
@@ -716,6 +741,23 @@ def default_ladder(
     # current and flux scales these two do not move with the salt.
     charge_scale = reference.scales.charge_density_C_m3
     surface_scale = reference.scales.surface_charge_C_m2
+
+    def _charges(fraction: float = 1.0) -> dict[str, Option]:
+        """Return the charges of one rung: the stage-4 ramp, or its converged end.
+
+        A charge left at zero is omitted rather than passed as ``CF(0.0)``: the
+        form would then assemble an integral that is identically zero on every
+        rung from stage 4 onwards, and the surface term would name a boundary
+        the geometry need not even carry.
+        """
+        charges: dict[str, Option] = {}
+        if fixed_charge_C_m3 != 0.0:
+            charges["fixed_charge"] = ngs.CF(fraction * fixed_charge_C_m3 / charge_scale)
+        if surface_charge_C_m2 != 0.0:
+            charges["surface_charge"] = ngs.CF(fraction * surface_charge_C_m2 / surface_scale)
+            charges["surface_charge_boundary"] = surface_charge_boundary
+        return charges
+
     if surface_charge_C_m2 != 0.0 or fixed_charge_C_m3 != 0.0:
         for fraction in ramp_schedule(charge_steps):
             rungs.append(
@@ -726,24 +768,9 @@ def default_ladder(
                     mesh=mesh,
                     boundaries=boundaries,
                     measures=measures,
-                    solve_kwargs={
-                        "potential_values": zero_bias,
-                        "fixed_charge": ngs.CF(fraction * fixed_charge_C_m3 / charge_scale),
-                        "surface_charge": ngs.CF(fraction * surface_charge_C_m2 / surface_scale),
-                        "surface_charge_boundary": surface_charge_boundary,
-                    },
+                    solve_kwargs={"potential_values": zero_bias, **_charges(fraction)},
                 )
             )
-
-    def _charges() -> dict[str, Option]:
-        """Return the converged stage-4 charges, carried by every later rung."""
-        if surface_charge_C_m2 == 0.0 and fixed_charge_C_m3 == 0.0:
-            return {}
-        return {
-            "fixed_charge": ngs.CF(fixed_charge_C_m3 / charge_scale),
-            "surface_charge": ngs.CF(surface_charge_C_m2 / surface_scale),
-            "surface_charge_boundary": surface_charge_boundary,
-        }
 
     # -- stage 5: ramp the bias -------------------------------------------
     for bias in bias_schedule(bias_V):
@@ -769,11 +796,17 @@ def default_ladder(
             (8, "steric", "epnp-ns", corrected),
         )
     target_switches = corrected if corrections_active else classical
+    # Same rule as stage 6 below: a classical rung has no wall correction able
+    # to read the distance field, and recording one it never evaluated would
+    # make the PHY-21 ablation and its reference disagree on the manifest.
+    wall_field: dict[str, Option] = (
+        {"wall_distance_nm": wall_distance_nm} if corrections_active else {}
+    )
     target_name = "epnp-ns" if corrections_active else "pnp-ns"
     for stage, label, name, switches in physics_stages:
         # The distance field is passed only where a wall correction can read it;
         # stage 6 is still classical and would carry it unused.
-        extra: dict[str, Option] = {} if stage == 6 else {"wall_distance_nm": wall_distance_nm}
+        extra: dict[str, Option] = {} if stage == 6 else wall_field
         rungs.append(
             Rung(
                 name=f"{stage}-{label}",
@@ -804,8 +837,8 @@ def default_ladder(
                     measures=measures,
                     solve_kwargs={
                         "potential_values": _potential(bias_V),
-                        "wall_distance_nm": wall_distance_nm,
                         **_charges(),
+                        **wall_field,
                     },
                 )
             )

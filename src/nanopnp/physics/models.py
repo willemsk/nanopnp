@@ -67,6 +67,7 @@ from nanopnp.physics.pb import (
     solve_pb_recorded,
 )
 from nanopnp.physics.poisson import charge_source, poisson_operator, surface_charge_source
+from nanopnp.physics.spaces import set_boundary_values
 from nanopnp.solve.gates import (
     FieldSampler,
     Gate,
@@ -1036,44 +1037,22 @@ class CoupledModel:
         import ngsolve as ngs
 
         fields = self._split(list(state.components))
-        _set_boundary_values(
+        set_boundary_values(
             fields[POTENTIAL], potential_values, mesh.Boundaries(boundaries.potential)
         )
         values = concentration_values or {}
         for name in self.species:
             bulk = values.get(name, 1.0)
             target = ngs.log(ngs.CF(bulk)) if self.log_variables else ngs.CF(bulk)
-            _set_boundary_values(
+            set_boundary_values(
                 fields[concentration_field_name(name)],
                 target,
                 mesh.Boundaries(boundaries.concentration_boundary(name)),
             )
         if self.flow and velocity_values is not None:
-            _set_boundary_values(
+            set_boundary_values(
                 fields[VELOCITY], velocity_values, mesh.Boundaries(boundaries.velocity)
             )
-
-
-def _set_boundary_values(component: GridFunction, values: Expression, region: Option) -> None:
-    """Write ``values`` onto ``region`` without disturbing the rest of the field.
-
-    ``GridFunction.Set(cf, definedon=region)`` zeroes every degree of freedom
-    outside the region, so calling it after an initial guess has been written
-    destroys that guess — and calling it on a warm start destroys the state the
-    continuation ladder is warm-starting from. The interpolation is therefore
-    done on a scratch function and only the region's degrees of freedom are
-    copied across.
-    """
-    import ngsolve as ngs
-
-    space = component.space
-    scratch = ngs.GridFunction(space)
-    scratch.Set(values, definedon=region)
-    on_region = space.GetDofs(region)
-    component.vec.data = (
-        ngs.Projector(on_region, False) * component.vec
-        + ngs.Projector(on_region, True) * scratch.vec
-    )
 
 
 @dataclass(frozen=True)
@@ -1227,7 +1206,7 @@ class ElectrostaticModel:
             state = ngs.GridFunction(space, name="phi_tilde")
             if initial is not None:
                 state.vec.data = initial.state.vec
-            _set_boundary_values(state, potential_values, mesh.Boundaries(boundaries.potential))
+            set_boundary_values(state, potential_values, mesh.Boundaries(boundaries.potential))
             a = ngs.BilinearForm(self.residual_form(space, measures)).Assemble()
             f = ngs.LinearForm(space).Assemble()
             solve_linear(a, f, state, solver=solver)
