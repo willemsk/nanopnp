@@ -137,6 +137,15 @@ using the full hydrodynamic stress tensor to calculate the force, rather than ju
 drag*". T_H is the **same** tensor as in the momentum equation (`01-physics-epnpns.md §2.3`), so η
 is the corrected position-dependent viscosity — the integrand inherits the wall correction.
 
+**Sign, resolved [tested].** `T_H = p I − η[∇u + (∇u)ᵀ]` as printed above is the *negative* of the
+Cauchy stress the momentum equation is written in, which is `T_H = −p I + 2 η sym ∇u` with
+`∇·T_H + f = Re ϱ(u·∇)u` — a positive pressure pushing outward. NUM-28 and
+`post/forces.hydrodynamic_stress` use the momentum-equation convention, because the domain form is
+derived from that divergence and mixing the two flips the force. The two conventions give the same
+physics and opposite numbers, so the rule is: whichever is chosen, the tensor in the force integral
+and the tensor in the residual must be the same one. `T_M = ε(E ⊗ E − ½|E|²I)` has no such ambiguity
+— `E` appears twice, so the sign of `E` cannot leak into it.
+
 ## 5. From energy landscape to rates (no Boltzmann inversion, no Kramers)
 
 The PMF is built **forward** (energy → rates), never inverted from a force profile.
@@ -241,6 +250,24 @@ rises ≈ 2.5 % from −60 → −100 mV (position shift, not stretching — unf
    **Partly superseded — see §10:** they *were* evaluated, for PlyAB + haemoglobin, in Angew. Chem.
    2022; §10.6 gives regression targets. Analytic tests (isolated sphere: Maxwell integral → qE;
    Stokes sphere → 6πηaU) remain the right first check.
+
+   **Done, and they were the right first check [tested]** (WP6, `tests/tier2/`). On a P2 sphere of
+   radius 1 nm in a box of radius 10 nm, `a = 1 nm` mesh units, the numbers are:
+
+   | Check | Measured | Reference |
+   |---|---|---|
+   | Stokes drag, three meshes (VER-19) | 0.430870, 0.430522, 0.430500 pN | `6πηaU` = 0.430491 pN |
+   | its relative error | 8.80 × 10⁻⁴ → 7.11 × 10⁻⁵ → 1.98 × 10⁻⁵ | rates 3.63 and 1.85 per halving |
+   | Maxwell integral on an uncharged dielectric sphere (VER-20) | −8.6 × 10⁻⁸ pN (domain), +7.0 × 10⁻⁵ pN (surface) | 0 |
+   | `F = qE₀` anchor, −4 e at 5.1 MV/m (VER-20) | −8.21704 pN (domain), −8.18903 pN (surface) | −8.23281 pN, i.e. 0.19 % and 0.53 % |
+   | Henry mobility at κa = 0.50 / 2.08 / 16.47 (VER-21) | `μ̃_e/ζ̃` = 0.661, 0.704, 0.872 | `2f(κa)/3` = 0.676, 0.711, 0.885 |
+
+   Two findings worth carrying forward. **The far field decides whether VER-19 measures anything**:
+   a uniform stream at `R = 10a` gives 1.285 × the drag, the `1 + (9/4)(a/b)` wall correction of a
+   sphere in a concentric container, so the exact Stokes field has to be imposed instead. And **the
+   zero test cannot stand alone**: a net force of zero on a polarised sphere is invariant under a
+   uniform scale factor, so the `qE₀` anchor is what pins the magnitude of the Maxwell route, which
+   has no reaction-route oracle because `φ` is not constrained on the body's surface.
 2. **"Surface charge density vs smeared volumetric charge" resolves to one pipeline, not two
    models** (§2). If the author meant a genuine σ_s on an analyte boundary in other work, it is not
    in the thesis — ask.

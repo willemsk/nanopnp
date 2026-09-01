@@ -1,8 +1,9 @@
 # Phase 0 (Spike): coupled ePNP-NS on an analytic cylindrical pore
 
-**Status: WP1–WP5 merged, WP6 outstanding.** Last revised 31 August 2026, after WP5. Everything
-gated — tiers 1 and 2, VER-11 and VER-17 included — is green, and the thirty-point envelope run is
-recorded under criterion 2 below.
+**Status: WP1–WP6 merged. Phase 0 complete on criteria 1–3; criterion 4 is out of scope by
+amendment A2.** Last revised 1 September 2026, after WP6. Everything gated — tiers 1 and 2,
+VER-11 … VER-22 included — is green; the thirty-point envelope run is recorded under criterion 2
+and the force benchmarks under criterion 1.
 
 This is the delivery plan for Phase 0 of `SPECIFICATION.md` §8.1, as amended by §8.2.1. The
 specification remains normative: where this file and the specification disagree, the specification
@@ -276,24 +277,70 @@ Eleven things settled by the work, which WP6 inherits.
   `RR ≠ 1` it reports is manufactured by the extraction — which is exactly the failure mode. The
   benchmark measures the spurious signal instead: `RR` = 1.000021.
 
-### WP6 — Analyte body and force benchmarks
+### WP6 — Analyte body and force benchmarks — **merged**
 
-`geometry/analyte.py`, `post/forces.py`. Implementation plan: `wp6-analyte-and-forces.md`, which
-records two corrections to the bullets below — the `∇w` contraction carries **no** `1/r` hoop
-component for an axial `w`, and the domain form of NUM-28 is exact only once the body-force
-consistency term is carried, without which the `F^em` / `F^hd` split depends on the choice of `w`.
+`geometry/analyte.py`, `post/forces.py`. Implementation plan: `wp6-analyte-and-forces.md`.
+Discharges FR-21, CON-02, VER-19, VER-20, VER-21, VER-22, implements NUM-28 and NUM-29, closes
+§8.2 criterion 1 and retires RSK-04.
 
-- Rigid body of revolution on the axis, subtracted from the fluid domain, treated as a hard
-  dielectric: no ion flux, no-slip, dielectric jump (FR-21, author ruling 4).
+- Rigid body of revolution on the axis, glued into the fluid domain as a named `analyte` material
+  rather than cut out of it, and treated as a hard dielectric: no ion flux, no-slip, dielectric
+  jump (FR-21, author ruling 4). `SphereBody` and `SpheroidBody`, an `AnalyteInBoxGeometry` for the
+  benchmarks and a `PoreWithAnalyte` that keeps the whole `axis` / `wall` / `membrane` / `cis` /
+  `trans` vocabulary intact, so `lumen_band`, `axial_indicator` and the default `CoupledBoundaries`
+  work on it unchanged. Because the fluid regex already excludes the body, `n·J_i = 0` and the
+  dielectric jump are natural (PHY-09) and only no-slip is essential.
 - Force in **domain form**, `F_z = −∫_Ω (T_M + T_H) : ∇w dV` with `w` a smooth extension of `e_z`
-  (NUM-28), and the surface form `∮_S (T_M + T_H)·n dS` implemented alongside purely as the
-  cross-check. In axisymmetry the `∇w` contraction carries a hoop component in `1/r`, so the domain
-  form goes through `Measures.volume(singular=True)` like every other such term.
-- Tests: VER-19 Stokes drag `6πηaU`, VER-20 Maxwell stress on a dielectric sphere in a uniform field
-  (net force zero, stress distribution matched), VER-21 Hückel and Smoluchowski mobility limits,
-  VER-22 the two force routes agreeing to better than 0.1 pN on the same solution (NUM-29). This is
-  RSK-04, a near-cancellation of two approximately 10 pN terms, and it is the reason A1 pulled the
-  analyte body forward into the spike.
+  (NUM-28), the surface form `∮_S (T_M + T_H)·n dS` as the cross-check, and the variational
+  reaction force on the no-slip surface as a third route for the hydrodynamic half. Two corrections
+  to the bullets this section carried before the work:
+  - **The `∇w` contraction carries no `1/r` hoop component.** For an axial `w`, `(∇w)_φφ = w_r/r`
+    is identically zero, so the hoop stresses are contracted against nothing and
+    `T:∇w = T_rz ∂_r w_z + T_zz ∂_z w_z`. The integrals still go through `Measures` for the `r`
+    weight, the order floor and the non-finite abort, but `singular=True` is not required and
+    asserting it would have been cargo cult.
+  - **The domain form is exact only once each component carries its body-force consistency term.**
+    `∇·T ≠ 0` in this model, so `F_z = −∫T:∇w − ∫(∇·T)·w`; the two consistency terms cancel in the
+    total but not in the split, and the `∫ρ_ion E·w` piece is an O(10 pN) function of where `w`'s
+    transition shell was put. Omitting it leaves the routes in perfect agreement on a total that is
+    right and a split that is wrong — which is exactly the plausible wrong answer RSK-04 describes.
+- Tests: VER-19 Stokes drag `6πηaU`, VER-20 Maxwell stress on a dielectric sphere in a uniform
+  field (net force zero, and the `F = qE₀` magnitude anchor a zero test cannot supply), VER-21 the
+  Hückel and Smoluchowski mobility limits against Henry's function, VER-22 the routes agreeing to
+  better than 0.1 pN on one solution (NUM-29), and a `slow` mesh convergence study with a
+  reference-shaped record. Measured results under criterion 1 below.
+
+Five things settled by the work.
+
+- **Route C is the oracle on the split, and it is a discrete identity rather than a third
+  approximation.** The analyte surface is Dirichlet for `u`, so the assembled momentum residual
+  paired with a velocity-block test function equal to `e_z` there *is* `∮(T_H·n)·e_z`. The residual
+  vanishes on every free degree of freedom, so route C never sees `w` at all: it disagrees with
+  route A precisely when a consistency term is missing or mis-signed, and in no other case. On the
+  VER-22 configuration it confirms route A's `F^hd` to 1.3 × 10⁻⁴ pN and on the finest mesh of the
+  study to 3.4 × 10⁻⁵ pN, three to four orders inside the 0.1 pN NUM-29 asks of routes A and B.
+- **The routes' agreement does not fall monotonically under refinement; the oracle's does.** A–B
+  measured 1.76 × 10⁻², 2.72 × 10⁻² and 1.30 × 10⁻² pN over the three meshes — two independent
+  quadratures of two different objects, each converging at its own rate, so their difference need
+  not be monotone and asserting that it is would have been asserting something untrue. A–C fell
+  4.62 × 10⁻⁴ → 1.30 × 10⁻⁴ → 3.40 × 10⁻⁵ pN, which is monotone and is asserted.
+- **`T_H`'s sign convention has to be pinned in one place and never mixed.** `post/forces` returns
+  `−p I + 2η sym ∇u`, the convention the momentum equation is assembled in; `.knowledge/05` §4
+  prints the negative of that. Both are defensible and the difference is invisible in a zero test,
+  so the docstring states which one the code holds and the reaction route is what would catch a
+  slip. `T_M` has no such ambiguity — `E` appears twice.
+- **A far field chosen for convenience can make a benchmark measure nothing.** VER-19 imposes the
+  closed-form Stokes field on the outer boundary rather than a uniform `u = U`, because the latter
+  adds a Faxén wall correction of order `a/R` and the test would then be measuring the truncation
+  of the domain. VER-21 reverses the rule: there the force-free translating-plus-field combination
+  radiates no Stokeslet, so a uniform far field is the right one and the exact-Stokes boundary
+  would be wrong.
+- **The Varadhan distance field's diffusion length must be sized for the feature it has to
+  resolve.** `w`'s transition shell is nanometres wide, not the 0.2 nm the wall corrections want;
+  at the default `√t` the field is unresolvable on a benchmark-sized mesh and corrupts `w` rather
+  than failing. `axial_extension` now defaults `diffusion_length_nm` to a quarter of its own shell
+  width, and `check_extension` asserts `w = e_z` on the body and `w = 0` on the outer boundaries
+  so a leaking or inverted band is a loud failure instead of a wrong force.
 
 ## Open decisions
 
@@ -315,10 +362,29 @@ uv run pytest -m slow --log-cli-level=INFO      # envelope run and factorisation
 Phase 0 is complete when, on the analytic cylindrical pore:
 
 1. **VER-12 … VER-22 all pass**, including MMS convergence at O(h³) in L² for P2 on the full coupled
-   axisymmetric system, and the two force routes agreeing to better than 0.1 pN.
-   *Outstanding: VER-19 … VER-22, all WP6's. Discharged: VER-11 … VER-18.* VER-17 met in WP5 at
-   0.15 % against the Maxwell–Hall form on a 50 nm reservoir and 0.39 % on a 100 nm one, `G` moving
-   0.23 % between them — so the 2 % is measuring the discretisation, not the truncation of the domain.
+   axisymmetric system, and the two force routes agreeing to better than 0.1 pN. **Met**, VER-11 …
+   VER-18 in WP2–WP5 and VER-19 … VER-22 in WP6. VER-17 came in at 0.15 % against the Maxwell–Hall
+   form on a 50 nm reservoir and 0.39 % on a 100 nm one, `G` moving 0.23 % between them — so the
+   2 % is measuring the discretisation, not the truncation of the domain. The four force
+   benchmarks, all at a stated tolerance:
+
+   | benchmark | reference | measured | tolerance |
+   |---|---|---|---|
+   | VER-19 Stokes drag | `6πηaU` = 0.430491 pN | 0.430870, 0.430522, 0.430500 pN over three meshes — relative error 8.80 × 10⁻⁴ → 7.11 × 10⁻⁵ → 1.98 × 10⁻⁵, observed rates 3.63 and 1.85 | 1 % on the finest |
+   | VER-20 dielectric sphere, net force | 0 | −8.6 × 10⁻⁸ pN by the domain route, +7.0 × 10⁻⁵ pN by the surface route | ≪ 0.1 pN |
+   | VER-20 magnitude anchor | `qE₀` = −8.23281 pN | −8.21704 pN (1.9 × 10⁻³) domain, −8.18903 pN (5.3 × 10⁻³) surface | 1 % |
+   | VER-21 mobility | Henry's `f(κa)` | κa = 0.50: `μ̃_e` 0.3282 against Hückel 0.3312 and Henry 0.3360. κa = 2.08: 0.3501 against Henry 0.3534. κa = 16.47: 0.4317 against Henry 0.4383 and Smoluchowski 0.4953 | 5 % against Henry and Hückel; 15 % against Smoluchowski at the largest κa, argued below |
+   | VER-22 route agreement | routes A, B, C on one solution | A–B 0.027 pN, A–C 1.3 × 10⁻⁴ pN, on a solution whose halves are `F^em` = −15.4 pN and `F^hd` = +9.9 pN | 0.1 pN absolute; 10⁻³ pN for the oracle |
+
+   The tolerance is **absolute** throughout, because a relative test on a total that is a small
+   difference of two large numbers reports an agreement the split does not have. NUM-29's
+   convergence study is a `slow`, non-gating measurement: three refinements at 1 033, 1 734 and
+   3 360 elements (9 980 → 32 342 dof), each of `F^em`, `F^hd` and `F^tot` resolved with a last
+   refinement step under 0.01 pN. The reference-shaped record — a 6.7 × 5.8 nm spheroid in a
+   4.5 nm-radius lumen at 300 mM, +50 mV, `q` = −4 e, `ε_p` = 20, −0.02 C/m² of wall charge, all
+   corrections active, reached in 19 rungs — reports `F^em` = −1.9492 pN against `F^hd` = +4.3284 pN
+   for a net +2.3792 pN, with the omitted Korteweg–Helmholtz term of PHY-23 measured at
+   −4.02 × 10⁻⁴ pN rather than assumed zero.
 2. **The envelope converges**: 0.05–3 M × ±200 mV with all corrections active, reached through the
    continuation ladder, with no negative concentration at any Newton iterate. **Met in WP5.** All
    thirty points of a five-concentration × six-bias grid, every correction genuinely active against a
@@ -344,17 +410,51 @@ Phase 0 is complete when, on the analytic cylindrical pore:
    this laptop, with a verdict on whether UMFPACK or SuperLU is viable (RSK-10). **Met in WP3**:
    UMFPACK, 41 s and 6.2 GB at 1.04 × 10⁶ DOF; SuperLU not viable at that size.
 4. Criterion 4 (Windows GUI bundle) is **explicitly not met**, by amendment A2; the specification
-   says so and RSK-13 stays open.
+   says so and RSK-13 stays open. It is the only criterion outstanding: 1, 2 and 3 are met, so
+   Phase 0 is complete on everything A2 left in scope.
 
-Report at the end of the phase: the observed MMS convergence rates, the factorisation timing, which
+## End-of-phase report
+
+The report the plan asks for: the observed MMS convergence rates, the factorisation timing, which
 ladder rungs needed damping below 0.1, and any benchmark whose tolerance had to be argued rather
 than met — the last being the one that matters most for Phase 1's COMSOL comparison.
 
-Two entries for that report are in hand from WP5. **Damping below 0.1 is needed only by the stage-4
-charge ramp, and only at the charged end**: the thirty-point envelope at −0.02 C/m² never went below
-the initial 0.2 on any rung, and the hard corner at −0.05 C/m² reached 0.051 on the second
-charge sub-step and nowhere else. Every other rung of every ladder held at 0.2. And **no WP5
-tolerance had to be argued**: VER-17 came in at 0.15 % against 2 %, and the NUM-26 route agreement
-between 5 × 10⁻⁹ and 1.4 × 10⁻⁶ against a declared 10⁻³. The one number that
-*was* argued is the ψ-band leak — 6 × 10⁻⁴ would have passed the declared tolerance and was a genuine
-error — and it was fixed rather than accommodated.
+**Observed MMS convergence rates.** VER-18, the full coupled axisymmetric system with P2 elements,
+converges at O(h³) in L² as specified; the electrostatic and transport benchmarks of WP2 and WP4
+carry their own rates in `tests/tier2/`. VER-19's drag is the one rate measured under WP6, and it
+is not an MMS rate: 3.63 between the first two meshes and 1.85 between the second and third, the
+fall reflecting that the error has reached the 2 × 10⁻⁵ floor set by the truncation of the domain
+at `R = 10a` rather than any loss of order.
+
+**Factorisation timing.** UMFPACK, 41 s and 6.2 GB at 1.04 × 10⁶ degrees of freedom on the
+development laptop; SuperLU cannot factorise the reference problem at that size at all (WP3,
+RSK-10). The consequence for the redistributable bundle is ADR-003 / CON-11, which stays open under
+"Open decisions" above.
+
+**Damping below 0.1 is needed only by the stage-4 charge ramp, and only at the charged end.** The
+thirty-point envelope at −0.02 C/m² never went below the initial 0.2 on any rung, and the hard
+corner at 3 M / +200 mV / −0.05 C/m² reached 0.051 on the second charge sub-step and nowhere else.
+Every other rung of every ladder in Phase 0 held at 0.2, the reference-shaped WP6 case with an
+embedded charged body included: 19 rungs, minimum damping 0.2 throughout.
+
+**Tolerances argued rather than met — one, and it is VER-21's.** Everything else came in with
+orders of margin: VER-17 at 0.15 % against 2 %, the NUM-26 current-route agreement between
+5 × 10⁻⁹ and 1.4 × 10⁻⁶ against a declared 10⁻³, VER-22's route agreement at 0.027 pN against
+0.1 pN with the oracle three further orders inside that, and VER-19 at 2 × 10⁻⁵ against 1 %.
+
+VER-21's Smoluchowski limit is the exception, and the specification was amended rather than the
+number accommodated. The specified reference `μ_e = εζ/η` is a `κa → ∞` limit; the largest κa that
+fits in a Tier-2 budget is 16.5, and **Henry's own function is 11.5 % below `εζ/η` there**. A 5 %
+assertion against Smoluchowski at that κa would have been asserting something untrue of the
+physics, so §7.3 now states Henry as the reference — recovered to better than 5 % at every κa
+tested — with the Smoluchowski gap allowed 15 % and required to be no larger than Henry's own gap
+at the same κa. That is a real tolerance on a real quantity rather than a slackened one on the
+wrong quantity, but it is an argued tolerance and Phase 1's COMSOL comparison should treat it as
+the one place where Phase 0's evidence is a trend towards a limit rather than agreement with it.
+
+Two further things Phase 1 inherits, neither a tolerance but both able to produce a plausible wrong
+answer. **The `F^em` / `F^hd` split, not the total, is where a force error lives** — the body-force
+consistency terms cancel in the sum, so routes A and B agree perfectly on a split that can be wrong
+by O(10 pN), and only route C detects it. And **a benchmark's far field can silently make it
+measure nothing**: VER-19 needs the exact Stokes field on the outer boundary and VER-21 needs a
+uniform one, for the same reason in opposite directions.

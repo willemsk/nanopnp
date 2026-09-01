@@ -402,6 +402,59 @@ alone would not notice both routes being scaled by the same wrong constant.
 being described as volume averages (flagged in `04-clya-geometry-and-charge.md`). Any regression
 target that is a pore average must state which convention it uses.
 
+### 7.2 The force on an embedded body: three routes, and the term NUM-28 hides
+
+The domain form of NUM-28 is the divergence theorem applied to the traction on the body. With `w`
+equal to `e_z` on the body, zero on every other boundary, and `T = T_M + T_H`:
+
+```
+F_z = ∮_∂B (T·n_B)·e_z dS = −∫_Ω T:∇w dV − ∫_Ω (∇·T)·w dV
+```
+
+**NUM-28 prints only the first term, and the second is not zero in this model. [verified]**
+`∇·T_M = ρ_ion E − ½|E|²∇ε` and `∇·T_H = −f_total + Re ϱ(u·∇)u`, so each *component* carries a
+body-force term of the same order as the force itself — `∫ρ_ion E·w` is the electrical body force
+on the fluid inside the shell where `w` varies, an O(10 pN) number that depends entirely on where
+that shell was put. **Omit it and each half of the force is a function of the band you chose**,
+while the sum is unaffected, because the two body-force terms cancel between the halves. That is
+the RSK-04 failure mode exactly: a total that agrees between routes over a split that is wrong.
+
+**Three routes, and what each is good for. [tested]**
+
+| Route | What it is | Independent of `w`? |
+|---|---|---|
+| A, domain | `−∫T:∇w` plus each component's consistency term | no — that is the point |
+| B, surface | `∮(T·n)·e_z r ds` over the body's own boundary | yes; shares no quadrature point with A |
+| C, reaction | the assembled momentum residual paired with a velocity-block test function equal to `e_z` on the body | **exactly**, being a discrete identity |
+
+A and B agree **component by component whatever the model omits**, because A's `F^em` carries
+`∇·T_M` and its `F^hd` carries `∇·T_H`, which are the divergences of the very tensors B takes the
+tractions of. So B is a check on quadrature, not on the split. C is the check on the split: the
+body's surface is Dirichlet for `u`, the residual vanishes on every free degree of freedom, and the
+result is `F^hd` from the solve itself. **There is no route-C analogue for `F^em`** — `φ` is not
+constrained on the body — which is why the `F = qE₀` anchor of VER-20 is not optional.
+
+Measured on a charged sphere in an applied field at 0.3 M, with `F^em = −15.45 pN` against
+`F^hd = +9.95 pN` (`tests/tier2/`): A against B is 1.3–2.7 × 10⁻² pN and wanders under refinement,
+being surface quadrature on a different support; A against C is 4.6 × 10⁻⁴ → 1.3 × 10⁻⁴ →
+3.4 × 10⁻⁵ pN and falls monotonically, being consistency error in A alone. **[tested]**
+
+**The residual `−∫ ½|E|²∇ε·w` is the Korteweg–Helmholtz force PHY-23 omits**, not a discretisation
+error: it is the gap between NUM-28 *as printed* and the force all three routes agree on. It is
+identically zero classically and −4.0 × 10⁻⁴ pN on the reference-shaped ePNP-NS case, i.e. 0.02 %
+of `F^em` there. **[tested]**
+
+**No `1/r` term, and `singular=True` is not needed.** For an axial `w`, `(∇w)_φφ = w_r/r = 0`, so
+the hoop components of both tensors are contracted against zero and `T:∇w = T_rz ∂_r w_z +
+T_zz ∂_z w_z`. The integrals still go through `Measures` for the `r` weight and the order floor.
+`physics/flow.strain_rate`'s documented omission of `ε_θθ = u_r/r` is harmless here for the same
+reason. **[verified]**
+
+**The `2π` is restored once**, in `post/forces.py`, exactly as `post/qoi.py` does it: every solver
+integral is `∫ f r dr dz`. The force scale is `ε V_T² = 4.5677 × 10⁻¹³ N` — `p₀ a²` with the `a²`
+cancelling, so it does **not** depend on the reference length. NUM-29's 0.1 pN is 0.219 in those
+units. **[verified]**
+
 ---
 
 ## 8. Mesh resolution and adaptivity
@@ -429,7 +482,7 @@ target that is a pore average must state which convention it uses.
 
 ## 8.1 NGSolve traps found by implementing this — all silent
 
-Twelve ways this project's own code was wrong while raising nothing. All reproduced on NGSolve
+Fourteen ways this project's own code was wrong while raising nothing. All reproduced on NGSolve
 6.2.2606. **[tested]**
 
 **1. A nonlinear form must be written in the trial function, not the grid function.**
@@ -531,6 +584,19 @@ not have an evaluator for BND!`. Build the boundary indicator of NUM-25 on one c
 `gf.components[i].Set(...)` — which is what you want anyway: the inner product with the residual
 then picks out one equation's flux rather than the sum over all of them. **[tested]**
 
+**13. `ngsolve.grad(gridfunction)` evaluated on a boundary region returns the *surface* gradient of
+the trace, silently dropping the normal derivative.** The surface route of NUM-28 needs the volume
+gradient lifted to the body's boundary, and `grad(u)` there gives the tangential part only — a
+traction missing its normal component, which on a no-slip surface is most of it, with no error and
+no NaN. The cure is `ngs.BoundaryFromVolumeCF(grad(u))`, which lifts the volume expression rather
+than differentiating the trace. Note also that **`ngs.BoundaryCF` is a method of the mesh**, not a
+module function: `mesh.BoundaryCF({...})`. **[tested]**
+
+**14. `ngs.LinearForm(term)` raises; a linear form must be built on a space and then added to.**
+`ngs.LinearForm(charge_source(rho, v, AXISYMMETRIC))` fails with `NgException: Linearform must have
+TestFunction`, which reads as a problem with the term. It is not — the constructor takes the *space*:
+`f = ngs.LinearForm(space); f += term; f.Assemble()`. **[tested]**
+
 ### 8.2 Measured: the reaction flux really is worth it
 
 Gouy-Chapman at 0.1 M, ζ̃ = 2, P2, planar slab. Wall gradient recovered two ways and compared with
@@ -576,6 +642,17 @@ gradient- or cross-section-based extraction.
   distance *is* the 3D distance. Against the exact `a - r` of a cylinder, within 1.5 nm of the
   wall: √t = 0.1 nm → 0.6 pm worst error, 1.1 % gradient jump; √t = 0.2 → 1.4 pm, 0.17 %; √t = 0.3
   → 10 pm, 0.08 %. **[tested]**
+- **…but the diffusion length must be resolved by the mesh it is solved on, and the default is
+  sized for the wall corrections, not for a force band.** Reusing `DEFAULT_DIFFUSION_LENGTH_NM`
+  (0.2 nm) to build the NUM-28 extension `w` on a mesh whose elements are 1.6 nm across leaves the
+  screened Poisson unresolved: it oscillates, undershoots the exponential floor, and the recovered
+  `d` jumps to its cap *inside an element touching the body* — so the smoothstep is no longer zero
+  there and `w` comes off the surface at 1 − 10⁻⁴ instead of 1. The symptom was an assertion on `w`
+  failing at a mean-square departure of 8.2 × 10⁻⁹; the cause was a distance field, not an
+  extension. Sizing √t at a quarter of the shell width instead cured it and improved the Stokes-drag
+  benchmark by a factor of thirty, from a 6 × 10⁻⁴ plateau to 2.0 × 10⁻⁵ falling monotonically.
+  **The rule: √t is set by the feature the field has to resolve, and there is no single default that
+  serves both a sub-nanometre wall correction and a several-nanometre force band.** **[tested]**
 
 ---
 
