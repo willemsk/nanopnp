@@ -106,6 +106,8 @@ __all__ = [
     "axial_extension",
     "check_extension",
     "domain_force",
+    "electrostatic_domain_force",
+    "electrostatic_surface_force",
     "extract",
     "hydrodynamic_stress",
     "maxwell_stress",
@@ -206,6 +208,15 @@ def axial_extension(
         independent of ``w`` - but its exactness at ``d = 0`` does, and
         :func:`~nanopnp.mesh.distance.wall_distance` zeroes the source degrees of
         freedom outright for that reason.
+
+        The default solve is run at a diffusion length of a quarter of the shell
+        width rather than at
+        :data:`~nanopnp.mesh.distance.DEFAULT_DIFFUSION_LENGTH_NM`, which is
+        sized for the sub-nanometre wall corrections. An unresolved screened
+        Poisson oscillates, and where it undershoots the exponential floor the
+        recovered ``d`` jumps to the cap *inside an element touching the body* -
+        so ``S(d)`` is no longer zero there, and ``w`` comes off the surface at
+        1 - 1e-4 rather than at 1. The shell is what this field has to resolve.
     check
         Whether to verify the result with :func:`check_extension`.
 
@@ -226,8 +237,13 @@ def axial_extension(
         raise ExtensionError(f"inner_nm must not be negative, got {inner_nm} nm")
 
     if distance_nm is None:
-        cap = 2.0 * outer_nm
-        distance_nm = wall_distance(mesh, body, order=order, max_distance_nm=cap)
+        distance_nm = wall_distance(
+            mesh,
+            body,
+            order=order,
+            diffusion_length_nm=(outer_nm - inner_nm) / 4.0,
+            max_distance_nm=2.0 * outer_nm,
+        )
     space = ngs.VectorH1(mesh, order=order, definedon=mesh.Materials(fluid))
     extension = ngs.GridFunction(space, name="w")
     profile = 1.0 - smoothstep(distance_nm, lower_nm=inner_nm, upper_nm=outer_nm)
@@ -381,6 +397,121 @@ def hydrodynamic_stress(
 
 
 # -- the results -------------------------------------------------------------
+
+
+# -- the Maxwell half, for a model that solves only Poisson -------------------
+
+
+def electrostatic_domain_force(
+    mesh: Mesh,
+    potential_gradient: Expression,
+    permittivity: Numeric,
+    extension: GridFunction,
+    measures: Measures,
+    *,
+    force_N: float,
+    fluid: str = ELECTROLYTE_DOMAINS,
+) -> float:
+    """Return ``-2 pi force_N int T_M : grad(w) r dr dz``, in newtons - route A's Maxwell half.
+
+    Separated from :func:`domain_force` because the electromagnetic half is
+    defined for any model that solves Poisson, and VER-20's dielectric sphere is
+    exactly such a model: a body in a uniform applied field, with no ions to
+    screen it and no flow. Composing the scale and the ``2 pi`` here rather than
+    in each caller is what keeps NUM-27's "restored exactly once" checkable.
+
+    It carries **no consistency term**: a caller whose fluid holds mobile charge
+    or a permittivity gradient must add ``-int f_ion . w`` and ``-int f_KH . w``
+    itself, as :func:`domain_force` does. Where the fluid is charge-free and
+    uniform - the VER-20 configuration - both vanish and this is the whole force.
+
+    Parameters
+    ----------
+    mesh
+        The meshed domain.
+    potential_gradient
+        ``grad(phi~)``, in the fluid.
+    permittivity
+        ``eps~_r`` in the **fluid**; see :func:`maxwell_stress`.
+    extension
+        ``w``, from :func:`axial_extension`.
+    measures
+        The symmetry and quadrature policy.
+    force_N
+        :attr:`~nanopnp.core.scaling.Scales.force_N`, ``eps V_T^2``.
+    fluid
+        Material-name regular expression of the region to integrate over.
+    """
+    import ngsolve as ngs
+
+    stress = maxwell_stress(potential_gradient, permittivity)
+    work = measures.integrate(
+        ngs.InnerProduct(stress, ngs.grad(extension)),
+        mesh,
+        definedon=mesh.Materials(fluid),
+        what="the Maxwell stress work",
+    )
+    return -TWO_PI * force_N * work
+
+
+def electrostatic_surface_force(
+    mesh: Mesh,
+    potential_gradient: Expression,
+    permittivity: Numeric,
+    measures: Measures,
+    *,
+    force_N: float,
+    boundary: str = ANALYTE_BOUNDARY,
+    piecewise_permittivity: Numeric | None = None,
+) -> float:
+    """Return ``2 pi force_N surface_int (T_M . n_B) . e_z r dl``, in newtons - route B's half.
+
+    The cross-check of :func:`electrostatic_domain_force`, and the two guards
+    :func:`surface_force` documents at length apply here in full: every
+    coefficient is lifted with ``BoundaryFromVolumeCF`` because ``ngsolve.grad``
+    on a boundary region returns only the tangential part, and the normal's
+    orientation is measured rather than assumed.
+
+    Parameters
+    ----------
+    mesh
+        The meshed domain.
+    potential_gradient
+        ``grad(phi~)``, as a volume expression; it is lifted here.
+    permittivity
+        ``eps~_r`` in the fluid.
+    measures
+        The symmetry and quadrature policy.
+    force_N
+        :attr:`~nanopnp.core.scaling.Scales.force_N`.
+    boundary
+        The body's surface.
+    piecewise_permittivity
+        The permittivity over all of Omega, if it jumps across the surface.
+        Supplying it enables the check that the lift landed on the fluid side,
+        which is worth the argument: taking the body's side gives a traction
+        wrong by the whole dielectric contrast, silently. ``None`` skips the
+        check and is correct only where the permittivity is continuous.
+
+    Raises
+    ------
+    ValueError
+        If the boundary matches nothing, if the lift lands on the solid side, or
+        if the normal's orientation cannot be determined.
+    """
+    import ngsolve as ngs
+
+    region, arc = _boundary_region(mesh, boundary)
+    lift = ngs.BoundaryFromVolumeCF
+    fluid_permittivity = lift(permittivity)
+    if piecewise_permittivity is not None:
+        _check_fluid_side(mesh, lift(piecewise_permittivity), fluid_permittivity, region, arc)
+    normal = _oriented_normal(mesh, region, arc)
+    stress = maxwell_stress(lift(potential_gradient), fluid_permittivity)
+    traction = measures.integrate(
+        (stress * normal)[1], mesh, definedon=region, what="the Maxwell surface traction"
+    )
+    return TWO_PI * force_N * traction
 
 
 @dataclass(frozen=True)
@@ -653,12 +784,22 @@ def domain_force(
     def integrate(integrand: Expression, what: str) -> float:
         return measures.integrate(integrand, mesh, definedon=fluid, what=what)
 
-    maxwell = maxwell_stress(terms.potential_gradient, terms.permittivity)
     hydro = hydrodynamic_stress(terms.velocity_gradient, terms.pressure, terms.viscosity)
     ionic = ngs.InnerProduct(terms.body_force, extension)
     korteweg = ngs.InnerProduct(terms.korteweg_force, extension)
 
-    em = -integrate(ngs.InnerProduct(maxwell, gradient), "the Maxwell stress work")
+    em = (
+        electrostatic_domain_force(
+            mesh,
+            terms.potential_gradient,
+            terms.permittivity,
+            extension,
+            measures,
+            force_N=model.scales.force_N,
+            fluid=model.fluid,
+        )
+        / scale
+    )
     em -= integrate(ionic, "the ionic body-force consistency term")
     em -= integrate(korteweg, "the dielectric-gradient consistency term")
 
@@ -750,38 +891,62 @@ def surface_force(
 
     terms = _integrands(solution, wall_distance_nm)
     mesh, model = terms.mesh, terms.model
-    region = mesh.Boundaries(boundary)
-    arc = float(ngs.Integrate(ngs.CF(1.0), mesh, definedon=region))
-    if arc <= 0.0:
-        known = ", ".join(sorted(set(mesh.GetBoundaries())))
-        raise ValueError(f"no boundary matching {boundary!r} in this mesh; it has {known}")
+    region, arc = _boundary_region(mesh, boundary)
 
     lift = ngs.BoundaryFromVolumeCF
-    permittivity = lift(terms.permittivity)
-    _check_fluid_side(mesh, model, terms, region, arc)
-
     normal = _oriented_normal(mesh, region, arc)
-    maxwell = maxwell_stress(lift(terms.potential_gradient), permittivity)
     hydro = hydrodynamic_stress(
         lift(terms.velocity_gradient), lift(terms.pressure), lift(terms.viscosity)
     )
     scale = TWO_PI * model.scales.force_N
-
-    def traction(stress: Expression, what: str) -> float:
-        return scale * measures.integrate((stress * normal)[1], mesh, definedon=region, what=what)
-
     forces = ForceComponents(
-        em_N=traction(maxwell, "the Maxwell surface traction"),
-        hd_N=traction(hydro, "the hydrodynamic surface traction"),
+        em_N=electrostatic_surface_force(
+            mesh,
+            terms.potential_gradient,
+            terms.permittivity,
+            measures,
+            force_N=model.scales.force_N,
+            boundary=boundary,
+            piecewise_permittivity=model.permittivity(mesh, terms.coefficients),
+        ),
+        hd_N=scale
+        * measures.integrate(
+            (hydro * normal)[1],
+            mesh,
+            definedon=region,
+            what="the hydrodynamic surface traction",
+        ),
     )
     logger.debug("surface force (pN): %s", {k: v * 1e12 for k, v in forces.summary().items()})
     return forces
 
 
+def _boundary_region(mesh: Mesh, boundary: str) -> tuple[Option, float]:
+    """Return a boundary region and its meridian arc length, insisting it exists.
+
+    Raises
+    ------
+    ValueError
+        If the name matches nothing; the message lists what the mesh does carry.
+    """
+    import ngsolve as ngs
+
+    region = mesh.Boundaries(boundary)
+    arc = float(ngs.Integrate(ngs.CF(1.0), mesh, definedon=region))
+    if arc <= 0.0:
+        known = ", ".join(sorted(set(mesh.GetBoundaries())))
+        raise ValueError(f"no boundary matching {boundary!r} in this mesh; it has {known}")
+    return region, arc
+
+
 def _check_fluid_side(
-    mesh: Mesh, model: CoupledModel, terms: _Integrands, region: Option, arc: float
+    mesh: Mesh, piecewise: Expression, fluid: Expression, region: Option, arc: float
 ) -> None:
     """Assert the boundary lift evaluates on the fluid side of the analyte surface.
+
+    Both coefficients are already lifted. Where the permittivity is continuous
+    across the surface the check is vacuous; where it jumps - which is exactly
+    where the side matters - it fires.
 
     Raises
     ------
@@ -791,9 +956,6 @@ def _check_fluid_side(
     """
     import ngsolve as ngs
 
-    lift = ngs.BoundaryFromVolumeCF
-    piecewise = lift(model.permittivity(mesh, terms.coefficients))
-    fluid = lift(terms.permittivity)
     departure = float(ngs.Integrate((piecewise - fluid) ** 2, mesh, definedon=region)) / arc
     reference = float(ngs.Integrate(fluid**2, mesh, definedon=region)) / arc
     if departure > 1e-4 * max(reference, 1.0):

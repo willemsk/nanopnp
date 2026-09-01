@@ -1542,8 +1542,8 @@ discretisation or stabilisation.
 | **VER-16** | 1D steady PNP with limiting current | Bazant, Chu & Bayly, *SIAM J. Appl. Math.* **65**, 1463 (2005) | Full PNP current-voltage response including the limiting-current plateau |
 | **VER-17** | Maxwell–Hall access conductance | `G = σ[L/(πa²) + 1/(2a)]⁻¹` (radius form) ≡ `σ[4L/(πd²) + 1/d]⁻¹` (diameter form) | Uncharged pore at 1 M reproduced to better than 2 % |
 | **VER-18** | Method of manufactured solutions, full coupled axisymmetric system | manufactured `φ, c_i, u, p` with consistent source terms | Observed convergence O(h³) in L² for P2; the only route that verifies the `u_r/r²` term and the axis treatment |
-| **VER-19** | Stokes drag on a sphere | `F = −6πηaU` | Drag on the analyte body in creeping flow within a stated tolerance under refinement |
-| **VER-20** | Maxwell stress on a dielectric sphere in a uniform field | analytic surface stress for a sphere of permittivity `ε_p` in medium `ε_m` | Net force zero and stress distribution matched to the analytic result |
+| **VER-19** | Stokes drag on a sphere | `F = −6πηaU` | Drag on the analyte body in creeping flow to better than **1 %** on the finest mesh, falling monotonically under refinement |
+| **VER-20** | Maxwell stress on a dielectric sphere in a uniform field | analytic potential for a sphere of permittivity `ε_p` in medium `ε_m`, and `F_z = qE₀` for a uniformly charged body at `ε_p = ε_m` | Field matched to the closed form, net force below **10⁻³ pN** by both routes, and the `qE₀` magnitude anchor to better than **1 %** |
 | **VER-21** | Electrophoretic mobility limits | Hückel `μ_e = 2εζ/3η` (κa ≪ 1) and Smoluchowski `μ_e = εζ/η` (κa ≫ 1) | Both limits recovered at the corresponding κa |
 | **VER-22** | Force-evaluation route agreement | domain form `F_z = −∫_Ω (T_M + T_H) : ∇w dV` against surface form `F = ∮_S (T_M + T_H)·n dS` | Agreement to better than 0.1 pN on the same solution |
 
@@ -1551,6 +1551,20 @@ NOTE: Hall's result is `R_access = ρ/(4a)` per side, so the two sides give `ρ/
 `G = σ[L/(πa²) + 1/a]⁻¹` substitutes radius for diameter in the access term and is wrong there by a
 factor of two; for `a = 2 nm`, `L = 13 nm` it under-predicts `G` by about 16 %. Used as a target it
 would fail a correct solver.
+
+NOTE (VER-19): the far field SHALL be the exact Stokes solution imposed on the outer boundary, not a
+uniform stream. A uniform `u = U e_z` at `R = 10a` confines the return flow and raises the drag by
+about 28 %, of order `a/R` — the `1 + (9/4)(a/b)` wall correction of a sphere in a concentric
+container — so a benchmark posed that way measures the domain truncation and not the discretisation.
+
+NOTE (VER-20): the zero test and the magnitude anchor are both required. `F^em` has no reaction-route
+oracle, because `φ` is not constrained on the analyte surface, so the Maxwell route's *scale* rests on
+quadrature alone; a net force of zero on a polarised sphere is invariant under a uniform factor and
+cannot catch a scale error. The anchor is exact — the self-force of a symmetric charge distribution
+vanishes — and in the NUM-09 variables reads `F/(εV_T²) = ρ̃ Ṽ Ẽ₀`, which pins the `2π` of NUM-27, the
+`r` weight and `Scales.force_N` together in one number. Neither VER-20 problem needs the NUM-28
+consistency term: the fluid is charge-free with a uniform permittivity in both, and the anchor's charge
+lies inside the body, where `w` is constant.
 
 ### 7.4 Tier 3 cross-implementation comparison
 
