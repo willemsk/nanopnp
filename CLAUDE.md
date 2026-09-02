@@ -191,13 +191,17 @@ next starts. Four steps, each a skill under `.claude/skills/`:
 | Step | Command | What it does |
 |---|---|---|
 | 1 | `/wp-plan <n\|phase-n>` | Writes the implementation plan into `docs/plans/` and commits it. The decisions table is the deliverable |
-| 2 | `/wp-implement` | Executes the plan; keeps `SPECIFICATION.md`, `.knowledge/` and the plan's **Outcome** annotations in step; ends by invoking step 3 |
-| 3–4 | `/wp-ship` | Gates, pushes, opens the PR, runs `/code-review xhigh --fix` onto the PR branch, then drives CI to green |
+| 2 | `/wp-implement` | Executes the plan; keeps `SPECIFICATION.md`, `.knowledge/` and the plan's **Outcome** annotations in step; stops and reports, leaving `/wp-ship` for the user to invoke |
+| 3–4 | `/wp-ship` | Gates, pushes, opens the PR, sends `/code-review xhigh --fix` to a fresh subagent onto the PR branch, then drives CI to green |
 
 `.claude/skills/steward/SKILL.md` carries the conventions for a PR already in flight — what each CI
 failure class means here, and why a failing Tier 2 benchmark is evidence rather than a chore. It is
 read automatically when a PR event wakes a session, so it governs the autofix loop whether or not
 `/wp-ship` started it.
+
+Step 2 no longer chains into step 3 automatically: the work package is implemented and gated in the
+same session and context that made the physics decisions, but the code-review pass in step 4 is
+deliberately run by a different subagent with no memory of that reasoning — see `wp-ship` §4.
 
 **Sub-agent models: the failure mode decides, not the size of the task.** Work whose error would be
 a plausible wrong number runs on Opus; work whose error is loud — lint, types, search, mechanical
