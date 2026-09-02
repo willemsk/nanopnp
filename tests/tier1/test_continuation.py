@@ -229,6 +229,26 @@ def test_num18_the_charge_ramp_reaches_the_target_and_is_held_afterwards(
     assert float(ngs.Integrate(held, mesh)) / area == pytest.approx(target / scale, rel=1e-9)
 
 
+def test_qr12_a_fixed_charge_domain_the_mesh_does_not_carry_is_refused(mesh: object) -> None:
+    """A misspelt domain is the silent failure ``MaterialCF`` invites.
+
+    Its keys are matched against the material names and anything unmatched is
+    left at the default, so a typo would put zero charge everywhere and converge
+    the whole ladder on the uncharged problem, reporting a plausible current for
+    a pore that never carried the charge (QR-12).
+    """
+    with pytest.raises(ValueError) as raised:
+        default_ladder(
+            mesh,
+            bias_V=0.05,
+            fixed_charge_C_m3=1.0e7,
+            fixed_charge_domain="analite",
+            solid_permittivities=MEMBRANE_PERMITTIVITY,
+        )
+    assert "analite" in str(raised.value)
+    assert "electrolyte" in str(raised.value)
+
+
 def test_num19_every_rung_carries_its_own_mesh(mesh: object) -> None:
     """The mesh is a rung's property, so adaptation *between* rungs needs no new API.
 

@@ -37,7 +37,6 @@ correction active is measuring the omission rather than discovering it.
 import ngsolve as ngs
 import pytest
 
-from nanopnp.core.constants import ELEMENTARY_CHARGE
 from nanopnp.geometry.analyte import AnalyteInBoxGeometry, SphereBody
 from nanopnp.physics import models
 from nanopnp.physics.measures import AXISYMMETRIC
@@ -98,9 +97,7 @@ def forces() -> tuple[CoupledModel, AnalyteForces]:
     mesh = AnalyteInBoxGeometry(body, outer_radius_nm=OUTER_NM).generate(
         maxh_nm=MESH[0], wall_h_nm=MESH[1]
     )
-    density = (CHARGE_E * ELEMENTARY_CHARGE / (body.volume_nm3 * 1e-27)) / (
-        model.scales.charge_density_C_m3
-    )
+    density = body.charge_density_C_m3(CHARGE_E) / model.scales.charge_density_C_m3
     solution = model.solve(
         mesh,
         AXISYMMETRIC,

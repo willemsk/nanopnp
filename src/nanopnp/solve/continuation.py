@@ -653,8 +653,24 @@ def default_ladder(
     -------
     tuple[Rung, ...]
         The ladder, ready for :func:`run_ladder`.
+
+    Raises
+    ------
+    ValueError
+        If ``fixed_charge_domain`` names no material of ``mesh``.
     """
     import ngsolve as ngs
+
+    # ``MaterialCF`` matches its keys against the material names and silently
+    # leaves anything unmatched at the default. A misspelt or absent domain
+    # would therefore make the fixed charge zero everywhere and converge the
+    # whole ladder on the uncharged problem - a plausible wrong answer with no
+    # diagnostic, which QR-12 forbids.
+    if fixed_charge_domain is not None and mesh.Materials(fixed_charge_domain).Mask().NumSet() == 0:
+        raise ValueError(
+            f"fixed_charge_domain={fixed_charge_domain!r} matches no material of the mesh; "
+            f"it carries {', '.join(sorted(set(mesh.GetMaterials())))}"
+        )
 
     solids = dict(solid_permittivities or {})
     build_M = concentration_M if start_concentration_M is None else start_concentration_M

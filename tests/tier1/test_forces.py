@@ -12,8 +12,8 @@ import math
 import pytest
 
 from nanopnp.core.scaling import Scales
-from nanopnp.geometry.analyte import AnalyteInBoxGeometry, SphereBody
-from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS
+from nanopnp.geometry.analyte import AnalyteInBoxGeometry, PoreWithAnalyte, SphereBody
+from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS, CylindricalPoreGeometry
 from nanopnp.physics import models
 from nanopnp.physics.measures import AXISYMMETRIC
 from nanopnp.physics.models import ModelSolution
@@ -130,6 +130,32 @@ class TestAxialExtension:
         """A degenerate shell is refused before a distance field is solved for."""
         with pytest.raises(ExtensionError):
             axial_extension(mesh, inner_nm=inner_nm, outer_nm=outer_nm)
+
+
+def test_num28_the_shell_may_cross_a_pore_mouth() -> None:
+    """The two mouths are interior to the fluid, so ``w`` is free to be non-zero.
+
+    NUM-28's divergence theorem asks for ``w = 0`` on the boundary of the domain
+    it integrates over, and a lumen-to-reservoir interface is not on it: both
+    sides are electrolyte. They carry netgen's automatic name ``default``, so
+    sweeping every named boundary into the check aborted a body held within a
+    shell width of a mouth — and blamed an inverted shell for it, which is the
+    one diagnosis that is certainly wrong.
+    """
+    import ngsolve as ngs
+
+    pore = CylindricalPoreGeometry(
+        pore_radius_nm=6.0, membrane_thickness_nm=13.0, reservoir_radius_nm=12.0
+    )
+    body = SphereBody(radius_nm=BODY_RADIUS_NM, z_nm=4.5)
+    mesh = PoreWithAnalyte(pore, body, analyte_h_nm=0.3).generate(maxh_nm=2.0)
+    assert "default" in mesh.GetBoundaries()
+
+    # The shell reaches z = 8.5 nm and the trans mouth is at z = 6.5 nm.
+    extension = axial_extension(mesh, inner_nm=1.0, outer_nm=3.0)
+    mouth = mesh.Boundaries("default")
+    crossing = float(ngs.Integrate(ngs.InnerProduct(extension, extension), mesh, definedon=mouth))
+    assert crossing > 1e-6, "the shell does not reach a mouth, so this pins nothing"
 
 
 def test_num28_maxwell_stress_check_values() -> None:

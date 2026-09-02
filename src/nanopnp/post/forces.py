@@ -90,6 +90,7 @@ from nanopnp.geometry.analyte import ANALYTE_BOUNDARY
 from nanopnp.mesh.distance import wall_distance
 from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS
 from nanopnp.physics.coefficients import NondimensionalCoefficients
+from nanopnp.physics.flow import permittivity_gradient
 from nanopnp.physics.measures import Measures
 from nanopnp.physics.models import POTENTIAL, PRESSURE, VELOCITY, CoupledModel, ModelSolution
 from nanopnp.post.indicator import smoothstep
@@ -223,8 +224,9 @@ def axial_extension(
     Raises
     ------
     ExtensionError
-        If the shell has no width, or if it extends past the cap of the default
-        distance field, where ``d`` saturates and ``w`` never reaches zero.
+        If the shell has no width or starts inside the body, or - through
+        :func:`check_extension` - if the interpolated ``w`` misses either of the
+        two boundary values NUM-28's derivation assumes.
     """
     import ngsolve as ngs
 
@@ -249,22 +251,46 @@ def axial_extension(
     profile = 1.0 - smoothstep(distance_nm, lower_nm=inner_nm, upper_nm=outer_nm)
     extension.Set(ngs.CF((0.0, profile)))
     if check:
-        check_extension(extension, mesh, body=body, axis=axis)
+        check_extension(extension, mesh, body=body, axis=axis, fluid=fluid)
     return extension
 
 
-def _outer_boundaries(mesh: Mesh, body: str, axis: str) -> str:
-    """Return the boundary names that are neither the body nor the axis.
+def _outer_boundaries(mesh: Mesh, body: str, axis: str, fluid: str) -> str:
+    """Return the boundaries of the fluid that are neither the body nor the axis.
 
     Built from the mesh's own vocabulary rather than asked of the caller, so
     that a geometry with an unexpected boundary is checked rather than skipped.
+    Both ``body`` and ``axis`` are matched as the boundary-name regular
+    expressions they are declared to be, through the mesh's own matcher.
+
+    Interfaces *interior to the fluid* are left out. NUM-28 integrates over the
+    fluid, and the divergence theorem asks for ``w`` to vanish on the boundary
+    of that domain only; an interface with electrolyte on both sides is not part
+    of it. :class:`~nanopnp.geometry.analyte.PoreWithAnalyte` has two of them --
+    the pore mouths, which carry netgen's automatic name ``default`` and
+    separate the lumen from the reservoirs -- so demanding ``w = 0`` there would
+    abort a body sitting within a shell width of a mouth, and blame an inverted
+    shell for it. The membrane interface is *not* interior to the fluid and is
+    kept.
     """
     on_body = mesh.Boundaries(body).Mask()
+    on_axis = mesh.Boundaries(axis).Mask()
+    fluid_mask = mesh.Materials(fluid).Mask()
+    # ``domin``/``domout`` are 1-based material numbers, 0 meaning the outside;
+    # the descriptors are in the order of ``GetBoundaries``.
+    descriptors = list(mesh.ngmesh.EdgeDescriptors())
+
+    def _interior_to_the_fluid(index: int) -> bool:
+        descriptor = descriptors[index]
+        return all(
+            side > 0 and fluid_mask[side - 1] for side in (descriptor.domin, descriptor.domout)
+        )
+
     names = sorted(
         {
             name
             for index, name in enumerate(mesh.GetBoundaries())
-            if not on_body[index] and name != axis
+            if not on_body[index] and not on_axis[index] and not _interior_to_the_fluid(index)
         }
     )
     return "|".join(names)
@@ -276,6 +302,7 @@ def check_extension(
     *,
     body: str = ANALYTE_BOUNDARY,
     axis: str = "axis",
+    fluid: str = ELECTROLYTE_DOMAINS,
     tolerance: float = 1e-12,
 ) -> None:
     """Assert that ``w`` is ``e_z`` on the body and zero on every other boundary.
@@ -291,6 +318,10 @@ def check_extension(
     axis
         Boundary name of the symmetry axis, which the body's poles sit on and
         where ``w`` is therefore ``e_z``, not zero.
+    fluid
+        Material-name regular expression of the domain NUM-28 integrates over.
+        Interfaces with fluid on both sides are interior to it and are not
+        checked; see :func:`_outer_boundaries`.
     tolerance
         Mean-square departure permitted on each boundary. Tight, because the
         requirement is exactness and not approximate separation: NUM-28 is a
@@ -316,7 +347,7 @@ def check_extension(
         )
         return deviation / length
 
-    outer = _outer_boundaries(mesh, body, axis)
+    outer = _outer_boundaries(mesh, body, axis, fluid)
     on_body = _mean_square((0.0, 1.0), body)
     on_outer = _mean_square((0.0, 0.0), outer) if outer else 0.0
     if on_body > tolerance or on_outer > tolerance:
@@ -678,9 +709,30 @@ class _Integrands:
     permittivity: Expression
     viscosity: Expression
     body_force: Expression
-    korteweg_force: Expression
+    korteweg_force: Expression | None
     mass_density: Expression
     reynolds: float
+
+    def korteweg(self) -> Expression:
+        """Return ``f_KH``, insisting the current branch can express it.
+
+        Kept behind a call rather than built eagerly so that route B, which
+        integrates a traction and needs no ``grad(eps)`` at all, stays available
+        on the branch route A cannot be taken on.
+
+        Raises
+        ------
+        NotImplementedError
+            In the NUM-02 log branch with an active permittivity correction,
+            where the Korteweg-Helmholtz term would need a derivative in ``w_i``.
+        """
+        if self.korteweg_force is None:
+            raise NotImplementedError(
+                "the NUM-28 electromagnetic force is not implemented for the NUM-02 log branch "
+                "with an active permittivity correction: the Korteweg-Helmholtz consistency term "
+                "needs d(eps~_r)/d(c~_i) and the symbolic derivative would come back in w_i"
+            )
+        return self.korteweg_force
 
 
 def _integrands(solution: ModelSolution, wall_distance_nm: Expression | None) -> _Integrands:
@@ -691,11 +743,9 @@ def _integrands(solution: ModelSolution, wall_distance_nm: Expression | None) ->
     :func:`~nanopnp.post.qoi.indicator_currents` does, so that the ``eta`` and
     ``eps`` in the stress are the ones the residual was assembled from.
 
-    Raises
-    ------
-    NotImplementedError
-        In the NUM-02 log branch with an active permittivity correction, where
-        the Korteweg-Helmholtz term would need a derivative in ``w_i``.
+    ``korteweg_force`` comes back ``None`` on the one branch that cannot express
+    it; :meth:`_Integrands.korteweg` is what turns that into an error, and only
+    for the routes that need the term.
     """
     import ngsolve as ngs
 
@@ -716,16 +766,11 @@ def _integrands(solution: ModelSolution, wall_distance_nm: Expression | None) ->
         # grad(eps) is identically zero, so the Korteweg-Helmholtz force is too,
         # and the symbolic chain rule need not be built at all - which is what
         # lets the log branch take a classical force.
-        korteweg: Expression = ngs.CF((0.0, 0.0))
+        korteweg: Expression | None = ngs.CF((0.0, 0.0))
     elif variables.logarithmic:
-        raise NotImplementedError(
-            "the NUM-28 electromagnetic force is not implemented for the NUM-02 log branch "
-            "with an active permittivity correction: the Korteweg-Helmholtz consistency term "
-            "needs d(eps~_r)/d(c~_i) and the symbolic derivative would come back in w_i"
-        )
+        # d(eps~_r)/d(c~_i) would come back in w_i; see _Integrands.korteweg.
+        korteweg = None
     else:
-        from nanopnp.physics.flow import permittivity_gradient
-
         korteweg = (
             -0.5 * ngs.InnerProduct(field, field) * permittivity_gradient(coefficients, variables)
         )
@@ -773,9 +818,32 @@ def domain_force(
         Overrides the distance field recorded on the solution; rebuilding the
         stress with a different one silently evaluates a different model.
     """
+    return _domain_force(_integrands(solution, wall_distance_nm), measures, extension)[0]
+
+
+def _korteweg_work(terms: _Integrands, measures: Measures, extension: GridFunction) -> float:
+    """Return ``int f_KH . w``, nondimensional: the PHY-23 consistency term."""
     import ngsolve as ngs
 
-    terms = _integrands(solution, wall_distance_nm)
+    return measures.integrate(
+        ngs.InnerProduct(terms.korteweg(), extension),
+        terms.mesh,
+        definedon=terms.mesh.Materials(terms.model.fluid),
+        what="the dielectric-gradient consistency term",
+    )
+
+
+def _domain_force(
+    terms: _Integrands, measures: Measures, extension: GridFunction
+) -> tuple[ForceComponents, float]:
+    """Return route A's force and the ``int f_KH . w`` it had to evaluate anyway.
+
+    The second return value is what :func:`dielectric_gradient_residual`
+    reports, handed back rather than re-integrated so that :func:`extract`
+    quadratures it once instead of twice.
+    """
+    import ngsolve as ngs
+
     mesh, model = terms.mesh, terms.model
     fluid = mesh.Materials(model.fluid)
     gradient = ngs.grad(extension)
@@ -785,39 +853,37 @@ def domain_force(
         return measures.integrate(integrand, mesh, definedon=fluid, what=what)
 
     hydro = hydrodynamic_stress(terms.velocity_gradient, terms.pressure, terms.viscosity)
-    ionic = ngs.InnerProduct(terms.body_force, extension)
-    korteweg = ngs.InnerProduct(terms.korteweg_force, extension)
-
-    em = (
-        electrostatic_domain_force(
-            mesh,
-            terms.potential_gradient,
-            terms.permittivity,
-            extension,
-            measures,
-            force_N=model.scales.force_N,
-            fluid=model.fluid,
-        )
-        / scale
+    ionic_work = integrate(
+        ngs.InnerProduct(terms.body_force, extension), "the ionic body-force consistency term"
     )
-    em -= integrate(ionic, "the ionic body-force consistency term")
-    em -= integrate(korteweg, "the dielectric-gradient consistency term")
+    korteweg_work = _korteweg_work(terms, measures, extension)
+
+    em_N = electrostatic_domain_force(
+        mesh,
+        terms.potential_gradient,
+        terms.permittivity,
+        extension,
+        measures,
+        force_N=model.scales.force_N,
+        fluid=model.fluid,
+    )
+    em_N -= scale * (ionic_work + korteweg_work)
 
     hd = -integrate(ngs.InnerProduct(hydro, gradient), "the hydrodynamic stress work")
-    hd += integrate(ionic, "the ionic body-force consistency term")
+    hd += ionic_work
     if model.dielectric_gradient_forces:
         # The momentum equation carries f_KH too, so f_total = f_ion + f_KH and
         # the two components' consistency terms cancel exactly in the sum.
-        hd += integrate(korteweg, "the dielectric-gradient consistency term")
+        hd += korteweg_work
     if model.inertia:
         convective = ngs.InnerProduct(terms.velocity_gradient * terms.velocity, extension)
         hd -= terms.reynolds * integrate(
             terms.mass_density * convective, "the inertial consistency term"
         )
 
-    forces = ForceComponents(em_N=scale * em, hd_N=scale * hd)
+    forces = ForceComponents(em_N=em_N, hd_N=scale * hd)
     logger.debug("domain force (pN): %s", {k: v * 1e12 for k, v in forces.summary().items()})
-    return forces
+    return forces, korteweg_work
 
 
 def dielectric_gradient_residual(
@@ -837,18 +903,24 @@ def dielectric_gradient_residual(
     routes agree on, and reporting it turns that gap from a mystery into a
     measurement of the PHY-23 omission.
     """
-    import ngsolve as ngs
+    return _dielectric_gradient_residual(
+        _integrands(solution, wall_distance_nm), measures, extension
+    )
 
-    terms = _integrands(solution, wall_distance_nm)
+
+def _dielectric_gradient_residual(
+    terms: _Integrands,
+    measures: Measures,
+    extension: GridFunction,
+    *,
+    work: float | None = None,
+) -> float:
+    """Return ``-int f_KH . w`` in newtons, reusing ``work`` if route A found it."""
     if terms.model.dielectric_gradient_forces:
         return 0.0
-    integral = measures.integrate(
-        ngs.InnerProduct(terms.korteweg_force, extension),
-        terms.mesh,
-        definedon=terms.mesh.Materials(terms.model.fluid),
-        what="the dielectric-gradient residual",
-    )
-    return -TWO_PI * terms.model.scales.force_N * integral
+    if work is None:
+        work = _korteweg_work(terms, measures, extension)
+    return -TWO_PI * terms.model.scales.force_N * work
 
 
 def surface_force(
@@ -887,9 +959,13 @@ def surface_force(
         If the boundary matches nothing, if the lift lands on the solid side, or
         if the normal's orientation cannot be determined.
     """
+    return _surface_force(_integrands(solution, wall_distance_nm), measures, boundary)
+
+
+def _surface_force(terms: _Integrands, measures: Measures, boundary: str) -> ForceComponents:
+    """Return route B's traction integral from already-rebuilt coefficients."""
     import ngsolve as ngs
 
-    terms = _integrands(solution, wall_distance_nm)
     mesh, model = terms.mesh, terms.model
     region, arc = _boundary_region(mesh, boundary)
 
@@ -1111,10 +1187,12 @@ def extract(
     ForceDisagreementError
         If the routes disagree beyond ``tolerance_N``.
     """
-    forces = domain_force(solution, measures, extension, wall_distance_nm=wall_distance_nm)
-    residual = dielectric_gradient_residual(
-        solution, measures, extension, wall_distance_nm=wall_distance_nm
-    )
+    # One rebuild of the coefficients for all three routes: ``_integrands``
+    # re-evaluates the correction chain against the distance field, and doing it
+    # per route made a force extraction pay for it three times over.
+    terms = _integrands(solution, wall_distance_nm)
+    forces, korteweg_work = _domain_force(terms, measures, extension)
+    residual = _dielectric_gradient_residual(terms, measures, extension, work=korteweg_work)
 
     agreement: ForceAgreement | None = None
     if check_routes:
@@ -1124,9 +1202,7 @@ def extract(
         # two routes agree component by component whatever the model omits. The
         # PHY-23 residual is a gap between NUM-28 as printed and both of them,
         # not a gap between them.
-        surface = surface_force(
-            solution, measures, boundary=boundary, wall_distance_nm=wall_distance_nm
-        )
+        surface = _surface_force(terms, measures, boundary)
         agreement = ForceAgreement(
             domain=forces,
             surface=surface,
