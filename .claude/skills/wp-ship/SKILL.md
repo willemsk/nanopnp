@@ -1,6 +1,6 @@
 ---
 name: wp-ship
-description: Ship a finished nanopnp work package — gate, push, open the PR, run /code-review xhigh --fix onto the PR branch, then drive CI to green. Use when the user says the work package is finished, asks to open the PR for it, to review and ship it, or invokes /wp-ship.
+description: Ship a finished nanopnp work package — gate, push, open the PR, send /code-review xhigh --fix to a fresh subagent on the PR branch, then drive CI to green. Use when the user says the work package is finished, asks to open the PR for it, to review and ship it, or invokes /wp-ship.
 ---
 
 # Ship a work package
@@ -53,16 +53,32 @@ Mirror `.github/pull_request_template.md` instead if one has appeared since.
 Then subscribe to the PR's activity (`subscribe_pr_activity`) so CI results and review comments
 wake this session.
 
-## 4. Review pass, onto the PR branch
+## 4. Review pass, in a fresh subagent
 
-Run `/code-review xhigh --fix <pr-number>` against the PR.
+This session carries the reasoning behind every decision the implementation made — which is exactly
+why it cannot be the one to check that reasoning. Hand the review to a subagent that starts cold, on
+a different model, so it evaluates the diff rather than its own prior conclusions:
 
-`--fix` writes to the working tree; it does not commit. So:
+```
+Agent(subagent_type="general-purpose", model="sonnet", run_in_background=false,
+      description="Fresh-context code review of WP<n>",
+      prompt="Run the code-review skill (via the Skill tool) with args 'xhigh --fix <pr-number>' "
+             "against pull request <pr-number> in this repository. Apply its fixes to the working "
+             "tree but do not commit or push — leave them staged as an uncommitted diff. Report back "
+             "every finding, fixed and unfixed, with file, line and a one-sentence rationale.")
+```
 
-1. Read every applied fix as a diff. A review finding is a hypothesis — confirm it against the
-   specification and the plan before keeping it. Revert any fix that is wrong, and say in the PR
-   thread why it was wrong; a reviewer proposing a change that would violate a spec clause is the
-   case this step exists to catch.
+Run it in the foreground (`run_in_background: false`) — the next step depends on its result and
+there is nothing else productive to do meanwhile. No isolation/worktree: it edits this session's
+working tree directly, so its diff lands where step 4.1 below reads it.
+
+`--fix` writes to the working tree; it does not commit. So, back in this session:
+
+1. Read every applied fix as a diff. A review finding from a cheaper, colder model is a hypothesis,
+   not a verdict — confirm it against the specification and the plan before keeping it. Revert any
+   fix that is wrong, and say in the PR thread why it was wrong; a reviewer proposing a change that
+   would violate a spec clause is the case this step exists to catch. This confirmation is the
+   safety net for running the pass on a cheaper model — do not skip it.
 2. Findings the pass raised but could not fix: fix them yourself here, or record them in the PR body
    under **Deliberately not done** with the reason. Do not leave a confirmed finding unmentioned.
 3. Re-run the gate.
