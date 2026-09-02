@@ -28,6 +28,7 @@ from nanopnp.core.typing import Numeric
 
 __all__ = [
     "FORMS",
+    "FORM_PARAMETERS",
     "NGSOLVE_OPS",
     "NUMPY_OPS",
     "MathOps",
@@ -276,6 +277,25 @@ FORMS: Mapping[str, FormFunction] = {
     "logistic_plus": logistic_plus,
 }
 """Correction forms by the name a parameter file uses to select them."""
+
+FORM_PARAMETERS: Mapping[str, frozenset[str]] = {
+    "inverse_poly_half": frozenset({"P1", "P2", "P3", "P4"}),
+    "poly_jones_dole": frozenset({"P1", "P2", "P3", "P4"}),
+    "poly_quadratic": frozenset({"P1", "P2"}),
+    "gavish_langevin": frozenset({"P0", "P1", "P2"}),
+    "exponential_saturation_plus": frozenset({"P1", "P2"}),
+    "logistic_plus": frozenset({"P1", "P2"}),
+}
+"""The exact fit coefficients each form reads, keyed by form name.
+
+The single source of truth for which coefficient keys a parameter file must
+carry for a given form. Each form above accesses these keys by name
+(``p["P1"]`` …), so a missing one is a ``KeyError`` deep in assembly and an
+extra one is silently ignored; the correction-file schema validates a fit block
+against this table at load instead, naming the offending key (IF-03). Every key
+here must match the corresponding form's body, and the set is asserted complete
+against :data:`FORMS` in the tier-1 tests.
+"""
 
 
 def get_form(name: str) -> FormFunction:
