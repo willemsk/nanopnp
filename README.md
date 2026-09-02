@@ -21,6 +21,7 @@ is not yet implemented.
 | [`SPECIFICATION.md`](SPECIFICATION.md) | Requirements, physics, design, numerics and V&V plan |
 | [`.knowledge/`](.knowledge/00-index.md) | Verified knowledge base: physics, numerics, biology, tooling |
 | [`CLAUDE.md`](CLAUDE.md) | Working instructions for coding agents and new contributors |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | How to report a finding, set up, and get a change accepted |
 | [`data/corrections/`](data/corrections) | Fitted correction parameters, one file per electrolyte |
 
 ## Quick start
@@ -32,6 +33,17 @@ uv sync --all-extras
 uv run pytest
 uv run nanopnp --env
 ```
+
+A VS Code Dev Container and a GitHub Codespace configuration are in
+[`.devcontainer/`](.devcontainer) if you would rather not install anything locally.
+
+## Contributing
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md). Findings are more welcome than fixes: if a benchmark
+disagrees with a known answer, or two extraction routes disagree with each other, please open a
+**Verification finding** issue — that is evidence, and it is worth more than a green test suite.
+
+Participation is under the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Licence
 
