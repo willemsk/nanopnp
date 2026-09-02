@@ -111,6 +111,16 @@ PRESSURE = "pressure"
 PRESSURE_MEAN = "pressure_mean"
 """Name of the scalar multiplier fixing the pressure level; see ``pressure_constraint``."""
 
+SUPPORTED_STABILISATIONS: frozenset[str] = frozenset({"none"})
+"""The residual stabilisation modes this phase implements (NUM-11, NUM-13).
+
+Only unstabilised Galerkin, ``"none"``, is available in Phase 0. The set is the
+gate that keeps a provenance record from claiming a mode the solver does not
+apply: NUM-14's streamline/crosswind stabilisation adds its name here when it is
+implemented, and until then asking for it is refused rather than recorded as a
+run that never happened.
+"""
+
 
 def _reject_unknown(kwargs: Mapping[str, Option], where: str) -> None:
     """Raise on keywords a model does not understand.
@@ -410,6 +420,19 @@ class CoupledModel:
     fluid: str = ELECTROLYTE_DOMAINS
     solid_permittivities: Mapping[str, float] = field(default_factory=dict)
     pressure_constraint: bool = False
+    stabilisation: str = "none"
+    """The residual stabilisation mode in force (NUM-11, NUM-13, §5.3.3, §6.4).
+
+    ``"none"`` is the unstabilised Galerkin discretisation of this phase. The
+    reference COMSOL model ran with streamline and crosswind stabilisation *on*
+    in both transport and flow (§6.4, §7.4), so a number recorded without its
+    stabilisation mode is not comparable to it: Phase 1's COMSOL comparison must
+    attribute a per-cent discrepancy to stabilised-vs-unstabilised rather than to
+    a bug, and a manifest that cannot state the mode cannot do that. Carrying it
+    here, sourced from the model rather than written as a literal into the
+    manifest, is what lets NUM-14's stabilised mode populate the provenance
+    automatically when it is added.
+    """
 
     def __post_init__(self) -> None:
         """Reject a configuration that cannot be assembled.
@@ -418,11 +441,19 @@ class CoupledModel:
         ------
         ValueError
             If the Taylor-Hood pair is equal-order, which NUM-03 permits only
-            with a flow stabilisation this phase does not provide, or if
-            ``dielectric_gradient_forces`` is combined with the log branch,
-            where the permittivity sensitivity would come back in the wrong
-            variable.
+            with a flow stabilisation this phase does not provide, if
+            ``dielectric_gradient_forces`` is combined with the log branch, where
+            the permittivity sensitivity would come back in the wrong variable, or
+            if ``stabilisation`` names a mode this phase does not implement.
         """
+        if self.stabilisation not in SUPPORTED_STABILISATIONS:
+            known = ", ".join(sorted(SUPPORTED_STABILISATIONS))
+            raise ValueError(
+                f"stabilisation {self.stabilisation!r} is not implemented this phase; the "
+                f"available modes are {known}. NUM-14's streamline/crosswind stabilisation is "
+                "Phase 1, and recording a mode the solver does not apply would make the FR-25 "
+                "manifest describe a run that never happened"
+            )
         if self.flow and self.pressure_order >= self.order:
             raise ValueError(
                 f"velocity order {self.order} with pressure order {self.pressure_order} is not "
@@ -515,6 +546,7 @@ class CoupledModel:
                 "pressure_constraint": self.pressure_constraint,
             },
             "deviations_from_validated_default": sorted(self._deviations()),
+            "stabilisation": self.stabilisation,
             "scales": self.scales.summary(),
             "materials": dict(self.electrolyte.provenance),
         }

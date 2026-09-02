@@ -136,6 +136,22 @@ def test_fr25_provenance_records_every_deviation_from_the_validated_default() ->
     assert deviant.provenance["switches"]["steric"] is True
 
 
+def test_fr25_provenance_records_the_stabilisation_mode() -> None:
+    """A number recorded without its stabilisation mode is not comparable (§6.4).
+
+    The mode is trivially ``"none"`` this phase (NUM-11), but the reference COMSOL
+    model ran stabilised, so Phase 1's comparison must be able to attribute a
+    discrepancy to the discretisation rather than to a bug — which a manifest that
+    omits the mode cannot do. A mode the solver does not implement is refused
+    rather than recorded, so the manifest never describes a run that did not
+    happen.
+    """
+    electrolyte = Electrolyte.from_parameter_file()
+    assert CoupledModel(electrolyte=electrolyte).provenance["stabilisation"] == "none"
+    with pytest.raises(ValueError, match="stabilisation 'supg' is not implemented"):
+        CoupledModel(electrolyte=electrolyte, stabilisation="supg")
+
+
 def test_fr20_a_model_declares_fields_boundaries_and_a_solve_strategy() -> None:
     """Every registered model implements the section 5.4.3 interface."""
     for name in SPECIFIED_MODELS:
