@@ -1,8 +1,18 @@
 # WP6 — Analyte body and force benchmarks
 
-**Status: planned, not started.** Written 1 September 2026 after WP5 merged. Nothing below has been
-run; every number in it is arithmetic or a quotation, and the **Outcome** annotations that
-`wp5-continuation-qoi-envelope.md` carries are what this file gains as the work lands.
+**Status: delivered.** Written 1 September 2026 after WP5 merged, when nothing below had been run
+and every number in it was arithmetic or a quotation. The work landed the same day:
+`geometry/analyte.py` and `post/forces.py`, VER-19 … VER-22 green on tiers 1 and 2, NUM-28 and
+NUM-29 implemented, §8.2 criterion 1 closed and RSK-04 retired.
+
+Unlike `wp5-continuation-qoi-envelope.md`, this file was never annotated in place as the work
+landed, so it stands as written — a plan, not a record. It is worth reading as the reasoning that
+led into the package, and its two load-bearing predictions both held: the `∇w` contraction carries
+no `1/r` hoop component, and the domain form is exact only once each component carries its
+body-force consistency term. **The authoritative record of the finished work is the WP6 section of
+`phase-0-spike.md`**, which carries the measured numbers and the five things the work settled that
+this plan did not anticipate — among them that the A–B route agreement is not monotone under
+refinement, while the route-C oracle's is.
 
 The implementation plan for work package 6 of `phase-0-spike.md`, the last package of Phase 0.
 `SPECIFICATION.md` remains normative: where this file and the specification disagree, the
