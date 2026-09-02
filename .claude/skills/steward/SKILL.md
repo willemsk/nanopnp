@@ -31,9 +31,14 @@ uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv ru
 - **`test-matrix`** — `pytest` on ubuntu × 3.10–3.14, plus 3.12 on windows and macOS (QR-09, CON-13).
 
 The default `pytest` selection is tiers 1 and 2. Tier 3 needs COMSOL golden files and is stubbed;
-Tier 4 gates releases; `-m slow` is measured, never gated. So a CI failure is always a lint, a type
-error, or a tier 1–2 test — never a licence problem, never a network problem, and there is nothing
-in the suite that reaches either.
+Tier 4 gates releases; `-m slow` is measured, never gated. Nothing in the suite reaches the network
+or needs a COMSOL licence, so a failure in `ruff`, `mypy` or `pytest` is always a real one — a lint,
+a type error, or a tier 1–2 assertion, never an environment excuse.
+
+The one step that is not is `astral-sh/setup-uv` and `uv sync --all-extras`, which do reach the
+network. A failure there is infrastructure: re-run the job. Read the log and establish which of the
+two you have before changing a line — a stale `uv.lock` also fails at `uv sync` under `UV_FROZEN`,
+and that one is a real failure with a real fix.
 
 Reproduce the failing job's exact command locally before changing anything. For a matrix-only
 failure, reproduce under that interpreter (`uv run --python 3.10 pytest …`).
