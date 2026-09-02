@@ -183,6 +183,27 @@ versions, mesh hash, solver settings, stabilisation mode, correction file versio
 switch set away from the validated default** (FR-25, §5.3.3). A result whose manifest cannot
 reconstruct the run is not a result.
 
+## Implementation workflow
+
+Work is delivered one work package at a time, one PR per package, green on tiers 1 and 2 before the
+next starts. Four steps, each a skill under `.claude/skills/`:
+
+| Step | Command | What it does |
+|---|---|---|
+| 1 | `/wp-plan <n\|phase-n>` | Writes the implementation plan into `docs/plans/` and commits it. The decisions table is the deliverable |
+| 2 | `/wp-implement` | Executes the plan; keeps `SPECIFICATION.md`, `.knowledge/` and the plan's **Outcome** annotations in step; ends by invoking step 3 |
+| 3–4 | `/wp-ship` | Gates, pushes, opens the PR, runs `/code-review xhigh --fix` onto the PR branch, then drives CI to green |
+
+`.claude/skills/steward/SKILL.md` carries the conventions for a PR already in flight — what each CI
+failure class means here, and why a failing Tier 2 benchmark is evidence rather than a chore. It is
+read automatically when a PR event wakes a session, so it governs the autofix loop whether or not
+`/wp-ship` started it.
+
+**Sub-agent models: the failure mode decides, not the size of the task.** Work whose error would be
+a plausible wrong number runs on Opus; work whose error is loud — lint, types, search, mechanical
+edits — runs on Sonnet. State the choice when delegating so it can be redirected. The rubric is
+`.claude/model-policy.md`.
+
 ## Git
 
 - Conventional commits: `feat:`, `fix:`, `test:`, `docs:`, `chore:`.
