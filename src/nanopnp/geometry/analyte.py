@@ -110,6 +110,10 @@ class AnalyteBody(Protocol):
         """Volume of the revolved body, in nm^3."""
         ...
 
+    def charge_density_C_m3(self, charge_e: float) -> float:
+        """Return ``rho_part = q/V`` in C/m^3; see :func:`_charge_density_C_m3`."""
+        ...
+
     def face(self, *, maxh_nm: float | None = None) -> Shape:
         """Return the profile as a named OCC face, its surface edges named."""
         ...

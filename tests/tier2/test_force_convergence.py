@@ -43,7 +43,6 @@ from itertools import pairwise
 import ngsolve as ngs
 import pytest
 
-from nanopnp.core.constants import ELEMENTARY_CHARGE
 from nanopnp.geometry.analyte import (
     ANALYTE_DOMAIN,
     AnalyteInBoxGeometry,
@@ -130,9 +129,7 @@ def study() -> tuple[Refinement, ...]:
     """Solve the VER-22 configuration on three meshes and take the force on each."""
     body = SphereBody(radius_nm=RADIUS_NM)
     model = _charged_sphere_model()
-    density = (CHARGE_E * ELEMENTARY_CHARGE / (body.volume_nm3 * 1e-27)) / (
-        model.scales.charge_density_C_m3
-    )
+    density = body.charge_density_C_m3(CHARGE_E) / model.scales.charge_density_C_m3
     boundaries = CoupledBoundaries(
         potential="outer",
         concentration="outer",
@@ -324,7 +321,7 @@ def reference_case() -> tuple[CoupledModel, AnalyteForces, float]:
     # source. Driving the wall corrections from proximity to the body would be a
     # model change, and it goes behind a flag rather than into a benchmark.
     distance = wall_distance(mesh, "wall", order=AXISYMMETRIC.element_order)
-    density_C_m3 = REFERENCE_CHARGE_E * ELEMENTARY_CHARGE / (REFERENCE_BODY.volume_nm3 * 1e-27)
+    density_C_m3 = REFERENCE_BODY.charge_density_C_m3(REFERENCE_CHARGE_E)
 
     ladder = run_ladder(
         default_ladder(
