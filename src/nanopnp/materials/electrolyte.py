@@ -92,14 +92,34 @@ class CorrectionSwitches:
         return cls()
 
     def without(self, *properties: str) -> CorrectionSwitches:
-        """Return a copy with the named properties disabled, for ablation runs."""
-        changes: dict[str, Any] = {}
-        for name in properties:
-            if name == "steric":
-                changes["steric"] = False
-            else:
-                changes[name] = CorrectionChoice()
-        return replace(self, **changes)
+        """Return a copy with the named properties disabled, for ablation runs.
+
+        Raises
+        ------
+        ValueError
+            If a name is not one of the switchable properties. A typo would
+            otherwise disable nothing and leave the ablation silently comparing a
+            configuration against itself, which is exactly the failure PHY-21's
+            differential testing exists to avoid.
+        """
+        known = {"diffusivity", "mobility", "viscosity", "permittivity", "density", "steric"}
+        unknown = sorted(set(properties) - known)
+        if unknown:
+            raise ValueError(
+                f"no correction property {', '.join(unknown)}; the switchable properties are "
+                f"{', '.join(sorted(known))}"
+            )
+        disabled = set(properties)
+        off = CorrectionChoice()
+        return replace(
+            self,
+            diffusivity=off if "diffusivity" in disabled else self.diffusivity,
+            mobility=off if "mobility" in disabled else self.mobility,
+            viscosity=off if "viscosity" in disabled else self.viscosity,
+            permittivity=off if "permittivity" in disabled else self.permittivity,
+            density=off if "density" in disabled else self.density,
+            steric=False if "steric" in disabled else self.steric,
+        )
 
 
 @dataclass(frozen=True)
@@ -307,30 +327,30 @@ class Electrolyte:
             raise ValueError(f"unknown correction driver {driver!r}; use average or ionic_strength")
         document = load_corrections(model)
         active = CorrectionSwitches.for_model(model) if switches is None else switches
-        temperature_K = float(document["temperature_K"])
-        names = tuple(species) if species is not None else tuple(document["species"])
+        temperature_K = document.temperature_K
+        names = tuple(species) if species is not None else tuple(document.species)
         ions = tuple(
             IonSpecies(
                 name=name,
-                valence=int(document["species"][name]["z"]),
-                diffusivity_0=float(document["species"][name]["diffusivity"]["D0"]),
-                steric_diameter=float(document["species"][name]["steric_diameter_nm"]) * 1e-9,
+                valence=document.species[name].z,
+                diffusivity_0=document.species[name].diffusivity.D0,
+                steric_diameter=document.species[name].steric_diameter_nm * 1e-9,
                 temperature_K=temperature_K,
             )
             for name in names
         )
-        solvent = document["solvent"]
+        solvent = document.solvent
         resolved = _resolve_corrections(active, ions)
         return cls(
             species=ions,
             switches=active,
             temperature_K=temperature_K,
-            viscosity_0=float(solvent["viscosity"]["eta0"]),
-            mass_density_0=float(solvent["density"]["rho0"]),
-            permittivity_0=float(solvent["permittivity"]["eps_r0"]),
-            water_steric_diameter=float(solvent["water_steric_diameter_nm"]) * 1e-9,
-            protein_permittivity=float(document["dielectrics"]["protein"]),
-            membrane_permittivity=float(document["dielectrics"]["membrane"]),
+            viscosity_0=solvent.viscosity.eta0,
+            mass_density_0=solvent.density.rho0,
+            permittivity_0=solvent.permittivity.eps_r0,
+            water_steric_diameter=solvent.water_steric_diameter_nm * 1e-9,
+            protein_permittivity=document.dielectrics.protein,
+            membrane_permittivity=document.dielectrics.membrane,
             validity_M=models.validity_range(document),
             driver=driver,
             parameter_file=model,

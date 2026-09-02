@@ -11,15 +11,22 @@ import logging
 
 import numpy as np
 import pytest
+from pydantic import ValidationError
 
 from nanopnp.core.constants import thermal_voltage
 from nanopnp.materials import models
-from nanopnp.materials.corrections import load_corrections
+from nanopnp.materials.corrections import (
+    CorrectionDocument,
+    DielectricsBlock,
+    FitBlock,
+    load_corrections,
+)
 from nanopnp.materials.electrolyte import (
     CorrectionSwitches,
     Electrolyte,
     log_clamp_activations,
 )
+from nanopnp.materials.forms import FORM_PARAMETERS, FORMS
 
 REL_TOL = 5e-4  # the published check values are quoted to four significant figures
 FAR_FROM_WALL_NM = 50.0  # f^w is 1 to machine precision well away from the wall
@@ -206,25 +213,25 @@ def test_parameter_file_mobilities_and_caps_agree_with_the_evaluated_model() -> 
     document = load_corrections("willems2020_nacl")
     electrolyte = Electrolyte.from_parameter_file("willems2020_nacl")
     for ion in electrolyte.species:
-        tabulated = float(document["species"][ion.name]["mobility"]["mu0"])
+        tabulated = document.species[ion.name].mobility.mu0
         assert ion.mobility_0 == pytest.approx(tabulated, rel=REL_TOL)
 
-    solvent, species = document["solvent"], document["species"]
+    solvent, species = document.solvent, document.species
     at_cap = {
         "viscosity": (
             electrolyte.viscosity(5.3, FAR_FROM_WALL_NM),
-            solvent["viscosity"]["cap_above_validity"],
+            solvent.viscosity.cap_above_validity,
         ),
-        "density": (electrolyte.mass_density(5.3), solvent["density"]["cap_above_validity"]),
+        "density": (electrolyte.mass_density(5.3), solvent.density.cap_above_validity),
         "permittivity": (
             electrolyte.relative_permittivity(5.3),
-            solvent["permittivity"]["cap_above_validity"],
+            solvent.permittivity.cap_above_validity,
         ),
     }
     for ion in electrolyte.species:
         at_cap[f"D_{ion.name}"] = (
             electrolyte.diffusivity(ion.name, 5.3, FAR_FROM_WALL_NM),
-            species[ion.name]["diffusivity"]["cap_above_validity"],
+            species[ion.name].diffusivity.cap_above_validity,
         )
     # The tabulated caps are the published, rounded values -- the density one is
     # quoted to three figures (1.19e3 against the fit's 1193.6) -- so the
@@ -262,3 +269,70 @@ def test_fit_metadata_is_not_reported_as_a_coefficient() -> None:
     assert "fc.r_squared" not in parameters
     assert "fw.r_squared" not in parameters
     assert parameters["fc.P1"] == pytest.approx(0.007558)
+
+
+def test_corrections_load_returns_a_validated_document() -> None:
+    """The one Phase-0 serialisation boundary is a typed model, not a raw dict.
+
+    CLAUDE.md requires a Pydantic model at every serialisation boundary; before
+    this the correction file crossed as ``dict[str, Any]`` and a renamed key
+    surfaced only as a ``KeyError`` in assembly. A valid file must still load
+    unchanged (VER-03 and the caps test gate the numbers).
+    """
+    document = load_corrections("willems2020_nacl")
+    assert isinstance(document, CorrectionDocument)
+    assert document.name == "willems2020_nacl"
+    assert document.concentration_validity_M == (0.0, 5.3)
+    fc = document.species["Na+"].diffusivity.fc
+    assert fc is not None and fc.form == "inverse_poly_half"
+    # The shared ion wall function carries exactly the coefficients its form reads.
+    assert set(document.ion_wall_function.coefficients) == {"P1", "P2"}
+
+
+def test_corrections_reject_an_unknown_key_naming_it() -> None:
+    """A coefficient the form never reads is rejected at load, named (IF-03).
+
+    ``inverse_poly_half`` reads P1..P4; a stray ``P5`` is a transcription error,
+    and before the schema it would have been silently ignored rather than caught.
+    """
+    with pytest.raises(ValidationError, match="P5"):
+        FitBlock.model_validate(
+            {"form": "inverse_poly_half", "P1": 0.2, "P2": -0.3, "P3": 0.2, "P4": -0.03, "P5": 0.1}
+        )
+
+
+def test_corrections_reject_a_missing_coefficient() -> None:
+    """A fit block missing a coefficient its form reads is rejected, naming it.
+
+    Before the schema a missing ``P4`` surfaced as a ``KeyError`` deep in the
+    assembly of ``inverse_poly_half``; it is now named at the load boundary.
+    """
+    with pytest.raises(ValidationError, match="P4"):
+        FitBlock.model_validate({"form": "inverse_poly_half", "P1": 0.2, "P2": -0.3, "P3": 0.2})
+
+
+def test_corrections_reject_an_unknown_form() -> None:
+    """A fit block naming a form the registry does not know is rejected."""
+    with pytest.raises(ValidationError, match="unknown correction form 'not_a_form'"):
+        FitBlock.model_validate({"form": "not_a_form", "P1": 1.0})
+
+
+def test_corrections_reject_an_unknown_block_key() -> None:
+    """A stray key in a structural block is rejected rather than ignored.
+
+    ``extra='forbid'`` is what makes a mistyped dielectric name, or a coefficient
+    misfiled outside its ``fc``/``fw`` block, an error instead of a silent
+    default.
+    """
+    with pytest.raises(ValidationError, match="typo"):
+        DielectricsBlock.model_validate({"protein": 20.0, "membrane": 3.2, "typo": 1.0})
+
+
+def test_every_form_declares_its_parameters() -> None:
+    """FORM_PARAMETERS must cover every registered form.
+
+    The schema validates a fit block against ``FORM_PARAMETERS[form]``, so a form
+    added to ``FORMS`` without an entry here would make every file using it fail
+    to load with a ``KeyError`` rather than a named diagnostic.
+    """
+    assert set(FORM_PARAMETERS) == set(FORMS)

@@ -19,10 +19,15 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from functools import cache
-from typing import Any, Literal, Protocol, TypeAlias
+from typing import Literal, Protocol, TypeAlias
 
 from nanopnp.core.paths import available_corrections
-from nanopnp.materials.corrections import load_corrections
+from nanopnp.materials.corrections import (
+    CorrectionDocument,
+    FitBlock,
+    PropertyBlock,
+    load_corrections,
+)
 from nanopnp.materials.forms import NUMPY_OPS, MathOps, Numeric, get_form
 
 PropertyKind: TypeAlias = Literal["diffusivity", "mobility", "viscosity", "density", "permittivity"]
@@ -272,49 +277,44 @@ def _build_none(
 
 
 @cache
-def _document(model_name: str) -> dict[str, Any]:
-    """Return the parsed parameter file, read once per model name."""
+def _document(model_name: str) -> CorrectionDocument:
+    """Return the validated parameter file, read once per model name."""
     return load_corrections(model_name)
 
 
-def validity_range(document: Mapping[str, Any]) -> tuple[float, float]:
+def validity_range(document: CorrectionDocument) -> tuple[float, float]:
     """Return a parameter file's concentration validity range, in mol/L.
 
-    Raises
-    ------
-    KeyError
-        If the file does not declare one. There is deliberately no default: the
-        range is a property of the fits in *that* file, and silently borrowing
-        NaCl's 0-5.3 M would extrapolate another electrolyte past its own limit
-        with no gate failure (PHY-13, QR-12).
+    The range is a required field of the schema and a property of the fits in
+    *that* file: silently borrowing NaCl's 0-5.3 M would extrapolate another
+    electrolyte past its own limit with no gate failure (PHY-13, QR-12).
     """
-    try:
-        low, high = document["concentration_validity_M"]
-    except KeyError:
-        raise KeyError(
-            f"correction file {document.get('name', '<unnamed>')!r} declares no "
-            "'concentration_validity_M'; the validity range of the fits is required"
-        ) from None
-    return (float(low), float(high))
+    return document.concentration_validity_M
 
 
 def _property_node(
-    document: Mapping[str, Any], kind: PropertyKind, species: str | None
-) -> dict[str, Any]:
-    """Return the parameter subtree for one property.
+    document: CorrectionDocument, kind: PropertyKind, species: str | None
+) -> PropertyBlock:
+    """Return the parameter block for one property.
 
     Raises
     ------
     KeyError
-        If the file carries no coefficients for that property or species.
+        If the file carries no coefficients for that species.
     """
     if kind not in SPECIES_PROPERTIES:
-        return dict(document["solvent"][kind])
-    table = document["species"]
+        solvent: dict[str, PropertyBlock] = {
+            "viscosity": document.solvent.viscosity,
+            "density": document.solvent.density,
+            "permittivity": document.solvent.permittivity,
+        }
+        return solvent[kind]
+    table = document.species
     if species not in table:
         known = ", ".join(sorted(table))
         raise KeyError(f"no species {species!r} in the parameter file; it has {known}")
-    return dict(table[species][kind])
+    ion = table[species]
+    return ion.diffusivity if kind == "diffusivity" else ion.mobility
 
 
 def _file_backed_builder(model_name: str) -> ModelBuilder:
@@ -325,46 +325,28 @@ def _file_backed_builder(model_name: str) -> ModelBuilder:
     ) -> CorrectionModel:
         document = _document(model_name)
         node = _property_node(document, property_kind, species)
-        fc = node.get("fc")
+        fc = node.fc
         # Diffusivity and mobility share one ion wall function (PHY-11); the
         # solvent properties carry their own, or none at all.
         if property_kind in SPECIES_PROPERTIES:
-            fw = document.get("ion_wall_function")
+            fw: FitBlock | None = document.ion_wall_function
         else:
-            fw = node.get("fw")
+            fw = node.fw
         return FittedCorrection(
             name=model_name,
             property_kind=property_kind,
             species=species,
-            concentration_form=None if fc is None else str(fc["form"]),
-            concentration_params={} if fc is None else _coefficients(fc),
-            wall_form=None if fw is None else str(fw["form"]),
-            wall_params={} if fw is None else _coefficients(fw),
+            concentration_form=None if fc is None else fc.form,
+            concentration_params={} if fc is None else fc.coefficients,
+            wall_form=None if fw is None else fw.form,
+            wall_params={} if fw is None else fw.coefficients,
             validity_M=validity_range(document),
             use_concentration=concentration,
             use_wall=wall,
-            source=str(document.get("name", model_name)),
+            source=document.name,
         )
 
     return build
-
-
-NON_COEFFICIENT_KEYS: frozenset[str] = frozenset({"r_squared"})
-"""Numeric keys a fit block may carry that are metadata, not fit coefficients."""
-
-
-def _coefficients(node: Mapping[str, Any]) -> dict[str, float]:
-    """Extract the numeric fit coefficients, dropping metadata keys.
-
-    Filtering by type alone is not enough: ``r_squared`` is a float and ``bool``
-    is a subclass of ``int``, so both would be reported as fit coefficients in
-    the FR-25 record even though no correction form reads them.
-    """
-    return {
-        k: float(v)
-        for k, v in node.items()
-        if isinstance(v, int | float) and not isinstance(v, bool) and k not in NON_COEFFICIENT_KEYS
-    }
 
 
 register("none", _build_none)
