@@ -353,21 +353,23 @@ water's 8.904 × 10⁻⁴, whereas salt raises viscosity. The other caps check o
 `ϱ(5.3 M) = 1194 kg m⁻³` (stated 1.19 × 10³), `D_Na = 8.13 × 10⁻¹⁰` (stated 0.81 × 10⁻⁹),
 `D_Cl = 1.071 × 10⁻⁹` (stated 1.07 × 10⁻⁹).
 
-**E5 — Which permittivity parameters were actually used (open question).** The text says the
+**E5 — Which permittivity parameters were actually used (settled).** The text says the
 authors "opted to make use of the parameters given by Gavish for NaCl at 298.15 K
 (`P₁ = 30.08`, `P₂ = 11.5`)" rather than their own fit to Buchner 1999
-(`P₁ = 29.50 ± 1.32`, `P₂ = 11.74 ± 0.21`). But the stated cap `ε_r(5.3 M) = 42.12` is reproduced
+(`P₁ = 29.50 ± 1.32`, `P₂ = 11.74 ± 0.21`). The stated cap `ε_r(5.3 M) = 42.12` is reproduced
 by the **own fit**, not by Gavish's:
 
 | parameters | `ε_r(5.3 M)` |
 |---|---|
-| Gavish (30.08, 11.5) | 42.67 |
-| **own fit (29.50, 11.74)** | **42.13** ← matches stated 42.12 |
+| **Gavish (30.08, 11.5)** | **42.67** ← what the model used |
+| own fit (29.50, 11.74) | 42.13 ← matches the *stale* stated 42.12 |
 
-So either the cap was computed before switching parameter sets, or the simulations used the own
-fit. **Ask the author.** The difference is ~1 % in `ε_r` at saturation and negligible below ~1 M,
-so it is unlikely to matter for the validated results — but it must be pinned down before the
-regression suite treats either as "the" reference.
+Settled from the COMSOL model report (2026-08): the model parameter table and the solver log both
+record `epsr_ms = 30.08`, `epsr_alpha = 11.5` — Gavish's values — so **those govern** (§1.6, and
+`SPECIFICATION.md` §4.6 erratum 6). The printed `42.12` is the stale cap: it follows from the
+authors' own Buchner fit, which the model did *not* use, so the cap with the parameters actually
+used is `42.67`. An earlier author recollection favouring the Buchner fit is superseded by the
+model file. The difference is ~1 % in `ε_r` at saturation and negligible below ~1 M. **[verified]**
 
 ---
 

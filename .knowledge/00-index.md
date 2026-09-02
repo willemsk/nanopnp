@@ -101,7 +101,7 @@ Answers given directly by the author. Where they conflict with a printed source,
 | # | Question | Ruling |
 |---|---|---|
 | 1 | D/μ wall coefficient `P₁` | **6.2 nm⁻¹.** Table 5.2 is correct; the running-text value and an earlier verbal correction to 0.62 are both wrong. |
-| 2 | Permittivity fit parameters | **REVERSED by the model file: Gavish (30.08, 11.5).** The model parameter table and solver log both record `epsr_ms = 30.08`, `epsr_alpha = 11.5`. The thesis text was right; the printed 42.12 cap is stale (it matches the unused Buchner fit). Correct cap 42.67. |
+| 2 | Permittivity fit parameters | **Settled by the model file: Gavish (30.08, 11.5) govern.** The model parameter table and solver log both record `epsr_ms = 30.08`, `epsr_alpha = 11.5`. The thesis text was right; the printed 42.12 cap is stale (it matches the unused Buchner fit). Correct cap 42.67. An earlier verbal recollection favouring the Buchner fit is superseded by the model file (`SPECIFICATION.md` §4.6 erratum 6). |
 | 3 | Meaning of `⟨c⟩` | **Configurable, defaulting to eq. 5.3** — the average ion concentration `(1/n)Σcᵢ`. Ionic strength available as a named option. |
 | 4 | Analyte boundary conditions | **Confirmed: no-flux, no-slip, dielectric jump.** The analyte is a hard dielectric body, impermeable to ions and water, like the pore wall. |
 | 5 | `ε_protein` | **A calibration parameter, not a constant.** Default 20 for ePNP-NS; surfaced in the case file and reported in every output as fitted rather than physical. The APBS value of 10 belongs to that workflow. |
@@ -123,8 +123,7 @@ Answers given directly by the author. Where they conflict with a printed source,
 4. **PlyAB SI details** — analyte `ε_r`, per-position mesh strategy, barrier heights in kT, EOF
    velocities. Unreachable from this environment; the author holds the model.
    → `05-analyte-and-forces.md` §10.
-5. **Permittivity fit parameters — ruling 2 is contradicted by the shipped model.** The COMSOL
-   report's parameter table gives `epsr_ms = 30.08`, `epsr_alpha = 11.5` (Gavish), not the authors'
-   Buchner fit (29.50, 11.74). The 42.12 cap that motivated ruling 2 follows from the Buchner
-   values; the solved model caps at 42.67. Re-put to the author.
-   → `09-comsol-reference-settings.md` §D3. **[verified]**
+
+The permittivity fit parameters (formerly open here) are **settled**: the model used Gavish
+(30.08, 11.5), which govern; ruling 2 above and `SPECIFICATION.md` §4.6 erratum 6 record the
+arithmetic. → `09-comsol-reference-settings.md` §D3.
