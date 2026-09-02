@@ -236,12 +236,25 @@ class LadderResult:
         """
         return min((rung.minimum_damping_used for rung in self.rungs), default=1.0)
 
+    @property
+    def stabilisation(self) -> str:
+        """The stabilisation mode the top rung's number was produced on (NUM-13, §5.3.3).
+
+        Read from the converged model rather than assumed, so the manifest cannot
+        disagree with the discretisation. Every Phase-0 model is unstabilised, so
+        this is ``"none"`` until NUM-14 adds the stabilised mode, which then flows
+        through unchanged: §6.4/§7.4 make the mode load-bearing because a number
+        recorded without it is not comparable to the reference COMSOL run.
+        """
+        return str(self.solution.model.provenance.get("stabilisation", "none"))
+
     def summary(self) -> dict[str, Option]:
         """Return the whole ladder's record, for the provenance manifest (FR-25).
 
         A result whose manifest cannot reconstruct the run is not a result, and a
         continuation run is not reconstructible from its final state alone: the
-        path taken to it is part of how it was obtained.
+        path taken to it, and the stabilisation mode it was solved under, are part
+        of how it was obtained.
         """
         return {
             "rungs": [rung.summary() for rung in self.rungs],
@@ -250,6 +263,7 @@ class LadderResult:
             "seconds": self.seconds,
             "iterations": self.iterations,
             "minimum_damping_used": self.minimum_damping_used,
+            "stabilisation": self.stabilisation,
         }
 
 

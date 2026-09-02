@@ -265,6 +265,10 @@ def test_fr25_the_ladder_record_can_reconstruct_the_run(ladder: LadderResult) ->
     assert summary["mesh"]["elements"] > 0
     assert summary["iterations"] == ladder.iterations
     assert 0.0 < summary["minimum_damping_used"] <= 1.0
+    # The stabilisation mode is load-bearing for the Phase-1 COMSOL comparison
+    # (§6.4/§7.4): unstabilised this phase, and recorded so the comparison can
+    # attribute a discrepancy to the discretisation rather than to a bug (FR-25).
+    assert summary["stabilisation"] == "none"
 
     hard = [record.name for record in ladder.rungs if record.minimum_damping_used < 0.1]
     logger.info("rungs that needed damping below 0.1: %s", hard or "none")
