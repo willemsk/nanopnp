@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: What the software is specified to do
+    url: https://github.com/willemsk/nanopnp/blob/main/SPECIFICATION.md
+    about: SPECIFICATION.md is normative. Behaviour that disagrees with it is a bug; behaviour it does not cover may be out of scope by design — see section 3.5 Exclusions before filing.
+  - name: The physics and where it comes from
+    url: https://github.com/willemsk/nanopnp/blob/main/.knowledge/00-index.md
+    about: The model, its five documented errata, and the arithmetic behind them. Several widely-copied summaries of this model are wrong; this is the reference that governs.
