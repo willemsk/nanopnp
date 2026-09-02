@@ -167,11 +167,9 @@ def test_phy21_switches_and_corrections_cannot_disagree() -> None:
     that calls itself PNP-NS, converges, and is ePNP-NS makes the PHY-21
     ablation compare a configuration against itself.
     """
-    from dataclasses import replace as dataclass_replace
-
     full = Electrolyte.from_parameter_file()
     with pytest.raises(ValueError, match="switches and its resolved corrections disagree"):
-        dataclass_replace(full, switches=CorrectionSwitches.classical())
+        replace(full, switches=CorrectionSwitches.classical())
 
 
 def test_phy21_with_switches_changes_the_behaviour_not_only_the_record() -> None:
@@ -208,14 +206,10 @@ def test_phy21_with_switches_round_trips_back_to_the_full_configuration() -> Non
 
 def test_phy21_an_ablated_sub_switch_is_caught_too() -> None:
     """Turning off only the wall part is as silent as turning off the model."""
-    from dataclasses import replace as dataclass_replace
-
     full = Electrolyte.from_parameter_file()
-    ablated = dataclass_replace(
-        full.switches, mobility=dataclass_replace(full.switches.mobility, wall=False)
-    )
+    ablated = replace(full.switches, mobility=replace(full.switches.mobility, wall=False))
     with pytest.raises(ValueError, match="wall="):
-        dataclass_replace(full, switches=ablated)
+        replace(full, switches=ablated)
 
     honest = full.with_switches(ablated)
     for ion in honest.species:

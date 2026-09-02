@@ -183,6 +183,12 @@ def _distance(mesh: object) -> object:
     return wall_distance(mesh, "wall", order=AXISYMMETRIC.element_order)
 
 
+def _indicator(mesh: object) -> object:
+    """Return psi over the default lumen band of this pore."""
+    lower, upper = lumen_band(PORE)
+    return axial_indicator(mesh, lower_nm=lower, upper_nm=upper)
+
+
 def _rung(
     name: str,
     model: CoupledModel,
@@ -301,7 +307,7 @@ def test_82_criterion_two_the_whole_envelope_converges_through_the_ladder() -> N
     points: dict[tuple[float, float], qoi.QuantitiesOfInterest] = {}
     records: list[tuple[str, int, float, float]] = []
     spine: ModelSolution = climb.solution
-    indicator = axial_indicator(mesh, lower_nm=lumen_band(PORE)[0], upper_nm=lumen_band(PORE)[1])
+    indicator = _indicator(mesh)
 
     for concentration_M in CONCENTRATIONS_M:
         # -- move along the concentration spine at the reference bias ------
@@ -363,7 +369,13 @@ def test_82_criterion_two_the_whole_envelope_converges_through_the_ladder() -> N
     # -- the record the end-of-phase report asks for ----------------------
     total_iterations = sum(iterations for _, iterations, _, _ in records)
     total_seconds = math.fsum(seconds for _, _, seconds, _ in records) + climb.seconds
-    hardest = [name for name, _, _, damping in records if damping < 0.1]
+    # The climb's rungs are in this list too: the surface-charge ramp of stage 4
+    # is where damping actually falls, and it lives in the climb, so a report
+    # built from the sweep alone would say "none" and hide the one segment the
+    # end-of-phase report is asking about.
+    hardest = [name for name, _, _, damping in records if damping < 0.1] + [
+        record.name for record in climb.rungs if record.minimum_damping_used < 0.1
+    ]
     logger.info(
         "envelope: %d points, %d ladder iterations beyond the climb, %.0f s in total",
         len(points),
@@ -465,7 +477,7 @@ def test_82_criterion_two_the_hard_corner_from_cold_costs_what_it_costs() -> Non
     assert result.rungs[-1].newton is not None
     assert result.rungs[-1].newton["converged"] is True
 
-    indicator = axial_indicator(mesh, lower_nm=lumen_band(PORE)[0], upper_nm=lumen_band(PORE)[1])
+    indicator = _indicator(mesh)
     quantities = qoi.extract(result.solution, AXISYMMETRIC, indicator, bias_V=0.2)
     logger.info("hard corner QoIs: %s", quantities.summary())
     assert quantities.conductance_S > 0.0
@@ -485,7 +497,7 @@ def test_num18_the_ablation_ladder_reaches_the_same_corner_without_the_correctio
     mesh = PORE.generate(maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM)
     distance = _distance(mesh)
     measured: dict[str, qoi.QuantitiesOfInterest] = {}
-    indicator = axial_indicator(mesh, lower_nm=lumen_band(PORE)[0], upper_nm=lumen_band(PORE)[1])
+    indicator = _indicator(mesh)
 
     for label, corrections_active in (("epnp-ns", True), ("pnp-ns", False)):
         result = run_ladder(

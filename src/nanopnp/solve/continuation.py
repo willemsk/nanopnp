@@ -175,6 +175,14 @@ class RungResult:
     transferred_fields: tuple[str, ...]
     cold_fields: tuple[str, ...]
     newton: Mapping[str, Option] | None
+    deviations: tuple[str, ...] = ()
+    """Every switch of this rung's model set away from the validated default.
+
+    FR-25 asks for these by name, and the registered model name does not carry
+    them: ``dielectric_gradient_forces`` or ``variable_density=off`` on one rung
+    would otherwise appear nowhere in the ladder's record, and the run would not
+    be reconstructible from it.
+    """
 
     @property
     def iterations(self) -> int:
@@ -195,6 +203,7 @@ class RungResult:
             "seconds": self.seconds,
             "transferred_fields": list(self.transferred_fields),
             "cold_fields": list(self.cold_fields),
+            "deviations_from_validated_default": list(self.deviations),
             "newton": dict(self.newton) if self.newton is not None else None,
         }
 
@@ -327,21 +336,27 @@ def ramp_schedule(steps: int) -> tuple[float, ...]:
     return tuple((index + 1) / steps for index in range(steps))
 
 
-def _fields_of(model: PhysicsModel) -> dict[str, int]:
-    """Return the model's field names and element orders."""
-    return {declared.name: declared.order for declared in model.fields}
+def _fields_of(model: PhysicsModel) -> dict[str, tuple[str, int]]:
+    """Return the model's field names against their element family and order."""
+    return {declared.name: (declared.element, declared.order) for declared in model.fields}
 
 
 def _shared_fields(source: PhysicsModel, target: PhysicsModel) -> tuple[str, ...]:
-    """Return the fields two models hold in common *at the same element order*.
+    """Return the fields two models hold in common *at the same discretisation*.
 
-    The one place the warm-start rule is written. A field carried at a different
-    order cannot be copied and is cold-started instead, so :func:`run_ladder`
-    asks here rather than restating the test: a record that counted it as
-    transferred would claim a warm start that did not happen (FR-25).
+    The one place the warm-start rule is written. A field carried in a different
+    element family or at a different order cannot be copied and is cold-started
+    instead, so :func:`run_ladder` asks here rather than restating the test: a
+    record that counted it as transferred would claim a warm start that did not
+    happen (FR-25).
     """
     before = _fields_of(source)
-    return tuple(name for name, order in _fields_of(target).items() if before.get(name) == order)
+    return tuple(name for name, kind in _fields_of(target).items() if before.get(name) == kind)
+
+
+def _log_branch(model: PhysicsModel) -> bool:
+    """Whether the model solves for ``w_i = log(c~_i)`` rather than ``c~_i`` (NUM-02)."""
+    return isinstance(model, CoupledModel) and model.log_variables
 
 
 def _component(state: GridFunction, model: PhysicsModel, name: str) -> GridFunction:
@@ -373,16 +388,21 @@ def transfer(
     :meth:`CoupledModel.cold_state` matters — a concentration left at zero would
     fail the NUM-17 positivity gate before Newton took a step.
 
-    When the two field sets are identical the state is copied verbatim rather
-    than interpolated. That is not only faster: an interpolation of a function
-    already in the space is the identity only up to round-off, and stages 4, 5, 7,
-    8 and 9 all transfer within one space, so an accumulating round-off would be
-    paid a dozen times over.
+    When the two models declare the same fields *and* solve in the same NUM-02
+    variable, the state is copied verbatim rather than interpolated. That is not
+    only faster: an interpolation of a function already in the space is the
+    identity only up to round-off, and stages 4, 5, 7, 8 and 9 all transfer
+    within one space, so an accumulating round-off would be paid a dozen times
+    over.
 
     Concentrations go through :meth:`ModelSolution.concentration`, so the NUM-02
     log branch is unwrapped on the way out and reapplied on the way in. Reading
     the raw component instead would carry ``w_i`` across as though it were
     ``c~_i`` — a state that is still admissible, still converges, and is wrong.
+    The verbatim copy above is a raw read by construction, which is why it is
+    taken only between two models on the same side of that branch: they declare
+    identical fields and have identical ``ndof`` either way, so nothing about the
+    shape of the two spaces would have caught the confusion.
 
     Parameters
     ----------
@@ -428,13 +448,22 @@ def transfer(
 
     if not shared:
         raise TransferError(
-            f"{previous.model.name!r} and {model.name!r} share no field at the same element "
-            f"order ({sorted(source)} against {sorted(target)}), so there is nothing to warm-"
-            "start from; solve the next rung cold instead of pretending otherwise"
+            f"{previous.model.name!r} and {model.name!r} share no field at the same "
+            f"discretisation ({sorted(source)} against {sorted(target)}), so there is nothing to "
+            "warm-start from; solve the next rung cold instead of pretending otherwise"
         )
 
     space = model.space(mesh, boundaries)
-    if tuple(target) == tuple(source) and space.ndof == previous.space.ndof:
+    # The NUM-02 branch is part of what a field *means* and none of what it looks
+    # like: a log-variable model and a primitive one declare the same names at
+    # the same order and have the same ``ndof``, so a shape test alone would send
+    # them down the verbatim copy below and carry ``w_i`` across as ``c~_i`` --
+    # the exact confusion the concentration accessor exists to prevent.
+    same_branch = _log_branch(previous.model) == _log_branch(model)
+    # ``list(...items())``, not a set or a bare key comparison: a verbatim vector
+    # copy needs the blocks of the product space in the same order as well.
+    same_shape = list(target.items()) == list(source.items())
+    if same_branch and same_shape and space.ndof == previous.space.ndof:
         # The cold start is not built at all here: every value it interpolated
         # would be overwritten by the copy, and each one is a mass-matrix solve
         # over the whole fluid. Most rungs of the default ladder take this path.
@@ -501,8 +530,9 @@ def run_ladder(rungs: Sequence[Rung], *, initial: ModelSolution | None = None) -
     previous: ModelSolution | None = initial
     records: list[RungResult] = []
     for rung in rungs:
+        declared = tuple(_fields_of(rung.model))
         transferred_fields: tuple[str, ...] = ()
-        cold_fields = tuple(_fields_of(rung.model))
+        cold_fields = declared
         carried: ModelSolution | None = None
         if previous is not None:
             # ``initial_concentrations`` is what a cold-started concentration
@@ -516,9 +546,15 @@ def run_ladder(rungs: Sequence[Rung], *, initial: ModelSolution | None = None) -
                 initial_concentrations=rung.solve_kwargs.get("initial_concentrations"),
             )
             transferred_fields = _shared_fields(previous.model, rung.model)
-            cold_fields = tuple(
-                name for name in _fields_of(rung.model) if name not in transferred_fields
-            )
+            cold_fields = tuple(name for name in declared if name not in transferred_fields)
+            # Released before the next solve rather than after it. A
+            # ``ModelSolution`` carries the assembled residual form, so holding
+            # the previous rung's would keep a whole system matrix alive
+            # alongside the factorisation of the next one — and a single
+            # factorisation of the five-field system is already 6.2 GB at the
+            # reference mesh size (SPECIFICATION.md section 6.6). Everything the
+            # record needs has been read out above; ``carried`` is the state.
+            previous = None
 
         started = time.perf_counter()
         try:
@@ -551,6 +587,7 @@ def run_ladder(rungs: Sequence[Rung], *, initial: ModelSolution | None = None) -
             transferred_fields=transferred_fields,
             cold_fields=cold_fields,
             newton=solution.newton.summary() if solution.newton is not None else None,
+            deviations=tuple(rung.model.provenance.get("deviations_from_validated_default", ())),
         )
         records.append(record)
         logger.info(
@@ -674,7 +711,14 @@ def default_ladder(
         )
 
     classical = CorrectionSwitches.classical()
-    corrected = CorrectionSwitches.for_model(corrections)
+    # The fit the corrected stages evaluate follows the *electrolyte* when one is
+    # supplied, not the ``corrections`` default. The two arguments are
+    # alternatives, so a caller handing in an electrolyte built from another
+    # parameter file leaves ``corrections`` at its default — and resolving the
+    # switches against that name would evaluate one fit's correction functions
+    # over the other's reference properties, silently.
+    correction_model = base.parameter_file or corrections
+    corrected = CorrectionSwitches.for_model(correction_model)
     without_steric = corrected.without("steric")
 
     reference = _coupled("pnp", classical, flow=False, salt=build_M)
@@ -796,26 +840,39 @@ def default_ladder(
             (8, "steric", "epnp-ns", corrected),
         )
     target_switches = corrected if corrections_active else classical
-    # Same rule as stage 6 below: a classical rung has no wall correction able
-    # to read the distance field, and recording one it never evaluated would
-    # make the PHY-21 ablation and its reference disagree on the manifest.
-    wall_field: dict[str, Option] = (
-        {"wall_distance_nm": wall_distance_nm} if corrections_active else {}
-    )
     target_name = "epnp-ns" if corrections_active else "pnp-ns"
+
+    def _wall(model: CoupledModel) -> dict[str, Option]:
+        """Return the distance-field keyword, where the rung's corrections read it.
+
+        Asked of the rung's own *resolved* corrections rather than of its
+        position on the ladder or of ``corrections_active``: a classical rung has
+        no wall factor able to evaluate ``d``, and recording a distance field it
+        never read would make the PHY-21 ablation and its reference disagree on
+        the manifest over something neither of them computed. Deriving it here
+        means a reordered ladder, or another classical rung, cannot get it wrong.
+        """
+        reads = any(
+            bool(getattr(correction, "use_wall", False))
+            for correction in model.electrolyte.corrections.values()
+        )
+        return {"wall_distance_nm": wall_distance_nm} if reads else {}
+
     for stage, label, name, switches in physics_stages:
-        # The distance field is passed only where a wall correction can read it;
-        # stage 6 is still classical and would carry it unused.
-        extra: dict[str, Option] = {} if stage == 6 else wall_field
+        model = _coupled(name, switches, flow=True, salt=build_M)
         rungs.append(
             Rung(
                 name=f"{stage}-{label}",
                 stage=stage,
-                model=_coupled(name, switches, flow=True, salt=build_M),
+                model=model,
                 mesh=mesh,
                 boundaries=boundaries,
                 measures=measures,
-                solve_kwargs={"potential_values": _potential(bias_V), **_charges(), **extra},
+                solve_kwargs={
+                    "potential_values": _potential(bias_V),
+                    **_charges(),
+                    **_wall(model),
+                },
             )
         )
 
@@ -827,18 +884,19 @@ def default_ladder(
         ratio = concentration_M / build_M
         for fraction in ramp_schedule(concentration_steps):
             salt = build_M * ratio**fraction
+            target_model = _coupled(target_name, target_switches, flow=True, salt=salt)
             rungs.append(
                 Rung(
                     name=f"9-salt-{salt:.4g}M",
                     stage=9,
-                    model=_coupled(target_name, target_switches, flow=True, salt=salt),
+                    model=target_model,
                     mesh=mesh,
                     boundaries=boundaries,
                     measures=measures,
                     solve_kwargs={
                         "potential_values": _potential(bias_V),
                         **_charges(),
-                        **wall_field,
+                        **_wall(target_model),
                     },
                 )
             )
