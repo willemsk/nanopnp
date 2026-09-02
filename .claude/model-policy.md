@@ -29,7 +29,9 @@ docstrings is a Sonnet task; deciding one sign in one weak form is an Opus task.
 - Diagnosing a failing Tier 2 benchmark, a convergence-rate loss, a Newton divergence, or a
   disagreement between two extraction routes.
 - Any change to `physics/`, `solve/`, `post/`, `materials/forms.py`, or the correction YAML.
-- Reviewing a diff for physics correctness, and the `/code-review xhigh` pass of `wp-ship`.
+- Reviewing a diff for physics correctness directly, and confirming or reverting every finding the
+  `/code-review xhigh` subagent of `wp-ship` §4 raises — that confirmation, not the pass itself, is
+  what keeps the cheaper model's findings from becoming a plausible wrong fix.
 - Judging whether a `.knowledge/` finding is `[tested]`, `[verified]` or neither.
 
 ## Sonnet
@@ -42,6 +44,10 @@ docstrings is a Sonnet task; deciding one sign in one weak form is an Opus task.
 - Running the gate, the tiers or a benchmark and summarising the output.
 - `uv.lock` refreshes, CI YAML edits, packaging and devcontainer chores.
 - Reading a long log and reporting the failing line.
+- The fresh-context `/code-review xhigh` pass in `wp-ship` §4 — a deliberate exception to "the
+  failure mode decides the model": run cold and cheap precisely *because* Opus, back in the
+  orchestrating session, confirms every finding against the specification before any fix survives.
+  The pass proposes; it never gets the last word on a physics claim.
 
 ## Haiku
 

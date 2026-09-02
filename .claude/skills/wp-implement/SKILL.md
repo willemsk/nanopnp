@@ -1,12 +1,13 @@
 ---
 name: wp-implement
-description: Implement a planned nanopnp work package from its docs/plans/ file, keeping the specification, knowledge base and plan in step, then hand off to /wp-ship. Use when the user asks to implement or build a work package, start work on WP7, execute the plan, or invokes /wp-implement.
+description: Implement a planned nanopnp work package from its docs/plans/ file, keeping the specification, knowledge base and plan in step. Use when the user asks to implement or build a work package, start work on WP7, execute the plan, or invokes /wp-implement.
 ---
 
 # Implement a work package
 
 Step 2 of the implementation workflow. The plan under `docs/plans/` is the brief; this skill
-executes it, records what the execution taught, and ends by invoking `/wp-ship`.
+executes it and records what the execution taught. It does not chain into `/wp-ship` — that is a
+separate invocation, by design (see **Finishing** below).
 
 ## Load the brief
 
@@ -82,5 +83,9 @@ Before handing off, confirm every one of these yourself:
 - the specification, the knowledge base and the plan's Outcome annotations are all committed;
 - `git status` is clean.
 
-Then invoke `/wp-ship`. Do not open the PR by hand — `wp-ship` owns the PR body, the review pass and
-the drive to green.
+Then stop and report to the user: the work package delivered, the identifiers discharged, and that
+it is ready to ship. Do not invoke `/wp-ship` yourself and do not open the PR by hand — this session
+carries the physics reasoning behind every decision the implementation made, and `wp-ship`'s review
+pass (§4 of that skill) is deliberately run by a different subagent with none of that context, so it
+catches what this session might rationalise past rather than confirm. The user starts `/wp-ship`
+when they are ready.
