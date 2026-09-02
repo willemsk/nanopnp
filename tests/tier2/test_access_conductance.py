@@ -106,7 +106,7 @@ def maxwell_hall_conductance_S(
     return conductivity_S_m / resistance
 
 
-def _solve(reservoir_radius_nm: float) -> tuple[float, models.ModelSolution]:
+def _solve(reservoir_radius_nm: float) -> float:
     """Return the conductance of the uncharged pore in one reservoir, in siemens."""
     pore = CylindricalPoreGeometry(
         pore_radius_nm=PORE_RADIUS_NM,
@@ -142,13 +142,13 @@ def _solve(reservoir_radius_nm: float) -> tuple[float, models.ModelSolution]:
         quantities.transport_number,
         quantities.agreement.relative_difference if quantities.agreement else float("nan"),
     )
-    return quantities.conductance_S, solution
+    return quantities.conductance_S
 
 
 @pytest.fixture(scope="module")
 def conductances() -> dict[float, float]:
     """Return the measured conductance at each reservoir radius, in siemens."""
-    return {radius: _solve(radius)[0] for radius in RESERVOIR_RADII_NM}
+    return {radius: _solve(radius) for radius in RESERVOIR_RADII_NM}
 
 
 @pytest.fixture(scope="module")

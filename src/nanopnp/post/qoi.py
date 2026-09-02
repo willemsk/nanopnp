@@ -125,6 +125,39 @@ def _coupled(solution: ModelSolution) -> CoupledModel:
     return model
 
 
+def _check_indicator_matches(
+    solution: ModelSolution, model: CoupledModel, indicator: GridFunction
+) -> None:
+    """Reject a ``psi`` that was not built for this solution (QR-12).
+
+    Both failures are silent. A ``psi`` on another mesh makes ``grad(psi)`` a
+    point evaluation outside its own domain, which returns a plausible number
+    rather than raising — the same reason
+    :func:`nanopnp.solve.continuation.transfer` refuses to cross a mesh. A
+    ``psi`` at a lower element order represents ``grad(psi)`` in a coarser space
+    than the flux it is integrated against, so the two no longer test the same
+    discretisation and the NUM-26 agreement is measured on the wrong pair.
+
+    Raises
+    ------
+    ValueError
+        Naming which of the two does not match.
+    """
+    if indicator.space.mesh is not solution.space.mesh:
+        raise ValueError(
+            "the indicator was built on a different mesh from the solution; grad(psi) would "
+            "then be evaluated outside its own domain, which returns a plausible number "
+            "rather than raising"
+        )
+    order = int(indicator.space.globalorder)
+    if order != model.order:
+        raise ValueError(
+            f"the indicator is order {order} but {model.name!r} solves at order {model.order}; "
+            "grad(psi) would be represented in a coarser space than the flux it is integrated "
+            "against, and the two routes of NUM-26 would no longer test the same discretisation"
+        )
+
+
 def _functions(solution: ModelSolution) -> dict[str, Expression]:
     """Return the solved fields keyed by name, in the model's own variables.
 
@@ -170,10 +203,17 @@ def indicator_currents(
     -------
     dict[str, float]
         Current per species, in amperes.
+
+    Raises
+    ------
+    ValueError
+        If the indicator was not built on this solution's mesh at the model's
+        element order; see :func:`_check_indicator_matches`.
     """
     import ngsolve as ngs
 
     model = _coupled(solution)
+    _check_indicator_matches(solution, model, indicator)
     mesh = solution.space.mesh
     distance = solution.wall_distance_nm if wall_distance_nm is None else wall_distance_nm
     functions = _functions(solution)
@@ -227,6 +267,7 @@ def indicator_eof(solution: ModelSolution, measures: Measures, indicator: GridFu
             f"{model.name!r} solves no flow block, so it has no Q_EOF to report; enable the "
             "flow or read the current only"
         )
+    _check_indicator_matches(solution, model, indicator)
     mesh = solution.space.mesh
     integral = measures.integrate(
         solution.velocity * ngs.grad(indicator),
@@ -384,12 +425,23 @@ class RouteAgreement:
         """
         difference = self.relative_difference
         if difference > tolerance:
+            # The one disagreement with a benign cause: referencing the reaction
+            # flux to ``trans`` rather than to ``cis`` negates it exactly, and
+            # arriving at that through a bare "one of the two is wrong" costs an
+            # afternoon.
+            opposite = (
+                "\nThe two are opposite in sign and close in magnitude, which is what "
+                "referencing the NUM-25 route to the *other* electrode looks like: psi is 1 on "
+                "cis, so the reaction flux has to be taken on cis too."
+                if self.indicator_A * self.reaction_A < 0.0
+                else ""
+            )
             raise RouteDisagreementError(
                 f"the NUM-24 indicator current is {self.indicator_A:.6e} A and the NUM-25 "
                 f"reaction flux is {self.reaction_A:.6e} A, a relative difference of "
                 f"{difference:.3e} against a declared tolerance of {tolerance:.3e}. One of "
                 "the two is wrong; a difference of this size can manufacture or erase the "
-                "rectification signal (NUM-23, RSK-03)"
+                f"rectification signal (NUM-23, RSK-03){opposite}"
             )
         logger.debug("current routes agree to %.3e", difference)
 
@@ -400,6 +452,42 @@ class RouteAgreement:
             "reaction_A": self.reaction_A,
             "relative_difference": self.relative_difference,
         }
+
+
+def _check_species_routes(
+    indicator: Mapping[str, float], reaction: Mapping[str, float], *, tolerance: float
+) -> None:
+    """Assert the two routes agree species by species (NUM-26, NUM-27).
+
+    :meth:`RouteAgreement.check` compares the totals, and a total is blind to two
+    per-species errors that cancel in the sum — which is exactly the shape a
+    swapped species block has. The transport number is derived from the
+    *per-species* currents, so such a pair leaves ``I`` right and ``t+``
+    inverted, and nothing else says so.
+
+    The difference is measured against the **total** current rather than against
+    each species' own, so a species carrying almost none of it does not turn its
+    own round-off into a relative difference of order one.
+
+    Raises
+    ------
+    RouteDisagreementError
+        Naming the species and both of its currents.
+    """
+    scale = abs(math.fsum(indicator.values()))
+    if scale == 0.0:
+        return
+    for species, value in indicator.items():
+        other = reaction[species]
+        difference = abs(value - other) / scale
+        if difference > tolerance:
+            raise RouteDisagreementError(
+                f"the two current routes disagree on {species!r}: the NUM-24 indicator gives "
+                f"{value:.6e} A and the NUM-25 reaction flux {other:.6e} A, a difference of "
+                f"{difference:.3e} of the total current against a declared tolerance of "
+                f"{tolerance:.3e}. The totals may still agree — two per-species errors that "
+                "cancel leave the current right and the NUM-27 transport number wrong"
+            )
 
 
 @dataclass(frozen=True)
@@ -483,6 +571,9 @@ def extract(
         sweep that has already established agreement on a representative point
         and is paying for the second assembly at every one of a thousand others.
         It is a deviation from NUM-26 and is recorded as such in the summary.
+        When on, the two routes are compared both in total and species by
+        species; the second comparison is what protects the transport number,
+        which the total is blind to.
 
     Raises
     ------
@@ -498,6 +589,10 @@ def extract(
         reaction = reaction_flux_currents(solution, boundary, load_form=load_form)
         agreement = RouteAgreement(indicator_A=current, reaction_A=total_current(reaction))
         agreement.check(tolerance)
+        # The total is not enough: the transport number below is built from the
+        # per-species currents, and two errors that cancel in the sum pass the
+        # check above while inverting it.
+        _check_species_routes(currents, reaction, tolerance=tolerance)
 
     cations = [ion.name for ion in model.electrolyte.species if ion.valence > 0]
     return QuantitiesOfInterest(

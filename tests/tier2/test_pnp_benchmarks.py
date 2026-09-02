@@ -165,12 +165,16 @@ def sweep() -> tuple[list[float], float]:
             concentration_values=concentrations,
             initial=previous,
         )
-        residual = ngs.BilinearForm(solution.space)
-        residual += model.residual_form(solution.space, PLANAR)
         # NUM-25, not a cross-section integral of the CG flux (NUM-23): the
         # cation is the only field constrained at the electrode, so the flux is
-        # taken component-wise.
-        flux = boundary_reaction_flux(residual, solution.state, "wall", component=cation_block)
+        # taken component-wise. The residual is the one the solve assembled and
+        # carried on the solution, not a rebuilt copy: a coupled residual
+        # reassembled with different arguments is a different operator, and the
+        # flux taken against it is wrong with no diagnostic at all.
+        assert solution.residual is not None
+        flux = boundary_reaction_flux(
+            solution.residual, solution.state, "wall", component=cation_block
+        )
         currents.append(flux / HEIGHT_NM)
         previous = solution
 
