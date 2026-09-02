@@ -1,10 +1,25 @@
 # Phase 0 consolidation: audit and remediation plan
 
-**Status: audit complete, 2 September 2026. The Phase 0 spike is in excellent health — tiers 1 and
-2 green (309 passed), `mypy --strict` and `ruff` clean, no defect found that produces a wrong
-number. Three provenance/boundary risks are carried into Phase 1; everything else is a reserved-slot
-gap that the release plan already schedules. Remediation is one short phase (A) plus two small
-architecture packages (B); documentation (C) is a single reconciliation.**
+**Status: remediation delivered, 2 September 2026. WP-A1, WP-B1, WP-B2 and WP-C1 are implemented and
+green on tiers 1 and 2; the optional WP-B3 is deferred to Phase 2 with the reason recorded below.
+The audit (below) stands as written. The three provenance/boundary risks it carried into Phase 1 are
+now closed: the PHY-13 clamp is logged from the extract path (WP-A1), the stabilisation mode is in
+every provenance record (WP-B1), and the correction-file boundary is a typed schema rather than a
+raw dict (WP-B2); the permittivity "still open" note is reconciled (WP-C1).**
+
+> **Outcome — remediation delivered.** Four commits, one per package, each green on tiers 1 and 2
+> before the next. `mypy --strict` and `ruff` stay clean with no `type: ignore`/`cast(` added. New
+> tests: `test_phy13_a_high_salt_solve_logs_the_clamp` (+ silent-within-range companion),
+> `test_fr25_provenance_records_the_stabilisation_mode` (+ the ladder-record assertion), and the
+> correction-schema rejection tests. No `SPECIFICATION.md` amendment was needed — every package
+> brings the code into line with an existing requirement (FR-25, PHY-13, FR-16/IF-03) rather than
+> changing one.
+
+**Original status: audit complete, 2 September 2026. The Phase 0 spike is in excellent health —
+tiers 1 and 2 green (309 passed), `mypy --strict` and `ruff` clean, no defect found that produces a
+wrong number. Three provenance/boundary risks are carried into Phase 1; everything else is a
+reserved-slot gap that the release plan already schedules. Remediation is one short phase (A) plus
+two small architecture packages (B); documentation (C) is a single reconciliation.**
 
 This is a consolidation audit of the merged Phase 0 work (WP1–WP6), written after reading
 `SPECIFICATION.md`, the `.knowledge/` base, and every module of `src/nanopnp/`. It touches no `src/`
@@ -228,6 +243,13 @@ the clamp record PHY-13 requires.
   `grep -rl report_clamp_activations src/nanopnp/{solve,post}` is non-empty. Existing 309 tests stay
   green.
 
+> **Outcome — delivered.** Added `post.qoi.report_clamp_activations(solution, measures)`, which
+> samples the converged species concentrations on the fluid-restricted nodal set (the same sampler
+> the NUM-17 gates build) and hands them to `Electrolyte.report_clamp_activations`; `extract` calls
+> it once per operating point. The test runs a uniform classical solve at 5.4 M (past the 5.3 M NaCl
+> limit) and asserts the located record fires, with a companion at 1.0 M asserting silence so the
+> diagnostic is not vacuous. `grep -rl report_clamp_activations src/nanopnp/post` is non-empty.
+
 ### Phase B — architecture alignment
 
 **WP-B1 — Record the stabilisation mode in provenance (FR-25, NUM-13, §5.3.3).** Add a
@@ -238,6 +260,14 @@ stabilised mode populates it automatically when Phase 1 adds it.
   equals `"none"` in both the model provenance and the ladder record; existing FR-25 tests updated
   and green.
 
+> **Outcome — delivered.** Added a validated `stabilisation` field to `CoupledModel` (a
+> `SUPPORTED_STABILISATIONS = {"none"}` gate refuses a mode the solver does not apply, so the
+> manifest can never claim a run that did not happen), surfaced it in `CoupledModel.provenance`, and
+> added a `LadderResult.stabilisation` property sourced from the converged model that feeds
+> `LadderResult.summary`. Sourcing from the model rather than a literal is what lets NUM-14 populate
+> it automatically. The Tier-1 test checks the model provenance and the refusal; the ladder-record
+> assertion was folded into the existing `test_fr25_the_ladder_record_can_reconstruct_the_run`.
+
 **WP-B2 — Validate correction files through a typed schema at load.** Replace the raw-dict return of
 `load_corrections` with a `pydantic` (or `dataclass` + validator) model, rejecting an unknown or
 missing coefficient key with a diagnostic that names the key — mirroring IF-03. Removes the
@@ -245,6 +275,18 @@ missing coefficient key with a diagnostic that names the key — mirroring IF-03
 - *Acceptance:* `test_corrections_reject_an_unknown_key_naming_it` and
   `test_corrections_reject_a_missing_coefficient` pass; `grep 'dict\[str, Any\]' src/nanopnp/materials`
   is empty; VER-03 and the materials tests stay green. No behaviour change on a valid file.
+
+> **Outcome — delivered.** `load_corrections` now returns a `pydantic` `CorrectionDocument`. Every
+> structural block is `extra="forbid"` (rejecting an unknown key by name), and each `FitBlock`
+> validates its numeric coefficients against the exact set its form reads, sourced from a new
+> `forms.FORM_PARAMETERS` table so the coefficient-key knowledge lives next to the forms (a Tier-1
+> test asserts the table covers every registered form). `electrolyte.from_parameter_file` and
+> `materials.models` consume the document by typed attribute; `_coefficients`/`NON_COEFFICIENT_KEYS`
+> moved onto `FitBlock`. Beyond the plan: `electrolyte.without` was rewritten from a
+> `dict[str, Any]` + `replace` into a typed `replace` with an unknown-property diagnostic (the other
+> `dict[str, Any]` the grep would have found in `materials/`), and the existing caps test was moved
+> to attribute access. `grep 'dict\[str, Any\]' src/nanopnp/materials` is empty; no `cast`/`type:
+> ignore` added.
 
 ### Phase C — documentation harmonisation
 
@@ -256,6 +298,12 @@ resolved rather than open. No `src/` or `SPECIFICATION.md` change.
   for the stale "ask the author"/"open" framing on the permittivity cap returns nothing; docs-only
   diff.
 
+> **Outcome — delivered.** Reframed `.knowledge/01` §8 E5 (open question → settled), `.knowledge/00-index.md`
+> ruling 2 and its "Still open" list, and — beyond the two files the plan named — `.knowledge/09` §D3
+> row 3, which carried the same "re-put to the author" framing and had to move for the grep to come
+> back clean. All three and `SPECIFICATION.md` §4.6 now state that Gavish (30.08, 11.5) govern, cap
+> 42.67. Docs only.
+
 ### Optional (bring Phase-2 work forward only if capacity allows)
 
 **WP-B3 — A mesh quality gate for the analytic primitives (VER-10, QR-12).** Add a min-SICN/gamma
@@ -263,6 +311,19 @@ resolved rather than open. No `src/` or `SPECIFICATION.md` change.
 not change specified behaviour but does discharge a v0.5 requirement early**; it is optional because
 RSK-05/VER-10 is a Phase-2 detection point and the analytic primitives are not yet the risk they
 guard against. If taken, it needs no spec amendment (QR-12 already mandates the gate).
+
+> **Outcome — deferred to Phase 2, with reason.** The gate was assumed "cheap" on the premise that
+> a per-element SICN/gamma is readily available. It is not on the default path: `SICN` and `gamma`
+> are gmsh's specific quality measures (`gmsh.model.mesh.getElementQualities`), and gmsh is the
+> optional GPLv2 backend banned from the default path (CON-10, ADR-002); netgen, the default mesher,
+> exposes no equivalent per-element quality through its Python API. Discharging QR-12 faithfully
+> therefore means either routing through the gmsh backend (out of scope for a Phase-0 consolidation)
+> or implementing a from-scratch triangle metric — whose 0.3 threshold, calibrated against gmsh's
+> SICN/gamma, would be a quantity dependent on the metric definition rather than on the mesh, exactly
+> the trap CLAUDE.md's testing rules name. Since WP-B3 is optional and RSK-05/VER-10 is a Phase-2
+> detection point on geometry the analytic primitives do not yet exercise, it is left to Phase 2,
+> where the gmsh-backed quality path is built and the threshold can be verified against the measure
+> it was calibrated for. No code changed.
 
 ---
 
