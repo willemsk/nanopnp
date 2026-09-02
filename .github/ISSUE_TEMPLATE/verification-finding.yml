@@ -1,0 +1,68 @@
+name: Verification finding
+description: A benchmark, gate or route-agreement check disagrees with what the specification says it should give.
+title: "[VER] "
+labels: ["verification"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For a *disagreement with a known answer* — an analytic benchmark outside tolerance, two
+        extraction routes that do not agree, a convergence rate that fell, a gate that fired. This
+        is evidence, not a chore: it is worth more than a green tick, so record it before fixing it.
+
+        A crash, an exception or a wrong-looking result with no reference to compare against is a
+        bug report instead.
+  - type: input
+    id: identifier
+    attributes:
+      label: Identifier
+      description: The specification identifier the check discharges, or the gate that fired.
+      placeholder: VER-21, NUM-26, PHY-06
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and observed
+      description: >
+        The reference quantity and where it comes from, the observed value, the difference, and the
+        declared tolerance. Both absolute and relative; nondimensional as well as SI where the
+        scaling matters.
+    validations:
+      required: true
+  - type: textarea
+    id: configuration
+    attributes:
+      label: Configuration
+      description: >
+        Mesh and element order, model (`epnp-ns`, `pnp`, `pb`, classical or corrected), which
+        corrections were active, the operating point, the linear and nonlinear settings, and the
+        **stabilisation mode** — a number measured under a different stabilisation is not comparable.
+      render: yaml
+    validations:
+      required: true
+  - type: textarea
+    id: localisation
+    attributes:
+      label: Where the error lives
+      description: >
+        The narrowest thing that still fails. Does it survive at the classical limit? On one mesh
+        only? In one term? Does a third route or an oracle (a reaction-flux route, an MMS solution)
+        agree with either side? An analytic test localises to a single term — say which term.
+    validations:
+      required: true
+  - type: textarea
+    id: implication
+    attributes:
+      label: What it implies
+      description: >
+        Whether this reads as an implementation error, a specification error, or a tolerance
+        specified against the wrong quantity — and what would have to be true for each.
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce
+      description: The exact `uv run …` command, and the provenance manifest if a full run produced it.
+      render: shell
+    validations:
+      required: true

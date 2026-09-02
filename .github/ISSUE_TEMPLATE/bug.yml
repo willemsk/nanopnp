@@ -1,0 +1,51 @@
+name: Bug report
+description: A crash, a hang, a failed gate with no obvious cause, or a result that cannot be reproduced.
+title: "[BUG] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        If the problem is a *disagreement with a known answer* — a benchmark outside tolerance, two
+        routes that do not agree — file a **Verification finding** instead; it asks for the things
+        that localise such a failure.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you ran, what you expected, what you got. Paste the diagnostic in full — a gate names the quantity and its location, and both matter.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce
+      description: The exact `uv run …` command, and the case file if there is one.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: manifest
+    attributes:
+      label: Provenance manifest
+      description: >
+        Paste it, or attach the result. It carries the input hashes, library versions, mesh hash,
+        solver settings, stabilisation mode, correction file versions and every switch set away from
+        the validated default — which is most of what makes a run diagnosable (FR-25). If the run
+        produced no manifest, say so: that is itself the bug.
+      render: yaml
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Output of `uv run nanopnp --env`, plus the OS.
+      render: shell
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      placeholder: 0.1.0.dev0, or the commit SHA
+    validations:
+      required: true
