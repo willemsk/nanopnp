@@ -47,6 +47,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 
 from nanopnp.core.typing import AssembledForm, Expression, GridFunction, Option
+from nanopnp.physics.coefficients import species_concentrations_SI
 from nanopnp.physics.measures import Measures
 from nanopnp.physics.models import (
     POTENTIAL,
@@ -57,6 +58,7 @@ from nanopnp.physics.models import (
 )
 from nanopnp.physics.nernst_planck import species_flux
 from nanopnp.post.reaction_flux import boundary_reaction_flux
+from nanopnp.solve.gates import FieldSampler
 
 __all__ = [
     "ROUTE_AGREEMENT_TOLERANCE",
@@ -71,6 +73,7 @@ __all__ = [
     "reaction_flux_currents",
     "rectification",
     "rectification_ratio",
+    "report_clamp_activations",
     "summarise",
     "total_current",
     "transport_number",
@@ -594,6 +597,12 @@ def extract(
         # check above while inverting it.
         _check_species_routes(currents, reaction, tolerance=tolerance)
 
+    # PHY-13: a high-salt operating point may have extrapolated the concentration
+    # fits past their validity range near a charged wall. The clamp that caps them
+    # there is silent in the solve, so the record is emitted here, once per
+    # extracted operating point, over the converged concentrations.
+    report_clamp_activations(solution, measures)
+
     cations = [ion.name for ion in model.electrolyte.species if ion.valence > 0]
     return QuantitiesOfInterest(
         bias_V=bias_V,
@@ -604,6 +613,53 @@ def extract(
         eof_m3_s=indicator_eof(solution, measures, indicator) if model.flow else None,
         agreement=agreement,
     )
+
+
+def report_clamp_activations(solution: ModelSolution, measures: Measures) -> int:
+    """Log every PHY-13 clamp activation over a converged solution and return the count.
+
+    The concentration fits hold only to the parameter file's validity limit
+    (5.3 M for NaCl) and every property is capped at its value there by clamping
+    the correction driver (PHY-13). That clamp is silent inside the symbolic
+    solve — :meth:`~nanopnp.materials.electrolyte.Electrolyte.average_concentration`
+    clamps each ``c_i`` *before* the average, so the driver it returns can never
+    exceed the limit — yet a real high-salt run near a charged wall, where a
+    counter-ion is enriched past the cap, extrapolates the fits there. ``.knowledge/01``
+    §3 names that silent extrapolation "a plausible source of confusion"; PHY-13
+    requires it to be logged with its location and property instead.
+
+    This samples the converged species concentrations on the fluid nodal set,
+    exactly as the NUM-17 gates do (:meth:`CoupledModel.gates` builds the same
+    fluid-restricted sampler), and hands them to
+    :meth:`~nanopnp.materials.electrolyte.Electrolyte.report_clamp_activations`,
+    which owns the "logged with location and property" half of the requirement.
+    :func:`extract` calls it on every operating point, so a QoI extraction emits
+    the record automatically; it is public so an end-of-solve diagnostic can call
+    it without extracting.
+
+    Parameters
+    ----------
+    solution
+        A converged solution of a coupled model.
+    measures
+        The symmetry policy the model was solved with; only its coordinate names
+        are read, for the location in the log line.
+
+    Returns
+    -------
+    int
+        Total number of clamped samples, summed over species; 0 when the whole
+        solution stayed inside the fit range.
+    """
+    model = _coupled(solution)
+    sampler = FieldSampler(
+        solution.space.mesh, coordinates=measures.coordinate_names, materials=model.fluid
+    )
+    variables = model.concentration_variables(_functions(solution))
+    concentrations_SI = species_concentrations_SI(model.scales, variables.values)
+    sampled = [sampler.evaluate(concentrations_SI[name]) for name in model.species]
+    coordinates = [(float(point[0]), float(point[1])) for point in sampler.points]
+    return model.electrolyte.report_clamp_activations(sampled, coordinates=coordinates)
 
 
 def rectification(forward: QuantitiesOfInterest, reverse: QuantitiesOfInterest) -> float:
