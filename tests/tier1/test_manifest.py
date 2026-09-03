@@ -204,6 +204,11 @@ def test_ver24_the_model_and_the_case_agree_on_the_switches_they_share() -> None
     document.physics.inertia = False
     document.physics.dielectric_gradient_forces = True
     document.electrolyte.corrections.steric.model = "none"
+    # The NUM-18 ladder builds every rung with a fixed set of physics options
+    # and would silently drop this deviation (io/case.py::_check_ladder_can_honour);
+    # this test is about the model and the case agreeing on what they name, which
+    # a single rung, resolved and built directly below, exercises just as well.
+    document.numerics.continuation = "none"
 
     resolved = resolve(document)
     model = CoupledModel(

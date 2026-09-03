@@ -849,7 +849,65 @@ def _require_runnable(document: CaseDocument) -> SuppliedArtefact:
             f"{', '.join(sorted(COUPLED_MODELS))}"
         )
     _check_physics_switches(document)
+    if model in COUPLED_MODELS and document.numerics.continuation != "none":
+        _check_ladder_can_honour(document.physics)
     return mesh
+
+
+_LADDER_PHYSICS: dict[str, bool] = {
+    "flow": True,
+    "variable_density": True,
+    "inertia": True,
+    "dielectric_gradient_forces": False,
+}
+"""The physics configuration the NUM-18 ladder arrives at, whatever the case says.
+
+``nanopnp.solve.continuation.default_ladder`` builds its rungs itself and reads
+none of these four from the case: its ``_coupled`` helper passes ``flow``
+explicitly -- off for the early electrostatic and equilibrium-PNP rungs, on from
+the stage-6 rung upwards, which is the ladder's own path rather than a switch --
+and leaves ``variable_density``, ``inertia`` and ``dielectric_gradient_forces``
+at the :class:`~nanopnp.physics.models.CoupledModel` defaults recorded above.
+Only ``numerics.continuation: none`` threads the case's four through to the
+model builder (:func:`_model_options`). The values here are therefore what the
+*top* rung carries, which is the rung the result and its manifest come from."""
+
+
+def _check_ladder_can_honour(physics: PhysicsSpec) -> None:
+    """Refuse a physics switch the NUM-18 ladder cannot honour.
+
+    NUM-18 fixes the path: flow is enabled at stage 6 and the corrections at
+    stage 7, so "flow off" is not a rung of the ladder but a different run, and
+    the opt-in dielectric-gradient forces of PHY-23 are not on the ladder at
+    all. ``default_ladder`` accordingly reads none of the four from the case, so
+    a case that set one of them and still selected the ladder would converge
+    with the FR-25 manifest recording a deviation the solve never carried --
+    exactly the silent drop :func:`_check_physics_switches` exists to prevent,
+    one rung later and for a different reason.
+
+    ``pnp`` gets its own message because it cannot take the advice the others
+    get: :func:`_check_physics_switches` already requires ``physics.flow: false``
+    for it, so "set them to match the ladder" is impossible by construction.
+    """
+    mismatched = [
+        name for name, fixed in _LADDER_PHYSICS.items() if getattr(physics, name) != fixed
+    ]
+    if not mismatched:
+        return
+    if physics.model == "pnp":
+        raise CaseValidationError(
+            "physics.model 'pnp' cannot be run on the NUM-18 ladder: every rung from stage 6 "
+            "carries the flow coupling, so the ladder would solve 'pnp-ns' while the manifest "
+            "recorded 'pnp'; set numerics.continuation: none to solve the single cold rung, or "
+            "choose 'pnp-ns' if the flow coupling was intended"
+        )
+    named = ", ".join(f"physics.{name}" for name in mismatched)
+    raise CaseValidationError(
+        f"{named} would be silently ignored by the NUM-18 ladder, which fixes the path rather "
+        "than reading these from the case (flow on from stage 6, variable_density and inertia "
+        "on, dielectric_gradient_forces off); set numerics.continuation: none to run a single "
+        "rung with the switches as given, or set them to match the ladder"
+    )
 
 
 def _check_physics_switches(document: CaseDocument) -> None:

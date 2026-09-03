@@ -1308,6 +1308,16 @@ from the converged state of the previous one.
 
 Rationale: enabling the corrections last isolates their contribution to any convergence failure.
 
+NOTE: the ladder above is a fixed path, not a configuration. Flow is enabled at rung 6 and the
+corrections at rung 7, so a run with `physics.flow` off, `variable_density` off, `inertia` off, or
+the PHY-23 dielectric-gradient forces on is not a rung of this ladder but a different run. An
+implementation SHALL NOT read those four switches from the case when `numerics.continuation` selects
+the ladder, and SHALL refuse such a case rather than solve it: the FR-25 manifest would otherwise
+record a deviation the solve never carried, which §5.3.3 exists to make impossible. The same applies
+to `physics.model: pnp`, whose flow-free transport no rung above 6 carries. Single-rung runs
+(`numerics.continuation: none`) take all four switches as given; that is how an ablation asks for a
+configuration the ladder cannot express.
+
 **NUM-19.** The mesh SHALL be adapted between continuation rungs only, never within a rung.
 
 **NUM-20.** The fallbacks below SHOULD be implemented in the order given, after NUM-16 is in
