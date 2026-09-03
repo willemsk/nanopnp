@@ -806,6 +806,8 @@ electrolyte:
   species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]
   concentration_M: 1.0
   temperature_K: 298.15
+  parameters: willems2020_nacl      # reference D_i^0, eta^0, rho^0, eps_r,f^0, a_i, a_0
+  driver: average                   # PHY-01; `ionic_strength` is a deviation
   corrections:                      # the pluggable registry, §5.5
     diffusivity:  {model: willems2020_nacl, wall: true, concentration: true}
     mobility:     {model: willems2020_nacl, wall: true, concentration: true}
@@ -823,15 +825,16 @@ physics:                            # the named model of PHY-21
   model: epnp-ns
   flow: true
   variable_density: true
-  inertia: false
+  inertia: true                      # PHY-22; the reference model retained it
   dielectric_gradient_forces: false  # PHY-23; off in the validated model
 
 numerics:
   elements: {phi: P2, c: P2, u: P2, p: P1}
   mesh: {backend: netgen, wall_h_nm: auto, boundary_layer: false}
-  nonlinear: {strategy: hybrid, damping: backtracking, max_iter: 40, rtol: 1e-9}
+  nonlinear: {strategy: newton, damping: residual, max_iter: 100, rtol: 1e-6}   # NUM-16
   continuation: default_ladder
   stabilisation: none                # NUM-11; `reference` matches §6.4
+  wall_distance: {sources: wall, max_distance_nm: 3.0}                         # PHY-02
   linear: {solver: umfpack}          # see §6.6; MUMPS requires a source build
 
 outputs: [current, transport_numbers, rectification, eof_rate, analyte_force, fields]
@@ -841,8 +844,29 @@ NOTE (`inputs:`, FR-27): the optional top-level `inputs:` block is hand substitu
 at stage granularity. Each key names a stage output supplied from outside — a mesh, a charge field,
 a dielectric field — by path and format. A stage whose output is supplied does not run, and neither
 does anything upstream of it; the substituted file is hashed by content and enters the FR-25
-manifest as an input like any other. Releases before v0.7 accept an externally generated mesh
+manifest as an input like any other. Releases before v0.9 accept an externally generated mesh
 this way, which is what makes the solver core testable ahead of the meshing pipeline (§8.1).
+
+NOTE (`electrolyte.parameters`, `electrolyte.driver`): `parameters` names the correction file the
+*reference* properties are read from — `D_i^0`, `η^0`, `ϱ^0`, `ε_r,f^0` and the steric diameters
+`a_i`, `a_0` — and is separate from the per-property correction models because a classical PNP-NS
+run turns every correction to `none` and still needs those values. Steric diameters given under
+`corrections.steric` SHALL be checked against that file and SHALL NOT override it: they are fitted
+parameters of the correction set (FR-16), and a case file that could override them silently would
+be a second source of truth for a physical constant. `driver` selects the argument the
+concentration corrections are evaluated at: `average`, `⟨c⟩ = (1/n)Σc_i` (PHY-01), or
+`ionic_strength`, which is a deviation from the validated model and is recorded as one.
+
+NOTE (`numerics.nonlinear`): the values shown are the NUM-16 reference settings — the monolithic
+damped Newton of the reference model, 100 iterations, relative tolerance 10⁻⁶, tested on the
+residual and on the relative update alike. `strategy: hybrid` and `damping: backtracking` select
+the NUM-20 fallbacks.
+
+NOTE (`numerics.wall_distance`): `sources` is the boundary-name pattern the PHY-02 distance field
+`d` is measured from, and its validated default is the pore wall alone. PHY-02 excludes the
+membrane from the source set deliberately, so widening `sources` is a deviation from the validated
+model and SHALL be recorded in the run provenance (FR-25). `max_distance_nm` is the saturation
+distance beyond which the wall functions are 1 to within round-off.
 
 NOTE (`walls`): the wall values name the condition applied, not its absence. `ion_flux` takes
 `no_flux | prescribed` and `slip` takes `no_slip | navier | free`. Under the `r`-weighted forms of
