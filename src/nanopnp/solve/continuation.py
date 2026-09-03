@@ -68,11 +68,12 @@ from __future__ import annotations
 import logging
 import math
 import time
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from typing import Literal
 
 from nanopnp.core.scaling import debye_length_nm
+from nanopnp.core.stages import Cancelled
 from nanopnp.core.typing import Expression, GridFunction, Mesh, Option
 from nanopnp.materials.electrolyte import CorrectionSwitches, Electrolyte
 from nanopnp.physics.coefficients import SATURATED_WALL_DISTANCE_NM
@@ -110,6 +111,9 @@ FINE_BIAS_STEP_V = 0.01
 
 COARSE_BIAS_STEP_V = 0.025
 """Step above the onset, where the response is closer to linear."""
+
+ELECTRODES: frozenset[str] = frozenset({"cis", "trans"})
+"""The two reservoir boundaries, one of which is grounded (IF-03)."""
 
 LADDER_START_CONCENTRATION_M = 0.05
 """Bottom of the NUM-18 stage 9 sweep, and the easiest rung of the envelope.
@@ -510,7 +514,12 @@ def transfer(
     return ModelSolution(model=model, space=state.space, state=state)
 
 
-def run_ladder(rungs: Sequence[Rung], *, initial: ModelSolution | None = None) -> LadderResult:
+def run_ladder(
+    rungs: Sequence[Rung],
+    *,
+    initial: ModelSolution | None = None,
+    on_rung: Callable[[int, Rung], None] | None = None,
+) -> LadderResult:
     """Solve every rung in order, each warm-started from the one before (NUM-18).
 
     Parameters
@@ -523,6 +532,14 @@ def run_ladder(rungs: Sequence[Rung], *, initial: ModelSolution | None = None) -
         it is how a sweep walks the FR-17 envelope: the ladder is climbed once to
         one corner and every other operating point is one rung away from a
         converged neighbour, rather than another climb from cold.
+    on_rung
+        Called with the 0-based index and the rung about to be solved. This is
+        the ladder's only point between rungs, and FR-27 needs one: the first
+        two rungs are electrostatic models
+        whose ``solve`` takes no Newton callback, so a stage driving progress or
+        cancellation through the callback alone would report nothing and refuse
+        to stop until stage 3. An exception raised here propagates, which is how
+        :class:`~nanopnp.core.stages.Cancelled` unwinds the ladder.
 
     Returns
     -------
@@ -543,7 +560,9 @@ def run_ladder(rungs: Sequence[Rung], *, initial: ModelSolution | None = None) -
 
     previous: ModelSolution | None = initial
     records: list[RungResult] = []
-    for rung in rungs:
+    for index, rung in enumerate(rungs):
+        if on_rung is not None:
+            on_rung(index, rung)
         declared = tuple(_fields_of(rung.model))
         transferred_fields: tuple[str, ...] = ()
         cold_fields = declared
@@ -579,6 +598,12 @@ def run_ladder(rungs: Sequence[Rung], *, initial: ModelSolution | None = None) -
                 **({"initial": carried} if carried is not None else {}),
                 **dict(rung.solve_kwargs),
             )
+        except Cancelled:
+            # Not a failure: the caller asked to stop (FR-27). Logging it beside
+            # the gate violations would make a cancelled run look like a diverged
+            # one in exactly the record an operator reads first.
+            logger.info("continuation cancelled on rung %r (stage %d)", rung.name, rung.stage)
+            raise
         except Exception:
             # Re-raised unchanged, traceback intact: a gate violation names the
             # field and the location (QR-12) and is the diagnostic; the rung is
@@ -624,6 +649,7 @@ def default_ladder(
     *,
     concentration_M: float = 1.0,
     bias_V: float = 0.2,
+    ground: str = "cis",
     electrolyte: Electrolyte | None = None,
     corrections: str = "willems2020_nacl",
     surface_charge_C_m2: float = 0.0,
@@ -639,6 +665,7 @@ def default_ladder(
     concentration_steps: int = 4,
     surface_charge_boundary: str = "wall",
     corrections_active: bool = True,
+    switches: CorrectionSwitches | None = None,
 ) -> tuple[Rung, ...]:
     """Build the nine stages of NUM-18 for one target operating point.
 
@@ -655,7 +682,14 @@ def default_ladder(
     concentration_M
         Target bulk concentration.
     bias_V
-        Target applied bias, of either sign, on the trans electrode.
+        Target applied bias, of either sign, applied to whichever of the two
+        electrodes is not ``ground``.
+    ground
+        Which electrode is held at zero, ``"cis"`` or ``"trans"`` (the case
+        file's ``boundary_conditions.ground``). The two choices differ by a
+        constant in ``phi`` and so by the sign convention of every reported
+        current, which is why the field is honoured here rather than recorded
+        and ignored.
     electrolyte, corrections
         The electrolyte, or the correction parameter file to build one from.
     surface_charge_C_m2, fixed_charge_C_m3
@@ -692,6 +726,12 @@ def default_ladder(
         Number of sub-rungs in the stage-4 and stage-9 ramps.
     surface_charge_boundary
         Boundary the surface charge sits on.
+    switches
+        The correction set stages 7 to 9 turn on. Defaults to the parameter
+        file's own full set, which is ``epnp-ns``. A case that switches one
+        correction off (PHY-22) must pass its own set here: resolving them from
+        the file name instead would put the correction back on at stage 7, and
+        the manifest would then record a deviation the run never took.
     corrections_active
         Whether the ladder ends at ``epnp-ns`` or at classical ``pnp-ns``.
         ``False`` **omits stages 7 and 8** rather than running them as no-ops —
@@ -708,9 +748,14 @@ def default_ladder(
     Raises
     ------
     ValueError
-        If ``fixed_charge_domain`` names no material of ``mesh``.
+        If ``fixed_charge_domain`` names no material of ``mesh``, or if
+        ``ground`` names neither electrode.
     """
     import ngsolve as ngs
+
+    if ground not in ELECTRODES:
+        raise ValueError(f"ground={ground!r} must be one of {', '.join(sorted(ELECTRODES))}")
+    driven = next(iter(ELECTRODES - {ground}))
 
     # ``MaterialCF`` matches its keys against the material names and silently
     # leaves anything unmatched at the default. A misspelt or absent domain
@@ -756,7 +801,7 @@ def default_ladder(
     # switches against that name would evaluate one fit's correction functions
     # over the other's reference properties, silently.
     correction_model = base.parameter_file or corrections
-    corrected = CorrectionSwitches.for_model(correction_model)
+    corrected = switches if switches is not None else CorrectionSwitches.for_model(correction_model)
     without_steric = corrected.without("steric")
 
     reference = _coupled("pnp", classical, flow=False, salt=build_M)
@@ -764,7 +809,7 @@ def default_ladder(
 
     def _potential(bias: float) -> Expression:
         """Return the essential potential data for one applied bias, in ``V_T``."""
-        return mesh.BoundaryCF({"cis": 0.0, "trans": bias / thermal_V})
+        return mesh.BoundaryCF({ground: 0.0, driven: bias / thermal_V})
 
     zero_bias = _potential(0.0)
     rungs: list[Rung] = []

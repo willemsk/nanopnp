@@ -104,6 +104,10 @@ CONFIGURATION_PATHS: dict[str, str] = {
     "numerics.mesh.boundary_layer": (
         "as numerics.mesh.backend: a discretisation choice, recorded with the mesh"
     ),
+    "numerics.mesh.wall_h_nm": (
+        "a mesh size in nm, or 'auto'; a discretisation choice like the two above, and "
+        "the only reason it reads as a switch at all is the 'auto' literal"
+    ),
     "structure.symmetry.axis": "v0.9; resolve() refuses a case carrying a structure: section",
     "geometry.density.kernel": "v0.9; resolve() refuses a case carrying a geometry: section",
     "geometry.contour.smoothing": "v0.9; resolve() refuses a case carrying a geometry: section",
