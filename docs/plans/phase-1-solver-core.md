@@ -187,18 +187,66 @@ One PR per package, green on tiers 1 and 2 before the next starts. WP7 first bec
 produces or consumes artefacts; WP8 before WP13 because the comparison needs the reference geometry;
 WP12 before WP13 because attribution needs the stabilised mode.
 
-### WP7 — Case-file schema, artefacts, provenance manifest
+### WP7 — Case-file schema, artefacts, provenance manifest — **delivered**
 
-`io/case.py`, `io/artefact.py`, `io/manifest.py`, `io/store.py`, `core/hashing.py`,
-`core/stages.py`.
+`io/case.py`, `io/artefact.py`, `io/manifest.py`, `io/store.py`, `io/defaults.py`, `core/hashing.py`,
+`core/stages.py`, and — beyond the plan — `materials/stage.py`, `solve/stage.py`, with changes to
+`solve/continuation.py`, `physics/models.py` and `core/paths.py`; spec amendments adding VER-23 …
+VER-26 and six Appendix A rows.
 
-The `nanopnp/case/v1` schema of §5.3.1 as pydantic models, rejecting an unknown key by naming it;
-`resolve()` onto the Phase-0 objects; the content-hashed artefact base class and its canonical
-serialisation; the §5.3.3 manifest writer with the Deviations group computed by diff; the result
-store; and the `Stage` protocol with progress and cooperative cancellation.
+Delivered: the `nanopnp/case/v1` schema of §5.3.1 as pydantic models with `extra="forbid"`
+everywhere, rejecting an unknown key by naming the key *and* the block it appeared in, and refusing
+a v0.9 section (`structure:`, `geometry:`, `charge:`) with `UnsupportedCaseSection` rather than
+ignoring it; `resolve()` onto the Phase-0 electrolyte, model and solver objects, going through the
+WP1 resolution discipline rather than `replace(...)`; the content-addressed artefact base of §5.3.2
+with one canonical digest over schema, parameters and input hashes; the result store with
+`get_or_compute`, hit/miss counters and payload-file hashes; the §5.3.3 manifest writer with all
+eight groups always present and the Deviations group computed by diff against an explicit
+validated-default case document; and the `Stage` protocol of FR-27 with a registry, progress
+reporting and cooperative cancellation. Discharges **IF-03, IF-08, FR-25, FR-26, FR-27, VER-09**,
+adds **VER-23, VER-24, VER-25, VER-26**, begins **IF-01**, and carries **QR-08** in part. The schema
+is frozen: from here on a change to it is a schema version, not an edit.
 
-Discharges **IF-03, IF-08, FR-25, FR-26, FR-27, VER-09**, and begins **IF-01**. The schema is frozen
-at the end of this package: from here on a change to it is a schema version, not an edit.
+Beyond the plan, two stages exist because the manifest and the cache had to be tested against a real
+run rather than a fixture: `materials/stage.py` (stage 8) and `solve/stage.py` (stage 10), the latter
+with a public `key(inputs)` beside `run(inputs)` so the key the store is asked about and the key the
+solve produces are built by one code path (`_prepare`). `solve/continuation.py` gained an `on_rung`
+hook and a `Cancelled` clause; `physics/models.py` gained its own deviation enumeration.
+
+Six things settled by the work that WP8 onwards inherit.
+
+- **The validated default is a document, not a `model_dump(exclude_defaults=True)`.** The schema's
+  `CorrectionChoiceSpec.model` defaults to `none` — the *classical* configuration — so a default-diff
+  reports validated ePNP-NS as nine deviations and classical PNP-NS as none, exactly backwards.
+  `io/defaults.py` spells the PHY-21/PHY-22 configuration out as a case document and diffs against
+  it along an enumerated list of dotted paths.
+- **Every switch-typed field must be classified, in both directions.** `SWITCH_PATHS` (31 paths) and
+  `CONFIGURATION_PATHS` (9, each with a written reason) partition the schema's switches, and the
+  Tier-1 test walks the schema tree *and* the two lists, so a switch added later without a validated
+  default fails Tier 1 rather than vanishing from the manifest, and a path left behind by a renamed
+  field fails too. That reverse walk is what found three wrong rows in the plan's own table.
+- **A stage must be introspectable without importing its implementation.** `core/stages.py` carries
+  the name, number, inputs, outputs and artefact schema in the registry, asserted in a subprocess on
+  `sys.modules`: describing all three stages imports neither `ngsolve` nor the stage modules. That is
+  what FR-27 buys the CLI, the GUI and the sweep runner, and it is why the deferred-import rule is
+  not negotiable.
+- **An electrostatic rung rejects a Newton callback.** `ElectrostaticModel.solve` ends in
+  `_reject_unknown(kwargs, ...)`, so passing `callback=` down the ladder aborts on stages 1–2.
+  Cancellation therefore hangs off `run_ladder`'s `on_rung` hook for the between-rungs granularity
+  and off the Newton callback only for coupled rungs.
+- **`default_ladder` had two manifest-integrity bugs, both found by writing the manifest.** It
+  re-enabled corrections the case had switched off when resolving the canonical models, and it
+  ignored `boundary_conditions.ground`. A manifest is only evidence if the thing it describes is the
+  thing that ran.
+- **Netgen `.vol` round-trips boundary and material names [tested]**, so a mesh can enter the digest
+  as a file hash rather than a path; a payload file edited on disk loads as `hand_substituted`
+  rather than aborting, which FR-27 requires.
+
+Reference measurement, stabilisation `none`: `CylindricalPoreGeometry(pore_radius_nm=2.0,
+membrane_thickness_nm=6.0, reservoir_radius_nm=10.0)` at `maxh_nm=4.0`, `wall_h_nm=1.0` → 124
+elements, 75 vertices; 0.1 M, 20 mV, `epnp-ns`, `default_ladder` → 12 rungs over stages
+[1, 2, 3, 5, 6, 7, 8, 9] (stage 4 empty — Phase 1 is uncharged), 36 Newton iterations, minimum
+damping 0.2, ≈ 0.7 s.
 
 ### WP8 — Mesh ingestion, tagging, quality gates, reference geometry
 

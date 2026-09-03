@@ -1,4 +1,4 @@
-"""FR-27 and section 5.3.2: the content hash, and what it must and must not depend on.
+"""VER-23 — the content hash, and what it must and must not depend on (FR-27, section 5.3.2).
 
 Every assertion here is an equality or an exception; there is no tolerance to
 choose, and that is the point. A failure localises to one function.
@@ -46,7 +46,7 @@ invalidated store.
 """
 
 
-def test_fr27_content_hash_is_stable_across_processes() -> None:
+def test_ver23_content_hash_is_stable_across_processes() -> None:
     """The digest does not depend on the interpreter's hash seed (section 5.3.2)."""
     script = (
         "import json,sys;"
@@ -67,7 +67,7 @@ def test_fr27_content_hash_is_stable_across_processes() -> None:
     assert content_hash("demo/v1", FIXTURE) == FIXTURE_HASH
 
 
-def test_fr27_every_leaf_change_moves_the_hash() -> None:
+def test_ver23_every_leaf_change_moves_the_hash() -> None:
     """A change anywhere in the parameter tree reaches the digest."""
     base = content_hash("demo/v1", FIXTURE)
     variants = [
@@ -81,7 +81,7 @@ def test_fr27_every_leaf_change_moves_the_hash() -> None:
     assert content_hash("other/v1", FIXTURE) != base
 
 
-def test_fr27_hash_ignores_what_resolves_to_the_same_run() -> None:
+def test_ver23_hash_ignores_what_resolves_to_the_same_run() -> None:
     """Key order, ``1`` against ``1.0`` and the sign of zero are not differences.
 
     ``1`` and ``1.0`` are one value once pydantic has coerced the field, so the
@@ -97,7 +97,7 @@ def test_fr27_hash_ignores_what_resolves_to_the_same_run() -> None:
     assert canonical({"bias": 1e-9}) == canonical({"bias": 0.000000001})
 
 
-def test_fr27_an_unhashable_type_is_rejected_naming_its_path() -> None:
+def test_ver23_an_unhashable_type_is_rejected_naming_its_path() -> None:
     """A set has no canonical order, so accepting one would make the hash depend on it."""
     with pytest.raises(CanonicalisationError, match=r"\$\.corrections\.models"):
         canonical({"corrections": {"models": {"a", "b"}}})
@@ -105,7 +105,7 @@ def test_fr27_an_unhashable_type_is_rejected_naming_its_path() -> None:
         canonical({"mesh": Path("clya.msh")})
 
 
-def test_fr27_a_changed_input_hash_changes_the_output_hash() -> None:
+def test_ver23_a_changed_input_hash_changes_the_output_hash() -> None:
     """Section 5.3.2: a hand-substituted artefact registers as a changed input."""
     one = content_hash("demo/v1", FIXTURE, {"mesh": "a" * 64})
     two = content_hash("demo/v1", FIXTURE, {"mesh": "b" * 64})
@@ -113,7 +113,7 @@ def test_fr27_a_changed_input_hash_changes_the_output_hash() -> None:
     assert content_hash("demo/v1", FIXTURE, {}) == content_hash("demo/v1", FIXTURE)
 
 
-def test_fr27_file_hash_is_content_not_path(tmp_path: Path) -> None:
+def test_ver23_file_hash_is_content_not_path(tmp_path: Path) -> None:
     """An input file is hashed by content, so moving it is not a change."""
     here = tmp_path / "here.msh"
     there = tmp_path / "elsewhere" / "there.msh"
@@ -125,14 +125,14 @@ def test_fr27_file_hash_is_content_not_path(tmp_path: Path) -> None:
     assert file_hash(here) != file_hash(there)
 
 
-def test_fr27_short_prefix_is_the_display_form_only() -> None:
+def test_ver23_short_prefix_is_the_display_form_only() -> None:
     """The display prefix is 12 hex; the store never keys on it."""
     digest = content_hash("demo/v1", FIXTURE)
     assert short(digest) == digest[:12]
     assert len(digest) == 64
 
 
-def test_fr27_store_round_trips_an_artefact(tmp_path: Path) -> None:
+def test_ver23_store_round_trips_an_artefact(tmp_path: Path) -> None:
     """An artefact read back from the store carries the same key and summary."""
     store = Store(tmp_path)
     artefact = Artefact(
@@ -151,7 +151,7 @@ def test_fr27_store_round_trips_an_artefact(tmp_path: Path) -> None:
     assert loaded.created_at is not None
 
 
-def test_fr27_an_edited_payload_loads_as_hand_substituted(tmp_path: Path) -> None:
+def test_ver23_an_edited_payload_loads_as_hand_substituted(tmp_path: Path) -> None:
     """FR-27 permits editing an artefact by hand; section 5.3.2 requires it be recorded.
 
     The payload is outside the digest — the key must be computable before the
@@ -174,7 +174,7 @@ def test_fr27_an_edited_payload_loads_as_hand_substituted(tmp_path: Path) -> Non
     assert loaded.payload_hashes()["fields"] != loaded.recorded_payload["fields"]
 
 
-def test_fr27_get_or_compute_returns_the_stored_artefact_on_a_hit(tmp_path: Path) -> None:
+def test_ver23_get_or_compute_returns_the_stored_artefact_on_a_hit(tmp_path: Path) -> None:
     """The cache key is computable before the work, which is what makes it a cache."""
     store = Store(tmp_path)
     key = Artefact(schema=SOLUTION_SCHEMA, parameters=FIXTURE, inputs={"mesh": "d" * 64})
@@ -202,7 +202,7 @@ def test_fr27_get_or_compute_returns_the_stored_artefact_on_a_hit(tmp_path: Path
     assert (store.hits, store.misses) == (1, 2)
 
 
-def test_fr27_a_stage_whose_parameters_do_not_determine_its_output_is_refused(
+def test_ver23_a_stage_whose_parameters_do_not_determine_its_output_is_refused(
     tmp_path: Path,
 ) -> None:
     """A cache is only sound if the key determines the answer, so a mismatch aborts."""
@@ -213,7 +213,7 @@ def test_fr27_a_stage_whose_parameters_do_not_determine_its_output_is_refused(
         store.get_or_compute(key, lambda: wrong)
 
 
-def test_fr27_store_writes_are_atomic(tmp_path: Path) -> None:
+def test_ver23_store_writes_are_atomic(tmp_path: Path) -> None:
     """No temporary file survives a write; the store directory holds only the record."""
     store = Store(tmp_path)
     artefact = Artefact(schema=SOLUTION_SCHEMA, parameters=FIXTURE)

@@ -1592,6 +1592,9 @@ route to a cause and invites adjusting the solver until the number matches.
 | **VER-09** | Case-file schema round-trip | A written and re-read case file yields a semantically identical run configuration; an unknown key is rejected with a diagnostic naming the key |
 | **VER-10** | Mesh quality gates | On known-bad input the gates fire: min SICN/gamma > 0.3 required, run aborts, diagnostic names the worst element and its location. Reference figures: minimum 0.6378, mean 0.9765 |
 | **VER-11** | Current-extraction route agreement | On a stored converged fixture, the ψ-domain-integral and the variational reaction flux agree to a tolerance smaller than the rectification signal at the lowest bias in the envelope |
+| **VER-23** | Artefact content addressing | The hash of a fixed artefact is a stated constant, reproduced in a fresh process under a varied `PYTHONHASHSEED`; every leaf change of the parameters or of an input hash moves it; representational differences that validation removes (`1` against `1.0`, `-0.0` against `0.0`, key order) do not; an unhashable payload is refused naming its path; a payload file edited on disk loads as hand-substituted rather than aborting (§5.3.2, FR-27) |
+| **VER-24** | Provenance manifest completeness | All eight field groups of §5.3.3 are present, a group no stage contributed carrying a status and a reason rather than being omitted; every switch-typed field of the case schema is classified either as a switch with a validated default or as a configuration choice with a written reason, in both directions, so that a switch added later without a default fails this test; the physics model's own deviation enumeration agrees with the case's on the switches they share; the environment group is populated without importing NGSolve (FR-25, IF-08) |
+| **VER-25** | Stage protocol | Every stage registered in §5.2 reports its name, number, inputs, outputs and artefact schema without importing its implementation module, asserted on `sys.modules` in a fresh process; each stage's own description is the registry's, so the two cannot drift; progress is monotone in [0, 1] and ends at 1; a cancellation token raises naming where the stage stopped, and is not a subclass of the numerical gate errors (FR-27, IF-01) |
 
 ### 7.3 Tier 2 analytic benchmarks
 
@@ -1611,6 +1614,7 @@ discretisation or stabilisation.
 | **VER-19** | Stokes drag on a sphere | `F = −6πηaU` | Drag on the analyte body in creeping flow to better than **1 %** on the finest mesh, falling monotonically under refinement |
 | **VER-20** | Maxwell stress on a dielectric sphere in a uniform field | analytic potential for a sphere of permittivity `ε_p` in medium `ε_m`, and `F_z = qE₀` for a uniformly charged body at `ε_p = ε_m` | Field matched to the closed form, net force below **10⁻³ pN** by both routes, and the `qE₀` magnitude anchor to better than **1 %** |
 | **VER-21** | Electrophoretic mobility limits | Hückel `μ_e = 2εζ/3η` (κa ≪ 1) and Smoluchowski `μ_e = εζ/η` (κa ≫ 1), with Henry's `μ_e = (2εζ/3η) f(κa)` as the reference between them | Henry's function recovered to better than **5 %** at every κa tested and the Hückel limit to **5 %** at κa ≲ 0.5; `μ_e/(εζ/η)` rising monotonically towards 1 with the residual gap at the largest κa under **15 %** and no larger than Henry's own gap there |
+| **VER-26** | Artefact cache and manifest against a real run | the key computed before the stage runs against the artefact it produces | On a converged solve: the two hashes are equal and the key carries no payload; re-running the same case is a store hit that does not re-enter Newton; a changed bias, or a mesh whose *contents* changed, misses, while the same mesh under another path hits; a cancelled run leaves no artefact in the store at either cancellation granularity; the manifest names every input hash the artefact was keyed on, from the same source (§5.3.2, FR-25, FR-26, FR-27, QR-08 in part) |
 | **VER-22** | Force-evaluation route agreement | domain form `F_z = −∫_Ω (T_M + T_H) : ∇w dV` against surface form `F = ∮_S (T_M + T_H)·n dS`, with the variational reaction force on the no-slip surface as a third route for the hydrodynamic half | Agreement to better than **0.1 pN absolute** on the same solution, on a solution whose two halves are individually of order 10 pN and opposite in sign; the reaction route confirming `F^hd` to better than **10⁻³ pN** |
 
 NOTE: Hall's result is `R_access = ρ/(4a)` per side, so the two sides give `ρ/(2a)`. The form
@@ -1659,6 +1663,12 @@ vanishes on every free degree of freedom — it is exactly independent of `w`. I
 the domain route precisely when the NUM-28 consistency term is missing or mis-signed, which is the
 failure mode invisible in the total. The agreement threshold is **absolute**: the total is a small
 difference of two large numbers by construction, so a relative test on it measures nothing.
+
+NOTE (VER-26): this is a property test, not an analytic benchmark, and it is in Tier 2 by *runtime*
+rather than by kind — it needs a converged solve, and §7.2 is seconds. It is listed here because
+§7.1 maps Tier 2 to this section; the tier a test belongs to is decided by which directory it is
+placed in, and this one is placed in Tier 2. Its acceptance criteria are equalities and exceptions,
+so it carries no tolerance.
 
 ### 7.4 Tier 3 cross-implementation comparison
 
@@ -1973,14 +1983,14 @@ needed.
 
 | Requirement | Verification or validation activity |
 |---|---|
-| IF-01 | None yet |
+| IF-01 | VER-25 |
 | IF-02 | None yet |
 | IF-03 | VER-09 |
 | IF-04 | None yet |
 | IF-05 | None yet |
 | IF-06 | None yet |
 | IF-07 | None yet |
-| IF-08 | None yet (manifest emitted per §7.6) |
+| IF-08 | VER-24 |
 | IF-09 | None yet |
 | FR-01 | None yet |
 | FR-02 | None yet |
@@ -2006,9 +2016,9 @@ needed.
 | FR-22 | VER-19, VER-21, VER-22 |
 | FR-23 | VER-11 |
 | FR-24 | None yet |
-| FR-25 | None yet (manifest emitted per §7.6) |
-| FR-26 | VER-09 |
-| FR-27 | None yet |
+| FR-25 | VER-24, VER-26 (manifest emitted per §7.6) |
+| FR-26 | VER-09, VER-26 |
+| FR-27 | VER-23, VER-25, VER-26 |
 | FR-28 | None yet |
 | FR-29 | None yet |
 | QR-01 | VER-12 to VER-22, in particular VER-17 and VER-18 |
@@ -2018,7 +2028,7 @@ needed.
 | QR-05 | VAL-07, VAL-08, VAL-09 |
 | QR-06 | None yet |
 | QR-07 | None yet (§8.2 criterion 3) |
-| QR-08 | None yet |
+| QR-08 | VER-26 for manifest sufficiency; QoI reproduction none yet |
 | QR-09 | None yet |
 | QR-10 | None yet |
 | QR-11 | None yet |

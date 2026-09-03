@@ -1,4 +1,4 @@
-"""The stage protocol, the registry, and the three promises FR-27 makes.
+"""VER-25 — the stage protocol, the registry, and the three promises FR-27 makes.
 
 Every stage of section 5.2 must be independently invocable, cancellable and
 introspectable. Each of those is a claim that fails quietly:
@@ -62,7 +62,7 @@ def _in_subprocess(script: str) -> dict[str, object]:
 # -- introspection ------------------------------------------------------------
 
 
-def test_fr27_every_stage_describes_itself_without_importing_it() -> None:
+def test_ver25_every_stage_describes_itself_without_importing_it() -> None:
     """Listing and describing stages imports neither NGSolve nor the stage modules.
 
     The registry holds each description beside a ``module:attribute`` target
@@ -86,7 +86,7 @@ def test_fr27_every_stage_describes_itself_without_importing_it() -> None:
     assert reported["materials"] is False
 
 
-def test_fr27_a_stage_description_matches_the_stage_it_describes() -> None:
+def test_ver25_a_stage_description_matches_the_stage_it_describes() -> None:
     """Each registered target resolves, and its ``describe()`` is the registry's row.
 
     The description is written in the registry rather than beside the class, so
@@ -100,13 +100,13 @@ def test_fr27_a_stage_description_matches_the_stage_it_describes() -> None:
         assert stage.describe() == entry.description
 
 
-def test_fr27_the_pipeline_numbers_match_section_5_2() -> None:
+def test_ver25_the_pipeline_numbers_match_section_5_2() -> None:
     """Stages are numbered by their position in the section 5.2 table."""
     numbered = {entry.name: entry.number for entry in registered_stages()}
     assert numbered == {"materials": 8, "case": 9, "solve": 10}
 
 
-def test_fr27_an_unknown_stage_is_refused_by_name() -> None:
+def test_ver25_an_unknown_stage_is_refused_by_name() -> None:
     """The diagnostic lists the stages that exist, because this is a typo's home."""
     with pytest.raises(KeyError, match="materials"):
         describe("solver")
@@ -114,7 +114,7 @@ def test_fr27_an_unknown_stage_is_refused_by_name() -> None:
         create("solver")
 
 
-def test_fr27_a_stage_cannot_be_registered_twice() -> None:
+def test_ver25_a_stage_cannot_be_registered_twice() -> None:
     """Replacing a registered stage would let two runs share a manifest."""
     description = StageDescription(
         name="solve",
@@ -128,7 +128,7 @@ def test_fr27_a_stage_cannot_be_registered_twice() -> None:
         register(description, "nanopnp.solve.stage:SolveStage")
 
 
-def test_fr27_a_malformed_target_is_refused() -> None:
+def test_ver25_a_malformed_target_is_refused() -> None:
     """A target must name a module and an attribute, or nothing can resolve it."""
     description = StageDescription(
         name="not-a-stage",
@@ -145,7 +145,7 @@ def test_fr27_a_malformed_target_is_refused() -> None:
 # -- progress and cancellation ------------------------------------------------
 
 
-def test_fr27_progress_is_clamped_into_the_unit_interval() -> None:
+def test_ver25_progress_is_clamped_into_the_unit_interval() -> None:
     """A stage that miscounts its rungs still drives a progress bar."""
     seen: list[float] = []
     report(lambda fraction, message: seen.append(fraction), 1.7, "over")
@@ -153,7 +153,7 @@ def test_fr27_progress_is_clamped_into_the_unit_interval() -> None:
     assert seen == [1.0, 0.0]
 
 
-def test_fr27_a_cancelled_token_raises_naming_where_it_stopped() -> None:
+def test_ver25_a_cancelled_token_raises_naming_where_it_stopped() -> None:
     """``Cancelled`` says how far the run got, which is what an operator asks."""
     flag = CancelFlag()
     check_cancelled(flag, "the solve")  # not set: nothing happens
@@ -162,7 +162,7 @@ def test_fr27_a_cancelled_token_raises_naming_where_it_stopped() -> None:
         check_cancelled(flag, "the solve")
 
 
-def test_fr27_cancellation_is_not_an_error_subclass_of_the_gates() -> None:
+def test_ver25_cancellation_is_not_an_error_subclass_of_the_gates() -> None:
     """A cancelled run is distinguishable from a diverged one.
 
     Both unwind the same call stack. If cancellation were caught by the same
@@ -178,7 +178,7 @@ def test_fr27_cancellation_is_not_an_error_subclass_of_the_gates() -> None:
 # -- the materials stage, which needs no mesh ---------------------------------
 
 
-def test_fr27_the_materials_stage_reports_progress_ending_at_one() -> None:
+def test_ver25_the_materials_stage_reports_progress_ending_at_one() -> None:
     """Stage 8 runs alone, from the case and nothing else."""
     seen: list[float] = []
     stage = create("materials")
@@ -192,7 +192,7 @@ def test_fr27_the_materials_stage_reports_progress_ending_at_one() -> None:
     assert artefact.hash
 
 
-def test_fr27_a_cancelled_stage_returns_no_artefact() -> None:
+def test_ver25_a_cancelled_stage_returns_no_artefact() -> None:
     """Cancellation raises rather than returning a partial result (section 5.3.2)."""
     flag = CancelFlag()
     flag.cancel()
@@ -200,7 +200,7 @@ def test_fr27_a_cancelled_stage_returns_no_artefact() -> None:
         create("materials").run(StageInputs(case=loads_case(MINIMAL)), cancel=flag)
 
 
-def test_fr27_a_stage_invoked_without_its_upstream_says_which_one() -> None:
+def test_ver25_a_stage_invoked_without_its_upstream_says_which_one() -> None:
     """Running a stage alone is exactly when a missing input shows up."""
     inputs = StageInputs(case=loads_case(MINIMAL))
     with pytest.raises(KeyError, match="materials"):

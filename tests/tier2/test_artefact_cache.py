@@ -1,4 +1,4 @@
-"""The content-addressed cache around a real solve (section 5.3.2, FR-25, FR-27).
+"""VER-26 — the content-addressed cache around a real solve (section 5.3.2, FR-25, FR-27).
 
 Tier 1 tests the hash: that it moves when a leaf moves and does not move when
 nothing did. What it cannot test is the property the cache actually rests on —
@@ -125,7 +125,7 @@ def solved(tmp_path_factory: pytest.TempPathFactory) -> Run:
     )
 
 
-def test_fr27_the_key_computed_before_the_solve_is_the_one_it_produces(solved: Run) -> None:
+def test_ver26_the_key_computed_before_the_solve_is_the_one_it_produces(solved: Run) -> None:
     """The cache is only a cache if the key is known before the work is done.
 
     ``get_or_compute`` decides on :meth:`SolveStage.key`, which resolves the
@@ -141,7 +141,7 @@ def test_fr27_the_key_computed_before_the_solve_is_the_one_it_produces(solved: R
     assert solved.key.payload == {}, "the key must be computable without doing the work"
 
 
-def test_fr27_the_key_is_the_same_whether_or_not_stage_8_was_supplied(solved: Run) -> None:
+def test_ver26_the_key_is_the_same_whether_or_not_stage_8_was_supplied(solved: Run) -> None:
     """Running the solve alone and running it after stage 8 key the same entry.
 
     A stage that is independently invocable (FR-27) must not produce a different
@@ -159,7 +159,7 @@ def test_fr27_the_key_is_the_same_whether_or_not_stage_8_was_supplied(solved: Ru
     assert solved.key.inputs["materials"] == materials.hash
 
 
-def test_fr27_solving_the_same_case_again_is_a_store_hit(solved: Run) -> None:
+def test_ver26_solving_the_same_case_again_is_a_store_hit(solved: Run) -> None:
     """The second run returns the stored artefact and does not re-enter Newton.
 
     "Does not recompute" is asserted on the compute callable rather than on a
@@ -191,7 +191,7 @@ def test_fr27_solving_the_same_case_again_is_a_store_hit(solved: Run) -> None:
     assert not again.hand_substituted
 
 
-def test_fr27_changing_the_bias_misses_the_cache(solved: Run) -> None:
+def test_ver26_changing_the_bias_misses_the_cache(solved: Run) -> None:
     """A different operating point is a different key, and the store has nothing.
 
     Checked on ``contains`` rather than by solving: the assertion is about the
@@ -207,7 +207,7 @@ def test_fr27_changing_the_bias_misses_the_cache(solved: Run) -> None:
     assert not solved.store.contains(key)
 
 
-def test_fr27_a_substituted_mesh_is_a_changed_input(solved: Run, tmp_path: Path) -> None:
+def test_ver26_a_substituted_mesh_is_a_changed_input(solved: Run, tmp_path: Path) -> None:
     """The mesh enters the key by content, so the same file under two names is one run.
 
     Both halves matter. A mesh hashed by *path* would make a case reproducible
@@ -227,7 +227,7 @@ def test_fr27_a_substituted_mesh_is_a_changed_input(solved: Run, tmp_path: Path)
     assert changed.hash != solved.key.hash
 
 
-def test_fr27_cancelling_mid_ladder_leaves_no_artefact_in_the_store(
+def test_ver26_cancelling_mid_ladder_leaves_no_artefact_in_the_store(
     solved: Run, tmp_path: Path
 ) -> None:
     """A cancelled solve raises between rungs and the store holds nothing.
@@ -264,7 +264,7 @@ def test_fr27_cancelling_mid_ladder_leaves_no_artefact_in_the_store(
     assert store.misses == 1 and store.hits == 0
 
 
-def test_fr27_cancelling_inside_a_coupled_rung_stops_between_newton_iterations(
+def test_ver26_cancelling_inside_a_coupled_rung_stops_between_newton_iterations(
     solved: Run, tmp_path: Path
 ) -> None:
     """The second cancellation granularity: within a rung, not only between them.
@@ -303,7 +303,7 @@ def test_fr27_cancelling_inside_a_coupled_rung_stops_between_newton_iterations(
     assert not store.contains(key)
 
 
-def test_fr25_the_manifest_names_every_input_hash_the_run_consumed(solved: Run) -> None:
+def test_ver26_the_manifest_names_every_input_hash_the_run_consumed(solved: Run) -> None:
     """A manifest written from this run reconstructs it (section 5.3.3, IF-08).
 
     The one assertion that needs a real run is the *agreement* between the
@@ -360,7 +360,7 @@ def test_fr25_the_manifest_names_every_input_hash_the_run_consumed(solved: Run) 
     assert groups["charge"]["reason"]
 
 
-def test_fr26_the_manifest_written_beside_the_run_round_trips(solved: Run, tmp_path: Path) -> None:
+def test_ver26_the_manifest_written_beside_the_run_round_trips(solved: Run, tmp_path: Path) -> None:
     """Written and read back, the manifest is byte-identical in content and hash."""
     materials = MaterialsStage().run(StageInputs(case=solved.document))
     case_artefact = CaseArtefact(solved.document)
