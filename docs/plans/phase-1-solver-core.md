@@ -241,6 +241,21 @@ Six things settled by the work that WP8 onwards inherit.
 - **Netgen `.vol` round-trips boundary and material names [tested]**, so a mesh can enter the digest
   as a file hash rather than a path; a payload file edited on disk loads as `hand_substituted`
   rather than aborting, which FR-27 requires.
+- **The NUM-18 ladder reads none of the four physics switches from the case, and `resolve()` now
+  refuses the combination.** `default_ladder` builds its own rungs: it passes `flow` explicitly (off
+  for the early rungs, on from stage 6) and leaves `variable_density`, `inertia` and
+  `dielectric_gradient_forces` at the `CoupledModel` defaults, so a case setting any of them and
+  still selecting the ladder converged while the FR-25 Deviations group recorded a deviation the
+  solve never carried. `physics.model: pnp` was the worse case — the ladder would have solved
+  `pnp-ns` under a manifest naming `pnp`. Found by the WP7 review pass, not by the implementation.
+  §6.5 gains a NOTE making the ladder's fixed path normative, and single-rung runs
+  (`continuation: none`) remain the way an ablation asks for a configuration the ladder cannot
+  express. Threading the switches into the ladder is solver-numerics work with its own verification
+  burden and is deliberately not attempted here.
+- **`numerics.stabilisation` is safe from the same trap only because `SUPPORTED_STABILISATIONS` is
+  `{"none"}`.** The ladder does not pass `stabilisation` to its rungs either; the schema refuses
+  anything but `none` this phase, so nothing is silently dropped today. WP12 adds the reference mode
+  and must thread it through `default_ladder` in the same package, or inherit this bug.
 
 Reference measurement, stabilisation `none`: `CylindricalPoreGeometry(pore_radius_nm=2.0,
 membrane_thickness_nm=6.0, reservoir_radius_nm=10.0)` at `maxh_nm=4.0`, `wall_h_nm=1.0` → 124

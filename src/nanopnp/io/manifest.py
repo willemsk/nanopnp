@@ -263,17 +263,28 @@ def stabilisation_group(
     }
 
 
+def _deviations_payload(found: tuple[Deviation, ...]) -> dict[str, Canonicalisable]:
+    """Return the Deviations group's payload for an already-computed diff.
+
+    Shared by :func:`deviations_group` and :meth:`Manifest.groups`, which hold
+    the same fact two different ways: one has the case document and diffs it
+    itself, the other already carries the diff on ``self.deviations``. Without
+    this the two would render the same group by two independent literal dicts,
+    free to drift the moment one is edited and the other is not.
+    """
+    return {
+        "count": len(found),
+        "switches": [deviation.summary() for deviation in found],
+    }
+
+
 def deviations_group(document: CaseDocument) -> dict[str, Canonicalisable]:
     """Return the Deviations group: every switch set away from the validated default.
 
     The enumeration lives in :mod:`nanopnp.io.defaults`, which is the manifest's
     authority on what the validated default *is* (PHY-22, PHY-23).
     """
-    found = deviations(document)
-    return {
-        "count": len(found),
-        "switches": [deviation.summary() for deviation in found],
-    }
+    return _deviations_payload(deviations(document))
 
 
 @dataclass(frozen=True)
@@ -319,10 +330,7 @@ class Manifest:
             "materials": dict(self.materials),
             "solver": dict(self.solver),
             "stabilisation": dict(self.stabilisation),
-            "deviations": {
-                "count": len(self.deviations),
-                "switches": [deviation.summary() for deviation in self.deviations],
-            },
+            "deviations": _deviations_payload(self.deviations),
         }
 
     @property

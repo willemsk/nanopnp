@@ -211,3 +211,18 @@ Separately, and more happily: with all extras enabled (`structure`, `gui`, `gmsh
 resolved lock contains **no sdist-only package** — every dependency, `ngsolve`, `PySide6`, `gmsh`,
 `pdb2pqr`, `MDAnalysis`, `scikit-image` and `h5py` included, installs from a binary wheel
 **[tested]**. Nothing in the current dependency set contradicts CON-07.
+
+**The local gate cannot see a 3.10 floor break; only the CI matrix can [tested].** The gate of
+`CLAUDE.md` runs on the development interpreter — 3.12 — so a 3.11+ stdlib API compiles, typechecks
+and passes every test locally while failing `tier 1-2 (ubuntu-latest, py3.10)` at *collection*.
+`datetime.UTC` is the worked example: it is 3.11+, `datetime.timezone.utc` is the equivalent
+available across the whole supported range, and the import error takes down every test module that
+transitively reaches it rather than one assertion.
+
+Typechecking at the floor would catch this class — `mypy --python-version=3.10` reports
+`Module "datetime" has no attribute "UTC"  [attr-defined]` on a two-line file **[tested]** — but it
+cannot currently be run over `src/`: NumPy's own bundled stubs use a PEP 695 `type` statement, and
+mypy aborts the whole check with `numpy/__init__.pyi:737: error: Type statement is only supported in
+Python 3.12 and greater  [syntax]` before reaching project code **[tested]**. So the guard is the
+3.10 matrix job, and reproducing a matrix-only failure means `uv run --python 3.10 --all-extras
+pytest`, which resolves and installs a separate 3.10 environment in about a minute.

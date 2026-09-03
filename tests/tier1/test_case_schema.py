@@ -10,6 +10,7 @@ differ in a field nothing records, and the hash alone says nothing about whether
 the document resolves at all.
 """
 
+import re
 from pathlib import Path
 
 import pytest
@@ -315,4 +316,74 @@ def test_phy24_an_electrostatic_model_has_no_transport_to_continue() -> None:
     """The NUM-18 ladder drives the coupled family; PB is a single solve (PHY-24)."""
     text = REFERENCE_CASE.replace("model: epnp-ns", "model: pb")
     with pytest.raises(CaseValidationError, match="continuation"):
+        resolve(loads_case(text))
+
+
+@pytest.mark.parametrize(
+    ("switch", "given"),
+    [
+        ("flow", "false"),
+        ("variable_density", "false"),
+        ("inertia", "false"),
+        ("dielectric_gradient_forces", "true"),
+    ],
+)
+def test_fr25_a_switch_the_ladder_cannot_honour_is_refused_not_dropped(
+    switch: str, given: str
+) -> None:
+    """NUM-18 fixes the path, so a switch it never reads must not reach the manifest.
+
+    ``default_ladder`` builds its own rungs and reads none of these four from the
+    case. Left unchecked the solve would converge and the FR-25 Deviations group
+    would record the switch as applied, which is the one thing section 5.3.3
+    exists to make impossible: a manifest that cannot reconstruct the run.
+    """
+    was = f"{switch}: " + ("true" if given == "false" else "false")
+    text = REFERENCE_CASE.replace(was, f"{switch}: {given}")
+    assert f"{switch}: {given}" in text  # the substitution actually landed
+    with pytest.raises(CaseValidationError, match=re.escape(f"physics.{switch}")) as raised:
+        resolve(loads_case(text))
+    assert "numerics.continuation: none" in str(raised.value)
+
+
+def test_fr25_the_same_switch_on_a_single_rung_resolves_and_is_carried() -> None:
+    """The refusal above is the ladder's, not the switch's: one rung honours it.
+
+    Asserted on the resolved model options rather than on the absence of an
+    exception, so that a future change making ``continuation: none`` drop the
+    switch too fails here rather than passing as "no error raised".
+    """
+    text = REFERENCE_CASE.replace("inertia: true", "inertia: false").replace(
+        "continuation: default_ladder", "continuation: none"
+    )
+    resolved = resolve(loads_case(text))
+    assert resolved.model_options["inertia"] is False
+
+
+def test_fr25_pnp_on_the_ladder_is_refused_with_advice_it_can_take() -> None:
+    """'pnp' cannot match the ladder, so it must not be told to (PHY-21).
+
+    Every rung from stage 6 carries the flow coupling, and ``physics.flow: false``
+    is mandatory for 'pnp', so the generic "set them to match the ladder" advice
+    is impossible by construction; the message has to name 'pnp-ns' instead.
+    """
+    text = REFERENCE_CASE.replace("model: epnp-ns", "model: pnp").replace(
+        "flow: true", "flow: false"
+    )
+    with pytest.raises(CaseValidationError, match="pnp-ns") as raised:
+        resolve(loads_case(text))
+    message = str(raised.value)
+    assert "match the ladder" not in message
+    assert "numerics.continuation: none" in message
+
+
+def test_phy21_pnp_with_flow_is_refused_by_the_model_check_not_the_ladder_check() -> None:
+    """The precise diagnostic must win: an inconsistent case is not a ladder problem.
+
+    'pnp' with ``flow: true`` violates PHY-21 whatever the continuation setting
+    is, so ordering the two checks the other way round would answer a question
+    the user did not ask.
+    """
+    text = REFERENCE_CASE.replace("model: epnp-ns", "model: pnp")
+    with pytest.raises(CaseValidationError, match=re.escape("physics.flow must be false")):
         resolve(loads_case(text))
