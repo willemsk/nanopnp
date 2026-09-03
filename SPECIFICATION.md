@@ -248,6 +248,12 @@ Rationale (FR-23): continuous-Galerkin fluxes are not pointwise conservative, so
 by integrating flux over an interior cross-section varies between cross-sections by amounts that
 can exceed the rectification signal at low bias.
 
+Rationale (FR-26): "semantically identical" is asserted on the content hash of the validated case
+document and on the resolved run configuration it produces, never on the YAML text. A case file
+written by hand omits defaults, orders keys freely and carries comments, none of which survive a
+round trip and none of which change the run; requiring textual identity would test the serialiser
+instead of the schema (VER-09).
+
 ### 3.3 Quality of service
 
 | ID | Requirement | Class |
@@ -773,6 +779,10 @@ One declarative YAML document is the unit of reproducibility (IF-03). Everything
 schema: nanopnp/case/v1
 name: clya-wt-1M-100mV
 
+inputs:                             # optional; supplied artefacts, §5.3.2
+  mesh: {path: clya.msh, format: msh41,
+         groups: {pore: pore, membrane: membrane, reservoir: bulk}}
+
 structure:
   source: {pdb: 2WCD.pdb, variant: ClyA-AS, chains: all}
   ensemble: {trajectory: eq.xtc, frames: {last_ns: 5, count: 50}}
@@ -807,17 +817,37 @@ electrolyte:
 boundary_conditions:
   bias_V: 0.100
   ground: cis
-  walls: {ion_flux: none, slip: none}
+  walls: {ion_flux: no_flux, slip: no_slip}
+
+physics:                            # the named model of PHY-21
+  model: epnp-ns
+  flow: true
+  variable_density: true
+  inertia: false
+  dielectric_gradient_forces: false  # PHY-23; off in the validated model
 
 numerics:
   elements: {phi: P2, c: P2, u: P2, p: P1}
   mesh: {backend: netgen, wall_h_nm: auto, boundary_layer: false}
   nonlinear: {strategy: hybrid, damping: backtracking, max_iter: 40, rtol: 1e-9}
   continuation: default_ladder
+  stabilisation: none                # NUM-11; `reference` matches §6.4
   linear: {solver: umfpack}          # see §6.6; MUMPS requires a source build
 
 outputs: [current, transport_numbers, rectification, eof_rate, analyte_force, fields]
 ```
+
+NOTE (`inputs:`, FR-27): the optional top-level `inputs:` block is hand substitution (FR-27) applied
+at stage granularity. Each key names a stage output supplied from outside — a mesh, a charge field,
+a dielectric field — by path and format. A stage whose output is supplied does not run, and neither
+does anything upstream of it; the substituted file is hashed by content and enters the FR-25
+manifest as an input like any other. Releases before v0.7 accept an externally generated mesh
+this way, which is what makes the solver core testable ahead of the meshing pipeline (§8.1).
+
+NOTE (`walls`): the wall values name the condition applied, not its absence. `ion_flux` takes
+`no_flux | prescribed` and `slip` takes `no_slip | navier | free`. Under the `r`-weighted forms of
+§6.2 the natural condition is the free one, so a value reading as "none applied" would silently
+remove no-slip while appearing to be the validated default.
 
 #### 5.3.2 Artefacts and interchange formats
 
@@ -838,6 +868,15 @@ parameters that produced it. The hash is the cache key: a stage whose input hash
 are unchanged is not recomputed, and a hand-substituted artefact registers as a changed input.
 MSH 4.1 is archival because it is the only format in the toolchain carrying physical-group tags,
 higher-order elements and mixed element types without loss.
+
+NOTE (canonical serialisation): the hash is taken over the *validated* artefact payload and the
+producing parameters, not over their file text. Mappings are serialised with sorted keys, sequence
+order is preserved as meaning, floats are encoded by `float.hex()` with `-0.0` normalised to `0.0`,
+arrays by dtype, shape and a digest of their contiguous bytes, and input files by the digest of
+their contents rather than by their path. Wall-clock fields such as `created_at` are recorded beside
+the hash and excluded from it, so that re-running a case reproduces the hash. A stored hash is
+re-computed on load as a cross-check: a mismatch means the artefact was edited by hand, which FR-27
+permits, and is recorded in the manifest as a substituted input rather than aborting the run.
 
 #### 5.3.3 Provenance manifest
 

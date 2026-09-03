@@ -151,8 +151,11 @@ Permissive core is achievable. Everything is LGPL/BSD/MIT/Apache **except**:
 
 - **Gmsh** GPLv2+ → optional mesher backend only.
 - **SuiteSparse UMFPACK** GPL-2+ → if it is the bundled default linear solver, the *bundle*
-  carries GPL even though the library does not. Default the bundle to scipy SuperLU (BSD) and make
-  UMFPACK opt-in if that matters.
+  carries GPL even though the library does not, so the distribution licence follows the solver
+  chosen as default. **[tested]** SciPy's SuperLU (BSD) is not an alternative at production size:
+  on the reference-sized factorisation (~1.2 × 10⁵ cells, five fields) it was OOM-killed, while
+  UMFPACK completed — the measurement behind SPECIFICATION.md §6.6 and the CON-11 amendment of
+  2 September 2026.
 - **Triangle / TetGen** → avoid entirely.
 
 LGPL dependencies (NGSolve, MDAnalysis, PySide6) are fine for a permissively-licensed project when
