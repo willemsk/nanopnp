@@ -1,4 +1,4 @@
-"""Filesystem locations of packaged data.
+"""Filesystem locations of packaged data and of the result store.
 
 The correction parameter files live at the repository root (``data/corrections``)
 as specified in ``SPECIFICATION.md`` section 11, and are force-included into the
@@ -8,6 +8,7 @@ never have to know which one they are running against.
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 _PACKAGE_ROOT = Path(__file__).resolve().parent.parent
@@ -57,3 +58,32 @@ def correction_file(name: str) -> Path:
     if not path.is_file():
         raise FileNotFoundError(f"no correction file {name!r} in {CORRECTIONS_DIR}")
     return path
+
+
+STORE_ROOT_VARIABLE = "NANOPNP_STORE"
+"""Environment variable naming the artefact and result store."""
+
+DEFAULT_STORE_DIRNAME = "nanopnp-store"
+"""Store directory created in the working directory when nothing else is set."""
+
+
+def store_root() -> Path:
+    """Return the root of the content-addressed artefact and result store.
+
+    ``$NANOPNP_STORE`` if it is set, else ``./nanopnp-store`` in the working
+    directory. A platform cache directory would be tidier for the desktop shell
+    but would need another dependency and would put a run's outputs somewhere a
+    user has to be told about; a visible default is the one a reader can find.
+
+    Returns
+    -------
+    Path
+        The store root, expanded and made absolute. It is not created here:
+        :class:`nanopnp.io.store.Store` creates it on first write, so that
+        merely reporting the environment (``nanopnp --env``) leaves no
+        directories behind.
+    """
+    configured = os.environ.get(STORE_ROOT_VARIABLE)
+    if configured:
+        return Path(configured).expanduser().resolve()
+    return (Path.cwd() / DEFAULT_STORE_DIRNAME).resolve()
