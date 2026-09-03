@@ -1,0 +1,975 @@
+"""The ``nanopnp/case/v1`` case-file schema, and its resolution to runnable objects.
+
+One declarative YAML document is the unit of reproducibility (IF-03,
+``SPECIFICATION.md`` section 5.3.1); everything else is derived. This module owns
+its shape, its diagnostics and the step that turns it into the objects the solver
+takes.
+
+Three things it deliberately does, each with a failure it exists to prevent.
+
+**The ``schema:`` string is checked before structural validation.** A file
+written to a future schema then fails naming the schema it claims, rather than
+with a wall of field errors against a shape it never declared. This copies
+:func:`nanopnp.materials.corrections.load_corrections` exactly, ordering
+included.
+
+**Every model forbids unknown keys, and the diagnostic names the key.** IF-03
+requires that; pydantic's own message does not carry it (the key is in ``loc``,
+not in ``msg``), so :class:`CaseValidationError` renders one line per error as
+``<dotted.path>: <what>`` and offers a suggestion from the owning model's fields.
+A typo in ``corrections`` would otherwise disable a correction silently, which is
+the failure PHY-21's differential testing exists to catch.
+
+**The round trip is asserted on the content hash, never on the text** (FR-26,
+VER-09). A case written by hand omits defaults, orders keys freely and carries
+comments, none of which survive a round trip and none of which change the run.
+:func:`resolve` produces the objects, and :attr:`ResolvedCase.provenance` the
+record; equality of either is a statement about the *run*, which is what FR-26
+means by "semantically identical".
+"""
+
+from __future__ import annotations
+
+import difflib
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Literal, get_args
+
+import yaml
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
+
+from nanopnp.core.paths import available_corrections
+from nanopnp.core.stages import (
+    CancelToken,
+    Progress,
+    StageDescription,
+    check_cancelled,
+    describe,
+    report,
+)
+from nanopnp.io.artefact import CASE_SCHEMA, CaseArtefact, StageInputs
+from nanopnp.materials.electrolyte import (
+    CorrectionChoice,
+    CorrectionSwitches,
+    Electrolyte,
+)
+from nanopnp.physics.models import SUPPORTED_STABILISATIONS, registered_models
+from nanopnp.solve.linear import AVAILABLE_SOLVERS
+from nanopnp.solve.newton import DEFAULT_SETTINGS, NewtonSettings
+
+SCHEMA: str = CASE_SCHEMA
+"""Schema identifier every case file must declare.
+
+Defined in :mod:`nanopnp.io.artefact` beside the artefact that carries it, so
+that the string a case file declares and the string the store addresses it by
+cannot drift apart.
+"""
+
+COUPLED_MODELS: frozenset[str] = frozenset({"epnp-ns", "pnp-ns", "pnp"})
+"""Physics models the continuation ladder of NUM-18 drives (PHY-21).
+
+``pb``, ``pb-linear`` and ``poisson`` are single-solve electrostatic models with
+no ladder and no transport; they are registered and selectable, and the solve
+stage refuses them by name rather than building a ladder that means nothing.
+"""
+
+STERIC_MODELS: frozenset[str] = frozenset({"none", "borukhov"})
+"""Steric models: the Borukhov size-modified flux, or off (PHY-22)."""
+
+OUTPUTS: frozenset[str] = frozenset(
+    {
+        "current",
+        "transport_numbers",
+        "rectification",
+        "eof_rate",
+        "analyte_force",
+        "fields",
+    }
+)
+"""Selectable outputs, per the section 5.3.1 example."""
+
+
+class CaseValidationError(ValueError):
+    """A case document failed validation; the message names every offending key.
+
+    Wraps pydantic's :class:`~pydantic.ValidationError` rather than replacing it:
+    the underlying error is kept on :attr:`errors` so a caller can inspect it,
+    and the rendering is what IF-03 requires — the dotted path to the key, what
+    is wrong with it, and, for an unknown key, the nearest field name of the
+    block that rejected it.
+    """
+
+    def __init__(self, message: str, errors: ValidationError | None = None) -> None:
+        super().__init__(message)
+        self.errors = errors
+
+
+class UnsupportedCaseSection(NotImplementedError):  # noqa: N818 - a release gap, not a failure
+    """The case asks for a pipeline stage this release does not implement.
+
+    Raised by :func:`resolve` naming the section and the release that owns it,
+    so that a Phase-2 case run against the solver core says which release will
+    run it rather than failing somewhere inside the solver.
+    """
+
+
+class _Strict(BaseModel):
+    """Base for every block: unknown keys are rejected, and named in the error."""
+
+    model_config = ConfigDict(extra="forbid")
+
+
+# -- inputs: hand-substituted upstream artefacts (FR-27, section 5.3.1) --------
+
+
+class SuppliedArtefact(_Strict):
+    """One upstream stage output supplied from outside the pipeline.
+
+    FR-27 grants that any artefact may be substituted by hand; this is that
+    substitution applied at stage granularity. A stage whose output is supplied
+    does not run, and neither does anything upstream of it — which is how the
+    solver core runs a real case before the meshing and charge pipelines exist
+    (section 8.1).
+
+    Exactly one of ``path`` and ``artefact`` is given: a file on disk, or the
+    hash of an artefact already in the store. The store form is what keeps a
+    sweep from re-hashing the same mesh at every operating point.
+    """
+
+    path: Path | None = None
+    artefact: str | None = None
+    format: str | None = None
+    groups: dict[str, str] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def _exactly_one_source(self) -> SuppliedArtefact:
+        """Reject a supplied artefact that names neither or both of its sources."""
+        if (self.path is None) == (self.artefact is None):
+            raise ValueError(
+                "a supplied artefact names exactly one of path: (a file on disk) and artefact: "
+                "(a content hash already in the store)"
+            )
+        return self
+
+
+class Inputs(_Strict):
+    """Supplied upstream artefacts, by the stage whose output each replaces."""
+
+    mesh: SuppliedArtefact | None = None
+    charge: SuppliedArtefact | None = None
+    eps_r: SuppliedArtefact | None = None
+
+
+# -- structure, geometry and charge: phases 2 and 3 ---------------------------
+
+
+class StructureSource(_Strict):
+    """The structure file and which of it to use."""
+
+    pdb: Path
+    variant: str | None = None
+    chains: str = "all"
+
+
+class Frames(_Strict):
+    """Which trajectory frames enter the ensemble average."""
+
+    last_ns: float | None = None
+    count: int | None = None
+
+
+class Ensemble(_Strict):
+    """The trajectory and its frame selection."""
+
+    trajectory: Path | None = None
+    frames: Frames = Field(default_factory=Frames)
+
+
+class SymmetrySpec(_Strict):
+    """The expected point group and how the axis is found."""
+
+    point_group: str
+    axis: Literal["auto", "z"] = "auto"
+
+
+class Structure(_Strict):
+    """Stage 1: structure ingestion and alignment (v0.9)."""
+
+    source: StructureSource
+    ensemble: Ensemble = Field(default_factory=Ensemble)
+    symmetry: SymmetrySpec
+
+
+class DensitySpec(_Strict):
+    """Stage 2: Gaussian smearing to a grid."""
+
+    grid_spacing_nm: float = 0.05
+    kernel: Literal["gaussian_vdw"] = "gaussian_vdw"
+    sharpness: float = 0.93
+
+
+class ContourSpec(_Strict):
+    """Stage 4: contour extraction and conditioning."""
+
+    isolevel: float = 0.25
+    smoothing: Literal["taubin", "none"] = "taubin"
+    simplify_tol_nm: float = 0.02
+
+
+class MembraneSpec(_Strict):
+    """The bilayer, defined analytically rather than from the density map."""
+
+    thickness_nm: float = 2.8
+    eps_r: float = 3.2
+
+
+class ReservoirSpec(_Strict):
+    """The reservoir half-disc."""
+
+    radius_nm: float = 250.0
+
+
+class AnalyteSpec(_Strict):
+    """An axisymmetric analyte body in the pore (PHY-11, WP6)."""
+
+    shape: Literal["sphere", "prolate_spheroid", "oblate_spheroid"]
+    a_nm: float
+    b_nm: float | None = None
+    z_nm: float = 0.0
+    charge_e: float = 0.0
+
+
+class Geometry(_Strict):
+    """Stages 2-5: density, contour, membrane, reservoir and analyte."""
+
+    density: DensitySpec = Field(default_factory=DensitySpec)
+    contour: ContourSpec = Field(default_factory=ContourSpec)
+    membrane: MembraneSpec = Field(default_factory=MembraneSpec)
+    reservoir: ReservoirSpec = Field(default_factory=ReservoirSpec)
+    analyte: AnalyteSpec | None = None
+
+
+class SmearingSpec(_Strict):
+    """Stage 7: quintic B-spline deposition of the partial charges (PHY-16)."""
+
+    sharpness: float = 0.5
+    grid_spacing_nm: float = 0.005
+    axis_cutoff_nm: float = 0.01
+
+
+class Charge(_Strict):
+    """Stage 7: charge assembly (v0.9)."""
+
+    ph: float = 7.5
+    forcefield: str = "CHARMM"
+    titration: Literal["propka", "none"] = "propka"
+    smearing: SmearingSpec = Field(default_factory=SmearingSpec)
+    eps_protein: float = 20.0
+
+
+# -- electrolyte --------------------------------------------------------------
+
+
+class SpeciesSpec(_Strict):
+    """One solved ionic species, by the name the parameter file gives it."""
+
+    name: str
+    z: int
+
+
+class CorrectionChoiceSpec(_Strict):
+    """One property's correction: a registered model, and its two parts (PHY-22).
+
+    ``model: none`` disables the correction by selecting the registered ``none``
+    model, never by taking a code branch. The concentration and wall parts switch
+    independently, which is what makes an ablation study a configuration sweep.
+    """
+
+    model: str = "none"
+    concentration: bool = True
+    wall: bool = True
+
+    def to_choice(self) -> CorrectionChoice:
+        """Return the materials-layer choice this names."""
+        return CorrectionChoice(model=self.model, concentration=self.concentration, wall=self.wall)
+
+
+class StericSpec(_Strict):
+    """The size-modified flux ``beta_i`` and the diameters it is built on (PHY-22).
+
+    ``a_ion_nm`` and ``a_water_nm`` are optional, and when given are **checked
+    against the parameter file** rather than used: the diameters belong to the
+    fitted parameter set, and a case file that could override them silently
+    would be a second source of truth for a physical constant (FR-16).
+    """
+
+    model: Literal["none", "borukhov"] = "none"
+    a_ion_nm: float | None = None
+    a_water_nm: float | None = None
+
+
+class CorrectionsSpec(_Strict):
+    """The nine independently switchable corrections of PHY-22."""
+
+    diffusivity: CorrectionChoiceSpec = Field(default_factory=CorrectionChoiceSpec)
+    mobility: CorrectionChoiceSpec = Field(default_factory=CorrectionChoiceSpec)
+    viscosity: CorrectionChoiceSpec = Field(default_factory=CorrectionChoiceSpec)
+    permittivity: CorrectionChoiceSpec = Field(default_factory=CorrectionChoiceSpec)
+    density: CorrectionChoiceSpec = Field(default_factory=CorrectionChoiceSpec)
+    steric: StericSpec = Field(default_factory=StericSpec)
+
+
+class ElectrolyteSpec(_Strict):
+    """Stage 8: the electrolyte, its reference parameter file and its corrections.
+
+    ``parameters`` names the file the *reference* properties come from —
+    ``D_i^0``, ``eta^0``, ``rho^0``, ``eps_r,f^0`` and the steric diameters —
+    and is separate from the per-property correction models because a classical
+    PNP-NS run turns every correction off and still needs those reference values
+    (PHY-21).
+    """
+
+    species: list[SpeciesSpec]
+    concentration_M: float
+    temperature_K: float = 298.15
+    parameters: str = "willems2020_nacl"
+    driver: Literal["average", "ionic_strength"] = "average"
+    corrections: CorrectionsSpec = Field(default_factory=CorrectionsSpec)
+
+
+# -- boundary conditions, physics and numerics --------------------------------
+
+
+class WallSpec(_Strict):
+    """The conditions applied on the pore and membrane walls.
+
+    The values name the condition **applied**, not its absence: under the
+    ``r``-weighted forms of section 6.2 the natural condition is the free one, so
+    a value reading as "none applied" would silently remove no-slip while
+    appearing to be the validated default.
+    """
+
+    ion_flux: Literal["no_flux", "prescribed"] = "no_flux"
+    slip: Literal["no_slip", "navier", "free"] = "no_slip"
+
+
+class BoundaryConditions(_Strict):
+    """The applied bias, the grounded electrode and the wall conditions."""
+
+    bias_V: float
+    ground: Literal["cis", "trans"] = "cis"
+    walls: WallSpec = Field(default_factory=WallSpec)
+
+
+class PhysicsSpec(_Strict):
+    """The named physics model of PHY-21 and the switches it carries."""
+
+    model: str = "epnp-ns"
+    flow: bool = True
+    variable_density: bool = True
+    inertia: bool = True
+    dielectric_gradient_forces: bool = False
+
+
+class ElementsSpec(_Strict):
+    """Element orders per field; the Taylor-Hood pair of NUM-03."""
+
+    phi: str = "P2"
+    c: str = "P2"
+    u: str = "P2"
+    p: str = "P1"
+
+
+class MeshSpec(_Strict):
+    """Stage 6: the mesher and its size field (v0.7)."""
+
+    backend: Literal["netgen", "gmsh"] = "netgen"
+    wall_h_nm: float | Literal["auto"] = "auto"
+    boundary_layer: bool = False
+
+
+class NonlinearSpec(_Strict):
+    """The damped-Newton policy; the defaults are the NUM-16 reference settings."""
+
+    strategy: Literal["newton", "hybrid"] = "newton"
+    damping: Literal["residual", "backtracking"] = "residual"
+    max_iter: int = 100
+    rtol: float = 1.0e-6
+
+
+class LinearSpec(_Strict):
+    """The direct linear solver of section 6.6."""
+
+    solver: Literal["umfpack", "superlu"] = "umfpack"
+
+
+class WallDistanceSpec(_Strict):
+    """The PHY-02 distance field: which boundaries it measures from, and its cap.
+
+    ``sources`` is a boundary-name regular expression. The validated default is
+    the pore wall alone: PHY-02 excludes the membrane from the source set
+    deliberately, so widening this is a deviation from the validated model and is
+    recorded as one.
+    """
+
+    sources: str = "wall"
+    max_distance_nm: float = 3.0
+
+
+class NumericsSpec(_Strict):
+    """Discretisation, meshing, continuation, stabilisation and the solvers."""
+
+    elements: ElementsSpec = Field(default_factory=ElementsSpec)
+    mesh: MeshSpec = Field(default_factory=MeshSpec)
+    nonlinear: NonlinearSpec = Field(default_factory=NonlinearSpec)
+    continuation: Literal["default_ladder", "none"] = "default_ladder"
+    stabilisation: Literal["none", "reference"] = "none"
+    wall_distance: WallDistanceSpec = Field(default_factory=WallDistanceSpec)
+    linear: LinearSpec = Field(default_factory=LinearSpec)
+
+
+class CaseDocument(_Strict):
+    """A validated case file (schema ``nanopnp/case/v1``).
+
+    ``schema`` is carried under an alias so the reserved name does not shadow
+    ``BaseModel``, exactly as :class:`nanopnp.materials.corrections.CorrectionDocument`
+    does.
+    """
+
+    schema_id: str = Field(alias="schema")
+    name: str
+    inputs: Inputs = Field(default_factory=Inputs)
+    structure: Structure | None = None
+    geometry: Geometry | None = None
+    charge: Charge | None = None
+    electrolyte: ElectrolyteSpec
+    boundary_conditions: BoundaryConditions
+    physics: PhysicsSpec = Field(default_factory=PhysicsSpec)
+    numerics: NumericsSpec = Field(default_factory=NumericsSpec)
+    outputs: list[str] = Field(default_factory=lambda: ["current"])
+
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
+    @model_validator(mode="after")
+    def _check_registries(self) -> CaseDocument:
+        """Check every name that must resolve to something installed.
+
+        Raises
+        ------
+        ValueError
+            Naming the value and the installed alternatives. Doing this here
+            rather than at solve time is what stops a misspelt correction model
+            from disabling a correction silently: ``models.create`` would raise,
+            but only after the ladder had already been built.
+        """
+        problems: list[str] = []
+        if self.physics.model not in registered_models():
+            problems.append(
+                f"physics.model {self.physics.model!r} is not registered; the models are "
+                f"{', '.join(registered_models())}"
+            )
+        if self.numerics.stabilisation not in SUPPORTED_STABILISATIONS:
+            problems.append(
+                f"numerics.stabilisation {self.numerics.stabilisation!r} is not implemented this "
+                f"release; the available modes are {', '.join(sorted(SUPPORTED_STABILISATIONS))}. "
+                "Recording a mode the solver does not apply would make the FR-25 manifest "
+                "describe a run that never happened"
+            )
+        if self.numerics.linear.solver not in AVAILABLE_SOLVERS:
+            problems.append(
+                f"numerics.linear.solver {self.numerics.linear.solver!r} is not available; the "
+                f"solvers are {', '.join(sorted(AVAILABLE_SOLVERS))}"
+            )
+        installed = available_corrections()
+        for name in ("diffusivity", "mobility", "viscosity", "permittivity", "density"):
+            choice: CorrectionChoiceSpec = getattr(self.electrolyte.corrections, name)
+            if choice.model != "none" and choice.model not in installed:
+                problems.append(
+                    f"electrolyte.corrections.{name}.model {choice.model!r} is not installed; the "
+                    f"correction files are {', '.join(installed) or 'none'}"
+                )
+        if self.electrolyte.parameters not in installed:
+            problems.append(
+                f"electrolyte.parameters {self.electrolyte.parameters!r} is not installed; the "
+                f"correction files are {', '.join(installed) or 'none'}"
+            )
+        unknown = sorted(set(self.outputs) - OUTPUTS)
+        if unknown:
+            problems.append(
+                f"outputs {', '.join(unknown)} are not selectable; the outputs are "
+                f"{', '.join(sorted(OUTPUTS))}"
+            )
+        if problems:
+            raise ValueError("; ".join(problems))
+        return self
+
+
+# -- diagnostics --------------------------------------------------------------
+
+
+def _model_of(annotation: object) -> type[BaseModel] | None:
+    """Return the model class an annotation carries, if it carries exactly one.
+
+    Walks ``X | None`` and ``list[X]`` alike, so that the owner of a key inside
+    ``electrolyte.species[0]`` is found as readily as one inside ``numerics``.
+    """
+    if isinstance(annotation, type) and issubclass(annotation, BaseModel):
+        return annotation
+    for argument in get_args(annotation):
+        found = _model_of(argument)
+        if found is not None:
+            return found
+    return None
+
+
+def _owner_of(loc: Sequence[str | int]) -> type[BaseModel]:
+    """Return the model whose fields the last element of ``loc`` was checked against."""
+    owner: type[BaseModel] = CaseDocument
+    for key in loc[:-1]:
+        if isinstance(key, int):
+            continue
+        field = owner.model_fields.get(key)
+        if field is None:
+            break
+        nested = _model_of(field.annotation)
+        if nested is None:
+            break
+        owner = nested
+    return owner
+
+
+def _keys_of(model: type[BaseModel]) -> list[str]:
+    """Return the names a block accepts, under the aliases a case file writes."""
+    return sorted(field.alias or name for name, field in model.model_fields.items())
+
+
+def _render(source: str, error: ValidationError) -> str:
+    """Render a pydantic error as one ``<dotted.path>: <what>`` line per problem.
+
+    IF-03 requires the offending key be named. pydantic reports ``extra_forbidden``
+    with the key in ``loc`` and a message that does not carry it, so the key is
+    read out of ``loc`` and, for an unknown one, the nearest accepted name of the
+    block that rejected it is offered.
+    """
+    problems = error.errors()
+    lines = [f"{source}: {len(problems)} problem(s) in the case document"]
+    for problem in problems:
+        loc = problem["loc"]
+        dotted = ".".join(str(part) for part in loc) if loc else "<document>"
+        if problem["type"] == "extra_forbidden":
+            accepted = _keys_of(_owner_of(loc))
+            close = difflib.get_close_matches(str(loc[-1]), accepted, n=1)
+            hint = (
+                f"did you mean {close[0]!r}?"
+                if close
+                else f"this block accepts {', '.join(accepted)}"
+            )
+            lines.append(f"  {dotted}: unknown key; {hint}")
+        else:
+            lines.append(f"  {dotted}: {problem['msg']}")
+    return "\n".join(lines)
+
+
+# -- reading and writing ------------------------------------------------------
+
+
+def load_case(path: str | Path) -> CaseDocument:
+    """Read and validate a case file.
+
+    The ``schema:`` string is checked first, so a file written to a future schema
+    fails naming the schema it claims rather than with a wall of field errors
+    against a shape it never declared.
+
+    Parameters
+    ----------
+    path
+        The YAML case file.
+
+    Returns
+    -------
+    CaseDocument
+        The validated document.
+
+    Raises
+    ------
+    CaseValidationError
+        If the file is not a mapping, declares another schema, or fails
+        validation; the message names every offending key by dotted path.
+    """
+    source = Path(path)
+    raw = yaml.safe_load(source.read_text(encoding="utf-8"))
+    if not isinstance(raw, Mapping):
+        raise CaseValidationError(
+            f"{source}: a case file is a YAML mapping, found {type(raw).__name__}"
+        )
+    declared = raw.get("schema")
+    if declared != SCHEMA:
+        raise CaseValidationError(f"{source}: expected schema {SCHEMA!r}, found {declared!r}")
+    try:
+        return CaseDocument.model_validate(dict(raw))
+    except ValidationError as error:
+        raise CaseValidationError(_render(str(source), error), error) from error
+
+
+def loads_case(text: str, *, source: str = "<string>") -> CaseDocument:
+    """Validate a case document held in memory; see :func:`load_case`."""
+    raw = yaml.safe_load(text)
+    if not isinstance(raw, Mapping):
+        raise CaseValidationError(
+            f"{source}: a case file is a YAML mapping, found {type(raw).__name__}"
+        )
+    declared = raw.get("schema")
+    if declared != SCHEMA:
+        raise CaseValidationError(f"{source}: expected schema {SCHEMA!r}, found {declared!r}")
+    try:
+        return CaseDocument.model_validate(dict(raw))
+    except ValidationError as error:
+        raise CaseValidationError(_render(source, error), error) from error
+
+
+def dump_case(document: CaseDocument, path: str | Path) -> Path:
+    """Write a validated case document back to YAML.
+
+    The text is not the round-trip invariant — comments, key order and ``1``
+    against ``1.0`` are all lost here, and none of them changes the run. FR-26 and
+    VER-09 are asserted on the content hash of the validated document and on
+    :attr:`ResolvedCase.provenance` instead (section 5.3.1 NOTE).
+
+    Returns
+    -------
+    Path
+        The file written.
+    """
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    payload = document.model_dump(by_alias=True, mode="json")
+    target.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+    return target
+
+
+# -- resolution ---------------------------------------------------------------
+
+_ORDERS: dict[str, int] = {"P1": 1, "P2": 2, "P3": 3}
+"""Element labels of section 5.3.1 against their polynomial order."""
+
+_PIPELINE_SECTIONS: dict[str, str] = {
+    "structure": "structure and trajectory ingestion (FR-01 to FR-03)",
+    "geometry": "the density, contour and CAD pipeline (FR-04 to FR-10)",
+    "charge": "the PDB2PQR charge and dielectric pipeline (FR-12 to FR-15)",
+}
+"""Case-file sections whose stages land in v0.9, with what each one drives."""
+
+
+def _order(label: str, field: str) -> int:
+    """Return the polynomial order a ``P<n>`` element label names."""
+    try:
+        return _ORDERS[label]
+    except KeyError:
+        raise CaseValidationError(
+            f"numerics.elements.{field} {label!r} is not an element label; "
+            f"the labels are {', '.join(sorted(_ORDERS))}"
+        ) from None
+
+
+@dataclass(frozen=True)
+class ResolvedCase:
+    """A case document turned into the objects a run is made of.
+
+    Everything here is derived from the document and from the installed data
+    files; nothing is read from the environment. Two documents that resolve to
+    equal :attr:`provenance` describe the same run, which is the half of FR-26
+    that a content hash cannot express (a field nothing records could differ).
+    """
+
+    document: CaseDocument
+    electrolyte: Electrolyte
+    concentration_M: float
+    temperature_K: float
+    bias_V: float
+    ground: str
+    model: str
+    model_options: Mapping[str, Any]
+    newton: NewtonSettings
+    linear_solver: str
+    stabilisation: str
+    continuation: str
+    wall_distance_sources: str
+    wall_distance_max_nm: float
+    mesh: SuppliedArtefact
+    outputs: tuple[str, ...]
+
+    @property
+    def name(self) -> str:
+        """The case name, which names the run directory in the store."""
+        return self.document.name
+
+    @property
+    def provenance(self) -> dict[str, Any]:
+        """Return what the FR-25 manifest must record about the resolved case.
+
+        The stabilisation mode is here because section 6.4 and section 7.4 make it
+        load-bearing: a number recorded without it is not comparable to the
+        reference COMSOL run, which was stabilised.
+        """
+        return {
+            "name": self.document.name,
+            "schema": self.document.schema_id,
+            "model": self.model,
+            "model_options": dict(sorted(self.model_options.items())),
+            "concentration_M": self.concentration_M,
+            "temperature_K": self.temperature_K,
+            "bias_V": self.bias_V,
+            "ground": self.ground,
+            "walls": self.document.boundary_conditions.walls.model_dump(),
+            "electrolyte": dict(self.electrolyte.provenance),
+            "newton": {
+                "initial_damping": self.newton.initial_damping,
+                "minimum_damping": self.newton.minimum_damping,
+                "recovery_damping": self.newton.recovery_damping,
+                "growth_factor": self.newton.growth_factor,
+                "max_iterations": self.newton.max_iterations,
+                "relative_tolerance": self.newton.relative_tolerance,
+                "absolute_tolerance": self.newton.absolute_tolerance,
+                "reference_norm": self.newton.reference_norm,
+            },
+            "linear_solver": self.linear_solver,
+            "stabilisation": self.stabilisation,
+            "continuation": self.continuation,
+            "wall_distance": {
+                "sources": self.wall_distance_sources,
+                "max_distance_nm": self.wall_distance_max_nm,
+            },
+            "outputs": list(self.outputs),
+        }
+
+
+def _switches(document: CaseDocument) -> CorrectionSwitches:
+    """Return the PHY-22 switch set the document's ``corrections`` block names."""
+    corrections = document.electrolyte.corrections
+    return CorrectionSwitches(
+        diffusivity=corrections.diffusivity.to_choice(),
+        mobility=corrections.mobility.to_choice(),
+        viscosity=corrections.viscosity.to_choice(),
+        permittivity=corrections.permittivity.to_choice(),
+        density=corrections.density.to_choice(),
+        steric=corrections.steric.model != "none",
+    )
+
+
+def _check_species(document: CaseDocument, electrolyte: Electrolyte) -> None:
+    """Check the case's species and steric diameters against the parameter file.
+
+    The diameters are *checked*, never applied: they are fitted parameters of the
+    correction file (FR-16), and a case file that could override them silently
+    would be a second source of truth for a physical constant.
+    """
+    problems: list[str] = []
+    for index, species in enumerate(document.electrolyte.species):
+        valence = electrolyte.ion(species.name).valence
+        if valence != species.z:
+            problems.append(
+                f"electrolyte.species[{index}].z is {species.z:+d} for {species.name!r}, but "
+                f"{document.electrolyte.parameters!r} gives {valence:+d}"
+            )
+    steric = document.electrolyte.corrections.steric
+    if steric.a_ion_nm is not None:
+        for index, ion in enumerate(electrolyte.species):
+            given_m = steric.a_ion_nm * 1e-9
+            if abs(ion.steric_diameter - given_m) > 1e-15:
+                problems.append(
+                    f"electrolyte.corrections.steric.a_ion_nm is {steric.a_ion_nm} nm, but "
+                    f"{document.electrolyte.parameters!r} gives "
+                    f"{ion.steric_diameter * 1e9} nm for {ion.name!r} "
+                    f"(species[{index}]); the diameters are fitted parameters of the correction "
+                    "file and the case file cannot override them (FR-16)"
+                )
+    if steric.a_water_nm is not None:
+        given_m = steric.a_water_nm * 1e-9
+        if abs(electrolyte.water_steric_diameter - given_m) > 1e-15:
+            problems.append(
+                f"electrolyte.corrections.steric.a_water_nm is {steric.a_water_nm} nm, but "
+                f"{document.electrolyte.parameters!r} gives "
+                f"{electrolyte.water_steric_diameter * 1e9} nm"
+            )
+    if problems:
+        raise CaseValidationError("; ".join(problems))
+
+
+def _require_runnable(document: CaseDocument) -> SuppliedArtefact:
+    """Reject every section this release does not run, and return the supplied mesh.
+
+    Returns
+    -------
+    SuppliedArtefact
+        ``inputs.mesh``, which every Phase-1 run has by construction: the meshing
+        pipeline is v0.9, so a case without one describes no run at all.
+    """
+    for section, what in _PIPELINE_SECTIONS.items():
+        if getattr(document, section) is not None:
+            raise UnsupportedCaseSection(
+                f"case {document.name!r} carries a {section}: section; {what} is v0.9 "
+                f"(SPECIFICATION.md section 3). This release runs on artefacts supplied through "
+                "inputs:, which is FR-27's hand substitution at stage granularity"
+            )
+    for supplied, what in (
+        ("charge", "the fixed-charge field"),
+        ("eps_r", "the dielectric field"),
+    ):
+        if getattr(document.inputs, supplied) is not None:
+            raise UnsupportedCaseSection(
+                f"case {document.name!r} supplies inputs.{supplied}; {what} is consumed from v0.9 "
+                "(SPECIFICATION.md section 3). Recording an input the solver never reads would "
+                "make the FR-25 manifest describe a run that never happened"
+            )
+    if document.inputs.mesh is None:
+        raise UnsupportedCaseSection(
+            f"case {document.name!r} supplies no inputs.mesh; the meshing pipeline is v0.9 "
+            "(SPECIFICATION.md section 3, FR-10), so this release needs an externally supplied "
+            "mesh (section 5.3.1 NOTE on inputs:)"
+        )
+    mesh = document.inputs.mesh
+    nonlinear = document.numerics.nonlinear
+    if nonlinear.strategy != "newton":
+        raise UnsupportedCaseSection(
+            f"numerics.nonlinear.strategy {nonlinear.strategy!r} is the NUM-20 fallback ladder, "
+            "which is v0.5; this release solves every rung with the monolithic damped Newton of "
+            "NUM-16"
+        )
+    if nonlinear.damping != "residual":
+        raise UnsupportedCaseSection(
+            f"numerics.nonlinear.damping {nonlinear.damping!r} is v0.5; this release uses the "
+            "residual-monotonicity damping of NUM-16, whose recovery rule the reference records"
+        )
+    model = document.physics.model
+    if model not in COUPLED_MODELS and document.numerics.continuation != "none":
+        raise CaseValidationError(
+            f"physics.model {model!r} has no transport to continue, so the NUM-18 ladder does not "
+            f"apply to it; set numerics.continuation: none, or choose one of "
+            f"{', '.join(sorted(COUPLED_MODELS))}"
+        )
+    return mesh
+
+
+def resolve(document: CaseDocument) -> ResolvedCase:
+    """Turn a validated case document into the objects the solver takes.
+
+    Parameters
+    ----------
+    document
+        A validated case document.
+
+    Returns
+    -------
+    ResolvedCase
+        The electrolyte, the model options, the Newton settings and the mesh the
+        run is made of.
+
+    Raises
+    ------
+    UnsupportedCaseSection
+        If the case asks for a pipeline stage a later release owns; the message
+        names the section and the release.
+    CaseValidationError
+        If the document is internally inconsistent — a species the parameter file
+        does not carry, a steric diameter disagreeing with it, an element label
+        that is not one.
+    """
+    mesh = _require_runnable(document)
+
+    electrolyte = Electrolyte.from_parameter_file(
+        document.electrolyte.parameters,
+        switches=_switches(document),
+        species=[species.name for species in document.electrolyte.species],
+        driver=document.electrolyte.driver,
+    )
+    _check_species(document, electrolyte)
+
+    elements = document.numerics.elements
+    order = _order(elements.phi, "phi")
+    for field_name in ("c", "u"):
+        other = _order(getattr(elements, field_name), field_name)
+        if other != order:
+            raise CaseValidationError(
+                f"numerics.elements.{field_name} is {getattr(elements, field_name)!r} and "
+                f"numerics.elements.phi is {elements.phi!r}; this release carries one order for "
+                "phi, c_i and u, and the Taylor-Hood pair of NUM-03 pairs it with p one lower"
+            )
+    pressure_order = _order(elements.p, "p")
+
+    physics = document.physics
+    nonlinear = document.numerics.nonlinear
+    return ResolvedCase(
+        document=document,
+        electrolyte=electrolyte,
+        concentration_M=document.electrolyte.concentration_M,
+        temperature_K=document.electrolyte.temperature_K,
+        bias_V=document.boundary_conditions.bias_V,
+        ground=document.boundary_conditions.ground,
+        model=physics.model,
+        model_options={
+            "flow": physics.flow,
+            "variable_density": physics.variable_density,
+            "inertia": physics.inertia,
+            "dielectric_gradient_forces": physics.dielectric_gradient_forces,
+            "order": order,
+            "pressure_order": pressure_order,
+            "stabilisation": document.numerics.stabilisation,
+        },
+        newton=NewtonSettings(
+            initial_damping=DEFAULT_SETTINGS.initial_damping,
+            minimum_damping=DEFAULT_SETTINGS.minimum_damping,
+            recovery_damping=DEFAULT_SETTINGS.recovery_damping,
+            growth_factor=DEFAULT_SETTINGS.growth_factor,
+            max_iterations=nonlinear.max_iter,
+            relative_tolerance=nonlinear.rtol,
+            absolute_tolerance=DEFAULT_SETTINGS.absolute_tolerance,
+            reference_norm=DEFAULT_SETTINGS.reference_norm,
+        ),
+        linear_solver=document.numerics.linear.solver,
+        stabilisation=document.numerics.stabilisation,
+        continuation=document.numerics.continuation,
+        wall_distance_sources=document.numerics.wall_distance.sources,
+        wall_distance_max_nm=document.numerics.wall_distance.max_distance_nm,
+        mesh=mesh,
+        outputs=tuple(document.outputs),
+    )
+
+
+# -- the stage ----------------------------------------------------------------
+
+
+class CaseStage:
+    """Stage 9 of section 5.2: the resolved case document.
+
+    Resolving is the work: validation has already happened at the file boundary,
+    and what this stage adds is the check that the document describes a run *this
+    release can perform*, before a mesh is read or a form assembled.
+    """
+
+    name = "case"
+
+    def describe(self) -> StageDescription:
+        """Return the registry's description of this stage (FR-27)."""
+        return describe(self.name)
+
+    def run(
+        self,
+        inputs: StageInputs,
+        *,
+        progress: Progress | None = None,
+        cancel: CancelToken | None = None,
+    ) -> CaseArtefact:
+        """Resolve the case and emit the stage-9 artefact.
+
+        Raises
+        ------
+        Cancelled
+            If ``cancel`` is already set; resolution is too short to interrupt
+            usefully, so the token is checked once on entry.
+        """
+        check_cancelled(cancel, "case")
+        report(progress, 0.0, f"resolving case {inputs.case.name!r}")
+        resolved = resolve(inputs.case)
+        report(progress, 1.0, f"case {inputs.case.name!r} resolved")
+        return CaseArtefact(inputs.case, summary=resolved.provenance)
