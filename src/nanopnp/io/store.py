@@ -27,7 +27,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from nanopnp.core.paths import store_root
-from nanopnp.io.artefact import Artefact, _now
+from nanopnp.io.artefact import Artefact, timestamp
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.core.hashing import Canonicalisable
@@ -113,7 +113,7 @@ class Store:
             inputs=artefact.inputs,
             payload=stored_payload,
             summary=artefact.summary,
-            created_at=artefact.created_at or _now(),
+            created_at=artefact.created_at or timestamp(),
         )
         meta = record.meta()
         _atomic_write_bytes(

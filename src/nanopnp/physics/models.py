@@ -552,18 +552,35 @@ class CoupledModel:
         }
 
     def _deviations(self) -> set[str]:
-        """Return every switch set away from the validated default (FR-25)."""
+        """Return the switches *this model* holds that deviate from PHY-22.
+
+        Named by their case-file path, and narrowed to the switches the model
+        object actually carries. The manifest's authority on "every switch set
+        away from the validated default" is
+        :func:`nanopnp.io.defaults.deviations`, which diffs the whole case
+        against ``VALIDATED_DEFAULT_CASE`` and so also sees the correction
+        switches, the solver settings and the boundary conditions this object
+        knows nothing about. ``physics/`` must not import ``io/`` (section 5.4.1),
+        so the two computations are independent by construction and
+        ``tests/tier1/test_manifest.py`` asserts they agree on the overlap: two
+        records that must agree, with a test that says so, beats one that
+        silently under-reports.
+
+        ``log_variables`` is not in the overlap: it is a numerics choice with no
+        case-file field, and it is reported under ``switches`` in
+        :attr:`provenance` rather than pretending to a path.
+        """
         deviations: set[str] = set()
-        if self.dielectric_gradient_forces:
-            deviations.add("dielectric_gradient_forces")
-        if self.log_variables:
-            deviations.add("log_variables")
+        if not self.flow:
+            deviations.add("physics.flow")
         if not self.variable_density:
-            deviations.add("variable_density_flow=off")
+            deviations.add("physics.variable_density")
         if not self.inertia:
-            deviations.add("inertia=off")
+            deviations.add("physics.inertia")
+        if self.dielectric_gradient_forces:
+            deviations.add("physics.dielectric_gradient_forces")
         if not self.steric:
-            deviations.add("steric=off")
+            deviations.add("electrolyte.corrections.steric.model")
         return deviations
 
     # -- discretisation ----------------------------------------------------

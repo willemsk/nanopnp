@@ -382,7 +382,7 @@ class ElementsSpec(_Strict):
 
 
 class MeshSpec(_Strict):
-    """Stage 6: the mesher and its size field (v0.7)."""
+    """Stage 6: the mesher and its size field (v0.9)."""
 
     backend: Literal["netgen", "gmsh"] = "netgen"
     wall_h_nm: float | Literal["auto"] = "auto"
@@ -848,7 +848,65 @@ def _require_runnable(document: CaseDocument) -> SuppliedArtefact:
             f"apply to it; set numerics.continuation: none, or choose one of "
             f"{', '.join(sorted(COUPLED_MODELS))}"
         )
+    _check_physics_switches(document)
     return mesh
+
+
+def _check_physics_switches(document: CaseDocument) -> None:
+    """Refuse a case whose physics switches the named model cannot honour (PHY-21).
+
+    A switch the solver silently drops is worse than one it refuses: the FR-25
+    manifest would record ``flow: true`` beside a solution that has no velocity
+    field in it, and a reader would have no way to tell. Both checks here name a
+    switch the chosen model fixes for itself.
+    """
+    physics = document.physics
+    model = physics.model
+    if model == "pnp" and physics.flow:
+        raise CaseValidationError(
+            "physics.model 'pnp' is Poisson-Nernst-Planck with no flow coupling (PHY-21), so "
+            "physics.flow must be false; 'pnp-ns' is the same transport model with flow"
+        )
+    if model in COUPLED_MODELS:
+        return
+    inapplicable = [
+        name
+        for name in ("flow", "variable_density", "inertia", "dielectric_gradient_forces")
+        if getattr(physics, name)
+    ]
+    if inapplicable:
+        named = ", ".join(f"physics.{name}" for name in inapplicable)
+        raise CaseValidationError(
+            f"physics.model {model!r} solves electrostatics alone (PHY-24): it carries no "
+            f"momentum and no transport, so {named} would be recorded in the manifest and never "
+            f"applied; set them false, or choose one of {', '.join(sorted(COUPLED_MODELS))}"
+        )
+
+
+def _model_options(document: CaseDocument, *, order: int, pressure_order: int) -> dict[str, Any]:
+    """Return the keyword arguments the named model's builder takes (PHY-21).
+
+    The builders are not uniform, and deliberately so:
+    ``nanopnp.physics.models`` gives the electrostatic family only ``order``, and
+    the ``pnp`` builder fixes ``flow=False`` itself. Passing every switch to every
+    builder would raise a ``TypeError`` for a duplicate keyword on ``pnp`` and be
+    rejected as unknown by ``pb``; :func:`_check_physics_switches` has already
+    refused any case where the omission would hide a switch the user set.
+    """
+    physics = document.physics
+    if physics.model not in COUPLED_MODELS:
+        return {"order": order}
+    options: dict[str, Any] = {
+        "variable_density": physics.variable_density,
+        "inertia": physics.inertia,
+        "dielectric_gradient_forces": physics.dielectric_gradient_forces,
+        "order": order,
+        "pressure_order": pressure_order,
+        "stabilisation": document.numerics.stabilisation,
+    }
+    if physics.model != "pnp":
+        options["flow"] = physics.flow
+    return options
 
 
 def resolve(document: CaseDocument) -> ResolvedCase:
@@ -907,15 +965,7 @@ def resolve(document: CaseDocument) -> ResolvedCase:
         bias_V=document.boundary_conditions.bias_V,
         ground=document.boundary_conditions.ground,
         model=physics.model,
-        model_options={
-            "flow": physics.flow,
-            "variable_density": physics.variable_density,
-            "inertia": physics.inertia,
-            "dielectric_gradient_forces": physics.dielectric_gradient_forces,
-            "order": order,
-            "pressure_order": pressure_order,
-            "stabilisation": document.numerics.stabilisation,
-        },
+        model_options=_model_options(document, order=order, pressure_order=pressure_order),
         newton=NewtonSettings(
             initial_damping=DEFAULT_SETTINGS.initial_damping,
             minimum_damping=DEFAULT_SETTINGS.minimum_damping,

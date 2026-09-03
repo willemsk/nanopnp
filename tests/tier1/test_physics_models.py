@@ -131,8 +131,10 @@ def test_fr25_provenance_records_every_deviation_from_the_validated_default() ->
 
     deviant = CoupledModel(electrolyte=electrolyte, dielectric_gradient_forces=True, inertia=False)
     recorded = deviant.provenance["deviations_from_validated_default"]
-    assert "dielectric_gradient_forces" in recorded
-    assert "inertia=off" in recorded
+    # Named by case-file path, so the manifest's own diff (io/defaults.deviations)
+    # and this one are comparable rather than merely both plausible.
+    assert "physics.dielectric_gradient_forces" in recorded
+    assert "physics.inertia" in recorded
     assert deviant.provenance["switches"]["steric"] is True
 
 

@@ -43,7 +43,7 @@ SOLUTION_SCHEMA = "nanopnp/solution/v1"
 """Stage 10: the converged field set and its iteration history."""
 
 
-def _now() -> str:
+def timestamp() -> str:
     """Return the current UTC time, ISO 8601, to the second.
 
     Recorded beside the hash and never inside it: a timestamp in the digest would
@@ -144,7 +144,7 @@ class Artefact:
                 for name, path in sorted(self.payload.items())
             },
             "summary": dict(self.summary),
-            "created_at": self.created_at or _now(),
+            "created_at": self.created_at or timestamp(),
         }
 
 
