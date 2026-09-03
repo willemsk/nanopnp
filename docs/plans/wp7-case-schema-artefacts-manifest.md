@@ -1,6 +1,6 @@
 # WP7 — Case-file schema, artefacts, and the provenance manifest
 
-**Status: planned, not started.** Written 3 September 2026, the first package of Phase 1, after the
+**Status: delivered.** Written 3 September 2026, the first package of Phase 1, after the
 phase plan merged in PR #16. It inherits from Phase 0 a verified solver and *no serialisation layer
 whatsoever*: `src/nanopnp/io/` is a one-line docstring, `core/` has `constants.py`, `paths.py`,
 `scaling.py` and `typing.py` and nothing else, and `hashlib`, `json` and `dataclasses.asdict` appear
@@ -69,8 +69,41 @@ IF-08, FR-25, FR-26, FR-27, VER-09** and begins **IF-01**. No new dependency: `p
 | Correction-file version | The Materials group records the **sha256 of the resolved `data/corrections/*.yaml`** beside its name | FR-25 asks for "version of each parameter data file" and `CorrectionDocument` carries no version field. The content hash is the version, and resolving it through `core.paths.correction_file` needs no change in `materials/` |
 | Stage registry | Name → `"module:attribute"` **string** plus its `describe()` metadata, resolved by `importlib.import_module` only when the stage is run | FR-27's introspection is what the deferred-import rule exists to protect: `nanopnp stage --list` and the GUI's stage browser must not import the physics. Holding the metadata in the registry entry means introspection never touches the module |
 | Cancellation | Cooperative, via a `CancelToken` the stage checks between rungs and inside the `damped_newton` callback, raising `Cancelled` | **No change to `solve/`**: `damped_newton` already takes `callback: Callable[[NewtonStep], None]` and calls it unguarded at `newton.py:372`, so a callback that raises propagates out of the solve. A cancel that interrupts a UMFPACK factorisation would need a subprocess and a signal; the GUI has one above this layer anyway (ADR-004) |
+
+> **Outcome — "no change to `solve/`" was wrong, and the reason is a real hole in FR-27's promise.**
+> The Newton callback reaches only the *coupled* rungs. `ElectrostaticModel.solve` ends with
+> `_reject_unknown(kwargs, ...)` — deliberately, so a misspelled argument is an error rather than a
+> silently ignored one — and stages 1 and 2 of the NUM-18 ladder are electrostatic. Injecting
+> `callback` into every rung's `solve_kwargs`, which is the obvious implementation, aborts the run
+> on rung 1 with a message about an unknown keyword rather than about the physics. So the callback
+> now goes only to `isinstance(rung.model, CoupledModel)` rungs, and `run_ladder` gained an
+> `on_rung(index, rung)` hook: it is the ladder's only genuine point between rungs, and without it
+> a stage would report no progress and refuse to stop until stage 3. `run_ladder` also gained an
+> `except Cancelled:` clause ahead of its blanket handler, because logging a user-requested stop
+> beside the gate violations makes a cancelled run look like a diverged one in exactly the record
+> an operator reads first. Two granularities, then, not one — and `tests/tier2/test_artefact_cache.py`
+> asserts both leave no artefact in the store.
 | Which stages WP7 implements | Three — `materials`, `case`, `solve` — the last over a *constructed* `CylindricalPoreGeometry` mesh | A protocol with no implementation cannot be verified, and "a package that cannot be verified by the end of its own PR is two packages". These three need no mesh ingestion, so WP7 stands alone. WP10 keeps QR-08 and the CLI; WP7's Tier-2 test asserts cache identity, not full QoI reproduction |
 | Store root | `NANOPNP_STORE`, else `./nanopnp-store`, resolved by a new `core.paths.store_root()` | `core/paths.py` already owns "where things are" and `nanopnp --env` already reports it |
+
+> **Outcome — `SolveStage` had to fix two manifest-integrity bugs in `default_ladder` before it
+> could honour the case it was handed.** Both are the same failure in different clothes: a switch
+> the manifest records must be one the run honours, or the manifest is a record of a run that did
+> not happen.
+>
+> `default_ladder` resolved its correction set from the *parameter-file name*
+> (`CorrectionSwitches.for_model(correction_model)`), not from the case. A case that switched one
+> correction off under PHY-22 — `corrections.viscosity: {model: none}` — climbed stages 1 to 6
+> without it and then had it back on from stage 7, while the Deviations group faithfully recorded a
+> deviation the run never took. Verified empirically both ways: with the case's own switches the top
+> rung reports `viscosity: none`, without them `willems2020_nacl`. `default_ladder` now takes
+> `switches`, and `SolveStage` passes `resolved.electrolyte.switches`.
+>
+> `default_ladder` also hard-coded `{cis: 0, trans: bias}` and ignored `boundary_conditions.ground`
+> entirely, so a case grounding `trans` ran with the bias reversed. It now takes `ground` and
+> derives the driven electrode from it. Refusing such a case would have been the other defensible
+> choice; honouring it is the same principle `_check_physics_switches` already applies elsewhere in
+> the resolver.
 
 ## Design
 
@@ -148,6 +181,19 @@ defaults are. The nine switches PHY-22 tabulates, plus the three the specificati
 | `numerics.wall_distance.include_analyte` | **off** | PHY-02, WP6 |
 | `numerics.linear.solver` | `umfpack` | CON-11 as amended, §6.6 |
 
+> **Outcome — three rows of this table were wrong, and the schema enumeration is what found them.**
+> `numerics.wall_distance.include_analyte` does not exist and was not added: WP6's distance field
+> takes a *source set* (`numerics.wall_distance.sources`, `wall | wall+analyte`), not a boolean, and
+> a second switch expressing the same choice would have let the manifest record a state the run
+> cannot be in. `physics.variable_density_flow` is spelled `physics.variable_density`, and
+> `physics.flow` — the switch that turns Navier–Stokes off entirely, making the difference between
+> PNP-NS and PNP — is missing from the table altogether. Two more switches that are not in PHY-22's
+> nine also carry validated defaults and are now in `SWITCH_PATHS`: `electrolyte.parameters`
+> (`willems2020_nacl`) and `electrolyte.driver` (`average`), because a run that resolved its
+> corrections through a *different fitted parameter file*, or that drove them with the ionic
+> strength rather than `⟨c⟩`, is not the validated model however its nine switches read. The
+> delivered set is 31 paths, against the twelve rows above.
+
 `CorrectionSwitches()` constructs all five corrections *off* and `steric` false, so the pydantic field
 defaults for the corrections block are the classical model. A `model_dump(exclude_defaults=True)`
 diff would therefore report the validated configuration as nine deviations and classical PNP-NS as
@@ -162,6 +208,25 @@ walks `SWITCH_PATHS` and compares. What keeps the table honest is not the walk b
 `test_manifest.py` enumerates every field in the schema tree whose annotation is `bool`, a `Literal`,
 or a `CorrectionChoice`, and asserts each appears in `SWITCH_PATHS`. Adding a switch in WP12 or WP14
 without giving it a validated default fails Tier 1 rather than silently vanishing from the manifest.
+
+> **Outcome — the enumeration needed a second bucket, and the test needed a second direction.**
+> A schema walk finds switch-typed fields that are *not* deviations from anything: which electrode
+> is grounded, the mesh backend, the boundary-layer flag, `numerics.mesh.wall_h_nm` (a size in nm
+> that only reads as a switch because of its `auto` literal), and the four v0.9 blocks `resolve()`
+> refuses outright. Forcing them into `SWITCH_PATHS` would have put five operating-point and
+> discretisation choices into the Deviations group, where a reader looking for "what is not the
+> validated model" would have to learn to ignore them. So `io/defaults.py` carries a second mapping,
+> `CONFIGURATION_PATHS`, each entry keyed to a written *reason*, and the enumeration test refuses a
+> switch-typed field that is in neither. The reason is the mechanism: "not a deviation" is not a
+> place a later package can quietly put a switch nobody wanted to think about.
+>
+> The test also runs in both directions. A walk of the schema tree cannot see a `str`-typed switch
+> such as `electrolyte.parameters`, so a second test resolves every classified path against
+> `CaseDocument`'s field tree and fails on a path that no longer names a field. The first direction
+> catches a switch added without a default; the second catches a default left behind by a renamed
+> field. Neither alone is enough. A third asserts that every `SWITCH_PATHS` entry actually reads a
+> value off `VALIDATED_DEFAULT_CASE`, since a path that silently resolved to `None` would report
+> its switch as never deviating.
 
 ### The eight groups, and where each comes from
 
@@ -251,6 +316,24 @@ inverted.
 | `io/manifest.py` | `Manifest`, `environment()`, the eight-group assembly, `write()` | FR-25, IF-08, §5.3.3 |
 | `materials/stage.py` | `MaterialsStage` — §5.2 stage 8, electrolyte specification → resolved coefficient set | IF-01 |
 | `solve/stage.py` | `SolveStage` — §5.2 stage 10 over a supplied mesh, driving `default_ladder` and `run_ladder` with progress and cancellation | IF-01, FR-27 |
+
+> **Outcome — the stage needed a public `key(inputs)` beside `run(inputs)`, and the plan did not ask
+> for one.** `Store.get_or_compute` decides whether to run a stage from an artefact carrying the
+> schema, the parameters and the input hashes and *no payload*; §5.3.2 is explicit that this is what
+> the single-digest design buys. But nothing in the plan said who builds that key for the solve, and
+> a caller cannot: it would have to resolve the case, hash the mesh file and run stage 8 itself, and
+> two hand-written spellings of the key are exactly the failure that files every artefact under a
+> key nothing will ask for again. `SolveStage.key` and `SolveStage.run` now share one `_prepare`, so
+> the key the store is asked about and the key the solve produces cannot be built differently, and
+> `test_ver26_the_key_computed_before_the_solve_is_the_one_it_produces` asserts the equality
+> directly rather than leaving it to the store's own after-the-fact check — by which point the solve
+> has already been paid for.
+>
+> The mesh reaches the digest as `file_hash(path)`, so the same mesh under two paths hits the same
+> entry and a mesh edited by hand (FR-27) misses; both directions are tested. And the materials
+> artefact is recomputed inside the stage when stage 8 did not supply it, which is what makes
+> "independently invocable" true of the *key* and not only of the call: a pipeline run and a
+> stage-alone run fill one store entry, not two.
 | `physics/models.py` (edit) | `_deviations` narrowed to the model's own switches, with the docstring pointing at `io/defaults.py` as the manifest's authority | FR-25 |
 
 `io/case.py` is the file the rest of the phase is written against, so the schema is **frozen at the

@@ -132,6 +132,16 @@ sign/`quad_segs` convention). For a closed contour, `buffer(-d)` is more robust 
 **Keep MSH 4.1 as the archival interchange format** — physical groups survive round-trips there
 and get mangled in some VTU paths.
 
+**Netgen's own `.vol` round-trips boundary and material names [tested].** `mesh.ngmesh.Save(path)`
+followed by `ngsolve.Mesh(path)` returns `GetMaterials()` and `GetBoundaries()` unchanged, so a
+mesh written by one process and solved by another keeps the vocabulary the essential conditions and
+the `definedon` restrictions are written against. Measured on a `CylindricalPoreGeometry` at
+`maxh = 4 nm`: materials `['electrolyte', 'membrane', 'cis', 'trans']` and boundaries `['axis',
+'cis', 'default', 'membrane', 'membrane_outer', 'trans', 'wall']` on both sides of the write. This
+is what makes an externally supplied mesh usable at all — a format that dropped the names would
+apply every essential condition to nothing and converge to the wrong problem in silence, so a
+release that reads a mesh from a case file must restrict itself to formats that carry them.
+
 ---
 
 ## 5. GUI and packaging

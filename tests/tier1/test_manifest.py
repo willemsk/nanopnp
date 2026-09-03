@@ -1,4 +1,4 @@
-"""The FR-25 provenance manifest and the validated-default diff it rests on.
+"""VER-24 — the FR-25 provenance manifest and the validated-default diff it rests on.
 
 A manifest is only worth writing if a run can be reconstructed from it, and the
 way that claim fails is not by being false but by being *incomplete*: a switch
@@ -102,7 +102,7 @@ def _switch_typed_leaves(model: type[BaseModel], prefix: str = "") -> set[str]:
     return found
 
 
-def test_fr25_every_switch_typed_field_of_the_schema_is_classified() -> None:
+def test_ver24_every_switch_typed_field_of_the_schema_is_classified() -> None:
     """No switch of the schema is in neither the deviation set nor the exempt set.
 
     FR-25 asks for "every switch set away from the validated default". A switch
@@ -136,7 +136,7 @@ def _all_leaves(model: type[BaseModel], prefix: str = "") -> set[str]:
     return found
 
 
-def test_fr25_every_classified_path_still_names_a_field() -> None:
+def test_ver24_every_classified_path_still_names_a_field() -> None:
     """Both mappings name real fields, so a rename cannot leave a dead path behind.
 
     The other direction of the test above, and the one that covers the
@@ -150,7 +150,7 @@ def test_fr25_every_classified_path_still_names_a_field() -> None:
     assert not stale, f"{sorted(stale)} name no field of nanopnp/case/v1"
 
 
-def test_fr25_every_switch_path_reads_off_the_validated_default() -> None:
+def test_ver24_every_switch_path_reads_off_the_validated_default() -> None:
     """Every deviation path resolves on the validated default case itself.
 
     :func:`~nanopnp.io.defaults.deviations` reads each path off both documents;
@@ -161,12 +161,12 @@ def test_fr25_every_switch_path_reads_off_the_validated_default() -> None:
         value_at(VALIDATED_DEFAULT_CASE, path)
 
 
-def test_fr25_the_two_classifications_are_disjoint() -> None:
+def test_ver24_the_two_classifications_are_disjoint() -> None:
     """A path is a deviation or an exemption, never quietly both."""
     assert not set(SWITCH_PATHS) & set(CONFIGURATION_PATHS)
 
 
-def test_fr25_an_unknown_path_is_refused_by_name() -> None:
+def test_ver24_an_unknown_path_is_refused_by_name() -> None:
     """A typo in a switch path fails loudly rather than reading as no deviation."""
     with pytest.raises(UnknownSwitchPathError, match=re.escape("physics.flowe")):
         value_at(VALIDATED_DEFAULT_CASE, "physics.flowe")
@@ -175,12 +175,12 @@ def test_fr25_an_unknown_path_is_refused_by_name() -> None:
 # -- the diff itself ----------------------------------------------------------
 
 
-def test_fr25_the_validated_default_case_deviates_from_nothing() -> None:
+def test_ver24_the_validated_default_case_deviates_from_nothing() -> None:
     """The validated default is the origin of the diff (PHY-22, PHY-23)."""
     assert deviations(VALIDATED_DEFAULT_CASE) == ()
 
 
-def test_fr25_a_disabled_correction_is_recorded_as_a_deviation() -> None:
+def test_ver24_a_disabled_correction_is_recorded_as_a_deviation() -> None:
     """Turning the viscosity correction off names the path, the value and the default."""
     document = VALIDATED_DEFAULT_CASE.model_copy(deep=True)
     document.electrolyte.corrections.viscosity.model = "none"
@@ -191,7 +191,7 @@ def test_fr25_a_disabled_correction_is_recorded_as_a_deviation() -> None:
     assert recorded.validated == "willems2020_nacl"
 
 
-def test_fr25_the_model_and_the_case_agree_on_the_switches_they_share() -> None:
+def test_ver24_the_model_and_the_case_agree_on_the_switches_they_share() -> None:
     """``CoupledModel``'s own record and the case's diff name the same switches.
 
     Section 5.4.1 keeps ``physics/`` from importing ``io/``, so these are two
@@ -226,7 +226,7 @@ def test_fr25_the_model_and_the_case_agree_on_the_switches_they_share() -> None:
 # -- the eight groups ---------------------------------------------------------
 
 
-def test_fr25_the_manifest_carries_all_eight_groups_of_section_5_3_3() -> None:
+def test_ver24_the_manifest_carries_all_eight_groups_of_section_5_3_3() -> None:
     """Every group of section 5.3.3 is present even when no stage produced it."""
     document = loads_case(MINIMAL)
     written = _manifest(document).document()
@@ -235,7 +235,7 @@ def test_fr25_the_manifest_carries_all_eight_groups_of_section_5_3_3() -> None:
     assert written["schema"] == MANIFEST_SCHEMA
 
 
-def test_fr25_a_group_no_stage_produced_names_the_reason() -> None:
+def test_ver24_a_group_no_stage_produced_names_the_reason() -> None:
     """A not-run group says *why* rather than being dropped or left empty.
 
     An absent key and an empty object are both readable as "nothing to record".
@@ -252,7 +252,7 @@ def test_fr25_a_group_no_stage_produced_names_the_reason() -> None:
         assert block["reason"]
 
 
-def test_fr25_the_solver_group_records_the_settings_and_the_run() -> None:
+def test_ver24_the_solver_group_records_the_settings_and_the_run() -> None:
     """The solver group carries what was asked for and what happened."""
     document = loads_case(MINIMAL)
     ladder = {"rungs": [], "iterations": 12, "minimum_damping_used": 0.5}
@@ -264,7 +264,7 @@ def test_fr25_the_solver_group_records_the_settings_and_the_run() -> None:
     assert solver["run"]["iterations"] == 12
 
 
-def test_fr25_stabilisation_is_recorded_with_the_number(tmp_path: Path) -> None:
+def test_ver24_stabilisation_is_recorded_with_the_number(tmp_path: Path) -> None:
     """The mode the solve actually ran under is recorded beside the requested one.
 
     Sections 6.4 and 7.4 make this load-bearing: the reference COMSOL model ran
@@ -280,7 +280,7 @@ def test_fr25_stabilisation_is_recorded_with_the_number(tmp_path: Path) -> None:
     assert block["matches_requested"] is False
 
 
-def test_fr25_deviations_reach_the_manifest_by_path() -> None:
+def test_ver24_deviations_reach_the_manifest_by_path() -> None:
     """The Deviations group carries the same paths the diff produced."""
     document = loads_case(MINIMAL)
     written = _manifest(document).document()
@@ -297,7 +297,7 @@ def test_fr25_deviations_reach_the_manifest_by_path() -> None:
 # -- writing, reading and the environment -------------------------------------
 
 
-def test_fr26_the_manifest_round_trips_with_the_case_beside_it(tmp_path: Path) -> None:
+def test_ver24_the_manifest_round_trips_with_the_case_beside_it(tmp_path: Path) -> None:
     """Written and read back, the manifest is unchanged and carries the case verbatim."""
     document = loads_case(MINIMAL)
     built = _manifest(document)
@@ -314,7 +314,7 @@ def test_fr26_the_manifest_round_trips_with_the_case_beside_it(tmp_path: Path) -
     assert loads_case(str(case["text"])).name == document.name
 
 
-def test_fr25_the_environment_group_names_versions_without_importing_ngsolve() -> None:
+def test_ver24_the_environment_group_names_versions_without_importing_ngsolve() -> None:
     """``environment()`` reports NGSolve's version without importing NGSolve.
 
     ``importlib.metadata`` reads distribution metadata off disk. That is why the
