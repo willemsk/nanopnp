@@ -165,8 +165,8 @@ The COMSOL model being replaced, as recorded in the model report and the ESI.
 | APBS 3.4.1 | BSD-3 | Poisson-only cross-check |
 | scikit-image, Shapely | BSD-3 | Contour extraction, polyline conditioning |
 | meshio (MIT), GridDataFormats (LGPL) | as noted | Mesh interchange; OpenDX/CCP4 grid IO |
-| SuiteSparse UMFPACK | GPL-2+ | Direct linear solver, opt-in |
-| scipy SuperLU | BSD | Direct linear solver, bundle default |
+| SuiteSparse UMFPACK | GPL-2+ | Direct linear solver, default (built into the NGSolve wheel; CON-11) |
+| scipy SuperLU | BSD | Direct linear solver, selectable fallback |
 | PySide6 | LGPL-3 | Desktop shell (ADR-004) |
 
 Assumptions: the published physics, parameters and COMSOL implementation details are CC-BY-4.0 and
@@ -286,7 +286,7 @@ until those differences are matched.
 | **CON-08** | The distributed wheels are serial-only and ship without MUMPS, and the reference model's PARDISO is equally unavailable; the desktop path SHALL use UMFPACK or scipy SuperLU. |
 | **CON-09** | The core library SHALL be licensed BSD-3-Clause. LGPL dependencies are acceptable under dynamic linking (NGSolve/Netgen LGPL-2.1, MDAnalysis LGPLv3, PySide6 LGPL-3). PyQt SHALL NOT be used, being GPL-3 or commercial only. |
 | **CON-10** | Gmsh (GPLv2+) SHALL be an optional backend only; the default path SHALL NOT link Gmsh, and the core library SHALL remain functional without it. |
-| **CON-11** | SuiteSparse UMFPACK is GPL-2+, so a bundle defaulting to UMFPACK carries GPL obligations even though the library does not; the bundled build SHOULD default to scipy SuperLU (BSD) with UMFPACK opt-in. |
+| **CON-11** | SuiteSparse UMFPACK is GPL-2+, so a bundle defaulting to UMFPACK carries GPL obligations even though the library does not. The core library SHALL remain BSD-3 and SHALL NOT itself depend on UMFPACK; the redistributable bundle SHALL default to UMFPACK, SHALL be distributed under the resulting GPL-2+ obligations and SHALL state them in its licence notice, scipy SuperLU remaining selectable at runtime. **Amended 2 September 2026**, reversing the earlier "SHOULD default to scipy SuperLU with UMFPACK opt-in", on the §6.6 measurement: SuperLU did not factorise the reference-sized problem at all, so a SuperLU-default bundle could not run the published case. |
 | **CON-12** | Meshing components with distribution-restricting licences SHALL NOT be depended upon, specifically Triangle (and MeshPy, which wraps it) and TetGen 1.5 (AGPLv3). |
 | **CON-13** | SHALL support Windows, macOS and Linux on desktop hardware, and Linux for headless and HPC execution. |
 | **CON-14** | The repository SHALL carry a `CITATION.cff` pointing at the Nanoscale paper and the software DOI. |
@@ -968,7 +968,7 @@ constraint applies.
 |---|---|
 | GPL core, Gmsh in the default path | Deferred, not foreclosed: the package has no other GPL entanglement, so this stays a one-line relicense should GPL become acceptable |
 | PyQt for the desktop shell | Rejected: GPL-3 or commercial only. PySide6 (LGPL-3) is used instead (CON-09) |
-| Bundle defaulting to UMFPACK | SuiteSparse UMFPACK is GPL-2+, so such a bundle carries GPL obligations even though the library does not. The bundled build defaults to scipy SuperLU (BSD), UMFPACK opt-in (CON-11) |
+| Bundle defaulting to scipy SuperLU | Rejected on measurement (§6.6): SuperLU was OOM-killed on the reference-sized factorisation, so a SuperLU-default bundle cannot run the published case. The bundle defaults to UMFPACK and carries the GPL-2+ obligations that follow, stated in its licence notice; the library itself stays BSD-3 and depends on neither (CON-11, amended 2 September 2026) |
 
 Consequences: BSD-3 maximises adoption where both academic and industrial reuse matter and matches
 the scientific Python stack. Dependencies are compatible: NGSolve and Netgen LGPL-2.1 (dynamic
@@ -1291,11 +1291,14 @@ SuperLU costs about 3.4 × the memory and 6–10 × the time, both gaps widening
 **did not complete the reference-sized factorisation at all**, being killed by the kernel at
 15.4 GB on two separate runs.
 
-> **This conflicts with CON-11**, which says the bundled build SHOULD default to scipy SuperLU with
+> **This conflicted with CON-11**, which said the bundled build SHOULD default to scipy SuperLU with
 > UMFPACK opt-in. On this evidence that default would ship a bundle unable to run the reference
-> problem. The conflict is recorded rather than resolved here: resolving it means either accepting
-> the GPL-2+ obligation for the bundle, restricting the bundled build to smaller meshes, or bringing
-> the iterative fallback of NUM-22 forward as the BSD-licensed path. That is an ADR-003 decision.
+> problem. **Resolved 2 September 2026** in favour of the measurement: the bundle defaults to
+> UMFPACK and accepts the GPL-2+ obligation, the alternatives — restricting the bundled build to
+> smaller meshes, or bringing NUM-22's iterative fallback forward as the BSD-licensed path — being
+> rejected as shipping less capability than the reference implementation. CON-11 and ADR-003 carry
+> the amended wording; the core library remains BSD-3 and depends on neither solver, UMFPACK being
+> built into the NGSolve wheel.
 
 NOTE: the reference used PARDISO with pivoting perturbation 1 × 10⁻¹³ and sparsity-pattern reuse.
 PARDISO is likewise absent from the NGSolve wheel, so the reference linear solver cannot be
@@ -1793,6 +1796,7 @@ concentrations) took 41 h on 12 cores. A full-envelope sweep is a day-scale job.
 | **OPN-02** | Location of the author's contour script | Author | Nothing on the critical path. Phase 2 is planned against the specified contour pipeline; the script is upside if it arrives (RSK-06) |
 | **OPN-03** | PlyAB supporting-information details: analyte relative permittivity, per-position mesh strategy (remesh against ALE), barrier heights in kT, electro-osmotic flow velocities | Author, from the retained model files | Analyte force regression targets and adoption of PlyAB as a second reference case after v1.0 |
 | **OPN-04** | ClyA-AS mutation list: 8 mutations relative to the *S. typhi* wild type in one place, 27 relative to the *E. coli* 2WCD structure in another. Both internally correct | Author, with the structure-preparation stage | Provenance of `Q_net` (FR-12); the structure-preparation stage must record which list was applied to which PDB |
+| **OPN-05** | Pore-polygon vertex count: §2.2 and §5.2.1 call the pore boundary a closed 196-vertex polygon, while the model report's geometry section records 190 vertices for the pore and 196 for the whole geometry (reservoir and membrane included), which is also the mesh's vertex-element count | Author, on delivery of the vertex table | The §5.2.1 regression fixture and its conformance test; reconciled in the commit that lands the table |
 
 ---
 
@@ -1969,7 +1973,7 @@ needed.
 | CON-08 | §6.6 measurement table (§8.2 criterion 3, discharged) |
 | CON-09 | None yet |
 | CON-10 | None yet |
-| CON-11 | §6.6 measurement table — measured, and in conflict with the stated default |
+| CON-11 | §6.6 measurement table — measured; the conflict it exposed is resolved by the 2 September 2026 amendment to CON-11 and ADR-003 |
 | CON-12 | None yet |
 | CON-13 | None yet |
 | CON-14 | None yet |
