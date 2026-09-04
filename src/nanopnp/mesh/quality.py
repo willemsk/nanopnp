@@ -24,7 +24,8 @@ They are **not** interchangeable, which is why "min SICN/gamma > 0.3" is read
 here as a conjunction. On the isoceles family with unit base, ``SICN = 0.3`` at
 height 0.132966, where ``gamma = 0.129841``; ``gamma = 0.3`` at height 0.215508,
 where ``SICN = 0.468673`` [verified]. Reading the gate off either measure alone
-admits meshes the other rejects, by a factor of 1.56 in element height.
+admits meshes the other rejects, by a factor of 0.215508/0.132966 = 1.6208 in
+element height.
 
 **gamma cannot see an inverted element**: an equilateral triangle wound
 clockwise scores ``gamma = +1`` and ``SICN = -1``. In an axisymmetric ``(r, z)``

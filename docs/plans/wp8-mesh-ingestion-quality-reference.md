@@ -240,6 +240,14 @@ base gives `SICN = 0.3` at height 0.132966, where `gamma = 0.129841`, and `gamma
 0.215508, where `SICN = 0.468673`. The two thresholds differ by a factor of 1.56 in element height.
 Amendment D records this in §5.2.2.
 
+> **Outcome — the factor is 1.6208, not 1.56.** `0.21550836/0.13296607 = 1.62078`, computed by
+> `brentq` on the two closed forms in `tests/tier1/test_mesh_quality.py`
+> (`test_ver10_the_two_measures_are_not_interchangeable`, asserted to 10⁻⁴). The plan and
+> §5.2.2 both carried 1.56, which is neither ratio of any pair of the four numbers printed here;
+> the specification is corrected in the same commit as the code comment. Nothing depends on the
+> figure — it is the *argument* for reading the gate as a conjunction, and it is stronger than
+> stated, not weaker.
+
 gmsh returns **+1** for the clockwise triangle: a 2-D element in a discrete entity has no intrinsic
 orientation there, so the sign is ours. In an axisymmetric (r, z) mesh it is load-bearing — a
 negative-Jacobian element contributes negative area under the `r` weight and nothing else complains
