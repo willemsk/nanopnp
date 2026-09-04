@@ -795,7 +795,8 @@ triangle, SICN is the signed inverse condition number of the Jacobian taken rela
 equilateral element and gamma is the normalised inradius-to-circumradius ratio `2 r_in / R_circ`;
 both equal 1 on the equilateral element and both are scale-invariant. They are not interchangeable:
 on the isoceles family over a unit base, `SICN = 0.3` occurs at `gamma = 0.1298` and `gamma = 0.3` at
-`SICN = 0.4687`, a factor of 1.56 in element height, so a single "SICN/gamma > 0.3" reading admits
+`SICN = 0.4687`, a factor of 1.6208 in element height (0.215508/0.132966), so a single
+"SICN/gamma > 0.3" reading admits
 two different meshes. Gamma is unsigned — an inverted equilateral element scores `gamma = 1` and
 `SICN = −1` — so gamma alone cannot detect inversion, and `SICN ≤ 0` SHALL be reported as its own
 failure ("inverted element") rather than folded into the quality gate. Under the axisymmetric
