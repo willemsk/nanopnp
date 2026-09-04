@@ -6,10 +6,11 @@ and settings, :func:`nanopnp.solve.continuation.default_ladder` builds the NUM-1
 ladder, and :func:`nanopnp.solve.continuation.run_ladder` climbs it. What this
 module adds is the three things FR-27 asks of every stage.
 
-**Invocable alone.** The mesh is loaded from the file the case names, and the
-materials artefact is recomputed when it was not supplied. Both routes produce
-the same digest, so running the solve on its own and running it after stage 8
-key the same cache entry rather than two.
+**Invocable alone.** The mesh is ingested from the file the case names by stage 6
+(:mod:`nanopnp.mesh.ingest`) when it was not handed down, and the materials
+artefact is recomputed when it was not supplied. Both routes produce the same
+digest, so running the solve on its own and running it after stages 6 and 8 key
+the same cache entry rather than two.
 
 **Cancellable.** Two granularities, because one is not enough: ``on_rung`` stops
 the ladder between rungs, which is the only point the two Poisson-Boltzmann
@@ -20,9 +21,18 @@ holds a partial solve (section 5.3.2).
 **Introspectable.** ``describe()`` comes from the registry, which is what lets the
 CLI and the GUI say what this stage takes without importing NGSolve.
 
-The mesh enters the digest as the hash of its *file*, never as its path: a mesh
-substituted by hand (FR-27) is then a changed input by construction, and the same
-mesh under another name is the same run.
+The mesh enters the digest as the stage-6 artefact's hash, never as its path: a
+mesh substituted by hand (FR-27) is then a changed input by construction, the
+same mesh under another name is the same run, and — because that artefact is
+keyed on the mesh's *contents* and on the vocabulary mapping applied to it — a
+mesh rewritten with a different header is not a second solve while the same file
+read under a different ``inputs.mesh.groups`` map is.
+
+Every mesh reaching this stage has been through the section 5.2.2 gate, so
+nothing here checks a boundary name again. That is the point of there being one
+route in: a boundary this stage selected on and the mesh did not supply would
+carry the natural condition and be silently free (NUM-06), and stage 6 is where
+that is caught.
 """
 
 from __future__ import annotations
@@ -34,7 +44,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from nanopnp.core.constants import thermal_voltage
-from nanopnp.core.hashing import file_hash
 from nanopnp.core.paths import store_root
 from nanopnp.core.stages import (
     CancelToken,
@@ -45,8 +54,9 @@ from nanopnp.core.stages import (
     report,
 )
 from nanopnp.io.artefact import Artefact, SolutionArtefact, StageInputs
-from nanopnp.io.case import COUPLED_MODELS, UnsupportedCaseSection, resolve
+from nanopnp.io.case import COUPLED_MODELS, resolve
 from nanopnp.materials.stage import MaterialsStage
+from nanopnp.mesh.ingest import IngestedMesh, MeshStage, ingest
 from nanopnp.physics.coefficients import SATURATED_WALL_DISTANCE_NM
 from nanopnp.physics.measures import AXISYMMETRIC, Measures
 from nanopnp.physics.models import CoupledModel, create
@@ -54,51 +64,15 @@ from nanopnp.solve.continuation import ELECTRODES, Rung, default_ladder, run_lad
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.core.typing import Expression, GridFunction, Mesh
-    from nanopnp.io.case import ResolvedCase, SuppliedArtefact
+    from nanopnp.io.case import ResolvedCase
     from nanopnp.materials.electrolyte import Electrolyte
     from nanopnp.solve.newton import NewtonStep
-
-MESH_SUFFIXES: tuple[str, ...] = (".vol", ".vol.gz")
-"""Mesh files this release loads: netgen's own format, which round-trips the
-boundary and material names the boundary vocabulary is written against."""
 
 WORKSPACE_DIRNAME = "tmp"
 """Directory under the store root the payload is written to before it is stored."""
 
 LOAD_FRACTION = 0.05
 """Share of the progress bar spent loading the mesh and the distance field."""
-
-
-def _mesh_path(supplied: SuppliedArtefact) -> Path:
-    """Return the mesh file the case names, checked.
-
-    Raises
-    ------
-    UnsupportedCaseSection
-        If the mesh is named by store hash rather than by path, which needs the
-        meshing pipeline of v0.9.
-    FileNotFoundError
-        If the file is not there.
-    ValueError
-        If it is not one of :data:`MESH_SUFFIXES`. A mesh in another format would
-        load without its boundary names, and every essential condition would then
-        be applied to nothing at all.
-    """
-    if supplied.path is None:
-        raise UnsupportedCaseSection(
-            "inputs.mesh: artefact: names a mesh in the store, which the meshing "
-            "pipeline of v0.9 fills; supply inputs.mesh: path: instead"
-        )
-    path = supplied.path
-    if not any(path.name.endswith(suffix) for suffix in MESH_SUFFIXES):
-        raise ValueError(
-            f"inputs.mesh.path {str(path)!r} is not a netgen mesh; this release reads "
-            f"{', '.join(MESH_SUFFIXES)}, which carry the boundary and material names "
-            "the boundary conditions are written against"
-        )
-    if not path.is_file():
-        raise FileNotFoundError(f"inputs.mesh.path {str(path)!r} does not exist")
-    return path
 
 
 def _reads_wall(electrolyte: Electrolyte) -> bool:
@@ -192,24 +166,37 @@ class SolveStage:
             hash of the artefact the solve will produce, which is what
             ``get_or_compute`` checks on the way out.
         """
-        resolved, mesh_path, materials = self._prepare(inputs)
+        resolved, ingested, mesh, materials = self._prepare(inputs)
+        del ingested
         return SolutionArtefact(
             parameters=resolved.provenance,
-            inputs={"mesh": file_hash(mesh_path), "materials": materials.hash},
+            inputs={"mesh": mesh.hash, "materials": materials.hash},
         )
 
-    def _prepare(self, inputs: StageInputs) -> tuple[ResolvedCase, Path, Artefact]:
-        """Resolve the case, check the mesh file and obtain the materials artefact.
+    def _prepare(
+        self, inputs: StageInputs
+    ) -> tuple[ResolvedCase, IngestedMesh, Artefact, Artefact]:
+        """Resolve the case, ingest and gate the mesh, and obtain the two artefacts.
 
         Shared by :meth:`key` and :meth:`run` so that the key the store is asked
         about and the key the solve produces cannot be built two different ways.
+
+        The mesh is ingested here even when stage 6 handed its artefact down,
+        because the solve needs the geometry and not only the key; the supplied
+        artefact is then what the digest is taken over, exactly as the materials
+        artefact is. A hand-substituted one (FR-27) therefore changes the key
+        rather than being checked against a recomputed one — section 5.3.2 asks
+        for it recorded, not refused.
         """
         resolved = resolve(inputs.case)
-        mesh_path = _mesh_path(resolved.mesh)
+        ingested = ingest(resolved.mesh, resolved)
+        mesh = inputs.upstream.get("mesh")
+        if mesh is None:
+            mesh = MeshStage().artefact(ingested)
         materials = inputs.upstream.get("materials")
         if materials is None:
             materials = MaterialsStage().run(StageInputs(case=inputs.case))
-        return resolved, mesh_path, materials
+        return resolved, ingested, mesh, materials
 
     def run(
         self,
@@ -223,9 +210,10 @@ class SolveStage:
         Parameters
         ----------
         inputs
-            The case, and optionally the ``materials`` artefact of stage 8. When
-            it is absent the stage recomputes it, which costs one YAML read and
-            keeps the artefact's key independent of how the run was invoked.
+            The case, and optionally the ``mesh`` artefact of stage 6 and the
+            ``materials`` artefact of stage 8. When either is absent the stage
+            recomputes it, which keeps the artefact's key independent of how the
+            run was invoked.
         progress
             Called with a fraction in [0, 1] and a message, monotone and ending
             at 1. Within the ladder the fraction is the rung index refined by
@@ -236,8 +224,8 @@ class SolveStage:
         Returns
         -------
         SolutionArtefact
-            Keyed on the resolved case, the mesh file's digest and the materials
-            artefact; carrying the ladder's per-rung record as its summary and
+            Keyed on the resolved case, the stage-6 mesh artefact and the
+            materials artefact; carrying the ladder's per-rung record as its summary and
             the converged state as its payload.
 
         Raises
@@ -246,13 +234,12 @@ class SolveStage:
             If ``cancel`` turns true. No artefact is written.
         """
         check_cancelled(cancel, "the solve")
-        resolved, mesh_path, materials = self._prepare(inputs)
+        report(progress, 0.0, "reading and gating the mesh")
+        resolved, ingested, mesh_artefact, materials = self._prepare(inputs)
 
-        report(progress, 0.0, f"loading the mesh from {mesh_path.name}")
+        report(progress, 0.0, f"loading the mesh from {ingested.source.name}")
         check_cancelled(cancel, "loading the mesh")
-        import ngsolve as ngs
-
-        mesh = ngs.Mesh(str(mesh_path))
+        mesh = ingested.mesh
         order = int(resolved.model_options.get("order", AXISYMMETRIC.element_order))
         measures = replace(AXISYMMETRIC, element_order=order)
 
@@ -281,7 +268,7 @@ class SolveStage:
         payload = self._write(result.solution.state, resolved.name)
         return SolutionArtefact(
             parameters=resolved.provenance,
-            inputs={"mesh": file_hash(mesh_path), "materials": materials.hash},
+            inputs={"mesh": mesh_artefact.hash, "materials": materials.hash},
             payload=payload,
             summary=dict(result.summary()),
         )
@@ -310,6 +297,11 @@ class SolveStage:
             measures=measures,
             corrections_active=resolved.model == "epnp-ns",
             switches=resolved.electrolyte.switches,
+            # The ladder builds its own models, so the case's ``physics.
+            # solid_permittivities`` reaches them only here. Omitting it leaves
+            # the membrane at the electrolyte's eps_r -- 24 times too large, and
+            # a plausible wrong current with no diagnostic (PHY-03, PHY-20).
+            solid_permittivities=dict(resolved.document.physics.solid_permittivities),
         )
 
     def _instrumented(

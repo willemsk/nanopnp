@@ -915,16 +915,38 @@ on. Several file groups MAY map to one vocabulary name — a CAD export routinel
 wall into several curves — and the reverse is not expressible, which is why the direction is this
 way round. The vocabulary is fixed and carries no aliases: materials `electrolyte`, `cis`, `trans`,
 `protein`, `membrane`, `analyte`; boundaries `axis`, `wall`, `membrane`, `membrane_outer`, `cis`,
-`trans`, `analyte`. `protein` is the pore's dielectric body (§2.2), a solid domain Poisson is solved
-on and Nernst–Planck and the flow are not; `pore` is deliberately **not** a name, because it reads as
-both that body and the lumen fluid, and a mesh that uses it SHALL disambiguate through the mapping.
-Ingestion SHALL abort when any group in the file is left unclaimed by the mapping, or when any name
-the resolved run selects on — the boundary-condition names, `numerics.wall_distance.sources` and the
-fluid material set — is supplied by no group, and the diagnostic SHALL name both lists (QR-12). A
-mapping whose keys are all vocabulary names while its values are not is almost certainly written
-backwards, and the diagnostic SHALL say so rather than reporting every group unclaimed.
+`trans`, `analyte`, `interface`. `protein` is the pore's dielectric body (§2.2), a solid domain
+Poisson is solved on and Nernst–Planck and the flow are not; `pore` is deliberately **not** a name,
+because it reads as both that body and the lumen fluid, and a mesh that uses it SHALL disambiguate
+through the mapping. `interface` is the interior fluid-to-fluid seam a fragmented region carries —
+the pore-mouth interfaces the reservoir-to-lumen split leaves behind — and **nothing selects on it**;
+it is in the vocabulary because every group must be claimed by some name, and calling an interior
+seam `wall` would put it in the PHY-02 distance source set and impose no-slip across the middle of
+the electrolyte. Ingestion SHALL abort when any group in the file is left unclaimed by the mapping,
+or when any name the resolved run selects on — the boundary-condition names,
+`numerics.wall_distance.sources` and the fluid material set — is supplied by no group, and the
+diagnostic SHALL name both lists (QR-12). A mapping whose keys are all vocabulary names while its
+values are not is almost certainly written backwards, and the diagnostic SHALL say so rather than
+reporting every group unclaimed.
 
-NOTE (a solid without a permittivity, PHY-03, QR-12): on an **ingested** mesh, a material that is
+NOTE (a group that claims itself, IF-06): a group whose own name is already a vocabulary name needs
+no entry in the mapping, and is claimed by that fact. The failure the gate exists to catch is a name
+the solver does *not* speak reaching a solve unnoticed, and a name it does speak is not one of
+those; requiring `wall: wall` of a mesh this implementation generated would be ceremony that a
+reader learns to write without reading. Which names the run selects on is derived from the resolved
+case — the model's boundary vocabulary, both electrodes, the species, the fluid material set and
+`numerics.wall_distance.sources` — and never from a constant list, so the diagnostic is exactly
+true of the run that produced it: *this run will select on this name, and no group supplies it*. A
+selection pattern that is not a flat `a|b|c` alternation of literal names SHALL be refused rather
+than parsed heuristically, since a requirement derived from a mis-parsed pattern is a gate that can
+only pass.
+
+NOTE (a solid without a permittivity, PHY-03, QR-12): `physics.solid_permittivities` is a map from
+material name to relative permittivity, defaulting to empty; PHY-20 gives ε_r = 3.2 for the membrane
+and 20 for the protein and the analyte, and it is not defaulted because the mesh decides which
+solids exist. It is the one member of `physics:` that is not a switch, and the electrostatic models
+of PHY-21 carry no solids, so a non-empty map beside one of them SHALL be refused as
+§5.3.1's other inapplicable switches are. On an **ingested** mesh, a material that is
 neither in the fluid set nor named in `physics.solid_permittivities` SHALL abort the run, naming the
 material. Poisson is solved over the whole domain, so the alternative is the electrolyte's ε_r about
 24 times too large in a solid — a plausible wrong answer with no solver diagnostic. Meshes built in

@@ -33,8 +33,9 @@ from nanopnp.io.artefact import CaseArtefact, SolutionArtefact, StageInputs
 from nanopnp.io.case import CaseDocument, loads_case, resolve
 from nanopnp.io.store import Store
 from nanopnp.materials.stage import MaterialsStage
+from nanopnp.mesh.adapter import read, write_msh41
+from nanopnp.mesh.ingest import MeshStage, MeshVocabularyError, ingest
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
-from nanopnp.solve.continuation import mesh_report
 from nanopnp.solve.stage import SolveStage
 
 logger = logging.getLogger(__name__)
@@ -48,13 +49,27 @@ CONCENTRATION_M = 0.1
 BIAS_V = 0.02
 
 
-def case_text(mesh_path: Path, *, bias_V: float = BIAS_V) -> str:
-    """Return a case naming ``mesh_path``, in the validated default configuration."""
+def case_text(mesh_path: Path, *, bias_V: float = BIAS_V, mesh_format: str = "vol") -> str:
+    """Return a case naming ``mesh_path``, in the validated default configuration.
+
+    Two entries are here because the section 5.2.2 ingestion gate now requires
+    them, and both were latent errors before it did.
+    :class:`~nanopnp.mesh.primitives.CylindricalPoreGeometry` leaves the two
+    pore-mouth seams at NGSolve's ``default``, which is an interior fluid-to-fluid
+    interface and no wall — mapping it to ``wall`` would put it in the PHY-02
+    distance source set and impose no-slip across the middle of the electrolyte.
+    And ``physics.solid_permittivities`` gives the membrane its PHY-20 value of
+    3.2; without it Poisson carried the electrolyte's eps_r there, about 24 times
+    too large, and the ladder converged on it without complaint.
+    """
     return f"""
 schema: nanopnp/case/v1
 name: cache-probe
 inputs:
-  mesh: {{path: {mesh_path}, format: vol}}
+  mesh:
+    path: {mesh_path}
+    format: {mesh_format}
+    groups: {{default: interface}}
 electrolyte:
   species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
   concentration_M: {CONCENTRATION_M}
@@ -65,6 +80,7 @@ boundary_conditions:
   ground: cis
 physics:
   model: epnp-ns
+  solid_permittivities: {{membrane: 3.2}}
 numerics:
   continuation: default_ladder
   stabilisation: none
@@ -207,24 +223,70 @@ def test_ver26_changing_the_bias_misses_the_cache(solved: Run) -> None:
     assert not solved.store.contains(key)
 
 
-def test_ver26_a_substituted_mesh_is_a_changed_input(solved: Run, tmp_path: Path) -> None:
-    """The mesh enters the key by content, so the same file under two names is one run.
+def test_ver26_the_mesh_enters_the_key_by_content_and_not_by_its_bytes(
+    solved: Run, tmp_path: Path
+) -> None:
+    """The same mesh keys one entry however it was written; a different mesh keys another.
 
-    Both halves matter. A mesh hashed by *path* would make a case reproducible
-    only on the machine that wrote it; a mesh not hashed at all would let a
-    hand-substituted mesh (FR-27) return the previous mesh's answer out of the
-    cache.
+    The mesh reaches the solve's digest as the stage-6 artefact's hash, and that
+    artefact is keyed on :attr:`nanopnp.mesh.adapter.MeshData.content_hash` — the
+    canonical vertices, connectivity and tag maps — rather than on the file's
+    bytes (section 5.3.2). Three things follow, and all three are asserted here
+    because each of them is a way the cache could be wrong.
+
+    A mesh hashed by *path* would make a case reproducible only on the machine
+    that wrote it. A mesh hashed by its bytes would file the same mesh twice for
+    a rewritten header or a re-ordered entity block, which is what any tool that
+    touches the file does. And a mesh not hashed at all would let a
+    hand-substituted one (FR-27) return the previous mesh's answer out of the
+    cache — so the last assertion is the one that has to hold whatever the first
+    two cost.
     """
     copied = tmp_path / "elsewhere.vol"
     copied.write_bytes(solved.mesh_path.read_bytes())
     same = SolveStage().key(StageInputs(case=loads_case(case_text(copied))))
     assert same.hash == solved.key.hash
 
-    edited = tmp_path / "edited.vol"
-    edited.write_bytes(solved.mesh_path.read_bytes() + b"\n")
-    changed = SolveStage().key(StageInputs(case=loads_case(case_text(edited))))
-    assert changed.inputs["mesh"] != solved.key.inputs["mesh"]
-    assert changed.hash != solved.key.hash
+    # Rewritten by another tool, into another format: MSH 4.1 out of the same
+    # MeshData the netgen reader produced. Bit-exact through the content hash
+    # [tested], which is the claim content addressing is making.
+    rewritten = write_msh41(read(solved.mesh_path), tmp_path / "rewritten.msh")
+    as_msh = SolveStage().key(
+        StageInputs(case=loads_case(case_text(rewritten, mesh_format="gmsh")))
+    )
+    assert as_msh.inputs["mesh"] == solved.key.inputs["mesh"]
+    assert as_msh.hash == solved.key.hash
+
+    # A genuinely different mesh of the same geometry: one boundary-layer height
+    # finer, so the wall elements move and the vertex count changes.
+    finer_path = tmp_path / "finer.vol"
+    PORE.generate(maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM / 2).ngmesh.Save(str(finer_path))
+    finer = SolveStage().key(StageInputs(case=loads_case(case_text(finer_path))))
+    assert finer.inputs["mesh"] != solved.key.inputs["mesh"]
+    assert finer.hash != solved.key.hash
+
+
+def test_ver27_a_boundary_the_run_selects_on_and_the_mesh_lacks_aborts(
+    solved: Run, tmp_path: Path
+) -> None:
+    """VER-27: the same mesh under a mapping that loses ``wall`` is refused.
+
+    The failure the stage-6 gate exists for, at the only place it is visible.
+    Under the ``r``-weighted forms the natural condition is the free one
+    (NUM-06), so a ``wall`` group nothing supplies imposes no no-slip and no
+    no-flux, and the solve converges to a current that is wrong with no residual
+    to show for it. The mesh here is the one the module already solved on, so the
+    only difference between the run that converged and the run that aborts is the
+    name.
+    """
+    text = case_text(solved.mesh_path).replace(
+        "groups: {default: interface}", "groups: {default: interface, wall: interface}"
+    )
+    with pytest.raises(MeshVocabularyError) as raised:
+        SolveStage().key(StageInputs(case=loads_case(text)))
+    message = str(raised.value)
+    assert "wall" in message
+    assert "NUM-06" in message
 
 
 def test_ver26_cancelling_mid_ladder_leaves_no_artefact_in_the_store(
@@ -314,9 +376,9 @@ def test_ver26_the_manifest_names_every_input_hash_the_run_consumed(solved: Run)
     provenance record that cannot reconstruct the run, which section 5.3.3 says
     is not a result.
     """
-    import ngsolve as ngs
-
-    mesh = ngs.Mesh(str(solved.mesh_path))
+    resolved = resolve(solved.document)
+    ingested = ingest(resolved.mesh, resolved)
+    mesh_artefact = MeshStage().artefact(ingested)
     materials = MaterialsStage().run(StageInputs(case=solved.document))
     case_artefact = CaseArtefact(solved.document)
 
@@ -325,9 +387,13 @@ def test_ver26_the_manifest_names_every_input_hash_the_run_consumed(solved: Run)
         case_text=solved.text,
         case_hash=case_artefact.hash,
         input_files={"mesh": solved.mesh_path},
-        upstream={"materials": materials, "solution": solved.artefact},
-        mesh=mesh_report(mesh),
-        electrolyte=resolve(solved.document).electrolyte,
+        upstream={
+            "mesh": mesh_artefact,
+            "materials": materials,
+            "solution": solved.artefact,
+        },
+        mesh=ingested.summary(),
+        electrolyte=resolved.electrolyte,
         ladder=solved.artefact.summary,
         stabilisation=str(solved.artefact.summary["stabilisation"]),
     )
@@ -336,17 +402,32 @@ def test_ver26_the_manifest_names_every_input_hash_the_run_consumed(solved: Run)
     assert set(groups) == set(manifest_module.GROUPS)
 
     # Every input hash the artefact was keyed on appears in the manifest, from
-    # the same source: the mesh by content, the materials artefact by hash.
-    assert groups["inputs"]["files"]["mesh"]["sha256"] == solved.artefact.inputs["mesh"]
-    assert file_hash(solved.mesh_path) == solved.artefact.inputs["mesh"]
+    # the same source: the mesh and the materials as upstream artefacts.
+    assert groups["inputs"]["artefacts"]["mesh"]["hash"] == solved.artefact.inputs["mesh"]
     assert groups["inputs"]["artefacts"]["materials"]["hash"] == solved.artefact.inputs["materials"]
     assert groups["inputs"]["artefacts"]["solution"]["hash"] == solved.artefact.hash
     assert groups["inputs"]["case"] == case_artefact.hash
+    # The file is recorded too, by its own bytes, and is deliberately *not* the
+    # key: that is the difference content addressing makes (section 5.3.2).
+    assert groups["inputs"]["files"]["mesh"]["sha256"] == file_hash(solved.mesh_path)
+    assert groups["inputs"]["files"]["mesh"]["sha256"] != solved.artefact.inputs["mesh"]
 
     # The run really happened, and the record of it is the ladder's own.
     assert groups["solver"]["run"]["stages"] == solved.artefact.summary["stages"]
     assert groups["solver"]["run"]["iterations"] == solved.artefact.summary["iterations"]
-    assert groups["geometry_and_mesh"]["elements"] == mesh.ne
+
+    # FR-25: the mesh group carries what the section 5.2.2 gate measured, and
+    # which of the file's groups became which vocabulary name. Neither is
+    # recoverable from the solution, and a run whose 'wall' was the file's
+    # 'default' is a different run from one whose 'wall' was the file's 'wall'.
+    geometry = groups["geometry_and_mesh"]
+    assert geometry["elements"] == ingested.data.element_count
+    assert geometry["content_hash"] == ingested.content_hash
+    assert geometry["groups"]["default"] == "interface"
+    assert geometry["groups"]["wall"] == "wall"
+    assert geometry["quality"]["min_sicn"] > 0.3
+    assert geometry["quality"]["min_gamma"] > 0.3
+    assert geometry["quality"]["inverted"] == 0
 
     # NUM-11: unstabilised, recorded, and agreeing with what was asked for.
     assert groups["stabilisation"] == {
