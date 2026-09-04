@@ -115,10 +115,10 @@ The COMSOL model being replaced, as recorded in the model report and the ESI.
 | Dimensionality | 2D axisymmetric (exploiting ClyA's C₁₂ symmetry), steady state |
 | Domains | Pore dielectric body, DPhPC bilayer, two electrolyte reservoirs |
 | Reservoirs | Hemispherical half-discs, R = 250 nm, one either side of the membrane |
-| Membrane | 2.8 nm thick; quadrilateral with vertices (r = 2, z = −1.4), (3.5, +1.4), (250, +1.4), (250, −1.4) nm; inner edge slanted to meet the pore's outer surface |
+| Membrane | 2.8 nm thick; quadrilateral with vertices (r = 2, z = −1.4), (3.5, +1.4), (250, +1.4), (250, −1.4) nm; the slanted inner edge lies *inside* the pore body over its whole length, so the assembled membrane meets the pore on the pore's own outer surface (§5.2.1) |
 | Pore extent | z from −1.85 nm (`z_trans`) to +12.25 nm (`z_cis`); r ≈ 1.65–5.66 nm |
-| Pore boundary | Closed 190-vertex polygon, tabulated in the model report |
-| Geometry vertices | 196 for the assembled region (3 domains, 198 boundaries): the 190 polygon vertices plus the membrane quadrilateral's four corners and the reservoir arc's two endpoints on the axis |
+| Pore boundary | Closed 190-vertex polygon, tabulated in the model report; delivered as a 185-vertex table (§5.2.1) |
+| Geometry vertices | 196 for the assembled region (3 domains, 198 boundaries): the 190 polygon vertices, the two points where the membrane planes z = ±1.4 cut the pore's outer surface, the membrane's two outer corners on the reservoir arc, and the arc's two endpoints on the axis (§5.2.1) |
 | Structure | PDB 2WCD (Mueller et al., *Nature* **459**, 726, 2009), as the ClyA-AS variant, not wild type |
 | Electrolyte | Aqueous NaCl, binary monovalent |
 | Bias range | −200 to +200 mV; 0.05–3 M experimentally, 0.005–5 M simulated |
@@ -717,16 +717,53 @@ mesher cannot repair.
 
 The reference pore boundary is published in the COMSOL model report as a closed 190-vertex polygon
 (r ≈ 1.65–5.66 nm, z from −1.85 to 12.25 nm) and SHALL be shipped as a regression fixture (§7.2),
-so solver work proceeds on the reference polygon without the contour pipeline.
+so solver work proceeds on the reference polygon without the contour pipeline. The table is held in
+the repository as `data/geometry/clya_as_radial_geometry.csv`, supplied by the reference model's
+author: 185 `r,z` pairs in nm tracing a simple closed loop, r ∈ [1.65, 5.66], z ∈ [−1.85, 12.25],
+enclosing 26.4939 nm².
+
+NOTE (the membrane junction): the membrane's slanted inner edge, (2, −1.4) → (3.5, +1.4), lies
+strictly **inside** the pore body along its whole length. At z = −1.4 the pore spans
+r ∈ [1.725, 2.7524] and the edge enters at 2.0 — 0.275 nm clear of the lumen wall and 0.752 nm clear
+of the outer surface; at z = +1.4 the pore spans r ∈ [2.96, 4.88] and the edge leaves at 3.5, with
+0.540 and 1.380 nm of clearance. The assembled membrane is therefore the quadrilateral **minus** the
+pore body, and it meets the pore on the pore's own outer surface, not on the drawn edge. The slant is
+necessary rather than cosmetic: the lumen wall passes through (2.0, 0) exactly and has opened to
+r = 2.96 by z = +1.4, so a vertical inner edge at r = 2 would place membrane material inside the
+electrolyte for every z > 0. The cap's underside is re-entrant, so the membrane also fills a cleft
+beneath it and its boundary is not monotone in z; it remains one connected domain, which is what
+makes the reported domain count come out at three — pore body, membrane, and a single electrolyte,
+the lumen joining the two reservoirs.
 
 NOTE (vertex counts): the model report's geometry section records **190 vertices for the pore
 polygon** and **3 domains, 198 boundaries and 196 vertices for the assembled region**. Earlier
-revisions of this document attached the geometry-wide 196 to the pore boundary. The two counts are
-consistent: the assembled region adds to the polygon exactly the points the polygon does not carry —
-the membrane quadrilateral's two inner corners at (2, −1.4) and (3.5, +1.4) nm, its two outer corners
-on the reservoir arc, and the arc's two endpoints on the axis — and 190 + 6 = 196, which is also the
-mesh's 196 vertex elements (§5.2.2), one per geometry vertex. The model report governs (`CLAUDE.md`).
-OPN-05 is narrowed accordingly: the interpretation is settled, the vertex table itself is still owed.
+revisions of this document attached the geometry-wide 196 to the pore boundary, and identified the
+extra six as the membrane quadrilateral's own corners; both are corrected here against the delivered
+table. Assembling as above, the region adds to the 190-vertex polygon: the two points where the
+planes z = ±1.4 cut the pore's outer surface, each splitting a polygon edge (+2 vertices, +2 edges);
+the membrane's two outer corners on the reservoir arc at r = √(250² − 1.4²) = 249.99608 nm (+2, +2);
+and the arc's two endpoints on the axis at (0, ±250) (+2, +2). Closing the region takes six further
+edges — the axis, the `cis` and `trans` arc segments, the `membrane_outer` arc between the corners,
+and the membrane's two faces at z = ±1.4. That is 190 + 6 = **196 vertices** and
+190 + 2 + 6 = **198 boundaries**, both as reported; Euler closes it, 196 − 198 + 4 = 2 over the three
+domains and the unbounded face; and 196 is also the mesh's 196 vertex elements (§5.2.2), one per
+geometry vertex.
+
+The delivered table carries 185 vertices, five short of the report's 190, and — unlike the report's
+polygon, which the count above requires to be cut at both planes — it already has a vertex exactly on
+the cis plane at (4.88, +1.4), so under the same construction it assembles to 190 vertices and 192
+boundaries (190 − 192 + 4 = 2 likewise). The difference is recorded, not reconciled: it changes
+neither the geometry the table describes nor anything computed from it. The model report governs
+(`CLAUDE.md`). OPN-05 stays open on that count alone.
+
+NOTE (the conditioning gate and a supplied fixture): the gate above applies to contours the FR-08
+pipeline *produces*. The delivered reference polygon does not meet two of its criteria at the
+reference wall size of 0.05 nm — minimum vertex spacing 0.0361 nm over 10 of its 185 edges, and
+minimum local feature size 0.0806 nm against a 0.1 nm threshold — and yet it is what the reference
+mesh of §5.2.2 was built from, at that wall size, reaching minimum element quality 0.6378. A supplied
+profile fixture is therefore NOT gated on those two criteria. It is gated on validity, simplicity and
+loop topology, and its measured spacing and feature size are recorded in its provenance block, so
+that a mesh size chosen against it can be checked rather than assumed.
 
 #### 5.2.2 Meshing
 
@@ -1737,7 +1774,7 @@ differences are recorded and attributed rather than gated on.
 | **VAL-02** | Integrated-quantity comparison (`G`, `t₊`, `RR`, EOF rate) | < 0.5 % relative error, once the preconditions above hold |
 | **VAL-03** | Reference-solution generation and archival, in Phase 1 | Full reference set for the frozen cases archived with the generating model, independent of continued licence access |
 | **VAL-04** | Reference discretisation-error probe | The reference case re-solved at two refinement levels while licence access lasts, bounding the reference's own discretisation error |
-| **VAL-05** | Geometry pipeline against the published boundary | Auto-generated contour compared against the published 190-vertex pore polygon: radius profile and constriction radius within a stated tolerance |
+| **VAL-05** | Geometry pipeline against the published boundary | Auto-generated contour compared against the delivered reference pore polygon (§5.2.1): radius profile and constriction radius within a stated tolerance |
 | **VAL-06** | Poisson-only comparison against APBS | Potential from the assembled fixed-charge and dielectric fields agrees with an APBS solve on the same structure within a stated tolerance |
 
 NOTE: the reference model carries no mesh convergence study, so part of any residual difference may
@@ -1864,7 +1901,8 @@ Factors making the work more tractable:
   than domain decomposition.
 - The physics is published, validated and CC-BY-4.0: correction functions, parameters and
   implementation details are in the ESI, the thesis source and the model report.
-- The final 190-vertex pore polygon is published, so solver work can proceed on it as a fixture.
+- The final pore polygon is published and the table is in the repository (§5.2.1), so solver work
+  can proceed on it as a fixture.
 - The reference mesh used isotropic grading only, with no boundary layers.
 
 Factors making the work less tractable:
@@ -1917,7 +1955,7 @@ concentrations) took 41 h on 12 cores. A full-envelope sweep is a day-scale job.
 | **OPN-02** | Location of the author's contour script | Author | Nothing on the critical path. Phase 2 is planned against the specified contour pipeline; the script is upside if it arrives (RSK-06) |
 | **OPN-03** | PlyAB supporting-information details: analyte relative permittivity, per-position mesh strategy (remesh against ALE), barrier heights in kT, electro-osmotic flow velocities | Author, from the retained model files | Analyte force regression targets and adoption of PlyAB as a second reference case after v1.0 |
 | **OPN-04** | ClyA-AS mutation list: 8 mutations relative to the *S. typhi* wild type in one place, 27 relative to the *E. coli* 2WCD structure in another. Both internally correct | Author, with the structure-preparation stage | Provenance of `Q_net` (FR-12); the structure-preparation stage must record which list was applied to which PDB |
-| **OPN-05** | Pore-polygon vertex table. The *count* is settled: 190 vertices for the pore polygon and 196 for the assembled geometry, per the model report's geometry section and the NOTE in §5.2.1; §2.2, §5.2.1, VAL-05 and RSK-05 are amended. What remains outstanding is the table itself, which is not held in this repository | Author, on delivery of the vertex table | The §5.2.1 regression fixture ships against a nominal profile built from the published dimensions until the table lands; VAL-05 and the Tier-3 comparison against published geometry wait for it |
+| **OPN-05** | Pore-polygon vertex table. **Delivered** as `data/geometry/clya_as_radial_geometry.csv`, 185 vertices, extents as published; §2.2 and §5.2.1 are amended to it and the §5.2.1 fixture and VAL-05 proceed on it. Outstanding only: whether the model report's 190-vertex polygon differs from this table by more than the five vertices the assembly arithmetic accounts for, and which of the two a Tier-3 comparison should cite | Author, on the 185-versus-190 count | None on the implementation — the fixture is the delivered table, and a later reconciliation is a data drop, not a code change |
 
 ---
 
