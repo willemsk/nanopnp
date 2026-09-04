@@ -61,8 +61,8 @@ Four facts about the tree shape the design; all four were established by reading
 
 The package delivers `mesh/adapter.py`, `mesh/ingest.py`, `mesh/quality.py`, `mesh/reference.py`,
 the ClyA profile fixture and its loader, a stage-6 registration, changes to `solve/stage.py` and
-`io/manifest.py`, and six amendments to `SPECIFICATION.md` — two of which take OPN-05 down to a
-single outstanding number. It discharges **IF-06, VER-10, QR-12**, re-verifies **VER-06** and **NUM-31** on
+`io/manifest.py`, and seven amendments to `SPECIFICATION.md` — two of which take OPN-05 down to a
+single outstanding number, and one of which gives the pore's dielectric body a name. It discharges **IF-06, VER-10, QR-12**, re-verifies **VER-06** and **NUM-31** on
 an ingested mesh, adds **VER-27** and **VER-28**, and carries **CON-10** for the first time. No new
 dependency: `meshio` 5.3.5 is already a core dependency and `gmsh` is already the optional extra.
 
@@ -73,7 +73,10 @@ dependency: `meshio` 5.3.5 is already a core dependency and `gmsh` is already th
 | Direction of `inputs.mesh.groups` | **`{group name in the file: vocabulary name}`** — the key is what the mesh says, the value is what the solver speaks. Many-to-one is allowed and expected | A CAD export splits one physical wall into several curves, so several file groups map to `wall`; the reverse direction cannot express that without a list. Keying on the file's names also makes "every group must be claimed" a statement about the keys, which is the gate's whole content. §5.3.1's example currently reads the other way and names `pore`/`reservoir`/`bulk`, none of which the solver speaks — amendment B fixes both |
 | Which names are *required* | Derived from the **resolved case**, never a constant list: the names `CoupledBoundaries.potential`, `.concentration`, `.velocity`, `.velocity_axis` and `numerics.wall_distance.sources` select on, plus the fluid material regex `ELECTROLYTE_DOMAINS` | A constant list is wrong in both directions — it demands `cis`/`trans` of a Debye–Hückel cylinder that has neither, and it says nothing when a case moves the distance sources to `wall\|membrane` and the mesh has no `membrane`. Deriving it makes the abort message exactly true: *this run will select on this name and no group supplies it* |
 | What an unmapped group does | **Aborts**, in one diagnostic listing every unclaimed file group *and* every required vocabulary name no group supplies, with the mesh's own group names quoted back | QR-12 wants the gate, the quantity and its location. Both halves matter and neither implies the other: a typo in the map leaves a group unclaimed *and* a name unsupplied, but a mesh with an extra decorative group leaves only the first, and a case widening `wall_distance.sources` leaves only the second |
-| Vocabulary | Materials `electrolyte`, `cis`, `trans`, `membrane`, `analyte`; boundaries `axis`, `wall`, `membrane`, `membrane_outer`, `cis`, `trans`, `analyte`. **No aliases.** The phase plan's `pore` material is dropped | The names `mesh/primitives.py` assigns and `ELECTROLYTE_DOMAINS`, `DEFAULT_BOUNDARIES`, `ANALYTE_DOMAIN` and `ANALYTE_BOUNDARY` already select on. `pore` would be a second spelling of `electrolyte`, and an alias table is how a vocabulary rots: two names for one region means two regexes, and the day they diverge the fluid loses a domain silently — the trap `ELECTROLYTE_DOMAINS` was written to document |
+| Vocabulary | Materials `electrolyte`, `cis`, `trans`, **`protein`**, `membrane`, `analyte`; boundaries `axis`, `wall`, `membrane`, `membrane_outer`, `cis`, `trans`, `analyte`. **No aliases**, and `pore` is not a name | The names `mesh/primitives.py` assigns and `ELECTROLYTE_DOMAINS`, `DEFAULT_BOUNDARIES`, `ANALYTE_DOMAIN` and `ANALYTE_BOUNDARY` already select on, plus the one the Phase-0 shapes never needed. An alias table is how a vocabulary rots: two names for one region means two regexes, and the day they diverge the fluid loses a domain silently — the trap `ELECTROLYTE_DOMAINS` was written to document |
+| The protein body | A material of its own, `protein`, decided by the author. The phase plan's `pore` is dropped **not** as a synonym of `electrolyte` but as ambiguous between the lumen and the dielectric body | The reference geometry has three domains and one of them is the protein (§2.2, §Design). Phase-0's shapes have no solid but the membrane, so this is the first geometry that needs the name; `physics/models.py:399` already takes it as a `solid_permittivities` key, so nothing else changes |
+| A solid with no permittivity | On an **ingested** mesh, **abort** naming the material; the in-process benchmark geometries keep today's warning (`models.py:670`) | Poisson is solved over the whole domain, so the fallback is the electrolyte's ε_r, about 24× too large in a solid — QR-12's plausible wrong answer. The asymmetry is deliberate: the benchmark meshes' material names are written by this codebase and covered by tests, an ingested mesh's are not |
+| Reversed `groups:` map | Detected and named: a mapping whose keys are all vocabulary names while its values are not aborts with "this looks reversed", not with every group unclaimed | The one ergonomic cost of keying on the file's names is that a reader writing the map from the solver's side gets a diagnostic pointing at the wrong thing. Two lines of check buy the right one |
 | One route in | Every readable format lands in one `MeshData` and every mesh goes through the same tagging and the same gate, **`.vol` included** | A second route that skips the gate is the hole the gate exists to close. `.vol` round-trips names [tested, WP7] and stays readable, but it earns no exemption: today it is the *only* format the solver accepts and the only one nothing checks |
 | Archival write | **MSH 4.1 through meshio**, with the entity bookkeeping constructed by us: one cell block per physical group, `gmsh:geometrical` constant within a block, `gmsh:dim_tags` on every node, and every entity owning at least one node | IF-06. meshio's 4.1 writer derives `$Entities` from node `dim_tags` alone and writes one entity per *cell block*, so the naive construction silently collapses four boundary groups into one and the naive node map omits entities the elements reference. Both failure modes are reproduced in §Design with the arithmetic and the fix |
 | Reading MSH | **meshio**, never `netgen.read_gmsh.ReadGmsh` | It is a 2.2 parser (§Context). Using it would make the archival format unreadable by the code that writes it |
@@ -346,7 +349,7 @@ re-verified against tags that came from a file rather than from `name_edges`.
 | File | Delivers | Identifiers |
 |---|---|---|
 | `mesh/adapter.py` | `MeshData` (vertices, triangles, material index, edge blocks, name tables, `content_hash`); `read(path, *, format=None) -> MeshData` over meshio and netgen `.vol`; `write_msh41(data, path)` with the entity construction of §Design; `to_ngsolve(data) -> Mesh`; `from_ngsolve(mesh) -> MeshData` | IF-06 |
-| `mesh/ingest.py` | `VOCABULARY` (materials and boundaries, no aliases); `required_names(resolved) -> frozenset[str]`; `apply_groups(data, groups) -> MeshData`; `MeshVocabularyError`; `ingest(supplied, resolved) -> Mesh`; `MeshStage` (stage 6) with `key(inputs)` beside `run(inputs)` | IF-06, QR-12, FR-27 |
+| `mesh/ingest.py` | `VOCABULARY` (materials incl. `protein`, boundaries, no aliases); `required_names(resolved) -> frozenset[str]`; `apply_groups(data, groups) -> MeshData` with the reversed-map diagnostic; `MeshVocabularyError`; `check_solid_permittivities(mesh, model)`; `ingest(supplied, resolved) -> Mesh`; `MeshStage` (stage 6) with `key(inputs)` beside `run(inputs)` | IF-06, QR-12, PHY-03, FR-27 |
 | `mesh/quality.py` | `element_quality(data) -> QualityReport` (per-element SICN and gamma, min/mean/worst with centroid); `QUALITY_FLOOR = 0.3`; `check_quality(data)` raising `MeshQualityError(gate, quantity, location)`; `inverted_elements(data)` | VER-10, QR-12 |
 | `mesh/reference.py` | `ReferenceGeometry` from a profile fixture: the membrane quadrilateral, the 250 nm half-disc, fragmentation, edge naming into the vocabulary, the §5.2.2 size fields and the `optimize("Netgen")` pass; `junction_report()` for the conformality gate | FR-09 (CAD half), VER-28 |
 | `mesh/profile.py` | `PoreProfile` pydantic model over the fixture — `provenance: {source, citation, sha256, vertex_count}`, `vertices: list[tuple[float, float]]` — with `is_reference` gating Tier-3/4 use; `load_profile(name)` through `core/paths.py`; `profile_from_csv(path)`, the one-way conversion the fixture is built and re-checked with | §5.2.1, IF-03 pattern |
@@ -406,12 +409,19 @@ analogue of QR-13's rule for the weak forms, not a discharge of it.
   OPN-05 is rewritten: delivered, open only on the 185-versus-190 count, with no implementation
   consequence either way.
 
+- **G. §5.3.1's vocabulary gains `protein` and two rules.** The pore's dielectric body is a domain of
+  the reference geometry and had no name; `protein` is it, `pore` is excluded in both its readings,
+  and the `groups:` example gains `clya: protein`. A NOTE adds the reversed-map diagnostic, and a
+  second NOTE makes a solid with no `physics.solid_permittivities` entry abort on an ingested mesh
+  (PHY-03, QR-12) where `models.py:670` warns today. VER-28's wording is corrected to the delivered
+  geometry with it.
+
 ## Verification
 
 | Test file | Tier | Identifiers | What it asserts |
 |---|---|---|---|
 | `tests/tier1/test_mesh_adapter.py` | 1 | IF-06 | A tagged `MeshData` written as MSH 4.1 and read back has identical vertices, connectivity, per-group physical tags and names; the same data written as 2.2 is read by netgen with both name sets; a four-group mesh packed into one cell block is refused by the writer rather than collapsing to one tag; `to_ngsolve` then `from_ngsolve` is the identity on the tag maps; the content hash is stable across processes, ignores a rewritten header, and changes when one edge moves group |
-| `tests/tier1/test_mesh_ingest.py` | 1 | IF-06, QR-12, VER-27 | A misspelt group aborts naming the unclaimed group *and* the vocabulary name left unsupplied; an extra unclaimed group aborts; a case widening `wall_distance.sources` to a name no group supplies aborts; a correct mapping ingests and `mesh.GetMaterials()`/`GetBoundaries()` are exactly the vocabulary; ingesting imports neither `gmsh` nor `netgen.read_gmsh`, asserted on `sys.modules` in a fresh process (CON-10); a mesh with a negative-`r` vertex aborts |
+| `tests/tier1/test_mesh_ingest.py` | 1 | IF-06, QR-12, PHY-03, VER-27 | A misspelt group aborts naming the unclaimed group *and* the vocabulary name left unsupplied; a map written vocabulary-first aborts saying it looks reversed; a mesh carrying a `protein` material with no `solid_permittivities` entry aborts naming it, while the same material on a primitives-built mesh only warns; an extra unclaimed group aborts; a case widening `wall_distance.sources` to a name no group supplies aborts; a correct mapping ingests and `mesh.GetMaterials()`/`GetBoundaries()` are exactly the vocabulary; ingesting imports neither `gmsh` nor `netgen.read_gmsh`, asserted on `sys.modules` in a fresh process (CON-10); a mesh with a negative-`r` vertex aborts |
 | `tests/tier1/test_mesh_quality.py` | 1 | VER-10, QR-12 | SICN and gamma reproduce the six §Design check values to 10⁻¹² — equilateral (1, 1), right isoceles (√3/2, 2√2 − 2), the two slivers, scale invariance, and the clockwise element at (−1, +1); a mesh carrying one deliberate sliver aborts with the worst element's index, (r, z) centroid and both metrics in the message; an inverted element aborts under its own name; the five Phase-0 geometries pass with the measured minima; **optional**: our per-element values match `gmsh.model.mesh.getElementQualities` in magnitude, skipped on `ImportError` or `OSError` |
 | `tests/tier1/test_wall_distance.py` (edit) | 1 | VER-06, NUM-31 | The existing gradient-jump and `d = 0`-on-the-wall assertions, re-run on an **ingested** mesh; the membrane is absent from the source set and `d` at the membrane exceeds `d` at the pore wall by the geometric separation |
 | `tests/tier1/test_mesh_profile.py` | 1 | §5.2.1, IF-03 | The fixture round-trips through the pydantic model; an unknown key is named; `profile_from_csv(data/geometry/clya_as_radial_geometry.csv)` reproduces the shipped fixture exactly, and the CSV's sha256 matches the one in its provenance block; the delivered table's measured properties — 185 vertices, `r ∈ [1.65, 5.66]`, `z ∈ [−1.85, 12.25]`, simple, closed, area 26.4939 nm² — hold to 10⁻⁹; a profile whose `provenance.source` is `nominal` refuses a Tier-3/4 caller |
@@ -468,15 +478,12 @@ work.
    import conditioning, or after a later cleanup. Worth one sentence from the author; until then the
    fixture's provenance reads `author-supplied`, not `model-report`, and a Tier-3 comparison cites
    the file it actually used.
-2. **Mapping direction.** Assumed file group → vocabulary name (§Decisions), and §5.3.1's example
-   corrected to match. If the author intended the reverse, the change is one line in the schema's
-   validator and one in the example — but it has to be settled before a case file written against
-   it exists outside the tests.
-3. **Dropping `pore` from the vocabulary.** The phase plan lists `pore` as a material; this plan
-   drops it as a second spelling of `electrolyte`. Assumed. If a supplier's meshes really do call
-   the lumen `pore`, that is what the `groups:` mapping is for, which is the argument for having no
-   aliases in the first place.
-4. **Whether the quality gate is configurable.** Assumed **not**: `QUALITY_FLOOR = 0.3` is a module
-   constant, not a case field, so it needs no `SWITCH_PATHS` entry and cannot be relaxed to make a
-   bad mesh pass. A case-file knob would be the first thing reached for when a mesh fails, which is
-   the opposite of what VER-10 is for.
+2. **Settled by the author, 4 September 2026.** The mapping reads file group → vocabulary name, as
+   assumed; the protein dielectric body is `protein` and `pore` stays out of the vocabulary in both
+   its readings; and an ingested mesh whose solid has no permittivity aborts rather than warns. The
+   decisions table and amendments B and G carry all three.
+3. **The quality floor stays a constant**, also settled: `QUALITY_FLOOR = 0.3` is a module constant,
+   not a case field, so it needs no `SWITCH_PATHS` entry and cannot be relaxed to make a bad mesh
+   pass. Adding a field later is a compatible change and removing one is not, which is the argument
+   for starting closed; if a real case ever needs the escape hatch it is a CLI flag that taints the
+   manifest and refuses the store, not a case-file knob.

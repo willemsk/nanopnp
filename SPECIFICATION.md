@@ -840,7 +840,8 @@ name: clya-wt-1M-100mV
 inputs:                             # optional; supplied artefacts, §5.3.2
   mesh: {path: clya.msh, format: msh41,
          groups: {lumen: electrolyte, upper: cis, lower: trans,
-                  bilayer: membrane, pore_wall: wall, outer_rim: membrane_outer,
+                  clya: protein, bilayer: membrane,
+                  pore_wall: wall, outer_rim: membrane_outer,
                   symmetry_axis: axis}}
 
 structure:
@@ -912,11 +913,22 @@ The key is the physical-group name the mesh file carries; the value is the name 
 on. Several file groups MAY map to one vocabulary name — a CAD export routinely splits one physical
 wall into several curves — and the reverse is not expressible, which is why the direction is this
 way round. The vocabulary is fixed and carries no aliases: materials `electrolyte`, `cis`, `trans`,
-`membrane`, `analyte`; boundaries `axis`, `wall`, `membrane`, `membrane_outer`, `cis`, `trans`,
-`analyte`. Ingestion SHALL abort when any group in the file is left unclaimed by the mapping, or when
-any name the resolved run selects on — the boundary-condition names, `numerics.wall_distance.sources`
-and the fluid material set — is supplied by no group, and the diagnostic SHALL name both lists
-(QR-12). Rationale: boundary conditions are selected by name and the natural condition under the
+`protein`, `membrane`, `analyte`; boundaries `axis`, `wall`, `membrane`, `membrane_outer`, `cis`,
+`trans`, `analyte`. `protein` is the pore's dielectric body (§2.2), a solid domain Poisson is solved
+on and Nernst–Planck and the flow are not; `pore` is deliberately **not** a name, because it reads as
+both that body and the lumen fluid, and a mesh that uses it SHALL disambiguate through the mapping.
+Ingestion SHALL abort when any group in the file is left unclaimed by the mapping, or when any name
+the resolved run selects on — the boundary-condition names, `numerics.wall_distance.sources` and the
+fluid material set — is supplied by no group, and the diagnostic SHALL name both lists (QR-12). A
+mapping whose keys are all vocabulary names while its values are not is almost certainly written
+backwards, and the diagnostic SHALL say so rather than reporting every group unclaimed.
+
+NOTE (a solid without a permittivity, PHY-03, QR-12): on an **ingested** mesh, a material that is
+neither in the fluid set nor named in `physics.solid_permittivities` SHALL abort the run, naming the
+material. Poisson is solved over the whole domain, so the alternative is the electrolyte's ε_r about
+24 times too large in a solid — a plausible wrong answer with no solver diagnostic. Meshes built in
+process by the benchmark geometries keep the warning they have today; the difference is that an
+ingested mesh's material names were not written by this codebase. Rationale: boundary conditions are selected by name and the natural condition under the
 `r`-weighted forms is the *free* one (§6.2, NUM-06), so an unmapped wall becomes an open boundary,
 the solve converges, and the current is wrong with no residual, no gate and no diagnostic.
 
@@ -1679,7 +1691,7 @@ route to a cause and invites adjusting the solver until the number matches.
 | **VER-24** | Provenance manifest completeness | All eight field groups of §5.3.3 are present, a group no stage contributed carrying a status and a reason rather than being omitted; every switch-typed field of the case schema is classified either as a switch with a validated default or as a configuration choice with a written reason, in both directions, so that a switch added later without a default fails this test; the physics model's own deviation enumeration agrees with the case's on the switches they share; the environment group is populated without importing NGSolve (FR-25, IF-08) |
 | **VER-25** | Stage protocol | Every stage registered in §5.2 reports its name, number, inputs, outputs and artefact schema without importing its implementation module, asserted on `sys.modules` in a fresh process; each stage's own description is the registry's, so the two cannot drift; progress is monotone in [0, 1] and ends at 1; a cancellation token raises naming where the stage stopped, and is not a subclass of the numerical gate errors (FR-27, IF-01) |
 | **VER-27** | Mesh ingestion and tagging | A tagged mesh written as Gmsh MSH 4.1 and read back preserves vertices, connectivity, per-group physical tags and group names (IF-06); a group left unclaimed by `inputs.mesh.groups`, or a vocabulary name the run selects on that no group supplies, aborts with a diagnostic naming both lists (QR-12); the default ingestion path imports neither `gmsh` nor netgen's Gmsh reader, asserted on `sys.modules` in a fresh process (CON-10) |
-| **VER-28** | Reference-geometry conformance | The assembled (r, z) region is conformal at the membrane-to-pore junction — the pore's outer surface meets the membrane's slanted inner edge at (2, −1.4) and (3.5, +1.4) nm within the gluing tolerance, *and* the junction is one shared edge rather than two coincident ones — carries exactly the §5.3.1 vocabulary, and its mesh meets the §5.2.2 quality figures (FR-09) |
+| **VER-28** | Reference-geometry conformance | The assembled (r, z) region has exactly three domains — pore body, one membrane, one electrolyte — and is conformal at the membrane-to-pore junction: the membrane meets the pore on the pore's own outer surface, at r = 2.7524 nm on z = −1.4 and r = 4.88 nm on z = +1.4 within the fragmentation tolerance and read from the fixture rather than hard-coded, *and* over one shared edge chain rather than two coincident ones; no membrane material lies inside the fluid set; the region carries exactly the §5.3.1 vocabulary and its mesh meets the §5.2.2 quality figures (FR-09) |
 
 ### 7.3 Tier 2 analytic benchmarks
 
