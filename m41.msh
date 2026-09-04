@@ -1,0 +1,12 @@
+$MeshFormat
+4.1 0 8
+$EndMeshFormat
+$PhysicalNames
+5
+1 1 "bottom"
+1 2 "right"
+1 3 "top"
+1 4 "left"
+2 10 "electrolyte"
+$EndPhysicalNames
+$Nodes
