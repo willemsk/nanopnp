@@ -26,3 +26,14 @@ describes.
 The file is kept **verbatim as delivered**, line endings included, so that the hash above identifies
 the delivered artefact and not a reformatting of it. Nothing reads it at run time: `mesh/profile.py`
 converts it once into the validated fixture the code loads (WP8).
+
+## `clya_reference_profile.yaml`
+
+The validated fixture the code loads, derived from that table by
+`nanopnp.mesh.profile.profile_from_csv` and read by `load_profile("clya_reference_profile")`. It
+carries the same 185 vertices, the sha256 of the table it came from, and the measurements above in
+its `provenance:` block, where a mesh size chosen against them can be checked rather than assumed
+(§5.2.1 NOTE).
+
+Derived data: do not edit it by hand. `tests/tier1/test_mesh_profile.py` re-derives it from the CSV
+and fails if the two have drifted.
