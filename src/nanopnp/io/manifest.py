@@ -408,8 +408,14 @@ def build(
     upstream
         Upstream artefacts by stage name.
     mesh
-        ``continuation.mesh_report(mesh)``: elements, vertices, materials and
-        boundaries. Quality statistics and size-field settings join it in WP8.
+        ``nanopnp.mesh.ingest.IngestedMesh.summary()``: the counts and name
+        tables, the mesh's content hash, the VER-10 quality statistics, the
+        source file and its digest, and the vocabulary mapping that was applied
+        to it. That last one is why the whole group comes from stage 6 rather
+        than from the NGSolve mesh: which of the file's groups became ``wall``
+        is not recoverable from the solved mesh, and two runs that differ only
+        in it are two different runs (section 5.3.3). Size-field settings join
+        it when the mesher lands in v0.9.
     charge
         The charge pipeline's record; ``None`` until WP9 builds it.
     electrolyte

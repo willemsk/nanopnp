@@ -277,6 +277,17 @@ def _register_builtins() -> None:
     """
     register(
         StageDescription(
+            name="mesh",
+            number=6,
+            title="Mesh",
+            inputs=("case",),
+            outputs=("tagged mesh", "element-quality report"),
+            artefact_schema="nanopnp/mesh/v1",
+        ),
+        "nanopnp.mesh.ingest:MeshStage",
+    )
+    register(
+        StageDescription(
             name="materials",
             number=8,
             title="Materials",

@@ -59,7 +59,12 @@ MESH_SCHEMA = "nanopnp/mesh/v1"
 """Stage 6: a tagged mesh, addressed by the content of its arrays and tag maps."""
 
 TOL_NM = 1e-9
-"""Tolerance on the out-of-plane coordinate of an ``(r, z)`` mesh, in nm."""
+"""Tolerance on the out-of-plane coordinate of an ``(r, z)`` mesh, in nm.
+
+Also the width of the axis band :meth:`MeshData._snap_to_axis` collapses to
+``r = 0``: a femtometre, eleven orders below the smallest feature any pore
+geometry of section 2.2 carries, so nothing physical can fall inside it.
+"""
 
 FORMATS: dict[str, str] = {
     "msh": "gmsh",
@@ -184,7 +189,35 @@ class MeshData:
         )
         object.__setattr__(self, "materials", tuple(self.materials))
         object.__setattr__(self, "boundaries", tuple(self.boundaries))
+        self._snap_to_axis()
         self._validate()
+
+    def _snap_to_axis(self) -> None:
+        """Set ``r`` to exactly zero wherever it is within :data:`TOL_NM` of it.
+
+        Netgen's OCC kernel puts axis vertices at ``r = -1.5e-15`` nm and at
+        ``+7e-16`` nm rather than at zero [tested], which is round-off in the
+        rotation the revolve applies and not a mesh that crosses the axis. Two
+        things need it snapped. The CON-04 gate in
+        :func:`nanopnp.mesh.quality.check_radii` asks for ``r >= 0`` exactly, and
+        must go on asking exactly, because the failure it is there to catch — a
+        mesh mirrored about the axis — is a *sign* error, and a gate with a
+        tolerance wide enough to pass round-off is a gate that has to justify its
+        width. And the content hash digests the coordinate bytes, so two runs of
+        the same mesher that differ only in that round-off would otherwise be two
+        meshes and two cache entries (section 5.3.2).
+
+        Snapped in the constructor rather than in the reader so that it holds for
+        every route into a :class:`MeshData`, the meshers' own included.
+        """
+        import numpy as np
+
+        radii = self.vertices[:, 0]
+        snapped = np.where(np.abs(radii) < TOL_NM, 0.0, radii)
+        if not np.array_equal(snapped, radii):
+            vertices = self.vertices.copy()
+            vertices[:, 0] = snapped
+            object.__setattr__(self, "vertices", vertices)
 
     def _validate(self) -> None:
         """Raise :class:`MeshDataError` unless every array and table lines up."""
@@ -393,10 +426,17 @@ class MeshData:
         )
 
     def summary(self) -> dict[str, object]:
-        """Return the counts and name tables a manifest records (FR-25)."""
+        """Return the counts and name tables a manifest records (FR-25).
+
+        The triangle count is called ``elements`` rather than ``triangles`` so
+        that this group and :meth:`nanopnp.mesh.quality.QualityReport.summary`
+        and :func:`nanopnp.solve.continuation.mesh_report` all name it the same
+        thing; a manifest whose two mesh counts have different keys is one a
+        reader has to be told about.
+        """
         return {
             "vertices": self.vertex_count,
-            "triangles": self.element_count,
+            "elements": self.element_count,
             "edges": int(self.edges.shape[0]),
             "materials": list(self.materials),
             "boundaries": list(self.boundaries),

@@ -363,13 +363,24 @@ class BoundaryConditions(_Strict):
 
 
 class PhysicsSpec(_Strict):
-    """The named physics model of PHY-21 and the switches it carries."""
+    """The named physics model of PHY-21 and the switches it carries.
+
+    ``solid_permittivities`` is the one member that is not a switch: it is the
+    relative permittivity of each non-fluid domain of the mesh, keyed by the
+    material name the boundary vocabulary gives it (section 5.3.1). Poisson is
+    solved over the solids too, so a domain with no entry silently takes the
+    electrolyte's ``eps_r`` — about 24 times too large in a bilayer — which is
+    why :func:`nanopnp.mesh.ingest.check_solid_permittivities` aborts on one.
+    PHY-20 gives 3.2 for the membrane and 20 for the protein and the analyte;
+    they are not defaulted here because the mesh decides which solids exist.
+    """
 
     model: str = "epnp-ns"
     flow: bool = True
     variable_density: bool = True
     inertia: bool = True
     dielectric_gradient_forces: bool = False
+    solid_permittivities: dict[str, float] = Field(default_factory=dict)
 
 
 class ElementsSpec(_Strict):
@@ -929,7 +940,13 @@ def _check_physics_switches(document: CaseDocument) -> None:
         return
     inapplicable = [
         name
-        for name in ("flow", "variable_density", "inertia", "dielectric_gradient_forces")
+        for name in (
+            "flow",
+            "variable_density",
+            "inertia",
+            "dielectric_gradient_forces",
+            "solid_permittivities",
+        )
         if getattr(physics, name)
     ]
     if inapplicable:
@@ -955,6 +972,7 @@ def _model_options(document: CaseDocument, *, order: int, pressure_order: int) -
     if physics.model not in COUPLED_MODELS:
         return {"order": order}
     options: dict[str, Any] = {
+        "solid_permittivities": dict(physics.solid_permittivities),
         "variable_density": physics.variable_density,
         "inertia": physics.inertia,
         "dielectric_gradient_forces": physics.dielectric_gradient_forces,

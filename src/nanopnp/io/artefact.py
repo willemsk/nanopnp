@@ -39,6 +39,15 @@ CASE_SCHEMA = "nanopnp/case/v1"
 MATERIALS_SCHEMA = "nanopnp/materials/v1"
 """Stage 8: the resolved material coefficient set."""
 
+MESH_ARTEFACT_SCHEMA = "nanopnp/mesh/v1"
+"""Stage 6: a tagged, gated mesh in the boundary vocabulary (IF-06).
+
+The same string as :data:`nanopnp.mesh.adapter.MESH_SCHEMA`, which is the domain
+separator of the mesh content hash, and deliberately repeated rather than
+imported: ``io`` imports nothing from ``mesh`` at run time (see the module
+docstring), and one schema naming one thing in two places is the intent.
+"""
+
 SOLUTION_SCHEMA = "nanopnp/solution/v1"
 """Stage 10: the converged field set and its iteration history."""
 
@@ -195,6 +204,47 @@ class MaterialsArtefact(Artefact):
                 "concentration_M": concentration_M,
             },
             inputs={"corrections": correction_file_hash},
+            summary=summary or {},
+        )
+
+
+class MeshArtefact(Artefact):
+    """Stage 6: a mesh that has passed the section 5.2.2 gates, in the vocabulary.
+
+    Keyed on the mesh's **contents** — canonical vertices, connectivity and tag
+    maps, as :meth:`nanopnp.mesh.adapter.MeshData.content_hash` takes them — and
+    not on the bytes of the file it came from. A mesh rewritten by another tool
+    with a different header, or with its entity blocks in another order, is then
+    one store entry rather than two, while a mesh whose ``wall`` group gained an
+    edge is a different one. The source file's own digest is recorded in the
+    summary, where provenance belongs and where it changes no key.
+
+    The applied vocabulary mapping is a *parameter*, not a summary field: the
+    same file read under two different ``inputs.mesh.groups`` maps is two
+    different meshes as far as every downstream selection is concerned, and
+    keying them alike would serve one solve's boundary conditions from the
+    other's cache entry.
+    """
+
+    def __init__(
+        self,
+        *,
+        content_hash: str,
+        materials: tuple[str, ...],
+        boundaries: tuple[str, ...],
+        groups: Mapping[str, str],
+        payload: Mapping[str, Path] | None = None,
+        summary: Mapping[str, Canonicalisable] | None = None,
+    ) -> None:
+        super().__init__(
+            schema=MESH_ARTEFACT_SCHEMA,
+            parameters={
+                "materials": list(materials),
+                "boundaries": list(boundaries),
+                "groups": dict(sorted(groups.items())),
+            },
+            inputs={"mesh": content_hash},
+            payload=dict(payload or {}),
             summary=summary or {},
         )
 
