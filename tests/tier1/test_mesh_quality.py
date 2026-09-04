@@ -1,5 +1,7 @@
 """VER-10, QR-12: the element-quality gates, against the values that calibrated them."""
 
+from typing import NoReturn
+
 import numpy as np
 import pytest
 from scipy.optimize import brentq
@@ -237,3 +239,28 @@ def test_ver10_gmsh_agrees_on_the_magnitude_of_both_measures() -> None:
             gmsh.model.remove()
     finally:
         gmsh.finalize()
+
+
+def test_ver10_generate_routes_every_built_mesh_through_the_gate(monkeypatch) -> None:
+    """The gate guards the meshes this package builds, not only imported ones.
+
+    A gate that only fires at ingestion leaves the geometry we generate
+    ourselves unwatched, and a badly chosen ``wall_h_nm`` is exactly how a
+    degenerate element gets built here. The four geometries above clear the
+    floor by a wide margin, so this asserts the wiring rather than the numbers:
+    the gate is reached by default and skipped only when asked.
+    """
+    calls: list[str] = []
+
+    def refuse(data, *, floor=0.3, where="this mesh") -> NoReturn:
+        calls.append(where)
+        raise MeshQualityError(gate="minimum SICN", quantity="0", location=where, detail="stubbed")
+
+    monkeypatch.setattr("nanopnp.mesh.primitives._check_quality", refuse)
+    geometry = CylinderGeometry(2.0, 4.0)
+    with pytest.raises(MeshQualityError):
+        geometry.generate(maxh_nm=1.0)
+    assert calls == ["a 2 nm cylinder"]
+
+    geometry.generate(maxh_nm=1.0, check_quality=False)
+    assert calls == ["a 2 nm cylinder"], "check_quality=False must not reach the gate"

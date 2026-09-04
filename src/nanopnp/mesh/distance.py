@@ -5,6 +5,16 @@ deliberately excluded from the source set: electrolyte properties near the
 bilayer do not affect the pore's figures of merit, and the reference model's
 general-extrusion operator ran over the pore boundaries only.
 
+That exclusion is a statement about *names*, and on a mesh this package did not
+build, the names are whatever the file said. What makes the default source set
+``"wall"`` mean the pore wall - and only the pore wall - is
+:mod:`nanopnp.mesh.ingest`, which maps the file's own groups onto the vocabulary
+once, at ingestion, and refuses the run if the name this field will select on is
+not among them (IF-06, VER-27). A mesh whose bilayer surfaces were mapped to
+``wall`` would be accepted here and would answer a different question, so the
+place to look when ``d`` is wrong on an imported mesh is the ``groups:`` map,
+not this module.
+
 The distance is measured **in the (r, z) half-plane, without the r weight**. For
 a surface of revolution the nearest point to any field point lies in that point's
 own meridian plane, so the two-dimensional distance in (r, z) *is* the
