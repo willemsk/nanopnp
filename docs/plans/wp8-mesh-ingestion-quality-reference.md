@@ -6,8 +6,9 @@ a solver that reads exactly one mesh format — netgen's own `.vol` — through 
 `solve/stage.py`, with no tagging, no vocabulary check and no quality gate anywhere between the file
 on disk and the assembled weak form. `mesh/` is `primitives.py` (Phase-0 benchmark shapes) and
 `distance.py` (PHY-02); `mesh/adapter.py`, `mesh/ingest.py`, `mesh/quality.py` and `mesh/reference.py`
-do not exist, and neither does any geometry fixture: `data/` holds one file, and it is a correction
-table.
+do not exist. The ClyA vertex table, absent when this plan was first written, landed while it was
+being written and is in the tree as `data/geometry/clya_as_radial_geometry.csv`; until then `data/`
+held one file, and it was a correction table.
 
 This is the implementation plan for WP8 of `docs/plans/phase-1-solver-core.md`. `SPECIFICATION.md`
 remains normative: where this file and the specification disagree, the specification governs and this
@@ -50,10 +51,18 @@ Four facts about the tree shape the design; all four were established by reading
   tree is anywhere near the 0.3 gate, so the gate can be unconditional rather than opt-in, and
   turning it on cannot break Tier 2.
 
+- **The reference vertex table is in the tree, and it settles the membrane junction. [tested]**
+  185 `r,z` pairs in nm, a simple closed loop with no duplicate vertex, `r ∈ [1.65, 5.66]`,
+  `z ∈ [−1.85, 12.25]` — the published extents to the digit. It refutes what this plan first assumed
+  about that junction: the pore's outer surface passes through `r = 2.7524` at `z = −1.4` and
+  `r = 4.88` at `z = +1.4`, *not* through the membrane quadrilateral's drawn corners at 2.0 and 3.5,
+  which lie inside the pore body. The membrane is a boolean subtraction, not a glue against matching
+  coordinates, and the conformality gate changes with it (§Design).
+
 The package delivers `mesh/adapter.py`, `mesh/ingest.py`, `mesh/quality.py`, `mesh/reference.py`,
 the ClyA profile fixture and its loader, a stage-6 registration, changes to `solve/stage.py` and
-`io/manifest.py`, and five amendments to `SPECIFICATION.md` — one of which closes half of OPN-05 on
-the primary source. It discharges **IF-06, VER-10, QR-12**, re-verifies **VER-06** and **NUM-31** on
+`io/manifest.py`, and six amendments to `SPECIFICATION.md` — two of which take OPN-05 down to a
+single outstanding number. It discharges **IF-06, VER-10, QR-12**, re-verifies **VER-06** and **NUM-31** on
 an ingested mesh, adds **VER-27** and **VER-28**, and carries **CON-10** for the first time. No new
 dependency: `meshio` 5.3.5 is already a core dependency and `gmsh` is already the optional extra.
 
@@ -75,7 +84,8 @@ dependency: `meshio` 5.3.5 is already a core dependency and `gmsh` is already th
 | Where the gate fires | At ingestion, and after every mesh this package generates. `primitives.generate` gains `check_quality: bool = True` | The measured margin (min SICN 0.647 against a 0.3 gate) says an unconditional gate costs nothing and would have caught a degenerate benchmark mesh had one ever been produced. A gate that only guards imported meshes leaves the geometry we build ourselves unwatched |
 | Mesh artefact identity | `sha256` over **vertices, element connectivity and the tag maps in file order**, not over file bytes; the source file's `file_hash` is recorded in the summary for provenance | The phase plan's decision. A mesh rewritten by meshio with a different header is the same mesh; a mesh whose `wall` group gained an edge is not. The cost is that `MeshStage.key(inputs)` must read the mesh — seconds against a solve of minutes, and the alternative files one mesh under two keys |
 | Stage 6 | Registered as `mesh` → `nanopnp.mesh.ingest:MeshStage`, and `SolveStage` takes the mesh artefact from `upstream` when given one and computes it itself otherwise | Exactly the WP7 precedent for materials: one code path builds the key whether the pipeline ran the stage or the stage was invoked alone, so a pipeline run and a stage-alone run fill one store entry rather than two |
-| Reference geometry input | A **profile fixture**, `data/geometry/clya_reference_profile.yaml`, loaded and validated through a pydantic model like every other serialisation boundary; `mesh/reference.py` assembles and meshes it and does not extract it | The polygon is data (the *corrections are data* rule, applied to geometry). Landing the published table then becomes a data drop, not a code change, and the fixture's own `provenance:` block records which table it is — the model report's, or the nominal stand-in of §Design |
+| Reference geometry input | A **profile fixture**, `data/geometry/clya_reference_profile.yaml`, derived from the delivered CSV and loaded through a pydantic model like every other serialisation boundary; `mesh/reference.py` assembles and meshes it and does not extract it | The polygon is data (the *corrections are data* rule, applied to geometry). The CSV stays beside it verbatim as the delivered artefact, and the fixture's `provenance:` block records which table it is and the sha256 it was derived from, so a later reconciliation is a data drop |
+| Membrane-to-pore junction | **Boolean subtraction**, not a glue against matching coordinates: the membrane is the quadrilateral minus the pore body, and the conformality gate asserts the two cut radii taken from the fixture, not the drawn corners | Measured on the delivered table: the drawn corners (2, −1.4) and (3.5, +1.4) are 0.275 and 0.540 nm inside the pore body, so a coordinate gate against them fails on the real geometry (§Design) |
 | Contour extraction | **Not in this package.** `reference.py` consumes a vertex table; it never produces one | FR-07/FR-08 are the Phase-2 contour pipeline. Assembling a region from a supplied polygon is FR-09's CAD half and is what WP13's comparison needs; conflating them would pull the density and marching-squares stack into Phase 1 |
 
 ## Design
@@ -89,15 +99,26 @@ vertices** for the whole geometry. `CLAUDE.md` says the model report governs, an
 the two numbers count the pore polygon and the assembled geometry respectively, and §2.2's "196" is
 the geometry-wide figure attached to the wrong object.
 
-The counts corroborate each other. The assembled region adds to the 190 polygon vertices exactly the
-points the polygon does not already carry: the membrane quadrilateral's two inner corners at
-(r = 2, z = −1.4) and (3.5, +1.4), its two outer corners where it meets the reservoir arc, and the
-arc's two endpoints on the axis. 190 + 6 = **196**, which is also the mesh's 196 vertex elements
-(§5.2.2) — a mesh carries one vertex element per geometry vertex, so the two 196s are the same
-number and neither of them is the polygon's.
+The counts corroborate each other once the membrane's construction is right — and it is not the one
+this plan first wrote down. The quadrilateral's inner edge is *buried* in the pore body, so its drawn
+corners survive nothing; what the assembly adds to the 190 polygon vertices is the two points where
+the planes `z = ±1.4` cut the pore's **outer** surface, each splitting a polygon edge (+2 vertices,
++2 edges); the membrane's two outer corners on the reservoir arc at
+`r = √(250² − 1.4²) = 249.99608` (+2, +2); and the arc's two endpoints on the axis at `(0, ±250)`
+(+2, +2). Closing the region takes six further edges: the axis, the `cis` and `trans` arc segments,
+the `membrane_outer` arc between the corners, and the membrane's two faces at `z = ±1.4`.
 
-Amendment A records this. It closes the *interpretation* half of OPN-05 on a primary source; the
-table itself is still owed, and §Open questions says what the package does in the meantime.
+```
+vertices    190 + 2 + 2 + 2                 = 196
+boundaries  190 + 2 (splits) + 6 (closures) = 198
+Euler       196 − 198 + 4 faces             = 2
+```
+
+Both reported numbers, and the mesh's 196 vertex elements (§5.2.2) — one per geometry vertex — are
+the same 196, none of them the polygon's. The delivered table has 185 vertices and already carries a
+vertex exactly on the cis plane at `(4.88, +1.4)`, so it needs one split rather than two and
+assembles to 190 vertices and 192 boundaries, Euler closing at 2 again. Amendments A and F record
+all of this; the five-vertex difference is the last thing OPN-05 is open on.
 
 ### The reference geometry, written out
 
@@ -111,44 +132,81 @@ All lengths in nm, all from §5.2.1, §5.2.2 and `.knowledge/04` §2.
 
 The membrane is a quadrilateral and not a rectangle: its inner edge slants from `r = 2.0` at
 `z = −1.4` to `r = 3.5` at `z = +1.4`, a slope of `1.5/2.8 = 0.535714` nm per nm, 28.18° from the
-axis. The pore's *outer* surface must pass through those two points exactly, or fragmentation leaves
-a wedge of gap or overlap at the junction — the failure §5.2's design note warns about. So the
-conformality gate is arithmetic, not opinion:
+axis. The delivered table says why, and it is not the reason this plan first gave. That edge lies
+**inside** the pore body along its whole length [tested]:
+
+| Plane | Pore spans | Edge enters at | Clear of the lumen | Clear of the outer surface |
+|---|---|---|---|---|
+| `z = −1.4` | `r ∈ [1.725, 2.7524]` | 2.0 | 0.275 | 0.752 |
+| `z = +1.4` | `r ∈ [2.96, 4.88]` | 3.5 | 0.540 | 1.380 |
+
+The lumen wall passes through `(2.0, 0)` exactly and has opened to `r = 2.96` by `z = +1.4`, so a
+*vertical* inner edge at `r = 2` would put membrane material inside the electrolyte for every
+`z > 0`. The slant is the fix, and burying the edge is the point: the assembled membrane is the
+quadrilateral **minus** the pore body, meeting the pore on the pore's own outer surface wherever that
+runs. There is nothing to make coincide, so the gate this plan first wrote — `|r_out(−1.4) − 2.0|`
+and `|r_out(+1.4) − 3.5|` under a gluing tolerance — asserts the wrong numbers and would fail on the
+reference geometry. It is replaced by four assertions on the fragmented region:
 
 ```
-|r_out(−1.4) − 2.0| < tol      and      |r_out(+1.4) − 3.5| < tol
+r_out(−1.4) = 2.7524 ± tol        r_out(+1.4) = 4.88 ± tol
 ```
 
-with `tol` the OCC gluing tolerance, and — the part a coordinate check cannot see — after
-`occ.Glue` the junction must be **one** edge shared by two faces, not two coincident edges. The test
-asserts the shared-edge count, because two coincident edges give conforming coordinates and a
-non-conformal mesh.
+both read from the fixture rather than hard-coded; the membrane-facing part of the pore boundary is
+**one** edge chain shared with the membrane face, not two coincident chains, because two coincident
+chains give conforming coordinates and a non-conformal mesh; no membrane material anywhere inside
+`ELECTROLYTE_DOMAINS`; and the region has exactly three domains.
+
+Three, not four, and the delivered table is what makes that non-obvious. The cap's underside is
+re-entrant — the boundary runs inward from `(4.29, −0.7)` to `(3.33, −0.14)`, back out to
+`(3.48, 0.15)` and over a closed top at `z ≈ 0.26` — so the membrane fills a cleft under the cap and
+its boundary is not monotone in `z`. That cleft opens downward past the cap edge at `z ≈ −0.7`, so it
+is continuous with the rest of the membrane, and the membrane is one domain; the electrolyte is a
+second, single domain because the lumen joins the two reservoirs; the pore body is the third. An
+implementation that fragments the cleft off as its own face has a bug, and the domain count is the
+cheapest test for it.
 
 The membrane's outer edge at `r = 250` lies outside the arc (`250² + 1.4² > 250²`), so the
 quadrilateral is intersected with the half-disc and `membrane_outer` is the resulting arc segment
 `|z| ≤ 1.4`, not a straight segment. An implementation that builds `membrane_outer` as a segment at
 `r = 250` leaves a sliver between it and the arc.
 
-### The nominal profile, and what it is not
+### The delivered vertex table, and what it does not settle
 
-The published vertex table is not in this repository and `.knowledge/04` §1 records that the final
-polyline "is not reproduced in the thesis". Until it lands, `reference.py` is exercised against a
-**nominal** profile built from the published *dimensions* only — every number below is quoted in
-§5.2.1 or `.knowledge/04` §2 — and the fixture's `provenance.source` field reads `nominal`, never
-`model-report`:
+`data/geometry/clya_as_radial_geometry.csv` is the ClyA-AS radial geometry as supplied by the
+reference model's author, kept **verbatim** — CRLF line endings included — so that its sha256
+`d0c2008…b0b386` identifies the delivered artefact and not our reformatting of it. Every row below
+was measured on the file [tested]:
 
-| Anchor | Value | Source |
-|---|---|---|
-| Lumen radius, trans constriction | 1.65 over `−1.85 ≤ z ≤ 1.6` | 3.3 nm diameter; §5.2.1 `r_min = 1.65` |
-| Lumen radius, cis lumen | 3.0 at `z = 12.25` | 6 nm diameter |
-| Outer radius at the membrane | 2.0 at `z = −1.4`, 3.5 at `z = +1.4` | the membrane quadrilateral |
-| Outer radius, cis end | 5.66 at `z = 12.25` | §5.2.1 `r_max = 5.66` |
+| Property | Value |
+|---|---|
+| Vertices | 185, no duplicates, closing edge implied rather than repeated |
+| Extent | `r ∈ [1.65, 5.66]`, `z ∈ [−1.85, 12.25]` — §2.2's published extents to the digit |
+| Topology | simple closed loop, no self-intersection |
+| Orientation | clockwise in `(r, z)`; signed area −26.4939 nm² |
+| Vertex spacing | min 0.0361 nm; 10 of 185 edges below 0.05 nm |
+| Local feature size | min 0.0806 nm |
 
-Piecewise linear between anchors, closed across the two end faces. **It is a stand-in for a
-regression fixture, not a regression fixture**: no test may compare a number computed on it against
-a published ClyA result, and the fixture loader refuses to be used by a Tier-3 or Tier-4 test unless
-`provenance.source` is `model-report`. That refusal is the guard that stops a nominal profile
-quietly becoming the reference.
+Three things follow.
+
+**The fixture is derived, and the derivation is tested.** `mesh/profile.py` converts the CSV once
+into `data/geometry/clya_reference_profile.yaml` — `provenance: {source: author-supplied, citation,
+sha256, vertex_count}` — and a Tier-1 test re-derives the YAML from the CSV in the tree and asserts
+they agree, so the two cannot drift. `data/` is force-included into the wheel already
+(`pyproject.toml:78`), so `data/geometry/` ships with no packaging change. The nominal stand-in this
+plan previously specified is **dropped**: nothing nominal ships, and `is_reference` becomes
+`source in {model-report, author-supplied}` rather than `source == model-report`.
+
+**Two of §5.2.1's conditioning criteria would reject the reference polygon.** At the reference wall
+size of 0.05 nm its minimum vertex spacing is 0.0361 nm and its minimum local feature size 0.0806 nm
+against a 0.1 nm threshold — and that same polygon, at that same wall size, produced the reference
+mesh with minimum element quality 0.6378. The criteria are about contours the FR-08 pipeline
+*produces*, not about a supplied fixture; amendment F says so, and the fixture is gated on validity,
+simplicity and topology instead, with its spacing and feature size recorded in provenance.
+
+**Five vertices are unaccounted for.** The model report's 190 against the delivered 185, with the
+assembly arithmetic above consistent for either. Nothing in this package depends on which is cited;
+§Open questions carries it.
 
 ### Element quality: the two measures, and why both
 
@@ -291,8 +349,9 @@ re-verified against tags that came from a file rather than from `name_edges`.
 | `mesh/ingest.py` | `VOCABULARY` (materials and boundaries, no aliases); `required_names(resolved) -> frozenset[str]`; `apply_groups(data, groups) -> MeshData`; `MeshVocabularyError`; `ingest(supplied, resolved) -> Mesh`; `MeshStage` (stage 6) with `key(inputs)` beside `run(inputs)` | IF-06, QR-12, FR-27 |
 | `mesh/quality.py` | `element_quality(data) -> QualityReport` (per-element SICN and gamma, min/mean/worst with centroid); `QUALITY_FLOOR = 0.3`; `check_quality(data)` raising `MeshQualityError(gate, quantity, location)`; `inverted_elements(data)` | VER-10, QR-12 |
 | `mesh/reference.py` | `ReferenceGeometry` from a profile fixture: the membrane quadrilateral, the 250 nm half-disc, fragmentation, edge naming into the vocabulary, the §5.2.2 size fields and the `optimize("Netgen")` pass; `junction_report()` for the conformality gate | FR-09 (CAD half), VER-28 |
-| `mesh/profile.py` | `PoreProfile` pydantic model over the fixture — `provenance: {source, citation, vertex_count}`, `vertices: list[tuple[float, float]]` — with `is_reference` gating Tier-3/4 use; `load_profile(name)` through `core/paths.py` | §5.2.1, IF-03 pattern |
-| `data/geometry/clya_nominal_profile.yaml` | The nominal stand-in of §Design, `source: nominal` | §5.2.1 |
+| `mesh/profile.py` | `PoreProfile` pydantic model over the fixture — `provenance: {source, citation, sha256, vertex_count}`, `vertices: list[tuple[float, float]]` — with `is_reference` gating Tier-3/4 use; `load_profile(name)` through `core/paths.py`; `profile_from_csv(path)`, the one-way conversion the fixture is built and re-checked with | §5.2.1, IF-03 pattern |
+| `data/geometry/clya_as_radial_geometry.csv` | **Landed.** The delivered 185-vertex table, verbatim, beside a `README.md` recording its provenance, hash and measured properties | §5.2.1, OPN-05 |
+| `data/geometry/clya_reference_profile.yaml` | The fixture derived from that CSV, `source: author-supplied`, with the sha256 it came from | §5.2.1 |
 | `mesh/primitives.py` (edit) | `generate(..., check_quality: bool = True)` on all three geometries, routed through `mesh/quality.py` | VER-10 |
 | `mesh/distance.py` (edit) | Docstring pointer to the ingestion gate as the thing that makes `sources="wall"` mean the pore wall on an ingested mesh; no behaviour change | PHY-02 |
 | `solve/stage.py` (edit) | `_mesh_path` and `MESH_SUFFIXES` replaced by `mesh.ingest.ingest`; the mesh enters the digest as the artefact's content hash, not `file_hash`; the mesh artefact is taken from `upstream` when supplied | §5.3.2, FR-27 |
@@ -311,8 +370,8 @@ analogue of QR-13's rule for the weak forms, not a discharge of it.
   pore and 3 domains / 198 boundaries / 196 vertices for the geometry, and `CLAUDE.md` makes the
   model report govern. §5.2.2's "196 vertex elements" is then the same 196, one vertex element per
   geometry vertex, rather than a third number. VAL-05 (§7.4) and RSK-05 lose "196-vertex" for
-  "published pore polygon". **OPN-05 is narrowed, not closed**: the interpretation is settled here;
-  the table is still owed and the entry says so.
+  "published pore polygon". Amendment F then corrects the *composition* of the extra six and records
+  the delivered table.
 - **B. §5.3.1's `inputs.mesh.groups` gains a NOTE and its example is corrected.** The example reads
   `groups: {pore: pore, membrane: membrane, reservoir: bulk}`, whose direction is unstated and whose
   three values name nothing the solver speaks. It becomes
@@ -337,6 +396,16 @@ analogue of QR-13's rule for the weak forms, not a discharge of it.
   none yet" to **35 and 32**, which is what the table has actually said since WP7 filled six rows
   without updating the count.
 
+- **F. §2.2 and §5.2.1 record the delivered table and correct the junction.** §2.2's membrane row
+  said the inner edge is "slanted to meet the pore's outer surface"; measured against the table it is
+  slanted so as to lie *inside* the pore body, and the assembled membrane is a subtraction. §5.2.1
+  gains the table's location and measured properties, a NOTE deriving the junction and the three-domain
+  count, the corrected 190 + 6 = 196 composition with the 198-boundary and Euler checks, and a NOTE
+  exempting a supplied fixture from the two conditioning criteria it does not meet — with the reason,
+  which is that the reference mesh was built from this polygon at 0.05 nm and reached quality 0.6378.
+  OPN-05 is rewritten: delivered, open only on the 185-versus-190 count, with no implementation
+  consequence either way.
+
 ## Verification
 
 | Test file | Tier | Identifiers | What it asserts |
@@ -345,9 +414,9 @@ analogue of QR-13's rule for the weak forms, not a discharge of it.
 | `tests/tier1/test_mesh_ingest.py` | 1 | IF-06, QR-12, VER-27 | A misspelt group aborts naming the unclaimed group *and* the vocabulary name left unsupplied; an extra unclaimed group aborts; a case widening `wall_distance.sources` to a name no group supplies aborts; a correct mapping ingests and `mesh.GetMaterials()`/`GetBoundaries()` are exactly the vocabulary; ingesting imports neither `gmsh` nor `netgen.read_gmsh`, asserted on `sys.modules` in a fresh process (CON-10); a mesh with a negative-`r` vertex aborts |
 | `tests/tier1/test_mesh_quality.py` | 1 | VER-10, QR-12 | SICN and gamma reproduce the six §Design check values to 10⁻¹² — equilateral (1, 1), right isoceles (√3/2, 2√2 − 2), the two slivers, scale invariance, and the clockwise element at (−1, +1); a mesh carrying one deliberate sliver aborts with the worst element's index, (r, z) centroid and both metrics in the message; an inverted element aborts under its own name; the five Phase-0 geometries pass with the measured minima; **optional**: our per-element values match `gmsh.model.mesh.getElementQualities` in magnitude, skipped on `ImportError` or `OSError` |
 | `tests/tier1/test_wall_distance.py` (edit) | 1 | VER-06, NUM-31 | The existing gradient-jump and `d = 0`-on-the-wall assertions, re-run on an **ingested** mesh; the membrane is absent from the source set and `d` at the membrane exceeds `d` at the pore wall by the geometric separation |
-| `tests/tier1/test_mesh_profile.py` | 1 | §5.2.1, IF-03 | The fixture round-trips through the pydantic model; an unknown key is named; a profile whose `provenance.source` is `nominal` refuses a Tier-3/4 caller; the nominal profile's vertex count, `r` range and `z` range match the §Design anchors |
+| `tests/tier1/test_mesh_profile.py` | 1 | §5.2.1, IF-03 | The fixture round-trips through the pydantic model; an unknown key is named; `profile_from_csv(data/geometry/clya_as_radial_geometry.csv)` reproduces the shipped fixture exactly, and the CSV's sha256 matches the one in its provenance block; the delivered table's measured properties — 185 vertices, `r ∈ [1.65, 5.66]`, `z ∈ [−1.85, 12.25]`, simple, closed, area 26.4939 nm² — hold to 10⁻⁹; a profile whose `provenance.source` is `nominal` refuses a Tier-3/4 caller |
 | `tests/tier1/test_stages.py` (edit) | 1 | VER-25, FR-27 | Stage 6 describes itself without importing `nanopnp.mesh.ingest`; `MeshStage.key(inputs)` equals the hash of the artefact `run` produces |
-| `tests/tier2/test_reference_geometry.py` | 2 | VER-28, FR-09 | The assembled ClyA region has three fluid domains and one membrane; the junction is conformal — `|r_out(∓1.4) − {2.0, 3.5}|` below the gluing tolerance *and* exactly one shared edge; `membrane_outer` is the arc segment and not a straight edge; the meshed region passes the quality gate and its min/mean SICN are recorded against 0.6378/0.9765 |
+| `tests/tier2/test_reference_geometry.py` | 2 | VER-28, FR-09 | The assembled ClyA region has exactly three domains — pore body, one membrane (the cleft under the cap is not fragmented off), one electrolyte; the junction is conformal — `r_out(−1.4) = 2.7524` and `r_out(+1.4) = 4.88` within the fragmentation tolerance, read from the fixture, *and* one shared edge chain rather than two coincident ones; no membrane material inside `ELECTROLYTE_DOMAINS`; `membrane_outer` is the arc segment and not a straight edge; the meshed region passes the quality gate and its min/mean SICN are recorded against 0.6378/0.9765 |
 | `tests/tier2/test_artefact_cache.py` (edit) | 2 | §5.3.2, QR-08 | The solve keyed on a mesh **content** hash: the same mesh rewritten with a different header is a store hit; a mesh with one boundary edge moved to another group is a miss |
 
 Tolerances and where they come from: the quality check values are exact rationals and surds and are
@@ -389,18 +458,16 @@ runner installs them is a workflow decision, not this package's.
 One blocks part of the deliverable; the rest are assumed and stated so that none of them stops the
 work.
 
-1. **The pore-polygon vertex table (OPN-05, second half) — the one real blocker, and only for the
-   fixture.** The table is not in this repository, and `.knowledge/04` §1 records that the thesis
-   does not reproduce it. `.knowledge/09` §F says the 190 vertices are "printed in §2.2.2 [of the
-   model report] and reproducible", and §2.2.2 falls inside the first ~66 pages that earlier mining
-   did reach before truncation — so `/wp-implement` should attempt the extraction from the ESI PDF,
-   which is the primary source this knowledge base is mined from and is not one of the things
-   `CLAUDE.md` forbids fetching. **If it succeeds**, the fixture ships as
-   `data/geometry/clya_reference_profile.yaml` with `source: model-report`, OPN-05 closes entirely,
-   and §5.2.1's "SHALL be shipped as a regression fixture" is discharged. **If it fails**, the
-   package ships the loader, the validator, the conformance test and the nominal stand-in, and OPN-05
-   stays open on the table alone. Everything else in WP8 lands either way; only VER-28's comparison
-   against *published* geometry waits.
+1. **The five vertices (OPN-05, what is left of it).** The table landed while this plan was being
+   written and is in the tree; the fixture, VAL-05 and VER-28 all proceed on it, and nothing in the
+   package is blocked. What remains is a count: the model report records 190 vertices for the pore
+   polygon, the delivered table has 185, and the assembly arithmetic of §Design closes consistently
+   for either (196/198 for the report's, 190/192 for the delivered one). The delivered table also
+   carries a vertex exactly on the cis membrane plane, which the report's polygon cannot have if its
+   196 is to come out right — consistent with the delivered file being the curve *before* COMSOL's
+   import conditioning, or after a later cleanup. Worth one sentence from the author; until then the
+   fixture's provenance reads `author-supplied`, not `model-report`, and a Tier-3 comparison cites
+   the file it actually used.
 2. **Mapping direction.** Assumed file group → vocabulary name (§Decisions), and §5.3.1's example
    corrected to match. If the author intended the reverse, the change is one line in the schema's
    validator and one in the example — but it has to be settled before a case file written against
