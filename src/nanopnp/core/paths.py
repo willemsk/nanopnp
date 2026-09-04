@@ -2,8 +2,9 @@
 
 The correction parameter files live at the repository root (``data/corrections``)
 as specified in ``SPECIFICATION.md`` section 11, and are force-included into the
-wheel under ``nanopnp/data``. Both layouts resolve here so that code and tests
-never have to know which one they are running against.
+wheel under ``nanopnp/data``; ``data/geometry`` ships the same way and by the same
+rule. Both layouts resolve here so that code and tests never have to know which
+one they are running against.
 """
 
 from __future__ import annotations
@@ -23,6 +24,10 @@ DATA_DIR: Path = _PACKAGED_DATA if _PACKAGED_DATA.is_dir() else _REPO_DATA
 
 CORRECTIONS_DIR: Path = DATA_DIR / "corrections"
 """Versioned ePNP-NS correction parameter files (FR-16)."""
+
+
+GEOMETRY_DIR: Path = DATA_DIR / "geometry"
+"""Shipped geometry fixtures: pore profile tables and the polygons derived from them."""
 
 
 def available_corrections() -> tuple[str, ...]:
@@ -57,6 +62,31 @@ def correction_file(name: str) -> Path:
     path = CORRECTIONS_DIR / f"{name}.yaml"
     if not path.is_file():
         raise FileNotFoundError(f"no correction file {name!r} in {CORRECTIONS_DIR}")
+    return path
+
+
+def profile_file(name: str) -> Path:
+    """Return the path of a named pore-profile fixture in :data:`GEOMETRY_DIR`.
+
+    Parameters
+    ----------
+    name
+        Fixture name without its suffix, e.g. ``"clya_reference_profile"``.
+
+    Returns
+    -------
+    Path
+        Path to ``<name>.yaml``.
+
+    Raises
+    ------
+    FileNotFoundError
+        If no such fixture is installed; the message names the directory
+        searched, as :func:`correction_file` does.
+    """
+    path = GEOMETRY_DIR / f"{name}.yaml"
+    if not path.is_file():
+        raise FileNotFoundError(f"no geometry profile {name!r} in {GEOMETRY_DIR}")
     return path
 
 
