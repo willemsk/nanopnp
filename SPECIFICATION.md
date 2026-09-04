@@ -101,7 +101,7 @@ Claims that could not be verified are marked in place. Errata in the source mate
 `nanopnp` occupies the position held by COMSOL Multiphysics in the source work and additionally
 automates the manual steps preceding the solve. The source Methods section records "manual removal
 of overlapping and superfluous vertices to improve the quality of the final computational mesh",
-and the ESI records a delivered ClyA boundary of 196 vertices after that conditioning. COMSOL is
+and the ESI records a delivered ClyA boundary of 190 vertices after that conditioning. COMSOL is
 retained during development as a differential-testing oracle (§7.4), not as a runtime dependency.
 
 ### 2.2 Reference implementation
@@ -117,7 +117,8 @@ The COMSOL model being replaced, as recorded in the model report and the ESI.
 | Reservoirs | Hemispherical half-discs, R = 250 nm, one either side of the membrane |
 | Membrane | 2.8 nm thick; quadrilateral with vertices (r = 2, z = −1.4), (3.5, +1.4), (250, +1.4), (250, −1.4) nm; inner edge slanted to meet the pore's outer surface |
 | Pore extent | z from −1.85 nm (`z_trans`) to +12.25 nm (`z_cis`); r ≈ 1.65–5.66 nm |
-| Pore boundary | Closed 196-vertex polygon, tabulated in the model report |
+| Pore boundary | Closed 190-vertex polygon, tabulated in the model report |
+| Geometry vertices | 196 for the assembled region (3 domains, 198 boundaries): the 190 polygon vertices plus the membrane quadrilateral's four corners and the reservoir arc's two endpoints on the axis |
 | Structure | PDB 2WCD (Mueller et al., *Nature* **459**, 726, 2009), as the ClyA-AS variant, not wild type |
 | Electrolyte | Aqueous NaCl, binary monovalent |
 | Bias range | −200 to +200 mV; 0.05–3 M experimentally, 0.005–5 M simulated |
@@ -714,9 +715,18 @@ Taubin λ|μ smoothing (volume-preserving, where Chaikin shrinks), Shapely `simp
 Rationale (feature size): near-tangential self-approaches at the constriction generate slivers the
 mesher cannot repair.
 
-The reference pore boundary is published in the COMSOL model report as a closed 196-vertex polygon
+The reference pore boundary is published in the COMSOL model report as a closed 190-vertex polygon
 (r ≈ 1.65–5.66 nm, z from −1.85 to 12.25 nm) and SHALL be shipped as a regression fixture (§7.2),
 so solver work proceeds on the reference polygon without the contour pipeline.
+
+NOTE (vertex counts): the model report's geometry section records **190 vertices for the pore
+polygon** and **3 domains, 198 boundaries and 196 vertices for the assembled region**. Earlier
+revisions of this document attached the geometry-wide 196 to the pore boundary. The two counts are
+consistent: the assembled region adds to the polygon exactly the points the polygon does not carry —
+the membrane quadrilateral's two inner corners at (2, −1.4) and (3.5, +1.4) nm, its two outer corners
+on the reservoir arc, and the arc's two endpoints on the axis — and 190 + 6 = 196, which is also the
+mesh's 196 vertex elements (§5.2.2), one per geometry vertex. The model report governs (`CLAUDE.md`).
+OPN-05 is narrowed accordingly: the interpretation is settled, the vertex table itself is still owed.
 
 #### 5.2.2 Meshing
 
@@ -742,6 +752,17 @@ That mesh has 120,917 triangles, 1,879 edge elements and 196 vertex elements, mi
 quality 0.6378, average 0.9765, which set the target. Quality gate, enforced in code: minimum
 SICN/gamma > 0.3, an `optimize("Netgen")` pass, worst element and its location reported, run
 aborted on failure (QR-12).
+
+NOTE (SICN and gamma): these are two distinct measures and both SHALL be gated. For a straight-sided
+triangle, SICN is the signed inverse condition number of the Jacobian taken relative to the unit
+equilateral element and gamma is the normalised inradius-to-circumradius ratio `2 r_in / R_circ`;
+both equal 1 on the equilateral element and both are scale-invariant. They are not interchangeable:
+on the isoceles family over a unit base, `SICN = 0.3` occurs at `gamma = 0.1298` and `gamma = 0.3` at
+`SICN = 0.4687`, a factor of 1.56 in element height, so a single "SICN/gamma > 0.3" reading admits
+two different meshes. Gamma is unsigned — an inverted equilateral element scores `gamma = 1` and
+`SICN = −1` — so gamma alone cannot detect inversion, and `SICN ≤ 0` SHALL be reported as its own
+failure ("inverted element") rather than folded into the quality gate. Under the axisymmetric
+`r`-weighted forms an inverted element contributes negative volume and nothing else raises.
 
 Anisotropic boundary layers are an optional element-count optimisation (FR-11, post-1.0), not a
 dependency of the default path.
@@ -781,7 +802,9 @@ name: clya-wt-1M-100mV
 
 inputs:                             # optional; supplied artefacts, §5.3.2
   mesh: {path: clya.msh, format: msh41,
-         groups: {pore: pore, membrane: membrane, reservoir: bulk}}
+         groups: {lumen: electrolyte, upper: cis, lower: trans,
+                  bilayer: membrane, pore_wall: wall, outer_rim: membrane_outer,
+                  symmetry_axis: axis}}
 
 structure:
   source: {pdb: 2WCD.pdb, variant: ClyA-AS, chains: all}
@@ -846,6 +869,19 @@ a dielectric field — by path and format. A stage whose output is supplied does
 does anything upstream of it; the substituted file is hashed by content and enters the FR-25
 manifest as an input like any other. Releases before v0.9 accept an externally generated mesh
 this way, which is what makes the solver core testable ahead of the meshing pipeline (§8.1).
+
+NOTE (`inputs.mesh.groups`, IF-06, QR-12): the mapping reads **file group name → vocabulary name**.
+The key is the physical-group name the mesh file carries; the value is the name the solver selects
+on. Several file groups MAY map to one vocabulary name — a CAD export routinely splits one physical
+wall into several curves — and the reverse is not expressible, which is why the direction is this
+way round. The vocabulary is fixed and carries no aliases: materials `electrolyte`, `cis`, `trans`,
+`membrane`, `analyte`; boundaries `axis`, `wall`, `membrane`, `membrane_outer`, `cis`, `trans`,
+`analyte`. Ingestion SHALL abort when any group in the file is left unclaimed by the mapping, or when
+any name the resolved run selects on — the boundary-condition names, `numerics.wall_distance.sources`
+and the fluid material set — is supplied by no group, and the diagnostic SHALL name both lists
+(QR-12). Rationale: boundary conditions are selected by name and the natural condition under the
+`r`-weighted forms is the *free* one (§6.2, NUM-06), so an unmapped wall becomes an open boundary,
+the solve converges, and the current is wrong with no residual, no gate and no diagnostic.
 
 NOTE (`electrolyte.parameters`, `electrolyte.driver`): `parameters` names the correction file the
 *reference* properties are read from — `D_i^0`, `η^0`, `ϱ^0`, `ε_r,f^0` and the steric diameters
@@ -1605,6 +1641,8 @@ route to a cause and invites adjusting the solver until the number matches.
 | **VER-23** | Artefact content addressing | The hash of a fixed artefact is a stated constant, reproduced in a fresh process under a varied `PYTHONHASHSEED`; every leaf change of the parameters or of an input hash moves it; representational differences that validation removes (`1` against `1.0`, `-0.0` against `0.0`, key order) do not; an unhashable payload is refused naming its path; a payload file edited on disk loads as hand-substituted rather than aborting (§5.3.2, FR-27) |
 | **VER-24** | Provenance manifest completeness | All eight field groups of §5.3.3 are present, a group no stage contributed carrying a status and a reason rather than being omitted; every switch-typed field of the case schema is classified either as a switch with a validated default or as a configuration choice with a written reason, in both directions, so that a switch added later without a default fails this test; the physics model's own deviation enumeration agrees with the case's on the switches they share; the environment group is populated without importing NGSolve (FR-25, IF-08) |
 | **VER-25** | Stage protocol | Every stage registered in §5.2 reports its name, number, inputs, outputs and artefact schema without importing its implementation module, asserted on `sys.modules` in a fresh process; each stage's own description is the registry's, so the two cannot drift; progress is monotone in [0, 1] and ends at 1; a cancellation token raises naming where the stage stopped, and is not a subclass of the numerical gate errors (FR-27, IF-01) |
+| **VER-27** | Mesh ingestion and tagging | A tagged mesh written as Gmsh MSH 4.1 and read back preserves vertices, connectivity, per-group physical tags and group names (IF-06); a group left unclaimed by `inputs.mesh.groups`, or a vocabulary name the run selects on that no group supplies, aborts with a diagnostic naming both lists (QR-12); the default ingestion path imports neither `gmsh` nor netgen's Gmsh reader, asserted on `sys.modules` in a fresh process (CON-10) |
+| **VER-28** | Reference-geometry conformance | The assembled (r, z) region is conformal at the membrane-to-pore junction — the pore's outer surface meets the membrane's slanted inner edge at (2, −1.4) and (3.5, +1.4) nm within the gluing tolerance, *and* the junction is one shared edge rather than two coincident ones — carries exactly the §5.3.1 vocabulary, and its mesh meets the §5.2.2 quality figures (FR-09) |
 
 ### 7.3 Tier 2 analytic benchmarks
 
@@ -1699,7 +1737,7 @@ differences are recorded and attributed rather than gated on.
 | **VAL-02** | Integrated-quantity comparison (`G`, `t₊`, `RR`, EOF rate) | < 0.5 % relative error, once the preconditions above hold |
 | **VAL-03** | Reference-solution generation and archival, in Phase 1 | Full reference set for the frozen cases archived with the generating model, independent of continued licence access |
 | **VAL-04** | Reference discretisation-error probe | The reference case re-solved at two refinement levels while licence access lasts, bounding the reference's own discretisation error |
-| **VAL-05** | Geometry pipeline against the published boundary | Auto-generated contour compared against the published 196-vertex pore polygon: radius profile and constriction radius within a stated tolerance |
+| **VAL-05** | Geometry pipeline against the published boundary | Auto-generated contour compared against the published 190-vertex pore polygon: radius profile and constriction radius within a stated tolerance |
 | **VAL-06** | Poisson-only comparison against APBS | Potential from the assembled fixed-charge and dielectric fields agrees with an APBS solve on the same structure within a stated tolerance |
 
 NOTE: the reference model carries no mesh convergence study, so part of any residual difference may
@@ -1826,7 +1864,7 @@ Factors making the work more tractable:
   than domain decomposition.
 - The physics is published, validated and CC-BY-4.0: correction functions, parameters and
   implementation details are in the ESI, the thesis source and the model report.
-- The final 196-vertex pore polygon is published, so solver work can proceed on it as a fixture.
+- The final 190-vertex pore polygon is published, so solver work can proceed on it as a fixture.
 - The reference mesh used isotropic grading only, with no boundary layers.
 
 Factors making the work less tractable:
@@ -1853,7 +1891,7 @@ concentrations) took 41 h on 12 cores. A full-envelope sweep is a day-scale job.
 | **RSK-02** | Under-resolved Debye layer at 3 M (λ_D = 0.18 nm) gives negative concentrations and a silently wrong current | High | Med | Mesh criterion `h ≤ λ_D/5`; `min c_i` monitored per Newton step and failed loudly (VER-08) | Phase 0–1 |
 | **RSK-03** | Current QoI wrong from non-conservative CG flux, corrupting the rectification signal | High | Med | Both the ψ-domain-integral and the variational reaction flux mandated, with automatic agreement check (VER-11) | Phase 1 |
 | **RSK-04** | Analyte net force is a near-cancellation of two terms of about 10 pN and opposite sign; a small error in either integral flips the sign of the total | High | Med–High | Domain-form force evaluation (§6.7) rather than surface integration; dedicated force convergence study; both routes cross-checked to better than 0.1 pN (VER-22) | Analyte phase |
-| **RSK-05** | Contour to mesh produces slivers at the constriction | Low–Med | Low | The published 196-vertex pore polygon is usable as a fixture; the reference mesh used no boundary layers, only isotropic grading to 0.05 nm at the pore wall; contour validity gate (FR-08); isotropic fallback; mesh quality gates abort the run (VER-10) | Phase 2 |
+| **RSK-05** | Contour to mesh produces slivers at the constriction | Low–Med | Low | The published 190-vertex pore polygon is usable as a fixture; the reference mesh used no boundary layers, only isotropic grading to 0.05 nm at the pore wall; contour validity gate (FR-08); isotropic fallback; mesh quality gates abort the run (VER-10) | Phase 2 |
 | **RSK-06** | The author's contour script proves tightly coupled to its original context and is not portable | Med | Med | Read it in week 1 of Phase 2, before the rest of the phase is planned; fall back to the specified contour pipeline | Phase 2 |
 | **RSK-07** | Axisymmetric reduction invalid for a given pore through large azimuthal variance | Med | Med | Residual azimuthal variance reported as a first-class output (FR-06) and documented as a validity criterion | Phase 2 |
 | **RSK-08** | Charge non-conservation through smearing and 1/r projection | Med | Med | Exact annular volumes; analytic annulus integration; assertion on the deployed mesh and per-z-slice check (VER-01, VER-02) | Phase 3 |
@@ -1879,7 +1917,7 @@ concentrations) took 41 h on 12 cores. A full-envelope sweep is a day-scale job.
 | **OPN-02** | Location of the author's contour script | Author | Nothing on the critical path. Phase 2 is planned against the specified contour pipeline; the script is upside if it arrives (RSK-06) |
 | **OPN-03** | PlyAB supporting-information details: analyte relative permittivity, per-position mesh strategy (remesh against ALE), barrier heights in kT, electro-osmotic flow velocities | Author, from the retained model files | Analyte force regression targets and adoption of PlyAB as a second reference case after v1.0 |
 | **OPN-04** | ClyA-AS mutation list: 8 mutations relative to the *S. typhi* wild type in one place, 27 relative to the *E. coli* 2WCD structure in another. Both internally correct | Author, with the structure-preparation stage | Provenance of `Q_net` (FR-12); the structure-preparation stage must record which list was applied to which PDB |
-| **OPN-05** | Pore-polygon vertex count: §2.2 and §5.2.1 call the pore boundary a closed 196-vertex polygon, while the model report's geometry section records 190 vertices for the pore and 196 for the whole geometry (reservoir and membrane included), which is also the mesh's vertex-element count | Author, on delivery of the vertex table | The §5.2.1 regression fixture and its conformance test; reconciled in the commit that lands the table |
+| **OPN-05** | Pore-polygon vertex table. The *count* is settled: 190 vertices for the pore polygon and 196 for the assembled geometry, per the model report's geometry section and the NOTE in §5.2.1; §2.2, §5.2.1, VAL-05 and RSK-05 are amended. What remains outstanding is the table itself, which is not held in this repository | Author, on delivery of the vertex table | The §5.2.1 regression fixture ships against a nominal profile built from the published dimensions until the table lands; VAL-05 and the Tier-3 comparison against published geometry wait for it |
 
 ---
 
@@ -1998,7 +2036,7 @@ needed.
 | IF-03 | VER-09 |
 | IF-04 | None yet |
 | IF-05 | None yet |
-| IF-06 | None yet |
+| IF-06 | VER-27 |
 | IF-07 | None yet |
 | IF-08 | VER-24 |
 | IF-09 | None yet |
@@ -2010,7 +2048,7 @@ needed.
 | FR-06 | None yet |
 | FR-07 | VAL-05 |
 | FR-08 | None yet |
-| FR-09 | VAL-05 |
+| FR-09 | VER-28, VAL-05 |
 | FR-10 | VER-10, VAL-05 |
 | FR-11 | None yet |
 | FR-12 | VAL-06 |
@@ -2055,13 +2093,13 @@ needed.
 | CON-07 | None yet |
 | CON-08 | §6.6 measurement table (§8.2 criterion 3, discharged) |
 | CON-09 | None yet |
-| CON-10 | None yet |
+| CON-10 | VER-27 (the default ingestion path imports no Gmsh) |
 | CON-11 | §6.6 measurement table — measured; the conflict it exposed is resolved by the 2 September 2026 amendment to CON-11 and ADR-003 |
 | CON-12 | None yet |
 | CON-13 | None yet |
 | CON-14 | None yet |
 
-Coverage: 26 of the 67 requirements in §3 have a specified activity; 41 are recorded as "none yet",
+Coverage: 35 of the 67 requirements in §3 have a specified activity; 32 are recorded as "none yet",
 predominantly interface, portability, licensing and documentation requirements whose demonstration
 is by inspection rather than by test.
 
