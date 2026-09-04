@@ -40,6 +40,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from nanopnp.core.typing import Mesh, Shape
+from nanopnp.mesh.adapter import from_ngsolve
+from nanopnp.mesh.quality import check_quality as _check_quality
 
 TOL_NM = 1e-9
 """Geometric tolerance for classifying an edge by its centre of mass.
@@ -62,6 +64,44 @@ leave a solve with no ions and no flow outside the lumen.
 """
 
 
+def _gated(mesh: Mesh, *, check: bool, where: str) -> Mesh:
+    """Return ``mesh``, gated on element quality unless ``check`` is false (VER-10).
+
+    The gate runs on every mesh this module builds, not only on imported ones.
+    The margin measured on the reference shapes is wide - minimum SICN 0.647
+    against the 0.3 floor of section 5.2.2 [tested] - so an unconditional gate
+    costs a fraction of a second and catches the degenerate mesh a badly chosen
+    ``wall_h_nm`` would otherwise hand to the solver.
+
+    Parameters
+    ----------
+    mesh
+        The freshly generated NGSolve mesh.
+    check
+        False to skip the gate. Reserved for a mesh whose element shapes are a
+        deliberate choice rather than a defect - a test building a bad mesh on
+        purpose, or a one-dimensional benchmark whose anisotropy lies in the
+        direction the solution is constant in (VER-16). It is keyword-only at
+        every call site so that skipping the gate is visible where it happens.
+    where
+        What to call the mesh in a diagnostic (QR-12).
+
+    Returns
+    -------
+    Mesh
+        ``mesh`` itself, unchanged.
+
+    Raises
+    ------
+    nanopnp.mesh.quality.MeshQualityError
+        If any element is inverted or either quality measure is at or below the
+        floor, naming the gate, the value and the element's centroid.
+    """
+    if check:
+        _check_quality(from_ngsolve(mesh), where=where)
+    return mesh
+
+
 @dataclass(frozen=True)
 class SlabGeometry:
     """A planar slab of electrolyte against a charged wall.
@@ -74,8 +114,14 @@ class SlabGeometry:
     width_nm: float
     height_nm: float = 1.0
 
-    def generate(self, *, maxh_nm: float, wall_h_nm: float | None = None) -> Mesh:
-        """Return a meshed slab, graded towards the wall if ``wall_h_nm`` is given."""
+    def generate(
+        self, *, maxh_nm: float, wall_h_nm: float | None = None, check_quality: bool = True
+    ) -> Mesh:
+        """Return a meshed slab, graded towards the wall if ``wall_h_nm`` is given.
+
+        ``check_quality`` gates the result through :func:`_gated`; see there for
+        why it defaults to on.
+        """
         import netgen.occ as occ
         import ngsolve as ngs
 
@@ -91,7 +137,8 @@ class SlabGeometry:
                 edge.name = "bulk"
             else:
                 edge.name = "lateral"
-        return ngs.Mesh(occ.OCCGeometry(face, dim=2).GenerateMesh(maxh=maxh_nm, grading=0.2))
+        mesh = ngs.Mesh(occ.OCCGeometry(face, dim=2).GenerateMesh(maxh=maxh_nm, grading=0.2))
+        return _gated(mesh, check=check_quality, where=f"a {self.width_nm:g} nm slab")
 
 
 @dataclass(frozen=True)
@@ -106,8 +153,14 @@ class CylinderGeometry:
     radius_nm: float
     length_nm: float
 
-    def generate(self, *, maxh_nm: float, wall_h_nm: float | None = None) -> Mesh:
-        """Return a meshed cylinder cross-section, graded towards the wall."""
+    def generate(
+        self, *, maxh_nm: float, wall_h_nm: float | None = None, check_quality: bool = True
+    ) -> Mesh:
+        """Return a meshed cylinder cross-section, graded towards the wall.
+
+        ``check_quality`` gates the result through :func:`_gated`; see there for
+        why it defaults to on.
+        """
         import netgen.occ as occ
         import ngsolve as ngs
 
@@ -123,7 +176,8 @@ class CylinderGeometry:
                     edge.maxh = wall_h_nm
             else:
                 edge.name = "end"
-        return ngs.Mesh(occ.OCCGeometry(face, dim=2).GenerateMesh(maxh=maxh_nm, grading=0.2))
+        mesh = ngs.Mesh(occ.OCCGeometry(face, dim=2).GenerateMesh(maxh=maxh_nm, grading=0.2))
+        return _gated(mesh, check=check_quality, where=f"a {self.radius_nm:g} nm cylinder")
 
 
 @dataclass(frozen=True)
@@ -235,7 +289,9 @@ class CylindricalPoreGeometry:
         self.name_edges(glued, wall_h_nm=wall_h_nm)
         return glued
 
-    def generate(self, *, maxh_nm: float, wall_h_nm: float | None = None) -> Mesh:
+    def generate(
+        self, *, maxh_nm: float, wall_h_nm: float | None = None, check_quality: bool = True
+    ) -> Mesh:
         """Return the meshed geometry with named domains and boundaries.
 
         Parameters
@@ -245,9 +301,17 @@ class CylindricalPoreGeometry:
         wall_h_nm
             Element size on the pore wall, in nm; NUM-30 asks for about
             ``lambda_D / 5`` there.
+        check_quality
+            Gate the result through :func:`_gated`; see there for why it
+            defaults to on.
         """
         import netgen.occ as occ
         import ngsolve as ngs
 
         geometry = occ.OCCGeometry(self.shape(wall_h_nm=wall_h_nm), dim=2)
-        return ngs.Mesh(geometry.GenerateMesh(maxh=maxh_nm, grading=0.2))
+        mesh = ngs.Mesh(geometry.GenerateMesh(maxh=maxh_nm, grading=0.2))
+        return _gated(
+            mesh,
+            check=check_quality,
+            where=f"a {self.pore_radius_nm:g} nm x {self.membrane_thickness_nm:g} nm pore",
+        )

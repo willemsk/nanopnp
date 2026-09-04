@@ -146,8 +146,18 @@ def sweep() -> tuple[list[float], float]:
         concentration={cation: "wall|bulk", anion: "bulk"},
     )
     screening_nm = debye_length_nm(CONCENTRATION_M)
+    # The quality gate is off here, and only here. It measures isotropy, and
+    # this mesh is deliberately anisotropic: a 2000 nm x 0.5 nm strip at
+    # maxh 50 nm is a chain of 100:1 triangles (minimum SICN 0.019 [tested]),
+    # which is what asking for 50 nm elements on a 0.5 nm strip means. The
+    # stretched direction is the one the solution is constant in - HEIGHT_NM is
+    # an artefact of solving a one-dimensional problem on a two-dimensional
+    # mesh, and every flux below is divided by it - so the interpolation error
+    # those elements carry is zero rather than merely bounded. Section 5.2.2's
+    # floor of 0.3 gates the pore meshes, where anisotropy is a defect; here it
+    # would reject a mesh that is correct by construction.
     mesh = SlabGeometry(width_nm=LENGTH_NM, height_nm=HEIGHT_NM).generate(
-        maxh_nm=LENGTH_NM / 40.0, wall_h_nm=screening_nm / 5.0
+        maxh_nm=LENGTH_NM / 40.0, wall_h_nm=screening_nm / 5.0, check_quality=False
     )
     concentrations = {
         cation: mesh.BoundaryCF({"wall": DEPLETION, "bulk": 1.0}),
