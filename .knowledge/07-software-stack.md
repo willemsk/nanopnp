@@ -142,6 +142,57 @@ is what makes an externally supplied mesh usable at all — a format that droppe
 apply every essential condition to nothing and converge to the wrong problem in silence, so a
 release that reads a mesh from a case file must restrict itself to formats that carry them.
 
+**Netgen's own reader is an MSH 2.2 parser and cannot read the archival format [tested].**
+`netgen.read_gmsh.ReadGmsh` handed a 4.1 file dies inside `int()` on the entity-block header, so the
+reader for the format IF-06 mandates cannot be the one netgen ships. `meshio` is therefore not
+optional bookkeeping — it is the only route in. CON-10 keeps `gmsh` itself off the default path for
+an unrelated reason (GPLv2+), and the two constraints agree.
+
+**meshio 5.3.5's MSH 4.1 writer gets entity bookkeeping wrong in two ways, both silent [tested].**
+
+- *One cell block is one entity.* `_write_elements` takes the **first** `gmsh:geometrical` tag of a
+  block and writes the whole block under it. Four boundary groups packed into a single `line` block
+  come back with all four physical tags equal to the first — three no-flux walls silently becoming
+  one. Cure: emit one cell block per (group, element type).
+- *An entity that owns no node is never written.* `_write_entities` builds `$Entities` from
+  `np.unique(point_data["gmsh:dim_tags"])` alone, so an entity a cell block references but no node
+  claims is omitted, and reading the file back raises `KeyError` — after the write reported success.
+  Cure: assign each node its lowest-dimensional entity, then repair any group left with none.
+
+**`meshio.Mesh.field_data` is keyed by name, so it cannot carry the same name in two dimensions
+[tested].** The §5.3.1 vocabulary uses `cis`, `trans`, `membrane` and `analyte` as both a domain name
+and a boundary name, which is exactly the collision. Read `$PhysicalNames` off the file and key it
+`(dimension, tag)` instead.
+
+**A round trip through MSH 4.1 permutes both nodes and cells [tested]**, because meshio's reader
+returns nodes grouped by entity and cell blocks in entity order. A content hash taken over the arrays
+in file order would therefore make a mesh differ from itself. Hash a canonical form: vertices sorted
+by `(r, z)`, connectivity renumbered into that order, elements sorted by group name — invariant under
+everything the round trip does, and changing the moment an edge moves group.
+
+**netgen.occ facts, all measured on 6.2.2606 [tested]:**
+
+- **A clockwise wire gives OCC a face of negative area, and a negative face subtracts as an
+  addition.** With the delivered ClyA table's own orientation (signed area −26.4939 nm²),
+  `disc - quad` returns the disc split in two rather than the disc with a hole, and `quad * disc`
+  returns nothing at all. Fix the orientation once, where the face is built.
+- **`Glue` is conformal and `Compound` is not.** `occ.Glue([a, b])` meshes with one node chain per
+  seam; `occ.Compound([a, b])` meshes with two coincident chains. On two unit rectangles sharing
+  the edge `x = 1`, meshed at `maxh = 0.5`: glue gives 13 points, 13 of them distinct, 3 on the seam;
+  compound gives 16 points, still 13 distinct, 6 on the seam. Two chains agree to the last digit on
+  coordinates, so only a mesh-level check catches it, and what it costs is a potential free to jump
+  across the seam with nothing raising.
+- **`edge.center` is the centre of mass, and for an arc it lies off the curve.** A
+  classify-by-centre chain works for straight edges and silently misplaces every curved one. Use
+  `edge.parameter_interval` with `edge.Value(t)` to get a point that is actually on the edge.
+- **`edge.faces` is empty.** Traversal is downward only, so an edge cannot be named by which faces
+  adjoin it; classify by geometry instead.
+- **`Circle(...).Face()` is one closed edge with a seam at parameter zero**, and the seam survives
+  a boolean clip as an ordinary vertex. A half-disc of radius 250 clipped to `r ≥ 0` carries a vertex
+  at `(250, 0)` that splits whatever arc segment spans it.
+- **A boolean on shapes returns a compound.** `.mass` and `.name` on the result raise
+  `NgException: Cannot query properties of compound shapes`; read them off `list(shape.faces)[0]`.
+
 ---
 
 ## 5. GUI and packaging
