@@ -524,10 +524,15 @@ runner installs them is a workflow decision, not this package's.
 > (`test_ver25_the_mesh_stage_is_stage_six_and_describes_itself`,
 > `test_ver27_the_artefact_key_is_the_contents_and_the_mapping`, and the progress and cancellation
 > pair FR-27 asks for); the two mesh-content cache assertions are in
-> `tests/tier2/test_artefact_cache.py`, keyed on VER-26 and VER-27. The gmsh comparison skipped in this environment on the
-> `OSError` the plan predicted, so the SICN and gamma check values stand on the closed forms and the
-> six exact values, not on the oracle. `tests/tier2/test_reference_geometry.py` runs in 7.3 s; the
-> full gate is 489 passed, 1 skipped, 10 deselected in 78 s.
+> `tests/tier2/test_artefact_cache.py`, keyed on VER-26 and VER-27. The gmsh comparison skipped in
+> this environment on the `OSError` the plan predicted, so the SICN and gamma check values stand on
+> the closed forms and the six exact values, not on the oracle.
+> `tests/tier2/test_reference_geometry.py` runs in 7.3 s; the full gate is 489 passed, 1 skipped,
+> 10 deselected in 78 s. CI then found one assertion that was a property of the build rather than
+> of the code: the phase-0 geometries' check pinned netgen's exact element count, which is 8141 on
+> Linux and macOS and 8147 on Windows for the largest of them. The count is now compared within one
+> per cent and the two measures are read as lower bounds, which is what VER-10 asks for; the exact
+> check values stay on the hand-built triangles, where they are platform-independent.
 
 ## Out of scope
 

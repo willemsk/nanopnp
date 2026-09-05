@@ -192,6 +192,15 @@ everything the round trip does, and changing the moment an edge moves group.
   at `(250, 0)` that splits whatever arc segment spans it.
 - **A boolean on shapes returns a compound.** `.mass` and `.name` on the result raise
   `NgException: Cannot query properties of compound shapes`; read them off `list(shape.faces)[0]`.
+- **The mesh netgen generates is not bit-reproducible across platforms.**
+  `CylindricalPoreGeometry(2.0, 13.0, 50.0)` at `maxh = 2.0 nm`, `wall_h = 0.05 nm` meshes to
+  **8141 triangles on Linux and macOS and 8147 on Windows** — same version, same options, a drift
+  of 0.07 %. The advancing front takes its decisions on floating-point comparisons, and the
+  compiler decides those. So an element count, or a minimum element quality read to four decimals,
+  is a property of the *build* and not of the geometry: assert a band on either, and keep exact
+  check values for figures computed in closed form on hand-built elements. The three smaller
+  phase-0 geometries (192, 811 and 124 elements) do agree exactly across all three platforms,
+  which is what makes this easy to miss until a mesh is large enough to have a choice to make.
 
 ---
 
