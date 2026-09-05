@@ -698,7 +698,7 @@ class ResolvedCase:
     concentration_M: float
     temperature_K: float
     bias_V: float
-    ground: str
+    ground: Literal["cis", "trans"]
     model: str
     model_options: Mapping[str, Any]
     newton: NewtonSettings
