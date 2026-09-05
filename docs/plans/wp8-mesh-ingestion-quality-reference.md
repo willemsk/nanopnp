@@ -567,10 +567,12 @@ work.
    fixture's provenance reads `author-supplied`, not `model-report`, and a Tier-3 comparison cites
    the file it actually used.
 
-   > **Outcome — still open, and still costs nothing.** The delivered geometry assembles,
-   > meshes into the published quality band and passes VER-28 on the 185-vertex table. The count
-   > is a provenance question about which curve COMSOL imported, not a modelling one; §5.2.1
-   > records both numbers and OPN-05 stays open on that alone.
+   > **Outcome — closed on the delivered table, 5 September 2026.** The delivered geometry
+   > assembles, meshes into the published quality band and passes VER-28 on the 185-vertex table.
+   > The author settled the count in favour of that table: it is the geometry of record, and the
+   > report's 190 is the count after COMSOL's import conditioning. §5.2.1 carries the DECISION and
+   > §10 closes OPN-05. Nothing in the code moved — `source: author-supplied` and
+   > `REFERENCE_SOURCES` were written for this answer.
 2. **Settled by the author, 4 September 2026.** The mapping reads file group → vocabulary name, as
    assumed; the protein dielectric body is `protein` and `pore` stays out of the vocabulary in both
    its readings; and an ingested mesh whose solid has no permittivity aborts rather than warns. The

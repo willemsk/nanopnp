@@ -44,7 +44,8 @@ A Tier-3 or Tier-4 comparison is against the reference model and means nothing
 against a stand-in, so :meth:`PoreProfile.require_reference` gates on this set
 rather than on the fixture's name. ``author-supplied`` is here beside
 ``model-report`` because the delivered table came from the reference model's
-author and is what section 5.2.1 amends to; nothing nominal ships (OPN-05).
+author and is the geometry of record section 5.2.1 amends to; nothing nominal
+ships (OPN-05, closed on the delivered table).
 """
 
 MEASUREMENT_TOL: float = 1e-9

@@ -117,7 +117,7 @@ The COMSOL model being replaced, as recorded in the model report and the ESI.
 | Reservoirs | Hemispherical half-discs, R = 250 nm, one either side of the membrane |
 | Membrane | 2.8 nm thick; quadrilateral with vertices (r = 2, z = −1.4), (3.5, +1.4), (250, +1.4), (250, −1.4) nm; the slanted inner edge lies *inside* the pore body over its whole length, so the assembled membrane meets the pore on the pore's own outer surface (§5.2.1) |
 | Pore extent | z from −1.85 nm (`z_trans`) to +12.25 nm (`z_cis`); r ≈ 1.65–5.66 nm |
-| Pore boundary | Closed 190-vertex polygon, tabulated in the model report; delivered as a 185-vertex table (§5.2.1) |
+| Pore boundary | Closed polygon; the delivered 185-vertex table is the geometry of record, the model report tabulates 190 after its import conditioning (§5.2.1) |
 | Geometry vertices | 196 for the assembled region (3 domains, 198 boundaries): the 190 polygon vertices, the two points where the membrane planes z = ±1.4 cut the pore's outer surface, the membrane's two outer corners on the reservoir arc, and the arc's two endpoints on the axis (§5.2.1) |
 | Structure | PDB 2WCD (Mueller et al., *Nature* **459**, 726, 2009), as the ClyA-AS variant, not wild type |
 | Electrolyte | Aqueous NaCl, binary monovalent |
@@ -716,8 +716,9 @@ Rationale (feature size): near-tangential self-approaches at the constriction ge
 mesher cannot repair.
 
 The reference pore boundary is published in the COMSOL model report as a closed 190-vertex polygon
-(r ≈ 1.65–5.66 nm, z from −1.85 to 12.25 nm) and SHALL be shipped as a regression fixture (§7.2),
-so solver work proceeds on the reference polygon without the contour pipeline. The table is held in
+(r ≈ 1.65–5.66 nm, z from −1.85 to 12.25 nm). The author's delivered tabulation of that boundary
+SHALL be shipped as the regression fixture (§7.2), so solver work proceeds on the reference polygon
+without the contour pipeline. The table is held in
 the repository as `data/geometry/clya_as_radial_geometry.csv`, supplied by the reference model's
 author: 185 `r,z` pairs in nm tracing a simple closed loop, r ∈ [1.65, 5.66], z ∈ [−1.85, 12.25],
 enclosing 26.4939 nm².
@@ -753,8 +754,15 @@ The delivered table carries 185 vertices, five short of the report's 190, and �
 polygon, which the count above requires to be cut at both planes — it already has a vertex exactly on
 the cis plane at (4.88, +1.4), so under the same construction it assembles to 190 vertices and 192
 boundaries (190 − 192 + 4 = 2 likewise). The difference is recorded, not reconciled: it changes
-neither the geometry the table describes nor anything computed from it. The model report governs
-(`CLAUDE.md`). OPN-05 stays open on that count alone.
+neither the geometry the table describes nor anything computed from it.
+
+DECISION (the author, 5 September 2026): **the delivered 185-vertex table is the geometry of
+record.** It is what the fixture ships, what `mesh/reference.py` assembles, and what VAL-05 and any
+Tier-3 comparison cite. The model report's 190 stays recorded above as the count of the polygon
+COMSOL held after its own import conditioning; no further reconciliation is sought, and the five
+vertices are not chased. This settles which of two tabulations of one curve to use and touches
+nothing the model report governs (`CLAUDE.md` §1.6) — not an equation, a correction or a fitted
+parameter. OPN-05 is closed.
 
 NOTE (what `nanopnp.mesh.reference` assembles): 193 vertices and 195 edges, three more of each than
 the count above, and both deviations are deliberate. Two come from breaking the side on `r = 0` into
@@ -1975,7 +1983,7 @@ concentrations) took 41 h on 12 cores. A full-envelope sweep is a day-scale job.
 | **RSK-02** | Under-resolved Debye layer at 3 M (λ_D = 0.18 nm) gives negative concentrations and a silently wrong current | High | Med | Mesh criterion `h ≤ λ_D/5`; `min c_i` monitored per Newton step and failed loudly (VER-08) | Phase 0–1 |
 | **RSK-03** | Current QoI wrong from non-conservative CG flux, corrupting the rectification signal | High | Med | Both the ψ-domain-integral and the variational reaction flux mandated, with automatic agreement check (VER-11) | Phase 1 |
 | **RSK-04** | Analyte net force is a near-cancellation of two terms of about 10 pN and opposite sign; a small error in either integral flips the sign of the total | High | Med–High | Domain-form force evaluation (§6.7) rather than surface integration; dedicated force convergence study; both routes cross-checked to better than 0.1 pN (VER-22) | Analyte phase |
-| **RSK-05** | Contour to mesh produces slivers at the constriction | Low–Med | Low | The published 190-vertex pore polygon is usable as a fixture; the reference mesh used no boundary layers, only isotropic grading to 0.05 nm at the pore wall; contour validity gate (FR-08); isotropic fallback; mesh quality gates abort the run (VER-10) | Phase 2 |
+| **RSK-05** | Contour to mesh produces slivers at the constriction | Low–Med | Low | The delivered 185-vertex pore polygon ships as a fixture (§5.2.1); the reference mesh used no boundary layers, only isotropic grading to 0.05 nm at the pore wall; contour validity gate (FR-08); isotropic fallback; mesh quality gates abort the run (VER-10) | Phase 2 |
 | **RSK-06** | The author's contour script proves tightly coupled to its original context and is not portable | Med | Med | Read it in week 1 of Phase 2, before the rest of the phase is planned; fall back to the specified contour pipeline | Phase 2 |
 | **RSK-07** | Axisymmetric reduction invalid for a given pore through large azimuthal variance | Med | Med | Residual azimuthal variance reported as a first-class output (FR-06) and documented as a validity criterion | Phase 2 |
 | **RSK-08** | Charge non-conservation through smearing and 1/r projection | Med | Med | Exact annular volumes; analytic annulus integration; assertion on the deployed mesh and per-z-slice check (VER-01, VER-02) | Phase 3 |
@@ -2001,7 +2009,7 @@ concentrations) took 41 h on 12 cores. A full-envelope sweep is a day-scale job.
 | **OPN-02** | Location of the author's contour script | Author | Nothing on the critical path. Phase 2 is planned against the specified contour pipeline; the script is upside if it arrives (RSK-06) |
 | **OPN-03** | PlyAB supporting-information details: analyte relative permittivity, per-position mesh strategy (remesh against ALE), barrier heights in kT, electro-osmotic flow velocities | Author, from the retained model files | Analyte force regression targets and adoption of PlyAB as a second reference case after v1.0 |
 | **OPN-04** | ClyA-AS mutation list: 8 mutations relative to the *S. typhi* wild type in one place, 27 relative to the *E. coli* 2WCD structure in another. Both internally correct | Author, with the structure-preparation stage | Provenance of `Q_net` (FR-12); the structure-preparation stage must record which list was applied to which PDB |
-| **OPN-05** | Pore-polygon vertex table. **Delivered** as `data/geometry/clya_as_radial_geometry.csv`, 185 vertices, extents as published; §2.2 and §5.2.1 are amended to it and the §5.2.1 fixture and VAL-05 proceed on it. Outstanding only: whether the model report's 190-vertex polygon differs from this table by more than the five vertices the assembly arithmetic accounts for, and which of the two a Tier-3 comparison should cite | Author, on the 185-versus-190 count | None on the implementation — the fixture is the delivered table, and a later reconciliation is a data drop, not a code change |
+| **OPN-05** | Pore-polygon vertex table. **Delivered** as `data/geometry/clya_as_radial_geometry.csv`, 185 vertices, extents as published. **Closed by the author, 5 September 2026: the delivered table is the geometry of record**, and the model report's 190 is the count after COMSOL's import conditioning. §2.2 and §5.2.1 are amended to it; the §5.2.1 fixture, `mesh/reference.py` and VAL-05 all cite it | Closed | Closed |
 
 ---
 
