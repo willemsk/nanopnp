@@ -19,9 +19,10 @@ first is implied and is not repeated.
 Supplied by the author of the reference model (Willems et al., *Nanoscale* **12**, 16775–16795,
 2020) as the radial geometry behind `npgrid_clya_v8_NaCl_report.mph`. The extent matches the
 published `z ∈ [−1.85, 12.25]`, `r ≈ 1.65–5.66` of `SPECIFICATION.md` §2.2 to the digit. The model
-report records **190** vertices for the pore polygon against the 185 delivered here; the difference
-is recorded rather than reconciled (§5.2.1 NOTE, OPN-05) and does not change the geometry this table
-describes.
+report records **190** vertices for the pore polygon against the 185 delivered here; the author
+settled this on 5 September 2026 in favour of the delivered table, which is the geometry of record
+(§5.2.1 DECISION, OPN-05 closed). The 190 is the count after COMSOL's own import conditioning, and
+the difference changes nothing this table describes.
 
 The file is kept **verbatim as delivered**, line endings included, so that the hash above identifies
 the delivered artefact and not a reformatting of it. Nothing reads it at run time: `mesh/profile.py`

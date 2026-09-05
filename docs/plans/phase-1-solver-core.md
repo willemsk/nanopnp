@@ -340,12 +340,14 @@ Six things settled by the work that WP9 onwards inherit.
   chain rather than two coincident ones, and exactly three domains — the cleft under the cap must
   not fragment off as a fourth.
 
-**OPN-05 is reconciled but not closed.** §2.2's "196-vertex pore polygon" was the geometry-wide
-count attached to the wrong object; the model report's 190 for the polygon and 196/198 for the
-assembly both stand, and the delivered table's 185 assembles consistently to 190/192 by the same
-arithmetic. What is open is which curve COMSOL imported — a provenance question with no
-implementation consequence, so the fixture reads `source: author-supplied` and a Tier-3 comparison
-cites the file it used.
+**OPN-05 is closed.** §2.2's "196-vertex pore polygon" was the geometry-wide count attached to
+the wrong object; the model report's 190 for the polygon and 196/198 for the assembly both stand,
+and the delivered table's 185 assembles consistently to 190/192 by the same arithmetic. The author
+settled the remaining question on 5 September 2026: **the delivered 185-vertex table is the geometry
+of record** — what the fixture ships, what `mesh/reference.py` assembles, and what VAL-05 and any
+Tier-3 comparison cite. The report's 190 is the count after COMSOL's import conditioning and the
+five vertices are not chased. The fixture's `source: author-supplied` and `REFERENCE_SOURCES` were
+already written for this answer, so nothing in the code moves.
 
 ### WP9 — External material and charge fields
 
@@ -358,6 +360,11 @@ when none is declared; the ion-exclusion region as a named material.
 
 Discharges the consumer half of **FR-15**, **QR-03** and **PHY-19** on the deployed mesh; **IF-05**
 read side. VER-01's producer side and VER-02 stay Phase 3.
+
+**No boundary layers** (the author, 5 September 2026). WP8 measured the reference region into the
+published quality band — 44,316 triangles at minimum SICN 0.6559 — by isotropic grading alone, which
+is what the reference model did (§5.2.2), so a Debye-layer resolution study here does not reopen
+FR-11. It stays a post-1.0 element-count optimisation, and WP9 poses no anisotropic meshing.
 
 ### WP10 — Case-driven runs, the CLI, field output
 
@@ -424,7 +431,7 @@ outstanding until it has run there.
 
 | # | Decision | Status |
 |---|---|---|
-| OPN-05 | Pore-polygon vertex count: the specification says 196, the model report's geometry section says 190 for the pore and 196 for the whole geometry | **Open — resolves on delivery of the vertex table.** Reconciled in the WP8 commit that lands the fixture; recorded in §10 of the specification. |
+| OPN-05 | Pore-polygon vertex count: the specification says 196, the model report's geometry section says 190 for the pore and 196 for the whole geometry | **Closed, 5 September 2026.** The two counts count two objects (§5.2.1); the author designated the delivered 185-vertex table the geometry of record. §10 of the specification records it. |
 | VAL-03 export scope | Which frozen cases the reference set covers — the envelope corners at minimum, and whether the analyte case of §7.5.1 joins them | **Open — for the author**, before WP13 starts. Does not block WP7–WP12. |
 | GUI packaging target | Whether the Windows bundle is built on the author's machine or on a Windows CI runner | **Open — for the author**, before WP14's probe. RSK-13 stays open until one of them runs. |
 | CON-11 / ADR-003 | Bundle default linear solver | **Closed, 2 September 2026.** UMFPACK, GPL-2+ obligation accepted and stated; the library stays BSD-3. `SPECIFICATION.md` CON-11, ADR-003 and §6.6 amended in this commit. |
