@@ -1,9 +1,11 @@
 # Phase 1 (Solver core): the production solver on an externally supplied mesh
 
-**Status: planned, not started.** Written 2 September 2026, after Phase 0 (WP1–WP6) and its
-consolidation (WP-A1, WP-B1, WP-B2, WP-C1). Inherits a verified physics core and a bare pipeline:
-tiers 1 and 2 green, `mypy --strict` and `ruff` clean, and `io/`, `sweep/`, `charge/`, `structure/`,
-`density/`, `symmetry/`, `gui/` still empty reserved slots.
+**Status: WP7 and WP8 delivered; WP9–WP12 planned.** Written 2 September 2026, after Phase 0
+(WP1–WP6) and its consolidation (WP-A1, WP-B1, WP-B2, WP-C1). It inherited a verified physics core
+and a bare pipeline: tiers 1 and 2 green, `mypy --strict` and `ruff` clean, and `io/`, `sweep/`,
+`charge/`, `structure/`, `density/`, `symmetry/`, `gui/` still empty reserved slots. `io/` is filled
+and `mesh/` is complete for ingestion as of WP8; `sweep/`, `charge/`, `structure/`, `density/`,
+`symmetry/` and `gui/` are still empty.
 
 This is the delivery plan for Phase 1 of `SPECIFICATION.md` §8.1 — release v0.5. The specification
 remains normative: where this file and the specification disagree, the specification governs and
@@ -263,18 +265,87 @@ elements, 75 vertices; 0.1 M, 20 mV, `epnp-ns`, `default_ladder` → 12 rungs ov
 [1, 2, 3, 5, 6, 7, 8, 9] (stage 4 empty — Phase 1 is uncharged), 36 Newton iterations, minimum
 damping 0.2, ≈ 0.7 s.
 
-### WP8 — Mesh ingestion, tagging, quality gates, reference geometry
+### WP8 — Mesh ingestion, tagging, quality gates, reference geometry — **delivered**
 
-`mesh/adapter.py`, `mesh/ingest.py`, `mesh/quality.py`, `mesh/reference.py`, and the pore-polygon
-fixture.
+`mesh/adapter.py`, `mesh/ingest.py`, `mesh/quality.py`, `mesh/profile.py`, `mesh/reference.py`,
+`data/geometry/` (the delivered 185-vertex ClyA table, its README and the fixture derived from it),
+with changes to `mesh/primitives.py`, `mesh/distance.py`, `solve/stage.py`, `core/stages.py`,
+`core/paths.py` and `io/manifest.py`; spec amendments A–G adding VER-27 and VER-28, the `protein`
+and `interface` vocabulary names, and the corrected 190/196 vertex composition.
 
-MSH 4.1 read and write through meshio (IF-06), the group→vocabulary mapping with its abort, the
-SICN/gamma gate with worst-element reporting, the PHY-02 distance field rebuilt from ingested tags
-(pore sources only, membrane excluded), and the reference ClyA geometry assembled from the published
-polygon with the slanted-edge membrane quadrilateral and the 250 nm reservoir half-discs.
+Delivered: `MeshData` as the mesher-adapter seam of §5.1 — vertices, triangles with a material
+index, edge blocks with a boundary index, both name tables and a content hash taken over a
+canonical form, because a 4.1 round trip permutes nodes and cells and a byte-identical mesh would
+otherwise hash differently twice; MSH 4.1 read and write through meshio with one cell block per
+(group, element type) and a node-ownership rule that guarantees every entity owns a node, the two
+constructions meshio's writer needs to stop failing silently; MSH 2.2 as the archival format netgen
+can still read; `to_ngsolve`/`from_ngsolve` identity on the tag maps; the group → vocabulary mapping
+with the reversed-map, unclaimed-group and unsupplied-name diagnostics, each naming both sides; the
+SICN and gamma gates at `QUALITY_FLOOR = 0.3` with worst-element index, `(r, z)` centroid and both
+metrics in the message, inverted elements reported under their own name; `MeshStage` as stage 6 with
+`key(inputs)` beside `run(inputs)`; the `PoreProfile` fixture and its one-way derivation from the
+delivered CSV, re-checked against the file in the tree; and `ReferenceGeometry`, which assembles the
+ClyA region — the 185-vertex profile, the slanted-edge membrane quadrilateral, the 250 nm reservoir
+half-disc — names every edge into the vocabulary and meshes it at the §5.2.2 size fields. Discharges
+**IF-06, VER-10, QR-12**, adds **VER-27** and **VER-28**, re-verifies **VER-06** and **NUM-31** on
+an ingested mesh, carries the CAD half of **FR-09**, and lands the §5.2.1 regression fixture.
 
-Discharges **IF-06, VER-10, QR-12**, re-verifies **VER-06, NUM-31** on an ingested mesh, and lands
-the §5.2.1 regression fixture. Reconciles **OPN-05** in the same commit as the vertex table.
+Beyond the plan: `interface` joins the boundary vocabulary beside amendment G's `protein`, because a
+fragmented region carries interior fluid-to-fluid and solid-to-solid seams that nothing selects on;
+`required_names` reads `wall_distance.sources` and the flow model as well as the boundary
+selections, so a case widening either aborts at ingestion rather than at form assembly;
+`check_solid_permittivities` turns `models.py`'s warning into an abort on an ingested mesh (PHY-03);
+`MeshData._snap_to_axis` snaps `|r| < 10⁻⁹` nm to zero on every route in; `mesh/primitives.py`
+routes all three Phase-0 geometries through the gate with a keyword-only `check_quality`;
+`io/manifest.py`'s `geometry_and_mesh` group gains the quality statistics, the mapping actually
+applied and the fixture's provenance; and `solve/stage.py` now takes its mesh from the ingestion
+artefact's content hash rather than a file hash, so a mesh rewritten with a different header is a
+store hit and a mesh with one edge moved to another group is a miss.
+
+Reference measurement, stabilisation `none`: the ClyA region at §5.2.2's size fields (global 10 nm,
+pore boundary 0.05 nm, pore domain 0.1 nm, reservoir domain 2.8 nm, reservoir arc 5 nm, axis-in-pore
+0.075 nm), `grading = 0.2`, `optsteps2d = 5` → **44,316 triangles in 6.5 s, minimum SICN 0.6559,
+mean 0.9870, minimum gamma 0.6157, mean 0.9852**, no inverted elements, against COMSOL's 120,917
+triangles at minimum quality 0.6378 and average 0.9765 — a third of the elements in the same band,
+by isotropic grading alone. The gate costs ≈1.1 s on a 121k-element mesh.
+
+Six things settled by the work that WP9 onwards inherit.
+
+- **An unmapped boundary is silent, and that is the whole argument for the ingestion gate.** Under
+  the `r`-weighted forms the natural condition is the free one (NUM-06), so a wall no name claims is
+  an open boundary that raises nothing and converges. Every file group must be claimed and every
+  name the resolved case selects on must be supplied, or the run aborts naming both lists.
+- **A fragmented region has seams, and they need a name.** Without `interface`, an ingested
+  fragmented mesh either fails the gate or has its seams mapped onto a boundary that *is* selected
+  on — the failure the gate exists to prevent, arriving through the gate itself.
+- **The quality gate is cheap and unconditional, and it found a degenerate mesh on its first run.**
+  VER-16's Gouy–Chapman slab is 2000 nm × 0.5 nm at `maxh = 50 nm`: a chain of 100:1 triangles at
+  minimum SICN 0.019. The anisotropy is deliberate — the stretched direction is the one the solution
+  is constant in — so the exemption is one keyword-only `check_quality=False` at that call site with
+  its reasoning beside it, and the floor is untouched. A gate is only worth having if the answer to
+  a failure is a reason, not a lower number.
+- **SICN and gamma are both gated because neither subsumes the other.** Gamma is blind to inversion
+  (it returns +1 on a clockwise element, where SICN returns −1), and the two thresholds differ by a
+  factor of **1.6208** in element height on the isoceles family — not the 1.56 the plan and §5.2.2
+  carried, both corrected. In an axisymmetric mesh the sign is load-bearing: a negative-Jacobian
+  element contributes negative area under the `r` weight and nothing else complains.
+- **The kernel adds vertices the geometry does not.** The assembled reference region has 193
+  vertices and 195 edges against the 190/192 §5.2.1 derives: two of each from breaking the axis into
+  three collinear segments, so that the 0.075 nm axis-in-pore size can be applied at all, and one of
+  each from the seam OCC places at parameter zero on a closed circle, at `(250, 0)`, which halves
+  `membrane_outer` into two arcs. Both are asserted rather than tolerated (VER-28).
+- **The membrane's inner edge is buried in the pore body**, so the assembled membrane is the
+  quadrilateral *minus* the pore and there is nothing to make coincide: the junction gate asserts
+  `r_out(−1.4) = 2.7524` and `r_out(+1.4) = 4.88` on the pore's own outer surface, one shared edge
+  chain rather than two coincident ones, and exactly three domains — the cleft under the cap must
+  not fragment off as a fourth.
+
+**OPN-05 is reconciled but not closed.** §2.2's "196-vertex pore polygon" was the geometry-wide
+count attached to the wrong object; the model report's 190 for the polygon and 196/198 for the
+assembly both stand, and the delivered table's 185 assembles consistently to 190/192 by the same
+arithmetic. What is open is which curve COMSOL imported — a provenance question with no
+implementation consequence, so the fixture reads `source: author-supplied` and a Tier-3 comparison
+cites the file it used.
 
 ### WP9 — External material and charge fields
 

@@ -478,11 +478,43 @@ units. **[verified]**
   been extracted (`WebFetch` truncates the PDF at ~p. 66 of 143). Still no convergence study.
   → `09-comsol-reference-settings.md`.
 
+### Measured: the reference region meshes to a third of COMSOL's element count **[tested]**
+
+The ClyA region of §5.2.1 — the delivered 185-vertex profile, the membrane quadrilateral with its
+slanted inner edge, a 250 nm reservoir half-disc, glued — meshed by netgen at the §5.2.2 size fields
+(global 10 nm, pore boundary 0.05 nm, pore domain 0.1 nm, reservoir domain 2.8 nm, reservoir arc
+5 nm, axis-in-pore 0.075 nm), `grading = 0.2`, `optsteps2d = 5`:
+
+| | netgen, here | COMSOL, §5.2.2 |
+|---|---|---|
+| triangles | 44,316 | 120,917 |
+| minimum element quality | 0.6559 (SICN), 0.6157 (gamma) | 0.6378 |
+| mean element quality | 0.9870 (SICN) | 0.9765 |
+| time | 6.5 s | — |
+
+A third of the elements in the same quality band. The counts are *not* comparable as a convergence
+statement — the two meshers' size fields are not the same knobs, and COMSOL's single "element
+quality" is not stated to be SICN — but the quality band is, and it is met without boundary layers,
+by isotropic grading alone, which is what §5.2.2 says the reference model did.
+
+**The quality gate is cheap enough to run unconditionally**: ≈1.1 s on a 121k-element mesh, a
+fraction of the time to build one. The measured margin on the geometries this project generates is
+wide (minimum SICN 0.647 against a 0.3 floor), so gating only *imported* meshes would leave the ones
+we build ourselves unwatched for no saving.
+
+**The gate's first run found a degenerate mesh, and the answer was not to weaken it.** VER-16's
+Gouy-Chapman slab is 2000 nm × 0.5 nm meshed at 50 nm: a chain of 100:1 triangles at minimum SICN
+0.019. That anisotropy is not a defect — the transverse extent is an artefact of solving a
+one-dimensional problem on a two-dimensional mesh, and the stretched direction is the one the
+solution is constant in, so those elements carry zero interpolation error rather than merely bounded
+error. A gate that measures isotropy has nothing to say about such a mesh; the exemption belongs at
+that call site, with its reasoning, not in the floor.
+
 ---
 
 ## 8.1 NGSolve traps found by implementing this — all silent
 
-Fourteen ways this project's own code was wrong while raising nothing. All reproduced on NGSolve
+Fifteen ways this project's own code was wrong while raising nothing. All reproduced on NGSolve
 6.2.2606. **[tested]**
 
 **1. A nonlinear form must be written in the trial function, not the grid function.**
@@ -596,6 +628,15 @@ module function: `mesh.BoundaryCF({...})`. **[tested]**
 `ngs.LinearForm(charge_source(rho, v, AXISYMMETRIC))` fails with `NgException: Linearform must have
 TestFunction`, which reads as a problem with the term. It is not — the constructor takes the *space*:
 `f = ngs.LinearForm(space); f += term; f.Assemble()`. **[tested]**
+
+**15. Netgen's OCC kernel does not put axis vertices at exactly `r = 0`.** A revolved geometry comes
+back with vertices at `r = -1.5e-15` nm and `r = +7e-16` nm — round-off in the rotation, not a mesh
+that crosses the axis. Two things break on it. The CON-04 gate asks for `r >= 0` *exactly*, and has
+to go on asking exactly, because the failure it exists to catch is a mesh mirrored about the axis,
+which is a sign error; a tolerance wide enough to pass round-off is a tolerance that has to justify
+its width. And a content hash over the coordinate bytes makes two runs of the same mesher two
+different meshes and two cache entries. Snap `|r| < 1e-9` nm to zero on the way into the in-memory
+mesh, for every route in, the meshers' own included. **[tested]**
 
 ### 8.2 Measured: the reaction flux really is worth it
 

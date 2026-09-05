@@ -769,12 +769,12 @@ costs one vertex element on the reservoir rim. The named edges are then 186 arou
 
 NOTE (the conditioning gate and a supplied fixture): the gate above applies to contours the FR-08
 pipeline *produces*. The delivered reference polygon does not meet two of its criteria at the
-reference wall size of 0.05 nm — minimum vertex spacing 0.0361 nm over 10 of its 185 edges, and
-minimum local feature size 0.0806 nm against a 0.1 nm threshold — and yet it is what the reference
-mesh of §5.2.2 was built from, at that wall size, reaching minimum element quality 0.6378. A supplied
-profile fixture is therefore NOT gated on those two criteria. It is gated on validity, simplicity and
-loop topology, and its measured spacing and feature size are recorded in its provenance block, so
-that a mesh size chosen against it can be checked rather than assumed.
+reference wall size of 0.05 nm — minimum vertex spacing 0.0361 nm, with 10 of its 185 edges shorter
+than that wall size, and minimum local feature size 0.0806 nm against a 0.1 nm threshold — and yet
+it is what the reference mesh of §5.2.2 was built from, at that wall size, reaching minimum element
+quality 0.6378. A supplied profile fixture is therefore NOT gated on those two criteria. It is gated
+on validity, simplicity and loop topology, and its measured spacing and feature size are recorded in
+its provenance block, so that a mesh size chosen against it can be checked rather than assumed.
 
 #### 5.2.2 Meshing
 

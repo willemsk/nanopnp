@@ -1,14 +1,15 @@
 # WP8 — Mesh ingestion, tagging, quality gates, and the reference geometry
 
-**Status: planned, not started.** Written 4 September 2026, the second package of Phase 1, after
-WP7 landed the case schema, the content-addressed artefact and the provenance manifest. It inherits
-a solver that reads exactly one mesh format — netgen's own `.vol` — through fourteen lines inside
-`solve/stage.py`, with no tagging, no vocabulary check and no quality gate anywhere between the file
-on disk and the assembled weak form. `mesh/` is `primitives.py` (Phase-0 benchmark shapes) and
-`distance.py` (PHY-02); `mesh/adapter.py`, `mesh/ingest.py`, `mesh/quality.py` and `mesh/reference.py`
-do not exist. The ClyA vertex table, absent when this plan was first written, landed while it was
-being written and is in the tree as `data/geometry/clya_as_radial_geometry.csv`; until then `data/`
-held one file, and it was a correction table.
+**Status: delivered, 5 September 2026.** Written 4 September 2026, the second package of Phase 1,
+after WP7 landed the case schema, the content-addressed artefact and the provenance manifest. It
+inherits a solver that reads exactly one mesh format — netgen's own `.vol` — through fourteen lines
+inside `solve/stage.py`, with no tagging, no vocabulary check and no quality gate anywhere between
+the file on disk and the assembled weak form. `mesh/` is `primitives.py` (Phase-0 benchmark shapes)
+and `distance.py` (PHY-02); `mesh/adapter.py`, `mesh/ingest.py`, `mesh/quality.py` and
+`mesh/reference.py` do not exist. The ClyA vertex table, absent when this plan was first written,
+landed while it was being written and is in the tree as
+`data/geometry/clya_as_radial_geometry.csv`; until then `data/` held one file, and it was a
+correction table.
 
 This is the implementation plan for WP8 of `docs/plans/phase-1-solver-core.md`. `SPECIFICATION.md`
 remains normative: where this file and the specification disagree, the specification governs and this
@@ -123,6 +124,18 @@ vertex exactly on the cis plane at `(4.88, +1.4)`, so it needs one split rather 
 assembles to 190 vertices and 192 boundaries, Euler closing at 2 again. Amendments A and F record
 all of this; the five-vertex difference is the last thing OPN-05 is open on.
 
+> **Outcome — the assembly delivers 193 vertices and 195 edges, not 190 and 192.** The
+> arithmetic above is right about the geometry and silent about the kernel, and the kernel adds
+> three of each, both deliberately. Two come from breaking the side on `r = 0` into three collinear
+> segments at the pore's axial extent (+2 vertices, +2 edges): OCC keeps collinear segments apart,
+> the pore polygon never touches the axis, and this is the only way §5.2.2's 0.075 nm "symmetry axis
+> inside pore" size can be applied as a size field at all. The third is the seam OCC places at
+> parameter zero on a closed circle, at `(250, 0)`, which survives the clip to `r ≥ 0` and halves
+> `membrane_outer` into two arcs meeting there (+1, +1) — a closed circle has a seam somewhere.
+> VER-28 asserts 193/195 and the per-name breakdown: 186 edges around the pore (151 `wall`,
+> 35 `interface`), 3 `axis`, 2 `membrane`, 2 `membrane_outer`, one each of `cis` and `trans`.
+> §5.2.1 carries the same NOTE. The 185-versus-190 count is untouched by any of it.
+
 ### The reference geometry, written out
 
 All lengths in nm, all from §5.2.1, §5.2.2 and `.knowledge/04` §2.
@@ -173,6 +186,18 @@ The membrane's outer edge at `r = 250` lies outside the arc (`250² + 1.4² > 25
 quadrilateral is intersected with the half-disc and `membrane_outer` is the resulting arc segment
 `|z| ≤ 1.4`, not a straight segment. An implementation that builds `membrane_outer` as a segment at
 `r = 250` leaves a sliver between it and the arc.
+
+> **Outcome — the four assertions hold as written; two kernel details were not foreseen.**
+> `r_out(−1.4) = 2.7524` and `r_out(+1.4) = 4.88` are what the fragmented region reports, the
+> membrane-facing part of the pore boundary is one shared chain, no membrane element lies inside
+> `ELECTROLYTE_DOMAINS`, and the region has exactly three domains — the cleft under the cap is not
+> fragmented off. What the plan did not predict: (i) the quadrilateral must be traced *past*
+> `r = 250`, by one membrane half-thickness, and clipped back by the intersection. Ending it exactly
+> on the reservoir radius makes its outer edge touch the arc at the single point `(250, 0)` instead
+> of crossing it, a boolean the kernel has to resolve exactly for no gain; any overshoot removes the
+> contact. (ii) `membrane_outer` is the arc segment as predicted, but it is *two* arcs, not one, for
+> the circle-seam reason recorded above — a test asserting a single `membrane_outer` edge would
+> fail on a correct geometry.
 
 ### The delivered vertex table, and what it does not settle
 
@@ -269,6 +294,20 @@ graded free meshing is already in the same band at a fortieth of the size. Two c
 gate is unconditional, and the end-of-phase comparison of the reference-geometry mesh against those
 two figures has a real chance of being a pass rather than an excuse.
 
+> **Outcome — it is a pass, and the unconditional gate immediately earned its keep.** The ClyA
+> region at the §5.2.2 size fields, `grading = 0.2`, `optsteps2d = 5`, meshes in 6.5 s to **44,316
+> triangles, minimum SICN 0.6559, mean 0.9870, minimum gamma 0.6157, mean 0.9852**, no inverted
+> elements — a third of COMSOL's 120,917 elements in the same quality band (0.6378 minimum, 0.9765
+> average), without boundary layers. The gate itself costs ≈1.1 s on a 121k-element mesh, a fraction
+> of the time to build one, which is what makes "unconditional" cheap. Its first run then rejected a
+> mesh the suite had been solving on for two packages: VER-16's Gouy–Chapman slab is 2000 nm ×
+> 0.5 nm at `maxh = 50 nm`, a chain of 100:1 triangles at minimum SICN 0.019. That anisotropy is not
+> a defect — the transverse extent is an artefact of solving a one-dimensional problem on a
+> two-dimensional mesh, and the stretched direction is the one the solution is constant in — so the
+> exemption is one keyword-only `check_quality=False` at that call site, with its reasoning beside
+> it, and the floor is untouched. `mesh/quality.py` and `.knowledge/06-numerics-fem.md` §8 carry the
+> numbers.
+
 ### Writing MSH 4.1 through meshio, and the two ways it goes wrong silently
 
 meshio's 4.1 writer needs entity bookkeeping that a mesh built from a tagged FE mesh does not
@@ -352,6 +391,19 @@ them cost an experiment to find and would cost the same one twice.
 Steps 3–5 are the abort surface, and each names its gate. Step 6 is where VER-06 and NUM-31 are
 re-verified against tags that came from a file rather than from `name_edges`.
 
+> **Outcome — the order is as delivered; the vocabulary gained an eighth boundary name, and
+> step 5 needed a snap in front of it.** `interface` is now in `BOUNDARY_VOCABULARY`: fragmenting a
+> region produces an interior seam wherever two domains meet with no physical boundary between them
+> — `CylindricalPoreGeometry`'s two pore mouths, which OCC leaves at NGSolve's `default`, and the
+> reference geometry's 35-edge protein-to-membrane seam. Without a name for it, an ingested
+> fragmented mesh either fails step 3 or has its seams mapped to a boundary that *is* selected on,
+> which is the silent-open-boundary failure the gate exists to prevent. Amendment G's `protein`
+> landed with it. Step 5's `min(r) ≥ 0` also cannot be applied to netgen's own output as it stands:
+> the OCC kernel places axis vertices at `r = −1.5 × 10⁻¹⁵` and `+7 × 10⁻¹⁶` nm, so `MeshData`
+> snaps `|r| < 10⁻⁹` nm to zero on every route in and the gate keeps asking for `r ≥ 0` exactly —
+> the failure it catches is a sign error, not a rounding one, and slackening it to `r ≥ −ε` would
+> hide the former to tolerate the latter.
+
 ## Work items
 
 | File | Delivers | Identifiers |
@@ -373,6 +425,18 @@ re-verified against tags that came from a file rather than from `name_edges`.
 `MeshData` is the seam behind the mesher adapters of §5.1: meshio, netgen and (in a later package)
 gmsh all produce it, and nothing downstream of `adapter.py` knows which one did. It is the mesh
 analogue of QR-13's rule for the weak forms, not a discharge of it.
+
+> **Outcome — every row delivered; three carry more than the row asked for.** `mesh/adapter.py`
+> also gained `canonical()` and `renamed()` — the hash is taken over a canonicalised form because a
+> 4.1 round trip permutes nodes and cells, so a byte-for-byte identical mesh written twice by meshio
+> hashes differently otherwise — and `_snap_to_axis()`, for the kernel's `−1.5 × 10⁻¹⁵` nm axis
+> vertices. `mesh/ingest.py`'s vocabulary gained `interface` beside amendment G's `protein`, and its
+> `required_names` reads `wall_distance.sources` and the flow model as well as the boundary
+> selections, so a case widening either aborts at ingestion rather than at form assembly.
+> `mesh/profile.py`'s local feature size skips the vertex's own two-edge neighbourhood; measured
+> over one edge instead, the delivered table's feature size collapses from 0.0806 nm to its
+> minimum vertex spacing, 0.0361 nm, and the criterion measures spacing twice rather than
+> proximity once.
 
 ## Specification changes in this commit
 
@@ -454,6 +518,17 @@ present at import [tested — the wheel dlopens them and raises `OSError`, not `
 they are absent]. The test skips rather than fails, so CI stays green either way; whether the
 runner installs them is a workflow decision, not this package's.
 
+> **Outcome — 78 test functions across the five new files, all green; two rows landed elsewhere
+> than planned.** The stage-6 assertions are in `tests/tier1/test_mesh_ingest.py` rather than in
+> `test_stages.py`, beside the stage they describe
+> (`test_ver25_the_mesh_stage_is_stage_six_and_describes_itself`,
+> `test_ver27_the_artefact_key_is_the_contents_and_the_mapping`, and the progress and cancellation
+> pair FR-27 asks for); the two mesh-content cache assertions are in
+> `tests/tier2/test_artefact_cache.py`, keyed on VER-26 and VER-27. The gmsh comparison skipped in this environment on the
+> `OSError` the plan predicted, so the SICN and gamma check values stand on the closed forms and the
+> six exact values, not on the oracle. `tests/tier2/test_reference_geometry.py` runs in 7.3 s; the
+> full gate is 489 passed, 1 skipped, 10 deselected in 78 s.
+
 ## Out of scope
 
 - **Contour extraction and conditioning** — FR-07, FR-08, §5.2.1's marching-squares and Taubin
@@ -486,6 +561,11 @@ work.
    import conditioning, or after a later cleanup. Worth one sentence from the author; until then the
    fixture's provenance reads `author-supplied`, not `model-report`, and a Tier-3 comparison cites
    the file it actually used.
+
+   > **Outcome — still open, and still costs nothing.** The delivered geometry assembles,
+   > meshes into the published quality band and passes VER-28 on the 185-vertex table. The count
+   > is a provenance question about which curve COMSOL imported, not a modelling one; §5.2.1
+   > records both numbers and OPN-05 stays open on that alone.
 2. **Settled by the author, 4 September 2026.** The mapping reads file group → vocabulary name, as
    assumed; the protein dielectric body is `protein` and `pore` stays out of the vocabulary in both
    its readings; and an ingested mesh whose solid has no permittivity aborts rather than warns. The
