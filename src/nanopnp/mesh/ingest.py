@@ -266,7 +266,8 @@ def required_names(resolved: ResolvedCase) -> RequiredNames:
     # The bias is applied between two *named* electrodes -- ``BoundaryCF({ground:
     # 0, driven: V})`` in ``solve/stage.py`` and in the continuation ladder -- so
     # each of them is required on its own, and not merely as an alternative of
-    # the pattern above.
+    # the pattern above. ``ResolvedCase.ground`` is ``Literal["cis", "trans"]``,
+    # so this difference is always a single name and never a choice.
     driven = next(iter({"cis", "trans"} - {resolved.ground}))
     for name, role in ((resolved.ground, "grounded"), (driven, "driven")):
         boundaries.append(

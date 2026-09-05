@@ -108,7 +108,7 @@ def test_ver10_the_two_measures_are_not_interchangeable() -> None:
     """At SICN = 0.3 gamma is 0.1298, and at gamma = 0.3 SICN is 0.4687.
 
     The arithmetic behind reading section 5.2.2's gate as a conjunction: the two
-    thresholds differ by a factor of 1.56 in the height of an isoceles element on
+    thresholds differ by a factor of 1.6208 in the height of an isoceles element on
     a unit base, so gating either measure alone admits meshes the other rejects.
     """
     height_at_sicn_floor = brentq(lambda h: isoceles_sicn(h) - QUALITY_FLOOR, 0.01, 0.5)
