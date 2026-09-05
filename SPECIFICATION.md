@@ -579,6 +579,42 @@ with the transition to `ε_w` smoothed over 1–2 Å and the ion-exclusion conto
 the hydrated-ion radius. `ε_p` and that offset are fitted, not measured, and SHALL be surfaced in
 the case file.
 
+NOTE (the smoothed dielectric is a blend, PHY-11, PHY-12, PHY-20): a smoothed transition **to `ε_w`**
+cannot be expressed as a static `ε_r` field, because `ε_w = ε_r,f⁰ · ε_r,f^c(⟨c⟩)` and `⟨c⟩` is
+solved for. A supplied dielectric field SHALL therefore be a solid fraction `χ ∈ [0, 1]`, and the
+permittivity SHALL be
+
+```
+ε_r(r, z) = χ(r, z) · ε_p  +  (1 − χ(r, z)) · ε_r,f(⟨c⟩)
+```
+
+with the 1–2 Å transition carried by `χ` alone. Setting `χ` to the sharp material indicator
+reproduces PHY-20's piecewise assignment exactly, so the smoothed field is a refinement of the
+validated model rather than a replacement for it, and is recorded as a deviation when supplied. An
+absolute `ε_r` field SHALL be refused, naming this clause: accepting one would silently disable the
+permittivity correction while the run continued to report ePNP-NS. The mesh still carries the
+material split, so Nernst–Planck is still not solved inside the protein; the field smooths the
+coefficient, not the domain.
+
+NOTE (the `2πr` cancels, PHY-16, PHY-19): under the axisymmetric volume element `dV = 2πr dr dz`,
+the Jacobian and the `1/(2πr)` of PHY-16 step 6 cancel identically, so
+
+```
+∫_Ω ρ_pore · 2πr dr dz  =  ∫_{Ω, r ≥ r_guard} rhoq_pore(r, z) dr dz
+```
+
+and the conservation check of step 7 is **blind to the Jacobian** for an `areal_charge_density`
+source: an error in how `r` enters cancels against itself. This is the compensating error PHY-19's
+rationale names. Two consequences are normative. First, the check SHALL be reported as two legs — a
+producer leg comparing the planar integral of the source grid against the declared `Q_net`, and a
+consumer leg comparing the integral over the deployed mesh against that planar integral — each gated
+at QR-03's tolerance, so that a failure names which side of the interface it belongs to; where no
+`Q_net` is declared, the producer leg SHALL be recorded as not run and the consumer leg SHALL still
+gate. Second, the per-`z`-slice cumulative check SHALL be evaluated against a Lipschitz weight of
+stated width rather than a step, applied identically to both sides, since a step is integrated
+inside every element the plane crosses and its quadrature error exceeds the tolerance it is meant to
+enforce.
+
 ### 4.5 Model variants and switches
 
 **PHY-21.** The following physics models SHALL be selectable by name in the case file.
@@ -681,7 +717,7 @@ CLI and the desktop shell drive the same stage objects (IF-01, IF-02, IF-09).
 | 4 | Contour extraction and conditioning | (r, z) map, isolevel, smoothing and simplification parameters | Closed conditioned polyline | scikit-image, Shapely, scipy (all BSD-3), per §5.2.1 | §5.2.1 (FR-08) |
 | 5 | CAD assembly | Polyline, membrane specification, reservoir radius, optional analyte | Fragmented (r, z) region, domains and boundaries tagged | `netgen.occ` (LGPL-2.1, OpenCASCADE, in-process) primary; Gmsh OCC Python API (GPLv2+) optional | All bodies fragmented and imprinted, interfaces conformal, no gap or overlap at the membrane-to-pore junction (FR-09) |
 | 6 | Meshing | Fragmented region, size fields | Graded triangular mesh | Netgen (LGPL-2.1) default, Gmsh (GPLv2+) optional, behind the mesh adapter | §5.2.2 (FR-10, QR-12) |
-| 7 | Charge assembly | Prepared ensemble, pH, force field | ρ_pore(r, z), Q_net, dielectric field, ion-exclusion surface | PDB2PQR 3.7+ (BSD-3) driving PROPKA3; quintic B-spline (`spl4`) deposition; APBS 3.4.1 (BSD-3) cross-check; settings per PHY-16 | Charge conservation to 10⁻³ of Q_net on the deployed FE mesh, plus the per-z-slice cumulative check (FR-14, QR-03, PHY-19) |
+| 7 | Charge assembly | Prepared ensemble, pH, force field, **and the deployed mesh** (its gate is evaluated there, PHY-19); on the consumer path, a supplied field document instead of the ensemble | ρ_pore(r, z), Q_net, dielectric field, ion-exclusion surface | PDB2PQR 3.7+ (BSD-3) driving PROPKA3; quintic B-spline (`spl4`) deposition; APBS 3.4.1 (BSD-3) cross-check; settings per PHY-16 | Charge conservation to 10⁻³ of Q_net on the deployed FE mesh, plus the per-z-slice cumulative check (FR-14, QR-03, PHY-19) |
 | 8 | Materials | Electrolyte specification, correction model names, coefficient files | D_i, μ_i, η, ϱ, ε_r as fields in ⟨c⟩ and d | Correction registry, `data/corrections/willems2020_nacl.yaml` | Conformance values of §4.3 reproduced; clamps above 5.3 M logged with location and property (PHY-13) |
 | 9 | Case assembly | Mesh, charge and dielectric fields, materials, boundary conditions, bias, analyte, numerics | Resolved case document, assembled discrete problem | `io/` schema validator, `physics/` model registry | Schema `nanopnp/case/v1` validates, unknown keys rejected with a diagnostic naming the key (IF-03); round trip semantically identical (FR-26) |
 | 10 | Solve | Assembled problem, continuation ladder, optional warm start | Converged fields, iteration history | NGSolve 6.2.2606+ (LGPL-2.1), damped Newton; UMFPACK (GPL-2+) or scipy SuperLU (BSD) (CON-08) | No negative concentration at any nonlinear iterate; ladder completed to the target rung (FR-17); §6.5, §6.6 govern |
@@ -863,6 +899,8 @@ inputs:                             # optional; supplied artefacts, §5.3.2
                   clya: protein, bilayer: membrane,
                   pore_wall: wall, outer_rim: membrane_outer,
                   symmetry_axis: axis}}
+  charge: {path: clya_charge.yaml, format: field1}
+  eps_r:  {path: clya_solid_fraction.yaml, format: field1}
 
 structure:
   source: {pdb: 2WCD.pdb, variant: ClyA-AS, chains: all}
@@ -928,20 +966,42 @@ does anything upstream of it; the substituted file is hashed by content and ente
 manifest as an input like any other. Releases before v0.9 accept an externally generated mesh
 this way, which is what makes the solver core testable ahead of the meshing pipeline (§8.1).
 
+NOTE (`inputs.charge`, `inputs.eps_r`, IF-05, IF-03): a supplied field is named by a
+pydantic-validated header document, `schema: nanopnp/field/v1`, which carries the `quantity`, its
+units, the grid descriptor (origin, spacing, shape), the axis cutoff of PHY-18 (default 0.01 nm),
+the declared `Q_net` where the producer knows one, the provenance of the file, and the data file it
+refers to. `format: field1` names that document; the *data* format is read from it, `.npz` on the
+default path and OpenDX or CCP4 through GridDataFormats, which SHALL remain optional. A header
+document SHALL reject an unknown key naming the key, as every other schema in §5.3 does. `quantity`
+is one of `areal_charge_density` (the reference's `rhoq_pore`, C m⁻²), `volume_charge_density`
+(C m⁻³) or `solid_fraction` (dimensionless), and the `1/(2πr)` projection and the axis guard of
+PHY-16 step 6 SHALL be applied to `areal_charge_density` **only** — applying them twice, or not at
+all, is invisible in the conservation check of PHY-19, for the reason given there. The interpolant
+SHALL be zero outside the grid box rather than continued by its edge value, and a grid whose
+boundary values are not negligible against its interior SHALL be refused rather than truncated
+silently. An `inputs.eps_r` field SHALL supply a solid fraction, not an absolute `ε_r`: see §4.4.
+
 NOTE (`inputs.mesh.groups`, IF-06, QR-12): the mapping reads **file group name → vocabulary name**.
 The key is the physical-group name the mesh file carries; the value is the name the solver selects
 on. Several file groups MAY map to one vocabulary name — a CAD export routinely splits one physical
 wall into several curves — and the reverse is not expressible, which is why the direction is this
 way round. The vocabulary is fixed and carries no aliases: materials `electrolyte`, `cis`, `trans`,
-`protein`, `membrane`, `analyte`; boundaries `axis`, `wall`, `membrane`, `membrane_outer`, `cis`,
-`trans`, `analyte`, `interface`. `protein` is the pore's dielectric body (§2.2), a solid domain
+`protein`, `membrane`, `analyte`, `exclusion`; boundaries `axis`, `wall`, `membrane`,
+`membrane_outer`, `cis`, `trans`, `analyte`, `interface`. `protein` is the pore's dielectric body (§2.2), a solid domain
 Poisson is solved on and Nernst–Planck and the flow are not; `pore` is deliberately **not** a name,
 because it reads as both that body and the lumen fluid, and a mesh that uses it SHALL disambiguate
 through the mapping. `interface` is the interior fluid-to-fluid seam a fragmented region carries —
 the pore-mouth interfaces the reservoir-to-lumen split leaves behind — and **nothing selects on it**;
 it is in the vocabulary because every group must be claimed by some name, and calling an interior
 seam `wall` would put it in the PHY-02 distance source set and impose no-slip across the middle of
-the electrolyte. Ingestion SHALL abort when any group in the file is left unclaimed by the mapping,
+the electrolyte. `exclusion` is the ion-exclusion region of FR-15 — the shell between the dielectric
+contour and the exclusion contour, offset outward by the hydrated-ion radius. It is a solid for
+Nernst–Planck and for the flow, so the no-slip surface sits at the outer edge of the shell, which is
+the conventional hydrodynamic shear plane; it takes the **fluid's** `ε_r` for Poisson, so
+`physics.solid_permittivities` SHALL NOT require an entry for it and SHALL NOT abort on its absence.
+ePNP-NS carries no explicit Stern layer, so a mesh presenting this material is a deviation from the
+validated model and SHALL be recorded as one in the run provenance (FR-25), even though no case-file
+switch selects it. Ingestion SHALL abort when any group in the file is left unclaimed by the mapping,
 or when any name the resolved run selects on — the boundary-condition names,
 `numerics.wall_distance.sources` and the fluid material set — is supplied by no group, and the
 diagnostic SHALL name both lists (QR-12). A mapping whose keys are all vocabulary names while its
@@ -1734,6 +1794,9 @@ route to a cause and invites adjusting the solver until the number matches.
 | **VER-25** | Stage protocol | Every stage registered in §5.2 reports its name, number, inputs, outputs and artefact schema without importing its implementation module, asserted on `sys.modules` in a fresh process; each stage's own description is the registry's, so the two cannot drift; progress is monotone in [0, 1] and ends at 1; a cancellation token raises naming where the stage stopped, and is not a subclass of the numerical gate errors (FR-27, IF-01) |
 | **VER-27** | Mesh ingestion and tagging | A tagged mesh written as Gmsh MSH 4.1 and read back preserves vertices, connectivity, per-group physical tags and group names (IF-06); a group left unclaimed by `inputs.mesh.groups`, or a vocabulary name the run selects on that no group supplies, aborts with a diagnostic naming both lists (QR-12); the default ingestion path imports neither `gmsh` nor netgen's Gmsh reader, asserted on `sys.modules` in a fresh process (CON-10) |
 | **VER-28** | Reference-geometry conformance | The assembled (r, z) region has exactly three domains — pore body, one membrane, one electrolyte — and is conformal at the membrane-to-pore junction: the membrane meets the pore on the pore's own outer surface, at r = 2.7524 nm on z = −1.4 and r = 4.88 nm on z = +1.4 within the fragmentation tolerance and read from the fixture rather than hard-coded, *and* over one shared edge chain rather than two coincident ones; no membrane material lies inside the fluid set; the region carries exactly the §5.3.1 vocabulary and its mesh meets the §5.2.2 quality figures (FR-09) |
+| **VER-29** | External field ingestion and charge conservation | An (r, z) grid round-trips through the native format and through OpenDX and CCP4 with the singleton-axis convention, origin, spacing and values preserved, and a genuinely two-dimensional array is refused naming its shape; the interpolant's axis order is asserted against a field that is not symmetric in its arguments, so a transposed array fails rather than agreeing on the diagonal; the field is zero outside the grid box rather than continued by its edge value; on the deployed finite-element mesh `|Q_mesh − Q_net|/|Q_net| < 10⁻³`, reported as the producer and consumer legs of the §4.4 NOTE and gated separately, with the axis-guard deficit and the boundary-ring maximum reported beside them; the ramped per-plane cumulative agrees to the same tolerance at every plane; a grid whose boundary values are not negligible against its interior aborts naming the value and its (r, z); a field declaring no `Q_net` gates the consumer leg and records the producer leg as not run (QR-03, PHY-18, PHY-19, IF-05, FR-14 in part) |
+| **VER-30** | Dielectric blend | The sharp solid fraction reproduces PHY-20's piecewise assignment to round-off at every quadrature point; a `χ` outside [0, 1] and an inverted `χ` both abort with the offending quantity and its location, the latter on the per-material means; an absolute `ε_r` field is refused with the §4.4 NOTE named (FR-15) |
+| **VER-31** | Gouy–Chapman–Stern | With an ion-exclusion layer of thickness `λ_S` against a charged wall, the wall potential is `φ_d + σ_s λ_S/(ε₀ε_r)` with `φ_d` and `σ_s` from VER-12's Grahame relation, to better than **1 %** at 0.1 M and `ζ̃_d = 2` — a 30.6 % effect at `λ_S = 0.25 nm`, so a shell the solver treats as fluid fails by 24 %; `λ_S = 0` reproduces VER-12 on the same mesh to solver tolerance (FR-15) |
 
 ### 7.3 Tier 2 analytic benchmarks
 
@@ -2010,6 +2073,7 @@ concentrations) took 41 h on 12 cores. A full-envelope sweep is a day-scale job.
 | **OPN-03** | PlyAB supporting-information details: analyte relative permittivity, per-position mesh strategy (remesh against ALE), barrier heights in kT, electro-osmotic flow velocities | Author, from the retained model files | Analyte force regression targets and adoption of PlyAB as a second reference case after v1.0 |
 | **OPN-04** | ClyA-AS mutation list: 8 mutations relative to the *S. typhi* wild type in one place, 27 relative to the *E. coli* 2WCD structure in another. Both internally correct | Author, with the structure-preparation stage | Provenance of `Q_net` (FR-12); the structure-preparation stage must record which list was applied to which PDB |
 | **OPN-05** | Pore-polygon vertex table. **Delivered** as `data/geometry/clya_as_radial_geometry.csv`, 185 vertices, extents as published. **Closed by the author, 5 September 2026: the delivered table is the geometry of record**, and the model report's 190 is the count after COMSOL's import conditioning. §2.2 and §5.2.1 are amended to it; the §5.2.1 fixture, `mesh/reference.py` and VAL-05 all cite it | Closed | Closed |
+| **OPN-06** | Attribution of the reference's own charge-conservation gap: `−72.9 e` integrated over the COMSOL mesh against `−72 e` atomistic is 1.25 %, twelve times QR-03's budget. Ruling 8 holds that the published net charges belong to different constructs, which would make the comparison invalid rather than the tolerance unmet; the alternative is that the reference's consumer leg lost 1.25 % on its own mesh | Author | Nothing in Phase 1: WP9 gates our own two legs separately (§4.4 NOTE). Any Tier-3 comparison of pore charge needs the answer (VAL-06, WP13) |
 
 ---
 
@@ -2127,7 +2191,7 @@ needed.
 | IF-02 | None yet |
 | IF-03 | VER-09 |
 | IF-04 | None yet |
-| IF-05 | None yet |
+| IF-05 | VER-29 |
 | IF-06 | VER-27 |
 | IF-07 | None yet |
 | IF-08 | VER-24 |
@@ -2145,8 +2209,8 @@ needed.
 | FR-11 | None yet |
 | FR-12 | VAL-06 |
 | FR-13 | VER-01, VER-02, VAL-06 |
-| FR-14 | VER-01, VER-02 |
-| FR-15 | VAL-06 |
+| FR-14 | VER-01, VER-02, VER-29 (the deployed-mesh half) |
+| FR-15 | VER-30, VER-31, VAL-06 |
 | FR-16 | VER-03 |
 | FR-17 | VER-08, VER-16, VER-18 |
 | FR-18 | VER-13, VAL-10 |
@@ -2163,7 +2227,7 @@ needed.
 | FR-29 | None yet |
 | QR-01 | VER-12 to VER-22, in particular VER-17 and VER-18 |
 | QR-02 | VAL-01, VAL-02 |
-| QR-03 | VER-01 |
+| QR-03 | VER-01, VER-29 |
 | QR-04 | VER-11 |
 | QR-05 | VAL-07, VAL-08, VAL-09 |
 | QR-06 | None yet |
@@ -2191,7 +2255,7 @@ needed.
 | CON-13 | None yet |
 | CON-14 | None yet |
 
-Coverage: 35 of the 67 requirements in §3 have a specified activity; 32 are recorded as "none yet",
+Coverage: 36 of the 67 requirements in §3 have a specified activity; 31 are recorded as "none yet",
 predominantly interface, portability, licensing and documentation requirements whose demonstration
 is by inspection rather than by test.
 
