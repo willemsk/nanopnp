@@ -106,13 +106,15 @@ BOUNDARY_VOCABULARY: tuple[str, ...] = (
 )
 """Boundary-group names the solver speaks (section 5.3.1).
 
-``interface`` is the interior fluid-to-fluid seam a fragmented region carries —
-the two pore-mouth interfaces of
+``interface`` is any interior seam nothing selects on. Fragmenting a region
+produces one wherever two domains meet without a physical boundary between
+them: the two pore-mouth interfaces of
 :class:`~nanopnp.mesh.primitives.CylindricalPoreGeometry`, which OCC leaves at
-NGSolve's ``default`` — and nothing selects on it. It is in the vocabulary
-because every group must be claimed by a name, and calling an interior seam
-``wall`` would put it in the PHY-02 distance source set and impose no-slip
-across the middle of the electrolyte.
+NGSolve's ``default`` and which separate fluid from fluid, and the
+protein-to-membrane seam of :mod:`nanopnp.mesh.reference`, which separates one
+solid from another. It is in the vocabulary because every group must be claimed
+by a name, and calling an interior seam ``wall`` would put it in the PHY-02
+distance source set and impose no-slip across the middle of the electrolyte.
 """
 
 VOCABULARY: frozenset[str] = frozenset(MATERIAL_VOCABULARY) | frozenset(BOUNDARY_VOCABULARY)
