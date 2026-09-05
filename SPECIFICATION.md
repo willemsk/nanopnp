@@ -756,6 +756,17 @@ boundaries (190 − 192 + 4 = 2 likewise). The difference is recorded, not recon
 neither the geometry the table describes nor anything computed from it. The model report governs
 (`CLAUDE.md`). OPN-05 stays open on that count alone.
 
+NOTE (what `nanopnp.mesh.reference` assembles): 193 vertices and 195 edges, three more of each than
+the count above, and both deviations are deliberate. Two come from breaking the side on `r = 0` into
+three collinear segments at the pore's axial extent: OCC keeps collinear segments as separate edges,
+the pore polygon never touches the axis, and this is therefore the only way §5.2.2's 0.075 nm
+"symmetry axis inside pore" can be applied as a size field at all. The third is the seam OCC places
+at parameter zero on a closed circle, at (250, 0), which survives the clip to `r ≥ 0` and halves
+`membrane_outer` into two arcs meeting there — a closed circle has a seam somewhere, and this one
+costs one vertex element on the reservoir rim. The named edges are then 186 around the pore
+(151 `wall`, 35 `interface`), 3 `axis`, 2 `membrane`, 2 `membrane_outer`, and one each of `cis` and
+`trans`. VER-28 asserts these counts.
+
 NOTE (the conditioning gate and a supplied fixture): the gate above applies to contours the FR-08
 pipeline *produces*. The delivered reference polygon does not meet two of its criteria at the
 reference wall size of 0.05 nm — minimum vertex spacing 0.0361 nm over 10 of its 185 edges, and
