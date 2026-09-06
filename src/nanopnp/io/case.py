@@ -39,6 +39,7 @@ from typing import Any, Literal, get_args
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
+from nanopnp.charge.fields import FIELD_FORMAT
 from nanopnp.core.paths import available_corrections
 from nanopnp.core.stages import (
     CancelToken,
@@ -708,6 +709,8 @@ class ResolvedCase:
     wall_distance_sources: str
     wall_distance_max_nm: float
     mesh: SuppliedArtefact
+    charge: SuppliedArtefact | None
+    eps_r: SuppliedArtefact | None
     outputs: tuple[str, ...]
 
     @property
@@ -750,6 +753,14 @@ class ResolvedCase:
             "wall_distance": {
                 "sources": self.wall_distance_sources,
                 "max_distance_nm": self.wall_distance_max_nm,
+            },
+            # The two supplied fields are named here and hashed elsewhere: the
+            # stage-7 artefact carries their contents into the solve's key
+            # (section 5.3.2), so recording the *path* here would key two runs
+            # differently for a file that merely moved.
+            "fields": {
+                "charge": self.charge is not None,
+                "eps_r": self.eps_r is not None,
             },
             "outputs": list(self.outputs),
         }
@@ -824,14 +835,28 @@ def _require_runnable(document: CaseDocument) -> SuppliedArtefact:
                 "inputs:, which is FR-27's hand substitution at stage granularity"
             )
     for supplied, what in (
-        ("charge", "the fixed-charge field"),
-        ("eps_r", "the dielectric field"),
+        ("charge", "a fixed-charge field"),
+        ("eps_r", "a dielectric field"),
     ):
-        if getattr(document.inputs, supplied) is not None:
+        field: SuppliedArtefact | None = getattr(document.inputs, supplied)
+        if field is None:
+            continue
+        if field.path is None:
             raise UnsupportedCaseSection(
-                f"case {document.name!r} supplies inputs.{supplied}; {what} is consumed from v0.9 "
-                "(SPECIFICATION.md section 3). Recording an input the solver never reads would "
-                "make the FR-25 manifest describe a run that never happened"
+                f"inputs.{supplied}: artefact: names {what} in the store, which the charge "
+                f"pipeline of v0.9 fills; supply inputs.{supplied}: path: instead"
+            )
+        if field.groups:
+            raise CaseValidationError(
+                f"inputs.{supplied}.groups is the mesh's vocabulary mapping (IF-06) and means "
+                f"nothing for {what}; a field is named by its header document, which carries the "
+                "quantity and the units (section 5.3.1 NOTE)"
+            )
+        if field.format not in (None, FIELD_FORMAT):
+            raise CaseValidationError(
+                f"inputs.{supplied}.format is {field.format!r}; a supplied field is named by a "
+                f"header document, so the format is {FIELD_FORMAT!r} and the *data* format is read "
+                "from the document's data.format key (section 5.3.1 NOTE)"
             )
     if document.inputs.mesh is None:
         raise UnsupportedCaseSection(
@@ -1058,6 +1083,8 @@ def resolve(document: CaseDocument) -> ResolvedCase:
         wall_distance_sources=document.numerics.wall_distance.sources,
         wall_distance_max_nm=document.numerics.wall_distance.max_distance_nm,
         mesh=mesh,
+        charge=document.inputs.charge,
+        eps_r=document.inputs.eps_r,
         outputs=tuple(document.outputs),
     )
 

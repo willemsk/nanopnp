@@ -35,7 +35,7 @@ from typing import TYPE_CHECKING
 from nanopnp.core.hashing import Canonicalisable, canonical, content_hash, file_hash
 from nanopnp.core.paths import correction_file
 from nanopnp.io.artefact import timestamp
-from nanopnp.io.defaults import Deviation, deviations
+from nanopnp.io.defaults import ContributedDeviation, Deviation, deviations
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from collections.abc import Mapping
@@ -263,7 +263,10 @@ def stabilisation_group(
     }
 
 
-def _deviations_payload(found: tuple[Deviation, ...]) -> dict[str, Canonicalisable]:
+def _deviations_payload(
+    found: tuple[Deviation, ...],
+    contributed: tuple[ContributedDeviation, ...] = (),
+) -> dict[str, Canonicalisable]:
     """Return the Deviations group's payload for an already-computed diff.
 
     Shared by :func:`deviations_group` and :meth:`Manifest.groups`, which hold
@@ -271,20 +274,37 @@ def _deviations_payload(found: tuple[Deviation, ...]) -> dict[str, Canonicalisab
     itself, the other already carries the diff on ``self.deviations``. Without
     this the two would render the same group by two independent literal dicts,
     free to drift the moment one is edited and the other is not.
+
+    ``count`` is the total. A reader asking whether a run departed from the
+    validated model must not have to know that departures arrive by two routes.
     """
     return {
-        "count": len(found),
+        "count": len(found) + len(contributed),
         "switches": [deviation.summary() for deviation in found],
+        "contributed": [deviation.summary() for deviation in contributed],
     }
 
 
-def deviations_group(document: CaseDocument) -> dict[str, Canonicalisable]:
-    """Return the Deviations group: every switch set away from the validated default.
+def deviations_group(
+    document: CaseDocument,
+    *,
+    contributed: tuple[ContributedDeviation, ...] = (),
+) -> dict[str, Canonicalisable]:
+    """Return the Deviations group: every departure from the validated default.
 
-    The enumeration lives in :mod:`nanopnp.io.defaults`, which is the manifest's
-    authority on what the validated default *is* (PHY-22, PHY-23).
+    The enumeration of switches lives in :mod:`nanopnp.io.defaults`, which is the
+    manifest's authority on what the validated default *is* (PHY-22, PHY-23).
+
+    Parameters
+    ----------
+    document
+        The case, diffed against the validated default.
+    contributed
+        Departures a *stage* found in its inputs rather than in the case — a
+        smoothed dielectric field, an ion-exclusion material on the supplied
+        mesh. No switch selects either, so nothing in the diff can see them.
     """
-    return _deviations_payload(deviations(document))
+    return _deviations_payload(deviations(document), contributed)
 
 
 @dataclass(frozen=True)
@@ -304,6 +324,8 @@ class Manifest:
         contributed carries :func:`not_run`.
     deviations
         Every switch this case set away from the validated default.
+    contributed_deviations
+        Departures the stages found in their inputs; see :func:`deviations_group`.
     created_at
         UTC timestamp, outside every digest.
     """
@@ -318,6 +340,7 @@ class Manifest:
     solver: Mapping[str, Canonicalisable]
     stabilisation: Mapping[str, Canonicalisable]
     deviations: tuple[Deviation, ...] = ()
+    contributed_deviations: tuple[ContributedDeviation, ...] = ()
     created_at: str = field(default_factory=timestamp)
 
     def groups(self) -> dict[str, Canonicalisable]:
@@ -330,7 +353,7 @@ class Manifest:
             "materials": dict(self.materials),
             "solver": dict(self.solver),
             "stabilisation": dict(self.stabilisation),
-            "deviations": _deviations_payload(self.deviations),
+            "deviations": _deviations_payload(self.deviations, self.contributed_deviations),
         }
 
     @property
@@ -387,6 +410,7 @@ def build(
     clamp_activations: int | None = None,
     ladder: Mapping[str, Canonicalisable] | None = None,
     stabilisation: str | None = None,
+    contributed_deviations: tuple[ContributedDeviation, ...] = (),
 ) -> Manifest:
     """Assemble a manifest from whatever the run produced.
 
@@ -417,7 +441,10 @@ def build(
         in it are two different runs (section 5.3.3). Size-field settings join
         it when the mesher lands in v0.9.
     charge
-        The charge pipeline's record; ``None`` until WP9 builds it.
+        The Charge group: ``nanopnp.charge.stage.ResolvedFields.summary()`` — each
+        supplied field's header, grid descriptor and digest, and for the charge
+        the decomposed PHY-19 report. ``None`` when the run carried no field,
+        which is a different fact from a field that carried no charge.
     electrolyte
         The resolved electrolyte.
     clamp_activations
@@ -426,6 +453,8 @@ def build(
         ``LadderResult.summary()``.
     stabilisation
         The mode read back off the converged model, ``LadderResult.stabilisation``.
+    contributed_deviations
+        Departures a stage found in its inputs; see :func:`deviations_group`.
     """
     return Manifest(
         case_text=case_text,
@@ -438,7 +467,10 @@ def build(
         charge=(
             dict(charge)
             if charge is not None
-            else not_run("the charge pipeline (stages 4 and 5, FR-08 to FR-11) lands in v0.9")
+            else not_run(
+                "this run supplied neither inputs.charge nor inputs.eps_r, so stage 7 did not "
+                "run; the pipeline that would produce them (FR-12 to FR-15) lands in v0.9"
+            )
         ),
         materials=(
             materials_group(electrolyte, clamp_activations=clamp_activations)
@@ -448,6 +480,7 @@ def build(
         solver=solver_group(document, ladder=ladder),
         stabilisation=stabilisation_group(document, solved=stabilisation),
         deviations=deviations(document),
+        contributed_deviations=contributed_deviations,
     )
 
 

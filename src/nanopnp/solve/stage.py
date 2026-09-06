@@ -43,6 +43,7 @@ from dataclasses import replace
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from nanopnp.charge.stage import FieldStage, ResolvedFields, load_fields, read_fields
 from nanopnp.core.constants import thermal_voltage
 from nanopnp.core.paths import store_root
 from nanopnp.core.stages import (
@@ -89,7 +90,9 @@ def _reads_wall(electrolyte: Electrolyte) -> bool:
     )
 
 
-def _single_rung(resolved: ResolvedCase, mesh: Mesh, measures: Measures) -> Rung:
+def _single_rung(
+    resolved: ResolvedCase, mesh: Mesh, measures: Measures, fields: ResolvedFields
+) -> Rung:
     """Return the one rung a case with ``continuation: none`` solves.
 
     Cold, at the target operating point. NUM-18 exists because that does not
@@ -108,6 +111,18 @@ def _single_rung(resolved: ResolvedCase, mesh: Mesh, measures: Measures) -> Rung
     else:
         model = create(resolved.model, **options)
     driven = next(iter(ELECTRODES - {resolved.ground}))
+    supplied: dict[str, Expression] = {}
+    if isinstance(model, CoupledModel):
+        # The electrostatic models of PHY-21 take neither: ``pb`` screens with a
+        # Debye length and carries no material permittivity, and handing one a
+        # keyword it does not take aborts the run with a message about an
+        # argument rather than about the physics.
+        if fields.charge is not None:
+            supplied["fixed_charge"] = (
+                fields.charge.volume_density_C_m3() / model.scales.charge_density_C_m3
+            )
+        if fields.eps_r is not None:
+            supplied["solid_fraction"] = fields.eps_r.chi()
     # Taken from the temperature rather than from ``model.scales``: the
     # electrostatic models of PHY-21 carry no scale set, and every model of the
     # table nondimensionalises the potential by the same ``V_T = RT/F`` (NUM-09).
@@ -121,9 +136,31 @@ def _single_rung(resolved: ResolvedCase, mesh: Mesh, measures: Measures) -> Rung
         solve_kwargs={
             "potential_values": mesh.BoundaryCF(
                 {resolved.ground: 0.0, driven: resolved.bias_V / thermal_V}
-            )
+            ),
+            **supplied,
         },
     )
+
+
+def _input_hashes(mesh: Artefact, materials: Artefact, fields: Artefact | None) -> dict[str, str]:
+    """Return the upstream hashes a solution artefact is keyed on (section 5.3.2).
+
+    The fields enter by their artefact's hash and never by their paths, so a
+    field substituted by hand is a changed input by construction and the same
+    table under another name is the same run. A case supplying no field carries
+    no entry at all rather than a null one: "there was no charge field" and
+    "there was one, and it was empty" are different runs.
+    """
+    hashes = {"mesh": mesh.hash, "materials": materials.hash}
+    if fields is not None:
+        hashes["charge"] = fields.hash
+    return hashes
+
+
+def _field_summary(fields: ResolvedFields) -> dict[str, object]:
+    """Return the solve summary's record of the supplied fields, if any."""
+    summary = fields.summary()
+    return {"fields": summary} if summary else {}
 
 
 class SolveStage:
@@ -166,16 +203,16 @@ class SolveStage:
             hash of the artefact the solve will produce, which is what
             ``get_or_compute`` checks on the way out.
         """
-        resolved, ingested, mesh, materials = self._prepare(inputs)
+        resolved, ingested, mesh, materials, fields = self._prepare(inputs)
         del ingested
         return SolutionArtefact(
             parameters=resolved.provenance,
-            inputs={"mesh": mesh.hash, "materials": materials.hash},
+            inputs=_input_hashes(mesh, materials, fields),
         )
 
     def _prepare(
         self, inputs: StageInputs
-    ) -> tuple[ResolvedCase, IngestedMesh, Artefact, Artefact]:
+    ) -> tuple[ResolvedCase, IngestedMesh, Artefact, Artefact, Artefact | None]:
         """Resolve the case, ingest and gate the mesh, and obtain the two artefacts.
 
         Shared by :meth:`key` and :meth:`run` so that the key the store is asked
@@ -196,7 +233,13 @@ class SolveStage:
         materials = inputs.upstream.get("materials")
         if materials is None:
             materials = MaterialsStage().run(StageInputs(case=inputs.case))
-        return resolved, ingested, mesh, materials
+        fields = inputs.upstream.get("charge")
+        if fields is None and (resolved.charge is not None or resolved.eps_r is not None):
+            # Read, not gated: the key must be computable without integrating
+            # over the mesh, and the gates run in :meth:`run` where the fields
+            # are actually assembled (section 5.3.2, stage 7).
+            fields = FieldStage().artefact(read_fields(resolved), mesh.hash)
+        return resolved, ingested, mesh, materials, fields
 
     def run(
         self,
@@ -235,7 +278,7 @@ class SolveStage:
         """
         check_cancelled(cancel, "the solve")
         report(progress, 0.0, "reading and gating the mesh")
-        resolved, ingested, mesh_artefact, materials = self._prepare(inputs)
+        resolved, ingested, mesh_artefact, materials, fields_artefact = self._prepare(inputs)
 
         report(progress, 0.0, f"loading the mesh from {ingested.source.name}")
         check_cancelled(cancel, "loading the mesh")
@@ -256,9 +299,15 @@ class SolveStage:
                 max_distance_nm=resolved.wall_distance_max_nm,
             )
 
+        fields = ResolvedFields(charge=None, conservation=None, eps_r=None, material_means=())
+        if resolved.charge is not None or resolved.eps_r is not None:
+            report(progress, LOAD_FRACTION, "reading and gating the supplied fields")
+            check_cancelled(cancel, "the supplied fields")
+            fields = load_fields(resolved, mesh, measures=measures, cancel=cancel)
+
         prepared, on_rung = self._instrumented(
             resolved,
-            self._ladder(resolved, mesh, measures, distance),
+            self._ladder(resolved, mesh, measures, distance, fields),
             progress=progress,
             cancel=cancel,
         )
@@ -268,9 +317,9 @@ class SolveStage:
         payload = self._write(result.solution.state, resolved.name)
         return SolutionArtefact(
             parameters=resolved.provenance,
-            inputs={"mesh": mesh_artefact.hash, "materials": materials.hash},
+            inputs=_input_hashes(mesh_artefact, materials, fields_artefact),
             payload=payload,
-            summary=dict(result.summary()),
+            summary={**result.summary(), **_field_summary(fields)},
         )
 
     def _ladder(
@@ -279,14 +328,15 @@ class SolveStage:
         mesh: Mesh,
         measures: Measures,
         distance: Expression,
+        fields: ResolvedFields,
     ) -> tuple[Rung, ...]:
         """Return the rungs this case solves, ladder or single (NUM-18)."""
         if resolved.continuation == "none":
-            return (_single_rung(resolved, mesh, measures),)
-        # Phase 1 solves an uncharged pore: the charge pipeline is stages 4 and 5
-        # of section 5.2 and lands in v0.9, and ``resolve`` refuses a case that
-        # names ``inputs.charge``. So the stage-4 ramp is empty here rather than
-        # silently zero, and the ladder is the same one WP5 measured.
+            return (_single_rung(resolved, mesh, measures, fields),)
+        # The producer pipeline is still v0.9, so the charge a run carries is the
+        # one it was handed through ``inputs.charge`` (FR-27, stage 7). With no
+        # field supplied the stage-4 ramp is empty rather than silently zero, and
+        # the ladder is the same one WP5 measured.
         return default_ladder(
             mesh,
             concentration_M=resolved.concentration_M,
@@ -302,6 +352,10 @@ class SolveStage:
             # the membrane at the electrolyte's eps_r -- 24 times too large, and
             # a plausible wrong current with no diagnostic (PHY-03, PHY-20).
             solid_permittivities=dict(resolved.document.physics.solid_permittivities),
+            fixed_charge_field=(
+                None if fields.charge is None else fields.charge.volume_density_C_m3()
+            ),
+            solid_fraction=None if fields.eps_r is None else fields.eps_r.chi(),
         )
 
     def _instrumented(

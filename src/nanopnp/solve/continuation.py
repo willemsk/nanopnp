@@ -655,6 +655,8 @@ def default_ladder(
     surface_charge_C_m2: float = 0.0,
     fixed_charge_C_m3: float = 0.0,
     fixed_charge_domain: str | None = None,
+    fixed_charge_field: Expression | None = None,
+    solid_fraction: Expression | None = None,
     wall_potential_V: float = 0.0,
     wall_distance_nm: Expression = SATURATED_WALL_DISTANCE_NM,
     solid_permittivities: Mapping[str, float] | None = None,
@@ -702,6 +704,22 @@ def default_ladder(
         nowhere else, so a body charge passed without this argument would also
         charge the electrolyte it is suspended in and drive a space charge the
         physical problem does not have.
+    fixed_charge_field
+        A gridded fixed charge in **SI** C m^-3, as
+        :meth:`nanopnp.charge.fields.ChargeField.volume_density_C_m3` returns it.
+        Nondimensionalised by the same scale the scalar is and ramped by the same
+        stage-4 fractions, which is the whole point of putting it here: the ramp
+        is the machinery a gridded field needs, and the scalar was only ever
+        standing in for one. The reference model applies ``scd_pore`` across
+        *all* computational domains (`.knowledge/04` §3), so no domain restriction
+        is offered for it; ``fixed_charge_domain`` belongs to the scalar.
+        Mutually exclusive with ``fixed_charge_C_m3``: a run carrying both would
+        be a superposition nobody asked for and neither number would describe it.
+    solid_fraction
+        The supplied ``chi`` of §4.4's NOTE, passed to every rung that solves
+        Poisson with a permittivity. Not ramped: it is a coefficient of the
+        operator, not a source, and a partially applied dielectric is not a
+        physical state on the way to the target.
     wall_potential_V
         Zeta potential imposed on the pore wall during the two Poisson-Boltzmann
         stages, in volts. Zero by default, and then those two stages are
@@ -767,6 +785,12 @@ def default_ladder(
             f"fixed_charge_domain={fixed_charge_domain!r} matches no material of the mesh; "
             f"it carries {', '.join(sorted(set(mesh.GetMaterials())))}"
         )
+    if fixed_charge_field is not None and fixed_charge_C_m3 != 0.0:
+        raise ValueError(
+            "default_ladder takes either fixed_charge_C_m3 (a uniform density) or "
+            "fixed_charge_field (a gridded one), not both: the ladder would ramp their sum and "
+            "the FR-25 manifest would record two charges, neither of which the solve carried"
+        )
 
     solids = dict(solid_permittivities or {})
     build_M = concentration_M if start_concentration_M is None else start_concentration_M
@@ -814,6 +838,18 @@ def default_ladder(
     zero_bias = _potential(0.0)
     rungs: list[Rung] = []
 
+    def _dielectric() -> dict[str, Option]:
+        """Return the supplied solid fraction, for every rung that solves Poisson.
+
+        Every *coupled* rung, that is: it is a coefficient of the operator rather
+        than a source, so it is not ramped and it is not withheld from the
+        equilibrium rung. The two Poisson-Boltzmann rungs take an
+        :class:`~nanopnp.physics.models.ElectrostaticModel`, which carries no
+        material permittivity at all, so they do not take it and must not be
+        handed it.
+        """
+        return {} if solid_fraction is None else {"solid_fraction": solid_fraction}
+
     # -- stages 1 and 2: Poisson-Boltzmann --------------------------------
     screening_nm = debye_length_nm(build_M, relative_permittivity=base.permittivity_0)
     if wall_potential_V == 0.0:
@@ -857,7 +893,7 @@ def default_ladder(
             mesh=mesh,
             boundaries=boundaries,
             measures=measures,
-            solve_kwargs={"potential_values": zero_bias},
+            solve_kwargs={"potential_values": zero_bias, **_dielectric()},
         )
     )
 
@@ -878,7 +914,9 @@ def default_ladder(
         the geometry need not even carry.
         """
         charges: dict[str, Option] = {}
-        if fixed_charge_C_m3 != 0.0:
+        if fixed_charge_field is not None:
+            charges["fixed_charge"] = fraction * fixed_charge_field / charge_scale
+        elif fixed_charge_C_m3 != 0.0:
             density = fraction * fixed_charge_C_m3 / charge_scale
             charges["fixed_charge"] = (
                 ngs.CF(density)
@@ -890,7 +928,7 @@ def default_ladder(
             charges["surface_charge_boundary"] = surface_charge_boundary
         return charges
 
-    if surface_charge_C_m2 != 0.0 or fixed_charge_C_m3 != 0.0:
+    if surface_charge_C_m2 != 0.0 or fixed_charge_C_m3 != 0.0 or fixed_charge_field is not None:
         for fraction in ramp_schedule(charge_steps):
             rungs.append(
                 Rung(
@@ -900,7 +938,11 @@ def default_ladder(
                     mesh=mesh,
                     boundaries=boundaries,
                     measures=measures,
-                    solve_kwargs={"potential_values": zero_bias, **_charges(fraction)},
+                    solve_kwargs={
+                        "potential_values": zero_bias,
+                        **_charges(fraction),
+                        **_dielectric(),
+                    },
                 )
             )
 
@@ -914,7 +956,11 @@ def default_ladder(
                 mesh=mesh,
                 boundaries=boundaries,
                 measures=measures,
-                solve_kwargs={"potential_values": _potential(bias), **_charges()},
+                solve_kwargs={
+                    "potential_values": _potential(bias),
+                    **_charges(),
+                    **_dielectric(),
+                },
             )
         )
 
@@ -959,6 +1005,7 @@ def default_ladder(
                 solve_kwargs={
                     "potential_values": _potential(bias_V),
                     **_charges(),
+                    **_dielectric(),
                     **_wall(model),
                 },
             )
@@ -984,6 +1031,7 @@ def default_ladder(
                     solve_kwargs={
                         "potential_values": _potential(bias_V),
                         **_charges(),
+                        **_dielectric(),
                         **_wall(target_model),
                     },
                 )

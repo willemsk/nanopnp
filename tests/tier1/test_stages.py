@@ -78,13 +78,15 @@ def test_ver25_every_stage_describes_itself_without_importing_it() -> None:
         " 'ngsolve': 'ngsolve' in sys.modules,"
         " 'solve': 'nanopnp.solve.stage' in sys.modules,"
         " 'materials': 'nanopnp.materials.stage' in sys.modules,"
+        " 'charge': 'nanopnp.charge.stage' in sys.modules,"
         " 'mesh': 'nanopnp.mesh.ingest' in sys.modules}))"
     )
     reported = _in_subprocess(script)
-    assert reported["names"] == ["mesh", "materials", "case", "solve"]
+    assert reported["names"] == ["mesh", "charge", "materials", "case", "solve"]
     assert reported["ngsolve"] is False
     assert reported["solve"] is False
     assert reported["materials"] is False
+    assert reported["charge"] is False
     assert reported["mesh"] is False
 
 
@@ -105,7 +107,7 @@ def test_ver25_a_stage_description_matches_the_stage_it_describes() -> None:
 def test_ver25_the_pipeline_numbers_match_section_5_2() -> None:
     """Stages are numbered by their position in the section 5.2 table."""
     numbered = {entry.name: entry.number for entry in registered_stages()}
-    assert numbered == {"mesh": 6, "materials": 8, "case": 9, "solve": 10}
+    assert numbered == {"mesh": 6, "charge": 7, "materials": 8, "case": 9, "solve": 10}
 
 
 def test_ver25_an_unknown_stage_is_refused_by_name() -> None:

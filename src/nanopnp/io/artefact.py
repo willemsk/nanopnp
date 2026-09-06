@@ -48,6 +48,9 @@ imported: ``io`` imports nothing from ``mesh`` at run time (see the module
 docstring), and one schema naming one thing in two places is the intent.
 """
 
+FIELDS_SCHEMA = "nanopnp/fields/v1"
+"""Stage 7: the supplied fixed-charge and dielectric fields, gated (§5.2)."""
+
 SOLUTION_SCHEMA = "nanopnp/solution/v1"
 """Stage 10: the converged field set and its iteration history."""
 
@@ -244,6 +247,40 @@ class MeshArtefact(Artefact):
                 "groups": dict(sorted(groups.items())),
             },
             inputs={"mesh": content_hash},
+            payload=dict(payload or {}),
+            summary=summary or {},
+        )
+
+
+class FieldsArtefact(Artefact):
+    """Stage 7: the external fields, keyed on their contents and on the mesh.
+
+    Keyed on each field's grid **digest** and on the header's physical
+    declarations — quantity, units, axis cutoff, declared ``Q_net`` — and not on
+    the bytes of the file they arrived in, exactly as :class:`MeshArtefact` is
+    keyed on the mesh's contents. The same table written as ``.npz`` and as
+    OpenDX is then one store entry, while a table whose values moved is a
+    different one; the source file's own digest is recorded in the summary, where
+    provenance belongs and where it changes no key.
+
+    The mesh enters as an *input* hash rather than as a parameter, because
+    PHY-19's gate is evaluated on the deployed mesh (§5.2, stage 7): the same
+    field on a different mesh is a different conservation result, and keying them
+    alike would serve one mesh's gate from the other's cache entry.
+    """
+
+    def __init__(
+        self,
+        *,
+        fields: Mapping[str, Canonicalisable],
+        mesh_hash: str,
+        payload: Mapping[str, Path] | None = None,
+        summary: Mapping[str, Canonicalisable] | None = None,
+    ) -> None:
+        super().__init__(
+            schema=FIELDS_SCHEMA,
+            parameters={"fields": dict(sorted(fields.items()))},
+            inputs={"mesh": mesh_hash},
             payload=dict(payload or {}),
             summary=summary or {},
         )
