@@ -109,6 +109,76 @@ scd_pore = if(r < 0.01[nm], 0, e_const * rhoq_pore(r,z) / (2*pi*r))     [C m^-3]
 final mesh gives **-72.9 e**, against **-72 e** for the atomistic model (T L425-427). Any
 reimplementation must land within ~1 % of -72 e.
 
+### 3.1 The delivered table, measured [tested]
+
+`prod5_clya_charge` is the interpolation table the published model loads — COMSOL's
+`%Grid`/`%Data` text export, 77 MB, coordinates in metres. Measured directly (6 September 2026;
+too large to vendor, so it is named by `$NANOPNP_REFERENCE_DATA` and Tier 3 skips without it):
+
+| Property | Value |
+|---|---|
+| Shape | 1401 x 3401, `values[i_z, i_r]` float64 |
+| Spacing | 0.005 nm on both axes, uniform to 1e-15 nm |
+| Extent | `r` in [0, 7] nm, `z` in [-3.5, 13.5] nm |
+| Value range | -2.81e20 to +6.90e20 (in `e/m^2`; 110.5 C/m^2 after the `e` factor) |
+| Planar integral | **-71.999999999663 e**, i.e. exactly -72 e to 4.7e-12 relative |
+| Boundary ring / interior max | 8.5e-24 — not truncated, by 20 decades |
+| Axis-guard deficit (`r < 0.01 nm`) | 1.4e-68 e — the innermost atoms sit at `r >~ 1.6 nm` |
+
+Two of the section-8 gaps close on these numbers.
+
+**G5 closes: there is no `e` in the file.** The integral is the *integer* -72, not
+`-72 x 1.6e-19`. So the stored table is the sum in units of `e/m^2` and the COMSOL assembly's
+`e_const` supplies the coulombs — exactly once. Eq. `eq:scdpore` as transcribed in §3 above, with
+an `e` inside the sum, is the published expression and not the file; implementing it literally and
+then applying `e_const` double-counts by 1.6e-19.
+
+**G10 closes:** the bounding box is `r` in [0, 7], `z` in [-3.5, 13.5] nm, 4.76e6 nodes — the
+order the gap predicted. The pore spans `z` in [-1.85, 12.25], so the box clears it by 1.25-1.65 nm
+either way, which is the ">= 4 sigma_max beyond the protein" of PHY-16 step 4 (4 x 0.085 = 0.34 nm)
+with a wide margin.
+
+### 3.2 The reference's 1.25 % is the *consumer's*, and it is aliasing [tested]
+
+The producer leg is exact (4.7e-12, above), so the published `-72.9 e` against `-72 e` cannot be a
+smearing or projection error: it is COMSOL's own integral of its own table over its own mesh.
+Reproduced here by the same route — `VoxelCoefficient` bilinear interpolation sampled at quadrature
+points — on the WP8 reference mesh, 44,316 elements graded to 0.05 nm at the pore wall:
+
+| Quantity | Value |
+|---|---|
+| `Q_grid` | -72.000000000 e |
+| `Q_mesh` | -71.289538 e |
+| Consumer leg `(Q_mesh - Q_grid)/\|Q_grid\|` | **+9.868e-03** |
+| Order vs order+3 quadrature agreement | 9.273e-03 |
+| Worst ramped plane cumulative | 2.032e-02, at `z = 8.269 nm` |
+
+Ours is -0.99 %, the reference's is +1.25 %: same magnitude, same character, opposite sign. That is
+the signature of an aliasing error rather than lost charge. **Neither refinement route converges
+it**, which is the finding:
+
+| maxh / wall (nm) | Elements | Consumer leg | Quadrature agreement |
+|---|---|---|---|
+| 10 / 0.05 | 44,316 | +9.868e-03 | 9.273e-03 |
+| 10 / 0.025 | 56,696 | -2.544e-03 | 6.062e-03 |
+| 10 / 0.0125 | 82,384 | -3.008e-03 | 1.097e-02 |
+| 2 / 0.0125 | 111,283 | -6.437e-03 | 5.363e-03 |
+| 0.5 / 0.05 | 884,759 | +3.051e-03 | 6.800e-03 |
+| 0.25 / 0.05 | 3,463,372 | **-1.062e-02** | 2.226e-02 |
+
+and on the fixed 44,316-element mesh, raising the integration order instead (extra_order 0 -> 32,
+i.e. order 8 -> 37) gives -71.289538, -71.289538, -71.957178, -72.212549, -71.800760, -72.053253,
+-71.965410 e — oscillating at the 1e-3 to 1e-2 level and never settling. (The first two are
+identical because `Measures.bonus_order` takes `max(extra, 3)` on a singular form, so `extra=3` *is*
+the assembly order; see `06-numerics-fem.md`.)
+
+**The cause is the field's own structure.** Along the densest `z` the table changes sign **49
+times**, with extrema a **median 0.035 nm** apart — an order below the finest element the reference
+mesh places. Pointwise quadrature of the bilinear interpolant therefore samples an oscillation it
+cannot resolve, and an aliased integral converges in neither `h` nor order. The remedy is on the
+producer side: depositing onto the finite-element space and rescaling to `Q_net` conserves by
+construction, where sampling somebody else's interpolant at quadrature points cannot.
+
 ---
 
 ## 4. Mesh
@@ -268,9 +338,9 @@ to ~25 %, as expected for a partly flattened profile. Treat both as loose target
   position `r_i`; the implementation (COMSOL, KB 01 §5) divides by the **field point's** `r`. These
   differ within the Gaussian's support and diverge differently near the axis. The COMSOL form is what
   produced -72.9 e, so implement that; but the discrepancy should be confirmed.
-- **G5 — factor `e` may be double-counted.** Eq. `eq:scdpore` already contains `e`, yet the COMSOL
-  expression multiplies `rhoq_pore` by `e_const` again. The interpolation file must therefore store
-  the sum *without* `e` (units m^-2). Confirm units of the stored table before trusting any charge integral.
+- **G5 — CLOSED [tested], §3.1.** The file stores the sum *without* `e`, in `e/m^2`: its planar
+  integral is the integer -72, to 4.7e-12. `e_const` in the COMSOL assembly supplies the coulombs
+  exactly once, and the `e` printed inside eq. `eq:scdpore` is not also in the table.
 - **G6 — pore averages omit the `2 pi r` Jacobian.** `eq:pore_surface_integral` integrates
   `beta * X dr dz`, an unweighted area average in the (r,z) half-plane, while the main text calls it
   an average "over the entire pore volume" (T L823). A true volume average needs `2 pi r dr dz`.
@@ -291,8 +361,8 @@ to ~25 %, as expected for a partly flattened profile. Treat both as loose target
   Compounding this, the MD/electrostatics frame places the structure's centre of mass at
   (0, 0, 55 Angstrom) (TA `eq:internal_radius` discussion) — the shift from MD coordinates to model
   coordinates is not given anywhere.
-- **G10 — extent of the `scd_pore` interpolation domain is unstated.** At 0.005 nm spacing the table
-  size is entirely determined by an unstated bounding box; expect ~10^7 nodes for a plausible one.
+- **G10 — CLOSED [tested], §3.1.** `r` in [0, 7] nm, `z` in [-3.5, 13.5] nm at 0.005 nm:
+  1401 x 3401 = 4.76e6 nodes, the order the estimate predicted.
 - **G11 — nothing on mesh or solver tolerances.** See §4 and §5. No convergence study of any kind is
   reported, so the published numbers carry no stated discretisation error bar.
 - **G12 — MD ion parameters unspecified beyond "CHARMM36"** (no NBFIX / Beglov-Roux statement).

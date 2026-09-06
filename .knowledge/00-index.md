@@ -107,7 +107,7 @@ Answers given directly by the author. Where they conflict with a printed source,
 | 5 | `ε_protein` | **A calibration parameter, not a constant.** Default 20 for ePNP-NS; surfaced in the case file and reported in every output as fitted rather than physical. The APBS value of 10 belongs to that workflow. |
 | 6 | Pore-averaging convention | **True volume average — the `2πr` Jacobian was included.** The apparent omission is a transcription issue in the thesis text. Published pore averages are directly usable as regression targets. |
 | 7 | Radial potential at 0.15 M (−14/−47 vs −29/−57 mV) | **Unresolved** — author to check. Excluded from regression targets until settled. |
-| 8 | Net charge (−72.9 / −72 / −60 e) | **Different constructs.** Each figure is right for its own construct; any structure-prep run must record which construct and which PDB it started from. |
+| 8 | Net charge (−72.9 / −72 / −60 e) | **Different constructs.** Each figure is right for its own construct; any structure-prep run must record which construct and which PDB it started from. **Narrowed by measurement, 2026-09-06: the −72.9 / −72 pair is one construct measured two ways, not two constructs.** The delivered `rhoq_pore` table integrates to the *integer* −72 e to 4.7e-12, so −72.9 is the same charge after COMSOL's own mesh quadrature of it — a consumer-side aliasing error of +1.25 %, reproduced here at −0.99 % by the same route. → `04-clya-geometry-and-charge.md` §3.2. The ruling stands for −60 e. |
 | 9 | Analyte force chain | Reproduce **forces + PMF** (`ΔU = −∫F dz`). Brownian dynamics stays out of scope. |
 | 10 | PlyAB as a second reference case | **Yes, but after v1.0** — the first post-release generalisation test. |
 
