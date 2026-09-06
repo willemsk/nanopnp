@@ -76,16 +76,34 @@ reference's.
 
 Q_NET_E = sum(charge for _, _, charge in RINGS)
 
-COARSE_MAXH_NM = 0.2
-"""Uniform element size of the deliberately under-resolving mesh.
+COARSE_DIVISIONS = (27, 70)
+"""``(nx, ny)`` of the deliberately under-resolving mesh, built structured.
 
-Chosen by measurement rather than by argument: at 0.2 nm the conservation legs
-read 1.3e-4 — comfortably inside QR-03 — while the order/order+3 agreement reads
-2.3e-4, over twice what it allows. The quadrature error is *not* monotone in
-``h`` (0.3 nm reads 1.0e-4 and 0.5 nm reads 1.4e-3), which is what aliasing of a
-0.085 nm Gaussian by a Gauss rule looks like and is exactly why the gate is a
+Structured rather than by netgen's unstructured mesher because the quantity this
+fixture exists to exceed is a *quadrature* error, and an unstructured mesh is not
+reproducible across platforms: one ``maxh`` of 0.2 nm measured 2.3e-4 on Linux,
+7.8e-5 on Windows and 2.2e-5 on macOS — straddling the 1e-4 gate three ways from
+the mesher's own arbitrariness rather than from anything about the field.
+``MakeStructured2DMesh`` places every vertex arithmetically, so the number below
+is the same number everywhere.
+
+The divisions are chosen by measurement rather than by argument: at (27, 70) —
+0.222 x 0.221 nm elements — the conservation legs read 1.9e-4 at worst, five
+times inside QR-03, while the order/order+3 agreement reads 3.7e-4, nearly four
+times what it allows. The quadrature error is *not* monotone in ``h``: on this
+same family 0.261 nm reads 7.4e-5 and 0.240 nm reads 5.0e-6, both *below* the
+gate that 0.222 nm exceeds, one coarser and one finer. That is what aliasing of
+a 0.085 nm Gaussian by a Gauss rule looks like, and is exactly why the gate is a
 measured agreement rather than an element-size rule.
 """
+
+
+def _grid_extent_nm() -> tuple[tuple[float, float], tuple[float, float]]:
+    """Return ``((r_min, r_max), (z_min, z_max))`` of the shared grid box, in nm."""
+    return tuple(  # type: ignore[return-value]
+        (origin, origin + spacing * (count - 1))
+        for origin, spacing, count in zip(GRID_ORIGIN_NM, GRID_SPACING_NM, GRID_SHAPE, strict=True)
+    )
 
 
 def _rings_grid() -> RadialGrid:
@@ -157,13 +175,17 @@ def report(field: ChargeField, mesh):
 
 @pytest.fixture(scope="module")
 def coarse_mesh():
-    """Return a uniform rectangle covering the whole grid box at 0.2 nm."""
-    import netgen.occ as occ
-    import ngsolve as ngs
+    """Return a structured rectangle covering the whole grid box."""
+    from ngsolve.meshes import MakeStructured2DMesh
 
-    face = occ.MoveTo(0.0, GRID_ORIGIN_NM[1]).Rectangle(6.0, 15.5).Face()
-    face.name = "electrolyte"
-    return ngs.Mesh(occ.OCCGeometry(face, dim=2).GenerateMesh(maxh=COARSE_MAXH_NM))
+    (r_min, r_max), (z_min, z_max) = _grid_extent_nm()
+    divisions_r, divisions_z = COARSE_DIVISIONS
+    return MakeStructured2DMesh(
+        quads=False,
+        nx=divisions_r,
+        ny=divisions_z,
+        mapping=lambda x, y: (r_min + (r_max - r_min) * x, z_min + (z_max - z_min) * y),
+    )
 
 
 # -- the two legs -------------------------------------------------------------
@@ -239,7 +261,7 @@ def test_ver29_a_coarsened_mesh_fails_the_quadrature_gate_not_the_conservation_o
 ) -> None:
     """The under-resolving mesh is named as such, and not as a conservation failure.
 
-    This is what the agreement gate is for. At 0.2 nm the conservation legs are
+    This is what the agreement gate is for. At 0.22 nm the conservation legs are
     still comfortably inside QR-03 — a run without the gate would report a
     conserved charge and a wrong field — while the order/order+3 agreement says
     plainly that the number cannot be defended. Getting these the wrong way round

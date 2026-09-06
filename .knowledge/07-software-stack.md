@@ -92,6 +92,24 @@ predict, all found while building the `(r, z)` grid IO:
   both DX and MRC with `origin` and `delta` intact. Refuse a genuinely 2D array yourself, naming the
   shape, so the user gets a diagnostic instead of a format-string traceback.
 
+**The MRC writer is not in every gridData a supported interpreter resolves to [tested].**
+GridDataFormats 1.2.0 requires Python ≥ 3.11, so on 3.10 a resolver takes **1.0.2**, whose
+`Grid()._exporters` registry is `DX, PKL, PICKLE, PYTHON` — no `MRC` and no `VDB`. Its `_loaders`
+registry *does* carry `CCP4, DX, MRC, PLT, PKL, PICKLE, PYTHON`, and `gridData.mrc` imports on both,
+so **reading** MRC and CCP4 works on 1.0.2 and only **writing** them does not. Measured by running
+each version: `griddataformats==1.0.2` on 3.10 exports a `(4, 3, 1)` grid to DX and refuses MRC with
+`ValueError: File format MRC not available`; 1.2.0 on 3.12 does both.
+
+Two consequences for anything that writes these formats across a 3.10–3.14 matrix:
+
+- `hasattr(gridData, "mrc")` and the module version are both **the wrong capability test** — the
+  first is true on 1.0.2 and the second is a proxy. `Grid()._exporters` is the registry
+  `Grid.export` itself looks the format up in, so it is the only authoritative answer. It is
+  private; guard the read and fall back to translating the `ValueError`.
+- A test guarded on "is gridData importable?" passes on 3.10 and then fails inside the writer. Guard
+  on **writer availability** and assert the refusal on the other branch, so both interpreters
+  assert something rather than one of them skipping.
+
 **Symmetry-axis detection:** do not use raw principal axes. ClyA is a truncated cone; the inertia
 tensor's axes are near-degenerate and drift between frames. Use **chain-permutation
 superposition** — superpose chain A onto chain B; the resulting rotation's eigenvector with
