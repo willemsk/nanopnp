@@ -195,6 +195,42 @@ class Deviation:
         return {"path": self.path, "value": self.value, "validated_default": self.validated}
 
 
+@dataclass(frozen=True)
+class ContributedDeviation:
+    """A deviation from the validated model that no case-file switch selects.
+
+    Some departures are not configuration. An ingested mesh carrying the
+    ``exclusion`` material puts a Stern layer in a model that has none, and a
+    supplied ``inputs.eps_r`` smooths a permittivity PHY-20 assigns as a constant
+    per domain; both are set by the *input*, not by a switch, so the diff of
+    :func:`deviations` cannot see either and the stage that read them must say so
+    (FR-25, §5.3.3).
+
+    Deliberately not given a fabricated dotted path. A path implies a key a
+    reader could set, and inventing one would make the manifest describe a case
+    file that does not exist.
+
+    Parameters
+    ----------
+    source
+        What carries the deviation: ``inputs.eps_r``, ``mesh material
+        'exclusion'``.
+    description
+        What departs from the validated model, and which clause says so.
+    """
+
+    source: str
+    description: str
+
+    def __str__(self) -> str:
+        """Render the deviation as the manifest and the log report it."""
+        return f"{self.source}: {self.description}"
+
+    def summary(self) -> dict[str, Any]:
+        """Return the manifest's record of this deviation."""
+        return {"source": self.source, "description": self.description}
+
+
 class UnknownSwitchPathError(KeyError):
     """A dotted path does not name a field of the case document."""
 

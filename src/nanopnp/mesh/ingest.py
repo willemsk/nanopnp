@@ -63,8 +63,9 @@ from nanopnp.core.stages import (
 )
 from nanopnp.io.artefact import MeshArtefact
 from nanopnp.io.case import COUPLED_MODELS, UnsupportedCaseSection, resolve
+from nanopnp.io.defaults import ContributedDeviation
 from nanopnp.mesh.adapter import MeshData, detect_format, read, write_msh41
-from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS
+from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS, PERMITTIVITY_EXEMPT
 from nanopnp.mesh.quality import QualityReport, check_quality, check_radii, element_quality
 from nanopnp.physics.models import DEFAULT_BOUNDARIES
 
@@ -82,6 +83,7 @@ MATERIAL_VOCABULARY: tuple[str, ...] = (
     "analyte",
     "cis",
     "electrolyte",
+    "exclusion",
     "membrane",
     "protein",
     "trans",
@@ -92,6 +94,16 @@ MATERIAL_VOCABULARY: tuple[str, ...] = (
 solved on and Nernst-Planck and the flow are not. ``cis`` and ``trans`` are
 domains *and* boundaries, in two separate namespaces, exactly as
 :mod:`nanopnp.mesh.primitives` already names them.
+
+``exclusion`` is the ion-exclusion shell of FR-15, and it is a *configuration* of
+the machinery the other names already use rather than a third kind of domain: a
+solid for Nernst-Planck and for the flow, so the no-slip surface sits at the
+outer edge of the shell — the conventional hydrodynamic shear plane — and the
+**fluid's** ``eps_r`` for Poisson, which is what
+:meth:`nanopnp.physics.models.CoupledModel.permittivity`'s default already gives
+anything with no entry of its own. It is therefore exempt from
+:func:`check_solid_permittivities`, and its presence is a deviation from the
+validated model: ePNP-NS has no explicit Stern layer (section 5.3.1 NOTE).
 """
 
 BOUNDARY_VOCABULARY: tuple[str, ...] = (
@@ -479,7 +491,9 @@ def check_solid_permittivities(
 
     Poisson is solved over the whole domain, so a solid with no entry falls back
     to the electrolyte's ``eps_r`` — about 24 times too large in a protein or a
-    bilayer, and a plausible wrong answer with no solver diagnostic.
+    bilayer, and a plausible wrong answer with no solver diagnostic. The
+    exception is :data:`PERMITTIVITY_EXEMPT`, whose members take the fluid's
+    ``eps_r`` deliberately.
 
     On an **ingested** mesh this aborts, where
     :meth:`nanopnp.physics.models.CoupledModel` only warns: the benchmark
@@ -503,7 +517,9 @@ def check_solid_permittivities(
     missing = sorted(
         name
         for name in data.materials
-        if name not in FLUID_MATERIALS and name not in solid_permittivities
+        if name not in FLUID_MATERIALS
+        and name not in PERMITTIVITY_EXEMPT
+        and name not in solid_permittivities
     )
     if not missing:
         return
@@ -558,6 +574,31 @@ class IngestedMesh:
         from nanopnp.mesh.adapter import to_ngsolve
 
         return to_ngsolve(self.data)
+
+    def deviations(self) -> tuple[ContributedDeviation, ...]:
+        """Return the departures from the validated model this mesh carries.
+
+        One, and no case-file switch selects it: a mesh presenting the
+        ``exclusion`` material puts an ion-exclusion shell into a model that has
+        none. ePNP-NS carries no explicit Stern layer, so its presence is a
+        deviation and is recorded as one (§5.3.1 NOTE, FR-25) — reported from
+        here rather than from stage 7 because a run may carry such a mesh and
+        supply no field at all.
+        """
+        if not set(self.data.materials) & PERMITTIVITY_EXEMPT:
+            return ()
+        return (
+            ContributedDeviation(
+                source="mesh material 'exclusion'",
+                description=(
+                    "an ion-exclusion shell, where ePNP-NS carries no explicit Stern layer "
+                    "(section 5.3.1 NOTE). The no-slip surface then sits at the outer edge of "
+                    "the shell, which is the conventional hydrodynamic shear plane, and the "
+                    "PHY-02 distance is measured from there rather than from the dielectric "
+                    "contour"
+                ),
+            ),
+        )
 
     def summary(self) -> dict[str, object]:
         """Return what the manifest's geometry-and-mesh group records (FR-25)."""

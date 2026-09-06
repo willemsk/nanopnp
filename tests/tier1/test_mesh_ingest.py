@@ -289,7 +289,15 @@ def test_ver27_a_group_mapped_into_the_wrong_namespace_aborts() -> None:
 
 def test_ver27_the_two_namespaces_are_the_specified_vocabulary() -> None:
     """Section 5.3.1's lists, with no aliases in either (FR-16, IF-06)."""
-    assert MATERIAL_VOCABULARY == ("analyte", "cis", "electrolyte", "membrane", "protein", "trans")
+    assert MATERIAL_VOCABULARY == (
+        "analyte",
+        "cis",
+        "electrolyte",
+        "exclusion",
+        "membrane",
+        "protein",
+        "trans",
+    )
     assert BOUNDARY_VOCABULARY == (
         "analyte",
         "axis",

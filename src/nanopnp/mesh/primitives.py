@@ -52,6 +52,22 @@ can drift apart would put an edge in one geometry's vocabulary and not the
 other's.
 """
 
+PERMITTIVITY_EXEMPT: frozenset[str] = frozenset({"exclusion"})
+"""Solid materials that need no ``physics.solid_permittivities`` entry.
+
+``exclusion`` is the ion-exclusion shell of FR-15: a solid for Nernst-Planck and
+for the flow, so the no-slip surface sits at its outer edge — the conventional
+hydrodynamic shear plane — and the **fluid's** ``eps_r`` for Poisson, which is
+what :meth:`nanopnp.physics.models.CoupledModel.permittivity`'s default already
+gives anything with no entry of its own (§5.3.1 NOTE). Demanding a value for it
+would invite one to be invented, and any value but the electrolyte's would put a
+dielectric jump at the shear plane, which is not what a Stern layer is.
+
+Here rather than in :mod:`nanopnp.mesh.ingest`, beside the fluid set and for the
+same reason: ``physics/`` reads both, and ``ingest`` imports ``physics``, so the
+vocabulary constants the forms consult live on this side of that edge.
+"""
+
 ELECTROLYTE_DOMAINS = "electrolyte|cis|trans"
 """Regular expression selecting every fluid domain of these geometries.
 
@@ -109,10 +125,54 @@ class SlabGeometry:
     The wall is at ``x = 0`` and the bulk at ``x = width_nm``; the ``y`` extent
     is an artefact of solving a one-dimensional problem on a two-dimensional
     mesh, and its boundaries carry natural conditions.
+
+    With ``exclusion_nm`` set, the first ``lambda_S`` of the slab is the
+    ``exclusion`` material of §5.3.1's NOTE rather than electrolyte: ions and
+    flow are excluded from it and Poisson is solved across it at the fluid's
+    ``eps_r``, which is the Gouy-Chapman-**Stern** geometry of VER-31. The wall
+    stays at ``x = 0``, so the surface charge is on the same plane in both
+    configurations and ``exclusion_nm = 0`` reproduces the plain slab exactly.
     """
 
     width_nm: float
     height_nm: float = 1.0
+    exclusion_nm: float = 0.0
+
+    def __post_init__(self) -> None:
+        """Refuse a shell that is not inside the slab.
+
+        Raises
+        ------
+        ValueError
+            If the layer is negative or reaches the bulk boundary, which would
+            leave no electrolyte for the diffuse layer this geometry exists to
+            resolve.
+        """
+        if not 0.0 <= self.exclusion_nm < self.width_nm:
+            raise ValueError(
+                f"exclusion_nm={self.exclusion_nm} must lie in [0, width_nm) and the slab is "
+                f"{self.width_nm} nm wide; an exclusion layer spanning the slab leaves no "
+                "electrolyte for the diffuse layer"
+            )
+
+    def _name_edges(self, shape: Shape, *, wall_h_nm: float | None) -> None:
+        """Name every edge of ``shape`` by its centre of mass, in place."""
+        for edge in shape.edges:
+            centre = edge.center
+            if abs(centre[0]) < TOL_NM:
+                edge.name = "wall"
+                if wall_h_nm is not None:
+                    edge.maxh = wall_h_nm
+            elif abs(centre[0] - self.width_nm) < TOL_NM:
+                edge.name = "bulk"
+            elif abs(centre[0] - self.exclusion_nm) < TOL_NM:
+                # The shell's outer face: an interior seam between two domains
+                # this run solves different equations on, and nothing selects on
+                # it. Calling it ``wall`` would put it in the PHY-02 distance
+                # source set and impose no-slip in the middle of the slab.
+                edge.name = "interface"
+            else:
+                edge.name = "lateral"
 
     def generate(
         self, *, maxh_nm: float, wall_h_nm: float | None = None, check_quality: bool = True
@@ -125,18 +185,20 @@ class SlabGeometry:
         import netgen.occ as occ
         import ngsolve as ngs
 
-        face = occ.Rectangle(self.width_nm, self.height_nm).Face()
-        face.name = "electrolyte"
-        for edge in face.edges:
-            centre = edge.center
-            if abs(centre[0]) < TOL_NM:
-                edge.name = "wall"
-                if wall_h_nm is not None:
-                    edge.maxh = wall_h_nm
-            elif abs(centre[0] - self.width_nm) < TOL_NM:
-                edge.name = "bulk"
-            else:
-                edge.name = "lateral"
+        if self.exclusion_nm > 0.0:
+            shell = occ.Rectangle(self.exclusion_nm, self.height_nm).Face()
+            shell.name = "exclusion"
+            fluid = (
+                occ.MoveTo(self.exclusion_nm, 0)
+                .Rectangle(self.width_nm - self.exclusion_nm, self.height_nm)
+                .Face()
+            )
+            fluid.name = "electrolyte"
+            face = occ.Glue([shell, fluid])
+        else:
+            face = occ.Rectangle(self.width_nm, self.height_nm).Face()
+            face.name = "electrolyte"
+        self._name_edges(face, wall_h_nm=wall_h_nm)
         mesh = ngs.Mesh(occ.OCCGeometry(face, dim=2).GenerateMesh(maxh=maxh_nm, grading=0.2))
         return _gated(mesh, check=check_quality, where=f"a {self.width_nm:g} nm slab")
 
