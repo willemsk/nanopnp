@@ -77,6 +77,21 @@ paper's per-atom VdW-weighted Gaussian must be written by hand. Do **not** subst
 then `gaussian_filter`" — uniform post-smoothing rounds the constriction, whereas VdW-weighted
 smearing preserves the exclusion surface.
 
+**gridData 1.2.0, as it actually behaves [tested].** Three things a reader of the docs would not
+predict, all found while building the `(r, z)` grid IO:
+
+- **There is no `CCP4` writer.** `file_format="ccp4"` raises `ValueError: File format CCP4 not
+  available, choose one of dict_keys(['DX', 'PKL', 'PICKLE', 'PYTHON', 'VDB', 'MRC'])`. Its `MRC`
+  writer *is* the CCP4-2000 map format and accepts a `.ccp4` filename, so route `.ccp4` and `.map`
+  to `MRC` and say so.
+- **MRC stores float32.** A round trip through it is therefore not bit-exact and changes any content
+  hash taken over the values. Record that rather than hide it; `.npz` stays the native format.
+- **A 2D array fails inside the writer, not at its door.** `Grid(values_2d, ...).export(...)` raises
+  `TypeError: not enough arguments for format string` from inside the DX writer. Write a `(r, z)`
+  grid as a 3D grid whose third axis is a **singleton**: gridData round-trips `(4, 3, 1)` through
+  both DX and MRC with `origin` and `delta` intact. Refuse a genuinely 2D array yourself, naming the
+  shape, so the user gets a diagnostic instead of a format-string traceback.
+
 **Symmetry-axis detection:** do not use raw principal axes. ClyA is a truncated cone; the inertia
 tensor's axes are near-degenerate and drift between frames. Use **chain-permutation
 superposition** — superpose chain A onto chain B; the resulting rotation's eigenvector with

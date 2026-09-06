@@ -1,6 +1,6 @@
 # WP9 — External material and charge fields
 
-**Status: planned, not started.** Written 5 September 2026, the third package of Phase 1, after WP7
+**Status: delivered, 6 September 2026.** Written 5 September 2026, the third package of Phase 1, after WP7
 landed the case schema, the content-addressed artefact and the provenance manifest, and WP8 landed
 mesh ingestion, the vocabulary gate, the element-quality gates and the ClyA reference geometry. It
 inherits a solver that runs on an *uncharged* pore: `src/nanopnp/charge/` is a one-line docstring
@@ -78,6 +78,13 @@ half of the pipeline it belongs to. WP9 builds the instrument that would have sa
 | Grid IO lives in `density/` | `density/grid.py` holds `RadialGrid` and its readers; `charge/fields.py` and `materials/fields.py` consume it | §5.1 assigns "grid IO" to `density/` and nothing else. Putting it in `charge/` would make the dielectric field import the charge module for a container. This fills one file of a Phase-2 slot; it does not start the density pipeline |
 | Stage number | One stage, **7 `charge`**, over `("case", "mesh")`, emitting `nanopnp/fields/v1` with both fields and the conservation report | §5.2's stage 7 outputs `ρ_pore(r, z), Q_net, dielectric field, ion-exclusion surface` — one row, and FR-15's whole point is that the dielectric and the exclusion contour come from the same density field. It takes the mesh because PHY-19's gate is evaluated on the deployed mesh, which the §5.1 diagram does not show |
 
+> **Outcome — every decision above stands, and a fourth data format joined them.** The delivered
+> ClyA table arrived mid-package as COMSOL's own `%Grid`/`%Data` text export, so `density/grid.py`
+> gained a **`comsolgrid`** reader: read-only, coordinates in metres, and refusing a non-uniform
+> axis naming it, since `VoxelCoefficient` takes a box and a shape and would otherwise resample one
+> in silence. It is read-only deliberately — it is an input to the reference model, not an output of
+> ours, and offering a writer would invite a round trip that is not one.
+
 ## Design
 
 ### The `2πr` cancels, and that is why the global check is not enough
@@ -144,6 +151,20 @@ The consumer's budget is then spent on four things, in decreasing order of size.
   `r ≳ 1.6 nm`, so the guard strip sees `exp(−(1.6/0.085)²) = exp(−354)` of peak. It is
   computed and reported rather than assumed, because a *different* structure — or an analyte on the
   axis — makes it real.
+
+> **Outcome — the ordering was right and the size was not.** Measured on the delivered table
+> (`.knowledge/04` §3.1, §3.2): the producer leg is `4.7 × 10⁻¹²` (`Q_grid = −71.999999999663 e`
+> against a declared `−72 e`), the ring ratio `8.5 × 10⁻²⁴`, the guard deficit `1.4 × 10⁻⁶⁸ e` —
+> the last three exactly as predicted, with decades to spare. FE quadrature did not "plausibly
+> consume the whole budget": on the WP8 reference mesh it consumed **ten times** it, at
+> `+9.868 × 10⁻³`, and **it does not converge**. Refining `h` to 3,463,372 elements made it
+> *worse* (`−1.062 × 10⁻²`, non-monotone in between); raising the order from 8 to 37 oscillated
+> without settling. The table's radial structure alternates sign 49 times along its densest `z`,
+> with extrema a median 0.035 nm apart — below element scale, so the quadrature is aliased rather
+> than inaccurate. The tolerance was **not** slackened: the quadrature-agreement gate fires first,
+> at `9.273 × 10⁻³` against its own `10⁻⁴`, and reports that the mesh under-resolves the supplied
+> field. The remedy is the producer's (deposit onto the FE space and rescale) and is v0.9's stage 7.
+> §4.4 of the specification gains a NOTE saying all of this normatively.
 
 ### Why the grid must be padded, not clamped
 
@@ -276,8 +297,19 @@ All on NGSolve 6.2.2606 and GridDataFormats 1.2.0, in this repository's environm
    'PYTHON', 'VDB', 'MRC'])`. `MRC` writes the CCP4-2000 map format and accepts a `.ccp4` filename;
    it stores float32.
 
-Each of these goes into `.knowledge/` at implementation time — 1 and 2 into `06-numerics-fem.md`
+5. **`extra_order=3` on a singular form is not a refinement.** `Measures.bonus_order(singular=True)`
+   takes `max(extra, 3)` — NUM-07's floor for a form carrying `1/r` — so the quadrature-agreement
+   gate as this plan specified it would have compared a value with itself and passed
+   unconditionally. `extra=0` and `extra=3` both return `−71.289538 e`, bit-identical; `extra=6`
+   returns `−71.957178 e`. The gate as built asks for enough extra orders to clear the floor.
+
+Each of these goes into `.knowledge/` at implementation time — 1, 2 and 5 into `06-numerics-fem.md`
 §8.1 beside the other silent NGSolve traps, 3 and 4 into `07-software-stack.md`.
+
+> **Outcome — all five recorded, and §8.1 gained a section of its own.** Findings 1, 2 and 5 are
+> traps 16, 17 and 18 in `06-numerics-fem.md` §8.1; 3 and 4 are in `07-software-stack.md` §2. The
+> non-convergence above is `06` §8.1.1, because it is not a trap in an API but a property of the
+> problem: a mesh integral of a sub-element-scale field converges in neither `h` nor order.
 
 ## Work items
 
@@ -296,6 +328,15 @@ Each of these goes into `.knowledge/` at implementation time — 1 and 2 into `0
 | `solve/stage.py` (edit) | The fields artefact taken from `upstream` or computed, threaded into the ladder, and entering the digest by its content hash | §5.3.2, FR-27 |
 | `core/stages.py` (edit) | `register(StageDescription(name="charge", number=7, …), "nanopnp.charge.stage:FieldStage")` | FR-27, IF-01 |
 | `mesh/primitives.py` (edit) | `SlabGeometry(..., exclusion_nm=0.0)` — an ion-free layer against the charged wall, for VER-31 | VER-31 |
+
+> **Outcome — every row delivered, plus three the plan did not foresee.**
+> `core/paths.py` gained `reference_data_root()` and `reference_file(name)` over
+> `$NANOPNP_REFERENCE_DATA`, because the delivered table is 77 MB and no reduction of it is a fair
+> reference — cropping at a `10⁻⁶` relative threshold still costs 28 MB, and subsampling by four
+> moves the planar integral by 1.5 %, fifteen times QR-03's budget. `density/grid.py` gained the
+> `comsolgrid` reader. `tests/tier3/test_reference_charge_map.py` is the Tier-3 file those two
+> exist for, and it skips rather than fails where the archive is absent (§7.1 NOTE).
+> `mesh/primitives.py`'s `SlabGeometry(..., exclusion_nm=…)` landed as planned.
 
 `RadialGrid` is the seam behind every gridded field: the charge table, the solid fraction, and (in
 Phase 2) the reduced density map all become one, and nothing downstream of `density/grid.py` knows
@@ -332,6 +373,14 @@ which format it arrived in. It is the field analogue of what `MeshData` did for 
   question 2 below, recorded where the other open items live so that WP13 does not have to
   rediscover it.
 
+> **Outcome — A to H all landed in the plan commit; implementation added four more.** §7.1 gains a
+> NOTE on why Tier-3 reference files are named by `$NANOPNP_REFERENCE_DATA` rather than vendored,
+> with the crop and subsample figures that rule out a shipped fixture. §5.3.1's field-document NOTE
+> gains the `comsolgrid` format and the uniform-axis requirement. §4.4 gains the NOTE on the
+> consumer leg being a resolution question rather than a tolerance one, with the refinement and
+> quadrature-order tables, and states normatively that the tolerance is **not** slackened for it.
+> §7.4 gains **VAL-15**, and OPN-06 is rewritten as closed.
+
 ## Verification
 
 | Test file | Tier | Identifiers | What it asserts |
@@ -362,6 +411,17 @@ New verification items for §7.2:
   charged wall, the wall potential is `φ_d + σ_s λ_S/(ε₀ε_r)` to better than 1 %, and `λ_S = 0`
   reproduces VER-12 on the same mesh (FR-15).
 
+> **Outcome — the tests landed as specified, with two identifiers moved.** **VER-31 sits in §7.3,
+> not §7.2**: it is a closed-form analytic benchmark that extends VER-12, its test is Tier 2, and
+> §7.2 is the Tier-1 section — VER-26 is the precedent for a Tier-2 item appearing there out of
+> numeric order. And the Tier-3 file needed an identifier of its own: it compares the *reference
+> model's own table* on our mesh, which is not VAL-06 (potential against APBS), so **VAL-15** was
+> added to §7.4 and Appendix A's IF-05, QR-03 and FR-14 rows cite it.
+>
+> Green on the current tree: **551 passed, 1 skipped** in 104 s (Tiers 1 and 2; the skip is the
+> OpenDX/MRC round trip without the `structure` extra). The four Tier-3 tests pass in 14.6 s with
+> the archive present and skip without it.
+
 Gate before the package is done, as every package:
 
 ```bash
@@ -389,24 +449,41 @@ uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv ru
 
 ## Open questions
 
-1. **Is there a real `rhoq_pore` grid from the COMSOL model that could ship as a fixture?** The
-   Tier-2 conservation test uses a synthetic field with an exactly known `Q_net`, which verifies the
-   machinery completely but is not a regression against the published `−72.9 e`. A real grid would
-   turn it into one and would give VAL-06 something to compare against ahead of Phase 3. **For the
-   author; does not block.**
-2. **Does the reference's `−72.9 e` against `−72 e` (1.25 %) belong to the producer or the
-   consumer?** Ruling 8 says the three published net charges belong to different constructs, which
-   would make the comparison invalid rather than the tolerance unmet. If instead COMSOL's own
-   consumer leg lost 1.25 % on its mesh, then our 10⁻³ gate is twelve times stricter than the
-   reference achieved, and any Tier-3 comparison of pore charge has to say so. **Recorded as
-   OPN-06 in this commit; for the author. Does not block WP9, but WP13 needs the answer.**
-3. **Units of the delivered table, if one arrives.** `.knowledge/04` §3 transcribes `rhoq_pore` with
-   an `e` inside the sum *and* an `e_const` in the assembly expression, which would double-count;
-   the field document's declared units make this a validation failure rather than a factor of
-   `1.6 × 10⁻¹⁹`, but a real file needs its convention confirmed once. **For the author, only when
-   a file exists.**
+> **Outcome — all three answered, 6 September 2026, by the author delivering the table.** It arrived
+> during implementation as `prod5_clya_charge`, COMSOL's `%Grid`/`%Data` export of the published
+> model's own `rhoq_pore`. The measurements are in `.knowledge/04` §3.1 and §3.2 and are not
+> repeated here; the answers are below, in place.
 
-One scope note rather than a question: the ion-exclusion material and its Gouy–Chapman–Stern
-benchmark are the natural cut line if this package proves too large for one PR. They are independent
+1. **Is there a real `rhoq_pore` grid from the COMSOL model that could ship as a fixture?**
+   **Yes to the grid, no to the fixture.** The delivered table is 1401 × 3401 at 0.005 nm — 77 MB
+   of text — and nothing survives being made small enough to vendor: a `10⁻⁶`-threshold crop keeps
+   `1.1 × 10⁻⁷` relative accuracy but still weighs 28 MB, and subsampling by four costs
+   `1.5 × 10⁻²` on the planar integral, fifteen times the budget it would be used to check. It is
+   therefore an **archived Tier-3 reference**, located by `$NANOPNP_REFERENCE_DATA`, with the tier
+   skipping where it is absent (§7.1 NOTE). The Tier-2 conservation test keeps its synthetic field,
+   which is the right thing regardless: its `Q_net` is exact by construction.
+
+2. **Does the reference's `−72.9 e` against `−72 e` (1.25 %) belong to the producer or the
+   consumer?** **The consumer's.** The delivered table's own planar integral is
+   `−71.999999999663 e` — the *integer* −72, to `4.7 × 10⁻¹²` — so the producer leg is not where
+   1.25 % went, and Ruling 8's "different constructs" reading does not hold on this axis. Our own
+   consumer leg on a comparable mesh is `−0.99 %` by the same interpolate-and-integrate route: same
+   size, same character, opposite sign, which is what aliasing does rather than what lost charge
+   does. **OPN-06 is closed in the specification** on those numbers, and any Tier-3 comparison of
+   pore charge (VAL-06, WP13) is now a comparison of two consumer legs, with ours gated ten times
+   more strictly than the reference achieved.
+
+3. **Units of the delivered table.** **`e/m²` — there is no `e` inside the file.** The integral
+   being the integer −72 rather than `−72 × 1.6 × 10⁻¹⁹` settles it: the stored sum is in units of
+   `e`, and the COMSOL assembly's `e_const` supplies the coulombs exactly once. `.knowledge/04`
+   §3's transcription of eq. `eq:scdpore` with an `e` inside the sum is the published expression and
+   not the file; implementing it literally and then applying `e_const` double-counts. **G5 and G10
+   both close on this table** (§8 of that file).
+
+One scope note rather than a question, recorded as written: the ion-exclusion material and its
+Gouy–Chapman–Stern benchmark are the natural cut line if this package proves too large for one PR. They are independent
 of the field-ingestion work — a different vocabulary name, a different test, no shared code beyond
 the mesh — and everything Phase 1's completion criteria need is on the other side of that line.
+
+> **Outcome — the cut line was not needed.** Both halves shipped in one package: field ingestion
+> and the decomposed conservation gate, and the `exclusion` material with VER-31 behind it.

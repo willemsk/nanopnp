@@ -615,6 +615,30 @@ stated width rather than a step, applied identically to both sides, since a step
 inside every element the plane crosses and its quadrature error exceeds the tolerance it is meant to
 enforce.
 
+NOTE (the consumer leg is a resolution question, not a tolerance one, QR-03, PHY-19): measured on
+the delivered ClyA `rhoq_pore` table — 1401 x 3401 at 0.005 nm, `r` in [0, 7] nm, `z` in
+[-3.5, 13.5] nm — the producer leg is `4.7 x 10^-12` (`Q_grid = -71.999999999663 e` against a
+declared `-72 e`) while the consumer leg on the WP8 reference mesh, 44 316 elements graded to
+0.05 nm at the pore wall, is `9.9 x 10^-3`: ten times QR-03's budget, from a field the producer
+delivered essentially exactly. Neither refinement route closes it. Refining `h` to 3 463 372
+elements leaves the leg at `-1.1 x 10^-2` — *worse* than at 44 316, and non-monotone in between —
+and raising the quadrature to order 37 on the fixed mesh oscillates through `+5.9 x 10^-4`,
+`-3.0 x 10^-3`, `+2.8 x 10^-3` without settling. The cause is that the field's own structure is
+below element scale: along the densest `z` the table changes sign 49 times, with extrema a median
+0.035 nm apart, so pointwise quadrature of the bilinear interpolant is aliased rather than
+inaccurate, and an aliased integral converges in neither `h` nor order.
+
+Three consequences are normative. First, **the tolerance SHALL NOT be slackened to accommodate
+this**: 10^-3 is what a conserved deposition achieves and the gate stays there, so a field whose
+structure the deployed mesh cannot carry is refused rather than integrated badly. Second, the
+quadrature-agreement gate is what SHALL name that case — on the delivered table it fires first, at
+`9.3 x 10^-3` against its own `10^-4`, and reports that the mesh under-resolves the supplied field
+rather than that charge was lost. Third, the remedy is on the **producer** side and is out of scope
+until it exists (FR-13, FR-14, Phase 3): a charge deposited onto the finite-element space and
+rescaled to `Q_net` conserves by construction, where sampling somebody else's interpolant at
+quadrature points cannot. Until then a supplied `areal_charge_density` of this character SHALL be
+ingested only with the gate's verdict recorded in the manifest.
+
 ### 4.5 Model variants and switches
 
 **PHY-21.** The following physics models SHALL be selectable by name in the case file.
@@ -1908,6 +1932,7 @@ differences are recorded and attributed rather than gated on.
 | **VAL-04** | Reference discretisation-error probe | The reference case re-solved at two refinement levels while licence access lasts, bounding the reference's own discretisation error |
 | **VAL-05** | Geometry pipeline against the published boundary | Auto-generated contour compared against the delivered reference pore polygon (§5.2.1): radius profile and constriction radius within a stated tolerance |
 | **VAL-06** | Poisson-only comparison against APBS | Potential from the assembled fixed-charge and dielectric fields agrees with an APBS solve on the same structure within a stated tolerance |
+| **VAL-15** | The reference model's own `rhoq_pore` table, on our mesh | The delivered table reads with the grid its header declares, its planar integral is the declared `Q_net` to better than 10⁻⁹, and its boundary ring is negligible against its interior, so the producer leg of §4.4 is exact and the reference's 1.25 % is the consumer's (OPN-06); the consumer leg on the reference mesh is recorded with the mesh it came from, and the quadrature-agreement gate refuses it, per cent-level, rather than reporting a conserved number it cannot defend |
 
 NOTE: the reference model carries no mesh convergence study, so part of any residual difference may
 originate in the reference (RSK-09). The project's own discretisation error is quantified first
@@ -2088,7 +2113,7 @@ concentrations) took 41 h on 12 cores. A full-envelope sweep is a day-scale job.
 | **OPN-03** | PlyAB supporting-information details: analyte relative permittivity, per-position mesh strategy (remesh against ALE), barrier heights in kT, electro-osmotic flow velocities | Author, from the retained model files | Analyte force regression targets and adoption of PlyAB as a second reference case after v1.0 |
 | **OPN-04** | ClyA-AS mutation list: 8 mutations relative to the *S. typhi* wild type in one place, 27 relative to the *E. coli* 2WCD structure in another. Both internally correct | Author, with the structure-preparation stage | Provenance of `Q_net` (FR-12); the structure-preparation stage must record which list was applied to which PDB |
 | **OPN-05** | Pore-polygon vertex table. **Delivered** as `data/geometry/clya_as_radial_geometry.csv`, 185 vertices, extents as published. **Closed by the author, 5 September 2026: the delivered table is the geometry of record**, and the model report's 190 is the count after COMSOL's import conditioning. §2.2 and §5.2.1 are amended to it; the §5.2.1 fixture, `mesh/reference.py` and VAL-05 all cite it | Closed | Closed |
-| **OPN-06** | Attribution of the reference's own charge-conservation gap: `−72.9 e` integrated over the COMSOL mesh against `−72 e` atomistic is 1.25 %, twelve times QR-03's budget. Ruling 8 holds that the published net charges belong to different constructs, which would make the comparison invalid rather than the tolerance unmet; the alternative is that the reference's consumer leg lost 1.25 % on its own mesh | Author | Nothing in Phase 1: WP9 gates our own two legs separately (§4.4 NOTE). Any Tier-3 comparison of pore charge needs the answer (VAL-06, WP13) |
+| **OPN-06** | Attribution of the reference's own charge-conservation gap: `−72.9 e` against `−72 e` atomistic is 1.25 %, twelve times QR-03's budget. **Answered from the delivered `rhoq_pore` table, 6 September 2026: it is the consumer's.** The table's own planar integral is `−71.999999999663 e`, exact to `4.7 × 10⁻¹²`, so the producer leg is not where the 1.25 % went, and the published net charges are not different constructs on this axis. Our own consumer leg on a comparable mesh is `−0.99 %` by the same interpolate-and-integrate route — the same size and character, opposite sign — which is aliasing of a sub-element-scale field, not lost charge (§4.4 NOTE) | Closed | Closed: any Tier-3 comparison of pore charge (VAL-06, WP13) compares two consumer legs, and ours is gated ten times more strictly than the reference achieved |
 
 ---
 
@@ -2206,7 +2231,7 @@ needed.
 | IF-02 | None yet |
 | IF-03 | VER-09 |
 | IF-04 | None yet |
-| IF-05 | VER-29 |
+| IF-05 | VER-29, VAL-15 |
 | IF-06 | VER-27 |
 | IF-07 | None yet |
 | IF-08 | VER-24 |
@@ -2224,7 +2249,7 @@ needed.
 | FR-11 | None yet |
 | FR-12 | VAL-06 |
 | FR-13 | VER-01, VER-02, VAL-06 |
-| FR-14 | VER-01, VER-02, VER-29 (the deployed-mesh half) |
+| FR-14 | VER-01, VER-02, VER-29 (the deployed-mesh half), VAL-15 |
 | FR-15 | VER-30, VER-31, VAL-06 |
 | FR-16 | VER-03 |
 | FR-17 | VER-08, VER-16, VER-18 |
@@ -2242,7 +2267,7 @@ needed.
 | FR-29 | None yet |
 | QR-01 | VER-12 to VER-22, in particular VER-17 and VER-18 |
 | QR-02 | VAL-01, VAL-02 |
-| QR-03 | VER-01, VER-29 |
+| QR-03 | VER-01, VER-29, VAL-15 |
 | QR-04 | VER-11 |
 | QR-05 | VAL-07, VAL-08, VAL-09 |
 | QR-06 | None yet |

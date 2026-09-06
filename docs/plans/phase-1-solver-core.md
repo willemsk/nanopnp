@@ -1,6 +1,6 @@
 # Phase 1 (Solver core): the production solver on an externally supplied mesh
 
-**Status: WP7 and WP8 delivered; WP9–WP12 planned.** Written 2 September 2026, after Phase 0
+**Status: WP7, WP8 and WP9 delivered; WP10–WP12 planned.** Written 2 September 2026, after Phase 0
 (WP1–WP6) and its consolidation (WP-A1, WP-B1, WP-B2, WP-C1). It inherited a verified physics core
 and a bare pipeline: tiers 1 and 2 green, `mypy --strict` and `ruff` clean, and `io/`, `sweep/`,
 `charge/`, `structure/`, `density/`, `symmetry/`, `gui/` still empty reserved slots. `io/` is filled
@@ -349,22 +349,84 @@ Tier-3 comparison cite. The report's 190 is the count after COMSOL's import cond
 five vertices are not chased. The fixture's `source: author-supplied` and `REFERENCE_SOURCES` were
 already written for this answer, so nothing in the code moves.
 
-### WP9 — External material and charge fields
+### WP9 — External material and charge fields — **delivered**
 
-`charge/fields.py`, `materials/fields.py`.
+`density/grid.py`, `charge/fields.py`, `charge/stage.py`, `materials/fields.py`, with changes to
+`core/paths.py`, `core/stages.py`, `io/artefact.py`, `io/case.py`, `io/defaults.py`,
+`io/manifest.py`, `mesh/ingest.py`, `mesh/primitives.py`, `physics/models.py`, `physics/pb.py`,
+`solve/continuation.py` and `solve/stage.py`; spec amendments A–H from the plan commit, plus four
+that implementation forced (§7.1's reference archive, §5.3.1's `comsolgrid` format, §4.4's NOTE on
+the consumer leg, and VAL-15 in §7.4).
 
-`ρ_fixed` and `ε_r` as ingested, typed, hashed field artefacts from an analytic expression or a
-gridded (r, z) table; the OpenDX/CCP4 reader behind the `structure` extra (IF-05); interpolation onto
-the deployed mesh; the conservation assertion against a declared `Q_net`, and the manifest record
-when none is declared; the ion-exclusion region as a named material.
+Delivered: `RadialGrid` as the seam behind every gridded field — origin, uniform spacing checked to
+`10⁻⁹` nm, `values[i_z, i_r]` float64, planar integral, ramped cumulative, boundary-ring maximum,
+zero padding and a content hash — read and written over `.npz` natively, OpenDX and MRC behind the
+`structure` extra, and the reference model's own `%Grid`/`%Data` table read-only; `FieldDocument`
+(`nanopnp/field/v1`, `extra="forbid"`) carrying quantity, units, grid descriptor, axis cutoff,
+declared `Q_net` and provenance, with an absolute `ε_r` refused naming PHY-11; the named analytic
+form registry (`uniform`, `gaussian_ring`, `slab`); `ChargeField.assemble` applying the `1/(2πr)`
+projection and PHY-18's axis guard to `areal_charge_density` alone; `conservation` and
+`check_conservation` reporting the producer and consumer legs separately with the quadrature
+agreement, ring ratio, guard deficit and worst ramped plane beside them; `SolidFractionField` and
+the §4.4 blend with its range and per-material-mean gates; `FieldStage` as stage 7 over
+`("case", "mesh")` with `key(inputs)` beside `run(inputs)`; the `exclusion` material, exempt from
+`check_solid_permittivities` and contributed to the manifest as a deviation through a new
+stage-contributed channel; `default_ladder(..., fixed_charge_field=…)` on the stage-4 ramp; and the
+manifest's `charge` group populated from the conservation report. Discharges the consumer halves of
+**FR-14**, **FR-15**, **QR-03**, **PHY-18** and **PHY-19**, the read side of **IF-05**, and adds
+**VER-29**, **VER-30**, **VER-31** and **VAL-15**. VER-01's producer side and VER-02 stay Phase 3.
 
-Discharges the consumer half of **FR-15**, **QR-03** and **PHY-19** on the deployed mesh; **IF-05**
-read side. VER-01's producer side and VER-02 stay Phase 3.
+Beyond the plan: the `comsolgrid` reader, once the author delivered the real table; `core/paths.py`
+gained `reference_data_root()`/`reference_file()` over `$NANOPNP_REFERENCE_DATA`, because that table
+is 77 MB and no reduction of it is a fair reference — a `10⁻⁶`-threshold crop still costs 28 MB and
+subsampling by four moves the planar integral by 1.5 %, fifteen times the budget it would check; and
+a Tier-3 file that skips rather than fails where the archive is absent.
+
+Reference measurements, stabilisation `none`, on the WP8 reference mesh (44,316 elements, §5.2.2
+size fields, 7.4 s to generate, 1.6 s to check):
+
+| Field | `Q_grid` vs `Q_net` | `Q_mesh` vs `Q_grid` | Quadrature agreement | Worst ramped plane |
+|---|---|---|---|---|
+| Gaussian rings on the contour, `w = 0.085 nm` (VER-29, Tier 2) | 0.0 | **1.37e-05** | 2.13e-05 | 1.37e-05 |
+| The delivered `prod5_clya_charge` (VAL-15, Tier 3) | 4.68e-12 | **9.87e-03** | 9.27e-03 | 2.03e-02 |
+
+The two rows are the package's most useful result, and they are the same mesh. QR-03's `10⁻³` is
+met with a factor of 73 to spare on a field smeared at the reference's own width; it is missed by a
+factor of ten on the reference's own table. VER-31: the Stern shell raises the wall potential from
+51.3852 mV to 67.1139 mV, a ratio of **1.30606** against the closed form to `10⁻⁵`, and `λ_S = 0`
+returns `ζ̃ = 2` to `10⁻³` on the same mesh.
+
+Five things settled by the work that WP10 onwards inherit.
+
+- **A mesh integral of a sub-element-scale field converges in neither `h` nor quadrature order.**
+  The delivered table alternates sign 49 times along its densest `z`, extrema a median 0.035 nm
+  apart. Refining to 3,463,372 elements made the consumer leg *worse* (−1.06e-2, non-monotone in
+  between, 669 s to mesh); raising the order from 8 to 37 oscillated at the 1e-3 to 1e-2 level
+  without settling. This is aliasing, not inaccuracy, and it is why the conservation gate reports
+  the quadrature agreement beside the number rather than the number alone. The remedy is the
+  producer's — deposit onto the FE space and rescale to `Q_net` — and it belongs to v0.9's stage 7.
+- **OPN-06 is closed, and the answer is "the consumer's".** The delivered table's planar integral is
+  the integer −72 e to 4.7e-12, so the published `−72.9 e` is COMSOL's own quadrature of its own
+  table, not a smearing error; our own leg by the same route is −0.99 % — same size, opposite sign.
+  WP13's Tier-3 comparison of pore charge is therefore two consumer legs, with ours gated ten times
+  more strictly than the reference achieved.
+- **The `2πr` cancels, so a single conservation number attributes nothing.** Under `dV = 2πr dr dz`
+  the Jacobian and PHY-16 step 6's `1/(2πr)` cancel identically for an areal source, which is
+  exactly the compensating error PHY-19's rationale warns of. Two legs, gated separately, is the
+  only form of the check that names which side of the interface failed.
+- **`extra_order=3` on a singular form is not a refinement**, because `Measures.bonus_order` takes
+  `max(extra, 3)` for NUM-07's floor. The agreement gate as the plan specified it would have
+  compared a value with itself and passed unconditionally. Any future route-agreement gate on a
+  form carrying `1/r` has to clear the floor explicitly.
+- **A ramped plane indicator is not a refinement of a step, it is the only workable one.** A step is
+  integrated by quadrature inside every element the plane crosses; measured on the reference mesh
+  the ramp is inside `10⁻³` at every plane while a near-step indicator is outside it, so the check
+  would have been measuring its own discretisation.
 
 **No boundary layers** (the author, 5 September 2026). WP8 measured the reference region into the
 published quality band — 44,316 triangles at minimum SICN 0.6559 — by isotropic grading alone, which
 is what the reference model did (§5.2.2), so a Debye-layer resolution study here does not reopen
-FR-11. It stays a post-1.0 element-count optimisation, and WP9 poses no anisotropic meshing.
+FR-11. It stays a post-1.0 element-count optimisation, and WP9 posed no anisotropic meshing.
 
 ### WP10 — Case-driven runs, the CLI, field output
 

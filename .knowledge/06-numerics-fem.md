@@ -514,7 +514,7 @@ that call site, with its reasoning, not in the floor.
 
 ## 8.1 NGSolve traps found by implementing this — all silent
 
-Fifteen ways this project's own code was wrong while raising nothing. All reproduced on NGSolve
+Eighteen ways this project's own code was wrong while raising nothing. All reproduced on NGSolve
 6.2.2606. **[tested]**
 
 **1. A nonlinear form must be written in the trial function, not the grid function.**
@@ -637,6 +637,49 @@ which is a sign error; a tolerance wide enough to pass round-off is a tolerance 
 its width. And a content hash over the coordinate bytes makes two runs of the same mesher two
 different meshes and two cache entries. Snap `|r| < 1e-9` nm to zero on the way into the in-memory
 mesh, for every route in, the meshers' own included. **[tested]**
+
+**16. `VoxelCoefficient`'s value array is indexed `[axis-2, axis-1]`.** For a 2D grid over
+`(r, z)` the array must be `values[i_z, i_r]`. Passing the transpose raises nothing: a field built
+to be `10r + z` returned 1.0 at `(r=1, z=0)` where 10.0 was intended, and **agreed exactly** at the
+symmetric sample `(0.5, 0.5)` — so a test that samples on the diagonal passes on a transposed field.
+Assert against a field that is not symmetric in its arguments, at an off-diagonal point. **[tested]**
+
+**17. `VoxelCoefficient` continues by the clamped edge value outside its box, not by zero** — as its
+docstring says, and as measured beyond the box in `r` and in `z`. For a charge grid this is not a
+detail: the reference mesh is a half-disc of radius 250 nm (98,175 nm²) against a grid footprint of
+~93 nm², so a residual edge value is amplified over an area **1056 times** the grid's own. Pad the
+value array with a ring of zeros and extend the box by one spacing each way; the field is then zero
+outside *and* continuous, where an `IfPos` window would be zero and discontinuous. Gate what the
+padding threw away by refusing a grid whose boundary ring is not negligible against its interior.
+**[tested]**
+
+**18. `extra_order=3` on a singular form is not a refinement.** `Measures.bonus_order(singular=True)`
+takes `max(extra, 3)` — NUM-07's floor for a form carrying `1/r` — so asking for three extra orders
+on such a form evaluates at *exactly* the assembly order and returns a bit-identical number. A
+quadrature-agreement gate written that way compares a value with itself and passes unconditionally.
+Measured on the delivered ClyA charge table: `extra=0` and `extra=3` both give -71.289538 e, while
+`extra=6` gives -71.957178 e. Ask for enough extra orders to clear the floor. **[tested]**
+
+### 8.1.1 Mesh-integral error on a sub-element-scale field converges in neither `h` nor order
+
+The finding that costs the most to rediscover, from ingesting the reference model's own 0.005 nm
+`rhoq_pore` table (`04-clya-geometry-and-charge.md` §3.2 carries the full tables). Integrating a
+`VoxelCoefficient` over the deployed mesh is *not* a discretisation error that refinement reduces:
+the table's radial structure alternates sign 49 times along its densest `z`, with extrema a median
+0.035 nm apart, an order below the finest element the reference mesh places. Pointwise quadrature of
+the bilinear interpolant is then **aliased**, and
+
+- refining `h` from 44,316 to **3,463,372** elements moved the error from +9.9e-3 to **-1.1e-2** —
+  worse, and non-monotone in between (669 s to mesh, 80 s to integrate);
+- raising the integration order from 8 to 37 on the fixed mesh oscillated through +5.9e-4, -3.0e-3,
+  +2.8e-3, -7.4e-4, +4.8e-4 without settling.
+
+Two consequences. First, a conservation gate on such a field is a *resolution* gate: report the
+order/order+N quadrature agreement beside the conservation figure, and let it be the one that fires,
+so the diagnostic says "the mesh under-resolves the supplied field" rather than "charge was lost".
+Second, the fix is on the producer side — deposit onto the finite-element space and rescale to
+`Q_net`, which conserves by construction — and no amount of consumer-side effort substitutes for it.
+**[tested]**
 
 ### 8.2 Measured: the reaction flux really is worth it
 
