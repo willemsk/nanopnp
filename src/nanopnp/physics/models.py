@@ -39,7 +39,8 @@ from nanopnp.core.typing import (
     Option,
 )
 from nanopnp.materials.electrolyte import CorrectionSwitches, Electrolyte
-from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS
+from nanopnp.materials.fields import blend
+from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS, PERMITTIVITY_EXEMPT
 from nanopnp.physics.coefficients import (
     SATURATED_WALL_DISTANCE_NM,
     NondimensionalCoefficients,
@@ -647,8 +648,14 @@ class CoupledModel:
             return ConcentrationVariables.logarithmic_branch(fields)
         return ConcentrationVariables.primitive(fields)
 
-    def permittivity(self, mesh: Mesh, coefficients: NondimensionalCoefficients) -> Expression:
-        """Return the piecewise relative permittivity ``eps~_r`` over all of Omega.
+    def permittivity(
+        self,
+        mesh: Mesh,
+        coefficients: NondimensionalCoefficients,
+        *,
+        solid_fraction: Expression | None = None,
+    ) -> Expression:
+        """Return the relative permittivity ``eps~_r`` over all of Omega.
 
         The fluid carries the corrected ``eps_r,f(<c>)/eps_r,f^0`` and each solid
         its own constant ratio (PHY-03). Poisson is solved over the whole domain,
@@ -656,7 +663,24 @@ class CoupledModel:
         electrolyte's permittivity - a plausible, wrong answer with no solver
         diagnostic, since ``eps_r`` is about 24 times too large there. Any
         material that is neither fluid nor named in ``solid_permittivities`` is
-        therefore reported before the form is assembled.
+        therefore reported before the form is assembled, except the ion-exclusion
+        shell, which takes the fluid's value by design (section 5.3.1 NOTE).
+
+        Parameters
+        ----------
+        mesh
+            The deployed mesh.
+        coefficients
+            The state the fluid permittivity is evaluated at.
+        solid_fraction
+            The supplied ``chi`` of section 4.4's NOTE, if any. It replaces the
+            sharp material split by the blend
+            ``chi * eps_p + (1 - chi) * eps_r,f(<c>)``, and with ``chi`` the
+            material indicator it reproduces the piecewise assignment exactly —
+            which is why this is a refinement of PHY-20 and not a replacement
+            for it. The mesh still carries the material split, so Nernst-Planck
+            is still not solved inside the protein: the field smooths the
+            coefficient, not the domain.
         """
         fluid_permittivity = coefficients.relative_permittivity()
         fluid_mask = mesh.Materials(self.fluid).Mask()
@@ -664,7 +688,9 @@ class CoupledModel:
             {
                 material
                 for index, material in enumerate(mesh.GetMaterials())
-                if not fluid_mask[index] and material not in self.solid_permittivities
+                if not fluid_mask[index]
+                and material not in self.solid_permittivities
+                and material not in PERMITTIVITY_EXEMPT
             }
         )
         if unassigned:
@@ -675,12 +701,24 @@ class CoupledModel:
                 ", ".join(unassigned),
             )
         if not self.solid_permittivities:
-            return fluid_permittivity
-        reference = self.electrolyte.permittivity_0
-        solids = {
-            material: value / reference for material, value in self.solid_permittivities.items()
-        }
-        return mesh.MaterialCF(solids, default=fluid_permittivity)
+            solids: Expression = fluid_permittivity
+        else:
+            reference = self.electrolyte.permittivity_0
+            solids = mesh.MaterialCF(
+                {
+                    material: value / reference
+                    for material, value in self.solid_permittivities.items()
+                },
+                default=fluid_permittivity,
+            )
+        if solid_fraction is None:
+            return solids
+        # The whole piecewise branch rather than one material's constant, so a
+        # mesh carrying a protein *and* a membrane blends each towards its own
+        # eps_p. Where chi is zero the branch's value is irrelevant, which is why
+        # its fluid default costs nothing. Written once, in materials.fields:
+        # a second copy of the blend here is a second place for it to drift.
+        return blend(solid_fraction, solids, fluid_permittivity)
 
     # -- weak form ---------------------------------------------------------
 
@@ -691,6 +729,7 @@ class CoupledModel:
         *,
         wall_distance_nm: Expression = SATURATED_WALL_DISTANCE_NM,
         fixed_charge: Expression | None = None,
+        solid_fraction: Expression | None = None,
         surface_charge: Expression | None = None,
         surface_charge_boundary: str = "wall",
         sources: Mapping[str, Expression] | None = None,
@@ -712,6 +751,12 @@ class CoupledModel:
         fixed_charge
             The dimensionless protein space charge ``rho~_pore``, if any. Its
             SI scale is :attr:`~nanopnp.core.scaling.Scales.charge_density_C_m3`.
+        solid_fraction
+            The supplied ``chi`` of section 4.4's NOTE, if any; see
+            :meth:`permittivity`. It enters the Poisson operator alone: the
+            material split the mesh carries is what keeps Nernst-Planck out of
+            the protein, and the field smooths the coefficient rather than the
+            domain.
         surface_charge
             The dimensionless surface charge ``sigma~_s`` on
             ``surface_charge_boundary``, if any. Its SI scale is
@@ -763,7 +808,7 @@ class CoupledModel:
             potential,
             potential_test,
             measures,
-            permittivity=self.permittivity(mesh, coefficients),
+            permittivity=self.permittivity(mesh, coefficients, solid_fraction=solid_fraction),
         )
         residual -= charge_source(
             coefficients.screening * coefficients.ionic_charge_density(),
@@ -925,6 +970,7 @@ class CoupledModel:
         velocity_values: Expression | None = None,
         wall_distance_nm: Expression = SATURATED_WALL_DISTANCE_NM,
         fixed_charge: Expression | None = None,
+        solid_fraction: Expression | None = None,
         surface_charge: Expression | None = None,
         surface_charge_boundary: str = "wall",
         sources: Mapping[str, Expression] | None = None,
@@ -959,7 +1005,8 @@ class CoupledModel:
             boundary coefficient function, which has no meaning in the volume.
         velocity_values
             Essential data for ``u~``; zero (no-slip) by default.
-        wall_distance_nm, fixed_charge, surface_charge, surface_charge_boundary, sources
+        wall_distance_nm, fixed_charge, solid_fraction, surface_charge,
+        surface_charge_boundary, sources
             As :meth:`residual_form`.
         initial
             A previous solution to warm-start from. Its space is reused, so it
@@ -1007,6 +1054,7 @@ class CoupledModel:
             measures,
             wall_distance_nm=wall_distance_nm,
             fixed_charge=fixed_charge,
+            solid_fraction=solid_fraction,
             surface_charge=surface_charge,
             surface_charge_boundary=surface_charge_boundary,
             sources=sources,
