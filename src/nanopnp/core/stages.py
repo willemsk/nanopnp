@@ -288,6 +288,21 @@ def _register_builtins() -> None:
     )
     register(
         StageDescription(
+            name="charge",
+            number=7,
+            title="Charge assembly",
+            inputs=("case", "mesh"),
+            outputs=(
+                "fixed-charge field",
+                "dielectric solid fraction",
+                "charge-conservation report",
+            ),
+            artefact_schema="nanopnp/fields/v1",
+        ),
+        "nanopnp.charge.stage:FieldStage",
+    )
+    register(
+        StageDescription(
             name="materials",
             number=8,
             title="Materials",

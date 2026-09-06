@@ -34,7 +34,14 @@ from typing import Literal, get_args, get_origin
 import pytest
 from pydantic import BaseModel
 
-from nanopnp.core.hashing import Canonicalisable
+from nanopnp.charge.fields import (
+    ChargeField,
+    FieldDocument,
+    FormSpec,
+    conservation,
+    create_form,
+)
+from nanopnp.charge.stage import ResolvedFields
 from nanopnp.io import manifest as manifest_module
 from nanopnp.io.artefact import CaseArtefact
 from nanopnp.io.case import CaseDocument, loads_case, resolve
@@ -48,6 +55,8 @@ from nanopnp.io.defaults import (
     value_at,
 )
 from nanopnp.io.manifest import GROUPS, MANIFEST_SCHEMA, build, read
+from nanopnp.materials.fields import SolidFractionField
+from nanopnp.physics.measures import AXISYMMETRIC
 from nanopnp.physics.models import CoupledModel
 
 MINIMAL = """
@@ -64,10 +73,10 @@ numerics: {continuation: default_ladder}
 """
 
 
-def _manifest(document: CaseDocument, **kwargs: Canonicalisable) -> manifest_module.Manifest:
+def _manifest(document: CaseDocument, **kwargs: object) -> manifest_module.Manifest:
     """Build a manifest for ``document`` with nothing but the case supplied."""
     artefact = CaseArtefact(document)
-    return build(document, case_text=MINIMAL, case_hash=artefact.hash, **kwargs)
+    return build(document, case_text=MINIMAL, case_hash=artefact.hash, **kwargs)  # type: ignore[arg-type]
 
 
 # -- the enumeration that keeps the manifest honest ---------------------------
@@ -297,6 +306,152 @@ def test_ver24_deviations_reach_the_manifest_by_path() -> None:
     # ``pnp-ns`` with the schema's default corrections is a long way from the
     # validated model, and the manifest must say so rather than imply otherwise.
     assert "physics.model" in paths
+
+
+# -- the charge group, once stage 7 has something to say ----------------------
+
+
+def _ring_field() -> ChargeField:
+    """Return one Gaussian ring of known total charge, as a supplied field.
+
+    The width is 0.3 nm rather than the reference's 0.085 nm for the reason
+    ``tests/tier1/test_charge_fields.py`` records: a 0.085 nm Gaussian on the
+    0.15 nm mesh this file can afford fails the quadrature-agreement gate, and
+    correctly. What is under test here is the manifest, not the smearing.
+    """
+    spec = FormSpec(
+        name="gaussian_ring",
+        parameters={
+            "centre_r_nm": 2.0,
+            "centre_z_nm": 4.0,
+            "width_nm": 0.3,
+            "charge_e": -12.0,
+        },
+        origin_nm=(0.0, 0.0),
+        spacing_nm=(0.01, 0.01),
+        shape=(500, 900),
+    )
+    document = FieldDocument.model_validate(
+        {
+            "schema": "nanopnp/field/v1",
+            "name": "ring",
+            "quantity": "areal_charge_density",
+            "units": "C/m^2",
+            "q_net_e": -12.0,
+            "provenance": {"source": "analytic"},
+            "form": spec.model_dump(),
+        }
+    )
+    # ``source`` is hashed by ResolvedFields.summary(), so it has to be a file
+    # that exists; this one will do, and its digest is never asserted.
+    return ChargeField(document=document, grid=create_form(spec), source=Path(__file__))
+
+
+def _solid_fraction_field() -> SolidFractionField:
+    """Return the smallest valid dielectric field: uniform ``chi`` on a 2x2 grid.
+
+    Nothing is interpolated from it. It exists so that the deviation below is
+    the one :meth:`~nanopnp.charge.stage.ResolvedFields.deviations` actually
+    produces rather than one this test wrote out by hand.
+    """
+    spec = FormSpec(
+        name="uniform",
+        parameters={"value": 1.0},
+        origin_nm=(0.0, 0.0),
+        spacing_nm=(1.0, 1.0),
+        shape=(2, 2),
+    )
+    document = FieldDocument.model_validate(
+        {
+            "schema": "nanopnp/field/v1",
+            "name": "chi",
+            "quantity": "solid_fraction",
+            "units": "1",
+            "provenance": {"source": "analytic"},
+            "form": spec.model_dump(),
+        }
+    )
+    return SolidFractionField(document=document, grid=create_form(spec), source=Path(__file__))
+
+
+def test_ver24_the_charge_group_carries_the_conservation_report_it_was_gated_on() -> None:
+    """Stage 7's summary populates the group, PHY-19 report and all.
+
+    The group is otherwise :func:`~nanopnp.io.manifest.not_run`, and the two
+    readings are indistinguishable to anyone who does not already know whether
+    the run supplied a field: "no charge pipeline" and "a charge field whose
+    conservation was checked" must not both render as an absence.
+
+    Both legs are asserted present because they are different claims. The
+    producer leg says the grid carries the charge the *document* declares; the
+    consumer leg says the mesh integrates the charge the *grid* carries. A
+    manifest recording one and not the other would attribute a passing gate to a
+    check that was never run.
+    """
+    import netgen.occ as occ
+    import ngsolve as ngs
+
+    face = occ.Rectangle(6.0, 10.0).Face()
+    face.name = "electrolyte"
+    mesh = ngs.Mesh(occ.OCCGeometry(face, dim=2).GenerateMesh(maxh=0.15))
+
+    field = _ring_field()
+    report = conservation(field, mesh, AXISYMMETRIC, planes_nm=[2.0, 6.0])
+    fields = ResolvedFields(charge=field, conservation=report, eps_r=None, material_means=())
+
+    written = _manifest(loads_case(MINIMAL), charge=fields.summary()).document()
+    block = written["charge"]
+    assert isinstance(block, dict)
+    assert "status" not in block, "a populated charge group must not read as not run"
+
+    charge = block["charge"]
+    assert isinstance(charge, dict)
+    assert charge["quantity"] == "areal_charge_density"
+    assert charge["document_sha256"]
+    assert charge["grid_digest"] == field.grid.digest()
+
+    recorded = charge["conservation"]
+    assert isinstance(recorded, dict)
+    assert recorded == report.summary()
+    assert recorded["q_net_e"] == pytest.approx(-12.0)
+    assert recorded["producer"]["relative_error"] < recorded["producer"]["tolerance"]
+    assert recorded["consumer"]["relative_error"] < recorded["consumer"]["tolerance"]
+    assert recorded["quadrature_agreement"]["relative_error"] < 1.0
+    assert recorded["per_plane"]["count"] == 2
+    # The interpolant is part of the number: the same grid read nearest-neighbour
+    # is a different field, and a reader reconstructing the run needs to know
+    # which one produced it.
+    assert recorded["interpolation"] == "bilinear"
+
+
+def test_ver24_a_stage_contributed_deviation_reaches_the_manifest_and_the_count() -> None:
+    """A departure no switch selects is recorded, and counted with the switches.
+
+    A smoothed dielectric field departs from PHY-20's per-domain constants and
+    no case-file key says so, which is exactly the departure FR-25 exists to
+    surface. It arrives by a second route, and ``count`` is the total precisely
+    so that a reader asking whether the run left the validated model does not
+    have to know there are two routes.
+    """
+    fields = ResolvedFields(
+        charge=None, conservation=None, eps_r=_solid_fraction_field(), material_means=()
+    )
+    contributed = fields.deviations()
+    assert contributed, "the fixture must actually carry a deviation, or this tests nothing"
+
+    document = loads_case(MINIMAL)
+    written = _manifest(document, contributed_deviations=contributed).document()
+    block = written["deviations"]
+    assert isinstance(block, dict)
+
+    sources = [entry["source"] for entry in block["contributed"]]
+    assert sources == ["inputs.eps_r"]
+    switches = {entry["path"] for entry in block["switches"]}
+    assert switches == {deviation.path for deviation in deviations(document)}
+    assert block["count"] == len(switches) + len(sources)
+    # No fabricated dotted path: one would name a case-file key that does not
+    # exist, and a reader would go looking for it.
+    assert all("path" not in entry for entry in block["contributed"])
 
 
 # -- writing, reading and the environment -------------------------------------
