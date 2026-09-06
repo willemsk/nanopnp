@@ -23,8 +23,13 @@ from __future__ import annotations
 
 import logging
 
+from nanopnp.core.constants import (
+    REFERENCE_TEMPERATURE_K,
+    VACUUM_PERMITTIVITY,
+    thermal_voltage,
+)
 from nanopnp.core.scaling import REFERENCE_PERMITTIVITY, debye_length_nm
-from nanopnp.core.typing import Expression, GridFunction, IntegralTerm, Mesh
+from nanopnp.core.typing import Expression, GridFunction, IntegralTerm, Mesh, Option
 from nanopnp.physics.measures import Measures
 from nanopnp.physics.poisson import poisson_operator
 from nanopnp.physics.spaces import set_boundary_values
@@ -59,21 +64,92 @@ about it.
 """
 
 
+def dimensionless_surface_charge(
+    surface_charge_C_m2: float,
+    *,
+    relative_permittivity: float,
+    temperature_K: float = REFERENCE_TEMPERATURE_K,
+    length_nm: float = 1.0,
+) -> float:
+    """Return the Neumann datum a surface charge imposes on ``phi~``.
+
+    ``d phi~ / d n = sigma_s L / (eps_0 eps_r V_T)`` with ``n`` the outward
+    normal of the electrolyte, which is Gauss's law at a charged plane written
+    in the variables the Poisson-Boltzmann solver works in.
+
+    The permittivity is an argument rather than :data:`ELECTROLYTE_PERMITTIVITY`
+    because it must be the *same* one the caller built its Debye length from: the
+    PB operator carries no ``eps`` at all — it enters only through ``lambda`` —
+    so a permittivity assumed here and a different one assumed there would be
+    silently inconsistent, and the profile would still converge.
+
+    Parameters
+    ----------
+    surface_charge_C_m2
+        The surface charge density, SI.
+    relative_permittivity
+        The electrolyte's ``eps_r``.
+    temperature_K
+        Sets ``V_T = RT/F``.
+    length_nm
+        The mesh's length unit in nm; 1 by default, as every mesh here is in nm.
+    """
+    return (
+        surface_charge_C_m2
+        * length_nm
+        * 1e-9
+        / (VACUUM_PERMITTIVITY * relative_permittivity * thermal_voltage(temperature_K))
+    )
+
+
 def linear_pb_operator(
-    trial: Expression, test: Expression, measures: Measures, *, debye_length_nm: float
+    trial: Expression,
+    test: Expression,
+    measures: Measures,
+    *,
+    debye_length_nm: float,
+    ions: Option | None = None,
 ) -> IntegralTerm:
-    """Return the Debye-Hueckel operator ``int (grad phi~ . grad v + phi~ v / lambda^2) r``."""
+    """Return the Debye-Hueckel operator ``int (grad phi~ . grad v + phi~ v / lambda^2) r``.
+
+    ``ions`` restricts the screening term to a region, as in
+    :func:`nonlinear_pb_residual`; Laplace's equation holds outside it.
+    """
     screening = 1.0 / debye_length_nm**2
-    return poisson_operator(trial, test, measures) + measures.volume(screening * trial * test)
+    return poisson_operator(trial, test, measures) + measures.volume(
+        screening * trial * test, **_ion_region(ions)
+    )
+
+
+def _ion_region(ions: Option | None) -> dict[str, Option]:
+    """Return the ``definedon`` keyword for the mobile-charge term, if restricted.
+
+    Omitted rather than passed as the whole mesh so that the unrestricted form
+    assembles exactly the term it did before an ion-free layer was expressible.
+    """
+    return {} if ions is None else {"definedon": ions}
 
 
 def nonlinear_pb_residual(
-    potential: Expression, test: Expression, measures: Measures, *, debye_length_nm: float
+    potential: Expression,
+    test: Expression,
+    measures: Measures,
+    *,
+    debye_length_nm: float,
+    ions: Option | None = None,
 ) -> IntegralTerm:
     """Return the nonlinear PB residual ``int (grad phi~ . grad v + sinh(phi~) v / lambda^2) r``.
 
     The ``sinh`` is the Boltzmann-distributed mobile charge of a symmetric
     monovalent electrolyte: ``rho_ion = -2 F c_0 sinh(phi~)``.
+
+    ``ions`` is the region the mobile charge occupies — a material selection, not
+    the whole mesh — and the Poisson operator is still assembled everywhere. That
+    is the Gouy-Chapman-**Stern** model: an ion-free layer of thickness
+    ``lambda_S`` against the wall carries no space charge, so ``phi`` is linear
+    across it and the diffuse layer beyond it is unchanged (VER-31, FR-15). It is
+    a deviation from the validated model, which has no explicit Stern layer, and
+    is recorded as one wherever a mesh presents the region (§5.3.1 NOTE).
 
     ``potential`` MUST be the **trial function**, not the grid function holding
     the current iterate. NGSolve linearises a nonlinear form by differentiating
@@ -87,7 +163,7 @@ def nonlinear_pb_residual(
 
     screening = 1.0 / debye_length_nm**2
     return poisson_operator(potential, test, measures) + measures.volume(
-        screening * ngs.sinh(potential) * test
+        screening * ngs.sinh(potential) * test, **_ion_region(ions)
     )
 
 
@@ -98,6 +174,9 @@ def solve_pb(
     debye_length_nm: float,
     dirichlet: str,
     boundary_values: Expression,
+    ions: str | None = None,
+    surface_charge: float = 0.0,
+    surface_charge_boundary: str = "wall",
     nonlinear: bool = True,
     order: int = 2,
     solver: str = DEFAULT_SOLVER,
@@ -125,6 +204,16 @@ def solve_pb(
         axis must not appear here: its condition is natural (NUM-06).
     boundary_values
         Values to set on those boundaries, in units of ``V_T``.
+    ions
+        Material-name regular expression naming where the mobile charge is, for
+        a Gouy-Chapman-Stern layer; ``None`` puts it everywhere, which is plain
+        Gouy-Chapman. Poisson is solved over the whole mesh either way.
+    surface_charge, surface_charge_boundary
+        A prescribed surface charge on a boundary, as the Neumann datum
+        :func:`dimensionless_surface_charge` returns. The natural condition
+        under these forms is the free one, so a boundary carrying neither an
+        essential value nor a datum is uncharged — which is the right default and
+        the reason this is stated positively rather than as an absence.
     nonlinear
         Solve the full ``sinh`` form, or the Debye-Hueckel linearisation.
     order
@@ -169,6 +258,9 @@ def solve_pb(
         debye_length_nm=debye_length_nm,
         dirichlet=dirichlet,
         boundary_values=boundary_values,
+        ions=ions,
+        surface_charge=surface_charge,
+        surface_charge_boundary=surface_charge_boundary,
         nonlinear=nonlinear,
         order=order,
         solver=solver,
@@ -184,6 +276,9 @@ def solve_pb_recorded(
     debye_length_nm: float,
     dirichlet: str,
     boundary_values: Expression,
+    ions: str | None = None,
+    surface_charge: float = 0.0,
+    surface_charge_boundary: str = "wall",
     nonlinear: bool = True,
     order: int = 2,
     solver: str = DEFAULT_SOLVER,
@@ -217,18 +312,57 @@ def solve_pb_recorded(
     # model uses; on a cold start the interior is zero either way.
     set_boundary_values(potential, boundary_values, mesh.Boundaries(dirichlet))
 
+    region = None if ions is None else mesh.Materials(ions)
+    if region is not None and region.Mask().NumSet() == 0:
+        raise ValueError(
+            f"ions={ions!r} matches no material of the mesh; it carries "
+            f"{', '.join(sorted(set(mesh.GetMaterials())))}. A screening term restricted to "
+            "nothing would solve Laplace's equation and converge"
+        )
+    charged = None if surface_charge == 0.0 else mesh.Boundaries(surface_charge_boundary)
+    if charged is not None and charged.Mask().NumSet() == 0:
+        raise ValueError(
+            f"surface_charge_boundary={surface_charge_boundary!r} matches no boundary of the "
+            f"mesh; it carries {', '.join(sorted(set(mesh.GetBoundaries())))}. A charge applied "
+            "to nothing leaves the wall uncharged and the solve converges (NUM-06, QR-12)"
+        )
+
+    def _charge_term(test: Expression, *, sign: float) -> IntegralTerm | None:
+        """Return the surface-charge term, if there is one, with ``sign`` applied.
+
+        The sign is folded into the integrand rather than negated afterwards:
+        NGSolve's ``SumOfIntegrals`` has no unary minus, and a form built and then
+        subtracted is a ``TypeError`` rather than a wrong answer only because of
+        that.
+        """
+        if charged is None:
+            return None
+        return measures.surface(sign * surface_charge * test, definedon=charged)
+
     if not nonlinear:
         trial, test = space.TnT()
         a = ngs.BilinearForm(
-            linear_pb_operator(trial, test, measures, debye_length_nm=debye_length_nm)
+            linear_pb_operator(trial, test, measures, debye_length_nm=debye_length_nm, ions=region)
         ).Assemble()
-        f = ngs.LinearForm(space).Assemble()
+        f = ngs.LinearForm(space)
+        term = _charge_term(test, sign=1.0)
+        if term is not None:
+            f += term
+        f.Assemble()
         solve_linear(a, f, potential, solver=solver)
         return potential, None
 
     trial, test = space.TnT()
     residual = ngs.BilinearForm(space)
-    residual += nonlinear_pb_residual(trial, test, measures, debye_length_nm=debye_length_nm)
+    residual += nonlinear_pb_residual(
+        trial, test, measures, debye_length_nm=debye_length_nm, ions=region
+    )
+    # The Poisson boundary term is +int_Gamma (dphi~/dn) v ds on the right-hand
+    # side, so it is subtracted from the residual exactly as
+    # CoupledModel.residual_form subtracts its own.
+    term = _charge_term(test, sign=-1.0)
+    if term is not None:
+        residual += term
 
     increment = ngs.GridFunction(space, name="delta_phi_tilde")
     sampler = FieldSampler(mesh, coordinates=measures.coordinate_names)
