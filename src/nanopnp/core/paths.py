@@ -117,3 +117,56 @@ def store_root() -> Path:
     if configured:
         return Path(configured).expanduser().resolve()
     return (Path.cwd() / DEFAULT_STORE_DIRNAME).resolve()
+
+
+REFERENCE_DATA_VARIABLE = "NANOPNP_REFERENCE_DATA"
+"""Environment variable naming the directory of archived Tier-3 reference files."""
+
+
+def reference_data_root() -> Path | None:
+    """Return the directory of archived reference files, or ``None`` if unset.
+
+    Tier 3 compares against the reference implementation's own inputs and
+    outputs, and some of those are far too large to ship: the delivered ClyA
+    ``rho_q`` table alone is 77 MB of text. They are named by
+    ``$NANOPNP_REFERENCE_DATA`` rather than vendored, so that a Tier-3 test
+    *skips* where the archive is absent instead of failing, and so that no test
+    ever reaches the network for one (section 7.1).
+
+    Returns
+    -------
+    Path or None
+        The configured directory, expanded and made absolute, or ``None`` when
+        the variable is unset or names something that is not a directory. A
+        misconfigured path and an unset one are deliberately the same answer
+        here: both mean the archive is unavailable, and :func:`reference_file`
+        is where the distinction would matter if it ever did.
+    """
+    configured = os.environ.get(REFERENCE_DATA_VARIABLE)
+    if not configured:
+        return None
+    root = Path(configured).expanduser().resolve()
+    return root if root.is_dir() else None
+
+
+def reference_file(name: str) -> Path | None:
+    """Return an archived reference file by name, or ``None`` if unavailable.
+
+    Parameters
+    ----------
+    name
+        The file's name within the archive, e.g. ``"prod5_clya_charge"``.
+
+    Returns
+    -------
+    Path or None
+        The file, or ``None`` when the archive is not configured or does not
+        carry it. ``None`` rather than an exception because the caller is a
+        Tier-3 skip condition, and a test that raised on an absent archive
+        would make the whole tier unrunnable off the machine that holds it.
+    """
+    root = reference_data_root()
+    if root is None:
+        return None
+    path = root / name
+    return path if path.is_file() else None

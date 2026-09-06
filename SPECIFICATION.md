@@ -971,7 +971,12 @@ pydantic-validated header document, `schema: nanopnp/field/v1`, which carries th
 units, the grid descriptor (origin, spacing, shape), the axis cutoff of PHY-18 (default 0.01 nm),
 the declared `Q_net` where the producer knows one, the provenance of the file, and the data file it
 refers to. `format: field1` names that document; the *data* format is read from it, `.npz` on the
-default path and OpenDX or CCP4 through GridDataFormats, which SHALL remain optional. A header
+default path, OpenDX or CCP4 through GridDataFormats, which SHALL remain optional, and
+`comsolgrid` — the reference model's own `%Grid`/`%Data` interpolation table, in metres, **read
+only**, since it is an input to the reference rather than an output of ours and writing it would
+invite a round trip that is not one. A grid axis SHALL be uniform to round-off or the file SHALL
+be refused naming the axis: the interpolant of PHY-19 takes a box and a shape, so a non-uniform
+axis would otherwise be resampled onto a uniform one in silence. A header
 document SHALL reject an unknown key naming the key, as every other schema in §5.3 does. `quantity`
 is one of `areal_charge_density` (the reference's `rhoq_pore`, C m⁻²), `volume_charge_density`
 (C m⁻³) or `solid_fraction` (dimensionless), and the `1/(2πr)` projection and the axis guard of
@@ -1773,6 +1778,16 @@ Rationale: an analytic test localises an error to a single term, so a Debye–H�
 at the axis condition or the r-weighted Poisson form and an MMS failure at the hoop-strain term. A
 whole-model comparison localises nothing, so a per-cent-level discrepancy found first offers no
 route to a cause and invites adjusting the solver until the number matches.
+
+NOTE (Tier-3 reference files are named, not vendored): the archived golden files Tier 3 compares
+against are too large to carry in the repository — the delivered ClyA charge table alone is 77 MB
+of text — and no lossy reduction of one is a fair reference: cropping the ClyA table at a
+`10⁻⁶` relative threshold still costs 28 MB, and subsampling it by four moves its planar integral
+by 1.5 %, which is fifteen times QR-03's budget. The archive SHALL therefore be located by the
+environment variable `NANOPNP_REFERENCE_DATA`, naming a directory of files by name, and a Tier-3
+test whose file is absent SHALL **skip** rather than fail: Tier 3 is recorded and not gated, so an
+unavailable reference is missing evidence, not a defect. Tier 1 and Tier 2 SHALL NOT read the
+archive, so the push gate is unaffected by whether it is present.
 
 ### 7.2 Tier 1 unit and property tests
 
