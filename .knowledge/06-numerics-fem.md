@@ -681,6 +681,26 @@ Second, the fix is on the producer side — deposit onto the finite-element spac
 `Q_net`, which conserves by construction — and no amount of consumer-side effort substitutes for it.
 **[tested]**
 
+### 8.1.2 An unstructured netgen mesh is not a portable measurement
+
+A corollary of §8.1.1 that only shows up on a CI matrix. Because the aliased quadrature error is a
+function of where the vertices happen to fall, *any* assertion on its magnitude inherits the
+mesher's own arbitrariness. Netgen's unstructured triangulation of the same rectangle at the same
+`maxh = 0.2 nm` gave, for the same field, an order/order+3 agreement of **2.3e-4 on Linux, 7.8e-5 on
+Windows and 2.2e-5 on macOS** — a factor of ten, straddling a 1e-4 threshold three different ways
+**[tested]**. Nothing about the physics differs; the meshes do.
+
+Coarsening is not the repair, because the quantity is non-monotone in `h` (§8.1.1) — it re-rolls the
+dice. `ngsolve.meshes.MakeStructured2DMesh` places every vertex arithmetically from `(nx, ny)` and a
+mapping, so the mesh, and therefore the number, is identical on every platform. On the same box and
+field it reads 3.7e-4 at `(27, 70)`, 7.4e-5 at `(23, 59)` and 5.0e-6 at `(25, 65)` — one coarser and
+one finer than the first, both *below* what it exceeds, which is the non-monotonicity again and the
+reason the resolution has to be picked by measurement.
+
+The rule: **a test that asserts a quadrature-error magnitude must run on a structured mesh.** A test
+that asserts a converged physical quantity may use whatever mesh the pipeline deploys, because that
+number is mesh-independent by construction and an unstructured mesh is then the more honest one.
+
 ### 8.2 Measured: the reaction flux really is worth it
 
 Gouy-Chapman at 0.1 M, ζ̃ = 2, P2, planar slab. Wall gradient recovered two ways and compared with

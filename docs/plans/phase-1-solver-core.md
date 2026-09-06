@@ -354,14 +354,16 @@ already written for this answer, so nothing in the code moves.
 `density/grid.py`, `charge/fields.py`, `charge/stage.py`, `materials/fields.py`, with changes to
 `core/paths.py`, `core/stages.py`, `io/artefact.py`, `io/case.py`, `io/defaults.py`,
 `io/manifest.py`, `mesh/ingest.py`, `mesh/primitives.py`, `physics/models.py`, `physics/pb.py`,
-`solve/continuation.py` and `solve/stage.py`; spec amendments A–H from the plan commit, plus four
+`solve/continuation.py` and `solve/stage.py`; spec amendments A–H from the plan commit, plus five
 that implementation forced (§7.1's reference archive, §5.3.1's `comsolgrid` format, §4.4's NOTE on
-the consumer leg, and VAL-15 in §7.4).
+the consumer leg, VAL-15 in §7.4, and §3.1's NOTE narrowing IF-05's CCP4 *write* side to the
+interpreters whose GridDataFormats carries the writer).
 
 Delivered: `RadialGrid` as the seam behind every gridded field — origin, uniform spacing checked to
 `10⁻⁹` nm, `values[i_z, i_r]` float64, planar integral, ramped cumulative, boundary-ring maximum,
 zero padding and a content hash — read and written over `.npz` natively, OpenDX and MRC behind the
-`structure` extra, and the reference model's own `%Grid`/`%Data` table read-only; `FieldDocument`
+`structure` extra with `writable_formats()` reporting which of them this install can actually write,
+and the reference model's own `%Grid`/`%Data` table read-only; `FieldDocument`
 (`nanopnp/field/v1`, `extra="forbid"`) carrying quantity, units, grid descriptor, axis cutoff,
 declared `Q_net` and provenance, with an absolute `ε_r` refused naming PHY-11; the named analytic
 form registry (`uniform`, `gaussian_ring`, `slab`); `ChargeField.assemble` applying the `1/(2πr)`
@@ -396,7 +398,7 @@ factor of ten on the reference's own table. VER-31: the Stern shell raises the w
 51.3852 mV to 67.1139 mV, a ratio of **1.30606** against the closed form to `10⁻⁵`, and `λ_S = 0`
 returns `ζ̃ = 2` to `10⁻³` on the same mesh.
 
-Five things settled by the work that WP10 onwards inherit.
+Seven things settled by the work that WP10 onwards inherit.
 
 - **A mesh integral of a sub-element-scale field converges in neither `h` nor quadrature order.**
   The delivered table alternates sign 49 times along its densest `z`, extrema a median 0.035 nm
@@ -422,6 +424,20 @@ Five things settled by the work that WP10 onwards inherit.
   integrated by quadrature inside every element the plane crosses; measured on the reference mesh
   the ramp is inside `10⁻³` at every plane while a near-step indicator is outside it, so the check
   would have been measuring its own discretisation.
+- **A test that asserts a quadrature-error magnitude must run on a structured mesh.** The corollary
+  of the aliasing above, and it only showed up on the CI matrix: netgen's unstructured triangulation
+  of the same box at the same `maxh` gave 2.3e-4 on Linux, 7.8e-5 on Windows and 2.2e-5 on macOS for
+  the same field — a factor of ten, straddling the 1e-4 gate three ways. Coarsening re-rolls the
+  dice, because the quantity is non-monotone in `h`. `MakeStructured2DMesh` places every vertex
+  arithmetically, so the number is the same everywhere; the gate now runs at `(27, 70)` divisions.
+  A test asserting a *converged physical* quantity is the opposite case and should keep the
+  unstructured mesh the pipeline deploys.
+- **The optional dependency's version is part of the interface, and 3.10 is where it bites.**
+  GridDataFormats 1.2 needs Python ≥ 3.11, so on 3.10 the resolver takes 1.0.2, which reads MRC and
+  CCP4 and writes neither. "Is the module importable?" is therefore the wrong guard for anything
+  that writes: ask the capability. Every optional-dependency guard added from here should be a
+  capability probe with the refusal asserted on the other branch, not a skip — one of the two
+  branches then runs on every row of the matrix.
 
 **No boundary layers** (the author, 5 September 2026). WP8 measured the reference region into the
 published quality band — 44,316 triangles at minimum SICN 0.6559 — by isotropic grading alone, which

@@ -418,9 +418,32 @@ New verification items for §7.2:
 > model's own table* on our mesh, which is not VAL-06 (potential against APBS), so **VAL-15** was
 > added to §7.4 and Appendix A's IF-05, QR-03 and FR-14 rows cite it.
 >
-> Green on the current tree: **551 passed, 1 skipped** in 104 s (Tiers 1 and 2; the skip is the
-> OpenDX/MRC round trip without the `structure` extra). The four Tier-3 tests pass in 14.6 s with
-> the archive present and skip without it.
+> Green on the current tree: **551 passed, 1 skipped** in 104 s (Tiers 1 and 2; the skip is
+> `test_mesh_quality.py`'s gmsh backend, which needs `libGLU.so.1` and predates this package). The
+> four Tier-3 tests pass in 14.6 s with the archive present and skip without it.
+
+> **Outcome — two of these tests were measurements of the platform, and the CI matrix said so.**
+> Both landed green on Linux/3.12 and failed elsewhere, and both were the same mistake in different
+> clothes: asserting on a number that is a property of the environment rather than of the code.
+>
+> **VER-29's coarsened-mesh gate was a measurement of netgen's mesher.** The order/order+3 agreement
+> at `maxh = 0.2 nm` read 2.3e-4 on Linux, 7.8e-5 on Windows and 2.2e-5 on macOS — the same field,
+> the same box, three different unstructured triangulations, straddling the 1e-4 gate three ways.
+> Coarsening is not the repair: §8.1.1's non-monotonicity in `h` means it only re-rolls the dice.
+> The mesh is now `MakeStructured2DMesh` at `(27, 70)` — 0.222 × 0.221 nm — where every vertex is
+> placed arithmetically and the number is the same everywhere: legs 1.9e-4 at worst (five times
+> inside QR-03), agreement 3.7e-4 (nearly four times over its gate). Recorded as
+> `.knowledge/06` §8.1.2.
+>
+> **VER-29's CCP4 round trip was a measurement of the resolver.** GridDataFormats 1.2 requires
+> Python ≥ 3.11, so on 3.10 the resolver takes 1.0.2, whose exporter registry has no `MRC` entry: it
+> reads MRC and CCP4 and writes neither. The test's `needs_griddata` guard was the wrong predicate —
+> 1.0.2 *imports* fine — so 3.10 got a third-party `ValueError` out of `Grid.export`. `write_grid`
+> now checks the exporter registry and refuses in QR-12 terms (format, installed version, the
+> release that gained the writer), `writable_formats()` exposes the capability for FR-27, and the
+> test asserts the refusal on the branch where the writer is absent rather than skipping — so 3.10
+> and 3.11+ each assert something. IF-05 gained the NOTE saying its write side is conditional and
+> why QR-09's 3.10 floor is the larger promise. Recorded as `.knowledge/07`.
 
 Gate before the package is done, as every package:
 
