@@ -71,7 +71,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
 
 __all__ = [
-    "FIELDS_SCHEMA",
+    "EXPORT_SCHEMA",
     "OMEGA_STEM",
     "OMEGA_W_STEM",
     "FieldExport",
@@ -83,8 +83,13 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
-FIELDS_SCHEMA = "nanopnp/fields/v1"
-"""Domain separator recorded in each file, so a reader can refuse a later one."""
+EXPORT_SCHEMA = "nanopnp/export/v1"
+"""Schema recorded in each file, so a reader can refuse a later one.
+
+Deliberately not ``nanopnp/fields/v1``: that identifier belongs to the stage-7
+charge artefact (:data:`nanopnp.io.artefact.FIELDS_SCHEMA`), and two payload
+contracts under one schema string is exactly the confusion a schema exists to
+prevent."""
 
 OMEGA_STEM = "fields_omega"
 """Stem of the whole-domain file pair."""
@@ -433,7 +438,7 @@ def export_fields(
         cells["eps_r"] = _sample_cells(mesh, relative_permittivity, omega)
 
     common: dict[str, object] = {
-        "schema": FIELDS_SCHEMA,
+        "schema": EXPORT_SCHEMA,
         "coordinate_units": "nm",
         "two_pi_applied": 0,
         "scales": json.dumps(scales.summary(), sort_keys=True),

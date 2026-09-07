@@ -32,7 +32,7 @@ import pytest
 from nanopnp.core.scaling import Scales
 from nanopnp.core.typing import Expression, Mesh, Numeric
 from nanopnp.io.fields import (
-    FIELDS_SCHEMA,
+    EXPORT_SCHEMA,
     OMEGA_STEM,
     OMEGA_W_STEM,
     FieldExport,
@@ -434,7 +434,7 @@ def test_if07_each_file_names_its_schema_and_the_materials_it_covers(
     """A reader can tell which part of Omega it holds without decoding ``material_id``."""
     omega = _metadata(exported, OMEGA_STEM)
     omega_w = _metadata(exported, OMEGA_W_STEM)
-    assert omega["schema"] == omega_w["schema"] == FIELDS_SCHEMA
+    assert omega["schema"] == omega_w["schema"] == EXPORT_SCHEMA
     assert omega["domain"] == "omega"
     assert omega_w["domain"] == "omega_w"
     assert set(json.loads(omega["domain_materials"])) == {"electrolyte", "membrane", "cis", "trans"}
