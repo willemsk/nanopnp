@@ -21,6 +21,7 @@ from nanopnp.core.hashing import (
     CanonicalisationError,
     canonical,
     content_hash,
+    decode_floats,
     file_hash,
     short,
 )
@@ -95,6 +96,43 @@ def test_ver23_hash_ignores_what_resolves_to_the_same_run() -> None:
     assert canonical({"bias": 1}) != canonical({"bias": 1.0})
     assert canonical({"bias": -0.0}) == canonical({"bias": 0.0})
     assert canonical({"bias": 1e-9}) == canonical({"bias": 0.000000001})
+
+
+def test_ver23_decode_floats_restores_the_numbers_a_canonical_file_holds() -> None:
+    """The encoding is the on-disk format too, so a reader must be able to undo it.
+
+    ``manifest.json`` and ``run.json`` are both written through
+    :func:`canonical`, which means every float in them is a ``{"__f__": <hex>}``
+    wrapper. QR-08's reproduction check compares those recorded numbers against
+    a live run that holds bare floats, and two sides disagreeing about the
+    *encoding* would report a missing quantity where the number is in fact
+    there.
+
+    Exact rather than close: ``float.hex`` is the IEEE-754 bit pattern, so a
+    round trip that loses a bit is a broken encoder rather than a rounding.
+    """
+    document = {
+        "quantities": {"current_A": 3.6170916294619195e-11, "routes_checked": True},
+        "band_nm": [0.6, 1.5],
+        "sign": -0.0,
+        "count": 7,
+        "mode": "none",
+        "missing": None,
+    }
+    restored = decode_floats(json.loads(canonical(document)))
+
+    assert restored == {**document, "sign": 0.0}
+    quantities = restored["quantities"]
+    assert isinstance(quantities, dict)
+    assert quantities["current_A"] == 3.6170916294619195e-11
+    assert quantities["routes_checked"] is True
+    assert restored["count"] == 7 and not isinstance(restored["count"], float)
+
+    # A digested array cannot be undone and is left as it stands, and a mapping
+    # that carries the name beside another key is a document, not a wrapper.
+    passthrough = {"__f__": "0x1.0p+0", "units": "A"}
+    assert decode_floats(passthrough) == passthrough
+    assert decode_floats({"__f__": 1.0}) == {"__f__": 1.0}
 
 
 def test_ver23_an_unhashable_type_is_rejected_naming_its_path() -> None:
