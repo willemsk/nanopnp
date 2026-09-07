@@ -46,6 +46,7 @@ from __future__ import annotations
 
 import logging
 import tempfile
+from collections.abc import Iterable
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
@@ -538,6 +539,43 @@ def check_solid_permittivities(
     )
 
 
+def exclusion_deviations(materials: Iterable[str]) -> tuple[ContributedDeviation, ...]:
+    """Return the FR-25 deviation an ``exclusion`` material contributes, if any.
+
+    Module-level, and taking the material names rather than a mesh, because two
+    callers need the same sentence from different things in hand:
+    :meth:`IngestedMesh.deviations` has the ingested mesh, and
+    :meth:`MeshStage.deviations` has only the stage-6 artefact — whose
+    ``materials`` parameter is exactly this list, so the driver need not ingest
+    and gate the mesh a second time to learn what it already recorded.
+
+    Parameters
+    ----------
+    materials
+        The mesh's material names, in the project vocabulary.
+
+    Returns
+    -------
+    tuple of ContributedDeviation
+        Empty unless a member of
+        :data:`~nanopnp.mesh.primitives.PERMITTIVITY_EXEMPT` is present.
+    """
+    if not set(materials) & PERMITTIVITY_EXEMPT:
+        return ()
+    return (
+        ContributedDeviation(
+            source="mesh material 'exclusion'",
+            description=(
+                "an ion-exclusion shell, where ePNP-NS carries no explicit Stern layer "
+                "(section 5.3.1 NOTE). The no-slip surface then sits at the outer edge of "
+                "the shell, which is the conventional hydrodynamic shear plane, and the "
+                "PHY-02 distance is measured from there rather than from the dielectric "
+                "contour"
+            ),
+        ),
+    )
+
+
 @dataclass(frozen=True)
 class IngestedMesh:
     """A supplied mesh that has passed every gate, and what the gates measured.
@@ -591,20 +629,7 @@ class IngestedMesh:
         here rather than from stage 7 because a run may carry such a mesh and
         supply no field at all.
         """
-        if not set(self.data.materials) & PERMITTIVITY_EXEMPT:
-            return ()
-        return (
-            ContributedDeviation(
-                source="mesh material 'exclusion'",
-                description=(
-                    "an ion-exclusion shell, where ePNP-NS carries no explicit Stern layer "
-                    "(section 5.3.1 NOTE). The no-slip surface then sits at the outer edge of "
-                    "the shell, which is the conventional hydrodynamic shear plane, and the "
-                    "PHY-02 distance is measured from there rather than from the dielectric "
-                    "contour"
-                ),
-            ),
-        )
+        return exclusion_deviations(self.data.materials)
 
     def summary(self) -> dict[str, object]:
         """Return what the manifest's geometry-and-mesh group records (FR-25)."""
@@ -723,6 +748,19 @@ class MeshStage:
     def describe(self) -> StageDescription:
         """Return the registry's description of this stage (FR-27)."""
         return describe(self.name)
+
+    def deviations(self, inputs: StageInputs) -> tuple[ContributedDeviation, ...]:
+        """Return the departures the supplied mesh contributes (FR-25).
+
+        Called by the driver *after* this stage's artefact is in hand and with
+        that artefact under ``inputs.upstream["mesh"]``, so the answer comes from
+        the ``materials`` parameter the artefact already records rather than from
+        a second read and quality gate of the mesh file. The same sentence
+        :meth:`IngestedMesh.deviations` returns, from the same helper.
+        """
+        materials = inputs.require(self.name).parameters["materials"]
+        assert isinstance(materials, list)  # MeshArtefact writes it as one
+        return exclusion_deviations(str(name) for name in materials)
 
     def key(self, inputs: StageInputs) -> MeshArtefact:
         """Return the artefact key this mesh will produce, without writing it.

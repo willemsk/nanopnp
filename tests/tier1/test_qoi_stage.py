@@ -336,6 +336,7 @@ def test_fr23_outputs_selects_exactly_the_quantities_asked_for(
     assert set(summary) - quantities == {
         "indicator_band_nm",
         "bias_V",
+        "clamp_activations",
         "two_pi_included",
         "routes_checked",
         "route_agreement",
@@ -407,6 +408,42 @@ def test_qr04_the_route_agreement_figure_appears_in_the_artefact_summary(
     difference = agreement["relative_difference"]
     assert isinstance(difference, float)
     assert difference < ROUTE_TOLERANCE
+
+
+def test_phy13_the_clamp_count_reaches_the_manifest_as_a_number(solved: Solved) -> None:
+    """A run that sampled the solution records a count, not "not run" (FR-25).
+
+    :func:`~nanopnp.post.qoi.report_clamp_activations` samples the converged
+    state on every operating point, and the manifest's Materials group records
+    ``None`` as ``not_run`` with the reason "no solution was sampled". Those are
+    two different facts, and discarding the count would make the manifest of a
+    run that *did* sample say the opposite of what happened. It is carried in the
+    stage-11 summary whatever ``outputs:`` asked for, because it is provenance
+    rather than a quantity.
+    """
+    summary = QoIStage().run(solved.inputs()).summary
+    clamps = summary["clamp_activations"]
+    assert isinstance(clamps, int)
+
+    group = manifest_io.build(
+        solved.document,
+        case_text=solved.text,
+        case_hash="0" * 64,
+        electrolyte=resolve(solved.document).electrolyte,
+        clamp_activations=clamps,
+    ).groups()["materials"]
+    assert isinstance(group, dict)
+    assert group["clamp_activations"] == clamps
+
+    without = manifest_io.build(
+        solved.document,
+        case_text=solved.text,
+        case_hash="0" * 64,
+        electrolyte=resolve(solved.document).electrolyte,
+    ).groups()["materials"]
+    assert isinstance(without, dict)
+    assert without["clamp_activations"] != clamps
+    assert "no solution was sampled" in str(without["clamp_activations"])
 
 
 def test_fr25_check_routes_off_reaches_the_manifest_as_a_contributed_deviation(

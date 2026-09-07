@@ -509,6 +509,15 @@ class QuantitiesOfInterest:
     conductance_S: float
     eof_m3_s: float | None
     agreement: RouteAgreement | None
+    clamp_activations: int | None = None
+    """PHY-13 clamp activations counted over this converged solution.
+
+    ``None`` only on a record built by hand: :func:`extract` samples the
+    solution on every operating point and always sets an integer. The manifest's
+    Materials group distinguishes the two — "no solution was sampled" is not the
+    same fact as "none was clamped" — so the distinction is carried rather than
+    collapsed to zero (FR-25, section 5.3.3).
+    """
 
     def summary(self) -> dict[str, Option]:
         """Return every quantity, for logs and the provenance manifest (FR-25)."""
@@ -519,6 +528,7 @@ class QuantitiesOfInterest:
             "transport_number": self.transport_number,
             "conductance_S": self.conductance_S,
             "eof_m3_s": self.eof_m3_s,
+            "clamp_activations": self.clamp_activations,
             "two_pi_included": True,
             # FR-25 wants every switch set away from the validated default, and
             # skipping NUM-26 is one. Absence of the ``route_agreement`` key
@@ -601,7 +611,7 @@ def extract(
     # fits past their validity range near a charged wall. The clamp that caps them
     # there is silent in the solve, so the record is emitted here, once per
     # extracted operating point, over the converged concentrations.
-    report_clamp_activations(solution, measures)
+    clamped = report_clamp_activations(solution, measures)
 
     cations = [ion.name for ion in model.electrolyte.species if ion.valence > 0]
     return QuantitiesOfInterest(
@@ -612,6 +622,7 @@ def extract(
         conductance_S=conductance(current, bias_V),
         eof_m3_s=indicator_eof(solution, measures, indicator) if model.flow else None,
         agreement=agreement,
+        clamp_activations=clamped,
     )
 
 

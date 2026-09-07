@@ -66,6 +66,38 @@ WORKSPACE_DIRNAME = "tmp"
 """Directory under the store root the archival native copies are written to."""
 
 
+def smoothed_dielectric_deviations(*, smoothed: bool) -> tuple[ContributedDeviation, ...]:
+    """Return the FR-25 deviation a supplied ``inputs.eps_r`` contributes, if any.
+
+    Module-level, and taking a boolean rather than the fields, because two
+    callers need the same sentence from different things in hand:
+    :meth:`ResolvedFields.deviations` has the loaded fields, and
+    :meth:`FieldStage.deviations` has only the stage-7 artefact — whose
+    ``fields`` parameter names ``eps_r`` exactly when one was supplied, so the
+    driver need not re-read the field table (tens of megabytes) to learn what
+    the artefact already records.
+
+    Parameters
+    ----------
+    smoothed
+        Whether the run supplies a dielectric field in place of PHY-20's
+        per-domain constants.
+    """
+    if not smoothed:
+        return ()
+    return (
+        ContributedDeviation(
+            source="inputs.eps_r",
+            description=(
+                "a smoothed dielectric field, where PHY-20's validated model assigns "
+                "eps_r per domain as a constant (section 4.4 NOTE). No case-file switch "
+                "selects it: a switch that could disagree with the presence of the input "
+                "would be a second source of truth"
+            ),
+        ),
+    )
+
+
 @dataclass(frozen=True)
 class ResolvedFields:
     """The supplied fields, gated, and what the gates measured.
@@ -155,20 +187,7 @@ class ResolvedFields:
         layer that went unrecorded because stage 7 had nothing to read would be
         exactly the silent departure FR-25 exists to prevent.
         """
-        found: list[ContributedDeviation] = []
-        if self.eps_r is not None:
-            found.append(
-                ContributedDeviation(
-                    source="inputs.eps_r",
-                    description=(
-                        "a smoothed dielectric field, where PHY-20's validated model assigns "
-                        "eps_r per domain as a constant (section 4.4 NOTE). No case-file switch "
-                        "selects it: a switch that could disagree with the presence of the input "
-                        "would be a second source of truth"
-                    ),
-                )
-            )
-        return tuple(found)
+        return smoothed_dielectric_deviations(smoothed=self.eps_r is not None)
 
 
 def _field_path(supplied: object, *, key: str) -> Path:
@@ -334,6 +353,19 @@ class FieldStage:
     def describe(self) -> StageDescription:
         """Return the registry's description of this stage (FR-27)."""
         return describe(self.name)
+
+    def deviations(self, inputs: StageInputs) -> tuple[ContributedDeviation, ...]:
+        """Return the departures the supplied fields contribute (FR-25).
+
+        Called by the driver *after* this stage's artefact is in hand and with
+        that artefact under ``inputs.upstream["charge"]``, so the answer comes
+        from the ``fields`` parameter the artefact already records rather than
+        from a second read of the field tables. The same sentence
+        :meth:`ResolvedFields.deviations` returns, from the same helper.
+        """
+        fields = inputs.require(self.name).parameters["fields"]
+        assert isinstance(fields, dict)  # FieldsArtefact writes it as one
+        return smoothed_dielectric_deviations(smoothed="eps_r" in fields)
 
     def key(self, inputs: StageInputs) -> FieldsArtefact:
         """Return the artefact key these fields will produce, without gating them.
