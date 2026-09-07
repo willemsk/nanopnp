@@ -223,6 +223,36 @@ installed version and the release that gained the writer (QR-12). Pinning GridDa
 would discharge IF-05 unconditionally at the cost of QR-09's 3.10 support, which is the larger
 promise.
 
+NOTE (IF-02, exit codes): the CLI's exit status is a contract, because the job-array dispatch of
+FR-24 branches on it and QR-06 requires a failed member to be distinguishable from a refused one.
+`0` success; `1` an unexpected failure, the only class whose traceback is worth keeping; `2` a usage
+error; `3` a case rejected by validation or by schema; `4` a numerical gate abort of the QR-12
+family; `5` nonlinear non-convergence; `130` cancellation. The mapping from exception to code SHALL
+be an explicit enumeration rather than a base-class test, and every public exception type of the
+package SHALL be either classified by it or listed as deliberately excluded with a reason, in both
+directions, so that an error type added later fails the enumeration rather than silently becoming
+`1`. Diagnostics and log records go to standard error; standard output carries only the command's
+own result, so that a caller may parse it.
+
+NOTE (IF-02, configuration): no command-line flag SHALL change what is solved. Flags select where
+output is written, which stages run and how much is logged; every quantity that changes a number
+lives in the case file (IF-03). A flag duplicating a case-file setting would make the FR-25 manifest
+describe one of two disagreeing sources of truth.
+
+NOTE (IF-07, field export): solution fields are written as XDMF with HDF5 heavy data at the P2 node
+set — the mesh vertices together with the edge midpoints, `ndof = nv + nedge` — with topology
+`Triangle_6`. A P2 function on a straight-sided triangle is determined by its six nodal values, and a
+P1 function's midpoint value is the mean of its endpoints, so one node set records both orders of
+NUM-01 exactly and no interpolation error is introduced by the export. Midside nodes SHALL be
+identified by the unordered pair of vertices they lie between rather than by any backend's local edge
+numbering. Ω and Ω_w are written as separate files: the fields of NUM-01 that live on the fluid alone
+SHALL NOT be padded over the solid, because a zero concentration inside a wall is indistinguishable
+in a viewer from a converged depletion. Coordinates are in nm, matching the MSH 4.1 archival mesh
+(IF-06); values are in SI with the unit in the attribute name, and the §6.3 scale set is recorded in
+the file so that the nondimensional state remains recoverable. The `2π` of the axisymmetric measure
+SHALL NOT be applied: exported fields are pointwise, and §6.7 restores that factor exactly once, in
+the quantity-of-interest extraction. Heavy data is compressed.
+
 ### 3.2 Functional requirements
 
 | ID | Requirement | Release |
@@ -1101,6 +1131,16 @@ NOTE (`walls`): the wall values name the condition applied, not its absence. `io
 §6.2 the natural condition is the free one, so a value reading as "none applied" would silently
 remove no-slip while appearing to be the validated default.
 
+NOTE (`outputs:`): the list selects what the run produces, and each word is refused rather than
+silently ignored where it cannot be met. `current`, `transport_numbers` and `eof_rate` select scalar
+quantities of interest (§6.7). `fields` gates the IF-07 field export, which is off unless asked for:
+the export is of order ten megabytes per solve and an envelope sweep of thousands of points would
+otherwise write tens of gigabytes nobody requested. `analyte_force` requires the mesh to carry an
+`analyte` material, and a case asking for it on a mesh without one SHALL abort naming the missing
+material (QR-12). `rectification` is a two-point quantity, `I(+V)/I(−V)`; a case asking for it at a
+single operating point SHALL be refused naming it as such, because the second bias can only come
+from a sweep (FR-24) and inventing one would report a ratio the run did not measure.
+
 #### 5.3.2 Artefacts and interchange formats
 
 | Stage | Artefact | Format |
@@ -1129,6 +1169,29 @@ their contents rather than by their path. Wall-clock fields such as `created_at`
 the hash and excluded from it, so that re-running a case reproduces the hash. A stored hash is
 re-computed on load as a cross-check: a mismatch means the artefact was edited by hand, which FR-27
 permits, and is recorded in the manifest as a substituted input rather than aborting the run.
+
+NOTE (solution payload, warm start): the stage-10 artefact's payload SHALL be a self-describing
+coefficient record — one array per field component, together with the discrete wall-distance
+coefficient vector and a descriptor — rather than a backend-native binary. The distance field is
+*stored* and not recomputed on restore: a residual reassembled against a freshly solved distance
+field is a different operator, so re-solving it would make a restored state depend on the machine
+that restored it. The descriptor SHALL carry the mesh content hash, the ordered field names, each
+field's element type, order, domain restriction and degree-of-freedom count, the physics model and
+its options, the wall-distance sources and saturation distance, the stabilisation mode (§6.4) and
+the case hash; restore SHALL compare it key by key and abort naming the first difference with both
+values (QR-12), never adapt. A coefficient vector loaded into a space that differs in any of these
+is silently a different function and there is no residual it would fail to reduce. Because the
+payload is excluded from the content hash, a change to this payload contract is a change of artefact
+*schema* and SHALL bump its version, or a stale cache entry would read as a hit whose payload the
+loader cannot open.
+
+NOTE (QR-08, reproduction): the check that a run reproduces its scalar quantities of interest from
+its manifest SHALL re-enter the solve rather than be served from the artefact store. Run against a
+populated store the check reduces to a dictionary lookup and asserts nothing; it is therefore
+performed against a fresh store, with the store miss and the re-entry into the nonlinear solve
+themselves asserted. The agreement required is the nonlinear relative tolerance of §5.3.1
+(`1 × 10⁻⁶`), and the *measured* difference is reported alongside the verdict, so that the figure
+across operating systems is on the record rather than inferred from a pass.
 
 #### 5.3.3 Provenance manifest
 
@@ -1847,6 +1910,9 @@ archive, so the push gate is unaffected by whether it is present.
 | **VER-28** | Reference-geometry conformance | The assembled (r, z) region has exactly three domains — pore body, one membrane, one electrolyte — and is conformal at the membrane-to-pore junction: the membrane meets the pore on the pore's own outer surface, at r = 2.7524 nm on z = −1.4 and r = 4.88 nm on z = +1.4 within the fragmentation tolerance and read from the fixture rather than hard-coded, *and* over one shared edge chain rather than two coincident ones; no membrane material lies inside the fluid set; the region carries exactly the §5.3.1 vocabulary and its mesh meets the §5.2.2 quality figures (FR-09) |
 | **VER-29** | External field ingestion and charge conservation | An (r, z) grid round-trips through the native format and through OpenDX and CCP4 with the singleton-axis convention, origin, spacing and values preserved — or, where the installed GridDataFormats has no CCP4 writer (the IF-05 NOTE of §3.1), the write is refused naming the format, the installed version and the release that gained the writer, which is the other half of the same claim and is asserted rather than skipped; a genuinely two-dimensional array is refused naming its shape; the interpolant's axis order is asserted against a field that is not symmetric in its arguments, so a transposed array fails rather than agreeing on the diagonal; the field is zero outside the grid box rather than continued by its edge value; on the deployed finite-element mesh `|Q_mesh − Q_net|/|Q_net| < 10⁻³`, reported as the producer and consumer legs of the §4.4 NOTE and gated separately, with the axis-guard deficit and the boundary-ring maximum reported beside them; the ramped per-plane cumulative agrees to the same tolerance at every plane; a grid whose boundary values are not negligible against its interior aborts naming the value and its (r, z); a field declaring no `Q_net` gates the consumer leg and records the producer leg as not run. The conservation half is asserted at Tier 2 on the reference mesh of §5.2.1, against a field whose `Q_net` is known in closed form, and a deliberately coarsened mesh there fails the quadrature-agreement gate rather than the conservation gate — which is the distinction the §4.4 NOTE makes normative (QR-03, PHY-18, PHY-19, IF-05, FR-14 in part) |
 | **VER-30** | Dielectric blend | The sharp solid fraction reproduces PHY-20's piecewise assignment to round-off at every quadrature point; a `χ` outside [0, 1] and an inverted `χ` both abort with the offending quantity and its location, the latter on the per-material means; an absolute `ε_r` field is refused with the §4.4 NOTE named (FR-15) |
+| **VER-32** | Command-line surface and exit-code contract | Every subcommand parses and dispatches to the stage objects it names; the registry is listed in a fresh process that imports no stage implementation module, no NGSolve and no netgen, asserted on `sys.modules`; each exit class of the §3.1 IF-02 NOTE is produced by an input that triggers it; every public exception type in the package is either classified by the exit-code enumeration or excluded from it with a written reason, in both directions, so that a type added later fails this test; diagnostics appear on standard error and standard output carries only the command's result; a gate abort prints its QR-12 diagnostic without a traceback unless one is requested (IF-02, FR-27) |
+| **VER-33** | Field export exactness and the Ω/Ω_w split | A quadratic exported and read back is reproduced *exactly* at all six nodes of every element, which a permutation of the midside nodes fails; the exported node count is `nv + nedge`; the two files carry the whole-domain and fluid-only field sets respectively and the fluid file contains no solid node; attribute names carry SI units and the values match the §6.3 scale conversion to round-off, with the `2π` of the axisymmetric measure absent; heavy data is compressed (IF-07) |
+| **VER-34** | Solution-state round trip and descriptor gate | Save followed by restore reproduces every component's coefficients to zero difference; the stored wall-distance vector is restored rather than re-solved; a descriptor differing in mesh hash, element order, domain restriction, degree-of-freedom count, model options, wall-distance sources or saturation distance, or stabilisation mode each abort naming the key and both values; a payload of the superseded schema version is refused by schema rather than misread (FR-27, QR-08 in part) |
 
 ### 7.3 Tier 2 analytic benchmarks
 
@@ -1869,6 +1935,7 @@ discretisation or stabilisation.
 | **VER-26** | Artefact cache and manifest against a real run | the key computed before the stage runs against the artefact it produces | On a converged solve: the two hashes are equal and the key carries no payload; re-running the same case is a store hit that does not re-enter Newton; a changed bias, or a mesh whose *contents* changed, misses, while the same mesh under another path hits; a cancelled run leaves no artefact in the store at either cancellation granularity; the manifest names every input hash the artefact was keyed on, from the same source (§5.3.2, FR-25, FR-26, FR-27, QR-08 in part) |
 | **VER-22** | Force-evaluation route agreement | domain form `F_z = −∫_Ω (T_M + T_H) : ∇w dV` against surface form `F = ∮_S (T_M + T_H)·n dS`, with the variational reaction force on the no-slip surface as a third route for the hydrodynamic half | Agreement to better than **0.1 pN absolute** on the same solution, on a solution whose two halves are individually of order 10 pN and opposite in sign; the reaction route confirming `F^hd` to better than **10⁻³ pN** |
 | **VER-31** | Gouy–Chapman–**Stern**, 1D | `φ_0 = φ_d + σ_s λ_S/(ε₀ε_r)` with `φ_d` and `σ_s` from VER-12's Grahame relation, the shell carrying no space charge so `φ` is linear across it | The wall potential reproduced to better than **1 %** at 0.1 M, `ζ̃_d = 2`, `λ_S = 0.25 nm` — a 30.6 % effect, so a shell the solver treats as fluid fails by 24 %; `λ_S = 0` reproduces VER-12 on the same mesh to solver tolerance (FR-15) |
+| **VER-35** | End-to-end reproduction from the manifest | a case run to convergence, then reproduced from its run directory alone | Every scalar quantity of interest reproduced to better than the `1 × 10⁻⁶` nonlinear relative tolerance of §5.3.1, with the measured difference reported rather than only the verdict; run against a *fresh* store, with the store miss and the re-entry into Newton asserted, so that the cache cannot satisfy the check (the §5.3.2 QR-08 NOTE); an input file whose contents have moved aborts naming it; a library-version difference is reported and non-fatal unless the run asks for a strict environment (QR-08, IF-08) |
 
 NOTE: Hall's result is `R_access = ρ/(4a)` per side, so the two sides give `ρ/(2a)`. The form
 `G = σ[L/(πa²) + 1/a]⁻¹` substitutes radius for diameter in the access term and is wrong there by a
@@ -2239,13 +2306,13 @@ needed.
 
 | Requirement | Verification or validation activity |
 |---|---|
-| IF-01 | VER-25 |
-| IF-02 | None yet |
+| IF-01 | VER-25, VER-32 |
+| IF-02 | VER-32 |
 | IF-03 | VER-09 |
 | IF-04 | None yet |
 | IF-05 | VER-29, VAL-15 |
 | IF-06 | VER-27 |
-| IF-07 | None yet |
+| IF-07 | VER-33 |
 | IF-08 | VER-24 |
 | IF-09 | None yet |
 | FR-01 | None yet |
@@ -2274,7 +2341,7 @@ needed.
 | FR-24 | None yet |
 | FR-25 | VER-24, VER-26 (manifest emitted per §7.6) |
 | FR-26 | VER-09, VER-26 |
-| FR-27 | VER-23, VER-25, VER-26 |
+| FR-27 | VER-23, VER-25, VER-26, VER-32, VER-34 |
 | FR-28 | None yet |
 | FR-29 | None yet |
 | QR-01 | VER-12 to VER-22, in particular VER-17 and VER-18 |
@@ -2284,11 +2351,11 @@ needed.
 | QR-05 | VAL-07, VAL-08, VAL-09 |
 | QR-06 | None yet |
 | QR-07 | None yet (§8.2 criterion 3) |
-| QR-08 | VER-26 for manifest sufficiency; QoI reproduction none yet |
+| QR-08 | VER-26 for manifest sufficiency; VER-34, VER-35 for QoI reproduction |
 | QR-09 | None yet |
 | QR-10 | None yet |
 | QR-11 | None yet |
-| QR-12 | VER-10 |
+| QR-12 | VER-10, VER-32 |
 | QR-13 | None yet |
 | QR-14 | VER-03 |
 | QR-15 | None yet |
@@ -2307,7 +2374,7 @@ needed.
 | CON-13 | None yet |
 | CON-14 | None yet |
 
-Coverage: 36 of the 67 requirements in §3 have a specified activity; 31 are recorded as "none yet",
+Coverage: 38 of the 67 requirements in §3 have a specified activity; 29 are recorded as "none yet",
 predominantly interface, portability, licensing and documentation requirements whose demonstration
 is by inspection rather than by test.
 
