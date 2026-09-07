@@ -19,9 +19,15 @@ never a quiet divergence.
 1. Read `.knowledge/00-index.md`, then the `.knowledge/` files the package touches.
 2. Read `SPECIFICATION.md` §8.1 (phases and gates), the sections the package implements, and its
    rows in Appendix A. Collect the exact `FR-`/`QR-`/`CON-`/`PHY-`/`NUM-`/`VER-`/`VAL-`/`RSK-`
-   identifiers the package discharges — the plan is written around them.
-3. Read the phase plan in `docs/plans/` and the two most recent WP plans. They carry conventions
-   established by merged work that the specification does not repeat, and the house structure below.
+   identifiers the package discharges — the plan is written around them. Also collect the `IF-`
+   interfaces it must satisfy, the `ADR-` decisions that constrain it, and any `OPN-` the
+   specification leaves open in this area: an `OPN-` is what `## Open questions` is *for*, and
+   closing one is a spec edit, not a plan note.
+3. Read the phase plan in `docs/plans/`, and the **Decisions** and **Verification** tables of the
+   two most recent WP plans. They carry conventions established by merged work that the
+   specification does not repeat, and the house structure below. Read those two plans in full only
+   when the package builds directly on one — between them they run to some 15 000 words, and the
+   tables are what the rest of the plan is arguing towards.
 4. Survey the code the package builds on: what exists, what is an empty package reserving a slot,
    which seams already take the argument you need. Delegate this survey (`Explore`, Sonnet — see
    `.claude/model-policy.md`); keep every physics and numerics decision yourself, on Opus.
@@ -78,6 +84,9 @@ gate failure aborts with the quantity and its location; integration order ≥ 3 
 1. If a spec amendment is needed, edit `SPECIFICATION.md` in the same commit and say so in the plan.
 2. Commit on the working branch (create one from `main` if you are on `main`):
    `docs: WP<n> implementation plan`, with the identifiers it discharges in the body.
-   The gate hook runs; a docs-only commit passes it unchanged.
+   The gate hook runs the whole gate, tests included; a docs-only commit passes it unchanged.
+   Then `git push -u origin <branch>`. The plan is the brief `/wp-implement` works from, and it may
+   be a different session on a different machine — an unpushed commit is one reclaimed container
+   away from gone.
 3. Report to the user: the path, the decisions that were close calls, any spec amendment made, and
    the open questions — then stop. Implementation is `/wp-implement`, and it is a separate turn.

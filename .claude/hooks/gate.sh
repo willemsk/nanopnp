@@ -19,7 +19,13 @@ command=$(printf '%s' "$payload" | jq -r '.tool_input.command // ""' 2>/dev/null
 # mention. Anything else leaves the tool call untouched.
 # The regex lives in a variable: bash parses an unquoted =~ operand as shell
 # syntax first, and a bare "(" inside it is a syntax error, not a pattern.
-commit_re='(^|[;&|(]|[[:space:]])git([[:space:]]+-[^[:space:]]+)*[[:space:]]+commit([[:space:]]|$)'
+#
+# Global options sit between `git` and `commit`, and the ones below take their
+# value as a *separate* token: matching only `-[^space]+` stops at that value
+# and lets `git -C /repo commit` through the gate silently. Each of these
+# therefore consumes the token after it; every other option consumes nothing.
+git_opt='[[:space:]]+(-[Cc]|--git-dir|--work-tree|--namespace|--exec-path|--config-env)[[:space:]]+[^[:space:]]+|[[:space:]]+-[^[:space:]]+'
+commit_re="(^|[;&|(]|[[:space:]])git(${git_opt})*[[:space:]]+commit([[:space:]]|\$)"
 [[ $command =~ $commit_re ]] || exit 0
 [[ $command == *--no-verify* ]] && exit 0
 
