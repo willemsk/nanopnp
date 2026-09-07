@@ -1168,7 +1168,21 @@ arrays by dtype, shape and a digest of their contiguous bytes, and input files b
 their contents rather than by their path. Wall-clock fields such as `created_at` are recorded beside
 the hash and excluded from it, so that re-running a case reproduces the hash. A stored hash is
 re-computed on load as a cross-check: a mismatch means the artefact was edited by hand, which FR-27
-permits, and is recorded in the manifest as a substituted input rather than aborting the run.
+permits, and is recorded in the manifest as a substituted input rather than aborting the run. This
+encoding is also the on-disk form of the manifest and the run record of §5.3.3, which are written
+through it so that the file a reader sees and the bytes that were hashed cannot disagree; a decoder
+for the float encoding SHALL therefore exist beside it, because a consumer comparing recorded
+numbers against live ones otherwise compares two encodings and reads a present number as a missing
+one.
+
+NOTE (workspace locality): a run given an artefact store SHALL write every file it produces inside
+that store, scratch included, and SHALL NOT fall back to the process-default store root for the
+files a stage writes before its artefact is put away. FR-24's job array runs many members
+concurrently, each with its own store; a member whose scratch mesh went to the process default
+would leave the artefact and the file it points at in different stores, and QR-06 could not
+attribute either to the member that produced it. The scratch directory is fresh per run rather than
+named after the stage: two runs sharing a store hold different meshes, and a deterministic name
+would have the second overwrite a file the first's artefact still references.
 
 NOTE (solution payload, warm start): the stage-10 artefact's payload SHALL be a self-describing
 coefficient record — one array per field component, together with the discrete wall-distance
@@ -1203,7 +1217,13 @@ populated store the check reduces to a dictionary lookup and asserts nothing; it
 performed against a fresh store, with the store miss and the re-entry into the nonlinear solve
 themselves asserted. The agreement required is the nonlinear relative tolerance of §5.3.1
 (`1 × 10⁻⁶`), and the *measured* difference is reported alongside the verdict, so that the figure
-across operating systems is on the record rather than inferred from a pass.
+across operating systems is on the record rather than inferred from a pass. The check SHALL be
+reachable as a command over a run directory and not only as a test: a promise only the project's own
+test harness can exercise is not one a user holding an archived result can rely on. Drift in an
+*input* is fatal and names the file, a reproduction against moved contents being a different
+calculation reported as the same one; drift in a recorded library version is reported and not fatal
+unless the caller asks for a strict environment, because a version that moved a number is caught by
+the quantity comparison, which is the assertion that matters.
 
 #### 5.3.3 Provenance manifest
 
@@ -1922,7 +1942,7 @@ archive, so the push gate is unaffected by whether it is present.
 | **VER-28** | Reference-geometry conformance | The assembled (r, z) region has exactly three domains — pore body, one membrane, one electrolyte — and is conformal at the membrane-to-pore junction: the membrane meets the pore on the pore's own outer surface, at r = 2.7524 nm on z = −1.4 and r = 4.88 nm on z = +1.4 within the fragmentation tolerance and read from the fixture rather than hard-coded, *and* over one shared edge chain rather than two coincident ones; no membrane material lies inside the fluid set; the region carries exactly the §5.3.1 vocabulary and its mesh meets the §5.2.2 quality figures (FR-09) |
 | **VER-29** | External field ingestion and charge conservation | An (r, z) grid round-trips through the native format and through OpenDX and CCP4 with the singleton-axis convention, origin, spacing and values preserved — or, where the installed GridDataFormats has no CCP4 writer (the IF-05 NOTE of §3.1), the write is refused naming the format, the installed version and the release that gained the writer, which is the other half of the same claim and is asserted rather than skipped; a genuinely two-dimensional array is refused naming its shape; the interpolant's axis order is asserted against a field that is not symmetric in its arguments, so a transposed array fails rather than agreeing on the diagonal; the field is zero outside the grid box rather than continued by its edge value; on the deployed finite-element mesh `|Q_mesh − Q_net|/|Q_net| < 10⁻³`, reported as the producer and consumer legs of the §4.4 NOTE and gated separately, with the axis-guard deficit and the boundary-ring maximum reported beside them; the ramped per-plane cumulative agrees to the same tolerance at every plane; a grid whose boundary values are not negligible against its interior aborts naming the value and its (r, z); a field declaring no `Q_net` gates the consumer leg and records the producer leg as not run. The conservation half is asserted at Tier 2 on the reference mesh of §5.2.1, against a field whose `Q_net` is known in closed form, and a deliberately coarsened mesh there fails the quadrature-agreement gate rather than the conservation gate — which is the distinction the §4.4 NOTE makes normative (QR-03, PHY-18, PHY-19, IF-05, FR-14 in part) |
 | **VER-30** | Dielectric blend | The sharp solid fraction reproduces PHY-20's piecewise assignment to round-off at every quadrature point; a `χ` outside [0, 1] and an inverted `χ` both abort with the offending quantity and its location, the latter on the per-material means; an absolute `ε_r` field is refused with the §4.4 NOTE named (FR-15) |
-| **VER-32** | Command-line surface and exit-code contract | Every subcommand parses and dispatches to the stage objects it names; the registry is listed in a fresh process that imports no stage implementation module, no NGSolve and no netgen, asserted on `sys.modules`; each exit class of the §3.1 IF-02 NOTE is produced by an input that triggers it; every public exception type in the package is either classified by the exit-code enumeration or excluded from it with a written reason, in both directions, so that a type added later fails this test; diagnostics appear on standard error and standard output carries only the command's result; a gate abort prints its QR-12 diagnostic without a traceback unless one is requested (IF-02, FR-27) |
+| **VER-32** | Command-line surface and exit-code contract | Every subcommand parses and dispatches to the stage objects it names; the registry is listed in a fresh process that imports no stage implementation module, no NGSolve and no netgen, asserted on `sys.modules`; each exit class of the §3.1 IF-02 NOTE is produced by an input that triggers it; every public exception type in the package is either classified by the exit-code enumeration or excluded from it with a written reason, in both directions, so that a type added later fails this test; diagnostics appear on standard error and standard output carries only the command's result; a gate abort prints its QR-12 diagnostic without a traceback unless one is requested; a run given a store writes every file it produces inside that store, asserted by running from a working directory the process-default fallback would land in and requiring it to stay empty (IF-02, FR-27, the §5.3.2 workspace-locality NOTE) |
 | **VER-33** | Field export exactness and the Ω/Ω_w split | A quadratic exported and read back is reproduced *exactly* at all six nodes of every element, which a permutation of the midside nodes fails; the exported node count is `nv + nedge`; the two files carry the whole-domain and fluid-only field sets respectively and the fluid file contains no solid node; attribute names carry SI units and the values match the §6.3 scale conversion to round-off, with the `2π` of the axisymmetric measure absent; heavy data is compressed (IF-07) |
 | **VER-34** | Solution-state round trip and descriptor gate | Save followed by restore reproduces every component's coefficients to zero difference; the stored wall-distance vector is restored rather than re-solved; a descriptor differing in the solve-provenance digest, mesh hash, element order, domain restriction, degree-of-freedom count, model options, wall-distance sources or saturation distance, or stabilisation mode each abort naming the key and both values; a payload of the superseded schema version is refused by schema rather than misread; a case differing only in `name:` or `outputs:` restores, and keys the same stage-10 artefact (FR-27, QR-08 in part) |
 
@@ -2325,7 +2345,7 @@ needed.
 | IF-05 | VER-29, VAL-15 |
 | IF-06 | VER-27 |
 | IF-07 | VER-33 |
-| IF-08 | VER-24 |
+| IF-08 | VER-24, VER-35 |
 | IF-09 | None yet |
 | FR-01 | None yet |
 | FR-02 | None yet |

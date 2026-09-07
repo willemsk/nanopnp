@@ -1,6 +1,6 @@
 # WP10 — Case-driven runs, the CLI, field output
 
-**Status: planned, not started.** Written 7 September 2026, the fourth package of Phase 1, after
+**Status: delivered, 7 September 2026.** Written 7 September 2026, the fourth package of Phase 1, after
 WP7 landed the case schema, the content-addressed artefact and the provenance manifest, WP8 landed
 mesh ingestion and the element-quality gates, and WP9 landed the external charge and dielectric
 fields. It inherits a solver that can be driven end to end *from Python* and by nothing else:
@@ -84,6 +84,31 @@ without that ratio beside it.
 | Route agreement | Stays **on** by default; `check_routes=False` reaches the manifest through WP9's stage-contributed deviation channel | The case schema cannot express it, and a NUM-26 check switched off silently is precisely RSK-03 |
 | QR-08's reproduction test | Runs against a **fresh store** and asserts the store missed and Newton was re-entered | `get_or_compute` would otherwise serve the cached artefact and the test would assert that a dictionary lookup is deterministic |
 
+> **Outcome — four decisions the table did not take, settled during implementation.**
+>
+> - **The stage-10 key is a `solve_provenance` digest, not the whole case hash.** The table's restore
+>   gate says "case provenance hash"; the implementation names it, `solve_provenance` reduced to
+>   `solve_hash`, and it covers only the *solve-relevant* part of the resolved case. A case differing
+>   only in `name:` or `outputs:` therefore keys the same stage-10 artefact and restores against it —
+>   without that, asking for one more reported quantity re-solves the case, which on the reference
+>   pore is minutes discarded for a question about post-processing. §5.3.2's "what keys a solve" NOTE
+>   carries the argument.
+> - **The run directory holds a third file, `run.json`.** `manifest.json` records how the run was
+>   configured and `case.yaml` what it was asked to do; neither records what it *produced*. QR-08
+>   needs the scalars to compare against, so the driver writes the stage records, the artefact hashes
+>   and the quantities beside the other two. It is written through `canonical()` like the manifest —
+>   which is what made the float-encoding outcome above necessary.
+> - **NUM-28's extension shell is `(1.2 R, 3.0 R)`, scaled off the analyte radius, overridable by
+>   `options["extension_shell_nm"]`.** The specification fixes the *form* of the shell and not its
+>   radii; a shell in absolute nm would be wrong on the next analyte, and one keyed to the mesh would
+>   make a force a function of a discretisation choice. Scaling off the body puts it in the one length
+>   the physics supplies. It is a stage option rather than a case-file key for the reason the
+>   indicator band is: a physics knob with a derivable default whose wrong value is silent.
+> - **The QoI stage threads `clamp_activations` into the manifest.** PHY-13's clamp above 5.3 M is
+>   recorded by stage 8; a result that clamped and did not say so in its manifest is one whose numbers
+>   cannot be accounted for, so it travels FR-25's "every switch set away from the validated default"
+>   channel.
+
 ## Design
 
 ### Stage 11 (`qoi`) and stage 12 (`report`)
@@ -105,6 +130,15 @@ The QoI artefact's summary is `QuantitiesOfInterest.summary()` as it stands, plu
 figure. That agreement figure in the summary is the RSK-03 instrument: it is what makes a wrong
 current *visible* rather than merely plausible.
 
+> **Outcome — the two stages gained three things the sketch above did not name.**
+> `ReportStage`'s export selection needed a schema of its own,
+> `EXPORT_SCHEMA = "nanopnp/export/v1"`, because the file pair is an artefact payload and not a
+> summary field. The mesh's material names travel with it under a `domain_materials` metadata key,
+> since the Ω_w split has to know which materials are fluid and the mesh artefact's summary does not
+> say. And the clamp activations of PHY-13, which stage 8 records and stage 11 reads, are threaded
+> from stage 11 into the FR-25 manifest: a run that clamped above 5.3 M and did not say so in its
+> manifest is a result whose numbers cannot be accounted for.
+
 ### The indicator band, derived
 
 `post/indicator.lumen_band` takes a `CylindricalPoreGeometry`. An ingested mesh has no such object,
@@ -122,6 +156,15 @@ On `CylindricalPoreGeometry` the membrane spans `±half_thickness_nm`, so `z_mid
 identity is asserted, and it is what says the derivation is the existing convention read off a
 different object rather than a second convention that happens to be close. On the WP8 ClyA reference
 the membrane spans z ∈ [−1.4, +1.4] nm, giving a band of [−1.12, +1.12] nm.
+
+> **Outcome — the identity is exact on the geometry and round-off-close on a mesh.**
+> The derivation reproduces `lumen_band(geometry, fraction=0.8)` exactly when the band is computed
+> from the geometry object, but the *meshed* membrane's z-extent comes back as
+> `[-3.0, 3.000000000000001]` on `CylindricalPoreGeometry(2, 6, 10)`: an OCC-generated extent is one
+> ulp off the number the geometry was given (`.knowledge/06-numerics-fem.md` §8.1.3). The assertion
+> is therefore exact against the geometry and to round-off against the mesh, which is the honest
+> pair — asserting exactness against the mesh would have been a tolerance met by luck on this
+> geometry and failing on the next.
 
 A mesh carrying no `membrane` material aborts naming the material and listing the materials the mesh
 does carry (QR-12). It does not fall back to the whole domain: a band spanning the reservoirs puts
@@ -175,6 +218,25 @@ topology   44 316 × 6 × 8 B = 2.13 MB   (1.06 MB as int32)
 
 Over WP11's 3 675-point envelope that is ≈33 GB uncompressed. gzip is therefore on, and `fields` is
 off unless `outputs:` asks for it.
+
+> **Outcome — the `Scales` set goes in HDF5 root attributes, not an XDMF `Information` element.**
+> meshio writes the XDMF tree itself and offers no hook for an extra `Information` child, so a
+> `Scales` element would have to be injected by re-parsing the file meshio had just written — a
+> second writer for the same file, and one that a meshio version bump would silently break. The
+> scales are written as attributes on the HDF5 root instead, where they travel with the heavy data
+> they describe and are read back with `h5py` alone.
+>
+> **Outcome — `material_id` and `eps_r` are cell-centred; the velocity is a three-component
+> vector.** `material_id` is a property of the element, not of a node, and a node on the membrane
+> boundary belongs to two materials at once: written per-node it would have to pick one, and a
+> reader thresholding on it would see a ragged interface that is an artefact of the choice. `eps_r`
+> follows it, being piecewise per material by PHY-20. `u_m_s` is written with three components
+> (`u_r`, `u_z`, 0) rather than two: XDMF's `AttributeType="Vector"` is 3-vector by definition, and
+> ParaView reads a 2-component attribute as two scalars.
+>
+> **Measured, on the reference pore** (`CylindricalPoreGeometry(2, 6, 10)`, `maxh` 4 nm /
+> `wall_h` 1 nm, 124 elements, stabilisation `none`): `fields_omega.xdmf` 943 B with a 27 750 B
+> `.h5`, `fields_omega_w.xdmf` 1 331 B with a 39 648 B `.h5`; the report stage runs in 0.2 s.
 
 ### Warm-start persistence (`solve/state.py`)
 
@@ -264,6 +326,32 @@ cached solution artefact and the "reproduction" would be a dictionary lookup. Th
 against a fresh store and asserts both that the store missed and that Newton was re-entered — the
 same construction VER-26 used from the other side to prove that a *hit* does not re-enter Newton.
 
+> **Outcome — `reproduce` is a module, `src/nanopnp/io/reproduce.py`, which the work-items table did
+> not name.** The plan wrote it as a CLI subcommand, and a subcommand is where it is *reached*; but
+> QR-08 is a promise to a user holding an archived run directory, and a promise only the project's
+> own test harness can exercise is not one. Putting the check in `io/` makes it callable from the
+> Python API (IF-01), from the desktop shell, and from the Tier-2 test by the same route the CLI
+> takes — so the thing the test exercises is the thing the user runs. The specification's QR-08
+> reproduction NOTE gained a sentence saying so.
+>
+> **Measured** (stabilisation `none`, 124 elements, 0.1 M NaCl, +20 mV, `ground: cis`,
+> `solid_permittivities: {membrane: 3.2}`, `default_ladder`): a run reproduces 11 quantities — 14
+> scalars once the nested `currents_A` and `route_agreement` blocks are flattened — to a worst
+> relative difference of **exactly 0**, with **0 store hits and 6 misses**. The 0 is what an
+> in-process deterministic direct solve should give; the cross-platform figure appears on the 3-OS
+> matrix, and the number is logged rather than only asserted so that it is on the record from the
+> first run.
+>
+> **Outcome — the recorded and the live side of the comparison spoke different encodings.**
+> `run.json` is written through `canonical()`, which encodes every float as `{"__f__": x.hex()}`, so
+> `json.loads` of the archived record yields `current_A.__f__` where the live result yields
+> `current_A` — and the comparison reported ten *missing* quantities rather than ten matching ones.
+> `canonical` is the on-disk format of `manifest.json` and `run.json` as well as the hash input, so
+> the fix belongs in the reader: `nanopnp.core.hashing.decode_floats` is the inverse, added beside
+> the encoder with a VER-23 test, and §5.3.2's canonical-serialisation NOTE now says a decoder SHALL
+> exist. Deliberately not a full inverse of `canonical`: an array encodes as a *digest* of its bytes
+> and nothing can undo that.
+
 ### Exit-code classification
 
 `cli/errors.py` holds an explicit table:
@@ -281,6 +369,34 @@ same construction VER-26 used from the other side to prove that a *hit* does not
 The Tier-1 test enumerates every public exception class under `src/nanopnp/**` and requires each to be
 either in the table or in an exclusion list carrying a written reason. A class added later is a test
 failure, not a silent `1`.
+
+> **Outcome — the table is keyed on strings, and three classifications were close calls.**
+> Each row is keyed on `f"{cls.__module__}:{cls.__qualname__}"` and `classify` walks
+> `type(error).__mro__` looking each name up, so classifying an error imports **no exception
+> module** — which is the point: the table names classes in `solve`, `mesh`, `charge` and `post`,
+> and a table of class *objects* would import all four at CLI start. Measured: `import nanopnp.cli`
+> costs 55.6 ms cumulative, 0.082 s as a cold process, against `import ngsolve`'s ~370 ms. The MRO
+> walk is load-bearing rather than incidental — it is what keeps a narrower gate error added later a
+> `4` instead of falling to `1`.
+>
+> Three rows the plan's table did not settle:
+>
+> - **`post.stage:SelectionError` is `3`, not `4`.** It fires when `outputs:` asks for something
+>   this case cannot produce — `analyte_force` with no `analyte` material, `rectification` at one
+>   operating point. Nothing numerical went wrong; the case asked for the impossible, which is
+>   exactly what `3` means. Reading it as a gate abort would have a job array treat a mis-written
+>   case as a physics failure.
+> - **`builtins:FileNotFoundError` is `3`.** Left unclassified it would fall to `1`, and `1` is the
+>   class a job array retries. A missing case file is the other kind: the path is wrong, and it will
+>   be just as wrong on the retry.
+> - **Two classes are excluded with written reasons** — `core.hashing:CanonicalisationError` and
+>   `io.defaults:UnknownSwitchPathError`. Both signal an internal contract violated by calling code,
+>   not a condition a user's input can reach, so `1` with a traceback is the right answer and the
+>   exclusion list records why.
+>
+> Exit codes `5` and `130` are not reachable in Tier 1 — forcing Newton to diverge or a token to
+> cancel needs a solve — so they are discharged by classifying an instance of each class, which is
+> the same route the CLI's own code takes.
 
 ### Spec amendments this package makes
 
@@ -302,6 +418,17 @@ All seven are edited into `SPECIFICATION.md` in the same commit as this plan.
    trip and descriptor gate), **VER-35** (end-to-end reproduction defeating the cache).
 7. **Appendix A** — rows for IF-01, IF-02, IF-07 and QR-08, three of which currently read "None yet".
 
+> **Outcome — three further amendments, all made during implementation.**
+> 8. **§5.3.2, NOTE (canonical serialisation)** — extended: the encoding is the on-disk form of the
+>    manifest and the run record too, and a decoder for the float encoding SHALL exist beside it,
+>    because a consumer comparing recorded against live numbers otherwise compares two encodings and
+>    reads a present number as a missing one.
+> 9. **§5.3.2, NOTE (workspace locality)** — new: a run given a store SHALL write every file it
+>    produces inside that store, scratch included. See the work-items outcome below.
+> 10. **§5.3.2, NOTE (QR-08, reproduction)** — extended: the check SHALL be reachable as a command
+>    over a run directory and not only as a test, with input drift fatal and library drift reported.
+>    **VER-32**'s row gained the workspace-locality assertion.
+
 ## Work items
 
 | File | Delivers | Identifiers |
@@ -317,6 +444,39 @@ All seven are edited into `SPECIFICATION.md` in the same commit as this plan.
 | `src/nanopnp/io/artefact.py` | `QOI_SCHEMA`, `REPORT_SCHEMA`; `SOLUTION_SCHEMA` bump | §5.3.2 |
 | `SPECIFICATION.md` | The seven amendments above | IF-02, IF-07, QR-08, VER-32 … VER-35 |
 
+> **Outcome — four files beyond the table, and one defect the driver work exposed.**
+>
+> - **`src/nanopnp/io/reproduce.py`** (new) — QR-08 as a callable check rather than only a test; see
+>   the outcome under *`reproduce`, and why it is a verb* above.
+> - **`src/nanopnp/core/hashing.py`** — `decode_floats`, the inverse of the float encoding, with a
+>   VER-23 test.
+> - **`.gitignore`** — `nanopnp-store/`. It is the documented default store location
+>   (`core/paths.store_root`), so running the CLI from a checkout creates it by design.
+> - **`src/nanopnp/io/run.py`** — every file-writing stage falls back to `store_root() / "tmp"` when
+>   constructed without a workspace, and `store_root()` is `$NANOPNP_STORE` or `./nanopnp-store`, the
+>   *process* default — never the `Store` the run was handed. So a run into a caller's store left its
+>   scratch mesh somewhere the caller never named while the artefact pointing at it lived in the
+>   store the caller did; running the test suite from a checkout left a `nanopnp-store/tmp/mesh-*`
+>   behind. `run_case` now takes a fresh workspace under the store in use when the caller names none,
+>   which is what its docstring already promised. Fresh per run rather than a fixed `tmp/mesh`: two
+>   runs sharing a store hold different meshes, and a deterministic name would have the second
+>   overwrite a file the first's artefact still references. Asserted by running from a working
+>   directory the fallback would land in and requiring it to stay empty.
+>
+> Two constants in `io/run.py` earned their own Tier-1 tests because getting either wrong is silent:
+> `PAYLOAD_FREE` names the stages with no payload to hand-substitute, and `WORKSPACE_STAGES` names
+> the constructors that take a directory. `WORKSPACE_STAGES` is enumerated rather than discovered by
+> catching `TypeError` from `create()` — a genuine `TypeError` raised *inside* a stage's constructor
+> would be indistinguishable from an unwanted keyword, and the driver would quietly rebuild the stage
+> with no workspace. A test asserts both sets against the constructors themselves.
+>
+> The driver also gained a **`deviations(inputs)` protocol extension**: a stage reports the
+> deviations from the validated model that its own artefact records — the mesh stage's exclusions,
+> the field stage's smoothed dielectric — so the FR-25 manifest lists every switch set away from the
+> default without the driver knowing what any stage's artefact contains. Two helpers read those off
+> the artefacts rather than off the case, which is what makes the manifest describe what was *run*
+> rather than what was *asked for*.
+
 ## Verification
 
 | Test file | Tier | Identifiers | What it asserts |
@@ -330,6 +490,42 @@ All seven are edited into `SPECIFICATION.md` in the same commit as this plan.
 Tolerance provenance: `1 × 10⁻⁶` is the case schema's own `numerics.nonlinear.rtol` (§5.3.1, NUM-16),
 not a number chosen for this test — reproduction to solver tolerance is exactly what QR-08 asks for.
 The route-agreement tolerance is NUM-26's `1 × 10⁻³`, unchanged from WP5.
+
+> **Outcome — the delivered numbers, all at stabilisation `none`.**
+>
+> The reference run throughout is `CylindricalPoreGeometry(2, 6, 10)` meshed at `maxh` 4 nm /
+> `wall_h` 1 nm — 124 elements, min SICN 0.7138, min gamma 0.6860 — with 0.1 M NaCl at +20 mV,
+> `ground: cis`, `solid_permittivities: {membrane: 3.2}`, the `willems2020_nacl` corrections and
+> `default_ladder`. Recorded with the stabilisation mode because a number whose mode is unrecorded is
+> not comparable to the reference COMSOL run, whose stabilisation was **on** (§6.4, §7.4).
+>
+> | Quantity | Value |
+> |---|---|
+> | `current_A` | 3.6170916294619195 × 10⁻¹¹ |
+> | `currents_A["Na+"]` | 1.4334969520459997 × 10⁻¹¹ |
+> | `currents_A["Cl-"]` | 2.18359467741592 × 10⁻¹¹ |
+> | `transport_number` | 0.3963120370990567 |
+> | `conductance_S` | 1.8085458147309597 × 10⁻⁹ |
+> | `eof_m3_s` | 4.484668242351342 × 10⁻²⁵ |
+> | Route agreement, relative | 3.25861342399385 × 10⁻¹⁰ |
+>
+> The route figure is four orders inside NUM-26's `1 × 10⁻³`, and the band does not set it: over
+> half-widths of 0.6, 1.5, 2.4 and 2.9 nm the agreement stays ≤ 6.7 × 10⁻¹⁰, which is what says the
+> current is a physical quantity rather than a function of where the band was drawn.
+>
+> Timings, same mesh: the `case` stage 0.011 s, `mesh` 0.075 s, `materials` 0.010 s, `solve` 0.445 s
+> over the full ladder, `report` 0.2 s. Test-suite cost: `tests/tier1/test_cli.py` 29 tests in 1.24 s,
+> `tests/tier1/test_run.py` 2.06 s, `tests/tier1/test_qoi_stage.py` 2.51 s,
+> `tests/tier2/test_artefact_cache.py` 10 tests in 1.33 s, `tests/tier2/test_reproducibility.py`
+> 6 tests in 2.6 s. The whole default selection is 657 passed, 1 skipped in 105 s.
+>
+> **A latent defect recorded and deliberately not fixed here.** The P2 Varadhan distance field
+> undershoots to −0.99 nm at the re-entrant pore-mouth corner, and `FittedCorrection.evaluate` clamps
+> the concentration driver but *not* `wall_distance_nm` — so `1 − exp(−6.2(d + 0.01))` returns a
+> **negative** diffusivity and mobility factor there. It does not move the numbers above, the corner
+> being a single quadrature neighbourhood, but it is a wrong sign in a correction and belongs to
+> whichever package owns the distance field's boundary behaviour. Written up in
+> `.knowledge/06-numerics-fem.md` §7.1.1.
 
 ## Out of scope
 
@@ -358,6 +554,13 @@ None of these block implementation; each has a stated proposal that the plan pro
 2. **Does `reproduce` earn a subcommand at v0.5**, or is QR-08 adequately discharged by the Tier-2
    test alone? Proposal: keep the subcommand — QR-08 is a promise to a *user* who has a run directory
    and no test harness, and a promise only a test can exercise is not one.
+
+   > **Outcome — settled as proposed, and one level deeper.** The check is a module,
+   > `io/reproduce.py`, with the subcommand as one caller and the Tier-2 test as another, so the
+   > thing the test exercises is the thing the user runs. §5.3.2's QR-08 NOTE now requires it.
+   > Question 1 stands open: the measured in-process difference is exactly 0, and the first honest
+   > cross-platform figure appears on the 3-OS matrix, which is where the argument about a separate
+   > looser gate should be had.
 3. **Should WP10 ship an example case outside `tests/`?** Proposal: no. A case file in `examples/`
    becomes a reference the moment somebody runs it, and the reference set is VAL-03's, whose export
    scope is still open (§10).

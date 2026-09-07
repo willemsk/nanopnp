@@ -1,6 +1,6 @@
 # Phase 1 (Solver core): the production solver on an externally supplied mesh
 
-**Status: WP7, WP8 and WP9 delivered; WP10–WP12 planned.** Written 2 September 2026, after Phase 0
+**Status: WP7, WP8, WP9 and WP10 delivered; WP11–WP12 planned.** Written 2 September 2026, after Phase 0
 (WP1–WP6) and its consolidation (WP-A1, WP-B1, WP-B2, WP-C1). It inherited a verified physics core
 and a bare pipeline: tiers 1 and 2 green, `mypy --strict` and `ruff` clean, and `io/`, `sweep/`,
 `charge/`, `structure/`, `density/`, `symmetry/`, `gui/` still empty reserved slots. `io/` is filled
@@ -444,16 +444,69 @@ published quality band — 44,316 triangles at minimum SICN 0.6559 — by isotro
 is what the reference model did (§5.2.2), so a Debye-layer resolution study here does not reopen
 FR-11. It stays a post-1.0 element-count optimisation, and WP9 posed no anisotropic meshing.
 
-### WP10 — Case-driven runs, the CLI, field output
+### WP10 — Case-driven runs, the CLI, field output — **delivered**
 
-`cli/` (subcommands `run`, `stage`, `inspect`, `env`), `io/fields.py`.
+`cli/__init__.py`, `cli/errors.py`, `io/run.py`, `io/fields.py`, `io/reproduce.py`,
+`post/stage.py`, `solve/state.py`, with changes to `core/hashing.py`, `core/stages.py`,
+`io/artefact.py` and `solve/stage.py`; the plan's seven spec amendments plus three that
+implementation forced (§5.3.2's canonical-serialisation NOTE extended to say the encoding is the
+on-disk format and a decoder SHALL exist beside it; a new §5.3.2 workspace-locality NOTE; and
+§5.3.2's QR-08 NOTE extended to require the reproduction check be reachable as a command).
 
-`nanopnp run case.yaml` end to end; `nanopnp stage <name>` for one stage over its inputs;
-`nanopnp inspect <artefact>` for introspection; XDMF + HDF5 field export (IF-07) and the native
-coefficient-vector round trip warm starts need; the reproducibility test that re-runs a case from its
-manifest and matches every scalar QoI to solver tolerance.
+Delivered: stages 11 (`qoi`, `nanopnp/qoi/v1`) and 12 (`report`, `nanopnp/report/v1`) registered, so
+`run` is a walk over the stage graph rather than physics inside the CLI, with the indicator band
+derived from the `membrane` material's z-extent and asserted identical to `lumen_band(fraction=0.8)`;
+`io/run.py` as the driver — `PIPELINE` in dependency order, `PAYLOAD_FREE` and `WORKSPACE_STAGES`
+both enumerated with tests against the constructors themselves, `Progress`/`CancelToken` threaded
+through, the FR-25 manifest and a third run-directory file `run.json` carrying what the run
+*produced*, and a `deviations(inputs)` protocol extension letting each stage report the deviations
+its own artefact records; `solve/state.py` as the `nanopnp/solution/v2` `.npz` payload — one
+coefficient array per component plus the stored wall-distance vector plus a descriptor gate that
+aborts naming the first differing key — where `restore` reassembles the *operator* and not only the
+state, because NUM-25 is the assembled residual and a restored solution without one can answer only
+half of QR-04; `io/fields.py` as the IF-07 export, `Triangle_6` at the P2 node set with midside nodes
+matched by vertex pair, split into an Ω pair and a fluid-only Ω_w pair, SI units in the attribute
+names and gzip on the heavy data; `cli/errors.py` as the IF-02 exit enumeration, keyed on
+`"module:qualname"` strings and walked over the MRO so that classifying an error imports no exception
+module; five subcommands over the IF-01 objects, none of whose flags changes what is solved; and
+`io/reproduce.py` making QR-08 a callable check rather than only a test assertion. Discharges
+**IF-01**, **IF-02**, **IF-07**, **FR-27** and **QR-08**, and adds **VER-32**, **VER-33**, **VER-34**
+and **VER-35**.
 
-Discharges **IF-01, IF-02, IF-07, FR-27, QR-08**.
+Beyond the plan: `core/hashing.py` gained `decode_floats`, the inverse of the `{"__f__": x.hex()}`
+float encoding — `canonical()` is the on-disk format of `manifest.json` and `run.json` as well as the
+hash input, and without a decoder the recorded and live sides of QR-08's comparison speak different
+encodings and a present number reads as a missing one; and `io/run.py` gained a workspace under the
+store in use, because all four file-writing stages fall back to `store_root()` — the *process*
+default — when constructed without one, so a run into a caller's store left its scratch mesh
+somewhere the caller never named. `nanopnp-store/` is gitignored besides.
+
+Reference measurements, stabilisation `none`, on `CylindricalPoreGeometry(2, 6, 10)` at `maxh` 4 nm /
+`wall_h` 1 nm (124 elements, min SICN 0.7138), 0.1 M NaCl at +20 mV, `ground: cis`,
+`solid_permittivities: {membrane: 3.2}`, `default_ladder`:
+
+| Quantity | Value |
+|---|---|
+| `current_A` | 3.6170916294619195e-11 |
+| `currents_A["Na+"]` / `["Cl-"]` | 1.4334969520459997e-11 / 2.18359467741592e-11 |
+| `transport_number` | 0.3963120370990567 |
+| `conductance_S` | 1.8085458147309597e-09 |
+| `eof_m3_s` | 4.484668242351342e-25 |
+| Route agreement, relative | **3.25861342399385e-10** |
+| QR-08 reproduction, worst relative | **0.0**, 0 store hits / 6 misses |
+
+The route figure is four orders inside NUM-26's `1e-3` and does not depend on the band: over
+half-widths 0.6, 1.5, 2.4 and 2.9 nm it stays ≤ 6.7e-10. `import nanopnp.cli` costs 55.6 ms
+cumulative and 0.082 s as a cold process, against `import ngsolve`'s ~370 ms — which is what the
+string-keyed exit table and the target-string registry buy.
+
+Inherited by WP11: a latent defect, recorded and deliberately not fixed here. The P2 Varadhan
+distance field undershoots to −0.99 nm at the re-entrant pore-mouth corner, and
+`FittedCorrection.evaluate` clamps the concentration driver but not `wall_distance_nm` — so
+`1 − exp(−6.2(d + 0.01))` returns a **negative** diffusivity and mobility factor there. It does not
+move the numbers above, the corner being one quadrature neighbourhood, but it is a wrong sign in a
+correction and belongs to whichever package owns the distance field's boundary behaviour
+(`.knowledge/06-numerics-fem.md` §7.1.1).
 
 ### WP11 — Sweep runner
 

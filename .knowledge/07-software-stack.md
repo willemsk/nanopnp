@@ -319,3 +319,58 @@ mypy aborts the whole check with `numpy/__init__.pyi:737: error: Type statement 
 Python 3.12 and greater  [syntax]` before reaching project code **[tested]**. So the guard is the
 3.10 matrix job, and reproducing a matrix-only failure means `uv run --python 3.10 --all-extras
 pytest`, which resolves and installs a separate 3.10 environment in about a minute.
+
+---
+
+## 9. The CLI's import budget, measured **[tested]**
+
+`import nanopnp.cli` costs **55.6 ms cumulative** (`python -X importtime`), and a cold subprocess
+that imports it and exits takes **0.082 s**. `import ngsolve` alone is ~370 ms, and the physics and
+mesh modules at module scope would take the package's own share from 56 ms to 424 ms. A sweep
+dispatching a job array pays that per process, which is what the deferred-import rule of
+`CLAUDE.md` buys.
+
+Two mechanisms keep it there, and both are load-bearing rather than tidy:
+
+- **The stage registry holds descriptions beside `"module:attribute"` target strings**, and
+  `nanopnp.core.stages.create` is the only function that resolves one. `nanopnp stage --list`
+  therefore answers from data. Asserted in a subprocess: after `main(["stage", "--list"])` no
+  module matching `ngsolve*` or `netgen*` is in `sys.modules` **[tested]**.
+
+- **The IF-02 exit-code table is keyed on `f"{cls.__module__}:{cls.__qualname__}"` strings**, and
+  `classify` walks `type(error).__mro__` looking each name up. Classifying an error therefore
+  imports no exception module — which matters because the table names classes in `solve`, `mesh`,
+  `charge` and `post`, and a table of *class objects* would import all four at CLI start.
+  Asserted the same way, on the table's own module list **[tested]**.
+
+The MRO walk is not incidental: it is what makes a subclass of a classified exception inherit its
+exit code, so a narrower gate error added later is still a `4` rather than falling to `1`.
+
+## 10. `canonical()` is the on-disk format, not only the hash input
+
+`nanopnp.core.hashing.canonical` produces the bytes that are hashed **and** the bytes that
+`manifest.json` and `run.json` hold — both are written through it, so the file a reader opens and
+the bytes that were hashed cannot disagree. The consequence is easy to miss and produces a
+confusing failure: every float on disk is a one-key wrapper `{"__f__": <float.hex()>}`, so
+`json.loads` of a run record yields `{"current_A": {"__f__": "0x1.3e...p-35"}}` rather than a
+number.
+
+Comparing such a record against live values without decoding it does not report a *different*
+number — it reports a **missing** one, because a flatten-to-dotted-paths comparison yields
+`current_A.__f__` on one side and `current_A` on the other **[tested]**. `decode_floats` is the
+inverse and belongs to any reader of these files.
+
+It is deliberately not a full inverse of `canonical`: an array encodes as dtype, shape and a
+*digest* of its bytes (`"__a__"`), which nothing can undo, and is left as it stands.
+
+## 11. A stage's workspace falls back to the process store root, not the run's store **[tested]**
+
+`mesh/ingest.py`, `charge/stage.py`, `solve/stage.py` and `post/stage.py` each fall back to
+`store_root() / "tmp"` plus a `mkdtemp` when constructed without a workspace — and `store_root()`
+is `$NANOPNP_STORE` or `./nanopnp-store`, the *process* default, never the `Store` the caller
+handed the run. Running the test suite from a checkout therefore left a `nanopnp-store/tmp/mesh-*`
+behind while every artefact lived in a `tmp_path` store.
+
+`io.run.run_case` now names a fresh workspace under the store in use when the caller gives none.
+Fresh per run and not a fixed `tmp/mesh`: two runs into one store hold different meshes, and a
+deterministic name has the second overwrite a file the first's artefact still points at.
