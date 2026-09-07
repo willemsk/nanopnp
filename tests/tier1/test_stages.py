@@ -126,7 +126,7 @@ def test_ver25_a_stage_cannot_be_registered_twice() -> None:
         title="Solve",
         inputs=(),
         outputs=(),
-        artefact_schema="nanopnp/solution/v1",
+        artefact_schema="nanopnp/solution/v2",
     )
     with pytest.raises(ValueError, match="already registered"):
         register(description, "nanopnp.solve.stage:SolveStage")

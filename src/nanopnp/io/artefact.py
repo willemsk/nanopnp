@@ -51,8 +51,22 @@ docstring), and one schema naming one thing in two places is the intent.
 FIELDS_SCHEMA = "nanopnp/fields/v1"
 """Stage 7: the supplied fixed-charge and dielectric fields, gated (§5.2)."""
 
-SOLUTION_SCHEMA = "nanopnp/solution/v1"
-"""Stage 10: the converged field set and its iteration history."""
+SOLUTION_SCHEMA = "nanopnp/solution/v2"
+"""Stage 10: the converged field set and its iteration history.
+
+``v2`` because the payload contract changed: ``v1`` wrote the backend's native
+``state.gfu``, ``v2`` writes the self-describing coefficient record of
+:mod:`nanopnp.solve.state`. The payload is outside the content hash (see the
+module docstring), so a ``v1`` entry left in a store would otherwise be a cache
+*hit* whose payload the loader cannot open — which is why section 5.3.2 makes a
+changed payload contract a changed schema version.
+"""
+
+QOI_SCHEMA = "nanopnp/qoi/v1"
+"""Stage 11: the NUM-27 scalar quantities of one converged solution."""
+
+REPORT_SCHEMA = "nanopnp/report/v1"
+"""Stage 12: the run record — the export selection and what was written."""
 
 
 def timestamp() -> str:
@@ -305,6 +319,73 @@ class SolutionArtefact(Artefact):
             schema=SOLUTION_SCHEMA,
             parameters=dict(parameters),
             inputs=dict(inputs),
+            payload=dict(payload or {}),
+            summary=summary or {},
+        )
+
+
+class QoIArtefact(Artefact):
+    """Stage 11: the NUM-27 scalars extracted from one converged solution.
+
+    The case and the solution enter as input hashes and everything that changes
+    a number enters as a parameter: which quantities were asked for, the axial
+    band ``grad(psi)`` is supported on, and whether the NUM-26 route check ran.
+    The band is a parameter and not a summary field because two extractions that
+    differ only in it are two different numbers, and NUM-24's whole claim is that
+    they are not — a claim VER-11 tests and this key must not assume.
+
+    No library version appears here. The environment is recorded in the manifest
+    beside the artefact; putting it in the key would make the cache
+    machine-dependent and every machine a miss.
+    """
+
+    def __init__(
+        self,
+        *,
+        case_hash: str,
+        solution_hash: str,
+        outputs: tuple[str, ...],
+        indicator_band_nm: tuple[float, float],
+        check_routes: bool,
+        payload: Mapping[str, Path] | None = None,
+        summary: Mapping[str, Canonicalisable] | None = None,
+    ) -> None:
+        super().__init__(
+            schema=QOI_SCHEMA,
+            parameters={
+                "outputs": list(outputs),
+                "indicator_band_nm": list(indicator_band_nm),
+                "check_routes": check_routes,
+            },
+            inputs={"case": case_hash, "solution": solution_hash},
+            payload=dict(payload or {}),
+            summary=summary or {},
+        )
+
+
+class ReportArtefact(Artefact):
+    """Stage 12: what the run wrote, and what it wrote it from.
+
+    The only parameter is the export selection, because that is the only thing
+    about this stage that changes what lands on disk. Its three inputs are the
+    hashes of everything the report describes, so a report is never served from
+    the cache for a different case, a different solve or a different extraction.
+    """
+
+    def __init__(
+        self,
+        *,
+        case_hash: str,
+        qoi_hash: str,
+        solution_hash: str,
+        exports: tuple[str, ...],
+        payload: Mapping[str, Path] | None = None,
+        summary: Mapping[str, Canonicalisable] | None = None,
+    ) -> None:
+        super().__init__(
+            schema=REPORT_SCHEMA,
+            parameters={"exports": list(exports)},
+            inputs={"case": case_hash, "qoi": qoi_hash, "solution": solution_hash},
             payload=dict(payload or {}),
             summary=summary or {},
         )

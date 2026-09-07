@@ -402,6 +402,45 @@ alone would not notice both routes being scaled by the same wrong constant.
 being described as volume averages (flagged in `04-clya-geometry-and-charge.md`). Any regression
 target that is a pore average must state which convention it uses.
 
+### 7.1.1 Measured: with the wall corrections on, route agreement *is* a mesh statement **[tested]**
+
+§7.1's "3.8 × 10⁻⁶ throughout — set by the Newton residual, not the mesh" was measured on
+**classical PNP**, where every coefficient is constant. It does not carry over to ePNP-NS. The same
+pore (`a` = 2 nm, `L` = 6 nm, reservoir 10 nm), 0.1 M NaCl, +20 mV, `willems2020_nacl` corrections
+with `wall: true` on diffusivity, mobility and viscosity, `default_ladder`, stabilisation `none`,
+`ψ` band ±2.4 nm, P2:
+
+| mesh (`maxh`/`wall_h`, nm) | elements | ndof | NUM-25 reaction (A) | NUM-24 indicator (A) | relative difference |
+|---|---|---|---|---|---|
+| 4.0 / 1.0 | 124 | 1 232 | 8.7622 × 10⁻¹¹ | 1.46142 × 10⁻¹⁰ | **4.00 × 10⁻¹** |
+| 2.0 / 0.5 | 257 | 2 408 | 2.93993 × 10⁻¹¹ | 2.94022 × 10⁻¹¹ | 9.63 × 10⁻⁵ |
+| 1.0 / 0.25 | 793 | 7 357 | 2.61972 × 10⁻¹¹ | 2.61972 × 10⁻¹¹ | 1.56 × 10⁻⁶ |
+
+The coarsest row converges — Newton reports no complaint, the gates pass, and both routes return a
+plausible current — and the two routes disagree by 40 %, five hundred times NUM-26's 10⁻³. The cause
+is resolution of the wall functions, not of the fields: `1 − exp(−6.2(d̄ + 0.01))` rises over a
+tenth of the pore radius, and on the 124-element mesh the PHY-02 distance field carries 273 degrees
+of freedom in total. The reaction flux and the indicator form disagree because they sample that
+coefficient differently — the residual on the constrained `cis` dofs, against `∇ψ` over the fluid.
+
+Two consequences worth keeping:
+
+- **NUM-26 is a resolution diagnostic as well as an extraction check.** A run that fails it with
+  corrections on is more likely under-resolved at the wall than wrong in its extraction, and the
+  refinement to look at is `wall_h`, not `maxh`.
+- **A mesh sized for a classical run is not sized for the corrected one.** Any correction-on test
+  that asserts a current needs the route agreement asserted with it, or it is measuring the mesh.
+
+### 7.1.2 Measured: a reassembled residual reproduces the live one bit for bit **[tested]**
+
+The NUM-25 route needs `ModelSolution.residual`, which a state loaded from disk does not have. Built
+by re-running the rung construction against the **stored** wall-distance coefficient vector, the
+restored residual gives `reaction_flux_currents` identical to the live solution's in every bit —
+`{'Na+': 1.4334969509489461e-11, 'Cl-': 2.1835946796916437e-11}` from both, on the 124-element mesh
+above with corrections off. Reassembly is therefore exact, and the storage of the distance vector is
+what makes it so: the screened-Poisson solve behind that field is not bit-reproducible across
+library versions, so a re-solved field would give a different operator with no diagnostic.
+
 ### 7.2 The force on an embedded body: three routes, and the term NUM-28 hides
 
 The domain form of NUM-28 is the divergence theorem applied to the traction on the body. With `w`
