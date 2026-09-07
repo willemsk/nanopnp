@@ -44,7 +44,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from nanopnp.charge.stage import FieldStage, ResolvedFields, gate_fields, read_fields
-from nanopnp.core.constants import thermal_voltage
 from nanopnp.core.paths import store_root
 from nanopnp.core.stages import (
     CancelToken,
@@ -55,18 +54,24 @@ from nanopnp.core.stages import (
     report,
 )
 from nanopnp.io.artefact import Artefact, SolutionArtefact, StageInputs
-from nanopnp.io.case import COUPLED_MODELS, resolve
+from nanopnp.io.case import resolve
 from nanopnp.materials.stage import MaterialsStage
 from nanopnp.mesh.ingest import IngestedMesh, MeshStage, ingest
-from nanopnp.physics.coefficients import SATURATED_WALL_DISTANCE_NM
-from nanopnp.physics.measures import AXISYMMETRIC, Measures
-from nanopnp.physics.models import CoupledModel, create
-from nanopnp.solve.continuation import ELECTRODES, Rung, default_ladder, run_ladder
+from nanopnp.physics.measures import AXISYMMETRIC
+from nanopnp.physics.models import CoupledBoundaries, CoupledModel
+from nanopnp.solve.continuation import Rung, run_ladder
+from nanopnp.solve.state import (
+    STATE_FILENAME,
+    ladder,
+    reads_wall,
+    save,
+    wall_distance_field,
+)
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
-    from nanopnp.core.typing import Expression, GridFunction, Mesh
+    from nanopnp.core.typing import Expression
     from nanopnp.io.case import ResolvedCase
-    from nanopnp.materials.electrolyte import Electrolyte
+    from nanopnp.physics.models import ModelSolution
     from nanopnp.solve.newton import NewtonStep
 
 WORKSPACE_DIRNAME = "tmp"
@@ -74,70 +79,6 @@ WORKSPACE_DIRNAME = "tmp"
 
 LOAD_FRACTION = 0.05
 """Share of the progress bar spent loading the mesh and the distance field."""
-
-
-def _reads_wall(electrolyte: Electrolyte) -> bool:
-    """Return whether any resolved correction of ``electrolyte`` evaluates ``d``.
-
-    Asked of the corrections rather than of the model name, exactly as
-    :func:`~nanopnp.solve.continuation.default_ladder` asks it: a run whose wall
-    factors are all off must not pay for a screened-Poisson solve, and must not
-    record a distance field nothing read.
-    """
-    return any(
-        bool(getattr(correction, "use_wall", False))
-        for correction in electrolyte.corrections.values()
-    )
-
-
-def _single_rung(
-    resolved: ResolvedCase, mesh: Mesh, measures: Measures, fields: ResolvedFields
-) -> Rung:
-    """Return the one rung a case with ``continuation: none`` solves.
-
-    Cold, at the target operating point. NUM-18 exists because that does not
-    converge over most of the FR-17 envelope; the switch is offered because the
-    electrostatic models of PHY-21 are not on the ladder at all, and because an
-    ablation needs to be able to ask for the cold solve and watch it fail.
-    """
-    options = dict(resolved.model_options)
-    if resolved.model in COUPLED_MODELS:
-        model = create(
-            resolved.model,
-            electrolyte=resolved.electrolyte,
-            concentration_M=resolved.concentration_M,
-            **options,
-        )
-    else:
-        model = create(resolved.model, **options)
-    driven = next(iter(ELECTRODES - {resolved.ground}))
-    supplied: dict[str, Expression] = {}
-    if isinstance(model, CoupledModel):
-        # The electrostatic models of PHY-21 take neither: ``pb`` screens with a
-        # Debye length and carries no material permittivity, and ``resolve``
-        # refuses a case that supplies a field to one of them, so this branch is
-        # the belt to that brace rather than a silent drop.
-        if fields.charge is not None:
-            supplied["fixed_charge"] = fields.charge.assemble(model.scales)
-        if fields.eps_r is not None:
-            supplied["solid_fraction"] = fields.eps_r.chi()
-    # Taken from the temperature rather than from ``model.scales``: the
-    # electrostatic models of PHY-21 carry no scale set, and every model of the
-    # table nondimensionalises the potential by the same ``V_T = RT/F`` (NUM-09).
-    thermal_V = thermal_voltage(resolved.temperature_K)
-    return Rung(
-        name=f"target-{resolved.model}",
-        stage=1,
-        model=model,
-        mesh=mesh,
-        measures=measures,
-        solve_kwargs={
-            "potential_values": mesh.BoundaryCF(
-                {resolved.ground: 0.0, driven: resolved.bias_V / thermal_V}
-            ),
-            **supplied,
-        },
-    )
 
 
 def _input_hashes(mesh: Artefact, materials: Artefact, fields: Artefact | None) -> dict[str, str]:
@@ -300,18 +241,10 @@ class SolveStage:
         order = int(resolved.model_options.get("order", AXISYMMETRIC.element_order))
         measures = replace(AXISYMMETRIC, element_order=order)
 
-        distance: Expression = SATURATED_WALL_DISTANCE_NM
-        if _reads_wall(resolved.electrolyte):
+        if reads_wall(resolved.electrolyte):
             report(progress, LOAD_FRACTION / 2, "solving for the wall distance field")
             check_cancelled(cancel, "the wall-distance solve")
-            from nanopnp.mesh.distance import wall_distance
-
-            distance = wall_distance(
-                mesh,
-                resolved.wall_distance_sources,
-                order=order,
-                max_distance_nm=resolved.wall_distance_max_nm,
-            )
+        distance: Expression = wall_distance_field(resolved, mesh, order=order)
 
         fields = ResolvedFields(charge=None, conservation=None, eps_r=None, material_means=())
         if supplied is not None:
@@ -322,57 +255,22 @@ class SolveStage:
             # chances to key one field and assemble another.
             fields = gate_fields(resolved, supplied, mesh, measures=measures, cancel=cancel)
 
-        prepared, on_rung = self._instrumented(
-            resolved,
-            self._ladder(resolved, mesh, measures, distance, fields),
-            progress=progress,
-            cancel=cancel,
-        )
+        rungs = ladder(resolved, mesh, measures, distance, fields)
+        prepared, on_rung = self._instrumented(resolved, rungs, progress=progress, cancel=cancel)
         result = run_ladder(prepared, on_rung=on_rung)
         report(progress, 1.0, f"converged in {result.iterations} Newton iterations")
 
-        payload = self._write(result.solution.state, resolved.name)
+        payload = self._write(
+            result.solution,
+            resolved=resolved,
+            mesh_content_hash=ingested.content_hash,
+            boundaries=prepared[-1].boundaries,
+        )
         return SolutionArtefact(
             parameters=resolved.provenance,
             inputs=_input_hashes(mesh_artefact, materials, fields_artefact),
             payload=payload,
             summary={**result.summary(), **_field_summary(fields)},
-        )
-
-    def _ladder(
-        self,
-        resolved: ResolvedCase,
-        mesh: Mesh,
-        measures: Measures,
-        distance: Expression,
-        fields: ResolvedFields,
-    ) -> tuple[Rung, ...]:
-        """Return the rungs this case solves, ladder or single (NUM-18)."""
-        if resolved.continuation == "none":
-            return (_single_rung(resolved, mesh, measures, fields),)
-        # The producer pipeline is still v0.9, so the charge a run carries is the
-        # one it was handed through ``inputs.charge`` (FR-27, stage 7). With no
-        # field supplied the stage-4 ramp is empty rather than silently zero, and
-        # the ladder is the same one WP5 measured.
-        return default_ladder(
-            mesh,
-            concentration_M=resolved.concentration_M,
-            bias_V=resolved.bias_V,
-            ground=resolved.ground,
-            electrolyte=resolved.electrolyte,
-            wall_distance_nm=distance,
-            measures=measures,
-            corrections_active=resolved.model == "epnp-ns",
-            switches=resolved.electrolyte.switches,
-            # The ladder builds its own models, so the case's ``physics.
-            # solid_permittivities`` reaches them only here. Omitting it leaves
-            # the membrane at the electrolyte's eps_r -- 24 times too large, and
-            # a plausible wrong current with no diagnostic (PHY-03, PHY-20).
-            solid_permittivities=dict(resolved.document.physics.solid_permittivities),
-            fixed_charge_field=(
-                None if fields.charge is None else fields.charge.volume_density_C_m3()
-            ),
-            solid_fraction=None if fields.eps_r is None else fields.eps_r.chi(),
         )
 
     def _instrumented(
@@ -433,20 +331,39 @@ class SolveStage:
         )
         return prepared, on_rung
 
-    def _write(self, state: GridFunction, name: str) -> dict[str, Path]:
+    def _write(
+        self,
+        solution: ModelSolution,
+        *,
+        resolved: ResolvedCase,
+        mesh_content_hash: str,
+        boundaries: CoupledBoundaries,
+    ) -> dict[str, Path]:
         """Write the converged state and return the payload map.
 
         The state is written before the artefact exists because the artefact
         names it: the payload is outside the content hash (section 5.3.2), and
         the store hashes each file as it copies it in.
+
+        What is written is the self-describing coefficient record of
+        :mod:`nanopnp.solve.state`, not the backend's own ``state.gfu``: stage 11
+        served from a cache hit here has to reassemble the residual to run the
+        NUM-25 route at all, and it can only do that against the same mesh,
+        model and *distance field* this solve used. That is the whole reason the
+        payload carries a descriptor and the artefact schema is ``v2``.
         """
         directory = self._workspace
         if directory is None:
             root = store_root() / WORKSPACE_DIRNAME
             root.mkdir(parents=True, exist_ok=True)
-            safe = "".join(character if character.isalnum() else "-" for character in name)
+            safe = "".join(character if character.isalnum() else "-" for character in resolved.name)
             directory = Path(tempfile.mkdtemp(prefix=f"{safe}-", dir=root))
         directory.mkdir(parents=True, exist_ok=True)
-        target = directory / "state.gfu"
-        state.Save(str(target))
+        target = save(
+            solution,
+            directory / STATE_FILENAME,
+            resolved=resolved,
+            mesh_content_hash=mesh_content_hash,
+            boundaries=boundaries,
+        )
         return {"state": target}

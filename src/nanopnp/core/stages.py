@@ -330,7 +330,7 @@ def _register_builtins() -> None:
             title="Solve",
             inputs=("case", "materials", "mesh"),
             outputs=("converged fields", "iteration history"),
-            artefact_schema="nanopnp/solution/v1",
+            artefact_schema="nanopnp/solution/v2",
         ),
         "nanopnp.solve.stage:SolveStage",
     )

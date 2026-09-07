@@ -201,6 +201,45 @@ the first difference raises naming the key, the stored value and the rebuilt one
 attempt to adapt: a coefficient vector loaded into a space that differs in order, in `definedon` or in
 ndof is silently a different function, and there is no residual it would fail to reduce.
 
+> **Outcome — `restore` must rebuild the *operator*, not only the state, so the ladder moved with it.**
+> The plan predicted `solve/state.py` would hold `save` and `restore`. It cannot: NUM-25 is the
+> assembled residual evaluated on the constrained degrees of freedom, so a restored solution with no
+> `residual` can answer only the NUM-24 half of the QR-04 cross-check — and stage 11 served from a
+> stage-10 cache hit has no live solution to check against. `restore` therefore reassembles the
+> residual from the rung the ladder ends on. Reconstructing that rung by hand would be writing the
+> ladder's model construction a second time, so `_single_rung` and `SolveStage._ladder` moved out of
+> `solve/stage.py` into `solve/state.py` as `single_rung` and `ladder`; the save path and the restore
+> path now build the top rung through one function and cannot differ in a switch. `stage.py` imports
+> `state.py` and `state.py` imports `continuation.py`, so nothing is circular. The residual's
+> coefficient keywords are separated from the rung's *solve* keywords by exclusion
+> (`SOLVE_ONLY_KEYWORDS`): a keyword added to `residual_form` and forgotten there still reaches the
+> form, while a new solve keyword forgotten there is rejected loudly by the model's own
+> `_reject_unknown` rather than silently dropped.
+
+> **Outcome — measured.** Reference solve: `CylindricalPoreGeometry(2, 6, 10)` at `maxh` 4 nm /
+> `wall_h` 1 nm (124 elements, 75 vertices), 0.1 M NaCl, +20 mV, `epnp-ns`, `default_ladder`,
+> stabilisation **`none`**, 12 rungs, 40 Newton iterations.
+>
+> | quantity | corrections off | `willems2020_nacl`, `wall: true` |
+> |---|---|---|
+> | `state.npz` payload | 11 117 B | 13 688 B |
+> | solve-space ndof | 1 232 | 1 232 |
+> | wall-distance ndof stored | — (constant) | 273 |
+> | round-trip coefficient difference | **exactly 0.0** | **exactly 0.0** |
+> | restored vs live NUM-25 flux | identical in every bit | identical in every bit |
+>
+> The 9.2 MB-per-solve estimate for the WP8 reference mesh stands: 13 688 B at 1 232 ndof is 11.1 B
+> per degree of freedom against the design section's 12.5 B, gzip doing slightly better on a coarse
+> field than the arithmetic assumed.
+>
+> Route agreement on the *restored* solution is the oracle for the reassembled operator, and it is
+> not free: with the wall corrections on, the NUM-24 and NUM-25 routes disagree by **4.0 × 10⁻¹** on
+> the 124-element mesh, by 9.6 × 10⁻⁵ at 257 elements and by 1.6 × 10⁻⁶ at 793. That is resolution of
+> the 6.2 nm⁻¹ wall function, not extraction error — `.knowledge/06-numerics-fem.md` §7.1.1. The
+> Tier-1 test therefore asserts NUM-26 on the 257-element mesh and does its wiring check on the
+> cheaper one. **This sizes the WP10 QoI-stage tests too:** a mesh chosen for a classical solve will
+> fail `check_routes` with corrections on.
+
 ### `reproduce`, and why it is a verb
 
 QR-08 says a result's manifest is sufficient to reconstruct the run. `nanopnp reproduce RUN_DIR`:
