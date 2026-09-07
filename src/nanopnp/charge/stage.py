@@ -208,7 +208,8 @@ def _field_path(supplied: object, *, key: str) -> Path:
             f"v0.9 fills; supply inputs.{key}: path: instead"
         )
     if not Path(path).is_file():
-        raise FileNotFoundError(f"inputs.{key}.path {str(path)!r} does not exist")
+        # Quoted rather than ``!r``, which doubles a Windows path's separators.
+        raise FileNotFoundError(f"inputs.{key}.path '{path}' does not exist")
     return Path(path)
 
 
