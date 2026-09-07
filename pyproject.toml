@@ -125,6 +125,7 @@ module = [
     "shapely.*",
     "scipy.*",
     "gridData.*",
+    "h5py",
     "pdb2pqr.*",
     "gmsh",
     "sympy.*",
