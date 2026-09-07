@@ -141,7 +141,13 @@ drift apart.
 """
 
 SOLID_MATERIALS: frozenset[str] = frozenset(MATERIAL_VOCABULARY) - FLUID_MATERIALS
-"""The domains Poisson alone is solved on; each needs a permittivity (PHY-03)."""
+"""The domains Poisson alone is solved on (PHY-03).
+
+Each needs a ``physics.solid_permittivities`` entry except the members of
+:data:`~nanopnp.mesh.primitives.PERMITTIVITY_EXEMPT`, which take the fluid's
+``eps_r`` deliberately; :func:`check_solid_permittivities` is where that
+distinction is enforced.
+"""
 
 
 _METACHARACTERS: frozenset[str] = frozenset(".*+?[](){}^$\\")

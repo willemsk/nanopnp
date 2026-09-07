@@ -52,6 +52,7 @@ from nanopnp.materials.fields import (
     SolidFractionField,
     load_solid_fraction,
 )
+from nanopnp.materials.fields import summary as solid_fraction_summary
 from nanopnp.mesh.ingest import IngestedMesh, MeshStage, ingest
 from nanopnp.physics.measures import AXISYMMETRIC, Measures
 
@@ -129,13 +130,14 @@ class ResolvedFields:
                 ),
             }
         if self.eps_r is not None:
+            # Through ``materials.fields.summary`` rather than beside it: a second
+            # literal dict here is a second place for the dielectric's FR-25
+            # record to drift, and it already had — the copy written here carried
+            # no ``interpolation`` key while the one under test did.
             record["eps_r"] = {
-                **self.eps_r.document.summary(),
+                **solid_fraction_summary(self.eps_r, self.material_means),
                 "document": self.eps_r.source.name,
                 "document_sha256": file_hash(self.eps_r.source),
-                "grid": self.eps_r.grid.descriptor(),
-                "grid_digest": self.eps_r.grid.digest(),
-                "material_means": [mean.summary() for mean in self.material_means],
             }
         return record
 
@@ -215,21 +217,29 @@ def read_fields(resolved: ResolvedCase) -> ResolvedFields:
     return ResolvedFields(charge=charge, conservation=None, eps_r=eps_r, material_means=())
 
 
-def load_fields(
+def gate_fields(
     resolved: ResolvedCase,
+    supplied: ResolvedFields,
     mesh: Mesh,
     *,
     measures: Measures = AXISYMMETRIC,
     cancel: CancelToken | None = None,
     progress: Progress | None = None,
 ) -> ResolvedFields:
-    """Read, assemble and gate the fields a case supplies (PHY-18, PHY-19, VER-30).
+    """Assemble and gate fields :func:`read_fields` already read (PHY-18, PHY-19, VER-30).
+
+    Split from the reading so that a caller holding the fields — the solve stage,
+    which reads them to key its own artefact — gates the grids it has rather than
+    reading them a second time. The reference table is 77 MB of text, and a
+    second parse of it is a second chance to disagree as well as a second minute.
 
     Parameters
     ----------
     resolved
-        The resolved case, which names the two fields and the solid
-        permittivities the dielectric blend registers against.
+        The resolved case, which names the solid permittivities the dielectric
+        blend registers against.
+    supplied
+        The ungated fields, as :func:`read_fields` returns them.
     mesh
         The deployed mesh. PHY-19's assertion is evaluated here and nowhere else.
     measures
@@ -247,15 +257,10 @@ def load_fields(
     ------
     nanopnp.charge.fields.ChargeFieldError
         On any gate failure, naming the gate, the quantity and its location.
-    nanopnp.charge.fields.FieldDocumentError
-        If a document is invalid or describes different data.
     """
-    charge: ChargeField | None = None
+    charge = supplied.charge
     report_: ConservationReport | None = None
-    if resolved.charge is not None:
-        path = _field_path(resolved.charge, key="charge")
-        report(progress, 0.0, f"reading the fixed-charge field from {path.name}")
-        charge = load_field(path)
+    if charge is not None:
         check_cancelled(cancel, "the charge conservation gate")
         report(progress, 0.2, "assembling the fixed charge and checking its conservation")
         report_ = check_conservation(conservation(charge, mesh, measures))
@@ -268,13 +273,11 @@ def load_fields(
             "not run" if report_.producer_error is None else f"{report_.producer_error:.3g}",
         )
 
-    eps_r: SolidFractionField | None = None
+    eps_r = supplied.eps_r
     means: tuple[MaterialMean, ...] = ()
-    if resolved.eps_r is not None:
-        check_cancelled(cancel, "reading the dielectric field")
-        path = _field_path(resolved.eps_r, key="eps_r")
-        report(progress, 0.6, f"reading the dielectric field from {path.name}")
-        eps_r = load_solid_fraction(path)
+    if eps_r is not None:
+        check_cancelled(cancel, "the dielectric range gate")
+        report(progress, 0.6, f"checking the dielectric field from {eps_r.source.name}")
         eps_r.check_range()
         check_cancelled(cancel, "the dielectric registration gate")
         report(progress, 0.8, "checking the solid fraction against the mesh materials")
@@ -285,6 +288,30 @@ def load_fields(
         )
     report(progress, 1.0, "the supplied fields passed their gates")
     return ResolvedFields(charge=charge, conservation=report_, eps_r=eps_r, material_means=means)
+
+
+def load_fields(
+    resolved: ResolvedCase,
+    mesh: Mesh,
+    *,
+    measures: Measures = AXISYMMETRIC,
+    cancel: CancelToken | None = None,
+    progress: Progress | None = None,
+) -> ResolvedFields:
+    """Read, assemble and gate the fields a case supplies.
+
+    :func:`read_fields` followed by :func:`gate_fields`; see those two for the
+    parameters and for what each raises.
+    """
+    report(progress, 0.0, "reading the supplied fields")
+    return gate_fields(
+        resolved,
+        read_fields(resolved),
+        mesh,
+        measures=measures,
+        cancel=cancel,
+        progress=progress,
+    )
 
 
 class FieldStage:
@@ -312,9 +339,13 @@ class FieldStage:
         """Return the artefact key these fields will produce, without gating them.
 
         Reads the grids, because their digests *are* the key, and does not
-        integrate over the mesh: the gate is what :meth:`run` adds.
+        integrate over the mesh: the gate is what :meth:`run` adds. Nor does it
+        ingest the mesh where stage 6 handed its artefact down — the key needs
+        that artefact's hash and nothing else, and reading and quality-gating a
+        mesh to answer "is this already in the store?" is the whole cost the
+        cache exists to avoid.
         """
-        resolved, ingested, mesh_artefact = self._prepare(inputs)
+        resolved, ingested, mesh_artefact = self._prepare(inputs, ingest_mesh=False)
         del ingested
         return self.artefact(read_fields(resolved), mesh_artefact.hash)
 
@@ -336,7 +367,8 @@ class FieldStage:
             this stage rather than an empty result.
         """
         check_cancelled(cancel, "reading the supplied fields")
-        resolved, ingested, mesh_artefact = self._prepare(inputs)
+        resolved, ingested, mesh_artefact = self._prepare(inputs, ingest_mesh=True)
+        assert ingested is not None  # ``ingest_mesh=True`` admits no other case
         fields = load_fields(
             resolved,
             ingested.mesh,
@@ -374,8 +406,18 @@ class FieldStage:
         order = int(resolved.model_options.get("order", AXISYMMETRIC.element_order))
         return replace(AXISYMMETRIC, element_order=order)
 
-    def _prepare(self, inputs: StageInputs) -> tuple[ResolvedCase, IngestedMesh, Artefact]:
-        """Resolve the case, ingest the mesh, and refuse a case with no fields."""
+    def _prepare(
+        self, inputs: StageInputs, *, ingest_mesh: bool
+    ) -> tuple[ResolvedCase, IngestedMesh | None, Artefact]:
+        """Resolve the case, ingest the mesh, and refuse a case with no fields.
+
+        Parameters
+        ----------
+        ingest_mesh
+            Whether the caller needs the geometry itself and not only its hash.
+            :meth:`run` does, and gets it; :meth:`key` does not, and the mesh is
+            then ingested only where no upstream artefact names its hash.
+        """
         resolved = resolve(inputs.case)
         if resolved.charge is None and resolved.eps_r is None:
             raise UnsupportedCaseSection(
@@ -383,9 +425,12 @@ class FieldStage:
                 "stage 7 has nothing to read; the producer pipeline that would build them is v0.9 "
                 "(SPECIFICATION.md section 3, FR-12 to FR-15)"
             )
-        ingested = ingest(resolved.mesh, resolved)
         mesh = inputs.upstream.get("mesh")
+        ingested: IngestedMesh | None = None
+        if ingest_mesh or mesh is None:
+            ingested = ingest(resolved.mesh, resolved)
         if mesh is None:
+            assert ingested is not None  # ingested above precisely for this
             mesh = MeshStage().artefact(ingested)
         return resolved, ingested, mesh
 

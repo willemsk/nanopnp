@@ -42,7 +42,7 @@ from nanopnp.core.typing import Expression, Mesh
 from nanopnp.density.grid import RadialGrid, coefficient
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
-    from collections.abc import Iterable, Mapping
+    from collections.abc import Iterable, Sequence
 
     from nanopnp.physics.measures import Measures
 
@@ -285,19 +285,17 @@ def blend(
     return chi * solid_permittivity + (1.0 - chi) * fluid_permittivity
 
 
-def summary(
-    field: SolidFractionField, means: Mapping[str, float] | tuple[MaterialMean, ...]
-) -> dict[str, object]:
-    """Return the FR-25 record of a supplied dielectric field."""
-    rendered = (
-        [mean.summary() for mean in means]
-        if isinstance(means, tuple)
-        else [{"material": name, "mean": value} for name, value in sorted(means.items())]
-    )
+def summary(field: SolidFractionField, means: Sequence[MaterialMean]) -> dict[str, object]:
+    """Return the FR-25 record of a supplied dielectric field.
+
+    The one place this record is written. :meth:`nanopnp.charge.stage.ResolvedFields.summary`
+    adds the header document's own name and digest around it and changes nothing
+    inside, so the manifest and the VER-30 assertion read the same dict.
+    """
     return {
         **field.document.summary(),
         "grid": field.grid.descriptor(),
         "grid_digest": field.grid.digest(),
-        "material_means": rendered,
+        "material_means": [mean.summary() for mean in means],
         "interpolation": "bilinear",
     }

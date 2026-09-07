@@ -951,8 +951,9 @@ def _check_physics_switches(document: CaseDocument) -> None:
 
     A switch the solver silently drops is worse than one it refuses: the FR-25
     manifest would record ``flow: true`` beside a solution that has no velocity
-    field in it, and a reader would have no way to tell. Both checks here name a
-    switch the chosen model fixes for itself.
+    field in it, and a reader would have no way to tell. Each check here names
+    something the chosen model fixes for itself — a switch, or one of the two
+    supplied fields of stage 7, which are the same failure arriving as an input.
     """
     physics = document.physics
     model = physics.model
@@ -980,6 +981,18 @@ def _check_physics_switches(document: CaseDocument) -> None:
             f"physics.model {model!r} solves electrostatics alone (PHY-24): it carries no "
             f"momentum and no transport, so {named} would be recorded in the manifest and never "
             f"applied; set them false, or choose one of {', '.join(sorted(COUPLED_MODELS))}"
+        )
+    # The same rule for the two supplied fields, which are inputs rather than
+    # switches: the electrostatic family of PHY-21 takes neither a material
+    # permittivity nor a fixed-charge source, so stage 7 would gate the field,
+    # the FR-25 manifest would record it, and the solve would never read it.
+    supplied = [f"inputs.{name}" for name in ("charge", "eps_r") if getattr(document.inputs, name)]
+    if supplied:
+        raise CaseValidationError(
+            f"physics.model {model!r} solves electrostatics alone (PHY-24): it takes no "
+            f"fixed-charge source and no material permittivity, so {', '.join(supplied)} would "
+            "be gated by stage 7 and recorded in the manifest while the solve ignored it; "
+            f"choose one of {', '.join(sorted(COUPLED_MODELS))}"
         )
 
 
