@@ -67,6 +67,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
 __all__ = [
     "STATE_FILENAME",
+    "STATE_KEY",
     "StateMismatchError",
     "ladder",
     "reads_wall",
@@ -75,6 +76,14 @@ __all__ = [
     "single_rung",
     "wall_distance_field",
 ]
+
+STATE_KEY = "state"
+"""Key stage 10's payload map records the state file under.
+
+Named rather than spelt twice: the payload is keyed by *role* and not by
+filename, and a diagnostic that told a reader to look for ``state.npz`` among
+the keys would send them looking for something that is never there.
+"""
 
 STATE_FILENAME = "state.npz"
 """Name of the stage-10 payload file. ``.npz`` because it is one compressed
@@ -185,7 +194,11 @@ def wall_distance_field(resolved: ResolvedCase, mesh: Mesh, *, order: int) -> Ex
 
 
 def single_rung(
-    resolved: ResolvedCase, mesh: Mesh, measures: Measures, fields: ResolvedFields
+    resolved: ResolvedCase,
+    mesh: Mesh,
+    measures: Measures,
+    distance: Expression,
+    fields: ResolvedFields,
 ) -> Rung:
     """Return the one rung a case with ``continuation: none`` solves.
 
@@ -193,6 +206,13 @@ def single_rung(
     converge over most of the FR-17 envelope; the switch is offered because the
     electrostatic models of PHY-21 are not on the ladder at all, and because an
     ablation needs to be able to ask for the cold solve and watch it fail.
+
+    ``distance`` is the PHY-02 field the case solves against, and is passed on
+    for the same reason :func:`~nanopnp.solve.continuation.default_ladder` takes
+    it: omitting it leaves every wall correction evaluating at
+    :data:`~nanopnp.physics.coefficients.SATURATED_WALL_DISTANCE_NM`, which is a
+    converged, plausible, wrong answer -- and one :func:`save` then refuses to
+    store, after the solve has been paid for.
     """
     options = dict(resolved.model_options)
     if resolved.model in COUPLED_MODELS:
@@ -207,14 +227,18 @@ def single_rung(
     driven = next(iter(ELECTRODES - {resolved.ground}))
     supplied: dict[str, Expression] = {}
     if isinstance(model, CoupledModel):
-        # The electrostatic models of PHY-21 take neither: ``pb`` screens with a
-        # Debye length and carries no material permittivity, and ``resolve``
-        # refuses a case that supplies a field to one of them, so this branch is
-        # the belt to that brace rather than a silent drop.
+        # The electrostatic models of PHY-21 take none of these: ``pb`` screens
+        # with a Debye length, carries no material permittivity and evaluates no
+        # wall factor, and ``resolve`` refuses a case that supplies a field to
+        # one of them -- so this branch is the belt to that brace rather than a
+        # silent drop. ``wall_distance_nm`` is unconditional inside it, because
+        # a coupled model that read ``d`` and was handed none would saturate
+        # every wall factor rather than fail (PHY-02).
         if fields.charge is not None:
             supplied["fixed_charge"] = fields.charge.assemble(model.scales)
         if fields.eps_r is not None:
             supplied["solid_fraction"] = fields.eps_r.chi()
+        supplied["wall_distance_nm"] = distance
     # Taken from the temperature rather than from ``model.scales``: the
     # electrostatic models of PHY-21 carry no scale set, and every model of the
     # table nondimensionalises the potential by the same ``V_T = RT/F`` (NUM-09).
@@ -250,7 +274,7 @@ def ladder(
     hand and risking a different operator.
     """
     if resolved.continuation == "none":
-        return (single_rung(resolved, mesh, measures, fields),)
+        return (single_rung(resolved, mesh, measures, distance, fields),)
     # The producer pipeline is still v0.9, so the charge a run carries is the
     # one it was handed through ``inputs.charge`` (FR-27, stage 7). With no
     # field supplied the stage-4 ramp is empty rather than silently zero, and

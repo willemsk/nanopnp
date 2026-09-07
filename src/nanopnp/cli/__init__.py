@@ -26,13 +26,14 @@ NGSolve are imported inside the subcommand that needs them, keeping
 from __future__ import annotations
 
 import argparse
+import dataclasses
 import json
 import logging
 import os
 import platform
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from nanopnp import __version__
 from nanopnp.cli.errors import EXIT_OK, EXIT_UNEXPECTED, classify
@@ -146,8 +147,6 @@ def _env(args: argparse.Namespace) -> int:
 
 def _run(args: argparse.Namespace) -> int:
     """``nanopnp run`` — walk the pipeline for one case file (FR-27, IF-01)."""
-    import dataclasses
-
     from nanopnp.io.run import run_case
     from nanopnp.io.store import Store
 
@@ -240,6 +239,7 @@ def _inspect(args: argparse.Namespace) -> int:
     so an artefact edited by hand reads back as edited — section 5.3.2 requires
     that be recorded rather than refused.
     """
+    from nanopnp.core.hashing import decode_floats
     from nanopnp.io.manifest import MANIFEST_FILENAME
     from nanopnp.io.manifest import read as read_manifest
     from nanopnp.io.run import RUN_RECORD_FILENAME
@@ -255,10 +255,20 @@ def _inspect(args: argparse.Namespace) -> int:
                 f"{args.target} holds no {MANIFEST_FILENAME}, meta.json or {RUN_RECORD_FILENAME}; "
                 "give a run directory, a stored artefact directory, or one of those files"
             )
+    # Both files are written through ``canonical``, which encodes every float as
+    # ``{"__f__": <hex>}`` so that the digest is exact. That is the right thing
+    # to hash and the wrong thing to read: undone here, so that the one command
+    # whose job is to read a run back reports ``bias_V 0.02`` rather than the
+    # wrapper -- and so that ``--json`` hands a sweep numbers it can compare.
     if target.name == MANIFEST_FILENAME:
-        document: dict[str, Canonicalisable] = dict(read_manifest(target))
+        raw: Canonicalisable = dict(read_manifest(target))
     else:
-        document = json.loads(target.read_text(encoding="utf-8"))
+        raw = json.loads(target.read_text(encoding="utf-8"))
+    # ``cast`` and not a check: both files hold a JSON object at the top level
+    # by construction, and one that does not is a file this command did not
+    # write -- which the ``sorted(document.items())`` below reports as the
+    # AttributeError it is, under exit 1, with ``--traceback`` to hand.
+    document = cast("dict[str, Canonicalisable]", decode_floats(raw))
 
     lines = [f"{target}"]
     lines += [

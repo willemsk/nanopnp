@@ -22,6 +22,7 @@ into a refusal for a caller who wants the stronger promise.
 
 from __future__ import annotations
 
+import json
 import logging
 import tempfile
 from dataclasses import dataclass
@@ -311,8 +312,6 @@ def _recorded_quantities(directory: Path) -> Mapping[str, Canonicalisable]:
         how the run was configured; the run record is what it *produced*, and
         there is nothing to reproduce without it.
     """
-    import json
-
     path = directory / RUN_RECORD_FILENAME
     if not path.is_file():
         raise ReproductionError(

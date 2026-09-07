@@ -444,6 +444,24 @@ def test_ver32_a_case_the_schema_refuses_exits_three(
     assert "Traceback" not in captured.err
 
 
+def test_ver32_upto_naming_a_stage_the_run_does_not_walk_exits_three(
+    case_file: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Exit 3, not 1: a typo in ``--upto`` is not a failure worth a retry (QR-06).
+
+    ``1`` is the class whose traceback is worth keeping and the class a job
+    array re-dispatches; this one fails identically every time, and the fix is
+    an edit to the command line.
+    """
+    code = main(["run", str(case_file), "--upto", "sovle", "--store", str(tmp_path / "store")])
+    assert code == EXIT_CASE
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "no stage 'sovle'" in captured.err
+    assert "unexpected" not in captured.err
+    assert "Traceback" not in captured.err
+
+
 def test_ver32_only_with_an_empty_store_exits_four(
     case_file: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -549,8 +567,16 @@ def test_ver32_inspect_reads_a_run_directory_back(
     capsys.readouterr()
 
     assert main(["inspect", str(where), "--json"]) == EXIT_OK
-    from_directory = json.loads(capsys.readouterr().out)
+    printed = capsys.readouterr().out
+    from_directory = json.loads(printed)
     assert from_directory["schema"] == MANIFEST_SCHEMA
+    # Both files are written through ``canonical``, which encodes a float as
+    # ``{"__f__": <hex>}`` so that the digest is exact. Printing that back is
+    # printing the encoding rather than the run: the one command whose job is to
+    # read a run back has to undo it (section 5.3.3).
+    assert "__f__" not in printed, "inspect printed canonical float wrappers, not numbers"
+    rtol = from_directory["solver"]["nonlinear"]["rtol"]
+    assert isinstance(rtol, float) and rtol == pytest.approx(1e-6)
 
     assert main(["inspect", str(where / RUN_RECORD_FILENAME), "--json"]) == EXIT_OK
     assert json.loads(capsys.readouterr().out)["schema"] == RUN_SCHEMA

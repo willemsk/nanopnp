@@ -71,6 +71,15 @@ EXIT_CODES: Final[dict[str, int]] = {
     # rather than a gate error: no result is in doubt, and like every other 3
     # the fix is an edit to the case file rather than a retry.
     "nanopnp.post.stage:SelectionError": EXIT_CASE,
+    # `--upto` named a stage this run does not walk -- a typo, or stage 7 on a
+    # case that supplies no field. 3 rather than 1 for the same reason as every
+    # other 3: nothing numerical went wrong, and a job array retrying on
+    # "unexpected" would fail identically. 3 rather than 2 because the second of
+    # the two conditions is not a wrong command line at all -- `--upto charge`
+    # names a registered stage, and it is the *case* that gives it nothing to
+    # read -- and because 2 stays argparse's own code, raised where argparse
+    # raises it and nowhere else.
+    "nanopnp.io.run:UnknownStageError": EXIT_CASE,
     # A file the case file or the command line named is not there. Classified
     # rather than left to fall through to 1 because "unexpected" is what a job
     # array retries, and this is the other kind: the path is wrong, and it will

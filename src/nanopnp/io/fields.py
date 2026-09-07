@@ -58,7 +58,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from nanopnp.core.scaling import Scales
-from nanopnp.core.typing import Expression, Mesh
+from nanopnp.core.typing import Expression, FESpace, Mesh
 from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS
 from nanopnp.physics.models import (
     POTENTIAL,
@@ -254,6 +254,7 @@ def _sample_nodes(
     order: int,
     dimension: int = 1,
     materials: str | None = None,
+    carriers: dict[tuple[int, int], FESpace] | None = None,
 ) -> np.ndarray:
     """Return ``expression`` at ``points_nm``, through a whole-domain carrier.
 
@@ -278,11 +279,22 @@ def _sample_nodes(
         1 for a scalar, 2 for the ``(r, z)`` velocity.
     materials
         Region the field is defined on, or ``None`` for all of Omega.
+    carriers
+        Spaces already built, by ``(order, dimension)``, added to as they are
+        needed. An export samples six or more fields over two node sets and they
+        share two spaces between them; building one per call would enumerate the
+        mesh's degrees of freedom once per *field*, on the one stage a sweep
+        writes thousands of times (FR-24). Omitted, each call builds its own.
     """
     import ngsolve as ngs
     import numpy as np
 
-    space = ngs.VectorH1(mesh, order=order) if dimension > 1 else ngs.H1(mesh, order=order)
+    if carriers is None:
+        carriers = {}
+    space = carriers.get((order, dimension))
+    if space is None:
+        space = ngs.VectorH1(mesh, order=order) if dimension > 1 else ngs.H1(mesh, order=order)
+        carriers[(order, dimension)] = space
     carrier = ngs.GridFunction(space)
     if materials is None:
         carrier.Set(expression)
@@ -408,6 +420,9 @@ def export_fields(
     omega = p2_nodes(mesh)
     omega_w = p2_nodes(mesh, materials=fluid)
 
+    # One set of carrier spaces for the whole export: two orders and two
+    # dimensions at most, where a space per sampled field would be a dozen.
+    carriers: dict[tuple[int, int], FESpace] = {}
     whole: dict[str, np.ndarray] = {}
     restricted: dict[str, np.ndarray] = {}
     for field in model.fields:
@@ -421,16 +436,25 @@ def export_fields(
             order=field.order,
             dimension=2 if field.element == "vector_h1" else 1,
             materials=field.domain,
+            carriers=carriers,
         ) * _field_scale(field.name, scales)
         target = whole if field.domain is None else restricted
         target[name] = _as_vector(values) if field.element == "vector_h1" else values[:, 0]
 
     if fixed_charge_C_m3 is not None:
         whole["rho_fixed_C_m3"] = _sample_nodes(
-            mesh, fixed_charge_C_m3, omega.points_nm, order=model.fields[0].order
+            mesh,
+            fixed_charge_C_m3,
+            omega.points_nm,
+            order=model.fields[0].order,
+            carriers=carriers,
         )[:, 0]
     restricted[WALL_DISTANCE] = _sample_nodes(
-        mesh, solution.wall_distance_nm, omega_w.points_nm, order=model.fields[0].order
+        mesh,
+        solution.wall_distance_nm,
+        omega_w.points_nm,
+        order=model.fields[0].order,
+        carriers=carriers,
     )[:, 0]
 
     cells: dict[str, np.ndarray] = {MATERIAL_ID: _material_ids(mesh, omega)}
