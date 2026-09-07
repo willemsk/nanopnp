@@ -18,6 +18,8 @@ separate invocation, by design (see **Finishing** below).
 3. The `SPECIFICATION.md` sections and Appendix A rows the plan cites.
 4. `uv sync --all-extras --frozen` if `.venv` is not already current (the `SessionStart` hook does
    this in web sessions).
+5. Check the branch. If it is `main`, stop and ask before writing anything — `wp-ship` §1 refuses to
+   ship from `main`, and by the time it says so the whole package has already been committed there.
 
 Then build a task list from the plan's work items, in dependency order, and work it. Physics and
 numerics decisions stay with the orchestrator on Opus; delegate surveys, mechanical edits and long
@@ -65,6 +67,15 @@ The phase plan's `### WP<n>` section gains the delivered summary — what was bu
 *beyond* the plan, which identifiers are discharged, and the findings the next package inherits —
 when the package is finished. That section, not the WP plan, is the authoritative record.
 
+Both plans' **Status** lines move with that summary, and they are easy to forget because nothing
+fails when you do. `.claude/hooks/session-start.sh` prints the first `**Status: …**` span of every
+`docs/plans/*.md` as the opening context of every session, so a stale one tells each future session
+that finished work is unstarted:
+
+- the WP plan's own — `**Status: planned, not started**` → `**Status: delivered, <date>.**`, keeping
+  the sentence that follows it;
+- the phase plan's roll-up — the `WP<n>` moves from the planned list to the delivered one.
+
 ## Measurements are deliverables
 
 Timings, convergence rates, minimum damping factors, route-agreement figures, memory at the
@@ -81,7 +92,10 @@ Before handing off, confirm every one of these yourself:
 - `uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv run pytest` is
   green on the current tree;
 - the specification, the knowledge base and the plan's Outcome annotations are all committed;
-- `git status` is clean.
+- both **Status** lines are updated;
+- `git status` is clean, and the branch is pushed (`git push -u origin <branch>`) — `wp-ship` §2
+  would push it, but that is a later session, possibly on a container this one's commits never
+  reach.
 
 Then stop and report to the user: the work package delivered, the identifiers discharged, and that
 it is ready to ship. Do not invoke `/wp-ship` yourself and do not open the PR by hand — this session
