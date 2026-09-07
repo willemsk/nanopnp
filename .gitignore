@@ -219,3 +219,7 @@ __marimo__/
 
 # Claude Code worktrees live inside .claude/ but are checkouts, not config.
 .claude/worktrees/
+
+# The default artefact and result store: `store_root()` is `$NANOPNP_STORE` or
+# ./nanopnp-store, so running the CLI from a checkout puts a run's outputs here.
+nanopnp-store/
