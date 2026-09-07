@@ -130,8 +130,12 @@ class SolveStage:
         The cache key of section 5.3.2 has to be computable *before* the stage
         runs, or :meth:`nanopnp.io.store.Store.get_or_compute` cannot decide
         whether to run it. For this stage that is the resolved case's
-        provenance, the mesh file's digest and the materials artefact's hash —
-        all of them cheap, none of them touching NGSolve.
+        *solve* provenance, the mesh file's digest and the materials artefact's
+        hash — all of them cheap, none of them touching NGSolve. The case's
+        ``name`` and ``outputs`` are excluded from that provenance because
+        neither reaches the operator, so asking a converged case for one more
+        quantity is a cache hit rather than another solve
+        (:attr:`~nanopnp.io.case.ResolvedCase.solve_provenance`).
 
         Returns
         -------
@@ -145,7 +149,7 @@ class SolveStage:
         resolved, ingested, mesh, materials, fields, supplied = self._prepare(inputs, load=False)
         del ingested, supplied
         return SolutionArtefact(
-            parameters=resolved.provenance,
+            parameters=resolved.solve_provenance,
             inputs=_input_hashes(mesh, materials, fields),
         )
 
@@ -267,7 +271,7 @@ class SolveStage:
             boundaries=prepared[-1].boundaries,
         )
         return SolutionArtefact(
-            parameters=resolved.provenance,
+            parameters=resolved.solve_provenance,
             inputs=_input_hashes(mesh_artefact, materials, fields_artefact),
             payload=payload,
             summary={**result.summary(), **_field_summary(fields)},
