@@ -423,6 +423,28 @@ tenth of the pore radius, and on the 124-element mesh the PHY-02 distance field 
 of freedom in total. The reaction flux and the indicator form disagree because they sample that
 coefficient differently — the residual on the constrained `cis` dofs, against `∇ψ` over the fluid.
 
+**The mechanism is sharper than "under-resolved", and it is a sign error the field commits on its
+own [tested].** The P2 Varadhan distance field *undershoots below zero* at the re-entrant corner of
+the pore mouth (`r ≈ 2.0`, `z ≈ ±3.0`), and `FittedCorrection.evaluate` clamps the concentration
+driver but not `d`. A negative `d` puts `1 − exp(−6.2(d + 0.01))` below zero, so the diffusivity and
+mobility factors change sign in that neighbourhood: ions are driven *up* their own gradient there.
+Measured on the same pore, sampling the fluid domain:
+
+| mesh (`maxh`/`wall_h`, nm) | elements | fluid area with `d < 0` | min `d` (nm) | min `f^w_D` | samples with `f^w_D < 0` |
+|---|---|---|---|---|---|
+| 4.0 / 1.0 | 124 | 2.186 % | −0.9913 | −437.7 | 8.257 % |
+| 2.0 / 0.5 | 257 | 0.687 % | −1.2347 | −1983.1 | 2.373 % |
+| 1.0 / 0.25 | 793 | 0.101 % | −0.9628 | −366.8 | 0.264 % |
+| 0.5 / 0.125 | 2 618 | 0.000 % | +0.0079 | +0.1 | 0.000 % |
+
+The undershoot is a genuine property of the discrete field and not an export artefact: the same
+negative values reach the IF-07 export and the correction chain alike. It vanishes by `maxh` 0.5 nm
+on this toy pore, and WP8's ClyA reference mesh (44 316 triangles) is far finer than that
+everywhere, so production runs are expected clean — but nothing currently *asserts* it. Clamping `d`
+at zero inside the correction, or gating on `min d ≥ −0.01 nm`, would each change every number a
+coarse-mesh test reports and needs a specification amendment; recorded here rather than fixed
+under WP10.
+
 Two consequences worth keeping:
 
 - **NUM-26 is a resolution diagnostic as well as an extraction check.** A run that fails it with
@@ -719,6 +741,17 @@ so the diagnostic says "the mesh under-resolves the supplied field" rather than 
 Second, the fix is on the producer side — deposit onto the finite-element space and rescale to
 `Q_net`, which conserves by construction — and no amount of consumer-side effort substitutes for it.
 **[tested]**
+
+### 8.1.3 An OCC-generated extent is one ulp off the number the geometry was given **[tested]**
+
+`CylindricalPoreGeometry(membrane_thickness_nm=6.0, ...)` produces a mesh whose `membrane` vertices
+span `z ∈ [−3.0, 3.000000000000001]`: the upper face is one unit in the last place high, and
+identically so at `maxh` 4.0 and 2.0, so it is the OCC revolve's round-off and not a meshing
+artefact. Anything derived from a material's own extent — the NUM-24 indicator band read off the
+mesh rather than off the geometry object is the case that found it — therefore agrees with the
+geometry formula to about 4 × 10⁻¹⁶ nm and not exactly. Assert such an identity on a hand-built
+`MeshData` with exact coordinates, and assert the meshed one to a tolerance far below any length in
+the problem; an `==` against a meshed extent is a test that will fail on some other platform's OCC.
 
 ### 8.1.2 An unstructured netgen mesh is not a portable measurement
 

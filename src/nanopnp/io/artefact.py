@@ -329,7 +329,8 @@ class QoIArtefact(Artefact):
 
     The case and the solution enter as input hashes and everything that changes
     a number enters as a parameter: which quantities were asked for, the axial
-    band ``grad(psi)`` is supported on, and whether the NUM-26 route check ran.
+    band ``grad(psi)`` is supported on, the NUM-28 extension shell when a force
+    was asked for, and whether the NUM-26 route check ran.
     The band is a parameter and not a summary field because two extractions that
     differ only in it are two different numbers, and NUM-24's whole claim is that
     they are not — a claim VER-11 tests and this key must not assume.
@@ -347,16 +348,24 @@ class QoIArtefact(Artefact):
         outputs: tuple[str, ...],
         indicator_band_nm: tuple[float, float],
         check_routes: bool,
+        extension_shell_nm: tuple[float, float] | None = None,
         payload: Mapping[str, Path] | None = None,
         summary: Mapping[str, Canonicalisable] | None = None,
     ) -> None:
+        parameters: dict[str, Canonicalisable] = {
+            "outputs": list(outputs),
+            "indicator_band_nm": list(indicator_band_nm),
+            "check_routes": check_routes,
+        }
+        # Absent rather than null when no force was asked for, matching the
+        # convention the other artefacts use for an input a run did not have:
+        # "no force was extracted" and "one was, over no shell" are different
+        # runs, and a null would read as the second.
+        if extension_shell_nm is not None:
+            parameters["extension_shell_nm"] = list(extension_shell_nm)
         super().__init__(
             schema=QOI_SCHEMA,
-            parameters={
-                "outputs": list(outputs),
-                "indicator_band_nm": list(indicator_band_nm),
-                "check_routes": check_routes,
-            },
+            parameters=parameters,
             inputs={"case": case_hash, "solution": solution_hash},
             payload=dict(payload or {}),
             summary=summary or {},
