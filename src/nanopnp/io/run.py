@@ -61,6 +61,7 @@ __all__ = [
     "MissingUpstreamError",
     "RunResult",
     "StageRecord",
+    "UnknownStageError",
     "run_case",
     "run_document",
 ]
@@ -122,6 +123,11 @@ def _scratch(store: Store) -> Path:
     Fresh per run rather than a fixed ``tmp/mesh``: two runs into one store hold
     different meshes, and a deterministic name would have the second overwrite
     a file the first's artefact still points at (section 5.3.2).
+
+    Called from :meth:`_Walk.construct` on the first stage that writes a file
+    rather than before the walk, so that a run served entirely from the store
+    leaves no empty directory behind — under FR-24 that is one per member of a
+    re-collected sweep, in the directory the cache exists to avoid touching.
     """
     root = store.root / WORKSPACE_DIRNAME
     root.mkdir(parents=True, exist_ok=True)
@@ -155,6 +161,26 @@ _WEIGHTS: Mapping[str, float] = {
 
 class MissingUpstreamError(RuntimeError):
     """An upstream artefact is not in the store and ``only`` forbade computing it."""
+
+
+class UnknownStageError(KeyError):
+    """``upto`` named a stage this run does not walk.
+
+    A :class:`KeyError` still, so that a caller written against the mapping-like
+    reading of ``upto`` keeps working, but a *named* one: IF-02 classifies it as
+    ``3``, the case, because nothing numerical has gone wrong and the retry a
+    job array would make on ``1`` fails identically (section 3.1 NOTE, QR-06).
+    """
+
+    def __str__(self) -> str:
+        """Return the message as written, without :class:`KeyError`'s quoting.
+
+        ``KeyError`` reprs its argument, which is right for a missing key and
+        wrong for a sentence: the CLI prints ``str(error)`` as the QR-12
+        diagnostic, and a diagnostic wrapped in quotes reads as a key nobody
+        looked up.
+        """
+        return str(self.args[0]) if self.args else ""
 
 
 @dataclass(frozen=True)
@@ -290,6 +316,8 @@ class _Walk:
     artefacts: dict[str, Artefact] = field(default_factory=dict)
     records: list[StageRecord] = field(default_factory=list)
     contributed: list[ContributedDeviation] = field(default_factory=list)
+    scratch: Path | None = None
+    """The workspace :func:`_scratch` made, once a stage has needed one."""
 
     def inputs(self, name: str) -> StageInputs:
         """Return the inputs one stage is handed.
@@ -305,10 +333,21 @@ class _Walk:
         )
 
     def construct(self, name: str) -> Stage:
-        """Return the stage object, giving the ones that write files a directory."""
-        if self.workspace is None or name not in WORKSPACE_STAGES:
+        """Return the stage object, giving the ones that write files a directory.
+
+        The workspace is the one the caller named, or one made under this run's
+        store the first time a file-writing stage asks for it — never the
+        process-default :func:`~nanopnp.core.paths.store_root` the stages
+        themselves fall back to (section 5.3.2, the workspace-locality NOTE).
+        """
+        if name not in WORKSPACE_STAGES:
             return create(name)
-        directory = self.workspace / name
+        root = self.workspace
+        if root is None:
+            if self.scratch is None:
+                self.scratch = _scratch(self.store)
+            root = self.scratch
+        directory = root / name
         directory.mkdir(parents=True, exist_ok=True)
         return create(name, workspace=directory)
 
@@ -322,7 +361,7 @@ def _selected(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]:
 
     Raises
     ------
-    KeyError
+    UnknownStageError
         If ``upto`` is not a stage this run walks; the message lists the ones it
         does, and says separately when the stage is registered but this case
         gives it nothing to do.
@@ -334,11 +373,11 @@ def _selected(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]:
     if upto in stages:
         return stages[: stages.index(upto) + 1]
     if upto in PIPELINE:
-        raise KeyError(
+        raise UnknownStageError(
             f"stage {upto!r} is registered but case {resolved.name!r} supplies neither "
             "inputs.charge nor inputs.eps_r, so there is nothing for it to read"
         )
-    raise KeyError(f"no stage {upto!r} in the pipeline; it walks {', '.join(stages)}")
+    raise UnknownStageError(f"no stage {upto!r} in the pipeline; it walks {', '.join(stages)}")
 
 
 def _probe(stage: Stage, inputs: StageInputs) -> Artefact:
@@ -571,7 +610,7 @@ def run_document(
         resolved=resolve(document),
         store=target,
         options=dict(options or {}),
-        workspace=Path(workspace) if workspace is not None else _scratch(target),
+        workspace=Path(workspace) if workspace is not None else None,
         only=only,
     )
     stages = _selected(walk.resolved, upto)

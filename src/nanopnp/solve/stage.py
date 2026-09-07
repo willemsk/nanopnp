@@ -62,6 +62,7 @@ from nanopnp.physics.models import CoupledBoundaries, CoupledModel
 from nanopnp.solve.continuation import Rung, run_ladder
 from nanopnp.solve.state import (
     STATE_FILENAME,
+    STATE_KEY,
     ladder,
     reads_wall,
     save,
@@ -370,4 +371,4 @@ class SolveStage:
             mesh_content_hash=mesh_content_hash,
             boundaries=boundaries,
         )
-        return {"state": target}
+        return {STATE_KEY: target}

@@ -530,3 +530,43 @@ def test_ver34_a_case_reading_d_without_a_stored_distance_is_refused(
     path = _rewrite(tmp_path / STATE_FILENAME, arrays)
     with pytest.raises(StateMismatchError, match=WALL_DISTANCE_ENTRY):
         restore(path, case=solved.document)
+
+
+def test_ver34_a_cold_solve_carries_the_wall_distance_the_ladder_carries(solved: Solved) -> None:
+    """``continuation: none`` is a different route to the same operator, not a weaker one.
+
+    The rung built for a cold solve has to be handed the PHY-02 field for the
+    same reason every rung of the ladder is: with none supplied,
+    ``CoupledModel.solve`` falls back to
+    :data:`~nanopnp.physics.coefficients.SATURATED_WALL_DISTANCE_NM`, every wall
+    factor evaluates at its far-field value, and what converges is the classical
+    operator wearing an ePNP-NS provenance. It converges, which is what makes it
+    dangerous — and :func:`~nanopnp.solve.state.save` then refuses to store it,
+    aborting a run that has already paid for the solve.
+
+    Asserted on the rung rather than through a solve because that is where the
+    keyword either is or is not: identity against the field
+    :func:`~nanopnp.solve.state.wall_distance_field` returned localises the
+    failure to the one line that passes it on (an analytic test localises, a
+    whole-model comparison does not).
+    """
+    cold = resolve(
+        loads_case(
+            CASE.format(
+                mesh_path=solved.work / "pore.vol",
+                concentration_M=CONCENTRATION_M,
+                bias_V=BIAS_V,
+            ).replace("continuation: default_ladder", "continuation: none")
+        )
+    )
+    assert cold.continuation == "none"
+    ingested = ingest(cold.mesh, cold)
+    order = int(cold.model_options.get("order", AXISYMMETRIC.element_order))
+    measures = replace(AXISYMMETRIC, element_order=order)
+    distance = wall_distance_field(cold, ingested.mesh, order=order)
+    empty = ResolvedFields(charge=None, conservation=None, eps_r=None, material_means=())
+
+    rungs = ladder(cold, ingested.mesh, measures, distance, empty)
+
+    assert len(rungs) == 1, "continuation: none is one rung, at the target point"
+    assert rungs[0].solve_kwargs["wall_distance_nm"] is distance

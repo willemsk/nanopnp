@@ -61,7 +61,7 @@ from nanopnp.post import forces as force_post
 from nanopnp.post import qoi as qoi_post
 from nanopnp.post.indicator import axial_indicator
 from nanopnp.solve.stage import SolveStage
-from nanopnp.solve.state import STATE_FILENAME, restore
+from nanopnp.solve.state import STATE_FILENAME, STATE_KEY, restore
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from collections.abc import Mapping
@@ -112,9 +112,6 @@ overrides it with absolute distances.
 
 WORKSPACE_DIRNAME = "tmp"
 """Directory under the store root an export is written to before it is stored."""
-
-SCALAR_OUTPUTS = frozenset({"current", "transport_numbers", "eof_rate"})
-"""Words in ``outputs:`` that the NUM-24/NUM-25 extraction alone satisfies."""
 
 
 class SelectionError(ValueError):
@@ -212,9 +209,7 @@ def extension_shell(data: MeshData, *, material: str = ANALYTE_DOMAIN) -> tuple[
     return (EXTENSION_INNER * semi_axis, EXTENSION_OUTER * semi_axis)
 
 
-def _band(
-    resolved: ResolvedCase, data: MeshData, options: Mapping[str, Canonicalisable]
-) -> tuple[float, float]:
+def _band(data: MeshData, options: Mapping[str, Canonicalisable]) -> tuple[float, float]:
     """Return the band this run uses: the option if given, else the mesh's."""
     supplied = options.get("indicator_band_nm")
     if supplied is None:
@@ -225,7 +220,6 @@ def _band(
             f"indicator_band_nm must be increasing in z, got ({lower}, {upper}); an inverted "
             "band flips the sign of every current"
         )
-    del resolved
     return (float(lower), float(upper))
 
 
@@ -238,7 +232,33 @@ def _shell(data: MeshData, options: Mapping[str, Canonicalisable]) -> tuple[floa
     return (float(inner), float(outer))
 
 
-def _check_selection(outputs: tuple[str, ...], model: str) -> None:
+def _solution(inputs: StageInputs, *, solving: bool) -> Artefact:
+    """Return the stage-10 artefact this stage describes, solving only if it must.
+
+    Both post-processing stages are independently invocable (FR-27), so both have
+    to cope with a caller that handed them a case and no ``solve`` artefact. What
+    they need of it differs: a ``key`` needs its *hash*, which
+    :meth:`~nanopnp.solve.stage.SolveStage.key` answers without entering Newton,
+    while ``run`` needs the converged state under its payload. Asking for the
+    state in both would converge the ladder twice for one extraction — once to
+    answer the probe whose contract is that it does not do the work, and once to
+    do it.
+
+    Parameters
+    ----------
+    inputs
+        What the driver, the CLI or a caller handed the stage.
+    solving
+        ``True`` when the payload is needed, ``False`` when the hash will do.
+    """
+    solution = inputs.upstream.get("solve")
+    if solution is not None:
+        return solution
+    stage = SolveStage()
+    return stage.run(inputs) if solving else stage.key(inputs)
+
+
+def _check_selection(outputs: tuple[str, ...]) -> None:
     """Refuse every word in ``outputs`` this run cannot meet (section 5.3.1 NOTE).
 
     Raises
@@ -252,7 +272,6 @@ def _check_selection(outputs: tuple[str, ...], model: str) -> None:
             "has one operating point. The second bias can only come from a sweep (FR-24), and "
             "inventing one would report a ratio the run did not measure"
         )
-    del model
 
 
 @dataclass(frozen=True)
@@ -320,7 +339,7 @@ class QoIStage:
         differing only in it are two numbers — which is precisely what NUM-24
         claims they are not, and what VER-11 tests rather than assumes.
         """
-        prepared = self._prepare(inputs)
+        prepared = self._prepare(inputs, solving=False)
         return QoIArtefact(
             case_hash=prepared.case_hash,
             solution_hash=prepared.solution.hash,
@@ -330,21 +349,31 @@ class QoIStage:
             extension_shell_nm=prepared.shell,
         )
 
-    def _prepare(self, inputs: StageInputs) -> _Prepared:
+    def _prepare(self, inputs: StageInputs, *, solving: bool) -> _Prepared:
         """Resolve the case, ingest the mesh and settle every parameter.
 
         Shared by :meth:`key` and :meth:`run`, so that the key the store is asked
         about and the key the extraction produces cannot be built two ways.
+
+        Parameters
+        ----------
+        inputs
+            What the driver, the CLI or a caller handed the stage.
+        solving
+            Whether the converged *state* is needed, or only the solve
+            artefact's hash. ``key`` needs the hash and :meth:`run` needs the
+            payload, and the difference is a whole continuation ladder: a stage
+            invoked with no upstream ``solve`` (FR-27) would otherwise converge
+            it once to answer the probe and once to do the work, and the probe's
+            contract is that it does not do the work.
         """
         resolved = resolve(inputs.case)
         ingested = ingest(resolved.mesh, resolved)
         outputs = tuple(resolved.outputs)
-        _check_selection(outputs, resolved.model)
+        _check_selection(outputs)
         check_routes = bool(inputs.options.get("check_routes", True))
         shell = _shell(ingested.data, inputs.options) if "analyte_force" in outputs else None
-        solution = inputs.upstream.get("solve")
-        if solution is None:
-            solution = SolveStage().run(inputs)
+        solution = _solution(inputs, solving=solving)
         case = inputs.upstream.get("case")
         case_hash = case.hash if case is not None else CaseArtefact(inputs.case).hash
         return _Prepared(
@@ -353,7 +382,7 @@ class QoIStage:
             case_hash=case_hash,
             solution=solution,
             outputs=outputs,
-            band=_band(resolved, ingested.data, inputs.options),
+            band=_band(ingested.data, inputs.options),
             shell=shell,
             check_routes=check_routes,
         )
@@ -388,15 +417,16 @@ class QoIStage:
         """
         check_cancelled(cancel, "the extraction")
         report(progress, 0.0, "resolving the case")
-        prepared = self._prepare(inputs)
+        prepared = self._prepare(inputs, solving=True)
 
         report(progress, 0.2, "restoring the converged state")
         check_cancelled(cancel, "restoring the state")
-        state_path = prepared.solution.payload.get("state")
+        state_path = prepared.solution.payload.get(STATE_KEY)
         if state_path is None:
             carried = ", ".join(sorted(prepared.solution.payload)) or "nothing"
             raise KeyError(
-                f"the solve artefact carries no {STATE_FILENAME!r} payload; it carries {carried}. "
+                f"the solve artefact carries no {STATE_KEY!r} payload (the {STATE_FILENAME} "
+                f"record); it carries {carried}. "
                 "Stage 11 restores the state to reassemble the NUM-25 residual and cannot extract "
                 "from a summary alone"
             )
@@ -524,7 +554,7 @@ class ReportStage:
 
     def key(self, inputs: StageInputs) -> ReportArtefact:
         """Return the artefact key this report will produce, without writing it."""
-        case_hash, qoi, solution = self._hashes(inputs)
+        case_hash, qoi, solution = self._hashes(inputs, solving=False)
         return ReportArtefact(
             case_hash=case_hash,
             qoi_hash=qoi.hash,
@@ -536,12 +566,15 @@ class ReportStage:
         """Return the export selection: ``("fields",)`` or nothing."""
         return ("fields",) if "fields" in resolve(inputs.case).outputs else ()
 
-    def _hashes(self, inputs: StageInputs) -> tuple[str, Artefact, Artefact]:
-        """Return the case hash and the two upstream artefacts this report describes."""
+    def _hashes(self, inputs: StageInputs, *, solving: bool) -> tuple[str, Artefact, Artefact]:
+        """Return the case hash and the two upstream artefacts this report describes.
+
+        ``solving`` is :func:`_solution`'s: the key needs the solve artefact's
+        hash and the export needs its payload, and only the second is worth a
+        continuation ladder.
+        """
         qoi = inputs.require("qoi")
-        solution = inputs.upstream.get("solve")
-        if solution is None:
-            solution = SolveStage().run(inputs)
+        solution = _solution(inputs, solving=solving)
         case = inputs.upstream.get("case")
         case_hash = case.hash if case is not None else CaseArtefact(inputs.case).hash
         return case_hash, qoi, solution
@@ -572,8 +605,10 @@ class ReportStage:
         """
         check_cancelled(cancel, "the report")
         report(progress, 0.0, "collecting the run's artefacts")
-        case_hash, qoi, solution = self._hashes(inputs)
         exports = self._exports(inputs)
+        # Only an export needs the converged state; a report that writes nothing
+        # needs the solve artefact's hash and no ladder to get it.
+        case_hash, qoi, solution = self._hashes(inputs, solving=bool(exports))
 
         payload: dict[str, Path] = {}
         summary: dict[str, Canonicalisable] = {"exports": list(exports)}
@@ -605,11 +640,12 @@ class ReportStage:
         from the file rather than written as a zero, which would claim it was
         computed and found to vanish.
         """
-        state_path = solution.payload.get("state")
+        state_path = solution.payload.get(STATE_KEY)
         if state_path is None:
             carried = ", ".join(sorted(solution.payload)) or "nothing"
             raise KeyError(
-                f"the solve artefact carries no {STATE_FILENAME!r} payload; it carries {carried}. "
+                f"the solve artefact carries no {STATE_KEY!r} payload (the {STATE_FILENAME} "
+                f"record); it carries {carried}. "
                 "The IF-07 export is of the converged fields and there is nothing to export from"
             )
         restored = restore(Path(state_path), case=inputs.case)
@@ -627,7 +663,7 @@ class ReportStage:
             directory,
             scales=model.scales,
             relative_permittivity=_permittivity(restored),
-            fixed_charge_C_m3=_fixed_charge(resolved, restored),
+            fixed_charge_C_m3=_fixed_charge(resolved),
         )
         payload = {path.name: path for path in export.paths()}
         record: dict[str, Canonicalisable] = {
@@ -666,7 +702,7 @@ def _permittivity(solution: ModelSolution) -> Expression | None:
     return permittivity
 
 
-def _fixed_charge(resolved: ResolvedCase, solution: ModelSolution) -> Expression | None:
+def _fixed_charge(resolved: ResolvedCase) -> Expression | None:
     """Return the supplied fixed-charge volume density, or ``None`` if there was none.
 
     A run that supplied no ``inputs.charge`` writes no ``rho_fixed_C_m3``
@@ -675,7 +711,6 @@ def _fixed_charge(resolved: ResolvedCase, solution: ModelSolution) -> Expression
     """
     if resolved.charge is None:
         return None
-    del solution
     fields = read_fields(resolved)
     if fields.charge is None:
         return None
