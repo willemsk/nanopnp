@@ -379,7 +379,9 @@ def load_grid(document: FieldDocument, *, base: Path) -> RadialGrid:
         assert document.data is not None  # the validator admits no third case
         path = document.data.path
         resolved = path if path.is_absolute() else base / path
-        grid = read_grid(resolved, format=document.data.format)
+        # Ahead of the read, not after it: a declared digest is a statement about
+        # the bytes, and checking it costs one pass over the buffer where parsing
+        # the 77 MB reference table before refusing it costs a minute.
         if document.data.sha256 is not None:
             from nanopnp.core.hashing import file_hash
 
@@ -389,6 +391,7 @@ def load_grid(document: FieldDocument, *, base: Path) -> RadialGrid:
                     f"{resolved.name!r} hashes to {digest} and the document declares "
                     f"{document.data.sha256}; the header describes different bytes"
                 )
+        grid = read_grid(resolved, format=document.data.format)
     factor = document.unit_factor
     if factor != 1.0:
         grid = RadialGrid(
@@ -447,8 +450,11 @@ def create_form(spec: FormSpec) -> RadialGrid:
     Raises
     ------
     FieldDocumentError
-        If the form is not registered, or if it was given a parameter it does
-        not take or left one it needs unset. Both messages name the parameters.
+        If the form is not registered, or if a parameter it needs is unset. Both
+        messages name what is missing. A parameter the form does not read is not
+        refused — the builders take a mapping, not a signature — but a misspelt
+        one shows up as the *needed* one being absent, which is the same report
+        from the other end.
     """
     import numpy as np
 
@@ -614,7 +620,9 @@ class ChargeField:
         no such cancellation and whose check therefore *does* exercise the
         Jacobian.
         """
-        return self.grid.integral(radial=not self.is_areal)
+        if self.is_areal:
+            return self.grid.planar_integral()
+        return self.grid.integral(radial=True)
 
     def mesh_integral_C(self, mesh: Mesh, measures: Measures, *, refined: bool = False) -> float:
         """Return ``Q_mesh``: the assembled density integrated over the mesh.
@@ -714,6 +722,21 @@ def load_field(path: str | Path) -> ChargeField:
 # -- the conservation report ---------------------------------------------------
 
 
+def _relative(deviation: float, reference: float) -> float:
+    """Return ``deviation / reference``, and infinity where the reference is zero.
+
+    Every leg of the report is a *relative* error, and a field whose reference
+    charge is zero has none: ``0.0`` would report a conserved charge and a bare
+    ``ZeroDivisionError`` would abort with a traceback rather than a gate name.
+    Infinity is neither — it fails every tolerance, and
+    :func:`check_conservation` refuses the case ahead of them all with a
+    diagnostic that says why (QR-12).
+    """
+    if reference == 0.0:
+        return 0.0 if deviation == 0.0 else float("inf")
+    return deviation / reference
+
+
 @dataclass(frozen=True)
 class ConservationReport:
     """What PHY-19's assertion measured, decomposed (§4.4 NOTE, QR-03).
@@ -763,17 +786,17 @@ class ConservationReport:
         """``(Q_grid - Q_net) / |Q_net|``, or ``None`` if none was declared."""
         if self.q_net_C is None:
             return None
-        return (self.q_grid_C - self.q_net_C) / abs(self.q_net_C)
+        return _relative(self.q_grid_C - self.q_net_C, abs(self.q_net_C))
 
     @property
     def consumer_error(self) -> float:
         """``(Q_mesh - Q_grid) / |Q_grid|``: interpolation, quadrature, footprint."""
-        return (self.q_mesh_C - self.q_grid_C) / abs(self.q_grid_C)
+        return _relative(self.q_mesh_C - self.q_grid_C, abs(self.q_grid_C))
 
     @property
     def quadrature_error(self) -> float:
         """``|Q_mesh(order) - Q_mesh(order + 3)| / reference``."""
-        return abs(self.q_mesh_C - self.q_mesh_refined_C) / self.reference_C
+        return _relative(abs(self.q_mesh_C - self.q_mesh_refined_C), self.reference_C)
 
     @property
     def ring_ratio(self) -> float:
@@ -786,7 +809,7 @@ class ConservationReport:
         if not self.planes_nm:
             return (float("nan"), 0.0)
         errors = [
-            (abs(mesh - grid) / self.reference_C, plane)
+            (_relative(abs(mesh - grid), self.reference_C), plane)
             for plane, grid, mesh in zip(
                 self.planes_nm, self.grid_cumulative_C, self.mesh_cumulative_C, strict=True
             )
@@ -886,6 +909,15 @@ def check_conservation(report: ConservationReport) -> ConservationReport:
         Naming the gate, the offending quantity and, where there is one, its
         location.
     """
+    if report.reference_C == 0.0:
+        raise ChargeFieldError(
+            "the supplied field carries no reference charge",
+            "every leg of this check is a relative error and its reference "
+            f"({'the declared q_net_e' if report.q_net_C is not None else 'the grid integral'}) "
+            "is zero, so no tolerance means anything. A field with no net charge cannot be "
+            "gated against QR-03's relative budget: omit q_net_e if the producer declared it "
+            "wrongly, or supply a field that carries charge",
+        )
     if report.ring_ratio > RING_TOL:
         raise ChargeFieldError(
             "the supplied grid is truncated",
@@ -905,11 +937,12 @@ def check_conservation(report: ConservationReport) -> ConservationReport:
             "quadrature-resolution check on this mesh, so its number cannot be defended",
         )
     producer = report.producer_error
-    if producer is not None and abs(producer) > CONSERVATION_TOL:
+    declared_C = report.q_net_C
+    if producer is not None and declared_C is not None and abs(producer) > CONSERVATION_TOL:
         raise ChargeFieldError(
             "the supplied field does not carry the charge it declares (producer leg, QR-03)",
             f"its grid integrates to {report.q_grid_C / ELEMENTARY_CHARGE:.6g} e against a "
-            f"declared q_net_e of {report.q_net_C / ELEMENTARY_CHARGE if report.q_net_C else 0:.6g}"
+            f"declared q_net_e of {declared_C / ELEMENTARY_CHARGE:.6g}"
             f", a relative error of {producer:.3g} against {CONSERVATION_TOL:g}. This leg is the "
             "producer's: smearing, projection and the annular volumes",
         )

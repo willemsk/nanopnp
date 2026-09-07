@@ -43,7 +43,7 @@ from dataclasses import replace
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from nanopnp.charge.stage import FieldStage, ResolvedFields, load_fields, read_fields
+from nanopnp.charge.stage import FieldStage, ResolvedFields, gate_fields, read_fields
 from nanopnp.core.constants import thermal_voltage
 from nanopnp.core.paths import store_root
 from nanopnp.core.stages import (
@@ -114,13 +114,11 @@ def _single_rung(
     supplied: dict[str, Expression] = {}
     if isinstance(model, CoupledModel):
         # The electrostatic models of PHY-21 take neither: ``pb`` screens with a
-        # Debye length and carries no material permittivity, and handing one a
-        # keyword it does not take aborts the run with a message about an
-        # argument rather than about the physics.
+        # Debye length and carries no material permittivity, and ``resolve``
+        # refuses a case that supplies a field to one of them, so this branch is
+        # the belt to that brace rather than a silent drop.
         if fields.charge is not None:
-            supplied["fixed_charge"] = (
-                fields.charge.volume_density_C_m3() / model.scales.charge_density_C_m3
-            )
+            supplied["fixed_charge"] = fields.charge.assemble(model.scales)
         if fields.eps_r is not None:
             supplied["solid_fraction"] = fields.eps_r.chi()
     # Taken from the temperature rather than from ``model.scales``: the
@@ -203,16 +201,18 @@ class SolveStage:
             hash of the artefact the solve will produce, which is what
             ``get_or_compute`` checks on the way out.
         """
-        resolved, ingested, mesh, materials, fields = self._prepare(inputs)
-        del ingested
+        resolved, ingested, mesh, materials, fields, supplied = self._prepare(inputs, load=False)
+        del ingested, supplied
         return SolutionArtefact(
             parameters=resolved.provenance,
             inputs=_input_hashes(mesh, materials, fields),
         )
 
     def _prepare(
-        self, inputs: StageInputs
-    ) -> tuple[ResolvedCase, IngestedMesh, Artefact, Artefact, Artefact | None]:
+        self, inputs: StageInputs, *, load: bool
+    ) -> tuple[
+        ResolvedCase, IngestedMesh, Artefact, Artefact, Artefact | None, ResolvedFields | None
+    ]:
         """Resolve the case, ingest and gate the mesh, and obtain the two artefacts.
 
         Shared by :meth:`key` and :meth:`run` so that the key the store is asked
@@ -224,6 +224,15 @@ class SolveStage:
         artefact is. A hand-substituted one (FR-27) therefore changes the key
         rather than being checked against a recomputed one — section 5.3.2 asks
         for it recorded, not refused.
+
+        Parameters
+        ----------
+        load
+            Whether the caller will go on to gate and assemble the fields. The
+            grids are read once here and handed back either way, because the
+            stage-7 key *is* their digest; ``load=False`` only lets :meth:`key`
+            skip the read entirely when stage 7 already handed its artefact
+            down, and the digest is therefore known without opening a file.
         """
         resolved = resolve(inputs.case)
         ingested = ingest(resolved.mesh, resolved)
@@ -234,12 +243,15 @@ class SolveStage:
         if materials is None:
             materials = MaterialsStage().run(StageInputs(case=inputs.case))
         fields = inputs.upstream.get("charge")
-        if fields is None and (resolved.charge is not None or resolved.eps_r is not None):
-            # Read, not gated: the key must be computable without integrating
-            # over the mesh, and the gates run in :meth:`run` where the fields
-            # are actually assembled (section 5.3.2, stage 7).
-            fields = FieldStage().artefact(read_fields(resolved), mesh.hash)
-        return resolved, ingested, mesh, materials, fields
+        # Read, not gated: the key must be computable without integrating over
+        # the mesh, and the gates run in :meth:`run`, on these same grids
+        # (section 5.3.2, stage 7).
+        supplied: ResolvedFields | None = None
+        if (resolved.charge is not None or resolved.eps_r is not None) and (load or fields is None):
+            supplied = read_fields(resolved)
+        if fields is None and supplied is not None:
+            fields = FieldStage().artefact(supplied, mesh.hash)
+        return resolved, ingested, mesh, materials, fields, supplied
 
     def run(
         self,
@@ -278,7 +290,9 @@ class SolveStage:
         """
         check_cancelled(cancel, "the solve")
         report(progress, 0.0, "reading and gating the mesh")
-        resolved, ingested, mesh_artefact, materials, fields_artefact = self._prepare(inputs)
+        resolved, ingested, mesh_artefact, materials, fields_artefact, supplied = self._prepare(
+            inputs, load=True
+        )
 
         report(progress, 0.0, f"loading the mesh from {ingested.source.name}")
         check_cancelled(cancel, "loading the mesh")
@@ -300,10 +314,13 @@ class SolveStage:
             )
 
         fields = ResolvedFields(charge=None, conservation=None, eps_r=None, material_means=())
-        if resolved.charge is not None or resolved.eps_r is not None:
-            report(progress, LOAD_FRACTION, "reading and gating the supplied fields")
+        if supplied is not None:
+            report(progress, LOAD_FRACTION, "gating the supplied fields")
             check_cancelled(cancel, "the supplied fields")
-            fields = load_fields(resolved, mesh, measures=measures, cancel=cancel)
+            # The grids ``_prepare`` already read, gated here rather than read
+            # again: the reference table is 77 MB of text, and two reads are two
+            # chances to key one field and assemble another.
+            fields = gate_fields(resolved, supplied, mesh, measures=measures, cancel=cancel)
 
         prepared, on_rung = self._instrumented(
             resolved,

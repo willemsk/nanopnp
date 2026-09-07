@@ -91,6 +91,14 @@ environment rather than a defect; :func:`writable_formats` reports it and
 ``ValueError`` out (QR-12).
 """
 
+NM2_TO_M2 = 1e-18
+"""``dr dz`` in nm^2 to m^2: the conversion every integral of this module ends on.
+
+One factor for the two differentials, in both the planar and the radial branch of
+:meth:`RadialGrid.integral`. The radial branch's third length is ``r``, which is
+converted where it is applied, so this constant is not the place to carry it.
+"""
+
 UNIFORM_TOL_NM = 1e-9
 """Tolerance on an axis's spacing, in nm, before it is refused as non-uniform.
 
@@ -374,13 +382,16 @@ class RadialGrid:
         weights_r = supplied.get("r")
         weights_r = self.trapezium_weights("r") if weights_r is None else weights_r
         if radial:
+            # ``r`` itself is converted here; ``dr`` and ``dz`` are converted
+            # once, below, for both branches. Folding a second factor into
+            # ``metres`` instead would convert only two of the three lengths and
+            # leave a radial integral 1e9 too large.
             weights_r = weights_r * (2.0 * np.pi * self.r_nm * 1e-9)
         weights_z = supplied.get("z")
         weights_z = self.trapezium_weights("z") if weights_z is None else weights_z
         if z_weight is not None:
             weights_z = weights_z * np.asarray(z_weight, dtype=np.float64)
-        metres = 1e-18 if not radial else 1e-9
-        return float(weights_z @ self.values @ weights_r) * metres
+        return float(weights_z @ self.values @ weights_r) * NM2_TO_M2
 
     def planar_integral(self) -> float:
         """Return ``∫ v dr dz`` in SI, without the ``2*pi*r`` Jacobian."""
@@ -584,7 +595,9 @@ def write_grid(grid: RadialGrid, path: str | Path, *, format: str | None = None)
         GridDataFormats has no writer for it — see :func:`writable_formats`.
     """
     target = Path(path)
-    target.parent.mkdir(parents=True, exist_ok=True)
+    # Before the directory is made: a refused format that had already created a
+    # tree on the way to refusing would leave the caller to tidy up after a
+    # failure that wrote nothing.
     chosen = detect_format(target, format)
     if chosen == "comsolgrid":
         raise GridFormatError(
@@ -592,6 +605,7 @@ def write_grid(grid: RadialGrid, path: str | Path, *, format: str | None = None)
             f"round-tripped copy under the same format would be indistinguishable from it. Write "
             f"{NATIVE_FORMAT!r}, 'dx' or 'mrc' instead"
         )
+    target.parent.mkdir(parents=True, exist_ok=True)
     if chosen == "npz":
         return _write_npz(grid, target)
     return _write_griddata(grid, target, chosen)
@@ -612,11 +626,17 @@ def _read_npz(path: Path) -> RadialGrid:
 
 
 def _write_npz(grid: RadialGrid, path: Path) -> Path:
-    """Write the native format, uncompressed: the axes reconstruct exactly."""
+    """Write the native format, uncompressed: the axes reconstruct exactly.
+
+    ``np.savez`` appends ``.npz`` to a filename that lacks it, so the written
+    path is returned rather than the requested one — a caller handed back a name
+    no file sits under would archive nothing and report success.
+    """
     import numpy as np
 
-    np.savez(path, r_nm=grid.r_nm, z_nm=grid.z_nm, values=grid.values)
-    return path
+    written = path if path.suffix.lower() == ".npz" else path.with_name(f"{path.name}.npz")
+    np.savez(written, r_nm=grid.r_nm, z_nm=grid.z_nm, values=grid.values)
+    return written
 
 
 def _grid_data_module() -> object:

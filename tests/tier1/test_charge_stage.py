@@ -170,8 +170,10 @@ def test_ver29_the_artefact_carries_the_conservation_it_was_gated_on(
     artefact = stage.run(_inputs(mesh_file, field_document))
     recorded = artefact.summary["charge"]["conservation"]
     assert recorded["q_net_e"] == pytest.approx(-12.0)
-    assert recorded["producer"]["relative_error"] < recorded["producer"]["tolerance"]
-    assert recorded["consumer"]["relative_error"] < recorded["consumer"]["tolerance"]
+    # Absolute: the legs are signed, and a field that lost half its charge would
+    # satisfy a bare ``< tolerance`` by being negative enough.
+    assert abs(recorded["producer"]["relative_error"]) < recorded["producer"]["tolerance"]
+    assert abs(recorded["consumer"]["relative_error"]) < recorded["consumer"]["tolerance"]
     assert recorded["interpolation"] == "bilinear"
 
 
