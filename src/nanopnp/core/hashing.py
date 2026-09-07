@@ -179,6 +179,48 @@ def _encode_array(array: Canonicalisable, path: str) -> JSONValue:
     }
 
 
+def decode_floats(value: JSONValue) -> JSONValue:
+    """Return a document read back from a canonical file with its floats restored.
+
+    :func:`canonical` writes every float as ``{"__f__": x.hex()}``, and that is
+    the encoding of the files it produces as well as of the bytes that are
+    hashed — ``manifest.json`` and ``run.json`` are both written through it. A
+    reader that wants the numbers back rather than the digest has to undo the
+    one leaf that is not itself: ``json.loads`` restores mappings, lists,
+    strings, integers and ``None`` unchanged, and turns a float into the
+    one-key mapping this function unwraps.
+
+    Parameters
+    ----------
+    value
+        A tree as ``json.loads`` returned it.
+
+    Returns
+    -------
+    JSONValue
+        The same tree with every ``{"__f__": <hex>}`` mapping replaced by the
+        float it encodes.
+
+    Notes
+    -----
+    Not an inverse of :func:`canonical` in general, and deliberately not named
+    as one: an array encodes as a *digest* of its bytes (``"__a__"``), which no
+    reader can undo, and is left as it stands. A mapping that carries ``__f__``
+    beside other keys is left alone too — the wrapper the encoder writes has
+    exactly one key, so anything else is a document that happens to use the
+    name.
+    """
+    if isinstance(value, dict):
+        if len(value) == 1:
+            encoded = value.get("__f__")
+            if isinstance(encoded, str):
+                return float.fromhex(encoded)
+        return {key: decode_floats(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [decode_floats(item) for item in value]
+    return value
+
+
 def content_hash(
     schema: str,
     parameters: Mapping[str, Canonicalisable],
