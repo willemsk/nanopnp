@@ -265,13 +265,17 @@ def check_inputs(manifest: Mapping[str, Canonicalisable], *, where: Path) -> Non
             path = where / CASE_FILENAME
         if not path.is_file():
             raise InputMovedError(
-                f"the {role!r} input {str(path)!r} recorded in {where / MANIFEST_FILENAME} is not "
-                "there; a reproduction cannot be made from an input that is gone"
+                # Quoted rather than ``!r``: ``repr`` of a Windows path doubles
+                # every separator, so the message would name a path the reader
+                # cannot open. QR-12 asks for the location, not an escaping of
+                # it (VER-35).
+                f"the {role!r} input '{path}' recorded in {where / MANIFEST_FILENAME} "
+                "is not there; a reproduction cannot be made from an input that is gone"
             )
         found = file_hash(path)
         if found != recorded:
             raise InputMovedError(
-                f"the {role!r} input {str(path)!r} has moved: the manifest recorded sha256 "
+                f"the {role!r} input '{path}' has moved: the manifest recorded sha256 "
                 f"{recorded} and the file now hashes to {found}. Reproducing against it would be "
                 "a different calculation reported as the same one (QR-08)"
             )

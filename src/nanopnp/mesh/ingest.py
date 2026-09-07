@@ -660,7 +660,8 @@ def _source_path(supplied: SuppliedArtefact) -> Path:
             "pipeline of v0.9 fills; supply inputs.mesh: path: instead"
         )
     if not supplied.path.is_file():
-        raise FileNotFoundError(f"inputs.mesh.path {str(supplied.path)!r} does not exist")
+        # Quoted rather than ``!r``, which doubles a Windows path's separators.
+        raise FileNotFoundError(f"inputs.mesh.path '{supplied.path}' does not exist")
     return supplied.path
 
 
