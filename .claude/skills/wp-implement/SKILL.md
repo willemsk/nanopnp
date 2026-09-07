@@ -86,6 +86,5 @@ Before handing off, confirm every one of these yourself:
 Then stop and report to the user: the work package delivered, the identifiers discharged, and that
 it is ready to ship. Do not invoke `/wp-ship` yourself and do not open the PR by hand — this session
 carries the physics reasoning behind every decision the implementation made, and `wp-ship`'s review
-pass (§4 of that skill) is deliberately run by a different subagent with none of that context, so it
-catches what this session might rationalise past rather than confirm. The user starts `/wp-ship`
-when they are ready.
+pass (§4 of that skill) is meant to run from a session that does not, so it catches what this one
+might rationalise past rather than confirm. The user starts `/wp-ship` when they are ready.
