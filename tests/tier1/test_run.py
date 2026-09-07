@@ -54,6 +54,7 @@ from nanopnp.io.run import (
     PIPELINE,
     RUN_RECORD_FILENAME,
     RUN_SCHEMA,
+    WORKSPACE_DIRNAME,
     WORKSPACE_STAGES,
     MissingUpstreamError,
     run_case,
@@ -331,6 +332,36 @@ def test_ver32_a_truncated_run_writes_its_directory_and_reports_monotone_progres
     assert record["manifest"] == result.manifest.hash
     assert set(record["artefacts"]) == {"case", "mesh"}
     assert result.manifest.document()["schema"] == MANIFEST_SCHEMA
+
+
+def test_ver32_a_run_writes_its_scratch_inside_the_store_it_was_given(
+    case_file: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """No workspace named means one under *this* store, not the process default.
+
+    Each file-writing stage falls back to ``store_root()`` when it is built
+    without a workspace, and that is ``$NANOPNP_STORE`` or the working
+    directory — so a sweep worker or a test that named its own store would find
+    the run's scratch mesh somewhere it never asked about while the artefact
+    pointing at it lived in the store it did. Asserted by running from a
+    directory that would catch the fallback: nothing may appear there.
+    """
+    elsewhere = tmp_path / "cwd"
+    elsewhere.mkdir()
+    monkeypatch.chdir(elsewhere)
+    monkeypatch.delenv("NANOPNP_STORE", raising=False)
+
+    store = Store(tmp_path / "store")
+    result = run_case(case_file, store=store, upto="mesh")
+
+    assert list(elsewhere.iterdir()) == [], "a run leaked files outside the store it was given"
+    scratch = sorted((store.root / WORKSPACE_DIRNAME).glob("run-*"))
+    assert len(scratch) == 1, scratch
+    assert (scratch[0] / "mesh" / "mesh.msh").is_file()
+
+    mesh = result.artefacts["mesh"]
+    written = Path(str(mesh.payload["mesh"]))
+    assert store.root in written.parents
 
 
 def test_ver32_a_second_run_through_the_same_store_is_served_from_it(

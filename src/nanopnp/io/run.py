@@ -25,6 +25,7 @@ run reaches it, so a walk that stops at stage 9 has still not paid the ~370 ms.
 from __future__ import annotations
 
 import logging
+import tempfile
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -98,6 +99,34 @@ rather than demand them from the store — there is no payload for a hand
 substitution (FR-27) to substitute, so recomputing one cannot read past an
 edited file.
 """
+
+WORKSPACE_DIRNAME = "tmp"
+"""Directory under the store root that a run's scratch workspaces are made in.
+
+The same name the file-writing stages use for their own fallback, because it is
+the same directory — the difference is only *which* store root it hangs from.
+"""
+
+
+def _scratch(store: Store) -> Path:
+    """Return a fresh workspace directory under ``store`` for one run.
+
+    Each stage falls back to ``store_root()`` when it is constructed without a
+    workspace, and ``store_root()`` is the process default — ``$NANOPNP_STORE``
+    or ``./nanopnp-store`` — rather than the store this run was handed. A sweep
+    worker or a test that named its own store would then have the run's scratch
+    meshes and field exports appear somewhere it never asked about, while the
+    artefacts referencing them lived in the store it did. Naming the workspace
+    here keeps a run's files inside its own store.
+
+    Fresh per run rather than a fixed ``tmp/mesh``: two runs into one store hold
+    different meshes, and a deterministic name would have the second overwrite
+    a file the first's artefact still points at (section 5.3.2).
+    """
+    root = store.root / WORKSPACE_DIRNAME
+    root.mkdir(parents=True, exist_ok=True)
+    return Path(tempfile.mkdtemp(prefix="run-", dir=root))
+
 
 WORKSPACE_STAGES: frozenset[str] = frozenset({"mesh", "charge", "solve", "report"})
 """Stages whose constructor takes the directory they write into.
@@ -510,8 +539,11 @@ def run_document(
         Per-stage options, by stage name, passed through on
         :attr:`~nanopnp.io.artefact.StageInputs.options`.
     workspace
-        Directory the file-writing stages use, one subdirectory each. Each stage
-        makes its own under the store root when this is ``None``.
+        Directory the file-writing stages use, one subdirectory each. When this
+        is ``None`` the run takes a fresh one under ``store``, so that a caller
+        who named a store gets every file the run wrote inside it — the stages'
+        own fallback is to :func:`~nanopnp.core.paths.store_root`, which is the
+        *process* default and not the store the run was handed.
     write
         Whether to write the run directory. ``False`` returns the result with the
         directory named and nothing in it, for a caller assembling several runs.
@@ -533,12 +565,13 @@ def run_document(
     nanopnp.core.stages.Cancelled
         If ``cancel`` turns true. No run directory is written.
     """
+    target = store if store is not None else Store()
     walk = _Walk(
         document=document,
         resolved=resolve(document),
-        store=store if store is not None else Store(),
+        store=target,
         options=dict(options or {}),
-        workspace=Path(workspace) if workspace is not None else None,
+        workspace=Path(workspace) if workspace is not None else _scratch(target),
         only=only,
     )
     stages = _selected(walk.resolved, upto)
