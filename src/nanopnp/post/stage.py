@@ -276,12 +276,21 @@ def _selected(
 
     The extraction is one calculation — NUM-27 requires it, so that a transport
     number and a current reported together cannot come from two of them — but
-    what is *reported* is what ``outputs:`` selects. The bias, the route record
-    and the ``2 pi`` convention are always present: they are not quantities, they
-    are what makes the quantities readable.
+    what is *reported* is what ``outputs:`` selects. The bias, the route record,
+    the ``2 pi`` convention and the PHY-13 clamp count are always present: they
+    are not quantities, they are what makes the quantities readable. The clamp
+    count in particular is provenance the manifest's Materials group takes from
+    here, and a run that reported no current would otherwise record that no
+    solution was sampled for it.
     """
     record = quantities.summary()
-    always = {"bias_V", "two_pi_included", "routes_checked", "route_agreement"}
+    always = {
+        "bias_V",
+        "clamp_activations",
+        "route_agreement",
+        "routes_checked",
+        "two_pi_included",
+    }
     wanted = set(always)
     if "current" in outputs:
         wanted |= {"current_A", "currents_A", "conductance_S"}
