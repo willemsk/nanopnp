@@ -334,6 +334,28 @@ def _register_builtins() -> None:
         ),
         "nanopnp.solve.stage:SolveStage",
     )
+    register(
+        StageDescription(
+            name="qoi",
+            number=11,
+            title="Quantities of interest",
+            inputs=("case", "solve"),
+            outputs=("scalar quantities of interest", "route-agreement record"),
+            artefact_schema="nanopnp/qoi/v1",
+        ),
+        "nanopnp.post.stage:QoIStage",
+    )
+    register(
+        StageDescription(
+            name="report",
+            number=12,
+            title="Report",
+            inputs=("case", "qoi", "solve"),
+            outputs=("field export", "run record"),
+            artefact_schema="nanopnp/report/v1",
+        ),
+        "nanopnp.post.stage:ReportStage",
+    )
 
 
 _register_builtins()
