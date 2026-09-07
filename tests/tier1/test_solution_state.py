@@ -356,7 +356,7 @@ def _mutations() -> list[tuple[str, Callable[[Any], Any]]]:
     not solved on — is the one this module exists to prevent.
     """
     return [
-        ("case_hash", lambda value: "0" * len(str(value))),
+        ("solve_hash", lambda value: "0" * len(str(value))),
         ("mesh_content_hash", lambda value: "0" * len(str(value))),
         ("boundaries", lambda value: {**value, "potential": ["cis"]}),
         ("stabilisation", lambda value: "streamline"),
@@ -390,6 +390,32 @@ def test_ver34_a_descriptor_that_differs_in_one_key_aborts_naming_it(
     assert f"different {key}" in message
     assert json.dumps(changed, sort_keys=True) in message
     assert json.dumps(stored[key], sort_keys=True) in message
+
+
+def test_ver34_a_case_differing_only_in_what_it_reports_restores(solved: Solved) -> None:
+    """``outputs:`` and ``name:`` do not gate the state, because they do not solve it.
+
+    The gate exists to refuse a state whose coefficients describe a different
+    problem. Asking a converged case for one more quantity — adding ``fields``
+    so that a run writes a picture — changes neither the operator, the space nor
+    the boundary data, so the state still describes the run and refusing it
+    would throw away a solve for a question about post-processing. The digest
+    the descriptor carries is the one stage 10 keys its artefact on, so a state
+    the store serves is a state this gate admits; asserting both here is what
+    stops the two drifting apart.
+    """
+    other = loads_case(
+        CASE.format(
+            mesh_path=solved.work / "pore.vol", concentration_M=CONCENTRATION_M, bias_V=BIAS_V
+        )
+        .replace("name: state-probe", "name: renamed")
+        .replace("outputs: [current]", "outputs: [current, eof_rate, fields]")
+    )
+    assert resolve(other).provenance != resolve(solved.document).provenance
+    assert resolve(other).solve_provenance == resolve(solved.document).solve_provenance
+
+    restored = restore(solved.path, case=other)
+    assert restored.space.ndof == solved.solution.space.ndof
 
 
 def test_ver34_the_gate_checks_every_key_it_declares(solved: Solved) -> None:

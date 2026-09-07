@@ -44,8 +44,8 @@ from typing import TYPE_CHECKING, Any
 
 from nanopnp.charge.stage import ResolvedFields, gate_fields, read_fields
 from nanopnp.core.constants import thermal_voltage
-from nanopnp.core.hashing import Canonicalisable
-from nanopnp.io.artefact import CaseArtefact
+from nanopnp.core.hashing import Canonicalisable, content_hash
+from nanopnp.io.artefact import SOLUTION_SCHEMA
 from nanopnp.io.case import COUPLED_MODELS, resolve
 from nanopnp.mesh.ingest import ingest
 from nanopnp.physics.coefficients import SATURATED_WALL_DISTANCE_NM
@@ -115,7 +115,7 @@ dropped from the form.
 """
 
 DESCRIPTOR_KEYS: tuple[str, ...] = (
-    "case_hash",
+    "solve_hash",
     "mesh_content_hash",
     "boundaries",
     "stabilisation",
@@ -130,6 +130,14 @@ The order runs from the cheapest and most likely difference to the most
 detailed, so the message a user sees names the case or the mesh when one of
 those moved rather than the twentieth field of a model provenance that differs
 only because of it.
+
+``solve_hash`` is the digest of
+:attr:`~nanopnp.io.case.ResolvedCase.solve_provenance` and deliberately not of
+the case document: the document carries ``name`` and ``outputs``, neither of
+which reaches the operator, and a gate keyed on them would refuse a converged
+state to a run that differs only in what it intends to *report*. It is the same
+digest stage 10 keys its artefact on, so a state the store serves is a state the
+gate admits — two records of one fact, and they must not be able to disagree.
 """
 
 
@@ -343,7 +351,7 @@ def _descriptor(
     """
     record: dict[str, Any] = _canonical(
         {
-            "case_hash": CaseArtefact(resolved.document).hash,
+            "solve_hash": content_hash(SOLUTION_SCHEMA, resolved.solve_provenance),
             "mesh_content_hash": mesh_content_hash,
             "boundaries": {
                 "potential": boundaries.potential,

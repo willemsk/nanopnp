@@ -1178,12 +1178,24 @@ field is a different operator, so re-solving it would make a restored state depe
 that restored it. The descriptor SHALL carry the mesh content hash, the ordered field names, each
 field's element type, order, domain restriction and degree-of-freedom count, the physics model and
 its options, the wall-distance sources and saturation distance, the stabilisation mode (§6.4) and
-the case hash; restore SHALL compare it key by key and abort naming the first difference with both
-values (QR-12), never adapt. A coefficient vector loaded into a space that differs in any of these
+the digest of the case's *solve-relevant* provenance defined in the NOTE below; restore SHALL
+compare it key by key and abort naming the first difference with both values (QR-12), never adapt.
+That digest is deliberately not the case document's own hash: `name:` and `outputs:` move the
+document hash and move no field, so a gate keyed on it would refuse a converged state to a run
+differing only in what it intends to report — and would refuse precisely the stage-10 cache entry
+the store had just served that run. A coefficient vector loaded into a space that differs in any of these
 is silently a different function and there is no residual it would fail to reduce. Because the
 payload is excluded from the content hash, a change to this payload contract is a change of artefact
 *schema* and SHALL bump its version, or a stale cache entry would read as a hit whose payload the
 loader cannot open.
+
+NOTE (what keys a solve): the parameters of the stage-10 artefact SHALL be the resolved case's
+provenance restricted to what can change a converged field. The case's `name:` and its `outputs:`
+selection are excluded: neither reaches the mesh, the operator or the boundary data, and a key
+carrying them re-solves a converged case because the run asked for one more quantity to be
+reported — on the reference pore, minutes of work discarded for a question about post-processing.
+Both remain in the §5.3.3 manifest, which records what was asked for and not only what was
+computed, and both remain in the stage-11 key, where `outputs:` does change the artefact.
 
 NOTE (QR-08, reproduction): the check that a run reproduces its scalar quantities of interest from
 its manifest SHALL re-enter the solve rather than be served from the artefact store. Run against a
@@ -1912,7 +1924,7 @@ archive, so the push gate is unaffected by whether it is present.
 | **VER-30** | Dielectric blend | The sharp solid fraction reproduces PHY-20's piecewise assignment to round-off at every quadrature point; a `χ` outside [0, 1] and an inverted `χ` both abort with the offending quantity and its location, the latter on the per-material means; an absolute `ε_r` field is refused with the §4.4 NOTE named (FR-15) |
 | **VER-32** | Command-line surface and exit-code contract | Every subcommand parses and dispatches to the stage objects it names; the registry is listed in a fresh process that imports no stage implementation module, no NGSolve and no netgen, asserted on `sys.modules`; each exit class of the §3.1 IF-02 NOTE is produced by an input that triggers it; every public exception type in the package is either classified by the exit-code enumeration or excluded from it with a written reason, in both directions, so that a type added later fails this test; diagnostics appear on standard error and standard output carries only the command's result; a gate abort prints its QR-12 diagnostic without a traceback unless one is requested (IF-02, FR-27) |
 | **VER-33** | Field export exactness and the Ω/Ω_w split | A quadratic exported and read back is reproduced *exactly* at all six nodes of every element, which a permutation of the midside nodes fails; the exported node count is `nv + nedge`; the two files carry the whole-domain and fluid-only field sets respectively and the fluid file contains no solid node; attribute names carry SI units and the values match the §6.3 scale conversion to round-off, with the `2π` of the axisymmetric measure absent; heavy data is compressed (IF-07) |
-| **VER-34** | Solution-state round trip and descriptor gate | Save followed by restore reproduces every component's coefficients to zero difference; the stored wall-distance vector is restored rather than re-solved; a descriptor differing in mesh hash, element order, domain restriction, degree-of-freedom count, model options, wall-distance sources or saturation distance, or stabilisation mode each abort naming the key and both values; a payload of the superseded schema version is refused by schema rather than misread (FR-27, QR-08 in part) |
+| **VER-34** | Solution-state round trip and descriptor gate | Save followed by restore reproduces every component's coefficients to zero difference; the stored wall-distance vector is restored rather than re-solved; a descriptor differing in the solve-provenance digest, mesh hash, element order, domain restriction, degree-of-freedom count, model options, wall-distance sources or saturation distance, or stabilisation mode each abort naming the key and both values; a payload of the superseded schema version is refused by schema rather than misread; a case differing only in `name:` or `outputs:` restores, and keys the same stage-10 artefact (FR-27, QR-08 in part) |
 
 ### 7.3 Tier 2 analytic benchmarks
 

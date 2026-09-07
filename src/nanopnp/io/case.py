@@ -684,6 +684,16 @@ def _order(label: str, field: str) -> int:
         ) from None
 
 
+SOLVE_IRRELEVANT_PROVENANCE = frozenset({"name", "outputs"})
+"""Provenance keys that cannot change a converged field, so cannot key a solve.
+
+Named by exclusion rather than by an allow-list: a key added to
+:attr:`ResolvedCase.provenance` and forgotten here enters the solve's cache key,
+which costs a re-solve, while one forgotten from an allow-list would be dropped
+from the key and serve a stale solution for a changed case (section 5.3.2).
+"""
+
+
 @dataclass(frozen=True)
 class ResolvedCase:
     """A case document turned into the objects a run is made of.
@@ -717,6 +727,30 @@ class ResolvedCase:
     def name(self) -> str:
         """The case name, which names the run directory in the store."""
         return self.document.name
+
+    @property
+    def solve_provenance(self) -> dict[str, Any]:
+        """Return the part of :attr:`provenance` that can change a converged field.
+
+        Section 5.3.2 keys an artefact on "the parameters that produced it", and
+        two of the keys in :attr:`provenance` produce nothing: the case's
+        ``name`` and its ``outputs``. Neither reaches the mesh, the operator or
+        the boundary data, so two cases differing only in them have the same
+        solution and must share its cache entry — otherwise adding ``fields`` to
+        ``outputs:`` in order to write a picture re-solves a case that has
+        already converged, which on the reference pore is minutes of work thrown
+        away for a question about post-processing.
+
+        They stay in :attr:`provenance` itself, which is the FR-25 manifest's
+        record of what was *asked for* rather than of what was computed: a
+        manifest that did not say which quantities the run reported would not
+        reconstruct the run (section 5.3.3).
+        """
+        return {
+            key: value
+            for key, value in self.provenance.items()
+            if key not in SOLVE_IRRELEVANT_PROVENANCE
+        }
 
     @property
     def provenance(self) -> dict[str, Any]:
