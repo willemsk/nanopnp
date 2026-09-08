@@ -425,6 +425,15 @@ electrolyte properties near the bilayer do not affect the pore's figures of meri
 unsmoothed. Mollification is an implementation change, not a model change, and is required because
 `D`, `μ` and `η` all depend on `d`, so a kinked `d` enters the Jacobian.
 
+NOTE (the driver clamp): the wall functions of PHY-11 are stated for `d̄ ≥ 0`, and the ion form
+`1 − exp(−P₁(d̄ + P₂))` has its root at `d̄ = −P₂`. A negative sample of a discrete distance field
+therefore does not attenuate `D_i` and `μ_i`, it reverses their sign, giving an anti-diffusion
+operator in the one neighbourhood where the wall correction is supposed to hold ions back. The
+driver SHALL be clamped to `max(d̄, 0)` before any wall form evaluates it, exactly as PHY-13
+requires of the concentration driver, and the clamp SHALL be applied where the correction reads the
+driver so that adding an electrolyte inherits it. The clamp is a floor on a discretisation artefact
+and SHALL NOT be relied on to make an under-resolved field admissible; NUM-34 is what decides that.
+
 ### 4.2 Governing equations
 
 **PHY-03.** Poisson's equation SHALL be solved over the whole domain `Ω`, with piecewise
@@ -1983,6 +1992,27 @@ NOTE: the published results carry no discretisation error bar. The COMSOL model 
 element counts and mesh quality but no convergence study, so the mesh convergence study of §7 is new
 work, and small disagreements with published numbers may originate in the reference's own
 discretisation error.
+
+**NUM-34.** Where any wall correction is active, the discrete wall-distance field of NUM-31 — as the
+corrections read it, after mollification where the smoothing pass is applied — SHALL satisfy
+`min d̄ ≥ −1 × 10⁻³ nm` over the fluid domain. A field violating it SHALL abort the run with the
+QR-12 diagnostic naming the gate, the measured minimum, its location and the fraction of samples
+below zero, and the measured minimum SHALL be recorded in the provenance manifest. A configuration
+activating no wall correction reads no distance field and SHALL NOT be gated.
+
+Rationale: the threshold is bounded on both sides and chosen between them. It cannot be zero,
+because interpolating the field projects element-wise and leaves an interior residual of a few times
+`10⁻⁴` nm whose sign is platform-dependent, so a gate at zero would gate the rounding mode. It
+cannot be `10⁻²` nm, which is the ion wall function's own root `−P₂`: a gate there admits a
+diffusivity of exactly zero as its last passing state, and it would restate a fitted coefficient
+outside the correction data. One order inside the root and one order outside the projection residual
+leaves the PHY-02 clamp free to absorb round-off — worst effect `5.8 × 10⁻³` on a factor whose wall
+value is `6.0 × 10⁻²` — while refusing a field that is genuinely negative. Such a field is
+under-resolved at the wall rather than marginally inaccurate, which NUM-26's route disagreement
+reports independently and which the measured transition confirms: the minimum steps from
+`−9.6 × 10⁻¹` nm to `+7.9 × 10⁻³` nm across a single refinement, so this gate discriminates a regime
+and does not shave a tolerance.
+
 ## 7. Verification and validation plan
 
 Verification activities carry `VER-nn` identifiers and establish that the software solves the
@@ -2044,6 +2074,7 @@ archive, so the push gate is unaffected by whether it is present.
 | **VER-36** | Sweep plan: substitution, validation and the warm-start forest | A product of axes enumerates the points of §5.3.4 in wave order; an assignment-valued axis moves several case-file paths together; a point identity is stable across processes and unchanged by a value inserted on another axis, while its index is not; every point has exactly one parent one grid step nearer its axis origin, its wave is its depth, and the points of one wave are pairwise independent; an axis rooted away from its first value walks outward in both directions; a misspelt path is refused naming the component and the prefix that exists, and a value of the wrong declared type is refused before any solve; a point the case schema resolves but §6.5 refuses fails when the plan is built, naming the point and the reason; a plan asking for `rectification` whose axes produce no exactly-opposite bias pair is refused naming the axis (FR-24, IF-03, QR-12) |
 | **VER-37** | Warm start across a sweep step: the descriptor partition | Every leaf of the descriptor a real solve produces appears in exactly one of the space and operator sets, and every entry of both sets appears in the descriptor, in both directions; a warm-start load accepts a payload differing only in operator keys and records each of them; it aborts naming the key and both values on a differing mesh hash, degree count, field record, boundary set, variable branch or stabilisation mode; a payload of a superseded schema version is refused by schema; the loaded state carries no residual and does not read the stored wall-distance vector; and a point reached warm reproduces the same point solved cold to better than the `1 × 10⁻⁶` nonlinear relative tolerance, with the measured difference reported. The partition is verified at Tier 1, on the descriptor alone; the warm-against-cold agreement is a Tier 2 activity, needing a converged pair (FR-24, the §5.3.2 warm-start NOTE) |
 | **VER-38** | Sweep dispatch and collection | A single-member dispatch exits with that member's own class for each of the case, gate, convergence and cancellation classes, and produces the same scalars run alone into an empty store as it does inside the sweep; a local multi-worker sweep exits `0` with a failed member present and nonzero under fail-fast; a member whose parent artefact is absent falls back to the full ladder and records the reason; the worker thread pinning is in place before the linear-algebra libraries are imported, asserted in a spawned process; the dataset round-trips to identical values, a failed member's quantities are absent rather than defaulted, and the rectification of an exactly-opposite bias pair equals the two-point ratio of §6.7 taken from the same two records. The dispatch and collection surface is verified at Tier 1; the equivalence of a member solved alone and the same member solved inside the sweep is a Tier 2 activity (FR-24, IF-02, FR-23) |
+| **VER-40** | Wall-distance admissibility and the correction driver clamp | Both wall forms are continuous across `d̄ = 0` and return their wall values for every non-positive sample, rather than the sign-reversed values the ion form's root at `−P₂` would otherwise give, on the numeric and the symbolic evaluation path alike; a distance field whose minimum falls below the NUM-34 threshold aborts naming the gate, the measured minimum, its location and the fraction of samples below zero, and one above the threshold passes; the field gated is the mollified one wherever NUM-31's smoothing is applied, and a configuration activating no wall correction is not gated; and a mesh coarse enough to violate the gate is refused rather than returning the current whose two extraction routes disagree by 40 %, while a mesh that passes agrees between the routes to better than the NUM-26 tolerance. The clamp and the gate diagnostic are verified at Tier 1, on the correction functions and one field; the route-agreement half needs a converged pair and is a Tier 2 activity (PHY-02, NUM-34, NUM-26, QR-04, QR-12) |
 
 ### 7.3 Tier 2 analytic benchmarks
 
@@ -2485,7 +2516,7 @@ needed.
 | QR-01 | VER-12 to VER-22, in particular VER-17 and VER-18 |
 | QR-02 | VAL-01, VAL-02 |
 | QR-03 | VER-01, VER-29, VAL-15 |
-| QR-04 | VER-11 |
+| QR-04 | VER-11, VER-40 (the route disagreement as a resolution gate) |
 | QR-05 | VAL-07, VAL-08, VAL-09 |
 | QR-06 | VER-39 (measured, recorded, not gated) |
 | QR-07 | None yet (§8.2 criterion 3) |
@@ -2493,7 +2524,7 @@ needed.
 | QR-09 | None yet |
 | QR-10 | None yet |
 | QR-11 | None yet |
-| QR-12 | VER-10, VER-32 |
+| QR-12 | VER-10, VER-32, VER-40 |
 | QR-13 | None yet |
 | QR-14 | VER-03 |
 | QR-15 | None yet |

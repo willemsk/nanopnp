@@ -64,10 +64,14 @@ status and exit class rather than a table of currents, and why the Tier-2 test a
 start does not move the answer.
 
 **RSK-02** (under-resolved Debye layer at 3 M giving a plausible wrong current) becomes live in bulk
-here for the same reason. It is not this package's to retire; what this package owes it is that the
-NUM-26 route agreement WP10 put on the production path is carried into the dataset for every member,
-so an under-resolved corner of the envelope is visible in the collected table rather than only in a
-log nobody reads.
+here for the same reason, and the author's ruling of 8 September 2026 hands this package the one
+concrete instance of it that WP10 recorded and left open: the P2 wall-distance field undershoots
+below zero at the re-entrant corner of the pore mouth, the ion wall function reads that negative
+distance, and the diffusivity and mobility it returns there change sign. WP11 therefore ships the
+clamp and the gate that close it — the derivation and the arithmetic are in the Design section — and
+carries the NUM-26 route agreement WP10 put on the production path into the dataset row of every
+member, so that an under-resolved corner of the envelope is visible in the collected table rather
+than only in a log nobody reads.
 
 ## Decisions taken before implementation
 
@@ -100,7 +104,13 @@ log nobody reads.
 | Rectification | The sweep **strips `rectification` from each member's `outputs:`** and the collector produces it from matched pairs — two rows differing only in `boundary_conditions.bias_V`, with biases exactly opposite. A plan asking for it whose axes produce **no** such pair is refused at plan time, naming it | §5.3.1 already says `rectification` is a two-point quantity that "can only come from a sweep", and `post.qoi.rectification(forward, reverse)` already exists and already refuses two biases of the same sign. This is the package that connects them. Refusing at plan time rather than reporting an empty column is the QR-12 shape: name the gate and what it wanted |
 | Two public exceptions, no more | `SweepPlanError(ValueError)` → exit 3, `SweepCollectionError(RuntimeError)` → exit 4, both entered in `cli/errors.EXIT_CODES` | The Tier-1 enumeration test requires every public exception to be classified or excluded with a reason. A plan refused is a case refused (retry will not help); a dataset that cannot be built from members that ran is a gate abort |
 | No new dependency | `multiprocessing`, `csv` and `json` are stdlib; the dataset is canonical JSON | pandas, xarray or pyarrow would each buy a `DataFrame` this package does not need and would put a heavyweight import on the path of a job-array member that pays it 3,675 times |
-| The WP10 distance-field undershoot is **not** fixed here | Recorded again, unfixed, and raised as an open question | It changes every number a coarse-mesh test reports and needs a specification amendment (`.knowledge/06` §7.1.1). It belongs to a numerics package, not to a dispatcher. What this package owes it is that the NUM-26 route agreement — the diagnostic that catches it — reaches every dataset row |
+| The WP10 wall-distance undershoot is fixed **here** | Two changes, and only together: the wall correction reads `max(d̄, 0)`, and a new **NUM-34** gate refuses a mesh whose distance field undershoots below `−1 × 10⁻³ nm` anywhere a wall correction reads it | The author's ruling of 8 September 2026: this package owns it. It is also where it bites. A defect that silently reverses a diffusivity is worth one wrong run today and 3,675 wrong rows the moment this package works, and a sweep is the first thing here that runs unattended. Clamp without gate hides an unresolved mesh behind a plausible number; gate without clamp aborts on projection round-off. §Design carries the arithmetic |
+| Clamp the driver, not the factor | `FittedCorrection.evaluate` clips `wall_distance_nm` at zero before the wall form reads it, in the same statement shape as the PHY-13 concentration clip three lines above it, on the float and the CoefficientFunction path alike | A distance is non-negative by definition and the fits are stated for `d̄ ≥ 0`, so a negative sample is a discretisation artefact whose nearest admissible value is zero. Clamping the *factor* at zero instead would set `D_i = μ_i = 0` on that neighbourhood — a degenerate operator, and a lie of the same size as the one it replaces. Clamping in the shared evaluator rather than in the two wall forms keeps the corrections data: a new electrolyte's wall fit inherits it by shipping a YAML |
+| Gate threshold | `min d̄ ≥ −1 × 10⁻³ nm` over the fluid sample set, on the field the corrections actually read — after mollification where it is on | Not zero, because `Set` projects and the sign of the interior residual is platform-dependent; `.knowledge/06` §8.1 already records a strict `> 0` gate that was green on Linux and red on the other two. Not `10⁻²` nm, which is the ion wall function's own root: a gate there admits a diffusivity of exactly zero as its last passing state, and it would put a fit coefficient in Python. One order inside the root, three orders clear of the measured undershoot in either direction |
+| When the gate runs | In `solve/stage.py` once per solve, after the field is built and before the first rung, and only when an active correction reads `d̄`; and once per distinct mesh at `sweep plan` time whenever any point of the plan activates a wall correction | Per member it is one evaluation on a sampler the NUM-17 gates build anyway. At plan time it costs one linear solve and the NGSolve import on a command run once, and it is the difference between a 3,675-member sweep refused in seconds and 3,675 identical aborts at wave 0 — the same argument this plan already makes for resolving every point at plan time. A classical run reads no distance field, and gating its mesh would be a gate on nothing |
+| Existing tests are audited, not exempted | Every Tier-1 and Tier-2 test that builds a real distance field with a wall correction active has its `min d̄` measured and recorded in this commit; one that fails the gate is re-meshed, or switches `wall: false` where the coarse mesh is the point of the test | `tests/tier2/test_envelope.py` is Phase 1's headline convergence evidence and runs every correction at `wall_h` 0.09 nm — finer than the 0.125 nm that came back clean in `.knowledge/06` §7.1.1, so it is expected to pass. Expected is not measured, and if it fails the finding is about the envelope's numbers rather than about the gate. Disabling a correction selects the `none` model rather than taking a branch, so the fallback costs no code |
+| Where the 3,675-point sweep is actually run | **Not here.** The `slow` test measures *scaling* on this four-core machine; the §8.3 reference sweep ships as a checked-in document under `docs/sweeps/` and the author runs it on twelve cores at the end of Phase 1 | The author's ruling of 8 September 2026. A day-scale run inside a package's own gate is not a gate, and the scaling curve is the half of QR-06 a four-core machine can honestly measure. What WP11 owes the deferred run is that it be one command against a document in the repository, not a reconstruction from a plan file |
+| A sweep axis over `inputs.mesh` | **Warns** at plan time, naming the axis that defeated the warm start; it does not refuse | The author's ruling of 8 September 2026. The forest degenerates to one-point trees and every member is cold — correct, only slower — and VAL-04's mesh-convergence study is a sweep of exactly that shape |
 
 ## Design
 
@@ -241,6 +251,114 @@ because without it N workers contend for one BLAS pool and the curve measures th
 `points_per_worker_hour` computed over **uncached** members only, because a resumed sweep is a
 dictionary lookup and would report unbounded throughput.
 
+The first half is deferred by the author's ruling of 8 September 2026: the 3,675-point run happens
+on twelve cores at the end of Phase 1, and the author runs it. What that ruling costs this package
+is one obligation, and it is worth stating as a deliverable rather than a hope. The reference sweep
+is **checked in** — `docs/sweeps/phase1-reference.sweep.yaml` and the base case it names — so that
+the deferred run is `nanopnp sweep plan` followed by `nanopnp sweep run --workers 12` against a
+document under version control, and the number it produces is attributable to a commit. A reference
+sweep reconstructed from prose four weeks later would measure a different grid and nobody would
+know. The document is checked at Tier 1 for the cheap half of its correctness — it parses, its base
+case resolves, and its plan enumerates 3,675 points in 42 waves — which is everything about it that
+can be verified without spending the day.
+
+### The wall-distance undershoot: the clamp, the gate, and why neither alone
+
+The author's ruling of 8 September 2026 gives this package the defect `.knowledge/06` §7.1.1
+records. It is worked out here in full.
+
+**What is measured.** On a toy pore (`a` = 2 nm, `L` = 6 nm), 0.1 M NaCl, +20 mV, `willems2020_nacl`
+with `wall: true` on diffusivity, mobility and viscosity, the P2 Varadhan field of PHY-02/NUM-31
+undershoots below zero at the re-entrant corner of the pore mouth (`r ≈ 2.0`, `z ≈ ±3.0`):
+
+| mesh (`maxh`/`wall_h`, nm) | elements | fluid area with `d < 0` | min `d` (nm) | min `f^w_D` | samples with `f^w_D < 0` |
+|---|---|---|---|---|---|
+| 4.0 / 1.0 | 124 | 2.186 % | −0.9913 | −437.7 | 8.257 % |
+| 2.0 / 0.5 | 257 | 0.687 % | −1.2347 | −1983.1 | 2.373 % |
+| 1.0 / 0.25 | 793 | 0.101 % | −0.9628 | −366.8 | 0.264 % |
+| 0.5 / 0.125 | 2 618 | 0.000 % | +0.0079 | +0.1 | 0.000 % |
+
+**Why a negative sample is not a small error.** The ion wall function is
+`f^w_D(d̄) = 1 − exp(−P1(d̄ + P2))` with `P1 = 6.2 nm⁻¹` and `P2 = 0.01 nm` — the
+`exponential_saturation_plus` form, shared by `D_i` and `μ_i`. Its **root is exactly `d̄ = −P2`**,
+so the function does not decay towards zero as the wall is approached and then stay there: it
+crosses. At the wall itself `f^w_D(0) = 1 − e^{−0.062} = +0.0601`, which is the `check:` value the
+YAML carries. One hundredth of a nanometre further in it is zero, and at the measured minimum
+`f^w_D(−0.9913) = 1 − e^{+6.0841} = −437.7`, reproducing the table's own figure. A negative
+diffusivity and mobility over 8 % of the sampled fluid is an anti-diffusion operator: ions are
+driven *up* their own gradient, in the one neighbourhood where PHY-11's wall function is supposed to
+hold them back. The viscosity function is `f^w_η(d̄) = 1 + exp(−P1(d̄ − P2))` with `P1 = 3.36 nm⁻¹`,
+`P2 = 0.147 nm` — `logistic_plus`, an exponential added to one, strictly greater than one, with no
+root and no sign change. It cannot invert; it is merely wrong by a factor of 17.7 at the same point
+(46.8 against 2.639 at `d̄ = 0`). So the sign defect is the ion function's alone, and the magnitude
+defect is shared — which is the argument for fixing this where **both** read the driver.
+
+**The clamp: on the driver, not the factor.** `FittedCorrection.evaluate` already clips the
+concentration driver for PHY-13 and passes `wall_distance_nm` through untouched; the fix is the same
+statement shape three lines below, `ops.clip(wall_distance_nm, 0.0, None)` on the float and the
+CoefficientFunction path alike. A distance is non-negative by definition and the fits are stated for
+`d̄ ≥ 0`, so a negative sample is a discretisation artefact whose nearest admissible value is zero.
+Clamping the *factor* at zero instead would set `D_i = μ_i = 0` there — a degenerate operator, and a
+lie of the same size as the one it replaces. It goes in the shared evaluator rather than in the two
+wall forms because the corrections are data: a new electrolyte's wall fit inherits the clamp by
+shipping a YAML file, which is what the house rule means by never touching solver code to add one.
+
+**The gate: NUM-34, `min d̄ ≥ −1 × 10⁻³ nm`.** The threshold is derived, not chosen, and it is
+bounded on both sides.
+
+- It cannot be **zero**. `GridFunction.Set` projects element-wise, and although `mesh/distance.py`
+  zeroes the constrained dofs outright so the wall is exact, the interior residual is a few times
+  `10⁻⁴` nm with a **platform-dependent sign**: `.knowledge/06` §8.1 records a strict `> 0` gate
+  that was green on Linux and red on macOS and Windows. A gate at zero is a gate on the rounding
+  mode.
+- It cannot be `10⁻²` **nm**. That is `−P2`, the ion function's own root, so a gate there admits a
+  diffusivity of exactly zero as its last passing state — and it would put a fitted coefficient in
+  Python, which the corrections-are-data rule forbids outright.
+
+`1 × 10⁻³` nm sits one order inside the root and one order outside the projection residual. What the
+clamp can then silently do on an *admissible* mesh is bounded: at `d̄ = −10⁻³` the unclamped factor
+is `1 − e^{−0.0558} = 0.0543` against the clamped `0.0601`, a difference of `0.0058` — under 0.6 % of
+the bulk factor, in a neighbourhood where the factor is already sixteen times below bulk. The
+threshold is also not a knife edge, because the measured transition is not graded: min `d̄` runs
+−0.99, −1.23, −0.96 and then **+0.0079** across one refinement step. The field either resolves the
+corner or it does not, and the gate discriminates a regime rather than shaving a tolerance.
+
+**Why both, and never one.** The clamp alone would turn the 124-element row into a plausible number:
+its 40 % NUM-24/NUM-26 route disagreement is a statement about *resolution*, and clamping the
+driver removes the sign inversion without resolving anything, so the run would come back converged,
+gated, and 40 % wrong in the current. The gate alone would abort on the projection round-off that
+`Set` leaves behind, on some platforms only. Together they say the honest thing: a field within
+round-off of admissible is treated as admissible and clamped, and a field that is genuinely negative
+is refused with the QR-12 diagnostic naming the gate, the measured minimum, its `(r, z)` and the
+fraction of samples below zero.
+
+**Where it runs.** In `solve/stage.py`, immediately after `wall_distance_field` returns and before
+`ladder(...)` builds the first rung, on the field the corrections actually read — after mollification
+where NUM-31's smoothing pass is on, since a mollified field is a different field and gating the
+un-mollified one would gate something no form evaluates. It runs only when `reads_wall(...)` is
+already true, the condition the same module uses to decide whether to solve for the field at all: a
+classical run reads no distance field and gating its mesh would be a gate on nothing. The sampler is
+`FieldSampler` restricted to the fluid materials, the same P2 nodal set the NUM-17 positivity and
+packing gates walk, so the cost is one `minimum()` call on an object the solve builds anyway. And
+once per **distinct mesh** at `sweep plan` time whenever any point of the plan activates a wall
+correction — one linear solve and the NGSolve import, on a command run once, buying the difference
+between a 3,675-member sweep refused in seconds and 3,675 identical aborts at wave 0. That is the
+same argument this plan already makes for resolving every point at plan time.
+
+**Blast radius, and what is not assumed.** The two Tier-2 tests that build real meshes on the
+coarsest settings in the suite are classical — `test_current_routes.py` (`maxh` 5.0 / `wall_h` 0.4,
+classical rungs only, `stage <= 5`) and `test_clamp_logging.py` (`maxh` 6.0 / `wall_h` 0.6,
+explicitly classical) — so their existing cases read no distance field and the gate cannot fire on
+them. The corrections-on case `test_current_routes.py` gains is a *new* case, added to assert the
+refusal, and its coarse mesh is chosen to violate the gate on purpose.
+`tests/tier1/test_wall_distance.py` builds real fields at `maxh` 2.0 / `wall_h` 0.15 with no
+correction attached to them. The one existing test exposed to the gate is
+`tests/tier2/test_envelope.py`, Phase 1's headline convergence evidence, which runs every correction
+at `maxh` 6.0 / `wall_h` 0.09 nm — finer at the wall than the 0.125 nm row that came back clean — so
+it is *expected* to pass. Expected is not measured: every such test has its `min d̄` measured and
+recorded in this commit, and a failure there is a finding about the envelope's numbers rather than a
+reason to move the gate.
+
 ### Spec amendments this package makes
 
 Written in the same commit as this plan.
@@ -268,18 +386,37 @@ Written in the same commit as this plan.
 - **E — §3.1, IF-02 exit NOTE, extended.** A single-member dispatch SHALL exit with that member's own
   code; a local multi-worker sweep SHALL exit `0` when every member reached a terminal state and the
   dataset was written, the per-member codes being recorded in the dataset rather than reduced to one.
-- **F — §7.2 and §7.3.** VER-36, VER-37, VER-38 and VER-39 added; Appendix A rows for FR-24 and
-  QR-06, which read "None yet" today, and additions to the IF-01, IF-02 and QR-08 rows.
+- **F — §7.2 and §7.3.** VER-36, VER-37, VER-38, VER-39 and VER-40 added; Appendix A rows for
+  FR-24 and QR-06, which read "None yet" today, and additions to the IF-01, IF-02, QR-04, QR-08 and
+  QR-12 rows.
 - **G — §8.3, throughput datum, NOTE added.** Linear scaling is a claim about *independent* workers;
   workers sharing a BLAS thread pool are not independent, and a measurement taken without pinning
   reports the pool.
+- **H — §4.1, PHY-02, NOTE added.** The wall functions of PHY-11 are stated for `d̄ ≥ 0` and the ion
+  form `1 − exp(−P₁(d̄ + P₂))` has its root at `d̄ = −P₂`, so a negative sample does not attenuate a
+  coefficient, it reverses its sign. The correction driver `d̄` SHALL therefore be clamped to
+  `max(d̄, 0)` before any wall form evaluates it, as PHY-13 already requires of the concentration
+  driver. The clamp is a floor on a discretisation artefact and SHALL NOT be relied on to make an
+  under-resolved field admissible; NUM-34 is what decides that.
+- **I — §6.8, NUM-34 added** at the end of the section, keeping the specification's identifier
+  order monotone, with its rationale pointing back at NUM-31 whose field it constrains. The discrete wall-distance
+  field, as the corrections read it and after mollification where NUM-31's smoothing pass is
+  applied, SHALL satisfy `min d̄ ≥ −1 × 10⁻³ nm` over the fluid domain wherever a wall correction is
+  active; a mesh that violates it SHALL abort with the QR-12 diagnostic naming the gate, the
+  measured minimum, its location and the fraction of samples below zero, and the measured minimum
+  SHALL be recorded in the provenance manifest. Rationale: the threshold is one order inside the ion
+  function's root at `−P₂ = −0.01 nm` and one order outside the element-wise projection residual
+  that `Set` leaves behind, whose sign is platform-dependent. A run whose distance field is
+  genuinely negative is under-resolved at the wall, which NUM-26's route disagreement independently
+  reports; the clamp of PHY-02 keeps such a run from returning a *plausible* wrong current, and this
+  gate keeps it from returning one at all.
 
 ## Work items
 
 | File | Delivers | Discharges |
 |---|---|---|
 | `src/nanopnp/sweep/document.py` (new) | `SweepDocument` (`nanopnp/sweep/v1`), `Axis`, `Assignment`, `extra="forbid"` throughout with the `io/case._render` diagnostic shape; `load_sweep` / `loads_sweep`, base-case path resolved relative to the sweep document | FR-24, IF-03 |
-| `src/nanopnp/sweep/plan.py` (new) | `Point` (index, id, assignments, parent index, wave), `SweepPlan`; the Cartesian product, the origin-rooted forest and its wave ordering; per-point substitution, validation and `resolve()`; the rectification-pair gate; `SweepPlanError`; `write_plan` / `read_plan` through `canonical()` | FR-24, QR-12 |
+| `src/nanopnp/sweep/plan.py` (new) | `Point` (index, id, assignments, parent index, wave), `SweepPlan`; the Cartesian product, the origin-rooted forest and its wave ordering; per-point substitution, validation and `resolve()`; the rectification-pair gate; the NUM-34 check once per distinct mesh where any point activates a wall correction; the `inputs.mesh` axis warning; `SweepPlanError`; `write_plan` / `read_plan` through `canonical()` | FR-24, QR-12, NUM-34 |
 | `src/nanopnp/io/case.py` (changed) | `field_at(path)` walking `CaseDocument.model_fields`, and `substitute(document, assignments)` through dump → set → re-validate; `io/defaults.value_at` rebased onto the same walker | IF-03, FR-24 |
 | `src/nanopnp/solve/state.py` (changed) | `SPACE_KEYS` / `OPERATOR_KEYS` as dotted descriptor paths partitioning the descriptor, with a written reason on each operator entry; `load_initial(...)` on a caller-supplied mesh, gating the space keys, returning a residual-free `ModelSolution` | §5.3.2 NOTE (amendment C) |
 | `src/nanopnp/solve/stage.py` (changed) | `SolveStage(..., warm_start=SolutionArtefact \| None)`: passes `initial=` to `run_ladder` and runs the target rung alone when one is supplied; the neighbour's hash and the differing operator keys into the artefact summary; **no change to `key(inputs)`** | FR-17, FR-24 |
@@ -287,21 +424,31 @@ Written in the same commit as this plan.
 | `src/nanopnp/sweep/collect.py` (new) | `SweepArtefact` assembly, the row schema, `dataset.json` through `canonical()`, the CSV export, the opposite-bias pairing and `rectification`; `SweepCollectionError` | FR-24, FR-23 |
 | `src/nanopnp/io/artefact.py` (changed) | `SWEEP_SCHEMA = "nanopnp/sweep/v1"` and `SweepArtefact` beside the other schemas | §5.3.2 |
 | `src/nanopnp/io/store.py` (changed) | `sweep_directory(name, digest)` under `<root>/sweeps/` | §5.3.2 |
-| `src/nanopnp/io/manifest.py` (changed) | The solver group carries the warm-start record — status, neighbour artefact hash, differing operator keys, rungs actually run | FR-25, §5.3.3 |
+| `src/nanopnp/io/manifest.py` (changed) | The solver group carries the warm-start record — status, neighbour artefact hash, differing operator keys, rungs actually run — and the mesh group carries the measured `min d̄` where a wall correction was active | FR-25, §5.3.3, NUM-34 |
+| `src/nanopnp/materials/models.py` (changed) | `FittedCorrection.evaluate` clips `wall_distance_nm` at zero before the wall form reads it, on both `MathOps` paths, with the PHY-11 root written beside it | PHY-02 (amendment H) |
+| `src/nanopnp/solve/gates.py` (changed) | `WallDistanceGate(sampler, distance, minimum_nm=-1e-3)`: a `Gate` returning the measured minimum and its `(r, z)`, raising `GateViolationError` naming the gate, the quantity, the value, the location and the below-zero sample fraction | NUM-34, QR-12 |
+| `src/nanopnp/solve/stage.py` (changed) | The gate checked once per solve, after `wall_distance_field` and before the first rung, only when `reads_wall(...)`; the measured minimum into the artefact summary and the manifest | NUM-34 |
 | `src/nanopnp/cli/__init__.py` (changed) | The `sweep` subparser and its `plan` / `run` / `collect` sub-subcommands, every physics quantity still in the case file | IF-02 |
 | `src/nanopnp/cli/errors.py` (changed) | `SweepPlanError` → 3, `SweepCollectionError` → 4 | IF-02 |
-| `SPECIFICATION.md` | Amendments A–G above | — |
-| `.knowledge/06-numerics-fem.md` | The measured warm-start saving and the measured scaling curve, marked **[tested]** | — |
+| `docs/sweeps/phase1-reference.sweep.yaml` (new), with its base case | The §8.3 reference sweep — 5 physics cases × 35 biases × 21 concentrations — checked in, so the deferred twelve-core run is one command against a commit rather than a reconstruction | QR-06, §8.3 |
+| `SPECIFICATION.md` | Amendments A–I above | — |
+| `.knowledge/06-numerics-fem.md` | The measured warm-start saving and the measured scaling curve, marked **[tested]**; §7.1.1's "recorded here rather than fixed under WP10" closed out with the clamp, the gate and the measured `min d̄` of every correction-on test | — |
 
 ## Verification
 
 | Test file | Tier | Identifiers | What it asserts |
 |---|---|---|---|
-| `tests/tier1/test_sweep_plan.py` (new) | 1 | FR-24, IF-03, QR-12, VER-36 | A product of three axes enumerates the right points in the right order; an assignment-valued axis moves several paths together; a `point_id` is stable across processes and unchanged by inserting a value on another axis, while the index is not; every point has exactly one parent one grid step nearer the origin, wave equals depth, and every point of a wave is pairwise independent; a `±` axis roots at its declared origin and walks outward both ways; a misspelt path is refused naming the component and the prefix that exists; a value of the wrong declared type is refused at plan time; a point that `resolve()` refuses (`physics.flow: false` with `default_ladder`) fails the plan naming the point and the case-file reason; `rectification` with no opposite-bias pair is refused naming the axis |
+| `tests/tier1/test_sweep_plan.py` (new) | 1 | FR-24, IF-03, QR-12, VER-36 | A product of three axes enumerates the right points in the right order; an assignment-valued axis moves several paths together; a `point_id` is stable across processes and unchanged by inserting a value on another axis, while the index is not; every point has exactly one parent one grid step nearer the origin, wave equals depth, and every point of a wave is pairwise independent; a `±` axis roots at its declared origin and walks outward both ways; a misspelt path is refused naming the component and the prefix that exists; a value of the wrong declared type is refused at plan time; a point that `resolve()` refuses (`physics.flow: false` with `default_ladder`) fails the plan naming the point and the case-file reason; `rectification` with no opposite-bias pair is refused naming the axis; the checked-in `docs/sweeps/phase1-reference.sweep.yaml` parses, its base case resolves, and its plan enumerates 3,675 points in 42 waves — everything about the deferred twelve-core run that can be verified without spending the day |
 | `tests/tier1/test_warm_start_descriptor.py` (new) | 1 | VER-37, §5.3.2 | Every leaf of a descriptor taken from a real solve appears in exactly one of `SPACE_KEYS` and `OPERATOR_KEYS`, and every entry of both lists appears in the descriptor — both directions; `load_initial` accepts a payload differing only in `solve_hash`, `scales` and `materials` and records each; it aborts naming the key and both values on a differing mesh hash, `ndof`, field record, `boundaries`, `log_variables` or `stabilisation`; a `nanopnp/solution/v1` payload is refused by schema; the returned solution carries no residual and does not read the stored distance vector |
 | `tests/tier1/test_sweep_cli.py` (new) | 1 | IF-02, FR-27, VER-38 | `sweep plan`, `sweep run` and `sweep collect` parse and dispatch; no flag changes a case-file field; `sweep run --index` exits with the member's own class for each of the case, gate, convergence and cancellation classes; `--workers` exits 0 with a failed member and nonzero with `--fail-fast`; `SweepPlanError` and `SweepCollectionError` are in the exit enumeration (inherited from the existing both-directions test); the worker initialiser sets the three thread variables before any deferred import, asserted in a spawned subprocess on `sys.modules` and `os.environ`; the dataset round-trips write → read to identical values; the CSV's first column is `status` and a failed row's QoI cells are empty |
+| `tests/tier1/test_wall_distance.py` (extended) | 1 | NUM-34, VER-40, PHY-02 | The clamp returns `f^w_D(0) = 0.0601` for every `d̄ ≤ 0` and is continuous across zero, on the float and the CoefficientFunction path alike, and the viscosity form is clamped by the same statement; the `WallDistanceGate` refuses the 124-element mesh of `.knowledge/06` §7.1.1 naming the gate, the measured minimum, its `(r, z)` and the below-zero fraction, and passes on the 2,618-element one; the un-mollified and mollified fields are both gated when NUM-31's smoothing is on, and it is the mollified one the gate reads; a classical case builds no distance field and is not gated; the gate's own threshold is read from one named constant, not repeated |
 | `tests/tier2/test_sweep.py` (new) | 2 | FR-24, VER-37, VER-38 | On a 2 × 2 grid (two concentrations × ±50 mV) on the WP10 reference pore: every point warm-started from its parent reproduces the same point run cold to better than the `1 × 10⁻⁶` nonlinear relative tolerance, with the **measured** worst difference reported; the warm run costs strictly fewer Newton iterations in total; a member whose parent artefact is deleted from the store falls back to the full ladder, converges, and records `cold` with the reason; the collected dataset carries one row per point with its NUM-26 route agreement, and the `rectification` of the ± pair equals `post.qoi.rectification` of the two rows exactly; a member run with `--index` alone into an empty store produces the same scalars as the same member inside the sweep |
+| `tests/tier2/test_current_routes.py` (extended) | 2 | NUM-34, NUM-26, VER-40 | With the wall corrections on, the coarse mesh that returned a 40 % NUM-24/NUM-26 route disagreement is **refused by the gate** rather than returning a plausible current, and the refined mesh passes the gate and agrees between the two routes to better than NUM-26's `1 × 10⁻³`. This is the half of VER-40 that cannot be asserted on the correction functions alone: it is the statement that the gate discriminates the regime the route disagreement was reporting |
 | `tests/tier2/test_sweep_throughput.py` (new, `slow`) | 2 | QR-06, VER-39 | A grid large enough to fill the waves, run at 1, 2 and 4 workers into a fresh store each time; points per worker-hour over *uncached* members and `efficiency(N) = T(1)/(N·T(N))` are logged with the core count, the pinning setting and the wave widths. Recorded, never gated: completing the sweep is the assertion |
+
+Every Tier-1 and Tier-2 test that builds a real distance field with a wall correction active has its
+`min d̄` measured and recorded in the commit that adds the gate — `tests/tier2/test_envelope.py`
+above all, which is expected to pass at `wall_h` 0.09 nm and is not assumed to.
 
 Tolerance provenance: `1 × 10⁻⁶` is the case schema's own `numerics.nonlinear.rtol` (§5.3.1,
 NUM-16), the same number QR-08's reproduction check uses and for the same reason — two Newton solves
@@ -325,25 +472,31 @@ NUM-26's `1 × 10⁻³`, unchanged since WP5.
   contiguous index range of each wave; the submission is the user's two lines.
 - **Figures.** §5.2's stage 12 mentions figures; nothing here plots. An I–V curve drawn from the
   dataset is v0.9's reporting work.
-- **The distance-field undershoot** of `.knowledge/06` §7.1.1 — see below.
+- **Re-meshing to satisfy NUM-34.** The gate refuses an inadmissible mesh and names what it
+  measured; it does not refine one. Automatic refinement in response to a gate is NUM-19's
+  adaptivity, which is not exercised this phase, and a mesher that silently changes the mesh a
+  manifest names would defeat the provenance the gate exists to protect.
+- **Any second use of the clamped driver.** The clamp is a floor inside `FittedCorrection.evaluate`
+  and changes nothing that reads the distance field for another purpose — the IF-07 export, the
+  stored wall-distance vector, VER-06's continuity measure. Those still see the field as solved,
+  which is what makes the gate's diagnostic meaningful.
 
 ## Open questions
 
-1. **Who owns the P2 distance-field undershoot?** WP10 recorded it, deliberately unfixed: the
-   Varadhan field reaches −0.99 nm at the re-entrant pore mouth and `FittedCorrection.evaluate`
-   clamps the concentration driver but not `wall_distance_nm`, so `1 − exp(−6.2(d + 0.01))` returns a
-   negative diffusivity and mobility there. Either cure — clamping `d` at zero inside the correction,
-   or gating on `min d ≥ −0.01 nm` — moves every number a coarse-mesh test reports and needs a
-   specification amendment. It is a numerics fix, not a dispatcher's, so this package does not take
-   it; **the author's ruling is asked on whether it goes to WP12 or to a package of its own**. What
-   WP11 does regardless is carry the NUM-26 route agreement into every dataset row, which is the
-   diagnostic that makes it visible in bulk.
-2. **Where is QR-06's headline number measured?** "3,675 solves within a day-scale wall clock on 12
-   cores" is the specification's figure and this development environment has four. The plan assumes
-   the `slow` test measures the *scaling* here and that the 12-core wall-clock figure is taken on the
-   author's machine for the end-of-phase report. If that is wrong, the throughput test needs a
-   different shape before it is written.
-3. **Should a sweep axis be allowed to vary `inputs.mesh`?** The forest degenerates to one-point
-   trees and every member is cold, which is correct but silent. A plan-time warning naming the axis
-   that defeated the warm start seems right; a refusal seems wrong, since a mesh-convergence sweep is
-   a legitimate thing to want and VAL-04 will want one. **Assumed: warn, do not refuse** — confirm.
+None. All three were put to the author and ruled on, 8 September 2026; each ruling is carried into
+the Decisions table above and into the design and verification sections it changes.
+
+1. **Who owns the P2 distance-field undershoot?** *Ruled: this package does, and it is to be worked
+   out here.* WP10 recorded it deliberately unfixed and this plan, as first written, proposed to
+   pass it to WP12 or to a package of its own. That is reversed: §Design derives the clamp and the
+   NUM-34 gate in full, amendments H and I make them normative, and VER-40 verifies them. The
+   argument that carried it is that a sweep is the first thing in this project to run unattended, so
+   a defect worth one wrong run today is worth 3,675 wrong rows the moment this package works.
+2. **Where is QR-06's headline number measured?** *Ruled: not here — deferred to the end of Phase 1,
+   and the author runs it on twelve cores.* The `slow` test measures the scaling curve only, which
+   is the half a four-core machine can honestly measure. What WP11 owes the deferred run is that it
+   be one command against a checked-in `docs/sweeps/` document, which is now a work item.
+3. **Should a sweep axis be allowed to vary `inputs.mesh`?** *Ruled: warn, do not refuse* — the
+   assumption this plan carried is confirmed. The forest degenerates to one-point trees, every
+   member is cold, and the plan-time warning names the axis that defeated the warm start. VAL-04's
+   mesh-convergence study is a sweep of exactly that shape.
