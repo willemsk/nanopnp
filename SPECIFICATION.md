@@ -227,7 +227,12 @@ NOTE (IF-02, exit codes): the CLI's exit status is a contract, because the job-a
 FR-24 branches on it and QR-06 requires a failed member to be distinguishable from a refused one.
 `0` success; `1` an unexpected failure, the only class whose traceback is worth keeping; `2` a usage
 error; `3` a case rejected by validation or by schema; `4` a numerical gate abort of the QR-12
-family; `5` nonlinear non-convergence; `130` cancellation. The mapping from exception to code SHALL
+family; `5` nonlinear non-convergence; `130` cancellation. A dispatch of a single sweep member SHALL exit
+with that member's own code, which is what a job array branches on; a local multi-worker sweep SHALL
+exit `0` once every member has reached a terminal state and the dataset has been written, the
+per-member codes being recorded in the dataset (§5.3.4) rather than reduced to one. Non-convergence
+at the corners of the FR-17 envelope is an expected result of a sweep, and an exit status that could
+not distinguish it from a broken dispatch would answer the wrong question. The mapping from exception to code SHALL
 be an explicit enumeration rather than a base-class test, and every public exception type of the
 package SHALL be either classified by it or listed as deliberately excluded with a reason, in both
 directions, so that an error type added later fails the enumeration rather than silently becoming
@@ -1139,7 +1144,13 @@ otherwise write tens of gigabytes nobody requested. `analyte_force` requires the
 `analyte` material, and a case asking for it on a mesh without one SHALL abort naming the missing
 material (QR-12). `rectification` is a two-point quantity, `I(+V)/I(−V)`; a case asking for it at a
 single operating point SHALL be refused naming it as such, because the second bias can only come
-from a sweep (FR-24) and inventing one would report a ratio the run did not measure.
+from a sweep (FR-24) and inventing one would report a ratio the run did not measure. A sweep
+(§5.3.4) SHALL therefore strip `rectification` from each member's `outputs:` and produce it in
+collection, from pairs of members whose case-file assignments are equal except at
+`boundary_conditions.bias_V` and whose two biases are exactly opposite. Exactly, not approximately:
+a tolerance on the pairing would report the ratio of two unrelated operating points as a
+rectification. A sweep asking for `rectification` whose axes produce no such pair SHALL be refused
+when the plan is built, naming the axis, rather than collecting a column of absent values (QR-12).
 
 #### 5.3.2 Artefacts and interchange formats
 
@@ -1154,6 +1165,7 @@ from a sweep (FR-24) and inventing one would report a ratio the run did not meas
 | 9 | Resolved case document | YAML, schema `nanopnp/case/v1` |
 | 10 | Field set, iteration history | XDMF with HDF5 heavy data (IF-07) |
 | 11, 12 | Scalar QoIs, profiles, figures, dataset, manifest | Result store record, figure files, manifest |
+| — (a sweep, §5.3.4) | Collected dataset over the members of a sweep | Result store record, schema `nanopnp/sweep/v1` |
 
 Every artefact carries a content hash over a canonical serialisation of its payload and the
 parameters that produced it. The hash is the cache key: a stage whose input hashes and parameters
@@ -1203,6 +1215,29 @@ payload is excluded from the content hash, a change to this payload contract is 
 *schema* and SHALL bump its version, or a stale cache entry would read as a hit whose payload the
 loader cannot open.
 
+NOTE (warm start from a neighbour, FR-24): the gate above is stated for reloading a run's *own*
+converged state, where every descriptor key must match. A sweep warm-starts one operating point from
+another, and two of those keys differ by construction — the solve-provenance digest carries the bias
+and everything else that keys a solve, and the model record carries the §6.3 scale set, which is a
+function of the concentration. The descriptor's keys SHALL therefore be partitioned into those that
+determine the **space** — the mesh, the ordered field record with each field's element, order,
+domain restriction and degree count, the total degree count, the boundary sets that fix which degrees
+of freedom are constrained, the declared field set, and the NUM-02 variable branch — and those that
+determine the **operator**. A warm-start load SHALL gate the space keys exactly as a restore does and
+SHALL record every operator key that differed; it SHALL NOT read the stored wall-distance vector,
+the operator being assembled belonging to the target run. The NUM-02 branch is in the first set
+because a log-variable model and a primitive one declare the same field names at the same order with
+the same degree count and mean different things by them, so no shape test would catch the confusion.
+The partition SHALL be enumerated in both directions against the descriptor a solve actually
+produces, so that a key added later fails verification rather than silently becoming ungated.
+
+The warm-start source SHALL be recorded in the run provenance (FR-25) and SHALL NOT enter the
+stage-10 artefact key. Two members differing only in where Newton started must key one artefact, or
+the store would hold two entries for one converged state and the QR-08 reproduction would compare a
+warm result against a cold key. That is admissible only because it is *asserted*: a converged state
+that depended on its starting point is a defect, and the verification of FR-24 measures the
+difference between the warm and cold paths rather than assuming it away.
+
 NOTE (what keys a solve): the parameters of the stage-10 artefact SHALL be the resolved case's
 provenance restricted to what can change a converged field. The case's `name:` and its `outputs:`
 selection are excluded: neither reaches the mesh, the operator or the boundary data, and a key
@@ -1240,6 +1275,58 @@ Emitted with every result artefact (FR-25, IF-08) and sufficient alone to recons
 | Solver | Physics model, element orders, continuation rungs, nonlinear and linear settings, iteration counts |
 | Stabilisation | The stabilisation mode that produced the number (§6.4) |
 | Deviations | Every switch set away from the validated default, including `dielectric_gradient_forces` (PHY-23) |
+
+#### 5.3.4 Sweep specification and dataset
+
+A sweep (FR-24) is a set of runs, not a pipeline stage: it produces no field, and a stage keyed on
+thousands of upstream artefacts has no meaningful key. It is specified by its own declarative
+document, `schema: nanopnp/sweep/v1`, which names a base case by path and the axes to vary. Nothing
+is added to `nanopnp/case/v1`, which is frozen: a sweep block inside a case would make that case's
+content hash — and every artefact key derived from it — a function of a sweep the run does not
+perform.
+
+An **axis** is a named, ordered list of **assignments**, an assignment being a mapping of dotted
+case-file paths to values; an axis varying one path may be written as a path and a list of values.
+Axes combine as a Cartesian product in declaration order. Each axis MAY declare the index of its
+**origin**, defaulting to its first value. A dotted path SHALL be validated against the case schema's
+own field tree before any substitution, refusing an unknown component by naming it and the prefix
+that does exist, and a value whose type the schema does not accept SHALL be refused there too.
+Substitution SHALL re-validate the whole document, so that a path which resolves but produces an
+inadmissible case is refused by the same diagnostic a hand-written case would receive (IF-03). Every
+point SHALL be substituted, validated and resolved when the plan is built, before any solve: a plan
+whose two-thousandth point is inadmissible must fail in seconds rather than after a day of compute.
+
+A point's **identity** is the content hash of its assignment mapping; its **index** is its position
+in the plan. The identity keys the collected dataset and the index keys the dispatch, because
+inserting one value on one axis renumbers every index after it and a dataset keyed on the index would
+relabel results the sweep did not re-run. A member's `name:` SHALL carry its point identity, `name`
+reaching the manifest and the run directory and nothing that keys a solve.
+
+Warm starting and independent dispatch are reconciled by a **forest** over the axis grid. The parent
+of a point is that point with the last index differing from its axis origin moved one step towards
+it; every point therefore has exactly one parent one grid step away, the depth of a point is the sum
+of its index distances from the origins, and all points at one depth are mutually independent. A plan
+SHALL order its points by depth, so that each wave is a contiguous range of indices a job array can
+be submitted over. A member whose parent's stage-10 artefact is not in the store SHALL run the full
+NUM-18 ladder and SHALL record that it did, with the reason: a member must be runnable alone, in any
+order, on a machine that has seen nothing else, and the warm start is an optimisation the store may
+or may not be able to supply.
+
+Members SHALL share one artefact store, which is what makes a neighbour's converged state reachable
+at all, and the workspace-locality NOTE above applies to each member individually. Independent
+workers SHALL be independent: each worker SHALL be started with the thread counts of the underlying
+linear-algebra libraries pinned to one before those libraries are imported, and the pinning SHALL be
+recorded, because N workers sharing one thread pool are not N independent workers and QR-06's scaling
+claim would otherwise measure the pool.
+
+The collected **dataset** is an artefact, `schema: nanopnp/sweep/v1`, written through the canonical
+serialisation above, carrying one record per point: its index and identity, its assignments, its
+status and — where it failed — the exit class of §3.1, the scalar quantities of interest or their
+explicit absence, the run directory, the manifest and solution hashes, the elapsed time, whether it
+was served from cache, and the warm-start record. The quantities of a member that did not succeed
+SHALL be absent rather than defaulted, QR-06 requiring that a failed member be distinguishable from a
+refused one and from one that was never dispatched. A flat tabular export MAY be written beside it
+and is derived rather than normative.
 
 ### 5.4 Component design
 
@@ -1641,6 +1728,15 @@ to `physics.model: pnp`, whose flow-free transport no rung above 6 carries. Sing
 (`numerics.continuation: none`) take all four switches as given; that is how an ablation asks for a
 configuration the ladder cannot express.
 
+NOTE (FR-24, a member warm-started from a neighbour): a sweep member that starts from the converged
+state of a neighbouring operating point SHALL solve the target rung alone rather than re-climbing the
+ladder. That is not a departure from the fixed path above but stage 9 of it — the salt sweep, whose
+rungs are warm starts one step apart — generalised to the other axes of the envelope, and re-solving
+the nine rungs below a converged neighbour would re-derive the answer the neighbour already is. The
+provenance manifest SHALL record the rungs actually run and the artefact hash of the state the member
+started from, and a member whose neighbour is unavailable SHALL take the full ladder and record that
+it did, so that a sweep's timings say which members paid for what.
+
 **NUM-19.** The mesh SHALL be adapted between continuation rungs only, never within a rung.
 
 **NUM-20.** The fallbacks below SHOULD be implemented in the order given, after NUM-16 is in
@@ -1945,6 +2041,9 @@ archive, so the push gate is unaffected by whether it is present.
 | **VER-32** | Command-line surface and exit-code contract | Every subcommand parses and dispatches to the stage objects it names; the registry is listed in a fresh process that imports no stage implementation module, no NGSolve and no netgen, asserted on `sys.modules`; each exit class of the §3.1 IF-02 NOTE is produced by an input that triggers it; every public exception type in the package is either classified by the exit-code enumeration or excluded from it with a written reason, in both directions, so that a type added later fails this test; diagnostics appear on standard error and standard output carries only the command's result; a gate abort prints its QR-12 diagnostic without a traceback unless one is requested; a run given a store writes every file it produces inside that store, asserted by running from a working directory the process-default fallback would land in and requiring it to stay empty (IF-02, FR-27, the §5.3.2 workspace-locality NOTE) |
 | **VER-33** | Field export exactness and the Ω/Ω_w split | A quadratic exported and read back is reproduced *exactly* at all six nodes of every element, which a permutation of the midside nodes fails; the exported node count is `nv + nedge`; the two files carry the whole-domain and fluid-only field sets respectively and the fluid file contains no solid node; attribute names carry SI units and the values match the §6.3 scale conversion to round-off, with the `2π` of the axisymmetric measure absent; heavy data is compressed (IF-07) |
 | **VER-34** | Solution-state round trip and descriptor gate | Save followed by restore reproduces every component's coefficients to zero difference; the stored wall-distance vector is restored rather than re-solved; a descriptor differing in the solve-provenance digest, mesh hash, element order, domain restriction, degree-of-freedom count, model options, wall-distance sources or saturation distance, or stabilisation mode each abort naming the key and both values; a payload of the superseded schema version is refused by schema rather than misread; a case differing only in `name:` or `outputs:` restores, and keys the same stage-10 artefact (FR-27, QR-08 in part) |
+| **VER-36** | Sweep plan: substitution, validation and the warm-start forest | A product of axes enumerates the points of §5.3.4 in wave order; an assignment-valued axis moves several case-file paths together; a point identity is stable across processes and unchanged by a value inserted on another axis, while its index is not; every point has exactly one parent one grid step nearer its axis origin, its wave is its depth, and the points of one wave are pairwise independent; an axis rooted away from its first value walks outward in both directions; a misspelt path is refused naming the component and the prefix that exists, and a value of the wrong declared type is refused before any solve; a point the case schema resolves but §6.5 refuses fails when the plan is built, naming the point and the reason; a plan asking for `rectification` whose axes produce no exactly-opposite bias pair is refused naming the axis (FR-24, IF-03, QR-12) |
+| **VER-37** | Warm start across a sweep step: the descriptor partition | Every leaf of the descriptor a real solve produces appears in exactly one of the space and operator sets, and every entry of both sets appears in the descriptor, in both directions; a warm-start load accepts a payload differing only in operator keys and records each of them; it aborts naming the key and both values on a differing mesh hash, degree count, field record, boundary set, variable branch or stabilisation mode; a payload of a superseded schema version is refused by schema; the loaded state carries no residual and does not read the stored wall-distance vector; and a point reached warm reproduces the same point solved cold to better than the `1 × 10⁻⁶` nonlinear relative tolerance, with the measured difference reported. The partition is verified at Tier 1, on the descriptor alone; the warm-against-cold agreement is a Tier 2 activity, needing a converged pair (FR-24, the §5.3.2 warm-start NOTE) |
+| **VER-38** | Sweep dispatch and collection | A single-member dispatch exits with that member's own class for each of the case, gate, convergence and cancellation classes, and produces the same scalars run alone into an empty store as it does inside the sweep; a local multi-worker sweep exits `0` with a failed member present and nonzero under fail-fast; a member whose parent artefact is absent falls back to the full ladder and records the reason; the worker thread pinning is in place before the linear-algebra libraries are imported, asserted in a spawned process; the dataset round-trips to identical values, a failed member's quantities are absent rather than defaulted, and the rectification of an exactly-opposite bias pair equals the two-point ratio of §6.7 taken from the same two records. The dispatch and collection surface is verified at Tier 1; the equivalence of a member solved alone and the same member solved inside the sweep is a Tier 2 activity (FR-24, IF-02, FR-23) |
 
 ### 7.3 Tier 2 analytic benchmarks
 
@@ -1968,6 +2067,7 @@ discretisation or stabilisation.
 | **VER-22** | Force-evaluation route agreement | domain form `F_z = −∫_Ω (T_M + T_H) : ∇w dV` against surface form `F = ∮_S (T_M + T_H)·n dS`, with the variational reaction force on the no-slip surface as a third route for the hydrodynamic half | Agreement to better than **0.1 pN absolute** on the same solution, on a solution whose two halves are individually of order 10 pN and opposite in sign; the reaction route confirming `F^hd` to better than **10⁻³ pN** |
 | **VER-31** | Gouy–Chapman–**Stern**, 1D | `φ_0 = φ_d + σ_s λ_S/(ε₀ε_r)` with `φ_d` and `σ_s` from VER-12's Grahame relation, the shell carrying no space charge so `φ` is linear across it | The wall potential reproduced to better than **1 %** at 0.1 M, `ζ̃_d = 2`, `λ_S = 0.25 nm` — a 30.6 % effect, so a shell the solver treats as fluid fails by 24 %; `λ_S = 0` reproduces VER-12 on the same mesh to solver tolerance (FR-15) |
 | **VER-35** | End-to-end reproduction from the manifest | a case run to convergence, then reproduced from its run directory alone | Every scalar quantity of interest reproduced to better than the `1 × 10⁻⁶` nonlinear relative tolerance of §5.3.1, with the measured difference reported rather than only the verdict; run against a *fresh* store, with the store miss and the re-entry into Newton asserted, so that the cache cannot satisfy the check (the §5.3.2 QR-08 NOTE); an input file whose contents have moved aborts naming it; a library-version difference is reported and non-fatal unless the run asks for a strict environment (QR-08, IF-08) |
+| **VER-39** | Sweep throughput and parallel scaling | one grid, run at several worker counts into a fresh store each time | Points per worker-hour over the members actually solved, and the parallel efficiency `T(1)/(N·T(N))`, reported with the core count, the thread pinning and the wave widths beside them. **Recorded, never gated**: completing the sweep is the assertion, and a scaling figure measured on shared hardware is a statement about that hardware (QR-06, §8.3) |
 
 NOTE: Hall's result is `R_access = ρ/(4a)` per side, so the two sides give `ρ/(2a)`. The form
 `G = σ[L/(πa²) + 1/a]⁻¹` substitutes radius for diameter in the access term and is wrong there by a
@@ -2187,6 +2287,12 @@ Factors making the work less tractable:
 Throughput datum: the reference sweep of 3,675 solves (5 physics cases × 35 bias values × 21 salt
 concentrations) took 41 h on 12 cores. A full-envelope sweep is a day-scale job.
 
+NOTE (QR-06): the scaling claim is about *independent* workers. Processes sharing one linear-algebra
+thread pool are not independent, and a scaling curve measured without the thread counts pinned per
+worker (§5.3.4) reports the pool rather than the dispatch. A throughput figure SHALL likewise be
+computed over the members that were actually solved, cache hits being dictionary lookups that would
+otherwise report unbounded throughput for a resumed sweep.
+
 ---
 
 ## 9. Risk register
@@ -2339,8 +2445,8 @@ needed.
 | Requirement | Verification or validation activity |
 |---|---|
 | IF-01 | VER-25, VER-32 |
-| IF-02 | VER-32 |
-| IF-03 | VER-09 |
+| IF-02 | VER-32, VER-38 |
+| IF-03 | VER-09, VER-36 (dotted-path substitution against the schema) |
 | IF-04 | None yet |
 | IF-05 | VER-29, VAL-15 |
 | IF-06 | VER-27 |
@@ -2369,8 +2475,8 @@ needed.
 | FR-20 | None yet |
 | FR-21 | VER-20, VER-22 |
 | FR-22 | VER-19, VER-21, VER-22 |
-| FR-23 | VER-11 |
-| FR-24 | None yet |
+| FR-23 | VER-11, VER-38 (the two-point ratio) |
+| FR-24 | VER-36, VER-37, VER-38 |
 | FR-25 | VER-24, VER-26 (manifest emitted per §7.6) |
 | FR-26 | VER-09, VER-26 |
 | FR-27 | VER-23, VER-25, VER-26, VER-32, VER-34 |
@@ -2381,7 +2487,7 @@ needed.
 | QR-03 | VER-01, VER-29, VAL-15 |
 | QR-04 | VER-11 |
 | QR-05 | VAL-07, VAL-08, VAL-09 |
-| QR-06 | None yet |
+| QR-06 | VER-39 (measured, recorded, not gated) |
 | QR-07 | None yet (§8.2 criterion 3) |
 | QR-08 | VER-26 for manifest sufficiency; VER-34, VER-35 for QoI reproduction |
 | QR-09 | None yet |
