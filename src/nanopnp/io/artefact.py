@@ -68,6 +68,16 @@ QOI_SCHEMA = "nanopnp/qoi/v1"
 REPORT_SCHEMA = "nanopnp/report/v1"
 """Stage 12: the run record — the export selection and what was written."""
 
+SWEEP_SCHEMA = "nanopnp/sweep/v1"
+"""A sweep: its specification document, its plan, and the collected dataset.
+
+One string for the three, because they are one thing described at three moments
+— what was asked for, what it enumerates, and what came back — and a sweep is
+not a pipeline stage (§5.3.4). A stage keyed on three thousand upstream
+artefacts has no meaningful key and no meaningful progress fraction, so the
+dataset is an artefact without being the output of a registered stage.
+"""
+
 
 def timestamp() -> str:
     """Return the current UTC time, ISO 8601, to the second.
@@ -395,6 +405,41 @@ class ReportArtefact(Artefact):
             schema=REPORT_SCHEMA,
             parameters={"exports": list(exports)},
             inputs={"case": case_hash, "qoi": qoi_hash, "solution": solution_hash},
+            payload=dict(payload or {}),
+            summary=summary or {},
+        )
+
+
+class SweepArtefact(Artefact):
+    """The collected dataset over the members of one sweep (FR-24, §5.3.4).
+
+    Keyed on the plan rather than on the members: the plan fixes the base case,
+    the axes, the point identities and their order, so two datasets with the
+    same key describe the same set of operating points. The *results* are the
+    summary, outside the digest, because they are what the artefact describes
+    rather than what determines it — and because a sweep whose members are still
+    running has a key before it has rows.
+
+    A member's row carries its status and, where it failed, the §3.1 exit class.
+    Its quantities are **absent** rather than defaulted on any non-``ok`` row:
+    QR-06 requires that a failed member be distinguishable from a refused one
+    and from one that was never dispatched, and a zero current is none of those.
+    """
+
+    def __init__(
+        self,
+        *,
+        plan_hash: str,
+        base_hash: str,
+        name: str,
+        points: int,
+        payload: Mapping[str, Path] | None = None,
+        summary: Mapping[str, Canonicalisable] | None = None,
+    ) -> None:
+        super().__init__(
+            schema=SWEEP_SCHEMA,
+            parameters={"name": name, "points": points},
+            inputs={"plan": plan_hash, "base_case": base_hash},
             payload=dict(payload or {}),
             summary=summary or {},
         )

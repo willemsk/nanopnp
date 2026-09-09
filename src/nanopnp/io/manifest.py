@@ -217,6 +217,7 @@ def solver_group(
     document: CaseDocument,
     *,
     ladder: Mapping[str, Canonicalisable] | None = None,
+    warm_start: Mapping[str, Canonicalisable] | None = None,
 ) -> dict[str, Canonicalisable]:
     """Return the Solver group: model, element orders, continuation, settings.
 
@@ -228,9 +229,21 @@ def solver_group(
         ``LadderResult.summary()``, which carries what actually happened: the
         rungs taken, the seconds, the Newton iterations and the minimum damping
         any rung needed. ``None`` when no solve ran.
+    warm_start
+        The FR-24 record of where Newton started: whether a converged neighbour
+        supplied the initial state or the run climbed the ladder cold, which
+        artefact it came from, and which operator keys the two runs differed in
+        (the section 5.3.2 warm-start NOTE). ``None`` for a solve that was never
+        offered one -- a run outside a sweep -- which is a different fact from a
+        member that was offered one and could not use it.
     """
     numerics = document.numerics
     return {
+        "warm_start": (
+            dict(warm_start)
+            if warm_start is not None
+            else not_run("this solve was not offered a warm start")
+        ),
         "model": document.physics.model,
         "physics_switches": document.physics.model_dump(mode="json"),
         "elements": numerics.elements.model_dump(mode="json"),
@@ -410,6 +423,8 @@ def build(
     clamp_activations: int | None = None,
     ladder: Mapping[str, Canonicalisable] | None = None,
     stabilisation: str | None = None,
+    warm_start: Mapping[str, Canonicalisable] | None = None,
+    wall_distance: Mapping[str, Canonicalisable] | None = None,
     contributed_deviations: tuple[ContributedDeviation, ...] = (),
 ) -> Manifest:
     """Assemble a manifest from whatever the run produced.
@@ -453,6 +468,16 @@ def build(
         ``LadderResult.summary()``.
     stabilisation
         The mode read back off the converged model, ``LadderResult.stabilisation``.
+    warm_start
+        The FR-24 warm-start record; see :func:`solver_group`.
+    wall_distance
+        The NUM-34 measurement of the discrete distance field this run read:
+        its minimum over the fluid, where that minimum occurred, and the
+        fraction of samples below zero. It joins the *mesh* group rather than
+        the solver's because it is a statement about the resolution of the mesh
+        at the wall, and NUM-34 requires it recorded whether or not it passed.
+        ``None`` when no wall correction was active, which is a different fact
+        from a field that was measured and found admissible.
     contributed_deviations
         Departures a stage found in its inputs; see :func:`deviations_group`.
     """
@@ -462,7 +487,12 @@ def build(
         inputs=input_group(case_hash=case_hash, files=input_files, upstream=upstream),
         environment=environment(),
         geometry_and_mesh=(
-            dict(mesh) if mesh is not None else not_run("no mesh was built or supplied to this run")
+            {
+                **dict(mesh),
+                **({} if wall_distance is None else {"wall_distance": dict(wall_distance)}),
+            }
+            if mesh is not None
+            else not_run("no mesh was built or supplied to this run")
         ),
         charge=(
             dict(charge)
@@ -477,7 +507,7 @@ def build(
             if electrolyte is not None
             else not_run("no electrolyte was resolved")
         ),
-        solver=solver_group(document, ladder=ladder),
+        solver=solver_group(document, ladder=ladder, warm_start=warm_start),
         stabilisation=stabilisation_group(document, solved=stabilisation),
         deviations=deviations(document),
         contributed_deviations=contributed_deviations,

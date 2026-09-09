@@ -37,6 +37,7 @@ that is caught.
 
 from __future__ import annotations
 
+import logging
 import tempfile
 from collections.abc import Callable
 from dataclasses import replace
@@ -63,17 +64,27 @@ from nanopnp.solve.continuation import Rung, run_ladder
 from nanopnp.solve.state import (
     STATE_FILENAME,
     STATE_KEY,
+    StateMismatchError,
+    WarmStart,
+    check_wall_distance,
+    cold_start,
     ladder,
+    load_initial,
     reads_wall,
     save,
     wall_distance_field,
+    warm_start_payload,
 )
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
-    from nanopnp.core.typing import Expression
+    from nanopnp.core.typing import Expression, Mesh
     from nanopnp.io.case import ResolvedCase
+    from nanopnp.physics.measures import Measures
     from nanopnp.physics.models import ModelSolution
+    from nanopnp.solve.gates import WallDistanceMeasurement
     from nanopnp.solve.newton import NewtonStep
+
+logger = logging.getLogger(__name__)
 
 WORKSPACE_DIRNAME = "tmp"
 """Directory under the store root the payload is written to before it is stored."""
@@ -103,12 +114,28 @@ def _field_summary(fields: ResolvedFields) -> dict[str, object]:
     return {"fields": summary} if summary else {}
 
 
+def _wall_distance_summary(measured: WallDistanceMeasurement | None) -> dict[str, object]:
+    """Return the NUM-34 measurement, or nothing when no correction read ``d``.
+
+    Nothing rather than a null: "this run activated no wall correction" and
+    "it did, and the field was fine" are different facts, and a null minimum
+    would read as the second.
+    """
+    return {} if measured is None else {"wall_distance": measured.summary()}
+
+
 class SolveStage:
     """Stage 10: a case and a mesh to a converged state and its record."""
 
     name = "solve"
 
-    def __init__(self, *, workspace: Path | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        workspace: Path | None = None,
+        warm_start: Artefact | None = None,
+        cold_reason: str = "",
+    ) -> None:
         """Build the stage.
 
         Parameters
@@ -118,8 +145,25 @@ class SolveStage:
             it in. Defaults to a fresh directory under the store root, so that a
             solve run without a store still leaves its fields somewhere the
             caller can find them.
+        warm_start
+            A neighbour's stage-10 artefact to start Newton from (FR-24). When
+            one is given and it loads, the target rung is solved **alone** —
+            that is stage 9 of NUM-18, the salt sweep, generalised to the other
+            axes of the envelope, and re-climbing the nine rungs below a
+            converged neighbour would re-derive the answer the neighbour already
+            is (the §6.5 NOTE). It changes nothing about
+            :meth:`key`: two members differing only in where Newton started must
+            key one artefact, or the store would hold two entries for one
+            converged state (§5.3.2).
+        cold_reason
+            Why no warm start was offered, recorded when ``warm_start`` is
+            ``None``. A member that could not find its parent and a member that
+            has no parent are different facts, and QR-06 asks that a sweep's
+            timings say which members paid for what.
         """
         self._workspace = Path(workspace) if workspace is not None else None
+        self._warm_start = warm_start
+        self._cold_reason = cold_reason
 
     def describe(self) -> StageDescription:
         """Return the registry's description of this stage (FR-27)."""
@@ -250,6 +294,14 @@ class SolveStage:
             report(progress, LOAD_FRACTION / 2, "solving for the wall distance field")
             check_cancelled(cancel, "the wall-distance solve")
         distance: Expression = wall_distance_field(resolved, mesh, order=order)
+        # NUM-34, once per solve, on the field the corrections actually read and
+        # before the first rung assembles anything against it. A field that
+        # samples below the threshold is under-resolved at the wall, and the
+        # PHY-02 clamp would turn that into a converged, plausible, wrong
+        # current rather than into a diagnostic (QR-12).
+        wall_distance = check_wall_distance(
+            resolved, mesh, distance, coordinates=measures.coordinate_names
+        )
 
         fields = ResolvedFields(charge=None, conservation=None, eps_r=None, material_means=())
         if supplied is not None:
@@ -261,8 +313,23 @@ class SolveStage:
             fields = gate_fields(resolved, supplied, mesh, measures=measures, cancel=cancel)
 
         rungs = ladder(resolved, mesh, measures, distance, fields)
+        warm, cold_reason = self._warm(
+            resolved,
+            mesh,
+            measures,
+            distance,
+            fields,
+            mesh_content_hash=ingested.content_hash,
+        )
+        if warm is not None:
+            # The target rung alone. The ladder's own last rung *is* the target
+            # operating point, and every rung below it is a path to a state the
+            # neighbour already supplies (NUM-18 NOTE, FR-24).
+            rungs = rungs[-1:]
         prepared, on_rung = self._instrumented(resolved, rungs, progress=progress, cancel=cancel)
-        result = run_ladder(prepared, on_rung=on_rung)
+        result = run_ladder(
+            prepared, initial=None if warm is None else warm.solution, on_rung=on_rung
+        )
         report(progress, 1.0, f"converged in {result.iterations} Newton iterations")
 
         payload = self._write(
@@ -275,8 +342,56 @@ class SolveStage:
             parameters=resolved.solve_provenance,
             inputs=_input_hashes(mesh_artefact, materials, fields_artefact),
             payload=payload,
-            summary={**result.summary(), **_field_summary(fields)},
+            summary={
+                **result.summary(),
+                **_field_summary(fields),
+                **_wall_distance_summary(wall_distance),
+                "warm_start": cold_start(cold_reason) if warm is None else warm.summary(),
+            },
         )
+
+    def _warm(
+        self,
+        resolved: ResolvedCase,
+        mesh: Mesh,
+        measures: Measures,
+        distance: Expression,
+        fields: ResolvedFields,
+        *,
+        mesh_content_hash: str,
+    ) -> tuple[WarmStart | None, str]:
+        """Load the neighbour's state this run was handed, or return ``None``.
+
+        A refusal is not an error here. FR-24 makes the members of a sweep
+        *independent* jobs: one must be runnable alone, in any order, on a
+        machine that has seen nothing else, and the warm start is an
+        optimisation the store may or may not be able to supply. So a payload
+        the space gate refuses is logged with its diagnostic and the full NUM-18
+        ladder is climbed instead — which is exactly what the caller would do
+        with an absent parent, by the same code path and with the same record.
+        """
+        if self._warm_start is None:
+            return None, self._cold_reason or "no warm start was offered to this solve"
+        try:
+            payload = warm_start_payload(self._warm_start)
+            found = load_initial(
+                payload,
+                resolved=resolved,
+                mesh=mesh,
+                measures=measures,
+                distance=distance,
+                fields=fields,
+                mesh_content_hash=mesh_content_hash,
+                source=self._warm_start.hash,
+            )
+        except (StateMismatchError, FileNotFoundError) as error:
+            logger.warning(
+                "warm start from %s refused, climbing the ladder cold: %s",
+                self._warm_start.short_hash,
+                error,
+            )
+            return None, f"the neighbour's state was refused: {error}"
+        return found, ""
 
     def _instrumented(
         self,

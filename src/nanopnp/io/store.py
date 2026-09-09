@@ -77,6 +77,19 @@ class Store:
 
         return self._root / "runs" / f"{name}-{short(digest)}"
 
+    def sweep_directory(self, name: str, digest: str) -> Path:
+        """Return the directory one sweep's plan, member records and dataset live in.
+
+        Beside ``runs/`` rather than inside it: a sweep is a set of runs and each
+        of its members already has a run directory of its own, so nesting them
+        would make a member's manifest reachable by two paths. The digest is the
+        plan's, so re-planning the same document lands on the same directory and
+        a plan with one value inserted lands on another (§5.3.4).
+        """
+        from nanopnp.core.hashing import short
+
+        return self._root / "sweeps" / f"{name}-{short(digest)}"
+
     def contains(self, artefact: Artefact) -> bool:
         """Whether an artefact with this key is already stored."""
         return (self.location(artefact.schema, artefact.hash) / META).is_file()

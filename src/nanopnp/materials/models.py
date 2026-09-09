@@ -180,7 +180,19 @@ class FittedCorrection:
             clamped = ops.clip(c_avg_M, lower, upper)
             factor = get_form(self.concentration_form)(self.concentration_params, clamped, ops)
         if self.use_wall and self.wall_form is not None:
-            factor = factor * get_form(self.wall_form)(self.wall_params, wall_distance_nm, ops)
+            # PHY-02: the wall fits are stated for d >= 0, and the ion form
+            # ``1 - exp(-P1 (d + P2))`` has its root at ``d = -P2`` rather than
+            # decaying to zero -- so a negative sample does not attenuate D_i
+            # and mu_i, it reverses their sign. A distance is non-negative by
+            # definition, so a negative sample is a discretisation artefact
+            # whose nearest admissible value is zero. Clamped here, on the
+            # driver, so that a new electrolyte's wall fit inherits it by
+            # shipping a YAML file; the *factor* is deliberately not clamped,
+            # because a factor floored at zero is a degenerate operator rather
+            # than an attenuated one. NUM-34, not this floor, decides whether
+            # a field that needed it is admissible at all.
+            floored = ops.clip(wall_distance_nm, 0.0, None)
+            factor = factor * get_form(self.wall_form)(self.wall_params, floored, ops)
         return factor
 
 

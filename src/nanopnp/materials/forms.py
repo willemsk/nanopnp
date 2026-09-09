@@ -86,8 +86,15 @@ class MathOps(Protocol):
         """Return ``if_true`` where ``condition > 0`` and ``if_false`` elsewhere."""
         ...
 
-    def clip(self, x: Numeric, lower: float, upper: float) -> Numeric:
-        """Return ``x`` limited to ``[lower, upper]``."""
+    def clip(self, x: Numeric, lower: float, upper: float | None) -> Numeric:
+        """Return ``x`` limited to ``[lower, upper]``; ``upper`` ``None`` is a floor.
+
+        The one-sided form exists because the two drivers are bounded
+        differently. The PHY-13 concentration driver is capped at both ends by
+        the validity range of the fit; the PHY-02 distance driver has no upper
+        bound of its own — the field's own saturation distance supplies one —
+        and needs only the floor at zero that PHY-02's NOTE requires.
+        """
         ...
 
 
@@ -121,7 +128,7 @@ class NumpyOps:
 
         return np.where(np.asarray(condition) > 0.0, if_true, if_false)
 
-    def clip(self, x: Numeric, lower: float, upper: float) -> Numeric:  # noqa: D102
+    def clip(self, x: Numeric, lower: float, upper: float | None) -> Numeric:  # noqa: D102
         import numpy as np
 
         return np.clip(x, lower, upper)
@@ -162,9 +169,11 @@ class NGSolveOps:
 
         return ngs.IfPos(condition, if_true, if_false)
 
-    def clip(self, x: Numeric, lower: float, upper: float) -> Numeric:  # noqa: D102
+    def clip(self, x: Numeric, lower: float, upper: float | None) -> Numeric:  # noqa: D102
         import ngsolve as ngs
 
+        if upper is None:
+            return ngs.IfPos(x - lower, x, lower)
         return ngs.IfPos(x - lower, ngs.IfPos(x - upper, upper, x), lower)
 
 

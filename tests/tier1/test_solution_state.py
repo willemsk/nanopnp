@@ -66,25 +66,26 @@ PORE = CylindricalPoreGeometry(
     pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
 )
 MAXH_NM = 2.0
-WALL_H_NM = 0.5
-"""Element size of the mesh the physics assertions run on.
+WALL_H_NM = 0.35
+"""Element size of every mesh in this module.
 
-Not the coarsest mesh that converges. With the wall corrections active the two
-QoI routes of NUM-26 disagree by 40 % on a 124-element mesh and by 9.6e-05 on
-this one: the 6.2 nm^-1 ion wall function of PHY-08 varies over a tenth of the
-pore radius, and a distance field carrying 273 degrees of freedom does not
-resolve it. Route agreement is therefore the oracle only above a resolution the
-mesh has to actually meet, which is why the restored solution is cross-checked
-here and not on the cheaper mesh below.
-"""
+Set by NUM-34 rather than by NUM-26. With the wall corrections active the P2
+distance field undershoots below zero at the re-entrant corner of the pore
+mouth unless the wall is resolved, and the transition is a regime change rather
+than a gradient: measured on this pore, ``wall_h`` 0.4 nm gives
+``min d = -1.08`` nm and 0.35 nm gives ``+9.5e-06`` nm, with nothing in between.
+The gate refuses everything on the wrong side of it, so this is the coarsest
+admissible wall spacing and every mesh here uses it.
 
-COARSE_MAXH_NM = 4.0
-COARSE_WALL_H_NM = 1.0
-"""Element size of the mesh the wiring assertion runs on.
+``maxh`` barely moves the element count once ``wall_h`` is that small — 4.0/0.35
+gives 392 elements against 2.0/0.35's 419 — which is why there is one mesh in
+this module and not the two it used to carry. **[tested]**
 
-Stage 10 writing the file this module reads is a question about filenames and
-keyword arguments; it needs a converged solve and no resolved one, so it gets
-the cheapest mesh that carries all four domains.
+Route agreement is comfortable at this resolution and is not what chose it: the
+two NUM-26 routes agree to 5.9e-06 here, against 3.0e-05 on the 257-element
+mesh this module used before and 5.5e-02 on a 124-element one. Note that the
+middle of those three *passes* NUM-26 while its current is 17 % low — the reason
+the PHY-02 clamp needs the NUM-34 gate beside it rather than instead of it.
 """
 
 BAND_NM = 2.4
@@ -293,14 +294,17 @@ def test_ver34_the_stage_payload_is_a_state_file_this_module_can_restore(
     space with different constraints, and the NUM-25 reaction flux is then taken
     over a boundary the solve left free.
 
-    On its own coarse mesh, because nothing here reads a number out of the
-    solution — only that the file exists under the name the stage promised and
-    that the gate accepts it.
+    On the module's own mesh: it used to run on a coarser one, because nothing
+    here reads a number out of the solution, but NUM-34's floor on ``wall_h``
+    leaves nothing meaningfully cheaper that the gate admits (see
+    :data:`WALL_H_NM`). Running through the stage rather than through
+    :func:`~nanopnp.solve.state.ladder` is also what puts that gate on this
+    path at all, which the fixture above deliberately bypasses.
     """
-    work = tmp_path / "coarse"
+    work = tmp_path / "wiring"
     work.mkdir()
     mesh_path = work / "pore.vol"
-    PORE.generate(maxh_nm=COARSE_MAXH_NM, wall_h_nm=COARSE_WALL_H_NM).ngmesh.Save(str(mesh_path))
+    PORE.generate(maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM).ngmesh.Save(str(mesh_path))
     document = loads_case(
         CASE.format(mesh_path=mesh_path, concentration_M=CONCENTRATION_M, bias_V=BIAS_V)
     )

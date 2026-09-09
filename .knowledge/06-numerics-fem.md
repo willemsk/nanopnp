@@ -440,10 +440,58 @@ Measured on the same pore, sampling the fluid domain:
 The undershoot is a genuine property of the discrete field and not an export artefact: the same
 negative values reach the IF-07 export and the correction chain alike. It vanishes by `maxh` 0.5 nm
 on this toy pore, and WP8's ClyA reference mesh (44 316 triangles) is far finer than that
-everywhere, so production runs are expected clean — but nothing currently *asserts* it. Clamping `d`
-at zero inside the correction, or gating on `min d ≥ −0.01 nm`, would each change every number a
-coarse-mesh test reports and needs a specification amendment; recorded here rather than fixed
-under WP10.
+everywhere, so production runs are expected clean.
+
+**Closed out under WP11: PHY-02's clamp and NUM-34's gate, and neither alone. [tested]**
+`FittedCorrection.evaluate` now clips `d̄` at zero before either wall form reads it, and
+`solve/stage.py` gates `min d̄ ≥ −1 × 10⁻³ nm` over the fluid once per solve wherever a wall
+correction is active. The arithmetic behind the threshold is in `SPECIFICATION.md` NUM-34.
+
+**The transition is a regime change, not a gradient, and `wall_h` alone decides it. [tested]**
+Measured on the same toy pore, sampling the fluid at the P2 nodal set the NUM-17 gates walk:
+
+| `maxh` / `wall_h` (nm) | elements | min `d̄` (nm) | fraction of samples < 0 |
+|---|---|---|---|
+| 4.0 / 1.0   | 124 | −0.9401 | 9.75 % |
+| 6.0 / 0.6   | 199 | −1.4557 | 11.94 % |
+| 5.0 / 0.4   | 354 | −1.0800 | 0.31 % |
+| 2.0 / 0.5   | 257 | −1.2377 | 2.14 % |
+| 1.0 / 0.25  | 793 | −0.9749 | 0.31 % |
+| **4.0 / 0.35** | **392** | **+9.48 × 10⁻⁶** | **0** |
+| 4.0 / 0.3   | 461 | +7.80 × 10⁻⁶ | 0 |
+| 4.0 / 0.25  | 529 | +5.96 × 10⁻⁶ | 0 |
+| 2.0 / 0.15  | 956 | +4.00 × 10⁻⁶ | 0 |
+| 6.0 / 0.09  | 1 539 | +2.47 × 10⁻⁶ | 0 |
+
+`maxh` barely moves the answer — 4.0/0.35 gives 392 elements against 2.0/0.35's 419, and both give
+`+9.5 × 10⁻⁶` — while `wall_h` moves it from −1.08 nm to +9.5 × 10⁻⁶ nm across a single step from
+0.4 to 0.35. Two consequences: the coarsest admissible wall spacing on this geometry is
+**0.35 nm**, and a test that wants a cheap mesh with the corrections on should coarsen `maxh` and
+leave `wall_h` alone.
+
+Note also that the residual `Set` leaves behind here is a few times `10⁻⁶` nm and *positive*, two
+orders inside NUM-34's threshold — the "few times `10⁻⁴` with a platform-dependent sign" of §8.1
+below is the unzeroed-projection case, which `mesh/distance.py` does not produce.
+
+**The clamp alone would have been worse than nothing, and this is the measurement that says so.
+[tested]** With the driver clamped, the toy pore at 0.1 M and +20 mV gives:
+
+| `maxh` / `wall_h` (nm) | min `d̄` (nm) | current (A) | NUM-26 route difference |
+|---|---|---|---|
+| 4.0 / 1.0  | −0.94 | 1.539 × 10⁻¹¹ | 5.5 × 10⁻² |
+| 4.0 / 0.5  | −1.2  | 2.303 × 10⁻¹¹ | **2.6 × 10⁻⁵** |
+| 2.0 / 0.5  | −1.24 | 2.204 × 10⁻¹¹ | **3.0 × 10⁻⁵** |
+| 4.0 / 0.35 | +9.5 × 10⁻⁶ | 2.6468 × 10⁻¹¹ | 5.9 × 10⁻⁶ |
+| 2.0 / 0.35 | +9.5 × 10⁻⁶ | 2.6514 × 10⁻¹¹ | 6.0 × 10⁻⁶ |
+| 2.0 / 0.25 | +6.0 × 10⁻⁶ | 2.6538 × 10⁻¹¹ | 1.6 × 10⁻⁶ |
+
+The `wall_h` 0.5 nm rows are the ones that matter. They **pass NUM-26 comfortably** — forty times
+inside the tolerance — and their current is 13 to 17 % below the resolved value. Removing the sign
+inversion removed the only signal an unresolved wall had: unclamped, the 124-element row disagreed
+between the routes by 40 % (§7.1.1's original table) and the 257-element row by 9.6 × 10⁻⁵. So the
+clamp turns "loudly wrong" into "quietly wrong" wherever the field is genuinely negative, and
+NUM-34 is what turns it back into "refused". `tests/tier2/test_current_routes.py` asserts exactly
+this pair of facts about the 0.5 nm mesh.
 
 Two consequences worth keeping:
 
@@ -829,8 +877,6 @@ gradient- or cross-section-based extraction.
   benchmark by a factor of thirty, from a 6 × 10⁻⁴ plateau to 2.0 × 10⁻⁵ falling monotonically.
   **The rule: √t is set by the feature the field has to resolve, and there is no single default that
   serves both a sub-nanometre wall correction and a several-nanometre force band.** **[tested]**
-
----
 
 ## 9. Unverified / to measure
 

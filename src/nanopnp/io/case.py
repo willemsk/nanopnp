@@ -34,10 +34,11 @@ import difflib
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal, get_args
+from typing import Any, Literal, TypeAlias, get_args, get_origin
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
+from pydantic.fields import FieldInfo
 
 from nanopnp.charge.fields import FIELD_FORMAT
 from nanopnp.core.paths import available_corrections
@@ -74,6 +75,18 @@ COUPLED_MODELS: frozenset[str] = frozenset({"epnp-ns", "pnp-ns", "pnp"})
 no ladder and no transport; they are registered and selectable, and the solve
 stage refuses them by name rather than building a ladder that means nothing.
 """
+
+FieldType: TypeAlias = Any
+"""The type the case schema declares at one dotted path.
+
+A ``type``, a ``Literal[...]``, a union or a parameterised container -- whatever
+pydantic put on the field. The alias names what the value *is* where the checker
+can only say ``Any`` (the house convention of :mod:`nanopnp.core.typing`)."""
+
+FieldValue: TypeAlias = Any
+"""A value one case-file field can hold: a bool, a number, a string, a path, or
+a block of them. Constrained by the schema per field; a walk over dotted paths
+sees the union."""
 
 STERIC_MODELS: frozenset[str] = frozenset({"none", "borukhov"})
 """Steric models: the Borukhov size-modified flux, or off (PHY-22)."""
@@ -556,8 +569,12 @@ def _keys_of(model: type[BaseModel]) -> list[str]:
     return sorted(field.alias or name for name, field in model.model_fields.items())
 
 
-def _render(source: str, error: ValidationError) -> str:
+def render_problems(source: str, error: ValidationError) -> str:
     """Render a pydantic error as one ``<dotted.path>: <what>`` line per problem.
+
+    Public because the sweep document of §5.3.4 is an IF-03 configuration file
+    too, and its diagnostics must be the ones a case file gets rather than
+    pydantic's own — a second rendering would be a second thing to keep right.
 
     IF-03 requires the offending key be named. pydantic reports ``extra_forbidden``
     with the key in ``loc`` and a message that does not carry it, so the key is
@@ -581,6 +598,324 @@ def _render(source: str, error: ValidationError) -> str:
         else:
             lines.append(f"  {dotted}: {problem['msg']}")
     return "\n".join(lines)
+
+
+# -- dotted paths: reading, checking and substituting -------------------------
+
+
+class UnknownCasePathError(KeyError):
+    """A dotted path does not name a field of the case schema (IF-03, FR-24).
+
+    Raised by :func:`field_at` before anything is read or written, so that a
+    misspelt sweep axis is refused at plan time by the component that is wrong
+    rather than a day later by a member that solved something else. A
+    :class:`KeyError` still, so a caller written against the mapping-like
+    reading of a path keeps working, but a *named* one: the CLI classifies it as
+    the case error it is (IF-02).
+    """
+
+    def __str__(self) -> str:
+        """Return the message as written, without :class:`KeyError`'s quoting."""
+        return str(self.args[0]) if self.args else ""
+
+
+@dataclass(frozen=True)
+class FieldReference:
+    """One field of the case schema, found by its dotted path.
+
+    Parameters
+    ----------
+    path
+        The dotted path, as it was given.
+    annotation
+        The type the schema declares at that path. For an entry of a mapping- or
+        sequence-valued field it is the *element* type, which is what a value
+        written there has to satisfy.
+    container
+        ``"model"`` for a declared field of a block, ``"mapping"`` for an entry
+        of a ``dict``-valued one, ``"sequence"`` for an element of a list. The
+        distinction matters to substitution: a mapping entry may be created, a
+        model field may not, and a sequence index must already exist.
+    """
+
+    path: str
+    annotation: FieldType
+    container: Literal["model", "mapping", "sequence"] = "model"
+
+    def validate(self, value: FieldValue) -> FieldValue:
+        """Return ``value`` as the schema's declared type accepts it.
+
+        Raises
+        ------
+        CaseValidationError
+            If the declared type refuses it, naming the path, the value and
+            what was expected. Re-validating the whole document would catch this
+            too, but only per point and only after a plan has committed to
+            thousands of them (FR-24).
+        """
+        from pydantic import TypeAdapter
+
+        try:
+            return TypeAdapter(self.annotation).validate_python(value)
+        except ValidationError as error:
+            reasons = "; ".join(problem["msg"] for problem in error.errors())
+            raise CaseValidationError(
+                f"{self.path}: {value!r} is not a value this field accepts "
+                f"({_annotation_name(self.annotation)}): {reasons}"
+            ) from None
+
+
+def _annotation_name(annotation: FieldType) -> str:
+    """Return a readable name for a declared type, for a diagnostic."""
+    return getattr(annotation, "__name__", None) or str(annotation).replace("typing.", "")
+
+
+def _entry_annotation(
+    annotation: FieldType,
+) -> tuple[FieldType, Literal["mapping", "sequence"]] | None:
+    """Return the element type of a mapping- or sequence-valued annotation.
+
+    ``dict[str, float]`` gives ``(float, "mapping")`` and ``list[str]`` gives
+    ``(str, "sequence")``; anything else gives ``None``. Walking through the
+    container is what lets a sweep vary ``physics.solid_permittivities.membrane``
+    or one entry of ``electrolyte.species`` without a second path syntax.
+    """
+    for candidate in (annotation, *get_args(annotation)):
+        origin = get_origin(candidate)
+        arguments = get_args(candidate)
+        if origin in (dict, Mapping) and len(arguments) == 2:
+            return arguments[1], "mapping"
+        if origin in (list, Sequence) and len(arguments) == 1:
+            return arguments[0], "sequence"
+    return None
+
+
+def field_at(path: str) -> FieldReference:
+    """Return the schema's declaration of the field a dotted path names.
+
+    The inverse of :func:`nanopnp.io.defaults.value_at`'s walk, taken over the
+    *schema* rather than over a document, so that a path can be checked before
+    any case is substituted into (FR-24, §5.3.4). Two loud failures rather than
+    one: this names a component that does not exist, and
+    :meth:`FieldReference.validate` names a value the field would not accept.
+
+    Parameters
+    ----------
+    path
+        Dotted path under the aliases a case file writes, e.g.
+        ``"boundary_conditions.bias_V"`` or
+        ``"electrolyte.corrections.diffusivity.wall"``.
+
+    Returns
+    -------
+    FieldReference
+        The declared type and how it is reached.
+
+    Raises
+    ------
+    UnknownCasePathError
+        If any component is not a field of the block it is read from, naming the
+        prefix that does exist, the component that does not, and what that block
+        accepts (QR-12).
+    """
+    components = [part for part in path.split(".") if part]
+    if not components:
+        raise UnknownCasePathError("a case-file path cannot be empty")
+
+    owner: type[BaseModel] | None = CaseDocument
+    annotation: FieldType = CaseDocument
+    container: Literal["model", "mapping", "sequence"] = "model"
+    walked: list[str] = []
+
+    for component in components:
+        # The container is tried first, because a ``list[SpeciesSpec]`` carries
+        # a model *and* is indexed: ``electrolyte.species.0.name`` steps through
+        # the list before it reaches the block, and asking the block first would
+        # report ``0`` as an unknown field of ``SpeciesSpec``.
+        entry = _entry_annotation(annotation)
+        if entry is not None:
+            annotation, container = entry
+        elif owner is not None:
+            field = _field_named(owner, component)
+            if field is None:
+                accepted = ", ".join(_keys_of(owner))
+                prefix = ".".join(walked) or "<document>"
+                close = difflib.get_close_matches(component, _keys_of(owner), n=1)
+                hint = f"did you mean {close[0]!r}? " if close else ""
+                raise UnknownCasePathError(
+                    f"{path!r} is not a field of the case schema: {prefix} has no "
+                    f"{component!r}. {hint}It accepts {accepted}"
+                )
+            annotation = field.annotation
+            container = "model"
+        else:
+            prefix = ".".join(walked)
+            raise UnknownCasePathError(
+                f"{path!r} is not a field of the case schema: {prefix} is a "
+                f"{_annotation_name(annotation)}, which has no {component!r} inside it"
+            )
+        walked.append(component)
+        owner = _model_of(annotation)
+
+    return FieldReference(path=path, annotation=annotation, container=container)
+
+
+def _field_named(owner: type[BaseModel], component: str) -> FieldInfo | None:
+    """Return the field a block declares under ``component``, by alias or by name.
+
+    By alias first, because a case file writes ``schema:`` for a field this
+    module has to call ``schema_id``.
+    """
+    for name, field in owner.model_fields.items():
+        if (field.alias or name) == component:
+            return field
+    return None
+
+
+def value_at(document: CaseDocument, path: str) -> FieldValue:
+    """Return the value a dotted path names in a case document.
+
+    Checked against the schema by :func:`field_at` first, so that an unknown
+    component is named the same way whether it was asked of the schema or of a
+    document. A path that silently resolved to ``None`` would report a switch as
+    never deviating, which is the failure :mod:`nanopnp.io.defaults` exists to
+    prevent.
+
+    Raises
+    ------
+    UnknownCasePathError
+        If the path is not one the schema declares, or if a block on the way to
+        it is absent from *this* document.
+    """
+    field_at(path)
+    value: FieldValue = document
+    walked: list[str] = []
+    for component in path.split("."):
+        walked.append(component)
+        if value is None:
+            raise UnknownCasePathError(
+                f"{path!r} cannot be read from this case: {'.'.join(walked[:-1])} is absent from it"
+            )
+        if isinstance(value, Mapping):
+            if component not in value:
+                raise UnknownCasePathError(
+                    f"{path!r} cannot be read from this case: {'.'.join(walked[:-1])} "
+                    f"has no entry {component!r}"
+                )
+            value = value[component]
+        elif isinstance(value, list):
+            value = _sequence_entry(value, component, path, walked)
+        else:
+            value = getattr(value, _attribute_named(type(value), component))
+    return value
+
+
+def _attribute_named(owner: type, component: str) -> str:
+    """Return the attribute a block's alias names, e.g. ``schema`` to ``schema_id``."""
+    fields: Mapping[str, FieldInfo] = getattr(owner, "model_fields", {})
+    for name, field in fields.items():
+        if (field.alias or name) == component:
+            return name
+    return component
+
+
+def _sequence_entry(
+    values: list[FieldValue], component: str, path: str, walked: list[str]
+) -> FieldValue:
+    """Return one element of a list-valued field, by index."""
+    try:
+        index = int(component)
+        return values[index]
+    except (ValueError, IndexError):
+        raise UnknownCasePathError(
+            f"{path!r} cannot be read from this case: {'.'.join(walked[:-1])} holds "
+            f"{len(values)} entries, and {component!r} is not an index into them"
+        ) from None
+
+
+def substitute(document: CaseDocument, assignments: Mapping[str, FieldValue]) -> CaseDocument:
+    """Return ``document`` with each dotted path set to its assigned value.
+
+    Dump by alias, set into the plain dict, re-validate the **whole document**
+    (§5.3.4). Re-validation is what makes a substitution that produces an
+    inadmissible case fail with the diagnostic a hand-written case would get, for
+    free: a typo hits ``extra="forbid"`` and :func:`render_problems`'s "did you mean"
+    message, and a cross-field rule such as the NUM-18 ladder refusal in
+    :func:`resolve` still runs. ``model_copy(update=...)`` would accept the typo,
+    and rebuilding the object field by field would make a configuration that
+    names itself stop being itself.
+
+    Parameters
+    ----------
+    document
+        The base case.
+    assignments
+        Dotted case-file path to the value to set there. An empty mapping
+        returns an equal document, which is the all-origins point of a sweep
+        with no axes.
+
+    Returns
+    -------
+    CaseDocument
+        Freshly validated. Never the same object as ``document``.
+
+    Raises
+    ------
+    UnknownCasePathError
+        If a path is not one the schema declares, or if the block it is inside
+        is absent from this document.
+    CaseValidationError
+        If a value is not one the declared type accepts, or if the substituted
+        document is not a valid case.
+    """
+    payload = document.model_dump(by_alias=True, mode="json")
+    for path, value in assignments.items():
+        reference = field_at(path)
+        # Validated against the declared type first, so that the diagnostic
+        # names the path rather than pydantic's own location inside a document
+        # the caller never wrote. Dumped back to JSON because the payload being
+        # written into is a plain dict: a validated ``Path`` set into it would
+        # come back out of ``model_dump`` as an object YAML cannot write.
+        reference.validate(value)
+        _set_at(payload, path, value)
+    try:
+        return CaseDocument.model_validate(payload)
+    except ValidationError as error:
+        listed = ", ".join(sorted(assignments)) or "nothing"
+        raise CaseValidationError(
+            render_problems(f"<{document.name} with {listed} substituted>", error), error
+        ) from None
+
+
+def _set_at(payload: dict[str, FieldValue], path: str, value: FieldValue) -> None:
+    """Set ``value`` into a dumped case document at a dotted path.
+
+    Raises
+    ------
+    UnknownCasePathError
+        If a block on the way is absent from this document. The path is known to
+        the *schema* by the time this runs -- ``structure.source.pdb`` is a real
+        field -- and a case that declares no ``structure:`` still has nowhere to
+        put it, which is a fact about the document and not about the path.
+    """
+    components = path.split(".")
+    cursor: FieldValue = payload
+    for depth, component in enumerate(components[:-1]):
+        prefix = ".".join(components[: depth + 1])
+        if isinstance(cursor, list):
+            cursor = _sequence_entry(cursor, component, path, components[: depth + 1])
+            continue
+        if not isinstance(cursor, dict) or cursor.get(component) is None:
+            raise UnknownCasePathError(
+                f"{path!r} cannot be set on this case: {prefix} is absent from it, so there "
+                "is no block to substitute into; give the base case that section first"
+            )
+        cursor = cursor[component]
+    last = components[-1]
+    if isinstance(cursor, list):
+        cursor[int(last)] = value
+    else:
+        cursor[last] = value
 
 
 # -- reading and writing ------------------------------------------------------
@@ -621,7 +956,7 @@ def load_case(path: str | Path) -> CaseDocument:
     try:
         return CaseDocument.model_validate(dict(raw))
     except ValidationError as error:
-        raise CaseValidationError(_render(str(source), error), error) from error
+        raise CaseValidationError(render_problems(str(source), error), error) from error
 
 
 def loads_case(text: str, *, source: str = "<string>") -> CaseDocument:
@@ -637,7 +972,7 @@ def loads_case(text: str, *, source: str = "<string>") -> CaseDocument:
     try:
         return CaseDocument.model_validate(dict(raw))
     except ValidationError as error:
-        raise CaseValidationError(_render(source, error), error) from error
+        raise CaseValidationError(render_problems(source, error), error) from error
 
 
 def dump_case(document: CaseDocument, path: str | Path) -> Path:
