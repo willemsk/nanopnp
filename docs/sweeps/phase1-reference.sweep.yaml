@@ -5,7 +5,7 @@
 # document under version control, and the number it produces is attributable to a commit:
 #
 #     nanopnp sweep plan docs/sweeps/phase1-reference.sweep.yaml
-#     nanopnp sweep run <the plan it names> --workers 12 --csv
+#     nanopnp sweep run <the plan it names> --csv        # workers: below is the default
 #
 # A reference sweep reconstructed from prose four weeks later would measure a different
 # grid and nobody would know. Tier 1 checks the cheap half of this document's correctness

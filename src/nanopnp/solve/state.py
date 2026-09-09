@@ -374,9 +374,7 @@ def check_wall_distance(
     if not reads_wall(resolved.electrolyte):
         return None
     sampler = FieldSampler(mesh, coordinates=coordinates, materials=ELECTROLYTE_DOMAINS)
-    gate = WallDistanceGate(sampler, distance)
-    gate.check()
-    return gate.measure()
+    return WallDistanceGate(sampler, distance).checked()
 
 
 def single_rung(

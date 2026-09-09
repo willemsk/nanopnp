@@ -43,6 +43,7 @@ from collections.abc import Callable
 from dataclasses import replace
 from pathlib import Path
 from typing import TYPE_CHECKING
+from zipfile import BadZipFile
 
 from nanopnp.charge.stage import FieldStage, ResolvedFields, gate_fields, read_fields
 from nanopnp.core.paths import store_root
@@ -369,6 +370,12 @@ class SolveStage:
         the space gate refuses is logged with its diagnostic and the full NUM-18
         ladder is climbed instead — which is exactly what the caller would do
         with an absent parent, by the same code path and with the same record.
+
+        The caught set is wider than :class:`StateMismatchError` for the same
+        reason: a neighbour's payload that is missing, unreadable or not a
+        ``.npz`` at all is refused by NumPy and by ``zipfile`` rather than by the
+        descriptor gate, and a member that aborted on one would have turned an
+        optimisation into a dependency.
         """
         if self._warm_start is None:
             return None, self._cold_reason or "no warm start was offered to this solve"
@@ -384,7 +391,7 @@ class SolveStage:
                 mesh_content_hash=mesh_content_hash,
                 source=self._warm_start.hash,
             )
-        except (StateMismatchError, FileNotFoundError) as error:
+        except (StateMismatchError, OSError, ValueError, BadZipFile) as error:
             logger.warning(
                 "warm start from %s refused, climbing the ladder cold: %s",
                 self._warm_start.short_hash,

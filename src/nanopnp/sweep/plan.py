@@ -37,7 +37,8 @@ from __future__ import annotations
 import json
 import logging
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
+from functools import cached_property
 from itertools import product
 from pathlib import Path
 from typing import cast
@@ -48,6 +49,7 @@ from nanopnp.io.case import (
     CaseDocument,
     CaseValidationError,
     FieldValue,
+    ResolvedCase,
     UnknownCasePathError,
     field_at,
     load_case,
@@ -185,6 +187,11 @@ class SweepPlan:
     wall_distance
         The NUM-34 measurement of each distinct mesh a point activates a wall
         correction on, by the mesh's content hash.
+    workers
+        The document's default worker count for a local dispatch, carried on the
+        plan so that ``sweep run`` — which reads the plan and never the sweep
+        document — can honour it. Deliberately outside :attr:`hash`: it changes
+        how long a sweep takes and no number it produces.
     """
 
     name: str
@@ -196,10 +203,18 @@ class SweepPlan:
     pairs: tuple[tuple[int, int], ...] = ()
     warnings: tuple[str, ...] = ()
     wall_distance: Mapping[str, Canonicalisable] = field(default_factory=dict)
+    workers: int | None = None
 
-    @property
+    @cached_property
     def hash(self) -> str:
-        """The plan's content hash: what it enumerates, not what it produced."""
+        """The plan's content hash: what it enumerates, not what it produced.
+
+        Over the name, the sweep document's record and every point — not over
+        the worker count, the warnings or the NUM-34 measurements, none of which
+        change which operating points the plan names. Cached because a
+        3,675-point plan is hashed several times per command and the digest is
+        taken over the whole point list each time.
+        """
         return content_hash(
             SWEEP_SCHEMA,
             {
@@ -244,13 +259,8 @@ class SweepPlan:
             )
         return self.points[index]
 
-    def case(self, index: int) -> CaseDocument:
-        """Return the validated case document of one member.
-
-        Rebuilt from the base case and the point's assignments rather than
-        stored: the plan file would otherwise carry thousands of whole case
-        documents, and a case rebuilt by the same :func:`substitute` the plan
-        validated with cannot be a different one.
+    def base_case(self) -> CaseDocument:
+        """Return the base case from disk, gated against the hash the plan was built on.
 
         Raises
         ------
@@ -265,7 +275,6 @@ class SweepPlan:
             dataset of plausible wrong answers, so it is checked rather than
             assumed (QR-12).
         """
-        point = self.point(index)
         try:
             base = load_case(self.base_path)
         except FileNotFoundError as error:
@@ -283,7 +292,34 @@ class SweepPlan:
                 "Every member would solve a case this plan never enumerated and report it under "
                 "the plan's own point identities; re-plan the sweep"
             )
-        return _member(base, point)
+        return base
+
+    def case(self, index: int, *, base: CaseDocument | None = None) -> CaseDocument:
+        """Return the validated case document of one member.
+
+        Rebuilt from the base case and the point's assignments rather than
+        stored: the plan file would otherwise carry thousands of whole case
+        documents, and a case rebuilt by the same :func:`substitute` the plan
+        validated with cannot be a different one.
+
+        Parameters
+        ----------
+        index
+            Which point to build.
+        base
+            A base case already read and gated by :meth:`base_case`. Passed by a
+            caller that builds two members in a row — a dispatch builds its own
+            and its parent's — so that one YAML parse, one validation and one
+            content hash serve both rather than one each (QR-06).
+
+        Raises
+        ------
+        SweepPlanError
+            As :meth:`base_case` documents it, and if ``index`` is not a point
+            of this plan.
+        """
+        point = self.point(index)
+        return _member(self.base_case() if base is None else base, point)
 
     def document_record(self) -> dict[str, Canonicalisable]:
         """Return the plan as it is written to disk."""
@@ -297,6 +333,7 @@ class SweepPlan:
             "pairs": [list(pair) for pair in self.pairs],
             "warnings": list(self.warnings),
             "wall_distance": dict(self.wall_distance),
+            "workers": self.workers,
             "waves": [list(span) for span in self.waves()],
             "points": [point.summary() for point in self.points],
         }
@@ -534,8 +571,11 @@ def build_plan(
         rectification=RECTIFICATION in base.outputs,
         pairs=_pairs(points),
         warnings=_warnings(document),
+        workers=document.workers,
     )
-    resolved = _resolve_every_point(base, plan)
+    # Before the resolve rather than after it: an asymmetric bias axis makes the
+    # plan impossible whatever its points resolve to, and the point of checking
+    # here at all is that a sweep is refused in seconds (§5.3.4).
     if plan.rectification and not plan.pairs:
         raise SweepPlanError(
             f"the base case asks for {RECTIFICATION!r}, which is the two-point ratio "
@@ -543,6 +583,7 @@ def build_plan(
             "of this sweep differ only in 'boundary_conditions.bias_V' at exactly opposite "
             "values. Give the bias axis a symmetric set of values, or drop the output"
         )
+    resolved = _resolve_every_point(base, plan)
     if check_meshes:
         plan = _gate_meshes(plan, resolved)
     for warning in plan.warnings:
@@ -550,8 +591,8 @@ def build_plan(
     return plan
 
 
-def _resolve_every_point(base: CaseDocument, plan: SweepPlan) -> tuple[CaseDocument, ...]:
-    """Substitute, validate and resolve every point, and return the documents.
+def _resolve_every_point(base: CaseDocument, plan: SweepPlan) -> tuple[ResolvedCase, ...]:
+    """Substitute, validate and resolve every point, and return the resolved cases.
 
     ``resolve`` is pure Python — no NGSolve, no mesh — and it is where the
     NUM-18 refusals live: a case setting ``physics.flow: false`` and still
@@ -559,22 +600,20 @@ def _resolve_every_point(base: CaseDocument, plan: SweepPlan) -> tuple[CaseDocum
     plan costs seconds and is what stops a two-thousandth inadmissible point
     from surfacing at hour twenty-two (§5.3.4).
     """
-    documents: list[CaseDocument] = []
+    cases: list[ResolvedCase] = []
     for point in plan.points:
         try:
-            member = _member(base, point)
-            resolve(member)
+            cases.append(resolve(_member(base, point)))
         except (CaseValidationError, UnknownCasePathError, NotImplementedError) as error:
             raise SweepPlanError(
                 f"point {point.index} ({point.point_id}) is not a case this build can run.\n"
                 f"  assignments: {_shown(point.assignments)}\n"
                 f"  {error}"
             ) from None
-        documents.append(member)
-    return tuple(documents)
+    return tuple(cases)
 
 
-def _gate_meshes(plan: SweepPlan, members: Sequence[CaseDocument]) -> SweepPlan:
+def _gate_meshes(plan: SweepPlan, members: Sequence[ResolvedCase]) -> SweepPlan:
     """Run the NUM-34 gate once per distinct mesh a wall correction is active on.
 
     Once per *mesh*, not once per point: the distance field is a function of the
@@ -592,8 +631,6 @@ def _gate_meshes(plan: SweepPlan, members: Sequence[CaseDocument]) -> SweepPlan:
         would produce, and IF-02 gives it the gate class rather than the case
         one.
     """
-    from dataclasses import replace as replace_dataclass
-
     from nanopnp.mesh.ingest import IngestedMesh, ingest
     from nanopnp.physics.measures import AXISYMMETRIC
     from nanopnp.solve.state import check_wall_distance, reads_wall, wall_distance_field
@@ -606,8 +643,10 @@ def _gate_meshes(plan: SweepPlan, members: Sequence[CaseDocument]) -> SweepPlan:
     # available *after* the read. Two cases naming the same file with the same
     # vocabulary mapping ingest to the same mesh by construction (§5.3.2).
     ingested_meshes: dict[tuple[str, str | None, tuple[tuple[str, str], ...]], object] = {}
-    for point, member in zip(plan.points, members, strict=True):
-        resolved = resolve(member)
+    # ``members`` are the cases ``_resolve_every_point`` already resolved: a
+    # second ``resolve`` over 3,675 points would be a second answer to a question
+    # already asked, and slower to be no more certain of it.
+    for point, resolved in zip(plan.points, members, strict=True):
         if not reads_wall(resolved.electrolyte):
             continue
         order = int(resolved.model_options.get("order", AXISYMMETRIC.element_order))
@@ -629,7 +668,7 @@ def _gate_meshes(plan: SweepPlan, members: Sequence[CaseDocument]) -> SweepPlan:
         if signature in checked:
             continue
         checked.add(signature)
-        measures = replace_dataclass(AXISYMMETRIC, element_order=order)
+        measures = replace(AXISYMMETRIC, element_order=order)
         distance = wall_distance_field(resolved, ingested.mesh, order=order)
         found = check_wall_distance(
             resolved, ingested.mesh, distance, coordinates=measures.coordinate_names
@@ -642,7 +681,7 @@ def _gate_meshes(plan: SweepPlan, members: Sequence[CaseDocument]) -> SweepPlan:
                 point.index,
             )
             measured[ingested.content_hash] = found.summary()
-    return replace_dataclass(plan, wall_distance=measured)
+    return replace(plan, wall_distance=measured)
 
 
 def write_plan(plan: SweepPlan, directory: Path) -> Path:
@@ -700,6 +739,7 @@ def read_plan(path: Path) -> SweepPlan:
         pairs=tuple((int(a), int(b)) for a, b in raw["pairs"]),
         warnings=tuple(str(line) for line in raw["warnings"]),
         wall_distance=dict(raw["wall_distance"]),
+        workers=None if raw.get("workers") is None else int(raw["workers"]),
     )
 
 

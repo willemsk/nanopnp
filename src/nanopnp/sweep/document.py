@@ -142,12 +142,15 @@ class SweepDocument(_Strict):
     name: str
     base: Path
     axes: list[Axis] = Field(default_factory=list)
-    workers: int | None = None
+    workers: int | None = Field(default=None, ge=1)
     """Default worker count for a local run, overridden by ``--workers``.
 
-    A convenience for a checked-in document, not a physics quantity: it changes
-    how long the sweep takes and no number it produces, which is why the IF-02
-    rule against flags that change a case-file field does not reach it.
+    Carried onto the plan by :func:`~nanopnp.sweep.plan.build_plan` and read back
+    by ``sweep run``, which sees the plan file and never this document. Outside
+    the plan's digest: it is a convenience for a checked-in document and not a
+    physics quantity, changing how long the sweep takes and no number it
+    produces, which is why the IF-02 rule against flags that change a case-file
+    field does not reach it.
     """
 
     model_config = ConfigDict(extra="forbid", populate_by_name=True)

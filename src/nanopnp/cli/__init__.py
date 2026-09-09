@@ -54,7 +54,6 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.io.artefact import SweepArtefact
     from nanopnp.io.store import Store
     from nanopnp.sweep.plan import SweepPlan
-    from nanopnp.sweep.run import MemberResult
 
 __all__ = ["main"]
 
@@ -366,6 +365,7 @@ def _sweep(args: argparse.Namespace) -> int:
 
 def _sweep_run(args: argparse.Namespace, plan: SweepPlan, directory: Path, *, store: Store) -> int:
     """Dispatch one member, one wave, or the whole plan (FR-24, QR-06)."""
+    from nanopnp.sweep.plan import SweepPlanError
     from nanopnp.sweep.run import run_plan, run_point
 
     if args.index is not None:
@@ -381,23 +381,33 @@ def _sweep_run(args: argparse.Namespace, plan: SweepPlan, directory: Path, *, st
 
     indices: range | None = None
     if args.wave is not None:
-        first, last = plan.waves()[args.wave]
+        waves = plan.waves()
+        # Named rather than left to ``IndexError``, exactly as ``--index`` is:
+        # a job array submitted over the wrong range is a configuration mistake,
+        # and a negative index would otherwise select a wave from the end
+        # silently (QR-12).
+        if not 0 <= args.wave < len(waves):
+            raise SweepPlanError(
+                f"this plan has {len(waves)} waves, 0 to {len(waves) - 1}; "
+                f"there is no wave {args.wave}"
+            )
+        first, last = waves[args.wave]
         indices = range(first, last)
+    # ``--workers`` overrides the sweep document's own default, which the plan
+    # carries; neither reaches a case-file field, so neither reaches a manifest.
+    workers = args.workers if args.workers is not None else (plan.workers or 1)
     members = run_plan(
         plan,
         directory,
         store=store,
-        workers=args.workers,
+        workers=workers,
         indices=indices,
         fail_fast=args.fail_fast,
     )
-    # Collected from the member files on disk rather than from the records in
-    # this process: `--wave` runs a subset, and a dataset built from that subset
-    # alone would overwrite the accumulated table with one whose other rows all
-    # read `not_dispatched`. The files are what a job array leaves behind and
-    # what `sweep collect` reads, so a wave-at-a-time dispatch and a local run
-    # build the same table by the same route.
-    artefact = _sweep_dataset(args, plan, directory, None)
+    # The files a job array leaves behind are what `sweep collect` reads too, so
+    # a wave-at-a-time dispatch and a local run build the same table by the same
+    # route; see :func:`_sweep_dataset`.
+    artefact = _sweep_dataset(args, plan, directory)
     counts: dict[str, int] = {}
     for member in members:
         counts[member.status] = counts.get(member.status, 0) + 1
@@ -416,7 +426,7 @@ def _sweep_run(args: argparse.Namespace, plan: SweepPlan, directory: Path, *, st
 
 def _sweep_collect(args: argparse.Namespace, plan: SweepPlan, directory: Path) -> int:
     """Build the dataset from whatever member records are on disk."""
-    artefact = _sweep_dataset(args, plan, directory, None)
+    artefact = _sweep_dataset(args, plan, directory)
     counts = artefact.summary.get("counts", {})
     lines = [f"dataset  {directory / 'dataset.json'}"]
     lines += [f"{status:<16} {count}" for status, count in sorted(dict(counts).items())]
@@ -426,16 +436,16 @@ def _sweep_collect(args: argparse.Namespace, plan: SweepPlan, directory: Path) -
     return EXIT_OK
 
 
-def _sweep_dataset(
-    args: argparse.Namespace,
-    plan: SweepPlan,
-    directory: Path,
-    members: Sequence[MemberResult] | None,
-) -> SweepArtefact:
-    """Collect and, if asked, export. Shared by ``run --workers`` and ``collect``."""
+def _sweep_dataset(args: argparse.Namespace, plan: SweepPlan, directory: Path) -> SweepArtefact:
+    """Collect and, if asked, export. Shared by ``run`` and ``collect``.
+
+    Always from the member files on disk: ``--wave`` runs a subset, and a dataset
+    built from the records this process happens to hold would overwrite the
+    accumulated table with one whose other rows all read ``not_dispatched``.
+    """
     from nanopnp.sweep.collect import collect, write_csv
 
-    artefact = collect(plan, directory, members=members)
+    artefact = collect(plan, directory)
     if getattr(args, "csv", False):
         write_csv(artefact, directory)
     return artefact
@@ -510,7 +520,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--index", type=int, default=None, help="run one member; exits with that member's own code"
     )
     runner.add_argument("--wave", type=int, default=None, help="run one wave of the forest")
-    runner.add_argument("--workers", type=int, default=1, help="independent worker processes")
+    runner.add_argument(
+        "--workers",
+        type=int,
+        default=None,
+        help="independent worker processes; defaults to the sweep document's workers:, or 1",
+    )
     runner.add_argument(
         "--fail-fast", action="store_true", help="stop at the first member that does not succeed"
     )

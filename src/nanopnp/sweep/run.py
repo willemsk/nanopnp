@@ -31,6 +31,7 @@ diagnostic. Workers inherit the parent's.
 from __future__ import annotations
 
 import logging
+import multiprocessing
 import os
 import time
 from collections.abc import Callable, Iterator, Mapping, Sequence
@@ -41,6 +42,7 @@ from pathlib import Path
 from nanopnp.cli.errors import EXIT_OK, classify
 from nanopnp.core.hashing import Canonicalisable, canonical
 from nanopnp.io.artefact import SOLUTION_SCHEMA, Artefact, StageInputs
+from nanopnp.io.case import CaseDocument, dumps_case
 from nanopnp.io.store import Store
 from nanopnp.sweep.plan import PLAN_FILENAME, Point, SweepPlan, read_plan
 
@@ -167,7 +169,9 @@ class MemberResult:
         return path
 
 
-def _parent_artefact(plan: SweepPlan, point: Point, store: Store) -> tuple[Artefact | None, str]:
+def _parent_artefact(
+    plan: SweepPlan, point: Point, store: Store, *, base: CaseDocument
+) -> tuple[Artefact | None, str]:
     """Return the parent's stage-10 artefact if the store holds it, and why not if not.
 
     The key is *computed*, never looked up by name: it is the hash of the
@@ -175,6 +179,10 @@ def _parent_artefact(plan: SweepPlan, point: Point, store: Store) -> tuple[Artef
     process can build from the plan alone. That is what makes a member
     independent — it needs the store, and it does not need the parent's process
     to have told it anything.
+
+    ``base`` is the case the caller has already read and gated, so that a member
+    parses and hashes the base case once rather than once for itself and once
+    for its parent (QR-06).
     """
     if point.parent is None:
         return None, "this point is the root of its tree and has no neighbour to start from"
@@ -182,7 +190,7 @@ def _parent_artefact(plan: SweepPlan, point: Point, store: Store) -> tuple[Artef
 
     parent = plan.point(point.parent)
     try:
-        key = SolveStage().key(StageInputs(case=plan.case(point.parent)))
+        key = SolveStage().key(StageInputs(case=plan.case(point.parent, base=base)))
     except Exception as error:
         # A parent whose key cannot even be computed is a parent this member
         # cannot warm-start from, and that is a fallback rather than a failure:
@@ -233,9 +241,18 @@ def run_point(
 
     point = plan.point(index)
     started = time.perf_counter()
-    warm, reason = _parent_artefact(plan, point, store)
-    document = plan.case(index)
-    case_text = plan.base_path.read_text(encoding="utf-8")
+    base = plan.base_case()
+    warm, reason = _parent_artefact(plan, point, store, base=base)
+    document = plan.case(index, base=base)
+    # The *member's* case, not the base case it was substituted from. The
+    # manifest embeds this text beside the member's own case hash and writes it
+    # back out as the run directory's ``case.yaml``, which is the file QR-08's
+    # reproduction re-runs (§5.3.3): the base case there would reproduce the
+    # origin of every axis and report it under this member's identity. And
+    # ``case_path`` stays ``None`` for the same reason — a member is a case
+    # assembled in memory, and recording the base case as its source file would
+    # make the manifest name a file whose contents are not the case that ran.
+    case_text = dumps_case(document)
     logger.info(
         "point %d/%d (%s, wave %d) %s",
         index,
@@ -248,7 +265,6 @@ def run_point(
         result = run_document(
             document,
             case_text=case_text,
-            case_path=plan.base_path,
             store=store,
             arguments={"solve": {"warm_start": warm, "cold_reason": reason}},
         )
@@ -446,8 +462,6 @@ def _pool(
         yield sequential
         return
 
-    import multiprocessing
-
     plan_path = directory / PLAN_FILENAME
     if not plan_path.is_file():
         raise FileNotFoundError(
@@ -478,7 +492,7 @@ def member_from_row(row: Mapping[str, Canonicalisable]) -> MemberResult:
         assignments=dict(row["assignments"]),
         wave=int(row["wave"]),
         status=str(row["status"]),
-        exit_class=int(row["exit_class"]),
+        exit_class=EXIT_OK if row["exit_class"] is None else int(row["exit_class"]),
         error=None if row["error"] is None else str(row["error"]),
         quantities=None if row["quantities"] is None else dict(row["quantities"]),
         directory=None if row["directory"] is None else str(row["directory"]),

@@ -269,26 +269,21 @@ def _undispatched(
     A row rather than a gap. "Never dispatched" is one of the three states QR-06
     asks a reader to be able to tell apart, and it is the one a missing row
     would render as silence.
+
+    Built through :meth:`~nanopnp.sweep.run.MemberResult.row` rather than written
+    out here, so that a column added to the record cannot reach the dispatched
+    rows and miss these. Only ``exit_class`` is overridden: a member that never
+    ran has no exit code at all, and ``0`` there would read as success.
     """
-    return {
-        "index": index,
-        "id": point_id,
-        "assignments": dict(assignments),
-        "wave": wave,
-        "status": "not_dispatched",
-        "exit_class": None,
-        "error": None,
-        "quantities": None,
-        "directory": None,
-        "manifest": None,
-        "solution": None,
-        "seconds": 0.0,
-        "iterations": None,
-        "cached": False,
-        "warm_start": None,
-        "wall_distance": None,
-        "route_agreement": None,
-    }
+    row = MemberResult(
+        index=index,
+        point_id=point_id,
+        assignments=assignments,
+        wave=wave,
+        status="not_dispatched",
+    ).row()
+    row["exit_class"] = None
+    return row
 
 
 def _exit_classes(rows: Sequence[Mapping[str, Canonicalisable]]) -> dict[str, int]:

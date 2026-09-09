@@ -233,16 +233,16 @@ def solver_group(
         The FR-24 record of where Newton started: whether a converged neighbour
         supplied the initial state or the run climbed the ladder cold, which
         artefact it came from, and which operator keys the two runs differed in
-        (the section 5.3.2 warm-start NOTE). ``None`` for a solve that was never
-        offered one -- a run outside a sweep -- which is a different fact from a
-        member that was offered one and could not use it.
+        (the section 5.3.2 warm-start NOTE). Every solve records one -- a run
+        outside a sweep records ``cold`` with its reason -- so ``None`` here
+        means *no solve ran at all*, which is what the group then says.
     """
     numerics = document.numerics
     return {
         "warm_start": (
             dict(warm_start)
             if warm_start is not None
-            else not_run("this solve was not offered a warm start")
+            else not_run("no solve ran, so Newton had no starting point to record")
         ),
         "model": document.physics.model,
         "physics_switches": document.physics.model_dump(mode="json"),

@@ -37,7 +37,7 @@ from pathlib import Path
 from typing import Any, Literal, TypeAlias, get_args, get_origin
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, model_validator
 from pydantic.fields import FieldInfo
 
 from nanopnp.charge.fields import FIELD_FORMAT
@@ -653,8 +653,6 @@ class FieldReference:
             too, but only per point and only after a plan has committed to
             thousands of them (FR-24).
         """
-        from pydantic import TypeAdapter
-
         try:
             return TypeAdapter(self.annotation).validate_python(value)
         except ValidationError as error:
@@ -733,6 +731,16 @@ def field_at(path: str) -> FieldReference:
         # the list before it reaches the block, and asking the block first would
         # report ``0`` as an unknown field of ``SpeciesSpec``.
         entry = _entry_annotation(annotation)
+        if entry is not None and entry[1] == "sequence" and not _is_index(component):
+            # A list is reached only by index. Without this the container branch
+            # below would swallow ``electrolyte.species.name`` as though ``name``
+            # were an index, hand back the *element* type, and leave the path to
+            # fail much later inside a substitution (FR-24, QR-12).
+            prefix = ".".join(walked) or "<document>"
+            raise UnknownCasePathError(
+                f"{path!r} is not a field of the case schema: {prefix} is a list, and "
+                f"{component!r} is not an index into it"
+            )
         if entry is not None:
             annotation, container = entry
         elif owner is not None:
@@ -758,6 +766,11 @@ def field_at(path: str) -> FieldReference:
         owner = _model_of(annotation)
 
     return FieldReference(path=path, annotation=annotation, container=container)
+
+
+def _is_index(component: str) -> bool:
+    """Return whether a path component reads as a list index."""
+    return component.removeprefix("-").isdigit()
 
 
 def _field_named(owner: type[BaseModel], component: str) -> FieldInfo | None:
@@ -990,9 +1003,25 @@ def dump_case(document: CaseDocument, path: str | Path) -> Path:
     """
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
-    payload = document.model_dump(by_alias=True, mode="json")
-    target.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+    target.write_text(dumps_case(document), encoding="utf-8")
     return target
+
+
+def dumps_case(document: CaseDocument) -> str:
+    """Return a validated case document as the YAML text a case file holds.
+
+    The half of :func:`dump_case` that does not touch the filesystem, because a
+    case assembled in memory still has to reach the FR-25 manifest as text: the
+    manifest embeds the case beside its hash and writes it back out as the run
+    directory's ``case.yaml``, which is what QR-08's reproduction re-runs from
+    (§5.3.3). A sweep member is exactly such a case (§5.3.4).
+
+    Returns
+    -------
+    str
+        YAML under the aliases a case file writes, in declaration order.
+    """
+    return str(yaml.safe_dump(document.model_dump(by_alias=True, mode="json"), sort_keys=False))
 
 
 # -- resolution ---------------------------------------------------------------

@@ -26,11 +26,12 @@ write_msh41(from_ngsolve(mesh), 'docs/sweeps/clya-reference.msh')
 "
 ```
 
-Then:
+Then, from the repository root — `inputs.mesh.path` in the base case resolves against the
+process working directory, because the sweep runner never changes directory:
 
 ```bash
 uv run nanopnp sweep plan docs/sweeps/phase1-reference.sweep.yaml
-uv run nanopnp sweep run <the plan path it printed> --workers 12 --csv
+uv run nanopnp sweep run <the plan path it printed> --csv
 ```
 
 `sweep plan` enumerates and validates all 3,675 points, resolves every one of them, and

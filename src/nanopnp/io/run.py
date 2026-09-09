@@ -550,7 +550,8 @@ def _manifest(walk: _Walk, *, case_text: str, case_path: Path | None) -> Manifes
     # rather than recomputed: the manifest's record of what the solve did must
     # come from the solve, or the two can disagree. ``wall_distance`` is absent
     # when no wall correction read the field (NUM-34); ``warm_start`` is absent
-    # when the solve was not offered a neighbour to start from (FR-24).
+    # only when no solve ran at all, because a solve that ran always records one
+    # -- ``cold`` with its reason when it was offered no neighbour (FR-24).
     wall_distance = _mapping(solver, "wall_distance")
     warm_start = _mapping(solver, "warm_start")
 

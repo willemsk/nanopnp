@@ -527,6 +527,17 @@ class WallDistanceGate:
 
     def check(self) -> None:
         """Raise if the field samples below the threshold anywhere in the fluid."""
+        self.checked()
+
+    def checked(self) -> WallDistanceMeasurement:
+        """Sample the field **once**, raise if it fails, and return what was measured.
+
+        One sampler pass, not two: the measurement reaches the artefact summary
+        and the FR-25 manifest whether or not it passed, and calling
+        :meth:`measure` again after :meth:`check` would evaluate the field over
+        every P2 node of the fluid a second time to learn what the first pass
+        already knows.
+        """
         found = self.measure()
         if found.minimum_nm < self.minimum_nm:
             raise GateViolationError(
@@ -551,6 +562,7 @@ class WallDistanceGate:
             found.location[1],
             found.samples,
         )
+        return found
 
 
 def excluded_volume_m3_per_mol(diameter_nm: float) -> float:
