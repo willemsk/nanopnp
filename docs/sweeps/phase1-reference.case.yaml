@@ -1,0 +1,56 @@
+# Base case of the Phase-1 reference sweep (SPECIFICATION.md section 8.3).
+#
+# The sweep beside this file varies `electrolyte.corrections`, `boundary_conditions.bias_V`
+# and `electrolyte.concentration_M`; every other field here is held fixed and is what the
+# 3,675 members have in common. The values that are *swept* are written here at the origin
+# of each axis, so that this document alone is a runnable case and `nanopnp run` on it
+# reproduces the root of the warm-start forest.
+#
+# The mesh is not checked in: it is 44,316 triangles and is reproducible from the
+# checked-in ClyA profile. See README.md beside this file for the one command that
+# writes it.
+schema: nanopnp/case/v1
+name: phase1-reference
+
+inputs:
+  mesh:
+    path: clya-reference.msh
+    format: msh41
+    groups: {default: interface}
+
+electrolyte:
+  species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]
+  concentration_M: 0.05          # the origin of the salt axis: the widest double layer
+  temperature_K: 298.15
+  parameters: willems2020_nacl
+  # The origin of the physics axis is classical PNP-NS: every correction selects the
+  # registered `none` model rather than taking a code branch (PHY-21, PHY-22), which is
+  # what makes the ablation a configuration sweep.
+  corrections:
+    diffusivity:  {model: none}
+    mobility:     {model: none}
+    viscosity:    {model: none}
+    permittivity: {model: none}
+    density:      {model: none}
+    steric:       {model: none}
+
+boundary_conditions:
+  bias_V: 0.005                  # the origin of the bias axis: the easy corner
+  ground: cis
+
+physics:
+  model: epnp-ns
+  solid_permittivities: {membrane: 3.2, protein: 20.0}
+
+numerics:
+  elements: {phi: P2, c: P2, u: P2, p: P1}
+  continuation: default_ladder
+  stabilisation: none
+  nonlinear: {rtol: 1.0e-6, max_iter: 100}
+  linear: {solver: umfpack}
+  wall_distance: {sources: wall, max_distance_nm: 3.0}
+
+# `rectification` is a two-point quantity (section 5.3.1 NOTE). The sweep strips it from
+# every member and the collector produces it from the matched opposite-bias pairs the
+# symmetric bias axis provides.
+outputs: [current, transport_numbers, eof_rate, rectification]

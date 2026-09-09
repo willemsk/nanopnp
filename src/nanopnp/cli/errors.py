@@ -85,6 +85,12 @@ EXIT_CODES: Final[dict[str, int]] = {
     # same reason as every other 3: the fix is an edit to the document that
     # named it, and a job array retrying the member fails identically (FR-24).
     "nanopnp.io.case:UnknownCasePathError": EXIT_CASE,
+    # A sweep that cannot be planned as written -- an axis naming a path the case
+    # schema does not have, a value of the wrong type, a point the schema refuses,
+    # or `rectification` asked for with no opposite-bias pair to produce it from.
+    # 3, because a plan is refused by an edit to the sweep document or to the base
+    # case; retrying the plan fails identically (FR-24).
+    "nanopnp.sweep.plan:SweepPlanError": EXIT_CASE,
     # A file the case file or the command line named is not there. Classified
     # rather than left to fall through to 1 because "unexpected" is what a job
     # array retries, and this is the other kind: the path is wrong, and it will
@@ -117,6 +123,13 @@ EXIT_CODES: Final[dict[str, int]] = {
     "nanopnp.solve.state:WarmStartError": EXIT_GATE,
     "nanopnp.io.store:StoreError": EXIT_GATE,
     "nanopnp.io.run:MissingUpstreamError": EXIT_GATE,
+    # A dataset that cannot be built from the members that ran -- an unreadable
+    # member record, or a pair whose recorded biases are not the opposite ones it
+    # was paired on. A gate in the QR-12 sense: rather than report a table it
+    # cannot build honestly, the collector stops and names what is wrong. Not a 3,
+    # because the members have already run and the fix is to re-run the missing
+    # ones rather than to edit a document.
+    "nanopnp.sweep.collect:SweepCollectionError": EXIT_GATE,
     # The reproduction refusals are gates in exactly the QR-12 sense: rather
     # than report a comparison it cannot make honestly, the check stops and
     # names what is wrong (an input that moved, a solve served from the store).

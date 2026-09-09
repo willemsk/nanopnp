@@ -1,11 +1,11 @@
 # Phase 1 (Solver core): the production solver on an externally supplied mesh
 
-**Status: WP7, WP8, WP9 and WP10 delivered; WP11–WP12 planned.** Written 2 September 2026, after Phase 0
+**Status: WP7, WP8, WP9, WP10 and WP11 delivered; WP12 planned.** Written 2 September 2026, after Phase 0
 (WP1–WP6) and its consolidation (WP-A1, WP-B1, WP-B2, WP-C1). It inherited a verified physics core
 and a bare pipeline: tiers 1 and 2 green, `mypy --strict` and `ruff` clean, and `io/`, `sweep/`,
 `charge/`, `structure/`, `density/`, `symmetry/`, `gui/` still empty reserved slots. `io/` is filled
-and `mesh/` is complete for ingestion as of WP8; `sweep/`, `charge/`, `structure/`, `density/`,
-`symmetry/` and `gui/` are still empty.
+and `mesh/` is complete for ingestion as of WP8, `sweep/` as of WP11; `charge/`, `structure/`,
+`density/`, `symmetry/` and `gui/` are still empty.
 
 This is the delivery plan for Phase 1 of `SPECIFICATION.md` §8.1 — release v0.5. The specification
 remains normative: where this file and the specification disagree, the specification governs and
@@ -508,15 +508,83 @@ move the numbers above, the corner being one quadrature neighbourhood, but it is
 correction and belongs to whichever package owns the distance field's boundary behaviour
 (`.knowledge/06-numerics-fem.md` §7.1.1).
 
-### WP11 — Sweep runner
+### WP11 — Sweep runner — **delivered**
 
-`sweep/plan.py`, `sweep/run.py`, `sweep/collect.py`, CLI subcommand `sweep`.
+`sweep/document.py`, `sweep/plan.py`, `sweep/run.py`, `sweep/collect.py`, with changes to
+`io/case.py`, `io/artefact.py`, `io/store.py`, `io/manifest.py`, `io/run.py`, `solve/state.py`,
+`solve/stage.py`, `solve/gates.py`, `materials/models.py`, `materials/forms.py`, `cli/__init__.py`
+and `cli/errors.py`; the plan's nine spec amendments (A–I), all written with the plan.
 
-Substitution on dotted schema paths; the index file and the single-point entry point a job array
-calls; the warm-start ordering and its recorded fallback; collection into one dataset with per-point
-provenance; a `slow` throughput measurement against QR-06's linear-scaling claim.
+Delivered: a sweep is specified by its **own** document, `nanopnp/sweep/v1`, naming a base case and
+axes of *assignments* — dotted case paths to values — that combine as a Cartesian product. Nothing
+was added to the frozen `nanopnp/case/v1`. `io/case.py` gained the walker FR-24 needs and did not
+have: `field_at(path)` walks `CaseDocument.model_fields` through nested models, mappings and
+sequences and returns the declared type; `substitute(document, assignments)` dumps by alias, sets,
+and **re-validates the whole document**, so a typo hits `extra="forbid"` and the existing "did you
+mean" diagnostic for free; `value_at` is the same walk over an instance, and
+`io/defaults.value_at` is now a four-line translation over it rather than a second implementation.
 
-Discharges **FR-24**, measures **QR-06**.
+FR-24's contradiction — *independent jobs* and *warm-started from a neighbour* — is reconciled by
+the forest of §5.3.4: each axis declares an origin, a point's parent is that point with the **last**
+index differing from its origin moved one step towards it, and the plan is ordered by depth so a
+wave is a contiguous index range. Every point is substituted, validated and `resolve()`d at plan
+time, and NUM-34 runs once per distinct mesh there, so a 3,675-point plan whose two-thousandth point
+is inadmissible fails in seconds. A member resolves its parent's stage-10 artefact from the shared
+store by *computing* its key, and falls back to the full NUM-18 ladder with the reason recorded when
+the store has not got it — which is what makes a member runnable alone, in any order, on a machine
+that has seen nothing else. `solve/state.py` gained `SPACE_KEYS`/`OPERATOR_KEYS`, the §5.3.2
+partition of the stage-10 descriptor, and `load_initial`, which gates the space keys exactly as
+`restore` does, permits and records every operator key that differed, reads no stored distance
+vector and returns no residual. `SolveStage` takes the neighbour's artefact and solves the target
+rung alone; **`key(inputs)` is unchanged**, so warm and cold key one artefact.
+
+Collection produces one dataset row per point — status, §3.1 exit class, the diagnostic verbatim,
+the quantities or `null`, the warm-start record, the NUM-34 minimum and the NUM-26 route agreement —
+plus `rectification` from matched exactly-opposite bias pairs, the one derived quantity a single
+operating point cannot give. Three sub-subcommands (`plan`, `run`, `collect`), none of whose flags
+changes a case-file field; `--index` exits with the member's own class, `--workers` exits 0 with a
+failed member because non-convergence at a hard corner is a *result*. Workers are `spawn`ed with the
+three BLAS thread counts pinned to 1 before the first deferred import, and one pool is held open for
+the whole plan. Discharges **FR-24**, measures **QR-06**, and adds **VER-36**, **VER-37**,
+**VER-38**, **VER-39** and **VER-40**.
+
+Beyond the plan: the WP10 defect below is **closed**, and closing it took two changes and not one.
+`FittedCorrection.evaluate` now clamps `d̄` at zero before either wall form reads it (PHY-02,
+amendment H) — the ion form's root is at `d̄ = −P₂`, so a negative sample reversed the sign of `D_i`
+and `μ_i` rather than attenuating them — and `WallDistanceGate` refuses a field sampling below
+`−1 × 10⁻³` nm anywhere a wall correction is active (NUM-34, amendment I). The measurement that
+justifies needing *both* is in `.knowledge/06` §7.1.1: with the clamp alone, a `wall_h` 0.5 nm mesh
+whose distance field reaches −1.2 nm **passes NUM-26 forty times inside tolerance** and returns a
+current 13 % low, where unclamped it disagreed between the routes by 9.6 × 10⁻⁵ and at 1.0 nm by
+40 %. The clamp turns loudly wrong into quietly wrong; the gate turns it into refused.
+`MathOps.clip` gained a one-sided form for it, `run_document` an `arguments` parameter so an
+*artefact* can reach a stage constructor without entering a digest, and `cli/errors.py` two more
+classifications than the plan foresaw (`UnknownCasePathError` → 3, `WarmStartError` → 4).
+
+Measurements, stabilisation `none`, on `CylindricalPoreGeometry(2, 6, 10)` at `maxh` 4 nm /
+`wall_h` 0.35 nm (392 elements — the coarsest NUM-34 admits), 0.1 M NaCl, every correction active:
+
+| Measurement | Value |
+|---|---|
+| Warm against cold, worst relative over every scalar | **3.367 × 10⁻⁹** (against `1 × 10⁻⁶`) |
+| Warm pass against cold pass, 4 points | **77 Newton iterations against 216 — 2.81×** (10.5 s against 22.3 s) |
+| Operator keys differing across a bias step / a salt step | `solve_hash` / `solve_hash`, `model.scales` |
+| Parallel efficiency, 25 points on 4 cores, N = 1, 2, 4 | **1.00, 0.76, 0.50** (33.5 → 22.1 → 16.8 s) |
+| Throughput over uncached members, N = 1, 2, 4 | 2 686 → 2 034 → 1 337 points per worker-hour |
+| §8.3 reference grid, planned | **3,675 points, 42 waves**, mean width 87.5, peak 174 |
+| `min d̄` at `wall_h` 0.4 nm / 0.35 nm | −1.08 nm / **+9.5 × 10⁻⁶ nm** — a regime change, not a gradient |
+
+`docs/sweeps/phase1-reference.sweep.yaml` and its base case are checked in, so the deferred
+twelve-core run of §8.3 is two commands against a commit; Tier 1 asserts the half of it that can be
+verified without spending the day.
+
+Inherited by WP12: **NUM-26's relative route check is inapplicable at exactly zero bias, and
+aborts.** The current is zero, both routes return round-off — `I_ψ = 2.288 × 10⁻²⁷` A against
+`I_reaction = 4.606 × 10⁻²⁵` A — and the relative difference is 0.995 on a converged solve at the
+one operating point whose answer is known exactly. The reference sweep's bias axis is rooted at
++5 mV rather than 0 V to keep its 3,675 points runnable; making the check *inapplicable* rather
+than failing means deciding what "no current" is, which is a scale the extraction does not carry.
+Recorded in `.knowledge/06` §8.5, deliberately not fixed here.
 
 ### WP12 — Reference-matching stabilised mode
 

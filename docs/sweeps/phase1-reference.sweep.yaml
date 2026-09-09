@@ -1,0 +1,119 @@
+# The Phase-1 reference sweep: 5 physics cases x 35 bias values x 21 salt concentrations
+# = 3,675 solves, the throughput datum of SPECIFICATION.md section 8.3 (QR-06).
+#
+# Checked in so that the twelve-core run at the end of Phase 1 is two commands against a
+# document under version control, and the number it produces is attributable to a commit:
+#
+#     nanopnp sweep plan docs/sweeps/phase1-reference.sweep.yaml
+#     nanopnp sweep run <the plan it names> --workers 12 --csv
+#
+# A reference sweep reconstructed from prose four weeks later would measure a different
+# grid and nobody would know. Tier 1 checks the cheap half of this document's correctness
+# -- it parses, its base case resolves, and its plan enumerates 3,675 points in 42 waves --
+# which is everything about the deferred run that can be verified without spending the day.
+schema: nanopnp/sweep/v1
+name: phase1-reference
+base: phase1-reference.case.yaml
+workers: 12
+
+axes:
+  # --- the ablation ladder of PHY-21/PHY-22 --------------------------------------------
+  #
+  # Five configurations of one model, not five models: `physics.model` stays `epnp-ns`
+  # throughout and only the correction switches move, so `model.model` and the declared
+  # field set are identical across the axis and every edge of it is a warm start the
+  # section 5.3.2 partition permits. Rooted at the classical configuration, which is the
+  # easiest to converge and the one NUM-18 climbs to first.
+  - name: physics
+    origin: 0
+    assignments:
+      # 0 -- classical PNP-NS: every correction off (PHY-21).
+      - electrolyte.corrections.diffusivity.model: none
+        electrolyte.corrections.mobility.model: none
+        electrolyte.corrections.viscosity.model: none
+        electrolyte.corrections.permittivity.model: none
+        electrolyte.corrections.density.model: none
+        electrolyte.corrections.steric.model: none
+      # 1 -- the concentration corrections alone: D(<c>), mu(<c>), eta(<c>), eps(<c>), rho(<c>).
+      - electrolyte.corrections.diffusivity.model: willems2020_nacl
+        electrolyte.corrections.diffusivity.wall: false
+        electrolyte.corrections.mobility.model: willems2020_nacl
+        electrolyte.corrections.mobility.wall: false
+        electrolyte.corrections.viscosity.model: willems2020_nacl
+        electrolyte.corrections.viscosity.wall: false
+        electrolyte.corrections.permittivity.model: willems2020_nacl
+        electrolyte.corrections.density.model: willems2020_nacl
+        electrolyte.corrections.steric.model: none
+      # 2 -- the wall functions added (PHY-11). This is where NUM-34 starts to bite.
+      - electrolyte.corrections.diffusivity.model: willems2020_nacl
+        electrolyte.corrections.diffusivity.wall: true
+        electrolyte.corrections.mobility.model: willems2020_nacl
+        electrolyte.corrections.mobility.wall: true
+        electrolyte.corrections.viscosity.model: willems2020_nacl
+        electrolyte.corrections.viscosity.wall: true
+        electrolyte.corrections.permittivity.model: willems2020_nacl
+        electrolyte.corrections.density.model: willems2020_nacl
+        electrolyte.corrections.steric.model: none
+      # 3 -- the validated ePNP-NS model: the steric flux beta_i added (PHY-05, PHY-22).
+      - electrolyte.corrections.diffusivity.model: willems2020_nacl
+        electrolyte.corrections.diffusivity.wall: true
+        electrolyte.corrections.mobility.model: willems2020_nacl
+        electrolyte.corrections.mobility.wall: true
+        electrolyte.corrections.viscosity.model: willems2020_nacl
+        electrolyte.corrections.viscosity.wall: true
+        electrolyte.corrections.permittivity.model: willems2020_nacl
+        electrolyte.corrections.density.model: willems2020_nacl
+        electrolyte.corrections.steric.model: borukhov
+      # 4 -- the validated model with the concentration part of D and mu switched out,
+      # which isolates the wall functions' own contribution against case 2 (PHY-21's
+      # differential testing).
+      - electrolyte.corrections.diffusivity.model: willems2020_nacl
+        electrolyte.corrections.diffusivity.wall: true
+        electrolyte.corrections.diffusivity.concentration: false
+        electrolyte.corrections.mobility.model: willems2020_nacl
+        electrolyte.corrections.mobility.wall: true
+        electrolyte.corrections.mobility.concentration: false
+        electrolyte.corrections.viscosity.model: willems2020_nacl
+        electrolyte.corrections.viscosity.wall: true
+        electrolyte.corrections.permittivity.model: willems2020_nacl
+        electrolyte.corrections.density.model: willems2020_nacl
+        electrolyte.corrections.steric.model: borukhov
+
+  # --- the bias axis, rooted at 0 mV ---------------------------------------------------
+  #
+  # 35 values over the FR-17 envelope: 10 mV steps to +-150 mV, matching NUM-18 stage 5's
+  # "steps of about 10 mV near onset", then 175 and 200 mV where the ramp is allowed to
+  # coarsen. `origin: 17` is +5 mV. Rooting at the first declared value instead would climb
+  # the ladder cold at -200 mV and then walk 400 mV in one direction; from the easy corner
+  # the forest walks outward 200 mV each way, which is the behaviour the envelope test
+  # already has.
+  #
+  # The 34 values around it are 17 exactly-opposite pairs, which is what the collector
+  # produces the rectification from; +5 mV is the one unpaired value and contributes no
+  # ratio. It is there instead of 0 V because at exactly zero bias the current is zero and
+  # both extraction routes return round-off, so NUM-26's *relative* agreement divides by a
+  # vanishing scale and aborts the member on a difference of order 1. The route check is
+  # inapplicable at equilibrium rather than failing there; 5 mV is the smallest bias of the
+  # envelope at which it means something, and it is still the easiest corner of the grid.
+  - name: bias
+    path: boundary_conditions.bias_V
+    origin: 17
+    values: [-0.2, -0.175, -0.15, -0.14, -0.13, -0.12, -0.11, -0.1, -0.09, -0.08,
+             -0.07, -0.06, -0.05, -0.04, -0.03, -0.02, -0.01, 0.005, 0.01, 0.02,
+             0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1, 0.11, 0.12,
+             0.13, 0.14, 0.15, 0.175, 0.2]
+
+  # --- the salt axis, rooted at the low end --------------------------------------------
+  #
+  # 21 values, geometric from 0.05 M to 3 M -- NUM-18 stage 9's own range, at a ratio of
+  # 1.2272 per step. Geometric rather than linear because the Debye length goes as
+  # 1/sqrt(c), so a linear grid would be a dozen indistinguishable points at the top and a
+  # cliff at the bottom. Rooted at 0.05 M: the double layer is widest and the packing
+  # fraction smallest there, so the ladder is built at the easy end and swept upwards,
+  # meeting the hard configuration last and warm.
+  - name: salt
+    path: electrolyte.concentration_M
+    origin: 0
+    values: [0.05, 0.06136, 0.0753, 0.0924, 0.1134, 0.1392, 0.1708, 0.2096, 0.2572,
+             0.3156, 0.3873, 0.4753, 0.5833, 0.7158, 0.8784, 1.078, 1.323, 1.623,
+             1.992, 2.445, 3.0]
