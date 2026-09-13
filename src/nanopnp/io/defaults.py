@@ -25,7 +25,8 @@ from dataclasses import dataclass
 from typing import Any, TypeAlias
 
 from nanopnp.io.artefact import CASE_SCHEMA
-from nanopnp.io.case import CaseDocument
+from nanopnp.io.case import CaseDocument, UnknownCasePathError
+from nanopnp.io.case import value_at as case_value_at
 
 SwitchValue: TypeAlias = Any
 """The value of one switch: a ``bool``, a correction model name, a solver
@@ -238,23 +239,25 @@ class UnknownSwitchPathError(KeyError):
 def value_at(document: CaseDocument, path: str) -> SwitchValue:
     """Return the value a dotted path names in a case document.
 
+    A thin translation over :func:`nanopnp.io.case.value_at`, which walks the
+    *schema* first and only then the document. One walker rather than two: the
+    enumeration here and the sweep axes of FR-24 name paths in the same
+    vocabulary, and two implementations of "what does this path mean" could
+    disagree about a field this module then reported as never deviating.
+
     Raises
     ------
     UnknownSwitchPathError
-        If any component is not a field of the block it is read from. A path that
-        silently resolved to ``None`` would report the switch as never deviating,
-        which is the one failure this whole module exists to prevent.
+        If any component is not a field of the block it is read from. Kept as
+        this module's own exception rather than propagating the case-level one:
+        the switch paths are a frozen enumeration checked by VER-24 in both
+        directions, so an unknown one here means *this build* is inconsistent,
+        which is why :data:`nanopnp.cli.errors.EXCLUDED` leaves it unclassified.
     """
-    value: SwitchValue = document
-    walked: list[str] = []
-    for part in path.split("."):
-        walked.append(part)
-        if not hasattr(value, part):
-            raise UnknownSwitchPathError(
-                f"{path!r} is not a field of the case document: {'.'.join(walked)!r} does not exist"
-            )
-        value = getattr(value, part)
-    return value
+    try:
+        return case_value_at(document, path)
+    except UnknownCasePathError as error:
+        raise UnknownSwitchPathError(str(error)) from None
 
 
 def deviations(document: CaseDocument) -> tuple[Deviation, ...]:

@@ -27,6 +27,7 @@ from __future__ import annotations
 import logging
 import tempfile
 import time
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -36,6 +37,7 @@ from nanopnp.core.stages import (
     CancelToken,
     Progress,
     Stage,
+    StageOption,
     check_cancelled,
     create,
     describe,
@@ -47,8 +49,6 @@ from nanopnp.io.manifest import Manifest, build
 from nanopnp.io.store import Store
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
-    from collections.abc import Mapping
-
     from nanopnp.io.case import CaseDocument, ResolvedCase
     from nanopnp.io.defaults import ContributedDeviation
 
@@ -311,6 +311,7 @@ class _Walk:
     resolved: ResolvedCase
     store: Store
     options: Mapping[str, Mapping[str, Canonicalisable]]
+    arguments: Mapping[str, Mapping[str, StageOption]]
     workspace: Path | None
     only: bool
     artefacts: dict[str, Artefact] = field(default_factory=dict)
@@ -339,9 +340,18 @@ class _Walk:
         store the first time a file-writing stage asks for it — never the
         process-default :func:`~nanopnp.core.paths.store_root` the stages
         themselves fall back to (section 5.3.2, the workspace-locality NOTE).
+
+        ``arguments`` carries anything else a caller needs to construct a stage
+        with — today only the FR-24 warm start, which is an *artefact* and so
+        cannot ride on :attr:`~nanopnp.io.artefact.StageInputs.options`, whose
+        values are canonicalisable by contract because they reach a digest. A
+        constructor argument reaches none, which is exactly right for a warm
+        start: it changes where Newton starts and not what it converges to, and
+        §5.3.2 requires it be recorded in provenance and kept out of the key.
         """
+        extra = dict(self.arguments.get(name, {}))
         if name not in WORKSPACE_STAGES:
-            return create(name)
+            return create(name, **extra)
         root = self.workspace
         if root is None:
             if self.scratch is None:
@@ -349,7 +359,7 @@ class _Walk:
             root = self.scratch
         directory = root / name
         directory.mkdir(parents=True, exist_ok=True)
-        return create(name, workspace=directory)
+        return create(name, workspace=directory, **extra)
 
 
 def _selected(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]:
@@ -502,6 +512,21 @@ def _input_files(resolved: ResolvedCase, case_path: Path | None) -> dict[str, Pa
     return files
 
 
+def _mapping(
+    summary: Mapping[str, Canonicalisable] | None, key: str
+) -> Mapping[str, Canonicalisable] | None:
+    """Return a mapping-valued entry of a stage summary, or ``None`` if it is absent.
+
+    Checked for shape rather than assumed: the summary reaches here through the
+    artefact, which FR-27 permits to have been edited by hand, and a manifest
+    group built from a string would fail far from the edit that caused it.
+    """
+    if summary is None:
+        return None
+    found = summary.get(key)
+    return found if isinstance(found, Mapping) else None
+
+
 def _manifest(walk: _Walk, *, case_text: str, case_path: Path | None) -> Manifest:
     """Assemble the FR-25 manifest from the artefacts the walk produced.
 
@@ -521,6 +546,14 @@ def _manifest(walk: _Walk, *, case_text: str, case_path: Path | None) -> Manifes
     solver = dict(solve.summary) if solve is not None else None
     stabilisation = str(solver["stabilisation"]) if solver and "stabilisation" in solver else None
     clamps = qoi.summary.get("clamp_activations") if qoi is not None else None
+    # Both are written by stage 10 into its summary and read back out here
+    # rather than recomputed: the manifest's record of what the solve did must
+    # come from the solve, or the two can disagree. ``wall_distance`` is absent
+    # when no wall correction read the field (NUM-34); ``warm_start`` is absent
+    # only when no solve ran at all, because a solve that ran always records one
+    # -- ``cold`` with its reason when it was offered no neighbour (FR-24).
+    wall_distance = _mapping(solver, "wall_distance")
+    warm_start = _mapping(solver, "warm_start")
 
     return build(
         walk.document,
@@ -534,6 +567,8 @@ def _manifest(walk: _Walk, *, case_text: str, case_path: Path | None) -> Manifes
         clamp_activations=clamps if isinstance(clamps, int) else None,
         ladder=solver,
         stabilisation=stabilisation,
+        warm_start=warm_start,
+        wall_distance=wall_distance,
         contributed_deviations=tuple(walk.contributed),
     )
 
@@ -547,6 +582,7 @@ def run_document(
     upto: str | None = None,
     only: bool = False,
     options: Mapping[str, Mapping[str, Canonicalisable]] | None = None,
+    arguments: Mapping[str, Mapping[str, StageOption]] | None = None,
     workspace: Path | None = None,
     write: bool = True,
     progress: Progress | None = None,
@@ -577,6 +613,9 @@ def run_document(
     options
         Per-stage options, by stage name, passed through on
         :attr:`~nanopnp.io.artefact.StageInputs.options`.
+    arguments
+        Per-stage constructor arguments, by stage name; see
+        :meth:`_Walk.construct`. Nothing here enters an artefact key.
     workspace
         Directory the file-writing stages use, one subdirectory each. When this
         is ``None`` the run takes a fresh one under ``store``, so that a caller
@@ -610,6 +649,7 @@ def run_document(
         resolved=resolve(document),
         store=target,
         options=dict(options or {}),
+        arguments=dict(arguments or {}),
         workspace=Path(workspace) if workspace is not None else None,
         only=only,
     )
@@ -682,6 +722,7 @@ def run_case(
     upto: str | None = None,
     only: bool = False,
     options: Mapping[str, Mapping[str, Canonicalisable]] | None = None,
+    arguments: Mapping[str, Mapping[str, StageOption]] | None = None,
     workspace: Path | None = None,
     write: bool = True,
     progress: Progress | None = None,
@@ -698,7 +739,7 @@ def run_case(
     ----------
     path
         The case file.
-    store, upto, only, options, workspace, write, progress, cancel
+    store, upto, only, options, arguments, workspace, write, progress, cancel
         As :func:`run_document` documents them.
     """
     source = Path(path)
@@ -710,6 +751,7 @@ def run_case(
         upto=upto,
         only=only,
         options=options,
+        arguments=arguments,
         workspace=workspace,
         write=write,
         progress=progress,

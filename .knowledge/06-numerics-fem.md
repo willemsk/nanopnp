@@ -440,10 +440,58 @@ Measured on the same pore, sampling the fluid domain:
 The undershoot is a genuine property of the discrete field and not an export artefact: the same
 negative values reach the IF-07 export and the correction chain alike. It vanishes by `maxh` 0.5 nm
 on this toy pore, and WP8's ClyA reference mesh (44 316 triangles) is far finer than that
-everywhere, so production runs are expected clean — but nothing currently *asserts* it. Clamping `d`
-at zero inside the correction, or gating on `min d ≥ −0.01 nm`, would each change every number a
-coarse-mesh test reports and needs a specification amendment; recorded here rather than fixed
-under WP10.
+everywhere, so production runs are expected clean.
+
+**Closed out under WP11: PHY-02's clamp and NUM-34's gate, and neither alone. [tested]**
+`FittedCorrection.evaluate` now clips `d̄` at zero before either wall form reads it, and
+`solve/stage.py` gates `min d̄ ≥ −1 × 10⁻³ nm` over the fluid once per solve wherever a wall
+correction is active. The arithmetic behind the threshold is in `SPECIFICATION.md` NUM-34.
+
+**The transition is a regime change, not a gradient, and `wall_h` alone decides it. [tested]**
+Measured on the same toy pore, sampling the fluid at the P2 nodal set the NUM-17 gates walk:
+
+| `maxh` / `wall_h` (nm) | elements | min `d̄` (nm) | fraction of samples < 0 |
+|---|---|---|---|
+| 4.0 / 1.0   | 124 | −0.9401 | 9.75 % |
+| 6.0 / 0.6   | 199 | −1.4557 | 11.94 % |
+| 5.0 / 0.4   | 354 | −1.0800 | 0.31 % |
+| 2.0 / 0.5   | 257 | −1.2377 | 2.14 % |
+| 1.0 / 0.25  | 793 | −0.9749 | 0.31 % |
+| **4.0 / 0.35** | **392** | **+9.48 × 10⁻⁶** | **0** |
+| 4.0 / 0.3   | 461 | +7.80 × 10⁻⁶ | 0 |
+| 4.0 / 0.25  | 529 | +5.96 × 10⁻⁶ | 0 |
+| 2.0 / 0.15  | 956 | +4.00 × 10⁻⁶ | 0 |
+| 6.0 / 0.09  | 1 539 | +2.47 × 10⁻⁶ | 0 |
+
+`maxh` barely moves the answer — 4.0/0.35 gives 392 elements against 2.0/0.35's 419, and both give
+`+9.5 × 10⁻⁶` — while `wall_h` moves it from −1.08 nm to +9.5 × 10⁻⁶ nm across a single step from
+0.4 to 0.35. Two consequences: the coarsest admissible wall spacing on this geometry is
+**0.35 nm**, and a test that wants a cheap mesh with the corrections on should coarsen `maxh` and
+leave `wall_h` alone.
+
+Note also that the residual `Set` leaves behind here is a few times `10⁻⁶` nm and *positive*, two
+orders inside NUM-34's threshold — the "few times `10⁻⁴` with a platform-dependent sign" of §8.1
+below is the unzeroed-projection case, which `mesh/distance.py` does not produce.
+
+**The clamp alone would have been worse than nothing, and this is the measurement that says so.
+[tested]** With the driver clamped, the toy pore at 0.1 M and +20 mV gives:
+
+| `maxh` / `wall_h` (nm) | min `d̄` (nm) | current (A) | NUM-26 route difference |
+|---|---|---|---|
+| 4.0 / 1.0  | −0.94 | 1.539 × 10⁻¹¹ | 5.5 × 10⁻² |
+| 4.0 / 0.5  | −1.2  | 2.303 × 10⁻¹¹ | **2.6 × 10⁻⁵** |
+| 2.0 / 0.5  | −1.24 | 2.204 × 10⁻¹¹ | **3.0 × 10⁻⁵** |
+| 4.0 / 0.35 | +9.5 × 10⁻⁶ | 2.6468 × 10⁻¹¹ | 5.9 × 10⁻⁶ |
+| 2.0 / 0.35 | +9.5 × 10⁻⁶ | 2.6514 × 10⁻¹¹ | 6.0 × 10⁻⁶ |
+| 2.0 / 0.25 | +6.0 × 10⁻⁶ | 2.6538 × 10⁻¹¹ | 1.6 × 10⁻⁶ |
+
+The `wall_h` 0.5 nm rows are the ones that matter. They **pass NUM-26 comfortably** — forty times
+inside the tolerance — and their current is 13 to 17 % below the resolved value. Removing the sign
+inversion removed the only signal an unresolved wall had: unclamped, the 124-element row disagreed
+between the routes by 40 % (§7.1.1's original table) and the 257-element row by 9.6 × 10⁻⁵. So the
+clamp turns "loudly wrong" into "quietly wrong" wherever the field is genuinely negative, and
+NUM-34 is what turns it back into "refused". `tests/tier2/test_current_routes.py` asserts exactly
+this pair of facts about the 0.5 nm mesh.
 
 Two consequences worth keeping:
 
@@ -829,6 +877,73 @@ gradient- or cross-section-based extraction.
   benchmark by a factor of thirty, from a 6 × 10⁻⁴ plateau to 2.0 × 10⁻⁵ falling monotonically.
   **The rule: √t is set by the feature the field has to resolve, and there is no single default that
   serves both a sub-nanometre wall correction and a several-nanometre force band.** **[tested]**
+
+### 8.4 Sweeps: the warm start, the forest, and what parallel scaling measures
+
+Measured under WP11 on the toy pore (`a` = 2 nm, `L` = 6 nm, reservoir 10 nm) at `maxh` 4.0 /
+`wall_h` 0.35 nm — 392 elements, the coarsest mesh NUM-34 admits with the wall corrections on —
+0.1 M NaCl, `willems2020_nacl` with every correction active, `default_ladder`, stabilisation
+`none`.
+
+- **A warm start does not move the answer, and the figure is 3.4 × 10⁻⁹. [tested]** A 2 × 2 grid
+  (two concentrations × ±50 mV) solved twice: once warm through the forest, once cold into a store
+  that had never seen a neighbour. Worst relative difference over every scalar every member
+  reported: `3.367 × 10⁻⁹`, on `conductance_S`, against the `1 × 10⁻⁶` nonlinear relative tolerance
+  the comparison is stated at. On the deepest point the current agreed to `9.8 × 10⁻¹⁰`
+  (`1.825414947 × 10⁻¹⁰` A warm against `1.825414949 × 10⁻¹⁰` A cold). This is the premise
+  §5.3.2 relies on when it keeps the warm-start source out of the stage-10 key, and it is measured
+  rather than assumed.
+- **The warm start is worth 2.81× in Newton iterations on four points. [tested]** 77 iterations
+  warm against 216 cold, with 3 of 4 members warm-started; the root is cold in both passes by
+  construction. A warm member solves the target rung alone — NUM-18 stage 9 generalised to the
+  other axes — where a cold one climbs twelve rungs.
+- **Measure that saving in iterations, not in seconds.** The wall clock said 10.5 s against 22.3 s
+  on an idle machine and **34.3 s against 26.7 s** — the two passes swapped — when the same code
+  ran alongside the rest of the test suite. A wall-time comparison between two passes of the same
+  work is a statement about what else the machine is doing; the iteration counts are a property of
+  the solves. `MemberResult` carries both, and only the second is ever asserted on. **[tested]**
+- **What differs across an edge, by axis. [tested]** A bias step differs from its parent in
+  `solve_hash` alone; a salt step differs in `solve_hash` **and** `model.scales`, the NUM-09 scale
+  set being a function of `concentration_M`. Both are operator keys the §5.3.2 partition permits;
+  a gate on either would refuse the axis outright.
+- **The §8.3 reference grid is 42 waves of mean width 87.5. [tested]** 5 physics cases × 35 biases ×
+  21 concentrations = 3,675 points, one root, deepest point at depth 41, peak wave width 174. The
+  dependency structure is therefore not what limits QR-06 on twelve cores; the serial tail is the
+  last few waves and it is short.
+- **Parallel efficiency on four cores: 1.00, 0.76, 0.50 at N = 1, 2, 4. [tested]** 25 points in
+  seven waves of widths 1, 3, 5, 5, 5, 4, 2; fresh store each run, every member a miss, thread
+  counts pinned to 1 per worker. Wall clock 33.5 → 22.1 → 16.8 s, so 2.0× at four workers on a
+  four-core machine that is also running the parent process. Throughput over uncached members:
+  2 686 → 2 034 → 1 337 points per worker-hour.
+- **One pool per plan, not one per wave, and it is worth a factor of the same size. [tested]**
+  `spawn` re-imports the package in each worker at about a second apiece. Creating the pool per
+  wave put that cost into the measurement: on a nine-point grid in five waves it took
+  `efficiency(4)` from 0.75 to **0.29**. The pool is now held open across the whole plan.
+- **A single-axis grid caps the curve at N = 2 whatever the runner does.** A one-axis sweep rooted
+  in its middle has waves two points wide, so a scaling measurement on one reports the *grid*. Two
+  axes are the minimum for a curve that says anything about the dispatch.
+
+### 8.5 Measured: NUM-26's relative route check is inapplicable at exactly zero bias **[tested]**
+
+At `V = 0` the current is zero, and both extraction routes return round-off:
+`I_ψ = 2.288 × 10⁻²⁷` A against `I_reaction = 4.606 × 10⁻²⁵` A on the toy pore above. The relative
+difference is then `0.995` and the NUM-26 gate aborts the run — on a solve that converged, on a
+mesh that is admissible, at the one operating point where the answer is known exactly.
+
+`RouteAgreement.relative_difference` divides by `max(|I_ψ|, |I_reaction|)` and returns `0.0` only
+when *both* are exactly zero, which round-off never is. So the check is not wrong about these two
+numbers; it is being asked a question — "do these two currents agree to one part in a thousand" —
+that has no answer when there is no current.
+
+**Consequence for a sweep:** a bias axis containing `0.0` aborts one member per remaining axis
+combination, with exit class 4 and a diagnostic about the extraction. The checked-in
+`docs/sweeps/phase1-reference.sweep.yaml` therefore roots its bias axis at **+5 mV** rather than at
+0 V and carries 17 exactly-opposite pairs plus that one unpaired value: 35 values, 3,675 points,
+1,785 rectification pairs, 42 waves — the §8.3 grid, with the degenerate point moved off it.
+
+Not fixed here. Making the check inapplicable rather than failing at zero current means deciding
+what "no current" is, which is a scale the extraction does not currently carry, and NUM-26 is a
+Phase-1 headline gate. Recorded for whoever owns it next.
 
 ---
 

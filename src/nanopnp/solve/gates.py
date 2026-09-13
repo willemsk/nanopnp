@@ -95,6 +95,12 @@ class GateViolationError(RuntimeError):
         Where it occurred, in mesh units, or ``None`` for a global quantity.
     coordinates
         Names of the two coordinates, for the message.
+    detail
+        One further clause appended to the message, for a gate whose diagnostic
+        needs more than one number to be actionable -- the NUM-34 gate reports
+        the *extent* of the violation as well as its worst point, because a
+        field one node below the threshold and a field negative over 8 % of the
+        fluid ask for different responses.
     """
 
     def __init__(
@@ -104,11 +110,13 @@ class GateViolationError(RuntimeError):
         value: float,
         location: tuple[float, float] | None = None,
         coordinates: tuple[str, str] = ("r", "z"),
+        detail: str = "",
     ) -> None:
         self.gate = gate
         self.quantity = quantity
         self.value = value
         self.location = location
+        self.detail = detail
         where = (
             ""
             if location is None
@@ -117,7 +125,8 @@ class GateViolationError(RuntimeError):
                 f"{coordinates[1]} = {location[1]:.6g} nm"
             )
         )
-        super().__init__(f"{gate} gate failed: {quantity} = {value:.6g}{where}")
+        clause = f"; {detail}" if detail else ""
+        super().__init__(f"{gate} gate failed: {quantity} = {value:.6g}{where}{clause}")
 
 
 @dataclass
@@ -414,6 +423,146 @@ class PotentialIncrementGate:
                 location,
                 self.sampler.coordinates,
             )
+
+
+MINIMUM_WALL_DISTANCE_NM = -1.0e-3
+"""NUM-34: how far below zero the discrete distance field may sample.
+
+Bounded on both sides and chosen between them, and held here as one named
+constant because the two places that read it -- the per-solve gate and the
+per-mesh check a sweep plan runs -- must not be able to disagree.
+
+It cannot be zero. ``GridFunction.Set`` projects element-wise, and although
+:func:`nanopnp.mesh.distance.wall_distance` zeroes the constrained degrees of
+freedom outright so that the wall itself is exact, the interior residual is a
+few times ``1e-4`` nm with a platform-dependent sign; a gate at zero would gate
+the rounding mode.
+
+It cannot be ``-1e-2`` nm, which is ``-P2``, the ion wall function's own root:
+a gate there admits a diffusivity of exactly zero as its last passing state, and
+it would restate a fitted coefficient in Python rather than reading it from the
+correction data.
+
+One order inside the root and one order outside the projection residual. What
+the PHY-02 clamp can then silently absorb is bounded: at ``d = -1e-3`` the
+unclamped ion factor is ``1 - exp(-0.0558) = 0.0543`` against the clamped
+``0.0601``, a difference of ``5.8e-3`` on a factor whose wall value is
+``6.0e-2`` (SPECIFICATION.md NUM-34).
+"""
+
+
+@dataclass(frozen=True)
+class WallDistanceMeasurement:
+    """What the NUM-34 gate measured, whether or not it passed.
+
+    Recorded in the artefact summary and in the FR-25 manifest as NUM-34
+    requires, so that a field which passed *narrowly* is visible in the record
+    of a sweep rather than only in the log of the one member that failed.
+    """
+
+    minimum_nm: float
+    location: tuple[float, float]
+    negative_fraction: float
+    samples: int
+
+    def summary(self) -> dict[str, float | int | list[float]]:
+        """Return this measurement as plain data, for the manifest and the dataset."""
+        return {
+            "minimum_nm": self.minimum_nm,
+            "location_nm": [self.location[0], self.location[1]],
+            "negative_fraction": self.negative_fraction,
+            "samples": self.samples,
+        }
+
+
+@dataclass
+class WallDistanceGate:
+    """``min d >= -1e-3 nm`` over the fluid, wherever a wall correction is active (NUM-34).
+
+    Not a NUM-17 gate: it is checked once per solve, on a field that does not
+    change between Newton steps, rather than at every iterate. It is here
+    because it is the same kind of assertion against the same sampler, and
+    because a run must not be able to reach Newton at all on a field whose sign
+    the corrections will misread.
+
+    The ion wall function ``1 - exp(-P1 (d + P2))`` has its root at ``d = -P2``,
+    so a negative sample reverses the sign of ``D_i`` and ``mu_i`` rather than
+    attenuating them. PHY-02's clamp keeps that from producing a *plausible*
+    wrong current; this gate keeps it from producing one at all, because a field
+    that is genuinely negative is under-resolved at the wall and the clamp
+    resolves nothing.
+
+    Parameters
+    ----------
+    sampler
+        Sampler over the fluid materials of the solve mesh. Restricted to the
+        fluid because the field is solved there and a solid sample would report
+        a violation that no correction ever reads.
+    distance
+        The distance field as the corrections read it -- after mollification
+        where NUM-31's smoothing pass is applied, because a mollified field is a
+        different field and gating the un-mollified one would gate something no
+        form evaluates.
+    minimum_nm
+        The threshold. Defaults to :data:`MINIMUM_WALL_DISTANCE_NM`.
+    """
+
+    sampler: FieldSampler
+    distance: Expression
+    minimum_nm: float = MINIMUM_WALL_DISTANCE_NM
+    name: str = "wall-distance admissibility"
+
+    def measure(self) -> WallDistanceMeasurement:
+        """Return the sampled minimum, where it occurred, and the negative fraction."""
+        import numpy as np
+
+        values = self.sampler.evaluate(self.distance)
+        index = int(np.argmin(values))
+        return WallDistanceMeasurement(
+            minimum_nm=float(values[index]),
+            location=(float(self.sampler.points[index, 0]), float(self.sampler.points[index, 1])),
+            negative_fraction=float(np.count_nonzero(values < 0.0) / values.size),
+            samples=int(values.size),
+        )
+
+    def check(self) -> None:
+        """Raise if the field samples below the threshold anywhere in the fluid."""
+        self.checked()
+
+    def checked(self) -> WallDistanceMeasurement:
+        """Sample the field **once**, raise if it fails, and return what was measured.
+
+        One sampler pass, not two: the measurement reaches the artefact summary
+        and the FR-25 manifest whether or not it passed, and calling
+        :meth:`measure` again after :meth:`check` would evaluate the field over
+        every P2 node of the fluid a second time to learn what the first pass
+        already knows.
+        """
+        found = self.measure()
+        if found.minimum_nm < self.minimum_nm:
+            raise GateViolationError(
+                self.name,
+                "min d",
+                found.minimum_nm,
+                found.location,
+                self.sampler.coordinates,
+                detail=(
+                    f"NUM-34 requires min d >= {self.minimum_nm:.6g} nm wherever a wall "
+                    f"correction is active, and {found.negative_fraction:.3%} of the "
+                    f"{found.samples} fluid samples are negative. The ion wall function's root "
+                    "is at d = -0.01 nm, so a field this far below zero reverses the sign of "
+                    "the diffusivity and mobility rather than attenuating them: refine the mesh "
+                    "at the wall (numerics.mesh.wall_h_nm), do not widen this gate"
+                ),
+            )
+        logger.debug(
+            "wall-distance gate: min d = %.6g nm at (%.4g, %.4g) over %d fluid samples",
+            found.minimum_nm,
+            found.location[0],
+            found.location[1],
+            found.samples,
+        )
+        return found
 
 
 def excluded_volume_m3_per_mol(diameter_nm: float) -> float:
