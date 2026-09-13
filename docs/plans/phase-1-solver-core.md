@@ -1,6 +1,6 @@
 # Phase 1 (Solver core): the production solver on an externally supplied mesh
 
-**Status: WP7, WP8, WP9 and WP10 delivered; WP11–WP12 planned.** Written 2 September 2026, after Phase 0
+**Status: WP7, WP8, WP9 and WP10 delivered; WP11 and WP12 planned.** Written 2 September 2026, after Phase 0
 (WP1–WP6) and its consolidation (WP-A1, WP-B1, WP-B2, WP-C1). It inherited a verified physics core
 and a bare pipeline: tiers 1 and 2 green, `mypy --strict` and `ruff` clean, and `io/`, `sweep/`,
 `charge/`, `structure/`, `density/`, `symmetry/`, `gui/` still empty reserved slots. `io/` is filled
@@ -527,8 +527,18 @@ the P1/P1 equal-order flow pair enabled *only* together with flow stabilisation 
 evaluation and its element-locating warning (NUM-12); quadrature at NUM-15's orders. Production
 default stays `none` (NUM-11), and the mode is already in the provenance record (WP-B1).
 
-Discharges **NUM-03, NUM-12, NUM-14, NUM-15**; adds the two Tier-2 assertions of §Design (MMS in the
-stabilised mode, and stabilised → unstabilised under refinement).
+Discharges **NUM-03, NUM-12, NUM-14, NUM-15** and the unfinished half of **NUM-11**; adds the two
+Tier-2 assertions of §Design (MMS in the stabilised mode, and stabilised → unstabilised under
+refinement).
+
+Planned in full in `docs/plans/wp12-reference-stabilised-mode.md`, 13 September 2026, with seven
+amendments to `SPECIFICATION.md` made in the same commit. Two findings there change what this
+section assumed. The transport stabilisation adds artificial streamline diffusion in the ratio
+`Pe_h²`, which on a mesh built to NUM-30 is `ζ̃²/100` — 9 % inside the double layer at `ζ̃ = 3` and
+0.09 % in the pore lumen, so `Δ_stab` is a double-layer effect by three orders of magnitude. And the
+Do Carmo–Galeão crosswind term is *identically zero* wherever `C_cw Pe_K ≤ 1`, hence everywhere on a
+mesh meeting NUM-30: it must be verified on a deliberately coarse mesh, and "the crosswind
+contributed nothing" becomes one of the numbers WP13 reports rather than an assumption it makes.
 
 ### WP13 — Tier 3 harness and the COMSOL comparison
 
