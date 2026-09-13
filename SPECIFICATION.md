@@ -1032,7 +1032,7 @@ numerics:
   mesh: {backend: netgen, wall_h_nm: auto, boundary_layer: false}
   nonlinear: {strategy: newton, damping: residual, max_iter: 100, rtol: 1e-6}   # NUM-16
   continuation: default_ladder
-  stabilisation: none                # NUM-11; `reference` matches §6.4
+  stabilisation: none                # NUM-11; `supg` is its flag, `reference` matches §6.4
   wall_distance: {sources: wall, max_distance_nm: 3.0}                         # PHY-02
   linear: {solver: umfpack}          # see §6.6; MUMPS requires a source build
 
@@ -1133,6 +1133,23 @@ NOTE (`numerics.nonlinear`): the values shown are the NUM-16 reference settings 
 damped Newton of the reference model, 100 iterations, relative tolerance 10⁻⁶, tested on the
 residual and on the relative update alike. `strategy: hybrid` and `damping: backtracking` select
 the NUM-20 fallbacks.
+
+NOTE (`numerics.elements`, NUM-03): `phi` and `c_i` carry one element order; `u` is independent of
+them and `p` is independent of both, so the reference implementation's own discretisation —
+quadratic `phi` and `c_i` with linear `u` and `p` — is expressible. An order for `u` at or below
+the order of `p` SHALL be refused unless `numerics.stabilisation` selects a mode supplying the flow
+stabilisation of §6.4.2, and the refusal SHALL name both the inf-sup condition and the mode that
+would permit the pair. All three orders are recorded in the run provenance record (NUM-03).
+
+NOTE (`numerics.stabilisation`, and the compatibility rule for `nanopnp/case/v1`): the value set is
+`none | supg | reference`. `none` is the validated default and the production policy of NUM-11;
+`supg` is NUM-11's flag, the streamline term alone; `reference` is the mode of NUM-14, streamline
+and crosswind on the transport operator together with the flow stabilisation of §6.4.2, and is the
+only value permitting an equal-order velocity–pressure pair. More generally: **widening the accepted
+value set of an existing key is compatible and SHALL NOT move the schema version, because every
+document that validated before still validates; adding, removing, renaming or narrowing a key SHALL
+move it.** The mode a run actually solved is in its FR-25 manifest, so no artefact of an earlier
+revision becomes ambiguous under a widening.
 
 NOTE (`numerics.wall_distance`): `sources` is the boundary-name pattern the PHY-02 distance field
 `d` is measured from, and its validated default is the pore wall alone. PHY-02 excludes the
@@ -1282,7 +1299,7 @@ Emitted with every result artefact (FR-25, IF-08) and sufficient alone to recons
 | Charge | Q_net, force field, pH, titration method, conservation residual |
 | Materials | Correction model names, version of each parameter data file, clamp activations |
 | Solver | Physics model, element orders, continuation rungs, nonlinear and linear settings, iteration counts |
-| Stabilisation | The stabilisation mode that produced the number (§6.4) |
+| Stabilisation | The stabilisation mode that produced the number, its tuning parameters and the provenance of each, and — where a mode is active — its own contribution to the current and the largest cell Péclet number per species (§6.4, NUM-12, NUM-13) |
 | Deviations | Every switch set away from the validated default, including `dielectric_gradient_forces` (PHY-23) |
 
 #### 5.3.4 Sweep specification and dataset
@@ -1650,6 +1667,18 @@ Rationale: SUPG biases the current quantity of interest and destroys Jacobian sy
 **NUM-12.** The solver SHALL evaluate `Pe_h` on the assembled mesh and SHALL emit a warning naming
 the element location when `Pe_h ≥ 1` anywhere in `Ω_w`.
 
+NOTE (which `Pe_h`): the form printed above assumes the Einstein relation, `μ_i = D_i/V_T`, which
+PHY-14 and VER-05 forbid at finite concentration — `D` and `μ` carry different concentration
+corrections and `D_i/μ_i` drifts to 1.2–1.7 × kT/e between 0.15 M and 3 M. The implementation SHALL
+therefore evaluate the cell Péclet as `Pe_K = ‖b_i‖ h_K / (2 D_i)` on the advective velocity it
+actually assembles, `b_i = z_i μ_i ∇φ̃ + D_i β_i − Pe u`, and SHALL record which expression produced
+the number. The printed form is the `c → 0` limit of that one and overestimates it by
+`D_i/(μ_i V_T)`, so it errs towards warning early rather than late.
+
+NOTE (when): there is no `∇φ̃` before a solve, so "on the assembled mesh" means on that mesh's
+converged state. The evaluation SHALL run in every stabilisation mode, `none` included: a diagnostic
+that runs only when the stabilisation is on is a diagnostic that never runs in production.
+
 **NUM-13.** The stabilisation mode in force SHALL be recorded in the run provenance record.
 
 #### 6.4.2 Optional reference-matching stabilised mode
@@ -1670,8 +1699,32 @@ and SHALL be used for like-for-like comparison against published currents (§7.4
 | Isotropic diffusion | off | off |
 | Convective term | conservative form | not applicable |
 
+NOTE (what the reference's setting names are taken to mean): COMSOL exports none of
+`tds.streamline`, `tds.crosswind`, `spf.streamlinens` or `spf.crosswindns`, so the mode above
+reproduces the reference's *settings* and not its operator, and the difference between the two is an
+irreducible systematic in any §7.4 comparison, bounded only by mesh refinement. Three readings are
+therefore fixed here rather than left to the implementation.
+
+- **Approximate residual** means every second derivative of a trial field is dropped from the
+  residual the stabilisation is built on, leaving the advective residual and its sources. The
+  streamline term is then inconsistent by construction — its residual does not vanish on the exact
+  solution — and the resulting loss of one order in the L² convergence rate of VER-18 is a property
+  of the mode rather than a defect, and SHALL be measured and reported rather than assumed away.
+- **Crosswind diffusion, Do Carmo and Galeão** means a term of that family: residual-scaled, acting
+  across the streamline, and vanishing identically where the element Péclet number is at or below
+  the reciprocal of its tuning constant. On a mesh meeting NUM-30 that condition holds everywhere, so
+  the term SHALL be verified on a mesh coarse enough to activate it, and the fraction of elements on
+  which it is active SHALL be reported with any comparison that relies on the mode.
+- **Convective term in conservative form** costs nothing to match: the Nernst–Planck weak form of
+  NUM-04 is already the divergence form integrated by parts.
+
 **NUM-15.** In the mode of NUM-14 the crosswind term SHALL be assembled at integration order 6 and
 the streamline term at integration order 4.
+
+NOTE: "at integration order *n*" SHALL be read as a lower bound. The quadrature order reaching the
+finite-element backend is a bonus added to an integrand-dependent estimate rather than an absolute
+setting, so an implementation SHALL request a bonus of *n*, which guarantees at least order *n*.
+Overshoot costs quadrature points and not correctness, which is the same trade NUM-07 already makes.
 
 NOTE: the reference gated pseudo-time stepping off (`spf.usePseudoTimeStepping = 0`). Its
 equal-order P1+P1 flow elements are LBB-unstable without this stabilisation (NUM-03).
@@ -1838,6 +1891,16 @@ references the trans electrode instead and negates every conductance. It is also
 makes this route agree with NUM-25 evaluated on `Γ_w,c`, whose reaction flux is the same
 `∮ ψ J_i·n` with the same outward normal — so a minus here would have made the NUM-26 agreement
 check fail on every solution.
+
+NOTE (a stabilised mode, NUM-14): under a stabilisation mode the functional above SHALL carry the
+stabilisation form of the species evaluated with `ψ` as its test function, in addition to
+`∫ J_i·∇ψ r dr dz`. The NUM-26 identity below is an identity between two evaluations of *the
+assembled residual*, and in a stabilised mode the assembled residual contains that term; omitting it
+from this route alone would make the two routes differ by exactly the quantity the mode exists to
+measure, failing NUM-26 on every stabilised solve for the one reason that is not a defect. The
+difference the term makes SHALL be reported per species as the stabilisation's contribution to the
+current, which is NUM-11's "SUPG biases the current quantity of interest" turned into a number from a
+single run rather than from a difference of two.
 
 **NUM-25.** The variational reaction flux SHALL also be implemented: the assembled residual
 evaluated against a test function equal to 1 on a Dirichlet electrode (Hughes, Engel, Mazzei &
@@ -2075,6 +2138,7 @@ archive, so the push gate is unaffected by whether it is present.
 | **VER-37** | Warm start across a sweep step: the descriptor partition | Every leaf of the descriptor a real solve produces appears in exactly one of the space and operator sets, and every entry of both sets appears in the descriptor, in both directions; a warm-start load accepts a payload differing only in operator keys and records each of them; it aborts naming the key and both values on a differing mesh hash, degree count, field record, boundary set, variable branch or stabilisation mode; a payload of a superseded schema version is refused by schema; the loaded state carries no residual and does not read the stored wall-distance vector; and a point reached warm reproduces the same point solved cold to better than the `1 × 10⁻⁶` nonlinear relative tolerance, with the measured difference reported. The partition is verified at Tier 1, on the descriptor alone; the warm-against-cold agreement is a Tier 2 activity, needing a converged pair (FR-24, the §5.3.2 warm-start NOTE) |
 | **VER-38** | Sweep dispatch and collection | A single-member dispatch exits with that member's own class for each of the case, gate, convergence and cancellation classes, and produces the same scalars run alone into an empty store as it does inside the sweep; a local multi-worker sweep exits `0` with a failed member present and nonzero under fail-fast; a member whose parent artefact is absent falls back to the full ladder and records the reason; the worker thread pinning is in place before the linear-algebra libraries are imported, asserted in a spawned process; the dataset round-trips to identical values, a failed member's quantities are absent rather than defaulted, and the rectification of an exactly-opposite bias pair equals the two-point ratio of §6.7 taken from the same two records. The dispatch and collection surface is verified at Tier 1; the equivalence of a member solved alone and the same member solved inside the sweep is a Tier 2 activity (FR-24, IF-02, FR-23) |
 | **VER-40** | Wall-distance admissibility and the correction driver clamp | Both wall forms are continuous across `d̄ = 0` and return their wall values for every non-positive sample, rather than the sign-reversed values the ion form's root at `−P₂` would otherwise give, on the numeric and the symbolic evaluation path alike; a distance field whose minimum falls below the NUM-34 threshold aborts naming the gate, the measured minimum, its location and the fraction of samples below zero, and one above the threshold passes; the field gated is the mollified one wherever NUM-31's smoothing is applied, and a configuration activating no wall correction is not gated; and a mesh coarse enough to violate the gate is refused rather than returning the current whose two extraction routes disagree by 40 %, while a mesh that passes agrees between the routes to better than the NUM-26 tolerance. The clamp and the gate diagnostic are verified at Tier 1, on the correction functions and one field; the route-agreement half needs a converged pair and is a Tier 2 activity (PHY-02, NUM-34, NUM-26, QR-04, QR-12) |
+| **VER-41** | Stabilisation terms, the mode registry and the `Pe_h` diagnostic | The element size the stabilisation parameters are defined against is asserted elementwise against its measured convention rather than assumed, so a backend that changed it fails here rather than retuning the mode in silence; the registry lists exactly the modes of §5.3.1 and refuses an unknown name listing them; the `none` entry produces an assembled residual *identical* to the unstabilised one, asserted on the vector and not on the mode string; the streamline parameter takes both branches of `ψ(q) = min(q, 1)` and is continuous at the crossover; the crosswind viscosity is exactly zero on every element at or below the Péclet number its tuning constant sets, positive on one above it, and bounded by `D_i(C Pe_K − 1)`; the crosswind projector annihilates the advective velocity and is idempotent; the crosswind, streamline and grad-div terms request the integration orders of NUM-15 and the `1/r` minimum of NUM-07 respectively, asserted on the quadrature request rather than on a number; an equal-order velocity–pressure pair is refused in every mode that supplies no flow stabilisation, naming both inf-sup and the mode that would permit it, and accepted in the mode that does; a velocity order left unset reproduces the previous two-order model exactly; and the `Pe_h` diagnostic warns naming the species, the value and its `(r, z)`, is silent below the threshold, and runs in the unstabilised mode (NUM-03, NUM-11, NUM-12, NUM-14, NUM-15, QR-12) |
 
 ### 7.3 Tier 2 analytic benchmarks
 
@@ -2099,6 +2163,7 @@ discretisation or stabilisation.
 | **VER-31** | Gouy–Chapman–**Stern**, 1D | `φ_0 = φ_d + σ_s λ_S/(ε₀ε_r)` with `φ_d` and `σ_s` from VER-12's Grahame relation, the shell carrying no space charge so `φ` is linear across it | The wall potential reproduced to better than **1 %** at 0.1 M, `ζ̃_d = 2`, `λ_S = 0.25 nm` — a 30.6 % effect, so a shell the solver treats as fluid fails by 24 %; `λ_S = 0` reproduces VER-12 on the same mesh to solver tolerance (FR-15) |
 | **VER-35** | End-to-end reproduction from the manifest | a case run to convergence, then reproduced from its run directory alone | Every scalar quantity of interest reproduced to better than the `1 × 10⁻⁶` nonlinear relative tolerance of §5.3.1, with the measured difference reported rather than only the verdict; run against a *fresh* store, with the store miss and the re-entry into Newton asserted, so that the cache cannot satisfy the check (the §5.3.2 QR-08 NOTE); an input file whose contents have moved aborts naming it; a library-version difference is reported and non-fatal unless the run asks for a strict environment (QR-08, IF-08) |
 | **VER-39** | Sweep throughput and parallel scaling | one grid, run at several worker counts into a fresh store each time | Points per worker-hour over the members actually solved, and the parallel efficiency `T(1)/(N·T(N))`, reported with the core count, the thread pinning and the wave widths beside them. **Recorded, never gated**: completing the sweep is the assertion, and a scaling figure measured on shared hardware is a statement about that hardware (QR-06, §8.3) |
+| **VER-42** | The reference-matching stabilised mode | the mode of NUM-14 exercised against the manufactured solution of VER-18, against the unstabilised solve on the same geometry under refinement, and against a mesh coarse enough to activate every term | On VER-18's manufactured solution the mode converges at a **measured** L² rate, reported rather than asserted exact and gated only from below, one order short of VER-18's own rate by the NUM-14 NOTE on the approximate residual; the same run with the manufactured source withheld from the stabilisation residual converges visibly worse, so the wiring error that prediction warns about fails a test rather than being absorbed into the rate; the unstabilised mode on the same meshes still gives VER-18's rate, unchanged. On a mesh whose cell Péclet number exceeds 1 in the double layer, plain Galerkin trips the NUM-17 positivity gate and the stabilised mode converges without tripping it — the spurious negative concentrations §6.4.1 cites — and the crosswind term is active on a reported non-zero fraction of elements, the same elements the NUM-12 warning names; on a mesh meeting NUM-30 the crosswind contributes exactly zero, asserted on the assembled term. The stabilised and unstabilised currents approach each other under refinement, with the measured rate reported; the two extraction routes of NUM-24 and NUM-25 agree to NUM-26's tolerance in the stabilised mode, and disagree by the reported stabilisation contribution when that term is removed from the indicator route, so the identity is measured rather than assumed. The equal-order velocity–pressure pair converges in the mode that permits it and its velocity field is compared against the Taylor–Hood solve, **recorded and not gated**: it is an input to the §7.4 attribution rather than a verdict (NUM-03, NUM-11, NUM-12, NUM-14, NUM-15, NUM-24, NUM-26, VER-18) |
 
 NOTE: Hall's result is `R_access = ρ/(4a)` per side, so the two sides give `ρ/(2a)`. The form
 `G = σ[L/(πa²) + 1/a]⁻¹` substitutes radius for diameter in the access term and is wrong there by a
@@ -2516,7 +2581,7 @@ needed.
 | QR-01 | VER-12 to VER-22, in particular VER-17 and VER-18 |
 | QR-02 | VAL-01, VAL-02 |
 | QR-03 | VER-01, VER-29, VAL-15 |
-| QR-04 | VER-11, VER-40 (the route disagreement as a resolution gate) |
+| QR-04 | VER-11, VER-40 (the route disagreement as a resolution gate), VER-42 (the identity under a stabilisation mode) |
 | QR-05 | VAL-07, VAL-08, VAL-09 |
 | QR-06 | VER-39 (measured, recorded, not gated) |
 | QR-07 | None yet (§8.2 criterion 3) |
@@ -2524,7 +2589,7 @@ needed.
 | QR-09 | None yet |
 | QR-10 | None yet |
 | QR-11 | None yet |
-| QR-12 | VER-10, VER-32, VER-40 |
+| QR-12 | VER-10, VER-32, VER-40, VER-41 |
 | QR-13 | None yet |
 | QR-14 | VER-03 |
 | QR-15 | None yet |
