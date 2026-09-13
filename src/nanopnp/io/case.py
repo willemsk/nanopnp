@@ -56,7 +56,11 @@ from nanopnp.materials.electrolyte import (
     CorrectionSwitches,
     Electrolyte,
 )
-from nanopnp.physics.models import registered_models, registered_stabilisations
+from nanopnp.physics.models import (
+    inf_sup_problem,
+    registered_models,
+    registered_stabilisations,
+)
 from nanopnp.solve.linear import AVAILABLE_SOLVERS
 from nanopnp.solve.newton import DEFAULT_SETTINGS, NewtonSettings
 
@@ -398,7 +402,14 @@ class PhysicsSpec(_Strict):
 
 
 class ElementsSpec(_Strict):
-    """Element orders per field; the Taylor-Hood pair of NUM-03."""
+    """Element orders per field; the Taylor-Hood pair of NUM-03.
+
+    ``u`` is independent of ``phi`` and ``c``. The reference model of section 6.4
+    runs ``phi`` and ``c`` at P2 with ``u`` and ``p`` at P1, which is neither the
+    Taylor-Hood pair nor one order throughout, and is legal only because the flow
+    stabilisation supplies the missing inf-sup stability — :func:`resolve` refuses
+    an equal-order pair in a mode that does not.
+    """
 
     phi: str = "P2"
     c: str = "P2"
@@ -449,7 +460,7 @@ class NumericsSpec(_Strict):
     mesh: MeshSpec = Field(default_factory=MeshSpec)
     nonlinear: NonlinearSpec = Field(default_factory=NonlinearSpec)
     continuation: Literal["default_ladder", "none"] = "default_ladder"
-    stabilisation: Literal["none", "reference"] = "none"
+    stabilisation: Literal["none", "supg", "reference"] = "none"
     wall_distance: WallDistanceSpec = Field(default_factory=WallDistanceSpec)
     linear: LinearSpec = Field(default_factory=LinearSpec)
 
@@ -1394,7 +1405,9 @@ def _check_physics_switches(document: CaseDocument) -> None:
         )
 
 
-def _model_options(document: CaseDocument, *, order: int, pressure_order: int) -> dict[str, Any]:
+def _model_options(
+    document: CaseDocument, *, order: int, velocity_order: int, pressure_order: int
+) -> dict[str, Any]:
     """Return the keyword arguments the named model's builder takes (PHY-21).
 
     The builders are not uniform, and deliberately so:
@@ -1413,6 +1426,7 @@ def _model_options(document: CaseDocument, *, order: int, pressure_order: int) -
         "inertia": physics.inertia,
         "dielectric_gradient_forces": physics.dielectric_gradient_forces,
         "order": order,
+        "velocity_order": velocity_order,
         "pressure_order": pressure_order,
         "stabilisation": document.numerics.stabilisation,
     }
@@ -1457,15 +1471,29 @@ def resolve(document: CaseDocument) -> ResolvedCase:
 
     elements = document.numerics.elements
     order = _order(elements.phi, "phi")
-    for field_name in ("c", "u"):
-        other = _order(getattr(elements, field_name), field_name)
-        if other != order:
-            raise CaseValidationError(
-                f"numerics.elements.{field_name} is {getattr(elements, field_name)!r} and "
-                f"numerics.elements.phi is {elements.phi!r}; this release carries one order for "
-                "phi, c_i and u, and the Taylor-Hood pair of NUM-03 pairs it with p one lower"
-            )
+    concentration_order = _order(elements.c, "c")
+    if concentration_order != order:
+        raise CaseValidationError(
+            f"numerics.elements.c is {elements.c!r} and numerics.elements.phi is "
+            f"{elements.phi!r}; this release carries one order for phi and c_i, which the "
+            "NUM-02 log branch and the PHY-05 steric term both assume"
+        )
+    # ``u`` is no longer folded into that equality. The reference mode of section
+    # 6.4 runs phi and c at P2 with u and p at P1, so the velocity order is a
+    # third order rather than a restatement of the first.
+    velocity_order = _order(elements.u, "u")
     pressure_order = _order(elements.p, "p")
+    if document.physics.flow:
+        problem = inf_sup_problem(
+            velocity_order=velocity_order,
+            pressure_order=pressure_order,
+            stabilisation=document.numerics.stabilisation,
+        )
+        if problem is not None:
+            raise CaseValidationError(
+                f"numerics.elements.u is {elements.u!r} and numerics.elements.p is "
+                f"{elements.p!r}: {problem}"
+            )
 
     physics = document.physics
     nonlinear = document.numerics.nonlinear
@@ -1477,7 +1505,12 @@ def resolve(document: CaseDocument) -> ResolvedCase:
         bias_V=document.boundary_conditions.bias_V,
         ground=document.boundary_conditions.ground,
         model=physics.model,
-        model_options=_model_options(document, order=order, pressure_order=pressure_order),
+        model_options=_model_options(
+            document,
+            order=order,
+            velocity_order=velocity_order,
+            pressure_order=pressure_order,
+        ),
         newton=NewtonSettings(
             initial_damping=DEFAULT_SETTINGS.initial_damping,
             minimum_damping=DEFAULT_SETTINGS.minimum_damping,

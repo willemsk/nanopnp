@@ -104,6 +104,7 @@ __all__ = [
     "PhysicsModel",
     "create",
     "equal_order_stabilisations",
+    "inf_sup_problem",
     "register",
     "registered_models",
     "registered_stabilisations",
@@ -126,9 +127,9 @@ PRESSURE_MEAN = "pressure_mean"
 def equal_order_stabilisations() -> tuple[str, ...]:
     """Return the registered modes that permit an equal-order velocity-pressure pair.
 
-    Read off each mode's own ``permits_equal_order`` rather than listed, so the
-    inf-sup refusal of :meth:`CoupledModel.__post_init__` can name the mode that
-    would permit the pair instead of merely refusing it (NUM-03).
+    Read off each mode's own ``permits_equal_order`` rather than listed, so
+    :func:`inf_sup_problem` can name the mode that would permit the pair instead
+    of merely refusing it (NUM-03).
 
     Queried live, like :func:`registered_stabilisations` itself: a snapshot taken at
     import would refuse a mode registered afterwards — an out-of-tree variant, or a
@@ -138,6 +139,52 @@ def equal_order_stabilisations() -> tuple[str, ...]:
         name
         for name in registered_stabilisations()
         if create_stabilisation(name).permits_equal_order
+    )
+
+
+def inf_sup_problem(*, velocity_order: int, pressure_order: int, stabilisation: str) -> str | None:
+    """Return why this velocity-pressure-mode triple is inadmissible, or ``None``.
+
+    NUM-03 specifies the Taylor-Hood pair ``P2/P1``, and allows an equal-order
+    pair only together with the flow stabilisation of section 6.4.2 — the
+    pressure-test piece of the GLS operator is what makes ``P1/P1`` legal, and
+    without it the discrete inf-sup condition fails and the pressure carries a
+    checkerboard mode the solve will happily converge to.
+
+    One implementation, two callers: :meth:`CoupledModel.__post_init__` gates the
+    model and :meth:`nanopnp.io.case.CaseDocument` gates the case file, so that a
+    case is refused at validation rather than after the continuation ladder has
+    been built. Two separate copies of the condition could disagree about which
+    pairs are admissible, and the one that mattered would be whichever ran first.
+
+    Parameters
+    ----------
+    velocity_order, pressure_order
+        The resolved polynomial orders of ``u`` and ``p``.
+    stabilisation
+        Registered mode name. An unregistered name is **not** this function's
+        refusal to make: it returns ``None``, and the caller's own registry check
+        reports it.
+
+    Returns
+    -------
+    str or None
+        The clause for the caller's message, or ``None`` when the pair is
+        admissible.
+    """
+    if pressure_order < velocity_order:
+        return None
+    if (
+        stabilisation in registered_stabilisations()
+        and create_stabilisation(stabilisation).permits_equal_order
+    ):
+        return None
+    permitting = ", ".join(equal_order_stabilisations()) or "no registered mode"
+    return (
+        f"velocity order {velocity_order} with pressure order {pressure_order} is not inf-sup "
+        "stable; NUM-03 allows equal order only together with the flow stabilisation of "
+        f"section 6.4.2, which the {permitting} stabilisation supplies and {stabilisation!r} "
+        "does not"
     )
 
 
@@ -480,18 +527,14 @@ class CoupledModel:
                 f"modes are {known}. Recording a mode the solver does not apply would make the "
                 "FR-25 manifest describe a run that never happened"
             )
-        if (
-            self.flow
-            and self.pressure_order >= self.resolved_velocity_order
-            and not self.stabilisation_model.permits_equal_order
-        ):
-            permitting = ", ".join(equal_order_stabilisations()) or "no registered mode"
-            raise ValueError(
-                f"velocity order {self.resolved_velocity_order} with pressure order "
-                f"{self.pressure_order} is not inf-sup stable; NUM-03 allows equal order only "
-                "together with the flow stabilisation of section 6.4.2, which the "
-                f"{permitting} stabilisation supplies and {self.stabilisation!r} does not"
+        if self.flow:
+            problem = inf_sup_problem(
+                velocity_order=self.resolved_velocity_order,
+                pressure_order=self.pressure_order,
+                stabilisation=self.stabilisation,
             )
+            if problem is not None:
+                raise ValueError(problem)
         if self.pressure_constraint and not self.flow:
             raise ValueError("pressure_constraint has no meaning without a flow block")
         if self.dielectric_gradient_forces and self.log_variables:

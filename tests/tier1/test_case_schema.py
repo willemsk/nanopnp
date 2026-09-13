@@ -387,3 +387,90 @@ def test_phy21_pnp_with_flow_is_refused_by_the_model_check_not_the_ladder_check(
     text = REFERENCE_CASE.replace("model: epnp-ns", "model: pnp")
     with pytest.raises(CaseValidationError, match=re.escape("physics.flow must be false")):
         resolve(loads_case(text))
+
+
+def test_num03_the_reference_element_set_resolves_to_three_independent_orders() -> None:
+    """``{phi: P2, c: P2, u: P1, p: P1}`` is the reference mode's own pair (section 6.4).
+
+    Not the Taylor-Hood pair of NUM-03 and not one order throughout: ``u`` is a
+    third order, and the equal-order velocity-pressure pair is legal only because
+    the flow stabilisation supplies the inf-sup stability it lacks.
+    """
+    text = REFERENCE_CASE.replace(
+        "elements: {phi: P2, c: P2, u: P2, p: P1}", "elements: {phi: P2, c: P2, u: P1, p: P1}"
+    ).replace("stabilisation: none", "stabilisation: reference")
+    resolved = resolve(loads_case(text))
+
+    assert resolved.model_options["order"] == 2
+    assert resolved.model_options["velocity_order"] == 1
+    assert resolved.model_options["pressure_order"] == 1
+    assert resolved.stabilisation == "reference"
+
+
+def test_num03_an_equal_order_pair_is_refused_in_a_mode_that_supplies_no_flow_term() -> None:
+    """The same element set without the stabilisation names inf-sup and the remedy.
+
+    Refused here rather than at solve time for the reason
+    :meth:`CaseDocument._check_registries` gives for the registry checks: the
+    continuation ladder is built before the first model is, so a case that cannot
+    run must not validate.
+    """
+    text = REFERENCE_CASE.replace(
+        "elements: {phi: P2, c: P2, u: P2, p: P1}", "elements: {phi: P2, c: P2, u: P1, p: P1}"
+    )
+    with pytest.raises(CaseValidationError) as raised:
+        resolve(loads_case(text))
+    message = str(raised.value)
+    assert "inf-sup" in message
+    assert "numerics.elements.u" in message
+    # Naming the mode that *would* permit it is the difference between a refusal
+    # and a dead end.
+    assert "reference" in message
+
+
+def test_num03_phi_and_c_must_still_agree_and_the_message_names_both() -> None:
+    """Splitting ``u`` out did not loosen the one equality the model does assume."""
+    text = REFERENCE_CASE.replace(
+        "elements: {phi: P2, c: P2, u: P2, p: P1}", "elements: {phi: P2, c: P1, u: P2, p: P1}"
+    )
+    with pytest.raises(CaseValidationError) as raised:
+        resolve(loads_case(text))
+    message = str(raised.value)
+    assert "numerics.elements.c" in message
+    assert "numerics.elements.phi" in message
+
+
+@pytest.mark.parametrize("mode", ["none", "supg", "reference"])
+def test_if03_every_registered_stabilisation_mode_validates(mode: str) -> None:
+    """The schema literal and the registry agree, in both directions.
+
+    Parametrised over the registry rather than over a list, so a mode added to
+    ``physics.stabilisation`` and forgotten in the schema fails here instead of
+    being refused by a case file that names it.
+    """
+    from nanopnp.physics.models import registered_stabilisations
+
+    assert mode in registered_stabilisations()
+    text = REFERENCE_CASE.replace("stabilisation: none", f"stabilisation: {mode}")
+    assert resolve(loads_case(text)).stabilisation == mode
+
+
+def test_if03_an_unregistered_stabilisation_mode_is_refused_naming_the_registry() -> None:
+    """``streamline`` is what somebody would write for ``supg``; it is not a mode."""
+    text = REFERENCE_CASE.replace("stabilisation: none", "stabilisation: streamline")
+    with pytest.raises(CaseValidationError) as raised:
+        loads_case(text)
+    message = str(raised.value)
+    assert "numerics.stabilisation" in message
+    for mode in ("none", "supg", "reference"):
+        assert mode in message
+
+
+def test_ver09_the_widened_stabilisation_literal_left_the_schema_identifier_alone() -> None:
+    """A new admissible value of an existing field is not a schema revision.
+
+    ``supg`` and ``reference`` widen what ``numerics.stabilisation`` accepts; every
+    v1 file remains a valid v1 file, so the identifier does not move (IF-03).
+    """
+    assert SCHEMA == "nanopnp/case/v1"
+    assert loads_case(REFERENCE_CASE).schema_id == SCHEMA
