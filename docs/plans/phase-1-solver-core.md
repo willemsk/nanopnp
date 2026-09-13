@@ -532,9 +532,13 @@ Tier-2 assertions of §Design (MMS in the stabilised mode, and stabilised → un
 refinement).
 
 Planned in full in `docs/plans/wp12-reference-stabilised-mode.md`, 13 September 2026, with seven
-amendments to `SPECIFICATION.md` made in the same commit. Two findings there change what this
-section assumed. The transport stabilisation adds artificial streamline diffusion in the ratio
-`Pe_h²`, which on a mesh built to NUM-30 is `ζ̃²/100` — 9 % inside the double layer at `ζ̃ = 3` and
+amendments to `SPECIFICATION.md` made in the same commit and its three open questions closed by
+author ruling on the same day: the stabilisation tuning constants are module constants of a named
+mode rather than case-file fields, `supg` is a third registered mode and `numerics.stabilisation`
+widens to admit it, and the `ζ̃` below stands as an illustrative substitution until this package
+measures the reference pore's own. Two findings there change what this section assumed. The
+transport stabilisation adds artificial streamline diffusion in the ratio `Pe_h²`, which on a mesh
+built to NUM-30 is `ζ̃²/100` — of order 9 % inside the double layer at an illustrative `ζ̃ = 3` and
 0.09 % in the pore lumen, so `Δ_stab` is a double-layer effect by three orders of magnitude. And the
 Do Carmo–Galeão crosswind term is *identically zero* wherever `C_cw Pe_K ≤ 1`, hence everywhere on a
 mesh meeting NUM-30: it must be verified on a deliberately coarse mesh, and "the crosswind

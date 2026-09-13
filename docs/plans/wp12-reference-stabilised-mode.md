@@ -1,6 +1,7 @@
 # WP12 — Reference-matching stabilised mode
 
-**Status: planned, not started.** Written 13 September 2026, after WP7 (case schema, artefacts,
+**Status: planned, not started; the three questions it opened are closed by author ruling, 13
+September 2026.** Written 13 September 2026, after WP7 (case schema, artefacts,
 manifest), WP8 (mesh ingestion and quality), WP9 (external fields), WP10 (case-driven runs, the CLI,
 field output) and WP11 (the sweep runner). It inherits a solver whose stabilisation mode is recorded
 everywhere and applied nowhere: `CoupledModel.stabilisation` exists, reaches the provenance, the
@@ -81,8 +82,8 @@ it, and it is the term WP13's `Δ_stab` is made of.
 | A gate, or a warning? | A **warning**. `Pe_K ≥ 1` does not abort | NUM-12 says warning, and it is a mesh-resolution statement rather than a wrong answer: §Design shows the NUM-30 rule puts `Pe_h` at `\|ζ̃\|/10` independently of concentration, so a mesh that violates it is under-resolved in a way NUM-34 and the NUM-26 route agreement already refuse on stronger grounds |
 | Threading the mode through the ladder | `default_ladder` gains `stabilisation: str = "none"` and `velocity_order`/`pressure_order`, applied to **every** rung; `solve/state.ladder` passes them from the resolved case | NUM-18's NOTE forbids reading four *physics* switches from the case when the ladder is selected, because the ladder's path is fixed. Stabilisation is not one of the four and is not a physics switch: it is a property of the discretisation, so every rung must carry it or the top rung's warm start crosses two operators — which the VER-37 gate would refuse anyway, at hour twenty-two |
 | No per-rung stabilisation schedule | The mode is uniform across the ladder. NUM-11's "SUPG on the coarse continuation mesh, off for the final solve" is expressed as **two cases** — a coarse-mesh case in `supg` and a fine-mesh case in `none` — which the sweep runner already dispatches | A ladder whose top rung changes discretisation makes that rung a cold solve in a different operator while presenting as a warm one, and the descriptor gate refuses exactly that crossing. Two cases say the same thing and each carries its own honest manifest |
-| `numerics.stabilisation` gains `supg` | The `Literal` widens from `{none, reference}` to `{none, supg, reference}`. The schema id stays `nanopnp/case/v1`, under a rule written into §5.3.1 in this commit: **widening the accepted value set of an existing key is compatible and does not move the version; adding, removing, renaming or narrowing a key does** | WP7 froze the schema and WP11 established that a change to it is a version rather than an edit. That rule needs a boundary or the first new correction model moves the version too. Every document that validated against `v1` still validates, and the mode a run actually solved is in its manifest, so no `v1` artefact becomes ambiguous |
-| `C_cw`, and where tuning constants live | `C_cw = 1.0`, `C_pspg` and the `ψ` cut-off are module constants in `physics/stabilisation.py`, each cited to the section it came from. **Not** case-file fields | They are numerics constants of a named mode, not fitted physical parameters: a case file that could retune the stabilisation would make "the `reference` mode" mean a different operator per run while the manifest recorded one word. If WP13's attribution needs a sensitivity study, it registers a second mode — which is what the registry is for. Flagged as an open question because it is the one decision here the author may want the other way |
+| `numerics.stabilisation` gains `supg` | The `Literal` widens from `{none, reference}` to `{none, supg, reference}`. The schema id stays `nanopnp/case/v1`, under a rule written into §5.3.1 in this commit: **widening the accepted value set of an existing key is compatible and does not move the version; adding, removing, renaming or narrowing a key does** | WP7 froze the schema and WP11 established that a change to it is a version rather than an edit. That rule needs a boundary or the first new correction model moves the version too. Every document that validated against `v1` still validates, and the mode a run actually solved is in its manifest, so no `v1` artefact becomes ambiguous. **Author ruling, 13 September 2026: keep `supg`, widen the schema.** The freeze needed a boundary before the first new correction model reached it, and this is the cheapest place to draw it |
+| `C_cw`, and where tuning constants live | `C_cw = 1.0`, `C_pspg` and the `ψ` cut-off are module constants in `physics/stabilisation.py`, each cited to the section it came from. **Not** case-file fields | They are numerics constants of a named mode, not fitted physical parameters: a case file that could retune the stabilisation would make "the `reference` mode" mean a different operator per run while the manifest recorded one word. If WP13's attribution needs a sensitivity study, it registers a second mode — which is what the registry is for. **Author ruling, 13 September 2026: module constants.** A C_cw swept from a case file would be a second source of truth for what `reference` means, and the deviation diff of §5.3.3 would have to learn that a non-default numerics constant is a deviation |
 | The manifest's stabilisation group | Gains the mode's `parameters` and `provenance` mappings, exactly as a correction model contributes its own | §5.3.3 wants enough to reconstruct the run. "reference" alone does not distinguish `C_cw = 1` from `C_cw = 0.35`, and the group already has the shape (`manifest.py:245`) |
 | No new dependency | Everything is NGSolve coefficient functions and `specialcf.mesh_size` | Nothing here needs a library, and CON-07 keeps the end-user path free of one |
 
@@ -113,8 +114,13 @@ Pe_h = ½ |z_i| |ζ̃| λ̃ / (5 λ̃) = |z_i| |ζ̃| / 10
 independently of concentration — which is where §6.4.1's `Pe_h = |z_i||ζ̃|/10` comes from, and which
 this plan checks at both ends of the envelope: at 1 M, `λ_D = 0.304 nm`, `h̃ = 0.0304`,
 `‖∇φ̃‖ = 19.7`, `Pe_h = 0.300`; at 0.05 M, `λ_D = 1.357 nm`, `h̃ = 0.1357`, `‖∇φ̃‖ = 4.42`,
-`Pe_h = 0.300`. Therefore **the added artificial diffusion is `ζ̃²/100`**: 4 % at `ζ̃ = 2`, **9 % at
-`ζ̃ = 3`**, 16 % at `ζ̃ = 4`.
+`Pe_h = 0.300`. Therefore **the added artificial diffusion is `ζ̃²/100`**: 4 % at `ζ̃ = 2`, 9 % at
+`ζ̃ = 3`, 16 % at `ζ̃ = 4`.
+
+The closed form is the result; the `ζ̃` values above are **illustrative substitutions**, not the
+reference pore's. Its pore-averaged `ζ̃` at 1 M is not in the knowledge base and is not needed to
+plan the work — it comes out of this package's own stabilised run beside `stabilisation_current_A`,
+and the end-of-phase report quotes the measured one (open question 3, closed).
 
 That is inside the double layer. In the pore lumen the potential gradient is set by the bias over the
 pore length — `0.2 V / 13 nm / V_T × a` gives `‖∇φ̃‖ ≈ 1.2` — and with `h̃ ≈ 0.05` that is
@@ -303,21 +309,14 @@ coefficient and not the constant in front of it. Nothing here tightens an existi
 
 ## Open questions
 
-1. **Should `C_cw` (and `τ_m`'s `ψ` cut-off) be case-file fields?** This plan says no — they are
-   numerics constants of a named mode, and a case that could retune them would make `reference` mean
-   a different operator per run while the manifest recorded one word. The counter-argument is that
-   WP13 may want a sensitivity study across `C_cw`, which under this decision means registering a
-   second mode rather than sweeping an axis. **For the author, before implementation starts.**
-2. **Is `supg` worth its spec amendment?** It discharges the unfinished half of NUM-11 and gives
-   WP13's attribution a fourth rung that separates the transport streamline term from the crosswind
-   and the flow pair. The cost is widening `numerics.stabilisation`, and with it the schema-widening
-   rule this commit writes into §5.3.1. If the author would rather keep `v1`'s value set exactly as
-   frozen, `supg` lives in the registry and is unreachable from a case file, and the §5.3.1 rule is
-   dropped. **Does not block the rest of the package.**
-3. **Which `ζ̃` should §Design's headline number quote?** The `ζ̃²/100` arithmetic is quoted at
-   `ζ̃ = 3`, giving 9 %. The reference pore's actual surface potential at 1 M sets the number WP13
-   reports, and it is not in the knowledge base. Not a blocker — the formula is the deliverable and
-   the value is a substitution — but the end-of-phase report should quote the right one.
+All three are closed. They were put to the author on 13 September 2026, before implementation
+started, and the rulings are folded into the Decisions table above.
+
+| # | Question | Ruling |
+|---|---|---|
+| 1 | Should `C_cw`, `τ_m`'s `ψ` cut-off and the PSPG coefficient be case-file fields? | **Closed, 13 September 2026 — module constants.** They are numerics constants of a named mode, not fitted physical parameters, and a case that could retune them would make `reference` mean a different operator per run while the manifest recorded one word. A variant is a second registered entry, which is what the registry is for; a `C_cw` sweep in WP13 is therefore a sweep over mode names, not over a number |
+| 2 | Is `supg` worth widening `numerics.stabilisation`, and with it the §5.3.1 schema-widening rule? | **Closed, 13 September 2026 — keep `supg`, widen the schema.** It discharges the unfinished half of NUM-11 and gives WP13's attribution a fourth rung separating the transport streamline term from the crosswind and the flow pair. The freeze needed a compatibility boundary before the first new correction model reached it, and a value-set widening — under which every `v1` document that validated still validates — is the cheapest place to draw one |
+| 3 | Which `ζ̃` should §Design's `ζ̃²/100` headline quote? | **Closed, 13 September 2026 — `ζ̃ = 3` stands as illustrative.** The closed form is the deliverable and the value is a substitution. The measured pore-averaged `ζ̃` at 1 M comes out of this package's own stabilised run alongside `stabilisation_current_A`, and the end-of-phase report quotes that one. Nothing here blocks |
 
 ## Specification amendments
 
