@@ -722,3 +722,113 @@ def test_num16_a_stabilised_assembly_without_a_state_is_refused() -> None:
         model.residual_form(space, AXISYMMETRIC)  # type: ignore[attr-defined]
     for term in ("streamline", "crosswind", "flow_gls", "grad_div"):
         assert term in str(raised.value)
+
+
+def _diagnostic(mode: str, potential: ngs.CoefficientFunction) -> object:
+    """Return the NUM-12 diagnostic for a coupled model at a state with ``potential``.
+
+    ``mode`` is varied to establish that the diagnostic is not a property of the
+    stabilisation: NUM-12's second NOTE requires it in every mode, and NUM-11 puts
+    production in the one where nothing is assembled.
+    """
+    from nanopnp.physics import models
+    from nanopnp.solve.gates import FieldSampler, PecletDiagnostic
+
+    model, mesh, _, state = _coupled(mode)
+    fields = {f.name: c for f, c in zip(model.fields, state.components, strict=True)}  # type: ignore[attr-defined]
+    fields[models.POTENTIAL].Set(potential)
+    return PecletDiagnostic(
+        FieldSampler(mesh, materials="electrolyte"),
+        model.cell_peclet(state, ngs.CF(1.0)),  # type: ignore[attr-defined]
+    )
+
+
+@pytest.mark.parametrize("mode", ["none", "supg", "reference"])
+def test_num12_the_peclet_diagnostic_warns_naming_the_species_value_and_place(
+    mode: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A warning above the threshold, carrying everything needed to act on it.
+
+    Parametrised over the mode because NUM-12's second NOTE is explicit that the
+    evaluation runs in ``none`` too: a diagnostic that only runs when the
+    stabilisation is on never runs in production, where NUM-11 requires it off.
+    """
+    diagnostic = _diagnostic(mode, 2.0 * ngs.y * ngs.y)
+    with caplog.at_level("INFO", logger="nanopnp.solve.gates"):
+        found = diagnostic.report()  # type: ignore[attr-defined]
+
+    assert found.maximum > 1.0
+    assert found.species in ("Na+", "Cl-")
+    assert 0.0 < found.exceeding_fraction < 1.0
+    records = [r for r in caplog.records if r.levelname == "WARNING"]
+    assert len(records) == 1
+    message = records[0].getMessage()
+    assert found.species in message
+    assert f"{found.maximum:.4g}" in message
+    assert f"{found.location[0]:.4g}" in message
+    assert f"{found.location[1]:.4g}" in message
+    assert "NUM-12" in message
+    # NUM-12's first NOTE: which expression produced the number is part of the
+    # report, because section 6.4.1's printed Pe_h assumes the Einstein relation
+    # and this one deliberately does not (PHY-14, VER-05).
+    assert "mu_i grad(phi~)" in message
+
+
+def test_num12_the_peclet_diagnostic_is_silent_below_the_threshold(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Below 1 it reports at INFO and never at WARNING: it is a warning, not a gate."""
+    diagnostic = _diagnostic("reference", 0.4 * ngs.y + 0.2 * ngs.x)
+    with caplog.at_level("INFO", logger="nanopnp.solve.gates"):
+        found = diagnostic.report()  # type: ignore[attr-defined]
+
+    assert found.maximum < 1.0
+    assert found.exceeding == 0
+    assert found.exceeding_fraction == 0.0
+    assert [r for r in caplog.records if r.levelname == "WARNING"] == []
+    assert len(caplog.records) == 1
+
+
+def test_num12_the_peclet_diagnostic_never_aborts_a_run() -> None:
+    """It has no ``check``: NUM-12 asks for a warning, and the ladder climbs through.
+
+    Asserted on the class rather than by calling something, because the failure
+    this guards against is a later edit giving it one — an under-resolved mesh is
+    then a hard failure and the lower rungs of the continuation ladder, which are
+    deliberately coarse, stop converging.
+    """
+    from nanopnp.solve.gates import PecletDiagnostic
+
+    assert not hasattr(PecletDiagnostic, "check")
+
+
+def test_num12_the_peclet_diagnostic_refuses_an_empty_species_mapping() -> None:
+    """An empty mapping is refused rather than reported as a maximum of zero.
+
+    A passing number from a diagnostic that sampled nothing is the quiet wrong
+    answer QR-12 exists to prevent.
+    """
+    from nanopnp.solve.gates import FieldSampler, PecletDiagnostic
+
+    _, mesh, _, _ = _coupled("reference")
+    diagnostic = PecletDiagnostic(FieldSampler(mesh, materials="electrolyte"), {})
+    with pytest.raises(ValueError, match="given no species"):
+        diagnostic.measure()
+
+
+def test_num12_the_peclet_measurement_reports_every_species_separately() -> None:
+    """A warning driven by one ion is not a property of the mesh.
+
+    ``Na+`` and ``Cl-`` differ in valence sign and in ``mu~_i``, so their winds
+    differ; a single maximum would hide which ion is under-resolved, and the
+    diffusivity correction that sets the difference is the one PHY-14 says cannot
+    be inferred from the mobility.
+    """
+    diagnostic = _diagnostic("reference", 2.0 * ngs.y * ngs.y)
+    found = diagnostic.measure()  # type: ignore[attr-defined]
+
+    assert set(found.per_species) == {"Na+", "Cl-"}
+    assert found.maximum == max(found.per_species.values())
+    assert found.per_species[found.species] == found.maximum
+    assert found.per_species["Na+"] != found.per_species["Cl-"]
+    assert found.summary()["per_species"] == dict(found.per_species)

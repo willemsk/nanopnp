@@ -75,6 +75,7 @@ from nanopnp.physics.stabilisation import (
     TransportState,
     registered_stabilisations,
 )
+from nanopnp.physics.stabilisation import cell_peclet as species_cell_peclet
 from nanopnp.physics.stabilisation import create as create_stabilisation
 from nanopnp.solve.gates import (
     FieldSampler,
@@ -710,6 +711,39 @@ class CoupledModel:
         if self.log_variables:
             return ConcentrationVariables.logarithmic_branch(fields)
         return ConcentrationVariables.primitive(fields)
+
+    def cell_peclet(
+        self, state: GridFunction, wall_distance_nm: Expression
+    ) -> dict[str, Expression]:
+        """Return ``Pe_K`` per species at ``state``, for the NUM-12 diagnostic.
+
+        Built from the same :class:`~nanopnp.physics.stabilisation.TransportState`
+        the stabilisation terms read their parameters from, so the number the
+        diagnostic reports is the one the mode was formed on rather than a second
+        expression that could drift from it. There is no ``grad(phi~)`` before a
+        solve, so this is meaningful on a converged state only (NUM-12's second
+        NOTE), and it is evaluated in every mode including ``none``.
+
+        Parameters
+        ----------
+        state
+            A grid function on this model's product space, normally the converged
+            one.
+        wall_distance_nm
+            The distance field the corrections read, as
+            :meth:`residual_form` was given it: ``D~_i`` carries the wall
+            correction, so a diagnostic built on a different field would report a
+            different Peclet number from the one the solver saw.
+        """
+        functions = self._split(list(state.components))
+        variables = self.concentration_variables(functions)
+        coefficients = self.coefficients(variables, wall_distance_nm)
+        return {
+            name: species_cell_peclet(
+                self._transport_state(name, functions, variables, coefficients)
+            )
+            for name in self.species
+        }
 
     def permittivity(
         self,

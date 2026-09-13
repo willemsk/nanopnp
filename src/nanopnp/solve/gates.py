@@ -565,6 +565,197 @@ class WallDistanceGate:
         return found
 
 
+PECLET_WARNING = 1.0
+"""Cell Peclet number at which NUM-12 requires a warning.
+
+Not a gate threshold. ``Pe_K > 1`` is where plain Galerkin starts producing the
+spurious negative concentrations section 6.4.1 cites, and where the crosswind
+viscosity of NUM-14 first becomes nonzero -- ``nu_K <= D_i max(0, C_cw Pe_K - 1)``
+puts the two thresholds at the same place for ``C_cw = 1``. So a run above it is
+under-resolved rather than wrong, and the NUM-17 positivity gate is what fails if
+it has become wrong.
+"""
+
+
+@dataclass(frozen=True)
+class PecletMeasurement:
+    """What the NUM-12 diagnostic measured, above the threshold or not.
+
+    Recorded in the artefact summary and in the FR-25 manifest beside the
+    stabilisation mode, so that "the mesh resolved the double layer" is a number
+    in the record of every run rather than the absence of a warning in the log of
+    one.
+
+    Attributes
+    ----------
+    maximum
+        The largest sampled ``Pe_K`` over every species.
+    species
+        Which species attained it.
+    location
+        Where, in mesh units.
+    exceeding
+        How many sample points reached the threshold, over all species.
+    samples
+        How many samples were taken, over all species.
+    per_species
+        The largest ``Pe_K`` of each species on its own, so that a warning driven
+        by one ion is not read as a property of the mesh.
+    expression
+        Which expression produced the number, as NUM-12's NOTE requires: the
+        printed ``Pe_h`` of section 6.4.1 assumes the Einstein relation and this
+        one does not, and the two differ by ``D_i/(mu_i V_T)`` -- 1.2 to 1.7
+        between 0.15 M and 3 M (PHY-14, VER-05).
+    """
+
+    maximum: float
+    species: str
+    location: tuple[float, float]
+    exceeding: int
+    samples: int
+    per_species: Mapping[str, float]
+    expression: str = "||b_i|| h_K / (2 D_i), b_i = z_i mu_i grad(phi~) + D_i beta_i - Pe u~"
+
+    @property
+    def exceeding_fraction(self) -> float:
+        """Return the fraction of samples at or above the threshold."""
+        return 0.0 if self.samples == 0 else self.exceeding / self.samples
+
+    def summary(self) -> dict[str, float | int | str | list[float] | dict[str, float]]:
+        """Return this measurement as plain data, for the manifest and the dataset."""
+        return {
+            "maximum": self.maximum,
+            "species": self.species,
+            "location_nm": [self.location[0], self.location[1]],
+            "exceeding": self.exceeding,
+            "exceeding_fraction": self.exceeding_fraction,
+            "samples": self.samples,
+            "per_species": dict(self.per_species),
+            "expression": self.expression,
+        }
+
+
+@dataclass
+class PecletDiagnostic:
+    """``Pe_K`` on a converged state: a warning, never a gate (NUM-12).
+
+    NUM-12 asks for a warning and not an abort, and the distinction is the point.
+    A cell Peclet number above 1 says the mesh does not resolve the double layer
+    at NUM-30's rate, which makes the transport operator under-resolved; it does
+    not make the answer inadmissible, and there are meshes the continuation ladder
+    deliberately climbs *through* that are above it on the lower rungs. So this
+    class carries no :meth:`check` that raises -- it logs, and it hands back what
+    it measured for the record.
+
+    It runs in every mode, ``none`` included (NUM-12's second NOTE): a diagnostic
+    that only runs when the stabilisation is on is a diagnostic that never runs in
+    production, where NUM-11 requires the stabilisation off.
+
+    Sampling is by point rather than by element, on the sampler the NUM-17 gates
+    already built for this mesh. ``h_K`` is element-constant, so a sample above
+    the threshold does localise to one element; what a point sample can miss is an
+    element whose ``||b_i||`` peaks strictly between its P2 nodes, which is the
+    same trade the module docstring records for the gates themselves.
+
+    Parameters
+    ----------
+    sampler
+        Sampler over the fluid materials of the solve mesh. The wind is built from
+        fields solved on the fluid, so a solid sample would report a ``Pe_K`` of
+        zero and dilute the fraction.
+    peclet
+        ``Pe_K`` per species, from :meth:`nanopnp.physics.models.CoupledModel.cell_peclet`
+        at the converged state. Passed in rather than built here so that the number
+        reported is the one the stabilisation parameters were formed from.
+    threshold
+        Where to warn. Defaults to :data:`PECLET_WARNING`.
+    """
+
+    sampler: FieldSampler
+    peclet: Mapping[str, Expression]
+    threshold: float = PECLET_WARNING
+    name: str = "cell Peclet"
+
+    def measure(self) -> PecletMeasurement:
+        """Return the largest sampled ``Pe_K``, where it occurred, and how many exceed.
+
+        Raises
+        ------
+        ValueError
+            If no species was supplied, which would leave the diagnostic
+            reporting a maximum of zero on a model that has transport -- a
+            passing number from a check that never ran.
+        """
+        import numpy as np
+
+        if not self.peclet:
+            raise ValueError(
+                "the Pe_h diagnostic was given no species; NUM-12 evaluates it on the "
+                "advective velocity of each ion, so an empty mapping reports a maximum of "
+                "zero from a diagnostic that sampled nothing"
+            )
+        best = -1.0
+        best_species = ""
+        best_location = (0.0, 0.0)
+        exceeding = 0
+        samples = 0
+        per_species: dict[str, float] = {}
+        for species in sorted(self.peclet):
+            values = self.sampler.evaluate(self.peclet[species])
+            index = int(np.argmax(values))
+            per_species[species] = float(values[index])
+            exceeding += int(np.count_nonzero(values >= self.threshold))
+            samples += int(values.size)
+            if float(values[index]) > best:
+                best = float(values[index])
+                best_species = species
+                best_location = (
+                    float(self.sampler.points[index, 0]),
+                    float(self.sampler.points[index, 1]),
+                )
+        return PecletMeasurement(
+            maximum=best,
+            species=best_species,
+            location=best_location,
+            exceeding=exceeding,
+            samples=samples,
+            per_species=per_species,
+        )
+
+    def report(self) -> PecletMeasurement:
+        """Measure, log at the level the number deserves, and return the measurement."""
+        found = self.measure()
+        if found.maximum >= self.threshold:
+            logger.warning(
+                "%s diagnostic: Pe_K = %.4g for %s at %s = %.4g nm, %s = %.4g nm, over "
+                "%d of %d fluid samples at or above %.4g (NUM-12). The mesh does not resolve "
+                "the double layer at the NUM-30 rate there; the transport operator is "
+                "under-resolved and the NUM-17 positivity gate is what will fail if it has "
+                "become inadmissible. Evaluated as %s",
+                self.name,
+                found.maximum,
+                found.species,
+                self.sampler.coordinates[0],
+                found.location[0],
+                self.sampler.coordinates[1],
+                found.location[1],
+                found.exceeding,
+                found.samples,
+                self.threshold,
+                found.expression,
+            )
+        else:
+            logger.info(
+                "%s diagnostic: max Pe_K = %.4g for %s over %d fluid samples, below %.4g",
+                self.name,
+                found.maximum,
+                found.species,
+                found.samples,
+                self.threshold,
+            )
+        return found
+
+
 def excluded_volume_m3_per_mol(diameter_nm: float) -> float:
     """Return ``N_A a^3`` in m^3/mol, the volume one mole of a species occupies.
 
