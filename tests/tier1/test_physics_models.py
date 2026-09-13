@@ -5,6 +5,7 @@ The claim this file defends is that ``pnp-ns`` is a *configuration* of
 the class identity test below is what notices.
 """
 
+from collections.abc import Iterator
 from dataclasses import fields as dataclass_fields
 from dataclasses import replace
 
@@ -83,11 +84,55 @@ def test_num01_field_set_matches_the_specified_discretisation() -> None:
     assert declared[VELOCITY].domain == declared[PRESSURE].domain == ELECTROLYTE_DOMAINS
 
 
-def test_num03_equal_order_velocity_pressure_is_rejected() -> None:
-    """P1/P1 is selectable only with a flow stabilisation this phase does not have."""
+def test_num03_equal_order_velocity_pressure_is_rejected_without_a_flow_stabilisation() -> None:
+    """P1/P1 is refused in every mode that supplies no PSPG content (NUM-03).
+
+    The refusal names both the reason and the mode that would lift it, because
+    "not inf-sup stable" on its own leaves a user with a working configuration they
+    cannot find. ``supg`` is refused as firmly as ``none``: it assembles the
+    transport streamline term and no flow term at all.
+    """
     electrolyte = Electrolyte.from_parameter_file()
+    for mode in ("none", "supg"):
+        with pytest.raises(ValueError, match="inf-sup") as raised:
+            CoupledModel(electrolyte=electrolyte, order=2, pressure_order=2, stabilisation=mode)
+        assert "reference" in str(raised.value), "the refusal must name the permitting mode"
+        assert repr(mode) in str(raised.value)
+
+
+def test_num03_equal_order_velocity_pressure_is_accepted_in_the_reference_mode() -> None:
+    """``reference`` assembles the GLS pair, so P1/P1 is legal in it (NUM-03, NUM-14)."""
+    electrolyte = Electrolyte.from_parameter_file()
+    model = CoupledModel(
+        electrolyte=electrolyte,
+        order=2,
+        velocity_order=1,
+        pressure_order=1,
+        stabilisation="reference",
+    )
+    declared = {field.name: field for field in model.fields}
+    assert declared[POTENTIAL].order == 2
+    assert declared[VELOCITY].order == 1
+    assert declared[PRESSURE].order == 1
+    # And the gate is on the *pair*, not on the mode: an equal-order pair is still
+    # refused in ``none`` even when the velocity order is set explicitly.
     with pytest.raises(ValueError, match="inf-sup"):
-        CoupledModel(electrolyte=electrolyte, order=2, pressure_order=2)
+        CoupledModel(electrolyte=electrolyte, order=2, velocity_order=1, pressure_order=1)
+
+
+def test_num03_velocity_order_defaults_to_the_shared_element_order() -> None:
+    """``velocity_order=None`` reproduces the two-order model exactly.
+
+    Every case written before the third order existed leaves it unset, so the
+    default has to be byte-identical in the field set *and* in the provenance —
+    which is what makes widening the case schema a non-event for existing runs.
+    """
+    electrolyte = Electrolyte.from_parameter_file()
+    implicit = CoupledModel(electrolyte=electrolyte, order=3, pressure_order=2)
+    explicit = CoupledModel(electrolyte=electrolyte, order=3, velocity_order=3, pressure_order=2)
+    assert implicit.resolved_velocity_order == 3
+    assert implicit.provenance["fields"] == explicit.provenance["fields"]
+    assert implicit.provenance["elements"] == explicit.provenance["elements"]
 
 
 def test_num06_axis_carries_only_the_radial_velocity_condition() -> None:
@@ -141,17 +186,84 @@ def test_fr25_provenance_records_every_deviation_from_the_validated_default() ->
 def test_fr25_provenance_records_the_stabilisation_mode() -> None:
     """A number recorded without its stabilisation mode is not comparable (§6.4).
 
-    The mode is trivially ``"none"`` this phase (NUM-11), but the reference COMSOL
-    model ran stabilised, so Phase 1's comparison must be able to attribute a
-    discrepancy to the discretisation rather than to a bug — which a manifest that
-    omits the mode cannot do. A mode the solver does not implement is refused
-    rather than recorded, so the manifest never describes a run that did not
-    happen.
+    The reference COMSOL model ran stabilised, so the comparison of §7.4 must be
+    able to attribute a discrepancy to the discretisation rather than to a bug —
+    which a manifest that omits the mode cannot do. A mode that is not registered
+    is refused rather than recorded, so the manifest never describes a run that did
+    not happen.
     """
     electrolyte = Electrolyte.from_parameter_file()
     assert CoupledModel(electrolyte=electrolyte).provenance["stabilisation"] == "none"
-    with pytest.raises(ValueError, match="stabilisation 'supg' is not implemented"):
-        CoupledModel(electrolyte=electrolyte, stabilisation="supg")
+    assert (
+        CoupledModel(electrolyte=electrolyte, stabilisation="supg").provenance["stabilisation"]
+        == "supg"
+    )
+    with pytest.raises(ValueError, match="'streamline' is not a registered mode") as raised:
+        CoupledModel(electrolyte=electrolyte, stabilisation="streamline")
+    for mode in ("none", "supg", "reference"):
+        assert mode in str(raised.value)
+
+
+@pytest.fixture
+def retuned_mode() -> Iterator[str]:
+    """Register a second ``reference`` entry with a different ``C_cw``, then remove it.
+
+    The tuning constants are deliberately not case-file fields — a variant is a
+    second registered entry — so this is the supported way to reach one. The
+    registry is process-global, so the entry is removed again: leaving it behind
+    would make ``test_stabilisation.py``'s "exactly three modes" assertion depend on
+    file ordering, which is the fourth failure mode ``CLAUDE.md`` names.
+    """
+    from nanopnp.physics import stabilisation as stab
+
+    name = "reference-cw035"
+    stab.register(name, lambda: stab.ReferenceStabilisation(crosswind_coefficient=0.35))
+    try:
+        yield name
+    finally:
+        # No public counterpart to ``register``; the registry is process-global.
+        del stab._REGISTRY[name]
+
+
+def test_fr25_provenance_distinguishes_two_tunings_of_the_same_mode(retuned_mode: str) -> None:
+    """The mode *name* is not the operator: its constants are in the digest too.
+
+    ``reference`` with ``C_cw = 1`` and ``reference`` with ``C_cw = 0.35`` are
+    different discretisations, so a provenance record carrying only the word
+    ``reference`` would let two runs share a cache key and a manifest (FR-25,
+    §5.3.2). The tuning constants are not case-file fields — a variant is a second
+    registered entry — which is exactly the situation reproduced here.
+    """
+    from nanopnp.core.hashing import content_hash
+
+    electrolyte = Electrolyte.from_parameter_file()
+    baseline = CoupledModel(electrolyte=electrolyte, stabilisation="reference")
+    retuned = CoupledModel(electrolyte=electrolyte, stabilisation=retuned_mode)
+    assert baseline.provenance["stabilisation_parameters"]["crosswind_coefficient"] == 1.0
+    assert retuned.provenance["stabilisation_parameters"]["crosswind_coefficient"] == 0.35
+    schema = "test/model-provenance/v1"
+    assert content_hash(schema, baseline.provenance) != content_hash(schema, retuned.provenance)
+
+
+def test_fr25_provenance_records_the_three_element_orders() -> None:
+    """``phi``/``c``, ``u`` and ``p`` are reported separately (NUM-03, §5.3.3)."""
+    electrolyte = Electrolyte.from_parameter_file()
+    model = CoupledModel(
+        electrolyte=electrolyte,
+        order=2,
+        velocity_order=1,
+        pressure_order=1,
+        stabilisation="reference",
+    )
+    assert model.provenance["elements"] == {
+        "potential": 2,
+        "concentration": 2,
+        "velocity": 1,
+        "pressure": 1,
+    }
+    assert model.provenance["stabilisation_provenance"]["terms"] == (
+        "streamline,crosswind,flow_gls,grad_div"
+    )
 
 
 def test_fr20_a_model_declares_fields_boundaries_and_a_solve_strategy() -> None:

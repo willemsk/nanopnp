@@ -56,7 +56,7 @@ from nanopnp.materials.electrolyte import (
     CorrectionSwitches,
     Electrolyte,
 )
-from nanopnp.physics.models import SUPPORTED_STABILISATIONS, registered_models
+from nanopnp.physics.models import registered_models, registered_stabilisations
 from nanopnp.solve.linear import AVAILABLE_SOLVERS
 from nanopnp.solve.newton import DEFAULT_SETTINGS, NewtonSettings
 
@@ -494,10 +494,10 @@ class CaseDocument(_Strict):
                 f"physics.model {self.physics.model!r} is not registered; the models are "
                 f"{', '.join(registered_models())}"
             )
-        if self.numerics.stabilisation not in SUPPORTED_STABILISATIONS:
+        if self.numerics.stabilisation not in registered_stabilisations():
             problems.append(
-                f"numerics.stabilisation {self.numerics.stabilisation!r} is not implemented this "
-                f"release; the available modes are {', '.join(sorted(SUPPORTED_STABILISATIONS))}. "
+                f"numerics.stabilisation {self.numerics.stabilisation!r} is not a registered "
+                f"mode; the available modes are {', '.join(registered_stabilisations())}. "
                 "Recording a mode the solver does not apply would make the FR-25 manifest "
                 "describe a run that never happened"
             )

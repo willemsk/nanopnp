@@ -601,6 +601,18 @@ class StabilisationModel(Protocol):
         ...
 
     @property
+    def terms(self) -> tuple[str, ...]:
+        """The terms this mode assembles, in assembly order; empty for ``none``.
+
+        Read by :meth:`~nanopnp.physics.models.CoupledModel.residual_form` to decide
+        whether a solve state is required, which is the one thing a caller must know
+        about a mode before building it. Deliberately not "is this mode ``none``":
+        a future mode that assembles nothing under some configuration gets the same
+        treatment without being special-cased by name.
+        """
+        ...
+
+    @property
     def permits_equal_order(self) -> bool:
         """Whether this mode supplies the flow stabilisation NUM-03 requires.
 
@@ -676,6 +688,10 @@ class NoStabilisation:
             "terms": "",
             "note": "unstabilised Galerkin; no term is assembled (NUM-11)",
         }
+
+    @property
+    def terms(self) -> tuple[str, ...]:  # noqa: D102
+        return ()
 
     @property
     def permits_equal_order(self) -> bool:  # noqa: D102

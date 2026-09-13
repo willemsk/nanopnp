@@ -179,6 +179,11 @@ SPACE_KEYS: tuple[str, ...] = (
     # not are two different spaces however equal everything else is.
     "model.model",
     "model.fields",
+    # The same element orders as ``model.fields``, restated in the case file's own
+    # ``{phi, c, u, p}`` vocabulary so the manifest can report them without knowing
+    # the species names. Two records of one fact: gated on the same side, so they
+    # cannot disagree about whether a warm start is admissible (NUM-03).
+    "model.elements",
     # The NUM-02 branch. A log-variable model and a primitive one declare the
     # same field names at the same order with the same ``ndof`` and mean
     # different things by them, so nothing about the shape of the two spaces
@@ -188,12 +193,15 @@ SPACE_KEYS: tuple[str, ...] = (
     "model.switches.pressure_constraint",
     # Placed here against its class, deliberately. Stabilisation changes the
     # form and not the space, so a warm start across it would load. It is gated
-    # anyway because WP12 introduces the reference mode precisely to compare two
-    # numbers, and a comparison whose two sides were reached through each other
-    # is not one. The cost is zero this phase: ``SUPPORTED_STABILISATIONS`` is
-    # ``{"none"}``.
+    # anyway because the reference mode of NUM-14 exists precisely to compare two
+    # numbers, and a comparison whose two sides were reached through each other is
+    # not one. The tuning constants sit beside the mode name for the same reason:
+    # ``reference`` at ``C_cw = 1`` and at ``C_cw = 0.35`` are different operators,
+    # and the mode name alone would let a warm start cross between them (FR-25).
     "stabilisation",
     "model.stabilisation",
+    "model.stabilisation_parameters",
+    "model.stabilisation_provenance",
     # Derived from the mesh and the element order, so a difference here means
     # one of those moved.
     "wall_distance.ndof",

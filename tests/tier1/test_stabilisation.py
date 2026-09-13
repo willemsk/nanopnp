@@ -584,3 +584,141 @@ def test_num11_supg_assembles_no_flow_term(mesh: ngs.Mesh) -> None:
         is None
     )
     assert measures.calls == []
+
+
+# -- what the terms do to the assembled residual --------------------------
+
+
+def _coupled(mode: str) -> tuple[object, ngs.Mesh, object, ngs.GridFunction]:
+    """Return a flow-coupled model, a small mesh, its space and a non-trivial state.
+
+    The state matters: at the cold start ``phi~ = 0``, ``c~_i = 1`` and ``u~ = 0``,
+    so ``b~_i``, ``R~_i`` and ``R~_m`` all vanish and every stabilisation term is
+    identically zero. A test that asserted on that state would pass with the terms
+    unwired, which is why the fields below are set to something with a gradient.
+    """
+    from nanopnp.mesh.primitives import CylinderGeometry
+    from nanopnp.physics import models
+
+    mesh = CylinderGeometry(radius_nm=2.0, length_nm=4.0).generate(maxh_nm=1.0)
+    model = models.create("pnp-ns", fluid="electrolyte", stabilisation=mode)
+    boundaries = models.CoupledBoundaries(
+        potential="end", concentration="end", velocity="wall", velocity_axis="axis"
+    )
+    space = model.space(mesh, boundaries)
+    state = ngs.GridFunction(space, name="state")
+    fields = {f.name: c for f, c in zip(model.fields, state.components, strict=True)}
+    fields[models.POTENTIAL].Set(0.4 * ngs.y + 0.2 * ngs.x)
+    fields["c_Na+"].Set(1.0 + 0.15 * ngs.x)
+    fields["c_Cl-"].Set(1.0 - 0.1 * ngs.y)
+    fields[models.VELOCITY].Set(ngs.CF((0.05 * ngs.x, 0.2)))
+    fields[models.PRESSURE].Set(0.3 * ngs.y)
+    return model, mesh, space, state
+
+
+def _applied(
+    model: object, space: object, at: ngs.GridFunction, *, lagged: bool = False
+) -> ngs.BaseVector:
+    """Return the residual of ``model`` applied at ``at``.
+
+    ``lagged`` decides whether the state is handed to ``residual_form`` as the side
+    the stabilisation parameters are read from. Both calls apply the form at the
+    same vector either way, so the difference between them is the stabilisation and
+    nothing else.
+    """
+    from nanopnp.physics.measures import AXISYMMETRIC
+
+    extra = {"state": at} if lagged else {}
+    form = ngs.BilinearForm(space)
+    form += model.residual_form(space, AXISYMMETRIC, **extra)  # type: ignore[attr-defined]
+    out = at.vec.CreateVector()
+    form.Apply(at.vec, out)
+    return out
+
+
+def test_phy22_the_none_mode_assembles_the_unstabilised_residual_exactly() -> None:
+    """``none`` is the unstabilised residual on the vector, not merely by its name.
+
+    Asserted bit-for-bit: passing a state to a ``none`` model must change nothing at
+    all, which is the guarantee that makes the mode a *configuration* rather than a
+    code path and that keeps every pre-WP12 result reproducible (PHY-22, NUM-11).
+    """
+    model, _, space, state = _coupled("none")
+    with_state = _applied(model, space, state, lagged=True)
+    without = _applied(model, space, state)
+    assert with_state.Norm() > 0.0
+    assert (with_state - without).Norm() == 0.0
+
+
+def test_num14_the_reference_mode_changes_the_assembled_residual() -> None:
+    """The terms are actually assembled; a wiring that dropped them fails here."""
+    plain, _, space, state = _coupled("none")
+    stabilised, _, _, _ = _coupled("reference")
+    difference = _applied(stabilised, space, state, lagged=True) - _applied(plain, space, state)
+    reference_norm = _applied(plain, space, state).Norm()
+    assert difference.Norm() > 1e-6 * reference_norm
+
+
+def test_num14_the_stabilisation_leaves_the_poisson_row_untouched() -> None:
+    """Only the transport and flow rows gain a term (NUM-11, NUM-14).
+
+    Poisson is elliptic and unstabilised by construction — §6.4 stabilises the
+    transport and flow equations and nothing else — so the potential block of the
+    difference must be exactly zero while the others are not. A term added against
+    the wrong test function would pass a norm test on the whole vector.
+    """
+    from nanopnp.physics.models import POTENTIAL
+
+    plain, _, space, state = _coupled("none")
+    stabilised, _, _, _ = _coupled("reference")
+    unstabilised = _applied(plain, space, state)
+    difference = unstabilised.CreateVector()
+    difference.data = _applied(stabilised, space, state, lagged=True) - unstabilised
+    blocks = {
+        field.name: difference[space.Range(index)].Norm()
+        for index, field in enumerate(plain.fields)  # type: ignore[attr-defined]
+    }
+    assert blocks[POTENTIAL] == 0.0
+    for name, norm in blocks.items():
+        if name != POTENTIAL:
+            assert norm > 0.0, f"the {name!r} row gained no stabilisation term"
+
+
+def test_num14_every_term_vanishes_at_a_state_with_no_wind() -> None:
+    """At ``phi~ = 0``, ``c~_i = 1``, ``u~ = 0`` and ``p~ = 0`` the mode adds nothing.
+
+    ``b~_i = 0`` there, and with a symmetric salt at bulk the body force and the
+    momentum residual vanish too, so every parameter multiplies a zero residual.
+    Worth pinning: it is what makes the entry rung of the NUM-18 ladder identical in
+    every mode, and a term with a stray additive constant would break it.
+    """
+    from nanopnp.mesh.primitives import CylinderGeometry
+    from nanopnp.physics import models
+
+    mesh = CylinderGeometry(radius_nm=2.0, length_nm=4.0).generate(maxh_nm=1.0)
+    boundaries = models.CoupledBoundaries(
+        potential="end", concentration="end", velocity="wall", velocity_axis="axis"
+    )
+    plain = models.create("pnp-ns", fluid="electrolyte")
+    stabilised = models.create("pnp-ns", fluid="electrolyte", stabilisation="reference")
+    space = plain.space(mesh, boundaries)
+    cold = plain.cold_state(mesh, boundaries)
+    difference = _applied(stabilised, space, cold, lagged=True) - _applied(plain, space, cold)
+    assert difference.Norm() == pytest.approx(0.0, abs=1e-20)
+
+
+def test_num16_a_stabilised_assembly_without_a_state_is_refused() -> None:
+    """The parameters must be lagged, so the state is not optional for a real mode.
+
+    Building them from the trial functions would put ``max(0, .)`` and
+    ``1/||grad c~_i||`` into the Jacobian, which the NUM-16 damping policy is not
+    tuned for — a silent change of solver behaviour rather than a wrong answer, and
+    therefore worth a refusal rather than a fallback.
+    """
+    from nanopnp.physics.measures import AXISYMMETRIC
+
+    model, _, space, _ = _coupled("reference")
+    with pytest.raises(ValueError, match="needs the solve state") as raised:
+        model.residual_form(space, AXISYMMETRIC)  # type: ignore[attr-defined]
+    for term in ("streamline", "crosswind", "flow_gls", "grad_div"):
+        assert term in str(raised.value)

@@ -69,6 +69,13 @@ from nanopnp.physics.pb import (
 )
 from nanopnp.physics.poisson import charge_source, poisson_operator, surface_charge_source
 from nanopnp.physics.spaces import set_boundary_values
+from nanopnp.physics.stabilisation import (
+    FlowState,
+    StabilisationModel,
+    TransportState,
+    registered_stabilisations,
+)
+from nanopnp.physics.stabilisation import create as create_stabilisation
 from nanopnp.solve.gates import (
     FieldSampler,
     Gate,
@@ -95,8 +102,10 @@ __all__ = [
     "ModelSolution",
     "PhysicsModel",
     "create",
+    "equal_order_stabilisations",
     "register",
     "registered_models",
+    "registered_stabilisations",
 ]
 
 logger = logging.getLogger(__name__)
@@ -112,15 +121,23 @@ PRESSURE = "pressure"
 PRESSURE_MEAN = "pressure_mean"
 """Name of the scalar multiplier fixing the pressure level; see ``pressure_constraint``."""
 
-SUPPORTED_STABILISATIONS: frozenset[str] = frozenset({"none"})
-"""The residual stabilisation modes this phase implements (NUM-11, NUM-13).
 
-Only unstabilised Galerkin, ``"none"``, is available in Phase 0. The set is the
-gate that keeps a provenance record from claiming a mode the solver does not
-apply: NUM-14's streamline/crosswind stabilisation adds its name here when it is
-implemented, and until then asking for it is refused rather than recorded as a
-run that never happened.
-"""
+def equal_order_stabilisations() -> tuple[str, ...]:
+    """Return the registered modes that permit an equal-order velocity-pressure pair.
+
+    Read off each mode's own ``permits_equal_order`` rather than listed, so the
+    inf-sup refusal of :meth:`CoupledModel.__post_init__` can name the mode that
+    would permit the pair instead of merely refusing it (NUM-03).
+
+    Queried live, like :func:`registered_stabilisations` itself: a snapshot taken at
+    import would refuse a mode registered afterwards — an out-of-tree variant, or a
+    retuned ``C_cw`` — which is a gate failing on a mode that *is* implemented.
+    """
+    return tuple(
+        name
+        for name in registered_stabilisations()
+        if create_stabilisation(name).permits_equal_order
+    )
 
 
 def _reject_unknown(kwargs: Mapping[str, Option], where: str) -> None:
@@ -387,12 +404,19 @@ class CoupledModel:
     log_variables
         Whether the NUM-02 log branch ``c~_i = exp(w_i)`` is used.
     order
-        Element order of ``phi``, ``c_i`` and ``u``.
+        Element order of ``phi`` and ``c_i``, and of ``u`` unless
+        ``velocity_order`` overrides it.
+    velocity_order
+        Element order of ``u``. ``None`` means ``order``, which is the two-order
+        model every case before WP12 was written against; the reference
+        configuration of section 7.4 is ``phi`` and ``c`` at P2 with ``u`` and
+        ``p`` at P1, which needs the third order (NUM-03).
     pressure_order
-        Element order of ``p``. The Taylor-Hood pair ``order``/``order - 1`` is
-        inf-sup stable and needs no pressure stabilisation of its own; equal
-        order is selectable only with the flow stabilisation of section 6.4.2,
-        which this phase does not implement (NUM-03).
+        Element order of ``p``. The Taylor-Hood pair
+        ``velocity_order``/``velocity_order - 1`` is inf-sup stable and needs no
+        pressure stabilisation of its own; equal order is selectable only with the
+        flow stabilisation of section 6.4.2, which the ``reference`` mode supplies
+        (NUM-03).
     fluid
         Material-name regular expression selecting the domains Nernst-Planck and
         the flow are solved on.
@@ -417,6 +441,7 @@ class CoupledModel:
     dielectric_gradient_forces: bool = False
     log_variables: bool = False
     order: int = 2
+    velocity_order: int | None = None
     pressure_order: int = 1
     fluid: str = ELECTROLYTE_DOMAINS
     solid_permittivities: Mapping[str, float] = field(default_factory=dict)
@@ -441,25 +466,30 @@ class CoupledModel:
         Raises
         ------
         ValueError
-            If the Taylor-Hood pair is equal-order, which NUM-03 permits only
-            with a flow stabilisation this phase does not provide, if
+            If the velocity-pressure pair is equal-order in a mode that supplies
+            no flow stabilisation, which NUM-03 refuses, if
             ``dielectric_gradient_forces`` is combined with the log branch, where
             the permittivity sensitivity would come back in the wrong variable, or
-            if ``stabilisation`` names a mode this phase does not implement.
+            if ``stabilisation`` names a mode that is not registered.
         """
-        if self.stabilisation not in SUPPORTED_STABILISATIONS:
-            known = ", ".join(sorted(SUPPORTED_STABILISATIONS))
+        if self.stabilisation not in registered_stabilisations():
+            known = ", ".join(registered_stabilisations())
             raise ValueError(
-                f"stabilisation {self.stabilisation!r} is not implemented this phase; the "
-                f"available modes are {known}. NUM-14's streamline/crosswind stabilisation is "
-                "Phase 1, and recording a mode the solver does not apply would make the FR-25 "
-                "manifest describe a run that never happened"
+                f"stabilisation {self.stabilisation!r} is not a registered mode; the available "
+                f"modes are {known}. Recording a mode the solver does not apply would make the "
+                "FR-25 manifest describe a run that never happened"
             )
-        if self.flow and self.pressure_order >= self.order:
+        if (
+            self.flow
+            and self.pressure_order >= self.resolved_velocity_order
+            and not self.stabilisation_model.permits_equal_order
+        ):
+            permitting = ", ".join(equal_order_stabilisations()) or "no registered mode"
             raise ValueError(
-                f"velocity order {self.order} with pressure order {self.pressure_order} is not "
-                "inf-sup stable; NUM-03 allows equal order only together with the flow "
-                "stabilisation of section 6.4.2, which this phase does not implement"
+                f"velocity order {self.resolved_velocity_order} with pressure order "
+                f"{self.pressure_order} is not inf-sup stable; NUM-03 allows equal order only "
+                "together with the flow stabilisation of section 6.4.2, which the "
+                f"{permitting} stabilisation supplies and {self.stabilisation!r} does not"
             )
         if self.pressure_constraint and not self.flow:
             raise ValueError("pressure_constraint has no meaning without a flow block")
@@ -470,6 +500,28 @@ class CoupledModel:
             )
 
     # -- declaration -------------------------------------------------------
+
+    @property
+    def resolved_velocity_order(self) -> int:
+        """Return the element order of ``u``: :attr:`velocity_order`, else :attr:`order`.
+
+        Defaulting rather than duplicating keeps every case written before the
+        third order existed byte-identical: ``velocity_order=None`` reproduces the
+        two-order model exactly, field set and provenance included (NUM-03).
+        """
+        return self.order if self.velocity_order is None else self.velocity_order
+
+    @property
+    def stabilisation_model(self) -> StabilisationModel:
+        """Return the resolved stabilisation mode (NUM-11, NUM-13, PHY-22).
+
+        Resolved from the registry on every access rather than stored, because the
+        model is frozen and the mode is a small immutable value object; the cost is
+        a dataclass construction. Selecting ``none`` returns the entry that
+        assembles nothing, which is why :meth:`residual_form` carries no ``if`` on
+        the mode name.
+        """
+        return create_stabilisation(self.stabilisation)
 
     @property
     def steric(self) -> bool:
@@ -489,7 +541,7 @@ class CoupledModel:
             for name in self.species
         ]
         if self.flow:
-            declared.append(Field(VELOCITY, "vector_h1", self.order, self.fluid))
+            declared.append(Field(VELOCITY, "vector_h1", self.resolved_velocity_order, self.fluid))
             declared.append(Field(PRESSURE, "h1", self.pressure_order, self.fluid))
             if self.pressure_constraint:
                 declared.append(Field(PRESSURE_MEAN, "number", 0, self.fluid))
@@ -547,7 +599,18 @@ class CoupledModel:
                 "pressure_constraint": self.pressure_constraint,
             },
             "deviations_from_validated_default": sorted(self._deviations()),
+            "elements": {
+                "potential": self.order,
+                "concentration": self.order,
+                "velocity": self.resolved_velocity_order,
+                "pressure": self.pressure_order,
+            },
             "stabilisation": self.stabilisation,
+            # The mode name alone does not identify the operator: ``reference``
+            # with ``C_cw = 1`` and ``reference`` with ``C_cw = 0.35`` are
+            # different discretisations (FR-25, section 5.3.3).
+            "stabilisation_parameters": dict(self.stabilisation_model.parameters),
+            "stabilisation_provenance": dict(self.stabilisation_model.provenance),
             "scales": self.scales.summary(),
             "materials": dict(self.electrolyte.provenance),
         }
@@ -610,7 +673,7 @@ class CoupledModel:
             spaces.append(
                 ngs.VectorH1(
                     mesh,
-                    order=self.order,
+                    order=self.resolved_velocity_order,
                     dirichlet=boundaries.velocity,
                     dirichletx=boundaries.velocity_axis,
                     definedon=fluid,
@@ -733,6 +796,7 @@ class CoupledModel:
         surface_charge: Expression | None = None,
         surface_charge_boundary: str = "wall",
         sources: Mapping[str, Expression] | None = None,
+        state: GridFunction | None = None,
         **kwargs: Option,
     ) -> IntegralTerm:
         """Return the coupled weak residual, written in the trial functions.
@@ -771,13 +835,26 @@ class CoupledModel:
         sources
             Body sources by field name, added to the right-hand side of each
             equation. This is what the manufactured solutions of VER-18 supply;
-            a physical case has none.
+            a physical case has none. A source on a concentration field also
+            enters the stabilisation residual ``R~_i``, and a source on the
+            velocity enters ``R~_m``: leaving it out there is what NUM-14's NOTE
+            warns about, and it shows up as a degraded convergence rate rather
+            than as an error (VER-42).
+        state
+            The solve's own state grid function, from which the stabilisation
+            parameters are evaluated. NGSolve treats a grid function in an
+            integrand as data, so ``tau_i``, ``nu_K``, ``tau_m`` and ``tau_c``
+            follow the current iterate on every ``Apply`` and are omitted from the
+            linearisation — COMSOL's ``nojac()``, and the reason the non-smooth
+            ``max(0, .)`` in ``nu_K`` never reaches the Jacobian. Required by every
+            mode that assembles a term; a mode that assembles none ignores it.
 
         Raises
         ------
         ValueError
-            If the measure's element order disagrees with the model's, or if a
-            source names a field the model does not solve for.
+            If the measure's element order disagrees with the model's, if a
+            source names a field the model does not solve for, or if the
+            stabilisation mode assembles a term and no ``state`` was given.
         """
         _reject_unknown(kwargs, f"{self.name!r}.residual_form")
         if measures.element_order != self.order:
@@ -802,6 +879,26 @@ class CoupledModel:
         coefficients = self.coefficients(variables, wall_distance_nm)
         potential, potential_test = trials[POTENTIAL], tests[POTENTIAL]
         velocity = trials[VELOCITY] if self.flow else None
+
+        stabilisation = self.stabilisation_model
+        if stabilisation.terms and state is None:
+            raise ValueError(
+                f"the {stabilisation.name!r} stabilisation assembles "
+                f"{', '.join(stabilisation.terms)} and needs the solve state to evaluate its "
+                "parameters at the iterate; pass state=. Building them from the trial functions "
+                "instead would put max(0, .) and 1/||grad c~|| into the Jacobian, which the "
+                "NUM-16 damping policy is not tuned for"
+            )
+        # The lagged side, from which every stabilisation parameter is read. When
+        # no state is supplied the mode assembles nothing, so the trial side stands
+        # in rather than a branch on the mode name (PHY-22).
+        lagged = self._split(list(state.components)) if state is not None else trials
+        lagged_variables = self.concentration_variables(lagged) if state is not None else variables
+        lagged_coefficients = (
+            self.coefficients(lagged_variables, wall_distance_nm)
+            if state is not None
+            else coefficients
+        )
 
         # Poisson over all of Omega; the mobile charge lives on the fluid only.
         residual = poisson_operator(
@@ -839,14 +936,35 @@ class CoupledModel:
                 steric=self.steric,
                 dielectric_gradient=self.dielectric_gradient_forces,
             )
-            residual += nernst_planck_residual(
-                flux, tests[concentration_field_name(name)], measures, definedon=fluid
+            field_name = concentration_field_name(name)
+            residual += nernst_planck_residual(flux, tests[field_name], measures, definedon=fluid)
+            stabilisation_term = stabilisation.transport_term(
+                measures,
+                trial=self._transport_state(name, trials, variables, coefficients),
+                lagged=self._transport_state(name, lagged, lagged_variables, lagged_coefficients),
+                test=tests[field_name],
+                source=sources.get(field_name),
+                definedon=fluid,
             )
+            if stabilisation_term is not None:
+                residual += stabilisation_term
 
         if self.flow:
             residual += self._flow_residual(
                 trials, tests, measures, coefficients, variables, definedon=fluid
             )
+            flow_term = stabilisation.flow_term(
+                measures,
+                trial=self._flow_state(trials, coefficients, variables, sources=sources),
+                lagged=self._flow_state(
+                    lagged, lagged_coefficients, lagged_variables, sources=sources
+                ),
+                velocity_test=tests[VELOCITY],
+                pressure_test=tests[PRESSURE],
+                definedon=fluid,
+            )
+            if flow_term is not None:
+                residual += flow_term
 
         for name, source in sources.items():
             # Poisson is posed on all of Omega and everything else on the fluid,
@@ -854,6 +972,67 @@ class CoupledModel:
             options = {} if name == POTENTIAL else {"definedon": fluid}
             residual -= measures.volume(source * tests[name], **options)
         return residual
+
+    def _transport_state(
+        self,
+        species: str,
+        functions: Mapping[str, Expression],
+        variables: ConcentrationVariables,
+        coefficients: NondimensionalCoefficients,
+    ) -> TransportState:
+        """Return one species' stabilisation state, from the trial or the lagged side.
+
+        One builder for both sides, so that the wind the term is linear in and the
+        wind its parameters are read from cannot be assembled differently.
+        """
+        return TransportState(
+            species=species,
+            coefficients=coefficients,
+            variables=variables,
+            potential=functions[POTENTIAL],
+            velocity=functions[VELOCITY] if self.flow else None,
+            steric=self.steric,
+        )
+
+    def _flow_state(
+        self,
+        functions: Mapping[str, Expression],
+        coefficients: NondimensionalCoefficients,
+        variables: ConcentrationVariables,
+        *,
+        sources: Mapping[str, Expression],
+    ) -> FlowState:
+        """Return the momentum stabilisation state, from the trial or the lagged side.
+
+        The body force is built here, from the same coefficients
+        :meth:`_flow_residual` uses, and passed into the state rather than rebuilt
+        inside it: the momentum residual the stabilisation is defined against must
+        be the one the Galerkin form assembles, including whether the PHY-23
+        deviation is enabled. Note the sign — :func:`~nanopnp.physics.flow.electrical_body_force`
+        returns the *residual* contribution ``-int f.v``, so ``f`` itself is the
+        negative of its integrand.
+        """
+        import ngsolve as ngs
+
+        force = (
+            -coefficients.screening
+            * coefficients.ionic_charge_density()
+            * ngs.grad(functions[POTENTIAL])
+        )
+        if self.dielectric_gradient_forces:
+            # The Korteweg-Helmholtz force of PHY-23, which survives the
+            # approximate residual: it carries first derivatives only.
+            field = ngs.grad(functions[POTENTIAL])
+            force = force - 0.5 * (field * field) * permittivity_gradient(coefficients, variables)
+        return FlowState(
+            coefficients=coefficients,
+            velocity=functions[VELOCITY],
+            pressure=functions[PRESSURE],
+            density=coefficients.mass_density() if self.variable_density else 1.0,
+            body_force=force,
+            inertia=self.inertia,
+            source=sources.get(VELOCITY),
+        )
 
     def _flow_residual(
         self,
@@ -1058,6 +1237,7 @@ class CoupledModel:
             surface_charge=surface_charge,
             surface_charge_boundary=surface_charge_boundary,
             sources=sources,
+            state=state,
         )
         increment = ngs.GridFunction(space, name=f"{self.name}_increment")
         state_gates, increment_gates = self.gates(mesh, state, measures, increment=increment)
