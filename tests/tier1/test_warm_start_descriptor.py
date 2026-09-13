@@ -94,7 +94,7 @@ physics:
   solid_permittivities: {{membrane: 3.2}}
 numerics:
   continuation: default_ladder
-  stabilisation: none
+  stabilisation: {stabilisation}
 outputs: [current]
 """
 
@@ -109,12 +109,13 @@ class Neighbour:
 
 
 def _document(mesh_path: Path, **overrides: object) -> CaseDocument:
-    """Return the probe case, with any of its four knobs moved."""
+    """Return the probe case, with any of its five knobs moved."""
     settings: dict[str, object] = {
         "mesh_path": mesh_path,
         "concentration_M": 0.1,
         "bias_V": 0.02,
         "ground": "cis",
+        "stabilisation": "none",
     }
     settings.update(overrides)
     return loads_case(CASE.format(**settings))
@@ -356,6 +357,39 @@ def test_ver37_a_differing_space_key_aborts_naming_it_and_both_values(
     message = str(raised.value)
     assert key in message
     assert "stored:" in message and "this run:" in message
+
+
+@pytest.mark.parametrize("mode", ["supg", "reference"])
+def test_num13_a_warm_start_across_two_stabilisation_modes_is_refused(
+    neighbour: Neighbour, mode: str
+) -> None:
+    """A converged ``none`` state may not seed a stabilised run, or the reverse.
+
+    Nothing about the two spaces differs -- same mesh, same fields, same orders,
+    same degree count -- so the coefficient vector would load and Newton would
+    converge. It would converge on an operator its starting point was never
+    solved with, which is the one thing the stabilised mode exists to make
+    comparable: NUM-14's mode is there so that two numbers can be attributed to
+    the discretisation, and a comparison whose two sides were reached through
+    each other is not one.
+
+    The stored payload is a genuine converged ``none`` run; only the *target*
+    case asks for a mode. Placing ``stabilisation`` in :data:`SPACE_KEYS` rather
+    than :data:`OPERATOR_KEYS` is what makes this a refusal rather than a
+    recorded difference -- deliberately against its class, since the mode changes
+    the form and not the space (NUM-13, VER-37, FR-25).
+    """
+    document = _document(neighbour.mesh_path, stabilisation=mode)
+    assert document.numerics.stabilisation == mode
+
+    with pytest.raises(WarmStartError) as raised:
+        _load(neighbour, document)
+    message = str(raised.value)
+    assert "stabilisation" in message
+    # Both values, so the message says what crossing was attempted rather than
+    # only that one was (QR-12).
+    assert '"none"' in message
+    assert f'"{mode}"' in message
 
 
 def test_ver37_the_log_variable_branch_is_a_space_key() -> None:

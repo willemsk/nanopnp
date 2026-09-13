@@ -216,6 +216,16 @@ viscous second derivative dropped — so it carries no `1/r`. The grad-div term 
 flow stabilisation at integration order 2, and the §6.2 NOTE already declares NUM-07 to govern
 irrespective of that.
 
+> **Outcome — the two GLS rows do not share an orientation.** The section above reads as though one
+> signed GLS term serves both rows. It does not. The velocity row is the coercive orientation and
+> takes a `+`; the continuity row is written `−∫ q ρ̃ d̂iv ũ`, which is *minus* the orientation in
+> which `+τ_m ∫∇q·∇p̃` is the stabilising pressure block, so the pressure-test piece takes a `−`.
+> One signed term for both stabilises one row and destabilises the other, giving the saddle
+> structure `[[A, B], [Bᵀ, −C]]` rather than `[[A, B], [Bᵀ, +C]]`. The streamline and crosswind
+> terms *do* share an orientation with each other — both `−`, the sign of the Galerkin diffusion
+> they augment in this flux-form residual — which is what makes the flow pair the exception worth
+> writing down.
+
 ### 5. The current identity, written out
 
 NUM-25's variational reaction flux is *the assembled residual* evaluated against a test function
@@ -246,6 +256,36 @@ within the shape factor. This goes into `.knowledge/06-numerics-fem.md` §2 as *
 every `τ` in this package is defined against it and a silent change to NGSolve's convention would
 retune the whole mode with no diagnostic.
 
+> **Outcome — `specialcf.mesh_size` also evaluates pointwise, which is what makes the NUM-12
+> diagnostic possible.** Verified before it was relied on: `mesh(x, y)` returns the containing
+> element's `h_K` at a located point, not only inside a quadrature loop. The `Pe_h` diagnostic is
+> therefore a sampler over the P2 nodal set rather than an element loop, and reuses `FieldSampler`
+> unchanged as the plan's work-items table assumed.
+
+### 7. The zero-wind linearisation, found in implementation
+
+> **Outcome — a term whose value is exactly zero can still make the Jacobian singular.** The plan
+> has no section on this because nothing predicted it. `reference` aborted on the first
+> linearisation of ladder stage 4 with `UmfpackInverse: Numeric factorization failed`, naming no
+> form and no term. The cause is that NGSolve evaluates `d/du ‖g‖ = (g·∂g/∂u)/‖g‖` numerically and
+> never folds away the structural zero that `∂g/∂u` is for a lagged grid function: at `g = 0`
+> exactly the entry is `0/0`, and the `NaN` survives multiplication by that zero. `Assemble` is
+> clean; only `AssembleLinearization` carries it, which is why
+> `test_num14_every_term_vanishes_at_a_state_with_no_wind` — which asserts the same state through
+> `Apply` — passes in every mode and caught none of it.
+>
+> `b̃_i = z_i μ̃_i ∇φ̃ + D̃_i β̃_i − Pe ũ` is **exactly** zero at every rung below stage 4 (zero bias,
+> zero charge, no flow), so this is the ordinary path rather than a corner of the envelope. The
+> guard is `MAGNITUDE_FLOOR = WIND_FLOOR² = 1e−60` inside every root `_magnitude` takes: the
+> perturbation to a magnitude of order 1 is `5e−61`, and the derivative becomes `0/1e−30 = 0`
+> exactly. The scalar sibling `|s| = IfPos(s, s, −s)` was already immune, because `IfPos`
+> differentiates branchwise with no division — the module had the hazard right for scalars and
+> missed it for vectors.
+>
+> Gated by `test_ver41_the_linearisation_is_finite_at_the_zero_wind_cold_state`, parametrised over
+> all three modes and asserted on the **assembled Jacobian entries**: a residual-norm check reports
+> zero, not `NaN`. VER-41 gains the clause and NUM-14 a NOTE requiring the floor.
+
 ## Work items
 
 | File | What it delivers | Identifiers |
@@ -263,6 +303,36 @@ retune the whole mode with no diagnostic.
 | `.knowledge/06-numerics-fem.md` | §2: `specialcf.mesh_size = sqrt(2|K|)` **[tested]**. §4: the mode as built, the `Pe_h²` ratio, the crosswind's `C_cw Pe_K ≤ 1` switch-off, and the `Re = 6 × 10⁻⁴` flow arithmetic **[verified]** | — |
 | `SPECIFICATION.md` | The seven amendments below, in this commit | NUM-03, NUM-12, NUM-14, NUM-15, NUM-24, NUM-26, §5.3.1, §7.2, §7.3 |
 
+> **Outcome — five rows landed somewhere other than where this table put them.**
+>
+> - **No `SUPPORTED_STABILISATIONS`.** A frozen tuple beside a live registry is a second record of
+>   one fact, and the two can disagree the moment a mode is registered. `physics/models.py` queries
+>   `registered_stabilisations()` directly, and `equal_order_stabilisations()` is the derived
+>   membership the inf-sup message needs.
+> - **The inf-sup condition is one predicate, `physics.models.inf_sup_problem`, with two callers.**
+>   The table gives the gate to `models.py` and the widened literal to `io/case.py`, which would
+>   have put the same condition in both — and the one that mattered would be whichever ran first.
+>   `io/case.py` calls the predicate and wraps its message in the case file's own `elements`
+>   vocabulary.
+> - **`stabilisation_current_A` is in `post/qoi.py`, not on `LadderResult`.** It is a
+>   post-processing integral over the fluid, evaluated through
+>   `CoupledModel.transport_states` — the same states the residual was assembled from, which is
+>   what keeps NUM-26 an identity rather than two constructions that happen to agree. `LadderResult`
+>   carries the `Pe_h` measurement and the mode's parameters; the current lives with the other
+>   currents.
+> - **`solve/stage.py` is unchanged.** The diagnostic runs in `run_ladder`, because every path to a
+>   converged solution goes through it and no caller can then skip it, and the stage already splats
+>   `result.summary()`. A different file gained the one line the table expected here:
+>   `post/stage.py`, whose `always` set had to learn `stabilisation_currents_A` is provenance rather
+>   than a selectable quantity.
+> - **`solve/state.py` gained three `SPACE_KEYS` entries, not zero.** `model.elements`,
+>   `model.stabilisation_parameters` and `model.stabilisation_provenance`: the mode *name* alone
+>   would let a warm start cross between `reference` at `C_cw = 1` and `reference` at
+>   `C_cw = 0.35`, which are different operators, and `model.elements` restates the three orders in
+>   the case file's vocabulary on the same side of the gate so the two records cannot disagree.
+>   `RungResult` also gained `stabilisation`, so the per-rung record says which mode each rung was
+>   assembled in rather than only the top one.
+
 ## Verification
 
 | Test file | Tier | Identifiers | What it asserts |
@@ -276,6 +346,16 @@ retune the whole mode with no diagnostic.
 | `tests/tier2/test_current_routes.py` (extended) | 2 | NUM-24, NUM-26, QR-04, VER-11 | With `reference` active the NUM-24 and NUM-25 routes agree to better than NUM-26's `1 × 10⁻³`, which they do only because the indicator route carries `S_i(ψ)`; with that term deliberately removed they disagree by the reported `stabilisation_current_A`, so the test measures the identity rather than asserting it; `stabilisation_current_A` is of the per-cent order §1 predicts and is zero in `none` |
 | `tests/tier2/test_ladder.py` (extended) | 2 | NUM-13, NUM-18 | A ladder run in `reference` reports that mode from every rung, not only the top one; a warm start across the two modes is refused by the existing VER-37 descriptor gate naming `stabilisation` and both values |
 | `tests/tier2/test_stabilised_mode.py` (same file, `slow`) | 2 | VER-42, NUM-03 | The equal-order P1/P1 pair converges in `reference` on the reference pore and produces a velocity field agreeing with the Taylor–Hood solve to a reported relative L², and the same pair in `none` is refused before assembly. Recorded, not gated: it is the third rung of WP13's attribution ladder and its number is the input, not the verdict |
+
+> **Outcome — the warm-start refusal is a Tier 1 test, not a Tier 2 one.** The row above puts both
+> ladder assertions in `tests/tier2/test_ladder.py`, on the reasoning that a mode crossing is
+> something a ladder does. It is not: `load_initial` gates the descriptor *before* any form is
+> assembled, so the refusal needs a stored `state.npz` and a case document and no solve at all. It
+> landed in `tests/tier1/test_warm_start_descriptor.py`, beside the `neighbour` fixture and the other
+> five `SPACE_KEYS` crossings it is a sibling of, where it runs in the same seconds they do and reads
+> as one more row of the same table rather than as an aside in a benchmark. Tier 2's
+> `test_ladder.py` keeps the per-rung mode record, which does need the climb. The identifiers are
+> unchanged; only the tier directory is.
 
 **Tolerance provenance.** The MMS floor of 1.8 is `2 − 0.2`, the margin `tests/tier2/test_mms.py`
 already allows on its rate of 3, unchanged. `1 × 10⁻³` is NUM-26's declared route tolerance,

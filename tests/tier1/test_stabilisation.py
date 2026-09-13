@@ -707,6 +707,55 @@ def test_num14_every_term_vanishes_at_a_state_with_no_wind() -> None:
     assert difference.Norm() == pytest.approx(0.0, abs=1e-20)
 
 
+@pytest.mark.parametrize("mode", ["none", "supg", "reference"])
+def test_ver41_the_linearisation_is_finite_at_the_zero_wind_cold_state(mode: str) -> None:
+    """No mode may put a ``NaN`` in the Jacobian where ``b~_i`` is exactly zero.
+
+    The sibling above asserts the same state through ``Apply`` and passes in every
+    mode, which is exactly why this one is separate: the residual is finite there
+    and the *linearisation* is not. NGSolve evaluates ``d/du sqrt(g.g)`` as
+    ``(g . dg/du)/sqrt(g.g)`` numerically rather than folding away the structural
+    zero that ``dg/du`` is for a lagged grid function, so at ``g = 0`` the entry is
+    ``0/0`` and the assembled matrix goes singular. The guard is
+    :data:`~nanopnp.physics.stabilisation.MAGNITUDE_FLOOR`, inside the root.
+
+    Not a corner case, which is why it is gated rather than noted: ``phi~ = 0``,
+    ``c~_i = 1`` and ``u~ = 0`` is what every rung of the NUM-18 ladder below stage
+    4 converges to, so ``reference`` aborts on the first linearisation of stage 4
+    without the floor -- with ``UmfpackInverse: Numeric factorization failed`` and
+    no mention of a stabilisation term anywhere in it (QR-12, NUM-14).
+
+    Asserted on the assembled matrix entries, because that is the only place the
+    difference shows: ``Assemble`` is clean in every mode, and a residual-norm
+    check would report zero rather than ``NaN``.
+    """
+    import numpy as np
+
+    from nanopnp.mesh.primitives import CylinderGeometry
+    from nanopnp.physics import models
+    from nanopnp.physics.measures import AXISYMMETRIC
+
+    mesh = CylinderGeometry(radius_nm=2.0, length_nm=4.0).generate(maxh_nm=1.0)
+    boundaries = models.CoupledBoundaries(
+        potential="end", concentration="end", velocity="wall", velocity_axis="axis"
+    )
+    model = models.create("pnp-ns", fluid="electrolyte", stabilisation=mode)
+    space = model.space(mesh, boundaries)
+    cold = model.cold_state(mesh, boundaries)
+
+    form = ngs.BilinearForm(space)
+    form += model.residual_form(space, AXISYMMETRIC, state=cold)
+    form.AssembleLinearization(cold.vec)
+    entries = np.asarray(form.mat.COO()[2])
+
+    assert entries.size > 0
+    assert np.isfinite(entries).all(), (
+        f"the {mode!r} linearisation carries {int(np.isnan(entries).sum())} NaN and "
+        f"{int(np.isinf(entries).sum())} infinite entries at the zero-wind cold state; "
+        "a stabilisation parameter is taking the square root of an exactly-zero vector"
+    )
+
+
 def test_num16_a_stabilised_assembly_without_a_state_is_refused() -> None:
     """The parameters must be lagged, so the state is not optional for a real mode.
 

@@ -101,6 +101,7 @@ __all__ = [
     "CROSSWIND_COEFFICIENT",
     "FLOW_BONUS_ORDER",
     "GRAD_DIV_COEFFICIENT",
+    "MAGNITUDE_FLOOR",
     "STREAMLINE_BONUS_ORDER",
     "STREAMLINE_CUTOFF",
     "FlowState",
@@ -201,6 +202,30 @@ speed, and the diffusive branch of ``tau_i`` is the finite limit of a ``0/0``.
 Small enough to be invisible against any speed a solve produces — the relative
 perturbation at ``||b~|| ~ 1`` is ``1e-30`` — and large enough that the unselected
 branch of the ``IfPos`` cannot overflow.
+"""
+
+MAGNITUDE_FLOOR = WIND_FLOOR * WIND_FLOOR
+"""Added inside every ``sqrt`` this module takes of a squared vector.
+
+A *derivative* guard, not a denominator guard, and it is needed even though
+every magnitude here is taken of a lagged grid function whose derivative with
+respect to the trial functions is identically zero. NGSolve evaluates that
+derivative numerically rather than folding the structural zero away:
+``d/du sqrt(g.g) = (g . dg/du) / sqrt(g.g)``, and with ``g = 0`` exactly that is
+``0/0``, which is ``NaN`` — multiplied by a structural zero it stays ``NaN``, and
+the assembled Jacobian goes singular. ``Assemble`` is unaffected, so the failure
+appears only under ``AssembleLinearization``, which is to say only inside Newton
+(``.knowledge/06-numerics-fem.md`` section 4) **[tested]**.
+
+``b~_i = 0`` exactly is not a corner case: it is the state every rung of the
+ladder below stage 4 converges to, since ``grad(phi~) = 0`` at zero bias and zero
+charge and there is no flow yet. So ``reference`` would abort on the first
+linearisation of stage 4 without this.
+
+``1e-60`` is ``WIND_FLOOR`` squared, so the floored magnitude is ``WIND_FLOOR``
+where the true one is zero and the two guards agree about what "no wind" means.
+The perturbation to a magnitude of order 1 is ``5e-61``, below the last bit of a
+double.
 """
 
 WIND_THRESHOLD = 1.0e-12
@@ -339,10 +364,15 @@ class FlowState:
 
 
 def _magnitude(vector: Expression) -> Expression:
-    """Return ``||vector||``, exactly; see :data:`WIND_FLOOR` for the reciprocal."""
+    """Return ``||vector||`` floored by :data:`MAGNITUDE_FLOOR` inside the root.
+
+    The floor is what keeps the linearisation finite at ``vector = 0``; see
+    :data:`MAGNITUDE_FLOOR`. See :data:`WIND_FLOOR` for the separate guard on the
+    reciprocal.
+    """
     import ngsolve as ngs
 
-    return ngs.sqrt(vector * vector)
+    return ngs.sqrt(vector * vector + MAGNITUDE_FLOOR)
 
 
 def _absolute(scalar: Expression) -> Expression:

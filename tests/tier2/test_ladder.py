@@ -45,6 +45,107 @@ MEMBRANE_PERMITTIVITY = {"membrane": 2.0}
 
 
 @pytest.fixture(scope="module")
+def stabilised() -> LadderResult:
+    """Climb the same pore in ``reference``, for the NUM-13 per-rung record.
+
+    Shorter than the fixture below on purpose: the charge ramp is one step and the
+    salt sweep is skipped, because what is under test is *which mode each rung was
+    assembled in*, not the path. It is still a real climb through stage 8, so a
+    mode that failed to assemble on a rung fails here rather than being asserted
+    away on a rung list built without solving.
+    """
+    mesh = PORE.generate(maxh_nm=3.0, wall_h_nm=0.5)
+    rungs = default_ladder(
+        mesh,
+        concentration_M=CONCENTRATION_M,
+        bias_V=BIAS_V,
+        surface_charge_C_m2=SURFACE_CHARGE_C_M2,
+        solid_permittivities=MEMBRANE_PERMITTIVITY,
+        wall_distance_nm=wall_distance(mesh, "wall", order=AXISYMMETRIC.element_order),
+        start_concentration_M=None,
+        charge_steps=1,
+        stabilisation="reference",
+    )
+    result = run_ladder(rungs)
+    logger.info(
+        "reference ladder: %d rungs, %d iterations, %.1f s, max cell Peclet %.3f, mesh %s",
+        len(result.rungs),
+        result.iterations,
+        result.seconds,
+        result.max_cell_peclet or float("nan"),
+        result.mesh,
+    )
+    return result
+
+
+def test_num13_every_coupled_rung_of_a_reference_ladder_reports_that_mode(
+    stabilised: LadderResult,
+) -> None:
+    """The mode is on every rung of the climb, not only the one that reports a number.
+
+    The ladder is a sequence of warm starts. A mode switched on at the last rung
+    would ask that rung to converge from a state produced by a different operator,
+    while presenting as a warm start -- and the record would show one mode for a
+    run that used two. So this is asserted per rung, from the model each rung was
+    actually assembled with, rather than from the argument ``default_ladder`` was
+    given (NUM-13, NUM-18, FR-25).
+
+    Stages 1 and 2 solve for ``phi`` alone and report ``none``, which is the honest
+    answer and not a gap: there is no transport to stabilise, and an unstabilised
+    operator is the ``none`` model rather than the absence of a choice (PHY-22).
+    """
+    by_stage: dict[int, list[str]] = {}
+    for record in stabilised.rungs:
+        by_stage.setdefault(record.stage, []).append(record.stabilisation)
+
+    assert by_stage[1] == ["none"]
+    assert by_stage[2] == ["none"]
+    for stage in sorted(by_stage):
+        if stage >= 3:
+            assert set(by_stage[stage]) == {"reference"}, (
+                f"stage {stage} was assembled in {sorted(set(by_stage[stage]))}, not 'reference'"
+            )
+
+    # And the top of the ladder agrees with its own rung record, with the tuning
+    # constants beside it: 'reference' at C_cw = 1 and at C_cw = 0.35 are different
+    # operators and the mode name alone does not separate them (FR-25).
+    assert stabilised.stabilisation == "reference"
+    assert stabilised.rungs[-1].stabilisation == "reference"
+    parameters = dict(stabilised.stabilisation_parameters)
+    logger.info("reference parameters: %s", parameters)
+    assert parameters["crosswind_coefficient"] == 1.0
+    assert parameters["streamline_cutoff"] == 1.0
+    assert stabilised.summary()["stabilisation"] == "reference"
+
+
+def test_num12_the_reference_ladder_measures_the_cell_peclet_it_ran_at(
+    stabilised: LadderResult,
+) -> None:
+    """A number recorded without its cell Peclet cannot be attributed later (NUM-12).
+
+    The measurement is a warning and never a gate, so what is asserted here is that
+    it *happened* and that it is on the record -- not that it came out small. The
+    value itself is reported, because section 7.4 reads it beside the current.
+    """
+    measured = stabilised.peclet
+    assert measured is not None, "a ladder whose top rung solves transport must measure Pe_K"
+    logger.info(
+        "cell Peclet on the converged top rung: max %.4f in %r at (r, z) = (%.3f, %.3f); "
+        "%d of %d samples above 1",
+        measured.maximum,
+        measured.species,
+        measured.location[0],
+        measured.location[1],
+        measured.exceeding,
+        measured.samples,
+    )
+    assert measured.samples > 0
+    assert measured.maximum >= 0.0
+    assert set(measured.per_species) == set(stabilised.solution.model.species)
+    assert stabilised.max_cell_peclet == pytest.approx(measured.maximum)
+
+
+@pytest.fixture(scope="module")
 def ladder() -> LadderResult:
     """Run the whole nine-stage ladder once and share the result.
 
