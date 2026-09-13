@@ -226,6 +226,7 @@ def indicator_currents(
     gradient = ngs.grad(indicator)
     scale = TWO_PI * model.scales.current_A
 
+    stabilisation = stabilisation_currents(solution, measures, indicator, wall_distance_nm=distance)
     currents: dict[str, float] = {}
     for name in model.species:
         flux = species_flux(
@@ -244,9 +245,89 @@ def indicator_currents(
             what=f"the indicator flux of {name!r}",
         )
         valence = float(model.electrolyte.ion(name).valence)
-        currents[name] = valence * scale * integral
+        # NUM-26's amended identity. The reaction flux of NUM-25 *is* the
+        # assembled residual tested against psi, so once the residual carries the
+        # stabilisation term so does that route; the indicator form does not,
+        # unless it is told to. Adding it here is what keeps the two routes
+        # measuring one integral rather than differing by S_i(psi) -- a per-cent
+        # quantity, the size of the signal -- on every stabilised solve.
+        currents[name] = valence * scale * integral + stabilisation[name]
     logger.debug("indicator currents (A): %s", currents)
     return currents
+
+
+def stabilisation_currents(
+    solution: ModelSolution,
+    measures: Measures,
+    indicator: GridFunction,
+    *,
+    wall_distance_nm: Expression | None = None,
+) -> dict[str, float]:
+    """Return each species' stabilisation contribution to the current, in amperes.
+
+    ``2 pi F z_i S_I S_i(c~; psi)``, where ``S_i`` is the stabilisation term the
+    residual assembles for that species, tested against the indicator. Identically
+    zero in ``none``, because that mode assembles nothing.
+
+    This is the number NUM-11's "SUPG biases the current quantity of interest"
+    becomes when it is measured rather than asserted, and it is what the section
+    7.4 attribution subtracts. It is reported per species and recorded in the
+    FR-25 manifest beside the mode that produced it.
+
+    The parameters are read from the converged state itself, which is also the
+    state the term is evaluated at: at convergence the lagged side and the trial
+    side are the same field, so this is the same integral the last Newton step
+    assembled.
+
+    Parameters
+    ----------
+    solution
+        A converged solution of a coupled model.
+    measures
+        The symmetry and quadrature policy the model was solved with. The term
+        carries its own integration bonuses (NUM-15), which
+        :meth:`~nanopnp.physics.stabilisation.StabilisationModel.indicator_term`
+        applies.
+    indicator
+        ``psi``, from :func:`nanopnp.post.indicator.axial_indicator`.
+    wall_distance_nm
+        The PHY-02 distance field; defaults to the one the solve recorded.
+
+    Returns
+    -------
+    dict[str, float]
+        The contribution per species, in amperes.
+
+    Notes
+    -----
+    No manufactured source is passed. A source belongs to a verification run and
+    not to a current extraction, and VER-42's MMS case measures the rate rather
+    than a current.
+    """
+    model = _coupled(solution)
+    _check_indicator_matches(solution, model, indicator)
+    mesh = solution.space.mesh
+    distance = solution.wall_distance_nm if wall_distance_nm is None else wall_distance_nm
+    stabilisation = model.stabilisation_model
+    scale = TWO_PI * model.scales.current_A
+    states = model.transport_states(_functions(solution), distance)
+
+    contributions: dict[str, float] = {}
+    for name, state in states.items():
+        valence = float(model.electrolyte.ion(name).valence)
+        contributions[name] = (
+            valence
+            * scale
+            * stabilisation.indicator_term(
+                measures,
+                mesh,
+                state=state,
+                indicator=indicator,
+                definedon=mesh.Materials(model.fluid),
+            )
+        )
+    logger.debug("stabilisation currents in %r (A): %s", stabilisation.name, contributions)
+    return contributions
 
 
 def indicator_eof(solution: ModelSolution, measures: Measures, indicator: GridFunction) -> float:
@@ -509,6 +590,19 @@ class QuantitiesOfInterest:
     conductance_S: float
     eof_m3_s: float | None
     agreement: RouteAgreement | None
+    stabilisation_currents_A: Mapping[str, float] | None = None
+    """The stabilisation's own contribution to each species' current, in amperes.
+
+    Identically zero in ``none`` and per-cent in the reference mode (section 6.4.1),
+    which is NUM-11's "SUPG biases the current quantity of interest" as a number.
+    It is *part of* :attr:`currents_A`, not a correction to be applied to them: the
+    NUM-26 identity holds only because the indicator route carries it.
+
+    ``None`` only on a record built by hand; :func:`extract` always sets a mapping,
+    so that "the contribution was zero" and "nothing measured it" stay distinct in
+    the FR-25 manifest.
+    """
+
     clamp_activations: int | None = None
     """PHY-13 clamp activations counted over this converged solution.
 
@@ -528,6 +622,11 @@ class QuantitiesOfInterest:
             "transport_number": self.transport_number,
             "conductance_S": self.conductance_S,
             "eof_m3_s": self.eof_m3_s,
+            "stabilisation_currents_A": (
+                None
+                if self.stabilisation_currents_A is None
+                else dict(self.stabilisation_currents_A)
+            ),
             "clamp_activations": self.clamp_activations,
             "two_pi_included": True,
             # FR-25 wants every switch set away from the validated default, and
@@ -596,6 +695,12 @@ def extract(
     model = _coupled(solution)
     currents = indicator_currents(solution, measures, indicator, wall_distance_nm=wall_distance_nm)
     current = total_current(currents)
+    # The contribution is already inside ``currents``; it is reported separately
+    # because it is the number section 7.4 subtracts. One extra pass over the
+    # fluid rather than a second full extraction.
+    stabilisation = stabilisation_currents(
+        solution, measures, indicator, wall_distance_nm=wall_distance_nm
+    )
 
     agreement: RouteAgreement | None = None
     if check_routes:
@@ -622,6 +727,7 @@ def extract(
         conductance_S=conductance(current, bias_V),
         eof_m3_s=indicator_eof(solution, measures, indicator) if model.flow else None,
         agreement=agreement,
+        stabilisation_currents_A=stabilisation,
         clamp_activations=clamped,
     )
 

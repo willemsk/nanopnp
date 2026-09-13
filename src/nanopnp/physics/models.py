@@ -778,13 +778,33 @@ class CoupledModel:
             correction, so a diagnostic built on a different field would report a
             different Peclet number from the one the solver saw.
         """
-        functions = self._split(list(state.components))
+        states = self.transport_states(self._split(list(state.components)), wall_distance_nm)
+        return {name: species_cell_peclet(state) for name, state in states.items()}
+
+    def transport_states(
+        self, functions: Mapping[str, Expression], wall_distance_nm: Expression
+    ) -> dict[str, TransportState]:
+        """Return one :class:`TransportState` per species, built from ``functions``.
+
+        The public seam onto the stabilisation's own view of a state, alongside
+        :meth:`concentration_variables` and :meth:`coefficients`. Post-processing
+        needs it to evaluate ``S_i(c~; psi)`` for the NUM-24 indicator route, and
+        the diagnostic of NUM-12 needs it for ``Pe_K``; both must see the state the
+        residual was assembled from rather than a second construction of it, or the
+        NUM-26 identity between the two current routes stops being an identity.
+
+        Parameters
+        ----------
+        functions
+            The solved fields keyed by field name, in the model's own NUM-02
+            variables.
+        wall_distance_nm
+            The PHY-02 distance field the solve used.
+        """
         variables = self.concentration_variables(functions)
         coefficients = self.coefficients(variables, wall_distance_nm)
         return {
-            name: species_cell_peclet(
-                self._transport_state(name, functions, variables, coefficients)
-            )
+            name: self._transport_state(name, functions, variables, coefficients)
             for name in self.species
         }
 

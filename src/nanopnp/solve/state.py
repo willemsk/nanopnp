@@ -488,6 +488,13 @@ def ladder(
         solid_permittivities=dict(resolved.document.physics.solid_permittivities),
         fixed_charge_field=(None if fields.charge is None else fields.charge.volume_density_C_m3()),
         solid_fraction=None if fields.eps_r is None else fields.eps_r.chi(),
+        # Read off ``model_options`` rather than off the document, so that the
+        # ladder's models and the single-rung model of :func:`single_rung` -- which
+        # passes the same mapping to ``create`` -- cannot be built at different
+        # orders or in different modes from one case file (NUM-03, NUM-13).
+        stabilisation=resolved.stabilisation,
+        velocity_order=resolved.model_options.get("velocity_order"),
+        pressure_order=resolved.model_options.get("pressure_order", 1),
     )
 
 

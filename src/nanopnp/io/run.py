@@ -554,6 +554,15 @@ def _manifest(walk: _Walk, *, case_text: str, case_path: Path | None) -> Manifes
     # -- ``cold`` with its reason when it was offered no neighbour (FR-24).
     wall_distance = _mapping(solver, "wall_distance")
     warm_start = _mapping(solver, "warm_start")
+    # Read from the stage that produced each: the mode and its constants from the
+    # solve, the contribution to the current from the extraction. A manifest that
+    # recomputed either could report a mode the run did not use (FR-25).
+    stabilisation_parameters = _mapping(solver, "stabilisation_parameters")
+    stabilisation_provenance = _mapping(solver, "stabilisation_provenance")
+    peclet = _mapping(solver, "peclet")
+    stabilisation_currents = _mapping(
+        dict(qoi.summary) if qoi is not None else None, "stabilisation_currents_A"
+    )
 
     return build(
         walk.document,
@@ -567,6 +576,10 @@ def _manifest(walk: _Walk, *, case_text: str, case_path: Path | None) -> Manifes
         clamp_activations=clamps if isinstance(clamps, int) else None,
         ladder=solver,
         stabilisation=stabilisation,
+        stabilisation_parameters=stabilisation_parameters,
+        stabilisation_provenance=stabilisation_provenance,
+        stabilisation_currents_A=stabilisation_currents,
+        peclet=peclet,
         warm_start=warm_start,
         wall_distance=wall_distance,
         contributed_deviations=tuple(walk.contributed),

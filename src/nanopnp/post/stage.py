@@ -296,11 +296,13 @@ def _selected(
     The extraction is one calculation — NUM-27 requires it, so that a transport
     number and a current reported together cannot come from two of them — but
     what is *reported* is what ``outputs:`` selects. The bias, the route record,
-    the ``2 pi`` convention and the PHY-13 clamp count are always present: they
-    are not quantities, they are what makes the quantities readable. The clamp
-    count in particular is provenance the manifest's Materials group takes from
-    here, and a run that reported no current would otherwise record that no
-    solution was sampled for it.
+    the ``2 pi`` convention, the PHY-13 clamp count and the stabilisation's own
+    contribution are always present: they are not quantities, they are what makes
+    the quantities readable. The clamp count in particular is provenance the
+    manifest's Materials group takes from here, and a run that reported no current
+    would otherwise record that no solution was sampled for it; the stabilisation
+    contribution reaches the manifest's Stabilisation group the same way, and is
+    what section 7.4 subtracts from a number the reference produced differently.
     """
     record = quantities.summary()
     always = {
@@ -308,6 +310,7 @@ def _selected(
         "clamp_activations",
         "route_agreement",
         "routes_checked",
+        "stabilisation_currents_A",
         "two_pi_included",
     }
     wanted = set(always)
