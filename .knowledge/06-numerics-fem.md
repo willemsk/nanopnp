@@ -183,6 +183,36 @@ gradient is set by the bias over the pore length (`‖∇φ̃‖ ≈ 1.2` at 200
 orders of magnitude. Applying PHY-14's `μ̃_i/D̃_i` (1.2–1.7 between 0.15 M and 3 M) scales every
 `Pe_h` by 0.59–0.83 and every added diffusion by its square.
 
+### 4.2.1 The SUPG bias on the current is `S_i(ψ)` almost exactly **[tested]**
+
+Under a stabilisation mode the assembled residual carries the stabilisation term, so the NUM-25
+reaction flux carries it too; the NUM-24 indicator form must therefore add
+`2π F z_i S_I S_i(c̃; ψ)` or the two routes differ by that quantity. That correction, reported per
+species as `stabilisation_current_A`, is also the **bias on the current**, and the two facts are not
+independent: the *bare* `∫ J̃_i·∇ψ` integral turns out to be nearly mode-independent, so the whole
+difference between a stabilised and an unstabilised current lives in the added term.
+
+Measured on the VER-11 benchmark pore — 2 nm lumen, 13 nm membrane, 25 nm reservoir, 0.5 M,
++50 mV, −0.05 C/m², `maxh` 5.0 nm, `wall_h` 0.4 nm, `max Pe_K = 0.775`:
+
+| Quantity | `none` | `reference` |
+|---|---|---|
+| bare `∫ J̃_i·∇ψ` route, total | 2.5288 × 10⁻¹⁰ A | 2.5327 × 10⁻¹⁰ A |
+| `S_i(ψ)` contribution, total | 0.0 exactly | −1.9059 × 10⁻¹¹ A |
+| reported current (either route) | 2.5288 × 10⁻¹⁰ A | 2.3421 × 10⁻¹⁰ A |
+
+So: the bare integrals differ by 0.15 %, the two currents by 7.38 %, and `S_i(ψ)` is 8.14 % of the
+stabilised current. The single-run number reproduces the two-run difference to `1.6 × 10⁻³` of the
+current — which is why the bias can be reported from one solve instead of from a pair, and why
+subtracting it is a meaningful operation rather than a coincidence at one operating point.
+
+`none` contributes `0.0` exactly, not approximately: that mode assembles no term, so the integral is
+never taken.
+
+8 % rather than the 0.09 % of §4.2's *lumen* estimate or the `ζ̃²/100` of its double-layer one,
+because this mesh is sized for the solve and not for NUM-30: at `Pe_K = 0.775` the added-diffusivity
+ratio `Pe_K²` is 0.60, not 0.09. The closed form is unchanged; only the substitution is.
+
 ### 4.3 The crosswind switches itself off at `C_cw Pe_K ≤ 1` **[verified]**
 
 In production `s̃_i = 0`, so `R̃_i = b̃_i·∇c̃_i` exactly and Cauchy–Schwarz gives

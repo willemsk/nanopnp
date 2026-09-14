@@ -133,6 +133,23 @@ double-layer effect by three orders of magnitude, which is precisely why it reac
 These are the numbers WP13 will subtract. They are predictions, and the Tier-2 measurement of
 `stabilisation_current_A` against the unstabilised current is what checks them.
 
+> **Outcome — `Pe_K²` is confirmed, and the single-run number *is* the two-run bias.** Measured on
+> the VER-11 benchmark pore (2 nm lumen, 13 nm membrane, 0.5 M, +50 mV, −0.05 C/m², `maxh` 5.0 nm and
+> `wall_h` 0.4 nm, `reference`), where the diagnostic reports `max Pe_K = 0.775`:
+> `stabilisation_current_A` sums to **−1.9059 × 10⁻¹¹ A, −8.14 % of the current**, and solving the
+> same pore on the same mesh in `none` gives a current larger by **7.38 %**. The two agree to
+> `1.55 × 10⁻³` of the current, so the NUM-26 NOTE's claim — the bias is reportable from a single run
+> rather than from a difference of two — holds as arithmetic and not only as an intention. The reason
+> it does is worth keeping: the *bare* `∫ J̃_i·∇ψ` integral is almost mode-independent
+> (2.5327 × 10⁻¹⁰ A in `reference` against 2.5288 × 10⁻¹⁰ A in `none`, 0.15 % apart), so essentially
+> the whole difference between the two currents lives in `S_i(ψ)`.
+>
+> 8 % is larger than the per-cent this section predicts, and consistently so: that estimate is for a
+> mesh meeting NUM-30, where `Pe_h = 0.300` and the added diffusivity ratio `Pe_K²` is 0.09. This
+> benchmark's mesh is deliberately coarser — it is sized for the solve and no finer — and at
+> `Pe_K = 0.775` the ratio is 0.60. The closed form survives the test; only the substitution changes.
+> VER-42 is where the number is watched under refinement.
+
 ### 2. Why the crosswind term is identically zero on the production mesh
 
 The term is
