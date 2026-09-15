@@ -152,10 +152,11 @@ def inf_sup_problem(*, velocity_order: int, pressure_order: int, stabilisation: 
     checkerboard mode the solve will happily converge to.
 
     One implementation, two callers: :meth:`CoupledModel.__post_init__` gates the
-    model and :meth:`nanopnp.io.case.CaseDocument` gates the case file, so that a
-    case is refused at validation rather than after the continuation ladder has
-    been built. Two separate copies of the condition could disagree about which
-    pairs are admissible, and the one that mattered would be whichever ran first.
+    model and :func:`nanopnp.io.case.resolve` gates the case, so that a case is
+    refused while it is being resolved rather than after the continuation ladder
+    has been built on it. Two separate copies of the condition could disagree
+    about which pairs are admissible, and the one that mattered would be
+    whichever ran first.
 
     Parameters
     ----------
@@ -779,7 +780,7 @@ class CoupledModel:
             different Peclet number from the one the solver saw.
         """
         states = self.transport_states(self._split(list(state.components)), wall_distance_nm)
-        return {name: species_cell_peclet(state) for name, state in states.items()}
+        return {name: species_cell_peclet(species) for name, species in states.items()}
 
     def transport_states(
         self, functions: Mapping[str, Expression], wall_distance_nm: Expression
@@ -1035,33 +1036,44 @@ class CoupledModel:
             )
             field_name = concentration_field_name(name)
             residual += nernst_planck_residual(flux, tests[field_name], measures, definedon=fluid)
-            stabilisation_term = stabilisation.transport_term(
-                measures,
-                trial=self._transport_state(name, trials, variables, coefficients),
-                lagged=self._transport_state(name, lagged, lagged_variables, lagged_coefficients),
-                test=tests[field_name],
-                source=sources.get(field_name),
-                definedon=fluid,
-            )
-            if stabilisation_term is not None:
-                residual += stabilisation_term
+            # Guarded on the capability rather than on the mode name (PHY-22),
+            # and on the same test the state requirement above is written
+            # against: a mode with no terms is the one case where ``lagged``
+            # falls back to the trial side, and building a lagged state out of
+            # the trial functions is meaningful only because nothing consumes it.
+            # Saying so here is what keeps that fallback from looking like an
+            # invariant a future mode could rely on.
+            if stabilisation.terms:
+                stabilisation_term = stabilisation.transport_term(
+                    measures,
+                    trial=self._transport_state(name, trials, variables, coefficients),
+                    lagged=self._transport_state(
+                        name, lagged, lagged_variables, lagged_coefficients
+                    ),
+                    test=tests[field_name],
+                    source=sources.get(field_name),
+                    definedon=fluid,
+                )
+                if stabilisation_term is not None:
+                    residual += stabilisation_term
 
         if self.flow:
             residual += self._flow_residual(
                 trials, tests, measures, coefficients, variables, definedon=fluid
             )
-            flow_term = stabilisation.flow_term(
-                measures,
-                trial=self._flow_state(trials, coefficients, variables, sources=sources),
-                lagged=self._flow_state(
-                    lagged, lagged_coefficients, lagged_variables, sources=sources
-                ),
-                velocity_test=tests[VELOCITY],
-                pressure_test=tests[PRESSURE],
-                definedon=fluid,
-            )
-            if flow_term is not None:
-                residual += flow_term
+            if stabilisation.terms:
+                flow_term = stabilisation.flow_term(
+                    measures,
+                    trial=self._flow_state(trials, coefficients, variables, sources=sources),
+                    lagged=self._flow_state(
+                        lagged, lagged_coefficients, lagged_variables, sources=sources
+                    ),
+                    velocity_test=tests[VELOCITY],
+                    pressure_test=tests[PRESSURE],
+                    definedon=fluid,
+                )
+                if flow_term is not None:
+                    residual += flow_term
 
         for name, source in sources.items():
             # Poisson is posed on all of Omega and everything else on the fluid,

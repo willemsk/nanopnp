@@ -1076,7 +1076,7 @@ def restore(path: Path, *, case: CaseDocument) -> ModelSolution:
 
     state = _load_state(path, data, model, space)
     residual = ngs.BilinearForm(space)
-    residual += model.residual_form(space, top.measures, **residual_keywords(top))
+    residual += model.residual_form(space, top.measures, state=state, **residual_keywords(top))
     return ModelSolution(
         model=model,
         space=space,

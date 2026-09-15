@@ -737,9 +737,7 @@ the assertions below are on the *ratio falling* and on the measured rate, becaus
 """
 
 
-def test_ver42_the_two_modes_currents_converge_to_each_other_under_refinement(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
+def test_ver42_the_two_modes_currents_converge_to_each_other_under_refinement() -> None:
     """The stabilisation bias is a discretisation error and falls like one.
 
     If it did not, ``reference`` would not be a *discretisation* of the same
@@ -754,7 +752,6 @@ def test_ver42_the_two_modes_currents_converge_to_each_other_under_refinement(
     exactly what a fixed floor of 1.8 would have failed on for no defect
     (NUM-11, VER-42).
     """
-    del caplog
     differences: list[float] = []
     for wall_h_nm in CURRENT_WALL_H_NM:
         currents: dict[str, float] = {}

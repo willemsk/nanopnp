@@ -93,6 +93,7 @@ from typing import Protocol, TypeAlias
 
 from nanopnp.core.typing import Expression, IntegralTerm, Mesh, Numeric, Option
 from nanopnp.physics.coefficients import NondimensionalCoefficients
+from nanopnp.physics.flow import axisymmetric_divergence
 from nanopnp.physics.measures import Measures
 from nanopnp.physics.nernst_planck import ConcentrationVariables, steric_flux
 
@@ -102,8 +103,12 @@ __all__ = [
     "FLOW_BONUS_ORDER",
     "GRAD_DIV_COEFFICIENT",
     "MAGNITUDE_FLOOR",
+    "SHAKIB_CONVECTIVE",
+    "SHAKIB_VISCOUS",
     "STREAMLINE_BONUS_ORDER",
     "STREAMLINE_CUTOFF",
+    "WIND_FLOOR",
+    "WIND_THRESHOLD",
     "FlowState",
     "NoStabilisation",
     "ReferenceStabilisation",
@@ -118,6 +123,9 @@ __all__ = [
     "crosswind_projector",
     "crosswind_viscosity",
     "element_size",
+    "grad_div_parameter",
+    "momentum_parameter",
+    "momentum_residual",
     "register",
     "registered_stabilisations",
     "streamline_parameter",
@@ -158,6 +166,12 @@ number.
 """
 
 SHAKIB_CONVECTIVE = 2.0
+"""The convective branch's coefficient, the ``2`` of ``2 Re rho~ ||u~|| / h_K``.
+
+Documented alongside :data:`SHAKIB_VISCOUS`, which carries the parameter itself
+and the source both are read from.
+"""
+
 SHAKIB_VISCOUS = 4.0
 """The two branches of the Shakib momentum parameter.
 
@@ -473,19 +487,22 @@ def streamline_parameter(
     size: Expression | None = None,
     cutoff: float = STREAMLINE_CUTOFF,
 ) -> Expression:
-    """Return ``tau_i = (h_K / 2||b~_i||) psi(Pe_K)`` with ``psi(q) = min(q, 1)``.
+    """Return ``tau_i = (h_K / 2||b~_i||) psi(Pe_K)``, ``psi(q) = min(q/cutoff, 1)``.
 
     Written as the two branches rather than as a ``min``, because the diffusive
     branch is the finite limit of a ``0/0``:
 
-    - ``Pe_K <= 1``: ``tau_i = h_K^2 / (4 D~_i)``, exactly, since the ``||b~_i||``
-      cancels. The artificial streamline diffusivity ``tau_i ||b~_i||^2`` is then
-      ``Pe_K^2 D~_i`` — a ratio to the physical diffusivity independent of every
-      material parameter, which is where section 6.4.1's ``zeta~^2/100`` on a mesh
-      built to NUM-30 comes from.
-    - ``Pe_K > 1``: ``tau_i = h_K / (2 ||b~_i||)``.
+    - ``Pe_K <= cutoff``: ``tau_i = h_K^2 / (4 cutoff D~_i)``, exactly, since the
+      ``||b~_i||`` cancels. At the default ``cutoff = 1`` the artificial streamline
+      diffusivity ``tau_i ||b~_i||^2`` is then ``Pe_K^2 D~_i`` — a ratio to the
+      physical diffusivity independent of every material parameter, which is where
+      section 6.4.1's ``zeta~^2/100`` on a mesh built to NUM-30 comes from.
+    - ``Pe_K > cutoff``: ``tau_i = h_K / (2 ||b~_i||)``.
 
-    The two agree at ``Pe_K = 1``, so ``tau_i`` is continuous at the crossover.
+    The ``cutoff`` in the diffusive branch is what makes the two agree at
+    ``Pe_K = cutoff`` for *any* cutoff, so ``tau_i`` is continuous at the
+    crossover however the mode is retuned; dropping it would leave a jump of
+    ``cutoff`` between neighbouring elements at every other setting.
     """
     import ngsolve as ngs
 
@@ -496,7 +513,7 @@ def streamline_parameter(
     return ngs.IfPos(
         peclet - cutoff,
         h / (2.0 * (speed + WIND_FLOOR)),
-        h * h / (4.0 * diffusivity),
+        h * h / (4.0 * cutoff * diffusivity),
     )
 
 
@@ -678,6 +695,23 @@ class StabilisationModel(Protocol):
         """Return this mode's contribution to the flow residual, or ``None``."""
         ...
 
+    def transport_contributions(
+        self,
+        *,
+        trial: TransportState,
+        lagged: TransportState,
+        test: Expression,
+        source: Expression | None = None,
+    ) -> tuple[StabilisationIntegrand, ...]:
+        """Return one species' transport contributions as unweighted integrands.
+
+        Declared on the protocol because it is the seam a term-by-term test reads
+        -- the VER-41 containment check integrates the crosswind contribution on
+        its own -- and a mode reachable only through :meth:`transport_term` could
+        not be checked that way. Empty for a mode that assembles nothing.
+        """
+        ...
+
     def indicator_term(
         self,
         measures: Measures,
@@ -726,6 +760,17 @@ class NoStabilisation:
     @property
     def permits_equal_order(self) -> bool:  # noqa: D102
         return False
+
+    def transport_contributions(  # noqa: D102
+        self,
+        *,
+        trial: TransportState,
+        lagged: TransportState,
+        test: Expression,
+        source: Expression | None = None,
+    ) -> tuple[StabilisationIntegrand, ...]:
+        del trial, lagged, test, source
+        return ()
 
     def transport_term(  # noqa: D102
         self,
@@ -932,8 +977,6 @@ class StreamlineStabilisation:
         if not self.flow:
             return None
         import ngsolve as ngs
-
-        from nanopnp.physics.flow import axisymmetric_divergence
 
         size = element_size()
         tau_m = momentum_parameter(lagged, size=size)

@@ -410,10 +410,12 @@ def test_num03_the_reference_element_set_resolves_to_three_independent_orders() 
 def test_num03_an_equal_order_pair_is_refused_in_a_mode_that_supplies_no_flow_term() -> None:
     """The same element set without the stabilisation names inf-sup and the remedy.
 
-    Refused here rather than at solve time for the reason
+    Refused by :func:`resolve` rather than at solve time for the reason
     :meth:`CaseDocument._check_registries` gives for the registry checks: the
     continuation ladder is built before the first model is, so a case that cannot
-    run must not validate.
+    run must not survive resolution. The condition needs the resolved orders and
+    the ``physics.flow`` switch together, which is why it sits there rather than
+    in the document's own validators.
     """
     text = REFERENCE_CASE.replace(
         "elements: {phi: P2, c: P2, u: P2, p: P1}", "elements: {phi: P2, c: P2, u: P1, p: P1}"

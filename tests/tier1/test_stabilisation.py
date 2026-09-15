@@ -392,6 +392,35 @@ def test_num14_streamline_parameter_is_continuous_across_the_crossover(
     assert float(below(point)) == pytest.approx(size**2 / (4.0 * diffusivity), rel=1e-7)
 
 
+def test_num14_streamline_parameter_stays_continuous_when_the_cutoff_is_retuned(
+    mesh: ngs.Mesh,
+) -> None:
+    """The crossover follows ``cutoff``, and the branches still meet there.
+
+    ``cutoff`` is a registry-tunable constant, so ``psi`` is ``min(q/cutoff, 1)``
+    and the diffusive branch carries the same ``cutoff``. Without it the branches
+    would differ by exactly that factor at the crossover and ``tau_i`` would jump
+    between neighbouring elements at every setting but the default -- a silent
+    failure, since the default is the only one VER-41 exercises.
+    """
+    cutoff = 2.5
+    point = mesh(*SAMPLE)
+    unit = _state(mesh, potential_slope=1.0)
+    wind_at_unit_slope = float(_norm(stab.advective_velocity(unit))(point))
+    diffusivity = float(unit.diffusivity)
+    size = float(stab.element_size()(point))
+    critical = 2.0 * cutoff * diffusivity / (size * wind_at_unit_slope)
+
+    below = stab.streamline_parameter(
+        _state(mesh, potential_slope=critical * (1.0 - 1e-9)), cutoff=cutoff
+    )
+    above = stab.streamline_parameter(
+        _state(mesh, potential_slope=critical * (1.0 + 1e-9)), cutoff=cutoff
+    )
+    assert float(below(point)) == pytest.approx(float(above(point)), rel=1e-7)
+    assert float(below(point)) == pytest.approx(size**2 / (4.0 * cutoff * diffusivity), rel=1e-7)
+
+
 # -- the crosswind --------------------------------------------------------
 
 

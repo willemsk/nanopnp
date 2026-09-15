@@ -702,11 +702,11 @@ def run_ladder(
         solution=previous,
         rungs=tuple(records),
         mesh=mesh_report(rungs[-1].mesh),
-        peclet=_report_peclet(previous),
+        peclet=_report_peclet(previous, rungs[-1].measures),
     )
 
 
-def _report_peclet(solution: ModelSolution) -> PecletMeasurement | None:
+def _report_peclet(solution: ModelSolution, measures: Measures) -> PecletMeasurement | None:
     """Run the NUM-12 diagnostic on the converged top rung, or return ``None``.
 
     Here rather than in the stage, because NUM-12's second NOTE puts the
@@ -718,12 +718,20 @@ def _report_peclet(solution: ModelSolution) -> PecletMeasurement | None:
     A warning and never a gate: a lower rung of the ladder is deliberately coarse,
     and an under-resolved double layer is not an inadmissible state. The NUM-17
     positivity gate is what fails if it has become one.
+
+    ``measures`` is the top rung's, so the location the warning names carries that
+    rung's own coordinate names; a planar case would otherwise be reported in
+    ``(r, z)``.
     """
     model = solution.model
     if not isinstance(model, CoupledModel):
         return None
     return PecletDiagnostic(
-        FieldSampler(solution.space.mesh, materials=model.fluid),
+        FieldSampler(
+            solution.space.mesh,
+            coordinates=measures.coordinate_names,
+            materials=model.fluid,
+        ),
         model.cell_peclet(solution.state, solution.wall_distance_nm),
     ).report()
 

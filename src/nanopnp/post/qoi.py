@@ -177,6 +177,7 @@ def indicator_currents(
     indicator: GridFunction,
     *,
     wall_distance_nm: Expression | None = None,
+    stabilisation: Mapping[str, float] | None = None,
 ) -> dict[str, float]:
     """Return the per-species current in amperes by the NUM-24 indicator form.
 
@@ -201,6 +202,11 @@ def indicator_currents(
         The PHY-02 distance field. Defaults to the one the solve recorded on the
         solution, which is the whole reason it is recorded: rebuilding the flux
         with a *different* distance field silently evaluates a different model.
+    stabilisation
+        The per-species stabilisation contribution of NUM-26, already measured by
+        :func:`stabilisation_currents`. Defaults to measuring it here. A caller
+        that reports the contribution separately -- :func:`extract` does -- passes
+        the mapping it already holds rather than integrating the term twice.
 
     Returns
     -------
@@ -226,7 +232,10 @@ def indicator_currents(
     gradient = ngs.grad(indicator)
     scale = TWO_PI * model.scales.current_A
 
-    stabilisation = stabilisation_currents(solution, measures, indicator, wall_distance_nm=distance)
+    if stabilisation is None:
+        stabilisation = stabilisation_currents(
+            solution, measures, indicator, wall_distance_nm=distance
+        )
     currents: dict[str, float] = {}
     for name in model.species:
         flux = species_flux(
@@ -693,14 +702,21 @@ def extract(
         If the two routes disagree beyond ``tolerance``.
     """
     model = _coupled(solution)
-    currents = indicator_currents(solution, measures, indicator, wall_distance_nm=wall_distance_nm)
-    current = total_current(currents)
-    # The contribution is already inside ``currents``; it is reported separately
-    # because it is the number section 7.4 subtracts. One extra pass over the
-    # fluid rather than a second full extraction.
+    # Measured once and used twice: the contribution goes *into* ``currents`` by
+    # NUM-26's amended identity, and is reported beside them because it is the
+    # number section 7.4 subtracts. Integrating the term a second time here would
+    # repeat the most expensive quadrature in the module for a value already held.
     stabilisation = stabilisation_currents(
         solution, measures, indicator, wall_distance_nm=wall_distance_nm
     )
+    currents = indicator_currents(
+        solution,
+        measures,
+        indicator,
+        wall_distance_nm=wall_distance_nm,
+        stabilisation=stabilisation,
+    )
+    current = total_current(currents)
 
     agreement: RouteAgreement | None = None
     if check_routes:
