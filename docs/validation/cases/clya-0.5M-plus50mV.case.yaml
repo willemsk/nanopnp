@@ -1,0 +1,72 @@
+# Frozen Tier-3 case clya-0.5M-plus50mV (VAL-03).
+#
+# One of the five cases SPECIFICATION.md section 7.4's NOTE names: the four envelope
+# corners 0.05 M and 3 M x +-200 mV, and the centre point 0.5 M / +50 mV. The corners
+# span the experimental range of VAL-07 and give VAL-02 a matched opposite-bias pair at
+# each salt, so RR is comparable and not only I; the centre point separates a discrepancy
+# linear in bias from one quadratic in it.
+#
+# FROZEN. Editing any field below changes this case's identity
+# (`nanopnp.validation.comsol.case_identity`), which every archived golden declares as
+# its `case_hash` -- so an edit here invalidates the archive rather than updating it.
+# That is the intended behaviour: a golden compared against a different case is the one
+# wrong answer nothing else detects.
+#
+# The configuration is the validated ePNP-NS model of PHY-22 throughout, and the
+# discretisation written here is rung 0 of the attribution ladder (our production
+# default, NUM-11). The other three rungs are reached by
+# `docs/validation/comsol-ladder.sweep.yaml`, whose `rung` axis moves
+# `numerics.stabilisation` and `numerics.elements` and nothing else -- none of which
+# enters the case identity, so all four rungs answer this same case.
+#
+# The mesh is not checked in (44,316 triangles) and is reproducible from the ClyA profile
+# in data/geometry/; see docs/sweeps/README.md for the one command. `inputs.mesh.path`
+# resolves against the process working directory, so it is written from the repository
+# root.
+
+schema: nanopnp/case/v1
+name: clya-0.5M-plus50mV
+
+inputs:
+  mesh:
+    path: docs/sweeps/clya-reference.msh
+    format: msh41
+    groups: {default: interface}
+
+electrolyte:
+  species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]
+  concentration_M: 0.5
+  temperature_K: 298.15
+  parameters: willems2020_nacl
+  # The validated ePNP-NS configuration (PHY-22): every concentration correction on,
+  # every wall function on, and the Borukhov steric flux. This is the set the published
+  # agreement with experiment was obtained with, and the set section 7.4 compares.
+  corrections:
+    diffusivity:  {model: willems2020_nacl, wall: true, concentration: true}
+    mobility:     {model: willems2020_nacl, wall: true, concentration: true}
+    viscosity:    {model: willems2020_nacl, wall: true, concentration: true}
+    permittivity: {model: willems2020_nacl}
+    density:      {model: willems2020_nacl}
+    steric:       {model: borukhov}
+
+boundary_conditions:
+  bias_V: 0.05
+  ground: cis
+
+physics:
+  model: epnp-ns
+  solid_permittivities: {membrane: 3.2, protein: 20.0}
+
+numerics:
+  # Rung 0: Taylor-Hood, unstabilised. `phi` and `c` stay at P2 on every rung, which is
+  # the reference's own choice (.knowledge/09-comsol-reference-settings.md section C.2).
+  elements: {phi: P2, c: P2, u: P2, p: P1}
+  continuation: default_ladder
+  stabilisation: none
+  nonlinear: {rtol: 1.0e-6, max_iter: 100}
+  linear: {solver: umfpack}
+  wall_distance: {sources: wall, max_distance_nm: 3.0}
+
+# `rectification` is a two-point quantity (section 5.3.1 NOTE) and is produced by the
+# collector from the matched opposite-bias pairs the case set provides, not by a member.
+outputs: [current, transport_numbers, eof_rate]

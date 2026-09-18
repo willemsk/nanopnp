@@ -1,0 +1,83 @@
+# The Tier-3 attribution ladder as a sweep: 4 rungs x 5 frozen cases = 20 solves.
+#
+# A sweep and not a second dispatch path. FR-24's substitution, warm-start forest,
+# job-array dispatch and collector already exist and are tested; twenty solves through
+# a bespoke runner would be a second set of failure modes for no capability.
+#
+#     uv run nanopnp sweep plan docs/validation/comsol-ladder.sweep.yaml
+#     uv run nanopnp sweep run <the plan path it printed>
+#     uv run nanopnp validate report <the sweep directory> --golden $NANOPNP_REFERENCE_DATA/...
+#
+# The base is the centre case, 0.5 M / +50 mV, at rung 0. The `case` axis reproduces the
+# other four frozen cases of `docs/validation/cases/` exactly -- same salt, same bias,
+# everything else inherited -- so every member's case identity
+# (`nanopnp.validation.comsol.case_identity`) is one of the five a golden may declare.
+# `tests/tier1/test_attribution.py` asserts that correspondence, which is what makes the
+# golden's `case_hash` gate mean anything.
+#
+# The mesh is not checked in; see docs/sweeps/README.md for the command that writes it.
+schema: nanopnp/sweep/v1
+name: comsol-ladder
+base: cases/clya-0.5M-plus50mV.case.yaml
+workers: 4
+
+axes:
+  # --- the ladder ----------------------------------------------------------------------
+  #
+  # Four rungs, not three. WP12 measured an MMS L2 convergence rate of 0.984 for
+  # `reference` on a Taylor-Hood pair against 2.012 for `supg` on the same meshes and the
+  # same manufactured solution -- a full order, lost in the flow operator. Without the
+  # `supg` rung the middle delta is the transport stabilisation and a first-order flow
+  # operator added together, and attributes neither. See
+  # src/nanopnp/validation/attribution.py, whose LADDER this axis must mirror; a Tier-1
+  # test asserts that it does.
+  #
+  # Every assignment here writes a path in `sweep.plan.WARM_START_BARRIERS`, so the
+  # planner gives each rung its own warm-start component: the element spaces and the
+  # assembled operator both move across this axis, and reading a converged coefficient
+  # vector onto a different space either raises on a length mismatch or -- where the two
+  # spaces happen to share a dimension -- silently seeds Newton with a meaningless state
+  # that may still converge, to something (section 5.3.2).
+  - name: rung
+    origin: 0
+    assignments:
+      # 0 -- production: Taylor-Hood, unstabilised (NUM-11). Delta_total is its distance.
+      - numerics.stabilisation: none
+        numerics.elements.u: P2
+        numerics.elements.p: P1
+      # 1 -- transport stabilisation only. `supg.permits_equal_order` is False, so this
+      # rung is P2/P1 by construction and `resolve` refuses it at equal order.
+      - numerics.stabilisation: supg
+        numerics.elements.u: P2
+        numerics.elements.p: P1
+      # 2 -- transport and flow GLS, still on an inf-sup-stable pair.
+      - numerics.stabilisation: reference
+        numerics.elements.u: P2
+        numerics.elements.p: P1
+      # 3 -- the reference's own discretisation (.knowledge/09 section C.2, section E
+      # rows 1, 2 and 4). Delta_resid is the like-for-like number, and the only part of
+      # the discrepancy that could be a defect.
+      - numerics.stabilisation: reference
+        numerics.elements.u: P1
+        numerics.elements.p: P1
+
+  # --- the five frozen cases -----------------------------------------------------------
+  #
+  # Rooted at the centre point, which is the base case and the easiest of the five: the
+  # forest then walks outward to each corner rather than climbing cold at 3 M / -200 mV
+  # and walking the whole envelope in one direction. Salt and bias move together because
+  # the set is five named cases and not a grid -- a 2 x 3 product would solve six points,
+  # one of which nothing was exported for.
+  - name: case
+    origin: 2
+    assignments:
+      - electrolyte.concentration_M: 0.05
+        boundary_conditions.bias_V: -0.2
+      - electrolyte.concentration_M: 0.05
+        boundary_conditions.bias_V: 0.2
+      - electrolyte.concentration_M: 0.5
+        boundary_conditions.bias_V: 0.05
+      - electrolyte.concentration_M: 3.0
+        boundary_conditions.bias_V: -0.2
+      - electrolyte.concentration_M: 3.0
+        boundary_conditions.bias_V: 0.2
