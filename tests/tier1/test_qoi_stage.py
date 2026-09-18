@@ -337,6 +337,10 @@ def test_fr23_outputs_selects_exactly_the_quantities_asked_for(
         "indicator_band_nm",
         "bias_V",
         "clamp_activations",
+        # Provenance rather than a quantity, like the clamp count: the manifest's
+        # Stabilisation group takes it from here, and it is what section 7.4
+        # subtracts (NUM-11, NUM-13).
+        "stabilisation_currents_A",
         "two_pi_included",
         "routes_checked",
         "route_agreement",

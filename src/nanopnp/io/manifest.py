@@ -259,6 +259,10 @@ def stabilisation_group(
     document: CaseDocument,
     *,
     solved: str | None = None,
+    parameters: Mapping[str, Canonicalisable] | None = None,
+    provenance: Mapping[str, Canonicalisable] | None = None,
+    currents_A: Mapping[str, Canonicalisable] | None = None,
+    peclet: Mapping[str, Canonicalisable] | None = None,
 ) -> dict[str, Canonicalisable]:
     """Return the Stabilisation group: the mode that produced the number (section 6.4).
 
@@ -267,12 +271,41 @@ def stabilisation_group(
     stabilisation on and ours does not, so a number whose mode is unrecorded is
     not comparable to it (section 6.4, section 7.4); a number whose recorded mode
     disagrees with the requested one is worse, and this group is where that shows.
+
+    The mode name is not the whole operator, so its tuning constants and their
+    provenance travel with it: ``reference`` at ``C_cw = 1`` and at ``C_cw = 0.35``
+    are different discretisations under one name. And the two numbers section 7.4
+    subtracts are here rather than in the solver group, because they are readings
+    *of* the stabilisation: what it contributed to the current (NUM-11, NUM-13),
+    and the cell Peclet number that says whether the mesh needed it (NUM-12).
+
+    Parameters
+    ----------
+    document
+        The case, for the requested mode.
+    solved
+        The mode read back off the converged model, ``LadderResult.stabilisation``.
+    parameters, provenance
+        The mode's own tuning constants and their sources.
+    currents_A
+        ``2 pi F z_i S_I S_i(psi)`` per species: what the stabilisation itself
+        contributed to the reported current. ``None`` when no solution was
+        extracted, which is a different fact from a contribution of zero -- and
+        zero is exactly what ``none`` contributes, so the two must not collapse.
+    peclet
+        The NUM-12 measurement on the converged top rung, likewise ``None`` rather
+        than zero when nothing was measured.
     """
     requested = document.numerics.stabilisation
     return {
         "requested": requested,
         "mode": solved if solved is not None else requested,
         "matches_requested": solved is None or solved == requested,
+        "parameters": None if parameters is None else dict(parameters),
+        "parameter_provenance": None if provenance is None else dict(provenance),
+        "stabilisation_current_A": None if currents_A is None else dict(currents_A),
+        "max_cell_peclet": None if peclet is None else peclet.get("maximum"),
+        "peclet": None if peclet is None else dict(peclet),
     }
 
 
@@ -423,6 +456,10 @@ def build(
     clamp_activations: int | None = None,
     ladder: Mapping[str, Canonicalisable] | None = None,
     stabilisation: str | None = None,
+    stabilisation_parameters: Mapping[str, Canonicalisable] | None = None,
+    stabilisation_provenance: Mapping[str, Canonicalisable] | None = None,
+    stabilisation_currents_A: Mapping[str, Canonicalisable] | None = None,
+    peclet: Mapping[str, Canonicalisable] | None = None,
     warm_start: Mapping[str, Canonicalisable] | None = None,
     wall_distance: Mapping[str, Canonicalisable] | None = None,
     contributed_deviations: tuple[ContributedDeviation, ...] = (),
@@ -468,6 +505,15 @@ def build(
         ``LadderResult.summary()``.
     stabilisation
         The mode read back off the converged model, ``LadderResult.stabilisation``.
+    stabilisation_parameters, stabilisation_provenance
+        The mode's tuning constants and their sources; see
+        :func:`stabilisation_group`.
+    stabilisation_currents_A
+        Each species' stabilisation contribution to the current, from
+        ``QuantitiesOfInterest.stabilisation_currents_A``.
+    peclet
+        The NUM-12 measurement on the converged top rung, from
+        ``LadderResult.peclet``.
     warm_start
         The FR-24 warm-start record; see :func:`solver_group`.
     wall_distance
@@ -508,7 +554,14 @@ def build(
             else not_run("no electrolyte was resolved")
         ),
         solver=solver_group(document, ladder=ladder, warm_start=warm_start),
-        stabilisation=stabilisation_group(document, solved=stabilisation),
+        stabilisation=stabilisation_group(
+            document,
+            solved=stabilisation,
+            parameters=stabilisation_parameters,
+            provenance=stabilisation_provenance,
+            currents_A=stabilisation_currents_A,
+            peclet=peclet,
+        ),
         deviations=deviations(document),
         contributed_deviations=contributed_deviations,
     )

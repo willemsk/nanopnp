@@ -23,9 +23,12 @@ compared key by key, and the first difference aborts (QR-12). Restore is a gate,
 never an adaptation, so each of those keys gets a test that mutating it alone is
 refused by name.
 
-Stabilisation is ``none`` throughout (NUM-11); the mesh is the coarsest one that
-carries all four domains, because what is under test is the payload rather than
-the physics.
+Stabilisation is ``none`` for the descriptor gates (NUM-11); the mesh is the
+coarsest one that carries all four domains, because what is under test is the
+payload rather than the physics. One test restores a ``supg`` state as well,
+because reassembling the residual of a stabilised mode needs the state that was
+just loaded and nothing about a ``none`` payload would notice if it were not
+passed.
 """
 
 from __future__ import annotations
@@ -176,6 +179,43 @@ def solved(tmp_path_factory: pytest.TempPathFactory) -> Solved:
     return Solved(document=document, solution=result.solution, path=path, work=work)
 
 
+@pytest.fixture(scope="module")
+def stabilised(tmp_path_factory: pytest.TempPathFactory) -> Solved:
+    """Solve the same case in ``supg`` and save it: an operator carrying a term.
+
+    Separate from :func:`solved` rather than a parametrisation of it, because the
+    descriptor gates below are about the payload and are the same in every mode;
+    the one thing that is not the same is whether the residual can be rebuilt at
+    all, and that is what the single test using this fixture asserts.
+    """
+    work = tmp_path_factory.mktemp("stabilised")
+    mesh_path = work / "pore.vol"
+    PORE.generate(maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM).ngmesh.Save(str(mesh_path))
+
+    document = loads_case(
+        CASE.format(mesh_path=mesh_path, concentration_M=CONCENTRATION_M, bias_V=BIAS_V).replace(
+            "stabilisation: none", "stabilisation: supg"
+        )
+    )
+    resolved = resolve(document)
+    ingested = ingest(resolved.mesh, resolved)
+    order = int(resolved.model_options.get("order", AXISYMMETRIC.element_order))
+    measures = replace(AXISYMMETRIC, element_order=order)
+    distance = wall_distance_field(resolved, ingested.mesh, order=order)
+    empty = ResolvedFields(charge=None, conservation=None, eps_r=None, material_means=())
+    rungs = ladder(resolved, ingested.mesh, measures, distance, empty)
+    result = run_ladder(rungs)
+
+    path = save(
+        result.solution,
+        work / STATE_FILENAME,
+        resolved=resolved,
+        mesh_content_hash=ingested.content_hash,
+        boundaries=rungs[-1].boundaries,
+    )
+    return Solved(document=document, solution=result.solution, path=path, work=work)
+
+
 def _arrays(path: Path) -> dict[str, Any]:
     """Return every array of an ``.npz`` payload, eagerly."""
     import numpy as np
@@ -251,6 +291,29 @@ def test_ver34_the_restored_operator_gives_the_same_reaction_flux(solved: Solved
     """
     live = reaction_flux_currents(solved.solution)
     recovered = reaction_flux_currents(restore(solved.path, case=solved.document))
+    assert set(recovered) == set(live)
+    for species, value in live.items():
+        assert recovered[species] == pytest.approx(value, rel=1e-12), species
+
+
+def test_ver34_a_stabilised_state_restores_with_the_operator_it_converged_on(
+    stabilised: Solved,
+) -> None:
+    """Restoring a ``supg`` state rebuilds the residual *with* its stabilisation.
+
+    The mode's parameters are evaluated at the iterate, so the residual cannot be
+    reassembled without the state -- :meth:`CoupledModel.residual_form` refuses
+    rather than silently linearising about zero wind. ``restore`` has the state
+    in hand two lines earlier, and this asserts it hands it over: without it every
+    stabilised case fails at stage 11 and at the IF-07 export, which is every path
+    a solved stabilised run has out of the solver.
+
+    Checked on the NUM-25 flux and not merely on "it returned": a residual rebuilt
+    Galerkin-only would restore without complaint and answer the reaction-flux
+    route with the unstabilised number.
+    """
+    live = reaction_flux_currents(stabilised.solution)
+    recovered = reaction_flux_currents(restore(stabilised.path, case=stabilised.document))
     assert set(recovered) == set(live)
     for species, value in live.items():
         assert recovered[species] == pytest.approx(value, rel=1e-12), species

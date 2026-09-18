@@ -294,6 +294,83 @@ def test_ver24_stabilisation_is_recorded_with_the_number(tmp_path: Path) -> None
     assert block["matches_requested"] is False
 
 
+def test_ver24_a_stabilised_run_appears_under_deviations_without_being_told() -> None:
+    """``numerics.stabilisation`` is a diffable path, so a new value costs nothing.
+
+    ``supg`` and ``reference`` were added to the schema in this package and no
+    entry in ``io/defaults`` moved; the deviation appears because the path is
+    already classified as a switch and its validated default is ``none``
+    (FR-25, section 5.3.3).
+    """
+    for mode in ("supg", "reference"):
+        document = loads_case(
+            MINIMAL.replace(
+                "{continuation: default_ladder}",
+                f"{{continuation: default_ladder, stabilisation: {mode}}}",
+            )
+        )
+        written = _manifest(document, stabilisation=mode).document()
+        block = written["deviations"]
+        assert isinstance(block, dict)
+        paths = {entry["path"] for entry in block["switches"]}  # type: ignore[index,union-attr]
+        assert "numerics.stabilisation" in paths
+
+
+def test_num13_the_stabilisation_group_carries_the_mode_s_own_constants() -> None:
+    """The mode name is not the operator, so its tuning constants travel with it.
+
+    ``reference`` at ``C_cw = 1`` and at ``C_cw = 0.35`` are two discretisations
+    under one name, and a manifest recording only the name could not tell two such
+    runs apart (FR-25).
+    """
+    from nanopnp.physics.stabilisation import create as create_stabilisation
+
+    mode = create_stabilisation("reference")
+    document = loads_case(MINIMAL)
+    written = _manifest(
+        document,
+        stabilisation="reference",
+        stabilisation_parameters=dict(mode.parameters),
+        stabilisation_provenance=dict(mode.provenance),
+    ).document()
+    block = written["stabilisation"]
+    assert isinstance(block, dict)
+    assert block["parameters"] == dict(mode.parameters)
+    assert block["parameter_provenance"] == dict(mode.provenance)
+    assert block["parameters"] != {}
+
+
+def test_num12_the_stabilisation_group_keeps_unmeasured_apart_from_zero() -> None:
+    """A contribution of zero and no measurement at all are different facts.
+
+    ``none`` contributes exactly zero, so collapsing "not measured" to zero would
+    make an unextracted run indistinguishable from an unstabilised one — the
+    reading section 7.4 depends on.
+    """
+    document = loads_case(MINIMAL)
+    unmeasured = _manifest(document).document()["stabilisation"]
+    assert isinstance(unmeasured, dict)
+    assert unmeasured["stabilisation_current_A"] is None
+    assert unmeasured["max_cell_peclet"] is None
+    assert unmeasured["peclet"] is None
+
+    measured = _manifest(
+        document,
+        stabilisation="none",
+        stabilisation_currents_A={"Na+": 0.0, "Cl-": 0.0},
+        peclet={"maximum": 0.31, "species": "Cl-", "exceeding": 0, "samples": 196},
+    ).document()["stabilisation"]
+    assert isinstance(measured, dict)
+    assert measured["stabilisation_current_A"] == {"Na+": 0.0, "Cl-": 0.0}
+    assert measured["max_cell_peclet"] == pytest.approx(0.31)
+    assert measured["peclet"] == {
+        "maximum": 0.31,
+        "species": "Cl-",
+        "exceeding": 0,
+        "samples": 196,
+    }
+
+
 def test_ver24_deviations_reach_the_manifest_by_path() -> None:
     """The Deviations group carries the same paths the diff produced."""
     document = loads_case(MINIMAL)

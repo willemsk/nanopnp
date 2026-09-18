@@ -87,6 +87,7 @@ from nanopnp.physics.models import (
     PhysicsModel,
     concentration_field_name,
 )
+from nanopnp.solve.gates import FieldSampler, PecletDiagnostic, PecletMeasurement
 
 __all__ = [
     "LadderResult",
@@ -188,6 +189,22 @@ class RungResult:
     be reconstructible from it.
     """
 
+    stabilisation: str = "none"
+    """The mode *this* rung was assembled in, read off its own model.
+
+    :attr:`LadderResult.stabilisation` records the top rung's, which is the one
+    the reported number was produced on. This is the per-rung breakdown, and it
+    exists because "record the stabilisation mode with every number" applies to
+    the intermediate numbers too: a ladder that changed discretisation partway
+    would present its top rung as a warm start onto an operator its parent never
+    solved, and the record is where that shows (NUM-13, NUM-18, FR-25).
+
+    ``"none"`` for a rung whose model carries no stabilisation at all -- stages 1
+    and 2 solve for ``phi`` alone -- which is the honest answer rather than a
+    missing one: an unstabilised operator is the ``none`` model, not the absence
+    of a choice (PHY-22).
+    """
+
     @property
     def iterations(self) -> int:
         """Newton iterations this rung took; 0 for a linear model."""
@@ -208,6 +225,7 @@ class RungResult:
             "transferred_fields": list(self.transferred_fields),
             "cold_fields": list(self.cold_fields),
             "deviations_from_validated_default": list(self.deviations),
+            "stabilisation": self.stabilisation,
             "newton": dict(self.newton) if self.newton is not None else None,
         }
 
@@ -219,6 +237,13 @@ class LadderResult:
     solution: ModelSolution
     rungs: tuple[RungResult, ...]
     mesh: Mapping[str, Option]
+    peclet: PecletMeasurement | None = None
+    """What the NUM-12 diagnostic measured on the converged top rung.
+
+    ``None`` when the top rung solves no ionic transport -- an electrostatic
+    ladder has no advective velocity to measure -- which is not the same fact as
+    a measured maximum of zero, and the manifest keeps the two apart (FR-25).
+    """
 
     @property
     def seconds(self) -> float:
@@ -252,6 +277,33 @@ class LadderResult:
         """
         return str(self.solution.model.provenance.get("stabilisation", "none"))
 
+    @property
+    def stabilisation_parameters(self) -> Mapping[str, Option]:
+        """The tuning constants of the mode the top rung was solved in (FR-25).
+
+        The mode *name* is not the operator: ``reference`` at ``C_cw = 1`` and at
+        ``C_cw = 0.35`` are different discretisations, and a manifest recording
+        only the name could not tell two such runs apart.
+        """
+        found = self.solution.model.provenance.get("stabilisation_parameters", {})
+        return dict(found) if isinstance(found, Mapping) else {}
+
+    @property
+    def stabilisation_provenance(self) -> Mapping[str, Option]:
+        """Where the mode's constants came from, as the mode itself reports them."""
+        found = self.solution.model.provenance.get("stabilisation_provenance", {})
+        return dict(found) if isinstance(found, Mapping) else {}
+
+    @property
+    def max_cell_peclet(self) -> float | None:
+        """The largest ``Pe_K`` on the converged top rung, or ``None`` if unmeasured.
+
+        Recorded beside the stabilisation mode because the two are read together:
+        NUM-11 puts production in ``none``, and whether that was safe is exactly
+        the question this number answers (NUM-12, section 5.3.3).
+        """
+        return None if self.peclet is None else self.peclet.maximum
+
     def summary(self) -> dict[str, Option]:
         """Return the whole ladder's record, for the provenance manifest (FR-25).
 
@@ -268,6 +320,10 @@ class LadderResult:
             "iterations": self.iterations,
             "minimum_damping_used": self.minimum_damping_used,
             "stabilisation": self.stabilisation,
+            "stabilisation_parameters": dict(self.stabilisation_parameters),
+            "stabilisation_provenance": dict(self.stabilisation_provenance),
+            "max_cell_peclet": self.max_cell_peclet,
+            "peclet": None if self.peclet is None else self.peclet.summary(),
         }
 
 
@@ -627,6 +683,7 @@ def run_ladder(
             cold_fields=cold_fields,
             newton=solution.newton.summary() if solution.newton is not None else None,
             deviations=tuple(rung.model.provenance.get("deviations_from_validated_default", ())),
+            stabilisation=str(rung.model.provenance.get("stabilisation", "none")),
         )
         records.append(record)
         logger.info(
@@ -641,7 +698,42 @@ def run_ladder(
 
     if previous is None:  # pragma: no cover - the empty ladder was refused above
         raise ValueError("a continuation ladder needs at least one rung")
-    return LadderResult(solution=previous, rungs=tuple(records), mesh=mesh_report(rungs[-1].mesh))
+    return LadderResult(
+        solution=previous,
+        rungs=tuple(records),
+        mesh=mesh_report(rungs[-1].mesh),
+        peclet=_report_peclet(previous, rungs[-1].measures),
+    )
+
+
+def _report_peclet(solution: ModelSolution, measures: Measures) -> PecletMeasurement | None:
+    """Run the NUM-12 diagnostic on the converged top rung, or return ``None``.
+
+    Here rather than in the stage, because NUM-12's second NOTE puts the
+    evaluation on the assembled mesh's *converged state* and this is where the
+    ladder has one. Every path to a converged solution -- the CLI, the sweep
+    runner, a test -- goes through :func:`run_ladder`, so the diagnostic cannot be
+    skipped by a caller that forgot it.
+
+    A warning and never a gate: a lower rung of the ladder is deliberately coarse,
+    and an under-resolved double layer is not an inadmissible state. The NUM-17
+    positivity gate is what fails if it has become one.
+
+    ``measures`` is the top rung's, so the location the warning names carries that
+    rung's own coordinate names; a planar case would otherwise be reported in
+    ``(r, z)``.
+    """
+    model = solution.model
+    if not isinstance(model, CoupledModel):
+        return None
+    return PecletDiagnostic(
+        FieldSampler(
+            solution.space.mesh,
+            coordinates=measures.coordinate_names,
+            materials=model.fluid,
+        ),
+        model.cell_peclet(solution.state, solution.wall_distance_nm),
+    ).report()
 
 
 def default_ladder(
@@ -668,6 +760,9 @@ def default_ladder(
     surface_charge_boundary: str = "wall",
     corrections_active: bool = True,
     switches: CorrectionSwitches | None = None,
+    stabilisation: str = "none",
+    velocity_order: int | None = None,
+    pressure_order: int = 1,
 ) -> tuple[Rung, ...]:
     """Build the nine stages of NUM-18 for one target operating point.
 
@@ -757,6 +852,18 @@ def default_ladder(
         makes the PHY-21 ablation a sweep over configurations rather than a
         rebuild: the same ladder, the same mesh, the same operating point, and
         the difference attributable to the corrections alone (section 7.4).
+    stabilisation
+        The mode of section 6.4 every coupled rung is built in. ``none`` is the
+        production setting NUM-11 requires; ``reference`` is the mode section 7.4's
+        like-for-like comparison against the published currents needs. Applied to
+        every rung rather than to the top one, so that no rung is warm-started
+        from a state a different operator produced.
+    velocity_order, pressure_order
+        The velocity and pressure element orders of NUM-03. ``velocity_order``
+        defaults to ``measures.element_order`` and the pair to Taylor-Hood; the
+        equal-order pair is refused unless ``stabilisation`` supplies the flow
+        stabilisation that makes it inf-sup stable, and it is refused here, while
+        the ladder is being built, rather than on the first flow rung.
 
     Returns
     -------
@@ -814,7 +921,15 @@ def default_ladder(
             name=name,
             flow=flow,
             order=measures.element_order,
+            velocity_order=velocity_order,
+            pressure_order=pressure_order,
             solid_permittivities=solids,
+            # Every rung, not only the top one. The ladder is a sequence of
+            # warm starts, and a mode that switched on at the last rung would
+            # ask that rung to converge from a state produced by a different
+            # operator -- which is also what the VER-37 descriptor gate refuses
+            # to do across two separately climbed ladders (NUM-13, NUM-18).
+            stabilisation=stabilisation,
         )
 
     classical = CorrectionSwitches.classical()

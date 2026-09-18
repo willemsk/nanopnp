@@ -501,3 +501,194 @@ def test_ver40_the_admissible_mesh_passes_the_gate_and_both_routes(tmp_path) -> 
     assert measured["minimum_nm"] > 0.0
     assert measured["negative_fraction"] == 0.0
     logger.info("NUM-34 recorded min d = %.3e nm", measured["minimum_nm"])
+
+
+# -- NUM-26 under a stabilisation mode: the identity, measured -------------------
+
+
+STABILISED_CONTRIBUTION = -1.906e-11
+"""``S_i(psi)`` summed over species on this pore in ``reference``: -8.1 % of I. **[tested]**
+
+Measured at ``maxh`` 5.0 nm / ``wall_h`` 0.4 nm, 0.5 M, +50 mV, -0.05 C/m^2, where
+the maximum cell Peclet number is 0.775. Recorded for the scale, not asserted as a
+reference value: the assertions below are on the *identity* and on the fraction
+being far outside NUM-26's tolerance, both of which hold at any resolution.
+
+Larger than the per-cent the plan's section 1 predicted, and legitimately so: that
+estimate is for a mesh meeting NUM-30, where ``Pe_K`` is 0.3 and the added
+diffusivity ratio ``Pe_K^2`` is 0.09. This mesh sits at ``Pe_K = 0.775``, so the
+ratio is 0.6 and the bias is correspondingly bigger. VER-42 is where the number is
+watched under refinement.
+"""
+
+
+@pytest.fixture(scope="module")
+def stabilised() -> models.ModelSolution:
+    """Return the same solve in ``reference``, for the stabilised half of NUM-26.
+
+    One sign only. Both signs are already checked in ``none`` above, and what this
+    fixture exists for is the *term*, which is even in the bias to the accuracy
+    anything here measures.
+    """
+    mesh = PORE.generate(maxh_nm=5.0, wall_h_nm=0.4)
+    ladder = default_ladder(
+        mesh,
+        concentration_M=CONCENTRATION_M,
+        bias_V=BIAS_V,
+        surface_charge_C_m2=SURFACE_CHARGE_C_M2,
+        solid_permittivities=MEMBRANE_PERMITTIVITY,
+        start_concentration_M=None,
+        charge_steps=2,
+        stabilisation="reference",
+    )
+    result = run_ladder([rung for rung in ladder if rung.stage <= 5])
+    logger.info(
+        "reference at %+0.0f mV: %d rungs, %d iterations, %.1f s, max cell Peclet %.4f",
+        BIAS_V * 1e3,
+        len(result.rungs),
+        result.iterations,
+        result.seconds,
+        result.max_cell_peclet or float("nan"),
+    )
+    return result.solution
+
+
+def test_num26_the_routes_agree_in_reference_only_because_psi_carries_the_term(
+    stabilised: models.ModelSolution,
+) -> None:
+    """NUM-26's amended identity, measured from the gap rather than assumed.
+
+    Three numbers are read off one solution: the NUM-25 reaction flux, the NUM-24
+    indicator form as this implementation builds it, and the stabilisation term
+    tested against ``psi`` on its own. The first two agree to NUM-26's tolerance.
+    Subtract the third from the indicator form — the bare
+    ``int J~_i . grad(psi)`` the clause carried before the NUM-14 NOTE — and the
+    two routes come apart by eighty times that tolerance.
+
+    That is the content of the NOTE: in a stabilised mode the assembled residual
+    *contains* the stabilisation term, so the reaction flux carries it whether or
+    not anyone decided it should, and a NUM-24 route that omits it differs from
+    NUM-25 by exactly the quantity the mode exists to measure. The assertion is
+    therefore that the gap **equals the independently computed contribution**, to
+    a relative tolerance on the contribution itself. A test that only checked the
+    routes agreed would pass with the term added to both routes from one shared
+    integral and could not tell that apart from the identity holding.
+
+    Per species as well as in total, because the term is per species and two
+    contributions that cancelled in the sum would satisfy the total and corrupt
+    the NUM-27 transport number (NUM-11, NUM-24, NUM-25, NUM-26, QR-04, VER-11).
+    """
+    indicator = _indicator(stabilised)
+    by_indicator = qoi.indicator_currents(stabilised, AXISYMMETRIC, indicator)
+    by_reaction = qoi.reaction_flux_currents(stabilised, "cis")
+    contribution = qoi.stabilisation_currents(stabilised, AXISYMMETRIC, indicator)
+
+    agreement = qoi.RouteAgreement(
+        indicator_A=qoi.total_current(by_indicator),
+        reaction_A=qoi.total_current(by_reaction),
+    )
+    total_contribution = qoi.total_current(contribution)
+    bare = agreement.indicator_A - total_contribution
+    without_the_term = abs(bare - agreement.reaction_A) / abs(agreement.reaction_A)
+    logger.info(
+        "reference: psi %.6e A, reaction %.6e A, agreement %.2e; bare psi integral %.6e A, "
+        "%.2e from the reaction flux; S_i(psi) %.6e A (%.2f %% of I)",
+        agreement.indicator_A,
+        agreement.reaction_A,
+        agreement.relative_difference,
+        bare,
+        without_the_term,
+        total_contribution,
+        100.0 * total_contribution / agreement.reaction_A,
+    )
+    agreement.check()
+
+    # The gap the term closes, against the term measured on its own. Relative to
+    # the contribution, not to the current: this is an assertion about whether the
+    # reported number *is* the gap, and 1e-3 of the current would admit a reported
+    # value wrong by a fifth of itself.
+    gap = agreement.reaction_A - bare
+    assert abs(gap - total_contribution) < 1.0e-3 * abs(total_contribution), (
+        f"the two routes differ by {gap:.6e} A and the reported stabilisation "
+        f"contribution is {total_contribution:.6e} A; NUM-26's amended identity says "
+        "those are the same integral"
+    )
+
+    # And the gap matters: if it were inside the tolerance, the clause would be
+    # bookkeeping rather than the reason the routes agree at all.
+    assert without_the_term > 10.0 * qoi.ROUTE_AGREEMENT_TOLERANCE, (
+        f"without S_i(psi) the routes are only {without_the_term:.2e} apart, inside "
+        "ten times NUM-26's tolerance, so this solve cannot demonstrate the identity; "
+        "the mesh is too fine or the mode is not active"
+    )
+
+    for species, current in by_indicator.items():
+        pair = qoi.RouteAgreement(indicator_A=current, reaction_A=by_reaction[species])
+        assert pair.relative_difference < qoi.ROUTE_AGREEMENT_TOLERANCE, (
+            f"{species}: {pair.summary()}"
+        )
+        species_gap = by_reaction[species] - (current - contribution[species])
+        assert abs(species_gap - contribution[species]) < 1.0e-3 * abs(contribution[species]), (
+            f"{species}: gap {species_gap:.6e} A against a reported contribution of "
+            f"{contribution[species]:.6e} A"
+        )
+
+
+def test_num11_the_stabilisation_current_is_the_bias_and_is_exactly_zero_in_none(
+    solutions: dict[float, models.ModelSolution], stabilised: models.ModelSolution
+) -> None:
+    """``stabilisation_current_A`` is the SUPG bias on the QoI, from one run.
+
+    NUM-11 says SUPG biases the current quantity of interest; the NUM-26 NOTE says
+    the size of that bias SHALL be reportable "from a single run rather than from a
+    difference of two". This test is the calibration of that claim: it takes the
+    difference of two — the same pore, same mesh, same bias, solved in ``none`` and
+    in ``reference`` — and checks that the single-run number reproduces it.
+
+    It does, to 2 % of itself, because the *bare* indicator integral is nearly
+    mode-independent: 2.5327e-10 against 2.5288e-10, 0.15 % apart, so essentially
+    the whole difference between the two currents lives in ``S_i(psi)``. The
+    tolerance is therefore stated on the residual difference as a fraction of the
+    **current**, where 0.15 % is the honest scale, rather than as a fraction of the
+    contribution, where it would be 2 %.
+
+    ``none`` contributes exactly ``0.0`` and not approximately zero: that mode
+    assembles no term at all, so the integral is never taken (PHY-22, NUM-11,
+    NUM-26).
+    """
+    unstabilised = solutions[BIAS_V]
+    bare_none = qoi.stabilisation_currents(unstabilised, AXISYMMETRIC, _indicator(unstabilised))
+    for species, value in bare_none.items():
+        assert value == 0.0, (
+            f"{species}: the 'none' mode assembles no stabilisation term, so its "
+            f"contribution is exactly zero, not {value!r}"
+        )
+
+    indicator = _indicator(stabilised)
+    contribution = qoi.total_current(
+        qoi.stabilisation_currents(stabilised, AXISYMMETRIC, indicator)
+    )
+    plain = qoi.total_current(qoi.reaction_flux_currents(unstabilised, "cis"))
+    biased = qoi.total_current(qoi.reaction_flux_currents(stabilised, "cis"))
+    measured_bias = biased - plain
+    logger.info(
+        "current in none %.6e A, in reference %.6e A: bias %.6e A (%.2f %%); reported "
+        "S_i(psi) %.6e A, residual %.2e of I",
+        plain,
+        biased,
+        measured_bias,
+        100.0 * measured_bias / plain,
+        contribution,
+        abs(measured_bias - contribution) / abs(plain),
+    )
+
+    assert abs(contribution) > 10.0 * qoi.ROUTE_AGREEMENT_TOLERANCE * abs(plain), (
+        "a contribution inside ten times the route tolerance cannot be distinguished "
+        f"from the routes' own disagreement; got {contribution:.6e} A against "
+        f"{plain:.6e} A"
+    )
+    assert abs(measured_bias - contribution) < 5.0e-3 * abs(plain), (
+        f"the single-run contribution {contribution:.6e} A does not reproduce the "
+        f"two-run bias {measured_bias:.6e} A to the accuracy of the bare indicator "
+        "integral; either the term is not the whole difference or one solve moved"
+    )

@@ -1,6 +1,6 @@
 # Phase 1 (Solver core): the production solver on an externally supplied mesh
 
-**Status: WP7, WP8, WP9, WP10 and WP11 delivered; WP12 planned.** Written 2 September 2026, after Phase 0
+**Status: WP7, WP8, WP9, WP10, WP11 and WP12 delivered; WP13 next.** Written 2 September 2026, after Phase 0
 (WP1–WP6) and its consolidation (WP-A1, WP-B1, WP-B2, WP-C1). It inherited a verified physics core
 and a bare pipeline: tiers 1 and 2 green, `mypy --strict` and `ruff` clean, and `io/`, `sweep/`,
 `charge/`, `structure/`, `density/`, `symmetry/`, `gui/` still empty reserved slots. `io/` is filled
@@ -586,31 +586,130 @@ one operating point whose answer is known exactly. The reference sweep's bias ax
 than failing means deciding what "no current" is, which is a scale the extraction does not carry.
 Recorded in `.knowledge/06` §8.5, deliberately not fixed here.
 
-### WP12 — Reference-matching stabilised mode
+### WP12 — Reference-matching stabilised mode — **delivered**
 
-`physics/stabilisation.py`, wired through `CoupledModel`.
+`physics/stabilisation.py` (new, 1 093 lines), with changes to `physics/models.py`, `solve/gates.py`,
+`solve/continuation.py`, `solve/state.py`, `io/case.py`, `io/manifest.py`, `io/run.py`, `post/qoi.py`
+and `post/stage.py`; the plan's seven spec amendments — six written with the plan, the seventh
+(VER-41 and VER-42 themselves) with the tests that discharge them — plus two the implementation
+found: the NUM-14 NOTE requiring the magnitude floor, a NUM-14 bullet recording that the flow row's
+equation residual is approximated by this project's choice and what that costs, and two sharpenings
+of VER-42 — its crosswind and current-convergence clauses to the forms that are actually assertable,
+and its MMS clause to the mode that isolates the term the prediction is about.
 
-SUPG on the Nernst–Planck operator and a Do Carmo–Galeão-type crosswind term, both residual-based;
-the P1/P1 equal-order flow pair enabled *only* together with flow stabilisation (NUM-03); the `Pe_h`
-evaluation and its element-locating warning (NUM-12); quadrature at NUM-15's orders. Production
-default stays `none` (NUM-11), and the mode is already in the provenance record (WP-B1).
+Delivered: stabilisation is a **registry of named models**, the shape `materials/models.py` already
+uses — `none` assembles nothing, `supg` the transport streamline term, `reference` the streamline and
+crosswind terms *and* the flow GLS and grad-div pair. "Off" is a registered entry, so
+`CoupledModel.residual_form` carries no `if` on the mode and §7.4's ablation is a sweep over mode
+names rather than three code paths (PHY-22 generalised). The streamline parameter is
+`τ_i = (h_K/2‖b̃_i‖)·min(Pe_K, 1)` on the whole non-diffusive flux bracket
+`b̃_i = z_i μ̃_i ∇φ̃ + D̃_i β̃_i − Pe ũ`; the crosswind is Do Carmo–Galeão-type with `C_cw = 1`, which
+by Cauchy–Schwarz makes it **identically zero wherever `Pe_K ≤ 1`**. Every parameter is evaluated at
+the lagged iterate, which is COMSOL's `nojac()` in one line and keeps `max(0, ·)` and `1/‖∇c̃‖` out
+of the Jacobian. `CoupledModel` gained a third element order (`velocity_order`, defaulting to
+`order`), so the reference's φ P2 / c P2 / u P1 / p P1 configuration is expressible at all, and the
+inf-sup refusal became **one predicate with two callers** (`physics.models.inf_sup_problem`) naming
+both the problem and the mode that would permit it. `numerics.stabilisation` widened to admit `supg`
+under a compatibility rule written into §5.3.1 in the same commit: widening the accepted value set of
+an existing key does not move the schema version; adding, removing, renaming or narrowing a key does.
 
-Discharges **NUM-03, NUM-12, NUM-14, NUM-15** and the unfinished half of **NUM-11**; adds the two
-Tier-2 assertions of §Design (MMS in the stabilised mode, and stabilised → unstabilised under
-refinement).
+The two things the mode changes about *results* are both recorded rather than absorbed. NUM-24's
+indicator functional now carries the stabilisation form evaluated with `ψ` as its test function,
+because NUM-25's reaction flux **is** the assembled residual and the assembled residual contains it
+— the two routes would otherwise differ by exactly that term on every stabilised solve, for the one
+reason that is not a bug. One `StabilisationIntegrand` is produced by `transport_contributions` and
+consumed twice, by the residual and by the functional, which is what makes NUM-26 an identity rather
+than two constructions that agree. And `2π F z_i S_I S_i(ψ)` is reported per species as
+`stabilisation_current_A`, from **one** run rather than a difference of two — WP13's `Δ_stab` input.
+NUM-12's `Pe_h` runs on the converged top rung in **every** mode, `none` included, evaluated from
+`‖b̃_i‖h_K/(2D̃_i)` rather than the printed `½|z_i|‖∇φ̃‖h̃` because that form assumes the Einstein
+relation PHY-14 and VER-05 forbid at finite concentration; it warns naming the species, the value and
+its `(r, z)`, and it is a warning and not a gate.
 
-Planned in full in `docs/plans/wp12-reference-stabilised-mode.md`, 13 September 2026, with seven
-amendments to `SPECIFICATION.md` made in the same commit and its three open questions closed by
-author ruling on the same day: the stabilisation tuning constants are module constants of a named
-mode rather than case-file fields, `supg` is a third registered mode and `numerics.stabilisation`
-widens to admit it, and the `ζ̃` below stands as an illustrative substitution until this package
-measures the reference pore's own. Two findings there change what this section assumed. The
-transport stabilisation adds artificial streamline diffusion in the ratio `Pe_h²`, which on a mesh
-built to NUM-30 is `ζ̃²/100` — of order 9 % inside the double layer at an illustrative `ζ̃ = 3` and
-0.09 % in the pore lumen, so `Δ_stab` is a double-layer effect by three orders of magnitude. And the
-Do Carmo–Galeão crosswind term is *identically zero* wherever `C_cw Pe_K ≤ 1`, hence everywhere on a
-mesh meeting NUM-30: it must be verified on a deliberately coarse mesh, and "the crosswind
-contributed nothing" becomes one of the numbers WP13 reports rather than an assumption it makes.
+Discharges **NUM-03, NUM-12, NUM-14, NUM-15** and the unfinished half of **NUM-11**; adds **VER-41**
+(Tier 1) and **VER-42** (Tier 2).
+
+Beyond the plan, five things. **On a stable element pair the flow terms are not asymptotically
+inert: they cost an order of accuracy and 20× the time.** The decisions table justified assembling
+them on a Taylor–Hood pair with "the flow terms are consistent", which §Design's own text contradicts
+— the momentum residual drops the viscous second derivative on the same rule as the transport one.
+Measured on VER-18's problem, where `max Pe_K ≤ 0.084` so the crosswind viscosity is identically zero
+and `reference` minus `supg` **is** the flow pair: the concentration rate falls from 2.01 to 0.98,
+Newton goes from 5 iterations to 31, and the velocity error — which no transport term can reach,
+`supg` moving it by 0.2 % — rises by a factor of 125. PSPG's consistency error enters the continuity
+equation weighted by `τ_m ≈ h̃²/4η̃` against a test *gradient*, which is `O(h)`. The decision stands:
+NUM-14 records the flow row's equation residual as *not recorded in the report*, so the
+approximation is ours rather than the reference's, and RSK-18 records that the reference ran its flow
+stabilisation on a **P1/P1** pair where the term is what makes the pair admissible — no configuration
+the reference itself ran loses an order. What changed is the claim, and where VER-42's MMS rate is
+gated: in `supg`, the mode that isolates the term NUM-14's prediction is about, with `reference`'s
+measured, attributed and recorded as `slow`.
+
+And four more. **A term whose value is exactly zero made the Jacobian singular**:
+`reference` aborted on the first linearisation of ladder stage 4 with `UmfpackInverse: Numeric
+factorization failed`, naming no form, because NGSolve evaluates `d/du ‖g‖ = (g·∂g/∂u)/‖g‖`
+numerically and never folds away the structural zero — at `g = 0` the entry is `0/0` and the `NaN`
+survives multiplication by that zero. `b̃_i` is exactly zero at every rung below stage 4, so this is
+the ordinary path. The guard is `MAGNITUDE_FLOOR = 1 × 10⁻⁶⁰` inside every root, gated on the
+**assembled Jacobian entries** because a residual-norm check reports zero and not `NaN`; `Assemble`
+is clean and only `AssembleLinearization` carries it, which is why the zero-wind residual test passed
+in all three modes and caught none of it. Recorded as trap 19 in `.knowledge/06` §8.1. **The two GLS
+rows do not share an orientation**: the velocity row takes a `+` and the pressure-test piece a `−`,
+giving `[[A, B], [Bᵀ, −C]]`; one signed term for both stabilises one row and destabilises the other.
+**`solve/state.py` gained three `SPACE_KEYS` entries, not zero** — the mode *name* alone would let a
+warm start cross between `reference` at `C_cw = 1` and `reference` at `C_cw = 0.35`, which are
+different operators — and `RungResult` gained `stabilisation`, so the per-rung record says which mode
+each rung was assembled in. **`specialcf.mesh_size` evaluates pointwise** as well as inside a
+quadrature loop, which is what lets the `Pe_h` diagnostic be a `FieldSampler` pass over the P2 nodal
+set rather than an element loop; it is exactly `sqrt(2|K|)` on triangles, measured to
+2.4 × 10⁻¹⁵ relative, so the `τ` definitions are pinned to a measured convention.
+
+Measurements. The transport stabilisation's added streamline diffusivity over the physical `D̃_i` is
+exactly `Pe_K²`, independent of every material parameter — on a mesh meeting NUM-30 that is
+`ζ̃²/100`, and `Pe_h = 0.300` at both 1 M and 0.05 M. At `Re = 6 × 10⁻⁴` the flow GLS term is pure
+PSPG in practice: the convective branch of `τ_m` is five orders below the viscous one and
+`τ_c ≈ 9 × 10⁻⁶`. Both are assembled anyway, so the mode is not silently specific to this Reynolds
+number. On the VER-11 benchmark pore (2 nm lumen, 13 nm membrane, 0.5 M, +50 mV, −0.05 C/m²,
+`maxh` 5.0 nm, `wall_h` 0.4 nm) in `reference`, where `max Pe_K = 0.775`:
+
+| Measurement | Value |
+|---|---|
+| `stabilisation_current_A`, summed | **−1.9059 × 10⁻¹¹ A, −8.14 % of the current** |
+| The same bias from two solves (`none` against `reference`) | **7.38 %**, agreeing with the single-run number to `1.55 × 10⁻³` of the current |
+| The *bare* `∫ J̃_i·∇ψ` integral, `reference` against `none` | 2.5327 × 10⁻¹⁰ A against 2.5288 × 10⁻¹⁰ A — **0.15 % apart** |
+| MMS L² rate, `supg` on VER-18's solution, `maxh` 0.4/0.2/0.1 nm | **2.012, 2.040** (§Design predicts 2, floor 1.8), 152 s |
+| The same meshes in `none` | 3.553, 3.111 (VER-18's 3, unchanged), 31 s |
+| The same meshes in `reference` (`maxh` 0.4/0.2) | **0.984** for `Na+` and 0.702 for `Cl−`, 31 Newton iterations against 5, 126 s and 436 s |
+| Velocity L² at `maxh` 0.4 nm, `none` / `supg` / `reference` | 2.7567e−04 / 2.7617e−04 / **3.4483e−02** |
+| Footprint `error/error(none) − 1`, intact against source withheld | 4.83 vs 0.065, 15.97 vs 0.67, 2.99 vs 0.014, 15.77 vs 0.20 |
+| Plain Galerkin at `wall_h` 1.0 nm, −0.12 C/m², `max Pe_K = 4.712` | `none` aborts on `Na+ = −72.9` at `(1.001, −4.376)` nm; `reference` converges in **126** Newton iterations |
+| Crosswind activation on that mesh | 125 of 1 344 fluid samples for `Na+`, 123 for `Cl−`, peak `ν_K` 3.71 / 5.61; **zero** samples active at `Pe_K ≤ 1` |
+| Crosswind at `wall_h` 0.2 nm, `max Pe_K = 0.457` | assembled linear form `max \|entry\| = 0.000 × 10⁰`, both species |
+| `\|I_ref − I_none\|/\|I_none\|` at `wall_h` 0.8 / 0.4 / 0.2 nm | 2.00 × 10⁻¹, 7.38 × 10⁻², 1.99 × 10⁻² — rates **1.441**, **1.889** |
+| Equal-order P1/P1 in `reference`, `wall_h` 0.4 nm | velocity **6.86 × 10⁻² relative *r*-weighted L²** from Taylor–Hood, 34 Newton iterations either way |
+
+The 8 % is larger than the per-cent §Design predicts and consistently so: that estimate is for a mesh
+meeting NUM-30 where `Pe_K² = 0.09`, and this benchmark's mesh is sized for the solve and no finer,
+`Pe_K² = 0.60` at `Pe_K = 0.775`. The closed form survives; only the substitution changes.
+
+Inherited by WP13, three things. **The middle rung of the attribution ladder is first-order
+accurate.** `reference` on a Taylor–Hood pair converges at 0.98 where `supg` converges at 2.01, so
+the `Δ_stab` measured there is the flow pair's contribution rather than the transport term's, and the
+like-for-like comparison against the reference's own runs is the **P1/P1** rung, not the middle one.
+Any §7.4 number from the middle rung has to say which of the two it is measuring.
+
+**The coarse-mesh positivity result is true of a *band*, not of the coarse-mesh
+regime.** `Pe_K > 1` is necessary and nowhere near sufficient for plain Galerkin to lose positivity —
+below about −0.10 C/m² on the 313-element mesh both modes converge and the comparison measures
+nothing, and well above it (a 1.5 nm pore at 0.05 M, −0.30 C/m², `wall_h` 1.0 nm) *both* modes lose it, `reference`
+merely reaching −0.385 where `none` reaches −0.826. The attribution ladder's middle rung therefore
+has to name its charge density as carefully as its mesh.
+
+Two smaller ones: the
+`|I_ref − I_none|` sequence reaches `O(h²)` **from below**, so a fixed rate floor fails its coarsest
+interval for no defect and the gate is the monotone fall plus 1.5 on the finest; and `C_cw` is a
+module constant by author ruling, so a sensitivity study over it is a second registered mode rather
+than a swept number — which is what the registry is for.
 
 ### WP13 — Tier 3 harness and the COMSOL comparison
 

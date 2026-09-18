@@ -1,7 +1,7 @@
 # WP12 — Reference-matching stabilised mode
 
-**Status: planned, not started; the three questions it opened are closed by author ruling, 13
-September 2026.** Written 13 September 2026, after WP7 (case schema, artefacts,
+**Status: delivered, 14 September 2026; the three questions it opened were closed by author ruling,
+13 September 2026.** Written 13 September 2026, after WP7 (case schema, artefacts,
 manifest), WP8 (mesh ingestion and quality), WP9 (external fields), WP10 (case-driven runs, the CLI,
 field output) and WP11 (the sweep runner). It inherits a solver whose stabilisation mode is recorded
 everywhere and applied nowhere: `CoupledModel.stabilisation` exists, reaches the provenance, the
@@ -133,6 +133,23 @@ double-layer effect by three orders of magnitude, which is precisely why it reac
 These are the numbers WP13 will subtract. They are predictions, and the Tier-2 measurement of
 `stabilisation_current_A` against the unstabilised current is what checks them.
 
+> **Outcome — `Pe_K²` is confirmed, and the single-run number *is* the two-run bias.** Measured on
+> the VER-11 benchmark pore (2 nm lumen, 13 nm membrane, 0.5 M, +50 mV, −0.05 C/m², `maxh` 5.0 nm and
+> `wall_h` 0.4 nm, `reference`), where the diagnostic reports `max Pe_K = 0.775`:
+> `stabilisation_current_A` sums to **−1.9059 × 10⁻¹¹ A, −8.14 % of the current**, and solving the
+> same pore on the same mesh in `none` gives a current larger by **7.38 %**. The two agree to
+> `1.55 × 10⁻³` of the current, so the NUM-26 NOTE's claim — the bias is reportable from a single run
+> rather than from a difference of two — holds as arithmetic and not only as an intention. The reason
+> it does is worth keeping: the *bare* `∫ J̃_i·∇ψ` integral is almost mode-independent
+> (2.5327 × 10⁻¹⁰ A in `reference` against 2.5288 × 10⁻¹⁰ A in `none`, 0.15 % apart), so essentially
+> the whole difference between the two currents lives in `S_i(ψ)`.
+>
+> 8 % is larger than the per-cent this section predicts, and consistently so: that estimate is for a
+> mesh meeting NUM-30, where `Pe_h = 0.300` and the added diffusivity ratio `Pe_K²` is 0.09. This
+> benchmark's mesh is deliberately coarser — it is sized for the solve and no finer — and at
+> `Pe_K = 0.775` the ratio is 0.60. The closed form survives the test; only the substitution changes.
+> VER-42 is where the number is watched under refinement.
+
 ### 2. Why the crosswind term is identically zero on the production mesh
 
 The term is
@@ -193,6 +210,26 @@ The second Tier-2 assertion is the other side of the same statement: the stabili
 independent routes to the same conclusion, and the one that matters for §7.4 is the second, because
 it is the one that says the two discretisations are discretisations of the same PDE.
 
+> **Outcome — the prediction is right about the term it is about, and the section attributes it to
+> the wrong mode.** `supg` — the streamline term alone — converges at **2.012 and 2.040** on
+> `maxh` 0.4/0.2/0.1 nm, against `none`'s 3.55 and 3.11 on the identical meshes. NUM-14's prediction
+> is confirmed to within 2 %. But this section, and the verification table below, asked for that rate
+> from **`reference`**, which also assembles the flow pair; measured there it is **0.984**. The gated
+> rate therefore moved to `supg`, which is the mode that isolates the term the prediction is about,
+> and `reference`'s is measured and recorded (§4's Outcome carries the attribution). The project's
+> own rule decided it: an analytic test that localises the error to a single term beats a whole-model
+> comparison that localises nothing.
+>
+> The section's falsification clauses need one correction each. "A rate near 3 means the streamline
+> term is not being assembled at all" — true, and the *other* cause of a rate near 3 is the one this
+> section names as producing a rate **below** 2: the manufactured source left out of `R̃_i`. This
+> problem is diffusion-dominated (`max Pe_K ≤ 0.084`), so `s̃_i` is the dominant part of `R̃_i` and
+> withholding it does not corrupt the residual, it erases it — the rate rose to **2.907**, and the
+> floor, which deliberately has no ceiling, passed it. The deliberate-mistake test is therefore
+> asserted on the term's *footprint* against the unstabilised error on the same mesh, which separates
+> by a factor of 24 to 212 and does not depend on which way the rate moves. Recorded in
+> `.knowledge/06` §4.3.4; VER-42 gains the clause.
+
 ### 4. The flow terms at `Re = 6 × 10⁻⁴`
 
 `NondimensionalCoefficients.reynolds` is `ρ₀ ε V_T²/η₀²`, length-independent, **6 × 10⁻⁴**
@@ -215,6 +252,45 @@ viscous second derivative dropped — so it carries no `1/r`. The grad-div term 
 `d̂iv u = ∂_r u_r + u_r/r + ∂_z u_z` (NUM-05), and takes `singular=True`: the reference assembled its
 flow stabilisation at integration order 2, and the §6.2 NOTE already declares NUM-07 to govern
 irrespective of that.
+
+> **Outcome — the two GLS rows do not share an orientation.** The section above reads as though one
+> signed GLS term serves both rows. It does not. The velocity row is the coercive orientation and
+> takes a `+`; the continuity row is written `−∫ q ρ̃ d̂iv ũ`, which is *minus* the orientation in
+> which `+τ_m ∫∇q·∇p̃` is the stabilising pressure block, so the pressure-test piece takes a `−`.
+> One signed term for both stabilises one row and destabilises the other, giving the saddle
+> structure `[[A, B], [Bᵀ, −C]]` rather than `[[A, B], [Bᵀ, +C]]`. The streamline and crosswind
+> terms *do* share an orientation with each other — both `−`, the sign of the Galerkin diffusion
+> they augment in this flux-form residual — which is what makes the flow pair the exception worth
+> writing down.
+
+> **Outcome — the flow terms are not asymptotically inert on a stable pair; they cost an order and
+> 20× the time.** The decisions table justifies assembling them on a Taylor–Hood pair with "the flow
+> terms are consistent (§Design), so on a stable pair they are asymptotically inert rather than
+> wrong". The first clause contradicts this section, which says in its own third paragraph that the
+> momentum residual drops the viscous second derivative; the rest follows from that and is wrong.
+> Measured on VER-18's problem, where `max Pe_K ≤ 0.084` and the crosswind viscosity is therefore
+> identically zero (sampled, both species), so that `reference` minus `supg` **is** the flow pair:
+>
+> | | `c_Na+` rate | velocity L² at `maxh` 0.4 nm | Newton | wall clock at 0.4 / 0.2 nm |
+> |---|---|---|---|---|
+> | `none` | 3.55, 3.11 | 2.7567e−04 | 5 | 0.8 s · 4.7 s |
+> | `supg` | 2.01, 2.04 | 2.7617e−04 | 5 | 7.2 s · 25.1 s |
+> | `reference` | 0.98, and 0.70 for `Cl−` | 3.4483e−02 | 31 | 126 s · 436 s |
+>
+> PSPG's consistency error enters the continuity equation weighted by `τ_m ≈ h̃²/4η̃` against a test
+> *gradient*, which is `O(h)` and not `O(h²)`. The velocity error, which no transport term can reach
+> — `supg` moves it by 0.2 % — rises by a factor of 125, which is what makes this an attribution
+> rather than an inference.
+>
+> **The decision itself stands.** NUM-14's table records the flow row's equation residual as *not
+> recorded in the report*, so the approximation is this project's rather than the reference's; and
+> RSK-18 records that the reference ran its flow stabilisation on a **P1/P1** pair, where the term is
+> what makes the pair admissible at all. No configuration the reference itself ran loses an order.
+> Making `reference` drop the flow terms on a stable pair would make the mode's meaning depend on the
+> element pair while the manifest recorded one word, which is worse than the cost. What changes is
+> what is claimed: the middle rung of the §7.4 attribution ladder is first-order accurate, and the
+> `Δ_stab` measured there is the flow pair's rather than the transport term's. Recorded in
+> `.knowledge/06` §4.3.3; NUM-14 gains the bullet and VER-42 the clause.
 
 ### 5. The current identity, written out
 
@@ -246,6 +322,36 @@ within the shape factor. This goes into `.knowledge/06-numerics-fem.md` §2 as *
 every `τ` in this package is defined against it and a silent change to NGSolve's convention would
 retune the whole mode with no diagnostic.
 
+> **Outcome — `specialcf.mesh_size` also evaluates pointwise, which is what makes the NUM-12
+> diagnostic possible.** Verified before it was relied on: `mesh(x, y)` returns the containing
+> element's `h_K` at a located point, not only inside a quadrature loop. The `Pe_h` diagnostic is
+> therefore a sampler over the P2 nodal set rather than an element loop, and reuses `FieldSampler`
+> unchanged as the plan's work-items table assumed.
+
+### 7. The zero-wind linearisation, found in implementation
+
+> **Outcome — a term whose value is exactly zero can still make the Jacobian singular.** The plan
+> has no section on this because nothing predicted it. `reference` aborted on the first
+> linearisation of ladder stage 4 with `UmfpackInverse: Numeric factorization failed`, naming no
+> form and no term. The cause is that NGSolve evaluates `d/du ‖g‖ = (g·∂g/∂u)/‖g‖` numerically and
+> never folds away the structural zero that `∂g/∂u` is for a lagged grid function: at `g = 0`
+> exactly the entry is `0/0`, and the `NaN` survives multiplication by that zero. `Assemble` is
+> clean; only `AssembleLinearization` carries it, which is why
+> `test_num14_every_term_vanishes_at_a_state_with_no_wind` — which asserts the same state through
+> `Apply` — passes in every mode and caught none of it.
+>
+> `b̃_i = z_i μ̃_i ∇φ̃ + D̃_i β̃_i − Pe ũ` is **exactly** zero at every rung below stage 4 (zero bias,
+> zero charge, no flow), so this is the ordinary path rather than a corner of the envelope. The
+> guard is `MAGNITUDE_FLOOR = WIND_FLOOR² = 1e−60` inside every root `_magnitude` takes: the
+> perturbation to a magnitude of order 1 is `5e−61`, and the derivative becomes `0/1e−30 = 0`
+> exactly. The scalar sibling `|s| = IfPos(s, s, −s)` was already immune, because `IfPos`
+> differentiates branchwise with no division — the module had the hazard right for scalars and
+> missed it for vectors.
+>
+> Gated by `test_ver41_the_linearisation_is_finite_at_the_zero_wind_cold_state`, parametrised over
+> all three modes and asserted on the **assembled Jacobian entries**: a residual-norm check reports
+> zero, not `NaN`. VER-41 gains the clause and NUM-14 a NOTE requiring the floor.
+
 ## Work items
 
 | File | What it delivers | Identifiers |
@@ -263,6 +369,36 @@ retune the whole mode with no diagnostic.
 | `.knowledge/06-numerics-fem.md` | §2: `specialcf.mesh_size = sqrt(2|K|)` **[tested]**. §4: the mode as built, the `Pe_h²` ratio, the crosswind's `C_cw Pe_K ≤ 1` switch-off, and the `Re = 6 × 10⁻⁴` flow arithmetic **[verified]** | — |
 | `SPECIFICATION.md` | The seven amendments below, in this commit | NUM-03, NUM-12, NUM-14, NUM-15, NUM-24, NUM-26, §5.3.1, §7.2, §7.3 |
 
+> **Outcome — five rows landed somewhere other than where this table put them.**
+>
+> - **No `SUPPORTED_STABILISATIONS`.** A frozen tuple beside a live registry is a second record of
+>   one fact, and the two can disagree the moment a mode is registered. `physics/models.py` queries
+>   `registered_stabilisations()` directly, and `equal_order_stabilisations()` is the derived
+>   membership the inf-sup message needs.
+> - **The inf-sup condition is one predicate, `physics.models.inf_sup_problem`, with two callers.**
+>   The table gives the gate to `models.py` and the widened literal to `io/case.py`, which would
+>   have put the same condition in both — and the one that mattered would be whichever ran first.
+>   `io/case.py` calls the predicate and wraps its message in the case file's own `elements`
+>   vocabulary.
+> - **`stabilisation_current_A` is in `post/qoi.py`, not on `LadderResult`.** It is a
+>   post-processing integral over the fluid, evaluated through
+>   `CoupledModel.transport_states` — the same states the residual was assembled from, which is
+>   what keeps NUM-26 an identity rather than two constructions that happen to agree. `LadderResult`
+>   carries the `Pe_h` measurement and the mode's parameters; the current lives with the other
+>   currents.
+> - **`solve/stage.py` is unchanged.** The diagnostic runs in `run_ladder`, because every path to a
+>   converged solution goes through it and no caller can then skip it, and the stage already splats
+>   `result.summary()`. A different file gained the one line the table expected here:
+>   `post/stage.py`, whose `always` set had to learn `stabilisation_currents_A` is provenance rather
+>   than a selectable quantity.
+> - **`solve/state.py` gained three `SPACE_KEYS` entries, not zero.** `model.elements`,
+>   `model.stabilisation_parameters` and `model.stabilisation_provenance`: the mode *name* alone
+>   would let a warm start cross between `reference` at `C_cw = 1` and `reference` at
+>   `C_cw = 0.35`, which are different operators, and `model.elements` restates the three orders in
+>   the case file's vocabulary on the same side of the gate so the two records cannot disagree.
+>   `RungResult` also gained `stabilisation`, so the per-rung record says which mode each rung was
+>   assembled in rather than only the top one.
+
 ## Verification
 
 | Test file | Tier | Identifiers | What it asserts |
@@ -277,11 +413,54 @@ retune the whole mode with no diagnostic.
 | `tests/tier2/test_ladder.py` (extended) | 2 | NUM-13, NUM-18 | A ladder run in `reference` reports that mode from every rung, not only the top one; a warm start across the two modes is refused by the existing VER-37 descriptor gate naming `stabilisation` and both values |
 | `tests/tier2/test_stabilised_mode.py` (same file, `slow`) | 2 | VER-42, NUM-03 | The equal-order P1/P1 pair converges in `reference` on the reference pore and produces a velocity field agreeing with the Taylor–Hood solve to a reported relative L², and the same pair in `none` is refused before assembly. Recorded, not gated: it is the third rung of WP13's attribution ladder and its number is the input, not the verdict |
 
+> **Outcome — every prediction §Design made about the coarse mesh held, and the numbers are
+> these.** `tests/tier2/test_stabilised_mode.py` runs the pore of the route-agreement file at
+> `maxh` 5 nm, 0.5 M, +50 mV.
+>
+> | Claim | Configuration | Measured |
+> |---|---|---|
+> | Plain Galerkin loses positivity | `wall_h` 1.0 nm, −0.12 C/m², 313 elements, `max Pe_K = 4.712` | `none` aborts on rung `4-ramp-charge-1.00` with `Na+ = −72.9` at `(r, z) = (1.001, −4.376)` nm; `reference` converges in 126 Newton iterations over the ten classical rungs |
+> | Crosswind active, and only above unit Péclet | the same mesh | active at 125 of 1 344 fluid samples for `Na+` and 123 for `Cl−`, peak `ν_K` 3.71 and 5.61; **zero** samples active at `Pe_K ≤ 1` |
+> | Crosswind identically zero when resolved | `wall_h` 0.2 nm, −0.05 C/m², 1 491 elements, `max Pe_K = 0.457` | the assembled crosswind linear form has `max |entry| = 0.000e+00` for both species |
+> | The two modes' currents converge together | `wall_h` 0.8 / 0.4 / 0.2 nm, −0.05 C/m² | `\|I_ref − I_none\|/\|I_none\|` = 2.00 × 10⁻¹, 7.38 × 10⁻², 1.99 × 10⁻²; rates **1.441** and **1.889** |
+> | Equal order, recorded not gated | `wall_h` 0.4 nm, P1/P1 in `reference`, stage 6 | velocity 6.86 × 10⁻² relative *r*-weighted L² from Taylor–Hood, 34 Newton iterations either way |
+>
+> Two things the plan did not say. The current-difference rate **approaches 2 from below** — 1.441
+> on the coarse interval — so the plan's own "assert the ratio falls, report the rate" was the right
+> call and a fixed floor of 1.8 would have failed the first interval for no defect; the gate is
+> therefore the monotone fall plus 1.5 on the finest interval. And the crosswind containment is
+> asserted **sample by sample** rather than as a comparison of fractions, which is stronger than the
+> plan's wording and is what §4.3 of the knowledge base actually licenses.
+>
+> The charge had to be raised from the route file's −0.05 C/m² to −0.12 C/m² to reach the regime at
+> all. Below about −0.10 C/m² on the coarse mesh both modes converge and the comparison measures
+> nothing; well above it — a 1.5 nm pore at 0.05 M and −0.30 C/m², `wall_h` 1.0 nm — *both* modes lose
+> positivity, `reference` merely reaching −0.385 where `none` reaches −0.826. The claim "the
+> stabilised mode does not trip the gate" is therefore true of a band and not of the whole
+> coarse-mesh regime, which is what the recorded configuration pins down.
+
+> **Outcome — the warm-start refusal is a Tier 1 test, not a Tier 2 one.** The row above puts both
+> ladder assertions in `tests/tier2/test_ladder.py`, on the reasoning that a mode crossing is
+> something a ladder does. It is not: `load_initial` gates the descriptor *before* any form is
+> assembled, so the refusal needs a stored `state.npz` and a case document and no solve at all. It
+> landed in `tests/tier1/test_warm_start_descriptor.py`, beside the `neighbour` fixture and the other
+> five `SPACE_KEYS` crossings it is a sibling of, where it runs in the same seconds they do and reads
+> as one more row of the same table rather than as an aside in a benchmark. Tier 2's
+> `test_ladder.py` keeps the per-rung mode record, which does need the climb. The identifiers are
+> unchanged; only the tier directory is.
+
 **Tolerance provenance.** The MMS floor of 1.8 is `2 − 0.2`, the margin `tests/tier2/test_mms.py`
 already allows on its rate of 3, unchanged. `1 × 10⁻³` is NUM-26's declared route tolerance,
 unchanged since WP5. The `O(h²)` current convergence is not gated on a constant: the *ratio* between
 successive levels is asserted to fall, and the measured rate is reported, because §1 predicts the
 coefficient and not the constant in front of it. Nothing here tightens an existing tolerance.
+
+Two constants the plan did not foresee, both floors with their measured headroom recorded beside
+them rather than thresholds fitted to a number. `WITHHELD_FOOTPRINT_FACTOR = 5` gates the collapse of
+the stabilisation's footprint when the manufactured source is withheld; measured 24 to 212, so the
+floor carries five times its own margin. `FLOW_PAIR_VELOCITY_FACTOR = 10` gates how much of the
+velocity error the flow pair owns in the `reference` measurement; measured 125. Each is a floor
+because the quantity it bounds is a *separation* that the implementation should widen, not meet.
 
 ## Out of scope
 
