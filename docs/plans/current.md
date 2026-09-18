@@ -7,24 +7,31 @@ an unmerged branch has shipped.
 ## Position
 
 - Phase: [Phase 1, solver core](phase-1-solver-core.md).
-- Delivered: WP7-WP12. Next: WP13; no WP13 implementation plan exists yet.
-- WP13 scope: Tier 3 harness, export contract, archived goldens and attribution
-  (VAL-01 to VAL-04, RSK-14, RSK-09). Read the phase plan's
-  [WP13 section](phase-1-solver-core.md#wp13--tier-3-harness-and-the-comsol-comparison).
-- Author decision needed: VAL-03 export scope, before WP13 starts. The harness
-  depends on the author's exports and WP8 reference geometry. A self-generated
-  golden tests machinery only, not agreement with COMSOL.
-- Later: WP14 GUI and packaging probe; Windows verification still needs the
-  author's machine or a Windows CI runner. See the phase plan's Open decisions.
+- Delivered: WP7–WP12. Current: **WP13, planned and not started** —
+  [`wp13-tier3-comsol-comparison.md`](wp13-tier3-comsol-comparison.md).
+- WP13 scope: the Tier-3 harness, the export contract, the probe grid, the archived
+  goldens and the attribution ladder (VAL-01 … VAL-04, RSK-14, RSK-09). Tier 3 stays
+  recorded, not gated; VAL-01 and VAL-02 do not become gates in this package.
+- Closed by the author, 18 September 2026: **VAL-03 export scope** — five frozen cases
+  (0.05 M and 3 M × ±200 mV, plus 0.5 M / +50 mV), the §7.5.1 analyte case excluded,
+  VAL-04 on the published mesh plus one uniform refinement at the centre case.
+  `SPECIFICATION.md` §7.4 carries the ruling.
+- Amended with that plan: the phase plan's attribution ladder is **four rungs**, not
+  three, on WP12's measured 0.98 convergence rate for `reference` on a Taylor–Hood
+  pair. Do not design against the three-rung row.
+- Later: WP14 GUI and packaging probe; Windows verification still needs the author's
+  machine or a Windows CI runner. See the phase plan's Open decisions.
 
 ## Dependencies To Read On Demand
 
 | Need | Read |
 |---|---|
-| WP13 comparison design and acceptance | Phase plan: Design / The Tier-3 attribution ladder, WP13, Verification; specification section 7.4 and its cited requirements |
+| WP13 decisions, work items and verification | `wp13-tier3-comsol-comparison.md` Execution brief; its §Design 1–3 for the ladder algebra, the norms and the golden contract |
+| What Tier 3 accepts and what it archives | Specification §7.4 including its two NOTEs, and the §7.1 NOTE on `$NANOPNP_REFERENCE_DATA` |
+| What must be matched for like-for-like | `.knowledge/09-comsol-reference-settings.md` §C.2, §C.10, §E, §F |
+| Stabilisation findings inherited by WP13 | Phase plan: the final Inherited by WP13 paragraphs in WP12; `wp12-reference-stabilised-mode.md` Outcomes in Design sections 3 and 4 |
 | Reference geometry and field inputs | Phase plan: WP8 and WP9; follow their evidence links only for the input under investigation |
-| Running cases and sweeps | Phase plan: WP10 and WP11; `docs/sweeps/README.md` for the reference sweep |
-| Stabilisation findings inherited by WP13 | Phase plan: final Inherited by WP13 paragraphs in WP12; `wp12-reference-stabilised-mode.md` Outcomes in Design sections 3 and 4 |
+| Running cases and sweeps | Phase plan: WP10 and WP11; `docs/sweeps/README.md` for the reference sweep, which the WP13 ladder reuses |
 | Reference settings and equations | `.knowledge/00-index.md`, then relevant sections of 01, 06 and 09; specification remains normative |
 
 The WP12 inherited findings supersede its original prediction that the flow terms
