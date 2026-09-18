@@ -2265,6 +2265,16 @@ NOTE: the reference model carries no mesh convergence study, so part of any resi
 originate in the reference (RSK-09). The project's own discretisation error is quantified first
 (§7.3), and the residual is then attributed.
 
+NOTE (the frozen cases, closing VAL-03's scope; author ruling, 18 September 2026): the reference set
+is **five cases** on the §5.2.1 reference geometry, in the validated ePNP-NS configuration — the
+four envelope corners 0.05 M and 3 M × ±200 mV, and the centre point 0.5 M / +50 mV. The corners
+span the experimental range of VAL-07 and supply VAL-02 a matched opposite-bias pair at each salt,
+so `RR` is comparable and not only `I`; the centre point separates a discrepancy linear in bias from
+one quadratic in it. The §7.5.1 analyte case is **not** in the set. VAL-04's refinement pair is the
+published mesh and one uniform refinement of it, on the centre case alone: RSK-09 needs a bound on
+the reference's own discretisation error, not a field of them, and a comparison whose residual falls
+below that bound SHALL be reported as *reference-limited* rather than as agreement.
+
 ### 7.5 Tier 4 experimental reproduction
 
 | ID | Activity | Acceptance criterion |
