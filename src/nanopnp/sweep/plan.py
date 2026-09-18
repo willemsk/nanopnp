@@ -63,6 +63,7 @@ logger = logging.getLogger(__name__)
 __all__ = [
     "PLAN_FILENAME",
     "POINT_SCHEMA",
+    "WARM_START_BARRIERS",
     "Point",
     "SweepPlan",
     "SweepPlanError",
@@ -96,6 +97,42 @@ than trusted not to occur -- see :func:`_identify`.
 
 RECTIFICATION = "rectification"
 """The one output a sweep strips from its members and produces in collection."""
+
+WARM_START_BARRIERS: tuple[str, ...] = (
+    # A cross-mesh transfer is a point evaluation outside the source domain,
+    # which returns a plausible number rather than raising, and ``transfer``
+    # refuses it.
+    "inputs.mesh",
+    # The element spaces. A coefficient vector is a function only relative to a
+    # space, and ``load_initial`` gates on ``model.elements`` exactly as
+    # ``restore`` does.
+    "numerics.elements",
+    # Not a space, and gated anyway: the reference mode of NUM-14 exists to
+    # compare two numbers, and a comparison whose two sides were reached through
+    # each other is not one (section 5.3.2, and ``state.SPACE_KEYS``).
+    "numerics.stabilisation",
+    # The declared field set: a model solving for a velocity and one that does
+    # not are two different spaces however equal everything else is.
+    "physics.model",
+    "physics.flow",
+    # It moves which degrees of freedom are constrained without moving any count.
+    "boundary_conditions.ground",
+)
+"""Case-file paths across which a warm start is refused, so an axis over one severs.
+
+Each entry names a path or the prefix of one, and mirrors
+:data:`nanopnp.solve.state.SPACE_KEYS` in the case file's own vocabulary. An axis
+writing one of these is a **barrier**: its values are separate warm-start
+components, each rooted and climbed cold, rather than a chain the run would build
+and :func:`~nanopnp.solve.state.load_initial` would then refuse member by member.
+
+Planned rather than discovered, because the WP13 attribution ladder is a sweep of
+exactly this shape — four rungs over ``numerics.stabilisation`` and
+``numerics.elements`` — and twenty solves that each attempt a warm start, fail
+its gate and fall back is twenty diagnostics for a fact the document already
+states. The refusal at run time stays where it is: this is the cheaper of two
+gates, not a replacement for the one that cannot be wrong.
+"""
 
 
 class SweepPlanError(ValueError):
@@ -386,7 +423,26 @@ def _identify(
     return digest
 
 
-def _parent_of(coordinates: Sequence[int], origins: Sequence[int]) -> tuple[int, ...] | None:
+def _barriers(document: SweepDocument) -> tuple[bool, ...]:
+    """Return, per axis, whether it writes a path a warm start cannot cross.
+
+    An axis is a barrier if any path it writes is one of
+    :data:`WARM_START_BARRIERS` or lies beneath one — ``numerics.elements.u`` is
+    beneath ``numerics.elements``, and both sever.
+    """
+    return tuple(
+        any(
+            path == barrier or path.startswith(f"{barrier}.")
+            for path in axis.paths()
+            for barrier in WARM_START_BARRIERS
+        )
+        for axis in document.axes
+    )
+
+
+def _parent_of(
+    coordinates: Sequence[int], origins: Sequence[int], barriers: Sequence[bool] = ()
+) -> tuple[int, ...] | None:
     """Return the grid coordinates of a point's parent, or ``None`` for a root.
 
     The **last** index differing from its origin, moved one step towards it. The
@@ -394,8 +450,15 @@ def _parent_of(coordinates: Sequence[int], origins: Sequence[int]) -> tuple[int,
     outermost, which is what makes a wave of the deepest axis contiguous in the
     Cartesian product and keeps the trees shallow in the axes a sweep varies
     most finely.
+
+    A **barrier** axis is skipped entirely, so each of its values roots its own
+    component (:data:`WARM_START_BARRIERS`). The forest then has one tree per
+    combination of barrier coordinates, which is what "each rung climbs the
+    ladder cold" means as a plan rather than as a hope.
     """
     for axis in range(len(coordinates) - 1, -1, -1):
+        if axis < len(barriers) and barriers[axis]:
+            continue
         if coordinates[axis] != origins[axis]:
             step = -1 if coordinates[axis] > origins[axis] else 1
             moved = list(coordinates)
@@ -404,9 +467,22 @@ def _parent_of(coordinates: Sequence[int], origins: Sequence[int]) -> tuple[int,
     return None
 
 
-def _depth(coordinates: Sequence[int], origins: Sequence[int]) -> int:
-    """Return a point's depth in the forest: the sum of its distances from the origins."""
-    return sum(abs(index - origin) for index, origin in zip(coordinates, origins, strict=True))
+def _depth(
+    coordinates: Sequence[int], origins: Sequence[int], barriers: Sequence[bool] = ()
+) -> int:
+    """Return a point's depth in the forest: its distance from its component's root.
+
+    Barrier axes do not count: they carry no warm-start edge, so their distance
+    from the origin is not a number of solves anything has to wait for. Counting
+    them would put every rung-3 member three waves late behind a parent it does
+    not have.
+    """
+    flags = tuple(barriers) + (False,) * (len(coordinates) - len(barriers))
+    return sum(
+        abs(index - origin)
+        for index, origin, barrier in zip(coordinates, origins, flags, strict=True)
+        if not barrier
+    )
 
 
 def _check_axes(document: SweepDocument) -> None:
@@ -438,15 +514,24 @@ def _warnings(document: SweepDocument) -> tuple[str, ...]:
     to one-point trees and every member is cold. That is correct, only slower,
     and VAL-04's mesh-convergence study is a sweep of exactly that shape.
     """
-    found = [
-        f"axis {axis.name!r} varies {path!r}, so no member can warm-start from its neighbour: "
-        "a transfer between two meshes is a point evaluation outside the source domain, which "
-        "returns a plausible number rather than raising, and is refused. Every member of this "
-        "sweep will climb the full NUM-18 ladder"
-        for axis in document.axes
-        for path in axis.paths()
-        if path == "inputs.mesh" or path.startswith("inputs.mesh.")
-    ]
+    found: list[str] = []
+    for axis, barrier in zip(document.axes, _barriers(document), strict=True):
+        if not barrier:
+            continue
+        crossed = sorted(
+            path
+            for path in axis.paths()
+            for entry in WARM_START_BARRIERS
+            if path == entry or path.startswith(f"{entry}.")
+        )
+        found.append(
+            f"axis {axis.name!r} varies {', '.join(repr(path) for path in crossed)}, which a warm "
+            "start cannot cross (section 5.3.2): a coefficient vector is a function only relative "
+            "to its space and its operator, and reading one onto another either raises on a "
+            "length mismatch or silently seeds Newton with a meaningless state. Each value of "
+            f"this axis is therefore its own warm-start component, rooted and cold, so "
+            f"{len(axis.points())} members of this sweep climb the full NUM-18 ladder"
+        )
     return tuple(found)
 
 
@@ -523,6 +608,7 @@ def build_plan(
     axes = list(document.axes)
     shape = document.shape()
     origins = document.origins()
+    barriers = _barriers(document)
     grid = list(product(*(range(length) for length in shape))) if shape else [()]
 
     seen: dict[str, Mapping[str, FieldValue]] = {}
@@ -535,7 +621,12 @@ def build_plan(
         except ValueError as error:
             raise SweepPlanError(str(error)) from None
         enumerated.append(
-            (_depth(coordinates, origins), coordinates, _identify(assignments, seen), assignments)
+            (
+                _depth(coordinates, origins, barriers),
+                coordinates,
+                _identify(assignments, seen),
+                assignments,
+            )
         )
 
     # Ordered by wave, and within a wave by the Cartesian product's own order.
@@ -549,7 +640,7 @@ def build_plan(
     points: list[Point] = []
     for index, position in enumerate(ordered):
         depth, coordinates, point_id, values = enumerated[position]
-        parent = _parent_of(coordinates, origins)
+        parent = _parent_of(coordinates, origins, barriers)
         points.append(
             Point(
                 index=index,
