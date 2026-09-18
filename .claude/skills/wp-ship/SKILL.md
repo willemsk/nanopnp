@@ -1,16 +1,20 @@
 ---
 name: wp-ship
-description: Ship a finished nanopnp work package — gate, push, open the PR, run /code-review xhigh --fix on it, then drive CI to green. Use when the user says the work package is finished, asks to open the PR for it, to review and ship it, or invokes /wp-ship.
+description: Ship a finished nanopnp work package — gate, push, reuse its PR (or open one if missing), run /code-review xhigh --fix, then drive CI to green. Use when the user says the work package is finished, asks to open the PR for it, to review and ship it, or invokes /wp-ship.
 ---
 
 # Ship a work package
 
-Steps 3 and 4 of the implementation workflow, run as one unbroken sequence. Invoking this skill *is*
-the user asking for a pull request; open it without asking again. Everything after that — the review
-pass, the fixes, the CI watch — happens without a further prompt, because the point of the skill is
-that the user does not have to babysit it.
+Steps 3 and 4 of the implementation workflow, run as one unbroken sequence. Normally `/wp-implement`
+has already opened the PR; reuse it. If missing, this invocation authorises opening it without asking
+again. The review pass, fixes and CI watch happen without a further prompt.
 
 ## 1. Preflight
+
+Read the requested WP's Execution brief and verification evidence, using `docs/plans/current.md`
+only to locate it. For legacy plans, start with Decisions, Work items, Verification and correcting
+Outcomes. Read normative sections and relevant derivations independently when assessing a claim;
+do not reload the entire phase history to write the PR. A brief is navigation, not a review oracle.
 
 Do not push a tree you have not gated.
 
@@ -28,7 +32,13 @@ If the branch is `main`, stop and ask. If the branch is behind `main`, merge `ma
 
 `git push -u origin <branch>`. On a network failure retry four times with 2 s, 4 s, 8 s, 16 s backoff.
 
-## 3. Open the PR
+## 3. Open or reuse the PR
+
+Look up an open PR for this repository and exact head branch targeting `main` before creating one.
+Verify the repository, head and base match before reusing it; do not create a duplicate on a resumed
+invocation. Preserve existing human edits and review evidence when updating its implementation
+summary. This section is also the PR creation contract used by `/wp-implement`; it does not start
+review or monitoring.
 
 Base `main`. Title: the conventional-commit summary of the package —
 `feat: WP<n> — <what it delivers>`.
@@ -47,13 +57,16 @@ not adjectives:
 - **Verification** — which tiers were run and the result; anything only run locally because CI
   does not carry it (Tier 3, `slow`).
 
+Keep each section concise. Link full derivations, measurement tables and requirement matrices at
+the reviewed revision instead of duplicating them; retain the key results and explicit deferrals.
+
 End with the attribution footer this session's instructions specify for pull request descriptions.
 Mirror `.github/pull_request_template.md` instead if one has appeared since.
 
-Then subscribe to the PR's activity (`subscribe_pr_activity`) so CI results and review comments
-wake this session.
-
 ## 4. Review pass
+
+Subscribe to the PR's activity (`subscribe_pr_activity`) from this shipping session so CI results
+and review comments wake the session responsible for review and stewardship.
 
 Run the review against the PR, from this session:
 
@@ -73,13 +86,21 @@ The cold-context property this step exists for comes from the skill running its 
 from `/wp-implement` never chaining into `/wp-ship` — not from an extra agent in between, which only
 adds a relay that can drop the report.
 
-**The pass must produce evidence that it ran.** Before going further, confirm both: it returned a
-findings list, and `git status --short` shows the working tree changed. Zero findings *and* an
-untouched tree on a work-package-sized diff is a failed dispatch, not a clean bill of health — it is
-what a review that never ran looks like. Re-run the pass once. If it is still empty, stop: do not
-enter §5, do not report the package as reviewed, and tell the user what you invoked and what came
-back. A genuinely clean small package can legitimately return nothing, which is why the guard
-re-runs once and then asks rather than failing outright.
+**The pass must produce evidence that it completed, not evidence that it edited files.** Record the
+PR base and head SHAs before invoking it. Read the installed review skill's completion contract and
+wait for its actual final report; an acknowledgement or an unfinished asynchronous dispatch is not
+completion. The returned report must establish the reviewed revision/scope, completed status and
+findings (an explicitly empty list is valid), including any items it could not assess or fix.
+Correlate that evidence with the recorded SHAs; do not manufacture a completion record from the
+caller's expectations or from `git status`.
+
+A completed review with zero findings needs no retry or edits. Findings without automatic fixes
+are also valid and go through the steps below. Missing/incomplete completion evidence permits one
+retry after the original dispatch has finished or been confirmed failed, never a concurrent duplicate.
+If completion still cannot be established, stop before §5 and report the invocation and missing
+evidence. An unavailable review tool is a blocker, not permission to mark the package reviewed.
+If the PR base/head changes during review, reconcile the changed diff and review any uncovered
+changes before accepting the report; evidence for an old revision does not certify a new one.
 
 `--fix` writes to the working tree; it does not commit. So, back in this session:
 
@@ -90,12 +111,14 @@ re-runs once and then asks rather than failing outright.
    becoming a plausible wrong one — do not skip it.
 2. Findings the pass raised but could not fix: fix them yourself here, or record them in the PR body
    under **Deliberately not done** with the reason. Do not leave a confirmed finding unmentioned.
-3. Re-run the gate.
-4. Commit — `fix: close the review gaps in <what>`, identifiers in the body — and push to the PR
-   branch. The commits belong on the branch, not in a comment.
+3. If fixes changed the tree, re-run the full gate.
+4. Commit accepted changes — `fix: close the review gaps in <what>`, identifiers in the body — and
+  push to the PR branch. No empty commit or cosmetic edit is needed for a clean review. The commits
+  belong on the branch, not in a comment; the commit hook remains mandatory.
 
 Then record the pass in the PR body under **Verification**: what was invoked, how many findings came
-back, and how many survived step 1.
+back, how many survived step 1, the reviewed base/head SHAs, and any resulting fix commits. Distinguish
+the independently reviewed revision from the fixes adjudicated and gated in this session.
 
 Where a finding is architectural or would widen the package, put it to the user rather than acting:
 scope decisions are the author's.
@@ -105,16 +128,15 @@ scope decisions are the author's.
 Follow `.claude/skills/steward/SKILL.md` — the repo's conventions for CI failures, which also apply
 automatically when a PR event wakes the session later.
 
-The rule that governs the whole step: **a red or conflicted PR is work now, at every wake, whatever
-its review state.** Never end a wake on this PR having done nothing about a failure. Either a fix is
-pushed, or a comment on the PR says exactly what is failing and why it is not this PR's to fix.
-
-Keep a self check-in scheduled roughly an hour out (`send_later`) until the PR is merged or closed,
-re-arming it each time it fires; webhook events do not reliably cover CI success or new pushes. Do
-not poll with `sleep`. If nothing changed, re-arm silently — do not message the user to say so.
+Use the bounded wake policy in `steward` below its environment section. New failures and conflicts
+require action regardless of review state; unchanged, already-diagnosed human blockers do not require
+another investigation or duplicate comment. Keep at most one fallback check-in, stop it at green and
+mergeable or explicit handoff, and never poll with `sleep`. Missing subscription/scheduler tools must
+be reported as an automation limit; do not claim a watch was established when it was not.
 
 ## 6. Report once
 
 When CI is green and the PR is mergeable, tell the user in one message: the PR link, the checks that
-passed, what the review pass changed, and anything left for them to decide. Then stop; the merge is
-theirs.
+passed, what the review pass changed, and anything left for them to decide. Cancel any outstanding
+fallback check-in (or make an already queued wake a no-op), then stop; the merge is theirs. A later
+event with a new head, failure, conflict or actionable review restarts attention under `steward`.

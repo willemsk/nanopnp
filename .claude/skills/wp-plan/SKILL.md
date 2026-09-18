@@ -16,18 +16,19 @@ never a quiet divergence.
 
 ## Before writing anything
 
-1. Read `.knowledge/00-index.md`, then the `.knowledge/` files the package touches.
+1. Read `.knowledge/00-index.md`, then the relevant sections of the files the package touches.
 2. Read `SPECIFICATION.md` §8.1 (phases and gates), the sections the package implements, and its
    rows in Appendix A. Collect the exact `FR-`/`QR-`/`CON-`/`PHY-`/`NUM-`/`VER-`/`VAL-`/`RSK-`
    identifiers the package discharges — the plan is written around them. Also collect the `IF-`
    interfaces it must satisfy, the `ADR-` decisions that constrain it, and any `OPN-` the
    specification leaves open in this area: an `OPN-` is what `## Open questions` is *for*, and
    closing one is a spec edit, not a plan note.
-3. Read the phase plan in `docs/plans/`, and the **Decisions** and **Verification** tables of the
-   two most recent WP plans. They carry conventions established by merged work that the
-   specification does not repeat, and the house structure below. Read those two plans in full only
-   when the package builds directly on one — between them they run to some 15 000 words, and the
-   tables are what the rest of the plan is arguing towards.
+3. Read `docs/plans/current.md`, then the requested package's scope, applicable phase decisions
+   and verification rows. Follow dependency links only where they constrain this package; do not
+   read all delivered summaries or the two most recent WP plans by default. If the brief is absent
+   or stale, locate the requested phase/WP headings and repair the brief from those sources.
+   For legacy plans without an execution brief, read Decisions, Work items, Verification and the
+   Outcomes that amend them; open Design sections only for the decisions this package depends on.
 4. Survey the code the package builds on: what exists, what is an empty package reserving a slot,
    which seams already take the argument you need. Delegate this survey (`Explore`, Sonnet — see
    `.claude/model-policy.md`); keep every physics and numerics decision yourself, on Opus.
@@ -50,17 +51,21 @@ a single term — that ordering is the point of §7.1 and it is what makes a fai
 |---|---|
 | Title + status | `# WP<n> — <name>`, then **Status: planned, not started**, the date, and what it inherits from the packages before it |
 | Normativity note | One paragraph: which phase plan it belongs to, that `SPECIFICATION.md` governs, that identifiers are pointers |
-| `## Context` | What the preceding packages built and what they deliberately did not; the empty slots this fills; the risk it retires, named (`RSK-nn`) and quantified |
-| `## Decisions taken before implementation` | A table `Decision \| Choice \| Why`. **This is the deliverable.** Every choice an implementer would otherwise make at 2 a.m. — how the body enters the mesh, which route is the oracle, what runs classical and why, what stays behind a flag — decided here with the reason, so implementation is execution rather than design |
-| `## Design` | The load-bearing derivations, in full arithmetic. The identity behind a numerics clause, the term it hides, the sign, the tolerance in both SI and nondimensional units. Anything the specification must gain as a NOTE, written out ready to paste |
-| Work items | A table of files against what each delivers and which identifiers it discharges. Name new modules and the subpackage they belong to (§5.1) |
-| `## Verification` | A table `test file \| tier \| identifiers \| what it asserts`, with the tolerance and where it comes from. Every `VER-`/`VAL-` the package claims appears here |
-| `## Out of scope` | What a reader will expect and not get, and which release owns it |
-| `## Open questions` | Anything needing the author's ruling before implementation starts. Ask these before committing if they block the work |
+| `## Execution brief` | Current scope and dependencies, requirement/section pointers, and the subsections below. Target at most 1,200 words; link evidence rather than retelling prior packages |
+| `### Decisions` | A table `Decision \| Choice \| Why/source`. **This is the deliverable.** Resolve choices that affect correctness before implementation; give a short reason and a link to the derivation where needed |
+| `### Work items` | Files, deliverables and identifiers, in dependency order; include any required Design section to read before touching that item |
+| `### Verification` | Test file, tier, identifiers, assertion/oracle, tolerance source and command. Every claimed `VER-`/`VAL-` appears here |
+| `### Out of scope` | Deferrals and their owner |
+| `### Open questions` | Author rulings needed before implementation. Ask blocking questions before committing |
+| `## Design` | Only new load-bearing derivations, in full arithmetic, with signs and units. Link existing specification/knowledge sections instead of reproducing them. This evidence is outside the brief's word budget |
+
+The brief is an index and execution contract, not a substitute for normative sources or derivations.
+If its budget cannot hold the correctness-critical decisions, split the package or state why it must
+exceed the target; never omit a required check to meet a word count.
 
 Leave the **Outcome** annotations out. They are blockquotes `> **Outcome — <what changed>.**` added
-in place by `/wp-implement` as predictions turn out wrong, and a plan whose predictions all held is
-a plan that was not specific enough.
+in place by `/wp-implement` when predictions change. A plan whose predictions hold needs no invented
+corrections. Keep the execution brief current; preserve superseded reasoning as labelled history.
 
 ### A phase plan
 
@@ -70,6 +75,10 @@ Same voice, one level up: `## Context` (what the phase is *for*, and what it del
 `## Open decisions`, `## Verification`, and an empty `## End-of-phase report` naming the numbers the
 phase must report. Amendments to the specification's own phase definition go in `SPECIFICATION.md`
 §8.2.x, not here.
+
+Keep `docs/plans/current.md` as the bounded entry point (target 800 words): current phase/WP links,
+status, live dependency constraints and open decisions. Replace obsolete entries; do not append
+completed-package histories. Existing detailed phase summaries remain available on demand.
 
 ## Rules the plan must respect
 
@@ -82,6 +91,7 @@ gate failure aborts with the quantity and its location; integration order ≥ 3 
 ## Finishing
 
 1. If a spec amendment is needed, edit `SPECIFICATION.md` in the same commit and say so in the plan.
+   Update `docs/plans/current.md` to link the planned package and its live dependencies.
 2. Commit on the working branch (create one from `main` if you are on `main`):
    `docs: WP<n> implementation plan`, with the identifiers it discharges in the body.
    The gate hook runs the whole gate, tests included; a docs-only commit passes it unchanged.

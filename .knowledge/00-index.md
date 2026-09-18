@@ -16,7 +16,7 @@ original sources contradict themselves.
 
 | File | Read it when |
 |---|---|
-| **`01-physics-epnpns.md`** | **Always, first.** The normative equations, the corrections, the parameters, and five documented errata in the source. Do not re-derive the model from anywhere else. |
+| **`01-physics-epnpns.md`** | **First for physics work.** Read the governing sections and relevant errata before implementing, testing or reviewing model behaviour. The normative equations, corrections and parameters; do not re-derive them from elsewhere. Workflow-only and mechanical tasks do not require loading this file. |
 | `02-electrokinetics-background.md` | You need the underlying theory: double layers, Poisson–Boltzmann, electro-osmosis, selectivity, rectification, access resistance. |
 | `03-nanopore-biology.md` | You need domain grounding: what these pores are, ClyA specifically, electrophysiology, glossary of terms and acronyms. |
 | `04-clya-geometry-and-charge.md` | You are working on the structure → geometry → mesh or charge pipelines, or you need numeric validation targets. |
