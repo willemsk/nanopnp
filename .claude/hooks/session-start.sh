@@ -45,24 +45,11 @@ dirty=$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ')
 echo "nanopnp — where the work stands (.claude/hooks/session-start.sh):"
 echo "- branch ${branch}${position}, working tree ${tree}"
 
-for plan in docs/plans/*.md; do
-    [ -f "$plan" ] || continue
-    # The status is the first **bold** span, and it wraps across source lines:
-    # take the whole span, not the first line of it, or the qualifier is lost.
-    status=$(awk '
-        /^\*\*Status/ {
-            buf = $0
-            n = 0
-            while (split(buf, parts, /\*\*/) < 3 && n++ < 4 && (getline line) > 0) buf = buf " " line
-            if (split(buf, parts, /\*\*/) < 3) exit
-            s = parts[2]
-            # Trim on a word boundary: a byte-wise cut can split a multi-byte dash.
-            if (length(s) > 140) { s = substr(s, 1, 140); sub(/[^ ]*$/, "", s); s = s "…" }
-            print s
-            exit
-        }' "$plan" 2>/dev/null)
-    [ -n "$status" ] && echo "- ${plan} — ${status}"
-done
+if [ -f docs/plans/current.md ]; then
+    echo "- current phase and work package: docs/plans/current.md (read when planning or resuming work)"
+else
+    echo "- current brief unavailable; locate the requested plan in docs/plans/ when needed"
+fi
 
 echo "- workflow: /wp-plan -> /wp-implement -> /wp-ship; CLAUDE.md 'Implementation workflow'"
 

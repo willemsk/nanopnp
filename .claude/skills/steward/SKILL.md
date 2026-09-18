@@ -23,6 +23,33 @@ uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv ru
 
 `--no-verify` exists and is not for you.
 
+## Bounded wakes
+
+Read live PR state before loading plans or logs. Keep one compact checkpoint in the PR's
+Verification section: base/head SHAs, check-run IDs and states/conclusions, mergeability, last
+handled review/comment IDs, last action or blocker, consecutive unchanged fallback count, and
+scheduled check-in ID if any. Update it on meaningful transitions or fallback checks, not on every
+duplicate event. An event caused only by your checkpoint edit is not new work.
+
+- A new failure or conflict needs a fix or an explicit diagnostic and handoff. Reuse the diagnosis
+	of an unchanged, already-recorded blocker; do not reopen logs or repeat the same comment. Never
+	silently abandon a new red check. Physics/scope blockers follow the rules below.
+- While CI is pending, schedule at most one fallback check-in. Start one hour out; consecutive
+	unchanged fallbacks back off to 2, 4, 8, 12 and 24 hours. After six unchanged fallback checks,
+	cancel further fallbacks and tell the user the remaining state and how to resume the watch.
+	Reset the counter only for a new base/head, check-run/state, conflict or actionable review,
+	not for duplicate webhooks, timestamps or your own checkpoint comments.
+- Stop fallbacks when green and mergeable, merged/closed, or handed off for a human decision.
+	Cancel the timer where supported; otherwise an already queued wake checks the checkpoint and
+	does no work unless live state has meaningfully changed. New events can restart attention.
+- If nothing changed, do not reload the specification/history or rerun a review/gate. Advance
+	only the fallback counter/timer when a fallback fired; duplicate events must not add timers.
+- If subscription or scheduling is unavailable, say so and hand off the current status. Do not
+	emulate a watcher with a polling shell loop or claim that a nonexistent timer will wake you.
+
+When a failure needs source context, start with the requested WP's Execution brief and cited
+sections. Historical phase summaries and unrelated knowledge files are not routine wake context.
+
 ## What CI runs
 
 `.github/workflows/ci.yml`, `UV_FROZEN: "1"` throughout:

@@ -1,20 +1,23 @@
 ---
 name: wp-implement
-description: Implement a planned nanopnp work package from its docs/plans/ file, keeping the specification, knowledge base and plan in step. Use when the user asks to implement or build a work package, start work on WP7, execute the plan, or invokes /wp-implement.
+description: Implement a planned nanopnp work package, keep the specification, knowledge base and plan in step, then gate, push and open its PR. Use when the user asks to implement or build a work package, start work on WP7, execute the plan, or invokes /wp-implement.
 ---
 
 # Implement a work package
 
 Step 2 of the implementation workflow. The plan under `docs/plans/` is the brief; this skill
-executes it and records what the execution taught. It does not chain into `/wp-ship` — that is a
-separate invocation, by design (see **Finishing** below).
+executes it, records what the execution taught, and opens the PR after validation. It does not chain
+into `/wp-ship`: independent review and CI stewardship remain a separate invocation (see **Finishing**).
 
 ## Load the brief
 
-1. `docs/plans/wp<n>-*.md` in full — the decisions table is binding. A decision it took is not
-   re-litigated mid-implementation; a decision it got *wrong* is corrected in the specification and
-   annotated in the plan (see **Keeping the record straight** below).
-2. `.knowledge/00-index.md`, then the files the package touches.
+1. Read `docs/plans/current.md` and the requested WP's Execution brief. Its current decisions are
+  binding, subject to the specification. Read each work item's linked Design sections before
+  implementing it; do not reload unrelated delivered packages. For legacy plans, read Decisions,
+  Work items, Verification and their correcting Outcomes first, then the relevant Design sections.
+  Correct a wrong decision in the brief and, if needed, the specification, preserving the original
+  argument as labelled history (see **Keeping the record straight** below).
+2. `.knowledge/00-index.md`, then the relevant sections of the files the package touches.
 3. The `SPECIFICATION.md` sections and Appendix A rows the plan cites.
 4. `uv sync --all-extras --frozen` if `.venv` is not already current (the `SessionStart` hook does
    this in web sessions).
@@ -61,16 +64,16 @@ Three records move together as the work lands:
 |---|---|
 | `SPECIFICATION.md` | Amendments, NOTEs, argued tolerances — normative changes only |
 | `.knowledge/<file>.md` | Durable findings, marked **[tested]** (verified by running code) or **[verified]** (verified by arithmetic), with the source. No status, no task lists, no scope opinions |
-| `docs/plans/wp<n>-*.md` | `> **Outcome — <what changed>.**` blockquotes in place, wherever a prediction was wrong or incomplete, plus the measured numbers the plan asked for |
+| `docs/plans/wp<n>-*.md` | Current Execution brief and concise `> **Outcome — <what changed>.**` annotations linking the evidence; measured numbers the plan requested, unless already recorded at a linked authoritative location |
 
-The phase plan's `### WP<n>` section gains the delivered summary — what was built, what was built
-*beyond* the plan, which identifiers are discharged, and the findings the next package inherits —
-when the package is finished. That section, not the WP plan, is the authoritative record.
+The phase plan's `### WP<n>` section gains a short delivered summary (target 150 words): scope,
+identifiers, live inherited constraints and links to evidence. Do not repeat derivations or measurement
+tables from the specification, knowledge base or WP plan. Preserve existing historical summaries.
+Update `docs/plans/current.md` in place with the current position, next package and live dependency
+links (target 800 words). It is navigation, not another source of requirements.
 
-Both plans' **Status** lines move with that summary, and they are easy to forget because nothing
-fails when you do. `.claude/hooks/session-start.sh` prints the first `**Status: …**` span of every
-`docs/plans/*.md` as the opening context of every session, so a stale one tells each future session
-that finished work is unstarted:
+Both plans' **Status** lines move with that summary. Startup points to `docs/plans/current.md`
+without loading historical statuses; keep that brief consistent with both plans:
 
 - the WP plan's own — `**Status: planned, not started**` → `**Status: delivered, <date>.**`, keeping
   the sentence that follows it;
@@ -92,13 +95,17 @@ Before handing off, confirm every one of these yourself:
 - `uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv run pytest` is
   green on the current tree;
 - the specification, the knowledge base and the plan's Outcome annotations are all committed;
-- both **Status** lines are updated;
-- `git status` is clean, and the branch is pushed (`git push -u origin <branch>`) — `wp-ship` §2
-  would push it, but that is a later session, possibly on a container this one's commits never
-  reach.
+- both **Status** lines and `docs/plans/current.md` are updated;
+- `git status` is clean, and the branch is pushed (`git push -u origin <branch>`).
 
-Then stop and report to the user: the work package delivered, the identifiers discharged, and that
-it is ready to ship. Do not invoke `/wp-ship` yourself and do not open the PR by hand — this session
-carries the physics reasoning behind every decision the implementation made, and `wp-ship`'s review
-pass (§4 of that skill) is meant to run from a session that does not, so it catches what this one
-might rationalise past rather than confirm. The user starts `/wp-ship` when they are ready.
+Then open or reuse the branch's PR against `main`, without asking again. Follow only the PR lookup
+and title/body contract in `wp-ship` §3; do not invoke that skill. On a new PR, state under
+**Verification** that independent review is pending `/wp-ship`, alongside the local gate result.
+When resuming an existing PR, preserve its review evidence and human edits; do not reset its state
+or create a duplicate. If PR creation is blocked by authentication or unavailable tooling, report
+the blocker and pushed branch rather than claiming a PR exists.
+
+Stop and report the PR link, identifiers discharged, and readiness for `/wp-ship`. Do not start the
+review pass, subscribe to PR activity, or schedule CI monitoring from this session. It carries the
+physics reasoning behind the implementation; `wp-ship`'s independent review (§4) should run from a
+fresh session so it can challenge those decisions. The user starts `/wp-ship` when ready.

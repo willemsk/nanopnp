@@ -188,22 +188,30 @@ reconstruct the run is not a result.
 Work is delivered one work package at a time, one PR per package, green on tiers 1 and 2 before the
 next starts. Four steps, each a skill under `.claude/skills/`:
 
+For planning or resuming work, start at `docs/plans/current.md`, then the requested WP's Execution
+brief and its cited sections. Load historical summaries and derivations on demand, not by default.
+Keep the current brief bounded and replace stale entries; preserve detailed evidence in its owning
+specification, knowledge or plan section. A brief never overrides a normative requirement.
+
 | Step | Command | What it does |
 |---|---|---|
 | 1 | `/wp-plan <n\|phase-n>` | Writes the implementation plan into `docs/plans/` and commits it. The decisions table is the deliverable |
-| 2 | `/wp-implement` | Executes the plan; keeps `SPECIFICATION.md`, `.knowledge/` and the plan's **Outcome** annotations in step; stops and reports, leaving `/wp-ship` for the user to invoke |
-| 3–4 | `/wp-ship` | Gates, pushes, opens the PR, runs `/code-review xhigh --fix` on it, then drives CI to green |
+| 2 | `/wp-implement` | Executes the plan; keeps the specification, knowledge and Outcomes in step; gates, pushes, opens or reuses the PR, then stops |
+| 3–4 | `/wp-ship` | Gates, pushes, reuses the PR (opens one if missing), runs `/code-review xhigh --fix`, then drives CI to green |
 
 `.claude/skills/steward/SKILL.md` carries the conventions for a PR already in flight — what each CI
 failure class means here, and why a failing Tier 2 benchmark is evidence rather than a chore. It is
 read automatically when a PR event wakes a session, so it governs the autofix loop whether or not
 `/wp-ship` started it.
 
-Step 2 no longer chains into step 3 automatically: the work package is implemented and gated in the
-session and context that made the physics decisions, and the user then starts `/wp-ship` — so the
+Step 2 opens the PR but does not chain into step 3: the work package is implemented, gated and
+published from the session that made the physics decisions. The user then starts `/wp-ship` in a
+fresh session, which takes over the existing PR, independent review and CI monitoring — so the
 code-review pass in step 4 runs from a session that did not make them, and the `code-review` skill
 runs its own pass on top of that. Do not wrap that pass in a sub-agent; §4 of `wp-ship` says why,
-and what to do when it comes back empty.
+and how to require explicit completion evidence. A completed review with zero findings is valid;
+an absent report is not. `steward` bounds fallback monitoring and stops it at green and mergeable
+or explicit handoff; new failures and conflicts still require attention.
 
 **Sub-agent models: the failure mode decides, not the size of the task.** Work whose error would be
 a plausible wrong number runs on Opus; work whose error is loud — lint, types, search, mechanical
