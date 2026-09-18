@@ -1,6 +1,6 @@
-# Tiers 1 and 2 on every push (SPECIFICATION.md section 7.6). Tier 3 is nightly
-# and Tier 4 gates releases; both are stubbed at the bottom until there are
-# COMSOL golden files and experimental fixtures to run them against.
+# Tiers 1 and 2 on every push (SPECIFICATION.md section 7.6). Tier 3 is nightly,
+# recorded and not gated, and is the `tier3` job below. Tier 4 gates releases and
+# has no job yet: there are no experimental fixtures to run it against.
 name: CI
 
 on:
@@ -8,6 +8,10 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+  schedule:
+    # 02:30 UTC, nightly. Section 7.1: Tier 3 runs "once Tier 2 passes", which the
+    # push gate establishes; this is the recording run, not a second gate.
+    - cron: "30 2 * * *"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -56,14 +60,42 @@ jobs:
       - run: uv sync --all-extras
       - run: uv run pytest
 
-# Enable once section 7.4 has archived COMSOL reference solutions (VAL-03):
-#
-#   tier3:
-#     name: COMSOL comparison (nightly)
-#     if: github.event_name == 'schedule'
-#     runs-on: ubuntu-latest
-#     steps:
-#       - uses: actions/checkout@v5
-#       - uses: astral-sh/setup-uv@v7
-#       - run: uv sync --all-extras
-#       - run: uv run pytest -m tier3
+  # Tier 3 is RECORDED, NOT GATED (section 7.1, section 7.6): `continue-on-error`
+  # is the whole point, and removing it would make a per-cent-level discrepancy
+  # against a different discretisation on a different mesh fail the build. The
+  # acceptance targets of section 7.4 become a gate in Phase 4, and only once both
+  # of that section's preconditions hold.
+  #
+  # The goldens are named and never vendored (section 7.1 NOTE): five cases x six
+  # fields x five patches x two refinements is not a repository file. Where
+  # $NANOPNP_REFERENCE_DATA is unset or lacks a golden, every Tier-3 test SKIPS --
+  # visibly, in the uploaded report -- because an unavailable reference is missing
+  # evidence and not a defect. A job that failed on an absent archive would make
+  # the tier unrunnable off the machine that holds it.
+  tier3:
+    name: COMSOL comparison (nightly, recorded not gated)
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    env:
+      # Unset here, and set on a runner that mounts the archive. The tests skip
+      # without it; `nanopnp --env` reports which it found.
+      NANOPNP_REFERENCE_DATA: ${{ vars.NANOPNP_REFERENCE_DATA }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          python-version: "3.12"
+      - run: uv sync --all-extras
+      - run: uv run nanopnp --env
+      - run: uv run pytest -m tier3 -v --junitxml=tier3-report.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tier3-report
+          path: |
+            tier3-report.xml
+            **/*.attribution.json
+            **/*.attribution.md
+          if-no-files-found: warn

@@ -48,12 +48,18 @@ from nanopnp.core.paths import (
 )
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
-    from collections.abc import Sequence
+    from collections.abc import Mapping, Sequence
+
+    import numpy as np
 
     from nanopnp.core.hashing import Canonicalisable
     from nanopnp.io.artefact import SweepArtefact
+    from nanopnp.io.case import CaseDocument, ResolvedCase
     from nanopnp.io.store import Store
     from nanopnp.sweep.plan import SweepPlan
+    from nanopnp.validation.comsol import Golden
+    from nanopnp.validation.probe import ProbeDocument, ProbeGrid
+    from nanopnp.validation.runs import ReopenedRun
 
 __all__ = ["main"]
 
@@ -451,6 +457,368 @@ def _sweep_dataset(args: argparse.Namespace, plan: SweepPlan, directory: Path) -
     return artefact
 
 
+def _validate(args: argparse.Namespace) -> int:
+    """``nanopnp validate`` — the Tier-3 harness (VAL-01 … VAL-04, section 7.4).
+
+    Six actions over one probe grid, and none of them changes what is solved:
+    ``export-grid`` and ``case-hash`` emit what the author pastes into COMSOL and
+    declares in a manifest; ``ingest-golden`` turns delivered tables into the
+    archive; ``export-golden`` writes one of *our* runs in the same format, which
+    is how the harness is exercisable before the exports land; ``compare`` and
+    ``report`` read finished runs and produce the numbers.
+
+    ``compare`` and ``report`` never solve. The ladder's twenty members are
+    dispatched by ``nanopnp sweep run``, and a comparison that re-solved would
+    compare a second solution while the manifest described the first
+    (:mod:`nanopnp.validation.runs`).
+    """
+    actions = {
+        "export-grid": _validate_export_grid,
+        "case-hash": _validate_case_hash,
+        "ingest-golden": _validate_ingest_golden,
+        "export-golden": _validate_export_golden,
+        "compare": _validate_compare,
+        "report": _validate_report,
+    }
+    return actions[args.action](args)
+
+
+def _validate_export_grid(args: argparse.Namespace) -> int:
+    """Print a probe grid's hash and the ``%Grid`` axis lines COMSOL is given."""
+    from nanopnp.validation.probe import load_probe
+
+    document = load_probe(args.probe)
+    text = document.write_comsol_axes()
+    if args.output is not None:
+        Path(args.output).write_text(text, encoding="utf-8")
+    payload: dict[str, Canonicalisable] = {
+        "probe": document.name,
+        "probe_hash": document.hash,
+        "points": document.count,
+        "patches": [patch.summary() for patch in document.patches],
+        "output": None if args.output is None else str(args.output),
+    }
+    lines = [f"probe      {document.name}", f"probe_hash {document.hash}"]
+    lines += [
+        f"patch      {patch.name}: n_r {patch.n_r} x n_z {patch.n_z} = {patch.count} points"
+        for patch in document.patches
+    ]
+    lines.append(f"points     {document.count}")
+    lines.append(f"axes       {args.output}" if args.output is not None else "")
+    if args.output is None and not args.json:
+        lines.append("")
+        lines.append(text.rstrip("\n"))
+    _emit(payload, [line for line in lines if line != ""], as_json=args.json)
+    return EXIT_OK
+
+
+def _validate_case_hash(args: argparse.Namespace) -> int:
+    """Print the ``case_hash`` a golden for this case must declare."""
+    from nanopnp.io.case import load_case, resolve
+    from nanopnp.validation.comsol import case_identity
+
+    document = load_case(args.case)
+    identity = case_identity(resolve(document))
+    payload: dict[str, Canonicalisable] = {"case": document.name, "case_hash": identity}
+    _emit(payload, [f"case      {document.name}", f"case_hash {identity}"], as_json=args.json)
+    return EXIT_OK
+
+
+def _validate_ingest_golden(args: argparse.Namespace) -> int:
+    """Turn a directory of exported ``%Grid`` tables into the archived golden."""
+    from nanopnp.validation.comsol import ingest_golden, load_golden
+
+    archive = ingest_golden(args.directory, probe=args.probe, destination=args.destination)
+    golden = load_golden(archive)
+    payload = dict(golden.summary())
+    payload["archive"] = str(archive)
+    lines = [
+        f"archive     {archive}",
+        f"golden_hash {golden.hash}",
+        f"case        {golden.manifest.case} ({golden.manifest.refinement})",
+        f"source      {golden.source}",
+        f"fields      {', '.join(sorted(golden.values))}",
+        "sign        "
+        + (
+            "flipped to the section 6.7 convention"
+            if golden.current_sign_flipped
+            else "as exported (cis)"
+        ),
+    ]
+    _emit(payload, lines, as_json=args.json)
+    return EXIT_OK
+
+
+def _validate_export_golden(args: argparse.Namespace) -> int:
+    """Write one of our own finished runs as a golden: the self-golden path.
+
+    The report it later feeds carries ``golden_source: self`` and every consumer
+    prints it, because a ladder run against one tests the machinery and nothing
+    else.
+    """
+    from nanopnp.validation.comsol import (
+        GOLDEN_SCHEMA,
+        GoldenManifest,
+        case_identity,
+        export_golden,
+    )
+    from nanopnp.validation.probe import load_probe
+
+    document, sampled, resolved = _sampled_run(args)
+    manifest = GoldenManifest.model_validate(
+        {
+            "schema": GOLDEN_SCHEMA,
+            "case": resolved.case.name,
+            "case_hash": case_identity(_resolved(resolved.case)),
+            "probe": document.name,
+            "probe_hash": document.hash,
+            "refinement": args.refinement,
+            "source": "self",
+            "comsol_version": f"nanopnp {__version__} (self-golden, no COMSOL)",
+            "model_file": str(resolved.directory),
+            "export_date": args.export_date,
+            "fields": {name: {"expression": name, "unit": _unit(name)} for name in sorted(sampled)},
+            "current_boundary": "the NUM-24 domain indicator, not a boundary",
+            "current_sign_reference": "cis",
+            "quantities": _self_quantities(resolved.quantities),
+        }
+    )
+    archive = export_golden(
+        sampled, manifest, args.destination, tables=load_probe(args.probe) if args.tables else None
+    )
+    payload: dict[str, Canonicalisable] = {
+        "archive": str(archive),
+        "case": manifest.case,
+        "golden_source": "self",
+        "fields": sorted(sampled),
+    }
+    _emit(
+        payload,
+        [
+            f"archive {archive}",
+            f"case    {manifest.case}",
+            "source  self -- this golden tests the harness and nothing else",
+            f"fields  {', '.join(sorted(sampled))}",
+        ],
+        as_json=args.json,
+    )
+    return EXIT_OK
+
+
+def _validate_compare(args: argparse.Namespace) -> int:
+    """Compare one finished run against one golden, field by field and QoI by QoI."""
+    from nanopnp.validation.compare import (
+        compare_fields,
+        compare_quantities,
+        unavailable_quantities,
+    )
+    from nanopnp.validation.comsol import case_identity, load_golden
+
+    document, sampled, resolved = _sampled_run(args)
+    golden = load_golden(args.golden)
+    golden.check_case(case_identity(_resolved(resolved.case)))
+    grid = _probe_grid(document, resolved)
+    fields = compare_fields(sampled, golden, grid)
+    quantities = compare_quantities(resolved.quantities, golden.quantities)
+    payload: dict[str, Canonicalisable] = {
+        "run": str(resolved.directory),
+        "golden_hash": golden.hash,
+        "golden_source": golden.source,
+        "current_sign_flipped": golden.current_sign_flipped,
+        "fields": [entry.summary() for entry in fields],
+        "quantities": [entry.summary() for entry in quantities],
+        "unavailable_fields": list(golden.unavailable(sorted(sampled))),
+        "unavailable_quantities": list(
+            unavailable_quantities(resolved.quantities, golden.quantities)
+        ),
+    }
+    lines = [
+        f"run          {resolved.directory}",
+        f"golden       {golden.hash[:12]} ({golden.source}, {golden.manifest.refinement})",
+    ]
+    lines += [
+        f"{entry.field:<12} rel_L2_r {entry.rel_L2_r:.4e}  rel_l2 {entry.rel_l2:.4e}  "
+        f"max {entry.max_abs_rel:.4e} at (r, z) = "
+        f"({entry.max_at_nm[0]:.4g}, {entry.max_at_nm[1]:.4g}) nm"
+        for entry in fields
+    ]
+    lines += [f"{entry.name:<12} {entry.relative:+.4e} relative" for entry in quantities]
+    _emit(payload, lines, as_json=args.json)
+    return EXIT_OK
+
+
+def _validate_report(args: argparse.Namespace) -> int:
+    """Run the four-rung attribution ladder over a finished ladder sweep."""
+    from nanopnp.sweep.collect import read_members
+    from nanopnp.sweep.plan import read_plan
+    from nanopnp.validation.attribution import (
+        LADDER,
+        LadderError,
+        RungOutcome,
+        attribute,
+        write_report,
+    )
+    from nanopnp.validation.compare import compare_fields, compare_quantities
+    from nanopnp.validation.comsol import load_golden
+    from nanopnp.validation.probe import load_probe
+    from nanopnp.validation.runs import reopen
+
+    document = load_probe(args.probe)
+    plan = read_plan(args.plan)
+    golden = load_golden(args.golden)
+    directory = Path(args.plan).parent
+
+    by_rung: dict[int, RungOutcome] = {}
+    for member in read_members(directory):
+        point = plan.point(member.index)
+        rung_index = point.coordinates[0]
+        if member.directory is None or rung_index in by_rung:
+            continue
+        resolved = reopen(member.directory, store=None if args.store is None else _store(args))
+        if _identity(resolved.case) != golden.manifest.case_hash:
+            continue
+        grid = _probe_grid(document, resolved)
+        sampled = _sample(resolved, grid)
+        by_rung[rung_index] = RungOutcome(
+            rung=LADDER[rung_index],
+            golden_hash=golden.hash,
+            probe_hash=golden.manifest.probe_hash,
+            case_hash=golden.manifest.case_hash,
+            fields=compare_fields(sampled, golden, grid),
+            quantities=compare_quantities(resolved.quantities, golden.quantities),
+            stabilisation_currents_A=_stabilisation_currents(resolved.quantities),
+        )
+    missing = [rung.name for rung in LADDER if rung.index not in by_rung]
+    if missing:
+        raise LadderError(
+            f"{directory} holds no member for rung(s) {', '.join(missing)} of the golden's case. "
+            "The ladder attributes a discrepancy by differences between adjacent rungs, so a "
+            "missing one does not make the remaining deltas mean less -- it makes them mean "
+            "something else. Run the sweep to completion first"
+        )
+    report = attribute(
+        [by_rung[index] for index in range(len(LADDER))],
+        case=golden.manifest.case,
+        golden=golden,
+        reference_errors=_reference_errors(args, document, golden),
+    )
+    json_path, markdown = write_report(report, args.output or directory)
+    payload = dict(report.summary())
+    payload["files"] = [str(json_path), str(markdown)]
+    _emit(payload, [report.markdown()], as_json=args.json)
+    return EXIT_OK
+
+
+def _reference_errors(
+    args: argparse.Namespace, document: ProbeDocument, golden: Golden
+) -> dict[str, float] | None:
+    """Return VAL-04's ``Delta_ref``, or ``None`` where no refinement pair was given."""
+    from nanopnp.validation.attribution import reference_error
+    from nanopnp.validation.comsol import load_golden
+
+    if args.refined is None:
+        return None
+    refined = load_golden(args.refined)
+    return reference_error(golden, refined, _bare_grid(document, golden))
+
+
+def _store(args: argparse.Namespace) -> Store:
+    """Return the artefact store a validate subcommand was pointed at."""
+    from nanopnp.io.store import Store
+
+    return Store(args.store)
+
+
+def _resolved(case: CaseDocument) -> ResolvedCase:
+    """Return a case document resolved, for the identity hash."""
+    from nanopnp.io.case import resolve
+
+    return resolve(case)
+
+
+def _identity(case: CaseDocument) -> str:
+    """Return a case document's Tier-3 identity hash."""
+    from nanopnp.validation.comsol import case_identity
+
+    return case_identity(_resolved(case))
+
+
+def _unit(field: str) -> str:
+    """Return the SI unit a self-golden declares for one field."""
+    from nanopnp.validation.comsol import field_unit
+
+    return field_unit(field)
+
+
+def _self_quantities(recorded: Mapping[str, Canonicalisable]) -> dict[str, Canonicalisable]:
+    """Return the ``quantities`` block of a self-golden manifest, from a run record."""
+    wanted = ("bias_V", "current_A", "currents_A", "transport_number", "conductance_S", "eof_m3_s")
+    block = {key: recorded.get(key) for key in wanted if recorded.get(key) is not None}
+    block.setdefault("bias_V", 0.0)
+    block.setdefault("current_A", 0.0)
+    return block
+
+
+def _stabilisation_currents(
+    recorded: Mapping[str, Canonicalisable],
+) -> Mapping[str, float] | None:
+    """Return the section 6.7 per-species stabilisation contribution a run recorded."""
+    value = recorded.get("stabilisation_currents_A")
+    return dict(value) if isinstance(value, dict) else None
+
+
+def _probe_grid(document: ProbeDocument, resolved: ReopenedRun) -> ProbeGrid:
+    """Return the probe grid bound to a reopened run's own mesh."""
+    from nanopnp.validation.compare import probe_domains
+    from nanopnp.validation.probe import ProbeGrid
+
+    return ProbeGrid.on_mesh(
+        document, resolved.solution.space.mesh, probe_domains(resolved.solution)
+    )
+
+
+def _bare_grid(document: ProbeDocument, golden: Golden) -> ProbeGrid:
+    """Return a grid whose masks are the golden's own, for a golden-to-golden norm.
+
+    VAL-04 compares two *exports* and never touches a mesh, so the mask that
+    belongs to the comparison is the finer golden's defined set — which
+    :func:`~nanopnp.validation.attribution.reference_error` passes to the mask
+    gate itself.
+    """
+    import numpy as np
+
+    from nanopnp.validation.probe import ProbeGrid
+
+    keep = np.ones(document.count, dtype=bool)
+    return ProbeGrid(
+        document=document,
+        points_nm=document.points_nm(),
+        weights_nm2=document.weights_nm2(),
+        masks=dict.fromkeys(sorted(golden.values), keep),
+        dropped=dict.fromkeys(sorted(golden.values), 0),
+    )
+
+
+def _sample(resolved: ReopenedRun, grid: ProbeGrid) -> dict[str, np.ndarray]:
+    """Return a reopened run's fields on a probe grid, in SI."""
+    from nanopnp.validation.compare import sample_on_probe
+
+    return sample_on_probe(resolved.solution, grid, scales=resolved.scales)
+
+
+def _sampled_run(
+    args: argparse.Namespace,
+) -> tuple[ProbeDocument, dict[str, np.ndarray], ReopenedRun]:
+    """Return the probe document, the sampled fields and the reopened run."""
+    from nanopnp.validation.probe import load_probe
+    from nanopnp.validation.runs import reopen
+
+    document = load_probe(args.probe)
+    resolved = reopen(args.run, store=None if args.store is None else _store(args))
+    grid = _probe_grid(document, resolved)
+    return document, _sample(resolved, grid), resolved
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Return the argument parser, importing nothing a subcommand does not need."""
     parser = argparse.ArgumentParser(prog="nanopnp", description=__doc__.splitlines()[0])
@@ -537,6 +905,66 @@ def build_parser() -> argparse.ArgumentParser:
     collector.add_argument("--store", type=Path, default=None, help="artefact store root")
     collector.add_argument("--csv", action="store_true", help="also write the flat CSV export")
     collector.set_defaults(handler=_sweep)
+
+    validate = subparsers.add_parser(
+        "validate", help="the Tier-3 COMSOL comparison harness (section 7.4)"
+    )
+    steps = validate.add_subparsers(dest="action", required=True)
+
+    # ``%%`` throughout the help strings below: argparse percent-formats help text,
+    # and a bare ``%G`` makes ``--help`` raise rather than print.
+    grid = _common(steps.add_parser("export-grid", help="print the %%Grid axes COMSOL is given"))
+    grid.add_argument("probe", type=Path, help="the nanopnp/probe/v1 document")
+    grid.add_argument("--output", type=Path, default=None, help="write the axes to this file")
+    grid.set_defaults(handler=_validate)
+
+    identity = _common(
+        steps.add_parser("case-hash", help="print the case_hash a golden must declare")
+    )
+    identity.add_argument("case", type=Path, help="a frozen case file")
+    identity.set_defaults(handler=_validate)
+
+    ingest = _common(
+        steps.add_parser("ingest-golden", help="archive a directory of exported tables")
+    )
+    ingest.add_argument("directory", type=Path, help="holds manifest.yaml and the %%Grid tables")
+    ingest.add_argument("--probe", type=Path, required=True, help="the probe document")
+    ingest.add_argument("--destination", type=Path, default=None, help="where to write the archive")
+    ingest.set_defaults(handler=_validate)
+
+    self_golden = _common(
+        steps.add_parser("export-golden", help="write one of our own runs as a self-golden")
+    )
+    self_golden.add_argument("run", type=Path, help="a finished run directory")
+    self_golden.add_argument("--probe", type=Path, required=True, help="the probe document")
+    self_golden.add_argument("--destination", type=Path, required=True, help="output directory")
+    self_golden.add_argument("--store", type=Path, default=None, help="artefact store root")
+    self_golden.add_argument(
+        "--refinement", default="published", choices=("published", "refined_1"), help="VAL-04 level"
+    )
+    self_golden.add_argument("--export-date", default="", help="date recorded in the manifest")
+    self_golden.add_argument(
+        "--tables", action="store_true", help="also write the %%Grid transport tables"
+    )
+    self_golden.set_defaults(handler=_validate)
+
+    against = _common(steps.add_parser("compare", help="compare one run against one golden"))
+    against.add_argument("run", type=Path, help="a finished run directory")
+    against.add_argument("--probe", type=Path, required=True, help="the probe document")
+    against.add_argument("--golden", type=Path, required=True, help="an archived golden")
+    against.add_argument("--store", type=Path, default=None, help="artefact store root")
+    against.set_defaults(handler=_validate)
+
+    ladder = _common(steps.add_parser("report", help="the four-rung attribution ladder"))
+    ladder.add_argument("plan", type=Path, help="the ladder sweep's plan file")
+    ladder.add_argument("--probe", type=Path, required=True, help="the probe document")
+    ladder.add_argument("--golden", type=Path, required=True, help="the published-mesh golden")
+    ladder.add_argument(
+        "--refined", type=Path, default=None, help="the refined golden, for VAL-04's Delta_ref"
+    )
+    ladder.add_argument("--store", type=Path, default=None, help="artefact store root")
+    ladder.add_argument("--output", type=Path, default=None, help="where to write the report")
+    ladder.set_defaults(handler=_validate)
 
     env = _common(subparsers.add_parser("env", help="report the environment and data locations"))
     env.set_defaults(handler=_env)

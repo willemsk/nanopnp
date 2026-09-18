@@ -583,3 +583,82 @@ def test_ver32_inspect_reads_a_run_directory_back(
 
     assert main(["inspect", str(tmp_path)]) == EXIT_CASE
     assert "run directory" in capsys.readouterr().err
+
+
+# -- the Tier-3 harness surface (VAL-01, VAL-03) -------------------------------
+
+
+def test_val01_validate_export_grid_prints_the_hash_a_golden_declares(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """``validate export-grid`` emits the probe hash and the %Grid axes, in metres.
+
+    The author pastes those axes into COMSOL, so the command exists to stop them
+    being retyped: a hand-entered extent is a silently moved sample point that
+    the ``probe_hash`` cannot catch, because the document did not change.
+    """
+    from nanopnp.validation.probe import load_probe
+
+    probe = Path("docs/validation/probes/clya-reference.probe.yaml")
+    assert main(["validate", "export-grid", str(probe), "--json"]) == 0
+    record = json.loads(capsys.readouterr().out)
+    assert record["probe_hash"] == load_probe(probe).hash
+    assert record["points"] == sum(patch["n_r"] * patch["n_z"] for patch in record["patches"])
+
+
+def test_val03_validate_case_hash_matches_every_rung_of_the_ladder(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """``validate case-hash`` prints the identity a golden declares for a frozen case.
+
+    It is the number the export contract tells the author to paste into
+    ``manifest.yaml``, so the command and the library must not be able to
+    disagree about it.
+    """
+    from nanopnp.io.case import load_case, resolve
+    from nanopnp.validation.comsol import case_identity
+
+    case = Path("docs/validation/cases/clya-0.5M-plus50mV.case.yaml")
+    assert main(["validate", "case-hash", str(case), "--json"]) == 0
+    record = json.loads(capsys.readouterr().out)
+    assert record["case_hash"] == case_identity(resolve(load_case(case)))
+
+
+def test_val03_validate_ingest_golden_refuses_a_directory_without_a_manifest(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """An export without its declaration is a pile of numbers, and exits 4.
+
+    Exit 4 and not 1: the Tier-3 refusals are gates in the QR-12 sense — rather
+    than report a comparison it cannot defend, the harness stops and says what is
+    missing.
+    """
+    probe = Path("docs/validation/probes/clya-reference.probe.yaml")
+    code = main(["validate", "ingest-golden", str(tmp_path), "--probe", str(probe)])
+    assert code == EXIT_GATE
+    assert "manifest.yaml" in capsys.readouterr().err
+
+
+def test_val01_validate_help_does_not_choke_on_the_grid_header(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """``--help`` renders, although the help text contains ``%Grid``.
+
+    argparse percent-formats help strings, so a literal ``%G`` makes ``--help``
+    raise ``TypeError`` rather than print — which no test of the handlers would
+    ever notice, and which is the first thing a new user hits.
+    """
+    with pytest.raises(SystemExit) as raised:
+        main(["validate", "--help"])
+    assert raised.value.code == 0
+    printed = capsys.readouterr().out
+    assert "%Grid" in printed
+    for action in (
+        "export-grid",
+        "case-hash",
+        "ingest-golden",
+        "export-golden",
+        "compare",
+        "report",
+    ):
+        assert action in printed
