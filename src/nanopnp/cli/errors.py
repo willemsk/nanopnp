@@ -135,6 +135,23 @@ EXIT_CODES: Final[dict[str, int]] = {
     # names what is wrong (an input that moved, a solve served from the store).
     "nanopnp.io.reproduce:InputMovedError": EXIT_GATE,
     "nanopnp.io.reproduce:ReproductionError": EXIT_GATE,
+    # The Tier-3 refusals, and gates in exactly the same sense: rather than
+    # report a comparison it cannot defend, the harness stops and names the
+    # patch, the field or the point. A probe grid whose mask disagrees with the
+    # golden's NaN set, a golden whose case or probe hash is not this run's, and
+    # four ladder rungs that were not compared against one object all produce
+    # finite, plausible, wrong numbers if allowed through (VAL-01, VAL-03).
+    # Note that the *document* failures of all three -- a malformed probe file or
+    # golden manifest -- raise CaseValidationError above and exit 3, because
+    # those are fixed by an edit.
+    "nanopnp.validation.probe:ProbeGridError": EXIT_GATE,
+    "nanopnp.validation.comsol:GoldenError": EXIT_GATE,
+    "nanopnp.validation.attribution:LadderError": EXIT_GATE,
+    # A run directory that cannot be reopened for comparison. 3 and not 4: the
+    # fix is to point at another directory or another store, or to re-run the
+    # member, which is the same class as a file the case file named and that is
+    # not there.
+    "nanopnp.validation.runs:RunError": EXIT_CASE,
     # -- 5, convergence ------------------------------------------------------
     # Distinguished from 4 because a different starting point may survive it:
     # this is the member a sweep may usefully re-dispatch from a neighbour.

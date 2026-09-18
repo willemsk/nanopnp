@@ -781,8 +781,16 @@ def _no_writer(
     )
 
 
-_COMSOL_GRID_HEADER = "%Grid"
-_COMSOL_DATA_HEADER = "%Data"
+COMSOL_GRID_HEADER = "%Grid"
+"""Header line a COMSOL interpolation table opens with.
+
+Public so that the Tier-3 harness, which is the only writer of this format
+(:mod:`nanopnp.validation.comsol`), states it in one place with this reader
+rather than in two that can drift.
+"""
+
+COMSOL_DATA_HEADER = "%Data"
+"""Header line separating a COMSOL table's axes from its values."""
 COMSOL_LENGTH_SCALE_NM = 1e9
 """Nanometres per metre: the reference table's coordinates are in SI."""
 
@@ -800,23 +808,23 @@ def _read_comsol(path: Path) -> RadialGrid:
     import numpy as np
 
     lines = [line for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
-    if not lines or lines[0].strip() != _COMSOL_GRID_HEADER:
+    if not lines or lines[0].strip() != COMSOL_GRID_HEADER:
         raise GridFormatError(
-            f"{path.name!r} does not begin with {_COMSOL_GRID_HEADER!r}; a COMSOL grid table "
+            f"{path.name!r} does not begin with {COMSOL_GRID_HEADER!r}; a COMSOL grid table "
             "carries that header, one line per axis, then a %Data header"
         )
     try:
-        split = next(i for i, line in enumerate(lines) if line.strip() == _COMSOL_DATA_HEADER)
+        split = next(i for i, line in enumerate(lines) if line.strip() == COMSOL_DATA_HEADER)
     except StopIteration:
         raise GridFormatError(
-            f"{path.name!r} carries no {_COMSOL_DATA_HEADER!r} header, so its axes and its values "
+            f"{path.name!r} carries no {COMSOL_DATA_HEADER!r} header, so its axes and its values "
             "cannot be told apart"
         ) from None
     axes = lines[1:split]
     if len(axes) != 2:
         raise GridFormatError(
-            f"{path.name!r} declares {len(axes)} coordinate axes between {_COMSOL_GRID_HEADER!r} "
-            f"and {_COMSOL_DATA_HEADER!r}; this release reads two-dimensional (r, z) tables only"
+            f"{path.name!r} declares {len(axes)} coordinate axes between {COMSOL_GRID_HEADER!r} "
+            f"and {COMSOL_DATA_HEADER!r}; this release reads two-dimensional (r, z) tables only"
         )
     r_nm = np.fromstring(axes[0], sep=" ") * COMSOL_LENGTH_SCALE_NM
     z_nm = np.fromstring(axes[1], sep=" ") * COMSOL_LENGTH_SCALE_NM
