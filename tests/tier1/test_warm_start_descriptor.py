@@ -95,6 +95,7 @@ physics:
 numerics:
   continuation: default_ladder
   stabilisation: {stabilisation}
+  elements: {{phi: P2, c: P2, u: {velocity_element}, p: P1}}
 outputs: [current]
 """
 
@@ -116,6 +117,7 @@ def _document(mesh_path: Path, **overrides: object) -> CaseDocument:
         "bias_V": 0.02,
         "ground": "cis",
         "stabilisation": "none",
+        "velocity_element": "P2",
     }
     settings.update(overrides)
     return loads_case(CASE.format(**settings))
@@ -390,6 +392,45 @@ def test_num13_a_warm_start_across_two_stabilisation_modes_is_refused(
     # only that one was (QR-12).
     assert '"none"' in message
     assert f'"{mode}"' in message
+
+
+def test_val01_a_warm_start_across_an_element_order_is_refused(neighbour: Neighbour) -> None:
+    """A P2 velocity state may not seed a P3 run, and the refusal names both spaces.
+
+    The run-time half of WP13's ladder rule: rungs 2 and 3 of the attribution
+    ladder differ only in the element pair, and reading a converged coefficient
+    vector onto a different space is the one warm-start error that produces a
+    plausible wrong number rather than a failure.
+
+    The key that fires is ``fields``, not ``model.elements``, and that is worth
+    saying out loud: an element order cannot move without moving the per-field
+    discretisation record and ``ndof`` with it, and ``fields`` comes first in
+    :data:`~nanopnp.solve.state.SPACE_KEYS`. ``model.elements`` is the same fact
+    in the case file's own ``{phi, c, u, p}`` vocabulary, gated on the same side
+    so the two records cannot disagree — belt and braces, asserted below, rather
+    than the only thing standing between a P2 state and a P3 space.
+
+    P3 rather than P1 because P1/P1 is not inf-sup stable and
+    :func:`~nanopnp.io.case.resolve` refuses it outside the reference
+    stabilisation (NUM-03); the point here is the *order*, not the pair.
+
+    The plan-time half — each rung its own warm-start component, so the sweep
+    never attempts this crossing — is
+    ``tests/tier1/test_attribution.py::test_val01_ladder_rungs_are_separate_warm_start_components``.
+    """
+    document = _document(neighbour.mesh_path, velocity_element="P3")
+    assert document.numerics.elements.u == "P3"
+    assert _stored_descriptor(neighbour)["model"]["elements"]["velocity"] == 2
+    assert "model.elements" in SPACE_KEYS
+    assert "fields" in SPACE_KEYS
+
+    with pytest.raises(WarmStartError) as raised:
+        _load(neighbour, document)
+    message = str(raised.value)
+    assert "a different fields" in message
+    # Both spaces, so the message says what crossing was attempted (QR-12).
+    assert '"name": "velocity"' in message
+    assert '"order": 2' in message and '"order": 3' in message
 
 
 def test_ver37_the_log_variable_branch_is_a_space_key() -> None:

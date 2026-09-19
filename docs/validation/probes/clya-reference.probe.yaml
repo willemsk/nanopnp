@@ -1,0 +1,65 @@
+# The Tier-3 comparison surface for the section 5.2.1 reference geometry (VAL-01).
+#
+# COMSOL interpolates onto THESE points. The grid is ours so that the comparison does
+# not depend on the reference's mesh and so that a re-export cannot silently move the
+# sample points; its content hash is declared in every golden manifest, and a golden
+# whose `probe_hash` does not match this file is refused rather than absorbed.
+#
+# Do not regenerate this file. Its extents and spacings are frozen: editing them
+# invalidates every archived golden, which is the behaviour the hash exists to enforce.
+#
+# Patch geometry, all lengths nm. The pore polygon spans z in [-1.85, 12.25] and
+# r in [1.65, 5.66]; the bilayer is |z| <= 1.4; the reservoir is the half-disc of
+# radius 250 (src/nanopnp/mesh/reference.py).
+#
+#   pore         the lumen and the wall it is bounded by, from just below the trans
+#                constriction to just above the cis cap. Points inside the protein or
+#                the membrane are masked out per field, not omitted here.
+#   mouth_cis    the cis mouth, above the cap; access resistance lives here
+#   mouth_trans  the trans mouth, below the constriction
+#   reservoir    the far field, coarse: this is where the norm's denominator comes from
+#   axis_line    r <= 0.045 nm, spaced 0.005 nm. The r weight of the axisymmetric norm
+#                vanishes here, and the axis is exactly where the 1/r forms of section
+#                6.2 and the NUM-06 natural condition are fragile, so this patch is what
+#                `rel_l2` exists to see. Its r range is disjoint from every other
+#                patch's: no two patches may sample one point.
+#
+# Every patch has n_r != n_z, which is what turns a transposed %Data read into a shape
+# error instead of a plausible wrong field (ProbePatch's own refusal).
+schema: nanopnp/probe/v1
+name: clya-reference
+
+# The reference model's own maximum element size on the pore wall
+# (.knowledge/09-comsol-reference-settings.md section A.2, size node `size5`).
+margin_nm: 0.05
+
+patches:
+  - name: pore
+    r_nm: [0.05, 3.05]
+    z_nm: [-1.9, 12.3]
+    n_r: 31              # dr = 0.10
+    n_z: 72              # dz = 0.20
+
+  - name: mouth_cis
+    r_nm: [0.05, 10.05]
+    z_nm: [12.5, 22.5]
+    n_r: 21              # dr = 0.50
+    n_z: 26              # dz = 0.40
+
+  - name: mouth_trans
+    r_nm: [0.05, 10.05]
+    z_nm: [-12.1, -2.1]
+    n_r: 21              # dr = 0.50
+    n_z: 26              # dz = 0.40
+
+  - name: reservoir
+    r_nm: [0.05, 60.05]
+    z_nm: [-60.0, 60.0]
+    n_r: 31              # dr = 2.0
+    n_z: 41              # dz = 3.0
+
+  - name: axis_line
+    r_nm: [0.0, 0.045]
+    z_nm: [-12.0, 20.0]
+    n_r: 10              # dr = 0.005
+    n_z: 161             # dz = 0.20

@@ -1187,6 +1187,20 @@ Measured under WP11 on the toy pore (`a` = 2 nm, `L` = 6 nm, reservoir 10 nm) at
   in its middle has waves two points wide, so a scaling measurement on one reports the *grid*. Two
   axes are the minimum for a curve that says anything about the dispatch.
 
+### 8.4.1 A sweep axis over a space key severs the forest, and the gate that fires is `fields` **[tested]**
+
+An axis varying `numerics.elements`, `numerics.stabilisation`, `inputs.mesh`, `physics.model`,
+`physics.flow` or `boundary_conditions.ground` writes a descriptor key `load_initial` refuses, so
+the warm-start forest is **planned** with one component per value of that axis rather than built and
+then refused member by member. The WP13 attribution ladder is a sweep of exactly this shape: 4 rungs
+× 5 cases plans as 4 roots in wave 0 and 20 points in 3 waves, with no edge crossing the rung axis.
+
+A detail that is easy to get wrong when writing the test for it: an element-order change cannot move
+without moving `fields` and `ndof` with it, and `fields` comes **first** in `SPACE_KEYS`. So the
+refusal a P2 → P3 crossing actually produces names `fields` and prints both field records with their
+orders; `model.elements` is the same fact restated per field kind, gated on the same side so the two
+cannot disagree, and is the belt to `fields`'s braces rather than the key that fires. [tested]
+
 ### 8.5 Measured: NUM-26's relative route check is inapplicable at exactly zero bias **[tested]**
 
 At `V = 0` the current is zero, and both extraction routes return round-off:

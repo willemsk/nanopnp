@@ -23,6 +23,7 @@ is not yet implemented.
 | [`CLAUDE.md`](CLAUDE.md) | Working instructions for coding agents and new contributors |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | How to report a finding, set up, and get a change accepted |
 | [`data/corrections/`](data/corrections) | Fitted correction parameters, one file per electrolyte |
+| [`docs/validation/`](docs/validation) | The Tier-3 comparison surface: the frozen cases, the probe grid, and the COMSOL export contract |
 
 ## Quick start
 

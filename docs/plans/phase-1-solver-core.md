@@ -1,6 +1,6 @@
 # Phase 1 (Solver core): the production solver on an externally supplied mesh
 
-**Status: WP7, WP8, WP9, WP10, WP11 and WP12 delivered; WP13 next.** Written 2 September 2026, after Phase 0
+**Status: WP7–WP13 delivered; WP14 not started.** Written 2 September 2026, after Phase 0
 (WP1–WP6) and its consolidation (WP-A1, WP-B1, WP-B2, WP-C1). It inherited a verified physics core
 and a bare pipeline: tiers 1 and 2 green, `mypy --strict` and `ruff` clean, and `io/`, `sweep/`,
 `charge/`, `structure/`, `density/`, `symmetry/`, `gui/` still empty reserved slots. `io/` is filled
@@ -70,7 +70,7 @@ Everything an implementer would otherwise settle at 2 a.m., settled here.
 | Field IO | XDMF + HDF5 for fields (IF-07) via meshio, plus a solver-native round-trip of the raw coefficient vector for warm starts | XDMF is the archival, viewer-readable format; a warm start needs the exact vector on the exact space, and interpolating through XDMF would perturb a converged state. Two formats, two purposes, both hashed. |
 | Stabilisation | `stabilisation: none | reference` resolving through a registry, exactly as corrections do; `none` stays the production default (NUM-11) | PHY-22's rule generalised: "off" is a named model, not a code branch. `CoupledModel.stabilisation` and its `SUPPORTED_STABILISATIONS` gate already exist from WP-B1 and were built for this. |
 | Tier-3 comparison surface | Our probe grid, shipped with the frozen case; COMSOL interpolates onto it. Goldens are `.npz` with a manifest naming the model file, COMSOL version, export date and the case hash | §7.4 asks for "a common probe grid". Making it *ours* means the comparison does not depend on COMSOL's mesh, and re-exporting later cannot silently move the sample points. |
-| Attribution, not agreement | WP13's report decomposes any discrepancy by re-running our solver in the matching configuration: unstabilised P2/P1 → stabilised P2/P1 → stabilised P1/P1, each against the same golden, and reports the three deltas | The phase gate is "differences attributed". A single number against a golden attributes nothing; three deltas say how much of it is the stabilisation, how much the element pair, and how much is left over. Left-over is the only part that can be a defect. |
+| Attribution, not agreement | WP13's report decomposes any discrepancy by re-running our solver in the matching configuration, each rung against the same golden. **Amended 18 September 2026 from three rungs to four**: `none`+P2/P1 → `supg`+P2/P1 → `reference`+P2/P1 → `reference`+P1/P1, reporting `Δ_total`, `Δ_transport`, `Δ_flow`, `Δ_pair` and `Δ_resid` | The phase gate is "differences attributed". A single number against a golden attributes nothing. The three-rung form was written before WP12 measured `reference` converging at **0.98** on a Taylor–Hood pair where `supg` converges at **2.01** — so its middle delta summed the transport stabilisation with a first-order flow operator and attributed neither. Splitting the rung at `supg`, which is second order on that pair, costs one solve per case and makes `Δ_transport` a clean number. `Δ_resid` remains the only part that can be a defect. Derivation: `wp13-tier3-comsol-comparison.md` §Design 1. |
 | GUI construction | The case editor is **generated from the pydantic schema**, not hand-laid-out; the field viewer is `webgui` in a `QWebEngineView`; the solver runs in a background process and reports through the existing `damped_newton` callback | QR-11 demands a graphical surface at every release from v0.5 onward, so the editor has to survive schema changes without GUI work. Generating it is what makes that true. RSK-15 is managed by keeping the GUI a shell with no physics in it (IF-09, ADR-004). |
 | Bundle linear solver | UMFPACK, with the GPL-2+ obligation accepted and stated (**CON-11 amended in this commit**) | The §6.6 measurement: SuperLU was OOM-killed on the reference-sized factorisation. A bundle that cannot run the published case is not a product. The library itself stays BSD-3 and depends on neither. |
 
@@ -711,18 +711,42 @@ interval for no defect and the gate is the monotone fall plus 1.5 on the finest;
 module constant by author ruling, so a sensitivity study over it is a second registered mode rather
 than a swept number — which is what the registry is for.
 
-### WP13 — Tier 3 harness and the COMSOL comparison
+### WP13 — Tier 3 harness and the COMSOL comparison — **delivered**
 
-`validation/comsol.py`, `tests/tier3/`, the frozen case set and probe grid, the archived goldens.
+Delivered: the machinery by which a COMSOL export becomes evidence. `nanopnp/probe/v1` is **our**
+comparison surface — named tensor-product patches, content-hashed into every golden, every patch
+refusing `n_r = n_z` so a transposed `%Data` read is a shape error rather than a field that is right
+only on `r = z`, and a per-field mask retaining a point only where its four `±0.05 nm` neighbours
+are also inside, with the radial neighbour mirrored so the near-axis line survives.
+`nanopnp/golden/v1` refuses a manifest that leaves the unit, the evaluation boundary or the sign
+reference unstated, refuses `mol/L` rather than scaling it, and flips a `trans`-referenced current
+onto §6.7's convention *and prints that it did*. `%Grid` text stays the transport format and `.npz`
+plus a typed manifest is the archival one. Comparison reports three numbers per field — the
+`r`-weighted relative L² (the VAL-01 quantity), the unweighted one, and the located maximum — with
+the pressure gauge-free. The four-rung ladder reports `Δ_total`, `Δ_transport`, `Δ_flow`, `Δ_pair`,
+`Δ_resid`, `Δ_ref` and a *reference-limited* verdict. `nanopnp validate` has six actions and the
+nightly Tier-3 job is enabled, `continue-on-error`.
 
-The export contract (probe grid, field list, scalar QoIs, golden manifest); the loader and the
-relative-L² comparison; the attribution ladder of §Design; the nightly Tier-3 CI job, recorded and
-not gated.
+Discharges **VAL-01, VAL-02, VAL-03, VAL-04**; retires **RSK-14**; bounds **RSK-09**. VAL-01 and
+VAL-02 remain **recorded, not gated** — §7.4's second precondition (convergence-matched meshes) is
+not this package's to achieve, and WP13 measures whether it holds rather than assuming it.
 
-Discharges **VAL-01, VAL-02, VAL-03, VAL-04**, retires **RSK-14**, and bounds **RSK-09**. Depends on
-the author's exports and on WP8's reference geometry — until both land, the harness is exercised
-against a golden generated by our own solver, which tests the machinery and nothing else, and the
-report says so.
+Amended `SPECIFICATION.md` §7.4 twice: VAL-03's criterion now requires the declarations above, and a
+new NOTE fixes the comparison surface and says which relative L² VAL-01's 1 % is about.
+
+**Inherited by WP14 and beyond, three things.** The COMSOL exports themselves are the author's,
+against [`docs/validation/comsol-export-contract.md`](../validation/comsol-export-contract.md);
+until they land the harness runs against a self-golden, whose report carries `golden_source: self`
+and which tests the machinery and nothing else. `sweep/plan.py` now **severs** the warm-start forest
+on any axis over a path a warm start cannot cross (`WARM_START_BARRIERS`), so a sweep over element
+orders or stabilisation modes plans as separate components rather than building edges the run then
+refuses — VAL-04's own mesh-refinement study is a sweep of that shape. And the decision row above
+claiming the telescoping identity catches a rung run against a stale golden is **wrong**: the sum
+telescopes for any four numbers, and the gate that does that job is the hash and point-count
+comparison in `attribute()`. Evidence:
+[`wp13-tier3-comsol-comparison.md`](wp13-tier3-comsol-comparison.md) Outcomes;
+`.knowledge/08-validation-benchmarks.md` for the measured ladder and the two-norm contrast;
+`.knowledge/06-numerics-fem.md` §8.4.1 for the forest severing.
 
 ### WP14 — GUI increment
 
@@ -744,7 +768,7 @@ outstanding until it has run there.
 | # | Decision | Status |
 |---|---|---|
 | OPN-05 | Pore-polygon vertex count: the specification says 196, the model report's geometry section says 190 for the pore and 196 for the whole geometry | **Closed, 5 September 2026.** The two counts count two objects (§5.2.1); the author designated the delivered 185-vertex table the geometry of record. §10 of the specification records it. |
-| VAL-03 export scope | Which frozen cases the reference set covers — the envelope corners at minimum, and whether the analyte case of §7.5.1 joins them | **Open — for the author**, before WP13 starts. Does not block WP7–WP12. |
+| VAL-03 export scope | Which frozen cases the reference set covers — the envelope corners at minimum, and whether the analyte case of §7.5.1 joins them | **Closed, 18 September 2026.** Five cases: 0.05 M and 3 M × ±200 mV, plus 0.5 M / +50 mV, in the validated ePNP-NS configuration. The §7.5.1 analyte case is excluded. VAL-04's pair is the published mesh and one uniform refinement, on the centre case. `SPECIFICATION.md` §7.4 is amended to it in the same commit as the WP13 plan. |
 | GUI packaging target | Whether the Windows bundle is built on the author's machine or on a Windows CI runner | **Open — for the author**, before WP14's probe. RSK-13 stays open until one of them runs. |
 | CON-11 / ADR-003 | Bundle default linear solver | **Closed, 2 September 2026.** UMFPACK, GPL-2+ obligation accepted and stated; the library stays BSD-3. `SPECIFICATION.md` CON-11, ADR-003 and §6.6 amended in this commit. |
 

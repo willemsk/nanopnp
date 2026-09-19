@@ -2255,15 +2255,47 @@ differences are recorded and attributed rather than gated on.
 |---|---|---|
 | **VAL-01** | Field comparison on the common probe grid | < 1 % relative L² error per field, once the preconditions above hold |
 | **VAL-02** | Integrated-quantity comparison (`G`, `t₊`, `RR`, EOF rate) | < 0.5 % relative error, once the preconditions above hold |
-| **VAL-03** | Reference-solution generation and archival, in Phase 1 | Full reference set for the frozen cases archived with the generating model, independent of continued licence access |
+| **VAL-03** | Reference-solution generation and archival, in Phase 1 | Full reference set for the frozen cases archived with the generating model, independent of continued licence access, and **declaring** per field its source expression and its unit, and for the current its evaluation boundary and which electrode it references; a golden leaving any of those unstated is refused rather than interpreted |
 | **VAL-04** | Reference discretisation-error probe | The reference case re-solved at two refinement levels while licence access lasts, bounding the reference's own discretisation error |
 | **VAL-05** | Geometry pipeline against the published boundary | Auto-generated contour compared against the delivered reference pore polygon (§5.2.1): radius profile and constriction radius within a stated tolerance |
 | **VAL-06** | Poisson-only comparison against APBS | Potential from the assembled fixed-charge and dielectric fields agrees with an APBS solve on the same structure within a stated tolerance |
 | **VAL-15** | The reference model's own `rhoq_pore` table, on our mesh | The delivered table reads with the grid its header declares, its planar integral is the declared `Q_net` to better than 10⁻⁹, and its boundary ring is negligible against its interior, so the producer leg of §4.4 is exact and the reference's 1.25 % is the consumer's (OPN-06); the consumer leg on the reference mesh is recorded with the mesh it came from, and the quadrature-agreement gate refuses it, per cent-level, rather than reporting a conserved number it cannot defend |
 
+NOTE (the comparison surface, and why VAL-01 reports two norms; WP13): the probe grid is **this
+project's**, a content-hashed document of named tensor-product patches that the reference is
+interpolated onto, so the comparison does not depend on the reference's mesh and a re-export cannot
+silently move the sample points; the grid's hash is declared in every golden and a mismatch is
+refused. A probe point is retained for a field only where the point *and* its four `±0.05 nm`
+neighbours lie inside that field's domain — the reference model's own maximum element size on the
+pore wall — because a solver returns zero outside a field's domain rather than refusing, and a
+concentration norm taken over the membrane is dominated by fabricated zeros and reads as agreement.
+Where the two implementations then still disagree about where a field exists, the comparison SHALL
+abort naming the worst point and its distance rather than intersecting the two sets.
+
+The VAL-01 quantity is the **`r`-weighted** axisymmetric relative L² error, which is the norm the
+axisymmetric weak forms of §6.2 are posed in. It SHALL be reported together with the unweighted
+relative L² and with the located maximum, because the `r` weight vanishes on the axis — the weight
+is three orders smaller on a near-axis sample than at the pore wall — and the axis is exactly where
+the `1/r` forms of §6.2 and the NUM-06 natural condition are fragile. A comparison reporting the
+weighted norm alone would be least sensitive precisely where this implementation is most likely to
+be wrong. The pressure SHALL be compared **gauge-free**, its `r`-weighted mean removed from both
+fields and the removed constants reported: `p` enters the momentum equation only through `∇p`, the
+reference's gauge is not in the model report, and a gauge offset compared raw presents as a
+discrepancy of order one that is not a discrepancy at all.
+
 NOTE: the reference model carries no mesh convergence study, so part of any residual difference may
 originate in the reference (RSK-09). The project's own discretisation error is quantified first
 (§7.3), and the residual is then attributed.
+
+NOTE (the frozen cases, closing VAL-03's scope; author ruling, 18 September 2026): the reference set
+is **five cases** on the §5.2.1 reference geometry, in the validated ePNP-NS configuration — the
+four envelope corners 0.05 M and 3 M × ±200 mV, and the centre point 0.5 M / +50 mV. The corners
+span the experimental range of VAL-07 and supply VAL-02 a matched opposite-bias pair at each salt,
+so `RR` is comparable and not only `I`; the centre point separates a discrepancy linear in bias from
+one quadratic in it. The §7.5.1 analyte case is **not** in the set. VAL-04's refinement pair is the
+published mesh and one uniform refinement of it, on the centre case alone: RSK-09 needs a bound on
+the reference's own discretisation error, not a field of them, and a comparison whose residual falls
+below that bound SHALL be reported as *reference-limited* rather than as agreement.
 
 ### 7.5 Tier 4 experimental reproduction
 

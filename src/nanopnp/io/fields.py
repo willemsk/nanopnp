@@ -78,7 +78,9 @@ __all__ = [
     "P2Nodes",
     "attribute_name",
     "export_fields",
+    "field_scale",
     "p2_nodes",
+    "sample_at",
 ]
 
 logger = logging.getLogger(__name__)
@@ -175,8 +177,13 @@ def attribute_name(field: str) -> str:
     return f"{field}_mol_m3"
 
 
-def _field_scale(field: str, scales: Scales) -> float:
-    """Return the NUM-09 scale that takes one field from nondimensional to SI."""
+def field_scale(field: str, scales: Scales) -> float:
+    """Return the NUM-09 scale that takes one field from nondimensional to SI.
+
+    Public for the same reason as :func:`sample_at`: the Tier-3 probe comparison
+    reports SI, the golden declares SI units, and one statement of which scale
+    belongs to which field is one fewer place for a factor to go missing.
+    """
     if field == POTENTIAL:
         return scales.potential_V
     if field == VELOCITY:
@@ -246,7 +253,7 @@ def p2_nodes(mesh: Mesh, *, materials: str | None = None) -> P2Nodes:
     )
 
 
-def _sample_nodes(
+def sample_at(
     mesh: Mesh,
     expression: Expression,
     points_nm: np.ndarray,
@@ -257,6 +264,11 @@ def _sample_nodes(
     carriers: dict[tuple[int, int], FESpace] | None = None,
 ) -> np.ndarray:
     """Return ``expression`` at ``points_nm``, through a whole-domain carrier.
+
+    Public because the Tier-3 probe comparison samples the same fields at points
+    of its own (:mod:`nanopnp.validation.compare`) and the carrier below is the
+    whole reason a sample on an interface node is right; a second implementation
+    of it would be a second chance to get it wrong.
 
     The carrier is the point of the function. Evaluating a space built with
     ``definedon`` directly returns zero wherever the mesh's point search lands in
@@ -429,7 +441,7 @@ def export_fields(
         if field.element == "number":
             continue
         name = attribute_name(field.name)
-        values = _sample_nodes(
+        values = sample_at(
             mesh,
             solution.component(field.name),
             omega.points_nm if field.domain is None else omega_w.points_nm,
@@ -437,19 +449,19 @@ def export_fields(
             dimension=2 if field.element == "vector_h1" else 1,
             materials=field.domain,
             carriers=carriers,
-        ) * _field_scale(field.name, scales)
+        ) * field_scale(field.name, scales)
         target = whole if field.domain is None else restricted
         target[name] = _as_vector(values) if field.element == "vector_h1" else values[:, 0]
 
     if fixed_charge_C_m3 is not None:
-        whole["rho_fixed_C_m3"] = _sample_nodes(
+        whole["rho_fixed_C_m3"] = sample_at(
             mesh,
             fixed_charge_C_m3,
             omega.points_nm,
             order=model.fields[0].order,
             carriers=carriers,
         )[:, 0]
-    restricted[WALL_DISTANCE] = _sample_nodes(
+    restricted[WALL_DISTANCE] = sample_at(
         mesh,
         solution.wall_distance_nm,
         omega_w.points_nm,
