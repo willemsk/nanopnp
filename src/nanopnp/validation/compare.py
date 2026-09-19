@@ -53,6 +53,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.core.scaling import Scales
     from nanopnp.core.typing import FESpace
     from nanopnp.physics.models import ModelSolution
+    from nanopnp.validation.probe import ProbeDocument
 
 __all__ = [
     "FieldComparison",
@@ -61,6 +62,7 @@ __all__ = [
     "compare_fields",
     "compare_quantities",
     "field_error",
+    "golden_grid",
     "probe_domains",
     "sample_on_probe",
     "unavailable_quantities",
@@ -197,6 +199,35 @@ def probe_domains(solution: ModelSolution) -> dict[str, str | None]:
         else:
             domains[field.name] = field.domain
     return domains
+
+
+def golden_grid(document: ProbeDocument, golden: Golden) -> ProbeGrid:
+    """Return a grid carrying a probe document's points but no mesh, for two goldens.
+
+    VAL-04's ``Delta_ref`` compares two *exports* and never touches a mesh, so
+    there is no ``definedon`` region to mask against and the mask that belongs to
+    the comparison is the finer golden's own ``NaN`` set — which
+    :func:`~nanopnp.validation.attribution.reference_error` passes to the mask
+    gate itself. The masks here are therefore all-true placeholders, and the
+    weights and coordinates are what the caller is really after.
+
+    Parameters
+    ----------
+    document
+        The probe grid both goldens were exported onto.
+    golden
+        Either of the pair; only its field names are read.
+    """
+    import numpy as np
+
+    keep = np.ones(document.count, dtype=bool)
+    return ProbeGrid(
+        document=document,
+        points_nm=document.points_nm(),
+        weights_nm2=document.weights_nm2(),
+        masks=dict.fromkeys(sorted(golden.values), keep),
+        dropped=dict.fromkeys(sorted(golden.values), 0),
+    )
 
 
 def sample_on_probe(

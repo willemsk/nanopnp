@@ -54,12 +54,13 @@ does that job.
 from __future__ import annotations
 
 import json
+import math
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
-from nanopnp.core.hashing import Canonicalisable, canonical, content_hash
+from nanopnp.core.hashing import Canonicalisable, canonical, content_hash, decode_floats
 from nanopnp.validation.compare import (
     COMPARED_QUANTITIES,
     FieldComparison,
@@ -84,6 +85,7 @@ __all__ = [
     "Rung",
     "RungOutcome",
     "attribute",
+    "read_report",
     "reference_error",
     "write_report",
 ]
@@ -420,15 +422,25 @@ class AttributionReport:
             Naming the key and the residual. See
             :meth:`Attribution.identity_residual` for what this does and does
             not establish.
+
+        Notes
+        -----
+        A non-finite residual fails too, and explicitly: an ``E_k`` of ``inf`` —
+        which :mod:`nanopnp.validation.compare` returns where the golden is zero
+        everywhere and we are not — telescopes to ``nan``, and ``abs(nan) >
+        tolerance`` is ``False``. Left to the magnitude test alone the one rung
+        that says nothing would be the one rung that passes.
         """
         for entry in self.attributions:
             residual = entry.identity_residual()
-            if abs(residual) > tolerance:
+            if not math.isfinite(residual) or abs(residual) > tolerance:
                 raise LadderError(
                     f"the ladder identity fails for {entry.kind} {entry.key!r}: "
                     f"delta_total + delta_transport + delta_flow + delta_pair - delta_resid = "
                     f"{residual:.3e}, against a tolerance of {tolerance:g}. The four deltas "
-                    "telescope by construction, so this is a defect in how they were formed"
+                    "telescope by construction, so this is a defect in how they were formed — "
+                    f"or one of the rung errors {list(entry.errors)} is not finite, which is the "
+                    "same statement about a rung that measured nothing"
                 )
 
     @property
@@ -603,6 +615,7 @@ def attribute(
     case: str,
     golden: Golden,
     reference_errors: Mapping[str, float] | None = None,
+    sampled_fields: Sequence[str] | None = None,
 ) -> AttributionReport:
     """Build the report from four rung outcomes, gating their provenance first.
 
@@ -620,6 +633,14 @@ def attribute(
         where the refinement pair was not supplied for this case. Absent, every
         verdict is ``reference-unbounded`` — RSK-09 is simply not bounded here,
         and saying so is the honest report.
+    sampled_fields
+        Every field *we* sampled on the probe grid, from
+        :func:`~nanopnp.validation.compare.sample_on_probe`. It is what
+        ``unavailable_fields`` is the complement of, and it cannot be recovered
+        from ``outcomes``: a rung's comparisons are already the intersection of
+        our fields with the golden's, so asking the golden which of *those* it
+        lacks always answers "none" and a report built that way would say a
+        golden carrying no ``pressure`` covered it.
 
     Returns
     -------
@@ -676,7 +697,9 @@ def attribute(
         refinement=golden.manifest.refinement,
         rungs=tuple(outcomes),
         attributions=tuple(attributions),
-        unavailable_fields=golden.unavailable(sorted(outcomes[0].field_errors())),
+        unavailable_fields=golden.unavailable(
+            sorted(outcomes[0].field_errors()) if sampled_fields is None else sampled_fields
+        ),
         unavailable_quantities=tuple(
             name for name in COMPARED_QUANTITIES if name not in outcomes[0].quantity_errors()
         ),
@@ -747,8 +770,6 @@ def read_report(path: str | Path) -> dict[str, Canonicalisable]:
     back as the mapping it was written as: every consumer of a Tier-3 run reads
     the deltas and the verdict, and none of them re-runs the ladder.
     """
-    from nanopnp.core.hashing import decode_floats
-
     decoded = decode_floats(json.loads(Path(path).read_text(encoding="utf-8")))
     if not isinstance(decoded, dict):
         raise LadderError(f"{path} does not hold an attribution report object")

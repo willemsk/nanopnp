@@ -311,16 +311,41 @@ def test_val01_a_self_golden_report_says_so_in_the_first_line() -> None:
 
 
 def test_val01_an_unexported_field_is_named_in_the_report() -> None:
-    """A golden without ``pressure`` reports it unavailable; the table does not shrink silently."""
+    """A golden without ``pressure`` reports it unavailable; the table does not shrink silently.
+
+    ``sampled_fields`` is what makes the statement possible, and it is passed
+    rather than derived: a rung's comparisons are already the intersection of our
+    fields with the golden's, so a report that asked the golden which of *those*
+    it lacked would always answer "none" and would say a golden carrying no
+    ``pressure`` had covered it.
+    """
     outcomes = _outcomes([0.1, 0.2, 0.3, 0.4], [0.01, 0.02, 0.03, 0.04])
-    report = attribute(outcomes, case="fixture", golden=_golden())
-    assert report.unavailable_fields == ()
+    report = attribute(
+        outcomes,
+        case="fixture",
+        golden=_golden(),
+        sampled_fields=["potential", "pressure", "velocity_z"],
+    )
+    assert report.unavailable_fields == ("pressure", "velocity_z")
     assert set(report.unavailable_quantities) == {
         "conductance_S",
         "transport_number",
         "eof_m3_s",
     }
-    assert "Not compared" in report.markdown()
+    markdown = report.markdown()
+    assert "Not compared" in markdown
+    assert "`pressure`" in markdown
+
+
+def test_val01_unavailable_fields_cannot_be_derived_from_the_comparisons() -> None:
+    """Without ``sampled_fields`` the report can only say what it compared.
+
+    The degenerate answer is pinned here so the parameter is not quietly dropped
+    again: every field an outcome carries is by construction one the golden has,
+    so the complement over that set is empty however many fields are missing.
+    """
+    report = attribute(_outcomes([0.1, 0.2, 0.3, 0.4]), case="fixture", golden=_golden())
+    assert report.unavailable_fields == ()
 
 
 # -- the ladder as a sweep ----------------------------------------------------
