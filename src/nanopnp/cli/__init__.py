@@ -504,11 +504,11 @@ def _validate_export_grid(args: argparse.Namespace) -> int:
         for patch in document.patches
     ]
     lines.append(f"points     {document.count}")
-    lines.append(f"axes       {args.output}" if args.output is not None else "")
-    if args.output is None and not args.json:
-        lines.append("")
-        lines.append(text.rstrip("\n"))
-    _emit(payload, [line for line in lines if line != ""], as_json=args.json)
+    if args.output is not None:
+        lines.append(f"axes       {args.output}")
+    elif not args.json:
+        lines += ["", text.rstrip("\n")]
+    _emit(payload, lines, as_json=args.json)
     return EXIT_OK
 
 
@@ -562,7 +562,6 @@ def _validate_export_golden(args: argparse.Namespace) -> int:
         case_identity,
         export_golden,
     )
-    from nanopnp.validation.probe import load_probe
 
     document, sampled, resolved = _sampled_run(args)
     manifest = GoldenManifest.model_validate(
@@ -584,7 +583,7 @@ def _validate_export_golden(args: argparse.Namespace) -> int:
         }
     )
     archive = export_golden(
-        sampled, manifest, args.destination, tables=load_probe(args.probe) if args.tables else None
+        sampled, manifest, args.destination, tables=document if args.tables else None
     )
     payload: dict[str, Canonicalisable] = {
         "archive": str(archive),
@@ -617,6 +616,7 @@ def _validate_compare(args: argparse.Namespace) -> int:
     document, sampled, resolved = _sampled_run(args)
     golden = load_golden(args.golden)
     golden.check_case(case_identity(_resolved(resolved.case)))
+    golden.check_probe(document)
     grid = _probe_grid(document, resolved)
     fields = compare_fields(sampled, golden, grid)
     quantities = compare_quantities(resolved.quantities, golden.quantities)
@@ -666,19 +666,25 @@ def _validate_report(args: argparse.Namespace) -> int:
     document = load_probe(args.probe)
     plan = read_plan(args.plan)
     golden = load_golden(args.golden)
+    golden.check_probe(document)
     directory = Path(args.plan).parent
+    store = None if args.store is None else _store(args)
 
     by_rung: dict[int, RungOutcome] = {}
+    fields_sampled: list[str] = []
     for member in read_members(directory):
-        point = plan.point(member.index)
-        rung_index = point.coordinates[0]
-        if member.directory is None or rung_index in by_rung:
+        plan.point(member.index)  # refuses a member this plan does not enumerate
+        rung_index = _rung_of(member.assignments)
+        if member.status != "ok" or member.directory is None:
             continue
-        resolved = reopen(member.directory, store=None if args.store is None else _store(args))
+        if rung_index is None or rung_index in by_rung:
+            continue
+        resolved = reopen(member.directory, store=store)
         if _identity(resolved.case) != golden.manifest.case_hash:
             continue
         grid = _probe_grid(document, resolved)
         sampled = _sample(resolved, grid)
+        fields_sampled = sorted(sampled)
         by_rung[rung_index] = RungOutcome(
             rung=LADDER[rung_index],
             golden_hash=golden.hash,
@@ -691,16 +697,17 @@ def _validate_report(args: argparse.Namespace) -> int:
     missing = [rung.name for rung in LADDER if rung.index not in by_rung]
     if missing:
         raise LadderError(
-            f"{directory} holds no member for rung(s) {', '.join(missing)} of the golden's case. "
-            "The ladder attributes a discrepancy by differences between adjacent rungs, so a "
-            "missing one does not make the remaining deltas mean less -- it makes them mean "
-            "something else. Run the sweep to completion first"
+            f"{directory} holds no completed member for rung(s) {', '.join(missing)} of the "
+            "golden's case. The ladder attributes a discrepancy by differences between adjacent "
+            "rungs, so a missing one does not make the remaining deltas mean less -- it makes "
+            "them mean something else. Run the sweep to completion first"
         )
     report = attribute(
         [by_rung[index] for index in range(len(LADDER))],
         case=golden.manifest.case,
         golden=golden,
         reference_errors=_reference_errors(args, document, golden),
+        sampled_fields=fields_sampled,
     )
     json_path, markdown = write_report(report, args.output or directory)
     payload = dict(report.summary())
@@ -709,17 +716,35 @@ def _validate_report(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def _rung_of(assignments: Mapping[str, Canonicalisable]) -> int | None:
+    """Return which ladder rung a sweep member is, or ``None`` if it is none of them.
+
+    Matched on the assignments the member actually carries rather than on a grid
+    coordinate: the rung's position in the sweep document's axis list is not a
+    fact about the ladder, and reading it off ``coordinates[0]`` labels a member
+    by whichever axis happens to be written first.
+    """
+    from nanopnp.validation.attribution import LADDER
+
+    for rung in LADDER:
+        if all(assignments.get(path) == value for path, value in rung.assignments().items()):
+            return rung.index
+    return None
+
+
 def _reference_errors(
     args: argparse.Namespace, document: ProbeDocument, golden: Golden
 ) -> dict[str, float] | None:
     """Return VAL-04's ``Delta_ref``, or ``None`` where no refinement pair was given."""
     from nanopnp.validation.attribution import reference_error
+    from nanopnp.validation.compare import golden_grid
     from nanopnp.validation.comsol import load_golden
 
     if args.refined is None:
         return None
     refined = load_golden(args.refined)
-    return reference_error(golden, refined, _bare_grid(document, golden))
+    refined.check_probe(document)
+    return reference_error(golden, refined, golden_grid(document, golden))
 
 
 def _store(args: argparse.Namespace) -> Store:
@@ -751,11 +776,26 @@ def _unit(field: str) -> str:
 
 
 def _self_quantities(recorded: Mapping[str, Canonicalisable]) -> dict[str, Canonicalisable]:
-    """Return the ``quantities`` block of a self-golden manifest, from a run record."""
+    """Return the ``quantities`` block of a self-golden manifest, from a run record.
+
+    ``bias_V`` and ``current_A`` are the two the manifest requires, and a run that
+    recorded neither is refused rather than defaulted to zero: a golden declaring
+    0 A is not a golden with a missing current, it is a golden whose current
+    comparison :func:`~nanopnp.validation.compare.compare_quantities` then skips
+    for having a reference of exactly zero — a comparison quietly covering one
+    quantity fewer, which is the thing the unavailable list exists to prevent.
+    """
+    from nanopnp.validation.runs import RunError
+
     wanted = ("bias_V", "current_A", "currents_A", "transport_number", "conductance_S", "eof_m3_s")
     block = {key: recorded.get(key) for key in wanted if recorded.get(key) is not None}
-    block.setdefault("bias_V", 0.0)
-    block.setdefault("current_A", 0.0)
+    absent = [key for key in ("bias_V", "current_A") if key not in block]
+    if absent:
+        raise RunError(
+            f"the run records no {' or '.join(absent)}, which a golden manifest must declare. The "
+            "stage-11 summary carries both, so this run stopped before the quantities of interest "
+            "were extracted; re-run it with 'current' among its outputs"
+        )
     return block
 
 
@@ -774,28 +814,6 @@ def _probe_grid(document: ProbeDocument, resolved: ReopenedRun) -> ProbeGrid:
 
     return ProbeGrid.on_mesh(
         document, resolved.solution.space.mesh, probe_domains(resolved.solution)
-    )
-
-
-def _bare_grid(document: ProbeDocument, golden: Golden) -> ProbeGrid:
-    """Return a grid whose masks are the golden's own, for a golden-to-golden norm.
-
-    VAL-04 compares two *exports* and never touches a mesh, so the mask that
-    belongs to the comparison is the finer golden's defined set — which
-    :func:`~nanopnp.validation.attribution.reference_error` passes to the mask
-    gate itself.
-    """
-    import numpy as np
-
-    from nanopnp.validation.probe import ProbeGrid
-
-    keep = np.ones(document.count, dtype=bool)
-    return ProbeGrid(
-        document=document,
-        points_nm=document.points_nm(),
-        weights_nm2=document.weights_nm2(),
-        masks=dict.fromkeys(sorted(golden.values), keep),
-        dropped=dict.fromkeys(sorted(golden.values), 0),
     )
 
 
@@ -942,7 +960,12 @@ def build_parser() -> argparse.ArgumentParser:
     self_golden.add_argument(
         "--refinement", default="published", choices=("published", "refined_1"), help="VAL-04 level"
     )
-    self_golden.add_argument("--export-date", default="", help="date recorded in the manifest")
+    # Required, not defaulted: the manifest refuses a blank ``export_date``, so a
+    # default of "" turns an omitted flag into an unclassified pydantic failure
+    # and exit 1. argparse's own exit 2 is what a missing argument means (IF-02).
+    self_golden.add_argument(
+        "--export-date", required=True, help="date recorded in the manifest, e.g. 2026-09-18"
+    )
     self_golden.add_argument(
         "--tables", action="store_true", help="also write the %%Grid transport tables"
     )

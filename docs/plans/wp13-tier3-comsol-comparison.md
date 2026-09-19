@@ -203,8 +203,10 @@ refuses a golden that leaves any of them unstated, which is the point:
 
 `src/nanopnp/validation/` gains `probe.py` (the `nanopnp/probe/v1` document, the `n_r ≠ n_z`
 refusal, the margined per-field masks with the axis **mirrored** rather than clipped, and
-`write_comsol_axes`), `comsol.py` (`nanopnp/golden/v1`, the four refusals, the `%Grid` writer that
-is the format's only one, and `case_identity`), `compare.py` (the three norms, the gauge-free
+`write_comsol_axes`), `comsol.py` (`nanopnp/golden/v1`, the five refusals — `case_hash` and `probe_hash` asked at
+ingest *and* at every comparison, the unit, the sign and the archive's own `golden_hash` — the
+`%Grid` writer that is the format's only one, and `case_identity`, which drops the discretisation
+entries of `model_options` and keeps its physics switches), `compare.py` (the three norms, the gauge-free
 pressure path, the mask gate), `attribution.py` (the four rungs, five deltas, `Δ_ref`, the verdict
 and both report writers) and `runs.py` (reopening a finished run without re-solving it).
 `nanopnp validate` gains six actions, and the nightly Tier-3 job is enabled, `continue-on-error`,
@@ -312,10 +314,17 @@ The identity
 Δ_total + Δ_transport + Δ_flow + Δ_pair = E₀ + (E₁ − E₀) + (E₂ − E₁) + (E₃ − E₂) = E₃ = Δ_resid
 ```
 
-is free by construction, which is exactly why it is worth asserting: it holds only if all four rungs
-were compared against **the same golden on the same probe grid with the same masks**. A rung run
-against a re-exported golden, or against a probe document edited since, breaks it. Assert to
-10⁻¹⁴ absolute on the telescoped sum.
+is free by construction. Assert to 10⁻¹⁴ absolute on the telescoped sum.
+
+> **Outcome — the sentence that stood here was wrong**, in the same way the Decisions table's
+> "What the ladder reports" row was: it claimed the identity "holds only if all four rungs were
+> compared against the same golden on the same probe grid with the same masks", and that a rung
+> run against a re-exported golden breaks it. It does not — the sum telescopes for *any* four
+> numbers. The identity is asserted because it catches a slip in forming or assigning the deltas
+> (and, since the review, a non-finite rung error); the stale-golden gate is `attribute()`
+> comparing the golden, probe and case hashes across the four rungs and the retained point count
+> per field. Pinned by
+> `tests/tier1/test_attribution.py::test_val01_the_identity_cannot_see_a_stale_golden`.
 
 **Why the phase plan's three rungs are not enough.** The phase plan specified
 `none`+P2/P1 → `reference`+P2/P1 → `reference`+P1/P1, calling the first delta `Δ_stab`. WP12 then

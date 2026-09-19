@@ -47,25 +47,19 @@ from nanopnp.validation.attribution import (
 from nanopnp.validation.compare import (
     compare_fields,
     compare_quantities,
+    golden_grid,
     probe_domains,
     sample_on_probe,
 )
 from nanopnp.validation.comsol import (
     ARCHIVE_NAME,
     GOLDEN_SCHEMA,
-    Golden,
     GoldenManifest,
     export_golden,
     field_unit,
     load_golden,
 )
-from nanopnp.validation.probe import (
-    PROBE_SCHEMA,
-    ProbeDocument,
-    ProbeGrid,
-    load_probe,
-    loads_probe,
-)
+from nanopnp.validation.probe import PROBE_SCHEMA, ProbeGrid, load_probe, loads_probe
 from nanopnp.validation.runs import reopen
 
 logger = logging.getLogger(__name__)
@@ -201,7 +195,12 @@ def test_val01_full_ladder_against_a_self_golden(solved_ladder, tmp_path: Path) 
         )
         for rung in LADDER
     ]
-    report = attribute(outcomes, case="ver11-benchmark", golden=golden)
+    report = attribute(
+        outcomes,
+        case="ver11-benchmark",
+        golden=golden,
+        sampled_fields=sorted(sampled[GENERATING_RUNG]),
+    )
     report.check_identity()
     assert report.golden_source == "self"
     assert "tests the harness and nothing else" in report.markdown()
@@ -281,29 +280,31 @@ def test_val01_val02_val04_attribution_against_the_archive() -> None:
 
     for name, directory in available:
         golden = load_golden(directory)
+        golden.check_probe(document)
         refined = root / ARCHIVE_SUBDIR / name / "refined_1"
         errors = (
-            reference_error(golden, load_golden(refined), _golden_grid(document, golden))
+            reference_error(golden, load_golden(refined), golden_grid(document, golden))
             if (refined / ARCHIVE_NAME).is_file()
             else None
         )
         outcomes: dict[int, RungOutcome] = {}
+        sampled_fields: list[str] = []
         for index, member in sorted(members.items()):
-            if member.directory is None:
+            if member.status != "ok" or member.directory is None:
                 continue
             run = reopen(member.directory)
             if case_identity(resolve(run.case)) != golden.manifest.case_hash:
                 continue
             rung = plan.point(index).coordinates[0]
             grid = ProbeGrid.on_mesh(document, run.solution.space.mesh, probe_domains(run.solution))
+            sampled = sample_on_probe(run.solution, grid, scales=run.scales)
+            sampled_fields = sorted(sampled)
             outcomes[rung] = RungOutcome(
                 rung=LADDER[rung],
                 golden_hash=golden.hash,
                 probe_hash=golden.manifest.probe_hash,
                 case_hash=golden.manifest.case_hash,
-                fields=compare_fields(
-                    sample_on_probe(run.solution, grid, scales=run.scales), golden, grid
-                ),
+                fields=compare_fields(sampled, golden, grid),
                 quantities=compare_quantities(run.quantities, golden.quantities),
                 stabilisation_currents_A=_currents(run.quantities),
             )
@@ -317,23 +318,10 @@ def test_val01_val02_val04_attribution_against_the_archive() -> None:
             case=name,
             golden=golden,
             reference_errors=errors,
+            sampled_fields=sampled_fields,
         )
         write_report(report, Path(runs))
         logger.info("%s", report.markdown())
-
-
-def _golden_grid(document: ProbeDocument, golden: Golden) -> ProbeGrid:
-    """Return a grid whose masks are the golden's own, for a golden-to-golden norm."""
-    import numpy as np
-
-    keep = np.ones(document.count, dtype=bool)
-    return ProbeGrid(
-        document=document,
-        points_nm=document.points_nm(),
-        weights_nm2=document.weights_nm2(),
-        masks=dict.fromkeys(sorted(golden.values), keep),
-        dropped=dict.fromkeys(sorted(golden.values), 0),
-    )
 
 
 def _currents(recorded: Mapping[str, object]) -> Mapping[str, float] | None:

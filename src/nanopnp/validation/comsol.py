@@ -10,12 +10,19 @@ delivered 77 MB ``prod5_clya_charge`` table to 4.7e-12 (VAL-15) — and ``.npz``
 plus a typed manifest is the **archival** one. The conversion is where the unit,
 sign and hash declarations are checked, once, rather than on every nightly run.
 
-**Four refusals, and each of them is a wrong answer we would otherwise print.**
+**Five refusals, and each of them is a wrong answer we would otherwise print.**
 
 ``case_hash`` and ``probe_hash``. A golden compared against a different case, or
 against a probe grid edited since the export, is the most expensive kind of wrong
 answer: everything runs, every number looks plausible, and nothing else detects
-it.
+it. Both are asked twice — at ingest, against the delivered tables, and again on
+every comparison (:meth:`Golden.check_case`, :meth:`Golden.check_probe`), because
+nothing stops a later run being pointed at another probe document or another
+case.
+
+``golden_hash``. The digest written with the archive is checked when it is read
+back, not only recorded: a ``.npz`` replaced under a manifest that still names
+the generating model would carry that model's provenance onto other numbers.
 
 The unit. The expected set is ``V`` [V], ``cpos``/``cneg`` [mol/m^3], ``u``/``w``
 [m/s] and ``p`` [Pa] (``.knowledge/09-comsol-reference-settings.md`` sections C.2
@@ -70,6 +77,7 @@ __all__ = [
     "DISCRETISATION_KEYS",
     "GOLDEN_SCHEMA",
     "MANIFEST_NAME",
+    "MODEL_OPTION_DISCRETISATION_KEYS",
     "PROBE_FIELDS",
     "Golden",
     "GoldenError",
@@ -143,7 +151,7 @@ CASE_IDENTITY_SCHEMA = "nanopnp/golden/case/v1"
 """Domain separator of :func:`case_identity`."""
 
 DISCRETISATION_KEYS: frozenset[str] = frozenset(
-    {"model_options", "stabilisation", "continuation", "newton", "linear_solver"}
+    {"stabilisation", "continuation", "newton", "linear_solver"}
 )
 """Keys of the solve provenance a golden's ``case_hash`` deliberately leaves out.
 
@@ -160,6 +168,27 @@ which mesh either implementation used is precisely what section 7.4 is measuring
 (VAL-04, RSK-09) rather than something to gate on. ``name`` and ``outputs`` are
 already outside the solve provenance, so a sweep member and the frozen case file
 it reproduces hash the same.
+
+``model_options`` is **not** here, and must not be: it carries ``flow``,
+``variable_density``, ``inertia``, ``dielectric_gradient_forces`` and
+``solid_permittivities`` beside the element orders, and those are the physics.
+Dropping the whole mapping would let a run with the flow switched off, or with
+the dielectric-gradient body force switched on, declare the identity of the
+validated case and be compared against its golden — exactly the wrong answer this
+hash exists to refuse. Only the discretisation entries *within* it are removed;
+see :data:`MODEL_OPTION_DISCRETISATION_KEYS`.
+"""
+
+MODEL_OPTION_DISCRETISATION_KEYS: frozenset[str] = frozenset(
+    {"order", "velocity_order", "pressure_order", "stabilisation"}
+)
+"""Entries of ``model_options`` that :func:`case_identity` leaves out.
+
+The four the attribution ladder moves — ``numerics.elements.{phi,c}`` reach
+``order``, ``numerics.elements.{u,p}`` reach ``velocity_order`` and
+``pressure_order``, and ``numerics.stabilisation`` is restated here beside the
+top-level key. Everything else in the mapping is a physics switch and stays in
+the hash.
 """
 
 AXIS_TOL_NM = 1e-6
@@ -236,17 +265,24 @@ def case_identity(resolved: ResolvedCase) -> str:
     str
         Content hash over
         :attr:`~nanopnp.io.case.ResolvedCase.solve_provenance` with
-        :data:`DISCRETISATION_KEYS` removed — see that constant for why each one
-        is left out.
+        :data:`DISCRETISATION_KEYS` removed, and with
+        :data:`MODEL_OPTION_DISCRETISATION_KEYS` removed from within
+        ``model_options`` — see those constants for why each one is left out, and
+        for why the rest of ``model_options`` is kept.
     """
-    return content_hash(
-        CASE_IDENTITY_SCHEMA,
-        {
+    record: dict[str, object] = {
+        key: value
+        for key, value in resolved.solve_provenance.items()
+        if key not in DISCRETISATION_KEYS
+    }
+    options = record.get("model_options")
+    if isinstance(options, Mapping):
+        record["model_options"] = {
             key: value
-            for key, value in resolved.solve_provenance.items()
-            if key not in DISCRETISATION_KEYS
-        },
-    )
+            for key, value in sorted(options.items())
+            if key not in MODEL_OPTION_DISCRETISATION_KEYS
+        }
+    return content_hash(CASE_IDENTITY_SCHEMA, record)
 
 
 def table_name(field: str, patch: str) -> str:
@@ -533,6 +569,29 @@ class Golden:
                 "golden answers a different case; nothing downstream would notice"
             )
 
+    def check_probe(self, document: ProbeDocument) -> None:
+        """Refuse a golden exported onto a different set of sample points.
+
+        The counterpart of :meth:`check_case`, and asked at *comparison* time
+        rather than only at ingest: :func:`ingest_golden` checks the hash of the
+        document the tables were read against, and nothing else stops a later
+        ``compare`` or ``report`` being pointed at another probe file. Every value
+        would then be attributed to a coordinate it was not taken at, while every
+        array kept its shape.
+
+        Raises
+        ------
+        GoldenError
+            Naming both hashes and both grid names.
+        """
+        if self.manifest.probe_hash != document.hash:
+            raise GoldenError(
+                f"golden for case {self.manifest.case!r} was exported onto probe grid "
+                f"{self.manifest.probe!r} ({self.manifest.probe_hash}) and this comparison is "
+                f"taken on {document.name!r} ({document.hash}). The two name different sample "
+                "points, so every value would be compared at a coordinate it was not taken at"
+            )
+
     def summary(self) -> dict[str, object]:
         """Return this golden's record for the attribution report (FR-25)."""
         return {
@@ -684,6 +743,12 @@ def export_golden(
         :func:`ingest_golden` from delivered tables and never assembled here:
         one path that writes a ``source: comsol`` archive from arrays in memory
         is one path by which a self-golden could be relabelled as evidence.
+
+        Also if ``tables`` is not the document the manifest's ``probe_hash``
+        names, or if an array is not that document's length. :func:`ingest_golden`
+        gates both on the delivered side and this path must not be the looser of
+        the two: an archive declaring a probe grid it was not sampled on is the
+        same undetectable wrong answer whichever writer produced it.
     """
     import numpy as np
 
@@ -696,6 +761,16 @@ def export_golden(
         )
     target = Path(destination)
     if tables is not None:
+        _check_probe(manifest, tables, target / ARCHIVE_MANIFEST_NAME)
+        for field, array in sorted(values.items()):
+            length = int(np.asarray(array).size)
+            if length != tables.count:
+                raise GoldenError(
+                    f"field {field!r} carries {length} values and probe grid {tables.name!r} has "
+                    f"{tables.count} points. The arrays are written patch by patch in the "
+                    "document's flattening order, so a length that is not the document's would "
+                    "split the blocks at the wrong place"
+                )
         offset = 0
         for patch in tables.patches:
             block = slice(offset, offset + patch.count)
@@ -726,14 +801,15 @@ def load_golden(path: str | Path) -> Golden:
     Raises
     ------
     GoldenError
-        If the archive or its manifest is absent, or if the manifest and the
-        arrays disagree about which fields are present — which means one of the
-        two files was replaced on its own.
+        If the archive or its manifest is absent, if the manifest and the arrays
+        disagree about which fields are present, or if the pair does not hash to
+        the ``golden_hash`` :func:`ingest_golden` recorded — each of which means
+        one of the two files was replaced on its own.
     """
     import numpy as np
 
     archive, manifest_path = _archive_paths(Path(path))
-    manifest = _read_archive_manifest(manifest_path)
+    manifest, recorded = _read_archive_manifest(manifest_path)
     with np.load(archive, allow_pickle=False) as loaded:
         values = {name: np.asarray(loaded[name], dtype=np.float64) for name in loaded.files}
     if sorted(values) != sorted(manifest.fields):
@@ -742,13 +818,22 @@ def load_golden(path: str | Path) -> Golden:
             f"{sorted(manifest.fields)}. The two files are written together by ingest_golden, so "
             "a disagreement means one of them was replaced on its own"
         )
+    digest = _golden_hash(manifest, values)
+    if recorded is not None and recorded != digest:
+        raise GoldenError(
+            f"{archive} and {manifest_path.name} hash to {digest} and the manifest records "
+            f"{recorded}. The two are written together by ingest_golden over the same bytes, so "
+            "a disagreement means the arrays or the declaration changed after the archive was "
+            "made — and every number compared against it would be attributed to the provenance "
+            "the manifest still states"
+        )
     flipped = manifest.current_sign_reference == "trans"
     return Golden(
         manifest=manifest,
         values=values,
         quantities=_referenced_to_cis(manifest.quantities) if flipped else manifest.quantities,
         current_sign_flipped=flipped,
-        hash=_golden_hash(manifest, values),
+        hash=digest,
     )
 
 
@@ -860,13 +945,22 @@ def _archive_paths(path: Path) -> tuple[Path, Path]:
     return archive, manifest
 
 
-def _read_archive_manifest(path: Path) -> GoldenManifest:
-    """Read the canonical-JSON manifest written beside an archive."""
+def _read_archive_manifest(path: Path) -> tuple[GoldenManifest, str | None]:
+    """Return the manifest written beside an archive, and the hash it recorded.
+
+    The hash comes back rather than being discarded, because a recorded digest
+    nothing ever compares against is a checksum that cannot fail;
+    :func:`load_golden` is where it is checked. ``None`` only for a manifest
+    written before the key existed.
+    """
     decoded = decode_floats(json.loads(path.read_text(encoding="utf-8")))
     if not isinstance(decoded, dict):
         raise GoldenError(f"{path} does not hold a golden manifest object")
+    recorded = decoded.get("golden_hash")
     record = {key: value for key, value in decoded.items() if key != "golden_hash"}
     try:
-        return GoldenManifest.model_validate(record)
+        return GoldenManifest.model_validate(record), (
+            str(recorded) if isinstance(recorded, str) else None
+        )
     except ValidationError as error:
         raise CaseValidationError(render_problems(str(path), error), error) from None

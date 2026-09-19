@@ -101,8 +101,12 @@ RECTIFICATION = "rectification"
 WARM_START_BARRIERS: tuple[str, ...] = (
     # A cross-mesh transfer is a point evaluation outside the source domain,
     # which returns a plausible number rather than raising, and ``transfer``
-    # refuses it.
+    # refuses it. ``numerics.mesh`` is the same barrier one step earlier: the
+    # mesher, its wall size and its boundary layer all move the mesh a member is
+    # solved on, so VAL-04's mesh-convergence study severs here even though no
+    # axis of it names a mesh file.
     "inputs.mesh",
+    "numerics.mesh",
     # The element spaces. A coefficient vector is a function only relative to a
     # space, and ``load_initial`` gates on ``model.elements`` exactly as
     # ``restore`` does.

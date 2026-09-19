@@ -110,7 +110,7 @@ schema: nanopnp/golden/v1
 
 case: clya-0.5M-plus50mV
 # From: uv run nanopnp validate case-hash docs/validation/cases/clya-0.5M-plus50mV.case.yaml
-case_hash: 057045b399fd442d1d6b09d7bf673b8ebab44baaa2733cb75b3c0cb7dc4e59b9
+case_hash: 7e9ca1887c20d81300fc33b82cdb8cf3a059487cfd995ce786b4f4273cc11594
 
 probe: clya-reference
 # From: uv run nanopnp validate export-grid <the probe document>
@@ -191,6 +191,11 @@ Run it once per directory as the exports land. Everything it checks is checked *
 once, rather than on every nightly run.
 
 ## 5. What happens to it
+
+Both `nanopnp validate compare` and `nanopnp validate report` re-check the `probe_hash` against
+the `--probe` document they were given, and `load_golden` re-checks `golden.npz` and
+`golden.manifest.json` against the `golden_hash` written with them. A golden read back is
+therefore refused on the same three grounds it was ingested on, not only on the day it landed.
 
 `nanopnp validate compare` samples our solution on the same probe grid and reports, per field,
 the *r*-weighted relative L² (the VAL-01 quantity), the unweighted relative L² (which is what
