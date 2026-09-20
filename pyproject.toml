@@ -55,6 +55,10 @@ Specification = "https://github.com/willemsk/nanopnp/blob/main/SPECIFICATION.md"
 
 [project.scripts]
 nanopnp = "nanopnp.cli:main"
+# The desktop shell and the RSK-13 packaging probe (IF-09, section 8.2
+# criterion 4). Both need the `gui` extra; neither is on the library path.
+nanopnp-gui = "nanopnp.gui.app:main"
+nanopnp-probe = "nanopnp.gui.probe:main"
 
 [dependency-groups]
 dev = [
@@ -63,6 +67,12 @@ dev = [
     "ruff>=0.6",
     "mypy>=1.11",
     "types-PyYAML>=6.0",
+]
+# Bundle builders only (ADR-004, section 8.2 criterion 4). Not in
+# `default-groups`: PyInstaller is needed by the `bundle` CI job and by whoever
+# builds a release, never by a developer running the gate or by a user.
+packaging = [
+    "pyinstaller>=6.10",
 ]
 
 [build-system]

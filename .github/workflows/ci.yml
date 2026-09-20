@@ -58,7 +58,47 @@ jobs:
           enable-cache: true
           python-version: ${{ matrix.python-version }}
       - run: uv sync --all-extras
+      # CON-13 names Windows, macOS and Linux. Qt's platform plugin works
+      # unaided on the first two, so `offscreen` is all the widget tests of
+      # tests/tier1/test_gui_widgets.py need there; on ubuntu-latest PySide6
+      # does not import at all (no libEGL) and those tests skip themselves.
+      # Installing system packages to change that would buy Linux widget
+      # coverage at the price of a portability promise per runner image
+      # (.knowledge/07-software-stack.md section 5).
       - run: uv run pytest
+        env:
+          QT_QPA_PLATFORM: offscreen
+
+  # RSK-13's continuous detector: desktop packaging defeated by a binary
+  # dependency. GATED -- a failed build fails CI, because a probe nobody looks
+  # at is amendment A2 again (section 8.2.1 A4). It is demoted to
+  # `continue-on-error` only if PyInstaller proves flaky for reasons outside
+  # this repository, and that demotion is recorded with the failure that caused
+  # it.
+  #
+  # The uploaded artefact is what the author double-clicks; that observation,
+  # and not this job's exit code, is what closes section 8.2 criterion 4.
+  bundle:
+    name: Windows bundle (RSK-13 probe, gated)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          python-version: "3.12"
+      - run: uv sync --all-extras --group packaging
+      - run: uv run pyinstaller --clean --noconfirm packaging/nanopnp-probe.spec
+      # One process importing PySide6, QtWebEngineWidgets, ngsolve, netgen and
+      # ngsolve.webgui, constructing a QWebEngineView over a real webgui scene
+      # and reading the CON-11 licence notice out of the bundle.
+      - run: dist/nanopnp-probe/nanopnp-probe.exe --selftest
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nanopnp-probe-windows
+          path: dist/nanopnp-probe
+          if-no-files-found: error
 
   # Tier 3 is RECORDED, NOT GATED (section 7.1, section 7.6): `continue-on-error`
   # is the whole point, and removing it would make a per-cent-level discrepancy
