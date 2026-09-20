@@ -1479,14 +1479,24 @@ pointing at the Nanoscale paper and the software DOI (CON-14).
 
 Decision: Python core, PySide6 (LGPL-3) shell, NGSolve webgui in a `QWebEngineView` for field
 rendering, and a background solver process communicating over a queue so the interface stays
-responsive and can show live convergence. Packaged with briefcase or conda-constructor. The
-graphical surface grows from Phase 1 onward.
+responsive and can show live convergence. Packaged with PyInstaller, briefcase or
+conda-constructor. The graphical surface grows from Phase 1 onward.
 
 | Alternative | Assessment |
 |---|---|
 | PyQt6 shell | Rejected: GPL-3 only |
-| Local web application: FastAPI plus browser frontend wrapped in `pywebview` | On the table. Identical core, different shell; it would serve a future hosted version and works over an SSH port-forward to HPC, at the cost of feeling less native. The choice may wait until Phase 1 provided the stage interface stays clean |
+| Local web application: FastAPI plus browser frontend wrapped in `pywebview` | **Rejected, 20 September 2026**, closing the deferral below. The stage interface did stay clean — `run_case` takes a `Progress` callback and a `CancelToken`, and every stage is introspectable without importing it (FR-27) — so the alternative remained available and was declined on its own merits: it buys a hosted future and an SSH port-forward this project has no requirement for, and pays in a second rendering path for the same webgui scene. Originally recorded as "on the table… the choice may wait until Phase 1", which is where it was made |
 | Defer the interface to a terminal phase | Rejected on two failure modes: an interface bolted on at the end exposes the API's accidental structure rather than the user's workflow, and a nine-month gap before any non-programmer touches the tool is a nine-month gap in shaping feedback |
+
+NOTE (packaging, amended 20 September 2026). The redistributable bundle SHALL be built one-**dir**
+rather than one-file, for two independent reasons. PySide6 and Qt are used under the LGPL option
+(CON-09), which requires that a recipient be able to replace the covered libraries; a directory of
+shared libraries satisfies that plainly. And Qt WebEngine runs a separate helper executable, which a
+one-file extractor must locate at runtime inside a temporary directory. The bundle SHALL carry the
+licence notice CON-11 requires, stating that the bundle as a whole is distributed under GPL-2+
+because its default linear solver is, while the library itself remains BSD-3. The background solver
+process SHALL be started with the `spawn` start method: it is the only one Windows has, and a forked
+child would inherit both the parent's Qt event loop and its already-imported numerical libraries.
 
 Consequences: every pipeline stage must be independently invocable, cancellable, progress-reporting
 and introspectable (FR-27), which §5.1 requires on scientific grounds in any case, so the interface
@@ -2159,6 +2169,7 @@ archive, so the push gate is unaffected by whether it is present.
 | **VER-38** | Sweep dispatch and collection | A single-member dispatch exits with that member's own class for each of the case, gate, convergence and cancellation classes, and produces the same scalars run alone into an empty store as it does inside the sweep; a local multi-worker sweep exits `0` with a failed member present and nonzero under fail-fast; a member whose parent artefact is absent falls back to the full ladder and records the reason; the worker thread pinning is in place before the linear-algebra libraries are imported, asserted in a spawned process; the dataset round-trips to identical values, a failed member's quantities are absent rather than defaulted, and the rectification of an exactly-opposite bias pair equals the two-point ratio of §6.7 taken from the same two records. The dispatch and collection surface is verified at Tier 1; the equivalence of a member solved alone and the same member solved inside the sweep is a Tier 2 activity (FR-24, IF-02, FR-23) |
 | **VER-40** | Wall-distance admissibility and the correction driver clamp | Both wall forms are continuous across `d̄ = 0` and return their wall values for every non-positive sample, rather than the sign-reversed values the ion form's root at `−P₂` would otherwise give, on the numeric and the symbolic evaluation path alike; a distance field whose minimum falls below the NUM-34 threshold aborts naming the gate, the measured minimum, its location and the fraction of samples below zero, and one above the threshold passes; the field gated is the mollified one wherever NUM-31's smoothing is applied, and a configuration activating no wall correction is not gated; and a mesh coarse enough to violate the gate is refused rather than returning the current whose two extraction routes disagree by 40 %, while a mesh that passes agrees between the routes to better than the NUM-26 tolerance. The clamp and the gate diagnostic are verified at Tier 1, on the correction functions and one field; the route-agreement half needs a converged pair and is a Tier 2 activity (PHY-02, NUM-34, NUM-26, QR-04, QR-12) |
 | **VER-41** | Stabilisation terms, the mode registry and the `Pe_h` diagnostic | The element size the stabilisation parameters are defined against is asserted elementwise against its measured convention rather than assumed, so a backend that changed it fails here rather than retuning the mode in silence; the registry lists exactly the modes of §5.3.1 and refuses an unknown name listing them; the `none` entry produces an assembled residual *identical* to the unstabilised one, asserted on the vector and not on the mode string; the streamline parameter takes both branches of `ψ(q) = min(q, 1)` and is continuous at the crossover; the crosswind viscosity is exactly zero on every element at or below the Péclet number its tuning constant sets, positive on one above it, and bounded by `D_i(C Pe_K − 1)`; the crosswind projector annihilates the advective velocity and is idempotent; the crosswind, streamline and grad-div terms request the integration orders of NUM-15 and the `1/r` minimum of NUM-07 respectively, asserted on the quadrature request rather than on a number; an equal-order velocity–pressure pair is refused in every mode that supplies no flow stabilisation, naming both inf-sup and the mode that would permit it, and accepted in the mode that does; a velocity order left unset reproduces the previous two-order model exactly; the `Pe_h` diagnostic warns naming the species, the value and its `(r, z)`, is silent below the threshold, and runs in the unstabilised mode; and every mode's **linearisation** is finite at the zero-wind cold state `φ̃ = 0`, `c̃_i = 1`, `u̅ = 0`, asserted on the assembled Jacobian entries rather than on the residual, because the residual is finite there in every mode and only the linearisation is not (NUM-03, NUM-11, NUM-12, NUM-14, NUM-15, QR-12) |
+| **VER-43** | Desktop shell, schema-generated editor, solver process and packaging probe | The schema walk enumerates exactly the editable dotted paths of `nanopnp/case/v1`, asserted in both directions so that a field added later fails this test rather than becoming silently uneditable, and the switch classification of FR-25 is checked against that same walk rather than a second one; the shell's view-model layer imports neither PySide6 nor NGSolve, asserted on `sys.modules` in a fresh process, and no `PyQt` module is reachable from any import path the shell takes (CON-09); every option the editor offers comes from the schema's own declared type or from a live registry, so no value set is written in `gui/`; a value the schema refuses is refused at the field before any substitution, naming the path, the value and the declared type, and a document the registries refuse produces the same diagnostic text the command line prints for the same file; run control drives the case through a **spawned** process, forwards a monotone completion fraction ending at 1, and cancels through a token the child honours, a cancelled run writing no artefact; a failed run reports the §3.1 exit class the command line would return for the same case; and the packaging probe imports PySide6, `QtWebEngineWidgets`, NGSolve, Netgen and `ngsolve.webgui` in one process, its bundle carrying the CON-11 licence notice (IF-09, QR-11, FR-27, CON-09, CON-11, RSK-13, §8.2 criterion 4 as amended by A4) |
 
 ### 7.3 Tier 2 analytic benchmarks
 
@@ -2399,8 +2410,10 @@ disagreement at the per-cent level is expected for the reasons in §7.4.
 | A1 | Criterion 1 stands in full, including VER-19 to VER-22. Those four benchmarks require an embedded body, so Phase 0 SHALL implement a rigid analyte body of revolution and the domain-form force integral of NUM-28 to the extent the benchmarks exercise them | Brings part of FR-21 and FR-22 forward from v1.0 into the spike, and verifies RSK-04 — a near-cancellation of two approximately 10 pN terms — against analytic results at the earliest point at which it can be verified at all. The case-file surface for analytes remains v1.0 work |
 | A2 | Criterion 4, the PySide6 and `webgui` Windows bundle, is deferred out of Phase 0 and is recorded as deliberately unmet | RSK-13 (desktop packaging defeated by a binary dependency) stays open and undetected for longer than ADR-004 intends. The GUI track of §8.1 resumes at Phase 1 |
 | A3 | The Phase 0 COMSOL comparison is deferred in full to Phase 1, together with the Tier 3 harness, the export contract and reference-set generation (VAL-03) | Phase 0 verifies against analytic solutions only. This tightens rather than weakens the gate, criterion 1 being the criterion that localises an error to a single term; §8.2 already excluded the comparison from the gate |
+| A4 | **Added 20 September 2026.** Criterion 4 is discharged in Phase 1, and how: a gated `windows-latest` continuous-integration job SHALL build the bundle on every push from a probe application that imports PySide6, `QtWebEngineWidgets`, NGSolve, Netgen and `ngsolve.webgui` in one process, and SHALL launch the built bundle headlessly. The criterion is closed by the author's observation that the uploaded bundle double-clicks, recorded with the build that produced it | Turns RSK-13 from a risk detected once into one detected on every push, which is what amendment A2 cost. A probe that omitted Qt WebEngine would retire RSK-13 without exercising the payload most likely to defeat packaging, so the import set is named here rather than left to the builder. "Double-clickable" remains a human observation: a process exit code on a headless runner does not establish it, and the criterion says desktop |
 
-Phase 0 is therefore met by criteria 1 to 3 as written, with criterion 4 explicitly outstanding.
+Phase 0 is therefore met by criteria 1 to 3 as written, with criterion 4 explicitly outstanding
+until amendment A4's build and observation have both happened.
 
 ### 8.3 Effort estimate
 
@@ -2600,7 +2613,7 @@ needed.
 | IF-06 | VER-27 |
 | IF-07 | VER-33 |
 | IF-08 | VER-24, VER-35 |
-| IF-09 | None yet |
+| IF-09 | VER-43 |
 | FR-01 | None yet |
 | FR-02 | None yet |
 | FR-03 | None yet |
@@ -2640,7 +2653,7 @@ needed.
 | QR-08 | VER-26 for manifest sufficiency; VER-34, VER-35 for QoI reproduction |
 | QR-09 | None yet |
 | QR-10 | None yet |
-| QR-11 | None yet |
+| QR-11 | VER-43 |
 | QR-12 | VER-10, VER-32, VER-40, VER-41 |
 | QR-13 | None yet |
 | QR-14 | VER-03 |
@@ -2653,16 +2666,17 @@ needed.
 | CON-06 | None yet |
 | CON-07 | None yet |
 | CON-08 | §6.6 measurement table (§8.2 criterion 3, discharged) |
-| CON-09 | None yet |
+| CON-09 | VER-43 (no PyQt module is reachable from the shell's import paths) |
 | CON-10 | VER-27 (the default ingestion path imports no Gmsh) |
 | CON-11 | §6.6 measurement table — measured; the conflict it exposed is resolved by the 2 September 2026 amendment to CON-11 and ADR-003 |
 | CON-12 | None yet |
 | CON-13 | None yet |
 | CON-14 | None yet |
 
-Coverage: 38 of the 67 requirements in §3 have a specified activity; 29 are recorded as "none yet",
+Coverage: 44 of the 67 requirements in §3 have a specified activity; 23 are recorded as "none yet",
 predominantly interface, portability, licensing and documentation requirements whose demonstration
-is by inspection rather than by test.
+is by inspection rather than by test. Recounted 20 September 2026 against the table itself: the
+previous figures, 38 and 29, had drifted by three rows before IF-09, QR-11 and CON-09 moved.
 
 ---
 

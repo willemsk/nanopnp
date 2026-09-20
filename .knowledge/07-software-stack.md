@@ -243,8 +243,41 @@ everything the round trip does, and changing the moment an edge moves group.
 |---|---|---|
 | **PySide6** 6.11.1 | LGPL-3 OR GPL-2 OR GPL-3 | **Use this.** LGPL option means no licence conflict |
 | PyQt6 | **GPL-3 only** | Avoid unless the project is GPL |
-| `PySide6.QtWebEngineWidgets.QWebEngineView` | — | Imports cleanly; hosts NGSolve webgui **[tested]** |
-| briefcase / conda-constructor / PyInstaller | — | Packaging candidates; probe early |
+| `PySide6.QtWebEngineWidgets.QWebEngineView` | — | Hosts NGSolve webgui **[tested]**. The earlier "imports cleanly" held on a machine with the GL libraries present; see the caveat below, which is a property of the machine and not of the wheel |
+| PyInstaller | — | **Chosen** for the bundle, one-dir (ADR-004, amended 20 September 2026) |
+| briefcase / conda-constructor | — | The other two candidates; not used |
+
+### PySide6 imports are a system-library question, not a wheel question **[tested]**
+
+Measured 20 September 2026, PySide6 6.11.2, in the Linux development container:
+
+```
+from PySide6 import QtWidgets            -> ImportError: libEGL.so.1: cannot open shared object file
+from PySide6 import QtWebEngineWidgets   -> ImportError: libEGL.so.1: cannot open shared object file
+```
+
+`QtWidgets` itself, not only WebEngine. The wheel installs perfectly and `import PySide6` succeeds;
+a GL-dependent payload then dlopens and fails. This is the same failure class the gmsh wheel has
+(`OSError: libGLU.so.1`, handled at `tests/tier1/test_mesh_quality.py`), which is why the skip idiom
+for either is `except (ImportError, OSError)` and never `pytest.importorskip`.
+
+Consequence for testing a GUI: anything that must run on the push gate has to be Qt-free. Widget
+construction belongs on the `windows-latest` and `macos-latest` matrix jobs, where Qt's platform
+plugin works unaided and `QT_QPA_PLATFORM=offscreen` is all that is needed. Installing system
+packages on a Linux gate job to work around this buys Linux coverage at the price of a portability
+promise per runner image.
+
+### `nanopnp.io.case` costs 622 ms and pulls in neither NGSolve nor NumPy **[tested]**
+
+Measured 20 September 2026 on the development interpreter (3.12). After `import nanopnp.io.case`,
+`"ngsolve" in sys.modules` and `"numpy" in sys.modules` are both `False`. The cost is pydantic and
+PyYAML building the `nanopnp/case/v1` model tree, paid once.
+
+So a caller can enumerate, display and validate an entire case document without the solver — which
+is what lets a schema-generated editor stay near the CLI's 56 ms stage-introspection budget in
+spirit, with NGSolve imported only in whatever process actually solves. Note that `io/case.py` does
+import `nanopnp.physics.models` at module scope for its registry check; that module defers its own
+NGSolve import, which is why the number above holds.
 
 ---
 

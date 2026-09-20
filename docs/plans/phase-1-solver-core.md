@@ -1,6 +1,6 @@
 # Phase 1 (Solver core): the production solver on an externally supplied mesh
 
-**Status: WP7–WP13 delivered; WP14 not started.** Written 2 September 2026, after Phase 0
+**Status: WP7–WP13 delivered; WP14 planned, not started; WP15 scoped.** Written 2 September 2026, after Phase 0
 (WP1–WP6) and its consolidation (WP-A1, WP-B1, WP-B2, WP-C1). It inherited a verified physics core
 and a bare pipeline: tiers 1 and 2 green, `mypy --strict` and `ruff` clean, and `io/`, `sweep/`,
 `charge/`, `structure/`, `density/`, `symmetry/`, `gui/` still empty reserved slots. `io/` is filled
@@ -41,7 +41,8 @@ dependency, open since amendment A2 deferred Phase-0 criterion 4), **RSK-14** (C
 before the reference set is archived — the author has confirmed access, so VAL-03 is live work this
 phase), and **RSK-09** (the reference carries no mesh convergence study, so a Tier-3 discrepancy may
 originate in the reference; VAL-04 bounds it while the licence lasts). **RSK-15** (GUI scope drawing
-effort from validation) becomes live for the first time: WP14 is the largest single package here.
+effort from validation) becomes live for the first time: the GUI increment is the largest single
+piece of work here, and is split into WP14 and WP15 for that reason.
 
 Deliberately excluded: the structure → density → contour → CAD pipeline (Phase 2), the PDB2PQR
 charge pipeline (Phase 3), and everything tagged v1.0 or post-1.0 in §3.2. Phase 1 *consumes*
@@ -748,20 +749,51 @@ comparison in `attribute()`. Evidence:
 `.knowledge/08-validation-benchmarks.md` for the measured ladder and the two-norm contrast;
 `.knowledge/06-numerics-fem.md` §8.4.1 for the forest severing.
 
-### WP14 — GUI increment
+### WP14 — The packaging probe and the desktop shell
 
-`gui/`, packaging configuration.
+`gui/`, packaging configuration. **Planned**: [`wp14-gui-shell-packaging-probe.md`](wp14-gui-shell-packaging-probe.md).
 
-The §8.1 Phase-1 increment in full: case editor generated from the frozen schema, run control, live
-convergence plot off the `damped_newton` callback, and the `webgui` field viewer in a
-`QWebEngineView`, with the solver in a background process (ADR-004). The packaging probe comes
-**first** in the package, not last: it is the RSK-13 detector that amendment A2 deferred out of Phase
-0, and a bundle that will not build is worth knowing about before the editor is written.
+The packaging probe comes **first** in the package, not last: it is the RSK-13 detector that
+amendment A2 deferred out of Phase 0, and a bundle that will not build is worth knowing about before
+the editor is written. Then the shell's first half — the case editor generated from the frozen
+schema, run control with the solver in a spawned background process (ADR-004), and a result panel
+over the WP10 run directory.
 
-Discharges **IF-09, QR-11**, closes the deferred Phase-0 criterion 4 and retires **RSK-13**.
-Constraint to record: a Windows bundle cannot be built or verified from the Linux development
-session, so that step needs the author's machine or a Windows CI runner, and the criterion stays
-outstanding until it has run there.
+Discharges the case-editing and run-control halves of **IF-09**, and **VER-43**; closes the deferred
+Phase-0 criterion 4 and retires **RSK-13**; discharges **CON-09** mechanically and carries
+**CON-11**'s licence notice into the bundle.
+
+**Split from the original single package, 20 September 2026.** The §8.1 increment was one work
+package here; it is now two, because it cannot be verified in one PR and because the data says where
+to cut. Run control needs only the `(fraction, message)` the `Progress` protocol already carries; a
+convergence plot needs the `NewtonStep` record, which `SolveStage._instrumented` currently forwards
+only inside a `:.3e`-formatted string. The first half consumes the FR-27 plumbing unchanged; the
+second half adds a hook to it. RSK-15 is the other reason: this was the largest single package in
+the phase.
+
+**Inherited by WP15, three things.** The probe establishes whether PySide6, Qt WebEngine and NGSolve
+bundle at all, so the viewer is built against a known answer rather than a hope. The view-model
+discipline — `gui/case_model.py`, `gui/run_model.py` and `gui/solver.py` import no PySide6, asserted
+on `sys.modules` — is what lets Tier 1 test the shell on every matrix job, and it applies to the
+convergence and viewer models too; measured 20 September 2026, `from PySide6 import QtWidgets` fails
+with `ImportError: libEGL.so.1` in the development container, so Qt cannot be constructed there at
+all. And the event union `gui/solver.py` defines is the channel a `NewtonStep` variant joins; WP15
+must add that variant rather than parse the residual out of a progress message.
+
+### WP15 — Live convergence and the field viewer
+
+`gui/`, `solve/stage.py`.
+
+The second half of the §8.1 Phase-1 increment: a structural `NewtonStep` hook on the solve stage,
+the live convergence plot fed from it across the process boundary, and the `webgui` field viewer in
+a `QWebEngineView` bound to a real solution. Completes **IF-09** and discharges **QR-11**; together
+with WP14 it meets the GUI half of Phase-1 criterion 5.
+
+Two facts it must design around, both from WP14. `on_step` is injected only when the rung's model is
+a `CoupledModel`, so the electrostatic rungs of the NUM-18 ladder emit no steps and a plot assuming
+a continuous stream across the ladder would show a gap it cannot explain. And `ngsolve.webgui` wants
+a live `GridFunction`, which lives in the *run* process; the IF-07 XDMF export WP10 writes is a P2
+node set for a reader, not a scene. Which of the two the viewer consumes is WP15's decision.
 
 ## Open decisions
 
@@ -769,7 +801,8 @@ outstanding until it has run there.
 |---|---|---|
 | OPN-05 | Pore-polygon vertex count: the specification says 196, the model report's geometry section says 190 for the pore and 196 for the whole geometry | **Closed, 5 September 2026.** The two counts count two objects (§5.2.1); the author designated the delivered 185-vertex table the geometry of record. §10 of the specification records it. |
 | VAL-03 export scope | Which frozen cases the reference set covers — the envelope corners at minimum, and whether the analyte case of §7.5.1 joins them | **Closed, 18 September 2026.** Five cases: 0.05 M and 3 M × ±200 mV, plus 0.5 M / +50 mV, in the validated ePNP-NS configuration. The §7.5.1 analyte case is excluded. VAL-04's pair is the published mesh and one uniform refinement, on the centre case. `SPECIFICATION.md` §7.4 is amended to it in the same commit as the WP13 plan. |
-| GUI packaging target | Whether the Windows bundle is built on the author's machine or on a Windows CI runner | **Open — for the author**, before WP14's probe. RSK-13 stays open until one of them runs. |
+| GUI packaging target | Whether the Windows bundle is built on the author's machine or on a Windows CI runner | **Closed, 20 September 2026.** A gated `windows-latest` CI job builds it on every push and uploads the artefact; the author double-clicks it once, and that observation closes Phase-0 criterion 4 and retires RSK-13. `SPECIFICATION.md` §8.2.1 gains amendment A4 in the same commit as the WP14 plan. |
+| GUI shell technology | ADR-004 left the FastAPI + `pywebview` local web application "on the table… the choice may wait until Phase 1" | **Closed, 20 September 2026: PySide6 native.** ADR-004 is amended in the same commit; the packaging tool is PyInstaller, one-dir. |
 | CON-11 / ADR-003 | Bundle default linear solver | **Closed, 2 September 2026.** UMFPACK, GPL-2+ obligation accepted and stated; the library stays BSD-3. `SPECIFICATION.md` CON-11, ADR-003 and §6.6 amended in this commit. |
 
 ## Verification
@@ -798,7 +831,11 @@ New verification activities this phase, each named for the requirement it discha
 | `tests/tier2/test_stabilised_mode.py` | 2 | NUM-14, NUM-15, VER-18 | MMS converges in the stabilised mode at a measured rate; the stabilised and unstabilised currents approach each other under refinement |
 | `tests/tier2/test_sweep.py` | 2 | FR-24 | A two-axis sweep warm-starts, collects, and reproduces the same QoIs as the same points run cold |
 | `tests/tier3/test_comsol_comparison.py` | 3 | VAL-01, VAL-02, VAL-04 | Relative L² per field and relative error per QoI against the archived goldens, decomposed by the §Design attribution ladder; recorded, not gated |
-| `tests/tier1/test_gui_viewmodels.py` | 1 | IF-09, QR-11 | The case editor's model round-trips a case through the schema; the convergence view consumes `NewtonStep` records. No test asserts pixels |
+| `tests/tier1/test_case_fields.py` | 1 | IF-09, IF-03, FR-25 | The schema walk enumerates exactly the editable dotted paths of the case schema, in both directions, and is the same walk the FR-25 switch classification is checked against |
+| `tests/tier1/test_gui_viewmodels.py` | 1 | VER-43, IF-09 | The editor's model round-trips a case through the schema and offers only what the schema and the live registries name; the run view-model's fraction is monotone and its failures carry the CLI's exit class; the layer imports no PySide6 and no NGSolve. No test asserts pixels |
+| `tests/tier1/test_gui_solver_process.py` | 1 | VER-43, FR-27 | A spawned run reports progress and finishes; a cancelled one writes no artefact |
+| `tests/tier1/test_gui_widgets.py` | 1 | VER-43, QR-11 | Widgets construct under `QT_QPA_PLATFORM=offscreen` and bind every schema field; skipped where Qt cannot be imported |
+| `tests/tier1/test_gui_probe.py`, CI job `bundle` | 1, — | VER-43, RSK-13 | The probe names the four binary payloads and the licence notice; a `windows-latest` job builds the bundle and launches it headlessly |
 
 The phase is complete when:
 
@@ -812,7 +849,8 @@ The phase is complete when:
    dataset, with a measured throughput figure against QR-06.
 5. **The GUI increment runs a case unaided** on the author's platform, and the packaging probe has
    either produced a double-clickable Windows bundle or named the binary dependency that defeats it
-   (RSK-13).
+   (RSK-13). Delivered across WP14 and WP15: WP14 closes the packaging half and the case-editing and
+   run-control halves of IF-09, WP15 the convergence and visualisation halves.
 
 ## End-of-phase report
 
