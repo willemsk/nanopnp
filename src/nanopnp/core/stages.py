@@ -56,6 +56,27 @@ class Progress(Protocol):
         """Report ``fraction`` in [0, 1], monotonically, ending at 1."""
 
 
+class StageHook(Protocol):
+    """Called before each stage of a pipeline walk, with the stage's position.
+
+    The structural counterpart of the ``"stage <name>"`` line
+    :func:`~nanopnp.io.run.run_document` reports through :class:`Progress`. Both
+    exist because they answer different questions and only one of them can be
+    answered honestly by a string: a progress bar wants a fraction and a caption,
+    and a caller that has to *act* on the stage — the desktop shell's run panel,
+    which shows which stage is running and how many are left — wants the name
+    and the position as data.
+
+    Recovering them by parsing the caption would make a display format into an
+    interface: the first person to widen it would move the panel without
+    touching it. The solve stage's ``on_rung`` callback is the same idea one
+    level down.
+    """
+
+    def __call__(self, name: str, index: int, total: int) -> None:
+        """Report that stage ``index`` of ``total`` (0-based) is about to run."""
+
+
 @runtime_checkable
 class CancelToken(Protocol):
     """Asked by a running stage whether the caller has asked it to stop."""

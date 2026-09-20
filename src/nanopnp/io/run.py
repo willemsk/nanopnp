@@ -37,6 +37,7 @@ from nanopnp.core.stages import (
     CancelToken,
     Progress,
     Stage,
+    StageHook,
     StageOption,
     check_cancelled,
     create,
@@ -600,6 +601,7 @@ def run_document(
     write: bool = True,
     progress: Progress | None = None,
     cancel: CancelToken | None = None,
+    on_stage: StageHook | None = None,
 ) -> RunResult:
     """Walk the pipeline for one validated case and return what it produced.
 
@@ -643,6 +645,10 @@ def run_document(
         Each stage's own fraction is mapped into its share of the total.
     cancel
         Checked before every stage and threaded into each of them.
+    on_stage
+        Called before each stage with its name and its position in the walk. The
+        same transition ``progress`` reports as text, given as data, so a caller
+        that has to act on it does not parse a caption (:class:`~nanopnp.core.stages.StageHook`).
 
     Returns
     -------
@@ -674,6 +680,8 @@ def run_document(
     for index, name in enumerate(stages):
         check_cancelled(cancel, f"stage {name!r}")
         low, high = offsets[index], offsets[index + 1]
+        if on_stage is not None:
+            on_stage(name, index, len(stages))
         report(progress, low, f"stage {name}")
         started = time.perf_counter()
         hits = walk.store.hits
@@ -740,6 +748,7 @@ def run_case(
     write: bool = True,
     progress: Progress | None = None,
     cancel: CancelToken | None = None,
+    on_stage: StageHook | None = None,
 ) -> RunResult:
     """Load a case file and run it.
 
@@ -752,7 +761,7 @@ def run_case(
     ----------
     path
         The case file.
-    store, upto, only, options, arguments, workspace, write, progress, cancel
+    store, upto, only, options, arguments, workspace, write, progress, cancel, on_stage
         As :func:`run_document` documents them.
     """
     source = Path(path)
@@ -769,4 +778,5 @@ def run_case(
         write=write,
         progress=progress,
         cancel=cancel,
+        on_stage=on_stage,
     )

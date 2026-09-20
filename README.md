@@ -24,6 +24,7 @@ is not yet implemented.
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | How to report a finding, set up, and get a change accepted |
 | [`data/corrections/`](data/corrections) | Fitted correction parameters, one file per electrolyte |
 | [`docs/validation/`](docs/validation) | The Tier-3 comparison surface: the frozen cases, the probe grid, and the COMSOL export contract |
+| [`packaging/`](packaging) | The desktop bundle: its PyInstaller recipe and its licence notice |
 
 ## Quick start
 
@@ -49,3 +50,8 @@ Participation is under the [Code of Conduct](CODE_OF_CONDUCT.md).
 ## Licence
 
 BSD-3-Clause. See [`LICENSE`](LICENSE) and [`CITATION.cff`](CITATION.cff).
+
+The **desktop bundle** is a different matter: its default direct linear solver is SuiteSparse
+UMFPACK, which is GPL-2+ and ships inside the NGSolve wheel, so the bundle as a whole is
+distributed under GPL-2+ while the library stays BSD-3. See
+[`packaging/LICENSES-BUNDLE.md`](packaging/LICENSES-BUNDLE.md), which travels with every bundle.
