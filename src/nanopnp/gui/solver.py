@@ -263,13 +263,10 @@ def _worker(request: RunRequest, events: Queue[RunEvent], cancel: EventType) -> 
     except CancelledError as cancelled:
         events.put(Cancelled(where=str(cancelled)))
     except BaseException as error:
-        events.put(
-            Failed(
-                exit_code=classify(error),
-                error=type(error).__qualname__,
-                message=str(error),
-            )
-        )
+        # :func:`failure_event`, not a second copy of it: the Tier-1 test that
+        # pins the §3.1 codes calls that function, and a copy here would be the
+        # path that actually runs going untested.
+        events.put(failure_event(error))
     else:
         events.put(Finished(directory=str(result.directory)))
 

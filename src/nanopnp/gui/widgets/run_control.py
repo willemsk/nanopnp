@@ -36,6 +36,7 @@ class RunControlWidget(QtWidgets.QWidget):
         super().__init__(parent)
         self._control = control
         self._settled = True
+        self._shown = 0
 
         self._start = QtWidgets.QPushButton("Run")
         self._cancel = QtWidgets.QPushButton("Cancel")
@@ -78,9 +79,18 @@ class RunControlWidget(QtWidgets.QWidget):
         self._control.cancel()
 
     def began(self) -> None:
-        """Tell the panel a run has just been started."""
+        """Tell the panel a run has just been started.
+
+        Called by the window once :meth:`~nanopnp.gui.run_model.RunControl.start`
+        has spawned the child, which is *before* the child has posted anything.
+        The buttons follow this flag rather than the model's state for exactly
+        that reason: between the spawn and the first :class:`Started` the model
+        still reads ``idle``, and a panel that enabled "Run" there would let a
+        second click reach a control that already has a run in flight.
+        """
         self._settled = False
         self._log.clear()
+        self._shown = 0
         self.refresh()
 
     def refresh(self) -> RunModel:
@@ -100,18 +110,49 @@ class RunControlWidget(QtWidgets.QWidget):
             if stage is None
             else f"{model.state}: stage {stage.index + 1} of {stage.total}, {stage.name}"
         )
-        shown = self._log.toPlainText().splitlines()
-        for line in model.log[len(shown) :]:
-            self._log.appendPlainText(line)
-        running = model.state == "running"
-        self._start.setEnabled(not running)
-        self._cancel.setEnabled(running)
+        self._show_log(model)
         if model.settled and not self._settled:
             self._settled = True
             self.settled.emit()
+        # In flight from the panel's own point of view, which is what the user
+        # is acting on: a run is in flight from the moment the window says so
+        # until the model settles, and neither edge coincides with an event.
+        in_flight = not self._settled
+        self._start.setEnabled(not in_flight)
+        self._cancel.setEnabled(in_flight)
         return model
+
+    def _show_log(self, model: RunModel) -> None:
+        """Append the log lines the panel has not shown yet.
+
+        Counted in *entries* and not in the widget's own physical lines: a QR-12
+        gate diagnostic names the gate, the quantity and its location and is
+        several lines long, so one entry can add four to the widget. Counting
+        rendered lines would then leave the panel permanently ahead of the model
+        and silently drop every line after the first multi-line one.
+        """
+        if len(model.log) < self._shown:  # a fresh model: a new run's log
+            self._log.clear()
+            self._shown = 0
+        for line in model.log[self._shown :]:
+            self._log.appendPlainText(line)
+        self._shown = len(model.log)
 
     @property
     def control(self) -> RunControl:
         """The view-model this panel drives."""
         return self._control
+
+    def log_text(self) -> str:
+        """Return the log the panel is showing, for a test."""
+        return str(self._log.toPlainText())
+
+    @property
+    def can_start(self) -> bool:
+        """Whether the panel is currently offering to start a run."""
+        return bool(self._start.isEnabled())
+
+    @property
+    def can_cancel(self) -> bool:
+        """Whether the panel is currently offering to cancel one."""
+        return bool(self._cancel.isEnabled())

@@ -32,6 +32,7 @@ from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
 from nanopnp.cli.errors import EXIT_OK
 from nanopnp.gui.solver import (
+    Cancelled,
     Failed,
     Finished,
     Progress,
@@ -41,15 +42,11 @@ from nanopnp.gui.solver import (
     Stage,
     Started,
 )
-from nanopnp.io.manifest import GROUPS, MANIFEST_FILENAME
+from nanopnp.io.manifest import DEVIATIONS_GROUP, MANIFEST_FILENAME
 from nanopnp.io.run import RUN_RECORD_FILENAME
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from collections.abc import Iterable, Mapping
-
-DEVIATIONS_GROUP = GROUPS[-1]
-"""The Deviations group's key, taken from the manifest's own list of the eight
-groups of §5.3.3 rather than written out again here."""
 
 __all__ = [
     "DEVIATIONS_GROUP",
@@ -200,11 +197,19 @@ class RunModel:
             self.exit_code = event.exit_code
             self.diagnosis = event.message
             self._say(f"failed ({event.error}, exit {event.exit_code}): {event.message}")
-        else:
+        elif isinstance(event, Cancelled):
             self.state = "cancelled"
             self.exit_code = event.exit_code
             self.diagnosis = event.where
             self._say(f"cancelled: {event.where}")
+        else:
+            # Named rather than caught by a trailing ``else``: WP15 widens
+            # ``RunEvent`` with a ``NewtonStep`` variant, and a fall-through
+            # would have marked the first Newton step of every run "cancelled".
+            raise TypeError(
+                f"{type(event).__name__} is a RunEvent this model does not apply; a variant "
+                "added to the union needs a branch here rather than a default"
+            )
 
     def _say(self, message: str) -> None:
         """Append one line to the log."""

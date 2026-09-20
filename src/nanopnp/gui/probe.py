@@ -95,9 +95,12 @@ constructed by the time it begins.
 def licence_notice() -> Path:
     """Return the path of the bundle's licence notice.
 
-    Searched where PyInstaller puts a collected data file first, then in the
-    repository, so that the probe reads the same notice whether it was launched
-    from the bundle or from a checkout.
+    Searched where PyInstaller puts a collected data file first, then beside the
+    installed package, then in the repository, so that the probe reads the same
+    notice whether it was launched from the bundle, from a wheel or from a
+    checkout. ``nanopnp-probe`` is a declared console script, so the wheel
+    location is not optional: without it the entry point would raise for every
+    installation that is not a source tree.
 
     Returns
     -------
@@ -115,6 +118,8 @@ def licence_notice() -> Path:
     candidates = [
         # PyInstaller's extraction root, set on the frozen executable only.
         Path(getattr(sys, "_MEIPASS", sys.prefix)) / LICENCE_NOTICE_FILENAME,
+        # Force-included into the wheel beside the package (pyproject.toml).
+        PACKAGE_ROOT / LICENCE_NOTICE_FILENAME,
         PACKAGE_ROOT.parents[1] / "packaging" / LICENCE_NOTICE_FILENAME,
     ]
     for candidate in candidates:

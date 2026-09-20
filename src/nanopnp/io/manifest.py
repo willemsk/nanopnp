@@ -54,6 +54,14 @@ MANIFEST_FILENAME = "manifest.json"
 CASE_FILENAME = "case.yaml"
 """Name the embedded case text is written beside it under."""
 
+DEVIATIONS_GROUP = "deviations"
+"""The Deviations group's key (FR-25, section 5.3.3).
+
+Named rather than left to a position in :data:`GROUPS`, because a reader that
+wants *this* group wants it by name: a ninth group appended to the tuple would
+silently re-point a ``GROUPS[-1]`` and make every manifest unreadable to it.
+"""
+
 GROUPS: tuple[str, ...] = (
     "inputs",
     "environment",
@@ -62,7 +70,7 @@ GROUPS: tuple[str, ...] = (
     "materials",
     "solver",
     "stabilisation",
-    "deviations",
+    DEVIATIONS_GROUP,
 )
 """The eight field groups of section 5.3.3, in the order that table lists them."""
 

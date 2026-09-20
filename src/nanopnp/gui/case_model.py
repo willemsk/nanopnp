@@ -11,9 +11,10 @@ apply — a run whose FR-25 manifest describes something that never happened
 **No Qt, and no NGSolve.** Nothing in this module imports PySide6, and nothing
 imports a stage. That is not tidiness: ``PySide6.QtWidgets`` does not import at
 all on the Linux push gate (`.knowledge/07-software-stack.md` §5), so a
-view-model that touched Qt could only be tested where Qt happens to work, and
-``import nanopnp.io.case`` costs 622 ms against NGSolve's ~370 ms *more* —
-browsing a case should not pay for a solver.
+view-model that touched Qt could only be tested where Qt happens to work. And
+``import nanopnp.io.case`` costs about what one NGSolve import costs — 253 ms
+warm against NGSolve's ~370 ms, and NGSolve's is *on top* — so browsing a case
+should not pay for a solver.
 
 **Validation happens twice, and the second time is the whole document.**
 :meth:`CaseEditor.stage` checks one value against the type the schema declares at
@@ -356,8 +357,19 @@ class CaseEditor:
         Raises
         ------
         ValueError
-            If this editor was not opened from a file; see :meth:`save`.
+            If this editor was not opened from a file; see :meth:`save`. Or if
+            edits are still staged: :meth:`save` writes :attr:`document`, which
+            does not carry them, so saving here would hand the caller a file
+            that is missing what the user typed — and then run it. The caller
+            commits first, and sees the whole-document diagnostic if the commit
+            is refused.
         """
+        if self._edits:
+            raise ValueError(
+                "this case has uncommitted edits; commit them before saving, because the file "
+                f"would otherwise be written without {', '.join(sorted(self._edits))} and the "
+                "run made from it would not be the run that was asked for"
+            )
         if self.source is None or self.dirty:
             return self.save()
         return self.source

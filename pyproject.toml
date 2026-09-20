@@ -87,6 +87,10 @@ packages = ["src/nanopnp"]
 # location.
 [tool.hatch.build.targets.wheel.force-include]
 "data" = "nanopnp/data"
+# CON-11's bundle licence notice. `nanopnp-probe` is a declared console script
+# and `probe.licence_notice()` refuses to start without the notice, so it has to
+# travel in the wheel as well as in the PyInstaller bundle.
+"packaging/LICENSES-BUNDLE.md" = "nanopnp/LICENSES-BUNDLE.md"
 
 [tool.uv]
 default-groups = ["dev"]
