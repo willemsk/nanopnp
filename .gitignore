@@ -31,6 +31,10 @@ MANIFEST
 #   before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
+# ...except the hand-written one-dir recipe for the RSK-13 packaging probe,
+# which is a source file of this repository and is what the gated `bundle`
+# job builds (SPECIFICATION.md section 8.2.1 A4).
+!packaging/nanopnp-probe.spec
 
 # Installer logs
 pip-log.txt
