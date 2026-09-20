@@ -30,8 +30,10 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import yaml
 from PySide6 import QtWidgets
 
+from nanopnp.cli.errors import classify
 from nanopnp.gui.case_model import CaseEditor
 from nanopnp.gui.run_model import RunControl
 from nanopnp.gui.widgets import CaseEditorWidget, ResultWidget, RunControlWidget
@@ -92,10 +94,16 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         try:
             path = editor.ensure_saved()
-        except (ValueError, OSError, CaseValidationError) as error:
+        except (ValueError, OSError) as error:
+            # ``CaseValidationError`` is a ``ValueError`` and is caught with it.
             self.statusBar().showMessage(str(error))
             return
         self._control.start(path, store=self._store)
+        # The previous run's numbers are not this run's, and the deviations
+        # beside them are the configuration that produced *those* numbers
+        # (FR-25). The panel is emptied before the new run rather than left
+        # showing the old one until it settles.
+        self._result.show_outcome(None)
         self._run.began()
         self.statusBar().showMessage(f"running {path}")
 
@@ -120,9 +128,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     Returns
     -------
     int
-        The Qt event loop's exit status, or ``1`` when the case file named on
-        the command line is not a valid case — refused here, in the words the
-        command line uses, rather than opened into an empty form.
+        The Qt event loop's exit status, or the §3.1 exit class
+        :func:`~nanopnp.cli.errors.classify` gives when the case file named on
+        the command line cannot be opened — refused here, in the words and with
+        the code the command line uses, rather than opened into an empty form.
+        A file that is not there and a file that is not YAML are refusals as
+        much as one the schema rejects; ``classify`` gives each the code
+        ``nanopnp run`` gives it for the same file, rather than a diagnostic
+        for one of them and a traceback for the other two.
     """
     parser = argparse.ArgumentParser(
         prog="nanopnp-gui",
@@ -144,9 +157,9 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     try:
         editor = CaseEditor.open(arguments.case)
-    except CaseValidationError as error:
-        print(error, file=sys.stderr)
-        return 1
+    except (CaseValidationError, OSError, yaml.YAMLError) as error:
+        print(f"nanopnp-gui: {error}", file=sys.stderr)
+        return classify(error)
 
     if arguments.selftest:
         os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")

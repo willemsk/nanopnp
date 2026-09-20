@@ -98,7 +98,11 @@ jobs:
         with:
           name: nanopnp-probe-windows
           path: dist/nanopnp-probe
-          if-no-files-found: error
+          # `warn`, as the tier3 upload below does, because this step runs
+          # `if: always()`: the only way to reach it with nothing to upload is a
+          # build that already failed loudly, and `error` would add a second red
+          # step pointing away from it.
+          if-no-files-found: warn
 
   # Tier 3 is RECORDED, NOT GATED (section 7.1, section 7.6): `continue-on-error`
   # is the whole point, and removing it would make a per-cent-level discrepancy

@@ -26,6 +26,8 @@ from pathlib import Path
 import pytest
 
 from nanopnp.gui.case_model import CaseEditor
+from nanopnp.gui.run_model import RunControl
+from nanopnp.gui.solver import Failed, Finished, Progress, Started
 from nanopnp.io.case import case_fields, load_case
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
@@ -34,7 +36,7 @@ try:
     from PySide6 import QtWidgets
 
     from nanopnp.gui.app import MainWindow
-    from nanopnp.gui.widgets import CaseEditorWidget
+    from nanopnp.gui.widgets import CaseEditorWidget, RunControlWidget
 except (ImportError, OSError) as error:  # pragma: no cover - platform dependent
     pytest.skip(f"PySide6 cannot be constructed here: {error}", allow_module_level=True)
 
@@ -173,3 +175,65 @@ def test_if09_the_window_assembles_its_three_panels(
     model = run.refresh()
     assert model.state == "idle"
     assert model.fraction == 0.0
+
+
+def test_if09_the_run_log_shows_every_entry_including_a_multi_line_one(
+    application: QtWidgets.QApplication,
+) -> None:
+    """A QR-12 diagnostic spanning four lines does not stop the log.
+
+    The panel counts log *entries*, not the rendered lines of its own widget. A
+    gate abort names the gate, the offending quantity and its location, so one
+    entry routinely renders as several; counting rendered lines would leave the
+    panel permanently ahead of the model and drop every line after the first
+    multi-line one — with nothing to say it had.
+    """
+    panel = RunControlWidget(RunControl())
+    model = panel.control.model
+    model.consume([Started(case="case.yaml", store=None)])
+    panel.refresh()
+    model.consume(
+        [
+            Failed(
+                exit_code=4,
+                error="MeshQualityError",
+                message="mesh quality gate failed:\n  min SICN 0.12 at (1.0, 2.0)\n  minimum 0.3",
+            )
+        ]
+    )
+    panel.refresh()
+    model.consume([Progress(fraction=1.0, message="the line after the diagnostic")])
+    panel.refresh()
+
+    shown = panel.log_text()
+    assert "min SICN 0.12" in shown
+    assert "the line after the diagnostic" in shown
+
+
+def test_if09_run_is_disabled_and_cancel_enabled_from_the_moment_a_run_begins(
+    application: QtWidgets.QApplication,
+) -> None:
+    """The buttons follow the panel, not the model's state.
+
+    ``RunControl.start`` spawns the child and returns; the model reads ``idle``
+    until the child posts its first event, which is a ``spawn`` re-import of
+    NGSolve away. A panel keyed on ``state == "running"`` would leave "Run"
+    enabled across that window — a second click reaching a control that already
+    has a run in flight, which raises — and leave "Cancel" disabled exactly
+    while the slowest part of starting up is happening.
+    """
+    panel = RunControlWidget(RunControl())
+    assert panel.can_start
+    assert not panel.can_cancel
+
+    panel.began()
+    assert panel.control.model.state == "idle"
+    assert not panel.can_start
+    assert panel.can_cancel
+
+    panel.control.model.consume(
+        [Started(case="case.yaml", store=None), Finished(directory="runs/probe")]
+    )
+    panel.refresh()
+    assert panel.can_start
+    assert not panel.can_cancel

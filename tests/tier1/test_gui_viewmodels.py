@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, get_args, get_origin
 
@@ -253,6 +254,25 @@ def test_if09_running_an_unchanged_case_does_not_rewrite_the_file(case_file: Pat
     assert not editor.dirty
 
 
+def test_if09_saving_refuses_while_an_edit_is_still_staged(case_file: Path) -> None:
+    """A staged edit is not in the document, so it must not be silently dropped.
+
+    :meth:`~nanopnp.gui.case_model.CaseEditor.save` writes ``document``, and a
+    staged edit is by construction not in it yet. Saving over the file with the
+    edit still pending would leave the user looking at a form that says ``0.2``
+    and a run, made from that very file, at ``0.1`` — §5.3.1's unit of
+    reproducibility reproducing something nobody asked for.
+    """
+    editor = CaseEditor.open(case_file)
+    editor.stage("boundary_conditions.bias_V", 0.2)
+    with pytest.raises(ValueError, match="uncommitted edits"):
+        editor.ensure_saved()
+
+    editor.commit()
+    assert editor.ensure_saved() == case_file
+    assert load_case(case_file).boundary_conditions.bias_V == pytest.approx(0.2)
+
+
 def test_if09_a_field_absent_from_the_document_reads_as_absent(case_file: Path) -> None:
     """A field of the schema the case does not carry is ``ABSENT``, never ``None``.
 
@@ -345,3 +365,23 @@ def test_if09_failure_carries_the_cli_exit_class() -> None:
     assert cancelled.exit_code == EXIT_CANCELLED
     assert "stage 'solve'" in cancelled.diagnosis
     assert cancelled.outcome() is None
+
+
+def test_if09_an_event_the_model_does_not_apply_is_refused_not_read_as_cancelled() -> None:
+    """A variant added to ``RunEvent`` fails here rather than settling the run.
+
+    WP15 widens the union with a ``NewtonStep``. Dispatching the terminal state
+    from a trailing ``else`` would have made the first Newton step of every run
+    read as a cancellation — a run that produced a result reported as one that
+    wrote nothing, which is the shape of wrong answer QR-12 exists to refuse.
+    """
+
+    @dataclass(frozen=True)
+    class _FutureVariant:
+        residual: float
+
+    model = RunModel()
+    model.consume([Started(case="case.yaml", store=None)])
+    with pytest.raises(TypeError, match="_FutureVariant"):
+        model.consume([_FutureVariant(residual=1e-3)])  # type: ignore[list-item]
+    assert model.state == "running"
