@@ -6,12 +6,19 @@ nobody thought to enumerate is a switch the manifest never mentions, and the
 result reads as though it were produced by the validated model when it was not.
 
 So the load-bearing test here is not that a manifest can be built. It is
-:func:`test_fr25_every_switch_typed_field_of_the_schema_is_classified`, which
-walks the case schema itself and refuses any bool-or-``Literal`` leaf that is in
-neither :data:`~nanopnp.io.defaults.SWITCH_PATHS` nor
+:func:`test_ver24_every_switch_typed_field_of_the_schema_is_classified`, which
+refuses any bool-or-``Literal`` field of the schema that is in neither
+:data:`~nanopnp.io.defaults.SWITCH_PATHS` nor
 :data:`~nanopnp.io.defaults.CONFIGURATION_PATHS`. Adding a switch to the schema
 and forgetting the manifest then fails at Tier 1, in seconds, rather than in a
 comparison against COMSOL six months later.
+
+The schema itself is enumerated by :func:`~nanopnp.io.case.case_fields`, not by a
+walk written here. It used to be written here, and that was two walks over one
+schema: the one that drifts silently is the one no test reads, and a field the
+local walk missed was a field the manifest never classified *and* the desktop
+editor never offered. VER-43 froze the enumeration in
+``tests/tier1/test_case_fields.py``; what is left below is the classification.
 
 The second is
 :func:`test_fr25_the_model_and_the_case_agree_on_the_switches_they_share`.
@@ -32,7 +39,6 @@ from pathlib import Path
 from typing import Literal, get_args, get_origin
 
 import pytest
-from pydantic import BaseModel
 
 from nanopnp.charge.fields import (
     ChargeField,
@@ -44,7 +50,7 @@ from nanopnp.charge.fields import (
 from nanopnp.charge.stage import ResolvedFields
 from nanopnp.io import manifest as manifest_module
 from nanopnp.io.artefact import CaseArtefact
-from nanopnp.io.case import CaseDocument, loads_case, resolve
+from nanopnp.io.case import CaseDocument, FieldReference, case_fields, loads_case, resolve
 from nanopnp.io.defaults import (
     CONFIGURATION_PATHS,
     MODEL_SWITCH_PATHS,
@@ -82,33 +88,21 @@ def _manifest(document: CaseDocument, **kwargs: object) -> manifest_module.Manif
 # -- the enumeration that keeps the manifest honest ---------------------------
 
 
-def _switch_typed_leaves(model: type[BaseModel], prefix: str = "") -> set[str]:
-    """Return the dotted paths of every switch-typed leaf of ``model``.
+def _is_switch(reference: FieldReference) -> bool:
+    """Return whether a field of the schema is switch-typed.
 
     Switch-typed means ``bool`` or carrying a ``Literal`` — the shapes a
-    configuration flag takes in this schema. Free-form strings and numbers are
-    not detected here and are covered instead by
-    :func:`test_fr25_every_classified_path_still_names_a_field`, which walks the
+    configuration flag takes in this schema — or named ``model``, which is how a
+    correction or physics model is selected by a registry name. Free-form
+    strings and numbers are not detected here and are covered instead by
+    :func:`test_ver24_every_classified_path_still_names_a_field`, which walks the
     two mappings in the other direction.
     """
-    found: set[str] = set()
-    for name, info in model.model_fields.items():
-        path = f"{prefix}{name}"
-        annotation = info.annotation
-        nested = [
-            candidate
-            for candidate in (annotation, *get_args(annotation))
-            if isinstance(candidate, type) and issubclass(candidate, BaseModel)
-        ]
-        if nested:
-            found |= _switch_typed_leaves(nested[0], f"{path}.")
-            continue
-        literal = get_origin(annotation) is Literal or any(
-            get_origin(argument) is Literal for argument in get_args(annotation)
-        )
-        if annotation is bool or literal or name == "model":
-            found.add(path)
-    return found
+    annotation = reference.annotation
+    literal = get_origin(annotation) is Literal or any(
+        get_origin(argument) is Literal for argument in get_args(annotation)
+    )
+    return annotation is bool or literal or reference.path.rsplit(".", 1)[-1] == "model"
 
 
 def test_ver24_every_switch_typed_field_of_the_schema_is_classified() -> None:
@@ -120,29 +114,13 @@ def test_ver24_every_switch_typed_field_of_the_schema_is_classified() -> None:
     is attributed to the validated model.
     """
     classified = set(SWITCH_PATHS) | set(CONFIGURATION_PATHS)
-    unclassified = _switch_typed_leaves(CaseDocument) - classified
+    switches = {reference.path for reference in case_fields() if _is_switch(reference)}
+    unclassified = switches - classified
     assert not unclassified, (
         f"{sorted(unclassified)} are switch-typed fields of nanopnp/case/v1 that are "
         "neither compared against the validated default (SWITCH_PATHS) nor exempted "
         "with a reason (CONFIGURATION_PATHS)"
     )
-
-
-def _all_leaves(model: type[BaseModel], prefix: str = "") -> set[str]:
-    """Return the dotted path of every leaf field of ``model``, of any type."""
-    found: set[str] = set()
-    for name, info in model.model_fields.items():
-        path = f"{prefix}{name}"
-        nested = [
-            candidate
-            for candidate in (info.annotation, *get_args(info.annotation))
-            if isinstance(candidate, type) and issubclass(candidate, BaseModel)
-        ]
-        if nested:
-            found |= _all_leaves(nested[0], f"{path}.")
-        else:
-            found.add(path)
-    return found
 
 
 def test_ver24_every_classified_path_still_names_a_field() -> None:
@@ -155,7 +133,8 @@ def test_ver24_every_classified_path_still_names_a_field() -> None:
     paths live under the optional ``structure:``, ``geometry:`` and ``charge:``
     blocks, which a Phase-1 case does not carry at all.
     """
-    stale = (set(SWITCH_PATHS) | set(CONFIGURATION_PATHS)) - _all_leaves(CaseDocument)
+    walked = {reference.path for reference in case_fields()}
+    stale = (set(SWITCH_PATHS) | set(CONFIGURATION_PATHS)) - walked
     assert not stale, f"{sorted(stale)} name no field of nanopnp/case/v1"
 
 

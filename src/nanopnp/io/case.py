@@ -92,6 +92,21 @@ FieldValue: TypeAlias = Any
 a block of them. Constrained by the schema per field; a walk over dotted paths
 sees the union."""
 
+CORRECTION_PROPERTIES: tuple[str, ...] = (
+    "diffusivity",
+    "mobility",
+    "viscosity",
+    "permittivity",
+    "density",
+)
+"""The five properties carrying a concentration-and-wall correction (PHY-22).
+
+Named once because two things index the case by them: :meth:`CaseDocument._check_registries`,
+which refuses a model that is not installed, and :func:`registry_options`, which
+tells an editor what to offer. A list that offered a sixth property the check
+never validated would be an editor offering a correction the solver ignores.
+"""
+
 STERIC_MODELS: frozenset[str] = frozenset({"none", "borukhov"})
 """Steric models: the Borukhov size-modified flux, or off (PHY-22)."""
 
@@ -518,7 +533,7 @@ class CaseDocument(_Strict):
                 f"solvers are {', '.join(sorted(AVAILABLE_SOLVERS))}"
             )
         installed = available_corrections()
-        for name in ("diffusivity", "mobility", "viscosity", "permittivity", "density"):
+        for name in CORRECTION_PROPERTIES:
             choice: CorrectionChoiceSpec = getattr(self.electrolyte.corrections, name)
             if choice.model != "none" and choice.model not in installed:
                 problems.append(
@@ -539,6 +554,106 @@ class CaseDocument(_Strict):
         if problems:
             raise ValueError("; ".join(problems))
         return self
+
+
+# -- what a value may be: the schema's own type, and the live registries -------
+
+
+def registry_options(path: str) -> tuple[str, ...] | None:
+    """Return the values an installed registry admits at a dotted path.
+
+    The same registries :meth:`CaseDocument._check_registries` asks, indexed by
+    the path its diagnostic names, so that a generated editor offers exactly the
+    values a document would be accepted with. It lives here rather than in
+    ``gui/`` for that reason: a second list of stabilisation modes would be a
+    GUI offering a mode the solver does not apply, which is a manifest
+    describing a run that never happened (§5.3.3).
+
+    Parameters
+    ----------
+    path
+        A dotted case-file path.
+
+    Returns
+    -------
+    tuple of str or None
+        The admissible values, or ``None`` where no registry governs the path —
+        which is not the same as "anything": the schema's declared type still
+        does, through :func:`options_at`.
+    """
+    if path == "physics.model":
+        return registered_models()
+    if path == "numerics.stabilisation":
+        return registered_stabilisations()
+    if path == "numerics.linear.solver":
+        return tuple(sorted(AVAILABLE_SOLVERS))
+    if path == "electrolyte.parameters":
+        return available_corrections()
+    if path in _CORRECTION_MODEL_PATHS:
+        # ``none`` disables a correction by selecting the registered ``none``
+        # model rather than by taking a code branch (PHY-22), so it is offered
+        # beside the installed parameter files and is not one of them.
+        return ("none", *available_corrections())
+    if path == "outputs":
+        return tuple(sorted(OUTPUTS))
+    return None
+
+
+_CORRECTION_MODEL_PATHS: frozenset[str] = frozenset(
+    f"electrolyte.corrections.{name}.model" for name in CORRECTION_PROPERTIES
+)
+"""The five correction-model paths, built from :data:`CORRECTION_PROPERTIES`."""
+
+
+def options_at(path: str) -> tuple[str, ...] | None:
+    """Return every value a case document would be accepted with at a path.
+
+    The **intersection** of what the schema's declared type accepts and what the
+    installed registries admit, because :class:`CaseDocument` requires both: a
+    ``Literal`` member no registry has is refused by ``_check_registries``, and a
+    registered name outside the ``Literal`` is refused by the type. Offering
+    either alone would offer a value that cannot be saved.
+
+    Parameters
+    ----------
+    path
+        A dotted case-file path.
+
+    Returns
+    -------
+    tuple of str or None
+        The admissible values in the schema's own order where it declares them,
+        or ``None`` for a field whose values are not enumerable — a number, a
+        free string, a path.
+
+    Raises
+    ------
+    UnknownCasePathError
+        If the path is not one the schema declares.
+    """
+    reference = field_at(path)
+    literal = _literal_options(reference.annotation)
+    registered = registry_options(path)
+    if literal is None:
+        return registered
+    if registered is None:
+        return literal
+    admitted = set(registered)
+    return tuple(value for value in literal if value in admitted)
+
+
+def _literal_options(annotation: FieldType) -> tuple[str, ...] | None:
+    """Return the members of a ``Literal``, looking through a union and a list.
+
+    ``list[str]`` and ``float | Literal["auto"]`` both reach here: the first
+    carries no ``Literal`` and enumerates nothing, and the second enumerates only
+    ``auto``, which is exactly what an editor should offer beside a free numeric
+    entry.
+    """
+    for candidate in (annotation, *get_args(annotation)):
+        if get_origin(candidate) is Literal:
+            return tuple(str(value) for value in get_args(candidate))
+    return None
 
 
 # -- diagnostics --------------------------------------------------------------
@@ -777,6 +892,84 @@ def field_at(path: str) -> FieldReference:
         owner = _model_of(annotation)
 
     return FieldReference(path=path, annotation=annotation, container=container)
+
+
+SEQUENCE_INDEX = "0"
+"""The index :func:`case_fields` stands on inside a sequence of blocks.
+
+The walk is over the *schema*, which fixes no length, so a representative index
+is the only way to name a field of ``electrolyte.species`` at all. ``0`` is the
+one every non-empty document has.
+"""
+
+
+def case_fields() -> tuple[FieldReference, ...]:
+    """Return every editable field of ``nanopnp/case/v1``, in declaration order.
+
+    The enumeration a generated editor is built from (IF-09), and the one the
+    FR-25 switch classification is checked against. It is deliberately not
+    :meth:`~pydantic.BaseModel.model_json_schema`: three things the callers need
+    do not survive that projection — the container kinds :class:`FieldReference`
+    carries, the ``schema:`` alias, and the fact that ``_check_registries`` asks
+    the *installed* registries rather than the document. Walking
+    ``model_fields`` gives all three, and gives the dotted paths every other
+    component of this package already indexes the case by as a by-product.
+
+    A field is *editable* when it carries a value rather than a block: a leaf,
+    a ``list[str]`` or a ``dict[str, float]``, but never ``numerics`` itself.
+    Blocks are walked through, including through ``X | None`` and through a
+    sequence of blocks — where :data:`SEQUENCE_INDEX` stands for the index, so
+    that the path resolves through :func:`field_at` like any other.
+
+    Returns
+    -------
+    tuple of FieldReference
+        Each equal to ``field_at`` of its own path, which
+        ``tests/tier1/test_case_fields.py`` asserts element by element: two
+        walks over one schema drift, and the one that drifts silently is the one
+        no test reads.
+
+    Raises
+    ------
+    NotImplementedError
+        If the schema grows a mapping whose *values* are blocks. ``nanopnp/case/v1``
+        has none, and there is no representative key to stand on the way
+        :data:`SEQUENCE_INDEX` stands on an index — so the walk says so rather
+        than omitting the block's fields, which would make them silently
+        uneditable and silently unclassified.
+    """
+    return tuple(_walk_fields(CaseDocument, ""))
+
+
+def _walk_fields(owner: type[BaseModel], prefix: str) -> list[FieldReference]:
+    """Return the editable fields of ``owner``, depth first, prefixed by ``prefix``."""
+    found: list[FieldReference] = []
+    for name, field in owner.model_fields.items():
+        path = f"{prefix}{field.alias or name}"
+        annotation = field.annotation
+        entry = _entry_annotation(annotation)
+        if entry is not None:
+            element, kind = entry
+            nested = _model_of(element)
+            if nested is None:
+                # list[str], dict[str, float]: the container is itself the value
+                # a reader writes, and its entries are reached under it.
+                found.append(FieldReference(path=path, annotation=annotation))
+                continue
+            if kind == "mapping":
+                raise NotImplementedError(
+                    f"{path!r} is a mapping of {nested.__name__} blocks; case_fields() has no "
+                    "representative key to walk one under, so a mapping of blocks needs a "
+                    "decision here rather than silently missing fields"
+                )
+            found.extend(_walk_fields(nested, f"{path}.{SEQUENCE_INDEX}."))
+            continue
+        nested = _model_of(annotation)
+        if nested is not None:
+            found.extend(_walk_fields(nested, f"{path}."))
+            continue
+        found.append(FieldReference(path=path, annotation=annotation))
+    return found
 
 
 def _is_index(component: str) -> bool:
