@@ -1,6 +1,6 @@
 # Phase 1 (Solver core): the production solver on an externally supplied mesh
 
-**Status: WP7–WP13 delivered; WP14 planned, not started; WP15 scoped.** Written 2 September 2026, after Phase 0
+**Status: WP7–WP14 delivered; WP15 scoped.** Written 2 September 2026, after Phase 0
 (WP1–WP6) and its consolidation (WP-A1, WP-B1, WP-B2, WP-C1). It inherited a verified physics core
 and a bare pipeline: tiers 1 and 2 green, `mypy --strict` and `ruff` clean, and `io/`, `sweep/`,
 `charge/`, `structure/`, `density/`, `symmetry/`, `gui/` still empty reserved slots. `io/` is filled
@@ -749,36 +749,37 @@ comparison in `attribute()`. Evidence:
 `.knowledge/08-validation-benchmarks.md` for the measured ladder and the two-norm contrast;
 `.knowledge/06-numerics-fem.md` §8.4.1 for the forest severing.
 
-### WP14 — The packaging probe and the desktop shell
+### WP14 — The packaging probe and the desktop shell — **delivered**
 
-`gui/`, packaging configuration. **Planned**: [`wp14-gui-shell-packaging-probe.md`](wp14-gui-shell-packaging-probe.md).
+Delivered: the RSK-13 detector and the first half of the §8.1 GUI increment. `gui/probe.py` imports
+PySide6 `QtWidgets`, `QtWebEngineWidgets`, `ngsolve`, `netgen` and `ngsolve.webgui` in one process
+and shows a real webgui scene in a `QWebEngineView`; `packaging/nanopnp-probe.spec` builds it
+one-dir, carrying `packaging/LICENSES-BUNDLE.md`, and a **gated** `windows-latest` job builds and
+`--selftest`s it on every push and uploads the artefact for the author's double-click. `io/case.py`
+gained `case_fields()` — 94 editable dotted paths, frozen in the test — plus `registry_options` and
+`options_at`, so the editor's every enumeration is the schema's `Literal` intersected with a live
+registry and `tests/tier1/test_manifest.py`'s two local schema walks are gone. `gui/case_model.py`,
+`gui/run_model.py` and `gui/solver.py` import no PySide6 and no NGSolve, asserted on `sys.modules`
+in a fresh process; `gui/widgets/` and `gui/app.py` are the Qt half and decide nothing.
 
-The packaging probe comes **first** in the package, not last: it is the RSK-13 detector that
-amendment A2 deferred out of Phase 0, and a bundle that will not build is worth knowing about before
-the editor is written. Then the shell's first half — the case editor generated from the frozen
-schema, run control with the solver in a spawned background process (ADR-004), and a result panel
-over the WP10 run directory.
+Discharges the case-editing and run-control halves of **IF-09** and **VER-43**; discharges **CON-09**
+mechanically and carries **CON-11**'s notice into the bundle. **§8.2 criterion 4 and RSK-13 stay
+open** until the author double-clicks an uploaded bundle, exactly as amendment A4 leaves them.
 
-Discharges the case-editing and run-control halves of **IF-09**, and **VER-43**; closes the deferred
-Phase-0 criterion 4 and retires **RSK-13**; discharges **CON-09** mechanically and carries
-**CON-11**'s licence notice into the bundle.
+Amended `SPECIFICATION.md` VER-43 to name the structural stage hook (below). The package invented
+one thing: `core/stages.py`'s `StageHook` and `run_document`'s `on_stage`, because the only prior
+signal of a stage transition was a caption inside a progress message, and recovering data from a
+display format is what the WP14 plan's own Design 2 forbids.
 
-**Split from the original single package, 20 September 2026.** The §8.1 increment was one work
-package here; it is now two, because it cannot be verified in one PR and because the data says where
-to cut. Run control needs only the `(fraction, message)` the `Progress` protocol already carries; a
-convergence plot needs the `NewtonStep` record, which `SolveStage._instrumented` currently forwards
-only inside a `:.3e`-formatted string. The first half consumes the FR-27 plumbing unchanged; the
-second half adds a hook to it. RSK-15 is the other reason: this was the largest single package in
-the phase.
-
-**Inherited by WP15, three things.** The probe establishes whether PySide6, Qt WebEngine and NGSolve
-bundle at all, so the viewer is built against a known answer rather than a hope. The view-model
-discipline — `gui/case_model.py`, `gui/run_model.py` and `gui/solver.py` import no PySide6, asserted
-on `sys.modules` — is what lets Tier 1 test the shell on every matrix job, and it applies to the
-convergence and viewer models too; measured 20 September 2026, `from PySide6 import QtWidgets` fails
-with `ImportError: libEGL.so.1` in the development container, so Qt cannot be constructed there at
-all. And the event union `gui/solver.py` defines is the channel a `NewtonStep` variant joins; WP15
-must add that variant rather than parse the residual out of a progress message.
+**Inherited by WP15, four things.** The probe answers the bundling question the viewer is built on.
+The Qt-free view-model discipline applies to the convergence and viewer models too — measured,
+`from PySide6 import QtWidgets` raises `ImportError: libEGL.so.1` in the development container and
+on `ubuntu-latest`, so a rule implemented in a widget is a rule asserted on two of seven matrix
+jobs. The `RunEvent` union in `gui/solver.py` is the channel a `NewtonStep` variant joins, beside
+`Stage`; WP15 adds the variant and must not parse the residual out of a progress message. And
+`MainWindow` is a `QTabWidget` laid out to take the plot and the viewer as further tabs. Evidence:
+[`wp14-gui-shell-packaging-probe.md`](wp14-gui-shell-packaging-probe.md) Outcomes;
+`.knowledge/07-software-stack.md` §5.
 
 ### WP15 — Live convergence and the field viewer
 
@@ -801,7 +802,7 @@ node set for a reader, not a scene. Which of the two the viewer consumes is WP15
 |---|---|---|
 | OPN-05 | Pore-polygon vertex count: the specification says 196, the model report's geometry section says 190 for the pore and 196 for the whole geometry | **Closed, 5 September 2026.** The two counts count two objects (§5.2.1); the author designated the delivered 185-vertex table the geometry of record. §10 of the specification records it. |
 | VAL-03 export scope | Which frozen cases the reference set covers — the envelope corners at minimum, and whether the analyte case of §7.5.1 joins them | **Closed, 18 September 2026.** Five cases: 0.05 M and 3 M × ±200 mV, plus 0.5 M / +50 mV, in the validated ePNP-NS configuration. The §7.5.1 analyte case is excluded. VAL-04's pair is the published mesh and one uniform refinement, on the centre case. `SPECIFICATION.md` §7.4 is amended to it in the same commit as the WP13 plan. |
-| GUI packaging target | Whether the Windows bundle is built on the author's machine or on a Windows CI runner | **Closed, 20 September 2026.** A gated `windows-latest` CI job builds it on every push and uploads the artefact; the author double-clicks it once, and that observation closes Phase-0 criterion 4 and retires RSK-13. `SPECIFICATION.md` §8.2.1 gains amendment A4 in the same commit as the WP14 plan. |
+| GUI packaging target | Whether the Windows bundle is built on the author's machine or on a Windows CI runner | **Closed, 20 September 2026.** A gated `windows-latest` CI job builds it on every push and uploads the artefact; the author double-clicks it once, and that observation closes Phase-0 criterion 4 and retires RSK-13. `SPECIFICATION.md` §8.2.1 gains amendment A4 in the same commit as the WP14 plan. The job is delivered in WP14; the **double-click is outstanding**, and criterion 4 and RSK-13 stay open until it is recorded. |
 | GUI shell technology | ADR-004 left the FastAPI + `pywebview` local web application "on the table… the choice may wait until Phase 1" | **Closed, 20 September 2026: PySide6 native.** ADR-004 is amended in the same commit; the packaging tool is PyInstaller, one-dir. |
 | CON-11 / ADR-003 | Bundle default linear solver | **Closed, 2 September 2026.** UMFPACK, GPL-2+ obligation accepted and stated; the library stays BSD-3. `SPECIFICATION.md` CON-11, ADR-003 and §6.6 amended in this commit. |
 

@@ -1,6 +1,6 @@
 # WP14 — The packaging probe and the desktop shell
 
-**Status: planned, not started.** Written 20 September 2026, after WP7–WP13 delivered the case
+**Status: delivered, 20 September 2026.** Written 20 September 2026, after WP7–WP13 delivered the case
 schema and artefact chain (WP7), mesh ingestion and the reference geometry (WP8), external charge
 and dielectric fields (WP9), case-driven runs, the CLI and IF-07 field output (WP10), the sweep
 runner (WP11), the `reference` stabilisation mode (WP12) and the Tier-3 comparison harness (WP13).
@@ -82,6 +82,32 @@ must carry every identifier claimed. Neither was cut to meet the count.
 | No apt packages on the push gate | Linux CI installs nothing beyond the wheels; widget construction is exercised on the **`windows-latest` and `macos-latest`** matrix jobs, where Qt's platform plugin works unaided | §Design 4. Two of CON-13's three platforms is the better claim anyway |
 | Licence notice | `packaging/LICENSES-BUNDLE.md`, collected into the bundle and reachable from the probe's window: BSD-3 (nanopnp), LGPL-2.1 (NGSolve/Netgen), LGPL-3 (PySide6/Qt), **GPL-2+ (SuiteSparse UMFPACK, inside the NGSolve wheel) — under which the bundle as a whole is distributed** | CON-11 requires the bundle to state the obligations its default solver creates. A licence statement cannot be retrofitted to something already distributed |
 
+> **Outcome — the vocabulary rule is enforced by a grep, and the combination rule moved into
+> `io/case.py`.** "The editor holds no vocabulary of its own" is now mechanical:
+> `test_if09_no_option_list_is_written_in_the_shell` reads every file under `src/nanopnp/gui/` and
+> fails if any of `epnp-ns`, `pnp-ns`, `willems2020_nacl`, `borukhov`, `umfpack`, `superlu`,
+> `no_slip`, `supg`, `taubin` or `propka` appears in it. Passing that meant the *combination* rule
+> could not live in `gui/` either, so `io/case.py` gained `registry_options(path)` — the same
+> registries `_check_registries` asks, indexed by the path its diagnostic names — and
+> `options_at(path)`, which returns the **intersection** of the declared `Literal` and the live
+> registry. The intersection, not either alone: `numerics.stabilisation` and
+> `numerics.linear.solver` are governed by *both*, so a `Literal` member no registry has and a
+> registered name outside the `Literal` are each a value the editor would offer and the document
+> would refuse. `CORRECTION_PROPERTIES` is now the one list the registry check and the option
+> lookup both iterate.
+
+> **Outcome — WP14 invented one thing, and this is the argument for it.** `core/stages.py` gains a
+> `StageHook` protocol and `run_document`/`run_case` an `on_stage` parameter, called before each
+> stage with `(name, index, total)`. The plan said the package "inherits four things and invents
+> none of them", and the transport in Design 2 was written on that basis; but the union it
+> specifies carries a `Stage` event, and the only existing signal of a stage transition is the
+> caption `f"stage {name}"` inside a `Progress` report. Recovering the name and the position from
+> that is exactly what Design 2 forbids one paragraph later for the residual — a display format
+> promoted to an interface, which the first person to widen it would break without touching the
+> panel. The hook is five lines, mirrors `on_rung` one level down, and is asserted by
+> `test_fr27_a_spawned_run_reports_progress_and_finishes`, which checks the indices are
+> `0 … total - 1` and that every event agrees on `total`. `SPECIFICATION.md` VER-43 names it.
+
 ### Work items
 
 In dependency order. Read §Design 3 before item 2, §Design 1 before item 5, §Design 2 before item 7.
@@ -99,6 +125,18 @@ In dependency order. Read §Design 3 before item 2, §Design 1 before item 5, §
 | 9 | `src/nanopnp/gui/widgets/` | `CaseEditorWidget` (a form built from `case_fields()`; `Literal` → combo box, `bool` → check box, numeric → validated line edit), `RunControlWidget` (start, cancel, progress bar, log), `ResultWidget` (the scalar QoIs and the manifest's Deviations group) | IF-09, QR-11 in part |
 | 10 | `src/nanopnp/gui/app.py`, `pyproject.toml` | `main(argv)` assembling the window; `[project.scripts] nanopnp-gui` | IF-09 |
 | 11 | `SPECIFICATION.md`, `docs/plans/phase-1-solver-core.md`, `docs/plans/current.md`, `.knowledge/07-software-stack.md` | The four amendments below; the phase plan's WP14/WP15 split and its closed open decision; `current.md` repointed; the measured Qt and import facts recorded | — |
+
+> **Outcome — all eleven items delivered; the schema walk yields 94 fields.** `case_fields()` is
+> frozen path by path in `tests/tier1/test_case_fields.py::SCHEMA_PATHS`, written out rather than
+> computed: a second walk would agree with the first for the same wrong reason, and a written list
+> is the only oracle that names the field when one is added and forgotten. A sequence of blocks is
+> walked under `SEQUENCE_INDEX = "0"` (`electrolyte.species.0.name`), which is the only index every
+> non-empty document has and which resolves through `field_at` like any other path; a *mapping* of
+> blocks is refused by name, because there is no representative key to stand on and omitting the
+> block's fields would make them silently uneditable **and** silently unclassified by FR-25.
+> `tests/tier1/test_manifest.py`'s two local walks are gone: its VER-24 classification tests now
+> read `case_fields()`, so a switch the editor can set is a switch the manifest can see, by
+> construction.
 
 ### Verification
 
@@ -124,6 +162,18 @@ of it, and no row claims a `VER-` or `VAL-` identifier that is not here.
 
 Placing a file under `tests/tier1/` is what marks its tier (`tests/tier1/conftest.py`).
 
+> **Outcome — every row is delivered, and four tests were added beyond them.** The delivered files
+> are `tests/tier1/test_case_fields.py` (5), `test_gui_viewmodels.py` (10), `test_gui_probe.py` (3),
+> `test_gui_solver_process.py` (3) and `test_gui_widgets.py` (6, skipped on the Linux gate). Beyond
+> the plan's rows: the vocabulary grep over `gui/`; `ABSENT` against `None`, because a field of a
+> *missing block* and a field *holding nothing* are different facts and
+> :func:`~nanopnp.io.case.substitute` acts on the difference; a spawned run of a case the schema
+> refuses, which establishes that a failure in the child reaches the parent at all rather than
+> leaving it waiting on a queue; and `ensure_saved`, because the shell saves before it runs and an
+> unconditional save would have destroyed the comments and key order of every hand-written case
+> file the first time anyone pressed Run (§5.3.1 NOTE: the text is not the round-trip invariant,
+> which is a reason not to rewrite it needlessly, not a licence to).
+
 ### Out of scope
 
 | Deferred | Owner |
@@ -143,6 +193,16 @@ None blocking. Two the author answers **after the first bundle runs**, not befor
    runner?** QtWebEngine wants a rasteriser. If `QTWEBENGINE_CHROMIUM_FLAGS=--disable-gpu` does not
    suffice, the selftest degrades — by rule, recorded in the plan — to constructing the
    `QWebEngineView` and exiting, which is still the binary-dependency detector RSK-13 asks for.
+
+   > **Outcome — answered on Linux, still open on Windows, and the degradation was not needed.**
+   > Measured 20 September 2026 **[tested]**: with `QT_QPA_PLATFORM=offscreen` and
+   > `QTWEBENGINE_CHROMIUM_FLAGS=--disable-gpu --no-sandbox`, `--selftest` reaches `loadFinished`
+   > and exits 0 on Linux with no GPU at all — Qt logs `QRhiGles2: Failed to create context` and
+   > `Failed to create RHI for backend: OpenGL` and loads the document anyway. So the selftest as
+   > written waits for the load rather than degrading; it also reports, on standard error, that the
+   > load did not complete if it ever does not, and still exits 0, because every payload has been
+   > imported and constructed before the wait begins and *those* are what RSK-13 is about. The
+   > `windows-latest` job is what answers this for Windows.
 2. **Does the bundle double-click?** Only the author can say. That observation closes §8.2
    criterion 4; until it is recorded, the criterion stays outstanding and RSK-13 stays open, exactly
    as amendment A2 left it.
@@ -161,6 +221,18 @@ Made in the same commit as this plan.
    solver-process bridge, the exit-class agreement and the probe's payload set.
 4. **Appendix A** — `IF-09`, `QR-11` and `CON-09` move from "None yet" to VER-43, and the coverage
    sentence is corrected.
+
+> **Outcome — two further amendments were made at implementation.** **§7.2, VER-43** gains a clause:
+> run control "receives each stage transition as data — the stage's name and its position in the
+> walk, through a structural hook, never recovered by parsing a progress caption". That is the one
+> thing WP14 invented, and the specification names it rather than leaving it as an undocumented
+> parameter. **Appendix A** moves `CON-13` from "None yet" to *VER-43 in part*, naming what is
+> asserted (the Windows bundle builds and launches headlessly on every push; widgets construct on
+> `windows-latest` and `macos-latest`) and what deliberately is not (Linux *desktop* Qt — the push
+> gate installs no system packages); `CON-11` gains the licence-notice assertion beside its §6.6
+> measurement. Recounted row by row: 44 of 67 covered, 23 "none yet". The previous sentence's
+> figures were right by coincidence — it counted `QR-07` as covered, and CON-13 moving cancelled
+> the error; the sentence now says which way `QR-07` is counted.
 
 ## Design
 
@@ -191,7 +263,18 @@ already index this schema by dotted path. An editor that indexed it any other wa
 component in the package that did.
 
 Measured, 20 September 2026 **[tested]**: `import nanopnp.io.case` costs 622 ms and leaves **neither
-`ngsolve` nor `numpy` in `sys.modules`**. So the editor can enumerate, display and validate the whole
+`ngsolve` nor `numpy` in `sys.modules`**.
+
+> **Outcome — the editor costs what the schema costs, and the 622 ms did not reproduce.** Measured
+> 20 September 2026 **[tested]**, best of three on an idle container: `nanopnp.gui.case_model`
+> 251 ms against `nanopnp.io.case`'s 253 ms — about a millisecond of its own — `nanopnp.gui.solver`
+> 73 ms and `nanopnp.gui.probe` 59 ms, beside `nanopnp.cli`'s 62 ms. After importing all three
+> view-models, none of `PySide6`, `PyQt5`, `PyQt6`, `ngsolve`, `netgen` or `numpy` is in
+> `sys.modules`. The 622 ms above did **not** reproduce here at either cache state (349 ms cold,
+> 253 ms warm), so it was taken under load or by another method; the absolute figure is
+> machine-dependent and the claim to rely on is the ratio to one NGSolve import (~370 ms) plus the
+> `sys.modules` assertion, which is not a timing claim at all.
+> `.knowledge/07-software-stack.md` §5 carries both. So the editor can enumerate, display and validate the whole
 schema without the solver ever being imported — which is what keeps a GUI that is only browsing a
 case as cheap as the CLI's 56 ms budget intends stage introspection to be. NGSolve is imported by the
 *run* process, on the far side of the boundary, when the user asks for a solve.
@@ -231,6 +314,30 @@ Two further facts WP15 will need and WP14 should not pre-empt: `on_step` is inje
 `isinstance(rung.model, CoupledModel)` (`solve/stage.py`), so the electrostatic rungs of the NUM-18
 ladder emit no steps at all, and a plot that assumed a continuous stream across the ladder would show
 a gap it cannot explain. `on_rung` is the per-rung hook beside it.
+
+> **Outcome — the transport is as designed, with one correction and one thing the plan did not
+> say.** The correction: stage transitions cross as `Stage(name, index, total)` through the new
+> `StageHook`, not as a parsed caption (see the Outcome under **Decisions**). The thing the plan did
+> not say: the eight groups of §5.3.3 sit at the **top level** of `manifest.json`, beside `schema`,
+> `created_at`, `hash` and `case` — `Manifest.document()` splices `groups()` in with `**`. A result
+> panel reading `manifest["groups"]["deviations"]` gets `{}` and shows *"none: this run used the
+> validated default configuration"* for every run ever made, which is the manifest attributing a
+> number to the validated model that was not produced by it. `run_outcome` now reads
+> `manifest[DEVIATIONS_GROUP]`, taking the key from `io/manifest.GROUPS` rather than writing it out,
+> and **raises** rather than defaulting when the group is absent. It was
+> `test_fr27_a_spawned_run_reports_progress_and_finishes` that found it, by asserting a named switch
+> is in the panel's deviation set rather than asserting the panel merely rendered.
+
+> **Outcome — the Tier-1 GUI suite costs 4.0 s, of which 2.9 s is a real spawned run.** Measured 20 September
+> 2026 **[tested]** on the development interpreter (3.12), `stabilisation: none`: the whole of
+> `tests/tier1/test_gui_solver_process.py` — a successful run, a cancelled one and a refused case,
+> each in its own spawned child paying a `spawn` re-import of the package and of NGSolve — runs in
+> 2.9 s, against 0.9 s for the same pipeline in-process; the whole Tier-1 GUI suite — those three
+> plus `test_case_fields.py`, `test_gui_viewmodels.py` and `test_gui_probe.py`, 21 tests — runs in
+> 4.0 s. So the process bridge is asserted against
+> a real solve on every push rather than against a mock, which is what makes the picklability of
+> every event, the emptying of the queue after the child exits and the §5.3.2 "a cancelled run
+> writes no artefact" claim evidence rather than design.
 
 ### 3. What makes the probe a detector rather than a demonstration
 
@@ -275,6 +382,16 @@ Not just WebEngine: **`QtWidgets` itself** cannot be imported. This is the same 
 GL-dependent payload dlopens, and the exception is `ImportError` or `OSError` depending on which
 library is missing — which is why the skip idiom is `except (ImportError, OSError)` and not
 `pytest.importorskip`.
+
+> **Outcome — the measurement held, and the widget suite was verified against real Qt anyway.**
+> `from PySide6 import QtWidgets` still raises `ImportError: libEGL.so.1` here (PySide6 6.11.2), so
+> `tests/tier1/test_gui_widgets.py` skips on the push gate exactly as designed and its six tests
+> are made on `windows-latest` and `macos-latest`. Shipping a Qt suite that had never once been
+> executed would have been shipping six tests on trust, so they were run locally against the real
+> toolkit by pointing `LD_LIBRARY_PATH` at the `libEGL.so` the pre-installed Chromium carries,
+> symlinked as `libEGL.so.1` in a scratch directory. Nothing of that shim is in the repository, the
+> gate or the workflow: it is a developer's one-off, and the recorded fact is that all six pass
+> under it, along with `nanopnp-probe --selftest` and `nanopnp-gui --selftest`.
 
 Three consequences, and they are the reason the view-model layer is Qt-free rather than merely
 tidy:

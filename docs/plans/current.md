@@ -7,58 +7,65 @@ an unmerged branch has shipped.
 ## Position
 
 - Phase: [Phase 1, solver core](phase-1-solver-core.md).
-- Delivered: WP7–WP13. Current: **WP14, the packaging probe and the desktop shell** —
-  planned, not started. Plan: [`wp14-gui-shell-packaging-probe.md`](wp14-gui-shell-packaging-probe.md).
-- **The §8.1 GUI increment is now two packages.** WP14 is the packaging probe, the
-  schema-generated case editor and run control; **WP15** is the live convergence plot
-  and the `webgui` field viewer. The cut is where the data changes: run control needs
-  only the `(fraction, message)` the `Progress` protocol already carries, a convergence
-  plot needs the `NewtonStep` record, and no hook forwards it yet. QR-11 is discharged
-  by the two together, inside Phase 1.
-- Three decisions closed on 20 September 2026 and written into the specification in the
-  WP14 plan's commit: the shell is **PySide6 native** (ADR-004's local-web-app
-  alternative is rejected), the packaging tool is **PyInstaller, one-dir**, and the
-  Windows bundle is built by a **gated `windows-latest` CI job on every push**, with the
-  author's double-click closing §8.2 criterion 4 (§8.2.1 amendment A4).
+- Delivered: WP7–WP14. Next: **WP15, the live convergence plot and the `webgui` field
+  viewer** — scoped in the phase plan, not yet planned. WP14's record:
+  [`wp14-gui-shell-packaging-probe.md`](wp14-gui-shell-packaging-probe.md).
+- **QR-11 is discharged by WP14 and WP15 together.** WP14 delivered the packaging probe,
+  the schema-generated case editor, run control over a spawned solver process and the
+  result panel. WP15 adds the structural `NewtonStep` hook, the plot fed from it, and a
+  field viewer bound to a real solution.
 - Tier 3 is recorded, not gated, and stays that way. WP13 delivered its harness; see
   [`wp13-tier3-comsol-comparison.md`](wp13-tier3-comsol-comparison.md).
 
-## Live constraints on WP14
+## Live constraints on WP15
 
-- **Qt cannot be constructed in the development container.** Measured 20 September 2026:
-  `from PySide6 import QtWidgets` raises `ImportError: libEGL.so.1` (PySide6 6.11.2) —
-  `QtWidgets`, not only WebEngine. The Tier-1 GUI suite therefore imports no PySide6;
-  widget construction is exercised on the existing `windows-latest` and `macos-latest`
-  matrix jobs under `QT_QPA_PLATFORM=offscreen`, and skips on `(ImportError, OSError)`
-  elsewhere. The push gate installs no system packages.
-- **`import nanopnp.io.case` costs 622 ms and imports neither `ngsolve` nor `numpy`.**
-  So the editor enumerates and validates the whole schema without the solver; NGSolve is
-  imported in the spawned run process, on the far side of the boundary.
-- **The bundle is distributed under GPL-2+** (CON-11: UMFPACK ships inside the NGSolve
-  wheel and is the bundle default), while the library stays BSD-3. The notice ships with
-  the first bundle, not later.
+- **Qt cannot be constructed in the development container.** `from PySide6 import QtWidgets`
+  raises `ImportError: libEGL.so.1` (PySide6 6.11.2) — `QtWidgets`, not only WebEngine. So
+  `gui/case_model.py`, `gui/run_model.py` and `gui/solver.py` import no PySide6, asserted on
+  `sys.modules` in a fresh process, and the convergence and viewer models must do the same.
+  Widget construction is exercised on the `windows-latest` and `macos-latest` matrix jobs under
+  `QT_QPA_PLATFORM=offscreen` and skips on `(ImportError, OSError)` elsewhere. The push gate
+  installs no system packages. A local `LD_LIBRARY_PATH` shim exists for developer use only
+  (`.knowledge/07` §5).
+- **The residual reaches the caller only inside a `:.3e` string.** `SolveStage._instrumented`
+  formats it into a progress message; a plot's subject is six or more orders of magnitude of it.
+  WP15 adds a structural hook forwarding the `NewtonStep` and **must not** parse the message.
+  `gui/solver.py`'s `RunEvent` union is where the variant joins, beside `Stage`; the `StageHook`
+  WP14 added to `run_document` is the pattern to copy.
+- **`on_step` is injected only for a `CoupledModel` rung**, so the electrostatic rungs of the
+  NUM-18 ladder emit no steps and a plot assuming a continuous stream would show an unexplained
+  gap. `on_rung` is the per-rung hook beside it.
+- **The bundle is distributed under GPL-2+** (CON-11: UMFPACK ships inside the NGSolve wheel and
+  is the bundle default), while the library stays BSD-3. `packaging/LICENSES-BUNDLE.md` says so
+  and `nanopnp-probe --selftest` fails if it did not travel with the bundle.
+- **`ngsolve.webgui` wants a live `GridFunction`**, which lives in the *run* process; the IF-07
+  XDMF export WP10 writes is a P2 node set for a reader, not a scene. Which the viewer consumes
+  is WP15's decision. Its HTML also fetches the renderer from a CDN, so `loadFinished` says the
+  document loaded, never that the picture drew.
 
 ## What is still somebody else's
 
+- **The double-click.** The gated `windows-latest` `bundle` job builds the one-dir bundle and
+  runs `--selftest` on every push, and uploads it. Only the author can observe that it
+  double-clicks; until that is recorded, **§8.2 criterion 4 stays outstanding and RSK-13 stays
+  open**, exactly as amendment A4 leaves them.
 - **The COMSOL exports do not exist yet** (WP13). The author's, against
   [`docs/validation/comsol-export-contract.md`](../validation/comsol-export-contract.md).
   Until they land every report carries `golden_source: self`, and
   `tests/tier3/test_comsol_comparison.py` skips the archive comparison visibly.
-- **Two declarations only the author can make**: which boundary `tds.ntflux_i` was
-  evaluated on, and which electrode the exported current references.
+- **Two declarations only the author can make**: which boundary `tds.ntflux_i` was evaluated on,
+  and which electrode the exported current references.
 - **`$NANOPNP_REFERENCE_DATA` on the nightly runner** is still open.
-- **The double-click.** Only the author can observe it; until it is recorded, §8.2
-  criterion 4 stays outstanding and RSK-13 stays open.
 
 ## Dependencies To Read On Demand
 
 | Need | Read |
 |---|---|
-| What WP14 builds and why each choice was made | `wp14-gui-shell-packaging-probe.md`, Decisions and §Design |
-| The FR-27 plumbing the shell consumes | `src/nanopnp/core/stages.py`; `io/run.py`'s `run_case`; `solve/stage.py`'s `_instrumented` |
-| The case schema and its dotted paths | `SPECIFICATION.md` §5.3.1 and its NOTEs; `src/nanopnp/io/case.py`; `src/nanopnp/io/defaults.py` |
+| What WP15 must build and the two facts it designs around | `phase-1-solver-core.md` §WP15; `wp14-gui-shell-packaging-probe.md` §Design 2 and its Outcomes |
+| The shell as delivered | `src/nanopnp/gui/` — `case_model.py`, `run_model.py`, `solver.py`, `widgets/`, `app.py`, `probe.py` |
+| The FR-27 plumbing and the stage hook | `src/nanopnp/core/stages.py` (`Progress`, `CancelToken`, `StageHook`); `io/run.py`'s `run_case`; `solve/stage.py`'s `_instrumented` |
+| The case schema, its dotted paths and its option sets | `SPECIFICATION.md` §5.3.1 and its NOTEs; `src/nanopnp/io/case.py` (`case_fields`, `field_at`, `options_at`, `registry_options`, `substitute`, `render_problems`) |
 | Shell, packaging and licence constraints | `SPECIFICATION.md` ADR-004, CON-07, CON-09, CON-11, CON-13, §8.2 criterion 4, §8.2.1 A4; `.knowledge/07-software-stack.md` §5–§6 |
-| The spawned-worker discipline to copy | `src/nanopnp/sweep/run.py` module docstring, `_worker`, `_pool` |
 | What Tier 3 is and how to drive it | `wp13-tier3-comsol-comparison.md`; `docs/validation/comsol-export-contract.md`; `nanopnp validate --help` |
 | Stabilisation findings inherited from WP12 | `wp12-reference-stabilised-mode.md` Outcomes in Design 3 and 4 |
 | Reference geometry, field inputs, runs and sweeps | Phase plan: WP8, WP9, WP10, WP11; `docs/sweeps/README.md` |
