@@ -244,7 +244,7 @@ everything the round trip does, and changing the moment an edge moves group.
 | **PySide6** 6.11.1 | LGPL-3 OR GPL-2 OR GPL-3 | **Use this.** LGPL option means no licence conflict |
 | PyQt6 | **GPL-3 only** | Avoid unless the project is GPL |
 | `PySide6.QtWebEngineWidgets.QWebEngineView` | — | Hosts NGSolve webgui **[tested]**. The earlier "imports cleanly" held on a machine with the GL libraries present; see the caveat below, which is a property of the machine and not of the wheel |
-| PyInstaller | — | **Chosen** for the bundle, one-dir (ADR-004, amended 20 September 2026) |
+| PyInstaller | — | **Chosen** for the bundle, one-dir (ADR-004, amended 20 September 2026). `collect_all("ngsolve")` and `collect_all("netgen")`; `upx=False`, which mangles Qt WebEngine's helper executable |
 | briefcase / conda-constructor | — | The other two candidates; not used |
 
 ### PySide6 imports are a system-library question, not a wheel question **[tested]**
@@ -267,7 +267,38 @@ plugin works unaided and `QT_QPA_PLATFORM=offscreen` is all that is needed. Inst
 packages on a Linux gate job to work around this buys Linux coverage at the price of a portability
 promise per runner image.
 
-### `nanopnp.io.case` costs 622 ms and pulls in neither NGSolve nor NumPy **[tested]**
+### A missing `libEGL.so.1` can be shimmed for local work, never for the gate **[tested]**
+
+Measured 20 September 2026. The pre-installed Playwright Chromium carries a real
+`libEGL.so`, and symlinking it as `libEGL.so.1` (with `libGLESv2.so` as `libGLESv2.so.2`) into a
+scratch directory on `LD_LIBRARY_PATH` makes `from PySide6 import QtWidgets` succeed, a
+`QApplication` construct under `QT_QPA_PLATFORM=offscreen`, and the whole Qt widget suite run.
+Useful for checking widget code that would otherwise ship having never been executed.
+
+It is **not** a way to get Linux widget coverage on the push gate. It depends on a browser bundle
+that has nothing to do with this project, and CON-07's posture is that nothing on the user path
+needs a build or an install step. Widget coverage belongs on `windows-latest` and `macos-latest`,
+where Qt's platform plugin works unaided.
+
+### `QWebEngineView` loads a webgui document with no GPU at all **[tested]**
+
+Measured 20 September 2026, PySide6 6.11.2, Linux, no display and no GPU, with
+`QT_QPA_PLATFORM=offscreen` and `QTWEBENGINE_CHROMIUM_FLAGS=--disable-gpu --no-sandbox`. Qt logs
+
+```
+QRhiGles2: Failed to create temporary context
+Failed to create RHI for backend: OpenGL
+```
+
+and then reaches `loadFinished(True)` anyway. So a headless packaging check *can* wait for the
+document load rather than merely constructing the view.
+
+What it does not establish is that the scene **rendered**. `WebGLScene.GenerateHTML()` emits a
+document that fetches its renderer from `https://cdn.jsdelivr.net/npm/webgui@<version>/dist/webgui.js`,
+so on a machine with no network the page loads and the console says `webgui is not defined`.
+`loadFinished` is a statement about the document, not about the picture.
+
+### `nanopnp.io.case` pulls in neither NGSolve nor NumPy, and costs 250–350 ms **[tested]**
 
 Measured 20 September 2026 on the development interpreter (3.12). After `import nanopnp.io.case`,
 `"ngsolve" in sys.modules` and `"numpy" in sys.modules` are both `False`. The cost is pydantic and
@@ -277,7 +308,33 @@ So a caller can enumerate, display and validate an entire case document without 
 is what lets a schema-generated editor stay near the CLI's 56 ms stage-introspection budget in
 spirit, with NGSolve imported only in whatever process actually solves. Note that `io/case.py` does
 import `nanopnp.physics.models` at module scope for its registry check; that module defers its own
-NGSolve import, which is why the number above holds.
+NGSolve import, which is why the claim above holds.
+
+**Re-measured 20 September 2026 on an idle container: 349 ms cold (no `__pycache__`), 253 ms warm**,
+against the 622 ms first recorded the same day. Neither cache state reproduces 622 ms here, so that
+figure was taken under load or by a different method. **Treat the absolute number as
+machine-dependent and the ratio as the fact**: importing the case schema costs roughly what one
+NGSolve import (~370 ms) costs, and the load-bearing half — neither `ngsolve` nor `numpy` in
+`sys.modules` afterwards — is re-confirmed and is not a timing claim at all.
+
+### The desktop shell's view-model layer costs what the schema costs **[tested]**
+
+Measured 20 September 2026, best of three on an idle container, warm cache:
+
+| Module | Cost | What it pulls in |
+|---|---|---|
+| `nanopnp.io.case` | 253 ms | pydantic and PyYAML building the `nanopnp/case/v1` model tree |
+| `nanopnp.gui.case_model` | 251 ms | the above, and about a millisecond of its own |
+| `nanopnp.gui.run_model` | 273 ms | the above, plus `io/manifest.py` and `io/run.py` |
+| `nanopnp.gui.solver` | 73 ms | `cli/errors.py` and `multiprocessing`; everything else is deferred into the child |
+| `nanopnp.gui.probe` | 59 ms | `core/paths.py` only — every payload is deferred |
+| `nanopnp.cli` | 62 ms | the comparison, and the budget the deferred-import rule protects |
+
+After importing all three view-models, **none** of `PySide6`, `PyQt5`, `PyQt6`, `ngsolve`, `netgen`
+or `numpy` is in `sys.modules` — asserted in a subprocess by
+`tests/tier1/test_gui_viewmodels.py::test_if09_the_view_models_import_no_qt_and_no_ngsolve`. The
+editor therefore enumerates and validates the whole schema at the cost of the schema, and a shell
+that is only browsing a case never pays for a solver or a toolkit.
 
 ---
 
