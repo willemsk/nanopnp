@@ -31,7 +31,10 @@ cannot be constructed at all, and a document that silently failed to load its
 data is exactly the blank panel QR-12 is written against. That costs two copies,
 so the previous field's pair is removed when a new one is rendered: this is a
 display artefact, not a cache. Collapsing the two into one subresource load is a
-one-line change for whoever can watch the picture draw.
+one-line change for whoever can watch the picture draw. The embedded copy differs
+from the file by one escape — ``</`` inside a script element would end it in the
+parser — which ``JSON.parse`` and the JavaScript literal both read back as what
+the file holds; see :func:`host_document`.
 
 **We build the host document ourselves.** ``netgen.webgui.GenerateHTML`` takes a
 ``template`` argument, assigns it and then substitutes into the module global
@@ -54,11 +57,14 @@ import multiprocessing
 import queue as queue_module
 from dataclasses import dataclass, field
 from pathlib import Path
+from string import Template
 from typing import TYPE_CHECKING, TypeAlias
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from multiprocessing.process import BaseProcess
     from multiprocessing.queues import Queue
+
+    from nanopnp.core.typing import Mesh
 
 logger = logging.getLogger(__name__)
 
@@ -116,40 +122,46 @@ scene to fix — so the document answers the question rather than leaving the pa
 to parse an exception message for the word ``webgui``.
 """
 
-_DOCUMENT = """<!DOCTYPE html>
+_DOCUMENT = Template("""<!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8"/>
-    <title>{title}</title>
+    <title>$title</title>
     <meta name="viewport" content="width=device-width, user-scalable=no"/>
     <style>
-      body {{ margin: 0; overflow: hidden; background: #ffffff; }}
-      canvas {{ cursor: grab; }}
-      canvas:active {{ cursor: grabbing; }}
+      body { margin: 0; overflow: hidden; background: #ffffff; }
+      canvas { cursor: grab; }
+      canvas:active { cursor: grabbing; }
     </style>
   </head>
   <body>
-    <script src="{renderer}"></script>
+    <script src="$renderer"></script>
     <script>
-      var render_data = {scene};
-      window.{flag} = {{
+      var render_data = $scene;
+      window.$flag = {
         ready: false,
         renderer_loaded: typeof webgui !== "undefined",
         error: "",
-        renderer: {renderer_literal}
-      }};
-      try {{
+        renderer: $renderer_literal
+      };
+      try {
         var scene = new webgui.Scene();
-        scene.init(document.body, render_data, {{preserveDrawingBuffer: false}});
-        window.{flag}.ready = true;
-      }} catch (error) {{
-        window.{flag}.error = String(error);
-      }}
+        scene.init(document.body, render_data, {preserveDrawingBuffer: false});
+        window.$flag.ready = true;
+      } catch (error) {
+        window.$flag.error = String(error);
+      }
     </script>
   </body>
 </html>
-"""
-"""The host document. One rendering path, ours, with the renderer as its variable."""
+""")
+"""The host document. One rendering path, ours, with the renderer as its variable.
+
+A :class:`string.Template` and not ``str.format``: the house rule is f-strings
+and never ``.format()``, and a template that is mostly CSS and JavaScript cannot
+be an f-string. ``$``-substitution also leaves every brace below as itself,
+where ``.format`` needed each one doubled and would raise on the first one added
+to the stylesheet without its pair."""
 
 
 def renderer_source() -> str:
@@ -191,11 +203,16 @@ def host_document(scene: str, *, renderer: str, title: str) -> str:
         The document title; the field's own attribute name, which comes from
         :func:`nanopnp.io.fields.attribute_name` and never from this package.
     """
-    return _DOCUMENT.format(
+    return _DOCUMENT.substitute(
         title=title,
         renderer=renderer,
         renderer_literal=json.dumps(renderer),
-        scene=scene,
+        # ``json.dumps`` does not escape ``/``, so a ``</script>`` anywhere in a
+        # scene's strings would close this element in the parser before the
+        # assignment completed — a page that loads, sets no flag, and is
+        # reported as a renderer that never arrived. The escape is invisible to
+        # ``JSON.parse`` and to the JavaScript literal alike.
+        scene=scene.replace("</", "<\\/"),
         flag=READY_FLAG,
     )
 
@@ -322,6 +339,40 @@ def _state_path(run: Path) -> Path:
     return Path(payload)
 
 
+def _element_count(mesh: Mesh, domain: str | None) -> int:
+    """Return how many elements the drawn region carries.
+
+    ``mesh.ne`` is the whole mesh, and every field but the potential declares a
+    ``domain`` — Nernst-Planck and the flow are solved on the fluid only
+    (PHY-03) — so a concentration's picture holds strictly fewer elements than
+    the mesh does. Counting the region is what makes :attr:`Rendered.elements`
+    attributable to the scene's size rather than to the mesh's.
+
+    Counted through the material mask, as
+    :func:`nanopnp.io.fields.p2_nodes` counts the same restriction for the
+    IF-07 export, so the picture and the file agree about what was drawn.
+    """
+    import ngsolve as ngs
+
+    if domain is None:
+        return int(mesh.ne)
+    keep = mesh.Materials(domain).Mask()
+    return sum(1 for element in mesh.Elements(ngs.VOL) if keep[element.index])
+
+
+def _replace(path: Path, text: str) -> None:
+    """Write ``text`` to ``path`` through a sibling, so the move is atomic.
+
+    A render is superseded whenever the panel is repointed at another field, and
+    a child stopped part-way through a multi-megabyte write would otherwise
+    leave a truncated document for the next load to find — a blank panel whose
+    diagnostic would name the renderer rather than the write (QR-12).
+    """
+    part = path.with_name(f"{path.name}.part")
+    part.write_text(text, encoding="utf-8")
+    part.replace(path)
+
+
 def render(request: RenderRequest) -> Rendered:
     """Restore a finished run and write one field's scene into its ``viewer/``.
 
@@ -387,6 +438,7 @@ def render(request: RenderRequest) -> Rendered:
     region = mesh if declared.domain is None else mesh.Materials(declared.domain)
     drawn = solution.component(declared.name) * field_scale(declared.name, model.scales)
     scene = Draw(drawn, region, show=False, order=declared.order).GetData()
+    elements = _element_count(mesh, declared.domain)
 
     directory = run / VIEWER_DIRNAME
     directory.mkdir(parents=True, exist_ok=True)
@@ -397,19 +449,21 @@ def render(request: RenderRequest) -> Rendered:
     # One field's pair at a time: at the reference mesh size each copy is tens of
     # megabytes, and this is a display artefact rather than a cache.
     for stale in directory.glob("scene-*"):
-        if stale not in (scene_path, document_path):
+        if stale not in (scene_path, document_path) and stale.is_file():
             stale.unlink()
-    scene_path.write_text(payload, encoding="utf-8")
-    document_path.write_text(
-        host_document(payload, renderer=request.renderer, title=wanted), encoding="utf-8"
-    )
+    # Written beside and moved into place, so that a render stopped part-way
+    # through — the panel supersedes one whenever a field is reselected — leaves
+    # no half-written document for the next load to find. A ``.part`` left by a
+    # killed child is swept by the loop above on the next render.
+    _replace(scene_path, payload)
+    _replace(document_path, host_document(payload, renderer=request.renderer, title=wanted))
     logger.info("scene for %s written to %s (%d bytes)", wanted, document_path, len(payload))
     return Rendered(
         document=str(document_path),
         scene=str(scene_path),
         field=wanted,
         fields=names,
-        elements=int(mesh.ne),
+        elements=elements,
     )
 
 
@@ -435,8 +489,12 @@ class RenderProcess:
 
     Polled rather than awaited, like :class:`~nanopnp.gui.solver.SolverProcess`,
     so the object is driven identically by a Qt timer and by a test. There is no
-    cancellation: a render is one ``GetData`` and one write, and a token checked
-    between them would stop nothing.
+    *cooperative* cancellation: a render is one ``GetData`` and one write, and a
+    token checked between them would stop nothing. :meth:`terminate` is the
+    other thing, and it is not a nicety — two children of one run write into one
+    ``viewer/`` directory and each sweeps the other's files away, so a render
+    whose answer is no longer wanted has to be stopped rather than left to
+    finish.
     """
 
     request: RenderRequest
@@ -482,6 +540,24 @@ class RenderProcess:
     def running(self) -> bool:
         """Whether the child is alive."""
         return self._process is not None and self._process.is_alive()
+
+    def terminate(self, timeout: float = 1.0) -> None:
+        """Stop the child and wait briefly for it to go.
+
+        For a render that has been superseded. Two children of one run write
+        into the same ``viewer/`` directory and each removes the ``scene-*``
+        pair it did not write, so a superseded render left to finish can delete
+        the document the panel has just been told to load. Waiting rather than
+        signalling and returning is what makes "the old child is gone" true
+        before the new one sweeps the directory.
+
+        Idempotent, and a no-op on a child that has already exited.
+        """
+        if self._process is None:
+            return
+        if self._process.is_alive():
+            self._process.terminate()
+        self._process.join(timeout)
 
     def join(self, timeout: float | None = None) -> None:
         """Wait for the child to exit."""

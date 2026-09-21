@@ -104,6 +104,13 @@ class ViewerWidget(QtWidgets.QWidget):
         field
             An attribute name the solution offers, or ``""`` for the first.
         """
+        # Either way the render in flight is dropped first, and dropping it is
+        # two things rather than one. Forgetting the child is what keeps the
+        # clear a clear: a child still attached would be drained by the next
+        # timer tick and would load the *previous* run's document into the panel
+        # this call just emptied. Stopping it is what keeps two renders of one
+        # run from sweeping each other's ``scene-*`` pair out of ``viewer/``.
+        self._stop_render()
         if directory is None:
             self._run = None
             self._model.reset()
@@ -114,6 +121,13 @@ class ViewerWidget(QtWidgets.QWidget):
         self._process = RenderProcess(request)
         self._process.start()
         self._show_model()
+
+    def _stop_render(self) -> None:
+        """Stop the render in flight, if there is one, and forget it."""
+        process = self._process
+        self._process = None
+        if process is not None:
+            process.terminate()
 
     def _reselect(self, index: int) -> None:
         """Re-render for the field the user chose."""
