@@ -398,3 +398,84 @@ def test_newton_result_summary_records_the_damping_for_the_manifest(
     assert "minimum_damping_used" in summary
     assert "forced_steps" in summary
     assert summary["relative_residual"] <= DEFAULT_SETTINGS.relative_tolerance
+
+
+def test_ver44_every_step_records_the_undamped_relative_update(
+    problem: tuple[ngs.Mesh, ngs.FESpace, float],
+) -> None:
+    """``NewtonStep.update`` is ``‖δu‖ / max(‖u‖, reference_norm)`` on the full direction.
+
+    The oracle is not ``relative_update`` read back: it is the *accepted states*.
+    The loop takes ``x_k = x_{k-1} - lambda P du``, so the full direction is
+    recoverable from the difference of two iterates and the damping factor the
+    step was taken with, and nothing in that reconstruction passes through the
+    quantity under test.
+
+    Both halves of the claim are asserted, because each fails silently. Recording
+    the *damped* step instead would leave the ratio at exactly ``λ``, which on
+    the opening steps of this problem is 0.2 — a plot still six orders deep and
+    still wrong, and the number the solver tests against
+    :attr:`~nanopnp.solve.newton.NewtonSettings.relative_tolerance` is the
+    undamped one (NUM-16 NOTE). Taking the denominator at the *new* iterate
+    rather than the one the step started from would be a relative error of one
+    step's size, which is invisible at convergence and largest exactly where the
+    plot is read.
+    """
+    mesh, space, screening_nm = problem
+    state = _initial_state(space, mesh)
+    reference = DEFAULT_SETTINGS.reference_norm
+
+    iterates = [state.vec.CreateVector()]
+    iterates[0].data = state.vec
+
+    def remember(step: object) -> None:
+        kept = state.vec.CreateVector()
+        kept.data = state.vec
+        iterates.append(kept)
+
+    result = damped_newton(_residual_form(space, screening_nm), state, callback=remember)
+
+    assert result.history
+    damped = 0
+    for index, step in enumerate(result.history, start=1):
+        before, after = iterates[index - 1], iterates[index]
+        taken = after.CreateVector()
+        taken.data = after - before
+        denominator = max(float(ngs.Norm(before)), reference)
+        undamped = float(ngs.Norm(taken)) / step.damping / denominator
+
+        assert step.update == pytest.approx(undamped, rel=1e-12)
+        if step.damping < 1.0:
+            damped += 1
+            assert step.update != pytest.approx(float(ngs.Norm(taken)) / denominator, rel=1e-9), (
+                "the recorded update is the damped step, not the Newton direction"
+            )
+    assert damped, "no step was damped, so the undamped/damped distinction went untested"
+
+
+def test_ver44_the_newton_summary_gains_no_per_iteration_key(
+    problem: tuple[ngs.Mesh, ngs.FESpace, float],
+) -> None:
+    """The manifest record is the same set of keys the history is not in.
+
+    :meth:`~nanopnp.solve.newton.NewtonResult.summary` reaches the stage-10
+    artefact's summary, which is inside the §5.3.2 content hash. A per-iteration
+    series there would make every solve its own cache entry and move the hash of
+    every run already in a store — so the live plot reads
+    :attr:`~nanopnp.solve.newton.NewtonResult.history` in the process that
+    produced it, and this asserts the boundary in the direction it could move.
+    """
+    mesh, space, screening_nm = problem
+    state = _initial_state(space, mesh)
+
+    summary = damped_newton(_residual_form(space, screening_nm), state).summary()
+
+    assert set(summary) == {
+        "converged",
+        "iterations",
+        "initial_residual",
+        "residual",
+        "relative_residual",
+        "minimum_damping_used",
+        "forced_steps",
+    }
