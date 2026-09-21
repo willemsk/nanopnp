@@ -1,6 +1,6 @@
 # Phase 1 (Solver core): the production solver on an externally supplied mesh
 
-**Status: WP7–WP14 delivered; WP15 planned.** Written 2 September 2026, after Phase 0
+**Status: WP7–WP15 delivered.** Written 2 September 2026, after Phase 0
 (WP1–WP6) and its consolidation (WP-A1, WP-B1, WP-B2, WP-C1). It inherited a verified physics core
 and a bare pipeline: tiers 1 and 2 green, `mypy --strict` and `ruff` clean, and `io/`, `sweep/`,
 `charge/`, `structure/`, `density/`, `symmetry/`, `gui/` still empty reserved slots. `io/` is filled
@@ -781,20 +781,38 @@ jobs. The `RunEvent` union in `gui/solver.py` is the channel a `NewtonStep` vari
 [`wp14-gui-shell-packaging-probe.md`](wp14-gui-shell-packaging-probe.md) Outcomes;
 `.knowledge/07-software-stack.md` §5.
 
-### WP15 — Live convergence and the field viewer
+### WP15 — Live convergence and the field viewer — **delivered**
 
-`gui/`, `solve/stage.py`.
+Delivered: the second half of the §8.1 GUI increment, completing **IF-09** and discharging
+**QR-11**. `core/stages.py` gained `SolveHook` — the rung and the accepted Newton step as plain
+scalars — and `SolveReporting`, a capability protocol so that only stage 10 grows a keyword and the
+twelve-stage `Stage.run` does not widen. `io/run.py` threads `on_solve` and rebinds the stage
+*after* its artefact key is taken, so a watched run and an unwatched one key one artefact and one
+store entry, asserted both ways. `NewtonStep` gained the undamped relative update, already computed
+at `newton.py:308`, because a residual-only plot shows a warm-started rung converging while its
+curve is flat; `NewtonResult.summary()` gains no key, so no manifest, run record or artefact hash
+moves. `gui/convergence.py`, `gui/scene.py` and `gui/render.py` import neither PySide6 nor NGSolve
+at module scope, asserted on `sys.modules` in a fresh process; `gui/widgets/convergence.py` strokes
+the plot with `QPainter` and no new dependency, and `gui/widgets/viewer.py` loads a **file** URL and
+never `setHtml`. The viewer renders a solution restored through the stage-10 gate in a separate
+spawned child, on the field's own material region, named by `io/fields.attribute_name()`.
 
-The second half of the §8.1 Phase-1 increment: a structural `NewtonStep` hook on the solve stage,
-the live convergence plot fed from it across the process boundary, and the `webgui` field viewer in
-a `QWebEngineView` bound to a real solution. Completes **IF-09** and discharges **QR-11**; together
-with WP14 it meets the GUI half of Phase-1 criterion 5.
+Amended **VER-44** in the implementation commit, for two things the plan had wrong. A rung reports
+no Newton step for **two** reasons, not one — two of twelve take no callback and three more are
+coupled rungs that converged on entry — so the hook carries the distinction and the band names
+which silence it is. And "which NUM-16 test closed the rung" is not knowable, the two tests not
+being exclusive and the residual test short-circuiting, so the band reports only the exclusion it
+can prove.
 
-Two facts it must design around, both from WP14. `on_step` is injected only when the rung's model is
-a `CoupledModel`, so the electrostatic rungs of the NUM-18 ladder emit no steps and a plot assuming
-a continuous stream across the ladder would show a gap it cannot explain. And `ngsolve.webgui` wants
-a live `GridFunction`, which lives in the *run* process; the IF-07 XDMF export WP10 writes is a P2
-node set for a reader, not a scene. Which of the two the viewer consumes is WP15's decision.
+**Inherited by whatever follows, three things.** **OQ-1 is open**: the `webgui` renderer is fetched
+from a CDN, and whether the LGPL-2.1-or-later file may be shipped as package data so a bundle draws
+offline is the author's ruling — it is one constant, `render.renderer_source()`, plus WP15's work
+item 15. It could not be settled here in any case: `cdn.jsdelivr.net` answers this container's
+proxy with 403. **§8.2 criterion 4 and RSK-13 remain open** on the author's double-click, unchanged
+by this package. And the viewer opens the run just finished; opening an arbitrary stored run is a
+file chooser away and belongs to Phase 4's result browser. Evidence:
+[`wp15-live-convergence-and-viewer.md`](wp15-live-convergence-and-viewer.md) Outcomes;
+`.knowledge/06-numerics-fem.md` §5.1 and `.knowledge/07-software-stack.md` §5.
 
 ## Open decisions
 

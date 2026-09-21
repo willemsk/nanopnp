@@ -6,6 +6,13 @@ pickle, a queue that empties after the child exits, a cancellation that never
 reaches the child because the token was copied instead of shared, and an
 artefact left in the store by a run that was stopped.
 
+What WP15 adds to it is the second half of the same claim (VER-44): the
+continuation rung and the Newton step cross as *numbers*. The residual reaches a
+progress caption only inside a ``:.3e``, which is three significant figures of
+something a convergence plot needs six orders of, and the relative update reaches
+it not at all — so what is asserted below is that the last step of each rung
+equals the ``newton`` record the run's own manifest carries, to the last bit.
+
 The case is the cheapest one that walks the whole pipeline — the same
 cylindrical pore ``tests/tier1/test_run.py`` uses, whose full run takes about a
 second — because a driver defect that only an expensive solve reveals is not a
@@ -14,18 +21,22 @@ driver defect. The stabilisation mode is ``none`` (NUM-11).
 
 from __future__ import annotations
 
+import json
 import time
 from pathlib import Path
 
 import pytest
 
+from nanopnp.core.hashing import decode_floats
 from nanopnp.gui.run_model import RunModel, run_outcome
 from nanopnp.gui.solver import (
     Cancelled,
     Failed,
     Finished,
+    Iteration,
     Progress,
     RunEvent,
+    Rung,
     RunRequest,
     SolverProcess,
     Stage,
@@ -129,6 +140,45 @@ def test_fr27_a_spawned_run_reports_progress_and_finishes(case_file: Path, tmp_p
     directory = Path(finished[0].directory)
     for name in (MANIFEST_FILENAME, CASE_FILENAME, RUN_RECORD_FILENAME):
         assert (directory / name).is_file(), name
+
+    # VER-44: the ladder crossed as data too, and the numbers are the solver's.
+    rungs = [event for event in events if isinstance(event, Rung)]
+    steps = [event for event in events if isinstance(event, Iteration)]
+    assert rungs, [type(event).__name__ for event in events]
+    assert steps, "a real spawned solve reported no Newton step"
+    assert [event.index for event in rungs] == list(range(len(rungs)))
+    assert {event.total for event in rungs} == {len(rungs)}
+    for step in steps:
+        # Floats, not the three significant figures of a ``:.3e`` caption. A
+        # string that survived the queue would pass ``isinstance(str)`` and fail
+        # here, which is the point.
+        assert isinstance(step.residual, float)
+        assert isinstance(step.update, float)
+    # And they are the numbers the run's own record carries. The manifest's
+    # solver group is written by the solve stage from the same ``NewtonResult``
+    # the hook's last step came from, so agreeing to the last bit is what makes
+    # the plot the solver's numbers rather than a parse of a display format.
+    manifest = decode_floats(
+        json.loads((directory / MANIFEST_FILENAME).read_text(encoding="utf-8"))
+    )
+    recorded = {
+        entry["rung"]: entry["newton"]
+        for entry in manifest["solver"]["run"]["rungs"]
+        if isinstance(entry["newton"], dict)
+    }
+    banded: dict[str, list[Iteration]] = {}
+    current = ""
+    for event in events:
+        if isinstance(event, Rung):
+            current = event.name
+            banded[current] = []
+        elif isinstance(event, Iteration):
+            banded[current].append(event)
+    reported = {name: taken for name, taken in banded.items() if taken}
+    assert reported, "no rung reported a step"
+    for name, taken in reported.items():
+        assert taken[-1].residual == recorded[name]["residual"], name
+        assert len(taken) == recorded[name]["iterations"], name
 
     model = RunModel()
     model.consume(events)

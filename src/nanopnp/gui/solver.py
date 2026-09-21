@@ -19,10 +19,12 @@ line run of the same case, which is what makes its FR-25 manifest identical too.
 
 *Out of the child*: :class:`RunEvent` values on a queue. :class:`QueueProgress`
 satisfies the :class:`~nanopnp.core.stages.Progress` protocol by putting
-``(fraction, message)`` on it, and :class:`QueueStage` satisfies
-:class:`~nanopnp.core.stages.StageHook` the same way. The stage transitions cross
-as *data* and not as parsed captions: a number or a name recovered from a display
-format is a number whose meaning is a formatting decision.
+``(fraction, message)`` on it, :class:`QueueStage` satisfies
+:class:`~nanopnp.core.stages.StageHook` and :class:`QueueSolve` satisfies
+:class:`~nanopnp.core.stages.SolveHook` the same way. The stage transitions, the
+continuation rungs and the Newton steps all cross as *data* and not as parsed
+captions: a number or a name recovered from a display format is a number whose
+meaning is a formatting decision.
 
 *Into the child, continuously*: cancellation, as a :class:`multiprocessing.Event`.
 :class:`~nanopnp.core.stages.CancelFlag` is an in-process boolean and says so, so
@@ -65,11 +67,14 @@ __all__ = [
     "EventCancel",
     "Failed",
     "Finished",
+    "Iteration",
     "Progress",
     "QueueProgress",
+    "QueueSolve",
     "QueueStage",
     "RunEvent",
     "RunRequest",
+    "Rung",
     "SolverProcess",
     "Stage",
     "Started",
@@ -116,6 +121,53 @@ class Stage:
     name: str
     index: int
     total: int
+
+
+@dataclass(frozen=True)
+class Rung:
+    """A continuation rung is about to be solved (:class:`~nanopnp.core.stages.SolveHook`).
+
+    Parameters
+    ----------
+    name, stage, index, total
+        The rung as the ladder names it, its NUM-18 stage number and its
+        position in the ladder.
+    reporting
+        Whether this rung's solve was given a Newton callback. NUM-18's
+        electrostatic rungs take none and report no :class:`Iteration` by
+        construction; a reporting rung that also reports none converged on
+        entry. The two are different facts and the silence is the same, which is
+        why this crosses rather than being inferred on the far side.
+    tolerance
+        The relative tolerance this rung is solved to, so a reader can say which
+        of NUM-16's two tests the numbers support without importing the solver
+        to read a default it may not be using.
+    """
+
+    name: str
+    stage: int
+    index: int
+    total: int
+    reporting: bool
+    tolerance: float
+
+
+@dataclass(frozen=True)
+class Iteration:
+    """One accepted Newton step of the rung most recently announced.
+
+    The fields of :class:`~nanopnp.solve.newton.NewtonStep`, as numbers. The
+    residual reaches :class:`Progress` only inside a ``:.3e`` caption and the
+    relative update reaches it not at all, which is the whole reason this
+    variant exists (VER-44).
+    """
+
+    iteration: int
+    residual: float
+    update: float
+    damping: float
+    trials: int
+    forced: bool
 
 
 @dataclass(frozen=True)
@@ -169,7 +221,7 @@ class Cancelled:
     exit_code: int = EXIT_CANCELLED
 
 
-RunEvent: TypeAlias = Started | Stage | Progress | Finished | Failed | Cancelled
+RunEvent: TypeAlias = Started | Stage | Rung | Iteration | Progress | Finished | Failed | Cancelled
 """Everything the child may post. Frozen, picklable, and plain."""
 
 
@@ -196,6 +248,56 @@ class QueueStage:
     def __call__(self, name: str, index: int, total: int) -> None:
         """Post one stage transition."""
         self.queue.put(Stage(name=str(name), index=int(index), total=int(total)))
+
+
+@dataclass(frozen=True)
+class QueueSolve:
+    """A :class:`~nanopnp.core.stages.SolveHook` that posts onto a queue.
+
+    The numbers cross as numbers. A :class:`Progress` caption carrying
+    ``residual 3.968e-12`` would reach the parent as three significant figures
+    of something a plot needs six orders of, and the relative update would not
+    reach it at all — so this posts the rung and the step structurally, exactly
+    as :class:`QueueStage` posts the stage transition one level up.
+    """
+
+    queue: Queue[RunEvent]
+
+    def rung(
+        self, name: str, stage: int, index: int, total: int, reporting: bool, tolerance: float
+    ) -> None:
+        """Post one continuation rung."""
+        self.queue.put(
+            Rung(
+                name=str(name),
+                stage=int(stage),
+                index=int(index),
+                total=int(total),
+                reporting=bool(reporting),
+                tolerance=float(tolerance),
+            )
+        )
+
+    def step(
+        self,
+        iteration: int,
+        residual: float,
+        update: float,
+        damping: float,
+        trials: int,
+        forced: bool,
+    ) -> None:
+        """Post one accepted Newton step."""
+        self.queue.put(
+            Iteration(
+                iteration=int(iteration),
+                residual=float(residual),
+                update=float(update),
+                damping=float(damping),
+                trials=int(trials),
+                forced=bool(forced),
+            )
+        )
 
 
 class EventCancel:
@@ -259,6 +361,7 @@ def _worker(request: RunRequest, events: Queue[RunEvent], cancel: EventType) -> 
             progress=QueueProgress(events),
             cancel=EventCancel(cancel),
             on_stage=QueueStage(events),
+            on_solve=QueueSolve(events),
         )
     except CancelledError as cancelled:
         events.put(Cancelled(where=str(cancelled)))

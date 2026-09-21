@@ -347,6 +347,34 @@ redistributed work and belongs in the licence notice if it is shipped. `cdn.jsde
 blocked from this development container (proxy 403), so the file has to be fetched elsewhere and
 checked against the integrity hash npm publishes.
 
+### A webgui scene draws on a material *region*, not only on a whole mesh **[tested]**
+
+Measured 21 September 2026 on a restored four-material ePNP-NS solution, 124 triangles.
+`Draw(cf, mesh.Materials("electrolyte|cis|trans"), show=False, order=2).GetData()` succeeds and
+returns a smaller scene than the whole-mesh draw of the same field (30.5 kB against 43.1 kB here),
+because it carries only the retained elements.
+
+That matters for honesty rather than for size. A field declared on the fluid alone evaluates to
+zero inside the membrane, and a whole-mesh draw of a concentration therefore paints a zero *inside
+a wall* that a reader cannot distinguish from a converged depletion — which is the same trap
+`io/fields.py` documents for the IF-07 export, and it is avoided the same way.
+
+The same call draws a **two-component vector** field without special handling: all five fields of
+the `epnp-ns` family (the potential, two concentrations, the velocity and the pressure) produce a
+scene from one code path, the vector one costing about 1.5x the scalars.
+
+### `QWebEngineView` can be constructed in this container with the Playwright GL shim **[tested]**
+
+Measured 21 September 2026. With `libEGL.so.1` and `libGLESv2.so.2` symlinked from
+`/opt/pw-browsers/chromium-*/chrome-linux/` onto `LD_LIBRARY_PATH`, and
+`QT_QPA_PLATFORM=offscreen`, both `from PySide6 import QtWidgets` and
+`from PySide6.QtWebEngineWidgets import QWebEngineView` succeed and the whole Tier-1 widget suite
+runs — including a `QPainter` repaint into a `QPixmap` and a `QWebEngineView` construction.
+
+This is the §5 shim recorded above, used for the purpose that section already states: checking
+widget code that would otherwise ship having never been executed. It stays off the push gate, where
+widget coverage remains `windows-latest` and `macos-latest`.
+
 ### `nanopnp.io.case` pulls in neither NGSolve nor NumPy, and costs 250–350 ms **[tested]**
 
 Measured 20 September 2026 on the development interpreter (3.12). After `import nanopnp.io.case`,

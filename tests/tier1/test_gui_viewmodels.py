@@ -1,4 +1,4 @@
-"""VER-43 — the shell's view-models, asserted where Qt cannot be constructed.
+"""VER-43 and VER-44 — the shell's view-models, asserted where Qt cannot be constructed.
 
 Every rule the desktop interface enforces lives below the Qt boundary, and this
 module is why. ``PySide6.QtWidgets`` raises ``ImportError: libEGL.so.1`` in the
@@ -14,10 +14,19 @@ The sharpest test in the file is
 asserts *string identity* between the diagnostic the interface shows and the one
 ``nanopnp run`` prints for a file holding the same mistake. Two renderings of
 one error drift, and the one that drifts is the one the user is reading.
+
+WP15 adds the convergence plot's and the field viewer's models to the same
+discipline. What they decide is what a picture is allowed to claim — that a band
+with no steps says which of the two reasons made it silent, that a solve served
+from the store is named rather than drawn as an empty plot, that no NUM-16
+threshold is drawn, and that a document which loaded without its renderer is a
+diagnostic and not a blank panel — and every one of those decisions is asserted
+here rather than in a widget.
 """
 
 from __future__ import annotations
 
+import math
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -30,11 +39,16 @@ from nanopnp.cli.errors import EXIT_CANCELLED, EXIT_CASE, EXIT_CONVERGENCE, EXIT
 from nanopnp.core.paths import available_corrections
 from nanopnp.core.stages import Cancelled as CancelledError
 from nanopnp.gui.case_model import ABSENT, CaseEditor
+from nanopnp.gui.convergence import RESIDUAL, UPDATE, ConvergenceModel
+from nanopnp.gui.render import Rendered, RenderFailed
 from nanopnp.gui.run_model import RunModel
+from nanopnp.gui.scene import SceneModel
 from nanopnp.gui.solver import (
     Cancelled,
     Finished,
+    Iteration,
     Progress,
+    Rung,
     Stage,
     Started,
     failure_event,
@@ -75,6 +89,14 @@ VOCABULARY = (
     "supg",
     "taubin",
     "propka",
+    # And the IF-07 attribute vocabulary, extended for WP15: the viewer's field
+    # names come from :func:`~nanopnp.io.fields.attribute_name` over the model's
+    # own declarations, so a name written here would be the interface saying
+    # what a number means in a second place from the file that holds it.
+    "phi_V",
+    "u_m_s",
+    "p_Pa",
+    "mol_m3",
 )
 
 
@@ -105,7 +127,8 @@ def test_if09_the_view_models_import_no_qt_and_no_ngsolve() -> None:
     probe = (
         "import sys;"
         "import nanopnp.gui.case_model, nanopnp.gui.run_model,"
-        " nanopnp.gui.solver, nanopnp.gui.probe;"
+        " nanopnp.gui.solver, nanopnp.gui.probe,"
+        " nanopnp.gui.convergence, nanopnp.gui.scene, nanopnp.gui.render;"
         "print(sorted(m for m in ('PySide6','PyQt5','PyQt6','ngsolve','netgen')"
         " if m in sys.modules))"
     )
@@ -385,3 +408,315 @@ def test_if09_an_event_the_model_does_not_apply_is_refused_not_read_as_cancelled
     with pytest.raises(TypeError, match="_FutureVariant"):
         model.consume([_FutureVariant(residual=1e-3)])  # type: ignore[list-item]
     assert model.state == "running"
+
+
+# -- the convergence plot ------------------------------------------------------
+
+
+def _ladder(model: RunModel) -> None:
+    """Drive one model through a small three-rung ladder.
+
+    Shaped like the real one and not like a convenient one: a rung that takes no
+    Newton callback, a rung that converged on entry, and a rung that took steps.
+    Those are the three cases the reference ladder actually produces.
+    """
+    model.consume(
+        [
+            Started(case="case.yaml", store=None),
+            Rung(name="1-pb-linear", stage=1, index=0, total=3, reporting=False, tolerance=1e-6),
+            Rung(name="3-equilibrium", stage=3, index=1, total=3, reporting=True, tolerance=1e-6),
+            Rung(name="9-salt", stage=9, index=2, total=3, reporting=True, tolerance=1e-6),
+            Iteration(iteration=1, residual=1e-2, update=2e-1, damping=0.2, trials=1, forced=False),
+            Iteration(iteration=2, residual=1e-6, update=1e-3, damping=0.6, trials=1, forced=False),
+            Iteration(
+                iteration=3, residual=1e-12, update=1e-8, damping=1.0, trials=1, forced=False
+            ),
+            Finished(directory="runs/probe"),
+        ]
+    )
+
+
+def test_ver44_the_plot_bands_the_ladder_and_names_both_kinds_of_silence() -> None:
+    """A silent band says *why* it is silent, and the two reasons differ.
+
+    The whole reason the hook carries ``reporting``. A rung whose model takes no
+    Newton callback and a coupled rung that converged before its first step are
+    both empty, and a plot that annotated either as the other would be stating
+    something about the solve that is not true.
+    """
+    model = RunModel()
+    _ladder(model)
+    plot = model.convergence
+
+    assert plot.state == "complete"
+    assert [band.name for band in plot.bands] == ["1-pb-linear", "3-equilibrium", "9-salt"]
+    assert [band.stage for band in plot.bands] == [1, 3, 9]
+    assert [len(band.steps) for band in plot.bands] == [0, 0, 3]
+
+    silent, on_entry, solved = plot.bands
+    assert "takes no Newton callback" in silent.note()
+    assert "converged on entry" in on_entry.note()
+    assert "converged on entry" not in silent.note()
+    assert "3 steps" in solved.note()
+
+
+def test_ver44_a_solve_served_from_the_store_is_named_not_drawn_empty() -> None:
+    """A finished run that reported no rung is a cache hit, and says so.
+
+    A finished run walked the whole pipeline, so its solve either climbed the
+    ladder or was answered from the artefact store. An empty plot would read as a
+    solve that converged instantly, which is the reading §5.3.2's cache must
+    never be given.
+    """
+    served = RunModel()
+    served.consume([Started(case="case.yaml", store=None), Finished(directory="runs/probe")])
+
+    assert served.convergence.state == "served"
+    assert "served from the artefact store" in served.convergence.summary
+    assert served.convergence.bands == []
+
+    # And a run that stopped is not that: it has no claim either way.
+    stopped = RunModel()
+    stopped.consume(
+        [
+            Started(case="case.yaml", store=None),
+            Rung(name="1-pb", stage=1, index=0, total=1, reporting=True, tolerance=1e-6),
+            Cancelled(where="cancelled before rung '1-pb'"),
+        ]
+    )
+    assert stopped.convergence.state == "stopped"
+    assert stopped.convergence.bands[0].closed_on() == ""
+
+
+def test_ver44_the_band_names_the_num16_test_its_own_numbers_support() -> None:
+    """A forced last step, and an update above tolerance, both exclude the update test.
+
+    NUM-16 accepts *either* test and never the update test on a forced step, so
+    the two are not exclusive and the model claims only what the recorded numbers
+    prove. A band that asserted "the update test closed it" from a forced step
+    would be quoting a criterion the solver had refused to apply.
+    """
+    forced = ConvergenceModel()
+    forced.rung("r", 9, 0, 1, True, 1e-6)
+    forced.step(1, 1e-13, 1e-9, 0.01, 6, True)
+    forced.settle(finished=True)
+    assert forced.bands[0].closed_on() == "residual"
+    assert "closed on the residual test" in forced.bands[0].note()
+    assert "1 forced" in forced.bands[0].note()
+
+    coarse = ConvergenceModel()
+    coarse.rung("r", 9, 0, 1, True, 1e-6)
+    coarse.step(1, 1e-13, 1e-2, 1.0, 1, False)
+    coarse.settle(finished=True)
+    assert coarse.bands[0].closed_on() == "residual"
+
+    met = ConvergenceModel()
+    met.rung("r", 9, 0, 1, True, 1e-6)
+    met.step(1, 1e-13, 1e-9, 1.0, 1, False)
+    met.settle(finished=True)
+    assert met.bands[0].closed_on() == "update"
+
+
+def test_ver44_the_axis_is_logarithmic_whole_decades_and_per_band() -> None:
+    """The mapping is the model's, the ticks are decades, and no band is joined to the next.
+
+    Each assertion is a way the plot could lie. A linear axis would hide the six
+    orders the plot exists to show; a tick at 2.5 decades would label a number
+    nobody reads; and a polyline running across a band boundary would draw a line
+    between two different operators.
+    """
+    model = RunModel()
+    _ladder(model)
+    plot = model.convergence
+
+    low, high = plot.y_range
+    assert low == float(int(low)) and high == float(int(high))
+    assert low <= -12.0 <= high
+    assert all(tick == float(int(tick)) for tick in plot.ticks())
+
+    # One polyline per band, in the band's own extent, and the values are the
+    # base-10 logarithms of the numbers the solver reported.
+    band = plot.bands[-1]
+    start, end = plot.extent(band)
+    points = plot.points(band, RESIDUAL)
+    assert len(points) == len(band.steps)
+    assert all(start <= x <= end for x, _ in points)
+    assert points[-1][1] == pytest.approx(-12.0)
+    assert plot.points(plot.bands[0], RESIDUAL) == ()
+
+    # And the second series is a different curve, not a copy of the first.
+    updates = plot.points(band, UPDATE)
+    assert [y for _, y in updates] != [y for _, y in points]
+
+
+def test_ver44_a_sample_a_logarithm_cannot_place_is_omitted_and_counted() -> None:
+    """An exactly zero residual is not drawn at the axis floor; it is reported.
+
+    Placing it at the bottom of the frame would draw a number the solve never
+    produced, and placing it nowhere without saying so would lose a step from a
+    plot whose subject is how many there were.
+    """
+    model = ConvergenceModel()
+    model.rung("r", 9, 0, 1, True, 1e-6)
+    model.step(1, 0.0, 0.0, 1.0, 1, False)
+    model.step(2, 1e-9, 1e-7, 1.0, 1, False)
+    model.settle(finished=True)
+
+    assert model.count_omitted() == 2
+    assert len(model.points(model.bands[0], RESIDUAL)) == 1
+    assert "omitted" in model.summary
+
+
+def test_ver44_a_step_with_no_rung_is_refused_not_banded_into_the_last_one() -> None:
+    """A step arriving before any rung aborts rather than being attributed.
+
+    The hook's contract is that a rung precedes the steps it scopes. A model that
+    fell back to "the last band" would silently draw one rung's iterates inside
+    another's, which is a wrong picture with nothing to say it is one.
+    """
+    model = ConvergenceModel()
+    with pytest.raises(ValueError, match="before any rung"):
+        model.step(1, 1e-3, 1e-3, 1.0, 1, False)
+
+
+# -- the field viewer ----------------------------------------------------------
+
+
+def test_ver44_the_scene_model_offers_only_the_fields_the_child_reported() -> None:
+    """The selector is the render child's list, and the document is a file."""
+    model = SceneModel()
+    request = model.request("runs/probe")
+    assert request.run == "runs/probe"
+    assert model.state == "rendering"
+
+    model.consume(
+        [
+            Rendered(
+                document="runs/probe/viewer/scene.html",
+                scene="runs/probe/viewer/scene.json",
+                field="a_field",
+                fields=("a_field", "another_field"),
+                elements=124,
+            )
+        ]
+    )
+    assert model.state == "loading"
+    assert model.fields == ("a_field", "another_field")
+    assert model.document == Path("runs/probe/viewer/scene.html")
+
+
+def test_ver44_a_document_that_loaded_without_drawing_is_a_diagnostic() -> None:
+    """``loadFinished(True)`` moves nothing; the probe decides, and names the source.
+
+    Qt reaches ``loadFinished(True)`` on a page whose renderer never arrived and
+    leaves ``webgui is not defined`` in a console nobody sees. Three answers, three
+    states: the scene initialised, the renderer was never there, or the scene threw.
+    A panel that could not tell the second from the first would report success on
+    an empty rectangle (QR-12).
+    """
+    model = SceneModel()
+    model.consume(
+        [
+            Rendered(
+                document="runs/probe/viewer/scene.html",
+                scene="runs/probe/viewer/scene.json",
+                field="a_field",
+                fields=("a_field",),
+                elements=8,
+            )
+        ]
+    )
+
+    model.loaded(True)
+    assert model.state == "loading", "a loaded document is not a drawn picture"
+
+    # A renderer that never arrived, reported as such — and the exception it
+    # actually throws is ``ReferenceError: webgui is not defined``, from the same
+    # line a real scene failure throws from. The document's ``renderer_loaded``
+    # flag is what tells them apart; matching on the message would make a
+    # renderer's wording into an interface.
+    missing = SceneModel(**{**vars(model)})
+    missing.probed(
+        '{"ready": false, "renderer_loaded": false, '
+        '"error": "ReferenceError: webgui is not defined", "renderer": "somewhere"}'
+    )
+    assert missing.state == "blank"
+    assert "its renderer was not there" in missing.diagnosis
+    assert missing.renderer in missing.diagnosis
+    assert str(missing.scene) in missing.diagnosis
+
+    threw = SceneModel(**{**vars(model)})
+    threw.probed(
+        '{"ready": false, "renderer_loaded": true, '
+        '"error": "TypeError: bad scene", "renderer": "somewhere"}'
+    )
+    assert threw.state == "blank"
+    assert "TypeError: bad scene" in threw.diagnosis
+    assert "its renderer was not there" not in threw.diagnosis
+
+    silent = SceneModel(**{**vars(model)})
+    silent.probed(None)
+    assert silent.state == "blank"
+    assert "returned nothing" in silent.diagnosis
+
+    drawn = SceneModel(**{**vars(model)})
+    drawn.probed('{"ready": true, "renderer_loaded": true, "error": "", "renderer": "somewhere"}')
+    assert drawn.state == "drawn"
+    assert drawn.diagnosis == ""
+
+
+def test_ver44_a_refused_render_replaces_the_picture_with_what_the_gate_said() -> None:
+    """A refusal is the panel's content, verbatim, not a second wording of it."""
+    model = SceneModel()
+    model.request("runs/probe")
+    model.consume(
+        [RenderFailed(error="StateMismatchError", message="solve.bias_V: stored 0.02, this 0.2")]
+    )
+
+    assert model.state == "failed"
+    assert model.diagnosis == "solve.bias_V: stored 0.02, this 0.2"
+    assert model.document is None
+    assert model.summary == model.diagnosis
+
+
+def test_ver44_a_render_event_the_model_does_not_apply_is_refused() -> None:
+    """A variant added to ``RenderEvent`` fails here rather than being ignored."""
+
+    @dataclass(frozen=True)
+    class _FutureVariant:
+        note: str
+
+    model = SceneModel()
+    with pytest.raises(TypeError, match="_FutureVariant"):
+        model.consume([_FutureVariant(note="later")])  # type: ignore[list-item]
+
+
+def test_ver44_a_long_rung_is_decimated_keeping_its_first_and_last_step() -> None:
+    """A band with more steps than the plot draws is thinned, not truncated.
+
+    The NUM-16 reference cap is 50 iterations and no band reaches the limit
+    today; the limit exists because a cap raised for a hard corner of the FR-17
+    envelope must cost the plot nothing. What must survive the thinning is the
+    shape's two ends: a plot that dropped the last step would show a rung as
+    having stopped short of where it converged.
+    """
+    from nanopnp.gui.convergence import MAX_POINTS_PER_BAND
+
+    model = ConvergenceModel()
+    model.rung("r", 9, 0, 1, True, 1e-6)
+    count = MAX_POINTS_PER_BAND * 3
+    # ``1 / n`` rather than ``10 ** -n``: past the 308th step the latter
+    # underflows to zero, and the samples the axis then omits would be mistaken
+    # for samples the decimation dropped.
+    for index in range(1, count + 1):
+        model.step(index, 1.0 / index, 0.5 / index, 1.0, 1, False)
+    model.settle(finished=True)
+
+    band = model.bands[0]
+    points = model.points(band, RESIDUAL)
+    assert len(band.steps) == count
+    assert len(points) == MAX_POINTS_PER_BAND
+    start, end = model.extent(band)
+    assert points[0][0] == pytest.approx(start + 0.5)
+    assert points[-1][0] == pytest.approx(end - 0.5)
+    assert points[-1][1] == pytest.approx(math.log10(1.0 / count))

@@ -17,6 +17,16 @@ reporting the transport rather than the run, so the model keeps the maximum.
 :func:`nanopnp.cli.errors.classify` in the child; this module names it and shows
 the QR-12 diagnostic the gate already wrote, and never re-derives either.
 
+**The convergence history is a projection of the same event stream.** The rung
+and the step arrive as :class:`~nanopnp.gui.solver.Rung` and
+:class:`~nanopnp.gui.solver.Iteration` beside the progress captions, and this
+model forwards them to a :class:`~nanopnp.gui.convergence.ConvergenceModel`
+rather than deciding anything about them or writing them into the log — where
+they would duplicate the captions the solve already reports. One consequence is
+load-bearing: a run that *finished* walked the whole pipeline, so a finished run
+that reported no rung had its solve answered from the artefact store, and that is
+the one state an empty plot must never be left to imply (VER-44).
+
 **The result is read from the run directory**, not carried through the queue. The
 run directory is the record (§5.3.3) — ``manifest.json``, ``case.yaml`` and the
 run record — so a result panel that read anything else would be showing something
@@ -31,12 +41,15 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
 from nanopnp.cli.errors import EXIT_OK
+from nanopnp.gui.convergence import ConvergenceModel
 from nanopnp.gui.solver import (
     Cancelled,
     Failed,
     Finished,
+    Iteration,
     Progress,
     RunEvent,
+    Rung,
     RunRequest,
     SolverProcess,
     Stage,
@@ -163,6 +176,9 @@ class RunModel:
     exit_code: int = EXIT_OK
     diagnosis: str = ""
     directory: Path | None = None
+    convergence: ConvergenceModel = field(default_factory=ConvergenceModel)
+    """The ladder as it is climbed, for the live plot. Fed from this event
+    stream and from nothing else, so the panel is a pure function of it."""
 
     def consume(self, events: Iterable[RunEvent]) -> None:
         """Apply every event, in order."""
@@ -178,10 +194,32 @@ class RunModel:
             self.exit_code = EXIT_OK
             self.diagnosis = ""
             self.directory = None
+            self.convergence.reset()
             self._say(f"running {event.case}")
         elif isinstance(event, Stage):
             self.stage = event
             self._say(f"stage {event.index + 1} of {event.total}: {event.name}")
+        elif isinstance(event, Rung):
+            # Not logged: the solve already reports ``rung <name>`` through
+            # ``progress``, and a second line saying the same thing would make
+            # the log twice as long and the two renderings free to drift.
+            self.convergence.rung(
+                event.name,
+                event.stage,
+                event.index,
+                event.total,
+                event.reporting,
+                event.tolerance,
+            )
+        elif isinstance(event, Iteration):
+            self.convergence.step(
+                event.iteration,
+                event.residual,
+                event.update,
+                event.damping,
+                event.trials,
+                event.forced,
+            )
         elif isinstance(event, Progress):
             # Monotone by enforcement, not by trust: see the module docstring.
             self.fraction = max(self.fraction, min(1.0, max(0.0, event.fraction)))
@@ -191,25 +229,34 @@ class RunModel:
             self.fraction = 1.0
             self.exit_code = event.exit_code
             self.directory = Path(event.directory)
+            self._settle(finished=True)
             self._say(f"finished: {event.directory}")
         elif isinstance(event, Failed):
             self.state = "failed"
             self.exit_code = event.exit_code
             self.diagnosis = event.message
+            self._settle(finished=False)
             self._say(f"failed ({event.error}, exit {event.exit_code}): {event.message}")
         elif isinstance(event, Cancelled):
             self.state = "cancelled"
             self.exit_code = event.exit_code
             self.diagnosis = event.where
+            self._settle(finished=False)
             self._say(f"cancelled: {event.where}")
         else:
-            # Named rather than caught by a trailing ``else``: WP15 widens
-            # ``RunEvent`` with a ``NewtonStep`` variant, and a fall-through
-            # would have marked the first Newton step of every run "cancelled".
+            # Named rather than caught by a trailing ``else``, which is how the
+            # ``Rung`` and ``Iteration`` variants above came to have branches
+            # rather than marking the first Newton step of every run
+            # "cancelled".
             raise TypeError(
                 f"{type(event).__name__} is a RunEvent this model does not apply; a variant "
                 "added to the union needs a branch here rather than a default"
             )
+
+    def _settle(self, *, finished: bool) -> None:
+        """Close the convergence history in the state the run reached."""
+        self.convergence.settle(finished=finished)
+        self.convergence.count_omitted()
 
     def _say(self, message: str) -> None:
         """Append one line to the log."""

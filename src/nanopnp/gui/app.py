@@ -1,9 +1,9 @@
 """The desktop shell (IF-09): a window over the view-models, and nothing more.
 
 ADR-004's consequence, stated: "the interface is a thin shell over the stage
-objects the CLI drives". This module assembles three panels and wires them to
-each other; it decides nothing about a case, a run or a result, exactly as
-:mod:`nanopnp.cli` decides nothing about them.
+objects the CLI drives". This module assembles five panels and wires them to
+each other; it decides nothing about a case, a run, a result or a picture,
+exactly as :mod:`nanopnp.cli` decides nothing about them.
 
 **Save, then run.** §5.3.1 makes the case file the unit of reproducibility, and
 the FR-25 manifest names it. So "Run" commits the staged edits, writes the file,
@@ -15,10 +15,15 @@ name an input that does not exist.
 ``nanopnp run`` would use, rather than opened into an empty form.
 
 **This release's increment.** QR-11 asks each release for a usable graphical
-surface over the functionality that exists at it. WP14's half is the
-schema-generated editor, run control and the result panel; the live convergence
-plot and the ``webgui`` field viewer are WP15's, and this window is laid out to
-take them as further tabs rather than to be rearranged for them.
+surface over the functionality that exists at it: the schema-generated editor,
+run control, the result panel, the live convergence plot and the ``webgui``
+field viewer, five tabs over one run.
+
+**The plot and the viewer are fed from the same two places the rest is.** The
+convergence panel draws the :class:`~nanopnp.gui.convergence.ConvergenceModel`
+that :class:`~nanopnp.gui.run_model.RunModel` builds from the run's own event
+stream, and the viewer renders the run *directory* — the same directory the
+result panel reads (§5.3.3). Neither is handed anything this window computed.
 """
 
 from __future__ import annotations
@@ -31,12 +36,18 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import yaml
-from PySide6 import QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 from nanopnp.cli.errors import classify
 from nanopnp.gui.case_model import CaseEditor
 from nanopnp.gui.run_model import RunControl
-from nanopnp.gui.widgets import CaseEditorWidget, ResultWidget, RunControlWidget
+from nanopnp.gui.widgets import (
+    CaseEditorWidget,
+    ConvergenceWidget,
+    ResultWidget,
+    RunControlWidget,
+    ViewerWidget,
+)
 from nanopnp.io.case import CaseValidationError
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
@@ -46,9 +57,16 @@ logger = logging.getLogger(__name__)
 
 __all__ = ["MainWindow", "main"]
 
+PLOT_INTERVAL_MS = 250
+"""How often the convergence panel redraws while a run is in flight.
+
+Slower than the run panel's 100 ms drain: that drain is what moves the model, and
+a repaint of a few hundred line segments is worth doing four times a second
+rather than ten."""
+
 
 class MainWindow(QtWidgets.QMainWindow):
-    """The shell's window: the case, the run and the result.
+    """The shell's window: the case, the run, its convergence, the result and the fields.
 
     Parameters
     ----------
@@ -64,18 +82,26 @@ class MainWindow(QtWidgets.QMainWindow):
         self._control = RunControl()
         self._case = CaseEditorWidget(editor)
         self._run = RunControlWidget(self._control)
+        self._convergence = ConvergenceWidget(self._control.model.convergence)
         self._result = ResultWidget()
+        self._viewer = ViewerWidget()
 
         tabs = QtWidgets.QTabWidget()
         tabs.addTab(self._case, "Case")
         tabs.addTab(self._run, "Run")
+        tabs.addTab(self._convergence, "Convergence")
         tabs.addTab(self._result, "Result")
+        tabs.addTab(self._viewer, "Fields")
         self.setCentralWidget(tabs)
         self.setWindowTitle(f"nanopnp — {editor.source or editor.document.name}")
         self.resize(1000, 800)
 
         self._run.startRequested.connect(self.start_run)
         self._run.settled.connect(self._show_result)
+        self._refresh = QtCore.QTimer(self)
+        self._refresh.setInterval(PLOT_INTERVAL_MS)
+        self._refresh.timeout.connect(self._convergence.refresh)
+        self._refresh.start()
 
     def start_run(self) -> None:
         """Commit, save and run the case file.
@@ -101,20 +127,36 @@ class MainWindow(QtWidgets.QMainWindow):
         self._control.start(path, store=self._store)
         # The previous run's numbers are not this run's, and the deviations
         # beside them are the configuration that produced *those* numbers
-        # (FR-25). The panel is emptied before the new run rather than left
-        # showing the old one until it settles.
+        # (FR-25). The panels are emptied before the new run rather than left
+        # showing the old one until it settles — the picture as much as the
+        # numbers, and the plot is repointed because ``start`` builds a fresh
+        # model rather than resetting the old one.
         self._result.show_outcome(None)
+        self._viewer.show_run(None)
+        self._convergence.set_model(self._control.model.convergence)
         self._run.began()
         self.statusBar().showMessage(f"running {path}")
 
     def _show_result(self) -> None:
-        """Read the run directory back into the result panel, if there is one."""
+        """Read the run directory back into the result panel and the viewer.
+
+        The viewer is pointed at the run *directory* and not at a solution: the
+        render child restores the state through the stage-10 gate for itself, in
+        a process of its own, so this window never holds a ``GridFunction`` and
+        a run from an earlier session opens by the same path.
+        """
+        self._convergence.refresh()
         try:
-            self._result.show_outcome(self._control.model.outcome())
+            outcome = self._control.model.outcome()
         except (FileNotFoundError, ValueError) as error:
             # A run directory that is not there, or a manifest this build cannot
             # read: the panel says so rather than showing the previous run.
             self.statusBar().showMessage(str(error))
+            return
+        self._result.show_outcome(outcome)
+        # Only a finished run has a converged state to draw. A cancelled run
+        # wrote no artefact (§5.3.2) and a failed one has nothing to restore.
+        self._viewer.show_run(None if outcome is None else outcome.directory)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
