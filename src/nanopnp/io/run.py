@@ -36,6 +36,8 @@ from nanopnp.core.hashing import Canonicalisable, canonical
 from nanopnp.core.stages import (
     CancelToken,
     Progress,
+    SolveHook,
+    SolveReporting,
     Stage,
     StageHook,
     StageOption,
@@ -457,6 +459,7 @@ def _resolve_stage(
     substitute: bool,
     progress: Progress | None,
     cancel: CancelToken | None,
+    on_solve: SolveHook | None = None,
 ) -> Artefact:
     """Return one stage's artefact, from the store or by running it.
 
@@ -468,7 +471,16 @@ def _resolve_stage(
         That is what makes a hand-substituted artefact testable (FR-27) — it
         proves the stage read the substituted file rather than recomputing past
         it.
+    on_solve
+        Where a :class:`~nanopnp.core.stages.SolveReporting` stage reports its
+        continuation rungs and Newton steps. Only such a stage is rebound, and
+        only *here*: ``key`` was taken from the unbound stage by the caller, so
+        a watched run and an unwatched one key one artefact and land on one
+        store entry (section 5.3.2). A stage that does not satisfy the protocol
+        is left alone rather than given a keyword it would have to ignore.
     """
+    if on_solve is not None and isinstance(stage, SolveReporting):
+        stage = stage.with_solve_hook(on_solve)
     if name in PAYLOAD_FREE:
         # ``_probe`` already ran it. Running it again would be the whole stage
         # twice for an artefact that carries no file, so the key is the answer;
@@ -602,6 +614,7 @@ def run_document(
     progress: Progress | None = None,
     cancel: CancelToken | None = None,
     on_stage: StageHook | None = None,
+    on_solve: SolveHook | None = None,
 ) -> RunResult:
     """Walk the pipeline for one validated case and return what it produced.
 
@@ -649,6 +662,13 @@ def run_document(
         Called before each stage with its name and its position in the walk. The
         same transition ``progress`` reports as text, given as data, so a caller
         that has to act on it does not parse a caption (:class:`~nanopnp.core.stages.StageHook`).
+    on_solve
+        Called with each continuation rung and each accepted Newton step of the
+        solve, as numbers (:class:`~nanopnp.core.stages.SolveHook`). Delivered by
+        capability and not by keyword: only a stage satisfying
+        :class:`~nanopnp.core.stages.SolveReporting` is rebound, and it is
+        rebound after its artefact key has been taken, so watching a run cannot
+        move a hash (section 5.3.2).
 
     Returns
     -------
@@ -696,6 +716,7 @@ def run_document(
             substitute=walk.only and index < len(stages) - 1,
             progress=_slice(progress, low, high, name),
             cancel=cancel,
+            on_solve=on_solve,
         )
         walk.artefacts[name] = artefact
         # After the artefact is recorded, and on inputs rebuilt so that the
@@ -749,6 +770,7 @@ def run_case(
     progress: Progress | None = None,
     cancel: CancelToken | None = None,
     on_stage: StageHook | None = None,
+    on_solve: SolveHook | None = None,
 ) -> RunResult:
     """Load a case file and run it.
 
@@ -761,7 +783,7 @@ def run_case(
     ----------
     path
         The case file.
-    store, upto, only, options, arguments, workspace, write, progress, cancel, on_stage
+    store, upto, only, options, arguments, workspace, write, progress, cancel, on_stage, on_solve
         As :func:`run_document` documents them.
     """
     source = Path(path)
@@ -779,4 +801,5 @@ def run_case(
         progress=progress,
         cancel=cancel,
         on_stage=on_stage,
+        on_solve=on_solve,
     )

@@ -50,6 +50,7 @@ from nanopnp.core.paths import store_root
 from nanopnp.core.stages import (
     CancelToken,
     Progress,
+    SolveHook,
     StageDescription,
     check_cancelled,
     describe,
@@ -136,6 +137,7 @@ class SolveStage:
         workspace: Path | None = None,
         warm_start: Artefact | None = None,
         cold_reason: str = "",
+        solve_hook: SolveHook | None = None,
     ) -> None:
         """Build the stage.
 
@@ -161,10 +163,45 @@ class SolveStage:
             ``None``. A member that could not find its parent and a member that
             has no parent are different facts, and QR-06 asks that a sweep's
             timings say which members paid for what.
+        solve_hook
+            Where each continuation rung and each accepted Newton step is
+            reported, as numbers (:class:`~nanopnp.core.stages.SolveHook`).
+            Normally set through :meth:`with_solve_hook` rather than here. It is
+            a callback and not an input: it reaches neither
+            :attr:`~nanopnp.io.case.ResolvedCase.solve_provenance` nor
+            :meth:`key`, so a run watched from the desktop shell keys the same
+            artefact as the same run from the command line (§5.3.2).
         """
         self._workspace = Path(workspace) if workspace is not None else None
         self._warm_start = warm_start
         self._cold_reason = cold_reason
+        self._solve_hook = solve_hook
+
+    def with_solve_hook(self, hook: SolveHook) -> SolveStage:
+        """Return a copy of this stage reporting its rungs and steps through ``hook``.
+
+        The :class:`~nanopnp.core.stages.SolveReporting` capability. A copy
+        rather than a mutation because the caller that rebinds is the pipeline
+        driver, which has already taken this stage's artefact key: mutating the
+        object it keyed would make the hook look like part of the run even
+        though the key is unmoved, and the copy makes the ordering explicit.
+
+        Parameters
+        ----------
+        hook
+            The reporter.
+
+        Returns
+        -------
+        SolveStage
+            The same stage, with the same workspace, warm start and cold reason.
+        """
+        return SolveStage(
+            workspace=self._workspace,
+            warm_start=self._warm_start,
+            cold_reason=self._cold_reason,
+            solve_hook=hook,
+        )
 
     def describe(self) -> StageDescription:
         """Return the registry's description of this stage (FR-27)."""
@@ -421,11 +458,36 @@ class SolveStage:
         about an unknown argument rather than about the physics. That is also
         why cancellation cannot ride the callback alone, and why ``on_rung``
         exists.
+
+        The :class:`~nanopnp.core.stages.SolveHook` rides the same two closures,
+        beside the progress reports rather than instead of them, and the captions
+        are left byte-identical: a hook is what a caller *acts* on and a caption
+        is what it shows, and the two answering the same question differently is
+        how they drift. Because the hook rides ``on_rung``, a rung whose model
+        takes no Newton callback still reports itself — which is what makes the
+        NUM-18 electrostatic stages visible as rungs that emitted no steps,
+        rather than as a gap (VER-44).
+
+        The hook is told *per rung* whether the callback was injected, from the
+        same test that injects it, because a rung reports no step for two
+        unrelated reasons and a reader cannot tell them apart from the silence.
+        A rung whose model takes no callback reports none by construction; a
+        coupled rung reports none when :func:`~nanopnp.solve.newton.damped_newton`
+        found the entry residual already below its target and returned before the
+        first step — which is not a missing record but the NUM-16 warm-start case
+        itself, and is what most of the ladder does once a neighbour has been
+        transferred onto it.
         """
         settings = resolved.newton
+        hook = self._solve_hook
         span = 1.0 - LOAD_FRACTION
         total = max(len(rungs), 1)
         iterations = max(settings.max_iterations, 1)
+        # One decision, read twice: whether this rung's ``solve`` takes a Newton
+        # callback. Testing it separately where the hook is told and where the
+        # callback is injected would let the two disagree, and the disagreement
+        # would show as a band that promised steps and reported none.
+        reporting = tuple(isinstance(rung.model, CoupledModel) for rung in rungs)
         # The rung the Newton callback is reporting within. A closure cell rather
         # than an argument because ``solve`` knows nothing about the ladder.
         current = [0]
@@ -434,6 +496,15 @@ class SolveStage:
             current[0] = index
             check_cancelled(cancel, f"rung {rung.name!r}")
             report(progress, LOAD_FRACTION + span * index / total, f"rung {rung.name}")
+            if hook is not None:
+                hook.rung(
+                    rung.name,
+                    rung.stage,
+                    index,
+                    len(rungs),
+                    reporting[index],
+                    settings.relative_tolerance,
+                )
 
         def on_step(step: NewtonStep) -> None:
             check_cancelled(cancel, f"Newton iteration {step.iteration}")
@@ -443,6 +514,15 @@ class SolveStage:
                 LOAD_FRACTION + span * (current[0] + within) / total,
                 f"iteration {step.iteration}, residual {step.residual:.3e}",
             )
+            if hook is not None:
+                hook.step(
+                    step.iteration,
+                    step.residual,
+                    step.update,
+                    step.damping,
+                    step.trials,
+                    step.forced,
+                )
 
         prepared = tuple(
             replace(
@@ -451,10 +531,10 @@ class SolveStage:
                     **dict(rung.solve_kwargs),
                     "settings": settings,
                     "solver": resolved.linear_solver,
-                    **({"callback": on_step} if isinstance(rung.model, CoupledModel) else {}),
+                    **({"callback": on_step} if takes_callback else {}),
                 },
             )
-            for rung in rungs
+            for rung, takes_callback in zip(rungs, reporting, strict=True)
         )
         return prepared, on_rung
 

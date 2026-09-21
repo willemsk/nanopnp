@@ -124,6 +124,15 @@ class NewtonStep:
         1-based index.
     residual
         Residual norm *after* the step.
+    update
+        ``‖δu‖ / max(‖u‖, reference_norm)`` on the **undamped** direction, at the
+        iterate the step started from. The other half of NUM-16's disjunctive
+        criterion, and the half that moves on a warm start: the entry residual is
+        already at its floor there, so a record carrying the residual alone shows
+        a rung converging while its curve is flat. Recorded rather than
+        recomputed because it is already in scope where this step is built, and a
+        second computation would be a second chance to take the norm of the
+        damped step instead.
     damping
         Damping factor the step was taken with.
     trials
@@ -135,6 +144,7 @@ class NewtonStep:
 
     iteration: int
     residual: float
+    update: float
     damping: float
     trials: int
     forced: bool
@@ -172,7 +182,15 @@ class NewtonResult:
         return sum(1 for step in self.history if step.forced)
 
     def summary(self) -> dict[str, Option]:
-        """Return a record of the solve, for logs and the manifest."""
+        """Return a record of the solve, for logs and the manifest.
+
+        :attr:`history` is deliberately not in it, and adding it would not be a
+        richer manifest: this record reaches the stage-10 artefact's summary,
+        which is inside the §5.3.2 content hash, so a per-iteration series here
+        would make every solve its own cache entry and move the hash of every
+        run in the store. The history is what the live convergence plot of
+        VER-44 reads, in the process that produced it.
+        """
         return {
             "converged": self.converged,
             "iterations": self.iterations,
@@ -355,6 +373,7 @@ def damped_newton(
         record = NewtonStep(
             iteration=iteration,
             residual=current,
+            update=relative_update,
             damping=damping,
             trials=trials,
             forced=forced,

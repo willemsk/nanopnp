@@ -19,7 +19,10 @@ desktop shell has one above this layer (ADR-004).
 
 **Progress is a fraction, not a log line.** ``progress(fraction, message)`` is
 monotone in [0, 1] and ends at 1, so a caller can drive a bar without parsing
-anything.
+anything. What a caller has to *act* on travels beside it as data:
+:class:`StageHook` carries the stage transition, :class:`SolveHook` the
+continuation rung and the Newton step. Both exist because the alternative is a
+caller parsing a caption, which makes a display format into an interface.
 """
 
 from __future__ import annotations
@@ -75,6 +78,93 @@ class StageHook(Protocol):
 
     def __call__(self, name: str, index: int, total: int) -> None:
         """Report that stage ``index`` of ``total`` (0-based) is about to run."""
+
+
+class SolveHook(Protocol):
+    """Called by the solve with each continuation rung and each Newton step.
+
+    :class:`StageHook` one level down, and for the same reason it exists: the
+    residual reaches a :class:`Progress` caller only inside a ``:.3e`` string,
+    and a convergence plot's whole subject is six or more orders of that number.
+    Recovering it from the caption would make a display format into an
+    interface.
+
+    Two methods rather than two hooks, so that threading it through the pipeline
+    is one object; and :meth:`rung` always precedes the steps it scopes, which is
+    what lets a reader band a series by rung rather than by a running iteration
+    count. A rung may report no step at all, and :meth:`rung` says in advance
+    whether one is even possible, because the two reasons for the silence are
+    different facts and neither is visible from the silence itself.
+
+    Plain scalars only. This module is on the command line's import path, and
+    naming :class:`~nanopnp.solve.newton.NewtonStep` here would import NGSolve
+    for a type the CLI never constructs.
+    """
+
+    def rung(
+        self, name: str, stage: int, index: int, total: int, reporting: bool, tolerance: float
+    ) -> None:
+        """Report that rung ``index`` of ``total`` (0-based) is about to be solved.
+
+        Parameters
+        ----------
+        name
+            The rung's name, as the ladder and the run record give it.
+        stage
+            The NUM-18 stage number this rung belongs to; a ramp expands into
+            several rungs sharing one.
+        index, total
+            The rung's position in the ladder, 0-based.
+        reporting
+            Whether this rung's solve was given a Newton callback at all. NUM-18's
+            electrostatic stages are not coupled models and take none, so they
+            report no step by construction; a rung that *is* reporting and still
+            reports no step converged on entry, before its first step, which is
+            the NUM-16 warm-start case and not a missing record. A reader told
+            only the silence cannot tell the two apart.
+        tolerance
+            The relative tolerance this rung is solved to. Both halves of NUM-16's
+            disjunctive criterion are measured against it, so a reader holding the
+            steps and this number can say what the solver tested rather than
+            assuming a default — and can say it without importing the solver to
+            read one.
+        """
+
+    def step(
+        self,
+        iteration: int,
+        residual: float,
+        update: float,
+        damping: float,
+        trials: int,
+        forced: bool,
+    ) -> None:
+        """Report one accepted Newton step of the rung most recently announced.
+
+        The fields of :class:`~nanopnp.solve.newton.NewtonStep`, as numbers:
+        ``residual`` after the step, ``update`` the relative update on the
+        *undamped* direction, and ``forced`` whether NUM-16 accepted the step at
+        minimum damping without reducing the residual.
+        """
+
+
+@runtime_checkable
+class SolveReporting(Protocol):
+    """A stage that can be asked to report its Newton progress (:class:`SolveHook`).
+
+    A capability rather than a parameter on :class:`Stage`. ``progress`` and
+    ``cancel`` are on the stage protocol because they are universal; a Newton
+    hook is meaningful to exactly one of the twelve stages, and putting it on
+    the protocol would add a keyword to eleven signatures that can only ever
+    ignore it.
+
+    The hook is **not an input**. A caller rebinds the stage *after* its artefact
+    key has been taken, so a run watched from the desktop shell lands on the same
+    store entry as the same run from the command line (section 5.3.2).
+    """
+
+    def with_solve_hook(self, hook: SolveHook) -> Stage:
+        """Return a copy of this stage that reports through ``hook``."""
 
 
 @runtime_checkable

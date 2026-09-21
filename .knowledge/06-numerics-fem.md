@@ -485,6 +485,20 @@ almost undiluted, and `t+` moves 0.433 -> 0.384. The classical arm doubles as a 
 the top of the salt range: with the double layer a tenth of the pore radius it gives 2.9495e-8 S
 against the closed form's 2.95e-8 S.
 
+**A rung reports no Newton step for two unrelated reasons, and the silence is identical. [tested]**
+Measured 21 September 2026 on the default ladder of an `epnp-ns` case at 0.1 M and 20 mV, twelve
+rungs on a cheap cylindrical pore. Two rungs (`1-pb-linear`, `2-pb`) are not coupled models, so
+`SolveStage._instrumented` injects no damped-Newton callback into them at all — a callback is a
+keyword their `solve` would reject. Three more (`3-equilibrium-pnp`, `7-corrections`, `8-steric`)
+*are* coupled and still record `iterations: 0`: `damped_newton` found the transferred state's
+residual already at or below `max(rtol * initial, atol)` and returned before its first step. Only
+the remaining seven took steps, five each on the bias and salt rungs and four on the flow rung.
+
+So five of twelve rungs keep no Newton history, and a consumer told only "no steps" cannot say
+which kind of rung it is looking at. Anything reporting the ladder has to carry that distinction
+explicitly — it is knowable only where the callback is injected — or it will describe a warm-started
+rung that converged on entry as one that is not a Newton solve.
+
 **Measured, on a charged 2 nm × 13 nm pore. [tested]** The only rungs needing damping below the
 0.2 initial value were the surface-charge ramp, at 0.08; every other rung of every ladder tried held
 at 0.2. A full climb to the hard corner — 3 M, ±200 mV, every correction active, wall graded to
