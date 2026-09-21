@@ -1,6 +1,6 @@
 # WP15 — Live convergence and the field viewer
 
-**Status: planned, not started.** Written 21 September 2026, after WP14 delivered the packaging
+**Status: delivered, 21 September 2026.** Written 21 September 2026, after WP14 delivered the packaging
 probe, the schema-generated case editor, run control over a spawned solver process and the result
 panel. WP15 inherits four things from it: the `RunEvent` union as the channel, the Qt-free
 view-model discipline, a `MainWindow` laid out to take further tabs, and the probe's answer to the
@@ -58,17 +58,66 @@ the measurements the decisions rest on are in §Design, outside the budget.
 
 | # | Decision | Choice | Why / source |
 |---|---|---|---|
-| D1 | How a Newton step reaches the shell | One protocol, `SolveHook`, in `core/stages.py`, with two methods — `rung(name, stage, index, total)` and `step(iteration, residual, update, damping, trials, forced)` — threaded as a single optional `on_solve` keyword through `run_case` → `run_document` → the solve stage. Plain scalars only, so `core/stages.py` imports nothing from `solve/` | `StageHook`'s own rationale one level down; WP14 §Design 2. Two methods rather than two parameters keeps the threading to one object, and `rung` always precedes the steps it scopes |
+| D1 | How a Newton step reaches the shell | One protocol, `SolveHook`, in `core/stages.py`, with two methods — `rung(name, stage, index, total, reporting, tolerance)` and `step(iteration, residual, update, damping, trials, forced)` — threaded as a single optional `on_solve` keyword through `run_case` → `run_document` → the solve stage. Plain scalars only, so `core/stages.py` imports nothing from `solve/` | `StageHook`'s own rationale one level down; WP14 §Design 2. Two methods rather than two parameters keeps the threading to one object, and `rung` always precedes the steps it scopes |
+
+> **Outcome — `rung` carries two arguments this table did not settle, and both are load-bearing.**
+> `reporting` because D3 turned out to be wrong (see its own Outcome): the silence of a rung has two
+> causes and is identical from the far side, and only `_instrumented` — where the callback is or is
+> not injected — can tell them apart, so the distinction travels as data from the same test that
+> makes it (`solve/stage.py`, `reporting = tuple(isinstance(rung.model, CoupledModel) ...)`).
+> `tolerance` because D6's annotation is measured against NUM-16's relative tolerance, and the
+> alternative was for `gui/convergence.py` to import `solve.newton` for a default the run may not be
+> using — which would have cost the Qt-free view-model layer its NGSolve-free guarantee for a
+> number the solver already holds. Both are asserted in `tests/tier1/test_solve_hook.py`.
 | D2 | How that hook reaches `SolveStage` without widening the twelve-stage `Stage.run` | A `runtime_checkable` capability protocol `SolveReporting` with `with_solve_hook(hook) -> Stage`; `_resolve_stage` rebinds the stage only when it satisfies the protocol. The hook is **not an input**: the artefact key is computed from the unbound stage before rebinding, and a watched run must land on the same cache entry as an unwatched one | A Newton hook is solve-specific; eleven stages should not grow a keyword they ignore. Hash invariance is asserted, not assumed (§5.3.2) |
 | D3 | The rungs that emit no steps | Both `rung` and `step` cross the boundary. The plot's x-axis is **the ladder**, one labelled band per rung; a rung that emitted no step is an empty labelled band reading that it is not a Newton solve, never a line interpolated across the gap | `on_step` is injected only when `isinstance(rung.model, CoupledModel)` (`solve/stage.py:454`), so NUM-18 rungs 1–2 are silent by construction |
+
+> **Outcome — "it is not a Newton solve" is false for three rungs in twelve, and the band says which
+> silence it is.** Measured on the default ladder of an `epnp-ns` case at 0.1 M and 20 mV: of its
+> twelve rungs, **two** take no callback (`1-pb-linear`, `2-pb`) and **three** are coupled rungs that
+> reported nothing because `damped_newton` found the transferred residual already at or below
+> `max(rtol·initial, atol)` and returned before its first step — `3-equilibrium-pnp`,
+> `7-corrections`, `8-steric`, each recording `iterations: 0`. That is the NUM-16 warm-start case,
+> not a missing record, and annotating it "not a Newton solve" would state something about the
+> solve that is not true. So `rung` carries `reporting` and `Band.note()` has two empty-band
+> branches. The rest of D3 stands: the axis is the ladder, one polyline per band, never across one.
+> Recorded in `.knowledge/06-numerics-fem.md` §5.1 **[tested]**; VER-44 amended in the same commit.
 | D4 | A solve served from the store | Emits no rungs and no steps. The panel says *that*, by name, rather than showing an empty plot | `walk.store.get_or_compute`; assert, don't hope. An empty plot would read as instant convergence |
 | D5 | `NewtonStep` gains `update` | Yes — the relative update norm on the **undamped** direction, already computed at `newton.py:308` and already half the NUM-16 criterion. A residual-only plot shows six orders of a number that is not the test the solver converged on | NUM-16 NOTE; `CLAUDE.md` *Numerics rules*. `NewtonResult.summary()` does not serialise `history`, so no manifest key, run-record field or artefact hash moves — asserted in both directions |
 | D6 | What the plot may claim | **No convergence threshold line.** The criterion is per rung and is *either* the residual test *or* the update test; one drawn line would claim a criterion the solver does not use. Each band is annotated with which test closed it, and NUM-16 forced steps are marked | NUM-16 |
+
+> **Outcome — "which test closed it" is not knowable, and the band claims only what it can prove.**
+> The two tests are not exclusive and `damped_newton` short-circuits on the residual one, so "which
+> closed it" would require the entry residual, which is unknown when the rung is announced. What is
+> provable from the step record and the rung's own tolerance is the *exclusion*: a forced last step
+> is barred from the update test by NUM-16, and a last relative update above the tolerance fails it —
+> either way the residual test is the only one that can have ended the rung. Otherwise the band
+> reports the update test as met, without claiming the residual test was not. `Band.closed_on()`,
+> asserted in all three branches in `tests/tier1/test_gui_viewmodels.py`. VER-44 amended to match.
 | D7 | How the plot is drawn | Hand-stroked `QPainter` polylines in a plain `QWidget`. No new dependency and no PySide6-Addons payload for PyInstaller to find; the log mapping, decimation, banding and tick selection live in the Qt-free view-model and are asserted on the push gate, where `PySide6.QtWidgets` does not import at all | WP14 §Design 4 Outcome; CON-07, ADR-004's one-dir bundle |
 | D8 | What the field viewer consumes | The **live `GridFunction`**, rebuilt by `solve.state.restore()` from a finished run's `state.npz` in a **separate spawned render process** — not the IF-07 XDMF export, and not a scene made at the tail of the solve child | webgui wants a live `GridFunction` and the XDMF pair is a P2 node set for a reader. `restore` is a gate, never an adaptation, so the scene is the operator that was actually solved. A run from an earlier session then renders by the same path, at no extra code |
 | D9 | How the scene crosses the boundary | As a **file**. The render child writes the scene JSON and its host document; the parent loads it with `QUrl.fromLocalFile`. Never through the queue, never through `setHtml` | Measured: 193 B/element at order 1, 321 B/element at order 2 → **23–39 MB** on the 120,917-element reference mesh (§Design 1) |
+
+> **Outcome — two files, one field's pair kept.** The document *embeds* the scene rather than
+> fetching the JSON as a subresource: whether Chromium lets a `file://` document load a `file://`
+> script is a policy question that cannot be settled on a machine where Qt WebEngine cannot be
+> constructed at all, and a document that silently failed to load its data is precisely the blank
+> panel QR-12 is written against. That costs two copies, so the child removes the previous field's
+> pair when it renders another — bounding a run directory at one scene rather than five, and making
+> a field switch a re-render of about a second at reference size rather than tens of megabytes kept.
+> Collapsing the two into one subresource load is a one-line change for whoever can watch a picture
+> draw. Asserted in `tests/tier1/test_gui_render.py`; `setHtml` is asserted *never called* in
+> `tests/tier1/test_gui_widgets.py` by replacing the method with one that fails the test.
 | D10 | Where those files live | `viewer/` inside the run directory, never registered as an artefact and never hashed. It is a display artefact, and §5.3.2's "a cancelled run writes no artefact" must keep meaning what it says | §5.3.2 |
 | D11 | Field names and units | The render child enumerates the model's components and names them with `io/fields.attribute_name()` under the same §6.3 scale table the XDMF export uses. No field name, unit or model name is written in `gui/` | The `VOCABULARY` guard in `tests/tier1/test_gui_viewmodels.py`; one scaling, never a second |
+
+> **Outcome — and on the field's own *region*, not the whole mesh.** `Draw(cf, mesh.Materials(...))`
+> works and returns a smaller scene **[tested]**, which matters for honesty rather than size: a field
+> declared on the fluid evaluates to zero inside the membrane, so a whole-mesh draw of a
+> concentration paints a zero *inside a wall* that a reader cannot distinguish from a converged
+> depletion — the same trap `io/fields.py` documents for the export, avoided the same way. All five
+> fields of the family draw from one code path, the two-component velocity included. The `VOCABULARY`
+> guard is extended with `phi_V`, `u_m_s`, `p_Pa` and `mol_m3`.
 | D12 | Whether the picture drew | `loadFinished` is a statement about the document. After it, the widget runs one `runJavaScript` readiness probe; if the renderer global is absent or the scene did not initialise, the panel is replaced by a diagnostic naming the renderer source it tried | QR-12; `.knowledge/07` §5 records `loadFinished(True)` with `webgui is not defined` |
 | D13 | Where the renderer JavaScript comes from | **Open, OQ-1.** Recommended: ship `webgui@0.2.39/dist/webgui.js` as package data, so a bundle draws offline. Until that ruling, the CDN URL `netgen.webgui` already hard-codes, with D12's probe and the limitation recorded. The source is one constant behind one function either way | npm `webgui@0.2.39` is **LGPL-2.1-or-later**, 1,206,946 B unpacked (§Design 2). Vendoring redistributes it, which is a CON-09 change and the author's call |
 | D14 | Not `netgen.webgui.GenerateHTML` | We build the host document ourselves from `WebGLScene.GetData()`. `GenerateHTML(data, filename, template)` takes a `template`, assigns it, and then substitutes into `_html_template` regardless — the argument is dead | `netgen/webgui.py:830–837`, read (§Design 2) |
@@ -96,6 +145,16 @@ In dependency order. Read the Design section named before touching the item.
 | 14 | The §Design measurements into `.knowledge/07-software-stack.md` §5 | `.knowledge/` | — | 1, 2 |
 | 15 | *Conditional on OQ-1*: the renderer asset, its wheel inclusion, its `LICENSES-BUNDLE.md` line, the CON-09 amendment, and its entry in the probe's `PAYLOADS` | `pyproject.toml`, `packaging/`, `SPECIFICATION.md`, `gui/probe.py` | CON-09, CON-11, RSK-13 | 2 |
 
+> **Outcome — items 13 and 14 were delivered with the plan; item 15 is deferred, twice over.**
+> §7.2's VER-44 and the Appendix A rows for IF-09 and QR-11 landed in the plan commit (`f4fecdb`),
+> as did §Design 1's and §Design 2's measurements in `.knowledge/07` §5; the implementation commit
+> **amends** VER-44 for what D3 and D6 turned out to be, and adds two further findings to the
+> knowledge base. Item 15 is not done: OQ-1 has had no ruling, and it could not be implemented in
+> this session even under a "yes", because `cdn.jsdelivr.net` answers the development container's
+> proxy with 403 and the file cannot be fetched to be vendored (§Design 2 predicted exactly this).
+> The renderer source stays one constant behind `renderer_source()`, the probe's `PAYLOADS` is
+> untouched, and no CON-09 amendment is made. What the deferral costs is recorded under OQ-1 below.
+
 ### Verification
 
 Every row runs under `uv run pytest` unless stated. Tier 1 throughout: nothing here is an analytic
@@ -116,6 +175,32 @@ Runtime budget: WP14 measured the whole Tier-1 GUI suite at 4.0 s, of which 2.9 
 runs. `test_gui_render.py` adds one `restore` plus one `GetData` on a small mesh — under 0.2 s at
 the sizes §Design 1 measures. If the suite passes ~8 s, the render test takes the same case fixture
 the solver-process test already builds rather than a second one.
+
+> **Outcome — two oracles are better than the ones this table named, and one row moved file.**
+>
+> - `NewtonStep.update` is asserted against the **accepted states**, not against a direction vector
+>   read back: the loop takes `x_k = x_{k-1} − λ·P·δu`, so the full direction is recoverable from
+>   two iterates and the damping factor, and nothing in that reconstruction passes through the
+>   quantity under test. It agrees to the last bit on every step, and the test also asserts that the
+>   recorded value is *not* the damped one — which on this problem's opening steps differs by the
+>   factor 0.2 and would otherwise pass every other assertion.
+> - The spawned-run row compares against the **manifest's** solver group, not the run record: the
+>   run record carries artefact hashes and quantities, and the per-rung `newton` block lives in
+>   `manifest.json`. Floats there are hex-encoded, so the test decodes with
+>   `core.hashing.decode_floats` and compares exactly.
+> - `tests/tier1/test_solve_hook.py` additionally asserts that **only** stage 10 satisfies
+>   `SolveReporting`, in both directions, which is the mechanical form of D2's argument.
+>
+> **Measured, 21 September 2026.** The whole Tier-1 GUI and hook set —
+> `test_gui_viewmodels.py`, `test_gui_solver_process.py`, `test_gui_render.py`,
+> `test_gui_probe.py`, `test_solve_hook.py` — runs in **6.4 s** on an unloaded container, of which
+> the two real spawned runs and the render fixture's solve are about 5 s. `test_gui_widgets.py`
+> skips on the push gate; under the `.knowledge/07` §5 GL shim all 13 of its cases pass, in 0.6 s
+> warm and 6.6 s on a cold Qt WebEngine start — including the `QPainter` repaint into a `QPixmap`
+> and the `QWebEngineView` construction. Scene sizes on the 124-triangle test
+> mesh: 43.1 kB for a whole-domain field at order 2, 30.5 kB for a fluid-restricted one, 63 kB for
+> the velocity — 347 B/element, consistent with §Design 1's 321 B/element at order 2. One render,
+> including the `restore`, is 0.46 s on that mesh.
 
 ### Out of scope
 
@@ -139,9 +224,23 @@ records the version and its hash. **Recommendation: yes.** If the ruling is no o
 WP15 ships D13's CDN default with D12's probe and records the limitation; the CON-09 amendment is
 then not made. *This does not block implementation* — the renderer source is one constant.
 
+> **Outcome — still open, and it outlived the package.** No ruling arrived, and the fallback is what
+> shipped: `RENDERER_SOURCE` is the CDN address `netgen.webgui`'s own template pins, read through
+> `renderer_source()`, with D12's probe naming it in every diagnostic. Note that a "yes" would not
+> have been implementable from this session either — `cdn.jsdelivr.net` returns 403 through the
+> development container's proxy, so the file has to be fetched elsewhere and checked against the
+> integrity hash npm publishes. **What the deferral costs**: a double-clicked bundle on a machine
+> with no route to the CDN shows the viewer's diagnostic instead of a field. Nothing else in WP15
+> depends on it, and closing it is work item 15 plus one constant.
+
 **OQ-2 — is a solve served from the store worth a panel of its own?** D4 requires the cache-hit
 state to be named. Whether the panel should also offer to re-run with the store bypassed is a
 workflow question, not a correctness one. Default: no, state it and stop.
+
+> **Outcome — the default stands.** `ConvergenceModel.state` carries `served` as a state of its own
+> and `summary` says the solve climbed no ladder and took no Newton step. No re-run control is
+> offered. `tests/tier1/test_solve_hook.py` establishes the premise the state rests on: a solve
+> answered from the store emits no rung and no step at all.
 
 ## Spec and plan amendments
 
@@ -252,9 +351,13 @@ class SolveReporting(Protocol):
     def with_solve_hook(self, hook: SolveHook) -> Stage: ...
 ```
 
-and `_resolve_stage` rebinds only a stage that satisfies it. `SolveStage` is a frozen dataclass, so
-`with_solve_hook` returns a copy; the hook is a field the stage carries, not a parameter every stage
-declares.
+and `_resolve_stage` rebinds only a stage that satisfies it. `with_solve_hook` returns a copy; the
+hook is a field the stage carries, not a parameter every stage declares.
+
+> **Outcome — `SolveStage` is a plain class with an `__init__`, not a frozen dataclass.** The
+> conclusion is unchanged and the copy is explicit: `with_solve_hook` calls the constructor with
+> this stage's workspace, warm start and cold reason plus the hook. `solve_hook` is a keyword-only
+> constructor argument like the other three, and reaches neither `solve_provenance` nor `key`.
 
 The hash argument is the part worth stating. `run_document` already computes the key from the
 stage *before* `_resolve_stage` runs:

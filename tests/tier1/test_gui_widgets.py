@@ -1,4 +1,4 @@
-"""VER-43 — the form binds the whole schema, and editing it moves the document.
+"""VER-43 and VER-44 — the form binds the whole schema, and the panels bind their models.
 
 The only file in the suite that constructs a Qt object, and the reason the rest
 of them do not. ``PySide6.QtWidgets`` raises ``ImportError: libEGL.so.1`` in the
@@ -13,9 +13,15 @@ names, which is a better claim than a Linux job with hand-installed system
 packages could make.
 
 Nothing here asserts a pixel. What is asserted is the binding: that every field
-of the schema has a widget, that a widget's edit reaches the document, and that
-a value the schema refuses is refused at the field with the message the command
-line gives.
+of the schema has a widget, that a widget's edit reaches the document, that a
+value the schema refuses is refused at the field with the message the command
+line gives, that the convergence plot paints a real ladder without raising, and
+that the field viewer loads a **file** URL and never ``setHtml``.
+
+That last one is a size claim rather than a style one. ``setHtml``
+percent-encodes its argument into a data URL and a scene of the reference mesh is
+23 to 39 MB (`.knowledge/07-software-stack.md` §5), so the call that must never
+happen is asserted to never happen rather than merely not written.
 """
 
 from __future__ import annotations
@@ -26,17 +32,25 @@ from pathlib import Path
 import pytest
 
 from nanopnp.gui.case_model import CaseEditor
-from nanopnp.gui.run_model import RunControl
-from nanopnp.gui.solver import Failed, Finished, Progress, Started
+from nanopnp.gui.convergence import ConvergenceModel
+from nanopnp.gui.render import Rendered, RenderFailed
+from nanopnp.gui.run_model import RunControl, RunModel
+from nanopnp.gui.solver import Failed, Finished, Iteration, Progress, Rung, Started
 from nanopnp.io.case import case_fields, load_case
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 try:
     from PySide6 import QtWidgets
+    from PySide6.QtWebEngineWidgets import QWebEngineView
 
     from nanopnp.gui.app import MainWindow
-    from nanopnp.gui.widgets import CaseEditorWidget, RunControlWidget
+    from nanopnp.gui.widgets import (
+        CaseEditorWidget,
+        ConvergenceWidget,
+        RunControlWidget,
+        ViewerWidget,
+    )
 except (ImportError, OSError) as error:  # pragma: no cover - platform dependent
     pytest.skip(f"PySide6 cannot be constructed here: {error}", allow_module_level=True)
 
@@ -151,10 +165,10 @@ def test_if09_a_choice_offers_exactly_the_registered_values(
     assert offered == editor.state("physics.model").options
 
 
-def test_if09_the_window_assembles_its_three_panels(
+def test_if09_the_window_assembles_its_five_panels(
     application: QtWidgets.QApplication, editor: CaseEditor
 ) -> None:
-    """The whole window builds offscreen: the case, the run panel and the result.
+    """The whole window builds offscreen: all five panels of the QR-11 increment.
 
     Constructed rather than merely imported, because the failures this catches
     are construction-time ones — a signal connected to a slot that does not take
@@ -165,7 +179,13 @@ def test_if09_the_window_assembles_its_three_panels(
     window = MainWindow(editor)
     tabs = window.centralWidget()
     assert isinstance(tabs, QtWidgets.QTabWidget)
-    assert [tabs.tabText(index) for index in range(tabs.count())] == ["Case", "Run", "Result"]
+    assert [tabs.tabText(index) for index in range(tabs.count())] == [
+        "Case",
+        "Run",
+        "Convergence",
+        "Result",
+        "Fields",
+    ]
     assert window.windowTitle().endswith("case.yaml")
 
     # The run panel polls a control that has never been started: it must read as
@@ -237,3 +257,172 @@ def test_if09_run_is_disabled_and_cancel_enabled_from_the_moment_a_run_begins(
     panel.refresh()
     assert panel.can_start
     assert not panel.can_cancel
+
+
+# -- the convergence plot ------------------------------------------------------
+
+
+def _ladder() -> ConvergenceModel:
+    """Return a model carrying the three kinds of band the real ladder produces."""
+    model = RunModel()
+    model.consume(
+        [
+            Started(case="case.yaml", store=None),
+            Rung(name="1-pb-linear", stage=1, index=0, total=3, reporting=False, tolerance=1e-6),
+            Rung(name="3-equilibrium", stage=3, index=1, total=3, reporting=True, tolerance=1e-6),
+            Rung(name="9-salt", stage=9, index=2, total=3, reporting=True, tolerance=1e-6),
+            Iteration(iteration=1, residual=1e-2, update=2e-1, damping=0.2, trials=3, forced=False),
+            Iteration(iteration=2, residual=1e-8, update=1e-5, damping=1.0, trials=1, forced=False),
+            Finished(directory="runs/probe"),
+        ]
+    )
+    return model.convergence
+
+
+def test_ver44_the_plot_paints_a_real_ladder_without_raising(
+    application: QtWidgets.QApplication,
+) -> None:
+    """The panel renders into a pixmap, which is the only way its painter runs.
+
+    Constructed *and painted*, because every failure this catches is a paint-time
+    one: a zero-width frame divided into, a band extent read from a model that
+    has none, a polyline built from an empty point list. None of them shows up
+    until something asks the widget to draw.
+    """
+    from PySide6 import QtGui
+
+    panel = ConvergenceWidget(_ladder())
+    panel.resize(800, 400)
+    panel.refresh()
+
+    pixmap = QtGui.QPixmap(panel.size())
+    panel.render(pixmap)
+    assert not pixmap.isNull()
+
+    # An empty model paints too: that is the panel's state before any run, and
+    # the axis has to survive a zero span rather than divide by it.
+    empty = ConvergenceWidget(ConvergenceModel())
+    empty.resize(400, 200)
+    empty.render(QtGui.QPixmap(empty.size()))
+
+
+def test_ver44_the_panel_prints_every_bands_note(
+    application: QtWidgets.QApplication,
+) -> None:
+    """The reasons a band is empty are on screen, not only in the model.
+
+    The plot cannot draw "this rung takes no Newton callback"; the note is where
+    that is said, and a panel that computed its own summary would be a second
+    reading of the same numbers.
+    """
+    model = _ladder()
+    panel = ConvergenceWidget(model)
+
+    shown = panel.notes_text()
+    for band in model.bands:
+        assert band.note() in shown
+        assert band.name in shown
+    assert panel.refresh() is model
+
+
+# -- the field viewer ----------------------------------------------------------
+
+
+def test_ver44_the_viewer_loads_a_file_url_and_never_sets_html(
+    application: QtWidgets.QApplication,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """A rendered scene arrives as ``QUrl.fromLocalFile`` and ``setHtml`` is not called.
+
+    Asserted by replacing both methods, because "we never call it" is a claim
+    about code that is easy to break by accident and impossible to see in a
+    screenshot: a data URL of a 23 MB scene fails somewhere inside Qt, not here.
+    """
+    from PySide6 import QtCore
+
+    loaded: list[QtCore.QUrl] = []
+    monkeypatch.setattr(QWebEngineView, "load", lambda _self, url: loaded.append(url))
+    monkeypatch.setattr(
+        QWebEngineView,
+        "setHtml",
+        lambda *_args, **_kwargs: pytest.fail("the viewer called setHtml"),
+    )
+
+    document = tmp_path / "viewer" / "scene.html"
+    document.parent.mkdir()
+    document.write_text("<html></html>", encoding="utf-8")
+
+    panel = ViewerWidget()
+    panel.model.request(tmp_path)
+    panel.apply(
+        [
+            Rendered(
+                document=str(document),
+                scene=str(document.with_suffix(".json")),
+                field="a_field",
+                fields=("a_field", "another_field"),
+                elements=124,
+            )
+        ]
+    )
+
+    assert len(loaded) == 1
+    assert loaded[0].isLocalFile()
+    assert Path(loaded[0].toLocalFile()) == document
+    assert panel.offered_fields() == ("a_field", "another_field")
+    assert not panel.showing_diagnostic
+
+
+def test_ver44_a_document_that_drew_nothing_replaces_the_view_with_a_diagnostic(
+    application: QtWidgets.QApplication,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """The probe's verdict decides what the panel shows, and the panel says the source.
+
+    The diagnostic *replaces* the view rather than sitting under it: a blank
+    rectangle with a warning below still reads as a picture that happens to be
+    empty, which is the reading QR-12 refuses.
+    """
+    monkeypatch.setattr(QWebEngineView, "load", lambda *_args, **_kwargs: None)
+
+    document = tmp_path / "scene.html"
+    document.write_text("<html></html>", encoding="utf-8")
+    panel = ViewerWidget()
+    panel.model.request(tmp_path)
+    panel.apply(
+        [
+            Rendered(
+                document=str(document),
+                scene=str(tmp_path / "scene.json"),
+                field="a_field",
+                fields=("a_field",),
+                elements=8,
+            )
+        ]
+    )
+    assert not panel.showing_diagnostic
+
+    panel.probed(
+        '{"ready": false, "renderer_loaded": false, '
+        '"error": "ReferenceError: webgui is not defined", "renderer": "somewhere"}'
+    )
+    assert panel.showing_diagnostic
+    assert panel.model.renderer in panel.diagnostic_text()
+
+    panel.probed('{"ready": true, "renderer_loaded": true, "error": "", "renderer": "somewhere"}')
+    assert not panel.showing_diagnostic
+
+
+def test_ver44_a_refused_render_is_shown_as_the_gate_wrote_it(
+    application: QtWidgets.QApplication,
+) -> None:
+    """A refusal replaces the view and carries the diagnostic verbatim."""
+    panel = ViewerWidget()
+    panel.model.request("runs/probe")
+    panel.apply([RenderFailed(error="StateMismatchError", message="solve.bias_V differs")])
+
+    assert panel.showing_diagnostic
+    assert panel.diagnostic_text() == "solve.bias_V differs"
+    assert panel.offered_fields() == ()
