@@ -33,7 +33,7 @@ import pytest
 
 from nanopnp.gui.case_model import CaseEditor
 from nanopnp.gui.convergence import ConvergenceModel
-from nanopnp.gui.render import Rendered, RenderFailed
+from nanopnp.gui.render import Rendered, RenderFailed, RenderProcess
 from nanopnp.gui.run_model import RunControl, RunModel
 from nanopnp.gui.solver import Failed, Finished, Iteration, Progress, Rung, Started
 from nanopnp.io.case import case_fields, load_case
@@ -426,3 +426,51 @@ def test_ver44_a_refused_render_is_shown_as_the_gate_wrote_it(
     assert panel.showing_diagnostic
     assert panel.diagnostic_text() == "solve.bias_V differs"
     assert panel.offered_fields() == ()
+
+
+def test_ver44_clearing_the_viewer_detaches_the_render_in_flight(
+    application: QtWidgets.QApplication,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """A cleared panel stops draining the render it was showing, and stops it.
+
+    The window clears the viewer before every new run, for the reason it clears
+    the result panel: the previous run's picture beside this run's numbers would
+    be two runs presented as one. A render already in flight defeats that unless
+    the child is *forgotten* as well — it posts seconds later, the 200 ms poll
+    drains it, and the panel loads the previous run's document into the pane it
+    was just told to empty. It is stopped as well as forgotten because two
+    children of one run each sweep the other's ``scene-*`` pair out of
+    ``viewer/``.
+    """
+    stopped: list[str] = []
+    monkeypatch.setattr(QWebEngineView, "load", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(RenderProcess, "start", lambda _self: None)
+    monkeypatch.setattr(
+        RenderProcess, "terminate", lambda self, timeout=1.0: stopped.append(str(self.request.run))
+    )
+    # A child that answers the moment it is asked, which is what makes the
+    # clear's effect visible: without the detach the drain below would arrive.
+    monkeypatch.setattr(
+        RenderProcess,
+        "drain",
+        lambda self: (
+            Rendered(
+                document=str(tmp_path / "scene.html"),
+                scene=str(tmp_path / "scene.json"),
+                field="a_field",
+                fields=("a_field",),
+                elements=8,
+            ),
+        ),
+    )
+
+    panel = ViewerWidget()
+    panel.show_run(tmp_path)
+    assert panel.model.state == "rendering"
+
+    panel.show_run(None)
+    assert stopped == [str(tmp_path)]
+    assert panel.model.state == "idle"
+    assert panel.refresh().state == "idle", "the cleared panel drained the previous run's render"

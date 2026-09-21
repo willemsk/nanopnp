@@ -140,7 +140,15 @@ class SceneModel:
         the state stays ``loading`` until :meth:`probed` reports what the
         document actually did, because ``loadFinished(True)`` is reached by a
         page whose renderer never arrived.
+
+        Guarded like :meth:`probed`, and for the same reason: ``loadFinished``
+        belongs to whatever document the view last held, which after a refused
+        render is not the one this model is reporting. Ungated, a late failure
+        would replace the gate's own message — the thing this module exists to
+        pass through verbatim — with "the document at None did not load".
         """
+        if self.state not in ("loading", "blank", "drawn"):
+            return
         if not ok:
             self.state = "blank"
             self.diagnosis = (

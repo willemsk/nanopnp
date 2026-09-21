@@ -204,7 +204,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         return classify(error)
 
     if arguments.selftest:
+        # Set before QApplication, and only for the selftest: a user who runs
+        # the shell wants the platform's own plugin and its own GPU.
         os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+        # The window now holds a ``QWebEngineView`` (the Fields panel), and Qt
+        # WebEngine on a headless runner has no GPU to talk to; without this its
+        # Chromium child aborts. The same pair ``nanopnp.gui.probe`` sets, for
+        # the same reason and in the same place.
+        os.environ.setdefault("QTWEBENGINE_CHROMIUM_FLAGS", "--disable-gpu --no-sandbox")
     existing = QtWidgets.QApplication.instance()
     application = (
         existing

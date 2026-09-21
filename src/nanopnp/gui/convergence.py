@@ -194,7 +194,14 @@ class Band:
         if closed == "residual":
             parts.append("closed on the residual test")
         elif closed == "update":
-            parts.append(f"the relative update fell to {self.tolerance:.0e} at the last step")
+            # The measured update and not the threshold it passed. Printing the
+            # tolerance here would state a number the solve never produced —
+            # typically three orders away from the one recorded — in a note
+            # whose whole discipline is to claim only what the numbers hold.
+            parts.append(
+                f"the relative update fell to {self.steps[-1].update:.2e} at the last step, "
+                f"below the {self.tolerance:.0e} tolerance"
+            )
         if self.minimum_damping < 1.0:
             parts.append(f"damping down to {self.minimum_damping:.3g}")
         if self.forced_steps:
@@ -346,9 +353,25 @@ class ConvergenceModel:
         return 0.0, sum(band.width for band in self.bands) or 1.0
 
     def extent(self, band: Band) -> tuple[float, float]:
-        """Return one band's ``(start, end)`` on the x-axis."""
-        start = sum(earlier.width for earlier in self.bands[: self.bands.index(band)])
-        return start, start + band.width
+        """Return one band's ``(start, end)`` on the x-axis.
+
+        The band is found by *identity*. :class:`Band` is a plain dataclass, so
+        ``list.index`` would find it by equality and two rungs carrying the same
+        metadata would both be given the first one's offset — one rung's
+        polyline drawn inside another's region, with nothing to say so.
+
+        Raises
+        ------
+        ValueError
+            If ``band`` is not one of this model's, which is what ``index``
+            raised and is still the honest answer.
+        """
+        start = 0.0
+        for earlier in self.bands:
+            if earlier is band:
+                return start, start + band.width
+            start += earlier.width
+        raise ValueError(f"band {band.name!r} is not one this model opened")
 
     def points(self, band: Band, series: Series) -> tuple[tuple[float, float], ...]:
         """Return one band's polyline for one series, as ``(x, log₁₀ y)``.
