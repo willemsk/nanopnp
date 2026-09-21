@@ -193,8 +193,9 @@ the solver-process test already builds rather than a second one.
 >
 > **Measured, 21 September 2026.** The whole Tier-1 GUI and hook set —
 > `test_gui_viewmodels.py`, `test_gui_solver_process.py`, `test_gui_render.py`,
-> `test_gui_probe.py`, `test_solve_hook.py` — runs in **6.4 s** on an unloaded container, of which
-> the two real spawned runs and the render fixture's solve are about 5 s. `test_gui_widgets.py`
+> `test_gui_probe.py`, `test_solve_hook.py` — is 44 cases in **6.96 s** on an unloaded container, of
+> which the two real spawned runs and the render fixture's solve are about 5 s. WP14 measured its
+> own four files at 4.0 s, so the package's additions cost about 3 s, inside the plan's ~8 s budget. `test_gui_widgets.py`
 > skips on the push gate; under the `.knowledge/07` §5 GL shim all 13 of its cases pass, in 0.6 s
 > warm and 6.6 s on a cold Qt WebEngine start — including the `QPainter` repaint into a `QPixmap`
 > and the `QWebEngineView` construction. Scene sizes on the 124-triangle test
