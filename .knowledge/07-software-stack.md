@@ -298,6 +298,55 @@ document that fetches its renderer from `https://cdn.jsdelivr.net/npm/webgui@<ve
 so on a machine with no network the page loads and the console says `webgui is not defined`.
 `loadFinished` is a statement about the document, not about the picture.
 
+### A webgui scene is JSON, costs ~200–320 B per element, and needs no Jupyter **[tested]**
+
+Measured 21 September 2026, P2 `GridFunction` on a unit-square mesh,
+`Draw(gf, mesh, order=k, show=False).GetData()` then `json.dumps`:
+
+| elements | order | `GetData` | JSON | per element |
+|---|---|---|---|---|
+| 224 | 1 | 3.0 ms | 0.045 MB | 202 B |
+| 224 | 2 | 2.3 ms | 0.075 MB | 334 B |
+| 2,550 | 1 | 15.7 ms | 0.496 MB | 194 B |
+| 2,550 | 2 | 25.4 ms | 0.825 MB | 324 B |
+| 16,036 | 1 | 157.9 ms | 3.094 MB | 193 B |
+| 16,036 | 2 | 142.6 ms | 5.153 MB | 321 B |
+
+Linear in elements to within 5 %. Extrapolated to the 120,917-triangle reference mesh that is
+**23.3 MB at order 1 and 38.8 MB at order 2**, built in roughly 1.2 s. A scene of a production mesh
+is therefore a file, not a queue payload and not a `setHtml` argument — `QWebEngineView.setHtml`
+percent-encodes into a data URL.
+
+`GetData()` runs headlessly and **without `anywidget`**: `netgen.webgui` defines `WebGuiWidget`
+inside a `try: import anywidget` and falls back to a stub with the same constructor
+(`netgen/webgui.py:423–435`), so `WebGLScene.__init__` succeeds with no Jupyter stack present.
+The returned dict is plain numbers and base64 strings, so it crosses a process boundary and
+serialises without help.
+
+### `netgen.webgui.GenerateHTML` ignores its `template` argument **[verified]**
+
+Read from the installed source, 21 September 2026:
+
+```text
+def GenerateHTML(data, filename=None, template=None):
+    if template is None:
+        template = _html_template
+    ...
+    html = _html_template.replace('{render}', jscode)
+```
+
+`template` is assigned and never read; the substitution is always into the module global. So a
+caller cannot redirect the renderer `<script src=…>` by passing a template, and anything that
+needs a different renderer source has to build the host document itself. The document is four lines
+plus the render data, so that is cheap — but it is not optional.
+
+The renderer itself is npm `webgui`, `"license": "LGPL-2.1-or-later"`, 1,206,946 B unpacked for
+version 0.2.39 (npm registry metadata, **[verified]**). Redistributing it inside a bundle is
+permitted and is the only way a packaged application draws a field offline; it is a new
+redistributed work and belongs in the licence notice if it is shipped. `cdn.jsdelivr.net` is
+blocked from this development container (proxy 403), so the file has to be fetched elsewhere and
+checked against the integrity hash npm publishes.
+
 ### `nanopnp.io.case` pulls in neither NGSolve nor NumPy, and costs 250–350 ms **[tested]**
 
 Measured 20 September 2026 on the development interpreter (3.12). After `import nanopnp.io.case`,

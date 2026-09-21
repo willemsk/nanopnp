@@ -1,6 +1,6 @@
 # Phase 1 (Solver core): the production solver on an externally supplied mesh
 
-**Status: WP7–WP14 delivered; WP15 scoped.** Written 2 September 2026, after Phase 0
+**Status: WP7–WP14 delivered; WP15 planned.** Written 2 September 2026, after Phase 0
 (WP1–WP6) and its consolidation (WP-A1, WP-B1, WP-B2, WP-C1). It inherited a verified physics core
 and a bare pipeline: tiers 1 and 2 green, `mypy --strict` and `ruff` clean, and `io/`, `sweep/`,
 `charge/`, `structure/`, `density/`, `symmetry/`, `gui/` still empty reserved slots. `io/` is filled
@@ -837,6 +837,8 @@ New verification activities this phase, each named for the requirement it discha
 | `tests/tier1/test_gui_solver_process.py` | 1 | VER-43, FR-27 | A spawned run reports progress and finishes; a cancelled one writes no artefact |
 | `tests/tier1/test_gui_widgets.py` | 1 | VER-43, QR-11 | Widgets construct under `QT_QPA_PLATFORM=offscreen` and bind every schema field; skipped where Qt cannot be imported |
 | `tests/tier1/test_gui_probe.py`, CI job `bundle` | 1, — | VER-43, RSK-13 | The probe names the four binary payloads and the licence notice; a `windows-latest` job builds the bundle and launches it headlessly |
+| `tests/tier1/test_solve_hook.py` | 1 | VER-44, FR-27, §5.3.2 | The structural solve hook sees every rung in ladder order and every step inside the rung that scopes it; a rung whose model takes no Newton callback yields a rung and no steps; the artefact hash is identical watched and unwatched, and a cached solve emits nothing |
+| `tests/tier1/test_gui_render.py` | 1 | VER-44, IF-09 | The render child restores a finished run through the stage-10 gate and writes a scene whose JSON round-trips; its field names come from the IF-07 attribute vocabulary; a missing or mismatched state produces a named diagnostic rather than an empty scene |
 
 The phase is complete when:
 
