@@ -122,10 +122,18 @@ class ViewerWidget(QtWidgets.QWidget):
         self.show_run(self._run, field=self._fields.itemText(index))
 
     def refresh(self) -> SceneModel:
-        """Drain the render child into :meth:`apply` and return the model."""
-        if self._process is not None:
-            return self.apply(self._process.drain())
-        return self._model
+        """Drain the render child into :meth:`apply` and return the model.
+
+        A child that has posted and exited is joined here. It is spawned and
+        daemonic, so nothing keeps it alive; joining is what stops a session
+        that rendered a dozen fields accumulating a dozen unreaped children.
+        """
+        if self._process is None:
+            return self._model
+        model = self.apply(self._process.drain())
+        if not self._process.running:
+            self._process.join(0.0)
+        return model
 
     def apply(self, events: Iterable[RenderEvent]) -> SceneModel:
         """Apply render events and load the document one produced, if any.
