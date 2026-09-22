@@ -316,6 +316,20 @@ count, which is assembly, and the flow pair takes Newton from 5 iterations to 31
 `τ_m` — relagging a large parameter at each iterate turns Newton into a fixed-point iteration in `τ`
 and the contraction weakens as `τ` grows.
 
+Most of that assembly cost is the **manufactured source**, not the streamline term itself **[tested]**.
+With the setup above (5 Newton iterations in every case), a solve at `maxh` 0.4, 0.2 and 0.1 nm took
+0.4 s, 2.0 s and 8.0 s in `none` and 6.6 s, 27.6 s and 107.5 s in `supg`. At 0.2 nm, withholding
+`s̃_i` from `R̃_i` (§4.3.4) brings `supg` from 30 s down to 5.0 s. The sympy-generated source
+polynomial sits inside the nonlinear SUPG integrand, and `AssembleLinearization` carries that whole
+constant subtree through every quadrature point. `CoefficientFunction.Compile()` (graph flattening
+only, with no C++ JIT, so CON-07 is untouched) recovers only 20 % (37 s to 29.6 s at 0.4 plus 0.2 nm)
+and leaves the errors identical to 13 digits. This cost belongs to the MMS benchmark. A production
+run carries no manufactured source, so it does not pay it. VER-42's three-level `supg` fixture
+(141 s, the largest single item in the push gate) pays it in full. What would remove it is to
+assemble the source's contribution `τ s̃_i (b̃·∇v)` apart from the linearised integrand. That is a
+change to a weak form in `physics/`, it is not done here, and it has to keep the §4.3.4 footprint
+test discriminating.
+
 ### 4.3.4 A stabilisation residual missing its source switches the term **off** **[tested]**
 
 `R̃_i = b̃_i·∇c̃_i − s̃_i`, and on the exact solution the two sides balance the diffusion that was
