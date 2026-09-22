@@ -8,12 +8,14 @@ is the whole failure mode the shared `materials.forms` module exists to prevent.
 """
 
 import logging
+from pathlib import Path
 
 import numpy as np
 import pytest
 from pydantic import ValidationError
 
 from nanopnp.core.constants import thermal_voltage
+from nanopnp.core.paths import correction_file
 from nanopnp.materials import models
 from nanopnp.materials.corrections import (
     CorrectionDocument,
@@ -287,6 +289,29 @@ def test_corrections_load_returns_a_validated_document() -> None:
     assert fc is not None and fc.form == "inverse_poly_half"
     # The shared ion wall function carries exactly the coefficients its form reads.
     assert set(document.ion_wall_function.coefficients) == {"P1", "P2"}
+
+
+def test_corrections_an_edited_file_is_reread_and_no_document_is_shared(tmp_path: Path) -> None:
+    """The parse cache never serves stale coefficients or a shared object (FR-16).
+
+    ``load_corrections`` caches the parse, keyed on the file's text, because a
+    sweep resolves every member against one file. An edit — even to the same
+    length, within one mtime tick — must be seen on the next load, and two loads
+    must not return, or share mutable state with, one object.
+    """
+    path = tmp_path / "edited.yaml"
+    shipped = correction_file("willems2020_nacl").read_text(encoding="utf-8")
+    path.write_text(shipped, encoding="utf-8")
+    first = load_corrections(path)
+    second = load_corrections(path)
+    assert first is not second
+    assert first.species is not second.species
+    assert first.temperature_K == 298.15
+
+    path.write_text(
+        shipped.replace("temperature_K: 298.15", "temperature_K: 310.15"), encoding="utf-8"
+    )
+    assert load_corrections(path).temperature_K == 310.15
 
 
 def test_corrections_reject_an_unknown_key_naming_it() -> None:

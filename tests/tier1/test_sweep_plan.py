@@ -575,8 +575,24 @@ def test_ver36_an_index_the_plan_does_not_enumerate_is_named(base: Path) -> None
 # -- the checked-in reference sweep -------------------------------------------
 
 
+@pytest.fixture(scope="module")
+def reference_plan() -> SweepPlan:
+    """Build the §8.3 reference plan once for the two tests that read it.
+
+    ``build_plan`` resolves all 3,675 members; building it once per test doubled
+    the cost of the slowest checks in Tier 1 for no additional assertion.
+    """
+    return build_plan(
+        loads_sweep(REFERENCE_SWEEP.read_text(encoding="utf-8")),
+        source=REFERENCE_SWEEP,
+        check_meshes=False,
+    )
+
+
 @pytest.mark.skipif(not REFERENCE_SWEEP.is_file(), reason="run from the repository root")
-def test_ver36_the_reference_sweep_parses_and_enumerates_the_section_8_3_grid() -> None:
+def test_ver36_the_reference_sweep_parses_and_enumerates_the_section_8_3_grid(
+    reference_plan: SweepPlan,
+) -> None:
     """Everything about the deferred twelve-core run that can be verified in seconds.
 
     The §8.3 datum is 3,675 solves — 5 physics cases x 35 bias values x 21 salt
@@ -593,7 +609,7 @@ def test_ver36_the_reference_sweep_parses_and_enumerates_the_section_8_3_grid() 
     # point is 4 + 17 + 20 = 41 and there are 42 waves.
     assert document.origins() == (0, 17, 0)
 
-    plan = build_plan(document, source=REFERENCE_SWEEP, check_meshes=False)
+    plan = reference_plan
     assert len(plan.points) == 3675
     assert len(plan.waves()) == 42
     assert max(point.wave for point in plan.points) == 41
@@ -619,7 +635,9 @@ def test_ver36_the_reference_sweep_parses_and_enumerates_the_section_8_3_grid() 
 
 
 @pytest.mark.skipif(not REFERENCE_SWEEP.is_file(), reason="run from the repository root")
-def test_ver36_the_reference_sweep_resolves_a_sample_of_its_members() -> None:
+def test_ver36_the_reference_sweep_resolves_a_sample_of_its_members(
+    reference_plan: SweepPlan,
+) -> None:
     """``build_plan`` resolved all 3,675; this says what that means for a reader.
 
     Named separately because the assertion above would pass on a plan that
@@ -627,11 +645,7 @@ def test_ver36_the_reference_sweep_resolves_a_sample_of_its_members() -> None:
     every one of them and would have raised, and this makes the consequence
     visible — each member is a runnable case with the physics its axis selected.
     """
-    plan = build_plan(
-        loads_sweep(REFERENCE_SWEEP.read_text(encoding="utf-8")),
-        source=REFERENCE_SWEEP,
-        check_meshes=False,
-    )
+    plan = reference_plan
     classical = plan.case(0)
     assert classical.electrolyte.corrections.diffusivity.model == "none"
     assert classical.numerics.continuation == "default_ladder"
