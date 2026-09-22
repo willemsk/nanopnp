@@ -33,8 +33,9 @@ library docs), and literature published after the knowledge base was written.
 - `uv add <pkg>` / `uv add --group dev <pkg>` — add a dependency and update the lock
 - `uv run <anything>` — run inside the environment; the only way code is executed here
 
-`uv.lock` is committed and CI runs `--frozen`: if you edit `pyproject.toml` by hand, run `uv lock`
-before committing or CI will fail.
+`uv.lock` is committed and CI runs with `UV_LOCKED`, which fails every job when the lock no longer
+matches `pyproject.toml`: if you edit `pyproject.toml` by hand, run `uv lock` before committing.
+(`--frozen` would not catch that; it installs the stale lock as it stands.)
 
 ## Commands
 
@@ -56,9 +57,12 @@ Before committing, run the whole gate:
 uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv run pytest
 ```
 
-`.claude/hooks/gate.sh` runs that gate automatically before any `git commit` Claude Code
-makes, and refuses the commit with the failing output if a stage fails. `git commit
---no-verify` skips it. It does not fire for commits you make yourself in a terminal.
+`.claude/hooks/gate.sh` runs that gate, plus `uv lock --check`, automatically before any `git commit`
+Claude Code makes, and refuses the commit with the failing output if a stage fails or its 25-minute
+budget runs out. It gates the working tree and remembers a pass, so a tree that already passed is
+not re-run. When only prose changed (`*.md`, `docs/`, `.knowledge/`) it runs ruff alone.
+`.claude/hooks/gate.sh run` runs the same gate by hand; the skills use it. `git commit --no-verify`
+(or `-n`) skips it. It does not fire for commits you make yourself in a terminal.
 
 ## Project structure
 
@@ -186,7 +190,7 @@ reconstruct the run is not a result.
 ## Implementation workflow
 
 Work is delivered one work package at a time, one PR per package, green on tiers 1 and 2 before the
-next starts. Four steps, each a skill under `.claude/skills/`:
+next starts. Four steps, in three skills under `.claude/skills/`:
 
 For planning or resuming work, start at `docs/plans/current.md`, then the requested WP's Execution
 brief and its cited sections. Load historical summaries and derivations on demand, not by default.
@@ -204,14 +208,9 @@ failure class means here, and why a failing Tier 2 benchmark is evidence rather 
 read automatically when a PR event wakes a session, so it governs the autofix loop whether or not
 `/wp-ship` started it.
 
-Step 2 opens the PR but does not chain into step 3: the work package is implemented, gated and
-published from the session that made the physics decisions. The user then starts `/wp-ship` in a
-fresh session, which takes over the existing PR, independent review and CI monitoring — so the
-code-review pass in step 4 runs from a session that did not make them, and the `code-review` skill
-runs its own pass on top of that. Do not wrap that pass in a sub-agent; §4 of `wp-ship` says why,
-and how to require explicit completion evidence. A completed review with zero findings is valid;
-an absent report is not. `steward` bounds fallback monitoring and stops it at green and mergeable
-or explicit handoff; new failures and conflicts still require attention.
+Step 2 does not chain into step 3. The user starts `/wp-ship` in a fresh session, so the review
+pass runs from a session that did not make the physics decisions; `wp-ship` §4 says how that pass is
+invoked and what counts as its completion.
 
 **Sub-agent models: the failure mode decides, not the size of the task.** Work whose error would be
 a plausible wrong number runs on Opus; work whose error is loud — lint, types, search, mechanical
@@ -222,7 +221,7 @@ edits — runs on Sonnet. State the choice when delegating so it can be redirect
 
 - Conventional commits: `feat:`, `fix:`, `test:`, `docs:`, `chore:`.
 - Name the requirement identifier the commit discharges in the body (`VER-03`, `FR-16`).
-- Run the full gate above before committing.
+- Run the full gate above before committing (`.claude/hooks/gate.sh run`).
 
 ## When you learn something durable
 
