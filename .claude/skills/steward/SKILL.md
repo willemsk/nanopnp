@@ -15,13 +15,9 @@ evidence rather than chores.
 no activated venv, no bare `python` or `pytest` — a fix validated outside `uv run` is not validated.
 The `SessionStart` hook syncs automatically in web sessions.
 
-The gate, which `.claude/hooks/gate.sh` enforces before every commit:
-
-```bash
-uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv run pytest
-```
-
-`--no-verify` exists and is not for you.
+The gate is `.claude/hooks/gate.sh run` (the CLAUDE.md chain plus `uv lock --check`). The hook
+runs the same script before every commit and skips a working tree that has already passed, so run
+it once on the finished fix and let the commit reuse the pass. `--no-verify` exists and is not for you.
 
 ## Bounded wakes
 
@@ -32,40 +28,46 @@ scheduled check-in ID if any. Update it on meaningful transitions or fallback ch
 duplicate event. An event caused only by your checkpoint edit is not new work.
 
 - A new failure or conflict needs a fix or an explicit diagnostic and handoff. Reuse the diagnosis
-	of an unchanged, already-recorded blocker; do not reopen logs or repeat the same comment. Never
-	silently abandon a new red check. Physics/scope blockers follow the rules below.
+  of an unchanged, already-recorded blocker; do not reopen logs or repeat the same comment. Never
+  silently abandon a new red check. Physics/scope blockers follow the rules below.
 - While CI is pending, schedule at most one fallback check-in. Start one hour out; consecutive
-	unchanged fallbacks back off to 2, 4, 8, 12 and 24 hours. After six unchanged fallback checks,
-	cancel further fallbacks and tell the user the remaining state and how to resume the watch.
-	Reset the counter only for a new base/head, check-run/state, conflict or actionable review,
-	not for duplicate webhooks, timestamps or your own checkpoint comments.
+  unchanged fallbacks back off to 2, 4, 8, 12 and 24 hours. After six unchanged fallback checks,
+  cancel further fallbacks and tell the user the remaining state and how to resume the watch.
+  Reset the counter only for a new base/head, check-run/state, conflict or actionable review,
+  not for duplicate webhooks, timestamps or your own checkpoint comments.
 - Stop fallbacks when green and mergeable, merged/closed, or handed off for a human decision.
-	Cancel the timer where supported; otherwise an already queued wake checks the checkpoint and
-	does no work unless live state has meaningfully changed. New events can restart attention.
+  Cancel the timer where supported; otherwise an already queued wake checks the checkpoint and
+  does no work unless live state has meaningfully changed. New events can restart attention.
 - If nothing changed, do not reload the specification/history or rerun a review/gate. Advance
-	only the fallback counter/timer when a fallback fired; duplicate events must not add timers.
+  only the fallback counter/timer when a fallback fired; duplicate events must not add timers.
 - If subscription or scheduling is unavailable, say so and hand off the current status. Do not
-	emulate a watcher with a polling shell loop or claim that a nonexistent timer will wake you.
+  emulate a watcher with a polling shell loop or claim that a nonexistent timer will wake you.
 
 When a failure needs source context, start with the requested WP's Execution brief and cited
 sections. Historical phase summaries and unrelated knowledge files are not routine wake context.
 
 ## What CI runs
 
-`.github/workflows/ci.yml`, `UV_FROZEN: "1"` throughout:
+`.github/workflows/ci.yml`, with `UV_LOCKED: "1"` throughout, so a `uv.lock` that no longer matches
+`pyproject.toml` fails every job at `uv sync`:
 
 - **`check`** — ubuntu, 3.12: `ruff check`, `ruff format --check`, `mypy src/`, `pytest --cov`.
 - **`test-matrix`** — `pytest` on ubuntu × 3.10–3.14, plus 3.12 on windows and macOS (QR-09, CON-13).
+- **`bundle`** — **gated**. Windows PyInstaller build of `packaging/nanopnp-probe.spec`, then the
+  bundle's own `--selftest` (RSK-13, §8.2.1 A4).
+- **`tier3`** — nightly and on `workflow_dispatch` only, `continue-on-error`: recorded, never gated
+  (§7.1, §7.6). Without `$NANOPNP_REFERENCE_DATA` every Tier 3 test skips visibly; a skip there is
+  missing evidence, not a defect.
 
-The default `pytest` selection is tiers 1 and 2. Tier 3 needs COMSOL golden files and is stubbed;
-Tier 4 gates releases; `-m slow` is measured, never gated. Nothing in the suite reaches the network
-or needs a COMSOL licence, so a failure in `ruff`, `mypy` or `pytest` is always a real one — a lint,
-a type error, or a tier 1–2 assertion, never an environment excuse.
+The default `pytest` selection is tiers 1 and 2. Tier 4 gates releases; `-m slow` is measured, never
+gated. Nothing in the suite reaches the network or needs a COMSOL licence, so a failure in `ruff`,
+`mypy` or `pytest` is always a real one — a lint, a type error, or a tier 1–2 assertion, never an
+environment excuse.
 
-The one step that is not is `astral-sh/setup-uv` and `uv sync --all-extras`, which do reach the
-network. A failure there is infrastructure: re-run the job. Read the log and establish which of the
-two you have before changing a line — a stale `uv.lock` also fails at `uv sync` under `UV_FROZEN`,
-and that one is a real failure with a real fix.
+The steps that do reach the network are `astral-sh/setup-uv`, `uv sync` and the artefact uploads. A
+failure there is infrastructure: re-run the job. Read the log and establish which of the two you
+have before changing a line — a stale `uv.lock` also fails at `uv sync`, and that one is a real
+failure with a real fix.
 
 Reproduce the failing job's exact command locally before changing anything. For a matrix-only
 failure, reproduce under that interpreter (`uv run --python 3.10 pytest …`).
@@ -78,6 +80,7 @@ failure, reproduce under that interpreter (`uv run --python 3.10 pytest …`).
 | `ruff check` | A real lint | Fix the code. A `noqa` needs a reason on the same line and is a last resort |
 | `mypy src/` | Strict-mode gap | Annotate properly. NGSolve ships no type information: extend the protocol aliases in `core/typing.py` rather than reaching for `Any` or a bare `type: ignore` |
 | Lockfile out of date | `pyproject.toml` moved without `uv lock` | `uv lock`, commit it |
+| `bundle` build or `--selftest` | A binary dependency defeating desktop packaging — RSK-13's detector doing its job | Root-cause it on the spec or the dependency. Never add `continue-on-error`: demotion is recorded with the failure that caused it (ci.yml comment, §8.2.1 A4), and that is the author's call |
 | One Python version only | A compatibility gap (3.10 syntax floors, 3.13/3.14 stdlib moves) | Fix compatibly across 3.10–3.14. **Never** narrow `requires-python` or drop a matrix entry — QR-09 is a requirement |
 | Windows or macOS only | Path handling, line endings, thread counts, float repr | `pathlib` everywhere, never `os.path`; pin thread counts in the test, not in the library |
 | A tier 1 property test | A real regression in a unit | Root-cause it. These are seconds long and localise precisely |
