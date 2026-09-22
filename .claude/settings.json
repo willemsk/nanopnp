@@ -1,5 +1,20 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(uv run pytest:*)",
+      "Bash(uv run ruff:*)",
+      "Bash(uv run mypy:*)",
+      "Bash(uv sync:*)",
+      "Bash(uv lock --check)",
+      "Bash(uv run nanopnp --env)",
+      "Bash(.claude/hooks/gate.sh run)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {
@@ -8,8 +23,20 @@
           {
             "type": "command",
             "command": "\"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}/.claude/hooks/gate.sh\"",
-            "timeout": 600,
+            "timeout": 1800,
             "statusMessage": "Running the CLAUDE.md gate before committing..."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}/.claude/hooks/format.sh\"",
+            "timeout": 60
           }
         ]
       }
