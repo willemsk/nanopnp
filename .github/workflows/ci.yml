@@ -18,7 +18,9 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  UV_FROZEN: "1"        # fail if uv.lock is out of date rather than silently resolving
+  # Fail if uv.lock no longer matches pyproject.toml. UV_LOCKED asserts that;
+  # UV_FROZEN would only skip re-locking and install the stale lock as it stands.
+  UV_LOCKED: "1"
 
 jobs:
   check:
