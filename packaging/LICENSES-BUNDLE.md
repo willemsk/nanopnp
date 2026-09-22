@@ -14,13 +14,15 @@ regardless of which solver a case selects.
 |---|---|---|
 | nanopnp | BSD-3-Clause | This application and the library it drives |
 | NGSolve, Netgen | LGPL-2.1 | Finite-element backend and mesher, dynamically linked |
+| Open CASCADE Technology (`netgen-occt`) | LGPL-2.1 with the OCCT exception | Netgen's CAD kernel, dynamically linked; its licence text travels in `netgen_occt-*.dist-info/` |
+| OpenBLAS (`ngsolve-openblas`) | BSD-3-Clause | NGSolve's dense linear algebra, dynamically linked. A Linux bundle also carries the `libgfortran` it links, under GPL-3 with the GCC Runtime Library Exception |
 | SuiteSparse UMFPACK | **GPL-2+** | Default direct linear solver, built into the NGSolve wheel |
 | PySide6, Qt 6 (including Qt WebEngine) | LGPL-3 | Desktop shell and the embedded field viewer, dynamically linked |
 | NumPy, SciPy, pydantic, PyYAML, meshio, h5py, SymPy | BSD-3-Clause / MIT / Apache-2.0 | Numerics, configuration and file formats |
 
 ## Your rights under the LGPL components
 
-NGSolve, Netgen, PySide6 and Qt are used under their LGPL options, which give you the right to
+NGSolve, Netgen, Open CASCADE, PySide6 and Qt are used under their LGPL options, which give you the right to
 replace them with your own versions. The bundle is built **one-dir** rather than one-file precisely
 so that you can: every shared library is an ordinary file in the bundle directory and may be
 replaced in place. Nothing in the bundle is statically linked against an LGPL component.
