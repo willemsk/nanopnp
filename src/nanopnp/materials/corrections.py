@@ -16,7 +16,9 @@ This model is also the template the Phase-1 case-file schema (FR-26/VER-09) copi
 
 from __future__ import annotations
 
+import copy
 from collections.abc import Mapping
+from functools import lru_cache
 from pathlib import Path
 
 import yaml
@@ -216,6 +218,19 @@ class CorrectionDocument(_Strict):
     transport_number_Na: TransportNumberBlock | None = None
 
 
+@lru_cache(maxsize=32)
+def _parse(text: str) -> Mapping[str, object]:
+    """Parse a correction file's text, once per distinct content.
+
+    A sweep resolves every member against the same file, and PyYAML's pure-Python
+    parser made that 92 % of planning the 3,675-point §8.3 reference sweep (29.4 s
+    against 4.3 s cached). Keyed on the text rather than on a path and mtime, so
+    an edited file is re-parsed however quickly it was rewritten.
+    """
+    raw: Mapping[str, object] = yaml.safe_load(text)
+    return raw
+
+
 def load_corrections(name_or_path: str | Path) -> CorrectionDocument:
     """Load and validate a correction parameter file by registered name or by path.
 
@@ -242,8 +257,9 @@ def load_corrections(name_or_path: str | Path) -> CorrectionDocument:
         if Path(name_or_path).suffix == ".yaml"
         else correction_file(str(name_or_path))
     )
-    with path.open(encoding="utf-8") as handle:
-        raw: Mapping[str, object] = yaml.safe_load(handle)
+    # Copied, so no caller can mutate the cached tree; validation still runs on
+    # every call and every document returned is a fresh object.
+    raw = copy.deepcopy(_parse(path.read_text(encoding="utf-8")))
     # The schema is checked before structural validation so a file written to a
     # future schema fails with a message naming the file and the version found,
     # rather than with a wall of field errors against a shape it never claimed.
