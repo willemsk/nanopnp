@@ -70,7 +70,10 @@ logger = logging.getLogger(__name__)
 
 __all__ = [
     "READY_FLAG",
+    "RENDERER_DIRECTORY",
+    "RENDERER_INTEGRITY",
     "RENDERER_SOURCE",
+    "RENDERER_VERSION",
     "VIEWER_DIRNAME",
     "RenderFailed",
     "RenderProcess",
@@ -82,17 +85,43 @@ __all__ = [
     "renderer_source",
 ]
 
-RENDERER_SOURCE = "https://cdn.jsdelivr.net/npm/webgui@0.2.39/dist/webgui.js"
-"""Where the host document fetches the renderer from.
+RENDERER_VERSION = "0.2.39"
+"""The npm ``webgui`` version shipped beside this module.
 
-The address ``netgen.webgui``'s own template hard-codes, pinned to the version
-that template pins. One constant behind :func:`renderer_source`, because whether
-the renderer may instead be shipped beside the package — so that a bundled
-application draws with no network — is a redistribution question about an
-LGPL-2.1-or-later work in a BSD-3 repository, and it is the author's to answer
-(WP15 OQ-1). Until it is answered the document fetches, and
-:func:`readiness_script` is what stops that being a blank panel reporting
-success.
+The version ``netgen.webgui``'s own template pins for the NGSolve release in the
+lock, because the scene :meth:`WebGLScene.GetData` emits is that renderer's input
+format and nothing else's. ``tests/tier1/test_gui_render.py`` reads the pin out of
+the installed ``netgen/webgui.py`` and fails when an upgrade moves it.
+"""
+
+RENDERER_INTEGRITY = (
+    "sha512-"
+    "yDd6YR7EjHGfeUC+rbn6/WvTWWkwJSU1KcsqWYzP5qJyN3IN9ax2vuUROvn8epKRKtuerLJ2qTSPp8A1yZubqw=="
+)
+"""npm's published ``dist.integrity`` for :data:`RENDERER_VERSION`'s tarball.
+
+The vendored tarball in ``third_party/`` is checked against it, and the shipped
+``webgui.js`` against that tarball, so what is drawn with is what npm published.
+"""
+
+RENDERER_DIRECTORY = Path(__file__).resolve().parent / "assets" / "webgui"
+"""Where the renderer, its three licence texts and its NOTICE are installed.
+
+Package data, so it travels in the wheel and is collected into the bundle; the
+bundle's PyInstaller recipe puts it at the same path relative to this module.
+"""
+
+RENDERER_SOURCE = (RENDERER_DIRECTORY / "webgui.js").as_uri()
+"""The ``file:`` URL the host document loads the renderer from.
+
+Shipped, not fetched (WP15 OQ-1, ruled 22 September 2026; CON-09): the npm
+``webgui`` build is LGPL-2.1-or-later and bundles three.js (MIT) and dat.gui
+(Apache-2.0), redistributed unmodified as a separate file beside their licence
+texts and a NOTICE naming the corresponding source. A document fetching from a
+CDN drew nothing on a machine with no route to it and reported ``loadFinished``
+anyway; this one needs no network. It is still one constant behind
+:func:`renderer_source`, and :func:`readiness_script` still asks the page whether
+it arrived, because an installation missing the file is a blank panel too.
 """
 
 VIEWER_DIRNAME = "viewer"
@@ -167,10 +196,8 @@ to the stylesheet without its pair."""
 def renderer_source() -> str:
     """Return the address the host document loads the renderer from.
 
-    A function and not a bare read of :data:`RENDERER_SOURCE` so that the day the
-    renderer is shipped as package data there is one place to change and one
-    place the probe, the licence notice and the bundle's payload list all agree
-    with.
+    A function and not a bare read of :data:`RENDERER_SOURCE` so that the
+    viewer, the probe and the tests all read the source from one place.
     """
     return RENDERER_SOURCE
 
@@ -198,7 +225,7 @@ def host_document(scene: str, *, renderer: str, title: str) -> str:
     scene
         The scene, already serialised as JSON.
     renderer
-        Where to fetch the renderer from.
+        The URL the document loads the renderer from.
     title
         The document title; the field's own attribute name, which comes from
         :func:`nanopnp.io.fields.attribute_name` and never from this package.
@@ -233,7 +260,7 @@ class RenderRequest:
         vocabulary is :func:`nanopnp.io.fields.attribute_name`'s, so a name the
         shell offers is a name the export writes.
     renderer
-        Where the document fetches the renderer from.
+        The URL the document loads the renderer from.
     """
 
     run: str

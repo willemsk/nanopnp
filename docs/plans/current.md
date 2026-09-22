@@ -1,6 +1,6 @@
 # Current work
 
-Updated 21 September 2026. Navigation only: `SPECIFICATION.md` governs. Check the
+Updated 22 September 2026. Navigation only: `SPECIFICATION.md` governs. Check the
 requested branch and its WP status before resuming; this brief is not evidence that
 an unmerged branch has shipped.
 
@@ -40,19 +40,23 @@ an unmerged branch has shipped.
   never hashed, and one field's pair is kept at a time: at reference mesh size a scene is 23–39 MB
   and it is written twice — once as data, once embedded in the host document. → WP15 D9's Outcome.
 
+- **The renderer ships with the package** (OQ-1, ruled 22 September 2026; CON-09 amended).
+  `webgui.js` is served from `nanopnp/gui/assets/webgui/`, byte-identical to the npm tarball kept
+  as `third_party/webgui-0.2.39.tgz`, and that tarball's SHA-512 is npm's published integrity. An
+  NGSolve upgrade that moves `netgen.webgui`'s pin fails the gate; `NOTICE.md` there says how to
+  refresh. → `test_ver44_vendored_renderer_matches_npm_integrity`.
+- **A bundle carries neither OCCT nor OpenBLAS unless told to.** `netgen-occt` installs outside
+  site-packages and `ngsolve_openblas` hides its BLAS as package data; the recipe collects both, and
+  it rewrites OCCT's RECORD so netgen's own loader finds the libraries. That was the `bundle` job's
+  `KeyError: 'tkernel'`. → `.knowledge/07-software-stack.md` §5 **[tested]**.
+
 ## What is still somebody else's
 
-- **OQ-1, the renderer's redistribution.** `ngsolve.webgui`'s document fetches an
-  LGPL-2.1-or-later renderer from `cdn.jsdelivr.net`. Shipping it as package data is what makes a
-  double-clicked bundle draw a field with no network; it is a CON-09 amendment and the author's
-  call. Until then the viewer's readiness probe reports a document that loaded without its
-  renderer as a diagnostic naming the source. It is one constant, `gui/render.renderer_source()`,
-  plus WP15 work item 15 — and it could not have been implemented here regardless: the CDN answers
-  this container's proxy with 403.
 - **The double-click.** The gated `windows-latest` `bundle` job builds the one-dir bundle, runs
-  `--selftest` and uploads it on every push. Only the author can observe that it double-clicks;
-  until that is recorded, **§8.2 criterion 4 stays outstanding and RSK-13 stays open**, exactly as
-  amendment A4 leaves them.
+  `--selftest` and uploads it on every push. Its selftest now also fails when the shipped renderer
+  does not reach its page. Only the author can observe that it double-clicks and draws; until that
+  is recorded, **§8.2 criterion 4 stays outstanding and RSK-13 stays open**, as amendment A4 leaves
+  them.
 - **The COMSOL exports do not exist yet** (WP13). The author's, against
   [`docs/validation/comsol-export-contract.md`](../validation/comsol-export-contract.md).
   Until they land every report carries `golden_source: self`, and
@@ -75,12 +79,9 @@ an unmerged branch has shipped.
 | Reference geometry, field inputs, runs and sweeps | Phase plan: WP8, WP9, WP10, WP11; `docs/sweeps/README.md` |
 | Reference settings and equations | `.knowledge/00-index.md`, then 01, 06, 08 and 09; the specification remains normative |
 
-Two claims in the WP13 plan's decision table are corrected by its own Outcomes and must
-not be read as current: the telescoping identity does **not** catch a rung compared
-against a stale golden (the hash and point-count gates do), and the export is one table
-per field **per patch**, not per field. Three in the WP15 plan's are corrected by its
-Outcomes: D1's `rung` signature, D3's single reason for a silent rung, and D6's claim that
-the closing test is knowable.
+Decision-table claims corrected by their own Outcomes, not to be read as current: WP13's
+telescoping identity catching a stale golden, and its per-field export; WP15's D1 `rung`
+signature, D3's single reason for a silent rung, D6's knowable closing test, and D13's CDN.
 
 ## Handoff Rules
 

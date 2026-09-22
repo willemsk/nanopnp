@@ -234,6 +234,29 @@ then not made. *This does not block implementation* — the renderer source is o
 > with no route to the CDN shows the viewer's diagnostic instead of a field. Nothing else in WP15
 > depends on it, and closing it is work item 15 plus one constant.
 
+> **Outcome, 22 September 2026: ruled yes, and item 15 is done.** The author asked for both open
+> items to be resolved properly. Two of the claims above were wrong:
+>
+> - Only `cdn.jsdelivr.net` is blocked from the container. `registry.npmjs.org` is not, and the
+>   tarball was fetched and checked against npm's published SHA-512 there.
+> - The file shipped is 779,484 B, not ~1 MB. It **bundles three.js r152 (MIT) and dat.gui 0.7
+>   (Apache-2.0)**, which this question did not name.
+>
+> What shipped:
+>
+> - `nanopnp/gui/assets/webgui/` holds `webgui.js`, the three licence texts and a `NOTICE.md`.
+> - `third_party/webgui-0.2.39.tgz` is the verbatim tarball, as corresponding source.
+> - `RENDERER_SOURCE` is the asset's `file:` URL. There is no CDN fallback, so there is still one
+>   rendering path.
+> - CON-09 and VER-44 are amended, and `LICENSES-BUNDLE.md` gains the row.
+>
+> The probe's `PAYLOADS` is **not** extended, because it mirrors amendment A4's import set
+> exactly and a test holds it there. Instead, `--selftest` loads the viewer's own host document as a
+> file and **fails** when `renderer_loaded` is false. That was tested both ways in a Linux build of
+> the bundle. `test_gui_widgets.py` asserts the same on the matrix with no monkeypatching, and
+> `test_ver44_vendored_renderer_matches_npm_integrity` ties the asset to the tarball, the tarball
+> to npm, and the version to `netgen.webgui`'s pin.
+
 **OQ-2 — is a solve served from the store worth a panel of its own?** D4 requires the cache-hit
 state to be named. Whether the panel should also offer to re-run with the store bypassed is a
 workflow question, not a correctness one. Default: no, state it and stop.

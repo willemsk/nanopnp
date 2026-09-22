@@ -39,6 +39,9 @@ from nanopnp.gui.solver import Failed, Finished, Iteration, Progress, Rung, Star
 from nanopnp.io.case import case_fields, load_case
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+# As the probe's selftest sets it: a runner has no GPU for Qt WebEngine's
+# Chromium child, which otherwise aborts before a document load begins.
+os.environ.setdefault("QTWEBENGINE_CHROMIUM_FLAGS", "--disable-gpu --no-sandbox")
 
 try:
     from PySide6 import QtWidgets
@@ -474,3 +477,52 @@ def test_ver44_clearing_the_viewer_detaches_the_render_in_flight(
     assert stopped == [str(tmp_path)]
     assert panel.model.state == "idle"
     assert panel.refresh().state == "idle", "the cleared panel drained the previous run's render"
+
+
+def test_ver44_the_shipped_renderer_reaches_a_document_with_no_network(
+    application: QtWidgets.QApplication, tmp_path: Path
+) -> None:
+    """A real host document, loaded as a file, receives the renderer the package ships.
+
+    Nothing is monkeypatched: this is the chain the viewer relies on, and the one
+    a ``file:`` document loading a ``file:`` script elsewhere on disk could
+    break by browser policy. The readiness flag records ``renderer_loaded``
+    before the scene is built, so an empty scene is enough and no GPU is needed
+    (WP15 OQ-1, CON-09). Whether the scene then *initialises* needs WebGL, which
+    a headless runner may not have, so it is not asserted here.
+    """
+    import json
+
+    from PySide6 import QtCore
+
+    from nanopnp.gui.render import host_document, readiness_script, renderer_source
+
+    document = tmp_path / "viewer" / "scene.html"
+    document.parent.mkdir()
+    document.write_text(
+        host_document("{}", renderer=renderer_source(), title="a field"), encoding="utf-8"
+    )
+
+    view = QWebEngineView()
+    loop = QtCore.QEventLoop()
+    loaded: list[bool] = []
+    answers: list[object] = []
+
+    def answered(answer: object) -> None:
+        answers.append(answer)
+        loop.quit()
+
+    def finished(ok: bool) -> None:
+        loaded.append(bool(ok))
+        view.page().runJavaScript(readiness_script(), answered)
+
+    view.loadFinished.connect(finished)
+    QtCore.QTimer.singleShot(60_000, loop.quit)
+    view.load(QtCore.QUrl.fromLocalFile(str(document)))
+    loop.exec()
+
+    assert loaded == [True], "the document did not finish loading within 60 s"
+    assert answers and isinstance(answers[0], str), "the readiness probe returned nothing"
+    report = json.loads(answers[0])
+    assert report["renderer_loaded"] is True, report
+    assert report["renderer"] == renderer_source()

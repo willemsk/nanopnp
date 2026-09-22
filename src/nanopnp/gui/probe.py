@@ -29,11 +29,14 @@ what the continuous-integration job's log shows.
 **What ``--selftest`` establishes, and what it does not.** It establishes that
 every payload imported, that a ``QApplication``, a ``QMainWindow`` and a
 ``QWebEngineView`` constructed, that a real ``ngsolve.webgui`` scene was
-generated and handed to the view, and that the CON-11 licence notice travelled
-with the bundle. It does not establish that the scene *rendered*: the HTML
-webgui emits loads its renderer from a CDN, so a headless runner without network
-finishes the document load with nothing drawn. Rendering is a human observation,
-which is why criterion 4 still ends at the author's double-click.
+generated and loaded into the view as a file, that the **renderer shipped with
+the package** reached the page with no network (WP15 OQ-1), and that the CON-11
+licence notice travelled with the bundle. A renderer missing from the bundle
+fails the selftest: it is a payload the viewer cannot draw without, and a bundle
+that drops it is RSK-13's failure exactly. It does not establish that the scene
+*rendered* — a headless runner has no GPU for WebGL — so whether the scene
+initialised is reported and not gated. Rendering is a human observation, which is
+why criterion 4 still ends at the author's double-click.
 """
 
 from __future__ import annotations
@@ -62,7 +65,7 @@ __all__ = [
     "licence_notice",
     "main",
     "payload_versions",
-    "scene_html",
+    "scene_document",
 ]
 
 PAYLOADS: tuple[str, ...] = (
@@ -169,21 +172,38 @@ def _pyside_version() -> str:
     return str(PySide6.__version__)
 
 
-def scene_html() -> str:
-    """Return the ``ngsolve.webgui`` HTML document for a trivial scene.
+def scene_document() -> Path:
+    """Write the host document for a trivial scene and return its path.
 
     A unit-square mesh, coarse enough to be instant: the scene is here to make
     ``ngsolve.webgui`` and the compiled meshers part of what the bundle has to
-    carry, not to show anything about a nanopore.
+    carry, not to show anything about a nanopore. The document is the viewer's
+    own (:func:`nanopnp.gui.render.host_document`), loading the shipped renderer,
+    and it is written to a file because a ``setHtml`` page has no ``file:``
+    origin to load that renderer from — the same reason the viewer loads a file
+    (WP15 D9).
     """
+    import json
+    import tempfile
+
     import ngsolve
     from netgen.occ import unit_square
     from ngsolve.webgui import Draw
 
+    from nanopnp.gui.render import host_document, renderer_source
+
     mesh = ngsolve.Mesh(unit_square.GenerateMesh(maxh=0.3))
     scene = Draw(mesh, show=False)
-    html: str = scene.GenerateHTML()
-    return html
+    directory = Path(tempfile.gettempdir()) / "nanopnp-probe"
+    directory.mkdir(parents=True, exist_ok=True)
+    document = directory / "scene.html"
+    document.write_text(
+        host_document(
+            json.dumps(scene.GetData()), renderer=renderer_source(), title="nanopnp probe"
+        ),
+        encoding="utf-8",
+    )
+    return document
 
 
 def build_window() -> QMainWindow:
@@ -202,7 +222,7 @@ def build_window() -> QMainWindow:
         If the licence notice did not travel with the bundle; see
         :func:`licence_notice`.
     """
-    from PySide6 import QtWidgets
+    from PySide6 import QtCore, QtWidgets
     from PySide6.QtWebEngineWidgets import QWebEngineView
 
     notice = licence_notice().read_text(encoding="utf-8")
@@ -212,7 +232,7 @@ def build_window() -> QMainWindow:
     window.setWindowTitle("nanopnp packaging probe")
 
     view = QWebEngineView()
-    view.setHtml(scene_html())
+    view.load(QtCore.QUrl.fromLocalFile(str(scene_document())))
 
     summary = QtWidgets.QPlainTextEdit()
     summary.setReadOnly(True)
@@ -235,25 +255,42 @@ def _selftest(application: QApplication, window: QMainWindow) -> int:
     Returns
     -------
     int
-        ``0`` always, once the window has been built: every payload imported and
-        every object constructed before this is reached, and those are what
-        RSK-13 is about. A document load that does not complete is reported on
-        standard error rather than failed, because Qt WebEngine's rasteriser on
-        a headless runner is not this project's dependency; §8.2.1 A4's
-        criterion is closed by the author's double-click either way.
+        ``0`` once the window has been built and, if the document loaded, its
+        renderer was there; ``1`` if the document loaded **without** the
+        renderer. Every payload imported and every object constructed before this
+        is reached, and those are what RSK-13 is about; the renderer is a payload
+        too, now that it ships with the package, and the readiness probe is the
+        only thing that can see it (``loadFinished`` is reached without it). A
+        document load that does not complete, and a scene that does not
+        initialise, are reported on standard error rather than failed, because Qt
+        WebEngine's rasteriser on a headless runner is not this project's
+        dependency; §8.2.1 A4's criterion is closed by the author's double-click
+        either way.
     """
+    import json
+
     from PySide6 import QtCore
     from PySide6.QtWebEngineWidgets import QWebEngineView
+
+    from nanopnp.gui.render import readiness_script, renderer_source
 
     view = window.findChild(QWebEngineView)
     if view is None:  # pragma: no cover - build_window always adds one
         raise RuntimeError("the probe window carries no QWebEngineView")
 
     loaded: list[bool] = []
+    answers: list[object] = []
+
+    def answered(answer: object) -> None:
+        answers.append(answer)
+        application.quit()
 
     def finished(ok: bool) -> None:
         loaded.append(bool(ok))
-        application.quit()
+        if ok:
+            view.page().runJavaScript(readiness_script(), answered)
+        else:
+            application.quit()
 
     view.loadFinished.connect(finished)
     QtCore.QTimer.singleShot(SELFTEST_TIMEOUT_MS, application.quit)
@@ -263,12 +300,30 @@ def _selftest(application: QApplication, window: QMainWindow) -> int:
     for name, value in payload_versions().items():
         print(f"{name}: {value}")
     print(f"licence notice: {licence_notice()}")
-    if loaded and loaded[0]:
-        print("web view: document loaded")
-    else:
+    print(f"renderer: {renderer_source()}")
+    if not (loaded and loaded[0]):
         print(
             "web view: the document load did not complete within "
             f"{SELFTEST_TIMEOUT_MS / 1000:.0f} s; every payload still imported and constructed",
+            file=sys.stderr,
+        )
+        return 0
+    print("web view: document loaded")
+    report = json.loads(answers[0]) if answers and isinstance(answers[0], str) else {}
+    if not report.get("renderer_loaded"):
+        print(
+            f"web view: the document loaded but the renderer shipped at {renderer_source()} "
+            "did not reach it, so this bundle cannot draw a field",
+            file=sys.stderr,
+        )
+        return 1
+    print("web view: renderer loaded")
+    if report.get("ready"):
+        print("web view: scene initialised")
+    else:
+        print(
+            f"web view: the scene did not initialise ({report.get('error') or 'no reason given'}); "
+            "a headless runner has no GPU for WebGL, so this is reported and not gated",
             file=sys.stderr,
         )
     return 0

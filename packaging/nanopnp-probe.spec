@@ -112,6 +112,14 @@ _datas.append((str(_root / "packaging" / "LICENSES-BUNDLE.md"), "."))
 # case -- which is the class of defect this bundle exists to find early.
 _datas.append((str(_root / "data"), "nanopnp/data"))
 
+# The field viewer's renderer, its three licence texts and its NOTICE (WP15
+# OQ-1, CON-09). `gui/render.py` resolves it relative to its own module, so it
+# goes to the same package-relative path; `--selftest` fails if the page it
+# loads does not receive it.
+_datas.append(
+    (str(_root / "src" / "nanopnp" / "gui" / "assets" / "webgui"), "nanopnp/gui/assets/webgui")
+)
+
 a = Analysis(
     [str(_root / "src" / "nanopnp" / "gui" / "probe.py")],
     pathex=[str(_root / "src")],

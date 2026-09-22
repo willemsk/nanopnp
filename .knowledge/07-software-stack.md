@@ -340,12 +340,27 @@ caller cannot redirect the renderer `<script src=…>` by passing a template, an
 needs a different renderer source has to build the host document itself. The document is four lines
 plus the render data, so that is cheap — but it is not optional.
 
-The renderer itself is npm `webgui`, `"license": "LGPL-2.1-or-later"`, 1,206,946 B unpacked for
-version 0.2.39 (npm registry metadata, **[verified]**). Redistributing it inside a bundle is
-permitted and is the only way a packaged application draws a field offline; it is a new
-redistributed work and belongs in the licence notice if it is shipped. `cdn.jsdelivr.net` is
-blocked from this development container (proxy 403), so the file has to be fetched elsewhere and
-checked against the integrity hash npm publishes.
+The renderer itself is npm `webgui`, `"license": "LGPL-2.1-or-later"` (npm registry metadata,
+**[verified]**). Its tarball for 0.2.39 is 503,052 B, and its published `dist.integrity` is
+`sha512-yDd6YR7E…Zubqw==`. The 1,206,946 B figure npm reports is the *unpacked* tarball. The file a
+page loads, `package/dist/webgui.js`, is **779,484 B**: a minified IIFE that defines the global
+`webgui`.
+
+That build **bundles two further works**: three.js r152 (MIT, which keeps its `@license` banner)
+and dat.gui 0.7 (Apache-2.0, which keeps no banner). The tarball also carries `src/*.ts`, the
+shaders and the vite configuration, so it is the corresponding source of the LGPL part as it
+stands. **[tested]**, 22 September 2026.
+
+`cdn.jsdelivr.net` answers this development container's proxy with 403, but
+**`registry.npmjs.org` does not**. The tarball downloads here, and its SHA-512 matches the
+published integrity exactly. That is how it is vendored: `third_party/webgui-0.2.39.tgz`, with
+`webgui.js` shipped from it under `nanopnp/gui/assets/webgui/`.
+
+Loaded from there as a `file:` URL by a host document that is itself a `file:` URL in another
+directory, it reaches the page in Qt WebEngine 6.11.2. `renderer_loaded` is true offline, both in
+the frozen probe bundle and in a plain `QWebEngineView`. With no GPU, `new webgui.Scene()` then
+throws `TypeError: Cannot read properties of null (reading 'getExtension')`: WebGL has no
+context, which is a property of the machine and not of the renderer.
 
 ### A webgui scene draws on a material *region*, not only on a whole mesh **[tested]**
 
