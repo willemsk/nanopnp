@@ -1,0 +1,5 @@
+# Vendored third-party files are checked byte for byte against the npm tarball
+# they came from (tests/tier1/test_gui_render.py), so no checkout may rewrite
+# their line endings -- which a Windows checkout with core.autocrlf would.
+src/nanopnp/gui/assets/webgui/** -text
+third_party/** -text
