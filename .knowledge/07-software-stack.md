@@ -244,7 +244,7 @@ everything the round trip does, and changing the moment an edge moves group.
 | **PySide6** 6.11.1 | LGPL-3 OR GPL-2 OR GPL-3 | **Use this.** LGPL option means no licence conflict |
 | PyQt6 | **GPL-3 only** | Avoid unless the project is GPL |
 | `PySide6.QtWebEngineWidgets.QWebEngineView` | — | Hosts NGSolve webgui **[tested]**. The earlier "imports cleanly" held on a machine with the GL libraries present; see the caveat below, which is a property of the machine and not of the wheel |
-| PyInstaller | — | **Chosen** for the bundle, one-dir (ADR-004, amended 20 September 2026). `collect_all("ngsolve")` and `collect_all("netgen")`; `upx=False`, which mangles Qt WebEngine's helper executable |
+| PyInstaller | — | **Chosen** for the bundle, one-dir (ADR-004, amended 20 September 2026). `collect_all` over `ngsolve`, `netgen` and `ngsolve_openblas`, plus the `netgen-occt` libraries collected by hand (below); `upx=False`, which mangles Qt WebEngine's helper executable |
 | briefcase / conda-constructor | — | The other two candidates; not used |
 
 ### PySide6 imports are a system-library question, not a wheel question **[tested]**
@@ -374,6 +374,50 @@ runs — including a `QPainter` repaint into a `QPixmap` and a `QWebEngineView` 
 This is the §5 shim recorded above, used for the purpose that section already states: checking
 widget code that would otherwise ship having never been executed. It stays off the push gate, where
 widget coverage remains `windows-latest` and `macos-latest`.
+
+### A PyInstaller bundle carries neither OCCT nor OpenBLAS unless told to **[tested]**
+
+Measured 22 September 2026: PyInstaller 6.22.3, contrib hooks 2026.7, NGSolve and Netgen
+6.2.2606, `netgen-occt` 7.8.1, `ngsolve-openblas` 0.3.33. The Windows build log and a Linux
+rebuild of the same recipe in this container agree.
+
+**OCCT.** `import netgen` runs `netgen.load_occ_libs()`, which does three things in order:
+
+1. calls `importlib.metadata.metadata("netgen-occt")`;
+2. builds a stem-to-path map from `metadata.files("netgen-occt")`;
+3. `ctypes.CDLL`s 28 `TK*` libraries in dependency order, starting with `lib_paths["tkernel"]`.
+
+The `netgen-occt` wheel installs those libraries **outside site-packages**, through its `.data/data`
+scheme: `bin/TK*.dll` at the environment root on Windows, and `lib/libTK*.so.7.8.1` on Linux. So
+its RECORD names them `../../bin/TKernel.dll`, relative to the dist-info's parent. A one-dir
+bundle then fails twice, independently:
+
+- **PyInstaller does not find the libraries.** The build log carries `Library not found: could not
+  resolve 'TKernel.dll', dependency of ...\netgen\nglib.dll` for every one of them. `collect_all`
+  cannot help, because they belong to no importable package.
+- **PyInstaller does collect the dist-info.** So `metadata()` succeeds, and the
+  `PackageNotFoundError` no-op branch is not taken. But since Python 3.12, `Distribution.files`
+  filters its result through `skip_missing_files`, and from `_internal/` every `../../` entry
+  points outside the bundle. The map comes back **empty**, and the first lookup raises
+  `KeyError: 'tkernel'`. That is the exact failure of the gated `bundle` job, before any Qt is
+  touched.
+
+**The fix makes netgen's own loader work unchanged** (`packaging/nanopnp-probe.spec`):
+
+- collect the existing `netgen-occt` files that match its filter (`*libTK*` or `*.dll`) into the
+  bundle root;
+- replace the collected dist-info with one whose RECORD names them by bare file name.
+
+**OpenBLAS.** `ngsolve/__init__.py` imports `ngsolve_openblas` and preloads the libraries it
+ships as package data. Static analysis collects the module but not the libraries, so the frozen
+`import ngsolve` fails with `libopenblas.so.0: cannot open shared object file`.
+`collect_all("ngsolve_openblas")` carries them. There is no macOS wheel, and `ngsolve` does not
+import it there.
+
+With both fixes, the probe bundle built here runs `--selftest` to completion on Linux under the §5
+GL shim. The unresolved-library warnings that remain in the build log are `libopenblas.so.0` and
+the optional CUDA libraries of `_ngscuda.so`. The first is satisfied at run time by the preload;
+the second is never loaded unless a CUDA solver is asked for.
 
 ### `nanopnp.io.case` pulls in neither NGSolve nor NumPy, and costs 250–350 ms **[tested]**
 
