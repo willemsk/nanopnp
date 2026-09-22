@@ -60,11 +60,11 @@ class SceneModel:
     Parameters
     ----------
     renderer
-        Where the host document fetches its renderer from, carried so the
+        The URL the host document loads its renderer from, carried so the
         diagnostics can name it. Read through
         :func:`~nanopnp.gui.render.renderer_source` and not from the constant
-        beside it, because that function is the one place the day the renderer
-        is shipped as package data has to change. A plain default rather than a
+        beside it, so that the viewer names the source the document was actually
+        built with. A plain default rather than a
         ``dataclasses.field``: this class already has an attribute called
         ``field``, and in a class body that name shadows the module's.
     """
@@ -189,9 +189,9 @@ class SceneModel:
         # message would make a renderer's wording into an interface.
         if not report.get("renderer_loaded"):
             self.diagnosis = (
-                f"the document loaded but its renderer was not there. It is fetched from "
-                f"{self.renderer}, so a machine with no route to it shows an empty panel; the "
-                f"scene itself is beside the document, at {self.scene}"
+                f"the document loaded but its renderer was not there. It is shipped with the "
+                f"package and loaded from {self.renderer}, so this installation is missing it; "
+                f"the scene itself is beside the document, at {self.scene}"
             )
         elif error:
             self.diagnosis = (

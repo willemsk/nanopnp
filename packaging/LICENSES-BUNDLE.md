@@ -18,14 +18,17 @@ regardless of which solver a case selects.
 | OpenBLAS (`ngsolve-openblas`) | BSD-3-Clause | NGSolve's dense linear algebra, dynamically linked. A Linux bundle also carries the `libgfortran` it links, under GPL-3 with the GCC Runtime Library Exception |
 | SuiteSparse UMFPACK | **GPL-2+** | Default direct linear solver, built into the NGSolve wheel |
 | PySide6, Qt 6 (including Qt WebEngine) | LGPL-3 | Desktop shell and the embedded field viewer, dynamically linked |
+| `webgui` 0.2.39 (npm), bundling three.js r152 and dat.gui 0.7 | LGPL-2.1-or-later; MIT; Apache-2.0 | The field viewer's renderer, shipped unmodified as `nanopnp/gui/assets/webgui/webgui.js` beside its three licence texts and a `NOTICE.md` naming its source |
 | NumPy, SciPy, pydantic, PyYAML, meshio, h5py, SymPy | BSD-3-Clause / MIT / Apache-2.0 | Numerics, configuration and file formats |
 
 ## Your rights under the LGPL components
 
-NGSolve, Netgen, Open CASCADE, PySide6 and Qt are used under their LGPL options, which give you the right to
+NGSolve, Netgen, Open CASCADE, PySide6, Qt and `webgui` are used under their LGPL options, which give you the right to
 replace them with your own versions. The bundle is built **one-dir** rather than one-file precisely
 so that you can: every shared library is an ordinary file in the bundle directory and may be
 replaced in place. Nothing in the bundle is statically linked against an LGPL component.
+The renderer is likewise an ordinary file, `_internal/nanopnp/gui/assets/webgui/webgui.js`, and
+the viewer loads whatever build is at that path.
 
 ## Source
 
@@ -34,6 +37,9 @@ nanopnp's source, including the build recipe for this bundle
 of every component above are available from their own projects; NGSolve at
 <https://ngsolve.org>, SuiteSparse at <https://people.engr.tamu.edu/davis/suitesparse.html>, and
 Qt for Python at <https://doc.qt.io/qtforpython>.
+The corresponding source of `webgui` is the npm tarball
+<https://registry.npmjs.org/webgui/-/webgui-0.2.39.tgz>, kept verbatim in nanopnp's repository as
+`third_party/webgui-0.2.39.tgz`.
 
 ## What this bundle is
 

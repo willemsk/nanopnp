@@ -22,7 +22,8 @@ in different units in the two places.
 hard-codes a renderer address and ignores the ``template`` argument that looks
 like it would redirect it, so the child builds the document itself. What is
 asserted is that the document it builds references the renderer it was given and
-carries no second script source.
+carries no second script source, and that the renderer it is given by default is
+the one shipped with the package, checked against npm's published integrity.
 
 The case is the cheapest one that walks the whole pipeline, as
 ``tests/tier1/test_run.py`` uses. Stabilisation is ``none`` (NUM-11).
@@ -30,14 +31,22 @@ The case is the cheapest one that walks the whole pipeline, as
 
 from __future__ import annotations
 
+import base64
+import hashlib
+import importlib.util
 import json
+import re
+import tarfile
 from pathlib import Path
 
 import pytest
 
 from nanopnp.gui.render import (
     READY_FLAG,
+    RENDERER_DIRECTORY,
+    RENDERER_INTEGRITY,
     RENDERER_SOURCE,
+    RENDERER_VERSION,
     VIEWER_DIRNAME,
     Rendered,
     RenderFailed,
@@ -222,16 +231,66 @@ def test_ver44_the_document_has_one_rendering_path_and_names_its_renderer() -> N
 
 
 def test_ver44_the_renderer_source_is_one_constant() -> None:
-    """The address is read through one function, which is what OQ-1 would change.
+    """The address is read through one function, and it is the shipped file.
 
-    Shipping the renderer as package data so a bundle draws with no network is a
-    redistribution question about an LGPL-2.1-or-later work and is the author's
-    to answer. Until it is answered the document fetches, which is why the
-    readiness probe below exists; what this asserts is that answering it is one
-    edit and not a search.
+    WP15 OQ-1 was ruled on 22 September 2026: the renderer ships with the package,
+    so the document needs no network. The source is a ``file:`` URL to a file
+    that exists, and it is read through one function so that the viewer, the
+    probe and these tests cannot disagree about it.
     """
     assert renderer_source() == RENDERER_SOURCE
     assert render.__module__ == renderer_source.__module__
+    assert RENDERER_SOURCE.startswith("file:")
+    assert (RENDERER_DIRECTORY / "webgui.js").is_file()
+
+
+VENDORED_TARBALL = Path(__file__).resolve().parents[2] / "third_party" / "webgui-0.2.39.tgz"
+"""The npm tarball kept verbatim as the renderer's corresponding source."""
+
+
+def test_ver44_vendored_renderer_matches_npm_integrity() -> None:
+    """What is drawn with is what npm published, for the version netgen pins.
+
+    Three links, each checked offline:
+
+    - the vendored tarball's SHA-512 is npm's published ``dist.integrity`` for it;
+    - the shipped ``webgui.js`` is that tarball's ``package/dist/webgui.js``, byte
+      for byte, and the shipped ``LICENSE.webgui`` is its ``package/LICENSE``;
+    - :data:`RENDERER_VERSION` is the tarball's own version **and** the version
+      the installed ``netgen/webgui.py`` pins, read from its source without
+      importing it. The scene ``GetData`` emits is that renderer's input format,
+      so an NGSolve upgrade that moves the pin must fail here and not draw
+      nothing. ``NOTICE.md`` beside the renderer says how to refresh it.
+    """
+    assert VENDORED_TARBALL.name == f"webgui-{RENDERER_VERSION}.tgz"
+    digest = hashlib.sha512(VENDORED_TARBALL.read_bytes()).digest()
+    assert f"sha512-{base64.b64encode(digest).decode()}" == RENDERER_INTEGRITY
+
+    with tarfile.open(VENDORED_TARBALL) as archive:
+
+        def member(name: str) -> bytes:
+            extracted = archive.extractfile(name)
+            assert extracted is not None, name
+            return extracted.read()
+
+        assert member("package/dist/webgui.js") == (RENDERER_DIRECTORY / "webgui.js").read_bytes()
+        assert member("package/LICENSE") == (RENDERER_DIRECTORY / "LICENSE.webgui").read_bytes()
+        manifest = json.loads(member("package/package.json"))
+    assert manifest["version"] == RENDERER_VERSION
+    assert manifest["license"] == "LGPL-2.1-or-later"
+
+    spec = importlib.util.find_spec("netgen")
+    assert spec is not None and spec.origin is not None
+    netgen_webgui = (Path(spec.origin).parent / "webgui.py").read_text(encoding="utf-8")
+    pinned = set(re.findall(r"npm/webgui@([0-9.]+)/", netgen_webgui))
+    assert pinned == {RENDERER_VERSION}, (
+        f"netgen.webgui pins webgui {sorted(pinned)} but the package ships {RENDERER_VERSION}; "
+        "refresh the renderer as src/nanopnp/gui/assets/webgui/NOTICE.md describes"
+    )
+
+    for text in ("NOTICE.md", "LICENSE.three", "LICENSE.dat-gui"):
+        assert (RENDERER_DIRECTORY / text).is_file(), text
+    assert RENDERER_INTEGRITY in (RENDERER_DIRECTORY / "NOTICE.md").read_text(encoding="utf-8")
 
 
 def test_ver44_the_readiness_probe_asks_the_document_what_it_did() -> None:
