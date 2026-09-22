@@ -12,17 +12,18 @@ into `/wp-ship`: independent review and CI stewardship remain a separate invocat
 ## Load the brief
 
 1. Read `docs/plans/current.md` and the requested WP's Execution brief. Its current decisions are
-  binding, subject to the specification. Read each work item's linked Design sections before
-  implementing it; do not reload unrelated delivered packages. For legacy plans, read Decisions,
-  Work items, Verification and their correcting Outcomes first, then the relevant Design sections.
-  Correct a wrong decision in the brief and, if needed, the specification, preserving the original
-  argument as labelled history (see **Keeping the record straight** below).
+   binding, subject to the specification. Read each work item's linked Design sections before
+   implementing it; do not reload unrelated delivered packages. For legacy plans, read Decisions,
+   Work items, Verification and their correcting Outcomes first, then the relevant Design sections.
+   Correct a wrong decision in the brief and, if needed, the specification, preserving the original
+   argument as labelled history (see **Keeping the record straight** below).
 2. `.knowledge/00-index.md`, then the relevant sections of the files the package touches.
 3. The `SPECIFICATION.md` sections and Appendix A rows the plan cites.
 4. `uv sync --all-extras --frozen` if `.venv` is not already current (the `SessionStart` hook does
    this in web sessions).
-5. Check the branch. If it is `main`, stop and ask before writing anything — `wp-ship` §1 refuses to
-   ship from `main`, and by the time it says so the whole package has already been committed there.
+5. Check the branch. If it is `main`, switch to the development branch this session was given; if
+   none was given, stop and ask before writing anything — `wp-ship` §1 refuses to ship from `main`,
+   and by the time it says so the whole package has already been committed there.
 
 Then build a task list from the plan's work items, in dependency order, and work it. Physics and
 numerics decisions stay with the orchestrator on Opus; delegate surveys, mechanical edits and long
@@ -32,7 +33,9 @@ test runs per `.claude/model-policy.md`, saying which model you chose and why.
 
 **One commit per coherent unit**, not one per file and not one at the end. Conventional prefix,
 requirement identifier in the body (`VER-19`, `NUM-28`). The gate hook runs the whole gate before
-each commit and refuses it with the failing output, so a commit is proof the tree was green.
+each commit and refuses it with the failing output, so a commit is proof the tree was green. It
+gates the working tree and remembers a pass, so a tree gated once can be split into several commits
+without paying for the gate again.
 
 A unit is done when its test exists and passes, not when the code compiles. Name every test for the
 requirement it discharges — `test_ver19_stokes_drag_against_six_pi_eta_a_u` — and place it in the
@@ -92,8 +95,7 @@ Before handing off, confirm every one of these yourself:
 
 - every work item in the plan is done, or explicitly deferred with a reason written into the plan;
 - every `VER-`/`VAL-` identifier the plan claimed has a test named for it, and it passes;
-- `uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv run pytest` is
-  green on the current tree;
+- `.claude/hooks/gate.sh run` is green on the current tree;
 - the specification, the knowledge base and the plan's Outcome annotations are all committed;
 - both **Status** lines and `docs/plans/current.md` are updated;
 - `git status` is clean, and the branch is pushed (`git push -u origin <branch>`).

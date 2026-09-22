@@ -92,9 +92,11 @@ gate failure aborts with the quantity and its location; integration order ≥ 3 
 
 1. If a spec amendment is needed, edit `SPECIFICATION.md` in the same commit and say so in the plan.
    Update `docs/plans/current.md` to link the planned package and its live dependencies.
-2. Commit on the working branch (create one from `main` if you are on `main`):
+2. Commit on the working branch — if you are on `main`, switch to the development branch this
+   session was given, and if none was given, stop and ask (the same rule as `wp-implement`):
    `docs: WP<n> implementation plan`, with the identifiers it discharges in the body.
-   The gate hook runs the whole gate, tests included; a docs-only commit passes it unchanged.
+   The gate hook sees a prose-only change (`*.md`, `docs/`, `.knowledge/`) and runs ruff alone; a
+   plan that also moves code or data pays for the whole gate.
    Then `git push -u origin <branch>`. The plan is the brief `/wp-implement` works from, and it may
    be a different session on a different machine — an unpushed commit is one reclaimed container
    away from gone.

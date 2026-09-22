@@ -16,15 +16,12 @@ only to locate it. For legacy plans, start with Decisions, Work items, Verificat
 Outcomes. Read normative sections and relevant derivations independently when assessing a claim;
 do not reload the entire phase history to write the PR. A brief is navigation, not a review oracle.
 
-Do not push a tree you have not gated.
-
-```bash
-uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv run pytest
-```
+Do not push a tree you have not gated. Run `.claude/hooks/gate.sh run`; on a tree that already
+passed (typically the commit `/wp-implement` ended on) it returns at once.
 
 Also confirm: `git status` clean; every `VER-`/`VAL-` the plan claimed has a test named for it;
-`SPECIFICATION.md`, `.knowledge/` and the plan's Outcome annotations are committed; `uv.lock` is
-current if `pyproject.toml` moved (CI runs `UV_FROZEN`, so a stale lock fails every job).
+`SPECIFICATION.md`, `.knowledge/` and the plan's Outcome annotations are committed. The gate's
+`uv lock --check` covers `uv.lock` (CI runs `UV_LOCKED`, so a stale lock fails every job).
 
 If the branch is `main`, stop and ask. If the branch is behind `main`, merge `main` in and re-gate.
 
@@ -43,25 +40,16 @@ review or monitoring.
 Base `main`. Title: the conventional-commit summary of the package —
 `feat: WP<n> — <what it delivers>`.
 
-Body, in this order. It is the reviewer's brief and the record of the package, so it carries numbers,
-not adjectives:
-
-- **What it delivers** — one paragraph, plus the new modules by path.
-- **Identifiers discharged** — the `VER-`/`VAL-`/`FR-`/`NUM-`/`PHY-` list, each against the test or
-  the module that discharges it.
-- **Specification changes** — every amendment and NOTE, with why it was the specification that was
-  wrong rather than the number that was accommodated. Empty is a fine answer; silence is not.
-- **Measured** — the convergence rates with their meshes, route-agreement figures, timings, minimum
-  damping, and the stabilisation mode they were measured under.
-- **Deliberately not done** — deferrals, flags left default-off, and what owns them next.
-- **Verification** — which tiers were run and the result; anything only run locally because CI
-  does not carry it (Tier 3, `slow`).
+Body: fill `.github/pull_request_template.md` — its sections (What this delivers, Identifiers
+discharged, Specification changes, Measured, Deliberately not done, Verification) and its
+Verification checklist, ticking only what was actually run. It is the reviewer's brief and the record
+of the package, so it carries numbers, not adjectives: rates with their meshes, route-agreement
+figures, timings, minimum damping, and the stabilisation mode each was measured under.
+"Specification changes" is never omitted — "None." is an answer, silence is not.
 
 Keep each section concise. Link full derivations, measurement tables and requirement matrices at
 the reviewed revision instead of duplicating them; retain the key results and explicit deferrals.
-
 End with the attribution footer this session's instructions specify for pull request descriptions.
-Mirror `.github/pull_request_template.md` instead if one has appeared since.
 
 ## 4. Review pass
 
@@ -74,17 +62,11 @@ Run the review against the PR, from this session:
 Skill(skill="code-review", args="xhigh --fix <pr-number>")
 ```
 
-Invoke the skill directly. Do **not** wrap it in an `Agent` call, as this step did after
-`48f5f63`: the wrapped form returned no findings and no fixes, run after run, and WP9
-shipped that way with a 1e9 error in `RadialGrid.integral(radial=True)` still in it. Verified: the
-direct call forks its own review agent and returns the finished findings into the calling turn.
-Inferred, from the `Skill` tool's contract that such a pass can return asynchronously: a subagent
-runs one prompt and is then torn down, leaving no turn for that result to return into. The mechanism
-is a hypothesis; the empty results are not.
-
-The cold-context property this step exists for comes from the skill running its own forked pass, and
-from `/wp-implement` never chaining into `/wp-ship` — not from an extra agent in between, which only
-adds a relay that can drop the report.
+Invoke the skill directly — never wrapped in an `Agent` call. Wrapped (after `48f5f63`), it
+returned no findings and no fixes run after run, and WP9 shipped with a 1e9 error in
+`RadialGrid.integral(radial=True)` still in it; called directly, it forks its own review agent and
+returns the finished findings into this turn. The cold-context property comes from that fork and
+from `/wp-implement` never chaining into `/wp-ship`, not from an extra relay.
 
 **The pass must produce evidence that it completed, not evidence that it edited files.** Record the
 PR base and head SHAs before invoking it. Read the installed review skill's completion contract and
@@ -111,7 +93,7 @@ changes before accepting the report; evidence for an old revision does not certi
    becoming a plausible wrong one — do not skip it.
 2. Findings the pass raised but could not fix: fix them yourself here, or record them in the PR body
    under **Deliberately not done** with the reason. Do not leave a confirmed finding unmentioned.
-3. If fixes changed the tree, re-run the full gate.
+3. If fixes changed the tree, re-run `.claude/hooks/gate.sh run`.
 4. Commit accepted changes — `fix: close the review gaps in <what>`, identifiers in the body — and
   push to the PR branch. No empty commit or cosmetic edit is needed for a clean review. The commits
   belong on the branch, not in a comment; the commit hook remains mandatory.
