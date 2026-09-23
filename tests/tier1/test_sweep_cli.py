@@ -169,6 +169,34 @@ def test_ver38_sweep_plan_writes_a_plan_and_prints_its_waves(
     assert "sweeps" in Path(payload["directory"]).parts
 
 
+def test_ver38_sweep_plan_directory_moves_the_plan_and_refuses_another_plan(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """``--directory`` chooses where the plan goes, and never mixes two sweeps.
+
+    Re-planning the same document into the same directory is allowed, since it
+    is the same plan; planning a different one there exits with the case class
+    and leaves the first plan in place.
+    """
+    (tmp_path / "base.yaml").write_text(BASE.format(mesh=tmp_path / "pore.vol"), encoding="utf-8")
+    (tmp_path / "sweep.yaml").write_text(SWEEP, encoding="utf-8")
+    target = tmp_path / "iv"
+    argv = ["sweep", "plan", str(tmp_path / "sweep.yaml"), "--no-mesh-check"]
+    argv += ["--store", str(tmp_path / "store"), "--directory", str(target), "--json"]
+
+    assert main(argv) == EXIT_OK
+    first = json.loads(capsys.readouterr().out)
+    assert first["plan"] == str(target / PLAN_FILENAME)
+    assert main(argv) == EXIT_OK, "the same plan into the same directory is not a conflict"
+    capsys.readouterr()
+
+    (tmp_path / "sweep.yaml").write_text(SWEEP.replace("[-0.05, 0.05]", "[-0.1, 0.1]"))
+    assert main(argv) == EXIT_CASE
+    assert "different sweep" in capsys.readouterr().err
+    written = json.loads((target / PLAN_FILENAME).read_text(encoding="utf-8"))
+    assert decode_floats(written)["hash"] == first["hash"]
+
+
 def test_ver38_a_misspelt_axis_exits_with_the_case_class(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
