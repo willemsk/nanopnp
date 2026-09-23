@@ -303,6 +303,8 @@ def test_ver32_classifying_imports_no_exception_module() -> None:
         (["inspect", "run-dir"], "_inspect"),
         (["reproduce", "run-dir"], "_reproduce"),
         (["env"], "_env"),
+        (["mesh", "cylinder", "--out", "pore.msh"], "_mesh"),
+        (["mesh", "reference", "--out", "clya.msh"], "_mesh"),
     ],
 )
 def test_ver32_every_subcommand_parses_and_dispatches(argv: list[str], handler: str) -> None:
@@ -341,15 +343,27 @@ def test_ver32_no_flag_changes_what_is_solved() -> None:
         "order",
     }
     parser = build_parser()
-    subcommands = [
-        choice
-        for action in parser._actions
-        if isinstance(action, argparse._SubParsersAction)
-        for choice in action.choices.values()
-    ]
+
+    def nested(group: argparse.ArgumentParser) -> list[argparse.ArgumentParser]:
+        """Every parser under ``group``, however deep, except the mesh generators.
+
+        ``nanopnp mesh`` is excluded by section 3.1's generators NOTE: its
+        geometric flags shape an *input file*, which a run later records by
+        content hash through ``inputs.mesh`` like any external mesh, so they do
+        not reach what a run solves.
+        """
+        found: list[argparse.ArgumentParser] = []
+        for action in group._actions:
+            if isinstance(action, argparse._SubParsersAction):
+                for name, choice in action.choices.items():
+                    if group is parser and name == "mesh":
+                        continue
+                    found += [choice, *nested(choice)]
+        return found
+
     named = {
         option.lstrip("-").replace("-", "_")
-        for group in (parser, *subcommands)
+        for group in (parser, *nested(parser))
         for action in group._actions
         for option in action.option_strings
     }
@@ -662,3 +676,111 @@ def test_val01_validate_help_does_not_choke_on_the_grid_header(
         "report",
     ):
         assert action in printed
+
+
+# -- the mesh generators (section 3.1 generators NOTE) -------------------------
+
+
+def test_ver32_mesh_cylinder_writes_a_mesh_its_printed_groups_ingest(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The file ingests through the VER-27 gate with the mapping printed, unchanged.
+
+    And the hash printed is the one the run's FR-25 manifest records for it: the
+    generator gates and hashes the file by the route a run reads it, so the two
+    cannot disagree without this failing.
+    """
+    out = tmp_path / "pore.msh"
+    assert main(["mesh", "cylinder", "--out", str(out), "--json"]) == EXIT_OK
+    printed = json.loads(capsys.readouterr().out)
+    assert out.is_file()
+    assert printed["path"] == str(out)
+    assert printed["groups"] == {"default": "interface"}
+    assert printed["elements"] > 0
+    assert printed["min_sicn"] > 0.3 and printed["min_gamma"] > 0.3
+    assert not list(tmp_path.glob(".*partial*")), "the staging file was left behind"
+
+    groups = ", ".join(f"{key}: {value}" for key, value in printed["groups"].items())
+    case = tmp_path / "case.yaml"
+    case.write_text(
+        CASE.format(mesh_path=out)
+        .replace("format: vol", "format: msh41")
+        .replace("groups: {default: interface}", f"groups: {{{groups}}}"),
+        encoding="utf-8",
+    )
+    from nanopnp.io.run import run_case
+    from nanopnp.io.store import Store
+
+    result = run_case(case, store=Store(tmp_path / "store"), upto="mesh")
+    assert result.manifest.geometry_and_mesh["content_hash"] == printed["content_hash"]
+    assert result.manifest.geometry_and_mesh["groups"]["default"] == "interface"
+
+
+def test_ver32_mesh_text_output_carries_a_pasteable_inputs_block(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Without ``--json`` the result ends in the ``inputs.mesh`` block a case needs."""
+    out = tmp_path / "pore.msh"
+    assert main(["mesh", "cylinder", "--out", str(out)]) == EXIT_OK
+    text = capsys.readouterr().out
+    assert "    groups: {default: interface}" in text
+    assert f"    path: {out}" in text
+    assert "    format: msh41" in text
+
+
+def test_ver32_mesh_failing_the_quality_gate_exits_four_and_leaves_no_file(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A 0.01 nm membrane meshes to slivers; the VER-10 gate refuses it, exit 4.
+
+    Measured: minimum SICN 0.025 against the 0.3 floor. The refused mesh leaves
+    neither the destination nor its staging file behind, so a case cannot pick a
+    refused mesh up by name afterwards.
+    """
+    out = tmp_path / "sliver.msh"
+    code = main(["mesh", "cylinder", "--membrane-thickness-nm", "0.01", "--out", str(out)])
+    assert code == EXIT_GATE
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "SICN" in captured.err or "gamma" in captured.err
+    assert "Traceback" not in captured.err
+    assert list(tmp_path.iterdir()) == []
+
+
+@pytest.mark.parametrize(
+    "argv",
+    [
+        ["mesh", "cylinder", "--pore-radius-nm", "0", "--out", "p.msh"],
+        ["mesh", "cylinder", "--pore-radius-nm", "12", "--out", "p.msh"],
+        ["mesh", "cylinder"],
+    ],
+)
+def test_ver32_mesh_refuses_a_bad_geometry_as_a_usage_error(
+    argv: list[str], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Non-positive lengths, a pore wider than its reservoir, no ``--out``: exit 2."""
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises(SystemExit) as raised:
+        main(argv)
+    assert raised.value.code == EXIT_USAGE
+    assert list(tmp_path.iterdir()) == []
+
+
+@pytest.mark.parametrize("shape", ["cylinder", "reference"])
+def test_ver32_mesh_help_imports_no_netgen(shape: str) -> None:
+    """``--help`` on either generator answers without importing netgen or NGSolve."""
+    code = (
+        "import sys, json\n"
+        "from nanopnp.cli import main\n"
+        "try:\n"
+        f"    main(['mesh', {shape!r}, '--help'])\n"
+        "except SystemExit:\n"
+        "    pass\n"
+        "loaded = sorted(m for m in sys.modules if m.startswith(('ngsolve', 'netgen')))\n"
+        "sys.stderr.write(json.dumps(loaded))\n"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", code], capture_output=True, text=True, check=True
+    )
+    assert json.loads(result.stderr) == []
+    assert "--out" in result.stdout

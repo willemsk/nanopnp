@@ -482,7 +482,11 @@ def _read_meshio(path: Path) -> MeshData:
     import numpy as np
 
     try:
-        mesh = meshio.read(str(path))
+        # The format is named, not left to the suffix: meshio maps ``.msh`` to
+        # ANSYS *and* gmsh, tries ANSYS first, and prints that reader's refusal
+        # -- an empty line -- to standard output, which the CLI reserves for its
+        # result (IF-02 NOTE) [tested].
+        mesh = meshio.read(str(path), file_format="gmsh")
     except Exception as error:  # meshio raises a dozen unrelated types
         raise MeshFormatError(f"meshio could not read {path}: {error}") from error
 

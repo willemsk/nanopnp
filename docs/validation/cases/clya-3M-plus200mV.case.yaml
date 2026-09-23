@@ -20,7 +20,7 @@
 # enters the case identity, so all four rungs answer this same case.
 #
 # The mesh is not checked in (44,316 triangles) and is reproducible from the ClyA profile
-# in data/geometry/; see docs/sweeps/README.md for the one command. `inputs.mesh.path`
+# in data/geometry/ by `nanopnp mesh reference` (docs/sweeps/README.md). `inputs.mesh.path`
 # resolves against the process working directory, so it is written from the repository
 # root.
 
@@ -31,7 +31,7 @@ inputs:
   mesh:
     path: docs/sweeps/clya-reference.msh
     format: msh41
-    groups: {default: interface}
+    groups: {}                   # the generator names every group in the vocabulary
 
 electrolyte:
   species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]
