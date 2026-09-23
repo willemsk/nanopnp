@@ -1,0 +1,117 @@
+# Builds every version tag and publishes a GitHub Release for a milestone
+# (SPECIFICATION.md section 2.7, Versioning). A milestone tag is vX.Y.Z, and it
+# gets a Release whose notes are that version's CHANGELOG.md section. A
+# work-package tag, vX.Y.Z-alpha.N, is only built, so a tag that no longer
+# builds fails here rather than at the milestone. Nothing goes to PyPI: that is
+# the DOI-archived v1.0 of QR-15.
+#
+# A single push of more than three tags triggers no workflow, so a Release for a
+# tag pushed in bulk (the retroactive history) is made by dispatching this
+# workflow with that tag.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "The existing tag to build and release, e.g. v0.1.0"
+        required: true
+        type: string
+
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: build and release ${{ inputs.tag || github.ref_name }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+      DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+    steps:
+      # The whole history, because hatch-vcs derives the version from the tag,
+      # and the default branch, because the notes come from its CHANGELOG.md:
+      # a tag cut before the changelog existed carries none of its own.
+      - uses: actions/checkout@v5
+        with:
+          ref: refs/tags/${{ env.TAG }}
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.12"
+      - run: uv build --out-dir dist
+
+      # Classify the tag, and compare the version the build produced with it.
+      # A tag cut before the package took its version from git (every tag up to
+      # v0.5.0-alpha.10) builds under the static version its pyproject.toml
+      # named. Its distributions would be mislabelled, so they are not
+      # attached, and the Release carries notes only.
+      - id: check
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! $TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-(alpha|beta|rc)\.[0-9]+)?$ ]]; then
+            echo "::error::$TAG is not a version tag (vX.Y.Z or vX.Y.Z-alpha.N)"
+            exit 1
+          fi
+          version=${TAG#v}
+          if [[ $version == *-* ]]; then milestone=false; else milestone=true; fi
+          wheel=$(ls dist/*.whl)
+          built=$(basename "$wheel" | cut -d- -f2)
+          matches=$(uv run --no-project --with packaging python -c \
+            "import sys; from packaging.version import Version as V; \
+             print(str(V(sys.argv[1]) == V(sys.argv[2])).lower())" "$version" "$built")
+          if [[ $matches == false ]]; then
+            echo "::notice::$TAG builds as $built, a version from before hatch-vcs; no distributions are attached"
+          fi
+          # A milestone cut under hatch-vcs must also be the version CITATION.cff
+          # names, or "Cite this repository" cites the wrong release.
+          if [[ $milestone == true && $matches == true ]]; then
+            cited=$(sed -n 's/^version: *//p' CITATION.cff | tr -d "\"'")
+            if [[ $cited != "$version" ]]; then
+              echo "::error::CITATION.cff names version $cited, not $version"
+              exit 1
+            fi
+          fi
+          {
+            echo "version=$version"
+            echo "milestone=$milestone"
+            echo "dists=$matches"
+          } | tee -a "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist-${{ env.TAG }}
+          path: dist/
+          if-no-files-found: error
+
+      - if: steps.check.outputs.milestone == 'true'
+        shell: bash
+        env:
+          VERSION: ${{ steps.check.outputs.version }}
+          DISTS: ${{ steps.check.outputs.dists }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          git show "origin/$DEFAULT_BRANCH:CHANGELOG.md" |
+            awk -v v="$VERSION" '/^## \[/ { f = index($0, "## [" v "]") == 1; next }
+                                 /^\[[^]]+\]: / { f = 0 } f' > notes.md
+          if [[ ! -s notes.md ]] || ! grep -q '[^[:space:]]' notes.md; then
+            echo "::error::CHANGELOG.md on $DEFAULT_BRANCH has no section for [$VERSION]"
+            exit 1
+          fi
+          files=()
+          if [[ $DISTS == true ]]; then files=(dist/*); fi
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release edit "$TAG" --notes-file notes.md
+            if (( ${#files[@]} )); then gh release upload "$TAG" "${files[@]}" --clobber; fi
+          else
+            gh release create "$TAG" --verify-tag --title "nanopnp $TAG" \
+              --notes-file notes.md "${files[@]}"
+          fi

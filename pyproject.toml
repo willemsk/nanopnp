@@ -1,6 +1,9 @@
 [project]
 name = "nanopnp"
-version = "0.1.0.dev0"
+# Derived from the git tag by hatch-vcs (SPECIFICATION.md section 2.7, Versioning):
+# a tagged commit is its tag, and every other commit a development version that
+# names it, which the provenance manifest records (FR-25).
+dynamic = ["version"]
 description = "Continuum simulation of biological nanopores with the ePNP-NS framework"
 readme = "README.md"
 requires-python = ">=3.10,<3.15"
@@ -12,7 +15,15 @@ classifiers = [
     "Development Status :: 2 - Pre-Alpha",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: BSD License",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering :: Physics",
 ]
 
@@ -54,6 +65,11 @@ gmsh = ["gmsh>=4.13"]
 examples = ["matplotlib>=3.8"]
 
 [project.urls]
+Homepage = "https://github.com/willemsk/nanopnp"
+Documentation = "https://nanopnp.readthedocs.io/"
+Repository = "https://github.com/willemsk/nanopnp"
+Issues = "https://github.com/willemsk/nanopnp/issues"
+Changelog = "https://github.com/willemsk/nanopnp/blob/main/CHANGELOG.md"
 Specification = "https://github.com/willemsk/nanopnp/blob/main/SPECIFICATION.md"
 
 [project.scripts]
@@ -89,8 +105,16 @@ docs = [
 ]
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
+
+# The version is the git tag (SPECIFICATION.md section 2.7, Versioning). An sdist
+# carries it in PKG-INFO; the fallback is only for a tree with no git history at
+# all, and is deliberately a version no release will ever carry. A shallow clone
+# with no tag in reach still builds, under a meaningless development version.
+[tool.hatch.version]
+source = "vcs"
+fallback-version = "0.0.0"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/nanopnp"]
@@ -107,6 +131,9 @@ packages = ["src/nanopnp"]
 
 [tool.uv]
 default-groups = ["dev"]
+# Rebuild the editable install's metadata when HEAD or a tag moves, so that
+# `nanopnp.__version__` and the manifest's recorded version follow the checkout.
+cache-keys = [{ file = "pyproject.toml" }, { git = { commit = true, tags = true } }]
 
 [tool.ruff]
 line-length = 100

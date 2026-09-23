@@ -35,6 +35,10 @@ env:
   OPENBLAS_NUM_THREADS: "1"
   MKL_NUM_THREADS: "1"
 
+# Every checkout that installs the package fetches the whole history
+# (`fetch-depth: 0`): hatch-vcs derives the version from the nearest tag
+# (SPECIFICATION.md section 2.7, Versioning), and a depth-1 clone has none in
+# reach, so the manifest would record a meaningless version.
 jobs:
   # Whether this push touches anything but prose. A prose-only change (the rule
   # is .github/scripts/prose-only.sh, which the commit gate uses too) runs no
@@ -85,6 +89,8 @@ jobs:
       CODE: ${{ needs.changes.outputs.code }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - uses: astral-sh/setup-uv@v7
         if: env.CODE == 'true'
         with:
@@ -113,6 +119,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
@@ -143,6 +151,8 @@ jobs:
             python-version: "3.12"
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - uses: astral-sh/setup-uv@v7
         if: env.CODE == 'true'
         with:
@@ -185,6 +195,8 @@ jobs:
       CODE: ${{ needs.changes.outputs.code }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - uses: astral-sh/setup-uv@v7
         if: env.CODE == 'true'
         with:
@@ -233,6 +245,8 @@ jobs:
       NANOPNP_REFERENCE_DATA: ${{ vars.NANOPNP_REFERENCE_DATA }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true

@@ -10,6 +10,10 @@ build:
   tools:
     python: "3.12"
   jobs:
+    # Read the Docs clones shallow; hatch-vcs needs a tag in reach to version the
+    # package the API reference documents (SPECIFICATION.md section 2.7).
+    post_checkout:
+      - git fetch --unshallow --tags || true
     pre_build:
       - python docs/scripts/generate.py
 
