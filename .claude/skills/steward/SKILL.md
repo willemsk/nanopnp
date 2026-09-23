@@ -49,13 +49,19 @@ sections. Historical phase summaries and unrelated knowledge files are not routi
 ## What CI runs
 
 `.github/workflows/ci.yml`, with `UV_LOCKED: "1"` throughout, so a `uv.lock` that no longer matches
-`pyproject.toml` fails every job at `uv sync`:
+`pyproject.toml` fails every job at `uv sync`. Every pytest step runs `-n auto --dist loadfile` with
+`OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS` and `MKL_NUM_THREADS` set to 1 (`.knowledge/07` §12).
 
+- **`changes`** — diffs the whole PR (`base...head`), or the push range on `main`, through
+  `.github/scripts/prose-only.sh`. When everything is prose, the jobs below skip their steps and
+  report success. A PR with any code in it always gets the full run, however small its last push.
 - **`check`** — ubuntu, 3.12: `ruff check`, `ruff format --check`, `mypy src/`, `pytest --cov`.
-- **`test-matrix`** — `pytest` on ubuntu × 3.10–3.14, plus 3.12 on windows and macOS (QR-09, CON-13).
+- **`test-matrix`** — `pytest` on ubuntu × 3.10, 3.11, 3.13 and 3.14, plus 3.12 on windows and macOS.
+  Ubuntu 3.12 is the `check` job (QR-09, CON-13).
 - **`bundle`** — **gated**. Windows PyInstaller build of `packaging/nanopnp-probe.spec`, then the
-  bundle's own `--selftest` (RSK-13, §8.2.1 A4).
-- **`tier3`** — nightly and on `workflow_dispatch` only, `continue-on-error`: recorded, never gated
+  bundle's own `--selftest` (RSK-13, §8.2.1 A4). It also runs nightly, as the runner-image drift
+  probe.
+- **`tier3`** — nightly and on `workflow_dispatch` only (the nightly skips `check` and `test-matrix`), `continue-on-error`: recorded, never gated
   (§7.1, §7.6). Without `$NANOPNP_REFERENCE_DATA` every Tier 3 test skips visibly; a skip there is
   missing evidence, not a defect.
 
@@ -84,6 +90,7 @@ failure, reproduce under that interpreter (`uv run --python 3.10 pytest …`).
 | One Python version only | A compatibility gap (3.10 syntax floors, 3.13/3.14 stdlib moves) | Fix compatibly across 3.10–3.14. **Never** narrow `requires-python` or drop a matrix entry — QR-09 is a requirement |
 | Windows or macOS only | Path handling, line endings, thread counts, float repr | `pathlib` everywhere, never `os.path`; pin thread counts in the test, not in the library |
 | A tier 1 property test | A real regression in a unit | Root-cause it. These are seconds long and localise precisely |
+| Fails under `-n`, passes serially | The test depends on order, or on state another module leaves (a global, a patched module attribute, the process store, a cwd) | Name the shared state and isolate it. Never drop `-n`, never pin a test to one worker to get green without naming the mechanism, and never call it a flake |
 | A tier 2 analytic benchmark | **Evidence.** See below | Read the next section before touching it |
 | Timeout or OOM in a job | A benchmark outgrew the gate budget | Reduce the *mesh*, never the assertion; if the test genuinely cannot gate, that is a scope decision — ask |
 
