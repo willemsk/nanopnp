@@ -7,44 +7,42 @@ an unmerged branch has shipped.
 ## Position
 
 - Phase: [Phase 1, solver core](phase-1-solver-core.md).
-- Delivered: **WP7–WP15**. **Planned, not started: WP16**, user documentation and worked
-  examples: [`wp16-user-docs-and-examples.md`](wp16-user-docs-and-examples.md). After WP16 come
-  the end-of-phase report of `SPECIFICATION.md` §8.1 and the phase plan's §Verification, and then
-  planning Phase 2.
-- WP16 opens §8.1's **documentation track**. From here on, every phase documents what it ships,
-  and its examples are executed by VER-46. Amended: §8.1, the QR-15, IF-01 and IF-02 NOTEs.
+- Delivered: **WP7–WP16**. WP16 opened §8.1's documentation track:
+  [`wp16-user-docs-and-examples.md`](wp16-user-docs-and-examples.md).
+- **Next: the end-of-phase report** of `SPECIFICATION.md` §8.1 and the phase plan's §Verification
+  and §End-of-phase report, then planning Phase 2. No work package is planned.
 - **IF-09 is complete and QR-11 discharged** by WP14 and WP15 together:
   [`wp15-live-convergence-and-viewer.md`](wp15-live-convergence-and-viewer.md).
-- Tier 3 is recorded, not gated, and stays that way. WP13 delivered its harness; see
-  [`wp13-tier3-comsol-comparison.md`](wp13-tier3-comsol-comparison.md).
 
-## What WP15 established that later work must not re-decide
+## What WP15 and WP16 established that later work must not re-decide
 
 Each is recorded in full where it points; read it there first.
 
 - **Two silences.** A rung reports no Newton step either because its model takes no callback or
-  because it converged on entry, and the hook carries which it was. Only the *exclusion* of a
-  NUM-16 test is knowable. → VER-44; `.knowledge/06-numerics-fem.md` §5.1.
-- **A callback is not an input.** A watched run keys the same artefact as an unwatched one, and
-  `NewtonResult.summary()` stays free of per-iteration data, because it is inside the §5.3.2 hash.
+  because it converged on entry, and the hook carries which it was. → VER-44;
+  `.knowledge/06-numerics-fem.md` §5.1.
+- **A callback is not an input**: a watched run keys the same artefact as an unwatched one.
   → `tests/tier1/test_solve_hook.py`.
-- **The scene is a display artefact**: never registered and never hashed. → WP15 D9's Outcome.
-- **The renderer ships with the package** (OQ-1, CON-09 amended), byte-identical to the npm
-  tarball in `third_party/`; an NGSolve upgrade that moves the pin fails the gate.
+- **The renderer ships with the package**, byte-identical to the npm tarball in `third_party/`.
   → `test_ver44_vendored_renderer_matches_npm_integrity`.
 - **A bundle needs OCCT and OpenBLAS collected explicitly.** → `.knowledge/07-software-stack.md` §5.
-
-## What WP16 must hold to
-
-- **No number in the docs that no test asserts**, and **no restated equation**: the model pages
-  are `SPECIFICATION.md` and `.knowledge/` rendered verbatim (WP16 D4, D9).
-- **`import nanopnp` stays solver-free**: the public surface is lazy (the IF-01 NOTE, VER-45).
-- **Material for MkDocs is in maintenance mode**: pin `mkdocs<2`, keep `mkdocs.yml`
-  Zensical-readable, and use no build hooks (`.knowledge/07-software-stack.md` §13).
+- **Every phase documents what it ships** (§8.1 track, the QR-15 NOTE). A documented command is
+  executed by VER-46, verbatim, through `nanopnp.validation.examples`. No number appears in the
+  docs as a result unless a test asserts it. The model pages are the specification and
+  `.knowledge/` rendered verbatim, never restated. → WP16 D4, D8, D9.
+- **The public API is `nanopnp.PUBLIC`**, twenty lazily resolved names; adding one is a decision
+  made in `tests/tier1/test_public_api.py`. → the IF-01 NOTE.
+- **Generated references are rendered at build time, never committed**: `nanopnp.cli.reference`
+  and `docs/scripts/generate.py`. A new case field, flag or exit class appears without a docs edit.
+- **Material for MkDocs is in maintenance mode**: `mkdocs<2`, no build hooks, and a Zensical
+  migration when it supports cross-references (`.knowledge/07-software-stack.md` §13).
+- **A generated mesh maps only NGSolve's `default` seam**; the reference geometry maps nothing.
+  A case written against it uses `groups: {}`. → WP16 D7's Outcome.
 
 ## What is still somebody else's
 
-- **The Read the Docs project** (WP16): the author creates it and connects the repository.
+- **The Read the Docs project**: the author creates it (slug `nanopnp`) and connects the
+  repository; `.readthedocs.yaml` is in place and CI's `docs` job builds the same site.
 - **The double-click.** The gated `windows-latest` `bundle` job builds the one-dir bundle, runs
   `--selftest` and uploads it on every push. Its selftest now also fails when the shipped renderer
   does not reach its page. Only the author can observe that it double-clicks and draws; until that
@@ -70,6 +68,7 @@ Each is recorded in full where it points; read it there first.
 | What Tier 3 is and how to drive it | `wp13-tier3-comsol-comparison.md`; `docs/validation/comsol-export-contract.md`; `nanopnp validate --help` |
 | Stabilisation findings inherited from WP12 | `wp12-reference-stabilised-mode.md` Outcomes in Design 3 and 4 |
 | Reference geometry, field inputs, runs and sweeps | Phase plan: WP8, WP9, WP10, WP11; `docs/sweeps/README.md` |
+| Documentation: site, examples, their executor | `mkdocs.yml`; `docs/scripts/`; `examples/`; `src/nanopnp/validation/examples.py`; `src/nanopnp/cli/reference.py` |
 | Reference settings and equations | `.knowledge/00-index.md`, then 01, 06, 08 and 09; the specification remains normative |
 
 Decision-table claims corrected by their own Outcomes, not to be read as current: WP13's

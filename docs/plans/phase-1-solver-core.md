@@ -1,6 +1,6 @@
 # Phase 1 (Solver core): the production solver on an externally supplied mesh
 
-**Status: WP7–WP15 delivered; WP16 planned.** Written 2 September 2026, after Phase 0
+**Status: WP7–WP16 delivered.** Written 2 September 2026, after Phase 0
 (WP1–WP6) and its consolidation (WP-A1, WP-B1, WP-B2, WP-C1). It inherited a verified physics core
 and a bare pipeline: tiers 1 and 2 green, `mypy --strict` and `ruff` clean, and `io/`, `sweep/`,
 `charge/`, `structure/`, `density/`, `symmetry/`, `gui/` still empty reserved slots. `io/` is filled
@@ -814,23 +814,21 @@ file chooser away and belongs to Phase 4's result browser. Evidence:
 [`wp15-live-convergence-and-viewer.md`](wp15-live-convergence-and-viewer.md) Outcomes;
 `.knowledge/06-numerics-fem.md` §5.1 and `.knowledge/07-software-stack.md` §5.
 
-### WP16 — User documentation and worked examples — **planned**
+### WP16 — User documentation and worked examples — **delivered**
 
-Added 23 September 2026, by the author's request, once WP7–WP15 had made Phase 1 feature complete.
-It opens the **documentation track** that `SPECIFICATION.md` §8.1 gains in the same commit. Each
-phase documents what it ships, and QR-15 is delivered incrementally rather than all at v1.0. It
-covers three things:
-- **two small code seams**: `nanopnp mesh {cylinder,reference}`, which writes an MSH 4.1 input
-  artefact so that no example needs Python to get a mesh (the §3.1 IF-02 generators NOTE, VER-32
-  extended), and a lazy public surface in `nanopnp.__all__` (the IF-01 NOTE);
-- **a documentation site**: MkDocs + Material, hosted on Read the Docs, with the model documented by
-  rendering the specification and `.knowledge/` verbatim. The case-file, CLI and exit-code
-  references are generated from their sources of truth (VER-45);
-- **five worked examples**, every documented command executed against an oracle that is a model
-  property rather than a transcribed number (VER-46).
+Delivered 23 September 2026: the Phase-1 increment of §8.1's documentation track. **Two seams**:
+`nanopnp mesh cylinder|reference`, which gate the file by the route a run reads it (VER-32, the IF-02
+generators NOTE), and a lazy `nanopnp.__all__` of twenty names (IF-01, VER-45). **The site**:
+MkDocs + Material + mkdocstrings, with a strict build on every push. The case-file, CLI, exit-code
+and API references are generated from their sources, and the specification and `.knowledge/` are
+rendered verbatim. **Five examples**, each README's commands executed by a test against a model
+property (VER-46); 05's solve is `slow`.
 
-Identifiers: QR-15 (in part), IF-01, IF-02, IF-03, VER-32, VER-45, VER-46; exercises FR-23, FR-24,
-FR-25, FR-27 and QR-08. Plan: [`wp16-user-docs-and-examples.md`](wp16-user-docs-and-examples.md).
+Found on the way, and fixed: every checked-in reference case mapped a `default` group the reference
+mesh does not carry, and meshio leaked a blank line into the CLI's stdout. Inherited: the Read the
+Docs project is the author's to create; the Tier-2 examples cost 129 s serial against a 120 s
+target. Evidence: [`wp16-user-docs-and-examples.md`](wp16-user-docs-and-examples.md) Outcomes;
+`.knowledge/07-software-stack.md` §4, §13.
 
 ## Open decisions
 
