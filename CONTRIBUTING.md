@@ -122,6 +122,27 @@ identifier in the body.
 [`CLAUDE.md`](CLAUDE.md) carries the same conventions in the form coding agents read, and is the
 faster orientation if you are about to make a substantial change.
 
+## Versions and releases
+
+Versions are git tags (`SPECIFICATION.md` §2.7, the Versioning NOTE), and the package version is
+derived from them by hatch-vcs. Neither `pyproject.toml` nor the package names a version, so there
+is no version to bump.
+
+- **A work package's PR writes its own [`CHANGELOG.md`](CHANGELOG.md) section** under the version
+  it will be tagged, `vX.Y.Z-alpha.N`, where `vX.Y.Z` is the phase's release and N counts the phase's
+  work packages. **After it merges**, tag its last commit on `main` with that version, so that the
+  tagged commit already carries its own entry.
+- **To cut a release** `vX.Y.Z`, commit the changelog section and `CITATION.cff`'s `version` and
+  `date-released`, then tag and push the tag. `.github/workflows/release.yml` builds it and
+  publishes a GitHub Release, whose notes are that version's section of
+  [`CHANGELOG.md`](CHANGELOG.md). The workflow refuses a milestone whose `CITATION.cff` names a
+  different version.
+- Tags are annotated: `git tag -a v0.5.0 -m "…"`, then `git push origin v0.5.0`.
+
+A shallow clone (`--depth 1`, or a hosted session that clones shallow) has no tag in reach and
+installs under a meaningless development version. `git fetch --unshallow --tags` puts that right,
+and CI and Read the Docs both do it.
+
 ## Conduct
 
 By participating you agree to the [Code of Conduct](CODE_OF_CONDUCT.md).

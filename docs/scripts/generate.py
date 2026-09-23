@@ -4,7 +4,7 @@ Run before every build, and never committed (WP16 D4, D5)::
 
     uv run docs/scripts/generate.py && uv run mkdocs build --strict
 
-Three kinds of page, all derived:
+Four kinds of page, all derived:
 
 - **The model.** ``SPECIFICATION.md`` and every ``.knowledge/*.md``, copied verbatim.
   The model is documented by rendering its normative records, never by restating
@@ -12,6 +12,8 @@ Three kinds of page, all derived:
   model drift and get copied wrong.
 - **The examples.** Each ``examples/NN-slug/README.md``, so the site shows the exact
   text whose tagged commands VER-46 executes.
+- **The release notes.** ``CHANGELOG.md``, copied verbatim, as the versions it records are the
+  git tags themselves (``SPECIFICATION.md`` section 2.7, Versioning).
 - **The references.** The case-file, command-line, exit-code and API pages, rendered
   from the live objects by :mod:`nanopnp.cli.reference`.
 
@@ -57,7 +59,10 @@ CODE = re.compile(r"(```.*?```|`[^`\n]*`)", re.DOTALL)
 
 def _copies() -> dict[Path, Path]:
     """Return ``{source: destination}`` for every page copied verbatim."""
-    pages = {ROOT / "SPECIFICATION.md": OUTPUT / "model" / "specification.md"}
+    pages = {
+        ROOT / "SPECIFICATION.md": OUTPUT / "model" / "specification.md",
+        ROOT / "CHANGELOG.md": OUTPUT / "project" / "changelog.md",
+    }
     for source in sorted((ROOT / ".knowledge").glob("*.md")):
         pages[source] = OUTPUT / "model" / "knowledge" / source.name
     for source in sorted((ROOT / "examples").glob("*/README.md")):
