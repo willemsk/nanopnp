@@ -21,32 +21,94 @@ env:
   # Fail if uv.lock no longer matches pyproject.toml. UV_LOCKED asserts that;
   # UV_FROZEN would only skip re-locking and install the stale lock as it stands.
   UV_LOCKED: "1"
+  # pytest runs as `-n auto --dist loadfile` with one BLAS thread per worker.
+  # Serially the BLAS threads buy no wall time on this suite; under xdist they
+  # oversubscribe the cores: 6m10s serial, 7m20s unpinned, 3m19s pinned on
+  # four cores (.knowledge/07-software-stack.md). The commit gate does the same.
+  OMP_NUM_THREADS: "1"
+  OPENBLAS_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
 
 jobs:
+  # Whether this push touches anything but prose. A prose-only change (the rule
+  # is .github/scripts/prose-only.sh, which the commit gate uses too) runs no
+  # sync, lint, types, tests or build below. The jobs still run and report
+  # success; only their steps are skipped, because a matrix job skipped whole
+  # reports under an unexpanded name and leaves per-entry required checks
+  # waiting. A schedule, a manual dispatch, or a push with no usable base is
+  # always code.
+  changes:
+    name: changes
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.diff.outputs.code }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - id: diff
+        shell: bash
+        env:
+          EVENT: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_AFTER: ${{ github.sha }}
+        run: |
+          case $EVENT in
+            pull_request) range="$PR_BASE...$PR_HEAD" ;;
+            push) range="$PUSH_BEFORE..$PUSH_AFTER" ;;
+            *) range="" ;;
+          esac
+          code=true
+          if [[ -n $range && $range != 0000000000000000000000000000000000000000* ]] &&
+              files=$(git diff --name-only "$range"); then
+            printf '%s\n' "$files"
+            printf '%s\n' "$files" | .github/scripts/prose-only.sh && code=false
+          fi
+          echo "code=$code" | tee -a "$GITHUB_OUTPUT"
+
   check:
     name: lint, types, tier 1-2 (3.12)
+    needs: changes
+    # The nightly records Tier 3 and re-probes the bundle; re-testing an
+    # unchanged, locked main on every runner is not a second gate.
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
+    env:
+      CODE: ${{ needs.changes.outputs.code }}
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v7
+        if: env.CODE == 'true'
         with:
           enable-cache: true
           python-version: "3.12"
-      - run: uv sync --all-extras
-      - run: uv run ruff check .
-      - run: uv run ruff format --check .
-      - run: uv run mypy src/
-      - run: uv run pytest --cov=src/nanopnp --cov-report=term-missing
+      - if: env.CODE == 'true'
+        run: uv sync --all-extras
+      - if: env.CODE == 'true'
+        run: uv run ruff check .
+      - if: env.CODE == 'true'
+        run: uv run ruff format --check .
+      - if: env.CODE == 'true'
+        run: uv run mypy src/
+      - if: env.CODE == 'true'
+        run: uv run pytest -n auto --dist loadfile --cov=src/nanopnp --cov-report=term-missing
 
   test-matrix:
     name: tier 1-2 (${{ matrix.os }}, py${{ matrix.python-version }})
+    needs: changes
+    if: github.event_name != 'schedule'
     runs-on: ${{ matrix.os }}
+    env:
+      CODE: ${{ needs.changes.outputs.code }}
     strategy:
       fail-fast: false
       matrix:
         # QR-09: binary wheels on Windows, macOS and Linux for 3.10-3.14.
+        # Ubuntu on 3.12 is the `check` job, which runs the same selection.
         os: [ubuntu-latest]
-        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.10", "3.11", "3.13", "3.14"]
         include:
           # CON-13: the desktop platforms, on the development pin.
           - os: windows-latest
@@ -56,10 +118,12 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v7
+        if: env.CODE == 'true'
         with:
           enable-cache: true
           python-version: ${{ matrix.python-version }}
-      - run: uv sync --all-extras
+      - if: env.CODE == 'true'
+        run: uv sync --all-extras
       # CON-13 names Windows, macOS and Linux. Qt's platform plugin works
       # unaided on the first two, so `offscreen` is all the widget tests of
       # tests/tier1/test_gui_widgets.py need there; on ubuntu-latest PySide6
@@ -67,7 +131,8 @@ jobs:
       # Installing system packages to change that would buy Linux widget
       # coverage at the price of a portability promise per runner image
       # (.knowledge/07-software-stack.md section 5).
-      - run: uv run pytest
+      - if: env.CODE == 'true'
+        run: uv run pytest -n auto --dist loadfile
         env:
           QT_QPA_PLATFORM: offscreen
 
@@ -82,21 +147,28 @@ jobs:
   # and not this job's exit code, is what closes section 8.2 criterion 4.
   bundle:
     name: Windows bundle (RSK-13 probe, gated)
+    needs: changes
     runs-on: windows-latest
+    env:
+      CODE: ${{ needs.changes.outputs.code }}
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v7
+        if: env.CODE == 'true'
         with:
           enable-cache: true
           python-version: "3.12"
-      - run: uv sync --all-extras --group packaging
-      - run: uv run pyinstaller --clean --noconfirm packaging/nanopnp-probe.spec
+      - if: env.CODE == 'true'
+        run: uv sync --all-extras --group packaging
+      - if: env.CODE == 'true'
+        run: uv run pyinstaller --clean --noconfirm packaging/nanopnp-probe.spec
       # One process importing PySide6, QtWebEngineWidgets, ngsolve, netgen and
       # ngsolve.webgui, constructing a QWebEngineView over a real webgui scene
       # and reading the CON-11 licence notice out of the bundle.
-      - run: dist/nanopnp-probe/nanopnp-probe.exe --selftest
+      - if: env.CODE == 'true'
+        run: dist/nanopnp-probe/nanopnp-probe.exe --selftest
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && env.CODE == 'true'
         with:
           name: nanopnp-probe-windows
           path: dist/nanopnp-probe
