@@ -227,6 +227,9 @@ edits — runs on Sonnet. State the choice when delegating so it can be redirect
 - Conventional commits: `feat:`, `fix:`, `test:`, `docs:`, `chore:`.
 - Name the requirement identifier the commit discharges in the body (`VER-03`, `FR-16`).
 - Run the full gate above before committing (`.claude/hooks/gate.sh run`).
+- Versions are git tags, never a number in `pyproject.toml` or the package (§2.7 Versioning).
+  A WP's PR writes its `CHANGELOG.md` section under `vX.Y.Z-alpha.N`, and after it merges its last
+  commit on `main` is tagged so; `CONTRIBUTING.md` *Versions and releases* has the steps.
 
 ## When you learn something durable
 

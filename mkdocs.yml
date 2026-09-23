@@ -130,6 +130,7 @@ nav:
       - project/index.md
       - Contributing: project/contributing.md
       - Citing: project/citing.md
+      - Release notes: _generated/project/changelog.md
       - Licence: project/licence.md
       - The reference sweep: sweeps/README.md
       - COMSOL export contract: validation/comsol-export-contract.md

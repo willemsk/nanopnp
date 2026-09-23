@@ -10,7 +10,9 @@ an unmerged branch has shipped.
 - Delivered: **WP7–WP16**. WP16 opened §8.1's documentation track:
   [`wp16-user-docs-and-examples.md`](wp16-user-docs-and-examples.md).
 - **Next: the end-of-phase report** of `SPECIFICATION.md` §8.1 and the phase plan's §Verification
-  and §End-of-phase report, then planning Phase 2. No work package is planned.
+  and §End-of-phase report, then planning Phase 2. No work package is planned. The report's merge
+  is tagged `v0.5.0`. Main is `v0.5.0-alpha.10`, and every earlier WP carries its tag
+  (§2.7 Versioning; `CHANGELOG.md`).
 - **IF-09 is complete and QR-11 discharged** by WP14 and WP15 together:
   [`wp15-live-convergence-and-viewer.md`](wp15-live-convergence-and-viewer.md).
 
