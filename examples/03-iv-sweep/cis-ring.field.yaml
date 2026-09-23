@@ -1,0 +1,13 @@
+schema: nanopnp/field/v1
+name: cis-ring
+# The ring of example 02, moved to z = +1.5 nm: into the cis half of the 6 nm pore.
+quantity: areal_charge_density
+units: C/m^2
+q_net_e: -6.0
+provenance: {source: analytic}
+form:
+  name: gaussian_ring
+  parameters: {centre_r_nm: 2.6, centre_z_nm: 1.5, width_nm: 0.4, charge_e: -6.0}
+  origin_nm: [0.0, -4.0]
+  spacing_nm: [0.01, 0.01]
+  shape: [501, 801]

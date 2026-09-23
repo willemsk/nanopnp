@@ -1,0 +1,16 @@
+schema: nanopnp/field/v1
+name: wall-ring
+# A ring of -6 e smeared by the reference model's own Gaussian kernel, centred in the
+# membrane 0.6 nm behind the pore wall at mid-length. Its planar integral is exactly
+# charge_e, so q_net_e is known in closed form and stage 7 gates the deployed field
+# against it (PHY-19, QR-03).
+quantity: areal_charge_density
+units: C/m^2
+q_net_e: -6.0
+provenance: {source: analytic}
+form:
+  name: gaussian_ring
+  parameters: {centre_r_nm: 2.6, centre_z_nm: 0.0, width_nm: 0.4, charge_e: -6.0}
+  origin_nm: [0.0, -4.0]
+  spacing_nm: [0.01, 0.01]
+  shape: [501, 801]

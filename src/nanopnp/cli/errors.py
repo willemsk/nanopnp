@@ -194,6 +194,11 @@ EXCLUDED: Final[dict[str, str]] = {
         "case file, and if one reaches the CLI it is a bug whose traceback is the diagnostic -- "
         "which is exactly what exit code 1 means"
     ),
+    "nanopnp.validation.examples:ExampleCommandError": (
+        "raised by the VER-46 test harness that executes the worked examples' README commands, "
+        "never by a command of the CLI: it reports that one of those commands exited nonzero, "
+        "and the command's own exit code is the classified one"
+    ),
     "nanopnp.io.defaults:UnknownSwitchPathError": (
         "likewise internal: the switch paths are a frozen enumeration checked by VER-24 in both "
         "directions, so an unknown one means the manifest code and the case schema have diverged "

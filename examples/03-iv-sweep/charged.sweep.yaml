@@ -1,0 +1,12 @@
+# The charged pore's I-V curve: four biases, two exactly-opposite pairs, so the
+# collector can compute a rectification ratio at each magnitude (FR-23, FR-24).
+# Rooted at +50 mV, the easiest point: every other member warm-starts from a
+# converged neighbour one grid step nearer the root (section 5.3.4).
+schema: nanopnp/sweep/v1
+name: iv-charged
+base: charged.case.yaml
+axes:
+  - name: bias
+    path: boundary_conditions.bias_V
+    origin: 2
+    values: [-0.1, -0.05, 0.05, 0.1]
