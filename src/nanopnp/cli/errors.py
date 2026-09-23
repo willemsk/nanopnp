@@ -32,6 +32,7 @@ __all__ = [
     "EXIT_CODES",
     "EXIT_CONVERGENCE",
     "EXIT_GATE",
+    "EXIT_MEANINGS",
     "EXIT_OK",
     "EXIT_UNEXPECTED",
     "EXIT_USAGE",
@@ -58,6 +59,23 @@ EXIT_CONVERGENCE: Final = 5
 
 EXIT_CANCELLED: Final = 130
 """The run was cancelled — a token, or SIGINT. 128 + SIGINT, as a shell reports it."""
+
+EXIT_MEANINGS: Final[dict[int, str]] = {
+    EXIT_OK: "success",
+    EXIT_UNEXPECTED: "an unexpected failure; the only class whose traceback is worth keeping "
+    "(re-run with --traceback)",
+    EXIT_USAGE: "a usage error: the command line was wrong",
+    EXIT_CASE: "the case was refused, by the schema or by validation; a retry fails identically",
+    EXIT_GATE: "a numerical gate of the QR-12 family aborted the run, naming the quantity and "
+    "where",
+    EXIT_CONVERGENCE: "Newton or the continuation ladder did not converge (FR-17, NUM-16)",
+    EXIT_CANCELLED: "cancelled, by a token or by SIGINT",
+}
+"""Every exit class of the section 3.1 NOTE (IF-02), with what it tells a caller.
+
+The generated command-line reference prints this table (VER-45), so the classes a
+job array branches on are documented from the constants it compares against.
+"""
 
 EXIT_CODES: Final[dict[str, int]] = {
     # -- 3, the case ---------------------------------------------------------
