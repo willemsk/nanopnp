@@ -20,12 +20,19 @@
 # What is gated is the working tree, not the index: a compound
 # `git add -A && git commit` reaches this hook before the `add` has run.
 #
-# Two things keep it from costing the full ~8 minutes on every commit:
+# pytest runs as CI runs it: -n auto --dist loadfile, one BLAS thread per
+# worker. Serial, the BLAS threads buy no wall time on this suite; under xdist
+# they oversubscribe the cores (6m10s serial, 7m20s unpinned, 3m19s pinned on
+# 4 cores; .knowledge/07-software-stack.md).
+#
+# Two things keep it from costing even that on every commit:
 # - a tree state that already passed (by either entry point) is not re-run;
 #   the stamp is the tree id of the working copy, so any edit invalidates it;
-# - when every changed path is prose (*.md, docs/, .knowledge/), the lock
-#   check, mypy and pytest are skipped: no test and no module reads those
-#   files. Anything else is code, data/corrections/*.yaml and this hook included.
+# - when every changed path is prose, the lock check, mypy and pytest are
+#   skipped. Prose is Markdown nothing reads; .github/scripts/prose-only.sh
+#   holds the rule (not docs/ as a whole: tests read its YAML) and CI uses the
+#   same script. Anything else is code, data/corrections/*.yaml and this hook
+#   included.
 #
 # The stages share one budget (NANOPNP_GATE_BUDGET_S, default 1500 s), kept
 # below the hook timeout in settings.json (1800 s). A gate that overruns its
@@ -76,6 +83,7 @@ cd "$root" || exit 0
 # Match CI: a uv.lock that pyproject.toml has moved away from is a failure,
 # not something `uv run` should quietly rewrite.
 export UV_LOCKED=1
+export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
 
 # The tree the working copy would commit as with `git add -A`, built in a
 # throwaway index: content-addressed, independent of HEAD and of how the
@@ -100,14 +108,10 @@ if [[ -n $state && -f $stamp_file && $(cat "$stamp_file") == "$state" ]]; then
     exit 0
 fi
 
-docs_only=true
-while IFS= read -r path; do
-    [[ -z $path ]] && continue
-    case $path in
-        *.md | docs/* | .knowledge/*) ;;
-        *) docs_only=false; break ;;
-    esac
-done < <({ git diff --name-only HEAD; git ls-files --others --exclude-standard; } 2>/dev/null)
+# The prose rule lives in one script that CI's `changes` job uses too.
+docs_only=false
+{ git diff --name-only HEAD; git ls-files --others --exclude-standard; } 2>/dev/null |
+    .github/scripts/prose-only.sh && docs_only=true
 
 if [[ $mode == run ]]; then
     lead="The gate"
@@ -185,7 +189,7 @@ if $docs_only; then
     say "gate: only prose changed; lock check, mypy and pytest skipped."
 else
     check "mypy --strict"   uv run mypy src/
-    check "pytest"          uv run pytest -q
+    check "pytest"          uv run pytest -q -n auto --dist loadfile
 fi
 
 [[ -n $state ]] && printf '%s\n' "$state" >"$stamp_file"
