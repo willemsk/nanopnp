@@ -435,7 +435,16 @@ def _sweep(args: argparse.Namespace) -> int:
     store = Store(args.store)
     if args.action == "plan":
         plan = plan_from_document(args.document, check_meshes=not args.no_mesh_check)
-        directory = store.sweep_directory(plan.name, plan.hash)
+        if args.directory is None:
+            directory = store.sweep_directory(plan.name, plan.hash)
+        else:
+            # Where the plan and its member records go, and nothing else: the
+            # members still solve into the store. A named directory is not keyed
+            # by the plan hash, so one holding a *different* plan is refused
+            # rather than overwritten -- its member records would otherwise be
+            # collected against points they were never solved for.
+            directory = Path(args.directory)
+            _refuse_another_plan(directory, plan.hash)
         path = write_plan(plan, directory)
         payload: dict[str, Canonicalisable] = {
             "plan": str(path),
@@ -467,6 +476,19 @@ def _sweep(args: argparse.Namespace) -> int:
     if args.action == "collect":
         return _sweep_collect(args, plan, directory)
     return _sweep_run(args, plan, directory, store=store)
+
+
+def _refuse_another_plan(directory: Path, digest: str) -> None:
+    """Refuse a ``--directory`` that already holds a plan with another hash (FR-24)."""
+    from nanopnp.sweep.plan import PLAN_FILENAME, SweepPlanError, read_plan
+
+    existing = directory / PLAN_FILENAME
+    if existing.is_file() and read_plan(existing).hash != digest:
+        raise SweepPlanError(
+            f"{directory} already holds the plan of a different sweep; its member records "
+            "would be collected against points they were not solved for. Choose another "
+            "--directory, or remove that one"
+        )
 
 
 def _sweep_run(args: argparse.Namespace, plan: SweepPlan, directory: Path, *, store: Store) -> int:
@@ -1041,6 +1063,13 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="skip the NUM-34 wall-distance gate on the meshes the points would solve on; "
         "the combinatorics alone, for a machine with no NGSolve",
+    )
+    planner.add_argument(
+        "--directory",
+        type=Path,
+        default=None,
+        help="write the plan and its member records here instead of the store's "
+        "sweeps/<name>-<hash>/; refused if it already holds a different plan",
     )
     planner.set_defaults(handler=_sweep)
 
