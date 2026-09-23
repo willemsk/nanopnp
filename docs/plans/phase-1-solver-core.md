@@ -1,6 +1,6 @@
 # Phase 1 (Solver core): the production solver on an externally supplied mesh
 
-**Status: WP7–WP15 delivered.** Written 2 September 2026, after Phase 0
+**Status: WP7–WP15 delivered; WP16 planned.** Written 2 September 2026, after Phase 0
 (WP1–WP6) and its consolidation (WP-A1, WP-B1, WP-B2, WP-C1). It inherited a verified physics core
 and a bare pipeline: tiers 1 and 2 green, `mypy --strict` and `ruff` clean, and `io/`, `sweep/`,
 `charge/`, `structure/`, `density/`, `symmetry/`, `gui/` still empty reserved slots. `io/` is filled
@@ -814,6 +814,24 @@ file chooser away and belongs to Phase 4's result browser. Evidence:
 [`wp15-live-convergence-and-viewer.md`](wp15-live-convergence-and-viewer.md) Outcomes;
 `.knowledge/06-numerics-fem.md` §5.1 and `.knowledge/07-software-stack.md` §5.
 
+### WP16 — User documentation and worked examples — **planned**
+
+Added 23 September 2026, by the author's request, once WP7–WP15 had made Phase 1 feature complete.
+It opens the **documentation track** that `SPECIFICATION.md` §8.1 gains in the same commit. Each
+phase documents what it ships, and QR-15 is delivered incrementally rather than all at v1.0. It
+covers three things:
+- **two small code seams**: `nanopnp mesh {cylinder,reference}`, which writes an MSH 4.1 input
+  artefact so that no example needs Python to get a mesh (the §3.1 IF-02 generators NOTE, VER-32
+  extended), and a lazy public surface in `nanopnp.__all__` (the IF-01 NOTE);
+- **a documentation site**: MkDocs + Material, hosted on Read the Docs, with the model documented by
+  rendering the specification and `.knowledge/` verbatim. The case-file, CLI and exit-code
+  references are generated from their sources of truth (VER-45);
+- **five worked examples**, every documented command executed against an oracle that is a model
+  property rather than a transcribed number (VER-46).
+
+Identifiers: QR-15 (in part), IF-01, IF-02, IF-03, VER-32, VER-45, VER-46; exercises FR-23, FR-24,
+FR-25, FR-27 and QR-08. Plan: [`wp16-user-docs-and-examples.md`](wp16-user-docs-and-examples.md).
+
 ## Open decisions
 
 | # | Decision | Status |
@@ -857,6 +875,8 @@ New verification activities this phase, each named for the requirement it discha
 | `tests/tier1/test_gui_probe.py`, CI job `bundle` | 1, — | VER-43, RSK-13 | The probe names the four binary payloads and the licence notice; a `windows-latest` job builds the bundle and launches it headlessly |
 | `tests/tier1/test_solve_hook.py` | 1 | VER-44, FR-27, §5.3.2 | The structural solve hook sees every rung in ladder order and every step inside the rung that scopes it; a rung whose model takes no Newton callback yields a rung and no steps; the artefact hash is identical watched and unwatched, and a cached solve emits nothing |
 | `tests/tier1/test_gui_render.py` | 1 | VER-44, IF-09 | The render child restores a finished run through the stage-10 gate and writes a scene whose JSON round-trips; its field names come from the IF-07 attribute vocabulary; a missing or mismatched state produces a named diagnostic rather than an empty scene |
+| `tests/tier1/test_public_api.py`, `tests/tier1/test_doc_reference.py`, CI job `docs` | 1, — | VER-45, IF-01, IF-02, IF-03 | The public surface equals `nanopnp.__all__` and imports no solver; the generated case-file, CLI and exit-code references cover their sources in both directions; the site builds strictly on every push |
+| `tests/tier2/test_examples.py`, `tests/tier1/test_examples_plan.py` | 2 (reference solve `slow`), 1 | VER-46, VER-32 | Every documented example command runs verbatim from a copy of its directory and meets a model-property oracle; `nanopnp mesh` output ingests through the VER-27 gate |
 
 The phase is complete when:
 

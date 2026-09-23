@@ -1,57 +1,50 @@
 # Current work
 
-Updated 22 September 2026. Navigation only: `SPECIFICATION.md` governs. Check the
+Updated 23 September 2026. Navigation only: `SPECIFICATION.md` governs. Check the
 requested branch and its WP status before resuming; this brief is not evidence that
 an unmerged branch has shipped.
 
 ## Position
 
 - Phase: [Phase 1, solver core](phase-1-solver-core.md).
-- Delivered: **WP7–WP15**. Phase 1 has no further planned package; the next step is the
-  end-of-phase report of `SPECIFICATION.md` §8.1 and the phase plan's §Verification, then
+- Delivered: **WP7–WP15**. **Planned, not started: WP16**, user documentation and worked
+  examples: [`wp16-user-docs-and-examples.md`](wp16-user-docs-and-examples.md). After WP16 come
+  the end-of-phase report of `SPECIFICATION.md` §8.1 and the phase plan's §Verification, and then
   planning Phase 2.
-- WP15's record: [`wp15-live-convergence-and-viewer.md`](wp15-live-convergence-and-viewer.md).
-  **QR-11 is discharged by WP14 and WP15 together**, and IF-09 is complete: the shell now has
-  five panels over one run — the schema-generated case editor, run control over a spawned solver
-  process, the live convergence plot, the result panel and the `webgui` field viewer.
+- WP16 opens §8.1's **documentation track**. From here on, every phase documents what it ships,
+  and its examples are executed by VER-46. Amended: §8.1, the QR-15, IF-01 and IF-02 NOTEs.
+- **IF-09 is complete and QR-11 discharged** by WP14 and WP15 together:
+  [`wp15-live-convergence-and-viewer.md`](wp15-live-convergence-and-viewer.md).
 - Tier 3 is recorded, not gated, and stays that way. WP13 delivered its harness; see
   [`wp13-tier3-comsol-comparison.md`](wp13-tier3-comsol-comparison.md).
 
 ## What WP15 established that later work must not re-decide
 
-- **A rung reports no Newton step for two unrelated reasons.** On the reference ladder, two rungs
-  of twelve take no damped-Newton callback (their models are not `CoupledModel`) and three more are
-  coupled rungs that converged *on entry*, `damped_newton` returning before its first step. The
-  silence is identical from outside, so `SolveHook.rung` carries `reporting` from the same test
-  that injects the callback. Annotating a warm-started rung "not a Newton solve" is false.
-  → `.knowledge/06-numerics-fem.md` §5.1 **[tested]**; VER-44.
-- **Which NUM-16 test closed a rung is not knowable, only the exclusion is.** The two tests are not
-  exclusive and the residual test short-circuits. A forced last step, or a last relative update
-  above the rung's own tolerance, each leave the residual test as the only candidate; otherwise the
-  update test is reported as met without claiming the residual test was not. → VER-44.
-- **A callback is not an input.** `io/run.py` rebinds the solve stage *after* its artefact key has
-  been taken, delivered by the `SolveReporting` capability so eleven stages gain no keyword. A run
-  watched from the shell keys the artefact a command-line run keys, asserted on the hash *and* on
-  the store's hit counter. → `tests/tier1/test_solve_hook.py`.
-- **`NewtonResult.summary()` must stay free of per-iteration data.** It reaches the stage-10
-  artefact's summary, which is inside the §5.3.2 content hash; a series there would make every
-  solve its own cache entry and move the hash of every run in every store.
-- **The scene is a display artefact.** `viewer/` inside the run directory is never registered and
-  never hashed, and one field's pair is kept at a time: at reference mesh size a scene is 23–39 MB
-  and it is written twice — once as data, once embedded in the host document. → WP15 D9's Outcome.
+Each is recorded in full where it points; read it there first.
 
-- **The renderer ships with the package** (OQ-1, ruled 22 September 2026; CON-09 amended).
-  `webgui.js` is served from `nanopnp/gui/assets/webgui/`, byte-identical to the npm tarball kept
-  as `third_party/webgui-0.2.39.tgz`, and that tarball's SHA-512 is npm's published integrity. An
-  NGSolve upgrade that moves `netgen.webgui`'s pin fails the gate; `NOTICE.md` there says how to
-  refresh. → `test_ver44_vendored_renderer_matches_npm_integrity`.
-- **A bundle carries neither OCCT nor OpenBLAS unless told to.** `netgen-occt` installs outside
-  site-packages and `ngsolve_openblas` hides its BLAS as package data; the recipe collects both, and
-  it rewrites OCCT's RECORD so netgen's own loader finds the libraries. That was the `bundle` job's
-  `KeyError: 'tkernel'`. → `.knowledge/07-software-stack.md` §5 **[tested]**.
+- **Two silences.** A rung reports no Newton step either because its model takes no callback or
+  because it converged on entry, and the hook carries which it was. Only the *exclusion* of a
+  NUM-16 test is knowable. → VER-44; `.knowledge/06-numerics-fem.md` §5.1.
+- **A callback is not an input.** A watched run keys the same artefact as an unwatched one, and
+  `NewtonResult.summary()` stays free of per-iteration data, because it is inside the §5.3.2 hash.
+  → `tests/tier1/test_solve_hook.py`.
+- **The scene is a display artefact**: never registered and never hashed. → WP15 D9's Outcome.
+- **The renderer ships with the package** (OQ-1, CON-09 amended), byte-identical to the npm
+  tarball in `third_party/`; an NGSolve upgrade that moves the pin fails the gate.
+  → `test_ver44_vendored_renderer_matches_npm_integrity`.
+- **A bundle needs OCCT and OpenBLAS collected explicitly.** → `.knowledge/07-software-stack.md` §5.
+
+## What WP16 must hold to
+
+- **No number in the docs that no test asserts**, and **no restated equation**: the model pages
+  are `SPECIFICATION.md` and `.knowledge/` rendered verbatim (WP16 D4, D9).
+- **`import nanopnp` stays solver-free**: the public surface is lazy (the IF-01 NOTE, VER-45).
+- **Material for MkDocs is in maintenance mode**: pin `mkdocs<2`, keep `mkdocs.yml`
+  Zensical-readable, and use no build hooks (`.knowledge/07-software-stack.md` §13).
 
 ## What is still somebody else's
 
+- **The Read the Docs project** (WP16): the author creates it and connects the repository.
 - **The double-click.** The gated `windows-latest` `bundle` job builds the one-dir bundle, runs
   `--selftest` and uploads it on every push. Its selftest now also fails when the shipped renderer
   does not reach its page. Only the author can observe that it double-clicks and draws; until that
