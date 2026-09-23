@@ -244,6 +244,24 @@ output is written, which stages run and how much is logged; every quantity that 
 lives in the case file (IF-03). A flag duplicating a case-file setting would make the FR-25 manifest
 describe one of two disagreeing sources of truth.
 
+NOTE (IF-02, generators; **added 23 September 2026**): `nanopnp mesh cylinder` and
+`nanopnp mesh reference` write an *input artefact*, a Gmsh MSH 4.1 mesh (IF-06), rather than run a
+case. The geometric flags of `mesh cylinder` shape that file, and a run that later consumes it
+records it by content hash through `inputs.mesh` (§5.3.1, §5.3.2), exactly as it would any
+externally supplied mesh. So they do not change what a run solves, and the configuration NOTE above
+is not breached. `mesh reference` takes no geometric flag, since its preset is fixed by §5.2.2 and
+the geometry of record. Both commands print the written mesh's content hash and the
+`inputs.mesh.groups` mapping a case needs to read it. Both are subject to the mesh quality gate of
+VER-10. These commands are the v0.5 means of producing a mesh without Python, and they are not the
+meshing pipeline of FR-10, which remains v0.9.
+
+NOTE (IF-01, public surface; **added 23 September 2026**): the stable API is the set of names in
+`nanopnp.__all__`, together with the modules the user documentation's API reference names. Every
+other module is internal and may change without notice before v1.0. The top-level names are
+resolved lazily (PEP 562 `__getattr__`), so `import nanopnp` imports neither NGSolve, Netgen nor
+numpy. The command line, the shell and the sweep runner import the package purely to introspect
+it, and an eager re-export would charge every one of them for a solver it never assembles.
+
 NOTE (IF-07, field export): solution fields are written as XDMF with HDF5 heavy data at the P2 node
 set — the mesh vertices together with the edge midpoints, `ndof = nv + nedge` — with topology
 `Triangle_6`. A P2 function on a straight-sided triangle is determined by its six nodal values, and a
@@ -321,6 +339,12 @@ instead of the schema (VER-09).
 | **QR-13** | The ePNP-NS weak forms SHALL be expressed once against the internal backend interface and SHALL NOT be duplicated per backend. | Maintainability |
 | **QR-14** | Adding a correction parameterisation SHALL require only a data file; adding a physics model SHALL require only one class (FR-20). | Maintainability |
 | **QR-15** | v1.0 SHALL ship user documentation, tutorials, a JOSS submission and a DOI-archived release. | Maintainability |
+
+NOTE (QR-15; **added 23 September 2026**): the user documentation and the worked examples are
+delivered incrementally from v0.5, by the documentation track of §8.1, each phase documenting what
+it ships. The requirement itself is unchanged. v1.0 is where it is met in full, including the JOSS
+submission and the DOI-archived release, which no earlier phase delivers. VER-45 and VER-46
+demonstrate the documentation part at every release. They do not demonstrate the JOSS or DOI parts.
 
 Rationale (QR-02): the reference implementation uses linear velocity and pressure on a mesh from a
 different generator with stabilisation active, so two correct codes disagree at the per-cent level
@@ -2161,7 +2185,7 @@ archive, so the push gate is unaffected by whether it is present.
 | **VER-28** | Reference-geometry conformance | The assembled (r, z) region has exactly three domains — pore body, one membrane, one electrolyte — and is conformal at the membrane-to-pore junction: the membrane meets the pore on the pore's own outer surface, at r = 2.7524 nm on z = −1.4 and r = 4.88 nm on z = +1.4 within the fragmentation tolerance and read from the fixture rather than hard-coded, *and* over one shared edge chain rather than two coincident ones; no membrane material lies inside the fluid set; the region carries exactly the §5.3.1 vocabulary and its mesh meets the §5.2.2 quality figures (FR-09) |
 | **VER-29** | External field ingestion and charge conservation | An (r, z) grid round-trips through the native format and through OpenDX and CCP4 with the singleton-axis convention, origin, spacing and values preserved — or, where the installed GridDataFormats has no CCP4 writer (the IF-05 NOTE of §3.1), the write is refused naming the format, the installed version and the release that gained the writer, which is the other half of the same claim and is asserted rather than skipped; a genuinely two-dimensional array is refused naming its shape; the interpolant's axis order is asserted against a field that is not symmetric in its arguments, so a transposed array fails rather than agreeing on the diagonal; the field is zero outside the grid box rather than continued by its edge value; on the deployed finite-element mesh `|Q_mesh − Q_net|/|Q_net| < 10⁻³`, reported as the producer and consumer legs of the §4.4 NOTE and gated separately, with the axis-guard deficit and the boundary-ring maximum reported beside them; the ramped per-plane cumulative agrees to the same tolerance at every plane; a grid whose boundary values are not negligible against its interior aborts naming the value and its (r, z); a field declaring no `Q_net` gates the consumer leg and records the producer leg as not run. The conservation half is asserted at Tier 2 on the reference mesh of §5.2.1, against a field whose `Q_net` is known in closed form, and a deliberately coarsened mesh there fails the quadrature-agreement gate rather than the conservation gate — which is the distinction the §4.4 NOTE makes normative (QR-03, PHY-18, PHY-19, IF-05, FR-14 in part) |
 | **VER-30** | Dielectric blend | The sharp solid fraction reproduces PHY-20's piecewise assignment to round-off at every quadrature point; a `χ` outside [0, 1] and an inverted `χ` both abort with the offending quantity and its location, the latter on the per-material means; an absolute `ε_r` field is refused with the §4.4 NOTE named (FR-15) |
-| **VER-32** | Command-line surface and exit-code contract | Every subcommand parses and dispatches to the stage objects it names; the registry is listed in a fresh process that imports no stage implementation module, no NGSolve and no netgen, asserted on `sys.modules`; each exit class of the §3.1 IF-02 NOTE is produced by an input that triggers it; every public exception type in the package is either classified by the exit-code enumeration or excluded from it with a written reason, in both directions, so that a type added later fails this test; diagnostics appear on standard error and standard output carries only the command's result; a gate abort prints its QR-12 diagnostic without a traceback unless one is requested; a run given a store writes every file it produces inside that store, asserted by running from a working directory the process-default fallback would land in and requiring it to stay empty (IF-02, FR-27, the §5.3.2 workspace-locality NOTE) |
+| **VER-32** | Command-line surface and exit-code contract | Every subcommand parses and dispatches to the stage objects it names; the registry is listed in a fresh process that imports no stage implementation module, no NGSolve and no netgen, asserted on `sys.modules`; each exit class of the §3.1 IF-02 NOTE is produced by an input that triggers it; every public exception type in the package is either classified by the exit-code enumeration or excluded from it with a written reason, in both directions, so that a type added later fails this test; diagnostics appear on standard error and standard output carries only the command's result; a gate abort prints its QR-12 diagnostic without a traceback unless one is requested; a run given a store writes every file it produces inside that store, asserted by running from a working directory the process-default fallback would land in and requiring it to stay empty; `mesh cylinder` and `mesh reference` write an MSH 4.1 file that a case using the `inputs.mesh.groups` mapping they print ingests through the VER-27 gate unchanged, the hash they print is the mesh hash that run's manifest records, a mesh failing the VER-10 quality gate is refused with its QR-12 diagnostic and exit class `4` and leaves no file behind, and `--help` on either imports no netgen (IF-02, FR-27, the §5.3.2 workspace-locality NOTE, the §3.1 IF-02 generators NOTE) |
 | **VER-33** | Field export exactness and the Ω/Ω_w split | A quadratic exported and read back is reproduced *exactly* at all six nodes of every element, which a permutation of the midside nodes fails; the exported node count is `nv + nedge`; the two files carry the whole-domain and fluid-only field sets respectively and the fluid file contains no solid node; attribute names carry SI units and the values match the §6.3 scale conversion to round-off, with the `2π` of the axisymmetric measure absent; heavy data is compressed (IF-07) |
 | **VER-34** | Solution-state round trip and descriptor gate | Save followed by restore reproduces every component's coefficients to zero difference; the stored wall-distance vector is restored rather than re-solved; a descriptor differing in the solve-provenance digest, mesh hash, element order, domain restriction, degree-of-freedom count, model options, wall-distance sources or saturation distance, or stabilisation mode each abort naming the key and both values; a payload of the superseded schema version is refused by schema rather than misread; a case differing only in `name:` or `outputs:` restores, and keys the same stage-10 artefact (FR-27, QR-08 in part) |
 | **VER-36** | Sweep plan: substitution, validation and the warm-start forest | A product of axes enumerates the points of §5.3.4 in wave order; an assignment-valued axis moves several case-file paths together; a point identity is stable across processes and unchanged by a value inserted on another axis, while its index is not; every point has exactly one parent one grid step nearer its axis origin, its wave is its depth, and the points of one wave are pairwise independent; an axis rooted away from its first value walks outward in both directions; a misspelt path is refused naming the component and the prefix that exists, and a value of the wrong declared type is refused before any solve; a point the case schema resolves but §6.5 refuses fails when the plan is built, naming the point and the reason; a plan asking for `rectification` whose axes produce no exactly-opposite bias pair is refused naming the axis (FR-24, IF-03, QR-12) |
@@ -2171,6 +2195,8 @@ archive, so the push gate is unaffected by whether it is present.
 | **VER-41** | Stabilisation terms, the mode registry and the `Pe_h` diagnostic | The element size the stabilisation parameters are defined against is asserted elementwise against its measured convention rather than assumed, so a backend that changed it fails here rather than retuning the mode in silence; the registry lists exactly the modes of §5.3.1 and refuses an unknown name listing them; the `none` entry produces an assembled residual *identical* to the unstabilised one, asserted on the vector and not on the mode string; the streamline parameter takes both branches of `ψ(q) = min(q, 1)` and is continuous at the crossover; the crosswind viscosity is exactly zero on every element at or below the Péclet number its tuning constant sets, positive on one above it, and bounded by `D_i(C Pe_K − 1)`; the crosswind projector annihilates the advective velocity and is idempotent; the crosswind, streamline and grad-div terms request the integration orders of NUM-15 and the `1/r` minimum of NUM-07 respectively, asserted on the quadrature request rather than on a number; an equal-order velocity–pressure pair is refused in every mode that supplies no flow stabilisation, naming both inf-sup and the mode that would permit it, and accepted in the mode that does; a velocity order left unset reproduces the previous two-order model exactly; the `Pe_h` diagnostic warns naming the species, the value and its `(r, z)`, is silent below the threshold, and runs in the unstabilised mode; and every mode's **linearisation** is finite at the zero-wind cold state `φ̃ = 0`, `c̃_i = 1`, `u̅ = 0`, asserted on the assembled Jacobian entries rather than on the residual, because the residual is finite there in every mode and only the linearisation is not (NUM-03, NUM-11, NUM-12, NUM-14, NUM-15, QR-12) |
 | **VER-43** | Desktop shell, schema-generated editor, solver process and packaging probe | The schema walk enumerates exactly the editable dotted paths of `nanopnp/case/v1`, asserted in both directions so that a field added later fails this test rather than becoming silently uneditable, and the switch classification of FR-25 is checked against that same walk rather than a second one; the shell's view-model layer imports neither PySide6 nor NGSolve, asserted on `sys.modules` in a fresh process, and no `PyQt` module is reachable from any import path the shell takes (CON-09); every option the editor offers comes from the schema's own declared type or from a live registry, so no value set is written in `gui/`; a value the schema refuses is refused at the field before any substitution, naming the path, the value and the declared type, and a document the registries refuse produces the same diagnostic text the command line prints for the same file; run control drives the case through a **spawned** process, forwards a monotone completion fraction ending at 1, receives each stage transition as data — the stage's name and its position in the walk, through a structural hook, never recovered by parsing a progress caption — and cancels through a token the child honours, a cancelled run writing no artefact; a failed run reports the §3.1 exit class the command line would return for the same case; and the packaging probe imports PySide6, `QtWebEngineWidgets`, NGSolve, Netgen and `ngsolve.webgui` in one process, its bundle carrying the CON-11 licence notice (IF-09, QR-11, FR-27, CON-09, CON-11, RSK-13, §8.2 criterion 4 as amended by A4) |
 | **VER-44** | Live convergence monitoring and field visualisation | The rung and the Newton step reach the shell through a structural hook carrying the residual and the undamped relative update as numbers, never recovered from a progress caption; the hook is not an input, asserted by running the same case watched and unwatched and requiring one artefact hash and one store entry; a rung that reports no Newton step yields a rung record all the same, and the plot shows it as a labelled band rather than interpolating a line across it, naming **which of the two silences** it is: a rung whose model takes no Newton callback and can report no step, or a coupled rung whose damped-Newton solve found the entry residual already below its target and returned before its first step — the NUM-16 warm-start case, which most of a warm ladder does. The hook SHALL carry that distinction as data, taken from the same test that injects the callback, because the two silences are identical from the far side and annotating either as the other states something about the solve that is not true; a solve served from the store is named as such rather than drawn as an empty plot; the plot draws no convergence threshold, the criterion of NUM-16 being per rung and disjunctive, and reports per rung which test the recorded numbers **prove** ended it rather than which the solver evaluated first: the two tests are not exclusive, so what may be asserted is the exclusion — a forced last step, which NUM-16 bars from the update test, and a last relative update above the rung's own tolerance each leave the residual test as the only one that can have closed the rung, and otherwise the update test is reported as met without also claiming the residual test was not. That tolerance SHALL travel with the rung rather than be assumed from the reference settings, so the reading is against the number the solve used; the band also reports the minimum damping and how many steps were forced; the field viewer renders a solution restored through the stage-10 gate rather than an export, its field names and units come from the IF-07 attribute vocabulary rather than from `gui/`, the scene reaches the view as a file rather than a data URL, a sample no logarithmic axis can place is omitted and counted rather than drawn at the axis floor, and a document that loaded without its renderer is reported as a diagnostic naming the renderer source rather than shown as a blank panel; the renderer is shipped with the package rather than fetched, is byte-identical to the npm tarball the repository keeps as its corresponding source, that tarball's SHA-512 is npm's published integrity, and its version is the one the installed `netgen.webgui` pins, so an upgrade that moves the pin fails the gate rather than drawing nothing; and the packaging probe's selftest fails when the bundled renderer does not reach its document (IF-09, QR-11, FR-27, NUM-16, NUM-18, QR-12, CON-09, RSK-13) |
+| **VER-45** | Documentation surface and the public API | The generated case-file reference enumerates exactly the editable dotted paths of the VER-43 schema walk, in both directions, with each field's declared type, default and option set taken from the schema or a live registry, so a field added later appears without a documentation edit; the generated command-line reference covers every subcommand `build_parser()` defines, and its exit-code table is the §3.1 IF-02 enumeration, both in both directions; every name in `nanopnp.__all__` resolves and is the object at its documented module path, and the documented public surface equals `__all__`, in both directions; `import nanopnp` in a fresh process imports no `ngsolve`, `netgen` or `numpy` module, asserted on `sys.modules`; the documentation site builds with the generator's strict mode, so that a broken internal link or cross-reference fails the build, on every push including prose-only ones (§7.6) (IF-01, IF-02, IF-03, QR-15 in part; §3.1 IF-01 public-surface NOTE) |
+| **VER-46** | Executed worked examples | Every command in an example's tagged console blocks is executed verbatim, from a copy of that example's directory, and exits `0`; each example meets an oracle stated in its README that is a property of the model rather than a transcribed number: an uncharged pore with symmetric reservoirs rectifies to unity within solver tolerance; a pore carrying negative fixed charge has a cation transport number above one half; a run with every correction set to `none` lists each of them under the manifest's deviations from the validated default; the two current-extraction routes of FR-23 agree to the tolerance QR-04 already gates; and fields read back from the IF-07 export carry the attribute names that vocabulary defines. No number appears in the user documentation as a result unless an example asserts it. Runs in the Tier 2 directory for its runtime; an example whose solve takes minutes (the reference geometry) is marked `slow` and is recorded rather than gated, its cheap steps still gated at Tier 1 (QR-15 in part, IF-02, FR-23, FR-24, FR-25) |
 
 ### 7.3 Tier 2 analytic benchmarks
 
@@ -2354,6 +2380,7 @@ model, and provides no stress-tensor force profile. Detail in
 | Every push | 1 and 2 |
 | Nightly, once enabled | 3 |
 | Before a tagged release | 1, 2, 3 and 4 |
+| Every push, prose-only pushes included | The strict documentation build of VER-45 (**added 23 September 2026**) |
 
 Every run SHALL emit a provenance manifest recording input hashes, library versions, mesh hash,
 solver settings, stabilisation mode and correction parameter file versions (FR-25).
@@ -2372,6 +2399,7 @@ solver settings, stabilisation mode and correction parameter file versions (FR-2
 | 3. Charge pipeline | PDB2PQR to smeared volumetric `ρ_fixed` and dielectric field | VER-01, VER-02 and VAL-06 pass | 3–5 weeks |
 | 4. Validation and release | Full V&V suite in CI, documentation, JOSS paper, v1.0 | Tier 4 passes (VAL-07 to VAL-10) | 4–6 weeks |
 | GUI | Continuous track from Phase 0 onward, one increment per phase | QR-10: an experimentalist runs a case unaided | continuous |
+| Documentation | Continuous track from Phase 1 onward, one increment per phase (**added 23 September 2026**) | VER-45 and VER-46 pass on every push | continuous |
 
 GUI increments, one per phase (ADR-004):
 
@@ -2383,6 +2411,19 @@ GUI increments, one per phase (ADR-004):
 | 3 | Charge pipeline surfaced: pH selector, force field, charge map viewer, conservation report |
 | 4 | Sweep builder, result browser, figure export, case comparison |
 | post-1.0 | Installers for all three platforms, in-application tutorials |
+
+Documentation increments, one per phase (QR-15 NOTE; **added 23 September 2026**). Each phase
+documents what it ships, and a phase's examples are executed by VER-46. The model itself is
+documented by rendering this specification and the companion knowledge base (§11) verbatim, never
+by a restatement of their equations:
+
+| Phase | Documentation increment |
+|---|---|
+| 1 | Documentation site and its build; user guide for the solver core, the case file, meshes and fields, runs, sweeps, provenance and the desktop shell; generated case-file, command-line and exit-code references; the API reference over the IF-01 public surface; worked examples on an idealised pore and on the reference geometry |
+| 2 | The geometry pipeline: structure and trajectory input, density, symmetry reduction, contour, meshing; an example from a PDB entry to a mesh |
+| 3 | The charge pipeline: protonation, force field, smearing, the conservation report; an example from a PDB entry to a charged run |
+| 4 | Tutorials completed against the validated release, the JOSS paper, and the DOI-archived v1.0 (QR-15 in full) |
+| post-1.0 | In-application tutorials, with the GUI track |
 
 Phase 2 SHALL NOT start before the Phase 0 exit criteria are met.
 
@@ -2606,8 +2647,8 @@ needed.
 
 | Requirement | Verification or validation activity |
 |---|---|
-| IF-01 | VER-25, VER-32 |
-| IF-02 | VER-32, VER-38 |
+| IF-01 | VER-25, VER-32, VER-45 (the public surface and its import cost) |
+| IF-02 | VER-32, VER-38, VER-45 (the generated command-line and exit-code references), VER-46 (every documented command executed) |
 | IF-03 | VER-09, VER-36 (dotted-path substitution against the schema) |
 | IF-04 | None yet |
 | IF-05 | VER-29, VAL-15 |
@@ -2658,7 +2699,7 @@ needed.
 | QR-12 | VER-10, VER-32, VER-40, VER-41 |
 | QR-13 | None yet |
 | QR-14 | VER-03 |
-| QR-15 | None yet |
+| QR-15 | VER-45, VER-46 — the documentation part only, delivered incrementally by the §8.1 documentation track; the JOSS submission and the DOI-archived release remain unverified until v1.0 |
 | CON-01 | None yet |
 | CON-02 | VER-20, VER-22 |
 | CON-03 | None yet |
@@ -2674,11 +2715,11 @@ needed.
 | CON-13 | VER-43 in part (the Windows bundle builds and launches headlessly on every push; widget construction is asserted on `windows-latest` and `macos-latest`). Linux *desktop* Qt is deliberately not asserted: the push gate installs no system packages, and PySide6 does not import on the runner image |
 | CON-14 | None yet |
 
-Coverage: 44 of the 67 requirements in §3 have a specified activity; 23 are recorded as "none yet",
+Coverage: 45 of the 67 requirements in §3 have a specified activity; 22 are recorded as "none yet",
 predominantly interface, portability, licensing and documentation requirements whose demonstration
-is by inspection rather than by test. Recounted row by row on 20 September 2026 after CON-13 moved;
-QR-07 is counted as "none yet", its entry naming §8.2 criterion 3 as the measurement it is still
-waiting for rather than as one it has.
+is by inspection rather than by test. Recounted row by row on 23 September 2026 after QR-15 gained
+VER-45 and VER-46; QR-07 is counted as "none yet", its entry naming §8.2 criterion 3 as the
+measurement it is still waiting for rather than as one it has.
 
 ---
 
