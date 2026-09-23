@@ -49,6 +49,9 @@ gui = ["PySide6>=6.7"]
 # OPTIONAL MESHER BACKEND ONLY. gmsh is GPLv2+; the default path must never
 # import it and the library must stay functional without it (CON-10, ADR-002).
 gmsh = ["gmsh>=4.13"]
+# The worked examples' plots (examples/, WP16 D12). Never needed to run a case:
+# every example writes its numbers as CSV and plots only when this imports.
+examples = ["matplotlib>=3.8"]
 
 [project.urls]
 Specification = "https://github.com/willemsk/nanopnp/blob/main/SPECIFICATION.md"
@@ -74,6 +77,15 @@ dev = [
 # builds a release, never by a developer running the gate or by a user.
 packaging = [
     "pyinstaller>=6.10",
+]
+# The documentation site (QR-15, VER-45; WP16 D1, D12). Not a default group:
+# nothing on the end-user path needs it. Material for MkDocs is in maintenance
+# mode and does not support MkDocs 2, so MkDocs is pinned below 2
+# (.knowledge/07-software-stack.md section 13).
+docs = [
+    "mkdocs>=1.6,<2",
+    "mkdocs-material>=9.5",
+    "mkdocstrings[python]>=0.26",
 ]
 
 [build-system]

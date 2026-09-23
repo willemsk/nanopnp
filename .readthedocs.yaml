@@ -1,0 +1,25 @@
+# Read the Docs build of the documentation site (WP16 D2).
+#
+# `uv sync --group docs` installs from uv.lock, so the site is built against the
+# locked versions the CI `docs` job builds with. The generated pages are written
+# before the build, by the same script, and are never committed (WP16 D4, D5).
+version: 2
+
+build:
+  os: ubuntu-24.04
+  tools:
+    python: "3.12"
+  jobs:
+    pre_build:
+      - python docs/scripts/generate.py
+
+python:
+  install:
+    - method: uv
+      command: sync
+      groups:
+        - docs
+
+mkdocs:
+  configuration: mkdocs.yml
+  fail_on_warning: true
