@@ -1741,7 +1741,6 @@ wheels = [
 
 [[package]]
 name = "nanopnp"
-version = "0.1.0.dev0"
 source = { editable = "." }
 dependencies = [
     { name = "h5py" },
@@ -1818,7 +1817,7 @@ requires-dist = [
     { name = "shapely", marker = "extra == 'structure'", specifier = ">=2.0" },
     { name = "sympy", specifier = ">=1.14.0" },
 ]
-provides-extras = ["structure", "gui", "gmsh", "examples"]
+provides-extras = ["examples", "gmsh", "gui", "structure"]
 
 [package.metadata.requires-dev]
 dev = [

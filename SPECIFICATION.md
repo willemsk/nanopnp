@@ -188,6 +188,17 @@ reference-solution generation; MD trajectories are supplied as input.
 Release tags in §3 take four values: v0.5, v0.9, v1.0, post-1.0. Items scheduled for v1.5 are
 tagged post-1.0.
 
+NOTE (Versioning; **added 23 September 2026**): the releases above are git tags `vX.Y.Z` on the
+commit that closes the phase: `v0.1.0` for Phase 0, and `v0.5.0` for Phase 1 on the merge of its
+end-of-phase report (§8.1). Each merged work package is tagged `vX.Y.Z-alpha.N` on its last commit
+on `main`, where N counts the phase's work packages toward that release. The history before this
+NOTE was tagged retroactively on the same rule. The tag names are SemVer, and PEP 440 reads them as
+`X.Y.ZaN` (`0.5.0a10`). The package version is derived from the tag (hatch-vcs), so a commit between
+tags installs as a development version naming that commit, and the provenance manifest's recorded
+`nanopnp` version identifies the code that produced a result (FR-25). The version enters no artefact
+key: the environment is recorded beside an artefact, never hashed into it (§5.3.2). `CHANGELOG.md`
+records every tag, and a milestone tag publishes a GitHub Release with its section as the notes.
+
 ---
 
 ## 3. Requirements
