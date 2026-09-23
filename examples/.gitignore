@@ -1,0 +1,14 @@
+# What running an example writes. The examples' tests run them in a copy, so
+# nothing here is ever an input.
+store/
+*.msh
+run/
+run-*/
+iv-*/
+phase1/
+phase1.sh
+phase1.member.sbatch
+slurm-logs/
+*.png
+*.csv
+tour.json

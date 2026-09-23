@@ -1,0 +1,53 @@
+# The frozen Tier-3 case clya-0.5M-plus50mV, run from this directory.
+#
+# A copy of docs/validation/cases/clya-0.5M-plus50mV.case.yaml with one change:
+# `inputs.mesh.path` names the mesh `nanopnp mesh reference` writes here, because
+# the path resolves against the working directory. The copy cannot drift: the
+# example's Tier-1 test asserts that this document and the frozen one have the same
+# case identity and differ in nothing but that path.
+schema: nanopnp/case/v1
+name: clya-0.5M-plus50mV
+
+inputs:
+  mesh:
+    path: clya-reference.msh
+    format: msh41
+    groups: {}                   # the generator names every group in the vocabulary
+
+electrolyte:
+  species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]
+  concentration_M: 0.5
+  temperature_K: 298.15
+  parameters: willems2020_nacl
+  # The validated ePNP-NS configuration (PHY-22): every concentration correction on,
+  # every wall function on, and the Borukhov steric flux. This is the set the published
+  # agreement with experiment was obtained with, and the set section 7.4 compares.
+  corrections:
+    diffusivity:  {model: willems2020_nacl, wall: true, concentration: true}
+    mobility:     {model: willems2020_nacl, wall: true, concentration: true}
+    viscosity:    {model: willems2020_nacl, wall: true, concentration: true}
+    permittivity: {model: willems2020_nacl}
+    density:      {model: willems2020_nacl}
+    steric:       {model: borukhov}
+
+boundary_conditions:
+  bias_V: 0.05
+  ground: cis
+
+physics:
+  model: epnp-ns
+  solid_permittivities: {membrane: 3.2, protein: 20.0}
+
+numerics:
+  # Rung 0: Taylor-Hood, unstabilised. `phi` and `c` stay at P2 on every rung, which is
+  # the reference's own choice (.knowledge/09-comsol-reference-settings.md section C.2).
+  elements: {phi: P2, c: P2, u: P2, p: P1}
+  continuation: default_ladder
+  stabilisation: none
+  nonlinear: {rtol: 1.0e-6, max_iter: 100}
+  linear: {solver: umfpack}
+  wall_distance: {sources: wall, max_distance_nm: 3.0}
+
+# `rectification` is a two-point quantity (section 5.3.1 NOTE) and is produced by the
+# collector from the matched opposite-bias pairs the case set provides, not by a member.
+outputs: [current, transport_numbers, eof_rate]
