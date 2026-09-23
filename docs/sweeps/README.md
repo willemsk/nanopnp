@@ -15,16 +15,16 @@ package's own gate is not a gate. `tests/tier2/test_sweep_throughput.py` measure
 honestly measure.
 
 The mesh is not checked in — 44,316 triangles is not a repository file — and is
-reproducible from the ClyA profile in `data/geometry/` at the §5.2.2 "Finer" preset:
+reproducible from the ClyA profile in `data/geometry/` at the §5.2.2 "Finer" preset, by the
+generator of the §3.1 IF-02 NOTE:
 
 ```bash
-uv run python -c "
-from nanopnp.mesh.adapter import from_ngsolve, write_msh41
-from nanopnp.mesh.reference import ReferenceGeometry
-mesh = ReferenceGeometry.from_fixture().generate()
-write_msh41(from_ngsolve(mesh), 'docs/sweeps/clya-reference.msh')
-"
+uv run nanopnp mesh reference --out docs/sweeps/clya-reference.msh
 ```
+
+It gates the mesh on element quality before writing it and prints the content hash the run's
+manifest will record. The reference geometry names every group in the solver's vocabulary, so
+the case maps nothing: `inputs.mesh.groups: {}`.
 
 Then, from the repository root — `inputs.mesh.path` in the base case resolves against the
 process working directory, because the sweep runner never changes directory:

@@ -203,6 +203,13 @@ in file order would therefore make a mesh differ from itself. Hash a canonical f
 by `(r, z)`, connectivity renumbered into that order, elements sorted by group name — invariant under
 everything the round trip does, and changing the moment an edge moves group.
 
+**`meshio.read` on a `.msh` file prints an empty line to standard output unless told the format
+[tested].** meshio 5.3.5 maps the `.msh` suffix to both `ansys` and `gmsh`, tries `ansys` first, and
+`print`s that reader's `ReadError` — whose text is empty — before falling through to `gmsh`. Found by
+WP16 (23 September 2026) when a CLI test asserted that a refused `nanopnp mesh` wrote nothing to
+stdout; every `nanopnp run` on an MSH case had been writing the same stray line, which a caller
+parsing the IF-02 result stream would read. Pass `file_format="gmsh"`.
+
 **netgen.occ facts, all measured on 6.2.2606 [tested]:**
 
 - **A clockwise wire gives OCC a face of negative area, and a negative face subtracts as an

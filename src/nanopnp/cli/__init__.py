@@ -319,6 +319,106 @@ def _reproduce(args: argparse.Namespace) -> int:
     return EXIT_OK if finding.reproduced else 1
 
 
+def _mesh(args: argparse.Namespace) -> int:
+    """``nanopnp mesh`` — write a gated MSH 4.1 mesh for a case to read (IF-02).
+
+    A generator, not a run: section 3.1's generators NOTE. The geometric flags of
+    ``mesh cylinder`` shape the *file*, and the run that later reads it records
+    it by content hash through ``inputs.mesh`` exactly as it would an external
+    mesh, so no flag here changes what a run solves.
+
+    The file is gated by the route a run ingests it by — written beside its
+    destination, read back, mapped through the groups printed, then checked on
+    element quality and radii (VER-10, VER-27) — and moved into place only once
+    that passes. So the hash printed is the one the run's manifest records, and a
+    mesh the gate refuses leaves no file for a case to pick up by mistake.
+    """
+    from nanopnp.mesh.adapter import from_ngsolve, read, write_msh41
+    from nanopnp.mesh.ingest import apply_groups
+    from nanopnp.mesh.quality import check_quality, check_radii
+
+    if args.shape == "cylinder":
+        from nanopnp.mesh.primitives import CylindricalPoreGeometry
+
+        if args.pore_radius_nm >= args.reservoir_radius_nm:
+            args.parser.error(
+                f"--pore-radius-nm {args.pore_radius_nm:g} must be smaller than "
+                f"--reservoir-radius-nm {args.reservoir_radius_nm:g}"
+            )
+        geometry = CylindricalPoreGeometry(
+            pore_radius_nm=args.pore_radius_nm,
+            membrane_thickness_nm=args.membrane_thickness_nm,
+            reservoir_radius_nm=args.reservoir_radius_nm,
+        )
+        # Ungated here and gated below, on the file as written: one gate, on
+        # the object a run will actually read.
+        generated = geometry.generate(
+            maxh_nm=args.maxh_nm, wall_h_nm=args.wall_h_nm, check_quality=False
+        )
+    else:
+        from nanopnp.mesh.reference import ReferenceGeometry
+
+        generated = ReferenceGeometry.from_fixture().generate(check_quality=False)
+    data = from_ngsolve(generated)
+
+    # OCC leaves the seams nothing names at NGSolve's ``default``: the two pore
+    # mouths of the cylinder, which separate fluid from fluid. They map to
+    # ``interface``, which nothing selects on. The reference geometry names its
+    # own seams and needs no mapping. Anything else outside the vocabulary is
+    # refused by ``apply_groups`` below, naming the group.
+    groups = {"default": "interface"} if "default" in data.boundaries else {}
+
+    out = Path(args.out)
+    partial = out.with_name(f".{out.stem}.partial{out.suffix}")
+    where = f"the generated mesh {out.name!r}"
+    try:
+        write_msh41(data, partial)
+        mapped, _applied = apply_groups(read(partial, format="msh41"), groups)
+        quality = check_quality(mapped, where=where)
+        check_radii(mapped, where=where)
+        partial.replace(out)
+    finally:
+        partial.unlink(missing_ok=True)
+
+    flow = "{" + ", ".join(f"{key}: {value}" for key, value in sorted(groups.items())) + "}"
+    payload: dict[str, Canonicalisable] = {
+        "path": str(out),
+        "format": "msh41",
+        "content_hash": mapped.content_hash,
+        "groups": dict(sorted(groups.items())),
+        "elements": mapped.element_count,
+        "vertices": mapped.vertex_count,
+        "materials": list(mapped.materials),
+        "boundaries": list(mapped.boundaries),
+        "min_sicn": quality.min_sicn,
+        "min_gamma": quality.min_gamma,
+    }
+    lines = [
+        f"mesh      {out}",
+        f"hash      {mapped.content_hash}",
+        f"elements  {mapped.element_count} ({mapped.vertex_count} vertices)",
+        f"quality   min SICN {quality.min_sicn:.3f}, min gamma {quality.min_gamma:.3f}",
+        f"domains   {', '.join(mapped.materials)}",
+        f"groups    {flow}",
+        "",
+        "inputs:",
+        "  mesh:",
+        f"    path: {out}",
+        "    format: msh41",
+        f"    groups: {flow}",
+    ]
+    _emit(payload, lines, as_json=args.json)
+    return EXIT_OK
+
+
+def _positive_nm(text: str) -> float:
+    """Parse a length in nm that must be positive and finite."""
+    value = float(text)
+    if not 0.0 < value < float("inf"):
+        raise argparse.ArgumentTypeError(f"{text!r} is not a positive length in nm")
+    return value
+
+
 def _sweep(args: argparse.Namespace) -> int:
     """``nanopnp sweep`` — plan, dispatch or collect a parameter sweep (FR-24, IF-02).
 
@@ -884,6 +984,51 @@ def build_parser() -> argparse.ArgumentParser:
         help="treat a library, interpreter or platform difference as a failure",
     )
     check.set_defaults(handler=_reproduce)
+
+    mesh = subparsers.add_parser("mesh", help="write a gated MSH 4.1 mesh for a case to read")
+    shapes = mesh.add_subparsers(dest="shape", required=True)
+
+    # The defaults are the 392-element idealised pore of the Tier-2 throughput
+    # benchmark: the coarsest mesh the NUM-34 wall-distance gate admits with the
+    # wall corrections on, so a first run finishes in seconds.
+    cylinder = _common(
+        shapes.add_parser("cylinder", help="an idealised cylindrical pore through a membrane")
+    )
+    cylinder.add_argument(
+        "--pore-radius-nm", type=_positive_nm, default=2.0, help="lumen radius (default 2)"
+    )
+    cylinder.add_argument(
+        "--membrane-thickness-nm",
+        type=_positive_nm,
+        default=6.0,
+        help="membrane thickness, the lumen's length (default 6)",
+    )
+    cylinder.add_argument(
+        "--reservoir-radius-nm",
+        type=_positive_nm,
+        default=10.0,
+        help="radius of each quarter-disc reservoir (default 10)",
+    )
+    cylinder.add_argument(
+        "--maxh-nm", type=_positive_nm, default=4.0, help="global maximum element size (default 4)"
+    )
+    cylinder.add_argument(
+        "--wall-h-nm",
+        type=_positive_nm,
+        default=0.35,
+        help="element size on the pore wall (default 0.35)",
+    )
+    cylinder.add_argument("--out", type=Path, required=True, help="the .msh file to write")
+    cylinder.set_defaults(handler=_mesh, parser=cylinder)
+
+    reference = _common(
+        shapes.add_parser(
+            "reference",
+            help="the ClyA reference geometry at the section 5.2.2 preset",
+        )
+    )
+    reference.add_argument("--out", type=Path, required=True, help="the .msh file to write")
+    reference.set_defaults(handler=_mesh, parser=reference)
 
     sweep = subparsers.add_parser("sweep", help="plan, run or collect a parameter sweep (FR-24)")
     actions = sweep.add_subparsers(dest="action", required=True)
