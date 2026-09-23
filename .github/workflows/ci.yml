@@ -103,6 +103,24 @@ jobs:
           uv run pytest -n auto --dist loadfile --ignore=tests/tier1/test_gui_widgets.py
           --cov=src/nanopnp --cov-report=term-missing
 
+  # VER-45's strict documentation build (section 7.6). It runs on EVERY push,
+  # prose-only ones included, and so has no `changes` dependency: a broken link
+  # is exactly what a prose-only edit introduces. The generated pages are
+  # rendered first, from the live schema, parser and exit enumeration.
+  docs:
+    name: documentation (strict build)
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          python-version: "3.12"
+      - run: uv sync --group docs
+      - run: uv run docs/scripts/generate.py
+      - run: uv run mkdocs build --strict
+
   test-matrix:
     name: tier 1-2 (${{ matrix.os }}, py${{ matrix.python-version }})
     needs: changes

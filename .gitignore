@@ -230,3 +230,7 @@ nanopnp-store/
 
 # Per-developer Claude Code settings, never shared.
 .claude/settings.local.json
+
+# The documentation site (WP16): generated pages and the build output.
+docs/_generated/
+site/
