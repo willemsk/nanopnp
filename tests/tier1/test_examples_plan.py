@@ -14,6 +14,7 @@ from __future__ import annotations
 import itertools
 import json
 import re
+import shlex
 from pathlib import Path
 
 import pytest
@@ -88,10 +89,12 @@ def test_ver46_example_05_renders_one_dependent_array_per_wave(planned: Path) ->
     member = (planned / "phase1.member.sbatch").read_text(encoding="utf-8")
     assert "nanopnp sweep run" in member
     assert '--index "$SLURM_ARRAY_TASK_ID"' in member
-    assert str((planned / "phase1" / "plan.json").resolve()) in member
+    # Paths are shell-quoted as the script writes them: bare on POSIX, quoted where
+    # the path carries a backslash or a drive colon (Windows).
+    assert shlex.quote(str((planned / "phase1" / "plan.json").resolve())) in member
     # The base case names its mesh from the repository root, so that is where
     # the members must run (the README's --workdir ../..).
-    assert f"--chdir={planned.parents[1].resolve()}" in member
+    assert f"--chdir={shlex.quote(str(planned.parents[1].resolve()))}" in member
 
 
 def test_ver46_example_05_case_is_the_frozen_case() -> None:
@@ -101,6 +104,7 @@ def test_ver46_example_05_case_is_the_frozen_case() -> None:
     assert case_identity(resolve(copy)) == case_identity(resolve(frozen))
     left = frozen.model_dump(mode="json", by_alias=True)
     right = copy.model_dump(mode="json", by_alias=True)
-    assert left["inputs"]["mesh"].pop("path") == "docs/sweeps/clya-reference.msh"
-    assert right["inputs"]["mesh"].pop("path") == "clya-reference.msh"
+    # A path dumps with the platform's separator, so compare paths, not strings.
+    assert Path(left["inputs"]["mesh"].pop("path")) == Path("docs/sweeps/clya-reference.msh")
+    assert Path(right["inputs"]["mesh"].pop("path")) == Path("clya-reference.msh")
     assert left == right
