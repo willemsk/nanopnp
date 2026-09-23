@@ -337,6 +337,16 @@ def _mesh(args: argparse.Namespace) -> int:
     from nanopnp.mesh.ingest import apply_groups
     from nanopnp.mesh.quality import check_quality, check_radii
 
+    # A destination that cannot be written is a usage error, refused before the
+    # mesher runs (the reference geometry takes seconds): left to the write, a
+    # missing directory would exit 3 as though a case were refused, naming the
+    # staging file, and a directory would exit 1 as an unexpected failure.
+    out = Path(args.out)
+    if not out.name or out.is_dir():
+        args.parser.error(f"--out {out} is a directory; name the .msh file to write")
+    if not out.parent.is_dir():
+        args.parser.error(f"--out {out}: the directory {out.parent} does not exist")
+
     if args.shape == "cylinder":
         from nanopnp.mesh.primitives import CylindricalPoreGeometry
 
@@ -368,8 +378,9 @@ def _mesh(args: argparse.Namespace) -> int:
     # refused by ``apply_groups`` below, naming the group.
     groups = {"default": "interface"} if "default" in data.boundaries else {}
 
-    out = Path(args.out)
-    partial = out.with_name(f".{out.stem}.partial{out.suffix}")
+    # The process id keeps two generators aimed at one destination from sharing
+    # a staging file, which would let one gate, hash and print the other's mesh.
+    partial = out.with_name(f".{out.stem}.{os.getpid()}.partial{out.suffix}")
     where = f"the generated mesh {out.name!r}"
     try:
         write_msh41(data, partial)

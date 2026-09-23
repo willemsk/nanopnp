@@ -7,7 +7,7 @@
 #   packaging/  LICENSES-BUNDLE.md ships in the bundle and the wheel and is
 #               asserted by tests/tier1/test_gui_probe.py (CON-11);
 #   src/, data/ package data;
-#   examples/   the worked examples, whose READMEs tests/tier2/test_examples.py
+#   examples/   the worked examples, whose READMEs tests/tier2/test_examples_*.py
 #               executes (VER-46).
 # docs/ is NOT prose as a directory: docs/sweeps/ and docs/validation/ hold the
 # YAML that tests/tier1 reads (the section 8.3 reference sweep, the frozen

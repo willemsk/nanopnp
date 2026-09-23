@@ -52,7 +52,7 @@ run `uv lock` in the same commit.
 The site is MkDocs with Material and mkdocstrings. Build it as CI does:
 
 ```bash
-uv sync --group docs
+uv sync --all-extras --group docs   # exact: without --all-extras it uninstalls the extras
 uv run docs/scripts/generate.py     # the generated references and verbatim model pages
 uv run mkdocs build --strict        # fails on any broken link or cross-reference
 ```

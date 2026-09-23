@@ -80,15 +80,19 @@ def test_ver46_example_05_renders_one_dependent_array_per_wave(planned: Path) ->
     """Every point is submitted once, each wave after the one before (FR-24, QR-06)."""
     plan = json.loads((planned / "phase1" / "plan.json").read_text(encoding="utf-8"))
     script = (planned / "phase1.sh").read_text(encoding="utf-8")
-    arrays = re.findall(r"--array=(\d+)-(\d+)%\d+", script)
-    assert [[int(first), int(last) + 1] for first, last in arrays] == plan["waves"]
+    # Each array counts from 0 within its wave, with the wave's first point index
+    # exported beside it: SLURM's default MaxArraySize (1001) refuses a task
+    # index at or above it, and this sweep's indices run to 3,674.
+    arrays = re.findall(r"--array=0-(\d+)%\d+ --export=ALL,WAVE_FIRST=(\d+) ", script)
+    assert [[int(first), int(first) + int(top) + 1] for top, first in arrays] == plan["waves"]
+    assert max(int(top) for top, _first in arrays) < 1000
     submissions = [line for line in script.splitlines() if "sbatch" in line]
     assert len(submissions) == REFERENCE_WAVES
     assert all("--dependency=afterany:$previous" in line for line in submissions)
 
     member = (planned / "phase1.member.sbatch").read_text(encoding="utf-8")
     assert "nanopnp sweep run" in member
-    assert '--index "$SLURM_ARRAY_TASK_ID"' in member
+    assert '--index "$((WAVE_FIRST + SLURM_ARRAY_TASK_ID))"' in member
     # Paths are shell-quoted as the script writes them: bare on POSIX, quoted where
     # the path carries a backslash or a drive colon (Windows).
     assert shlex.quote(str((planned / "phase1" / "plan.json").resolve())) in member

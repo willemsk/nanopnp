@@ -51,7 +51,7 @@ matches `pyproject.toml`: if you edit `pyproject.toml` by hand, run `uv lock` be
 | `uv run ruff check . && uv run ruff format .` | Lint and format |
 | `uv run mypy src/` | Type check (strict) |
 | `uv run nanopnp --env` | Report the resolved environment and data locations |
-| `uv sync --group docs && uv run docs/scripts/generate.py && uv run mkdocs build --strict` | The documentation site, as CI's `docs` job builds it (VER-45); generated pages go to the gitignored `docs/_generated/` |
+| `uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run mkdocs build --strict` | The documentation site, as CI's `docs` job builds it (VER-45); generated pages go to the gitignored `docs/_generated/` |
 
 Before committing, run the whole gate:
 
