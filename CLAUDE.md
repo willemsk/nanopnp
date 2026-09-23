@@ -42,6 +42,7 @@ matches `pyproject.toml`: if you edit `pyproject.toml` by hand, run `uv lock` be
 | Command | Purpose |
 |---|---|
 | `uv run pytest` | Tiers 1 and 2 — the default selection, and the push gate |
+| `uv run pytest -n auto --dist loadfile` | The same, in parallel as CI and the gate run it; set `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS` and `MKL_NUM_THREADS` to 1 or the workers oversubscribe (`.knowledge/07` §12) |
 | `uv run pytest -m tier1` | Unit and property tests only (seconds) |
 | `uv run pytest -m tier3` | COMSOL comparison; nightly, not a push gate |
 | `uv run pytest -m slow --log-cli-level=INFO` | Benchmarks and envelope runs; measured, never gated |
@@ -60,7 +61,9 @@ uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv ru
 `.claude/hooks/gate.sh` runs that gate, plus `uv lock --check`, automatically before any `git commit`
 Claude Code makes, and refuses the commit with the failing output if a stage fails or its 25-minute
 budget runs out. It gates the working tree and remembers a pass, so a tree that already passed is
-not re-run. When only prose changed (`*.md`, `docs/`, `.knowledge/`) it runs ruff alone.
+not re-run. When only prose changed it runs ruff alone. Prose means Markdown outside `packaging/`,
+`src/` and `data/`; `docs/` as a whole doesn't count, because tests read its YAML. The rule is
+`.github/scripts/prose-only.sh`, and CI uses the same script.
 `.claude/hooks/gate.sh run` runs the same gate by hand; the skills use it. `git commit --no-verify`
 (or `-n`) skips it. It does not fire for commits you make yourself in a terminal.
 

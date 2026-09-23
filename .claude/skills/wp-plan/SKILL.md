@@ -95,8 +95,9 @@ gate failure aborts with the quantity and its location; integration order ≥ 3 
 2. Commit on the working branch — if you are on `main`, switch to the development branch this
    session was given, and if none was given, stop and ask (the same rule as `wp-implement`):
    `docs: WP<n> implementation plan`, with the identifiers it discharges in the body.
-   The gate hook sees a prose-only change (`*.md`, `docs/`, `.knowledge/`) and runs ruff alone; a
-   plan that also moves code or data pays for the whole gate.
+   The gate hook sees a prose-only change (Markdown outside `packaging/`, `src/` and `data/`; see
+   `.github/scripts/prose-only.sh`) and runs ruff alone. A plan that also moves code, data or the
+   YAML under `docs/sweeps/` or `docs/validation/` pays for the whole gate.
    Then `git push -u origin <branch>`. The plan is the brief `/wp-implement` works from, and it may
    be a different session on a different machine — an unpushed commit is one reclaimed container
    away from gone.

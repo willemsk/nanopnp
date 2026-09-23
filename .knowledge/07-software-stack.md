@@ -600,3 +600,19 @@ behind while every artefact lived in a `tmp_path` store.
 `io.run.run_case` now names a fresh workspace under the store in use when the caller gives none.
 Fresh per run and not a fixed `tmp/mesh`: two runs into one store hold different meshes, and a
 deterministic name has the second overwrite a file the first's artefact still points at.
+
+## 12. The suite's BLAS threads buy nothing; parallelism has to come from workers **[tested]**
+
+Tiers 1 and 2 were measured on four cores, 923 tests, after the VER-36 fix. Serially the suite takes
+6m10s whether or not the BLAS threads are pinned to one. Pinned, it uses half the CPU time
+(6m07s of user time against about 12 min), so the threads were spinning, not computing: the systems
+here are too small to split. Under `pytest-xdist`, `-n 4 --dist loadfile`, unpinned workers
+oversubscribe the cores and the suite gets *slower* (7m20s, 26 min of user time). With
+`OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS` and `MKL_NUM_THREADS` all set to 1 it takes 3m19s. CI and
+the commit gate therefore run `-n auto --dist loadfile` with the three pinned, and the long pole is
+`tests/tier2/test_stabilised_mode.py`, whose module fixture (146 s) cannot be split across workers
+(`.knowledge/06-numerics-fem.md` §4.3.3).
+
+`--dist loadfile` keeps each module's fixtures in one worker, so a module-scoped solve is paid once,
+as it is serially. A failure that appears only under `-n` means a test depends on the order it runs
+in, or on state another module leaves behind, and that is a real isolation defect.
