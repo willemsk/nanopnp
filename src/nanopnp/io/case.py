@@ -972,6 +972,47 @@ def _walk_fields(owner: type[BaseModel], prefix: str) -> list[FieldReference]:
     return found
 
 
+def schema_default(path: str) -> tuple[bool, FieldValue]:
+    """Return whether the schema defaults a field, and the default it declares.
+
+    The generated case-file reference prints this beside each path of
+    :func:`case_fields` (VER-45), so that the documented default is the one a
+    document omitting the field is validated with, rather than a transcription.
+
+    Parameters
+    ----------
+    path
+        A dotted path as :func:`case_fields` names it; a sequence index stands
+        for any element.
+
+    Returns
+    -------
+    tuple
+        ``(False, None)`` for a required field; otherwise ``(True, default)``,
+        with a ``default_factory`` called for its value.
+
+    Raises
+    ------
+    UnknownCasePathError
+        If the path does not name a declared field of a block.
+    """
+    field_at(path)  # the named diagnostic for a path that is wrong
+    owner: type[BaseModel] | None = CaseDocument
+    info: FieldInfo | None = None
+    for component in path.split("."):
+        if _is_index(component):
+            continue
+        if owner is None:
+            raise UnknownCasePathError(f"{path!r} does not end at a declared field of a block")
+        info = _field_named(owner, component)
+        if info is None:
+            raise UnknownCasePathError(f"{path!r} does not end at a declared field of a block")
+        owner = _model_of(info.annotation)
+    if info is None or info.is_required():
+        return False, None
+    return True, info.get_default(call_default_factory=True)
+
+
 def _is_index(component: str) -> bool:
     """Return whether a path component reads as a list index."""
     return component.removeprefix("-").isdigit()
