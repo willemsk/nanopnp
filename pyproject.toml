@@ -67,6 +67,7 @@ dev = [
     "ruff>=0.6",
     "mypy>=1.11",
     "types-PyYAML>=6.0",
+    "pytest-xdist>=3.8.0",
 ]
 # Bundle builders only (ADR-004, section 8.2 criterion 4). Not in
 # `default-groups`: PyInstaller is needed by the `bundle` CI job and by whoever
