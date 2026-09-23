@@ -616,3 +616,11 @@ the commit gate therefore run `-n auto --dist loadfile` with the three pinned, a
 `--dist loadfile` keeps each module's fixtures in one worker, so a module-scoped solve is paid once,
 as it is serially. A failure that appears only under `-n` means a test depends on the order it runs
 in, or on state another module leaves behind, and that is a real isolation defect.
+
+One test measures wall time and therefore fails under xdist for a different reason.
+`test_ver44_the_shipped_renderer_reaches_a_document_with_no_network` waits 60 s for a real
+QtWebEngine page. On a 3-core macOS runner it passed twice under `-n auto` and then failed once
+(run 113), in the window where the other two workers were in the heavy solver modules. That points
+to Chromium's helper processes being starved of CPU. It is not proven, because macOS was not
+reproducible from here. CI and the gate therefore run `tests/tier1/test_gui_widgets.py` serially and
+alone. The wait and the assertion are unchanged.

@@ -42,7 +42,7 @@ matches `pyproject.toml`: if you edit `pyproject.toml` by hand, run `uv lock` be
 | Command | Purpose |
 |---|---|
 | `uv run pytest` | Tiers 1 and 2 — the default selection, and the push gate |
-| `uv run pytest -n auto --dist loadfile` | The same, in parallel as CI and the gate run it; set `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS` and `MKL_NUM_THREADS` to 1 or the workers oversubscribe (`.knowledge/07` §12) |
+| `uv run pytest -n auto --dist loadfile` | The same, in parallel as CI and the gate run it; set `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS` and `MKL_NUM_THREADS` to 1 or the workers oversubscribe (`.knowledge/07` §12). CI and the gate run `tests/tier1/test_gui_widgets.py` separately and serially, because it waits on a real web page by the wall clock |
 | `uv run pytest -m tier1` | Unit and property tests only (seconds) |
 | `uv run pytest -m tier3` | COMSOL comparison; nightly, not a push gate |
 | `uv run pytest -m slow --log-cli-level=INFO` | Benchmarks and envelope runs; measured, never gated |

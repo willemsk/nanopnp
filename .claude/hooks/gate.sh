@@ -189,7 +189,14 @@ if $docs_only; then
     say "gate: only prose changed; lock check, mypy and pytest skipped."
 else
     check "mypy --strict"   uv run mypy src/
-    check "pytest"          uv run pytest -q -n auto --dist loadfile
+    check "pytest"          uv run pytest -q -n auto --dist loadfile \
+        --ignore=tests/tier1/test_gui_widgets.py
+    # Serially and alone, as in CI: it waits on a real QtWebEngine page by the
+    # wall clock, which busy xdist workers can starve (ci.yml, run 113). Exit 5
+    # ("no tests ran") is the module skipping itself where PySide6 cannot
+    # import, the usual Linux case (no libEGL); CI's desktop runners, where it
+    # must run, treat 5 as the failure it is there.
+    check "pytest (GUI)"    bash -c 'uv run pytest -q tests/tier1/test_gui_widgets.py; s=$?; ((s == 5)) && s=0; exit $s'
 fi
 
 [[ -n $state ]] && printf '%s\n' "$state" >"$stamp_file"
