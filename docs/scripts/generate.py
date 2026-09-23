@@ -95,6 +95,22 @@ def rewrite_links(text: str, source: Path, destination: Path, pages: dict[Path, 
     return LINK.sub(replace, text)
 
 
+def _correction_files() -> str:
+    """Return every shipped correction parameter file, verbatim, as one page."""
+    lines = [
+        "# Shipped correction parameter files",
+        "",
+        "Each file under `data/corrections/`, verbatim. They are the fitted parameters of the",
+        "ePNP-NS corrections, with the provenance of every coefficient in its comments; see",
+        "[Correction data files](../../reference/corrections.md) for how a case selects one.",
+        "",
+    ]
+    for path in sorted((ROOT / "data" / "corrections").glob("*.yaml")):
+        lines += [f"## `{path.stem}`", "", "```yaml", path.read_text(encoding="utf-8").rstrip()]
+        lines += ["```", ""]
+    return "\n".join(lines)
+
+
 def main() -> int:
     """Regenerate ``docs/_generated/`` from scratch."""
     logging.basicConfig(level=logging.INFO, format="%(name)s: %(message)s")
@@ -106,6 +122,7 @@ def main() -> int:
         text = source.read_text(encoding="utf-8")
         destination.write_text(rewrite_links(text, source, destination, pages), encoding="utf-8")
     rendered = {
+        "reference/correction-files.md": _correction_files(),
         "reference/case-file.md": render_case_reference(),
         "reference/cli.md": render_cli_reference(),
         "reference/exit-codes.md": render_exit_codes(),

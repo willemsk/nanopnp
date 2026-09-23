@@ -111,6 +111,7 @@ nav:
       - Exit codes: _generated/reference/exit-codes.md
       - Python API: _generated/reference/api.md
       - Correction data files: reference/corrections.md
+      - Shipped parameter files: _generated/reference/correction-files.md
   - Model:
       - model/index.md
       - Specification: _generated/model/specification.md

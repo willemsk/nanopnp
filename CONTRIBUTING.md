@@ -44,8 +44,23 @@ uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv ru
 ```
 
 CI runs the same four stages on Python 3.12, plus the test suite on 3.10–3.14 on Linux and on 3.12
-on Windows and macOS. `uv.lock` is committed and CI resolves nothing: if you edit `pyproject.toml`,
+on Windows and macOS, and the strict documentation build on every push, prose-only ones included. `uv.lock` is committed and CI resolves nothing: if you edit `pyproject.toml`,
 run `uv lock` in the same commit.
+
+## The documentation
+
+The site is MkDocs with Material and mkdocstrings. Build it as CI does:
+
+```bash
+uv sync --group docs
+uv run docs/scripts/generate.py     # the generated references and verbatim model pages
+uv run mkdocs build --strict        # fails on any broken link or cross-reference
+```
+
+The case-file, command-line, exit-code and API references are rendered from the code, and the
+specification and the knowledge base are copied in verbatim. None of it is committed; do not edit
+it by hand. A worked example's tagged commands are executed by a test, word for word, and no number
+may appear in the documentation as a result unless an example asserts it (VER-46).
 
 ## What a change has to carry
 

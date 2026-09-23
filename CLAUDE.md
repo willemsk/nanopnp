@@ -51,6 +51,7 @@ matches `pyproject.toml`: if you edit `pyproject.toml` by hand, run `uv lock` be
 | `uv run ruff check . && uv run ruff format .` | Lint and format |
 | `uv run mypy src/` | Type check (strict) |
 | `uv run nanopnp --env` | Report the resolved environment and data locations |
+| `uv sync --group docs && uv run docs/scripts/generate.py && uv run mkdocs build --strict` | The documentation site, as CI's `docs` job builds it (VER-45); generated pages go to the gitignored `docs/_generated/` |
 
 Before committing, run the whole gate:
 
@@ -62,8 +63,9 @@ uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv ru
 Claude Code makes, and refuses the commit with the failing output if a stage fails or its 25-minute
 budget runs out. It gates the working tree and remembers a pass, so a tree that already passed is
 not re-run. When only prose changed it runs ruff alone. Prose means Markdown outside `packaging/`,
-`src/` and `data/`; `docs/` as a whole doesn't count, because tests read its YAML. The rule is
-`.github/scripts/prose-only.sh`, and CI uses the same script.
+`src/`, `data/` and `examples/`; `docs/` as a whole doesn't count, because tests read its YAML, and
+an example's README is executed by its test (VER-46). The rule is `.github/scripts/prose-only.sh`,
+and CI uses the same script. CI's strict documentation build runs on every push, prose included.
 `.claude/hooks/gate.sh run` runs the same gate by hand; the skills use it. `git commit --no-verify`
 (or `-n`) skips it. It does not fire for commits you make yourself in a terminal.
 
