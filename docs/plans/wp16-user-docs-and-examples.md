@@ -1,6 +1,6 @@
 # WP16 — User documentation and worked examples
 
-**Status: planned, not started.** Written 23 September 2026, after WP15 completed IF-09. The solver
+**Status: delivered, 23 September 2026.** Written 23 September 2026, after WP15 completed IF-09. The solver
 core, the case file, the CLI, sweeps, provenance and the desktop shell are all delivered, but a
 user has nothing to read. The README still says the solver is not implemented. There is no
 documentation tooling and no `examples/` directory. `nanopnp/__init__.py` exports only
@@ -68,6 +68,55 @@ package still verifies inside one PR.
 | D13 | CI and prose rule | A new `docs` job in `ci.yml` (`uv sync --group docs`, generate, `mkdocs build --strict`) runs on **every** push, including prose-only ones. `.github/scripts/prose-only.sh` treats `examples/*` as non-prose, and `.claude/hooks/gate.sh` inherits that | The tests read the example READMEs (VER-46), and the strict build (VER-45) must see prose edits |
 | D14 | GUI guide | `docs/scripts/capture_gui.py` grabs the editor, run and convergence panels under `QT_QPA_PLATFORM=offscreen` into `docs/guide/img/`; the PNGs are committed and no test looks at pixels. The WebEngine viewer is described in text. The guide says v0.5 GUI use is the development install (`uv run nanopnp-gui`) until §8.2 criterion 4's double-click and the post-1.0 installers exist | Author ruling; honest about criterion 4 and RSK-13 |
 
+> **Outcome — D6: the set is twenty names, `registered_stages` added.** The stage protocol is
+> introspected through it (FR-27), and a public `Stage` without a way to list the stages would be
+> half a surface. `nanopnp.PUBLIC` maps each name to its defining module; `__all__`, the lazy
+> `__getattr__` and the generated API page all read that one table, and
+> `tests/tier1/test_public_api.py` asserts the three agree and that a fresh `import nanopnp` loads
+> no NGSolve, Netgen or NumPy.
+
+> **Outcome — D7 found two defects the plan did not know about.** (1) Every checked-in reference
+> case (the five frozen Tier-3 cases and the §8.3 sweep's base) mapped `groups: {default:
+> interface}`, but the reference geometry names every group in the vocabulary and carries no
+> `default`, so ingest refused them all. They now map `{}`; the Tier-3 case identity is unchanged,
+> `groups` not being part of it, and `tests/tier2/test_mesh_generators.py` now ingests the generated
+> reference mesh through a frozen case. (2) meshio tried its ANSYS reader first on `.msh` and
+> printed that reader's empty refusal to standard output, so every `nanopnp run` on an MSH case had
+> leaked a blank line into the IF-02 result stream. `mesh/adapter.py` now names the format
+> (`.knowledge/07-software-stack.md` §4). The generator gates the file by the route a run reads it
+> (write beside the destination, read back, map, gate, rename), so the printed hash is the manifest's
+> by construction. A 0.01 nm membrane is the honest trigger for the exit-4 test: min SICN 0.025
+> against the 0.3 floor [tested].
+
+> **Outcome — D8 as built.** The executor is `nanopnp.validation.examples`, so both tiers share it.
+> A runnable line begins `$ `; other lines in the fence are shown output. Two tags, `run` and
+> `plan`, the second for example 05's cheap step. Two programs, `nanopnp` and `python`, resolved to
+> the running interpreter's; no shell. A `../../<path>` argument mirrors that directory into the
+> copy, which is how example 05 reaches `docs/sweeps/`. One small CLI addition was needed:
+> `nanopnp sweep plan --directory`, because the default plan path carries the plan hash and a README
+> cannot name it verbatim. It is an output location, which the IF-02 configuration NOTE permits,
+> and it refuses a directory holding a different plan (`test_ver38_sweep_plan_directory_…`).
+
+> **Outcome — D11: split per example, and the budget missed by nine seconds.** The Tier-2 examples
+> are `tests/tier2/test_examples_0{1..5}_*.py`, one file each, so `--dist loadfile` spreads them over
+> workers instead of stacking two minutes on one. Measured serially on this four-core container, with
+> a single-threaded reference solve running alongside: 01 32.5 s, 02 23.2 s, 03 54.5 s, 04 18.7 s,
+> **129 s** against the ≤ 2 min target, plus 12.5 s for the reference-generator test. The gate's wall
+> time grows by at most the longest file, 03 at 55 s, which is two cold ePNP-NS ladders (the charged
+> and the control origins). Example 05's `mesh reference` took 12.0 s and 222 MiB; its solve is
+> recorded under the examples table's Outcome.
+
+> **Outcome — D2, D3, D5 and D14 as built.** Read the Docs installs with its native `method: uv,
+> command: sync, groups: [docs]` and runs `generate.py` as a `pre_build` job, with
+> `fail_on_warning`. The banner is the `announce` block of a Material template override
+> (`docs/overrides/`), a template rather than a hook; whether Zensical reads it is unverified and is
+> part of D1's migration. `docs/sweeps/` and `docs/validation/` stay on the site, under Project,
+> because the reference-sweep README is user material for P1 and P2. The generated pages gained a
+> fifth, the shipped correction files verbatim. `capture_gui.py` runs the quick-start case in the real
+> window and grabs three panels; it copies the example's inputs only, since a stale `store/` would
+> serve the solve from cache and leave the convergence plot empty. The strict build emits no
+> warning, mkdocstrings included (`.knowledge/07-software-stack.md` §13).
+
 **Examples** (`examples/NN-slug/`: `README.md`, cases, sweeps, optional `.py`):
 
 | Example | Persona | Content | Oracle (VER-46) |
@@ -77,6 +126,26 @@ package still verifies inside one PR.
 | `03-iv-sweep` | P2 | Charge on one side only, a small ± bias sweep, `sweep plan` / `run --workers 2 --csv` / `collect`, `plot_iv.py` | uncharged control rectifies to 1 within solver tolerance; the charged pore's CSV is complete and every member exits 0 |
 | `04-python-api` | P1 | `tour.py`: mesh through the API, `loads_case`, `run_case(upto=…)`, inspect and substitute an artefact (FR-27), read the IF-07 XDMF, plot | substituted input moves the downstream hash; field names match IF-07 |
 | `05-clya-reference` | P1/P2 | `nanopnp mesh reference`; one frozen case from `docs/validation/cases/`; a SLURM job-array template over `sweep plan`'s wave ranges for `docs/sweeps/phase1-reference.sweep.yaml` | `slow`: the solve exits 0 and the FR-23 routes agree. Tier 1: the plan enumerates 3,675 points in 42 waves |
+
+> **Outcome — the oracles, with the numbers they were checked against.** Every number below is
+> recorded here and asserted nowhere as a value, per D9; the tests assert the properties.
+> **02:** a Gaussian ring of −6 e, 0.4 nm wide, centred at `(r, z) = (2.6, 0)` nm in the membrane,
+> passes stage 7's gates on the default 392-element mesh. `t+` was 0.542 under ePNP-NS and 0.556
+> under classical PNP-NS, against 0.385 for the uncharged pore of 01, which sits at the bulk ratio of
+> the diffusivities; the classical manifest lists all six correction switches. **03:** the ring moved
+> to `z = +1.5` nm. The uncharged control rectified to `|RR − 1| = 5.3e-5` at ±100 mV, against the
+> NUM-26 tolerance of 1e-3 that `test_current_routes` already holds the same pore family to. The
+> tolerance is not set from the mesh's asymmetry, because the measured departure sits a factor of 19
+> inside it. The charged pore gave RR 0.91 at ±50 mV and 0.84 at ±100 mV, shown by the plot and not
+> asserted. **04:** the substitution oracle is sharper than planned. A different mesh moves stage
+> 6's key and **not** stage 8's, since materials never reads the mesh, and a byte-identical copy
+> under another name moves neither. So the test asserts that keys follow real dependencies, not
+> merely that something moved. **05:** the case is a copy of the frozen `clya-0.5M-plus50mV` with a
+> local mesh path; `test_ver46_example_05_case_is_the_frozen_case` asserts the same Tier-3 identity
+> and no other difference. Its two `run` commands, run by hand in a `copy_example` copy, exited 0 in **2,512 s**
+> wall on one core (stage 10 2,489 s, stage 11 22 s) at a peak RSS of 3.4 GiB, and the FR-23 routes
+> agreed to 5.6e-9. The executor's default 1,800 s command timeout would have killed it, so the
+> `slow` test passes 7,200 s.
 
 ### Work items
 
@@ -99,6 +168,15 @@ package still verifies inside one PR.
 | `tests/tier1/test_examples_plan.py` | 1 | VER-46, FR-24 | Example 05's `sweep plan --no-mesh-check` enumerates 3,675 points in 42 waves; every example README has at least one tagged block |
 | `tests/tier2/test_examples.py` | 2 (05: `slow`) | VER-46, FR-23, FR-25, QR-08 | The per-example oracles in the table above |
 | CI `docs` job | — | VER-45, §7.6 | `mkdocs build --strict` exits 0 |
+
+> **Outcome — test files as delivered.** VER-32's generator half is `tests/tier1/test_cli.py`
+> (cylinder) and `tests/tier2/test_mesh_generators.py` (reference, whose meshing takes seconds).
+> VER-45 is `test_public_api.py` and `test_doc_reference.py`. VER-46 is `test_examples_plan.py` at
+> Tier 1 and `tests/tier2/test_examples_0{1..5}_*.py`, 05 marked `slow`. Everything gated passes,
+> and the full gate is green on the delivered tree. The `slow` 05 test was not completed under pytest
+> in this session: its first attempt was killed by a 20-minute shell timeout, and its oracle was then
+> checked on the same two commands run by hand, as recorded above. Its next recorded run is the
+> first under pytest.
 
 Commands: the full gate (`.claude/hooks/gate.sh run`);
 `uv sync --group docs && uv run docs/scripts/generate.py && uv run mkdocs build --strict`; and
