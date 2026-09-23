@@ -25,6 +25,12 @@ env:
   # Serially the BLAS threads buy no wall time on this suite; under xdist they
   # oversubscribe the cores: 6m10s serial, 7m20s unpinned, 3m19s pinned on
   # four cores (.knowledge/07-software-stack.md). The commit gate does the same.
+  # tests/tier1/test_gui_widgets.py is the exception and runs serially, alone,
+  # on the desktop runners where it runs at all (on ubuntu PySide6 does not
+  # import and the module skips itself). It waits on a real QtWebEngine page by
+  # the wall clock, and with every core busy with a solver in another worker
+  # Chromium's helper processes missed its 60 s on a 3-core macOS runner (run
+  # 113), where they never had serially.
   OMP_NUM_THREADS: "1"
   OPENBLAS_NUM_THREADS: "1"
   MKL_NUM_THREADS: "1"
@@ -93,7 +99,9 @@ jobs:
       - if: env.CODE == 'true'
         run: uv run mypy src/
       - if: env.CODE == 'true'
-        run: uv run pytest -n auto --dist loadfile --cov=src/nanopnp --cov-report=term-missing
+        run: >-
+          uv run pytest -n auto --dist loadfile --ignore=tests/tier1/test_gui_widgets.py
+          --cov=src/nanopnp --cov-report=term-missing
 
   test-matrix:
     name: tier 1-2 (${{ matrix.os }}, py${{ matrix.python-version }})
@@ -132,7 +140,13 @@ jobs:
       # coverage at the price of a portability promise per runner image
       # (.knowledge/07-software-stack.md section 5).
       - if: env.CODE == 'true'
-        run: uv run pytest -n auto --dist loadfile
+        run: uv run pytest -n auto --dist loadfile --ignore=tests/tier1/test_gui_widgets.py
+        env:
+          QT_QPA_PLATFORM: offscreen
+      # A nonzero exit here, 5 ("no tests ran") included, is a real failure: on
+      # these two runners the module must import and run.
+      - if: env.CODE == 'true' && runner.os != 'Linux'
+        run: uv run pytest tests/tier1/test_gui_widgets.py
         env:
           QT_QPA_PLATFORM: offscreen
 

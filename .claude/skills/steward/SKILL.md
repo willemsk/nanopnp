@@ -49,8 +49,11 @@ sections. Historical phase summaries and unrelated knowledge files are not routi
 ## What CI runs
 
 `.github/workflows/ci.yml`, with `UV_LOCKED: "1"` throughout, so a `uv.lock` that no longer matches
-`pyproject.toml` fails every job at `uv sync`. Every pytest step runs `-n auto --dist loadfile` with
-`OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS` and `MKL_NUM_THREADS` set to 1 (`.knowledge/07` §12).
+`pyproject.toml` fails every job at `uv sync`. pytest runs `-n auto --dist loadfile` with
+`OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS` and `MKL_NUM_THREADS` set to 1 (`.knowledge/07` §12),
+except `tests/tier1/test_gui_widgets.py`. That module runs serially in its own step on Windows and
+macOS only, because it waits on a real QtWebEngine page by the wall clock and busy workers starved it
+(run 113). On ubuntu it skips itself, because PySide6 does not import there.
 
 - **`changes`** — diffs the whole PR (`base...head`), or the push range on `main`, through
   `.github/scripts/prose-only.sh`. When everything is prose, the jobs below skip their steps and
