@@ -70,8 +70,12 @@ library (CON-07). A job array is two lines of your own shell over those ranges: 
 per wave, each element running
 
 ```console
-$ nanopnp sweep run <plan.json> --store <store> --index $SLURM_ARRAY_TASK_ID
+$ nanopnp sweep run <plan.json> --store <store> --index <point index>
 ```
+
+Submit each wave's array counting from 0, and pass the wave's first index to the element, which
+adds `$SLURM_ARRAY_TASK_ID` to it. SLURM refuses a task index at or above its `MaxArraySize`, 1001
+by default, and a large sweep's point indices run well past that.
 
 A single member dispatched with `--index` exits with **its own** code, which is what the array
 branches on (the IF-02 exit NOTE). Once the arrays finish, `nanopnp sweep collect <plan.json> --csv`

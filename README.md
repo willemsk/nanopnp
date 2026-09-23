@@ -52,8 +52,9 @@ It meshes an idealised pore, solves the validated ePNP-NS model on it, reads the
 back, and re-solves it to check that every number reproduces. The [worked examples](examples/) go on
 to a charged pore, an I–V sweep, the Python API, and the ClyA reference geometry on a cluster.
 
-To run the test suite: `uv run pytest`. To build the documentation: `uv sync --group docs && uv run
-docs/scripts/generate.py && uv run mkdocs build --strict`.
+To run the test suite: `uv run pytest`. To build the documentation: `uv sync --all-extras --group
+docs && uv run docs/scripts/generate.py && uv run mkdocs build --strict` (`uv sync` is exact, so
+naming only `--group docs` would uninstall the extras).
 
 A VS Code Dev Container and a GitHub Codespace configuration are in
 [`.devcontainer/`](.devcontainer) if you would rather not install anything locally.

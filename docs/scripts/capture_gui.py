@@ -20,7 +20,6 @@ from __future__ import annotations
 
 import logging
 import os
-import shutil
 import sys
 import tempfile
 import time
@@ -46,48 +45,55 @@ def main() -> int:
     from nanopnp.cli import main as cli
     from nanopnp.gui.app import MainWindow
     from nanopnp.gui.case_model import CaseEditor
+    from nanopnp.validation.examples import copy_example
 
     OUTPUT.mkdir(parents=True, exist_ok=True)
+    origin = Path.cwd()
     with tempfile.TemporaryDirectory() as scratch:
-        work = Path(scratch) / EXAMPLE.name
         # Inputs only: a store left in the example by a manual run would serve
         # the solve from cache, and the plot would have no ladder to draw.
-        shutil.copytree(EXAMPLE, work, ignore=shutil.ignore_patterns("store", "run*", "*.msh"))
+        work = copy_example(EXAMPLE, Path(scratch), repository=ROOT)
         os.chdir(work)  # the case's mesh path resolves against the working directory
-        if cli(["mesh", "cylinder", "--out", "pore.msh"]) != 0:
-            return 1
+        try:
+            if cli(["mesh", "cylinder", "--out", "pore.msh"]) != 0:
+                return 1
 
-        application = QtWidgets.QApplication([sys.argv[0]])
-        window = MainWindow(CaseEditor.open(work / "quickstart.case.yaml"), store=work / "store")
-        window.resize(1000, 760)
-        window.show()
-        tabs = window.centralWidget()
-        assert isinstance(tabs, QtWidgets.QTabWidget)
+            application = QtWidgets.QApplication([sys.argv[0]])
+            window = MainWindow(
+                CaseEditor.open(work / "quickstart.case.yaml"), store=work / "store"
+            )
+            window.resize(1000, 760)
+            window.show()
+            tabs = window.centralWidget()
+            assert isinstance(tabs, QtWidgets.QTabWidget)
 
-        def grab(index: int, name: str) -> None:
-            tabs.setCurrentIndex(index)
-            application.processEvents()
-            window.grab().save(str(OUTPUT / name))
-            logger.info("wrote %s", OUTPUT / name)
+            def grab(index: int, name: str) -> None:
+                tabs.setCurrentIndex(index)
+                application.processEvents()
+                window.grab().save(str(OUTPUT / name))
+                logger.info("wrote %s", OUTPUT / name)
 
-        grab(0, "editor.png")
+            grab(0, "editor.png")
 
-        settled: list[bool] = []
-        window._run.settled.connect(lambda: settled.append(True))
-        window.start_run()
-        deadline = time.monotonic() + TIMEOUT_S
-        loop = QtCore.QEventLoop()
-        while not settled and time.monotonic() < deadline:
-            QtCore.QTimer.singleShot(200, loop.quit)
-            loop.exec()
-        if not settled:
-            logger.error("the run did not settle within %.0f s", TIMEOUT_S)
-            return 1
-        window._convergence.refresh()
-        grab(1, "run.png")
-        grab(2, "convergence.png")
-        window.close()
-        os.chdir(ROOT)
+            settled: list[bool] = []
+            window._run.settled.connect(lambda: settled.append(True))
+            window.start_run()
+            deadline = time.monotonic() + TIMEOUT_S
+            loop = QtCore.QEventLoop()
+            while not settled and time.monotonic() < deadline:
+                QtCore.QTimer.singleShot(200, loop.quit)
+                loop.exec()
+            if not settled:
+                logger.error("the run did not settle within %.0f s", TIMEOUT_S)
+                return 1
+            window._convergence.refresh()
+            grab(1, "run.png")
+            grab(2, "convergence.png")
+            window.close()
+        finally:
+            # On every exit path: left inside the scratch directory, the
+            # process cannot remove it on Windows.
+            os.chdir(origin)
     return 0
 
 

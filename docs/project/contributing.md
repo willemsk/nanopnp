@@ -22,7 +22,7 @@ experimental reproduction (before a release).
 ## Build this documentation
 
 ```bash
-uv sync --group docs
+uv sync --all-extras --group docs   # exact: without --all-extras it uninstalls the extras
 uv run docs/scripts/generate.py
 uv run mkdocs build --strict
 ```

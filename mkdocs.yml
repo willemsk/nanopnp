@@ -5,7 +5,7 @@
 # `hooks:`, and no plugin Zensical has no shim for (.knowledge/07-software-stack.md
 # section 13). Generated pages are written by a separate step, never by a hook:
 #
-#   uv sync --group docs
+#   uv sync --all-extras --group docs   (exact: without --all-extras it drops the extras)
 #   uv run docs/scripts/generate.py
 #   uv run mkdocs build --strict
 site_name: nanopnp

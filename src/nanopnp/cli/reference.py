@@ -17,10 +17,22 @@ from __future__ import annotations
 import argparse
 import types
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, Union, get_args, get_origin
+from typing import Literal, Union, get_args, get_origin
 
-if TYPE_CHECKING:  # pragma: no cover - annotations only
-    from nanopnp.io.case import FieldValue
+import yaml
+
+from nanopnp import PUBLIC
+from nanopnp.cli import build_parser
+from nanopnp.cli.errors import EXCLUDED, EXIT_CODES, EXIT_MEANINGS
+from nanopnp.io.case import (
+    _PIPELINE_SECTIONS,
+    SEQUENCE_INDEX,
+    FieldValue,
+    case_fields,
+    options_at,
+    schema_default,
+)
+from nanopnp.io.defaults import SWITCH_PATHS, VALIDATED_DEFAULT_CASE, value_at
 
 __all__ = [
     "API_SECTIONS",
@@ -76,8 +88,6 @@ def _type_name(annotation: object) -> str:
 
 def _flow(value: FieldValue) -> str:
     """Return a value as it would be written in a case file, on one line."""
-    import yaml
-
     if value is None:
         return "unset"
     if isinstance(value, Path):
@@ -100,15 +110,6 @@ def render_case_reference() -> str:
     and, for a switch, the validated default the FR-25 manifest measures
     deviations against (:data:`~nanopnp.io.defaults.VALIDATED_DEFAULT_CASE`).
     """
-    from nanopnp.io.case import (
-        _PIPELINE_SECTIONS,
-        SEQUENCE_INDEX,
-        case_fields,
-        options_at,
-        schema_default,
-    )
-    from nanopnp.io.defaults import SWITCH_PATHS, VALIDATED_DEFAULT_CASE, value_at
-
     lines = [
         "# Case-file reference",
         "",
@@ -195,8 +196,6 @@ def _expanded(parser: argparse.ArgumentParser, action: argparse.Action) -> str:
 
 def command_parsers() -> list[tuple[str, argparse.ArgumentParser, str]]:
     """Return ``(command, parser, help)`` for ``nanopnp`` and every subcommand under it."""
-    from nanopnp.cli import build_parser
-
     return [(parser.prog, parser, text) for parser, text in _parsers(build_parser())]
 
 
@@ -226,11 +225,17 @@ def render_cli_reference() -> str:
                 f"`{action.metavar or action.dest}`"
             )
             default = action.default
-            shown = (
-                ""
-                if default in (None, False, argparse.SUPPRESS) or action.option_strings == []
-                else f"`{default}`"
+            # By identity, not ``in``: ``0 == False`` and ``0.0 == False``, so a
+            # membership test would hide a numeric default of zero. A counting
+            # flag's zero is the one "no default worth showing" besides these.
+            hidden = (
+                default is None
+                or default is False
+                or default is argparse.SUPPRESS
+                or isinstance(action, argparse._CountAction)
+                or not action.option_strings
             )
+            shown = "" if hidden else f"`{default}`"
             rows.append(f"| {name} | {_cell(_expanded(parser, action))} | {shown} |")
         if rows:
             lines += ["| Argument | Meaning | Default |", "|---|---|---|", *rows, ""]
@@ -239,8 +244,6 @@ def render_cli_reference() -> str:
 
 def render_exit_codes() -> str:
     """Return the exit-code reference: the classes, and which exception maps to which."""
-    from nanopnp.cli.errors import EXCLUDED, EXIT_CODES, EXIT_MEANINGS
-
     lines = [
         "# Exit codes",
         "",
@@ -281,8 +284,6 @@ def render_exit_codes() -> str:
 
 def render_api_reference() -> str:
     """Return the API reference over the IF-01 public surface, as mkdocstrings directives."""
-    from nanopnp import PUBLIC
-
     lines = [
         "# Python API",
         "",

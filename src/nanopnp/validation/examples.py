@@ -54,6 +54,9 @@ PROGRAMS: tuple[str, ...] = ("nanopnp", "python")
 UP = "../../"
 """The prefix a command uses to reach a repository file from an example directory."""
 
+GENERATED = ("__pycache__",)
+"""Ignored when copying an example, beside the patterns of ``examples/.gitignore``."""
+
 
 class ExampleCommandError(RuntimeError):
     """A documented command failed, or could not be run as written.
@@ -122,6 +125,9 @@ def copy_example(example: Path, root: Path, *, repository: Path) -> Path:
     the example generated in the source tree is copied: only tracked-looking
     inputs, never ``store/`` or a written mesh, which the test must produce itself.
 
+    What counts as generated is read from ``examples/.gitignore``, the one list of
+    what running an example writes, so that list and this copy cannot drift.
+
     Returns
     -------
     Path
@@ -131,7 +137,7 @@ def copy_example(example: Path, root: Path, *, repository: Path) -> Path:
     shutil.copytree(
         example,
         destination,
-        ignore=shutil.ignore_patterns("store", "*.msh", "run*", "iv-*", "phase1*", "__pycache__"),
+        ignore=shutil.ignore_patterns(*_generated_patterns(example.parent / ".gitignore")),
     )
     for argv in tagged_commands(example / "README.md", "run") + tagged_commands(
         example / "README.md", "plan"
@@ -140,9 +146,29 @@ def copy_example(example: Path, root: Path, *, repository: Path) -> Path:
             if word.startswith(UP):
                 source = (repository / word[len(UP) :]).parent
                 target = root / source.relative_to(repository)
-                if not target.exists():
-                    shutil.copytree(source, target, ignore=shutil.ignore_patterns("*.msh"))
+                # Merged rather than skipped when the target exists: a directory
+                # mirrored for an earlier word may be this one's ancestor or child.
+                shutil.copytree(
+                    source, target, ignore=shutil.ignore_patterns("*.msh"), dirs_exist_ok=True
+                )
     return destination
+
+
+def _generated_patterns(gitignore: Path) -> tuple[str, ...]:
+    """Return the name patterns of a ``.gitignore``, for :func:`shutil.ignore_patterns`.
+
+    Only the plain name patterns the examples' file uses: a trailing ``/`` is
+    dropped, since ``ignore_patterns`` matches a directory by its name alone, and
+    comments and blank lines are skipped.
+    """
+    if not gitignore.is_file():
+        return GENERATED
+    patterns = [
+        line.strip().rstrip("/")
+        for line in gitignore.read_text(encoding="utf-8").splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    ]
+    return (*patterns, *GENERATED)
 
 
 def run_tagged(directory: Path, tag: str, *, timeout_s: float = 1800.0) -> list[CommandResult]:

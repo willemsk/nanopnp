@@ -51,8 +51,10 @@ $ python render_slurm.py phase1/plan.json --workdir ../.. --store store --out ph
   mesh the gate refuses fails now rather than on the cluster.
 - `render_slurm.py` turns the wave ranges into `phase1.sh`, which submits one job array per wave,
   each depending on the one before. It also writes `phase1.member.sbatch`, the job every array
-  element runs: `nanopnp sweep run phase1/plan.json --index $SLURM_ARRAY_TASK_ID`. A member's exit
-  code is its own (the IF-02 exit NOTE). The dependency is `afterany`, because a member that fails to
+  element runs: `nanopnp sweep run phase1/plan.json --index <point>`. Each array counts from 0
+  within its wave and the member adds the wave's first index, because SLURM refuses a task index
+  at or above its `MaxArraySize` (1001 by default) and this sweep's indices run to 3,674. A
+  member's exit code is its own (the IF-02 exit NOTE). The dependency is `afterany`, because a member that fails to
   converge at a hard corner is a result, not a broken dispatch, and its children fall back to the
   full ladder and record why. `--workdir` is where the members run. The base case names its mesh
   from the repository root, so that is the working directory here.

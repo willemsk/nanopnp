@@ -6,11 +6,17 @@ Run from this directory, after ``nanopnp sweep plan ... --directory phase1``::
 
 It writes two files: ``<out>``, a shell script that submits each wave as a job
 array depending on the previous one, and ``<out stem>.member.sbatch``, the job every
-array element runs: ``nanopnp sweep run <plan> --index $SLURM_ARRAY_TASK_ID``. Nothing
-here talks to a scheduler, and nanopnp ships no scheduler library (CON-07): the
+array element runs: ``nanopnp sweep run <plan> --index <wave first + $SLURM_ARRAY_TASK_ID>``.
+Nothing here talks to a scheduler, and nanopnp ships no scheduler library (CON-07): the
 wave ranges ``nanopnp sweep plan`` prints are the whole integration, and this
 script is two loops over them. Review both files, set the account and partition
 your cluster needs, then run ``bash <out>`` on the login node.
+
+Why each array counts from zero: SLURM refuses an array task index at or above
+``MaxArraySize``, which defaults to 1001, and the reference sweep's point indices
+run to 3,674. So each wave is submitted as ``--array=0-<size - 1>`` with its first
+point index exported beside it, and the member adds the two. No wave of the
+reference sweep is larger than 174 points.
 
 Why ``afterany`` and not ``afterok``: a member that fails to converge at a hard
 corner of the envelope is an expected *result* (the IF-02 exit NOTE), not a broken
@@ -35,8 +41,10 @@ MEMBER = """#!/bin/bash
 #SBATCH --time={time}
 #SBATCH --output={logs}/%x-%A_%a.out
 # One member of the sweep: its own exit code is the job's (the IF-02 exit NOTE).
+# The array counts from 0 within a wave; WAVE_FIRST, exported by the submission
+# script, is the wave's first point index in the plan.
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
-exec nanopnp sweep run {plan} --store {store} --index "$SLURM_ARRAY_TASK_ID"
+exec nanopnp sweep run {plan} --store {store} --index "$((WAVE_FIRST + SLURM_ARRAY_TASK_ID))"
 """
 
 
@@ -55,6 +63,8 @@ def render(
     name = plan["name"]
     member = out.with_suffix(".member.sbatch")
     logs = workdir / "slurm-logs"
+    # ``newline="\n"``: these are bash scripts for a Linux cluster, and a CRLF
+    # written on Windows breaks the shebang and every line after it.
     member.write_text(
         MEMBER.format(
             name=name,
@@ -65,6 +75,7 @@ def render(
             store=shlex.quote(str(store.resolve())),
         ),
         encoding="utf-8",
+        newline="\n",
     )
     lines = [
         "#!/bin/bash",
@@ -75,14 +86,15 @@ def render(
         "previous=",
     ]
     for wave, (first, last) in enumerate(waves):
-        span = f"{first}-{last - 1}%{concurrency}"
+        # Counted from 0 within the wave, so no task index reaches MaxArraySize.
+        span = f"0-{last - first - 1}%{concurrency}"
         lines += [
-            f"# wave {wave}: {last - first} point(s)",
-            f"previous=$(sbatch --parsable --array={span} "
-            f"${{previous:+--dependency=afterany:$previous}} {shlex.quote(str(member))})",
+            f"# wave {wave}: points {first}..{last - 1}, {last - first} point(s)",
+            f"previous=$(sbatch --parsable --array={span} --export=ALL,WAVE_FIRST={first} "
+            f"${{previous:+--dependency=afterany:$previous}} {shlex.quote(str(member.resolve()))})",
         ]
     lines.append('echo "submitted; the last wave is job $previous"')
-    out.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    out.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
     return out, member
 
 

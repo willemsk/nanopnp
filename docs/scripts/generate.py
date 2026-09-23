@@ -51,6 +51,9 @@ REPOSITORY = "https://github.com/willemsk/nanopnp/blob/main"
 LINK = re.compile(r"(!?\[[^\]]*\])\(([^)\s]+)\)")
 """An inline Markdown link or image, capturing its text and its target."""
 
+CODE = re.compile(r"(```.*?```|`[^`\n]*`)", re.DOTALL)
+"""A fenced block or an inline code span, whose text is shown verbatim, never a link."""
+
 
 def _copies() -> dict[Path, Path]:
     """Return ``{source: destination}`` for every page copied verbatim."""
@@ -92,7 +95,13 @@ def rewrite_links(text: str, source: Path, destination: Path, pages: dict[Path, 
             raise SystemExit(f"{source.relative_to(ROOT)}: broken link {target!r}")
         return f"{label}({REPOSITORY}/{resolved.relative_to(ROOT).as_posix()}{suffix})"
 
-    return LINK.sub(replace, text)
+    # Code is split out first: ``a[i](x)`` in a code span is not a link, and
+    # rewriting it would alter a verbatim page or fail the build as a broken link.
+    # ``split`` on one capturing group puts the code pieces at the odd indices.
+    pieces = CODE.split(text)
+    return "".join(
+        piece if index % 2 else LINK.sub(replace, piece) for index, piece in enumerate(pieces)
+    )
 
 
 def _correction_files() -> str:

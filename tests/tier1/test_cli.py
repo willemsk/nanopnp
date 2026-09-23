@@ -753,12 +753,18 @@ def test_ver32_mesh_failing_the_quality_gate_exits_four_and_leaves_no_file(
         ["mesh", "cylinder", "--pore-radius-nm", "0", "--out", "p.msh"],
         ["mesh", "cylinder", "--pore-radius-nm", "12", "--out", "p.msh"],
         ["mesh", "cylinder"],
+        ["mesh", "cylinder", "--out", "missing/p.msh"],
+        ["mesh", "reference", "--out", "."],
     ],
 )
 def test_ver32_mesh_refuses_a_bad_geometry_as_a_usage_error(
     argv: list[str], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Non-positive lengths, a pore wider than its reservoir, no ``--out``: exit 2."""
+    """A bad geometry or destination is a usage error, exit 2, refused before meshing.
+
+    Non-positive lengths, a pore wider than its reservoir, no ``--out``, or an
+    ``--out`` that is a directory or lies in a directory that does not exist.
+    """
     monkeypatch.chdir(tmp_path)
     with pytest.raises(SystemExit) as raised:
         main(argv)
