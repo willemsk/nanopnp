@@ -1,0 +1,37 @@
+# The case the Python tour drives: the quick-start pore, with the solved fields
+# exported as XDMF (IF-07) so the tour can read them back.
+schema: nanopnp/case/v1
+name: api-tour
+
+inputs:
+  mesh:
+    path: pore.msh
+    format: msh41
+    groups: {default: interface}   # as `nanopnp mesh cylinder` printed it
+
+electrolyte:
+  species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]
+  concentration_M: 0.1
+  temperature_K: 298.15
+  parameters: willems2020_nacl
+  corrections:
+    diffusivity:  {model: willems2020_nacl}
+    mobility:     {model: willems2020_nacl}
+    viscosity:    {model: willems2020_nacl}
+    permittivity: {model: willems2020_nacl}
+    density:      {model: willems2020_nacl}
+    steric:       {model: borukhov}
+
+boundary_conditions:
+  bias_V: 0.05
+  ground: cis
+
+physics:
+  model: epnp-ns
+  solid_permittivities: {membrane: 3.2}
+
+numerics:
+  continuation: default_ladder
+  stabilisation: none
+
+outputs: [current, transport_numbers, fields]

@@ -1,0 +1,1754 @@
+{
+  "cases": {
+    "docs/sweeps/phase1-reference.case.yaml": {
+      "case_identity": "18295e4c2f6651f0d44c6fcabafe792ff2036d5c490652f5e24747f8a5b9cab7",
+      "materials_key": "2148f28f80a028f34b3777c608b097b039f460565cb29b19da2c5fbe95f2c27a",
+      "restore_digest": "7fabaf1dba3758f4bcb124d3654c664121c3b1010a694909452235d9fe916811",
+      "solve_provenance": {
+        "bias_V": 0.005,
+        "concentration_M": 0.05,
+        "continuation": "default_ladder",
+        "electrolyte": {
+          "corrections": {
+            "density": {
+              "model": "none",
+              "note": "correction disabled; factor is identically 1"
+            },
+            "diffusivity:Cl-": {
+              "model": "none",
+              "note": "correction disabled; factor is identically 1"
+            },
+            "diffusivity:Na+": {
+              "model": "none",
+              "note": "correction disabled; factor is identically 1"
+            },
+            "mobility:Cl-": {
+              "model": "none",
+              "note": "correction disabled; factor is identically 1"
+            },
+            "mobility:Na+": {
+              "model": "none",
+              "note": "correction disabled; factor is identically 1"
+            },
+            "permittivity": {
+              "model": "none",
+              "note": "correction disabled; factor is identically 1"
+            },
+            "viscosity": {
+              "model": "none",
+              "note": "correction disabled; factor is identically 1"
+            }
+          },
+          "driver": "average",
+          "parameter_file": "willems2020_nacl",
+          "species": [
+            "Na+",
+            "Cl-"
+          ],
+          "steric": false,
+          "temperature_K": 298.15,
+          "validity_M": [
+            0.0,
+            5.3
+          ]
+        },
+        "fields": {
+          "charge": false,
+          "eps_r": false
+        },
+        "ground": "cis",
+        "linear_solver": "umfpack",
+        "model": "epnp-ns",
+        "model_options": {
+          "dielectric_gradient_forces": false,
+          "flow": true,
+          "inertia": true,
+          "order": 2,
+          "pressure_order": 1,
+          "solid_permittivities": {
+            "membrane": 3.2,
+            "protein": 20.0
+          },
+          "stabilisation": "none",
+          "variable_density": true,
+          "velocity_order": 2
+        },
+        "newton": {
+          "absolute_tolerance": 1e-12,
+          "growth_factor": 2.0,
+          "initial_damping": 0.2,
+          "max_iterations": 100,
+          "minimum_damping": 0.01,
+          "recovery_damping": 0.2,
+          "reference_norm": 1.0,
+          "relative_tolerance": 1e-06
+        },
+        "schema": "nanopnp/case/v1",
+        "stabilisation": "none",
+        "temperature_K": 298.15,
+        "wall_distance": {
+          "max_distance_nm": 3.0,
+          "sources": "wall"
+        },
+        "walls": {
+          "ion_flux": "no_flux",
+          "slip": "no_slip"
+        }
+      }
+    },
+    "docs/validation/cases/clya-0.05M-minus200mV.case.yaml": {
+      "case_identity": "6d3120ea0f1714dd2ce7c1dc255e9e4120fbf44a65196bfe439f5221d9cb1ec6",
+      "materials_key": "ff72b02e265b991e223b60f2fa7916a74c6af6265d9b3c22d48829200e3cb989",
+      "restore_digest": "64659daaffb32f3f348e7a3c5a400125642fa8984cccbfc27c7ac48a8255276f",
+      "solve_provenance": {
+        "bias_V": -0.2,
+        "concentration_M": 0.05,
+        "continuation": "default_ladder",
+        "electrolyte": {
+          "corrections": {
+            "density": {
+              "concentration_enabled": "true",
+              "concentration_form": "poly_quadratic",
+              "model": "willems2020_nacl",
+              "property": "density",
+              "source": "willems2020_nacl",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "off"
+            },
+            "diffusivity:Cl-": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "diffusivity",
+              "source": "willems2020_nacl",
+              "species": "Cl-",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "diffusivity:Na+": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "diffusivity",
+              "source": "willems2020_nacl",
+              "species": "Na+",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "mobility:Cl-": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "mobility",
+              "source": "willems2020_nacl",
+              "species": "Cl-",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "mobility:Na+": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "mobility",
+              "source": "willems2020_nacl",
+              "species": "Na+",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "permittivity": {
+              "concentration_enabled": "true",
+              "concentration_form": "gavish_langevin",
+              "model": "willems2020_nacl",
+              "property": "permittivity",
+              "source": "willems2020_nacl",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "off"
+            },
+            "viscosity": {
+              "concentration_enabled": "true",
+              "concentration_form": "poly_jones_dole",
+              "model": "willems2020_nacl",
+              "property": "viscosity",
+              "source": "willems2020_nacl",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "logistic_plus"
+            }
+          },
+          "driver": "average",
+          "parameter_file": "willems2020_nacl",
+          "species": [
+            "Na+",
+            "Cl-"
+          ],
+          "steric": true,
+          "temperature_K": 298.15,
+          "validity_M": [
+            0.0,
+            5.3
+          ]
+        },
+        "fields": {
+          "charge": false,
+          "eps_r": false
+        },
+        "ground": "cis",
+        "linear_solver": "umfpack",
+        "model": "epnp-ns",
+        "model_options": {
+          "dielectric_gradient_forces": false,
+          "flow": true,
+          "inertia": true,
+          "order": 2,
+          "pressure_order": 1,
+          "solid_permittivities": {
+            "membrane": 3.2,
+            "protein": 20.0
+          },
+          "stabilisation": "none",
+          "variable_density": true,
+          "velocity_order": 2
+        },
+        "newton": {
+          "absolute_tolerance": 1e-12,
+          "growth_factor": 2.0,
+          "initial_damping": 0.2,
+          "max_iterations": 100,
+          "minimum_damping": 0.01,
+          "recovery_damping": 0.2,
+          "reference_norm": 1.0,
+          "relative_tolerance": 1e-06
+        },
+        "schema": "nanopnp/case/v1",
+        "stabilisation": "none",
+        "temperature_K": 298.15,
+        "wall_distance": {
+          "max_distance_nm": 3.0,
+          "sources": "wall"
+        },
+        "walls": {
+          "ion_flux": "no_flux",
+          "slip": "no_slip"
+        }
+      }
+    },
+    "docs/validation/cases/clya-0.05M-plus200mV.case.yaml": {
+      "case_identity": "ad4e4d01f8a9cfc0f9b4f5c0952b4b87660baa4fd86c00256920cbf831f7e457",
+      "materials_key": "ff72b02e265b991e223b60f2fa7916a74c6af6265d9b3c22d48829200e3cb989",
+      "restore_digest": "89daa0665fd84553aaf33497a564f0e1e5decf91aeff68c081ce7f9e36781488",
+      "solve_provenance": {
+        "bias_V": 0.2,
+        "concentration_M": 0.05,
+        "continuation": "default_ladder",
+        "electrolyte": {
+          "corrections": {
+            "density": {
+              "concentration_enabled": "true",
+              "concentration_form": "poly_quadratic",
+              "model": "willems2020_nacl",
+              "property": "density",
+              "source": "willems2020_nacl",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "off"
+            },
+            "diffusivity:Cl-": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "diffusivity",
+              "source": "willems2020_nacl",
+              "species": "Cl-",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "diffusivity:Na+": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "diffusivity",
+              "source": "willems2020_nacl",
+              "species": "Na+",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "mobility:Cl-": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "mobility",
+              "source": "willems2020_nacl",
+              "species": "Cl-",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "mobility:Na+": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "mobility",
+              "source": "willems2020_nacl",
+              "species": "Na+",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "permittivity": {
+              "concentration_enabled": "true",
+              "concentration_form": "gavish_langevin",
+              "model": "willems2020_nacl",
+              "property": "permittivity",
+              "source": "willems2020_nacl",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "off"
+            },
+            "viscosity": {
+              "concentration_enabled": "true",
+              "concentration_form": "poly_jones_dole",
+              "model": "willems2020_nacl",
+              "property": "viscosity",
+              "source": "willems2020_nacl",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "logistic_plus"
+            }
+          },
+          "driver": "average",
+          "parameter_file": "willems2020_nacl",
+          "species": [
+            "Na+",
+            "Cl-"
+          ],
+          "steric": true,
+          "temperature_K": 298.15,
+          "validity_M": [
+            0.0,
+            5.3
+          ]
+        },
+        "fields": {
+          "charge": false,
+          "eps_r": false
+        },
+        "ground": "cis",
+        "linear_solver": "umfpack",
+        "model": "epnp-ns",
+        "model_options": {
+          "dielectric_gradient_forces": false,
+          "flow": true,
+          "inertia": true,
+          "order": 2,
+          "pressure_order": 1,
+          "solid_permittivities": {
+            "membrane": 3.2,
+            "protein": 20.0
+          },
+          "stabilisation": "none",
+          "variable_density": true,
+          "velocity_order": 2
+        },
+        "newton": {
+          "absolute_tolerance": 1e-12,
+          "growth_factor": 2.0,
+          "initial_damping": 0.2,
+          "max_iterations": 100,
+          "minimum_damping": 0.01,
+          "recovery_damping": 0.2,
+          "reference_norm": 1.0,
+          "relative_tolerance": 1e-06
+        },
+        "schema": "nanopnp/case/v1",
+        "stabilisation": "none",
+        "temperature_K": 298.15,
+        "wall_distance": {
+          "max_distance_nm": 3.0,
+          "sources": "wall"
+        },
+        "walls": {
+          "ion_flux": "no_flux",
+          "slip": "no_slip"
+        }
+      }
+    },
+    "docs/validation/cases/clya-0.5M-plus50mV.case.yaml": {
+      "case_identity": "7e9ca1887c20d81300fc33b82cdb8cf3a059487cfd995ce786b4f4273cc11594",
+      "materials_key": "cdcae9a09770e94202dfa8c4799d903cf3c877aeed12e5152aa1d5b318b0cced",
+      "restore_digest": "b70159d563560ce5b4ff5c5e102e2079063fe165dde58d5c5c6169096db3ac10",
+      "solve_provenance": {
+        "bias_V": 0.05,
+        "concentration_M": 0.5,
+        "continuation": "default_ladder",
+        "electrolyte": {
+          "corrections": {
+            "density": {
+              "concentration_enabled": "true",
+              "concentration_form": "poly_quadratic",
+              "model": "willems2020_nacl",
+              "property": "density",
+              "source": "willems2020_nacl",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "off"
+            },
+            "diffusivity:Cl-": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "diffusivity",
+              "source": "willems2020_nacl",
+              "species": "Cl-",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "diffusivity:Na+": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "diffusivity",
+              "source": "willems2020_nacl",
+              "species": "Na+",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "mobility:Cl-": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "mobility",
+              "source": "willems2020_nacl",
+              "species": "Cl-",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "mobility:Na+": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "mobility",
+              "source": "willems2020_nacl",
+              "species": "Na+",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "permittivity": {
+              "concentration_enabled": "true",
+              "concentration_form": "gavish_langevin",
+              "model": "willems2020_nacl",
+              "property": "permittivity",
+              "source": "willems2020_nacl",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "off"
+            },
+            "viscosity": {
+              "concentration_enabled": "true",
+              "concentration_form": "poly_jones_dole",
+              "model": "willems2020_nacl",
+              "property": "viscosity",
+              "source": "willems2020_nacl",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "logistic_plus"
+            }
+          },
+          "driver": "average",
+          "parameter_file": "willems2020_nacl",
+          "species": [
+            "Na+",
+            "Cl-"
+          ],
+          "steric": true,
+          "temperature_K": 298.15,
+          "validity_M": [
+            0.0,
+            5.3
+          ]
+        },
+        "fields": {
+          "charge": false,
+          "eps_r": false
+        },
+        "ground": "cis",
+        "linear_solver": "umfpack",
+        "model": "epnp-ns",
+        "model_options": {
+          "dielectric_gradient_forces": false,
+          "flow": true,
+          "inertia": true,
+          "order": 2,
+          "pressure_order": 1,
+          "solid_permittivities": {
+            "membrane": 3.2,
+            "protein": 20.0
+          },
+          "stabilisation": "none",
+          "variable_density": true,
+          "velocity_order": 2
+        },
+        "newton": {
+          "absolute_tolerance": 1e-12,
+          "growth_factor": 2.0,
+          "initial_damping": 0.2,
+          "max_iterations": 100,
+          "minimum_damping": 0.01,
+          "recovery_damping": 0.2,
+          "reference_norm": 1.0,
+          "relative_tolerance": 1e-06
+        },
+        "schema": "nanopnp/case/v1",
+        "stabilisation": "none",
+        "temperature_K": 298.15,
+        "wall_distance": {
+          "max_distance_nm": 3.0,
+          "sources": "wall"
+        },
+        "walls": {
+          "ion_flux": "no_flux",
+          "slip": "no_slip"
+        }
+      }
+    },
+    "docs/validation/cases/clya-3M-minus200mV.case.yaml": {
+      "case_identity": "80232f5760524008c73c42d31c6b9bfde33be173699ac0ee5d52d3485f50d72a",
+      "materials_key": "e5ef4ecb01be4f4f3060ff1a41a79b300735ae5c2460927a565fa3ec453d91df",
+      "restore_digest": "4453ac58189a431c4d56df1c2bceb6539bfdcdccf9c7ebaa58e19ce7808b0cca",
+      "solve_provenance": {
+        "bias_V": -0.2,
+        "concentration_M": 3.0,
+        "continuation": "default_ladder",
+        "electrolyte": {
+          "corrections": {
+            "density": {
+              "concentration_enabled": "true",
+              "concentration_form": "poly_quadratic",
+              "model": "willems2020_nacl",
+              "property": "density",
+              "source": "willems2020_nacl",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "off"
+            },
+            "diffusivity:Cl-": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "diffusivity",
+              "source": "willems2020_nacl",
+              "species": "Cl-",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "diffusivity:Na+": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "diffusivity",
+              "source": "willems2020_nacl",
+              "species": "Na+",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "mobility:Cl-": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "mobility",
+              "source": "willems2020_nacl",
+              "species": "Cl-",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "mobility:Na+": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "mobility",
+              "source": "willems2020_nacl",
+              "species": "Na+",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "permittivity": {
+              "concentration_enabled": "true",
+              "concentration_form": "gavish_langevin",
+              "model": "willems2020_nacl",
+              "property": "permittivity",
+              "source": "willems2020_nacl",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "off"
+            },
+            "viscosity": {
+              "concentration_enabled": "true",
+              "concentration_form": "poly_jones_dole",
+              "model": "willems2020_nacl",
+              "property": "viscosity",
+              "source": "willems2020_nacl",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "logistic_plus"
+            }
+          },
+          "driver": "average",
+          "parameter_file": "willems2020_nacl",
+          "species": [
+            "Na+",
+            "Cl-"
+          ],
+          "steric": true,
+          "temperature_K": 298.15,
+          "validity_M": [
+            0.0,
+            5.3
+          ]
+        },
+        "fields": {
+          "charge": false,
+          "eps_r": false
+        },
+        "ground": "cis",
+        "linear_solver": "umfpack",
+        "model": "epnp-ns",
+        "model_options": {
+          "dielectric_gradient_forces": false,
+          "flow": true,
+          "inertia": true,
+          "order": 2,
+          "pressure_order": 1,
+          "solid_permittivities": {
+            "membrane": 3.2,
+            "protein": 20.0
+          },
+          "stabilisation": "none",
+          "variable_density": true,
+          "velocity_order": 2
+        },
+        "newton": {
+          "absolute_tolerance": 1e-12,
+          "growth_factor": 2.0,
+          "initial_damping": 0.2,
+          "max_iterations": 100,
+          "minimum_damping": 0.01,
+          "recovery_damping": 0.2,
+          "reference_norm": 1.0,
+          "relative_tolerance": 1e-06
+        },
+        "schema": "nanopnp/case/v1",
+        "stabilisation": "none",
+        "temperature_K": 298.15,
+        "wall_distance": {
+          "max_distance_nm": 3.0,
+          "sources": "wall"
+        },
+        "walls": {
+          "ion_flux": "no_flux",
+          "slip": "no_slip"
+        }
+      }
+    },
+    "docs/validation/cases/clya-3M-plus200mV.case.yaml": {
+      "case_identity": "a2024fe04f8442385bfbf333d3c3b56c3f76f71f0219c2f585f5fdbb32eb981d",
+      "materials_key": "e5ef4ecb01be4f4f3060ff1a41a79b300735ae5c2460927a565fa3ec453d91df",
+      "restore_digest": "0db176170ffa236f21967b9df4ee9d4cf8d48295eb525c448ebde17a1f182e27",
+      "solve_provenance": {
+        "bias_V": 0.2,
+        "concentration_M": 3.0,
+        "continuation": "default_ladder",
+        "electrolyte": {
+          "corrections": {
+            "density": {
+              "concentration_enabled": "true",
+              "concentration_form": "poly_quadratic",
+              "model": "willems2020_nacl",
+              "property": "density",
+              "source": "willems2020_nacl",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "off"
+            },
+            "diffusivity:Cl-": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "diffusivity",
+              "source": "willems2020_nacl",
+              "species": "Cl-",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "diffusivity:Na+": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "diffusivity",
+              "source": "willems2020_nacl",
+              "species": "Na+",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "mobility:Cl-": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "mobility",
+              "source": "willems2020_nacl",
+              "species": "Cl-",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "mobility:Na+": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "mobility",
+              "source": "willems2020_nacl",
+              "species": "Na+",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "permittivity": {
+              "concentration_enabled": "true",
+              "concentration_form": "gavish_langevin",
+              "model": "willems2020_nacl",
+              "property": "permittivity",
+              "source": "willems2020_nacl",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "off"
+            },
+            "viscosity": {
+              "concentration_enabled": "true",
+              "concentration_form": "poly_jones_dole",
+              "model": "willems2020_nacl",
+              "property": "viscosity",
+              "source": "willems2020_nacl",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "logistic_plus"
+            }
+          },
+          "driver": "average",
+          "parameter_file": "willems2020_nacl",
+          "species": [
+            "Na+",
+            "Cl-"
+          ],
+          "steric": true,
+          "temperature_K": 298.15,
+          "validity_M": [
+            0.0,
+            5.3
+          ]
+        },
+        "fields": {
+          "charge": false,
+          "eps_r": false
+        },
+        "ground": "cis",
+        "linear_solver": "umfpack",
+        "model": "epnp-ns",
+        "model_options": {
+          "dielectric_gradient_forces": false,
+          "flow": true,
+          "inertia": true,
+          "order": 2,
+          "pressure_order": 1,
+          "solid_permittivities": {
+            "membrane": 3.2,
+            "protein": 20.0
+          },
+          "stabilisation": "none",
+          "variable_density": true,
+          "velocity_order": 2
+        },
+        "newton": {
+          "absolute_tolerance": 1e-12,
+          "growth_factor": 2.0,
+          "initial_damping": 0.2,
+          "max_iterations": 100,
+          "minimum_damping": 0.01,
+          "recovery_damping": 0.2,
+          "reference_norm": 1.0,
+          "relative_tolerance": 1e-06
+        },
+        "schema": "nanopnp/case/v1",
+        "stabilisation": "none",
+        "temperature_K": 298.15,
+        "wall_distance": {
+          "max_distance_nm": 3.0,
+          "sources": "wall"
+        },
+        "walls": {
+          "ion_flux": "no_flux",
+          "slip": "no_slip"
+        }
+      }
+    },
+    "examples/01-quickstart/quickstart.case.yaml": {
+      "case_identity": "69fa11d441c6db53139ae22952b23e1c87c71704399f064108408a9f7dfb5ed9",
+      "materials_key": "1c654654006b55ef5345c11ac9b65697e0a29d21e3b31652b48ae0b9b512c7fa",
+      "restore_digest": "bf8e75210f788be4929fae0f2df6a1139a455b575de2c8877d441c283ffe9519",
+      "solve_provenance": {
+        "bias_V": 0.05,
+        "concentration_M": 0.1,
+        "continuation": "default_ladder",
+        "electrolyte": {
+          "corrections": {
+            "density": {
+              "concentration_enabled": "true",
+              "concentration_form": "poly_quadratic",
+              "model": "willems2020_nacl",
+              "property": "density",
+              "source": "willems2020_nacl",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "off"
+            },
+            "diffusivity:Cl-": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "diffusivity",
+              "source": "willems2020_nacl",
+              "species": "Cl-",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "diffusivity:Na+": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "diffusivity",
+              "source": "willems2020_nacl",
+              "species": "Na+",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "mobility:Cl-": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "mobility",
+              "source": "willems2020_nacl",
+              "species": "Cl-",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "mobility:Na+": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "mobility",
+              "source": "willems2020_nacl",
+              "species": "Na+",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "permittivity": {
+              "concentration_enabled": "true",
+              "concentration_form": "gavish_langevin",
+              "model": "willems2020_nacl",
+              "property": "permittivity",
+              "source": "willems2020_nacl",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "off"
+            },
+            "viscosity": {
+              "concentration_enabled": "true",
+              "concentration_form": "poly_jones_dole",
+              "model": "willems2020_nacl",
+              "property": "viscosity",
+              "source": "willems2020_nacl",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "logistic_plus"
+            }
+          },
+          "driver": "average",
+          "parameter_file": "willems2020_nacl",
+          "species": [
+            "Na+",
+            "Cl-"
+          ],
+          "steric": true,
+          "temperature_K": 298.15,
+          "validity_M": [
+            0.0,
+            5.3
+          ]
+        },
+        "fields": {
+          "charge": false,
+          "eps_r": false
+        },
+        "ground": "cis",
+        "linear_solver": "umfpack",
+        "model": "epnp-ns",
+        "model_options": {
+          "dielectric_gradient_forces": false,
+          "flow": true,
+          "inertia": true,
+          "order": 2,
+          "pressure_order": 1,
+          "solid_permittivities": {
+            "membrane": 3.2
+          },
+          "stabilisation": "none",
+          "variable_density": true,
+          "velocity_order": 2
+        },
+        "newton": {
+          "absolute_tolerance": 1e-12,
+          "growth_factor": 2.0,
+          "initial_damping": 0.2,
+          "max_iterations": 100,
+          "minimum_damping": 0.01,
+          "recovery_damping": 0.2,
+          "reference_norm": 1.0,
+          "relative_tolerance": 1e-06
+        },
+        "schema": "nanopnp/case/v1",
+        "stabilisation": "none",
+        "temperature_K": 298.15,
+        "wall_distance": {
+          "max_distance_nm": 3.0,
+          "sources": "wall"
+        },
+        "walls": {
+          "ion_flux": "no_flux",
+          "slip": "no_slip"
+        }
+      }
+    },
+    "examples/02-charged-pore/classical.case.yaml": {
+      "case_identity": "70c250bc9954fca26c6a7dee118a193434ce7a09047dd4a3602ece4307d69e63",
+      "materials_key": "f044f1d49b0a87a4728c0d25b10c1a5dc2fc7d165ef7453ccbe086f6fe85b8c2",
+      "restore_digest": "ccf230455a06bd843d6389b46f586af0ad0330709e4d97b6d430311e30c687d8",
+      "solve_provenance": {
+        "bias_V": 0.05,
+        "concentration_M": 0.1,
+        "continuation": "default_ladder",
+        "electrolyte": {
+          "corrections": {
+            "density": {
+              "model": "none",
+              "note": "correction disabled; factor is identically 1"
+            },
+            "diffusivity:Cl-": {
+              "model": "none",
+              "note": "correction disabled; factor is identically 1"
+            },
+            "diffusivity:Na+": {
+              "model": "none",
+              "note": "correction disabled; factor is identically 1"
+            },
+            "mobility:Cl-": {
+              "model": "none",
+              "note": "correction disabled; factor is identically 1"
+            },
+            "mobility:Na+": {
+              "model": "none",
+              "note": "correction disabled; factor is identically 1"
+            },
+            "permittivity": {
+              "model": "none",
+              "note": "correction disabled; factor is identically 1"
+            },
+            "viscosity": {
+              "model": "none",
+              "note": "correction disabled; factor is identically 1"
+            }
+          },
+          "driver": "average",
+          "parameter_file": "willems2020_nacl",
+          "species": [
+            "Na+",
+            "Cl-"
+          ],
+          "steric": false,
+          "temperature_K": 298.15,
+          "validity_M": [
+            0.0,
+            5.3
+          ]
+        },
+        "fields": {
+          "charge": true,
+          "eps_r": false
+        },
+        "ground": "cis",
+        "linear_solver": "umfpack",
+        "model": "epnp-ns",
+        "model_options": {
+          "dielectric_gradient_forces": false,
+          "flow": true,
+          "inertia": true,
+          "order": 2,
+          "pressure_order": 1,
+          "solid_permittivities": {
+            "membrane": 3.2
+          },
+          "stabilisation": "none",
+          "variable_density": true,
+          "velocity_order": 2
+        },
+        "newton": {
+          "absolute_tolerance": 1e-12,
+          "growth_factor": 2.0,
+          "initial_damping": 0.2,
+          "max_iterations": 100,
+          "minimum_damping": 0.01,
+          "recovery_damping": 0.2,
+          "reference_norm": 1.0,
+          "relative_tolerance": 1e-06
+        },
+        "schema": "nanopnp/case/v1",
+        "stabilisation": "none",
+        "temperature_K": 298.15,
+        "wall_distance": {
+          "max_distance_nm": 3.0,
+          "sources": "wall"
+        },
+        "walls": {
+          "ion_flux": "no_flux",
+          "slip": "no_slip"
+        }
+      }
+    },
+    "examples/02-charged-pore/epnpns.case.yaml": {
+      "case_identity": "9c7e6c8ba35182c0aad601e59bbe4afe21beb151d7186f403753b5f4b50dc62b",
+      "materials_key": "1c654654006b55ef5345c11ac9b65697e0a29d21e3b31652b48ae0b9b512c7fa",
+      "restore_digest": "4cd5a8ccdbb0ec5e5b63cbc059cf9a2afb2f1ba3b73fcfe79c462672d956a298",
+      "solve_provenance": {
+        "bias_V": 0.05,
+        "concentration_M": 0.1,
+        "continuation": "default_ladder",
+        "electrolyte": {
+          "corrections": {
+            "density": {
+              "concentration_enabled": "true",
+              "concentration_form": "poly_quadratic",
+              "model": "willems2020_nacl",
+              "property": "density",
+              "source": "willems2020_nacl",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "off"
+            },
+            "diffusivity:Cl-": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "diffusivity",
+              "source": "willems2020_nacl",
+              "species": "Cl-",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "diffusivity:Na+": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "diffusivity",
+              "source": "willems2020_nacl",
+              "species": "Na+",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "mobility:Cl-": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "mobility",
+              "source": "willems2020_nacl",
+              "species": "Cl-",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "mobility:Na+": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "mobility",
+              "source": "willems2020_nacl",
+              "species": "Na+",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "permittivity": {
+              "concentration_enabled": "true",
+              "concentration_form": "gavish_langevin",
+              "model": "willems2020_nacl",
+              "property": "permittivity",
+              "source": "willems2020_nacl",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "off"
+            },
+            "viscosity": {
+              "concentration_enabled": "true",
+              "concentration_form": "poly_jones_dole",
+              "model": "willems2020_nacl",
+              "property": "viscosity",
+              "source": "willems2020_nacl",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "logistic_plus"
+            }
+          },
+          "driver": "average",
+          "parameter_file": "willems2020_nacl",
+          "species": [
+            "Na+",
+            "Cl-"
+          ],
+          "steric": true,
+          "temperature_K": 298.15,
+          "validity_M": [
+            0.0,
+            5.3
+          ]
+        },
+        "fields": {
+          "charge": true,
+          "eps_r": false
+        },
+        "ground": "cis",
+        "linear_solver": "umfpack",
+        "model": "epnp-ns",
+        "model_options": {
+          "dielectric_gradient_forces": false,
+          "flow": true,
+          "inertia": true,
+          "order": 2,
+          "pressure_order": 1,
+          "solid_permittivities": {
+            "membrane": 3.2
+          },
+          "stabilisation": "none",
+          "variable_density": true,
+          "velocity_order": 2
+        },
+        "newton": {
+          "absolute_tolerance": 1e-12,
+          "growth_factor": 2.0,
+          "initial_damping": 0.2,
+          "max_iterations": 100,
+          "minimum_damping": 0.01,
+          "recovery_damping": 0.2,
+          "reference_norm": 1.0,
+          "relative_tolerance": 1e-06
+        },
+        "schema": "nanopnp/case/v1",
+        "stabilisation": "none",
+        "temperature_K": 298.15,
+        "wall_distance": {
+          "max_distance_nm": 3.0,
+          "sources": "wall"
+        },
+        "walls": {
+          "ion_flux": "no_flux",
+          "slip": "no_slip"
+        }
+      }
+    },
+    "examples/03-iv-sweep/charged.case.yaml": {
+      "case_identity": "9c7e6c8ba35182c0aad601e59bbe4afe21beb151d7186f403753b5f4b50dc62b",
+      "materials_key": "1c654654006b55ef5345c11ac9b65697e0a29d21e3b31652b48ae0b9b512c7fa",
+      "restore_digest": "4cd5a8ccdbb0ec5e5b63cbc059cf9a2afb2f1ba3b73fcfe79c462672d956a298",
+      "solve_provenance": {
+        "bias_V": 0.05,
+        "concentration_M": 0.1,
+        "continuation": "default_ladder",
+        "electrolyte": {
+          "corrections": {
+            "density": {
+              "concentration_enabled": "true",
+              "concentration_form": "poly_quadratic",
+              "model": "willems2020_nacl",
+              "property": "density",
+              "source": "willems2020_nacl",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "off"
+            },
+            "diffusivity:Cl-": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "diffusivity",
+              "source": "willems2020_nacl",
+              "species": "Cl-",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "diffusivity:Na+": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "diffusivity",
+              "source": "willems2020_nacl",
+              "species": "Na+",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "mobility:Cl-": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "mobility",
+              "source": "willems2020_nacl",
+              "species": "Cl-",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "mobility:Na+": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "mobility",
+              "source": "willems2020_nacl",
+              "species": "Na+",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "permittivity": {
+              "concentration_enabled": "true",
+              "concentration_form": "gavish_langevin",
+              "model": "willems2020_nacl",
+              "property": "permittivity",
+              "source": "willems2020_nacl",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "off"
+            },
+            "viscosity": {
+              "concentration_enabled": "true",
+              "concentration_form": "poly_jones_dole",
+              "model": "willems2020_nacl",
+              "property": "viscosity",
+              "source": "willems2020_nacl",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "logistic_plus"
+            }
+          },
+          "driver": "average",
+          "parameter_file": "willems2020_nacl",
+          "species": [
+            "Na+",
+            "Cl-"
+          ],
+          "steric": true,
+          "temperature_K": 298.15,
+          "validity_M": [
+            0.0,
+            5.3
+          ]
+        },
+        "fields": {
+          "charge": true,
+          "eps_r": false
+        },
+        "ground": "cis",
+        "linear_solver": "umfpack",
+        "model": "epnp-ns",
+        "model_options": {
+          "dielectric_gradient_forces": false,
+          "flow": true,
+          "inertia": true,
+          "order": 2,
+          "pressure_order": 1,
+          "solid_permittivities": {
+            "membrane": 3.2
+          },
+          "stabilisation": "none",
+          "variable_density": true,
+          "velocity_order": 2
+        },
+        "newton": {
+          "absolute_tolerance": 1e-12,
+          "growth_factor": 2.0,
+          "initial_damping": 0.2,
+          "max_iterations": 100,
+          "minimum_damping": 0.01,
+          "recovery_damping": 0.2,
+          "reference_norm": 1.0,
+          "relative_tolerance": 1e-06
+        },
+        "schema": "nanopnp/case/v1",
+        "stabilisation": "none",
+        "temperature_K": 298.15,
+        "wall_distance": {
+          "max_distance_nm": 3.0,
+          "sources": "wall"
+        },
+        "walls": {
+          "ion_flux": "no_flux",
+          "slip": "no_slip"
+        }
+      }
+    },
+    "examples/03-iv-sweep/uncharged.case.yaml": {
+      "case_identity": "69fa11d441c6db53139ae22952b23e1c87c71704399f064108408a9f7dfb5ed9",
+      "materials_key": "1c654654006b55ef5345c11ac9b65697e0a29d21e3b31652b48ae0b9b512c7fa",
+      "restore_digest": "bf8e75210f788be4929fae0f2df6a1139a455b575de2c8877d441c283ffe9519",
+      "solve_provenance": {
+        "bias_V": 0.05,
+        "concentration_M": 0.1,
+        "continuation": "default_ladder",
+        "electrolyte": {
+          "corrections": {
+            "density": {
+              "concentration_enabled": "true",
+              "concentration_form": "poly_quadratic",
+              "model": "willems2020_nacl",
+              "property": "density",
+              "source": "willems2020_nacl",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "off"
+            },
+            "diffusivity:Cl-": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "diffusivity",
+              "source": "willems2020_nacl",
+              "species": "Cl-",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "diffusivity:Na+": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "diffusivity",
+              "source": "willems2020_nacl",
+              "species": "Na+",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "mobility:Cl-": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "mobility",
+              "source": "willems2020_nacl",
+              "species": "Cl-",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "mobility:Na+": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "mobility",
+              "source": "willems2020_nacl",
+              "species": "Na+",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "permittivity": {
+              "concentration_enabled": "true",
+              "concentration_form": "gavish_langevin",
+              "model": "willems2020_nacl",
+              "property": "permittivity",
+              "source": "willems2020_nacl",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "off"
+            },
+            "viscosity": {
+              "concentration_enabled": "true",
+              "concentration_form": "poly_jones_dole",
+              "model": "willems2020_nacl",
+              "property": "viscosity",
+              "source": "willems2020_nacl",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "logistic_plus"
+            }
+          },
+          "driver": "average",
+          "parameter_file": "willems2020_nacl",
+          "species": [
+            "Na+",
+            "Cl-"
+          ],
+          "steric": true,
+          "temperature_K": 298.15,
+          "validity_M": [
+            0.0,
+            5.3
+          ]
+        },
+        "fields": {
+          "charge": false,
+          "eps_r": false
+        },
+        "ground": "cis",
+        "linear_solver": "umfpack",
+        "model": "epnp-ns",
+        "model_options": {
+          "dielectric_gradient_forces": false,
+          "flow": true,
+          "inertia": true,
+          "order": 2,
+          "pressure_order": 1,
+          "solid_permittivities": {
+            "membrane": 3.2
+          },
+          "stabilisation": "none",
+          "variable_density": true,
+          "velocity_order": 2
+        },
+        "newton": {
+          "absolute_tolerance": 1e-12,
+          "growth_factor": 2.0,
+          "initial_damping": 0.2,
+          "max_iterations": 100,
+          "minimum_damping": 0.01,
+          "recovery_damping": 0.2,
+          "reference_norm": 1.0,
+          "relative_tolerance": 1e-06
+        },
+        "schema": "nanopnp/case/v1",
+        "stabilisation": "none",
+        "temperature_K": 298.15,
+        "wall_distance": {
+          "max_distance_nm": 3.0,
+          "sources": "wall"
+        },
+        "walls": {
+          "ion_flux": "no_flux",
+          "slip": "no_slip"
+        }
+      }
+    },
+    "examples/04-python-api/tour.case.yaml": {
+      "case_identity": "69fa11d441c6db53139ae22952b23e1c87c71704399f064108408a9f7dfb5ed9",
+      "materials_key": "1c654654006b55ef5345c11ac9b65697e0a29d21e3b31652b48ae0b9b512c7fa",
+      "restore_digest": "bf8e75210f788be4929fae0f2df6a1139a455b575de2c8877d441c283ffe9519",
+      "solve_provenance": {
+        "bias_V": 0.05,
+        "concentration_M": 0.1,
+        "continuation": "default_ladder",
+        "electrolyte": {
+          "corrections": {
+            "density": {
+              "concentration_enabled": "true",
+              "concentration_form": "poly_quadratic",
+              "model": "willems2020_nacl",
+              "property": "density",
+              "source": "willems2020_nacl",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "off"
+            },
+            "diffusivity:Cl-": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "diffusivity",
+              "source": "willems2020_nacl",
+              "species": "Cl-",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "diffusivity:Na+": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "diffusivity",
+              "source": "willems2020_nacl",
+              "species": "Na+",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "mobility:Cl-": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "mobility",
+              "source": "willems2020_nacl",
+              "species": "Cl-",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "mobility:Na+": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "mobility",
+              "source": "willems2020_nacl",
+              "species": "Na+",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "permittivity": {
+              "concentration_enabled": "true",
+              "concentration_form": "gavish_langevin",
+              "model": "willems2020_nacl",
+              "property": "permittivity",
+              "source": "willems2020_nacl",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "off"
+            },
+            "viscosity": {
+              "concentration_enabled": "true",
+              "concentration_form": "poly_jones_dole",
+              "model": "willems2020_nacl",
+              "property": "viscosity",
+              "source": "willems2020_nacl",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "logistic_plus"
+            }
+          },
+          "driver": "average",
+          "parameter_file": "willems2020_nacl",
+          "species": [
+            "Na+",
+            "Cl-"
+          ],
+          "steric": true,
+          "temperature_K": 298.15,
+          "validity_M": [
+            0.0,
+            5.3
+          ]
+        },
+        "fields": {
+          "charge": false,
+          "eps_r": false
+        },
+        "ground": "cis",
+        "linear_solver": "umfpack",
+        "model": "epnp-ns",
+        "model_options": {
+          "dielectric_gradient_forces": false,
+          "flow": true,
+          "inertia": true,
+          "order": 2,
+          "pressure_order": 1,
+          "solid_permittivities": {
+            "membrane": 3.2
+          },
+          "stabilisation": "none",
+          "variable_density": true,
+          "velocity_order": 2
+        },
+        "newton": {
+          "absolute_tolerance": 1e-12,
+          "growth_factor": 2.0,
+          "initial_damping": 0.2,
+          "max_iterations": 100,
+          "minimum_damping": 0.01,
+          "recovery_damping": 0.2,
+          "reference_norm": 1.0,
+          "relative_tolerance": 1e-06
+        },
+        "schema": "nanopnp/case/v1",
+        "stabilisation": "none",
+        "temperature_K": 298.15,
+        "wall_distance": {
+          "max_distance_nm": 3.0,
+          "sources": "wall"
+        },
+        "walls": {
+          "ion_flux": "no_flux",
+          "slip": "no_slip"
+        }
+      }
+    },
+    "examples/05-clya-reference/clya-0.5M-plus50mV.case.yaml": {
+      "case_identity": "7e9ca1887c20d81300fc33b82cdb8cf3a059487cfd995ce786b4f4273cc11594",
+      "materials_key": "cdcae9a09770e94202dfa8c4799d903cf3c877aeed12e5152aa1d5b318b0cced",
+      "restore_digest": "b70159d563560ce5b4ff5c5e102e2079063fe165dde58d5c5c6169096db3ac10",
+      "solve_provenance": {
+        "bias_V": 0.05,
+        "concentration_M": 0.5,
+        "continuation": "default_ladder",
+        "electrolyte": {
+          "corrections": {
+            "density": {
+              "concentration_enabled": "true",
+              "concentration_form": "poly_quadratic",
+              "model": "willems2020_nacl",
+              "property": "density",
+              "source": "willems2020_nacl",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "off"
+            },
+            "diffusivity:Cl-": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "diffusivity",
+              "source": "willems2020_nacl",
+              "species": "Cl-",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "diffusivity:Na+": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "diffusivity",
+              "source": "willems2020_nacl",
+              "species": "Na+",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "mobility:Cl-": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "mobility",
+              "source": "willems2020_nacl",
+              "species": "Cl-",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "mobility:Na+": {
+              "concentration_enabled": "true",
+              "concentration_form": "inverse_poly_half",
+              "model": "willems2020_nacl",
+              "property": "mobility",
+              "source": "willems2020_nacl",
+              "species": "Na+",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "exponential_saturation_plus"
+            },
+            "permittivity": {
+              "concentration_enabled": "true",
+              "concentration_form": "gavish_langevin",
+              "model": "willems2020_nacl",
+              "property": "permittivity",
+              "source": "willems2020_nacl",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "off"
+            },
+            "viscosity": {
+              "concentration_enabled": "true",
+              "concentration_form": "poly_jones_dole",
+              "model": "willems2020_nacl",
+              "property": "viscosity",
+              "source": "willems2020_nacl",
+              "validity_M": "0-5.3",
+              "wall_enabled": "true",
+              "wall_form": "logistic_plus"
+            }
+          },
+          "driver": "average",
+          "parameter_file": "willems2020_nacl",
+          "species": [
+            "Na+",
+            "Cl-"
+          ],
+          "steric": true,
+          "temperature_K": 298.15,
+          "validity_M": [
+            0.0,
+            5.3
+          ]
+        },
+        "fields": {
+          "charge": false,
+          "eps_r": false
+        },
+        "ground": "cis",
+        "linear_solver": "umfpack",
+        "model": "epnp-ns",
+        "model_options": {
+          "dielectric_gradient_forces": false,
+          "flow": true,
+          "inertia": true,
+          "order": 2,
+          "pressure_order": 1,
+          "solid_permittivities": {
+            "membrane": 3.2,
+            "protein": 20.0
+          },
+          "stabilisation": "none",
+          "variable_density": true,
+          "velocity_order": 2
+        },
+        "newton": {
+          "absolute_tolerance": 1e-12,
+          "growth_factor": 2.0,
+          "initial_damping": 0.2,
+          "max_iterations": 100,
+          "minimum_damping": 0.01,
+          "recovery_damping": 0.2,
+          "reference_norm": 1.0,
+          "relative_tolerance": 1e-06
+        },
+        "schema": "nanopnp/case/v1",
+        "stabilisation": "none",
+        "temperature_K": 298.15,
+        "wall_distance": {
+          "max_distance_nm": 3.0,
+          "sources": "wall"
+        },
+        "walls": {
+          "ion_flux": "no_flux",
+          "slip": "no_slip"
+        }
+      }
+    }
+  },
+  "recorded_by": "nanopnp 0.5.1.dev2+g08b5d16db",
+  "schema": "nanopnp/case/v1"
+}

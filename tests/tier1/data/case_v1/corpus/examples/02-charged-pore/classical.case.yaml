@@ -1,0 +1,42 @@
+# The same charged pore, solved with classical PNP-NS: every correction set to its
+# `none` model. That is a configuration of the same solver, not a second code path
+# (PHY-21, PHY-22), and the manifest lists each `none` as a deviation from the
+# validated model (FR-25).
+#
+# Run from this directory, after `nanopnp mesh cylinder --out pore.msh`.
+schema: nanopnp/case/v1
+name: charged-classical
+
+inputs:
+  mesh:
+    path: pore.msh
+    format: msh41
+    groups: {default: interface}
+  charge: {path: ring.field.yaml, format: field1}
+
+electrolyte:
+  species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]
+  concentration_M: 0.1
+  temperature_K: 298.15
+  parameters: willems2020_nacl
+  corrections:
+    diffusivity:  {model: none}
+    mobility:     {model: none}
+    viscosity:    {model: none}
+    permittivity: {model: none}
+    density:      {model: none}
+    steric:       {model: none}
+
+boundary_conditions:
+  bias_V: 0.05
+  ground: cis
+
+physics:
+  model: epnp-ns
+  solid_permittivities: {membrane: 3.2}
+
+numerics:
+  continuation: default_ladder
+  stabilisation: none
+
+outputs: [current, transport_numbers, eof_rate]
