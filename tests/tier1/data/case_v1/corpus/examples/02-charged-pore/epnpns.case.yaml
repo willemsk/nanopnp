@@ -1,0 +1,42 @@
+# A negatively charged pore in 0.1 M NaCl at +50 mV, solved with the validated
+# ePNP-NS model (PHY-21, PHY-22): every correction on, so the manifest lists no
+# deviation. The fixed charge is the ring of ring.field.yaml, deployed on the mesh
+# by stage 7 and gated there on charge conservation (PHY-19).
+#
+# Run from this directory, after `nanopnp mesh cylinder --out pore.msh`.
+schema: nanopnp/case/v1
+name: charged-epnpns
+
+inputs:
+  mesh:
+    path: pore.msh
+    format: msh41
+    groups: {default: interface}
+  charge: {path: ring.field.yaml, format: field1}
+
+electrolyte:
+  species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]
+  concentration_M: 0.1
+  temperature_K: 298.15
+  parameters: willems2020_nacl
+  corrections:
+    diffusivity:  {model: willems2020_nacl}
+    mobility:     {model: willems2020_nacl}
+    viscosity:    {model: willems2020_nacl}
+    permittivity: {model: willems2020_nacl}
+    density:      {model: willems2020_nacl}
+    steric:       {model: borukhov}
+
+boundary_conditions:
+  bias_V: 0.05
+  ground: cis
+
+physics:
+  model: epnp-ns
+  solid_permittivities: {membrane: 3.2}
+
+numerics:
+  continuation: default_ladder
+  stabilisation: none
+
+outputs: [current, transport_numbers, eof_rate]
