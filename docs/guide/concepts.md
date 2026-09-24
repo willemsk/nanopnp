@@ -6,7 +6,7 @@ that records how it was produced.
 
 ## The case file
 
-A case is one YAML document, `schema: nanopnp/case/v1`, and it is the whole run specification
+A case is one YAML document, `schema: nanopnp/case/v2`, and it is the whole run specification
 (IF-03): the mesh and fields it reads, the electrolyte, the boundary conditions, the physics model
 and its switches, the numerics, and the quantities to report. Nothing that changes a number can be
 set anywhere else. No command-line flag reaches the physics (the IF-02 configuration NOTE), so the

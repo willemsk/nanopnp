@@ -35,7 +35,7 @@ that can reconstruct the run.
   quantity and its location, never with a plausible wrong answer.
 - **Hard cases by continuation.** A staged ladder, warm-started from rung to rung, reaches high
   salt and high bias rather than relying on a cold solve.
-- **Reproducible by construction.** A case file (`nanopnp/case/v1`) is the unit of work. Every
+- **Reproducible by construction.** A case file (`nanopnp/case/v2`) is the unit of work. Every
   stage emits a content-hashed artefact, and every run records its inputs, library versions,
   solver settings, stabilisation mode and every switch set away from the validated default.
   `nanopnp reproduce` re-solves a run and checks every number.
