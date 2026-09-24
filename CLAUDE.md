@@ -185,7 +185,7 @@ Tests live in `tests/tier{1,2,3,4}/`, matching the four verification tiers of §
 
 ## Provenance and reproducibility
 
-The case file (`schema: nanopnp/case/v1`) is the unit of reproducibility; everything else is
+The case file (`schema: nanopnp/case/v2`) is the unit of reproducibility; everything else is
 derived. Every artefact carries a content hash over its payload and the parameters that produced it,
 and that hash is the cache key. Every result carries a provenance manifest — input hashes, library
 versions, mesh hash, solver settings, stabilisation mode, correction file versions, and **every

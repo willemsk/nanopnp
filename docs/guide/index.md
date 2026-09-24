@@ -8,7 +8,7 @@ an equation.
 | Page | What it covers |
 |---|---|
 | [Concepts](concepts.md) | Case, stages, artefacts, the store, the manifest |
-| [Case files](case-files.md) | The `nanopnp/case/v1` document, its sections and dotted paths |
+| [Case files](case-files.md) | The `nanopnp/case/v2` document, its sections and dotted paths |
 | [Meshes](meshes.md) | Supplying a mesh, the group vocabulary, the quality gate, the generators |
 | [Charge and permittivity fields](fields.md) | Field headers, the three quantities, the conservation gate |
 | [Running and exit codes](running.md) | `run`, `stage`, `inspect`, `reproduce`; logging; exit codes |
