@@ -16,6 +16,35 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+## [0.9.0-alpha.1] - 2026-09-24
+
+WP17: case schema v2 and the Python 3.11 floor ([#38](https://github.com/willemsk/nanopnp/pull/38)).
+The first work package of Phase 2 and its one breaking change.
+
+### Changed
+
+- The case schema is `nanopnp/case/v2`. It adds `inputs.profile`, `inputs.pqr`,
+  `structure.source.selection`, `geometry.membrane.centre_z_nm`, `charge.exclusion_offset_nm`,
+  `charge.dielectric_transition_nm` and `numerics.mesh.size_scale`. It renames
+  `structure.source.pdb` to `path`, and removes `charge.eps_protein` and `geometry.membrane.eps_r`:
+  `physics.solid_permittivities` is the one place a solid's permittivity is set (IF-03, VER-47).
+- A `nanopnp/case/v1` file is still read, as its v2 upgrade. The upgrade renames and moves only what
+  the file wrote, and refuses a v1 file carrying a v2 key or a permittivity that disagrees with the
+  map (FR-26).
+- The schema string no longer keys a solve. The v1 key carried it, so every solve stored before
+  this release re-solves once; the materials key is unchanged. The COMSOL export contract's
+  `case_hash` for `clya-0.5M-plus50mV` is now `e266057d…` (§5.3.2 NOTE).
+- Python 3.11–3.14. The `structure` extra requires MDAnalysis 2.10, GridDataFormats 1.2 and
+  pdb2pqr 3.7, and CCP4 grids are written on every supported interpreter (QR-09, IF-05, VER-29).
+
+### Added
+
+- `charge.exclusion_offset_nm` and `charge.dielectric_transition_nm` are switches: a non-zero value
+  is listed as a deviation in the manifest (FR-25).
+- A supplied artefact beside one downstream of it on the same chain, and `size_scale` other than 1
+  beside `inputs.mesh`, are refused naming both. `inputs.profile` and `inputs.pqr` are refused,
+  naming the stage that will read them (FR-27).
+
 ## [0.5.0] - 2026-09-24
 
 **Phase 1, the solver core.** The verified Phase 0 physics becomes a product that others can run

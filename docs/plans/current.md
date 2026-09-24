@@ -10,25 +10,28 @@ an unmerged branch has shipped.
   report, released as `v0.5.0` under `SPECIFICATION.md` §8.2.3. The COMSOL attribution is
   outstanding on the author's exports (C1), and so is the 12-core reference sweep (C2). Each lands
   as an addendum to that report.
-- Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **planned, not started**:
-  WP17–WP25, with the author's rulings B1–B7 recorded in `SPECIFICATION.md` §8.2.2.
-- **WP17** ([case schema v2 and the 3.11 floor](wp17-case-schema-v2.md)) is **in progress** on
-  `claude/wp-plan-17-211905`. Ruling B1 is met: the author's double-click was recorded on
-  24 September 2026 (the NOTE to `SPECIFICATION.md` §8.2.1), closing Phase 0 criterion 4 and
-  retiring RSK-13. Its first commit freezes the v1 case corpus and its solve keys **on unchanged
-  code**, before any schema edit (WP17 D7).
+- Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **in progress**: WP17 is
+  delivered and WP18–WP25 are planned (rulings B1–B7, §8.2.2). B1 was met when the double-click
+  was recorded (the NOTE to §8.2.1), closing Phase 0 criterion 4 and RSK-13.
+- **WP17** ([case schema v2 and the 3.11 floor](wp17-case-schema-v2.md)) is **delivered** on
+  `claude/wp-plan-17-211905`, PR [#38](https://github.com/willemsk/nanopnp/pull/38), ready for
+  `/wp-ship`; tag `v0.9.0-alpha.1` on merge.
+- **Next:** `/wp-plan 18` (structure ingestion, stage 1), on the merged v2 schema.
 
 ## What Phase 2 must not re-decide
 
 Each item is recorded in full where it points. Read it there first.
 
-- **The schema moves once**, to `nanopnp/case/v2` in WP17, with the key set of the §5.3.1 v2 NOTE.
-  A later need widens an existing key's value set, and does not add a key. → §8.2.2 B3; WP17 D1.
+- **The schema moved once**, to `nanopnp/case/v2` in WP17, with the key set of the §5.3.1 v2 NOTE.
+  A later need widens an existing key's value set, and does not add a key. The schema string no
+  longer keys a solve. → §8.2.2 B3; WP17 D1; the §5.3.2 NOTE.
+- **`inputs.profile` and `inputs.pqr` are accepted and refused** through `_UNCONSUMED_INPUTS` in
+  `io/case.py`. The package that delivers the consuming stage removes the entry (WP21, Phase 3).
 - **`physics.solid_permittivities` is the only place ε_protein and ε_membrane are set**, and contour
   tuning parameters and gate thresholds are never case keys (author rulings, 24 September 2026).
   → WP17 D2, D3.
-- **Python 3.11–3.14.** QR-09 is amended; `pyproject.toml`, the CI matrix and the IF-05 NOTE follow
-  in WP17. → §8.2.2 B4.
+- **Python 3.11–3.14.** QR-09 is amended, and `pyproject.toml`, the CI matrix and the IF-05 NOTE
+  follow it; VER-47 holds them together. → §8.2.2 B4.
 - **VAL-05 has two legs**: vendored 2WCD, gated at Tier 2; the author's ensemble, Tier 3, which the
   phase gate requires. → §8.2.2 B2; §7.4.
 - **No HOLE on the default path**: the radius profile is an in-project probe-radius profile.
@@ -56,8 +59,8 @@ Each item is recorded in full where it points. Read it there first.
 - **The COMSOL exports** (WP13), against
   [`docs/validation/comsol-export-contract.md`](../validation/comsol-export-contract.md). Until they
   land every report carries `golden_source: self`, and Tier 3 skips the archive comparison visibly.
-  This also covers the two declarations only the author can make: which boundary `tds.ntflux_i` was
-  evaluated on, and which electrode the exported current references.
+  They include the author's two declarations: the `tds.ntflux_i` boundary and the current's
+  reference electrode.
 - **The Read the Docs project** (slug `nanopnp`) and **`$NANOPNP_REFERENCE_DATA` on the nightly
   runner**.
 
