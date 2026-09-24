@@ -46,4 +46,5 @@ the physics, and need full introspection. **Collaborating computational scientis
 reproducible, case-file runs and sweeps from the command line. **Experimental nanopore
 laboratories** want a desktop application: choose a pore, set the salt and the voltage, and get a
 prediction. The first two are served today. The third is served by the desktop shell from a
-development install, until the double-clickable bundle is confirmed.
+development install. A double-clickable Windows build of the packaging probe has been confirmed on
+a real desktop; a bundled shell and installers come later.

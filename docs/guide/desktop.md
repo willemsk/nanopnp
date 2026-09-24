@@ -13,9 +13,10 @@ form.
 
 !!! note "v0.5: a development install"
     In v0.5, run the shell from a development install (`uv run nanopnp-gui case.yaml`) or a pip
-    install with the `gui` extra. A double-clickable Windows bundle is built and self-tested by CI
-    on every push, but confirming that it opens and draws on a real desktop is still outstanding
-    (§8.2 criterion 4, risk RSK-13), and installers for all three platforms come after v1.0.
+    install with the `gui` extra. A double-clickable Windows bundle of the packaging probe is built
+    and self-tested by CI on every push, and it has been confirmed to open and draw on a real
+    desktop (§8.2 criterion 4, closed 24 September 2026). Installers for all three platforms come
+    after v1.0.
 
 ## The five panels
 

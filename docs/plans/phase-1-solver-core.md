@@ -920,6 +920,10 @@ and that attribution is reported as an addendum here when the exports land. Phas
 the double-click, is still open as §8.2.1 leaves it. It is the author's, and Phase 2's ruling B1
 requires it before WP17.
 
+> **Outcome — criterion 4 closed, 24 September 2026.** The author double-clicked the
+> `nanopnp-probe-windows` bundle of CI run 36045057612 (commit `52fd531`) and it opened, drawing a
+> mesh. RSK-13 is retired; the record is the NOTE to `SPECIFICATION.md` §8.2.1.
+
 **Tier-3 attribution: machinery measured, reference not.** Every Tier-3 report carries
 `golden_source: self`. The four-rung ladder ran against a self-golden on the VER-11 benchmark pore
 (708 elements, 0.5 M, +50 mV, −0.05 C/m²; four full-ladder solves in 75 s). The `none`-rung

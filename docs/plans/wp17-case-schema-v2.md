@@ -4,7 +4,8 @@
 It inherits the `case_fields()` schema walk and switch classification (WP7, WP14), the stage-10
 solve-key and restore-digest contract (WP10, WP15), and the Tier-3 case identity (WP13). **It is not
 implemented until ruling B1 is met.** The Phase 1 end-of-phase report has merged as `v0.5.0`, and the
-author's double-click observation of amendment A4 is still to be recorded. Its tag is `v0.9.0-alpha.1`.
+author's double-click observation of amendment A4 was recorded on 24 September 2026 (the NOTE to
+§8.2.1), so B1 is met. Its tag is `v0.9.0-alpha.1`.
 
 This package belongs to [Phase 2, geometry pipeline](phase-2-geometry-pipeline.md) §WP17.
 `SPECIFICATION.md` governs, and every identifier below points into it. Where this plan and the

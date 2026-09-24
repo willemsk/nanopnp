@@ -2524,6 +2524,15 @@ disagreement at the per-cent level is expected for the reasons in §7.4.
 Phase 0 is therefore met by criteria 1 to 3 as written, with criterion 4 explicitly outstanding
 until amendment A4's build and observation have both happened.
 
+NOTE — **Criterion 4 closed, 24 September 2026.** The author double-clicked the bundle uploaded as
+`nanopnp-probe-windows` by the gated `bundle` job of CI run
+[36045057612](https://github.com/willemsk/nanopnp/actions/runs/36045057612), built from commit
+`52fd531` (reported version `0.5.0a11.dev4+g52fd531b4`), on a Windows desktop. The executable opened
+a window drawing a basic mesh with its controls. The author called it "still a bit janky", which is
+a usability remark on the probe and not a packaging failure: the criterion asks that the bundle
+build and open, and it did. Amendment A4's build and observation have both happened, so criterion 4
+is met and RSK-13 is retired as a risk. The `bundle` job keeps detecting it on every push.
+
 #### 8.2.2 Phase 2 decisions, agreed 24 September 2026
 
 Rulings by the author, taken while planning Phase 2 (`docs/plans/phase-2-geometry-pipeline.md`).
@@ -2549,8 +2558,8 @@ The end-of-phase report (`docs/plans/phase-1-solver-core.md`) measures the phase
 | C1 | The gate's last clause is met by Tier 3 being **enabled and its attribution machinery verified**: the four-rung ladder against a self-golden, with `golden_source: self` on every report. The attribution of differences **against COMSOL** is recorded as outstanding until the author's reference exports exist (VAL-03, `docs/validation/comsol-export-contract.md`). When they land, it is reported as an addendum to the Phase 1 report, and it gates nothing retroactively. v0.5.0 is released on this basis | Phase 1 closes without the one comparison that needs data the project does not yet hold. The consequence is the same as A2's: a risk stays open longer than planned, here RSK-09 (a Tier-3 discrepancy originating in the reference) and the attribution of any residual. Nothing in Phase 2 touches a weak form, so the addendum can land at any point without re-opening a Phase 2 result |
 | C2 | The §8.3 reference sweep (3,675 points on 12 cores) is planned and checked in, but not run. QR-06's scaling is measured on 4 cores (VER-39, recorded and never gated) | QR-06 remains a SHOULD, measured only at the scale the development machine allows. The day-scale run is the author's to make, on HPC hardware |
 
-Phase 0 criterion 4 is not changed by this section: it stays open, as §8.2.1 leaves it, until the
-double-click is recorded (§8.2.2 B1).
+Phase 0 criterion 4 is not changed by this section. It was closed by the author's double-click,
+recorded in the NOTE to §8.2.1 on the same day, which met the last condition of §8.2.2 B1.
 
 ### 8.3 Effort estimate
 
@@ -2609,7 +2618,7 @@ otherwise report unbounded throughput for a resumed sweep.
 | **RSK-10** | The NGSolve pip wheel ships without MUMPS, and UMFPACK or SuperLU may not handle production-size coupled factorisations | Med | Med | Two solver configurations (§6.6); measured on day one of Phase 0 (§8.2 criterion 3); iterative fieldsplit through ngsPETSc in reserve | Phase 0 |
 | **RSK-11** | NaN from 1/r terms at integration order 2, silent rather than a crash | Med | Med–High | Integration order ≥ 3 asserted on all 1/r forms; dedicated test on an axis-touching mesh (VER-07) | Tier 1 |
 | **RSK-12** | Transcription errors in the correction coefficients, the per-ion `D` and `μ` sets being easy to conflate | Med | Med | Coefficient files reviewed against the model report in a second pass; each `f(c)` property-tested against published check values (VER-03) | Tier 1 |
-| **RSK-13** | Desktop packaging defeated by a binary dependency | Med | Low–Med | NGSolve wheels chosen for this reason; packaging prototyped in Phase 0 (§8.2 criterion 4), not at the end | Phase 0 |
+| **RSK-13** | Desktop packaging defeated by a binary dependency | Med | Low–Med | NGSolve wheels chosen for this reason; packaging prototyped in Phase 0 (§8.2 criterion 4), not at the end. **Retired 24 September 2026** on the author's double-click (§8.2.1 NOTE); the gated `bundle` job re-detects it on every push | Phase 0 |
 | **RSK-14** | COMSOL licence access lapses, removing the oracle | Med | Low | Full reference set generated and archived in Phase 1 (VAL-03) | Continuous |
 | **RSK-15** | Scope creep from the GUI drawing effort away from validation | Med | High | Each increment stays thin and follows the physics it exposes; no GUI is built for an unvalidated capability | Continuous |
 | **RSK-16** | Sole-maintainer bus factor | Med | Med | JOSS paper and DOI; small dependency surface; every stage independently usable | Continuous |
