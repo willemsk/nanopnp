@@ -211,7 +211,7 @@ The subject of each requirement is the product unless stated otherwise.
 |---|---|
 | **IF-01** | SHALL expose a Python API in which every pipeline stage is a separately importable, invocable object, stable from v0.5 onward. |
 | **IF-02** | SHALL provide a CLI over the same stage objects, able to execute a case file, run one stage, and dispatch a sweep. |
-| **IF-03** | SHALL accept one declarative YAML case file, identified by `schema: nanopnp/case/v1`, as the complete run specification, rejecting unknown keys with a diagnostic naming the key. |
+| **IF-03** | SHALL accept one declarative YAML case file, identified by `schema: nanopnp/case/v2`, as the complete run specification, rejecting unknown keys with a diagnostic naming the key. A document declaring `nanopnp/case/v1` SHALL be read losslessly as its v2 upgrade (§5.3.1). **Amended 24 September 2026** from v1 (§8.2.2 B3). |
 | **IF-04** | SHALL read structures in PDB and mmCIF, and trajectories in DCD, XTC, TRR and NetCDF. |
 | **IF-05** | SHALL read and write volumetric density and charge grids in OpenDX and CCP4. |
 | **IF-06** | SHALL write meshes in Gmsh MSH 4.1 as the archival format, and SHOULD read any format meshio supports. |
@@ -834,7 +834,7 @@ CLI and the desktop shell drive the same stage objects (IF-01, IF-02, IF-09).
 | 6 | Meshing | Fragmented region, size fields | Graded triangular mesh | Netgen (LGPL-2.1) default, Gmsh (GPLv2+) optional, behind the mesh adapter | §5.2.2 (FR-10, QR-12) |
 | 7 | Charge assembly | Prepared ensemble, pH, force field, **and the deployed mesh** (its gate is evaluated there, PHY-19); on the consumer path, a supplied field document instead of the ensemble | ρ_pore(r, z), Q_net, dielectric field, ion-exclusion surface | PDB2PQR 3.7+ (BSD-3) driving PROPKA3; quintic B-spline (`spl4`) deposition; APBS 3.4.1 (BSD-3) cross-check; settings per PHY-16 | Charge conservation to 10⁻³ of Q_net on the deployed FE mesh, plus the per-z-slice cumulative check (FR-14, QR-03, PHY-19) |
 | 8 | Materials | Electrolyte specification, correction model names, coefficient files | D_i, μ_i, η, ϱ, ε_r as fields in ⟨c⟩ and d | Correction registry, `data/corrections/willems2020_nacl.yaml` | Conformance values of §4.3 reproduced; clamps above 5.3 M logged with location and property (PHY-13) |
-| 9 | Case assembly | Mesh, charge and dielectric fields, materials, boundary conditions, bias, analyte, numerics | Resolved case document, assembled discrete problem | `io/` schema validator, `physics/` model registry | Schema `nanopnp/case/v1` validates, unknown keys rejected with a diagnostic naming the key (IF-03); round trip semantically identical (FR-26) |
+| 9 | Case assembly | Mesh, charge and dielectric fields, materials, boundary conditions, bias, analyte, numerics | Resolved case document, assembled discrete problem | `io/` schema validator, `physics/` model registry | Schema `nanopnp/case/v2` validates, a v1 document upgraded losslessly, unknown keys rejected with a diagnostic naming the key (IF-03); round trip semantically identical (FR-26) |
 | 10 | Solve | Assembled problem, continuation ladder, optional warm start | Converged fields, iteration history | NGSolve 6.2.2606+ (LGPL-2.1), damped Newton; UMFPACK (GPL-2+) or scipy SuperLU (BSD) (CON-08) | No negative concentration at any nonlinear iterate; ladder completed to the target rung (FR-17); §6.5, §6.6 govern |
 | 11 | QoI extraction | Converged fields | I, t₊, RR, EOF rate, F^em(z), F^hd(z), ΔU(z) | Domain/indicator form and variational reaction flux, both implemented | The two routes agree within the stated tolerance, checked in CI (FR-23, QR-04); §6.7 governs |
 | 12 | Reporting and export | Results, artefact hashes, environment | Figures, XDMF/HDF5 fields, dataset, case file, manifest | `io/`, `sweep/` result store | Manifest complete and sufficient to reconstruct the run (FR-25, QR-08) |
@@ -1005,7 +1005,7 @@ volumetric charge, sharing the smearing machinery of §4.4.
 One declarative YAML document is the unit of reproducibility (IF-03). Everything else is derived.
 
 ```yaml
-schema: nanopnp/case/v1
+schema: nanopnp/case/v2
 name: clya-wt-1M-100mV
 
 inputs:                             # optional; supplied artefacts, §5.3.2
@@ -1016,16 +1016,18 @@ inputs:                             # optional; supplied artefacts, §5.3.2
                   symmetry_axis: axis}}
   charge: {path: clya_charge.yaml, format: field1}
   eps_r:  {path: clya_solid_fraction.yaml, format: field1}
+  # profile: {path: clya_profile.yaml, format: profile1}   # stage 4, nanopnp/profile/v1
+  # pqr:     {path: clya.pqr, format: pqr}                 # stage 7's PDB2PQR step
 
 structure:
-  source: {pdb: 2WCD.pdb, variant: ClyA-AS, chains: all}
+  source: {path: 2WCD.pdb, variant: ClyA-AS, chains: all, selection: protein}
   ensemble: {trajectory: eq.xtc, frames: {last_ns: 5, count: 50}}
   symmetry: {point_group: C12, axis: auto}
 
 geometry:
   density:  {grid_spacing_nm: 0.05, kernel: gaussian_vdw, sharpness: 0.93}   # 0.5 Å, as the paper
   contour:  {isolevel: 0.25, smoothing: taubin, simplify_tol_nm: 0.02}
-  membrane: {thickness_nm: 2.8, eps_r: 3.2}
+  membrane: {thickness_nm: 2.8, centre_z_nm: 0.0}   # centre in the structure's frame, along the axis
   reservoir: {radius_nm: 250}
   analyte:  {shape: prolate_spheroid, a_nm: 2.0, b_nm: 3.0, z_nm: 6.0, charge_e: -8}
 
@@ -1034,7 +1036,8 @@ charge:
   forcefield: CHARMM
   titration: propka
   smearing: {sharpness: 0.5, grid_spacing_nm: 0.005, axis_cutoff_nm: 0.01}
-  eps_protein: 20.0
+  exclusion_offset_nm: 0.0           # FR-15, PHY-20; 0 is the validated model, no exclusion shell
+  dielectric_transition_nm: 0.0      # PHY-20 NOTE; 0 is the sharp indicator of the validated model
 
 electrolyte:
   species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]
@@ -1061,10 +1064,11 @@ physics:                            # the named model of PHY-21
   variable_density: true
   inertia: true                      # PHY-22; the reference model retained it
   dielectric_gradient_forces: false  # PHY-23; off in the validated model
+  solid_permittivities: {protein: 20.0, membrane: 3.2}   # PHY-20; the only place they are set
 
 numerics:
   elements: {phi: P2, c: P2, u: P2, p: P1}
-  mesh: {backend: netgen, wall_h_nm: auto, boundary_layer: false}
+  mesh: {backend: netgen, wall_h_nm: auto, size_scale: 1.0, boundary_layer: false}
   nonlinear: {strategy: newton, damping: residual, max_iter: 100, rtol: 1e-6}   # NUM-16
   continuation: default_ladder
   stabilisation: none                # NUM-11; `supg` is its flag, `reference` matches §6.4
@@ -1074,12 +1078,56 @@ numerics:
 outputs: [current, transport_numbers, rectification, eof_rate, analyte_force, fields]
 ```
 
+NOTE (`nanopnp/case/v2`, and reading a v1 document; **added 24 September 2026**, §8.2.2 B3): the
+schema moved once, carrying every key Phases 2 and 3 are foreseen to need. Against v1 it **adds**
+`inputs.profile`, `inputs.pqr`, `structure.source.selection`, `geometry.membrane.centre_z_nm`,
+`charge.exclusion_offset_nm`, `charge.dielectric_transition_nm` and `numerics.mesh.size_scale`;
+**renames** `structure.source.pdb` to `structure.source.path`, since IF-04 reads mmCIF as well; and
+**removes** `charge.eps_protein` and `geometry.membrane.eps_r`, whose values
+`physics.solid_permittivities` already carries. A permittivity set in two places is a calibration
+parameter (PHY-20) with two sources of truth, and a default of 20 or 3.2 written in code would be a
+fitted parameter hard-coded in Python; the author ruled on 24 September 2026 that the map is the one
+place they are set. The seven added keys default to the validated configuration, so a v1 document
+means under v2 exactly what it meant under v1. A document declaring `nanopnp/case/v1` SHALL be
+read as its upgrade: the schema string is replaced, `structure.source.pdb` is renamed, and a written
+`charge.eps_protein` or `geometry.membrane.eps_r` moves to `physics.solid_permittivities.protein` or
+`.membrane`. The upgrade SHALL refuse, naming both keys and both values, a moved value that
+disagrees with one the map already holds, and SHALL refuse a key v1 did not have, naming the key and
+the schema it belongs to: a document is valid against the schema it declares or not at all. A v2
+document that uses a removed or renamed key SHALL be refused with a diagnostic naming the v2 key
+that replaced it. The upgrade is not a deviation and does not reach the solve: the schema string is
+excluded from the provenance that keys a solve (§5.3.2), as `name:` and `outputs:` are, so a v1
+document and its v2 rewrite key one stage-10 artefact and one VER-34 restore digest. The stage-9 key
+of a v1 document is the key of its upgrade, which differs from any key v1 recorded, and the
+manifest's embedded case text stays the file as it was read. The frozen v1 field tree and the map
+from it to v2 are held as test data, so VER-47 can hold the upgrade to them in both directions.
+
+NOTE (the v2 keys that change a number; **added 24 September 2026**): `charge.exclusion_offset_nm`
+and `charge.dielectric_transition_nm` are the fitted exclusion offset of FR-15 and the width of
+PHY-20's transition to `ε_w`. Both SHALL be non-negative, and both are switches whose validated
+default is `0`: the validated model has no exclusion shell and a sharp material permittivity (PHY-20
+NOTEs). A non-zero value is therefore a deviation that the FR-25 manifest records. When the
+`charge:` block is absent, each reads as its validated default. `numerics.mesh.size_scale`, default
+`1`, SHALL multiply every element-size target of §5.2.2 and NUM-30, the resolved `wall_h_nm`
+included. It exists so that a mesh-convergence study (RSK-09, §6.8) is a sweep over a case-file
+field (FR-24) rather than a code edit. It is a discretisation choice recorded with the mesh, not a
+deviation. With a supplied `inputs.mesh` a value other than `1` would be a knob with no effect, so
+it SHALL be refused.
+
 NOTE (`inputs:`, FR-27): the optional top-level `inputs:` block is hand substitution (FR-27) applied
 at stage granularity. Each key names a stage output supplied from outside — a mesh, a charge field,
 a dielectric field — by path and format. A stage whose output is supplied does not run, and neither
 does anything upstream of it; the substituted file is hashed by content and enters the FR-25
 manifest as an input like any other. Releases before v0.9 accept an externally generated mesh
 this way, which is what makes the solver core testable ahead of the meshing pipeline (§8.1).
+`inputs.profile` supplies stage 4's conditioned polyline as a `nanopnp/profile/v1` document
+(`format: profile1`), which is how a hand-edited contour enters a run (§8.1, GUI increment 2), and
+`inputs.pqr` supplies the per-atom charges and radii of stage 7's PDB2PQR step (`format: pqr`). The
+two chains are structure → density → profile → mesh and structure → PQR → charge field, and the
+dielectric field comes from the density (FR-15). Supplying an artefact together with one downstream
+of it on the same chain SHALL be refused, naming both. The upstream one would be hashed into the
+manifest as an input to a run that never read it. Until the stage that consumes a supplied
+artefact is delivered, the case is refused as an unsupported section, naming that stage.
 
 NOTE (`inputs.charge`, `inputs.eps_r`, IF-05, IF-03): a supplied field is named by a
 pydantic-validated header document, `schema: nanopnp/field/v1`, which carries the `quantity`, its
@@ -1176,7 +1224,7 @@ the order of `p` SHALL be refused unless `numerics.stabilisation` selects a mode
 stabilisation of §6.4.2, and the refusal SHALL name both the inf-sup condition and the mode that
 would permit the pair. All three orders are recorded in the run provenance record (NUM-03).
 
-NOTE (`numerics.stabilisation`, and the compatibility rule for `nanopnp/case/v1`): the value set is
+NOTE (`numerics.stabilisation`, and the compatibility rule for the case schema): the value set is
 `none | supg | reference`. `none` is the validated default and the production policy of NUM-11;
 `supg` is NUM-11's flag, the streamline term alone; `reference` is the mode of NUM-14, streamline
 and crosswind on the transport operator together with the flow stabilisation of §6.4.2, and is the
@@ -1223,7 +1271,7 @@ when the plan is built, naming the axis, rather than collecting a column of abse
 | 5 | Tagged (r, z) region | OCC BRep plus tag map |
 | 6 | Mesh | Gmsh MSH 4.1 archival, any meshio (MIT) format on read (IF-06) |
 | 8 | Resolved material coefficient set | Correction file references and evaluated parameters |
-| 9 | Resolved case document | YAML, schema `nanopnp/case/v1` |
+| 9 | Resolved case document | YAML, schema `nanopnp/case/v2` |
 | 10 | Field set, iteration history | XDMF with HDF5 heavy data (IF-07) |
 | 11, 12 | Scalar QoIs, profiles, figures, dataset, manifest | Result store record, figure files, manifest |
 | — (a sweep, §5.3.4) | Collected dataset over the members of a sweep | Result store record, schema `nanopnp/sweep/v1` |
@@ -1305,7 +1353,10 @@ selection are excluded: neither reaches the mesh, the operator or the boundary d
 carrying them re-solves a converged case because the run asked for one more quantity to be
 reported — on the reference pore, minutes of work discarded for a question about post-processing.
 Both remain in the §5.3.3 manifest, which records what was asked for and not only what was
-computed, and both remain in the stage-11 key, where `outputs:` does change the artefact.
+computed, and both remain in the stage-11 key, where `outputs:` does change the artefact. The
+`schema:` string is excluded for the same reason (**added 24 September 2026**): a v1 document and its
+lossless v2 upgrade describe one run (§5.3.1), and a key that told them apart would re-solve every
+converged case in a store because the loader, not the case, had changed.
 
 NOTE (QR-08, reproduction): the check that a run reproduces its scalar quantities of interest from
 its manifest SHALL re-enter the solve rather than be served from the artefact store. Run against a
@@ -1342,7 +1393,7 @@ Emitted with every result artefact (FR-25, IF-08) and sufficient alone to recons
 A sweep (FR-24) is a set of runs, not a pipeline stage: it produces no field, and a stage keyed on
 thousands of upstream artefacts has no meaningful key. It is specified by its own declarative
 document, `schema: nanopnp/sweep/v1`, which names a base case by path and the axes to vary. Nothing
-is added to `nanopnp/case/v1`, which is frozen: a sweep block inside a case would make that case's
+is added to the case schema for it: a sweep block inside a case would make that case's
 content hash — and every artefact key derived from it — a function of a sweep the run does not
 perform.
 
@@ -2204,10 +2255,11 @@ archive, so the push gate is unaffected by whether it is present.
 | **VER-38** | Sweep dispatch and collection | A single-member dispatch exits with that member's own class for each of the case, gate, convergence and cancellation classes, and produces the same scalars run alone into an empty store as it does inside the sweep; a local multi-worker sweep exits `0` with a failed member present and nonzero under fail-fast; a member whose parent artefact is absent falls back to the full ladder and records the reason; the worker thread pinning is in place before the linear-algebra libraries are imported, asserted in a spawned process; the dataset round-trips to identical values, a failed member's quantities are absent rather than defaulted, and the rectification of an exactly-opposite bias pair equals the two-point ratio of §6.7 taken from the same two records. The dispatch and collection surface is verified at Tier 1; the equivalence of a member solved alone and the same member solved inside the sweep is a Tier 2 activity (FR-24, IF-02, FR-23) |
 | **VER-40** | Wall-distance admissibility and the correction driver clamp | Both wall forms are continuous across `d̄ = 0` and return their wall values for every non-positive sample, rather than the sign-reversed values the ion form's root at `−P₂` would otherwise give, on the numeric and the symbolic evaluation path alike; a distance field whose minimum falls below the NUM-34 threshold aborts naming the gate, the measured minimum, its location and the fraction of samples below zero, and one above the threshold passes; the field gated is the mollified one wherever NUM-31's smoothing is applied, and a configuration activating no wall correction is not gated; and a mesh coarse enough to violate the gate is refused rather than returning the current whose two extraction routes disagree by 40 %, while a mesh that passes agrees between the routes to better than the NUM-26 tolerance. The clamp and the gate diagnostic are verified at Tier 1, on the correction functions and one field; the route-agreement half needs a converged pair and is a Tier 2 activity (PHY-02, NUM-34, NUM-26, QR-04, QR-12) |
 | **VER-41** | Stabilisation terms, the mode registry and the `Pe_h` diagnostic | The element size the stabilisation parameters are defined against is asserted elementwise against its measured convention rather than assumed, so a backend that changed it fails here rather than retuning the mode in silence; the registry lists exactly the modes of §5.3.1 and refuses an unknown name listing them; the `none` entry produces an assembled residual *identical* to the unstabilised one, asserted on the vector and not on the mode string; the streamline parameter takes both branches of `ψ(q) = min(q, 1)` and is continuous at the crossover; the crosswind viscosity is exactly zero on every element at or below the Péclet number its tuning constant sets, positive on one above it, and bounded by `D_i(C Pe_K − 1)`; the crosswind projector annihilates the advective velocity and is idempotent; the crosswind, streamline and grad-div terms request the integration orders of NUM-15 and the `1/r` minimum of NUM-07 respectively, asserted on the quadrature request rather than on a number; an equal-order velocity–pressure pair is refused in every mode that supplies no flow stabilisation, naming both inf-sup and the mode that would permit it, and accepted in the mode that does; a velocity order left unset reproduces the previous two-order model exactly; the `Pe_h` diagnostic warns naming the species, the value and its `(r, z)`, is silent below the threshold, and runs in the unstabilised mode; and every mode's **linearisation** is finite at the zero-wind cold state `φ̃ = 0`, `c̃_i = 1`, `u̅ = 0`, asserted on the assembled Jacobian entries rather than on the residual, because the residual is finite there in every mode and only the linearisation is not (NUM-03, NUM-11, NUM-12, NUM-14, NUM-15, QR-12) |
-| **VER-43** | Desktop shell, schema-generated editor, solver process and packaging probe | The schema walk enumerates exactly the editable dotted paths of `nanopnp/case/v1`, asserted in both directions so that a field added later fails this test rather than becoming silently uneditable, and the switch classification of FR-25 is checked against that same walk rather than a second one; the shell's view-model layer imports neither PySide6 nor NGSolve, asserted on `sys.modules` in a fresh process, and no `PyQt` module is reachable from any import path the shell takes (CON-09); every option the editor offers comes from the schema's own declared type or from a live registry, so no value set is written in `gui/`; a value the schema refuses is refused at the field before any substitution, naming the path, the value and the declared type, and a document the registries refuse produces the same diagnostic text the command line prints for the same file; run control drives the case through a **spawned** process, forwards a monotone completion fraction ending at 1, receives each stage transition as data — the stage's name and its position in the walk, through a structural hook, never recovered by parsing a progress caption — and cancels through a token the child honours, a cancelled run writing no artefact; a failed run reports the §3.1 exit class the command line would return for the same case; and the packaging probe imports PySide6, `QtWebEngineWidgets`, NGSolve, Netgen and `ngsolve.webgui` in one process, its bundle carrying the CON-11 licence notice (IF-09, QR-11, FR-27, CON-09, CON-11, RSK-13, §8.2 criterion 4 as amended by A4) |
+| **VER-43** | Desktop shell, schema-generated editor, solver process and packaging probe | The schema walk enumerates exactly the editable dotted paths of the current case schema (`nanopnp/case/v2`), asserted in both directions so that a field added later fails this test rather than becoming silently uneditable, and the switch classification of FR-25 is checked against that same walk rather than a second one; the shell's view-model layer imports neither PySide6 nor NGSolve, asserted on `sys.modules` in a fresh process, and no `PyQt` module is reachable from any import path the shell takes (CON-09); every option the editor offers comes from the schema's own declared type or from a live registry, so no value set is written in `gui/`; a value the schema refuses is refused at the field before any substitution, naming the path, the value and the declared type, and a document the registries refuse produces the same diagnostic text the command line prints for the same file; run control drives the case through a **spawned** process, forwards a monotone completion fraction ending at 1, receives each stage transition as data — the stage's name and its position in the walk, through a structural hook, never recovered by parsing a progress caption — and cancels through a token the child honours, a cancelled run writing no artefact; a failed run reports the §3.1 exit class the command line would return for the same case; and the packaging probe imports PySide6, `QtWebEngineWidgets`, NGSolve, Netgen and `ngsolve.webgui` in one process, its bundle carrying the CON-11 licence notice (IF-09, QR-11, FR-27, CON-09, CON-11, RSK-13, §8.2 criterion 4 as amended by A4) |
 | **VER-44** | Live convergence monitoring and field visualisation | The rung and the Newton step reach the shell through a structural hook carrying the residual and the undamped relative update as numbers, never recovered from a progress caption; the hook is not an input, asserted by running the same case watched and unwatched and requiring one artefact hash and one store entry; a rung that reports no Newton step yields a rung record all the same, and the plot shows it as a labelled band rather than interpolating a line across it, naming **which of the two silences** it is: a rung whose model takes no Newton callback and can report no step, or a coupled rung whose damped-Newton solve found the entry residual already below its target and returned before its first step — the NUM-16 warm-start case, which most of a warm ladder does. The hook SHALL carry that distinction as data, taken from the same test that injects the callback, because the two silences are identical from the far side and annotating either as the other states something about the solve that is not true; a solve served from the store is named as such rather than drawn as an empty plot; the plot draws no convergence threshold, the criterion of NUM-16 being per rung and disjunctive, and reports per rung which test the recorded numbers **prove** ended it rather than which the solver evaluated first: the two tests are not exclusive, so what may be asserted is the exclusion — a forced last step, which NUM-16 bars from the update test, and a last relative update above the rung's own tolerance each leave the residual test as the only one that can have closed the rung, and otherwise the update test is reported as met without also claiming the residual test was not. That tolerance SHALL travel with the rung rather than be assumed from the reference settings, so the reading is against the number the solve used; the band also reports the minimum damping and how many steps were forced; the field viewer renders a solution restored through the stage-10 gate rather than an export, its field names and units come from the IF-07 attribute vocabulary rather than from `gui/`, the scene reaches the view as a file rather than a data URL, a sample no logarithmic axis can place is omitted and counted rather than drawn at the axis floor, and a document that loaded without its renderer is reported as a diagnostic naming the renderer source rather than shown as a blank panel; the renderer is shipped with the package rather than fetched, is byte-identical to the npm tarball the repository keeps as its corresponding source, that tarball's SHA-512 is npm's published integrity, and its version is the one the installed `netgen.webgui` pins, so an upgrade that moves the pin fails the gate rather than drawing nothing; and the packaging probe's selftest fails when the bundled renderer does not reach its document (IF-09, QR-11, FR-27, NUM-16, NUM-18, QR-12, CON-09, RSK-13) |
 | **VER-45** | Documentation surface and the public API | The generated case-file reference enumerates exactly the editable dotted paths of the VER-43 schema walk, in both directions, with each field's declared type, default and option set taken from the schema or a live registry, so a field added later appears without a documentation edit; the generated command-line reference covers every subcommand `build_parser()` defines, and its exit-code table is the §3.1 IF-02 enumeration, both in both directions; every name in `nanopnp.__all__` resolves and is the object at its documented module path, and the documented public surface equals `__all__`, in both directions; `import nanopnp` in a fresh process imports no `ngsolve`, `netgen` or `numpy` module, asserted on `sys.modules`; the documentation site builds with the generator's strict mode, so that a broken internal link or cross-reference fails the build, on every push including prose-only ones (§7.6) (IF-01, IF-02, IF-03, QR-15 in part; §3.1 IF-01 public-surface NOTE) |
 | **VER-46** | Executed worked examples | Every command in an example's tagged console blocks is executed verbatim, from a copy of that example's directory, and exits `0`; each example meets an oracle stated in its README that is a property of the model rather than a transcribed number: an uncharged pore with symmetric reservoirs rectifies to unity within solver tolerance; a pore carrying negative fixed charge has a cation transport number above one half; a run with every correction set to `none` lists each of them under the manifest's deviations from the validated default; the two current-extraction routes of FR-23 agree to the tolerance QR-04 already gates; and fields read back from the IF-07 export carry the attribute names that vocabulary defines. No number appears in the user documentation as a result unless an example asserts it. Runs in the Tier 2 directory for its runtime; an example whose solve takes minutes (the reference geometry) is marked `slow` and is recorded rather than gated, its cheap steps still gated at Tier 1 (QR-15 in part, IF-02, FR-23, FR-24, FR-25) |
+| **VER-47** | Case schema v2, the v1 upgrade and the supported interpreter range | Every case file the project shipped under `nanopnp/case/v1`, frozen as a test corpus, loads as v2. For each of them, the VER-34 solve-provenance digest, the stage-8 materials key and the Tier-3 case identity equal the values the v1 loader recorded before the move, and the v1 file and its v2 rewrite share one stage-9 key and one resolved configuration; the frozen v1 field tree maps onto the v2 tree through the declared added, renamed and moved sets, in both directions, so that a key changed later without a map entry fails this test; a v1 document carrying a v2 key, a moved permittivity disagreeing with `physics.solid_permittivities`, and a v2 document using a removed or renamed key are each refused naming the keys; an undeclared schema string is refused naming both accepted ones; each supplied artefact given beside one downstream of it on the same chain is refused naming both, and each new `inputs:` key is refused as unsupported naming the stage that would consume it; `charge.exclusion_offset_nm` and `charge.dielectric_transition_nm` are classified switches whose non-zero values are listed as deviations, and read as their defaults where the block is absent; `numerics.mesh.size_scale` other than 1 beside `inputs.mesh` is refused; the Python range declared by `requires-python`, the trove classifiers, the ruff target and the CI matrix agree with each other and with §2.5 (IF-03, FR-25, FR-26, FR-27, QR-09; §5.3.1 v2 NOTEs; **added 24 September 2026**) |
 
 ### 7.3 Tier 2 analytic benchmarks
 
@@ -2692,7 +2744,7 @@ needed.
 |---|---|
 | IF-01 | VER-25, VER-32, VER-45 (the public surface and its import cost) |
 | IF-02 | VER-32, VER-38, VER-45 (the generated command-line and exit-code references), VER-46 (every documented command executed) |
-| IF-03 | VER-09, VER-36 (dotted-path substitution against the schema) |
+| IF-03 | VER-09, VER-36 (dotted-path substitution against the schema), VER-47 (schema v2 and the v1 upgrade) |
 | IF-04 | None yet |
 | IF-05 | VER-29, VAL-15 |
 | IF-06 | VER-27 |
@@ -2724,7 +2776,7 @@ needed.
 | FR-23 | VER-11, VER-38 (the two-point ratio) |
 | FR-24 | VER-36, VER-37, VER-38 |
 | FR-25 | VER-24, VER-26 (manifest emitted per §7.6) |
-| FR-26 | VER-09, VER-26 |
+| FR-26 | VER-09, VER-26, VER-47 (a v1 document and its v2 rewrite are one run) |
 | FR-27 | VER-23, VER-25, VER-26, VER-32, VER-34 |
 | FR-28 | None yet |
 | FR-29 | None yet |
@@ -2736,7 +2788,7 @@ needed.
 | QR-06 | VER-39 (measured, recorded, not gated) |
 | QR-07 | None yet (§8.2 criterion 3) |
 | QR-08 | VER-26 for manifest sufficiency; VER-34, VER-35 for QoI reproduction |
-| QR-09 | None yet |
+| QR-09 | VER-47 (the declared interpreter range agrees with §2.5); the wheel-only install itself is exercised by the §7.6 matrix, not asserted by a test |
 | QR-10 | None yet |
 | QR-11 | VER-43, VER-44 |
 | QR-12 | VER-10, VER-32, VER-40, VER-41 |

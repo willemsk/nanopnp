@@ -12,17 +12,23 @@ an unmerged branch has shipped.
   as an addendum to that report.
 - Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **planned, not started**:
   WP17–WP25, with the author's rulings B1–B7 recorded in `SPECIFICATION.md` §8.2.2.
+- **WP17** ([case schema v2 and the 3.11 floor](wp17-case-schema-v2.md)) is **planned**, and its
+  spec amendments are committed. It is not implemented until B1's remaining condition, the double-click observation, is met.
 - **Next, in order** (ruling B1):
   1. the author's double-click observation of the Windows bundle, which closes Phase 0 criterion 4
      and RSK-13 (§8.2.1 A4);
-  2. `/wp-plan 17`: case schema v2 and the 3.11 floor.
+  2. `/wp-implement` WP17. Its first commit freezes the v1 case corpus and its solve keys **on
+     unchanged code**, before any schema edit (WP17 D7).
 
 ## What Phase 2 must not re-decide
 
 Each item is recorded in full where it points. Read it there first.
 
-- **The schema moves once**, to `nanopnp/case/v2` in WP17, carrying every Phase 2 and 3 key.
-  → §8.2.2 B3; §5.3.1 compatibility NOTE.
+- **The schema moves once**, to `nanopnp/case/v2` in WP17, with the key set of the §5.3.1 v2 NOTE.
+  A later need widens an existing key's value set, and does not add a key. → §8.2.2 B3; WP17 D1.
+- **`physics.solid_permittivities` is the only place ε_protein and ε_membrane are set**, and contour
+  tuning parameters and gate thresholds are never case keys (author rulings, 24 September 2026).
+  → WP17 D2, D3.
 - **Python 3.11–3.14.** QR-09 is amended; `pyproject.toml`, the CI matrix and the IF-05 NOTE follow
   in WP17. → §8.2.2 B4.
 - **VAL-05 has two legs**: vendored 2WCD, gated at Tier 2; the author's ensemble, Tier 3, which the
