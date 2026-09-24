@@ -57,8 +57,8 @@ release yet, and the comparison against the reference COMSOL model is recorded b
 | Release | Phase | Scope | State |
 |---|---|---|---|
 | v0.1 | 0 | Spike: the coupled model on an analytic pore, the continuation ladder, analytic benchmarks | **released**, [`v0.1.0`](CHANGELOG.md#010---2026-09-02) |
-| v0.5 | 1 | Solver core: external meshes and fields, QoI extraction, frozen case schema, API, CLI, sweeps | **in progress**, [`v0.5.0-alpha.10`](CHANGELOG.md#050-alpha10---2026-09-23) |
-| v0.9 | 2–3 | Full pipeline from a PDB structure: density, symmetry reduction, contour, mesh, PDB2PQR charges | planned |
+| v0.5 | 1 | Solver core: external meshes and fields, QoI extraction, frozen case schema, API, CLI, sweeps | **released**, [`v0.5.0`](CHANGELOG.md#050---2026-09-24) |
+| v0.9 | 2–3 | Full pipeline from a PDB structure: density, symmetry reduction, contour, mesh, PDB2PQR charges | **planned**, [Phase 2 plan](docs/plans/phase-2-geometry-pipeline.md) |
 | v1.0 | 4 | Validated release: V&V suite in CI, tutorials, JOSS submission, DOI archive | planned |
 
 Each merged work package is tagged `vX.Y.Z-alpha.N` toward its phase's release, and the package
