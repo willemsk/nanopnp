@@ -1,7 +1,7 @@
 """The ``nanopnp/sweep/v1`` specification document (FR-24, IF-03, §5.3.4).
 
 A sweep is specified by its **own** declarative document, naming a base case by
-path and the axes to vary. Nothing is added to ``nanopnp/case/v1``, which WP7
+path and the axes to vary. Nothing is added to the case schema, which WP7
 froze: a sweep block inside a case would make that case's content hash — and
 every artefact key derived from it — a function of a sweep the run does not
 perform, and the same base case is swept three different ways in a week.

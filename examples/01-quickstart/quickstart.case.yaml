@@ -4,7 +4,7 @@
 #
 # `inputs.mesh.path` resolves against the working directory, so run this from the
 # directory it is in, after `nanopnp mesh cylinder --out pore.msh`.
-schema: nanopnp/case/v1
+schema: nanopnp/case/v2
 name: quickstart
 
 inputs:

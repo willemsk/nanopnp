@@ -66,6 +66,12 @@ SWITCH_PATHS: tuple[str, ...] = (
     # Section 6.2: the conditions the reference model applied on the walls.
     "boundary_conditions.walls.ion_flux",
     "boundary_conditions.walls.slip",
+    # FR-15, PHY-20: the exclusion offset and the dielectric transition width,
+    # both 0 in the validated model (section 5.3.1 NOTE on the v2 keys that
+    # change a number). Floats, so the walk does not type them as switches;
+    # they are classified here by hand.
+    "charge.exclusion_offset_nm",
+    "charge.dielectric_transition_nm",
     # NUM-11, NUM-16, NUM-18, PHY-02, CON-11.
     "numerics.stabilisation",
     "numerics.continuation",
@@ -151,6 +157,9 @@ _VALIDATED_DEFAULTS: dict[str, Any] = {
         "ground": "cis",
         "walls": {"ion_flux": "no_flux", "slip": "no_slip"},
     },
+    # Present at its defaults so that every switch path reads off this document;
+    # a case without a charge: block reads the same values (see deviations()).
+    "charge": {"exclusion_offset_nm": 0.0, "dielectric_transition_nm": 0.0},
     "physics": {
         "model": "epnp-ns",
         "flow": True,
@@ -175,7 +184,10 @@ Every correction on against ``willems2020_nacl``, both parts of each; the steric
 flux on; variable-density flow and inertia on; the dielectric-gradient forces off
 (PHY-23); unstabilised (NUM-11); the NUM-16 Newton policy; the NUM-18 ladder; the
 PHY-02 distance field measured from the pore wall alone; UMFPACK (CON-11 as
-amended).
+amended); no exclusion shell and a sharp material permittivity (FR-15, PHY-20).
+
+It carries a ``charge:`` block, which :func:`~nanopnp.io.case.resolve` refuses in
+this release: the document is read path by path and never resolved.
 """
 
 
@@ -264,12 +276,30 @@ def deviations(document: CaseDocument) -> tuple[Deviation, ...]:
     """Return every switch this case sets away from the validated default.
 
     Sorted by path, so that two runs of the same configuration produce identical
-    manifests and a diff of two manifests is readable.
+    manifests and a diff of two manifests is readable. A switch under an
+    optional block the case does not carry reads as its validated default: the
+    block's absence selects nothing (section 5.3.1 NOTE on the v2 keys).
     """
-    found = [
-        Deviation(path=path, validated=default, value=value)
-        for path in SWITCH_PATHS
-        for default, value in [(value_at(VALIDATED_DEFAULT_CASE, path), value_at(document, path))]
-        if default != value
-    ]
+    found: list[Deviation] = []
+    for path in SWITCH_PATHS:
+        default = value_at(VALIDATED_DEFAULT_CASE, path)
+        if _block_absent(document, path):
+            continue
+        value = value_at(document, path)
+        if default != value:
+            found.append(Deviation(path=path, validated=default, value=value))
     return tuple(sorted(found, key=lambda deviation: deviation.path))
+
+
+def _block_absent(document: CaseDocument, path: str) -> bool:
+    """Return whether a block on the way to ``path`` is absent from ``document``.
+
+    Asked of every proper prefix, each of which the schema declares, so a path
+    the schema does not know still fails loudly in :func:`value_at` rather than
+    reading as absent.
+    """
+    components = path.split(".")
+    return any(
+        value_at(document, ".".join(components[:depth])) is None
+        for depth in range(1, len(components))
+    )

@@ -1,4 +1,4 @@
-"""The ``nanopnp/case/v1`` case-file schema, and its resolution to runnable objects.
+"""The ``nanopnp/case/v2`` case-file schema, and its resolution to runnable objects.
 
 One declarative YAML document is the unit of reproducibility (IF-03,
 ``SPECIFICATION.md`` section 5.3.1); everything else is derived. This module owns
@@ -12,6 +12,11 @@ written to a future schema then fails naming the schema it claims, rather than
 with a wall of field errors against a shape it never declared. This copies
 :func:`nanopnp.materials.corrections.load_corrections` exactly, ordering
 included.
+
+**A ``nanopnp/case/v1`` document is read as its upgrade.** :func:`upgrade_v1`
+maps the v1 mapping onto v2 before validation (section 5.3.1 v2 NOTE), so
+there is one model to maintain rather than one per schema; the frozen v1 field
+tree it is held to lives in the tests (VER-47).
 
 **Every model forbids unknown keys, and the diagnostic names the key.** IF-03
 requires that; pydantic's own message does not carry it (the key is in ``loc``,
@@ -30,7 +35,9 @@ means by "semantically identical".
 
 from __future__ import annotations
 
+import copy
 import difflib
+import itertools
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -50,7 +57,7 @@ from nanopnp.core.stages import (
     describe,
     report,
 )
-from nanopnp.io.artefact import CASE_SCHEMA, CaseArtefact, StageInputs
+from nanopnp.io.artefact import CASE_SCHEMA, CASE_SCHEMA_V1, CaseArtefact, StageInputs
 from nanopnp.materials.electrolyte import (
     CorrectionChoice,
     CorrectionSwitches,
@@ -71,6 +78,27 @@ Defined in :mod:`nanopnp.io.artefact` beside the artefact that carries it, so
 that the string a case file declares and the string the store addresses it by
 cannot drift apart.
 """
+
+V2_ADDED: tuple[str, ...] = (
+    "inputs.profile",
+    "inputs.pqr",
+    "structure.source.selection",
+    "geometry.membrane.centre_z_nm",
+    "charge.exclusion_offset_nm",
+    "charge.dielectric_transition_nm",
+    "numerics.mesh.size_scale",
+)
+"""Paths ``nanopnp/case/v2`` added to v1; a v1 document carrying one is refused (section 5.3.1)."""
+
+V2_RENAMED: dict[str, str] = {"structure.source.pdb": "structure.source.path"}
+"""v1 path to the v2 path that replaced it. IF-04 reads mmCIF as well as PDB."""
+
+V2_MOVED: dict[str, str] = {
+    "charge.eps_protein": "physics.solid_permittivities.protein",
+    "geometry.membrane.eps_r": "physics.solid_permittivities.membrane",
+}
+"""v1 path to the v2 entry its value moves to. ``physics.solid_permittivities`` is
+the one place a solid's permittivity is set (PHY-20; author ruling, 24 September 2026)."""
 
 COUPLED_MODELS: frozenset[str] = frozenset({"epnp-ns", "pnp-ns", "pnp"})
 """Physics models the continuation ladder of NUM-18 drives (PHY-21).
@@ -192,17 +220,26 @@ class Inputs(_Strict):
     mesh: SuppliedArtefact | None = None
     charge: SuppliedArtefact | None = None
     eps_r: SuppliedArtefact | None = None
+    profile: SuppliedArtefact | None = None
+    pqr: SuppliedArtefact | None = None
 
 
 # -- structure, geometry and charge: phases 2 and 3 ---------------------------
 
 
 class StructureSource(_Strict):
-    """The structure file and which of it to use."""
+    """The structure file and which of it to use.
 
-    pdb: Path
+    ``selection`` is an MDAnalysis selection string. The bilayer is absent from
+    the density map (section 5.2, stages 3 and 5), and an ensemble archive may
+    carry lipids and waters, so what counts as the pore is said here rather than
+    assumed.
+    """
+
+    path: Path
     variant: str | None = None
     chains: str = "all"
+    selection: str = "protein"
 
 
 class Frames(_Strict):
@@ -251,10 +288,15 @@ class ContourSpec(_Strict):
 
 
 class MembraneSpec(_Strict):
-    """The bilayer, defined analytically rather than from the density map."""
+    """The bilayer, defined analytically rather than from the density map.
+
+    ``centre_z_nm`` is the bilayer's centre along the axis, in the structure's
+    frame. Its permittivity is ``physics.solid_permittivities.membrane``, the one
+    place it is set (PHY-20).
+    """
 
     thickness_nm: float = 2.8
-    eps_r: float = 3.2
+    centre_z_nm: float = 0.0
 
 
 class ReservoirSpec(_Strict):
@@ -292,13 +334,21 @@ class SmearingSpec(_Strict):
 
 
 class Charge(_Strict):
-    """Stage 7: charge assembly (v0.9)."""
+    """Stage 7: charge assembly (v0.9).
+
+    ``exclusion_offset_nm`` is FR-15's fitted exclusion offset and
+    ``dielectric_transition_nm`` the width of PHY-20's transition to ``eps_w``.
+    Both are switches whose validated default is ``0``: the validated model has no
+    exclusion shell and a sharp material permittivity (section 5.3.1 NOTE). The
+    protein's permittivity is ``physics.solid_permittivities.protein`` (PHY-20).
+    """
 
     ph: float = 7.5
     forcefield: str = "CHARMM"
     titration: Literal["propka", "none"] = "propka"
     smearing: SmearingSpec = Field(default_factory=SmearingSpec)
-    eps_protein: float = 20.0
+    exclusion_offset_nm: float = Field(default=0.0, ge=0.0)
+    dielectric_transition_nm: float = Field(default=0.0, ge=0.0)
 
 
 # -- electrolyte --------------------------------------------------------------
@@ -433,10 +483,17 @@ class ElementsSpec(_Strict):
 
 
 class MeshSpec(_Strict):
-    """Stage 6: the mesher and its size field (v0.9)."""
+    """Stage 6: the mesher and its size field (v0.9).
+
+    ``size_scale`` multiplies every element-size target of section 5.2.2 and
+    NUM-30, the resolved ``wall_h_nm`` included, so that a mesh-convergence study
+    (RSK-09, section 6.8) is a sweep over this field (FR-24) rather than a code
+    edit. A discretisation choice recorded with the mesh, not a deviation.
+    """
 
     backend: Literal["netgen", "gmsh"] = "netgen"
     wall_h_nm: float | Literal["auto"] = "auto"
+    size_scale: float = Field(default=1.0, gt=0.0)
     boundary_layer: bool = False
 
 
@@ -481,7 +538,7 @@ class NumericsSpec(_Strict):
 
 
 class CaseDocument(_Strict):
-    """A validated case file (schema ``nanopnp/case/v1``).
+    """A validated case file (schema ``nanopnp/case/v2``).
 
     ``schema`` is carried under an alias so the reserved name does not shadow
     ``BaseModel``, exactly as :class:`nanopnp.materials.corrections.CorrectionDocument`
@@ -554,6 +611,51 @@ class CaseDocument(_Strict):
         if problems:
             raise ValueError("; ".join(problems))
         return self
+
+    @model_validator(mode="after")
+    def _check_supplied(self) -> CaseDocument:
+        """Refuse a supplied artefact beside one it makes unread, and an idle knob.
+
+        Section 5.3.1: a stage whose output is supplied does not run, and neither
+        does anything upstream of it, so an upstream artefact supplied beside a
+        downstream one would be hashed into the FR-25 manifest as an input to a
+        run that never read it. ``numerics.mesh.size_scale`` scales the mesher's
+        size targets, and beside a supplied mesh there is no mesher.
+
+        Raises
+        ------
+        ValueError
+            Naming both artefacts, or the scale and the supplied mesh.
+        """
+        problems: list[str] = []
+        for chain in SUPPLY_CHAINS:
+            given = [name for name in chain if getattr(self.inputs, name) is not None]
+            for upstream, downstream in itertools.pairwise(given):
+                problems.append(
+                    f"inputs.{upstream} and inputs.{downstream} are both supplied, but "
+                    f"{downstream} is downstream of {upstream} on one chain "
+                    f"({' -> '.join(chain)}), so inputs.{upstream} would be recorded as an input "
+                    "to a run that never read it; supply one of them"
+                )
+        scale = self.numerics.mesh.size_scale
+        if self.inputs.mesh is not None and scale != 1.0:
+            problems.append(
+                f"numerics.mesh.size_scale is {scale} beside inputs.mesh; the scale multiplies the "
+                "mesher's size targets, and a supplied mesh is not meshed, so it would have no "
+                "effect; set it to 1 or remove inputs.mesh"
+            )
+        if problems:
+            raise ValueError("; ".join(problems))
+        return self
+
+
+SUPPLY_CHAINS: tuple[tuple[str, ...], ...] = (("profile", "mesh"), ("pqr", "charge"))
+"""The ``inputs:`` keys on each chain of section 5.3.1, upstream first.
+
+The chains are structure -> density -> profile -> mesh and structure -> PQR ->
+charge field; these are the members ``inputs:`` can carry. ``eps_r`` comes from
+the density on a branch of its own (FR-15) and is on neither.
+"""
 
 
 # -- what a value may be: the schema's own type, and the live registries -------
@@ -713,6 +815,10 @@ def render_problems(source: str, error: ValidationError) -> str:
         loc = problem["loc"]
         dotted = ".".join(str(part) for part in loc) if loc else "<document>"
         if problem["type"] == "extra_forbidden":
+            replaced = _v2_replacement(loc)
+            if replaced is not None:
+                lines.append(f"  {dotted}: unknown key; {replaced}")
+                continue
             accepted = _keys_of(_owner_of(loc))
             close = difflib.get_close_matches(str(loc[-1]), accepted, n=1)
             hint = (
@@ -724,6 +830,25 @@ def render_problems(source: str, error: ValidationError) -> str:
         else:
             lines.append(f"  {dotted}: {problem['msg']}")
     return "\n".join(lines)
+
+
+def _v2_replacement(loc: Sequence[str | int]) -> str | None:
+    """Return what replaced a v1 key that a v2 document still uses, if it is one.
+
+    A v2 document writing ``charge.eps_protein`` would otherwise be told the
+    nearest field name of ``charge:``, which is no help: the key was moved to
+    another block, and a calibration parameter a reader believed was set would
+    be dropped with a spelling hint (section 5.3.1 v2 NOTE).
+    """
+    path = ".".join(str(part) for part in loc if not isinstance(part, int))
+    if path in V2_RENAMED:
+        return f"{CASE_SCHEMA} renamed it to {V2_RENAMED[path]}"
+    if path in V2_MOVED:
+        return (
+            f"{CASE_SCHEMA} removed it; the value is set as {V2_MOVED[path]}, the one place a "
+            "solid's permittivity is set (PHY-20)"
+        )
+    return None
 
 
 # -- dotted paths: reading, checking and substituting -------------------------
@@ -904,7 +1029,7 @@ one every non-empty document has.
 
 
 def case_fields() -> tuple[FieldReference, ...]:
-    """Return every editable field of ``nanopnp/case/v1``, in declaration order.
+    """Return every editable field of ``nanopnp/case/v2``, in declaration order.
 
     The enumeration a generated editor is built from (IF-09), and the one the
     FR-25 switch classification is checked against. It is deliberately not
@@ -932,7 +1057,7 @@ def case_fields() -> tuple[FieldReference, ...]:
     Raises
     ------
     NotImplementedError
-        If the schema grows a mapping whose *values* are blocks. ``nanopnp/case/v1``
+        If the schema grows a mapping whose *values* are blocks. ``nanopnp/case/v2``
         has none, and there is no representative key to stand on the way
         :data:`SEQUENCE_INDEX` stands on an index — so the walk says so rather
         than omitting the block's fields, which would make them silently
@@ -1152,7 +1277,7 @@ def _set_at(payload: dict[str, FieldValue], path: str, value: FieldValue) -> Non
     ------
     UnknownCasePathError
         If a block on the way is absent from this document. The path is known to
-        the *schema* by the time this runs -- ``structure.source.pdb`` is a real
+        the *schema* by the time this runs -- ``structure.source.path`` is a real
         field -- and a case that declares no ``structure:`` still has nowhere to
         put it, which is a fact about the document and not about the path.
     """
@@ -1184,7 +1309,8 @@ def load_case(path: str | Path) -> CaseDocument:
 
     The ``schema:`` string is checked first, so a file written to a future schema
     fails naming the schema it claims rather than with a wall of field errors
-    against a shape it never declared.
+    against a shape it never declared. A ``nanopnp/case/v1`` file is read as its
+    v2 upgrade (:func:`upgrade_v1`).
 
     Parameters
     ----------
@@ -1199,38 +1325,154 @@ def load_case(path: str | Path) -> CaseDocument:
     Raises
     ------
     CaseValidationError
-        If the file is not a mapping, declares another schema, or fails
-        validation; the message names every offending key by dotted path.
+        If the file is not a mapping, declares neither accepted schema, cannot
+        be upgraded, or fails validation; the message names every offending key
+        by dotted path.
     """
     source = Path(path)
-    raw = yaml.safe_load(source.read_text(encoding="utf-8"))
-    if not isinstance(raw, Mapping):
-        raise CaseValidationError(
-            f"{source}: a case file is a YAML mapping, found {type(raw).__name__}"
-        )
-    declared = raw.get("schema")
-    if declared != SCHEMA:
-        raise CaseValidationError(f"{source}: expected schema {SCHEMA!r}, found {declared!r}")
-    try:
-        return CaseDocument.model_validate(dict(raw))
-    except ValidationError as error:
-        raise CaseValidationError(render_problems(str(source), error), error) from error
+    return _validate(yaml.safe_load(source.read_text(encoding="utf-8")), str(source))
 
 
 def loads_case(text: str, *, source: str = "<string>") -> CaseDocument:
     """Validate a case document held in memory; see :func:`load_case`."""
-    raw = yaml.safe_load(text)
+    return _validate(yaml.safe_load(text), source)
+
+
+def _validate(raw: object, source: str) -> CaseDocument:
+    """Dispatch on the declared schema, upgrade a v1 mapping, and validate."""
     if not isinstance(raw, Mapping):
         raise CaseValidationError(
             f"{source}: a case file is a YAML mapping, found {type(raw).__name__}"
         )
     declared = raw.get("schema")
-    if declared != SCHEMA:
-        raise CaseValidationError(f"{source}: expected schema {SCHEMA!r}, found {declared!r}")
+    if declared == CASE_SCHEMA_V1:
+        raw = upgrade_v1(raw, source=source)
+    elif declared != SCHEMA:
+        raise CaseValidationError(
+            f"{source}: expected schema {SCHEMA!r}, or {CASE_SCHEMA_V1!r} (read as its upgrade), "
+            f"found {declared!r}"
+        )
     try:
         return CaseDocument.model_validate(dict(raw))
     except ValidationError as error:
         raise CaseValidationError(render_problems(source, error), error) from error
+
+
+def upgrade_v1(raw: Mapping[str, FieldValue], *, source: str = "<string>") -> dict[str, FieldValue]:
+    """Return a ``nanopnp/case/v1`` mapping rewritten as ``nanopnp/case/v2``.
+
+    A pure transform over the parsed YAML, run before validation, so that one
+    model serves both schemas (section 5.3.1 v2 NOTE). It moves only what was
+    written and adds no default: :data:`V2_RENAMED` keys are renamed, and a
+    written :data:`V2_MOVED` permittivity moves into
+    ``physics.solid_permittivities``. Validation of the result is the caller's.
+
+    Parameters
+    ----------
+    raw
+        The parsed v1 document. It is not modified.
+    source
+        Names the document in a diagnostic.
+
+    Returns
+    -------
+    dict
+        The v2 mapping, declaring ``nanopnp/case/v2``.
+
+    Raises
+    ------
+    CaseValidationError
+        If the v1 document carries a key v1 did not have (a document is valid
+        against the schema it declares or not at all), or if a moved permittivity
+        disagrees with one ``physics.solid_permittivities`` already holds, naming
+        both keys and both values.
+    """
+    document: dict[str, FieldValue] = copy.deepcopy(dict(raw))
+    foreign = [
+        path
+        for path in (*V2_ADDED, *V2_RENAMED.values())
+        if _raw_lookup(document, path) is not _ABSENT
+    ]
+    if foreign:
+        raise CaseValidationError(
+            f"{source}: declares {CASE_SCHEMA_V1!r} but carries {', '.join(foreign)}, which "
+            f"{CASE_SCHEMA!r} added; declare {CASE_SCHEMA!r}, since a document is valid against "
+            "the schema it declares or not at all"
+        )
+    for old, new in V2_RENAMED.items():
+        value = _raw_pop(document, old)
+        if value is not _ABSENT:
+            _raw_put(document, new, value, source)
+    problems: list[str] = []
+    for old, new in V2_MOVED.items():
+        value = _raw_pop(document, old)
+        if value is _ABSENT:
+            continue
+        held = _raw_lookup(document, new)
+        if held is not _ABSENT and held != value:
+            problems.append(
+                f"{old} is {value!r} but {new} is {held!r}; {CASE_SCHEMA!r} sets a solid's "
+                "permittivity in one place, and the two disagree"
+            )
+            continue
+        _raw_put(document, new, value, source)
+    if problems:
+        raise CaseValidationError(
+            f"{source}: cannot upgrade to {CASE_SCHEMA!r}: " + "; ".join(problems)
+        )
+    document["schema"] = CASE_SCHEMA
+    return document
+
+
+class _Absent:
+    """The marker for a key a raw mapping does not carry, where ``None`` is a value."""
+
+
+_ABSENT = _Absent()
+
+
+def _raw_lookup(document: Mapping[str, FieldValue], path: str) -> FieldValue:
+    """Return the value at a dotted path of a raw mapping, or :data:`_ABSENT`."""
+    cursor: FieldValue = document
+    for component in path.split("."):
+        if not isinstance(cursor, Mapping) or component not in cursor:
+            return _ABSENT
+        cursor = cursor[component]
+    return cursor
+
+
+def _raw_pop(document: dict[str, FieldValue], path: str) -> FieldValue:
+    """Remove and return the value at a dotted path of a raw mapping, or :data:`_ABSENT`."""
+    *head, last = path.split(".")
+    parent = _raw_lookup(document, ".".join(head)) if head else document
+    if not isinstance(parent, dict) or last not in parent:
+        return _ABSENT
+    return parent.pop(last)
+
+
+def _raw_put(document: dict[str, FieldValue], path: str, value: FieldValue, source: str) -> None:
+    """Set a value at a dotted path of a raw mapping, creating absent blocks.
+
+    Raises
+    ------
+    CaseValidationError
+        If a block on the way is present and is not a mapping, so the value has
+        nowhere to go; dropping it would lose a written parameter.
+    """
+    *head, last = path.split(".")
+    cursor = document
+    for depth, component in enumerate(head):
+        nested = cursor.get(component)
+        if nested is None:
+            nested = cursor[component] = {}
+        if not isinstance(nested, dict):
+            prefix = ".".join(head[: depth + 1])
+            raise CaseValidationError(
+                f"{source}: cannot upgrade to {CASE_SCHEMA!r}: {path} is where the value goes, "
+                f"and {prefix} is a {type(nested).__name__}, not a block"
+            )
+        cursor = nested
+    cursor[last] = value
 
 
 def dump_case(document: CaseDocument, path: str | Path) -> Path:
@@ -1281,6 +1523,22 @@ _PIPELINE_SECTIONS: dict[str, str] = {
 }
 """Case-file sections whose stages land in v0.9, with what each one drives."""
 
+_UNCONSUMED_INPUTS: dict[str, str] = {
+    "profile": (
+        "stage 5, CAD assembly from a conditioned profile, which reads a supplied "
+        "nanopnp/profile/v1 polyline (Phase 2, WP21)"
+    ),
+    "pqr": (
+        "stage 7's charge deposition from per-atom charges and radii, which reads a supplied "
+        "PQR file (Phase 3)"
+    ),
+}
+"""``inputs:`` keys ``nanopnp/case/v2`` accepts ahead of the stage that reads them.
+
+Each is refused naming that stage until the stage is delivered, and the package
+that delivers it removes its entry (section 5.3.1 NOTE on ``inputs:``).
+"""
+
 
 def _order(label: str, field: str) -> int:
     """Return the polynomial order a ``P<n>`` element label names."""
@@ -1293,8 +1551,13 @@ def _order(label: str, field: str) -> int:
         ) from None
 
 
-SOLVE_IRRELEVANT_PROVENANCE = frozenset({"name", "outputs"})
+SOLVE_IRRELEVANT_PROVENANCE = frozenset({"name", "outputs", "schema"})
 """Provenance keys that cannot change a converged field, so cannot key a solve.
+
+``schema`` is here because a document and its upgrade describe one run: were it
+in the key, the next schema move would re-solve every stored case (section 5.3.2
+NOTE). It left the key at the move to ``nanopnp/case/v2``, which is the one move
+that re-keys a solve.
 
 Named by exclusion rather than by an allow-list: a key added to
 :attr:`ResolvedCase.provenance` and forgotten here enters the solve's cache key,
@@ -1476,6 +1739,12 @@ def _require_runnable(document: CaseDocument) -> SuppliedArtefact:
                 f"case {document.name!r} carries a {section}: section; {what} is v0.9 "
                 f"(SPECIFICATION.md section 3). This release runs on artefacts supplied through "
                 "inputs:, which is FR-27's hand substitution at stage granularity"
+            )
+    for supplied, consumer in _UNCONSUMED_INPUTS.items():
+        if getattr(document.inputs, supplied) is not None:
+            raise UnsupportedCaseSection(
+                f"case {document.name!r} supplies inputs.{supplied}; {consumer} is not delivered "
+                "in this release, so nothing would read it (section 5.3.1 NOTE on inputs:)"
             )
     for supplied, what in (
         ("charge", "a fixed-charge field"),

@@ -1,4 +1,4 @@
-"""VER-43 — the one walk over ``nanopnp/case/v1``, and what is built on it.
+"""VER-43 — the one walk over ``nanopnp/case/v2``, and what is built on it.
 
 :func:`~nanopnp.io.case.case_fields` is what makes the desktop editor *generated*
 rather than hand-written (IF-09), and it is also what the FR-25 switch
@@ -41,9 +41,18 @@ SCHEMA_PATHS: tuple[str, ...] = (
     "inputs.eps_r.artefact",
     "inputs.eps_r.format",
     "inputs.eps_r.groups",
-    "structure.source.pdb",
+    "inputs.profile.path",
+    "inputs.profile.artefact",
+    "inputs.profile.format",
+    "inputs.profile.groups",
+    "inputs.pqr.path",
+    "inputs.pqr.artefact",
+    "inputs.pqr.format",
+    "inputs.pqr.groups",
+    "structure.source.path",
     "structure.source.variant",
     "structure.source.chains",
+    "structure.source.selection",
     "structure.ensemble.trajectory",
     "structure.ensemble.frames.last_ns",
     "structure.ensemble.frames.count",
@@ -56,7 +65,7 @@ SCHEMA_PATHS: tuple[str, ...] = (
     "geometry.contour.smoothing",
     "geometry.contour.simplify_tol_nm",
     "geometry.membrane.thickness_nm",
-    "geometry.membrane.eps_r",
+    "geometry.membrane.centre_z_nm",
     "geometry.reservoir.radius_nm",
     "geometry.analyte.shape",
     "geometry.analyte.a_nm",
@@ -69,7 +78,8 @@ SCHEMA_PATHS: tuple[str, ...] = (
     "charge.smearing.sharpness",
     "charge.smearing.grid_spacing_nm",
     "charge.smearing.axis_cutoff_nm",
-    "charge.eps_protein",
+    "charge.exclusion_offset_nm",
+    "charge.dielectric_transition_nm",
     "electrolyte.species.0.name",
     "electrolyte.species.0.z",
     "electrolyte.concentration_M",
@@ -110,6 +120,7 @@ SCHEMA_PATHS: tuple[str, ...] = (
     "numerics.elements.p",
     "numerics.mesh.backend",
     "numerics.mesh.wall_h_nm",
+    "numerics.mesh.size_scale",
     "numerics.mesh.boundary_layer",
     "numerics.nonlinear.strategy",
     "numerics.nonlinear.damping",
@@ -122,7 +133,7 @@ SCHEMA_PATHS: tuple[str, ...] = (
     "numerics.linear.solver",
     "outputs",
 )
-"""Every editable field of ``nanopnp/case/v1``, in declaration order.
+"""Every editable field of ``nanopnp/case/v2``, in declaration order.
 
 Written out rather than computed. A field added to the schema and forgotten
 elsewhere fails the test below naming itself, which is the whole point; a field
@@ -155,7 +166,7 @@ def test_if09_every_walked_field_is_the_one_field_at_resolves() -> None:
 def test_if09_case_fields_refuses_a_mapping_of_blocks() -> None:
     """A mapping of blocks is refused by name rather than walked past.
 
-    ``nanopnp/case/v1`` has none today. If one is added there is no
+    ``nanopnp/case/v2`` has none today. If one is added there is no
     representative key to stand on the way ``0`` stands on a sequence index, so
     the walk must say so: omitting the block's fields would make them silently
     uneditable *and* silently unclassified by FR-25, which is the failure this

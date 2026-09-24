@@ -33,8 +33,11 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only; io must not import at 
     from nanopnp.io.case import CaseDocument
     from nanopnp.materials.electrolyte import Electrolyte
 
-CASE_SCHEMA = "nanopnp/case/v1"
+CASE_SCHEMA = "nanopnp/case/v2"
 """Stage 9: the resolved case document (IF-03)."""
+
+CASE_SCHEMA_V1 = "nanopnp/case/v1"
+"""The previous case schema, still read: a v1 document loads as its v2 upgrade (IF-03)."""
 
 MATERIALS_SCHEMA = "nanopnp/materials/v1"
 """Stage 8: the resolved material coefficient set."""

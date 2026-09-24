@@ -1,7 +1,7 @@
 # The control: the quick-start pore, uncharged and symmetric in z, at the same model.
 # Reversing the bias maps it onto its own mirror image, so its current reverses
 # exactly and it cannot rectify; any departure from unity is numerical.
-schema: nanopnp/case/v1
+schema: nanopnp/case/v2
 name: iv-uncharged
 
 inputs:

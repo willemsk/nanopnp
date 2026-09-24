@@ -12,7 +12,7 @@
 # and not against this file -- the sweep runner deliberately never chdirs, so that
 # a member cannot silently read a different mesh -- which is why the path below is
 # written from the repository root, where the README's two commands are run.
-schema: nanopnp/case/v1
+schema: nanopnp/case/v2
 name: phase1-reference
 
 inputs:

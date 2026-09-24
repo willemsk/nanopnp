@@ -80,7 +80,7 @@ def case_text(mesh_path: Path, field_path: Path | None) -> str:
     """Return a case naming ``mesh_path``, and ``field_path`` if there is one."""
     charge = "" if field_path is None else f"\n  charge: {{path: {field_path}, format: field1}}"
     return f"""
-schema: nanopnp/case/v1
+schema: nanopnp/case/v2
 name: field-probe
 inputs:
   mesh: {{path: {mesh_path}, format: gmsh}}{charge}

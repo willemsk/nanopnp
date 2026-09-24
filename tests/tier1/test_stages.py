@@ -38,7 +38,7 @@ from nanopnp.io.artefact import StageInputs
 from nanopnp.io.case import loads_case
 
 MINIMAL = """
-schema: nanopnp/case/v1
+schema: nanopnp/case/v2
 name: minimal
 inputs: {mesh: {path: pore.vol, format: vol}}
 electrolyte:

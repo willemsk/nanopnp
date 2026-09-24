@@ -58,7 +58,7 @@ except (ImportError, OSError) as error:  # pragma: no cover - platform dependent
     pytest.skip(f"PySide6 cannot be constructed here: {error}", allow_module_level=True)
 
 CASE = """
-schema: nanopnp/case/v1
+schema: nanopnp/case/v2
 name: widget-probe
 inputs: {mesh: {path: pore.vol, format: vol}}
 electrolyte:
@@ -91,7 +91,7 @@ def editor(tmp_path: Path) -> CaseEditor:
 def test_if09_the_form_binds_every_schema_field(
     application: QtWidgets.QApplication, editor: CaseEditor
 ) -> None:
-    """Every field of ``nanopnp/case/v1`` has a widget, in declaration order.
+    """Every field of ``nanopnp/case/v2`` has a widget, in declaration order.
 
     A form that bound a subset would leave part of the schema uneditable with
     nothing to say so — which is the same failure
@@ -153,7 +153,7 @@ def test_if09_a_field_the_case_does_not_carry_is_shown_disabled(
     refusal rather than hiding the field and making it look unimplemented.
     """
     widget = CaseEditorWidget(editor)
-    assert not widget.widget_at("structure.source.pdb").isEnabled()
+    assert not widget.widget_at("structure.source.path").isEnabled()
     assert widget.widget_at("boundary_conditions.bias_V").isEnabled()
 
 

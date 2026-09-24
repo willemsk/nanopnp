@@ -226,7 +226,7 @@ def test_val01_the_round_trip_preserves_the_masked_points_as_nan(solved, tmp_pat
 # -- the CLI path: a finished run, reopened and compared (IF-02, FR-27) --------
 
 RUN_CASE = """
-schema: nanopnp/case/v1
+schema: nanopnp/case/v2
 name: validate-probe
 inputs:
   mesh:

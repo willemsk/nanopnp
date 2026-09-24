@@ -231,7 +231,7 @@ def content_hash(
     Parameters
     ----------
     schema
-        The artefact's schema identifier, e.g. ``"nanopnp/case/v1"``. It is
+        The artefact's schema identifier, e.g. ``"nanopnp/case/v2"``. It is
         inside the digest so that two artefacts with coincidentally identical
         parameters cannot share a key.
     parameters

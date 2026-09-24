@@ -63,7 +63,7 @@ TOLERANCE = 1.0e-6
 fixed point may differ by, which is the residual each left behind."""
 
 BASE = """
-schema: nanopnp/case/v1
+schema: nanopnp/case/v2
 name: sweep-probe
 inputs:
   mesh: {{path: {mesh}, format: vol, groups: {{default: interface}}}}
