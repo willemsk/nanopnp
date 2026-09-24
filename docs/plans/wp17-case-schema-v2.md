@@ -1,6 +1,6 @@
 # WP17 — Case schema v2 and the 3.11 floor
 
-**Status: planned, not started.** Written 24 September 2026. This is the first package of Phase 2.
+**Status: delivered, 24 September 2026.** Written 24 September 2026. This is the first package of Phase 2.
 It inherits the `case_fields()` schema walk and switch classification (WP7, WP14), the stage-10
 solve-key and restore-digest contract (WP10, WP15), and the Tier-3 case identity (WP13). **It is not
 implemented until ruling B1 is met.** The Phase 1 end-of-phase report has merged as `v0.5.0`, and the
@@ -83,6 +83,27 @@ by one oracle.
 > record; §5.3.1, the §5.3.2 NOTE and VER-47 are amended, and the export contract's `case_hash`
 > is updated.
 
+> **Outcome — D8 and D10 are checked on the document, not at resolution.** The chain rule and the
+> `size_scale` refusal are a `CaseDocument` model validator (`_check_supplied`), because both are
+> facts about the document in any release: a load, the editor and a sweep substitution refuse them
+> before anything resolves. Only the "not delivered yet" refusals of `profile` and `pqr` live in
+> `_require_runnable`, as `_UNCONSUMED_INPUTS`, which WP21 and Phase 3 each shrink. `size_scale`
+> is also validated `> 0`.
+
+> **Outcome — D15's run directory keeps the file as read.** `run_case` writes the case text it
+> read, so a v1 file's run directory holds v1 text, and the manifest's `case_hash` is the
+> upgrade's. The plan's "every run writes the upgraded document" was wrong; nothing depends on it,
+> and `docs/guide/case-files.md` says how to write a v2 copy (`dump_case(load_case(...))`).
+
+> **Outcome — D9 made `VALIDATED_DEFAULT_CASE` unresolvable.** It carries a `charge:` block, which
+> `resolve()` refuses in this release. The one test that resolved it
+> (`test_ver24_the_model_and_the_case_agree_on_the_switches_they_share`) drops the block first,
+> which reads as the same defaults.
+
+> **Outcome — D12 needed one `UP` fix** (`datetime.UTC`, UP017, in `io/artefact.py`). The
+> `core/stages.py` registry keeps its literal `"nanopnp/case/v2"`: `core` does not import `io` at
+> run time, so work item 2's "derive it from `SCHEMA`" became a VER-47 assertion that the two agree.
+
 ### Work items
 
 1. **Freeze the oracle, on unchanged code, as its own commit** (D7). Put the corpus in
@@ -124,6 +145,12 @@ by one oracle.
 
 Commands: `uv run pytest tests/tier1/test_case_schema_v2.py -v`, then the full gate
 (`.claude/hooks/gate.sh run`). Also run `uv run pytest -m "tier2 and not slow"` to completion.
+
+> **Outcome — verified, 24 September 2026.** `test_case_schema_v2.py`: 67 passed, 13 corpus files
+> (commit `38e335c` froze them on the v1 code). Tier 1: 954 passed on 3.12 plus 15 widget tests,
+> and 969 passed on **Python 3.11** in a separate environment, which the local gate cannot see.
+> `-m "tier2 and not slow"`: 130 passed in 234 s on 3.12. The strict docs build passed; the
+> generated case reference lists the seven added keys and none of the three old ones.
 
 ### Out of scope
 

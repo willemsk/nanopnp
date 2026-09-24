@@ -1,6 +1,6 @@
 # Phase 2 (Geometry pipeline): from a structure to a gated mesh
 
-**Status: planned, not started.** Written 24 September 2026, after Phase 1 (WP7–WP16) delivered the
+**Status: in progress. WP17 delivered, 24 September 2026; WP18–WP25 planned.** Written 24 September 2026, after Phase 1 (WP7–WP16) delivered the
 solver core on an externally supplied mesh (main at `v0.5.0-alpha.10`). Two things come first:
 the Phase 1 end-of-phase report, which merges as tag `v0.5.0`, and the author's double-click
 observation that closes Phase 0 criterion 4. That ordering is ruling B1 of `SPECIFICATION.md`
@@ -117,6 +117,16 @@ GridDataFormats 1.2, drops the 3.10 CI leg, and retires the IF-05 NOTE's conditi
 Discharges IF-03, FR-26 and QR-09 as amended. Adds **VER-47**: a v1 document resolves to the same
 run configuration as its v2 upgrade; every new key is classified; the VER-09, VER-24, VER-43 and
 VER-45 walks cover the new paths in both directions.
+
+> **Delivered, 24 September 2026** ([plan](wp17-case-schema-v2.md), tag `v0.9.0-alpha.1`). The
+> schema is `nanopnp/case/v2` with the §5.3.1 key set, and a v1 file is read through
+> `upgrade_v1`. The floor is Python 3.11, with MDAnalysis 2.10, GridDataFormats 1.2 and CCP4
+> written everywhere. IF-03, FR-26, QR-09 and VER-47 are discharged, and VER-29 is amended. **The
+> solve keys moved once:** the v1 key carried the schema string, so every stored solve re-solves
+> once and the export contract's `case_hash` changed (author ruling; the §5.3.2 NOTE). Constraints
+> inherited by later packages: `inputs.profile` and `inputs.pqr` are refused through
+> `_UNCONSUMED_INPUTS` in `io/case.py` until WP21 and Phase 3 remove their entries. The two new
+> charge floats are FR-25 switches with a validated default of 0. Any later key is a v3 move.
 
 ### WP18 — Structure ingestion, alignment and the Cₙ axis (stage 1)
 
