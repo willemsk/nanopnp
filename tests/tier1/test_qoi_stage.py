@@ -96,7 +96,7 @@ CONCENTRATION_M = 0.1
 BIAS_V = 0.02
 
 CASE = """
-schema: nanopnp/case/v1
+schema: nanopnp/case/v2
 name: qoi-probe
 inputs:
   mesh:

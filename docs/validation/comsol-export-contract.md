@@ -110,7 +110,7 @@ schema: nanopnp/golden/v1
 
 case: clya-0.5M-plus50mV
 # From: uv run nanopnp validate case-hash docs/validation/cases/clya-0.5M-plus50mV.case.yaml
-case_hash: 7e9ca1887c20d81300fc33b82cdb8cf3a059487cfd995ce786b4f4273cc11594
+case_hash: e266057d941a1893c57e86f00612d464f966a659641492fe17790074471b6b70
 
 probe: clya-reference
 # From: uv run nanopnp validate export-grid <the probe document>
@@ -144,6 +144,11 @@ quantities:
   conductance_S: 2.469e-8
   eof_m3_s: 3.1e-18
 ```
+
+Take `case_hash` from the command, not from this page. It moved once, on 24 September 2026, when
+the case schema moved to `nanopnp/case/v2` and the schema string left the key
+(`SPECIFICATION.md` §5.3.2 NOTE). A golden declaring the earlier value, `7e9ca188…`, is
+refused when it is compared, naming both hashes.
 
 ### The two declarations only you can make
 

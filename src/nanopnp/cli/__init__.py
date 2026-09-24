@@ -46,6 +46,7 @@ from nanopnp.core.paths import (
     reference_data_root,
     store_root,
 )
+from nanopnp.io.artefact import CASE_SCHEMA
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from collections.abc import Mapping, Sequence
@@ -983,7 +984,7 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command")
 
     run = _common(subparsers.add_parser("run", help="run a case file through the pipeline"))
-    run.add_argument("case", type=Path, help="the case file (schema: nanopnp/case/v1)")
+    run.add_argument("case", type=Path, help=f"the case file (schema: {CASE_SCHEMA})")
     run.add_argument("--store", type=Path, default=None, help="artefact store root")
     run.add_argument("--run-dir", type=Path, default=None, help="where the run directory goes")
     run.add_argument("--upto", default=None, help="stop after this stage")

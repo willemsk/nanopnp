@@ -4,7 +4,7 @@
 # validated model (FR-25).
 #
 # Run from this directory, after `nanopnp mesh cylinder --out pore.msh`.
-schema: nanopnp/case/v1
+schema: nanopnp/case/v2
 name: charged-classical
 
 inputs:

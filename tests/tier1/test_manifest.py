@@ -66,7 +66,7 @@ from nanopnp.physics.measures import AXISYMMETRIC
 from nanopnp.physics.models import CoupledModel
 
 MINIMAL = """
-schema: nanopnp/case/v1
+schema: nanopnp/case/v2
 name: minimal
 inputs: {mesh: {path: pore.vol, format: vol}}
 electrolyte:
@@ -117,7 +117,7 @@ def test_ver24_every_switch_typed_field_of_the_schema_is_classified() -> None:
     switches = {reference.path for reference in case_fields() if _is_switch(reference)}
     unclassified = switches - classified
     assert not unclassified, (
-        f"{sorted(unclassified)} are switch-typed fields of nanopnp/case/v1 that are "
+        f"{sorted(unclassified)} are switch-typed fields of nanopnp/case/v2 that are "
         "neither compared against the validated default (SWITCH_PATHS) nor exempted "
         "with a reason (CONFIGURATION_PATHS)"
     )
@@ -135,7 +135,7 @@ def test_ver24_every_classified_path_still_names_a_field() -> None:
     """
     walked = {reference.path for reference in case_fields()}
     stale = (set(SWITCH_PATHS) | set(CONFIGURATION_PATHS)) - walked
-    assert not stale, f"{sorted(stale)} name no field of nanopnp/case/v1"
+    assert not stale, f"{sorted(stale)} name no field of nanopnp/case/v2"
 
 
 def test_ver24_every_switch_path_reads_off_the_validated_default() -> None:
@@ -189,6 +189,10 @@ def test_ver24_the_model_and_the_case_agree_on_the_switches_they_share() -> None
     quietly disagreeing about what was run.
     """
     document = VALIDATED_DEFAULT_CASE.model_copy(deep=True)
+    # The validated default carries a charge: block at its defaults so that every
+    # switch path reads off it; resolve() refuses the block in this release, and
+    # its absence reads as those same defaults.
+    document.charge = None
     document.physics.inertia = False
     document.physics.dielectric_gradient_forces = True
     document.electrolyte.corrections.steric.model = "none"

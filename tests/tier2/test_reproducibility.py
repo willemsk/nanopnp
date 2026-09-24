@@ -52,7 +52,7 @@ PORE = CylindricalPoreGeometry(
 MAXH_NM = 4.0
 WALL_H_NM = 1.0
 CASE = """
-schema: nanopnp/case/v1
+schema: nanopnp/case/v2
 name: reproduction-probe
 inputs:
   mesh:

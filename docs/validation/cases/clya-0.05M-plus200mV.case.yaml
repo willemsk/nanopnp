@@ -24,7 +24,7 @@
 # resolves against the process working directory, so it is written from the repository
 # root.
 
-schema: nanopnp/case/v1
+schema: nanopnp/case/v2
 name: clya-0.05M-plus200mV
 
 inputs:

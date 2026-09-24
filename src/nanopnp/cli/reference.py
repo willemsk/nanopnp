@@ -26,6 +26,7 @@ from nanopnp.cli import build_parser
 from nanopnp.cli.errors import EXCLUDED, EXIT_CODES, EXIT_MEANINGS
 from nanopnp.io.case import (
     _PIPELINE_SECTIONS,
+    SCHEMA,
     SEQUENCE_INDEX,
     FieldValue,
     case_fields,
@@ -102,7 +103,7 @@ def _cell(text: str) -> str:
 
 
 def render_case_reference() -> str:
-    """Return the case-file reference: every editable field of ``nanopnp/case/v1``.
+    """Return the case-file reference: every editable field of the current case schema.
 
     One row per path of :func:`~nanopnp.io.case.case_fields`, grouped by section,
     with the declared type, the schema's default, the values accepted where a
@@ -113,7 +114,7 @@ def render_case_reference() -> str:
     lines = [
         "# Case-file reference",
         "",
-        "Generated from the `nanopnp/case/v1` schema by `nanopnp.cli.reference`; every",
+        f"Generated from the `{SCHEMA}` schema by `nanopnp.cli.reference`; every",
         "editable field is listed, and nothing here is written by hand. A path written",
         f"`a.{SEQUENCE_INDEX}.b` names field `b` of each element of the list `a`.",
         "",

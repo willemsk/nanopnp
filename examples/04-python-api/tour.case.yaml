@@ -1,6 +1,6 @@
 # The case the Python tour drives: the quick-start pore, with the solved fields
 # exported as XDMF (IF-07) so the tour can read them back.
-schema: nanopnp/case/v1
+schema: nanopnp/case/v2
 name: api-tour
 
 inputs:

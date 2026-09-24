@@ -63,7 +63,7 @@ a single-worker measurement must not pay the ``spawn`` cost, or ``efficiency(1)`
 would be a statement about process startup."""
 
 BASE = """
-schema: nanopnp/case/v1
+schema: nanopnp/case/v2
 name: throughput
 inputs:
   mesh: {{path: {mesh}, format: vol, groups: {{default: interface}}}}

@@ -1,7 +1,7 @@
 """The case editor's view-model: a case file, its fields, and what may be typed into them.
 
 Generated from the schema, not written out (IF-09). :func:`~nanopnp.io.case.case_fields`
-enumerates every editable dotted path of ``nanopnp/case/v1`` and
+enumerates every editable dotted path of the case schema and
 :func:`~nanopnp.io.case.options_at` says what each one admits, so this module holds
 no default, no unit and no option list of its own. A second list of stabilisation
 modes here would be a graphical interface offering a mode the solver does not
@@ -71,7 +71,7 @@ from a table of paths."""
 class Absent:
     """The value of a field the *document* does not carry.
 
-    ``structure.source.pdb`` is a field of ``nanopnp/case/v1`` whatever a given
+    ``structure.source.path`` is a field of the case schema whatever a given
     case says, and a Phase-1 case carries no ``structure:`` block at all. That is
     a fact about the document, not about the path (:func:`~nanopnp.io.case.value_at`
     says so in those words), and it is not ``None`` either: ``None`` is a value

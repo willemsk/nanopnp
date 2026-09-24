@@ -91,7 +91,7 @@ def case_text(
 ) -> str:
     """Return a case naming ``mesh_path`` with ``groups`` as its mapping."""
     return f"""
-schema: nanopnp/case/v1
+schema: nanopnp/case/v2
 name: ingest-probe
 inputs:
   mesh: {{path: {mesh_path}, format: gmsh, groups: {groups}}}

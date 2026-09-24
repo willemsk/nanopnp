@@ -120,7 +120,7 @@ def test_missing_source_boundary_fails_loudly(cylinder) -> None:
 
 
 INGESTED_CASE = """
-schema: nanopnp/case/v1
+schema: nanopnp/case/v2
 name: ingested-distance
 inputs:
   mesh: {{path: {path}, format: gmsh, groups: {{default: interface}}}}
@@ -391,7 +391,7 @@ def test_num34_the_coarse_mesh_is_refused_naming_everything_it_measured() -> Non
 
 
 GATED_CASE = """
-schema: nanopnp/case/v1
+schema: nanopnp/case/v2
 name: gated
 inputs:
   mesh: {{path: {path}, format: vol, groups: {{default: interface}}}}

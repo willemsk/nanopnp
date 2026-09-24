@@ -44,7 +44,7 @@ from nanopnp.sweep.plan import PLAN_FILENAME, plan_from_document, write_plan
 from nanopnp.sweep.run import MEMBERS_DIRNAME, THREAD_VARIABLES, MemberResult, pin_threads
 
 BASE = """
-schema: nanopnp/case/v1
+schema: nanopnp/case/v2
 name: base
 inputs:
   mesh: {{path: {mesh}, format: vol, groups: {{default: interface}}}}

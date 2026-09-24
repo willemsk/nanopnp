@@ -74,7 +74,7 @@ PORE = CylindricalPoreGeometry(
     pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
 )
 CASE = """
-schema: nanopnp/case/v1
+schema: nanopnp/case/v2
 name: cli-probe
 inputs:
   mesh:
@@ -450,7 +450,7 @@ def test_ver32_a_case_the_schema_refuses_exits_three(
 ) -> None:
     """Exit 3: the case file is wrong and a retry will fail identically (QR-06)."""
     path = tmp_path / "bad.yaml"
-    path.write_text("schema: nanopnp/case/v1\nname: bad\nnonsense: 1\n", encoding="utf-8")
+    path.write_text("schema: nanopnp/case/v2\nname: bad\nnonsense: 1\n", encoding="utf-8")
     assert main(["run", str(path), "--store", str(tmp_path / "store")]) == EXIT_CASE
     captured = capsys.readouterr()
     assert captured.out == ""

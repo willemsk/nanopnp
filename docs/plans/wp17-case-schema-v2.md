@@ -72,6 +72,17 @@ by one oracle.
 | D14 | The CCP4 writer | Delete `MRC_WRITER_MIN_VERSION` and the version-gap wording of `_no_writer`. `writable_formats()` stays as the queryable surface. VER-29 asserts the CCP4 round trip unconditionally | B4. A refusal branch that no supported interpreter can reach is untested code |
 | D15 | Upgrade command | None. Reading is lossless, and every run writes the upgraded document to its run directory. The manifest embeds the file as it was read (the `case_hash` is the upgrade's) | This keeps IF-02 unchanged. See out of scope |
 
+> **Outcome — D6 was wrong about the three solve keys; they moved once.** The v1
+> `solve_provenance` *contained* `"schema": "nanopnp/case/v1"`, so adding `schema` to
+> `SOLVE_IRRELEVANT_PROVENANCE` changes the stage-10 key, the restore digest and `case_identity`
+> of every v1 case (clya-0.5M-plus50mV: `7e9ca188…` → `e266057d…`). Design §2's "removing
+> `schema` therefore leaves all three hashes unchanged" is the error. The author ruled on
+> 24 September 2026 to let them move once rather than freeze a v1 string into every v2 solve
+> record. The materials key survives. VER-47 now holds the upgraded record equal to the recorded
+> v1 record less `schema`, entry by entry, and checks that the recorded digests hash the recorded
+> record; §5.3.1, the §5.3.2 NOTE and VER-47 are amended, and the export contract's `case_hash`
+> is updated.
+
 ### Work items
 
 1. **Freeze the oracle, on unchanged code, as its own commit** (D7). Put the corpus in
@@ -169,6 +180,8 @@ The stage-10 key is `content_hash(SOLUTION_SCHEMA, solve_provenance, (mesh, mate
 provenance entries are built field by field from resolved objects, not dumped, so they do not see
 the new keys. Removing `schema` therefore leaves all three hashes of a runnable v1 case unchanged.
 Work item 1 records those hashes before the change and VER-47 checks them after it.
+*(Historical, and wrong: see the D6 Outcome above. `provenance` holds `schema`, so removing it
+moves all three.)*
 
 The mesh, materials and fields keys never see the case schema. `CaseArtefact` (stage 9) hashes
 `document.model_dump()` under `CASE_SCHEMA`, so the dump gains `inputs.profile: null` and the

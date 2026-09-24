@@ -27,7 +27,7 @@ from nanopnp.io.case import (
 )
 
 REFERENCE_CASE = """
-schema: nanopnp/case/v1
+schema: nanopnp/case/v2
 name: clya-wt-1M-100mV
 
 inputs:
@@ -100,7 +100,7 @@ REFORMATTED_CASE = """
 # reference uses block, `1` for `1.0`, quoted scalars, and a comment on every line
 # that carries a decision. None of it changes the run.
 name: clya-wt-1M-100mV
-schema: 'nanopnp/case/v1'
+schema: 'nanopnp/case/v2'
 
 outputs:
   - current
@@ -210,11 +210,11 @@ def test_if03_an_unknown_key_with_no_near_match_lists_the_block_s_keys() -> None
 
 def test_if03_a_future_schema_fails_naming_the_schema_before_any_field_error() -> None:
     """A file written to a later schema must not fail against a shape it never claimed."""
-    text = REFERENCE_CASE.replace(SCHEMA, "nanopnp/case/v2").replace("bias_V: 0.100", "bias: 0.100")
+    text = REFERENCE_CASE.replace(SCHEMA, "nanopnp/case/v3").replace("bias_V: 0.100", "bias: 0.100")
     with pytest.raises(CaseValidationError) as raised:
         loads_case(text)
     message = str(raised.value)
-    assert "nanopnp/case/v2" in message
+    assert "nanopnp/case/v3" in message
     assert "bias" not in message
 
 
@@ -242,7 +242,7 @@ def test_if03_a_supplied_artefact_names_exactly_one_source() -> None:
 @pytest.mark.parametrize(
     ("section", "release"),
     [
-        ("structure:\n  source: {pdb: 2WCD.pdb}\n  symmetry: {point_group: C12}\n", "v0.9"),
+        ("structure:\n  source: {path: 2WCD.pdb}\n  symmetry: {point_group: C12}\n", "v0.9"),
         ("geometry:\n  membrane: {thickness_nm: 2.8}\n", "v0.9"),
         ("charge:\n  ph: 7.5\n", "v0.9"),
     ],
@@ -471,8 +471,10 @@ def test_if03_an_unregistered_stabilisation_mode_is_refused_naming_the_registry(
 def test_ver09_the_widened_stabilisation_literal_left_the_schema_identifier_alone() -> None:
     """A new admissible value of an existing field is not a schema revision.
 
-    ``supg`` and ``reference`` widen what ``numerics.stabilisation`` accepts; every
-    v1 file remains a valid v1 file, so the identifier does not move (IF-03).
+    ``supg`` and ``reference`` widened what ``numerics.stabilisation`` accepts
+    under v1 without moving it (IF-03). The move to v2 was made by adding,
+    renaming and removing keys (section 5.3.1 v2 NOTE, VER-47), and the widening
+    is part of neither map.
     """
-    assert SCHEMA == "nanopnp/case/v1"
+    assert SCHEMA == "nanopnp/case/v2"
     assert loads_case(REFERENCE_CASE).schema_id == SCHEMA

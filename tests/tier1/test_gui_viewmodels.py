@@ -64,7 +64,7 @@ from nanopnp.physics.models import registered_models, registered_stabilisations
 from nanopnp.solve.linear import AVAILABLE_SOLVERS
 
 CASE = """
-schema: nanopnp/case/v1
+schema: nanopnp/case/v2
 name: shell-probe
 inputs: {mesh: {path: pore.vol, format: vol}}
 electrolyte:
@@ -300,7 +300,7 @@ def test_if09_a_field_absent_from_the_document_reads_as_absent(case_file: Path) 
     """A field of the schema the case does not carry is ``ABSENT``, never ``None``.
 
     ``None`` is a value several fields may legitimately hold, and a panel that
-    conflated the two would show ``structure.source.pdb`` as set to nothing
+    conflated the two would show ``structure.source.path`` as set to nothing
     rather than as living in a block this case has not got — which is a fact
     about the document, and the distinction
     :func:`~nanopnp.io.case.substitute` acts on when it refuses to write into a
@@ -308,7 +308,7 @@ def test_if09_a_field_absent_from_the_document_reads_as_absent(case_file: Path) 
     """
     editor = CaseEditor.open(case_file)
     # Blocks this case does not carry at all.
-    assert editor.state("structure.source.pdb").value is ABSENT
+    assert editor.state("structure.source.path").value is ABSENT
     assert editor.state("geometry.analyte.shape").value is ABSENT
     assert editor.state("inputs.charge.path").value is ABSENT
     # A field of a block it does carry, holding nothing.
