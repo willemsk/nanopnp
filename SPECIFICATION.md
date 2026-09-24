@@ -149,7 +149,7 @@ The COMSOL model being replaced, as recorded in the model report and the ESI.
 | Aspect | Value |
 |---|---|
 | Operating systems | Windows, macOS, Linux |
-| Python | 3.10 to 3.14 |
+| Python | 3.11 to 3.14 (**amended 24 September 2026**, §8.2.2 B4) |
 | Execution modes | Headless library and CLI; HPC job arrays; packaged desktop application |
 | Solver hardware | Single node, serial per solve; parallelism at the job level |
 | Direct-solve ceiling | About 2–5 × 10⁶ DOF for a sparse direct factorisation |
@@ -343,7 +343,7 @@ instead of the schema (VER-09).
 | **QR-06** | A full-envelope sweep of 3,675 solves SHOULD complete within a day-scale wall-clock time on 12 cores, throughput scaling linearly with the number of independent workers. | Performance |
 | **QR-07** | A sparse direct factorisation of a production-sized problem (about 1.2 × 10⁵ cells, five fields) SHALL complete in acceptable time and memory on a laptop. | Performance |
 | **QR-08** | Re-running a case file with the recorded library versions SHALL reproduce every scalar QoI to within the solver tolerance, the FR-25 manifest sufficing to reconstruct the run. | Reproducibility |
-| **QR-09** | SHALL install from binary wheels on Windows, macOS and Linux for Python 3.10–3.14, with no compilation on the target machine. | Portability |
+| **QR-09** | SHALL install from binary wheels on Windows, macOS and Linux for Python 3.11–3.14, with no compilation on the target machine. **Amended 24 September 2026** from 3.10–3.14 (§8.2.2 B4). | Portability |
 | **QR-10** | A nanopore experimentalist without Python knowledge SHALL be able to load a structure, accept defaults and obtain a conductance prediction and a field visualisation in the desktop application unaided. | Usability |
 | **QR-11** | Each release from v0.5 onward SHALL ship a usable graphical surface over the functionality existing at that release. | Usability |
 | **QR-12** | Every automatic gate failure SHALL abort the run with a diagnostic naming the gate, the offending quantity and its location. | Usability |
@@ -828,7 +828,7 @@ CLI and the desktop shell drive the same stage objects (IF-01, IF-02, IF-09).
 |---|---|---|---|---|---|
 | 1 | Structure ingestion and alignment | PDB/mmCIF, optional trajectory, expected point group | Aligned ensemble; Cₙ axis on z at r = 0 | MDAnalysis 2.10+ (LGPLv3), `AlignTraj`, `rotation_matrix`; MDTraj as alternative reader; PDBFixer or Modeller for missing loops | Oligomeric state matches (ClyA 12, αHL 7, MspA 8); abort on missing chains (FR-03) |
 | 2 | Density map | Aligned ensemble, grid spacing, kernel | 3D density map | Vectorised scipy Gaussian deposition over a local stencil, per-atom width from the van der Waals radius, sharpness 0.93; MDAnalysis `DensityAnalysis` for accumulation and units; `gridData` IO; optional `gmx densmap` check | Grid spacing 0.25–0.5 Å (FR-04) |
-| 3 | Symmetry reduction to (r, z) | 3D map, n | (r, z) map; residual azimuthal variance | numpy; `np.bincount` with voxel-volume weights; `mdahole2` (HOLE) | Variance emitted with the geometry (FR-06, CON-04); radius profile within tolerance of the HOLE profile |
+| 3 | Symmetry reduction to (r, z) | 3D map, n | (r, z) map; residual azimuthal variance | numpy; `np.bincount` with voxel-volume weights; an in-project probe-radius profile on the aligned structure, `mdahole2` (HOLE) an optional cross-check (§8.2.2 B5) | Variance emitted with the geometry (FR-06, CON-04); radius profile within tolerance of the probe-radius profile |
 | 4 | Contour extraction and conditioning | (r, z) map, isolevel, smoothing and simplification parameters | Closed conditioned polyline | scikit-image, Shapely, scipy (all BSD-3), per §5.2.1 | §5.2.1 (FR-08) |
 | 5 | CAD assembly | Polyline, membrane specification, reservoir radius, optional analyte | Fragmented (r, z) region, domains and boundaries tagged | `netgen.occ` (LGPL-2.1, OpenCASCADE, in-process) primary; Gmsh OCC Python API (GPLv2+) optional | All bodies fragmented and imprinted, interfaces conformal, no gap or overlap at the membrane-to-pore junction (FR-09) |
 | 6 | Meshing | Fragmented region, size fields | Graded triangular mesh | Netgen (LGPL-2.1) default, Gmsh (GPLv2+) optional, behind the mesh adapter | §5.2.2 (FR-10, QR-12) |
@@ -861,7 +861,7 @@ Taubin λ|μ smoothing (volume-preserving, where Chaikin shrinks), Shapely `simp
 | Minimum vertex spacing | ≥ target element size |
 | Minimum local feature size | > 2 × target element size |
 | Loop topology | single closed loop, no detached islands |
-| Radius profile | within tolerance of the HOLE profile |
+| Radius profile | within tolerance of the probe-radius profile computed on the aligned structure (HOLE an optional cross-check, §8.2.2 B5) |
 
 Rationale (feature size): near-tangential self-approaches at the constriction generate slivers the
 mesher cannot repair.
@@ -2306,7 +2306,7 @@ differences are recorded and attributed rather than gated on.
 | **VAL-02** | Integrated-quantity comparison (`G`, `t₊`, `RR`, EOF rate) | < 0.5 % relative error, once the preconditions above hold |
 | **VAL-03** | Reference-solution generation and archival, in Phase 1 | Full reference set for the frozen cases archived with the generating model, independent of continued licence access, and **declaring** per field its source expression and its unit, and for the current its evaluation boundary and which electrode it references; a golden leaving any of those unstated is refused rather than interpreted |
 | **VAL-04** | Reference discretisation-error probe | The reference case re-solved at two refinement levels while licence access lasts, bounding the reference's own discretisation error |
-| **VAL-05** | Geometry pipeline against the published boundary | Auto-generated contour compared against the delivered reference pore polygon (§5.2.1): radius profile and constriction radius within a stated tolerance |
+| **VAL-05** | Geometry pipeline against the published boundary | Auto-generated contour compared against the delivered reference pore polygon (§5.2.1): radius profile and constriction radius within a stated tolerance. Measured on two inputs (§8.2.2 B2): the public 2WCD entry, gated at Tier 2 to a looser tolerance, and the author's ClyA-AS ensemble, archived under `NANOPNP_REFERENCE_DATA` and run at Tier 3; the Phase 2 gate requires the ensemble leg. Each leg's tolerance is stated with its argument when the comparison is implemented |
 | **VAL-06** | Poisson-only comparison against APBS | Potential from the assembled fixed-charge and dielectric fields agrees with an APBS solve on the same structure within a stated tolerance |
 | **VAL-15** | The reference model's own `rhoq_pore` table, on our mesh | The delivered table reads with the grid its header declares, its planar integral is the declared `Q_net` to better than 10⁻⁹, and its boundary ring is negligible against its interior, so the producer leg of §4.4 is exact and the reference's 1.25 % is the consumer's (OPN-06); the consumer leg on the reference mesh is recorded with the mesh it came from, and the quadrature-agreement gate refuses it, per cent-level, rather than reporting a conserved number it cannot defend |
 
@@ -2438,6 +2438,10 @@ by a restatement of their equations:
 
 Phase 2 SHALL NOT start before the Phase 0 exit criteria are met.
 
+NOTE (FR-19, FR-20; **added 24 September 2026**): v0.9 is released by Phases 2 and 3 together.
+FR-19's `pb` and `pb-linear` models shipped in Phase 0. FR-20, the documented physics-model
+interface, is assigned to **Phase 3**, which is where the table above leaves room for it (§8.2.2 B7).
+
 ### 8.2 Phase 0 exit criteria
 
 All four SHALL be met.
@@ -2467,6 +2471,21 @@ disagreement at the per-cent level is expected for the reasons in §7.4.
 
 Phase 0 is therefore met by criteria 1 to 3 as written, with criterion 4 explicitly outstanding
 until amendment A4's build and observation have both happened.
+
+#### 8.2.2 Phase 2 decisions, agreed 24 September 2026
+
+Rulings by the author, taken while planning Phase 2 (`docs/plans/phase-2-geometry-pipeline.md`).
+Where a ruling changes a clause, the clause is amended in the commit named in the last column.
+
+| # | Decision | Consequence | Clause changed, and when |
+|---|---|---|---|
+| B1 | Phase 2 starts only after the Phase 1 end-of-phase report has merged (tag `v0.5.0`) and the author has recorded the double-click observation of amendment A4 | The start condition of §8.1 is met as written, not amended: criterion 4 and RSK-13 close on the observation | None |
+| B2 | VAL-05 is measured on two inputs. The public 2WCD entry (wwPDB, CC0) is vendored as test data and gated at Tier 2 to a looser tolerance. The author's 50-frame ClyA-AS ensemble, or the prepared structure it came from, is archived under `NANOPNP_REFERENCE_DATA` and run at Tier 3. The Phase 2 gate requires the ensemble leg | 2WCD lacks residues 1–7 at the *trans* constriction and the MD relaxation, so only the ensemble can be held to a tight tolerance. The 2WCD leg still exercises the whole pipeline on every push | §7.4 VAL-05, in the Phase 2 plan's commit. The tolerances are stated in the VAL-05 work package |
+| B3 | The case schema moves **once**, to `nanopnp/case/v2`, in the first Phase 2 work package. That move carries every key Phases 2 and 3 are foreseen to need, among them stage-4 hand substitution under `inputs:` and the membrane's axial position. A v1 document reads losslessly as v2 | The §5.3.1 compatibility rule stands: adding a key moves the version, and it moves once rather than once per phase | §5.3.1, in the first Phase 2 work package |
+| B4 | The Python floor rises to 3.11 (Python 3.10 reaches end of life in October 2026) | One MDAnalysis (2.10) and one GridDataFormats (1.2) across the supported range, as §2.6 names them. The IF-05 NOTE's conditional CCP4 write side is retired | QR-09 and §2.5, in the Phase 2 plan's commit. The IF-05 NOTE, `requires-python` and the CI matrix change with the code, in the first Phase 2 work package |
+| B5 | The radius-profile criterion of stage 3 and §5.2.1 is checked against a probe-radius profile computed in project code on the aligned structure. HOLE, through `mdahole2`, becomes an optional cross-check that skips when absent | HOLE is a compiled binary with no wheel, so it cannot sit on the end-user path (CON-07, QR-09) | §5.2 stage 3 and §5.2.1, in the Phase 2 plan's commit |
+| B6 | The author's contour script is available (OPN-02) | It is read before the contour work package is planned, as RSK-06 intends. The specified pipeline remains the fallback | §10 OPN-02, in the Phase 2 plan's commit |
+| B7 | FR-20 moves to Phase 3. The optional Gmsh mesher adapter of ADR-002 is delivered in Phase 2 | Phase 2 stays on the geometry chain. The Gmsh backend is optional and never imported on the default path (CON-10) | §8.1 NOTE, in the Phase 2 plan's commit |
 
 ### 8.3 Effort estimate
 
@@ -2540,7 +2559,7 @@ otherwise report unbounded throughput for a resumed sweep.
 | ID | Item | Owner | Blocks |
 |---|---|---|---|
 | **OPN-01** | Radial potential at 0.15 M: the text quotes −14/−47 mV, the appendix table −29/−57 mV | Author | Use of the radial potential as a regression target; excluded from Tier 3 and Tier 4 targets until settled |
-| **OPN-02** | Location of the author's contour script | Author | Nothing on the critical path. Phase 2 is planned against the specified contour pipeline; the script is upside if it arrives (RSK-06) |
+| **OPN-02** | Location of the author's contour script. **Available, 24 September 2026**: it is read before the contour stage (WP20) is planned, and closes this item then | Author | Nothing on the critical path. Phase 2 is planned against the specified contour pipeline; the script is upside if it arrives (RSK-06) |
 | **OPN-03** | PlyAB supporting-information details: analyte relative permittivity, per-position mesh strategy (remesh against ALE), barrier heights in kT, electro-osmotic flow velocities | Author, from the retained model files | Analyte force regression targets and adoption of PlyAB as a second reference case after v1.0 |
 | **OPN-04** | ClyA-AS mutation list: 8 mutations relative to the *S. typhi* wild type in one place, 27 relative to the *E. coli* 2WCD structure in another. Both internally correct | Author, with the structure-preparation stage | Provenance of `Q_net` (FR-12); the structure-preparation stage must record which list was applied to which PDB |
 | **OPN-05** | Pore-polygon vertex table. **Delivered** as `data/geometry/clya_as_radial_geometry.csv`, 185 vertices, extents as published. **Closed by the author, 5 September 2026: the delivered table is the geometry of record**, and the model report's 190 is the count after COMSOL's import conditioning. §2.2 and §5.2.1 are amended to it; the §5.2.1 fixture, `mesh/reference.py` and VAL-05 all cite it | Closed | Closed |
