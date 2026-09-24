@@ -14,12 +14,15 @@ from __future__ import annotations
 import copy
 import difflib
 import json
+import re
+import tomllib
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
 
 import pytest
 import yaml
+from packaging.specifiers import SpecifierSet
 
 from nanopnp.core.hashing import content_hash
 from nanopnp.core.stages import describe
@@ -391,3 +394,71 @@ def test_ver47_the_new_switches_are_deviations() -> None:
 
     raw["charge"] = {}
     assert deviations(loads_case(_text(raw))) == ()
+
+
+# -- the supported interpreter range (QR-09, section 2.5) -----------------------
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+def _minor_versions(first: str, last: str) -> list[str]:
+    """Return ``3.x`` strings from ``first`` to ``last`` inclusive."""
+    low, high = (int(version.split(".")[1]) for version in (first, last))
+    return [f"3.{minor}" for minor in range(low, high + 1)]
+
+
+def _specified_range() -> list[str]:
+    """Return the interpreters section 2.5 names, read from the specification."""
+    text = (ROOT / "SPECIFICATION.md").read_text(encoding="utf-8")
+    found = re.search(r"^\| Python \| (3\.\d+) to (3\.\d+)", text, flags=re.MULTILINE)
+    assert found is not None, "section 2.5 no longer has a 'Python | 3.x to 3.y' row"
+    return _minor_versions(found.group(1), found.group(2))
+
+
+def _python_versions(node: object) -> set[str]:
+    """Return every literal ``python-version`` under a workflow node."""
+    found: set[str] = set()
+    if isinstance(node, dict):
+        for key, value in node.items():
+            if key == "python-version":
+                values = value if isinstance(value, list) else [value]
+                found.update(str(item) for item in values if "${{" not in str(item))
+            else:
+                found |= _python_versions(value)
+    elif isinstance(node, list):
+        for item in node:
+            found |= _python_versions(item)
+    return found
+
+
+def test_ver47_the_declared_python_range_agrees() -> None:
+    """``requires-python``, the classifiers, ruff's target and the CI matrix all say 3.11-3.14.
+
+    Four declarations of one fact drift apart one edit at a time; a floor raised
+    in ``pyproject.toml`` with the CI matrix still running 3.10 tests an
+    interpreter nobody supports, and the reverse ships one nobody tests.
+    """
+    specified = _specified_range()
+    assert specified == ["3.11", "3.12", "3.13", "3.14"]
+    project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+
+    requires = SpecifierSet(project["project"]["requires-python"])
+    admitted = [version for version in _minor_versions("3.8", "3.20") if f"{version}.0" in requires]
+    assert admitted == specified, f"requires-python {requires} admits {admitted}"
+
+    prefix = "Programming Language :: Python :: "
+    classified = [
+        entry.removeprefix(prefix)
+        for entry in project["project"]["classifiers"]
+        if entry.startswith(prefix) and entry.removeprefix(prefix).count(".") == 1
+    ]
+    assert classified == specified
+
+    target = project["tool"]["ruff"]["target-version"]
+    assert target == f"py{specified[0].replace('.', '')}"
+
+    workflow = yaml.safe_load((ROOT / ".github" / "workflows" / "ci.yml").read_text("utf-8"))
+    tested = _python_versions(workflow["jobs"]["check"]) | _python_versions(
+        workflow["jobs"]["test-matrix"]
+    )
+    assert sorted(tested) == specified, f"CI tests {sorted(tested)}"

@@ -2,7 +2,7 @@
 
 ## Install
 
-nanopnp needs Python 3.10 to 3.14 on Linux, macOS or Windows. Every dependency ships as a binary
+nanopnp needs Python 3.11 to 3.14 on Linux, macOS or Windows. Every dependency ships as a binary
 wheel, including the NGSolve finite-element library, so no compiler is needed. It is not yet on
 PyPI. Install it from the repository:
 

@@ -6,7 +6,7 @@ name = "nanopnp"
 dynamic = ["version"]
 description = "Continuum simulation of biological nanopores with the ePNP-NS framework"
 readme = "README.md"
-requires-python = ">=3.10,<3.15"
+requires-python = ">=3.11,<3.15"
 license = "BSD-3-Clause"
 license-files = ["LICENSE"]
 authors = [{ name = "Kherim Willems", email = "kherimwillems@gmail.com" }]
@@ -19,7 +19,6 @@ classifiers = [
     "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -43,17 +42,15 @@ dependencies = [
 
 [project.optional-dependencies]
 # Structure -> density -> contour -> charge pipeline (v0.9, phases 2-3).
-# Floors are set to the oldest release that still supports Python 3.10, which
-# QR-09 requires. On 3.11+ the resolver picks the versions named in
-# SPECIFICATION.md section 2.6 (MDAnalysis 2.10, GridDataFormats 1.2); those
-# releases dropped 3.10 themselves. If the geometry pipeline comes to need a
-# 2.10-only API, the supported floor becomes Python 3.11 and QR-09 must say so.
+# Floors are the versions SPECIFICATION.md section 2.6 names, one across the
+# supported 3.11-3.14 range (section 8.2.2 B4). GridDataFormats 1.2 is the
+# release that gained the MRC writer, so CCP4 is written unconditionally (IF-05).
 structure = [
-    "MDAnalysis>=2.7",
-    "GridDataFormats>=1.0.2",
+    "MDAnalysis>=2.10",
+    "GridDataFormats>=1.2",
     "scikit-image>=0.22",
     "shapely>=2.0",
-    "pdb2pqr>=3.6",
+    "pdb2pqr>=3.7",
 ]
 # Desktop shell (ADR-004). PySide6 is LGPL-3; PyQt is forbidden by CON-09.
 gui = ["PySide6>=6.7"]
@@ -137,7 +134,7 @@ cache-keys = [{ file = "pyproject.toml" }, { git = { commit = true, tags = true 
 
 [tool.ruff]
 line-length = 100
-target-version = "py310"
+target-version = "py311"
 src = ["src", "tests"]
 
 [tool.ruff.lint]
@@ -158,8 +155,8 @@ convention = "numpy"
 "tests/*" = ["D100", "D103", "ANN201", "ANN001"]
 
 [tool.mypy]
-# The development pin, not the 3.10 support floor: NumPy's shipped stubs use
-# `type` statements that only parse under 3.12+. Ruff's target-version = py310
+# The development pin, not the 3.11 support floor: NumPy's shipped stubs use
+# `type` statements that only parse under 3.12+. Ruff's target-version = py311
 # is what keeps the source itself compatible with the floor.
 python_version = "3.12"
 files = ["src"]

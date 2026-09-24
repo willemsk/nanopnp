@@ -110,6 +110,11 @@ Two consequences for anything that writes these formats across a 3.10–3.14 mat
   on **writer availability** and assert the refusal on the other branch, so both interpreters
   assert something rather than one of them skipping.
 
+**Superseded by the 3.11 floor, 24 September 2026 [tested].** With `requires-python = ">=3.11"`
+and `GridDataFormats>=1.2`, every supported interpreter resolves to 1.2.0 and writes MRC, so the
+writer-availability branch and its refusal were deleted (§8.2.2 B4, WP17). The facts above still
+describe 1.0.2, should an older environment turn up.
+
 **Symmetry-axis detection:** do not use raw principal axes. ClyA is a truncated cone; the inertia
 tensor's axes are near-degenerate and drift between frames. Use **chain-permutation
 superposition** — superpose chain A onto chain B; the resulting rotation's eigenvector with
@@ -511,6 +516,13 @@ dynamically linked.
 ---
 
 ## 8. Python version floor — the 3.10 target is not free
+
+**Resolved, 24 September 2026 [tested]: the floor is now 3.11** (§8.2.2 B4, WP17). With
+`requires-python = ">=3.11,<3.15"` and the `structure` extra at `MDAnalysis>=2.10`,
+`GridDataFormats>=1.2`, `pdb2pqr>=3.7`, `uv lock` resolves one version of each across the range:
+MDAnalysis 2.10.0, GridDataFormats 1.2.0, pdb2pqr 3.7.1. The 3.10 splits the lock carried for
+numpy, scipy, scikit-image and tifffile went with it. The rest of this section is the analysis that
+led there.
 
 Resolved with `uv 0.12.5`, August 2026, against live PyPI **[tested]**.
 

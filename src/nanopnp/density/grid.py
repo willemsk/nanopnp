@@ -55,9 +55,8 @@ GridFormat: TypeAlias = Literal["npz", "dx", "mrc", "comsolgrid"]
 """The data formats a grid is read from and written to (IF-05).
 
 ``npz`` is the native one and is on the default path. ``dx`` (OpenDX) and ``mrc``
-(the CCP4-2000 map format) go through GridDataFormats, which is optional
-(CON-10 applied to a second dependency): it needs Python 3.11 and this project's
-floor is 3.10, so a field must be readable without it. ``comsolgrid`` is the
+(the CCP4-2000 map format) go through GridDataFormats, which is behind the
+``structure`` extra, so a field must be readable without it. ``comsolgrid`` is the
 reference model's own text table, read only.
 """
 
@@ -77,18 +76,6 @@ _SUFFIXES: dict[str, GridFormat] = {
 ``.ccp4`` and ``.map`` both resolve to ``mrc`` because gridData has no CCP4
 writer at all — ``file_format="ccp4"`` raises ``ValueError: File format CCP4 not
 available`` — and its ``MRC`` writer *is* the CCP4-2000 map format [tested].
-"""
-
-MRC_WRITER_MIN_VERSION = "1.2.0"
-"""First GridDataFormats release whose exporter registry carries an MRC writer.
-
-It requires Python >= 3.11 and QR-09 keeps this project's floor at 3.10, so on
-3.10 the resolver takes 1.0.2 — whose registry is ``DX, PKL, PICKLE, PYTHON``
-and which therefore *reads* MRC and CCP4 but cannot write either [tested].
-Reading is the direction IF-05 needs, so this is a capability of the
-environment rather than a defect; :func:`writable_formats` reports it and
-:func:`write_grid` refuses in those terms rather than letting a third-party
-``ValueError`` out (QR-12).
 """
 
 NM2_TO_M2 = 1e-18
@@ -591,8 +578,8 @@ def write_grid(grid: RadialGrid, path: str | Path, *, format: str | None = None)
     GridFormatError
         If the format is unknown; if it is ``comsolgrid``, which is read-only: it
         is the reference model's own table and writing one would invite a
-        round-tripped copy to be mistaken for it; or if the installed
-        GridDataFormats has no writer for it — see :func:`writable_formats`.
+        round-tripped copy to be mistaken for it; or if it is an interchange
+        format and GridDataFormats is not installed — see :func:`writable_formats`.
     """
     target = Path(path)
     # Before the directory is made: a refused format that had already created a
@@ -646,8 +633,9 @@ def _grid_data_module() -> object:
     ------
     GridFormatError
         If GridDataFormats is not installed. It is behind the ``structure``
-        extra: it requires Python 3.11 and this project supports 3.10 (QR-09), so
-        the interchange formats of IF-05 cannot be on the default path.
+        extra with the rest of the structure pipeline's dependencies, so the
+        default install stays small and wheel-only (QR-09, CON-07); the native
+        format needs none of it.
     """
     try:
         import gridData
@@ -693,33 +681,15 @@ _GRIDDATA_EXPORTERS: dict[GridFormat, str] = {"dx": "DX", "mrc": "MRC"}
 """The gridData exporter key each of our format names is written through."""
 
 
-def _griddata_exporters() -> frozenset[str] | None:
-    """Return the installed exporter registry's keys, or ``None`` if unreadable.
-
-    ``Grid._exporters`` is the registry :meth:`gridData.core.Grid.export` looks
-    the format up in, and it is the only authoritative statement of what this
-    installation can write — the module version is a proxy for it and the
-    filename suffix is not a statement at all. ``None`` where the attribute has
-    moved: the caller then assumes the writer is there and
-    :func:`_write_griddata` translates the refusal if it is not, so a future
-    refactor of gridData costs a worse diagnostic rather than a wrong answer.
-    """
-    module = _grid_data_module()
-    try:
-        registry = module.Grid()._exporters  # type: ignore[attr-defined]
-        return frozenset(str(key) for key in registry)
-    except Exception:  # pragma: no cover - only on a gridData that moved it
-        return None
-
-
 def writable_formats() -> frozenset[GridFormat]:
     """Return the formats :func:`write_grid` can write in this environment.
 
     ``comsolgrid`` is never among them — it is read-only by policy, see
-    :func:`write_grid` — and ``mrc`` is among them only where the installed
-    GridDataFormats carries an MRC writer (:data:`MRC_WRITER_MIN_VERSION`). A
-    caller offering formats to a user asks this rather than discovering the gap
-    from a traceback, which is what makes the stage introspectable (FR-27).
+    :func:`write_grid` — and the two interchange formats are among them where
+    GridDataFormats is installed. Its floor, 1.2, is the release that gained the
+    MRC writer, so where it imports it writes both. A caller offering formats to
+    a user asks this rather than discovering a missing extra from a traceback,
+    which is what makes the stage introspectable (FR-27).
 
     Returns
     -------
@@ -728,12 +698,10 @@ def writable_formats() -> frozenset[GridFormat]:
     """
     formats: set[GridFormat] = {NATIVE_FORMAT}
     try:
-        exporters = _griddata_exporters()
+        _grid_data_module()
     except GridFormatError:
         return frozenset(formats)
-    for name, key in _GRIDDATA_EXPORTERS.items():
-        if exporters is None or key in exporters:
-            formats.add(name)
+    formats.update(_GRIDDATA_EXPORTERS)
     return frozenset(formats)
 
 
@@ -743,42 +711,15 @@ def _write_griddata(grid: RadialGrid, path: Path, chosen: GridFormat) -> Path:
     ``mrc`` stores ``float32``, so a CCP4 round trip is not bit-exact and changes
     the grid's digest. Recorded here rather than hidden: the native format is the
     working one and the interchange formats are for other tools (IF-05).
-
-    Raises
-    ------
-    GridFormatError
-        If the installed GridDataFormats has no writer for this format, naming
-        the format, the installed version and the release that gained it.
     """
-    key = _GRIDDATA_EXPORTERS[chosen]
     module = _grid_data_module()
-    exporters = _griddata_exporters()
-    if exporters is not None and key not in exporters:
-        raise _no_writer(module, chosen, key, exporters)
     data = module.Grid(  # type: ignore[attr-defined]
         grid=grid.values.T[:, :, None],
         origin=(grid.origin_nm[0], grid.origin_nm[1], 0.0),
         delta=(grid.spacing_nm[0], grid.spacing_nm[1], 1.0),
     )
-    try:
-        data.export(str(path), file_format=key)
-    except ValueError as error:  # pragma: no cover - the registry check precedes it
-        raise _no_writer(module, chosen, key, exporters) from error
+    data.export(str(path), file_format=_GRIDDATA_EXPORTERS[chosen])
     return path
-
-
-def _no_writer(
-    module: object, chosen: GridFormat, key: str, exporters: frozenset[str] | None
-) -> GridFormatError:
-    """Return the refusal for a format this GridDataFormats cannot write."""
-    installed = getattr(module, "__version__", "an unknown version")
-    offers = "" if exporters is None else f"; it offers {', '.join(sorted(exporters))}"
-    return GridFormatError(
-        f"the installed GridDataFormats ({installed}) has no {key} writer, so a {chosen!r} grid "
-        f"cannot be written here{offers}. That writer arrived in {MRC_WRITER_MIN_VERSION}, which "
-        "needs Python >= 3.11 while this project supports 3.10 (QR-09). Reading this format still "
-        f"works; write {NATIVE_FORMAT!r}, which is on the default path and is the working format"
-    )
 
 
 COMSOL_GRID_HEADER = "%Grid"
