@@ -43,7 +43,7 @@ Everything must pass before a commit:
 uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv run pytest
 ```
 
-CI runs the same four stages on Python 3.12, plus the test suite on 3.10–3.14 on Linux and on 3.12
+CI runs the same four stages on Python 3.12, plus the test suite on 3.11–3.14 on Linux and on 3.12
 on Windows and macOS, and the strict documentation build on every push, prose-only ones included. `uv.lock` is committed and CI resolves nothing: if you edit `pyproject.toml`,
 run `uv lock` in the same commit.
 

@@ -6,7 +6,7 @@
 [![Documentation](https://img.shields.io/readthedocs/nanopnp?label=docs)](https://nanopnp.readthedocs.io/)
 [![Version](https://img.shields.io/github/v/tag/willemsk/nanopnp?include_prereleases&sort=semver&label=version)](CHANGELOG.md)
 [![Status: pre-alpha](https://img.shields.io/badge/status-pre--alpha-orange)](#status-and-roadmap)
-[![Python 3.10–3.14](https://img.shields.io/badge/python-3.10%E2%80%933.14-blue)](pyproject.toml)
+[![Python 3.11–3.14](https://img.shields.io/badge/python-3.11%E2%80%933.14-blue)](pyproject.toml)
 [![Licence: BSD-3-Clause](https://img.shields.io/badge/licence-BSD--3--Clause-blue)](LICENSE)
 <br>
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)

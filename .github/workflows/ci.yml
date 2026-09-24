@@ -139,10 +139,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # QR-09: binary wheels on Windows, macOS and Linux for 3.10-3.14.
+        # QR-09: binary wheels on Windows, macOS and Linux for 3.11-3.14.
         # Ubuntu on 3.12 is the `check` job, which runs the same selection.
         os: [ubuntu-latest]
-        python-version: ["3.10", "3.11", "3.13", "3.14"]
+        python-version: ["3.11", "3.13", "3.14"]
         include:
           # CON-13: the desktop platforms, on the development pin.
           - os: windows-latest

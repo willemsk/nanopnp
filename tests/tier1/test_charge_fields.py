@@ -37,8 +37,6 @@ from nanopnp.charge.fields import (
 )
 from nanopnp.core.constants import ELEMENTARY_CHARGE
 from nanopnp.density.grid import (
-    MRC_WRITER_MIN_VERSION,
-    NATIVE_FORMAT,
     GridFormatError,
     RadialGrid,
     coefficient,
@@ -158,6 +156,17 @@ def test_ver29_the_writable_formats_exclude_the_read_only_reference_table():
 
 
 @needs_griddata
+def test_ver29_with_griddataformats_both_interchange_formats_are_writable():
+    """GridDataFormats' floor, 1.2, carries the MRC writer, so installed means both.
+
+    Under the 3.10 floor the resolver could take 1.0.2, which reads CCP4 and
+    cannot write it; the 3.11 floor retired that gap (section 8.2.2 B4), and
+    with it the refusal branch no supported interpreter can reach.
+    """
+    assert writable_formats() == {"npz", "dx", "mrc"}
+
+
+@needs_griddata
 @pytest.mark.parametrize(
     ("name", "writer", "tolerance"), [("field.dx", "dx", 0.0), ("field.ccp4", "mrc", 1e-6)]
 )
@@ -167,14 +176,8 @@ def test_ver29_a_grid_round_trips_through_opendx_and_ccp4(tmp_path, name, writer
     CCP4 is written through gridData's ``MRC`` writer — its registry has no
     ``CCP4`` entry at all — and that stores ``float32``, so the round trip is not
     bit-exact and the digest moves. Asserted rather than hidden: the native
-    format is the working one.
-
-    The MRC *writer* arrived in GridDataFormats 1.2, which needs Python >= 3.11,
-    and QR-09 keeps this project's floor at 3.10 — where the resolver takes 1.0.2
-    and can read this format but not write it. That case takes the second branch
-    rather than a skip, because "we refuse it, in these terms" is exactly as much
-    a claim about this code as the round trip is, and both branches run: 3.10
-    takes the refusal and every other interpreter takes the round trip.
+    format is the working one. Unconditional on every supported interpreter
+    since the 3.11 floor (section 8.2.2 B4).
     """
     grid = RadialGrid.from_axes(
         np.array([1.0, 1.5, 2.0, 2.5]),
@@ -182,16 +185,7 @@ def test_ver29_a_grid_round_trips_through_opendx_and_ccp4(tmp_path, name, writer
         np.arange(12.0).reshape(3, 4),
     )
 
-    if writer not in writable_formats():
-        with pytest.raises(GridFormatError) as raised:
-            write_grid(grid, tmp_path / name)
-        message = str(raised.value)
-        assert "writer" in message
-        assert MRC_WRITER_MIN_VERSION in message
-        assert repr(NATIVE_FORMAT) in message
-        assert not (tmp_path / name).exists()
-        return
-
+    assert writer in writable_formats()
     back = read_grid(write_grid(grid, tmp_path / name))
 
     assert back.shape == grid.shape

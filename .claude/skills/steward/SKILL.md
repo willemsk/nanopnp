@@ -59,7 +59,7 @@ macOS only, because it waits on a real QtWebEngine page by the wall clock and bu
   `.github/scripts/prose-only.sh`. When everything is prose, the jobs below skip their steps and
   report success. A PR with any code in it always gets the full run, however small its last push.
 - **`check`** — ubuntu, 3.12: `ruff check`, `ruff format --check`, `mypy src/`, `pytest --cov`.
-- **`test-matrix`** — `pytest` on ubuntu × 3.10, 3.11, 3.13 and 3.14, plus 3.12 on windows and macOS.
+- **`test-matrix`** — `pytest` on ubuntu × 3.11, 3.13 and 3.14, plus 3.12 on windows and macOS.
   Ubuntu 3.12 is the `check` job (QR-09, CON-13).
 - **`bundle`** — **gated**. Windows PyInstaller build of `packaging/nanopnp-probe.spec`, then the
   bundle's own `--selftest` (RSK-13, §8.2.1 A4). It also runs nightly, as the runner-image drift
@@ -79,7 +79,7 @@ have before changing a line — a stale `uv.lock` also fails at `uv sync`, and t
 failure with a real fix.
 
 Reproduce the failing job's exact command locally before changing anything. For a matrix-only
-failure, reproduce under that interpreter (`uv run --python 3.10 pytest …`).
+failure, reproduce under that interpreter (`uv run --python 3.11 pytest …`).
 
 ## Failure classes
 
@@ -90,7 +90,7 @@ failure, reproduce under that interpreter (`uv run --python 3.10 pytest …`).
 | `mypy src/` | Strict-mode gap | Annotate properly. NGSolve ships no type information: extend the protocol aliases in `core/typing.py` rather than reaching for `Any` or a bare `type: ignore` |
 | Lockfile out of date | `pyproject.toml` moved without `uv lock` | `uv lock`, commit it |
 | `bundle` build or `--selftest` | A binary dependency defeating desktop packaging — RSK-13's detector doing its job | Root-cause it on the spec or the dependency. Never add `continue-on-error`: demotion is recorded with the failure that caused it (ci.yml comment, §8.2.1 A4), and that is the author's call |
-| One Python version only | A compatibility gap (3.10 syntax floors, 3.13/3.14 stdlib moves) | Fix compatibly across 3.10–3.14. **Never** narrow `requires-python` or drop a matrix entry — QR-09 is a requirement |
+| One Python version only | A compatibility gap (3.11 syntax floors, 3.13/3.14 stdlib moves) | Fix compatibly across 3.11–3.14. **Never** narrow `requires-python` or drop a matrix entry — QR-09 is a requirement |
 | Windows or macOS only | Path handling, line endings, thread counts, float repr | `pathlib` everywhere, never `os.path`; pin thread counts in the test, not in the library |
 | A tier 1 property test | A real regression in a unit | Root-cause it. These are seconds long and localise precisely |
 | Fails under `-n`, passes serially | The test depends on order, or on state another module leaves (a global, a patched module attribute, the process store, a cwd) | Name the shared state and isolate it. Never drop `-n`, never pin a test to one worker to get green without naming the mechanism, and never call it a flake |
