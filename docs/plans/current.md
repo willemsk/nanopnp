@@ -12,13 +12,11 @@ an unmerged branch has shipped.
   as an addendum to that report.
 - Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **planned, not started**:
   WP17–WP25, with the author's rulings B1–B7 recorded in `SPECIFICATION.md` §8.2.2.
-- **WP17** ([case schema v2 and the 3.11 floor](wp17-case-schema-v2.md)) is **planned**, and its
-  spec amendments are committed. It is not implemented until B1's remaining condition, the double-click observation, is met.
-- **Next, in order** (ruling B1):
-  1. the author's double-click observation of the Windows bundle, which closes Phase 0 criterion 4
-     and RSK-13 (§8.2.1 A4);
-  2. `/wp-implement` WP17. Its first commit freezes the v1 case corpus and its solve keys **on
-     unchanged code**, before any schema edit (WP17 D7).
+- **WP17** ([case schema v2 and the 3.11 floor](wp17-case-schema-v2.md)) is **in progress** on
+  `claude/wp-plan-17-211905`. Ruling B1 is met: the author's double-click was recorded on
+  24 September 2026 (the NOTE to `SPECIFICATION.md` §8.2.1), closing Phase 0 criterion 4 and
+  retiring RSK-13. Its first commit freezes the v1 case corpus and its solve keys **on unchanged
+  code**, before any schema edit (WP17 D7).
 
 ## What Phase 2 must not re-decide
 
@@ -55,8 +53,6 @@ Each item is recorded in full where it points. Read it there first.
 
 - **The G9 axial offset** and the **ensemble archive** (format, frames, lipids) for VAL-05. The
   author's, before WP22.
-- **The double-click** of the `bundle` job's artefact: criterion 4 and RSK-13 stay open until it
-  is recorded.
 - **The COMSOL exports** (WP13), against
   [`docs/validation/comsol-export-contract.md`](../validation/comsol-export-contract.md). Until they
   land every report carries `golden_source: self`, and Tier 3 skips the archive comparison visibly.

@@ -4,7 +4,7 @@
 solver core on an externally supplied mesh (main at `v0.5.0-alpha.10`). Two things come first:
 the Phase 1 end-of-phase report, which merges as tag `v0.5.0`, and the author's double-click
 observation that closes Phase 0 criterion 4. That ordering is ruling B1 of `SPECIFICATION.md`
-§8.2.2.
+§8.2.2. **Both were met on 24 September 2026** (the double-click is recorded in the NOTE to §8.2.1).
 
 This is the delivery plan for Phase 2 of `SPECIFICATION.md` §8.1. With Phase 3 it makes up release
 v0.9. The specification is normative: where this file and the specification disagree, the
