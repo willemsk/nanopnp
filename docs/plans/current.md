@@ -6,16 +6,16 @@ an unmerged branch has shipped.
 
 ## Position
 
-- Phase 1 ([solver core](phase-1-solver-core.md)) delivered **WP7–WP16**; main is
-  `v0.5.0-alpha.10`.
+- Phase 1 ([solver core](phase-1-solver-core.md)) is **closed**: WP7–WP16, and the end-of-phase
+  report, released as `v0.5.0` under `SPECIFICATION.md` §8.2.3. The COMSOL attribution is
+  outstanding on the author's exports (C1), and so is the 12-core reference sweep (C2). Each lands
+  as an addendum to that report.
 - Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **planned, not started**:
   WP17–WP25, with the author's rulings B1–B7 recorded in `SPECIFICATION.md` §8.2.2.
 - **Next, in order** (ruling B1):
-  1. the Phase 1 end-of-phase report (`phase-1-solver-core.md` §End-of-phase report; §8.1), merged
-     and tagged `v0.5.0`;
-  2. the author's double-click observation of the Windows bundle, which closes Phase 0 criterion 4
+  1. the author's double-click observation of the Windows bundle, which closes Phase 0 criterion 4
      and RSK-13 (§8.2.1 A4);
-  3. `/wp-plan 17`: case schema v2 and the 3.11 floor.
+  2. `/wp-plan 17`: case schema v2 and the 3.11 floor.
 
 ## What Phase 2 must not re-decide
 

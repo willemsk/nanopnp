@@ -16,8 +16,38 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-24
+
+**Phase 1, the solver core.** The verified Phase 0 physics becomes a product that others can run
+and reproduce: a case file goes in, and a manifest, fields and a dataset come out. It runs on an
+externally supplied mesh and charge field. It has full quantity-of-interest extraction, a frozen
+`nanopnp/case/v1` schema, a sweep runner, a Tier-3 COMSOL comparison harness, a desktop shell and a
+documentation site. Tiers 1 and 2 pass, and Tier 3 is enabled and verified. Under
+`SPECIFICATION.md` §8.2.3, the attribution of differences against COMSOL is outstanding until the
+author's reference exports exist. The end-of-phase report is in
+[docs/plans/phase-1-solver-core.md](docs/plans/phase-1-solver-core.md).
+
+The release gathers ten work packages, each tagged, each with its own entry in this file:
+
+- WP7, the case-file schema, content-addressed artefacts and the provenance manifest
+  (`v0.5.0-alpha.1`);
+- WP8, mesh ingestion, quality gates and the reference geometry (`v0.5.0-alpha.2`);
+- WP9, external charge and dielectric fields (`v0.5.0-alpha.3`);
+- WP10, case-driven runs, the command line and field output (`v0.5.0-alpha.4`);
+- WP11, the sweep runner (`v0.5.0-alpha.5`);
+- WP12, the reference-matching stabilised mode (`v0.5.0-alpha.6`);
+- WP13, the Tier-3 harness and the COMSOL comparison (`v0.5.0-alpha.7`);
+- WP14, the packaging probe and the desktop shell (`v0.5.0-alpha.8`);
+- WP15, live convergence monitoring and the field viewer (`v0.5.0-alpha.9`);
+- WP16, user documentation and worked examples (`v0.5.0-alpha.10`).
+
 ### Added
 
+- The Phase 1 end-of-phase report, and the §8.2.3 amendment that closes the phase.
+- The Phase 2 delivery plan, `docs/plans/phase-2-geometry-pipeline.md`
+  ([#36](https://github.com/willemsk/nanopnp/pull/36)), with the author's rulings recorded as
+  `SPECIFICATION.md` §8.2.2. QR-09 is amended to Python 3.11–3.14, taking effect in the code with
+  WP17.
 - Versions come from git tags through hatch-vcs, and every earlier work package and milestone is
   tagged retroactively. CI and Read the Docs fetch the full history so the version resolves.
 - `.github/workflows/release.yml` builds every version tag and publishes a GitHub Release, with this

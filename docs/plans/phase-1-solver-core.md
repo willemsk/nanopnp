@@ -1,6 +1,7 @@
 # Phase 1 (Solver core): the production solver on an externally supplied mesh
 
-**Status: WP7–WP16 delivered.** Written 2 September 2026, after Phase 0
+**Status: WP7–WP16 delivered; end-of-phase report written 24 September 2026; released as `v0.5.0`**
+(§8.2.3). Written 2 September 2026, after Phase 0
 (WP1–WP6) and its consolidation (WP-A1, WP-B1, WP-B2, WP-C1). It inherited a verified physics core
 and a bare pipeline: tiers 1 and 2 green, `mypy --strict` and `ruff` clean, and `io/`, `sweep/`,
 `charge/`, `structure/`, `density/`, `symmetry/`, `gui/` still empty reserved slots. `io/` is filled
@@ -905,3 +906,105 @@ To be written at the end of the phase, naming numbers rather than adjectives:
 - Any Tier-1 or Tier-2 tolerance that had to be argued rather than met — the one thing Phase 0's
   report flagged as most consequential for this phase's comparison.
 - Whether the Windows bundle built, and on what.
+
+Written 24 September 2026, on `main` at `b2ab533` (the `v0.5.0-alpha.10` code plus the Phase 2 plan).
+Every number below is quoted from the Outcome, test or knowledge entry it cites. None is
+re-derived here.
+
+**Verdict.** Tiers 1 and 2 pass, and Tier 3 is enabled, with its attribution machinery verified.
+**No difference against COMSOL has been attributed**, because the author's reference exports do
+not exist yet (WP13; `docs/validation/comsol-export-contract.md`). The §8.1 gate's last clause is
+therefore not met as written. By the author's ruling it is closed by `SPECIFICATION.md` §8.2.3 C1,
+in the manner of Phase 0's A2 and A4. v0.5.0 is released with the COMSOL attribution outstanding,
+and that attribution is reported as an addendum here when the exports land. Phase 0 criterion 4,
+the double-click, is still open as §8.2.1 leaves it. It is the author's, and Phase 2's ruling B1
+requires it before WP17.
+
+**Tier-3 attribution: machinery measured, reference not.** Every Tier-3 report carries
+`golden_source: self`. The four-rung ladder ran against a self-golden on the VER-11 benchmark pore
+(708 elements, 0.5 M, +50 mV, −0.05 C/m²; four full-ladder solves in 75 s). The `none`-rung
+distance splits as expected. `Δ_transport` carries 88 % of the potential's `Δ_total` (4.01 × 10⁻²),
+and `Δ_flow` carries 90 % of the radial velocity's (8.53 × 10⁻¹). `Δ_resid` is zero by
+construction, and the telescoping identity holds to round-off (`.knowledge/08-validation-benchmarks.md`
+§Tier 3; `wp13-tier3-comsol-comparison.md` Outcomes). These numbers describe the ladder. They say
+nothing about the reference implementation, so no fraction of `Δ_resid` has been bounded by VAL-04:
+its `Δ_ref` needs the published mesh and one uniform refinement from COMSOL. One Tier-3 number
+*does* concern the reference. VAL-15 measured the delivered `rhoq_pore` table on our 44,316-element
+reference mesh. Its producer leg is exact, to 4.68 × 10⁻¹². Its consumer leg is off by
+**9.87 × 10⁻³**, missing QR-03's 10⁻³ by a factor of ten, with the quadrature-agreement gate at
+9.27 × 10⁻³. Aliasing of a sub-element field is the cause (OPN-06, `.knowledge/04` §3.2). The same
+gate meets QR-03 with a factor of 73 to spare on a field smeared at the reference's own width
+(WP9).
+
+**MMS in the stabilised modes (VER-42, WP12).** In `supg` mode, where the transport term acts
+alone, the rate on VER-18's manufactured solution is **2.012 and 2.040** at `maxh` 0.4/0.2/0.1 nm.
+That is the one order the approximate residual predicts, and it is gated from below at 1.8.
+`none` on the same meshes gives 3.553 and 3.111, VER-18's rate unchanged. The full `reference` mode
+is recorded and not gated: **0.984** for Na⁺ and 0.702 for Cl⁻. That shortfall is the flow pair's
+approximate residual costing an order on Taylor–Hood, and the velocity error, which moves from
+2.76 × 10⁻⁴ to 3.45 × 10⁻² at `maxh` 0.4 nm, is the evidence. The `reference` and `none` currents
+converge on each other: `|I_ref − I_none|/|I_none|` is 2.00 × 10⁻¹, 7.38 × 10⁻² and 1.99 × 10⁻² at
+`wall_h` 0.8/0.4/0.2 nm. The rates are **1.441, then 1.889**, approaching O(h²) from below.
+
+**Sweep throughput (VER-39, VER-37, WP11).** 25 points on the 4-core development machine, at
+N = 1, 2 and 4 workers, took 33.5, 22.1 and 16.8 s. The parallel efficiency is **1.00, 0.76 and
+0.50**, and the throughput 2,686, 2,034 and 1,337 points per worker-hour over uncached members.
+That is half of linear at four workers on four cores, on a sweep whose members take about a second
+each, so dispatch and import overhead are not amortised. Recorded, not gated (QR-06). The §8.3
+reference grid (3,675 points in 42 waves) is planned and checked in as
+`docs/sweeps/phase1-reference.sweep.yaml`, but **the twelve-core day-scale run has not been made**.
+QR-06's day-scale claim is therefore still unmeasured at scale. Warm against cold, the worst
+relative difference over every scalar is **3.367 × 10⁻⁹** against the 10⁻⁶ tolerance. The warm pass
+took 77 Newton iterations against 216 (2.81×).
+
+**The reference-geometry mesh (WP8).** At §5.2.2's size fields, with isotropic grading and no
+boundary layers, the mesh is **44,316 triangles** in 6.5 s. Minimum SICN is **0.6559** (mean
+0.9870), minimum gamma 0.6157 (mean 0.9852), with no inverted element. COMSOL reached 0.6378 and
+0.9765 with 120,917 triangles. Ours needed **about a third of the elements**, not more, to land in
+the same quality band. Element counts are a property of the netgen build, not of the geometry
+(`.knowledge/07` §4), so the count is asserted as a band.
+
+**Tolerances argued rather than met.** There are three, and none of them is a slackened Tier-1 or
+Tier-2 gate.
+- **NUM-26 at exactly zero bias.** Both current routes return round-off (`I_ψ = 2.288 × 10⁻²⁷` A
+  against `I_reaction = 4.606 × 10⁻²⁵` A, relative difference 0.995), so the relative check is
+  inapplicable there. The reference sweep's bias axis is rooted at +5 mV. Deciding what "no current"
+  means is left open (`.knowledge/06` §8.5).
+- **VER-42's full `reference` mode rate.** At 0.984 it is recorded, never gated, for the reason
+  above.
+- **VAL-15's consumer leg.** Ten times outside QR-03, attributed and not accommodated.
+
+Everything that *was* gated came in with margin. QR-08's reproduction differed by a worst relative
+**0.0** across six store misses (VER-35). NUM-26's routes agreed at every non-zero bias. Phase 0's
+one argued tolerance, VER-21's Henry-against-Smoluchowski, was flagged for this phase's COMSOL
+comparison. It remains unexamined, because that comparison has not run.
+
+**The Windows bundle (WP14, WP15).** The gated `bundle` job builds the PyInstaller one-dir bundle
+on `windows-latest` on every push, then runs `nanopnp-probe.exe --selftest` headlessly and uploads
+the artefact. On the last full run on `main`
+([run 35971212439](https://github.com/willemsk/nanopnp/actions/runs/35971212439)), PyInstaller took
+2 min 53 s and the selftest passed in 2 s. The selftest also fails when the bundled webgui renderer
+does not reach its page (VER-44). The bundle's size is not recorded. **The double-click is not yet
+observed**, so §8.2 criterion 4 and RSK-13 remain open.
+
+**Completion criteria.**
+1. Tiers 1 and 2 pass on ingested and constructed meshes. On `5458450`, the last code commit
+   before this report's, [CI run 35909281813](https://github.com/willemsk/nanopnp/actions/runs/35909281813)
+   passed lint, `mypy --strict`, and tiers 1–2. The tier runs covered Ubuntu on Python 3.10–3.14,
+   and macOS and Windows on 3.12, with the Qt widget module run serially where Qt imports.
+2. A case file drives a run from the CLI, and its manifest reconstructs it: QR-08 reproduced to
+   0.0 (VER-35).
+3. Tier 3 is enabled. Its attribution is verified on self-goldens, and the attribution against
+   COMSOL is outstanding (§8.2.3 C1).
+4. A sweep of the published shape is planned, and one of its own kind runs with warm starts and a
+   measured throughput. The full-scale run is deferred to the author's hardware (§8.2.3 C2).
+5. The desktop shell edits, runs, monitors and views a case (IF-09, VER-43, VER-44). The bundle
+   builds and self-tests on every push, and the double-click is outstanding.
+
+**What Phase 2 inherits.** No weak form changes in Phase 2, so the Tier-3 attribution can land at
+any point, independently of the geometry work. Its three pending inputs are the COMSOL exports, the
+two declarations of `tds.ntflux_i`'s boundary and the current's electrode, and `$NANOPNP_REFERENCE_DATA`
+on the nightly runner. Two further things carry a plausible-wrong-number risk into Phase 2. Every
+generated mesh must reach the reference mesh's quality band without boundary layers, which WP8
+showed isotropic grading does at a third of COMSOL's elements. And a supplied charge table sampled
+at quadrature points aliases (VAL-15), which is why Phase 3 deposits onto the finite-element space.
