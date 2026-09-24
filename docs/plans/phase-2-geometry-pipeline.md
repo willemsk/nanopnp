@@ -213,7 +213,7 @@ Cₙ rotation. The generated references pick up the v2 fields without a docs edi
 | G9 | The axial offset from the MD frame to the model frame for ClyA, which sets ClyA's `geometry.membrane.centre_z_nm` (`.knowledge/04` §8) | **Author, open.** Wanted with the ensemble delivery. If lipids are in the archive, the bilayer centre may fix it. Fallback: WP22 fits the offset as one degree of freedom and reports it |
 | Ensemble delivery | Format, frame count, and whether lipids and waters are included in the archived ClyA-AS ensemble; the file names it carries under `NANOPNP_REFERENCE_DATA` | **Author, needed before WP22** |
 | VAL-05 tolerances | Radius-profile and constriction-radius tolerances per leg | WP22 plan, argued from `G ∝ r²` and gap G3 |
-| Schema v2 contents | The exact v2 key list, including Phase 3's, and whether v1 artefact keys survive the upgrade | WP17 plan |
+| Schema v2 contents | The exact v2 key list, including Phase 3's, and whether v1 artefact keys survive the upgrade | **Settled** in the [WP17 plan](wp17-case-schema-v2.md), D1–D6, and in the `SPECIFICATION.md` §5.3.1 v2 NOTE: the solve keys survive and the stage-9 key moves |
 | Cₙ averaging method | Rotate atoms or interpolate the voxel map | WP19 plan, with its derivation |
 | Contour script | Which parts of the author's script port | WP20 plan, after reading it (B6) |
 
