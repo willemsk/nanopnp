@@ -42,6 +42,12 @@ CASE_SCHEMA_V1 = "nanopnp/case/v1"
 STRUCTURE_SCHEMA = "nanopnp/structure/v1"
 """Stage 1: the aligned ensemble, with the Cₙ axis on z at r = 0 (FR-01 to FR-03)."""
 
+DENSITY_SCHEMA = "nanopnp/density/v1"
+"""Stage 2: the ensemble-mean union density on the canonical 3D grid (FR-04)."""
+
+REDUCED_SCHEMA = "nanopnp/reduced/v1"
+"""Stage 3: the (r, z) mean and the Cₙ and raw azimuthal variances (FR-05, FR-06)."""
+
 MATERIALS_SCHEMA = "nanopnp/materials/v1"
 """Stage 8: the resolved material coefficient set."""
 
@@ -234,6 +240,57 @@ class StructureArtefact(Artefact):
         super().__init__(
             schema=STRUCTURE_SCHEMA,
             parameters=dict(parameters),
+            payload=dict(payload or {}),
+            summary=summary or {},
+        )
+
+
+class DensityArtefact(Artefact):
+    """Stage 2: the density map, keyed on ``geometry.density``, the radius set and stage 1.
+
+    The parameters are the ``geometry.density`` block, the radius set's name and
+    file digest, and the two constants that move a number, ε and the logarithm's
+    floor (WP19 D11). Stage 1's hash is the one input. The payload's digest is
+    recorded beside it and re-checked on load (VER-23).
+    """
+
+    def __init__(
+        self,
+        *,
+        parameters: Mapping[str, Canonicalisable],
+        inputs: Mapping[str, str],
+        payload: Mapping[str, Path] | None = None,
+        summary: Mapping[str, Canonicalisable] | None = None,
+    ) -> None:
+        super().__init__(
+            schema=DENSITY_SCHEMA,
+            parameters=dict(parameters),
+            inputs=dict(inputs),
+            payload=dict(payload or {}),
+            summary=summary or {},
+        )
+
+
+class ReducedArtefact(Artefact):
+    """Stage 3: the (r, z) reduction, keyed on n, the bin width, its two methods and stage 2.
+
+    The parameters are the point group's n, the bin width, and the names of the
+    detrending and harmonic-truncation rules, each of which moves a variance
+    (WP19 D11). Stage 2's hash is the one input.
+    """
+
+    def __init__(
+        self,
+        *,
+        parameters: Mapping[str, Canonicalisable],
+        inputs: Mapping[str, str],
+        payload: Mapping[str, Path] | None = None,
+        summary: Mapping[str, Canonicalisable] | None = None,
+    ) -> None:
+        super().__init__(
+            schema=REDUCED_SCHEMA,
+            parameters=dict(parameters),
+            inputs=dict(inputs),
             payload=dict(payload or {}),
             summary=summary or {},
         )

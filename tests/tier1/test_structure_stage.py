@@ -10,8 +10,9 @@ The vendored wwPDB entry 2WCD holds two dodecamers (chains A-L and M-X) in the
 crystal frame, where the pore axis is 22.9 degrees from z and +z points to
 *trans*. That frame is refused by the orientation gate, as the specification
 requires (a test below holds it). The stage-one run uses chains A-L rigidly
-moved into a frame the stage admits: a test-time preparation, since preparing a
-structure is outside the pipeline (WP18 Outcomes).
+moved into a frame the stage admits, the root conftest's ``prepared_2wcd``: a
+test-time preparation, since preparing a structure is outside the pipeline
+(WP18 Outcomes; WP19 D14).
 """
 
 from __future__ import annotations
@@ -23,6 +24,7 @@ import subprocess
 import sys
 import warnings
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import gemmi
 import MDAnalysis as mda  # noqa: N813 - the alias the library documents
@@ -50,17 +52,15 @@ from nanopnp.structure.read import (
     select_frames,
 )
 
+if TYPE_CHECKING:
+    from conftest import Prepared2WCD
+
 logger = logging.getLogger(__name__)
 
 STRUCTURES = Path(__file__).parents[1] / "data" / "structures"
 PDB = STRUCTURES / "2wcd.pdb.gz"
 CIF = STRUCTURES / "2wcd.cif.gz"
 DODECAMER = "A,B,C,D,E,F,G,H,I,J,K,L"
-
-PREPARED_TILT_DEG = 4.0
-"""The tilt the prepared copy is left with, so the frame transform is not the identity."""
-
-PREPARED_SHIFT_NM = np.array([0.6, -0.35, 1.2])
 
 
 def _case(tmp_path: Path, structure: str, *, name: str = "structure") -> Path:
@@ -104,14 +104,6 @@ def _block(
     return "".join(lines)
 
 
-def _dodecamer() -> mda.AtomGroup:
-    """Return chains A-L of the deposited 2WCD, protein only."""
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        universe = load_universe(PDB)
-    return universe.select_atoms("protein and chainID " + " ".join(DODECAMER.split(",")))
-
-
 def _rotation(axis: np.ndarray, angle: float) -> np.ndarray:
     """Return the rotation by ``angle`` (radians) about ``axis``."""
     k = np.asarray(axis, dtype=np.float64) / np.linalg.norm(axis)
@@ -137,41 +129,10 @@ def _write(group: mda.AtomGroup, frames_angstrom: np.ndarray, path: Path) -> Pat
     return path
 
 
-def _prepared_rotation(group: mda.AtomGroup) -> np.ndarray:
-    """Return a rotation taking the deposited dodecamer's axis to z, *cis* up, then tilting it 4°.
-
-    Which end is *cis* is read from the structure, not assumed: the ClyA cap is the
-    wide end (``.knowledge/04-clya-geometry-and-charge.md``). In the deposited
-    frame the axis signed to +z has its narrow end up, so +z there points to
-    *trans* — the same finding as a Kabsch superposition of chains A-L onto the
-    author's aligned copy, which maps it to -z (WP18 Outcomes).
-    """
-    chains = []
-    for chain in DODECAMER.split(","):
-        ca = group.select_atoms(f"chainID {chain} and name CA and resid 8:292")
-        chains.append(ca.positions / 10.0)
-    record = measure_axis(np.asarray(chains), 12)
-    flat = np.concatenate(chains)
-    height = (flat - record.centroid_nm) @ record.axis
-    radial = np.linalg.norm((flat - record.centroid_nm) - np.outer(height, record.axis), axis=1)
-    top = radial[height > np.quantile(height, 0.8)].mean()
-    bottom = radial[height < np.quantile(height, 0.2)].mean()
-    cis = record.axis if top > bottom else -record.axis
-    logger.info("deposited 2WCD: +axis end radius %.2f nm, -axis end %.2f nm", top, bottom)
-    to_z = (
-        _rotation(np.cross(cis, [0, 0, 1.0]), math.acos(float(cis[2]))) if cis[2] < 1 else np.eye(3)
-    )
-    tilt = _rotation(np.array([1.0, 1.0, 0.0]), math.radians(PREPARED_TILT_DEG))
-    return tilt @ to_z
-
-
 @pytest.fixture(scope="module")
-def prepared(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """Chains A-L of 2WCD, rigidly moved to *cis* up, tilted 4° and shifted: a prepared file."""
-    group = _dodecamer()
-    rotation = _prepared_rotation(group)
-    moved = group.positions @ rotation.T + PREPARED_SHIFT_NM * 10.0
-    return _write(group, moved[None], tmp_path_factory.mktemp("prepared") / "2wcd-prepared.pdb")
+def prepared(prepared_2wcd: Prepared2WCD) -> Path:
+    """Return the root conftest's prepared 2WCD: chains A-L, *cis* up, tilted 4° and shifted."""
+    return prepared_2wcd.path
 
 
 def _run(case: Path, store: Path) -> AlignedEnsemble:
@@ -190,7 +151,9 @@ def test_ver48_the_deposited_2wcd_frame_is_refused_by_the_orientation_gate(
         run_case(case, store=Store(tmp_path / "store"), upto="structure", write=False)
 
 
-def test_ver48_2wcd_runs_as_stage_one(prepared: Path, tmp_path: Path) -> None:
+def test_ver48_2wcd_runs_as_stage_one(
+    prepared: Path, prepared_2wcd: Prepared2WCD, tmp_path: Path
+) -> None:
     """``run_case(upto="structure")``: 12 chains, 285 common C-alpha, gates pass, output on z.
 
     The prepared copy is tilted by 4 degrees, so the stage must measure that tilt
@@ -208,7 +171,7 @@ def test_ver48_2wcd_runs_as_stage_one(prepared: Path, tmp_path: Path) -> None:
     assert summary["common_ca"] == 285
     assert summary["chains_cyclic_order"][0] == "A"
     record = summary["axis"]["file_frame"]
-    assert abs(record["tilt_deg"] - PREPARED_TILT_DEG) <= 1e-6
+    assert abs(record["tilt_deg"] - prepared_2wcd.tilt_deg) <= 1e-6
     assert abs(record["angle_deg"] - 30.0) <= 0.01
     logger.info(
         "2WCD A-L: angle %.4f deg, worst spacing %.3f deg, permutation RMSD %.4f nm, tilt %.4f deg",
@@ -252,9 +215,11 @@ def test_ver48_2wcd_pdb_and_mmcif_agree() -> None:
 
 
 @pytest.fixture(scope="module")
-def two_chains(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, np.ndarray]:
+def two_chains(
+    dodecamer_2wcd: mda.AtomGroup, tmp_path_factory: pytest.TempPathFactory
+) -> tuple[Path, np.ndarray]:
     """Chains A-B of 2WCD as a PDB, and three frames of coordinates in ångströms."""
-    group = _dodecamer().select_atoms("chainID A B")
+    group = dodecamer_2wcd.select_atoms("chainID A B")
     rng = np.random.default_rng(3)
     frames = np.stack(
         [group.positions + rng.normal(0.0, 0.5, group.positions.shape) for _ in range(3)]
@@ -329,9 +294,9 @@ def _edited(path: Path, tmp_path: Path, name: str, edit: object) -> Path:
 
 
 @pytest.fixture(scope="module")
-def dodecamer_pdb(tmp_path_factory: pytest.TempPathFactory) -> Path:
+def dodecamer_pdb(dodecamer_2wcd: mda.AtomGroup, tmp_path_factory: pytest.TempPathFactory) -> Path:
     """Chains A-L of 2WCD, as deposited, as a plain PDB the refusal cases edit."""
-    group = _dodecamer()
+    group = dodecamer_2wcd
     return _write(group, group.positions[None], tmp_path_factory.mktemp("refusals") / "al.pdb")
 
 
@@ -598,10 +563,14 @@ def test_ver48_rigid_move_superposes_to_zero(prepared: Path, tmp_path: Path) -> 
 
 
 def test_ver48_walk_rules(prepared: Path, tmp_path: Path) -> None:
-    """A full walk is refused naming stage 2; ``upto`` must name a stage the case has (IF-02)."""
+    """A full walk is refused naming stage 4; ``upto`` must name a stage the case has (IF-02).
+
+    Stage 2 until WP19 delivered stages 2 and 3; stage 4 now (section 5.3.1 NOTE on
+    ``structure:``).
+    """
     case = _case(tmp_path, _block(prepared))
     store = Store(tmp_path / "store")
-    with pytest.raises(UnsupportedCaseSection, match=r"Stage 2, the density map \(FR-04\)"):
+    with pytest.raises(UnsupportedCaseSection, match=r"Stage 4, contour extraction"):
         run_case(case, store=store, write=False)
     with pytest.raises(UnsupportedCaseSection, match=r"stage 'materials'"):
         run_case(case, store=store, upto="materials", write=False)
@@ -632,7 +601,7 @@ def test_ver48_a_sweep_over_a_structure_case_is_refused_at_plan_build(
         "  - {name: bias, path: boundary_conditions.bias_V, values: [0.05, 0.1]}\n",
         encoding="utf-8",
     )
-    with pytest.raises(SweepPlanError, match=r"Stage 2, the density map"):
+    with pytest.raises(SweepPlanError, match=r"Stage 4, contour extraction"):
         plan_from_document(sweep)
 
 

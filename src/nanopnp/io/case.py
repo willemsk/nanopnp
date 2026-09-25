@@ -1595,21 +1595,24 @@ _ORDERS: dict[str, int] = {"P1": 1, "P2": 2, "P3": 3}
 """Element labels of section 5.3.1 against their polynomial order."""
 
 _PIPELINE_SECTIONS: dict[str, str] = {
-    "geometry": "the density, contour and CAD pipeline (FR-04 to FR-10)",
     "charge": "the PDB2PQR charge and dielectric pipeline (FR-12 to FR-15)",
 }
 """Case-file sections whose stages land in v0.9, with what each one drives.
 
-``structure:`` left this table in WP18: stage 1 runs, and a walk past it is
-refused by :func:`refuse_walk` instead, naming stage 2.
+``structure:`` left this table in WP18 and ``geometry:`` in WP19: stages 1 to 3
+run, and a walk past them is refused by :func:`refuse_walk` instead, naming
+stage 4.
 """
 
-STRUCTURE_WALK: tuple[str, ...] = ("case", "structure")
-"""The stages a walk over a ``structure:`` case may reach until stage 2 is delivered.
+STRUCTURE_WALK: tuple[str, ...] = ("case", "structure", "density", "symmetry")
+"""The stages a walk over a ``structure:`` case may reach until stage 4 is delivered.
 
-Section 5.3.1 NOTE on ``structure:``: stage 1 runs alone through the stage
-command (IF-02), and a walk extending past it is refused naming stage 2.
+Section 5.3.1 NOTE on ``structure:``: once stages 2 and 3 are delivered, and until
+stage 4 is, a walk extending past stage 3 is refused naming stage 4 (WP19 D1).
 """
+
+GRID_SPACING_RANGE_NM: tuple[float, float] = (0.025, 0.05)
+"""FR-04's density grid spacing, 0.25-0.5 Å (section 5.3.1 NOTE on ``geometry.density``)."""
 
 _POINT_GROUP = re.compile(r"C([1-9][0-9]*)")
 """``symmetry.point_group``: a cyclic group ``C<n>``, n >= 1 (section 5.3.1 NOTE)."""
@@ -1705,6 +1708,9 @@ class ResolvedCase:
     eps_r: SuppliedArtefact | None
     outputs: tuple[str, ...]
     structure: ResolvedStructure | None = None
+    density: DensitySpec | None = None
+    """``geometry.density`` on a case carrying ``structure:``, at its defaults when the
+    case has no ``geometry:`` block; ``None`` on any other case."""
 
     @property
     def name(self) -> str:
@@ -1715,7 +1721,7 @@ class ResolvedCase:
         """Return ``inputs.mesh``, or refuse a case whose mesh no delivered stage produces.
 
         Only a case carrying ``structure:`` resolves without one, and its walk is
-        refused past stage 1 by :func:`refuse_walk`; this is the same refusal for
+        refused past stage 3 by :func:`refuse_walk`; this is the same refusal for
         a caller that reaches a mesh-consuming stage by another route.
 
         Raises
@@ -1727,8 +1733,8 @@ class ResolvedCase:
             raise UnsupportedCaseSection(
                 f"case {self.name!r} supplies no inputs.mesh and generates its geometry from a "
                 "structure:, but the stages between the structure and the mesh are not delivered "
-                "in this release: stage 2, the density map (FR-04), lands in WP19. Stage 1 runs "
-                "alone through `nanopnp stage structure` (IF-02)"
+                "in this release: stage 4, contour extraction (FR-07, FR-08), lands in WP20. "
+                "Stages 1 to 3 run through `nanopnp run --upto symmetry` (IF-02)"
             )
         return self.mesh
 
@@ -1889,8 +1895,44 @@ def _resolve_structure(document: CaseDocument) -> ResolvedStructure | None:
     return ResolvedStructure(spec=spec, n=n, chains=chains)
 
 
+def _resolve_density(document: CaseDocument) -> DensitySpec | None:
+    """Make the ``geometry.density`` refusals (section 5.3.1 NOTE, WP19 D2).
+
+    Value checks, not a narrowing of the schema, for the reason
+    :func:`_resolve_structure` gives.
+
+    Returns
+    -------
+    DensitySpec or None
+        The block, or its defaults where the case has no ``geometry:``; ``None``
+        on a case without ``structure:``, which runs no stage that reads it.
+
+    Raises
+    ------
+    CaseValidationError
+        Naming the key and its value: a grid spacing outside FR-04's
+        0.025-0.05 nm, or a sharpness that is not positive.
+    """
+    if document.structure is None:
+        return None
+    spec = document.geometry.density if document.geometry is not None else DensitySpec()
+    low, high = GRID_SPACING_RANGE_NM
+    if not low <= spec.grid_spacing_nm <= high:
+        raise CaseValidationError(
+            f"geometry.density.grid_spacing_nm is {spec.grid_spacing_nm} nm; FR-04 requires "
+            f"{low}-{high} nm (0.25-0.5 A), because the trans constriction's contour moves with "
+            "resolution (section 5.3.1 NOTE on geometry.density)"
+        )
+    if not spec.sharpness > 0.0:
+        raise CaseValidationError(
+            f"geometry.density.sharpness is {spec.sharpness}; it scales each atom's radius to "
+            "its Gaussian width, so it is positive (section 5.3.1 NOTE on geometry.density)"
+        )
+    return spec
+
+
 def refuse_walk(resolved: ResolvedCase, upto: str | None) -> None:
-    """Refuse a walk past stage 1 on a case carrying ``structure:`` (section 5.3.1 NOTE).
+    """Refuse a walk past stage 3 on a case carrying ``structure:`` (section 5.3.1 NOTE).
 
     One function of the resolved case and the stage a walk stops at, called by
     :func:`nanopnp.io.run.run_document` and by the sweep plan builder, so a sweep
@@ -1907,7 +1949,7 @@ def refuse_walk(resolved: ResolvedCase, upto: str | None) -> None:
     Raises
     ------
     UnsupportedCaseSection
-        Naming stage 2, when the case carries ``structure:`` and ``upto`` is not
+        Naming stage 4, when the case carries ``structure:`` and ``upto`` is not
         one of :data:`STRUCTURE_WALK`.
     """
     if resolved.structure is None or upto in STRUCTURE_WALK:
@@ -1915,9 +1957,9 @@ def refuse_walk(resolved: ResolvedCase, upto: str | None) -> None:
     target = "the whole pipeline" if upto is None else f"stage {upto!r}"
     raise UnsupportedCaseSection(
         f"case {resolved.name!r} carries a structure: section, and a walk through {target} "
-        "extends past stage 1. Stage 2, the density map (FR-04), is delivered in WP19; until "
-        "then stage 1 runs alone, through `nanopnp stage structure <case>` (IF-02, section "
-        "5.3.1 NOTE on structure:)"
+        "extends past stage 3. Stage 4, contour extraction (FR-07, FR-08), is delivered in "
+        "WP20; until then stages 1 to 3 run, through `nanopnp run <case> --upto symmetry` "
+        "(IF-02, section 5.3.1 NOTE on structure:)"
     )
 
 
@@ -2013,6 +2055,13 @@ def _require_runnable(document: CaseDocument) -> SuppliedArtefact | None:
             "stage whose output is supplied does not run, and neither does anything upstream of "
             "it, so the structure would be recorded as an input to a run that never read it "
             "(section 5.3.1 NOTE on inputs:); remove one of them"
+        )
+    if document.geometry is not None and document.inputs.mesh is not None:
+        raise CaseValidationError(
+            f"case {document.name!r} carries a geometry: section and supplies inputs.mesh. A "
+            "stage whose output is supplied does not run, and neither does anything upstream of "
+            "it, so the geometry would be recorded as an input to a run that never read it "
+            "(section 5.3.1 NOTE on geometry.density); remove one of them"
         )
     if document.inputs.mesh is None and document.structure is None:
         raise UnsupportedCaseSection(
@@ -2208,6 +2257,7 @@ def resolve(document: CaseDocument) -> ResolvedCase:
     """
     mesh = _require_runnable(document)
     structure = _resolve_structure(document)
+    density = _resolve_density(document)
 
     electrolyte = Electrolyte.from_parameter_file(
         document.electrolyte.parameters,
@@ -2279,6 +2329,7 @@ def resolve(document: CaseDocument) -> ResolvedCase:
         eps_r=document.inputs.eps_r,
         outputs=tuple(document.outputs),
         structure=structure,
+        density=density,
     )
 
 

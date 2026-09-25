@@ -436,6 +436,28 @@ def _register_builtins() -> None:
     )
     register(
         StageDescription(
+            name="density",
+            number=2,
+            title="Density map",
+            inputs=("case", "structure"),
+            outputs=("ensemble-mean union density on a canonical 3D grid", "radius-set record"),
+            artefact_schema="nanopnp/density/v1",
+        ),
+        "nanopnp.density.stage:DensityStage",
+    )
+    register(
+        StageDescription(
+            name="symmetry",
+            number=3,
+            title="Symmetry reduction to (r, z)",
+            inputs=("case", "density"),
+            outputs=("(r, z) mean", "Cn-averaged and raw azimuthal variance"),
+            artefact_schema="nanopnp/reduced/v1",
+        ),
+        "nanopnp.symmetry.stage:SymmetryStage",
+    )
+    register(
+        StageDescription(
             name="mesh",
             number=6,
             title="Mesh",
