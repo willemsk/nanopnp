@@ -24,6 +24,7 @@ import sys
 import warnings
 from pathlib import Path
 
+import gemmi
 import MDAnalysis as mda  # noqa: N813 - the alias the library documents
 import numpy as np
 import pytest
@@ -385,6 +386,80 @@ def test_ver48_input_refusals(
     case = _case(tmp_path, _block(path, chains=chains, point_group=point_group))
     with pytest.raises(StructureInputError, match=message):
         run_case(case, store=Store(tmp_path / "store"), upto="structure", write=False)
+
+
+def _alternate_in_chain_l(lines: list[str], atoms: list[int]) -> None:
+    index = next(index for index in atoms if lines[index][21] == "L")
+    lines[index] = lines[index][:16] + "A" + lines[index][17:]
+
+
+def test_ver48_element_and_location_refusals_apply_to_the_listed_chains(
+    dodecamer_pdb: Path, tmp_path: Path
+) -> None:
+    """An alternate location in a chain ``source.chains`` leaves out is not refused (§5.3.1 NOTE).
+
+    The chains a case lists are the selected ones; the same file with every
+    chain selected is refused naming the atom.
+    """
+    path = _edited(dodecamer_pdb, tmp_path, "alternate_l.pdb", _alternate_in_chain_l)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        universe = load_universe(path)
+    chosen = select(universe, selection="protein", chains="A,B,C,D,E,F,G,H,I,J,K", n=11)
+    assert chosen.chains == tuple("ABCDEFGHIJK")
+    with pytest.raises(StructureInputError, match=r"chain L\) has alternate location 'A'"):
+        select(universe, selection="protein", chains="all", n=12)
+
+
+def test_ver48_a_malformed_selection_is_refused_naming_the_key(tmp_path: Path) -> None:
+    """A selection MDAnalysis cannot parse is a named refusal, not an unexpected error (QR-12)."""
+    case = _case(tmp_path, _block(PDB, selection="protien"))
+    with pytest.raises(StructureInputError, match=r"selection 'protien' is not an MDAnalysis"):
+        run_case(case, store=Store(tmp_path / "store"), upto="structure", write=False)
+
+
+def test_ver48_a_trajectory_of_other_atoms_is_refused_naming_both_files(
+    two_chains: tuple[Path, np.ndarray], tmp_path: Path
+) -> None:
+    """A trajectory whose atom count is not the structure's is refused naming both (QR-12)."""
+    topology, frames = two_chains
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        group = mda.Universe(str(topology)).select_atoms("chainID A")
+    count = len(group)
+    dcd = _write(group, frames[:, :count], tmp_path / "a.dcd")
+    with pytest.raises(StructureInputError, match=r"'a\.dcd' cannot be read against .*'ab\.pdb'"):
+        load_universe(topology, dcd)
+
+
+def test_ver48_mmcif_models_must_hold_the_same_atoms_in_order(tmp_path: Path) -> None:
+    """An mmCIF model listing the same atoms in another order is refused (IF-04).
+
+    Equal atom counts are not enough: with chain A moved after chain B in model
+    2, chain B's coordinates would otherwise be read onto chain A's topology.
+    """
+
+    def two_models(swap: bool) -> Path:
+        structure = gemmi.read_structure(str(CIF))
+        structure.remove_ligands_and_waters()
+        model = structure[0]
+        for name in [chain.name for chain in model]:
+            if name not in ("A", "B"):
+                model.remove_chain(name)
+        second = model.clone()
+        second.num = 2
+        if swap:
+            chain = second["A"].clone()
+            second.remove_chain("A")
+            second.add_chain(chain)
+        structure.add_model(second)
+        path = tmp_path / f"models_{swap}.cif"
+        structure.make_mmcif_document().write_file(str(path))
+        return path
+
+    assert len(load_universe(two_models(swap=False)).trajectory) == 2
+    with pytest.raises(StructureInputError, match=r"atom 1 of model 2 is not atom 1 of model 1"):
+        load_universe(two_models(swap=True))
 
 
 @pytest.mark.parametrize(

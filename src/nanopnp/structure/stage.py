@@ -25,6 +25,7 @@ from __future__ import annotations
 import logging
 import math
 import tempfile
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -112,6 +113,15 @@ def structure_parameters(structure: ResolvedStructure) -> dict[str, Canonicalisa
     return parameters
 
 
+def _digest(parameters: Mapping[str, Canonicalisable], section: str, key: str) -> str:
+    """Return the sha256 :func:`structure_parameters` put in place of a file path."""
+    entry = parameters[section]
+    assert isinstance(entry, Mapping)  # structure_parameters built it so
+    digest = entry[key]
+    assert isinstance(digest, Mapping)
+    return str(digest["sha256"])
+
+
 @dataclass(frozen=True)
 class Alignment:
     """What :func:`align` produced: the ensemble, and the record its header is made from."""
@@ -132,6 +142,7 @@ def _angle_deg(first: np.ndarray, second: np.ndarray) -> float:
 def align(
     structure: ResolvedStructure,
     *,
+    parameters: Mapping[str, Canonicalisable] | None = None,
     progress: Progress | None = None,
     cancel: CancelToken | None = None,
 ) -> Alignment:
@@ -141,6 +152,10 @@ def align(
     ----------
     structure
         The resolved ``structure:`` block.
+    parameters
+        Its key's parameters, as :func:`structure_parameters` returns them; the
+        header takes the file digests from here rather than reading each file a
+        second time. Computed when omitted.
     progress, cancel
         As the stage protocol gives them.
 
@@ -163,6 +178,8 @@ def align(
 
     spec = structure.spec
     n = structure.n
+    if parameters is None:
+        parameters = structure_parameters(structure)
     check_cancelled(cancel, "reading the structure")
     report(progress, 0.0, f"reading {spec.source.path.name}")
     universe = load_universe(spec.source.path, spec.ensemble.trajectory)
@@ -238,14 +255,14 @@ def align(
     header: dict[str, Canonicalisable] = {
         "source": {
             "file": spec.source.path.name,
-            "sha256": file_hash(spec.source.path),
+            "sha256": _digest(parameters, "source", "path"),
         },
         "trajectory": (
             None
             if spec.ensemble.trajectory is None
             else {
                 "file": spec.ensemble.trajectory.name,
-                "sha256": file_hash(spec.ensemble.trajectory),
+                "sha256": _digest(parameters, "ensemble", "trajectory"),
             }
         ),
         "variant": spec.source.variant,
@@ -356,7 +373,7 @@ class StructureStage:
         """
         structure = _structure(inputs)
         parameters = structure_parameters(structure)
-        alignment = align(structure, progress=progress, cancel=cancel)
+        alignment = align(structure, parameters=parameters, progress=progress, cancel=cancel)
         directory = self._workspace
         if directory is None:
             root = store_root() / WORKSPACE_DIRNAME

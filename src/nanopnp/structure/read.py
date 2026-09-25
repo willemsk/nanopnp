@@ -42,6 +42,7 @@ from typing import TYPE_CHECKING, Any, Literal
 import gemmi
 import MDAnalysis as mda  # noqa: N813 - the alias the library documents
 from MDAnalysis.coordinates.memory import MemoryReader
+from MDAnalysis.exceptions import SelectionError
 
 from nanopnp.io.case import parse_chains
 
@@ -149,7 +150,8 @@ def load_universe(source: Path, trajectory: Path | None = None) -> mda.Universe:
     ------
     StructureInputError
         If a file is missing, has an extension outside the accepted set, or an
-        mmCIF file has no ``_atom_site.type_symbol`` column.
+        mmCIF file has no ``_atom_site.type_symbol`` column; or if the trajectory
+        does not hold the structure's atoms.
     """
     _require_file(source, "structure.source.path")
     kind = structure_format(source)
@@ -166,7 +168,16 @@ def load_universe(source: Path, trajectory: Path | None = None) -> mda.Universe:
         else:
             universe = mda.Universe(str(source), topology_format="PDB", format="PDB")
         if trajectory is not None:
-            universe.load_new(str(trajectory), format=chosen)
+            try:
+                universe.load_new(str(trajectory), format=chosen)
+            except ValueError as error:
+                # MDAnalysis refuses a trajectory whose atom count is not the
+                # topology's with a plain ValueError; name both files (QR-12).
+                raise StructureInputError(
+                    f"structure.ensemble.trajectory {trajectory.name!r} cannot be read against "
+                    f"structure.source.path {source.name!r}, which holds {len(universe.atoms)} "
+                    f"atoms: {error}"
+                ) from error
     return universe
 
 
@@ -193,7 +204,14 @@ def _universe_from_mmcif(path: Path) -> mda.Universe:
     def atoms_of(model: Any) -> list[tuple[Any, Any, Any]]:  # noqa: ANN401 - gemmi is untyped
         return [(chain, residue, atom) for chain in model for residue in chain for atom in residue]
 
+    def identity(atoms: list[tuple[Any, Any, Any]]) -> list[tuple[str, str, str, str]]:
+        return [
+            (chain.name, str(residue.seqid), residue.name, atom.name)
+            for chain, residue, atom in atoms
+        ]
+
     first = atoms_of(structure[0])
+    first_identity = identity(first)
     names, elements, altlocs, chains = [], [], [], []
     residues: list[tuple[str, int, str, str]] = []
     resindex: list[int] = []
@@ -213,6 +231,20 @@ def _universe_from_mmcif(path: Path) -> mda.Universe:
             raise StructureInputError(
                 f"{path.name!r}: model {index + 1} holds {len(atoms)} atoms and model 1 holds "
                 f"{len(first)}; the models of an ensemble must hold the same atoms"
+            )
+        # Equal counts are not the same atoms: a model listing its chains in
+        # another order would put one chain's coordinates on another's topology.
+        found = first_identity if index == 0 else identity(atoms)
+        if found != first_identity:
+            mismatch = next(
+                position
+                for position, pair in enumerate(zip(found, first_identity, strict=True))
+                if pair[0] != pair[1]
+            )
+            raise StructureInputError(
+                f"{path.name!r}: atom {mismatch + 1} of model {index + 1} is not atom "
+                f"{mismatch + 1} of model 1; the models of an ensemble must hold the same atoms "
+                "in the same order"
             )
         frames.append([[atom.pos.x, atom.pos.y, atom.pos.z] for _, _, atom in atoms])
 
@@ -330,9 +362,30 @@ def select(universe: mda.Universe, *, selection: str, chains: str, n: int) -> Se
     """
     import numpy as np
 
-    group = universe.select_atoms(selection)
+    try:
+        group = universe.select_atoms(selection)
+    except SelectionError as error:
+        raise StructureInputError(
+            f"structure.source.selection {selection!r} is not an MDAnalysis selection: {error}"
+        ) from error
     if len(group) == 0:
         raise StructureInputError(f"structure.source.selection {selection!r} selects no atom")
+    keys, chain_key = _chain_keys(group)
+    listed = parse_chains(chains)
+    present = tuple(dict.fromkeys(keys))
+    if listed is not None:
+        missing = [chain for chain in listed if chain not in present]
+        if missing:
+            raise StructureInputError(
+                f"structure.source.chains lists {', '.join(missing)}, which the selection does not "
+                f"contain; it holds chains {', '.join(present)} by {chain_key} (FR-03)"
+            )
+        mask = np.isin(np.asarray(keys), np.asarray(listed))
+        group = group[mask]
+        keys = [key for key, kept in zip(keys, mask, strict=True) if kept]
+        present = tuple(chain for chain in present if chain in listed)
+    # The element and alternate-location refusals apply to the atoms stage 1
+    # keeps: a chain source.chains leaves out is not selected (section 5.3.1 NOTE).
     if not hasattr(group, "elements"):
         raise StructureInputError(
             f"no atom of structure.source.selection {selection!r} carries an element in the file; "
@@ -357,21 +410,6 @@ def select(universe: mda.Universe, *, selection: str, chains: str, n: int) -> Se
                     "the file"
                 )
 
-    keys, chain_key = _chain_keys(group)
-    listed = parse_chains(chains)
-    present = tuple(dict.fromkeys(keys))
-    if listed is not None:
-        missing = [chain for chain in listed if chain not in present]
-        if missing:
-            raise StructureInputError(
-                f"structure.source.chains lists {', '.join(missing)}, which the selection does not "
-                f"contain; it holds chains {', '.join(present)} by {chain_key} (FR-03)"
-            )
-        mask = np.isin(np.asarray(keys), np.asarray(listed))
-        group = group[mask]
-        keys = [key for key, kept in zip(keys, mask, strict=True) if kept]
-        elements = [value for value, kept in zip(elements, mask, strict=True) if kept]
-        present = tuple(chain for chain in present if chain in listed)
     if len(present) != n:
         raise StructureInputError(
             f"C{n} expects {n} chains, and the selection holds {len(present)} "

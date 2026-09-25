@@ -209,6 +209,13 @@ uv run pytest -m tier3 tests/tier3/test_structure_ensemble.py -v
 >   another. The output re-detects z through r = 0, with a tilt of 0.0° and an offset of 3e-15 nm
 >   (`.knowledge/04` §1.1).
 >
+> **Outcome — the shipping review added four refusals.** A selection MDAnalysis cannot parse, a
+> trajectory that does not hold the structure's atoms, and an mmCIF model whose atoms are not
+> model 1's in order were reaching the CLI as unclassified errors, or not refused at all. Each is
+> now a `StructureInputError` naming the key or file. The element and alternate-location refusals
+> now run after `source.chains` narrows the selection. The §5.3.1 NOTE and VER-48 say so, and
+> `test_structure_stage.py` holds 34 tests.
+>
 > The coverage line of Appendix A was recounted to 50 of 67. The line it replaced said 45/22, but
 > the table held 46/21 before VER-48.
 
