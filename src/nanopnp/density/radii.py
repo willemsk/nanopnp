@@ -221,14 +221,15 @@ def resolve_radii(
 
     radius_set = RadiusSet.load(name)
     pairs = np.char.add(np.char.add(resname.astype(str), "\t"), atom.astype(str))
-    unique, inverse = np.unique(pairs, return_inverse=True)
+    unique, first_seen, inverse = np.unique(pairs, return_index=True, return_inverse=True)
     radii_A = np.empty(len(unique), dtype=np.float64)
-    for index, pair in enumerate(unique.tolist()):
-        residue, _, name_ = pair.partition("\t")
+    # In order of first appearance, so the atom refused is the first in the file.
+    for index in np.argsort(first_seen, kind="stable").tolist():
+        residue, _, name_ = str(unique[index]).partition("\t")
         try:
             radii_A[index] = radius_set.radius_A(residue, name_)
         except KeyError as error:
-            first = int(np.flatnonzero(inverse == index)[0])
+            first = int(first_seen[index])
             number = f"{int(resid[first])}{str(icode[first]).strip()}"
             raise DensityInputError(
                 f"stage 2 cannot place atom {name_!r} of residue {residue} {number} in chain "
