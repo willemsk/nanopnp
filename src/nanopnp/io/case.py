@@ -347,8 +347,8 @@ class Charge(_Strict):
     forcefield: str = "CHARMM"
     titration: Literal["propka", "none"] = "propka"
     smearing: SmearingSpec = Field(default_factory=SmearingSpec)
-    exclusion_offset_nm: float = Field(default=0.0, ge=0.0)
-    dielectric_transition_nm: float = Field(default=0.0, ge=0.0)
+    exclusion_offset_nm: float = Field(default=0.0, ge=0.0, allow_inf_nan=False)
+    dielectric_transition_nm: float = Field(default=0.0, ge=0.0, allow_inf_nan=False)
 
 
 # -- electrolyte --------------------------------------------------------------
@@ -493,7 +493,7 @@ class MeshSpec(_Strict):
 
     backend: Literal["netgen", "gmsh"] = "netgen"
     wall_h_nm: float | Literal["auto"] = "auto"
-    size_scale: float = Field(default=1.0, gt=0.0)
+    size_scale: float = Field(default=1.0, gt=0.0, allow_inf_nan=False)
     boundary_layer: bool = False
 
 
@@ -1396,8 +1396,8 @@ def upgrade_v1(raw: Mapping[str, FieldValue], *, source: str = "<string>") -> di
     if foreign:
         raise CaseValidationError(
             f"{source}: declares {CASE_SCHEMA_V1!r} but carries {', '.join(foreign)}, which "
-            f"{CASE_SCHEMA!r} added; declare {CASE_SCHEMA!r}, since a document is valid against "
-            "the schema it declares or not at all"
+            f"only {CASE_SCHEMA!r} has; declare {CASE_SCHEMA!r}, since a document is valid "
+            "against the schema it declares or not at all"
         )
     for old, new in V2_RENAMED.items():
         value = _raw_pop(document, old)
@@ -1453,6 +1453,10 @@ def _raw_pop(document: dict[str, FieldValue], path: str) -> FieldValue:
 def _raw_put(document: dict[str, FieldValue], path: str, value: FieldValue, source: str) -> None:
     """Set a value at a dotted path of a raw mapping, creating absent blocks.
 
+    Only a block the document does not carry is created. One written as
+    ``null`` is present, and v1 refused it, so it is not turned into a block
+    that would make the upgrade accept a document v1 did not.
+
     Raises
     ------
     CaseValidationError
@@ -1462,9 +1466,9 @@ def _raw_put(document: dict[str, FieldValue], path: str, value: FieldValue, sour
     *head, last = path.split(".")
     cursor = document
     for depth, component in enumerate(head):
-        nested = cursor.get(component)
-        if nested is None:
-            nested = cursor[component] = {}
+        if component not in cursor:
+            cursor[component] = {}
+        nested = cursor[component]
         if not isinstance(nested, dict):
             prefix = ".".join(head[: depth + 1])
             raise CaseValidationError(
