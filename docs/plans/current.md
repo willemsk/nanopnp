@@ -10,11 +10,11 @@ an unmerged branch has shipped.
   attribution (C1) and the 12-core reference sweep (C2) land as addenda to its report.
 - Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **in progress**. WP17 and WP18
   are merged (PRs [#38](https://github.com/willemsk/nanopnp/pull/38) and
-  [#39](https://github.com/willemsk/nanopnp/pull/39), `v0.9.0-alpha.1` and `alpha.2`). WP19–WP25
+  [#39](https://github.com/willemsk/nanopnp/pull/39), `v0.9.0-alpha.1` and `alpha.2`). WP20–WP25
   are planned (rulings B1–B7, §8.2.2).
 - **WP19** ([density map and symmetry reduction, stages 2 and 3](wp19-density-and-reduction.md)) is
-  **planned, not started**, on `claude/wp-plan-19-19570b`. **Next:** `/wp-implement`. Its PR
-  becomes `v0.9.0-alpha.3`.
+  **delivered** on `claude/wp-plan-19-19570b`; its PR awaits `/wp-ship` and becomes
+  `v0.9.0-alpha.3`. **Next:** WP20, contour extraction (stage 4).
 
 ## What Phase 2 must not re-decide
 
@@ -36,17 +36,18 @@ Each item is recorded in full where it points. Read it there first.
 - **Stage 4 emits `nanopnp/profile/v1`**; stage 3 fills `RadialGrid`. → phase plan.
 - **Stage 1's frame is fixed**: axis on z at r = 0, `z = â·x`, +z to *cis*; stage 5 applies
   `centre_z_nm`. → the §5.3.1 NOTE on `structure:`; WP18 D2, D8, D10.
-- **`refuse_walk`** (`io/case.py`) stops runs and sweeps past the last delivered stage. WP19
-  moves the stop to stage 3, and WP20 moves it on. → WP18 D1; WP19 D1.
+- **`refuse_walk`** (`io/case.py`) stops runs and sweeps past the last delivered stage, now
+  stage 3, naming stage 4. WP20 moves it on. → WP18 D1; WP19 D1.
 - **The density's radii are CHARMM Rmin/2** from PDB2PQR's `CHARMM.DAT`, by residue and atom, with
   no element fallback (author ruling, 25 September 2026). **The Cₙ average is a harmonic
-  projection**, and the variance is taken after detrending. → the §5.3.1 NOTE on
-  `geometry.density`; WP19 D3, D7, D9.
+  projection**, and the variance is taken after detrending; below `n h/π` it is unresolved, not
+  zero. → the §5.3.1 NOTE on
+  `geometry.density`; WP19 D3, D7, D9 and their Outcomes.
 - **For VAL-05 (WP22), all answered by the author on 25 September 2026.** G9 is 0 in the MD frame,
   so the vendored 2WCD must be registered to it. The paper's 50 frames are DCD frames 48–97 at
   100 ps. The density included hydrogens. → `.knowledge/04` §1.1, §8; index rulings 11–12.
 - **The vendored 2WCD is in its crystal frame** and stage 1 refuses it; the tests orient it through
-  the `prepared_2wcd` fixture. → WP18 D16 Outcome; WP19 D14.
+  the `prepared_2wcd` fixture in `tests/conftest.py`. → WP18 D16 Outcome; WP19 D14.
 
 ## Inherited from Phase 1, still binding
 
@@ -76,7 +77,7 @@ Each item is recorded in full where it points. Read it there first.
 | Phase 2 scope and rulings | `phase-2-geometry-pipeline.md`; `SPECIFICATION.md` §5.2–§5.2.2, §8.2.2 |
 | The ClyA pipeline as executed, and gaps G1–G13 | `.knowledge/04-clya-geometry-and-charge.md` |
 | Structure, geometry and meshing libraries | `.knowledge/07-software-stack.md` §2, §4, §8 |
-| The seams Phase 2 builds on | `density/grid.py` (`RadialGrid`); `mesh/profile.py`; `mesh/reference.py` (`ReferenceGeometry`); `core/stages.py`; `io/run.py`; `io/case.py` (`_require_runnable`) |
+| The seams Phase 2 builds on | `density/grid.py` (`RadialGrid`); `symmetry/reduce.py` (`ReducedMap`); `symmetry/annular.py`; `mesh/profile.py`; `mesh/reference.py` (`ReferenceGeometry`); `core/stages.py`; `io/run.py`; `io/case.py` (`_require_runnable`) |
 | Case schema, dotted paths and option sets | `SPECIFICATION.md` §5.3.1 and its NOTEs; `io/case.py` |
 | Shell, packaging and licence constraints | ADR-004, CON-07, CON-09, CON-10, CON-11; `.knowledge/07-software-stack.md` §5–§6 |
 

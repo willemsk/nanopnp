@@ -228,6 +228,47 @@ with scratch prototypes while planning WP19. They are not the implementation, an
   `b²/2` (relative to the peak) at r ≥ 1 nm when n | m. When n ∤ m, the Cₙ variance stays below
   7.1e-5 of it.
 
+**Stages 2 and 3 as implemented [tested].** Measured on 25 September 2026 with
+`nanopnp.density` and `nanopnp.symmetry` (WP19; `tests/tier1/test_density.py`,
+`tests/tier1/test_reduction.py`, `tests/tier2/test_density_2wcd.py`), at h = 0.05 nm and
+σ = 0.93:
+
+- **Deposition.** Atoms are grouped by stencil half-width, each group gathers a separable
+  Gaussian over a spherical offset set, and the terms are scattered by `np.bincount` into a z-slab
+  of at most 4e6 cells, 1e6 terms at a time. The prepared 2WCD dodecamer (26,844 heavy atoms, a
+  315 × 271 × 271 grid in the aligned frame) deposits in **17.0 s**, and stage 3 reduces it in
+  **6.9 s**. A fresh interpreter running stages 1–3 peaks at **0.47 GB** RSS. The prototype above
+  took 31.2 s for the deposition alone.
+- **The truncation error sits inside its bound.** On 200 random atoms against an untruncated
+  evaluation, the largest voxel error was 7.8e-6. At every voxel it stayed below the sum of
+  `g/(1 − g)` over the dropped terms, which peaked at 1.15e-5.
+- **The exact annular weights**, with the `atan2` segment, sum to the annulus areas to 1.2e-13 to
+  1.6e-13 relative, and each interior cell's to `h²` to 3e-16. A 2WCD slice's integral is conserved
+  through the binning to 6e-16.
+- **2WCD's reduction.** The largest C12 variance is 0.204, at r = 5.40 nm and z = 12.95 nm. The
+  largest non-C12 variance, raw minus C12, is 9.5e-3, at r = 1.65 nm and z = 3.10 nm: the crystal's
+  chains are not exact copies. The axis bin's mean is exactly 0 over the central 80 % of the Cα
+  extent, because the lumen is wider than the 3.72σR kernel cutoff.
+- **Turning a C12 by a non-symmetry angle moves it measurably.** A synthetic C12 of 480 atoms,
+  turned by 90° before deposition, reduces unchanged to round-off. Turned by 30°, one of its own symmetries,
+  it agrees to the float32 map's rounding. Turned by 15°, it moves the mean by 5.5e-4 and each
+  variance by 0.26 % of its 0.175 peak. That is the grid's own anisotropy, and why a 30° turn alone
+  is too weak an invariance test.
+- **gridData's precision on export.** OpenDX writes the origin with `%f`, the delta with `%.7g`
+  and the values with six decimals, so a float32 map comes back within 5e-7 plus its own
+  re-rounding, 2⁻²⁴. MRC stores the values and the voxel size as float32: 0.05 reads back as
+  0.05000000074505806. A grid identity check must round the spacing, as `%.7g` does, before
+  comparing.
+- **numpy's fixed-width strings drop trailing NULs.** `np.char.add(a, "\x00")` returns `a`
+  unchanged, because a `<U` array treats trailing NULs as padding. So a `"\x00"` separator between
+  residue and atom names silently vanishes, and `ALA`+`CA` reads `ALACA`. Use a printable separator
+  that no name contains, such as a tab.
+- **The CHARMM radius set against 2WCD.** All 26,844 atoms resolve, with radii of 0.170 to
+  0.2275 nm. Its 216 `ILE CD1` resolve through the alias to `CD`, and its 120 `HIS` atoms because
+  HSD, HSE and HSP agree on every heavy atom. `CHARMM.DAT` in PDB2PQR 3.7.1 holds 2,587 entry
+  lines, and `CAL` and `DUM` appear twice with identical values. `DUM`'s radius is 0, which the
+  set refuses, because a zero-width kernel deposits nothing.
+
 ---
 
 ## 3. Charge and electrostatics
