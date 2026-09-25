@@ -8,12 +8,13 @@ an unmerged branch has shipped.
 
 - Phase 1 ([solver core](phase-1-solver-core.md)) is **closed** as `v0.5.0` (§8.2.3). The COMSOL
   attribution (C1) and the 12-core reference sweep (C2) land as addenda to its report.
-- Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **in progress**: WP17 is
-  merged (PR [#38](https://github.com/willemsk/nanopnp/pull/38), `v0.9.0-alpha.1`), WP18 is
-  delivered on its branch, and WP19–WP25 are planned (rulings B1–B7, §8.2.2).
-- **WP18** ([structure ingestion, stage 1](wp18-structure-ingestion.md)) is **delivered** on
-  `claude/wp-plan-18-2f2174`, with its PR open and independent review pending. **Next:**
-  `/wp-ship` in a fresh session; after merge, tag `v0.9.0-alpha.2`; then `/wp-plan 19`.
+- Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **in progress**. WP17 and WP18
+  are merged (PRs [#38](https://github.com/willemsk/nanopnp/pull/38) and
+  [#39](https://github.com/willemsk/nanopnp/pull/39), `v0.9.0-alpha.1` and `alpha.2`). WP19–WP25
+  are planned (rulings B1–B7, §8.2.2).
+- **WP19** ([density map and symmetry reduction, stages 2 and 3](wp19-density-and-reduction.md)) is
+  **planned, not started**, on `claude/wp-plan-19-19570b`. **Next:** `/wp-implement`. Its PR
+  becomes `v0.9.0-alpha.3`.
 
 ## What Phase 2 must not re-decide
 
@@ -32,16 +33,17 @@ Each item is recorded in full where it points. Read it there first.
   phase gate requires. → §8.2.2 B2; §7.4.
 - **No HOLE on the default path** (B5). **The contour script is read before WP20 is planned**
   (B6). **Gmsh arrives in WP23, optional, and FR-20 is Phase 3's** (B7). → §8.2.2.
-- **Stage 4 emits `nanopnp/profile/v1`** and stage 3 fills `RadialGrid`: the existing schemas.
-  → phase plan, Design decisions.
-- **Stage 1's frame is fixed.** The axis is on z at r = 0, and `z = â·x` keeps the file's axial
-  coordinate. +z is the file's +z, which must point to *cis*. Stage 5 applies `centre_z_nm`. The
-  van der Waals radius belongs to stage 2. mmCIF is read by gemmi. → the §5.3.1 NOTE on
-  `structure:`; WP18 D2, D8, D10.
-- **`refuse_walk`** (`io/case.py`) stops runs and sweeps past the last delivered stage; WP19
-  extends it. → WP18 D1.
-- **The vendored 2WCD is in its crystal frame**, 22.9° from z, and stage 1 refuses it; WP22's
-  Tier-2 leg must orient it, as the stage-one test does. → WP18 D16 Outcome.
+- **Stage 4 emits `nanopnp/profile/v1`**; stage 3 fills `RadialGrid`. → phase plan.
+- **Stage 1's frame is fixed**: axis on z at r = 0, `z = â·x`, +z to *cis*; stage 5 applies
+  `centre_z_nm`. → the §5.3.1 NOTE on `structure:`; WP18 D2, D8, D10.
+- **`refuse_walk`** (`io/case.py`) stops runs and sweeps past the last delivered stage. WP19
+  moves the stop to stage 3, and WP20 moves it on. → WP18 D1; WP19 D1.
+- **The density's radii are CHARMM Rmin/2** from PDB2PQR's `CHARMM.DAT`, by residue and atom, with
+  no element fallback (author ruling, 25 September 2026). **The Cₙ average is a harmonic
+  projection**, and the variance is taken after detrending. → the §5.3.1 NOTE on
+  `geometry.density`; WP19 D3, D7, D9.
+- **The vendored 2WCD is in its crystal frame** and stage 1 refuses it; the tests orient it through
+  the `prepared_2wcd` fixture. → WP18 D16 Outcome; WP19 D14.
 
 ## Inherited from Phase 1, still binding
 
@@ -58,9 +60,10 @@ Each item is recorded in full where it points. Read it there first.
 
 - **The G9 axial offset**, and **the ensemble's frame spacing and the paper's 50 frames**, for
   VAL-05. They are the author's, before WP22. The archive is `prod5_clya_as.{pdb,dcd}`: 98 frames,
-  protein only, with no time metadata. The MD frame suggests G9 ≈ 0 (`.knowledge/04` §1.1).
-- **The van der Waals radius set** of the original density map. The author's, before WP19; the
-  contour script may carry it (B6).
+  protein only, with no time metadata. The MD frame suggests G9 ≈ 0. The archived PQR files suggest
+  100 ps per frame (`.knowledge/04` §1.1).
+- **Whether the original density included hydrogens.** The PQR files carry them. The author's,
+  before WP22.
 - **The COMSOL exports** (WP13), against
   [`docs/validation/comsol-export-contract.md`](../validation/comsol-export-contract.md). Until they
   land every report carries `golden_source: self`, and Tier 3 skips the archive comparison visibly.

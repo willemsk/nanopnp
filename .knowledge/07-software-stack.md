@@ -196,6 +196,38 @@ the scipy fallback suffices. The times are the trap:
   wrong window. Gate a `last_ns` longer than the recorded span, and record the times as read
   (`SPECIFICATION.md` §5.3.1 NOTE on `structure:`).
 
+**Density deposition and the (r, z) reduction, measured [tested].** Measured on 25 September 2026
+with scratch prototypes while planning WP19. They are not the implementation, and the plan's Design
+§1–§5 has the derivations. At h = 0.05 nm:
+
+- **Deposition cost.** One probabilistic-union deposition of the 2WCD dodecamer (26,844 heavy
+  atoms, ε = 1e-6 spherical truncation, a 295 × 287 × 341 grid) took 31.2 s in numpy. Most of that
+  was a full-grid `np.bincount(..., minlength=N)` per 256-atom batch, which allocates a 231 MB array
+  105 times. Scatter per z-slab instead. Depositing n rotated copies costs n times this.
+- **Cell–annulus overlap areas.** The closed form for the area of a square inside a disc needs the
+  circular-segment primitive `½(x s + R² θ)`. With `θ = asin(x/R)`, the weights summed to the exact
+  annulus areas only to 2.3e-7, because `asin` is ill-conditioned as x → R and R² amplifies the
+  error. With `θ = atan2(x, s)` and `s = √((R − x)(R + x))` they sum to 4.0e-13.
+- **The inner bins need no interpolation once the weights are exact.** Interpolating bins 1–2 from
+  the axis sample, linearly in r² or by an even quartic, was worse than the binned value in some of
+  15 on- and off-axis Gaussians. The worst was 7.6e-2 against 2.9e-2.
+- **A binned variance is not an azimuthal variance.** Within a bin of width h, the radial gradient
+  contributes about `(∂ρ/∂r)² h²/12`. An axisymmetric ring (r₀ = 2 nm, w = 0.2 nm) reads a raw
+  variance of 7.0e-3 and a C12 harmonic variance of 1.9e-4, where a genuine C12 ring of the same
+  width reads 8.7e-4. Subtracting the binned mean, as an even cubic spline evaluated at each cell's
+  own radius, brings those to 3.6e-6 and 2.0e-8. Linear interpolation brings the C12 figure only
+  to 5.4e-6.
+- **The Cₙ average is a projection [verified].** In the angular harmonic basis, averaging n rotated
+  copies multiplies `c_m` by `[n | m]`. It therefore leaves the azimuthal mean unchanged and needs
+  no rotated map. Against the closed form `2E²Σ I_{kn}(β)²` for a C12 ring of Gaussians, the peak
+  variance came out −0.3 to −0.7 % by harmonic projection, −1.4 to −2.4 % from exactly rotated
+  copies binned, and −3.3 to −6.1 % from `scipy.ndimage.map_coordinates(order=1)` rotation. The
+  bilinear route is biased low, and its k = 0, 3, 6 and 9 copies are exact while the other eight are
+  smoothed.
+- **`cos(mθ)` modulations** with a smooth radial envelope give both variances within 1.5e-3 of
+  `b²/2` (relative to the peak) at r ≥ 1 nm when n | m. When n ∤ m, the Cₙ variance stays below
+  7.1e-5 of it.
+
 ---
 
 ## 3. Charge and electrostatics
