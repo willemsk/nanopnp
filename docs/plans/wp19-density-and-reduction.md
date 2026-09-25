@@ -191,14 +191,14 @@ uv run pytest -m tier3 tests/tier3/test_density_ensemble.py -v
 
 ### Open questions
 
-Nothing blocks WP19; the radius set is ruled (D3). These are carried to their owners:
+None. The radius set is ruled (D3). The three questions this plan carried to WP22 were answered
+by the author on 25 September 2026 (`.knowledge/04` §1.1, §8):
 
-1. **Frame spacing.** The PQR file names put the reference frames 100 ps apart, and the analysis
-   notebook reads the DCD with `dt=100` (`.knowledge/04` §1.1). The author should confirm, and say
-   which 50 frames the paper used, before WP22.
-2. **Hydrogens in the original density.** The PQR files carry them. The author should confirm that
-   the density map was built from those files, before WP22 compares against 2WCD, which has none.
-3. **G9**, unchanged. It is the author's, before WP22.
+1. **Frame spacing: 100 ps.** The archived PQR files are all the frames. Matched by coordinates,
+   the DCD's frames are PQRs 02–99 in time order, so the paper's final 5 ns are DCD frames 48–97.
+2. **Hydrogens: included.** The density was built from the full-atom trajectory, which is what
+   D10's hydrogen count records. WP22 must account for the vendored 2WCD having none.
+3. **G9: 0 in the MD frame**, which was centred on the middle of the bilayer.
 
 ## Design
 
