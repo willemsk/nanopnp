@@ -36,6 +36,8 @@ d_i = sqrt((x-x_i)^2 + (y-y_i)^2 + (z-z_i)^2)
 sigma = 0.93        R_i = Van der Waals radius of atom i
 ```
 
+**Which radii.** The thesis says only "Van der Waals radius". The author ruled on 25 September 2026 that R_i is the CHARMM Rmin/2 of PDB2PQR's `CHARMM.DAT`, the set carried by the reference ensemble's per-frame PQR files (§1.1). For an isolated atom `ρ = g`, so the 25 % isolevel sits at `d = σR√ln 4 = 0.93 × 1.1774 R = 1.095 R`, just outside the van der Waals radius itself. The contour therefore moves one-for-one with the radius set **[verified]**.
+
 A probabilistic-union ("at least one atom here") field bounded in [0,1], after Li 2013. Grid
 **0.5 Angstrom** isotropic, computed in **3D for each of the 50 frames**, then the **50 maps are
 averaged in 3D**, and only then **radially averaged about the z-axis** relative to the pore centre
@@ -63,6 +65,7 @@ Measured on 25 September 2026. The archive is held locally by the author at
 |---|---|
 | `prod5_clya_as.pdb` | 54,075 atoms, all protein and hydrogens included: no lipids, waters or ions. Chains A–L, with the chain identifier equal to the segment identifier. Residues 7–292, 286 Cα per chain, histidines as `HSE`. Elements present in the file. Written by MDAnalysis |
 | `prod5_clya_as.dcd` | **98 frames. The time metadata reads 1.0 ps per frame**, a 0.097 ns span, which is the default of a DCD written without a timestep and cannot be the true spacing. The author recalls the span as about 10 ns (≈100 ps per frame). Which frames made the paper's 50-frame ensemble is unresolved (G1) |
+| `prod5_trajectory_last_10ns.7z` | **99 PQR files**, `prod5_protein_aligned_100ps_NN.pdb.pqr` with NN = 01–99, written by PDB2PQR 2.1.1 with `--with-ph=7.5 --ph-calc-method=propka --ff=charmm --ffout=charmm --chain`. Each holds 54,075 atoms, 27,134 of them hydrogens, which is the same atom count as `prod5_clya_as.pdb`. **The file names put the frames 100 ps apart**, 9.9 ns in all, and `notebooks/clya_md_trajectory_analysis.ipynb` reads the DCD with `dt=100` (ps). This is the first recorded evidence for the spacing the DCD's metadata lacks (G1). Whether the DCD's 98 frames are these 99 less one is not established. **The radii are CHARMM Rmin/2.** Frame 01 holds 318 distinct (residue, atom) pairs. 313 of them carry exactly the radius of PDB2PQR 3.7.1's `dat/CHARMM.DAT`, and the other five (`GLU HT1–HT3`, `HSE OT1–OT2`) are that file's `NTER` and `CTER` patch entries. By element the radii span C 1.80–2.275, N 1.85, O 1.70–1.77, S 2.00 and H 0.2245–1.468 Å. The author ruled on 25 September 2026 that these are the density map's van der Waals radii (`SPECIFICATION.md` §5.3.1 NOTE on `geometry.density`) **[tested]**, 25 Sep 2026 |
 | Also present | `2wcd.pdb` (12 × 285 Cα, residues 8–292, protein only), `6mrt.pdb`, and a `prod5_trajectory_last_10ns.7z`. `radius_comparison/2wcd_h.pdb` is 2WCD **flipped** (+z at the narrow *trans* end) |
 | Frame orientation | The Cₙ axis is 0.69° from the file's z in the MD frame, through (0.35, 0.02) Å. It is 0.047° from z in 2WCD and 0.006° in 6MRT. In all three the wide *cis* cap lies at +z |
 | The deposited 2WCD | **Not the author's `2wcd.pdb`.** The wwPDB entry's asymmetric unit holds two dodecamers, chains A–L and M–X (53,832 atoms, 24 × 285 Cα), in the crystal frame. The A–L axis is 22.92° from z and the M–X axis 22.98°, nearly parallel. Signed to +z, the axis has its narrow *trans* end up (mean Cα radius 3.42 nm in the top fifth of the axial extent, 4.28 nm in the bottom fifth). Chains A–L superpose on the author's copy with an RMSD of 1.0e-4 nm, and that superposition takes the deposited +z-signed axis to −z. So the author's file is chains A–L moved rigidly and flipped, *cis* up. Stage 1 refuses the deposited frame by its 10° rule. On the author's copy it measures a 29.99896° turn, a worst spacing error of 0.193°, a permutation RMSD of 0.0262 nm, a tilt of 0.047° and an `axis: z` displacement of 0.0062 nm. The Design §4 "2WCD" column of the WP18 plan is this copy **[tested]**, 25 Sep 2026 |
@@ -343,7 +346,9 @@ to ~25 %, as expected for a partly flattened profile. Treat both as loose target
 
 - **G1 — "every 100 fs" is impossible.** T L280-281 says the 50 frames were taken from the final 5 ns
   "i.e. every 100 fs". 50 frames over 5 ns is **every 100 ps**, and coordinates were only written
-  every 5 ps (T L273-274). Assume 100 ps.
+  every 5 ps (T L273-274). Assume 100 ps. **Evidence, 25 September 2026 (§1.1):** the archived PQR
+  files are named `…_aligned_100ps_NN`, 99 of them, and the analysis notebook reads the DCD at
+  `dt=100`. Which 50 frames the paper used is still the author's to confirm.
 - **G2 — 25 % isolevel is unjustified.** No rationale, no sensitivity study, no comparison against
   the solvent-excluded surface. Since pore radius enters conductance roughly as r^2, this is the
   single largest untested lever in the geometry. Ask what other isolevels were tried.

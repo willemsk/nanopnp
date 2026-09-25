@@ -325,6 +325,11 @@ written by hand omits defaults, orders keys freely and carries comments, none of
 round trip and none of which change the run; requiring textual identity would test the serialiser
 instead of the schema (VER-09).
 
+NOTE (FR-05, FR-06; **added 25 September 2026**, WP19): the n rotated copies are averaged in the
+angular harmonic basis. There the average keeps the harmonics that are multiples of n, so it leaves
+the azimuthal mean unchanged and defines FR-06's residual variance. The binning weights are exact
+cell–annulus overlaps. The §5.3.1 NOTE on `geometry.density` is the contract.
+
 ### 3.3 Quality of service
 
 | ID | Requirement | Class |
@@ -821,8 +826,8 @@ CLI and the desktop shell drive the same stage objects (IF-01, IF-02, IF-09).
 | # | Stage | Inputs | Outputs | Tools | Validation gate |
 |---|---|---|---|---|---|
 | 1 | Structure ingestion and alignment | PDB/mmCIF, optional trajectory, expected point group | Aligned ensemble; Cₙ axis on z at r = 0 | MDAnalysis 2.10+ (LGPLv3) for PDB and every trajectory format; gemmi 0.7+ (MPL-2.0) for mmCIF, which MDAnalysis 2.10 does not read; the Kabsch rotation for superposition, cross-checked against MDAnalysis `rotation_matrix`; MDTraj as alternative reader; PDBFixer or Modeller for missing loops | Oligomeric state matches (ClyA 12, αHL 7, MspA 8); abort on missing chains (FR-03) |
-| 2 | Density map | Aligned ensemble, grid spacing, kernel | 3D density map | Vectorised scipy Gaussian deposition over a local stencil, per-atom width from the van der Waals radius, sharpness 0.93; MDAnalysis `DensityAnalysis` for accumulation and units; `gridData` IO; optional `gmx densmap` check | Grid spacing 0.25–0.5 Å (FR-04) |
-| 3 | Symmetry reduction to (r, z) | 3D map, n | (r, z) map; residual azimuthal variance | numpy; `np.bincount` with voxel-volume weights; an in-project probe-radius profile on the aligned structure, `mdahole2` (HOLE) an optional cross-check (§8.2.2 B5) | Variance emitted with the geometry (FR-06, CON-04); radius profile within tolerance of the probe-radius profile |
+| 2 | Density map | Aligned ensemble, grid spacing, kernel | 3D density map | Vectorised numpy Gaussian deposition over a spherical stencil truncated at 10⁻⁶, per-atom width σR_i from the CHARMM radius set of the §5.3.1 NOTE on `geometry.density`, sharpness 0.93; `gridData` IO. MDAnalysis `DensityAnalysis` is histogram-only and is not used (**amended 25 September 2026**, WP19) | Grid spacing 0.25–0.5 Å (FR-04); every atom has a radius; the map is finite and within [0, 1] |
+| 3 | Symmetry reduction to (r, z) | 3D map, n | (r, z) map; residual azimuthal variance, Cₙ-averaged and raw | numpy and `scipy.sparse`; exact cell–annulus overlap weights; the Cₙ average in the angular harmonic basis (**amended 25 September 2026**, WP19) | Variance emitted with the geometry (FR-06, CON-04); annular weights summing to the exact annulus areas. The radius profile against the probe-radius profile is stage 4's gate (§5.2.1, §8.2.2 B5) |
 | 4 | Contour extraction and conditioning | (r, z) map, isolevel, smoothing and simplification parameters | Closed conditioned polyline | scikit-image, Shapely, scipy (all BSD-3), per §5.2.1 | §5.2.1 (FR-08) |
 | 5 | CAD assembly | Polyline, membrane specification, reservoir radius, optional analyte | Fragmented (r, z) region, domains and boundaries tagged | `netgen.occ` (LGPL-2.1, OpenCASCADE, in-process) primary; Gmsh OCC Python API (GPLv2+) optional | All bodies fragmented and imprinted, interfaces conformal, no gap or overlap at the membrane-to-pore junction (FR-09) |
 | 6 | Meshing | Fragmented region, size fields | Graded triangular mesh | Netgen (LGPL-2.1) default, Gmsh (GPLv2+) optional, behind the mesh adapter | §5.2.2 (FR-10, QR-12) |
@@ -839,7 +844,7 @@ Design notes, recorded where an implementer would otherwise choose wrongly.
 |---|---|
 | 1 | The Cₙ axis comes from chain-permutation superposition: superpose chain A onto chain B, take the rotation's eigenvector of eigenvalue 1 (FR-02). Principal axes are unusable because they drift between frames. Over the 98 frames of the ClyA-AS ensemble, the largest-variance axis of the Cα set moved by up to 1.54° (rms 0.66°), while the chain-permutation axis moved by at most 0.010°. The cause is not degeneracy: the axial eigenvalue is well separated (1432 Å² against 801 and 881 Å² on the first frame). It is the chains' asymmetric fluctuation, which the permutation fit averages out by construction (**measured 25 September 2026**, WP18 plan, Design §4). Stage 1 is specified in full in the §5.3.1 NOTE on `structure:`. |
 | 2 | Histogram plus uniform `gaussian_filter` is rejected: van der Waals-weighted smearing preserves the exclusion surface, uniform post-smoothing rounds the constriction. The grid is not coarsened, the *trans* constriction being about 3.3 nm across with a contour position that moves measurably with resolution. |
-| 3 | The n rotated copies are averaged before azimuthal averaging. Binning is area-weighted over exact annular volumes (about 4 voxels per annulus near r = 0, about 600 at r = 5 nm), innermost 2–3 bins interpolated. A 1° axis error adds about 0.2 nm of apparent radius to a 3.3 nm constriction. |
+| 3 | The n rotated copies are averaged before azimuthal averaging. Binning is area-weighted over exact annular volumes (about 6 cells per annulus of width h at r = h, about 630 at r = 5 nm, per slice at h = 0.05 nm). **Amended 25 September 2026** (WP19 plan, Design §2–§3): the overlap weights are exact, so no bin is interpolated. The earlier "innermost 2–3 bins interpolated" compensated for centre-assigned binning, and against exact weights every interpolant tried was worse somewhere. The rotated copies are averaged in the angular harmonic basis, where the average keeps the harmonics m ≡ 0 (mod n): it is exact and costs one deposition. Depositing n rotated copies costs n, and rotating the voxel map by interpolation smooths it, lowering the peak Cₙ variance of a C12 ring by 3–6 %. The binned mean is subtracted at each cell's own radius before any variance is taken, or the radial gradient across a bin reads as azimuthal variance. A 1° axis error adds about 0.2 nm of apparent radius to a 3.3 nm constriction. |
 | 3, 5 | The bilayer is absent from the density map. It is defined analytically in (r, z) over the hydrophobic belt and fragmented against the pore contour. |
 | 5 | Reference geometry: reservoir half-disc R = 250 nm, membrane thickness 2.8 nm, `z_cis` = 12.25 nm, `z_trans` = −1.85 nm. The membrane is a quadrilateral, not a rectangle: vertices (r = 2, z = −1.4), (3.5, +1.4), (250, +1.4), (250, −1.4) nm, inner edge slanted to meet the pore's outer surface. Code assuming a rectangle leaves a wedge of gap or overlap at the junction. CadQuery and build123d are 3D-solid-centric and unused; pythonocc serves BRep edge cases only. |
 
@@ -1183,11 +1188,54 @@ asymmetric unit holds two dodecamers, chains A–L and M–X, in the crystal fra
 chains A–L are the author's copy moved rigidly (RMSD 1e-4 nm), and moving them is structure
 preparation (WP18 Outcomes, **added 25 September 2026**).
 Until stage 2 is delivered, a walk that extends past stage 1 on a case carrying `structure:` SHALL be
-refused as an unsupported section naming stage 2. Stage 1 alone runs through the stage command
+refused as an unsupported section naming stage 2. Once stages 2 and 3 are delivered, and until
+stage 4 is, a walk that extends past stage 3 SHALL be refused in the same way, naming stage 4
+(**added 25 September 2026**, WP19). Stage 1 alone runs through the stage command
 (IF-02). A case carrying `structure:` and `inputs.mesh` SHALL be refused naming both: a stage whose
 output is supplied does not run, and neither does anything upstream of it (the `inputs:` NOTE), so
 the structure would be recorded as an input to a run that never read it (**added 25 September
 2026**, WP18).
+
+NOTE (`geometry.density`, stages 2 and 3, FR-04 to FR-06, CON-04, IF-05; **added 25 September
+2026**, WP19): the `geometry:` block is read on a case carrying `structure:`. Beside `inputs.mesh`
+it SHALL be refused naming both, by the upstream rule of the `inputs:` NOTE. `grid_spacing_nm`
+SHALL lie in [0.025, 0.05] nm (FR-04) and `sharpness` SHALL be positive, and each is refused naming
+its value rather than narrowed in the schema.
+
+`kernel: gaussian_vdw` takes each atom's width as `σ R_i`, with σ the `sharpness`. R_i is the
+atom's CHARMM van der Waals radius (Rmin/2) by residue and atom name, from the radius set of
+PDB2PQR's `CHARMM.DAT`, held as data under `data/radii/`. This is an **author ruling of 25
+September 2026**: it is the set carried by the per-frame PQR files of the reference ensemble
+(`.knowledge/04` §1.1). The histidine names `HID`, `HIE` and `HIP` read as CHARMM's `HSD`, `HSE`
+and `HSP`. `HIS` resolves only where those three agree. `ILE CD1` reads as `CD`, `OXT` as `OT2`,
+and terminal atoms resolve through the patch residues. An atom the set does not name SHALL be
+refused, naming its chain, residue number, residue and atom. There is no fallback by element: a
+guessed radius is a plausible wrong geometry. Which atoms are deposited, hydrogens included, is
+`structure.source.selection`'s to decide, and the count of each element is recorded.
+
+Each frame's density is the probabilistic union `ρ_f = 1 − Π_i (1 − g_i)` over that frame's atoms,
+with `g_i = exp(−d_i²/(σR_i)²)`. A term is kept where `g_i ≥ 10⁻⁶`. The ensemble map is the mean
+of the per-frame maps, not a union over frames. Grid nodes lie at integer multiples of the spacing
+in the stage-1 frame, so the axis is a column of nodes. The grid is square in (x, y) about the
+axis and holds every kept term with one cell to spare. The map SHALL be finite and within [0, 1],
+or the run aborts naming the voxel (QR-12).
+
+Stage 3 bins the map in (r, z) at `r_j = j·h`, each bin being the annulus of half-width h/2 about
+r_j. Its weights are the exact areas of overlap between each grid cell and each annulus, so an
+annulus's weights sum to its exact area, and each nonzero cell's to the cell's area. No bin is
+interpolated. FR-05's average over the n rotated copies SHALL be taken in the angular harmonic
+basis. There a rotation by α multiplies the m-th coefficient by `e^{−imα}`, so the average keeps
+exactly the harmonics with m ≡ 0 (mod n). The averaged map's azimuthal mean is then the map's own,
+and its azimuthal variance is `2Σ_{k≥1}|c_{kn}|²`. Both are computed from the unrotated map, with
+neither rotated deposition nor interpolation. That variance is FR-06's residual azimuthal variance.
+It SHALL be computed after the binned mean profile, interpolated at each cell's own radius, is
+subtracted, because otherwise the radial gradient across a bin reads as azimuthal variation. It
+uses only harmonics below the ring's sampling limit `π r_j/h`. Below `r = n h/π` no harmonic is
+resolved, and the artefact records that radius and each bin's harmonic count rather than
+presenting a measured zero. The variance of the map without the Cₙ average is reported beside it,
+and their difference is the part of the azimuthal variation that is not Cₙ-symmetric. Neither is
+gated: RSK-07 makes the variance a validity criterion to be documented, and no threshold is
+specified. The derivations and measurements are in the WP19 plan, Design §1–§4.
 
 NOTE (`inputs.charge`, `inputs.eps_r`, IF-05, IF-03): a supplied field is named by a
 pydantic-validated header document, `schema: nanopnp/field/v1`, which carries the `quantity`, its
@@ -1326,7 +1374,8 @@ when the plan is built, naming the axis, rather than collecting a column of abse
 | Stage | Artefact | Format |
 |---|---|---|
 | 1 | Aligned ensemble: coordinates in nm, atom table (element, name, residue name, number and insertion code, chain) and axis-transform record | Native `.npz` (float32 coordinates) with its header record; exported as a PDB topology with a DCD trajectory (IF-04). **Amended 25 September 2026** (WP18) from "trajectory plus transform record": a trajectory file carries no atom table and no gate record |
-| 2, 3, 7 | Density map, reduced (r, z) map and variance, ρ_pore, dielectric and exclusion fields | OpenDX or CCP4 via GridDataFormats (LGPL) (IF-05) |
+| 2, 3 | Density map (3D, float32), and the reduced (r, z) mean with its Cₙ-averaged and raw azimuthal variance | Native `.npz` with its header record; exported to, and read from, OpenDX or CCP4 via GridDataFormats (LGPL) (IF-05), the (r, z) grids as `RadialGrid`s with a singleton axis. **Amended 25 September 2026** (WP19) |
+| 7 | ρ_pore, dielectric and exclusion fields | OpenDX or CCP4 via GridDataFormats (LGPL) (IF-05) |
 | 4 | Conditioned polyline | Vertex table |
 | 5 | Tagged (r, z) region | OCC BRep plus tag map |
 | 6 | Mesh | Gmsh MSH 4.1 archival, any meshio (MIT) format on read (IF-06) |
