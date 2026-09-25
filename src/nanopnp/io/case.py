@@ -38,6 +38,7 @@ from __future__ import annotations
 import copy
 import difflib
 import itertools
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -236,35 +237,83 @@ class StructureSource(_Strict):
     assumed.
     """
 
-    path: Path
-    variant: str | None = None
-    chains: str = "all"
-    selection: str = "protein"
+    path: Path = Field(
+        description=(
+            "A PDB or mmCIF file, optionally gzipped (.pdb, .ent, .cif, .mmcif). MDAnalysis reads "
+            "PDB and gemmi reads mmCIF. The file's +z SHALL point from the trans side to the cis "
+            "side, and every selected atom SHALL carry its element in the file"
+        )
+    )
+    variant: str | None = Field(
+        default=None, description="A label for the prepared structure, recorded (OPN-04)"
+    )
+    chains: str = Field(
+        default="all",
+        description=(
+            "`all`, or a comma-separated list of chain identifiers. A chain is its chain "
+            "identifier, or its segment identifier where the chain column is blank. The selected "
+            "chains SHALL number the point group's n (FR-03)"
+        ),
+    )
+    selection: str = Field(
+        default="protein",
+        description="An MDAnalysis selection applied to the file; alternate locations are refused",
+    )
 
 
 class Frames(_Strict):
     """Which trajectory frames enter the ensemble average."""
 
-    last_ns: float | None = None
-    count: int | None = None
+    last_ns: float | None = Field(
+        default=None,
+        description=(
+            "Keep the frames within this many ns of the last, by the times the file records; "
+            "refused beyond the recorded span plus one frame interval"
+        ),
+    )
+    count: int | None = Field(
+        default=None,
+        description=(
+            "Keep this many frames at the uniform stride floor(N/count), ending on the last "
+            "frame of the window of N"
+        ),
+    )
 
 
 class Ensemble(_Strict):
     """The trajectory and its frame selection."""
 
-    trajectory: Path | None = None
+    trajectory: Path | None = Field(
+        default=None,
+        description=(
+            "A DCD, XTC, TRR or NetCDF trajectory whose frames are the ensemble; without one, "
+            "the models of the source file are. Every frame is superposed on the C-alpha of the "
+            "earliest selected frame (FR-01)"
+        ),
+    )
     frames: Frames = Field(default_factory=Frames)
 
 
 class SymmetrySpec(_Strict):
     """The expected point group and how the axis is found."""
 
-    point_group: str
-    axis: Literal["auto", "z"] = "auto"
+    point_group: str = Field(description="C<n> with n >= 1, e.g. C12 for ClyA (FR-03)")
+    axis: Literal["auto", "z"] = Field(
+        default="auto",
+        description=(
+            "`auto`: the Cn axis by chain-permutation superposition, gated on the chains' "
+            "spacing, the rotation angle and a 10 degree limit from the file's z (FR-02). `z`: "
+            "the file's z axis through its origin, refused where n >= 2 and it strays more than "
+            "0.01 nm from the detected axis over the C-alpha extent"
+        ),
+    )
 
 
 class Structure(_Strict):
-    """Stage 1: structure ingestion and alignment (v0.9)."""
+    """Stage 1: structure ingestion and alignment (v0.9).
+
+    The normative contract is the section 5.3.1 NOTE on ``structure:``.
+    """
 
     source: StructureSource
     ensemble: Ensemble = Field(default_factory=Ensemble)
@@ -1155,6 +1204,31 @@ def _field_named(owner: type[BaseModel], component: str) -> FieldInfo | None:
     return None
 
 
+def field_description(path: str) -> str | None:
+    """Return the description a field of the schema declares, or ``None``.
+
+    The generated case-file reference prints it under its section (VER-45), so a
+    normative contract written on a field — the section 5.3.1 NOTE on
+    ``structure:`` — reaches the documentation without a hand-written copy.
+    """
+    owner: type[BaseModel] = CaseDocument
+    parts = path.split(".")
+    for index, part in enumerate(parts):
+        if _is_index(part):
+            continue
+        field = _field_named(owner, part)
+        if field is None:
+            return None
+        if index == len(parts) - 1:
+            return field.description
+        entry = _entry_annotation(field.annotation)
+        nested = _model_of(entry[0] if entry is not None else field.annotation)
+        if nested is None:
+            return None
+        owner = nested
+    return None
+
+
 def value_at(document: CaseDocument, path: str) -> FieldValue:
     """Return the value a dotted path names in a case document.
 
@@ -1521,11 +1595,24 @@ _ORDERS: dict[str, int] = {"P1": 1, "P2": 2, "P3": 3}
 """Element labels of section 5.3.1 against their polynomial order."""
 
 _PIPELINE_SECTIONS: dict[str, str] = {
-    "structure": "structure and trajectory ingestion (FR-01 to FR-03)",
     "geometry": "the density, contour and CAD pipeline (FR-04 to FR-10)",
     "charge": "the PDB2PQR charge and dielectric pipeline (FR-12 to FR-15)",
 }
-"""Case-file sections whose stages land in v0.9, with what each one drives."""
+"""Case-file sections whose stages land in v0.9, with what each one drives.
+
+``structure:`` left this table in WP18: stage 1 runs, and a walk past it is
+refused by :func:`refuse_walk` instead, naming stage 2.
+"""
+
+STRUCTURE_WALK: tuple[str, ...] = ("case", "structure")
+"""The stages a walk over a ``structure:`` case may reach until stage 2 is delivered.
+
+Section 5.3.1 NOTE on ``structure:``: stage 1 runs alone through the stage
+command (IF-02), and a walk extending past it is refused naming stage 2.
+"""
+
+_POINT_GROUP = re.compile(r"C([1-9][0-9]*)")
+"""``symmetry.point_group``: a cyclic group ``C<n>``, n >= 1 (section 5.3.1 NOTE)."""
 
 _UNCONSUMED_INPUTS: dict[str, str] = {
     "profile": (
@@ -1571,6 +1658,25 @@ from the key and serve a stale solution for a changed case (section 5.3.2).
 
 
 @dataclass(frozen=True)
+class ResolvedStructure:
+    """The ``structure:`` block, with the refusals resolution can make before a file is read.
+
+    Parameters
+    ----------
+    spec
+        The validated block.
+    n
+        The order of ``symmetry.point_group``.
+    chains
+        The identifiers ``source.chains`` lists, or ``None`` for ``all``.
+    """
+
+    spec: Structure
+    n: int
+    chains: tuple[str, ...] | None
+
+
+@dataclass(frozen=True)
 class ResolvedCase:
     """A case document turned into the objects a run is made of.
 
@@ -1594,15 +1700,37 @@ class ResolvedCase:
     continuation: str
     wall_distance_sources: str
     wall_distance_max_nm: float
-    mesh: SuppliedArtefact
+    mesh: SuppliedArtefact | None
     charge: SuppliedArtefact | None
     eps_r: SuppliedArtefact | None
     outputs: tuple[str, ...]
+    structure: ResolvedStructure | None = None
 
     @property
     def name(self) -> str:
         """The case name, which names the run directory in the store."""
         return self.document.name
+
+    def require_mesh(self) -> SuppliedArtefact:
+        """Return ``inputs.mesh``, or refuse a case whose mesh no delivered stage produces.
+
+        Only a case carrying ``structure:`` resolves without one, and its walk is
+        refused past stage 1 by :func:`refuse_walk`; this is the same refusal for
+        a caller that reaches a mesh-consuming stage by another route.
+
+        Raises
+        ------
+        UnsupportedCaseSection
+            If the case supplies no mesh.
+        """
+        if self.mesh is None:
+            raise UnsupportedCaseSection(
+                f"case {self.name!r} supplies no inputs.mesh and generates its geometry from a "
+                "structure:, but the stages between the structure and the mesh are not delivered "
+                "in this release: stage 2, the density map (FR-04), lands in WP19. Stage 1 runs "
+                "alone through `nanopnp stage structure` (IF-02)"
+            )
+        return self.mesh
 
     @property
     def solve_provenance(self) -> dict[str, Any]:
@@ -1689,6 +1817,110 @@ def _switches(document: CaseDocument) -> CorrectionSwitches:
     )
 
 
+def parse_chains(chains: str) -> tuple[str, ...] | None:
+    """Return the identifiers ``structure.source.chains`` lists, or ``None`` for ``all``.
+
+    The key is ``all`` or a comma-separated list of chain identifiers (section
+    5.3.1 NOTE on ``structure:``). Whitespace around an identifier is dropped.
+    """
+    if chains.strip() == "all":
+        return None
+    return tuple(part.strip() for part in chains.split(","))
+
+
+def _resolve_structure(document: CaseDocument) -> ResolvedStructure | None:
+    """Make the ``structure:`` refusals that need no file (section 5.3.1 NOTE, WP18 D4).
+
+    Each is a refusal here rather than a narrowing of the schema: a narrowed value
+    set would move the schema (the section 5.3.1 compatibility rule), and a
+    document valid against ``nanopnp/case/v2`` stays valid.
+
+    Raises
+    ------
+    CaseValidationError
+        Naming the key: a point group that is not ``C<n>``, ``axis: auto`` on
+        ``C1``, a chain list that is empty, repeats an identifier or does not
+        number ``n``, and a non-positive ``last_ns`` or ``count``.
+    """
+    spec = document.structure
+    if spec is None:
+        return None
+    group = spec.symmetry.point_group.strip()
+    match = _POINT_GROUP.fullmatch(group)
+    if match is None:
+        raise CaseValidationError(
+            f"structure.symmetry.point_group {group!r} is not a cyclic point group; the accepted "
+            "form is C<n> with n >= 1, such as C12 for ClyA, C7 for alpha-hemolysin or C8 for "
+            "MspA (section 5.3.1 NOTE on structure:)"
+        )
+    n = int(match.group(1))
+    if n == 1 and spec.symmetry.axis == "auto":
+        raise CaseValidationError(
+            "structure.symmetry.axis is auto and the point group is C1, which has no chain "
+            "permutation to superpose (FR-02); set structure.symmetry.axis: z, which takes the "
+            "file's z axis through its origin, unchecked"
+        )
+    chains = parse_chains(spec.source.chains)
+    if chains is not None:
+        if any(not chain for chain in chains):
+            raise CaseValidationError(
+                f"structure.source.chains {spec.source.chains!r} has an empty entry; it is `all` "
+                "or a comma-separated list of chain identifiers"
+            )
+        repeated = sorted({chain for chain in chains if chains.count(chain) > 1})
+        if repeated:
+            raise CaseValidationError(
+                f"structure.source.chains lists {', '.join(repeated)} more than once"
+            )
+        if len(chains) != n:
+            raise CaseValidationError(
+                f"structure.source.chains lists {len(chains)} chains ({', '.join(chains)}), and "
+                f"structure.symmetry.point_group {group} has {n} (FR-03)"
+            )
+    frames = spec.ensemble.frames
+    if frames.last_ns is not None and not frames.last_ns > 0.0:
+        raise CaseValidationError(
+            f"structure.ensemble.frames.last_ns is {frames.last_ns}; it is a positive time in ns"
+        )
+    if frames.count is not None and frames.count < 1:
+        raise CaseValidationError(
+            f"structure.ensemble.frames.count is {frames.count}; it is at least 1"
+        )
+    return ResolvedStructure(spec=spec, n=n, chains=chains)
+
+
+def refuse_walk(resolved: ResolvedCase, upto: str | None) -> None:
+    """Refuse a walk past stage 1 on a case carrying ``structure:`` (section 5.3.1 NOTE).
+
+    One function of the resolved case and the stage a walk stops at, called by
+    :func:`nanopnp.io.run.run_document` and by the sweep plan builder, so a sweep
+    over such a case is refused when its plan is built rather than at every
+    member.
+
+    Parameters
+    ----------
+    resolved
+        The resolved case.
+    upto
+        The last stage of the walk; ``None`` for the whole pipeline.
+
+    Raises
+    ------
+    UnsupportedCaseSection
+        Naming stage 2, when the case carries ``structure:`` and ``upto`` is not
+        one of :data:`STRUCTURE_WALK`.
+    """
+    if resolved.structure is None or upto in STRUCTURE_WALK:
+        return
+    target = "the whole pipeline" if upto is None else f"stage {upto!r}"
+    raise UnsupportedCaseSection(
+        f"case {resolved.name!r} carries a structure: section, and a walk through {target} "
+        "extends past stage 1. Stage 2, the density map (FR-04), is delivered in WP19; until "
+        "then stage 1 runs alone, through `nanopnp stage structure <case>` (IF-02, section "
+        "5.3.1 NOTE on structure:)"
+    )
+
+
 def _check_species(document: CaseDocument, electrolyte: Electrolyte) -> None:
     """Check the case's species and steric diameters against the parameter file.
 
@@ -1728,14 +1960,15 @@ def _check_species(document: CaseDocument, electrolyte: Electrolyte) -> None:
         raise CaseValidationError("; ".join(problems))
 
 
-def _require_runnable(document: CaseDocument) -> SuppliedArtefact:
+def _require_runnable(document: CaseDocument) -> SuppliedArtefact | None:
     """Reject every section this release does not run, and return the supplied mesh.
 
     Returns
     -------
-    SuppliedArtefact
-        ``inputs.mesh``, which every Phase-1 run has by construction: the meshing
-        pipeline is v0.9, so a case without one describes no run at all.
+    SuppliedArtefact or None
+        ``inputs.mesh``. Only a case carrying ``structure:`` may omit it: stage 1
+        runs, and :func:`refuse_walk` stops its walk there. Any other case
+        without one describes no run at all.
     """
     for section, what in _PIPELINE_SECTIONS.items():
         if getattr(document, section) is not None:
@@ -1774,7 +2007,14 @@ def _require_runnable(document: CaseDocument) -> SuppliedArtefact:
                 f"header document, so the format is {FIELD_FORMAT!r} and the *data* format is read "
                 "from the document's data.format key (section 5.3.1 NOTE)"
             )
-    if document.inputs.mesh is None:
+    if document.structure is not None and document.inputs.mesh is not None:
+        raise CaseValidationError(
+            f"case {document.name!r} carries a structure: section and supplies inputs.mesh. A "
+            "stage whose output is supplied does not run, and neither does anything upstream of "
+            "it, so the structure would be recorded as an input to a run that never read it "
+            "(section 5.3.1 NOTE on inputs:); remove one of them"
+        )
+    if document.inputs.mesh is None and document.structure is None:
         raise UnsupportedCaseSection(
             f"case {document.name!r} supplies no inputs.mesh; the meshing pipeline is v0.9 "
             "(SPECIFICATION.md section 3, FR-10), so this release needs an externally supplied "
@@ -1967,6 +2207,7 @@ def resolve(document: CaseDocument) -> ResolvedCase:
         that is not one.
     """
     mesh = _require_runnable(document)
+    structure = _resolve_structure(document)
 
     electrolyte = Electrolyte.from_parameter_file(
         document.electrolyte.parameters,
@@ -2037,6 +2278,7 @@ def resolve(document: CaseDocument) -> ResolvedCase:
         charge=document.inputs.charge,
         eps_r=document.inputs.eps_r,
         outputs=tuple(document.outputs),
+        structure=structure,
     )
 
 

@@ -39,6 +39,9 @@ CASE_SCHEMA = "nanopnp/case/v2"
 CASE_SCHEMA_V1 = "nanopnp/case/v1"
 """The previous case schema, still read: a v1 document loads as its v2 upgrade (IF-03)."""
 
+STRUCTURE_SCHEMA = "nanopnp/structure/v1"
+"""Stage 1: the aligned ensemble, with the Cₙ axis on z at r = 0 (FR-01 to FR-03)."""
+
 MATERIALS_SCHEMA = "nanopnp/materials/v1"
 """Stage 8: the resolved material coefficient set."""
 
@@ -205,6 +208,33 @@ class CaseArtefact(Artefact):
         super().__init__(
             schema=CASE_SCHEMA,
             parameters=document.model_dump(by_alias=True, mode="json"),
+            summary=summary or {},
+        )
+
+
+class StructureArtefact(Artefact):
+    """Stage 1: the aligned ensemble, keyed on the ``structure:`` block and its files' bytes.
+
+    The parameters are the resolved ``structure:`` block with each file replaced
+    by its content digest (WP18 D11), so a moved file is the same input and an
+    edited one is a different key. The key never depends on the payload: the
+    aligned coordinates come out of an SVD whose last bits LAPACK may vary across
+    platforms, and a key over them would make the cache machine-dependent
+    (section 5.3.2). The payload's own digest is recorded beside it and re-checked
+    on load, which is VER-23's hand-edit rule.
+    """
+
+    def __init__(
+        self,
+        *,
+        parameters: Mapping[str, Canonicalisable],
+        payload: Mapping[str, Path] | None = None,
+        summary: Mapping[str, Canonicalisable] | None = None,
+    ) -> None:
+        super().__init__(
+            schema=STRUCTURE_SCHEMA,
+            parameters=dict(parameters),
+            payload=dict(payload or {}),
             summary=summary or {},
         )
 

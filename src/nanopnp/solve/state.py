@@ -1042,7 +1042,7 @@ def restore(path: Path, *, case: CaseDocument) -> ModelSolution:
     import numpy as np
 
     resolved = resolve(case)
-    ingested = ingest(resolved.mesh, resolved)
+    ingested = ingest(resolved.require_mesh(), resolved)
     mesh = ingested.mesh
     order = int(resolved.model_options.get("order", AXISYMMETRIC.element_order))
     measures = replace(AXISYMMETRIC, element_order=order)

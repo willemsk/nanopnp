@@ -16,6 +16,38 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+## [0.9.0-alpha.2] - 2026-09-25
+
+WP18: structure ingestion, alignment and the Cₙ axis, pipeline stage 1.
+
+### Added
+
+- Stage 1, `structure`. `nanopnp stage structure case.yaml` reads a PDB or mmCIF file, optionally
+  gzipped, and an optional DCD, XTC, TRR or NetCDF trajectory (IF-04). It selects frames by
+  `last_ns` and `count` and superposes each on the earliest selected frame's C-alpha (FR-01). It
+  finds the Cₙ axis by chain-permutation superposition and puts it on z at r = 0, keeping the file's
+  axial coordinate (FR-02). It emits a content-hashed `nanopnp/structure/v1` artefact: an `.npz`
+  ensemble with its atom table and gate record, exportable as a PDB and a DCD (FR-27). mmCIF is read
+  by gemmi, now in the `structure` extra (MPL-2.0).
+- The oligomeric state is checked (FR-03). A blank element, an alternate location, a chain count
+  other than the point group's n, a missing listed chain, a chain under half the most complete one's
+  C-alpha, and a residue-name disagreement between chains are each refused, naming the atom or the
+  chain (QR-12).
+- Symmetry gates on the axis: the chains' spacing, the cyclic rotation angle, and a 10° limit
+  between the axis and the file's z, whose +z must point to *cis*. `symmetry.axis: z` is admitted
+  only within 0.01 nm of the detected axis (§5.3.1 NOTE on `structure:`).
+- The manifest records the structure and trajectory digests, and stage 1's axis, gates, frames
+  and drift (FR-25).
+- A stage whose optional extra is missing is refused when it is created, naming the extra.
+- VER-48, and `tests/data/structures/`: the wwPDB entry 2WCD, byte for byte.
+
+### Changed
+
+- A case carrying `structure:` resolves without `inputs.mesh`, and a walk past stage 1 is refused,
+  naming stage 2; a sweep over such a case is refused when its plan is built. `structure:` beside
+  `inputs.mesh` is refused.
+- `structure.source.chains` is `all` or a comma-separated list, such as `A,B,C`.
+
 ## [0.9.0-alpha.1] - 2026-09-24
 
 WP17: case schema v2 and the Python 3.11 floor ([#38](https://github.com/willemsk/nanopnp/pull/38)).

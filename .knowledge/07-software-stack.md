@@ -146,6 +146,44 @@ the Cα set:
 retired `MMTF` format is there. The row above once claimed mmCIF as **[tested]**, which was wrong.
 IF-04's mmCIF leg goes through gemmi (§2.6, WP18).
 
+**What the readers do with a blank or odd field [tested].** Measured 25 September 2026 on MDAnalysis
+2.10.0 and gemmi 0.7.5, while building stage 1 (WP18):
+
+- A PDB atom whose element columns are blank reads as element `''`. If **every** atom's are blank,
+  the `elements` attribute is absent altogether. MDAnalysis 2.10 does not guess elements unless
+  asked, so a blank stays blank.
+- A blank segment identifier in a PDB is filled from the chain identifier ("Setting segids from
+  chainIDs").
+- gemmi reads an mmCIF `type_symbol` of `?` as element `X`, without guessing from the atom name.
+  gemmi's `Chain.name` is the `auth_asym_id` and `Residue.seqid.num` the `auth_seq_id`.
+- `Universe.trajectory.dt` warns "Reader has no dt information, set to 1.0 ps" and returns 1.0 for
+  a PDB and for an untimed DCD.
+
+**What each trajectory format gives back [tested].** Coordinates written in float32 ångströms from a
+`MemoryReader` universe and read again: DCD and NetCDF store ångströms and return the written bytes
+exactly. TRR stores float32 nanometres, so the ångström-to-nanometre conversion costs up to two
+float32 ulps, 1.1e-6 nm measured at 13 nm. XTC is quantised to 0.001 nm and returns within
+5.02e-4 nm, which is half the quantum plus the same float32 round-off.
+
+**The permutation axis on synthetic assemblies [tested].** Measured with `nanopnp.structure.axis`
+(`tests/tier1/test_structure_axis.py`):
+
+- An exact C7, C8 or C12 about an axis tilted 35° and offset by (3, −1.5, 40) nm is recovered to
+  about 4e-14° and 4e-14 nm, with the chain letters shuffled.
+- A C12 of 285-point chains with its second moments made exactly isotropic, plus 0.02 nm of per-atom
+  noise, gives a permutation axis within 0.0014 nm of the true one over the axial extent. The
+  principal axis nearest the truth is 35° off and 3.2 nm away: with the moments exactly isotropic,
+  the noise alone picks the principal axes.
+- **A D6 assembly defeats the ordering average.** The rotations from chain 0 onto the others sum to
+  zero: six turns about the axis give `6 ẑẑᵀ`, and six two-folds perpendicular to it give
+  `−6 ẑẑᵀ`. The ordering axis is then arbitrary, and the **spacing** gate refuses the assembly (the
+  worst gap is 281° from nominal), before the angle gate is reached.
+- **The angle gate is the one that catches a ring whose chains are not rotational copies.** Twelve
+  chains exactly 30° apart, whose own orientation turns at a quarter of the ring's rate, have a
+  spacing error of 0.001° and a cyclic turn of 28.07°. At half the rate the turn is 29.03°, inside
+  the 1° tolerance. Helical rises and partial turn-overs move the spacing before they move the
+  angle.
+
 **MDAnalysis trajectory readers and their time metadata [tested].** Each writer (DCD, XTC, TRR,
 NCDF) round-trips three frames written from a static `Universe`. NCDF needs no `netCDF4`, because
 the scipy fallback suffices. The times are the trap:

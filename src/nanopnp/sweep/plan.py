@@ -53,6 +53,7 @@ from nanopnp.io.case import (
     UnknownCasePathError,
     field_at,
     load_case,
+    refuse_walk,
     resolve,
     substitute,
 )
@@ -698,7 +699,12 @@ def _resolve_every_point(base: CaseDocument, plan: SweepPlan) -> tuple[ResolvedC
     cases: list[ResolvedCase] = []
     for point in plan.points:
         try:
-            cases.append(resolve(_member(base, point)))
+            resolved = resolve(_member(base, point))
+            # A member walks the whole pipeline, so a structure: case is refused
+            # here, at plan build, and not at each of its members (section 5.3.1
+            # NOTE on structure:).
+            refuse_walk(resolved, None)
+            cases.append(resolved)
         except (CaseValidationError, UnknownCasePathError, NotImplementedError) as error:
             raise SweepPlanError(
                 f"point {point.index} ({point.point_id}) is not a case this build can run.\n"
@@ -745,7 +751,7 @@ def _gate_meshes(plan: SweepPlan, members: Sequence[ResolvedCase]) -> SweepPlan:
         if not reads_wall(resolved.electrolyte):
             continue
         order = int(resolved.model_options.get("order", AXISYMMETRIC.element_order))
-        supplied = resolved.mesh
+        supplied = resolved.require_mesh()
         source = (
             str(supplied.path or supplied.artefact),
             supplied.format,

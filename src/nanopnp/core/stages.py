@@ -291,12 +291,30 @@ class StageEntry:
     description: StageDescription
     target: str
     """``"module:attribute"``, imported by :func:`create` and by nothing else."""
+    extra: str | None = None
+    """The optional-dependency extra the implementation needs, or ``None``.
+
+    On the entry and not on :class:`StageDescription`, so the description a
+    caller introspects (VER-25) is unchanged by where a stage's dependencies
+    come from.
+    """
+
+
+class MissingExtraError(ImportError):
+    """A registered stage's implementation needs an extra that is not installed.
+
+    Raised by :func:`create` naming the extra, the module that failed and the
+    install command, rather than letting a bare ``ModuleNotFoundError`` for
+    ``gemmi`` surface from three imports down. The case is not wrong and no gate
+    fired; the installation is, so IF-02 classifies it with the case refusals: a
+    retry fails identically until the extra is installed.
+    """
 
 
 _REGISTRY: dict[str, StageEntry] = {}
 
 
-def register(description: StageDescription, target: str) -> None:
+def register(description: StageDescription, target: str, *, extra: str | None = None) -> None:
     """Register a stage under its name.
 
     Parameters
@@ -306,6 +324,9 @@ def register(description: StageDescription, target: str) -> None:
         about a stage never imports it.
     target
         ``"module:attribute"`` naming the class implementing the stage.
+    extra
+        The ``pyproject.toml`` optional-dependency extra the implementation
+        imports, named by :func:`create` when it is missing.
 
     Raises
     ------
@@ -322,7 +343,7 @@ def register(description: StageDescription, target: str) -> None:
         )
     if target.count(":") != 1:
         raise ValueError(f"stage target {target!r} must be of the form 'module:attribute'")
-    _REGISTRY[description.name] = StageEntry(description=description, target=target)
+    _REGISTRY[description.name] = StageEntry(description=description, target=target, extra=extra)
 
 
 def registered_stages() -> tuple[StageDescription, ...]:
@@ -368,11 +389,26 @@ def create(name: str, **kwargs: StageOption) -> Stage:
     ------
     KeyError
         If no stage is registered under that name.
+    MissingExtraError
+        If the stage declares an extra and importing its module fails on a
+        module outside this package, naming the extra, the missing module and
+        the install command.
     """
     describe(name)  # raises the diagnostic naming the registered stages
     entry = _REGISTRY[name]
     module_name, _, attribute = entry.target.partition(":")
-    module = importlib.import_module(module_name)
+    try:
+        module = importlib.import_module(module_name)
+    except ModuleNotFoundError as error:
+        missing = error.name or ""
+        if entry.extra is None or missing == "nanopnp" or missing.startswith("nanopnp."):
+            raise
+        raise MissingExtraError(
+            f"stage {name!r} needs the {entry.extra!r} extra: importing {module_name} failed "
+            f"because {missing!r} is not installed. Install the extras with "
+            "`uv sync --all-extras`",
+            name=missing,
+        ) from error
     factory = getattr(module, attribute)
     stage: Stage = factory(**kwargs)
     return stage
@@ -386,6 +422,18 @@ def _register_builtins() -> None:
     ``describe()`` returns its registry entry, and a Tier-1 test asserts the two
     cannot drift apart.
     """
+    register(
+        StageDescription(
+            name="structure",
+            number=1,
+            title="Structure ingestion and alignment",
+            inputs=("case",),
+            outputs=("aligned ensemble", "Cn axis on z at r = 0", "symmetry-gate record"),
+            artefact_schema="nanopnp/structure/v1",
+        ),
+        "nanopnp.structure.stage:StructureStage",
+        extra="structure",
+    )
     register(
         StageDescription(
             name="mesh",

@@ -815,7 +815,7 @@ class MeshStage:
     def _ingest(self, inputs: StageInputs) -> IngestedMesh:
         """Resolve the case and run the gate; shared by :meth:`key` and :meth:`run`."""
         resolved = resolve(inputs.case)
-        return ingest(resolved.mesh, resolved)
+        return ingest(resolved.require_mesh(), resolved)
 
     def artefact(
         self, ingested: IngestedMesh, *, payload: dict[str, Path] | None = None

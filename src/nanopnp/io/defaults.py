@@ -115,7 +115,10 @@ CONFIGURATION_PATHS: dict[str, str] = {
         "a mesh size in nm, or 'auto'; a discretisation choice like the two above, and "
         "the only reason it reads as a switch at all is the 'auto' literal"
     ),
-    "structure.symmetry.axis": "v0.9; resolve() refuses a case carrying a structure: section",
+    "structure.symmetry.axis": (
+        "how stage 1 finds the axis, not a model term: z is admitted only inside the 0.01 nm "
+        "displacement budget from the detected axis (section 5.3.1 NOTE on structure:)"
+    ),
     "geometry.density.kernel": "v0.9; resolve() refuses a case carrying a geometry: section",
     "geometry.contour.smoothing": "v0.9; resolve() refuses a case carrying a geometry: section",
     "geometry.analyte.shape": "v0.9; resolve() refuses a case carrying a geometry: section",

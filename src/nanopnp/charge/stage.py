@@ -461,7 +461,7 @@ class FieldStage:
         mesh = inputs.upstream.get("mesh")
         ingested: IngestedMesh | None = None
         if ingest_mesh or mesh is None:
-            ingested = ingest(resolved.mesh, resolved)
+            ingested = ingest(resolved.require_mesh(), resolved)
         if mesh is None:
             assert ingested is not None  # ingested above precisely for this
             mesh = MeshStage().artefact(ingested)

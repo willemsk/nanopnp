@@ -25,6 +25,7 @@ import pytest
 from nanopnp.core.stages import (
     CancelFlag,
     Cancelled,
+    MissingExtraError,
     StageDescription,
     _catalogue,
     check_cancelled,
@@ -80,11 +81,26 @@ def test_ver25_every_stage_describes_itself_without_importing_it() -> None:
         " 'materials': 'nanopnp.materials.stage' in sys.modules,"
         " 'charge': 'nanopnp.charge.stage' in sys.modules,"
         " 'mesh': 'nanopnp.mesh.ingest' in sys.modules,"
+        " 'structure': 'nanopnp.structure.stage' in sys.modules,"
+        " 'extras': sorted(m for m in ('MDAnalysis', 'gemmi') if m in sys.modules),"
         " 'post': 'nanopnp.post.stage' in sys.modules}))"
     )
     reported = _in_subprocess(script)
-    assert reported["names"] == ["mesh", "charge", "materials", "case", "solve", "qoi", "report"]
+    assert reported["names"] == [
+        "structure",
+        "mesh",
+        "charge",
+        "materials",
+        "case",
+        "solve",
+        "qoi",
+        "report",
+    ]
     assert reported["ngsolve"] is False
+    # VER-48, WP18 D13: stage 1's dependencies are behind the `structure` extra,
+    # and introspecting it must not need them.
+    assert reported["structure"] is False
+    assert reported["extras"] == []
     assert reported["solve"] is False
     assert reported["materials"] is False
     assert reported["charge"] is False
@@ -110,6 +126,7 @@ def test_ver25_the_pipeline_numbers_match_section_5_2() -> None:
     """Stages are numbered by their position in the section 5.2 table."""
     numbered = {entry.name: entry.number for entry in registered_stages()}
     assert numbered == {
+        "structure": 1,
         "mesh": 6,
         "charge": 7,
         "materials": 8,
@@ -118,6 +135,31 @@ def test_ver25_the_pipeline_numbers_match_section_5_2() -> None:
         "qoi": 11,
         "report": 12,
     }
+
+
+def test_ver48_a_missing_extra_is_named_when_the_stage_is_created(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """``create()`` names the extra, the module and the install command (WP18 D12).
+
+    ``gemmi`` is made unimportable for the duration, and the stage modules that
+    import it are dropped from ``sys.modules`` so that ``create`` imports them
+    afresh.
+    """
+    import sys
+
+    monkeypatch.setitem(sys.modules, "gemmi", None)
+    for module in ("nanopnp.structure.stage", "nanopnp.structure.read"):
+        monkeypatch.delitem(sys.modules, module, raising=False)
+    with pytest.raises(MissingExtraError) as raised:
+        create("structure")
+    message = str(raised.value)
+    assert "'structure' extra" in message
+    assert "nanopnp.structure.stage" in message
+    assert "'gemmi'" in message
+    assert "uv sync --all-extras" in message
+    assert _catalogue()["structure"].extra == "structure"
+    assert _catalogue()["solve"].extra is None
 
 
 def test_ver25_an_unknown_stage_is_refused_by_name() -> None:
