@@ -1,7 +1,7 @@
 # WP18 — Structure ingestion, alignment and the Cₙ axis (stage 1)
 
 **Status: planned, not started.** Written 25 September 2026. It builds on WP17, merged
-25 September 2026 as PR #38, whose tag `v0.9.0-alpha.1` is still to be pushed. WP18 inherits:
+25 September 2026 as PR #38 and tagged `v0.9.0-alpha.1`. WP18 inherits:
 
 - the `nanopnp/case/v2` `structure:` block and its keys (`source.path`, `selection`, `chains`,
   `variant`, `ensemble.frames`, `symmetry.point_group`, `symmetry.axis: auto | z`);
