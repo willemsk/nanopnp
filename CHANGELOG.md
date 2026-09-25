@@ -16,6 +16,40 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+## [0.9.0-alpha.3] - 2026-09-25
+
+WP19: the density map and the reduction to (r, z), pipeline stages 2 and 3.
+
+### Added
+
+- Stage 2, `density`. Each frame is deposited as the probabilistic union `1 − Π(1 − g_i)` of
+  Gaussians of width `σ R_i`, with each term kept where `g_i ≥ 10⁻⁶`, and the ensemble map is the
+  mean of the per-frame maps (FR-04). The grid's nodes are multiples of the spacing, so the axis
+  is a node column. The stage emits a content-hashed `nanopnp/density/v1` artefact, an `.npz` map
+  exportable as OpenDX or CCP4/MRC (IF-05, FR-27). A NaN or a value outside [0, 1] aborts the run,
+  naming the voxel (QR-12). 2WCD at 0.05 nm deposits in about 17 s with a peak RSS under 0.5 GB.
+- The radius set: CHARMM Rmin/2 by residue and atom, transcribed from PDB2PQR 3.7.1's
+  `CHARMM.DAT` into `data/radii/pdb2pqr_charmm.yaml` (BSD-3-Clause; its notice is in
+  `LICENSES-BUNDLE.md`), with the histidine, atom-alias and terminal-patch rules as data. An atom
+  the set does not name is refused, naming its chain, residue number, residue and atom. There is
+  no fallback by element.
+- Stage 3, `symmetry`. The map is binned in (r, z) by the exact areas of overlap between grid
+  cells and annuli. The Cₙ average is taken in the angular harmonic basis, with neither rotated
+  copies nor interpolation (FR-05). The stage reports the Cₙ azimuthal variance after detrending,
+  the raw variance, and each bin's harmonic count, with the radius below which nothing is resolved
+  (FR-06, CON-04). It emits `nanopnp/reduced/v1`, exportable as three radial grids.
+- The manifest records the density and reduction parameters, the radius set's digest, the
+  element counts and the variance maxima (FR-25).
+- VER-49 and VER-50. A shared `tests/conftest.py` holds the prepared 2WCD and a synthetic C12
+  assembly.
+
+### Changed
+
+- A `structure:` case walks to stage 3. A full walk and a sweep are refused naming stage 4,
+  contour extraction. The `geometry:` block is read, and it is refused beside `inputs.mesh`.
+- `geometry.density.grid_spacing_nm` outside [0.025, 0.05] nm and a non-positive
+  `geometry.density.sharpness` are refused naming the value.
+
 ## [0.9.0-alpha.2] - 2026-09-25
 
 WP18: structure ingestion, alignment and the Cₙ axis, pipeline stage 1.

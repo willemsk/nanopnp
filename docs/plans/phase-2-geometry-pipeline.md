@@ -1,6 +1,6 @@
 # Phase 2 (Geometry pipeline): from a structure to a gated mesh
 
-**Status: in progress. WP17 delivered, 24 September 2026; WP18 delivered, 25 September 2026; WP19 planned in detail; WP20–WP25 planned.** Written 24 September 2026, after Phase 1 (WP7–WP16) delivered the
+**Status: in progress. WP17 delivered, 24 September 2026; WP18 delivered, 25 September 2026; WP19 delivered, 25 September 2026; WP20–WP25 planned.** Written 24 September 2026, after Phase 1 (WP7–WP16) delivered the
 solver core on an externally supplied mesh (main at `v0.5.0-alpha.10`). Two things come first:
 the Phase 1 end-of-phase report, which merges as tag `v0.5.0`, and the author's double-click
 observation that closes Phase 0 criterion 4. That ordering is ruling B1 of `SPECIFICATION.md`
@@ -186,6 +186,21 @@ and matches its closed form on a `cos(nθ)` modulation.
 >   that, the radial gradient reads as azimuthal variance.
 >
 > The stages are `density` and `symmetry`, and a walk past stage 3 is refused naming stage 4.
+
+> **Delivered, 25 September 2026** ([plan](wp19-density-and-reduction.md), to be tagged
+> `v0.9.0-alpha.3`). Stage 2, `density`, deposits each frame's probabilistic union on a canonical
+> grid. The widths come from the CHARMM radius set in `data/radii/`, and the frame mean is emitted
+> as `nanopnp/density/v1`, exportable to OpenDX and CCP4. Stage 3, `symmetry`, bins the map by
+> exact overlap weights and takes the Cₙ average in the harmonic basis. It emits
+> `nanopnp/reduced/v1`: the mean, the detrended Cₙ and raw variances, and the harmonic counts.
+> VER-49 and VER-50 discharge FR-04, FR-06 and CON-04, and add to FR-05, IF-05 and QR-12. 2WCD
+> runs stages 2–3 in 24 s. Constraints inherited by later packages:
+>
+> - A walk or sweep past stage 3 is refused naming stage 4, and WP20 lifts that through
+>   `refuse_walk`.
+> - `geometry:` beside `inputs.mesh` is refused.
+> - Stage 4 reads `ReducedMap.grids()`. Below `n h/π` the variance is unresolved, not zero.
+> - Phase 3's FR-13 reuses `symmetry/annular.py`.
 
 ### WP20 — Contour extraction, conditioning and its gate (stage 4)
 

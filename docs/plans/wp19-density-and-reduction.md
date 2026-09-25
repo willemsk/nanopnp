@@ -1,6 +1,6 @@
 # WP19 — Density map and symmetry reduction (stages 2 and 3)
 
-**Status: planned, not started.** Written 25 September 2026, after WP18 merged as
+**Status: delivered, 25 September 2026.** Written 25 September 2026, after WP18 merged as
 `v0.9.0-alpha.2` (PR [#39](https://github.com/willemsk/nanopnp/pull/39)). This package inherits
 stage 1's frame: the axis is on z at r = 0, z = â·x keeps the file's axial coordinate, and the
 aligned ensemble carries an atom table (element, name, residue name, number, insertion code, chain)
@@ -84,6 +84,39 @@ against.
 | D13 | Manifest | `geometry_and_mesh` gains `density` (grid, radius set and digest, frames, atoms, hydrogens) and `reduction` (n, bins, unresolved radius, and the maximum Cₙ and non-Cₙ variance with their (r, z)). Both come from the summaries | FR-25; WP18 D14 |
 | D14 | Test fixture | `_prepared_rotation` and `_dodecamer` move from `test_structure_stage.py` into a root `tests/conftest.py` session fixture, `prepared_2wcd`. It writes chains A–L of the vendored 2WCD, rigidly moved into an admitted frame | Tiers 1 and 2 need it here, and WP22 needs it next (WP18 D16 Outcome) |
 | D15 | Public API | No new name | IF-01 NOTE; WP18 D15 |
+
+> **Outcome — D3's lookup lives in `density/radii.py`, and three rules were sharpened.** The
+> radius set is its own module rather than part of `union.py`, because stage 2 and the tests both
+> read it without the deposition. What executing D3 against `CHARMM.DAT` fixed:
+>
+> - **The patches are residue-specific.** A residue is patched by `NTER` and `CTER`, `GLY` by
+>   `GLYP` and `CTER`, and `PRO` by `PROP` and `CTER`. These rules are data, in the file.
+> - **An unknown residue is refused before the patches are consulted.** Otherwise `NTER` names
+>   `CA` and places an unknown residue's backbone without a word.
+> - **`HIS` agreement is counted among the histidines that name the atom.** `HE2` is in HSE and
+>   HSP but not HSD, and they agree, so it resolves. `HD2` and `HE1` disagree and are refused. The
+>   §5.3.1 NOTE now says "every one of those three that names the atom".
+> - **A zero radius is refused.** `DUM` has one, and a zero-width kernel deposits nothing.
+>
+> 2WCD resolves all 26,844 atoms: 216 `ILE CD1` through the alias, and 120 `HIS` atoms by
+> agreement (`.knowledge/07` §2).
+
+> **Outcome — D5 spares one z node at each end too, and D6 groups by stencil, not by radius.**
+> z runs from `⌊(z_min − d)/h⌋ − 1` to `⌈(z_max + d)/h⌉ + 1`, so the NOTE's "one cell to spare"
+> holds axially as well as radially. Atoms are grouped by stencil half-width `m = ⌈d/h + ½⌉`,
+> and each group gathers a separable Gaussian `e_x e_y e_z` over the spherical offset set of its
+> widest member. The scatter is a `np.bincount` over a z-slab of at most 4e6 cells, 1e6 terms at
+> a time. 2WCD deposits in 17.0 s and runs stages 1–3 in a 0.47 GB peak, against the ≤ 60 s and
+> < 1.5 GB of [Design §5](#5-runtime-and-memory).
+
+> **Outcome — two switches exist for the tests alone.** `deposit(float64=True)` keeps the map in
+> float64, for VER-49's 1e-15 closed forms. `reduce_map(detrend=False)` skips D9's detrend, for
+> VER-50's discrimination check. Neither is reachable from a case, and the stage-3 key records
+> `detrend: "even-cubic"`.
+
+> **Outcome — D14's conftest also holds a synthetic C12.** `synthetic_c12` writes an exact
+> C12 of 12 chains × 8 alanines as a PDB, and `c12_assembly` returns the generator, so VER-50's
+> invariance test can turn it before deposition.
 
 ### Work items
 
