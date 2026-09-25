@@ -51,6 +51,7 @@ structure = [
     "scikit-image>=0.22",
     "shapely>=2.0",
     "pdb2pqr>=3.7",
+    "gemmi>=0.7",
 ]
 # Desktop shell (ADR-004). PySide6 is LGPL-3; PyQt is forbidden by CON-09.
 gui = ["PySide6>=6.7"]
@@ -171,6 +172,7 @@ module = [
     "ngsolve.*",
     "netgen.*",
     "MDAnalysis.*",
+    "gemmi",
     "meshio.*",
     "skimage.*",
     "shapely.*",
