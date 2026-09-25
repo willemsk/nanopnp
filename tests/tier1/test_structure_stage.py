@@ -242,7 +242,7 @@ def test_ver48_2wcd_pdb_and_mmcif_agree() -> None:
         warnings.simplefilter("ignore")
         from_pdb = select(load_universe(PDB), selection="protein", chains=DODECAMER, n=12)
         from_cif = select(load_universe(CIF), selection="protein", chains=DODECAMER, n=12)
-    for field in ("element", "name", "resname", "resid", "chain"):
+    for field in ("element", "name", "resname", "resid", "icode", "chain"):
         assert np.array_equal(getattr(from_pdb.atoms, field), getattr(from_cif.atoms, field)), field
     assert np.array_equal(from_pdb.common_index, from_cif.common_index)
     difference = np.max(
@@ -529,6 +529,7 @@ def test_ver48_artefact_round_trip_and_export(prepared: Path, tmp_path: Path) ->
         name=ensemble.name,
         resname=ensemble.resname,
         resid=ensemble.resid,
+        icode=ensemble.icode,
         chain=ensemble.chain,
         header=ensemble.header,
     )
@@ -543,6 +544,36 @@ def test_ver48_artefact_round_trip_and_export(prepared: Path, tmp_path: Path) ->
     assert np.array_equal(reloaded.atoms.names, ensemble.name)
     assert np.max(np.abs(reloaded.atoms.positions / 10.0 - ensemble.positions_nm[0])) <= 1e-5
     assert json.loads(json.dumps(dict(ensemble.header)))["n"] == 12
+
+
+def test_ver48_insertion_codes_survive_the_artefact_and_its_export(tmp_path: Path) -> None:
+    """Residues 27 and 27A stay two residues through the ``.npz`` and the PDB export (IF-04).
+
+    They share a residue number and differ only in insertion code, so an atom
+    table without one would merge them.
+    """
+    ensemble = AlignedEnsemble(
+        positions_nm=np.arange(12, dtype=np.float32).reshape(1, 4, 3),
+        element=np.array(["N", "C", "N", "C"]),
+        name=np.array(["N", "CA", "N", "CA"]),
+        resname=np.array(["GLY", "GLY", "ALA", "ALA"]),
+        resid=np.array([27, 27, 27, 27]),
+        icode=np.array(["", "", "A", "A"]),
+        chain=np.array(["A", "A", "A", "A"]),
+        header={"n": 1},
+    )
+    again = AlignedEnsemble.read(ensemble.write(tmp_path / "icodes.npz"))
+    assert again.icode.tolist() == ["", "", "A", "A"]
+    assert again.digest() == ensemble.digest()
+
+    pdb, _ = again.export(tmp_path / "export")
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        residues = mda.Universe(str(pdb)).residues
+    assert [(int(r.resid), str(r.icode).strip(), str(r.resname)) for r in residues] == [
+        (27, "", "GLY"),
+        (27, "A", "ALA"),
+    ]
 
 
 def test_ver48_rigid_move_superposes_to_zero(prepared: Path, tmp_path: Path) -> None:

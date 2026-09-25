@@ -2,7 +2,7 @@
 
 One ``.npz`` holds the aligned coordinates, float32 ``(frames, atoms, 3)`` in nm
 in the model frame, and the atom table — element, name, residue name, residue
-number and chain. The header travels in the same file, as a JSON string, and is
+number, insertion code and chain. The header travels in the same file, as a JSON string, and is
 also the artefact's summary: the source and trajectory digests, the selection,
 the chains in cyclic order, the frames as read, the superposition RMSD, the axis
 in the file frame and the rotation ``Q`` that took it to z, every gate
@@ -35,7 +35,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 PAYLOAD_NAME = "ensemble"
 """The artefact's payload key, and the ``.npz`` file's stem."""
 
-ATOM_FIELDS: tuple[str, ...] = ("element", "name", "resname", "resid", "chain")
+ATOM_FIELDS: tuple[str, ...] = ("element", "name", "resname", "resid", "icode", "chain")
 """The atom-table arrays the payload carries, in order."""
 
 ORIENTATION_RULE = (
@@ -59,8 +59,9 @@ class AlignedEnsemble:
     ----------
     positions_nm
         ``(frames, atoms, 3)`` float32, in the model frame of WP18 D8.
-    element, name, resname, chain
-        String arrays, one entry per atom.
+    element, name, resname, icode, chain
+        String arrays, one entry per atom; ``icode`` is blank where the source
+        file has no insertion code.
     resid
         Integer array, one entry per atom.
     header
@@ -72,6 +73,7 @@ class AlignedEnsemble:
     name: np.ndarray
     resname: np.ndarray
     resid: np.ndarray
+    icode: np.ndarray
     chain: np.ndarray
     header: Mapping[str, Canonicalisable]
 
@@ -166,7 +168,8 @@ class AlignedEnsemble:
         import numpy as np
         from MDAnalysis.coordinates.memory import MemoryReader
 
-        keys = list(zip(self.chain.tolist(), self.resid.tolist(), strict=True))
+        # A residue is its chain, number and insertion code: 27 and 27A are two.
+        keys = list(zip(self.chain.tolist(), self.resid.tolist(), self.icode.tolist(), strict=True))
         starts = [0] + [index for index in range(1, len(keys)) if keys[index] != keys[index - 1]]
         boundary = np.zeros(len(keys), dtype=int)
         boundary[starts] = 1
@@ -184,6 +187,7 @@ class AlignedEnsemble:
         universe.add_TopologyAttr("chainIDs", self.chain.tolist())
         universe.add_TopologyAttr("resnames", [str(self.resname[i]) for i in starts])
         universe.add_TopologyAttr("resids", [int(self.resid[i]) for i in starts])
+        universe.add_TopologyAttr("icodes", [str(self.icode[i]) for i in starts])
         universe.add_TopologyAttr("segids", [""])
         universe.load_new(
             np.asarray(self.positions_nm, dtype=np.float32) * np.float32(10.0), format=MemoryReader

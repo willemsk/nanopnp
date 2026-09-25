@@ -213,8 +213,14 @@ uv run pytest -m tier3 tests/tier3/test_structure_ensemble.py -v
 > trajectory that does not hold the structure's atoms, and an mmCIF model whose atoms are not
 > model 1's in order were reaching the CLI as unclassified errors, or not refused at all. Each is
 > now a `StructureInputError` naming the key or file. The element and alternate-location refusals
-> now run after `source.chains` narrows the selection. The §5.3.1 NOTE and VER-48 say so, and
-> `test_structure_stage.py` holds 34 tests.
+> now run after `source.chains` narrows the selection. The §5.3.1 NOTE and VER-48 say so.
+>
+> **Outcome — D10's atom table gained `icode`** (author ruling, 25 September 2026, at review).
+> `select` already matched residues on number and insertion code, but the table kept only `resid`.
+> Residues 27 and 27A therefore exported as one residue. `nanopnp/structure/v1` was not yet
+> released, so the field was added under the same schema string. The §5.3.2 stage-1 row names it,
+> and `test_structure_stage.py` holds 35 tests. At the same review, `CLAUDE.md`'s import rule gained
+> the optional-extra exception that D13's lazy `export()` and `density/grid.py` already relied on.
 >
 > The coverage line of Appendix A was recounted to 50 of 67. The line it replaced said 45/22, but
 > the table held 46/21 before VER-48.

@@ -161,7 +161,12 @@ CLI, the GUI and the sweep runner all depend on.
   ~67 ms, and the CLI, the GUI and the sweep runner all import stage modules purely to introspect a
   stage (FR-27) without ever assembling a form — so a sweep dispatching a job array pays that per
   process. Deferring keeps `import nanopnp.cli` at ~70 ms; at module scope the physics and mesh
-  modules alone would cost 424 ms rather than 56 ms. Defer nothing else: a stdlib import buys
+  modules alone would cost 424 ms rather than 56 ms. The one other exception is **an optional
+  extra's package, in a module that must stay usable without that extra**: it is imported inside
+  the function that needs it, and a missing extra is refused naming it. That is how
+  `AlignedEnsemble` reads without MDAnalysis and exports with it, and how `density/grid.py` reads
+  OpenDX through GridDataFormats. A module reached only through `create()`, such as
+  `structure/read.py`, imports its extra at the top. Defer nothing else: a stdlib import buys
   microseconds and just makes the module harder to read.
 
 ## Testing

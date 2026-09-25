@@ -27,7 +27,8 @@ WP18: structure ingestion, alignment and the Cₙ axis, pipeline stage 1.
   `last_ns` and `count` and superposes each on the earliest selected frame's C-alpha (FR-01). It
   finds the Cₙ axis by chain-permutation superposition and puts it on z at r = 0, keeping the file's
   axial coordinate (FR-02). It emits a content-hashed `nanopnp/structure/v1` artefact: an `.npz`
-  ensemble with its atom table and gate record, exportable as a PDB and a DCD (FR-27). mmCIF is read
+  ensemble with its atom table, insertion codes included, and gate record, exportable as a PDB and
+  a DCD (FR-27). mmCIF is read
   by gemmi, now in the `structure` extra (MPL-2.0).
 - The oligomeric state is checked (FR-03). A blank element, an alternate location, a chain count
   other than the point group's n, a missing listed chain, a chain under half the most complete one's
