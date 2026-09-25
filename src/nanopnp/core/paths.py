@@ -2,8 +2,8 @@
 
 The correction parameter files live at the repository root (``data/corrections``)
 as specified in ``SPECIFICATION.md`` section 11, and are force-included into the
-wheel under ``nanopnp/data``; ``data/geometry`` ships the same way and by the same
-rule. Both layouts resolve here so that code and tests never have to know which
+wheel under ``nanopnp/data``; ``data/geometry`` and ``data/radii`` ship the same way and by
+the same rule. Both layouts resolve here so that code and tests never have to know which
 one they are running against.
 """
 
@@ -28,6 +28,10 @@ CORRECTIONS_DIR: Path = DATA_DIR / "corrections"
 
 GEOMETRY_DIR: Path = DATA_DIR / "geometry"
 """Shipped geometry fixtures: pore profile tables and the polygons derived from them."""
+
+
+RADII_DIR: Path = DATA_DIR / "radii"
+"""Van der Waals radius sets for the stage-2 density kernel (section 5.3.1 NOTE)."""
 
 
 def available_corrections() -> tuple[str, ...]:
@@ -87,6 +91,31 @@ def profile_file(name: str) -> Path:
     path = GEOMETRY_DIR / f"{name}.yaml"
     if not path.is_file():
         raise FileNotFoundError(f"no geometry profile {name!r} in {GEOMETRY_DIR}")
+    return path
+
+
+def radii_file(name: str) -> Path:
+    """Return the path of a named radius set in :data:`RADII_DIR`.
+
+    Parameters
+    ----------
+    name
+        Radius-set name without its suffix, e.g. ``"pdb2pqr_charmm"``.
+
+    Returns
+    -------
+    Path
+        Path to ``<name>.yaml``.
+
+    Raises
+    ------
+    FileNotFoundError
+        If no such set is installed; the message names the directory searched,
+        as :func:`correction_file` does.
+    """
+    path = RADII_DIR / f"{name}.yaml"
+    if not path.is_file():
+        raise FileNotFoundError(f"no radius set {name!r} in {RADII_DIR}")
     return path
 
 

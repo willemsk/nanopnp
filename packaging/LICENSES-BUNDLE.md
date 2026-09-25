@@ -20,6 +20,7 @@ regardless of which solver a case selects.
 | PySide6, Qt 6 (including Qt WebEngine) | LGPL-3 | Desktop shell and the embedded field viewer, dynamically linked |
 | `webgui` 0.2.39 (npm), bundling three.js r152 and dat.gui 0.7 | LGPL-2.1-or-later; MIT; Apache-2.0 | The field viewer's renderer, shipped unmodified as `nanopnp/gui/assets/webgui/webgui.js` beside its three licence texts and a `NOTICE.md` naming its source |
 | NumPy, SciPy, pydantic, PyYAML, meshio, h5py, SymPy | BSD-3-Clause / MIT / Apache-2.0 | Numerics, configuration and file formats |
+| PDB2PQR 3.7.1 `CHARMM.DAT` (radius column only) | BSD-3-Clause | The stage-2 density map's van der Waals radii, transcribed as data into `nanopnp/data/radii/pdb2pqr_charmm.yaml`; its notice and licence are below |
 
 ## Your rights under the LGPL components
 
@@ -29,6 +30,26 @@ so that you can: every shared library is an ordinary file in the bundle director
 replaced in place. Nothing in the bundle is statically linked against an LGPL component.
 The renderer is likewise an ordinary file, `_internal/nanopnp/gui/assets/webgui/webgui.js`, and
 the viewer loads whatever build is at that path.
+
+## PDB2PQR's radius table
+
+`data/radii/pdb2pqr_charmm.yaml` carries the atomic radii of PDB2PQR's `pdb2pqr/dat/CHARMM.DAT`
+(version 3.7.1), which the density map of `SPECIFICATION.md` §5.3.1 uses by an author ruling. It is
+redistributed under PDB2PQR's licence, reproduced here verbatim from the 3.7.1 distribution:
+
+> Copyright (c) 2002-2024, Jens Erik Nielsen; Nathan A. Baker; Battelle Memorial Institute, Developed at the Pacific Northwest National Laboratory, operated by Battelle Memorial Institute, Pacific Northwest Division for the U.S. Department Energy.; Paul Czodrowski & Gerhard Klebe, University of Marburg.
+>
+> All rights reserved.
+>
+> Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+>
+> * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+>
+> * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+>
+> * Neither the names of University College Dublin, Battelle Memorial Institute, Pacific Northwest National Laboratory, US Department of Energy, or University of Marburg nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+>
+> THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ## Source
 
