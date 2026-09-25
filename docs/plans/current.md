@@ -42,6 +42,9 @@ Each item is recorded in full where it points. Read it there first.
   no element fallback (author ruling, 25 September 2026). **The Cₙ average is a harmonic
   projection**, and the variance is taken after detrending. → the §5.3.1 NOTE on
   `geometry.density`; WP19 D3, D7, D9.
+- **For VAL-05 (WP22), all answered by the author on 25 September 2026.** G9 is 0 in the MD frame,
+  so the vendored 2WCD must be registered to it. The paper's 50 frames are DCD frames 48–97 at
+  100 ps. The density included hydrogens. → `.knowledge/04` §1.1, §8; index rulings 11–12.
 - **The vendored 2WCD is in its crystal frame** and stage 1 refuses it; the tests orient it through
   the `prepared_2wcd` fixture. → WP18 D16 Outcome; WP19 D14.
 
@@ -58,12 +61,6 @@ Each item is recorded in full where it points. Read it there first.
 
 ## What is still somebody else's
 
-- **The G9 axial offset**, and **the ensemble's frame spacing and the paper's 50 frames**, for
-  VAL-05. They are the author's, before WP22. The archive is `prod5_clya_as.{pdb,dcd}`: 98 frames,
-  protein only, with no time metadata. The MD frame suggests G9 ≈ 0. The archived PQR files suggest
-  100 ps per frame (`.knowledge/04` §1.1).
-- **Whether the original density included hydrogens.** The PQR files carry them. The author's,
-  before WP22.
 - **The COMSOL exports** (WP13), against
   [`docs/validation/comsol-export-contract.md`](../validation/comsol-export-contract.md). Until they
   land every report carries `golden_source: self`, and Tier 3 skips the archive comparison visibly.

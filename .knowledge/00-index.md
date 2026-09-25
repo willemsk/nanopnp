@@ -110,6 +110,8 @@ Answers given directly by the author. Where they conflict with a printed source,
 | 8 | Net charge (−72.9 / −72 / −60 e) | **Different constructs.** Each figure is right for its own construct; any structure-prep run must record which construct and which PDB it started from. **Narrowed by measurement, 2026-09-06: the −72.9 / −72 pair is one construct measured two ways, not two constructs.** The delivered `rhoq_pore` table integrates to the *integer* −72 e to 4.7e-12, so −72.9 is the same charge after COMSOL's own mesh quadrature of it — a consumer-side aliasing error of +1.25 %, reproduced here at −0.99 % by the same route. → `04-clya-geometry-and-charge.md` §3.2. The ruling stands for −60 e. |
 | 9 | Analyte force chain | Reproduce **forces + PMF** (`ΔU = −∫F dz`). Brownian dynamics stays out of scope. |
 | 10 | PlyAB as a second reference case | **Yes, but after v1.0** — the first post-release generalisation test. |
+| 11 | Density-map radii and atoms (25 Sep 2026) | **CHARMM Rmin/2** from PDB2PQR's `CHARMM.DAT`, the set in the archived per-frame PQR files; the map was built from the **full-atom** MD trajectory, hydrogens included. → `SPECIFICATION.md` §5.3.1 NOTE on `geometry.density`; `04` §1.1. |
+| 12 | Axial offset G9 (25 Sep 2026) | **0 in the MD frame**: the trajectory was centred on the middle of the bilayer. → `04` §8 G9. |
 
 ## Still open
 
