@@ -459,6 +459,7 @@ def build(
     input_files: Mapping[str, Path] | None = None,
     upstream: Mapping[str, Artefact] | None = None,
     mesh: Mapping[str, Canonicalisable] | None = None,
+    structure: Mapping[str, Canonicalisable] | None = None,
     charge: Mapping[str, Canonicalisable] | None = None,
     electrolyte: Electrolyte | None = None,
     clamp_activations: int | None = None,
@@ -500,6 +501,12 @@ def build(
         is not recoverable from the solved mesh, and two runs that differ only
         in it are two different runs (section 5.3.3). Size-field settings join
         it when the mesher lands in v0.9.
+    structure
+        Stage 1's record, taken from its artefact summary: the point group, the
+        chains in cyclic order, the axis in the file frame and the rotation that
+        took it to z, every gate measurement beside its threshold, the frames as
+        read, the superposition RMSD and the per-frame axis drift (WP18 D14).
+        Recorded under the group's ``structure`` key.
     charge
         The Charge group: ``nanopnp.charge.stage.ResolvedFields.summary()`` — each
         supplied field's header, grid descriptor and digest, and for the charge
@@ -540,14 +547,7 @@ def build(
         case_hash=case_hash,
         inputs=input_group(case_hash=case_hash, files=input_files, upstream=upstream),
         environment=environment(),
-        geometry_and_mesh=(
-            {
-                **dict(mesh),
-                **({} if wall_distance is None else {"wall_distance": dict(wall_distance)}),
-            }
-            if mesh is not None
-            else not_run("no mesh was built or supplied to this run")
-        ),
+        geometry_and_mesh=_geometry_group(mesh, structure, wall_distance),
         charge=(
             dict(charge)
             if charge is not None
@@ -573,6 +573,28 @@ def build(
         deviations=deviations(document),
         contributed_deviations=contributed_deviations,
     )
+
+
+def _geometry_group(
+    mesh: Mapping[str, Canonicalisable] | None,
+    structure: Mapping[str, Canonicalisable] | None,
+    wall_distance: Mapping[str, Canonicalisable] | None,
+) -> dict[str, Canonicalisable]:
+    """Return the Geometry and mesh group: the mesh record, and stage 1's where it ran.
+
+    A run that stopped at stage 1 records its structure and says the mesh was
+    not built, which is a different fact from a run that had neither.
+    """
+    if mesh is None:
+        group = not_run("no mesh was built or supplied to this run")
+    else:
+        group = {
+            **dict(mesh),
+            **({} if wall_distance is None else {"wall_distance": dict(wall_distance)}),
+        }
+    if structure is not None:
+        group["structure"] = dict(structure)
+    return group
 
 
 def read(path: Path) -> dict[str, Canonicalisable]:

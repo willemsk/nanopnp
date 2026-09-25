@@ -263,7 +263,7 @@ class SolveStage:
             down, and the digest is therefore known without opening a file.
         """
         resolved = resolve(inputs.case)
-        ingested = ingest(resolved.mesh, resolved)
+        ingested = ingest(resolved.require_mesh(), resolved)
         mesh = inputs.upstream.get("mesh")
         if mesh is None:
             mesh = MeshStage().artefact(ingested)

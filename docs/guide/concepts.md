@@ -28,6 +28,11 @@ through the case's `inputs:` block, and a run walks these:
 | 11 | qoi | the quantities of interest |
 | 12 | report | the exported fields, if asked for |
 
+Stage 1, `structure`, is the first of the geometry pipeline to arrive. For a case carrying a
+`structure:` section, `nanopnp stage structure case.yaml` reads a PDB or mmCIF file and an optional
+trajectory, superposes the frames, finds the Cₙ axis and puts it on z at r = 0. A full walk of such a
+case is refused, naming stage 2, until the density map is delivered.
+
 `nanopnp stage --list` prints the registry. Every stage is independently invocable, cancellable
 and introspectable (FR-27). `nanopnp stage <name> case.yaml` runs the pipeline up to that stage and
 prints its artefact.

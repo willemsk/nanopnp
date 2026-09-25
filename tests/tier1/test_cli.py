@@ -180,6 +180,7 @@ def _public_exception_classes() -> dict[str, str]:
         "TypeError",
         "OSError",
         "ArithmeticError",
+        "ImportError",
         "LookupError",
     }
     found: dict[str, str] = {}
@@ -237,6 +238,9 @@ def test_ver32_every_public_exception_class_is_classified_or_excluded() -> None:
         ("nanopnp.io.run:MissingUpstreamError", EXIT_GATE),
         ("nanopnp.solve.newton:NewtonDivergenceError", EXIT_CONVERGENCE),
         ("nanopnp.core.stages:Cancelled", EXIT_CANCELLED),
+        ("nanopnp.core.stages:MissingExtraError", EXIT_CASE),
+        ("nanopnp.structure.read:StructureInputError", EXIT_GATE),
+        ("nanopnp.structure.axis:SymmetryGateError", EXIT_GATE),
     ],
 )
 def test_ver32_each_code_is_produced_by_an_instance_of_its_class(key: str, code: int) -> None:
@@ -386,7 +390,8 @@ def test_ver32_stage_list_imports_no_stage_module(tmp_path: Path) -> None:
         "main(['stage', '--list'])\n"
         "loaded = sorted(m for m in sys.modules if m.startswith(('ngsolve', 'netgen')) "
         "or m in {'nanopnp.mesh.ingest', 'nanopnp.charge.stage', 'nanopnp.solve.stage', "
-        "'nanopnp.post.stage', 'nanopnp.materials.stage', 'nanopnp.io.stage'})\n"
+        "'nanopnp.post.stage', 'nanopnp.materials.stage', 'nanopnp.io.stage', "
+        "'nanopnp.structure.stage', 'nanopnp.structure.read', 'MDAnalysis', 'gemmi'})\n"
         "sys.stderr.write(json.dumps(loaded))\n"
     )
     result = subprocess.run(
@@ -394,7 +399,7 @@ def test_ver32_stage_list_imports_no_stage_module(tmp_path: Path) -> None:
     )
     assert json.loads(result.stderr) == []
     numbers = [line.split()[0] for line in result.stdout.splitlines()]
-    assert numbers == ["6", "7", "8", "9", "10", "11", "12"]
+    assert numbers == ["1", "6", "7", "8", "9", "10", "11", "12"]
 
 
 def test_ver32_env_reports_the_store_and_the_reference_archive(

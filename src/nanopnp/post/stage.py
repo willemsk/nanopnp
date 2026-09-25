@@ -371,7 +371,7 @@ class QoIStage:
             contract is that it does not do the work.
         """
         resolved = resolve(inputs.case)
-        ingested = ingest(resolved.mesh, resolved)
+        ingested = ingest(resolved.require_mesh(), resolved)
         outputs = tuple(resolved.outputs)
         _check_selection(outputs)
         check_routes = bool(inputs.options.get("check_routes", True))

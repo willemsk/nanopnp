@@ -47,7 +47,7 @@ from nanopnp.core.stages import (
     report,
 )
 from nanopnp.io.artefact import Artefact, CaseArtefact, StageInputs
-from nanopnp.io.case import load_case, resolve
+from nanopnp.io.case import load_case, refuse_walk, resolve
 from nanopnp.io.manifest import Manifest, build
 from nanopnp.io.store import Store
 
@@ -84,7 +84,16 @@ what lets a reader with a run directory and no store tell a run that was served
 from a cache from one that solved.
 """
 
-PIPELINE: tuple[str, ...] = ("case", "mesh", "charge", "materials", "solve", "qoi", "report")
+PIPELINE: tuple[str, ...] = (
+    "case",
+    "structure",
+    "mesh",
+    "charge",
+    "materials",
+    "solve",
+    "qoi",
+    "report",
+)
 """The stages a run walks, in dependency order.
 
 Not in section 5.2's *numbering* order: stage 9 resolves the case and stages 6,
@@ -137,7 +146,7 @@ def _scratch(store: Store) -> Path:
     return Path(tempfile.mkdtemp(prefix="run-", dir=root))
 
 
-WORKSPACE_STAGES: frozenset[str] = frozenset({"mesh", "charge", "solve", "report"})
+WORKSPACE_STAGES: frozenset[str] = frozenset({"structure", "mesh", "charge", "solve", "report"})
 """Stages whose constructor takes the directory they write into.
 
 Enumerated rather than discovered by catching :class:`TypeError` from
@@ -152,6 +161,7 @@ _WEIGHTS: Mapping[str, float] = {
     # integrating over a converged state, and a progress bar giving them equal
     # weight would sit at 5/7 for the whole of the ladder.
     "case": 0.01,
+    "structure": 0.05,
     "mesh": 0.05,
     "charge": 0.06,
     "materials": 0.01,
@@ -370,7 +380,8 @@ def _selected(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]:
 
     ``charge`` is dropped when the case supplies neither ``inputs.charge`` nor
     ``inputs.eps_r``: stage 7 refuses such a case as describing no work, and a
-    run with no field to gate has not skipped a gate.
+    run with no field to gate has not skipped a gate. ``structure`` is dropped
+    when the case carries no ``structure:`` section, for the same reason.
 
     Raises
     ------
@@ -380,11 +391,19 @@ def _selected(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]:
         gives it nothing to do.
     """
     supplied = resolved.charge is not None or resolved.eps_r is not None
-    stages = tuple(name for name in PIPELINE if name != "charge" or supplied)
+    dropped = set() if supplied else {"charge"}
+    if resolved.structure is None:
+        dropped.add("structure")
+    stages = tuple(name for name in PIPELINE if name not in dropped)
     if upto is None:
         return stages
     if upto in stages:
         return stages[: stages.index(upto) + 1]
+    if upto == "structure":
+        raise UnknownStageError(
+            f"stage 'structure' is registered but case {resolved.name!r} carries no structure: "
+            "section, so there is nothing for it to read"
+        )
     if upto in PIPELINE:
         raise UnknownStageError(
             f"stage {upto!r} is registered but case {resolved.name!r} supplies neither "
@@ -522,6 +541,11 @@ def _input_files(resolved: ResolvedCase, case_path: Path | None) -> dict[str, Pa
     ):
         if supplied is not None and supplied.path is not None:
             files[role] = supplied.path
+    if resolved.structure is not None:
+        files["structure"] = resolved.structure.spec.source.path
+        trajectory = resolved.structure.spec.ensemble.trajectory
+        if trajectory is not None:
+            files["trajectory"] = trajectory
     return files
 
 
@@ -540,6 +564,30 @@ def _mapping(
     return found if isinstance(found, Mapping) else None
 
 
+STRUCTURE_RECORD_KEYS: tuple[str, ...] = (
+    "point_group",
+    "chains_cyclic_order",
+    "axis",
+    "gates",
+    "frames",
+    "superposition",
+    "drift_deg",
+    "payload_digest",
+)
+"""The stage-1 summary entries the manifest's Geometry group records (FR-25, WP18 D14)."""
+
+
+def _structure_record(artefact: Artefact | None) -> dict[str, Canonicalisable] | None:
+    """Return the Geometry group's ``structure`` record, from the stage-1 summary.
+
+    Taken from the artefact and never recomputed, so the manifest cannot report an
+    axis or a gate the stage did not measure.
+    """
+    if artefact is None:
+        return None
+    return {key: artefact.summary[key] for key in STRUCTURE_RECORD_KEYS if key in artefact.summary}
+
+
 def _manifest(walk: _Walk, *, case_text: str, case_path: Path | None) -> Manifest:
     """Assemble the FR-25 manifest from the artefacts the walk produced.
 
@@ -551,6 +599,7 @@ def _manifest(walk: _Walk, *, case_text: str, case_path: Path | None) -> Manifes
     group that ran and found nothing.
     """
     case = walk.artefacts.get("case")
+    structure = walk.artefacts.get("structure")
     mesh = walk.artefacts.get("mesh")
     charge = walk.artefacts.get("charge")
     solve = walk.artefacts.get("solve")
@@ -584,6 +633,7 @@ def _manifest(walk: _Walk, *, case_text: str, case_path: Path | None) -> Manifes
         input_files=_input_files(walk.resolved, case_path),
         upstream=dict(walk.artefacts),
         mesh=dict(mesh.summary) if mesh is not None else None,
+        structure=_structure_record(structure),
         charge=dict(charge.summary) if charge is not None else None,
         electrolyte=walk.resolved.electrolyte,
         clamp_activations=clamps if isinstance(clamps, int) else None,
@@ -692,6 +742,7 @@ def run_document(
         workspace=Path(workspace) if workspace is not None else None,
         only=only,
     )
+    refuse_walk(walk.resolved, upto)
     stages = _selected(walk.resolved, upto)
     weights = [_WEIGHTS[name] for name in stages]
     total = sum(weights)

@@ -30,6 +30,7 @@ from nanopnp.io.case import (
     SEQUENCE_INDEX,
     FieldValue,
     case_fields,
+    field_description,
     options_at,
     schema_default,
 )
@@ -127,6 +128,7 @@ def render_case_reference() -> str:
         "",
     ]
     sections: dict[str, list[str]] = {}
+    notes: dict[str, list[str]] = {}
     for reference in case_fields():
         head = reference.path.split(".", 1)[0] if "." in reference.path else "document"
         has_default, default = schema_default(reference.path)
@@ -143,6 +145,9 @@ def render_case_reference() -> str:
             f"{_cell(validated)} |"
         )
         sections.setdefault(head, []).append(row)
+        description = field_description(reference.path)
+        if description:
+            notes.setdefault(head, []).append(f"- `{reference.path}`: {description}.")
 
     for head, rows in sections.items():
         lines += [f"## `{head}`" if head != "document" else "## Top level", ""]
@@ -153,12 +158,21 @@ def render_case_reference() -> str:
                 "it would produce through `inputs:` instead.",
                 "",
             ]
+        elif head == "structure":
+            lines += [
+                "This section drives stage 1, structure ingestion and alignment (FR-01 to",
+                "FR-03). It runs alone through `nanopnp stage structure`; a walk past stage 1",
+                "is refused, naming stage 2, until the density map is delivered.",
+                "",
+            ]
         lines += [
             "| Path | Type | Default | Accepts | Validated default |",
             "|---|---|---|---|---|",
             *rows,
             "",
         ]
+        if head in notes:
+            lines += [*notes[head], ""]
     return "\n".join(lines)
 
 

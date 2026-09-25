@@ -1134,7 +1134,9 @@ calcium. A selection carrying alternate locations SHALL be refused naming the fi
 choosing between them is structure preparation, which the pipeline does not do.
 
 A chain is identified by its chain identifier, or by its segment identifier where the chain column
-is blank. `source.chains` is `all` or a list of chain identifiers. `symmetry.point_group` is `C<n>`
+is blank. `source.chains` is `all` or a comma-separated list of chain identifiers, such as
+`A,B,C`, which SHALL number `n` (a string, so the key's type is unchanged: **clarified 25 September
+2026**, WP18). `symmetry.point_group` is `C<n>`
 with `n ≥ 1`, and any other group SHALL be refused naming the accepted form. The selected chains
 SHALL number exactly `n`, and a listed chain that is absent SHALL be named (FR-03). Each chain SHALL
 carry at least half the Cα atoms of the most complete chain. Chains SHALL agree in residue name at
@@ -1164,15 +1166,24 @@ file SHALL point +z from the *trans* side to the *cis* side. A detected axis mor
 file's z SHALL be refused, naming the angle, because such a frame does not name an end.
 `symmetry.axis: z` takes the file's z axis through its origin. Where `n ≥ 2`, it SHALL be refused
 when its lateral displacement from the detected axis exceeds 0.01 nm anywhere over the Cα axial
-extent, naming the tilt, the offset and the displacement.
+extent, naming the tilt, the offset and the displacement. The detected axis it is measured
+against passes the spacing, angle and orientation refusals above first.
 
 The aligned frame puts the axis on z at r = 0 and keeps the file's axial coordinate, `z = â · x`. So
 `geometry.membrane.centre_z_nm` is read in the frame it is written in, and stage 5 applies that
 shift. The four thresholds above are constants of the code and never case keys. Their derivation
-and the margins measured on 2WCD, 6MRT and the ClyA-AS ensemble are in the WP18 plan, Design §2–§4.
+and the margins measured on the author's aligned copy of 2WCD, on 6MRT and on the ClyA-AS ensemble
+are in the WP18 plan, Design §2–§4. The wwPDB entry 2WCD as deposited is not such a file: its
+asymmetric unit holds two dodecamers, chains A–L and M–X, in the crystal frame, with the pore axis
+22.9° from z and +z towards *trans*, so it SHALL be refused by the 10° rule like any other file. Its
+chains A–L are the author's copy moved rigidly (RMSD 1e-4 nm), and moving them is structure
+preparation (WP18 Outcomes, **added 25 September 2026**).
 Until stage 2 is delivered, a walk that extends past stage 1 on a case carrying `structure:` SHALL be
 refused as an unsupported section naming stage 2. Stage 1 alone runs through the stage command
-(IF-02).
+(IF-02). A case carrying `structure:` and `inputs.mesh` SHALL be refused naming both: a stage whose
+output is supplied does not run, and neither does anything upstream of it (the `inputs:` NOTE), so
+the structure would be recorded as an input to a run that never read it (**added 25 September
+2026**, WP18).
 
 NOTE (`inputs.charge`, `inputs.eps_r`, IF-05, IF-03): a supplied field is named by a
 pydantic-validated header document, `schema: nanopnp/field/v1`, which carries the `quantity`, its
@@ -2311,6 +2322,7 @@ archive, so the push gate is unaffected by whether it is present.
 | **VER-45** | Documentation surface and the public API | The generated case-file reference enumerates exactly the editable dotted paths of the VER-43 schema walk, in both directions, with each field's declared type, default and option set taken from the schema or a live registry, so a field added later appears without a documentation edit; the generated command-line reference covers every subcommand `build_parser()` defines, and its exit-code table is the §3.1 IF-02 enumeration, both in both directions; every name in `nanopnp.__all__` resolves and is the object at its documented module path, and the documented public surface equals `__all__`, in both directions; `import nanopnp` in a fresh process imports no `ngsolve`, `netgen` or `numpy` module, asserted on `sys.modules`; the documentation site builds with the generator's strict mode, so that a broken internal link or cross-reference fails the build, on every push including prose-only ones (§7.6) (IF-01, IF-02, IF-03, QR-15 in part; §3.1 IF-01 public-surface NOTE) |
 | **VER-46** | Executed worked examples | Every command in an example's tagged console blocks is executed verbatim, from a copy of that example's directory, and exits `0`; each example meets an oracle stated in its README that is a property of the model rather than a transcribed number: an uncharged pore with symmetric reservoirs rectifies to unity within solver tolerance; a pore carrying negative fixed charge has a cation transport number above one half; a run with every correction set to `none` lists each of them under the manifest's deviations from the validated default; the two current-extraction routes of FR-23 agree to the tolerance QR-04 already gates; and fields read back from the IF-07 export carry the attribute names that vocabulary defines. No number appears in the user documentation as a result unless an example asserts it. Runs in the Tier 2 directory for its runtime; an example whose solve takes minutes (the reference geometry) is marked `slow` and is recorded rather than gated, its cheap steps still gated at Tier 1 (QR-15 in part, IF-02, FR-23, FR-24, FR-25) |
 | **VER-47** | Case schema v2, the v1 upgrade and the supported interpreter range | Every case file the project shipped under `nanopnp/case/v1`, frozen as a test corpus, loads as v2. For each of them, the resolved solve provenance equals, entry by entry, the record the v1 loader made before the move less its `schema:` string; the VER-34 solve-provenance digest and the Tier-3 case identity are the hashes of that record, and the recorded v1 digests are shown to be the hashes of the recorded record, so the comparison is against what v1 keyed; the stage-8 materials key equals the recorded one; and the v1 file and its v2 rewrite share one stage-9 key and one resolved configuration; the frozen v1 field tree maps onto the v2 tree through the declared added, renamed and moved sets, in both directions, so that a key changed later without a map entry fails this test; a v1 document carrying a v2 key, a moved permittivity disagreeing with `physics.solid_permittivities`, and a v2 document using a removed or renamed key are each refused naming the keys; an undeclared schema string is refused naming both accepted ones; each supplied artefact given beside one downstream of it on the same chain is refused naming both, and each new `inputs:` key is refused as unsupported naming the stage that would consume it; `charge.exclusion_offset_nm` and `charge.dielectric_transition_nm` are classified switches whose non-zero values are listed as deviations, and read as their defaults where the block is absent; `numerics.mesh.size_scale` other than 1 beside `inputs.mesh` is refused; the Python range declared by `requires-python`, the trove classifiers, the ruff target and the CI matrix agree with each other and with §2.5 (IF-03, FR-25, FR-26, FR-27, QR-09; §5.3.1 v2 NOTEs; **added 24 September 2026**; the solve-provenance clause **amended** the same day, when the v1 keys were found to carry the schema string, §5.3.2 NOTE) |
+| **VER-48** | Structure ingestion, the Cₙ axis and the oligomeric state | A synthetic Cₙ assembly (n = 7, 8, 12) about a known axis tilted 35° and offset by (3, −1.5, 40) nm, its chains lettered in a shuffled order, recovers that axis to 1e-9 in direction and in offset; with per-atom noise of 0.02 nm on an assembly whose second moments are isotropic, the permutation axis stays within the 0.01 nm displacement budget over the axial extent while the principal axis nearest the truth does not; a 6 × 2 arrangement, a D6 assembly, a ring whose chains do not turn with it, `auto` on C1, an axis 30° from the file's z and `axis: z` 0.02 nm off the detected axis are each refused naming the gate and the measured value; the in-project Kabsch rotation equals MDAnalysis `rotation_matrix` to 1e-12; a blank element, an alternate location, a missing, surplus, unlisted or truncated chain, a residue-name disagreement, a non-cyclic point group, a chain list not numbering n and a non-positive frame window are each refused naming the atom, chain or key; PDB and mmCIF of 2WCD read to the same atom table and coordinates within 5e-5 nm, and DCD, XTC, TRR and NetCDF read back the bytes written within each format's precision; the frame stride ends on the last frame, and a `last_ns` beyond an untimed DCD's recorded span and a `count` beyond the window are refused naming both; rigidly moved frames superpose to within 1e-5 nm; the deposited 2WCD frame is refused by the orientation gate, and its chains A–L moved rigidly into an admitted frame run as stage 1 with 12 chains and 285 common C-alpha, recover the applied tilt to 1e-6 degrees, keep `z = â·x`, and re-detect their own axis as z through r = 0 to 1e-6; the artefact round-trips, its key is stable across processes, a hand edit of its payload is recorded as one, and its PDB and DCD export reloads; a full walk and a sweep over a `structure:` case are refused naming stage 2, `structure:` beside `inputs.mesh` is refused, and the stage is listed with neither MDAnalysis nor gemmi imported while a missing extra is named when it is created. At Tier 3 the author's ClyA-AS ensemble passes every gate over all 98 frames, recorded (IF-04, FR-01, FR-02, FR-03, FR-27, QR-12; §5.3.1 NOTE on `structure:`; **added 25 September 2026**, WP18) |
 
 ### 7.3 Tier 2 analytic benchmarks
 
@@ -2805,15 +2817,15 @@ needed.
 | IF-01 | VER-25, VER-32, VER-45 (the public surface and its import cost) |
 | IF-02 | VER-32, VER-38, VER-45 (the generated command-line and exit-code references), VER-46 (every documented command executed) |
 | IF-03 | VER-09, VER-36 (dotted-path substitution against the schema), VER-47 (schema v2 and the v1 upgrade) |
-| IF-04 | None yet |
+| IF-04 | VER-48 (PDB, mmCIF and each trajectory format read; PDB and mmCIF of one entry agree) |
 | IF-05 | VER-29, VAL-15 |
 | IF-06 | VER-27 |
 | IF-07 | VER-33 |
 | IF-08 | VER-24, VER-35 |
 | IF-09 | VER-43, VER-44 |
-| FR-01 | None yet |
-| FR-02 | None yet |
-| FR-03 | None yet |
+| FR-01 | VER-48 (frame window, superposition on the earliest frame's C-alpha, Kabsch against MDAnalysis) |
+| FR-02 | VER-48 (the permutation axis against a known axis, and against principal axes) |
+| FR-03 | VER-48 (missing, surplus and truncated chains, residue names and the point group refused) |
 | FR-04 | None yet |
 | FR-05 | VER-01 (shared annular-volume integration) |
 | FR-06 | None yet |
@@ -2851,7 +2863,7 @@ needed.
 | QR-09 | VER-47 (the declared interpreter range agrees with §2.5); the wheel-only install itself is exercised by the §7.6 matrix, not asserted by a test |
 | QR-10 | None yet |
 | QR-11 | VER-43, VER-44 |
-| QR-12 | VER-10, VER-32, VER-40, VER-41 |
+| QR-12 | VER-10, VER-32, VER-40, VER-41, VER-48 (the stage-1 input and symmetry gates) |
 | QR-13 | None yet |
 | QR-14 | VER-03 |
 | QR-15 | VER-45, VER-46 — the documentation part only, delivered incrementally by the §8.1 documentation track; the JOSS submission and the DOI-archived release remain unverified until v1.0 |
@@ -2870,11 +2882,12 @@ needed.
 | CON-13 | VER-43 in part (the Windows bundle builds and launches headlessly on every push; widget construction is asserted on `windows-latest` and `macos-latest`). Linux *desktop* Qt is deliberately not asserted: the push gate installs no system packages, and PySide6 does not import on the runner image |
 | CON-14 | None yet |
 
-Coverage: 45 of the 67 requirements in §3 have a specified activity; 22 are recorded as "none yet",
+Coverage: 50 of the 67 requirements in §3 have a specified activity; 17 are recorded as "none yet",
 predominantly interface, portability, licensing and documentation requirements whose demonstration
-is by inspection rather than by test. Recounted row by row on 23 September 2026 after QR-15 gained
-VER-45 and VER-46; QR-07 is counted as "none yet", its entry naming §8.2 criterion 3 as the
-measurement it is still waiting for rather than as one it has.
+is by inspection rather than by test. Recounted row by row on 25 September 2026, after IF-04 and
+FR-01 to FR-03 gained VER-48. The previous line read 45 and 22, which was one off: the table then
+held 46 rows with an activity and 21 without. QR-07 is counted as "none yet", its entry naming §8.2
+criterion 3 as the measurement it is still waiting for rather than as one it has.
 
 ---
 

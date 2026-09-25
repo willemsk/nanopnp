@@ -242,7 +242,6 @@ def test_if03_a_supplied_artefact_names_exactly_one_source() -> None:
 @pytest.mark.parametrize(
     ("section", "release"),
     [
-        ("structure:\n  source: {path: 2WCD.pdb}\n  symmetry: {point_group: C12}\n", "v0.9"),
         ("geometry:\n  membrane: {thickness_nm: 2.8}\n", "v0.9"),
         ("charge:\n  ph: 7.5\n", "v0.9"),
     ],

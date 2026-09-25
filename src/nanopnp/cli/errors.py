@@ -98,6 +98,9 @@ EXIT_CODES: Final[dict[str, int]] = {
     # read -- and because 2 stays argparse's own code, raised where argparse
     # raises it and nowhere else.
     "nanopnp.io.run:UnknownStageError": EXIT_CASE,
+    # An optional-dependency extra a registered stage needs is not installed:
+    # nothing numerical went wrong, and a retry fails identically until it is.
+    "nanopnp.core.stages:MissingExtraError": EXIT_CASE,
     # A dotted path that names no field of the case schema -- a misspelt sweep
     # axis, or a switch path this build and the schema disagree about. 3 for the
     # same reason as every other 3: the fix is an edit to the document that
@@ -129,6 +132,12 @@ EXIT_CODES: Final[dict[str, int]] = {
     "nanopnp.mesh.reference:ReferenceGeometryError": EXIT_GATE,
     "nanopnp.geometry.analyte:AnalyteGeometryError": EXIT_GATE,
     "nanopnp.density.grid:GridFormatError": EXIT_GATE,
+    # Stage 1 (WP18 D12): a refused file, element, alternate location, chain set
+    # or frame window; a refused spacing, rotation angle, orientation or axis: z
+    # displacement; an unreadable ensemble payload. Each names what it refused.
+    "nanopnp.structure.read:StructureInputError": EXIT_GATE,
+    "nanopnp.structure.axis:SymmetryGateError": EXIT_GATE,
+    "nanopnp.structure.ensemble:EnsembleFormatError": EXIT_GATE,
     "nanopnp.charge.fields:FieldDocumentError": EXIT_GATE,
     "nanopnp.charge.fields:ChargeFieldError": EXIT_GATE,
     "nanopnp.solve.state:StateMismatchError": EXIT_GATE,
