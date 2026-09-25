@@ -337,6 +337,30 @@ def _refusal_cases() -> list[Any]:
         cases.append(
             pytest.param(raw, CaseValidationError, (f"charge.{name}",), id=f"negative-{name}")
         )
+        raw = _v2()
+        raw["charge"] = {name: float("inf")}
+        cases.append(
+            pytest.param(raw, CaseValidationError, (f"charge.{name}",), id=f"infinite-{name}")
+        )
+    raw = _v2()
+    del raw["inputs"]["mesh"]
+    raw["numerics"]["mesh"] = {"size_scale": float("inf")}
+    cases.append(
+        pytest.param(raw, CaseValidationError, ("numerics.mesh.size_scale",), id="infinite-scale")
+    )
+
+    # v1 refused a null physics: block, so its upgrade must not make one up.
+    raw = _v1()
+    raw["physics"] = None
+    raw["charge"] = {"eps_protein": 20.0}
+    cases.append(
+        pytest.param(
+            raw,
+            CaseValidationError,
+            ("physics.solid_permittivities.protein", "physics is a NoneType"),
+            id="v1-null-physics",
+        )
+    )
     return cases
 
 
