@@ -12,7 +12,6 @@ non-Cn variance with where they sit.
 from __future__ import annotations
 
 import logging
-import resource
 import sys
 from pathlib import Path
 
@@ -31,6 +30,21 @@ needs_archive = pytest.mark.skipif(
     TOPOLOGY is None or TRAJECTORY is None,
     reason=f"prod5_clya_as.pdb and .dcd are not in ${REFERENCE_DATA_VARIABLE}",
 )
+
+
+def _session_peak_rss_GB() -> float | None:
+    """Return this session's peak RSS in GB, an upper bound on the run's; ``None`` on Windows.
+
+    ``resource`` is POSIX only, so it is imported here: at module scope it fails the
+    module's collection on Windows, where every tier collects it.
+    """
+    if sys.platform == "win32":
+        return None
+    import resource
+
+    # ru_maxrss is kB on Linux and bytes on macOS.
+    scale = 1e9 if sys.platform == "darwin" else 1e6
+    return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / scale
 
 
 @needs_archive
@@ -61,14 +75,12 @@ def test_ver50_clya_as_ensemble(tmp_path: Path) -> None:
     assert density["frames"]["indices"] == list(range(48, 98))  # type: ignore[index]
 
     seconds = {record.name: round(record.seconds, 1) for record in result.stages}
-    # ru_maxrss is kB on Linux and bytes on macOS; this session's peak, an upper bound.
-    scale = 1e9 if sys.platform == "darwin" else 1e6
-    peak_GB = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / scale
+    peak_GB = _session_peak_rss_GB()
     logger.info(
-        "ClyA-AS, 50 frames: %s s; peak RSS of the session %.2f GB; grid %s (z, y, x); "
+        "ClyA-AS, 50 frames: %s s; peak RSS of the session %s; grid %s (z, y, x); "
         "%d atoms of which %d hydrogens",
         seconds,
-        peak_GB,
+        "not measured on Windows" if peak_GB is None else f"{peak_GB:.2f} GB",
         density["grid"]["shape_zyx"],  # type: ignore[index]
         density["atoms"]["total"],  # type: ignore[index]
         density["hydrogens"],

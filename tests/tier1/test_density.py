@@ -350,6 +350,18 @@ def test_ver49_map_round_trip_and_export(synthetic_c12: Path, tmp_path: Path) ->
         assert np.max(np.abs(exported.values - density.values)) <= tolerance
     with pytest.raises(GridFormatError, match=r"\.npz, \.dx, \.ccp4"):
         density.export(tmp_path / "map.vtk")
+    # An origin off the lattice, by half a spacing in x and y or 0.013 nm in z, is
+    # refused rather than rounded onto it, which would move every value.
+    from gridData import Grid
+
+    h = density.grid.spacing_nm
+    x0, y0, z0 = density.grid.origin_nm
+    raw = np.transpose(density.values, (2, 1, 0))
+    for origin in ((x0 - h / 2, y0 - h / 2, z0), (x0, y0, z0 + 0.013)):
+        off = tmp_path / "off-lattice.dx"
+        Grid(grid=raw, origin=origin, delta=(h,) * 3).export(str(off), file_format="DX")
+        with pytest.raises(GridFormatError, match=r"integer multiples of it"):
+            DensityMap.read(off)
 
     script = (
         "from nanopnp.core.stages import create\n"
@@ -400,6 +412,7 @@ def test_ver49_the_key_moves_with_every_input(synthetic_c12: Path, tmp_path: Pat
         ("{grid_spacing_nm: 0.06}", r"grid_spacing_nm is 0\.06 nm; FR-04 requires 0\.025-0\.05"),
         ("{sharpness: 0.0}", r"sharpness is 0\.0; it scales each atom's radius"),
         ("{sharpness: -0.93}", r"sharpness is -0\.93"),
+        ("{sharpness: .inf}", r"sharpness is inf; .* a positive number"),
     ],
 )
 def test_ver49_resolution_refusals(
@@ -469,6 +482,23 @@ def test_ver49_a_bad_atom_aborts_stage_two_naming_it(synthetic_c12: Path, tmp_pa
     pdb.write_text("\n".join(lines) + "\n", encoding="utf-8")
     with pytest.raises(DensityInputError, match=r"atom 'CG' of residue ALA 1 in chain 'B'"):
         run_case(_case(tmp_path, pdb), store=Store(tmp_path / "store"), upto="density")
+
+
+def test_ver49_radius_refusal_names_the_first_atom_in_file_order() -> None:
+    """Of two atoms the set does not place, the refusal names the one earlier in the file.
+
+    ``TRP QQ`` comes first in the file and ``ALA QZ`` first in sorted order, which
+    is the order the distinct pairs are looked up in.
+    """
+    columns = {
+        "resname": np.array(["ALA", "TRP", "ALA"]),
+        "atom": np.array(["CA", "QQ", "QZ"]),
+        "chain": np.array(["A", "A", "B"]),
+        "resid": np.array([1, 2, 3]),
+        "icode": np.array(["", "", ""]),
+    }
+    with pytest.raises(DensityInputError, match=r"atom 'QQ' of residue TRP 2 in chain 'A'"):
+        resolve_radii("pdb2pqr_charmm", **columns)
 
 
 def test_ver49_2wcd_resolves_every_atom(prepared_2wcd: Prepared2WCD) -> None:

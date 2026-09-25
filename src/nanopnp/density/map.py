@@ -51,6 +51,14 @@ SPACING_TOLERANCE_NM = 1e-6
 gridData writes an OpenDX delta to seven significant figures.
 """
 
+LATTICE_TOLERANCE_NM = 1e-5
+"""How far a file's origin may lie from a node ``i·h`` before it is not a canonical grid.
+
+gridData writes an OpenDX origin to six decimals (5e-7 nm), and MRC holds it as
+float32, whose half-spacing at 50 nm is 1.9e-6 nm; half a spacing is 0.0125 nm at
+the finest grid FR-04 admits.
+"""
+
 
 @dataclass(frozen=True)
 class DensityMap:
@@ -159,21 +167,24 @@ class DensityMap:
         # writes it so, and MRC stores float32, which returns 0.05 as 0.0500000007.
         h = float(f"{float(delta[0]):.7g}")
         nx, ny, nz = (int(size) for size in array.shape)
-        half_width = round(-float(origin[0]) / h)
+        # The origin must sit on a node of the canonical lattice, or rounding it
+        # would move every value by up to h/2 without a word.
+        nodes = np.rint(origin / h)
+        half_width = int(-nodes[0])
         if (
             float(np.max(np.abs(delta - h))) > SPACING_TOLERANCE_NM
+            or float(np.max(np.abs(origin - nodes * h))) > LATTICE_TOLERANCE_NM
             or nx != ny
             or nx != 2 * half_width + 1
-            or round(-float(origin[1]) / h) != half_width
+            or int(-nodes[1]) != half_width
         ):
             raise GridFormatError(
                 f"{path.name!r} is not a canonical stage-2 grid: spacing {delta.tolist()} nm, "
                 f"origin {origin.tolist()} nm, shape {tuple(array.shape)}. Stage 2 grids are "
-                "square in (x, y), symmetric about the axis, with one spacing"
+                "square in (x, y), symmetric about the axis, with one spacing, and their nodes "
+                "are integer multiples of it"
             )
-        grid = DensityGrid(
-            spacing_nm=h, half_width=half_width, z_first=round(float(origin[2]) / h), nz=nz
-        )
+        grid = DensityGrid(spacing_nm=h, half_width=half_width, z_first=int(nodes[2]), nz=nz)
         # gridData indexes [x, y, z]; this container indexes [z, y, x].
         values = np.transpose(array, (2, 1, 0)).astype(np.float32)
         return cls(values=values, grid=grid, header={"file": path.name})

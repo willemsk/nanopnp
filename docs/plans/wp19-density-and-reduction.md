@@ -109,6 +109,17 @@ against.
 > a time. 2WCD deposits in 17.0 s and runs stages 1–3 in a 0.47 GB peak, against the ≤ 60 s and
 > < 1.5 GB of [Design §5](#5-runtime-and-memory).
 
+> **Outcome (review, PR #40) — cancellation is per frame, and three gaps closed.** With frames
+> inner, D6's per-slab check left the ClyA-AS run 8 checks in 980 s, about 2 min to honour a
+> cancel. Cancellation and progress are now checked per frame within a slab, and each frame's
+> node indices are computed there, so memory no longer grows with the frame count. Three other
+> changes came out of the review:
+>
+> - A DX or CCP4 file whose origin is off the lattice of its spacing is now refused. Before, it
+>   was rounded onto the lattice, which moved every value by up to h/2.
+> - A non-finite `sharpness` is refused. Before, it crashed in the grid builder.
+> - The radius refusal names the first failing atom in file order.
+
 > **Outcome — two switches exist for the tests alone.** `deposit(float64=True)` keeps the map in
 > float64, for VER-49's 1e-15 closed forms. `reduce_map(detrend=False)` skips D9's detrend, for
 > VER-50's discrimination check. Neither is reachable from a case, and the stage-3 key records

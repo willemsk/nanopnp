@@ -31,7 +31,7 @@ Gaussian separable into three one-dimensional factors, and scattered with
 ``np.bincount`` into one z-slab at a time: never ``np.add.at``, and never a
 full-grid ``minlength``, which cost a prototype 31 s in allocations alone (D6).
 The loops run slabs outer and frames inner, so memory is the float32 map plus one
-float64 slab, whatever the frame count.
+float64 slab and one frame's node indices, whatever the frame count.
 """
 
 from __future__ import annotations
@@ -306,7 +306,7 @@ def deposit(
         the artefact stores (D10), so a test can hold the accumulation itself to
         float64 round-off.
     progress, cancel
-        Reported and checked once per slab.
+        Reported and checked once per frame of each slab.
 
     Raises
     ------
@@ -314,7 +314,7 @@ def deposit(
         If the map is not finite or leaves [0, 1] by more than float32
         round-off, naming the voxel (QR-12).
     nanopnp.core.stages.Cancelled
-        If ``cancel`` turns true between slabs.
+        If ``cancel`` turns true between frames.
     """
     import numpy as np
 
@@ -325,23 +325,32 @@ def deposit(
     planes = max(1, SLAB_CELLS // (n * n))
     result = np.empty(grid.shape, dtype=np.float64 if float64 else np.float32)
 
-    # Each atom's nearest node, as grid indices, and its offset from it in units of h.
-    nodes: list[np.ndarray] = []
-    fractions: list[np.ndarray] = []
     shift = np.array([grid.half_width, grid.half_width, -grid.z_first], dtype=np.int64)
-    for frame in range(frames):
-        scaled = np.asarray(positions_nm[frame], dtype=np.float64) / grid.spacing_nm
-        nearest = np.rint(scaled)
-        nodes.append(nearest.astype(np.int64) + shift)
-        fractions.append(scaled - nearest)
 
     for first in range(0, grid.nz, planes):
         last = min(first + planes, grid.nz)
-        check_cancelled(cancel, f"depositing z planes {first}-{last - 1} of {grid.nz}")
         mean = np.zeros((last - first) * n * n, dtype=np.float64)
         for frame in range(frames):
+            # A slab of an ensemble takes minutes, so cancellation and progress
+            # are per frame within it (FR-27).
+            check_cancelled(
+                cancel,
+                f"depositing frame {frame + 1} of {frames} in z planes {first}-{last - 1} "
+                f"of {grid.nz}",
+            )
+            report(
+                progress,
+                (first + (last - first) * frame / frames) / grid.nz,
+                f"depositing z planes {first}-{last - 1} of {grid.nz}, frame {frame + 1} "
+                f"of {frames}",
+            )
+            # Each atom's nearest node, as grid indices, and its offset from it in
+            # units of h: recomputed per slab, so memory does not grow with frames.
+            scaled = np.asarray(positions_nm[frame], dtype=np.float64) / grid.spacing_nm
+            nearest = np.rint(scaled)
+            node = nearest.astype(np.int64) + shift
+            fraction = scaled - nearest
             total = np.zeros_like(mean)
-            node, fraction = nodes[frame], fractions[frame]
             for stencil in stencils:
                 plane = node[stencil.atoms, 2]
                 reached = (plane + stencil.m >= first) & (plane - stencil.m < last)

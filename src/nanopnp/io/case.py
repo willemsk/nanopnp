@@ -38,6 +38,7 @@ from __future__ import annotations
 import copy
 import difflib
 import itertools
+import math
 import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -1923,10 +1924,11 @@ def _resolve_density(document: CaseDocument) -> DensitySpec | None:
             f"{low}-{high} nm (0.25-0.5 A), because the trans constriction's contour moves with "
             "resolution (section 5.3.1 NOTE on geometry.density)"
         )
-    if not spec.sharpness > 0.0:
+    if not 0.0 < spec.sharpness < math.inf:
         raise CaseValidationError(
             f"geometry.density.sharpness is {spec.sharpness}; it scales each atom's radius to "
-            "its Gaussian width, so it is positive (section 5.3.1 NOTE on geometry.density)"
+            "its Gaussian width, so it is a positive number (section 5.3.1 NOTE on "
+            "geometry.density)"
         )
     return spec
 
