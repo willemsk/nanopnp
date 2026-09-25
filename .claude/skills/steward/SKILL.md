@@ -126,7 +126,7 @@ dependency, or trade off a `CON-`/`QR-` constraint goes to the user first.
 The standing constraints a hurried fix tends to break: corrections are data in
 `data/corrections/*.yaml`, never coefficients in Python; deviations from the validated model go
 behind a flag, default off, and into the FR-25 manifest; `ngsolve`, `netgen` and `numpy` are
-imported inside the function that uses them and nothing else is deferred; no `gmsh` on the default
+imported inside the function that uses them, as is an optional extra's package in a module that must work without it, and nothing else is deferred; no `gmsh` on the default
 path (CON-10); PySide6 never PyQt (CON-09); nothing on the end-user path that needs a compiler
 (CON-07); no `import *`, no `print()`, no `os.path`.
 

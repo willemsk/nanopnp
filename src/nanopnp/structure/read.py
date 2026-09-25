@@ -278,12 +278,16 @@ class AtomTable:
         String arrays; ``chain`` is the chain key of :attr:`Selection.chain_key`.
     resid
         Integer residue numbers.
+    icode
+        Insertion codes, blank where the file has none. Residues 27 and 27A
+        share a number and are told apart only by this.
     """
 
     element: np.ndarray
     name: np.ndarray
     resname: np.ndarray
     resid: np.ndarray
+    icode: np.ndarray
     chain: np.ndarray
 
     def __len__(self) -> int:
@@ -473,6 +477,7 @@ def select(universe: mda.Universe, *, selection: str, chains: str, n: int) -> Se
         name=names,
         resname=resnames,
         resid=resids,
+        icode=icodes,
         chain=key_array,
     )
     return Selection(

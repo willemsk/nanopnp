@@ -303,6 +303,7 @@ def align(
         name=chosen.atoms.name,
         resname=chosen.atoms.resname,
         resid=chosen.atoms.resid,
+        icode=chosen.atoms.icode,
         chain=chosen.atoms.chain,
         header=header,
     )
