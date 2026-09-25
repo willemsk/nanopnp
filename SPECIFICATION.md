@@ -162,6 +162,7 @@ The COMSOL model being replaced, as recorded in the model report and the ESI.
 | NGSolve / Netgen 6.2.2606+ | LGPL-2.1 | FEM backend and default mesher (ADR-001) |
 | Gmsh | GPLv2+ | Optional mesher backend (ADR-002) |
 | MDAnalysis 2.10+ | LGPLv3 | Structure and trajectory input, alignment |
+| gemmi 0.7+ | MPL-2.0 | mmCIF structure input, which MDAnalysis 2.10 does not read (**added 25 September 2026**, WP18) |
 | PDB2PQR 3.7+, PROPKA3 | BSD | Protonation states and partial charges |
 | APBS 3.4.1 | BSD-3 | Poisson-only cross-check |
 | scikit-image, Shapely | BSD-3 | Contour extraction, polyline conditioning |
@@ -366,7 +367,7 @@ until those differences are matched.
 | **CON-06** | The single production FEM backend SHALL be NGSolve/Netgen 6.2.2606+ (LGPL-2.1), behind a thin internal interface sized only to make a future second backend bounded work. |
 | **CON-07** | No component on the end-user execution path SHALL require a C++ compiler, a source build or a JIT toolchain on the end-user machine. |
 | **CON-08** | The distributed wheels are serial-only and ship without MUMPS, and the reference model's PARDISO is equally unavailable; the desktop path SHALL use UMFPACK or scipy SuperLU. |
-| **CON-09** | The core library SHALL be licensed BSD-3-Clause. LGPL dependencies are acceptable under dynamic linking (NGSolve/Netgen LGPL-2.1, MDAnalysis LGPLv3, PySide6 LGPL-3). The field viewer's renderer, npm `webgui` (LGPL-2.1-or-later, bundling three.js under MIT and dat.gui under Apache-2.0), MAY be redistributed with the package, **unmodified and as a separate file** loaded at run time, beside its licence texts and a notice naming its corresponding source, which the repository and the source distribution carry verbatim; nothing in the library SHALL be linked against it. PyQt SHALL NOT be used, being GPL-3 or commercial only. |
+| **CON-09** | The core library SHALL be licensed BSD-3-Clause. LGPL dependencies are acceptable under dynamic linking (NGSolve/Netgen LGPL-2.1, MDAnalysis LGPLv3, PySide6 LGPL-3). MPL-2.0 dependencies are acceptable used unmodified as separate packages (gemmi, the mmCIF reader of the `structure` extra; **added 25 September 2026**). The field viewer's renderer, npm `webgui` (LGPL-2.1-or-later, bundling three.js under MIT and dat.gui under Apache-2.0), MAY be redistributed with the package, **unmodified and as a separate file** loaded at run time, beside its licence texts and a notice naming its corresponding source, which the repository and the source distribution carry verbatim; nothing in the library SHALL be linked against it. PyQt SHALL NOT be used, being GPL-3 or commercial only. |
 | **CON-10** | Gmsh (GPLv2+) SHALL be an optional backend only; the default path SHALL NOT link Gmsh, and the core library SHALL remain functional without it. |
 | **CON-11** | SuiteSparse UMFPACK is GPL-2+, so a bundle defaulting to UMFPACK carries GPL obligations even though the library does not. The core library SHALL remain BSD-3 and SHALL NOT itself depend on UMFPACK; the redistributable bundle SHALL default to UMFPACK, SHALL be distributed under the resulting GPL-2+ obligations and SHALL state them in its licence notice, scipy SuperLU remaining selectable at runtime. **Amended 2 September 2026**, reversing the earlier "SHOULD default to scipy SuperLU with UMFPACK opt-in", on the §6.6 measurement: SuperLU did not factorise the reference-sized problem at all, so a SuperLU-default bundle could not run the published case. |
 | **CON-12** | Meshing components with distribution-restricting licences SHALL NOT be depended upon, specifically Triangle (and MeshPy, which wraps it) and TetGen 1.5 (AGPLv3). |
@@ -819,7 +820,7 @@ CLI and the desktop shell drive the same stage objects (IF-01, IF-02, IF-09).
 
 | # | Stage | Inputs | Outputs | Tools | Validation gate |
 |---|---|---|---|---|---|
-| 1 | Structure ingestion and alignment | PDB/mmCIF, optional trajectory, expected point group | Aligned ensemble; Cₙ axis on z at r = 0 | MDAnalysis 2.10+ (LGPLv3), `AlignTraj`, `rotation_matrix`; MDTraj as alternative reader; PDBFixer or Modeller for missing loops | Oligomeric state matches (ClyA 12, αHL 7, MspA 8); abort on missing chains (FR-03) |
+| 1 | Structure ingestion and alignment | PDB/mmCIF, optional trajectory, expected point group | Aligned ensemble; Cₙ axis on z at r = 0 | MDAnalysis 2.10+ (LGPLv3) for PDB and every trajectory format; gemmi 0.7+ (MPL-2.0) for mmCIF, which MDAnalysis 2.10 does not read; the Kabsch rotation for superposition, cross-checked against MDAnalysis `rotation_matrix`; MDTraj as alternative reader; PDBFixer or Modeller for missing loops | Oligomeric state matches (ClyA 12, αHL 7, MspA 8); abort on missing chains (FR-03) |
 | 2 | Density map | Aligned ensemble, grid spacing, kernel | 3D density map | Vectorised scipy Gaussian deposition over a local stencil, per-atom width from the van der Waals radius, sharpness 0.93; MDAnalysis `DensityAnalysis` for accumulation and units; `gridData` IO; optional `gmx densmap` check | Grid spacing 0.25–0.5 Å (FR-04) |
 | 3 | Symmetry reduction to (r, z) | 3D map, n | (r, z) map; residual azimuthal variance | numpy; `np.bincount` with voxel-volume weights; an in-project probe-radius profile on the aligned structure, `mdahole2` (HOLE) an optional cross-check (§8.2.2 B5) | Variance emitted with the geometry (FR-06, CON-04); radius profile within tolerance of the probe-radius profile |
 | 4 | Contour extraction and conditioning | (r, z) map, isolevel, smoothing and simplification parameters | Closed conditioned polyline | scikit-image, Shapely, scipy (all BSD-3), per §5.2.1 | §5.2.1 (FR-08) |
@@ -836,7 +837,7 @@ Design notes, recorded where an implementer would otherwise choose wrongly.
 
 | Stage | Note |
 |---|---|
-| 1 | The Cₙ axis comes from chain-permutation superposition: superpose chain A onto chain B, take the rotation's eigenvector of eigenvalue 1 (FR-02). Principal axes are unusable, a truncated cone having near-degenerate inertia axes that drift between frames. |
+| 1 | The Cₙ axis comes from chain-permutation superposition: superpose chain A onto chain B, take the rotation's eigenvector of eigenvalue 1 (FR-02). Principal axes are unusable because they drift between frames. Over the 98 frames of the ClyA-AS ensemble, the largest-variance axis of the Cα set moved by up to 1.54° (rms 0.66°), while the chain-permutation axis moved by at most 0.010°. The cause is not degeneracy: the axial eigenvalue is well separated (1432 Å² against 801 and 881 Å² on the first frame). It is the chains' asymmetric fluctuation, which the permutation fit averages out by construction (**measured 25 September 2026**, WP18 plan, Design §4). Stage 1 is specified in full in the §5.3.1 NOTE on `structure:`. |
 | 2 | Histogram plus uniform `gaussian_filter` is rejected: van der Waals-weighted smearing preserves the exclusion surface, uniform post-smoothing rounds the constriction. The grid is not coarsened, the *trans* constriction being about 3.3 nm across with a contour position that moves measurably with resolution. |
 | 3 | The n rotated copies are averaged before azimuthal averaging. Binning is area-weighted over exact annular volumes (about 4 voxels per annulus near r = 0, about 600 at r = 5 nm), innermost 2–3 bins interpolated. A 1° axis error adds about 0.2 nm of apparent radius to a 3.3 nm constriction. |
 | 3, 5 | The bilayer is absent from the density map. It is defined analytically in (r, z) over the hydrophobic belt and fragmented against the pore contour. |
@@ -1124,6 +1125,55 @@ of it on the same chain SHALL be refused, naming both. The upstream one would be
 manifest as an input to a run that never read it. Until the stage that consumes a supplied
 artefact is delivered, the case is refused as an unsupported section, naming that stage.
 
+NOTE (`structure:`, stage 1, FR-01 to FR-03, IF-04; **added 25 September 2026**, WP18):
+`source.path` names a PDB or mmCIF file, optionally gzipped. MDAnalysis reads PDB and gemmi reads
+mmCIF. `source.selection` is an MDAnalysis selection applied to the file. Every selected atom SHALL
+carry its element in the file, in the PDB element columns or the mmCIF `type_symbol`, and a file
+that leaves one blank SHALL be refused naming the atom: a guessed element is how a Cα becomes
+calcium. A selection carrying alternate locations SHALL be refused naming the first, because
+choosing between them is structure preparation, which the pipeline does not do.
+
+A chain is identified by its chain identifier, or by its segment identifier where the chain column
+is blank. `source.chains` is `all` or a list of chain identifiers. `symmetry.point_group` is `C<n>`
+with `n ≥ 1`, and any other group SHALL be refused naming the accepted form. The selected chains
+SHALL number exactly `n`, and a listed chain that is absent SHALL be named (FR-03). Each chain SHALL
+carry at least half the Cα atoms of the most complete chain. Chains SHALL agree in residue name at
+every residue number they share, with the histidine protonation variants read as one name. A
+failure of either SHALL be refused naming the chain.
+
+The ensemble is the frames of `ensemble.trajectory` when one is given, and otherwise the models of
+the source file. `frames.last_ns` keeps the frames within that many nanoseconds of the last one, by
+the times the file records. A value exceeding the recorded span by more than one frame interval
+SHALL be refused naming the span and the interval. A file written without a timestep reads as 1 ps
+or 0 ps per frame, and without this refusal it would yield the whole trajectory in silence.
+`frames.count` keeps `count` frames at the uniform stride `⌊N/count⌋`, ending on the last frame of
+the window of `N` frames. A count exceeding the window SHALL be refused naming both. The selected
+frame indices and their times are recorded as read. Every selected frame is superposed on the Cα
+set of the earliest selected frame (FR-01).
+
+`symmetry.axis: auto` takes the Cₙ axis from the ensemble-mean Cα structure by chain-permutation
+superposition (FR-02). The chains are ordered by azimuth, and the whole assembly is superposed on
+itself with each chain mapped to its neighbour. The axis is that rotation's eigenvector of
+eigenvalue 1, through the Cα centroid. It SHALL refuse the point group, naming the measured
+quantity, when the chains' azimuths are not spaced 360°/n to within a quarter of that spacing, or
+when the rotation angle differs from 360°/n by more than 1°. It SHALL refuse `C1`, which has no
+permutation to superpose.
+
+The axis carries no sign of its own. It is signed to agree with the file's +z, so the structure
+file SHALL point +z from the *trans* side to the *cis* side. A detected axis more than 10° from the
+file's z SHALL be refused, naming the angle, because such a frame does not name an end.
+`symmetry.axis: z` takes the file's z axis through its origin. Where `n ≥ 2`, it SHALL be refused
+when its lateral displacement from the detected axis exceeds 0.01 nm anywhere over the Cα axial
+extent, naming the tilt, the offset and the displacement.
+
+The aligned frame puts the axis on z at r = 0 and keeps the file's axial coordinate, `z = â · x`. So
+`geometry.membrane.centre_z_nm` is read in the frame it is written in, and stage 5 applies that
+shift. The four thresholds above are constants of the code and never case keys. Their derivation
+and the margins measured on 2WCD, 6MRT and the ClyA-AS ensemble are in the WP18 plan, Design §2–§4.
+Until stage 2 is delivered, a walk that extends past stage 1 on a case carrying `structure:` SHALL be
+refused as an unsupported section naming stage 2. Stage 1 alone runs through the stage command
+(IF-02).
+
 NOTE (`inputs.charge`, `inputs.eps_r`, IF-05, IF-03): a supplied field is named by a
 pydantic-validated header document, `schema: nanopnp/field/v1`, which carries the `quantity`, its
 units, the grid descriptor (origin, spacing, shape), the axis cutoff of PHY-18 (default 0.01 nm),
@@ -1260,7 +1310,7 @@ when the plan is built, naming the axis, rather than collecting a column of abse
 
 | Stage | Artefact | Format |
 |---|---|---|
-| 1 | Aligned ensemble, axis transform | Trajectory (DCD, XTC, TRR, NetCDF) plus transform record (IF-04) |
+| 1 | Aligned ensemble: coordinates in nm, atom table (element, name, residue, chain) and axis-transform record | Native `.npz` (float32 coordinates) with its header record; exported as a PDB topology with a DCD trajectory (IF-04). **Amended 25 September 2026** (WP18) from "trajectory plus transform record": a trajectory file carries no atom table and no gate record |
 | 2, 3, 7 | Density map, reduced (r, z) map and variance, ρ_pore, dielectric and exclusion fields | OpenDX or CCP4 via GridDataFormats (LGPL) (IF-05) |
 | 4 | Conditioned polyline | Vertex table |
 | 5 | Tagged (r, z) region | OCC BRep plus tag map |

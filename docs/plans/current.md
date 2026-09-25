@@ -1,6 +1,6 @@
 # Current work
 
-Updated 24 September 2026. Navigation only: `SPECIFICATION.md` governs. Check the
+Updated 25 September 2026. Navigation only: `SPECIFICATION.md` governs. Check the
 requested branch and its WP status before resuming; this brief is not evidence that
 an unmerged branch has shipped.
 
@@ -11,12 +11,12 @@ an unmerged branch has shipped.
   outstanding on the author's exports (C1), and so is the 12-core reference sweep (C2). Each lands
   as an addendum to that report.
 - Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **in progress**: WP17 is
-  delivered and WP18–WP25 are planned (rulings B1–B7, §8.2.2). B1 was met when the double-click
-  was recorded (the NOTE to §8.2.1), closing Phase 0 criterion 4 and RSK-13.
-- **WP17** ([case schema v2 and the 3.11 floor](wp17-case-schema-v2.md)) is **delivered** on
-  `claude/wp-plan-17-211905`, PR [#38](https://github.com/willemsk/nanopnp/pull/38), ready for
-  `/wp-ship`; tag `v0.9.0-alpha.1` on merge.
-- **Next:** `/wp-plan 18` (structure ingestion, stage 1), on the merged v2 schema.
+  merged, WP18 is planned in detail, and WP19–WP25 are planned (rulings B1–B7, §8.2.2).
+- **WP17** merged as PR [#38](https://github.com/willemsk/nanopnp/pull/38). **Its tag
+  `v0.9.0-alpha.1` is not yet on origin** (`CONTRIBUTING.md`, *Versions and releases*).
+- **WP18** ([structure ingestion, stage 1](wp18-structure-ingestion.md)) is **planned, not
+  started**, on `claude/wp-plan-18-2f2174`. **Next:** `/wp-implement` on that branch; tag
+  `v0.9.0-alpha.2`.
 
 ## What Phase 2 must not re-decide
 
@@ -30,16 +30,17 @@ Each item is recorded in full where it points. Read it there first.
 - **`physics.solid_permittivities` is the only place ε_protein and ε_membrane are set**, and contour
   tuning parameters and gate thresholds are never case keys (author rulings, 24 September 2026).
   → WP17 D2, D3.
-- **Python 3.11–3.14.** QR-09 is amended, and `pyproject.toml`, the CI matrix and the IF-05 NOTE
-  follow it; VER-47 holds them together. → §8.2.2 B4.
+- **Python 3.11–3.14**, held together by VER-47. → §8.2.2 B4.
 - **VAL-05 has two legs**: vendored 2WCD, gated at Tier 2; the author's ensemble, Tier 3, which the
   phase gate requires. → §8.2.2 B2; §7.4.
-- **No HOLE on the default path**: the radius profile is an in-project probe-radius profile.
-  → §8.2.2 B5; §5.2.1.
-- **The contour script is read before WP20 is planned.** → §8.2.2 B6; OPN-02; RSK-06.
-- **Gmsh arrives in WP23, optional; FR-20 is Phase 3's.** → §8.2.2 B7.
+- **No HOLE on the default path** (B5). **The contour script is read before WP20 is planned**
+  (B6). **Gmsh arrives in WP23, optional, and FR-20 is Phase 3's** (B7). → §8.2.2.
 - **Stage 4 emits `nanopnp/profile/v1`** and stage 3 fills `RadialGrid`: the existing schemas.
   → phase plan, Design decisions.
+- **Stage 1's frame is fixed.** The axis is on z at r = 0, and `z = â·x` keeps the file's axial
+  coordinate. +z is the file's +z, which must point to *cis*. Stage 5 applies `centre_z_nm`. The
+  van der Waals radius belongs to stage 2. mmCIF is read by gemmi. → the §5.3.1 NOTE on
+  `structure:`; WP18 D2, D8, D10.
 
 ## Inherited from Phase 1, still binding
 
@@ -54,8 +55,11 @@ Each item is recorded in full where it points. Read it there first.
 
 ## What is still somebody else's
 
-- **The G9 axial offset** and the **ensemble archive** (format, frames, lipids) for VAL-05. The
-  author's, before WP22.
+- **The G9 axial offset**, and **the ensemble's frame spacing and the paper's 50 frames**, for
+  VAL-05. They are the author's, before WP22. The archive is `prod5_clya_as.{pdb,dcd}`: 98 frames,
+  protein only, with no time metadata. The MD frame suggests G9 ≈ 0 (`.knowledge/04` §1.1).
+- **The van der Waals radius set** of the original density map. The author's, before WP19; the
+  contour script may carry it (B6).
 - **The COMSOL exports** (WP13), against
   [`docs/validation/comsol-export-contract.md`](../validation/comsol-export-contract.md). Until they
   land every report carries `golden_source: self`, and Tier 3 skips the archive comparison visibly.
@@ -76,9 +80,8 @@ Each item is recorded in full where it points. Read it there first.
 | Case schema, dotted paths and option sets | `SPECIFICATION.md` §5.3.1 and its NOTEs; `io/case.py` |
 | Shell, packaging and licence constraints | ADR-004, CON-07, CON-09, CON-10, CON-11; `.knowledge/07-software-stack.md` §5–§6 |
 
-Their own Outcomes later corrected some decision-table claims, so don't read these as current:
-WP13's telescoping identity catching a stale golden, and its per-field export; WP15's D1 `rung`
-signature, D3's single reason for a silent rung, D6's knowable closing test, and D13's CDN.
+A delivered plan's Outcomes override its decisions table; read them together (WP13 and WP15
+especially).
 
 ## Handoff Rules
 
