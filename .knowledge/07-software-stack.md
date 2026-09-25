@@ -263,6 +263,13 @@ with scratch prototypes while planning WP19. They are not the implementation, an
   unchanged, because a `<U` array treats trailing NULs as padding. So a `"\x00"` separator between
   residue and atom names silently vanishes, and `ALA`+`CA` reads `ALACA`. Use a printable separator
   that no name contains, such as a tab.
+- **The ClyA-AS ensemble through stages 2 and 3.** This is `prod5_clya_as`, DCD frames 48–97:
+  54,075 atoms, 27,134 of them hydrogens, on a 339 × 293 × 293 grid. The 50 depositions took
+  980.6 s, 19.6 s a frame, and stage 3 took 9.9 s. The session peaked at 0.56 GB. The largest C12
+  variance is 0.171, at r = 4.70 nm and z = 6.55 nm. The largest non-C12 variance is 0.088, at
+  r = 2.00 nm and z = −1.70 nm, inside the lumen. That is nine times the crystal's 9.5e-3, which
+  is consistent with the ensemble's chains fluctuating independently. The cause is not measured
+  (`tests/tier3/test_density_ensemble.py`).
 - **The CHARMM radius set against 2WCD.** All 26,844 atoms resolve, with radii of 0.170 to
   0.2275 nm. Its 216 `ILE CD1` resolve through the alias to `CD`, and its 120 `HIS` atoms because
   HSD, HSE and HSP agree on every heavy atom. `CHARMM.DAT` in PDB2PQR 3.7.1 holds 2,587 entry

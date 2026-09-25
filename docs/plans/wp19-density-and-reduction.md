@@ -208,6 +208,28 @@ uv run pytest -m tier3 tests/tier3/test_density_ensemble.py -v
 .claude/hooks/gate.sh run
 ```
 
+> **Outcome — delivered as tabled, with one test added.** `test_density.py` holds 29 tests and
+> `test_reduction.py` 33, and both Tier-2 tests pass. `.claude/hooks/gate.sh run` passed on
+> 25 September 2026. The measured numbers are in `.knowledge/07` §2. What moved:
+>
+> - **VER-50's invariance test gained a 15° turn.** A 30° turn is one of the assembly's own
+>   symmetries, so it agrees to the float32 rounding and tests nothing about the grid. A 15° turn
+>   moves the mean by 5.5e-4 and each variance by 0.26 % of its 0.175 peak. It is asserted against
+>   the off-axis test's 1e-3 for the mean, and against 1 % of the peak for each variance, which is
+>   inside that test's 2 %.
+> - **The undetrended 2 nm ring reads 1.17e-4 to 2.3e-4** across the widths and orders, against
+>   the plan's 1.9e-4. The 1e-4 floor that makes the test discriminating still holds.
+> - **The OpenDX round trip allows 5e-7 + 2⁻²⁴**, because the float32 map is rounded again on
+>   read. CCP4 and MRC are exact once the spacing is read at `%.7g`.
+> - **2WCD: 17.0 s and 6.9 s for stages 2 and 3, at a 0.47 GB peak.** The slice integrals are
+>   conserved to 6.1e-16, and the axis bin is empty over the central 80 % of the Cα extent.
+> - **Tier 3, the ClyA-AS ensemble: DCD frames 48–97 exactly.** 54,075 atoms, 27,134 of them
+>   hydrogens, on a 339 × 293 × 293 grid. Stage 2 took 980.6 s, 19.6 s a frame, inside the
+>   predicted 15–25 min; part of the run shared the machine with the gate. Stage 3 took 9.9 s, and
+>   the session peaked at 0.56 GB. The largest C12 variance is 0.171, at r = 4.70 nm and
+>   z = 6.55 nm. The largest non-C12 variance is 0.088, at r = 2.00 nm and z = −1.70 nm, inside
+>   the lumen and nine times the crystal's. WP22 records the variance along the contour.
+
 ### Out of scope
 
 - **Contour, probe-radius profile and the FR-08 gate** go to WP20. **VAL-05** and the isolevel
