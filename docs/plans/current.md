@@ -12,8 +12,8 @@ an unmerged branch has shipped.
   as an addendum to that report.
 - Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **in progress**: WP17 is
   merged, WP18 is planned in detail, and WP19–WP25 are planned (rulings B1–B7, §8.2.2).
-- **WP17** merged as PR [#38](https://github.com/willemsk/nanopnp/pull/38). **Its tag
-  `v0.9.0-alpha.1` is not yet on origin** (`CONTRIBUTING.md`, *Versions and releases*).
+- **WP17** merged as PR [#38](https://github.com/willemsk/nanopnp/pull/38), tagged
+  `v0.9.0-alpha.1`.
 - **WP18** ([structure ingestion, stage 1](wp18-structure-ingestion.md)) is **planned, not
   started**, on `claude/wp-plan-18-2f2174`. **Next:** `/wp-implement` on that branch; tag
   `v0.9.0-alpha.2`.
