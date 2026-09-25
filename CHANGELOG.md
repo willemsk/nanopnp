@@ -32,7 +32,9 @@ WP18: structure ingestion, alignment and the Cₙ axis, pipeline stage 1.
 - The oligomeric state is checked (FR-03). A blank element, an alternate location, a chain count
   other than the point group's n, a missing listed chain, a chain under half the most complete one's
   C-alpha, and a residue-name disagreement between chains are each refused, naming the atom or the
-  chain (QR-12).
+  chain (QR-12). So are a selection MDAnalysis cannot parse, a trajectory that does not hold the
+  structure's atoms, and an mmCIF model whose atoms are not model 1's in order. The element and
+  alternate-location refusals apply to the chains `source.chains` lists.
 - Symmetry gates on the axis: the chains' spacing, the cyclic rotation angle, and a 10° limit
   between the axis and the file's z, whose +z must point to *cis*. `symmetry.axis: z` is admitted
   only within 0.01 nm of the detected axis (§5.3.1 NOTE on `structure:`).

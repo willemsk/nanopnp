@@ -168,7 +168,9 @@ class AlignedEnsemble:
 
         keys = list(zip(self.chain.tolist(), self.resid.tolist(), strict=True))
         starts = [0] + [index for index in range(1, len(keys)) if keys[index] != keys[index - 1]]
-        resindex = np.cumsum([index in set(starts) for index in range(len(keys))]) - 1
+        boundary = np.zeros(len(keys), dtype=int)
+        boundary[starts] = 1
+        resindex = np.cumsum(boundary) - 1
         universe = mda.Universe.empty(
             self.atoms,
             n_residues=len(starts),
