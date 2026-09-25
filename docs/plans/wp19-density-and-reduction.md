@@ -165,7 +165,7 @@ against.
 | `test_stages.py`, `test_cli.py`, `test_manifest.py`, `test_case_schema*.py` (existing) | 1 | VER-25, VER-32, VER-24, VER-45 | Registry names; modules not imported by a listing; the new errors classified; the reasons updated; the `geometry:` refusal tests moved to D2 | — |
 | `tests/tier2/test_density_2wcd.py::test_ver49_ver50_2wcd_to_stage_three` | 2 | VER-49, VER-50 | `run_case(upto="symmetry")` on `prepared_2wcd`: every atom resolves; bounds; conservation; `cn ≤ raw + 1e-4`; lumen open (`μ(0, z) < 0.25` over the central 80 % of the Cα extent); runtimes logged | Conservation 1e-9 relative. The rest are inequalities |
 | `…::test_ver49_2wcd_budget` (`slow`) | 2 | VER-49 | Wall-clock and peak RSS of stages 2 and 3 | Recorded, never gated. Predicted ≤ 60 s and < 1.5 GB ([Design §5](#5-runtime-and-memory)) |
-| `tests/tier3/test_density_ensemble.py::test_ver50_clya_as_ensemble` | 3 | VER-49, VER-50 | All 98 frames of `prod5_clya_as` to stage 3. Records runtime, memory, and the maximum Cₙ and non-Cₙ variance with their (r, z). Skips without the archive | Recorded |
+| `tests/tier3/test_density_ensemble.py::test_ver50_clya_as_ensemble` | 3 | VER-49, VER-50 | `prod5_clya_as` with `frames: {count: 50}` to stage 3. Stride ⌊98/50⌋ = 1 ending on the last frame gives DCD frames 48–97, the paper's final 5 ns (`.knowledge/04` §1.1); the test asserts those indices. Records runtime, memory, and the maximum Cₙ and non-Cₙ variance with their (r, z). Skips without the archive | Indices exact; the rest recorded |
 
 ```bash
 uv run pytest tests/tier1/test_density.py tests/tier1/test_reduction.py -v
@@ -329,5 +329,5 @@ the stencil batch, plus stage 3's per-slab detrend: under 1.5 GB.
 
 The harmonics cost `K_max ≈ π · 6.8/(12 · 0.05) ≈ 35` sparse products with 1.5e5 nonzeros over
 340 slices, a few seconds. Stage 2 is therefore predicted at ≤ 60 s for 2WCD at 0.05 nm. The
-ensemble costs 98 depositions: about 25–50 min at Tier 3, with hydrogens adding about half again.
-An n-copy average would have cost 12 times that: over 5 h for the ensemble.
+paper's 50-frame ensemble costs 50 depositions: about 15–25 min at Tier 3, with hydrogens adding
+about half again. An n-copy average would have cost 12 times that: 3–5 h.
