@@ -1,6 +1,6 @@
 # WP18 — Structure ingestion, alignment and the Cₙ axis (stage 1)
 
-**Status: planned, not started.** Written 25 September 2026. It builds on WP17, merged
+**Status: delivered, 25 September 2026.** Written 25 September 2026. It builds on WP17, merged
 25 September 2026 as PR #38 and tagged `v0.9.0-alpha.1`. WP18 inherits:
 
 - the `nanopnp/case/v2` `structure:` block and its keys (`source.path`, `selection`, `chains`,
@@ -80,6 +80,49 @@ oracles.
 | D15 | Public API | No new `nanopnp.__all__` name. The stage is reached through the registry, and WP25 decides what to document | IF-01 NOTE; `test_public_api.py` makes adding a name a decision |
 | D16 | Vendored 2WCD | The wwPDB entry goes in as `tests/data/structures/2wcd.pdb.gz` and `2wcd.cif.gz`, byte-for-byte as downloaded, with a README giving the URL, date, sha256 and CC0. Add `tests/data/** -text` to `.gitattributes`. It is shared with the WP22 Tier-2 leg | B2. The file digest enters the stage-1 key, and a CRLF rewrite would move it (`.knowledge/07` §14) |
 
+> **Outcome — D16's entry is not the file Design §4 measured.** The wwPDB 2WCD holds two
+> dodecamers, chains A–L and M–X (24 × 285 Cα), in the crystal frame. Their axes are 22.92° and
+> 22.98° from z, and +z points to *trans*. The "2WCD" column of Design §4 is the author's
+> `md_data/2wcd.pdb`. That file is chains A–L moved rigidly and flipped (RMSD 1.0e-4 nm), and
+> stage 1 reproduces every number in the column on it (29.99896°, 0.193°, 0.0262 nm, tilt 0.047°,
+> `axis: z` displacement 0.0062 nm). D16 stands: the bytes are the wwPDB's. Stage 1 refuses the
+> deposited frame by the 10° rule, and a Tier-1 test holds that refusal. The stage-one test moves
+> chains A–L rigidly at test time, *cis* up by the cap's width, then tilts them 4° and shifts them.
+> The stage recovers the 4° to 1e-6. The §5.3.1 NOTE says so (`.knowledge/04` §1.1). **For WP22:**
+> the Tier-2 VAL-05 leg of B2 needs this 2WCD in an admitted frame. Preparing it is outside the
+> pipeline, so WP22 decides how: at test time, as here, or as a vendored derived file with its
+> transform.
+
+> **Outcome — D7's dihedral case is refused by the spacing gate, not the angle gate.** For an exact
+> D6, the chain-0 rotations sum to zero: `6 ẑẑᵀ` from the turns and `−6 ẑẑᵀ` from the two-folds.
+> The ordering axis is then arbitrary, and the spacing gate fires, with a worst gap 281° off
+> nominal. The angle gate's case is a ring of 12 chains exactly 30° apart whose own orientation
+> turns at a quarter of the ring's rate. Its spacing error is 0.001° and its cyclic turn 28.07°.
+> Both are in `test_ver48_gates_fire` (`.knowledge/07` §2).
+
+> **Outcome — `source.chains` is a comma-separated string.** The v2 key is typed `str`, so a YAML
+> list would fail validation, and widening the type is not needed. The §5.3.1 NOTE now reads
+> "`all` or a comma-separated list", and `resolve()` refuses a list that is empty, repeats an
+> identifier or does not number `n`. `resolve()` also refuses `auto` on C1, a non-positive
+> `last_ns` and a `count` below 1, so a sweep is refused at plan build.
+
+> **Outcome — two refusals the plan implied, now written.** `structure:` beside `inputs.mesh` is
+> refused naming both (a `CaseValidationError` in `resolve()`, by the `inputs:` NOTE's
+> upstream rule). `axis: z` applies the spacing, angle and orientation gates to the detected axis
+> before its displacement budget. Both sentences are in the §5.3.1 NOTE.
+
+> **Outcome — D10's header lives in the `.npz` and the summary; D13's export imports lazily.**
+> `AlignedEnsemble` keeps its header as a JSON string inside the `.npz` and as the artefact summary,
+> with `payload_digest` beside it. Reading needs NumPy alone. `export()` imports MDAnalysis where
+> it is used, so a later stage or the GUI opens an ensemble without the extra. `MissingExtraError`
+> is an `ImportError`, and the VER-32 class walk gained that root. The generated case reference
+> prints each field's `description`, so the `structure:` fields carry the NOTE into the docs
+> (`field_description` in `io/case.py`).
+
+> **Outcome — D14's record is under `geometry_and_mesh.structure`.** A run that stops at stage 1
+> records it beside a `not run` mesh status. The Inputs group gains `structure` and `trajectory`
+> file digests.
+
 ### Work items
 
 1. **Dependencies and data** (D2, D16). Run `uv add --optional structure "gemmi>=0.7"`, add a mypy
@@ -146,6 +189,28 @@ uv run pytest tests/tier1/test_structure_axis.py tests/tier1/test_structure_stag
 uv run pytest -m tier3 tests/tier3/test_structure_ensemble.py -v
 .claude/hooks/gate.sh run
 ```
+
+> **Outcome — delivered as tabled, with four numbers moved.** The two new Tier-1 files hold 43
+> tests: 13 in `test_structure_axis.py` and 30 in `test_structure_stage.py`. They pass, and so does
+> the default selection of 1,149 (`.claude/hooks/gate.sh run`, 25 September 2026). What moved:
+>
+> - **TRR is not exact.** It stores float32 nanometres, so the ångström conversion costs two ulps
+>   (1.1e-6 nm at 13 nm). The test allows 3.1e-6 nm for TRR and 5e-4 + 3.1e-6 nm for XTC, which
+>   is half its quantum plus the same round-off (`.knowledge/07` §2).
+> - **The `last_ns` window is inclusive.** At 5 ps per frame, `last_ns: 1` takes frames 799–999,
+>   including the frame exactly 1 ns before the last. `count: 3` on 1,000 frames takes 333, 666 and
+>   999.
+> - **The σ = 0.02 nm synthetic beat its prediction.** The permutation displacement was 0.0014 nm,
+>   not ≈ 0.003. The principal axis nearest the truth was 35.5° off and 3.19 nm away.
+> - **Tier 3 recorded against a different reference.** On `prod5_clya_as`, all 98 frames pass. The
+>   turn is 29.9954°, the worst spacing 0.679°, the permutation RMSD 0.136 nm, and the tilt 0.695°
+>   with a 0.0775 nm offset. Frame RMSD to frame 0 is 0.095–0.219 nm. Each frame's axis lies within
+>   0.0163° of the **ensemble-mean** axis. Design §4's ≤ 0.010° compared the frames with one
+>   another. The output re-detects z through r = 0, with a tilt of 0.0° and an offset of 3e-15 nm
+>   (`.knowledge/04` §1.1).
+>
+> The coverage line of Appendix A was recounted to 50 of 67. The line it replaced said 45/22, but
+> the table held 46/21 before VER-48.
 
 ### Out of scope
 

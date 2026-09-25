@@ -1,6 +1,6 @@
 # Phase 2 (Geometry pipeline): from a structure to a gated mesh
 
-**Status: in progress. WP17 delivered, 24 September 2026; WP18 planned in detail, 25 September 2026; WP19–WP25 planned.** Written 24 September 2026, after Phase 1 (WP7–WP16) delivered the
+**Status: in progress. WP17 delivered, 24 September 2026; WP18 delivered, 25 September 2026; WP19–WP25 planned.** Written 24 September 2026, after Phase 1 (WP7–WP16) delivered the
 solver core on an externally supplied mesh (main at `v0.5.0-alpha.10`). Two things come first:
 the Phase 1 end-of-phase report, which merges as tag `v0.5.0`, and the author's double-click
 observation that closes Phase 0 criterion 4. That ordering is ruling B1 of `SPECIFICATION.md`
@@ -146,6 +146,20 @@ missing; each trajectory format reads; a rigidly moved frame superposes to zero 
 > structure`, and a full walk is refused naming stage 2 until WP19. The sign of the axis follows
 > the file's +z, gated at 10° (author ruling). The §5.3.1 NOTE on `structure:` is the stage's
 > contract.
+
+> **Delivered, 25 September 2026** ([plan](wp18-structure-ingestion.md), to be tagged
+> `v0.9.0-alpha.2`). Stage 1, `structure`, reads PDB, mmCIF (through gemmi) and the four trajectory
+> formats. It superposes the selected frames and puts the permutation Cₙ axis on z at r = 0. It
+> emits `nanopnp/structure/v1`, and the manifest records it. VER-48 discharges IF-04, FR-01, FR-02
+> and FR-03, and adds to QR-12. The registry names a missing extra (`MissingExtraError`, FR-27).
+> Constraints inherited by later packages:
+>
+> - A walk or sweep past stage 1 is refused naming stage 2, and WP19 lifts that through
+>   `refuse_walk` in `io/case.py`.
+> - `structure:` beside `inputs.mesh` is refused.
+> - The deposited 2WCD is in its crystal frame, 22.9° from z, and stage 1 refuses it. **WP22's
+>   Tier-2 VAL-05 leg needs it in an admitted frame**, as the stage-one test prepares it (the WP18
+>   D16 Outcome; `.knowledge/04` §1.1).
 
 ### WP19 — Density map and symmetry reduction (stages 2 and 3)
 
