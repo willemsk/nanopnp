@@ -45,6 +45,12 @@ The first work package of Phase 2 and its one breaking change.
   beside `inputs.mesh`, are refused naming both. `inputs.profile` and `inputs.pqr` are refused,
   naming the stage that will read them (FR-27).
 
+### Fixed
+
+- A Windows checkout keeps the bytes of `data/`. With `core.autocrlf` it rewrote the correction
+  file's line endings, so the file hashed to another version and the materials key differed from
+  every other platform's (FR-25, VER-47).
+
 ## [0.5.0] - 2026-09-24
 
 **Phase 1, the solver core.** The verified Phase 0 physics becomes a product that others can run
