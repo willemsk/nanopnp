@@ -6,17 +6,14 @@ an unmerged branch has shipped.
 
 ## Position
 
-- Phase 1 ([solver core](phase-1-solver-core.md)) is **closed**: WP7–WP16, and the end-of-phase
-  report, released as `v0.5.0` under `SPECIFICATION.md` §8.2.3. The COMSOL attribution is
-  outstanding on the author's exports (C1), and so is the 12-core reference sweep (C2). Each lands
-  as an addendum to that report.
+- Phase 1 ([solver core](phase-1-solver-core.md)) is **closed** as `v0.5.0` (§8.2.3). The COMSOL
+  attribution (C1) and the 12-core reference sweep (C2) land as addenda to its report.
 - Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **in progress**: WP17 is
-  merged, WP18 is planned in detail, and WP19–WP25 are planned (rulings B1–B7, §8.2.2).
-- **WP17** merged as PR [#38](https://github.com/willemsk/nanopnp/pull/38), tagged
-  `v0.9.0-alpha.1`.
-- **WP18** ([structure ingestion, stage 1](wp18-structure-ingestion.md)) is **planned, not
-  started**, on `claude/wp-plan-18-2f2174`. **Next:** `/wp-implement` on that branch; tag
-  `v0.9.0-alpha.2`.
+  merged (PR [#38](https://github.com/willemsk/nanopnp/pull/38), `v0.9.0-alpha.1`), WP18 is
+  delivered on its branch, and WP19–WP25 are planned (rulings B1–B7, §8.2.2).
+- **WP18** ([structure ingestion, stage 1](wp18-structure-ingestion.md)) is **delivered** on
+  `claude/wp-plan-18-2f2174`, with its PR open and independent review pending. **Next:**
+  `/wp-ship` in a fresh session; after merge, tag `v0.9.0-alpha.2`; then `/wp-plan 19`.
 
 ## What Phase 2 must not re-decide
 
@@ -41,6 +38,10 @@ Each item is recorded in full where it points. Read it there first.
   coordinate. +z is the file's +z, which must point to *cis*. Stage 5 applies `centre_z_nm`. The
   van der Waals radius belongs to stage 2. mmCIF is read by gemmi. → the §5.3.1 NOTE on
   `structure:`; WP18 D2, D8, D10.
+- **`refuse_walk`** (`io/case.py`) stops runs and sweeps past the last delivered stage; WP19
+  extends it. → WP18 D1.
+- **The vendored 2WCD is in its crystal frame**, 22.9° from z, and stage 1 refuses it; WP22's
+  Tier-2 leg must orient it, as the stage-one test does. → WP18 D16 Outcome.
 
 ## Inherited from Phase 1, still binding
 
@@ -63,8 +64,7 @@ Each item is recorded in full where it points. Read it there first.
 - **The COMSOL exports** (WP13), against
   [`docs/validation/comsol-export-contract.md`](../validation/comsol-export-contract.md). Until they
   land every report carries `golden_source: self`, and Tier 3 skips the archive comparison visibly.
-  They include the author's two declarations: the `tds.ntflux_i` boundary and the current's
-  reference electrode.
+  They include the `tds.ntflux_i` boundary and the current's reference electrode.
 - **The Read the Docs project** (slug `nanopnp`) and **`$NANOPNP_REFERENCE_DATA` on the nightly
   runner**.
 
