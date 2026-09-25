@@ -53,6 +53,20 @@ not deviate materially from 2WCD or the cryo-EM 6MRT; mean lumen diameter is **6
 corrugations included), whereas the frequently quoted **5.5 nm** is the largest protein that fits
 without touching the wall.
 
+### 1.1 The author's MD archive, measured [tested]
+
+Measured on 25 September 2026. The archive is held locally by the author at
+`~/repos/will2018-data/md_data/`. It is not vendored; Tier 3 reads it through
+`NANOPNP_REFERENCE_DATA`.
+
+| Item | Measured |
+|---|---|
+| `prod5_clya_as.pdb` | 54,075 atoms, all protein and hydrogens included: no lipids, waters or ions. Chains A–L, with the chain identifier equal to the segment identifier. Residues 7–292, 286 Cα per chain, histidines as `HSE`. Elements present in the file. Written by MDAnalysis |
+| `prod5_clya_as.dcd` | **98 frames. The time metadata reads 1.0 ps per frame**, a 0.097 ns span, which is the default of a DCD written without a timestep and cannot be the true spacing. The author recalls the span as about 10 ns (≈100 ps per frame). Which frames made the paper's 50-frame ensemble is unresolved (G1) |
+| Also present | `2wcd.pdb` (12 × 285 Cα, residues 8–292, protein only), `6mrt.pdb`, and a `prod5_trajectory_last_10ns.7z`. `radius_comparison/2wcd_h.pdb` is 2WCD **flipped** (+z at the narrow *trans* end) |
+| Frame orientation | The Cₙ axis is 0.69° from the file's z in the MD frame, through (0.35, 0.02) Å. It is 0.047° from z in 2WCD and 0.006° in 6MRT. In all three the wide *cis* cap lies at +z |
+| Axial placement | The Cα centroid is at z = 56.3 Å (MD) and 57.0 Å (2WCD), which matches G9's "(0, 0, 55 Å)". The MD all-atom extent is z = −2.28 to 12.52 nm, bracketing the model's pore extent of −1.85 to 12.25 nm by 0.43 and 0.27 nm. That suggests the MD frame is already close to the model frame (`centre_z_nm` ≈ 0). This is an inference, not a ruling; see G9 |
+
 ---
 
 ## 2. Model geometry and conventions
@@ -360,7 +374,10 @@ to ~25 %, as expected for a partly flattened profile. Treat both as loose target
   centred at z = 0 (spanning -1.4 to +1.4 nm) is the obvious reading, but it is an inference.
   Compounding this, the MD/electrostatics frame places the structure's centre of mass at
   (0, 0, 55 Angstrom) (TA `eq:internal_radius` discussion) — the shift from MD coordinates to model
-  coordinates is not given anywhere.
+  coordinates is not given anywhere. **Evidence, 25 September 2026 (§1.1):** the protein-only MD
+  archive carries no lipids, so the bilayer cannot fix it. But the MD frame's all-atom extent
+  brackets the model's pore extent to within 0.3–0.4 nm at each end, which is consistent with an
+  offset near zero. Still the author's to confirm.
 - **G10 — CLOSED [tested], §3.1.** `r` in [0, 7] nm, `z` in [-3.5, 13.5] nm at 0.005 nm:
   1401 x 3401 = 4.76e6 nodes, the order the estimate predicted.
 - **G11 — nothing on mesh or solver tolerances.** See §4 and §5. No convergence study of any kind is

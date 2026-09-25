@@ -1,6 +1,6 @@
 # Phase 2 (Geometry pipeline): from a structure to a gated mesh
 
-**Status: in progress. WP17 delivered, 24 September 2026; WP18–WP25 planned.** Written 24 September 2026, after Phase 1 (WP7–WP16) delivered the
+**Status: in progress. WP17 delivered, 24 September 2026; WP18 planned in detail, 25 September 2026; WP19–WP25 planned.** Written 24 September 2026, after Phase 1 (WP7–WP16) delivered the
 solver core on an externally supplied mesh (main at `v0.5.0-alpha.10`). Two things come first:
 the Phase 1 end-of-phase report, which merges as tag `v0.5.0`, and the author's double-click
 observation that closes Phase 0 criterion 4. That ordering is ruling B1 of `SPECIFICATION.md`
@@ -62,7 +62,7 @@ its decisions table.
 | Decision | Choice | Why |
 |---|---|---|
 | Order of evidence | Every stage is verified on a synthetic input with a closed form before it sees 2WCD, and on 2WCD before the ensemble | §7.1: an analytic test localises an error to one stage. A VAL-05 miss seen first localises nothing |
-| Stage artefacts | Stage 1: aligned coordinates, atom table (element, van der Waals radius, chain, residue) and the axis transform record. Stage 2: the 3D map, native `.npz` float32, with OpenDX/CCP4 export through GridDataFormats (IF-05). Stage 3: a `RadialGrid` map plus its variance grid. Stage 4: `nanopnp/profile/v1`, `source: pipeline`, carrying the conditioning record. Stage 5: a declarative region record (profile hash, membrane, reservoir) that rebuilds the OCC region deterministically, rather than a BRep blob. Stage 6: MSH 4.1 | §5.3.2. Reusing `RadialGrid` and the profile schema keeps one reader per artefact. A region record hashes by content, where a BRep's bytes need not be stable |
+| Stage artefacts | Stage 1: aligned coordinates, atom table (element, chain, residue) and the axis transform record. The van der Waals radius moved to stage 2 (WP18 D10, 25 September 2026): it is a density-kernel parameter, so it belongs in stage 2's key. Stage 2: the 3D map, native `.npz` float32, with OpenDX/CCP4 export through GridDataFormats (IF-05). Stage 3: a `RadialGrid` map plus its variance grid. Stage 4: `nanopnp/profile/v1`, `source: pipeline`, carrying the conditioning record. Stage 5: a declarative region record (profile hash, membrane, reservoir) that rebuilds the OCC region deterministically, rather than a BRep blob. Stage 6: MSH 4.1 | §5.3.2. Reusing `RadialGrid` and the profile schema keeps one reader per artefact. A region record hashes by content, where a BRep's bytes need not be stable |
 | Model frame | z = 0 at the membrane centre. The structure maps to the model frame by the FR-02 axis plus `geometry.membrane.centre_z_nm`, a v2 key in the structure's own frame, measured along the axis. Its default, 0, is the OPM convention for membrane-protein coordinate files | Closes gap G9 generically. ClyA's own value is the author's to give (open decision G9) |
 | Membrane inner edge | Derived, not configured: the chord between the pore body's radial mid-points on `z = ±t/2`, gated to lie strictly inside the body. The reference fixture keeps its (2.0, 3.5) corners | §5.2.1 NOTE: the assembled membrane is the quadrilateral minus the body, so any edge strictly inside the body yields the same region. A configurable edge would be a knob with no effect when right and a gap or overlap when wrong |
 | Structure preparation | Out of scope. The pipeline consumes a prepared structure and records `structure.source.variant` and the chain set (OPN-04) | FR-01 says ingest, not prepare. PDBFixer brings OpenMM onto the end-user path for a step the author performed by hand in the source work |
@@ -139,6 +139,13 @@ is registered and `run_case` runs it. Adds **VER-48**: a synthetic Cₙ assembly
 tilted and offset axis recovers that axis to a stated angle, and a principal-axes estimate is shown
 to fail on the same input; a missing chain and a wrong point group each abort naming what is
 missing; each trajectory format reads; a rigidly moved frame superposes to zero RMSD.
+
+> **Planned in detail, 25 September 2026** ([plan](wp18-structure-ingestion.md)). Two things
+> differ from the paragraph above. mmCIF is read by gemmi, because MDAnalysis 2.10 has none
+> (author ruling; §2.6 and CON-09 amended). The stage runs alone through `nanopnp stage
+> structure`, and a full walk is refused naming stage 2 until WP19. The sign of the axis follows
+> the file's +z, gated at 10° (author ruling). The §5.3.1 NOTE on `structure:` is the stage's
+> contract.
 
 ### WP19 — Density map and symmetry reduction (stages 2 and 3)
 
@@ -220,8 +227,8 @@ Cₙ rotation. The generated references pick up the v2 fields without a docs edi
 
 | # | Decision | Owner and status |
 |---|---|---|
-| G9 | The axial offset from the MD frame to the model frame for ClyA, which sets ClyA's `geometry.membrane.centre_z_nm` (`.knowledge/04` §8) | **Author, open.** Wanted with the ensemble delivery. If lipids are in the archive, the bilayer centre may fix it. Fallback: WP22 fits the offset as one degree of freedom and reports it |
-| Ensemble delivery | Format, frame count, and whether lipids and waters are included in the archived ClyA-AS ensemble; the file names it carries under `NANOPNP_REFERENCE_DATA` | **Author, needed before WP22** |
+| G9 | The axial offset from the MD frame to the model frame for ClyA, which sets ClyA's `geometry.membrane.centre_z_nm` (`.knowledge/04` §8) | **Author, open.** The archive has no lipids, so the bilayer cannot fix it. The MD frame's extent suggests ≈ 0 (`.knowledge/04` §1.1). Fallback: WP22 fits the offset as one degree of freedom and reports it |
+| Ensemble delivery | Format, frame count, and whether lipids and waters are included in the archived ClyA-AS ensemble; the file names it carries under `NANOPNP_REFERENCE_DATA` | **Largely answered, 25 September 2026.** `prod5_clya_as.{pdb,dcd}`: 98 frames, protein with hydrogens, no lipids or waters (`.knowledge/04` §1.1). The DCD's time metadata is absent. **Still open:** the true frame spacing (about 10 ns in total, by the author's recollection) and which 50 frames the paper used |
 | VAL-05 tolerances | Radius-profile and constriction-radius tolerances per leg | WP22 plan, argued from `G ∝ r²` and gap G3 |
 | Schema v2 contents | The exact v2 key list, including Phase 3's, and whether v1 artefact keys survive the upgrade | **Settled** in the [WP17 plan](wp17-case-schema-v2.md), D1–D6, and in the `SPECIFICATION.md` §5.3.1 v2 NOTE: the solve keys survive and the stage-9 key moves |
 | Cₙ averaging method | Rotate atoms or interpolate the voxel map | WP19 plan, with its derivation |

@@ -66,7 +66,8 @@ desktop app anyway, i.e. writing and maintaining the ePNP-NS weak forms twice, f
 
 | Tool | Version | Licence | Notes |
 |---|---|---|---|
-| **MDAnalysis** | 2.10.0 | LGPLv3+ | PDB/mmCIF, DCD/XTC/TRR/NCDF; `analysis.align.AlignTraj`, `rotation_matrix` **[tested]** |
+| **MDAnalysis** | 2.10.0 | LGPLv3+ | PDB, DCD/XTC/TRR/NCDF; `analysis.align.AlignTraj`, `rotation_matrix` **[tested]**. **Not mmCIF**; see below |
+| **gemmi** | 0.7.5 | MPL-2.0 | mmCIF (and PDB) reader; wheels cp311–cp314 on manylinux, musllinux, macOS and win_amd64 **[tested]**, 25 Sep 2026 |
 | MDTraj | 1.11.1 | LGPLv2.1+ | Faster I/O, leaner; no density-on-grid |
 | **GridDataFormats** | 1.2.0 | LGPL | OpenDX/CCP4 I/O; `Density` subclasses `gridData.core.Grid` |
 | mdahole2 (MDAKit) | current | GPL-ish + HOLE binary academic licence | Pore-radius profile — use to *validate* the contour |
@@ -115,10 +116,47 @@ and `GridDataFormats>=1.2`, every supported interpreter resolves to 1.2.0 and wr
 writer-availability branch and its refusal were deleted (§8.2.2 B4, WP17). The facts above still
 describe 1.0.2, should an older environment turn up.
 
-**Symmetry-axis detection:** do not use raw principal axes. ClyA is a truncated cone; the inertia
-tensor's axes are near-degenerate and drift between frames. Use **chain-permutation
-superposition** — superpose chain A onto chain B; the resulting rotation's eigenvector with
-eigenvalue 1 *is* the Cₙ axis. ~40 lines, markedly more stable.
+**Symmetry-axis detection:** do not use raw principal axes. Use **chain-permutation
+superposition**: superpose chain A onto chain B, and the rotation's eigenvector with eigenvalue 1
+*is* the Cₙ axis. It is about 40 lines and markedly more stable.
+
+**Why principal axes fail on ClyA: they drift, but not from degeneracy [tested].** Measured on
+25 September 2026 on the author's ClyA-AS ensemble (`prod5_clya_as.{pdb,dcd}`, 98 frames), using
+the Cα set:
+
+- **The axial eigenvalue is well separated.** The Cα covariance eigenvalues are 801, 881 and
+  1432 Å² on frame 0, and 794, 809 and 1416 Å² on 2WCD. The two *perpendicular* eigenvalues are
+  near-degenerate, which does not affect the axis. The earlier wording, "near-degenerate inertia
+  axes", was wrong about the cause.
+- **The principal axis still drifts.** Across the frames it moves by up to 1.54° (rms 0.66°), and
+  it differs from the permutation axis by up to 1.54° (mean 0.74°). The cause is the chains'
+  asymmetric fluctuation.
+- **The cyclic permutation axis is stable.** Fitted to the whole assembly, it moves by at most
+  0.010° (rms 0.005°), and its rotation angle stays within 0.031° of 30°.
+- **Averaging chain A's rotations is noisier than the whole-assembly fit.** Averaging chain A's
+  rotations onto every other chain (`(1/n)Σ_k R^k = â âᵀ` for an exact Cₙ) differs from the
+  cyclic fit by up to 1.12° per frame. Use it only to order the chains.
+- **A synthetic has to be built for principal axes to fail.** With the second moments made
+  isotropic (`h = √(6⟨ρ²⟩)` for points on a cylinder), 0.02 nm of per-atom noise sends the principal
+  axis up to 6° astray, and 0.1 nm sends it up to 24°. The permutation axis stays within 0.02° and
+  0.1° respectively.
+
+**MDAnalysis 2.10 reads no mmCIF [tested].** `mda._PARSERS` and `mda._READERS` in 2.10.0 have no
+`CIF`, `MMCIF` or `PDBX` entry, and `MDAnalysis.topology.PDBxParser` does not import. Only the
+retired `MMTF` format is there. The row above once claimed mmCIF as **[tested]**, which was wrong.
+IF-04's mmCIF leg goes through gemmi (§2.6, WP18).
+
+**MDAnalysis trajectory readers and their time metadata [tested].** Each writer (DCD, XTC, TRR,
+NCDF) round-trips three frames written from a static `Universe`. NCDF needs no `netCDF4`, because
+the scipy fallback suffices. The times are the trap:
+
+- A DCD written without a timestep reads **1.0 ps per frame**, while XTC, TRR and NCDF read
+  **0 ps**.
+- The author's `prod5_clya_as.dcd` reads 1.0 ps per frame, a 0.097 ns span for what is about 10 ns
+  of production.
+- A "last *n* ns" selection trusted to that metadata silently takes the whole trajectory, or the
+  wrong window. Gate a `last_ns` longer than the recorded span, and record the times as read
+  (`SPECIFICATION.md` §5.3.1 NOTE on `structure:`).
 
 ---
 
@@ -500,7 +538,8 @@ Permissive core is achievable. Everything is LGPL/BSD/MIT/Apache **except**:
 - **Triangle / TetGen** → avoid entirely.
 
 LGPL dependencies (NGSolve, MDAnalysis, PySide6) are fine for a permissively-licensed project when
-dynamically linked.
+dynamically linked. gemmi is MPL-2.0. That copyleft is file-level, so it is fine used unmodified as
+a separate package (CON-09, amended 25 September 2026).
 
 ---
 
