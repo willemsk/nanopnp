@@ -87,6 +87,8 @@ from a cache from one that solved.
 PIPELINE: tuple[str, ...] = (
     "case",
     "structure",
+    "density",
+    "symmetry",
     "mesh",
     "charge",
     "materials",
@@ -112,6 +114,9 @@ rather than demand them from the store — there is no payload for a hand
 substitution (FR-27) to substitute, so recomputing one cannot read past an
 edited file.
 """
+
+STRUCTURE_STAGES: tuple[str, ...] = ("structure", "density", "symmetry")
+"""The stages a case runs only when it carries ``structure:`` (stages 1 to 3)."""
 
 WORKSPACE_DIRNAME = "tmp"
 """Directory under the store root that a run's scratch workspaces are made in.
@@ -146,7 +151,9 @@ def _scratch(store: Store) -> Path:
     return Path(tempfile.mkdtemp(prefix="run-", dir=root))
 
 
-WORKSPACE_STAGES: frozenset[str] = frozenset({"structure", "mesh", "charge", "solve", "report"})
+WORKSPACE_STAGES: frozenset[str] = frozenset(
+    {"structure", "density", "symmetry", "mesh", "charge", "solve", "report"}
+)
 """Stages whose constructor takes the directory they write into.
 
 Enumerated rather than discovered by catching :class:`TypeError` from
@@ -162,6 +169,10 @@ _WEIGHTS: Mapping[str, float] = {
     # weight would sit at 5/7 for the whole of the ladder.
     "case": 0.01,
     "structure": 0.05,
+    # Stage 2 deposits every frame's atoms, which is the longest thing a walk
+    # through stage 3 does: seconds for a crystal structure, minutes for an ensemble.
+    "density": 0.2,
+    "symmetry": 0.05,
     "mesh": 0.05,
     "charge": 0.06,
     "materials": 0.01,
@@ -380,8 +391,9 @@ def _selected(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]:
 
     ``charge`` is dropped when the case supplies neither ``inputs.charge`` nor
     ``inputs.eps_r``: stage 7 refuses such a case as describing no work, and a
-    run with no field to gate has not skipped a gate. ``structure`` is dropped
-    when the case carries no ``structure:`` section, for the same reason.
+    run with no field to gate has not skipped a gate. ``structure``, ``density``
+    and ``symmetry`` are dropped when the case carries no ``structure:`` section,
+    for the same reason.
 
     Raises
     ------
@@ -393,15 +405,15 @@ def _selected(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]:
     supplied = resolved.charge is not None or resolved.eps_r is not None
     dropped = set() if supplied else {"charge"}
     if resolved.structure is None:
-        dropped.add("structure")
+        dropped.update(STRUCTURE_STAGES)
     stages = tuple(name for name in PIPELINE if name not in dropped)
     if upto is None:
         return stages
     if upto in stages:
         return stages[: stages.index(upto) + 1]
-    if upto == "structure":
+    if upto in STRUCTURE_STAGES:
         raise UnknownStageError(
-            f"stage 'structure' is registered but case {resolved.name!r} carries no structure: "
+            f"stage {upto!r} is registered but case {resolved.name!r} carries no structure: "
             "section, so there is nothing for it to read"
         )
     if upto in PIPELINE:
@@ -576,16 +588,36 @@ STRUCTURE_RECORD_KEYS: tuple[str, ...] = (
 )
 """The stage-1 summary entries the manifest's Geometry group records (FR-25, WP18 D14)."""
 
+DENSITY_RECORD_KEYS: tuple[str, ...] = (
+    "grid",
+    "radius_set",
+    "sharpness",
+    "frames",
+    "atoms",
+    "hydrogens",
+    "payload_digest",
+)
+"""The stage-2 summary entries the Geometry group records as ``density`` (WP19 D13)."""
 
-def _structure_record(artefact: Artefact | None) -> dict[str, Canonicalisable] | None:
-    """Return the Geometry group's ``structure`` record, from the stage-1 summary.
+REDUCTION_RECORD_KEYS: tuple[str, ...] = (
+    "n",
+    "bins",
+    "unresolved_radius_nm",
+    "maximum",
+    "payload_digest",
+)
+"""The stage-3 summary entries the Geometry group records as ``reduction`` (WP19 D13)."""
+
+
+def _record(artefact: Artefact | None, keys: tuple[str, ...]) -> dict[str, Canonicalisable] | None:
+    """Return a Geometry-group record: the named entries of one stage's summary.
 
     Taken from the artefact and never recomputed, so the manifest cannot report an
-    axis or a gate the stage did not measure.
+    axis, a gate or a variance the stage did not measure.
     """
     if artefact is None:
         return None
-    return {key: artefact.summary[key] for key in STRUCTURE_RECORD_KEYS if key in artefact.summary}
+    return {key: artefact.summary[key] for key in keys if key in artefact.summary}
 
 
 def _manifest(walk: _Walk, *, case_text: str, case_path: Path | None) -> Manifest:
@@ -600,6 +632,8 @@ def _manifest(walk: _Walk, *, case_text: str, case_path: Path | None) -> Manifes
     """
     case = walk.artefacts.get("case")
     structure = walk.artefacts.get("structure")
+    density = walk.artefacts.get("density")
+    symmetry = walk.artefacts.get("symmetry")
     mesh = walk.artefacts.get("mesh")
     charge = walk.artefacts.get("charge")
     solve = walk.artefacts.get("solve")
@@ -633,7 +667,9 @@ def _manifest(walk: _Walk, *, case_text: str, case_path: Path | None) -> Manifes
         input_files=_input_files(walk.resolved, case_path),
         upstream=dict(walk.artefacts),
         mesh=dict(mesh.summary) if mesh is not None else None,
-        structure=_structure_record(structure),
+        structure=_record(structure, STRUCTURE_RECORD_KEYS),
+        density=_record(density, DENSITY_RECORD_KEYS),
+        reduction=_record(symmetry, REDUCTION_RECORD_KEYS),
         charge=dict(charge.summary) if charge is not None else None,
         electrolyte=walk.resolved.electrolyte,
         clamp_activations=clamps if isinstance(clamps, int) else None,

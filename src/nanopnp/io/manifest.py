@@ -460,6 +460,8 @@ def build(
     upstream: Mapping[str, Artefact] | None = None,
     mesh: Mapping[str, Canonicalisable] | None = None,
     structure: Mapping[str, Canonicalisable] | None = None,
+    density: Mapping[str, Canonicalisable] | None = None,
+    reduction: Mapping[str, Canonicalisable] | None = None,
     charge: Mapping[str, Canonicalisable] | None = None,
     electrolyte: Electrolyte | None = None,
     clamp_activations: int | None = None,
@@ -507,6 +509,14 @@ def build(
         took it to z, every gate measurement beside its threshold, the frames as
         read, the superposition RMSD and the per-frame axis drift (WP18 D14).
         Recorded under the group's ``structure`` key.
+    density
+        Stage 2's record: the grid, the radius set and its digest, sigma , the frames,
+        the atom counts by element and the hydrogen count (WP19 D13). Recorded
+        under ``density``.
+    reduction
+        Stage 3's record: n, the bins, the radius below which no harmonic is
+        resolved, and the maximum Cₙ, non-Cₙ and raw variance with their (r, z)
+        (WP19 D13). Recorded under ``reduction``.
     charge
         The Charge group: ``nanopnp.charge.stage.ResolvedFields.summary()`` — each
         supplied field's header, grid descriptor and digest, and for the charge
@@ -547,7 +557,9 @@ def build(
         case_hash=case_hash,
         inputs=input_group(case_hash=case_hash, files=input_files, upstream=upstream),
         environment=environment(),
-        geometry_and_mesh=_geometry_group(mesh, structure, wall_distance),
+        geometry_and_mesh=_geometry_group(
+            mesh, wall_distance, structure=structure, density=density, reduction=reduction
+        ),
         charge=(
             dict(charge)
             if charge is not None
@@ -577,13 +589,14 @@ def build(
 
 def _geometry_group(
     mesh: Mapping[str, Canonicalisable] | None,
-    structure: Mapping[str, Canonicalisable] | None,
     wall_distance: Mapping[str, Canonicalisable] | None,
+    **stages: Mapping[str, Canonicalisable] | None,
 ) -> dict[str, Canonicalisable]:
-    """Return the Geometry and mesh group: the mesh record, and stage 1's where it ran.
+    """Return the Geometry and mesh group: the mesh record, and stages 1 to 3's where they ran.
 
-    A run that stopped at stage 1 records its structure and says the mesh was
-    not built, which is a different fact from a run that had neither.
+    A run that stopped at stage 3 records its structure, its density and its
+    reduction, and says the mesh was not built, which is a different fact from a
+    run that had none of them.
     """
     if mesh is None:
         group = not_run("no mesh was built or supplied to this run")
@@ -592,8 +605,9 @@ def _geometry_group(
             **dict(mesh),
             **({} if wall_distance is None else {"wall_distance": dict(wall_distance)}),
         }
-    if structure is not None:
-        group["structure"] = dict(structure)
+    for name, record in stages.items():
+        if record is not None:
+            group[name] = dict(record)
     return group
 
 

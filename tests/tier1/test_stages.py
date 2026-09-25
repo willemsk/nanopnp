@@ -82,12 +82,17 @@ def test_ver25_every_stage_describes_itself_without_importing_it() -> None:
         " 'charge': 'nanopnp.charge.stage' in sys.modules,"
         " 'mesh': 'nanopnp.mesh.ingest' in sys.modules,"
         " 'structure': 'nanopnp.structure.stage' in sys.modules,"
+        " 'density': 'nanopnp.density.stage' in sys.modules,"
+        " 'symmetry': 'nanopnp.symmetry.stage' in sys.modules,"
+        " 'numpy': 'numpy' in sys.modules,"
         " 'extras': sorted(m for m in ('MDAnalysis', 'gemmi') if m in sys.modules),"
         " 'post': 'nanopnp.post.stage' in sys.modules}))"
     )
     reported = _in_subprocess(script)
     assert reported["names"] == [
         "structure",
+        "density",
+        "symmetry",
         "mesh",
         "charge",
         "materials",
@@ -101,6 +106,11 @@ def test_ver25_every_stage_describes_itself_without_importing_it() -> None:
     # and introspecting it must not need them.
     assert reported["structure"] is False
     assert reported["extras"] == []
+    # VER-49, WP19 D1: stages 2 and 3 are listed without importing their modules,
+    # or the numpy and scipy they defer.
+    assert reported["density"] is False
+    assert reported["symmetry"] is False
+    assert reported["numpy"] is False
     assert reported["solve"] is False
     assert reported["materials"] is False
     assert reported["charge"] is False
@@ -127,6 +137,8 @@ def test_ver25_the_pipeline_numbers_match_section_5_2() -> None:
     numbered = {entry.name: entry.number for entry in registered_stages()}
     assert numbered == {
         "structure": 1,
+        "density": 2,
+        "symmetry": 3,
         "mesh": 6,
         "charge": 7,
         "materials": 8,

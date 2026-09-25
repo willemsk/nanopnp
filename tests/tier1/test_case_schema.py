@@ -242,7 +242,8 @@ def test_if03_a_supplied_artefact_names_exactly_one_source() -> None:
 @pytest.mark.parametrize(
     ("section", "release"),
     [
-        ("geometry:\n  membrane: {thickness_nm: 2.8}\n", "v0.9"),
+        # geometry: left this list in WP19: it is read beside structure:, and
+        # beside inputs.mesh it is refused naming both (tests/tier1/test_density.py).
         ("charge:\n  ph: 7.5\n", "v0.9"),
     ],
 )

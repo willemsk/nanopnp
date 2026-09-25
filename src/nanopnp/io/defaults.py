@@ -119,9 +119,19 @@ CONFIGURATION_PATHS: dict[str, str] = {
         "how stage 1 finds the axis, not a model term: z is admitted only inside the 0.01 nm "
         "displacement budget from the detected axis (section 5.3.1 NOTE on structure:)"
     ),
-    "geometry.density.kernel": "v0.9; resolve() refuses a case carrying a geometry: section",
-    "geometry.contour.smoothing": "v0.9; resolve() refuses a case carrying a geometry: section",
-    "geometry.analyte.shape": "v0.9; resolve() refuses a case carrying a geometry: section",
+    "geometry.density.kernel": (
+        "stage 2's kernel, which names its radius set; gaussian_vdw is the one kernel and "
+        "is recorded with the density in the Geometry and mesh group (section 5.3.1 NOTE on "
+        "geometry.density), so it is geometry input rather than a model switch"
+    ),
+    "geometry.contour.smoothing": (
+        "stage 4's contour conditioning, WP20; a structure: case's walk is refused before "
+        "stage 4, so nothing reads it yet"
+    ),
+    "geometry.analyte.shape": (
+        "the analyte body of stage 5, WP21; a structure: case's walk is refused before stage 4, "
+        "so nothing reads it yet, and a supplied mesh carries its analyte already"
+    ),
     "charge.titration": "v0.9; resolve() refuses a case carrying a charge: section",
 }
 """Switch-typed fields that are deliberately *not* deviations, each with its reason.

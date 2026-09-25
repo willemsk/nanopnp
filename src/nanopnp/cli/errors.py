@@ -138,6 +138,11 @@ EXIT_CODES: Final[dict[str, int]] = {
     "nanopnp.structure.read:StructureInputError": EXIT_GATE,
     "nanopnp.structure.axis:SymmetryGateError": EXIT_GATE,
     "nanopnp.structure.ensemble:EnsembleFormatError": EXIT_GATE,
+    # Stages 2 and 3 (WP19 D12): an atom the ruled radius set does not resolve,
+    # or a coordinate that is not finite; a map that is not finite or leaves
+    # [0, 1], naming the voxel.
+    "nanopnp.density.radii:DensityInputError": EXIT_GATE,
+    "nanopnp.density.union:DensityGateError": EXIT_GATE,
     "nanopnp.charge.fields:FieldDocumentError": EXIT_GATE,
     "nanopnp.charge.fields:ChargeFieldError": EXIT_GATE,
     "nanopnp.solve.state:StateMismatchError": EXIT_GATE,
