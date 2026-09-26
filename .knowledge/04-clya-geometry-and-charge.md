@@ -112,6 +112,34 @@ of overlapping and superfluous vertices", and it goes beyond it.
 with no `1/(2πr)`, whose planar integral is the net charge: the `e/m²` convention of the delivered
 table (G5). It is a pointer for Phase 3's FR-13.
 
+### 1.3 Stage 4 on real and synthetic inputs, measured [tested]
+
+`nanopnp` stage 4 at its defaults (isolevel 0.25, Taubin, `simplify_tol_nm` 0.02, h = 0.05 nm,
+closing and opening by 2h), 26 September 2026 (`SPECIFICATION.md` §5.2.1; VER-51).
+
+| | 2WCD, vendored and prepared | ClyA-AS, DCD frames 48–97 | Synthetic C12 tube |
+|---|---|---|---|
+| Raw contours at 0.25 | 2: the body and a void the closing removes | 1 | 1 |
+| Vertices: raw, after the morphology, resampled, final | 962, 2,529, 1,510, 161 | 866, 2,156, 1,386, 114 | 156, 432, 296, 12 |
+| Area, raw and final (nm²) | 28.145, 28.109 | 29.541, 29.545 | 2.956, 2.908 |
+| Minimum spacing and feature size (nm) | 0.0727, 0.157 | 0.0732, 0.229 | 0.124, 0.239 |
+| `r_c − R_p` (nm) | +0.062 to +0.908 | +0.170 to +0.916 | **−0.011** to +0.198 |
+| Constriction `r_c` (nm) | 1.630 | 1.611 at z = −1.33 | 2.464 |
+| Lumen moved by conditioning: max, rms (nm) | 0.039, 0.010 | 0.101 at z = 1.63, 0.013 | 0.030, 0.010 |
+| Stage 4, probe included | 0.28 s | 4.6 s | 0.17 s |
+
+The tube is 12 chains of alanine atoms on three rings (2.7, 3.0, 3.3 nm) and nine layers 0.3 nm
+apart. Its inner wall is flat, with every atom of the inner ring touching the probe sphere. That is
+the worst case for the radius band's lower bound (the §5.2.1 NOTE): the union of many atoms at one
+radius raises the density just inside the sphere. Even so, the contour enters the sphere by only
+0.011 nm, a fifth of h. A real lumen is corrugated, and the azimuthal mean pulls its contour
+outward, so on 2WCD the margin stays positive. The 2WCD numbers agree with the plan's prototype,
+which ran on the author's copy of chains A–L: 157 vertices, a feature size of 0.173 nm and a
+margin of +0.061 to +0.908 nm. The ensemble agrees with it too: a feature size of 0.229 nm, a
+margin of +0.173 to +0.869 nm and the constriction at 1.610 nm. The largest margin here, 0.916 nm,
+sits at z = −1.925 nm, the lowest mid-plane that crosses the loop. The ensemble's z is the MD
+frame, whose bilayer centre is z = 0 (G9) (WP20 plan, Design §6).
+
 ---
 
 ## 2. Model geometry and conventions

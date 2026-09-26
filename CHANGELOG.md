@@ -16,6 +16,40 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+## [0.9.0-alpha.4] - 2026-09-26
+
+WP20: contour extraction, conditioning and its gate, pipeline stage 4.
+
+### Added
+
+- Stage 4, `contour`. It finds the isolevel contour of stage 3's mean by sub-pixel marching
+  squares, placing each point by the grid's own axes, so bin j sits at its centre. The closed
+  loops are assembled into the region above the level, and a contour left open at the grid's
+  edge is refused (FR-07). The region is closed and then opened by a disc of radius 2h, which
+  removes gaps and fins under 4h (0.2 nm at the default grid), fills the holes left and records
+  them, and admits exactly one component. The loop is resampled at h/2, smoothed by ten Taubin
+  passes, simplified by Douglas–Peucker at `simplify_tol_nm`, and thinned until no edge is
+  shorter than h.
+- The gate (FR-08, QR-12): a valid, simple loop clear of the axis, every edge at least h, a local
+  feature size above 2h, and the lumen radius within `[−h, +1.5 nm]` of a frame-mean probe
+  radius computed on the aligned structure. Each failure names the criterion, the value, the
+  threshold and the (r, z). The gate's size target is the density grid spacing, not the mesh's
+  wall size, so the geometry does not depend on the electrolyte.
+- The stage emits `nanopnp/profile/v1` with `provenance.source: pipeline`, the same document
+  `inputs.profile` reads, written by a new `write_profile`. Its summary and the manifest record
+  the conditioning and the gate. On 2WCD the stage takes under a second and passes with a
+  feature size of 0.157 nm and a band of +0.062 to +0.908 nm.
+- VER-51.
+
+### Changed
+
+- A `structure:` case walks to stage 4. A full walk and a sweep are refused naming stage 5, CAD
+  assembly.
+- `geometry.contour.isolevel` outside (0, 1) and `geometry.contour.simplify_tol_nm` outside
+  (0, h) are refused naming the value.
+- The author's contour script was read, and its index-to-radius erratum is recorded (OPN-02,
+  closed; RSK-06, retired).
+
 ## [0.9.0-alpha.3] - 2026-09-25
 
 WP19: the density map and the reduction to (r, z), pipeline stages 2 and 3.

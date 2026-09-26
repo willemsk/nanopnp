@@ -323,6 +323,22 @@ AUTHOR"*, and **TetGen 1.5** (AGPLv3). Also avoid **pygmsh** (last release 2022-
 2.1.2 **[tested]**, but its docstring marks it legacy in favour of `offset_curve` (different
 sign/`quad_segs` convention). For a closed contour, `buffer(-d)` is more robust than either.
 
+**`find_contours` orientation in (r, z) [tested].** On a `[z, r]` array with
+`positive_orientation="high"`, a point `(row, col)` maps to `(r, z) = (col·Δr, row·Δz)`, which
+swaps the axes, so the winding flips from the one the docstring describes. A loop around values
+above the level has a **negative** shoelace area in (r, z), clockwise, and a loop around a void
+inside it is counter-clockwise. Stage 4 tells bodies from holes that way (`nanopnp.geometry.contour`,
+WP20 D4). A contour that reaches the array's edge comes back open, with its first and last points
+distinct, and `fully_connected="high"` joins diagonal neighbours above the level. Measured with
+scikit-image 0.26.0 on 26 September 2026.
+
+**Shapely closing and opening [tested].** `region.buffer(δ, quad_segs=8, join_style="round")
+.buffer(−δ, …)` is a closing and the reverse order an opening; both keep a straight wall straight,
+fill a slot narrower than 2δ completely, and remove a fin thinner than 2δ with no bump at its root.
+A 90° corner moves by `δ²(1 − π/4)` in area, concave corners gaining and convex ones losing. The
+output ring is densely sampled on its arcs, with edges of about `δπ/16`, which is why stage 4
+resamples before it measures a feature size. Measured with Shapely 2.1.2 (VER-51).
+
 **Keep MSH 4.1 as the archival interchange format** — physical groups survive round-trips there
 and get mangled in some VTU paths.
 

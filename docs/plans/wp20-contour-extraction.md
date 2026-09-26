@@ -1,6 +1,6 @@
 # WP20 — Contour extraction, conditioning and its gate (stage 4)
 
-**Status: planned, not started.** Written 26 September 2026, after WP19 was delivered on
+**Status: delivered, 26 September 2026.** Written 26 September 2026, after WP19 was delivered on
 `claude/wp-plan-19-19570b` (its PR becomes `v0.9.0-alpha.3`). This package inherits stage 3's
 `ReducedMap`: the (r, z) mean on bins `r_j = j·h` with exact annular weights and no interpolated
 bin (WP19 D8), and `grids()`, which returns it as a `RadialGrid` indexed `[z, r]`. It inherits
@@ -87,6 +87,23 @@ unless they are fixed together.
 feature size > 2h, so a pore-wall element size of h or less satisfies §5.2.1 literally. Where the
 resolved wall size (λ_D/5 × `size_scale`) exceeds h, WP21 decides, and VER-10 is the backstop.
 
+> **Outcome — D10's gate locates what it measures, and D13's key holds two more constants.**
+> `mesh/profile.py` gains `feature_sizes`, the per-vertex array whose minimum `min_feature_size`
+> now returns. The gate names the pinch from it, and a supplied profile's provenance still uses
+> the same measure. `ContourGateError` carries `criterion`, `measured`, `threshold` and `where`.
+> Its criteria are the §5.2.1 rows. `loop topology` covers an open contour, a closed lumen, an
+> island, an empty region and the axis clearance. The key's `KEY_CONSTANTS` also records D5's
+> `quad_segs` and the feature measure's factor 2 and two local edges, since each moves a verdict.
+> The Tier-1 test changes each constant in turn and watches the key move.
+
+> **Outcome — the stage module is `geometry/contour.py`, with the probe in `geometry/probe.py`.**
+> scikit-image and Shapely are imported at the top of the contour module, which only `create()`
+> reaches, and NumPy is deferred as everywhere else. The summary holds the manifest's D15 entries
+> at its top level. Beneath them are `conditioning` (the area and vertex count after each step,
+> the holes filled, the vertices the spacing step removed, and D5's lumen change) and `gate`
+> (each criterion's value, threshold and location, and the radius profile on every mid-plane).
+> `cli/reference.py` and `docs/guide/concepts.md` now say that stages 1 to 4 run.
+
 ### Work items
 
 1. **`geometry/probe.py`** (D11). The probe-radius profile, numpy deferred, cancellable per
@@ -147,6 +164,25 @@ uv run pytest tests/tier2/test_contour_2wcd.py -v --log-cli-level=INFO
 uv run pytest -m tier3 tests/tier3/test_density_ensemble.py -v --log-cli-level=INFO
 .claude/hooks/gate.sh run
 ```
+
+> **Outcome — delivered as tabled, with tests added.** `test_contour.py` holds 18 tests. Beyond
+> the table, they cover uniform resampling, the spacing step and the canonical form, a
+> parametrised set of case refusals, and a gate failure that aborts the walk and stores nothing.
+> `test_stages.py` adds the missing-extra test for stage 4. The Tier-1 walk and artefact tests
+> use a synthetic C12 tube in place of `synthetic_c12`, whose sparse chains give no contour at
+> 0.25. `.claude/hooks/gate.sh run` passed on 26 September 2026. The measurements are in
+> `.knowledge/04` §1.3:
+>
+> - **2WCD, Tier 2:** the gate passes with 161 vertices, spacing 0.0727 nm, feature size 0.157 nm
+>   and a band of +0.062 to +0.908 nm. The prototype, on the author's copy, measured 157, 0.0725,
+>   0.173 and +0.061 to +0.908. Stages 1–4 take 25 s, and stage 4 takes 0.28 s of that.
+> - **ClyA-AS, Tier 3:** the gate passes with 114 vertices, spacing 0.0732 nm, feature size
+>   0.229 nm, a band of +0.170 to +0.916 nm, and the constriction 1.611 nm at z = −1.33 nm. The
+>   prototype measured +0.173 to +0.869, and 1.610 at −1.35. Stages 1–3 came from the VER-50
+>   run's store, and stage 4 took 4.6 s, the probe included. The morphology moved the lumen by at
+>   most 0.101 nm, at z = 1.63, where Design §2 predicted the fin.
+> - **The tube's flat, dense inner wall enters the probe sphere by 0.011 nm,** a fifth of h. That
+>   is the worst case for D11's lower bound, and it holds.
 
 ### Out of scope
 
@@ -277,6 +313,12 @@ has k = 1 and is cut to 0.069 of its amplitude after N = 10. The largest low-fre
 `k₁ = 1 − cos(2π/n)`. At n = 64 that is **1.002770** for Taubin. A Laplacian with the same 2N = 20
 applications of λ = 0.5 gives `(1 − λk₁)^20 = `**0.952933**. Both are VER-51 oracles to 1e-12. On
 the ClyA contours, resampled to 1,400–1,500 points, Taubin moved the area by +3e-4 and +4e-4 nm².
+
+> **Outcome — the Laplacian comparator is N passes, not 2N.** A Laplacian with "the same 2N = 20
+> applications" of λ would scale the 64-gon's area by `(1 − λk₁)^{40}` = 0.908081. The 0.952933
+> quoted above, and asserted by VER-51, is `(1 − λk₁)^{2N}`: N = 10 applications of λ, the same
+> pass count as Taubin with μ = 0 **[verified]**. The test builds it that way, as
+> `taubin(loop, mu=0.0)`.
 
 ### 4. The contour's size target
 

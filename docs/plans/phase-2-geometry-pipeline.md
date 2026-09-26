@@ -1,6 +1,6 @@
 # Phase 2 (Geometry pipeline): from a structure to a gated mesh
 
-**Status: in progress. WP17 delivered, 24 September 2026; WP18 delivered, 25 September 2026; WP19 delivered, 25 September 2026; WP20 planned in detail, 26 September 2026 ([plan](wp20-contour-extraction.md)); WP21–WP25 planned.** Written 24 September 2026, after Phase 1 (WP7–WP16) delivered the
+**Status: in progress. WP17 delivered, 24 September 2026; WP18 delivered, 25 September 2026; WP19 delivered, 25 September 2026; WP20 delivered, 26 September 2026; WP21–WP25 planned.** Written 24 September 2026, after Phase 1 (WP7–WP16) delivered the
 solver core on an externally supplied mesh (main at `v0.5.0-alpha.10`). Two things come first:
 the Phase 1 end-of-phase report, which merges as tag `v0.5.0`, and the author's double-click
 observation that closes Phase 0 criterion 4. That ordering is ruling B1 of `SPECIFICATION.md`
@@ -215,6 +215,20 @@ at a known isolevel is recovered; Taubin preserves enclosed area where plain Lap
 visibly shrinks it, which makes the test discriminating; each gate criterion fires on constructed
 input with its QR-12 diagnostic; the probe-radius profile of an analytic ring of atoms matches its
 closed form.
+
+> **Delivered, 26 September 2026** ([plan](wp20-contour-extraction.md), to be tagged
+> `v0.9.0-alpha.4`). Stage 4, `contour`, runs marching squares on the reduced mean, placed by the
+> grid's own axes. The region is closed and opened by 2h, then Taubin-smoothed at h/2, simplified
+> and thinned to spacing h. The gate checks validity, topology, spacing ≥ h, feature size > 2h,
+> and the radius band `[−h, +1.5 nm]` against the frame-mean probe radius. The stage emits
+> `nanopnp/profile/v1` with `source: pipeline`. VER-51 discharges FR-08 and adds to FR-07, FR-27
+> and QR-12. OPN-02 is closed and RSK-06 retired. 2WCD and the ClyA-AS ensemble both pass the gate
+> (`.knowledge/04` §1.3). Constraints inherited by later packages:
+>
+> - A walk or sweep past stage 4 is refused naming stage 5, and WP21 lifts that through
+>   `refuse_walk`.
+> - The profile is in the stage-1 frame. Stage 5 applies `centre_z_nm` and reads `inputs.profile`.
+> - Stage 4 guarantees spacing ≥ h and feature size > 2h. The wall-size question is WP21's.
 
 ### WP21 — CAD assembly and graded meshing from a profile (stages 5 and 6)
 
