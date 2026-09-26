@@ -8,14 +8,15 @@ an unmerged branch has shipped.
 
 - Phase 1 ([solver core](phase-1-solver-core.md)) is **closed** as `v0.5.0` (§8.2.3). The COMSOL
   attribution (C1) and the 12-core reference sweep (C2) land as addenda to its report.
-- Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **in progress**. WP17 and WP18
-  are merged (PRs [#38](https://github.com/willemsk/nanopnp/pull/38) and
-  [#39](https://github.com/willemsk/nanopnp/pull/39), `v0.9.0-alpha.1` and `alpha.2`). WP20–WP25
+- Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **in progress**. WP17, WP18
+  and WP19 are merged (PRs [#38](https://github.com/willemsk/nanopnp/pull/38),
+  [#39](https://github.com/willemsk/nanopnp/pull/39) and
+  [#40](https://github.com/willemsk/nanopnp/pull/40), `v0.9.0-alpha.1` to `alpha.3`). WP21–WP25
   are planned (rulings B1–B7, §8.2.2).
-- **WP19** ([stages 2 and 3](wp19-density-and-reduction.md)) is **delivered** on
-  `claude/wp-plan-19-19570b`. Its PR awaits `/wp-ship` and becomes `v0.9.0-alpha.3`.
-- **WP20** ([stage 4, the contour](wp20-contour-extraction.md)) is **planned** on
-  `claude/wp-plan-20-e8e1e9`. It is **next** for `/wp-implement`, once WP19 has merged.
+- **WP20** ([stage 4, the contour](wp20-contour-extraction.md)) is **delivered** on
+  `claude/wp-plan-20-e8e1e9`. Its PR awaits `/wp-ship` and becomes `v0.9.0-alpha.4`.
+- **WP21** (stages 5 and 6, CAD assembly and meshing from a profile) is **next** for `/wp-plan`,
+  once WP20 has merged.
 
 ## What Phase 2 must not re-decide
 
@@ -25,7 +26,7 @@ Each item is recorded in full where it points. Read it there first.
   A later need widens an existing key's value set, and does not add a key. The schema string no
   longer keys a solve. → §8.2.2 B3; WP17 D1; the §5.3.2 NOTE.
 - **`inputs.profile` and `inputs.pqr` are accepted and refused** through `_UNCONSUMED_INPUTS` in
-  `io/case.py`. The package that delivers the consuming stage removes the entry (WP21, Phase 3).
+  `io/case.py` until their consumer lands (WP21, Phase 3).
 - **`physics.solid_permittivities` is the only place ε_protein and ε_membrane are set**, and contour
   tuning parameters and gate thresholds are never case keys (author rulings, 24 September 2026).
   → WP17 D2, D3.
@@ -34,21 +35,20 @@ Each item is recorded in full where it points. Read it there first.
   phase gate requires. → §8.2.2 B2; §7.4.
 - **No HOLE on the default path** (B5). **The contour script has been read** (B6; WP20 D2).
   **Gmsh arrives in WP23, optional, and FR-20 is Phase 3's** (B7). → §8.2.2.
-- **Stage 4 emits `nanopnp/profile/v1`, in the stage-1 frame.** Its size target is the grid
-  spacing h, not the stage-6 wall size. Its region is closed and opened by 2h. Its radius band is
-  `[−h, +1.5 nm]` against the probe radius. WP21 and WP22 inherit all of this. → §5.2.1 and its
-  NOTEs; WP20 D5, D9–D11.
+- **Stage 4 emits `nanopnp/profile/v1` in the stage-1 frame**, `source: pipeline`, the document
+  `inputs.profile` reads. Its size target is h, not the stage-6 wall size; its region is closed and
+  opened by 2h; its band is `[−h, +1.5 nm]` against the probe radius. It guarantees spacing ≥ h
+  and feature size > 2h. → §5.2.1 and its NOTEs; WP20 D5, D9–D12 and the handoff to WP21.
 - **Stage 1's frame is fixed**: axis on z at r = 0, `z = â·x`, +z to *cis*; stage 5 applies
   `centre_z_nm`. → the §5.3.1 NOTE on `structure:`; WP18 D2, D8, D10.
-- **`refuse_walk`** (`io/case.py`) stops runs and sweeps past the last delivered stage, now
-  stage 3, naming stage 4. WP20 moves it to stage 4, naming stage 5. → WP18 D1; WP19 D1; WP20 D1.
+- **`refuse_walk`** (`io/case.py`) stops runs and sweeps past stage 4, naming stage 5. WP21
+  moves it on and lifts `_require_runnable`'s mesh refusal. → WP18 D1; WP19 D1; WP20 D1.
 - **Open for WP22, from the author:** did the reference polygon use `pqr2grid`'s binning, and
   what did its hand edit do? → WP20 Open questions; Design §7.
-- **The density's radii are CHARMM Rmin/2** from PDB2PQR's `CHARMM.DAT`, by residue and atom, with
-  no element fallback (author ruling, 25 September 2026). **The Cₙ average is a harmonic
-  projection**, and the variance is taken after detrending; below `n h/π` it is unresolved, not
-  zero. → the §5.3.1 NOTE on
-  `geometry.density`; WP19 D3, D7, D9 and their Outcomes.
+- **The density's radii are CHARMM Rmin/2** by residue and atom, with no element fallback
+  (author ruling, 25 September 2026); the probe profile uses the same set. **The Cₙ average is a
+  harmonic projection**; below `n h/π` the variance is unresolved, not zero. → the §5.3.1 NOTE on
+  `geometry.density`; WP19 D3, D7, D9.
 - **For VAL-05 (WP22), answered by the author:** G9 is 0 in the MD frame, the paper's 50 frames
   are DCD frames 48–97, and the density included hydrogens. → `.knowledge/04` §1.1, §8.
 - **The vendored 2WCD is in its crystal frame** and stage 1 refuses it; the tests orient it through
@@ -82,7 +82,7 @@ Each item is recorded in full where it points. Read it there first.
 | Phase 2 scope and rulings | `phase-2-geometry-pipeline.md`; `SPECIFICATION.md` §5.2–§5.2.2, §8.2.2 |
 | The ClyA pipeline as executed, and gaps G1–G13 | `.knowledge/04-clya-geometry-and-charge.md` |
 | Structure, geometry and meshing libraries | `.knowledge/07-software-stack.md` §2, §4, §8 |
-| The seams Phase 2 builds on | `density/grid.py` (`RadialGrid`); `symmetry/reduce.py` (`ReducedMap`); `symmetry/annular.py`; `mesh/profile.py`; `mesh/reference.py` (`ReferenceGeometry`); `core/stages.py`; `io/run.py`; `io/case.py` (`_require_runnable`) |
+| The seams Phase 2 builds on | `geometry/contour.py` (`ContourStage`, the gate); `geometry/probe.py`; `mesh/profile.py` (`PoreProfile`, `write_profile`, `feature_sizes`); `mesh/reference.py` (`ReferenceGeometry`, `plane_crossings`); `symmetry/reduce.py` (`ReducedMap`); `core/stages.py`; `io/run.py`; `io/case.py` (`_require_runnable`, `refuse_walk`) |
 | Case schema, dotted paths and option sets | `SPECIFICATION.md` §5.3.1 and its NOTEs; `io/case.py` |
 | Shell, packaging and licence constraints | ADR-004, CON-07, CON-09, CON-10, CON-11; `.knowledge/07-software-stack.md` §5–§6 |
 
