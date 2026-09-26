@@ -1,6 +1,6 @@
 # WP21 — CAD assembly and graded meshing from a profile (stages 5 and 6)
 
-**Status: planned, not started.** Written 26 September 2026, after WP20 merged (PR
+**Status: delivered, 26 September 2026.** Written 26 September 2026, after WP20 merged (PR
 [#41](https://github.com/willemsk/nanopnp/pull/41), to be tagged `v0.9.0-alpha.4`). This package
 inherits stage 4's `nanopnp/profile/v1` document. It is in the stage-1 frame, spaced at least h
 apart, with feature size above 2h (WP20 D9, D10). It also inherits `ReferenceGeometry` and
@@ -87,6 +87,37 @@ the reference fixture and 2WCD. [Design §2](#2-the-wall-size): NUM-30 read lite
 | D16 | Manifest | `geometry_and_mesh` gains `region` (frame shift, thickness, chord and clearance, junction radii, face areas) and a `sizing` block (resolved wall size, its source, λ_D, `size_scale`, the D9 statistics, the NUM-30 ratio). The mesh's content hash stays where it is | FR-25, §5.3.3 |
 | D17 | Public API | No new name | IF-01 NOTE |
 
+> **Outcome — D3's fixture chord is (1.9818, 3.4700), clearance 0.2365 nm.** Design §1 printed
+> 3.464, which is not a point of the 63 × 63 grid; the specification's NOTE is corrected. 2WCD's
+> (1.9321, 3.4690) and 0.3017 nm match the prototype.
+
+> **Outcome — D6 names edges by adjacency, not by a classification chain.** After the glue, each
+> edge is named by the faces whose edge sets hold it (`protein` with `membrane` is `interface`,
+> with `electrolyte` is `wall`, `membrane` with `electrolyte` is `membrane`), with only the axis and
+> the reservoir arc tested by position. The chord never enters the naming, so D6's invariance
+> argument is not needed. Netgen shapes hash by topological identity
+> ([`.knowledge/07`](../../.knowledge/07-software-stack.md) §4). `ReferenceGeometry` names through
+> the same function, and its mesh hash is unchanged (`2fbf66ef…`, 44,316 elements).
+
+> **Outcome — D12 is `deployed_mesh(resolved, generated)`, and it has five call sites, not
+> three.** Stages 7, 10 and 11 call it with `inputs.upstream.get("mesh")`, and so does
+> `solve.state.restore`, which gained a `mesh_artefact` argument. Stage 11 restores the state
+> twice, for the extraction and for the IF-07 export. The Tier-2 2WCD walk found the first
+> unpatched, and the second is the same call. The GUI's renderer and `validation.runs` read the artefact back from the run's store.
+> A Tier-1 walk of a coarse generated region through the export now guards every call.
+
+> **Outcome — D14 refuses `geometry.density` and `geometry.contour` set away from their defaults,
+> not written.** FR-26's round trip dumps the resolved document with every section written out, so
+> "written" would refuse a case's own dump. The §5.3.1 `inputs:` NOTE is clarified. A case with
+> no mesh, no profile and no structure is now a `CaseValidationError` naming all three.
+
+> **Outcome — the sweep's plan-time NUM-34 mesh gate skips a generated mesh.** There is no file to
+> read at plan time; stage 6's gates run on each member instead. D15's barriers are as tabled.
+
+> **Outcome — D13 compares the reproduced mesh's content hash after the run** (`check_mesh` in
+> `io/reproduce.py`), raising `InputMovedError` with both hashes. A supplied mesh whose file moved
+> is still refused before any work, by the file-hash check.
+
 ### Work items
 
 1. **Generic assembly** (`geometry/region.py`, new): `RegionRecord`, `derive_region(profile,
@@ -110,6 +141,10 @@ the reference fixture and 2WCD. [Design §2](#2-the-wall-size): NUM-30 read lite
    Design §1–§3 measurements, re-measured. The docs pages that say stages 1 to 4 run are updated,
    and CHANGELOG `v0.9.0-alpha.5` is written.
 
+> **Outcome — every work item is delivered.** `nanopnp mesh reference` prints the pre-refactor
+> hash. The stage-5 region summary records `profile_vertices`, the input polygon's count (185 on
+> the fixture); the 193 of VER-28 is the assembled shape's, counted in Tier 2.
+
 ### Verification
 
 | Test file | Tier | Identifiers | Assertion / oracle | Tolerance source |
@@ -124,6 +159,20 @@ the reference fixture and 2WCD. [Design §2](#2-the-wall-size): NUM-30 read lite
 uv run pytest tests/tier1/test_region.py tests/tier1/test_mesh_sizing.py tests/tier1/test_mesh_generate.py
 uv run pytest tests/tier2/test_region_reference.py tests/tier2/test_pipeline_2wcd.py --log-cli-level=INFO
 ```
+
+> **Outcome — the four-crossing assertion was impossible, and became a refusal.** A plane that
+> crosses the profile more than twice always splits a domain (the argument is in the §5.2.1 NOTE
+> and [`.knowledge/04`](../../.knowledge/04-clya-geometry-and-charge.md) §2.1), so no body cut four
+> times assembles for the membrane to meet at `r₂`. `test_region.py` builds a hook and a bridge
+> and asserts the one-face criterion's refusal, naming each face's centroid. Test counts: 21 in
+> `test_region.py`, 24 in `test_mesh_sizing.py`, 7 in `test_mesh_generate.py` (the D12 walk and
+> the D13 check added), 5 in `test_region_reference.py`, 2 in `test_pipeline_2wcd.py`.
+
+> **Outcome — the 2WCD walk stays in Tier 2.** Stages 1–4 take 25 s and are shared through the
+> store, region 0.4 s, mesh 7.0 s at the default sizes. At `size_scale` 4 (6,074 triangles, wall
+> 0.2 nm, logged as coarser than λ_D/5 = 0.157 nm) the walk from mesh to report takes 5.8 s, with
+> `pnp` currents of 4.14e-11 A (Na⁺) and 6.16e-11 A (Cl⁻) at +50 mV and 0.15 M, uncharged,
+> stabilisation `none` (the default). The file runs in 40 s.
 
 ### Out of scope
 
@@ -211,6 +260,13 @@ The bounds 1.15 and 2.0 sit above every measured value. With no wall field, the 
 0.1 nm field and the polygon edges govern. Those edges run up to 20 times the target on the
 fixture, so the mean would be about 2.
 
+> **Outcome — re-measured through stages 5 and 6, and the withheld case measured.** The fixture
+> repeats at 0.05 nm (569, 1.045, 1.200, 1.600). At the resolved 3 M target, 0.03505 nm: 792
+> segments, 1.071, 1.194, 1.614; at 5 M, 0.02715 nm: 1003, 1.092, 1.218, 1.519. 2WCD at 0.05 nm:
+> 582, 1.062, 1.233, 1.485; at 0.03505 nm: 826, 1.067, 1.180, 1.250. With the wall field withheld
+> the fixture's mean is 1.976 and its maximum 3.20, which the gate refuses. The table is in
+> [`.knowledge/06`](../../.knowledge/06-numerics-fem.md) §8.
+
 ### 4. Measured on the prototype
 
 | | Fixture, 0.05 | Fixture, 0.035 | 2WCD, 0.05 | 2WCD, 0.035 |
@@ -223,3 +279,10 @@ The 2WCD profile came from stages 1–4 on the prepared file in 25 s. It has 161
 constriction of 1.630 nm at stage-1 z = 3.125, and a *trans* tip at z = 2.779. Registered at
 `centre_z_nm = 4.629`, its planes cut [1.630, 2.837] and [3.089, 4.826]. The reference mesh
 generated twice in fresh processes gave one canonical hash, `2fbf66ef…`.
+
+> **Outcome — re-measured through the delivered stages.** Fixture at 0.05 nm: 44,316 triangles,
+> 0.6559 and 0.6157, the drawn region's count exactly. At 0.03505 nm (3 M, not 0.035): 48,986,
+> 0.7489 and 0.6870. 2WCD at 0.05 nm: 44,688, 0.7111 and 0.6196, as prototyped; at 0.03505 nm:
+> 49,878, 0.7335 and 0.6470. Mesh 6.9–8.0 s. The 2WCD profile has 161 vertices and its *trans* tip
+> at z = 2.7789, registered at `centre_z_nm = 4.62887`, cutting [1.630, 2.8373] and
+> [3.089, 4.8256].
