@@ -125,18 +125,22 @@ FEATURE_FACTOR = 2.0
 
 KEY_CONSTANTS: Mapping[str, Canonicalisable] = {
     "connectivity": CONNECTIVITY,
-    "closing": {"radius": "2h", "quad_segs": QUAD_SEGS},
+    "closing": {"radius": f"{CLOSING_SPACINGS:g}h", "quad_segs": QUAD_SEGS},
     "taubin": {
         "lambda": TAUBIN_LAMBDA,
         "mu": TAUBIN_MU,
         "passes": TAUBIN_PASSES,
-        "resample": "h/2",
+        "resample": f"h/{1.0 / RESAMPLE_SPACINGS:g}",
     },
     "spacing": "h",
     "feature": {"factor": FEATURE_FACTOR, "local_edges": LOCAL_EDGES},
     "band": {"low": "-h", "high_nm": BAND_HIGH_NM},
 }
-"""Every code constant that moves a vertex or a verdict, as the stage-4 key records it (D13)."""
+"""Every code constant that moves a vertex or a verdict, as the stage-4 key records it (D13).
+
+The closing radius and the resampling length are written from the constants the
+pipeline reads, as ``"2h"`` and ``"h/2"``, so editing either moves the key.
+"""
 
 
 class ContourGateError(ValueError):
@@ -306,8 +310,8 @@ def close_and_open(
     Returns
     -------
     tuple
-        The single component, holes filled, and the record: the area after the
-        morphology, and the count, area and centroids of the holes filled.
+        The single component, holes filled, and the record: the count, area and
+        centroids of the holes filled.
 
     Raises
     ------
@@ -342,7 +346,6 @@ def close_and_open(
     holes = [Polygon(ring) for ring in body.interiors]
     filled = Polygon(body.exterior)
     record: dict[str, Canonicalisable] = {
-        "area_nm2": float(filled.area),
         "holes_filled": {
             "count": len(holes),
             "area_nm2": float(sum(hole.area for hole in holes)),
@@ -575,7 +578,6 @@ def condition(
     steps: dict[str, Canonicalisable] = {}
 
     def record(step: str, points: np.ndarray) -> None:
-
         steps[step] = {"vertices": len(points), "area_nm2": abs(signed_area(points))}
 
     region = assemble_region(loops)
@@ -648,9 +650,9 @@ def gate(
 
     points = np.asarray(loop, dtype=np.float64)
     h_c = spacing_nm
-    polygon = Polygon(points)
-    if len(points) < 3 or not LinearRing(points).is_simple or not polygon.is_valid:
-        reason = explain_validity(polygon) if len(points) >= 3 else "fewer than three vertices"
+    polygon = Polygon(points) if len(points) >= 3 else None
+    if polygon is None or not LinearRing(points).is_simple or not polygon.is_valid:
+        reason = "fewer than three vertices" if polygon is None else explain_validity(polygon)
         found = _LOCATION.search(reason)
         where = _at(float(found.group(1)), float(found.group(2))) if found else "over the loop"
         raise ContourGateError(
@@ -809,9 +811,8 @@ def _specs(inputs: StageInputs) -> tuple[ContourSpec, DensitySpec]:
     return resolved.contour, resolved.density
 
 
-def contour_parameters(inputs: StageInputs) -> dict[str, Canonicalisable]:
+def contour_parameters(contour: ContourSpec, density: DensitySpec) -> dict[str, Canonicalisable]:
     """Return the stage-4 key's parameters (D13): the block, h, the constants and the radius set."""
-    contour, density = _specs(inputs)
     name = KERNEL_RADII[density.kernel]
     return {
         "contour": contour.model_dump(mode="json"),
@@ -843,8 +844,14 @@ class ContourStage:
 
     def key(self, inputs: StageInputs) -> ProfileArtefact:
         """Return the artefact key from the block, h, the constants and stages 1 and 3."""
+        return self._key(inputs, *_specs(inputs))
+
+    def _key(
+        self, inputs: StageInputs, contour: ContourSpec, density: DensitySpec
+    ) -> ProfileArtefact:
+        """Return the artefact key from specs already resolved, so a run resolves the case once."""
         return ProfileArtefact(
-            parameters=contour_parameters(inputs),
+            parameters=contour_parameters(contour, density),
             inputs={
                 "structure": inputs.require("structure").hash,
                 "symmetry": inputs.require("symmetry").hash,
@@ -869,7 +876,7 @@ class ContourStage:
             If ``cancel`` turns true. No artefact is written.
         """
         contour, density = _specs(inputs)
-        key = self.key(inputs)
+        key = self._key(inputs, contour, density)
         structure = inputs.require("structure")
         symmetry = inputs.require("symmetry")
         h = density.grid_spacing_nm
