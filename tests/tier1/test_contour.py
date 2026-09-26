@@ -324,6 +324,11 @@ def test_ver51_gate_criteria_fire() -> None:
     assert caught.value.criterion == "validity and simplicity"
     assert "(2.5000, 0.5000)" in caught.value.where
 
+    with pytest.raises(ContourGateError) as caught:
+        _gate(np.array([[2.0, 0.0], [3.0, 1.0]]))
+    assert caught.value.criterion == "validity and simplicity"
+    assert "fewer than three vertices" in caught.value.measured
+
 
 def test_ver51_spacing_and_canonical_form() -> None:
     """The spacing step drops the endpoint that moves the area least; the loop starts lowest-z."""
@@ -499,6 +504,16 @@ def test_ver51_artefact_and_key(
     for name, value in contour.KEY_CONSTANTS.items():
         assert parameters[name] == value
     assert parameters["radius_set"]["name"] == "pdb2pqr_charmm"  # type: ignore[index]
+    # The entries are the constants the pipeline reads, not literals beside them.
+    closing, taubin_key = parameters["closing"], parameters["taubin"]
+    assert closing["radius"] == f"{contour.CLOSING_SPACINGS:g}h" == "2h"  # type: ignore[index]
+    assert closing["quad_segs"] == contour.QUAD_SEGS  # type: ignore[index]
+    assert taubin_key["resample"] == f"h/{1 / contour.RESAMPLE_SPACINGS:g}" == "h/2"  # type: ignore[index]
+    assert taubin_key["lambda"] == contour.TAUBIN_LAMBDA  # type: ignore[index]
+    assert taubin_key["mu"] == contour.TAUBIN_MU  # type: ignore[index]
+    assert taubin_key["passes"] == contour.TAUBIN_PASSES  # type: ignore[index]
+    assert parameters["band"]["high_nm"] == contour.BAND_HIGH_NM  # type: ignore[index]
+    assert parameters["feature"]["factor"] == contour.FEATURE_FACTOR  # type: ignore[index]
     for name in contour.KEY_CONSTANTS:
         changed = {**contour.KEY_CONSTANTS, name: "changed"}
         monkeypatch.setattr(contour, "KEY_CONSTANTS", changed)
