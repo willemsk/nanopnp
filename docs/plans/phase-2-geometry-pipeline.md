@@ -1,6 +1,6 @@
 # Phase 2 (Geometry pipeline): from a structure to a gated mesh
 
-**Status: in progress. WP17 delivered, 24 September 2026; WP18 delivered, 25 September 2026; WP19 delivered, 25 September 2026; WP20 delivered, 26 September 2026; WP21–WP25 planned.** Written 24 September 2026, after Phase 1 (WP7–WP16) delivered the
+**Status: in progress. WP17 delivered, 24 September 2026; WP18 delivered, 25 September 2026; WP19 delivered, 25 September 2026; WP20 delivered, 26 September 2026; WP21 planned in detail, 26 September 2026; WP22–WP25 planned.** Written 24 September 2026, after Phase 1 (WP7–WP16) delivered the
 solver core on an externally supplied mesh (main at `v0.5.0-alpha.10`). Two things come first:
 the Phase 1 end-of-phase report, which merges as tag `v0.5.0`, and the author's double-click
 observation that closes Phase 0 criterion 4. That ordering is ruling B1 of `SPECIFICATION.md`
@@ -64,7 +64,7 @@ its decisions table.
 | Order of evidence | Every stage is verified on a synthetic input with a closed form before it sees 2WCD, and on 2WCD before the ensemble | §7.1: an analytic test localises an error to one stage. A VAL-05 miss seen first localises nothing |
 | Stage artefacts | Stage 1: aligned coordinates, atom table (element, chain, residue) and the axis transform record. The van der Waals radius moved to stage 2 (WP18 D10, 25 September 2026): it is a density-kernel parameter, so it belongs in stage 2's key. Stage 2: the 3D map, native `.npz` float32, with OpenDX/CCP4 export through GridDataFormats (IF-05). Stage 3: a `RadialGrid` map plus its variance grid. Stage 4: `nanopnp/profile/v1`, `source: pipeline`, carrying the conditioning record. Stage 5: a declarative region record (profile hash, membrane, reservoir) that rebuilds the OCC region deterministically, rather than a BRep blob. Stage 6: MSH 4.1 | §5.3.2. Reusing `RadialGrid` and the profile schema keeps one reader per artefact. A region record hashes by content, where a BRep's bytes need not be stable |
 | Model frame | z = 0 at the membrane centre. The structure maps to the model frame by the FR-02 axis plus `geometry.membrane.centre_z_nm`, a v2 key in the structure's own frame, measured along the axis. Its default, 0, is the OPM convention for membrane-protein coordinate files | Closes gap G9 generically. ClyA's own value is the author's to give (open decision G9) |
-| Membrane inner edge | Derived, not configured: the chord between the pore body's radial mid-points on `z = ±t/2`, gated to lie strictly inside the body. The reference fixture keeps its (2.0, 3.5) corners | §5.2.1 NOTE: the assembled membrane is the quadrilateral minus the body, so any edge strictly inside the body yields the same region. A configurable edge would be a knob with no effect when right and a gap or overlap when wrong |
+| Membrane inner edge | Derived, not configured, and gated to lie strictly inside the body. The reference fixture keeps its (2.0, 3.5) corners. **Superseded in part by the [WP21 plan](wp21-cad-assembly-and-meshing.md), D3, 26 September 2026:** the chord is the widest-margin one between the lumen-adjacent body intervals on `z = ±t/2`, not the chord between their mid-points. That chord crosses the cleft under the cap on the reference fixture and on 2WCD, and splits the electrolyte in two (WP21 Design §1) | §5.2.1 NOTE: the assembled membrane is the quadrilateral minus the body, so any edge strictly inside the body yields the same region. A configurable edge would be a knob with no effect when right and a gap or overlap when wrong |
 | Structure preparation | Out of scope. The pipeline consumes a prepared structure and records `structure.source.variant` and the chain set (OPN-04) | FR-01 says ingest, not prepare. PDBFixer brings OpenMM onto the end-user path for a step the author performed by hand in the source work |
 | Nothing is tuned to the target | The isolevel (0.25) and the density sharpness (0.93) stay case values cited to `.knowledge/04` §1. The isolevel sensitivity is recorded, never fitted to VAL-05 | Gap G2: the 25 % level is unjustified in the source, and radius enters conductance as r². Fitting it to the polygon would make VAL-05 pass by construction |
 | Radius-profile check | In-project probe-radius profile on the aligned structure: the largest sphere centred on the known axis that clears every atom's van der Waals radius. `mdahole2` is an optional cross-check that skips when absent | B5. The axis is known from FR-02, so HOLE's axis search is not needed |
@@ -242,6 +242,12 @@ at the junction, the membrane edge strictly inside the body, the §5.3.1 vocabul
 reference fixture through the generic path reproducing VER-28's counts. Adds **VER-53**: the wall
 size target is met on the wall, the VER-10 gates hold on generated meshes, and the default path
 imports no gmsh.
+
+> **Planned, 26 September 2026** ([plan](wp21-cad-assembly-and-meshing.md)). Two premises above
+> changed on measurement. The membrane's inner edge is the widest-margin chord (D3), because the
+> mid-point chord leaves the body. `auto` is `size_scale × min(0.05 nm, λ_D/5)` (D7), because
+> NUM-30 read literally puts 0.27 nm on the wall at 0.05 M. A generated mesh is keyed on its
+> recipe, and its content hash is recorded (D10).
 
 ### WP22 — VAL-05: the pipeline against the reference geometry
 
