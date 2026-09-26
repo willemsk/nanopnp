@@ -392,7 +392,8 @@ def test_ver32_stage_list_imports_no_stage_module(tmp_path: Path) -> None:
         "or m in {'nanopnp.mesh.ingest', 'nanopnp.charge.stage', 'nanopnp.solve.stage', "
         "'nanopnp.post.stage', 'nanopnp.materials.stage', 'nanopnp.io.stage', "
         "'nanopnp.structure.stage', 'nanopnp.structure.read', 'MDAnalysis', 'gemmi', "
-        "'nanopnp.density.stage', 'nanopnp.symmetry.stage'})\n"
+        "'nanopnp.density.stage', 'nanopnp.symmetry.stage', 'nanopnp.geometry.contour', "
+        "'skimage', 'shapely'})\n"
         "sys.stderr.write(json.dumps(loaded))\n"
     )
     result = subprocess.run(
@@ -400,7 +401,7 @@ def test_ver32_stage_list_imports_no_stage_module(tmp_path: Path) -> None:
     )
     assert json.loads(result.stderr) == []
     numbers = [line.split()[0] for line in result.stdout.splitlines()]
-    assert numbers == ["1", "2", "3", "6", "7", "8", "9", "10", "11", "12"]
+    assert numbers == ["1", "2", "3", "4", "6", "7", "8", "9", "10", "11", "12"]
 
 
 def test_ver32_env_reports_the_store_and_the_reference_archive(

@@ -330,11 +330,37 @@ class DensitySpec(_Strict):
 
 
 class ContourSpec(_Strict):
-    """Stage 4: contour extraction and conditioning."""
+    """Stage 4: contour extraction and conditioning.
 
-    isolevel: float = 0.25
-    smoothing: Literal["taubin", "none"] = "taubin"
-    simplify_tol_nm: float = 0.02
+    The normative contract is the section 5.3.1 NOTE on ``geometry.contour``. No
+    other contour parameter and no gate threshold is a case key: they are the
+    constants of section 5.2.1, and they key the stage-4 artefact (WP17 D3).
+    """
+
+    isolevel: float = Field(
+        default=0.25,
+        description=(
+            "The density isolevel whose contour is the pore wall, finite and in (0, 1). The "
+            "source work used 0.25 without a sensitivity study (section 5.3.1 NOTE on "
+            "geometry.contour)"
+        ),
+    )
+    smoothing: Literal["taubin", "none"] = Field(
+        default="taubin",
+        description=(
+            "`taubin`: resample at arc length h/2, then ten Taubin passes of lambda 0.5 and mu "
+            "-0.53, which keep the enclosed area where Laplacian smoothing shrinks it. `none` "
+            "skips both (section 5.2.1)"
+        ),
+    )
+    simplify_tol_nm: float = Field(
+        default=0.02,
+        description=(
+            "The Douglas-Peucker tolerance, finite, positive and below the density grid "
+            "spacing h: a larger one discards resolved geometry and breaks the margin of the "
+            "closing of radius 2h that the feature-size gate relies on (section 5.2.1 NOTE)"
+        ),
+    )
 
 
 class MembraneSpec(_Strict):
@@ -1600,16 +1626,16 @@ _PIPELINE_SECTIONS: dict[str, str] = {
 }
 """Case-file sections whose stages land in v0.9, with what each one drives.
 
-``structure:`` left this table in WP18 and ``geometry:`` in WP19: stages 1 to 3
+``structure:`` left this table in WP18 and ``geometry:`` in WP19: stages 1 to 4
 run, and a walk past them is refused by :func:`refuse_walk` instead, naming
-stage 4.
+stage 5.
 """
 
-STRUCTURE_WALK: tuple[str, ...] = ("case", "structure", "density", "symmetry")
-"""The stages a walk over a ``structure:`` case may reach until stage 4 is delivered.
+STRUCTURE_WALK: tuple[str, ...] = ("case", "structure", "density", "symmetry", "contour")
+"""The stages a walk over a ``structure:`` case may reach until stage 5 is delivered.
 
-Section 5.3.1 NOTE on ``structure:``: once stages 2 and 3 are delivered, and until
-stage 4 is, a walk extending past stage 3 is refused naming stage 4 (WP19 D1).
+Section 5.3.1 NOTE on ``structure:``: once stage 4 is delivered, and until stage 5
+is, a walk extending past stage 4 is refused naming stage 5 (WP20 D1).
 """
 
 GRID_SPACING_RANGE_NM: tuple[float, float] = (0.025, 0.05)
@@ -1712,6 +1738,8 @@ class ResolvedCase:
     density: DensitySpec | None = None
     """``geometry.density`` on a case carrying ``structure:``, at its defaults when the
     case has no ``geometry:`` block; ``None`` on any other case."""
+    contour: ContourSpec | None = None
+    """``geometry.contour`` on a case carrying ``structure:``, likewise (WP20 D3)."""
 
     @property
     def name(self) -> str:
@@ -1734,8 +1762,8 @@ class ResolvedCase:
             raise UnsupportedCaseSection(
                 f"case {self.name!r} supplies no inputs.mesh and generates its geometry from a "
                 "structure:, but the stages between the structure and the mesh are not delivered "
-                "in this release: stage 4, contour extraction (FR-07, FR-08), lands in WP20. "
-                "Stages 1 to 3 run through `nanopnp run --upto symmetry` (IF-02)"
+                "in this release: stage 5, CAD assembly (FR-09), lands in WP21. Stages 1 to 4 "
+                "run through `nanopnp run --upto contour` (IF-02)"
             )
         return self.mesh
 
@@ -1933,8 +1961,46 @@ def _resolve_density(document: CaseDocument) -> DensitySpec | None:
     return spec
 
 
+def _resolve_contour(document: CaseDocument, density: DensitySpec | None) -> ContourSpec | None:
+    """Make the ``geometry.contour`` refusals (section 5.3.1 NOTE, WP20 D3).
+
+    Value checks, not a narrowing of the schema, for the reason
+    :func:`_resolve_structure` gives.
+
+    Returns
+    -------
+    ContourSpec or None
+        The block, or its defaults where the case has no ``geometry:``; ``None``
+        on a case without ``structure:``.
+
+    Raises
+    ------
+    CaseValidationError
+        Naming the key and its value: an isolevel that is not finite or not in
+        (0, 1), or a tolerance that is not finite or not in (0, h), which also
+        names h.
+    """
+    if document.structure is None or density is None:
+        return None
+    spec = document.geometry.contour if document.geometry is not None else ContourSpec()
+    if not (math.isfinite(spec.isolevel) and 0.0 < spec.isolevel < 1.0):
+        raise CaseValidationError(
+            f"geometry.contour.isolevel is {spec.isolevel}; it is a level of a density in "
+            "[0, 1], so it lies in (0, 1) (section 5.3.1 NOTE on geometry.contour)"
+        )
+    h = density.grid_spacing_nm
+    if not (math.isfinite(spec.simplify_tol_nm) and 0.0 < spec.simplify_tol_nm < h):
+        raise CaseValidationError(
+            f"geometry.contour.simplify_tol_nm is {spec.simplify_tol_nm} nm; it must be positive "
+            f"and below the density grid spacing h = {h} nm, because a larger tolerance "
+            "discards resolved geometry and breaks the feature-size margin of the closing of "
+            "radius 2h (section 5.3.1 NOTE on geometry.contour, section 5.2.1)"
+        )
+    return spec
+
+
 def refuse_walk(resolved: ResolvedCase, upto: str | None) -> None:
-    """Refuse a walk past stage 3 on a case carrying ``structure:`` (section 5.3.1 NOTE).
+    """Refuse a walk past stage 4 on a case carrying ``structure:`` (section 5.3.1 NOTE).
 
     One function of the resolved case and the stage a walk stops at, called by
     :func:`nanopnp.io.run.run_document` and by the sweep plan builder, so a sweep
@@ -1951,7 +2017,7 @@ def refuse_walk(resolved: ResolvedCase, upto: str | None) -> None:
     Raises
     ------
     UnsupportedCaseSection
-        Naming stage 4, when the case carries ``structure:`` and ``upto`` is not
+        Naming stage 5, when the case carries ``structure:`` and ``upto`` is not
         one of :data:`STRUCTURE_WALK`.
     """
     if resolved.structure is None or upto in STRUCTURE_WALK:
@@ -1959,8 +2025,8 @@ def refuse_walk(resolved: ResolvedCase, upto: str | None) -> None:
     target = "the whole pipeline" if upto is None else f"stage {upto!r}"
     raise UnsupportedCaseSection(
         f"case {resolved.name!r} carries a structure: section, and a walk through {target} "
-        "extends past stage 3. Stage 4, contour extraction (FR-07, FR-08), is delivered in "
-        "WP20; until then stages 1 to 3 run, through `nanopnp run <case> --upto symmetry` "
+        "extends past stage 4. Stage 5, CAD assembly from the contour (FR-09), is delivered in "
+        "WP21; until then stages 1 to 4 run, through `nanopnp run <case> --upto contour` "
         "(IF-02, section 5.3.1 NOTE on structure:)"
     )
 
@@ -2260,6 +2326,7 @@ def resolve(document: CaseDocument) -> ResolvedCase:
     mesh = _require_runnable(document)
     structure = _resolve_structure(document)
     density = _resolve_density(document)
+    contour = _resolve_contour(document, density)
 
     electrolyte = Electrolyte.from_parameter_file(
         document.electrolyte.parameters,
@@ -2332,6 +2399,7 @@ def resolve(document: CaseDocument) -> ResolvedCase:
         outputs=tuple(document.outputs),
         structure=structure,
         density=density,
+        contour=contour,
     )
 
 

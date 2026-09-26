@@ -89,6 +89,7 @@ PIPELINE: tuple[str, ...] = (
     "structure",
     "density",
     "symmetry",
+    "contour",
     "mesh",
     "charge",
     "materials",
@@ -115,8 +116,8 @@ substitution (FR-27) to substitute, so recomputing one cannot read past an
 edited file.
 """
 
-STRUCTURE_STAGES: tuple[str, ...] = ("structure", "density", "symmetry")
-"""The stages a case runs only when it carries ``structure:`` (stages 1 to 3)."""
+STRUCTURE_STAGES: tuple[str, ...] = ("structure", "density", "symmetry", "contour")
+"""The stages a case runs only when it carries ``structure:`` (stages 1 to 4)."""
 
 WORKSPACE_DIRNAME = "tmp"
 """Directory under the store root that a run's scratch workspaces are made in.
@@ -152,7 +153,7 @@ def _scratch(store: Store) -> Path:
 
 
 WORKSPACE_STAGES: frozenset[str] = frozenset(
-    {"structure", "density", "symmetry", "mesh", "charge", "solve", "report"}
+    {"structure", "density", "symmetry", "contour", "mesh", "charge", "solve", "report"}
 )
 """Stages whose constructor takes the directory they write into.
 
@@ -173,6 +174,8 @@ _WEIGHTS: Mapping[str, float] = {
     # through stage 3 does: seconds for a crystal structure, minutes for an ensemble.
     "density": 0.2,
     "symmetry": 0.05,
+    # The probe profile is frames x atoms x planes distances: seconds on an ensemble.
+    "contour": 0.03,
     "mesh": 0.05,
     "charge": 0.06,
     "materials": 0.01,
@@ -392,7 +395,7 @@ def _selected(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]:
     ``charge`` is dropped when the case supplies neither ``inputs.charge`` nor
     ``inputs.eps_r``: stage 7 refuses such a case as describing no work, and a
     run with no field to gate has not skipped a gate. ``structure``, ``density``
-    and ``symmetry`` are dropped when the case carries no ``structure:`` section,
+    ``symmetry`` and ``contour`` are dropped when the case carries no ``structure:`` section,
     for the same reason.
 
     Raises
@@ -608,6 +611,20 @@ REDUCTION_RECORD_KEYS: tuple[str, ...] = (
 )
 """The stage-3 summary entries the Geometry group records as ``reduction`` (WP19 D13)."""
 
+CONTOUR_RECORD_KEYS: tuple[str, ...] = (
+    "isolevel",
+    "smoothing",
+    "simplify_tol_nm",
+    "h_c_nm",
+    "vertex_count",
+    "min_vertex_spacing_nm",
+    "min_feature_size_nm",
+    "holes_filled",
+    "band",
+    "constriction",
+)
+"""The stage-4 summary entries the Geometry group records as ``contour`` (WP20 D15)."""
+
 
 def _record(artefact: Artefact | None, keys: tuple[str, ...]) -> dict[str, Canonicalisable] | None:
     """Return a Geometry-group record: the named entries of one stage's summary.
@@ -634,6 +651,7 @@ def _manifest(walk: _Walk, *, case_text: str, case_path: Path | None) -> Manifes
     structure = walk.artefacts.get("structure")
     density = walk.artefacts.get("density")
     symmetry = walk.artefacts.get("symmetry")
+    contour = walk.artefacts.get("contour")
     mesh = walk.artefacts.get("mesh")
     charge = walk.artefacts.get("charge")
     solve = walk.artefacts.get("solve")
@@ -670,6 +688,7 @@ def _manifest(walk: _Walk, *, case_text: str, case_path: Path | None) -> Manifes
         structure=_record(structure, STRUCTURE_RECORD_KEYS),
         density=_record(density, DENSITY_RECORD_KEYS),
         reduction=_record(symmetry, REDUCTION_RECORD_KEYS),
+        contour=_record(contour, CONTOUR_RECORD_KEYS),
         charge=dict(charge.summary) if charge is not None else None,
         electrolyte=walk.resolved.electrolyte,
         clamp_activations=clamps if isinstance(clamps, int) else None,

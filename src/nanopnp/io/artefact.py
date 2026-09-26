@@ -48,6 +48,14 @@ DENSITY_SCHEMA = "nanopnp/density/v1"
 REDUCED_SCHEMA = "nanopnp/reduced/v1"
 """Stage 3: the (r, z) mean and the Cₙ and raw azimuthal variances (FR-05, FR-06)."""
 
+PROFILE_ARTEFACT_SCHEMA = "nanopnp/profile/v1"
+"""Stage 4: the conditioned, gated contour, a ``nanopnp/profile/v1`` document (FR-07, FR-08).
+
+The same string as :data:`nanopnp.mesh.profile.PROFILE_SCHEMA`, repeated rather
+than imported for the reason :data:`MESH_ARTEFACT_SCHEMA` gives: the payload *is*
+a profile document, which ``inputs.profile`` reads back (WP20 D12).
+"""
+
 MATERIALS_SCHEMA = "nanopnp/materials/v1"
 """Stage 8: the resolved material coefficient set."""
 
@@ -289,6 +297,33 @@ class ReducedArtefact(Artefact):
     ) -> None:
         super().__init__(
             schema=REDUCED_SCHEMA,
+            parameters=dict(parameters),
+            inputs=dict(inputs),
+            payload=dict(payload or {}),
+            summary=summary or {},
+        )
+
+
+class ProfileArtefact(Artefact):
+    """Stage 4: the conditioned contour, keyed on ``geometry.contour``, h, its constants and 1, 3.
+
+    The parameters are the ``geometry.contour`` block, the grid spacing h that
+    sets the morphology, the resampling and the gate's ``h_c``, every code
+    constant that moves a vertex or a verdict, and the radius set the probe
+    profile reads (WP20 D13). Stages 1 and 3's hashes are the inputs: stage 3's
+    mean is contoured, and stage 1's ensemble gives the probe profile.
+    """
+
+    def __init__(
+        self,
+        *,
+        parameters: Mapping[str, Canonicalisable],
+        inputs: Mapping[str, str],
+        payload: Mapping[str, Path] | None = None,
+        summary: Mapping[str, Canonicalisable] | None = None,
+    ) -> None:
+        super().__init__(
+            schema=PROFILE_ARTEFACT_SCHEMA,
             parameters=dict(parameters),
             inputs=dict(inputs),
             payload=dict(payload or {}),

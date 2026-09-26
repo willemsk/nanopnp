@@ -563,14 +563,14 @@ def test_ver48_rigid_move_superposes_to_zero(prepared: Path, tmp_path: Path) -> 
 
 
 def test_ver48_walk_rules(prepared: Path, tmp_path: Path) -> None:
-    """A full walk is refused naming stage 4; ``upto`` must name a stage the case has (IF-02).
+    """A full walk is refused naming stage 5; ``upto`` must name a stage the case has (IF-02).
 
-    Stage 2 until WP19 delivered stages 2 and 3; stage 4 now (section 5.3.1 NOTE on
-    ``structure:``).
+    Stage 2 until WP19 delivered stages 2 and 3, stage 4 until WP20 delivered it,
+    and stage 5 now (section 5.3.1 NOTE on ``structure:``).
     """
     case = _case(tmp_path, _block(prepared))
     store = Store(tmp_path / "store")
-    with pytest.raises(UnsupportedCaseSection, match=r"Stage 4, contour extraction"):
+    with pytest.raises(UnsupportedCaseSection, match=r"Stage 5, CAD assembly"):
         run_case(case, store=store, write=False)
     with pytest.raises(UnsupportedCaseSection, match=r"stage 'materials'"):
         run_case(case, store=store, upto="materials", write=False)
@@ -601,7 +601,7 @@ def test_ver48_a_sweep_over_a_structure_case_is_refused_at_plan_build(
         "  - {name: bias, path: boundary_conditions.bias_V, values: [0.05, 0.1]}\n",
         encoding="utf-8",
     )
-    with pytest.raises(SweepPlanError, match=r"Stage 4, contour extraction"):
+    with pytest.raises(SweepPlanError, match=r"Stage 5, CAD assembly"):
         plan_from_document(sweep)
 
 

@@ -458,6 +458,22 @@ def _register_builtins() -> None:
     )
     register(
         StageDescription(
+            name="contour",
+            number=4,
+            title="Contour extraction and conditioning",
+            inputs=("case", "structure", "symmetry"),
+            outputs=(
+                "conditioned closed polyline, a nanopnp/profile/v1 document",
+                "conditioning and gate record",
+                "probe-radius profile",
+            ),
+            artefact_schema="nanopnp/profile/v1",
+        ),
+        "nanopnp.geometry.contour:ContourStage",
+        extra="structure",
+    )
+    register(
+        StageDescription(
             name="mesh",
             number=6,
             title="Mesh",
