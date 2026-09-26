@@ -302,6 +302,51 @@ def feature_sizes(points: np.ndarray, *, local_edges: int = LOCAL_EDGES) -> np.n
     return sizes
 
 
+def plane_crossings(profile: PoreProfile | np.ndarray, z_nm: float) -> tuple[float, ...]:
+    """Return the radii at which a closed polygon crosses the plane ``z = z_nm``.
+
+    Here rather than in :mod:`nanopnp.mesh.reference` because stage 5 derives the
+    membrane junction of *any* profile from it (section 5.2.1 NOTE on the
+    membrane junction on any profile); the reference module re-exports it.
+
+    Parameters
+    ----------
+    profile
+        The pore profile, or its ``(n, 2)`` vertices. The closing edge is
+        implied, and is included here.
+    z_nm
+        The plane, in nm.
+
+    Returns
+    -------
+    tuple of float
+        The crossing radii, sorted ascending. A closed simple polygon crosses a
+        plane an even number of times, so consecutive pairs bracket the body's
+        intervals on the plane; the first pair is the lumen-adjacent one.
+
+    Notes
+    -----
+    A vertex lying exactly on the plane is counted once, not twice: the interval
+    test is half-open in ``z``, which is the standard fix for the double-count
+    and is why the delivered table's vertex at ``(4.88, +1.4)`` gives ``4.88``
+    rather than a duplicate.
+    """
+    import numpy as np
+
+    points = profile.as_array() if isinstance(profile, PoreProfile) else profile
+    starts = points
+    ends = np.roll(points, -1, axis=0)
+    z0, z1 = starts[:, 1], ends[:, 1]
+    lower = np.minimum(z0, z1)
+    upper = np.maximum(z0, z1)
+    crossing = (lower <= z_nm) & (z_nm < upper)
+    if not bool(np.any(crossing)):
+        return ()
+    fraction = (z_nm - z0[crossing]) / (z1[crossing] - z0[crossing])
+    radii = starts[crossing, 0] + fraction * (ends[crossing, 0] - starts[crossing, 0])
+    return tuple(sorted(float(value) for value in radii))
+
+
 def _check_no_repeats(points: np.ndarray) -> None:
     """Raise if any two vertices coincide, naming the first pair.
 

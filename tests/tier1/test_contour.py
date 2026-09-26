@@ -45,8 +45,8 @@ from nanopnp.geometry.contour import (
 )
 from nanopnp.geometry.probe import probe_radius_profile
 from nanopnp.io.artefact import Artefact, StageInputs
-from nanopnp.io.case import CaseValidationError, UnsupportedCaseSection, load_case, resolve
-from nanopnp.io.run import run_case
+from nanopnp.io.case import CaseValidationError, load_case, resolve
+from nanopnp.io.run import _selected, run_case
 from nanopnp.io.store import Store
 from nanopnp.mesh.profile import (
     PIPELINE_SOURCE,
@@ -553,13 +553,19 @@ def test_ver51_case_value_refusals(
 
 
 def test_ver51_case_values_and_walk(tube: Path, tube_store: Store, tmp_path: Path) -> None:
-    """A ``structure:`` case walks to stage 4; a full walk, a mesh walk and a sweep name stage 5.
+    """A ``structure:`` case walks to stage 4, and on to stage 5, which gates the junction.
+
+    Until WP21 a full walk, a mesh walk and a sweep were refused naming stage 5
+    (WP20 D1). Now the walk selects every stage, the sweep plans, and stage 5
+    refuses a bilayer at the default ``centre_z_nm = 0`` that misses the tube,
+    naming the key (WP21 D4).
 
     The tolerance is checked against the case's own grid spacing, so 0.035 nm is
     refused at h = 0.03 nm and admitted at the default h. The manifest's Geometry
     group records the contour (D15).
     """
-    from nanopnp.sweep.plan import SweepPlanError, plan_from_document
+    from nanopnp.geometry.region import RegionGateError
+    from nanopnp.sweep.plan import plan_from_document
 
     case = _case(tmp_path, tube)
     ran = run_case(case, store=tube_store, upto="contour", write=False)
@@ -587,10 +593,21 @@ def test_ver51_case_values_and_walk(tube: Path, tube_store: Store, tmp_path: Pat
         assert key in recorded, key  # type: ignore[operator]
     assert recorded["band"]["low"]["value_nm"] >= -H  # type: ignore[index]
 
-    with pytest.raises(UnsupportedCaseSection, match=r"Stage 5, CAD assembly .* WP21"):
-        run_case(case, store=tube_store, write=False)
-    with pytest.raises(UnsupportedCaseSection, match=r"stage 'mesh' extends past stage 4"):
-        run_case(case, store=tube_store, upto="mesh", write=False)
+    assert _selected(resolve(load_case(case)), None) == (
+        "case",
+        "structure",
+        "density",
+        "symmetry",
+        "contour",
+        "region",
+        "mesh",
+        "materials",
+        "solve",
+        "qoi",
+        "report",
+    )
+    with pytest.raises(RegionGateError, match=r"centre_z_nm = 0 nm"):
+        run_case(case, store=tube_store, upto="region", write=False)
     sweep = tmp_path / "sweep.yaml"
     sweep.write_text(
         "schema: nanopnp/sweep/v1\n"
@@ -600,8 +617,7 @@ def test_ver51_case_values_and_walk(tube: Path, tube_store: Store, tmp_path: Pat
         "  - {name: bias, path: boundary_conditions.bias_V, values: [0.05, 0.1]}\n",
         encoding="utf-8",
     )
-    with pytest.raises(SweepPlanError, match=r"Stage 5, CAD assembly"):
-        plan_from_document(sweep)
+    assert len(plan_from_document(sweep).points) == 2
 
     fine = "geometry: {density: {grid_spacing_nm: 0.03}, contour: {simplify_tol_nm: 0.035}}\n"
     with pytest.raises(CaseValidationError, match=r"h = 0\.03 nm"):

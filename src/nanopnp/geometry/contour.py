@@ -496,7 +496,7 @@ def mid_planes(loops: Sequence[np.ndarray], z_nm: np.ndarray) -> np.ndarray:
 def innermost_crossings(loops: Sequence[np.ndarray], planes: np.ndarray) -> np.ndarray:
     """Return the smallest radius at which any loop crosses each plane; ``nan`` where none does.
 
-    The interval test is half-open in z, as :func:`nanopnp.mesh.reference.plane_crossings`
+    The interval test is half-open in z, as :func:`nanopnp.mesh.profile.plane_crossings`
     takes it, so a vertex on the plane is counted once.
     """
     import numpy as np

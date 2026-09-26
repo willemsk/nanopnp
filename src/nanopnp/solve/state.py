@@ -47,7 +47,7 @@ from nanopnp.core.constants import thermal_voltage
 from nanopnp.core.hashing import Canonicalisable, content_hash
 from nanopnp.io.artefact import SOLUTION_SCHEMA, Artefact
 from nanopnp.io.case import COUPLED_MODELS, resolve
-from nanopnp.mesh.ingest import ingest
+from nanopnp.mesh.ingest import deployed_mesh
 from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS
 from nanopnp.physics.coefficients import SATURATED_WALL_DISTANCE_NM
 from nanopnp.physics.measures import AXISYMMETRIC, Measures
@@ -1005,7 +1005,9 @@ def _gate_space(stored: Mapping[str, Any], expected: Mapping[str, Any], path: Pa
             )
 
 
-def restore(path: Path, *, case: CaseDocument) -> ModelSolution:
+def restore(
+    path: Path, *, case: CaseDocument, mesh_artefact: Artefact | None = None
+) -> ModelSolution:
     """Return the converged solution stored at ``path``, on this case's operator.
 
     The residual is reassembled from the rung the ladder ends on, against the
@@ -1022,6 +1024,11 @@ def restore(path: Path, *, case: CaseDocument) -> ModelSolution:
         The case document the state is being restored into. Its mesh is ingested
         and gated exactly as a solve would ingest it, because the space the
         coefficients are loaded onto is built on that mesh.
+    mesh_artefact
+        The run's stage-6 artefact, needed when the case generates its mesh:
+        the generated file is read from its payload and never regenerated
+        (:func:`~nanopnp.mesh.ingest.deployed_mesh`). Ignored for a case that
+        supplies ``inputs.mesh``.
 
     Returns
     -------
@@ -1042,7 +1049,7 @@ def restore(path: Path, *, case: CaseDocument) -> ModelSolution:
     import numpy as np
 
     resolved = resolve(case)
-    ingested = ingest(resolved.require_mesh(), resolved)
+    ingested = deployed_mesh(resolved, mesh_artefact)
     mesh = ingested.mesh
     order = int(resolved.model_options.get("order", AXISYMMETRIC.element_order))
     measures = replace(AXISYMMETRIC, element_order=order)

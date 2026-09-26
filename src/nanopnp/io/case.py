@@ -695,13 +695,14 @@ class CaseDocument(_Strict):
         Section 5.3.1: a stage whose output is supplied does not run, and neither
         does anything upstream of it, so an upstream artefact supplied beside a
         downstream one would be hashed into the FR-25 manifest as an input to a
-        run that never read it. ``numerics.mesh.size_scale`` scales the mesher's
-        size targets, and beside a supplied mesh there is no mesher.
+        run that never read it. Every ``numerics.mesh`` key configures the
+        mesher, and beside a supplied mesh there is no mesher (section 5.3.1 NOTE
+        on ``numerics.mesh``, WP21 D14).
 
         Raises
         ------
         ValueError
-            Naming both artefacts, or the scale and the supplied mesh.
+            Naming both artefacts, or each mesh key and the supplied mesh.
         """
         problems: list[str] = []
         for chain in SUPPLY_CHAINS:
@@ -713,13 +714,17 @@ class CaseDocument(_Strict):
                     f"({' -> '.join(chain)}), so inputs.{upstream} would be recorded as an input "
                     "to a run that never read it; supply one of them"
                 )
-        scale = self.numerics.mesh.size_scale
-        if self.inputs.mesh is not None and scale != 1.0:
-            problems.append(
-                f"numerics.mesh.size_scale is {scale} beside inputs.mesh; the scale multiplies the "
-                "mesher's size targets, and a supplied mesh is not meshed, so it would have no "
-                "effect; set it to 1 or remove inputs.mesh"
-            )
+        if self.inputs.mesh is not None:
+            defaults = MeshSpec()
+            for key in MeshSpec.model_fields:
+                value = getattr(self.numerics.mesh, key)
+                if value == getattr(defaults, key):
+                    continue
+                problems.append(
+                    f"numerics.mesh.{key} is {value!r} beside inputs.mesh; it configures the "
+                    "mesher, and a supplied mesh is not meshed, so it would have no effect; "
+                    f"remove it or remove inputs.mesh"
+                )
         if problems:
             raise ValueError("; ".join(problems))
         return self
@@ -1626,17 +1631,12 @@ _PIPELINE_SECTIONS: dict[str, str] = {
 }
 """Case-file sections whose stages land in v0.9, with what each one drives.
 
-``structure:`` left this table in WP18 and ``geometry:`` in WP19: stages 1 to 4
-run, and a walk past them is refused by :func:`refuse_walk` instead, naming
-stage 5.
+``structure:`` left this table in WP18 and ``geometry:`` in WP19. Since WP21 a
+``structure:`` case walks the whole pipeline (section 5.3.1 NOTE on ``structure:``).
 """
 
-STRUCTURE_WALK: tuple[str, ...] = ("case", "structure", "density", "symmetry", "contour")
-"""The stages a walk over a ``structure:`` case may reach until stage 5 is delivered.
-
-Section 5.3.1 NOTE on ``structure:``: once stage 4 is delivered, and until stage 5
-is, a walk extending past stage 4 is refused naming stage 5 (WP20 D1).
-"""
+PROFILE_FORMAT = "profile1"
+"""``inputs.profile.format``: a ``nanopnp/profile/v1`` document (section 5.3.1 NOTE)."""
 
 GRID_SPACING_RANGE_NM: tuple[float, float] = (0.025, 0.05)
 """FR-04's density grid spacing, 0.25-0.5 Å (section 5.3.1 NOTE on ``geometry.density``)."""
@@ -1645,10 +1645,6 @@ _POINT_GROUP = re.compile(r"C([1-9][0-9]*)")
 """``symmetry.point_group``: a cyclic group ``C<n>``, n >= 1 (section 5.3.1 NOTE)."""
 
 _UNCONSUMED_INPUTS: dict[str, str] = {
-    "profile": (
-        "stage 5, CAD assembly from a conditioned profile, which reads a supplied "
-        "nanopnp/profile/v1 polyline (Phase 2, WP21)"
-    ),
     "pqr": (
         "stage 7's charge deposition from per-atom charges and radii, which reads a supplied "
         "PQR file (Phase 3)"
@@ -1740,32 +1736,23 @@ class ResolvedCase:
     case has no ``geometry:`` block; ``None`` on any other case."""
     contour: ContourSpec | None = None
     """``geometry.contour`` on a case carrying ``structure:``, likewise (WP20 D3)."""
+    profile: SuppliedArtefact | None = None
+    """``inputs.profile``, which stage 5 reads in place of stage 4's contour (WP21)."""
+    membrane: MembraneSpec | None = None
+    """``geometry.membrane`` on a case that generates its mesh, at its defaults when the
+    case has no ``geometry:`` block; ``None`` on a case supplying ``inputs.mesh``."""
+    reservoir: ReservoirSpec | None = None
+    """``geometry.reservoir``, likewise."""
 
     @property
     def name(self) -> str:
         """The case name, which names the run directory in the store."""
         return self.document.name
 
-    def require_mesh(self) -> SuppliedArtefact:
-        """Return ``inputs.mesh``, or refuse a case whose mesh no delivered stage produces.
-
-        Only a case carrying ``structure:`` resolves without one, and its walk is
-        refused past stage 3 by :func:`refuse_walk`; this is the same refusal for
-        a caller that reaches a mesh-consuming stage by another route.
-
-        Raises
-        ------
-        UnsupportedCaseSection
-            If the case supplies no mesh.
-        """
-        if self.mesh is None:
-            raise UnsupportedCaseSection(
-                f"case {self.name!r} supplies no inputs.mesh and generates its geometry from a "
-                "structure:, but the stages between the structure and the mesh are not delivered "
-                "in this release: stage 5, CAD assembly (FR-09), lands in WP21. Stages 1 to 4 "
-                "run through `nanopnp run --upto contour` (IF-02)"
-            )
-        return self.mesh
+    @property
+    def generates_mesh(self) -> bool:
+        """Whether stages 5 and 6 build this case's mesh: it supplies no ``inputs.mesh``."""
+        return self.mesh is None
 
     @property
     def solve_provenance(self) -> dict[str, Any]:
@@ -1999,38 +1986,6 @@ def _resolve_contour(document: CaseDocument, density: DensitySpec | None) -> Con
     return spec
 
 
-def refuse_walk(resolved: ResolvedCase, upto: str | None) -> None:
-    """Refuse a walk past stage 4 on a case carrying ``structure:`` (section 5.3.1 NOTE).
-
-    One function of the resolved case and the stage a walk stops at, called by
-    :func:`nanopnp.io.run.run_document` and by the sweep plan builder, so a sweep
-    over such a case is refused when its plan is built rather than at every
-    member.
-
-    Parameters
-    ----------
-    resolved
-        The resolved case.
-    upto
-        The last stage of the walk; ``None`` for the whole pipeline.
-
-    Raises
-    ------
-    UnsupportedCaseSection
-        Naming stage 5, when the case carries ``structure:`` and ``upto`` is not
-        one of :data:`STRUCTURE_WALK`.
-    """
-    if resolved.structure is None or upto in STRUCTURE_WALK:
-        return
-    target = "the whole pipeline" if upto is None else f"stage {upto!r}"
-    raise UnsupportedCaseSection(
-        f"case {resolved.name!r} carries a structure: section, and a walk through {target} "
-        "extends past stage 4. Stage 5, CAD assembly from the contour (FR-09), is delivered in "
-        "WP21; until then stages 1 to 4 run, through `nanopnp run <case> --upto contour` "
-        "(IF-02, section 5.3.1 NOTE on structure:)"
-    )
-
-
 def _check_species(document: CaseDocument, electrolyte: Electrolyte) -> None:
     """Check the case's species and steric diameters against the parameter file.
 
@@ -2076,9 +2031,9 @@ def _require_runnable(document: CaseDocument) -> SuppliedArtefact | None:
     Returns
     -------
     SuppliedArtefact or None
-        ``inputs.mesh``. Only a case carrying ``structure:`` may omit it: stage 1
-        runs, and :func:`refuse_walk` stops its walk there. Any other case
-        without one describes no run at all.
+        ``inputs.mesh``. A case carrying ``structure:`` or supplying
+        ``inputs.profile`` may omit it, and stages 5 and 6 build the mesh. Any
+        other case without one describes no run at all.
     """
     for section, what in _PIPELINE_SECTIONS.items():
         if getattr(document, section) is not None:
@@ -2131,12 +2086,19 @@ def _require_runnable(document: CaseDocument) -> SuppliedArtefact | None:
             "it, so the geometry would be recorded as an input to a run that never read it "
             "(section 5.3.1 NOTE on geometry.density); remove one of them"
         )
-    if document.inputs.mesh is None and document.structure is None:
-        raise UnsupportedCaseSection(
-            f"case {document.name!r} supplies no inputs.mesh; the meshing pipeline is v0.9 "
-            "(SPECIFICATION.md section 3, FR-10), so this release needs an externally supplied "
-            "mesh (section 5.3.1 NOTE on inputs:)"
+    _check_profile(document)
+    if (
+        document.inputs.mesh is None
+        and document.structure is None
+        and document.inputs.profile is None
+    ):
+        raise CaseValidationError(
+            f"case {document.name!r} names no geometry: it supplies neither inputs.mesh nor "
+            "inputs.profile and carries no structure: section, so there is nothing to mesh and "
+            "no mesh to solve on (section 5.3.1 NOTE on inputs:)"
         )
+    if document.inputs.mesh is None:
+        _check_generation(document)
     mesh = document.inputs.mesh
     nonlinear = document.numerics.nonlinear
     if nonlinear.strategy != "newton":
@@ -2161,6 +2123,110 @@ def _require_runnable(document: CaseDocument) -> SuppliedArtefact | None:
     if model in COUPLED_MODELS and document.numerics.continuation != "none":
         _check_ladder_can_honour(document.physics)
     return mesh
+
+
+def _check_profile(document: CaseDocument) -> None:
+    """Make the ``inputs.profile`` refusals (section 5.3.1 NOTE on ``inputs:``, WP21 D14).
+
+    Raises
+    ------
+    CaseValidationError
+        Naming the key: ``artefact:``, ``groups`` or a format other than
+        ``profile1`` on ``inputs.profile``; ``structure:`` beside it; and
+        ``geometry.density`` or ``geometry.contour`` set away from their defaults
+        beside it, which stages 2 to 4 would read and which do not run.
+    """
+    profile = document.inputs.profile
+    if profile is None:
+        return
+    if profile.path is None:
+        raise CaseValidationError(
+            "inputs.profile: artefact: names a profile in the store; stage 4's artefact is "
+            "reached through a structure: section, and a supplied profile is named by "
+            "inputs.profile: path: (section 5.3.1 NOTE on inputs:)"
+        )
+    if profile.groups:
+        raise CaseValidationError(
+            "inputs.profile.groups is the mesh's vocabulary mapping (IF-06) and means nothing "
+            "for a profile, whose one boundary stage 5 names itself (section 5.3.1 NOTE on "
+            "inputs:)"
+        )
+    if profile.format not in (None, PROFILE_FORMAT):
+        raise CaseValidationError(
+            f"inputs.profile.format is {profile.format!r}; a supplied profile is a "
+            f"nanopnp/profile/v1 document, format {PROFILE_FORMAT!r} (section 5.3.1 NOTE on "
+            "inputs:)"
+        )
+    if document.structure is not None:
+        raise CaseValidationError(
+            f"case {document.name!r} carries a structure: section and supplies inputs.profile. "
+            "A stage whose output is supplied does not run, and neither does anything upstream "
+            "of it, so the structure would be recorded as an input to a run that never read it "
+            "(section 5.3.1 NOTE on inputs:); remove one of them"
+        )
+    geometry = document.geometry
+    if geometry is None:
+        return
+    for key, default in (("density", DensitySpec()), ("contour", ContourSpec())):
+        if getattr(geometry, key) != default:
+            raise CaseValidationError(
+                f"geometry.{key} is set beside inputs.profile. Stages 2 to 4 read it and a "
+                "supplied profile means they do not run, so it would change nothing; remove it "
+                "(section 5.3.1 NOTE on inputs:)"
+            )
+
+
+def _check_generation(document: CaseDocument) -> None:
+    """Make the refusals of a case whose mesh stages 5 and 6 build (WP21 D14).
+
+    Raises
+    ------
+    UnsupportedCaseSection
+        Naming the key and its value: ``numerics.mesh.backend: gmsh`` until the
+        Gmsh adapter is delivered (WP23), ``boundary_layer: true`` (FR-11,
+        post-1.0) and ``geometry.analyte`` (FR-21, v1.0).
+    CaseValidationError
+        Naming the key and its value: a membrane thickness, a reservoir radius
+        or an explicit ``wall_h_nm`` that is not finite and positive.
+    """
+    mesh = document.numerics.mesh
+    if mesh.backend != "netgen":
+        raise UnsupportedCaseSection(
+            f"numerics.mesh.backend is {mesh.backend!r}; the Gmsh adapter is optional and "
+            "delivered in WP23 (CON-10, ADR-002), and this release meshes with netgen"
+        )
+    if mesh.boundary_layer:
+        raise UnsupportedCaseSection(
+            "numerics.mesh.boundary_layer is true; boundary-layer meshing is FR-11, after v1.0. "
+            "The reference mesh used none, only isotropic grading to the wall (section 5.2.2)"
+        )
+    geometry = document.geometry
+    if geometry is not None and geometry.analyte is not None:
+        raise UnsupportedCaseSection(
+            f"geometry.analyte is a {geometry.analyte.shape}; an analyte in a generated region "
+            "is FR-21, v1.0. The benchmark geometries embed one (PHY-11)"
+        )
+    membrane = geometry.membrane if geometry is not None else MembraneSpec()
+    reservoir = geometry.reservoir if geometry is not None else ReservoirSpec()
+    for key, value in (
+        ("geometry.membrane.thickness_nm", membrane.thickness_nm),
+        ("geometry.reservoir.radius_nm", reservoir.radius_nm),
+    ):
+        if not (math.isfinite(value) and value > 0.0):
+            raise CaseValidationError(
+                f"{key} is {value}; it is a length, finite and positive (section 5.3.1 NOTE on "
+                "numerics.mesh)"
+            )
+    if not math.isfinite(membrane.centre_z_nm):
+        raise CaseValidationError(
+            f"geometry.membrane.centre_z_nm is {membrane.centre_z_nm}; it is a finite position "
+            "along the axis in the structure's frame"
+        )
+    if mesh.wall_h_nm != "auto" and not (math.isfinite(mesh.wall_h_nm) and mesh.wall_h_nm > 0.0):
+        raise CaseValidationError(
+            f"numerics.mesh.wall_h_nm is {mesh.wall_h_nm}; it is `auto` or an element size in "
+            "nm, finite and positive (section 5.3.1 NOTE on numerics.mesh)"
+        )
 
 
 _LADDER_PHYSICS: dict[str, bool] = {
@@ -2327,6 +2393,7 @@ def resolve(document: CaseDocument) -> ResolvedCase:
     structure = _resolve_structure(document)
     density = _resolve_density(document)
     contour = _resolve_contour(document, density)
+    geometry = document.geometry if document.geometry is not None else Geometry()
 
     electrolyte = Electrolyte.from_parameter_file(
         document.electrolyte.parameters,
@@ -2400,6 +2467,9 @@ def resolve(document: CaseDocument) -> ResolvedCase:
         structure=structure,
         density=density,
         contour=contour,
+        profile=document.inputs.profile,
+        membrane=geometry.membrane if mesh is None else None,
+        reservoir=geometry.reservoir if mesh is None else None,
     )
 
 

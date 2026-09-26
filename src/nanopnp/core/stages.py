@@ -474,11 +474,25 @@ def _register_builtins() -> None:
     )
     register(
         StageDescription(
+            name="region",
+            number=5,
+            title="CAD assembly",
+            inputs=("case", "contour"),
+            outputs=(
+                "tagged (r, z) region, a nanopnp/region/v1 record",
+                "membrane inner edge and junction-gate record",
+            ),
+            artefact_schema="nanopnp/region/v1",
+        ),
+        "nanopnp.geometry.region:RegionStage",
+    )
+    register(
+        StageDescription(
             name="mesh",
             number=6,
             title="Mesh",
-            inputs=("case",),
-            outputs=("tagged mesh", "element-quality report"),
+            inputs=("case", "region"),
+            outputs=("tagged mesh", "element-quality report", "size-field record"),
             artefact_schema="nanopnp/mesh/v1",
         ),
         "nanopnp.mesh.ingest:MeshStage",

@@ -35,13 +35,14 @@ by listing every correction as a deviation. To solve ePNP-NS, name the correctio
 
 | Section | Holds |
 |---|---|
-| `inputs` | Stage outputs supplied from outside: `mesh`, and optionally `charge` and `eps_r`, each by `path` and `format` (the §5.3.1 `inputs:` NOTE). `profile` and `pqr` are accepted by the schema and refused by this release, naming the stage that will read them |
+| `inputs` | Stage outputs supplied from outside, each by `path` and `format` (the §5.3.1 `inputs:` NOTE): a `mesh`, or a pore `profile` that stages 5 and 6 assemble and mesh, and optionally `charge` and `eps_r`. `pqr` is accepted by the schema and refused by this release, naming the stage that will read it |
 | `electrolyte` | Species and valences, concentration, temperature, the correction parameter file, and each correction's model and parts |
 | `boundary_conditions` | The bias, which electrode is grounded, and the wall conditions |
 | `physics` | The model (`epnp-ns`, `pnp-ns`, `pnp`, `pb`, `pb-linear`, `poisson`), the flow switches, and the solid permittivities, which are set here and nowhere else |
-| `numerics` | Element orders, the nonlinear and linear solvers, the continuation ladder, stabilisation, the wall-distance field |
+| `numerics` | Element orders, the nonlinear and linear solvers, the continuation ladder, stabilisation, the wall-distance field, and the sizes of a generated mesh (`numerics.mesh`) |
 | `outputs` | Which quantities to report: `current`, `transport_numbers`, `eof_rate`, `rectification`, `analyte_force`, `fields` |
-| `structure`, `geometry`, `charge` | The v0.9 geometry and charge pipeline. Accepted by the schema, refused by this release, naming the section |
+| `structure`, `geometry` | The geometry pipeline: the structure file and its symmetry, the density map, the contour, the membrane and the reservoir. A `structure:` case walks every stage |
+| `charge` | The v0.9 charge pipeline. Accepted by the schema, refused by this release, naming the section |
 
 ## Validation
 

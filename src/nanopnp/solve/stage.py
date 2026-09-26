@@ -59,7 +59,7 @@ from nanopnp.core.stages import (
 from nanopnp.io.artefact import Artefact, SolutionArtefact, StageInputs
 from nanopnp.io.case import resolve
 from nanopnp.materials.stage import MaterialsStage
-from nanopnp.mesh.ingest import IngestedMesh, MeshStage, ingest
+from nanopnp.mesh.ingest import IngestedMesh, MeshStage, deployed_mesh
 from nanopnp.physics.measures import AXISYMMETRIC
 from nanopnp.physics.models import CoupledBoundaries, CoupledModel
 from nanopnp.solve.continuation import Rung, run_ladder
@@ -263,8 +263,8 @@ class SolveStage:
             down, and the digest is therefore known without opening a file.
         """
         resolved = resolve(inputs.case)
-        ingested = ingest(resolved.require_mesh(), resolved)
         mesh = inputs.upstream.get("mesh")
+        ingested = deployed_mesh(resolved, mesh)
         if mesh is None:
             mesh = MeshStage().artefact(ingested)
         materials = inputs.upstream.get("materials")

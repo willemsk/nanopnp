@@ -53,7 +53,7 @@ from nanopnp.materials.fields import (
     load_solid_fraction,
 )
 from nanopnp.materials.fields import summary as solid_fraction_summary
-from nanopnp.mesh.ingest import IngestedMesh, MeshStage, ingest
+from nanopnp.mesh.ingest import IngestedMesh, MeshStage, deployed_mesh
 from nanopnp.physics.measures import AXISYMMETRIC, Measures
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
@@ -461,7 +461,7 @@ class FieldStage:
         mesh = inputs.upstream.get("mesh")
         ingested: IngestedMesh | None = None
         if ingest_mesh or mesh is None:
-            ingested = ingest(resolved.require_mesh(), resolved)
+            ingested = deployed_mesh(resolved, mesh)
         if mesh is None:
             assert ingested is not None  # ingested above precisely for this
             mesh = MeshStage().artefact(ingested)

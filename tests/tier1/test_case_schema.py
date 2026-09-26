@@ -259,13 +259,13 @@ def test_fr27_a_section_a_later_release_owns_names_the_section_and_the_release(
 
 
 def test_fr27_a_case_without_a_supplied_mesh_says_where_the_mesh_comes_from() -> None:
-    """Phase 1 runs on a hand-substituted stage-6 artefact; there is no other mesh."""
+    """A case naming no mesh, no profile and no structure has no geometry to solve on (WP21)."""
     text = REFERENCE_CASE.replace(
         "inputs:\n  mesh: {path: clya.msh, format: msh41,\n"
         "         groups: {pore: pore, membrane: membrane, reservoir: bulk}}\n",
         "",
     )
-    with pytest.raises(UnsupportedCaseSection, match=r"inputs\.mesh"):
+    with pytest.raises(CaseValidationError, match=r"inputs\.mesh nor inputs\.profile"):
         resolve(loads_case(text))
 
 
