@@ -129,7 +129,6 @@ EXIT_CODES: Final[dict[str, int]] = {
     "nanopnp.mesh.quality:MeshQualityError": EXIT_GATE,
     "nanopnp.mesh.adapter:MeshFormatError": EXIT_GATE,
     "nanopnp.mesh.adapter:MeshDataError": EXIT_GATE,
-    "nanopnp.mesh.reference:ReferenceGeometryError": EXIT_GATE,
     "nanopnp.geometry.analyte:AnalyteGeometryError": EXIT_GATE,
     "nanopnp.density.grid:GridFormatError": EXIT_GATE,
     # Stage 1 (WP18 D12): a refused file, element, alternate location, chain set
@@ -147,6 +146,11 @@ EXIT_CODES: Final[dict[str, int]] = {
     # a detached island, or a loop failing a section 5.2.1 criterion, naming the
     # criterion, the value, the threshold and the (r, z).
     "nanopnp.geometry.contour:ContourGateError": EXIT_GATE,
+    # Stages 5 and 6 (WP21 D4, D9): a bilayer plane that misses the profile, an
+    # inner edge too close to it, a domain in more than one face, a vertex outside
+    # the reservoir or a junction off r2; a wall coarser than its size field.
+    "nanopnp.geometry.region:RegionGateError": EXIT_GATE,
+    "nanopnp.mesh.generate:WallSizeGateError": EXIT_GATE,
     "nanopnp.charge.fields:FieldDocumentError": EXIT_GATE,
     "nanopnp.charge.fields:ChargeFieldError": EXIT_GATE,
     "nanopnp.solve.state:StateMismatchError": EXIT_GATE,

@@ -65,6 +65,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     from multiprocessing.queues import Queue
 
     from nanopnp.core.typing import Mesh
+    from nanopnp.io.artefact import Artefact
 
 logger = logging.getLogger(__name__)
 
@@ -366,6 +367,25 @@ def _state_path(run: Path) -> Path:
     return Path(payload)
 
 
+def _mesh_artefact(run: Path) -> Artefact | None:
+    """Return the stage-6 artefact the run recorded, or ``None`` if it recorded none.
+
+    A run on a generated mesh is restored onto the file stage 6 wrote, which is
+    that artefact's payload (WP21 D12); a run on a supplied mesh re-reads
+    ``inputs.mesh`` and needs none. :func:`_state_path` has already checked the
+    record and the store, so a missing entry here is a run that recorded no mesh.
+    """
+    from nanopnp.io.run import RUN_RECORD_FILENAME
+    from nanopnp.io.store import Store
+
+    record = json.loads((run / RUN_RECORD_FILENAME).read_text(encoding="utf-8"))
+    mesh = record.get("artefacts", {}).get("mesh")
+    root = record.get("store")
+    if mesh is None or root is None:
+        return None
+    return Store(Path(root)).get(str(mesh["schema"]), str(mesh["hash"]))
+
+
 def _element_count(mesh: Mesh, domain: str | None) -> int:
     """Return how many elements the drawn region carries.
 
@@ -432,7 +452,9 @@ def render(request: RenderRequest) -> Rendered:
     from nanopnp.solve.state import restore
 
     run = Path(request.run)
-    solution = restore(_state_path(run), case=load_case(run / CASE_FILENAME))
+    solution = restore(
+        _state_path(run), case=load_case(run / CASE_FILENAME), mesh_artefact=_mesh_artefact(run)
+    )
     model = solution.model
     if not isinstance(model, CoupledModel):
         # The same refusal stage 12 makes for the IF-07 export, for the same

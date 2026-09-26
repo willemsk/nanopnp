@@ -35,11 +35,10 @@ from MDAnalysis.coordinates.memory import MemoryReader
 from nanopnp.core.stages import create
 from nanopnp.io.case import (
     CaseValidationError,
-    UnsupportedCaseSection,
     load_case,
     resolve,
 )
-from nanopnp.io.run import UnknownStageError, run_case
+from nanopnp.io.run import UnknownStageError, _selected, run_case
 from nanopnp.io.store import Store
 from nanopnp.structure.axis import SymmetryGateError, measure_axis, minimal_rotation
 from nanopnp.structure.ensemble import AlignedEnsemble
@@ -563,17 +562,16 @@ def test_ver48_rigid_move_superposes_to_zero(prepared: Path, tmp_path: Path) -> 
 
 
 def test_ver48_walk_rules(prepared: Path, tmp_path: Path) -> None:
-    """A full walk is refused naming stage 5; ``upto`` must name a stage the case has (IF-02).
+    """A full walk selects every stage; ``upto`` must name a stage the case has (IF-02).
 
-    Stage 2 until WP19 delivered stages 2 and 3, stage 4 until WP20 delivered it,
-    and stage 5 now (section 5.3.1 NOTE on ``structure:``).
+    A full walk was refused naming stage 2 until WP19, stage 4 until WP20 and
+    stage 5 until WP21 delivered stages 5 and 6 (section 5.3.1 NOTE on
+    ``structure:``). The walk itself is Tier 2's (``test_pipeline_2wcd.py``).
     """
     case = _case(tmp_path, _block(prepared))
     store = Store(tmp_path / "store")
-    with pytest.raises(UnsupportedCaseSection, match=r"Stage 5, CAD assembly"):
-        run_case(case, store=store, write=False)
-    with pytest.raises(UnsupportedCaseSection, match=r"stage 'materials'"):
-        run_case(case, store=store, upto="materials", write=False)
+    assert "region" in _selected(resolve(load_case(case)), None)
+    assert _selected(resolve(load_case(case)), "materials")[-3:] == ("region", "mesh", "materials")
     assert run_case(case, store=store, upto="case", write=False).stages[-1].name == "case"
     ran = run_case(case, store=store, upto="structure", write=False)
     assert [record.name for record in ran.stages] == ["case", "structure"]
@@ -585,11 +583,9 @@ def test_ver48_walk_rules(prepared: Path, tmp_path: Path) -> None:
         run_case(plain, store=store, upto="structure", write=False)
 
 
-def test_ver48_a_sweep_over_a_structure_case_is_refused_at_plan_build(
-    prepared: Path, tmp_path: Path
-) -> None:
-    """The walk refusal is the sweep plan builder's too, so no member is dispatched."""
-    from nanopnp.sweep.plan import SweepPlanError, plan_from_document
+def test_ver48_a_sweep_over_a_structure_case_plans(prepared: Path, tmp_path: Path) -> None:
+    """A sweep over a ``structure:`` case plans; before WP21 its builder refused it at stage 5."""
+    from nanopnp.sweep.plan import plan_from_document
 
     case = _case(tmp_path, _block(prepared))
     sweep = tmp_path / "sweep.yaml"
@@ -601,8 +597,9 @@ def test_ver48_a_sweep_over_a_structure_case_is_refused_at_plan_build(
         "  - {name: bias, path: boundary_conditions.bias_V, values: [0.05, 0.1]}\n",
         encoding="utf-8",
     )
-    with pytest.raises(SweepPlanError, match=r"Stage 5, CAD assembly"):
-        plan_from_document(sweep)
+    plan = plan_from_document(sweep)
+    assert len(plan.points) == 2
+    assert plan.warnings == ()
 
 
 def test_ver48_structure_beside_a_supplied_mesh_is_refused(tmp_path: Path) -> None:

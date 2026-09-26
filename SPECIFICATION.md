@@ -829,8 +829,8 @@ CLI and the desktop shell drive the same stage objects (IF-01, IF-02, IF-09).
 | 2 | Density map | Aligned ensemble, grid spacing, kernel | 3D density map | Vectorised numpy Gaussian deposition over a spherical stencil truncated at 10⁻⁶, per-atom width σR_i from the CHARMM radius set of the §5.3.1 NOTE on `geometry.density`, sharpness 0.93; `gridData` IO. MDAnalysis `DensityAnalysis` is histogram-only and is not used (**amended 25 September 2026**, WP19) | Grid spacing 0.25–0.5 Å (FR-04); every atom has a radius; the map is finite and within [0, 1] |
 | 3 | Symmetry reduction to (r, z) | 3D map, n | (r, z) map; residual azimuthal variance, Cₙ-averaged and raw | numpy and `scipy.sparse`; exact cell–annulus overlap weights; the Cₙ average in the angular harmonic basis (**amended 25 September 2026**, WP19) | Variance emitted with the geometry (FR-06, CON-04); annular weights summing to the exact annulus areas. The radius profile against the probe-radius profile is stage 4's gate (§5.2.1, §8.2.2 B5) |
 | 4 | Contour extraction and conditioning | Stage 3's (r, z) mean; the aligned ensemble and its radius set, for the probe-radius profile; isolevel, smoothing and simplification tolerance | Closed conditioned polyline, a `nanopnp/profile/v1` document | scikit-image, Shapely (both BSD-3) and numpy, per §5.2.1 (**amended 26 September 2026**, WP20) | §5.2.1 (FR-08) |
-| 5 | CAD assembly | Polyline, membrane specification, reservoir radius, optional analyte | Fragmented (r, z) region, domains and boundaries tagged | `netgen.occ` (LGPL-2.1, OpenCASCADE, in-process) primary; Gmsh OCC Python API (GPLv2+) optional | All bodies fragmented and imprinted, interfaces conformal, no gap or overlap at the membrane-to-pore junction (FR-09) |
-| 6 | Meshing | Fragmented region, size fields | Graded triangular mesh | Netgen (LGPL-2.1) default, Gmsh (GPLv2+) optional, behind the mesh adapter | §5.2.2 (FR-10, QR-12) |
+| 5 | CAD assembly | Stage 4's polyline or a supplied `inputs.profile`, membrane specification with its `centre_z_nm` shift, reservoir radius, optional analyte | Fragmented (r, z) region, domains and boundaries tagged, as a declarative region record | `netgen.occ` (LGPL-2.1, OpenCASCADE, in-process) primary; Gmsh OCC Python API (GPLv2+) optional | All bodies fragmented and imprinted, interfaces conformal, no gap or overlap at the membrane-to-pore junction, each domain one face, the membrane's inner edge strictly inside the body (FR-09; §5.2.1 NOTE on the membrane junction on any profile). **Amended 26 September 2026** (WP21) |
+| 6 | Meshing | Fragmented region, size fields | Graded triangular mesh | Netgen (LGPL-2.1) default, Gmsh (GPLv2+) optional, behind the mesh adapter | §5.2.2 (FR-10, QR-12): the VER-10 and VER-27 gates, as on an ingested mesh, and the wall-size gate of the §5.3.1 NOTE on `numerics.mesh` (**amended 26 September 2026**, WP21) |
 | 7 | Charge assembly | Prepared ensemble, pH, force field, **and the deployed mesh** (its gate is evaluated there, PHY-19); on the consumer path, a supplied field document instead of the ensemble | ρ_pore(r, z), Q_net, dielectric field, ion-exclusion surface | PDB2PQR 3.7+ (BSD-3) driving PROPKA3; quintic B-spline (`spl4`) deposition; APBS 3.4.1 (BSD-3) cross-check; settings per PHY-16 | Charge conservation to 10⁻³ of Q_net on the deployed FE mesh, plus the per-z-slice cumulative check (FR-14, QR-03, PHY-19) |
 | 8 | Materials | Electrolyte specification, correction model names, coefficient files | D_i, μ_i, η, ϱ, ε_r as fields in ⟨c⟩ and d | Correction registry, `data/corrections/willems2020_nacl.yaml` | Conformance values of §4.3 reproduced; clamps above 5.3 M logged with location and property (PHY-13) |
 | 9 | Case assembly | Mesh, charge and dielectric fields, materials, boundary conditions, bias, analyte, numerics | Resolved case document, assembled discrete problem | `io/` schema validator, `physics/` model registry | Schema `nanopnp/case/v2` validates, a v1 document upgraded losslessly, unknown keys rejected with a diagnostic naming the key (IF-03); round trip semantically identical (FR-26) |
@@ -919,6 +919,43 @@ electrolyte for every z > 0. The cap's underside is re-entrant, so the membrane 
 beneath it and its boundary is not monotone in z; it remains one connected domain, which is what
 makes the reported domain count come out at three — pore body, membrane, and a single electrolyte,
 the lumen joining the two reservoirs.
+
+NOTE (the membrane junction on any profile, stage 5, FR-09; **added 26 September 2026**, WP21): the
+profile is first moved into the model frame, `z ← z − geometry.membrane.centre_z_nm`. On each plane
+`z = ±t/2` the **lumen-adjacent body interval** `[r₁, r₂]` is bounded by the profile's two
+smallest crossings of that plane. The inner edge of the membrane quadrilateral is the chord from
+the lower plane's interval to the upper plane's that has the largest minimum distance to the
+profile. It is searched on the 63 × 63 interior points `r₁ + (r₂ − r₁)k/64` of the two intervals.
+Any chord with its ends in those intervals that lies inside the body yields the same region: a
+fluid pocket between two such chords would be enclosed by them, by the body and by the plane
+segments between their ends, which are body too, while the complement of a simple polygon is
+connected. The widest-margin chord is taken because it is the choice furthest from failure. The
+chord between the intervals' mid-points is **not** admissible in general. On the delivered fixture
+it runs from (2.2387, −1.4) to (3.92, +1.4) and crosses the cleft under the cap between
+(3.070, −0.016) and (3.235, 0.260), which splits the electrolyte in two. On the fixture the
+widest-margin chord is (1.982, 3.470) nm, with a clearance of 0.236 nm (**corrected 26 September
+2026**, WP21: the plan's prototype printed 3.464, a grid point the search does not visit). A plane
+that crosses the profile more than twice always splits a domain, and the one-face criterion below
+refuses it. The gap between the first two body intervals on the plane is a segment of fluid
+bounded by body at both ends. The body arms on either side of it join above the plane or below
+it, because the profile is one simple polygon. If they join above, the fluid over the gap is
+enclosed by body and the gap, and is a second electrolyte face. If they join below, the pocket
+under the gap is enclosed alike: bilayer where it lies in the slab, a second membrane face, and
+electrolyte where it reaches past the other plane (WP21 Outcomes, [verified]). Stage 5 SHALL abort,
+naming the criterion, the measured value, the threshold and the (r, z), on any of these:
+
+- a plane crossing the profile fewer than twice, with the profile's model-frame z extent and
+  `centre_z_nm` named;
+- a best chord closer than 0.01 nm to the profile, so that the membrane is not representable as a
+  quadrilateral with a slanted inner edge;
+- a domain assembled as other than one face, with each face's centroid and area named;
+- a profile vertex not strictly inside the reservoir disc;
+- a membrane whose innermost radius on either plane differs from that plane's `r₂` by more than
+  the fragmentation tolerance.
+
+The last criterion is VER-28's junction measure, made generic. The shipped reference geometry keeps
+its drawn corners (2.0, 3.5), and its mesh is unchanged. The fixture assembled with either chord
+meshes to one connectivity, with vertices within 4.2 × 10⁻⁹ nm (WP21 plan, Design §1).
 
 NOTE (vertex counts): the model report's geometry section records **190 vertices for the pore
 polygon** and **3 domains, 198 boundaries and 196 vertices for the assembled region**. Earlier
@@ -1163,6 +1200,13 @@ dielectric field comes from the density (FR-15). Supplying an artefact together 
 of it on the same chain SHALL be refused, naming both. The upstream one would be hashed into the
 manifest as an input to a run that never read it. Until the stage that consumes a supplied
 artefact is delivered, the case is refused as an unsupported section, naming that stage.
+`inputs.profile` is consumed by stage 5 (**added 26 September 2026**, WP21). It is named by `path`
+with `format: profile1`, and `artefact:` or `groups` beside it is refused. The profile is
+hashed by the canonical digest of its validated payload. `structure:` beside it is refused naming
+both, by the upstream rule, and so are `geometry.density` and `geometry.contour` where either is
+set away from its default; `geometry.membrane` and `geometry.reservoir` are read. A section set to
+its defaults is not refused, because a case dumped from its resolved document writes every section
+out, and FR-26 requires that dump to load back (**clarified 26 September 2026**, WP21).
 
 NOTE (`structure:`, stage 1, FR-01 to FR-03, IF-04; **added 25 September 2026**, WP18):
 `source.path` names a PDB or mmCIF file, optionally gzipped. MDAnalysis reads PDB and gemmi reads
@@ -1225,7 +1269,9 @@ Until stage 2 is delivered, a walk that extends past stage 1 on a case carrying 
 refused as an unsupported section naming stage 2. Once stages 2 and 3 are delivered, and until
 stage 4 is, a walk that extends past stage 3 SHALL be refused in the same way, naming stage 4
 (**added 25 September 2026**, WP19). Once stage 4 is delivered, and until stage 5 is, a walk that
-extends past stage 4 SHALL be refused naming stage 5 (**added 26 September 2026**, WP20). Stage 1
+extends past stage 4 SHALL be refused naming stage 5 (**added 26 September 2026**, WP20). With
+stages 5 and 6 delivered, a walk runs the whole pipeline and no stage is refused on this ground
+(**added 26 September 2026**, WP21). Stage 1
 alone runs through the stage command (IF-02). A case carrying `structure:` and `inputs.mesh` SHALL be refused naming both: a stage whose
 output is supplied does not run, and neither does anything upstream of it (the `inputs:` NOTE), so
 the structure would be recorded as an input to a run that never read it (**added 25 September
@@ -1355,9 +1401,33 @@ neither in the fluid set nor named in `physics.solid_permittivities` SHALL abort
 material. Poisson is solved over the whole domain, so the alternative is the electrolyte's ε_r about
 24 times too large in a solid — a plausible wrong answer with no solver diagnostic. Meshes built in
 process by the benchmark geometries keep the warning they have today; the difference is that an
-ingested mesh's material names were not written by this codebase. Rationale: boundary conditions are selected by name and the natural condition under the
+ingested mesh's material names were not written by this codebase. A mesh stage 6 generates from a
+profile is gated as an ingested one is: its `protein` is a structure's body, not a benchmark's, and
+the same wrong answer follows from a missing entry (**added 26 September 2026**, WP21). Rationale: boundary conditions are selected by name and the natural condition under the
 `r`-weighted forms is the *free* one (§6.2, NUM-06), so an unmapped wall becomes an open boundary,
 the solve converges, and the current is wrong with no residual, no gate and no diagnostic.
+
+NOTE (`geometry.membrane`, `geometry.reservoir`, `numerics.mesh`; stages 5 and 6, FR-09, FR-10,
+NUM-30; **added 26 September 2026**, WP21): `membrane.thickness_nm`, `reservoir.radius_nm` and an
+explicit `wall_h_nm` SHALL each be finite and positive, and each is refused naming its value.
+Stage 5 applies `membrane.centre_z_nm` as `z ← z − centre_z_nm` and gates the junction as the
+§5.2.1 NOTE on the membrane junction on any profile says. `wall_h_nm: auto` resolves to
+`size_scale × min(0.05 nm, λ_D/5)`. λ_D is §6.3's `√(ε₀ ε_r,f⁰ RT / (2F² I))`, with `ε_r,f⁰`
+from `electrolyte.parameters`, the case's temperature and the ionic strength I of the bulk species.
+The 0.05 nm ceiling is §5.2.2's pore-boundary maximum, which the validated reference applied at
+every concentration. It governs below 1.474 M, and above that NUM-30's target is finer and governs.
+`ε_r,f⁰` is used rather than the concentration-corrected permittivity, so the mesh does not move
+when the permittivity correction is switched. An explicit value is used as written, times
+`size_scale`. A resolved wall size coarser than λ_D/5 is logged and recorded in the manifest, not
+refused: it is a discretisation choice, and a mesh-convergence study needs coarse meshes. §5.2.2's
+other sizes are each multiplied by `size_scale`. After meshing, the mean length of the `wall`
+boundary segments SHALL NOT exceed 1.15 × the resolved wall size, and the longest SHALL NOT exceed
+2.0 ×, or the run aborts naming the statistic, the segment and its midpoint (QR-12). Netgen treats
+the size as a target, and 1.045–1.078 and 1.25–1.62 are the measured means and maxima (WP21 plan,
+Design §3). `backend: gmsh` is refused until the Gmsh adapter is delivered (WP23, ADR-002), and
+`boundary_layer: true` naming FR-11. `geometry.analyte` on a generated mesh is refused naming FR-21.
+Beside `inputs.mesh`, any `numerics.mesh` key away from its default is refused naming it, because
+nothing meshes and the key would change nothing.
 
 NOTE (`electrolyte.parameters`, `electrolyte.driver`): `parameters` names the correction file the
 *reference* properties are read from — `D_i^0`, `η^0`, `ϱ^0`, `ε_r,f^0` and the steric diameters
@@ -1426,8 +1496,8 @@ when the plan is built, naming the axis, rather than collecting a column of abse
 | 2, 3 | Density map (3D, float32), and the reduced (r, z) mean with its Cₙ-averaged and raw azimuthal variance | Native `.npz` with its header record; exported to, and read from, OpenDX or CCP4 via GridDataFormats (LGPL) (IF-05), the (r, z) grids as `RadialGrid`s with a singleton axis. **Amended 25 September 2026** (WP19) |
 | 7 | ρ_pore, dielectric and exclusion fields | OpenDX or CCP4 via GridDataFormats (LGPL) (IF-05) |
 | 4 | Conditioned polyline | `nanopnp/profile/v1` YAML: the vertex table with its provenance block (§5.2.1). The conditioning and gate record is in the artefact's summary. **Amended 26 September 2026** (WP20) |
-| 5 | Tagged (r, z) region | OCC BRep plus tag map |
-| 6 | Mesh | Gmsh MSH 4.1 archival, any meshio (MIT) format on read (IF-06) |
+| 5 | Tagged (r, z) region | `nanopnp/region/v1` YAML: a declarative record of the model-frame profile, the membrane with its derived inner edge, the reservoir and the tag counts, from which the OCC region is rebuilt deterministically. **Amended 26 September 2026** (WP21) from "OCC BRep plus tag map": a record hashes by content, where a BRep's bytes need not be stable |
+| 6 | Mesh | Gmsh MSH 4.1 archival, any meshio (MIT) format on read (IF-06). A supplied mesh is keyed on its canonical contents; a generated one on its recipe, the stage-5 key and the resolved size fields, with its content hash recorded beside the key (**amended 26 September 2026**, WP21) |
 | 8 | Resolved material coefficient set | Correction file references and evaluated parameters |
 | 9 | Resolved case document | YAML, schema `nanopnp/case/v2` |
 | 10 | Field set, iteration history | XDMF with HDF5 heavy data (IF-07) |
@@ -2312,6 +2382,12 @@ mis-signed, which no comparison of the two stress routes can detect.
 | Far-reservoir element size | 5 to 10 nm |
 | Expected element count | 5 × 10⁴ to 2 × 10⁵ |
 
+NOTE (the wall target and its ceiling; **added 26 September 2026**, WP21): `h₁` is resolved as
+`min(0.05 nm, λ_D/5)`, so the table's 0.27 nm at 0.05 M is never used. It would be coarser than the
+ion wall function's decay length, 1/6.2 = 0.161 nm, and than stage 4's contour resolution, and
+five times the validated reference's pore-boundary size. λ_D is taken at `ε_r,f⁰`, as are the
+values above. The §5.3.1 NOTE on `numerics.mesh` is the contract.
+
 NOTE: the reference reached the published results with graded free triangular meshing and no
 boundary-layer node, at 120,917 triangles with minimum element quality 0.6378 and average 0.9765.
 
@@ -2427,7 +2503,9 @@ archive, so the push gate is unaffected by whether it is present.
 | **VER-48** | Structure ingestion, the Cₙ axis and the oligomeric state | A synthetic Cₙ assembly (n = 7, 8, 12) about a known axis tilted 35° and offset by (3, −1.5, 40) nm, its chains lettered in a shuffled order, recovers that axis to 1e-9 in direction and in offset; with per-atom noise of 0.02 nm on an assembly whose second moments are isotropic, the permutation axis stays within the 0.01 nm displacement budget over the axial extent while the principal axis nearest the truth does not; a 6 × 2 arrangement, a D6 assembly, a ring whose chains do not turn with it, `auto` on C1, an axis 30° from the file's z and `axis: z` 0.02 nm off the detected axis are each refused naming the gate and the measured value; the in-project Kabsch rotation equals MDAnalysis `rotation_matrix` to 1e-12; a blank element, an alternate location, a missing, surplus, unlisted or truncated chain, a residue-name disagreement, a non-cyclic point group, a chain list not numbering n, a non-positive frame window, a selection MDAnalysis cannot parse, a trajectory of other atoms and an mmCIF model listing its atoms in another order are each refused naming the atom, chain, key or file, while an alternate location in a chain `source.chains` leaves out is not; PDB and mmCIF of 2WCD read to the same atom table and coordinates within 5e-5 nm, and DCD, XTC, TRR and NetCDF read back the bytes written within each format's precision; the frame stride ends on the last frame, and a `last_ns` beyond an untimed DCD's recorded span and a `count` beyond the window are refused naming both; rigidly moved frames superpose to within 1e-5 nm; the deposited 2WCD frame is refused by the orientation gate, and its chains A–L moved rigidly into an admitted frame run as stage 1 with 12 chains and 285 common C-alpha, recover the applied tilt to 1e-6 degrees, keep `z = â·x`, and re-detect their own axis as z through r = 0 to 1e-6; the artefact round-trips, its key is stable across processes, a hand edit of its payload is recorded as one, and its PDB and DCD export reloads, with residues that differ only in insertion code kept apart; a full walk and a sweep over a `structure:` case are refused naming the first stage not yet delivered (stage 2 when WP18 landed; stage 4 since WP19, **amended 25 September 2026**), `structure:` beside `inputs.mesh` is refused, and the stage is listed with neither MDAnalysis nor gemmi imported while a missing extra is named when it is created. At Tier 3 the author's ClyA-AS ensemble passes every gate over all 98 frames, recorded (IF-04, FR-01, FR-02, FR-03, FR-27, QR-12; §5.3.1 NOTE on `structure:`; **added 25 September 2026**, WP18) |
 | **VER-49** | The density map | One atom gives `g` exactly and two give `g₁ + g₂ − g₁g₂`, to 1e-15 in float64 and within the float32 store's rounding; on random clusters with coincident atoms the map is finite and within [0, 1], and a NaN or out-of-range value injected into a slab aborts the run naming the voxel; the truncated map differs from an untruncated evaluation, at every voxel, by no more than the sum of `g/(1 − g)` over the terms dropped there; two frames of one displaced atom average to `(g_a + g_b)/2`, not to their union; the grid nodes are integer multiples of the spacing, the axis is a node column, every kept term lies inside the box, and the node set is unchanged by permuting frames; each lookup route of the radius set resolves — a residue, a histidine name, `HIS` where the histidines agree, `ILE CD1`, `OXT` and each terminal patch — while an unknown residue, an unknown atom, a zero radius and a `HIS` atom the histidines disagree on are each refused naming chain, residue number, residue and atom; the shipped table equals PDB2PQR's `CHARMM.DAT` entry for entry; the map round-trips through `.npz` exactly and through OpenDX and CCP4/MRC with the origin, spacing and shape exact and the values within each format's precision, and a file whose origin is off the lattice of the spacing is refused; the stage-2 key is stable across processes, moves with every density key and with the radius file's digest, and a hand edit of the payload is recorded as one; a `grid_spacing_nm` outside [0.025, 0.05] nm and a non-positive or non-finite `sharpness` are refused naming the value; a `structure:` case walks to stage 3, while a full walk and a sweep are refused naming stage 4, `geometry:` beside `inputs.mesh` is refused naming both, and the stages are listed without importing their modules or numpy. At Tier 2 every heavy atom of the prepared 2WCD dodecamer resolves and its map is bounded; at Tier 3 the author's ClyA-AS ensemble runs over the paper's final 50 frames, DCD frames 48 to 97, recorded (FR-04, FR-27, IF-05, QR-12; §5.3.1 NOTE on `geometry.density`; **added 25 September 2026**, WP19) |
 | **VER-50** | The reduction to (r, z) | The annular weights sum to each annulus's exact area to 1e-11 relative, each interior cell's weights to its area, and the integral of a map is conserved slice by slice to 1e-12; an off-axis Gaussian matches the closed forms for the azimuthal mean, the Cₙ variance and the raw variance (WP19 plan, Design §2) for n = 7 and 12; an on-axis Gaussian and thin rings give a Cₙ variance below 1e-6, while the same computation without the detrend reads above 1e-4, so the test discriminates; a `cos(mθ)` modulation of amplitude b gives `b²/2` for both variances when n divides m, and otherwise a Cₙ variance of zero and a raw variance of `b²/2`; a synthetic C12 assembly deposited through stage 2 reduces unchanged to round-off when turned by 90°, to the float32 rounding of its map when turned by 30°, which maps it onto itself, and within the off-axis tolerances when turned by 15°, which does not; no harmonic is used below `n h/π`, the header names that radius, and the artefact round-trips, exports as three radial grids, and records a hand edit. At Tier 2 the prepared 2WCD reduces with its integral conserved to 1e-9 relative, its Cₙ variance nowhere above its raw variance by more than 1e-4, and an open lumen on the axis (FR-05, FR-06, FR-27, CON-04, IF-05; §5.3.1 NOTE on `geometry.density`; **added 25 September 2026**, WP19) |
-| **VER-51** | Contour extraction, conditioning and its gate | A square pyramid `1 − max(|r − r₀|, |z − z₀|)/a` centred on a node, linear along every grid edge, is contoured on its square to 1e-12, with the area `(2a(1 − l))² − h²/2` to 1e-12; a Gaussian section's contour lies within 1e-3 nm of its circle of radius `s√ln 4`, against a linear-interpolation bound of 4.7e-4 nm; Taubin scales the area of a regular 64-gon by its closed form `f(k₁)^{2N}` = 1.002770, where a Laplacian of the same N passes scales it by `(1 − λk₁)^{2N}` = 0.952933, both to 1e-12; closing and opening by 2h fill a 0.1 nm slot, remove a 0.1 nm fin and keep a 0.3 nm slot, within the corner-rounding bound `δ²(1 − π/4)` per corner, and the conditioned loop's feature size exceeds 2h; a void is filled and recorded with its area, an island is refused naming its centroid and area, and a lumen closed on the axis is refused naming its z range; each §5.2.1 criterion fires on a loop built to fail it, naming the criterion, the value, the threshold and the (r, z); the probe profile of a ring of atoms matches `√(ρ₀² + (z − z₀)²) − R_a` to 1e-12 and two frames give their mean; the artefact loads through `load_profile` as a `pipeline` profile, its key is stable across processes and moves with each constant that moves a vertex or a verdict, and a hand edit is recorded; the refusals of the §5.3.1 NOTE on `geometry.contour` and the stage-5 walk refusal hold. At Tier 2 the prepared 2WCD passes the gate and its payload loads as a profile; at Tier 3 the ClyA-AS ensemble's verdict and measurements are recorded (FR-07, FR-08, FR-27, QR-12; §5.2.1; §5.3.1 NOTE on `geometry.contour`; **added 26 September 2026**, WP20) |
+| **VER-51** | Contour extraction, conditioning and its gate | A square pyramid `1 − max(|r − r₀|, |z − z₀|)/a` centred on a node, linear along every grid edge, is contoured on its square to 1e-12, with the area `(2a(1 − l))² − h²/2` to 1e-12; a Gaussian section's contour lies within 1e-3 nm of its circle of radius `s√ln 4`, against a linear-interpolation bound of 4.7e-4 nm; Taubin scales the area of a regular 64-gon by its closed form `f(k₁)^{2N}` = 1.002770, where a Laplacian of the same N passes scales it by `(1 − λk₁)^{2N}` = 0.952933, both to 1e-12; closing and opening by 2h fill a 0.1 nm slot, remove a 0.1 nm fin and keep a 0.3 nm slot, within the corner-rounding bound `δ²(1 − π/4)` per corner, and the conditioned loop's feature size exceeds 2h; a void is filled and recorded with its area, an island is refused naming its centroid and area, and a lumen closed on the axis is refused naming its z range; each §5.2.1 criterion fires on a loop built to fail it, naming the criterion, the value, the threshold and the (r, z); the probe profile of a ring of atoms matches `√(ρ₀² + (z − z₀)²) − R_a` to 1e-12 and two frames give their mean; the artefact loads through `load_profile` as a `pipeline` profile, its key is stable across processes and moves with each constant that moves a vertex or a verdict, and a hand edit is recorded; the refusals of the §5.3.1 NOTE on `geometry.contour` hold, and a walk past stage 4 runs once stage 5 is delivered (the stage-5 walk refusal, which held until WP21). At Tier 2 the prepared 2WCD passes the gate and its payload loads as a profile; at Tier 3 the ClyA-AS ensemble's verdict and measurements are recorded (FR-07, FR-08, FR-27, QR-12; §5.2.1; §5.3.1 NOTE on `geometry.contour`; **added 26 September 2026**, WP20) |
+| **VER-52** | CAD assembly on any profile (stage 5) | A parallelogram body's widest-margin chord is its mid-line, with clearance half its perpendicular width; on the fixture the drawn (2.0, 3.5) and the derived chord give face areas equal to 1e-10 relative and equal edge-name counts; a profile translated by Δ with `centre_z_nm = Δ` gives the untranslated region; a body cut more than twice by a plane is refused by the one-face criterion, naming each face's centroid and area; each criterion of the §5.2.1 NOTE on the membrane junction fires on a profile built to fail it, naming the criterion, the value, the threshold and the (r, z); the `nanopnp/region/v1` record round-trips and rebuilds equal areas; the key is stable across processes, moves with each constant and records a hand edit; the stage is listed without importing netgen; the refusals of the §5.3.1 NOTE on `inputs:` for `inputs.profile` hold. At Tier 2 the fixture through `inputs.profile` has 193 vertices and 195 edges named as VER-28's, the junction at 2.7524 and 4.88 nm over one node chain and no bilayer in the fluid (FR-09, FR-27, QR-12; §5.2.1 NOTE on the membrane junction; **added 26 September 2026**, WP21) |
+| **VER-53** | Meshing a generated region (stage 6) | `wall_h_nm: auto` is 0.05, 0.05, 0.03505 and 0.02715 nm at 0.05, 1, 3 and 5 M, crossing at 1.4741 M, and λ_D matches NUM-30's check values to 5e-4 nm; `size_scale` multiplies every size and temperature enters λ_D as √T; each refusal of the §5.3.1 NOTE on `numerics.mesh` names its key; a salt axis severs warm starts only where it moves the wall size; a coarse synthetic region meshes through VER-27 and VER-10, round-trips its content hash through MSH 4.1, gives one content hash in two fresh processes without importing Gmsh, fails the wall-size gate with its wall field withheld, naming the segment, and is refused without a `protein` permittivity; every consumer to the IF-07 export reads stage 6's file; a reproduced mesh with another content hash aborts naming both. At Tier 2 the fixture's element count is within 0.1 % of the drawn reference's and meets §5.2.2's quality band, and the prepared 2WCD meshes at the default sizes, passes both gates and walks to stage 12 with every stage keyed in the manifest (FR-10, FR-27, QR-08, QR-12, CON-10, NUM-30; **added 26 September 2026**, WP21) |
 
 ### 7.3 Tier 2 analytic benchmarks
 
@@ -2778,7 +2856,7 @@ otherwise report unbounded throughput for a resumed sweep.
 | **RSK-02** | Under-resolved Debye layer at 3 M (λ_D = 0.18 nm) gives negative concentrations and a silently wrong current | High | Med | Mesh criterion `h ≤ λ_D/5`; `min c_i` monitored per Newton step and failed loudly (VER-08) | Phase 0–1 |
 | **RSK-03** | Current QoI wrong from non-conservative CG flux, corrupting the rectification signal | High | Med | Both the ψ-domain-integral and the variational reaction flux mandated, with automatic agreement check (VER-11) | Phase 1 |
 | **RSK-04** | Analyte net force is a near-cancellation of two terms of about 10 pN and opposite sign; a small error in either integral flips the sign of the total | High | Med–High | Domain-form force evaluation (§6.7) rather than surface integration; dedicated force convergence study; both routes cross-checked to better than 0.1 pN (VER-22) | Analyte phase |
-| **RSK-05** | Contour to mesh produces slivers at the constriction | Low–Med | Low | The delivered 185-vertex pore polygon ships as a fixture (§5.2.1); the reference mesh used no boundary layers, only isotropic grading to 0.05 nm at the pore wall; contour validity gate (FR-08); isotropic fallback; mesh quality gates abort the run (VER-10) | Phase 2 |
+| **RSK-05** | Contour to mesh produces slivers at the constriction | Low–Med | Low | The delivered 185-vertex pore polygon ships as a fixture (§5.2.1); the reference mesh used no boundary layers, only isotropic grading to 0.05 nm at the pore wall; contour validity gate (FR-08); isotropic fallback; mesh quality gates abort the run (VER-10). **Retired 26 September 2026**: the stage-4 profile of the prepared 2WCD assembles and meshes at the default sizes with minimum SICN 0.7111 and gamma 0.6196, above the reference mesh's 0.6378, and the wall-size gate passes (VER-53, WP21) | Phase 2 |
 | **RSK-06** | The author's contour script proves tightly coupled to its original context and is not portable | Med | Med | Read it in week 1 of Phase 2, before the rest of the phase is planned; fall back to the specified contour pipeline. **Retired 26 September 2026**: it was read (OPN-02). It is 20 lines, coupled to nothing beyond MDAnalysis, scikit-image and Shapely | Phase 2 |
 | **RSK-07** | Axisymmetric reduction invalid for a given pore through large azimuthal variance | Med | Med | Residual azimuthal variance reported as a first-class output (FR-06) and documented as a validity criterion | Phase 2 |
 | **RSK-08** | Charge non-conservation through smearing and 1/r projection | Med | Med | Exact annular volumes; analytic annulus integration; assertion on the deployed mesh and per-z-slice check (VER-01, VER-02) | Phase 3 |
@@ -2936,8 +3014,8 @@ needed.
 | FR-06 | VER-50 (the Cₙ and raw variance against closed forms) |
 | FR-07 | VER-51 (marching squares against exact and closed-form level sets, the morphology, Taubin and the conditioning), VAL-05 |
 | FR-08 | VER-51 (each §5.2.1 gate criterion fires on constructed input; the radius band against the probe profile) |
-| FR-09 | VER-28, VAL-05 |
-| FR-10 | VER-10, VAL-05 |
+| FR-09 | VER-28, VER-52 (the membrane junction derived on any profile), VAL-05 |
+| FR-10 | VER-10, VER-53 (the size fields, the wall-size gate and the generated mesh's gates), VAL-05 |
 | FR-11 | None yet |
 | FR-12 | VAL-06 |
 | FR-13 | VER-01, VER-02, VAL-06 |
@@ -2954,7 +3032,7 @@ needed.
 | FR-24 | VER-36, VER-37, VER-38 |
 | FR-25 | VER-24, VER-26 (manifest emitted per §7.6) |
 | FR-26 | VER-09, VER-26, VER-47 (a v1 document and its v2 rewrite are one run) |
-| FR-27 | VER-23, VER-25, VER-26, VER-32, VER-34, VER-51 (the stage-4 payload is an `inputs.profile` document) |
+| FR-27 | VER-23, VER-25, VER-26, VER-32, VER-34, VER-51 (the stage-4 payload is an `inputs.profile` document), VER-52, VER-53 (stages 5 and 6 keyed and walked to stage 12) |
 | FR-28 | None yet |
 | FR-29 | None yet |
 | QR-01 | VER-12 to VER-22, in particular VER-17 and VER-18 |
@@ -2964,11 +3042,11 @@ needed.
 | QR-05 | VAL-07, VAL-08, VAL-09 |
 | QR-06 | VER-39 (measured, recorded, not gated) |
 | QR-07 | None yet (§8.2 criterion 3) |
-| QR-08 | VER-26 for manifest sufficiency; VER-34, VER-35 for QoI reproduction |
+| QR-08 | VER-26 for manifest sufficiency; VER-34, VER-35 for QoI reproduction; VER-53 (a regenerated mesh's content hash against the recorded one) |
 | QR-09 | VER-47 (the declared interpreter range agrees with §2.5); the wheel-only install itself is exercised by the §7.6 matrix, not asserted by a test |
 | QR-10 | None yet |
 | QR-11 | VER-43, VER-44 |
-| QR-12 | VER-10, VER-32, VER-40, VER-41, VER-48 (the stage-1 input and symmetry gates), VER-49 (the radius refusal and the density bounds gate), VER-51 (each contour gate criterion names its value, threshold and (r, z)) |
+| QR-12 | VER-10, VER-32, VER-40, VER-41, VER-48 (the stage-1 input and symmetry gates), VER-49 (the radius refusal and the density bounds gate), VER-51 (each contour gate criterion names its value, threshold and (r, z)), VER-52 (each stage-5 criterion likewise), VER-53 (the wall-size gate names the segment) |
 | QR-13 | None yet |
 | QR-14 | VER-03 |
 | QR-15 | VER-45, VER-46 — the documentation part only, delivered incrementally by the §8.1 documentation track; the JOSS submission and the DOI-archived release remain unverified until v1.0 |
@@ -2981,7 +3059,7 @@ needed.
 | CON-07 | None yet |
 | CON-08 | §6.6 measurement table (§8.2 criterion 3, discharged) |
 | CON-09 | VER-43 (no PyQt module is reachable from the shell's import paths); VER-44 (the shipped renderer is byte-identical to the npm tarball kept as its source, whose SHA-512 is npm's published integrity) |
-| CON-10 | VER-27 (the default ingestion path imports no Gmsh) |
+| CON-10 | VER-27 (the default ingestion path imports no Gmsh), VER-53 (nor does generating a mesh through stages 5 and 6) |
 | CON-11 | §6.6 measurement table — measured; the conflict it exposed is resolved by the 2 September 2026 amendment to CON-11 and ADR-003. VER-43 asserts that the bundle's licence notice states the resulting GPL-2+ obligation, and the probe refuses to start without it |
 | CON-12 | None yet |
 | CON-13 | VER-43 in part (the Windows bundle builds and launches headlessly on every push; widget construction is asserted on `windows-latest` and `macos-latest`). Linux *desktop* Qt is deliberately not asserted: the push gate installs no system packages, and PySide6 does not import on the runner image |
@@ -2989,8 +3067,9 @@ needed.
 
 Coverage: 54 of the 67 requirements in §3 have a specified activity; 13 are recorded as "none yet",
 predominantly interface, portability, licensing and documentation requirements whose demonstration
-is by inspection rather than by test. Recounted row by row on 26 September 2026, after FR-08 gained
-VER-51 (WP20); FR-07, FR-27 and QR-12, which already had an activity, gained it too. The line
+is by inspection rather than by test. Unchanged by WP21: VER-52 and VER-53 add activities to FR-09,
+FR-10, FR-27, QR-08, QR-12 and CON-10, each of which already had one. Recounted row by row on 26
+September 2026, after FR-08 gained VER-51 (WP20); FR-07, FR-27 and QR-12, which already had an activity, gained it too. The line
 before that, 53 and 14, was recounted on 25 September 2026, after FR-04, FR-06 and CON-04 gained
 VER-49 and VER-50 (WP19). The line before that, after IF-04 and FR-01 to FR-03 gained VER-48, read 50 and 17,
 and corrected an earlier 45 and 22 that was one off. QR-07 is counted as "none yet", its entry

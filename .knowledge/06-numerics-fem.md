@@ -868,6 +868,27 @@ statement — the two meshers' size fields are not the same knobs, and COMSOL's 
 quality" is not stated to be SICN — but the quality band is, and it is met without boundary layers,
 by isotropic grading alone, which is what §5.2.2 says the reference model did.
 
+### Measured: the wall-size field reaches the wall, and a gate can tell **[tested]**
+
+Netgen treats a size as a target, not a bound. Stage 6 (WP21) measures the `wall` segment lengths
+over the resolved target, at the §5.2.2 sizes otherwise; netgen 6.2.2606, Linux, 26 September 2026:
+
+| Region | Target (nm) | Segments | Mean | p95 | Max | Triangles | Min SICN, gamma |
+|---|---|---|---|---|---|---|---|
+| Fixture | 0.05 | 569 | 1.045 | 1.200 | 1.600 | 44,316 | 0.6559, 0.6157 |
+| Fixture | 0.03505 (3 M) | 792 | 1.071 | 1.194 | 1.614 | 48,986 | 0.7489, 0.6870 |
+| Fixture | 0.02715 (5 M) | 1003 | 1.092 | 1.218 | 1.519 | 54,256 | 0.6414, 0.5671 |
+| 2WCD, stage 4 | 0.05 | 582 | 1.062 | 1.233 | 1.485 | 44,688 | 0.7111, 0.6196 |
+| 2WCD, stage 4 | 0.03505 (3 M) | 826 | 1.067 | 1.180 | 1.250 | 49,878 | 0.7335, 0.6470 |
+| Fixture, **no wall field** | 0.05 | 301 | 1.976 | 2.691 | 3.200 | 38,908 | — |
+
+The gate's bounds, mean ≤ 1.15 × and max ≤ 2.0 ×, sit above every row with the field and below
+the row without it. Withheld, the protein domain's 0.1 nm field and the polygon's own edges govern,
+and the mean doubles. The fixture meshes to the same 44,316 triangles through the derived chord as
+through the drawn one. Stages 5 and 6 take 0.4–0.7 s and 6.9–9.8 s. **The minimum quality moves
+with the target by more than the band's width** (0.6414 at 5 M against 0.7489 at 3 M), so a quality
+check value belongs to one target, not to the geometry.
+
 **The quality gate is cheap enough to run unconditionally**: ≈1.1 s on a 121k-element mesh, a
 fraction of the time to build one. The measured margin on the geometries this project generates is
 wide (minimum SICN 0.647 against a 0.3 floor), so gating only *imported* meshes would leave the ones

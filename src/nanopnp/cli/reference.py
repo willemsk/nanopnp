@@ -161,9 +161,8 @@ def render_case_reference() -> str:
         elif head == "structure":
             lines += [
                 "This section drives stage 1, structure ingestion and alignment (FR-01 to",
-                "FR-03). Stages 1 to 4 run, through `nanopnp run <case> --upto contour`; a",
-                "walk past stage 4 is refused, naming stage 5, until CAD assembly is",
-                "delivered.",
+                "FR-03). A case carrying it walks every stage: stages 1 to 4 derive a pore",
+                "profile, and stages 5 and 6 assemble and mesh it.",
                 "",
             ]
         elif head == "geometry":
@@ -171,9 +170,9 @@ def render_case_reference() -> str:
                 "Of this section, `geometry.density` drives stages 2 and 3, the density map",
                 "and its reduction to (r, z) (FR-04 to FR-06), and `geometry.contour` drives",
                 "stage 4, the pore wall's contour and its gate (FR-07, FR-08), on a case",
-                "carrying `structure:`. The membrane, reservoir and analyte keys are read by",
-                "stages not yet delivered. Beside `inputs.mesh` the section is refused, naming",
-                "both.",
+                "carrying `structure:`. The membrane and reservoir keys are read by stage 5,",
+                "CAD assembly (FR-09); the analyte on a generated mesh is refused naming FR-21.",
+                "Beside `inputs.mesh` the section is refused, naming both.",
                 "",
             ]
         lines += [

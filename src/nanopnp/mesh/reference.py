@@ -54,17 +54,41 @@ junction conformal: a compound of the same three faces meshes with two
 coincident node chains along every seam and a glue meshes with one [tested], and
 coincident chains are exactly the failure VER-28 exists to catch - the
 coordinates agree and the mesh does not.
+
+**The assembly, naming and sizing are stage 5's and stage 6's** (WP21). This
+class is the stage-5 region of :mod:`nanopnp.geometry.region` with the drawn
+inner corners in place of the derived chord, sized by the one table of
+:mod:`nanopnp.mesh.sizing`. Any chord inside the body yields the same region,
+and the fixture meshed with the drawn and the derived chord has one connectivity
+(section 5.2.1 NOTE on the membrane junction on any profile), so the reference
+mesh keeps its content hash.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from nanopnp.core.typing import Mesh, Shape
+from nanopnp.geometry.region import (
+    MembraneRecord,
+    RegionRecord,
+    assemble_faces,
+    build_region,
+    membrane_radii,
+    name_region,
+)
 from nanopnp.mesh.adapter import from_ngsolve
-from nanopnp.mesh.primitives import TOL_NM
-from nanopnp.mesh.profile import PoreProfile, load_profile
+from nanopnp.mesh.profile import PoreProfile, load_profile, plane_crossings
 from nanopnp.mesh.quality import QualityReport, check_quality
+from nanopnp.mesh.sizing import SIZES, WALL_CEILING_NM, apply_sizes
+
+__all__ = [
+    "REFERENCE_PROFILE",
+    "JunctionReport",
+    "ReferenceGeometry",
+    "check_quality_report",
+    "plane_crossings",
+]
 
 REFERENCE_PROFILE = "clya_reference_profile"
 """Fixture name of the ClyA-AS radial geometry (section 5.2.1)."""
@@ -86,43 +110,8 @@ point of :meth:`ReferenceGeometry.junction_report`; they are kept because they
 define the *quadrilateral being subtracted from*, not the junction.
 """
 
-GLOBAL_MAXH_NM = 10.0
-"""Global maximum element size; the reference model's "Finer" preset."""
-
-WALL_MAXH_NM = 0.05
-"""Element size on the pore boundary (section 5.2.2, NUM-30: about lambda_D/5)."""
-
-RESERVOIR_ARC_MAXH_NM = 5.0
-"""Element size on the reservoir's outer boundary (section 5.2.2)."""
-
-PORE_DOMAIN_MAXH_NM = 0.1
-"""Element size inside the pore body; section 5.2.2's "Extremely fine" preset.
-
-Section 5.2.2 names a *pore domain* and the assembled region has one electrolyte
-face, lumen and reservoirs together (VER-28 requires exactly three domains), so
-there is no separate lumen face to size. The lumen is refined instead by grading
-away from its 0.05 nm wall, which is how the reference mesh reached 0.05 nm
-there in the first place.
-"""
-
-RESERVOIR_DOMAIN_MAXH_NM = 2.8
-"""Element size in the electrolyte away from a size field (section 5.2.2)."""
-
-AXIS_IN_PORE_MAXH_NM = 0.075
-"""Element size on the symmetry axis over the pore's axial span (section 5.2.2)."""
-
-GRADING = 0.2
-"""Netgen grading. Smaller grades faster; 0.2 is what the Phase-0 shapes use."""
-
-OPTIMISATION_STEPS = 5
-"""``optsteps2d``: the ``optimize("Netgen")`` pass section 5.2.2 requires."""
-
-_ARC_RTOL = 1e-9
-"""Relative tolerance for deciding that a point lies on the reservoir arc."""
-
-
-class ReferenceGeometryError(ValueError):
-    """Raised when the assembled region is not the one section 5.2.2 describes."""
+WALL_MAXH_NM = WALL_CEILING_NM
+"""Element size on the pore boundary: section 5.2.2's 0.05 nm, NUM-30's ceiling."""
 
 
 @dataclass(frozen=True)
@@ -179,47 +168,6 @@ class JunctionReport:
         }
 
 
-def plane_crossings(profile: PoreProfile, z_nm: float) -> tuple[float, ...]:
-    """Return the radii at which ``profile``'s closed polygon crosses ``z = z_nm``.
-
-    Parameters
-    ----------
-    profile
-        The pore profile. Its closing edge is implied, and is included here.
-    z_nm
-        The plane, in nm.
-
-    Returns
-    -------
-    tuple of float
-        The crossing radii, sorted ascending. A closed simple polygon crosses a
-        plane an even number of times, so the first and last entries bracket the
-        body; the pore gives two on each bilayer plane, the lumen wall and the
-        outer surface.
-
-    Notes
-    -----
-    A vertex lying exactly on the plane is counted once, not twice: the interval
-    test is half-open in ``z``, which is the standard fix for the double-count
-    and is why the delivered table's vertex at ``(4.88, +1.4)`` gives ``4.88``
-    rather than a duplicate.
-    """
-    import numpy as np
-
-    points = profile.as_array()
-    starts = points
-    ends = np.roll(points, -1, axis=0)
-    z0, z1 = starts[:, 1], ends[:, 1]
-    lower = np.minimum(z0, z1)
-    upper = np.maximum(z0, z1)
-    crossing = (lower <= z_nm) & (z_nm < upper)
-    if not bool(np.any(crossing)):
-        return ()
-    fraction = (z_nm - z0[crossing]) / (z1[crossing] - z0[crossing])
-    radii = starts[crossing, 0] + fraction * (ends[crossing, 0] - starts[crossing, 0])
-    return tuple(sorted(float(value) for value in radii))
-
-
 @dataclass(frozen=True)
 class ReferenceGeometry:
     """The ClyA reference region in the ``(r, z)`` half-plane, in nm.
@@ -252,162 +200,45 @@ class ReferenceGeometry:
         """Half the bilayer thickness; the membrane spans ``+/- this``."""
         return 0.5 * self.membrane_thickness_nm
 
+    def record(self) -> RegionRecord:
+        """Return this geometry as a stage-5 record, with the drawn inner corners.
+
+        The profile is already in the model frame (the bilayer's mid-plane is
+        ``z = 0``), and the junction radii are the outermost plane crossings,
+        which on this profile are the lumen-adjacent intervals' ``r2``.
+        """
+        half = self.half_thickness_nm
+        return RegionRecord(
+            profile=[(float(r), float(z)) for r, z in self.profile.vertices],
+            membrane=MembraneRecord(
+                thickness_nm=self.membrane_thickness_nm,
+                centre_z_nm=0.0,
+                inner_trans_nm=self.membrane_inner_trans_nm,
+                inner_cis_nm=self.membrane_inner_cis_nm,
+            ),
+            reservoir_radius_nm=self.reservoir_radius_nm,
+            axis_split_nm=self.profile.extent_z_nm,
+            junction_nm={
+                "trans": max(plane_crossings(self.profile, -half)),
+                "cis": max(plane_crossings(self.profile, half)),
+            },
+        )
+
     def faces(self) -> tuple[Shape, Shape, Shape]:
         """Return the three named faces - electrolyte, membrane, pore - unglued.
 
-        The booleans are the assembly: the membrane is the quadrilateral clipped
-        to the reservoir and cut by the pore body, and the electrolyte is what
-        the half-disc has left once both are removed. Names are set after the
-        booleans, because a face's name does not survive being cut.
+        :func:`nanopnp.geometry.region.assemble_faces` on :meth:`record`, which
+        raises :class:`~nanopnp.geometry.region.RegionGateError` if a domain
+        assembled as other than one face.
         """
-        pore = self._pore_face()
-        disc = self._reservoir_face()
-        quad = self._membrane_face()
-
-        membrane = (quad * disc) - pore
-        electrolyte = (disc - quad) - pore
-        for face, name in ((electrolyte, "electrolyte"), (membrane, "membrane"), (pore, "protein")):
-            face.name = name
-        self._check_face_counts(electrolyte, membrane, pore)
-        return electrolyte, membrane, pore
-
-    def _pore_face(self) -> Shape:
-        """Return the pore polygon as a face, from the fixture's vertices.
-
-        The vertices are reversed when the fixture traces its loop clockwise,
-        which the delivered ClyA table does (signed area -26.4939 nm^2). A
-        clockwise wire gives OCC a face of negative area, and a negative face is
-        not merely upside down: it subtracts as an addition, so
-        ``disc - quad`` returns the disc split in two rather than the disc with
-        a hole, and ``quad * disc`` returns nothing at all [tested]. Orientation
-        is fixed here, once, rather than asked of every fixture.
-        """
-        import netgen.occ as occ
-
-        vertices = self.profile.as_array()
-        if self.profile.is_clockwise:
-            vertices = vertices[::-1]
-        plane = occ.WorkPlane().MoveTo(float(vertices[0][0]), float(vertices[0][1]))
-        for radius, height in vertices[1:]:
-            plane = plane.LineTo(float(radius), float(height))
-        return plane.Close().Face()
-
-    def _reservoir_face(self) -> Shape:
-        """Return the reservoir half-disc, ``r >= 0`` of a 250 nm circle.
-
-        The clipping box is traced by hand rather than taken from
-        ``Rectangle`` so that its side on ``r = 0`` is broken into three
-        collinear segments at the pore's axial extent. OCC keeps collinear
-        segments as separate edges, and that is the only way section 5.2.2's
-        "symmetry axis inside pore, 0.075 nm" can be a size field at all: the
-        pore polygon never touches the axis, so nothing else splits it.
-
-        The half-disc's arc carries one vertex the construction did not ask for.
-        ``Circle(...).Face()`` is a single closed edge whose seam OCC places at
-        parameter zero, ``(250, 0)``, and clipping to ``r >= 0`` keeps it: the
-        arc between the membrane's two outer corners is therefore two arcs
-        meeting there, both named ``membrane_outer`` and both carrying the same
-        size field, and the assembled region has 193 vertices and 195 edges
-        rather than the 192 and 194 the axis split alone would give [tested].
-        A closed circle has a seam somewhere; putting it at ``z = 0`` costs one
-        vertex element on the reservoir rim and nothing else.
-        """
-        import netgen.occ as occ
-
-        radius = self.reservoir_radius_nm
-        lower, upper = self.profile.extent_z_nm
-        disc = occ.WorkPlane().Circle(0.0, 0.0, radius).Face()
-        box = (
-            occ.WorkPlane()
-            .MoveTo(0.0, -radius)
-            .LineTo(radius, -radius)
-            .LineTo(radius, radius)
-            .LineTo(0.0, radius)
-            .LineTo(0.0, upper)
-            .LineTo(0.0, lower)
-            .Close()
-            .Face()
-        )
-        return disc * box
-
-    def _membrane_face(self) -> Shape:
-        """Return the membrane quadrilateral, unclipped and uncut.
-
-        Traced counter-clockwise, for the reason :meth:`_pore_face` gives.
-
-        It is traced *past* the reservoir radius, by one membrane half-thickness,
-        and the intersection with the half-disc clips it back. Ending it exactly
-        on ``r = 250`` makes its outer edge touch the reservoir arc at the single
-        point ``(250, 0)`` rather than crossing it, which is a boolean the mesher
-        would have to resolve exactly for no gain. Any overshoot removes the
-        contact; a half-thickness scales with the geometry.
-        """
-        import netgen.occ as occ
-
-        half = self.half_thickness_nm
-        outer = self.reservoir_radius_nm + half
-        return (
-            occ.WorkPlane()
-            .MoveTo(self.membrane_inner_trans_nm, -half)
-            .LineTo(outer, -half)
-            .LineTo(outer, half)
-            .LineTo(self.membrane_inner_cis_nm, half)
-            .Close()
-            .Face()
-        )
-
-    def _check_face_counts(self, electrolyte: Shape, membrane: Shape, pore: Shape) -> None:
-        """Raise unless each of the three domains came out as a single face.
-
-        The membrane is the one at risk: the cleft under the cap is continuous
-        with the rest of the bilayer only because the cap's underside opens
-        downward past ``z ~ -0.7``, and an assembly that got the polygon or the
-        quadrilateral wrong fragments it off as a fourth face. Counting is
-        cheaper than discovering it in the domain names of a solved mesh.
-        """
-        named = ((electrolyte, "electrolyte"), (membrane, "membrane"), (pore, "protein"))
-        for shape, name in named:
-            count = len(list(shape.faces))
-            if count != 1:
-                raise ReferenceGeometryError(
-                    f"the {name} domain assembled as {count} faces rather than one; the "
-                    "reference region has exactly three domains (section 5.2.2, VER-28)"
-                )
-
-    def _inside_membrane_quad(self, radius: float, height: float) -> bool:
-        """Return whether ``(r, z)`` is strictly inside the membrane quadrilateral.
-
-        Used to split the pore's boundary: a segment of it whose midpoint is
-        inside the quadrilateral is buried in the bilayer and is the pore-to-
-        membrane seam, and one outside it faces the electrolyte and is ``wall``.
-        The slant is what makes the test work - the lumen wall runs from
-        ``r = 1.725`` to ``r = 2.96`` across the bilayer and stays inside the
-        drawn corners, while the outer surface runs from 2.7524 to 4.88 and
-        stays outside them.
-        """
-        half = self.half_thickness_nm
-        if abs(height) >= half - TOL_NM:
-            return False
-        span = self.membrane_inner_cis_nm - self.membrane_inner_trans_nm
-        inner = self.membrane_inner_trans_nm + span * (height + half) / self.membrane_thickness_nm
-        return bool(inner + TOL_NM < radius < self.reservoir_radius_nm - TOL_NM)
+        return assemble_faces(self.record())
 
     def name_edges(self, shape: Shape, *, wall_h_nm: float | None = WALL_MAXH_NM) -> None:
-        """Name every edge of ``shape`` into the section 5.3.1 vocabulary, in place.
+        """Name every edge of ``shape`` into the section 5.3.1 vocabulary and size it, in place.
 
-        Classification is by a point *on* the curve rather than by
-        ``edge.center``: the reservoir arc's centre of mass is the circle's
-        centre, nowhere near the arc [tested], so the centre-of-mass chain
-        :class:`~nanopnp.mesh.primitives.CylindricalPoreGeometry` uses does not
-        carry over to a geometry with curved boundaries.
-
-        The order of the chain is the argument. The arc is taken first because
-        the bilayer planes cut it; the bilayer surfaces next, and only as
-        *horizontal* edges, because the pore polygon crosses ``z = +1.4``
-        without running along it; then the buried part of the pore boundary,
-        which is the pore-to-membrane seam and is named ``interface`` rather
-        than ``wall`` so that PHY-02's distance field does not measure from it;
-        and everything left is the pore boundary facing the electrolyte.
+        The naming is stage 5's (:func:`nanopnp.geometry.region.name_region`),
+        by adjacency in the glued shape, and the sizes are section 5.2.2's
+        (:func:`nanopnp.mesh.sizing.apply_sizes`).
 
         Parameters
         ----------
@@ -416,56 +247,23 @@ class ReferenceGeometry:
         wall_h_nm
             Element size imposed on ``wall``; ``None`` leaves the global size.
         """
-        half = self.half_thickness_nm
-        radius = self.reservoir_radius_nm
-        lower, upper = self.profile.extent_z_nm
-        for edge in shape.edges:
-            start, end = _endpoints(edge)
-            r_mid, z_mid = _curve_midpoint(edge)
-            on_axis = abs(r_mid) < TOL_NM
-            on_arc = abs(_norm(r_mid, z_mid) - radius) < _ARC_RTOL * radius
-            horizontal = abs(start[1] - end[1]) < TOL_NM
-            if on_axis:
-                edge.name = "axis"
-                if lower - TOL_NM < z_mid < upper + TOL_NM:
-                    edge.maxh = AXIS_IN_PORE_MAXH_NM
-            elif on_arc:
-                edge.maxh = RESERVOIR_ARC_MAXH_NM
-                if abs(z_mid) < half + TOL_NM:
-                    edge.name = "membrane_outer"
-                else:
-                    edge.name = "cis" if z_mid > 0.0 else "trans"
-            elif horizontal and abs(abs(z_mid) - half) < TOL_NM:
-                edge.name = "membrane"
-            elif self._inside_membrane_quad(r_mid, z_mid):
-                edge.name = "interface"
-            else:
-                edge.name = "wall"
-                if wall_h_nm is not None:
-                    edge.maxh = wall_h_nm
+        name_region(shape, reservoir_radius_nm=self.reservoir_radius_nm)
+        apply_sizes(shape, wall_h_nm=wall_h_nm, axis_extent_nm=self.profile.extent_z_nm)
 
     def shape(self, *, wall_h_nm: float | None = WALL_MAXH_NM) -> Shape:
-        """Return the glued, fully named region, unmeshed.
+        """Return the glued, fully named and sized region, unmeshed.
 
         The glue is not cosmetic: it is what makes the membrane-to-pore junction
         one node chain instead of two coincident ones (VER-28).
         """
-        import netgen.occ as occ
-
-        electrolyte, membrane, pore = self.faces()
-        glued = occ.Glue([electrolyte, membrane, pore])
-        self.name_edges(glued, wall_h_nm=wall_h_nm)
-        for face in glued.faces:
-            if face.name == "protein":
-                face.maxh = PORE_DOMAIN_MAXH_NM
-            elif face.name == "electrolyte":
-                face.maxh = RESERVOIR_DOMAIN_MAXH_NM
+        glued = build_region(self.record())
+        apply_sizes(glued, wall_h_nm=wall_h_nm, axis_extent_nm=self.profile.extent_z_nm)
         return glued
 
     def generate(
         self,
         *,
-        maxh_nm: float = GLOBAL_MAXH_NM,
+        maxh_nm: float = SIZES.global_nm,
         wall_h_nm: float | None = WALL_MAXH_NM,
         check_quality: bool = True,
     ) -> Mesh:
@@ -486,13 +284,9 @@ class ReferenceGeometry:
         Mesh
             The NGSolve mesh, domains and boundaries named.
         """
-        import netgen.occ as occ
-        import ngsolve as ngs
+        from nanopnp.mesh.generate import mesh_shape
 
-        geometry = occ.OCCGeometry(self.shape(wall_h_nm=wall_h_nm), dim=2)
-        mesh = ngs.Mesh(
-            geometry.GenerateMesh(maxh=maxh_nm, grading=GRADING, optsteps2d=OPTIMISATION_STEPS)
-        )
+        mesh = mesh_shape(self.shape(wall_h_nm=wall_h_nm), replace(SIZES, global_nm=maxh_nm))
         if check_quality:
             check_quality_report(mesh)
         return mesh
@@ -508,34 +302,19 @@ class ReferenceGeometry:
 
         Raises
         ------
-        ReferenceGeometryError
+        nanopnp.geometry.region.RegionGateError
             If either bilayer plane carries no ``membrane`` edge, which means
             the quadrilateral did not reach the pore and there is no junction to
             report on.
         """
-        half = self.half_thickness_nm
         glued = self.shape(wall_h_nm=wall_h_nm)
         materials = sorted({face.name for face in glued.faces if face.name is not None})
         boundaries = sorted({edge.name for edge in glued.edges if edge.name is not None})
-        assembled: list[float] = []
-        for plane, label in ((-half, "trans"), (half, "cis")):
-            radii = [
-                point[0]
-                for edge in glued.edges
-                if edge.name == "membrane"
-                for point in _endpoints(edge)
-                if abs(point[1] - plane) < TOL_NM
-            ]
-            if not radii:
-                raise ReferenceGeometryError(
-                    f"no membrane boundary on the {label} bilayer plane z = {plane:g} nm; the "
-                    "quadrilateral did not meet the pore body (VER-28)"
-                )
-            assembled.append(min(radii))
-        expected = tuple(max(plane_crossings(self.profile, z)) for z in (-half, half))
+        assembled = membrane_radii(glued, self.half_thickness_nm)
+        record = self.record()
         return JunctionReport(
-            expected_trans_nm=expected[0],
-            expected_cis_nm=expected[1],
+            expected_trans_nm=record.junction_nm["trans"],
+            expected_cis_nm=record.junction_nm["cis"],
             assembled_trans_nm=assembled[0],
             assembled_cis_nm=assembled[1],
             materials=tuple(materials),
@@ -546,26 +325,3 @@ class ReferenceGeometry:
 def check_quality_report(mesh: Mesh, *, where: str = "the reference geometry") -> QualityReport:
     """Gate a meshed reference region and return its quality report (VER-10)."""
     return check_quality(from_ngsolve(mesh), where=where)
-
-
-def _norm(radius: float, height: float) -> float:
-    """Return the distance of ``(r, z)`` from the origin."""
-    return float((radius * radius + height * height) ** 0.5)
-
-
-def _endpoints(edge: Shape) -> tuple[tuple[float, float], tuple[float, float]]:
-    """Return an edge's two endpoints as ``(r, z)`` pairs, in nm."""
-    start, end = edge.start, edge.end
-    return (float(start[0]), float(start[1])), (float(end[0]), float(end[1]))
-
-
-def _curve_midpoint(edge: Shape) -> tuple[float, float]:
-    """Return the point halfway along ``edge`` in its own parameter, as ``(r, z)``.
-
-    ``edge.center`` is the centre of mass and lies off the curve for an arc, so
-    it cannot classify a boundary that has any; ``Value`` on the midpoint of
-    ``parameter_interval`` is on the curve for both an arc and a segment.
-    """
-    lower, upper = edge.parameter_interval
-    point = edge.Value(0.5 * (lower + upper))
-    return float(point[0]), float(point[1])

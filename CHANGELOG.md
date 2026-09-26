@@ -16,6 +16,53 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+## [0.9.0-alpha.5] - 2026-09-26
+
+WP21: CAD assembly and meshing from a profile, pipeline stages 5 and 6.
+
+### Added
+
+- Stage 5, `region`. It moves stage 4's profile, or a supplied `inputs.profile`, into the model
+  frame by `geometry.membrane.centre_z_nm`, and fits the bilayer to it. The membrane's inner edge
+  is the chord between the two planes' lumen-adjacent body intervals with the widest margin to the
+  profile, found on a 63 × 63 grid. The pore, the bilayer and the electrolyte are assembled with
+  OCC and glued, and every edge is named by the faces it separates (FR-09). The stage writes a
+  declarative `nanopnp/region/v1` record from which the region is rebuilt.
+- Stage 5's gate (QR-12): each plane crosses the profile at least twice, the chord clears the
+  profile by 0.01 nm, each domain is one face, the profile lies inside the reservoir, and the
+  membrane meets the body at the lumen-adjacent interval's outer end. A plane cut more than twice
+  always splits a domain, and is refused by the one-face criterion. Each failure names the
+  criterion, the value, the threshold and the (r, z).
+- Stage 6 generates a mesh from stage 5's region (FR-10). `wall_h_nm: auto` resolves to
+  `size_scale × min(0.05 nm, λ_D/5)` with λ_D at the reference permittivity; the rest of §5.2.2's
+  size table scales with `size_scale`. The mesh is written as MSH 4.1 and read back through the
+  ingestion gates, so a generated mesh passes every gate a supplied one does, including the
+  solid-permittivity check. A wall-size gate then refuses a `wall` whose mean segment exceeds
+  1.15 × its target or whose longest exceeds 2.0 ×, naming the segment.
+- A generated mesh is keyed on its recipe and records its content hash. Every consumer reads the
+  stage-6 file rather than regenerating it, and a reproduction whose mesh hashes differently is
+  refused naming both hashes (QR-08).
+- The manifest records the region (frame shift, chord, clearance, junction, face areas) and the
+  sizing (the resolved wall size and its source, λ_D, `size_scale`, the wall-size statistics and
+  the NUM-30 ratio) (FR-25).
+- On the ClyA fixture the derived region meshes to the drawn reference's 44,316 triangles. The
+  prepared 2WCD meshes at the default sizes, with 44,688 triangles and minimum SICN 0.7111, and
+  walks to stage 12.
+- VER-52, VER-53.
+
+### Changed
+
+- A `structure:` case, and a case supplying `inputs.profile`, walk the whole pipeline, and a sweep
+  over either plans. A case with neither a mesh nor a profile nor a structure is refused.
+- `structure`, `geometry` and `inputs.profile` are warm-start barriers in a sweep, and so is a salt
+  or temperature axis whose values resolve to more than one wall size.
+- Beside `inputs.mesh`, any `numerics.mesh` key away from its default is refused naming it.
+  `numerics.mesh.backend: gmsh` is refused naming WP23, `boundary_layer: true` naming FR-11 and an
+  analyte on a generated mesh naming FR-21.
+- The reference geometry builds its region through stage 5's assembly, keeping its drawn corners;
+  its mesh hash is unchanged. `ReferenceGeometryError` is replaced by stage 5's `RegionGateError`.
+- RSK-05 is retired.
+
 ## [0.9.0-alpha.4] - 2026-09-26
 
 WP20: contour extraction, conditioning and its gate, pipeline stage 4.
