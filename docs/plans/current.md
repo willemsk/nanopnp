@@ -8,15 +8,13 @@ an unmerged branch has shipped.
 
 - Phase 1 ([solver core](phase-1-solver-core.md)) is **closed** as `v0.5.0` (§8.2.3). The COMSOL
   attribution (C1) and the 12-core reference sweep (C2) land as addenda to its report.
-- Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **in progress**. WP17, WP18
-  and WP19 are merged (PRs [#38](https://github.com/willemsk/nanopnp/pull/38),
-  [#39](https://github.com/willemsk/nanopnp/pull/39) and
-  [#40](https://github.com/willemsk/nanopnp/pull/40), `v0.9.0-alpha.1` to `alpha.3`). WP21–WP25
-  are planned (rulings B1–B7, §8.2.2).
-- **WP20** ([stage 4, the contour](wp20-contour-extraction.md)) is **delivered** on
-  `claude/wp-plan-20-e8e1e9`. Its PR awaits `/wp-ship` and becomes `v0.9.0-alpha.4`.
-- **WP21** (stages 5 and 6, CAD assembly and meshing from a profile) is **next** for `/wp-plan`,
-  once WP20 has merged.
+- Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **in progress**. WP17 to WP20
+  are merged (PRs [#38](https://github.com/willemsk/nanopnp/pull/38) to
+  [#41](https://github.com/willemsk/nanopnp/pull/41), `v0.9.0-alpha.1` to `alpha.4`). WP22–WP25
+  are planned in the phase plan (rulings B1–B7, §8.2.2).
+- **WP21** ([stages 5 and 6, CAD assembly and meshing](wp21-cad-assembly-and-meshing.md)) is
+  **planned** on `claude/wp-plan-21-eea388`, and is next for `/wp-implement`. It becomes
+  `v0.9.0-alpha.5`.
 
 ## What Phase 2 must not re-decide
 
@@ -41,8 +39,12 @@ Each item is recorded in full where it points. Read it there first.
   and feature size > 2h. → §5.2.1 and its NOTEs; WP20 D5, D9–D12 and the handoff to WP21.
 - **Stage 1's frame is fixed**: axis on z at r = 0, `z = â·x`, +z to *cis*; stage 5 applies
   `centre_z_nm`. → the §5.3.1 NOTE on `structure:`; WP18 D2, D8, D10.
-- **`refuse_walk`** (`io/case.py`) stops runs and sweeps past stage 4, naming stage 5. WP21
-  moves it on and lifts `_require_runnable`'s mesh refusal. → WP18 D1; WP19 D1; WP20 D1.
+- **`refuse_walk`** (`io/case.py`) stops runs and sweeps past stage 4, naming stage 5, until
+  WP21 removes it. → WP18 D1; WP20 D1; WP21 D1, D14.
+- **WP21's settled choices:** the membrane's inner edge is the widest-margin chord inside the
+  body, `auto` is `size_scale × min(0.05 nm, λ_D/5)` at `ε_r,f⁰`, a generated mesh is keyed on
+  its recipe, and a generated mesh needs both solid permittivities. → WP21 D3, D7, D10, D11; the
+  §5.2.1 and §5.3.1 NOTEs they amend.
 - **Open for WP22, from the author:** did the reference polygon use `pqr2grid`'s binning, and
   what did its hand edit do? → WP20 Open questions; Design §7.
 - **The density's radii are CHARMM Rmin/2** by residue and atom, with no element fallback
