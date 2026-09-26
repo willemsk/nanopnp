@@ -1,6 +1,6 @@
 # Phase 2 (Geometry pipeline): from a structure to a gated mesh
 
-**Status: in progress. WP17 delivered, 24 September 2026; WP18 delivered, 25 September 2026; WP19 delivered, 25 September 2026; WP20–WP25 planned.** Written 24 September 2026, after Phase 1 (WP7–WP16) delivered the
+**Status: in progress. WP17 delivered, 24 September 2026; WP18 delivered, 25 September 2026; WP19 delivered, 25 September 2026; WP20 planned in detail, 26 September 2026 ([plan](wp20-contour-extraction.md)); WP21–WP25 planned.** Written 24 September 2026, after Phase 1 (WP7–WP16) delivered the
 solver core on an externally supplied mesh (main at `v0.5.0-alpha.10`). Two things come first:
 the Phase 1 end-of-phase report, which merges as tag `v0.5.0`, and the author's double-click
 observation that closes Phase 0 criterion 4. That ordering is ruling B1 of `SPECIFICATION.md`
@@ -274,7 +274,7 @@ Cₙ rotation. The generated references pick up the v2 fields without a docs edi
 | VAL-05 tolerances | Radius-profile and constriction-radius tolerances per leg | WP22 plan, argued from `G ∝ r²` and gap G3 |
 | Schema v2 contents | The exact v2 key list, including Phase 3's, and whether v1 artefact keys survive the upgrade | **Settled** in the [WP17 plan](wp17-case-schema-v2.md), D1–D6, and in the `SPECIFICATION.md` §5.3.1 v2 NOTE: the solve keys survive and the stage-9 key moves |
 | Cₙ averaging method | Rotate atoms or interpolate the voxel map | **Settled** in the [WP19 plan](wp19-density-and-reduction.md), D7 and Design §2: neither. The average is taken in the angular harmonic basis, where it keeps the multiples of n. That is exact, and costs one deposition per frame. §5.2 and the §5.3.1 NOTE on `geometry.density` are amended |
-| Contour script | Which parts of the author's script port | WP20 plan, after reading it (B6) |
+| Contour script | Which parts of the author's script port | **Settled** in the [WP20 plan](wp20-contour-extraction.md), D2 and Design §1: the script is `pqr2grid`'s `create_polygon_contour` (2019). Marching squares and topology-preserving Douglas–Peucker port. Its index-to-radius map is an erratum and does not (`.knowledge/04` §1.2). OPN-02 closed, RSK-06 retired |
 
 ## Verification
 

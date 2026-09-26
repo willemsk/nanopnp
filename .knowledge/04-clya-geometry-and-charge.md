@@ -72,6 +72,46 @@ Measured on 25 September 2026. The archive is held locally by the author at
 | Stage 1 on the archive | All 98 frames, superposed on frame 0 over every Cα (0.095–0.219 nm RMSD to it), 12 chains × 286 common Cα. On the ensemble-mean structure the cyclic turn is 29.9954°, the worst spacing error 0.679°, the permutation RMSD 0.136 nm and the tilt from the file's z 0.695°. Each frame's own permutation axis lies within 0.0163° of the ensemble-mean axis. This is a different reference from the ≤ 0.010° frame-to-frame figure of §5.2 (stage 1), which compared the frames' axes with one another. The DCD's interval reads 0.001 ns, so `last_ns: 5` is refused **[tested]**, `tests/tier3/test_structure_ensemble.py`, 25 Sep 2026 |
 | Axial placement | The Cα centroid is at z = 56.3 Å (MD) and 57.0 Å (2WCD), which matches G9's "(0, 0, 55 Å)". The MD all-atom extent is z = −2.28 to 12.52 nm, bracketing the model's pore extent of −1.85 to 12.25 nm by 0.43 and 0.27 nm. **Author ruling, 25 September 2026: the MD trajectory was centred on the middle of the bilayer, so in the MD frame `centre_z_nm` = 0** (G9, closed). The author's `2wcd.pdb` copy has its Cα centroid 0.07 nm from the MD one, but the vendored wwPDB 2WCD takes whatever axial position its test-time move gives it, so WP22 must register it to the MD frame |
 
+### 1.2 The author's contour script, read [tested]
+
+Read on 26 September 2026 (`SPECIFICATION.md` OPN-02, closed). The script is
+`create_polygon_contour` in the author's `pqr2grid` repository, held locally at
+`~/repos/pqr2grid`, MIT. It first appears in commit `a8e2898`, 7 October 2019, and is unchanged in
+the 2023 package. The PlyAB and MspA scripts use the same lines. The paper's archive does not call
+it for ClyA.
+
+| Step | What the script does | Consequence |
+|---|---|---|
+| Density | The union of §1, `sigma=0.93`, radii from the PQR, on a Cartesian grid over `[−L, L]` at h | The model of `SPECIFICATION.md` §5.2 stage 2 |
+| Radial average | `np.histogram` of the node radii, at bin width `w = (x_max − x_min + 1)/N_x` | `w/h = (2L + 1)/(2L + h)`, not 1: the `+1` is in nm, where one spacing was meant. It is 1.0316 at L = 15 nm and 1.0701 at L = 6.75 nm **[verified]** |
+| Contour | `find_contours(D, 0.25)`, then `contours[0]` | The first contour in scan order, not the largest |
+| Coordinates | `r = col·h`, `z = row·h + z_min` | Bin j's centre is `(j + ½)w`, so a feature at true radius r is written at `r_a = (r/w − ½)h`. At L = 15, 1.65 nm reads 1.574 nm and 5.66 nm reads 5.462 nm **[verified]** |
+| Simplify | `Polygon.simplify(0.1)`, topology preserved | Douglas–Peucker, with no smoothing, no spacing step and no gate |
+| Output | A z offset (PlyAB: −0.5 nm), then `savetxt(fmt='%.2f')` | Vertices rounded to 0.01 nm |
+
+**The erratum, measured.** We applied the script's binning and coordinate map to the 2WCD density
+from `nanopnp` stage 2 (L = 6.75 nm). The script's 0.25 contour lies 0.13–0.24 nm inside the exact
+reduction's at the lumen, and 0.21–0.40 nm inside at the outer surface. The same bins, placed at
+their centres `(j + ½)w`, agree with the exact reduction to ≤ 0.01 nm. So the error lies entirely
+in the index-to-radius map, not in the binning **[tested]** (WP20 plan, Design §1, 26 Sep 2026).
+
+Whether the delivered 185-vertex polygon was made this way is an open question for the author. The
+evidence argues against it. Its lumen is on average 0.08–0.14 nm *wider* than the exact contour of
+2WCD, of one MD frame, and of the 50-frame ensemble, and its outer surface is up to 0.12 nm
+narrower. The erratum would move both surfaces inward (WP20 plan, Design §7).
+
+**The delivered polygon's lattice fingerprint [tested].** Of its 185 vertices, 58 % have at least
+one coordinate on the 0.05 nm lattice, and 32 % have both. A subset of marching-squares vertices on
+a 0.05 nm grid, written at `%.2f`, would have at least one lattice coordinate on *every* vertex,
+and both on about a fifth. So the table is not a vertex subset of such a contour. About four in ten
+of its vertices were moved or placed by hand. That is consistent with the Methods' "manual removal
+of overlapping and superfluous vertices", and it goes beyond it.
+
+**The 2023 charge map.** The same repository deposits
+`q/(π(σR)²)·exp(−((r − r_i)² + (z − z_i)²)/(σR)²)` per atom in (r, z). That is a planar Gaussian
+with no `1/(2πr)`, whose planar integral is the net charge: the `e/m²` convention of the delivered
+table (G5). It is a pointer for Phase 3's FR-13.
+
 ---
 
 ## 2. Model geometry and conventions

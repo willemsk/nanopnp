@@ -120,8 +120,10 @@ Answers given directly by the author. Where they conflict with a printed source,
    glossary and 27 relative to the *E. coli* 2WCD structure elsewhere. Both are internally
    correct; any structure-prep pipeline must record which it applied to which PDB. Related to
    ruling 8. → `03-nanopore-biology.md`.
-3. **The contour script** — the author needs to locate it. Plan around the from-scratch pipeline
-   and treat it as upside. → `SPECIFICATION.md` §8.4.
+3. **Whether the reference polygon used `pqr2grid`'s radial binning.** The contour script was
+   located and read on 26 September 2026. Its index-to-radius map is an erratum, and the delivered
+   polygon's lumen argues against its use, but only the author knows. → `04-clya-geometry-and-charge.md`
+   §1.2; WP22.
 4. **PlyAB SI details** — analyte `ε_r`, per-position mesh strategy, barrier heights in kT, EOF
    velocities. Unreachable from this environment; the author holds the model.
    → `05-analyte-and-forces.md` §10.

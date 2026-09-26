@@ -1,6 +1,6 @@
 # Current work
 
-Updated 25 September 2026. Navigation only: `SPECIFICATION.md` governs. Check the
+Updated 26 September 2026. Navigation only: `SPECIFICATION.md` governs. Check the
 requested branch and its WP status before resuming; this brief is not evidence that
 an unmerged branch has shipped.
 
@@ -12,9 +12,10 @@ an unmerged branch has shipped.
   are merged (PRs [#38](https://github.com/willemsk/nanopnp/pull/38) and
   [#39](https://github.com/willemsk/nanopnp/pull/39), `v0.9.0-alpha.1` and `alpha.2`). WP20–WP25
   are planned (rulings B1–B7, §8.2.2).
-- **WP19** ([density map and symmetry reduction, stages 2 and 3](wp19-density-and-reduction.md)) is
-  **delivered** on `claude/wp-plan-19-19570b`; its PR awaits `/wp-ship` and becomes
-  `v0.9.0-alpha.3`. **Next:** WP20, contour extraction (stage 4).
+- **WP19** ([stages 2 and 3](wp19-density-and-reduction.md)) is **delivered** on
+  `claude/wp-plan-19-19570b`. Its PR awaits `/wp-ship` and becomes `v0.9.0-alpha.3`.
+- **WP20** ([stage 4, the contour](wp20-contour-extraction.md)) is **planned** on
+  `claude/wp-plan-20-e8e1e9`. It is **next** for `/wp-implement`, once WP19 has merged.
 
 ## What Phase 2 must not re-decide
 
@@ -31,21 +32,25 @@ Each item is recorded in full where it points. Read it there first.
 - **Python 3.11–3.14**, held together by VER-47. → §8.2.2 B4.
 - **VAL-05 has two legs**: vendored 2WCD, gated at Tier 2; the author's ensemble, Tier 3, which the
   phase gate requires. → §8.2.2 B2; §7.4.
-- **No HOLE on the default path** (B5). **The contour script is read before WP20 is planned**
-  (B6). **Gmsh arrives in WP23, optional, and FR-20 is Phase 3's** (B7). → §8.2.2.
-- **Stage 4 emits `nanopnp/profile/v1`**; stage 3 fills `RadialGrid`. → phase plan.
+- **No HOLE on the default path** (B5). **The contour script has been read** (B6; WP20 D2).
+  **Gmsh arrives in WP23, optional, and FR-20 is Phase 3's** (B7). → §8.2.2.
+- **Stage 4 emits `nanopnp/profile/v1`, in the stage-1 frame.** Its size target is the grid
+  spacing h, not the stage-6 wall size. Its region is closed and opened by 2h. Its radius band is
+  `[−h, +1.5 nm]` against the probe radius. WP21 and WP22 inherit all of this. → §5.2.1 and its
+  NOTEs; WP20 D5, D9–D11.
 - **Stage 1's frame is fixed**: axis on z at r = 0, `z = â·x`, +z to *cis*; stage 5 applies
   `centre_z_nm`. → the §5.3.1 NOTE on `structure:`; WP18 D2, D8, D10.
 - **`refuse_walk`** (`io/case.py`) stops runs and sweeps past the last delivered stage, now
-  stage 3, naming stage 4. WP20 moves it on. → WP18 D1; WP19 D1.
+  stage 3, naming stage 4. WP20 moves it to stage 4, naming stage 5. → WP18 D1; WP19 D1; WP20 D1.
+- **Open for WP22, from the author:** did the reference polygon use `pqr2grid`'s binning, and
+  what did its hand edit do? → WP20 Open questions; Design §7.
 - **The density's radii are CHARMM Rmin/2** from PDB2PQR's `CHARMM.DAT`, by residue and atom, with
   no element fallback (author ruling, 25 September 2026). **The Cₙ average is a harmonic
   projection**, and the variance is taken after detrending; below `n h/π` it is unresolved, not
   zero. → the §5.3.1 NOTE on
   `geometry.density`; WP19 D3, D7, D9 and their Outcomes.
-- **For VAL-05 (WP22), all answered by the author on 25 September 2026.** G9 is 0 in the MD frame,
-  so the vendored 2WCD must be registered to it. The paper's 50 frames are DCD frames 48–97 at
-  100 ps. The density included hydrogens. → `.knowledge/04` §1.1, §8; index rulings 11–12.
+- **For VAL-05 (WP22), answered by the author:** G9 is 0 in the MD frame, the paper's 50 frames
+  are DCD frames 48–97, and the density included hydrogens. → `.knowledge/04` §1.1, §8.
 - **The vendored 2WCD is in its crystal frame** and stage 1 refuses it; the tests orient it through
   the `prepared_2wcd` fixture in `tests/conftest.py`. → WP18 D16 Outcome; WP19 D14.
 
