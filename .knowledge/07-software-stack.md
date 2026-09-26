@@ -667,7 +667,7 @@ a separate package (CON-09, amended 25 September 2026).
 |---|---|
 | `thesis/` | `github.com/willemsk/phdthesis-text`, CC-BY-4.0. LaTeX source of the full thesis incl. all parameter tables |
 | `data/corrections/willems2020_nacl.yaml` | The fitted ePNP-NS correction parameters, transcribed and numerically verified |
-| Author's contour script | **Exists** — semi-automatic density-contour extraction, to be supplied. Likely the fastest route through the riskiest pipeline stage |
+| Author's contour script | **Read, 26 September 2026**: `create_polygon_contour` in the author's `pqr2grid` (`~/repos/pqr2grid`, MIT, 2019). It is marching squares, the first contour, and Douglas–Peucker at 0.1 nm, with a radial-binning erratum. → `04-clya-geometry-and-charge.md` §1.2 |
 | COMSOL models | Author retains a licence and can regenerate reference solutions on demand — the project's numerical oracle |
 
 ---

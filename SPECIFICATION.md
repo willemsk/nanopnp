@@ -828,7 +828,7 @@ CLI and the desktop shell drive the same stage objects (IF-01, IF-02, IF-09).
 | 1 | Structure ingestion and alignment | PDB/mmCIF, optional trajectory, expected point group | Aligned ensemble; Cₙ axis on z at r = 0 | MDAnalysis 2.10+ (LGPLv3) for PDB and every trajectory format; gemmi 0.7+ (MPL-2.0) for mmCIF, which MDAnalysis 2.10 does not read; the Kabsch rotation for superposition, cross-checked against MDAnalysis `rotation_matrix`; MDTraj as alternative reader; PDBFixer or Modeller for missing loops | Oligomeric state matches (ClyA 12, αHL 7, MspA 8); abort on missing chains (FR-03) |
 | 2 | Density map | Aligned ensemble, grid spacing, kernel | 3D density map | Vectorised numpy Gaussian deposition over a spherical stencil truncated at 10⁻⁶, per-atom width σR_i from the CHARMM radius set of the §5.3.1 NOTE on `geometry.density`, sharpness 0.93; `gridData` IO. MDAnalysis `DensityAnalysis` is histogram-only and is not used (**amended 25 September 2026**, WP19) | Grid spacing 0.25–0.5 Å (FR-04); every atom has a radius; the map is finite and within [0, 1] |
 | 3 | Symmetry reduction to (r, z) | 3D map, n | (r, z) map; residual azimuthal variance, Cₙ-averaged and raw | numpy and `scipy.sparse`; exact cell–annulus overlap weights; the Cₙ average in the angular harmonic basis (**amended 25 September 2026**, WP19) | Variance emitted with the geometry (FR-06, CON-04); annular weights summing to the exact annulus areas. The radius profile against the probe-radius profile is stage 4's gate (§5.2.1, §8.2.2 B5) |
-| 4 | Contour extraction and conditioning | (r, z) map, isolevel, smoothing and simplification parameters | Closed conditioned polyline | scikit-image, Shapely, scipy (all BSD-3), per §5.2.1 | §5.2.1 (FR-08) |
+| 4 | Contour extraction and conditioning | Stage 3's (r, z) mean; the aligned ensemble and its radius set, for the probe-radius profile; isolevel, smoothing and simplification tolerance | Closed conditioned polyline, a `nanopnp/profile/v1` document | scikit-image, Shapely (both BSD-3) and numpy, per §5.2.1 (**amended 26 September 2026**, WP20) | §5.2.1 (FR-08) |
 | 5 | CAD assembly | Polyline, membrane specification, reservoir radius, optional analyte | Fragmented (r, z) region, domains and boundaries tagged | `netgen.occ` (LGPL-2.1, OpenCASCADE, in-process) primary; Gmsh OCC Python API (GPLv2+) optional | All bodies fragmented and imprinted, interfaces conformal, no gap or overlap at the membrane-to-pore junction (FR-09) |
 | 6 | Meshing | Fragmented region, size fields | Graded triangular mesh | Netgen (LGPL-2.1) default, Gmsh (GPLv2+) optional, behind the mesh adapter | §5.2.2 (FR-10, QR-12) |
 | 7 | Charge assembly | Prepared ensemble, pH, force field, **and the deployed mesh** (its gate is evaluated there, PHY-19); on the consumer path, a supplied field document instead of the ensemble | ρ_pore(r, z), Q_net, dielectric field, ion-exclusion surface | PDB2PQR 3.7+ (BSD-3) driving PROPKA3; quintic B-spline (`spl4`) deposition; APBS 3.4.1 (BSD-3) cross-check; settings per PHY-16 | Charge conservation to 10⁻³ of Q_net on the deployed FE mesh, plus the per-z-slice cumulative check (FR-14, QR-03, PHY-19) |
@@ -850,20 +850,54 @@ Design notes, recorded where an implementer would otherwise choose wrongly.
 
 #### 5.2.1 Contour conditioning and its gate
 
-Pipeline: `find_contours` (sub-pixel marching squares) at isolevel 0.25, longest closed contour,
-Taubin λ|μ smoothing (volume-preserving, where Chaikin shrinks), Shapely `simplify`
-(Douglas–Peucker, tolerance about 0.02 nm), minimum vertex spacing, optional periodic B-spline fit.
+Pipeline (**amended 26 September 2026**, WP20):
+
+1. `find_contours` (sub-pixel marching squares, diagonal neighbours above the level joined) runs
+   on stage 3's mean at the isolevel, default 0.25. Each point is placed by the grid's own axes,
+   so bin j sits at its centre `r_j = j·h`.
+2. The closed contours are assembled into the region above the isolevel. A contour left open at the
+   grid's edge is refused.
+3. The region is closed, then opened, by a disc of radius 2h, with h the density grid spacing.
+   Every hole left is filled and recorded, and exactly one component is admitted.
+4. The loop is resampled at uniform arc length h/2 and smoothed by Taubin λ|μ, which preserves the
+   area where Laplacian and Chaikin smoothing shrink it.
+5. Shapely `simplify` (Douglas–Peucker, topology preserved) runs at `simplify_tol_nm`, default
+   0.02 nm, which must be below h.
+6. Vertices are removed until no edge is shorter than `h_c`.
+7. An optional periodic B-spline fit is not implemented.
+
+The constants are recorded in the WP20 plan, D4–D9. They key the stage-4 artefact and are not case
+keys.
 
 | Gate criterion | Threshold |
 |---|---|
 | `LinearRing.is_valid`, `is_simple` | both true |
-| Minimum vertex spacing | ≥ target element size |
-| Minimum local feature size | > 2 × target element size |
-| Loop topology | single closed loop, no detached islands |
-| Radius profile | within tolerance of the probe-radius profile computed on the aligned structure (HOLE an optional cross-check, §8.2.2 B5) |
+| Minimum vertex spacing | ≥ `h_c` |
+| Minimum local feature size, measured two edges either side of each vertex | > 2 `h_c` |
+| Loop topology | one component after the closing and opening, with no contour open at the grid's edge, holes filled and recorded, and the loop clear of the axis by `h_c` |
+| Radius profile | `−h_c ≤ r_c(z) − R_p(z) ≤ 1.5 nm` on every mid-plane between z nodes that crosses the loop. `r_c` is the loop's innermost crossing, and `R_p` the frame-mean radius of the largest sphere centred on the axis that clears every atom's radius in the aligned structure. HOLE is an optional cross-check (§8.2.2 B5) |
 
 Rationale (feature size): near-tangential self-approaches at the constriction generate slivers the
 mesher cannot repair.
+
+NOTE (the contour's size target, **added 26 September 2026**, WP20): `h_c`, the "target element
+size" of the criteria above, is the density grid spacing h, 0.05 nm by default. It is not the
+stage-6 wall size. NUM-30's `λ_D/5` is 0.27 nm at 0.05 M: read as the target, it would make the
+contour depend on the electrolyte concentration, and at 0.05 M erase the lumen's corrugation.
+Step 3's radius is set by the margin the feature-size criterion needs. Simplification moves each
+wall by up to its tolerance, so the gap left by a closing of radius δ stays above `2h_c` only if
+`δ > h + simplify_tol_nm`, and 2h meets that for every admitted tolerance. The gaps and fins it
+removes, under 0.2 nm at the default grid, admit no water molecule and are thinner than one heavy
+atom. Step 3 automates the "manual removal of overlapping and superfluous vertices" that the source
+work records. On the ClyA-AS ensemble, a closing of radius h leaves a groove that fails the
+criterion at 0.058 nm, and 2h passes it at 0.229 nm (WP20 plan, Design §2 and §4).
+
+NOTE (the radius band, **added 26 September 2026**, WP20): the lower bound is geometric. Inside
+the axis-centred sphere every atom is at least its own radius away, so the 25 % contour of the
+azimuthal mean can enter that sphere by at most a fraction of an atom's width. The upper bound is a
+gross-error check on the lumen's corrugation. `r_c − R_p` measures between +0.061 and +0.908 nm
+on 2WCD (chains A–L), and between +0.173 and +0.869 nm on the ClyA-AS ensemble. The band does not
+detect a radial scale error of a few per cent; VAL-05 does (WP20 plan, Design §5).
 
 The reference pore boundary is published in the COMSOL model report as a closed 190-vertex polygon
 (r ≈ 1.65–5.66 nm, z from −1.85 to 12.25 nm). The author's delivered tabulation of that boundary
@@ -1190,8 +1224,9 @@ preparation (WP18 Outcomes, **added 25 September 2026**).
 Until stage 2 is delivered, a walk that extends past stage 1 on a case carrying `structure:` SHALL be
 refused as an unsupported section naming stage 2. Once stages 2 and 3 are delivered, and until
 stage 4 is, a walk that extends past stage 3 SHALL be refused in the same way, naming stage 4
-(**added 25 September 2026**, WP19). Stage 1 alone runs through the stage command
-(IF-02). A case carrying `structure:` and `inputs.mesh` SHALL be refused naming both: a stage whose
+(**added 25 September 2026**, WP19). Once stage 4 is delivered, and until stage 5 is, a walk that
+extends past stage 4 SHALL be refused naming stage 5 (**added 26 September 2026**, WP20). Stage 1
+alone runs through the stage command (IF-02). A case carrying `structure:` and `inputs.mesh` SHALL be refused naming both: a stage whose
 output is supplied does not run, and neither does anything upstream of it (the `inputs:` NOTE), so
 the structure would be recorded as an input to a run that never read it (**added 25 September
 2026**, WP18).
@@ -1237,6 +1272,19 @@ presenting a measured zero. The variance of the map without the Cₙ average is 
 and their difference is the part of the azimuthal variation that is not Cₙ-symmetric. Neither is
 gated: RSK-07 makes the variance a validity criterion to be documented, and no threshold is
 specified. The derivations and measurements are in the WP19 plan, Design §1–§4.
+
+NOTE (`geometry.contour`, stage 4, FR-07, FR-08; **added 26 September 2026**, WP20): `isolevel`
+SHALL be finite and lie in (0, 1). `simplify_tol_nm` SHALL be finite, positive and below the
+density grid spacing h, because a larger tolerance discards resolved geometry and breaks the margin
+of the §5.2.1 NOTE on the contour's size target. Each is refused naming its value, and the second
+names h as well. `smoothing` is `taubin` or `none`. No other contour parameter and no gate
+threshold is a case key: they are the constants of §5.2.1, and they key the stage-4 artefact.
+Stage 4 emits a `nanopnp/profile/v1` document with `provenance.source: pipeline`, and its `sha256`
+is the digest of the stage-3 payload it was drawn from. The loop runs clockwise from its lowest
+vertex and stays in the stage-1 frame, so stage 5 applies `geometry.membrane.centre_z_nm` to it
+exactly as to a supplied profile. The document read back through `inputs.profile` is a supplied
+profile (the §5.2.1 NOTE on a supplied fixture). The conditioning and gate records belong to the
+stage-4 artefact, not to the document, so a hand edit cannot carry a stale one.
 
 NOTE (`inputs.charge`, `inputs.eps_r`, IF-05, IF-03): a supplied field is named by a
 pydantic-validated header document, `schema: nanopnp/field/v1`, which carries the `quantity`, its
@@ -1377,7 +1425,7 @@ when the plan is built, naming the axis, rather than collecting a column of abse
 | 1 | Aligned ensemble: coordinates in nm, atom table (element, name, residue name, number and insertion code, chain) and axis-transform record | Native `.npz` (float32 coordinates) with its header record; exported as a PDB topology with a DCD trajectory (IF-04). **Amended 25 September 2026** (WP18) from "trajectory plus transform record": a trajectory file carries no atom table and no gate record |
 | 2, 3 | Density map (3D, float32), and the reduced (r, z) mean with its Cₙ-averaged and raw azimuthal variance | Native `.npz` with its header record; exported to, and read from, OpenDX or CCP4 via GridDataFormats (LGPL) (IF-05), the (r, z) grids as `RadialGrid`s with a singleton axis. **Amended 25 September 2026** (WP19) |
 | 7 | ρ_pore, dielectric and exclusion fields | OpenDX or CCP4 via GridDataFormats (LGPL) (IF-05) |
-| 4 | Conditioned polyline | Vertex table |
+| 4 | Conditioned polyline | `nanopnp/profile/v1` YAML: the vertex table with its provenance block (§5.2.1). The conditioning and gate record is in the artefact's summary. **Amended 26 September 2026** (WP20) |
 | 5 | Tagged (r, z) region | OCC BRep plus tag map |
 | 6 | Mesh | Gmsh MSH 4.1 archival, any meshio (MIT) format on read (IF-06) |
 | 8 | Resolved material coefficient set | Correction file references and evaluated parameters |
@@ -2730,7 +2778,7 @@ otherwise report unbounded throughput for a resumed sweep.
 | **RSK-03** | Current QoI wrong from non-conservative CG flux, corrupting the rectification signal | High | Med | Both the ψ-domain-integral and the variational reaction flux mandated, with automatic agreement check (VER-11) | Phase 1 |
 | **RSK-04** | Analyte net force is a near-cancellation of two terms of about 10 pN and opposite sign; a small error in either integral flips the sign of the total | High | Med–High | Domain-form force evaluation (§6.7) rather than surface integration; dedicated force convergence study; both routes cross-checked to better than 0.1 pN (VER-22) | Analyte phase |
 | **RSK-05** | Contour to mesh produces slivers at the constriction | Low–Med | Low | The delivered 185-vertex pore polygon ships as a fixture (§5.2.1); the reference mesh used no boundary layers, only isotropic grading to 0.05 nm at the pore wall; contour validity gate (FR-08); isotropic fallback; mesh quality gates abort the run (VER-10) | Phase 2 |
-| **RSK-06** | The author's contour script proves tightly coupled to its original context and is not portable | Med | Med | Read it in week 1 of Phase 2, before the rest of the phase is planned; fall back to the specified contour pipeline | Phase 2 |
+| **RSK-06** | The author's contour script proves tightly coupled to its original context and is not portable | Med | Med | Read it in week 1 of Phase 2, before the rest of the phase is planned; fall back to the specified contour pipeline. **Retired 26 September 2026**: it was read (OPN-02). It is 20 lines, coupled to nothing beyond MDAnalysis, scikit-image and Shapely | Phase 2 |
 | **RSK-07** | Axisymmetric reduction invalid for a given pore through large azimuthal variance | Med | Med | Residual azimuthal variance reported as a first-class output (FR-06) and documented as a validity criterion | Phase 2 |
 | **RSK-08** | Charge non-conservation through smearing and 1/r projection | Med | Med | Exact annular volumes; analytic annulus integration; assertion on the deployed mesh and per-z-slice check (VER-01, VER-02) | Phase 3 |
 | **RSK-09** | The reference model carries no mesh convergence study, so a Tier 3 discrepancy of a few per cent may originate in the reference | Med | Med–High | Quantify this project's discretisation error first (§7.3), then attribute the residual; re-solve the reference case at two refinement levels while licence access lasts (VAL-04); never adjust the solver to close such a gap | Tier 3 |
@@ -2752,7 +2800,7 @@ otherwise report unbounded throughput for a resumed sweep.
 | ID | Item | Owner | Blocks |
 |---|---|---|---|
 | **OPN-01** | Radial potential at 0.15 M: the text quotes −14/−47 mV, the appendix table −29/−57 mV | Author | Use of the radial potential as a regression target; excluded from Tier 3 and Tier 4 targets until settled |
-| **OPN-02** | Location of the author's contour script. **Available, 24 September 2026**: it is read before the contour stage (WP20) is planned, and closes this item then | Author | Nothing on the critical path. Phase 2 is planned against the specified contour pipeline; the script is upside if it arrives (RSK-06) |
+| **OPN-02** | Location of the author's contour script. **Closed, 26 September 2026 (WP20 plan, Design §1).** It is `create_polygon_contour` in the author's `pqr2grid`, first committed 7 October 2019. It takes the first contour found at 0.25, applies Shapely `simplify(0.1)` and writes at `%.2f`, with no smoothing, spacing step or gate. Its radial binning places column j at `jh`, where the bin's centre is `(j + ½)w`, with `w = (2L + 1)h/(2L + h)`. That is an index-to-radius erratum (`.knowledge/04` §1.2). The WP20 plan, D2, records what ports | Closed | Closed |
 | **OPN-03** | PlyAB supporting-information details: analyte relative permittivity, per-position mesh strategy (remesh against ALE), barrier heights in kT, electro-osmotic flow velocities | Author, from the retained model files | Analyte force regression targets and adoption of PlyAB as a second reference case after v1.0 |
 | **OPN-04** | ClyA-AS mutation list: 8 mutations relative to the *S. typhi* wild type in one place, 27 relative to the *E. coli* 2WCD structure in another. Both internally correct | Author, with the structure-preparation stage | Provenance of `Q_net` (FR-12); the structure-preparation stage must record which list was applied to which PDB |
 | **OPN-05** | Pore-polygon vertex table. **Delivered** as `data/geometry/clya_as_radial_geometry.csv`, 185 vertices, extents as published. **Closed by the author, 5 September 2026: the delivered table is the geometry of record**, and the model report's 190 is the count after COMSOL's import conditioning. §2.2 and §5.2.1 are amended to it; the §5.2.1 fixture, `mesh/reference.py` and VAL-05 all cite it | Closed | Closed |
