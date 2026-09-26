@@ -1,6 +1,6 @@
 # Phase 2 (Geometry pipeline): from a structure to a gated mesh
 
-**Status: in progress. WP17 delivered, 24 September 2026; WP18 delivered, 25 September 2026; WP19 delivered, 25 September 2026; WP20 delivered, 26 September 2026; WP21 planned in detail, 26 September 2026; WP22–WP25 planned.** Written 24 September 2026, after Phase 1 (WP7–WP16) delivered the
+**Status: in progress. WP17 delivered, 24 September 2026; WP18 delivered, 25 September 2026; WP19 delivered, 25 September 2026; WP20 delivered, 26 September 2026; WP21 delivered, 26 September 2026; WP22–WP25 planned.** Written 24 September 2026, after Phase 1 (WP7–WP16) delivered the
 solver core on an externally supplied mesh (main at `v0.5.0-alpha.10`). Two things come first:
 the Phase 1 end-of-phase report, which merges as tag `v0.5.0`, and the author's double-click
 observation that closes Phase 0 criterion 4. That ordering is ruling B1 of `SPECIFICATION.md`
@@ -248,6 +248,22 @@ imports no gmsh.
 > mid-point chord leaves the body. `auto` is `size_scale × min(0.05 nm, λ_D/5)` (D7), because
 > NUM-30 read literally puts 0.27 nm on the wall at 0.05 M. A generated mesh is keyed on its
 > recipe, and its content hash is recorded (D10).
+
+> **Delivered, 26 September 2026** ([plan](wp21-cad-assembly-and-meshing.md), to be tagged
+> `v0.9.0-alpha.5`). Stage 5, `region`, turns a stage-4 or supplied profile into the glued,
+> adjacency-named region and gates the junction. Stage 6 meshes it under the §5.2.2 fields, re-reads
+> it through the ingestion gates and adds the D9 wall-size gate. A `structure:` or `inputs.profile`
+> case walks to stage 12. VER-52 and VER-53 add activities to FR-09, FR-10, FR-27, QR-08, QR-12
+> and CON-10; RSK-05 is retired. Constraints inherited by later packages:
+>
+> - Consumers read a generated mesh only through `deployed_mesh`; nothing regenerates one (D12).
+> - A generated mesh is keyed on its recipe, and a reproduction compares content hashes (D10, D13).
+> - `numerics.mesh.backend: gmsh` is refused naming WP23, which lifts it behind `mesh_shape`.
+> - **WP22 registers 2WCD axially**; the Tier-2 walk's trans tip + 1.85 nm is a test choice.
+>
+> Measurements: [WP21 Outcomes](wp21-cad-assembly-and-meshing.md#verification),
+> [`.knowledge/04`](../../.knowledge/04-clya-geometry-and-charge.md) §2.1,
+> [`.knowledge/06`](../../.knowledge/06-numerics-fem.md) §8.
 
 ### WP22 — VAL-05: the pipeline against the reference geometry
 
