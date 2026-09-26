@@ -128,7 +128,13 @@ def reopen(directory: str | Path, *, store: Store | None = None) -> ReopenedRun:
         )
     document = load_case(case_path)
     resolved = resolve(document)
-    solution = restore(warm_start_payload(artefact), case=document)
+    mesh = record.get("artefacts", {}).get("mesh")
+    # A generated mesh is read from the run's own stage-6 payload, never
+    # regenerated (WP21 D12); a supplied one is re-read from inputs.mesh.
+    generated = (
+        holding.get(str(mesh["schema"]), str(mesh["hash"])) if isinstance(mesh, dict) else None
+    )
+    solution = restore(warm_start_payload(artefact), case=document, mesh_artefact=generated)
     quantities = record.get("quantities")
     return ReopenedRun(
         directory=source,

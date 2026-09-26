@@ -18,6 +18,14 @@ the numbers that come out of it would say so. A NumPy patch release is not that:
 it is recorded, and if it moved a number the quantity diff is what catches it —
 which is the assertion that matters. ``strict_environment`` turns the report
 into a refusal for a caller who wants the stronger promise.
+
+**A generated mesh is an input too.** Stage 6 keys a generated mesh on its
+recipe, not on its vertices, and netgen is deterministic on one platform but not
+across platforms (``.knowledge/07`` section 4). So the reproduction compares the
+regenerated mesh's content hash with the one the manifest recorded, and a
+difference is fatal in the same terms as a moved input file: without the check,
+a cross-platform mesher difference would surface as a quantity drift with no
+named cause (WP21 D13).
 """
 
 from __future__ import annotations
@@ -281,6 +289,32 @@ def check_inputs(manifest: Mapping[str, Canonicalisable], *, where: Path) -> Non
             )
 
 
+def check_mesh(manifest: Mapping[str, Canonicalisable], result: RunResult, *, where: Path) -> None:
+    """Abort if the reproduced mesh is not the one the manifest recorded (WP21 D13).
+
+    Raises
+    ------
+    InputMovedError
+        Naming the mesh and both content hashes. Only a generated mesh can
+        reach this: a supplied one whose file moved is refused earlier by
+        :func:`check_inputs`, before any work is done.
+    """
+    group = manifest.get("geometry_and_mesh")
+    recorded = group.get("content_hash") if isinstance(group, dict) else None
+    artefact = result.artefacts.get("mesh")
+    if recorded is None or artefact is None:
+        return
+    reproduced = artefact.summary.get("content_hash")
+    if reproduced != recorded:
+        origin = "generated" if group.get("generated") else "supplied"  # type: ignore[union-attr]
+        raise InputMovedError(
+            f"the {origin} mesh has moved: {where / MANIFEST_FILENAME} recorded content hash "
+            f"{recorded} and the reproduction's mesh hashes to {reproduced}. A mesher that "
+            "places vertices differently on this platform makes a different calculation, "
+            "reported as the same one (QR-08, WP21 D13)"
+        )
+
+
 def check_environment(
     manifest: Mapping[str, Canonicalisable],
 ) -> tuple[EnvironmentDrift, ...]:
@@ -374,7 +408,8 @@ def reproduce(
     Raises
     ------
     InputMovedError
-        If a recorded input file is absent or its contents moved.
+        If a recorded input file is absent or its contents moved, or if the
+        reproduced mesh's content hash differs from the recorded one.
     ReproductionError
         If the run directory is incomplete, if its ``case.yaml`` disagrees with
         the text the manifest embeds, if the solve was served from the store
@@ -428,6 +463,7 @@ def reproduce(
                 "this reproduction would assert that a dictionary lookup is deterministic and "
                 "nothing else. Reproduce into a store that does not hold the run (QR-08)"
             )
+        check_mesh(manifest, result, where=where)
         drifts, worst = compare(recorded, result.quantities, tolerance=tolerance)
 
     reproduction = Reproduction(

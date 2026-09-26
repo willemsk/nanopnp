@@ -162,6 +162,39 @@ Consequences that must be reproduced: at **V_bias > 0** cations move **trans -> 
 pore is added to the grounded cis reservoir (T `sec:transport:methods` L1631-1633). Current is
 integrated over the **cis** boundary (eq. `eq:currentsim`).
 
+### 2.1 The bilayer on a structure-derived profile, measured [tested]
+
+Stage 5 (WP21) derives the membrane's inner edge from the profile rather than drawing it. On each
+plane `z = ±1.4` nm (model frame) the lumen-adjacent body interval is the profile's two smallest
+crossings, and the edge is the chord between the two intervals with the widest margin to the
+profile (SPECIFICATION.md §5.2.1 NOTE on the membrane junction).
+
+| | ClyA fixture | 2WCD, stage 4 |
+|---|---|---|
+| Profile vertices | 185 | 161 |
+| Frame shift `centre_z_nm` | 0 | 4.62887 (trans tip 2.77887 + 1.85) |
+| Lumen-adjacent intervals (nm) | [1.725, 2.7524], [2.96, 4.88] | [1.630, 2.8373], [3.089, 4.8256] |
+| Widest-margin chord (nm) | (1.9818, 3.4700) | (1.9321, 3.4690) |
+| Clearance (nm) | 0.2365 | 0.3017 |
+| Drawn chord, for comparison | (2.0, 3.5), clearance 0.214 | — |
+| Face areas (nm²): protein, membrane, electrolyte | equal to the drawn region's to 1e-10 relative | 28.109, 688.42, 97,458 |
+
+- **The chord between the intervals' mid-points is wrong on both profiles.** On the fixture it
+  runs (2.2387, −1.4) to (3.92, +1.4) and crosses the fluid cleft under the cap between
+  (3.070, −0.016) and (3.235, 0.260), splitting the electrolyte in two. **[tested]**
+- **Any admissible chord gives the same region**: a pocket between two chords would be enclosed by
+  them, the body and the plane stretches between their ends, which are body too, yet the
+  complement of a simple polygon is connected. **[verified]**
+- **A plane that crosses the profile more than twice always splits a domain.** The gap between
+  the first two intervals is fluid bounded by body at both ends, and the arms either side of it
+  join above the plane or below it. Joined above, the fluid over the gap is enclosed and is a
+  second electrolyte face; joined below, the pocket under it is a second membrane face (and
+  electrolyte where it passes the other plane). So "the membrane meets the body at `r₂`, not
+  `r₄`" cannot be tested on a four-crossing body: no such body assembles. **[verified]** by the
+  argument, **[tested]** on a hook and a bridge profile, refused naming each face's centroid.
+- **The 1.85 nm trans-tip offset is the fixture's own** (pore axial extent −1.85 ≤ z, bilayer
+  centre 0). Applying it to 2WCD is a test-time registration, not a VAL-05 claim.
+
 ---
 
 ## 3. Fixed-charge pipeline

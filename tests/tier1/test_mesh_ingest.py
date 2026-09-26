@@ -390,7 +390,7 @@ def test_ver25_the_mesh_stage_is_stage_six_and_describes_itself() -> None:
     """FR-27: the registry can say what this stage takes without importing it."""
     description = describe("mesh")
     assert description.number == 6
-    assert description.inputs == ("case",)
+    assert description.inputs == ("case", "region")
     assert create("mesh").describe() == description
 
 

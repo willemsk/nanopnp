@@ -56,6 +56,13 @@ than imported for the reason :data:`MESH_ARTEFACT_SCHEMA` gives: the payload *is
 a profile document, which ``inputs.profile`` reads back (WP20 D12).
 """
 
+REGION_SCHEMA = "nanopnp/region/v1"
+"""Stage 5: the declarative record of the tagged (r, z) region (FR-09, WP21 D5).
+
+The same string as :data:`nanopnp.geometry.region.REGION_SCHEMA`, repeated for
+the reason :data:`MESH_ARTEFACT_SCHEMA` gives.
+"""
+
 MATERIALS_SCHEMA = "nanopnp/materials/v1"
 """Stage 8: the resolved material coefficient set."""
 
@@ -360,42 +367,97 @@ class MaterialsArtefact(Artefact):
         )
 
 
+class RegionArtefact(Artefact):
+    """Stage 5: the tagged region, keyed on the membrane, reservoir, constants and profile.
+
+    The parameters are ``geometry.membrane``, ``geometry.reservoir`` and every
+    code constant that moves a vertex of the region or a verdict of its gate
+    (WP21 D5). The one input is the profile: stage 4's key, or the canonical
+    digest of a supplied profile's validated payload, so a hand edit of a
+    supplied profile is a new key (FR-27). The payload is the record, whose
+    digest is recorded beside it and re-checked on load.
+    """
+
+    def __init__(
+        self,
+        *,
+        parameters: Mapping[str, Canonicalisable],
+        inputs: Mapping[str, str],
+        payload: Mapping[str, Path] | None = None,
+        summary: Mapping[str, Canonicalisable] | None = None,
+    ) -> None:
+        super().__init__(
+            schema=REGION_SCHEMA,
+            parameters=dict(parameters),
+            inputs=dict(inputs),
+            payload=dict(payload or {}),
+            summary=summary or {},
+        )
+
+
 class MeshArtefact(Artefact):
     """Stage 6: a mesh that has passed the section 5.2.2 gates, in the vocabulary.
 
-    Keyed on the mesh's **contents** — canonical vertices, connectivity and tag
-    maps, as :meth:`nanopnp.mesh.adapter.MeshData.content_hash` takes them — and
-    not on the bytes of the file it came from. A mesh rewritten by another tool
-    with a different header, or with its entity blocks in another order, is then
-    one store entry rather than two, while a mesh whose ``wall`` group gained an
-    edge is a different one. The source file's own digest is recorded in the
-    summary, where provenance belongs and where it changes no key.
+    A **supplied** mesh is keyed on its **contents** — canonical vertices,
+    connectivity and tag maps, as :meth:`nanopnp.mesh.adapter.MeshData.content_hash`
+    takes them — and not on the bytes of the file it came from. A mesh rewritten
+    by another tool with a different header, or with its entity blocks in another
+    order, is then one store entry rather than two, while a mesh whose ``wall``
+    group gained an edge is a different one. The source file's own digest is
+    recorded in the summary, where provenance belongs and where it changes no key.
+
+    A **generated** mesh is keyed on its **recipe**: the stage-5 key as its input,
+    and the resolved size fields as the ``sizing`` parameter (WP21 D10). A content
+    key would have to mesh before the store could be asked whether it holds the
+    mesh, which is seconds per sweep member, and netgen is deterministic within a
+    process and platform but not across them (``.knowledge/07`` section 4). The
+    content hash is recorded in the summary and the manifest, and the QR-08
+    reproduction check compares it (WP21 D13).
 
     The applied vocabulary mapping is a *parameter*, not a summary field: the
     same file read under two different ``inputs.mesh.groups`` maps is two
     different meshes as far as every downstream selection is concerned, and
     keying them alike would serve one solve's boundary conditions from the
     other's cache entry.
+
+    Parameters
+    ----------
+    content_hash
+        A supplied mesh's canonical content hash; its input.
+    region
+        A generated mesh's stage-5 key; its input. Exactly one of the two.
+    sizing
+        A generated mesh's resolved size fields; ``None`` for a supplied one.
     """
 
     def __init__(
         self,
         *,
-        content_hash: str,
         materials: tuple[str, ...],
         boundaries: tuple[str, ...],
         groups: Mapping[str, str],
+        content_hash: str | None = None,
+        region: str | None = None,
+        sizing: Mapping[str, Canonicalisable] | None = None,
         payload: Mapping[str, Path] | None = None,
         summary: Mapping[str, Canonicalisable] | None = None,
     ) -> None:
+        if (content_hash is None) == (region is None):
+            raise ValueError(
+                "a mesh artefact is keyed on exactly one of its content (a supplied mesh) and "
+                "its region (a generated one)"
+            )
+        parameters: dict[str, Canonicalisable] = {
+            "materials": list(materials),
+            "boundaries": list(boundaries),
+            "groups": dict(sorted(groups.items())),
+        }
+        if region is not None:
+            parameters["sizing"] = dict(sizing or {})
         super().__init__(
             schema=MESH_ARTEFACT_SCHEMA,
-            parameters={
-                "materials": list(materials),
-                "boundaries": list(boundaries),
-                "groups": dict(sorted(groups.items())),
-            },
-            inputs={"mesh": content_hash},
+            parameters=parameters,
+            inputs={"mesh": content_hash} if content_hash is not None else {"region": str(region)},
             payload=dict(payload or {}),
             summary=summary or {},
         )

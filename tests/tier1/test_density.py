@@ -35,8 +35,8 @@ from nanopnp.density.union import (
     deposit,
     gate_density,
 )
-from nanopnp.io.case import CaseValidationError, UnsupportedCaseSection, load_case, resolve
-from nanopnp.io.run import run_case
+from nanopnp.io.case import CaseValidationError, load_case, resolve
+from nanopnp.io.run import _selected, run_case
 from nanopnp.io.store import Store
 
 if TYPE_CHECKING:
@@ -425,15 +425,16 @@ def test_ver49_resolution_refusals(
 
 
 def test_ver49_resolution_and_walk_rules(synthetic_c12: Path, tmp_path: Path) -> None:
-    """A ``structure:`` case walks to stage 3; a full walk and a sweep are refused naming stage 5.
+    """A ``structure:`` case walks to stage 3, and its full walk and its sweep reach the solve.
 
-    Stage 4 until WP20 delivered it (WP20 D1).
+    Until WP21 delivered stages 5 and 6 a full walk and a sweep were refused
+    naming the next undelivered stage (WP20 D1, WP21 D1).
 
     ``geometry:`` beside ``inputs.mesh`` is refused naming both, by the upstream
     rule; ``geometry:`` with neither ``structure:`` nor a mesh describes no run
     (WP19 D1, D2; section 5.3.1 NOTE on ``geometry.density``).
     """
-    from nanopnp.sweep.plan import SweepPlanError, plan_from_document
+    from nanopnp.sweep.plan import plan_from_document
 
     case = _case(tmp_path, synthetic_c12, geometry="geometry: {membrane: {thickness_nm: 2.8}}\n")
     store = Store(tmp_path / "store")
@@ -444,10 +445,19 @@ def test_ver49_resolution_and_walk_rules(synthetic_c12: Path, tmp_path: Path) ->
     assert group["density"]["radius_set"]["name"] == "pdb2pqr_charmm"  # type: ignore[index]
     assert group["reduction"]["n"] == 12  # type: ignore[index]
 
-    with pytest.raises(UnsupportedCaseSection, match=r"Stage 5, CAD assembly .* WP21"):
-        run_case(case, store=store, write=False)
-    with pytest.raises(UnsupportedCaseSection, match=r"stage 'mesh' extends past stage 4"):
-        run_case(case, store=store, upto="mesh", write=False)
+    assert _selected(resolve(load_case(case)), None) == (
+        "case",
+        "structure",
+        "density",
+        "symmetry",
+        "contour",
+        "region",
+        "mesh",
+        "materials",
+        "solve",
+        "qoi",
+        "report",
+    )
     sweep = tmp_path / "sweep.yaml"
     sweep.write_text(
         "schema: nanopnp/sweep/v1\n"
@@ -457,8 +467,7 @@ def test_ver49_resolution_and_walk_rules(synthetic_c12: Path, tmp_path: Path) ->
         "  - {name: bias, path: boundary_conditions.bias_V, values: [0.05, 0.1]}\n",
         encoding="utf-8",
     )
-    with pytest.raises(SweepPlanError, match=r"Stage 5, CAD assembly"):
-        plan_from_document(sweep)
+    assert len(plan_from_document(sweep).points) == 2
 
     mesh = "inputs:\n  mesh: {path: pore.msh, format: msh41}\n"
     text = case.read_text(encoding="utf-8")
@@ -472,7 +481,7 @@ def test_ver49_resolution_and_walk_rules(synthetic_c12: Path, tmp_path: Path) ->
         resolve(load_case(beside))
     alone = tmp_path / "alone.case.yaml"
     alone.write_text(text.replace(text[text.index("structure:\n") : text.index("geometry:")], ""))
-    with pytest.raises(UnsupportedCaseSection, match=r"supplies no inputs\.mesh"):
+    with pytest.raises(CaseValidationError, match=r"neither inputs\.mesh nor inputs\.profile"):
         resolve(load_case(alone))
 
 

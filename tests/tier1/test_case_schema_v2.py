@@ -379,17 +379,16 @@ def test_ver47_refusals(
 @pytest.mark.parametrize(
     ("supplied", "fragments"),
     [
-        ("profile", ("inputs.profile", "stage 5", "WP21")),
+        # inputs.profile left this table in WP21, when stage 5 began to read it;
+        # tests/tier1/test_region.py covers its refusals.
         ("pqr", ("inputs.pqr", "stage 7", "Phase 3")),
     ],
 )
 def test_ver47_a_new_input_is_refused_naming_the_stage_that_would_read_it(
     supplied: str, fragments: tuple[str, ...]
 ) -> None:
-    """``inputs.profile`` and ``inputs.pqr`` validate, and are refused at resolution."""
+    """``inputs.pqr`` validates, and is refused at resolution until Phase 3 reads it."""
     raw = _v2()
-    if supplied == "profile":
-        del raw["inputs"]["mesh"]
     raw["inputs"][supplied] = {"path": f"supplied.{supplied}"}
     document = loads_case(_text(raw))
     with pytest.raises(UnsupportedCaseSection) as caught:

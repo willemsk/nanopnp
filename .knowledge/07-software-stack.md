@@ -404,6 +404,13 @@ parsing the IF-02 result stream would read. Pass `file_format="gmsh"`.
   `edge.parameter_interval` with `edge.Value(t)` to get a point that is actually on the edge.
 - **`edge.faces` is empty.** Traversal is downward only, so an edge cannot be named by which faces
   adjoin it; classify by geometry instead.
+  **The other direction works** **[tested]** (WP21, netgen 6.2.2606): a shape hashes and compares
+  equal to the same topological entity reached another way, so `set(face.edges)` per named face
+  after a `Glue` gives each edge's adjacency by membership. A seam shared by two faces is in both
+  sets, and `set(shape.edges)` removes the per-face duplicates (383 listed edges become 195 on the
+  ClyA region). Stage 5 names every edge this way: `protein` with `membrane` is `interface`,
+  `protein` with `electrolyte` is `wall`, `membrane` with `electrolyte` is `membrane`. Geometry is
+  left to the two tests adjacency cannot make, `r = 0` and the reservoir arc.
 - **`Circle(...).Face()` is one closed edge with a seam at parameter zero**, and the seam survives
   a boolean clip as an ordinary vertex. A half-disc of radius 250 clipped to `r ≥ 0` carries a vertex
   at `(250, 0)` that splits whatever arc segment spans it.

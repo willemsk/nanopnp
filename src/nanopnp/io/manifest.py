@@ -463,6 +463,7 @@ def build(
     density: Mapping[str, Canonicalisable] | None = None,
     reduction: Mapping[str, Canonicalisable] | None = None,
     contour: Mapping[str, Canonicalisable] | None = None,
+    region: Mapping[str, Canonicalisable] | None = None,
     charge: Mapping[str, Canonicalisable] | None = None,
     electrolyte: Electrolyte | None = None,
     clamp_activations: int | None = None,
@@ -502,8 +503,10 @@ def build(
         to it. That last one is why the whole group comes from stage 6 rather
         than from the NGSolve mesh: which of the file's groups became ``wall``
         is not recoverable from the solved mesh, and two runs that differ only
-        in it are two different runs (section 5.3.3). Size-field settings join
-        it when the mesher lands in v0.9.
+        in it are two different runs (section 5.3.3). A generated mesh's record
+        carries its ``sizing`` block instead of a source file: the resolved wall
+        size, its source and lambda_D, ``size_scale``, the size table and the
+        wall-size gate's statistics (WP21 D16).
     structure
         Stage 1's record, taken from its artefact summary: the point group, the
         chains in cyclic order, the axis in the file frame and the rotation that
@@ -523,6 +526,10 @@ def build(
         vertex count, spacing and feature size, the holes filled, the radius
         band's worst margins with their z, and the constriction (WP20 D15).
         Recorded under ``contour``.
+    region
+        Stage 5's record: the frame shift, the thickness, the inner edge and its
+        clearance, the junction radii, the face areas and the edge-name counts
+        (WP21 D16). Recorded under ``region``.
     charge
         The Charge group: ``nanopnp.charge.stage.ResolvedFields.summary()`` — each
         supplied field's header, grid descriptor and digest, and for the charge
@@ -570,6 +577,7 @@ def build(
             density=density,
             reduction=reduction,
             contour=contour,
+            region=region,
         ),
         charge=(
             dict(charge)
@@ -603,11 +611,12 @@ def _geometry_group(
     wall_distance: Mapping[str, Canonicalisable] | None,
     **stages: Mapping[str, Canonicalisable] | None,
 ) -> dict[str, Canonicalisable]:
-    """Return the Geometry and mesh group: the mesh record, and stages 1 to 4's where they ran.
+    """Return the Geometry and mesh group: the mesh record, and stages 1 to 5's where they ran.
 
     A run that stopped at stage 4 records its structure, its density, its
     reduction and its contour, and says the mesh was not built, which is a different fact from a
-    run that had none of them.
+    run that had none of them. A generated mesh's record carries its ``sizing``
+    block, and stage 5's record is ``region`` (FR-25, WP21 D16).
     """
     if mesh is None:
         group = not_run("no mesh was built or supplied to this run")

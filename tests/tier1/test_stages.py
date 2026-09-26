@@ -85,6 +85,8 @@ def test_ver25_every_stage_describes_itself_without_importing_it() -> None:
         " 'density': 'nanopnp.density.stage' in sys.modules,"
         " 'symmetry': 'nanopnp.symmetry.stage' in sys.modules,"
         " 'contour': 'nanopnp.geometry.contour' in sys.modules,"
+        " 'region': 'nanopnp.geometry.region' in sys.modules,"
+        " 'netgen': 'netgen' in sys.modules,"
         " 'numpy': 'numpy' in sys.modules,"
         " 'extras': sorted(m for m in ('MDAnalysis', 'gemmi', 'skimage', 'shapely')"
         " if m in sys.modules),"
@@ -96,6 +98,7 @@ def test_ver25_every_stage_describes_itself_without_importing_it() -> None:
         "density",
         "symmetry",
         "contour",
+        "region",
         "mesh",
         "charge",
         "materials",
@@ -115,6 +118,9 @@ def test_ver25_every_stage_describes_itself_without_importing_it() -> None:
     assert reported["symmetry"] is False
     # WP20 D1: stage 4 is listed without importing scikit-image or Shapely.
     assert reported["contour"] is False
+    # VER-52, WP21 D1: stage 5 is listed without importing its module or netgen.
+    assert reported["region"] is False
+    assert reported["netgen"] is False
     assert reported["numpy"] is False
     assert reported["solve"] is False
     assert reported["materials"] is False
@@ -145,6 +151,7 @@ def test_ver25_the_pipeline_numbers_match_section_5_2() -> None:
         "density": 2,
         "symmetry": 3,
         "contour": 4,
+        "region": 5,
         "mesh": 6,
         "charge": 7,
         "materials": 8,

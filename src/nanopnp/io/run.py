@@ -47,7 +47,7 @@ from nanopnp.core.stages import (
     report,
 )
 from nanopnp.io.artefact import Artefact, CaseArtefact, StageInputs
-from nanopnp.io.case import load_case, refuse_walk, resolve
+from nanopnp.io.case import load_case, resolve
 from nanopnp.io.manifest import Manifest, build
 from nanopnp.io.store import Store
 
@@ -90,6 +90,7 @@ PIPELINE: tuple[str, ...] = (
     "density",
     "symmetry",
     "contour",
+    "region",
     "mesh",
     "charge",
     "materials",
@@ -153,7 +154,7 @@ def _scratch(store: Store) -> Path:
 
 
 WORKSPACE_STAGES: frozenset[str] = frozenset(
-    {"structure", "density", "symmetry", "contour", "mesh", "charge", "solve", "report"}
+    {"structure", "density", "symmetry", "contour", "region", "mesh", "charge", "solve", "report"}
 )
 """Stages whose constructor takes the directory they write into.
 
@@ -176,6 +177,9 @@ _WEIGHTS: Mapping[str, float] = {
     "symmetry": 0.05,
     # The probe profile is frames x atoms x planes distances: seconds on an ensemble.
     "contour": 0.03,
+    "region": 0.01,
+    # Generating a mesh is seconds (6-8 s on the reference profile); reading one
+    # is less. Either is small beside the ladder.
     "mesh": 0.05,
     "charge": 0.06,
     "materials": 0.01,
@@ -396,7 +400,9 @@ def _selected(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]:
     ``inputs.eps_r``: stage 7 refuses such a case as describing no work, and a
     run with no field to gate has not skipped a gate. ``structure``, ``density``
     ``symmetry`` and ``contour`` are dropped when the case carries no ``structure:`` section,
-    for the same reason.
+    for the same reason, which covers a case supplying ``inputs.profile``; and
+    ``region`` is dropped when the case supplies ``inputs.mesh``, which stage 6
+    then reads instead of generating (section 5.3.1 NOTE on ``inputs:``).
 
     Raises
     ------
@@ -409,6 +415,8 @@ def _selected(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]:
     dropped = set() if supplied else {"charge"}
     if resolved.structure is None:
         dropped.update(STRUCTURE_STAGES)
+    if not resolved.generates_mesh:
+        dropped.add("region")
     stages = tuple(name for name in PIPELINE if name not in dropped)
     if upto is None:
         return stages
@@ -418,6 +426,11 @@ def _selected(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]:
         raise UnknownStageError(
             f"stage {upto!r} is registered but case {resolved.name!r} carries no structure: "
             "section, so there is nothing for it to read"
+        )
+    if upto == "region":
+        raise UnknownStageError(
+            f"stage 'region' is registered but case {resolved.name!r} supplies inputs.mesh, so "
+            "there is no region to assemble"
         )
     if upto in PIPELINE:
         raise UnknownStageError(
@@ -551,6 +564,7 @@ def _input_files(resolved: ResolvedCase, case_path: Path | None) -> dict[str, Pa
         files["case"] = case_path
     for role, supplied in (
         ("mesh", resolved.mesh),
+        ("profile", resolved.profile),
         ("charge", resolved.charge),
         ("eps_r", resolved.eps_r),
     ):
@@ -652,6 +666,7 @@ def _manifest(walk: _Walk, *, case_text: str, case_path: Path | None) -> Manifes
     density = walk.artefacts.get("density")
     symmetry = walk.artefacts.get("symmetry")
     contour = walk.artefacts.get("contour")
+    region = walk.artefacts.get("region")
     mesh = walk.artefacts.get("mesh")
     charge = walk.artefacts.get("charge")
     solve = walk.artefacts.get("solve")
@@ -689,6 +704,7 @@ def _manifest(walk: _Walk, *, case_text: str, case_path: Path | None) -> Manifes
         density=_record(density, DENSITY_RECORD_KEYS),
         reduction=_record(symmetry, REDUCTION_RECORD_KEYS),
         contour=_record(contour, CONTOUR_RECORD_KEYS),
+        region=dict(region.summary) if region is not None else None,
         charge=dict(charge.summary) if charge is not None else None,
         electrolyte=walk.resolved.electrolyte,
         clamp_activations=clamps if isinstance(clamps, int) else None,
@@ -797,7 +813,6 @@ def run_document(
         workspace=Path(workspace) if workspace is not None else None,
         only=only,
     )
-    refuse_walk(walk.resolved, upto)
     stages = _selected(walk.resolved, upto)
     weights = [_WEIGHTS[name] for name in stages]
     total = sum(weights)

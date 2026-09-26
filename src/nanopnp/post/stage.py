@@ -54,7 +54,7 @@ from nanopnp.io.artefact import Artefact, CaseArtefact, QoIArtefact, ReportArtef
 from nanopnp.io.case import resolve
 from nanopnp.io.defaults import ContributedDeviation
 from nanopnp.io.fields import export_fields
-from nanopnp.mesh.ingest import ingest
+from nanopnp.mesh.ingest import deployed_mesh
 from nanopnp.physics.measures import AXISYMMETRIC, Measures
 from nanopnp.physics.models import CoupledModel
 from nanopnp.post import forces as force_post
@@ -371,7 +371,7 @@ class QoIStage:
             contract is that it does not do the work.
         """
         resolved = resolve(inputs.case)
-        ingested = ingest(resolved.require_mesh(), resolved)
+        ingested = deployed_mesh(resolved, inputs.upstream.get("mesh"))
         outputs = tuple(resolved.outputs)
         _check_selection(outputs)
         check_routes = bool(inputs.options.get("check_routes", True))
@@ -433,7 +433,9 @@ class QoIStage:
                 "Stage 11 restores the state to reassemble the NUM-25 residual and cannot extract "
                 "from a summary alone"
             )
-        solution = restore(Path(state_path), case=inputs.case)
+        solution = restore(
+            Path(state_path), case=inputs.case, mesh_artefact=inputs.upstream.get("mesh")
+        )
         order = int(prepared.resolved.model_options.get("order", AXISYMMETRIC.element_order))
         measures = replace(AXISYMMETRIC, element_order=order)
         mesh = solution.space.mesh
@@ -651,7 +653,9 @@ class ReportStage:
                 f"record); it carries {carried}. "
                 "The IF-07 export is of the converged fields and there is nothing to export from"
             )
-        restored = restore(Path(state_path), case=inputs.case)
+        restored = restore(
+            Path(state_path), case=inputs.case, mesh_artefact=inputs.upstream.get("mesh")
+        )
         model = restored.model
         if not isinstance(model, CoupledModel):
             raise TypeError(

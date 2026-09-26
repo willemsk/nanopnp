@@ -40,6 +40,12 @@ The gate, in order (section 5.2.2, QR-12):
 
 and only then is the NGSolve mesh built. Steps 3 to 6 are the abort surface and
 each names its own gate.
+
+**A generated mesh takes the same route** (WP21 D10, D12). Stage 6's generator
+(:mod:`nanopnp.mesh.generate`) writes the mesh it builds as MSH 4.1 and reads it
+back through :func:`ingest`, and every consumer of the mesh, stages 7, 10 and 11,
+reaches it through :func:`deployed_mesh`, which ingests the supplied file or the
+stage-6 payload and never regenerates one.
 """
 
 from __future__ import annotations
@@ -63,7 +69,7 @@ from nanopnp.core.stages import (
     report,
 )
 from nanopnp.io.artefact import MeshArtefact
-from nanopnp.io.case import COUPLED_MODELS, UnsupportedCaseSection, resolve
+from nanopnp.io.case import COUPLED_MODELS, SuppliedArtefact, UnsupportedCaseSection, resolve
 from nanopnp.io.defaults import ContributedDeviation
 from nanopnp.mesh.adapter import MeshData, detect_format, read, write_msh41
 from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS, PERMITTIVITY_EXEMPT
@@ -72,8 +78,8 @@ from nanopnp.physics.models import DEFAULT_BOUNDARIES
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.core.typing import Mesh
-    from nanopnp.io.artefact import StageInputs
-    from nanopnp.io.case import ResolvedCase, SuppliedArtefact
+    from nanopnp.io.artefact import Artefact, StageInputs
+    from nanopnp.io.case import ResolvedCase
 
 logger = logging.getLogger(__name__)
 
@@ -722,15 +728,56 @@ def ingest(supplied: SuppliedArtefact, resolved: ResolvedCase) -> IngestedMesh:
     )
 
 
-class MeshStage:
-    """Stage 6: a supplied mesh file to a tagged, gated, content-addressed mesh.
+MESH_PAYLOAD = "mesh"
+"""The stage-6 artefact's payload key: the archival, or generated, MSH 4.1 file."""
 
-    The artefact's identity is the mesh's **contents** — canonical vertices,
+
+def deployed_mesh(resolved: ResolvedCase, generated: Artefact | None) -> IngestedMesh:
+    """Return the mesh a run solves on, ingested and gated (WP21 D12).
+
+    The one route every consumer of the mesh takes. A supplied ``inputs.mesh`` is
+    ingested; otherwise the stage-6 artefact's payload is, which is the file the
+    generator wrote. A consumer never regenerates a mesh: a second generation is
+    a second chance to disagree with the one stage 6 gated and keyed.
+
+    Parameters
+    ----------
+    resolved
+        The resolved case.
+    generated
+        The stage-6 artefact, when the caller holds one. Only read when the case
+        supplies no mesh.
+
+    Raises
+    ------
+    KeyError
+        If the case generates its mesh and no stage-6 artefact was handed down,
+        naming the stage to run first.
+    """
+    if resolved.mesh is not None:
+        return ingest(resolved.mesh, resolved)
+    if generated is None or MESH_PAYLOAD not in generated.payload:
+        raise KeyError(
+            f"case {resolved.name!r} generates its mesh, and this stage was handed no stage-6 "
+            "mesh artefact to read it from; run the pipeline through 'mesh' first. A consumer "
+            "reads the generated mesh and never regenerates it"
+        )
+    return ingest(SuppliedArtefact(path=generated.payload[MESH_PAYLOAD], format="msh41"), resolved)
+
+
+class MeshStage:
+    """Stage 6: a supplied mesh file, or stage 5's region, to a tagged, gated mesh.
+
+    A **supplied** mesh's identity is its **contents** — canonical vertices,
     connectivity and tag maps — and not the file's bytes, so a mesh rewritten by
     another tool with a different header is one store entry rather than two, and a
     mesh whose ``wall`` group gained an edge is a different one. The cost is that
     :meth:`key` has to read and gate the mesh: seconds, against a solve of
     minutes, and the alternative files one mesh under two keys.
+
+    A **generated** mesh's identity is its **recipe**: stage 5's key and the
+    resolved size fields (WP21 D10). Its key is known without meshing, and its
+    content hash is recorded in the summary.
     """
 
     name = "mesh"
@@ -771,7 +818,36 @@ class MeshStage:
         MeshArtefact
             The same schema and parameters :meth:`run` returns, with no payload.
         """
+        resolved = resolve(inputs.case)
+        if resolved.generates_mesh:
+            return self._recipe(inputs, resolved)
         return self.artefact(self._ingest(inputs))
+
+    def _recipe(
+        self,
+        inputs: StageInputs,
+        resolved: ResolvedCase,
+        *,
+        payload: dict[str, Path] | None = None,
+        summary: dict[str, object] | None = None,
+    ) -> MeshArtefact:
+        """Return a generated mesh's artefact, keyed on the region and the sizes (D10)."""
+        from nanopnp.geometry.region import PAYLOAD_NAME, read_region
+        from nanopnp.mesh.generate import sizing_parameters
+        from nanopnp.mesh.sizing import SIZES, resolve_wall_size
+
+        region = inputs.require("region")
+        record = read_region(region.payload[PAYLOAD_NAME])
+        wall = resolve_wall_size(resolved.document)
+        return MeshArtefact(
+            region=region.hash,
+            materials=tuple(sorted(record.face_areas_nm2)),
+            boundaries=tuple(sorted(record.edge_counts)),
+            groups={},
+            sizing=sizing_parameters(wall, SIZES.scaled(wall.size_scale)),
+            payload=payload,
+            summary=summary,
+        )
 
     def run(
         self,
@@ -785,7 +861,8 @@ class MeshStage:
         Parameters
         ----------
         inputs
-            Carries the case; this stage consumes no upstream artefact.
+            Carries the case, and on a case that generates its mesh the stage-5
+            ``region`` artefact.
         progress
             Called with a fraction in [0, 1], monotone, ending at 1.
         cancel
@@ -794,14 +871,18 @@ class MeshStage:
         Returns
         -------
         MeshArtefact
-            Keyed on the mesh's contents, carrying the MSH 4.1 copy as its
-            payload and the quality statistics as its summary.
+            Keyed on a supplied mesh's contents or a generated mesh's recipe,
+            carrying the MSH 4.1 file as its payload and the quality statistics
+            as its summary.
 
         Raises
         ------
         Cancelled
             If ``cancel`` turns true. No artefact is written.
         """
+        resolved = resolve(inputs.case)
+        if resolved.generates_mesh:
+            return self._generate(inputs, resolved, progress=progress, cancel=cancel)
         check_cancelled(cancel, "reading the mesh")
         report(progress, 0.0, "reading and gating the mesh")
         ingested = self._ingest(inputs)
@@ -812,10 +893,51 @@ class MeshStage:
         report(progress, 1.0, f"{ingested.data.element_count} elements, gates passed")
         return self.artefact(ingested, payload=payload)
 
+    def _generate(
+        self,
+        inputs: StageInputs,
+        resolved: ResolvedCase,
+        *,
+        progress: Progress | None,
+        cancel: CancelToken | None,
+    ) -> MeshArtefact:
+        """Mesh stage 5's region, gate it, and emit the recipe-keyed artefact (D9-D11).
+
+        The generator is imported here rather than at the top: it reads its mesh
+        back through :func:`ingest`, so it imports this module.
+        """
+        from nanopnp.geometry.region import PAYLOAD_NAME, read_region
+        from nanopnp.mesh.generate import generate
+
+        check_cancelled(cancel, "meshing the region")
+        report(progress, 0.0, "meshing the region")
+        record = read_region(inputs.require("region").payload[PAYLOAD_NAME])
+        generated = generate(record, resolved, self._directory("generate-"))
+        found = (set(generated.ingested.data.materials), set(generated.ingested.data.boundaries))
+        wanted = (set(record.face_areas_nm2), set(record.edge_counts))
+        if found != wanted:
+            raise MeshVocabularyError(
+                f"the generated mesh carries the domains {sorted(found[0])} and the boundaries "
+                f"{sorted(found[1])}, and its region named {sorted(wanted[0])} and "
+                f"{sorted(wanted[1])}; the mesher lost or invented a name (VER-27)"
+            )
+        report(
+            progress,
+            1.0,
+            f"{generated.ingested.data.element_count} elements generated, gates passed",
+        )
+        return self._recipe(
+            inputs,
+            resolved,
+            payload={MESH_PAYLOAD: generated.ingested.source},
+            summary=generated.summary(),
+        )
+
     def _ingest(self, inputs: StageInputs) -> IngestedMesh:
         """Resolve the case and run the gate; shared by :meth:`key` and :meth:`run`."""
         resolved = resolve(inputs.case)
-        return ingest(resolved.require_mesh(), resolved)
+        assert resolved.mesh is not None  # only reached for a supplied mesh
+        return ingest(resolved.mesh, resolved)
 
     def artefact(
         self, ingested: IngestedMesh, *, payload: dict[str, Path] | None = None
@@ -851,10 +973,15 @@ class MeshStage:
         vocabulary and needs no mapping to be read back — which is what makes it
         an archive rather than a second copy of the input.
         """
+        directory = self._directory("mesh-")
+        return {MESH_PAYLOAD: write_msh41(ingested.data, directory / "mesh.msh")}
+
+    def _directory(self, prefix: str) -> Path:
+        """Return the workspace, or a fresh directory under the store root."""
         directory = self._workspace
         if directory is None:
             root = store_root() / WORKSPACE_DIRNAME
             root.mkdir(parents=True, exist_ok=True)
-            directory = Path(tempfile.mkdtemp(prefix="mesh-", dir=root))
+            directory = Path(tempfile.mkdtemp(prefix=prefix, dir=root))
         directory.mkdir(parents=True, exist_ok=True)
-        return {"mesh": write_msh41(ingested.data, directory / "mesh.msh")}
+        return directory

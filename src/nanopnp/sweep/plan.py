@@ -53,10 +53,10 @@ from nanopnp.io.case import (
     UnknownCasePathError,
     field_at,
     load_case,
-    refuse_walk,
     resolve,
     substitute,
 )
+from nanopnp.mesh.sizing import resolve_wall_size
 from nanopnp.sweep.document import SweepDocument, load_sweep, merged
 
 logger = logging.getLogger(__name__)
@@ -108,6 +108,12 @@ WARM_START_BARRIERS: tuple[str, ...] = (
     # axis of it names a mesh file.
     "inputs.mesh",
     "numerics.mesh",
+    # The same barrier further upstream still, since stages 5 and 6 generate the
+    # mesh from them: the structure and its contour, the membrane and the
+    # reservoir, and a supplied profile each move it (WP21 D15).
+    "structure",
+    "geometry",
+    "inputs.profile",
     # The element spaces. A coefficient vector is a function only relative to a
     # space, and ``load_initial`` gates on ``model.elements`` exactly as
     # ``restore`` does.
@@ -445,6 +451,71 @@ def _barriers(document: SweepDocument) -> tuple[bool, ...]:
     )
 
 
+WALL_SIZE_PATHS: tuple[str, ...] = (
+    "electrolyte.concentration_M",
+    "electrolyte.temperature_K",
+    "electrolyte.parameters",
+    "electrolyte.species",
+)
+"""Paths that move ``wall_h_nm: auto``'s resolved size, and with it a generated mesh.
+
+Not unconditional barriers: below 1.474 M the resolved wall size is the 0.05 nm
+ceiling at every concentration, so an ordinary salt sweep keeps its warm starts
+(section 5.3.1 NOTE on ``numerics.mesh``, WP21 D15).
+"""
+
+
+def _wall_size_barriers(
+    document: SweepDocument,
+    base: CaseDocument,
+    grid: Sequence[tuple[int, ...]],
+    barriers: Sequence[bool],
+) -> tuple[bool, ...]:
+    """Return, per axis, whether it moves a generated mesh's resolved wall size (WP21 D15).
+
+    An axis writing one of :data:`WALL_SIZE_PATHS` is a barrier when two points of
+    the grid that differ only along it resolve to different wall sizes. Only a
+    member that generates its mesh with ``wall_h_nm: auto`` has one; a point that
+    does not substitute cleanly is left to :func:`_resolve_every_point`, which
+    refuses it with its own diagnostic.
+    """
+    candidates = [
+        index
+        for index, axis in enumerate(document.axes)
+        if not barriers[index]
+        and any(
+            path == entry or path.startswith(f"{entry}.")
+            for path in axis.paths()
+            for entry in WALL_SIZE_PATHS
+        )
+    ]
+    if not candidates:
+        return tuple(barriers)
+    sizes: dict[tuple[int, ...], float | None] = {}
+    for coordinates in grid:
+        try:
+            assignments = merged(
+                [axis.points()[i] for axis, i in zip(document.axes, coordinates, strict=True)],
+                document.axes,
+            )
+            member = substitute(base, assignments)
+        except (CaseValidationError, UnknownCasePathError, ValueError):
+            sizes[coordinates] = None
+            continue
+        generated = member.inputs.mesh is None and member.numerics.mesh.wall_h_nm == "auto"
+        sizes[coordinates] = resolve_wall_size(member).wall_h_nm if generated else None
+    flags = list(barriers)
+    for index in candidates:
+        lines: dict[tuple[int, ...], set[float]] = {}
+        for coordinates, size in sizes.items():
+            if size is None:
+                continue
+            rest = coordinates[:index] + coordinates[index + 1 :]
+            lines.setdefault(rest, set()).add(size)
+        flags[index] = any(len(values) > 1 for values in lines.values())
+    return tuple(flags)
+
+
 def _parent_of(
     coordinates: Sequence[int], origins: Sequence[int], barriers: Sequence[bool] = ()
 ) -> tuple[int, ...] | None:
@@ -509,7 +580,7 @@ def _check_axes(document: SweepDocument) -> None:
                     raise SweepPlanError(f"axis {axis.name!r}, value {position}: {error}") from None
 
 
-def _warnings(document: SweepDocument) -> tuple[str, ...]:
+def _warnings(document: SweepDocument, barriers: Sequence[bool]) -> tuple[str, ...]:
     """Return the plan-time warnings, naming the axis each one is about.
 
     One today: an axis over ``inputs.mesh``. It is warned about and not refused.
@@ -520,13 +591,13 @@ def _warnings(document: SweepDocument) -> tuple[str, ...]:
     and VAL-04's mesh-convergence study is a sweep of exactly that shape.
     """
     found: list[str] = []
-    for axis, barrier in zip(document.axes, _barriers(document), strict=True):
+    for axis, barrier in zip(document.axes, barriers, strict=True):
         if not barrier:
             continue
         crossed = sorted(
             path
             for path in axis.paths()
-            for entry in WARM_START_BARRIERS
+            for entry in (*WARM_START_BARRIERS, *WALL_SIZE_PATHS)
             if path == entry or path.startswith(f"{entry}.")
         )
         found.append(
@@ -613,8 +684,8 @@ def build_plan(
     axes = list(document.axes)
     shape = document.shape()
     origins = document.origins()
-    barriers = _barriers(document)
     grid = list(product(*(range(length) for length in shape))) if shape else [()]
+    barriers = _wall_size_barriers(document, base, grid, _barriers(document))
 
     seen: dict[str, Mapping[str, FieldValue]] = {}
     enumerated: list[tuple[int, tuple[int, ...], str, Mapping[str, FieldValue]]] = []
@@ -666,7 +737,7 @@ def build_plan(
         points=tuple(points),
         rectification=RECTIFICATION in base.outputs,
         pairs=_pairs(points),
-        warnings=_warnings(document),
+        warnings=_warnings(document, barriers),
         workers=document.workers,
     )
     # Before the resolve rather than after it: an asymmetric bias axis makes the
@@ -699,12 +770,7 @@ def _resolve_every_point(base: CaseDocument, plan: SweepPlan) -> tuple[ResolvedC
     cases: list[ResolvedCase] = []
     for point in plan.points:
         try:
-            resolved = resolve(_member(base, point))
-            # A member walks the whole pipeline, so a structure: case is refused
-            # here, at plan build, and not at each of its members (section 5.3.1
-            # NOTE on structure:).
-            refuse_walk(resolved, None)
-            cases.append(resolved)
+            cases.append(resolve(_member(base, point)))
         except (CaseValidationError, UnknownCasePathError, NotImplementedError) as error:
             raise SweepPlanError(
                 f"point {point.index} ({point.point_id}) is not a case this build can run.\n"
@@ -750,8 +816,14 @@ def _gate_meshes(plan: SweepPlan, members: Sequence[ResolvedCase]) -> SweepPlan:
     for point, resolved in zip(plan.points, members, strict=True):
         if not reads_wall(resolved.electrolyte):
             continue
+        supplied = resolved.mesh
+        if supplied is None:
+            # A generated mesh does not exist until the member's stage 6 runs,
+            # and meshing every distinct region here would put stages 1 to 6 of
+            # the whole sweep in front of its first member. The member's solve
+            # gates NUM-34 on the mesh it generated, as every solve does.
+            continue
         order = int(resolved.model_options.get("order", AXISYMMETRIC.element_order))
-        supplied = resolved.require_mesh()
         source = (
             str(supplied.path or supplied.artefact),
             supplied.format,

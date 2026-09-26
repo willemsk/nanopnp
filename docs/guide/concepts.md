@@ -14,9 +14,9 @@ case file and the manifest cannot disagree about what was solved. See [Case file
 
 ## Stages
 
-The pipeline is twelve numbered stages (SPECIFICATION.md §5.2). Stages 1–5 build geometry from a
-protein structure, and are the v0.9 geometry pipeline. In v0.5 the mesh and the fields are supplied
-through the case's `inputs:` block, and a run walks these:
+The pipeline is twelve numbered stages (SPECIFICATION.md §5.2). Stages 1–6 build a mesh from a
+protein structure, and stages 5–6 alone build one from a pore profile. A case that supplies its
+mesh through the `inputs:` block skips them, and a run walks these:
 
 | # | Stage | Produces |
 |---|---|---|
@@ -35,8 +35,13 @@ each frame's atoms as a density map on a 3D grid and averages the frames. Stage 
 reduces that map to (r, z) and reports how far it is from Cₙ-symmetric. Stage 4, `contour`, draws
 the pore wall as the map's isolevel contour, conditions it, and gates it against the radius of
 the largest sphere on the axis that clears every atom. Its output is a pore profile, the same kind
-of document as the reference fixture. `nanopnp run case.yaml --upto contour` runs all four. A full
-walk of such a case is refused, naming stage 5, until CAD assembly is delivered.
+of document as the reference fixture. `nanopnp run case.yaml --upto contour` runs all four.
+
+Stage 5, `region`, moves the profile into the model frame by `geometry.membrane.centre_z_nm`, fits
+the bilayer to it and assembles the three domains, gating the junction. Stage 6, `mesh`, then meshes
+that region under the §5.2.2 size fields rather than reading a supplied file, and gates it as it
+would an ingested one, plus a check that the pore wall got the size it asked for. A case supplying
+`inputs.profile` starts at stage 5; a `structure:` case walks every stage.
 
 `nanopnp stage --list` prints the registry. Every stage is independently invocable, cancellable
 and introspectable (FR-27). `nanopnp stage <name> case.yaml` runs the pipeline up to that stage and
