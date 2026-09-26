@@ -462,6 +462,7 @@ def build(
     structure: Mapping[str, Canonicalisable] | None = None,
     density: Mapping[str, Canonicalisable] | None = None,
     reduction: Mapping[str, Canonicalisable] | None = None,
+    contour: Mapping[str, Canonicalisable] | None = None,
     charge: Mapping[str, Canonicalisable] | None = None,
     electrolyte: Electrolyte | None = None,
     clamp_activations: int | None = None,
@@ -517,6 +518,11 @@ def build(
         Stage 3's record: n, the bins, the radius below which no harmonic is
         resolved, and the maximum Cₙ, non-Cₙ and raw variance with their (r, z)
         (WP19 D13). Recorded under ``reduction``.
+    contour
+        Stage 4's record: the isolevel, the smoothing, the tolerance, ``h_c``, the
+        vertex count, spacing and feature size, the holes filled, the radius
+        band's worst margins with their z, and the constriction (WP20 D15).
+        Recorded under ``contour``.
     charge
         The Charge group: ``nanopnp.charge.stage.ResolvedFields.summary()`` — each
         supplied field's header, grid descriptor and digest, and for the charge
@@ -558,7 +564,12 @@ def build(
         inputs=input_group(case_hash=case_hash, files=input_files, upstream=upstream),
         environment=environment(),
         geometry_and_mesh=_geometry_group(
-            mesh, wall_distance, structure=structure, density=density, reduction=reduction
+            mesh,
+            wall_distance,
+            structure=structure,
+            density=density,
+            reduction=reduction,
+            contour=contour,
         ),
         charge=(
             dict(charge)
@@ -592,10 +603,10 @@ def _geometry_group(
     wall_distance: Mapping[str, Canonicalisable] | None,
     **stages: Mapping[str, Canonicalisable] | None,
 ) -> dict[str, Canonicalisable]:
-    """Return the Geometry and mesh group: the mesh record, and stages 1 to 3's where they ran.
+    """Return the Geometry and mesh group: the mesh record, and stages 1 to 4's where they ran.
 
-    A run that stopped at stage 3 records its structure, its density and its
-    reduction, and says the mesh was not built, which is a different fact from a
+    A run that stopped at stage 4 records its structure, its density, its
+    reduction and its contour, and says the mesh was not built, which is a different fact from a
     run that had none of them.
     """
     if mesh is None:

@@ -48,6 +48,13 @@ author and is the geometry of record section 5.2.1 amends to; nothing nominal
 ships (OPN-05, closed on the delivered table).
 """
 
+PIPELINE_SOURCE: str = "pipeline"
+"""``provenance.source`` of a profile stage 4 extracted (§5.3.1 NOTE on ``geometry.contour``).
+
+Outside :data:`REFERENCE_SOURCES`: a contour drawn from a structure is a
+geometry, not the reference model's, and a Tier-3 comparison refuses it.
+"""
+
 MEASUREMENT_TOL: float = 1e-9
 """Tolerance, in nm and nm², on a recorded measurement against the vertices.
 
@@ -257,6 +264,20 @@ def min_feature_size(points: np.ndarray, *, local_edges: int = LOCAL_EDGES) -> f
     local_edges
         Cyclic edge distance below which an edge counts as local to the vertex.
     """
+    return float(feature_sizes(points, local_edges=local_edges).min())
+
+
+def feature_sizes(points: np.ndarray, *, local_edges: int = LOCAL_EDGES) -> np.ndarray:
+    """Return each vertex's distance to its nearest non-local edge, in nm.
+
+    :func:`min_feature_size` is the minimum of this. The array is what locates
+    it, which stage 4's gate names when the criterion fails (QR-12).
+
+    Parameters
+    ----------
+    points, local_edges
+        As :func:`min_feature_size` takes them.
+    """
     import numpy as np
 
     count = len(points)
@@ -265,7 +286,7 @@ def min_feature_size(points: np.ndarray, *, local_edges: int = LOCAL_EDGES) -> f
     length_squared = np.einsum("ij,ij->i", span, span)
     safe = np.where(length_squared > 0.0, length_squared, 1.0)
     edge = np.arange(count)
-    smallest = float("inf")
+    sizes = np.empty(count)
     # On a loop so short that the neighbourhood would swallow every edge — a
     # triangle, a quadrilateral — it shrinks to the two incident edges, which
     # leaves the measure defined rather than empty. It cannot bite on a profile
@@ -277,8 +298,8 @@ def min_feature_size(points: np.ndarray, *, local_edges: int = LOCAL_EDGES) -> f
         offset = points[vertex] - starts
         parameter = np.clip(np.einsum("ij,ij->i", offset, span) / safe, 0.0, 1.0)
         distance = np.linalg.norm(offset - parameter[:, None] * span, axis=1)
-        smallest = min(smallest, float(np.min(distance[~local])))
-    return smallest
+        sizes[vertex] = np.min(distance[~local])
+    return sizes
 
 
 def _check_no_repeats(points: np.ndarray) -> None:
@@ -399,6 +420,27 @@ def load_profile(name_or_path: str | Path) -> PoreProfile:
     if schema != PROFILE_SCHEMA:
         raise ValueError(f"{path}: expected schema {PROFILE_SCHEMA!r}, found {schema!r}")
     return PoreProfile.model_validate(raw)
+
+
+def write_profile(profile: PoreProfile, path: Path) -> Path:
+    """Write ``profile`` as a ``nanopnp/profile/v1`` YAML document that :func:`load_profile` reads.
+
+    Every float is written as Python's shortest round-trip representation, so
+    the vertices read back bit for bit and the provenance block's measurements
+    still describe them to round-off. The vertices are one ``[r, z]`` pair per
+    line.
+
+    Returns
+    -------
+    Path
+        ``path``.
+    """
+    document = profile.model_dump(by_alias=True, mode="json", exclude_none=True)
+    document["vertices"] = [[float(r), float(z)] for r, z in profile.vertices]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    text = yaml.safe_dump(document, sort_keys=False, default_flow_style=None, width=100)
+    path.write_text(text, encoding="utf-8")
+    return path
 
 
 def profile_from_csv(

@@ -84,8 +84,10 @@ def test_ver25_every_stage_describes_itself_without_importing_it() -> None:
         " 'structure': 'nanopnp.structure.stage' in sys.modules,"
         " 'density': 'nanopnp.density.stage' in sys.modules,"
         " 'symmetry': 'nanopnp.symmetry.stage' in sys.modules,"
+        " 'contour': 'nanopnp.geometry.contour' in sys.modules,"
         " 'numpy': 'numpy' in sys.modules,"
-        " 'extras': sorted(m for m in ('MDAnalysis', 'gemmi') if m in sys.modules),"
+        " 'extras': sorted(m for m in ('MDAnalysis', 'gemmi', 'skimage', 'shapely')"
+        " if m in sys.modules),"
         " 'post': 'nanopnp.post.stage' in sys.modules}))"
     )
     reported = _in_subprocess(script)
@@ -93,6 +95,7 @@ def test_ver25_every_stage_describes_itself_without_importing_it() -> None:
         "structure",
         "density",
         "symmetry",
+        "contour",
         "mesh",
         "charge",
         "materials",
@@ -110,6 +113,8 @@ def test_ver25_every_stage_describes_itself_without_importing_it() -> None:
     # or the numpy and scipy they defer.
     assert reported["density"] is False
     assert reported["symmetry"] is False
+    # WP20 D1: stage 4 is listed without importing scikit-image or Shapely.
+    assert reported["contour"] is False
     assert reported["numpy"] is False
     assert reported["solve"] is False
     assert reported["materials"] is False
@@ -139,6 +144,7 @@ def test_ver25_the_pipeline_numbers_match_section_5_2() -> None:
         "structure": 1,
         "density": 2,
         "symmetry": 3,
+        "contour": 4,
         "mesh": 6,
         "charge": 7,
         "materials": 8,
@@ -172,6 +178,22 @@ def test_ver48_a_missing_extra_is_named_when_the_stage_is_created(
     assert "uv sync --all-extras" in message
     assert _catalogue()["structure"].extra == "structure"
     assert _catalogue()["solve"].extra is None
+
+
+def test_ver51_contour_names_its_missing_extra(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Stage 4 imports scikit-image at the top, so ``create()`` names the extra (WP20 D1)."""
+    import sys
+
+    monkeypatch.setitem(sys.modules, "skimage", None)
+    monkeypatch.setitem(sys.modules, "skimage.measure", None)
+    monkeypatch.delitem(sys.modules, "nanopnp.geometry.contour", raising=False)
+    with pytest.raises(MissingExtraError) as raised:
+        create("contour")
+    message = str(raised.value)
+    assert "'structure' extra" in message
+    assert "nanopnp.geometry.contour" in message
+    assert "'skimage" in message
+    assert _catalogue()["contour"].extra == "structure"
 
 
 def test_ver25_an_unknown_stage_is_refused_by_name() -> None:

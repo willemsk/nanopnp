@@ -425,7 +425,9 @@ def test_ver49_resolution_refusals(
 
 
 def test_ver49_resolution_and_walk_rules(synthetic_c12: Path, tmp_path: Path) -> None:
-    """A ``structure:`` case walks to stage 3; a full walk and a sweep are refused naming stage 4.
+    """A ``structure:`` case walks to stage 3; a full walk and a sweep are refused naming stage 5.
+
+    Stage 4 until WP20 delivered it (WP20 D1).
 
     ``geometry:`` beside ``inputs.mesh`` is refused naming both, by the upstream
     rule; ``geometry:`` with neither ``structure:`` nor a mesh describes no run
@@ -442,9 +444,9 @@ def test_ver49_resolution_and_walk_rules(synthetic_c12: Path, tmp_path: Path) ->
     assert group["density"]["radius_set"]["name"] == "pdb2pqr_charmm"  # type: ignore[index]
     assert group["reduction"]["n"] == 12  # type: ignore[index]
 
-    with pytest.raises(UnsupportedCaseSection, match=r"Stage 4, contour extraction .* WP20"):
+    with pytest.raises(UnsupportedCaseSection, match=r"Stage 5, CAD assembly .* WP21"):
         run_case(case, store=store, write=False)
-    with pytest.raises(UnsupportedCaseSection, match=r"stage 'mesh' extends past stage 3"):
+    with pytest.raises(UnsupportedCaseSection, match=r"stage 'mesh' extends past stage 4"):
         run_case(case, store=store, upto="mesh", write=False)
     sweep = tmp_path / "sweep.yaml"
     sweep.write_text(
@@ -455,7 +457,7 @@ def test_ver49_resolution_and_walk_rules(synthetic_c12: Path, tmp_path: Path) ->
         "  - {name: bias, path: boundary_conditions.bias_V, values: [0.05, 0.1]}\n",
         encoding="utf-8",
     )
-    with pytest.raises(SweepPlanError, match=r"Stage 4, contour extraction"):
+    with pytest.raises(SweepPlanError, match=r"Stage 5, CAD assembly"):
         plan_from_document(sweep)
 
     mesh = "inputs:\n  mesh: {path: pore.msh, format: msh41}\n"

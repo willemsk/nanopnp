@@ -125,11 +125,13 @@ CONFIGURATION_PATHS: dict[str, str] = {
         "geometry.density), so it is geometry input rather than a model switch"
     ),
     "geometry.contour.smoothing": (
-        "stage 4's contour conditioning, WP20; a structure: case's walk is refused before "
-        "stage 4, so nothing reads it yet"
+        "stage 4's contour conditioning, which moves the wall by a few hundredths of a nm and "
+        "is gated with the loop; it is recorded with the contour in the Geometry and mesh "
+        "group (section 5.3.1 NOTE on geometry.contour), so it is geometry input rather than "
+        "a model switch"
     ),
     "geometry.analyte.shape": (
-        "the analyte body of stage 5, WP21; a structure: case's walk is refused before stage 4, "
+        "the analyte body of stage 5, WP21; a structure: case's walk is refused before stage 5, "
         "so nothing reads it yet, and a supplied mesh carries its analyte already"
     ),
     "charge.titration": "v0.9; resolve() refuses a case carrying a charge: section",

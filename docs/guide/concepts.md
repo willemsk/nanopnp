@@ -28,13 +28,15 @@ through the case's `inputs:` block, and a run walks these:
 | 11 | qoi | the quantities of interest |
 | 12 | report | the exported fields, if asked for |
 
-Stages 1 to 3 are the first of the geometry pipeline to arrive. For a case carrying a
+Stages 1 to 4 are the first of the geometry pipeline to arrive. For a case carrying a
 `structure:` section, stage 1, `structure`, reads a PDB or mmCIF file and an optional trajectory,
 superposes the frames, finds the Cₙ axis and puts it on z at r = 0. Stage 2, `density`, deposits
 each frame's atoms as a density map on a 3D grid and averages the frames. Stage 3, `symmetry`,
-reduces that map to (r, z) and reports how far it is from Cₙ-symmetric. `nanopnp run case.yaml
---upto symmetry` runs all three. A full walk of such a case is refused, naming stage 4, until
-contour extraction is delivered.
+reduces that map to (r, z) and reports how far it is from Cₙ-symmetric. Stage 4, `contour`, draws
+the pore wall as the map's isolevel contour, conditions it, and gates it against the radius of
+the largest sphere on the axis that clears every atom. Its output is a pore profile, the same kind
+of document as the reference fixture. `nanopnp run case.yaml --upto contour` runs all four. A full
+walk of such a case is refused, naming stage 5, until CAD assembly is delivered.
 
 `nanopnp stage --list` prints the registry. Every stage is independently invocable, cancellable
 and introspectable (FR-27). `nanopnp stage <name> case.yaml` runs the pipeline up to that stage and

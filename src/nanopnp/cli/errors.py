@@ -143,6 +143,10 @@ EXIT_CODES: Final[dict[str, int]] = {
     # [0, 1], naming the voxel.
     "nanopnp.density.radii:DensityInputError": EXIT_GATE,
     "nanopnp.density.union:DensityGateError": EXIT_GATE,
+    # Stage 4 (WP20 D14): a contour open at the grid's edge or closed on the axis,
+    # a detached island, or a loop failing a section 5.2.1 criterion, naming the
+    # criterion, the value, the threshold and the (r, z).
+    "nanopnp.geometry.contour:ContourGateError": EXIT_GATE,
     "nanopnp.charge.fields:FieldDocumentError": EXIT_GATE,
     "nanopnp.charge.fields:ChargeFieldError": EXIT_GATE,
     "nanopnp.solve.state:StateMismatchError": EXIT_GATE,
