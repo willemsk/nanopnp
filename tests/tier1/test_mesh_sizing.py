@@ -29,7 +29,7 @@ from nanopnp.mesh.sizing import (
     ionic_strength_M,
     resolve_wall_size,
 )
-from nanopnp.sweep.plan import plan_from_document
+from nanopnp.sweep.plan import SweepPlanError, plan_from_document
 
 CASE = """\
 schema: nanopnp/case/v2
@@ -262,6 +262,12 @@ def test_ver53_a_salt_axis_is_a_barrier_only_where_it_moves_the_wall(tmp_path: P
     chained = plan_from_document(_sweep(tmp_path / "chained", [0.1, 1.0]))
     assert [point.parent for point in chained.points] == [None, 0]
     assert chained.warnings == ()
+
+
+def test_ver53_a_salt_point_with_no_wall_size_is_refused_naming_it(tmp_path: Path) -> None:
+    """D15: a point whose lambda_D is undefined is a plan error naming it, not a bare ValueError."""
+    with pytest.raises(SweepPlanError, match=r"electrolyte\.concentration_M': 0\.0.*positive"):
+        plan_from_document(_sweep(tmp_path, [1.0, 0.0]))
 
 
 def test_ver53_upstream_geometry_axes_are_barriers(tmp_path: Path) -> None:

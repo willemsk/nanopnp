@@ -367,13 +367,19 @@ def _state_path(run: Path) -> Path:
     return Path(payload)
 
 
-def _mesh_artefact(run: Path) -> Artefact | None:
+def _mesh_artefact(run: Path, *, generated: bool) -> Artefact | None:
     """Return the stage-6 artefact the run recorded, or ``None`` if it recorded none.
 
     A run on a generated mesh is restored onto the file stage 6 wrote, which is
     that artefact's payload (WP21 D12); a run on a supplied mesh re-reads
     ``inputs.mesh`` and needs none. :func:`_state_path` has already checked the
     record and the store, so a missing entry here is a run that recorded no mesh.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the case generates its mesh and the recorded artefact has been
+        removed from the store, as :func:`_state_path` refuses a removed state.
     """
     from nanopnp.io.run import RUN_RECORD_FILENAME
     from nanopnp.io.store import Store
@@ -383,7 +389,13 @@ def _mesh_artefact(run: Path) -> Artefact | None:
     root = record.get("store")
     if mesh is None or root is None:
         return None
-    return Store(Path(root)).get(str(mesh["schema"]), str(mesh["hash"]))
+    artefact = Store(Path(root)).get(str(mesh["schema"]), str(mesh["hash"]))
+    if artefact is None and generated:
+        raise FileNotFoundError(
+            f"{mesh['schema']} {mesh['hash'][:12]} is not in the store at {root}; the run "
+            "record refers to a generated mesh that has been removed"
+        )
+    return artefact
 
 
 def _element_count(mesh: Mesh, domain: str | None) -> int:
@@ -452,8 +464,12 @@ def render(request: RenderRequest) -> Rendered:
     from nanopnp.solve.state import restore
 
     run = Path(request.run)
+    state = _state_path(run)
+    case = load_case(run / CASE_FILENAME)
     solution = restore(
-        _state_path(run), case=load_case(run / CASE_FILENAME), mesh_artefact=_mesh_artefact(run)
+        state,
+        case=case,
+        mesh_artefact=_mesh_artefact(run, generated=case.inputs.mesh is None),
     )
     model = solution.model
     if not isinstance(model, CoupledModel):

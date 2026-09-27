@@ -73,6 +73,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
     from nanopnp.core.typing import Shape
     from nanopnp.io.artefact import StageInputs
+    from nanopnp.io.case import ResolvedCase
 
 logger = logging.getLogger(__name__)
 
@@ -763,7 +764,7 @@ def derive_region(
 # -- the stage -------------------------------------------------------------------------
 
 
-def _profile_input(inputs: StageInputs) -> tuple[str, Path]:
+def _profile_input(inputs: StageInputs, resolved: ResolvedCase) -> tuple[str, Path]:
     """Return the profile's identity and its file: stage 4's artefact, or ``inputs.profile``.
 
     Raises
@@ -772,7 +773,6 @@ def _profile_input(inputs: StageInputs) -> tuple[str, Path]:
         If the case has neither a ``structure:`` section nor ``inputs.profile``,
         so there is no profile to assemble.
     """
-    resolved = resolve(inputs.case)
     if resolved.profile is not None:
         path = resolved.profile.path
         assert path is not None  # the resolver refuses artefact: on inputs.profile
@@ -819,12 +819,12 @@ class RegionStage:
 
     def key(self, inputs: StageInputs) -> RegionArtefact:
         """Return the key: the membrane, the reservoir, the constants and the profile."""
-        identity, _ = _profile_input(inputs)
-        return self._key(inputs, identity)
-
-    def _key(self, inputs: StageInputs, identity: str) -> RegionArtefact:
-        """Return the key from a profile identity already in hand."""
         resolved = resolve(inputs.case)
+        identity, _ = _profile_input(inputs, resolved)
+        return self._key(resolved, identity)
+
+    def _key(self, resolved: ResolvedCase, identity: str) -> RegionArtefact:
+        """Return the key from the resolved case and a profile identity already in hand."""
         assert resolved.membrane is not None and resolved.reservoir is not None
         return RegionArtefact(
             parameters=region_parameters(resolved.membrane, resolved.reservoir),
@@ -850,9 +850,9 @@ class RegionStage:
         """
         check_cancelled(cancel, "reading the profile")
         report(progress, 0.0, "reading the profile")
-        identity, path = _profile_input(inputs)
-        key = self._key(inputs, identity)
         resolved = resolve(inputs.case)
+        identity, path = _profile_input(inputs, resolved)
+        key = self._key(resolved, identity)
         assert resolved.membrane is not None and resolved.reservoir is not None
         profile = load_profile(path)
 

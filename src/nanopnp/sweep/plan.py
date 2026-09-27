@@ -478,6 +478,13 @@ def _wall_size_barriers(
     member that generates its mesh with ``wall_h_nm: auto`` has one; a point that
     does not substitute cleanly is left to :func:`_resolve_every_point`, which
     refuses it with its own diagnostic.
+
+    Raises
+    ------
+    SweepPlanError
+        Naming the point, if a member that generates its mesh has a wall size
+        that cannot be resolved: a concentration that is not positive, or a
+        parameter file that is not there.
     """
     candidates = [
         index
@@ -502,8 +509,16 @@ def _wall_size_barriers(
         except (CaseValidationError, UnknownCasePathError, ValueError):
             sizes[coordinates] = None
             continue
-        generated = member.inputs.mesh is None and member.numerics.mesh.wall_h_nm == "auto"
-        sizes[coordinates] = resolve_wall_size(member).wall_h_nm if generated else None
+        if member.inputs.mesh is not None or member.numerics.mesh.wall_h_nm != "auto":
+            sizes[coordinates] = None
+            continue
+        try:
+            sizes[coordinates] = resolve_wall_size(member).wall_h_nm
+        except (ValueError, FileNotFoundError) as error:
+            raise SweepPlanError(
+                f"the point {dict(assignments)} generates its mesh with wall_h_nm: auto, and its "
+                f"wall size cannot be resolved: {error}"
+            ) from None
     flags = list(barriers)
     for index in candidates:
         lines: dict[tuple[int, ...], set[float]] = {}

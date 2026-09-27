@@ -134,6 +134,13 @@ def reopen(directory: str | Path, *, store: Store | None = None) -> ReopenedRun:
     generated = (
         holding.get(str(mesh["schema"]), str(mesh["hash"])) if isinstance(mesh, dict) else None
     )
+    if isinstance(mesh, dict) and generated is None and resolved.generates_mesh:
+        raise RunError(
+            f"the store at {holding.root} holds no {mesh['schema']} artefact "
+            f"{str(mesh['hash'])[:12]}, which is the generated mesh {source} was solved on. The "
+            "run was made against another store, or the store has been pruned; point --store at "
+            "the one the run used, or re-run the member"
+        )
     solution = restore(warm_start_payload(artefact), case=document, mesh_artefact=generated)
     quantities = record.get("quantities")
     return ReopenedRun(
