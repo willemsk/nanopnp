@@ -68,12 +68,14 @@ from nanopnp.core.stages import (
     describe,
     report,
 )
+from nanopnp.geometry.region import PAYLOAD_NAME, read_region
 from nanopnp.io.artefact import MeshArtefact
 from nanopnp.io.case import COUPLED_MODELS, SuppliedArtefact, UnsupportedCaseSection, resolve
 from nanopnp.io.defaults import ContributedDeviation
 from nanopnp.mesh.adapter import MeshData, detect_format, read, write_msh41
 from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS, PERMITTIVITY_EXEMPT
 from nanopnp.mesh.quality import QualityReport, check_quality, check_radii, element_quality
+from nanopnp.mesh.sizing import SIZES, resolve_wall_size
 from nanopnp.physics.models import DEFAULT_BOUNDARIES
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
@@ -831,10 +833,12 @@ class MeshStage:
         payload: dict[str, Path] | None = None,
         summary: dict[str, object] | None = None,
     ) -> MeshArtefact:
-        """Return a generated mesh's artefact, keyed on the region and the sizes (D10)."""
-        from nanopnp.geometry.region import PAYLOAD_NAME, read_region
+        """Return a generated mesh's artefact, keyed on the region and the sizes (D10).
+
+        :func:`~nanopnp.mesh.generate.sizing_parameters` is imported here for the
+        reason :meth:`_generate` gives.
+        """
         from nanopnp.mesh.generate import sizing_parameters
-        from nanopnp.mesh.sizing import SIZES, resolve_wall_size
 
         region = inputs.require("region")
         record = read_region(region.payload[PAYLOAD_NAME])
@@ -906,7 +910,6 @@ class MeshStage:
         The generator is imported here rather than at the top: it reads its mesh
         back through :func:`ingest`, so it imports this module.
         """
-        from nanopnp.geometry.region import PAYLOAD_NAME, read_region
         from nanopnp.mesh.generate import generate
 
         check_cancelled(cancel, "meshing the region")
