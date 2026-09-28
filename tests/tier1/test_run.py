@@ -38,6 +38,7 @@ from __future__ import annotations
 
 import importlib
 import inspect
+import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -45,6 +46,7 @@ import pytest
 
 from nanopnp.charge.fields import FieldDocument, FormSpec, create_form
 from nanopnp.charge.stage import FieldStage, ResolvedFields, smoothed_dielectric_deviations
+from nanopnp.core.hashing import file_hash
 from nanopnp.core.stages import _catalogue, create, describe
 from nanopnp.io import run as run_module
 from nanopnp.io.artefact import StageInputs
@@ -333,6 +335,26 @@ def test_ver32_a_truncated_run_writes_its_directory_and_reports_monotone_progres
     assert record["manifest"] == result.manifest.hash
     assert set(record["artefacts"]) == {"case", "mesh"}
     assert result.manifest.document()["schema"] == MANIFEST_SCHEMA
+
+
+@pytest.mark.parametrize("linesep", ["\n", "\r\n"])
+def test_qr08_the_run_directory_case_hashes_to_the_recorded_case_input(
+    case_file: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, linesep: str
+) -> None:
+    """The copy beside the manifest is what ``reproduce`` checks the recorded hash against.
+
+    The recorded hash is of the source file, written here as a text-mode write
+    writes it on each platform; the CRLF case stands in for Windows, where an LF
+    copy made every archived run refuse to reproduce as a moved input.
+    """
+    monkeypatch.setattr(os, "linesep", linesep)
+    source = tmp_path / "case.yaml"
+    source.write_bytes(case_file.read_text(encoding="utf-8").replace("\n", linesep).encode("utf-8"))
+
+    result = run_case(source, store=Store(tmp_path / "store"), upto="mesh")
+
+    recorded = result.manifest.document()["inputs"]["files"]["case"]["sha256"]  # type: ignore[index]
+    assert file_hash(result.directory / CASE_FILENAME) == recorded == file_hash(source)
 
 
 def test_ver32_a_run_writes_its_scratch_inside_the_store_it_was_given(

@@ -26,6 +26,7 @@ CLI, GUI and sweep-worker process for a string that is already on disk.
 from __future__ import annotations
 
 import json
+import os
 import platform
 import sys
 from dataclasses import dataclass, field
@@ -448,7 +449,12 @@ class Manifest:
         directory.mkdir(parents=True, exist_ok=True)
         # Atomically, as the store writes: members of a job array that share a
         # case write one run directory, and a reader must never see half a file.
-        atomic_write_bytes(directory / CASE_FILENAME, self.case_text.encode("utf-8"))
+        # With the platform's line endings, as text mode wrote it: ``case_text``
+        # was read with universal newlines, and the recorded case hash is of the
+        # source file, which on Windows ends its lines CRLF — so an LF copy there
+        # fails ``reproduce``'s input check as a moved input (QR-08).
+        text = self.case_text.replace("\n", os.linesep)
+        atomic_write_bytes(directory / CASE_FILENAME, text.encode("utf-8"))
         path = directory / MANIFEST_FILENAME
         atomic_write_bytes(path, canonical(self.document()) + b"\n")
         return path
