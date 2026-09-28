@@ -187,6 +187,12 @@ EXIT_CODES: Final[dict[str, int]] = {
     "nanopnp.validation.probe:ProbeGridError": EXIT_GATE,
     "nanopnp.validation.comsol:GoldenError": EXIT_GATE,
     "nanopnp.validation.attribution:LadderError": EXIT_GATE,
+    # VAL-05's refusals (WP22): a generated polygon that leaves a comparison
+    # plane uncrossed outside the tip band, and a leg outside its tolerance.
+    # Each names the quantity and the z it sits at, as a gate does (QR-12).
+    "nanopnp.validation.geometry:GeometryComparisonError": EXIT_GATE,
+    "nanopnp.validation.geometry:MissingPlaneError": EXIT_GATE,
+    "nanopnp.validation.geometry:GeometryToleranceError": EXIT_GATE,
     # A run directory that cannot be reopened for comparison. 3 and not 4: the
     # fix is to point at another directory or another store, or to re-run the
     # member, which is the same class as a file the case file named and that is
