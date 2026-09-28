@@ -3,9 +3,10 @@
 RSK-05 was that a structure-derived profile would not assemble and mesh without a
 hand-drawn membrane. This file retires it: the root conftest's ``prepared_2wcd``
 runs through stages 1 to 6 at the default sizes, and the mesh passes VER-10 and
-the D9 wall-size gate. The axial registration is a test-time choice, the
-profile's *trans* tip plus 1.85 nm (the fixture's own offset), and is **not** a
-VAL-05 claim; registering 2WCD against the reference is WP22's.
+the D9 wall-size gate. The axial registration is VAL-05's (WP22 D6): the C-alpha
+centroid of residues 8-292 is placed at the MD structure's ``Z_MD``, through
+:func:`~nanopnp.validation.geometry.register_by_centroid`, so the suite registers
+2WCD one way. WP21 used the profile's *trans* tip plus 1.85 nm, 0.056 nm away.
 
 The second half walks the same structure to stage 12 at ``size_scale`` 4 with
 ``pnp``, flow off and every correction off. That is the cheapest coupled model a
@@ -21,20 +22,18 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from nanopnp.geometry.contour import PAYLOAD_NAME
 from nanopnp.io.run import PIPELINE, run_case
 from nanopnp.io.store import Store
 from nanopnp.mesh.adapter import read
-from nanopnp.mesh.profile import load_profile
 from nanopnp.mesh.quality import QUALITY_FLOOR
+from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
+from nanopnp.structure.ensemble import AlignedEnsemble
+from nanopnp.validation.geometry import register_by_centroid
 
 if TYPE_CHECKING:
     from conftest import Prepared2WCD
 
 logger = logging.getLogger(__name__)
-
-TRANS_TIP_OFFSET_NM = 1.85
-"""The fixture's bilayer centre sits 1.85 nm above its *trans* tip; 2WCD is registered alike."""
 
 STRUCTURE = """\
 structure:
@@ -83,8 +82,8 @@ outputs: [current]
 def registered(prepared_2wcd: Prepared2WCD, tmp_path_factory: pytest.TempPathFactory):
     """Return the store, the structure block and the membrane block registering 2WCD.
 
-    Stages 1 to 4 run once, and the *trans* tip is read off the profile they
-    produce; every later run reuses them from the store.
+    Stages 1 to 4 run once, and the registration is read off the aligned
+    structure stage 1 produced; every later run reuses them from the store.
     """
     root = tmp_path_factory.mktemp("2wcd")
     store = Store(root / "store")
@@ -92,13 +91,13 @@ def registered(prepared_2wcd: Prepared2WCD, tmp_path_factory: pytest.TempPathFac
     case = root / "contour.case.yaml"
     case.write_text(MESH_CASE.format(structure=structure, geometry=""), encoding="utf-8")
     result = run_case(case, store=store, upto="contour", write=False)
-    profile = load_profile(result.artefacts["contour"].payload[PAYLOAD_NAME])
-    tip = float(profile.as_array()[:, 1].min())
-    centre = tip + TRANS_TIP_OFFSET_NM
+    ensemble = AlignedEnsemble.read(result.artefacts["structure"].payload[ENSEMBLE_PAYLOAD])
+    centre = register_by_centroid(
+        ensemble.positions_nm, name=ensemble.name, resid=ensemble.resid, chain=ensemble.chain
+    )
     logger.info(
-        "2WCD stages 1-4: %s s; trans tip z = %.4f nm, centre_z_nm = %.4f nm",
+        "2WCD stages 1-4: %s s; centre_z_nm = %.4f nm by the C-alpha centroid",
         {record.name: round(record.seconds, 2) for record in result.stages},
-        tip,
         centre,
     )
     geometry = f"geometry: {{membrane: {{centre_z_nm: {centre!r}}}}}\n"
