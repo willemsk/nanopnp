@@ -42,6 +42,9 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 - The VAL-01 mask gate leaves the margin band out, as the norms already did. It compared our
   margin-shrunk mask with the golden's raw one, so a COMSOL export, which has values next to every
   interface, would have been refused as a geometry difference on every concentration field (VAL-01).
+- The stage-8 key hashes every correction file a case reads, not only `electrolyte.parameters`. A
+  correction model naming a second file took its fits from there, and an edit to it was served
+  from the store unchanged. A case reading one file keeps its key (FR-16, FR-25).
 
 ## [0.9.0-alpha.5] - 2026-09-26
 

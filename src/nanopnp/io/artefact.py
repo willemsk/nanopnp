@@ -341,11 +341,15 @@ class ProfileArtefact(Artefact):
 class MaterialsArtefact(Artefact):
     """Stage 8: the resolved material coefficient set.
 
-    Hashed over the electrolyte's provenance and the digest of the correction
+    Hashed over the electrolyte's provenance and the digest of every correction
     file it resolved through, so that editing ``data/corrections/*.yaml`` is a
     cache miss. FR-25 asks for the "version of each parameter data file" and
     :class:`~nanopnp.materials.corrections.CorrectionDocument` carries no version
     field; the content hash is the version.
+
+    The reference file is the ``corrections`` input. A correction model naming
+    another file adds a ``corrections:<name>`` input, so a case reading one file
+    keeps the key it always had.
     """
 
     def __init__(
@@ -354,15 +358,20 @@ class MaterialsArtefact(Artefact):
         *,
         concentration_M: float,
         correction_file_hash: str,
+        other_correction_file_hashes: Mapping[str, str] | None = None,
         summary: Mapping[str, Canonicalisable] | None = None,
     ) -> None:
+        others = other_correction_file_hashes or {}
         super().__init__(
             schema=MATERIALS_SCHEMA,
             parameters={
                 "electrolyte": dict(electrolyte.provenance),
                 "concentration_M": concentration_M,
             },
-            inputs={"corrections": correction_file_hash},
+            inputs={
+                "corrections": correction_file_hash,
+                **{f"corrections:{name}": digest for name, digest in sorted(others.items())},
+            },
             summary=summary or {},
         )
 

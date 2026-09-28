@@ -16,7 +16,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from nanopnp.core.hashing import file_hash
-from nanopnp.core.paths import correction_file
+from nanopnp.core.paths import available_corrections, correction_file
 from nanopnp.core.stages import (
     CancelToken,
     Progress,
@@ -64,7 +64,7 @@ class MaterialsStage:
         -------
         MaterialsArtefact
             Hashed over the electrolyte's provenance, the reference
-            concentration, and the digest of the correction file.
+            concentration, and the digest of every correction file it reads.
 
         Raises
         ------
@@ -79,11 +79,18 @@ class MaterialsStage:
         # The correction file's content hash is its version (FR-25): the
         # documents carry no version field, and a hash cannot be forgotten.
         digest = file_hash(correction_file(parameter_file)) if parameter_file else ""
+        # A correction model may name a file other than the reference one, and
+        # its fit coefficients are read from there (FR-16): that file is an
+        # input as much as the reference file is.
+        named = {model.name for model in electrolyte.corrections.values()}
+        read = named.intersection(available_corrections()) - {parameter_file}
+        others = {name: file_hash(correction_file(name)) for name in sorted(read)}
         report(progress, 1.0, f"electrolyte resolved from {parameter_file!r}")
         return MaterialsArtefact(
             electrolyte,
             concentration_M=resolved.concentration_M,
             correction_file_hash=digest,
+            other_correction_file_hashes=others,
             summary={
                 "species": [ion.name for ion in electrolyte.species],
                 "concentration_M": resolved.concentration_M,

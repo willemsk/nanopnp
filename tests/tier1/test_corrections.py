@@ -361,3 +361,55 @@ def test_every_form_declares_its_parameters() -> None:
     to load with a ``KeyError`` rather than a named diagnostic.
     """
     assert set(FORM_PARAMETERS) == set(FORMS)
+
+
+SECOND_FILE_CASE = """
+schema: nanopnp/case/v2
+name: two-correction-files
+inputs:
+  mesh: {path: pore.msh, format: msh41}
+electrolyte:
+  species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]
+  concentration_M: 1.0
+  parameters: willems2020_nacl
+  corrections:
+    viscosity: {model: refitted_nacl, wall: true, concentration: true}
+boundary_conditions: {bias_V: 0.1}
+physics: {model: epnp-ns, solid_permittivities: {membrane: 3.2}}
+numerics: {continuation: none}
+"""
+"""A case whose viscosity fit is read from a second installed file (FR-16)."""
+
+
+def test_fr16_editing_a_second_correction_file_moves_the_materials_key(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Stage 8 hashed the reference file only, so a refit of any other went unseen.
+
+    ``electrolyte.parameters`` and ``corrections.<property>.model`` can name
+    different files, and the coefficients come from the second. Its digest is an
+    input of the key, and a case reading one file keeps the key it always had.
+    """
+    from nanopnp.core import paths
+    from nanopnp.io.artefact import StageInputs
+    from nanopnp.io.case import loads_case
+    from nanopnp.materials.stage import MaterialsStage
+
+    shipped = correction_file("willems2020_nacl").read_text(encoding="utf-8")
+    (tmp_path / "willems2020_nacl.yaml").write_text(shipped, encoding="utf-8")
+    second = tmp_path / "refitted_nacl.yaml"
+    second.write_text(shipped, encoding="utf-8")
+    monkeypatch.setattr(paths, "CORRECTIONS_DIR", tmp_path)
+    monkeypatch.setattr(models, "_REGISTRY", dict(models._REGISTRY))
+
+    document = loads_case(SECOND_FILE_CASE)
+    single = loads_case(SECOND_FILE_CASE.replace("refitted_nacl", "willems2020_nacl"))
+    before = MaterialsStage().run(StageInputs(case=document))
+    reference = MaterialsStage().run(StageInputs(case=single))
+    assert set(before.inputs) == {"corrections", "corrections:refitted_nacl"}
+    assert set(reference.inputs) == {"corrections"}
+
+    second.write_text(shipped + "\n# refitted\n", encoding="utf-8")
+    after = MaterialsStage().run(StageInputs(case=document))
+    assert after.hash != before.hash
+    assert MaterialsStage().run(StageInputs(case=single)).hash == reference.hash
