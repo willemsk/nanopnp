@@ -47,7 +47,6 @@ from nanopnp.validation.attribution import (
 from nanopnp.validation.compare import (
     compare_fields,
     compare_quantities,
-    golden_grid,
     probe_domains,
     sample_on_probe,
 )
@@ -282,13 +281,9 @@ def test_val01_val02_val04_attribution_against_the_archive() -> None:
         golden = load_golden(directory)
         golden.check_probe(document)
         refined = root / ARCHIVE_SUBDIR / name / "refined_1"
-        errors = (
-            reference_error(golden, load_golden(refined), golden_grid(document, golden))
-            if (refined / ARCHIVE_NAME).is_file()
-            else None
-        )
         outcomes: dict[int, RungOutcome] = {}
         sampled_fields: list[str] = []
+        rung_grid: ProbeGrid | None = None
         for index, member in sorted(members.items()):
             if member.status != "ok" or member.directory is None:
                 continue
@@ -296,7 +291,9 @@ def test_val01_val02_val04_attribution_against_the_archive() -> None:
             if case_identity(resolve(run.case)) != golden.manifest.case_hash:
                 continue
             rung = plan.point(index).coordinates[0]
-            grid = ProbeGrid.on_mesh(document, run.solution.space.mesh, probe_domains(run.solution))
+            grid = rung_grid = ProbeGrid.on_mesh(
+                document, run.solution.space.mesh, probe_domains(run.solution)
+            )
             sampled = sample_on_probe(run.solution, grid, scales=run.scales)
             sampled_fields = sorted(sampled)
             outcomes[rung] = RungOutcome(
@@ -313,6 +310,13 @@ def test_val01_val02_val04_attribution_against_the_archive() -> None:
                 f"{name}: the sweep holds {len(outcomes)} of {len(LADDER)} rungs, so the deltas "
                 "would be differences between rungs that are not adjacent"
             )
+        assert rung_grid is not None
+        # Over a rung's own masks, which drop the margin band E_k is taken without.
+        errors = (
+            reference_error(golden, load_golden(refined), rung_grid)
+            if (refined / ARCHIVE_NAME).is_file()
+            else None
+        )
         report = attribute(
             [outcomes[index] for index in range(len(LADDER))],
             case=name,

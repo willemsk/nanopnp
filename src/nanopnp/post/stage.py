@@ -39,7 +39,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from nanopnp.charge.stage import read_fields
+from nanopnp.charge.stage import ResolvedFields, read_fields
 from nanopnp.core.paths import store_root
 from nanopnp.core.stages import (
     CancelToken,
@@ -655,8 +655,18 @@ class ReportStage:
                 f"record); it carries {carried}. "
                 "The IF-07 export is of the converged fields and there is nothing to export from"
             )
+        resolved = resolve(inputs.case)
+        # Read once, for the restore to gate and for the fixed charge to export.
+        supplied = (
+            read_fields(resolved)
+            if resolved.charge is not None or resolved.eps_r is not None
+            else None
+        )
         restored = restore(
-            Path(state_path), case=inputs.case, mesh_artefact=inputs.upstream.get("mesh")
+            Path(state_path),
+            case=inputs.case,
+            mesh_artefact=inputs.upstream.get("mesh"),
+            fields=supplied,
         )
         model = restored.model
         if not isinstance(model, CoupledModel):
@@ -665,14 +675,13 @@ class ReportStage:
                 "the NUM-09 scale set alongside the fields so that the nondimensional state "
                 "stays recoverable, and this model declares none"
             )
-        resolved = resolve(inputs.case)
         directory = self._directory(resolved.name)
         export = export_fields(
             restored,
             directory,
             scales=model.scales,
             relative_permittivity=_permittivity(restored),
-            fixed_charge_C_m3=_fixed_charge(resolved),
+            fixed_charge_C_m3=_fixed_charge(supplied),
         )
         payload = {path.name: path for path in export.paths()}
         record: dict[str, Canonicalisable] = {
@@ -713,17 +722,14 @@ def _permittivity(solution: ModelSolution) -> Expression | None:
     return permittivity
 
 
-def _fixed_charge(resolved: ResolvedCase) -> Expression | None:
+def _fixed_charge(fields: ResolvedFields | None) -> Expression | None:
     """Return the supplied fixed-charge volume density, or ``None`` if there was none.
 
     A run that supplied no ``inputs.charge`` writes no ``rho_fixed_C_m3``
     attribute at all. "There was no charge field" and "there was one and it was
     zero" are different runs, and a colour map of a zero field says the second.
     """
-    if resolved.charge is None:
-        return None
-    fields = read_fields(resolved)
-    if fields.charge is None:
+    if fields is None or fields.charge is None:
         return None
     density: Expression = fields.charge.volume_density_C_m3()
     return density

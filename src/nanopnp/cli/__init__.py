@@ -806,6 +806,9 @@ def _validate_report(args: argparse.Namespace) -> int:
 
     by_rung: dict[int, RungOutcome] = {}
     fields_sampled: list[str] = []
+    # Every rung is the golden's case on one mesh, so any rung's grid carries the
+    # masks the rungs' norms were taken over, and Delta_ref is taken over them too.
+    rung_grid: ProbeGrid | None = None
     for member in read_members(directory):
         plan.point(member.index)  # refuses a member this plan does not enumerate
         rung_index = _rung_of(member.assignments)
@@ -816,7 +819,7 @@ def _validate_report(args: argparse.Namespace) -> int:
         resolved = reopen(member.directory, store=store)
         if _identity(resolved.case) != golden.manifest.case_hash:
             continue
-        grid = _probe_grid(document, resolved)
+        grid = rung_grid = _probe_grid(document, resolved)
         sampled = _sample(resolved, grid)
         fields_sampled = sorted(sampled)
         by_rung[rung_index] = RungOutcome(
@@ -836,11 +839,12 @@ def _validate_report(args: argparse.Namespace) -> int:
             "rungs, so a missing one does not make the remaining deltas mean less -- it makes "
             "them mean something else. Run the sweep to completion first"
         )
+    assert rung_grid is not None  # four rungs were found, and each built its grid
     report = attribute(
         [by_rung[index] for index in range(len(LADDER))],
         case=golden.manifest.case,
         golden=golden,
-        reference_errors=_reference_errors(args, document, golden),
+        reference_errors=_reference_errors(args, document, golden, rung_grid),
         sampled_fields=fields_sampled,
     )
     json_path, markdown = write_report(report, args.output or directory)
@@ -867,18 +871,21 @@ def _rung_of(assignments: Mapping[str, Canonicalisable]) -> int | None:
 
 
 def _reference_errors(
-    args: argparse.Namespace, document: ProbeDocument, golden: Golden
+    args: argparse.Namespace, document: ProbeDocument, golden: Golden, grid: ProbeGrid
 ) -> dict[str, float] | None:
-    """Return VAL-04's ``Delta_ref``, or ``None`` where no refinement pair was given."""
+    """Return VAL-04's ``Delta_ref``, or ``None`` where no refinement pair was given.
+
+    ``grid`` is a rung's mesh-bound grid, so that ``Delta_ref`` is taken over the
+    points the rungs' errors were (:func:`~nanopnp.validation.attribution.reference_error`).
+    """
     from nanopnp.validation.attribution import reference_error
-    from nanopnp.validation.compare import golden_grid
     from nanopnp.validation.comsol import load_golden
 
     if args.refined is None:
         return None
     refined = load_golden(args.refined)
     refined.check_probe(document)
-    return reference_error(golden, refined, golden_grid(document, golden))
+    return reference_error(golden, refined, grid)
 
 
 def _store(args: argparse.Namespace) -> Store:

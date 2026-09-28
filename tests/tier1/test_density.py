@@ -187,6 +187,30 @@ def test_ver49_truncation_bound() -> None:
     assert error.max() > 0.0  # the bound is not met by computing nothing
 
 
+def test_ver49_slab_thickness_does_not_change_the_map(monkeypatch: pytest.MonkeyPatch) -> None:
+    """One-plane slabs and one whole-grid slab deposit the same map, to float64 round-off.
+
+    A one-plane slab cuts every atom's stencil to the run of offsets in that plane,
+    which is the path fine spacing takes; one slab holding the grid takes every
+    offset of every atom. A slice off by one plane drops or doubles a plane of
+    terms, of order ``g`` itself, and cannot hide under the tolerance. Round-off
+    rather than equality, because the slab decides which atoms share a batch and
+    therefore how each voxel's sum is grouped.
+    """
+    import nanopnp.density.union as union
+
+    rng = np.random.default_rng(8)
+    positions = rng.uniform(-0.9, 0.9, (2, 150, 3))
+    widths = 0.93 * rng.choice([0.17, 0.185, 0.2, 0.2275, 0.132], 150)
+    grid = canonical_grid(positions, widths, H)
+    monkeypatch.setattr(union, "SLAB_CELLS", grid.n * grid.n)
+    thin = deposit(positions, widths, grid, float64=True)
+    monkeypatch.setattr(union, "SLAB_CELLS", grid.n * grid.n * grid.nz)
+    whole = deposit(positions, widths, grid, float64=True)
+    assert thin.max() > 0.5  # the atoms deposited something to compare
+    assert np.max(np.abs(thin - whole)) <= 1e-14
+
+
 def test_ver49_frames_average_not_union() -> None:
     """One atom in two frames 0.3 nm apart averages to ``(g_a + g_b)/2``, not their union.
 

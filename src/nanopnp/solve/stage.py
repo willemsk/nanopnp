@@ -278,7 +278,7 @@ class SolveStage:
         if (resolved.charge is not None or resolved.eps_r is not None) and (load or fields is None):
             supplied = read_fields(resolved)
         if fields is None and supplied is not None:
-            fields = FieldStage().artefact(supplied, mesh.hash)
+            fields = FieldStage().artefact(supplied, mesh.hash, resolved=resolved)
         return resolved, ingested, mesh, materials, fields, supplied
 
     def run(

@@ -45,12 +45,17 @@ from typing import TYPE_CHECKING
 import pytest
 
 from nanopnp.charge.fields import FieldDocument, FormSpec, create_form
-from nanopnp.charge.stage import FieldStage, ResolvedFields, smoothed_dielectric_deviations
+from nanopnp.charge.stage import (
+    FieldStage,
+    ResolvedFields,
+    gate_parameters,
+    smoothed_dielectric_deviations,
+)
 from nanopnp.core.hashing import file_hash
 from nanopnp.core.stages import _catalogue, create, describe
 from nanopnp.io import run as run_module
 from nanopnp.io.artefact import StageInputs
-from nanopnp.io.case import loads_case
+from nanopnp.io.case import ResolvedCase, loads_case, resolve
 from nanopnp.io.manifest import CASE_FILENAME, MANIFEST_FILENAME, MANIFEST_SCHEMA
 from nanopnp.io.run import (
     PAYLOAD_FREE,
@@ -259,10 +264,49 @@ def test_ver32_the_field_stage_reads_the_dielectric_deviation_off_its_artefact()
     )
     assert fields.deviations(), "the fixture must carry a deviation, or this tests nothing"
 
-    artefact = FieldStage().artefact(fields, "0" * 64)
-    inputs = StageInputs(case=loads_case(_MINIMAL), upstream={"charge": artefact})
+    case = loads_case(_MINIMAL)
+    artefact = FieldStage().artefact(fields, "0" * 64, resolved=resolve(case))
+    inputs = StageInputs(case=case, upstream={"charge": artefact})
     assert FieldStage().deviations(inputs) == fields.deviations()
     assert smoothed_dielectric_deviations(smoothed=False) == ()
+
+
+def test_ver29_the_field_key_carries_the_solid_set_only_with_a_dielectric_field() -> None:
+    """The per-material means of ``chi`` are classified by the solid names, so they key stage 7.
+
+    By name and not by value: a permittivity classifies nothing. Without a
+    dielectric field no gate reads the set, and keying on it would re-run stage 7
+    for a change it cannot see.
+    """
+    dielectric = ResolvedFields(
+        charge=None, conservation=None, eps_r=_solid_fraction_field(), material_means=()
+    )
+    bare = ResolvedFields(charge=None, conservation=None, eps_r=None, material_means=())
+    base = resolve(loads_case(_MINIMAL))
+    protein = resolve(
+        loads_case(
+            _MINIMAL.replace(
+                "physics: {model: pnp-ns}",
+                "physics: {model: pnp-ns, solid_permittivities: {protein: 10.0}}",
+            )
+        )
+    )
+    softer = resolve(
+        loads_case(
+            _MINIMAL.replace(
+                "physics: {model: pnp-ns}",
+                "physics: {model: pnp-ns, solid_permittivities: {protein: 4.0}}",
+            )
+        )
+    )
+
+    def key(resolved: ResolvedCase, fields: ResolvedFields) -> str:
+        return FieldStage().artefact(fields, "0" * 64, resolved=resolved).hash
+
+    assert key(protein, dielectric) != key(base, dielectric)
+    assert key(protein, dielectric) == key(softer, dielectric)
+    assert key(protein, bare) == key(base, bare)
+    assert gate_parameters(protein, dielectric)["solids"] == ["protein"]
 
 
 def _solid_fraction_field() -> SolidFractionField:

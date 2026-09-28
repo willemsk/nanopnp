@@ -213,6 +213,29 @@ def _field_path(supplied: object, *, key: str) -> Path:
     return Path(path)
 
 
+def _element_order(resolved: ResolvedCase) -> int:
+    """Return the element order the solve assembles at, which sets the gates' quadrature."""
+    return int(resolved.model_options.get("order", AXISYMMETRIC.element_order))
+
+
+def gate_parameters(resolved: ResolvedCase, fields: ResolvedFields) -> dict[str, Canonicalisable]:
+    """Return what the gates are evaluated at, for the stage-7 key (§5.3.2).
+
+    The artefact's summary carries what :func:`gate_fields` measured: the
+    conservation integrals, taken at the solve's element order, and the per-material
+    means of ``chi``, which ``physics.solid_permittivities`` classifies into solid
+    and fluid. Keyed on the field contents and the mesh alone, two cases differing
+    only in either would share one artefact, and the second run's manifest would
+    record the first run's gates. The solid set is keyed by name and only with a
+    dielectric field: its permittivities classify nothing, and a charge field alone
+    never reads the set.
+    """
+    gates: dict[str, Canonicalisable] = {"element_order": _element_order(resolved)}
+    if fields.eps_r is not None:
+        gates["solids"] = sorted(resolved.document.physics.solid_permittivities)
+    return gates
+
+
 def read_fields(resolved: ResolvedCase) -> ResolvedFields:
     """Read the fields a case supplies, **without** gating them.
 
@@ -381,7 +404,7 @@ class FieldStage:
         """
         resolved, ingested, mesh_artefact = self._prepare(inputs, ingest_mesh=False)
         del ingested
-        return self.artefact(read_fields(resolved), mesh_artefact.hash)
+        return self.artefact(read_fields(resolved), mesh_artefact.hash, resolved=resolved)
 
     def run(
         self,
@@ -413,13 +436,14 @@ class FieldStage:
         check_cancelled(cancel, "writing the archival field copies")
         payload = self._write(fields)
         report(progress, 1.0, "the supplied fields passed their gates")
-        return self.artefact(fields, mesh_artefact.hash, payload=payload)
+        return self.artefact(fields, mesh_artefact.hash, resolved=resolved, payload=payload)
 
     def artefact(
         self,
         fields: ResolvedFields,
         mesh_hash: str,
         *,
+        resolved: ResolvedCase,
         payload: dict[str, Path] | None = None,
     ) -> FieldsArtefact:
         """Return the artefact for already-loaded fields, with or without payload.
@@ -427,9 +451,13 @@ class FieldStage:
         Public for the same reason :meth:`nanopnp.mesh.ingest.MeshStage.artefact`
         is: stage 10 has the :class:`ResolvedFields` in hand and needs its key,
         and two loadings of one file are two chances to disagree.
+
+        ``resolved`` supplies what the gates are evaluated at, which
+        :func:`gate_parameters` puts in the key beside the fields.
         """
         return FieldsArtefact(
             fields=fields.parameters(),
+            gates=gate_parameters(resolved, fields),
             mesh_hash=mesh_hash,
             payload=payload or {},
             summary=fields.summary(),
@@ -437,8 +465,7 @@ class FieldStage:
 
     def _measures(self, resolved: ResolvedCase) -> Measures:
         """Return the quadrature policy the solve will assemble at."""
-        order = int(resolved.model_options.get("order", AXISYMMETRIC.element_order))
-        return replace(AXISYMMETRIC, element_order=order)
+        return replace(AXISYMMETRIC, element_order=_element_order(resolved))
 
     def _prepare(
         self, inputs: StageInputs, *, ingest_mesh: bool

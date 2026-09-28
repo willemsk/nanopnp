@@ -550,22 +550,34 @@ def reference_error(coarse: Golden, fine: Golden, grid: ProbeGrid) -> dict[str, 
     """Return VAL-04's ``Delta_ref`` per field: the reference's own discretisation error.
 
     ``Delta_ref = ||g_fine - g_coarse|| / ||g_fine||`` in the same *r*-weighted
-    norm every other number here is taken in, so the comparison against
-    ``Delta_resid`` is between two of one quantity.
+    norm every other number here is taken in, and over the same probe points,
+    so the comparison against ``Delta_resid`` is between two of one quantity.
+
+    The points are the fine golden's defined set less the margin band that
+    ``grid`` drops next to every fluid/solid interface. The rungs' ``E_k`` are
+    taken without that band, and a COMSOL export carries values in it, where the
+    two refinements disagree most: a ``Delta_ref`` that kept the band would
+    exceed the ``Delta_resid`` it bounds for a reason that is not the
+    reference's, and the verdict would read *reference-limited* too readily.
 
     Parameters
     ----------
     coarse, fine
         The same case on the published mesh and on one uniform refinement of it.
     grid
-        The probe grid both were exported onto.
+        The probe grid the rungs were compared on, bound to their mesh
+        (:meth:`~nanopnp.validation.probe.ProbeGrid.on_mesh`): its masks are
+        what drops the margin band. Two goldens alone carry no mesh to take a
+        band from.
 
     Returns
     -------
     dict of str to float
-        Per field carried by both, plus one entry per scalar quantity both
-        report, keyed as :data:`~nanopnp.validation.compare.COMPARED_QUANTITIES`
-        names it.
+        Per field carried by both goldens and compared on ``grid``, plus one
+        entry per scalar quantity both report, keyed as
+        :data:`~nanopnp.validation.compare.COMPARED_QUANTITIES` names it. A
+        field ``grid`` does not compare has no ``E_k`` for a ``Delta_ref`` to
+        bound, and the report already names it unavailable.
 
     Raises
     ------
@@ -595,9 +607,13 @@ def reference_error(coarse: Golden, fine: Golden, grid: ProbeGrid) -> dict[str, 
             "published mesh and one uniform refinement of it; two of one level measure nothing"
         )
     errors: dict[str, float] = {}
-    for name in sorted(set(coarse.values) & set(fine.values)):
-        keep = fine.defined(name)
-        check_mask_agreement(name, keep, coarse.defined(name), grid)
+    for name in sorted(set(coarse.values) & set(fine.values) & set(grid.masks)):
+        # The two exports must agree about where the field exists, band
+        # included: that is a statement about the two models, and the band is
+        # dropped only from the norm.
+        defined = fine.defined(name)
+        check_mask_agreement(name, defined, coarse.defined(name), grid)
+        keep = defined & np.asarray(grid.masks[name], dtype=bool)
         comparison = field_error(
             name,
             np.asarray(coarse.values[name], dtype=np.float64),

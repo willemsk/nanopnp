@@ -239,7 +239,13 @@ def align(
 
     check_cancelled(cancel, "transforming to the model frame")
     report(progress, 0.9, "transforming to the model frame")
-    aligned = (positions - foot) @ rotation.T
+    # In place, one frame at a time: everything that reads the superposed frame
+    # (the mean, the axis, the drift) has read it by now, and the whole-ensemble
+    # ``(positions - foot) @ rotation.T`` held two more float64 copies of the
+    # ensemble beside it.
+    for frame in range(positions.shape[0]):
+        positions[frame] = (positions[frame] - foot) @ rotation.T
+    aligned = positions
 
     # The transformed ensemble should carry its own axis on z through r = 0. It
     # is recorded, not gated: the tests hold it to round-off, and a threshold

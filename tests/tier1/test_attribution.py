@@ -261,6 +261,68 @@ def test_val04_the_verdict_is_strict_at_the_boundary() -> None:
     assert report.attribution("potential").verdict() == "attributed"
 
 
+def _refinement(refinement: str, values: dict[str, object]) -> Golden:
+    """Return one golden of a refinement pair, carrying ``values``."""
+    manifest = GoldenManifest.model_validate(
+        {
+            **_golden().manifest.model_dump(),
+            "refinement": refinement,
+            "fields": {
+                "potential": {"expression": "V", "unit": "V"},
+                "c_Na+": {"expression": "cpos", "unit": "mol/m^3"},
+            },
+        }
+    )
+    return Golden(
+        manifest=manifest,
+        values=values,  # type: ignore[arg-type]
+        quantities=manifest.quantities,
+        current_sign_flipped=False,
+        hash=GOLDEN_HASH,
+    )
+
+
+def test_val04_delta_ref_is_taken_over_the_points_the_rungs_were() -> None:
+    """Delta_ref leaves out the margin band the rungs' grid drops, and only from the norm.
+
+    The two refinements differ by exactly 1 % away from the wall and by 50 % in
+    the outermost column, which stands for the band next to an interface: a COMSOL
+    export has values there, and the rungs' ``E_k`` are taken without it. Over the
+    rungs' points ``Delta_ref`` is therefore the 1 % exactly (the proportional
+    closed form of ``test_comparison_norms``); keeping the band would put the
+    50 % into a bound on errors that never saw it. A field the rungs' grid does
+    not compare has no ``E_k`` to bound and is left out.
+    """
+    import numpy as np
+
+    from nanopnp.validation.attribution import reference_error
+    from nanopnp.validation.probe import PROBE_SCHEMA, ProbeGrid, loads_probe
+
+    document = loads_probe(
+        f"schema: {PROBE_SCHEMA}\nname: band\npatches:\n"
+        "  - {name: block, r_nm: [0.5, 3.0], z_nm: [-1.0, 1.0], n_r: 11, n_z: 5}\n"
+    )
+    points = document.points_nm()
+    wall = points[:, 0] >= 3.0 - 1e-12
+    fine = 1.0 + points[:, 0] ** 2
+    coarse = np.where(wall, 1.5, 1.01) * fine
+    grid = ProbeGrid(
+        document=document,
+        points_nm=points,
+        weights_nm2=document.weights_nm2(),
+        masks={"potential": ~wall},
+        bare={"potential": np.ones(document.count, dtype=bool)},
+        dropped={"potential": int(wall.sum())},
+    )
+    errors = reference_error(
+        _refinement("published", {"potential": coarse, "c_Na+": coarse}),
+        _refinement("refined_1", {"potential": fine, "c_Na+": fine}),
+        grid,
+    )
+    assert set(errors) == {"potential", "current_A"}
+    assert errors["potential"] == pytest.approx(0.01, rel=1e-12)
+
+
 # -- the report ---------------------------------------------------------------
 
 

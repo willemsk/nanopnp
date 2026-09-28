@@ -46,6 +46,9 @@ from nanopnp.physics.models import ModelSolution
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import meshio
 
+    from nanopnp.charge.stage import ResolvedFields
+    from nanopnp.io.case import ResolvedCase
+
 PORE = CylindricalPoreGeometry(
     pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
 )
@@ -482,3 +485,56 @@ def test_if07_the_export_reports_every_path_and_attribute_it_wrote(
         "u_m_s",
         "wall_distance_nm",
     )
+
+
+def test_if07_the_report_exports_the_fixed_charge_it_read_for_the_restore(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Stage 12 reads a supplied charge table once, and exports it as ``rho_fixed_C_m3``.
+
+    The restore gates the fields it is handed, and the fixed charge the export
+    writes is the one those fields carry: before, stage 12 parsed the table in
+    its restore and again for the export, and the reference table costs about
+    1.6 s a parse. Stage 11's restore still reads its own, since no stage holds
+    another's fields. Counted at the two modules' ``read_fields``, on the
+    charged pore of example 02.
+    """
+    import shutil
+
+    import nanopnp.post.stage as post_stage
+    import nanopnp.solve.state as solve_state
+    from nanopnp.charge.stage import read_fields
+    from nanopnp.cli import main
+    from nanopnp.io.run import run_case
+    from nanopnp.io.store import Store
+
+    example = Path(__file__).resolve().parents[2] / "examples" / "02-charged-pore"
+    field = Path(shutil.copy(example / "ring.field.yaml", tmp_path))
+    mesh_path = tmp_path / "pore.msh"
+    assert main(["mesh", "cylinder", "--out", str(mesh_path)]) == 0
+    case = tmp_path / "charged.case.yaml"
+    case.write_text(
+        (example / "classical.case.yaml")
+        .read_text(encoding="utf-8")
+        .replace("path: pore.msh", f"path: {mesh_path}")
+        .replace("path: ring.field.yaml", f"path: {field}")
+        .replace("outputs: [current, transport_numbers, eof_rate]", "outputs: [current, fields]"),
+        encoding="utf-8",
+    )
+
+    reads = {"post": 0, "restore": 0}
+
+    def counting(key: str) -> Callable[[ResolvedCase], ResolvedFields]:
+        def counted(resolved: ResolvedCase) -> ResolvedFields:
+            reads[key] += 1
+            return read_fields(resolved)
+
+        return counted
+
+    monkeypatch.setattr(post_stage, "read_fields", counting("post"))
+    monkeypatch.setattr(solve_state, "read_fields", counting("restore"))
+
+    result = run_case(case, store=Store(tmp_path / "store"))
+    assert reads == {"post": 1, "restore": 1}
+    omega = next(path for path in result.files if path.name == f"{OMEGA_STEM}.xdmf")
+    assert "rho_fixed_C_m3" in omega.read_text(encoding="utf-8")
