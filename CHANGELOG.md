@@ -18,6 +18,12 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ### Fixed
 
+- The permittivity is no longer evaluated where the ions do not exist (author ruling 13). The ion-exclusion
+  shell and the water share of a solid-fraction blend inside a solid are ion-free water, `ε_r,f⁰`,
+  set as such; before, the salt correction was evaluated on concentrations that read zero there
+  and happened to land near 78.15 by the clamp. Where the blend reaches into the fluid it now honours
+  `χ` and goes towards the nearest solid's `ε_p`; before, the fluid side discarded `χ`. The exported
+  `eps_r` field carries the blend the solve used (PHY-20, FR-15, VER-30, §4.4 NOTE).
 - A sweep over a case that generates its mesh warm-starts. The member runner keyed each parent from
   its bare case, which raised for every generated mesh and was caught as a cold fallback, so every
   member climbed the full continuation ladder. The parent is now keyed through the artefacts its own

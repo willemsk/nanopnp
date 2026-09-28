@@ -1084,11 +1084,13 @@ residual norm reports zero, not `NaN`. **[tested]**
 
 **Trap: a coefficient built from `definedon` fields reads their zero everywhere else.** The
 concentrations live on the fluid, so off it they evaluate to 0, `average_concentration` clamps
-that to 1e-6 M, and anything derived from them returns its infinite-dilution value with no
+that to 1e-6 M, and anything derived from them returns its value at the clamp floor with no
 diagnostic. Measured on `CoupledModel.permittivity` at 3 M with the permittivity correction on:
-ε_r = **78.150** in the `exclusion` shell against **51.09** in the electrolyte beside it, and a χ
-blend inside the membrane going towards 78.15 rather than towards ε_r,f(⟨c⟩). Any expression that
-is evaluated on a material its inputs are not defined on has to be given a value there
+ε_r = **78.1499885** in the `exclusion` shell against **51.09** in the electrolyte beside it. That
+number was near the right one only by accident: under author ruling 13 `⟨c⟩` has no meaning off the
+fluid, and water there is ion-free, `ε_r,f⁰` = 78.15, which the code now sets as such. The same trap
+made the fluid side of a χ blend discard χ, because its solid branch defaulted to the fluid value.
+Any expression evaluated on a material its inputs are not defined on has to be given a value there
 deliberately. (Codebase review of 2026-09-28, CR-2.) **[tested]**
 
 ### 8.1.1 Mesh-integral error on a sub-element-scale field converges in neither `h` nor order

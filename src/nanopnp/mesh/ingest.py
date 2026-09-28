@@ -107,10 +107,10 @@ domains *and* boundaries, in two separate namespaces, exactly as
 ``exclusion`` is the ion-exclusion shell of FR-15, and it is a *configuration* of
 the machinery the other names already use rather than a third kind of domain: a
 solid for Nernst-Planck and for the flow, so the no-slip surface sits at the
-outer edge of the shell — the conventional hydrodynamic shear plane — and the
-**fluid's** ``eps_r`` for Poisson, which is what
-:meth:`nanopnp.physics.models.CoupledModel.permittivity`'s default already gives
-anything with no entry of its own. It is therefore exempt from
+outer edge of the shell — the conventional hydrodynamic shear plane — and
+ion-free water, ``eps_r,f^0``, for Poisson, which is what
+:meth:`nanopnp.physics.models.CoupledModel.permittivity` gives every material off
+the fluid with no entry of its own. It is therefore exempt from
 :func:`check_solid_permittivities`, and its presence is a deviation from the
 validated model: ePNP-NS has no explicit Stern layer (section 5.3.1 NOTE).
 """

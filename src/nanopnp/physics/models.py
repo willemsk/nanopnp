@@ -39,7 +39,7 @@ from nanopnp.core.typing import (
     Option,
 )
 from nanopnp.materials.electrolyte import CorrectionSwitches, Electrolyte
-from nanopnp.materials.fields import blend
+from nanopnp.materials.fields import blend, nearest_solid_permittivity
 from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS, PERMITTIVITY_EXEMPT
 from nanopnp.physics.coefficients import (
     SATURATED_WALL_DISTANCE_NM,
@@ -310,6 +310,11 @@ class ModelSolution:
         The PHY-02 distance field the residual was assembled with, so that a
         consumer rebuilding any part of the model — the NUM-24 indicator form
         rebuilds ``J~_i`` — reproduces the coefficients exactly.
+    solid_fraction
+        The section 4.4 ``chi`` the residual was assembled with, or ``None`` for
+        the sharp material split, for the same reason: a consumer rebuilding the
+        permittivity without it would report a different ``eps_r`` from the one
+        the solve used.
     """
 
     model: PhysicsModel
@@ -318,6 +323,7 @@ class ModelSolution:
     newton: NewtonResult | None = None
     residual: AssembledForm | None = None
     wall_distance_nm: Expression = SATURATED_WALL_DISTANCE_NM
+    solid_fraction: Expression | None = None
 
     def component(self, name: str) -> Expression:
         """Return one field of the solution by name.
@@ -825,7 +831,15 @@ class CoupledModel:
         diagnostic, since ``eps_r`` is about 24 times too large there. Any
         material that is neither fluid nor named in ``solid_permittivities`` is
         therefore reported before the form is assembled, except the ion-exclusion
-        shell, which takes the fluid's value by design (section 5.3.1 NOTE).
+        shell, which is water by design (section 5.3.1 NOTE).
+
+        ``<c>`` has no meaning where ions do not exist (author ruling 13,
+        section 4.4 NOTE), so ``eps_r,f(<c>)`` is never evaluated off the fluid:
+        the concentrations are defined on the fluid only and read 0 elsewhere,
+        which the driver's floor turned into the infinite-dilution value by
+        accident. Water off the fluid — the exclusion shell, an unassigned solid,
+        the water share of a blend inside a solid — is ion-free water,
+        ``eps_r,f^0``, set as such.
 
         Parameters
         ----------
@@ -835,51 +849,56 @@ class CoupledModel:
             The state the fluid permittivity is evaluated at.
         solid_fraction
             The supplied ``chi`` of section 4.4's NOTE, if any. It replaces the
-            sharp material split by the blend
-            ``chi * eps_p + (1 - chi) * eps_r,f(<c>)``, and with ``chi`` the
-            material indicator it reproduces the piecewise assignment exactly —
-            which is why this is a refinement of PHY-20 and not a replacement
-            for it. The mesh still carries the material split, so Nernst-Planck
-            is still not solved inside the protein: the field smooths the
-            coefficient, not the domain.
+            sharp material split by the blend ``chi * eps_p + (1 - chi) * eps_w``,
+            where ``eps_w`` is ``eps_r,f(<c>)`` in the fluid and ``eps_r,f^0``
+            off it, and ``eps_p`` is the element's own solid permittivity or, off
+            the solids, the nearest solid's
+            (:func:`~nanopnp.materials.fields.nearest_solid_permittivity`). With
+            ``chi`` the material indicator it reproduces the piecewise assignment
+            exactly — which is why this is a refinement of PHY-20 and not a
+            replacement for it. The mesh still carries the material split, so
+            Nernst-Planck is still not solved inside the protein: the field
+            smooths the coefficient, not the domain.
         """
         fluid_permittivity = coefficients.relative_permittivity()
+        # eps_r,f^0 over the scale fluid_permittivity is divided by: 1 exactly.
+        ion_free = self.electrolyte.permittivity_0 / coefficients.scales.relative_permittivity
         fluid_mask = mesh.Materials(self.fluid).Mask()
+        off_fluid = {
+            material for index, material in enumerate(mesh.GetMaterials()) if not fluid_mask[index]
+        }
         unassigned = sorted(
-            {
-                material
-                for index, material in enumerate(mesh.GetMaterials())
-                if not fluid_mask[index]
-                and material not in self.solid_permittivities
-                and material not in PERMITTIVITY_EXEMPT
-            }
+            material
+            for material in off_fluid
+            if material not in self.solid_permittivities and material not in PERMITTIVITY_EXEMPT
         )
         if unassigned:
             logger.warning(
                 "%r has no solid_permittivities entry for %s, so Poisson carries the "
-                "electrolyte permittivity there (PHY-03)",
+                "ion-free water permittivity eps_r,f^0 there (PHY-03)",
                 self.name,
                 ", ".join(unassigned),
             )
-        if not self.solid_permittivities:
-            solids: Expression = fluid_permittivity
-        else:
-            reference = self.electrolyte.permittivity_0
-            solids = mesh.MaterialCF(
-                {
-                    material: value / reference
-                    for material, value in self.solid_permittivities.items()
-                },
-                default=fluid_permittivity,
-            )
+        reference = self.electrolyte.permittivity_0
+        named = {
+            material: value / reference for material, value in self.solid_permittivities.items()
+        }
+        # Every off-fluid material that is not a named solid is ion-free water.
+        water_off_fluid = dict.fromkeys(sorted(off_fluid - set(named)), ion_free)
+        sharp: Expression = mesh.MaterialCF(
+            {**water_off_fluid, **named}, default=fluid_permittivity
+        )
         if solid_fraction is None:
-            return solids
-        # The whole piecewise branch rather than one material's constant, so a
-        # mesh carrying a protein *and* a membrane blends each towards its own
-        # eps_p. Where chi is zero the branch's value is irrelevant, which is why
-        # its fluid default costs nothing. Written once, in materials.fields:
-        # a second copy of the blend here is a second place for it to drift.
-        return blend(solid_fraction, solids, fluid_permittivity)
+            return sharp
+        # The water branch: eps_r,f(<c>) where the ions are, eps_r,f^0 where
+        # they are not. The solid branch: each element's own eps_p, or its
+        # nearest solid's where the transition reaches past the boundary.
+        # Written once, in materials.fields: a second copy of the blend here is a
+        # second place for it to drift.
+        water = mesh.MaterialCF(
+            dict.fromkeys(sorted(off_fluid), ion_free), default=fluid_permittivity
+        )
+        return blend(solid_fraction, nearest_solid_permittivity(mesh, named), water)
 
     # -- weak form ---------------------------------------------------------
 
@@ -1368,6 +1387,7 @@ class CoupledModel:
             newton=result,
             residual=residual,
             wall_distance_nm=wall_distance_nm,
+            solid_fraction=solid_fraction,
         )
 
     def cold_state(
