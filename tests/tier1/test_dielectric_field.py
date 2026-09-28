@@ -293,8 +293,8 @@ def test_ver30_a_transposed_field_aborts_on_the_material_means(mesh) -> None:
 def test_ver30_the_exclusion_shell_takes_the_fluid_branch() -> None:
     """A water-filled Stern shell averages ``chi = 0`` and must pass (§5.3.1 NOTE).
 
-    ``exclusion`` is a solid for Nernst-Planck and for the flow but takes the
-    *fluid's* ``eps_r`` for Poisson, so it is absent from
+    ``exclusion`` is a solid for Nernst-Planck and for the flow but is water for
+    Poisson (ion-free water, ``eps_r,f^0``), so it is absent from
     ``solid_permittivities`` and must not be gated as if it were a protein.
     """
     from nanopnp.density.grid import RadialGrid
@@ -386,6 +386,78 @@ def test_ver30_the_blend_is_a_convex_combination_of_the_two_branches(mesh) -> No
     assert midpoint == pytest.approx(0.0, abs=1e-14)
     # And the two branches are genuinely different, or the check above is empty.
     assert float(ngs.Integrate(ngs.sqrt((solid - fluid) ** 2), mesh, order=order)) > 0.0
+
+
+def test_ver30_water_off_the_fluid_is_ion_free_water() -> None:
+    """The exclusion shell is ``eps_r,f^0`` exactly, whatever the salt (author ruling 13).
+
+    ``<c>`` has no meaning where ions do not exist, and the concentrations are
+    defined on the fluid only: evaluated in the shell they read 0, and the driver
+    floor made ``eps_r,f(<c>)`` the infinite-dilution value only to within the
+    floor (78.1499885 against 78.15). The shell is now ion-free water by
+    construction, while the electrolyte beside it carries the 3 M correction.
+    """
+    mesh = SlabGeometry(width_nm=5.0, exclusion_nm=0.3).generate(maxh_nm=0.2)
+    model = models.create("pnp", concentration_M=3.0, fluid="electrolyte")
+    boundaries = models.CoupledBoundaries(
+        potential="bulk", concentration="bulk", velocity="wall", velocity_axis="lateral"
+    )
+    state = model.cold_state(mesh, boundaries)
+    fields = {
+        field.name: component
+        for field, component in zip(model.fields, state.components, strict=True)
+    }
+    coefficients = model.coefficients(model.concentration_variables(fields), 3.0)
+    permittivity = model.permittivity(mesh, coefficients)
+    reference = model.electrolyte.permittivity_0
+    assert float(permittivity(mesh(0.15, 0.5))) * reference == 78.15
+    assert float(permittivity(mesh(0.45, 0.5))) * reference < 60.0
+
+
+def test_ver30_the_blend_goes_to_ion_free_water_in_a_solid_and_eps_p_in_the_fluid(
+    mesh,
+) -> None:
+    """Both halves of a transition that straddles the mesh boundary blend as §4.4 says.
+
+    Inside the membrane the water share is ion-free water, ``eps_r,f^0``; in the
+    fluid ``chi`` is honoured and blends towards the membrane's ``eps_p``. The
+    fluid side used to discard ``chi`` entirely (its solid branch was the fluid
+    value), and the solid side used the corrected fluid value where no ions exist.
+    """
+    import ngsolve as ngs
+
+    model = models.create("epnp-ns", solid_permittivities=MEMBRANE_PERMITTIVITY)
+    coefficients = _coefficients(mesh)
+    reference = model.electrolyte.permittivity_0
+    chi = 0.3
+    blended = model.permittivity(mesh, coefficients, solid_fraction=ngs.CF(chi))
+    eps_p = MEMBRANE_PERMITTIVITY["membrane"]
+    fluid = float(coefficients.relative_permittivity()(mesh(1.8, 0.0))) * reference
+    assert fluid < 78.0  # the 1 M correction is on, or the fluid check says nothing
+    inside = float(blended(mesh(5.0, 0.0))) * reference
+    beside = float(blended(mesh(1.8, 0.0))) * reference
+    assert inside == pytest.approx(chi * eps_p + (1.0 - chi) * 78.15, rel=1e-12)
+    assert beside == pytest.approx(chi * eps_p + (1.0 - chi) * fluid, rel=1e-12)
+
+
+def test_ver30_the_solid_branch_off_the_solids_is_the_nearest_solids_eps_p(mesh) -> None:
+    """Each non-solid element takes the ``eps_p`` of the solid its ``chi`` belongs to.
+
+    ``trans`` is named a solid here only to give the mesh two solids with
+    different values: the lumen beside the membrane wall goes to the membrane,
+    the lumen beside ``trans`` to ``trans``, and each solid keeps its own.
+    """
+    from nanopnp.materials.fields import nearest_solid_permittivity
+
+    field = nearest_solid_permittivity(mesh, {"membrane": 2.0, "trans": 5.0})
+    assert float(field(mesh(5.0, 0.0))) == 2.0  # in the membrane
+    assert float(field(mesh(4.0, -6.0))) == 5.0  # in trans
+    assert float(field(mesh(1.8, 0.0))) == 2.0  # lumen, at the membrane wall
+    assert float(field(mesh(0.2, -2.8))) == 5.0  # lumen, at the trans mouth
+    assert float(field(mesh(5.0, 3.5))) == 2.0  # cis, just above the membrane
+    assert nearest_solid_permittivity(mesh, {"trans": 5.0, "membrane": 2.0}) is field
+    with pytest.raises(ValueError, match="no material of this mesh"):
+        nearest_solid_permittivity(mesh, {"protein": 20.0})
 
 
 def test_ver30_blend_takes_the_whole_solid_branch_not_one_constant() -> None:

@@ -1082,8 +1082,9 @@ def restore(
     )
 
     state = _load_state(path, data, model, space)
+    keywords = residual_keywords(top)
     residual = ngs.BilinearForm(space)
-    residual += model.residual_form(space, top.measures, state=state, **residual_keywords(top))
+    residual += model.residual_form(space, top.measures, state=state, **keywords)
     return ModelSolution(
         model=model,
         space=space,
@@ -1091,4 +1092,5 @@ def restore(
         newton=None,
         residual=residual,
         wall_distance_nm=distance,
+        solid_fraction=keywords.get("solid_fraction"),
     )

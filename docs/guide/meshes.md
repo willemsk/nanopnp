@@ -43,8 +43,9 @@ measured from (PHY-02). The membrane is deliberately left out of that source set
 membrane face `wall` changes the physics.
 
 Every solid domain needs a relative permittivity in `physics.solid_permittivities`, except the
-ion-exclusion shell `exclusion`, which takes the fluid's permittivity by design. A mesh carrying an
-`exclusion` domain is recorded as a deviation from the validated model, which has no Stern layer.
+ion-exclusion shell `exclusion`, which is ion-free water (`ε_r,f⁰`) by design: ions do not exist
+there, so the salt correction does not apply. A mesh carrying an `exclusion` domain is recorded as a
+deviation from the validated model, which has no Stern layer.
 
 ## The quality gate
 

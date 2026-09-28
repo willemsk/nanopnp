@@ -707,7 +707,9 @@ def _permittivity(solution: ModelSolution) -> Expression | None:
     coefficients = model.coefficients(
         model.concentration_variables(values), solution.wall_distance_nm
     )
-    permittivity: Expression = model.permittivity(solution.space.mesh, coefficients)
+    permittivity: Expression = model.permittivity(
+        solution.space.mesh, coefficients, solid_fraction=solution.solid_fraction
+    )
     return permittivity
 
 

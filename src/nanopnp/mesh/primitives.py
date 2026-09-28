@@ -57,11 +57,11 @@ PERMITTIVITY_EXEMPT: frozenset[str] = frozenset({"exclusion"})
 
 ``exclusion`` is the ion-exclusion shell of FR-15: a solid for Nernst-Planck and
 for the flow, so the no-slip surface sits at its outer edge — the conventional
-hydrodynamic shear plane — and the **fluid's** ``eps_r`` for Poisson, which is
-what :meth:`nanopnp.physics.models.CoupledModel.permittivity`'s default already
-gives anything with no entry of its own (§5.3.1 NOTE). Demanding a value for it
-would invite one to be invented, and any value but the electrolyte's would put a
-dielectric jump at the shear plane, which is not what a Stern layer is.
+hydrodynamic shear plane — and **water** for Poisson. Ions do not exist in it,
+so ``<c>`` has no meaning there and the water is ion-free: ``eps_r,f^0``, which
+:meth:`nanopnp.physics.models.CoupledModel.permittivity` gives every material off
+the fluid that has no entry of its own (§5.3.1 NOTE, author ruling 13). Demanding
+a value for it would invite one to be invented.
 
 Here rather than in :mod:`nanopnp.mesh.ingest`, beside the fluid set and for the
 same reason: ``physics/`` reads both, and ``ingest`` imports ``physics``, so the
