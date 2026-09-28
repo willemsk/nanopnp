@@ -397,6 +397,45 @@ def test_if06_a_mesh_with_no_boundary_segments_is_refused(tmp_path: Path) -> Non
         read(path)
 
 
+@pytest.mark.parametrize("kind", ["quad", "triangle6"])
+def test_if06_a_cell_that_is_not_a_straight_sided_triangle_is_refused_not_dropped(
+    tmp_path: Path, kind: str
+) -> None:
+    """A recombined gmsh boundary layer writes quads; dropping them leaves a free edge.
+
+    The wall's line elements would survive on vertices no triangle uses, every
+    gate would pass, and the real fluid edge one row in would take the natural
+    condition. ``from_ngsolve`` refuses the same mesh, so the two readers agree.
+    """
+    import meshio
+
+    points = np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0], [2.0, 0.0], [2.0, 1.0]])
+    extra = (
+        ("quad", np.array([[1, 4, 5, 2]]))
+        if kind == "quad"
+        else ("triangle6", np.array([[1, 4, 5, 0, 2, 3]]))
+    )
+    mesh = meshio.Mesh(
+        points,
+        [
+            ("vertex", np.array([[0]])),
+            ("line", np.array([[0, 1], [1, 4]])),
+            ("triangle", np.array([[0, 1, 2], [0, 2, 3]])),
+            extra,
+        ],
+        cell_data={
+            "gmsh:physical": [np.array([3]), np.array([1, 1]), np.array([2, 2]), np.array([2])],
+            "gmsh:geometrical": [np.array([1]), np.array([1, 1]), np.array([1, 1]), np.array([1])],
+        },
+    )
+    path = tmp_path / f"{kind}.msh"
+    # MSH 2.2: meshio's 4.1 writer wants entity tags for a mixed mesh, and the
+    # reader takes either version through the same cell loop.
+    meshio.write(str(path), mesh, file_format="gmsh22", binary=False)
+    with pytest.raises(MeshFormatError, match=rf"1 '{kind}' cells"):
+        read(path)
+
+
 # --- the NGSolve routes ----------------------------------------------------
 
 
