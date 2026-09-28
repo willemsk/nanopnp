@@ -619,7 +619,10 @@ class RenderProcess:
         pair it did not write, so a superseded render left to finish can delete
         the document the panel has just been told to load. Waiting rather than
         signalling and returning is what makes "the old child is gone" true
-        before the new one sweeps the directory.
+        before the new one sweeps the directory. A child that outlives
+        ``timeout`` after SIGTERM, stuck in a long NGSolve call that does not
+        return to the interpreter, is killed and waited for again: returning
+        with it alive would let it race the new one after all.
 
         Idempotent, and a no-op on a child that has already exited.
         """
@@ -628,6 +631,9 @@ class RenderProcess:
         if self._process.is_alive():
             self._process.terminate()
         self._process.join(timeout)
+        if self._process.is_alive():
+            self._process.kill()
+            self._process.join(timeout)
 
     def join(self, timeout: float | None = None) -> None:
         """Wait for the child to exit."""

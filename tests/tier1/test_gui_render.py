@@ -432,3 +432,37 @@ def test_ver44_the_drawn_region_counts_its_elements_not_its_materials(domain: st
     assert _element_count(mesh, domain) == expected
     if domain == "membrane":
         assert 0 < expected < mesh.ne
+
+
+class _DeafChild:
+    """A render child stuck where SIGTERM is not acted on, as in a long NGSolve call."""
+
+    def __init__(self) -> None:
+        self.signals: list[str] = []
+        self.alive = True
+
+    def is_alive(self) -> bool:
+        return self.alive
+
+    def terminate(self) -> None:
+        self.signals.append("terminate")
+
+    def kill(self) -> None:
+        self.signals.append("kill")
+        self.alive = False
+
+    def join(self, timeout: float | None = None) -> None:
+        del timeout
+
+
+def test_ver44_a_superseded_child_that_ignores_terminate_is_killed() -> None:
+    """Returning with the old child alive lets it race the new one in ``viewer/``.
+
+    Each child removes the ``scene-*`` pair it did not write, so a superseded
+    render still running can delete the document the panel was just told to load.
+    """
+    child = _DeafChild()
+    process = RenderProcess(RenderRequest(run="unused"), _process=child)  # type: ignore[arg-type]
+    process.terminate(timeout=0.0)
+    assert child.signals == ["terminate", "kill"]
+    assert not process.running
