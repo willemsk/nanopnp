@@ -631,8 +631,9 @@ class QuantitiesOfInterest:
     bias_V: float
     currents_A: Mapping[str, float]
     current_A: float
-    transport_number: float
-    conductance_S: float
+    transport_number: float | None
+    conductance_S: float | None
+    """Both ``None`` at zero bias, where each is a ratio to a round-off current."""
     eof_m3_s: float | None
     agreement: RouteAgreement | None
     stabilisation_currents_A: Mapping[str, float] | None = None
@@ -733,6 +734,10 @@ def extract(
         species; the second comparison is what protects the transport number,
         which the total is blind to.
 
+    At exactly zero bias the transport number and the conductance are ``None``,
+    and the route check is not applied: every current is round-off there, and
+    so is any relative difference between two of them (section 6.7 NOTE on NUM-27).
+
     Raises
     ------
     RouteDisagreementError
@@ -755,8 +760,19 @@ def extract(
     )
     current = total_current(currents)
 
+    # At zero bias both routes are round-off -- 1e-27 A against 1e-25 A on the
+    # stage-11 fixture -- and a relative difference between two round-offs is of
+    # order one whatever the extraction does, so NUM-26 has nothing to compare
+    # there. ``routes_checked: False`` in the summary says the check did not run.
+    equilibrium = bias_V == 0.0
     agreement: RouteAgreement | None = None
-    if check_routes:
+    if check_routes and equilibrium:
+        logger.info(
+            "zero bias: the NUM-26 route check is not applied, both currents being round-off "
+            "(%.3e A by the NUM-24 indicator)",
+            current,
+        )
+    elif check_routes:
         reaction = reaction_flux_currents(solution, boundary, load_form=load_form)
         agreement = RouteAgreement(indicator_A=current, reaction_A=total_current(reaction))
         agreement.check(tolerance)
@@ -776,8 +792,9 @@ def extract(
         bias_V=bias_V,
         currents_A=currents,
         current_A=current,
-        transport_number=transport_number(currents, cations),
-        conductance_S=conductance(current, bias_V),
+        # Both are ratios to a current that is round-off at zero bias.
+        transport_number=None if equilibrium else transport_number(currents, cations),
+        conductance_S=None if equilibrium else conductance(current, bias_V),
         eof_m3_s=indicator_eof(solution, measures, indicator) if model.flow else None,
         agreement=agreement,
         stabilisation_currents_A=stabilisation,

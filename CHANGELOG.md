@@ -35,6 +35,10 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
   NaN `q_net_e` switched off three of the five charge-conservation gates (VER-29, QR-12).
 - `nanopnp reproduce` reports a quantity that became NaN or infinite, or stopped being one, as a
   drift. The NaN difference passed the tolerance test and the run was declared reproduced (QR-08).
+- A zero-bias case runs through stage 11. The transport number and the conductance are reported as
+  undefined there, and the NUM-26 route check, a relative difference of two round-off currents, is
+  not applied and is recorded as not applied; before, every zero-bias case aborted whatever
+  `outputs:` asked for (NUM-26, NUM-27).
 
 ## [0.9.0-alpha.5] - 2026-09-26
 
