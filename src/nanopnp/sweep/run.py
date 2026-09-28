@@ -191,17 +191,25 @@ def _parent_artefact(
     """
     if point.parent is None:
         return None, "this point is the root of its tree and has no neighbour to start from"
+    from nanopnp.io.run import MissingUpstreamError, stored_upstream
     from nanopnp.solve.stage import SolveStage
 
     parent = plan.point(point.parent)
+    document = plan.case(point.parent, base=base)
     try:
-        key = SolveStage().key(StageInputs(case=plan.case(point.parent, base=base)))
-    except Exception as error:
-        # A parent whose key cannot even be computed is a parent this member
-        # cannot warm-start from, and that is a fallback rather than a failure:
-        # the member's own run will raise the same error properly if it is a
-        # real one, with its own diagnostic and its own exit class.
-        return None, f"the parent's artefact key could not be computed: {error}"
+        # Keyed on the artefacts the parent's own walk handed its solve, not on
+        # the bare case: a generated mesh exists only as stage 6's stored
+        # artefact, and a bare-case key raised for every such sweep, which
+        # silently made every member cold.
+        upstream = stored_upstream(document, store=store)
+    except MissingUpstreamError as error:
+        # The parent has not run, which is a fallback rather than a failure. Any
+        # other error is a defect and is left to raise.
+        return None, (
+            f"the store holds no converged state for parent point {parent.index} "
+            f"({parent.point_id}); not even its upstream artefacts are stored: {error}"
+        )
+    key = SolveStage().key(StageInputs(case=document, upstream=upstream))
     found = store.get(SOLUTION_SCHEMA, key.hash)
     if found is None:
         return None, (
@@ -247,7 +255,13 @@ def run_point(
     point = plan.point(index)
     started = time.perf_counter()
     base = plan.base_case()
-    warm, reason = _parent_artefact(plan, point, store, base=base)
+    try:
+        warm, reason = _parent_artefact(plan, point, store, base=base)
+    except Exception as error:
+        # The parent's case resolves as this member's does, so an error keying
+        # it is this member's to report, classified, rather than one that ends
+        # the whole sweep.
+        return _failed(point, error, started, directory)
     document = plan.case(index, base=base)
     # The *member's* case, not the base case it was substituted from. The
     # manifest embeds this text beside the member's own case hash and writes it

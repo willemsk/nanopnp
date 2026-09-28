@@ -383,7 +383,8 @@ def load_grid(document: FieldDocument, *, base: Path) -> RadialGrid:
         resolved = path if path.is_absolute() else base / path
         # Ahead of the read, not after it: a declared digest is a statement about
         # the bytes, and checking it costs one pass over the buffer where parsing
-        # the 77 MB reference table before refusing it costs a minute.
+        # the 77 MB reference table before refusing it costs a couple of seconds
+        # (1.6 s measured for an 84 MB %Grid table, 2026-09-28).
         if document.data.sha256 is not None:
             from nanopnp.core.hashing import file_hash
 

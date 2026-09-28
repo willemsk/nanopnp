@@ -1230,7 +1230,7 @@ class CoupledModel:
             in :meth:`solve`.
         """
         fields = self._split(list(state.components))
-        fluid_sampler = FieldSampler(
+        fluid_sampler = FieldSampler.shared(
             mesh, coordinates=measures.coordinate_names, materials=self.fluid
         )
         variables = self.concentration_variables(fields)
@@ -1242,7 +1242,7 @@ class CoupledModel:
         ]
         if increment is None:
             return state_gates, []
-        potential_sampler = FieldSampler(mesh, coordinates=measures.coordinate_names)
+        potential_sampler = FieldSampler.shared(mesh, coordinates=measures.coordinate_names)
         potential_increment = self._split(list(increment.components))[POTENTIAL]
         return state_gates, [PotentialIncrementGate(potential_sampler, potential_increment)]
 

@@ -2387,6 +2387,29 @@ def _model_options(
     return options
 
 
+def _check_operating_point(document: CaseDocument) -> None:
+    """Refuse a concentration, bias or distance cap no solve could use.
+
+    Written so that NaN fails every test: ``nan <= 0`` is False, and a sweep
+    plan resolves every point precisely so that an inadmissible one fails at
+    plan time rather than after a ladder of non-converging Newton.
+    """
+    concentration = document.electrolyte.concentration_M
+    if not (math.isfinite(concentration) and concentration > 0.0):
+        raise CaseValidationError(
+            f"electrolyte.concentration_M is {concentration!r}; it must be finite and positive"
+        )
+    bias = document.boundary_conditions.bias_V
+    if not math.isfinite(bias):
+        raise CaseValidationError(f"boundary_conditions.bias_V is {bias!r}; it must be finite")
+    cap = document.numerics.wall_distance.max_distance_nm
+    if not (math.isfinite(cap) and cap > 0.0):
+        raise CaseValidationError(
+            f"numerics.wall_distance.max_distance_nm is {cap!r}; the PHY-02 saturation distance "
+            "must be finite and positive, or the wall functions are evaluated at a capped d"
+        )
+
+
 def resolve(document: CaseDocument) -> ResolvedCase:
     """Turn a validated case document into the objects the solver takes.
 
@@ -2424,6 +2447,7 @@ def resolve(document: CaseDocument) -> ResolvedCase:
         driver=document.electrolyte.driver,
     )
     _check_species(document, electrolyte)
+    _check_operating_point(document)
 
     elements = document.numerics.elements
     order = _order(elements.phi, "phi")

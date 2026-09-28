@@ -1082,6 +1082,15 @@ At `ε = 1e-30` the perturbation to a magnitude of order 1 is `5e-61`, below the
 and the derivative becomes `0/1e-30 = 0` exactly. Verify on the **assembled Jacobian entries**: a
 residual norm reports zero, not `NaN`. **[tested]**
 
+**Trap: a coefficient built from `definedon` fields reads their zero everywhere else.** The
+concentrations live on the fluid, so off it they evaluate to 0, `average_concentration` clamps
+that to 1e-6 M, and anything derived from them returns its infinite-dilution value with no
+diagnostic. Measured on `CoupledModel.permittivity` at 3 M with the permittivity correction on:
+ε_r = **78.150** in the `exclusion` shell against **51.09** in the electrolyte beside it, and a χ
+blend inside the membrane going towards 78.15 rather than towards ε_r,f(⟨c⟩). Any expression that
+is evaluated on a material its inputs are not defined on has to be given a value there
+deliberately. (Codebase review of 2026-09-28, CR-2.) **[tested]**
+
 ### 8.1.1 Mesh-integral error on a sub-element-scale field converges in neither `h` nor order
 
 The finding that costs the most to rediscover, from ingesting the reference model's own 0.005 nm
@@ -1235,6 +1244,13 @@ Measured under WP11 on the toy pore (`a` = 2 nm, `L` = 6 nm, reservoir 10 nm) at
 - **A single-axis grid caps the curve at N = 2 whatever the runner does.** A one-axis sweep rooted
   in its middle has waves two points wide, so a scaling measurement on one reports the *grid*. Two
   axes are the minimum for a curve that says anything about the dispatch.
+- **A generated mesh's parent is keyed through the store, not the case. [tested]** The stage-10
+  key needs the mesh artefact, and a generated mesh exists only as stage 6's stored artefact, keyed
+  on the stage-5 recipe. Keying the parent from its bare case raised for every such sweep, and the
+  runner's broad `except` turned that into a cold start, so every member climbed the ladder:
+  44 Newton iterations instead of 5 on the Tier-1 synthetic profile. `io.run.stored_upstream` now
+  keys the parent's walk through `materials` with every payload taken from the store, and only a
+  missing artefact is a cold fallback (CR-1, `tests/tier2/test_sweep_generated_mesh.py`).
 
 ### 8.4.1 A sweep axis over a space key severs the forest, and the gate that fires is `fields` **[tested]**
 
@@ -1271,6 +1287,17 @@ combination, with exit class 4 and a diagnostic about the extraction. The checke
 Not fixed here. Making the check inapplicable rather than failing at zero current means deciding
 what "no current" is, which is a scale the extraction does not currently carry, and NUM-26 is a
 Phase-1 headline gate. Recorded for whoever owns it next.
+
+### 8.6 Measured: locating the gate sample points costs 100× evaluating on them **[tested]**
+
+On a 144,628-element mesh, `FieldSampler` over the fluid holds 1,012,396 points (duplicates kept on
+purpose, so each stays inside its own element) and takes 2.7 s to build and **21.7 s** to locate;
+over the whole mesh, 434,885 points take 2.9 s and 9.4 s. Evaluating a field on the located points
+takes 0.23 s. Before the codebase review of 2026-09-28 each rung built two samplers and each solve
+three more, about 36 s a rung at that size. `FieldSampler.shared` keeps one per mesh and material
+set, cached **on the mesh object**: `ngsolve.comp.Mesh` is unhashable, so a `WeakKeyDictionary`
+raises `TypeError`, but it takes attributes and weak references, and the mesh ↔ sampler reference
+cycle is collected with the mesh. **[tested]**
 
 ---
 

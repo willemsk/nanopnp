@@ -94,11 +94,13 @@ ATTRIBUTION_SCHEMA = "nanopnp/attribution/v1"
 """Schema identifier of the report, and the separator of its content hash."""
 
 IDENTITY_TOLERANCE = 1e-14
-"""Absolute tolerance on the telescoped sum.
+"""Tolerance on the telescoped sum, relative to ``max(1, |E_k|)``.
 
 The identity is exact in real arithmetic, so what is left is the round-off of
-four additions of numbers of order one: about 1e-16. Asserting at 1e-14 leaves
-two orders of headroom and still fails on any real slip in forming the deltas.
+four additions: about 1e-16 of the largest ``E_k``. Asserting at 1e-14 of that
+leaves two orders of headroom and still fails on any real slip in forming the
+deltas. Not absolute: an ``E_k`` is a relative error, which exceeds 10 wherever
+the golden is small, and an absolute 1e-14 then fails on correct input.
 """
 
 Verdict = Literal["reference-limited", "attributed", "reference-unbounded"]
@@ -433,7 +435,10 @@ class AttributionReport:
         """
         for entry in self.attributions:
             residual = entry.identity_residual()
-            if not math.isfinite(residual) or abs(residual) > tolerance:
+            # Relative to the largest E_k: an E_k is a relative error and is not
+            # bounded by 1, and the round-off of the telescoped sum grows with it.
+            scale = max(1.0, *(abs(value) for value in entry.errors))
+            if not math.isfinite(residual) or abs(residual) > tolerance * scale:
                 raise LadderError(
                     f"the ladder identity fails for {entry.kind} {entry.key!r}: "
                     f"delta_total + delta_transport + delta_flow + delta_pair - delta_resid = "

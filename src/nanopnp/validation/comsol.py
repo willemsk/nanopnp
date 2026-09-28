@@ -819,7 +819,13 @@ def load_golden(path: str | Path) -> Golden:
             "a disagreement means one of them was replaced on its own"
         )
     digest = _golden_hash(manifest, values)
-    if recorded is not None and recorded != digest:
+    if recorded is None:
+        raise GoldenError(
+            f"{manifest_path.name} records no golden_hash. ingest_golden always writes one, so a "
+            "manifest without it was edited by hand, and an archive it vouches for cannot be "
+            "checked against it"
+        )
+    if recorded != digest:
         raise GoldenError(
             f"{archive} and {manifest_path.name} hash to {digest} and the manifest records "
             f"{recorded}. The two are written together by ingest_golden over the same bytes, so "
@@ -950,8 +956,7 @@ def _read_archive_manifest(path: Path) -> tuple[GoldenManifest, str | None]:
 
     The hash comes back rather than being discarded, because a recorded digest
     nothing ever compares against is a checksum that cannot fail;
-    :func:`load_golden` is where it is checked. ``None`` only for a manifest
-    written before the key existed.
+    :func:`load_golden` is where it is checked, and refuses ``None``.
     """
     decoded = decode_floats(json.loads(path.read_text(encoding="utf-8")))
     if not isinstance(decoded, dict):

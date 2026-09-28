@@ -173,6 +173,19 @@ grid, which telescope exactly as cleanly. Those need the hashes compared directl
 point count per field compared between rungs. The WP13 plan's decision row claimed the identity did
 that job; it does not.
 
+Its round-off is not absolute. An `E_k` is a relative error and exceeds 10 wherever the golden is
+small, and the round-off of the telescoped sum grows with it: over 100k random draws an absolute
+1e-14 failed **0 %** for `E_k ∈ [0, 2]`, **2.7 %** for `[10, 100]` and **16.1 %** for
+`[100, 1000]`, aborting the report on correct input. The tolerance is therefore taken relative to
+`max(1, |E_k|)` (codebase review of 2026-09-28, CR-7). **[tested]**
+
+### A norm over no points is zero, which reads as agreement **[tested]**
+
+`field_error` over an all-false mask returned `rel_L2_r = rel_l2 = max_abs_rel = 0.0`, and a mask
+gate comparing two empty masks passes. A self-golden made by a probe grid whose masks came back
+empty — which `_inside`'s catch-all made one NGSolve API change away — would pass the Tier-2 round
+trip on every field while comparing nothing. An empty mask is now refused (CR-5).
+
 ### A `%Grid` table round-trips `float64` exactly at `%.17g` **[tested]**
 
 Seventeen significant decimal digits round-trip an IEEE-754 double by definition, so a solution

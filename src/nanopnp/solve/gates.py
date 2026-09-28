@@ -129,6 +129,10 @@ class GateViolationError(RuntimeError):
         super().__init__(f"{gate} gate failed: {quantity} = {value:.6g}{where}{clause}")
 
 
+_SAMPLER_CACHE = "_nanopnp_field_samplers"
+"""Attribute on an NGSolve mesh holding :meth:`FieldSampler.shared`'s cache."""
+
+
 @dataclass
 class FieldSampler:
     """Evaluates coefficient functions at the P2 nodal set of a mesh.
@@ -152,6 +156,34 @@ class FieldSampler:
     materials: str | None = None
     _points: np.ndarray | None = field(default=None, init=False, repr=False, compare=False)
     _located: Expression | None = field(default=None, init=False, repr=False, compare=False)
+
+    @classmethod
+    def shared(
+        cls,
+        mesh: Mesh,
+        *,
+        coordinates: tuple[str, str] = ("r", "z"),
+        materials: str | None = None,
+    ) -> FieldSampler:
+        """Return the one sampler of this mesh and material set, built on first use.
+
+        Building the point set and locating it costs seconds per sampler at the
+        reference mesh size, against a fraction of a second to evaluate on it,
+        and the rung gates, NUM-34, the Peclet report and the clamp report each
+        want the same points on the same fixed mesh. Kept on the mesh itself, so
+        the cache dies with the mesh rather than keeping it alive.
+        """
+        cache: dict[tuple[tuple[str, str], str | None], FieldSampler] | None = getattr(
+            mesh, _SAMPLER_CACHE, None
+        )
+        if cache is None:
+            cache = {}
+            setattr(mesh, _SAMPLER_CACHE, cache)
+        key = (coordinates, materials)
+        found = cache.get(key)
+        if found is None:
+            found = cache[key] = cls(mesh, coordinates=coordinates, materials=materials)
+        return found
 
     @property
     def points(self) -> np.ndarray:

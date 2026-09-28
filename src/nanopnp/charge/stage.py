@@ -251,7 +251,8 @@ def gate_fields(
     Split from the reading so that a caller holding the fields — the solve stage,
     which reads them to key its own artefact — gates the grids it has rather than
     reading them a second time. The reference table is 77 MB of text, and a
-    second parse of it is a second chance to disagree as well as a second minute.
+    second parse of it is a second chance to disagree as well as a second pass
+    over it (about 1.6 s for an 84 MB table, measured 2026-09-28).
 
     Parameters
     ----------

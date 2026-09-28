@@ -78,6 +78,9 @@ SWITCH_PATHS: tuple[str, ...] = (
     "numerics.nonlinear.strategy",
     "numerics.nonlinear.damping",
     "numerics.wall_distance.sources",
+    # PHY-02: the saturation distance. A float, classified by hand as the charge
+    # offsets above are: below ~1 nm the wall functions no longer reach 1.
+    "numerics.wall_distance.max_distance_nm",
     "numerics.linear.solver",
 )
 """Every switch with a validated default, by dotted path into the case document."""

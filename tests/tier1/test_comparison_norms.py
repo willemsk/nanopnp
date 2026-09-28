@@ -239,6 +239,26 @@ def test_val01_no_other_field_is_gauge_shifted() -> None:
     assert comparison.rel_L2_r == pytest.approx(0.2, rel=1e-12)
 
 
+def test_val01_a_norm_over_no_retained_point_aborts() -> None:
+    """An empty mask is refused, not reported as exact agreement (QR-12).
+
+    Every norm over zero points is 0, which is indistinguishable from a perfect
+    match. A self-golden built by a probe grid whose masks came back empty would
+    otherwise pass the Tier-2 round trip on every field while comparing nothing.
+    """
+    import numpy as np
+
+    document = loads_probe(
+        f"schema: {PROBE_SCHEMA}\nname: empty\npatches:\n"
+        "  - {name: block, r_nm: [0.5, 5.5], z_nm: [-2.0, 2.0], n_r: 11, n_z: 17}\n"
+    )
+    grid = _grid(document, ("potential",))
+    values = np.zeros(document.count, dtype=np.float64)
+    nothing = np.zeros(document.count, dtype=bool)
+    with pytest.raises(ProbeGridError, match="retains no probe point"):
+        field_error("potential", values + 1.0, values, grid, nothing)
+
+
 # -- the mask gate ------------------------------------------------------------
 
 

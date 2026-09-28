@@ -2,6 +2,14 @@
 
 2026-09-28 · commit `abe328a` (`claude/exciting-dijkstra-3gjuts`) · scope: `src/nanopnp/` (111 files, 46.3k lines; tests read for context only) · focus: correctness, efficiency
 
+> **Status (2026-09-28, follow-up commit on the same branch):** CR-1 is fixed, by the design in its
+> fix section (`io.run.stored_upstream`). The eight patches below (CR-3, CR-4, CR-5, CR-7, CR-9,
+> CR-10, CR-11 and the golden-hash one) are applied. Regression tests cover CR-1
+> (`tests/tier2/test_sweep_generated_mesh.py`), CR-4 and CR-9 (`tests/tier1/test_manifest.py`) and
+> CR-5 (`tests/tier1/test_comparison_norms.py`); each new test fails on `abe328a`. Still open:
+> CR-2 (it needs a specification decision), CR-6, CR-8, CR-12, CR-13, CR-14 (its stale comment is
+> corrected) and CR-15.
+
 ## Summary
 
 The codebase is in good shape where it is most often wrong elsewhere. Every solver gate, Newton test and current cross-check the reviewers traced is NaN-safe and aborts rather than logs. The signs of every weak-form term were re-derived and hold. Every correction switched to `none` reduces exactly to classical PNP-NS.

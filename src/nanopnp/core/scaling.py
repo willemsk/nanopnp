@@ -105,7 +105,7 @@ def debye_length_nm(
     ValueError
         If the concentration is not positive.
     """
-    if concentration_M <= 0.0:
+    if not concentration_M > 0.0:  # NaN fails too
         raise ValueError(f"concentration must be positive, got {concentration_M} M")
     permittivity = VACUUM_PERMITTIVITY * relative_permittivity
     concentration_mol_m3 = concentration_M * MOL_PER_M3_PER_MOL_PER_L
@@ -160,7 +160,7 @@ class Scales:
             "relative_permittivity",
         ):
             value = getattr(self, name)
-            if value <= 0.0:
+            if not value > 0.0:  # NaN fails too
                 raise ValueError(f"scale {name} must be positive, got {value}")
 
     # -- primitive scales ------------------------------------------------

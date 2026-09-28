@@ -18,6 +18,28 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ### Fixed
 
+- A sweep over a case that generates its mesh warm-starts. The member runner keyed each parent from
+  its bare case, which raised for every generated mesh and was caught as a cold fallback, so every
+  member climbed the full continuation ladder. The parent is now keyed through the artefacts its own
+  walk stored, and only a parent that has not run falls back cold; any other error fails that member
+  rather than the sweep (FR-24, VER-37).
+- `numerics.wall_distance.max_distance_nm` set away from 3.0 nm is recorded as a deviation, and a
+  cap, `electrolyte.concentration_M` or `boundary_conditions.bias_V` that is not finite (or, for
+  the first two, not positive) is refused at resolve time, so a sweep plan rejects it in seconds
+  (FR-25, PHY-02, QR-12).
+- A field comparison over a mask that retains no probe point is refused rather than reported as
+  exact agreement, and the probe grid's point lookup treats only NGSolve's "not in mesh" error as
+  outside the mesh (VAL-01, QR-12).
+- The attribution ladder's identity check is relative to the largest `E_k`. At an absolute 1e-14 it
+  aborted a correct report whenever the golden was small enough for `E_k` to exceed about 10
+  (VAL-04).
+- A golden archive whose manifest records no `golden_hash` is refused instead of loading unchecked.
+- The manifest's Materials group hashes every correction file the models read, not only the
+  reference one (FR-25).
+- A correction file carrying a per-species `fw` on an ion diffusivity or mobility is refused. The
+  ion properties take the file's shared `ion_wall_function`, and the per-species fit was accepted
+  and never applied (FR-16, PHY-11).
+
 - A case whose `electrolyte.temperature_K` differs from the temperature its parameter file is
   fitted at is refused, naming both. The solve took every property and `V_T` from the file while
   the manifest recorded the case's temperature (FR-16, FR-25).
@@ -69,6 +91,11 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 - A supplied charge or solid-fraction grid carrying a NaN sample aborts at the conservation and
   range gates, naming the leg and the location, instead of passing them: every leg became NaN and
   every check was written `value > tolerance` (PHY-19, QR-03, VER-30, QR-12).
+
+### Changed
+
+- The gate sample points of a mesh are built and located once per mesh and material set rather than
+  twice per continuation rung and three more times per solve, about 36 s a rung at 145k elements.
 
 ## [0.9.0-alpha.5] - 2026-09-26
 

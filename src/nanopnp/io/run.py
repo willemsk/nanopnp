@@ -68,6 +68,7 @@ __all__ = [
     "UnknownStageError",
     "run_case",
     "run_document",
+    "stored_upstream",
 ]
 
 logger = logging.getLogger(__name__)
@@ -835,6 +836,54 @@ def run_document(
             # this directory once the walk is over. Left behind, it doubled every
             # mesh, field export and solution on disk, once per sweep member.
             shutil.rmtree(walk.scratch, ignore_errors=True)
+
+
+def stored_upstream(
+    document: CaseDocument, *, store: Store, upto: str = "materials"
+) -> dict[str, Artefact]:
+    """Return the artefacts a walk through ``upto`` hands on, every payload from the store.
+
+    How a sweep member finds its parent's converged state (FR-24). The parent's
+    solve key is its solve provenance and the hashes of the mesh, fields and
+    materials artefacts its own walk handed the solve, and those are exactly
+    what this returns: each stage is keyed as :func:`run_document` keys it, and a
+    stage that writes a payload is taken from the store rather than computed.
+    A key built from the bare case cannot stand in for this: a case that
+    generates its mesh has no mesh until stage 6 has run, and its key is the
+    stage-6 recipe, not a file (WP21 D10).
+
+    Key-only: no stage runs, no directory is made, and the store's hit and miss
+    counts are left alone, because they belong to the run that reads them.
+
+    Parameters
+    ----------
+    document
+        The validated case whose upstream artefacts are wanted.
+    store
+        Where the payload-writing stages' artefacts are looked up.
+    upto
+        The last stage to key. ``"materials"`` is the one before ``solve``.
+
+    Raises
+    ------
+    MissingUpstreamError
+        If a payload-writing stage's artefact is not in the store, which for a
+        sweep parent means it has not run yet.
+    """
+    artefacts: dict[str, Artefact] = {}
+    for name in _selected(resolve(document), upto):
+        key = _probe(create(name), StageInputs(case=document, upstream=dict(artefacts)))
+        if name in PAYLOAD_FREE:
+            artefacts[name] = key
+            continue
+        found = store.get(key.schema, key.hash)
+        if found is None:
+            raise MissingUpstreamError(
+                f"stage {name!r} of case {document.name!r} produces {key.schema} "
+                f"{key.short_hash}, which is not in the store at {store.root}"
+            )
+        artefacts[name] = found
+    return artefacts
 
 
 def _walk(

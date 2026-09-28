@@ -581,6 +581,15 @@ This is the §5 shim recorded above, used for the purpose that section already s
 widget code that would otherwise ship having never been executed. It stays off the push gate, where
 widget coverage remains `windows-latest` and `macos-latest`.
 
+### SIGTERM stops a child busy inside netgen in milliseconds **[tested]**
+
+Neither netgen nor NGSolve installs a SIGTERM handler, so the signal's default action ends a
+`spawn` child at once even while it is inside compiled meshing code; only a Python-level handler
+would defer it until the interpreter is re-entered. Measured: a child in `GenerateMesh(maxh=0.002)`
+joined **14 ms** after `terminate()`, exit code −15. `RenderProcess.terminate`'s synchronous join
+therefore does not stall the Qt thread, and it is what keeps two render children of one run from
+sweeping each other's files. (Codebase review of 2026-09-28.)
+
 ### A PyInstaller bundle carries neither OCCT nor OpenBLAS unless told to **[tested]**
 
 Measured 22 September 2026: PyInstaller 6.22.3, contrib hooks 2026.7, NGSolve and Netgen
