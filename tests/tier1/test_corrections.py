@@ -413,3 +413,33 @@ def test_fr16_editing_a_second_correction_file_moves_the_materials_key(
     after = MaterialsStage().run(StageInputs(case=document))
     assert after.hash != before.hash
     assert MaterialsStage().run(StageInputs(case=single)).hash == reference.hash
+
+
+def test_fr16_an_edited_correction_file_is_read_again_in_the_same_process(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The GUI and an in-process sweep outlive an edit to ``data/corrections``.
+
+    The stage-8 key moves with the file and the reference values are read again,
+    so fit coefficients cached by model name would be the only part of the
+    result that did not: old fits beside new reference values, under the new key.
+    """
+    from nanopnp.core import paths
+
+    shipped = correction_file("willems2020_nacl").read_text(encoding="utf-8")
+    edited = tmp_path / "refitted_nacl.yaml"
+    edited.write_text(shipped, encoding="utf-8")
+    monkeypatch.setattr(paths, "CORRECTIONS_DIR", tmp_path)
+    monkeypatch.setattr(models, "_REGISTRY", dict(models._REGISTRY))
+
+    before = models.create("refitted_nacl", "viscosity")
+    assert isinstance(before, models.FittedCorrection)
+    assert before.concentration_params["P1"] == pytest.approx(0.007558)
+
+    assert "      P1: 0.007558 " in shipped
+    edited.write_text(
+        shipped.replace("      P1: 0.007558 ", "      P1: 0.008000 "), encoding="utf-8"
+    )
+    after = models.create("refitted_nacl", "viscosity")
+    assert isinstance(after, models.FittedCorrection)
+    assert after.concentration_params["P1"] == pytest.approx(0.008)

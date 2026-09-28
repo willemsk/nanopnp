@@ -53,6 +53,9 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 - Damped Newton counts a NaN trial residual accepted at minimum damping as a forced step, which is
   never convergence. It counted as unforced, so convergence could be declared on the update alone
   with a NaN residual (NUM-16).
+- A correction file edited while a process runs, the GUI or an in-process sweep, is read again for
+  its fit coefficients. They were cached by model name, so the result mixed new reference values
+  with old fits under the new key (FR-16).
 
 ## [0.9.0-alpha.5] - 2026-09-26
 
