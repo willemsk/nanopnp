@@ -8,17 +8,19 @@ asserts exactly those. Every other number is recorded, not gated (section 7.1:
 Tier 3 is recorded): the stage times, the peak memory, and the largest Cn and
 non-Cn variance with where they sit.
 
-Stage 4's test runs on the same module-scoped store, so it reads stages 1 to 3
-from the VER-50 run's cache rather than depositing the ensemble again; it shares
-the store and not a fixture, so a contour-gate failure cannot fail VER-50 (WP20
-plan, work item 6). Its gate verdict is the assertion; the measurements are
-logged and recorded in the WP20 plan's Outcomes.
+Stage 4's test runs on the tier's session-scoped store (WP22 D12), so it reads
+stages 1 to 3 from the VER-50 run's cache rather than depositing the ensemble
+again, as does VAL-05's ensemble leg; it shares the store and not a fixture, so a
+contour-gate failure cannot fail VER-50 (WP20 plan, work item 6). Its gate
+verdict is the assertion; the measurements are logged and recorded in the WP20
+plan's Outcomes.
 """
 
 from __future__ import annotations
 
 import logging
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -53,37 +55,12 @@ def _session_peak_rss_GB() -> float | None:
     return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / scale
 
 
-@pytest.fixture(scope="module")
-def ensemble_store(tmp_path_factory: pytest.TempPathFactory) -> Store:
-    """One store for the module, so stage 4 reads stages 1 to 3 from the VER-50 run."""
-    return Store(tmp_path_factory.mktemp("clya-as-store"))
-
-
-def _case(directory: Path) -> Path:
-    """Write the ClyA-AS case: the paper's 50 frames, C12, the default geometry blocks."""
-    case = directory / "clya-as.case.yaml"
-    case.write_text(
-        "schema: nanopnp/case/v2\n"
-        "name: clya-as-density\n"
-        "structure:\n"
-        f"  source: {{path: {TOPOLOGY}, variant: ClyA-AS}}\n"
-        f"  ensemble: {{trajectory: {TRAJECTORY}, frames: {{count: 50}}}}\n"
-        "  symmetry: {point_group: C12}\n"
-        "electrolyte:\n"
-        "  species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]\n"
-        "  concentration_M: 0.15\n"
-        "  parameters: willems2020_nacl\n"
-        "boundary_conditions: {bias_V: 0.1}\n"
-        "physics: {model: epnp-ns, solid_permittivities: {protein: 20.0, membrane: 3.2}}\n",
-        encoding="utf-8",
-    )
-    return case
-
-
 @needs_archive
-def test_ver50_clya_as_ensemble(tmp_path: Path, ensemble_store: Store) -> None:
+def test_ver50_clya_as_ensemble(
+    tmp_path: Path, ensemble_store: Store, ensemble_case: Callable[..., Path]
+) -> None:
     """The paper's final 50 frames run to stage 3; times, memory and variance maxima logged."""
-    result = run_case(_case(tmp_path), store=ensemble_store, upto="symmetry", write=False)
+    result = run_case(ensemble_case(tmp_path), store=ensemble_store, upto="symmetry", write=False)
     structure = result.artefacts["structure"].summary
     density = result.artefacts["density"].summary
     reduction = result.artefacts["symmetry"].summary
@@ -113,7 +90,9 @@ def test_ver50_clya_as_ensemble(tmp_path: Path, ensemble_store: Store) -> None:
 
 
 @needs_archive
-def test_ver51_clya_as_contour(tmp_path: Path, ensemble_store: Store) -> None:
+def test_ver51_clya_as_contour(
+    tmp_path: Path, ensemble_store: Store, ensemble_case: Callable[..., Path]
+) -> None:
     """Stage 4 on the 50-frame mean: the gate passes, and every measurement is logged.
 
     The prototype passed at a feature size of 0.229 nm, with ``r_c - R_p`` from
@@ -121,7 +100,7 @@ def test_ver51_clya_as_contour(tmp_path: Path, ensemble_store: Store) -> None:
     Design §6). The contour is in the stage-1 frame, the MD frame, whose bilayer
     centre is z = 0 (G9).
     """
-    result = run_case(_case(tmp_path), store=ensemble_store, upto="contour", write=False)
+    result = run_case(ensemble_case(tmp_path), store=ensemble_store, upto="contour", write=False)
     seconds = {record.name: round(record.seconds, 1) for record in result.stages}
     cached = [record.name for record in result.stages if record.cached]
     summary = result.artefacts["contour"].summary
