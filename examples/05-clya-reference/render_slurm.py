@@ -61,13 +61,17 @@ def render(
     plan = json.loads(plan_path.read_text(encoding="utf-8"))
     waves: list[list[int]] = plan["waves"]
     name = plan["name"]
+    # Quoted like every other value in the script, and a line break refused
+    # outright: quoting does not stop one from starting a new line of shell.
+    if any(not character.isprintable() for character in name):
+        raise ValueError(f"the sweep name {name!r} carries a control character")
     member = out.with_suffix(".member.sbatch")
     logs = workdir / "slurm-logs"
     # ``newline="\n"``: these are bash scripts for a Linux cluster, and a CRLF
     # written on Windows breaks the shebang and every line after it.
     member.write_text(
         MEMBER.format(
-            name=name,
+            name=shlex.quote(name),
             workdir=shlex.quote(str(workdir)),
             time=time,
             logs=shlex.quote(str(logs)),

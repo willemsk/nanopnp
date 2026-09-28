@@ -11,6 +11,7 @@ case is a copy of a frozen Tier-3 case and must keep its identity.
 
 from __future__ import annotations
 
+import importlib.util
 import itertools
 import json
 import re
@@ -99,6 +100,36 @@ def test_ver46_example_05_renders_one_dependent_array_per_wave(planned: Path) ->
     # The base case names its mesh from the repository root, so that is where
     # the members must run (the README's --workdir ../..).
     assert f"--chdir={shlex.quote(str(planned.parents[1].resolve()))}" in member
+    assert f"--job-name={shlex.quote(plan['name'])}\n" in member
+
+
+def test_ver46_example_05_quotes_the_sweep_name_and_refuses_a_line_break(
+    planned: Path, tmp_path: Path
+) -> None:
+    """The name was the one value written into the member job unquoted."""
+    spec = importlib.util.spec_from_file_location("render_slurm", planned / "render_slurm.py")
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    plan = json.loads((planned / "phase1" / "plan.json").read_text(encoding="utf-8"))
+    for name, refused in (("phase 1; rm -rf ~", False), ("phase1\necho injected", True)):
+        path = tmp_path / f"plan-{refused}.json"
+        path.write_text(json.dumps({**plan, "name": name}), encoding="utf-8")
+        arguments = {
+            "workdir": tmp_path,
+            "store": tmp_path / "store",
+            "out": tmp_path / f"submit-{refused}.sh",
+            "time": "00:10:00",
+            "concurrency": 4,
+        }
+        if refused:
+            with pytest.raises(ValueError, match="control character"):
+                module.render(path, **arguments)
+            continue
+        _, member = module.render(path, **arguments)
+        text = member.read_text(encoding="utf-8")
+        assert f"#SBATCH --job-name={shlex.quote(name)}\n" in text
 
 
 def test_ver46_example_05_case_is_the_frozen_case() -> None:
