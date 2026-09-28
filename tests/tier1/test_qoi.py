@@ -21,6 +21,7 @@ from nanopnp.post.qoi import (
     QuantitiesOfInterest,
     RouteAgreement,
     RouteDisagreementError,
+    _check_species_routes,
     cis_referenced_bias,
     conductance,
     rectification,
@@ -148,6 +149,27 @@ def test_num26_the_tolerance_is_declared_and_below_the_rectification_signal() ->
     """
     assert ROUTE_AGREEMENT_TOLERANCE == 1e-3
     assert ROUTE_AGREEMENT_TOLERANCE < 1e-2
+
+
+@pytest.mark.parametrize(
+    ("indicator", "reaction"), [(1.0e-9, math.nan), (math.nan, 1.0e-9), (1.0e-9, math.inf)]
+)
+def test_num26_a_route_that_is_not_finite_fails_the_check(
+    indicator: float, reaction: float
+) -> None:
+    """``max(finite, nan)`` is the finite one and ``nan > tol`` is False; neither may pass."""
+    agreement = RouteAgreement(indicator_A=indicator, reaction_A=reaction)
+    assert agreement.relative_difference == math.inf
+    with pytest.raises(RouteDisagreementError):
+        agreement.check()
+
+
+def test_num26_a_species_route_that_is_nan_fails_the_per_species_check() -> None:
+    """The per-species comparison is the one that guards the transport number."""
+    with pytest.raises(RouteDisagreementError, match="'Cl'"):
+        _check_species_routes(
+            {"Na": 3.0e-9, "Cl": 1.0e-9}, {"Na": 3.0e-9, "Cl": math.nan}, tolerance=1e-3
+        )
 
 
 def test_num26_two_vanishing_currents_do_not_divide_by_zero() -> None:

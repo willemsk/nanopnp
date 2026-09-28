@@ -26,6 +26,11 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 - A case with `ground: trans` reported a negative conductance and an inverted rectification ratio.
   Stage 11 now reports its quantities against the cis-referenced bias, and a sweep orients its
   rectification pairs by the biases the members recorded (NUM-24, NUM-27).
+- The MSH reader refuses a mesh carrying quads, curved triangles or any other cell that is not a
+  straight-sided triangle or a line segment, as the NGSolve reader already did. It dropped them with
+  a debug log, leaving a hole whose edge took the free condition (IF-06, QR-12).
+- The NUM-26 route-agreement check fails when either current is not finite, in total and per
+  species. A NaN reaction-flux route compared as agreeing and was recorded as checked (QR-04).
 
 ## [0.9.0-alpha.5] - 2026-09-26
 
