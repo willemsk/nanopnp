@@ -580,15 +580,20 @@ class ProbeGrid:
         nothing.
         """
         import numpy as np
+        from netgen.meshing import NgException
 
         try:
             sampled = np.asarray(indicator(mesh(points[:, 0], points[:, 1])), dtype=np.float64)
-        except Exception:  # NGSolve raises a bare NgException for a point it cannot find
+        except NgException:  # NGSolve raises a bare NgException for a point it cannot find
             values = np.zeros(points.shape[0], dtype=np.float64)
             for index, (r_nm, z_nm) in enumerate(points):
                 try:
                     values[index] = float(indicator(mesh(r_nm, z_nm)))
-                except Exception:  # outside the mesh is outside every material
-                    continue
+                except NgException as error:
+                    # Outside the mesh is outside every material; any other
+                    # failure is a defect, and reading it as "outside" would
+                    # empty the mask and report agreement over nothing.
+                    if "not in mesh" not in str(error):
+                        raise
             sampled = values
         return sampled.reshape(points.shape[0]) > 0.5

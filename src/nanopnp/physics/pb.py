@@ -365,7 +365,7 @@ def solve_pb_recorded(
         residual += term
 
     increment = ngs.GridFunction(space, name="delta_phi_tilde")
-    sampler = FieldSampler(mesh, coordinates=measures.coordinate_names)
+    sampler = FieldSampler.shared(mesh, coordinates=measures.coordinate_names)
     result = damped_newton(
         residual,
         potential,

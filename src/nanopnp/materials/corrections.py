@@ -123,13 +123,27 @@ class PropertyBlock(_Strict):
     cap_above_validity: float | None = None
 
 
-class DiffusivityBlock(PropertyBlock):
+class _IonPropertyBlock(PropertyBlock):
+    """An ion property: its wall fit is the file's shared ``ion_wall_function``."""
+
+    @model_validator(mode="after")
+    def _no_own_wall_fit(self) -> _IonPropertyBlock:
+        """Refuse a per-species ``fw``, which the builder never reads (PHY-11)."""
+        if self.fw is not None:
+            raise ValueError(
+                "an ion diffusivity or mobility takes the file's ion_wall_function; a "
+                "per-species fw here would be accepted and never applied"
+            )
+        return self
+
+
+class DiffusivityBlock(_IonPropertyBlock):
     """One species' diffusivity: ``D0`` at infinite dilution and its fit."""
 
     D0: float
 
 
-class MobilityBlock(PropertyBlock):
+class MobilityBlock(_IonPropertyBlock):
     """One species' mobility: the tabulated ``mu0`` (a regression target) and fit.
 
     ``mu0`` is not read by the solver — PHY-14 derives the mobility from ``D0`` —

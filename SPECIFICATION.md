@@ -1469,7 +1469,11 @@ NOTE (`numerics.wall_distance`): `sources` is the boundary-name pattern the PHY-
 `d` is measured from, and its validated default is the pore wall alone. PHY-02 excludes the
 membrane from the source set deliberately, so widening `sources` is a deviation from the validated
 model and SHALL be recorded in the run provenance (FR-25). `max_distance_nm` is the saturation
-distance beyond which the wall functions are 1 to within round-off.
+distance beyond which the wall functions are 1 to within round-off. A value other than the
+validated 3.0 nm SHALL be recorded as a deviation for the same reason: below about 1 nm the ion
+wall function no longer reaches 1 inside the cap, which changes the model. A value that is not
+finite and positive SHALL be refused by `resolve()`, naming the key (**amended 28 September
+2026**, codebase review CR-4).
 
 NOTE (`walls`): the wall values name the condition applied, not its absence. `ion_flux` takes
 `no_flux | prescribed` and `slip` takes `no_slip | navier | free`. Under the `r`-weighted forms of

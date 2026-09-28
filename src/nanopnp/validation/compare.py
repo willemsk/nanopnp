@@ -479,6 +479,11 @@ def field_error(
     """
     import numpy as np
 
+    if not bool(np.any(keep)):
+        raise ProbeGridError(
+            f"field {field!r}: the mask retains no probe point, so there is nothing to compare. "
+            "A norm over no points is 0 and would read as exact agreement (QR-12)"
+        )
     points = np.asarray(grid.points_nm, dtype=np.float64)[keep]
     radial = np.asarray(grid.weights_nm2, dtype=np.float64)[keep] * points[:, 0]
     mine, reference = ours[keep], theirs[keep]

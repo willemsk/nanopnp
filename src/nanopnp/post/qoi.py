@@ -839,7 +839,7 @@ def report_clamp_activations(solution: ModelSolution, measures: Measures) -> int
         solution stayed inside the fit range.
     """
     model = _coupled(solution)
-    sampler = FieldSampler(
+    sampler = FieldSampler.shared(
         solution.space.mesh, coordinates=measures.coordinate_names, materials=model.fluid
     )
     variables = model.concentration_variables(_functions(solution))

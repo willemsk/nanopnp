@@ -727,7 +727,7 @@ def _report_peclet(solution: ModelSolution, measures: Measures) -> PecletMeasure
     if not isinstance(model, CoupledModel):
         return None
     return PecletDiagnostic(
-        FieldSampler(
+        FieldSampler.shared(
             solution.space.mesh,
             coordinates=measures.coordinate_names,
             materials=model.fluid,

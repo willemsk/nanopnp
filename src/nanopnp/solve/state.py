@@ -381,7 +381,7 @@ def check_wall_distance(
     """
     if not reads_wall(resolved.electrolyte):
         return None
-    sampler = FieldSampler(mesh, coordinates=coordinates, materials=ELECTROLYTE_DOMAINS)
+    sampler = FieldSampler.shared(mesh, coordinates=coordinates, materials=ELECTROLYTE_DOMAINS)
     return WallDistanceGate(sampler, distance).checked()
 
 

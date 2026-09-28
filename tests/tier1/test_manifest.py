@@ -50,7 +50,14 @@ from nanopnp.charge.fields import (
 from nanopnp.charge.stage import ResolvedFields
 from nanopnp.io import manifest as manifest_module
 from nanopnp.io.artefact import CaseArtefact
-from nanopnp.io.case import CaseDocument, FieldReference, case_fields, loads_case, resolve
+from nanopnp.io.case import (
+    CaseDocument,
+    CaseValidationError,
+    FieldReference,
+    case_fields,
+    loads_case,
+    resolve,
+)
 from nanopnp.io.defaults import (
     CONFIGURATION_PATHS,
     MODEL_SWITCH_PATHS,
@@ -177,6 +184,48 @@ def test_ver24_a_disabled_correction_is_recorded_as_a_deviation() -> None:
     recorded = found["electrolyte.corrections.viscosity.model"]
     assert recorded.value == "none"
     assert recorded.validated == "willems2020_nacl"
+
+
+def test_ver24_a_moved_wall_distance_cap_is_recorded_as_a_deviation() -> None:
+    """PHY-02's saturation distance is a float switch; classified by hand, it must diff.
+
+    Below about 1 nm the ion wall function no longer reaches 1 inside the cap,
+    so a run at 0.3 nm is a different model and FR-25 has to say so.
+    """
+    document = VALIDATED_DEFAULT_CASE.model_copy(deep=True)
+    document.numerics.wall_distance.max_distance_nm = 0.3
+    found = {deviation.path: deviation for deviation in deviations(document)}
+    recorded = found["numerics.wall_distance.max_distance_nm"]
+    assert recorded.value == 0.3
+    assert recorded.validated == 3.0
+
+
+@pytest.mark.parametrize(
+    ("path", "value"),
+    [
+        ("numerics.wall_distance.max_distance_nm", 0.0),
+        ("numerics.wall_distance.max_distance_nm", float("nan")),
+        ("electrolyte.concentration_M", -0.5),
+        ("electrolyte.concentration_M", float("nan")),
+        ("boundary_conditions.bias_V", float("inf")),
+    ],
+)
+def test_ver24_resolve_refuses_an_operating_point_no_solve_could_use(
+    path: str, value: float
+) -> None:
+    """A NaN or non-positive value is refused at resolve time, naming its key.
+
+    Written so NaN fails: ``nan <= 0`` is False, and a sweep plan resolves every
+    point precisely so that an inadmissible one fails in seconds (QR-12).
+    """
+    document = loads_case(MINIMAL)
+    section, *middle, leaf = path.split(".")
+    target = getattr(document, section)
+    for part in middle:
+        target = getattr(target, part)
+    setattr(target, leaf, value)
+    with pytest.raises(CaseValidationError, match=re.escape(path)):
+        resolve(document)
 
 
 def test_ver24_the_model_and_the_case_agree_on_the_switches_they_share() -> None:
