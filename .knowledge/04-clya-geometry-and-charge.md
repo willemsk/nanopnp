@@ -95,8 +95,11 @@ reduction's at the lumen, and 0.21–0.40 nm inside at the outer surface. The sa
 their centres `(j + ½)w`, agree with the exact reduction to ≤ 0.01 nm. So the error lies entirely
 in the index-to-radius map, not in the binning **[tested]** (WP20 plan, Design §1, 26 Sep 2026).
 
-Whether the delivered 185-vertex polygon was made this way is an open question for the author. The
-evidence argues against it. Its lumen is on average 0.08–0.14 nm *wider* than the exact contour of
+**Answered by the author, 28 September 2026: it was.** The delivered 185-vertex polygon was made
+with `pqr2grid`'s radial binning at **L = 15 nm** (h = 0.05 nm), so `w/h = 31/30.05 = 1.03161` and
+`r_a = 0.96935 r − 0.025` nm. **The hand edit then moved vertices**, not only removed them. The
+evidence below had argued against the binning. It is kept because it measures the edit: the erratum
+moves both surfaces inward, so the edit moved them outward by more than the erratum did (§1.4). Its lumen is on average 0.08–0.14 nm *wider* than the exact contour of
 2WCD, of one MD frame, and of the 50-frame ensemble, and its outer surface is up to 0.12 nm
 narrower. The erratum would move both surfaces inward (WP20 plan, Design §7).
 
@@ -139,6 +142,31 @@ margin of +0.061 to +0.908 nm. The ensemble agrees with it too: a feature size o
 margin of +0.173 to +0.869 nm and the constriction at 1.610 nm. The largest margin here, 0.916 nm,
 sits at z = −1.925 nm, the lowest mid-plane that crosses the loop. The ensemble's z is the MD
 frame, whose bilayer centre is z = 0 (G9) (WP20 plan, Design §6).
+
+### 1.4 2WCD against the reference polygon, and the isolevel lever [tested]
+
+Measured on 28 September 2026 by the WP22 plan's prototype (Design §4). The prepared vendored 2WCD
+(chains A–L) ran through stages 1–4 at the defaults. Its polygon was compared with the delivered
+table on the 282 mid-planes `z = −1.85 + (k + ½)0.05` nm, lumen radius taken as the innermost
+crossing. `ε_G = 2Σ(Δ/r)r⁻²/Σr⁻²` is the first-order relative conductance change of a bulk series
+resistor. It is the `G ∝ r²` sensitivity weighted by where the resistance sits
+(`SPECIFICATION.md` §7.4 NOTE on VAL-05).
+
+- **Registration.** The Cα centroid of residues 8–292 lies at z = 10.2027 nm in the stage-1 frame.
+  Placing it at the MD structure's 5.63 nm (§1.1) gives `centre_z_nm` = 4.5727 nm. The offset that
+  minimises the rms lumen deviation is 4.580 nm, 0.007 nm away. The *trans* tip + 1.85 nm of WP21
+  gives 4.6289 nm.
+- **At isolevel 0.25:** ε_G = −8.08 % (exact series −8.19 %), lumen mean Δ −0.132 nm, rms 0.158,
+  max |Δ| 0.333 nm at z = 3.375, and r_c = 1.6295 nm against the table's 1.650 nm at z = −1.225.
+  The outer surface's mean Δ is −0.023 nm, rms 0.154.
+- **The isolevel lever (G2).** ε_G is −13.24, −10.08, −8.08, −5.81, −3.26, −0.40 and +4.87 % at
+  0.15, 0.20, 0.25, 0.30, 0.35, 0.40 and 0.50, so it crosses zero near 0.41. ±0.1 of isolevel is
+  about ±5 % of G. That is the size of the source's unjustified choice.
+- **The erratum at L = 15 nm, applied to our contour:** ε_G = −16.01 %, lumen mean Δ −0.242 nm, and
+  outer surface −0.191 nm. With 2WCD standing in for the ensemble, the hand edit therefore widened
+  the lumen by about 0.24 nm and moved the outer surface out by about 0.19 nm. G3's ±1 % floor
+  cannot be reached by any reproduction of the method, because the reference is the method plus
+  two opposite several-per-cent steps outside it.
 
 ---
 
@@ -454,9 +482,14 @@ to ~25 %, as expected for a partly flattened profile. Treat both as loose target
 - **G2 — 25 % isolevel is unjustified.** No rationale, no sensitivity study, no comparison against
   the solvent-excluded surface. Since pore radius enters conductance roughly as r^2, this is the
   single largest untested lever in the geometry. Ask what other isolevels were tried.
+  **Measured on 2WCD, 28 September 2026 (§1.4):** ±0.1 of isolevel moves the bulk-resistor
+  conductance by about ±5 %.
 - **G3 — the manual vertex edit is unreproducible.** The final boundary polyline is not published and
   its vertex count is not stated; the 30-degree-wedge claim is qualitative. Without the vertex list a
   bit-for-bit geometry match is impossible; treat +-1 % on conductance as the tolerance floor.
+  **Superseded for VAL-05, 28 September 2026:** the list is delivered, and its construction
+  (`pqr2grid` binning at L = 15 nm, then a hand edit that moved vertices; §1.2, §1.4) puts ±1 %
+  out of reach. The author's tolerances are in the `SPECIFICATION.md` §7.4 NOTE on VAL-05.
 - **G4 — `q_i/(2 pi r_i)` vs `/(2 pi r)`.** The prose (T L404-408) divides by the **atom's** radial
   position `r_i`; the implementation (COMSOL, KB 01 §5) divides by the **field point's** `r`. These
   differ within the Gaussian's support and diverge differently near the axis. The COMSOL form is what

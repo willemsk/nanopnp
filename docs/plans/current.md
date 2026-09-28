@@ -1,19 +1,17 @@
 # Current work
 
-Updated 26 September 2026. Navigation only: `SPECIFICATION.md` governs. This brief is not
+Updated 28 September 2026. Navigation only: `SPECIFICATION.md` governs. This brief is not
 evidence that an unmerged branch has shipped.
 
 ## Position
 
 - Phase 1 ([solver core](phase-1-solver-core.md)) is **closed** as `v0.5.0` (§8.2.3); C1 and C2
   land as addenda to its report.
-- Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **in progress**. WP17 to WP20
-  are merged (PRs [#38](https://github.com/willemsk/nanopnp/pull/38) to
-  [#41](https://github.com/willemsk/nanopnp/pull/41), `v0.9.0-alpha.1` to `alpha.4`). WP22–WP25
-  are planned in the phase plan (rulings B1–B7, §8.2.2).
-- **WP21** ([stages 5 and 6, CAD assembly and meshing](wp21-cad-assembly-and-meshing.md)) is
-  **delivered** on `claude/wp-plan-21-eea388`, awaiting `/wp-ship`. It becomes `v0.9.0-alpha.5`.
-- **Next: WP22**, VAL-05 against the reference geometry (phase plan §WP22), after WP21 merges.
+- Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **in progress**. WP17 to WP21
+  are merged (`v0.9.0-alpha.1` to `alpha.5`). WP23–WP25 are planned in the phase plan (§8.2.2).
+- **WP22** ([VAL-05 against the reference geometry](wp22-val05-reference-geometry.md)) is
+  **planned, not started**, on `claude/dreamy-gates-seojm6`. Next: `/wp-implement`. It becomes
+  `v0.9.0-alpha.6`. Its Tier-3 leg is the phase gate, and its verdict needs a run on the archive.
 
 ## What Phase 2 must not re-decide
 
@@ -38,10 +36,12 @@ Each item is recorded in full where it points. Read it there first.
   `ε_r,f⁰`; a generated mesh is keyed on its recipe, records its content hash, needs both solid
   permittivities and passes the wall-size gate; consumers read it only through `deployed_mesh`.
   → WP21 D3, D7, D9–D13 and Outcomes; the §5.2.1 and §5.3.1 NOTEs.
-- **2WCD's axial registration is WP22's.** WP21's Tier-2 walk registers it at the *trans* tip
-  plus 1.85 nm, a test choice and not a VAL-05 claim. → WP21 Outcomes.
-- **Open for WP22, from the author:** the reference polygon's binning and hand edit. → WP20 Open
-  questions.
+- **VAL-05 is settled** (author, 28 September 2026): gated on `ε_G`, rms and `Δr_c`; ensemble
+  5 %, 0.1 nm, 0.1 nm, and 2WCD 10 %, 0.1 nm, 0.2 nm. 2WCD is registered by its Cα centroid at
+  `Z_MD = 5.63` nm, and nothing is fitted. → §7.4 NOTE on VAL-05; WP22 D3–D6.
+- **The reference polygon was binned by `pqr2grid` at L = 15 nm and hand-edited**, with vertices
+  moved. That offset is attributed and recorded, and never corrected. → `.knowledge/04` §1.2,
+  §1.4; ruling 14.
 - **The density's radii are CHARMM Rmin/2**, with no element fallback; **the Cₙ average is a
   harmonic projection**. → the §5.3.1 NOTE on `geometry.density`; WP19 D3, D7, D9.
 - **For VAL-05 (WP22), answered by the author:** G9 is 0 in the MD frame, the paper's 50 frames

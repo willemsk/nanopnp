@@ -2645,7 +2645,7 @@ differences are recorded and attributed rather than gated on.
 | **VAL-02** | Integrated-quantity comparison (`G`, `t₊`, `RR`, EOF rate) | < 0.5 % relative error, once the preconditions above hold |
 | **VAL-03** | Reference-solution generation and archival, in Phase 1 | Full reference set for the frozen cases archived with the generating model, independent of continued licence access, and **declaring** per field its source expression and its unit, and for the current its evaluation boundary and which electrode it references; a golden leaving any of those unstated is refused rather than interpreted |
 | **VAL-04** | Reference discretisation-error probe | The reference case re-solved at two refinement levels while licence access lasts, bounding the reference's own discretisation error |
-| **VAL-05** | Geometry pipeline against the published boundary | Auto-generated contour compared against the delivered reference pore polygon (§5.2.1): radius profile and constriction radius within a stated tolerance. Measured on two inputs (§8.2.2 B2): the public 2WCD entry, gated at Tier 2 to a looser tolerance, and the author's ClyA-AS ensemble, archived under `NANOPNP_REFERENCE_DATA` and run at Tier 3; the Phase 2 gate requires the ensemble leg. Each leg's tolerance is stated with its argument when the comparison is implemented |
+| **VAL-05** | Geometry pipeline against the published boundary | Auto-generated contour compared against the delivered reference pore polygon (§5.2.1): radius profile and constriction radius within a stated tolerance. Measured on two inputs (§8.2.2 B2): the public 2WCD entry, gated at Tier 2 to a looser tolerance, and the author's ClyA-AS ensemble, archived under `NANOPNP_REFERENCE_DATA` and run at Tier 3; the Phase 2 gate requires the ensemble leg. Each leg's metric, registration and tolerance are stated, with their argument, in the NOTE on VAL-05 below (**amended 28 September 2026**, WP22) |
 | **VAL-06** | Poisson-only comparison against APBS | Potential from the assembled fixed-charge and dielectric fields agrees with an APBS solve on the same structure within a stated tolerance |
 | **VAL-15** | The reference model's own `rhoq_pore` table, on our mesh | The delivered table reads with the grid its header declares, its planar integral is the declared `Q_net` to better than 10⁻⁹, and its boundary ring is negligible against its interior, so the producer leg of §4.4 is exact and the reference's 1.25 % is the consumer's (OPN-06); the consumer leg on the reference mesh is recorded with the mesh it came from, and the quadrature-agreement gate refuses it, per cent-level, rather than reporting a conserved number it cannot defend |
 
@@ -2689,6 +2689,37 @@ interface, which the comparison against the rungs drops, is dropped from `Δ_ref
 two exports carry values there. Kept, it would put the near-wall disagreement of the two
 refinements into a bound on errors that never saw it, and the verdict would read
 *reference-limited* too readily (**added 28 September 2026**).
+
+NOTE (VAL-05's metric, registration and tolerances; **added 28 September 2026**, WP22; author
+ruling of the same date): both legs compare polygons in the model frame. Ours is the stage-5
+region's profile. The reference is the delivered 185-vertex table of §5.2.1. The comparison runs
+on the 282 mid-planes `z_k = −1.85 + (k + ½)·0.05` nm, where the lumen radius is each polygon's
+innermost crossing. The generated polygon SHALL cross every plane except within 0.1 nm of the
+reference's tips. With `Δ = r_ours − r_ref` and `r = r_ref`, three quantities are gated:
+
+- `ε_G = 2 Σ (Δ/r) r⁻² / Σ r⁻²`, the first-order relative conductance change of a bulk series
+  resistor, which is the phase plan's `G ∝ r²` made a number;
+- the rms of `Δ`;
+- `Δr_c`, the difference of the two minimum lumen radii over `z ∈ [−1.85, 1.6]` nm, each
+  located on its own polygon.
+
+| Leg | Tier | `\|ε_G\|` | `\|Δr_c\|` | rms `Δ` | Axial registration |
+|---|---|---|---|---|---|
+| ClyA-AS ensemble, DCD frames 48–97 (the Phase 2 gate) | 3 | ≤ 5 % | ≤ 0.1 nm | ≤ 0.1 nm | `centre_z_nm = 0` in the MD frame (G9) |
+| Vendored 2WCD, chains A–L | 2 | ≤ 10 % | ≤ 0.1 nm | ≤ 0.2 nm | Cα centroid of residues 8–292 at `Z_MD = 5.63` nm, the MD structure's, which the Tier-3 leg pins to 0.01 nm |
+
+The argument for the tolerances follows. ±1 % on G (`.knowledge/04` G3) was a floor set while the
+vertex list was unavailable. The author has since confirmed that the table was made with
+`pqr2grid`'s radial binning at a 15 nm half-extent, an index-to-radius erratum worth about −8 % of
+ε_G, and then by a hand edit that moved vertices by about the same amount the other way. Neither
+step belongs to the method the pipeline implements, so ±1 % is unreachable by construction. The
+tolerance is instead the method's own definitional uncertainty. The 25 % isolevel is unjustified
+in the source (G2), and ±0.1 of isolevel moves ε_G by about ±5 %. The radius bounds are 2h, below
+which stage 4 erases features by design. The 2WCD leg is looser because 2WCD lacks residues 1–7,
+its hydrogens and the MD relaxation (§8.2.2 B2). No offset is fitted, and the isolevel is not
+varied to pass. The isolevel sensitivity, the attribution to the erratum and the hand edit, one
+frozen case's conductance on both meshes, the mesh figures and the FR-06 variance are recorded
+beside the verdict (WP22 plan, D2–D11 and Design §1–§4).
 
 ### 7.5 Tier 4 experimental reproduction
 

@@ -113,6 +113,7 @@ Answers given directly by the author. Where they conflict with a printed source,
 | 11 | Density-map radii and atoms (25 Sep 2026) | **CHARMM Rmin/2** from PDB2PQR's `CHARMM.DAT`, the set in the archived per-frame PQR files; the map was built from the **full-atom** MD trajectory, hydrogens included. → `SPECIFICATION.md` §5.3.1 NOTE on `geometry.density`; `04` §1.1. |
 | 12 | Axial offset G9 (25 Sep 2026) | **0 in the MD frame**: the trajectory was centred on the middle of the bilayer. → `04` §8 G9. |
 | 13 | `⟨c⟩` inside a solid (28 Sep 2026) | **Has no meaning: ions do not exist there in the model.** `ε_r,f(⟨c⟩)` is evaluated only in the fluid; water off the fluid — the ion-exclusion shell, the water share of a χ blend inside a solid — is ion-free, `ε_r,f⁰`. Where χ reaches into the fluid it blends towards the nearest solid's `ε_p`. → `SPECIFICATION.md` §4.4 NOTE, §5.3.1 NOTE on `exclusion`; `06` §8.1. |
+| 14 | The reference polygon's construction, and VAL-05 (28 Sep 2026) | The 185-vertex table was made with **`pqr2grid`'s radial binning at L = 15 nm**, and the **hand edit moved vertices**. VAL-05's tolerances: ensemble \|ε_G\| ≤ 5 %, \|Δr_c\| ≤ 0.1 nm, rms ≤ 0.1 nm; 2WCD 10 %, 0.1 nm, 0.2 nm. → `SPECIFICATION.md` §7.4 NOTE on VAL-05; `04` §1.2, §1.4. |
 
 ## Still open
 
@@ -121,11 +122,7 @@ Answers given directly by the author. Where they conflict with a printed source,
    glossary and 27 relative to the *E. coli* 2WCD structure elsewhere. Both are internally
    correct; any structure-prep pipeline must record which it applied to which PDB. Related to
    ruling 8. → `03-nanopore-biology.md`.
-3. **Whether the reference polygon used `pqr2grid`'s radial binning.** The contour script was
-   located and read on 26 September 2026. Its index-to-radius map is an erratum, and the delivered
-   polygon's lumen argues against its use, but only the author knows. → `04-clya-geometry-and-charge.md`
-   §1.2; WP22.
-4. **PlyAB SI details** — analyte `ε_r`, per-position mesh strategy, barrier heights in kT, EOF
+3. **PlyAB SI details** — analyte `ε_r`, per-position mesh strategy, barrier heights in kT, EOF
    velocities. Unreachable from this environment; the author holds the model.
    → `05-analyte-and-forces.md` §10.
 
