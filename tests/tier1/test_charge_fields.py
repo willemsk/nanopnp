@@ -490,6 +490,25 @@ def test_ver29_the_truncation_gate_names_the_ring_value_and_its_location(mesh):
     assert "(r, z) = " in str(raised.value)
 
 
+def test_ver29_charge_on_the_axis_column_is_not_a_truncation():
+    """The ``r = 0`` column is the axis, and no mesh point lies beyond it.
+
+    The gate read it as a cut edge, so a supplied field with its origin on the
+    axis and charge there aborted as "the supplied grid is truncated", blaming
+    the grid for nothing the padding discards. Off the axis it is a cut edge.
+    """
+    r_nm, z_nm = np.linspace(0.0, 1.0, 11), np.linspace(0.0, 2.0, 21)
+    values = np.zeros((z_nm.size, r_nm.size))
+    values[10, 0] = 1.0
+    values[10, 5] = 1.0e-9
+    on_axis = RadialGrid.from_axes(r_nm, z_nm, values)
+    assert on_axis.boundary_ring_maximum().value == 0.0
+
+    off_axis = RadialGrid.from_axes(r_nm + 0.5, z_nm, values)
+    ring = off_axis.boundary_ring_maximum()
+    assert (ring.value, ring.r_nm, ring.z_nm) == (1.0, 0.5, 1.0)
+
+
 def test_ver29_a_field_with_no_declared_charge_still_gates_the_consumer_leg(mesh):
     """The producer leg records that it could not run; the consumer leg gates."""
     field = _field(_ring())

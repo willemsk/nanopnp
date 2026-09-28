@@ -56,6 +56,9 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 - A correction file edited while a process runs, the GUI or an in-process sweep, is read again for
   its fit coefficients. They were cached by model name, so the result mixed new reference values
   with old fits under the new key (FR-16).
+- The truncation gate on a supplied field no longer treats a first grid column on the axis as a cut
+  edge. Charge on the axis aborted as "the supplied grid is truncated", though the padding there
+  discards nothing (VER-29).
 
 ## [0.9.0-alpha.5] - 2026-09-26
 

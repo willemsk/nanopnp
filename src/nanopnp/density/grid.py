@@ -436,7 +436,8 @@ class RadialGrid:
     def boundary_ring_maximum(self) -> RingMaximum:
         """Return the largest ``|v|`` on the grid's boundary ring, and where.
 
-        What the padding of :func:`coefficient` throws away. A grid extended
+        What the padding of :func:`coefficient` throws away, so the first
+        column is in the ring only when it lies off the axis. A grid extended
         ``>= 4 sigma`` beyond the structure as PHY-16 step 4 requires carries
         ``exp(-16) = 1.1e-7`` of its peak there, so a compliant grid clears the
         truncation gate by decades and a truncated one does not.
@@ -445,7 +446,12 @@ class RadialGrid:
 
         ring = np.zeros_like(self.values, dtype=bool)
         ring[0, :] = ring[-1, :] = True
-        ring[:, 0] = ring[:, -1] = True
+        ring[:, -1] = True
+        # A first column on or beyond the axis is not a cut edge: no mesh point
+        # lies at r < 0, so the padding there discards nothing, and charge on
+        # the axis is not a truncation.
+        if self.origin_nm[0] > 0.0:
+            ring[:, 0] = True
         magnitude = np.where(ring, np.abs(self.values), -1.0)
         i_z, i_r = np.unravel_index(int(np.argmax(magnitude)), magnitude.shape)
         return RingMaximum(
