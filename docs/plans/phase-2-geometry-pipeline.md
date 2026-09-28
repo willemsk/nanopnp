@@ -1,6 +1,6 @@
 # Phase 2 (Geometry pipeline): from a structure to a gated mesh
 
-**Status: in progress. WP17 delivered, 24 September 2026; WP18 delivered, 25 September 2026; WP19 delivered, 25 September 2026; WP20 delivered, 26 September 2026; WP21 delivered, 26 September 2026; WP22–WP25 planned.** Written 24 September 2026, after Phase 1 (WP7–WP16) delivered the
+**Status: in progress. WP17 delivered, 24 September 2026; WP18 delivered, 25 September 2026; WP19 delivered, 25 September 2026; WP20 delivered, 26 September 2026; WP21 delivered, 26 September 2026; WP22 planned in detail, 28 September 2026; WP23–WP25 planned.** Written 24 September 2026, after Phase 1 (WP7–WP16) delivered the
 solver core on an externally supplied mesh (main at `v0.5.0-alpha.10`). Two things come first:
 the Phase 1 end-of-phase report, which merges as tag `v0.5.0`, and the author's double-click
 observation that closes Phase 0 criterion 4. That ordering is ruling B1 of `SPECIFICATION.md`
@@ -276,6 +276,13 @@ is fitted as one reported degree of freedom. The WP22 plan states each leg's tol
 sensitivity (G2), the FR-06 variance along z, element count and quality against the reference mesh
 (§5.2.2), and the conductance of one frozen case on the generated mesh against the reference mesh.
 
+> **Planned, 28 September 2026** ([plan](wp22-val05-reference-geometry.md)). The radius profile is
+> gated as `ε_G`, the first-order bulk-resistor conductance change, with the rms deviation and
+> `Δr_c`. Tolerances, by author ruling: ensemble 5 %, 0.1 nm and 0.1 nm; 2WCD 10 %, 0.1 nm and
+> 0.2 nm (`SPECIFICATION.md` §7.4 NOTE on VAL-05). 2WCD is registered by its Cα centroid, not
+> fitted. The author confirmed that the reference was binned by `pqr2grid` at L = 15 nm and then
+> hand-edited, which puts G3's ±1 % out of reach. That offset is attributed and recorded (D7).
+
 ### WP23 — The Gmsh mesher backend
 
 The optional GPLv2+ backend of ADR-002 behind the WP21 adapter, selected by
@@ -307,7 +314,7 @@ Cₙ rotation. The generated references pick up the v2 fields without a docs edi
 |---|---|---|
 | G9 | The axial offset from the MD frame to the model frame for ClyA, which sets ClyA's `geometry.membrane.centre_z_nm` (`.knowledge/04` §8) | **Settled by the author, 25 September 2026: 0 in the MD frame**, which was centred on the middle of the bilayer. WP22 uses it for the ensemble leg and must register the vendored 2WCD to the MD frame. Superseded: **Author, open.** The archive has no lipids, so the bilayer cannot fix it. The MD frame's extent suggests ≈ 0 (`.knowledge/04` §1.1). Fallback: WP22 fits the offset as one degree of freedom and reports it |
 | Ensemble delivery | Format, frame count, and whether lipids and waters are included in the archived ClyA-AS ensemble; the file names it carries under `NANOPNP_REFERENCE_DATA` | **Answered, 25 September 2026.** `prod5_clya_as.{pdb,dcd}`: 98 frames, protein with hydrogens, no lipids or waters. The DCD's frames are the archived PQRs 02–99 at 100 ps, in time order, so the paper's final-5-ns ensemble is DCD frames 48–97 (`.knowledge/04` §1.1) |
-| VAL-05 tolerances | Radius-profile and constriction-radius tolerances per leg | WP22 plan, argued from `G ∝ r²` and gap G3 |
+| VAL-05 tolerances | Radius-profile and constriction-radius tolerances per leg | **Settled by the author, 28 September 2026**, in the [WP22 plan](wp22-val05-reference-geometry.md), D3–D5 and Design §2, and the `SPECIFICATION.md` §7.4 NOTE on VAL-05: \|ε_G\| ≤ 5 %, \|Δr_c\| ≤ 0.1 nm and rms ≤ 0.1 nm on the ensemble; 10 %, 0.1 nm and 0.2 nm on 2WCD. The isolevel lever (G2) sets them, not G3's ±1 %, which the reference's own construction puts out of reach |
 | Schema v2 contents | The exact v2 key list, including Phase 3's, and whether v1 artefact keys survive the upgrade | **Settled** in the [WP17 plan](wp17-case-schema-v2.md), D1–D6, and in the `SPECIFICATION.md` §5.3.1 v2 NOTE: the solve keys survive and the stage-9 key moves |
 | Cₙ averaging method | Rotate atoms or interpolate the voxel map | **Settled** in the [WP19 plan](wp19-density-and-reduction.md), D7 and Design §2: neither. The average is taken in the angular harmonic basis, where it keeps the multiples of n. That is exact, and costs one deposition per frame. §5.2 and the §5.3.1 NOTE on `geometry.density` are amended |
 | Contour script | Which parts of the author's script port | **Settled** in the [WP20 plan](wp20-contour-extraction.md), D2 and Design §1: the script is `pqr2grid`'s `create_polygon_contour` (2019). Marching squares and topology-preserving Douglas–Peucker port. Its index-to-radius map is an erratum and does not (`.knowledge/04` §1.2). OPN-02 closed, RSK-06 retired |
