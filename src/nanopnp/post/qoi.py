@@ -37,6 +37,12 @@ flowing trans to cis, in ``+z``, and an uncharged ohmic pore has
 ``G = I / V_bias > 0`` at either sign of the bias. Referencing the trans
 electrode instead flips every current and would make ``G`` negative; the two
 differ only by that choice, and VER-17 is what pins it down.
+
+A case may ground trans instead (``boundary_conditions.ground``), which puts
+its bias on cis. The quantities are still reported in the cis-referenced
+convention, against the bias :func:`cis_referenced_bias` returns,
+``phi_trans - phi_cis``. One physical state then reports one set of numbers
+whichever electrode is grounded, and ``G > 0`` holds under either.
 """
 
 from __future__ import annotations
@@ -66,6 +72,7 @@ __all__ = [
     "QuantitiesOfInterest",
     "RouteAgreement",
     "RouteDisagreementError",
+    "cis_referenced_bias",
     "conductance",
     "extract",
     "indicator_currents",
@@ -479,6 +486,27 @@ def rectification_ratio(current_plus_A: float, current_minus_A: float) -> float:
     return abs(current_plus_A) / abs(current_minus_A)
 
 
+def cis_referenced_bias(bias_V: float, ground: str) -> float:
+    """Return a case's bias as the current's convention reads it, ``phi_trans - phi_cis``.
+
+    The solve holds ``ground`` at zero and puts ``bias_V`` on the other
+    electrode, while the current is referenced to cis (the module docstring). With
+    trans grounded the bias sits on cis, and the ``+z`` current responds to its
+    negative; dividing by the case's bias would report ``G < 0`` for an ohmic pore
+    and a rectification ratio inverted to its reciprocal.
+
+    Raises
+    ------
+    ValueError
+        If ``ground`` names neither electrode.
+    """
+    if ground == "cis":
+        return bias_V
+    if ground == "trans":
+        return -bias_V
+    raise ValueError(f"ground={ground!r} must be 'cis' or 'trans'")
+
+
 def conductance(current_A: float, bias_V: float) -> float:
     """Return ``G = I / V_bias`` in siemens (NUM-27).
 
@@ -677,7 +705,8 @@ def extract(
     indicator
         ``psi``, from :func:`nanopnp.post.indicator.axial_indicator`.
     bias_V
-        The applied bias, in volts, for the conductance.
+        The bias ``phi_trans - phi_cis``, in volts, for the conductance; see
+        :func:`cis_referenced_bias` for a case that grounds trans.
     boundary
         The electrode the reaction-flux route is referenced to.
     wall_distance_nm

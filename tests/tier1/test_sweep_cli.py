@@ -519,3 +519,39 @@ def test_ver38_an_unreadable_member_record_is_named_rather_than_skipped(planned:
     (members / "000000.json").write_text("{ this is not json", encoding="utf-8")
     with pytest.raises(SweepCollectionError, match="not a readable member record"):
         read_members(planned.parent)
+
+
+def test_ver23_a_trans_grounded_pair_is_oriented_by_the_biases_its_members_recorded() -> None:
+    """Grounding trans records ``-V`` for the member assigned ``+V``; the pair turns round.
+
+    Stage 11 reports every bias cis-referenced (``post.qoi.cis_referenced_bias``),
+    so read against the plan's assignments the pair would be refused as two
+    same-signed biases, or worse, reported as the reciprocal ratio.
+    """
+    from types import SimpleNamespace
+
+    from nanopnp.sweep.collect import _rectification
+
+    def member(index: int, bias_V: float, current_A: float) -> MemberResult:
+        return MemberResult(
+            index=index,
+            point_id=f"p{index}",
+            assignments={"boundary_conditions.bias_V": -bias_V},
+            wave=0,
+            status="ok",
+            quantities={"bias_V": bias_V, "current_A": current_A},
+        )
+
+    rows = {0: member(0, -0.1, -1.0e-9), 1: member(1, 0.1, 3.0e-9)}
+    produced, notes = _rectification(SimpleNamespace(pairs=((0, 1),)), rows)  # type: ignore[arg-type]
+    assert notes == []
+    assert produced == [
+        {
+            "forward": 1,
+            "reverse": 0,
+            "forward_id": "p1",
+            "reverse_id": "p0",
+            "bias_V": 0.1,
+            "rectification": pytest.approx(3.0),
+        }
+    ]

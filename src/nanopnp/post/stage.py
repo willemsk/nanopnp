@@ -451,7 +451,9 @@ class QoIStage:
             solution,
             measures,
             indicator,
-            bias_V=prepared.resolved.bias_V,
+            # NUM-27's G = I/V > 0 is stated with cis grounded; with trans grounded
+            # the bias sits on cis, and the +z current responds to its negative.
+            bias_V=qoi_post.cis_referenced_bias(prepared.resolved.bias_V, prepared.resolved.ground),
             check_routes=prepared.check_routes,
         )
 
