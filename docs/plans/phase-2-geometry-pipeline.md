@@ -1,6 +1,6 @@
 # Phase 2 (Geometry pipeline): from a structure to a gated mesh
 
-**Status: in progress. WP17 delivered, 24 September 2026; WP18 delivered, 25 September 2026; WP19 delivered, 25 September 2026; WP20 delivered, 26 September 2026; WP21 delivered, 26 September 2026; WP22 planned in detail, 28 September 2026; WP23–WP25 planned.** Written 24 September 2026, after Phase 1 (WP7–WP16) delivered the
+**Status: in progress. WP17 delivered, 24 September 2026; WP18 delivered, 25 September 2026; WP19 delivered, 25 September 2026; WP20 delivered, 26 September 2026; WP21 delivered, 26 September 2026; WP22 delivered, 28 September 2026, its Tier-3 verdict awaiting a run on the archive; WP23–WP25 planned.** Written 24 September 2026, after Phase 1 (WP7–WP16) delivered the
 solver core on an externally supplied mesh (main at `v0.5.0-alpha.10`). Two things come first:
 the Phase 1 end-of-phase report, which merges as tag `v0.5.0`, and the author's double-click
 observation that closes Phase 0 criterion 4. That ordering is ruling B1 of `SPECIFICATION.md`
@@ -282,6 +282,20 @@ sensitivity (G2), the FR-06 variance along z, element count and quality against 
 > 0.2 nm (`SPECIFICATION.md` §7.4 NOTE on VAL-05). 2WCD is registered by its Cα centroid, not
 > fitted. The author confirmed that the reference was binned by `pqr2grid` at L = 15 nm and then
 > hand-edited, which puts G3's ±1 % out of reach. That offset is attributed and recorded (D7).
+
+> **Delivered, 28 September 2026** ([plan](wp22-val05-reference-geometry.md), to be tagged
+> `v0.9.0-alpha.6`). `nanopnp.validation.geometry` computes VAL-05 once for both legs and the
+> end-of-phase report: the D2 planes, the D3 metric, the D6 registration, the D7 attribution and
+> the D8 sweep. The 2WCD leg passes D5 at Tier 2: ε_G −8.08 %, Δr_c −0.0205 nm, rms 0.158 nm. The
+> ensemble leg, the phase gate, is written and skips visibly here. **Criterion 3 stays open until
+> it runs on the archive.** Constraints inherited by later packages:
+>
+> - The suite registers 2WCD one way, by its C-alpha centroid at `Z_MD` (D6); nothing is fitted.
+> - D2's plane rule binds the gated comparison only; the recorded sweep compares on common planes.
+> - WP23 re-runs D10 on its backend; the end-of-phase report reads D13's records.
+>
+> Measurements: [WP22 Outcomes](wp22-val05-reference-geometry.md#outcomes),
+> [`.knowledge/04`](../../.knowledge/04-clya-geometry-and-charge.md) §1.4.
 
 ### WP23 — The Gmsh mesher backend
 

@@ -1,6 +1,6 @@
 # WP22 — VAL-05: the pipeline against the reference geometry
 
-**Status: planned, not started.** Written 28 September 2026. WP21 has merged (tagged
+**Status: delivered, 28 September 2026.** Written 28 September 2026. WP21 has merged (tagged
 `v0.9.0-alpha.5`), and so has the CODE_REVIEW_002 follow-up on `main`. This package inherits the
 whole geometry chain: stages 1–4 (WP18–WP20), which emit `nanopnp/profile/v1` in the stage-1 frame,
 and stages 5–6 (WP21), which apply `geometry.membrane.centre_z_nm` and mesh under the D9 wall-size
@@ -105,6 +105,58 @@ uv run pytest -m tier3 tests/tier3/test_val05_ensemble.py --log-cli-level=INFO  
 Runtime: the 2WCD file costs stages 1–4 (about 42 s, measured), seven stage-4 re-runs (about 1 s
 each), one default-size mesh (7 s) and two `size_scale` 2 solves. If it exceeds three minutes, D9
 moves to `slow` and is logged there.
+
+### Outcomes
+
+> **Outcome — every work item is delivered; the ensemble leg's verdict awaits a run on the
+> archive.** `nanopnp.validation.geometry` holds D1–D8, and three test files discharge VAL-05:
+> 20 tests in `tests/tier1/test_val05_geometry.py`, 4 in `tests/tier2/test_val05_2wcd.py` and 3 in
+> `tests/tier3/test_val05_ensemble.py`. This session had no `$NANOPNP_REFERENCE_DATA`, so the
+> Tier-3 leg skips here, naming the variable. Its code was exercised end to end against a stand-in
+> archive: the prepared 2WCD, shifted to put its C-alpha centroid at 5.63 nm and written as 98
+> jittered frames. That run checks the code paths and says nothing about the ensemble's numbers.
+> Its 22.5-minute session deposited the density once for both files (D12), and every record ran,
+> including the frozen case at `size_scale` 1: 45,449 triangles, with the fixture at WP21's 44,316.
+> Both gated tests refused as designed, each naming its quantity. The stand-in's hand-placed
+> centroid missed `Z_MD` by 0.0145 nm, and its 2WCD polygon's `|ε_G|` of 8.23 % exceeded the
+> ensemble's 5 %.
+> The phase gate's verdict, `Z_MD` and the D7–D11 records go here when the nightly runner or the
+> author runs `uv run pytest -m tier3 tests/tier3/test_val05_ensemble.py --log-cli-level=INFO`.
+
+> **Outcome — the 2WCD leg passes D5, as predicted to the last digit.** ε_G = −8.08 % (exact
+> series −8.19 %), Δr_c = −0.0205 nm (1.6295 nm at z = −1.475 against 1.650 at −1.225), rms
+> 0.158 nm. 281 of 282 planes are crossed. The one missed, z = −1.825, is in the tip band. D7:
+> binned through the erratum, ε_G = −16.01 % and the lumen mean Δ is −0.242 nm, so the hand edit
+> widened the lumen by 0.24 nm and moved the outer surface out by 0.19 nm. Conditioning moved the
+> lumen by at most 0.039 nm, rms 0.010. Registration: centroid 10.2027 nm, `centre_z_nm`
+> 4.5727 nm. The full record is [`.knowledge/04`](../../.knowledge/04-clya-geometry-and-charge.md)
+> §1.4.
+
+> **Outcome — D8's sweep compares a level on the planes both polygons cross, not under D2's rule.**
+> The body shortens at both tips as the level rises. At 0.50 it spans z = −1.684 to 11.907 nm and
+> misses ten planes, six of them outside the tip band, so D2's strict rule refused a level that
+> stage 4 passes, and the sweep lost its zero crossing. D2 binds the gated comparison.
+> `compare_profiles(..., strict=False)` serves the recorded sweep, which logs each level's uncrossed
+> planes. The §7.4 NOTE says so. The sweep then reproduces Design §4's table: −13.23, −10.08,
+> −8.08, −5.81, −3.26, −0.40 and +4.87 %, strictly increasing, crossing zero at 0.408. Stage 4
+> passed at every level.
+
+> **Outcome — D6's rms-optimal offset is 4.5827 nm, not 4.580.** It is scanned on a 0.005 nm grid
+> about the centroid's 4.5727 nm. The prototype's grid ran from 4.2 nm, so the minimum lies between
+> the two, 0.007–0.010 nm from the centroid's. It is recorded and never used.
+
+> **Outcome — D9 and D10 on 2WCD, recorded.** The frozen case at `size_scale` 2 gives
+> `G_gen/G_ref − 1` = −6.57 % against ε_G's −8.08 %: 1.3786e-8 S on 14,162 triangles, against
+> 1.4756e-8 S on the fixture's 14,511. Access resistance takes about a fifth of the first-order
+> figure. At the default sizes the mesh has 44,998 triangles, minimum SICN 0.6267, mean 0.9867,
+> minimum gamma 0.5222 and mean 0.9848, beside the reference's 120,917, 0.6378 and 0.9765. D11:
+> the largest Cₙ variance is 0.204 at (5.40, 12.95) nm and the largest non-Cₙ variance 0.0095 at
+> (1.65, 3.10) nm, both in the stage-1 frame. At one thread the file runs in about two minutes,
+> within the three-minute budget, so D9 stays in Tier 2.
+
+> **Outcome — the registration in `test_pipeline_2wcd.py` is D6's.** Its default-size mesh becomes
+> the 44,998 triangles above, and its walk's currents become 4.15e-11 A (Na⁺) and 6.15e-11 A
+> (Cl⁻). WP21's registration note carries the change.
 
 ### Out of scope
 
