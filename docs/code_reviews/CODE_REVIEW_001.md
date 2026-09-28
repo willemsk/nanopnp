@@ -380,10 +380,12 @@ index d12d8f2..d386474 100644
 equilibrium point, or the 0 V member of an I–V sweep, fails even when it asks only for
 `eof_rate`. The transport number just before it is a ratio of round-off anyway.
 
+<!-- fmt: off -->
 ```python
         transport_number=transport_number(currents, cations),
         conductance_S=conductance(current, bias_V),
 ```
+<!-- fmt: on -->
 
 **Suggested fix:** make both optional at zero bias. `summary` and `compare_quantities` already
 handle `None`:
