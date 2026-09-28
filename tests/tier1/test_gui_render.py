@@ -407,3 +407,28 @@ def test_ver44_a_refusal_crosses_the_boundary_as_a_diagnostic(tmp_path: Path) ->
     assert isinstance(failed, RenderFailed)
     assert failed.error == "FileNotFoundError"
     assert "run.json" in failed.message
+
+
+@pytest.mark.parametrize("domain", [None, "membrane", "electrolyte|cis|trans", "absent"])
+def test_ver44_the_drawn_region_counts_its_elements_not_its_materials(domain: str | None) -> None:
+    """The material mask has one bit per material, so its ``NumSet()`` is not the count.
+
+    The count is taken as an array lookup rather than a Python loop over every
+    element on every render, and has to agree with that loop element for element.
+    """
+    import ngsolve as ngs
+
+    from nanopnp.gui.render import _element_count
+    from nanopnp.mesh.primitives import CylindricalPoreGeometry
+
+    mesh = CylindricalPoreGeometry(
+        pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
+    ).generate(maxh_nm=2.0, wall_h_nm=0.5)
+    if domain is None:
+        expected = mesh.ne
+    else:
+        keep = mesh.Materials(domain).Mask()
+        expected = sum(1 for element in mesh.Elements(ngs.VOL) if keep[element.index])
+    assert _element_count(mesh, domain) == expected
+    if domain == "membrane":
+        assert 0 < expected < mesh.ne

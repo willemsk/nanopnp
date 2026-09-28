@@ -409,14 +409,19 @@ def _element_count(mesh: Mesh, domain: str | None) -> int:
 
     Counted through the material mask, as
     :func:`nanopnp.io.fields.p2_nodes` counts the same restriction for the
-    IF-07 export, so the picture and the file agree about what was drawn.
+    IF-07 export, so the picture and the file agree about what was drawn. The
+    mask has one bit per *material*, so its ``NumSet()`` is not the count; the
+    elements' own 1-based material indices are looked up in it as an array,
+    rather than by a Python loop over some 121k elements on every render.
     """
-    import ngsolve as ngs
+    import numpy as np
 
     if domain is None:
         return int(mesh.ne)
     keep = mesh.Materials(domain).Mask()
-    return sum(1 for element in mesh.Elements(ngs.VOL) if keep[element.index])
+    wanted = np.array([keep[index] for index in range(len(keep))], dtype=bool)
+    materials = np.asarray(mesh.ngmesh.Elements2D().NumPy()["index"], dtype=np.int64) - 1
+    return int(np.count_nonzero(wanted[materials]))
 
 
 def _replace(path: Path, text: str) -> None:
