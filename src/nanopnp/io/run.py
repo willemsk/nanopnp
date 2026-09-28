@@ -50,7 +50,7 @@ from nanopnp.core.stages import (
 from nanopnp.io.artefact import Artefact, CaseArtefact, StageInputs
 from nanopnp.io.case import load_case, resolve
 from nanopnp.io.manifest import Manifest, build
-from nanopnp.io.store import Store
+from nanopnp.io.store import Store, atomic_write_bytes
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.io.case import CaseDocument, ResolvedCase
@@ -327,7 +327,7 @@ class RunResult:
         """
         self.manifest.write(self.directory)
         path = self.directory / RUN_RECORD_FILENAME
-        path.write_bytes(canonical(self.record()) + b"\n")
+        atomic_write_bytes(path, canonical(self.record()) + b"\n")
         return path
 
 

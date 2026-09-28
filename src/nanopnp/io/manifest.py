@@ -36,6 +36,7 @@ from nanopnp.core.hashing import Canonicalisable, canonical, content_hash, file_
 from nanopnp.core.paths import correction_file
 from nanopnp.io.artefact import timestamp
 from nanopnp.io.defaults import ContributedDeviation, Deviation, deviations
+from nanopnp.io.store import atomic_write_bytes
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from collections.abc import Mapping
@@ -445,9 +446,11 @@ class Manifest:
             The path of the written manifest.
         """
         directory.mkdir(parents=True, exist_ok=True)
-        (directory / CASE_FILENAME).write_text(self.case_text, encoding="utf-8")
+        # Atomically, as the store writes: members of a job array that share a
+        # case write one run directory, and a reader must never see half a file.
+        atomic_write_bytes(directory / CASE_FILENAME, self.case_text.encode("utf-8"))
         path = directory / MANIFEST_FILENAME
-        path.write_bytes(canonical(self.document()) + b"\n")
+        atomic_write_bytes(path, canonical(self.document()) + b"\n")
         return path
 
 

@@ -56,6 +56,7 @@ from nanopnp.io.case import (
     resolve,
     substitute,
 )
+from nanopnp.io.store import atomic_write_bytes
 from nanopnp.mesh.sizing import resolve_wall_size
 from nanopnp.sweep.document import SweepDocument, load_sweep, merged
 
@@ -881,7 +882,7 @@ def write_plan(plan: SweepPlan, directory: Path) -> Path:
     """
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / PLAN_FILENAME
-    path.write_bytes(canonical(plan.document_record()) + b"\n")
+    atomic_write_bytes(path, canonical(plan.document_record()) + b"\n")
     return path
 
 

@@ -22,6 +22,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import secrets
 from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -117,7 +118,7 @@ class Store:
                 )
             target = directory / Path(source).name
             if Path(source).resolve() != target.resolve():
-                _atomic_write_bytes(target, Path(source).read_bytes())
+                atomic_write_bytes(target, Path(source).read_bytes())
             stored_payload[name] = target
 
         record = Artefact(
@@ -129,7 +130,7 @@ class Store:
             created_at=artefact.created_at or timestamp(),
         )
         meta = record.meta()
-        _atomic_write_bytes(
+        atomic_write_bytes(
             directory / META, json.dumps(meta, indent=2, sort_keys=True).encode("utf-8")
         )
         logger.debug("stored %s %s", record.schema, record.short_hash)
@@ -240,13 +241,17 @@ def _payload_entries(meta: Mapping[str, Canonicalisable]) -> dict[str, dict[str,
     return {str(name): dict(entry) for name, entry in payload.items()}
 
 
-def _atomic_write_bytes(target: Path, data: bytes) -> None:
+def atomic_write_bytes(target: Path, data: bytes) -> None:
     """Write bytes to ``target`` through a temporary file in the same directory.
 
-    ``Path.replace`` is ``os.replace``, atomic on POSIX and Windows. The
-    temporary carries the process id so two workers of a job array cannot collide
-    on the temporary itself.
+    ``Path.replace`` is ``os.replace``, atomic on POSIX and Windows, so a reader
+    sees the old file or the new one and never a torn one. The temporary carries
+    the process id and a random token, because the workers of a job array on a
+    shared filesystem run on different hosts, where process ids repeat.
     """
-    temporary = target.with_name(f".{target.name}.{os.getpid()}.tmp")
-    temporary.write_bytes(data)
-    temporary.replace(target)
+    temporary = target.with_name(f".{target.name}.{os.getpid()}.{secrets.token_hex(4)}.tmp")
+    try:
+        temporary.write_bytes(data)
+        temporary.replace(target)
+    finally:
+        temporary.unlink(missing_ok=True)

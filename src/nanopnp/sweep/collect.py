@@ -28,6 +28,7 @@ from pathlib import Path
 
 from nanopnp.core.hashing import Canonicalisable, canonical, decode_floats
 from nanopnp.io.artefact import SWEEP_SCHEMA, SweepArtefact
+from nanopnp.io.store import atomic_write_bytes
 from nanopnp.sweep.plan import SweepPlan
 from nanopnp.sweep.run import MEMBERS_DIRNAME, MemberResult, member_from_row
 
@@ -254,7 +255,7 @@ def collect(
     }
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / DATASET_FILENAME
-    path.write_bytes(canonical({"schema": SWEEP_SCHEMA, **summary}) + b"\n")
+    atomic_write_bytes(path, canonical({"schema": SWEEP_SCHEMA, **summary}) + b"\n")
     logger.info(
         "collected %d point(s) into %s: %s",
         len(rows),

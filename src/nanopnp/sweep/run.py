@@ -43,7 +43,7 @@ from nanopnp.cli.errors import EXIT_OK, classify
 from nanopnp.core.hashing import Canonicalisable, canonical
 from nanopnp.io.artefact import SOLUTION_SCHEMA, Artefact, StageInputs
 from nanopnp.io.case import CaseDocument, dumps_case
-from nanopnp.io.store import Store
+from nanopnp.io.store import Store, atomic_write_bytes
 from nanopnp.sweep.plan import PLAN_FILENAME, Point, SweepPlan, read_plan
 
 logger = logging.getLogger(__name__)
@@ -162,10 +162,15 @@ class MemberResult:
         }
 
     def write(self, directory: Path) -> Path:
-        """Write this member's record into a sweep's ``members/`` directory."""
+        """Write this member's record into a sweep's ``members/`` directory.
+
+        Atomically: collection reads the directory while other members of the
+        job array are still writing into it, and ``read_members`` treats a torn
+        record as fatal.
+        """
         directory.mkdir(parents=True, exist_ok=True)
         path = directory / f"{self.index:06d}.json"
-        path.write_bytes(canonical(self.row()) + b"\n")
+        atomic_write_bytes(path, canonical(self.row()) + b"\n")
         return path
 
 
