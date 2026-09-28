@@ -385,6 +385,33 @@ def test_num16_minimally_damped_step_is_accepted_not_aborted(
     assert result.minimum_damping_used == pytest.approx(0.5)
 
 
+def test_num16_a_nan_trial_residual_at_minimum_damping_is_a_forced_step() -> None:
+    """``nan >= current`` is False, so a NaN step used to count as an unforced one.
+
+    ``sqrt(u) = 0.1`` started at ``u = 4`` steps to ``u = -3.6``, where the
+    residual is NaN, and the damping is pinned so the step must be taken. Taken
+    as unforced, it left ``current`` NaN and every later step unforced too, and
+    convergence could then be declared on the relative update alone.
+    """
+    mesh = SlabGeometry(width_nm=1.0).generate(maxh_nm=1.0)
+    space = ngs.H1(mesh, order=1)
+    trial, test = space.TnT()
+    form = ngs.BilinearForm(space)
+    form += (ngs.sqrt(trial) - 0.1) * test * ngs.dx
+    state = ngs.GridFunction(space)
+    state.Set(ngs.CF(4.0))
+    settings = NewtonSettings(
+        initial_damping=1.0, minimum_damping=1.0, max_iterations=1, growth_factor=1.0
+    )
+
+    result = damped_newton(form, state, raise_on_failure=False, settings=settings)
+
+    (step,) = result.history
+    assert step.residual != step.residual, "the trial residual is NaN"
+    assert step.forced
+    assert not result.converged
+
+
 def test_newton_result_summary_records_the_damping_for_the_manifest(
     problem: tuple[ngs.Mesh, ngs.FESpace, float],
 ) -> None:
