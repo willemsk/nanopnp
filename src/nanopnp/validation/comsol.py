@@ -54,6 +54,7 @@ from typing import TYPE_CHECKING, Literal
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
+from nanopnp.charge.stage import read_fields
 from nanopnp.core.hashing import canonical, content_hash, decode_floats
 from nanopnp.density.grid import (
     COMSOL_DATA_HEADER,
@@ -268,13 +269,37 @@ def case_identity(resolved: ResolvedCase) -> str:
         :data:`DISCRETISATION_KEYS` removed, and with
         :data:`MODEL_OPTION_DISCRETISATION_KEYS` removed from within
         ``model_options`` — see those constants for why each one is left out, and
-        for why the rest of ``model_options`` is kept.
+        for why the rest of ``model_options`` is kept — and with each supplied
+        field's contents in place of the bare fact that it was supplied.
+
+    Raises
+    ------
+    nanopnp.charge.fields.FieldDocumentError
+        If a supplied field's document is invalid, as stage 7 would refuse it.
+
+    Notes
+    -----
+    The solve provenance records only *whether* a charge or ``eps_r`` field was
+    supplied, because the solve's key takes their contents from the stage-7
+    artefact. The identity has no stage-7 artefact to lean on, and a fixed charge
+    is physics: two cases differing only in their charge table (another
+    protonation state, another structure) are two cases, and a golden of one must
+    not be accepted for the other. Each supplied field is therefore replaced by
+    the stage-7 key's own record of it — the header's physical declarations and
+    the grid's digest — so that the same table written in another format is the
+    same case, and a table whose values moved is another. That reads the table,
+    about 1.6 s for the 84 MB reference charge (measured 2026-09-28). A case
+    supplying no field keeps the identity it had.
     """
     record: dict[str, object] = {
         key: value
         for key, value in resolved.solve_provenance.items()
         if key not in DISCRETISATION_KEYS
     }
+    supplied = record.get("fields")
+    if isinstance(supplied, Mapping) and any(supplied.values()):
+        contents = read_fields(resolved).parameters()
+        record["fields"] = {name: contents.get(name, given) for name, given in supplied.items()}
     options = record.get("model_options")
     if isinstance(options, Mapping):
         record["model_options"] = {

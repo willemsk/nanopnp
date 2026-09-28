@@ -83,10 +83,22 @@ def _diff(recorded: dict[str, Any], resolved: dict[str, Any]) -> str:
 def _identity_of(solve_provenance: dict[str, Any]) -> str:
     """Return :func:`case_identity` of a recorded solve provenance.
 
-    :func:`case_identity` reads nothing of the resolved case but its solve
-    provenance, so a stand-in carrying the recorded one asks it what v1 hashed.
+    For a case supplying no field, :func:`case_identity` reads nothing of the
+    resolved case but its solve provenance, so a stand-in carrying the recorded
+    one asks it what v1 hashed.
     """
     return case_identity(cast(ResolvedCase, SimpleNamespace(solve_provenance=solve_provenance)))
+
+
+def _supplies_a_field(solve_provenance: dict[str, Any]) -> bool:
+    """Return whether a recorded case supplies a charge or ``eps_r`` field.
+
+    The identity of such a case hashes the field's contents as well
+    (**28 September 2026**, the ``comsol-export-contract`` page), which its
+    solve provenance does not carry, so it is not the hash of the recorded
+    record and v1's value is history. No frozen validation case supplies one.
+    """
+    return any(solve_provenance["fields"].values())
 
 
 def test_ver47_the_corpus_is_every_case_file_shipped_at_v0_5_0() -> None:
@@ -114,7 +126,8 @@ def test_ver47_the_recorded_keys_are_the_hashes_of_the_recorded_provenance(relat
     recorded = GOLDEN["cases"][relative]
     provenance = recorded["solve_provenance"]
     assert content_hash(SOLUTION_SCHEMA, provenance) == recorded["restore_digest"]
-    assert _identity_of(provenance) == recorded["case_identity"]
+    if not _supplies_a_field(provenance):
+        assert _identity_of(provenance) == recorded["case_identity"]
 
 
 @pytest.mark.parametrize("relative", CORPUS)
@@ -141,7 +154,8 @@ def test_ver47_the_v1_corpus_resolves_to_its_recorded_solve(relative: str) -> No
     assert content_hash(SOLUTION_SCHEMA, resolved.solve_provenance) == content_hash(
         SOLUTION_SCHEMA, expected
     )
-    assert case_identity(resolved) == _identity_of(expected)
+    if not _supplies_a_field(expected):
+        assert case_identity(resolved) == _identity_of(expected)
 
     materials = MaterialsStage().run(StageInputs(case=resolved.document))
     assert materials.hash == recorded["materials_key"]

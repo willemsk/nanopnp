@@ -601,12 +601,16 @@ def positions_nm(group: mda.AtomGroup, indices: Sequence[int]) -> np.ndarray:
     import numpy as np
 
     trajectory = group.universe.trajectory
-    frames = []
+    # Filled in place: a list of frames and its stacked copy held the ensemble
+    # twice, which at 10^5 atoms and 10^3 frames is 2.4 GB of float64 each.
+    positions = np.empty((len(indices), len(group), 3), dtype=np.float64)
     with warnings.catch_warnings():
         # Re-reading a PDB frame repeats the reader's notices (a placeholder
         # CRYST1 cell, a filled-in occupancy); none bears on the coordinates.
         warnings.simplefilter("ignore")
-        for index in indices:
+        for frame, index in enumerate(indices):
             trajectory[index]
-            frames.append(np.asarray(group.positions, dtype=np.float64) * ANGSTROM_NM)
-    return np.stack(frames)
+            # Widened to float64 first and scaled second, as a float64 product.
+            positions[frame] = group.positions
+            positions[frame] *= ANGSTROM_NM
+    return positions

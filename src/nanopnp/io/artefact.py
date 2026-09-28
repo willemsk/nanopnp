@@ -486,20 +486,26 @@ class FieldsArtefact(Artefact):
     The mesh enters as an *input* hash rather than as a parameter, because
     PHY-19's gate is evaluated on the deployed mesh (§5.2, stage 7): the same
     field on a different mesh is a different conservation result, and keying them
-    alike would serve one mesh's gate from the other's cache entry.
+    alike would serve one mesh's gate from the other's cache entry. ``gates``
+    keys the rest of what the gates were evaluated at, for the same reason:
+    :func:`nanopnp.charge.stage.gate_parameters` says what that is.
     """
 
     def __init__(
         self,
         *,
         fields: Mapping[str, Canonicalisable],
+        gates: Mapping[str, Canonicalisable],
         mesh_hash: str,
         payload: Mapping[str, Path] | None = None,
         summary: Mapping[str, Canonicalisable] | None = None,
     ) -> None:
         super().__init__(
             schema=FIELDS_SCHEMA,
-            parameters={"fields": dict(sorted(fields.items()))},
+            parameters={
+                "fields": dict(sorted(fields.items())),
+                "gates": dict(sorted(gates.items())),
+            },
             inputs={"mesh": mesh_hash},
             payload=dict(payload or {}),
             summary=summary or {},

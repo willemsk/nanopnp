@@ -9,7 +9,18 @@
 > CR-5 (`tests/tier1/test_comparison_norms.py`); each new test fails on `abe328a`. CR-2 is fixed
 > in a further commit under author ruling 13 (`⟨c⟩` has no meaning inside a solid): ion-free
 > `ε_r,f⁰` off the fluid, the nearest solid's `ε_p` where `χ` reaches into it, three VER-30 tests.
-> Still open: CR-6, CR-8, CR-12, CR-13, CR-14 (its stale comment is corrected) and CR-15.
+> CR-6, CR-8 and CR-12 to CR-15 are fixed in a third commit. CR-6, CR-12, CR-13 and CR-14 each have
+> a test that fails before the fix. CR-8 has a slab-thickness equivalence test, and CR-8 and CR-15
+> were measured bit-identical against the old code. CR-6 follows the fix section; `golden_grid` is
+> removed. CR-8 slices each atom's stencil to the slab: 27–30 s → 19–20 s at h = 0.025 nm and
+> parity at 0.05 nm on 3,000 synthetic atoms. Bounding the `bincount` range was measured and left out,
+> because its gain is within run-to-run noise at 0.025 nm and it costs up to 25 % at 0.05 nm. CR-12
+> adds the stage-7 field record to the identity only where a field is supplied, so no published
+> `case_hash` moves. CR-13 keys stage 7 on the element order and, with a dielectric field, the solid
+> names (author's choice over rebuilding the manifest from the solve). CR-14 takes the review's fix
+> alone, by the author's choice: stage 12 reads once, and the stage-11 restore still reads its own.
+> CR-15 fills one preallocated array and transforms in place: bit-identical, with peak traced memory
+> 3.4× → 2.0× the float64 ensemble. No finding is open.
 
 ## Summary
 

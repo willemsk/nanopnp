@@ -1006,7 +1006,11 @@ def _gate_space(stored: Mapping[str, Any], expected: Mapping[str, Any], path: Pa
 
 
 def restore(
-    path: Path, *, case: CaseDocument, mesh_artefact: Artefact | None = None
+    path: Path,
+    *,
+    case: CaseDocument,
+    mesh_artefact: Artefact | None = None,
+    fields: ResolvedFields | None = None,
 ) -> ModelSolution:
     """Return the converged solution stored at ``path``, on this case's operator.
 
@@ -1029,6 +1033,10 @@ def restore(
         the generated file is read from its payload and never regenerated
         (:func:`~nanopnp.mesh.ingest.deployed_mesh`). Ignored for a case that
         supplies ``inputs.mesh``.
+    fields
+        The case's supplied fields as :func:`~nanopnp.charge.stage.read_fields`
+        returned them, for a caller that already holds them; read here when
+        omitted. Gated here either way, on the mesh the state is restored onto.
 
     Returns
     -------
@@ -1062,7 +1070,8 @@ def restore(
 
     supplied = ResolvedFields(charge=None, conservation=None, eps_r=None, material_means=())
     if resolved.charge is not None or resolved.eps_r is not None:
-        supplied = gate_fields(resolved, read_fields(resolved), mesh, measures=measures)
+        read = fields if fields is not None else read_fields(resolved)
+        supplied = gate_fields(resolved, read, mesh, measures=measures)
 
     top = ladder(resolved, mesh, measures, distance, supplied)[-1]
     model = top.model

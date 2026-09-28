@@ -150,6 +150,12 @@ the case schema moved to `nanopnp/case/v2` and the schema string left the key
 (`SPECIFICATION.md` §5.3.2 NOTE). A golden declaring the earlier value, `7e9ca188…`, is
 refused when it is compared, naming both hashes.
 
+A case that supplies a charge or `ε_r` field under `inputs:` hashes that field's contents into
+its `case_hash`: the header's physical declarations and the grid's digest, as stage 7 keys them.
+Two cases differing only in their charge table are then two cases, and the same table in another
+format or at another path is one (**added 28 September 2026**). None of the five frozen cases
+supplies a field, so none of their hashes moved.
+
 ### The two declarations only you can make
 
 **`current_boundary`** — which boundary `tds.ntflux_i` was evaluated on. The model report does

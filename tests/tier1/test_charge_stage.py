@@ -76,8 +76,8 @@ def field_document(tmp_path_factory: pytest.TempPathFactory) -> Path:
     return path
 
 
-def case_text(mesh_path: Path, field_path: Path | None) -> str:
-    """Return a case naming ``mesh_path``, and ``field_path`` if there is one."""
+def case_text(mesh_path: Path, field_path: Path | None, *, order: str = "P2") -> str:
+    """Return a case naming ``mesh_path``, and ``field_path`` if there is one, at ``order``."""
     charge = "" if field_path is None else f"\n  charge: {{path: {field_path}, format: field1}}"
     return f"""
 schema: nanopnp/case/v2
@@ -90,13 +90,13 @@ electrolyte:
   parameters: willems2020_nacl
 boundary_conditions: {{bias_V: 0.1, ground: cis}}
 physics: {{model: pnp-ns}}
-numerics: {{continuation: none}}
+numerics: {{continuation: none, elements: {{phi: {order}, c: {order}}}}}
 """
 
 
-def _inputs(mesh_path: Path, field_path: Path | None) -> StageInputs:
+def _inputs(mesh_path: Path, field_path: Path | None, *, order: str = "P2") -> StageInputs:
     """Return the stage inputs for a case naming these two files."""
-    return StageInputs(case=loads_case(case_text(mesh_path, field_path)))
+    return StageInputs(case=loads_case(case_text(mesh_path, field_path, order=order)))
 
 
 # -- introspection -------------------------------------------------------------
@@ -194,3 +194,67 @@ def test_ver25_the_artefact_key_is_the_field_contents_and_not_its_path(
     moved = tmp_path / "renamed.yaml"
     moved.write_text(field_document.read_text(encoding="utf-8"), encoding="utf-8")
     assert stage.key(_inputs(mesh_file, moved)).hash == stage.key(inputs).hash
+
+
+def test_ver29_the_artefact_key_moves_with_the_order_its_gates_integrate_at(
+    mesh_file: Path, field_document: Path, tmp_path: Path
+) -> None:
+    """One field on one mesh at two element orders is two stage-7 artefacts.
+
+    The summary records the conservation integrals, and they are taken at the
+    solve's quadrature. Keyed on the field and the mesh alone, the second order
+    would be served the first order's artefact, and its manifest would record a
+    conservation measured at a quadrature it never used.
+    """
+    stage = FieldStage(workspace=tmp_path / "work")
+    second = stage.run(_inputs(mesh_file, field_document))
+    third = stage.key(_inputs(mesh_file, field_document, order="P3"))
+    assert third.hash != second.hash
+    assert third.hash == stage.run(_inputs(mesh_file, field_document, order="P3")).hash
+
+
+def test_val03_case_identity_carries_the_supplied_field_contents(
+    mesh_file: Path, field_document: Path, tmp_path: Path
+) -> None:
+    """Two cases differing only in their charge table are two golden identities.
+
+    The solve provenance records only that a charge field was supplied, so the
+    identity takes the field's contents from the stage-7 key: a golden of one
+    protonation state must not be accepted for another. The same table read from
+    another path is the same case, and a case supplying no field keeps the
+    identity it had, which is what every published ``case_hash`` rests on.
+    """
+    from nanopnp.core.hashing import content_hash
+    from nanopnp.io.case import resolve
+    from nanopnp.validation.comsol import (
+        CASE_IDENTITY_SCHEMA,
+        DISCRETISATION_KEYS,
+        MODEL_OPTION_DISCRETISATION_KEYS,
+        case_identity,
+    )
+
+    def identity(field: Path | None) -> str:
+        return case_identity(resolve(loads_case(case_text(mesh_file, field))))
+
+    halved = tmp_path / "halved.yaml"
+    halved.write_text(
+        FIELD_DOCUMENT.replace("charge_e: -12.0", "charge_e: -6.0").replace(
+            "q_net_e: -12.0", "q_net_e: -6.0"
+        ),
+        encoding="utf-8",
+    )
+    moved = tmp_path / "moved.yaml"
+    moved.write_text(field_document.read_text(encoding="utf-8"), encoding="utf-8")
+    assert identity(halved) != identity(field_document)
+    assert identity(moved) == identity(field_document)
+
+    # With no field, the record is the solve provenance less the discretisation,
+    # exactly as before the field contents joined it.
+    provenance = resolve(loads_case(case_text(mesh_file, None))).solve_provenance
+    record = {key: value for key, value in provenance.items() if key not in DISCRETISATION_KEYS}
+    record["model_options"] = {
+        key: value
+        for key, value in sorted(provenance["model_options"].items())
+        if key not in MODEL_OPTION_DISCRETISATION_KEYS
+    }
+    assert identity(None) == content_hash(CASE_IDENTITY_SCHEMA, record)

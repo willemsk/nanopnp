@@ -97,11 +97,31 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 - A supplied charge or solid-fraction grid carrying a NaN sample aborts at the conservation and
   range gates, naming the leg and the location, instead of passing them: every leg became NaN and
   every check was written `value > tolerance` (PHY-19, QR-03, VER-30, QR-12).
+- VAL-04's `Δ_ref` is taken over the probe points the rungs' errors are: the margin band beside
+  every interface is left out of it too. It kept the band, where a COMSOL export has values and the
+  two refinements disagree most, so the verdict read "reference-limited" too readily. `nanopnp
+  validate report` takes the band from a rung's own grid, and `compare.golden_grid`, whose masks
+  were all true, is removed (VAL-04, §7.4 NOTE).
+- A golden's `case_hash` carries the contents of a supplied charge or `ε_r` field, as stage 7 keys
+  them. Two cases differing only in their charge table shared one identity, so a golden of one was
+  accepted for the other. A case supplying no field, every frozen case among them, keeps its hash
+  (VAL-03).
+- The stage-7 key carries the element order its conservation integrals are taken at and, with a
+  dielectric field, the solid materials its per-material means are classified by. A second order
+  was served the first order's artefact, and its manifest recorded that order's conservation. A
+  case supplying a field re-solves once (FR-25, §5.3.2).
 
 ### Changed
 
 - The gate sample points of a mesh are built and located once per mesh and material set rather than
   twice per continuation rung and three more times per solve, about 36 s a rung at 145k elements.
+- Stage 2 evaluates each atom's stencil only over the z planes of the slab being deposited, so the
+  map is unchanged to the bit and a 0.025 nm grid deposits about 1.4 times faster; at 0.05 nm the
+  time is unchanged (FR-04).
+- Stage 1 holds one float64 copy of the ensemble rather than three: the frames are read into one
+  array and moved into the model frame in place (FR-01).
+- Stage 12 reads a supplied field table once, for its restore and for the exported fixed charge,
+  rather than twice.
 
 ## [0.9.0-alpha.5] - 2026-09-26
 

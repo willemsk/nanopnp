@@ -250,30 +250,58 @@ def _accumulate(
 
     ``node`` is each atom's nearest node as grid indices ``(i_x, i_y, i_z)``, and
     ``fraction`` its offset from it in units of ``h``.
+
+    Only the offsets landing in the slab are evaluated. ``stencil.oz`` ascends,
+    because the ``"ij"`` meshgrid puts z slowest, so each atom's in-slab offsets
+    are one contiguous run of it; at fine spacing a slab is a few planes of a
+    stencil tens of planes deep, and evaluating the whole stencil in every slab
+    it reaches did 6.8x the work at h = 0.025 nm (measured 2026-09-28). The
+    kept terms, and their order into the sum, are those of the whole-stencil
+    evaluation, so the map is unchanged to the bit.
     """
     import numpy as np
 
     h = grid.spacing_nm
     m = stencil.m
+    plane = node[atoms, 2]
+    start = np.searchsorted(stencil.oz, first - plane, side="left")
+    lengths = np.searchsorted(stencil.oz, last - plane, side="left") - start
+    reached = int(lengths.sum())
+    if reached == 0:
+        return
     span = np.arange(-m, m + 1, dtype=np.float64)
     scale = h / widths_nm[atoms][:, None]
     factors = [
         np.exp(-(((span[None, :] - fraction[atoms, axis][:, None]) * scale) ** 2))
         for axis in range(3)
     ]
-    g = (
-        factors[0][:, stencil.ox + m]
-        * factors[1][:, stencil.oy + m]
-        * factors[2][:, stencil.oz + m]
-    )
-    plane = node[atoms, 2][:, None] + stencil.oz[None, :]
-    keep = (g >= EPSILON) & (plane >= first) & (plane < last)
-    if not keep.any():
-        return
     n = grid.n
-    base = ((node[atoms, 2] - first) * n + node[atoms, 1]) * n + node[atoms, 0]
+    base = ((plane - first) * n + node[atoms, 1]) * n + node[atoms, 0]
     offset = (stencil.oz * n + stencil.oy) * n + stencil.ox
-    index = (base[:, None] + offset[None, :])[keep]
+    if reached == atoms.size * stencil.oz.size:
+        # Every offset of every atom lands in the slab, as it does for most
+        # batches at the default spacing, where the one-array gather along the
+        # stencil is cheaper than the two-array gather below.
+        g = (
+            factors[0][:, stencil.ox + m]
+            * factors[1][:, stencil.oy + m]
+            * factors[2][:, stencil.oz + m]
+        ).reshape(-1)
+        keep = g >= EPSILON
+        index = (base[:, None] + offset[None, :]).reshape(-1)[keep]
+    else:
+        # Term k belongs to atom row[k] and stencil offset column[k].
+        row = np.repeat(np.arange(atoms.size), lengths)
+        column = np.arange(reached) - np.repeat(np.cumsum(lengths) - lengths - start, lengths)
+        g = (
+            factors[0][row, stencil.ox[column] + m]
+            * factors[1][row, stencil.oy[column] + m]
+            * factors[2][row, stencil.oz[column] + m]
+        )
+        keep = g >= EPSILON
+        index = (base[row] + offset[column])[keep]
+    if index.size == 0:
+        return
     # log1p(-g) at g = 1 - 2**-53 is ln 2**-53: clipping g is the floor.
     terms = np.log1p(-np.minimum(g[keep], 1.0 - 2.0**-53))
     low = int(index.min())
