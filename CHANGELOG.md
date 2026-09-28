@@ -50,6 +50,9 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 - A run removes its scratch workspace under `<store>/tmp` when it ends. The store holds a copy of
   every payload, so each member of a sweep left a duplicate of its mesh, field export and solution
   on disk (QR-06).
+- Damped Newton counts a NaN trial residual accepted at minimum damping as a forced step, which is
+  never convergence. It counted as unforced, so convergence could be declared on the update alone
+  with a NaN residual (NUM-16).
 
 ## [0.9.0-alpha.5] - 2026-09-26
 

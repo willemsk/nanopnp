@@ -347,7 +347,9 @@ def damped_newton(
 
             trial_residual = residual_norm()
             if trial_residual < current or at_minimum:
-                forced = trial_residual >= current
+                # ``not <``, not ``>=``: a NaN trial residual is a forced step,
+                # which can never be taken as convergence on the update alone.
+                forced = not trial_residual < current
                 break
             damping = max(settings.minimum_damping, damping * settings.recovery_damping)
 
