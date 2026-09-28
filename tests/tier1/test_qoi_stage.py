@@ -347,6 +347,33 @@ def test_fr23_outputs_selects_exactly_the_quantities_asked_for(
     }
 
 
+def test_num27_grounding_trans_reports_the_quantities_of_the_same_state_grounded_at_cis(
+    solved: Solved,
+) -> None:
+    """One physical state, two ground choices, one set of numbers, and ``G > 0`` under both.
+
+    Trans at ``+V`` with cis grounded and cis at ``-V`` with trans grounded are
+    the same potential difference. The current is referenced to cis whichever is
+    grounded, so dividing it by the case's own bias would report the second as a
+    negative conductance and invert every rectification ratio built from it.
+    """
+    text = CASE.format(
+        mesh_path=solved.mesh_path,
+        concentration_M=CONCENTRATION_M,
+        bias_V=-BIAS_V,
+        outputs="current, transport_numbers, eof_rate",
+    ).replace("ground: cis", "ground: trans")
+    document = loads_case(text)
+    solution = SolveStage(workspace=solved.work / "solve-trans").run(StageInputs(case=document))
+    trans = QoIStage().run(StageInputs(case=document, upstream={"solve": solution})).summary
+    cis = QoIStage().run(solved.inputs()).summary
+    assert trans["bias_V"] == pytest.approx(BIAS_V, rel=1e-15)
+    assert isinstance(trans["conductance_S"], float)
+    assert trans["conductance_S"] > 0.0
+    for key in ("current_A", "conductance_S", "transport_number"):
+        assert trans[key] == pytest.approx(cis[key], rel=1e-8), key
+
+
 def test_fr23_analyte_force_without_an_analyte_material_is_refused_naming_it(
     solved: Solved,
 ) -> None:

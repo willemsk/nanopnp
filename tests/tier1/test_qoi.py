@@ -21,6 +21,7 @@ from nanopnp.post.qoi import (
     QuantitiesOfInterest,
     RouteAgreement,
     RouteDisagreementError,
+    cis_referenced_bias,
     conductance,
     rectification,
     rectification_ratio,
@@ -73,6 +74,14 @@ def test_num27_conductance_is_the_chord_conductance() -> None:
     """``G = I / V_bias``. A positive bias gives a positive conductance (the convention)."""
     assert conductance(4.0e-9, 0.2) == pytest.approx(2.0e-8, rel=1e-15)
     assert conductance(-4.0e-9, -0.2) == pytest.approx(2.0e-8, rel=1e-15)
+
+
+def test_num27_a_trans_grounded_bias_is_read_as_its_cis_referenced_negative() -> None:
+    """With trans grounded the bias sits on cis, and the +z current responds to its negative."""
+    assert cis_referenced_bias(0.1, "cis") == 0.1
+    assert cis_referenced_bias(0.1, "trans") == -0.1
+    with pytest.raises(ValueError, match="'cis' or 'trans'"):
+        cis_referenced_bias(0.1, "bath")
 
 
 def test_num27_conductance_is_undefined_at_zero_bias() -> None:

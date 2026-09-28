@@ -2249,6 +2249,13 @@ makes this route agree with NUM-25 evaluated on `Γ_w,c`, whose reaction flux is
 `∮ ψ J_i·n` with the same outward normal — so a minus here would have made the NUM-26 agreement
 check fail on every solution.
 
+NOTE (`boundary_conditions.ground: trans`): the case may ground trans instead, which puts its bias
+on cis. The current is still referenced to cis, so every quantity SHALL be reported against the
+cis-referenced bias `φ_trans − φ_cis`, which is the negative of the case's `bias_V`, and that is the
+bias the quantities record. One physical state then reports one set of numbers whichever electrode
+is grounded, `G > 0` holds under either, and a sweep pairs its rectification members by the biases
+they recorded (**added 28 September 2026**, code review CR-3).
+
 NOTE (a stabilised mode, NUM-14): under a stabilisation mode the functional above SHALL carry the
 stabilisation form of the species evaluated with `ψ` as its test function, in addition to
 `∫ J_i·∇ψ r dr dz`. The NUM-26 identity below is an identity between two evaluations of *the

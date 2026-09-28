@@ -114,7 +114,9 @@ def _rectification(
     :func:`nanopnp.post.qoi.rectification` computes after checking the signs of
     the two biases. The signs are checked here too, against the *recorded*
     biases rather than against the plan's assignments, because the assignment is
-    what was asked for and the recorded bias is what the member solved.
+    what was asked for and the recorded bias is what the member solved. A pair is
+    oriented by those recorded signs too: a case grounding trans records the
+    negative of its assigned bias, so its planned forward member is the reverse.
     """
     from nanopnp.post.qoi import rectification_ratio
 
@@ -133,6 +135,14 @@ def _rectification(
             )
             continue
         plus_V, minus_V = _bias(forward), _bias(reverse)
+        if plus_V is not None and minus_V is not None and plus_V < 0.0:
+            # Under ground: trans the recorded bias is the cis-referenced one, the
+            # negative of the assigned bias (post.qoi.cis_referenced_bias), so the
+            # pair planned as (+V, -V) solved (-V, +V) in the current's convention.
+            forward_index, reverse_index = reverse_index, forward_index
+            forward, reverse = reverse, forward
+            plus, minus = minus, plus
+            plus_V, minus_V = minus_V, plus_V
         if plus_V is None or minus_V is None or plus_V <= 0.0 or plus_V + minus_V != 0.0:
             raise SweepCollectionError(
                 f"points {forward_index} and {reverse_index} were paired as opposite biases but "
