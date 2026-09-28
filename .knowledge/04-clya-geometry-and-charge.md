@@ -145,28 +145,53 @@ frame, whose bilayer centre is z = 0 (G9) (WP20 plan, Design §6).
 
 ### 1.4 2WCD against the reference polygon, and the isolevel lever [tested]
 
-Measured on 28 September 2026 by the WP22 plan's prototype (Design §4). The prepared vendored 2WCD
-(chains A–L) ran through stages 1–4 at the defaults. Its polygon was compared with the delivered
-table on the 282 mid-planes `z = −1.85 + (k + ½)0.05` nm, lumen radius taken as the innermost
-crossing. `ε_G = 2Σ(Δ/r)r⁻²/Σr⁻²` is the first-order relative conductance change of a bulk series
-resistor. It is the `G ∝ r²` sensitivity weighted by where the resistance sits
+Measured on 28 September 2026 by the WP22 plan's prototype (Design §4), and again by the
+implementation, `nanopnp.validation.geometry` through `tests/tier2/test_val05_2wcd.py`, the same
+day; the two agree to the last printed digit except where noted. The prepared vendored 2WCD
+(chains A–L) ran through stages 1–5 at the defaults. Stage 5's model-frame polygon was compared with
+the delivered table on the 282 mid-planes `z = −1.85 + (k + ½)0.05` nm, lumen radius taken as the
+innermost crossing. `ε_G = 2Σ(Δ/r)r⁻²/Σr⁻²` is the first-order relative conductance change of a bulk
+series resistor. It is the `G ∝ r²` sensitivity weighted by where the resistance sits
 (`SPECIFICATION.md` §7.4 NOTE on VAL-05).
 
 - **Registration.** The Cα centroid of residues 8–292 lies at z = 10.2027 nm in the stage-1 frame.
   Placing it at the MD structure's 5.63 nm (§1.1) gives `centre_z_nm` = 4.5727 nm. The offset that
-  minimises the rms lumen deviation is 4.580 nm, 0.007 nm away. The *trans* tip + 1.85 nm of WP21
-  gives 4.6289 nm.
+  minimises the rms lumen deviation is 4.5827 nm on a 0.005 nm grid about the centroid's, and
+  4.580 nm on the prototype's grid from 4.2 nm: the minimum lies between, 0.007–0.010 nm from the
+  centroid's. The *trans* tip + 1.85 nm of WP21 gives 4.6289 nm.
 - **At isolevel 0.25:** ε_G = −8.08 % (exact series −8.19 %), lumen mean Δ −0.132 nm, rms 0.158,
-  max |Δ| 0.333 nm at z = 3.375, and r_c = 1.6295 nm against the table's 1.650 nm at z = −1.225.
-  The outer surface's mean Δ is −0.023 nm, rms 0.154.
-- **The isolevel lever (G2).** ε_G is −13.24, −10.08, −8.08, −5.81, −3.26, −0.40 and +4.87 % at
-  0.15, 0.20, 0.25, 0.30, 0.35, 0.40 and 0.50, so it crosses zero near 0.41. ±0.1 of isolevel is
-  about ±5 % of G. That is the size of the source's unjustified choice.
-- **The erratum at L = 15 nm, applied to our contour:** ε_G = −16.01 %, lumen mean Δ −0.242 nm, and
-  outer surface −0.191 nm. With 2WCD standing in for the ensemble, the hand edit therefore widened
-  the lumen by about 0.24 nm and moved the outer surface out by about 0.19 nm. G3's ±1 % floor
-  cannot be reached by any reproduction of the method, because the reference is the method plus
-  two opposite several-per-cent steps outside it.
+  max |Δ| 0.333 nm at z = 3.375, and r_c = 1.6295 nm at z = −1.475 against the table's 1.650 nm at
+  z = −1.225, so Δr_c = −0.0205 nm. The constriction window's mean Δ is −0.051 nm and the *cis*
+  lumen's −0.158 nm. The outer surface's mean Δ is −0.023 nm, rms 0.154. The polygon misses one
+  plane, z = −1.825, inside the 0.1 nm tip band. The largest single term of ε_G is −0.15 pp, at
+  z = −0.625. Conditioning moved the lumen by at most 0.039 nm, rms 0.010 nm (stage 4's
+  `lumen_change`).
+- **The isolevel lever (G2).** ε_G is −13.23, −10.08, −8.08, −5.81, −3.26, −0.40 and +4.87 % at
+  0.15, 0.20, 0.25, 0.30, 0.35, 0.40 and 0.50, strictly increasing, and crosses zero at 0.408. ±0.1
+  of isolevel is about ±5 % of G. That is the size of the source's unjustified choice. **The body
+  shortens at both tips as the level rises**: at 0.40 it misses four planes, all in the tip band,
+  and at 0.50 it spans z = −1.684 to 11.907 nm and misses ten, so that level is compared on the 272
+  planes both cross. Stage 4 passes at every level.
+- **The erratum at L = 15 nm, applied to our contour:** ε_G = −16.01 %, lumen mean Δ −0.242 nm
+  (constriction window −0.139, *cis* lumen −0.275), outer surface −0.191 nm. The erratum alone moves
+  our lumen by −0.110 nm and our outer surface by −0.169 nm on average. With 2WCD standing in for the
+  ensemble, the hand edit therefore widened the lumen by about 0.24 nm and moved the outer surface
+  out by about 0.19 nm. G3's ±1 % floor cannot be reached by any reproduction of the method, because
+  the reference is the method plus two opposite several-per-cent steps outside it.
+- **The conductance proxy against a solve.** One frozen case, uncharged `pnp`, flow off, every
+  correction `none`, 1 M NaCl, +50 mV, stabilisation `none`, at `size_scale` 2: 1.3786e-8 S on the
+  generated mesh (14,162 triangles) and 1.4756e-8 S on the fixture through `inputs.profile`
+  (14,511), so `G_gen/G_ref − 1` = −6.57 % against ε_G's −8.08 % and the exact series −8.19 %. Access
+  resistance and the electrolyte past the pore ends carry about a fifth of the resistance, and dilute
+  the bulk-resistor figure by that much.
+- **The mesh at the default sizes** (0.05 nm at the wall): 44,998 triangles, minimum SICN 0.6267,
+  mean 0.9867, minimum gamma 0.5222, mean 0.9848. The reference COMSOL mesh has 120,917 elements,
+  minimum quality 0.6378 and mean 0.9765 by a measure its report does not state
+  (`09-comsol-reference-settings.md`). WP21's 44,688 triangles and 0.7111 were at its *trans*-tip
+  registration, which places the bilayer 0.056 nm higher.
+- **The Cₙ variance (FR-06)**, from stage 3 in the stage-1 frame: the largest Cₙ variance is 0.204 at
+  (r, z) = (5.40, 12.95) nm, the *cis* rim, and the largest non-Cₙ variance 0.0095 at (1.65, 3.10) nm,
+  which is the *trans* constriction's lumen wall.
 
 ---
 

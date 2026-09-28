@@ -16,6 +16,31 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+## [0.9.0-alpha.6] - 2026-09-28
+
+WP22: VAL-05, the geometry pipeline against the reference pore polygon, and the Phase 2 gate. The
+tag also carries the codebase-review fixes merged on `main` since `v0.9.0-alpha.5`, listed under
+*Fixed* and *Changed*.
+
+### Added
+
+- `nanopnp.validation.geometry`, the VAL-05 harness. It compares a model-frame polygon with the
+  delivered 185-vertex table on the 282 mid-planes of its z extent. It gates three quantities per
+  leg: `ε_G`, the first-order relative conductance change of a bulk series resistor; the rms lumen
+  deviation; and `Δr_c`, the difference of the two *trans* constriction radii, each located on its
+  own polygon. A plane the generated polygon leaves uncrossed outside 2h of a tip is refused naming
+  z, and a tolerance failure names the leg, the quantity, the value, the threshold and where (QR-12).
+  It also registers a structure to the MD frame by its C-alpha centroid, maps a polygon through the
+  reference's `pqr2grid` binning erratum at L = 15 nm, and sweeps the isolevel on a cached map
+  (§7.4 NOTE on VAL-05).
+- VAL-05's 2WCD leg at Tier 2, gated to the author's 10 %, 0.1 nm and 0.2 nm. It records the
+  attribution to the reference's construction, the isolevel sweep, the mesh against §5.2.2's figures,
+  one frozen case's conductance on the generated mesh against the fixture's, and the Cₙ variance
+  (FR-06, FR-07, FR-09, FR-10).
+- VAL-05's ensemble leg at Tier 3, the Phase 2 gate, gated to 5 %, 0.1 nm and 0.1 nm on DCD frames
+  48–97 at `centre_z_nm = 0`. It pins the MD structure's C-alpha centroid, 5.63 nm, to 0.01 nm, and
+  skips naming `NANOPNP_REFERENCE_DATA` without the archive.
+
 ### Fixed
 
 - The permittivity is no longer evaluated where the ions do not exist (author ruling 13). The ion-exclusion
@@ -113,6 +138,9 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ### Changed
 
+- The Tier-2 2WCD walk registers the structure by its C-alpha centroid, the VAL-05 registration,
+  rather than by its *trans* tip plus 1.85 nm.
+- The Tier-3 ensemble store is session-scoped, so a nightly session deposits the 50 frames once.
 - The gate sample points of a mesh are built and located once per mesh and material set rather than
   twice per continuation rung and three more times per solve, about 36 s a rung at 145k elements.
 - Stage 2 evaluates each atom's stencil only over the z planes of the slab being deposited, so the

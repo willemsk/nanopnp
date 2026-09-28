@@ -10,8 +10,10 @@ evidence that an unmerged branch has shipped.
 - Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **in progress**. WP17 to WP21
   are merged (`v0.9.0-alpha.1` to `alpha.5`). WP23–WP25 are planned in the phase plan (§8.2.2).
 - **WP22** ([VAL-05 against the reference geometry](wp22-val05-reference-geometry.md)) is
-  **planned, not started**, on `claude/dreamy-gates-seojm6`. Next: `/wp-implement`. It becomes
-  `v0.9.0-alpha.6`. Its Tier-3 leg is the phase gate, and its verdict needs a run on the archive.
+  **implemented** on `claude/dreamy-gates-seojm6`, PR open. Next: `/wp-ship` in a fresh session;
+  it becomes `v0.9.0-alpha.6`. The 2WCD leg passes at Tier 2. **Phase criterion 3 stays open until
+  `tests/tier3/test_val05_ensemble.py` runs on `$NANOPNP_REFERENCE_DATA`**; that run also pins
+  `Z_MD`, and its numbers go into the WP22 Outcomes. Then WP23, the Gmsh backend.
 
 ## What Phase 2 must not re-decide
 
@@ -24,8 +26,6 @@ Each item is recorded in full where it points. Read it there first.
 - **`physics.solid_permittivities` alone sets ε_protein and ε_membrane**; gate thresholds are never
   case keys. → WP17 D2, D3.
 - **Python 3.11–3.14**, held together by VER-47. → §8.2.2 B4.
-- **VAL-05 has two legs**: vendored 2WCD, gated at Tier 2; the author's ensemble, Tier 3, which the
-  phase gate requires. → §8.2.2 B2; §7.4.
 - **No HOLE on the default path** (B5). **Gmsh arrives in WP23, optional** (B7). → §8.2.2.
 - **Stage 4 emits `nanopnp/profile/v1` in the stage-1 frame**, spacing ≥ h and feature size
   > 2h, gated against the probe radius. → §5.2.1 and its NOTEs; WP20 D5, D9–D12.
@@ -36,16 +36,16 @@ Each item is recorded in full where it points. Read it there first.
   `ε_r,f⁰`; a generated mesh is keyed on its recipe, records its content hash, needs both solid
   permittivities and passes the wall-size gate; consumers read it only through `deployed_mesh`.
   → WP21 D3, D7, D9–D13 and Outcomes; the §5.2.1 and §5.3.1 NOTEs.
-- **VAL-05 is settled** (author, 28 September 2026): gated on `ε_G`, rms and `Δr_c`; ensemble
-  5 %, 0.1 nm, 0.1 nm, and 2WCD 10 %, 0.1 nm, 0.2 nm. 2WCD is registered by its Cα centroid at
-  `Z_MD = 5.63` nm, and nothing is fitted. → §7.4 NOTE on VAL-05; WP22 D3–D6.
+- **VAL-05 is settled** (author, 28 September 2026) on both B2 legs: gated on `ε_G`, rms and
+  `Δr_c`; ensemble 5 %, 0.1 nm, 0.1 nm at `centre_z_nm = 0` (G9), frames 48–97; 2WCD 10 %, 0.1 nm,
+  0.2 nm, registered by its Cα centroid at `Z_MD = 5.63` nm. Nothing is fitted. Only
+  `nanopnp.validation.geometry` computes it. D2's plane rule binds the gated comparison, not the
+  recorded sweep. → §7.4 NOTE on VAL-05; WP22 D3–D6 and Outcomes.
 - **The reference polygon was binned by `pqr2grid` at L = 15 nm and hand-edited**, with vertices
   moved. That offset is attributed and recorded, and never corrected. → `.knowledge/04` §1.2,
   §1.4; ruling 14.
 - **The density's radii are CHARMM Rmin/2**, with no element fallback; **the Cₙ average is a
   harmonic projection**. → the §5.3.1 NOTE on `geometry.density`; WP19 D3, D7, D9.
-- **For VAL-05 (WP22), answered by the author:** G9 is 0 in the MD frame, the paper's 50 frames
-  are DCD frames 48–97, and the density included hydrogens. → `.knowledge/04` §1.1, §8.
 - **The vendored 2WCD is in its crystal frame**; tests orient it through `prepared_2wcd` in
   `tests/conftest.py`. → WP18 D16 Outcome.
 
@@ -69,6 +69,7 @@ Each item is recorded in full where it points. Read it there first.
 
 | Need | Read |
 |---|---|
+| VAL-05's harness and records | `validation/geometry.py`; WP22 Outcomes; `.knowledge/04` §1.4 |
 | Phase 2 scope and rulings | `phase-2-geometry-pipeline.md`; `SPECIFICATION.md` §5.2–§5.2.2, §8.2.2 |
 | The ClyA pipeline as executed, and gaps G1–G13 | `.knowledge/04-clya-geometry-and-charge.md` |
 | Structure, geometry and meshing libraries | `.knowledge/07-software-stack.md` §2, §4, §8 |

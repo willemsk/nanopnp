@@ -16,8 +16,10 @@ uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv ru
 ```
 
 `uv run pytest` runs tiers 1 and 2, the push gate. The tiers are the four levels of §7: unit and
-property tests, analytic benchmarks, the COMSOL comparison (nightly, recorded, not gated), and
-experimental reproduction (before a release).
+property tests; analytic benchmarks, with VAL-05's leg on the vendored 2WCD; the COMSOL comparison
+and VAL-05's leg on the author's ClyA-AS ensemble, which is the Phase 2 gate (nightly, recorded, not
+gated); and experimental reproduction (before a release). VAL-05 compares the geometry pipeline's
+pore polygon with the reference one (§7.4 NOTE on VAL-05).
 
 ## Build this documentation
 

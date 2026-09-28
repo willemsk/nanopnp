@@ -174,6 +174,13 @@ uv run pytest tests/tier2/test_region_reference.py tests/tier2/test_pipeline_2wc
 > `pnp` currents of 4.14e-11 A (Na⁺) and 6.16e-11 A (Cl⁻) at +50 mV and 0.15 M, uncharged,
 > stabilisation `none` (the default). The file runs in 40 s.
 
+> **Outcome (WP22, 28 September 2026) — the walk's registration is VAL-05's now.** The *trans* tip
+> plus 1.85 nm above gave `centre_z_nm` = 4.6289 nm. `test_pipeline_2wcd.py` registers 2WCD by its
+> C-alpha centroid instead, through `register_by_centroid` (WP22 D6), at 4.5727 nm, so the suite has
+> one registration of 2WCD. The mesh at the default sizes becomes 44,998 triangles with minimum SICN
+> 0.6267, and the `size_scale` 4 walk's currents are 4.15e-11 A (Na⁺) and 6.15e-11 A (Cl⁻)
+> ([WP22 Outcomes](wp22-val05-reference-geometry.md#outcomes)).
+
 ### Out of scope
 
 VAL-05, the axial registration of 2WCD and the reference comparison (WP22). The Gmsh backend

@@ -2695,7 +2695,9 @@ ruling of the same date): both legs compare polygons in the model frame. Ours is
 region's profile. The reference is the delivered 185-vertex table of §5.2.1. The comparison runs
 on the 282 mid-planes `z_k = −1.85 + (k + ½)·0.05` nm, where the lumen radius is each polygon's
 innermost crossing. The generated polygon SHALL cross every plane except within 0.1 nm of the
-reference's tips. With `Δ = r_ours − r_ref` and `r = r_ref`, three quantities are gated:
+reference's tips. The rule binds the gated comparison; the recorded isolevel sweep compares each
+level on the planes both polygons cross and records the rest, since a high level shortens the body
+at both tips (**implemented 28 September 2026**, WP22 Outcomes). With `Δ = r_ours − r_ref` and `r = r_ref`, three quantities are gated:
 
 - `ε_G = 2 Σ (Δ/r) r⁻² / Σ r⁻²`, the first-order relative conductance change of a bulk series
   resistor, which is the phase plan's `G ∝ r²` made a number;
@@ -3088,11 +3090,11 @@ needed.
 | FR-03 | VER-48 (missing, surplus and truncated chains, residue names and the point group refused) |
 | FR-04 | VER-49 (the union density, its truncation bound, the frame average and the radius set) |
 | FR-05 | VER-01 (shared annular-volume integration), VER-50 (exact annular weights and the harmonic Cₙ average) |
-| FR-06 | VER-50 (the Cₙ and raw variance against closed forms) |
-| FR-07 | VER-51 (marching squares against exact and closed-form level sets, the morphology, Taubin and the conditioning), VAL-05 |
+| FR-06 | VER-50 (the Cₙ and raw variance against closed forms), VAL-05 (the largest Cₙ and non-Cₙ variance and where, recorded on both legs: `tests/tier2/test_val05_2wcd.py`, `tests/tier3/test_val05_ensemble.py`) |
+| FR-07 | VER-51 (marching squares against exact and closed-form level sets, the morphology, Taubin and the conditioning), VAL-05 (the stage-4 polygon against the reference: `tests/tier1/test_val05_geometry.py`, the harness; `tests/tier2/test_val05_2wcd.py`; `tests/tier3/test_val05_ensemble.py`) |
 | FR-08 | VER-51 (each §5.2.1 gate criterion fires on constructed input; the radius band against the probe profile) |
-| FR-09 | VER-28, VER-52 (the membrane junction derived on any profile), VAL-05 |
-| FR-10 | VER-10, VER-53 (the size fields, the wall-size gate and the generated mesh's gates), VAL-05 |
+| FR-09 | VER-28, VER-52 (the membrane junction derived on any profile), VAL-05 (stage 5's model-frame polygon is the compared one: `tests/tier2/test_val05_2wcd.py`, `tests/tier3/test_val05_ensemble.py`) |
+| FR-10 | VER-10, VER-53 (the size fields, the wall-size gate and the generated mesh's gates), VAL-05 (the generated mesh against §5.2.2's figures, and one frozen case's conductance on it against the fixture's, recorded: `tests/tier2/test_val05_2wcd.py`, `tests/tier3/test_val05_ensemble.py`) |
 | FR-11 | None yet |
 | FR-12 | VAL-06 |
 | FR-13 | VER-01, VER-02, VAL-06 |
