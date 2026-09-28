@@ -2124,6 +2124,16 @@ def _require_runnable(document: CaseDocument) -> SuppliedArtefact | None:
             f"numerics.nonlinear.damping {nonlinear.damping!r} is v0.5; this release uses the "
             "residual-monotonicity damping of NUM-16, whose recovery rule the reference records"
         )
+    walls = document.boundary_conditions.walls
+    if walls.slip != "no_slip" or walls.ion_flux != "no_flux":
+        # Nothing downstream reads the wall values: the forms pose no-slip and
+        # no-flux unconditionally, so any other value would be recorded in the
+        # manifest without being applied (section 5.3.1 NOTE on walls).
+        raise UnsupportedCaseSection(
+            f"boundary_conditions.walls asks for slip: {walls.slip} and ion_flux: "
+            f"{walls.ion_flux}; this release applies slip: no_slip and ion_flux: no_flux only, "
+            "and no release of SPECIFICATION.md section 3 schedules the others yet"
+        )
     model = document.physics.model
     if model not in COUPLED_MODELS and document.numerics.continuation != "none":
         raise CaseValidationError(

@@ -276,6 +276,23 @@ def test_fr27_the_num20_fallbacks_are_refused_by_name() -> None:
         resolve(loads_case(text))
 
 
+@pytest.mark.parametrize(
+    ("walls", "named"),
+    [
+        ("{ion_flux: no_flux, slip: free}", "slip: free"),
+        ("{ion_flux: no_flux, slip: navier}", "slip: navier"),
+        ("{ion_flux: prescribed, slip: no_slip}", "ion_flux: prescribed"),
+    ],
+)
+def test_fr25_a_wall_condition_the_forms_do_not_pose_is_refused_not_recorded(
+    walls: str, named: str
+) -> None:
+    """The forms pose no-slip and no-flux only; any other value would be a manifest's fiction."""
+    text = REFERENCE_CASE.replace("walls: {ion_flux: no_flux, slip: no_slip}", f"walls: {walls}")
+    with pytest.raises(UnsupportedCaseSection, match=named):
+        resolve(loads_case(text))
+
+
 def test_phy16_case_steric_diameters_are_checked_against_the_parameter_file() -> None:
     """FR-16: the diameters are fitted parameters, and the case file cannot override them."""
     text = REFERENCE_CASE.replace("a_ion_nm: 0.50", "a_ion_nm: 0.66")
