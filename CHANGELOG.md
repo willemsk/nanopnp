@@ -47,6 +47,9 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
   from the store unchanged. A case reading one file keeps its key (FR-16, FR-25).
 - `dielectric_gradient_forces: true` with the permittivity correction off, or its concentration
   part off, assembles with a zero sensitivity instead of raising `AttributeError` (PHY-23).
+- A run removes its scratch workspace under `<store>/tmp` when it ends. The store holds a copy of
+  every payload, so each member of a sweep left a duplicate of its mesh, field export and solution
+  on disk (QR-06).
 
 ## [0.9.0-alpha.5] - 2026-09-26
 

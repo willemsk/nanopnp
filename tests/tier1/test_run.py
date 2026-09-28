@@ -46,6 +46,7 @@ import pytest
 from nanopnp.charge.fields import FieldDocument, FormSpec, create_form
 from nanopnp.charge.stage import FieldStage, ResolvedFields, smoothed_dielectric_deviations
 from nanopnp.core.stages import _catalogue, create, describe
+from nanopnp.io import run as run_module
 from nanopnp.io.artefact import StageInputs
 from nanopnp.io.case import loads_case
 from nanopnp.io.manifest import CASE_FILENAME, MANIFEST_FILENAME, MANIFEST_SCHEMA
@@ -351,17 +352,47 @@ def test_ver32_a_run_writes_its_scratch_inside_the_store_it_was_given(
     monkeypatch.chdir(elsewhere)
     monkeypatch.delenv("NANOPNP_STORE", raising=False)
 
+    # The scratch is removed when the walk ends, so where it was made is
+    # recorded as it is made.
+    made: list[Path] = []
+    original = run_module._scratch
+
+    def watched(store: Store) -> Path:
+        made.append(original(store))
+        return made[-1]
+
+    monkeypatch.setattr(run_module, "_scratch", watched)
+
     store = Store(tmp_path / "store")
     result = run_case(case_file, store=store, upto="mesh")
 
     assert list(elsewhere.iterdir()) == [], "a run leaked files outside the store it was given"
-    scratch = sorted((store.root / WORKSPACE_DIRNAME).glob("run-*"))
-    assert len(scratch) == 1, scratch
-    assert (scratch[0] / "mesh" / "mesh.msh").is_file()
+    assert len(made) == 1, made
+    assert made[0].parent == store.root / WORKSPACE_DIRNAME
 
     mesh = result.artefacts["mesh"]
     written = Path(str(mesh.payload["mesh"]))
     assert store.root in written.parents
+    assert written.is_file()
+
+
+def test_ver32_a_run_removes_its_scratch_once_the_store_holds_the_payloads(
+    case_file: Path, tmp_path: Path
+) -> None:
+    """``Store.put`` copies every payload, so the workspace would hold each one twice.
+
+    Across an envelope sweep that is one duplicate mesh, field export and
+    solution per member on the store's own filesystem, never reclaimed. A
+    workspace the caller named is the caller's, and is left alone.
+    """
+    store = Store(tmp_path / "store")
+    result = run_case(case_file, store=store, upto="mesh")
+    assert list((store.root / WORKSPACE_DIRNAME).glob("run-*")) == []
+    assert Path(str(result.artefacts["mesh"].payload["mesh"])).is_file()
+
+    named = tmp_path / "work"
+    run_case(case_file, store=Store(tmp_path / "other"), upto="mesh", workspace=named)
+    assert (named / "mesh" / "mesh.msh").is_file()
 
 
 def test_ver32_a_second_run_through_the_same_store_is_served_from_it(
