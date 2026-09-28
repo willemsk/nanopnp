@@ -339,6 +339,19 @@ def test_ver29_declared_units_convert_onto_the_canonical_si_unit(tmp_path):
     assert field.grid.values[0, 0] == pytest.approx(2.0 * ELEMENTARY_CHARGE)
 
 
+@pytest.mark.parametrize("key", ["q_net_e", "axis_cutoff_nm"])
+@pytest.mark.parametrize("value", [math.nan, math.inf])
+def test_ver29_a_header_value_that_is_not_finite_is_refused(key, value):
+    """``yaml.safe_dump`` of a NumPy NaN writes ``.nan``, and NaN passes every ``> tol`` gate.
+
+    A NaN ``q_net_e`` made the reference charge NaN, which skipped the zero
+    reference refusal and turned three of the five conservation legs into NaN
+    errors that no gate caught, in the charge stage and again in the solve.
+    """
+    with pytest.raises(ValueError, match=key):
+        _document(_ring(), **{key: value})
+
+
 def test_ver29_a_document_naming_both_a_file_and_a_form_is_refused():
     with pytest.raises(ValueError, match="exactly one"):
         _document(_ring(), data={"path": "ring.npz"})

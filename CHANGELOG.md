@@ -31,6 +31,8 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
   a debug log, leaving a hole whose edge took the free condition (IF-06, QR-12).
 - The NUM-26 route-agreement check fails when either current is not finite, in total and per
   species. A NaN reaction-flux route compared as agreeing and was recorded as checked (QR-04).
+- A supplied field document whose `q_net_e` or `axis_cutoff_nm` is NaN or infinite is refused. A
+  NaN `q_net_e` switched off three of the five charge-conservation gates (VER-29, QR-12).
 
 ## [0.9.0-alpha.5] - 2026-09-26
 
