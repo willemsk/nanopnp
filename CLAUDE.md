@@ -227,6 +227,14 @@ a plausible wrong number runs on Opus; work whose error is loud — lint, types,
 edits — runs on Sonnet. State the choice when delegating so it can be redirected. The rubric is
 `.claude/model-policy.md`.
 
+## Code review reports
+
+A report from the `/codebase-review` skill is archived in `docs/code_reviews/` as
+`CODE_REVIEW_NNN.md`, numbered sequentially from `001` (zero-padded to three digits). The next number
+is one above the highest already in the directory; never reuse or renumber one, because findings
+elsewhere cite them. The skill writes `CODE_REVIEW.md` at the repo root by default: pass
+`out=docs/code_reviews/CODE_REVIEW_NNN.md` so no copy is left there.
+
 ## Git
 
 - Conventional commits: `feat:`, `fix:`, `test:`, `docs:`, `chore:`.
