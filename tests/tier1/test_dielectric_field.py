@@ -222,6 +222,23 @@ def test_ver30_the_worst_offender_is_the_one_reported() -> None:
     assert "2 samples" in raised.value.quantity
 
 
+def test_ver30_a_nan_sample_leaves_the_unit_interval() -> None:
+    """``nan < 0`` and ``nan > 1`` are both False, so a NaN used to pass as a weight.
+
+    It is also the one reported, ahead of a finite offender further from 1/2.
+    """
+    field = _field()
+    values = field.grid.values.copy()
+    values[300, 120] = -3.0
+    values[100, 10] = float("nan")
+    with pytest.raises(ChargeFieldError) as raised:
+        _field(values).check_range()
+    assert "chi = nan" in raised.value.quantity
+    assert "2 samples" in raised.value.quantity
+    assert raised.value.location is not None
+    assert f"{float(field.grid.r_nm[10]):.4g}" in raised.value.location
+
+
 # -- registration with the mesh -----------------------------------------------
 
 

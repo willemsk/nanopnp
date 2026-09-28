@@ -146,10 +146,14 @@ class SolidFractionField:
         import numpy as np
 
         values = self.grid.values
-        outside = (values < 0.0) | (values > 1.0)
+        # Written so that a NaN sample is outside: ``nan < 0.0`` and ``nan > 1.0``
+        # are both False, and it would otherwise pass as a blend weight. It is
+        # also ranked worst, so the diagnostic names it rather than a finite one.
+        outside = ~((values >= 0.0) & (values <= 1.0))
         if not bool(outside.any()):
             return
-        flat = np.where(outside, np.abs(values - 0.5), -1.0)
+        distance = np.where(np.isnan(values), np.inf, np.abs(values - 0.5))
+        flat = np.where(outside, distance, -1.0)
         i_z, i_r = np.unravel_index(int(np.argmax(flat)), values.shape)
         raise ChargeFieldError(
             "the supplied solid fraction leaves [0, 1]",
