@@ -22,7 +22,9 @@ membrane is dominated by fabricated zeros and reads as agreement. The mask is
 therefore the set of points whose four ``+-margin_nm`` neighbours are *also*
 inside the field's materials, which keeps it off the boundary-resolution lottery
 and makes a residual disagreement with the golden's ``NaN`` set a real geometry
-difference rather than a coin flip.
+difference rather than a coin flip. The band the margin removes is left out of that
+comparison too: a COMSOL export has values there and a self-golden does not, and
+neither is a statement about the geometry (:meth:`ProbeGrid.band`).
 
 **The axis is mirrored, not clipped.** A probe point on ``r = 0`` has no
 neighbour at ``r = -margin`` in a half-plane mesh, and clipping would drop the
@@ -420,6 +422,11 @@ class ProbeGrid:
     masks
         Field name to a boolean ``(n,)`` array: ``True`` where the point and all
         four of its ``+-margin_nm`` neighbours lie in that field's materials.
+    bare
+        Field name to the bare point test: ``True`` where the point itself lies
+        in that field's materials. The points it keeps and :attr:`masks` drops
+        are the margin band, where an export legitimately has a value and a
+        self-golden does not; see :meth:`band`.
     dropped
         Field name to the number of points the margin rule removed that the bare
         point test would have kept. Recorded because it is the number that says
@@ -437,7 +444,23 @@ class ProbeGrid:
     points_nm: np.ndarray
     weights_nm2: np.ndarray
     masks: Mapping[str, np.ndarray]
+    bare: Mapping[str, np.ndarray]
     dropped: Mapping[str, int]
+
+    def band(self, field: str) -> np.ndarray:
+        """Return the margin band of ``field``: kept by the bare test, dropped by the margin.
+
+        Neither statement about where the field exists is made there. COMSOL
+        interpolates a value onto a point within ``margin_nm`` of an interface,
+        and a self-golden inherits our ``NaN``; the band is left out of the mask
+        gate as it is left out of the norms.
+        """
+        import numpy as np
+
+        band: np.ndarray = np.asarray(self.bare[field], dtype=bool) & ~np.asarray(
+            self.masks[field], dtype=bool
+        )
+        return band
 
     @classmethod
     def on_mesh(
@@ -473,6 +496,7 @@ class ProbeGrid:
         cls._check_within(document, mesh)
         margin = document.margin_nm
         masks: dict[str, np.ndarray] = {}
+        bares: dict[str, np.ndarray] = {}
         dropped: dict[str, int] = {}
         for field, pattern in domains.items():
             indicator = cls._indicator(mesh, pattern, field)
@@ -485,12 +509,14 @@ class ProbeGrid:
                 shifted[:, 0] = np.abs(shifted[:, 0])
                 keep &= cls._inside(mesh, indicator, shifted)
             masks[field] = keep
+            bares[field] = bare
             dropped[field] = int(np.count_nonzero(bare & ~keep))
         return cls(
             document=document,
             points_nm=points,
             weights_nm2=document.weights_nm2(),
             masks=masks,
+            bare=bares,
             dropped=dropped,
         )
 

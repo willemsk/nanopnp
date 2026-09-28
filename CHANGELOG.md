@@ -39,6 +39,9 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
   undefined there, and the NUM-26 route check, a relative difference of two round-off currents, is
   not applied and is recorded as not applied; before, every zero-bias case aborted whatever
   `outputs:` asked for (NUM-26, NUM-27).
+- The VAL-01 mask gate leaves the margin band out, as the norms already did. It compared our
+  margin-shrunk mask with the golden's raw one, so a COMSOL export, which has values next to every
+  interface, would have been refused as a geometry difference on every concentration field (VAL-01).
 
 ## [0.9.0-alpha.5] - 2026-09-26
 

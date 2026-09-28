@@ -20,7 +20,13 @@ from pathlib import Path
 
 import pytest
 
-from nanopnp.validation.compare import PRESSURE_FIELD, check_mask_agreement, field_error
+from nanopnp.validation.compare import (
+    PRESSURE_FIELD,
+    check_mask_agreement,
+    compare_fields,
+    field_error,
+)
+from nanopnp.validation.comsol import GOLDEN_SCHEMA, Golden, GoldenManifest
 from nanopnp.validation.probe import (
     PROBE_SCHEMA,
     ProbeDocument,
@@ -44,6 +50,7 @@ def _grid(document: ProbeDocument, fields: tuple[str, ...]) -> ProbeGrid:
         points_nm=document.points_nm(),
         weights_nm2=document.weights_nm2(),
         masks=dict.fromkeys(fields, keep),
+        bare=dict.fromkeys(fields, keep),
         dropped=dict.fromkeys(fields, 0),
     )
 
@@ -265,6 +272,93 @@ def test_val01_mask_disagreement_aborts_with_location() -> None:
     assert f"{r_nm:.6g}" in message and f"{z_nm:.6g}" in message
     assert "1 of 35" in message
     assert "nm from the nearest point" in message
+
+
+def _banded(document: ProbeDocument) -> ProbeGrid:
+    """Return a grid whose last z row lies outside ``c_Na+`` and whose r = 4 nm column is band."""
+    import numpy as np
+
+    points = document.points_nm()
+    bare = points[:, 1] < 6.0
+    keep = bare & (points[:, 0] < 4.0)
+    return ProbeGrid(
+        document=document,
+        points_nm=points,
+        weights_nm2=document.weights_nm2(),
+        masks={"c_Na+": keep},
+        bare={"c_Na+": bare},
+        dropped={"c_Na+": int(np.count_nonzero(bare & ~keep))},
+    )
+
+
+def _golden_defined_at(defined: object) -> Golden:
+    """Return a golden carrying ``c_Na+ = 1`` where ``defined`` holds and NaN elsewhere."""
+    import numpy as np
+
+    manifest = GoldenManifest.model_validate(
+        {
+            "schema": GOLDEN_SCHEMA,
+            "case": "fixture",
+            "case_hash": "f" * 64,
+            "probe": "masks",
+            "probe_hash": "e" * 64,
+            "refinement": "published",
+            "source": "comsol",
+            "comsol_version": "COMSOL 5.4",
+            "model_file": "npgrid_clya_v8_NaCl_report.mph",
+            "export_date": "2026-09-18",
+            "fields": {
+                "potential": {"expression": "V", "unit": "V"},
+                "c_Na+": {"expression": "c_Na", "unit": "mol/m^3"},
+            },
+            "current_boundary": "the cis reservoir cap",
+            "current_sign_reference": "cis",
+            "quantities": {"bias_V": 0.05, "current_A": 1.0e-9},
+        }
+    )
+    values = np.where(np.asarray(defined, dtype=bool), 1.0, np.nan)
+    return Golden(
+        manifest=manifest,
+        values={"c_Na+": values},
+        quantities=manifest.quantities,
+        current_sign_flipped=False,
+        hash="d" * 64,
+    )
+
+
+def test_val01_the_margin_band_is_in_neither_the_mask_gate_nor_the_norms() -> None:
+    """A COMSOL export has values within ``margin_nm`` of an interface; a self-golden has NaN.
+
+    The gate used to compare our margin-shrunk mask with the golden's raw one, so
+    a real export, defined at every point next to an interface, would have
+    aborted every concentration comparison as a geometry difference. What the
+    gate asks is that the golden be defined at every kept point and undefined
+    outside the bare point test; the band between is neither.
+    """
+    import numpy as np
+
+    document = loads_probe(
+        f"schema: {PROBE_SCHEMA}\nname: masks\npatches:\n"
+        "  - {name: block, r_nm: [0.0, 4.0], z_nm: [0.0, 6.0], n_r: 5, n_z: 7}\n"
+    )
+    grid = _banded(document)
+    keep, bare = grid.masks["c_Na+"], grid.bare["c_Na+"]
+    assert int(np.count_nonzero(grid.band("c_Na+"))) == 6
+    ours = {"c_Na+": np.where(keep, 1.0, np.nan)}
+
+    for defined in (bare, keep):  # a COMSOL export, and a self-golden
+        (comparison,) = compare_fields(ours, _golden_defined_at(defined), grid)
+        assert comparison.points == int(np.count_nonzero(keep))
+        assert comparison.rel_L2_r == 0.0
+
+    outside = bare.copy()
+    outside[np.flatnonzero(~bare)[0]] = True
+    with pytest.raises(ProbeGridError, match="1 only by the golden"):
+        compare_fields(ours, _golden_defined_at(outside), grid)
+    missing = bare.copy()
+    missing[np.flatnonzero(keep)[0]] = False
+    with pytest.raises(ProbeGridError, match="1 kept only by us"):
+        compare_fields(ours, _golden_defined_at(missing), grid)
 
 
 def test_val01_mask_disagreement_names_the_furthest_point_not_the_first() -> None:

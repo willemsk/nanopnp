@@ -204,7 +204,11 @@ therefore refused on the same three grounds it was ingested on, not only on the 
 
 `nanopnp validate compare` samples our solution on the same probe grid and reports, per field,
 the *r*-weighted relative L² (the VAL-01 quantity), the unweighted relative L² (which is what
-sees the axis, where the `1/r` forms are fragile) and the located maximum. `nanopnp validate
+sees the axis, where the `1/r` forms are fragile) and the located maximum. The norms are taken
+over the probe points whose four neighbours at `margin_nm` also lie in the field's domain. Your
+export must carry a value at every one of those and `NaN` at every point outside the domain;
+points within `margin_nm` of an interface may carry either, and are left out of both the check
+and the norms, so you need do nothing special for them. `nanopnp validate
 report` runs the four-rung attribution ladder and decomposes the discrepancy into the parts we
 chose and the part that could be a defect.
 

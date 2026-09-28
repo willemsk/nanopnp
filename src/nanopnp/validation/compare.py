@@ -226,6 +226,7 @@ def golden_grid(document: ProbeDocument, golden: Golden) -> ProbeGrid:
         points_nm=document.points_nm(),
         weights_nm2=document.weights_nm2(),
         masks=dict.fromkeys(sorted(golden.values), keep),
+        bare=dict.fromkeys(sorted(golden.values), keep),
         dropped=dict.fromkeys(sorted(golden.values), 0),
     )
 
@@ -321,8 +322,10 @@ def compare_fields(
     Raises
     ------
     ProbeGridError
-        If the two masks disagree anywhere, naming the worst point's ``(r, z)``
-        and its distance from the nearest retained point of the other mask.
+        If the two masks disagree anywhere outside the margin band of
+        :meth:`~nanopnp.validation.probe.ProbeGrid.band`, naming the worst
+        point's ``(r, z)`` and its distance from the nearest retained point of
+        the other mask.
     """
     import numpy as np
 
@@ -331,7 +334,11 @@ def compare_fields(
         mine = np.asarray(ours[field], dtype=np.float64)
         theirs = np.asarray(golden.values[field], dtype=np.float64)
         keep = np.asarray(grid.masks[field], dtype=bool)
-        check_mask_agreement(field, keep, golden.defined(field), grid)
+        # The golden must be defined at every kept point and NaN outside the bare
+        # test; in the margin band between, a COMSOL export carries values and a
+        # self-golden does not, and the band is in neither the gate nor the norms.
+        band = np.asarray(grid.band(field), dtype=bool)
+        check_mask_agreement(field, keep, np.where(band, keep, golden.defined(field)), grid)
         _check_finite(field, mine, keep, grid)
         comparisons.append(field_error(field, mine, theirs, grid, keep))
     return tuple(comparisons)
