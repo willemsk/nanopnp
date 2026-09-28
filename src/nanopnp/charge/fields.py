@@ -35,6 +35,7 @@ localises a failure the total can hide.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, TypeAlias
@@ -806,7 +807,11 @@ class ConservationReport:
 
     @property
     def worst_plane(self) -> tuple[float, float]:
-        """The plane with the largest cumulative disagreement, and that error."""
+        """The plane with the largest cumulative disagreement, and that error.
+
+        A NaN error ranks above every number: ``max`` over tuples does not order
+        NaN, so it would otherwise report whichever finite plane it met first.
+        """
         if not self.planes_nm:
             return (float("nan"), 0.0)
         errors = [
@@ -815,7 +820,7 @@ class ConservationReport:
                 self.planes_nm, self.grid_cumulative_C, self.mesh_cumulative_C, strict=True
             )
         ]
-        error, plane = max(errors)
+        error, plane = max(errors, key=lambda item: math.inf if math.isnan(item[0]) else item[0])
         return (plane, error)
 
     def summary(self) -> dict[str, object]:
@@ -899,6 +904,10 @@ def check_conservation(report: ConservationReport) -> ConservationReport:
     conserved" when the real fact is "this grid was cut short" or "this mesh
     cannot resolve this field" names the wrong culprit.
 
+    Every comparison is written so that a NaN fails it: ``nan > tol`` is False,
+    and a grid carrying one NaN sample makes every leg NaN, so the gates written
+    the other way round passed it whole.
+
     Returns
     -------
     ConservationReport
@@ -919,7 +928,7 @@ def check_conservation(report: ConservationReport) -> ConservationReport:
             "gated against QR-03's relative budget: omit q_net_e if the producer declared it "
             "wrongly, or supply a field that carries charge",
         )
-    if report.ring_ratio > RING_TOL:
+    if not report.ring_ratio <= RING_TOL:
         raise ChargeFieldError(
             "the supplied grid is truncated",
             f"its boundary ring reaches {report.ring.value:.6g} against an interior maximum of "
@@ -929,7 +938,7 @@ def check_conservation(report: ConservationReport) -> ConservationReport:
             "the structure",
             f"(r, z) = ({report.ring.r_nm:.4g}, {report.ring.z_nm:.4g}) nm",
         )
-    if report.quadrature_error > QUADRATURE_TOL:
+    if not report.quadrature_error <= QUADRATURE_TOL:
         raise ChargeFieldError(
             "the deployed mesh under-resolves the supplied field",
             f"the charge integral moves by {report.quadrature_error:.3g} of the reference charge "
@@ -939,7 +948,7 @@ def check_conservation(report: ConservationReport) -> ConservationReport:
         )
     producer = report.producer_error
     declared_C = report.q_net_C
-    if producer is not None and declared_C is not None and abs(producer) > CONSERVATION_TOL:
+    if producer is not None and declared_C is not None and not abs(producer) <= CONSERVATION_TOL:
         raise ChargeFieldError(
             "the supplied field does not carry the charge it declares (producer leg, QR-03)",
             f"its grid integrates to {report.q_grid_C / ELEMENTARY_CHARGE:.6g} e against a "
@@ -947,7 +956,7 @@ def check_conservation(report: ConservationReport) -> ConservationReport:
             f", a relative error of {producer:.3g} against {CONSERVATION_TOL:g}. This leg is the "
             "producer's: smearing, projection and the annular volumes",
         )
-    if abs(report.consumer_error) > CONSERVATION_TOL:
+    if not abs(report.consumer_error) <= CONSERVATION_TOL:
         raise ChargeFieldError(
             "the assembled charge is not conserved on the deployed mesh (consumer leg, QR-03)",
             f"the mesh carries {report.q_mesh_C / ELEMENTARY_CHARGE:.6g} e against the grid's "
@@ -957,7 +966,7 @@ def check_conservation(report: ConservationReport) -> ConservationReport:
             f"guard, which deletes {report.guard_deficit_C / ELEMENTARY_CHARGE:.3g} e",
         )
     plane, plane_error = report.worst_plane
-    if plane_error > CONSERVATION_TOL:
+    if not plane_error <= CONSERVATION_TOL:
         raise ChargeFieldError(
             "the cumulative charge disagrees with the source grid at a z plane (PHY-19)",
             f"the mesh carries {plane_error:.3g} of the reference charge more or less than the "

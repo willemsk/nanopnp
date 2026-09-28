@@ -66,6 +66,9 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 - The packing-fraction, potential-increment and wall-distance gates fail on a NaN sample, as the
   positivity gate already did, and a pore profile with a NaN or infinite vertex is refused naming
   it; each passed NaN through a `>`-style comparison (NUM-17, NUM-34, QR-12).
+- A supplied charge or solid-fraction grid carrying a NaN sample aborts at the conservation and
+  range gates, naming the leg and the location, instead of passing them: every leg became NaN and
+  every check was written `value > tolerance` (PHY-19, QR-03, VER-30, QR-12).
 
 ## [0.9.0-alpha.5] - 2026-09-26
 

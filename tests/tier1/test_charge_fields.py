@@ -26,6 +26,7 @@ from nanopnp.charge.fields import (
     RING_TOL,
     ChargeField,
     ChargeFieldError,
+    ConservationReport,
     FieldDocument,
     FieldDocumentError,
     FormSpec,
@@ -39,6 +40,7 @@ from nanopnp.core.constants import ELEMENTARY_CHARGE
 from nanopnp.density.grid import (
     GridFormatError,
     RadialGrid,
+    RingMaximum,
     coefficient,
     read_grid,
     writable_formats,
@@ -521,6 +523,60 @@ def test_ver29_a_field_with_no_declared_charge_still_gates_the_consumer_leg(mesh
     }
     assert report.reference_C == pytest.approx(abs(report.q_grid_C))
     assert abs(report.consumer_error) < CONSERVATION_TOL
+
+
+def _report(**overrides: object) -> ConservationReport:
+    """Return a conservation report that passes every gate, to spoil one leg at a time."""
+    q_C = -12.0 * ELEMENTARY_CHARGE
+    fields: dict[str, object] = {
+        "q_net_C": q_C,
+        "q_grid_C": q_C,
+        "q_mesh_C": q_C,
+        "q_mesh_refined_C": q_C,
+        "guard_deficit_C": 0.0,
+        "ring": RingMaximum(value=0.0, r_nm=10.0, z_nm=0.0),
+        "interior_maximum": 1.0,
+        "planes_nm": (2.0, 4.0, 6.0),
+        "grid_cumulative_C": (0.0, q_C / 2, q_C),
+        "mesh_cumulative_C": (0.0, q_C / 2, q_C),
+        "ramp_nm": 0.1,
+    }
+    fields.update(overrides)
+    return ConservationReport(**fields)  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize(
+    ("overrides", "gate"),
+    [
+        (
+            {"ring": RingMaximum(value=math.nan, r_nm=10.0, z_nm=3.0)},
+            "the supplied grid is truncated",
+        ),
+        ({"q_mesh_refined_C": math.nan}, "the deployed mesh under-resolves the supplied field"),
+        ({"q_grid_C": math.nan}, "the supplied field does not carry the charge it declares"),
+        ({"q_mesh_C": math.nan}, "the deployed mesh under-resolves the supplied field"),
+        (
+            {"mesh_cumulative_C": (0.0, math.nan, -12.0 * ELEMENTARY_CHARGE)},
+            "the cumulative charge disagrees with the source grid at a z plane",
+        ),
+    ],
+)
+def test_qr12_a_nan_leg_fails_the_conservation_gate(overrides, gate):
+    """``nan > tol`` is False, so a NaN in any leg used to pass PHY-19's check."""
+    check_conservation(_report())  # the unspoiled report passes, so the gate is not vacuous
+    with pytest.raises(ChargeFieldError) as raised:
+        check_conservation(_report(**overrides))
+    assert raised.value.gate.startswith(gate)
+    assert "nan" in raised.value.quantity
+
+
+def test_qr12_a_nan_plane_is_the_worst_plane_wherever_it_sits():
+    """``max`` does not order NaN; the plane it sits on is named, not a finite one."""
+    q_C = -12.0 * ELEMENTARY_CHARGE
+    report = _report(mesh_cumulative_C=(1e-3 * q_C, math.nan, q_C))
+    plane, error = report.worst_plane
+    assert plane == 4.0
+    assert math.isnan(error)
 
 
 def test_ver29_the_quadrature_check_compares_two_genuinely_different_orders():
