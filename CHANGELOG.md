@@ -21,6 +21,8 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 - A case whose `electrolyte.temperature_K` differs from the temperature its parameter file is
   fitted at is refused, naming both. The solve took every property and `V_T` from the file while
   the manifest recorded the case's temperature (FR-16, FR-25).
+- A case asking for a wall condition other than `slip: no_slip` and `ion_flux: no_flux` is refused.
+  Nothing applied the other values, which were recorded in the manifest all the same (FR-25).
 
 ## [0.9.0-alpha.5] - 2026-09-26
 

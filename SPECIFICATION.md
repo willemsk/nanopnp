@@ -1474,7 +1474,10 @@ distance beyond which the wall functions are 1 to within round-off.
 NOTE (`walls`): the wall values name the condition applied, not its absence. `ion_flux` takes
 `no_flux | prescribed` and `slip` takes `no_slip | navier | free`. Under the `r`-weighted forms of
 §6.2 the natural condition is the free one, so a value reading as "none applied" would silently
-remove no-slip while appearing to be the validated default.
+remove no-slip while appearing to be the validated default. The forms pose `no_flux` and `no_slip`
+only, so every other value SHALL be refused by name until the condition is implemented, and the
+refusal lifted in the same commit that implements it: a condition recorded in the manifest but not
+applied would be a plausible wrong answer (**added 28 September 2026**, code review CR-2).
 
 NOTE (`outputs:`): the list selects what the run produces, and each word is refused rather than
 silently ignored where it cannot be met. `current`, `transport_numbers` and `eof_rate` select scalar
