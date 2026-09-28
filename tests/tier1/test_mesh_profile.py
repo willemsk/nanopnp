@@ -209,6 +209,16 @@ def test_a_negative_radius_is_refused() -> None:
         unit_square(vertices=[(-1.0, 0.0), (2.0, 0.0), (2.0, 1.0), (1.0, 1.0)])
 
 
+# The helper measures the provenance off the same vertices, and NumPy warns
+# doing arithmetic on the NaN it is handed; the refusal is what is under test.
+@pytest.mark.filterwarnings("ignore::RuntimeWarning")
+@pytest.mark.parametrize("bad", [float("nan"), float("inf")])
+def test_a_vertex_that_is_not_finite_is_refused_naming_it(bad: float) -> None:
+    """A NaN radius fails ``r < 0`` and every other comparison, so it passed them all."""
+    with pytest.raises(ValueError, match=r"vertex 2 is .* finite number"):
+        unit_square(vertices=[(1.0, 0.0), (2.0, 0.0), (bad, 1.0), (1.0, 1.0)])
+
+
 def test_too_few_vertices_for_a_loop_is_refused() -> None:
     with pytest.raises(ValueError, match="at least three vertices"):
         unit_square(vertices=[(1.0, 0.0), (2.0, 0.0)])

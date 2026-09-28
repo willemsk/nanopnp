@@ -24,6 +24,7 @@ from nanopnp.solve.gates import (
     PackingFractionGate,
     PositivityGate,
     PotentialIncrementGate,
+    WallDistanceGate,
     check_all,
     excluded_volume_m3_per_mol,
     maximum_packing_M,
@@ -178,6 +179,34 @@ def test_num17_increment_gate_catches_a_negative_overshoot(sampler: FieldSampler
     increment.Set(ngs.CF(-1.5))
     with pytest.raises(GateViolationError, match="increment"):
         PotentialIncrementGate(sampler, increment).check()
+
+
+def test_qr12_a_nan_anywhere_fails_the_packing_increment_and_wall_distance_gates(
+    sampler: FieldSampler,
+) -> None:
+    """``nan >= limit`` is False, so a NaN sample used to pass both gates.
+
+    The sampler's argmax lands on the NaN and returns it, so written as the
+    positivity gate is, ``not value < limit``, the gate fails and names where.
+    """
+    space = _space(sampler)
+    poisoned = ngs.GridFunction(space)
+    poisoned.Set(ngs.CF(1000.0))
+    poisoned.vec[3] = float("nan")
+    with pytest.raises(GateViolationError, match="packing fraction"):
+        PackingFractionGate(sampler, {"c_Na": poisoned, "c_Cl": ngs.CF(1000.0)}).check()
+
+    increment = ngs.GridFunction(space)
+    increment.Set(ngs.CF(0.1))
+    increment.vec[3] = float("nan")
+    with pytest.raises(GateViolationError, match="increment"):
+        PotentialIncrementGate(sampler, increment).check()
+
+    distance = ngs.GridFunction(space)
+    distance.Set(ngs.CF(1.0))
+    distance.vec[3] = float("nan")
+    with pytest.raises(GateViolationError, match="min d"):
+        WallDistanceGate(sampler, distance).check()
 
 
 def test_sampler_covers_the_p2_nodal_set(sampler: FieldSampler) -> None:

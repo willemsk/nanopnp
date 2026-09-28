@@ -370,7 +370,9 @@ class PackingFractionGate:
     def check(self) -> None:
         """Raise if ``Phi`` reaches the limit anywhere in the sample set."""
         value, location = self.sampler.maximum(self.packing_fraction)
-        if value >= self.limit:
+        # ``not <`` so that NaN fails, as ``PositivityGate`` writes it: the
+        # sampler's argmax lands on a NaN and returns it (QR-12).
+        if not value < self.limit:
             raise GateViolationError(
                 self.name, "packing fraction Phi", value, location, self.sampler.coordinates
             )
@@ -415,7 +417,7 @@ class PotentialIncrementGate:
     def check(self) -> None:
         """Raise if the damped increment exceeds the cap anywhere."""
         value, location = self.sampler.maximum_magnitude(self.increment)
-        if value > self.limit:
+        if not value <= self.limit:  # NaN fails
             raise GateViolationError(
                 self.name,
                 "|delta phi| / V_T",
@@ -539,7 +541,7 @@ class WallDistanceGate:
         already knows.
         """
         found = self.measure()
-        if found.minimum_nm < self.minimum_nm:
+        if not found.minimum_nm >= self.minimum_nm:  # NaN fails
             raise GateViolationError(
                 self.name,
                 "min d",

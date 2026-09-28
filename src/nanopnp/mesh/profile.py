@@ -123,9 +123,20 @@ class PoreProfile(_Strict):
     @model_validator(mode="after")
     def _check_polygon(self) -> PoreProfile:
         """Gate the loop on validity, simplicity and topology (section 5.2.1 NOTE)."""
+        import numpy as np
+
         points = self.as_array()
         if len(points) < 3:
             raise ValueError(f"a closed polygon needs at least three vertices, got {len(points)}")
+        # First: a NaN coordinate fails no comparison, so every test below it,
+        # the half-plane test included, would pass it by.
+        finite = np.isfinite(points).all(axis=1)
+        if not finite.all():
+            index = int(np.flatnonzero(~finite)[0])
+            raise ValueError(
+                f"vertex {index} is ({points[index, 0]}, {points[index, 1]}); every coordinate "
+                "must be a finite number of nanometres"
+            )
         if float(points[:, 0].min()) < 0.0:
             raise ValueError(
                 f"vertex radius must be non-negative in the (r, z) half-plane; the smallest is "
@@ -160,7 +171,7 @@ class PoreProfile(_Strict):
             "signed_area_nm2": (self.provenance.signed_area_nm2, signed_area(points)),
         }
         for key, (claimed, measured) in recorded.items():
-            if abs(claimed - measured) > MEASUREMENT_TOL:
+            if not abs(claimed - measured) <= MEASUREMENT_TOL:  # NaN fails
                 raise ValueError(
                     f"provenance.{key} is {claimed!r} but these vertices give {measured!r}; the "
                     "provenance block does not describe this polygon"

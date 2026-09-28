@@ -63,6 +63,9 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
   written atomically, as the store's files already were, so collection never reads a torn record
   written by a member still running. Temporaries carry a random token as well as the process id,
   which repeats across the hosts of a job array (QR-06).
+- The packing-fraction, potential-increment and wall-distance gates fail on a NaN sample, as the
+  positivity gate already did, and a pore profile with a NaN or infinite vertex is refused naming
+  it; each passed NaN through a `>`-style comparison (NUM-17, NUM-34, QR-12).
 
 ## [0.9.0-alpha.5] - 2026-09-26
 
