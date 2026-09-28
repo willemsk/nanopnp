@@ -1438,6 +1438,10 @@ parameters of the correction set (FR-16), and a case file that could override th
 be a second source of truth for a physical constant. `driver` selects the argument the
 concentration corrections are evaluated at: `average`, `⟨c⟩ = (1/n)Σc_i` (PHY-01), or
 `ionic_strength`, which is a deviation from the validated model and is recorded as one.
+`electrolyte.temperature_K` is checked against that file the same way and SHALL be refused naming
+both values when it differs: every reference property, every scale and `V_T` are taken from the
+file, whose fits are temperature-specific, so a case at another temperature would be solved at the
+file's while its manifest recorded the case's (**added 28 September 2026**, code review CR-1).
 
 NOTE (`numerics.nonlinear`): the values shown are the NUM-16 reference settings — the monolithic
 damped Newton of the reference model, 100 iterations, relative tolerance 10⁻⁶, tested on the

@@ -16,6 +16,12 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+### Fixed
+
+- A case whose `electrolyte.temperature_K` differs from the temperature its parameter file is
+  fitted at is refused, naming both. The solve took every property and `V_T` from the file while
+  the manifest recorded the case's temperature (FR-16, FR-25).
+
 ## [0.9.0-alpha.5] - 2026-09-26
 
 WP21: CAD assembly and meshing from a profile, pipeline stages 5 and 6.

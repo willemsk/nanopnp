@@ -1987,13 +1987,25 @@ def _resolve_contour(document: CaseDocument, density: DensitySpec | None) -> Con
 
 
 def _check_species(document: CaseDocument, electrolyte: Electrolyte) -> None:
-    """Check the case's species and steric diameters against the parameter file.
+    """Check the case's species, steric diameters and temperature against the parameter file.
 
     The diameters are *checked*, never applied: they are fitted parameters of the
     correction file (FR-16), and a case file that could override them silently
-    would be a second source of truth for a physical constant.
+    would be a second source of truth for a physical constant. So is the
+    temperature: every reference property, every scale and ``V_T`` come from the
+    file, and the fits are temperature-specific, so a case at another temperature
+    would be solved at the file's while its manifest recorded the case's.
     """
     problems: list[str] = []
+    temperature_K = document.electrolyte.temperature_K
+    if temperature_K != electrolyte.temperature_K:
+        problems.append(
+            f"electrolyte.temperature_K is {temperature_K} K, but "
+            f"{document.electrolyte.parameters!r} is fitted at {electrolyte.temperature_K} K and "
+            "the solve takes every material property and V_T from the file; set temperature_K: "
+            f"{electrolyte.temperature_K} or supply a parameter file fitted at the temperature "
+            "you want"
+        )
     for index, species in enumerate(document.electrolyte.species):
         valence = electrolyte.ion(species.name).valence
         if valence != species.z:
@@ -2386,7 +2398,7 @@ def resolve(document: CaseDocument) -> ResolvedCase:
         names the section and the release.
     CaseValidationError
         If the document is internally inconsistent — a species the parameter file
-        does not carry, a steric diameter disagreeing with it, an element label
+        does not carry, a steric diameter or a temperature disagreeing with it, an element label
         that is not one.
     """
     mesh = _require_runnable(document)

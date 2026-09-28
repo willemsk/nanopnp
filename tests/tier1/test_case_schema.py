@@ -283,6 +283,13 @@ def test_phy16_case_steric_diameters_are_checked_against_the_parameter_file() ->
         resolve(loads_case(text))
 
 
+def test_fr16_a_case_temperature_the_parameter_file_is_not_fitted_at_is_refused() -> None:
+    """Every scale and V_T come from the file; solving at its 298.15 K would misreport 310 K."""
+    text = REFERENCE_CASE.replace("temperature_K: 298.15", "temperature_K: 310.0")
+    with pytest.raises(CaseValidationError, match=r"temperature_K is 310\.0 K.*298\.15 K"):
+        resolve(loads_case(text))
+
+
 def test_phy21_resolution_builds_the_named_model_s_configuration() -> None:
     """The resolved case carries what the solver is actually given."""
     resolved = resolve(loads_case(REFERENCE_CASE))
