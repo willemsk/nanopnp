@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -196,7 +197,16 @@ def _flatten(value: Canonicalisable, prefix: str = "") -> dict[str, Canonicalisa
 
 
 def _relative(recorded: float, reproduced: float) -> float:
-    """Return the relative difference, falling back to the absolute one at zero."""
+    """Return the relative difference, falling back to the absolute one at zero.
+
+    Never NaN, because ``nan > tolerance`` is False and would count as
+    reproduced: a number that became NaN or infinite, or stopped being one, is
+    infinitely far off, and two NaNs, or two equal infinities, reproduce.
+    """
+    if recorded == reproduced or (math.isnan(recorded) and math.isnan(reproduced)):
+        return 0.0
+    if not (math.isfinite(recorded) and math.isfinite(reproduced)):
+        return math.inf
     difference = abs(reproduced - recorded)
     return difference / abs(recorded) if recorded != 0.0 else difference
 
@@ -242,7 +252,7 @@ def compare(
             continue
         difference = _relative(float(value), float(other))
         worst = difference if worst is None else max(worst, difference)
-        if difference > tolerance:
+        if not difference <= tolerance:
             drifts.append(Drift(path=path, recorded=value, reproduced=other, relative=difference))
     return tuple(drifts), worst
 
