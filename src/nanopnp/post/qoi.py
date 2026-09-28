@@ -529,7 +529,13 @@ class RouteAgreement:
 
     @property
     def relative_difference(self) -> float:
-        """``|I_psi - I_reaction|`` over the larger magnitude, or 0 if both vanish."""
+        """``|I_psi - I_reaction|`` over the larger magnitude, or 0 if both vanish.
+
+        Infinite when either route is not finite: such a route has agreed with
+        nothing, and a NaN here would pass every ``> tolerance`` test.
+        """
+        if not (math.isfinite(self.indicator_A) and math.isfinite(self.reaction_A)):
+            return math.inf
         scale = max(abs(self.indicator_A), abs(self.reaction_A))
         if scale == 0.0:
             return 0.0
@@ -545,7 +551,8 @@ class RouteAgreement:
             is wrong and the numbers cannot say which, so neither is reported.
         """
         difference = self.relative_difference
-        if difference > tolerance:
+        # ``not <=`` rather than ``>``, so that NaN fails the gate (QR-12).
+        if not difference <= tolerance:
             # The one disagreement with a benign cause: referencing the reaction
             # flux to ``trans`` rather than to ``cis`` negates it exactly, and
             # arriving at that through a bare "one of the two is wrong" costs an
@@ -601,7 +608,8 @@ def _check_species_routes(
     for species, value in indicator.items():
         other = reaction[species]
         difference = abs(value - other) / scale
-        if difference > tolerance:
+        # ``not <=`` rather than ``>``: a NaN route, or a NaN total, fails (QR-12).
+        if not difference <= tolerance:
             raise RouteDisagreementError(
                 f"the two current routes disagree on {species!r}: the NUM-24 indicator gives "
                 f"{value:.6e} A and the NUM-25 reaction flux {other:.6e} A, a difference of "
