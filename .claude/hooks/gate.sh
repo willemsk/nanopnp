@@ -42,6 +42,7 @@ set -uo pipefail
 
 mode=hook
 [[ ${1:-} == run ]] && mode=run
+target_dir=.
 
 if [[ $mode == hook ]]; then
     payload=$(cat)
@@ -68,6 +69,24 @@ if [[ $mode == hook ]]; then
     # --no-verify / -n count only as options of that commit: quoted strings
     # are removed first, so `-m "document --no-verify"` is still gated.
     args=${BASH_REMATCH[${#BASH_REMATCH[@]} - 1]}
+
+    # The tree being committed is the one `-C` or `--work-tree` names, not this
+    # hook's cwd, so that is the tree gated. Read from the global options alone:
+    # the matched text less the commit's own arguments, and less the `commit`
+    # itself, so a `-C` inside a quoted message is never taken for one. A
+    # repeated option leaves the last value, which is git's own reading for
+    # absolute paths.
+    options=${BASH_REMATCH[0]%"$args"}
+    options=${options%commit}
+    option_re='(^|[[:space:]])(-C|--work-tree)(=|[[:space:]]+)([^[:space:]]+)'
+    while [[ $options =~ $option_re ]]; do
+        target_dir=${BASH_REMATCH[4]}
+        options=${options#*"${BASH_REMATCH[0]}"}
+    done
+    target_dir=${target_dir#[\"\']}
+    target_dir=${target_dir%[\"\']}
+    [[ $target_dir == "~" || $target_dir == "~/"* ]] && target_dir=$HOME${target_dir:1}
+
     args=$(printf '%s' "$args" | sed -E "s/\"[^\"]*\"//g; s/'[^']*'//g")
     set -f
     for token in $args; do
@@ -76,7 +95,7 @@ if [[ $mode == hook ]]; then
     set +f
 fi
 
-root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+root=$(git -C "$target_dir" rev-parse --show-toplevel 2>/dev/null) || exit 0
 cd "$root" || exit 0
 [[ -f pyproject.toml && -d src/nanopnp ]] || exit 0
 
