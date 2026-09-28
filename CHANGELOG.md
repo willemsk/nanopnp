@@ -33,6 +33,8 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
   species. A NaN reaction-flux route compared as agreeing and was recorded as checked (QR-04).
 - A supplied field document whose `q_net_e` or `axis_cutoff_nm` is NaN or infinite is refused. A
   NaN `q_net_e` switched off three of the five charge-conservation gates (VER-29, QR-12).
+- `nanopnp reproduce` reports a quantity that became NaN or infinite, or stopped being one, as a
+  drift. The NaN difference passed the tolerance test and the run was declared reproduced (QR-08).
 
 ## [0.9.0-alpha.5] - 2026-09-26
 

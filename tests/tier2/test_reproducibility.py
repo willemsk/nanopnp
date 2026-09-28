@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -231,3 +232,25 @@ def test_ver35_compare_localises_a_drift_to_the_scalar_that_moved() -> None:
 
     with pytest.raises(ReproductionError, match="produced no value for"):
         compare(recorded, {"currents_A": {"Na+": 1.0}}, tolerance=DEFAULT_TOLERANCE)
+
+
+@pytest.mark.parametrize(
+    ("recorded", "reproduced", "drifted"),
+    [
+        (1.0, math.nan, True),
+        (math.nan, 1.0, True),
+        (1.0, math.inf, True),
+        (math.inf, 1.0, True),
+        (math.nan, math.nan, False),
+        (math.inf, math.inf, False),
+    ],
+)
+def test_qr08_a_number_that_became_nan_has_not_reproduced(
+    recorded: float, reproduced: float, drifted: bool
+) -> None:
+    """``nan > tolerance`` is False, so a NaN difference used to count as reproduced."""
+    drifts, worst = compare(
+        {"current_A": recorded}, {"current_A": reproduced}, tolerance=DEFAULT_TOLERANCE
+    )
+    assert bool(drifts) is drifted
+    assert worst == (math.inf if drifted else 0.0)
