@@ -2317,6 +2317,15 @@ extraction, so every SI quantity reported (`I`, `Q_EOF`, and everything derived 
 three-dimensional quantity and includes the full Jacobian. Because both routes inherit the same
 convention, their NUM-26 agreement is independent of it while their SI values are not.
 
+NOTE (zero bias): at `V_bias = 0` exactly, as on the equilibrium rung of §6.5 or the 0 V member of an
+I–V sweep, every current is round-off (1e-27 A against 1e-25 A for the two routes on a coarse
+uncharged pore), so the transport number and the conductance, each a ratio to it, SHALL be
+reported as undefined (`null`) rather than computed, and the NUM-26 check SHALL NOT be applied,
+because a relative difference between two round-offs is of order one whatever the extraction does.
+The summary records `routes_checked: false`. The currents and `Q_EOF` are still reported, and a
+case asking only for `eof_rate` at zero bias SHALL run (**added 28 September 2026**, code review
+CR-8).
+
 **NUM-28.** The force on an embedded analyte SHALL be evaluated in domain form,
 
 ```

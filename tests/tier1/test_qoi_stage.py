@@ -374,6 +374,36 @@ def test_num27_grounding_trans_reports_the_quantities_of_the_same_state_grounded
         assert trans[key] == pytest.approx(cis[key], rel=1e-8), key
 
 
+@pytest.mark.parametrize("outputs", ["eof_rate", "current, transport_numbers, eof_rate"])
+def test_num27_a_zero_bias_case_reports_its_currents_and_leaves_the_ratios_undefined(
+    solved: Solved, outputs: str
+) -> None:
+    """The equilibrium rung and the 0 V member of an I-V sweep run through stage 11.
+
+    Every current is round-off at zero bias, so ``G`` and ``t+``, each a ratio to
+    one, are ``None``, and the NUM-26 check, a relative difference of two
+    round-offs, is not applied and says so. Before, the route check raised there
+    whatever ``outputs:`` asked for, and ``G = I/0`` behind it.
+    """
+    text = CASE.format(
+        mesh_path=solved.mesh_path,
+        concentration_M=CONCENTRATION_M,
+        bias_V=0.0,
+        outputs=outputs,
+    )
+    document = loads_case(text)
+    solution = SolveStage(workspace=solved.work / "solve-zero").run(StageInputs(case=document))
+    summary = QoIStage().run(StageInputs(case=document, upstream={"solve": solution})).summary
+    assert summary["bias_V"] == 0.0
+    assert summary["routes_checked"] is False
+    assert "route_agreement" not in summary
+    assert isinstance(summary["eof_m3_s"], float)
+    if "current" in outputs:
+        assert isinstance(summary["current_A"], float)
+        assert summary["conductance_S"] is None
+        assert summary["transport_number"] is None
+
+
 def test_fr23_analyte_force_without_an_analyte_material_is_refused_naming_it(
     solved: Solved,
 ) -> None:
