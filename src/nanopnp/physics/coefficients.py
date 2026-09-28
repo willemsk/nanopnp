@@ -279,7 +279,15 @@ class NondimensionalCoefficients:
         Only used when ``dielectric_gradient_forces`` is enabled, which is a
         deviation from the validated model (PHY-08, PHY-23).
         """
-        return self.relative_permittivity().Diff(self.concentrations[species])
+        import ngsolve as ngs
+
+        permittivity = self.relative_permittivity()
+        if not isinstance(permittivity, ngs.CoefficientFunction):
+            # ``none``, or the concentration part switched off: the correction
+            # returns the float 1.0, whose sensitivity is identically zero. A CF,
+            # because ``_sensitivity_gradient`` differentiates the result again.
+            return ngs.CoefficientFunction(0.0)
+        return permittivity.Diff(self.concentrations[species])
 
     @property
     def provenance(self) -> Mapping[str, Any]:

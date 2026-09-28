@@ -13,7 +13,7 @@ import math
 import ngsolve as ngs
 import pytest
 
-from nanopnp.materials.electrolyte import Electrolyte
+from nanopnp.materials.electrolyte import CorrectionChoice, CorrectionSwitches, Electrolyte
 from nanopnp.mesh.primitives import SlabGeometry
 from nanopnp.physics.coefficients import (
     SATURATED_WALL_DISTANCE_NM,
@@ -22,6 +22,7 @@ from nanopnp.physics.coefficients import (
 )
 from nanopnp.physics.nernst_planck import (
     ConcentrationVariables,
+    excess_potential_gradient,
     packing_fraction,
     species_flux,
     steric_flux,
@@ -250,3 +251,35 @@ def test_num02_log_branch_is_positive_by_construction(mesh: ngs.Mesh) -> None:
     value = variables.values["Na+"](mesh(*SAMPLE))
     assert value > 0.0
     assert value == pytest.approx(math.exp(-8.0 + 4.0 * SAMPLE[0]), rel=1e-6)
+
+
+@pytest.mark.parametrize("model", ["none", "willems2020_nacl"])
+def test_phy23_the_permittivity_sensitivity_is_zero_when_the_correction_is_off(
+    mesh: ngs.Mesh, model: str
+) -> None:
+    """An ablation of the permittivity correction under PHY-23 is an ordinary case.
+
+    ``none`` returns the float 1.0, and so does a fitted model with its
+    concentration part off, since permittivity has no wall form; ``.Diff`` on it
+    raised ``AttributeError`` inside the residual assembly, naming neither the
+    switch nor the correction. The sensitivity is identically zero there, and
+    the excess-potential gradient built from it assembles to zero.
+    """
+    variables, _ = _linear_state(mesh)
+    choice = CorrectionChoice(model=model, concentration=False)
+    electrolyte = Electrolyte.from_parameter_file(switches=CorrectionSwitches(permittivity=choice))
+    coefficients = NondimensionalCoefficients(
+        electrolyte=electrolyte,
+        scales=mesh_unit_scales(electrolyte, CONCENTRATION_M),
+        concentrations=variables.values,
+        wall_distance_nm=SATURATED_WALL_DISTANCE_NM,
+    )
+    point = mesh(*SAMPLE)
+    for ion in electrolyte.species:
+        assert coefficients.permittivity_sensitivity(ion.name)(point) == 0.0
+    potential = ngs.GridFunction(ngs.H1(mesh, order=2))
+    potential.Set(ngs.x * ngs.x + ngs.y)
+    gradient = excess_potential_gradient(
+        "Na+", coefficients=coefficients, variables=variables, potential=potential
+    )
+    assert tuple(gradient(point)) == (0.0, 0.0)

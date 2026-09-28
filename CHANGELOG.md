@@ -45,6 +45,8 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 - The stage-8 key hashes every correction file a case reads, not only `electrolyte.parameters`. A
   correction model naming a second file took its fits from there, and an edit to it was served
   from the store unchanged. A case reading one file keeps its key (FR-16, FR-25).
+- `dielectric_gradient_forces: true` with the permittivity correction off, or its concentration
+  part off, assembles with a zero sensitivity instead of raising `AttributeError` (PHY-23).
 
 ## [0.9.0-alpha.5] - 2026-09-26
 
