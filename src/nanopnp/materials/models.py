@@ -18,7 +18,6 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
-from functools import cache
 from typing import Literal, Protocol, TypeAlias
 
 from nanopnp.core.paths import available_corrections
@@ -288,9 +287,14 @@ def _build_none(
     return NoCorrection(property_kind=property_kind, species=species)
 
 
-@cache
 def _document(model_name: str) -> CorrectionDocument:
-    """Return the validated parameter file, read once per model name."""
+    """Return the validated parameter file as it is on disk now.
+
+    Not cached by name: ``load_corrections`` already caches the parse by file
+    text, and a name-keyed cache would serve the fit coefficients a long-lived
+    process read first after an edit the stage-8 key has already seen, storing
+    old fits beside new reference values under the new key.
+    """
     return load_corrections(model_name)
 
 
