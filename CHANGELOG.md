@@ -59,6 +59,10 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 - The truncation gate on a supplied field no longer treats a first grid column on the axis as a cut
   edge. Charge on the axis aborted as "the supplied grid is truncated", though the padding there
   discards nothing (VER-29).
+- Sweep member records, run manifests, their case copies, run records, sweep plans and datasets are
+  written atomically, as the store's files already were, so collection never reads a torn record
+  written by a member still running. Temporaries carry a random token as well as the process id,
+  which repeats across the hosts of a job array (QR-06).
 
 ## [0.9.0-alpha.5] - 2026-09-26
 

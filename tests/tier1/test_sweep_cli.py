@@ -555,3 +555,35 @@ def test_ver23_a_trans_grounded_pair_is_oriented_by_the_biases_its_members_recor
             "rectification": pytest.approx(3.0),
         }
     ]
+
+
+def test_qr06_a_member_record_is_replaced_whole_and_leaves_no_temporary(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Collection reads ``members/`` while the job array is still writing into it.
+
+    A record written in place can be read half-written, and ``read_members``
+    treats a torn record as fatal. Written through a temporary and a rename, a
+    reader sees the old record or the new one, and a write that fails leaves the
+    old record and no temporary behind.
+    """
+    from nanopnp.io import store as store_module
+
+    directory = tmp_path / MEMBERS_DIRNAME
+    first = MemberResult(index=3, point_id="p3", assignments={}, wave=0, status="failed")
+    path = first.write(directory)
+    second = MemberResult(
+        index=3, point_id="p3", assignments={}, wave=0, status="ok", quantities={"current_A": 1.0}
+    )
+    second.write(directory)
+    assert decode_floats(json.loads(path.read_text(encoding="utf-8")))["status"] == "ok"
+    assert [entry.name for entry in directory.iterdir()] == [path.name]
+
+    def refuse(self: Path, target: Path) -> Path:
+        raise OSError("the rename was interrupted")
+
+    monkeypatch.setattr(store_module.Path, "replace", refuse)
+    with pytest.raises(OSError, match="interrupted"):
+        first.write(directory)
+    assert decode_floats(json.loads(path.read_text(encoding="utf-8")))["status"] == "ok"
+    assert [entry.name for entry in directory.iterdir()] == [path.name]
