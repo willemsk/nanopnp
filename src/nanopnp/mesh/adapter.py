@@ -504,9 +504,19 @@ def _read_meshio(path: Path) -> MeshData:
     physical = mesh.cell_data.get("gmsh:physical")
     blocks: dict[str, dict[int, list[np.ndarray]]] = {"triangle": {}, "line": {}}
     for position, block in enumerate(mesh.cells):
-        if block.type not in blocks:
+        if block.type == "vertex":
+            # Physical points: nothing is posed on them, and gmsh writes them freely.
             _LOGGER.debug("ignoring %d %s cells in %s", len(block.data), block.type, path.name)
             continue
+        if block.type not in blocks:
+            # ``from_ngsolve`` refuses the same meshes. A dropped row of quads would
+            # leave a hole whose edge takes the natural, free condition, while the
+            # wall's line elements hang on vertices no triangle uses.
+            raise MeshFormatError(
+                f"{path}: carries {len(block.data)} {block.type!r} cells; nanopnp solves on "
+                "straight-sided triangles bounded by line segments (section 5.2.2), and dropping "
+                "these cells would leave a hole whose edge carries no boundary condition"
+            )
         connectivity = np.asarray(block.data, dtype=np.int64)
         tags = (
             np.asarray(physical[position], dtype=np.int64)
