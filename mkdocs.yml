@@ -18,9 +18,11 @@ edit_uri: edit/main/docs/
 copyright: nanopnp is BSD-3-Clause licensed.
 
 docs_dir: docs
-# Plans are not user material (CLAUDE.md); the build scripts are not pages.
+# Plans and code-review reports are not user material (CLAUDE.md); the build
+# scripts are not pages.
 exclude_docs: |
   plans/
+  code_reviews/
   scripts/
   overrides/
 
