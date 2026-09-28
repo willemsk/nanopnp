@@ -25,6 +25,7 @@ run reaches it, so a walk that stops at stage 9 has still not paid the ~370 ms.
 from __future__ import annotations
 
 import logging
+import shutil
 import tempfile
 import time
 from collections.abc import Mapping
@@ -141,7 +142,9 @@ def _scratch(store: Store) -> Path:
 
     Fresh per run rather than a fixed ``tmp/mesh``: two runs into one store hold
     different meshes, and a deterministic name would have the second overwrite
-    a file the first's artefact still points at (section 5.3.2).
+    a file the first's artefact still points at (section 5.3.2). Removed by
+    :func:`run_document` when the walk ends, succeeded or not, because
+    :meth:`~nanopnp.io.store.Store.put` has copied what the run keeps.
 
     Called from :meth:`_Walk.construct` on the first stage that writes a file
     rather than before the walk, so that a run served entirely from the store
@@ -813,6 +816,41 @@ def run_document(
         workspace=Path(workspace) if workspace is not None else None,
         only=only,
     )
+    try:
+        return _walk(
+            walk,
+            upto=upto,
+            case_text=case_text,
+            case_path=case_path,
+            write=write,
+            progress=progress,
+            cancel=cancel,
+            on_stage=on_stage,
+            on_solve=on_solve,
+        )
+    finally:
+        if walk.scratch is not None:
+            # Store.put copied every payload a stage wrote here into the store,
+            # and every artefact the walk holds points there, so nothing reads
+            # this directory once the walk is over. Left behind, it doubled every
+            # mesh, field export and solution on disk, once per sweep member.
+            shutil.rmtree(walk.scratch, ignore_errors=True)
+
+
+def _walk(
+    walk: _Walk,
+    *,
+    upto: str | None,
+    case_text: str,
+    case_path: Path | None,
+    write: bool,
+    progress: Progress | None,
+    cancel: CancelToken | None,
+    on_stage: StageHook | None,
+    on_solve: SolveHook | None,
+) -> RunResult:
+    """Run the stages of :func:`run_document`, which owns the scratch they write into."""
+    document = walk.document
     stages = _selected(walk.resolved, upto)
     weights = [_WEIGHTS[name] for name in stages]
     total = sum(weights)
