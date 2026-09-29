@@ -1376,6 +1376,63 @@ def substitute(document: CaseDocument, assignments: Mapping[str, FieldValue]) ->
         ) from None
 
 
+def with_profile(document: CaseDocument, path: str | Path) -> CaseDocument:
+    """Return ``document`` rewritten to take its pore profile from ``path`` (WP24 D6).
+
+    How a hand-edited contour enters a run: as a supplied profile, through
+    ``inputs.profile``, which stage 5 reads exactly as it reads stage 4's
+    (section 5.3.1 NOTE on ``geometry.contour``). Four things change and nothing
+    else does:
+
+    - ``structure:`` is removed, because a stage whose output is supplied does
+      not run and neither does anything upstream of it;
+    - ``geometry.density`` and ``geometry.contour`` are reset to their defaults,
+      because stages 2 to 4 read them and do not run;
+    - ``inputs.profile`` is set to ``{path, format: profile1}``;
+    - the whole document is re-validated.
+
+    :func:`substitute` cannot do this, because it sets values inside blocks the
+    document already has and ``inputs.profile`` is absent from a structure case.
+    The result is accepted by :func:`resolve`'s ``inputs.profile`` refusals by
+    construction, and a command-line user writing it by hand gets the same file.
+
+    Parameters
+    ----------
+    document
+        The case whose profile is replaced: a structure case, or one already
+        supplying a profile.
+    path
+        The profile document. Written verbatim, so a caller wanting the derived
+        case to run from any working directory passes an absolute path (WP24 D7);
+        case paths resolve against the process's working directory.
+
+    Returns
+    -------
+    CaseDocument
+        Freshly validated.
+
+    Raises
+    ------
+    CaseValidationError
+        If the rewritten document is not a valid case: for instance one that
+        also supplies ``inputs.mesh``, which is downstream of the profile.
+    """
+    payload = document.model_dump(by_alias=True, mode="json")
+    payload.pop("structure", None)
+    geometry = payload.get("geometry")
+    if isinstance(geometry, dict):
+        geometry["density"] = DensitySpec().model_dump(mode="json")
+        geometry["contour"] = ContourSpec().model_dump(mode="json")
+    inputs = payload.setdefault("inputs", {})
+    inputs["profile"] = {"path": str(path), "format": PROFILE_FORMAT}
+    try:
+        return CaseDocument.model_validate(payload)
+    except ValidationError as error:
+        raise CaseValidationError(
+            render_problems(f"<{document.name} with inputs.profile {path}>", error), error
+        ) from None
+
+
 def _set_at(payload: dict[str, FieldValue], path: str, value: FieldValue) -> None:
     """Set ``value`` into a dumped case document at a dotted path.
 
