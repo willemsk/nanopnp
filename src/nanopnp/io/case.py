@@ -246,7 +246,11 @@ class StructureSource(_Strict):
         )
     )
     variant: str | None = Field(
-        default=None, description="A label for the prepared structure, recorded (OPN-04)"
+        default=None,
+        description=(
+            "A label for the prepared structure (OPN-04). It is recorded in the manifest through "
+            "the case and keys no stage: relabelling does not re-run anything"
+        ),
     )
     chains: str = Field(
         default="all",

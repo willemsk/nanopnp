@@ -2,12 +2,27 @@
 
 2026-09-29 · commit `7b35183` (`ccr-edee6716-ywr441`) · scope: the Phase 2 work packages WP17–WP24 (stages 1–6, case schema v2, the Gmsh backend, the VAL-05 harness, the Geometry tab; 21.1k lines in 35 files; tests read for context only) · focus: all five categories at equal weight
 
-> **Status (2026-09-29, follow-up commit on the same branch):** CR-1 to CR-4, CR-6, CR-8 and
-> CR-10 to CR-12 are fixed by the patches below, as `git diff` made them. CR-1 to CR-4, CR-6 and
-> CR-11 have a regression test that fails on the previous code (six of them checked by stashing
-> the fix). CR-4 amends the §5.2.1 NOTE on the membrane junction in the same commit. CR-8, CR-10
-> and CR-12 are covered by the existing suites. **Open:** CR-5, CR-7, CR-9 and CR-13, which are
-> design changes with prose fixes.
+> **Status (2026-09-29, follow-up commits on the same branch):** every finding is fixed. CR-1 to
+> CR-4, CR-6, CR-8 and CR-10 to CR-12 by the patches below, as `git diff` made them. CR-5, CR-7, CR-9
+> and CR-13, which the first pass left as design changes, are resolved as follows:
+>
+> - **CR-5:** the plan records each input file's sha256 (`SweepPlan.files`), keeps it in its own hash,
+>   and `base_case()` refuses a file that has changed or gone, naming the path and both digests. Author
+>   ruling: the digests are in the plan hash, so existing plans must be re-planned and sweep directory
+>   names move once (§5.3.4 amended).
+> - **CR-7:** `AssessProcess` and `RenderProcess` carry `answered`, set by `drain()`; the tab reports a
+>   child that exited without answering.
+> - **CR-9:** an export whose chain keys do not fit the PDB chain column gives each chain its own
+>   character and writes the key in the segid columns. The first pass proposed a blank chain column;
+>   MDAnalysis's writer forces a blank or multi-character chain ID to `X`, so that fix was measured and
+>   rejected.
+> - **CR-13:** author ruling: `variant` is a label. It is out of the stage-1 key and out of the payload
+>   header, so every stored structure artefact re-keys once and case hashes do not move.
+>
+> CR-1 to CR-7, CR-9, CR-11 and CR-13 have a regression test that fails on the previous code; CR-8,
+> CR-10 and CR-12 are covered by the existing suites. CR-4 and CR-5 amend the specification in the same
+> commits. The CR-1 test first killed its child with `signal.SIGKILL`, which Windows does not have; the
+> Windows job caught it and `Process.kill()` replaced it.
 
 ## Summary
 
