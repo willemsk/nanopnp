@@ -475,6 +475,10 @@ Outcomes):
 - **The wheel can install and still fail to import.** On a bare Linux container `import gmsh`
   raises `OSError: libGLU.so.1`, not `ImportError`. A dispatch that turns a missing extra into a
   refusal has to catch both, as `tests/conftest.py`'s `import_gmsh` does for the tests.
+- **On `ubuntu-latest`, four packages make it import [tested].** GitHub's image lacks
+  `libGLU.so.1`. After `apt-get install --no-install-recommends libglu1-mesa libxft2 libxinerama1
+  libxcursor1`, Gmsh 4.15 imports and meshes on Python 3.11 to 3.14 (WP23 PR, run 36574260470,
+  29 September 2026).
 
 ---
 

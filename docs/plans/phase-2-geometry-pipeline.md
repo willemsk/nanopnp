@@ -324,8 +324,8 @@ passes the same VER-10 and VER-27 gates with the same vocabulary; the default pa
 >   in `GMSH_FIELD_RULES`.
 > - Every Gmsh-dependent test takes the `gmsh_module` fixture (D11).
 > - Whether the bundle carries Gmsh is WP24's decision.
-> - Gmsh's tests run on the Windows and macOS legs only: the ubuntu runners lack `libGLU.so.1`,
->   so there they skip and the refusal path is what is tested (D11 Outcome).
+> - Gmsh's tests fail rather than skip on every CI leg. The ubuntu jobs install the X and GL
+>   libraries the wheel loads at import (D11 Outcome).
 >
 > Measurements: [WP23 Outcomes](wp23-gmsh-backend.md#outcomes), `.knowledge/07` §4.
 

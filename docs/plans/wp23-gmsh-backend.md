@@ -161,16 +161,19 @@ and two frozen solves at about 9 s each. That is under a minute.
 > correction. The ensemble leg records the same in `test_val05_ensemble.py`, and it skips here
 > without the archive.
 
-> **Outcome — D11: `ubuntu-latest` does not import Gmsh, so its legs keep `require-gmsh: "0"`.**
-> The PR's first CI run (`3358f21`, run 36548648270) was the first with `-rs`. On each of the
-> four ubuntu legs (the 3.12 `check` job and the 3.11, 3.13 and 3.14 matrix legs) all 16
-> Gmsh-dependent tests skip with `gmsh does not import: OSError: libGLU.so.1: cannot open shared
-> object file`, and nothing else skips: 1,392 passed, 16 skipped. `macos-latest` ran all 1,408,
-> and `windows-latest` 1,403, skipping only the 5 POSIX hook tests. So the backend is exercised,
-> under `NANOPNP_REQUIRE_GMSH=1`, on the two desktop legs, and the ubuntu legs cover the
-> refusal path. Both local runs also held: with the variable set and `gmsh` hidden, every Gmsh
-> test fails; without it, each skips naming the error. The one pre-existing Gmsh test
-> (`test_mesh_quality.py`) now goes through the same fixture.
+> **Outcome — D11 revised by the author: Gmsh is required on every leg.** The PR's first CI
+> run (`3358f21`, run 36548648270) was the first with `-rs`. On each of the four ubuntu legs (the
+> 3.12 `check` job and the 3.11, 3.13 and 3.14 matrix legs) all 16 Gmsh-dependent tests skipped
+> with `gmsh does not import: OSError: libGLU.so.1`, and nothing else skipped: 1,392 passed, 16
+> skipped. So the backend ran only on the two 3.12 desktop legs. On review the author chose to
+> test it on Linux too, rather than leave `require-gmsh` at `"0"` there as D11 had it. The ubuntu
+> jobs, the nightly Tier 3 included, now install `libglu1-mesa`, `libxft2`, `libxinerama1` and
+> `libxcursor1`. `NANOPNP_REQUIRE_GMSH` is `"1"` in the workflow's env, and the matrix field is
+> gone. On `9634fa2` (run 36574260470) every ubuntu leg and macOS ran all 1,408 tests with no
+> skip, and Windows ran 1,403, skipping only the 5 POSIX hook tests. Both local runs also held:
+> with the variable set and `gmsh` hidden, every Gmsh test fails; without it, each skips naming
+> the error. The one pre-existing Gmsh test (`test_mesh_quality.py`) now goes through the same
+> fixture.
 
 ### Out of scope
 
