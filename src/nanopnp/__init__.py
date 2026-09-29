@@ -25,6 +25,7 @@ except PackageNotFoundError:  # pragma: no cover - only when running from a bare
 if TYPE_CHECKING:  # pragma: no cover - annotations only; resolved lazily below
     # The ``X as X`` spelling marks each as a re-export for the type checker and
     # the linter, which cannot read ``__all__`` through the ``PUBLIC`` table.
+    from nanopnp.core.stages import ArtefactHook as ArtefactHook
     from nanopnp.core.stages import CancelFlag as CancelFlag
     from nanopnp.core.stages import Cancelled as Cancelled
     from nanopnp.core.stages import CancelToken as CancelToken
@@ -72,6 +73,7 @@ PUBLIC: dict[str, str] = {
     "Cancelled": "nanopnp.core.stages",
     "StageHook": "nanopnp.core.stages",
     "SolveHook": "nanopnp.core.stages",
+    "ArtefactHook": "nanopnp.core.stages",
 }
 """Each public name and the module that defines it; the API reference documents these."""
 
