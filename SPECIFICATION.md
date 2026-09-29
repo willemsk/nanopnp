@@ -1364,6 +1364,12 @@ vertex and stays in the stage-1 frame, so stage 5 applies `geometry.membrane.cen
 exactly as to a supplied profile. The document read back through `inputs.profile` is a supplied
 profile (the §5.2.1 NOTE on a supplied fixture). The conditioning and gate records belong to the
 stage-4 artefact, not to the document, so a hand edit cannot carry a stale one.
+A hand edit written by the desktop shell (§8.1, GUI increment 2) is a `nanopnp/profile/v1`
+document with `provenance.source: hand-edit`, which is never a reference source. Its `sha256` is the
+canonical digest of the profile it was edited from, or, where it was started from a loop stage 4's
+gate refused (§8.2.2 B9), the digest of the stage-3 payload that loop was drawn from, as stage 4
+records it. Its measurements are re-derived from its own vertices. It enters a run only through
+`inputs.profile`, and is gated as a supplied profile (**added 29 September 2026**, WP24 D5).
 
 NOTE (`inputs.charge`, `inputs.eps_r`, IF-05, IF-03): a supplied field is named by a
 pydantic-validated header document, `schema: nanopnp/field/v1`, which carries the `quantity`, its
@@ -2907,6 +2913,8 @@ Where a ruling changes a clause, the clause is amended in the commit named in th
 | B5 | The radius-profile criterion of stage 3 and §5.2.1 is checked against a probe-radius profile computed in project code on the aligned structure. HOLE, through `mdahole2`, becomes an optional cross-check that skips when absent | HOLE is a compiled binary with no wheel, so it cannot sit on the end-user path (CON-07, QR-09) | §5.2 stage 3 and §5.2.1, in the Phase 2 plan's commit |
 | B6 | The author's contour script is available (OPN-02) | It is read before the contour work package is planned, as RSK-06 intends. The specified pipeline remains the fallback | §10 OPN-02, in the Phase 2 plan's commit |
 | B7 | FR-20 moves to Phase 3. The optional Gmsh mesher adapter of ADR-002 is delivered in Phase 2 | Phase 2 stays on the geometry chain. The Gmsh backend is optional and never imported on the default path (CON-10) | §8.1 NOTE, in the Phase 2 plan's commit |
+| B8 | The desktop bundle carries the optional Gmsh backend (**added 29 September 2026**, while planning WP24) | `numerics.mesh.backend: gmsh` runs in the bundle; netgen stays the default, so CON-10 holds. The bundle is already GPL-2+ under CON-11, so Gmsh's licence adds no obligation; the packaging probe imports and exercises it and the licence notice names it | The ADR-004 packaging NOTE and VER-55, with the WP24 code |
+| B9 | The shell's contour editor may start from a loop stage 4's gate refused (**added 29 September 2026**, while planning WP24) | A refused gate writes no artefact (QR-12), so otherwise there is nothing to override. The loop is recomputed from the stored stage-3 map by stage 4's own conditioning; the edit is saved as a supplied profile with `provenance.source: hand-edit`, gated as §5.2.1's NOTE on a supplied fixture states, and stages 5 and 6 apply their gates unchanged. The §5.2.1 criteria are measured and shown, not enforced | The §5.3.1 NOTE on `geometry.contour`, in the WP24 plan's commit |
 
 #### 8.2.3 Phase 1 exit, agreed 24 September 2026
 
