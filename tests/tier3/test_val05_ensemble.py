@@ -173,7 +173,6 @@ def test_val05_ensemble_against_the_reference_polygon(
         case,
         store=ensemble_store,
         reference=reference,
-        centre_z_nm=0.0,
         workspace=tmp_path / "sweep",
     )
     for point in points:
@@ -189,7 +188,7 @@ def test_val05_ensemble_against_the_reference_polygon(
             100 * c.conductance_ratio_exact,
             c.mean_nm,
             c.rms_nm,
-            c.constriction_ours.value,
+            c.constriction_ours.value_nm,
             c.constriction_ours.z_nm,
             c.compared_planes,
         )

@@ -128,9 +128,13 @@ class Walked:
     centroid_z_nm: float
     stage1: RunResult
     region: RunResult
+    stage4: np.ndarray
+    """Stage 4's polygon, in the stage-1 frame."""
     ours: np.ndarray
     """Stage 5's polygon, in the model frame."""
     comparison: ProfileComparison
+    """The comparison on the planes both polygons cross; the gated test applies D2's rule itself,
+    so a plane missed outside the tip band fails that test and leaves the records to run."""
 
 
 def _write(path: Path, text: str) -> Path:
@@ -190,8 +194,9 @@ def walked(
         centroid_z_nm=centroid,
         stage1=stage1,
         region=region,
+        stage4=stage4,
         ours=record.points(),
-        comparison=compare_profiles(record.points(), reference),
+        comparison=compare_profiles(record.points(), reference, strict=False),
     )
 
 
@@ -202,7 +207,7 @@ def test_val05_2wcd_against_the_reference_polygon(walked: Walked, reference: np.
     0.158 nm (Design §4). The attribution (D7), the conditioning's share and the
     rms-optimal offset (D6) are recorded beside the verdict.
     """
-    comparison = walked.comparison
+    comparison = compare_profiles(walked.ours, reference)
     logger.info("VAL-05, 2WCD leg:\n%s", as_yaml(comparison))
     assert comparison.planes == 282
     # compare_profiles is strict: an uncrossed plane outside the tip band has already failed.
@@ -216,8 +221,7 @@ def test_val05_2wcd_against_the_reference_polygon(walked: Walked, reference: np.
     conditioning = walked.stage1.artefacts["contour"].summary["conditioning"]
     logger.info("2WCD conditioning's lumen change (D7): %s", conditioning["lumen_change"])  # type: ignore[index]
 
-    stage4 = to_model_frame(walked.ours, -walked.centre_z_nm)
-    fitted = rms_optimal_offset(stage4, reference, centre_nm=walked.centre_z_nm)
+    fitted = rms_optimal_offset(walked.stage4, reference, centre_nm=walked.centre_z_nm)
     logger.info(
         "2WCD registration (D6): centroid %.4f nm, centre_z_nm %.4f nm; rms-optimal offset "
         "%.4f nm (%+.4f nm from the centroid's, a diagnostic never used)",
@@ -246,7 +250,6 @@ def test_val05_2wcd_isolevel_sweep_is_strictly_increasing(
         case,
         store=walked.store,
         reference=reference,
-        centre_z_nm=walked.centre_z_nm,
         workspace=walked.root / "sweep",
     )
     assert [point.isolevel for point in points] == list(ISOLEVELS)
@@ -263,7 +266,7 @@ def test_val05_2wcd_isolevel_sweep_is_strictly_increasing(
             100 * c.conductance_ratio_exact,
             c.mean_nm,
             c.rms_nm,
-            c.constriction_ours.value,
+            c.constriction_ours.value_nm,
             c.constriction_ours.z_nm,
             point.vertices,
             c.compared_planes,
