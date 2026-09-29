@@ -1,4 +1,4 @@
-"""The packaging probe: the four binary payloads of RSK-13, in one process.
+"""The packaging probe: the binary payloads of RSK-13, in one process.
 
 RSK-13 is "desktop packaging defeated by a binary dependency", and §8.2
 criterion 4 asks for "a trivial PySide6 and NGSolve ``webgui`` application" that
@@ -11,7 +11,9 @@ author's double-click closes the criterion.
 real shell will — Qt's widgets *and* Qt WebEngine, the compiled NGSolve and
 Netgen extensions, and the ``ngsolve.webgui`` scene generator — because a probe
 omitting WebEngine would retire RSK-13 without exercising the dependency most
-likely to defeat packaging (ADR-004's packaging NOTE, §8.2.1 A4). :data:`PAYLOADS`
+likely to defeat packaging (ADR-004's packaging NOTE, §8.2.1 A4) — and, since
+WP24, the geometry pipeline's compiled readers, contour extraction, polygon
+checks and the optional Gmsh backend, each exercised once. :data:`PAYLOADS`
 names that set, and ``tests/tier1/test_gui_probe.py`` reads this module's own
 import statements to assert the two cannot drift apart.
 
@@ -45,13 +47,14 @@ import argparse
 import logging
 import os
 import sys
+from importlib import metadata
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from nanopnp.core.paths import PACKAGE_ROOT
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
-    from collections.abc import Sequence
+    from collections.abc import Callable, Sequence
 
     from PySide6.QtWidgets import QApplication, QMainWindow
 
@@ -61,7 +64,9 @@ __all__ = [
     "LICENCE_NOTICE_FILENAME",
     "PAYLOADS",
     "SELFTEST_TIMEOUT_MS",
+    "PayloadError",
     "build_window",
+    "exercise_payloads",
     "licence_notice",
     "main",
     "payload_versions",
@@ -74,8 +79,19 @@ PAYLOADS: tuple[str, ...] = (
     "ngsolve",
     "netgen",
     "ngsolve.webgui",
+    "MDAnalysis",
+    "gemmi",
+    "skimage.measure",
+    "shapely.geometry",
+    "gmsh",
 )
 """The binary payloads the bundle must carry, named by §8.2.1 amendment A4.
+
+The last five are the geometry pipeline's compiled readers and meshers (WP24
+D16, D17): stage 1's two structure readers, stage 4's contour extraction and
+polygon checks, and the optional Gmsh backend (§8.2.2 B8). Each is **exercised**
+by :func:`exercise_payloads`, not only imported: RSK-13's failure is an extension
+that imports and then cannot load the library it wraps.
 
 Not a list this module keeps beside its code: ``tests/tier1/test_gui_probe.py``
 parses the import statements below and asserts the set they name is exactly this
@@ -134,6 +150,132 @@ def licence_notice() -> Path:
         f"{searched}. CON-11 requires the bundle to state the GPL-2+ obligations its default "
         "linear solver creates, so a bundle without it must not be distributed"
     )
+
+
+class PayloadError(RuntimeError):
+    """A payload imported but did not work, or did not import; the message names it."""
+
+    def __init__(self, payload: str, cause: BaseException) -> None:
+        self.payload = payload
+        super().__init__(f"payload {payload!r} failed: {type(cause).__name__}: {cause}")
+
+
+_THREE_ATOMS = (
+    "".join(
+        f"ATOM  {serial:5d}  {name:<3s} ALA A   1    {x:8.3f}{y:8.3f}{z:8.3f}  1.00  0.00"
+        f"           {name[0]}\n"
+        for serial, (name, x, y, z) in enumerate(
+            (("N", 0.0, 0.0, 0.0), ("CA", 1.458, 0.0, 0.0), ("C", 2.009, 1.42, 0.0)), start=1
+        )
+    )
+    + "END\n"
+)
+"""A three-atom PDB: the smallest structure both stage-1 readers accept."""
+
+
+def _exercise_mdanalysis(structure: Path) -> str:
+    """Read the three-atom structure with MDAnalysis."""
+    import MDAnalysis
+
+    atoms = MDAnalysis.Universe(str(structure)).atoms.n_atoms
+    if atoms != 3:
+        raise ValueError(f"read {atoms} atoms from a three-atom structure")
+    return f"MDAnalysis {MDAnalysis.__version__}: read 3 atoms"
+
+
+def _exercise_gemmi(structure: Path) -> str:
+    """Read the three-atom structure with gemmi."""
+    import gemmi
+
+    atoms = gemmi.read_structure(str(structure))[0].count_atom_sites()
+    if atoms != 3:
+        raise ValueError(f"read {atoms} atoms from a three-atom structure")
+    return f"gemmi {metadata.version('gemmi')}: read 3 atoms"
+
+
+def _exercise_skimage() -> str:
+    """Extract the contours of a 3 x 3 cross with scikit-image."""
+    import skimage.measure
+    import skimage.morphology
+
+    # The cross ``disk(1)``, as floats: made by the payload itself, because
+    # importing NumPy here would be a payload the probe does not declare. Its
+    # arms reach the edges, so the level cuts it into four open arcs.
+    cross = skimage.morphology.disk(1).astype(float)  # type: ignore[no-untyped-call]
+    contours = skimage.measure.find_contours(cross, 0.5)  # type: ignore[no-untyped-call]
+    if not contours:
+        raise ValueError("found no contour of a 3 x 3 cross at half its height")
+    return (
+        f"scikit-image {metadata.version('scikit-image')}: find_contours on a 3 x 3 array, "
+        f"{len(contours)} arcs"
+    )
+
+
+def _exercise_shapely() -> str:
+    """Check a triangle with Shapely, which calls into GEOS."""
+    import shapely
+    import shapely.geometry
+
+    if not shapely.geometry.Polygon([(0.0, 0.0), (1.0, 0.0), (0.0, 1.0)]).is_valid:
+        raise ValueError("GEOS reports the unit right triangle invalid")
+    return f"Shapely {shapely.__version__} (GEOS {shapely.geos_version_string}): is_valid"
+
+
+def _exercise_gmsh() -> str:
+    """Mesh the unit square with Gmsh, and finalise it whatever happens."""
+    import gmsh
+
+    gmsh.initialize(interruptible=False)
+    try:
+        gmsh.option.setNumber("General.Terminal", 0)
+        gmsh.model.add("nanopnp-probe")
+        gmsh.model.occ.addRectangle(0.0, 0.0, 0.0, 1.0, 1.0)
+        gmsh.model.occ.synchronize()
+        gmsh.option.setNumber("Mesh.MeshSizeMax", 0.5)
+        gmsh.model.mesh.generate(2)
+        _, tags, _ = gmsh.model.mesh.getElements(2)
+        triangles = sum(len(block) for block in tags)
+    finally:
+        gmsh.finalize()
+    if triangles == 0:
+        raise ValueError("meshed the unit square into no triangles")
+    return f"Gmsh {gmsh.__version__}: meshed the unit square into {triangles} triangles"
+
+
+def exercise_payloads() -> dict[str, str]:
+    """Exercise each geometry payload once, and report what each did (WP24 D17).
+
+    Returns
+    -------
+    dict of str to str
+        Payload to a one-line account of what it did.
+
+    Raises
+    ------
+    PayloadError
+        Naming the first payload that failed to import or to work. An extension
+        that imports and then cannot load its library is RSK-13's failure, so
+        importing alone would prove nothing.
+    """
+    import tempfile
+
+    report: dict[str, str] = {}
+    with tempfile.TemporaryDirectory(prefix="nanopnp-probe-") as scratch:
+        structure = Path(scratch) / "three-atoms.pdb"
+        structure.write_text(_THREE_ATOMS, encoding="utf-8")
+        exercises: tuple[tuple[str, Callable[[], str]], ...] = (
+            ("MDAnalysis", lambda: _exercise_mdanalysis(structure)),
+            ("gemmi", lambda: _exercise_gemmi(structure)),
+            ("skimage.measure", _exercise_skimage),
+            ("shapely.geometry", _exercise_shapely),
+            ("gmsh", _exercise_gmsh),
+        )
+        for payload, exercise in exercises:
+            try:
+                report[payload] = exercise()
+            except Exception as error:
+                raise PayloadError(payload, error) from error
+    return report
 
 
 def payload_versions() -> dict[str, str]:
@@ -347,8 +489,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="nanopnp-probe",
         description=(
-            "The RSK-13 packaging probe: PySide6, Qt WebEngine, NGSolve, Netgen and "
-            "ngsolve.webgui in one process (SPECIFICATION.md section 8.2 criterion 4)."
+            "The RSK-13 packaging probe: PySide6, Qt WebEngine, NGSolve, Netgen, "
+            "ngsolve.webgui and the geometry pipeline's compiled payloads in one process "
+            "(SPECIFICATION.md section 8.2 criterion 4)."
         ),
     )
     parser.add_argument(
@@ -359,6 +502,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     arguments = parser.parse_args(argv)
 
     if arguments.selftest:
+        # The geometry payloads first, each exercised once: a bundle that cannot
+        # read a structure or mesh a square fails naming the payload, before Qt.
+        try:
+            exercised = exercise_payloads()
+        except PayloadError as error:
+            print(f"nanopnp-probe: {error}", file=sys.stderr)
+            return 1
+        for line in exercised.values():
+            print(f"exercised {line}")
         # Set before QApplication, and only for the selftest: a user who
         # double-clicks the bundle wants the platform's own plugin.
         os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")

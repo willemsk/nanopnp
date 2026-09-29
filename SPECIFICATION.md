@@ -1879,7 +1879,14 @@ rather than one-file, for two independent reasons. PySide6 and Qt are used under
 shared libraries satisfies that plainly. And Qt WebEngine runs a separate helper executable, which a
 one-file extractor must locate at runtime inside a temporary directory. The bundle SHALL carry the
 licence notice CON-11 requires, stating that the bundle as a whole is distributed under GPL-2+
-because its default linear solver is, while the library itself remains BSD-3. The background solver
+because its default linear solver is, while the library itself remains BSD-3. The packaging probe
+SHALL carry, and its `--selftest` SHALL exercise once each, failing naming the payload: PySide6's
+widgets and Qt WebEngine, NGSolve, Netgen and `ngsolve.webgui` (§8.2.1 A4), and since WP24 the
+geometry pipeline's compiled payloads, MDAnalysis and gemmi reading a structure, scikit-image's
+contour extraction, Shapely's polygon checks through GEOS, and Gmsh meshing a square (§8.2.2 B8).
+An extension that imports and then cannot load its library is RSK-13's failure, which an import
+alone does not detect: Gmsh's Python module imports with its library missing and fails on its first
+call (`.knowledge/07-software-stack.md` §5). The background solver
 process SHALL be started with the `spawn` start method: it is the only one Windows has, and a forked
 child would inherit both the parent's Qt event loop and its already-imported numerical libraries.
 

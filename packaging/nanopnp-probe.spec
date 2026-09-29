@@ -101,6 +101,44 @@ for _entry in _occt.files or []:
     if _entry.match("*LICENSE*"):
         _occt_datas.append((str(Path(_entry.locate()).resolve()), _occt_metadata.name))
 
+# THE GEOMETRY PIPELINE'S PAYLOADS (WP24 D16, D17). Stage 1's two structure
+# readers, stage 4's contour extraction and its polygon checks: compiled
+# extensions whose shared libraries (Shapely's GEOS above all) are what RSK-13
+# is about, so the collection is as wide as the WP15 one. `--selftest` exercises
+# each once and fails naming it.
+for _package in ("MDAnalysis", "gemmi", "skimage", "shapely"):
+    _package_datas, _package_binaries, _package_hidden = collect_all(_package)
+    _datas += _package_datas
+    _binaries += _package_binaries
+    _hiddenimports += _package_hidden
+
+# GMSH, AND WHY `collect_all("gmsh")` WOULD NOT CARRY IT (section 8.2.2 B8).
+#
+# The wheel installs `gmsh.py` in site-packages and its library OUTSIDE it, as
+# netgen-occt does: `lib/libgmsh.so.4.15` at the environment root on Linux,
+# `Lib/gmsh-4.15.dll` on Windows. `gmsh.py` then finds it by ctypes from a list
+# of paths relative to its own `__file__`, the first of which is its own
+# directory -- which in the bundle is `_internal/`, where a PYZ module's
+# `__file__` points. So the library goes to the bundle root, beside it, and
+# Gmsh's GPL-2+ text travels with it. Nothing on the default path imports it
+# (CON-10); the bundle is already GPL-2+ under CON-11.
+_gmsh = _metadata.distribution("gmsh")
+_gmsh_libraries = [
+    Path(_entry.locate()).resolve()
+    for _entry in _gmsh.files or []
+    if _entry.match("*gmsh*.dll") or _entry.match("libgmsh*.so*") or _entry.match("libgmsh*.dylib")
+]
+if not _gmsh_libraries:
+    raise SystemExit(
+        "the gmsh distribution lists no Gmsh shared library in this environment; a bundle "
+        "built now would import `gmsh` and fail to load it (see the comment above)"
+    )
+_binaries += [(str(_path), ".") for _path in _gmsh_libraries]
+_hiddenimports.append("gmsh")
+for _entry in _gmsh.files or []:
+    if _entry.match("*gmsh/LICENSE.txt"):
+        _datas.append((str(Path(_entry.locate()).resolve()), "gmsh-licence"))
+
 # The CON-11 licence notice travels beside the executable. `probe.licence_notice`
 # looks for it at the bundle root first, and `--selftest` fails if it is absent:
 # a bundle that cannot state its own obligations must not be distributed.
