@@ -36,6 +36,10 @@ env:
   MKL_NUM_THREADS: "1"
   # Every pytest call below passes -rs, so each skip is listed with its reason:
   # a skip is missing evidence, and an unnamed one cannot be audited (WP23 D11).
+  # The optional Gmsh backend's tests FAIL rather than skip on every leg
+  # (tests/conftest.py): a backend whose every test can skip is untested. The
+  # ubuntu jobs install the X and GL libraries the gmsh wheel loads at import.
+  NANOPNP_REQUIRE_GMSH: "1"
 
 # Every checkout that installs the package fetches the whole history
 # (`fetch-depth: 0`): hatch-vcs derives the version from the nearest tag
@@ -98,6 +102,12 @@ jobs:
         with:
           enable-cache: true
           python-version: "3.12"
+      # The gmsh wheel loads these at import and raises OSError without them
+      # (.knowledge/07-software-stack.md section 4; WP23 D11).
+      - if: env.CODE == 'true'
+        run: >-
+          sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends
+          libglu1-mesa libxft2 libxinerama1 libxcursor1
       - if: env.CODE == 'true'
         run: uv sync --all-extras
       - if: env.CODE == 'true'
@@ -145,18 +155,12 @@ jobs:
         # Ubuntu on 3.12 is the `check` job, which runs the same selection.
         os: [ubuntu-latest]
         python-version: ["3.11", "3.13", "3.14"]
-        require-gmsh: ["0"]
         include:
-          # CON-13: the desktop platforms, on the development pin. The gmsh
-          # wheel imports on both, so there its tests FAIL rather than skip
-          # (NANOPNP_REQUIRE_GMSH, tests/conftest.py; WP23 D11): the optional
-          # backend must have one leg where a skip is not an option.
+          # CON-13: the desktop platforms, on the development pin.
           - os: windows-latest
             python-version: "3.12"
-            require-gmsh: "1"
           - os: macos-latest
             python-version: "3.12"
-            require-gmsh: "1"
     steps:
       - uses: actions/checkout@v5
         with:
@@ -166,6 +170,12 @@ jobs:
         with:
           enable-cache: true
           python-version: ${{ matrix.python-version }}
+      # The gmsh wheel loads these at import and raises OSError without them
+      # (.knowledge/07-software-stack.md section 4; WP23 D11).
+      - if: env.CODE == 'true' && runner.os == 'Linux'
+        run: >-
+          sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends
+          libglu1-mesa libxft2 libxinerama1 libxcursor1
       - if: env.CODE == 'true'
         run: uv sync --all-extras
       # CON-13 names Windows, macOS and Linux. Qt's platform plugin works
@@ -179,7 +189,6 @@ jobs:
         run: uv run pytest -rs -n auto --dist loadfile --ignore=tests/tier1/test_gui_widgets.py
         env:
           QT_QPA_PLATFORM: offscreen
-          NANOPNP_REQUIRE_GMSH: ${{ matrix.require-gmsh }}
       # A nonzero exit here, 5 ("no tests ran") included, is a real failure: on
       # these two runners the module must import and run.
       - if: env.CODE == 'true' && runner.os != 'Linux'
@@ -260,6 +269,11 @@ jobs:
         with:
           enable-cache: true
           python-version: "3.12"
+      # The gmsh wheel loads these at import and raises OSError without them
+      # (.knowledge/07-software-stack.md section 4; WP23 D11).
+      - run: >-
+          sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends
+          libglu1-mesa libxft2 libxinerama1 libxcursor1
       - run: uv sync --all-extras
       - run: uv run nanopnp --env
       - run: uv run pytest -m tier3 -v -rs --junitxml=tier3-report.xml
