@@ -74,6 +74,8 @@ That loop is recomputed from the stored map, and the pane marks the place the re
 Open the derived case, or run it from the command line, to mesh and solve the edit. The profile's
 provenance records `source: hand-edit`, and the digest and name of what it was edited from. A
 hand-edited reference fixture is therefore no longer accepted as the reference.
+[Editing the contour by hand](geometry.md#editing-the-contour-by-hand) compares this route with
+editing a profile document as text.
 
 ![Run control](img/run.png)
 

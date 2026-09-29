@@ -28,8 +28,7 @@ mesh through the `inputs:` block skips them, and a run walks these:
 | 11 | qoi | the quantities of interest |
 | 12 | report | the exported fields, if asked for |
 
-Stages 1 to 4 are the first of the geometry pipeline to arrive. For a case carrying a
-`structure:` section, stage 1, `structure`, reads a PDB or mmCIF file and an optional trajectory,
+For a case carrying a `structure:` section, stage 1, `structure`, reads a PDB or mmCIF file and an optional trajectory,
 superposes the frames, finds the Cₙ axis and puts it on z at r = 0. Stage 2, `density`, deposits
 each frame's atoms as a density map on a 3D grid and averages the frames. Stage 3, `symmetry`,
 reduces that map to (r, z) and reports how far it is from Cₙ-symmetric. Stage 4, `contour`, draws
@@ -41,11 +40,14 @@ Stage 5, `region`, moves the profile into the model frame by `geometry.membrane.
 the bilayer to it and assembles the three domains, gating the junction. Stage 6, `mesh`, then meshes
 that region under the §5.2.2 size fields rather than reading a supplied file, and gates it as it
 would an ingested one, plus a check that the pore wall got the size it asked for. A case supplying
-`inputs.profile` starts at stage 5; a `structure:` case walks every stage.
+`inputs.profile` starts at stage 5; a `structure:` case walks every stage. See
+[Structures and trajectories](structures.md) for stage 1, and [From a structure to a
+mesh](geometry.md) for stages 2 to 6, hand edits and exports.
 
 `nanopnp stage --list` prints the registry. Every stage is independently invocable, cancellable
 and introspectable (FR-27). `nanopnp stage <name> case.yaml` runs the pipeline up to that stage and
-prints its artefact.
+prints its artefact, and `--export PATH` also writes that artefact in a format other tools read
+([Exporting what the stages store](geometry.md#exporting-what-the-stages-store)).
 
 ## Artefacts and the store
 
