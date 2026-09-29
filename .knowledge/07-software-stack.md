@@ -688,6 +688,59 @@ GL shim. The unresolved-library warnings that remain in the build log are `libop
 the optional CUDA libraries of `_ngscuda.so`. The first is satisfied at run time by the preload;
 the second is never loaded unless a CUDA solver is asked for.
 
+### The geometry payloads bundle through `collect_all`; Gmsh's library does not **[tested]**
+
+Measured 29 September 2026 on a Linux rebuild of the probe recipe in this container (WP24 D16, D17):
+PyInstaller 6.22.3, MDAnalysis 2.10.0, gemmi 0.7.5, scikit-image 0.26.0, Shapely 2.1.2 with GEOS
+3.13.1, and Gmsh 4.15.2. The Windows bundle is the gated `bundle` job's to confirm; nothing here
+was measured on Windows.
+
+**MDAnalysis, gemmi, scikit-image and Shapely need nothing but `collect_all`.** It carries
+Shapely's GEOS pair from `shapely.libs/`, and the frozen `--selftest` exercises all four. Their
+footprint in `_internal/` is:
+
+| Payload | Size |
+|---|---|
+| MDAnalysis | 45 MB |
+| scikit-image | 30 MB |
+| gemmi | 6.8 MB |
+| Shapely | 5.0 MB, plus 5.6 MB of GEOS |
+
+**Gmsh repeats the OCCT problem, differently.** The wheel installs `gmsh.py` in site-packages and
+`libgmsh.so.4.15` in `lib/` at the environment root; on Windows it is `Lib/gmsh-4.15.dll`.
+`gmsh.py` does not use metadata to find it. Instead it tries a fixed list of paths relative to its
+own `__file__`, and then `ctypes.util.find_library`. The first path is the module's own directory,
+which for a PYZ module in a one-dir bundle is `_internal/`. So the library goes to the bundle root,
+and Gmsh then loads unchanged. The library is 89 MB.
+
+**`import gmsh` succeeds without its library.** With `libgmsh.so.4.15` removed from the built
+bundle, the import prints a warning listing the paths it searched and returns. The first call then
+raises `AttributeError: ...: undefined symbol: gmshInitialize`. A probe that only imported Gmsh
+would pass on a bundle that cannot mesh. This is why the probe exercises each payload once, and it
+is RSK-13's failure in its plainest form.
+
+The whole bundle is 1.3 GB, 501 MB of it PySide6, and builds in 74 s. The five exercises take
+0.46 s together, unfrozen. One detail of the exercise: `skimage.measure.find_contours` needs an
+ndarray and raises `AttributeError: 'list' object has no attribute 'shape'` on a nested list. The
+probe therefore builds its 3 × 3 input with `skimage.morphology.disk(1)`, so that it imports no
+undeclared NumPy.
+
+### The geometry tab's view-models stay under the schema's cost **[tested]**
+
+Measured 29 September 2026, best of three fresh processes, warm cache:
+
+| Module | Cost |
+|---|---|
+| `nanopnp.gui.geometry` | 157 ms |
+| `nanopnp.gui.assess` | 52 ms |
+| `nanopnp.gui.run_model` | 200 ms, the comparison |
+
+Neither of the two new modules brings in PySide6, NGSolve, Netgen, NumPy, MDAnalysis,
+scikit-image, Shapely or Gmsh. `nanopnp.gui.assess` imports `geometry.contour`, and with it
+scikit-image, only inside the spawned child. A drag on the editor canvas can be driven offscreen by
+sending `QMouseEvent`s through `QApplication.sendEvent`: press, move, release. That is how
+`test_gui_widgets.py` asserts it.
+
 ### `nanopnp.io.case` pulls in neither NGSolve nor NumPy, and costs 250–350 ms **[tested]**
 
 Measured 20 September 2026 on the development interpreter (3.12). After `import nanopnp.io.case`,

@@ -8,7 +8,8 @@ NGSolve wheel the bundle carries. `SPECIFICATION.md` CON-11 requires this to be 
 OOM-killed on the reference-sized factorisation, so a SuperLU-default bundle could not run the
 published case. SuperLU remains selectable at run time (`numerics.linear.solver: superlu`); a
 bundle configured that way is still distributed under GPL-2+, because UMFPACK ships inside it
-regardless of which solver a case selects.
+regardless of which solver a case selects. Gmsh, carried as the optional mesher backend
+(`SPECIFICATION.md` §8.2.2 B8), is GPL-2+ as well and changes nothing about that.
 
 | Component | Licence | What it is here |
 |---|---|---|
@@ -20,12 +21,19 @@ regardless of which solver a case selects.
 | PySide6, Qt 6 (including Qt WebEngine) | LGPL-3 | Desktop shell and the embedded field viewer, dynamically linked |
 | `webgui` 0.2.39 (npm), bundling three.js r152 and dat.gui 0.7 | LGPL-2.1-or-later; MIT; Apache-2.0 | The field viewer's renderer, shipped unmodified as `nanopnp/gui/assets/webgui/webgui.js` beside its three licence texts and a `NOTICE.md` naming its source |
 | NumPy, SciPy, pydantic, PyYAML, meshio, h5py, SymPy | BSD-3-Clause / MIT / Apache-2.0 | Numerics, configuration and file formats |
+| MDAnalysis, with GridDataFormats | LGPL-3.0-or-later | Stage 1's structure and trajectory reader, and the OpenDX grid reader, dynamically loaded |
+| gemmi | MPL-2.0 | Stage 1's mmCIF and PDB reader, unmodified |
+| scikit-image | BSD-3-Clause | Stage 4's contour extraction (`find_contours`) |
+| Shapely | BSD-3-Clause | Stage 4's polygon checks |
+| GEOS (inside the Shapely wheel) | LGPL-2.1 | Shapely's geometry engine, dynamically linked |
+| Gmsh | **GPL-2+** | The optional mesher backend (`numerics.mesh.backend: gmsh`); never imported on the default path (CON-10). Its library sits at the bundle root and its licence text in `gmsh-licence/` |
+| The geometry payloads' pure-Python dependencies (NetworkX, imageio, tifffile, Pillow, lazy_loader, mmtf-python, mda-xdrlib, tqdm, threadpoolctl) | BSD / MIT / Apache-2.0 / PSF / MPL-2.0 | Imported by the readers above; unmodified |
 | PDB2PQR 3.7.1 `CHARMM.DAT` (radius column only) | BSD-3-Clause | The stage-2 density map's van der Waals radii, transcribed as data into `nanopnp/data/radii/pdb2pqr_charmm.yaml`; its notice and licence are below |
 
 ## Your rights under the LGPL components
 
-NGSolve, Netgen, Open CASCADE, PySide6, Qt and `webgui` are used under their LGPL options, which give you the right to
-replace them with your own versions. The bundle is built **one-dir** rather than one-file precisely
+NGSolve, Netgen, Open CASCADE, PySide6, Qt, `webgui`, MDAnalysis, GridDataFormats and GEOS are used
+under their LGPL options, which give you the right to replace them with your own versions. The bundle is built **one-dir** rather than one-file precisely
 so that you can: every shared library is an ordinary file in the bundle directory and may be
 replaced in place. Nothing in the bundle is statically linked against an LGPL component.
 The renderer is likewise an ordinary file, `_internal/nanopnp/gui/assets/webgui/webgui.js`, and
@@ -66,7 +74,9 @@ The corresponding source of `webgui` is the npm tarball
 
 The current bundle is the **packaging probe** of `SPECIFICATION.md` §8.2 criterion 4 as amended by
 §8.2.1 A4: a trivial application that imports PySide6, Qt WebEngine, NGSolve, Netgen and
-`ngsolve.webgui` in one process, so that RSK-13 — desktop packaging defeated by a binary
-dependency — is detected on every push rather than once. It is not the desktop shell, and it solves
+`ngsolve.webgui` in one process, and exercises the geometry pipeline's compiled payloads once each —
+MDAnalysis and gemmi read a three-atom structure, scikit-image extracts a contour, Shapely checks a
+polygon through GEOS, and Gmsh meshes a unit square — so that RSK-13, desktop packaging defeated by
+a binary dependency, is detected on every push rather than once. It is not the desktop shell, and it solves
 nothing. The licence obligations above are stated with the first bundle rather than with the first
 useful one, because a licence statement cannot be retrofitted to something already distributed.

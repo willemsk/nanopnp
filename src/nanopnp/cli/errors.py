@@ -237,6 +237,11 @@ EXCLUDED: Final[dict[str, str]] = {
         "directions, so an unknown one means the manifest code and the case schema have diverged "
         "in this build, not that the user asked for something impossible"
     ),
+    "nanopnp.gui.probe:PayloadError": (
+        "raised only inside the packaging probe's --selftest, which catches it, prints it naming "
+        "the payload and exits 1 itself (WP24 D17); no command of the CLI reaches the probe, and "
+        "a broken bundle is a packaging defect rather than a case, gate or convergence class"
+    ),
 }
 """Public exception classes deliberately left unclassified, with the reason.
 

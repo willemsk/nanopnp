@@ -32,11 +32,19 @@ AMENDED_PAYLOAD_SET = frozenset(
         "ngsolve",
         "netgen",
         "ngsolve.webgui",
+        # WP24 D16, D17: the geometry pipeline's compiled payloads, and Gmsh (B8).
+        "MDAnalysis",
+        "gemmi",
+        "skimage.measure",
+        "shapely.geometry",
+        "gmsh",
     }
 )
 """The import set §8.2.1 amendment A4 names, written out from the specification."""
 
-BINARY_ROOTS = frozenset({"PySide6", "ngsolve", "netgen"})
+BINARY_ROOTS = frozenset(
+    {"PySide6", "ngsolve", "netgen", "MDAnalysis", "gemmi", "skimage", "shapely", "gmsh"}
+)
 """Top-level packages whose payloads are compiled and have to be bundled."""
 
 
