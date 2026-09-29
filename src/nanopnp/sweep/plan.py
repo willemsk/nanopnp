@@ -918,7 +918,7 @@ def read_plan(path: Path) -> SweepPlan:
         )
         for entry in raw["points"]
     )
-    return SweepPlan(
+    plan = SweepPlan(
         name=str(raw["name"]),
         base_path=Path(str(base["path"])),
         base_hash=str(base["hash"]),
@@ -930,6 +930,20 @@ def read_plan(path: Path) -> SweepPlan:
         wall_distance=dict(raw["wall_distance"]),
         workers=None if raw.get("workers") is None else int(raw["workers"]),
     )
+    # The file carries its own identities; a hand edit or a merge of two plans would
+    # otherwise run other operating points under the recorded point ids (QR-12).
+    for point in plan.points:
+        if short(content_hash(POINT_SCHEMA, dict(point.assignments)), ID_LENGTH) != point.point_id:
+            raise SweepPlanError(
+                f"{path}: point {point.index} is recorded as {point.point_id!r} but its "
+                "assignments hash to another identity; the plan was edited, re-plan it"
+            )
+    if plan.hash != raw["hash"]:
+        raise SweepPlanError(
+            f"{path}: records hash {raw['hash']} but its contents hash to {plan.hash}; "
+            "the plan was edited, re-plan it"
+        )
+    return plan
 
 
 def plan_from_document(path: Path, *, check_meshes: bool = True) -> SweepPlan:

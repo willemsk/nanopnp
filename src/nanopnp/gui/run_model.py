@@ -40,7 +40,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
-from nanopnp.cli.errors import EXIT_OK
+from nanopnp.cli.errors import EXIT_OK, EXIT_UNEXPECTED
 from nanopnp.gui.convergence import ConvergenceModel
 from nanopnp.gui.solver import (
     Cancelled,
@@ -350,7 +350,24 @@ class RunControl:
     def poll(self) -> RunModel:
         """Drain the child's events into the model and return it."""
         if self.process is not None:
+            # Liveness before the queue, so that a child which posts its last event and
+            # exits between the two reads is not mistaken for a silent one.
+            alive = self.process.running
             self.model.consume(self.process.drain())
+            if not alive and not self.model.settled:
+                self.model.consume(
+                    (
+                        Failed(
+                            exit_code=EXIT_UNEXPECTED,
+                            error="ChildExited",
+                            message=(
+                                f"the run process exited with status {self.process.exit_code} "
+                                "without reporting a result (killed, out of memory, or a fault "
+                                "in a compiled library)"
+                            ),
+                        ),
+                    )
+                )
         return self.model
 
     def cancel(self) -> None:

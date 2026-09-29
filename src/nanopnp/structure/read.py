@@ -563,8 +563,10 @@ def select_frames(
                 "window would be the whole trajectory in silence (section 5.3.1 NOTE)"
             )
         start = times_ns[-1] - last_ns
-        # A relative slack for the round-off of times accumulated as frame * dt.
-        slack = 1e-9 * max(1.0, abs(times_ns[-1]))
+        # A slack for the round-off of times accumulated as frame * dt, where dt may be a
+        # float32 (a DCD stores its timestep so): a thousandth of an interval never admits
+        # a neighbouring frame, and covers the drift of ~1.6e4 frames of float32 error.
+        slack = 1e-9 * max(1.0, abs(times_ns[-1])) + 1e-3 * interval_ns
         window = [index for index in window if times_ns[index] >= start - slack]
     if count is not None:
         if count > len(window):

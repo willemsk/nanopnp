@@ -322,7 +322,23 @@ def lumen_interval(points: np.ndarray, z_nm: float, *, centre_z_nm: float) -> tu
             f"with the profile spanning z = [{lower:.4f}, {upper:.4f}] nm in the model frame "
             f"after geometry.membrane.centre_z_nm = {centre_z_nm:g} nm",
         )
-    return crossings[0], crossings[1]
+    import numpy as np
+
+    # The half-open test counts one end of an edge lying on the plane; the body's
+    # section runs on along it, and the membrane meets the body at the far end.
+    following = np.roll(points, -1, axis=0)
+    flat = [
+        (min(a[0], b[0]), max(a[0], b[0]))
+        for a, b in zip(points, following, strict=True)
+        if a[1] == z_nm and b[1] == z_nm
+    ]
+    r2, grown = crossings[1], True
+    while grown:
+        grown = False
+        for low, high in flat:
+            if low <= r2 < high:
+                r2, grown = float(high), True
+    return crossings[0], r2
 
 
 def _point_segment_distance(p: np.ndarray, s0: np.ndarray, s1: np.ndarray) -> np.ndarray:

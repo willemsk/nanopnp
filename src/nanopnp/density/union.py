@@ -187,11 +187,17 @@ def canonical_grid(
 
     h = float(spacing_nm)
     reach = float(np.max(cutoff_nm(widths_nm)))
-    positions = np.asarray(positions_nm, dtype=np.float64)
-    radius = float(np.max(np.hypot(positions[..., 0], positions[..., 1])))
+    # One frame at a time: the ensemble is float32 and a float64 copy of it, plus a
+    # (frames, atoms) radius array, is 2.7x its size (the module's memory contract).
+    radius, z_min, z_max = 0.0, math.inf, -math.inf
+    for frame in positions_nm:
+        xyz = np.asarray(frame, dtype=np.float64)
+        radius = max(radius, float(np.max(np.hypot(xyz[:, 0], xyz[:, 1]))))
+        z_min = min(z_min, float(xyz[:, 2].min()))
+        z_max = max(z_max, float(xyz[:, 2].max()))
     half_width = math.ceil((radius + reach) / h) + 1
-    z_low = math.floor((float(np.min(positions[..., 2])) - reach) / h) - 1
-    z_high = math.ceil((float(np.max(positions[..., 2])) + reach) / h) + 1
+    z_low = math.floor((z_min - reach) / h) - 1
+    z_high = math.ceil((z_max + reach) / h) + 1
     return DensityGrid(spacing_nm=h, half_width=half_width, z_first=z_low, nz=z_high - z_low + 1)
 
 

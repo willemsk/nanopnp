@@ -23,6 +23,7 @@ two-thousandth point is inadmissible must fail in seconds.
 
 from __future__ import annotations
 
+import json
 import re
 import subprocess
 import sys
@@ -555,6 +556,32 @@ def test_ver36_a_plan_round_trips_through_its_file(base: Path, tmp_path: Path) -
     ]
     assert reloaded.waves() == plan.waves()
     assert reloaded.pairs == plan.pairs
+
+
+def test_ver36_a_plan_whose_recorded_identities_no_longer_match_is_refused(
+    base: Path, tmp_path: Path
+) -> None:
+    """A point's id keys its dataset row, so an edited assignment must not keep the old id.
+
+    ``read_plan`` re-derives each id and the plan hash from what the file enumerates
+    (CODE_REVIEW_003 CR-6). Without that, a hand edit or a merge of two plans ran the
+    new operating point under the recorded identity.
+    """
+    path = write_plan(_plan(base, TWO_BY_THREE), tmp_path / "sweep")
+    text = path.read_text(encoding="utf-8")
+    document = json.loads(text)
+    assert read_plan(path).hash == document["hash"]
+
+    document["points"][1]["assignments"]["bias"] = {"__f__": (0.3).hex()}
+    path.write_text(json.dumps(document), encoding="utf-8")
+    with pytest.raises(SweepPlanError, match=r"point 1 .* the plan was edited"):
+        read_plan(path)
+
+    document = json.loads(text)
+    document["hash"] = "0" * 64
+    path.write_text(json.dumps(document), encoding="utf-8")
+    with pytest.raises(SweepPlanError, match="the plan was edited"):
+        read_plan(path)
 
 
 def test_ver36_a_file_of_another_schema_is_refused(tmp_path: Path) -> None:

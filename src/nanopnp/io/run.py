@@ -49,7 +49,7 @@ from nanopnp.core.stages import (
     report,
 )
 from nanopnp.io.artefact import Artefact, CaseArtefact, StageInputs
-from nanopnp.io.case import load_case, resolve
+from nanopnp.io.case import loads_case, resolve
 from nanopnp.io.manifest import Manifest, build
 from nanopnp.io.store import Store, atomic_write_bytes
 
@@ -971,8 +971,11 @@ def _walk(
     report(progress, 1.0, f"{len(stages)} stages complete")
 
     manifest = _manifest(walk, case_text=case_text, case_path=case_path)
+    # A truncated walk is another record of the same case; it must not replace the
+    # run record a complete walk wrote, because QR-08 reproduces from that one.
+    label = document.name if stages[-1] == PIPELINE[-1] else f"{document.name}-upto-{stages[-1]}"
     result = RunResult(
-        directory=walk.store.run_directory(document.name, manifest.case_hash),
+        directory=walk.store.run_directory(label, manifest.case_hash),
         manifest=manifest,
         artefacts=dict(walk.artefacts),
         stages=tuple(walk.records),
@@ -1017,9 +1020,10 @@ def run_case(
         As :func:`run_document` documents them.
     """
     source = Path(path)
+    text = source.read_text(encoding="utf-8")
     return run_document(
-        load_case(source),
-        case_text=source.read_text(encoding="utf-8"),
+        loads_case(text, source=str(source)),
+        case_text=text,
         case_path=source,
         store=store,
         upto=upto,
