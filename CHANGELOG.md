@@ -14,7 +14,36 @@ development version that names it, for example `0.5.0a11.dev3+g1a2b3c4`, and tha
 every provenance manifest records (FR-25). Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
 
-## [Unreleased]
+## [0.9.0-alpha.9] - 2026-09-29
+
+WP25: documentation increment 2, the geometry pipeline (Phase 2 criterion 5). The tag also
+carries the fixes of CODE_REVIEW_003, which merged after WP24.
+
+### Added
+
+- `nanopnp stage <name> <case> --export PATH` writes the artefact a stage stored, in the format
+  the suffix names: the aligned ensemble as a PDB with a DCD beside it; the density map as `.npz`,
+  OpenDX or CCP4/MRC; the reduced map as `.npz`; the stage-4 profile and a stage-6 mesh byte for
+  byte. A stage or suffix it does not write exits 2 before any stage runs, and a failed write
+  leaves no file. No key moves (the IF-02 export NOTE, IF-05, VER-32).
+- Two user-guide pages: *Structures and trajectories*, for stage 1, and *From a structure to a
+  mesh*, for stages 2 to 6, the membrane's registration, hand edits and exports (QR-15 in part).
+- Example `06-pdb-to-mesh`. The deposited 2WCD entry is refused by stage 1's orientation gate; a
+  preparation script that uses no nanopnp code orients it; the prepared entry is walked to a gated
+  mesh, its artefacts are exported, and the exported profile meshes to the same mesh again as a
+  supplied input. Executed at Tier 2 (VER-46).
+- The example executor's `refused` tag: every command of such a block must exit `4`, the gate
+  class, and a command that exits otherwise fails naming both codes (VER-46).
+
+### Changed
+
+- **The density map's OpenDX and CCP4/MRC files are in ångströms** (§8.2.2 B10), the unit
+  molecular viewers read and the one the PDB export is in. `DensityMap.read` converts back to nm.
+  A map exported by an earlier version is in nm and must be exported again. The `.npz` and the
+  `(r, z)` field grids stay in nm (IF-05, VER-49).
+- `DensityMap.read` names the GridDataFormats reader instead of letting it guess from the
+  extension, which it could not do for `.map` (IF-05).
+- The getting-started page lists all four extras, `structure` and `gmsh` included.
 
 ### Fixed
 

@@ -1,6 +1,6 @@
 # Worked examples
 
-Five examples, each a directory under `examples/` in the repository with a README, the case and
+Six examples, each a directory under `examples/` in the repository with a README, the case and
 sweep files it runs, and any script. The pages below are those READMEs, verbatim. Every command in a
 README's tagged blocks is **executed by a test**, word for word, from a copy of the directory, and
 each example asserts a property of the model rather than a transcribed number (VER-46).
@@ -12,10 +12,12 @@ each example asserts a property of the model rather than a transcribed number (V
 | [03 An I–V sweep](../_generated/examples/03-iv-sweep.md) | P2 | sweeps, waves, rectification, and a symmetric control |
 | [04 The Python API](../_generated/examples/04-python-api.md) | P1 | the public API, hand substitution, and reading exported fields |
 | [05 The ClyA reference](../_generated/examples/05-clya-reference.md) | P1, P2 | the reference geometry, a frozen validation case, and a SLURM submission |
+| [06 From a PDB entry to a mesh](../_generated/examples/06-pdb-to-mesh.md) | P1, P2 | a gate refusing the deposited frame, preparation, stages 1 to 6, exports, and a supplied profile |
 
 Examples 01–04 run on an idealised cylindrical pore and take seconds to a minute each. Example 05's
 solve takes tens of minutes on the reference mesh, so its test is recorded rather than gated. Its planning
-step runs on every push.
+step runs on every push. Example 06 builds a mesh from a structure in about a minute and solves
+nothing.
 
 To run one, copy its directory and run its commands from inside it. Case paths resolve against the
 working directory.

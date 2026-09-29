@@ -1,8 +1,9 @@
 # Meshes
 
-In v0.5 the mesh is an input. You supply it through `inputs.mesh`, or generate an idealised pore or
-the ClyA reference geometry with `nanopnp mesh`. Building a mesh from a protein structure is the
-v0.9 geometry pipeline (FR-10).
+A mesh is either an input or built by the pipeline. You supply one through `inputs.mesh`, or
+generate an idealised pore or the ClyA reference geometry with `nanopnp mesh`. A case with a
+`structure:` section or an `inputs.profile` builds its own, through stages 5 and 6 (FR-10): see
+[From a structure to a mesh](geometry.md).
 
 ## Coordinates and formats
 

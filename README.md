@@ -49,16 +49,17 @@ that can reconstruct the run.
 ## Status and roadmap
 
 **Pre-alpha.** The solver core, the case file, the command line, parameter sweeps, provenance, a
-desktop shell, and the user documentation with five worked examples are implemented and tested.
-Meshes and charge maps are either supplied from outside or generated for an idealised pore or the
-ClyA reference geometry. Building them from a PDB structure is v0.9. Nothing is a validated
+desktop shell, and the user documentation with six worked examples are implemented and tested.
+Meshes are supplied from outside, generated for an idealised pore or the ClyA reference geometry,
+or built from a PDB structure by the geometry pipeline (Phase 2). Charge maps are still supplied
+from outside; assigning them from a structure is Phase 3. Nothing is a validated
 release yet, and the comparison against the reference COMSOL model is recorded but not yet passed.
 
 | Release | Phase | Scope | State |
 |---|---|---|---|
 | v0.1 | 0 | Spike: the coupled model on an analytic pore, the continuation ladder, analytic benchmarks | **released**, [`v0.1.0`](CHANGELOG.md#010---2026-09-02) |
 | v0.5 | 1 | Solver core: external meshes and fields, QoI extraction, frozen case schema, API, CLI, sweeps | **released**, [`v0.5.0`](CHANGELOG.md#050---2026-09-24) |
-| v0.9 | 2–3 | Full pipeline from a PDB structure: density, symmetry reduction, contour, mesh, PDB2PQR charges | **planned**, [Phase 2 plan](docs/plans/phase-2-geometry-pipeline.md) |
+| v0.9 | 2–3 | Full pipeline from a PDB structure: density, symmetry reduction, contour, mesh, PDB2PQR charges | **in progress**, [Phase 2 plan](docs/plans/phase-2-geometry-pipeline.md) |
 | v1.0 | 4 | Validated release: V&V suite in CI, tutorials, JOSS submission, DOI archive | planned |
 
 Each merged work package is tagged `vX.Y.Z-alpha.N` toward its phase's release, and the package

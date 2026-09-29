@@ -10,8 +10,15 @@ PyPI. Install it from the repository:
 pip install "nanopnp @ git+https://github.com/willemsk/nanopnp"
 ```
 
-Two optional extras: `gui`, for the desktop shell, and `examples`, for the worked examples' plots.
-For example, `pip install "nanopnp[gui,examples] @ git+https://github.com/willemsk/nanopnp"`.
+Four optional extras:
+
+- `structure`, for building a geometry from a protein structure (stages 1 to 4:
+  [Structures and trajectories](guide/structures.md));
+- `gui`, for the desktop shell;
+- `gmsh`, the optional mesher backend, which is GPL-licensed and never needed;
+- `examples`, for the worked examples' plots.
+
+For example, `pip install "nanopnp[structure,gui] @ git+https://github.com/willemsk/nanopnp"`.
 
 ### From a checkout
 
