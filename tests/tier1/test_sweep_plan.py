@@ -32,6 +32,7 @@ from pathlib import Path
 
 import pytest
 
+from nanopnp.core.hashing import file_hash
 from nanopnp.io.case import CaseValidationError, loads_case
 from nanopnp.sweep.document import loads_sweep
 from nanopnp.sweep.plan import (
@@ -581,6 +582,57 @@ def test_ver36_a_plan_whose_recorded_identities_no_longer_match_is_refused(
     document["hash"] = "0" * 64
     path.write_text(json.dumps(document), encoding="utf-8")
     with pytest.raises(SweepPlanError, match="the plan was edited"):
+        read_plan(path)
+
+
+def test_ver36_the_plan_binds_itself_to_the_files_it_hashed(base: Path, tmp_path: Path) -> None:
+    """The base case's hash covers the path a case names, not the bytes behind it.
+
+    The plan records each input file's content hash, keeps it in its own hash, and a member
+    is refused if the file has since changed or gone (CODE_REVIEW_003 CR-5, QR-12). Without
+    that, an edited mesh, or a dispatch from a directory holding another one, solved a
+    different problem under the plan's point identities.
+    """
+    mesh = tmp_path / "pore.vol"
+    mesh.write_bytes(b"one")
+    plan = _plan(base, TWO_BY_THREE)
+    assert plan.files == {str(mesh): file_hash(mesh)}
+    assert plan.case(0).name.startswith("base-"), "an unchanged file builds members as before"
+
+    other = tmp_path / "other"
+    other.mkdir()
+    (other / "pore.vol").write_bytes(b"a different mesh")
+    (other / "base.yaml").write_text(
+        base.read_text(encoding="utf-8").replace(str(mesh), str(other / "pore.vol")),
+        encoding="utf-8",
+    )
+    assert _plan(other / "base.yaml", TWO_BY_THREE).hash != plan.hash
+
+    mesh.write_bytes(b"three, and longer")
+    with pytest.raises(SweepPlanError, match=r"different .*pore\.vol") as caught:
+        plan.case(0)
+    assert file_hash(mesh) in str(caught.value)
+    assert plan.files[str(mesh)] in str(caught.value)
+
+    mesh.unlink()
+    with pytest.raises(SweepPlanError, match=r"pore\.vol, which is not there now"):
+        plan.case(0)
+
+
+def test_ver36_the_recorded_file_digests_round_trip_and_an_older_plan_is_refused(
+    base: Path, tmp_path: Path
+) -> None:
+    """A plan file carries its digests; one written before they were recorded says to re-plan."""
+    (tmp_path / "pore.vol").write_bytes(b"one")
+    plan = _plan(base, TWO_BY_THREE)
+    path = write_plan(plan, tmp_path / "sweep")
+    reloaded = read_plan(path)
+    assert reloaded.files == plan.files and reloaded.hash == plan.hash
+
+    document = json.loads(path.read_text(encoding="utf-8"))
+    del document["files"]
+    path.write_text(json.dumps(document), encoding="utf-8")
+    with pytest.raises(SweepPlanError, match=r"records no input file digests.*re-plan"):
         read_plan(path)
 
 

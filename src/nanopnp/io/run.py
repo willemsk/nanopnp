@@ -67,6 +67,7 @@ __all__ = [
     "RunResult",
     "StageRecord",
     "UnknownStageError",
+    "input_files",
     "run_case",
     "run_document",
     "selected_stages",
@@ -561,8 +562,10 @@ def _resolve_stage(
     )
 
 
-def _input_files(resolved: ResolvedCase, case_path: Path | None) -> dict[str, Path]:
+def input_files(resolved: ResolvedCase, case_path: Path | None) -> dict[str, Path]:
     """Return the run's input files by role, for the manifest's Inputs group.
+
+    Shared with the sweep plan, which binds itself to the same files (CODE_REVIEW_003 CR-5).
 
     Only files that exist as paths: a mesh or a field named by store hash rather
     than by path is already recorded as an upstream artefact, and hashing it a
@@ -706,7 +709,7 @@ def _manifest(walk: _Walk, *, case_text: str, case_path: Path | None) -> Manifes
         walk.document,
         case_text=case_text,
         case_hash=case.hash if case is not None else CaseArtefact(walk.document).hash,
-        input_files=_input_files(walk.resolved, case_path),
+        input_files=input_files(walk.resolved, case_path),
         upstream=dict(walk.artefacts),
         mesh=dict(mesh.summary) if mesh is not None else None,
         structure=_record(structure, STRUCTURE_RECORD_KEYS),
