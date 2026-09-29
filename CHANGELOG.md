@@ -16,6 +16,39 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+## [0.9.0-alpha.8] - 2026-09-29
+
+WP24: the geometry pipeline surfaced in the desktop shell (Phase 2 criterion 4).
+
+### Added
+
+- A **Geometry** tab, after Case, builds stages 1 to 6 from the shell (`upto: mesh`, in the run's
+  spawned child and with its cancel token) and shows each stage's artefact as it lands. It shows
+  the structure record, the density section, the (r, z) mean and both variances, the contour,
+  the region, and the mesh by material beside its quality figures. Every picture names its frame
+  (IF-09, QR-11, FR-27).
+- A contour editor. It moves, inserts and deletes vertices with undo and redo, and never smooths.
+  An edit is saved as a `nanopnp/profile/v1` document with `provenance.source: hand-edit`, and a
+  derived case, written by the new `nanopnp.io.case.with_profile`, runs it through
+  `inputs.profile`. The original case file is never modified.
+- The §5.2.1 criteria are measured on an edit in a spawned child, against the case's own stored
+  stages, and are shown but not enforced. A contour stage 4 refused can seed the editor
+  (§8.2.2 B9).
+- `ArtefactHook` (`on_artefact` on `run_case`) reports each stage's schema, hash and cache state
+  after the artefact is in the store. It is bound after every key is taken, so it moves no key.
+- `nanopnp.geometry.contour.measure`: stage 4's gate without its raise. `gate` is now built on it,
+  and its messages and record are unchanged.
+- The packaging probe carries and exercises MDAnalysis, gemmi, scikit-image, Shapely (with GEOS)
+  and Gmsh, and fails naming the payload that does not work. The bundle carries Gmsh as the
+  optional backend (§8.2.2 B8), and its licence notice names every new payload.
+- VER-55 at Tiers 1 and 2, the latter on the prepared 2WCD.
+
+### Changed
+
+- The profile loader's messages for a negative radius and for coincident vertices now name the
+  vertex index. `ContourGateError` carries the (r, z) it names as numbers, `location_nm`.
+- `profile_digest` moved to `nanopnp.mesh.profile`. `nanopnp.geometry.region` re-exports it.
+
 ## [0.9.0-alpha.7] - 2026-09-29
 
 WP23: the optional Gmsh mesher backend of ADR-002.
