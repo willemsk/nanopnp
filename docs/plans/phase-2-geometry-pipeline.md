@@ -1,6 +1,6 @@
 # Phase 2 (Geometry pipeline): from a structure to a gated mesh
 
-**Status: in progress. WP17 delivered, 24 September 2026; WP18 delivered, 25 September 2026; WP19 delivered, 25 September 2026; WP20 delivered, 26 September 2026; WP21 delivered, 26 September 2026; WP22 delivered, 28 September 2026, its Tier-3 verdict awaiting a run on the archive; WP23 delivered, 29 September 2026; WP24–WP25 planned.** Written 24 September 2026, after Phase 1 (WP7–WP16) delivered the
+**Status: in progress. WP17 delivered, 24 September 2026; WP18 delivered, 25 September 2026; WP19 delivered, 25 September 2026; WP20 delivered, 26 September 2026; WP21 delivered, 26 September 2026; WP22 delivered, 28 September 2026, its Tier-3 verdict awaiting a run on the archive; WP23 delivered, 29 September 2026; WP24 planned in detail, 29 September 2026; WP25 planned.** Written 24 September 2026, after Phase 1 (WP7–WP16) delivered the
 solver core on an externally supplied mesh (main at `v0.5.0-alpha.10`). Two things come first:
 the Phase 1 end-of-phase report, which merges as tag `v0.5.0`, and the author's double-click
 observation that closes Phase 0 criterion 4. That ordering is ruling B1 of `SPECIFICATION.md`
@@ -337,6 +337,15 @@ substituted through `inputs.profile`, so it is recorded by content hash like any
 (FR-27). The shell adds viewers and no physics (RSK-15). The packaging probe gains MDAnalysis,
 scikit-image and Shapely, so the `bundle` job detects a packaging break on every push (RSK-13).
 Adds **VER-55**, extending VER-43 and VER-44 to the new views, with the view-models importing no Qt.
+
+> **Planned, 29 September 2026** ([plan](wp24-gui-geometry-pipeline.md)). Two author rulings,
+> recorded as §8.2.2 B8 and B9: the bundle carries Gmsh, and the contour editor may start from a
+> loop stage 4's gate refused. A new `ArtefactHook` reports each stage's stored artefact, and
+> `Build geometry` is `run --upto mesh` through the existing child (D1–D3). A hand edit is a
+> profile with `source: hand-edit` entering a derived case through `inputs.profile`, drawn and
+> written in the stage-1 frame (D4–D7). It is gated as a supplied profile; the §5.2.1 criteria are
+> measured and shown, not enforced (D8, D9). The oracle for the route: a null edit meshes to the
+> original's content hash on 2WCD.
 
 ### WP25 — Documentation increment 2
 

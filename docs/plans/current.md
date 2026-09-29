@@ -5,17 +5,15 @@ evidence that an unmerged branch has shipped.
 
 ## Position
 
-- Phase 1 ([solver core](phase-1-solver-core.md)) is **closed** as `v0.5.0` (§8.2.3); C1 and C2
-  land as addenda to its report.
-- Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **in progress**. WP17 to WP22
-  are merged (`v0.9.0-alpha.1` to `alpha.6`). WP24–WP25 are planned in the phase plan (§8.2.2).
+- Phase 1 ([solver core](phase-1-solver-core.md)) is **closed** as `v0.5.0` (§8.2.3).
+- Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **in progress**. WP17 to WP23
+  are merged (`v0.9.0-alpha.1` to `alpha.7`). WP25 is planned in the phase plan (§8.2.2).
 - **Phase criterion 3 stays open until `tests/tier3/test_val05_ensemble.py` runs on
   `$NANOPNP_REFERENCE_DATA`**. That run also pins `Z_MD`, and its numbers go into the
   [WP22 Outcomes](wp22-val05-reference-geometry.md#outcomes).
-- **WP23** ([Gmsh backend](wp23-gmsh-backend.md)) is **implemented** on
-  `claude/wp-plan-23-2fdcd2`, in review as PR #47; it merges as `v0.9.0-alpha.7`. Its Gmsh
-  tests are required on every CI leg, ubuntu included (WP23 D11 Outcome). Then WP24, which
-  decides whether the bundle carries Gmsh.
+- **WP24** ([GUI increment 2](wp24-gui-geometry-pipeline.md)) is **planned** on
+  `claude/wp-plan-24-2fdcd2`; it merges as `v0.9.0-alpha.8` and discharges phase criterion 4.
+  Author rulings §8.2.2 B8 and B9 bind it. Then WP25.
 
 ## What Phase 2 must not re-decide
 
@@ -30,7 +28,7 @@ Each is recorded in full where it points.
 - **Python 3.11–3.14**, held together by VER-47. → §8.2.2 B4.
 - **No HOLE on the default path** (B5). **Gmsh is optional** (B7): it meshes stage 5's region
   through `region_graph`, its fields state netgen's implicit size restrictions, its settings key
-  the mesh and are never case keys, and its tests take `gmsh_module`. → §5.2.2 NOTE; WP23 D1–D4,
+  the mesh and are never case keys, and its tests take `gmsh_module`; the bundle carries it (B8). → §5.2.2 NOTE; WP23 D1–D4,
   D8, D10, D11.
 - **Stage 4 emits `nanopnp/profile/v1` in the stage-1 frame**, spacing ≥ h and feature size
   > 2h, gated against the probe radius. → §5.2.1 and its NOTEs; WP20 D5, D9–D12.
@@ -76,6 +74,7 @@ Each is recorded in full where it points.
 | Phase 2 scope and rulings | `phase-2-geometry-pipeline.md`; `SPECIFICATION.md` §5.2–§5.2.2, §8.2.2 |
 | The ClyA pipeline as executed, and gaps G1–G13 | `.knowledge/04-clya-geometry-and-charge.md` |
 | Structure, geometry and meshing libraries | `.knowledge/07-software-stack.md` §2, §4, §8 |
+| The desktop shell WP24 extends | `gui/` (`solver.py` events, `run_model.py`, `render.py`, `probe.py`); WP14 §Design 2 and 4, WP15 D1–D10 and their Outcomes; `.knowledge/07` §5 |
 | The seams Phase 2 builds on | `geometry/region.py` (`RegionStage`, `RegionRecord`, `build_region`, `region_graph`); `mesh/generate.py` (`mesh_region`), `mesh/sizing.py` and `mesh/gmsh_backend.py`; `mesh/ingest.py` (`MeshStage`, `deployed_mesh`); `geometry/contour.py`; `mesh/profile.py`; `core/stages.py`; `io/run.py`; `io/case.py` |
 | Case schema, dotted paths and option sets | `SPECIFICATION.md` §5.3.1 and its NOTEs; `io/case.py` |
 | Shell, packaging and licence constraints | ADR-004, CON-07, CON-09, CON-10, CON-11; `.knowledge/07-software-stack.md` §5–§6 |
