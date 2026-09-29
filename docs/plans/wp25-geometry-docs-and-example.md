@@ -1,6 +1,6 @@
 # WP25 — Documentation increment 2: the geometry pipeline and example 06
 
-**Status: planned, not started.** Written 29 September 2026, after WP24 merged (to be tagged
+**Status: delivered, 29 September 2026.** Written 29 September 2026, after WP24 merged (to be tagged
 `v0.9.0-alpha.8`). Stages 1–6 exist, run from the CLI and the Geometry tab, and are gated. But the
 only prose on them is two paragraphs in `docs/guide/concepts.md`, and no example reaches them. WP25
 inherits the VER-46 executor (`nanopnp.validation.examples`, WP16 D8), the generated references
@@ -68,6 +68,46 @@ verified contract, so each needs its own decision.
 | D13 | Generated references | No edit. VER-45's walks already cover `structure.*` and `geometry.*`, and `--export` appears in the CLI reference | WP16 D5 |
 | D14 | Housekeeping | `docs/examples/index.md` says six examples, and `mkdocs.yml` gains the three pages. `examples/.gitignore` names `2wcd-prepared.pdb`, `aligned.pdb`, `aligned.dcd`, `density.mrc` and `contour.profile.yaml`. `CHANGELOG.md` gains `0.9.0-alpha.9` | A pattern such as `*.yaml` would hide case files |
 
+> **Outcome — D6: the exporters live in `cli/export.py`.** The suffix table and the payload
+> keys are data there, so `stage --help` and the refusal import no stage module, and
+> `test_ver32_stage_export_help_imports_no_stage_module` holds that. A structure is staged as a
+> directory beside the destination and renamed DCD first, so a PDB on disk always has its
+> trajectory. `--list` with `--export` is a usage error.
+>
+> **Outcome — D7: `.map` never read back.** GridDataFormats guesses its *reader* from the
+> extension and has none for `.map`, so `DensityMap.read` failed on a file `export` had just
+> written. It now names the reader from the writer's table, and VER-49 covers `.map`
+> (`.knowledge/07` §2).
+>
+> **Outcome — D3: every command passes `--store store`.** Without it, the refusal wrote the
+> process-default `nanopnp-store/` into the example directory. The cases also carry the validated
+> `corrections:` block, because the schema's defaults are `none` and a case without it lists six
+> deviations.
+>
+> **Outcome — D8 (d): the bound's `R_min` is taken over the heavy atoms present.** Filtering the
+> radius table by names not starting with `H` admitted NAD's hydrogens (`NH2T`, 0.2245 Å) and made
+> the bound 0.013, which any map passes. Over the 26,844 heavy atoms of the aligned export,
+> through the set's own lookup, `R_min` is 0.170 nm and the bound, with √3 × the PDB's 5e-5 nm
+> rounding added to the reach, is 0.9275. The lowest nearest-node value measured is 0.9767. The
+> test asserts the bound exceeds 0.9, so it cannot go vacuous again. Run by hand, the oracle rejects
+> a map read as nm (every atom outside the box), fully transposed (89 % of atoms below the bound)
+> and x/y-swapped (57 %) **[tested]**.
+>
+> **Outcome — D12: a text-edited pipeline profile is refused until its measurements are
+> re-derived.** One vertex of the exported 2WCD profile moved by 0.05 nm: `nanopnp run` exits 3,
+> naming `provenance.signed_area_nm2` and both values. With `vertex_count`,
+> `min_vertex_spacing_nm`, `min_feature_size_nm` and `signed_area_nm2` re-derived it runs, to a new
+> region and mesh. The loader checks neither `source` nor `sha256`, so the guide tells a user to set
+> `source: hand-edit` and to prefer the Geometry tab, which does both **[tested]**.
+>
+> **Outcome — D9: 55 s, inside the 90 s target.** The refused block took 2.4 s and the run block
+> 51.8 s, serial, on the development machine (WSL2, 29 September 2026), with `OMP_NUM_THREADS=1`.
+> Cold `run --upto mesh`: structure 1.4 s, density 17.2 s, symmetry 7.1 s, contour 0.3 s, region
+> 0.4 s, mesh 6.8 s; the profile run 8.0 s. Nothing is solved, so no stabilisation mode applies.
+>
+> **Outcome — D14: the getting-started page named two extras.** The README's "as the
+> getting-started page installs it" was untrue for `structure`, so that page now lists all four.
+
 ### Work items
 
 1. **`density/map.py`** (D7): convert to Å in `export` and back in `read`, and amend the VER-49
@@ -115,6 +155,19 @@ Commands: the full gate (`.claude/hooks/gate.sh run`);
 ### Open questions
 
 None blocking. B10 was ruled by the author before this commit.
+
+## Outcomes
+
+Delivered 29 September 2026. Every work item is done and none is deferred. The inline Outcomes
+above correct D3, D6–D9, D12 and D14.
+
+| Identifier | Test | Result |
+|---|---|---|
+| VER-49, IF-05 | `tests/tier1/test_density.py::test_ver49_map_round_trip_and_export` | the raw `.dx`, `.ccp4`, `.mrc` and `.map` headers hold 10 × the nm origin and spacing; the grid comes back exactly |
+| VER-32, IF-02, IF-05, FR-27 | `tests/tier1/test_cli.py`, the five `test_ver32_stage_export_*` tests | every pair written; profile and mesh equal the store's bytes; PDB within 5e-5 + 1e-6 nm; refusals exit 2 with an empty store and no file; a failed write leaves nothing |
+| VER-46 | `tests/tier1/test_examples_plan.py` | six examples; tags {run, plan, refused}; a mismatch names both codes |
+| VER-46, FR-01–FR-10, IF-05, QR-12 | `tests/tier2/test_examples_06_pdb_to_mesh.py` | D8 (a)–(f) pass, 55 s |
+| VER-45 | `test_doc_reference.py`, `test_public_api.py`, `mkdocs build --strict` | unchanged and green; every new anchor resolves |
 
 ## Design
 

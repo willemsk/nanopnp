@@ -8,12 +8,12 @@ evidence that an unmerged branch has shipped.
 - Phase 1 ([solver core](phase-1-solver-core.md)) is **closed** as `v0.5.0` (§8.2.3).
 - Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **in progress**. WP17 to WP24
   are merged (to be tagged up to `v0.9.0-alpha.8`).
+- **WP25** ([documentation increment 2](wp25-geometry-docs-and-example.md), criterion 5) is
+  **delivered on its branch**, awaiting `/wp-ship` and merge as `v0.9.0-alpha.9`.
 - **Phase criterion 3 stays open until `tests/tier3/test_val05_ensemble.py` runs on
   `$NANOPNP_REFERENCE_DATA`**. That run also pins `Z_MD`, and its numbers go into the
   [WP22 Outcomes](wp22-val05-reference-geometry.md#outcomes).
-- **WP25** ([documentation increment 2](wp25-geometry-docs-and-example.md)) is **planned**:
-  the guide, `stage --export` and example `06-pdb-to-mesh` (criterion 5), as `v0.9.0-alpha.9`.
-  The end-of-phase report and `v0.9.0` then wait only on criterion 3.
+- **Next:** once WP25 merges, the end-of-phase report and `v0.9.0` wait only on criterion 3.
 
 ## What Phase 2 must not re-decide
 
@@ -40,17 +40,18 @@ Each is recorded in full where it points.
 - **VAL-05 is settled** (author, 28 September 2026): gated on `ε_G`, rms and `Δr_c`, per leg;
   nothing is fitted; only `nanopnp.validation.geometry` computes it. → §7.4 NOTE on VAL-05;
   WP22 D3–D6 and Outcomes.
-- **The reference polygon was binned by `pqr2grid` and hand-edited**; that offset is recorded,
-  never corrected. → `.knowledge/04` §1.2, §1.4.
+- **The reference polygon's `pqr2grid` offset is recorded, never corrected.** → `.knowledge/04`
+  §1.2, §1.4.
 - **Density radii are CHARMM Rmin/2**; **the Cₙ average is a harmonic projection**. → §5.3.1
   NOTE on `geometry.density`; WP19.
 - **The vendored 2WCD is in its crystal frame**; tests orient it through `prepared_2wcd`, and
   example 06 through its own `prepare.py`. → WP18 D16 Outcome; WP25 D4.
-- **The geometry tab adds views, no physics**: hand edits are stage-1-frame `hand-edit` profiles
-  entering through `inputs.profile`; the probe exercises every payload. → §8.2.2 B8, B9; WP24.
+- **The geometry tab adds views, no physics**; hand edits are stage-1-frame `hand-edit` profiles
+  through `inputs.profile`. → §8.2.2 B8, B9; WP24.
 - **Lengths at the interchange boundary follow the reader.** The 3D density map is written in
   ångströms (B10); `.npz` and the `field1` grids stay in nm. An export is an output location and
-  moves no key. → the IF-05 and IF-02 export NOTEs; WP25 D6, D7.
+  moves no key. → the IF-05 and IF-02 export NOTEs; WP25 D6, D7 and Outcomes.
+- **An example's tag names its exit**: `run` and `plan` 0, `refused` 4. → VER-46; WP25 D10.
 
 ## Inherited from Phase 1, still binding
 
@@ -76,6 +77,7 @@ Each is recorded in full where it points.
 | The ClyA pipeline as executed, and gaps G1–G13 | `.knowledge/04-clya-geometry-and-charge.md` |
 | Structure, geometry and meshing libraries | `.knowledge/07-software-stack.md` §2, §4, §8 |
 | The desktop shell | `gui/`; WP15 and WP24 Outcomes; `.knowledge/07` §5 |
+| The geometry guide, exports and example 06 | `docs/guide/structures.md`, `docs/guide/geometry.md`; `cli/export.py`; `examples/06-pdb-to-mesh/`; WP25 Outcomes |
 | The seams Phase 2 builds on | `geometry/region.py` (`RegionStage`, `RegionRecord`, `build_region`, `region_graph`); `mesh/generate.py` (`mesh_region`), `mesh/sizing.py` and `mesh/gmsh_backend.py`; `mesh/ingest.py` (`MeshStage`, `deployed_mesh`); `geometry/contour.py`; `mesh/profile.py`; `core/stages.py`; `io/run.py`; `io/case.py` |
 | Case schema, dotted paths and option sets | `SPECIFICATION.md` §5.3.1 and its NOTEs; `io/case.py` |
 | Shell, packaging and licence constraints | ADR-004, CON-07, CON-09, CON-10, CON-11; `.knowledge/07-software-stack.md` §5–§6 |
