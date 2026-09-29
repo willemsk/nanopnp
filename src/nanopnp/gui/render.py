@@ -70,19 +70,23 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 logger = logging.getLogger(__name__)
 
 __all__ = [
+    "MESH_SCENE_STEM",
     "READY_FLAG",
     "RENDERER_DIRECTORY",
     "RENDERER_INTEGRITY",
     "RENDERER_SOURCE",
     "RENDERER_VERSION",
     "VIEWER_DIRNAME",
+    "MeshRequest",
     "RenderFailed",
     "RenderProcess",
     "RenderRequest",
     "Rendered",
+    "RenderedMesh",
     "host_document",
     "readiness_script",
     "render",
+    "render_mesh",
     "renderer_source",
 ]
 
@@ -132,6 +136,12 @@ Never registered as an artefact and never hashed. §5.3.2's "a cancelled run
 writes no artefact" has to keep meaning what it says, and a picture of a
 converged state is not a result — it is a view of one.
 """
+
+MESH_SCENE_STEM = "mesh"
+"""Stem of the stage-6 mesh's scene and document under ``viewer/`` (WP24 D12).
+
+Not ``scene-*``, so a field render's sweep of its own previous pair leaves the
+mesh picture alone, and the other way round."""
 
 READY_FLAG = "__nanopnp_viewer"
 """Name of the global the document sets while it tries to draw.
@@ -310,7 +320,52 @@ class RenderFailed:
     message: str
 
 
-RenderEvent: TypeAlias = Rendered | RenderFailed
+@dataclass(frozen=True)
+class MeshRequest:
+    """What the child is asked for by the geometry tab: a run's stage-6 mesh (WP24 D12).
+
+    Parameters
+    ----------
+    run
+        The run directory, holding ``run.json`` and ``case.yaml``; a walk
+        through stage 6 writes one, ``--upto mesh`` included.
+    renderer
+        The URL the document loads the renderer from.
+    """
+
+    run: str
+    renderer: str = RENDERER_SOURCE
+
+
+@dataclass(frozen=True)
+class RenderedMesh:
+    """The mesh was drawn, by material, and this is where, beside what its gates measured.
+
+    Parameters
+    ----------
+    document, scene
+        The host document and the scene JSON under the run's ``viewer/``.
+    elements
+        Triangles drawn: the mesh file's own count.
+    materials
+        The mesh's materials, in the order their colour index follows.
+    quality
+        VER-10's figures: the least SICN and gamma, the floor, and the ``(r, z)``
+        centroid of the element holding each least value, in the model frame.
+    wall
+        Stage 6's wall-size gate statistics, as its artefact recorded them; empty
+        for a supplied mesh, which is not generated and has no such gate.
+    """
+
+    document: str
+    scene: str
+    elements: int
+    materials: tuple[str, ...]
+    quality: dict[str, object]
+    wall: dict[str, object]
+
+
+RenderEvent: TypeAlias = Rendered | RenderedMesh | RenderFailed
 """Everything the render child may post. Frozen, picklable and plain."""
 
 
@@ -537,7 +592,70 @@ def render(request: RenderRequest) -> Rendered:
     )
 
 
-def _worker(request: RenderRequest, events: Queue[RenderEvent]) -> None:
+def render_mesh(request: MeshRequest) -> RenderedMesh:
+    """Draw a run's stage-6 mesh by material into its ``viewer/``, with its gate figures (WP24 D12).
+
+    The mesh is read through :func:`~nanopnp.mesh.ingest.deployed_mesh`, the
+    route every consumer of a run's mesh takes, so what is drawn is what stage 7
+    and the solve read. Colour is the material's index in the mesh's own order:
+    the pore wall is 0.05 nm against a 250 nm reservoir, and ``webgui``'s zoom
+    is what spans that, so a picture by material is what shows the junction.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the run records no stage-6 artefact, or it has left the store.
+    """
+    from nanopnp.io.case import load_case, resolve
+    from nanopnp.io.manifest import CASE_FILENAME
+    from nanopnp.mesh.ingest import deployed_mesh
+
+    run = Path(request.run)
+    resolved = resolve(load_case(run / CASE_FILENAME))
+    artefact = _mesh_artefact(run, generated=resolved.mesh is None)
+    if artefact is None and resolved.mesh is None:
+        raise FileNotFoundError(
+            f"{run} records no stage-6 artefact, so there is no generated mesh to draw; run the "
+            "build through 'mesh' first"
+        )
+    ingested = deployed_mesh(resolved, artefact)
+    mesh = ingested.mesh
+    materials = tuple(str(name) for name in mesh.GetMaterials())
+
+    from ngsolve.webgui import Draw
+
+    colour = mesh.MaterialCF({name: float(index) for index, name in enumerate(materials)})
+    scene = Draw(colour, mesh, show=False).GetData()
+    report = ingested.quality
+    quality: dict[str, object] = {
+        "min_sicn": report.min_sicn,
+        "min_gamma": report.min_gamma,
+        "floor": report.summary()["floor"],
+        "worst_sicn_at_nm": report.centroid(report.worst_sicn_element),
+        "worst_gamma_at_nm": report.centroid(report.worst_gamma_element),
+    }
+    sizing = artefact.summary.get("sizing") if artefact is not None else None
+    wall = dict(sizing.get("wall_statistics", {})) if isinstance(sizing, dict) else {}
+
+    directory = run / VIEWER_DIRNAME
+    directory.mkdir(parents=True, exist_ok=True)
+    scene_path = directory / f"{MESH_SCENE_STEM}.json"
+    document_path = directory / f"{MESH_SCENE_STEM}.html"
+    payload = json.dumps(scene)
+    _replace(scene_path, payload)
+    _replace(document_path, host_document(payload, renderer=request.renderer, title="mesh"))
+    logger.info("mesh scene written to %s (%d bytes)", document_path, len(payload))
+    return RenderedMesh(
+        document=str(document_path),
+        scene=str(scene_path),
+        elements=int(mesh.ne),
+        materials=materials,
+        quality=quality,
+        wall=wall,
+    )
+
+
+def _worker(request: RenderRequest | MeshRequest, events: Queue[RenderEvent]) -> None:
     """Render one scene and post where it went, or why it did not.
 
     Never raises, for the reason :func:`nanopnp.gui.solver._worker` gives: an
@@ -545,7 +663,7 @@ def _worker(request: RenderRequest, events: Queue[RenderEvent]) -> None:
     never carry another event.
     """
     try:
-        events.put(render(request))
+        events.put(render_mesh(request) if isinstance(request, MeshRequest) else render(request))
     except BaseException as error:
         events.put(RenderFailed(error=type(error).__qualname__, message=str(error)))
 
@@ -567,7 +685,7 @@ class RenderProcess:
     finish.
     """
 
-    request: RenderRequest
+    request: RenderRequest | MeshRequest
     _process: BaseProcess | None = field(default=None, repr=False)
     _events: Queue[RenderEvent] | None = field(default=None, repr=False)
 
