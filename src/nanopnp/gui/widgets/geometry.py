@@ -134,6 +134,13 @@ class GeometryCanvas(QtWidgets.QWidget):
         self._frame = frame
         self._editor = None
         self._selected = None
+        # A pane re-shown mid-drag (the stage list refreshing during a build, a
+        # measurement landing) abandons the drag. The frozen transform goes with
+        # it: left set, :meth:`transform` would return it for every picture shown
+        # afterwards, whatever its extent.
+        self._drag = None
+        self._drag_transform = None
+        self._preview = None
         self.update()
 
     def show_image(
@@ -175,6 +182,7 @@ class GeometryCanvas(QtWidgets.QWidget):
         in_loop = editor is not None and selected is not None and selected < len(editor.vertices)
         self._selected = selected if in_loop else None
         self._drag = None
+        self._drag_transform = None
         self._preview = None
         if editor is not None:
             self._loop = ()
@@ -321,14 +329,20 @@ class GeometryCanvas(QtWidgets.QWidget):
         self.update()
 
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
-        """Commit the drag as one move: one undoable step, however far it went."""
+        """Commit the drag as one move: one undoable step, however far it went.
+
+        A press and release with no motion between them is a click, which
+        selects the vertex and moves nothing: the pointer is anywhere within the
+        pick tolerance of the vertex, and snapping the vertex to it would edit
+        the loop by up to that tolerance whenever a vertex is picked to delete.
+        """
         if self._drag is None or self._drag_transform is None or self._editor is None:
             super().mouseReleaseEvent(event)
             return
         position = event.position()
         r, z = self._drag_transform.to_data(position.x(), position.y())
         index = self._drag
-        moved = self._preview is not None or (r, z) != self._editor.vertices[index]
+        moved = self._preview is not None
         self._drag = None
         self._drag_transform = None
         self._preview = None
@@ -428,6 +442,7 @@ class GeometryWidget(QtWidgets.QWidget):
         self._render: RenderProcess | None = None
         self._mesh: RenderedMesh | None = None
         self._mesh_problem = ""
+        self._buildable: tuple[CaseDocument, bool] | None = None
 
         self._load = QtWidgets.QPushButton("Load structure…")
         self._build = QtWidgets.QPushButton("Build geometry")
@@ -531,31 +546,56 @@ class GeometryWidget(QtWidgets.QWidget):
         """Relay the button press; the window saves the case before :meth:`build`."""
         self.buildRequested.emit()
 
-    def build(self, case_path: str | Path) -> None:
+    def build(self, case_path: str | Path) -> bool:
         """Walk the saved case through stage 6 in the spawned child (WP24 D3).
+
+        Nothing about the previous build is dropped until this one has started:
+        a case the window committed with staged edits :func:`can_build` never
+        saw may not resolve, and a previous child still exiting refuses a new
+        one; either is shown and the previous build's panes are kept.
 
         Parameters
         ----------
         case_path
             The case file as saved, which is what the child reads and what a
             hand edit's derived case is written beside.
+
+        Returns
+        -------
+        bool
+            Whether the build started.
         """
+        document = self._case_editor.document
+        try:
+            planned = planned_stages(document)
+        except (ValueError, NotImplementedError) as error:
+            self._status.setText(f"not built: {error}")
+            return False
+        try:
+            self._control.start(case_path, store=self._store, upto=BUILD_UPTO)
+        except RuntimeError as error:
+            self._status.setText(f"not built: {error}")
+            return False
         self._stop_children()
         self._case_path = Path(case_path)
-        self._document = self._case_editor.document
-        self._stages = StageList(planned_stages(self._document))
+        self._document = document
+        self._stages = StageList(planned)
         self._views.clear()
         self._view_errors.clear()
+        # The previous build's pending loads are dropped rather than left to
+        # read their maps on the one worker ahead of this build's.
+        for future in self._loading.values():
+            future.cancel()
         self._loading.clear()
         self._requested.clear()
         self._editor = None
         self._assessment = None
         self._mesh = None
         self._mesh_problem = ""
-        self._control.start(self._case_path, store=self._store, upto=BUILD_UPTO)
         self._settled = False
         self._status.setText(f"building {self._case_path} through stage 6")
         self.refresh()
+        return True
 
     def _stop(self) -> None:
         """Cancel the build; a cancelled walk writes no artefact (§5.3.2)."""
@@ -585,7 +625,9 @@ class GeometryWidget(QtWidgets.QWidget):
         document = self._document
         if document is not None:
             for event in model.produced:
-                if event.name not in self._requested:
+                # Only the stages the list shows: the walk also reports ``case``,
+                # which has no pane and which ``load_view`` would refuse.
+                if event.name in self._stages.planned and event.name not in self._requested:
                     self._requested.add(event.name)
                     self._loading[event.name] = self._executor.submit(
                         load_view, event, dict(produced), document
@@ -610,10 +652,10 @@ class GeometryWidget(QtWidgets.QWidget):
             view = future.result()
         except Exception as error:  # the pane shows it; the tab stays usable
             self._view_errors[name] = f"{type(error).__name__}: {error}"
-            return
-        self._views[name] = view
-        if isinstance(view, ImageView) and view.profile is not None and self._editor is None:
-            self._editor = ProfileEditor.from_profile(view.profile)
+        else:
+            self._views[name] = view
+            if isinstance(view, ImageView) and view.profile is not None and self._editor is None:
+                self._editor = ProfileEditor.from_profile(view.profile)
         if self._selected_name() == name:
             self._show_row(self._list.currentRow())
 
@@ -629,9 +671,21 @@ class GeometryWidget(QtWidgets.QWidget):
         """Apply what the assess child posted."""
         if self._assess is None:
             return
+        # Liveness first, then the queue: a child that posts and exits between a
+        # drain and the check would otherwise be forgotten with its answer unread.
+        finished = not self._assess.running
+        measured = self._assess.request.vertices
         events = self._assess.drain()
         for event in events:
             if isinstance(event, Assessed):
+                if self._editor is None or tuple(self._editor.vertices) != measured:
+                    # The loop was edited while it was measured: the verdict is
+                    # another loop's, and showing it here would attribute it to
+                    # this one.
+                    self._status.setText(
+                        "the edit changed while it was being measured; measure it again"
+                    )
+                    continue
                 self._assessment = event.assessment
                 self._status.setText(
                     "the edit meets every section 5.2.1 criterion"
@@ -651,7 +705,6 @@ class GeometryWidget(QtWidgets.QWidget):
                 self._select("contour")
             elif isinstance(event, AssessFailed):
                 self._status.setText(f"{event.error}: {event.message}")
-        finished = not self._assess.running
         if finished:
             self._assess.join(0.0)
             self._assess = None
@@ -662,6 +715,8 @@ class GeometryWidget(QtWidgets.QWidget):
         """Load the mesh picture the render child wrote, or keep its refusal."""
         if self._render is None:
             return
+        # Liveness before the queue, as :meth:`_drain_assess` does and for the same reason.
+        finished = not self._render.running
         for event in self._render.drain():
             if isinstance(event, RenderedMesh):
                 self._mesh = event
@@ -669,7 +724,7 @@ class GeometryWidget(QtWidgets.QWidget):
                 self._web.load(QtCore.QUrl.fromLocalFile(event.document))
             elif isinstance(event, RenderFailed):
                 self._mesh_problem = f"{event.error}: {event.message}"
-        if not self._render.running:
+        if finished:
             self._render.join(0.0)
             self._render = None
             if self._selected_name() == "mesh":
@@ -679,6 +734,8 @@ class GeometryWidget(QtWidgets.QWidget):
         """Ask the document whether it drew, as the Fields panel does."""
         if not ok:
             self._mesh_problem = "the mesh document did not load"
+            if self._selected_name() == "mesh":
+                self._show_row(self._list.currentRow())
             return
         self._web.page().runJavaScript(readiness_script(), self._mesh_answered)
 
@@ -914,7 +971,7 @@ class GeometryWidget(QtWidgets.QWidget):
         )
         idle = self._assess is None
         self._load.setEnabled(not in_flight)
-        self._build.setEnabled(not in_flight and can_build(self._case_editor.document))
+        self._build.setEnabled(not in_flight and self._can_build())
         self._cancel.setEnabled(in_flight)
         self._measure.setEnabled(self._editor is not None and stored_upstream and idle)
         self._seed.setEnabled(
@@ -924,6 +981,18 @@ class GeometryWidget(QtWidgets.QWidget):
         self._undo.setEnabled(self._editor is not None and self._editor.can_undo)
         self._redo.setEnabled(self._editor is not None and self._editor.can_redo)
         self._save.setEnabled(self._editor is not None and self._case_path is not None)
+
+    def _can_build(self) -> bool:
+        """:func:`can_build` of the editor's document, resolved once per document.
+
+        The buttons are re-offered on every poll, and resolving a case on the Qt
+        thread ten times a second would pay for the same answer each time; a
+        commit replaces the document, so its identity is the cache key.
+        """
+        document = self._case_editor.document
+        if self._buildable is None or self._buildable[0] is not document:
+            self._buildable = (document, can_build(document))
+        return self._buildable[1]
 
     # -- for tests -------------------------------------------------------------------
 

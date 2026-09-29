@@ -69,6 +69,7 @@ __all__ = [
     "UnknownStageError",
     "run_case",
     "run_document",
+    "selected_stages",
     "stored_upstream",
 ]
 
@@ -398,7 +399,7 @@ class _Walk:
         return create(name, workspace=directory, **extra)
 
 
-def _selected(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]:
+def selected_stages(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]:
     """Return the stages this case runs, truncated after ``upto``.
 
     ``charge`` is dropped when the case supplies neither ``inputs.charge`` nor
@@ -408,6 +409,9 @@ def _selected(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]:
     for the same reason, which covers a case supplying ``inputs.profile``; and
     ``region`` is dropped when the case supplies ``inputs.mesh``, which stage 6
     then reads instead of generating (section 5.3.1 NOTE on ``inputs:``).
+
+    Public so that the desktop shell lists the stages a build will walk from
+    this rule rather than from a restatement of it (WP24).
 
     Raises
     ------
@@ -880,7 +884,7 @@ def stored_upstream(
         sweep parent means it has not run yet.
     """
     artefacts: dict[str, Artefact] = {}
-    for name in _selected(resolve(document), upto):
+    for name in selected_stages(resolve(document), upto):
         key = _probe(create(name), StageInputs(case=document, upstream=dict(artefacts)))
         if name in PAYLOAD_FREE:
             artefacts[name] = key
@@ -910,7 +914,7 @@ def _walk(
 ) -> RunResult:
     """Run the stages of :func:`run_document`, which owns the scratch they write into."""
     document = walk.document
-    stages = _selected(walk.resolved, upto)
+    stages = selected_stages(walk.resolved, upto)
     weights = [_WEIGHTS[name] for name in stages]
     total = sum(weights)
     offsets = [sum(weights[:index]) / total for index in range(len(stages) + 1)]

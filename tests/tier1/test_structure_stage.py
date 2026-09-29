@@ -38,7 +38,7 @@ from nanopnp.io.case import (
     load_case,
     resolve,
 )
-from nanopnp.io.run import UnknownStageError, _selected, run_case
+from nanopnp.io.run import UnknownStageError, run_case, selected_stages
 from nanopnp.io.store import Store
 from nanopnp.structure.axis import SymmetryGateError, measure_axis, minimal_rotation
 from nanopnp.structure.ensemble import AlignedEnsemble
@@ -570,8 +570,12 @@ def test_ver48_walk_rules(prepared: Path, tmp_path: Path) -> None:
     """
     case = _case(tmp_path, _block(prepared))
     store = Store(tmp_path / "store")
-    assert "region" in _selected(resolve(load_case(case)), None)
-    assert _selected(resolve(load_case(case)), "materials")[-3:] == ("region", "mesh", "materials")
+    assert "region" in selected_stages(resolve(load_case(case)), None)
+    assert selected_stages(resolve(load_case(case)), "materials")[-3:] == (
+        "region",
+        "mesh",
+        "materials",
+    )
     assert run_case(case, store=store, upto="case", write=False).stages[-1].name == "case"
     ran = run_case(case, store=store, upto="structure", write=False)
     assert [record.name for record in ran.stages] == ["case", "structure"]

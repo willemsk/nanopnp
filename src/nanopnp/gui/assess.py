@@ -40,7 +40,15 @@ from pathlib import Path
 from types import ModuleType
 from typing import TYPE_CHECKING, Any, TypeAlias
 
-from nanopnp.core.stages import MissingExtraError
+from nanopnp.core.stages import MissingExtraError, create
+from nanopnp.io.artefact import StageInputs
+from nanopnp.io.case import UnsupportedCaseSection, load_case, resolve
+from nanopnp.io.run import stored_upstream
+from nanopnp.io.store import Store
+from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
+from nanopnp.structure.ensemble import AlignedEnsemble
+from nanopnp.symmetry.reduce import PAYLOAD_NAME as REDUCED_PAYLOAD
+from nanopnp.symmetry.reduce import ReducedMap
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from multiprocessing.process import BaseProcess
@@ -233,10 +241,6 @@ def _context(request: AssessRequest) -> _Context:
     nanopnp.io.run.MissingUpstreamError
         If stages 1 to 3 have not run into this store.
     """
-    from nanopnp.io.case import UnsupportedCaseSection, load_case
-    from nanopnp.io.run import stored_upstream
-    from nanopnp.io.store import Store
-
     document = load_case(Path(request.case))
     if document.structure is None:
         raise UnsupportedCaseSection(
@@ -277,37 +281,21 @@ def measure_loop(loop: np.ndarray, context: _Context) -> Assessment:
     """Measure a loop as stage 4's gate would, against the case's stored stages 1 and 3.
 
     The planes are the mid-planes of the stage-3 map's z lattice that cross the
-    loop, and the probe radius is the stage-1 structure's on each — exactly
-    stage 4's inputs to its gate (``ContourStage.run``), so a loop stage 4
-    produced measures to the record its summary carries.
+    loop, and the probe radius is the stage-1 structure's on each — stage 4's
+    inputs to its gate, through the same
+    :func:`~nanopnp.geometry.contour.gate_inputs` ``ContourStage.run`` calls, so
+    a loop stage 4 produced measures to the record its summary carries.
     """
     import numpy as np
 
     contour = _contour()
-    from nanopnp.density.radii import KERNEL_RADII, resolve_radii
-    from nanopnp.geometry.probe import probe_radius_profile
-    from nanopnp.io.case import resolve
-    from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
-    from nanopnp.structure.ensemble import AlignedEnsemble
-    from nanopnp.symmetry.reduce import PAYLOAD_NAME as REDUCED_PAYLOAD
-    from nanopnp.symmetry.reduce import ReducedMap
-
     resolved = resolve(context.document)
     density = resolved.density
     assert density is not None  # a structure case always resolves one
     reduced = ReducedMap.read(context.symmetry.payload[REDUCED_PAYLOAD])
     ensemble = AlignedEnsemble.read(context.structure.payload[ENSEMBLE_PAYLOAD])
-    radii = resolve_radii(
-        KERNEL_RADII[density.kernel],
-        resname=ensemble.resname,
-        atom=ensemble.name,
-        chain=ensemble.chain,
-        resid=ensemble.resid,
-        icode=ensemble.icode,
-    )
     points = np.asarray(loop, dtype=np.float64).reshape(-1, 2)
-    planes = contour.mid_planes([points], reduced.z_nm)
-    probe = probe_radius_profile(ensemble.positions_nm, radii.radii_nm, planes)
+    planes, probe, _ = contour.gate_inputs(points, reduced.z_nm, ensemble, density)
     return _assessment(
         contour.measure(
             points, spacing_nm=density.grid_spacing_nm, planes_nm=planes, probe_nm=probe
@@ -340,26 +328,12 @@ def seed(request: AssessRequest) -> Seed:
         one component. There is then no loop to seed from, and the refusal
         propagates with the gate's own words.
     """
-    from nanopnp.core.stages import create
-    from nanopnp.io.artefact import StageInputs
-    from nanopnp.io.case import resolve
-    from nanopnp.symmetry.reduce import PAYLOAD_NAME as REDUCED_PAYLOAD
-    from nanopnp.symmetry.reduce import ReducedMap
-
     contour = _contour()
     context = _context(request)
     resolved = resolve(context.document)
     assert resolved.contour is not None and resolved.density is not None
     reduced = ReducedMap.read(context.symmetry.payload[REDUCED_PAYLOAD])
-    conditioned = contour.condition(
-        reduced.mean,
-        reduced.r_nm,
-        reduced.z_nm,
-        spacing_nm=resolved.density.grid_spacing_nm,
-        isolevel=resolved.contour.isolevel,
-        smoothing=resolved.contour.smoothing,
-        simplify_tol_nm=resolved.contour.simplify_tol_nm,
-    )
+    conditioned = contour.condition_map(reduced, resolved.contour, resolved.density)
     key = create("contour").key(  # type: ignore[attr-defined]
         StageInputs(case=context.document, upstream=dict(context.upstream))
     )

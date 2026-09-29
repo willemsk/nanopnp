@@ -65,7 +65,7 @@ from nanopnp.core.stages import (
     describe,
     report,
 )
-from nanopnp.density.radii import KERNEL_RADII, radius_set_digest, resolve_radii
+from nanopnp.density.radii import KERNEL_RADII, ResolvedRadii, radius_set_digest, resolve_radii
 from nanopnp.geometry.probe import probe_radius_profile
 from nanopnp.io.artefact import ProfileArtefact
 from nanopnp.io.case import ContourSpec, DensitySpec, UnsupportedCaseSection, resolve
@@ -864,6 +864,76 @@ def gate(
     return measured.record
 
 
+def condition_map(
+    reduced: ReducedMap, contour: ContourSpec, density: DensitySpec
+) -> ConditionedContour:
+    """Condition a stage-3 map's mean as stage 4 does, with the case's own parameters.
+
+    The one call of :func:`condition` stage 4 makes, so the desktop shell's seed
+    after a refusal (§8.2.2 B9, WP24 D10) recomputes exactly the loop the gate
+    refused.
+    """
+    return condition(
+        reduced.mean,
+        reduced.r_nm,
+        reduced.z_nm,
+        spacing_nm=density.grid_spacing_nm,
+        isolevel=contour.isolevel,
+        smoothing=contour.smoothing,
+        simplify_tol_nm=contour.simplify_tol_nm,
+    )
+
+
+def gate_inputs(
+    loop: np.ndarray,
+    z_nm: np.ndarray,
+    ensemble: AlignedEnsemble,
+    density: DensitySpec,
+    *,
+    progress: Progress | None = None,
+    cancel: CancelToken | None = None,
+) -> tuple[np.ndarray, np.ndarray, ResolvedRadii]:
+    """Return what :func:`gate` holds a loop against: the mid-planes and ``R_p`` on each (D11).
+
+    The one route to the gate's inputs, so stage 4 and the desktop shell's
+    measurement of a hand edit (WP24 D8) cannot disagree about a plane or a
+    probe radius any more than :func:`measure` lets them disagree about a
+    threshold.
+
+    Parameters
+    ----------
+    loop
+        The loop, ``(n, 2)`` in ``(r, z)`` nm.
+    z_nm
+        The stage-3 map's z nodes; the planes are the mid-planes between them
+        that cross the loop.
+    ensemble
+        The stage-1 aligned ensemble.
+    density
+        ``geometry.density``, whose kernel names the radius set.
+    progress, cancel
+        Passed to :func:`~nanopnp.geometry.probe.probe_radius_profile`.
+
+    Returns
+    -------
+    tuple
+        The planes, the probe radius on each, and the resolved radius set.
+    """
+    radii = resolve_radii(
+        KERNEL_RADII[density.kernel],
+        resname=ensemble.resname,
+        atom=ensemble.name,
+        chain=ensemble.chain,
+        resid=ensemble.resid,
+        icode=ensemble.icode,
+    )
+    planes = mid_planes([loop], z_nm)
+    probe = probe_radius_profile(
+        ensemble.positions_nm, radii.radii_nm, planes, progress=progress, cancel=cancel
+    )
+    return planes, probe, radii
+
+
 def lumen_change(
     raw_loops: Sequence[np.ndarray], loop: np.ndarray, planes_nm: np.ndarray
 ) -> dict[str, Canonicalisable]:
@@ -987,35 +1057,18 @@ class ContourStage:
         check_cancelled(cancel, "reading the reduced map")
         report(progress, 0.0, "reading the reduced map")
         reduced = ReducedMap.read(symmetry.payload[REDUCED_PAYLOAD])
-        conditioned = condition(
-            reduced.mean,
-            reduced.r_nm,
-            reduced.z_nm,
-            spacing_nm=h,
-            isolevel=contour.isolevel,
-            smoothing=contour.smoothing,
-            simplify_tol_nm=contour.simplify_tol_nm,
-        )
+        conditioned = condition_map(reduced, contour, density)
         loop = conditioned.loop
         report(progress, 0.1, f"contour conditioned to {len(loop)} vertices")
 
         check_cancelled(cancel, "reading the aligned ensemble")
         ensemble = AlignedEnsemble.read(structure.payload[ENSEMBLE_PAYLOAD])
-        radii = resolve_radii(
-            KERNEL_RADII[density.kernel],
-            resname=ensemble.resname,
-            atom=ensemble.name,
-            chain=ensemble.chain,
-            resid=ensemble.resid,
-            icode=ensemble.icode,
-        )
-        planes = mid_planes([loop], reduced.z_nm)
 
         def scaled(fraction: float, message: str) -> None:
             report(progress, 0.15 + 0.8 * fraction, message)
 
-        probe = probe_radius_profile(
-            ensemble.positions_nm, radii.radii_nm, planes, progress=scaled, cancel=cancel
+        planes, probe, radii = gate_inputs(
+            loop, reduced.z_nm, ensemble, density, progress=scaled, cancel=cancel
         )
         checked = gate(loop, spacing_nm=h, planes_nm=planes, probe_nm=probe)
         change = lumen_change(conditioned.raw_loops, loop, planes)
