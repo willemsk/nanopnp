@@ -30,7 +30,8 @@ Each step is a pure function over arrays, so a test can drive one alone:
    endpoint whose removal moves the area least, the lower index on a tie.
 7. :func:`canonical`: clockwise from the lowest-z vertex, the smallest r on a tie.
 
-:func:`gate` then measures the loop and never moves it. **Its size target
+:func:`gate` then measures the loop and never moves it; it is :func:`measure`, which
+refuses nothing, and a raise at the first failure (WP24 D9). **Its size target
 ``h_c`` is the density grid spacing h**, not the stage-6 wall size, which would
 make the geometry depend on the electrolyte (§5.2.1 NOTE on the contour's size
 target). Every threshold here is a constant that keys the stage-4 artefact
@@ -160,13 +161,26 @@ class ContourGateError(ValueError):
         What it was held to, with units.
     where
         The location: an ``(r, z)``, a z range, or a list of components.
+    location_nm
+        The same ``(r, z)`` as numbers, where there is one point to name, so a
+        caller marking it on a picture reads it rather than parsing ``where``
+        (WP24 D10). ``None`` for a z range or a list of components.
     """
 
-    def __init__(self, criterion: str, measured: str, threshold: str, where: str) -> None:
+    def __init__(
+        self,
+        criterion: str,
+        measured: str,
+        threshold: str,
+        where: str,
+        *,
+        location_nm: tuple[float, float] | None = None,
+    ) -> None:
         self.criterion = criterion
         self.measured = measured
         self.threshold = threshold
         self.where = where
+        self.location_nm = location_nm
         super().__init__(
             f"stage 4 contour gate, {criterion}: {measured}, against {threshold}, {where} "
             "(section 5.2.1, FR-08)"
@@ -616,6 +630,202 @@ def condition(
 _LOCATION = re.compile(r"\[(-?[0-9.eE+-]+) (-?[0-9.eE+-]+)\]")
 
 
+@dataclass(frozen=True)
+class ContourMeasurement:
+    """Every section 5.2.1 criterion measured on one loop, and which of them it fails.
+
+    Parameters
+    ----------
+    record
+        What :func:`gate` returns when the loop passes: each criterion's measured
+        value, threshold and location, and the radius profile. On a loop that
+        fails, every criterion that could still be measured is here too, so a
+        caller can show all of them rather than only the first refusal.
+    failures
+        One :class:`ContourGateError` per failed criterion, in the order
+        :func:`gate` checks them; the first is the one it raises.
+    """
+
+    record: dict[str, Canonicalisable]
+    failures: tuple[ContourGateError, ...]
+
+    @property
+    def passed(self) -> bool:
+        """Whether the loop meets every criterion."""
+        return not self.failures
+
+
+def measure(
+    loop: np.ndarray,
+    *,
+    spacing_nm: float,
+    planes_nm: np.ndarray,
+    probe_nm: np.ndarray,
+) -> ContourMeasurement:
+    """Measure the loop against every section 5.2.1 criterion, refusing nothing (WP24 D9).
+
+    The one implementation of the criteria: :func:`gate` is this and a raise at
+    the first failure, so the stage-4 gate and the desktop shell's display of a
+    hand edit (WP24 D8) cannot disagree about a value or a threshold.
+
+    Parameters
+    ----------
+    loop
+        The loop, ``(n, 2)`` in ``(r, z)`` nm.
+    spacing_nm
+        ``h_c``, the density grid spacing.
+    planes_nm, probe_nm
+        The mid-planes and the probe radius ``R_p`` on each (D11).
+
+    Returns
+    -------
+    ContourMeasurement
+        The record and the failures. A loop of fewer than three vertices has
+        nothing else to measure, and records only ``h_c_nm``.
+    """
+    import numpy as np
+
+    points = np.asarray(loop, dtype=np.float64)
+    h_c = spacing_nm
+    record: dict[str, Canonicalisable] = {"h_c_nm": h_c}
+    failures: list[ContourGateError] = []
+
+    polygon = Polygon(points) if len(points) >= 3 else None
+    if polygon is None or not LinearRing(points).is_simple or not polygon.is_valid:
+        reason = "fewer than three vertices" if polygon is None else explain_validity(polygon)
+        found = _LOCATION.search(reason)
+        location = (float(found.group(1)), float(found.group(2))) if found else None
+        where = _at(*location) if location is not None else "over the loop"
+        failures.append(
+            ContourGateError(
+                "validity and simplicity",
+                f"the loop is not simple ({reason})",
+                "a simple ring",
+                where,
+                location_nm=location,
+            )
+        )
+        if polygon is None:
+            return ContourMeasurement(record=record, failures=tuple(failures))
+
+    nearest = int(np.argmin(points[:, 0]))
+    axis_r = float(points[nearest, 0])
+    record["axis_clearance"] = {
+        "value_nm": axis_r,
+        "threshold_nm": h_c,
+        "r_nm": axis_r,
+        "z_nm": float(points[nearest, 1]),
+    }
+    if axis_r < h_c:
+        failures.append(
+            ContourGateError(
+                "loop topology",
+                f"the loop comes within {axis_r:.4g} nm of the axis",
+                f"a clearance of h_c = {h_c} nm",
+                _at(axis_r, float(points[nearest, 1])),
+                location_nm=(axis_r, float(points[nearest, 1])),
+            )
+        )
+
+    lengths = np.linalg.norm(np.roll(points, -1, axis=0) - points, axis=1)
+    edge = int(np.argmin(lengths))
+    middle = 0.5 * (points[edge] + points[(edge + 1) % len(points)])
+    record["vertex_spacing"] = {
+        "value_nm": float(lengths[edge]),
+        "threshold_nm": h_c,
+        "r_nm": float(middle[0]),
+        "z_nm": float(middle[1]),
+    }
+    if lengths[edge] < h_c:
+        failures.append(
+            ContourGateError(
+                "minimum vertex spacing",
+                f"an edge is {float(lengths[edge]):.4g} nm long",
+                f">= h_c = {h_c} nm",
+                _at(float(middle[0]), float(middle[1])),
+                location_nm=(float(middle[0]), float(middle[1])),
+            )
+        )
+
+    sizes = feature_sizes(points)
+    pinch = int(np.argmin(sizes))
+    record["feature_size"] = {
+        "value_nm": float(sizes[pinch]),
+        "threshold_nm": FEATURE_FACTOR * h_c,
+        "r_nm": float(points[pinch, 0]),
+        "z_nm": float(points[pinch, 1]),
+    }
+    if not sizes[pinch] > FEATURE_FACTOR * h_c:
+        failures.append(
+            ContourGateError(
+                "minimum local feature size",
+                f"{float(sizes[pinch]):.4g} nm",
+                f"> {FEATURE_FACTOR:g} h_c = {FEATURE_FACTOR * h_c:.4g} nm",
+                _at(float(points[pinch, 0]), float(points[pinch, 1])),
+                location_nm=(float(points[pinch, 0]), float(points[pinch, 1])),
+            )
+        )
+
+    planes = np.asarray(planes_nm, dtype=np.float64)
+    probe = np.asarray(probe_nm, dtype=np.float64)
+    lumen = innermost_crossings([points], planes)
+    margin = lumen - probe
+    record["radius_profile"] = {
+        "z_nm": planes.tolist(),
+        "probe_nm": probe.tolist(),
+        "lumen_nm": lumen.tolist(),
+    }
+    measured = np.isfinite(margin)
+    if not np.any(measured):
+        failures.append(
+            ContourGateError(
+                "radius profile",
+                "no mid-plane between z nodes crosses the loop",
+                "at least one plane",
+                "over the loop's z extent",
+            )
+        )
+        return ContourMeasurement(record=record, failures=tuple(failures))
+    low = int(np.nanargmin(np.where(measured, margin, np.nan)))
+    high = int(np.nanargmax(np.where(measured, margin, np.nan)))
+    constriction = int(np.nanargmin(np.where(measured, lumen, np.nan)))
+    record["band"] = {
+        "low": {"value_nm": float(margin[low]), "threshold_nm": -h_c, "z_nm": float(planes[low])},
+        "high": {
+            "value_nm": float(margin[high]),
+            "threshold_nm": BAND_HIGH_NM,
+            "z_nm": float(planes[high]),
+        },
+    }
+    record["constriction"] = {
+        "r_nm": float(lumen[constriction]),
+        "z_nm": float(planes[constriction]),
+    }
+    if margin[low] < -h_c:
+        failures.append(
+            ContourGateError(
+                "radius profile",
+                f"the lumen radius {float(lumen[low]):.4f} nm lies {float(-margin[low]):.4g} nm "
+                f"inside the probe radius {float(probe[low]):.4f} nm",
+                f"r_c - R_p >= -h_c = {-h_c} nm",
+                _at(float(lumen[low]), float(planes[low])),
+                location_nm=(float(lumen[low]), float(planes[low])),
+            )
+        )
+    if margin[high] > BAND_HIGH_NM:
+        failures.append(
+            ContourGateError(
+                "radius profile",
+                f"the lumen radius {float(lumen[high]):.4f} nm lies {float(margin[high]):.4g} nm "
+                f"outside the probe radius {float(probe[high]):.4f} nm",
+                f"r_c - R_p <= {BAND_HIGH_NM} nm",
+                _at(float(lumen[high]), float(planes[high])),
+                location_nm=(float(lumen[high]), float(planes[high])),
+            )
+        )
+    return ContourMeasurement(record=record, failures=tuple(failures))
+
+
 def gate(
     loop: np.ndarray,
     *,
@@ -624,6 +834,8 @@ def gate(
     probe_nm: np.ndarray,
 ) -> dict[str, Canonicalisable]:
     """Measure the loop against every section 5.2.1 criterion; never move it (D10).
+
+    :func:`measure`, and a raise at the first criterion it finds failed.
 
     Parameters
     ----------
@@ -646,119 +858,10 @@ def gate(
         At the first criterion that fails, naming it, the value, the threshold and
         the (r, z).
     """
-    import numpy as np
-
-    points = np.asarray(loop, dtype=np.float64)
-    h_c = spacing_nm
-    polygon = Polygon(points) if len(points) >= 3 else None
-    if polygon is None or not LinearRing(points).is_simple or not polygon.is_valid:
-        reason = "fewer than three vertices" if polygon is None else explain_validity(polygon)
-        found = _LOCATION.search(reason)
-        where = _at(float(found.group(1)), float(found.group(2))) if found else "over the loop"
-        raise ContourGateError(
-            "validity and simplicity", f"the loop is not simple ({reason})", "a simple ring", where
-        )
-
-    record: dict[str, Canonicalisable] = {"h_c_nm": h_c}
-
-    nearest = int(np.argmin(points[:, 0]))
-    axis_r = float(points[nearest, 0])
-    record["axis_clearance"] = {
-        "value_nm": axis_r,
-        "threshold_nm": h_c,
-        "r_nm": axis_r,
-        "z_nm": float(points[nearest, 1]),
-    }
-    if axis_r < h_c:
-        raise ContourGateError(
-            "loop topology",
-            f"the loop comes within {axis_r:.4g} nm of the axis",
-            f"a clearance of h_c = {h_c} nm",
-            _at(axis_r, float(points[nearest, 1])),
-        )
-
-    lengths = np.linalg.norm(np.roll(points, -1, axis=0) - points, axis=1)
-    edge = int(np.argmin(lengths))
-    middle = 0.5 * (points[edge] + points[(edge + 1) % len(points)])
-    record["vertex_spacing"] = {
-        "value_nm": float(lengths[edge]),
-        "threshold_nm": h_c,
-        "r_nm": float(middle[0]),
-        "z_nm": float(middle[1]),
-    }
-    if lengths[edge] < h_c:
-        raise ContourGateError(
-            "minimum vertex spacing",
-            f"an edge is {float(lengths[edge]):.4g} nm long",
-            f">= h_c = {h_c} nm",
-            _at(float(middle[0]), float(middle[1])),
-        )
-
-    sizes = feature_sizes(points)
-    pinch = int(np.argmin(sizes))
-    record["feature_size"] = {
-        "value_nm": float(sizes[pinch]),
-        "threshold_nm": FEATURE_FACTOR * h_c,
-        "r_nm": float(points[pinch, 0]),
-        "z_nm": float(points[pinch, 1]),
-    }
-    if not sizes[pinch] > FEATURE_FACTOR * h_c:
-        raise ContourGateError(
-            "minimum local feature size",
-            f"{float(sizes[pinch]):.4g} nm",
-            f"> {FEATURE_FACTOR:g} h_c = {FEATURE_FACTOR * h_c:.4g} nm",
-            _at(float(points[pinch, 0]), float(points[pinch, 1])),
-        )
-
-    planes = np.asarray(planes_nm, dtype=np.float64)
-    probe = np.asarray(probe_nm, dtype=np.float64)
-    lumen = innermost_crossings([points], planes)
-    margin = lumen - probe
-    record["radius_profile"] = {
-        "z_nm": planes.tolist(),
-        "probe_nm": probe.tolist(),
-        "lumen_nm": lumen.tolist(),
-    }
-    measured = np.isfinite(margin)
-    if not np.any(measured):
-        raise ContourGateError(
-            "radius profile",
-            "no mid-plane between z nodes crosses the loop",
-            "at least one plane",
-            "over the loop's z extent",
-        )
-    low = int(np.nanargmin(np.where(measured, margin, np.nan)))
-    high = int(np.nanargmax(np.where(measured, margin, np.nan)))
-    constriction = int(np.nanargmin(np.where(measured, lumen, np.nan)))
-    record["band"] = {
-        "low": {"value_nm": float(margin[low]), "threshold_nm": -h_c, "z_nm": float(planes[low])},
-        "high": {
-            "value_nm": float(margin[high]),
-            "threshold_nm": BAND_HIGH_NM,
-            "z_nm": float(planes[high]),
-        },
-    }
-    record["constriction"] = {
-        "r_nm": float(lumen[constriction]),
-        "z_nm": float(planes[constriction]),
-    }
-    if margin[low] < -h_c:
-        raise ContourGateError(
-            "radius profile",
-            f"the lumen radius {float(lumen[low]):.4f} nm lies {float(-margin[low]):.4g} nm inside "
-            f"the probe radius {float(probe[low]):.4f} nm",
-            f"r_c - R_p >= -h_c = {-h_c} nm",
-            _at(float(lumen[low]), float(planes[low])),
-        )
-    if margin[high] > BAND_HIGH_NM:
-        raise ContourGateError(
-            "radius profile",
-            f"the lumen radius {float(lumen[high]):.4f} nm lies {float(margin[high]):.4g} nm "
-            f"outside the probe radius {float(probe[high]):.4f} nm",
-            f"r_c - R_p <= {BAND_HIGH_NM} nm",
-            _at(float(lumen[high]), float(planes[high])),
-        )
-    return record
+    measured = measure(loop, spacing_nm=spacing_nm, planes_nm=planes_nm, probe_nm=probe_nm)
+    if measured.failures:
+        raise measured.failures[0]
+    return measured.record
 
 
 def lumen_change(

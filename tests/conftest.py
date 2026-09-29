@@ -224,3 +224,41 @@ def synthetic_c12(tmp_path_factory: pytest.TempPathFactory) -> Path:
 def c12_assembly() -> Callable[[float], tuple[np.ndarray, list[str], list[str]]]:
     """Return :func:`synthetic_c12_positions_nm`, for a test that turns the assembly itself."""
     return synthetic_c12_positions_nm
+
+
+TUBE_NAMES = ("N", "CA", "C", "O", "CB")
+"""The atom names of :func:`write_tube_pdb`'s alanine-like residues, one per slot."""
+
+
+def write_tube_pdb(path: Path) -> Path:
+    """Write a synthetic C12 tube: per chain, five atoms on each of three rings over nine layers.
+
+    Rings of radius 2.7, 3.0 and 3.3 nm, layers 0.3 nm apart from z = 0, so stages
+    1 to 4 run on it in seconds. Moved here from ``tests/tier1/test_contour.py``
+    because the WP24 geometry and assess tests build on it too.
+    """
+    lines = []
+    serial = 0
+    for chain in range(12):
+        points = [
+            (rho, 2.0 * math.pi * (5 * chain + k) / 60, 0.3 * layer)
+            for layer in range(9)
+            for rho in (2.7, 3.0, 3.3)
+            for k in range(5)
+        ]
+        for index, (rho, angle, z) in enumerate(points):
+            serial += 1
+            name = TUBE_NAMES[index % 5]
+            x, y = 10 * rho * math.cos(angle), 10 * rho * math.sin(angle)
+            lines.append(
+                f"ATOM  {serial:5d} {name:<4s} ALA {'ABCDEFGHIJKL'[chain]}{1 + index // 5:4d}    "
+                f"{x:8.3f}{y:8.3f}{10 * z:8.3f}  1.00  0.00           {name[0]}"
+            )
+    path.write_text("\n".join([*lines, "END"]) + "\n", encoding="utf-8")
+    return path
+
+
+@pytest.fixture(scope="session")
+def tube_pdb(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """Return :func:`write_tube_pdb`'s file, written once per session."""
+    return write_tube_pdb(tmp_path_factory.mktemp("tube") / "tube.pdb")
