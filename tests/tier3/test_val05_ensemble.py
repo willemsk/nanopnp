@@ -16,7 +16,8 @@ measured here on the 50-frame mean and pinned to 0.01 nm (D6). Recorded beside
 the verdict, logged at INFO as YAML (D13): the attribution to the reference's
 construction (D7), the isolevel sweep (D8), one frozen case's conductance on the
 generated mesh against the fixture's at ``size_scale`` 1 (D9), the default-size
-mesh against the reference figures (D10), and the stage-3 variance (D11).
+mesh against the reference figures (D10), the same on the Gmsh backend beside
+netgen's (WP23 D13), and the stage-3 variance (D11).
 
 Stages 1 to 3 come from the tier's session-scoped store (D12), shared with
 ``test_density_ensemble.py``, so the nightly session deposits them once.
@@ -27,6 +28,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Callable
 from pathlib import Path
+from types import ModuleType
 
 import numpy as np
 import pytest
@@ -262,3 +264,38 @@ def test_val05_ensemble_mesh_and_frozen_case_conductance(
         fixture.artefacts["mesh"].summary["elements"],
         100 * (g_generated / g_fixture - 1.0),
     )
+
+
+@needs_archive
+def test_val05_ensemble_mesh_on_both_backends(
+    gmsh_module: ModuleType,
+    tmp_path: Path,
+    ensemble_store: Store,
+    ensemble_case: Callable[..., Path],
+) -> None:
+    """WP23 D13, recorded: ClyA-AS's default-size mesh on Gmsh beside netgen's."""
+    base = ensemble_case(tmp_path, geometry=GEOMETRY).read_text("utf-8")
+    for backend in ("netgen", "gmsh"):
+        document = yaml.safe_load(base)
+        document["name"] = f"clya-as-mesh-{backend}"
+        document.setdefault("numerics", {}).setdefault("mesh", {})["backend"] = backend
+        case = tmp_path / f"mesh-{backend}.case.yaml"
+        case.write_text(yaml.safe_dump(document, sort_keys=False), encoding="utf-8")
+        result = run_case(case, store=ensemble_store, upto="mesh", write=False)
+        mesh = result.artefacts["mesh"].summary
+        quality = mesh["quality"]
+        statistics = mesh["sizing"]["wall_statistics"]  # type: ignore[index]
+        logger.info(
+            "ClyA-AS mesh on %s at the default sizes (WP23 D13): %d triangles, min SICN %.4f, "
+            "mean SICN %.4f, min gamma %.4f, mean gamma %.4f; wall %d segments, mean %.3f, max "
+            "%.3f x the target",
+            backend,
+            mesh["elements"],
+            quality["min_sicn"],  # type: ignore[index]
+            quality["mean_sicn"],  # type: ignore[index]
+            quality["min_gamma"],  # type: ignore[index]
+            quality["mean_gamma"],  # type: ignore[index]
+            statistics["segments"],
+            statistics["mean_ratio"],
+            statistics["max_ratio"],
+        )
