@@ -13,9 +13,9 @@ evidence that an unmerged branch has shipped.
   `$NANOPNP_REFERENCE_DATA`**. That run also pins `Z_MD`, and its numbers go into the
   [WP22 Outcomes](wp22-val05-reference-geometry.md#outcomes).
 - **WP23** ([Gmsh backend](wp23-gmsh-backend.md)) is **implemented** on
-  `claude/wp-plan-23-2fdcd2`, review pending. Next: `/wp-ship`, which also sets the ubuntu legs'
-  `require-gmsh` from their `-rs` output (WP23 D11 Outcome); it merges as `v0.9.0-alpha.7`. Then
-  WP24, which decides whether the bundle carries Gmsh.
+  `claude/wp-plan-23-2fdcd2`, in review as PR #47; it merges as `v0.9.0-alpha.7`. Its Gmsh
+  tests run on the Windows and macOS legs; ubuntu lacks `libGLU.so.1` and skips them (WP23 D11
+  Outcome). Then WP24, which decides whether the bundle carries Gmsh.
 
 ## What Phase 2 must not re-decide
 

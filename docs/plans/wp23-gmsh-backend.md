@@ -161,12 +161,15 @@ and two frozen solves at about 9 s each. That is under a minute.
 > correction. The ensemble leg records the same in `test_val05_ensemble.py`, and it skips here
 > without the archive.
 
-> **Outcome — D11: the ubuntu determination is deferred to the PR's first CI run.** It needs a
-> run: `-rs` now names each skip, and no earlier log does. `windows-latest` and `macos-latest` set
-> `NANOPNP_REQUIRE_GMSH=1` through a `require-gmsh` matrix field. If the ubuntu legs' `-rs` output
-> shows no Gmsh skip, set the field to `"1"` there too. If it shows `OSError: libGLU.so.1`, leave it
-> and record that here. Both runs were checked locally: with the variable set and `gmsh` hidden,
-> every Gmsh test fails; without it, each skips naming the error. The one pre-existing Gmsh test
+> **Outcome — D11: `ubuntu-latest` does not import Gmsh, so its legs keep `require-gmsh: "0"`.**
+> The PR's first CI run (`3358f21`, run 36548648270) was the first with `-rs`. On each of the
+> four ubuntu legs (the 3.12 `check` job and the 3.11, 3.13 and 3.14 matrix legs) all 16
+> Gmsh-dependent tests skip with `gmsh does not import: OSError: libGLU.so.1: cannot open shared
+> object file`, and nothing else skips: 1,392 passed, 16 skipped. `macos-latest` ran all 1,408,
+> and `windows-latest` 1,403, skipping only the 5 POSIX hook tests. So the backend is exercised,
+> under `NANOPNP_REQUIRE_GMSH=1`, on the two desktop legs, and the ubuntu legs cover the
+> refusal path. Both local runs also held: with the variable set and `gmsh` hidden, every Gmsh
+> test fails; without it, each skips naming the error. The one pre-existing Gmsh test
 > (`test_mesh_quality.py`) now goes through the same fixture.
 
 ### Out of scope
