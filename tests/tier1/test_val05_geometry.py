@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 import subprocess
 import sys
 
@@ -20,6 +21,7 @@ import pytest
 
 from nanopnp.core.paths import profile_file
 from nanopnp.geometry.contour import innermost_crossings
+from nanopnp.geometry.region import to_model_frame
 from nanopnp.mesh.profile import load_profile
 from nanopnp.validation.geometry import (
     CONSTRICTION_WINDOW_NM,
@@ -35,6 +37,7 @@ from nanopnp.validation.geometry import (
     pqr2grid_polygon,
     pqr2grid_radius,
     register_by_centroid,
+    rms_optimal_offset,
     zero_crossing,
 )
 
@@ -83,7 +86,7 @@ def test_val05_a_polygon_against_itself_is_zero(reference) -> None:
         comparison.outer_rms_nm,
     ):
         assert value == 0.0
-    assert comparison.constriction_reference.value == pytest.approx(1.65)
+    assert comparison.constriction_reference.value_nm == pytest.approx(1.65)
     assert comparison.constriction_reference.z_nm == pytest.approx(-1.225)
     assert comparison.tips_ours_nm == comparison.tips_reference_nm == (LOW, HIGH)
     comparison.check("ensemble")
@@ -112,10 +115,10 @@ def test_val05_each_constriction_is_located_on_its_own_polygon() -> None:
     comparison = compare_profiles(ours, reference)
     assert comparison.constriction_reference.z_nm == pytest.approx(-0.975)
     assert comparison.constriction_ours.z_nm == pytest.approx(0.475)
-    assert comparison.constriction_reference.value == pytest.approx(1.6 + 1.4 * 0.025)
-    assert comparison.constriction_ours.value == pytest.approx(1.7 + 1.3 * 0.025)
+    assert comparison.constriction_reference.value_nm == pytest.approx(1.6 + 1.4 * 0.025)
+    assert comparison.constriction_ours.value_nm == pytest.approx(1.7 + 1.3 * 0.025)
     assert comparison.constriction_difference_nm == pytest.approx(
-        comparison.constriction_ours.value - comparison.constriction_reference.value
+        comparison.constriction_ours.value_nm - comparison.constriction_reference.value_nm
     )
 
 
@@ -124,7 +127,7 @@ def test_val05_the_constriction_is_taken_only_inside_its_window() -> None:
     reference = _straight()
     ours = _body([(3.0, LOW), (3.0, 4.0), (1.0, 5.0), (3.0, 6.0), (3.0, HIGH)])
     comparison = compare_profiles(ours, reference)
-    assert comparison.constriction_ours.value == pytest.approx(3.0)
+    assert comparison.constriction_ours.value_nm == pytest.approx(3.0)
     assert comparison.constriction_ours.z_nm <= CONSTRICTION_WINDOW_NM[1]
     assert comparison.max_abs.z_nm == pytest.approx(4.975)
 
@@ -180,7 +183,8 @@ def test_val05_the_constriction_tolerance_fires_naming_both_minima() -> None:
     with pytest.raises(GeometryToleranceError, match=r"\|Δr_c\| is 0\.1500 nm") as caught:
         comparison.check("2wcd")
     message = str(caught.value)
-    assert "ours 2.8500 nm at z = -0.025 nm" in message or "at z = 0.025 nm" in message
+    # The notch is symmetric, so which of its two equal planes is the minimum is the last bit.
+    assert re.search(r"ours 2\.8500 nm at z = -?0\.025 nm against the reference's", message)
     assert "the reference's 3.0000 nm" in message
     assert caught.value.quantity == "|Δr_c|"
 
@@ -270,6 +274,56 @@ def test_val05_the_zero_crossing_interpolates_between_passing_levels(reference) 
     ]
     assert zero_crossing(points) == pytest.approx(0.35)
     assert zero_crossing(points[:2]) is None
+    # A level at exactly zero is the crossing, the last passing level included.
+    at_zero = IsolevelPoint(
+        isolevel=0.5, comparison=base.model_copy(update={"conductance_deviation": 0.0})
+    )
+    assert zero_crossing([*points[:2], at_zero]) == pytest.approx(0.5)
+    assert zero_crossing([at_zero]) == pytest.approx(0.5)
+
+
+def test_val05_no_plane_sits_on_a_reference_tip() -> None:
+    """An extent of 29.5 h rounds to 30 planes, the last on the top tip: it is dropped.
+
+    The crossing test is half-open, so a plane on the top vertex is never crossed,
+    and the reference would be refused against itself.
+    """
+    reference = _straight(low=-1.85, high=-1.85 + 29.5 * 0.05)
+    planes = comparison_planes(reference)
+    assert planes.size == 29
+    assert planes[-1] < reference[:, 1].max()
+    assert compare_profiles(reference, reference).compared_planes == 29
+
+
+def test_val05_the_registration_refuses_an_empty_selection(c12_assembly) -> None:
+    """No chain named selects no atom, and is refused rather than averaged to NaN."""
+    positions, names, chains = c12_assembly(0.0)
+    resid = [1 + (index // 5) % 8 for index in range(len(names))]
+    with pytest.raises(GeometryComparisonError, match="selects no atom over residues 1-8"):
+        calpha_centroid_z_nm(
+            positions, name=names, resid=resid, chain=chains, residues=(1, 8), chains=()
+        )
+
+
+def test_val05_the_rms_optimal_offset_recovers_a_known_shift(reference) -> None:
+    """D6's diagnostic: the reference moved up 4.5 nm is best registered at 4.5 nm.
+
+    It agrees with :func:`compare_profiles`' rms at the neighbouring offsets, which
+    it must, since it is that rms computed on the lumen alone.
+    """
+    stage1 = reference + np.array([0.0, 4.5])
+    fitted = rms_optimal_offset(stage1, reference, centre_nm=4.47, half_width_nm=0.05)
+    assert fitted == pytest.approx(4.5, abs=1e-9)
+    for offset in (4.49, 4.51):
+        direct = compare_profiles(to_model_frame(stage1, offset), reference).rms_nm
+        assert direct > compare_profiles(to_model_frame(stage1, fitted), reference).rms_nm
+
+
+def test_val05_the_attribution_refuses_a_comparison_on_other_planes(reference) -> None:
+    """A supplied comparison on another plane set cannot be split against the binned one."""
+    coarse = compare_profiles(reference, reference, spacing_nm=0.1)
+    with pytest.raises(GeometryComparisonError, match="do not split one offset"):
+        attribute_to_construction(reference, reference, coarse)
 
 
 def test_val05_importing_the_harness_imports_no_numpy() -> None:

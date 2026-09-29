@@ -110,7 +110,7 @@ moves to `slow` and is logged there.
 
 > **Outcome — every work item is delivered; the ensemble leg's verdict awaits a run on the
 > archive.** `nanopnp.validation.geometry` holds D1–D8, and three test files discharge VAL-05:
-> 20 tests in `tests/tier1/test_val05_geometry.py`, 4 in `tests/tier2/test_val05_2wcd.py` and 3 in
+> 24 tests in `tests/tier1/test_val05_geometry.py`, 4 in `tests/tier2/test_val05_2wcd.py` and 3 in
 > `tests/tier3/test_val05_ensemble.py`. This session had no `$NANOPNP_REFERENCE_DATA`, so the
 > Tier-3 leg skips here, naming the variable. Its code was exercised end to end against a stand-in
 > archive: the prepared 2WCD, shifted to put its C-alpha centroid at 5.63 nm and written as 98
