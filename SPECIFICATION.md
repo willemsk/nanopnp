@@ -839,7 +839,7 @@ CLI and the desktop shell drive the same stage objects (IF-01, IF-02, IF-09).
 | 2 | Density map | Aligned ensemble, grid spacing, kernel | 3D density map | Vectorised numpy Gaussian deposition over a spherical stencil truncated at 10⁻⁶, per-atom width σR_i from the CHARMM radius set of the §5.3.1 NOTE on `geometry.density`, sharpness 0.93; `gridData` IO. MDAnalysis `DensityAnalysis` is histogram-only and is not used (**amended 25 September 2026**, WP19) | Grid spacing 0.25–0.5 Å (FR-04); every atom has a radius; the map is finite and within [0, 1] |
 | 3 | Symmetry reduction to (r, z) | 3D map, n | (r, z) map; residual azimuthal variance, Cₙ-averaged and raw | numpy and `scipy.sparse`; exact cell–annulus overlap weights; the Cₙ average in the angular harmonic basis (**amended 25 September 2026**, WP19) | Variance emitted with the geometry (FR-06, CON-04); annular weights summing to the exact annulus areas. The radius profile against the probe-radius profile is stage 4's gate (§5.2.1, §8.2.2 B5) |
 | 4 | Contour extraction and conditioning | Stage 3's (r, z) mean; the aligned ensemble and its radius set, for the probe-radius profile; isolevel, smoothing and simplification tolerance | Closed conditioned polyline, a `nanopnp/profile/v1` document | scikit-image, Shapely (both BSD-3) and numpy, per §5.2.1 (**amended 26 September 2026**, WP20) | §5.2.1 (FR-08) |
-| 5 | CAD assembly | Stage 4's polyline or a supplied `inputs.profile`, membrane specification with its `centre_z_nm` shift, reservoir radius, optional analyte | Fragmented (r, z) region, domains and boundaries tagged, as a declarative region record | `netgen.occ` (LGPL-2.1, OpenCASCADE, in-process) primary; Gmsh OCC Python API (GPLv2+) optional | All bodies fragmented and imprinted, interfaces conformal, no gap or overlap at the membrane-to-pore junction, each domain one face, the membrane's inner edge strictly inside the body (FR-09; §5.2.1 NOTE on the membrane junction on any profile). **Amended 26 September 2026** (WP21) |
+| 5 | CAD assembly | Stage 4's polyline or a supplied `inputs.profile`, membrane specification with its `centre_z_nm` shift, reservoir radius, optional analyte | Fragmented (r, z) region, domains and boundaries tagged, as a declarative region record | `netgen.occ` (LGPL-2.1, OpenCASCADE, in-process). The optional Gmsh backend meshes this region at stage 6 and assembles none of its own (**amended 29 September 2026**, WP23 D1) | All bodies fragmented and imprinted, interfaces conformal, no gap or overlap at the membrane-to-pore junction, each domain one face, the membrane's inner edge strictly inside the body (FR-09; §5.2.1 NOTE on the membrane junction on any profile). **Amended 26 September 2026** (WP21) |
 | 6 | Meshing | Fragmented region, size fields | Graded triangular mesh | Netgen (LGPL-2.1) default, Gmsh (GPLv2+) optional, behind the mesh adapter | §5.2.2 (FR-10, QR-12): the VER-10 and VER-27 gates, as on an ingested mesh, and the wall-size gate of the §5.3.1 NOTE on `numerics.mesh` (**amended 26 September 2026**, WP21) |
 | 7 | Charge assembly | Prepared ensemble, pH, force field, **and the deployed mesh** (its gate is evaluated there, PHY-19); on the consumer path, a supplied field document instead of the ensemble | ρ_pore(r, z), Q_net, dielectric field, ion-exclusion surface | PDB2PQR 3.7+ (BSD-3) driving PROPKA3; quintic B-spline (`spl4`) deposition; APBS 3.4.1 (BSD-3) cross-check; settings per PHY-16 | Charge conservation to 10⁻³ of Q_net on the deployed FE mesh, plus the per-z-slice cumulative check (FR-14, QR-03, PHY-19) |
 | 8 | Materials | Electrolyte specification, correction model names, coefficient files | D_i, μ_i, η, ϱ, ε_r as fields in ⟨c⟩ and d | Correction registry, `data/corrections/willems2020_nacl.yaml` | Conformance values of §4.3 reproduced; clamps above 5.3 M logged with location and property (PHY-13) |
@@ -1037,8 +1037,9 @@ isotropic grading to 0.05 nm at the pore wall.
 
 That mesh has 120,917 triangles, 1,879 edge elements and 196 vertex elements, minimum element
 quality 0.6378, average 0.9765, which set the target. Quality gate, enforced in code: minimum
-SICN/gamma > 0.3, an `optimize("Netgen")` pass, worst element and its location reported, run
-aborted on failure (QR-12).
+SICN/gamma > 0.3, the mesher's own optimisation pass (netgen's `optsteps2d` 5, Gmsh's
+`Mesh.Smoothing` 5; **amended 29 September 2026**, WP23 D5), worst element and its location
+reported, run aborted on failure (QR-12).
 
 NOTE (SICN and gamma): these are two distinct measures and both SHALL be gated. For a straight-sided
 triangle, SICN is the signed inverse condition number of the Jacobian taken relative to the unit
@@ -1065,6 +1066,28 @@ Excluded components (CON-12): MeshPy, maintained at 2026.1 but wrapping Triangle
 permits distribution as part of a commercial system "ONLY BY DIRECT ARRANGEMENT WITH THE AUTHOR";
 TetGen 1.5 (AGPLv3); pygmsh (2022-01) and pygalmesh (2022-09), both stale. The `gmsh` API is called
 directly.
+
+NOTE (the Gmsh backend's size field; FR-10, CON-10; **added 29 September 2026**, WP23): the Gmsh
+backend meshes the region stage 5 assembled, never one of its own. It applies the table above
+through the classification netgen's sizes use. Gmsh has nothing like netgen's built-in restriction
+of the element size by edge length and by the proximity of close edges. It does not grade outwards
+from a domain's size either. Given the table alone it clears the quality gate on the reference
+fixture at a minimum gamma of 0.3143 and fails it at `size_scale` 2 and 4 (WP23 plan, Design §2).
+The backend therefore states those restrictions as size fields. Each is graded outwards as
+`h + 0.2 d`, 0.2 being the constant netgen is given as its grading:
+
+- every sized boundary (`wall`, the reservoir arc, the axis inside the pore) is a source at its
+  size;
+- the boundary of every sized domain is a source at the domain's size, the domain being held to
+  that size inside;
+- each vertex whose shortest incident curve is shorter than the smallest target of its incident
+  curves is a source at that curve's length;
+- the membrane is a sized domain at its own thickness, not multiplied by `size_scale`, because it is
+  a feature of the geometry and not an entry of the table.
+
+None of these touches a netgen mesh, which already meets them. On the fixture, the WP22 frozen case
+gives conductances 1.25e-4 apart on the two backends' meshes at `size_scale` 2. Refining netgen to
+`size_scale` 1 moves its own value by 2.0e-4 (WP23 plan, Design §4).
 
 #### 5.2.3 Embedded analyte
 
@@ -1438,8 +1461,13 @@ other sizes are each multiplied by `size_scale`. After meshing, the mean length 
 boundary segments SHALL NOT exceed 1.15 × the resolved wall size, and the longest SHALL NOT exceed
 2.0 ×, or the run aborts naming the statistic, the segment and its midpoint (QR-12). Netgen treats
 the size as a target, and 1.045–1.078 and 1.25–1.62 are the measured means and maxima (WP21 plan,
-Design §3). `backend: gmsh` is refused until the Gmsh adapter is delivered (WP23, ADR-002), and
-`boundary_layer: true` naming FR-11. `geometry.analyte` on a generated mesh is refused naming FR-21.
+Design §3). `backend: gmsh` meshes the stage-5 region with the optional backend of ADR-002, under
+the §5.2.2 NOTE on its size field, and passes the same three gates. It needs the `gmsh` extra.
+Without it, stage 6 refuses the run, naming the extra and the import error, whether that error is a
+missing module or a native library the wheel could not load (CON-10). The resolved case is not
+refused. A generated mesh's key records the backend and that backend's own settings, and the Gmsh
+version is recorded beside the key (**amended 29 September 2026**, WP23 D8, D9).
+`boundary_layer: true` is refused naming FR-11. `geometry.analyte` on a generated mesh is refused naming FR-21.
 Beside `inputs.mesh`, any `numerics.mesh` key away from its default is refused naming it, because
 nothing meshes and the key would change nothing.
 
