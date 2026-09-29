@@ -19,7 +19,7 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 ### Fixed
 
 Findings of [CODE_REVIEW_003](docs/code_reviews/CODE_REVIEW_003.md), the Phase 2 review. CR-1 to
-CR-4, CR-6 and CR-11 each have a regression test that fails on the previous code.
+CR-7, CR-9, CR-11 and CR-13 each have a regression test that fails on the previous code.
 
 - A run or build child that dies without reporting (the OOM killer, a fault in a compiled
   library) now settles the run as `failed`; the Run and Geometry tabs no longer stay locked
@@ -33,6 +33,16 @@ CR-4, CR-6 and CR-11 each have a regression test that fails on the previous code
 - `read_plan` re-derives each point's id and the plan hash, and refuses an edited plan (CR-6).
 - `run_case` reads the case file once (CR-10); `load_profile` reads a `Path` as a path whatever
   its suffix (CR-11).
+- A sweep plan records the content hash of every input file its points name and keeps it in its own
+  hash. Building a member refuses a file that has changed or gone, naming the path and both
+  digests. **Existing plan files must be re-planned**, and sweep directory names move (CR-5, QR-12).
+- The assess and render helper processes report when they die without answering, and the Geometry
+  tab says so instead of showing "measuring" or "drawing" for ever (CR-7).
+- `AlignedEnsemble.export` keeps chains distinct when their keys are longer than one character:
+  each gets a single character and the key goes in the segid columns (CR-9).
+- `structure.source.variant` no longer keys stage 1 or enters its payload header, so relabelling does
+  not re-align the ensemble. **Every stored structure artefact and everything keyed on it re-keys
+  once**; case hashes do not move (CR-13, OPN-04).
 - Stage 2's `canonical_grid` no longer copies the float32 ensemble to float64 (CR-8); the packaging
   probe writes its scene to a private temporary directory (CR-12).
 
