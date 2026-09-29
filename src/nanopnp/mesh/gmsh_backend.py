@@ -110,6 +110,16 @@ def _options(sizes: SizeTable) -> dict[str, float]:
         "Mesh.MeshSizeFromPoints": 0,
         "Mesh.MeshSizeFromCurvature": 0,
         "Mesh.MeshSizeExtendFromBoundary": 0,
+        # Gmsh's defaults, pinned so a session opened elsewhere cannot move the
+        # mesh under an unchanged key: points per curve and per circle, the
+        # perturbation of the Delaunay kernel, and the geometry's tolerance.
+        "Mesh.MeshSizeFromParametricPoints": 0,
+        "Mesh.MinimumCurvePoints": 3,
+        "Mesh.MinimumCirclePoints": 7,
+        "Mesh.RandomFactor": 1e-9,
+        "Mesh.LcIntegrationPrecision": 1e-9,
+        "Geometry.Tolerance": 1e-8,
+        "Geometry.AutoCoherence": 1,
     }
 
 

@@ -17,8 +17,8 @@ target to hold it to: the **wall-size gate** (section 5.3.1 NOTE on
 ``numerics.mesh``, WP21 D9). A mesher treats a size as a target, not a bound:
 on the reference profile and on 2WCD's stage-4 profile netgen's ``wall``
 segments' mean length is 1.045-1.078 times the target and the longest 1.25-1.62
-times (WP21 plan, Design section 3), and Gmsh's run at or under it (WP23 plan,
-Design section 2). The bounds 1.15 and 2.0 sit above every measured
+times (WP21 plan, Design section 3), and Gmsh's mean runs under it and its longest
+within 1.06 times (WP23 plan, Outcomes). The bounds 1.15 and 2.0 sit above every measured
 value. What they catch is a size field that did not reach the wall: the protein's
 0.1 nm field and the polygon's own edges then govern, and the mean doubles.
 
@@ -258,11 +258,22 @@ def gmsh_backend() -> ModuleType:
 
 
 def _missing_gmsh(error: Exception) -> MissingExtraError:
-    """Return the refusal of ``numerics.mesh.backend: gmsh`` on an install that lacks it."""
+    """Return the refusal of ``numerics.mesh.backend: gmsh`` on an install that lacks it.
+
+    The remedy follows the error: a missing module wants the extra, and an
+    ``OSError`` means the wheel is installed and a system library it loads is
+    not, which installing the extra again would not change.
+    """
+    remedy = (
+        "The gmsh wheel is installed but could not load a native library; install the system "
+        "library the error names"
+        if isinstance(error, OSError)
+        else "Install the extras with `uv sync --all-extras`"
+    )
     return MissingExtraError(
         f"numerics.mesh.backend is 'gmsh', which needs the {GMSH_EXTRA!r} extra: importing gmsh "
-        f"failed with {type(error).__name__}: {error}. Install the extras with "
-        "`uv sync --all-extras`, or mesh with the default backend, netgen (CON-10, ADR-002)",
+        f"failed with {type(error).__name__}: {error}. {remedy}, or mesh with the default "
+        "backend, netgen (CON-10, ADR-002)",
         name="gmsh",
     )
 

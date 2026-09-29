@@ -307,15 +307,22 @@ def test_ver54_the_key_moves_with_the_backend_and_netgen_s_does_not_move(
 def test_ver54_an_open_gmsh_session_keeps_its_model_and_its_options(
     gmsh_module: ModuleType, workspace: Path, region
 ) -> None:
-    """D6: in a session already open, the adapter works in its own model and restores options."""
+    """D6: in a session already open, the adapter works in its own model and restores options.
+
+    Every option the adapter sets is watched, and three are set away from both
+    Gmsh's default and the adapter's value first.
+    """
+    from nanopnp.mesh import gmsh_backend as backend
+
     gmsh = gmsh_module
-    watched = ("General.Terminal", "Mesh.Algorithm", "Mesh.MeshSizeMax", "Mesh.Smoothing")
+    watched = tuple(backend._options(SIZES.scaled(20.0)))
     gmsh.initialize(readConfigFiles=False, interruptible=False)
     try:
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.model.add("theirs")
         gmsh.option.setNumber("Mesh.Algorithm", 1)
         gmsh.option.setNumber("Mesh.MeshSizeMax", 3.5)
+        gmsh.option.setNumber("Mesh.MinimumCurvePoints", 11)
         before = {name: gmsh.option.getNumber(name) for name in watched}
         models = gmsh.model.list()
         resolved = resolve(loads_case(_case_text(workspace, "gmsh")))
