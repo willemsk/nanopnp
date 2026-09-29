@@ -8,6 +8,13 @@ artefact's summary.
 **It is exported to OpenDX and CCP4 through GridDataFormats** (IF-05), transposed to
 gridData's x-first order, and read back from either. Those formats carry the grid
 and the values but no header, so a map read from one carries only its file name.
+
+**Their lengths are in ångströms** (§8.2.2 B10; the IF-05 NOTE on length units).
+CCP4/MRC defines the cell in ångströms and molecular viewers read OpenDX so, and
+the map is exported to be overlaid on the aligned structure's PDB, which is in
+ångströms by its format. A read converts back to nm. The ``.npz`` stays in nm, as
+does everything inside the package.
+
 gridData writes an OpenDX origin to six decimals, its spacing to seven significant
 figures and its values at the array's own precision, six decimals for float32; its
 MRC writer is the CCP4-2000 format and stores everything as float32, so a CCP4
@@ -45,6 +52,9 @@ _INTERCHANGE: Mapping[str, str] = {".dx": "DX", ".ccp4": "MRC", ".mrc": "MRC", "
 writer is the CCP4-2000 map format (``.knowledge/07-software-stack.md`` §2).
 """
 
+ANGSTROM_PER_NM = 10.0
+"""The interchange files' length unit, per nm (§8.2.2 B10)."""
+
 SPACING_TOLERANCE_NM = 1e-6
 """How far a file's spacings may differ from one another before it is not a canonical grid.
 
@@ -54,9 +64,9 @@ gridData writes an OpenDX delta to seven significant figures.
 LATTICE_TOLERANCE_NM = 1e-5
 """How far a file's origin may lie from a node ``i·h`` before it is not a canonical grid.
 
-gridData writes an OpenDX origin to six decimals (5e-7 nm), and MRC holds it as
-float32, whose half-spacing at 50 nm is 1.9e-6 nm; half a spacing is 0.0125 nm at
-the finest grid FR-04 admits.
+Compared in nm, after conversion. gridData writes an OpenDX origin to six decimals
+of an ångström (5e-8 nm), and MRC holds it as float32, whose half-spacing at 500 Å
+is 3.1e-5 Å, 3.1e-6 nm; half a spacing is 0.0125 nm at the finest grid FR-04 admits.
 """
 
 
@@ -154,17 +164,23 @@ class DensityMap:
         import numpy as np
 
         module = _grid_data_module()
-        data = module.Grid(str(path))  # type: ignore[attr-defined]
+        # The reader is named rather than guessed: gridData guesses it from the
+        # extension, and has none for ``.map``.
+        data = module.Grid(  # type: ignore[attr-defined]
+            str(path), file_format=_INTERCHANGE[path.suffix.lower()]
+        )
         array = np.asarray(data.grid)
         if array.ndim != 3:
             raise GridFormatError(
                 f"{path.name!r} holds an array of shape {tuple(array.shape)}; a density map is "
                 "three-dimensional"
             )
-        origin = np.asarray(data.origin, dtype=np.float64)
-        delta = np.asarray(data.delta, dtype=np.float64).reshape(-1)[:3]
+        # The file is in ångströms (B10); everything from here on is in nm.
+        origin = np.asarray(data.origin, dtype=np.float64) / ANGSTROM_PER_NM
+        delta = np.asarray(data.delta, dtype=np.float64).reshape(-1)[:3] / ANGSTROM_PER_NM
         # Both formats hold the spacing to about seven significant figures: OpenDX
-        # writes it so, and MRC stores float32, which returns 0.05 as 0.0500000007.
+        # writes it so, and MRC stores float32, which returns 0.5 Å as 0.500000007.
+        # Re-parsed from seven figures, so that 0.5 Å reads as the double 0.05 nm is.
         h = float(f"{float(delta[0]):.7g}")
         nx, ny, nz = (int(size) for size in array.shape)
         # The origin must sit on a node of the canonical lattice, or rounding it
@@ -192,7 +208,9 @@ class DensityMap:
     def export(self, path: Path) -> Path:
         """Write the map as OpenDX (``.dx``) or CCP4 (``.ccp4``, ``.mrc``, ``.map``).
 
-        ``.npz`` writes the native format with its header. Returns the path.
+        Origin and spacing are written in ångströms, the unit a molecular viewer
+        reads these formats in (§8.2.2 B10). ``.npz`` writes the native format with
+        its header, in nm. Returns the path.
 
         Raises
         ------
@@ -213,8 +231,8 @@ class DensityMap:
         module = _grid_data_module()
         data = module.Grid(  # type: ignore[attr-defined]
             grid=np.transpose(self.values, (2, 1, 0)),
-            origin=self.grid.origin_nm,
-            delta=(self.grid.spacing_nm,) * 3,
+            origin=tuple(value * ANGSTROM_PER_NM for value in self.grid.origin_nm),
+            delta=(self.grid.spacing_nm * ANGSTROM_PER_NM,) * 3,
         )
         path.parent.mkdir(parents=True, exist_ok=True)
         data.export(str(path), file_format=exporter)

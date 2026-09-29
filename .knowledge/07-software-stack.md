@@ -92,6 +92,19 @@ predict, all found while building the `(r, z)` grid IO:
   grid as a 3D grid whose third axis is a **singleton**: gridData round-trips `(4, 3, 1)` through
   both DX and MRC with `origin` and `delta` intact. Refuse a genuinely 2D array yourself, naming the
   shape, so the user gets a diagnostic instead of a format-string traceback.
+- **The reader is guessed from the extension, and `.map` has none.** `Grid("x.map")` raises
+  `ValueError: File format MAP not available, choose one of dict_keys(['CCP4', 'MRC', 'DX', …])`,
+  although the writer, told `file_format="MRC"`, wrote that file without complaint. Pass the
+  reader's `file_format` explicitly, from the same suffix table as the writer. `DensityMap.read`
+  exported `.map` and failed to read it back until WP25 did so **[tested]**, 29 September 2026.
+- **It carries no length unit.** `origin` and `delta` are written as given. CCP4/MRC defines its
+  cell in ångströms, and molecular viewers read OpenDX in ångströms too, so a map written in nm
+  overlays its structure at a tenth of its size. The 3D density map is therefore exported in Å and
+  converted back on reading (the author's ruling, `SPECIFICATION.md` §8.2.2 B10). On the prepared
+  2WCD, an overlay oracle that reads the exported MRC header raw and looks up each heavy atom's
+  nearest node rejects all three errors a converter can make: read as nm, every atom falls outside
+  the box; with the axes fully transposed, 89 % of atoms read below the single-frame bound; with x
+  and y alone swapped, 57 % do **[tested]**, WP25, 29 September 2026.
 
 **The MRC writer is not in every gridData a supported interpreter resolves to [tested].**
 GridDataFormats 1.2.0 requires Python ≥ 3.11, so on 3.10 a resolver takes **1.0.2**, whose
