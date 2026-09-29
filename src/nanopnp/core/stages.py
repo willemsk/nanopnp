@@ -20,9 +20,10 @@ desktop shell has one above this layer (ADR-004).
 **Progress is a fraction, not a log line.** ``progress(fraction, message)`` is
 monotone in [0, 1] and ends at 1, so a caller can drive a bar without parsing
 anything. What a caller has to *act* on travels beside it as data:
-:class:`StageHook` carries the stage transition, :class:`SolveHook` the
-continuation rung and the Newton step. Both exist because the alternative is a
-caller parsing a caption, which makes a display format into an interface.
+:class:`StageHook` carries the stage transition, :class:`ArtefactHook` the
+artefact each stage left in the store, and :class:`SolveHook` the continuation
+rung and the Newton step. All three exist because the alternative is a caller
+parsing a caption, which makes a display format into an interface.
 """
 
 from __future__ import annotations
@@ -145,6 +146,45 @@ class SolveHook(Protocol):
         ``residual`` after the step, ``update`` the relative update on the
         *undamped* direction, and ``forced`` whether NUM-16 accepted the step at
         minimum damping without reducing the residual.
+        """
+
+
+class ArtefactHook(Protocol):
+    """Called after each stage of a pipeline walk, once its artefact is in the store.
+
+    :class:`StageHook` fires *before* a stage and can say nothing about what it
+    produced; this fires *after*, with the artefact's identity. The desktop
+    shell's geometry views read each stage's payload as it lands, and the only
+    other way to learn which store entry a stage produced would be to parse the
+    ``"stage <name>"`` caption and re-key the stage — a display format made into
+    an interface, and a second walk over the graph (VER-43, VER-55).
+
+    It fires for a stage served from the store as much as for one that ran,
+    with ``cached`` saying which. Unlike a cached solve, which has no Newton
+    history to report, a cached stage still has an artefact to show.
+
+    The hook is **not an input**, for the reason :class:`SolveReporting` gives:
+    every key is taken before it is called and none is passed to it, so a
+    watched walk and an unwatched one land on one set of store entries
+    (section 5.3.2).
+
+    Plain scalars only, so that it crosses a process boundary as data; a
+    reader holding ``(schema, hash)`` and the store's root reads the payload
+    through :meth:`nanopnp.io.store.Store.get`.
+    """
+
+    def __call__(self, name: str, schema: str, hash: str, cached: bool) -> None:
+        """Report that stage ``name`` produced artefact ``(schema, hash)``.
+
+        Parameters
+        ----------
+        name
+            The stage's registry name.
+        schema, hash
+            The artefact's schema identifier and content hash: its identity,
+            and its location in the store.
+        cached
+            Whether the store already held it, so the stage did no work.
         """
 
 

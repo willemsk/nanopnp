@@ -35,6 +35,7 @@ from typing import TYPE_CHECKING
 
 from nanopnp.core.hashing import Canonicalisable, canonical
 from nanopnp.core.stages import (
+    ArtefactHook,
     CancelToken,
     Progress,
     SolveHook,
@@ -740,6 +741,7 @@ def run_document(
     cancel: CancelToken | None = None,
     on_stage: StageHook | None = None,
     on_solve: SolveHook | None = None,
+    on_artefact: ArtefactHook | None = None,
 ) -> RunResult:
     """Walk the pipeline for one validated case and return what it produced.
 
@@ -794,6 +796,12 @@ def run_document(
         :class:`~nanopnp.core.stages.SolveReporting` is rebound, and it is
         rebound after its artefact key has been taken, so watching a run cannot
         move a hash (section 5.3.2).
+    on_artefact
+        Called after each stage with the artefact it produced — its schema, its
+        hash and whether the store already held it — once that artefact is in
+        the store (:class:`~nanopnp.core.stages.ArtefactHook`). Every key is
+        taken before it is called and none is handed to it, so it cannot move a
+        hash either.
 
     Returns
     -------
@@ -828,6 +836,7 @@ def run_document(
             cancel=cancel,
             on_stage=on_stage,
             on_solve=on_solve,
+            on_artefact=on_artefact,
         )
     finally:
         if walk.scratch is not None:
@@ -897,6 +906,7 @@ def _walk(
     cancel: CancelToken | None,
     on_stage: StageHook | None,
     on_solve: SolveHook | None,
+    on_artefact: ArtefactHook | None,
 ) -> RunResult:
     """Run the stages of :func:`run_document`, which owns the scratch they write into."""
     document = walk.document
@@ -949,6 +959,11 @@ def _walk(
             "from the store" if walk.records[-1].cached else "computed",
             walk.records[-1].seconds,
         )
+        if on_artefact is not None:
+            # After ``_resolve_stage`` has put the artefact in the store or found
+            # it there, so a reader told this hash can read the entry at once.
+            # Handed the record's values, never a key: the hook cannot reach one.
+            on_artefact(name, artefact.schema, artefact.hash, walk.records[-1].cached)
     report(progress, 1.0, f"{len(stages)} stages complete")
 
     manifest = _manifest(walk, case_text=case_text, case_path=case_path)
@@ -979,6 +994,7 @@ def run_case(
     cancel: CancelToken | None = None,
     on_stage: StageHook | None = None,
     on_solve: SolveHook | None = None,
+    on_artefact: ArtefactHook | None = None,
 ) -> RunResult:
     """Load a case file and run it.
 
@@ -991,7 +1007,9 @@ def run_case(
     ----------
     path
         The case file.
-    store, upto, only, options, arguments, workspace, write, progress, cancel, on_stage, on_solve
+    store, upto, only, options, arguments, workspace, write, progress, cancel
+        As :func:`run_document` documents them.
+    on_stage, on_solve, on_artefact
         As :func:`run_document` documents them.
     """
     source = Path(path)
@@ -1010,4 +1028,5 @@ def run_case(
         cancel=cancel,
         on_stage=on_stage,
         on_solve=on_solve,
+        on_artefact=on_artefact,
     )

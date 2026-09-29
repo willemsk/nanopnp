@@ -43,6 +43,9 @@ EXPECTED = {
     "Cancelled",
     "StageHook",
     "SolveHook",
+    # WP24 D1: ``run_case`` and ``run_document`` take ``on_artefact``, so the
+    # protocol a caller implements for it is public beside the other two hooks.
+    "ArtefactHook",
 }
 """Written out, not derived: adding to the stable API is a decision, and this is where
 it is seen being made."""
