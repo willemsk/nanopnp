@@ -371,6 +371,19 @@ gated mesh, executed verbatim by VER-46. Its oracle is a model property, not a t
 for example, the profile closes and passes its gate, and the reduced map is invariant under the
 Cₙ rotation. The generated references pick up the v2 fields without a docs edit (VER-45).
 
+> **Planned, 29 September 2026** ([plan](wp25-geometry-docs-and-example.md)). Three things
+> differ from the paragraph above.
+>
+> - `nanopnp stage <name> --export` writes a stored artefact in its interchange format. It closes
+>   the export command that WP18 and WP19 deferred and WP24 did not ship (the IF-02 export NOTE).
+> - By author ruling (§8.2.2 B10), the density map is exported in ångströms, so it overlays its
+>   PDB.
+> - Example 06 prepares the deposited entry itself, with no nanopnp code, and shows stage 1
+>   refusing it first.
+>
+> The "invariant under the Cₙ rotation" oracle is dropped, because the harmonic-basis average makes
+> it true by construction. The oracles are VER-46's, as amended.
+
 ## Open decisions
 
 | # | Decision | Owner and status |
