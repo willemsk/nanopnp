@@ -22,8 +22,6 @@ driver defect. The stabilisation mode is ``none`` (NUM-11).
 from __future__ import annotations
 
 import json
-import os
-import signal
 import time
 from pathlib import Path
 
@@ -215,8 +213,9 @@ def test_fr27_a_child_killed_without_reporting_settles_the_run_as_failed(
     assert control.process is not None
     child = control.process._process  # the test kills the real child
     assert child is not None
-    assert child.pid is not None
-    os.kill(child.pid, signal.SIGKILL)
+    # ``kill`` is SIGKILL on POSIX and TerminateProcess on Windows, which has no SIGKILL;
+    # either way the child dies without posting a terminal event.
+    child.kill()
     child.join(TIMEOUT_S)
     deadline = time.monotonic() + TIMEOUT_S
     model = control.poll()
