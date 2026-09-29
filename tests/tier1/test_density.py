@@ -355,6 +355,11 @@ def test_ver49_map_round_trip_and_export(synthetic_c12: Path, tmp_path: Path) ->
     return within 5e-7 plus float32's spacing at 1 when parsed back, 6e-8; CCP4
     stores float32, so they return exactly (VER-29's statement of each format's
     precision; IF-05, FR-27).
+
+    The interchange files are in ångströms (§8.2.2 B10): their own headers, read
+    by GridDataFormats with no conversion, hold ten times the origin and spacing
+    in nm. A reader that round-tripped through its own inverse could not tell nm
+    from Å, so the header is read directly.
     """
     case = _case(tmp_path, synthetic_c12)
     store = Store(tmp_path / "store")
@@ -368,22 +373,37 @@ def test_ver49_map_round_trip_and_export(synthetic_c12: Path, tmp_path: Path) ->
     again = DensityMap.read(density.write(tmp_path / "copy.npz"))
     assert again.digest() == density.digest()
 
-    for suffix, tolerance in ((".dx", 5e-7 + 2.0**-24), (".ccp4", 0.0), (".mrc", 0.0)):
-        exported = DensityMap.read(density.export(tmp_path / f"map{suffix}"))
+    from gridData import Grid
+
+    h = density.grid.spacing_nm
+    x0, y0, z0 = density.grid.origin_nm
+    # Each format's precision on the header, in Å: OpenDX writes the origin to six
+    # decimals and the spacing to seven figures; MRC holds both as float32.
+    for suffix, tolerance, header_A in (
+        (".dx", 5e-7 + 2.0**-24, 5e-6),
+        (".ccp4", 0.0, 5e-5),
+        (".mrc", 0.0, 5e-5),
+        (".map", 0.0, 5e-5),
+    ):
+        path = density.export(tmp_path / f"map{suffix}")
+        # The reader named, as gridData cannot guess one for ``.map``.
+        header = Grid(str(path), file_format="DX" if suffix == ".dx" else "MRC")
+        assert np.allclose(header.delta, 10.0 * h, rtol=0.0, atol=header_A)
+        assert np.allclose(header.origin, 10.0 * np.asarray((x0, y0, z0)), rtol=0.0, atol=header_A)
+        exported = DensityMap.read(path)
         assert exported.grid == density.grid
         assert np.max(np.abs(exported.values - density.values)) <= tolerance
     with pytest.raises(GridFormatError, match=r"\.npz, \.dx, \.ccp4"):
         density.export(tmp_path / "map.vtk")
     # An origin off the lattice, by half a spacing in x and y or 0.013 nm in z, is
-    # refused rather than rounded onto it, which would move every value.
-    from gridData import Grid
-
-    h = density.grid.spacing_nm
-    x0, y0, z0 = density.grid.origin_nm
+    # refused rather than rounded onto it, which would move every value. Written in
+    # Å, as the reader expects.
     raw = np.transpose(density.values, (2, 1, 0))
     for origin in ((x0 - h / 2, y0 - h / 2, z0), (x0, y0, z0 + 0.013)):
         off = tmp_path / "off-lattice.dx"
-        Grid(grid=raw, origin=origin, delta=(h,) * 3).export(str(off), file_format="DX")
+        Grid(
+            grid=raw, origin=tuple(10.0 * value for value in origin), delta=(10.0 * h,) * 3
+        ).export(str(off), file_format="DX")
         with pytest.raises(GridFormatError, match=r"integer multiples of it"):
             DensityMap.read(off)
 
