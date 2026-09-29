@@ -38,12 +38,19 @@ import json
 import logging
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field, replace
-from functools import cached_property
+from functools import cached_property, lru_cache
 from itertools import product
 from pathlib import Path
 from typing import cast
 
-from nanopnp.core.hashing import Canonicalisable, canonical, content_hash, decode_floats, short
+from nanopnp.core.hashing import (
+    Canonicalisable,
+    canonical,
+    content_hash,
+    decode_floats,
+    file_hash,
+    short,
+)
 from nanopnp.io.artefact import SWEEP_SCHEMA, CaseArtefact
 from nanopnp.io.case import (
     CaseDocument,
@@ -56,6 +63,7 @@ from nanopnp.io.case import (
     resolve,
     substitute,
 )
+from nanopnp.io.run import input_files
 from nanopnp.io.store import atomic_write_bytes
 from nanopnp.mesh.sizing import resolve_wall_size
 from nanopnp.sweep.document import SweepDocument, load_sweep, merged
@@ -236,6 +244,12 @@ class SweepPlan:
     wall_distance
         The NUM-34 measurement of each distinct mesh a point activates a wall
         correction on, by the mesh's content hash.
+    files
+        Content hash of every input file a point names (a mesh, a profile, a field, a
+        structure or a trajectory), by the path as the case writes it. In the plan's
+        digest, and re-checked against the disk when a member is built, so that a file
+        edited or swapped between planning and dispatch is refused rather than solved
+        under the plan's point identities (CODE_REVIEW_003 CR-5).
     workers
         The document's default worker count for a local dispatch, carried on the
         plan so that ``sweep run`` — which reads the plan and never the sweep
@@ -252,6 +266,7 @@ class SweepPlan:
     pairs: tuple[tuple[int, int], ...] = ()
     warnings: tuple[str, ...] = ()
     wall_distance: Mapping[str, Canonicalisable] = field(default_factory=dict)
+    files: Mapping[str, str] = field(default_factory=dict)
     workers: int | None = None
 
     @cached_property
@@ -271,7 +286,7 @@ class SweepPlan:
                 "document": dict(self.document),
                 "points": [point.summary() for point in self.points],
             },
-            {"base_case": self.base_hash},
+            {"base_case": self.base_hash, **{f"file {path}": d for path, d in self.files.items()}},
         )
 
     def waves(self) -> tuple[tuple[int, int], ...]:
@@ -341,7 +356,40 @@ class SweepPlan:
                 "Every member would solve a case this plan never enumerated and report it under "
                 "the plan's own point identities; re-plan the sweep"
             )
+        self._check_files()
         return base
+
+    def _check_files(self) -> None:
+        """Refuse a member build when an input file is not the one the plan hashed.
+
+        The base case's hash covers the path strings a case names and not the bytes behind
+        them, and a path resolves against the working directory of whoever dispatches. A job
+        array submitted from another directory or machine, or a mesh edited after planning,
+        would otherwise have every member solve a file the plan never saw (QR-12).
+
+        Raises
+        ------
+        SweepPlanError
+            Naming the path and both digests.
+        """
+        for path, planned in self.files.items():
+            try:
+                found = _digest_of_file(Path(path))
+            except FileNotFoundError:
+                raise SweepPlanError(
+                    f"this plan was built against {path}, which is not there now (working "
+                    f"directory {Path.cwd()}). A member reads its input files from the "
+                    "dispatching process's working directory; dispatch from where the plan "
+                    "was built, or re-plan the sweep"
+                ) from None
+            if found != planned:
+                raise SweepPlanError(
+                    f"this plan was built against a different {path}:\n"
+                    f"  planned against: {planned}\n"
+                    f"  on disk now:     {found}\n"
+                    "Every member would solve a file this plan never enumerated and report it "
+                    "under the plan's own point identities; re-plan the sweep"
+                )
 
     def case(self, index: int, *, base: CaseDocument | None = None) -> CaseDocument:
         """Return the validated case document of one member.
@@ -382,10 +430,41 @@ class SweepPlan:
             "pairs": [list(pair) for pair in self.pairs],
             "warnings": list(self.warnings),
             "wall_distance": dict(self.wall_distance),
+            "files": dict(self.files),
             "workers": self.workers,
             "waves": [list(span) for span in self.waves()],
             "points": [point.summary() for point in self.points],
         }
+
+
+@lru_cache(maxsize=256)
+def _digest_at(resolved: str, size: int, mtime_ns: int) -> str:
+    """Hash a file once per (location, size, modification time).
+
+    A dispatch builds every member through :meth:`SweepPlan.base_case`, and a trajectory
+    can be gigabytes: the stat is what is repeated, and an edit changes it.
+    """
+    return file_hash(resolved)
+
+
+def _digest_of_file(path: Path) -> str:
+    """Return the content hash of ``path``, read from the working directory as a member would."""
+    status = path.stat()
+    return _digest_at(str(path.resolve()), status.st_size, status.st_mtime_ns)
+
+
+def _planned_files(resolved: Sequence[ResolvedCase]) -> dict[str, str]:
+    """Hash every input file the points name, once per distinct path.
+
+    Only files that exist now: an absent one is a dry run (``check_meshes=False``) or a
+    case that fails loudly when it reads it, and there is nothing to bind it to.
+    """
+    files: dict[str, str] = {}
+    for member in resolved:
+        for path in input_files(member, None).values():
+            if str(path) not in files and path.is_file():
+                files[str(path)] = _digest_of_file(path)
+    return dict(sorted(files.items()))
 
 
 def _member(base: CaseDocument, point: Point) -> CaseDocument:
@@ -767,6 +846,7 @@ def build_plan(
             "values. Give the bias axis a symmetric set of values, or drop the output"
         )
     resolved = _resolve_every_point(base, plan)
+    plan = replace(plan, files=_planned_files(resolved))
     if check_meshes:
         plan = _gate_meshes(plan, resolved)
     for warning in plan.warnings:
@@ -905,6 +985,13 @@ def read_plan(path: Path) -> SweepPlan:
     # ``cast`` and not a check: the file was written by ``write_plan`` through
     # ``canonical``, and one that was not is refused by the schema line above.
     raw = cast("dict[str, Canonicalisable]", parsed)
+    recorded = raw.get("files")
+    if not isinstance(recorded, dict):
+        raise SweepPlanError(
+            f"{path} records no input file digests, as a plan written before they were "
+            "recorded does not; re-plan the sweep so that its members are bound to the "
+            "files it was built against"
+        )
     base = raw["base"]
     points = tuple(
         Point(
@@ -928,6 +1015,7 @@ def read_plan(path: Path) -> SweepPlan:
         pairs=tuple((int(a), int(b)) for a, b in raw["pairs"]),
         warnings=tuple(str(line) for line in raw["warnings"]),
         wall_distance=dict(raw["wall_distance"]),
+        files={str(name): str(digest) for name, digest in recorded.items()},
         workers=None if raw.get("workers") is None else int(raw["workers"]),
     )
     # The file carries its own identities; a hand edit or a merge of two plans would
