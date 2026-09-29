@@ -12,3 +12,8 @@ slurm-logs/
 *.png
 *.csv
 tour.json
+2wcd-prepared.pdb
+aligned.pdb
+aligned.dcd
+density.mrc
+contour.profile.yaml

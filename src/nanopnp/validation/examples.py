@@ -19,6 +19,13 @@ Two programs are allowed: ``nanopnp``, resolved to the console script installed
 beside the running interpreter, and ``python``, resolved to that interpreter. A
 reader of a development checkout prefixes each line with ``uv run``; the README
 says so rather than writing it into every line.
+
+**The tag names the exit status every command in the block must return**
+(:data:`EXPECTED_EXIT`). ``run`` and ``plan`` expect ``0``; ``refused`` expects
+``4``, the gate class of the IF-02 exit NOTE, so that a README can show a gate
+refusing an input and have that refusal tested rather than asserted in prose
+(VER-46, WP25 D5, D10). A refusal that exits ``0``, or a run that exits ``4``,
+fails naming both codes.
 """
 
 from __future__ import annotations
@@ -29,10 +36,14 @@ import shlex
 import shutil
 import subprocess
 import sys
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
+from nanopnp.cli.errors import EXIT_GATE, EXIT_OK
+
 __all__ = [
+    "EXPECTED_EXIT",
     "PROGRAMS",
     "CommandResult",
     "ExampleCommandError",
@@ -50,6 +61,9 @@ TAGGED_BLOCK = re.compile(
 
 PROGRAMS: tuple[str, ...] = ("nanopnp", "python")
 """The programs a tagged command may name."""
+
+EXPECTED_EXIT: Mapping[str, int] = {"run": EXIT_OK, "plan": EXIT_OK, "refused": EXIT_GATE}
+"""The tags a README may use, against the exit status each command in the block must return."""
 
 UP = "../../"
 """The prefix a command uses to reach a repository file from an example directory."""
@@ -139,9 +153,8 @@ def copy_example(example: Path, root: Path, *, repository: Path) -> Path:
         destination,
         ignore=shutil.ignore_patterns(*_generated_patterns(example.parent / ".gitignore")),
     )
-    for argv in tagged_commands(example / "README.md", "run") + tagged_commands(
-        example / "README.md", "plan"
-    ):
+    readme = example / "README.md"
+    for argv in (argv for tag in EXPECTED_EXIT for argv in tagged_commands(readme, tag)):
         for word in argv[1:]:
             if word.startswith(UP):
                 source = (repository / word[len(UP) :]).parent
@@ -174,11 +187,19 @@ def _generated_patterns(gitignore: Path) -> tuple[str, ...]:
 def run_tagged(directory: Path, tag: str, *, timeout_s: float = 1800.0) -> list[CommandResult]:
     """Run every ``tag`` command of ``directory/README.md`` in ``directory``.
 
+    Each must exit with the status :data:`EXPECTED_EXIT` gives its tag.
+
     Raises
     ------
     ExampleCommandError
-        On the first command that exits nonzero, carrying both of its streams.
+        On the first command that exits otherwise, naming both codes and carrying
+        both of its streams; or if ``tag`` is not one of :data:`EXPECTED_EXIT`.
     """
+    expected = EXPECTED_EXIT.get(tag)
+    if expected is None:
+        raise ExampleCommandError(
+            f"no test executes the tag {tag!r}; the tags are {', '.join(EXPECTED_EXIT)}"
+        )
     results: list[CommandResult] = []
     for argv in tagged_commands(directory / "README.md", tag):
         resolved = [_program(argv[0]), *argv[1:]]
@@ -197,9 +218,10 @@ def run_tagged(directory: Path, tag: str, *, timeout_s: float = 1800.0) -> list[
             stdout=completed.stdout,
             stderr=completed.stderr,
         )
-        if completed.returncode != 0:
+        if completed.returncode != expected:
             raise ExampleCommandError(
-                f"{shlex.join(argv)} exited {completed.returncode} in {directory}\n"
+                f"{shlex.join(argv)} exited {completed.returncode} in {directory}, and a "
+                f"{tag!r} command must exit {expected}\n"
                 f"--- stdout\n{completed.stdout}\n--- stderr\n{completed.stderr}"
             )
         results.append(result)

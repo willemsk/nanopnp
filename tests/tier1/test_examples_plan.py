@@ -3,7 +3,9 @@
 The examples' solves are Tier 2 (``tests/tier2/test_examples_*.py``); what is
 gated here costs seconds. Every example's README must carry at least one tagged
 block of commands a test executes, in programs the executor can run without a
-shell. Example 05's planning block runs verbatim over the §8.3 reference sweep
+shell, and each tag names the exit status its commands must return: ``refused``
+is a gate refusal, exit 4, and a command that exits otherwise fails naming both
+codes (WP25 D10). Example 05's planning block runs verbatim over the §8.3 reference sweep
 and must enumerate it exactly as that sweep is specified, and its SLURM rendering
 must submit every point once, wave by wave, in dependency order. Example 05's
 case is a copy of a frozen Tier-3 case and must keep its identity.
@@ -20,9 +22,16 @@ from pathlib import Path
 
 import pytest
 
+from nanopnp.cli.errors import EXIT_GATE, EXIT_OK
 from nanopnp.io.case import load_case, resolve
 from nanopnp.validation.comsol import case_identity
-from nanopnp.validation.examples import copy_example, run_tagged, tagged_commands
+from nanopnp.validation.examples import (
+    EXPECTED_EXIT,
+    ExampleCommandError,
+    copy_example,
+    run_tagged,
+    tagged_commands,
+)
 
 REPOSITORY = Path(__file__).resolve().parents[2]
 EXAMPLES = sorted(path.parent for path in (REPOSITORY / "examples").glob("*/README.md"))
@@ -34,14 +43,15 @@ REFERENCE_WAVES = 42
 """The wave count docs/sweeps/README.md states for the reference sweep."""
 
 
-def test_ver46_the_five_examples_exist() -> None:
-    """The examples of the Phase-1 documentation increment (section 8.1)."""
+def test_ver46_the_six_examples_exist() -> None:
+    """The examples of the Phase-1 and Phase-2 documentation increments (section 8.1)."""
     assert [path.name for path in EXAMPLES] == [
         "01-quickstart",
         "02-charged-pore",
         "03-iv-sweep",
         "04-python-api",
         "05-clya-reference",
+        "06-pdb-to-mesh",
     ]
 
 
@@ -52,7 +62,67 @@ def test_ver46_every_readme_has_a_tagged_block_of_runnable_commands(example: Pat
     commands = tagged_commands(readme, "run")
     assert commands, f"{readme} has no <!-- example: run --> block"
     tags = set(re.findall(r"<!--\s*example:\s*([\w-]+)\s*-->", readme.read_text("utf-8")))
-    assert tags <= {"run", "plan"}, f"{readme} uses a tag no test executes: {tags}"
+    assert tags <= set(EXPECTED_EXIT), f"{readme} uses a tag no test executes: {tags}"
+
+
+def test_ver46_the_tags_are_run_plan_and_refused() -> None:
+    """``refused`` expects the gate class, 4; ``run`` and ``plan`` expect 0 (WP25 D10)."""
+    assert dict(EXPECTED_EXIT) == {"run": EXIT_OK, "plan": EXIT_OK, "refused": EXIT_GATE}
+
+
+@pytest.mark.parametrize(
+    ("tag", "code", "message"),
+    [
+        ("refused", 0, "exited 0 in .*, and a 'refused' command must exit 4"),
+        ("run", 4, "exited 4 in .*, and a 'run' command must exit 0"),
+        ("refused", 3, "exited 3 in .*, and a 'refused' command must exit 4"),
+    ],
+)
+def test_ver46_an_exit_the_tag_does_not_expect_fails_naming_both_codes(
+    tag: str, code: int, message: str, tmp_path: Path
+) -> None:
+    """A refusal that succeeds, or a run a gate stops, fails the example (VER-46)."""
+    (tmp_path / "README.md").write_text(
+        f"<!-- example: {tag} -->\n```console\n$ python -c 'raise SystemExit({code})'\n```\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ExampleCommandError, match=message):
+        run_tagged(tmp_path, tag)
+
+
+def test_ver46_a_refused_block_passes_on_exit_four(tmp_path: Path) -> None:
+    """The one exit a ``refused`` block accepts is the gate class."""
+    (tmp_path / "README.md").write_text(
+        "<!-- example: refused -->\n```console\n$ python -c 'raise SystemExit(4)'\n```\n",
+        encoding="utf-8",
+    )
+    (result,) = run_tagged(tmp_path, "refused")
+    assert result.returncode == EXIT_GATE
+
+
+def test_ver46_an_unknown_tag_is_refused(tmp_path: Path) -> None:
+    """A tag no test executes cannot be run by accident as if it were one."""
+    (tmp_path / "README.md").write_text("", encoding="utf-8")
+    with pytest.raises(ExampleCommandError, match="no test executes the tag 'skip'"):
+        run_tagged(tmp_path, "skip")
+
+
+def test_ver46_copy_mirrors_the_repository_files_of_every_tag(tmp_path: Path) -> None:
+    """A ``../../`` argument in a ``refused`` block is mirrored as one in a ``run`` block is."""
+    example = tmp_path / "source" / "examples" / "99-scratch"
+    example.mkdir(parents=True)
+    (example / "README.md").write_text(
+        "<!-- example: refused -->\n```console\n$ nanopnp stage structure ../../data/a/x.txt\n"
+        "```\n\n<!-- example: run -->\n```console\n$ python ../../data/b/y.txt\n```\n",
+        encoding="utf-8",
+    )
+    repository = tmp_path / "source"
+    for name in ("a/x.txt", "b/y.txt"):
+        (repository / "data" / name).parent.mkdir(parents=True)
+        (repository / "data" / name).write_text(name, encoding="utf-8")
+    copied = copy_example(example, tmp_path / "copy", repository=repository)
+    assert (copied / "../../data/a/x.txt").resolve().read_text(encoding="utf-8") == "a/x.txt"
+    assert (copied / "../../data/b/y.txt").resolve().read_text(encoding="utf-8") == "b/y.txt"
 
 
 @pytest.fixture(scope="module")
