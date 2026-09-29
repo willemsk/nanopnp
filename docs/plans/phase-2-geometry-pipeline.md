@@ -1,6 +1,6 @@
 # Phase 2 (Geometry pipeline): from a structure to a gated mesh
 
-**Status: in progress. WP17 delivered, 24 September 2026; WP18 delivered, 25 September 2026; WP19 delivered, 25 September 2026; WP20 delivered, 26 September 2026; WP21 delivered, 26 September 2026; WP22 delivered, 28 September 2026, its Tier-3 verdict awaiting a run on the archive; WP23 delivered, 29 September 2026; WP24 planned in detail, 29 September 2026; WP25 planned.** Written 24 September 2026, after Phase 1 (WP7–WP16) delivered the
+**Status: in progress. WP17 delivered, 24 September 2026; WP18 delivered, 25 September 2026; WP19 delivered, 25 September 2026; WP20 delivered, 26 September 2026; WP21 delivered, 26 September 2026; WP22 delivered, 28 September 2026, its Tier-3 verdict awaiting a run on the archive; WP23 delivered, 29 September 2026; WP24 delivered, 29 September 2026; WP25 planned.** Written 24 September 2026, after Phase 1 (WP7–WP16) delivered the
 solver core on an externally supplied mesh (main at `v0.5.0-alpha.10`). Two things come first:
 the Phase 1 end-of-phase report, which merges as tag `v0.5.0`, and the author's double-click
 observation that closes Phase 0 criterion 4. That ordering is ruling B1 of `SPECIFICATION.md`
@@ -346,6 +346,22 @@ Adds **VER-55**, extending VER-43 and VER-44 to the new views, with the view-mod
 > written in the stage-1 frame (D4–D7). It is gated as a supplied profile; the §5.2.1 criteria are
 > measured and shown, not enforced (D8, D9). The oracle for the route: a null edit meshes to the
 > original's content hash on 2WCD.
+
+> **Delivered, 29 September 2026** ([plan](wp24-gui-geometry-pipeline.md), to be tagged
+> `v0.9.0-alpha.8`). The desktop shell gains its **Geometry** tab. It builds stages 1 to 6 in the
+> run's spawned child, shows each stored artefact in the frame it lives in, and edits the contour
+> into a hand-edit profile and a derived case (`io.case.with_profile`). **VER-55** discharges
+> IF-09, QR-11, FR-27, CON-09, CON-10 and CON-11. On 2WCD, the null edit meshes to the original's
+> content hash under a new key, and the spawned cold build takes 31.6 s. The probe exercises five
+> new payloads, Gmsh among them. Constraints inherited by later packages:
+>
+> - `ArtefactHook` keys nothing. Like `StageHook` and `SolveHook`, it is bound after the keys are
+>   taken.
+> - The editor writes the stage-1 frame; only the region and mesh views draw the model frame.
+> - A new compiled payload is declared in `PAYLOADS` and exercised by `--selftest`, not only
+>   imported.
+>
+> Measurements: [WP24 Outcomes](wp24-gui-geometry-pipeline.md#outcomes), `.knowledge/07` §5.
 
 ### WP25 — Documentation increment 2
 

@@ -7,13 +7,13 @@ evidence that an unmerged branch has shipped.
 
 - Phase 1 ([solver core](phase-1-solver-core.md)) is **closed** as `v0.5.0` (§8.2.3).
 - Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **in progress**. WP17 to WP23
-  are merged (`v0.9.0-alpha.1` to `alpha.7`). WP25 is planned in the phase plan (§8.2.2).
+  are merged (`v0.9.0-alpha.1` to `alpha.7`).
 - **Phase criterion 3 stays open until `tests/tier3/test_val05_ensemble.py` runs on
   `$NANOPNP_REFERENCE_DATA`**. That run also pins `Z_MD`, and its numbers go into the
   [WP22 Outcomes](wp22-val05-reference-geometry.md#outcomes).
-- **WP24** ([GUI increment 2](wp24-gui-geometry-pipeline.md)) is **planned** on
-  `claude/wp-plan-24-2fdcd2`; it merges as `v0.9.0-alpha.8` and discharges phase criterion 4.
-  Author rulings §8.2.2 B8 and B9 bind it. Then WP25.
+- **WP24** ([GUI increment 2](wp24-gui-geometry-pipeline.md)) is **implemented** on
+  `claude/wp-plan-24-2fdcd2` (VER-55), awaiting `/wp-ship`; it merges as `v0.9.0-alpha.8`, phase
+  criterion 4. Then **WP25**: the pipeline guide and example `06-pdb-to-mesh`.
 
 ## What Phase 2 must not re-decide
 
@@ -25,7 +25,7 @@ Each is recorded in full where it points.
   Phase 3 consumes it. `inputs.profile` is stage 5's.
 - **`physics.solid_permittivities` alone sets ε_protein and ε_membrane**; gate thresholds are never
   case keys. → WP17 D2, D3.
-- **Python 3.11–3.14**, held together by VER-47. → §8.2.2 B4.
+- **Python 3.11–3.14**, held by VER-47. → B4.
 - **No HOLE on the default path** (B5). **Gmsh is optional** (B7): it meshes stage 5's region
   through `region_graph`, its fields state netgen's implicit size restrictions, its settings key
   the mesh and are never case keys, and its tests take `gmsh_module`; the bundle carries it (B8). → §5.2.2 NOTE; WP23 D1–D4,
@@ -42,22 +42,22 @@ Each is recorded in full where it points.
   5 %, 0.1, 0.1 nm at `centre_z_nm = 0`; 2WCD 10 %, 0.1, 0.2 nm at `Z_MD = 5.63` nm. Nothing is
   fitted; only `nanopnp.validation.geometry` computes it. → §7.4 NOTE on VAL-05; WP22 D3–D6 and
   Outcomes.
-- **The reference polygon was binned by `pqr2grid` at L = 15 nm and hand-edited**; that offset is
-  attributed and recorded, never corrected. → `.knowledge/04` §1.2,
-  §1.4; ruling 14.
-- **The density's radii are CHARMM Rmin/2**, with no element fallback; **the Cₙ average is a
-  harmonic projection**. → the §5.3.1 NOTE on `geometry.density`; WP19 D3, D7, D9.
+- **The reference polygon was binned by `pqr2grid` and hand-edited**; that offset is recorded,
+  never corrected. → `.knowledge/04` §1.2, §1.4.
+- **Density radii are CHARMM Rmin/2**; **the Cₙ average is a harmonic projection**. → §5.3.1
+  NOTE on `geometry.density`; WP19.
 - **The vendored 2WCD is in its crystal frame**; tests orient it through `prepared_2wcd` in
   `tests/conftest.py`. → WP18 D16 Outcome.
+- **The geometry tab adds views, no physics**: hand edits are stage-1-frame `hand-edit` profiles
+  entering through `inputs.profile`; the probe exercises every payload. → §8.2.2 B8, B9; WP24.
 
 ## Inherited from Phase 1, still binding
 
 - **A callback is not an input**; a watched run keys the same artefact. → VER-44.
 - **The public API is `nanopnp.PUBLIC`**; adding a name is a decision in
   `tests/tier1/test_public_api.py`. → the IF-01 NOTE.
-- **Every phase documents what it ships**; documented commands run verbatim (VER-46). → WP16 D4,
-  D8, D9.
-- **Generated references are rendered at build time, never committed.**
+- **Every phase documents what it ships**, commands run verbatim (VER-46). → WP16.
+- **Generated references are built, never committed.**
 
 ## What is still somebody else's
 
@@ -74,7 +74,7 @@ Each is recorded in full where it points.
 | Phase 2 scope and rulings | `phase-2-geometry-pipeline.md`; `SPECIFICATION.md` §5.2–§5.2.2, §8.2.2 |
 | The ClyA pipeline as executed, and gaps G1–G13 | `.knowledge/04-clya-geometry-and-charge.md` |
 | Structure, geometry and meshing libraries | `.knowledge/07-software-stack.md` §2, §4, §8 |
-| The desktop shell WP24 extends | `gui/` (`solver.py` events, `run_model.py`, `render.py`, `probe.py`); WP14 §Design 2 and 4, WP15 D1–D10 and their Outcomes; `.knowledge/07` §5 |
+| The desktop shell | `gui/` (`solver.py` events, `run_model.py`, `geometry.py`, `assess.py`, `render.py`, `probe.py`, `widgets/`); WP15 and WP24 Outcomes; `.knowledge/07` §5 |
 | The seams Phase 2 builds on | `geometry/region.py` (`RegionStage`, `RegionRecord`, `build_region`, `region_graph`); `mesh/generate.py` (`mesh_region`), `mesh/sizing.py` and `mesh/gmsh_backend.py`; `mesh/ingest.py` (`MeshStage`, `deployed_mesh`); `geometry/contour.py`; `mesh/profile.py`; `core/stages.py`; `io/run.py`; `io/case.py` |
 | Case schema, dotted paths and option sets | `SPECIFICATION.md` §5.3.1 and its NOTEs; `io/case.py` |
 | Shell, packaging and licence constraints | ADR-004, CON-07, CON-09, CON-10, CON-11; `.knowledge/07-software-stack.md` §5–§6 |
@@ -84,8 +84,8 @@ A delivered plan's Outcomes override its decisions table; read them together.
 ## Handoff Rules
 
 Replace this brief's position and live dependencies when planning or finishing a
-package; do not append a delivery diary. Target at most 800 words. Measurements and
-derivations stay in their owning records, loaded only when needed.
+package; no delivery diary. At most 800 words; measurements and derivations stay in their
+owning records.
 
 The full quality gate and independent shipping review remain required. Tier 3 is
 recorded, not a push gate. No scientific requirement changes in this brief.

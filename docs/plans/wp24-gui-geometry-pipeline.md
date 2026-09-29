@@ -1,6 +1,6 @@
 # WP24 — GUI increment 2: the geometry pipeline surfaced
 
-**Status: planned, not started.** Written 29 September 2026, after WP23 merged on `main`
+**Status: delivered, 29 September 2026.** Written 29 September 2026, after WP23 merged on `main`
 (`4232eeb`, tagged `v0.9.0-alpha.7`). This package inherits the desktop shell of WP14 and WP15:
 
 - the `RunEvent` queue from a spawned child;
@@ -149,6 +149,81 @@ uv run pytest tests/tier1/test_artefact_hook.py tests/tier1/test_gui_geometry.py
 uv run pytest tests/tier2/test_gui_geometry_2wcd.py -v
 .claude/hooks/gate.sh run
 ```
+
+### Outcomes
+
+> **Outcome — delivered as decided; D1 to D18 hold, with the refinements below.** Every VER-55 row
+> above has its test, named `test_ver55_*`, in the file the table names. The Tier 1 widget tests
+> also pass on Linux here, under the `.knowledge/07` §5 GL shim; CI runs them only on Windows and
+> macOS.
+
+> **Outcome — D1: `ArtefactHook` is public, and `case` reports too.** It joins `StageHook` and
+> `SolveHook` in `nanopnp.PUBLIC` (`tests/tier1/test_public_api.py`), because a caller of
+> `run_case(on_artefact=)` needs its type. The hook fires for every stage the walk stores, so a
+> supplied-profile build reports `case`, `region` and `mesh`, not only the last two; the Verification
+> row read "region, then mesh". A cached stage reports `cached=True`. `RunModel` keeps the stream as
+> `produced`, and the stages the walk entered as `walked`. A walk that never entered `solve`
+> leaves the convergence plot `idle` rather than settling it as a solve with no steps.
+
+> **Outcome — D3: *Build geometry* is offered when the case resolves and generates its mesh.**
+> "Walks stage 6" is true of every case, since a supplied mesh is read at stage 6, so the rule is
+> `ResolvedCase.generates_mesh` (`gui/geometry.py` `can_build`). *Load structure* stages
+> `structure.source.path` only in a case that already has a `structure:` section. Otherwise it is
+> refused, naming the section, because the shell does not invent a point group.
+
+> **Outcome — D8 and D9: diagnostics name their place.** The profile loader's negative-radius and
+> coincident-vertex messages now end with the vertex index (`mesh/profile.py`), which D8 needed;
+> the other validators already named theirs. `ContourGateError` gained `location_nm`, the (r, z)
+> as numbers, so the editor marks a refusal without parsing its message. `measure` returns a
+> `ContourMeasurement(record, failures)`, and every failing criterion is listed in gate order.
+
+> **Outcome — the B9 test refuses on the radius-profile band, not on feature size.** Stage 4's
+> closing, of radius 2h, removes every feature the 2h criterion measures (the §5.2.1 NOTE's
+> margin). So no map yields a feature-size refusal after conditioning, and the Verification row's
+> "synthetic reduced map whose contour fails the feature-size criterion" cannot be built. The test
+> uses the synthetic tube at isolevel 0.1 instead, whose contour lies 0.08478 nm inside the probe
+> radius at (2.3906, 1.9750) nm, against a 0.05 nm allowance. The seed, the refusal's criterion,
+> message and (r, z), and the saved `sha256` are asserted as planned
+> (`tests/tier1/test_gui_assess.py`).
+
+> **Outcome — Design §1 and §3 also run at Tier 1.** The null edit is held to its oracle on the
+> synthetic tube at `centre_z_nm` 1.5, so the frame check needs no 2WCD. Stage 5's profile is equal
+> to the bit, the mesh key moves, the content hash does not, and a 0.1 nm move changes both. The
+> tube builds to the mesh in about 2.7 s cold (`tests/tier1/test_gui_geometry.py`). A sabotaged
+> editor that wrote model-frame vertices failed that test.
+
+> **Outcome — D12: the render child computes the worst element's place.** The stage-6 summary
+> records the least SICN and gamma, not where they are. So the mesh request reads the mesh through
+> `deployed_mesh` and reports the centroid of each worst element from the quality report on that
+> file, beside the recorded wall-size statistics. The scene is `viewer/mesh.{json,html}`, outside
+> the `scene-*` names a field render sweeps, so the two pictures coexist
+> (`tests/tier1/test_gui_render.py`).
+
+> **Outcome — D15: the editor starts from stage 4's profile or a B9 seed.** A case that supplies
+> `inputs.profile` has no stage 4, so the tab shows no contour pane for it. The profile file is
+> edited where it lives. Offering one would be a single call to `ProfileEditor.from_profile` on
+> the supplied document, which is already in the stage-1 frame.
+
+> **Outcome — D17: the payloads are declared as dotted modules.** `skimage.measure` and
+> `shapely.geometry` are declared, as `PySide6.QtWidgets` already was, because they are what the
+> exercises import. Gmsh's library sits outside site-packages, like OCCT's, and is collected to the
+> bundle root; `import gmsh` succeeds without it, and only the first call fails. That is why each
+> payload is exercised. Collection sizes and the failure are in `.knowledge/07` §5
+> ("The geometry payloads bundle through `collect_all`").
+
+> **Outcome — measured on 2WCD** (`tests/tier2/test_gui_geometry_2wcd.py`, netgen, default sizes,
+> no solve, so no stabilisation mode applies). All five figures come from one run on Linux
+> (WSL2):
+>
+> | Step | Time |
+> |---|---|
+> | The spawned cold build to stage 6 (44,762 triangles) | 31.6 s |
+> | `assess` on stage 4's loop | 0.19 s |
+> | The null edit, from saving to stage 6 | 7.3 s |
+> | The moved edit, from saving to stage 6 | 7.4 s |
+> | The whole test | 49 s |
+>
+> The constriction vertex is vertex 2 of 161, at (1.6295, 3.0930) nm.
 
 ### Out of scope
 
