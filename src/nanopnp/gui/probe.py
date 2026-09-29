@@ -336,8 +336,8 @@ def scene_document() -> Path:
 
     mesh = ngsolve.Mesh(unit_square.GenerateMesh(maxh=0.3))
     scene = Draw(mesh, show=False)
-    directory = Path(tempfile.gettempdir()) / "nanopnp-probe"
-    directory.mkdir(parents=True, exist_ok=True)
+    # Owner-only and unpredictable: never a name another local user can pre-create.
+    directory = Path(tempfile.mkdtemp(prefix="nanopnp-probe-"))
     document = directory / "scene.html"
     document.write_text(
         host_document(

@@ -2,6 +2,13 @@
 
 2026-09-29 · commit `7b35183` (`ccr-edee6716-ywr441`) · scope: the Phase 2 work packages WP17–WP24 (stages 1–6, case schema v2, the Gmsh backend, the VAL-05 harness, the Geometry tab; 21.1k lines in 35 files; tests read for context only) · focus: all five categories at equal weight
 
+> **Status (2026-09-29, follow-up commit on the same branch):** CR-1 to CR-4, CR-6, CR-8 and
+> CR-10 to CR-12 are fixed by the patches below, as `git diff` made them. CR-1 to CR-4, CR-6 and
+> CR-11 have a regression test that fails on the previous code (six of them checked by stashing
+> the fix). CR-4 amends the §5.2.1 NOTE on the membrane junction in the same commit. CR-8, CR-10
+> and CR-12 are covered by the existing suites. **Open:** CR-5, CR-7, CR-9 and CR-13, which are
+> design changes with prose fixes.
+
 ## Summary
 
 The Phase 2 code is in good shape where wrong answers are most plausible. The reviewers re-derived and ran the stage-1 frame and Cₙ-axis sign conventions, the union-density stencil arithmetic, the annular weights, the OpenDX/CCP4 axis order, marching-squares coordinate placement, every FR-08 gate criterion (all NaN-safe), the stage 4–6 cache keys against the inputs each stage reads, the VAL-05 ε_G formula and registration sign, and Gmsh session teardown on error. No finding changes a published number, and none is critical.

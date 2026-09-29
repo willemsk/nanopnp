@@ -282,6 +282,37 @@ def test_ver48_frame_selection_and_the_time_gate(
         select_frames(recorded, interval, count=4)
 
 
+@pytest.mark.parametrize("dt_ps", [0.5, 1.0, 2.0, 2.5, 10.0, 20.0])
+def test_ver48_the_last_ns_window_does_not_depend_on_the_float32_timestep(
+    dt_ps: float, tmp_path: Path
+) -> None:
+    """A DCD stores its timestep as a float32, and the window stays inclusive for all of them.
+
+    1 ps reads back as 1.0000000328 ps and 10 ps as 9.99999996 ps, so times accumulated as
+    ``frame * dt`` drift in opposite directions. The frame exactly ``last_ns`` before the
+    last one is in the window either way (CODE_REVIEW_003 CR-3, WP18 plan D5).
+    """
+    frames = 1001
+    universe = mda.Universe.empty(4, trajectory=True)
+    universe.load_new(
+        np.random.default_rng(0).random((frames, 4, 3)).astype(np.float32), format=MemoryReader
+    )
+    topology, trajectory = tmp_path / "t.pdb", tmp_path / "t.dcd"
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        universe.atoms.write(str(topology))
+        with mda.Writer(str(trajectory), 4, dt=dt_ps) as writer:
+            for step in universe.trajectory:
+                step.dt = dt_ps
+                writer.write(universe.atoms)
+        read = load_universe(topology, trajectory)
+    times, interval = frame_times(read)
+    span_ns = (frames - 1) * dt_ps / 1000.0
+    for fraction in (0.1, 0.25, 0.5):
+        window = select_frames(times, interval, last_ns=span_ns * fraction)
+        assert len(window.indices) == round((frames - 1) * fraction) + 1
+
+
 def _edited(path: Path, tmp_path: Path, name: str, edit: object) -> Path:
     """Write a copy of ``path`` with ``edit`` applied to its ATOM lines."""
     lines = path.read_text().splitlines()

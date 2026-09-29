@@ -381,6 +381,28 @@ def test_ver32_a_truncated_run_writes_its_directory_and_reports_monotone_progres
     assert result.manifest.document()["schema"] == MANIFEST_SCHEMA
 
 
+def test_qr08_a_truncated_walk_does_not_overwrite_the_record_of_the_full_run(
+    case_file: Path, tmp_path: Path
+) -> None:
+    """``--upto`` and the shell's **Build geometry** write beside a full run, never over it.
+
+    The run directory is named by the case; a truncated walk of the same case used to land
+    in the same directory and replace ``run.json`` and the manifest, so a full run could no
+    longer be reproduced from its directory (CODE_REVIEW_003 CR-2, QR-08).
+    """
+    store = Store(tmp_path / "store")
+    full = run_case(case_file, store=store, workspace=tmp_path / "work")
+    assert full.quantities, "a full run records its quantities"
+    recorded = (full.directory / RUN_RECORD_FILENAME).read_bytes()
+    manifest = (full.directory / MANIFEST_FILENAME).read_bytes()
+
+    truncated = run_case(case_file, store=store, upto="mesh", workspace=tmp_path / "work")
+    assert truncated.directory != full.directory
+    assert (full.directory / RUN_RECORD_FILENAME).read_bytes() == recorded
+    assert (full.directory / MANIFEST_FILENAME).read_bytes() == manifest
+    assert (truncated.directory / RUN_RECORD_FILENAME).is_file()
+
+
 @pytest.mark.parametrize("linesep", ["\n", "\r\n"])
 def test_qr08_the_run_directory_case_hashes_to_the_recorded_case_input(
     case_file: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, linesep: str

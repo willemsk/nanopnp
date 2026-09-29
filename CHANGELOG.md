@@ -16,6 +16,26 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+### Fixed
+
+Findings of [CODE_REVIEW_003](docs/code_reviews/CODE_REVIEW_003.md), the Phase 2 review. CR-1 to
+CR-4, CR-6 and CR-11 each have a regression test that fails on the previous code.
+
+- A run or build child that dies without reporting (the OOM killer, a fault in a compiled
+  library) now settles the run as `failed`; the Run and Geometry tabs no longer stay locked
+  (CR-1, FR-27).
+- A truncated walk (`nanopnp run --upto`, **Build geometry**) writes its own run directory
+  and no longer replaces the run record of a full run of the same case (CR-2, QR-08, FR-25).
+- `structure.ensemble.frames.last_ns` keeps its inclusive window on DCDs whatever the sign of
+  the float32 timestep's rounding error (CR-3, FR-01).
+- Stage 5 accepts a step whose flat edge lies on a bilayer plane; the §5.2.1 NOTE on the
+  membrane junction says so (CR-4, FR-09).
+- `read_plan` re-derives each point's id and the plan hash, and refuses an edited plan (CR-6).
+- `run_case` reads the case file once (CR-10); `load_profile` reads a `Path` as a path whatever
+  its suffix (CR-11).
+- Stage 2's `canonical_grid` no longer copies the float32 ensemble to float64 (CR-8); the packaging
+  probe writes its scene to a private temporary directory (CR-12).
+
 ## [0.9.0-alpha.8] - 2026-09-29
 
 WP24: the geometry pipeline surfaced in the desktop shell (Phase 2 criterion 4).

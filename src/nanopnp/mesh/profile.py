@@ -495,7 +495,7 @@ def load_profile(name_or_path: str | Path) -> PoreProfile:
     """
     path = (
         Path(name_or_path)
-        if Path(name_or_path).suffix in {".yaml", ".yml"}
+        if isinstance(name_or_path, Path) or Path(name_or_path).suffix in {".yaml", ".yml"}
         else profile_file(str(name_or_path))
     )
     with path.open(encoding="utf-8") as handle:

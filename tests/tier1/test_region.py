@@ -471,3 +471,47 @@ def test_ver52_a_supplied_profile_case_file_loads(tmp_path: Path) -> None:
     case = tmp_path / "profile.case.yaml"
     case.write_text(profile_case(profile_file(FIXTURE)), encoding="utf-8")
     assert resolve(load_case(case)).profile is not None
+
+
+@pytest.mark.parametrize(
+    ("points", "junction"),
+    [
+        # A bilayer plane can lie along a flat edge of the body in four ways: the plane
+        # z = +-1.4 is the top or the bottom edge of a step, on either side. The half-open
+        # crossing rule counts one end of the edge only, so the interval [r1, r2] used to
+        # stop short of the far end in two of the four, and the junction gate then refused a
+        # valid region (CODE_REVIEW_003 CR-4).
+        pytest.param(
+            [(2.0, -3.0), (2.0, 5.0), (3.0, 5.0), (3.0, 1.4), (5.0, 1.4), (5.0, -3.0)],
+            {"trans": 5.0, "cis": 5.0},
+            id="cis-wide-lower",
+        ),
+        pytest.param(
+            [(2.0, -3.0), (2.0, 5.0), (6.0, 5.0), (6.0, 1.4), (3.0, 1.4), (3.0, -3.0)],
+            {"trans": 3.0, "cis": 6.0},
+            id="cis-cap-flush",
+        ),
+        pytest.param(
+            [(2.0, -3.0), (2.0, 5.0), (3.0, 5.0), (3.0, -1.4), (5.0, -1.4), (5.0, -3.0)],
+            {"trans": 5.0, "cis": 3.0},
+            id="trans-wide-foot",
+        ),
+        pytest.param(
+            [(2.0, -3.0), (2.0, 5.0), (5.0, 5.0), (5.0, -1.4), (3.0, -1.4), (3.0, -3.0)],
+            {"trans": 5.0, "cis": 5.0},
+            id="trans-body-above",
+        ),
+    ],
+)
+def test_ver52_an_edge_lying_on_a_bilayer_plane_extends_the_interval_along_it(
+    points: list[tuple[float, float]], junction: dict[str, float]
+) -> None:
+    """The membrane meets the body at the far end of an edge that lies on its plane.
+
+    The oracle is the geometry, not the code: in each orientation the membrane's
+    outer surface starts where the flat edge ends, so the junction radius is that
+    end. Before the fix the two wide-step orientations were refused with an offset
+    equal to the edge's length.
+    """
+    reservoir = ReservoirSpec(radius_nm=30.0)
+    assert derive_region(_profile(points), MEMBRANE, reservoir).junction_nm == junction

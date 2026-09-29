@@ -22,13 +22,15 @@ driver defect. The stabilisation mode is ``none`` (NUM-11).
 from __future__ import annotations
 
 import json
+import os
+import signal
 import time
 from pathlib import Path
 
 import pytest
 
 from nanopnp.core.hashing import decode_floats
-from nanopnp.gui.run_model import RunModel, run_outcome
+from nanopnp.gui.run_model import RunControl, RunModel, run_outcome
 from nanopnp.gui.solver import (
     Cancelled,
     Failed,
@@ -197,6 +199,35 @@ def test_fr27_a_spawned_run_reports_progress_and_finishes(case_file: Path, tmp_p
     switches = {entry["path"] for entry in outcome.deviations["switches"]}
     assert "electrolyte.corrections.viscosity.model" in switches
     assert run_outcome(directory).quantities == outcome.quantities
+
+
+def test_fr27_a_child_killed_without_reporting_settles_the_run_as_failed(
+    case_file: Path, tmp_path: Path
+) -> None:
+    """A child that dies by signal posts nothing, and the shell must still settle.
+
+    The OOM killer or a fault in a compiled library leaves no ``Failed`` event, and a
+    model that only reads the queue stays ``running`` for ever: the Run and Geometry
+    tabs then never re-enable (CODE_REVIEW_003 CR-1).
+    """
+    control = RunControl()
+    control.start(case_file, store=tmp_path / "store")
+    assert control.process is not None
+    child = control.process._process  # the test kills the real child
+    assert child is not None
+    assert child.pid is not None
+    os.kill(child.pid, signal.SIGKILL)
+    child.join(TIMEOUT_S)
+    deadline = time.monotonic() + TIMEOUT_S
+    model = control.poll()
+    while not model.settled and time.monotonic() < deadline:
+        time.sleep(0.02)
+        model = control.poll()
+
+    assert model.state == "failed"
+    assert model.exit_code != 0
+    assert "without reporting a result" in model.diagnosis
+    assert str(control.process.exit_code) in model.diagnosis
 
 
 def test_fr27_cancelling_a_spawned_run_writes_no_artefact(case_file: Path, tmp_path: Path) -> None:
