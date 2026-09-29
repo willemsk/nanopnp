@@ -46,7 +46,7 @@ from nanopnp.io.case import (
     loads_case,
     resolve,
 )
-from nanopnp.io.run import _selected
+from nanopnp.io.run import selected_stages
 from nanopnp.io.store import Store
 from nanopnp.mesh.profile import (
     PROFILE_SCHEMA,
@@ -335,7 +335,7 @@ def test_ver52_a_supplied_profile_is_read_by_stage_5(tmp_path: Path) -> None:
     assert resolved.profile is not None
     assert resolved.generates_mesh
     assert resolved.membrane == MembraneSpec()
-    assert _selected(resolved, None) == (
+    assert selected_stages(resolved, None) == (
         "case",
         "region",
         "mesh",

@@ -161,8 +161,10 @@ class MainWindow(QtWidgets.QMainWindow):
         path = self._saved_case()
         if path is None:
             return
-        self._geometry.build(path)
-        self.statusBar().showMessage(f"building the geometry of {path}")
+        if self._geometry.build(path):
+            self.statusBar().showMessage(f"building the geometry of {path}")
+        else:
+            self.statusBar().showMessage("the geometry was not built; see the Geometry tab")
 
     def _show_structure(self, path: str) -> None:
         """Show a structure the Geometry tab staged in the Case tab's field.

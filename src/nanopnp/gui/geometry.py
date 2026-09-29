@@ -46,6 +46,10 @@ from typing import TYPE_CHECKING, Literal, TypeAlias
 from pydantic import ValidationError
 
 from nanopnp.core.stages import describe
+from nanopnp.density.map import PAYLOAD_NAME as DENSITY_PAYLOAD
+from nanopnp.density.map import DensityMap
+from nanopnp.geometry.region import PAYLOAD_NAME as REGION_PAYLOAD
+from nanopnp.geometry.region import read_region
 from nanopnp.io.case import (
     CaseDocument,
     MembraneSpec,
@@ -57,10 +61,10 @@ from nanopnp.io.case import (
 )
 from nanopnp.io.run import (
     DENSITY_RECORD_KEYS,
-    PIPELINE,
     REDUCTION_RECORD_KEYS,
     STRUCTURE_RECORD_KEYS,
     STRUCTURE_STAGES,
+    selected_stages,
 )
 from nanopnp.io.store import Store
 from nanopnp.mesh.profile import (
@@ -75,6 +79,8 @@ from nanopnp.mesh.profile import (
     signed_area,
     write_profile,
 )
+from nanopnp.symmetry.reduce import PAYLOAD_NAME as REDUCED_PAYLOAD
+from nanopnp.symmetry.reduce import QUANTITIES, ReducedMap
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from collections.abc import Mapping, Sequence
@@ -161,21 +167,16 @@ def planned_stages(document: CaseDocument) -> tuple[str, ...]:
     """Return the geometry stages this case walks, in order.
 
     Stages 1 to 4 need ``structure:``; stage 5 needs a generated mesh. The
-    rule :func:`nanopnp.io.run.run_case` applies, restated over the resolved
-    case's own properties rather than by calling the driver's private selector.
+    rule :func:`nanopnp.io.run.run_case` applies, taken from the driver's own
+    :func:`~nanopnp.io.run.selected_stages` so the list cannot drift from the walk.
 
     Raises
     ------
     nanopnp.io.case.CaseValidationError
         If the case does not resolve.
     """
-    resolved = resolve(document)
-    dropped: set[str] = set()
-    if resolved.structure is None:
-        dropped.update(STRUCTURE_STAGES)
-    if not resolved.generates_mesh:
-        dropped.add("region")
-    return tuple(name for name in PIPELINE if name in GEOMETRY_STAGES and name not in dropped)
+    walked = selected_stages(resolve(document), None)
+    return tuple(name for name in walked if name in GEOMETRY_STAGES)
 
 
 def can_build(document: CaseDocument) -> bool:
@@ -712,9 +713,7 @@ def load_view(
     if event.name == "structure":
         return SummaryView(name=event.name, lines=_lines(summary, STRUCTURE_RECORD_KEYS))
     if event.name == "density":
-        from nanopnp.density.map import PAYLOAD_NAME, DensityMap
-
-        density = DensityMap.read(artefact.payload[PAYLOAD_NAME])
+        density = DensityMap.read(artefact.payload[DENSITY_PAYLOAD])
         grid = density.grid
         section = density_section(
             density.values, grid.axis_nm("x"), grid.axis_nm("z"), y_index=grid.half_width
@@ -726,15 +725,15 @@ def load_view(
             slab=membrane_slab(document),
         )
     if event.name in ("symmetry", "contour"):
-        from nanopnp.symmetry.reduce import PAYLOAD_NAME, QUANTITIES, ReducedMap
-
         symmetry = artefact if event.name == "symmetry" else _artefact(produced["symmetry"])
-        reduced = ReducedMap.read(symmetry.payload[PAYLOAD_NAME])
+        reduced = ReducedMap.read(symmetry.payload[REDUCED_PAYLOAD])
+        # The contour is drawn over the mean alone, so its view builds no variance.
+        quantities = QUANTITIES if event.name == "symmetry" else ("mean",)
         images = {
             quantity: reduced_image(
                 reduced.r_nm, reduced.z_nm, getattr(reduced, quantity), quantity=quantity
             )
-            for quantity in QUANTITIES
+            for quantity in quantities
         }
         if event.name == "symmetry":
             return ImageView(
@@ -743,12 +742,14 @@ def load_view(
                 lines=_lines(summary, REDUCTION_RECORD_KEYS),
                 slab=membrane_slab(document),
             )
+        # Deferred: stage 4's module imports scikit-image and Shapely, the
+        # ``structure`` extra, which a case supplying its profile does not need.
         from nanopnp.geometry.contour import PAYLOAD_NAME as PROFILE_PAYLOAD
 
         profile = load_profile(artefact.payload[PROFILE_PAYLOAD])
         return ImageView(
             name=event.name,
-            images={"mean": images["mean"]},
+            images=images,
             lines=_lines(
                 summary,
                 (
@@ -764,9 +765,7 @@ def load_view(
             profile=profile,
         )
     if event.name == "region":
-        from nanopnp.geometry.region import PAYLOAD_NAME, read_region
-
-        record = read_region(artefact.payload[PAYLOAD_NAME])
+        record = read_region(artefact.payload[REGION_PAYLOAD])
         points = record.points()
         half = record.membrane.half_thickness_nm
         return OutlineView(

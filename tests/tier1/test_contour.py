@@ -47,7 +47,7 @@ from nanopnp.geometry.contour import (
 from nanopnp.geometry.probe import probe_radius_profile
 from nanopnp.io.artefact import Artefact, StageInputs
 from nanopnp.io.case import CaseValidationError, load_case, resolve
-from nanopnp.io.run import _selected, run_case
+from nanopnp.io.run import run_case, selected_stages
 from nanopnp.io.store import Store
 from nanopnp.mesh.profile import (
     PIPELINE_SOURCE,
@@ -642,7 +642,7 @@ def test_ver51_case_values_and_walk(tube: Path, tube_store: Store, tmp_path: Pat
         assert key in recorded, key  # type: ignore[operator]
     assert recorded["band"]["low"]["value_nm"] >= -H  # type: ignore[index]
 
-    assert _selected(resolve(load_case(case)), None) == (
+    assert selected_stages(resolve(load_case(case)), None) == (
         "case",
         "structure",
         "density",

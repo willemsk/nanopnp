@@ -36,7 +36,7 @@ from nanopnp.density.union import (
     gate_density,
 )
 from nanopnp.io.case import CaseValidationError, load_case, resolve
-from nanopnp.io.run import _selected, run_case
+from nanopnp.io.run import run_case, selected_stages
 from nanopnp.io.store import Store
 
 if TYPE_CHECKING:
@@ -469,7 +469,7 @@ def test_ver49_resolution_and_walk_rules(synthetic_c12: Path, tmp_path: Path) ->
     assert group["density"]["radius_set"]["name"] == "pdb2pqr_charmm"  # type: ignore[index]
     assert group["reduction"]["n"] == 12  # type: ignore[index]
 
-    assert _selected(resolve(load_case(case)), None) == (
+    assert selected_stages(resolve(load_case(case)), None) == (
         "case",
         "structure",
         "density",
