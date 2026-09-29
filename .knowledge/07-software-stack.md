@@ -426,6 +426,56 @@ parsing the IF-02 result stream would read. Pass `file_format="gmsh"`.
   phase-0 geometries (192, 811 and 124 elements) do agree exactly across all three platforms,
   which is what makes this easy to miss until a mesh is large enough to have a choice to make.
 
+**Gmsh facts, measured on 4.15.2 with netgen 6.2.2606, Linux (WSL2), 29 September 2026 [tested]**
+(WP23; the implementation is `mesh/gmsh_backend.py`, the evidence the WP23 plan's Design and
+Outcomes):
+
+- **`gmsh.initialize()` from Python turns the terminal on.** `General.Terminal` reads 1 straight
+  after it, so meshing writes Gmsh's progress to standard output, which IF-02 reserves. Set it to 0
+  before anything else, and collect the messages with `gmsh.logger` instead. Pass
+  `readConfigFiles=False` too, or a user's `~/.gmsh-options` changes a mesh under an unchanged key.
+  Pass `interruptible=False`, because the default installs a SIGINT handler, which only the main
+  thread may do.
+- **A stage-5 region goes into the built-in `geo` kernel from netgen's own coordinates.** Reading
+  `set(shape.vertices)`, `set(shape.edges)` and each face's `set(face.edges)` off the glued shape
+  gives the graph: 193 vertices and 195 edges on the ClyA fixture. Its face areas, in closed form
+  (Green's theorem, `½(a × b)` per segment and `½R²Δθ` per arc), agree with OCC's `face.mass` to
+  1e-15 on the electrolyte and 1e-12 on the membrane. No BREP passes between netgen-occt and Gmsh's
+  own OpenCASCADE. Every region vertex survives as a mesh node, the 185 profile vertices included.
+- **The only curved edges are the reservoir arcs, and each spans less than π,** which
+  `geo.addCircleArc` requires. OCC's seam at `(R, 0)` is what splits the membrane's outer arc in two.
+  A straight edge is told from an arc by its parameter midpoint lying on its chord, to 1e-9.
+- **A clockwise curve loop meshes every triangle of its surface inverted.** On the coarse
+  parallelogram region, the protein's loop handed to Gmsh reversed gave 14 triangles, all 14
+  inverted. Orient each loop counter-clockwise by its signed area before `addCurveLoop`, as the
+  pore face is oriented for OCC above.
+- **Given only §5.2.2's size table, Gmsh does not match netgen's quality.** Netgen limits the
+  element size near short edges and close edges by itself, and grades outwards from a face's
+  `maxh`. A Gmsh `Constant` field does neither. On the fixture, with the table as `Distance` and
+  `Threshold` sources and `Constant` domains, the minimum gamma is 0.3143 against VER-10's 0.3.
+  With the domain boundaries also as graded sources it fails at `size_scale` 2 (0.2084, beside a
+  0.0412 nm profile edge) and at 4 (0.2348, where the 2.8 nm membrane strip meets the arc). The
+  field the backend uses fixes that: sources `h + 0.2 d` on every sized boundary and domain
+  boundary, on each vertex whose shortest curve is shorter than its curves' smallest target, and on
+  the membrane at its unscaled thickness. Its minimum gamma is 0.5840, 0.5241, 0.5655 and 0.5072
+  at `size_scale` 1, 2, 4 and 8. `Mesh.MeshSizeExtendFromBoundary` 1 is the tempting shortcut. It
+  doubles the element count, to 95,103 at `size_scale` 1, and still gives only 0.3876 at 4.
+- **Frontal-Delaunay (`Mesh.Algorithm` 6) is the algorithm, and one thread makes the mesh
+  reproducible.** With the table-only field, algorithm 5 gives 10 % more triangles at a mean gamma
+  of 0.95 against 0.99, and MeshAdapt (1) is slower and worse (WP23 plan, Design §3). `Mesh.Smoothing`
+  5 is its optimisation pass, as `optsteps2d` is netgen's. With `General.NumThreads` and
+  `Mesh.MaxNumThreads2D` at 1, two fresh processes give one content hash.
+- **Gmsh's wall runs at or under its target, and netgen's over it.** With the backend's field on the
+  fixture, the mean `wall` segment is 0.909, 0.931 and 0.945 of the target at 0.05, 0.03505 and
+  0.02715 nm, and the longest is 1.029–1.055 of it. Netgen's mean is 1.045–1.078. The mesh has
+  48,941 triangles in 3.3–4.2 s, against netgen's 44,316 in 6.4–7.0 s.
+- **`Distance`'s sampling option is `Sampling`** (formerly `NumPointsPerCurve`). A source curve
+  needs about `⌈L/h⌉` samples, so a reservoir arc hundreds of nm long, sized at 5 nm, needs 80 or
+  more, where the default is 20.
+- **The wheel can install and still fail to import.** On a bare Linux container `import gmsh`
+  raises `OSError: libGLU.so.1`, not `ImportError`. A dispatch that turns a missing extra into a
+  refusal has to catch both, as `tests/conftest.py`'s `import_gmsh` does for the tests.
+
 ---
 
 ## 5. GUI and packaging

@@ -1,6 +1,6 @@
 # WP23 — The Gmsh mesher backend
 
-**Status: planned, not started.** Written 29 September 2026, after WP22 merged on `main`
+**Status: delivered, 29 September 2026.** Written 29 September 2026, after WP22 merged on `main`
 (`32fecf1`, to be tagged `v0.9.0-alpha.6`). This package inherits stage 5's glued, adjacency-named
 region and its `nanopnp/region/v1` record (WP21 D5, D6), and stage 6's route: size, mesh, write
 MSH 4.1, re-ingest through VER-27 and VER-10, then the D9 wall-size gate, keyed on the recipe with
@@ -106,6 +106,68 @@ NANOPNP_REQUIRE_GMSH=1 uv run pytest -rs tests/tier1/test_mesh_gmsh.py   # fails
 Runtime: the Tier-2 file costs about 7 s (netgen) and 3.5 s (Gmsh) per mesh at the default
 sizes, two further Gmsh wall sizes at about 4 s each, three coarse Gmsh meshes at under 2 s each,
 and two frozen solves at about 9 s each. That is under a minute.
+
+### Outcomes
+
+> **Outcome — delivered as decided; D1 to D13 hold.** Measured on Linux (WSL2), Gmsh 4.15.2, netgen
+> 6.2.2606, stabilisation `none` wherever a solve is quoted. VER-54's three files pass:
+> `test_region_graph.py` (7), `test_mesh_gmsh.py` (13, of which 7 run without Gmsh) and
+> `test_mesh_backends.py` (8, 55 s unpinned on eight cores).
+
+> **Outcome — D2's signature takes the record.** `region_graph(shape, record)`: the record's radius
+> classifies the arcs, and its counts and areas are the check. The areas are compared in closed
+> form (Green's theorem over segments and arcs) to `GRAPH_AREA_RTOL` = 1e-9. They agree to 1e-15 on
+> the electrolyte and 1e-12 on the membrane, so a dropped, split or bent edge fails loudly. A loop
+> handed to Gmsh clockwise inverts every triangle of its face (14 of 14 on the parallelogram), which
+> `test_ver54_a_clockwise_profile_meshes_with_no_inverted_element` now shows. So D2's orientation
+> rule is load-bearing, and not only a precaution.
+
+> **Outcome — D3/D4 as implemented.** Edge sources are grouped by size, one `Distance` per distinct
+> size. The fixture meshes to 48,941 triangles against the prototype's 48,929, with the same minima
+> at every `size_scale`:
+>
+> | Gmsh, fixture | Triangles | Min SICN, gamma | Wall segments; mean, p95, max ratio | Stage 6 (s) |
+> |---|---|---|---|---|
+> | 0.05 nm, `size_scale` 1 | 48,941 | 0.6887, 0.5840 | 654; 0.909, 1.007, 1.029 | 4.2 |
+> | 0.03505 nm (3 M) | 55,047 | 0.7102, 0.6137 | 911; 0.931, 1.021, 1.051 | 4.4 |
+> | 0.02715 nm (5 M) | 61,270 | 0.7003, 0.6006 | 1,159; 0.945, 1.022, 1.055 | 5.6 |
+> | `size_scale` 2 | 18,510 | 0.6448, 0.5241 | 396; 0.751, 1.004, 1.023 | 1.9 |
+> | `size_scale` 4 | 11,764 | 0.6753, 0.5655 | 314; 0.474, —, 1.025 | 1.8 |
+> | `size_scale` 8 | 10,683 | 0.6275, 0.5072 | 310; 0.240, —, 0.687 | 1.9 |
+>
+> Netgen on the fixture at the default sizes: 44,316 triangles, 0.6559 and 0.6157, 569 segments,
+> mean 1.045, max 1.600, in 6.7 s. `nanopnp mesh reference` still prints `2fbf66ef…` after the
+> shared classification (work item 2).
+
+> **Outcome — the frozen case (Design §4) reproduced.** At `size_scale` 2, G is 1.475574e-8 S on
+> netgen's 14,511 triangles and 1.475390e-8 S on Gmsh's 18,510, so `G_gmsh/G_netgen − 1` is
+> −1.244e-4 against VER-54's 1e-3.
+
+> **Outcome — a Gmsh failure is a gate (exit 4).** `GmshMeshingError` quotes Gmsh's error and
+> the end of its log. `cli/errors.py` classifies it with the stage-6 gates, because the mesh is a
+> function of the recipe and a retry fails identically. The session is finalised on the way out.
+
+> **Outcome — D8: netgen's key literally unchanged.** The coarse parallelogram case keys stage 6 as
+> `afcc0833…` on `2bb1a34` and on this branch (`NETGEN_KEY` in `test_mesh_gmsh.py`). The mesher's
+> version is also recorded beside the key in the mesh summary's `sizing.backend_version`, for netgen
+> as well. The manifest's environment already carried it. Stage 5's key does not name the backend
+> (D1), so the Tier-2 file assembles the region once for both.
+
+> **Outcome — D13 on 2WCD.** At the default sizes Gmsh gives 49,617 triangles, minimum SICN 0.6805
+> and gamma 0.5749, with a wall mean of 0.931 and max of 1.010 of the target. Netgen gives 44,762,
+> 0.6267 and 0.5222, 1.055 and 1.485, in `test_val05_2wcd.py`. The 44,998 quoted above was WP22's
+> figure, taken before `32fecf1` changed the C-alpha centroid's computation. `2bb1a34` gives 44,762
+> as well, so the change is not this package's. `.knowledge/04` §1.4 and a WP22 Outcome carry the
+> correction. The ensemble leg records the same in `test_val05_ensemble.py`, and it skips here
+> without the archive.
+
+> **Outcome — D11: the ubuntu determination is deferred to the PR's first CI run.** It needs a
+> run: `-rs` now names each skip, and no earlier log does. `windows-latest` and `macos-latest` set
+> `NANOPNP_REQUIRE_GMSH=1` through a `require-gmsh` matrix field. If the ubuntu legs' `-rs` output
+> shows no Gmsh skip, set the field to `"1"` there too. If it shows `OSError: libGLU.so.1`, leave it
+> and record that here. Both runs were checked locally: with the variable set and `gmsh` hidden,
+> every Gmsh test fails; without it, each skips naming the error. The one pre-existing Gmsh test
+> (`test_mesh_quality.py`) now goes through the same fixture.
 
 ### Out of scope
 
