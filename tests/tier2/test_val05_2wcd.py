@@ -11,9 +11,10 @@ pass (D8), a property of nested superlevel sets rather than a tolerance.
 Everything else is recorded, not gated, and logged at INFO as YAML (D13): the
 attribution to the reference's construction (D7), the rms-optimal offset (D6),
 one frozen case's conductance on the generated mesh against the fixture's (D9),
-the default-size mesh against the reference figures (D10), and the stage-3
-variance (D11). The module runs on its own store, as ``test_contour_2wcd.py``
-does, because ``--dist loadfile`` may place the two on different workers.
+the default-size mesh against the reference figures (D10), the same on the Gmsh
+backend beside netgen's (WP23 D13), and the stage-3 variance (D11). The module
+runs on its own store, as ``test_contour_2wcd.py`` does, because
+``--dist loadfile`` may place the two on different workers.
 """
 
 from __future__ import annotations
@@ -22,6 +23,7 @@ import logging
 from dataclasses import dataclass
 from itertools import pairwise
 from pathlib import Path
+from types import ModuleType
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -310,6 +312,43 @@ def test_val05_2wcd_mesh_against_the_reference_figures(walked: Walked) -> None:
             where["value"],
             where["r_nm"],
             where["z_nm"],
+        )
+
+
+def test_val05_2wcd_mesh_on_both_backends(gmsh_module: ModuleType, walked: Walked) -> None:
+    """WP23 D13, recorded: 2WCD's default-size mesh on Gmsh beside netgen's.
+
+    Recorded, not gated beyond stage 6's own gates, which either mesh must pass
+    to be recorded at all. Stage 5 is shared: its key does not name the backend.
+    """
+    recorded = {}
+    for backend in ("netgen", "gmsh"):
+        case = _write(
+            walked.root / f"mesh-{backend}.case.yaml",
+            GEOMETRY_CASE.format(structure=walked.structure, geometry=walked.geometry)
+            + f"numerics: {{mesh: {{backend: {backend}}}}}\n",
+        )
+        result = run_case(case, store=walked.store, upto="mesh", write=False)
+        recorded[backend] = result
+    assert recorded["gmsh"].artefacts["region"].hash == recorded["netgen"].artefacts["region"].hash
+    for backend, result in recorded.items():
+        mesh = result.artefacts["mesh"].summary
+        quality = mesh["quality"]
+        statistics = mesh["sizing"]["wall_statistics"]  # type: ignore[index]
+        logger.info(
+            "2WCD mesh on %s at the default sizes (WP23 D13): %d triangles, min SICN %.4f, "
+            "mean SICN %.4f, min gamma %.4f, mean gamma %.4f; wall %d segments, mean %.3f, max "
+            "%.3f x the target; stage 6 %.2f s",
+            backend,
+            mesh["elements"],
+            quality["min_sicn"],  # type: ignore[index]
+            quality["mean_sicn"],  # type: ignore[index]
+            quality["min_gamma"],  # type: ignore[index]
+            quality["mean_gamma"],  # type: ignore[index]
+            statistics["segments"],
+            statistics["mean_ratio"],
+            statistics["max_ratio"],
+            next(entry.seconds for entry in result.stages if entry.name == "mesh"),
         )
 
 
