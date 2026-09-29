@@ -1,6 +1,6 @@
 # Phase 2 (Geometry pipeline): from a structure to a gated mesh
 
-**Status: in progress. WP17 delivered, 24 September 2026; WP18 delivered, 25 September 2026; WP19 delivered, 25 September 2026; WP20 delivered, 26 September 2026; WP21 delivered, 26 September 2026; WP22 delivered, 28 September 2026, its Tier-3 verdict awaiting a run on the archive; WP23 delivered, 29 September 2026; WP24 delivered, 29 September 2026; WP25 planned.** Written 24 September 2026, after Phase 1 (WP7–WP16) delivered the
+**Status: in progress. WP17 delivered, 24 September 2026; WP18 delivered, 25 September 2026; WP19 delivered, 25 September 2026; WP20 delivered, 26 September 2026; WP21 delivered, 26 September 2026; WP22 delivered, 28 September 2026, its Tier-3 verdict awaiting a run on the archive; WP23 delivered, 29 September 2026; WP24 delivered, 29 September 2026; WP25 delivered, 29 September 2026.** Written 24 September 2026, after Phase 1 (WP7–WP16) delivered the
 solver core on an externally supplied mesh (main at `v0.5.0-alpha.10`). Two things come first:
 the Phase 1 end-of-phase report, which merges as tag `v0.5.0`, and the author's double-click
 observation that closes Phase 0 criterion 4. That ordering is ruling B1 of `SPECIFICATION.md`
@@ -383,6 +383,23 @@ Cₙ rotation. The generated references pick up the v2 fields without a docs edi
 >
 > The "invariant under the Cₙ rotation" oracle is dropped, because the harmonic-basis average makes
 > it true by construction. The oracles are VER-46's, as amended.
+
+> **Delivered, 29 September 2026** ([plan](wp25-geometry-docs-and-example.md), to be tagged
+> `v0.9.0-alpha.9`). Phase criterion 5 is met. The guide gains *Structures and trajectories* and
+> *From a structure to a mesh*. `nanopnp stage <name> --export` writes stages 1 to 4 and 6 by
+> suffix, and the density map's OpenDX and CCP4/MRC files are in ångströms (B10). Example 06 runs
+> from the refused deposited entry to a gated mesh and back through `inputs.profile`, in 55 s at
+> Tier 2. It discharges VER-32, VER-45, VER-46 and VER-49 as amended, and QR-15 in part.
+> Constraints inherited by later packages:
+>
+> - The executor's tags are `run`, `plan` and `refused`, and each names the exit its commands
+>   must return. A new tag needs a test that executes it.
+> - A 3D interchange grid is in Å at the file boundary. The `field1` grids stay in nm until Phase 3
+>   decides otherwise for the charge grids.
+> - An exported profile edited as text must have its measurements re-derived, or the loader
+>   refuses it.
+>
+> Measurements: [WP25 Outcomes](wp25-geometry-docs-and-example.md#outcomes), `.knowledge/07` §2.
 
 ## Open decisions
 
