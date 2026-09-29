@@ -38,6 +38,9 @@ PAYLOAD_NAME = "ensemble"
 ATOM_FIELDS: tuple[str, ...] = ("element", "name", "resname", "resid", "icode", "chain")
 """The atom-table arrays the payload carries, in order."""
 
+_CHAIN_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+"""The single characters a PDB chain column can hold, which is what MDAnalysis's writer accepts."""
+
 ORIENTATION_RULE = (
     "x' = Q (x - p): the Cn axis on z through r = 0, signed to the file's +z (trans to cis), "
     "with z' = a.x so the file's axial coordinate is kept; the first chain in file order on +x "
@@ -159,10 +162,21 @@ class AlignedEnsemble:
         format. Written through MDAnalysis, so a reader of either file is reading
         what MDAnalysis wrote rather than a hand-rolled format.
 
+        A chain key longer than one character (a segment identifier such as ``PROA``, or
+        a two-character mmCIF ``auth_asym_id``) does not fit the PDB chain column. Each
+        chain then gets a single character in order of appearance and its key is written
+        in the segid columns, so the export keeps every chain distinct.
+
         Returns
         -------
         tuple[Path, Path]
             The PDB (first frame) and the DCD (every frame).
+
+        Raises
+        ------
+        ValueError
+            If the keys are longer than one character and there are more chains than
+            single characters to give them.
         """
         import MDAnalysis as mda  # noqa: N813 - the alias the library documents
         import numpy as np
@@ -174,21 +188,43 @@ class AlignedEnsemble:
         boundary = np.zeros(len(keys), dtype=int)
         boundary[starts] = 1
         resindex = np.cumsum(boundary) - 1
+        # One segment per chain key, so that a key the PDB chain column cannot hold (a
+        # segid such as ``PROA``, or a two-character mmCIF ``auth_asym_id``) survives in the
+        # segid columns, which is where stage 1 reads it back from (CODE_REVIEW_003 CR-9).
+        chains = list(dict.fromkeys(self.chain.tolist()))
+        segment_of = {chain: index for index, chain in enumerate(chains)}
         universe = mda.Universe.empty(
             self.atoms,
             n_residues=len(starts),
-            n_segments=1,
+            n_segments=len(chains),
             atom_resindex=resindex,
-            residue_segindex=np.zeros(len(starts), dtype=int),
+            residue_segindex=np.array(
+                [segment_of[str(self.chain[index])] for index in starts], dtype=int
+            ),
             trajectory=True,
         )
         universe.add_TopologyAttr("names", self.name.tolist())
         universe.add_TopologyAttr("elements", self.element.tolist())
-        universe.add_TopologyAttr("chainIDs", self.chain.tolist())
+        # The chain column holds one alphanumeric character, and the PDB writer replaces
+        # anything else by ``X``, which would merge every chain into one. When any key is
+        # longer, each chain gets its own single character in order of appearance and the
+        # key itself travels in the segid columns (the writer keeps their first four).
+        single = all(len(chain) == 1 for chain in chains)
+        if single:
+            chain_ids = self.chain.tolist()
+        else:
+            if len(chains) > len(_CHAIN_CHARACTERS):
+                raise ValueError(
+                    f"{len(chains)} chains do not fit the {len(_CHAIN_CHARACTERS)} "
+                    "single-character chain identifiers of a PDB file, and their keys are "
+                    "longer than one character"
+                )
+            chain_ids = [_CHAIN_CHARACTERS[segment_of[str(chain)]] for chain in self.chain]
+        universe.add_TopologyAttr("chainIDs", chain_ids)
         universe.add_TopologyAttr("resnames", [str(self.resname[i]) for i in starts])
         universe.add_TopologyAttr("resids", [int(self.resid[i]) for i in starts])
         universe.add_TopologyAttr("icodes", [str(self.icode[i]) for i in starts])
-        universe.add_TopologyAttr("segids", [""])
+        universe.add_TopologyAttr("segids", [""] * len(chains) if single else chains)
         universe.load_new(
             np.asarray(self.positions_nm, dtype=np.float32) * np.float32(10.0), format=MemoryReader
         )

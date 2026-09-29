@@ -17,6 +17,7 @@ test-time preparation, since preparing a structure is outside the pipeline
 
 from __future__ import annotations
 
+import dataclasses
 import json
 import logging
 import math
@@ -572,6 +573,50 @@ def test_ver48_artefact_round_trip_and_export(prepared: Path, tmp_path: Path) ->
     assert np.array_equal(reloaded.atoms.names, ensemble.name)
     assert np.max(np.abs(reloaded.atoms.positions / 10.0 - ensemble.positions_nm[0])) <= 1e-5
     assert json.loads(json.dumps(dict(ensemble.header)))["n"] == 12
+
+
+@pytest.mark.parametrize(
+    "chains",
+    [["PROA", "PROA", "PROB", "PROB"], ["AA", "AA", "BB", "BB", "C", "C"]],
+    ids=["segids", "mixed-length"],
+)
+def test_ver48_an_export_keeps_chains_distinct_whatever_their_keys(
+    chains: list[str], tmp_path: Path
+) -> None:
+    """A key longer than the PDB chain column keeps its chain: the writer's ``X`` merged them.
+
+    Stage 1 keys chains by segid where the chain column is blank, so ``PROA``/``PROB`` and
+    two-character mmCIF identifiers are admitted. The export gives each chain its own
+    character and writes the key in the segid columns; read back, the partition is the
+    original one (CODE_REVIEW_003 CR-9).
+    """
+    atoms = len(chains)
+    ensemble = AlignedEnsemble(
+        positions_nm=np.random.default_rng(1).random((2, atoms, 3)).astype(np.float32),
+        element=np.array(["C"] * atoms),
+        name=np.array(["CA"] * atoms),
+        resname=np.array(["ALA"] * atoms),
+        resid=np.array([1, 2] * (atoms // 2)),
+        icode=np.array([""] * atoms),
+        chain=np.array(chains),
+        header={},
+    )
+    pdb, _ = ensemble.export(tmp_path, stem="x")
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        written = mda.Universe(str(pdb)).atoms
+    ids = [str(value) for value in written.chainIDs]
+    assert len(set(ids)) == len(set(chains)), ids
+    assert [ids[i] == ids[0] for i in range(atoms)] == [chain == chains[0] for chain in chains]
+    if chains[0] == "PROA":
+        assert [str(value) for value in written.segids] == chains
+    # Single-character keys are written as they are.
+    letters = ["A", "A", "B", "B", "C", "C"][:atoms]
+    plain = dataclasses.replace(ensemble, chain=np.array(letters))
+    pdb_plain, _ = plain.export(tmp_path, stem="plain")
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        assert [str(v) for v in mda.Universe(str(pdb_plain)).atoms.chainIDs] == letters
 
 
 def test_ver48_insertion_codes_survive_the_artefact_and_its_export(tmp_path: Path) -> None:
