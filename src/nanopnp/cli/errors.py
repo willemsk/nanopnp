@@ -151,6 +151,11 @@ EXIT_CODES: Final[dict[str, int]] = {
     # the reservoir or a junction off r2; a wall coarser than its size field.
     "nanopnp.geometry.region:RegionGateError": EXIT_GATE,
     "nanopnp.mesh.generate:WallSizeGateError": EXIT_GATE,
+    # The optional Gmsh backend (WP23) failed on a region stage 5 passed, quoting
+    # Gmsh's own log. 4 rather than 1: the mesh is a function of the recipe (one
+    # thread, no configuration file read), so a retry fails identically, and what
+    # it names is the region and the mesher's complaint, not a traceback.
+    "nanopnp.mesh.gmsh_backend:GmshMeshingError": EXIT_GATE,
     "nanopnp.charge.fields:FieldDocumentError": EXIT_GATE,
     "nanopnp.charge.fields:ChargeFieldError": EXIT_GATE,
     "nanopnp.solve.state:StateMismatchError": EXIT_GATE,

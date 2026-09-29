@@ -158,21 +158,35 @@ def test_ver53_the_ionic_strength_weights_valence_squared() -> None:
 
 
 def test_ver53_the_recipe_carries_the_backend_the_sizes_and_the_gate() -> None:
-    """D10: everything that moves a vertex of a generated mesh or a verdict of its gate."""
+    """D10: everything that moves a vertex of a generated mesh or a verdict of its gate.
+
+    Netgen's recipe keeps WP21's keys in WP21's order (WP23 D8), so its canonical
+    bytes, and every stored key, are unchanged.
+    """
     wall = resolve_wall_size(loads_case(case(3.0)))
     recipe = sizing_parameters(wall, SIZES)
+    assert list(recipe) == ["backend", "wall", "table", "grading", "optsteps2d", "gate"]
     assert recipe["backend"] == "netgen"
     assert recipe["wall"] == wall.summary()
     assert recipe["table"] == SIZES.summary()
     assert recipe["grading"] == 0.2
     assert recipe["optsteps2d"] == 5
     assert recipe["gate"] == dict(GATE_CONSTANTS)
+    gmsh = sizing_parameters(wall, SIZES, "gmsh")
+    assert gmsh["backend"] == "gmsh"
+    assert "optsteps2d" not in gmsh
+    assert gmsh["gmsh"]["algorithm"] == 6  # type: ignore[index]
+
+
+def test_ver54_backend_gmsh_resolves_on_any_install() -> None:
+    """WP23 D9: the case is not refused; stage 6 refuses a missing extra, naming it."""
+    resolved = resolve(loads_case(case(extra="numerics: {mesh: {backend: gmsh}}\n")))
+    assert resolved.document.numerics.mesh.backend == "gmsh"
 
 
 @pytest.mark.parametrize(
     ("extra", "error", "fragment"),
     [
-        ("numerics: {mesh: {backend: gmsh}}\n", UnsupportedCaseSection, "backend is 'gmsh'"),
         ("numerics: {mesh: {boundary_layer: true}}\n", UnsupportedCaseSection, "FR-11"),
         (
             "geometry: {analyte: {shape: sphere, a_nm: 1.0}}\n",
