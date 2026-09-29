@@ -97,6 +97,10 @@ VOCABULARY = (
     "u_m_s",
     "p_Pa",
     "mol_m3",
+    # And WP24's: the derived case's profile format and a hand edit's source
+    # come from ``io.case.with_profile`` and ``mesh.profile.HAND_EDIT_SOURCE``.
+    "profile1",
+    '"hand-edit"',
 )
 
 
@@ -123,14 +127,20 @@ def test_if09_the_view_models_import_no_qt_and_no_ngsolve() -> None:
     ``PyQt5`` and ``PyQt6`` are checked as well. CON-09 forbids PyQt outright
     (it is GPL-3 or commercial only), and an import reaching one through some
     transitive path would put the whole bundle's licence in question.
+
+    WP24 adds the geometry tab's view-model and its measuring child, and with
+    them the geometry pipeline's libraries (VER-55): MDAnalysis, scikit-image
+    and Shapely are for the child that measures a contour, and Gmsh is CON-10's
+    optional backend, so none of them belongs in the process that draws.
     """
     probe = (
         "import sys;"
         "import nanopnp.gui.case_model, nanopnp.gui.run_model,"
         " nanopnp.gui.solver, nanopnp.gui.probe,"
-        " nanopnp.gui.convergence, nanopnp.gui.scene, nanopnp.gui.render;"
-        "print(sorted(m for m in ('PySide6','PyQt5','PyQt6','ngsolve','netgen')"
-        " if m in sys.modules))"
+        " nanopnp.gui.convergence, nanopnp.gui.scene, nanopnp.gui.render,"
+        " nanopnp.gui.geometry, nanopnp.gui.assess;"
+        "print(sorted(m for m in ('PySide6','PyQt5','PyQt6','ngsolve','netgen',"
+        " 'MDAnalysis','skimage','shapely','gmsh') if m in sys.modules))"
     )
     found = subprocess.run(
         [sys.executable, "-c", probe], capture_output=True, text=True, check=True
@@ -423,6 +433,7 @@ def _ladder(model: RunModel) -> None:
     model.consume(
         [
             Started(case="case.yaml", store=None),
+            Stage(name="solve", index=9, total=12),
             Rung(name="1-pb-linear", stage=1, index=0, total=3, reporting=False, tolerance=1e-6),
             Rung(name="3-equilibrium", stage=3, index=1, total=3, reporting=True, tolerance=1e-6),
             Rung(name="9-salt", stage=9, index=2, total=3, reporting=True, tolerance=1e-6),
@@ -469,11 +480,32 @@ def test_ver44_a_solve_served_from_the_store_is_named_not_drawn_empty() -> None:
     never be given.
     """
     served = RunModel()
-    served.consume([Started(case="case.yaml", store=None), Finished(directory="runs/probe")])
+    served.consume(
+        [
+            Started(case="case.yaml", store=None),
+            Stage(name="solve", index=9, total=12),
+            Finished(directory="runs/probe"),
+        ]
+    )
 
     assert served.convergence.state == "served"
     assert "served from the artefact store" in served.convergence.summary
     assert served.convergence.bands == []
+
+    # A walk truncated before the solve (``upto``, WP24 D3) finished without
+    # entering it, and is not a cache hit either: its plot is a plot of no solve.
+    truncated = RunModel()
+    truncated.consume(
+        [
+            Started(case="case.yaml", store=None),
+            Stage(name="region", index=1, total=3),
+            Stage(name="mesh", index=2, total=3),
+            Finished(directory="runs/probe"),
+        ]
+    )
+    assert truncated.state == "finished"
+    assert truncated.convergence.state == "idle"
+    assert "served" not in truncated.convergence.summary
 
     # And a run that stopped is not that: it has no claim either way.
     stopped = RunModel()
