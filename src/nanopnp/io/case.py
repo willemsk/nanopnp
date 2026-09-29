@@ -2204,19 +2204,15 @@ def _check_generation(document: CaseDocument) -> None:
     Raises
     ------
     UnsupportedCaseSection
-        Naming the key and its value: ``numerics.mesh.backend: gmsh`` until the
-        Gmsh adapter is delivered (WP23), ``boundary_layer: true`` (FR-11,
-        post-1.0) and ``geometry.analyte`` (FR-21, v1.0).
+        Naming the key and its value: ``boundary_layer: true`` (FR-11,
+        post-1.0) and ``geometry.analyte`` (FR-21, v1.0). ``backend: gmsh`` is
+        not refused here: it resolves on any install, and stage 6 refuses it
+        naming the extra when ``gmsh`` does not import (WP23 D9).
     CaseValidationError
         Naming the key and its value: a membrane thickness, a reservoir radius
         or an explicit ``wall_h_nm`` that is not finite and positive.
     """
     mesh = document.numerics.mesh
-    if mesh.backend != "netgen":
-        raise UnsupportedCaseSection(
-            f"numerics.mesh.backend is {mesh.backend!r}; the Gmsh adapter is optional and "
-            "delivered in WP23 (CON-10, ADR-002), and this release meshes with netgen"
-        )
     if mesh.boundary_layer:
         raise UnsupportedCaseSection(
             "numerics.mesh.boundary_layer is true; boundary-layer meshing is FR-11, after v1.0. "

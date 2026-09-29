@@ -53,7 +53,31 @@ GRADING = 0.2
 """Netgen grading. Smaller grades faster; 0.2 is what the Phase-0 shapes use."""
 
 OPTIMISATION_STEPS = 5
-"""``optsteps2d``: the ``optimize("Netgen")`` pass section 5.2.2 requires."""
+"""``optsteps2d``: netgen's own optimisation pass, which section 5.2.2 requires."""
+
+GMSH_ALGORITHM = 6
+"""``Mesh.Algorithm`` on the Gmsh backend: Frontal-Delaunay (WP23 D5).
+
+On the reference fixture, algorithm 5 (Delaunay) gives 10 % more triangles at a
+mean gamma of 0.95 against 0.99, and 1 (MeshAdapt) is slower and worse (WP23
+plan, Design section 3).
+"""
+
+GMSH_SMOOTHING = 5
+"""``Mesh.Smoothing`` on the Gmsh backend: its optimisation pass, as ``optsteps2d`` is netgen's."""
+
+GMSH_FIELD_RULES: tuple[str, ...] = (
+    "boundary-sources-graded",
+    "domain-boundary-sources-graded",
+    "short-curve-vertices-below-target",
+    "membrane-at-thickness-unscaled",
+)
+"""The Gmsh backend's size-field rules, as the stage-6 key names them (WP23 D3, D4, D8).
+
+Each changes the mesh, so each keys it: a rule edited in code is a new
+identifier here, and the mesh it makes a new store entry. Their statement is the
+section 5.2.2 NOTE on the Gmsh backend's size field.
+"""
 
 
 @dataclass(frozen=True)
@@ -222,21 +246,72 @@ def corrected_debye_ratio(resolved: ResolvedCase, wall: WallSize) -> float:
     return wall.wall_h_nm / (corrected / DEBYE_FRACTION)
 
 
+ARC_NAMES = frozenset({"cis", "trans", "membrane_outer"})
+"""The boundary names of the reservoir arc, sized at ``arc_nm``."""
+
+AXIS_TOLERANCE_NM = 1e-9
+"""Slack on the test that an ``axis`` edge lies within the pore's axial extent."""
+
+
+def edge_size(
+    name: str,
+    z_mid_nm: float,
+    *,
+    wall_h_nm: float | None,
+    axis_extent_nm: tuple[float, float],
+    sizes: SizeTable,
+) -> float | None:
+    """Return the section 5.2.2 size of a named boundary edge, or ``None`` for none.
+
+    The one classification both backends apply (WP23 D3): ``wall`` at the wall
+    target, the reservoir arc at ``arc_nm``, and the stretch of ``axis`` whose
+    midpoint lies over the pore's axial span at ``axis_in_pore_nm``.
+
+    Parameters
+    ----------
+    name
+        The edge's section 5.3.1 name.
+    z_mid_nm
+        The edge's midpoint ``z``; read for ``axis`` only.
+    wall_h_nm
+        The wall target; ``None`` leaves the wall to the other fields.
+    axis_extent_nm
+        The pore's axial extent, where the axis is split.
+    sizes
+        The table, with ``size_scale`` already applied.
+    """
+    if name == "wall":
+        return wall_h_nm
+    if name in ARC_NAMES:
+        return sizes.arc_nm
+    if name == "axis":
+        lower, upper = axis_extent_nm
+        if lower - AXIS_TOLERANCE_NM < z_mid_nm < upper + AXIS_TOLERANCE_NM:
+            return sizes.axis_in_pore_nm
+    return None
+
+
+def domain_size(name: str, sizes: SizeTable) -> float | None:
+    """Return the section 5.2.2 size of a named domain, or ``None`` for the global size."""
+    if name == "protein":
+        return sizes.protein_nm
+    if name == "electrolyte":
+        return sizes.electrolyte_nm
+    return None
+
+
 def apply_sizes(
     shape: Shape,
     *,
     wall_h_nm: float | None,
     axis_extent_nm: tuple[float, float],
     sizes: SizeTable = SIZES,
-    tolerance_nm: float = 1e-9,
 ) -> None:
-    """Set the section 5.2.2 size fields on a named region, in place.
+    """Set the section 5.2.2 size fields on a named region, in place, for netgen.
 
     Applied by name, after naming, so the one table reaches every region the
-    same way: ``wall`` at the wall target, the reservoir arc (``cis``, ``trans``,
-    ``membrane_outer``) at ``arc_nm``, the stretch of ``axis`` over the pore's
-    axial span at ``axis_in_pore_nm``, and the ``protein`` and ``electrolyte``
-    faces at their domain sizes. The global size is the mesher's ``maxh``.
+    same way, through :func:`edge_size` and :func:`domain_size`. The global size
+    is the mesher's ``maxh``.
 
     Parameters
     ----------
@@ -248,24 +323,19 @@ def apply_sizes(
         The pore's axial extent, where the axis is split.
     sizes
         The table, with ``size_scale`` already applied.
-    tolerance_nm
-        Slack on the axial extent test.
     """
-    lower, upper = axis_extent_nm
-    arc = {"cis", "trans", "membrane_outer"}
     for edge in shape.edges:
-        if edge.name == "wall":
-            if wall_h_nm is not None:
-                edge.maxh = wall_h_nm
-        elif edge.name in arc:
-            edge.maxh = sizes.arc_nm
-        elif edge.name == "axis":
-            start, end = edge.start, edge.end
-            z_mid = 0.5 * (float(start[1]) + float(end[1]))
-            if lower - tolerance_nm < z_mid < upper + tolerance_nm:
-                edge.maxh = sizes.axis_in_pore_nm
+        z_mid = 0.5 * (float(edge.start[1]) + float(edge.end[1]))
+        size = edge_size(
+            str(edge.name),
+            z_mid,
+            wall_h_nm=wall_h_nm,
+            axis_extent_nm=axis_extent_nm,
+            sizes=sizes,
+        )
+        if size is not None:
+            edge.maxh = size
     for face in shape.faces:
-        if face.name == "protein":
-            face.maxh = sizes.protein_nm
-        elif face.name == "electrolyte":
-            face.maxh = sizes.electrolyte_nm
+        size = domain_size(str(face.name), sizes)
+        if size is not None:
+            face.maxh = size

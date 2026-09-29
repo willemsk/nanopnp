@@ -12,16 +12,23 @@ It moved here from ``tests/tier1/test_structure_stage.py`` because stages 2 and 
 need it at Tiers 1 and 2, and WP22's VAL-05 needs it next. MDAnalysis is imported
 inside the fixtures: a conftest at the root is loaded by every run, and the
 registry tests assert that listing the stages imports no extra.
+
+The ``gmsh_module`` fixture is the one way a test reaches the optional Gmsh
+backend (WP23 D11). It skips, naming the error, where ``gmsh`` does not import,
+and fails instead under ``NANOPNP_REQUIRE_GMSH=1``, which CI sets on the legs
+where it does: a backend whose every test can skip unseen is untested.
 """
 
 from __future__ import annotations
 
 import logging
 import math
+import os
 import warnings
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
+from types import ModuleType
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -35,6 +42,34 @@ logger = logging.getLogger(__name__)
 STRUCTURES = Path(__file__).parent / "data" / "structures"
 DEPOSITED_2WCD = STRUCTURES / "2wcd.pdb.gz"
 DODECAMER = "A,B,C,D,E,F,G,H,I,J,K,L"
+
+REQUIRE_GMSH = "NANOPNP_REQUIRE_GMSH"
+"""Set to ``1`` where ``gmsh`` must import, so its tests fail rather than skip (WP23 D11)."""
+
+
+def import_gmsh() -> ModuleType:
+    """Import ``gmsh``, or skip naming why; under :data:`REQUIRE_GMSH` fail instead.
+
+    ``OSError`` as well as ``ImportError``: the wheel dlopens X and GL at import
+    and raises ``OSError: libGLU.so.1`` in a bare container, which
+    ``pytest.importorskip`` turns into an error rather than a skip
+    (``.knowledge/07-software-stack.md`` section 5).
+    """
+    try:
+        import gmsh
+    except (ImportError, OSError) as error:  # pragma: no cover - environment-dependent
+        reason = f"gmsh does not import: {type(error).__name__}: {error}"
+        if os.environ.get(REQUIRE_GMSH) == "1":
+            pytest.fail(f"{REQUIRE_GMSH}=1 and {reason}")
+        pytest.skip(reason)
+    return gmsh
+
+
+@pytest.fixture
+def gmsh_module() -> ModuleType:
+    """Return the ``gmsh`` module, through :func:`import_gmsh`."""
+    return import_gmsh()
+
 
 PREPARED_TILT_DEG = 4.0
 """The tilt the prepared copy is left with, so the frame transform is not the identity."""

@@ -1,5 +1,6 @@
 """VER-10, QR-12: the element-quality gates, against the values that calibrated them."""
 
+from types import ModuleType
 from typing import NoReturn
 
 import numpy as np
@@ -209,21 +210,16 @@ def test_ver10_phase_zero_geometries_clear_the_gate(
     assert not report.inverted
 
 
-def test_ver10_gmsh_agrees_on_the_magnitude_of_both_measures() -> None:
+def test_ver10_gmsh_agrees_on_the_magnitude_of_both_measures(gmsh_module: ModuleType) -> None:
     """Optional calibration against the implementation that set the 0.3 threshold.
 
-    Skipped when gmsh is absent — and on ``OSError`` as well as ``ImportError``,
-    because the gmsh wheel dlopens X and GL at import and raises ``OSError:
-    libGLU.so.1`` in a bare container, which a bare ``importorskip`` turns into
-    an error rather than a skip [tested]. Magnitudes only: gmsh returns +1 for a
+    Skipped when gmsh does not import, through the ``gmsh_module`` fixture of
+    ``tests/conftest.py`` (WP23 D11), which also fails it where CI requires
+    gmsh. Magnitudes only: gmsh returns +1 for a
     clockwise 2-D element in a discrete entity, so the sign is ours (CON-10 keeps
     gmsh off every other path).
     """
-    try:
-        import gmsh
-    except (ImportError, OSError) as error:  # pragma: no cover - environment-dependent
-        pytest.skip(f"gmsh unavailable: {error}")
-
+    gmsh = gmsh_module
     corners = [
         ((0.0, 0.0), (1.0, 0.0), (0.5, ROOT_THREE_HALF)),
         ((0.0, 0.0), (1.0, 0.0), (0.0, 1.0)),

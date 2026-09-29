@@ -1,5 +1,10 @@
 """Stage 6's generator: the stage-5 region meshed under the section 5.2.2 size fields (FR-10).
 
+``numerics.mesh.backend`` picks the mesher: netgen by default, or the optional
+Gmsh backend of ADR-002 (:mod:`nanopnp.mesh.gmsh_backend`, WP23). Both mesh the
+one region stage 5 assembled, under one size table, and both meshes take the
+route below.
+
 A generated mesh goes through the gates an ingested one does, by the route an
 ingested one takes: it is written as MSH 4.1 and read back through
 :func:`nanopnp.mesh.ingest.ingest`, which applies VER-27's naming gate, the
@@ -9,21 +14,25 @@ one would fail.
 
 It then passes one gate an ingested mesh does not, because only here is there a
 target to hold it to: the **wall-size gate** (section 5.3.1 NOTE on
-``numerics.mesh``, WP21 D9). Netgen treats a size as a target, not a bound, and
-on the reference profile and on 2WCD's stage-4 profile the ``wall`` segments'
-mean length is 1.045-1.078 times the target and the longest 1.25-1.62 times
-(WP21 plan, Design section 3). The bounds 1.15 and 2.0 sit above every measured
+``numerics.mesh``, WP21 D9). A mesher treats a size as a target, not a bound:
+on the reference profile and on 2WCD's stage-4 profile netgen's ``wall``
+segments' mean length is 1.045-1.078 times the target and the longest 1.25-1.62
+times (WP21 plan, Design section 3), and Gmsh's run at or under it (WP23 plan,
+Design section 2). The bounds 1.15 and 2.0 sit above every measured
 value. What they catch is a size field that did not reach the wall: the protein's
 0.1 nm field and the polygon's own edges then govern, and the mean doubles.
 
-Netgen is deterministic within one process and platform [tested] and not across
-platforms (``.knowledge/07`` section 4), which is why the stage-6 artefact of a
-generated mesh is keyed on its recipe and records its content hash beside the
-key (WP21 D10, D13).
+Either mesher is deterministic within one platform [tested], and netgen is not
+across platforms (``.knowledge/07`` section 4), which is why the stage-6
+artefact of a generated mesh is keyed on its recipe and records its content hash
+beside the key (WP21 D10, D13). The recipe names the backend and that backend's
+own settings; the mesher's version is the environment's, recorded beside it
+(WP23 D8).
 """
 
 from __future__ import annotations
 
+import importlib
 import logging
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -31,11 +40,15 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from nanopnp.core.hashing import Canonicalisable
-from nanopnp.geometry.region import RegionRecord, build_region
+from nanopnp.core.stages import MissingExtraError
+from nanopnp.geometry.region import RegionRecord, build_region, region_graph
 from nanopnp.io.case import SuppliedArtefact
 from nanopnp.mesh.adapter import from_ngsolve, write_msh41
 from nanopnp.mesh.ingest import IngestedMesh, ingest
 from nanopnp.mesh.sizing import (
+    GMSH_ALGORITHM,
+    GMSH_FIELD_RULES,
+    GMSH_SMOOTHING,
     GRADING,
     OPTIMISATION_STEPS,
     SIZES,
@@ -47,14 +60,16 @@ from nanopnp.mesh.sizing import (
 )
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
+    from types import ModuleType
+
     from nanopnp.core.typing import Mesh, Shape
     from nanopnp.io.case import ResolvedCase
     from nanopnp.mesh.adapter import MeshData
 
 logger = logging.getLogger(__name__)
 
-BACKEND = "netgen"
-"""The mesher this module drives; the Gmsh adapter is WP23's (CON-10)."""
+GMSH_EXTRA = "gmsh"
+"""The ``pyproject.toml`` extra the Gmsh backend needs (CON-10, WP23 D9)."""
 
 WALL_MEAN_BOUND = 1.15
 """The ``wall`` segments' mean length may be at most this times the target (D9)."""
@@ -187,22 +202,69 @@ def check_wall_size(statistics: WallStatistics) -> None:
         )
 
 
-def sizing_parameters(document_wall: WallSize, sizes: SizeTable) -> dict[str, Canonicalisable]:
-    """Return the stage-6 recipe's ``sizing`` parameter (D10).
+def sizing_parameters(
+    document_wall: WallSize, sizes: SizeTable, backend: str = "netgen"
+) -> dict[str, Canonicalisable]:
+    """Return the stage-6 recipe's ``sizing`` parameter (WP21 D10, WP23 D8).
 
     The backend, the resolved wall size with its source and lambda_D,
-    ``size_scale``, the scaled table, the grading, the optimisation steps and
-    the wall-size gate's constants: everything that moves a vertex of a
-    generated mesh or a verdict of its gate.
+    ``size_scale``, the scaled table, the grading, the wall-size gate's
+    constants, and the backend's own settings: everything that moves a vertex of
+    a generated mesh or a verdict of its gate. Netgen's is byte-identical to the
+    one WP21 keyed, so no stored key moves; Gmsh's names its algorithm, its
+    smoothing and its size-field rules, and has no ``optsteps2d``. The mesher's
+    version is not here: it is the environment's, recorded beside the key.
     """
-    return {
-        "backend": BACKEND,
+    recipe: dict[str, Canonicalisable] = {
+        "backend": backend,
         "wall": document_wall.summary(),
         "table": sizes.summary(),
         "grading": GRADING,
-        "optsteps2d": OPTIMISATION_STEPS,
-        "gate": dict(GATE_CONSTANTS),
     }
+    if backend == "gmsh":
+        recipe["gmsh"] = {
+            "algorithm": GMSH_ALGORITHM,
+            "smoothing": GMSH_SMOOTHING,
+            "fields": list(GMSH_FIELD_RULES),
+        }
+    else:
+        recipe["optsteps2d"] = OPTIMISATION_STEPS
+    recipe["gate"] = dict(GATE_CONSTANTS)
+    return recipe
+
+
+def gmsh_backend() -> ModuleType:
+    """Import the Gmsh backend, or refuse naming the extra (CON-10, WP23 D9).
+
+    Only stage 6's Gmsh branch calls this, so the default path never imports
+    ``gmsh``. A missing module and a native library the wheel could not load
+    (``OSError: libGLU.so.1`` in a bare container, ``.knowledge/07`` section 5)
+    are one refusal: the installation, not the case, is what is wrong.
+
+    Raises
+    ------
+    MissingExtraError
+        Naming the ``gmsh`` extra and the underlying error.
+    """
+    try:
+        module = importlib.import_module("nanopnp.mesh.gmsh_backend")
+    except ModuleNotFoundError as error:
+        if error.name is None or error.name.split(".")[0] != "gmsh":
+            raise
+        raise _missing_gmsh(error) from error
+    except OSError as error:
+        raise _missing_gmsh(error) from error
+    return module
+
+
+def _missing_gmsh(error: Exception) -> MissingExtraError:
+    """Return the refusal of ``numerics.mesh.backend: gmsh`` on an install that lacks it."""
+    return MissingExtraError(
+        f"numerics.mesh.backend is 'gmsh', which needs the {GMSH_EXTRA!r} extra: importing gmsh "
+        f"failed with {type(error).__name__}: {error}. Install the extras with "
+        "`uv sync --all-extras`, or mesh with the default backend, netgen (CON-10, ADR-002)",
+        name="gmsh",
+    )
 
 
 def mesh_shape(shape: Shape, sizes: SizeTable) -> Mesh:
@@ -218,6 +280,40 @@ def mesh_shape(shape: Shape, sizes: SizeTable) -> Mesh:
     return ngs.Mesh(
         geometry.GenerateMesh(maxh=sizes.global_nm, grading=GRADING, optsteps2d=OPTIMISATION_STEPS)
     )
+
+
+def mesh_region(
+    record: RegionRecord, wall_h_nm: float | None, sizes: SizeTable, backend: str
+) -> tuple[MeshData, str]:
+    """Mesh stage 5's region with the named backend; return the mesh and the mesher's version.
+
+    Netgen meshes the rebuilt shape under :func:`~nanopnp.mesh.sizing.apply_sizes`.
+    Gmsh meshes the same shape, read into a
+    :class:`~nanopnp.geometry.region.RegionGraph`, under the size field of the
+    section 5.2.2 NOTE on the Gmsh backend (WP23 D2-D4). Neither mesh is gated
+    here: :func:`generate` gates both by one route.
+
+    Raises
+    ------
+    nanopnp.core.stages.MissingExtraError
+        On ``gmsh`` without its extra.
+    """
+    if backend == "gmsh":
+        module = gmsh_backend()
+        graph = region_graph(build_region(record), record)
+        data = module.mesh_region(
+            graph,
+            wall_h_nm,
+            sizes,
+            membrane_thickness_nm=record.membrane.thickness_nm,
+            axis_extent_nm=record.axis_split_nm,
+        )
+        return data, str(module.version())
+    from netgen import config
+
+    shape = build_region(record)
+    apply_sizes(shape, wall_h_nm=wall_h_nm, axis_extent_nm=record.axis_split_nm, sizes=sizes)
+    return from_ngsolve(mesh_shape(shape, sizes)), str(config.version).lstrip("v").split("-")[0]
 
 
 @dataclass(frozen=True)
@@ -236,6 +332,10 @@ class GeneratedMesh:
         The wall-size gate's measurements.
     corrected_ratio
         The wall size over ``lambda_D / 5`` at ``eps_r,f(c)`` (D16).
+    backend
+        ``numerics.mesh.backend``.
+    backend_version
+        The mesher's version, recorded beside the key and never in it (WP23 D8).
     """
 
     ingested: IngestedMesh
@@ -243,11 +343,14 @@ class GeneratedMesh:
     sizes: SizeTable
     statistics: WallStatistics
     corrected_ratio: float
+    backend: str
+    backend_version: str
 
     def sizing(self) -> dict[str, Canonicalisable]:
-        """Return the manifest's ``sizing`` block (D16)."""
+        """Return the manifest's ``sizing`` block (D16), the mesher's version beside it."""
         return {
-            **sizing_parameters(self.wall, self.sizes),
+            **sizing_parameters(self.wall, self.sizes, self.backend),
+            "backend_version": self.backend_version,
             "debye_target_nm": self.wall.debye_target_nm,
             "num30_ratio": self.wall.wall_h_nm / self.wall.debye_target_nm,
             "num30_ratio_corrected": self.corrected_ratio,
@@ -294,9 +397,12 @@ def generate(record: RegionRecord, resolved: ResolvedCase, directory: Path) -> G
         On a sliver, an inverted element or a negative radius (VER-10).
     WallSizeGateError
         On a wall coarser than its size field asked for (D9).
+    nanopnp.core.stages.MissingExtraError
+        On ``backend: gmsh`` without the ``gmsh`` extra (WP23 D9).
     """
     wall = resolve_wall_size(resolved.document)
     sizes = SIZES.scaled(wall.size_scale)
+    backend = resolved.document.numerics.mesh.backend
     if wall.coarser_than_num30:
         logger.warning(
             "the wall size %.4f nm is coarser than NUM-30's lambda_D/5 = %.4f nm; recorded, "
@@ -304,9 +410,7 @@ def generate(record: RegionRecord, resolved: ResolvedCase, directory: Path) -> G
             wall.wall_h_nm,
             wall.debye_target_nm,
         )
-    shape = build_region(record)
-    apply_sizes(shape, wall_h_nm=wall.wall_h_nm, axis_extent_nm=record.axis_split_nm, sizes=sizes)
-    data = from_ngsolve(mesh_shape(shape, sizes))
+    data, version = mesh_region(record, wall.wall_h_nm, sizes, backend)
 
     directory.mkdir(parents=True, exist_ok=True)
     path = write_msh41(data, directory / MESH_FILENAME)
@@ -314,8 +418,10 @@ def generate(record: RegionRecord, resolved: ResolvedCase, directory: Path) -> G
     statistics = wall_statistics(ingested.data, wall.wall_h_nm)
     check_wall_size(statistics)
     logger.info(
-        "generated mesh: %d elements, wall %.4f nm (%s), wall segments mean %.3f and max %.3f "
-        "x the target",
+        "generated mesh (%s %s): %d elements, wall %.4f nm (%s), wall segments mean %.3f and max "
+        "%.3f x the target",
+        backend,
+        version,
         ingested.data.element_count,
         wall.wall_h_nm,
         wall.source,
@@ -328,4 +434,6 @@ def generate(record: RegionRecord, resolved: ResolvedCase, directory: Path) -> G
         sizes=sizes,
         statistics=statistics,
         corrected_ratio=corrected_debye_ratio(resolved, wall),
+        backend=backend,
+        backend_version=version,
     )
