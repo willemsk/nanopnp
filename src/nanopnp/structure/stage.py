@@ -97,6 +97,12 @@ def structure_parameters(structure: ResolvedStructure) -> dict[str, Canonicalisa
         If a named file is missing, naming the key.
     """
     parameters: dict[str, Canonicalisable] = structure.spec.model_dump(mode="json")
+    # ``variant`` is a label (OPN-04) and changes nothing the stage computes, so it is not
+    # part of the key: relabelling would otherwise re-align the ensemble and re-key stages
+    # 2 to 6. The label is recorded through the case, whose text and hash the manifest
+    # carries; it is kept out of the payload's header too, where a cache hit would hand
+    # back the previous label (CODE_REVIEW_003 CR-13).
+    del parameters["source"]["variant"]
     source = structure.spec.source.path
     if not source.is_file():
         raise StructureInputError(
@@ -271,7 +277,6 @@ def align(
                 "sha256": _digest(parameters, "ensemble", "trajectory"),
             }
         ),
-        "variant": spec.source.variant,
         "selection": spec.source.selection,
         "point_group": f"C{n}",
         "n": n,

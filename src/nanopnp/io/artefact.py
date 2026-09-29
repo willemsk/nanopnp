@@ -237,8 +237,9 @@ class StructureArtefact(Artefact):
     """Stage 1: the aligned ensemble, keyed on the ``structure:`` block and its files' bytes.
 
     The parameters are the resolved ``structure:`` block with each file replaced
-    by its content digest (WP18 D11), so a moved file is the same input and an
-    edited one is a different key. The key never depends on the payload: the
+    by its content digest (WP18 D11) and the ``variant`` label left out, so a moved
+    file is the same input, an edited one is a different key and a relabelled one
+    is the same. The key never depends on the payload: the
     aligned coordinates come out of an SVD whose last bits LAPACK may vary across
     platforms, and a key over them would make the cache machine-dependent
     (section 5.3.2). The payload's own digest is recorded beside it and re-checked
