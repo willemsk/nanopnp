@@ -89,10 +89,12 @@ def _block(
     trajectory: Path | None = None,
     frames: str = "",
     selection: str = "protein",
+    variant: str | None = None,
 ) -> str:
     """Return a ``structure:`` block as YAML text."""
+    label = "" if variant is None else f", variant: '{variant}'"
     lines = [
-        f"  source: {{path: {path}, chains: '{chains}', selection: '{selection}'}}\n",
+        f"  source: {{path: {path}, chains: '{chains}', selection: '{selection}'{label}}}\n",
         f"  symmetry: {{point_group: {point_group}, axis: {axis}}}\n",
     ]
     if trajectory is not None or frames:
@@ -139,6 +141,37 @@ def _run(case: Path, store: Path) -> AlignedEnsemble:
     result = run_case(case, store=Store(store), upto="structure", write=False)
     artefact = result.artefacts["structure"]
     return AlignedEnsemble.read(artefact.payload["ensemble"])
+
+
+def test_ver48_relabelling_the_variant_is_a_cache_hit_and_the_manifest_keeps_the_label(
+    prepared: Path, tmp_path: Path
+) -> None:
+    """``structure.source.variant`` is a label (OPN-04): it names the run and keys nothing.
+
+    A relabelled case is served from the store, so its ensemble is not re-aligned and its
+    stages 2 to 6 keep their keys, and the label reaches the manifest through the embedded
+    case rather than through a payload a cache hit would hand back stale (CODE_REVIEW_003
+    CR-13).
+    """
+    store = Store(tmp_path / "store")
+    first = run_case(
+        _case(tmp_path, _block(prepared, variant="ClyA-AS"), name="first"),
+        store=store,
+        upto="structure",
+        write=False,
+    )
+    second = run_case(
+        _case(tmp_path, _block(prepared, variant="ClyA-AS-relabelled"), name="second"),
+        store=store,
+        upto="structure",
+        write=False,
+    )
+    assert not first.stages[-1].cached
+    assert second.stages[-1].cached
+    assert first.artefacts["structure"].hash == second.artefacts["structure"].hash
+    assert "variant" not in first.artefacts["structure"].summary
+    assert "variant: 'ClyA-AS'" in first.manifest.case_text
+    assert "variant: 'ClyA-AS-relabelled'" in second.manifest.case_text
 
 
 def test_ver48_the_deposited_2wcd_frame_is_refused_by_the_orientation_gate(
