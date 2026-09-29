@@ -16,6 +16,33 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+## [0.9.0-alpha.7] - 2026-09-29
+
+WP23: the optional Gmsh mesher backend of ADR-002.
+
+### Added
+
+- `numerics.mesh.backend: gmsh` meshes a generated region with Gmsh, through the `gmsh` API called
+  directly (CON-12). Gmsh meshes the region stage 5 assembled with `netgen.occ`, read from its named
+  edges into Gmsh's built-in kernel, and assembles none of its own. The mesh joins netgen's route at
+  the MSH 4.1 writer, so the naming, permittivity, quality and wall-size gates are the ones a netgen
+  mesh passes. Its size field applies §5.2.2's table and states as graded fields what netgen does
+  implicitly: grading from each domain's boundary, refinement near short edges, and the membrane
+  held to its own thickness (§5.2.2 NOTE on the Gmsh backend's size field; FR-10, QR-12).
+- The stage-6 key names the backend and, for Gmsh, its algorithm, smoothing and size-field rules.
+  Netgen's recipe is byte-identical to before, so no stored key moves. The mesher's version is
+  recorded beside the key in the mesh's sizing record (§5.3.1 NOTE on `numerics.mesh`).
+- VER-54 at Tiers 1 and 2: the region graph against the record, the same region through the same
+  gates on both backends, and WP22's frozen case on both backends' meshes within 1e-3 (measured
+  1.24e-4). The VAL-05 tests record the Gmsh mesh beside netgen's (WP22 D10).
+
+### Changed
+
+- `backend: gmsh` is no longer a case refusal. Without the `gmsh` extra, stage 6 refuses the run
+  naming the extra and the import error, a missing native library included (exit code 3, CON-10).
+- CI lists every skip with its reason (`-rs`), and the Windows and macOS legs set
+  `NANOPNP_REQUIRE_GMSH=1`, so there a Gmsh test fails rather than skips when `gmsh` does not import.
+
 ## [0.9.0-alpha.6] - 2026-09-28
 
 WP22: VAL-05, the geometry pipeline against the reference pore polygon, and the Phase 2 gate. The

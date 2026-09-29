@@ -78,6 +78,34 @@ the gate refuses leaves no file behind. These generators produce input files, so
 change what a run solves: the run records the mesh by its content hash, like any supplied mesh (the
 IF-02 generators NOTE).
 
+## Choosing the mesher of a generated mesh
+
+A case that builds its own mesh, from `inputs.profile` or a `structure:` section, meshes it with
+netgen by default. `numerics.mesh.backend: gmsh` meshes it with Gmsh instead:
+
+```yaml
+numerics:
+  mesh: {backend: gmsh}
+```
+
+Gmsh is optional and GPL-2+, so it is an extra and never on the default path (CON-10). Install it
+with `pip install "nanopnp[gmsh] @ git+https://github.com/willemsk/nanopnp"`, or `uv sync
+--all-extras` in a checkout. Without it, the case still validates, and the run stops at the meshing
+stage with exit code `3`, naming the extra and the import error. That includes a wheel that
+installed but could not load its native libraries, as happens on a bare Linux container without
+`libGLU`. The stages before meshing are cached, so after installing the extra a re-run pays for the
+mesh only.
+
+Both meshers mesh the same region, assembled once, and under the same size table (§5.2.2). Gmsh
+also gets size fields that state what netgen does without being asked: grading away from each
+domain's boundary, refining near short edges, and holding the membrane to its own thickness. Both
+meshes then pass the same gates, including the wall-size gate. On the ClyA reference profile, Gmsh
+makes about 10 % more triangles than netgen, in about half the time. The two meshes give
+conductances 1.2e-4 apart, less than refining either mesh moves it. The backend is recorded with the
+mesh and keys it. Changing it gives a different mesh in the store, and in a sweep it stops warm
+starts across that axis. Boundary layers (`boundary_layer: true`) are refused on either backend
+(FR-11).
+
 ## A mesh is identified by its content
 
 A mesh's hash is taken over its canonical vertices, connectivity and group tags, never over the

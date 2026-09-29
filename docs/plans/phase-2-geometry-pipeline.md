@@ -1,6 +1,6 @@
 # Phase 2 (Geometry pipeline): from a structure to a gated mesh
 
-**Status: in progress. WP17 delivered, 24 September 2026; WP18 delivered, 25 September 2026; WP19 delivered, 25 September 2026; WP20 delivered, 26 September 2026; WP21 delivered, 26 September 2026; WP22 delivered, 28 September 2026, its Tier-3 verdict awaiting a run on the archive; WP23 planned in detail, 29 September 2026; WP24–WP25 planned.** Written 24 September 2026, after Phase 1 (WP7–WP16) delivered the
+**Status: in progress. WP17 delivered, 24 September 2026; WP18 delivered, 25 September 2026; WP19 delivered, 25 September 2026; WP20 delivered, 26 September 2026; WP21 delivered, 26 September 2026; WP22 delivered, 28 September 2026, its Tier-3 verdict awaiting a run on the archive; WP23 delivered, 29 September 2026; WP24–WP25 planned.** Written 24 September 2026, after Phase 1 (WP7–WP16) delivered the
 solver core on an externally supplied mesh (main at `v0.5.0-alpha.10`). Two things come first:
 the Phase 1 end-of-phase report, which merges as tag `v0.5.0`, and the author's double-click
 observation that closes Phase 0 criterion 4. That ordering is ruling B1 of `SPECIFICATION.md`
@@ -312,6 +312,21 @@ passes the same VER-10 and VER-27 gates with the same vocabulary; the default pa
 > domain boundaries, short curves and the membrane strip (D3, D4). A skip is not evidence, so CI
 > requires Gmsh on the legs where it imports (D11). VER-54 adds a solve: the frozen case on both
 > backends' meshes within 1e-3.
+
+> **Delivered, 29 September 2026** ([plan](wp23-gmsh-backend.md), to be tagged
+> `v0.9.0-alpha.7`). `numerics.mesh.backend: gmsh` meshes stage 5's region through
+> `region_graph` and `mesh/gmsh_backend.py`, and joins netgen's route at `write_msh41`. **VER-54**
+> discharges FR-10, QR-12, CON-10 and CON-12. On the fixture, Gmsh passes VER-10 at `size_scale` 1
+> to 8, and the frozen case differs by −1.244e-4 across the backends. Netgen's key and the reference
+> mesh's hash did not move. Constraints inherited by later packages:
+>
+> - A mesher setting is a key constant, never a case key (D10). A new Gmsh rule is a new identifier
+>   in `GMSH_FIELD_RULES`.
+> - Every Gmsh-dependent test takes the `gmsh_module` fixture (D11).
+> - Whether the bundle carries Gmsh is WP24's decision.
+> - The ubuntu leg's `NANOPNP_REQUIRE_GMSH` waits on the PR's first `-rs` run.
+>
+> Measurements: [WP23 Outcomes](wp23-gmsh-backend.md#outcomes), `.knowledge/07` §4.
 
 ### WP24 — GUI increment 2: the geometry pipeline surfaced
 

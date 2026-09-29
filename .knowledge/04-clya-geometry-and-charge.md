@@ -184,8 +184,13 @@ series resistor. It is the `G ∝ r²` sensitivity weighted by where the resista
   (14,511), so `G_gen/G_ref − 1` = −6.57 % against ε_G's −8.08 % and the exact series −8.19 %. Access
   resistance and the electrolyte past the pore ends carry about a fifth of the resistance, and dilute
   the bulk-resistor figure by that much.
-- **The mesh at the default sizes** (0.05 nm at the wall): 44,998 triangles, minimum SICN 0.6267,
-  mean 0.9867, minimum gamma 0.5222, mean 0.9848. The reference COMSOL mesh has 120,917 elements,
+- **The mesh at the default sizes** (0.05 nm at the wall): 44,762 triangles, minimum SICN 0.6267,
+  mean 0.9862, minimum gamma 0.5222, mean 0.9843, re-measured on 29 September 2026 at `2bb1a34`
+  and on the WP23 branch alike. The 44,998 triangles (means 0.9867 and 0.9848) recorded when WP22
+  delivered predate `32fecf1`, which changed how the C-alpha centroid is computed and so the
+  registration. The minima did not move. The cause of the count's move was not isolated further. On
+  the Gmsh backend the same region meshes to 49,617 triangles, minimum SICN 0.6805 and gamma 0.5749
+  (WP23 D13). The reference COMSOL mesh has 120,917 elements,
   minimum quality 0.6378 and mean 0.9765 by a measure its report does not state
   (`09-comsol-reference-settings.md`). WP21's 44,688 triangles and 0.7111 were at its *trans*-tip
   registration, which places the bilayer 0.056 nm higher.

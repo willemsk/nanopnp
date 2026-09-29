@@ -158,6 +158,11 @@ moves to `slow` and is logged there.
 > the 44,998 triangles above, and its walk's currents become 4.15e-11 A (Na⁺) and 6.15e-11 A
 > (Cl⁻). WP21's registration note carries the change.
 
+> **Outcome — the default-size count, re-measured by WP23 (29 September 2026).** At `2bb1a34`, after
+> `32fecf1` changed how the C-alpha centroid is computed, the 2WCD mesh at the default sizes has
+> 44,762 triangles, means 0.9862 and 0.9843, with unchanged minima. `.knowledge/04` §1.4 carries the
+> figure, and WP23's Outcomes the Gmsh mesh beside it.
+
 ### Out of scope
 
 - **The charged frozen case** on a generated mesh: Phase 3 (FR-12 to FR-15). D9 is uncharged.
