@@ -48,13 +48,16 @@ from nanopnp.gui.render import (
     RENDERER_SOURCE,
     RENDERER_VERSION,
     VIEWER_DIRNAME,
+    MeshRequest,
     Rendered,
+    RenderedMesh,
     RenderFailed,
     RenderProcess,
     RenderRequest,
     host_document,
     readiness_script,
     render,
+    render_mesh,
     renderer_source,
 )
 from nanopnp.io.fields import attribute_name
@@ -432,6 +435,154 @@ def test_ver44_the_drawn_region_counts_its_elements_not_its_materials(domain: st
     assert _element_count(mesh, domain) == expected
     if domain == "membrane":
         assert 0 < expected < mesh.ne
+
+
+# -- the stage-6 mesh (WP24 D12) ----------------------------------------------
+
+PROFILE_CASE = """\
+schema: nanopnp/case/v2
+name: mesh-picture
+inputs:
+  profile: {{path: {path}}}
+geometry: {{reservoir: {{radius_nm: 30.0}}}}
+electrolyte:
+  species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
+  concentration_M: 1.0
+boundary_conditions: {{bias_V: 0.05, ground: cis}}
+physics: {{model: pnp-ns, solid_permittivities: {{protein: 20.0, membrane: 3.2}}}}
+numerics: {{mesh: {{size_scale: 20.0}}}}
+"""
+
+
+@pytest.fixture(scope="module")
+def built_mesh(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """Walk a supplied-profile case through stage 6 and return its run directory.
+
+    The coarse slanted body of ``test_artefact_hook.py``: the geometry tab's
+    build stops at stage 6 (``--upto mesh``), so the run records a mesh and no
+    solve, which is the directory the mesh request is made against.
+    """
+    import numpy as np
+
+    from nanopnp.mesh.profile import (
+        PROFILE_SCHEMA,
+        PoreProfile,
+        ProfileProvenance,
+        min_feature_size,
+        min_vertex_spacing,
+        signed_area,
+        write_profile,
+    )
+
+    work = tmp_path_factory.mktemp("mesh-picture")
+    points = [(2.0, -3.0), (3.0, -3.0), (6.0, 3.0), (5.0, 3.0)]
+    array = np.asarray(points, dtype=np.float64)
+    profile = write_profile(
+        PoreProfile(
+            schema=PROFILE_SCHEMA,
+            name="parallelogram",
+            provenance=ProfileProvenance(
+                source="test",
+                citation="tests/tier1/test_gui_render.py",
+                sha256="0" * 64,
+                vertex_count=len(points),
+                min_vertex_spacing_nm=min_vertex_spacing(array),
+                min_feature_size_nm=min_feature_size(array),
+                signed_area_nm2=signed_area(array),
+            ),
+            vertices=points,
+        ),
+        work / "profile.yaml",
+    )
+    path = work / "case.yaml"
+    path.write_text(PROFILE_CASE.format(path=profile), encoding="utf-8")
+    return run_case(path, store=Store(work / "store"), upto="mesh").directory
+
+
+def _stored_files(run: Path) -> set[Path]:
+    """Return every file under the run's store outside the run directory, so an added one shows.
+
+    The default run directory lies under the store root; its ``viewer/`` is where
+    the picture belongs, and everything else is where an artefact would be.
+    """
+    record = json.loads((run / "run.json").read_text(encoding="utf-8"))
+    root = Path(record["store"])
+    return {path for path in root.rglob("*") if path.is_file() and not path.is_relative_to(run)}
+
+
+def test_ver55_the_mesh_request_draws_the_stage_6_file_and_stores_nothing(
+    built_mesh: Path,
+) -> None:
+    """The scene holds the MSH's own triangles, lives under ``viewer/`` and is no artefact.
+
+    The oracle is the file stage 6 wrote, read by the adapter rather than by
+    NGSolve, so a render that drew a regenerated mesh, or a different one, fails
+    on the count. The gate figures are the report's on that same file, and the
+    wall statistics the ones the artefact recorded.
+    """
+    from nanopnp.mesh.adapter import read
+    from nanopnp.mesh.quality import QUALITY_FLOOR, element_quality
+
+    record = json.loads((built_mesh / "run.json").read_text(encoding="utf-8"))
+    assert "solve" not in record["artefacts"]
+    mesh = Store(Path(record["store"])).get(
+        record["artefacts"]["mesh"]["schema"], record["artefacts"]["mesh"]["hash"]
+    )
+    assert mesh is not None
+    msh = next(Path(str(value)) for value in mesh.payload.values() if str(value).endswith(".msh"))
+    data = read(msh)
+    before = _stored_files(built_mesh)
+
+    rendered = render_mesh(MeshRequest(run=str(built_mesh)))
+
+    assert rendered.elements == int(data.triangles.shape[0])
+    scene = Path(rendered.scene)
+    assert scene.parent == built_mesh / VIEWER_DIRNAME
+    assert Path(rendered.document).parent == scene.parent
+    assert json.loads(scene.read_text(encoding="utf-8"))["Bezier_trig_points"]
+    assert {"protein", "membrane"} <= set(rendered.materials)
+
+    report = element_quality(data)
+    assert rendered.quality["min_sicn"] == report.min_sicn
+    assert rendered.quality["min_gamma"] == report.min_gamma
+    assert rendered.quality["floor"] == QUALITY_FLOOR
+    assert rendered.quality["worst_sicn_at_nm"] == report.centroid(report.worst_sicn_element)
+    assert rendered.wall == mesh.summary["sizing"]["wall_statistics"]
+    assert rendered.wall
+
+    after = json.loads((built_mesh / "run.json").read_text(encoding="utf-8"))
+    assert after == record
+    assert _stored_files(built_mesh) == before
+
+
+def test_ver55_a_field_render_leaves_the_mesh_picture(finished_run: Path) -> None:
+    """The two pictures share ``viewer/``, and neither sweep removes the other's pair.
+
+    On the supplied-mesh run, which draws its ``inputs.mesh`` and records no wall
+    gate because it generated nothing.
+    """
+    drawn = render_mesh(MeshRequest(run=str(finished_run)))
+    assert drawn.wall == {}
+    render(RenderRequest(run=str(finished_run)))
+
+    assert Path(drawn.document).is_file()
+    assert Path(drawn.scene).is_file()
+
+
+def test_ver55_the_mesh_request_crosses_the_boundary(built_mesh: Path, tmp_path: Path) -> None:
+    """Spawned, the mesh comes back as plain data, and a run with no mesh is refused."""
+    process = RenderProcess(MeshRequest(run=str(built_mesh)))
+    process.start()
+    process.join(600.0)
+    events = process.drain()
+    assert len(events) == 1 and isinstance(events[0], RenderedMesh), events
+
+    process = RenderProcess(MeshRequest(run=str(tmp_path)))
+    process.start()
+    process.join(300.0)
+    events = process.drain()
+    assert len(events) == 1 and isinstance(events[0], RenderFailed), events
+    assert events[0].error == "FileNotFoundError"
 
 
 class _DeafChild:
