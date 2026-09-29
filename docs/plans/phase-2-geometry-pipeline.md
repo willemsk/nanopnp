@@ -1,6 +1,6 @@
 # Phase 2 (Geometry pipeline): from a structure to a gated mesh
 
-**Status: in progress. WP17 delivered, 24 September 2026; WP18 delivered, 25 September 2026; WP19 delivered, 25 September 2026; WP20 delivered, 26 September 2026; WP21 delivered, 26 September 2026; WP22 delivered, 28 September 2026, its Tier-3 verdict awaiting a run on the archive; WP23–WP25 planned.** Written 24 September 2026, after Phase 1 (WP7–WP16) delivered the
+**Status: in progress. WP17 delivered, 24 September 2026; WP18 delivered, 25 September 2026; WP19 delivered, 25 September 2026; WP20 delivered, 26 September 2026; WP21 delivered, 26 September 2026; WP22 delivered, 28 September 2026, its Tier-3 verdict awaiting a run on the archive; WP23 planned in detail, 29 September 2026; WP24–WP25 planned.** Written 24 September 2026, after Phase 1 (WP7–WP16) delivered the
 solver core on an externally supplied mesh (main at `v0.5.0-alpha.10`). Two things come first:
 the Phase 1 end-of-phase report, which merges as tag `v0.5.0`, and the author's double-click
 observation that closes Phase 0 criterion 4. That ordering is ruling B1 of `SPECIFICATION.md`
@@ -304,6 +304,14 @@ The optional GPLv2+ backend of ADR-002 behind the WP21 adapter, selected by
 directly, never through pygmsh (CON-12). Adds **VER-54**: the same region meshed by both backends
 passes the same VER-10 and VER-27 gates with the same vocabulary; the default path imports no
 `gmsh`, asserted in a fresh process (CON-10); the tests skip without the extra.
+
+> **Planned, 29 September 2026** ([plan](wp23-gmsh-backend.md)). Three premises changed on
+> measurement. Gmsh meshes the region stage 5 assembled, from its named edges, and assembles none
+> of its own (D1, D2). Gmsh given the §5.2.2 table alone fails VER-10 on the fixture at
+> `size_scale` 2 and 4. So the backend states netgen's implicit size restrictions as graded fields:
+> domain boundaries, short curves and the membrane strip (D3, D4). A skip is not evidence, so CI
+> requires Gmsh on the legs where it imports (D11). VER-54 adds a solve: the frozen case on both
+> backends' meshes within 1e-3.
 
 ### WP24 — GUI increment 2: the geometry pipeline surfaced
 

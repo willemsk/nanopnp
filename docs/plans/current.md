@@ -1,19 +1,19 @@
 # Current work
 
-Updated 28 September 2026. Navigation only: `SPECIFICATION.md` governs. This brief is not
+Updated 29 September 2026. Navigation only: `SPECIFICATION.md` governs. This brief is not
 evidence that an unmerged branch has shipped.
 
 ## Position
 
 - Phase 1 ([solver core](phase-1-solver-core.md)) is **closed** as `v0.5.0` (§8.2.3); C1 and C2
   land as addenda to its report.
-- Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **in progress**. WP17 to WP21
-  are merged (`v0.9.0-alpha.1` to `alpha.5`). WP23–WP25 are planned in the phase plan (§8.2.2).
-- **WP22** ([VAL-05 against the reference geometry](wp22-val05-reference-geometry.md)) is
-  **implemented** on `claude/dreamy-gates-seojm6`, PR open. Next: `/wp-ship` in a fresh session;
-  it becomes `v0.9.0-alpha.6`. The 2WCD leg passes at Tier 2. **Phase criterion 3 stays open until
-  `tests/tier3/test_val05_ensemble.py` runs on `$NANOPNP_REFERENCE_DATA`**; that run also pins
-  `Z_MD`, and its numbers go into the WP22 Outcomes. Then WP23, the Gmsh backend.
+- Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **in progress**. WP17 to WP22
+  are merged (`v0.9.0-alpha.1` to `alpha.6`). WP24–WP25 are planned in the phase plan (§8.2.2).
+- **Phase criterion 3 stays open until `tests/tier3/test_val05_ensemble.py` runs on
+  `$NANOPNP_REFERENCE_DATA`**. That run also pins `Z_MD`, and its numbers go into the
+  [WP22 Outcomes](wp22-val05-reference-geometry.md#outcomes).
+- **WP23** ([the Gmsh mesher backend](wp23-gmsh-backend.md)) is **planned** on
+  `claude/wp-plan-23-2fdcd2`. Next: `/wp-implement`; it becomes `v0.9.0-alpha.7`.
 
 ## What Phase 2 must not re-decide
 
@@ -26,7 +26,8 @@ Each item is recorded in full where it points. Read it there first.
 - **`physics.solid_permittivities` alone sets ε_protein and ε_membrane**; gate thresholds are never
   case keys. → WP17 D2, D3.
 - **Python 3.11–3.14**, held together by VER-47. → §8.2.2 B4.
-- **No HOLE on the default path** (B5). **Gmsh arrives in WP23, optional** (B7). → §8.2.2.
+- **No HOLE on the default path** (B5). **Gmsh is optional** (B7): it meshes stage 5's region,
+  and its fields state netgen's implicit size restrictions. → §5.2.2 NOTE; WP23 D1–D4.
 - **Stage 4 emits `nanopnp/profile/v1` in the stage-1 frame**, spacing ≥ h and feature size
   > 2h, gated against the probe radius. → §5.2.1 and its NOTEs; WP20 D5, D9–D12.
 - **Stage 1's frame is fixed**: axis on z at r = 0, `z = â·x`, +z to *cis*; stage 5 applies
