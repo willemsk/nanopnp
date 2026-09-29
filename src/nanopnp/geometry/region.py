@@ -47,7 +47,7 @@ import math
 import tempfile
 from collections import Counter
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
@@ -861,12 +861,18 @@ def region_graph(shape: Shape, record: RegionRecord) -> RegionGraph:
         name = str(face.name)
         ids = sorted({edge_index[edge] for edge in face.edges})
         faces[name] = tuple(_chain(edges, ids, name))
-    graph = RegionGraph(
+    unoriented = RegionGraph(
         vertices=tuple(vertices), edges=tuple(edges), faces=faces, reservoir_radius_nm=radius
     )
-    for name, loop in faces.items():
-        if graph.area(name) < 0.0:
-            faces[name] = tuple(~signed for signed in reversed(loop))
+    graph = replace(
+        unoriented,
+        faces={
+            name: tuple(~signed for signed in reversed(loop))
+            if unoriented.area(name) < 0.0
+            else loop
+            for name, loop in faces.items()
+        },
+    )
 
     if graph.edge_counts() != dict(sorted(record.edge_counts.items())):
         raise RegionGateError(
