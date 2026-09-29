@@ -1,0 +1,21 @@
+# The dodecamer prepared by prepare.py: axis near z, cis up, and the C-alpha
+# centroid of residues 8-292 at z = 5.63 nm, so the bilayer centre is z = 0.
+schema: nanopnp/case/v2
+name: 2wcd
+structure:
+  source: {path: 2wcd-prepared.pdb}
+  symmetry: {point_group: C12}
+electrolyte:
+  species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]
+  concentration_M: 0.15
+  parameters: willems2020_nacl
+  corrections:                     # the validated model: no deviation recorded
+    diffusivity:  {model: willems2020_nacl}
+    mobility:     {model: willems2020_nacl}
+    viscosity:    {model: willems2020_nacl}
+    permittivity: {model: willems2020_nacl}
+    density:      {model: willems2020_nacl}
+    steric:       {model: borukhov}
+boundary_conditions: {bias_V: 0.05, ground: cis}
+physics: {model: epnp-ns, solid_permittivities: {protein: 20.0, membrane: 3.2}}
+

@@ -1,0 +1,23 @@
+# The wwPDB entry as deposited: chains A-L of 2WCD in the crystal frame. Stage 1
+# refuses it, because its pore axis is more than 10 degrees from z.
+schema: nanopnp/case/v2
+name: 2wcd-deposited
+structure:
+  source:
+    path: ../../tests/data/structures/2wcd.pdb.gz
+    chains: A,B,C,D,E,F,G,H,I,J,K,L
+  symmetry: {point_group: C12}
+electrolyte:
+  species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]
+  concentration_M: 0.15
+  parameters: willems2020_nacl
+  corrections:                     # the validated model: no deviation recorded
+    diffusivity:  {model: willems2020_nacl}
+    mobility:     {model: willems2020_nacl}
+    viscosity:    {model: willems2020_nacl}
+    permittivity: {model: willems2020_nacl}
+    density:      {model: willems2020_nacl}
+    steric:       {model: borukhov}
+boundary_conditions: {bias_V: 0.05, ground: cis}
+physics: {model: epnp-ns, solid_permittivities: {protein: 20.0, membrane: 3.2}}
+
