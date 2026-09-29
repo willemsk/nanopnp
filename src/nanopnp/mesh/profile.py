@@ -29,6 +29,7 @@ from typing import TYPE_CHECKING
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from nanopnp.core.hashing import content_hash
 from nanopnp.core.paths import profile_file
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
@@ -53,6 +54,15 @@ PIPELINE_SOURCE: str = "pipeline"
 
 Outside :data:`REFERENCE_SOURCES`: a contour drawn from a structure is a
 geometry, not the reference model's, and a Tier-3 comparison refuses it.
+"""
+
+HAND_EDIT_SOURCE: str = "hand-edit"
+"""``provenance.source`` of a profile edited by hand in the desktop shell (WP24 D5).
+
+Outside :data:`REFERENCE_SOURCES`, so editing the reference fixture stops it
+being the reference: :meth:`PoreProfile.require_reference` then refuses it. The
+document enters a run through ``inputs.profile`` and is gated as a supplied
+profile (§5.3.1 NOTE on ``geometry.contour``, §8.2.2 B9).
 """
 
 MEASUREMENT_TOL: float = 1e-9
@@ -138,9 +148,10 @@ class PoreProfile(_Strict):
                 "must be a finite number of nanometres"
             )
         if float(points[:, 0].min()) < 0.0:
+            index = int(np.argmin(points[:, 0]))
             raise ValueError(
                 f"vertex radius must be non-negative in the (r, z) half-plane; the smallest is "
-                f"{float(points[:, 0].min()):.6g} nm"
+                f"{float(points[index, 0]):.6g} nm, at vertex {index}"
             )
         _check_no_repeats(points)
         _check_simple(points)
@@ -228,6 +239,19 @@ class PoreProfile(_Strict):
     def is_clockwise(self) -> bool:
         """Whether the loop runs clockwise in ``(r, z)``; the delivered table does."""
         return signed_area(self.as_array()) < 0.0
+
+
+def profile_digest(profile: PoreProfile) -> str:
+    """Return the canonical digest of a validated profile's payload (WP21 D5).
+
+    Over the validated document rather than the file's bytes, so reformatting a
+    supplied profile is the same input and editing a vertex is a different one
+    (FR-27). Stage 5 keys a supplied profile on it, and a hand edit records its
+    parent's as ``provenance.sha256`` (WP24 D5). Here rather than in stage 5's
+    module so that the shell's editor can take it without importing OCC
+    (WP24 D18); :mod:`nanopnp.geometry.region` re-exports it.
+    """
+    return content_hash(PROFILE_SCHEMA, profile.model_dump(by_alias=True, mode="json"))
 
 
 def signed_area(points: np.ndarray) -> float:
@@ -378,7 +402,11 @@ def _check_no_repeats(points: np.ndarray) -> None:
     if bool(np.any(same)):
         first = int(np.argmax(same))
         r, z = sorted_points[first]
-        raise ValueError(f"two vertices coincide at (r, z) = ({r:.6g}, {z:.6g}) nm")
+        pair = sorted((int(order[first]), int(order[first + 1])))
+        raise ValueError(
+            f"two vertices coincide at (r, z) = ({r:.6g}, {z:.6g}) nm: vertices {pair[0]} and "
+            f"{pair[1]}"
+        )
 
 
 def _check_simple(points: np.ndarray) -> None:

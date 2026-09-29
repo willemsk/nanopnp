@@ -39,6 +39,7 @@ from nanopnp.geometry.contour import (
     exterior,
     extract_loops,
     gate,
+    measure,
     resample,
     simplify,
     taubin,
@@ -330,6 +331,80 @@ def test_ver51_gate_criteria_fire() -> None:
     assert "fewer than three vertices" in caught.value.measured
 
 
+def _failing_loops() -> dict[str, tuple[np.ndarray, float]]:
+    """Return one loop, and its probe radius, built to fail each §5.2.1 criterion."""
+    short = _rectangle()
+    before = int(np.flatnonzero(np.isclose(short[:, 0], 2.3) & (short[:, 1] == 0.0))[0])
+    short = np.insert(short, before, [2.33, 0.0], axis=0)
+    slot = _rectangle()
+    wall = int(np.flatnonzero((slot[:, 0] == 3.0) & np.isclose(slot[:, 1], 1.0))[0])
+    notch = [(3.0, 1.04), (2.6, 1.04), (2.6, 0.96), (3.0, 0.96)]
+    slot = np.vstack((slot[:wall], notch, slot[wall + 1 :]))
+    return {
+        "spacing": (short, 1.9),
+        "feature": (slot, 1.9),
+        "axis": (_rectangle() - np.array([1.98, 0.0]), -0.05),
+        "band low": (_rectangle(), 2.1),
+        "band high": (_rectangle(), 0.0),
+        "bowtie": (np.array([[2.0, 0.0], [3.0, 1.0], [3.0, 0.0], [2.0, 1.0]]), 1.9),
+        "two vertices": (np.array([[2.0, 0.0], [3.0, 1.0]]), 1.9),
+        # Two criteria at once: the spacing and the band, so the order is visible.
+        "spacing and band": (short, 2.1),
+    }
+
+
+def test_ver55_measure_is_the_gate_without_the_raise() -> None:
+    """``measure`` equals ``gate``'s record where it passes, and names its refusal where not (D9).
+
+    One implementation of the criteria: the shell's display of a hand edit and
+    the stage-4 gate cannot disagree about a value, a threshold or a location.
+    Where several criteria fail, ``measure`` lists all of them in ``gate``'s order,
+    and the first is the refusal ``gate`` raises.
+    """
+    planes = _planes()
+
+    def both(loop: np.ndarray, probe: float) -> tuple[object, object]:
+        radii = np.full(planes.size, probe)
+        measured = measure(loop, spacing_nm=H, planes_nm=planes, probe_nm=radii)
+        try:
+            return measured, gate(loop, spacing_nm=H, planes_nm=planes, probe_nm=radii)
+        except ContourGateError as refusal:
+            return measured, refusal
+
+    measured, record = both(_rectangle(), 1.9)
+    assert measured.passed  # type: ignore[attr-defined]
+    assert measured.record == record  # type: ignore[attr-defined]
+
+    for name, (loop, probe) in _failing_loops().items():
+        measured, refusal = both(loop, probe)
+        assert isinstance(refusal, ContourGateError), name
+        failures = measured.failures  # type: ignore[attr-defined]
+        assert not measured.passed, name  # type: ignore[attr-defined]
+        first = failures[0]
+        assert (first.criterion, first.measured, first.threshold, first.where) == (
+            refusal.criterion,
+            refusal.measured,
+            refusal.threshold,
+            refusal.where,
+        ), name
+        assert str(first) == str(refusal), name
+
+    measured, _ = both(*_failing_loops()["spacing and band"])
+    assert [failure.criterion for failure in measured.failures] == [  # type: ignore[attr-defined]
+        "minimum vertex spacing",
+        "radius profile",
+    ]
+    # Every criterion that could be measured is recorded beside the refusal.
+    assert set(measured.record) >= {  # type: ignore[attr-defined]
+        "axis_clearance",
+        "vertex_spacing",
+        "feature_size",
+        "radius_profile",
+        "band",
+        "constriction",
+    }
+
+
 def test_ver51_spacing_and_canonical_form() -> None:
     """The spacing step drops the endpoint that moves the area least; the loop starts lowest-z."""
     loop = np.array([[2.0, 0.0], [2.0, 1.0], [2.02, 1.0], [3.0, 1.0], [3.0, 0.0]])
@@ -369,36 +444,10 @@ def test_ver51_probe_ring_closed_form() -> None:
 # -- the stage, on a synthetic tube ----------------------------------------------
 
 
-_TUBE_NAMES = ("N", "CA", "C", "O", "CB")
-
-
-def _tube_pdb(path: Path) -> Path:
-    """Write the C12 tube: per chain five atoms a ring on three rings over nine layers."""
-    lines = []
-    serial = 0
-    for chain in range(12):
-        points = [
-            (rho, 2.0 * math.pi * (5 * chain + k) / 60, 0.3 * layer)
-            for layer in range(9)
-            for rho in (2.7, 3.0, 3.3)
-            for k in range(5)
-        ]
-        for index, (rho, angle, z) in enumerate(points):
-            serial += 1
-            name = _TUBE_NAMES[index % 5]
-            x, y = 10 * rho * math.cos(angle), 10 * rho * math.sin(angle)
-            lines.append(
-                f"ATOM  {serial:5d} {name:<4s} ALA {'ABCDEFGHIJKL'[chain]}{1 + index // 5:4d}    "
-                f"{x:8.3f}{y:8.3f}{10 * z:8.3f}  1.00  0.00           {name[0]}"
-            )
-    path.write_text("\n".join([*lines, "END"]) + "\n", encoding="utf-8")
-    return path
-
-
 @pytest.fixture(scope="module")
-def tube(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """Write the tube's PDB."""
-    return _tube_pdb(tmp_path_factory.mktemp("tube") / "tube.pdb")
+def tube(tube_pdb: Path) -> Path:
+    """Return the tube's PDB (the root conftest writes it)."""
+    return tube_pdb
 
 
 def _case(directory: Path, pdb: Path, *, geometry: str = "", name: str = "tube") -> Path:

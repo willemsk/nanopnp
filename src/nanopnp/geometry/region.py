@@ -54,7 +54,7 @@ from typing import TYPE_CHECKING, Literal
 import yaml
 from pydantic import BaseModel, ConfigDict, Field
 
-from nanopnp.core.hashing import Canonicalisable, content_hash
+from nanopnp.core.hashing import Canonicalisable
 from nanopnp.core.paths import store_root
 from nanopnp.core.stages import (
     CancelToken,
@@ -67,7 +67,12 @@ from nanopnp.core.stages import (
 from nanopnp.io.artefact import RegionArtefact
 from nanopnp.io.case import MembraneSpec, ReservoirSpec, UnsupportedCaseSection, resolve
 from nanopnp.mesh.primitives import TOL_NM
-from nanopnp.mesh.profile import PROFILE_SCHEMA, PoreProfile, load_profile, plane_crossings
+from nanopnp.mesh.profile import (
+    PoreProfile,
+    load_profile,
+    plane_crossings,
+    profile_digest,
+)
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
@@ -285,16 +290,6 @@ def read_region(path: Path) -> RegionRecord:
     if schema != REGION_SCHEMA:
         raise ValueError(f"{path}: expected schema {REGION_SCHEMA!r}, found {schema!r}")
     return RegionRecord.model_validate(raw)
-
-
-def profile_digest(profile: PoreProfile) -> str:
-    """Return the canonical digest of a validated profile's payload (WP21 D5).
-
-    Over the validated document rather than the file's bytes, so reformatting a
-    supplied profile is the same input and editing a vertex is a different one
-    (FR-27).
-    """
-    return content_hash(PROFILE_SCHEMA, profile.model_dump(by_alias=True, mode="json"))
 
 
 # -- the junction: geometry on arrays -------------------------------------------------
