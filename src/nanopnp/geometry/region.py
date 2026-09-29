@@ -47,8 +47,9 @@ import math
 import tempfile
 from collections import Counter
 from collections.abc import Mapping
+from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field
@@ -650,6 +651,240 @@ def measure(shape: Shape) -> tuple[dict[str, float], dict[str, int]]:
     areas = {str(face.name): float(face.mass) for face in shape.faces}
     counts = Counter(str(edge.name) for edge in set(shape.edges))
     return dict(sorted(areas.items())), dict(sorted(counts.items()))
+
+
+# -- the graph: the region as another mesher reads it ----------------------------------
+
+
+GRAPH_AREA_RTOL = 1e-9
+"""Relative tolerance on a graph face's exact area against the record's (WP23 D2).
+
+The graph's area is closed form over the shape's own coordinates, and OCC's
+``face.mass`` integrates the same boundary; on the reference fixture they agree to
+1e-15 on the electrolyte and 1e-12 on the membrane [tested].
+"""
+
+
+@dataclass(frozen=True)
+class GraphEdge:
+    """One edge of a :class:`RegionGraph`: its name, its end vertices and its kind.
+
+    Parameters
+    ----------
+    name
+        The section 5.3.1 boundary name :func:`name_region` gave it.
+    start, end
+        Indices into :attr:`RegionGraph.vertices`, in the edge's own direction.
+    kind
+        ``"segment"``, or ``"arc"``: the shorter arc of the reservoir circle about
+        the origin between its two ends.
+    """
+
+    name: str
+    start: int
+    end: int
+    kind: Literal["segment", "arc"]
+
+
+@dataclass(frozen=True)
+class RegionGraph:
+    """The glued, named region as vertices, edges and faces (WP23 D2).
+
+    What a mesher other than netgen meshes: every coordinate is the netgen
+    shape's own, bit for bit, and faces share edges by index, so a mesher that
+    builds its curves once from :attr:`edges` meshes a conformal region by
+    construction.
+
+    Parameters
+    ----------
+    vertices
+        ``(r, z)`` in nm, one per topological vertex.
+    edges
+        Each unique edge once.
+    faces
+        Each domain's boundary as one closed loop of signed edge indices,
+        counter-clockwise: ``k`` walks edge ``k`` from its start to its end and
+        ``~k`` walks it backwards. A clockwise loop would mesh inverted
+        elements, so the orientation is fixed here, once, as :func:`_pore_face`
+        fixes it for OCC.
+    reservoir_radius_nm
+        The circle every ``arc`` lies on.
+    """
+
+    vertices: tuple[tuple[float, float], ...]
+    edges: tuple[GraphEdge, ...]
+    faces: Mapping[str, tuple[int, ...]]
+    reservoir_radius_nm: float
+
+    def walk(self, signed: int) -> tuple[int, int]:
+        """Return the start and end vertex of a signed edge index as a loop walks it."""
+        edge = self.edges[~signed if signed < 0 else signed]
+        return (edge.end, edge.start) if signed < 0 else (edge.start, edge.end)
+
+    def length(self, index: int) -> float:
+        """Return edge ``index``'s length along its curve, in nm."""
+        edge = self.edges[index]
+        (r0, z0), (r1, z1) = self.vertices[edge.start], self.vertices[edge.end]
+        if edge.kind == "segment":
+            return math.hypot(r1 - r0, z1 - z0)
+        return self.reservoir_radius_nm * abs(_arc_angle((r0, z0), (r1, z1)))
+
+    def area(self, face: str) -> float:
+        """Return a face's area in closed form, in nm^2: positive for a counter-clockwise loop.
+
+        Green's theorem, ``1/2 oint (r dz - z dr)``: a segment contributes
+        ``1/2 (a x b)`` and an arc about the origin ``1/2 R^2 dtheta``, with
+        ``dtheta`` its signed angle.
+        """
+        total = 0.0
+        for signed in self.faces[face]:
+            start, end = self.walk(signed)
+            a, b = self.vertices[start], self.vertices[end]
+            if self.edges[~signed if signed < 0 else signed].kind == "segment":
+                total += 0.5 * (a[0] * b[1] - a[1] * b[0])
+            else:
+                total += 0.5 * self.reservoir_radius_nm**2 * _arc_angle(a, b)
+        return total
+
+    def edge_counts(self) -> dict[str, int]:
+        """Return each boundary name's count of edges, as :func:`measure` counts them."""
+        return dict(sorted(Counter(edge.name for edge in self.edges).items()))
+
+
+def _arc_angle(a: tuple[float, float], b: tuple[float, float]) -> float:
+    """Return the signed angle about the origin from ``a`` to ``b``, in (-pi, pi]."""
+    return math.atan2(a[0] * b[1] - a[1] * b[0], a[0] * b[0] + a[1] * b[1])
+
+
+def _classify_edge(
+    edge: Shape, start: tuple[float, float], end: tuple[float, float], radius_nm: float
+) -> Literal["segment", "arc"]:
+    """Return an edge's kind, or refuse it naming its midpoint (QR-12).
+
+    Straight when its parameter midpoint lies on its chord. Otherwise it must lie
+    on the reservoir circle, as must both its ends, and on the shorter arc
+    between them: that is the arc a mesher's circle-arc primitive draws.
+    """
+    r_mid, z_mid = _curve_midpoint(edge)
+    dr, dz = end[0] - start[0], end[1] - start[1]
+    chord = math.hypot(dr, dz)
+    off_chord = abs(dr * (z_mid - start[1]) - dz * (r_mid - start[0])) / max(chord, TOL_NM)
+    if off_chord < _ARC_RTOL * max(1.0, chord):
+        return "segment"
+    tolerance = _ARC_RTOL * radius_nm
+    on_circle = all(
+        abs(math.hypot(*point) - radius_nm) < tolerance for point in (start, end, (r_mid, z_mid))
+    )
+    shorter = r_mid * (start[0] + end[0]) + z_mid * (start[1] + end[1]) > 0.0
+    if on_circle and shorter:
+        return "arc"
+    raise RegionGateError(
+        "edge geometry",
+        f"an edge named {str(edge.name)!r} that is neither straight nor the shorter arc of the "
+        f"reservoir circle, its midpoint {off_chord:.3e} nm off its chord",
+        f"a segment, or an arc of r^2 + z^2 = {radius_nm:g}^2 spanning less than pi",
+        _at(r_mid, z_mid),
+    )
+
+
+def _chain(graph_edges: list[GraphEdge], ids: list[int], name: str) -> list[int]:
+    """Chain a face's edges into one closed loop of signed indices, by shared vertex."""
+    remaining = list(ids[1:])
+    loop = [ids[0]]
+    first, current = graph_edges[ids[0]].start, graph_edges[ids[0]].end
+    while remaining:
+        following = next(
+            (i for i in remaining if current in (graph_edges[i].start, graph_edges[i].end)), None
+        )
+        if following is None:
+            raise RegionGateError(
+                f"{name} boundary",
+                f"{len(remaining)} of its edges not reachable along one loop",
+                "one closed loop",
+                f"from the vertex the chain stopped at, index {current}",
+            )
+        remaining.remove(following)
+        edge = graph_edges[following]
+        if edge.start == current:
+            loop.append(following)
+            current = edge.end
+        else:
+            loop.append(~following)
+            current = edge.start
+    if current != first:
+        raise RegionGateError(
+            f"{name} boundary", "an open loop", "one closed loop", f"ending at vertex {current}"
+        )
+    return loop
+
+
+def region_graph(shape: Shape, record: RegionRecord) -> RegionGraph:
+    """Read the glued, named region into a :class:`RegionGraph` (WP23 D2).
+
+    Parameters
+    ----------
+    shape
+        :func:`build_region`'s shape for ``record``.
+    record
+        The region's record: its reservoir radius classifies the arcs, and its
+        measured edge counts and face areas check the graph.
+
+    Raises
+    ------
+    RegionGateError
+        On an edge that is neither a segment nor a reservoir arc, naming its
+        midpoint; on a face that is not one closed loop; and on a graph whose
+        edge-name counts or face areas are not the record's (QR-12).
+    """
+    radius = record.reservoir_radius_nm
+    vertex_index: dict[Shape, int] = {}
+    vertices: list[tuple[float, float]] = []
+    for vertex in shape.vertices:
+        if vertex not in vertex_index:
+            point = vertex.p
+            vertex_index[vertex] = len(vertices)
+            vertices.append((float(point[0]), float(point[1])))
+
+    edge_index: dict[Shape, int] = {}
+    edges: list[GraphEdge] = []
+    for edge in shape.edges:
+        if edge in edge_index:
+            continue
+        ends = list(edge.vertices)
+        start, end = vertex_index[ends[0]], vertex_index[ends[-1]]
+        kind = _classify_edge(edge, vertices[start], vertices[end], radius)
+        edge_index[edge] = len(edges)
+        edges.append(GraphEdge(name=str(edge.name), start=start, end=end, kind=kind))
+
+    faces: dict[str, tuple[int, ...]] = {}
+    for face in shape.faces:
+        name = str(face.name)
+        ids = sorted({edge_index[edge] for edge in face.edges})
+        faces[name] = tuple(_chain(edges, ids, name))
+    graph = RegionGraph(
+        vertices=tuple(vertices), edges=tuple(edges), faces=faces, reservoir_radius_nm=radius
+    )
+    for name, loop in faces.items():
+        if graph.area(name) < 0.0:
+            faces[name] = tuple(~signed for signed in reversed(loop))
+
+    if graph.edge_counts() != dict(sorted(record.edge_counts.items())):
+        raise RegionGateError(
+            "graph edge counts",
+            f"{graph.edge_counts()}",
+            f"the record's {dict(sorted(record.edge_counts.items()))}",
+            "over the whole region",
+        )
+    for name, expected in sorted(record.face_areas_nm2.items()):
+        found = graph.area(name) if name in faces else 0.0
+        if not abs(found - expected) <= GRAPH_AREA_RTOL * abs(expected):
+            raise RegionGateError(
+                "graph face area",
+                f"{name} {found:.12g} nm^2, {found / expected - 1.0:+.3e} relative",
+                f"the record's {expected:.12g} nm^2 to {GRAPH_AREA_RTOL:g}",
+                f"on the {name} face",
+            )
+    return graph
 
 
 def membrane_radii(shape: Shape, half_thickness_nm: float) -> tuple[float, float]:
