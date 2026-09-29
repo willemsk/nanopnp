@@ -20,11 +20,12 @@ line run of the same case, which is what makes its FR-25 manifest identical too.
 *Out of the child*: :class:`RunEvent` values on a queue. :class:`QueueProgress`
 satisfies the :class:`~nanopnp.core.stages.Progress` protocol by putting
 ``(fraction, message)`` on it, :class:`QueueStage` satisfies
-:class:`~nanopnp.core.stages.StageHook` and :class:`QueueSolve` satisfies
+:class:`~nanopnp.core.stages.StageHook`, :class:`QueueArtefact` satisfies
+:class:`~nanopnp.core.stages.ArtefactHook` and :class:`QueueSolve` satisfies
 :class:`~nanopnp.core.stages.SolveHook` the same way. The stage transitions, the
-continuation rungs and the Newton steps all cross as *data* and not as parsed
-captions: a number or a name recovered from a display format is a number whose
-meaning is a formatting decision.
+artefacts they left in the store, the continuation rungs and the Newton steps
+all cross as *data* and not as parsed captions: a number or a name recovered
+from a display format is a number whose meaning is a formatting decision.
 
 *Into the child, continuously*: cancellation, as a :class:`multiprocessing.Event`.
 :class:`~nanopnp.core.stages.CancelFlag` is an in-process boolean and says so, so
@@ -68,7 +69,9 @@ __all__ = [
     "Failed",
     "Finished",
     "Iteration",
+    "Produced",
     "Progress",
+    "QueueArtefact",
     "QueueProgress",
     "QueueSolve",
     "QueueStage",
@@ -97,10 +100,16 @@ class RunRequest:
         manifest naming an input that does not exist.
     store
         The artefact store's root, or ``None`` for the process default.
+    upto
+        The last stage to walk, or ``None`` for the whole pipeline. The shell's
+        **Build geometry** is ``"mesh"`` (WP24 D3): the command line's
+        ``run --upto``, through the same child and the same cancel token, so a
+        truncated walk writes the same run directory either way.
     """
 
     case: str
     store: str | None = None
+    upto: str | None = None
 
 
 # -- what crosses out of it ---------------------------------------------------
@@ -121,6 +130,32 @@ class Stage:
     name: str
     index: int
     total: int
+
+
+@dataclass(frozen=True)
+class Produced:
+    """A stage's artefact is in the store (:class:`~nanopnp.core.stages.ArtefactHook`).
+
+    Parameters
+    ----------
+    name
+        The stage's registry name.
+    schema, hash
+        The artefact's identity and its location in the store.
+    cached
+        Whether the store already held it.
+    store
+        The root of the store it is in, resolved in the child: the request may
+        have named none, and the process default is the child's to resolve. A
+        reader opens ``Store(store).get(schema, hash)`` and parses no caption
+        (WP24 D1).
+    """
+
+    name: str
+    schema: str
+    hash: str
+    cached: bool
+    store: str
 
 
 @dataclass(frozen=True)
@@ -221,7 +256,9 @@ class Cancelled:
     exit_code: int = EXIT_CANCELLED
 
 
-RunEvent: TypeAlias = Started | Stage | Rung | Iteration | Progress | Finished | Failed | Cancelled
+RunEvent: TypeAlias = (
+    Started | Stage | Produced | Rung | Iteration | Progress | Finished | Failed | Cancelled
+)
 """Everything the child may post. Frozen, picklable, and plain."""
 
 
@@ -248,6 +285,34 @@ class QueueStage:
     def __call__(self, name: str, index: int, total: int) -> None:
         """Post one stage transition."""
         self.queue.put(Stage(name=str(name), index=int(index), total=int(total)))
+
+
+@dataclass(frozen=True)
+class QueueArtefact:
+    """A :class:`~nanopnp.core.stages.ArtefactHook` that posts onto a queue.
+
+    Parameters
+    ----------
+    queue
+        Where :class:`Produced` is posted.
+    store
+        The store's root, as the child resolved it, carried on every event.
+    """
+
+    queue: Queue[RunEvent]
+    store: str
+
+    def __call__(self, name: str, schema: str, hash: str, cached: bool) -> None:
+        """Post one stored artefact."""
+        self.queue.put(
+            Produced(
+                name=str(name),
+                schema=str(schema),
+                hash=str(hash),
+                cached=bool(cached),
+                store=self.store,
+            )
+        )
 
 
 @dataclass(frozen=True)
@@ -355,13 +420,18 @@ def _worker(request: RunRequest, events: Queue[RunEvent], cancel: EventType) -> 
 
     events.put(Started(case=request.case, store=request.store))
     try:
+        # Resolved here rather than left to ``run_case``, so the root every
+        # ``Produced`` names is the one the walk wrote into.
+        store = Store(Path(request.store)) if request.store is not None else Store()
         result = run_case(
             Path(request.case),
-            store=Store(Path(request.store)) if request.store is not None else None,
+            store=store,
+            upto=request.upto,
             progress=QueueProgress(events),
             cancel=EventCancel(cancel),
             on_stage=QueueStage(events),
             on_solve=QueueSolve(events),
+            on_artefact=QueueArtefact(events, str(store.root)),
         )
     except CancelledError as cancelled:
         events.put(Cancelled(where=str(cancelled)))

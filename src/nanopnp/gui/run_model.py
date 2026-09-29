@@ -47,6 +47,7 @@ from nanopnp.gui.solver import (
     Failed,
     Finished,
     Iteration,
+    Produced,
     Progress,
     RunEvent,
     Rung,
@@ -179,6 +180,13 @@ class RunModel:
     convergence: ConvergenceModel = field(default_factory=ConvergenceModel)
     """The ladder as it is climbed, for the live plot. Fed from this event
     stream and from nothing else, so the panel is a pure function of it."""
+    produced: tuple[Produced, ...] = ()
+    """Every artefact the walk has left in the store, in order (WP24 D1). The
+    geometry views read each one's payload from the store by its hash."""
+    walked: tuple[str, ...] = ()
+    """The stages the walk has entered, in order. A truncated walk
+    (``upto``) finishes without entering the solve, and the convergence plot
+    must not then read the silence as a solve served from the store."""
 
     def consume(self, events: Iterable[RunEvent]) -> None:
         """Apply every event, in order."""
@@ -194,11 +202,19 @@ class RunModel:
             self.exit_code = EXIT_OK
             self.diagnosis = ""
             self.directory = None
+            self.produced = ()
+            self.walked = ()
             self.convergence.reset()
             self._say(f"running {event.case}")
         elif isinstance(event, Stage):
             self.stage = event
+            self.walked = (*self.walked, event.name)
             self._say(f"stage {event.index + 1} of {event.total}: {event.name}")
+        elif isinstance(event, Produced):
+            self.produced = (*self.produced, event)
+            self._say(
+                f"{event.name}: {event.hash[:12]} {'from the store' if event.cached else 'stored'}"
+            )
         elif isinstance(event, Rung):
             # Not logged: the solve already reports ``rung <name>`` through
             # ``progress``, and a second line saying the same thing would make
@@ -254,7 +270,16 @@ class RunModel:
             )
 
     def _settle(self, *, finished: bool) -> None:
-        """Close the convergence history in the state the run reached."""
+        """Close the convergence history in the state the run reached.
+
+        A run truncated before the solve (``upto``, WP24 D3), or one that failed
+        before reaching it, never entered it and reported no rung, so its plot
+        is left as a plot of no solve rather than settled: a finished run that
+        reported no rung is otherwise read as a solve served from the store, and
+        a stopped one as a ladder that did not finish — neither of which it was.
+        """
+        if "solve" not in self.walked and not self.convergence.bands:
+            return
         self.convergence.settle(finished=finished)
         self.convergence.count_omitted()
 
@@ -291,7 +316,9 @@ class RunControl:
     model: RunModel = field(default_factory=RunModel)
     process: SolverProcess | None = None
 
-    def start(self, case: str | Path, *, store: str | Path | None = None) -> None:
+    def start(
+        self, case: str | Path, *, store: str | Path | None = None, upto: str | None = None
+    ) -> None:
         """Spawn a run of a case file.
 
         Parameters
@@ -302,6 +329,9 @@ class RunControl:
             in memory.
         store
             The artefact store's root, or ``None`` for the process default.
+        upto
+            The last stage to walk, or ``None`` for the whole pipeline. The
+            geometry tab's build is ``"mesh"`` (WP24 D3).
 
         Raises
         ------
@@ -313,7 +343,7 @@ class RunControl:
             raise RuntimeError("a run is already in flight; cancel it before starting another")
         self.model = RunModel()
         self.process = SolverProcess(
-            RunRequest(case=str(case), store=None if store is None else str(store))
+            RunRequest(case=str(case), store=None if store is None else str(store), upto=upto)
         )
         self.process.start()
 
