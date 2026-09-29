@@ -40,8 +40,9 @@ WP23: the optional Gmsh mesher backend of ADR-002.
 
 - `backend: gmsh` is no longer a case refusal. Without the `gmsh` extra, stage 6 refuses the run
   naming the extra and the import error, a missing native library included (exit code 3, CON-10).
-- CI lists every skip with its reason (`-rs`), and the Windows and macOS legs set
-  `NANOPNP_REQUIRE_GMSH=1`, so there a Gmsh test fails rather than skips when `gmsh` does not import.
+- CI lists every skip with its reason (`-rs`), and sets `NANOPNP_REQUIRE_GMSH=1` on every leg, so
+  a Gmsh test fails rather than skips when `gmsh` does not import. The ubuntu jobs install the X
+  and GL libraries the gmsh wheel loads.
 
 ## [0.9.0-alpha.6] - 2026-09-28
 
