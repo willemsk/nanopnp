@@ -374,6 +374,14 @@ class AssessProcess:
     request: AssessRequest
     _process: BaseProcess | None = field(default=None, repr=False)
     _events: Queue[AssessEvent] | None = field(default=None, repr=False)
+    answered: bool = field(default=False, repr=False)
+    """Whether :meth:`drain` has ever returned an event.
+
+    The child always ends by posting one, verdict or refusal, so a child that has
+    exited while this is still false died without answering (killed, out of memory,
+    a fault in a compiled library) and the caller must say so: the parent cannot
+    tell that from a slow child by the queue alone (CODE_REVIEW_003 CR-7).
+    """
 
     def start(self) -> None:
         """Spawn the child.
@@ -407,6 +415,7 @@ class AssessProcess:
             try:
                 found.append(self._events.get_nowait())
             except queue_module.Empty:
+                self.answered = self.answered or bool(found)
                 return tuple(found)
 
     @property

@@ -148,6 +148,36 @@ def test_ver55_the_assess_child_seeds_across_the_boundary(tube_store) -> None:
     assert "not in the store" in events[0].message
 
 
+def test_ver55_an_assess_child_killed_before_it_answers_is_not_called_answered(
+    tmp_path: Path,
+) -> None:
+    """A child that dies by signal posts nothing, and the parent must be able to say so.
+
+    ``answered`` is what the tab reads once the child has exited: still false means the
+    measurement died and the status line must not go on saying it is measuring
+    (CODE_REVIEW_003 CR-7).
+    """
+    process = AssessProcess(AssessRequest(case=str(tmp_path / "x.yaml"), store=str(tmp_path)))
+    process.start()
+    assert not process.answered
+    process._process.kill()  # type: ignore[union-attr]
+    process.join(TIMEOUT_S)
+    assert not process.running
+    assert process.drain() == ()
+    assert not process.answered
+
+
+def test_ver55_a_child_that_answers_marks_the_process_answered(tmp_path: Path) -> None:
+    """A refusal is an answer: the tab reports its message, not a silent death."""
+    process = AssessProcess(
+        AssessRequest(case=str(tmp_path / "missing.yaml"), store=str(tmp_path / "store"))
+    )
+    process.start()
+    events = _settle(process)
+    assert len(events) == 1 and isinstance(events[0], AssessFailed), events
+    assert process.answered
+
+
 def _settle(process: AssessProcess) -> tuple[object, ...]:
     """Drain until the child posts its one event, or time out."""
     deadline = time.monotonic() + TIMEOUT_S

@@ -393,6 +393,24 @@ def test_ver44_the_render_runs_in_a_spawned_child_and_posts_plain_data(
     assert Path(rendered.scene).is_file()
 
 
+def test_ver44_a_render_child_killed_before_it_answers_is_not_called_answered(
+    tmp_path: Path,
+) -> None:
+    """A render child that dies by signal posts nothing; ``answered`` says so (CR-7).
+
+    The mesh pane reads it once the child has exited, so that "drawing the mesh" does not
+    stay on screen for ever over a child that is gone (CODE_REVIEW_003 CR-7).
+    """
+    process = RenderProcess(RenderRequest(run=str(tmp_path / "nowhere")))
+    process.start()
+    assert not process.answered
+    process._process.kill()  # type: ignore[union-attr]
+    process.join(300.0)
+    assert not process.running
+    assert process.drain() == ()
+    assert not process.answered
+
+
 def test_ver44_a_refusal_crosses_the_boundary_as_a_diagnostic(tmp_path: Path) -> None:
     """The child never dies silently: a refusal comes back named.
 
@@ -410,6 +428,7 @@ def test_ver44_a_refusal_crosses_the_boundary_as_a_diagnostic(tmp_path: Path) ->
     assert isinstance(failed, RenderFailed)
     assert failed.error == "FileNotFoundError"
     assert "run.json" in failed.message
+    assert process.answered
 
 
 @pytest.mark.parametrize("domain", [None, "membrane", "electrolyte|cis|trans", "absent"])
