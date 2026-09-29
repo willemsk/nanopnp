@@ -251,3 +251,111 @@ def test_fr27_a_case_the_schema_refuses_comes_back_as_the_case_exit_class(
     assert failed, [type(event).__name__ for event in events]
     assert failed[0].exit_code == EXIT_CASE
     assert "electrolyte" in failed[0].message
+
+
+# -- WP24: building the geometry through the same child (VER-55) --------------
+
+PROFILE_CASE = """
+schema: nanopnp/case/v2
+name: shell-geometry
+inputs:
+  profile: {{path: {profile}}}
+geometry: {{reservoir: {{radius_nm: 30.0}}}}
+electrolyte:
+  species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
+  concentration_M: 1.0
+boundary_conditions: {{bias_V: 0.05, ground: cis}}
+physics: {{model: pnp-ns, solid_permittivities: {{protein: 20.0, membrane: 3.2}}}}
+numerics: {{mesh: {{size_scale: 20.0}}}}
+"""
+
+
+@pytest.fixture(scope="module")
+def profile_case(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """Write a slanted 1 nm body across the slab and a coarse case naming it."""
+    import numpy as np
+
+    from nanopnp.mesh.profile import (
+        PROFILE_SCHEMA,
+        PoreProfile,
+        ProfileProvenance,
+        min_feature_size,
+        min_vertex_spacing,
+        signed_area,
+        write_profile,
+    )
+
+    work = tmp_path_factory.mktemp("geometry")
+    points = [(2.0, -3.0), (3.0, -3.0), (6.0, 3.0), (5.0, 3.0)]
+    array = np.asarray(points)
+    profile = write_profile(
+        PoreProfile(
+            schema=PROFILE_SCHEMA,
+            name="parallelogram",
+            provenance=ProfileProvenance(
+                source="test",
+                citation="tests/tier1/test_gui_solver_process.py",
+                sha256="0" * 64,
+                vertex_count=len(points),
+                min_vertex_spacing_nm=min_vertex_spacing(array),
+                min_feature_size_nm=min_feature_size(array),
+                signed_area_nm2=signed_area(array),
+            ),
+            vertices=points,
+        ),
+        work / "profile.yaml",
+    )
+    path = work / "case.yaml"
+    path.write_text(PROFILE_CASE.format(profile=profile), encoding="utf-8")
+    return path
+
+
+def test_ver55_a_spawned_geometry_build_reports_each_stored_artefact(
+    profile_case: Path, tmp_path: Path
+) -> None:
+    """``upto="mesh"`` posts ``Produced`` for the region, then the mesh, then ``Finished`` (D1, D3).
+
+    Each ``Produced`` names an entry a fresh reader finds in the store the event
+    names, which is how the geometry views read a payload without parsing a
+    caption. The walk stops at stage 6, and the plot is left a plot of no solve.
+    """
+    from nanopnp.gui.solver import Produced
+    from nanopnp.io.store import Store
+
+    store = tmp_path / "store"
+    process = SolverProcess(RunRequest(case=str(profile_case), store=str(store), upto="mesh"))
+    process.start()
+    events = _settle(process)
+
+    produced = [event for event in events if isinstance(event, Produced)]
+    assert [event.name for event in produced] == ["case", "region", "mesh"]
+    assert isinstance(events[-1], Finished), [type(event).__name__ for event in events]
+    last_produced = max(index for index, event in enumerate(events) if isinstance(event, Produced))
+    assert last_produced < len(events) - 1
+    for event in produced:
+        assert Path(event.store) == store.resolve()
+        assert Store(event.store).get(event.schema, event.hash) is not None, event.name
+        assert not event.cached
+
+    model = RunModel()
+    model.consume(events)
+    assert model.state == "finished"
+    assert [event.name for event in model.produced] == ["case", "region", "mesh"]
+    assert model.convergence.state == "idle"
+    record = json.loads((Path(events[-1].directory) / RUN_RECORD_FILENAME).read_text("utf-8"))
+    assert [stage["hash"] for stage in record["stages"]] == [event.hash for event in produced]
+
+
+def test_ver55_cancelling_a_geometry_build_writes_no_artefact(
+    profile_case: Path, tmp_path: Path
+) -> None:
+    """The build shares the run's cancel token, and a cancelled build leaves the store empty."""
+    store = tmp_path / "store"
+    process = SolverProcess(RunRequest(case=str(profile_case), store=str(store), upto="mesh"))
+    process.start()
+    process.cancel()
+    events = _settle(process)
+
+    assert any(isinstance(event, Cancelled) for event in events), events
+    written = [path for path in store.rglob("*") if path.is_file()] if store.exists() else []
+    assert not written, f"a cancelled build left {written} in the store"
