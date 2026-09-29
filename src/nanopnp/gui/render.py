@@ -688,6 +688,13 @@ class RenderProcess:
     request: RenderRequest | MeshRequest
     _process: BaseProcess | None = field(default=None, repr=False)
     _events: Queue[RenderEvent] | None = field(default=None, repr=False)
+    answered: bool = field(default=False, repr=False)
+    """Whether :meth:`drain` has ever returned an event.
+
+    The child always ends by posting one, a scene or a refusal, so a child that has
+    exited while this is still false died without answering and the caller must say
+    so (CODE_REVIEW_003 CR-7).
+    """
 
     def start(self) -> None:
         """Spawn the child and begin the render.
@@ -722,6 +729,7 @@ class RenderProcess:
             try:
                 found.append(self._events.get_nowait())
             except queue_module.Empty:
+                self.answered = self.answered or bool(found)
                 return tuple(found)
 
     @property

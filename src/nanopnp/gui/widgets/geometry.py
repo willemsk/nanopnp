@@ -707,6 +707,11 @@ class GeometryWidget(QtWidgets.QWidget):
                 self._status.setText(f"{event.error}: {event.message}")
         if finished:
             self._assess.join(0.0)
+            if not self._assess.answered:
+                logger.error("the assess child exited without answering")
+                self._status.setText(
+                    "the measuring process exited without an answer (killed or crashed)"
+                )
             self._assess = None
         if events or finished:
             self._show_row(self._list.currentRow())
@@ -726,6 +731,11 @@ class GeometryWidget(QtWidgets.QWidget):
                 self._mesh_problem = f"{event.error}: {event.message}"
         if finished:
             self._render.join(0.0)
+            if not self._render.answered:
+                logger.error("the render child exited without answering")
+                self._mesh_problem = (
+                    "the render process exited without drawing the mesh (killed or crashed)"
+                )
             self._render = None
             if self._selected_name() == "mesh":
                 self._show_row(self._list.currentRow())
