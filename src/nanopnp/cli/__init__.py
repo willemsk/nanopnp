@@ -37,6 +37,7 @@ from typing import TYPE_CHECKING, cast
 
 from nanopnp import __version__
 from nanopnp.cli.errors import EXIT_OK, EXIT_UNEXPECTED, classify
+from nanopnp.cli.export import EXPORTS, export_artefact, refusal
 from nanopnp.core.paths import (
     CORRECTIONS_DIR,
     DATA_DIR,
@@ -191,6 +192,8 @@ def _stage(args: argparse.Namespace) -> int:
     from nanopnp.core.stages import registered_stages
 
     if args.list:
+        if args.export is not None:
+            args.parser.error("--list writes no artefact; --export needs a stage and a case file")
         # Answered from the registry alone: no stage module, no NGSolve, no
         # netgen (VER-25, VER-32). The import above is `nanopnp.core.stages`,
         # which holds descriptions and constructor paths as data.
@@ -210,6 +213,12 @@ def _stage(args: argparse.Namespace) -> int:
         # A usage error, so it exits 2 through argparse rather than being
         # classified: nothing was run and nothing is in doubt.
         args.parser.error("give a stage name and a case file, or --list")
+    if args.export is not None:
+        # Refused before the walk, which may take a minute: a wrong stage or
+        # suffix is a usage error, and nothing has been run to leave a file.
+        why = refusal(args.name, Path(args.export))
+        if why is not None:
+            args.parser.error(why)
 
     from nanopnp.io.run import run_case
     from nanopnp.io.store import Store
@@ -237,6 +246,12 @@ def _stage(args: argparse.Namespace) -> int:
         f"hash     {artefact.hash}",
         *(f"payload  {name} {path}" for name, path in sorted(artefact.payload.items())),
     ]
+    if args.export is not None:
+        # After the walk, from what the store holds: the export is an output
+        # location and reaches no key (the section 3.1 IF-02 export NOTE).
+        written = export_artefact(args.name, artefact, Path(args.export))
+        found["export"] = [str(path) for path in written]
+        lines += [f"export   {path}" for path in written]
     _emit(found, lines, as_json=args.json)
     return EXIT_OK
 
@@ -1006,6 +1021,15 @@ def build_parser() -> argparse.ArgumentParser:
         "--only",
         action="store_true",
         help="refuse to compute anything upstream; abort naming what the store lacks",
+    )
+    stage.add_argument(
+        "--export",
+        type=Path,
+        default=None,
+        metavar="PATH",
+        help="also write the stage's artefact here, in the format its suffix names: "
+        + "; ".join(f"{name} {', '.join(suffixes)}" for name, suffixes in EXPORTS.items())
+        + ". Lengths in the .pdb, .dcd, .dx, .ccp4, .mrc and .map files are in angstroms",
     )
     stage.set_defaults(handler=_stage, parser=stage)
 

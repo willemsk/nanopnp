@@ -262,3 +262,45 @@ def write_tube_pdb(path: Path) -> Path:
 def tube_pdb(tmp_path_factory: pytest.TempPathFactory) -> Path:
     """Return :func:`write_tube_pdb`'s file, written once per session."""
     return write_tube_pdb(tmp_path_factory.mktemp("tube") / "tube.pdb")
+
+
+def write_parallelogram_profile(path: Path, *, citation: str = "tests/conftest.py") -> Path:
+    """Write a slanted body 1 nm wide across the slab as a ``profile/v1`` document.
+
+    Meshed in a 30 nm reservoir at ``size_scale`` 20, it generates in a fraction of
+    a second (``tests/tier1/test_mesh_generate.py``). The nanopnp imports are here
+    for the reason the module docstring gives for MDAnalysis's.
+    """
+    from nanopnp.mesh.profile import (
+        PROFILE_SCHEMA,
+        PoreProfile,
+        ProfileProvenance,
+        min_feature_size,
+        min_vertex_spacing,
+        signed_area,
+        write_profile,
+    )
+
+    points = [(2.0, -3.0), (3.0, -3.0), (6.0, 3.0), (5.0, 3.0)]
+    array = np.asarray(points, dtype=np.float64)
+    profile = PoreProfile(
+        schema=PROFILE_SCHEMA,
+        name="parallelogram",
+        provenance=ProfileProvenance(
+            source="test",
+            citation=citation,
+            sha256="0" * 64,
+            vertex_count=len(points),
+            min_vertex_spacing_nm=min_vertex_spacing(array),
+            min_feature_size_nm=min_feature_size(array),
+            signed_area_nm2=signed_area(array),
+        ),
+        vertices=points,
+    )
+    return write_profile(profile, path)
+
+
+@pytest.fixture(scope="session")
+def parallelogram_profile(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """Return :func:`write_parallelogram_profile`'s file, written once per session."""
+    return write_parallelogram_profile(tmp_path_factory.mktemp("parallelogram") / "profile.yaml")

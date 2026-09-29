@@ -797,3 +797,213 @@ def test_ver32_mesh_help_imports_no_netgen(shape: str) -> None:
     )
     assert json.loads(result.stderr) == []
     assert "--out" in result.stdout
+
+
+# -- stage --export (section 3.1 IF-02 export NOTE; IF-05 length-units NOTE) ----
+
+TUBE_CASE = """\
+schema: nanopnp/case/v2
+name: tube
+structure:
+  source: {{path: {pdb}}}
+  symmetry: {{point_group: C12}}
+electrolyte:
+  species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
+  concentration_M: 0.1
+  parameters: willems2020_nacl
+boundary_conditions: {{bias_V: 0.1}}
+physics: {{model: epnp-ns, solid_permittivities: {{membrane: 3.2}}}}
+"""
+
+PROFILE_CASE = """\
+schema: nanopnp/case/v2
+name: coarse
+inputs:
+  profile: {{path: {path}}}
+geometry: {{reservoir: {{radius_nm: 30.0}}}}
+electrolyte:
+  species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
+  concentration_M: 1.0
+boundary_conditions: {{bias_V: 0.05, ground: cis}}
+physics: {{model: pnp-ns, solid_permittivities: {{protein: 20.0, membrane: 3.2}}}}
+numerics: {{mesh: {{size_scale: 20.0}}}}
+"""
+
+
+def _stage_json(capsys: pytest.CaptureFixture[str], *argv: str) -> dict[str, object]:
+    """Run ``nanopnp stage ... --json`` in process; return its parsed result."""
+    assert main(["stage", *argv, "--json"]) == EXIT_OK
+    found = json.loads(capsys.readouterr().out)
+    assert isinstance(found, dict)
+    return found
+
+
+@pytest.fixture(scope="module")
+def tube_walk(tube_pdb: Path, tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, Path]:
+    """Walk the synthetic C12 tube to stage 4 once; return its case and its store."""
+    root = tmp_path_factory.mktemp("export")
+    case = root / "tube.case.yaml"
+    case.write_text(TUBE_CASE.format(pdb=tube_pdb), encoding="utf-8")
+    store = root / "store"
+    assert main(["stage", "contour", str(case), "--store", str(store)]) == EXIT_OK
+    return case, store
+
+
+def test_ver32_stage_export_writes_each_interchange_file(
+    tube_walk: tuple[Path, Path], tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Stages 1 to 4 export by suffix; the native payloads are the store's bytes (IF-05).
+
+    Each walk is served from the store, and its hash is the one the same command
+    prints without ``--export``: the flag reaches no key. The PDB and the DCD
+    reload with the stored coordinates: the PDB to half its 0.001 Å column, 5e-5 nm,
+    and the DCD to float32; each plus the 1e-6 nm that float32 rounding of the
+    ångström values and their tenth costs at these few-nm coordinates. The density
+    map comes back on the stored grid from every format, which with the VER-49
+    header test pins it in Å.
+    """
+    import MDAnalysis as mda  # noqa: N813 - the alias the library documents
+    import numpy as np
+
+    from nanopnp.density.map import DensityMap
+    from nanopnp.mesh.profile import load_profile
+    from nanopnp.structure.ensemble import AlignedEnsemble
+
+    case, store = tube_walk
+    for name in ("structure", "density", "symmetry", "contour"):
+        plain = _stage_json(capsys, name, str(case), "--store", str(store))
+        suffixes = {
+            "structure": (".pdb",),
+            "density": (".npz", ".dx", ".ccp4", ".mrc", ".map"),
+            "symmetry": (".npz",),
+            "contour": (".yaml",),
+        }[name]
+        for suffix in suffixes:
+            out = tmp_path / f"{name}{suffix}"
+            found = _stage_json(
+                capsys, name, str(case), "--store", str(store), "--export", str(out)
+            )
+            assert found["hash"] == plain["hash"], "--export moved the artefact key"
+            assert all(entry["cached"] for entry in found["stages"])  # type: ignore[union-attr, index]
+            payload = {key: Path(value) for key, value in found["payload"].items()}  # type: ignore[union-attr]
+            (stored,) = payload.values()
+            if name == "structure":
+                assert found["export"] == [str(out), str(out.with_suffix(".dcd"))]
+                ensemble = AlignedEnsemble.read(stored)
+                universe = mda.Universe(str(out), str(out.with_suffix(".dcd")))
+                assert universe.trajectory.n_frames == ensemble.frames
+                for frame in universe.trajectory:
+                    tolerance = 1e-6
+                    moved = np.abs(
+                        universe.atoms.positions / 10.0 - ensemble.positions_nm[frame.frame]
+                    )
+                    assert float(moved.max()) <= tolerance
+                first = mda.Universe(str(out))
+                moved = np.abs(first.atoms.positions / 10.0 - ensemble.positions_nm[0])
+                assert float(moved.max()) <= 5e-5 + 1e-6
+            elif suffix in {".npz", ".yaml"}:
+                assert found["export"] == [str(out)]
+                assert out.read_bytes() == stored.read_bytes()
+            else:
+                exported = DensityMap.read(out)
+                assert exported.grid == DensityMap.read(stored).grid
+        if name == "contour":
+            assert load_profile(tmp_path / "contour.yaml").provenance.source == "pipeline"
+    assert not list(tmp_path.glob(".*partial*")), "a staging file was left behind"
+
+
+def test_ver32_stage_export_copies_the_generated_mesh(
+    parallelogram_profile: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Stage 6's ``.msh`` is the stored MSH 4.1 file, byte for byte (IF-06)."""
+    from nanopnp.mesh.adapter import read
+
+    case = tmp_path / "coarse.case.yaml"
+    case.write_text(PROFILE_CASE.format(path=parallelogram_profile), encoding="utf-8")
+    out = tmp_path / "coarse.msh"
+    store = str(tmp_path / "store")
+    found = _stage_json(capsys, "mesh", str(case), "--store", store, "--export", str(out))
+    stored = Path(found["payload"]["mesh"])  # type: ignore[index]
+    assert out.read_bytes() == stored.read_bytes()
+    assert read(out, format="msh41").content_hash == found["summary"]["content_hash"]  # type: ignore[index]
+    assert _stage_json(capsys, "mesh", str(case), "--store", store)["hash"] == found["hash"]
+
+
+@pytest.mark.parametrize(
+    ("name", "destination", "message"),
+    [
+        ("region", "region.yaml", "has no export"),
+        ("case", "case.yaml", "has no export"),
+        ("density", "density.vtk", "writes .npz, .dx, .ccp4, .mrc, .map"),
+        ("contour", "contour.yml", "writes .yaml"),
+        ("structure", "aligned", "no suffix"),
+        ("mesh", "missing/mesh.msh", "does not exist"),
+    ],
+)
+def test_ver32_stage_export_refuses_before_any_stage_runs(
+    name: str,
+    destination: str,
+    message: str,
+    tube_pdb: Path,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A stage without an export, or a suffix it does not write, exits 2 and runs nothing.
+
+    The store stays empty, so no stage ran, and no file is left at the destination.
+    """
+    case = tmp_path / "tube.case.yaml"
+    case.write_text(TUBE_CASE.format(pdb=tube_pdb), encoding="utf-8")
+    work = tmp_path / "work"
+    work.mkdir()
+    monkeypatch.chdir(work)
+    store = tmp_path / "store"
+    with pytest.raises(SystemExit) as raised:
+        main(["stage", name, str(case), "--store", str(store), "--export", destination])
+    assert raised.value.code == EXIT_USAGE
+    assert message in capsys.readouterr().err
+    assert not store.exists() or not any(store.rglob("*.json"))
+    assert list(work.iterdir()) == []
+
+
+def test_ver32_stage_export_that_fails_leaves_no_file(
+    tube_walk: tuple[Path, Path],
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A writer that fails part-way leaves neither the destination nor its staging file."""
+    from nanopnp.density.map import DensityMap
+
+    def half_written(self: DensityMap, path: Path) -> Path:
+        path.write_bytes(b"half a map")
+        raise OSError("the disk filled up")
+
+    monkeypatch.setattr(DensityMap, "export", half_written)
+    case, store = tube_walk
+    out = tmp_path / "density.dx"
+    code = main(["stage", "density", str(case), "--store", str(store), "--export", str(out)])
+    assert code == EXIT_UNEXPECTED
+    assert "the disk filled up" in capsys.readouterr().err
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_ver32_stage_export_help_imports_no_stage_module() -> None:
+    """``stage --help`` lists the export table without importing a stage or NumPy."""
+    code = (
+        "import sys, json\n"
+        "from nanopnp.cli import main\n"
+        "try:\n"
+        "    main(['stage', '--help'])\n"
+        "except SystemExit:\n"
+        "    pass\n"
+        "loaded = sorted(m for m in sys.modules if m.startswith(('ngsolve', 'netgen', 'numpy', "
+        "'MDAnalysis', 'nanopnp.structure', 'nanopnp.density', 'nanopnp.mesh')))\n"
+        "sys.stderr.write(json.dumps(loaded))\n"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", code], capture_output=True, text=True, check=True
+    )
+    assert json.loads(result.stderr) == []
+    assert "--export" in result.stdout and ".mrc" in result.stdout
