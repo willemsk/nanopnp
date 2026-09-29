@@ -1,14 +1,15 @@
 """The desktop shell (IF-09): a window over the view-models, and nothing more.
 
 ADR-004's consequence, stated: "the interface is a thin shell over the stage
-objects the CLI drives". This module assembles five panels and wires them to
+objects the CLI drives". This module assembles six panels and wires them to
 each other; it decides nothing about a case, a run, a result or a picture,
 exactly as :mod:`nanopnp.cli` decides nothing about them.
 
 **Save, then run.** §5.3.1 makes the case file the unit of reproducibility, and
 the FR-25 manifest names it. So "Run" commits the staged edits, writes the file,
 and runs the file — never a document held only in memory, whose manifest would
-name an input that does not exist.
+name an input that does not exist. "Build geometry" on the Geometry tab does the
+same, and walks the saved file through stage 6 (WP24 D3).
 
 **It prints for the same reason the command line does.** ``nanopnp-gui`` is a shell like
 ``nanopnp``, and a case file it cannot open is refused on standard error in the words
@@ -17,7 +18,8 @@ name an input that does not exist.
 **This release's increment.** QR-11 asks each release for a usable graphical
 surface over the functionality that exists at it: the schema-generated editor,
 run control, the result panel, the live convergence plot and the ``webgui``
-field viewer, five tabs over one run.
+field viewer, five tabs over one run; and since WP24, Phase 2's increment, the
+Geometry tab, which builds stages 1 to 6 and edits the contour by hand.
 
 **The plot and the viewer are fed from the same two places the rest is.** The
 convergence panel draws the :class:`~nanopnp.gui.convergence.ConvergenceModel`
@@ -36,7 +38,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import yaml
-from PySide6 import QtCore, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from nanopnp.cli.errors import classify
 from nanopnp.gui.case_model import CaseEditor
@@ -44,6 +46,7 @@ from nanopnp.gui.run_model import RunControl
 from nanopnp.gui.widgets import (
     CaseEditorWidget,
     ConvergenceWidget,
+    GeometryWidget,
     ResultWidget,
     RunControlWidget,
     ViewerWidget,
@@ -66,7 +69,7 @@ rather than ten."""
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    """The shell's window: the case, the run, its convergence, the result and the fields.
+    """The shell's window: the case, its geometry, the run, its convergence, the result, the fields.
 
     Parameters
     ----------
@@ -81,6 +84,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._store = store
         self._control = RunControl()
         self._case = CaseEditorWidget(editor)
+        self._geometry = GeometryWidget(editor, store=store)
         self._run = RunControlWidget(self._control)
         self._convergence = ConvergenceWidget(self._control.model.convergence)
         self._result = ResultWidget()
@@ -88,6 +92,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         tabs = QtWidgets.QTabWidget()
         tabs.addTab(self._case, "Case")
+        # After Case (WP24 D15): the geometry is built from the case and
+        # before the run, which reads it back from the store.
+        tabs.addTab(self._geometry, "Geometry")
         tabs.addTab(self._run, "Run")
         tabs.addTab(self._convergence, "Convergence")
         tabs.addTab(self._result, "Result")
@@ -97,6 +104,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.resize(1000, 800)
 
         self._run.startRequested.connect(self.start_run)
+        self._geometry.buildRequested.connect(self.build_geometry)
+        self._geometry.structureLoaded.connect(self._show_structure)
         self._run.settled.connect(self._show_result)
         self._refresh = QtCore.QTimer(self)
         self._refresh.setInterval(PLOT_INTERVAL_MS)
@@ -114,15 +123,8 @@ class MainWindow(QtWidgets.QMainWindow):
         not ``save``: a run that changed nothing must not rewrite a hand-written
         file and lose its comments.
         """
-        editor = self._case.editor
-        if editor.staged and not self._case.commit():
-            self.statusBar().showMessage("the case was refused; see the Case tab")
-            return
-        try:
-            path = editor.ensure_saved()
-        except (ValueError, OSError) as error:
-            # ``CaseValidationError`` is a ``ValueError`` and is caught with it.
-            self.statusBar().showMessage(str(error))
+        path = self._saved_case()
+        if path is None:
             return
         self._control.start(path, store=self._store)
         # The previous run's numbers are not this run's, and the deviations
@@ -136,6 +138,46 @@ class MainWindow(QtWidgets.QMainWindow):
         self._convergence.set_model(self._control.model.convergence)
         self._run.began()
         self.statusBar().showMessage(f"running {path}")
+
+    def _saved_case(self) -> Path | None:
+        """Commit and save the case, or show why not and return ``None``.
+
+        What a run and a geometry build both start from: the child reads the
+        file, so an unsaved edit would be an edit the build never saw.
+        """
+        editor = self._case.editor
+        if editor.staged and not self._case.commit():
+            self.statusBar().showMessage("the case was refused; see the Case tab")
+            return None
+        try:
+            return editor.ensure_saved()
+        except (ValueError, OSError) as error:
+            # ``CaseValidationError`` is a ``ValueError`` and is caught with it.
+            self.statusBar().showMessage(str(error))
+            return None
+
+    def build_geometry(self) -> None:
+        """Commit, save and build the case through stage 6 on the Geometry tab (WP24 D3)."""
+        path = self._saved_case()
+        if path is None:
+            return
+        self._geometry.build(path)
+        self.statusBar().showMessage(f"building the geometry of {path}")
+
+    def _show_structure(self, path: str) -> None:
+        """Show a structure the Geometry tab staged in the Case tab's field.
+
+        ``setText`` emits no ``editingFinished``, so the value is shown and not
+        staged a second time.
+        """
+        field = self._case.widget_at("structure.source.path")
+        if isinstance(field, QtWidgets.QLineEdit):
+            field.setText(path)
+
+    def closeEvent(self, event: QtGui.QCloseEvent) -> None:
+        """Stop the Geometry tab's build and children with the window."""
+        self._geometry.shutdown()
+        super().closeEvent(event)
 
     def _show_result(self) -> None:
         """Read the run directory back into the result panel and the viewer.

@@ -27,12 +27,15 @@ happen is asserted to never happen rather than merely not written.
 from __future__ import annotations
 
 import os
+import time
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 from nanopnp.gui.case_model import CaseEditor
 from nanopnp.gui.convergence import ConvergenceModel
+from nanopnp.gui.geometry import MODEL_FRAME, STAGE_1_FRAME, ProfileEditor
 from nanopnp.gui.render import Rendered, RenderFailed, RenderProcess
 from nanopnp.gui.run_model import RunControl, RunModel
 from nanopnp.gui.solver import Failed, Finished, Iteration, Progress, Rung, Started
@@ -44,16 +47,18 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 os.environ.setdefault("QTWEBENGINE_CHROMIUM_FLAGS", "--disable-gpu --no-sandbox")
 
 try:
-    from PySide6 import QtWidgets
+    from PySide6 import QtCore, QtGui, QtWidgets
     from PySide6.QtWebEngineWidgets import QWebEngineView
 
     from nanopnp.gui.app import MainWindow
     from nanopnp.gui.widgets import (
         CaseEditorWidget,
         ConvergenceWidget,
+        GeometryWidget,
         RunControlWidget,
         ViewerWidget,
     )
+    from nanopnp.gui.widgets.geometry import GeometryCanvas
 except (ImportError, OSError) as error:  # pragma: no cover - platform dependent
     pytest.skip(f"PySide6 cannot be constructed here: {error}", allow_module_level=True)
 
@@ -168,10 +173,10 @@ def test_if09_a_choice_offers_exactly_the_registered_values(
     assert offered == editor.state("physics.model").options
 
 
-def test_if09_the_window_assembles_its_five_panels(
+def test_if09_the_window_assembles_its_six_panels(
     application: QtWidgets.QApplication, editor: CaseEditor
 ) -> None:
-    """The whole window builds offscreen: all five panels of the QR-11 increment.
+    """The whole window builds offscreen: the five panels of QR-11 and WP24's Geometry tab.
 
     Constructed rather than merely imported, because the failures this catches
     are construction-time ones — a signal connected to a slot that does not take
@@ -184,6 +189,7 @@ def test_if09_the_window_assembles_its_five_panels(
     assert isinstance(tabs, QtWidgets.QTabWidget)
     assert [tabs.tabText(index) for index in range(tabs.count())] == [
         "Case",
+        "Geometry",
         "Run",
         "Convergence",
         "Result",
@@ -194,7 +200,7 @@ def test_if09_the_window_assembles_its_five_panels(
     # The run panel polls a control that has never been started: it must read as
     # idle rather than raise, because that is its state for as long as the user
     # is editing.
-    run = tabs.widget(1)
+    run = tabs.widget(2)
     model = run.refresh()
     assert model.state == "idle"
     assert model.fraction == 0.0
@@ -342,8 +348,6 @@ def test_ver44_the_viewer_loads_a_file_url_and_never_sets_html(
     about code that is easy to break by accident and impossible to see in a
     screenshot: a data URL of a 23 MB scene fails somewhere inside Qt, not here.
     """
-    from PySide6 import QtCore
-
     loaded: list[QtCore.QUrl] = []
     monkeypatch.setattr(QWebEngineView, "load", lambda _self, url: loaded.append(url))
     monkeypatch.setattr(
@@ -526,3 +530,150 @@ def test_ver44_the_shipped_renderer_reaches_a_document_with_no_network(
     report = json.loads(answers[0])
     assert report["renderer_loaded"] is True, report
     assert report["renderer"] == renderer_source()
+
+
+# -- the Geometry tab (WP24) ---------------------------------------------------------
+
+PROFILE_CASE = """\
+schema: nanopnp/case/v2
+name: geometry-probe
+inputs:
+  profile: {{path: {path}}}
+geometry: {{reservoir: {{radius_nm: 30.0}}}}
+electrolyte:
+  species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
+  concentration_M: 1.0
+boundary_conditions: {{bias_V: 0.05, ground: cis}}
+physics: {{model: pnp-ns, solid_permittivities: {{protein: 20.0, membrane: 3.2}}}}
+numerics: {{mesh: {{size_scale: 20.0}}}}
+"""
+
+PARALLELOGRAM = ((2.0, -3.0), (3.0, -3.0), (6.0, 3.0), (5.0, 3.0))
+"""A slanted body 1 nm wide across the slab: the cheapest profile that walks stages 5 and 6."""
+
+
+def _mouse(
+    kind: QtCore.QEvent.Type, point: tuple[float, float], *, held: bool
+) -> QtGui.QMouseEvent:
+    """Return a left-button mouse event at a widget pixel."""
+    position = QtCore.QPointF(*point)
+    button = QtCore.Qt.MouseButton.LeftButton
+    return QtGui.QMouseEvent(
+        kind,
+        position,
+        position,
+        button if kind != QtCore.QEvent.Type.MouseMove else QtCore.Qt.MouseButton.NoButton,
+        button if held else QtCore.Qt.MouseButton.NoButton,
+        QtCore.Qt.KeyboardModifier.NoModifier,
+    )
+
+
+def test_ver55_a_drag_in_the_editor_moves_the_view_models_vertex(
+    application: QtWidgets.QApplication,
+) -> None:
+    """Press on a vertex, move, release: one ``move`` on the editor, to the released point.
+
+    Through real ``QMouseEvent``s sent to the canvas, so the hit-test, the frozen
+    transform and the inverse mapping are the ones the user's drag goes through.
+    One drag is one undoable step however far the pointer travelled (D14).
+    """
+    editor = ProfileEditor.from_seed(PARALLELOGRAM, digest="0" * 64, name="parallelogram")
+    canvas = GeometryCanvas()
+    canvas.resize(400, 400)
+    canvas.clear("the contour")
+    canvas.attach(editor)
+    transform = canvas.transform()
+    start = transform.to_screen(*PARALLELOGRAM[1])
+    middle = (start[0] + 10.0, start[1] - 5.0)
+    end = (start[0] + 20.0, start[1] - 12.0)
+
+    send = QtWidgets.QApplication.sendEvent
+    send(canvas, _mouse(QtCore.QEvent.Type.MouseButtonPress, start, held=True))
+    send(canvas, _mouse(QtCore.QEvent.Type.MouseMove, middle, held=True))
+    assert editor.vertices[1] == PARALLELOGRAM[1], "a drag in progress edited the loop"
+    send(canvas, _mouse(QtCore.QEvent.Type.MouseButtonRelease, end, held=False))
+
+    assert canvas.selected == 1
+    assert editor.vertices[1] == pytest.approx(transform.to_data(*end))
+    assert [vertex for index, vertex in enumerate(editor.vertices) if index != 1] == [
+        vertex for index, vertex in enumerate(PARALLELOGRAM) if index != 1
+    ]
+    assert editor.undo()
+    assert tuple(editor.vertices) == PARALLELOGRAM
+    assert not editor.can_undo
+    assert canvas.caption.endswith(STAGE_1_FRAME)
+
+
+def test_ver55_the_tab_builds_through_stage_6_and_draws_the_mesh(
+    application: QtWidgets.QApplication, tmp_path: Path
+) -> None:
+    """A real build from the tab: rows carry the run record's hashes, and the mesh is drawn.
+
+    The build is the spawned walk with ``upto="mesh"``; the rows are the
+    ``Produced`` stream; the region is drawn in the model frame; the mesh pane
+    shows the stage-6 gate figures once the render child has written its scene.
+    """
+    import json
+
+    from nanopnp.mesh.profile import (
+        PROFILE_SCHEMA,
+        PoreProfile,
+        ProfileProvenance,
+        min_feature_size,
+        min_vertex_spacing,
+        signed_area,
+        write_profile,
+    )
+
+    points = np.asarray(PARALLELOGRAM, dtype=np.float64)
+    profile = write_profile(
+        PoreProfile(
+            schema=PROFILE_SCHEMA,
+            name="parallelogram",
+            provenance=ProfileProvenance(
+                source="test",
+                citation="tests/tier1/test_gui_widgets.py",
+                sha256="0" * 64,
+                vertex_count=len(points),
+                min_vertex_spacing_nm=min_vertex_spacing(points),
+                min_feature_size_nm=min_feature_size(points),
+                signed_area_nm2=signed_area(points),
+            ),
+            vertices=list(PARALLELOGRAM),
+        ),
+        tmp_path / "profile.yaml",
+    )
+    path = tmp_path / "case.yaml"
+    path.write_text(PROFILE_CASE.format(path=profile), encoding="utf-8")
+    tab = GeometryWidget(CaseEditor.open(path), store=tmp_path / "store")
+
+    tab.build(path)
+    deadline = time.monotonic() + BUILD_TIMEOUT_S
+    while time.monotonic() < deadline:
+        application.processEvents()
+        model = tab.refresh()
+        if model.settled and (model.state != "finished" or _mesh_shown(tab)):
+            break
+        time.sleep(0.05)
+    model = tab.control.model
+    assert model.state == "finished", model.log
+
+    record = json.loads((model.directory / "run.json").read_text(encoding="utf-8"))
+    assert [row.name for row in tab.rows] == ["region", "mesh"]
+    for row in tab.rows:
+        assert row.status == "stored"
+        assert row.hash == record["artefacts"][row.name]["hash"]
+
+    tab._select("region")
+    assert tab.canvas.caption.endswith(MODEL_FRAME)
+    assert _mesh_shown(tab), tab.details()
+    tab.shutdown()
+
+
+BUILD_TIMEOUT_S = 300.0
+
+
+def _mesh_shown(tab: GeometryWidget) -> bool:
+    """Whether the mesh pane carries the render child's gate figures."""
+    tab._select("mesh")
+    return "minimum SICN" in tab.details()

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from nanopnp.gui.widgets.case_editor import CaseEditorWidget
 from nanopnp.gui.widgets.convergence import ConvergenceWidget
+from nanopnp.gui.widgets.geometry import GeometryWidget
 from nanopnp.gui.widgets.result import ResultWidget
 from nanopnp.gui.widgets.run_control import RunControlWidget
 from nanopnp.gui.widgets.viewer import ViewerWidget
@@ -24,6 +25,7 @@ from nanopnp.gui.widgets.viewer import ViewerWidget
 __all__ = [
     "CaseEditorWidget",
     "ConvergenceWidget",
+    "GeometryWidget",
     "ResultWidget",
     "RunControlWidget",
     "ViewerWidget",
