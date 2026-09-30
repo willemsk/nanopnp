@@ -44,7 +44,7 @@ matches `pyproject.toml`: if you edit `pyproject.toml` by hand, run `uv lock` be
 | `uv run pytest` | Tiers 1 and 2 — the default selection, and the push gate |
 | `uv run pytest -n auto --dist loadfile` | The same, in parallel as CI and the gate run it; set `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS` and `MKL_NUM_THREADS` to 1 or the workers oversubscribe (`.knowledge/07` §12). CI and the gate run `tests/tier1/test_gui_widgets.py` separately and serially, because it waits on a real web page by the wall clock |
 | `uv run pytest -m tier1` | Unit and property tests only (seconds) |
-| `uv run pytest -m tier3` | COMSOL comparison; nightly, not a push gate |
+| `uv run pytest -m tier3` | Comparison with the reference and the author's archive; nightly, not a push gate |
 | `uv run pytest -m slow --log-cli-level=INFO` | Benchmarks and envelope runs; measured, never gated |
 | `uv run pytest tests/tier1/test_corrections.py::test_ver03_ion_wall_function_check_values -v` | One test |
 | `uv run pytest --cov=src/nanopnp --cov-report=term-missing` | Coverage |
@@ -178,15 +178,15 @@ Tests live in `tests/tier{1,2,3,4}/`, matching the four verification tiers of §
 |---|---|---|---|
 | 1 | Unit and property tests (VER-01 … VER-11) | seconds | every push |
 | 2 | Analytic benchmarks (VER-12 … VER-22) | minutes | every push |
-| 3 | COMSOL cross-implementation comparison (VAL-01 … VAL-06) | hours | nightly, recorded not gated |
+| 3 | Cross-implementation comparison: the published results (VAL-16, VAL-17, gating v1.0), VAL-05, VAL-06, and COMSOL fields where exported (VAL-01 … VAL-04) | hours | nightly, recorded not gated |
 | 4 | Experimental reproduction (VAL-07 … VAL-14) | hours | before a tagged release |
 
 - **Name tests for the requirement they discharge**: `test_ver03_ion_wall_function_check_values`,
   `test_val05_contour_against_published_polygon`. Appendix A traceability is then mechanical.
 - An analytic test localises an error to a single term; a whole-model comparison localises nothing.
   Fix Tier 2 before chasing a Tier 3 discrepancy.
-- Tests must not reach the network and must not need a COMSOL licence; Tier 3 reads archived golden
-  files.
+- Tests must not reach the network and must not need a COMSOL licence; Tier 3 reads archived reference
+  data.
 
 ## Provenance and reproducibility
 

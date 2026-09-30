@@ -43,8 +43,8 @@ that can reconstruct the run.
   starts from a converged neighbour, so a sweep maps directly onto an HPC job array.
 - **Three ways in.** The `nanopnp` command line, a Python API of twenty stable names, and a PySide6
   desktop shell with live convergence plots and a field viewer.
-- **Comparable with the reference.** A reference-matching stabilised mode and a Tier-3 harness
-  compare results field by field against COMSOL exports.
+- **Comparable with the reference.** A reference-matching stabilised mode, and a Tier-3
+  comparison against the paper's published current–voltage relationships and in-pore averages.
 
 ## Status and roadmap
 
@@ -53,7 +53,7 @@ desktop shell, and the user documentation with six worked examples are implement
 Meshes are supplied from outside, generated for an idealised pore or the ClyA reference geometry,
 or built from a PDB structure by the geometry pipeline (Phase 2). Charge maps are still supplied
 from outside; assigning them from a structure is Phase 3. Nothing is a validated
-release yet, and the comparison against the reference COMSOL model is recorded but not yet passed.
+release yet. The comparison against the paper's published results gates v1.0.
 
 | Release | Phase | Scope | State |
 |---|---|---|---|
@@ -127,7 +127,7 @@ model pages render the specification and the knowledge base verbatim.
 | [`examples/`](examples) | Five worked examples, each executed by a test |
 | [`docs/`](docs) | The documentation site's sources (`mkdocs.yml` at the root) |
 | [`data/corrections/`](data/corrections) | Fitted correction parameters, one file per electrolyte |
-| [`docs/validation/`](docs/validation) | The Tier-3 comparison surface: the frozen cases, the probe grid, and the COMSOL export contract |
+| [`docs/validation/`](docs/validation) | The COMSOL field-comparison surface, kept but not required: the frozen cases, the probe grid, and the export contract |
 | [`packaging/`](packaging) | The desktop bundle: its PyInstaller recipe and its licence notice |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | How to report a finding, set up, and get a change accepted |
 | [`CLAUDE.md`](CLAUDE.md) | Working instructions for coding agents and new contributors |

@@ -183,8 +183,8 @@ reference-solution generation; MD trajectories are supplied as input.
 | v0.1 | 0 | Spike. Analytic cylindrical/conical pore, coupled steady axisymmetric ePNP-NS, continuation ladder, analytic benchmarks, one COMSOL comparison. No structure pipeline, no GUI. |
 | v0.2 | 1 | Solver core on an externally supplied mesh and material/charge fields; full QoI extraction; pluggable correction models; frozen case-file schema; stable Python API; CLI; sweep runner. |
 | v0.3 | 2 | Geometry pipeline: structure and trajectory ingestion, density, symmetry reduction, contour, CAD, mesh. |
-| v0.4 | 3 | Charge pipeline: PDB2PQR to smeared ρ_fixed and dielectric field; the physics-model interface (FR-20). Reproduces the paper end to end. |
-| v1.0 | 4 | Validated release: V&V suite in CI, documentation, tutorials, JOSS submission, DOI-archived. |
+| v0.4 | 3 | Charge pipeline: PDB2PQR to smeared ρ_fixed and dielectric field; the physics-model interface (FR-20). Runs the paper's pipeline end to end, from structure to current; the reproduction of the published results is measured at v1.0 (VAL-16, VAL-17; §8.2.4 D6). |
+| v1.0 | 4 | Validated release: V&V suite in CI, the published current–voltage relationships and in-pore averages reproduced (VAL-16, VAL-17), documentation, tutorials, JOSS submission, DOI-archived. |
 | v1.5 | 5 | Desktop application: packaged installers, in-app case builder, live convergence monitoring, field visualisation. |
 | post-1.0 | — | Backlog: 3D; transient; ion-specific rather than ionic-strength-based property models; MD-fitting toolkit for corrections; solid-state pores; charge regulation; multi-species electrolytes beyond binary; non-axisymmetric analytes. |
 
@@ -368,7 +368,7 @@ cell–annulus overlaps. The §5.3.1 NOTE on `geometry.density` is the contract.
 | ID | Requirement | Class |
 |---|---|---|
 | **QR-01** | Tier-2 analytic benchmarks SHALL pass, including Maxwell–Hall access conductance to better than 2 % and MMS convergence at O(h³) in L² for P2 on the full coupled axisymmetric system. | Correctness |
-| **QR-02** | Once the matching stabilised mode exists and meshes are convergence-matched, comparison against COMSOL reference solutions SHALL agree to better than 1 % relative L² error on fields and 0.5 % on integrated QoIs; until then, differences SHALL be recorded and attributed, not gated on. | Correctness |
+| **QR-02** | By v1.0, the current–voltage relationships and in-pore averages computed in the validated configuration on the reference inputs SHALL agree with the published ePNP-NS results within the tolerances VAL-16 and VAL-17 state. A field comparison against exported COMSOL solutions, where exports exist, SHALL agree to better than 1 % relative L² error on fields and 0.5 % on integrated QoIs once the matching stabilised mode exists and meshes are convergence-matched; it is not required. Until a comparison is gated, differences SHALL be recorded and attributed, not gated on. **Amended 30 September 2026** (§8.2.4 D6). | Correctness |
 | **QR-03** | Assembled fixed charge SHALL be conserved to better than 0.1 % of Q_net on the deployed mesh. | Correctness |
 | **QR-04** | The two current-extraction routes of FR-23 SHALL agree within a stated tolerance, checked in CI. | Correctness |
 | **QR-05** | End-to-end reproduction of published conductance, transport-number and rectification data SHALL agree with experiment no worse than the source work's own agreement with experiment. | Correctness |
@@ -391,7 +391,11 @@ demonstrate the documentation part at every release. They do not demonstrate the
 
 Rationale (QR-02): the reference implementation uses linear velocity and pressure on a mesh from a
 different generator with stabilisation active, so two correct codes disagree at the per-cent level
-until those differences are matched.
+until those differences are matched. The comparison against the published results is the one a
+user relies on, because those are the numbers the model is cited for. It needs no licence and no
+export, and its reference cannot lapse. It localises a discrepancy less well than a field
+comparison would, which is why the Tier-2 benchmarks, which localise to a single term, come first
+(§7.1).
 
 ### 3.4 Design and implementation constraints
 
@@ -2734,7 +2738,15 @@ so it carries no tolerance.
 
 ### 7.4 Tier 3 cross-implementation comparison
 
-For frozen cases spanning the envelope, solutions are compared field by field against exported
+This implementation is compared with the reference on what the paper publishes: the current–voltage
+relationships and the in-pore averages of its ePNP-NS results (VAL-16, VAL-17), which gate v1.0.
+The reference numbers are the paper's tables, shipped as test data, and the data behind its
+figures, which the author supplies under `NANOPNP_REFERENCE_DATA`. **Amended 30 September 2026**
+(§8.2.4 D6): the tier was first specified as a field-by-field comparison against exported COMSOL
+solutions. That route, VAL-01 to VAL-04, is kept and runs wherever exports exist, but no release
+waits on it.
+
+On the field route, frozen cases spanning the envelope are compared field by field against exported
 COMSOL reference solutions (`φ`, `c_i`, `u`, `p`) on a common probe grid, together with all scalar
 QoIs. Golden files are stored as compressed arrays with the generating model archived alongside.
 
@@ -2747,13 +2759,15 @@ differences are recorded and attributed rather than gated on.
 
 | ID | Activity | Acceptance criterion |
 |---|---|---|
-| **VAL-01** | Field comparison on the common probe grid | < 1 % relative L² error per field, once the preconditions above hold |
-| **VAL-02** | Integrated-quantity comparison (`G`, `t₊`, `RR`, EOF rate) | < 0.5 % relative error, once the preconditions above hold |
-| **VAL-03** | Reference-solution generation and archival, in Phase 1 | Full reference set for the frozen cases archived with the generating model, independent of continued licence access, and **declaring** per field its source expression and its unit, and for the current its evaluation boundary and which electrode it references; a golden leaving any of those unstated is refused rather than interpreted |
-| **VAL-04** | Reference discretisation-error probe | The reference case re-solved at two refinement levels while licence access lasts, bounding the reference's own discretisation error |
+| **VAL-01** | Field comparison on the common probe grid | **Not required** (§8.2.4 D6); runs where exports exist. < 1 % relative L² error per field, once the preconditions above hold |
+| **VAL-02** | Integrated-quantity comparison (`G`, `t₊`, `RR`, EOF rate) against the exports | **Not required** (§8.2.4 D6); VAL-16 compares the same quantities with the published results. < 0.5 % relative error, once the preconditions above hold |
+| **VAL-03** | Reference-solution generation and archival, in Phase 1 | **Not required** (§8.2.4 D6), and not generated in Phase 1 (§8.2.3 C1); the harness ingests and refuses as below whenever a set arrives. Full reference set for the frozen cases archived with the generating model, independent of continued licence access, and **declaring** per field its source expression and its unit, and for the current its evaluation boundary and which electrode it references; a golden leaving any of those unstated is refused rather than interpreted |
+| **VAL-04** | Reference discretisation-error probe | **Not required** (§8.2.4 D6). The reference case re-solved at two refinement levels while licence access lasts, bounding the reference's own discretisation error |
 | **VAL-05** | Geometry pipeline against the published boundary | Auto-generated contour compared against the delivered reference pore polygon (§5.2.1): radius profile and constriction radius within a stated tolerance. Measured on two inputs (§8.2.2 B2): the public 2WCD entry, gated at Tier 2 to a looser tolerance, and the author's ClyA-AS ensemble, archived under `NANOPNP_REFERENCE_DATA` and run at Tier 3; the Phase 2 gate requires the ensemble leg. Each leg's metric, registration and tolerance are stated, with their argument, in the NOTE on VAL-05 below (**amended 28 September 2026**, WP22) |
 | **VAL-06** | Poisson-only comparison against APBS | Potential from the assembled fixed-charge and dielectric fields agrees with an APBS solve on the same structure within a stated tolerance. Two legs (**amended 30 September 2026**, §8.2.4 D3). The **gated** leg gives APBS, at zero ionic strength, our assembled charge and solid fraction as 3D maps, so that only the two solvers differ. The **recorded** leg runs APBS from the PQR with its own charge assignment and molecular surface, which measures the azimuthal averaging of CON-04. APBS runs from the test-only `apbs-binary` package on every CI leg its wheels cover, so VAL-06 is gated at Tier 2 on 2WCD and skips visibly where no wheel exists; the ensemble is recorded at Tier 3. The tolerance is stated, with its argument, by the work package that implements it, before the comparison is run |
 | **VAL-15** | The reference model's own `rhoq_pore` table, on our mesh | The delivered table reads with the grid its header declares, its planar integral is the declared `Q_net` to better than 10⁻⁹, and its boundary ring is negligible against its interior, so the producer leg of §4.4 is exact and the reference's 1.25 % is the consumer's (OPN-06); the consumer leg on the reference mesh is recorded with the mesh it came from, and the quadrature-agreement gate refuses it, per cent-level, rather than reporting a conserved number it cannot defend |
+| **VAL-16** | Current–voltage relationships against the published results | The ionic current, conductance `G`, rectification ratio, cation transport number and electro-osmotic flow rate agree with the paper's published ePNP-NS results within a stated tolerance, at the published concentrations and biases. Two legs, as for VAL-06. The **gated** leg solves on the reference inputs, the §5.2.1 geometry and the delivered `rhoq_pore` table, so that only the solver differs. The **recorded** leg solves on the geometry and charge that stages 1–7 generate from the author's ensemble. Gates v1.0 (**added 30 September 2026**, §8.2.4 D6). The tolerance is stated, with its argument, by the work package that implements it, before the comparison is run |
+| **VAL-17** | In-pore averages against the published results | The pore-averaged ion concentrations, the peak radially averaged equilibrium potential, and the mobile charge in the pore with its wall and bulk split agree with the paper's published values within a stated tolerance. The same two legs, reference sources and tolerance rule as VAL-16. Gates v1.0 (**added 30 September 2026**, §8.2.4 D6) |
 
 NOTE (the comparison surface, and why VAL-01 reports two norms; WP13): the probe grid is **this
 project's**, a content-hashed document of named tensor-product patches that the reference is
@@ -2776,6 +2790,22 @@ be wrong. The pressure SHALL be compared **gauge-free**, its `r`-weighted mean r
 fields and the removed constants reported: `p` enters the momentum equation only through `∇p`, the
 reference's gauge is not in the model report, and a gauge offset compared raw presents as a
 discrepancy of order one that is not a discrepancy at all.
+
+NOTE (VAL-16 and VAL-17; **added 30 September 2026**, §8.2.4 D6): the gated leg solves on the
+reference inputs in the validated configuration, so a difference there belongs to the solver or to
+the reference's own discretisation (RSK-09). The recorded leg solves the same cases on the geometry
+and charge generated from the ensemble. Its difference from the gated leg is what the pipeline adds,
+and it gates nothing. Every published number compared SHALL be declared with its unit and sign
+convention. A current SHALL also declare the boundary it was evaluated on (`.knowledge/04` §6.6),
+and an average its weight. The published pore averages may omit the `2πr` Jacobian
+(`.knowledge/04` G6), so the declaration settles G6 and the comparison does not guess it. A
+reference value missing its declaration is refused, as VAL-03 refuses a golden. The tolerances are
+not QR-02's 1 % and 0.5 %. The published values carry no discretisation error bar, were solved with
+streamline and crosswind stabilisation on, and are quoted to two or three significant figures. The
+work package states each tolerance with that argument before the comparison is run. The published
+correction-ablation percentages (`.knowledge/04` §6.5) are recorded beside the verdict. A
+discrepancy that appears under one correction family alone localises to it, which recovers part of
+what a field comparison would have localised.
 
 NOTE: the reference model carries no mesh convergence study, so part of any residual difference may
 originate in the reference (RSK-09). The project's own discretisation error is quantified first
@@ -2891,7 +2921,7 @@ solver settings, stabilisation mode and correction parameter file versions (FR-2
 | 1. Solver core | Production solver on an externally supplied mesh, full QoI extraction, frozen case-file schema, sweep runner | Tier 1 and Tier 2 pass; Tier 3 enabled and differences attributed; met as amended by §8.2.3 | 6–10 weeks |
 | 2. Geometry pipeline | Structure and trajectory ingestion, density, symmetry reduction, contour, CAD, mesh | VAL-05: the auto-generated mesh reproduces the hand-conditioned reference geometry | 8–12 weeks |
 | 3. Charge pipeline | PDB2PQR to smeared volumetric `ρ_fixed` and dielectric field | VER-01, VER-02 and VAL-06 pass | 3–5 weeks |
-| 4. Validation and release | Full V&V suite in CI, documentation, JOSS paper, v1.0 | Tier 4 passes (VAL-07 to VAL-10) | 4–6 weeks |
+| 4. Validation and release | Full V&V suite in CI, documentation, JOSS paper, v1.0 | Tier 4 passes (VAL-07 to VAL-10), and Tier 3 against the published results passes (VAL-16, VAL-17; **amended 30 September 2026**, §8.2.4 D6) | 4–6 weeks |
 | GUI | Continuous track from Phase 0 onward, one increment per phase | QR-10: an experimentalist runs a case unaided | continuous |
 | Documentation | Continuous track from Phase 1 onward, one increment per phase (**added 23 September 2026**) | VER-45 and VER-46 pass on every push | continuous |
 
@@ -2990,7 +3020,7 @@ The end-of-phase report (`docs/plans/phase-1-solver-core.md`) measures the phase
 
 | # | Amendment | Consequence |
 |---|---|---|
-| C1 | The gate's last clause is met by Tier 3 being **enabled and its attribution machinery verified**: the four-rung ladder against a self-golden, with `golden_source: self` on every report. The attribution of differences **against COMSOL** is recorded as outstanding until the author's reference exports exist (VAL-03, `docs/validation/comsol-export-contract.md`). When they land, it is reported as an addendum to the Phase 1 report, and it gates nothing retroactively. v0.2.0 is released on this basis | Phase 1 closes without the one comparison that needs data the project does not yet hold. The consequence is the same as A2's: a risk stays open longer than planned, here RSK-09 (a Tier-3 discrepancy originating in the reference) and the attribution of any residual. Nothing in Phase 2 touches a weak form, so the addendum can land at any point without re-opening a Phase 2 result |
+| C1 | The gate's last clause is met by Tier 3 being **enabled and its attribution machinery verified**: the four-rung ladder against a self-golden, with `golden_source: self` on every report. The attribution of differences **against COMSOL** is recorded as outstanding until the author's reference exports exist (VAL-03, `docs/validation/comsol-export-contract.md`). When they land, it is reported as an addendum to the Phase 1 report, and it gates nothing retroactively. v0.2.0 is released on this basis | Phase 1 closes without the one comparison that needs data the project does not yet hold. The consequence is the same as A2's: a risk stays open longer than planned, here RSK-09 (a Tier-3 discrepancy originating in the reference) and the attribution of any residual. Nothing in Phase 2 touches a weak form, so the addendum can land at any point without re-opening a Phase 2 result. **Superseded 30 September 2026** (§8.2.4 D6): the exports are no longer required, so no addendum is owed, and the comparison against the published results gates v1.0 instead |
 | C2 | The §8.3 reference sweep (3,675 points on 12 cores) is planned and checked in, but not run. QR-06's scaling is measured on 4 cores (VER-39, recorded and never gated) | QR-06 remains a SHOULD, measured only at the scale the development machine allows. The day-scale run is the author's to make, on HPC hardware |
 
 Phase 0 criterion 4 is not changed by this section. It was closed by the author's double-click,
@@ -3009,6 +3039,7 @@ the commit named in the last column.
 | D3 | VAL-06 runs APBS in CI, through the test-only `apbs-binary` package, with a gated like-for-like leg and a recorded leg from the PQR | The Phase 3 gate is evidence on every push, not a nightly record. `apbs-binary` has no Windows wheel, so VAL-06 skips visibly there and is required on Linux and macOS | VAL-06 in §7.4, §2.6 and §5.2 stage 7, in the Phase 3 plan's commit |
 | D4 | Protonation runs on every selected frame, as the reference did. `inputs.pqr` takes a single-frame PQR or a multi-MODEL PQR, one MODEL per frame | `Q_net` and the protonation states are recorded per frame, and a per-chain difference is a diagnostic, never symmetrised. The schema does not move: `inputs.pqr` keeps `format: pqr` and reads either form | The §5.3.1 NOTE on `inputs:`, in the work package that consumes `inputs.pqr` |
 | D5 | FR-15's ion-exclusion shell is built in Phase 3, beside the smoothed solid fraction | Both are deviations that default to off. A non-zero `charge.exclusion_offset_nm` adds the `exclusion` region to stages 5 and 6 | None: FR-15 stands as written |
+| D6 | Tier 3 compares the current–voltage relationships and in-pore averages the paper publishes (VAL-16, VAL-17), and that comparison gates v1.0. The reference is the paper's tables, shipped as test data, and the data behind its figures, which the author supplies under `NANOPNP_REFERENCE_DATA`. The gated leg runs on the reference geometry and charge, and a recorded leg on the pipeline's. The COMSOL field-export route (VAL-01 to VAL-04) and its harness are kept, but no release waits on them | The author chose the published results over producing the field exports of the export contract, and asked for the comparison to gate v1.0 so that the reference data can follow. Those results are what the model is cited for, need no licence and cannot lapse, which retires RSK-14. They localise a discrepancy less than fields would, so the Tier-2 benchmarks keep that job, and the ablation percentages are recorded beside the verdict. The Phase 1 addendum of §8.2.3 C1 is withdrawn. Phases 2 and 3 are unaffected | §2.7, QR-02 and its rationale, §7.4 (its preamble, VAL-01 to VAL-04, the new VAL-16 and VAL-17, and their NOTE), §8.1 Phase 4, §8.2.3 C1, RSK-09, RSK-14 and Appendix A, in this commit |
 
 ### 8.3 Effort estimate
 
@@ -3063,12 +3094,12 @@ otherwise report unbounded throughput for a resumed sweep.
 | **RSK-06** | The author's contour script proves tightly coupled to its original context and is not portable | Med | Med | Read it in week 1 of Phase 2, before the rest of the phase is planned; fall back to the specified contour pipeline. **Retired 26 September 2026**: it was read (OPN-02). It is 20 lines, coupled to nothing beyond MDAnalysis, scikit-image and Shapely | Phase 2 |
 | **RSK-07** | Axisymmetric reduction invalid for a given pore through large azimuthal variance | Med | Med | Residual azimuthal variance reported as a first-class output (FR-06) and documented as a validity criterion | Phase 2 |
 | **RSK-08** | Charge non-conservation through smearing and 1/r projection | Med | Med | Exact annular volumes; analytic annulus integration; assertion on the deployed mesh and per-z-slice check (VER-01, VER-02) | Phase 3 |
-| **RSK-09** | The reference model carries no mesh convergence study, so a Tier 3 discrepancy of a few per cent may originate in the reference | Med | Med–High | Quantify this project's discretisation error first (§7.3), then attribute the residual; re-solve the reference case at two refinement levels while licence access lasts (VAL-04); never adjust the solver to close such a gap | Tier 3 |
+| **RSK-09** | The reference model carries no mesh convergence study, so a Tier 3 discrepancy of a few per cent may originate in the reference | Med | Med–High | Quantify this project's discretisation error first (§7.3), then attribute the residual; the published results carry no error bar, so VAL-16 and VAL-17 state tolerances that include it (§8.2.4 D6); re-solving the reference at two refinement levels (VAL-04) is kept but not required; never adjust the solver to close such a gap | Tier 3 |
 | **RSK-10** | The NGSolve pip wheel ships without MUMPS, and UMFPACK or SuperLU may not handle production-size coupled factorisations | Med | Med | Two solver configurations (§6.6); measured on day one of Phase 0 (§8.2 criterion 3); iterative fieldsplit through ngsPETSc in reserve | Phase 0 |
 | **RSK-11** | NaN from 1/r terms at integration order 2, silent rather than a crash | Med | Med–High | Integration order ≥ 3 asserted on all 1/r forms; dedicated test on an axis-touching mesh (VER-07) | Tier 1 |
 | **RSK-12** | Transcription errors in the correction coefficients, the per-ion `D` and `μ` sets being easy to conflate | Med | Med | Coefficient files reviewed against the model report in a second pass; each `f(c)` property-tested against published check values (VER-03) | Tier 1 |
 | **RSK-13** | Desktop packaging defeated by a binary dependency | Med | Low–Med | NGSolve wheels chosen for this reason; packaging prototyped in Phase 0 (§8.2 criterion 4), not at the end. **Retired 24 September 2026** on the author's double-click (§8.2.1 NOTE); the gated `bundle` job re-detects it on every push | Phase 0 |
-| **RSK-14** | COMSOL licence access lapses, removing the oracle | Med | Low | Full reference set generated and archived in Phase 1 (VAL-03) | Continuous |
+| **RSK-14** | COMSOL licence access lapses, removing the oracle | Med | Low | The gating comparison is against the published results (VAL-16, VAL-17), which need no licence (**amended 30 September 2026**, §8.2.4 D6); the field route stays available while access lasts | Continuous |
 | **RSK-15** | Scope creep from the GUI drawing effort away from validation | Med | High | Each increment stays thin and follows the physics it exposes; no GUI is built for an unvalidated capability | Continuous |
 | **RSK-16** | Sole-maintainer bus factor | Med | Med | JOSS paper and DOI; small dependency surface; every stage independently usable | Continuous |
 | **RSK-17** | NGSolve MPI weakness blocks a future 3D phase | Med | Med | Not on the v1 path; 3D scaling prototyped before commitment; ngsPETSc and a DOLFINx backend as fallbacks | Post-v1 |
@@ -3231,7 +3262,7 @@ needed.
 | FR-20 | None yet |
 | FR-21 | VER-20, VER-22 |
 | FR-22 | VER-19, VER-21, VER-22 |
-| FR-23 | VER-11, VER-38 (the two-point ratio) |
+| FR-23 | VER-11, VER-38 (the two-point ratio), VAL-16 (the published currents, transport numbers, rectification and flow rate) |
 | FR-24 | VER-36, VER-37, VER-38 |
 | FR-25 | VER-24, VER-26 (manifest emitted per §7.6) |
 | FR-26 | VER-09, VER-26, VER-47 (a v1 document and its v2 rewrite are one run) |
@@ -3239,7 +3270,7 @@ needed.
 | FR-28 | None yet |
 | FR-29 | None yet |
 | QR-01 | VER-12 to VER-22, in particular VER-17 and VER-18 |
-| QR-02 | VAL-01, VAL-02 |
+| QR-02 | VAL-16, VAL-17 (gating v1.0); VAL-01, VAL-02 (kept, not required) |
 | QR-03 | VER-01, VER-29, VAL-15 |
 | QR-04 | VER-11, VER-40 (the route disagreement as a resolution gate), VER-42 (the identity under a stabilisation mode) |
 | QR-05 | VAL-07, VAL-08, VAL-09 |
