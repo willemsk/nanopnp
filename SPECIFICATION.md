@@ -806,6 +806,19 @@ Classical PNP-NS SHALL be recovered exactly by setting `β_i = 0` and
 `ε_r,f^c = D_i^c = μ_i^c = η^c = ϱ^c = 1` and `D_i^w = μ_i^w = η^w = 1`; no separate code path is
 permitted for it.
 
+NOTE (the electrostatic models as case-file models, PHY-20, PHY-24, FR-19, FR-20; **added 30
+September 2026**, WP26): `poisson` solves `∇·(ε_0 ε_r ∇φ) = −ρ_pore` over all of Ω, with the fixed
+charge, `physics.solid_permittivities` and the §4.4 `χ` taken as the coupled models take them. It
+carries no mobile ions, so the fluid is ion-free water at `ε_r,f⁰` whatever the permittivity
+correction (author ruling 13), and `ρ_ion` is none: case schema v2 has no key that prescribes one.
+This is the configuration VAL-06 compares with APBS. `pb` and `pb-linear` take `λ_D` from the case,
+at `ε_r,f⁰`, the case temperature and `c_0` with unit valence (NUM-09), and SHALL be refused for any
+electrolyte other than a symmetric monovalent salt, for which that `λ_D` and the `sinh` form are
+exact. They carry no solids, no fixed charge and no `χ`: their screening term is posed on all of Ω,
+so a solid domain would screen as if it held ions. They are therefore run only on a mesh with no
+solid domain, and an ingested mesh that carries one SHALL be refused naming the model and the
+domain (§5.3.1 NOTE on a solid without a permittivity).
+
 **PHY-22.** The corrections SHALL be independently switchable, each resolving to a named model in
 the correction registry, with "off" a named model rather than a code branch.
 
@@ -1491,11 +1504,15 @@ only pass.
 NOTE (a solid without a permittivity, PHY-03, QR-12): `physics.solid_permittivities` is a map from
 material name to relative permittivity, defaulting to empty; PHY-20 gives ε_r = 3.2 for the membrane
 and 20 for the protein and the analyte, and it is not defaulted because the mesh decides which
-solids exist. It is the one member of `physics:` that is not a switch, and the electrostatic models
-of PHY-21 carry no solids, so a non-empty map beside one of them SHALL be refused as
-§5.3.1's other inapplicable switches are. On an **ingested** mesh, a material that is
+solids exist. It is the one member of `physics:` that is not a switch, and `pb` and `pb-linear`
+carry no solids, so a non-empty map beside one of them SHALL be refused as §5.3.1's other
+inapplicable switches are; `poisson` carries them as the coupled models do (**amended 30 September
+2026**, WP26: the refusal covered all three electrostatic models, which left none of them runnable
+on any mesh with a membrane). On an **ingested** mesh, a material that is
 neither in the fluid set nor named in `physics.solid_permittivities` SHALL abort the run, naming the
-material. Poisson is solved over the whole domain, so the alternative is the electrolyte's ε_r about
+material; for a model that carries no solids the abort SHALL say that the model cannot be posed on
+a mesh with a solid domain, rather than ask for an entry the case would then refuse. Poisson is
+solved over the whole domain, so the alternative is the electrolyte's ε_r about
 24 times too large in a solid — a plausible wrong answer with no solver diagnostic. Meshes built in
 process by the benchmark geometries keep the warning they have today; the difference is that an
 ingested mesh's material names were not written by this codebase. A mesh stage 6 generates from a
@@ -1587,7 +1604,11 @@ applied would be a plausible wrong answer (**added 28 September 2026**, code rev
 
 NOTE (`outputs:`): the list selects what the run produces, and each word is refused rather than
 silently ignored where it cannot be met. `current`, `transport_numbers` and `eof_rate` select scalar
-quantities of interest (§6.7). `fields` gates the IF-07 field export, which is off unless asked for:
+quantities of interest (§6.7). Each model declares the quantities it provides (§5.4.3), and a word
+the named model does not declare SHALL be refused when the case is resolved, naming the model and
+the quantities it declares, rather than when stage 11 reaches it (**added 30 September 2026**,
+WP26); the electrostatic models declare none, so a case naming one of them writes `outputs: []` or
+`outputs: [fields]`. `fields` gates the IF-07 field export, which is off unless asked for:
 the export is of order ten megabytes per solve and an envelope sweep of thousands of points would
 otherwise write tens of gigabytes nobody requested. `analyte_force` requires the mesh to carry an
 `analyte` material, and a case asking for it on a mesh without one SHALL abort naming the missing
@@ -1823,6 +1844,20 @@ A `PhysicsModel` declares its field set, its weak-form contributions, its bounda
 vocabulary and its default solve strategy (FR-20). The geometry, mesh, charge, solver,
 post-processing, sweep, provenance and interface layers are model-agnostic, so adding a model
 changes none of them.
+
+NOTE (what a model declares; **added 30 September 2026**, WP26): a model is registered by name
+together with a declaration that can be read without building it. The declaration states the
+case-derived options its builder takes, which are the resolved `model_options`; the value set of each
+`physics:` switch it honours; whether it carries solid materials, and which supplied coefficients it
+accepts (the fixed charge, `χ`); whether it reads the PHY-02 distance field; the values of
+`numerics.continuation` it admits; the quantities of interest it provides (§6.7); and whether it
+solves ionic transport. Every built model reports its field set, boundary vocabulary, essential
+boundaries, NUM-09 scale set and provenance. A layer outside `physics/` reads these, and SHALL NOT
+branch on a model's name or on its class: case validation refuses what the declaration does not
+admit, the mesh gate requires the boundaries the model declares, the solve passes the coefficients
+it accepts, and QoI extraction reaches the transport members through the declaration. The NUM-18
+ladder is the one place outside `physics/` that names models, because §6.5 defines it as a path
+through named models; it is a strategy a model admits, not a branch on the model.
 
 ### 5.5 Extension points
 
