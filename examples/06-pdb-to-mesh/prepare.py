@@ -23,7 +23,7 @@ What it does, to the dodecamer of chains A-L, protein only:
    points from *trans* to *cis*. The script compares the mean C-alpha radius of
    the top and bottom fifths along the axis, and points +z at the wider end.
 3. **Rotates and places it.** The signed axis is turned onto z, and the C-alpha
-   centroid of residues 8-292 is moved to (0, 0, 5.63) nm. That is where the
+   centroid of residues 8-292 is moved to (0, 0, 5.655) nm. That is where the
    centroid of the molecular-dynamics structure sits when the bilayer centre is
    at z = 0, so the case can keep ``geometry.membrane.centre_z_nm`` at its
    default of 0.
@@ -47,7 +47,7 @@ CHAINS = "A B C D E F G H I J K L"
 REGISTRATION_RESIDUES = "8:292"
 """The residues whose C-alpha centroid is placed on the axis."""
 
-CENTROID_Z_NM = 5.63
+CENTROID_Z_NM = 5.655
 """Where that centroid goes on z, in nm: the molecular-dynamics structure's, bilayer centre at 0."""
 
 DEGENERACY = 0.25

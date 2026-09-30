@@ -7,16 +7,12 @@ evidence that an unmerged branch has shipped.
 
 - Phase 1 ([solver core](phase-1-solver-core.md)) is **closed** as `v0.2.0` (§8.2.3). It was
   released as `v0.5.0` before the renumbering of §8.2.4 D1.
-- Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)): WP17 to WP25 are **merged**
-  (`v0.3.0-alpha.1` to `.9`). **Its end-of-phase report and `v0.3.0` wait for one run**:
-  `uv run pytest -m tier3 tests/tier3/test_val05_ensemble.py --log-cli-level=INFO` on
-  `$NANOPNP_REFERENCE_DATA`, which the author makes. That run closes criterion 3, pins `Z_MD`, and
-  fills the [WP22 Outcomes](wp22-val05-reference-geometry.md#outcomes).
-- **The tags are renamed by the author** with `.github/scripts/renumber-tags.sh --apply`, after the
-  renumbering commit reaches `main`. Until then the remote carries the retired names.
+- Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **closed** as `v0.3.0`, with
+  criterion 3 waived: the ensemble's ε_G is −5.56 % against 5 % (§8.2.4 D7). `Z_MD` is 5.655 nm.
+- **After this report merges, the author** runs `.github/scripts/renumber-tags.sh --apply`, then
+  tags the merge commit `v0.3.0`.
 - Phase 3 ([charge pipeline](phase-3-charge-pipeline.md), release `v0.4.0`) is **planned**:
-  WP26–WP32. **Next: `/wp-plan 26`**, the physics-model interface (FR-20). It may start before the
-  Phase 2 report merges, but `v0.4.0` is not tagged before `v0.3.0`.
+  WP26–WP32. **Next: `/wp-plan 26`**, the physics-model interface (FR-20).
 
 ## What Phase 3 must not re-decide
 
@@ -39,6 +35,8 @@ Each is recorded in full where it points.
 
 ## Inherited from Phases 1 and 2, still binding
 
+- **The VAL-05 ensemble test fails on the archive by design** (§8.2.4 D7): a waiver, not a
+  regression.
 - **Schema v2 is frozen**: a need widens a value set, never adds a key (§8.2.2 B3).
   `physics.solid_permittivities` alone sets ε_protein and ε_membrane (WP17 D2, D3).
 - **A callback is not an input**, and a watched run keys the same artefact (VER-44).

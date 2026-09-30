@@ -112,7 +112,7 @@ def reference() -> np.ndarray:
 def test_val05_ensemble_pins_z_md(
     tmp_path: Path, ensemble_store: Store, ensemble_case: Callable[..., Path]
 ) -> None:
-    """D6: the 50-frame mean's C-alpha centroid, residues 8-292, lies within 0.01 nm of 5.63 nm.
+    """D6: the 50-frame mean's C-alpha centroid, residues 8-292, lies within 0.01 nm of 5.655 nm.
 
     If it does not, the constant and every 2WCD figure registered by it are
     corrected in the WP22 Outcomes; the test fails so that happens.
@@ -147,6 +147,11 @@ def test_val05_ensemble_against_the_reference_polygon(
     Every plane outside the tip band must be crossed (D2). The attribution (D7),
     the isolevel sweep (D8) and the conditioning's share are recorded first, so
     a miss still leaves them in the log.
+
+    The run of 30 September 2026 measured ε_G = -5.56 % and failed here. Phase 2
+    closed on the author's waiver (``SPECIFICATION.md`` §8.2.4 D7), and the
+    tolerance stands, so this test keeps failing on the archive until the method
+    or the reference changes. That failure is the record.
     """
     case = ensemble_case(tmp_path, name="clya-as-val05", geometry=GEOMETRY)
     result = run_case(case, store=ensemble_store, upto="region", write=False)

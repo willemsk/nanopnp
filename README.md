@@ -59,9 +59,9 @@ release yet. The comparison against the paper's published results gates v1.0.
 |---|---|---|---|
 | v0.1 | 0 | Spike: the coupled model on an analytic pore, the continuation ladder, analytic benchmarks | **released**, [`v0.1.0`](CHANGELOG.md#010---2026-09-02) |
 | v0.2 | 1 | Solver core: external meshes and fields, QoI extraction, frozen case schema, API, CLI, sweeps | **released**, [`v0.2.0`](CHANGELOG.md#020---2026-09-24) |
-| v0.3 | 2 | Geometry pipeline from a PDB structure: alignment, density, symmetry reduction, contour, mesh | work packages merged, the end-of-phase report pending, [Phase 2 plan](docs/plans/phase-2-geometry-pipeline.md) |
-| v0.4 | 3 | Charge pipeline: PDB2PQR charges, smeared fixed charge and dielectric; reproduces the paper end to end | planned |
-| v1.0 | 4 | Validated release: V&V suite in CI, tutorials, JOSS submission, DOI archive | planned |
+| v0.3 | 2 | Geometry pipeline from a PDB structure: alignment, density, symmetry reduction, contour, mesh | **released**, [`v0.3.0`](CHANGELOG.md#030---2026-09-30) |
+| v0.4 | 3 | Charge pipeline: PDB2PQR charges, smeared fixed charge and dielectric; the paper's pipeline end to end | planned, [Phase 3 plan](docs/plans/phase-3-charge-pipeline.md) |
+| v1.0 | 4 | Validated release: the published results reproduced, V&V suite in CI, tutorials, JOSS submission, DOI archive | planned |
 
 Each merged work package is tagged `vX.Y.Z-alpha.N` toward its phase's release, and the package
 version is derived from the tag. The history is in [`CHANGELOG.md`](CHANGELOG.md), and the full
