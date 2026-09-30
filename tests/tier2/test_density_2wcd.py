@@ -14,6 +14,7 @@ import json
 import logging
 import subprocess
 import sys
+from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -56,8 +57,14 @@ def _case(tmp_path: Path, pdb: Path) -> Path:
     return path
 
 
-def test_ver49_ver50_2wcd_to_stage_three(prepared_2wcd: Prepared2WCD, tmp_path: Path) -> None:
+def test_ver49_ver50_2wcd_to_stage_three(
+    prepared_2wcd: Prepared2WCD, seeded_2wcd: Callable[[Path], Path], tmp_path: Path
+) -> None:
     """2WCD runs to stage 3: every atom resolves, the map is bounded and conserved, the lumen open.
+
+    The stage-2 and stage-3 artefacts are the session's seed (``seeded_2wcd``): the
+    same content-addressed bytes this walk would write, computed once by the same
+    code. The cold walk's time and memory are :func:`test_ver49_2wcd_budget`'s.
 
     Conservation to 1e-9 relative, slice by slice: ``sum_j mu_j A_j`` against
     ``sum_p rho_p h^2``. The Cn variance cannot exceed the raw variance by more
@@ -66,7 +73,7 @@ def test_ver49_ver50_2wcd_to_stage_three(prepared_2wcd: Prepared2WCD, tmp_path: 
     """
     result = run_case(
         _case(tmp_path, prepared_2wcd.path),
-        store=Store(tmp_path / "store"),
+        store=Store(seeded_2wcd(tmp_path / "store")),
         upto="symmetry",
         write=False,
     )

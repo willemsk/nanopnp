@@ -20,6 +20,7 @@ runs on its own store, as ``test_contour_2wcd.py`` does, because
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass
 from itertools import pairwise
 from pathlib import Path
@@ -152,11 +153,17 @@ def reference() -> np.ndarray:
 
 @pytest.fixture(scope="module")
 def walked(
-    prepared_2wcd: Prepared2WCD, tmp_path_factory: pytest.TempPathFactory, reference: np.ndarray
+    prepared_2wcd: Prepared2WCD,
+    seeded_2wcd: Callable[[Path], Path],
+    tmp_path_factory: pytest.TempPathFactory,
+    reference: np.ndarray,
 ) -> Walked:
-    """Run stages 1-4, register by the C-alpha centroid (D6), then stage 5, and compare (D2, D3)."""
+    """Run stages 1-4, register by the C-alpha centroid (D6), then stage 5, and compare (D2, D3).
+
+    Stages 1 to 3 are the session's seed (``seeded_2wcd``); stage 4 on runs here.
+    """
     root = tmp_path_factory.mktemp("2wcd-val05")
-    store = Store(root / "store")
+    store = Store(seeded_2wcd(root / "store"))
     structure = STRUCTURE.format(pdb=prepared_2wcd.path)
     case = _write(
         root / "contour.case.yaml", GEOMETRY_CASE.format(structure=structure, geometry="")

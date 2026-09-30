@@ -510,8 +510,8 @@ def to_coefficient_function(expression: Symbolic) -> Expression:
         "cosh": ngs.cosh,
         "atan": ngs.atan,
     }
-    evaluate = sp.lambdify((RADIAL, AXIAL), expression, modules=[namespace, "math"])
-    return ngs.CF(evaluate(ngs.x, ngs.y))
+    evaluate = sp.lambdify((RADIAL, AXIAL), expression, modules=[namespace, "math"], cse=True)
+    return ngs.CF(evaluate(ngs.x, ngs.y)).Compile()
 
 
 def weighted_l2_error(

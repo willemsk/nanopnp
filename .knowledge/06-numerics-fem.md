@@ -338,11 +338,27 @@ polynomial sits inside the nonlinear SUPG integrand, and `AssembleLinearization`
 constant subtree through every quadrature point. `CoefficientFunction.Compile()` (graph flattening
 only, with no C++ JIT, so CON-07 is untouched) recovers only 20 % (37 s to 29.6 s at 0.4 plus 0.2 nm)
 and leaves the errors identical to 13 digits. This cost belongs to the MMS benchmark. A production
-run carries no manufactured source, so it does not pay it. VER-42's three-level `supg` fixture
-(141 s, the largest single item in the push gate) pays it in full. What would remove it is to
-assemble the source's contribution `τ s̃_i (b̃·∇v)` apart from the linearised integrand. That is a
-change to a weak form in `physics/`, it is not done here, and it has to keep the §4.3.4 footprint
-test discriminating.
+run carries no manufactured source, so it does not pay it.
+
+**The cost is the source's *representation*, and it is removed in the harness [tested].** `_reduce`
+puts each species source over one common denominator (`cancel(together(·))`) so the removable `1/r`
+cancels. The result is about 3,800 operations. `lambdify` writes it as a tree in which every
+repeated subexpression is its own node, so NGSolve evaluates all of them at every quadrature point:
+one `Integrate` of the `c_Na+` source at order 12 on the 0.1 nm mesh takes 1.08 s, against 0.001 s
+for the exact concentration. `CoefficientFunction.Freeze()` changes nothing, bitwise or in time, so
+automatic differentiation is not the cost. Built with `lambdify(..., cse=True)` and then
+`Compile()`, the repeated subexpressions are shared and each is evaluated once: 0.057 s (19×), with
+the source values moving by 1.5e-15 relative. `to_coefficient_function` does this. VER-42's
+three-level `supg` fixture went from 208 s to 26 s, and `none` from 11 s to 7.5 s (serial, one BLAS
+thread, NGSolve 6.2.2606). The errors equal the recorded ones to every printed digit (`supg`
+`c_Na+` 3.7396590029e-04, 9.2730603940e-05, 2.2549195484e-05; rates 2.0118, 2.0400), and every
+Tier-1 and Tier-2 test passes unchanged. The weak forms are untouched, so the §4.3.4 footprint test
+discriminates exactly as before. Source: test-suite timing work, 30 September 2026.
+
+Two things measured and rejected. First, `TaskManager()` makes the same solve 3.9× faster on four
+idle cores (158 s to 41 s at 0.1 nm). But the push gate runs four workers on four cores, so no core
+is idle. Second, the form's derivative of the source is identically zero, so freezing it is exact
+but buys nothing.
 
 ### 4.3.4 A stabilisation residual missing its source switches the term **off** **[tested]**
 
