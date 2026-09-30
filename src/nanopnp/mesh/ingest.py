@@ -302,17 +302,21 @@ def required_names(resolved: ResolvedCase) -> RequiredNames:
     )
 
     # The model's own essential sets, read off the built model rather than off
-    # its name (section 5.4.3 NOTE): the potential for every model, each
+    # its name (section 5.4.3 NOTE): the potential for every shipped model, each
     # species' concentration, and no-slip and the axis where a flow block exists.
+    # The potential is listed first, as it always has been, but it is asked for
+    # only where the model reports it: the protocol does not promise it.
     essential = dict(resolved.physics_model().essential_boundaries(DEFAULT_BOUNDARIES))
-    potential = essential.pop(POTENTIAL)
-    boundaries = [
-        Requirement(
-            purpose=_ESSENTIAL_PURPOSES[POTENTIAL],
-            pattern=potential,
-            options=_options(potential),
+    potential = essential.pop(POTENTIAL, None)
+    boundaries: list[Requirement] = []
+    if potential is not None:
+        boundaries.append(
+            Requirement(
+                purpose=_ESSENTIAL_PURPOSES[POTENTIAL],
+                pattern=potential,
+                options=_options(potential),
+            )
         )
-    ]
     # The bias is applied between two *named* electrodes -- ``BoundaryCF({ground:
     # 0, driven: V})`` in ``solve/stage.py`` and in the continuation ladder -- so
     # each of them is required on its own, and not merely as an alternative of

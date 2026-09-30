@@ -66,6 +66,7 @@ from nanopnp.materials.electrolyte import (
     Electrolyte,
 )
 from nanopnp.physics.models import (
+    LADDER_STRATEGY,
     SWITCHES,
     PhysicsModel,
     create,
@@ -2311,9 +2312,6 @@ def _check_generation(document: CaseDocument) -> None:
         )
 
 
-LADDER_STRATEGY = "default_ladder"
-"""The ``numerics.continuation`` value that selects the NUM-18 ladder (section 6.5)."""
-
 _LADDER_PHYSICS: dict[str, bool] = {
     "flow": True,
     "variable_density": True,
@@ -2417,6 +2415,15 @@ def _check_physics_switches(document: CaseDocument) -> None:
             "mesh with no solid domain (PHY-21 NOTE). Models carrying solids: "
             f"{_admitting(lambda other: declaration(other).solids)}"
         )
+    if document.inputs.mesh is None and not declared.solids:
+        # Every region stages 5 and 6 build carries a membrane and a protein, so
+        # the stage-6 gate would refuse this case -- after meshing it.
+        raise CaseValidationError(
+            f"physics.model {model!r} carries no solid materials, so it is posed on a mesh with "
+            "no solid domain (PHY-21 NOTE), and every mesh stages 5 and 6 generate carries a "
+            "membrane and a protein; supply inputs.mesh with no solid domain. Models carrying "
+            f"solids: {_admitting(lambda other: declaration(other).solids)}"
+        )
     for supplied, coefficient, what in (
         ("charge", "fixed_charge", "a fixed-charge source"),
         ("eps_r", "solid_fraction", "a material permittivity field"),
@@ -2469,10 +2476,15 @@ def _check_outputs(document: CaseDocument) -> None:
     undeclared = [word for word in document.outputs if word != "fields" and word not in declared]
     if not undeclared:
         return
+    advice = (
+        f"remove {', '.join(undeclared)} from outputs"
+        if declared
+        else "write outputs: [] or outputs: [fields]"
+    )
     raise CaseValidationError(
         f"outputs asks for {', '.join(undeclared)}, which physics.model {model!r} does not "
         f"provide; it declares {', '.join(declared) or 'no quantity of interest'} (section 6.7), "
-        "so write outputs: [] or outputs: [fields] for a model that declares none"
+        f"so {advice}. fields, the IF-07 export, is admitted for every model"
     )
 
 
@@ -2622,11 +2634,7 @@ def resolve(document: CaseDocument) -> ResolvedCase:
     options = _model_options(
         document, order=order, velocity_order=velocity_order, pressure_order=pressure_order
     )
-    # Built once and discarded: a builder's own refusal -- ``pb`` beside a salt
-    # that is not symmetric monovalent -- is a case error, and is reported now
-    # rather than when stage 10 builds the model again (WP26 D10).
-    build_model(physics.model, electrolyte, document.electrolyte.concentration_M, options)
-    return ResolvedCase(
+    resolved = ResolvedCase(
         document=document,
         electrolyte=electrolyte,
         concentration_M=document.electrolyte.concentration_M,
@@ -2661,6 +2669,12 @@ def resolve(document: CaseDocument) -> ResolvedCase:
         membrane=geometry.membrane if mesh is None else None,
         reservoir=geometry.reservoir if mesh is None else None,
     )
+    # Built once and discarded, through the one call every consumer uses: a
+    # builder's own refusal -- ``pb`` beside a salt that is not symmetric
+    # monovalent -- is a case error, and is reported now rather than when stage
+    # 10 builds the model again (WP26 D10).
+    resolved.physics_model()
+    return resolved
 
 
 # -- the stage ----------------------------------------------------------------

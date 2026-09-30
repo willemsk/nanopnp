@@ -79,6 +79,7 @@ from nanopnp.physics.coefficients import SATURATED_WALL_DISTANCE_NM
 from nanopnp.physics.measures import AXISYMMETRIC, Measures
 from nanopnp.physics.models import (
     DEFAULT_BOUNDARIES,
+    LADDER_TARGETS,
     CoupledBoundaries,
     ModelSolution,
     PhysicsModel,
@@ -888,7 +889,8 @@ def default_ladder(
     import ngsolve as ngs
 
     # The models the ladder can end at: with the corrections on, and without.
-    targets = ("epnp-ns", "pnp-ns")
+    # Shared with ``register_model``, which refuses the ladder to any other.
+    targets = LADDER_TARGETS
     if target is not None:
         if target not in targets:
             raise ValueError(f"the NUM-18 ladder ends at {' or '.join(targets)}, not at {target!r}")
@@ -998,11 +1000,15 @@ def default_ladder(
             Rung(
                 name=f"{stage}-{name}",
                 stage=stage,
+                # The rung's own ``lambda_D``, stated to the builder as well as to
+                # the solve: an initialiser is not the case-file model, and must
+                # not be refused a salt that model is exact for only.
                 model=create(
                     name,
                     electrolyte=base,
                     concentration_M=build_M,
                     order=measures.element_order,
+                    debye_length_nm=screening_nm,
                 ),
                 mesh=mesh,
                 boundaries=pb_boundaries,

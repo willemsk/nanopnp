@@ -42,13 +42,18 @@ WP26: the physics-model interface (FR-20, QR-14), the first package of Phase 3.
 
 ### Changed
 
+- `nanopnp.physics.models.register(name, builder)` is replaced by
+  `register_model(name, builder, declaration)`: a model cannot be registered without saying what it
+  admits. A builder must return a model under the name it is registered by, and only `epnp-ns` and
+  `pnp-ns`, the models the NUM-18 ladder ends at, may admit `numerics.continuation: default_ladder`.
 - Every refusal a declaration makes names the model, the key and the values or models that are
   admitted. `pnp` admits `numerics.continuation: none` only, as §6.5 already required. An
   `outputs:` word the model does not provide is refused when the case is resolved rather than at
   stage 11: `pnp` does not provide `eof_rate` or `analyte_force`, and the electrostatic models
   provide no quantity (`outputs: []` or `[fields]`).
 - For a model without solids, a mesh carrying a solid domain is refused naming the model and the
-  domain, rather than asking for a `solid_permittivities` entry the case would then refuse.
+  domain, rather than asking for a `solid_permittivities` entry the case would then refuse; a case
+  that generates its mesh, which always carries a membrane and a protein, is refused when resolved.
 - The stage-10 key of every model runnable before this release, the model of every rung of the
   NUM-18 ladder, and the coupled models' stage-11 scalars on the quick-start case are unchanged,
   the scalars bit for bit (VER-56).

@@ -12,11 +12,14 @@ and
 with ``D_0 = -(V + rho_0 I2)/I1`` from ``phi(L) = V`` (the WP26 plan's *Design*
 section 3, [verified]). ``phi`` is piecewise quadratic in ``z``, so the P2 space
 on a mesh whose element edges lie on ``z = a`` and ``z = b`` contains it exactly,
-and the ``r``-weighted integrands are cubic, which the order-3 rule of NUM-07
-integrates exactly: the Galerkin solution *is* the closed form up to the linear
-solve's round-off. Any larger error is a scale, a sign or a permittivity defect,
-and each of the three moves the answer by far more than the tolerance -- which is
-why this test localises an error the whole-model comparison of VAL-06 could not.
+and the ``r``-weighted integrands are cubic. NGSolve's own estimate integrates them
+at order 2, one short, because it does not count the ``r`` weight; ``poisson``
+adds :data:`~nanopnp.physics.models.RADIAL_WEIGHT_ORDER` to both terms, so they
+are integrated exactly (NUM-07 NOTE on the ``r`` weight) and the Galerkin solution
+*is* the closed form up to the linear solve's round-off. Any larger error is a
+scale, a sign or a permittivity defect, and each of the three moves the answer by
+far more than the tolerance -- which is why this test localises an error the
+whole-model comparison of VAL-06 could not.
 
 The check values are the plan's, at ``L = 10``, ``a = 4``, ``b = 6`` nm,
 ``eps_f = 78.15`` (``eps_r,f^0``, Gavish 2016, ``data/corrections/
