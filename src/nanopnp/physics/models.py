@@ -104,6 +104,8 @@ from nanopnp.solve.newton import (
 __all__ = [
     "COEFFICIENTS",
     "DEFAULT_BOUNDARIES",
+    "LADDER_STRATEGY",
+    "LADDER_TARGETS",
     "PRESSURE_MEAN",
     "SWITCHES",
     "VELOCITY_AXIS",
@@ -153,6 +155,17 @@ SWITCHES: tuple[str, ...] = ("flow", "variable_density", "inertia", "dielectric_
 
 COEFFICIENTS: tuple[str, ...] = ("fixed_charge", "solid_fraction")
 """The supplied coefficients a model may accept: ``rho~_pore`` and the section 4.4 ``chi``."""
+
+LADDER_STRATEGY = "default_ladder"
+"""The ``numerics.continuation`` value that selects the NUM-18 ladder (section 6.5)."""
+
+LADDER_TARGETS: tuple[str, ...] = ("epnp-ns", "pnp-ns")
+"""The models the NUM-18 ladder ends at: with the corrections on, and without.
+
+NUM-18 defines the ladder as a path through these named models, so it is the one
+strategy a declaration cannot admit on its own say-so: :func:`register_model`
+refuses :data:`LADDER_STRATEGY` for any other name, rather than let case
+validation admit a ladder that stage 10 then cannot build."""
 
 
 def equal_order_stabilisations() -> tuple[str, ...]:
@@ -470,7 +483,15 @@ class ModelDeclaration:
     reports_newton: bool = False
 
     def __post_init__(self) -> None:
-        """Refuse a declaration that leaves a switch unstated or names an unknown coefficient."""
+        """Refuse a declaration that leaves a switch unstated or names an unknown coefficient.
+
+        ``switches`` is copied, so a mapping shared between two declarations --
+        the three electrostatic models are declared with one -- cannot be changed
+        through one of them and alter the others behind this check.
+        """
+        object.__setattr__(
+            self, "switches", {name: tuple(values) for name, values in self.switches.items()}
+        )
         if sorted(self.switches) != sorted(SWITCHES) or not all(self.switches.values()):
             raise ValueError(
                 f"a model declaration states the honoured values of every switch of "
@@ -1817,6 +1838,11 @@ class ElectrostaticModel:
         Bulk concentration ``c_0``, in mol/L.
     order
         Element order.
+    screening_length_nm
+        A ``lambda_D`` the caller states, in nm, in place of the case's. The
+        NUM-18 ladder's initialiser rungs state their own, for any salt; with it
+        the builder does not insist on a symmetric monovalent one, because the
+        default it would be exact for is not used.
     """
 
     name: str
@@ -1824,6 +1850,7 @@ class ElectrostaticModel:
     electrolyte: Electrolyte
     concentration_M: float = 1.0
     order: int = 2
+    screening_length_nm: float | None = None
 
     @property
     def species(self) -> tuple[str, ...]:  # noqa: D102 - documented on the protocol
@@ -1852,7 +1879,12 @@ class ElectrostaticModel:
 
     @property
     def debye_length_nm(self) -> float:
-        """``lambda_D`` in nm, at ``eps_r,f^0``, the case temperature and ``c_0`` (NUM-09)."""
+        """``lambda_D`` in nm: :attr:`screening_length_nm` if stated, else the case's (NUM-09).
+
+        The case's is at ``eps_r,f^0``, the case temperature and ``c_0``.
+        """
+        if self.screening_length_nm is not None:
+            return self.screening_length_nm
         return self.scales.debye_length_nm
 
     @property
@@ -2307,10 +2339,18 @@ def register_model(name: str, builder: ModelBuilder, declaration: ModelDeclarati
     ------
     ValueError
         If the name is already registered, which would silently change the
-        meaning of existing case files.
+        meaning of existing case files; or if the declaration admits
+        :data:`LADDER_STRATEGY` for a model the NUM-18 ladder does not end at,
+        which case validation would admit and stage 10 could not build.
     """
     if name in _REGISTRY:
         raise ValueError(f"physics model {name!r} is already registered")
+    if LADDER_STRATEGY in declaration.strategies and name not in LADDER_TARGETS:
+        raise ValueError(
+            f"physics model {name!r} declares numerics.continuation {LADDER_STRATEGY!r}, but "
+            f"the NUM-18 ladder is a path through named models and ends at "
+            f"{' or '.join(LADDER_TARGETS)} only (section 6.5); declare strategies=('none',)"
+        )
     _REGISTRY[name] = _Registration(builder=builder, declaration=declaration)
 
 
@@ -2354,8 +2394,19 @@ def create(name: str, **kwargs: Option) -> PhysicsModel:
     ------
     KeyError
         If no such model is registered; the message lists the known names.
+    ValueError
+        If the builder returns a model under another name. Every consumer finds
+        the declaration by the built model's own name, so a mismatch would have
+        it read another model's declaration, or none, part-way through a run.
     """
-    return _registration(name).builder(**kwargs)
+    model = _registration(name).builder(**kwargs)
+    if model.name != name:
+        raise ValueError(
+            f"the builder registered as {name!r} built a model named {model.name!r}; the "
+            "declaration is found by the built model's own name, so the two must agree "
+            "(section 5.4.3)"
+        )
+    return model
 
 
 def solves_transport(model: PhysicsModel) -> bool:
@@ -2495,7 +2546,14 @@ def _symmetric_monovalent(name: str, electrolyte: Electrolyte) -> Electrolyte:
 
 
 def _screened_builder(name: str, screening: Literal["linear", "sinh"]) -> ModelBuilder:
-    """Return a builder for one of the two Poisson-Boltzmann models."""
+    """Return a builder for one of the two Poisson-Boltzmann models.
+
+    ``debye_length_nm`` is not a case option: it is how the NUM-18 ladder's
+    initialiser rungs state their own screening length. Given one, the model
+    does not use the case's, so the salt it would be exact for is not insisted
+    on -- which keeps the ladder open to every electrolyte, as it was before
+    the rungs were built through the registry.
+    """
 
     def build(
         *,
@@ -2503,18 +2561,27 @@ def _screened_builder(name: str, screening: Literal["linear", "sinh"]) -> ModelB
         corrections: str = "willems2020_nacl",
         concentration_M: float = 1.0,
         order: int = 2,
+        debye_length_nm: float | None = None,
         **kwargs: Option,
     ) -> PhysicsModel:
         _reject_unknown(kwargs, f"the {name!r} builder")
         resolved = (
             electrolyte if electrolyte is not None else Electrolyte.from_parameter_file(corrections)
         )
+        if debye_length_nm is None:
+            resolved = _symmetric_monovalent(name, resolved)
+        elif not (math.isfinite(debye_length_nm) and debye_length_nm > 0.0):
+            raise ValueError(
+                f"{name!r} was given debye_length_nm={debye_length_nm!r}; a screening length is "
+                "finite and positive"
+            )
         return ElectrostaticModel(
             name=name,
             screening=screening,
-            electrolyte=_symmetric_monovalent(name, resolved),
+            electrolyte=resolved,
             concentration_M=concentration_M,
             order=order,
+            screening_length_nm=debye_length_nm,
         )
 
     return build
@@ -2570,7 +2637,7 @@ _COUPLED = ModelDeclaration(
     solids=True,
     coefficients=COEFFICIENTS,
     wall_distance=True,
-    strategies=("default_ladder", "none"),
+    strategies=(LADDER_STRATEGY, "none"),
     quantities=_QUANTITIES,
     transport=True,
     reports_newton=True,

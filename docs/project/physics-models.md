@@ -24,7 +24,7 @@ what they admit.
 | `solids` | `resolve`, the mesh gate | Whether `physics.solid_permittivities` means anything, and whether a mesh may carry a solid domain |
 | `coefficients` | `resolve`, the solve | Whether `inputs.charge` (`fixed_charge`) and `inputs.eps_r` (`solid_fraction`) are accepted and passed |
 | `wall_distance` | the mesh gate, the solve | Whether the PHY-02 distance field is computed, gated and passed |
-| `strategies` | `resolve` | The values of `numerics.continuation` the model admits |
+| `strategies` | `resolve` | The values of `numerics.continuation` the model admits; `default_ladder` only for `epnp-ns` and `pnp-ns`, the models NUM-18 ends at, which `register_model` enforces |
 | `quantities` | `resolve`, stage 11 | The `outputs:` words it provides; `fields` is admitted for every model |
 | `transport` | stage 11, the ladder, the GUI | Whether it is reached as a `TransportModel` |
 | `reports_newton` | stage 10 | Whether its `solve` takes a Newton `callback` |
@@ -111,7 +111,9 @@ register_model(
 
 Every builder receives `electrolyte` and `concentration_M` beside the declared options, and may
 refuse a configuration by raising `ValueError` or `TypeError`: `resolve` builds the model once and
-reports the refusal naming `physics.model`. Building must not import NGSolve, because resolving a
+reports the refusal naming `physics.model`. The model it returns must answer to the name it is
+registered by, because every consumer finds the declaration by that name; `create` refuses one
+that does not. Building must not import NGSolve, because resolving a
 case is how the command line validates it. The declaration above then decides the rest without
 further code:
 

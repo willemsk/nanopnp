@@ -36,13 +36,24 @@ from typing import TYPE_CHECKING, Any
 import pytest
 
 import nanopnp
+from nanopnp.charge.stage import ResolvedFields, read_fields
+from nanopnp.core.constants import thermal_voltage
 from nanopnp.core.hashing import content_hash
 from nanopnp.io.artefact import SOLUTION_SCHEMA
 from nanopnp.io.case import CaseValidationError, loads_case, resolve
+from nanopnp.io.run import run_case
+from nanopnp.io.store import Store
+from nanopnp.materials.electrolyte import Electrolyte
 from nanopnp.mesh.adapter import from_ngsolve, write_msh41
-from nanopnp.mesh.ingest import MeshVocabularyError, ingest, required_names
+from nanopnp.mesh.ingest import MeshVocabularyError, deployed_mesh, ingest, required_names
+from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.mesh.sizing import case_debye_length_nm
 from nanopnp.physics import models
+from nanopnp.physics.coefficients import SATURATED_WALL_DISTANCE_NM
+from nanopnp.physics.measures import AXISYMMETRIC
 from nanopnp.physics.models import ModelSolution, PhysicsModel
+from nanopnp.solve.continuation import default_ladder
+from nanopnp.solve.state import ladder, restore
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
@@ -385,16 +396,87 @@ def test_ver56_a_builder_refusal_is_re_raised_naming_the_model(
     assert "for a reason of its own" in message
 
 
+def _divalent() -> Electrolyte:
+    """Return the NaCl parameter file's electrolyte with the cation made divalent."""
+    salt = Electrolyte.from_parameter_file("willems2020_nacl")
+    return replace(salt, species=(replace(salt.species[0], valence=2), salt.species[1]))
+
+
 def test_fr19_poisson_boltzmann_refuses_a_salt_that_is_not_symmetric_monovalent() -> None:
     """``lambda_D`` with unit valence and ``sinh`` are exact for a 1:1 salt only (PHY-21 NOTE)."""
-    from nanopnp.materials.electrolyte import Electrolyte
-
-    salt = Electrolyte.from_parameter_file("willems2020_nacl")
-    divalent = replace(salt, species=(replace(salt.species[0], valence=2), salt.species[1]))
+    divalent = _divalent()
     for name in ("pb", "pb-linear"):
         with pytest.raises(ValueError, match=r"symmetric monovalent.*z = \+2"):
             models.create(name, electrolyte=divalent)
     assert models.create("poisson", electrolyte=divalent).name == "poisson"
+
+
+def test_fr19_the_ladder_initialisers_state_their_own_debye_length_for_any_salt() -> None:
+    """NUM-18's stages 1 and 2 are initialisers with their own ``lambda_D``, not case models.
+
+    Built through the registry they must still take every electrolyte the ladder
+    took before WP26: the refusal is of the case's *default* ``lambda_D``, which a
+    stated one replaces.
+    """
+    divalent = _divalent()
+    stated = models.create("pb", electrolyte=divalent, debye_length_nm=0.5)
+    assert isinstance(stated, models.ElectrostaticModel)
+    assert stated.debye_length_nm == 0.5
+    with pytest.raises(ValueError, match="finite and positive"):
+        models.create("pb-linear", debye_length_nm=0.0)
+    mesh = CylindricalPoreGeometry().generate(maxh_nm=4.0)
+    rungs = default_ladder(mesh, electrolyte=divalent, solid_permittivities={"membrane": 3.2})
+    assert [rung.model.name for rung in rungs[:2]] == ["pb-linear", "pb"]
+
+
+def test_ver56_a_declaration_cannot_admit_a_ladder_that_does_not_end_at_it() -> None:
+    """Section 6.5: the ladder ends at ``epnp-ns`` or ``pnp-ns``, so no other may admit it.
+
+    Refused at registration, and nothing is registered: case validation would
+    otherwise admit ``default_ladder`` and stage 10 refuse to build it.
+    """
+    with pytest.raises(ValueError, match="ends at epnp-ns or pnp-ns"):
+        models.register_model(
+            "laddered", lambda **_: models.create("pnp-ns"), models.declaration("epnp-ns")
+        )
+    assert "laddered" not in models.registered_models()
+
+
+def test_ver56_a_builder_must_build_the_model_it_is_registered_as(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The declaration is found by the built model's name, so ``create`` insists they agree."""
+    monkeypatch.setitem(
+        models._REGISTRY,
+        "misnamed",
+        models._Registration(
+            builder=lambda **options: models.create("pnp", **options),
+            declaration=models.declaration("pnp"),
+        ),
+    )
+    with pytest.raises(ValueError, match="built a model named 'pnp'"):
+        models.create("misnamed")
+
+
+def test_ver56_a_model_without_solids_is_refused_a_generated_mesh() -> None:
+    """Every generated region carries a membrane and a protein (PHY-21 NOTE).
+
+    So the refusal is the case's, made when it is resolved, and not the stage-6
+    gate's after the mesh has been built.
+    """
+    text = case_text(physics=ELECTROSTATIC_PHYSICS % "pb", outputs="[]").replace(
+        "mesh: {path: absent.msh, format: msh41}", "profile: {path: absent.yaml}"
+    )
+    message = _refusal(text)
+    assert "'pb'" in message and "inputs.mesh" in message and "poisson" in message
+
+
+def test_ver56_the_declared_switches_are_not_shared_between_declarations() -> None:
+    """A declaration copies its switches, so one mapping cannot move two models."""
+    shared = {name: (False,) for name in models.SWITCHES}
+    first = models.ModelDeclaration(options=(), switches=shared, solids=False)
+    shared["flow"] = (False, True)
+    assert first.switches["flow"] == (False,)
 
 
 def test_ver56_building_a_model_while_resolving_imports_no_backend() -> None:
@@ -451,12 +533,6 @@ def test_ver56_the_stage_ten_key_of_each_model_is_the_one_main_recorded(model: s
 @pytest.mark.parametrize("model", sorted(RUNG_HASHES))
 def test_ver56_every_ladder_rung_builds_the_model_main_built(model: str) -> None:
     """WP26 D14: the rungs are built through ``create`` and are the rungs of ``main``."""
-    from nanopnp.charge.stage import ResolvedFields
-    from nanopnp.mesh.primitives import CylindricalPoreGeometry
-    from nanopnp.physics.coefficients import SATURATED_WALL_DISTANCE_NM
-    from nanopnp.physics.measures import AXISYMMETRIC
-    from nanopnp.solve.state import ladder
-
     resolved = resolve(loads_case(_quickstart_variants()[model]))
     mesh = CylindricalPoreGeometry().generate(maxh_nm=4.0)
     empty = ResolvedFields(charge=None, conservation=None, eps_r=None, material_means=())
@@ -531,8 +607,6 @@ def forwarding_model() -> Iterator[str]:
 @pytest.fixture(scope="module")
 def pore_mesh(tmp_path_factory: pytest.TempPathFactory) -> Path:
     """Write the quick-start pore, as ``nanopnp mesh cylinder`` writes it with its defaults."""
-    from nanopnp.mesh.primitives import CylindricalPoreGeometry
-
     generated = CylindricalPoreGeometry(
         pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
     ).generate(maxh_nm=4.0, wall_h_nm=0.35, check_quality=False)
@@ -541,9 +615,6 @@ def pore_mesh(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
 def _run(text: str, directory: Path) -> RunResult:
     """Run a case file through stage 12 in its own store, and return the run."""
-    from nanopnp.io.run import run_case
-    from nanopnp.io.store import Store
-
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / "case.yaml"
     path.write_text(text, encoding="utf-8")
@@ -567,8 +638,6 @@ def test_ver56_a_model_defined_as_one_class_runs_from_a_case_file_to_stage_twelv
     bit, and the model stage 11 restores is the wrapper, not the model it wraps.
     """
     import numpy as np
-
-    from nanopnp.solve.state import restore
 
     physics = "{model: %s, flow: false, solid_permittivities: {membrane: 3.2}}"
     texts = {
@@ -686,11 +755,6 @@ def _direct(
     charged: bool = True,
 ) -> tuple[ResolvedCase, ModelSolution]:
     """Solve the case's model through the API alone, on the mesh the case deploys."""
-    from nanopnp.charge.stage import read_fields
-    from nanopnp.core.constants import thermal_voltage
-    from nanopnp.mesh.ingest import deployed_mesh
-    from nanopnp.physics.measures import AXISYMMETRIC
-
     resolved = resolve(loads_case(text))
     mesh = deployed_mesh(resolved, None).mesh
     model = models.create(
@@ -728,8 +792,6 @@ def test_fr19_pb_linear_from_a_case_file_equals_the_api_solve(tmp_path: Path) ->
     the model's default is the case's Debye length and not merely itself.
     """
     import numpy as np
-
-    from nanopnp.mesh.sizing import case_debye_length_nm
 
     mesh = _slab(tmp_path / "slab.msh", membrane=None)
     text = case_text(mesh, physics=ELECTROSTATIC_PHYSICS % "pb-linear", outputs="[fields]")
