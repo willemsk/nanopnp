@@ -71,8 +71,11 @@ verified contract, so each needs its own decision.
 > **Outcome — D6: the exporters live in `cli/export.py`.** The suffix table and the payload
 > keys are data there, so `stage --help` and the refusal import no stage module, and
 > `test_ver32_stage_export_help_imports_no_stage_module` holds that. A structure is staged as a
-> directory beside the destination and renamed DCD first, so a PDB on disk always has its
-> trajectory. `--list` with `--export` is a usage error.
+> directory beside the destination, and its PDB and DCD replace what is there as a pair. Any
+> earlier PDB is set aside before its DCD, and a failed rename puts both back. The first
+> version renamed the DCD first. The `/wp-ship` review found that a failed PDB rename then left an
+> earlier PDB beside the new DCD. `test_ver32_stage_export_replaces_a_structure_pair_whole_or_not_at_all`
+> injects that failure, and it fails on the first version. `--list` with `--export` is a usage error.
 >
 > **Outcome — D7: `.map` never read back.** GridDataFormats guesses its *reader* from the
 > extension and has none for `.map`, so `DensityMap.read` failed on a file `export` had just
@@ -164,7 +167,7 @@ above correct D3, D6–D9, D12 and D14.
 | Identifier | Test | Result |
 |---|---|---|
 | VER-49, IF-05 | `tests/tier1/test_density.py::test_ver49_map_round_trip_and_export` | the raw `.dx`, `.ccp4`, `.mrc` and `.map` headers hold 10 × the nm origin and spacing; the grid comes back exactly |
-| VER-32, IF-02, IF-05, FR-27 | `tests/tier1/test_cli.py`, the five `test_ver32_stage_export_*` tests | every pair written; profile and mesh equal the store's bytes; PDB within 5e-5 + 1e-6 nm; refusals exit 2 with an empty store and no file; a failed write leaves nothing |
+| VER-32, IF-02, IF-05, FR-27 | `tests/tier1/test_cli.py`, the six `test_ver32_stage_export_*` tests | every pair written; profile and mesh equal the store's bytes; PDB within 5e-5 + 1e-6 nm; refusals exit 2 with an empty store and no file; a failed write leaves nothing; a failed structure export leaves the earlier PDB and DCD |
 | VER-46 | `tests/tier1/test_examples_plan.py` | six examples; tags {run, plan, refused}; a mismatch names both codes |
 | VER-46, FR-01–FR-10, IF-05, QR-12 | `tests/tier2/test_examples_06_pdb_to_mesh.py` | D8 (a)–(f) pass, 55 s |
 | VER-45 | `test_doc_reference.py`, `test_public_api.py`, `mkdocs build --strict` | unchanged and green; every new anchor resolves |

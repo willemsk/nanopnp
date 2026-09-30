@@ -19,7 +19,8 @@ hash the store records, and a profile exported here and supplied through
 §3.1 is not breached and no artefact key depends on it. A stage or a suffix this
 does not write is refused before anything runs (:func:`refusal`), and a file is
 written beside its destination and renamed into place, so a failure leaves none
-(WP16 D7's rule, as ``nanopnp mesh`` applies it).
+(WP16 D7's rule, as ``nanopnp mesh`` applies it). A structure's PDB and DCD are
+replaced as a pair: a failure leaves the files that were there before.
 
 Nothing here imports a stage module at module scope: the table is read by
 ``--help`` and by the refusal, both of which must stay as cheap as ``--list``.
@@ -121,20 +122,50 @@ def _staged(path: Path, write: Callable[[Path], Path]) -> Path:
 
 
 def _export_structure(source: Path, path: Path) -> tuple[Path, Path]:
-    """Write the ensemble as ``path`` (PDB, first frame) and its DCD, staged together.
+    """Write the ensemble as ``path`` (PDB, first frame) and its DCD, as one pair.
 
-    Both are written into a staging directory beside ``path`` and renamed into
-    place, the DCD first: a PDB on disk then always has its trajectory beside it.
+    Both are written into a staging directory beside ``path``. They are then
+    renamed into place by :func:`_replace_pair`, which leaves either the new pair
+    or whatever was there before, never a PDB beside another export's DCD.
     """
     from nanopnp.structure.ensemble import AlignedEnsemble
 
     ensemble = AlignedEnsemble.read(source)
+    trajectory = path.with_suffix(".dcd")
     staging = Path(tempfile.mkdtemp(prefix=f".{path.stem}.", suffix=".partial", dir=path.parent))
     try:
         pdb, dcd = ensemble.export(staging, stem=path.stem)
-        trajectory = path.with_suffix(".dcd")
-        dcd.replace(trajectory)
-        pdb.replace(path)
+        _replace_pair(((dcd, trajectory), (pdb, path)), staging / "previous")
     finally:
         shutil.rmtree(staging, ignore_errors=True)
     return path, trajectory
+
+
+def _replace_pair(moves: tuple[tuple[Path, Path], ...], previous: Path) -> None:
+    """Rename each ``(new, destination)`` into place, all or none.
+
+    Whatever sits at a destination is first moved into ``previous``, the last
+    destination first, so the PDB leaves before its DCD and no stale PDB can end
+    up beside a new DCD. A failure part-way removes the new files already placed
+    and moves the previous ones back, the first destination first, so a PDB is
+    only restored once its DCD is. The previous files are discarded with the
+    staging directory on success.
+    """
+    previous.mkdir()
+    set_aside: list[tuple[Path, Path]] = []
+    placed: list[Path] = []
+    try:
+        for index, (_, destination) in reversed(list(enumerate(moves))):
+            if destination.exists():
+                kept = previous / f"{index}{destination.suffix}"
+                destination.replace(kept)
+                set_aside.append((kept, destination))
+        for new, destination in moves:
+            new.replace(destination)
+            placed.append(destination)
+    except BaseException:
+        for destination in placed:
+            destination.unlink(missing_ok=True)
+        for kept, destination in reversed(set_aside):
+            kept.replace(destination)
+        raise
