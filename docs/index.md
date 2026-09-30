@@ -25,7 +25,7 @@ electro-osmotic flow rate. It is built around three rules:
     shell are delivered. Meshes and charge maps are supplied from outside, or generated for an
     idealised pore or the ClyA reference geometry. Building a mesh from a PDB structure is the
     v0.3 geometry pipeline, and assigning charges from it is the v0.4 charge pipeline. Nothing here is a validated release yet, and the comparison
-    against the reference COMSOL model is recorded, not yet passed.
+    against the paper's published results gates v1.0.
 
 ## Where to start
 

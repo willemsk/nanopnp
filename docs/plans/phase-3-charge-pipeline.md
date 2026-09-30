@@ -18,7 +18,8 @@ Phase 2 answered whether the geometry can be produced from a structure, reproduc
 hand-editing. Phase 3 answers the last question the source work leaves: **can the fixed charge and
 the dielectric be produced from the same structure, conserved to QR-03's 10⁻³ on the mesh the solver
 actually uses, so that one case file runs from a PDB entry to a charged conductance?** That is what
-v0.4 means by "reproduces the paper end to end" (§2.7).
+v0.4 means by running "the paper's pipeline end to end" (§2.7). Whether the result
+reproduces the published numbers is measured at v1.0 (VAL-16, VAL-17; §8.2.4 D6).
 
 The gate of §8.1 is **VER-01, VER-02 and VAL-06**. The first two are conservation on the deployed
 mesh, as a total and per z-slice (FR-14, PHY-19). The third is the Poisson solution against APBS on
@@ -78,7 +79,7 @@ decisions table.
 | VAL-06's two legs (§8.2.4 D3) | **Gated:** APBS solves Poisson at zero ionic strength on our assembled charge and `χ`, revolved into 3D maps and read with `READ charge` and `READ diel`, so the comparison isolates our axisymmetric FE solve. **Recorded:** APBS from the PQR with its own `spl4` charge and `smol` surface, which measures the azimuthal averaging (CON-04) | Zero ionic strength follows `.knowledge/07` §3, where the `spl2`/`spl4` surfaces are unreliable at finite ionic strength. The tolerance and the treatment of APBS's box boundary are WP29's, argued from the two discretisations |
 | The electrostatic models on the pore | `poisson` accepts solid materials, `physics.solid_permittivities`, a fixed charge and `χ`, which it needs for VAL-06. `pb` and `pb-linear` stay as they are. The change is made through the FR-20 interface, as a declared capability rather than a new branch | §5.5 names `poisson` the APBS cross-check target. PHY-24 is untouched |
 | FR-20 first | The interface package comes first. Every model declares its field set, material and boundary vocabulary, the inputs it accepts (fixed charge, `χ`, solids) and its solve strategy. The `COUPLED_MODELS` and `isinstance` branches outside `physics/` read those declarations instead | It is cheapest while there are six models and no producer. It also unblocks `poisson` for VAL-06 without a seventh special case |
-| The phase gate's input | VER-01, VER-02 and VAL-06 are gated on 2WCD at Tier 2. The ensemble runs the same checks at Tier 3, recorded, together with the end-to-end charged comparison against the reference | Unlike VAL-05, these are properties of the implementation rather than reproductions of the reference, so the public structure is enough to gate them. Reproducing the paper's numbers is Tier 4, Phase 4 |
+| The phase gate's input | VER-01, VER-02 and VAL-06 are gated on 2WCD at Tier 2. The ensemble runs the same checks at Tier 3, recorded, together with the end-to-end charged comparison against the reference | Unlike VAL-05, these are properties of the implementation rather than reproductions of the reference, so the public structure is enough to gate them. Reproducing the paper's numbers is Phase 4: at Tier 3 against the published results (VAL-16, VAL-17; §8.2.4 D6) and at Tier 4 against experiment |
 | Optional dependencies | PDB2PQR and PROPKA stay in the `structure` extra, imported at the top of the protonation stage module, which is reached only through the lazy registry. `scipy.special` supplies `Ĩ₀` (`i0e`) | The `CLAUDE.md` import rule, and VER-25 introspection. The supplied-field path keeps working without the extra |
 | Units at the interchange boundary | The (r, z) charge grids stay in nm, as their `field1` header declares (the IF-05 NOTE leaves this decision to Phase 3). No 3D charge map is written | A 2D (r, z) grid overlays no molecular viewer, so B10's argument for ångströms does not apply |
 
@@ -277,7 +278,8 @@ To be written at the end of the phase, naming numbers rather than adjectives:
   size of the azimuthal averaging.
 - The end-to-end charged case, one frozen case on the pipeline's mesh and charge against the
   reference mesh and the delivered table: conductance and `t₊`, with the difference split between
-  geometry (VAL-05's ε_G) and charge.
+  geometry (VAL-05's ε_G) and charge. It is the first measurement of VAL-16's recorded leg, and
+  gates nothing before v1.0.
 - VER-58's convergence rate, and the element order WP28 chose.
 - Wall-clock and peak memory for protonation and deposition, per frame and for the ensemble.
 - FR-20: the files a new model touched (the target is one).

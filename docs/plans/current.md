@@ -32,6 +32,8 @@ Each is recorded in full where it points.
 - **Protonation is per frame.** `inputs.pqr` is a single- or multi-MODEL PQR, and the schema does
   not move. → §8.2.4 D4.
 - **The exclusion shell is in Phase 3 (WP30)**, off by default. → §8.2.4 D5; FR-15.
+- **Tier 3 compares the published I–V and in-pore averages**, and gates v1.0, not Phase 3.
+  → VAL-16, VAL-17; §8.2.4 D6.
 - **The gate is 2WCD at Tier 2**, and the ensemble is recorded at Tier 3. → the phase plan's
   *Design decisions*.
 
@@ -57,9 +59,8 @@ Each is recorded in full where it points.
 
 ## What is still somebody else's
 
-- **The COMSOL exports** (WP13), against
-  [`docs/validation/comsol-export-contract.md`](../validation/comsol-export-contract.md). Until they
-  land, every report carries `golden_source: self`.
+- **The data behind the paper's published figures**, with each quantity's conventions declared
+  (VAL-16, VAL-17), for v1.0. The COMSOL field exports are no longer asked for (§8.2.4 D6).
 - **The Read the Docs project**, and **`$NANOPNP_REFERENCE_DATA` on the nightly runner**.
 - **OPN-04**, the ClyA-AS mutation list, which is the provenance of `Q_net`.
 
