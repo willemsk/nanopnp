@@ -128,6 +128,11 @@ Versions are git tags (`SPECIFICATION.md` §2.7, the Versioning NOTE), and the p
 derived from them by hatch-vcs. Neither `pyproject.toml` nor the package names a version, so there
 is no version to bump.
 
+There is one minor version per phase: v0.1 is Phase 0, v0.2 Phase 1, v0.3 Phase 2, v0.4 Phase 3 and
+v1.0 Phase 4. Phase 1's and Phase 2's tags were renamed to this scheme on 30 September 2026, and
+[`.github/renumbered-tags.txt`](.github/renumbered-tags.txt) maps each retired name to its new one.
+Never reuse a retired name.
+
 - **A work package's PR writes its own [`CHANGELOG.md`](CHANGELOG.md) section** under the version
   it will be tagged, `vX.Y.Z-alpha.N`, where `vX.Y.Z` is the phase's release and N counts the phase's
   work packages. **After it merges**, tag its last commit on `main` with that version, so that the
@@ -137,7 +142,7 @@ is no version to bump.
   publishes a GitHub Release, whose notes are that version's section of
   [`CHANGELOG.md`](CHANGELOG.md). The workflow refuses a milestone whose `CITATION.cff` names a
   different version.
-- Tags are annotated: `git tag -a v0.5.0 -m "…"`, then `git push origin v0.5.0`.
+- Tags are annotated: `git tag -a v0.2.0 -m "…"`, then `git push origin v0.2.0`.
 
 A shallow clone (`--depth 1`, or a hosted session that clones shallow) has no tag in reach and
 installs under a meaningless development version. `git fetch --unshallow --tags` puts that right,

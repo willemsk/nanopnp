@@ -1,13 +1,14 @@
 # Phase 2 (Geometry pipeline): from a structure to a gated mesh
 
 **Status: in progress. WP17 delivered, 24 September 2026; WP18 delivered, 25 September 2026; WP19 delivered, 25 September 2026; WP20 delivered, 26 September 2026; WP21 delivered, 26 September 2026; WP22 delivered, 28 September 2026, its Tier-3 verdict awaiting a run on the archive; WP23 delivered, 29 September 2026; WP24 delivered, 29 September 2026; WP25 delivered, 29 September 2026.** Written 24 September 2026, after Phase 1 (WP7–WP16) delivered the
-solver core on an externally supplied mesh (main at `v0.5.0-alpha.10`). Two things come first:
-the Phase 1 end-of-phase report, which merges as tag `v0.5.0`, and the author's double-click
+solver core on an externally supplied mesh (main at `v0.2.0-alpha.10`). Two things come first:
+the Phase 1 end-of-phase report, which merges as tag `v0.2.0`, and the author's double-click
 observation that closes Phase 0 criterion 4. That ordering is ruling B1 of `SPECIFICATION.md`
 §8.2.2. **Both were met on 24 September 2026** (the double-click is recorded in the NOTE to §8.2.1).
 
-This is the delivery plan for Phase 2 of `SPECIFICATION.md` §8.1. With Phase 3 it makes up release
-v0.9. The specification is normative: where this file and the specification disagree, the
+This is the delivery plan for Phase 2 of `SPECIFICATION.md` §8.1, released as v0.3. (Until the
+renumbering of 30 September 2026, §2.7's Versioning NOTE, Phases 2 and 3 together made up v0.9, and
+this phase's packages were tagged `v0.9.0-alpha.N`.) The specification is normative: where this file and the specification disagree, the
 specification governs and this file is wrong. Requirement identifiers here are pointers into it,
 never restatements of it. The rulings behind this plan are recorded in §8.2.2 (B1–B7) and are not
 re-argued here.
@@ -118,7 +119,7 @@ Discharges IF-03, FR-26 and QR-09 as amended. Adds **VER-47**: a v1 document res
 run configuration as its v2 upgrade; every new key is classified; the VER-09, VER-24, VER-43 and
 VER-45 walks cover the new paths in both directions.
 
-> **Delivered, 24 September 2026** ([plan](wp17-case-schema-v2.md), tag `v0.9.0-alpha.1`). The
+> **Delivered, 24 September 2026** ([plan](wp17-case-schema-v2.md), tag `v0.3.0-alpha.1`). The
 > schema is `nanopnp/case/v2` with the §5.3.1 key set, and a v1 file is read through
 > `upgrade_v1`. The floor is Python 3.11, with MDAnalysis 2.10, GridDataFormats 1.2 and CCP4
 > written everywhere. IF-03, FR-26, QR-09 and VER-47 are discharged, and VER-29 is amended. **The
@@ -148,7 +149,7 @@ missing; each trajectory format reads; a rigidly moved frame superposes to zero 
 > contract.
 
 > **Delivered, 25 September 2026** ([plan](wp18-structure-ingestion.md), to be tagged
-> `v0.9.0-alpha.2`). Stage 1, `structure`, reads PDB, mmCIF (through gemmi) and the four trajectory
+> `v0.3.0-alpha.2`). Stage 1, `structure`, reads PDB, mmCIF (through gemmi) and the four trajectory
 > formats. It superposes the selected frames and puts the permutation Cₙ axis on z at r = 0. It
 > emits `nanopnp/structure/v1`, and the manifest records it. VER-48 discharges IF-04, FR-01, FR-02
 > and FR-03, and adds to QR-12. The registry names a missing extra (`MissingExtraError`, FR-27).
@@ -188,7 +189,7 @@ and matches its closed form on a `cos(nθ)` modulation.
 > The stages are `density` and `symmetry`, and a walk past stage 3 is refused naming stage 4.
 
 > **Delivered, 25 September 2026** ([plan](wp19-density-and-reduction.md), to be tagged
-> `v0.9.0-alpha.3`). Stage 2, `density`, deposits each frame's probabilistic union on a canonical
+> `v0.3.0-alpha.3`). Stage 2, `density`, deposits each frame's probabilistic union on a canonical
 > grid. The widths come from the CHARMM radius set in `data/radii/`, and the frame mean is emitted
 > as `nanopnp/density/v1`, exportable to OpenDX and CCP4. Stage 3, `symmetry`, bins the map by
 > exact overlap weights and takes the Cₙ average in the harmonic basis. It emits
@@ -217,7 +218,7 @@ input with its QR-12 diagnostic; the probe-radius profile of an analytic ring of
 closed form.
 
 > **Delivered, 26 September 2026** ([plan](wp20-contour-extraction.md), to be tagged
-> `v0.9.0-alpha.4`). Stage 4, `contour`, runs marching squares on the reduced mean, placed by the
+> `v0.3.0-alpha.4`). Stage 4, `contour`, runs marching squares on the reduced mean, placed by the
 > grid's own axes. The region is closed and opened by 2h, then Taubin-smoothed at h/2, simplified
 > and thinned to spacing h. The gate checks validity, topology, spacing ≥ h, feature size > 2h,
 > and the radius band `[−h, +1.5 nm]` against the frame-mean probe radius. The stage emits
@@ -250,7 +251,7 @@ imports no gmsh.
 > recipe, and its content hash is recorded (D10).
 
 > **Delivered, 26 September 2026** ([plan](wp21-cad-assembly-and-meshing.md), to be tagged
-> `v0.9.0-alpha.5`). Stage 5, `region`, turns a stage-4 or supplied profile into the glued,
+> `v0.3.0-alpha.5`). Stage 5, `region`, turns a stage-4 or supplied profile into the glued,
 > adjacency-named region and gates the junction. Stage 6 meshes it under the §5.2.2 fields, re-reads
 > it through the ingestion gates and adds the D9 wall-size gate. A `structure:` or `inputs.profile`
 > case walks to stage 12. VER-52 and VER-53 add activities to FR-09, FR-10, FR-27, QR-08, QR-12
@@ -284,7 +285,7 @@ sensitivity (G2), the FR-06 variance along z, element count and quality against 
 > hand-edited, which puts G3's ±1 % out of reach. That offset is attributed and recorded (D7).
 
 > **Delivered, 28 September 2026** ([plan](wp22-val05-reference-geometry.md), to be tagged
-> `v0.9.0-alpha.6`). `nanopnp.validation.geometry` computes VAL-05 once for both legs and the
+> `v0.3.0-alpha.6`). `nanopnp.validation.geometry` computes VAL-05 once for both legs and the
 > end-of-phase report: the D2 planes, the D3 metric, the D6 registration, the D7 attribution and
 > the D8 sweep. The 2WCD leg passes D5 at Tier 2: ε_G −8.08 %, Δr_c −0.0205 nm, rms 0.158 nm. The
 > ensemble leg, the phase gate, is written and skips visibly here. **Criterion 3 stays open until
@@ -314,7 +315,7 @@ passes the same VER-10 and VER-27 gates with the same vocabulary; the default pa
 > backends' meshes within 1e-3.
 
 > **Delivered, 29 September 2026** ([plan](wp23-gmsh-backend.md), to be tagged
-> `v0.9.0-alpha.7`). `numerics.mesh.backend: gmsh` meshes stage 5's region through
+> `v0.3.0-alpha.7`). `numerics.mesh.backend: gmsh` meshes stage 5's region through
 > `region_graph` and `mesh/gmsh_backend.py`, and joins netgen's route at `write_msh41`. **VER-54**
 > discharges FR-10, QR-12, CON-10 and CON-12. On the fixture, Gmsh passes VER-10 at `size_scale` 1
 > to 8, and the frozen case differs by −1.244e-4 across the backends. Netgen's key and the reference
@@ -348,7 +349,7 @@ Adds **VER-55**, extending VER-43 and VER-44 to the new views, with the view-mod
 > original's content hash on 2WCD.
 
 > **Delivered, 29 September 2026** ([plan](wp24-gui-geometry-pipeline.md), to be tagged
-> `v0.9.0-alpha.8`). The desktop shell gains its **Geometry** tab. It builds stages 1 to 6 in the
+> `v0.3.0-alpha.8`). The desktop shell gains its **Geometry** tab. It builds stages 1 to 6 in the
 > run's spawned child, shows each stored artefact in the frame it lives in, and edits the contour
 > into a hand-edit profile and a derived case (`io.case.with_profile`). **VER-55** discharges
 > IF-09, QR-11, FR-27, CON-09, CON-10 and CON-11. On 2WCD, the null edit meshes to the original's
@@ -385,7 +386,7 @@ Cₙ rotation. The generated references pick up the v2 fields without a docs edi
 > it true by construction. The oracles are VER-46's, as amended.
 
 > **Delivered, 29 September 2026** ([plan](wp25-geometry-docs-and-example.md), to be tagged
-> `v0.9.0-alpha.9`). Phase criterion 5 is met. The guide gains *Structures and trajectories* and
+> `v0.3.0-alpha.9`). Phase criterion 5 is met. The guide gains *Structures and trajectories* and
 > *From a structure to a mesh*. `nanopnp stage <name> --export` writes stages 1 to 4 and 6 by
 > suffix, and the density map's OpenDX and CCP4/MRC files are in ångströms (B10). Example 06 runs
 > from the refused deposited entry to a gated mesh and back through `inputs.profile`, in 55 s at

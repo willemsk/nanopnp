@@ -2,7 +2,7 @@
 
 A pore's fixed charge, and optionally its dielectric, are supplied as fields on a regular `(r, z)`
 grid through `inputs.charge` and `inputs.eps_r`. Producing them from a structure (PDB2PQR,
-protonation, smearing) is the v0.9 charge pipeline. Stage 7 consumes them.
+protonation, smearing) is the v0.4 charge pipeline. Stage 7 consumes them.
 
 ## The field header
 

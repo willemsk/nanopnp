@@ -1,7 +1,7 @@
 # WP18 — Structure ingestion, alignment and the Cₙ axis (stage 1)
 
 **Status: delivered, 25 September 2026.** Written 25 September 2026. It builds on WP17, merged
-25 September 2026 as PR #38 and tagged `v0.9.0-alpha.1`. WP18 inherits:
+25 September 2026 as PR #38 and tagged `v0.3.0-alpha.1`. WP18 inherits:
 
 - the `nanopnp/case/v2` `structure:` block and its keys (`source.path`, `selection`, `chains`,
   `variant`, `ensemble.frames`, `symmetry.point_group`, `symmetry.axis: auto | z`);
@@ -144,7 +144,7 @@ oracles.
    (VER-45) carries it.
 7. **Spec, changelog, knowledge.** Add VER-48 to §7.2 (text in Verification below). Map IF-04,
    FR-01, FR-02 and FR-03 to it in Appendix A and recount the coverage line. Add the `CHANGELOG.md`
-   section `v0.9.0-alpha.2`. Add Outcomes here where a prediction moved, and update `current.md`.
+   section `v0.3.0-alpha.2`. Add Outcomes here where a prediction moved, and update `current.md`.
 
 ### Verification
 

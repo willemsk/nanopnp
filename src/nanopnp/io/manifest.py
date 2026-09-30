@@ -597,7 +597,7 @@ def build(
             if charge is not None
             else not_run(
                 "this run supplied neither inputs.charge nor inputs.eps_r, so stage 7 did not "
-                "run; the pipeline that would produce them (FR-12 to FR-15) lands in v0.9"
+                "run; the pipeline that would produce them (FR-12 to FR-15) lands in v0.4"
             )
         ),
         materials=(

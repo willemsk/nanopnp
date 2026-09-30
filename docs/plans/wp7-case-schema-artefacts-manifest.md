@@ -212,7 +212,7 @@ without giving it a validated default fails Tier 1 rather than silently vanishin
 > **Outcome — the enumeration needed a second bucket, and the test needed a second direction.**
 > A schema walk finds switch-typed fields that are *not* deviations from anything: which electrode
 > is grounded, the mesh backend, the boundary-layer flag, `numerics.mesh.wall_h_nm` (a size in nm
-> that only reads as a switch because of its `auto` literal), and the four v0.9 blocks `resolve()`
+> that only reads as a switch because of its `auto` literal), and the four v0.3 and v0.4 blocks `resolve()`
 > refuses outright. Forcing them into `SWITCH_PATHS` would have put five operating-point and
 > discretisation choices into the Deviations group, where a reader looking for "what is not the
 > validated model" would have to learn to ignore them. So `io/defaults.py` carries a second mapping,

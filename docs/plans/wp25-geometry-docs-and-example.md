@@ -1,7 +1,7 @@
 # WP25 — Documentation increment 2: the geometry pipeline and example 06
 
 **Status: delivered, 29 September 2026.** Written 29 September 2026, after WP24 merged (to be tagged
-`v0.9.0-alpha.8`). Stages 1–6 exist, run from the CLI and the Geometry tab, and are gated. But the
+`v0.3.0-alpha.8`). Stages 1–6 exist, run from the CLI and the Geometry tab, and are gated. But the
 only prose on them is two paragraphs in `docs/guide/concepts.md`, and no example reaches them. WP25
 inherits the VER-46 executor (`nanopnp.validation.examples`, WP16 D8), the generated references
 (VER-45, WP16 D5), `with_profile` and the hand-edit route (WP24 D5–D7), and the prepared-2WCD
@@ -153,7 +153,7 @@ Commands: the full gate (`.claude/hooks/gate.sh run`);
 - **Å for the 2D field grids.** Their headers declare nm, and a change is a Phase 3 decision with the
   charge grids.
 - **The charge pipeline's documentation:** Phase 3's increment.
-- **The Phase 2 end-of-phase report and the `v0.9.0` tag.** Both wait for criterion 3.
+- **The Phase 2 end-of-phase report and the `v0.3.0` tag.** Both wait for criterion 3.
 
 ### Open questions
 

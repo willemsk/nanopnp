@@ -183,7 +183,7 @@ and 2 read no archived file (§7.1).
 | Making VAL-01/VAL-02 a gate | Phase 4, and only once both §7.4 preconditions hold |
 | The §7.5.1 analyte case in the reference set | Excluded by the author ruling; revisit with VAL-11…VAL-14 |
 | VAL-05 (contour against the published polygon) and VAL-06 (APBS) | Phases 2 and 3 |
-| VAL-15's producer-side fix — depositing the charge table onto the FE space | v0.9 stage 7, per `tests/tier3/test_reference_charge_map.py` |
+| VAL-15's producer-side fix — depositing the charge table onto the FE space | v0.4 stage 7, per `tests/tier3/test_reference_charge_map.py` |
 
 ### Open questions
 

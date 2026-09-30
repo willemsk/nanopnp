@@ -1,7 +1,7 @@
 """Stage 7 of §5.2: the external fixed-charge and dielectric fields (FR-27, IF-01).
 
 The consumer path of the charge stage. Its producer half — PDB2PQR, protonation,
-per-atom smearing and the azimuthal projection — is v0.9; what runs here is
+per-atom smearing and the azimuthal projection — is v0.4; what runs here is
 everything downstream of the grid: read the header document, read the data,
 interpolate onto the deployed mesh, and gate.
 
@@ -205,7 +205,7 @@ def _field_path(supplied: object, *, key: str) -> Path:
     if path is None:
         raise UnsupportedCaseSection(
             f"inputs.{key}: artefact: names a field in the store, which the charge pipeline of "
-            f"v0.9 fills; supply inputs.{key}: path: instead"
+            f"v0.4 fills; supply inputs.{key}: path: instead"
         )
     if not Path(path).is_file():
         # Quoted rather than ``!r``, which doubles a Windows path's separators.
@@ -483,7 +483,7 @@ class FieldStage:
         if resolved.charge is None and resolved.eps_r is None:
             raise UnsupportedCaseSection(
                 f"case {resolved.name!r} supplies neither inputs.charge nor inputs.eps_r, so "
-                "stage 7 has nothing to read; the producer pipeline that would build them is v0.9 "
+                "stage 7 has nothing to read; the producer pipeline that would build them is v0.4 "
                 "(SPECIFICATION.md section 3, FR-12 to FR-15)"
             )
         mesh = inputs.upstream.get("mesh")

@@ -22,7 +22,7 @@ the schema offer exactly the installed files, plus `none`.
 
 ## The shipped file
 
-v0.5 ships one file, `willems2020_nacl`: NaCl at 298.15 K, as fitted and deployed in the reference
+v0.2 ships one file, `willems2020_nacl`: NaCl at 298.15 K, as fitted and deployed in the reference
 model of Willems *et al.* (2020). Every coefficient is taken from the COMSOL model report that
 produced the published results, not from the rounded tables of the printed sources, and its
 comments give the provenance and the transcription traps. It is shown verbatim on the [shipped

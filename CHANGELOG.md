@@ -4,17 +4,20 @@ Every notable change to nanopnp, newest first. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the versions are the git tags of
 [SPECIFICATION.md](SPECIFICATION.md) §2.7:
 
-- a **release** `vX.Y.Z` closes a phase's release scope (v0.1 is Phase 0, v0.5 is Phase 1, v0.9 is
-  Phases 2–3, v1.0 is Phase 4);
+- a **release** `vX.Y.Z` closes a phase, one minor version per phase: v0.1 is Phase 0, v0.2 is
+  Phase 1, v0.3 is Phase 2, v0.4 is Phase 3 and v1.0 is Phase 4;
 - a **work-package pre-release** `vX.Y.Z-alpha.N` marks the merge of the N-th work package toward
   that release.
 
 The package version comes from the tag (hatch-vcs). A commit between two tags installs as a
-development version that names it, for example `0.5.0a11.dev3+g1a2b3c4`, and that is the version
-every provenance manifest records (FR-25). Each entry names the requirements it discharges. The
+development version that names it, for example `0.2.0a11.dev3+g1a2b3c4`, and that is the version
+every provenance manifest records (FR-25). The versions were renumbered on 30 September 2026
+(`SPECIFICATION.md` §2.7, the Versioning NOTE): Phase 1's tags were `v0.5.0-alpha.1` to `v0.5.0` and
+Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before then records the old
+version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
 
-## [0.9.0-alpha.9] - 2026-09-29
+## [0.3.0-alpha.9] - 2026-09-29
 
 WP25: documentation increment 2, the geometry pipeline (Phase 2 criterion 5). The tag also
 carries the fixes of CODE_REVIEW_003, which merged after WP24.
@@ -75,7 +78,7 @@ CR-7, CR-9, CR-11 and CR-13 each have a regression test that fails on the previo
 - Stage 2's `canonical_grid` no longer copies the float32 ensemble to float64 (CR-8); the packaging
   probe writes its scene to a private temporary directory (CR-12).
 
-## [0.9.0-alpha.8] - 2026-09-29
+## [0.3.0-alpha.8] - 2026-09-29
 
 WP24: the geometry pipeline surfaced in the desktop shell (Phase 2 criterion 4).
 
@@ -108,7 +111,7 @@ WP24: the geometry pipeline surfaced in the desktop shell (Phase 2 criterion 4).
   vertex index. `ContourGateError` carries the (r, z) it names as numbers, `location_nm`.
 - `profile_digest` moved to `nanopnp.mesh.profile`. `nanopnp.geometry.region` re-exports it.
 
-## [0.9.0-alpha.7] - 2026-09-29
+## [0.3.0-alpha.7] - 2026-09-29
 
 WP23: the optional Gmsh mesher backend of ADR-002.
 
@@ -136,10 +139,10 @@ WP23: the optional Gmsh mesher backend of ADR-002.
   a Gmsh test fails rather than skips when `gmsh` does not import. The ubuntu jobs install the X
   and GL libraries the gmsh wheel loads.
 
-## [0.9.0-alpha.6] - 2026-09-28
+## [0.3.0-alpha.6] - 2026-09-28
 
 WP22: VAL-05, the geometry pipeline against the reference pore polygon, and the Phase 2 gate. The
-tag also carries the codebase-review fixes merged on `main` since `v0.9.0-alpha.5`, listed under
+tag also carries the codebase-review fixes merged on `main` since `v0.3.0-alpha.5`, listed under
 *Fixed* and *Changed*.
 
 ### Added
@@ -271,7 +274,7 @@ tag also carries the codebase-review fixes merged on `main` since `v0.9.0-alpha.
 - Stage 12 reads a supplied field table once, for its restore and for the exported fixed charge,
   rather than twice.
 
-## [0.9.0-alpha.5] - 2026-09-26
+## [0.3.0-alpha.5] - 2026-09-26
 
 WP21: CAD assembly and meshing from a profile, pipeline stages 5 and 6.
 
@@ -318,7 +321,7 @@ WP21: CAD assembly and meshing from a profile, pipeline stages 5 and 6.
   its mesh hash is unchanged. `ReferenceGeometryError` is replaced by stage 5's `RegionGateError`.
 - RSK-05 is retired.
 
-## [0.9.0-alpha.4] - 2026-09-26
+## [0.3.0-alpha.4] - 2026-09-26
 
 WP20: contour extraction, conditioning and its gate, pipeline stage 4.
 
@@ -352,7 +355,7 @@ WP20: contour extraction, conditioning and its gate, pipeline stage 4.
 - The author's contour script was read, and its index-to-radius erratum is recorded (OPN-02,
   closed; RSK-06, retired).
 
-## [0.9.0-alpha.3] - 2026-09-25
+## [0.3.0-alpha.3] - 2026-09-25
 
 WP19: the density map and the reduction to (r, z), pipeline stages 2 and 3.
 
@@ -386,7 +389,7 @@ WP19: the density map and the reduction to (r, z), pipeline stages 2 and 3.
 - `geometry.density.grid_spacing_nm` outside [0.025, 0.05] nm and a non-positive
   `geometry.density.sharpness` are refused naming the value.
 
-## [0.9.0-alpha.2] - 2026-09-25
+## [0.3.0-alpha.2] - 2026-09-25
 
 WP18: structure ingestion, alignment and the Cₙ axis, pipeline stage 1.
 
@@ -421,7 +424,7 @@ WP18: structure ingestion, alignment and the Cₙ axis, pipeline stage 1.
   `inputs.mesh` is refused.
 - `structure.source.chains` is `all` or a comma-separated list, such as `A,B,C`.
 
-## [0.9.0-alpha.1] - 2026-09-24
+## [0.3.0-alpha.1] - 2026-09-24
 
 WP17: case schema v2 and the Python 3.11 floor ([#38](https://github.com/willemsk/nanopnp/pull/38)).
 The first work package of Phase 2 and its one breaking change.
@@ -456,7 +459,7 @@ The first work package of Phase 2 and its one breaking change.
   file's line endings, so the file hashed to another version and the materials key differed from
   every other platform's (FR-25, VER-47).
 
-## [0.5.0] - 2026-09-24
+## [0.2.0] - 2026-09-24
 
 **Phase 1, the solver core.** The verified Phase 0 physics becomes a product that others can run
 and reproduce: a case file goes in, and a manifest, fields and a dataset come out. It runs on an
@@ -470,16 +473,16 @@ author's reference exports exist. The end-of-phase report is in
 The release gathers ten work packages, each tagged, each with its own entry in this file:
 
 - WP7, the case-file schema, content-addressed artefacts and the provenance manifest
-  (`v0.5.0-alpha.1`);
-- WP8, mesh ingestion, quality gates and the reference geometry (`v0.5.0-alpha.2`);
-- WP9, external charge and dielectric fields (`v0.5.0-alpha.3`);
-- WP10, case-driven runs, the command line and field output (`v0.5.0-alpha.4`);
-- WP11, the sweep runner (`v0.5.0-alpha.5`);
-- WP12, the reference-matching stabilised mode (`v0.5.0-alpha.6`);
-- WP13, the Tier-3 harness and the COMSOL comparison (`v0.5.0-alpha.7`);
-- WP14, the packaging probe and the desktop shell (`v0.5.0-alpha.8`);
-- WP15, live convergence monitoring and the field viewer (`v0.5.0-alpha.9`);
-- WP16, user documentation and worked examples (`v0.5.0-alpha.10`).
+  (`v0.2.0-alpha.1`);
+- WP8, mesh ingestion, quality gates and the reference geometry (`v0.2.0-alpha.2`);
+- WP9, external charge and dielectric fields (`v0.2.0-alpha.3`);
+- WP10, case-driven runs, the command line and field output (`v0.2.0-alpha.4`);
+- WP11, the sweep runner (`v0.2.0-alpha.5`);
+- WP12, the reference-matching stabilised mode (`v0.2.0-alpha.6`);
+- WP13, the Tier-3 harness and the COMSOL comparison (`v0.2.0-alpha.7`);
+- WP14, the packaging probe and the desktop shell (`v0.2.0-alpha.8`);
+- WP15, live convergence monitoring and the field viewer (`v0.2.0-alpha.9`);
+- WP16, user documentation and worked examples (`v0.2.0-alpha.10`).
 
 ### Added
 
@@ -500,7 +503,7 @@ The release gathers ten work packages, each tagged, each with its own entry in t
   citation, and carries the same facts as before.
 - `pyproject.toml` declares the supported Python versions and platforms and the project's links.
 
-## [0.5.0-alpha.10] - 2026-09-23
+## [0.2.0-alpha.10] - 2026-09-23
 
 WP16: user documentation and worked examples ([#34](https://github.com/willemsk/nanopnp/pull/34)).
 
@@ -518,7 +521,7 @@ WP16: user documentation and worked examples ([#34](https://github.com/willemsk/
 
 - Every checked-in reference case mapped a `default` group that the reference mesh does not carry.
 
-## [0.5.0-alpha.9] - 2026-09-22
+## [0.2.0-alpha.9] - 2026-09-22
 
 WP15: live convergence monitoring and the webgui field viewer
 ([#32](https://github.com/willemsk/nanopnp/pull/32)).
@@ -533,7 +536,7 @@ WP15: live convergence monitoring and the webgui field viewer
 
 Completes IF-09 and discharges QR-11 and VER-44.
 
-## [0.5.0-alpha.8] - 2026-09-21
+## [0.2.0-alpha.8] - 2026-09-21
 
 WP14: the packaging probe and the desktop shell ([#31](https://github.com/willemsk/nanopnp/pull/31)).
 
@@ -549,7 +552,7 @@ WP14: the packaging probe and the desktop shell ([#31](https://github.com/willem
 Discharges the case-editing and run-control halves of IF-09, VER-43, and CON-09. §8.2 criterion 4
 stays open until the author double-clicks a built bundle.
 
-## [0.5.0-alpha.7] - 2026-09-20
+## [0.2.0-alpha.7] - 2026-09-20
 
 WP13: the Tier-3 harness and the COMSOL comparison
 ([#30](https://github.com/willemsk/nanopnp/pull/30)).
@@ -565,7 +568,7 @@ WP13: the Tier-3 harness and the COMSOL comparison
 
 Discharges VAL-01 to VAL-04, retires RSK-14 and bounds RSK-09.
 
-## [0.5.0-alpha.6] - 2026-09-18
+## [0.2.0-alpha.6] - 2026-09-18
 
 WP12: the reference-matching stabilised mode ([#28](https://github.com/willemsk/nanopnp/pull/28)).
 
@@ -577,7 +580,7 @@ WP12: the reference-matching stabilised mode ([#28](https://github.com/willemsk/
 
 Discharges NUM-03, NUM-12, NUM-14 and NUM-15, completes NUM-11, and adds VER-41 and VER-42.
 
-## [0.5.0-alpha.5] - 2026-09-13
+## [0.2.0-alpha.5] - 2026-09-13
 
 WP11: the sweep runner ([#26](https://github.com/willemsk/nanopnp/pull/26)).
 
@@ -592,7 +595,7 @@ WP11: the sweep runner ([#26](https://github.com/willemsk/nanopnp/pull/26)).
 
 Discharges FR-24, measures QR-06, and adds VER-36 to VER-40.
 
-## [0.5.0-alpha.4] - 2026-09-07
+## [0.2.0-alpha.4] - 2026-09-07
 
 WP10: case-driven runs, the command line and field output
 ([#24](https://github.com/willemsk/nanopnp/pull/24)).
@@ -608,7 +611,7 @@ WP10: case-driven runs, the command line and field output
 
 Discharges IF-01, IF-02, IF-07, FR-27 and QR-08, and adds VER-32 to VER-35.
 
-## [0.5.0-alpha.3] - 2026-09-07
+## [0.2.0-alpha.3] - 2026-09-07
 
 WP9: external charge and dielectric fields ([#21](https://github.com/willemsk/nanopnp/pull/21)).
 
@@ -624,7 +627,7 @@ WP9: external charge and dielectric fields ([#21](https://github.com/willemsk/na
 Discharges the consumer halves of FR-14, FR-15, QR-03, PHY-18 and PHY-19, and the read side of
 IF-05. Adds VER-29 to VER-31 and VAL-15.
 
-## [0.5.0-alpha.2] - 2026-09-05
+## [0.2.0-alpha.2] - 2026-09-05
 
 WP8: mesh ingestion, quality gates and the reference geometry
 ([#19](https://github.com/willemsk/nanopnp/pull/19)).
@@ -641,7 +644,7 @@ WP8: mesh ingestion, quality gates and the reference geometry
 
 Discharges IF-06, VER-10 and QR-12, and adds VER-27 and VER-28.
 
-## [0.5.0-alpha.1] - 2026-09-04
+## [0.2.0-alpha.1] - 2026-09-04
 
 WP7: the case-file schema, content-addressed artefacts and the provenance manifest
 ([#17](https://github.com/willemsk/nanopnp/pull/17)).
@@ -649,7 +652,7 @@ WP7: the case-file schema, content-addressed artefacts and the provenance manife
 ### Added
 
 - The frozen `nanopnp/case/v1` schema. An unknown key is rejected, naming the key and its block, and
-  a v0.9 section is refused rather than ignored.
+  a v0.3 or v0.4 section is refused rather than ignored.
 - Content-addressed artefacts, and a result store that uses the content hash as the cache key.
 - The eight-group provenance manifest of §5.3.3. Its Deviations group is computed by diffing against
   the validated-default case.
@@ -776,17 +779,17 @@ WP1: the correction registry and the materials layer
 
 Discharges VER-03, VER-04 and VER-05.
 
-[Unreleased]: https://github.com/willemsk/nanopnp/compare/v0.5.0-alpha.10...HEAD
-[0.5.0-alpha.10]: https://github.com/willemsk/nanopnp/compare/v0.5.0-alpha.9...v0.5.0-alpha.10
-[0.5.0-alpha.9]: https://github.com/willemsk/nanopnp/compare/v0.5.0-alpha.8...v0.5.0-alpha.9
-[0.5.0-alpha.8]: https://github.com/willemsk/nanopnp/compare/v0.5.0-alpha.7...v0.5.0-alpha.8
-[0.5.0-alpha.7]: https://github.com/willemsk/nanopnp/compare/v0.5.0-alpha.6...v0.5.0-alpha.7
-[0.5.0-alpha.6]: https://github.com/willemsk/nanopnp/compare/v0.5.0-alpha.5...v0.5.0-alpha.6
-[0.5.0-alpha.5]: https://github.com/willemsk/nanopnp/compare/v0.5.0-alpha.4...v0.5.0-alpha.5
-[0.5.0-alpha.4]: https://github.com/willemsk/nanopnp/compare/v0.5.0-alpha.3...v0.5.0-alpha.4
-[0.5.0-alpha.3]: https://github.com/willemsk/nanopnp/compare/v0.5.0-alpha.2...v0.5.0-alpha.3
-[0.5.0-alpha.2]: https://github.com/willemsk/nanopnp/compare/v0.5.0-alpha.1...v0.5.0-alpha.2
-[0.5.0-alpha.1]: https://github.com/willemsk/nanopnp/compare/v0.1.0...v0.5.0-alpha.1
+[Unreleased]: https://github.com/willemsk/nanopnp/compare/v0.2.0-alpha.10...HEAD
+[0.2.0-alpha.10]: https://github.com/willemsk/nanopnp/compare/v0.2.0-alpha.9...v0.2.0-alpha.10
+[0.2.0-alpha.9]: https://github.com/willemsk/nanopnp/compare/v0.2.0-alpha.8...v0.2.0-alpha.9
+[0.2.0-alpha.8]: https://github.com/willemsk/nanopnp/compare/v0.2.0-alpha.7...v0.2.0-alpha.8
+[0.2.0-alpha.7]: https://github.com/willemsk/nanopnp/compare/v0.2.0-alpha.6...v0.2.0-alpha.7
+[0.2.0-alpha.6]: https://github.com/willemsk/nanopnp/compare/v0.2.0-alpha.5...v0.2.0-alpha.6
+[0.2.0-alpha.5]: https://github.com/willemsk/nanopnp/compare/v0.2.0-alpha.4...v0.2.0-alpha.5
+[0.2.0-alpha.4]: https://github.com/willemsk/nanopnp/compare/v0.2.0-alpha.3...v0.2.0-alpha.4
+[0.2.0-alpha.3]: https://github.com/willemsk/nanopnp/compare/v0.2.0-alpha.2...v0.2.0-alpha.3
+[0.2.0-alpha.2]: https://github.com/willemsk/nanopnp/compare/v0.2.0-alpha.1...v0.2.0-alpha.2
+[0.2.0-alpha.1]: https://github.com/willemsk/nanopnp/compare/v0.1.0...v0.2.0-alpha.1
 [0.1.0]: https://github.com/willemsk/nanopnp/compare/v0.1.0-alpha.6...v0.1.0
 [0.1.0-alpha.6]: https://github.com/willemsk/nanopnp/compare/v0.1.0-alpha.5...v0.1.0-alpha.6
 [0.1.0-alpha.5]: https://github.com/willemsk/nanopnp/compare/v0.1.0-alpha.4...v0.1.0-alpha.5

@@ -467,7 +467,7 @@ def ladder(
     """
     if resolved.continuation == "none":
         return (single_rung(resolved, mesh, measures, distance, fields),)
-    # The producer pipeline is still v0.9, so the charge a run carries is the
+    # The producer pipeline is still v0.4, so the charge a run carries is the
     # one it was handed through ``inputs.charge`` (FR-27, stage 7). With no
     # field supplied the stage-4 ramp is empty rather than silently zero, and
     # the ladder is the same one WP5 measured.

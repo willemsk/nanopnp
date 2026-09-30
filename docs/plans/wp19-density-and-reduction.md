@@ -1,7 +1,7 @@
 # WP19 — Density map and symmetry reduction (stages 2 and 3)
 
 **Status: delivered, 25 September 2026.** Written 25 September 2026, after WP18 merged as
-`v0.9.0-alpha.2` (PR [#39](https://github.com/willemsk/nanopnp/pull/39)). This package inherits
+`v0.3.0-alpha.2` (PR [#39](https://github.com/willemsk/nanopnp/pull/39)). This package inherits
 stage 1's frame: the axis is on z at r = 0, z = â·x keeps the file's axial coordinate, and the
 aligned ensemble carries an atom table (element, name, residue name, number, insertion code, chain)
 but **no radius** (WP18 D10). It also inherits `refuse_walk`, which it extends. The van der Waals
@@ -153,7 +153,7 @@ against.
 9. **Specification, changelog and knowledge.** Add VER-49 and VER-50 to §7.2, with the text below.
    Map them in Appendix A: FR-04 → VER-49; FR-05 → VER-01, VER-50; FR-06 → VER-50;
    CON-04 → VER-50; IF-05 adds both. Recount the coverage line. Write `CHANGELOG.md`
-   `[0.9.0-alpha.3]`. Add Outcomes here and update `current.md`.
+   `[0.3.0-alpha.3]`. Add Outcomes here and update `current.md`.
 
 ### Verification
 

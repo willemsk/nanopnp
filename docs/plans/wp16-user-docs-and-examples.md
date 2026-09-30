@@ -4,7 +4,7 @@
 core, the case file, the CLI, sweeps, provenance and the desktop shell are all delivered, but a
 user has nothing to read. The README still says the solver is not implemented. There is no
 documentation tooling and no `examples/` directory. `nanopnp/__init__.py` exports only
-`__version__`, although IF-01 promises a stable API from v0.5. Every checked-in case points at
+`__version__`, although IF-01 promises a stable API from v0.2. Every checked-in case points at
 `docs/sweeps/clya-reference.msh`, which is not in the repository and can be produced only with a
 Python one-liner. WP16 inherits the `case_fields` schema walk (WP14), the IF-02 exit-code
 enumeration (WP10) and the spawned-process shell (WP14–15).
@@ -32,7 +32,7 @@ Three deliverables, in this order.
    documentation. It is built strictly in CI and hosted on Read the Docs.
 3. **Five worked examples**, each executed by a test.
 
-Discharges QR-15 in part (the documentation half, from v0.5), and touches IF-01, IF-02, IF-03,
+Discharges QR-15 in part (the documentation half, from v0.2), and touches IF-01, IF-02, IF-03,
 FR-23, FR-24, FR-25 and FR-27. **The brief exceeds its 1,200-word target, at about 1,700.** Fourteen
 decisions settle what is public, what is executed and what the docs may claim as a number; the
 package still verifies inside one PR.
@@ -54,7 +54,7 @@ package still verifies inside one PR.
 | # | Decision | Choice | Why/source |
 |---|---|---|---|
 | D1 | Generator | `mkdocs<2`, `mkdocs-material`, `mkdocstrings[python]`, with `mkdocs.yml` restricted to what Zensical reads: no `hooks:`, and no plugin without a Zensical shim | Author ruling. Material is in maintenance mode and does not support MkDocs 2; Zensical lacks cross-references (`.knowledge/07` §13). **Migration trigger:** Zensical supports mkdocstrings cross-references |
-| D2 | Hosting | Read the Docs, from `.readthedocs.yaml`, installing from `uv.lock` (verify the current RTD uv recipe via Context7). The site banner reads *pre-alpha, v0.5 scope* | Author ruling |
+| D2 | Hosting | Read the Docs, from `.readthedocs.yaml`, installing from `uv.lock` (verify the current RTD uv recipe via Context7). The site banner reads *pre-alpha, v0.2 scope* | Author ruling |
 | D3 | Site layout | `docs_dir: docs`, excluding `plans/`. Nav: Home · Getting started · User guide · Examples · Reference · Model · Project | Plans are not user material (CLAUDE.md) |
 | D4 | Model pages | A pre-build step copies `SPECIFICATION.md` and `.knowledge/*.md` into a gitignored `docs/_generated/`, rewriting relative links; the strict build proves every link resolves. One orientation page maps each case-file switch to its §4/§6 identifier and **restates no equation** | Author ruling. Restated summaries of this model drift and get copied wrong (CLAUDE.md) |
 | D5 | Generated references | Pure renderers in `src/nanopnp/cli/reference.py` build the case-file reference from `case_fields()`, the CLI reference from `build_parser()`, and the exit codes from `cli/errors.py` `EXIT_CODES`. `docs/scripts/generate.py` (run with `uv run`) writes them, with D4's copies, to `docs/_generated/`. Nothing generated is committed | Drift is impossible; generated pages are portable to Zensical (D1); the renderers are testable at Tier 1 (VER-45) |
@@ -66,7 +66,7 @@ package still verifies inside one PR.
 | D11 | Tiers and budget | 01–04 go in `tests/tier2/test_examples.py`, with a **≤ 2 min serial** target, measured and recorded as an Outcome. 05's solve is `slow`, while its `sweep plan --no-mesh-check` and its SLURM template's rendering run at Tier 1 | The push gate stays at minutes |
 | D12 | Dependencies | `[dependency-groups] docs = ["mkdocs>=1.6,<2", "mkdocs-material", "mkdocstrings[python]"]`, not a default group. `[project.optional-dependencies] examples = ["matplotlib"]`. Then `uv lock`. Examples always write CSV and plot only when `matplotlib` imports | CON-07: nothing new on the end-user path. CI's `--all-extras` exercises the plots |
 | D13 | CI and prose rule | A new `docs` job in `ci.yml` (`uv sync --group docs`, generate, `mkdocs build --strict`) runs on **every** push, including prose-only ones. `.github/scripts/prose-only.sh` treats `examples/*` as non-prose, and `.claude/hooks/gate.sh` inherits that | The tests read the example READMEs (VER-46), and the strict build (VER-45) must see prose edits |
-| D14 | GUI guide | `docs/scripts/capture_gui.py` grabs the editor, run and convergence panels under `QT_QPA_PLATFORM=offscreen` into `docs/guide/img/`; the PNGs are committed and no test looks at pixels. The WebEngine viewer is described in text. The guide says v0.5 GUI use is the development install (`uv run nanopnp-gui`) until §8.2 criterion 4's double-click and the post-1.0 installers exist | Author ruling; honest about criterion 4 and RSK-13 |
+| D14 | GUI guide | `docs/scripts/capture_gui.py` grabs the editor, run and convergence panels under `QT_QPA_PLATFORM=offscreen` into `docs/guide/img/`; the PNGs are committed and no test looks at pixels. The WebEngine viewer is described in text. The guide says v0.2 GUI use is the development install (`uv run nanopnp-gui`) until §8.2 criterion 4's double-click and the post-1.0 installers exist | Author ruling; honest about criterion 4 and RSK-13 |
 
 > **Outcome — D6: the set is twenty names, `registered_stages` added.** The stage protocol is
 > introspected through it (FR-27), and a public `Stage` without a way to list the stages would be

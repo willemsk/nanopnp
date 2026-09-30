@@ -107,7 +107,7 @@ requirement* — none is a defect, and the release plan (§2.7, §8.1) schedules
 - **[gap, Med] VER-10 / QR-12** (mesh quality gate, min SICN/gamma > 0.3, worst element reported).
   `mesh/primitives.py` builds real Netgen meshes via `netgen.occ` but carries **no** quality gate
   (`grep` for `sicn|gamma|quality|optimize` in `mesh/` hits only a docstring word). RSK-05/VER-10
-  is nominally a Phase-2 detection, but the gate is a v0.5 (QR-12) requirement and the meshes it
+  is nominally a Phase-2 detection, but the gate is a v0.2 (QR-12) requirement and the meshes it
   would guard already exist. Bringing a thin gate forward is cheap and closes a named invariant —
   see WP-B3 (optional).
 
@@ -308,7 +308,7 @@ resolved rather than open. No `src/` or `SPECIFICATION.md` change.
 
 **WP-B3 — A mesh quality gate for the analytic primitives (VER-10, QR-12).** Add a min-SICN/gamma
 > 0.3 gate with worst-element reporting to `mesh/primitives.py`, and a `test_ver10_*`. **This does
-not change specified behaviour but does discharge a v0.5 requirement early**; it is optional because
+not change specified behaviour but does discharge a v0.2 requirement early**; it is optional because
 RSK-05/VER-10 is a Phase-2 detection point and the analytic primitives are not yet the risk they
 guard against. If taken, it needs no spec amendment (QR-12 already mandates the gate).
 

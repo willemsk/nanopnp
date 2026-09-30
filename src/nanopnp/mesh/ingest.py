@@ -658,14 +658,14 @@ def _source_path(supplied: SuppliedArtefact) -> Path:
     ------
     UnsupportedCaseSection
         If the mesh is named by store hash rather than by path, which needs the
-        meshing pipeline of v0.9.
+        meshing pipeline of v0.3.
     FileNotFoundError
         If the file is not there.
     """
     if supplied.path is None:
         raise UnsupportedCaseSection(
             "inputs.mesh: artefact: names a mesh in the store, which the meshing "
-            "pipeline of v0.9 fills; supply inputs.mesh: path: instead"
+            "pipeline of v0.3 fills; supply inputs.mesh: path: instead"
         )
     if not supplied.path.is_file():
         # Quoted rather than ``!r``, which doubles a Windows path's separators.

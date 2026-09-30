@@ -108,7 +108,7 @@ CONFIGURATION_PATHS: dict[str, str] = {
         "recorded in the resolved case rather than as a deviation"
     ),
     "numerics.mesh.backend": (
-        "mesh generation is v0.9 and is recorded in the Geometry and mesh group of the "
+        "mesh generation is v0.3 and is recorded in the Geometry and mesh group of the "
         "manifest (section 5.3.3); it changes the discretisation, not the model"
     ),
     "numerics.mesh.boundary_layer": (
@@ -137,7 +137,7 @@ CONFIGURATION_PATHS: dict[str, str] = {
         "the analyte body of stage 5, WP21; a structure: case's walk is refused before stage 5, "
         "so nothing reads it yet, and a supplied mesh carries its analyte already"
     ),
-    "charge.titration": "v0.9; resolve() refuses a case carrying a charge: section",
+    "charge.titration": "v0.4; resolve() refuses a case carrying a charge: section",
 }
 """Switch-typed fields that are deliberately *not* deviations, each with its reason.
 

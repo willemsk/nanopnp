@@ -1,7 +1,7 @@
 # WP23 — The Gmsh mesher backend
 
 **Status: delivered, 29 September 2026.** Written 29 September 2026, after WP22 merged on `main`
-(`32fecf1`, to be tagged `v0.9.0-alpha.6`). This package inherits stage 5's glued, adjacency-named
+(`32fecf1`, to be tagged `v0.3.0-alpha.6`). This package inherits stage 5's glued, adjacency-named
 region and its `nanopnp/region/v1` record (WP21 D5, D6), and stage 6's route: size, mesh, write
 MSH 4.1, re-ingest through VER-27 and VER-10, then the D9 wall-size gate, keyed on the recipe with
 the content hash recorded (WP21 D9–D13). It also inherits `numerics.mesh.backend`, which is already
@@ -84,7 +84,7 @@ explicit, and each one moves a verdict.
    the FR-10, CON-10, CON-12 and QR-12 rows, with the count recounted. ADR-002 is noted as
    delivered. `.knowledge/07` §4 gets the Gmsh facts of Design §1–§3, re-measured and marked
    **[tested]**. `docs/guide/meshes.md` gets a section on the backend and its extra. Write
-   CHANGELOG `v0.9.0-alpha.7`, and add the phase plan's *Delivered* note.
+   CHANGELOG `v0.3.0-alpha.7`, and add the phase plan's *Delivered* note.
 
 ### Verification
 

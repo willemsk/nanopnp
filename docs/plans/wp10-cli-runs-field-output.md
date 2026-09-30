@@ -537,7 +537,7 @@ The route-agreement tolerance is NUM-26's `1 × 10⁻³`, unchanged from WP5.
 - **A shipped reference case set** — WP13 / VAL-03. WP10 ships a small case in `tests/` only; the
   frozen reference set waits on the author's still-open VAL-03 export-scope decision.
 - **Figures and plots** (stage 12's "figures" column in §5.3.2) — the `report` stage registered here
-  writes the manifest and the export selection; plotting is v0.9.
+  writes the manifest and the export selection; plotting is v0.4.
 - **COMSOL import or export** (N7) — permanently out of scope.
 - **Profiles and derived field quantities** in the XDMF — flux densities, current densities and
   energy densities are post-processing with their own verification tier, and each is a term whose
@@ -551,7 +551,7 @@ None of these block implementation; each has a stated proposal that the plan pro
    difference reported on every run, so that when the 3-OS matrix produces a larger figure it is on
    the record before anyone has to argue about it. Should the cross-platform figure instead be
    recorded as a separate, looser gate from the outset?
-2. **Does `reproduce` earn a subcommand at v0.5**, or is QR-08 adequately discharged by the Tier-2
+2. **Does `reproduce` earn a subcommand at v0.2**, or is QR-08 adequately discharged by the Tier-2
    test alone? Proposal: keep the subcommand — QR-08 is a promise to a *user* who has a run directory
    and no test harness, and a promise only a test can exercise is not one.
 
