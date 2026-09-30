@@ -154,7 +154,8 @@ def copy_example(example: Path, root: Path, *, repository: Path) -> Path:
         ignore=shutil.ignore_patterns(*_generated_patterns(example.parent / ".gitignore")),
     )
     readme = example / "README.md"
-    for argv in (argv for tag in EXPECTED_EXIT for argv in tagged_commands(readme, tag)):
+    commands = [command for tag in EXPECTED_EXIT for command in tagged_commands(readme, tag)]
+    for argv in commands:
         for word in argv[1:]:
             if word.startswith(UP):
                 source = (repository / word[len(UP) :]).parent

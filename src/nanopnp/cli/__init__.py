@@ -216,7 +216,7 @@ def _stage(args: argparse.Namespace) -> int:
     if args.export is not None:
         # Refused before the walk, which may take a minute: a wrong stage or
         # suffix is a usage error, and nothing has been run to leave a file.
-        why = refusal(args.name, Path(args.export))
+        why = refusal(args.name, args.export)
         if why is not None:
             args.parser.error(why)
 
@@ -249,7 +249,7 @@ def _stage(args: argparse.Namespace) -> int:
     if args.export is not None:
         # After the walk, from what the store holds: the export is an output
         # location and reaches no key (the section 3.1 IF-02 export NOTE).
-        written = export_artefact(args.name, artefact, Path(args.export))
+        written = export_artefact(args.name, artefact, args.export)
         found["export"] = [str(path) for path in written]
         lines += [f"export   {path}" for path in written]
     _emit(found, lines, as_json=args.json)
