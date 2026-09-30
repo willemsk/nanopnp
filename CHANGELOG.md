@@ -17,6 +17,57 @@ Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before t
 version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
 
+## [0.3.0] - 2026-09-30
+
+**Phase 2, the geometry pipeline.** A PDB entry or an MD trajectory becomes a gated mesh by six
+stages: alignment on the Cₙ axis, a smeared density map, the reduction to (r, z), the contour, the
+region and the mesh, on netgen or the optional Gmsh backend. Each stage stores a content-hashed
+artefact, can be exported and hand-edited, and is shown in the desktop shell. VAL-05 compares the
+generated ClyA geometry with the published reference polygon. The 2WCD leg passes on every push.
+The ensemble leg passes on the constriction radius (−0.039 nm) and the rms (0.089 nm), and misses
+ε_G at −5.56 % against 5 %. The author waived that miss (`SPECIFICATION.md` §8.2.4 D7), and the
+tolerance is unchanged. The end-of-phase report is in
+[docs/plans/phase-2-geometry-pipeline.md](docs/plans/phase-2-geometry-pipeline.md).
+
+The release gathers nine work packages, each tagged, each with its own entry in this file:
+
+- WP17, case schema v2 and the Python 3.11 floor (`v0.3.0-alpha.1`);
+- WP18, structure ingestion, alignment and the Cₙ axis (`v0.3.0-alpha.2`);
+- WP19, the density map and the reduction to (r, z) (`v0.3.0-alpha.3`);
+- WP20, contour extraction, conditioning and its gate (`v0.3.0-alpha.4`);
+- WP21, CAD assembly and meshing from a profile (`v0.3.0-alpha.5`);
+- WP22, VAL-05 against the reference geometry (`v0.3.0-alpha.6`);
+- WP23, the optional Gmsh mesher backend (`v0.3.0-alpha.7`);
+- WP24, the geometry pipeline in the desktop shell (`v0.3.0-alpha.8`);
+- WP25, documentation increment 2 and example 06 (`v0.3.0-alpha.9`).
+
+### Added
+
+- The Phase 2 end-of-phase report, and `SPECIFICATION.md` §8.2.4 D7, which closes the phase.
+- The Phase 3 delivery plan, `docs/plans/phase-3-charge-pipeline.md` (WP26–WP32), with the author's
+  rulings recorded as §8.2.4 D2–D5. These cover the closed-form charge kernel deposited on the
+  deployed mesh, VAL-06 against APBS, per-frame protonation and the exclusion shell.
+- VAL-16 and VAL-17: Tier 3 compares the paper's published current–voltage relationships and
+  in-pore averages, and that comparison gates v1.0 (§8.2.4 D6).
+- `.github/renumbered-tags.txt` and `.github/scripts/renumber-tags.sh`, which re-create the retired
+  tags under their new names.
+
+### Changed
+
+- **Versions are renumbered so that the minor version names the phase** (§8.2.4 D1). Phase 1's
+  `v0.5.0` is now `v0.2.0`, and Phase 2's `v0.9.0-alpha.N` are now `v0.3.0-alpha.N`. `release.yml`
+  skips its `CITATION.cff` check for a renamed tag.
+- The COMSOL field comparison, VAL-01 to VAL-04, is kept but no longer required. The export
+  contract says so.
+- `SPECIFICATION.md` §2.6 and CON-09: PROPKA is LGPL-2.1, not BSD.
+
+### Fixed
+
+- `Z_MD`, the MD structure's Cα centroid that registers 2WCD axially, is 5.655 nm, not 5.63 nm. The
+  old constant included residue 7, and the ensemble measures 5.6553 nm over residues 8–292. The 2WCD
+  leg's ε_G moves from −8.08 % to −8.49 %, and example 06's `prepare.py` places the centroid at the
+  corrected height (VAL-05, WP22 D6).
+
 ## [0.3.0-alpha.9] - 2026-09-29
 
 WP25: documentation increment 2, the geometry pipeline (Phase 2 criterion 5). The tag also

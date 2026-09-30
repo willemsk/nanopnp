@@ -1,6 +1,6 @@
 # Phase 2 (Geometry pipeline): from a structure to a gated mesh
 
-**Status: in progress. WP17 delivered, 24 September 2026; WP18 delivered, 25 September 2026; WP19 delivered, 25 September 2026; WP20 delivered, 26 September 2026; WP21 delivered, 26 September 2026; WP22 delivered, 28 September 2026, its Tier-3 verdict awaiting a run on the archive; WP23 delivered, 29 September 2026; WP24 delivered, 29 September 2026; WP25 delivered, 29 September 2026.** Written 24 September 2026, after Phase 1 (WP7–WP16) delivered the
+**Status: closed, 30 September 2026, as `v0.3.0`, with criterion 3 waived (`SPECIFICATION.md` §8.2.4 D7; [End-of-phase report](#end-of-phase-report)). WP17 delivered, 24 September 2026; WP18 delivered, 25 September 2026; WP19 delivered, 25 September 2026; WP20 delivered, 26 September 2026; WP21 delivered, 26 September 2026; WP22 delivered, 28 September 2026, its Tier-3 verdict awaiting a run on the archive; WP23 delivered, 29 September 2026; WP24 delivered, 29 September 2026; WP25 delivered, 29 September 2026.** Written 24 September 2026, after Phase 1 (WP7–WP16) delivered the
 solver core on an externally supplied mesh (main at `v0.2.0-alpha.10`). Two things come first:
 the Phase 1 end-of-phase report, which merges as tag `v0.2.0`, and the author's double-click
 observation that closes Phase 0 criterion 4. That ordering is ruling B1 of `SPECIFICATION.md`
@@ -298,6 +298,11 @@ sensitivity (G2), the FR-06 variance along z, element count and quality against 
 > Measurements: [WP22 Outcomes](wp22-val05-reference-geometry.md#outcomes),
 > [`.knowledge/04`](../../.knowledge/04-clya-geometry-and-charge.md) §1.4.
 
+> **Verdict, 30 September 2026.** The ensemble leg ran on the author's archive. It passes Δr_c
+> (−0.039 nm) and the rms (0.089 nm), and misses ε_G at −5.56 % against 5 %. Criterion 3 is
+> waived by the author's ruling, `SPECIFICATION.md` §8.2.4 D7, and the tolerance is unchanged.
+> `Z_MD` is corrected to 5.655 nm, and the 2WCD leg, re-registered, passes at ε_G −8.49 %.
+
 ### WP23 — The Gmsh mesher backend
 
 The optional GPLv2+ backend of ADR-002 behind the WP21 adapter, selected by
@@ -462,3 +467,118 @@ To be written at the end of the phase, naming numbers rather than adjectives:
 - The conductance of one frozen case on the generated mesh against the reference mesh.
 - Deposition and meshing wall-clock times and peak memory for 2WCD and for the ensemble.
 - Whether the desktop bundle still builds with the pipeline's dependencies in it.
+
+Written 30 September 2026, on `main` at `ba98f37` (`v0.3.0-alpha.9` and the review fixes) with this
+report's branch. The ensemble figures come from the author's run of
+`tests/tier3/test_val05_ensemble.py` that day. The 2WCD figures come from
+`tests/tier2/test_val05_2wcd.py`, re-run that day at the corrected `Z_MD`. Every number is quoted
+from the Outcome, test log or knowledge entry it cites, and none is re-derived here.
+
+**Verdict.** Criteria 1, 2, 4 and 5 are met. **Criterion 3 is not met as written.** On the ensemble
+leg, VAL-05's ε_G is −5.56 % against a 5 % tolerance, while Δr_c and the rms pass. By the author's
+ruling the miss is waived (`SPECIFICATION.md` §8.2.4 D7), in the manner of Phase 1's C1. The
+tolerance stands and the Tier-3 test keeps asserting it. v0.3.0 is released on that basis. The
+2WCD leg is gated on every push and passes.
+
+**VAL-05, both legs** ([WP22 Outcomes](wp22-val05-reference-geometry.md#outcomes);
+`.knowledge/04` §1.4 and §1.5). The reference constriction is 1.650 nm at z = −1.225 nm.
+
+| Quantity | Ensemble, DCD frames 48–97 (Tier 3) | 2WCD, chains A–L (Tier 2) |
+|---|---|---|
+| ε_G (exact series) | **−5.56 %** (−5.57 %), against ≤ 5 % | −8.49 % (−8.54 %), against ≤ 10 % |
+| Δr_c | −0.039 nm (1.611 at z = −1.325) | −0.020 nm (1.630 at z = −1.425) |
+| rms Δ, mean Δ | 0.089 nm, −0.075 nm | 0.159 nm, −0.136 nm |
+| max \|Δ\| | 0.295 nm at z = 1.725 | 0.339 nm at z = 3.425 |
+| Planes compared | 282 of 282 | 280 of 282, both misses in the tip band |
+| Axial registration | `centre_z_nm` = 0 in the MD frame, the author's value (G9) | Cα centroid at `Z_MD` = 5.655 nm, so `centre_z_nm` = 4.5477 nm; not fitted |
+
+Nothing was fitted. The rms-optimal 2WCD offset, 4.5827 nm, lies 0.035 nm from the registration and
+is recorded as a diagnostic. The reference polygon is `pqr2grid`'s binned contour plus a hand edit.
+Binned through that erratum, our ensemble contour gives ε_G = −13.57 %, so the hand edit widened the
+lumen by 0.187 nm. The miss lies in that step, which the method does not reproduce by design.
+**`Z_MD` measured 5.6553 nm**, 0.025 nm above the 5.63 nm constant, which was the centroid with
+residue 7 included (5.6293 nm). The constant is corrected as WP22 D6 provides, and the 2WCD figures
+move with it: ε_G goes from −8.08 % to −8.49 %.
+
+**The isolevel sensitivity** (D8; ε_G, then r_c):
+
+| Isolevel | 0.15 | 0.20 | **0.25** | 0.30 | 0.35 | 0.40 | 0.50 |
+|---|---|---|---|---|---|---|---|
+| Ensemble ε_G | −12.98 % | −8.92 % | **−5.56 %** | −2.12 % | +1.02 % | +3.93 % | +9.80 % |
+| Ensemble r_c [nm] | 1.510 | 1.578 | **1.611** | 1.646 | 1.684 | 1.718 | 1.758 |
+| 2WCD ε_G | −12.95 % | −10.86 % | **−8.49 %** | −6.07 % | −3.50 % | −0.87 % | +4.41 % |
+| 2WCD r_c [nm] | 1.581 | 1.606 | **1.630** | 1.643 | 1.670 | 1.680 | 1.712 |
+
+Both are strictly increasing. ε_G crosses zero at 0.334 on the ensemble and at 0.416 on 2WCD. On the
+ensemble, ±0.1 of isolevel moves ε_G by −7.4 and +6.6 pp, more than the ±5 pp the tolerance was
+argued from. From 0.40 up, the ensemble's minimum radius moves to z = −0.325 nm.
+
+**The FR-06 residual variance.** On the ensemble, the largest Cₙ variance is 0.171 at (r, z) =
+(4.70, 6.55) nm. The largest non-Cₙ variance is **0.088 at (2.00, −1.70) nm**, the *trans* entrance
+of the constriction. On 2WCD the figures are 0.204 at the *cis* rim, (5.40, 12.95) nm, and 0.0095
+at (1.65, 3.10) nm. The MD breaks the crystal's twelve-fold symmetry by nine times as much, and most
+where the lumen is narrowest.
+
+**The generated mesh against the reference figures** (D10, default sizes, 0.05 nm at the wall):
+
+| Mesh | Triangles | min SICN (mean) | min gamma (mean) |
+|---|---|---|---|
+| Ensemble, netgen | 45,272 | 0.7087 (0.9866) | 0.6763 (0.9847) |
+| Ensemble, Gmsh 4.15.2 | 49,100 | 0.7317 (0.9886) | 0.6441 (0.9867) |
+| 2WCD, netgen | 44,987 | 0.6956 (0.9862) | 0.6223 (0.9843) |
+| 2WCD, Gmsh, at `Z_MD` = 5.63 (WP23 D13) | 49,617 | 0.6805 | 0.5749 |
+| Reference COMSOL mesh | 120,917 | 0.6378 (0.9765), measure not stated | |
+
+Every generated mesh clears the 0.3 gates, with about 40 % of the reference's elements. The 2WCD
+Gmsh row predates the `Z_MD` correction. Gmsh does not import in the container this report was
+written in, and CI re-measures it on every push.
+
+**The frozen case's conductance** (D9: uncharged `pnp`, flow off, every correction `none`, 1 M NaCl,
++50 mV). On the ensemble at `size_scale` 1, the generated mesh gives 1.4103e-8 S and the fixture
+1.4753e-8 S: **−4.40 %**, against ε_G −5.56 %. On 2WCD at `size_scale` 2, the figure is −6.59 %
+against −8.49 %. Access resistance dilutes the bulk-resistor proxy by about a fifth on both legs.
+
+**Wall-clock time and memory.** The 2WCD pipeline takes 17.0 s for stage 2 and 6.9 s for stage 3, at
+a 0.47 GB peak (WP19 Outcomes). The ensemble's timings depend on the machine:
+- In the development container, stage 2 takes 980.6 s (19.6 s a frame) and stage 3 9.9 s, at a
+  0.56 GB peak (`.knowledge/07` §2).
+- On the author's machine, stage 2 takes 596.6 s (11.9 s a frame) and stage 3 13.7 s. Peak memory
+  was not recorded there.
+
+Meshing at the default sizes takes 12.3 s cold and 4.9 s warm on netgen, and 2.2 s on Gmsh, for the
+ensemble. It takes 8.5 s on netgen for 2WCD. The GUI's spawned cold build of 2WCD to stage 6 takes
+31.6 s (WP24).
+
+**The desktop bundle.** It carries MDAnalysis, gemmi, scikit-image, Shapely and Gmsh.
+[CI run 36693364368](https://github.com/willemsk/nanopnp/actions/runs/36693364368), on `ba98f37`,
+built it with PyInstaller on `windows-latest` in 5 min 43 s. `nanopnp-probe.exe --selftest`, which
+exercises each payload once (WP24 D17), passed in 3 s. RSK-13 stays retired.
+
+**Completion criteria.**
+1. **Tiers 1 and 2 pass**, on generated meshes as well as ingested ones. The same CI run passed
+   lint, `mypy --strict` and tiers 1–2 on Ubuntu with Python 3.11–3.14, and on macOS and Windows
+   with 3.12. The Qt widget module ran serially where Qt imports. VER-53 and VER-54 solve on
+   generated meshes from both backends. **Met.**
+2. **A `structure:` and `geometry:` case with no `inputs.mesh` runs end to end** from the command
+   line, and its manifest records every stage's artefact hash (WP21, VER-53; example 06, VER-46).
+   **Met.**
+3. **VAL-05 on the ensemble leg**: Δr_c and the rms pass, and ε_G misses by 0.56 pp. **Waived**
+   (§8.2.4 D7). The 2WCD leg is gated on every push and passes.
+4. **The GUI increment** builds stages 1–6 in a spawned child, shows each stage, and meshes a
+   hand-edited contour. The null edit meshes to the original's content hash (WP24, VER-55). **Met.**
+5. **Example 06** runs verbatim from the deposited 2WCD entry to a gated mesh in 55 s at Tier 2
+   (WP25, VER-46). **Met.**
+
+**What Phase 3 inherits.**
+- **The generated ClyA geometry conducts less than the reference**: −5.6 % by the bulk proxy and
+  −4.4 % by a solve. Phase 3's end-to-end charged case splits a conductance difference between
+  geometry and charge, and this is the geometry's share. It is carried into current at v1.0 by
+  VAL-16's recorded leg (§8.2.4 D6).
+- **`Z_MD` is 5.655 nm.** Example 06, the tests and the knowledge base register 2WCD by it.
+- **The MD's asymmetry is largest at the constriction's *trans* entrance.** Its non-C12 variance
+  there is 0.088, nine times 2WCD's. The charge's azimuthal average (CON-04) is least faithful
+  there, and VAL-06's recorded leg measures that.
+- **`test_val05_ensemble_against_the_reference_polygon` fails on the archive by design** until
+  the method or the reference changes (§8.2.4 D7). A nightly red there is the waiver, not a
+  regression. Its other three tests are expected to pass.
+- **No COMSOL exports are owed** (§8.2.4 D6). The Phase 1 addendum of §8.2.3 C1 is withdrawn.

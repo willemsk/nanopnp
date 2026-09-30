@@ -75,11 +75,13 @@ TIP_BAND_NM = 0.1
 CONSTRICTION_WINDOW_NM = (-1.85, 1.6)
 """The *trans* constriction, in the model frame (``.knowledge/04`` §2), over which r_c is taken."""
 
-Z_MD_NM = 5.63
-"""The MD structure's C-alpha centroid z, residues 8-292, in the MD frame (``.knowledge/04`` §1.1).
+Z_MD_NM = 5.655
+"""The MD structure's C-alpha centroid z, residues 8-292, over DCD frames 48-97, in the MD frame.
 
 The Tier-3 leg measures it on the 50-frame ensemble mean and asserts it within
-:data:`Z_MD_TOLERANCE_NM` (D6).
+:data:`Z_MD_TOLERANCE_NM` (D6). It measured 5.6553 nm on 30 September 2026. The
+5.63 nm first pinned from ``.knowledge/04`` §1.1 was the centroid with residue 7
+included (5.6293 nm), and was corrected as D6 provides (``SPECIFICATION.md`` §8.2.4 D7).
 """
 
 Z_MD_TOLERANCE_NM = 0.01

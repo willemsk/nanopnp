@@ -70,7 +70,7 @@ Measured on 25 September 2026. The archive is held locally by the author at
 | Frame orientation | The Cₙ axis is 0.69° from the file's z in the MD frame, through (0.35, 0.02) Å. It is 0.047° from z in 2WCD and 0.006° in 6MRT. In all three the wide *cis* cap lies at +z |
 | The deposited 2WCD | **Not the author's `2wcd.pdb`.** The wwPDB entry's asymmetric unit holds two dodecamers, chains A–L and M–X (53,832 atoms, 24 × 285 Cα), in the crystal frame. The A–L axis is 22.92° from z and the M–X axis 22.98°, nearly parallel. Signed to +z, the axis has its narrow *trans* end up (mean Cα radius 3.42 nm in the top fifth of the axial extent, 4.28 nm in the bottom fifth). Chains A–L superpose on the author's copy with an RMSD of 1.0e-4 nm, and that superposition takes the deposited +z-signed axis to −z. So the author's file is chains A–L moved rigidly and flipped, *cis* up. Stage 1 refuses the deposited frame by its 10° rule. On the author's copy it measures a 29.99896° turn, a worst spacing error of 0.193°, a permutation RMSD of 0.0262 nm, a tilt of 0.047° and an `axis: z` displacement of 0.0062 nm. The Design §4 "2WCD" column of the WP18 plan is this copy **[tested]**, 25 Sep 2026 |
 | Stage 1 on the archive | All 98 frames, superposed on frame 0 over every Cα (0.095–0.219 nm RMSD to it), 12 chains × 286 common Cα. On the ensemble-mean structure the cyclic turn is 29.9954°, the worst spacing error 0.679°, the permutation RMSD 0.136 nm and the tilt from the file's z 0.695°. Each frame's own permutation axis lies within 0.0163° of the ensemble-mean axis. This is a different reference from the ≤ 0.010° frame-to-frame figure of §5.2 (stage 1), which compared the frames' axes with one another. The DCD's interval reads 0.001 ns, so `last_ns: 5` is refused **[tested]**, `tests/tier3/test_structure_ensemble.py`, 25 Sep 2026 |
-| Axial placement | The Cα centroid is at z = 56.3 Å (MD) and 57.0 Å (2WCD), which matches G9's "(0, 0, 55 Å)". The MD all-atom extent is z = −2.28 to 12.52 nm, bracketing the model's pore extent of −1.85 to 12.25 nm by 0.43 and 0.27 nm. **Author ruling, 25 September 2026: the MD trajectory was centred on the middle of the bilayer, so in the MD frame `centre_z_nm` = 0** (G9, closed). The author's `2wcd.pdb` copy has its Cα centroid 0.07 nm from the MD one, but the vendored wwPDB 2WCD takes whatever axial position its test-time move gives it, so WP22 must register it to the MD frame |
+| Axial placement | The Cα centroid is at z = 56.3 Å (MD; residues 7–292. Over residues 8–292 and DCD frames 48–97 it is 56.553 Å, §1.5) and 57.0 Å (2WCD), which matches G9's "(0, 0, 55 Å)". The MD all-atom extent is z = −2.28 to 12.52 nm, bracketing the model's pore extent of −1.85 to 12.25 nm by 0.43 and 0.27 nm. **Author ruling, 25 September 2026: the MD trajectory was centred on the middle of the bilayer, so in the MD frame `centre_z_nm` = 0** (G9, closed). The author's `2wcd.pdb` copy has its Cα centroid 0.07 nm from the MD one, but the vendored wwPDB 2WCD takes whatever axial position its test-time move gives it, so WP22 must register it to the MD frame |
 
 ### 1.2 The author's contour script, read [tested]
 
@@ -145,6 +145,17 @@ frame, whose bilayer centre is z = 0 (G9) (WP20 plan, Design §6).
 
 ### 1.4 2WCD against the reference polygon, and the isolevel lever [tested]
 
+> **Re-registered, 30 September 2026.** The bullets below place 2WCD at `Z_MD` = 5.63 nm. The
+> ensemble measured `Z_MD` = 5.6553 nm over residues 8–292 (§1.5), and 5.63 was the centroid
+> with residue 7 included. At the corrected 5.655 nm, `centre_z_nm` = 4.5477 nm and, at isolevel
+> 0.25, ε_G = −8.49 % (exact −8.54 %), Δr_c = −0.0203 nm (1.6297 nm at z = −1.425), rms 0.159 nm,
+> mean Δ −0.136 nm, max |Δ| 0.339 nm at z = 3.425, on 280 planes (−1.825 and −1.775 fall in the
+> tip band). The sweep is −12.95, −10.86, −8.49, −6.07, −3.50, −0.87 and +4.41 %, crossing zero
+> at 0.416. The frozen case at `size_scale` 2 gives −6.59 % (14,116 triangles). The default-size
+> mesh is 44,987 triangles, minimum SICN 0.6956 (mean 0.9862), minimum gamma 0.6223 (mean
+> 0.9843). The rms-optimal offset, 4.5827 nm, now lies 0.035 nm from the registration. It is a
+> diagnostic and is never used **[tested]**, `tests/tier2/test_val05_2wcd.py`, 30 Sep 2026.
+
 Measured on 28 September 2026 by the WP22 plan's prototype (Design §4), and again by the
 implementation, `nanopnp.validation.geometry` through `tests/tier2/test_val05_2wcd.py`, the same
 day; the two agree to the last printed digit except where noted. The prepared vendored 2WCD
@@ -197,6 +208,45 @@ series resistor. It is the `G ∝ r²` sensitivity weighted by where the resista
 - **The Cₙ variance (FR-06)**, from stage 3 in the stage-1 frame: the largest Cₙ variance is 0.204 at
   (r, z) = (5.40, 12.95) nm, the *cis* rim, and the largest non-Cₙ variance 0.0095 at (1.65, 3.10) nm,
   which is the *trans* constriction's lumen wall.
+
+### 1.5 The ensemble against the reference polygon [tested]
+
+Run by the author on 30 September 2026, `tests/tier3/test_val05_ensemble.py` on
+`$NANOPNP_REFERENCE_DATA`: DCD frames 48–97, stages 1–5 at the defaults, `centre_z_nm` = 0 in the
+MD frame (G9). It uses the same planes and metric as §1.4.
+
+- **`Z_MD`.** The Cα centroid of residues 8–292 over the 50 frames is **5.6553 nm**, and 5.6293 nm
+  with residue 7. §1.1's 56.3 Å is therefore the residue-7-inclusive figure, and residue 7 pulls
+  the centroid 0.026 nm towards *trans*, as WP22 Design §3 estimated.
+- **At isolevel 0.25:** ε_G = **−5.56 %** (exact series −5.57 %), Δr_c = **−0.039 nm**
+  (1.6112 nm at z = −1.325 against 1.650 at −1.225), rms **0.089 nm**, mean Δ −0.075 nm, max |Δ|
+  0.295 nm at z = 1.725. All 282 planes are crossed. The constriction window's mean Δ is −0.073 nm
+  and the *cis* lumen's −0.076 nm. The outer surface's mean is +0.167 nm and its rms 0.337 nm.
+  The tips are at −1.944 and 12.277 nm. The largest ε_G term is −0.096 pp, at z = −1.375.
+  Conditioning moved the lumen by at most 0.101 nm (z = 1.625), rms 0.013 nm.
+- **The isolevel lever.** ε_G is −12.98, −8.92, −5.56, −2.12, +1.02, +3.93 and +9.80 % at 0.15,
+  0.20, 0.25, 0.30, 0.35, 0.40 and 0.50, strictly increasing. It crosses zero at 0.334 (2WCD:
+  0.416). **±0.1 of isolevel is −7.4 and +6.6 pp here**, against about ±5 pp on 2WCD. r_c is
+  1.510, 1.578, 1.611, 1.646, 1.684, 1.718 and 1.758 nm. From 0.40 up, the minimum moves from the
+  constriction's *trans* end to z = −0.325 nm.
+- **The erratum at L = 15 nm, applied to our contour:** ε_G = −13.57 % (exact −13.20 %), lumen
+  mean Δ −0.187 nm, r_c 1.537 nm. The erratum moves our lumen by −0.111 nm and our outer surface by
+  −0.174 nm. **The hand edit therefore widened the lumen by 0.187 nm** and left the outer surface
+  where it was (+0.008 nm). 2WCD's stand-in estimate, 0.24 nm, was high by 0.05 nm.
+- **The conductance proxy against a solve.** For the §1.4 frozen case at `size_scale` 1, the
+  generated mesh gives 1.4103e-8 S (45,272 triangles) and the fixture 1.4753e-8 S (44,316), so
+  `G_gen/G_ref − 1` = **−4.40 %**, against ε_G −5.56 %.
+- **The mesh at the default sizes.** Netgen gives 45,272 triangles, minimum SICN 0.7087 (mean
+  0.9866), minimum gamma 0.6763 (mean 0.9847), with 555 wall segments at 1.053 × the target on
+  average and 1.464 at most. Gmsh 4.15.2 gives 49,100, 0.7317 (0.9886) and 0.6441 (0.9867), with
+  613 wall segments at 0.953 × on average and 1.043 at most.
+- **The C12 variance (FR-06).** The largest Cₙ variance is 0.171 at (r, z) = (4.70, 6.55) nm. The
+  largest non-Cₙ variance is **0.088 at (2.00, −1.70) nm**, the *trans* entrance of the
+  constriction, nine times 2WCD's 0.0095. The raw variance peaks at 0.186 at (4.60, 0.65) nm.
+- **Timing, on the author's machine.** Stage 1 took 9.2 s. Stage 2 took 596.6 s, 11.9 s a frame on
+  a 339 × 293 × 293 grid at 0.05 nm. Stages 3 to 5 took 13.7, 3.3 and 1.5 s. Stage 6 took 12.3 s
+  cold and 4.9 s warm, and Gmsh 2.2 s. The whole file ran in 12 min 54 s. `07-software-stack.md`
+  §2 has the development container's 980.6 s for stage 2.
 
 ---
 

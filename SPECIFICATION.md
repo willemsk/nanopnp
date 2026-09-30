@@ -2844,7 +2844,7 @@ at both tips (**implemented 28 September 2026**, WP22 Outcomes). With `Δ = r_ou
 | Leg | Tier | `\|ε_G\|` | `\|Δr_c\|` | rms `Δ` | Axial registration |
 |---|---|---|---|---|---|
 | ClyA-AS ensemble, DCD frames 48–97 (the Phase 2 gate) | 3 | ≤ 5 % | ≤ 0.1 nm | ≤ 0.1 nm | `centre_z_nm = 0` in the MD frame (G9) |
-| Vendored 2WCD, chains A–L | 2 | ≤ 10 % | ≤ 0.1 nm | ≤ 0.2 nm | Cα centroid of residues 8–292 at `Z_MD = 5.63` nm, the MD structure's, which the Tier-3 leg pins to 0.01 nm |
+| Vendored 2WCD, chains A–L | 2 | ≤ 10 % | ≤ 0.1 nm | ≤ 0.2 nm | Cα centroid of residues 8–292 at `Z_MD = 5.655` nm, the MD structure's over DCD frames 48–97, which the Tier-3 leg pins to 0.01 nm (**corrected 30 September 2026** from 5.63 nm, which was the centroid with residue 7 included; §8.2.4 D7) |
 
 The argument for the tolerances follows. ±1 % on G (`.knowledge/04` G3) was a floor set while the
 vertex list was unavailable. The author has since confirmed that the table was made with
@@ -2919,7 +2919,7 @@ solver settings, stabilisation mode and correction parameter file versions (FR-2
 |---|---|---|---|
 | 0. Spike | Coupled ePNP-NS on an analytic cylindrical pore; continuation ladder; Tier 1 and Tier 2 suites (§8.2.1) | §8.2 exit criteria, as amended by §8.2.1 | 3–5 weeks |
 | 1. Solver core | Production solver on an externally supplied mesh, full QoI extraction, frozen case-file schema, sweep runner | Tier 1 and Tier 2 pass; Tier 3 enabled and differences attributed; met as amended by §8.2.3 | 6–10 weeks |
-| 2. Geometry pipeline | Structure and trajectory ingestion, density, symmetry reduction, contour, CAD, mesh | VAL-05: the auto-generated mesh reproduces the hand-conditioned reference geometry | 8–12 weeks |
+| 2. Geometry pipeline | Structure and trajectory ingestion, density, symmetry reduction, contour, CAD, mesh | VAL-05: the auto-generated mesh reproduces the hand-conditioned reference geometry; met as amended by §8.2.4 D7 | 8–12 weeks |
 | 3. Charge pipeline | PDB2PQR to smeared volumetric `ρ_fixed` and dielectric field | VER-01, VER-02 and VAL-06 pass | 3–5 weeks |
 | 4. Validation and release | Full V&V suite in CI, documentation, JOSS paper, v1.0 | Tier 4 passes (VAL-07 to VAL-10), and Tier 3 against the published results passes (VAL-16, VAL-17; **amended 30 September 2026**, §8.2.4 D6) | 4–6 weeks |
 | GUI | Continuous track from Phase 0 onward, one increment per phase | QR-10: an experimentalist runs a case unaided | continuous |
@@ -3026,7 +3026,7 @@ The end-of-phase report (`docs/plans/phase-1-solver-core.md`) measures the phase
 Phase 0 criterion 4 is not changed by this section. It was closed by the author's double-click,
 recorded in the NOTE to §8.2.1 on the same day, which met the last condition of §8.2.2 B1.
 
-#### 8.2.4 Phase 3 decisions, agreed 30 September 2026
+#### 8.2.4 Phase 2 exit and Phase 3 decisions, agreed 30 September 2026
 
 Rulings by the author, taken while closing Phase 2 and planning Phase 3
 (`docs/plans/phase-3-charge-pipeline.md`). Where a ruling changes a clause, the clause is amended in
@@ -3040,6 +3040,7 @@ the commit named in the last column.
 | D4 | Protonation runs on every selected frame, as the reference did. `inputs.pqr` takes a single-frame PQR or a multi-MODEL PQR, one MODEL per frame | `Q_net` and the protonation states are recorded per frame, and a per-chain difference is a diagnostic, never symmetrised. The schema does not move: `inputs.pqr` keeps `format: pqr` and reads either form | The §5.3.1 NOTE on `inputs:`, in the work package that consumes `inputs.pqr` |
 | D5 | FR-15's ion-exclusion shell is built in Phase 3, beside the smoothed solid fraction | Both are deviations that default to off. A non-zero `charge.exclusion_offset_nm` adds the `exclusion` region to stages 5 and 6 | None: FR-15 stands as written |
 | D6 | Tier 3 compares the current–voltage relationships and in-pore averages the paper publishes (VAL-16, VAL-17), and that comparison gates v1.0. The reference is the paper's tables, shipped as test data, and the data behind its figures, which the author supplies under `NANOPNP_REFERENCE_DATA`. The gated leg runs on the reference geometry and charge, and a recorded leg on the pipeline's. The COMSOL field-export route (VAL-01 to VAL-04) and its harness are kept, but no release waits on them | The author chose the published results over producing the field exports of the export contract, and asked for the comparison to gate v1.0 so that the reference data can follow. Those results are what the model is cited for, need no licence and cannot lapse, which retires RSK-14. They localise a discrepancy less than fields would, so the Tier-2 benchmarks keep that job, and the ablation percentages are recorded beside the verdict. The Phase 1 addendum of §8.2.3 C1 is withdrawn. Phases 2 and 3 are unaffected | §2.7, QR-02 and its rationale, §7.4 (its preamble, VAL-01 to VAL-04, the new VAL-16 and VAL-17, and their NOTE), §8.1 Phase 4, §8.2.3 C1, RSK-09, RSK-14 and Appendix A, in this commit |
+| D7 | Phase 2 closes with criterion 3 waived. On the ensemble leg VAL-05 measures `ε_G` = −5.56 % against the 5 % tolerance, while `Δr_c` = −0.039 nm and the rms of 0.089 nm pass. The tolerance is not changed, and the Tier-3 test keeps asserting it. `Z_MD` is corrected to 5.655 nm, as WP22 D6 provides | The miss is 0.56 pp, inside the definitional uncertainty the tolerance was argued from: on the ensemble, ±0.1 of isolevel moves `ε_G` by −7.4 and +6.6 pp, not the ±5 pp measured on 2WCD. The D7 attribution puts the gap in the reference's hand edit, which widened the lumen by 0.187 nm and which the method does not reproduce by design. A solve on the generated mesh gives a conductance 4.40 % below the fixture's. Re-arguing the tolerance after the result would weaken every tolerance stated before its run (VAL-06, VAL-16, VAL-17), so the miss is recorded, not absorbed. What the geometry costs in current is measured at v1.0 by VAL-16's recorded leg. The measured `Z_MD` is 5.6553 nm, 0.025 nm above the constant, which had included residue 7 (5.6293 nm). Re-registered, the 2WCD leg passes D5 at `ε_G` −8.49 % | §8.1 (Phase 2) and the §7.4 NOTE on VAL-05 (the 2WCD registration), in the Phase 2 report's commit. v0.3.0 is released on this basis |
 
 ### 8.3 Effort estimate
 

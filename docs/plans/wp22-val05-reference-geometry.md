@@ -123,6 +123,31 @@ moves to `slow` and is logged there.
 > The phase gate's verdict, `Z_MD` and the D7–D11 records go here when the nightly runner or the
 > author runs `uv run pytest -m tier3 tests/tier3/test_val05_ensemble.py --log-cli-level=INFO`.
 
+> **Outcome — the ensemble leg misses D4 on ε_G alone, and Phase 2 closes on the author's waiver
+> (`SPECIFICATION.md` §8.2.4 D7).** The author ran the file on 30 September 2026: 2 failed and
+> 2 passed, in 12 min 54 s. On DCD frames 48–97, **ε_G = −5.56 %** (exact series −5.57 %) against
+> 5 %. **Δr_c = −0.039 nm** (1.6112 nm at z = −1.325 against 1.650 at −1.225) and the **rms of
+> 0.089 nm** pass their 0.1 nm tolerances. All 282 planes are crossed. The D4 prediction, −4.5 %,
+> −0.040 nm and 0.09 nm, held on Δr_c and the rms and missed ε_G by 1.1 pp. The tolerance is not
+> changed, and the test keeps failing as the record. D7: binned through the erratum, ε_G =
+> −13.57 %, so the hand edit widened the lumen by 0.187 nm. D8: −12.98 to +9.80 % over 0.15–0.50,
+> strictly increasing, crossing zero at 0.334; ±0.1 of isolevel is −7.4 and +6.6 pp. D9 at
+> `size_scale` 1: −4.40 %. D10 on netgen: 45,272 triangles, SICN 0.7087 and gamma 0.6763. D10 on
+> Gmsh: 49,100 triangles, 0.7317 and 0.6441. D11: the C12 variance is 0.171 at (4.70, 6.55) nm, and
+> the non-C12 variance 0.088 at (2.00, −1.70) nm. The full record is
+> [`.knowledge/04`](../../.knowledge/04-clya-geometry-and-charge.md) §1.5.
+
+> **Outcome — `Z_MD` is 5.655 nm, not 5.63, and the 2WCD figures move with it (D6).** The
+> 50-frame centroid of residues 8–292 is 5.6553 nm, 0.025 nm off the constant, so
+> `test_val05_ensemble_pins_z_md` failed as designed. With residue 7 the centroid is 5.6293 nm,
+> so §1.1's 56.3 Å was the residue-7-inclusive figure, off by the bias Design §3 estimated. The
+> constant, example 06's `prepare.py` and the registration are corrected to 5.655 nm. Re-registered,
+> 2WCD sits at `centre_z_nm` = 4.5477 nm and still passes D5: ε_G −8.49 % (was −8.08 %), Δr_c
+> −0.0203 nm, rms 0.159 nm. Its D8 zero crossing is 0.416, its D9 −6.59 %, and its D10 44,987
+> triangles at SICN 0.6956 and gamma 0.6223. The rms-optimal offset, 4.5827 nm, is now 0.035 nm
+> away, and stays a diagnostic. The earlier 2WCD numbers in this plan are at 5.63 nm
+> (`.knowledge/04` §1.4, *Re-registered*).
+
 > **Outcome — the 2WCD leg passes D5, as predicted to the last digit.** ε_G = −8.08 % (exact
 > series −8.19 %), Δr_c = −0.0205 nm (1.6295 nm at z = −1.475 against 1.650 at −1.225), rms
 > 0.158 nm. 281 of 282 planes are crossed. The one missed, z = −1.825, is in the tip band. D7:

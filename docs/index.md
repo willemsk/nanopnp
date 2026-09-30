@@ -20,12 +20,12 @@ electro-osmotic flow rate. It is built around three rules:
 - **The model is data and configuration.** The fitted corrections live in data files, and
   classical PNP-NS is ePNP-NS with its corrections switched off, not a second code path.
 
-!!! warning "Pre-alpha: the v0.2 scope"
-    The solver core, the case file, the command line, parameter sweeps, provenance and the desktop
-    shell are delivered. Meshes and charge maps are supplied from outside, or generated for an
-    idealised pore or the ClyA reference geometry. Building a mesh from a PDB structure is the
-    v0.3 geometry pipeline, and assigning charges from it is the v0.4 charge pipeline. Nothing here is a validated release yet, and the comparison
-    against the paper's published results gates v1.0.
+!!! warning "Pre-alpha: the v0.3 scope"
+    The solver core, the case file, the command line, parameter sweeps, provenance, the desktop
+    shell and the v0.3 geometry pipeline, from a PDB structure to a mesh, are delivered. Charge
+    maps are still supplied from outside; assigning them from a structure is the v0.4 charge
+    pipeline. Nothing here is a validated release yet, and the comparison against the paper's
+    published results gates v1.0.
 
 ## Where to start
 
