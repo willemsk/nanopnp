@@ -44,6 +44,11 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only; resolved lazily below
     from nanopnp.io.run import run_case as run_case
     from nanopnp.io.run import run_document as run_document
     from nanopnp.io.store import Store as Store
+    from nanopnp.physics.models import ModelDeclaration as ModelDeclaration
+    from nanopnp.physics.models import PhysicsModel as PhysicsModel
+    from nanopnp.physics.models import TransportModel as TransportModel
+    from nanopnp.physics.models import register_model as register_model
+    from nanopnp.physics.models import registered_models as registered_models
     from nanopnp.sweep.plan import plan_from_document as plan_from_document
     from nanopnp.sweep.run import run_plan as run_plan
 
@@ -61,6 +66,13 @@ PUBLIC: dict[str, str] = {
     "resolve": "nanopnp.io.case",
     # The artefact store (section 5.3.2).
     "Store": "nanopnp.io.store",
+    # The physics-model interface (FR-20, section 5.4.3): one class and a
+    # declaration add a model (WP26 D16).
+    "PhysicsModel": "nanopnp.physics.models",
+    "TransportModel": "nanopnp.physics.models",
+    "ModelDeclaration": "nanopnp.physics.models",
+    "register_model": "nanopnp.physics.models",
+    "registered_models": "nanopnp.physics.models",
     # Sweeps (FR-24, section 5.3.4).
     "plan_from_document": "nanopnp.sweep.plan",
     "run_plan": "nanopnp.sweep.run",

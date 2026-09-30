@@ -40,7 +40,7 @@ import difflib
 import itertools
 import math
 import re
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal, TypeAlias, get_args, get_origin
@@ -66,6 +66,10 @@ from nanopnp.materials.electrolyte import (
     Electrolyte,
 )
 from nanopnp.physics.models import (
+    SWITCHES,
+    PhysicsModel,
+    create,
+    declaration,
     inf_sup_problem,
     registered_models,
     registered_stabilisations,
@@ -101,14 +105,6 @@ V2_MOVED: dict[str, str] = {
 }
 """v1 path to the v2 entry its value moves to. ``physics.solid_permittivities`` is
 the one place a solid's permittivity is set (PHY-20; author ruling, 24 September 2026)."""
-
-COUPLED_MODELS: frozenset[str] = frozenset({"epnp-ns", "pnp-ns", "pnp"})
-"""Physics models the continuation ladder of NUM-18 drives (PHY-21).
-
-``pb``, ``pb-linear`` and ``poisson`` are single-solve electrostatic models with
-no ladder and no transport; they are registered and selectable, and the solve
-stage refuses them by name rather than building a ladder that means nothing.
-"""
 
 FieldType: TypeAlias = Any
 """The type the case schema declares at one dotted path.
@@ -1810,6 +1806,15 @@ class ResolvedCase:
         """The case name, which names the run directory in the store."""
         return self.document.name
 
+    def physics_model(self) -> PhysicsModel:
+        """Build the named model at this case's operating point (WP26 D6).
+
+        Every consumer that needs the built model -- the single rung, the mesh
+        gate, a restore -- builds it here, so none of them can pass the builder a
+        different set of keywords.
+        """
+        return build_model(self.model, self.electrolyte, self.concentration_M, self.model_options)
+
     @property
     def generates_mesh(self) -> bool:
         """Whether stages 5 and 6 build this case's mesh: it supplies no ``inputs.mesh``."""
@@ -2195,16 +2200,14 @@ def _require_runnable(document: CaseDocument) -> SuppliedArtefact | None:
             f"{walls.ion_flux}; this release applies slip: no_slip and ion_flux: no_flux only, "
             "and no release of SPECIFICATION.md section 3 schedules the others yet"
         )
-    model = document.physics.model
-    if model not in COUPLED_MODELS and document.numerics.continuation != "none":
-        raise CaseValidationError(
-            f"physics.model {model!r} has no transport to continue, so the NUM-18 ladder does not "
-            f"apply to it; set numerics.continuation: none, or choose one of "
-            f"{', '.join(sorted(COUPLED_MODELS))}"
-        )
+    # Read from the model's declaration, never from its name (section 5.4.3
+    # NOTE): the switch check first, because a case the model cannot pose is a
+    # more precise diagnostic than one about how to continue it.
     _check_physics_switches(document)
-    if model in COUPLED_MODELS and document.numerics.continuation != "none":
+    _check_strategy(document)
+    if document.numerics.continuation == LADDER_STRATEGY:
         _check_ladder_can_honour(document.physics)
+    _check_outputs(document)
     return mesh
 
 
@@ -2308,6 +2311,9 @@ def _check_generation(document: CaseDocument) -> None:
         )
 
 
+LADDER_STRATEGY = "default_ladder"
+"""The ``numerics.continuation`` value that selects the NUM-18 ladder (section 6.5)."""
+
 _LADDER_PHYSICS: dict[str, bool] = {
     "flow": True,
     "variable_density": True,
@@ -2339,22 +2345,15 @@ def _check_ladder_can_honour(physics: PhysicsSpec) -> None:
     exactly the silent drop :func:`_check_physics_switches` exists to prevent,
     one rung later and for a different reason.
 
-    ``pnp`` gets its own message because it cannot take the advice the others
-    get: :func:`_check_physics_switches` already requires ``physics.flow: false``
-    for it, so "set them to match the ladder" is impossible by construction.
+    A model whose own switches cannot match the ladder -- ``pnp``, which honours
+    ``flow: false`` only -- never reaches this check: it does not admit the ladder
+    as a strategy, and :func:`_check_strategy` has already said so.
     """
     mismatched = [
         name for name, fixed in _LADDER_PHYSICS.items() if getattr(physics, name) != fixed
     ]
     if not mismatched:
         return
-    if physics.model == "pnp":
-        raise CaseValidationError(
-            "physics.model 'pnp' cannot be run on the NUM-18 ladder: every rung from stage 6 "
-            "carries the flow coupling, so the ladder would solve 'pnp-ns' while the manifest "
-            "recorded 'pnp'; set numerics.continuation: none to solve the single cold rung, or "
-            "choose 'pnp-ns' if the flow coupling was intended"
-        )
     named = ", ".join(f"physics.{name}" for name in mismatched)
     raise CaseValidationError(
         f"{named} would be silently ignored by the NUM-18 ladder, which fixes the path rather "
@@ -2364,72 +2363,134 @@ def _check_ladder_can_honour(physics: PhysicsSpec) -> None:
     )
 
 
-def _check_physics_switches(document: CaseDocument) -> None:
-    """Refuse a case whose physics switches the named model cannot honour (PHY-21).
+def _admitting(predicate: Callable[[str], bool]) -> str:
+    """Return the registered models a predicate on their declaration admits, as prose."""
+    names = [name for name in registered_models() if predicate(name)]
+    return ", ".join(names) or "no registered model"
 
-    A switch the solver silently drops is worse than one it refuses: the FR-25
-    manifest would record ``flow: true`` beside a solution that has no velocity
-    field in it, and a reader would have no way to tell. Each check here names
-    something the chosen model fixes for itself — a switch, or one of the two
-    supplied fields of stage 7, which are the same failure arriving as an input.
+
+def _honouring(switch: str, value: bool) -> str:
+    """Return the registered models honouring one switch value, as prose."""
+    return _admitting(lambda other: value in declaration(other).switches[switch])
+
+
+def _accepting(coefficient: str) -> str:
+    """Return the registered models accepting one supplied coefficient, as prose."""
+    return _admitting(lambda other: coefficient in declaration(other).coefficients)
+
+
+def _check_physics_switches(document: CaseDocument) -> None:
+    """Refuse a case whose physics the named model cannot honour (PHY-21, section 5.4.3).
+
+    Read from the model's declaration, never from its name. A switch the solver
+    silently drops is worse than one it refuses: the FR-25 manifest would record
+    ``flow: true`` beside a solution that has no velocity field in it, and a
+    reader would have no way to tell. The same holds for ``physics.
+    solid_permittivities`` beside a model that carries no solids, and for the two
+    supplied fields of stage 7 beside a model that does not accept them -- the
+    same failure arriving as an input: stage 7 would gate the field, the manifest
+    would record it, and the solve would never read it.
+
+    Raises
+    ------
+    CaseValidationError
+        Naming the model, the key and the values or models that are admitted.
     """
     physics = document.physics
     model = physics.model
-    if model == "pnp" and physics.flow:
+    declared = declaration(model)
+    for name in SWITCHES:
+        value = getattr(physics, name)
+        honoured = declared.switches[name]
+        if value not in honoured:
+            admitted = " or ".join(str(choice).lower() for choice in honoured)
+            raise CaseValidationError(
+                f"physics.model {model!r} honours physics.{name}: {admitted} only (PHY-21), so "
+                f"physics.{name} must be {admitted}; {str(value).lower()} would be recorded in "
+                f"the manifest and never applied. Models honouring {str(value).lower()}: "
+                f"{_honouring(name, value)}"
+            )
+    if physics.solid_permittivities and not declared.solids:
         raise CaseValidationError(
-            "physics.model 'pnp' is Poisson-Nernst-Planck with no flow coupling (PHY-21), so "
-            "physics.flow must be false; 'pnp-ns' is the same transport model with flow"
+            f"physics.model {model!r} carries no solid materials, so "
+            "physics.solid_permittivities would be recorded and never applied; it is posed on a "
+            "mesh with no solid domain (PHY-21 NOTE). Models carrying solids: "
+            f"{_admitting(lambda other: declaration(other).solids)}"
         )
-    if model in COUPLED_MODELS:
+    for supplied, coefficient, what in (
+        ("charge", "fixed_charge", "a fixed-charge source"),
+        ("eps_r", "solid_fraction", "a material permittivity field"),
+    ):
+        if getattr(document.inputs, supplied) is not None and coefficient not in (
+            declared.coefficients
+        ):
+            raise CaseValidationError(
+                f"physics.model {model!r} takes no {what}, so inputs.{supplied} would be gated by "
+                "stage 7 and recorded in the manifest while the solve ignored it (PHY-24). "
+                f"Models accepting it: {_accepting(coefficient)}"
+            )
+
+
+def _check_strategy(document: CaseDocument) -> None:
+    """Refuse a ``numerics.continuation`` the named model does not admit (section 6.5).
+
+    Raises
+    ------
+    CaseValidationError
+        Naming the model, the value, the values it admits and the models that
+        admit the value asked for.
+    """
+    model = document.physics.model
+    value = document.numerics.continuation
+    admitted = declaration(model).strategies
+    if value in admitted:
         return
-    inapplicable = [
-        name
-        for name in (
-            "flow",
-            "variable_density",
-            "inertia",
-            "dielectric_gradient_forces",
-            "solid_permittivities",
-        )
-        if getattr(physics, name)
-    ]
-    if inapplicable:
-        named = ", ".join(f"physics.{name}" for name in inapplicable)
-        raise CaseValidationError(
-            f"physics.model {model!r} solves electrostatics alone (PHY-24): it carries no "
-            f"momentum and no transport, so {named} would be recorded in the manifest and never "
-            f"applied; set them false, or choose one of {', '.join(sorted(COUPLED_MODELS))}"
-        )
-    # The same rule for the two supplied fields, which are inputs rather than
-    # switches: the electrostatic family of PHY-21 takes neither a material
-    # permittivity nor a fixed-charge source, so stage 7 would gate the field,
-    # the FR-25 manifest would record it, and the solve would never read it.
-    supplied = [f"inputs.{name}" for name in ("charge", "eps_r") if getattr(document.inputs, name)]
-    if supplied:
-        raise CaseValidationError(
-            f"physics.model {model!r} solves electrostatics alone (PHY-24): it takes no "
-            f"fixed-charge source and no material permittivity, so {', '.join(supplied)} would "
-            "be gated by stage 7 and recorded in the manifest while the solve ignored it; "
-            f"choose one of {', '.join(sorted(COUPLED_MODELS))}"
-        )
+    raise CaseValidationError(
+        f"physics.model {model!r} admits numerics.continuation {', '.join(admitted)} only, not "
+        f"{value!r}: the NUM-18 ladder is a path through named models, and every rung from "
+        "stage 6 carries the flow coupling and transport this model may not have. Write "
+        f"numerics.continuation: {' or '.join(admitted)}, or choose a model admitting {value!r}: "
+        f"{_admitting(lambda other: value in declaration(other).strategies)}"
+    )
+
+
+def _check_outputs(document: CaseDocument) -> None:
+    """Refuse an ``outputs:`` quantity the named model does not declare (section 5.3.1 NOTE).
+
+    ``fields`` is the IF-07 export and not a quantity, and every model admits it.
+
+    Raises
+    ------
+    CaseValidationError
+        Naming the model, the words and the quantities it declares.
+    """
+    model = document.physics.model
+    declared = declaration(model).quantities
+    undeclared = [word for word in document.outputs if word != "fields" and word not in declared]
+    if not undeclared:
+        return
+    raise CaseValidationError(
+        f"outputs asks for {', '.join(undeclared)}, which physics.model {model!r} does not "
+        f"provide; it declares {', '.join(declared) or 'no quantity of interest'} (section 6.7), "
+        "so write outputs: [] or outputs: [fields] for a model that declares none"
+    )
 
 
 def _model_options(
     document: CaseDocument, *, order: int, velocity_order: int, pressure_order: int
 ) -> dict[str, Any]:
-    """Return the keyword arguments the named model's builder takes (PHY-21).
+    """Return the keyword arguments the named model's builder takes (PHY-21, WP26 D5).
 
-    The builders are not uniform, and deliberately so:
-    ``nanopnp.physics.models`` gives the electrostatic family only ``order``, and
-    the ``pnp`` builder fixes ``flow=False`` itself. Passing every switch to every
-    builder would raise a ``TypeError`` for a duplicate keyword on ``pnp`` and be
-    rejected as unknown by ``pb``; :func:`_check_physics_switches` has already
-    refused any case where the omission would hide a switch the user set.
+    The case offers one candidate set and the model's declaration selects from it
+    (section 5.4.3 NOTE): ``pnp`` fixes ``flow=False`` in its builder and does not
+    declare it, and ``pb`` declares ``order`` alone. The candidate order is the one
+    the keys have always been written in, so every model's resolved options, and
+    with them its stage-10 key, are what they were before the declaration existed.
+    :func:`_check_physics_switches` has already refused any case where the omission
+    would hide a switch the user set.
     """
     physics = document.physics
-    if physics.model not in COUPLED_MODELS:
-        return {"order": order}
-    options: dict[str, Any] = {
+    candidates: dict[str, Any] = {
         "solid_permittivities": dict(physics.solid_permittivities),
         "variable_density": physics.variable_density,
         "inertia": physics.inertia,
@@ -2438,10 +2499,34 @@ def _model_options(
         "velocity_order": velocity_order,
         "pressure_order": pressure_order,
         "stabilisation": document.numerics.stabilisation,
+        "flow": physics.flow,
     }
-    if physics.model != "pnp":
-        options["flow"] = physics.flow
-    return options
+    declared = declaration(physics.model).options
+    return {key: value for key, value in candidates.items() if key in declared}
+
+
+def build_model(
+    model: str, electrolyte: Electrolyte, concentration_M: float, options: Mapping[str, Any]
+) -> PhysicsModel:
+    """Build the named model at the case's operating point (WP26 D6, D10).
+
+    The one call site: every builder receives the electrolyte and the
+    concentration beside the declared options. Building imports no
+    finite-element backend, so :func:`resolve` does it once to surface a builder's
+    own refusal while the case is being resolved.
+
+    Raises
+    ------
+    CaseValidationError
+        If the builder refuses the configuration, naming ``physics.model`` and
+        carrying the builder's reason.
+    """
+    try:
+        return create(model, electrolyte=electrolyte, concentration_M=concentration_M, **options)
+    except (TypeError, ValueError) as error:
+        raise CaseValidationError(
+            f"physics.model {model!r} cannot be built for this case: {error}"
+        ) from error
 
 
 def _check_operating_point(document: CaseDocument) -> None:
@@ -2534,6 +2619,13 @@ def resolve(document: CaseDocument) -> ResolvedCase:
 
     physics = document.physics
     nonlinear = document.numerics.nonlinear
+    options = _model_options(
+        document, order=order, velocity_order=velocity_order, pressure_order=pressure_order
+    )
+    # Built once and discarded: a builder's own refusal -- ``pb`` beside a salt
+    # that is not symmetric monovalent -- is a case error, and is reported now
+    # rather than when stage 10 builds the model again (WP26 D10).
+    build_model(physics.model, electrolyte, document.electrolyte.concentration_M, options)
     return ResolvedCase(
         document=document,
         electrolyte=electrolyte,
@@ -2542,12 +2634,7 @@ def resolve(document: CaseDocument) -> ResolvedCase:
         bias_V=document.boundary_conditions.bias_V,
         ground=document.boundary_conditions.ground,
         model=physics.model,
-        model_options=_model_options(
-            document,
-            order=order,
-            velocity_order=velocity_order,
-            pressure_order=pressure_order,
-        ),
+        model_options=options,
         newton=NewtonSettings(
             initial_damping=DEFAULT_SETTINGS.initial_damping,
             minimum_damping=DEFAULT_SETTINGS.minimum_damping,

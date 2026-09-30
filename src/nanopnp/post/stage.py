@@ -56,7 +56,7 @@ from nanopnp.io.defaults import ContributedDeviation
 from nanopnp.io.fields import export_fields
 from nanopnp.mesh.ingest import deployed_mesh
 from nanopnp.physics.measures import AXISYMMETRIC, Measures
-from nanopnp.physics.models import CoupledModel
+from nanopnp.physics.models import declaration
 from nanopnp.post import forces as force_post
 from nanopnp.post import qoi as qoi_post
 from nanopnp.post.indicator import axial_indicator
@@ -283,7 +283,7 @@ class _Prepared:
     case_hash: str
     solution: Artefact
     outputs: tuple[str, ...]
-    band: tuple[float, float]
+    band: tuple[float, float] | None
     shell: tuple[float, float] | None
     check_routes: bool
 
@@ -376,6 +376,12 @@ class QoIStage:
         _check_selection(outputs)
         check_routes = bool(inputs.options.get("check_routes", True))
         shell = _shell(ingested.data, inputs.options) if "analyte_force" in outputs else None
+        # A model without transport has no current and no indicator to take it
+        # with, so no band: the mesh of a solid-free electrostatic case carries no
+        # membrane to read one off (WP26 D15). ``resolve`` has already refused any
+        # quantity such a model does not declare.
+        transport = declaration(resolved.model).transport
+        band = _band(ingested.data, inputs.options) if transport else None
         solution = _solution(inputs, solving=solving)
         case = inputs.upstream.get("case")
         case_hash = case.hash if case is not None else CaseArtefact(inputs.case).hash
@@ -385,7 +391,7 @@ class QoIStage:
             case_hash=case_hash,
             solution=solution,
             outputs=outputs,
-            band=_band(ingested.data, inputs.options),
+            band=band,
             shell=shell,
             check_routes=check_routes,
         )
@@ -421,6 +427,21 @@ class QoIStage:
         check_cancelled(cancel, "the extraction")
         report(progress, 0.0, "resolving the case")
         prepared = self._prepare(inputs, solving=True)
+        bias_V = qoi_post.cis_referenced_bias(prepared.resolved.bias_V, prepared.resolved.ground)
+        band = prepared.band
+        if band is None:
+            # No transport, so nothing to extract: the record is the operating
+            # point and an empty selection, and no indicator is built (WP26 D15).
+            # The state is not restored either -- nothing here would read it.
+            report(progress, 1.0, "the model declares no quantity of interest")
+            return QoIArtefact(
+                case_hash=prepared.case_hash,
+                solution_hash=prepared.solution.hash,
+                outputs=prepared.outputs,
+                indicator_band_nm=None,
+                check_routes=prepared.check_routes,
+                summary={"bias_V": bias_V},
+            )
 
         report(progress, 0.2, "restoring the converged state")
         check_cancelled(cancel, "restoring the state")
@@ -442,7 +463,7 @@ class QoIStage:
 
         report(progress, 0.4, "building the NUM-24 indicator")
         check_cancelled(cancel, "the indicator")
-        lower, upper = prepared.band
+        lower, upper = band
         indicator = axial_indicator(mesh, lower_nm=lower, upper_nm=upper, order=order)
 
         report(progress, 0.5, "extracting the scalar quantities")
@@ -453,12 +474,12 @@ class QoIStage:
             indicator,
             # NUM-27's G = I/V > 0 is stated with cis grounded; with trans grounded
             # the bias sits on cis, and the +z current responds to its negative.
-            bias_V=qoi_post.cis_referenced_bias(prepared.resolved.bias_V, prepared.resolved.ground),
+            bias_V=bias_V,
             check_routes=prepared.check_routes,
         )
 
         summary: dict[str, Canonicalisable] = {
-            "indicator_band_nm": list(prepared.band),
+            "indicator_band_nm": list(band),
             **_selected(quantities, prepared.outputs),
         }
         if prepared.shell is not None:
@@ -668,19 +689,15 @@ class ReportStage:
             mesh_artefact=inputs.upstream.get("mesh"),
             fields=supplied,
         )
+        # Any model: every one reports its NUM-09 scale set and the permittivity
+        # its solve used, or none, through the section 5.4.3 interface (WP26 D15).
         model = restored.model
-        if not isinstance(model, CoupledModel):
-            raise TypeError(
-                f"{model.name!r} is not a model of the epnp-ns family; the IF-07 export writes "
-                "the NUM-09 scale set alongside the fields so that the nondimensional state "
-                "stays recoverable, and this model declares none"
-            )
         directory = self._directory(resolved.name)
         export = export_fields(
             restored,
             directory,
             scales=model.scales,
-            relative_permittivity=_permittivity(restored),
+            relative_permittivity=model.relative_permittivity(restored),
             fixed_charge_C_m3=_fixed_charge(supplied),
         )
         payload = {path.name: path for path in export.paths()}
@@ -700,26 +717,6 @@ class ReportStage:
             directory = Path(tempfile.mkdtemp(prefix=f"{safe}-fields-", dir=root))
         directory.mkdir(parents=True, exist_ok=True)
         return directory
-
-
-def _permittivity(solution: ModelSolution) -> Expression | None:
-    """Return ``eps_r`` as the solved model evaluates it, or ``None``.
-
-    Evaluated through the model's own coefficient chain against the *stored*
-    distance field, so the permittivity in the file is the one the solve used
-    and not a second evaluation that a different distance field could move.
-    """
-    model = solution.model
-    if not isinstance(model, CoupledModel):
-        return None
-    values = {field.name: solution.component(field.name) for field in model.fields}
-    coefficients = model.coefficients(
-        model.concentration_variables(values), solution.wall_distance_nm
-    )
-    permittivity: Expression = model.permittivity(
-        solution.space.mesh, coefficients, solid_fraction=solution.solid_fraction
-    )
-    return permittivity
 
 
 def _fixed_charge(fields: ResolvedFields | None) -> Expression | None:

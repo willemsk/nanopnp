@@ -559,17 +559,18 @@ class QoIArtefact(Artefact):
         case_hash: str,
         solution_hash: str,
         outputs: tuple[str, ...],
-        indicator_band_nm: tuple[float, float],
+        indicator_band_nm: tuple[float, float] | None,
         check_routes: bool,
         extension_shell_nm: tuple[float, float] | None = None,
         payload: Mapping[str, Path] | None = None,
         summary: Mapping[str, Canonicalisable] | None = None,
     ) -> None:
-        parameters: dict[str, Canonicalisable] = {
-            "outputs": list(outputs),
-            "indicator_band_nm": list(indicator_band_nm),
-            "check_routes": check_routes,
-        }
+        parameters: dict[str, Canonicalisable] = {"outputs": list(outputs)}
+        # Absent for a model without transport, which builds no indicator (WP26
+        # D15); present, in the position it has always had, for every other.
+        if indicator_band_nm is not None:
+            parameters["indicator_band_nm"] = list(indicator_band_nm)
+        parameters["check_routes"] = check_routes
         # Absent rather than null when no force was asked for, matching the
         # convention the other artefacts use for an input a run did not have:
         # "no force was extracted" and "one was, over no shell" are different

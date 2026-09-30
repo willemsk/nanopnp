@@ -70,13 +70,19 @@ from nanopnp.core.stages import (
 )
 from nanopnp.geometry.region import PAYLOAD_NAME, read_region
 from nanopnp.io.artefact import MeshArtefact
-from nanopnp.io.case import COUPLED_MODELS, SuppliedArtefact, UnsupportedCaseSection, resolve
+from nanopnp.io.case import SuppliedArtefact, UnsupportedCaseSection, resolve
 from nanopnp.io.defaults import ContributedDeviation
 from nanopnp.mesh.adapter import MeshData, detect_format, read, write_msh41
 from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS, PERMITTIVITY_EXEMPT
 from nanopnp.mesh.quality import QualityReport, check_quality, check_radii, element_quality
 from nanopnp.mesh.sizing import SIZES, resolve_wall_size
-from nanopnp.physics.models import DEFAULT_BOUNDARIES
+from nanopnp.physics.models import (
+    DEFAULT_BOUNDARIES,
+    POTENTIAL,
+    VELOCITY,
+    VELOCITY_AXIS,
+    declaration,
+)
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.core.typing import Mesh
@@ -257,6 +263,18 @@ def _options(pattern: str) -> tuple[str, ...]:
     return parts
 
 
+_ESSENTIAL_PURPOSES: dict[str, str] = {
+    POTENTIAL: "the essential potential (PHY-09)",
+    VELOCITY: "no-slip (NUM-06)",
+    VELOCITY_AXIS: "the axis, carrying u_r = 0 and nothing else (NUM-06)",
+}
+"""What the diagnostic says each essential set is for, by the key the model reports it under.
+
+Keyed by field, the shared vocabulary of :mod:`nanopnp.physics.models`, not by
+model: a key missing here -- each species' concentration, or a field a new model
+brings -- is described generically."""
+
+
 def required_names(resolved: ResolvedCase) -> RequiredNames:
     """Return every name selection ``resolved`` will make on its mesh.
 
@@ -283,11 +301,16 @@ def required_names(resolved: ResolvedCase) -> RequiredNames:
         ),
     )
 
+    # The model's own essential sets, read off the built model rather than off
+    # its name (section 5.4.3 NOTE): the potential for every model, each
+    # species' concentration, and no-slip and the axis where a flow block exists.
+    essential = dict(resolved.physics_model().essential_boundaries(DEFAULT_BOUNDARIES))
+    potential = essential.pop(POTENTIAL)
     boundaries = [
         Requirement(
-            purpose="the essential potential (PHY-09)",
-            pattern=DEFAULT_BOUNDARIES.potential,
-            options=_options(DEFAULT_BOUNDARIES.potential),
+            purpose=_ESSENTIAL_PURPOSES[POTENTIAL],
+            pattern=potential,
+            options=_options(potential),
         )
     ]
     # The bias is applied between two *named* electrodes -- ``BoundaryCF({ground:
@@ -304,48 +327,28 @@ def required_names(resolved: ResolvedCase) -> RequiredNames:
                 options=(name,),
             )
         )
-
-    if resolved.model in COUPLED_MODELS:
-        for ion in resolved.electrolyte.species:
-            pattern = DEFAULT_BOUNDARIES.concentration_boundary(ion.name)
-            boundaries.append(
-                Requirement(
-                    purpose=f"the essential concentration of {ion.name} (PHY-09)",
-                    pattern=pattern,
-                    options=_options(pattern),
-                )
+    for key, pattern in essential.items():
+        boundaries.append(
+            Requirement(
+                purpose=_ESSENTIAL_PURPOSES.get(key, f"the essential condition on {key} (PHY-09)"),
+                pattern=pattern,
+                options=_options(pattern),
             )
-        # ``pnp`` is the one model whose ``flow`` is not in ``model_options``:
-        # ``io.case._model_options`` omits it because the builder fixes
-        # ``flow=False`` itself, so a bare ``.get("flow", True)`` would demand a
-        # no-slip boundary of a model that poses none.
-        if resolved.model != "pnp" and resolved.model_options.get("flow", True):
-            boundaries.append(
-                Requirement(
-                    purpose="no-slip (NUM-06)",
-                    pattern=DEFAULT_BOUNDARIES.velocity,
-                    options=_options(DEFAULT_BOUNDARIES.velocity),
-                )
-            )
-            boundaries.append(
-                Requirement(
-                    purpose="the axis, carrying u_r = 0 and nothing else (NUM-06)",
-                    pattern=DEFAULT_BOUNDARIES.velocity_axis,
-                    options=_options(DEFAULT_BOUNDARIES.velocity_axis),
-                )
-            )
-
-    # Required whether or not this electrolyte's corrections read ``d``: the
-    # sources are a case field, and a mesh that cannot supply them is not a mesh
-    # this case can run on. An ablation with every wall correction off would
-    # otherwise pass a gate the validated configuration fails.
-    boundaries.append(
-        Requirement(
-            purpose="the PHY-02 wall-distance sources, numerics.wall_distance.sources",
-            pattern=resolved.wall_distance_sources,
-            options=_options(resolved.wall_distance_sources),
         )
-    )
+
+    # Required whether or not this electrolyte's corrections read ``d``, for a
+    # model that reads the distance field at all: the sources are a case field,
+    # and a mesh that cannot supply them is not a mesh this case can run on. An
+    # ablation with every wall correction off would otherwise pass a gate the
+    # validated configuration fails.
+    if declaration(resolved.model).wall_distance:
+        boundaries.append(
+            Requirement(
+                purpose="the PHY-02 wall-distance sources, numerics.wall_distance.sources",
+                pattern=resolved.wall_distance_sources,
+                options=_options(resolved.wall_distance_sources),
+            )
+        )
     return RequiredNames(materials=materials, boundaries=tuple(boundaries))
 
 
@@ -500,9 +503,20 @@ def check_names(data: MeshData, required: RequiredNames, *, where: str) -> None:
 
 
 def check_solid_permittivities(
-    data: MeshData, solid_permittivities: dict[str, float], *, where: str
+    data: MeshData,
+    solid_permittivities: dict[str, float],
+    *,
+    where: str,
+    model: str | None = None,
+    solids: bool = True,
 ) -> None:
     """Abort unless every solid domain of ``data`` has a permittivity (PHY-03, QR-12).
+
+    For a model that carries no solids (``solids`` false) any solid domain at
+    all aborts, the exclusion shell included, naming the model: its screening
+    term is posed on all of Omega, so a solid would screen as if it held ions,
+    and asking for a ``physics.solid_permittivities`` entry the case would then
+    refuse is no advice (section 5.3.1 NOTE on a solid without a permittivity).
 
     Poisson is solved over the whole domain, so a solid with no entry falls back
     to the electrolyte's ``eps_r`` — about 24 times too large in a protein or a
@@ -523,12 +537,27 @@ def check_solid_permittivities(
         ``physics.solid_permittivities`` from the case.
     where
         Named in the diagnostic.
+    model
+        ``physics.model``, named in the diagnostic of a model without solids.
+    solids
+        Whether that model carries solid materials, from its declaration.
 
     Raises
     ------
     MeshVocabularyError
-        Naming every solid material with no entry, and the reference values.
+        Naming every solid material with no entry, and the reference values; or,
+        for a model without solids, naming the model and every solid domain.
     """
+    if not solids:
+        present = sorted(name for name in data.materials if name not in FLUID_MATERIALS)
+        if present:
+            raise MeshVocabularyError(
+                f"{where} carries the solid {'domains' if len(present) > 1 else 'domain'} "
+                f"{', '.join(repr(name) for name in present)}, and physics.model {model!r} "
+                "cannot be posed on a mesh with a solid domain: it carries no solid materials, "
+                "and its screening term would treat the solid as electrolyte (PHY-21 NOTE)"
+            )
+        return
     missing = sorted(
         name
         for name in data.materials
@@ -705,7 +734,11 @@ def ingest(supplied: SuppliedArtefact, resolved: ResolvedCase) -> IngestedMesh:
     mapped, applied = apply_groups(data, dict(supplied.groups))
     check_names(mapped, required_names(resolved), where=where)
     check_solid_permittivities(
-        mapped, dict(resolved.document.physics.solid_permittivities), where=where
+        mapped,
+        dict(resolved.document.physics.solid_permittivities),
+        where=where,
+        model=resolved.model,
+        solids=declaration(resolved.model).solids,
     )
 
     quality = element_quality(mapped)

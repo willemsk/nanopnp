@@ -92,7 +92,14 @@ from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS
 from nanopnp.physics.coefficients import NondimensionalCoefficients
 from nanopnp.physics.flow import permittivity_gradient
 from nanopnp.physics.measures import Measures
-from nanopnp.physics.models import POTENTIAL, PRESSURE, VELOCITY, CoupledModel, ModelSolution
+from nanopnp.physics.models import (
+    POTENTIAL,
+    PRESSURE,
+    VELOCITY,
+    ModelSolution,
+    TransportModel,
+    transport_model,
+)
 from nanopnp.post.indicator import smoothstep
 from nanopnp.post.qoi import TWO_PI
 from nanopnp.post.reaction_flux import boundary_reaction_flux
@@ -670,22 +677,17 @@ class AnalyteForces:
 # -- the three routes --------------------------------------------------------
 
 
-def _coupled(solution: ModelSolution) -> CoupledModel:
+def _coupled(solution: ModelSolution) -> TransportModel:
     """Return the solution's model, insisting it is one a force can be taken from.
 
     Raises
     ------
     TypeError
-        If the model is not of the ePNP-NS family, or solves no flow block: the
+        If the model declares no transport, or solves no flow block: the
         hydrodynamic half of NUM-28 does not exist without one, and reporting it
         as zero would claim the flow was computed and found to vanish.
     """
-    model = solution.model
-    if not isinstance(model, CoupledModel):
-        raise TypeError(
-            f"{model.name!r} is not a model of the epnp-ns family, so the NUM-28 force on an "
-            "analyte is not defined for it"
-        )
+    model = transport_model(solution)
     if not model.flow:
         raise TypeError(
             f"{model.name!r} solves no flow block, so it has no hydrodynamic force to report; "
@@ -699,7 +701,7 @@ def _coupled(solution: ModelSolution) -> CoupledModel:
 class _Integrands:
     """The nondimensional expressions both domain routes are built from."""
 
-    model: CoupledModel
+    model: TransportModel
     mesh: Mesh
     coefficients: NondimensionalCoefficients
     potential_gradient: Expression
@@ -1124,7 +1126,7 @@ def reaction_force(
     if solution.residual is None:
         raise ValueError(
             "this solution carries no residual form, so the NUM-28 reaction force cannot be "
-            "taken from it; solve through CoupledModel.solve, which records it"
+            "taken from it; solve through the model's own solve, which records it"
         )
     block = [field.name for field in model.fields].index(VELOCITY)
     traction = boundary_reaction_flux(

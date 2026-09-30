@@ -896,7 +896,7 @@ def _gate_meshes(plan: SweepPlan, members: Sequence[ResolvedCase]) -> SweepPlan:
     """
     from nanopnp.mesh.ingest import IngestedMesh, ingest
     from nanopnp.physics.measures import AXISYMMETRIC
-    from nanopnp.solve.state import check_wall_distance, reads_wall, wall_distance_field
+    from nanopnp.solve.state import check_wall_distance, reads_distance, wall_distance_field
 
     measured: dict[str, Canonicalisable] = {}
     checked: set[tuple[str, str, float, int]] = set()
@@ -910,7 +910,7 @@ def _gate_meshes(plan: SweepPlan, members: Sequence[ResolvedCase]) -> SweepPlan:
     # second ``resolve`` over 3,675 points would be a second answer to a question
     # already asked, and slower to be no more certain of it.
     for point, resolved in zip(plan.points, members, strict=True):
-        if not reads_wall(resolved.electrolyte):
+        if not reads_distance(resolved):
             continue
         supplied = resolved.mesh
         if supplied is None:

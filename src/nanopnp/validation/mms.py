@@ -61,7 +61,7 @@ from nanopnp.physics.models import (
     PRESSURE,
     PRESSURE_MEAN,
     VELOCITY,
-    CoupledModel,
+    TransportModel,
     concentration_field_name,
 )
 
@@ -107,7 +107,7 @@ class ConstantCoefficients:
     reynolds: float
 
 
-def constant_coefficients(model: CoupledModel) -> ConstantCoefficients:
+def constant_coefficients(model: TransportModel) -> ConstantCoefficients:
     """Return the model's material constants, having checked that they are constant.
 
     Raises
@@ -144,7 +144,7 @@ def constant_coefficients(model: CoupledModel) -> ConstantCoefficients:
     )
 
 
-def _numeric_coefficients(model: CoupledModel, value: float) -> NondimensionalCoefficients:
+def _numeric_coefficients(model: TransportModel, value: float) -> NondimensionalCoefficients:
     """Return the model's coefficients evaluated numerically at a uniform state."""
     return NondimensionalCoefficients(
         electrolyte=model.electrolyte,
@@ -155,7 +155,7 @@ def _numeric_coefficients(model: CoupledModel, value: float) -> NondimensionalCo
     )
 
 
-def _require_equal(first: float, second: float, what: str, model: CoupledModel) -> None:
+def _require_equal(first: float, second: float, what: str, model: TransportModel) -> None:
     """Raise if a coefficient differs between the two probe concentrations."""
     if not math.isclose(float(first), float(second), rel_tol=1e-12, abs_tol=0.0):
         raise ValueError(
@@ -192,7 +192,7 @@ class ManufacturedSolution:
     regular there. :meth:`polynomial` builds such a set.
     """
 
-    model: CoupledModel
+    model: TransportModel
     potential: sp.Expr
     concentrations: Mapping[str, sp.Expr]
     velocity: tuple[sp.Expr, sp.Expr] | None = None
@@ -218,7 +218,7 @@ class ManufacturedSolution:
             )
 
     @classmethod
-    def polynomial(cls, model: CoupledModel) -> ManufacturedSolution:
+    def polynomial(cls, model: TransportModel) -> ManufacturedSolution:
         """Return a default manufactured set: even powers of ``r``, trigonometric in ``z``.
 
         The radial dependence is polynomial and includes an ``r^4`` term, which
