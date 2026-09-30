@@ -76,7 +76,7 @@ are recorded as unresolved rather than as zero.
 ## Stage 4: the contour
 
 Stage 4 draws the pore wall as the contour of the (r, z) map at `isolevel`, 0.25 by default. It
-then conditions the loop: a closing and an opening by a disc of twice the grid spacing remove
+then conditions the loop: a closing and an opening by a disc of radius twice the grid spacing remove
 gaps and fins too thin to mesh, Taubin smoothing follows when `smoothing: taubin`, the loop is
 simplified to within `simplify_tol_nm`, which must be below the grid spacing, and vertices closer
 than the spacing are removed.

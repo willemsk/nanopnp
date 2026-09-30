@@ -66,7 +66,7 @@ LATTICE_TOLERANCE_NM = 1e-5
 
 Compared in nm, after conversion. gridData writes an OpenDX origin to six decimals
 of an ångström (5e-8 nm), and MRC holds it as float32, whose half-spacing at 500 Å
-is 3.1e-5 Å, 3.1e-6 nm; half a spacing is 0.0125 nm at the finest grid FR-04 admits.
+is 1.5e-5 Å, 1.5e-6 nm; half a spacing is 0.0125 nm at the finest grid FR-04 admits.
 """
 
 

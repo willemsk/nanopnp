@@ -3164,7 +3164,7 @@ needed.
 | IF-01 | VER-25, VER-32, VER-45 (the public surface and its import cost) |
 | IF-02 | VER-32, VER-38, VER-45 (the generated command-line and exit-code references), VER-46 (every documented command executed) |
 | IF-03 | VER-09, VER-36 (dotted-path substitution against the schema), VER-47 (schema v2 and the v1 upgrade) |
-| IF-04 | VER-48 (PDB, mmCIF and each trajectory format read; PDB and mmCIF of one entry agree) |
+| IF-04 | VER-48 (PDB, mmCIF and each trajectory format read; PDB and mmCIF of one entry agree), VER-32 (the aligned ensemble exported as a PDB and a DCD) |
 | IF-05 | VER-29, VER-49 (the density map in `.npz`, OpenDX and CCP4, in ångströms at the file boundary), VER-50 (the reduced map exported as radial grids), VER-32 and VER-46 (the map exported from the command line and overlaid on its structure), VAL-15 |
 | IF-06 | VER-27 |
 | IF-07 | VER-33 |
