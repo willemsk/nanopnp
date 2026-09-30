@@ -58,9 +58,10 @@ from nanopnp.physics.measures import Measures
 from nanopnp.physics.models import (
     POTENTIAL,
     VELOCITY,
-    CoupledModel,
     ModelSolution,
+    TransportModel,
     concentration_field_name,
+    transport_model,
 )
 from nanopnp.physics.nernst_planck import species_flux
 from nanopnp.post.reaction_flux import boundary_reaction_flux
@@ -118,25 +119,22 @@ class RouteDisagreementError(RuntimeError):
     """
 
 
-def _coupled(solution: ModelSolution) -> CoupledModel:
-    """Return the solution's model, insisting it solves for ions.
+def _coupled(solution: ModelSolution) -> TransportModel:
+    """Return the solution's model, insisting it declares ionic transport.
+
+    Reached through :func:`~nanopnp.physics.models.transport_model`, which reads
+    the model's declaration rather than its class (section 5.4.3 NOTE).
 
     Raises
     ------
     TypeError
-        If the model has no ionic species, which every quantity here needs.
+        If the model declares no transport, which every quantity here needs.
     """
-    model = solution.model
-    if not isinstance(model, CoupledModel):
-        raise TypeError(
-            f"{model.name!r} solves no ionic species, so it carries no current; the "
-            "quantities of interest of NUM-27 need a model of the epnp-ns family"
-        )
-    return model
+    return transport_model(solution)
 
 
 def _check_indicator_matches(
-    solution: ModelSolution, model: CoupledModel, indicator: GridFunction
+    solution: ModelSolution, model: TransportModel, indicator: GridFunction
 ) -> None:
     """Reject a ``psi`` that was not built for this solution (QR-12).
 
@@ -172,7 +170,7 @@ def _functions(solution: ModelSolution) -> dict[str, Expression]:
     """Return the solved fields keyed by name, in the model's own variables.
 
     The *raw* components, not :meth:`ModelSolution.concentration`: the flux is
-    rebuilt with :meth:`CoupledModel.concentration_variables`, which applies the
+    rebuilt with :meth:`TransportModel.concentration_variables`, which applies the
     NUM-02 log branch itself. Unwrapping here as well would exponentiate twice.
     """
     return {field.name: solution.component(field.name) for field in solution.model.fields}
@@ -192,8 +190,8 @@ def indicator_currents(
     ``S_I = F D_0 c_0 a`` the current scale of NUM-09.
 
     The flux is rebuilt from the converged state through the model's own public
-    seams — :meth:`~nanopnp.physics.models.CoupledModel.concentration_variables`,
-    :meth:`~nanopnp.physics.models.CoupledModel.coefficients` and
+    seams — :meth:`~nanopnp.physics.models.TransportModel.concentration_variables`,
+    :meth:`~nanopnp.physics.models.TransportModel.coefficients` and
     :func:`~nanopnp.physics.nernst_planck.species_flux` — so that it is the same
     expression the residual was assembled from, correction for correction.
 
@@ -418,7 +416,7 @@ def reaction_flux_currents(
     if solution.residual is None:
         raise ValueError(
             "this solution carries no residual form, so the NUM-25 reaction flux cannot be "
-            "taken from it; solve through CoupledModel.solve, which records it"
+            "taken from it; solve through the model's own solve, which records it"
         )
     names = [field.name for field in model.fields]
     scale = TWO_PI * model.scales.current_A

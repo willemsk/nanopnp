@@ -70,7 +70,6 @@ import math
 import time
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
-from typing import Literal
 
 from nanopnp.core.scaling import debye_length_nm
 from nanopnp.core.stages import Cancelled
@@ -81,11 +80,13 @@ from nanopnp.physics.measures import AXISYMMETRIC, Measures
 from nanopnp.physics.models import (
     DEFAULT_BOUNDARIES,
     CoupledBoundaries,
-    CoupledModel,
-    ElectrostaticModel,
     ModelSolution,
     PhysicsModel,
     concentration_field_name,
+    create,
+    declaration,
+    solves_transport,
+    transport_model,
 )
 from nanopnp.solve.gates import FieldSampler, PecletDiagnostic, PecletMeasurement
 
@@ -430,7 +431,7 @@ def _shared_fields(source: PhysicsModel, target: PhysicsModel) -> tuple[str, ...
 
 def _log_branch(model: PhysicsModel) -> bool:
     """Whether the model solves for ``w_i = log(c~_i)`` rather than ``c~_i`` (NUM-02)."""
-    return isinstance(model, CoupledModel) and model.log_variables
+    return solves_transport(model) and transport_model(model).log_variables
 
 
 def _component(state: GridFunction, model: PhysicsModel, name: str) -> GridFunction:
@@ -546,19 +547,18 @@ def transfer(
         logger.debug("transfer to %r: copied %d fields verbatim", model.name, len(shared))
         return ModelSolution(model=model, space=state.space, state=state)
 
-    if isinstance(model, CoupledModel):
-        state = model.cold_state(mesh, boundaries, initial_concentrations=initial_concentrations)
-    else:
-        state = model.cold_state(mesh, boundaries)
+    # A model with no species refuses ion data; the ladder hands a rung's own
+    # value only to the rungs that carry it.
+    state = model.cold_state(mesh, boundaries, initial_concentrations=initial_concentrations)
 
-    species = set(model.species) if isinstance(model, CoupledModel) else set()
+    species = set(model.species)
     for name in shared:
         matched = [ion for ion in species if concentration_field_name(ion) == name]
         if matched:
             # The concentration, not the solved variable: in the NUM-02 log
             # branch those differ by an exponential.
             value: Expression = previous.concentration(matched[0])
-            if isinstance(model, CoupledModel) and model.log_variables:
+            if _log_branch(model):
                 value = ngs.log(value)
         else:
             value = previous.component(name)
@@ -723,9 +723,9 @@ def _report_peclet(solution: ModelSolution, measures: Measures) -> PecletMeasure
     rung's own coordinate names; a planar case would otherwise be reported in
     ``(r, z)``.
     """
-    model = solution.model
-    if not isinstance(model, CoupledModel):
+    if not solves_transport(solution.model):
         return None
+    model = transport_model(solution)
     return PecletDiagnostic(
         FieldSampler.shared(
             solution.space.mesh,
@@ -759,6 +759,7 @@ def default_ladder(
     concentration_steps: int = 4,
     surface_charge_boundary: str = "wall",
     corrections_active: bool = True,
+    target: str | None = None,
     switches: CorrectionSwitches | None = None,
     stabilisation: str = "none",
     velocity_order: int | None = None,
@@ -845,6 +846,13 @@ def default_ladder(
         correction off (PHY-22) must pass its own set here: resolving them from
         the file name instead would put the correction back on at stage 7, and
         the manifest would then record a deviation the run never took.
+    target
+        The registered model the top rung solves, ``physics.model`` of the case
+        this ladder serves: ``epnp-ns`` or ``pnp-ns``, the two models whose
+        declaration admits the ladder and which it can reach. When given it
+        decides ``corrections_active``. This function is the one place outside
+        ``physics/`` that names models, because NUM-18 defines the ladder as a
+        path through named models (section 5.4.3 NOTE).
     corrections_active
         Whether the ladder ends at ``epnp-ns`` or at classical ``pnp-ns``.
         ``False`` **omits stages 7 and 8** rather than running them as no-ops —
@@ -873,11 +881,18 @@ def default_ladder(
     Raises
     ------
     ValueError
-        If ``fixed_charge_domain`` names no material of ``mesh``, or if
-        ``ground`` names neither electrode.
+        If ``fixed_charge_domain`` names no material of ``mesh``, if ``ground``
+        names neither electrode, or if ``target`` names a model the ladder does
+        not end at.
     """
     import ngsolve as ngs
 
+    # The models the ladder can end at: with the corrections on, and without.
+    targets = ("epnp-ns", "pnp-ns")
+    if target is not None:
+        if target not in targets:
+            raise ValueError(f"the NUM-18 ladder ends at {' or '.join(targets)}, not at {target!r}")
+        corrections_active = target == targets[0]
     if ground not in ELECTRODES:
         raise ValueError(f"ground={ground!r} must be one of {', '.join(sorted(ELECTRODES))}")
     driven = next(iter(ELECTRODES - {ground}))
@@ -905,21 +920,22 @@ def default_ladder(
 
     def _coupled(
         name: str, switches: CorrectionSwitches, *, flow: bool, salt: float
-    ) -> CoupledModel:
-        """Return one coupled configuration of the ladder.
+    ) -> PhysicsModel:
+        """Return one coupled configuration of the ladder, built through the registry.
 
         Every rung is the same class with different switches, which is what
         makes "enable the corrections last" a change of configuration rather
-        than a change of code path (PHY-21).
+        than a change of code path (PHY-21). ``flow`` is passed only to a model
+        that declares it: ``pnp`` fixes it in its builder.
         """
-        return CoupledModel(
+        return create(
+            name,
             # ``with_switches`` rebuilds the resolved corrections; ``replace``
             # would change only the record and leave every stage of the ladder
             # evaluating whatever ``base`` was built with.
             electrolyte=base.with_switches(switches),
             concentration_M=salt,
-            name=name,
-            flow=flow,
+            **({"flow": flow} if "flow" in declaration(name).options else {}),
             order=measures.element_order,
             velocity_order=velocity_order,
             pressure_order=pressure_order,
@@ -958,10 +974,9 @@ def default_ladder(
 
         Every *coupled* rung, that is: it is a coefficient of the operator rather
         than a source, so it is not ramped and it is not withheld from the
-        equilibrium rung. The two Poisson-Boltzmann rungs take an
-        :class:`~nanopnp.physics.models.ElectrostaticModel`, which carries no
-        material permittivity at all, so they do not take it and must not be
-        handed it.
+        equilibrium rung. The two Poisson-Boltzmann rungs declare no
+        coefficient and carry no material permittivity at all, so they do not
+        take it and must not be handed it.
         """
         return {} if solid_fraction is None else {"solid_fraction": solid_fraction}
 
@@ -977,17 +992,17 @@ def default_ladder(
         pb_values = mesh.BoundaryCF(
             {"cis": 0.0, "trans": 0.0, surface_charge_boundary: wall_potential_V / thermal_V}
         )
-    pb_stages: tuple[tuple[int, str, Literal["linear", "sinh"]], ...] = (
-        (1, "pb-linear", "linear"),
-        (2, "pb", "sinh"),
-    )
-    for stage, name, screening in pb_stages:
+    pb_stages: tuple[tuple[int, str], ...] = ((1, "pb-linear"), (2, "pb"))
+    for stage, name in pb_stages:
         rungs.append(
             Rung(
                 name=f"{stage}-{name}",
                 stage=stage,
-                model=ElectrostaticModel(
-                    name=name, screening=screening, order=measures.element_order
+                model=create(
+                    name,
+                    electrolyte=base,
+                    concentration_M=build_M,
+                    order=measures.element_order,
                 ),
                 mesh=mesh,
                 boundaries=pb_boundaries,
@@ -1089,9 +1104,9 @@ def default_ladder(
             (8, "steric", "epnp-ns", corrected),
         )
     target_switches = corrected if corrections_active else classical
-    target_name = "epnp-ns" if corrections_active else "pnp-ns"
+    target_name = targets[0] if corrections_active else targets[1]
 
-    def _wall(model: CoupledModel) -> dict[str, Option]:
+    def _wall(model: PhysicsModel) -> dict[str, Option]:
         """Return the distance-field keyword, where the rung's corrections read it.
 
         Asked of the rung's own *resolved* corrections rather than of its
@@ -1103,7 +1118,7 @@ def default_ladder(
         """
         reads = any(
             bool(getattr(correction, "use_wall", False))
-            for correction in model.electrolyte.corrections.values()
+            for correction in transport_model(model).electrolyte.corrections.values()
         )
         return {"wall_distance_nm": wall_distance_nm} if reads else {}
 

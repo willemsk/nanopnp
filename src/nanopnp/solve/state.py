@@ -46,7 +46,7 @@ from nanopnp.charge.stage import ResolvedFields, gate_fields, read_fields
 from nanopnp.core.constants import thermal_voltage
 from nanopnp.core.hashing import Canonicalisable, content_hash
 from nanopnp.io.artefact import SOLUTION_SCHEMA, Artefact
-from nanopnp.io.case import COUPLED_MODELS, resolve
+from nanopnp.io.case import resolve
 from nanopnp.mesh.ingest import deployed_mesh
 from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS
 from nanopnp.physics.coefficients import SATURATED_WALL_DISTANCE_NM
@@ -54,10 +54,9 @@ from nanopnp.physics.measures import AXISYMMETRIC, Measures
 from nanopnp.physics.models import (
     DEFAULT_BOUNDARIES,
     CoupledBoundaries,
-    CoupledModel,
     ModelSolution,
     PhysicsModel,
-    create,
+    declaration,
 )
 from nanopnp.solve.continuation import ELECTRODES, Rung, default_ladder
 from nanopnp.solve.gates import FieldSampler, WallDistanceGate, WallDistanceMeasurement
@@ -81,6 +80,7 @@ __all__ = [
     "descriptor_leaves",
     "ladder",
     "load_initial",
+    "reads_distance",
     "reads_wall",
     "restore",
     "save",
@@ -325,14 +325,25 @@ def reads_wall(electrolyte: Electrolyte) -> bool:
     )
 
 
+def reads_distance(resolved: ResolvedCase) -> bool:
+    """Return whether this case's solve reads the PHY-02 distance field.
+
+    Both halves are asked: the model must declare that it reads ``d`` at all
+    (section 5.4.3 NOTE), and some resolved correction must evaluate it
+    (:func:`reads_wall`). ``poisson`` beside an electrolyte whose corrections are
+    on reads no distance field, and must neither pay for one nor record it.
+    """
+    return declaration(resolved.model).wall_distance and reads_wall(resolved.electrolyte)
+
+
 def wall_distance_field(resolved: ResolvedCase, mesh: Mesh, *, order: int) -> Expression:
     """Return the PHY-02 distance field this case solves against.
 
-    :data:`~nanopnp.physics.coefficients.SATURATED_WALL_DISTANCE_NM` when no
-    correction reads ``d``, so a classical run pays for no screened-Poisson solve
-    and records no field it never evaluated.
+    :data:`~nanopnp.physics.coefficients.SATURATED_WALL_DISTANCE_NM` when nothing
+    reads ``d`` (:func:`reads_distance`), so a classical run pays for no
+    screened-Poisson solve and records no field it never evaluated.
     """
-    if not reads_wall(resolved.electrolyte):
+    if not reads_distance(resolved):
         return SATURATED_WALL_DISTANCE_NM
     from nanopnp.mesh.distance import wall_distance
 
@@ -353,10 +364,10 @@ def check_wall_distance(
 ) -> WallDistanceMeasurement | None:
     """Gate the discrete distance field this run will read (NUM-34).
 
-    Returns ``None`` for a configuration that activates no wall correction: such
-    a run reads no distance field, and gating its mesh would be a gate on
-    nothing. Otherwise the field is sampled over the fluid at the same P2 nodal
-    set the NUM-17 gates walk, and the measurement is returned so that the
+    Returns ``None`` for a configuration that reads no distance field
+    (:func:`reads_distance`): gating its mesh would be a gate on nothing.
+    Otherwise the field is sampled over the fluid at the same P2 nodal set the
+    NUM-17 gates walk, and the measurement is returned so that the
     minimum reaches the artefact summary and the FR-25 manifest whether or not
     it passed -- a field that passed *narrowly* is a fact about the mesh, and a
     sweep's dataset is where it should be visible.
@@ -379,7 +390,7 @@ def check_wall_distance(
         If the field samples below :data:`~nanopnp.solve.gates.MINIMUM_WALL_DISTANCE_NM`
         anywhere in the fluid (QR-12).
     """
-    if not reads_wall(resolved.electrolyte):
+    if not reads_distance(resolved):
         return None
     sampler = FieldSampler.shared(mesh, coordinates=coordinates, materials=ELECTROLYTE_DOMAINS)
     return WallDistanceGate(sampler, distance).checked()
@@ -406,34 +417,25 @@ def single_rung(
     converged, plausible, wrong answer -- and one :func:`save` then refuses to
     store, after the solve has been paid for.
     """
-    options = dict(resolved.model_options)
-    if resolved.model in COUPLED_MODELS:
-        model = create(
-            resolved.model,
-            electrolyte=resolved.electrolyte,
-            concentration_M=resolved.concentration_M,
-            **options,
-        )
-    else:
-        model = create(resolved.model, **options)
+    model = resolved.physics_model()
+    declared = declaration(resolved.model)
     driven = next(iter(ELECTRODES - {resolved.ground}))
     supplied: dict[str, Expression] = {}
-    if isinstance(model, CoupledModel):
-        # The electrostatic models of PHY-21 take none of these: ``pb`` screens
-        # with a Debye length, carries no material permittivity and evaluates no
-        # wall factor, and ``resolve`` refuses a case that supplies a field to
-        # one of them -- so this branch is the belt to that brace rather than a
-        # silent drop. ``wall_distance_nm`` is unconditional inside it, because
-        # a coupled model that read ``d`` and was handed none would saturate
-        # every wall factor rather than fail (PHY-02).
-        if fields.charge is not None:
-            supplied["fixed_charge"] = fields.charge.assemble(model.scales)
-        if fields.eps_r is not None:
-            supplied["solid_fraction"] = fields.eps_r.chi()
+    # Passed by declaration, never by class (section 5.4.3 NOTE). ``resolve``
+    # refuses a case supplying a field its model does not accept, so the
+    # coefficient tests are the belt to that brace rather than a silent drop.
+    # ``wall_distance_nm`` goes to every model that reads ``d`` whatever its
+    # corrections: one that read ``d`` and was handed none would saturate every
+    # wall factor rather than fail (PHY-02).
+    if fields.charge is not None and "fixed_charge" in declared.coefficients:
+        supplied["fixed_charge"] = fields.charge.assemble(model.scales)
+    if fields.eps_r is not None and "solid_fraction" in declared.coefficients:
+        supplied["solid_fraction"] = fields.eps_r.chi()
+    if declared.wall_distance:
         supplied["wall_distance_nm"] = distance
-    # Taken from the temperature rather than from ``model.scales``: the
-    # electrostatic models of PHY-21 carry no scale set, and every model of the
-    # table nondimensionalises the potential by the same ``V_T = RT/F`` (NUM-09).
+    # Taken from the temperature rather than from ``model.scales``, so the
+    # essential data is the same number for every model: each nondimensionalises
+    # the potential by the same ``V_T = RT/F`` (NUM-09).
     thermal_V = thermal_voltage(resolved.temperature_K)
     return Rung(
         name=f"target-{resolved.model}",
@@ -479,7 +481,9 @@ def ladder(
         electrolyte=resolved.electrolyte,
         wall_distance_nm=distance,
         measures=measures,
-        corrections_active=resolved.model == "epnp-ns",
+        # The top rung is the case's own model: the ladder decides which rungs
+        # lead to it, and refuses a model it does not end at (section 6.5).
+        target=resolved.model,
         switches=resolved.electrolyte.switches,
         # The ladder builds its own models, so the case's ``physics.
         # solid_permittivities`` reaches them only here. Omitting it leaves
@@ -670,7 +674,7 @@ def save(
     distance = solution.wall_distance_nm
     arrays: dict[str, Any] = {}
 
-    stored_distance = reads_wall(resolved.electrolyte)
+    stored_distance = reads_distance(resolved)
     wall_ndof: int | None = None
     if stored_distance:
         vector = getattr(distance, "vec", None)
@@ -756,7 +760,7 @@ def _restore_distance(
     import ngsolve as ngs
     import numpy as np
 
-    if not reads_wall(resolved.electrolyte):
+    if not reads_distance(resolved):
         return SATURATED_WALL_DISTANCE_NM, None
     if WALL_DISTANCE_ENTRY not in data:
         raise StateMismatchError(

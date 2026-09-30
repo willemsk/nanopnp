@@ -76,6 +76,20 @@ Integrate(gf*gf/(x*x)*x, mesh, order=3)  ->  correct
 **Requirement:** assert integration order ≥ 3 on every form containing `1/r`, and keep a unit test
 that integrates a known `1/r`-weighted quantity on an axis-touching mesh.
 
+**The default order does not count the `r` weight [tested].** NGSolve estimates an integrand's
+order from its trial and test functions, not from coefficient functions such as `x`, so a
+non-singular `r`-weighted term is integrated one order below its degree. At P2 the stiffness
+`eps grad(u).grad(v) r` (degree 3) and the source `rho v r` (degree 3) are integrated at order 2.
+Measured on NGSolve 6.2.2606 with a bare `BilinearForm`/`LinearForm` pair on the WP26 three-layer
+capacitor (`tests/tier2/test_poisson_layers.py`: `r` in [0, 3], `z` in [0, 10] nm, membrane on
+[4, 6] at eps 3.2/78.15, `rho_0 = -1e7 C m^-3`, 130 triangles at `maxh = 0.7`), whose exact
+piecewise-quadratic solution P2 contains: max error 0.38 `V_T` (3 % of `max |phi~|`), largest on
+the axis inside the membrane; with `bonus_intorder=1` on both terms, 1.1e-13. The planar forms and
+a uniform-permittivity problem with no source are exact at the default. With uniform permittivity
+and the source the error is 3.4e-2 `V_T`: the source is short too. `poisson` assembles with
+`RADIAL_WEIGHT_ORDER = 1`; the coupled models keep the default (SPECIFICATION.md NUM-07 NOTE on the
+`r` weight). Source: WP26 implementation session, 30 September 2026.
+
 ### 2.3 `specialcf.mesh_size` is `sqrt(2|K|)`, and it evaluates pointwise **[tested]**
 
 On a 2D triangular element NGSolve's `specialcf.mesh_size` returns `√(2|K|)`, verified elementwise

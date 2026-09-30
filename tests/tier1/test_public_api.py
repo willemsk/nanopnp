@@ -46,6 +46,13 @@ EXPECTED = {
     # WP24 D1: ``run_case`` and ``run_document`` take ``on_artefact``, so the
     # protocol a caller implements for it is public beside the other two hooks.
     "ArtefactHook",
+    # WP26 D16: a model is added as one class against the section 5.4.3 interface
+    # and registered with its declaration (FR-20), so the interface is public.
+    "PhysicsModel",
+    "TransportModel",
+    "ModelDeclaration",
+    "register_model",
+    "registered_models",
 }
 """Written out, not derived: adding to the stable API is a decision, and this is where
 it is seen being made."""

@@ -337,10 +337,21 @@ def test_phy21_a_classical_case_resolves_to_every_correction_off() -> None:
 
 
 def test_phy24_an_electrostatic_model_has_no_transport_to_continue() -> None:
-    """The NUM-18 ladder drives the coupled family; PB is a single solve (PHY-24)."""
-    text = REFERENCE_CASE.replace("model: epnp-ns", "model: pb")
-    with pytest.raises(CaseValidationError, match="continuation"):
+    """The NUM-18 ladder drives the coupled family; PB is a single solve (PHY-24).
+
+    The flow switches are set to what ``pb`` honours first, so that the refusal is
+    the strategy's: the switch check runs before it, because a case the model
+    cannot pose is the more precise diagnostic (WP26 D11).
+    """
+    text = (
+        REFERENCE_CASE.replace("model: epnp-ns", "model: pb")
+        .replace("flow: true", "flow: false")
+        .replace("variable_density: true", "variable_density: false")
+        .replace("inertia: true", "inertia: false")
+    )
+    with pytest.raises(CaseValidationError, match="continuation") as raised:
         resolve(loads_case(text))
+    assert "'pb'" in str(raised.value) and "none" in str(raised.value)
 
 
 @pytest.mark.parametrize(

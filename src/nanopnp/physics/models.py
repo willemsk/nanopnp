@@ -18,6 +18,14 @@ is exactly the reduction PHY-21 states. The same holds for ``pnp``, which is the
 coupled model with the flow block absent. A correction-by-correction ablation is
 therefore a sweep over configurations rather than a rebuild, and that is the
 project's primary differential-testing instrument (section 7.4).
+
+**A model is registered with its declaration** (section 5.4.3 NOTE, WP26). The
+:class:`ModelDeclaration` is per registered *name*, because ``epnp-ns``,
+``pnp-ns`` and ``pnp`` share a class and differ in what they admit, and it is
+readable without building the model, because case validation decides before any
+model exists. Every layer outside ``physics/`` reads the declaration or the built
+model's own members, never the name or the class: that is what lets a model added
+as one class run from a case file to stage 12 with no other edit (FR-20, QR-14).
 """
 
 from __future__ import annotations
@@ -25,8 +33,8 @@ from __future__ import annotations
 import logging
 import math
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass, field
-from typing import Any, Literal, Protocol, TypeAlias
+from dataclasses import dataclass, field, replace
+from typing import TYPE_CHECKING, Any, Literal, Protocol, TypeAlias, cast
 
 from nanopnp.core.scaling import NM_PER_M, Scales
 from nanopnp.core.typing import (
@@ -84,7 +92,7 @@ from nanopnp.solve.gates import (
     PositivityGate,
     PotentialIncrementGate,
 )
-from nanopnp.solve.linear import DEFAULT_SOLVER, solve_linear
+from nanopnp.solve.linear import DEFAULT_SOLVER, solve_correction
 from nanopnp.solve.newton import (
     DEFAULT_SETTINGS,
     NewtonResult,
@@ -94,20 +102,30 @@ from nanopnp.solve.newton import (
 )
 
 __all__ = [
+    "COEFFICIENTS",
     "DEFAULT_BOUNDARIES",
     "PRESSURE_MEAN",
+    "SWITCHES",
+    "VELOCITY_AXIS",
     "CoupledBoundaries",
     "CoupledModel",
     "ElectrostaticModel",
     "Field",
+    "ModelDeclaration",
     "ModelSolution",
     "PhysicsModel",
+    "PoissonModel",
+    "TransportModel",
     "create",
+    "declaration",
     "equal_order_stabilisations",
     "inf_sup_problem",
-    "register",
+    "register_model",
     "registered_models",
     "registered_stabilisations",
+    "relative_permittivity_field",
+    "solves_transport",
+    "transport_model",
 ]
 
 logger = logging.getLogger(__name__)
@@ -122,6 +140,19 @@ VELOCITY = "velocity"
 PRESSURE = "pressure"
 PRESSURE_MEAN = "pressure_mean"
 """Name of the scalar multiplier fixing the pressure level; see ``pressure_constraint``."""
+
+VELOCITY_AXIS = "velocity_axis"
+"""Key of the axis constraint ``u_r = 0`` in :meth:`PhysicsModel.essential_boundaries`.
+
+The one essential set that is not a whole field: the axis constrains one
+component of ``u`` and leaves ``u_z`` natural (NUM-06), so it is reported beside
+the velocity's own no-slip set rather than folded into it."""
+
+SWITCHES: tuple[str, ...] = ("flow", "variable_density", "inertia", "dielectric_gradient_forces")
+"""The ``physics:`` switches a :class:`ModelDeclaration` states a value set for (PHY-22)."""
+
+COEFFICIENTS: tuple[str, ...] = ("fixed_charge", "solid_fraction")
+"""The supplied coefficients a model may accept: ``rho~_pore`` and the section 4.4 ``chi``."""
 
 
 def equal_order_stabilisations() -> tuple[str, ...]:
@@ -368,7 +399,7 @@ class ModelSolution:
         import ngsolve as ngs
 
         field = self.component(concentration_field_name(species))
-        if isinstance(self.model, CoupledModel) and self.model.log_variables:
+        if transport_model(self.model).log_variables:
             return ngs.exp(field)
         return field
 
@@ -376,6 +407,81 @@ class ModelSolution:
 def concentration_field_name(species: str) -> str:
     """Return the field name holding one species' concentration."""
     return f"c_{species}"
+
+
+@dataclass(frozen=True)
+class ModelDeclaration:
+    """What a registered model admits, readable without building it (section 5.4.3 NOTE).
+
+    One per registered **name**, not per class: ``epnp-ns``, ``pnp-ns`` and
+    ``pnp`` share :class:`CoupledModel` and differ in what they admit. Case
+    validation, the mesh gate, the solve and stage 11 read these fields in place
+    of a model's name or class, which is what lets a model added as one class run
+    with no other edit (FR-20, QR-14).
+
+    Parameters
+    ----------
+    options
+        The case-derived keywords the builder takes: the keys of the resolved
+        ``model_options``. The case offers a fixed candidate set, and a key not
+        named here is not passed.
+    switches
+        Per ``physics:`` switch of :data:`SWITCHES`, the values the model
+        honours. A case setting any other value is refused rather than recorded
+        in the manifest beside a solve that never applied it.
+    solids
+        Whether the model carries solid materials: Poisson posed over a solid
+        with that solid's own permittivity. A model without them is posed on a
+        solid-free mesh only (section 5.3.1 NOTE on a solid without a
+        permittivity).
+    coefficients
+        The supplied coefficients of :data:`COEFFICIENTS` the solve passes:
+        ``fixed_charge`` (``inputs.charge``) and ``solid_fraction``
+        (``inputs.eps_r``).
+    wall_distance
+        Whether the model reads the PHY-02 distance field, so that the mesh gate
+        asks for its sources and the solve computes and gates it.
+    strategies
+        The values of ``numerics.continuation`` the model admits (section 6.5).
+    quantities
+        The ``outputs:`` words for quantities of interest it provides (section 6.7).
+        ``fields`` is not a quantity and is admitted for every model.
+    transport
+        Whether it solves ionic transport, and so whether
+        :func:`transport_model` returns it as a :class:`TransportModel`.
+    reports_newton
+        Whether its ``solve`` takes a Newton ``callback`` (FR-27).
+
+    Raises
+    ------
+    ValueError
+        If a switch of :data:`SWITCHES` is not stated, or states no value, or if
+        a coefficient is not one of :data:`COEFFICIENTS`.
+    """
+
+    options: tuple[str, ...]
+    switches: Mapping[str, tuple[bool, ...]]
+    solids: bool
+    coefficients: tuple[str, ...] = ()
+    wall_distance: bool = False
+    strategies: tuple[str, ...] = ("none",)
+    quantities: tuple[str, ...] = ()
+    transport: bool = False
+    reports_newton: bool = False
+
+    def __post_init__(self) -> None:
+        """Refuse a declaration that leaves a switch unstated or names an unknown coefficient."""
+        if sorted(self.switches) != sorted(SWITCHES) or not all(self.switches.values()):
+            raise ValueError(
+                f"a model declaration states the honoured values of every switch of "
+                f"{', '.join(SWITCHES)}; this one states {dict(self.switches)}"
+            )
+        unknown = sorted(set(self.coefficients) - set(COEFFICIENTS))
+        if unknown:
+            raise ValueError(
+                f"coefficients {', '.join(unknown)} are not supplied coefficients; a model may "
+                f"accept {', '.join(COEFFICIENTS)}"
+            )
 
 
 class PhysicsModel(Protocol):
@@ -392,13 +498,36 @@ class PhysicsModel(Protocol):
         ...
 
     @property
+    def species(self) -> tuple[str, ...]:
+        """Names of the solved ionic species; empty for a model with one field."""
+        ...
+
+    @property
     def boundary_conditions(self) -> Mapping[str, Mapping[str, str]]:
         """The boundary-condition vocabulary, per field (PHY-09)."""
         ...
 
     @property
+    def scales(self) -> Scales:
+        """The NUM-09 scale set the state is solved in, on the mesh's nanometre unit."""
+        ...
+
+    @property
     def provenance(self) -> Mapping[str, Any]:
         """Everything a result manifest must record about the model (FR-25)."""
+        ...
+
+    def essential_boundaries(self, boundaries: CoupledBoundaries) -> Mapping[str, str]:
+        """Return the boundary pattern of every essential condition, keyed by field.
+
+        The axis constraint ``u_r = 0`` is keyed :data:`VELOCITY_AXIS`. Each
+        pattern is a flat alternation of names, one of which must exist on the
+        mesh, which is what the ingestion gate requires of it (VER-27).
+        """
+        ...
+
+    def relative_permittivity(self, solution: ModelSolution) -> Expression | None:
+        """Return ``eps~_r`` as the solve used it, or ``None`` if it carries none."""
         ...
 
     def space(self, mesh: Mesh, boundaries: CoupledBoundaries) -> FESpace:
@@ -418,6 +547,7 @@ class PhysicsModel(Protocol):
         a solution onto a *larger* field set and must fill the new fields from
         something the model itself calls admissible — a cold start at
         ``c~_i = 0`` fails the NUM-17 positivity gate before Newton takes a step.
+        A model whose :attr:`species` is empty refuses ``initial_concentrations``.
         """
         ...
 
@@ -428,6 +558,196 @@ class PhysicsModel(Protocol):
     def solve(self, mesh: Mesh, measures: Measures, **kwargs: Option) -> ModelSolution:
         """Solve the model with its default strategy."""
         ...
+
+
+class TransportModel(PhysicsModel, Protocol):
+    """A model that solves ionic transport: the members used outside ``physics/``.
+
+    Exactly the members of :class:`CoupledModel` that the continuation ladder,
+    QoI and force extraction, the IF-07 export, the GUI and the MMS harness read,
+    and no more. Reached through :func:`transport_model`, which consults the
+    declaration, so a consumer never asks for the class (section 5.4.3 NOTE).
+    NUM-27's quantities are defined for these models only.
+    """
+
+    @property
+    def electrolyte(self) -> Electrolyte:
+        """Reference properties and the correction model per property."""
+        ...
+
+    @property
+    def fluid(self) -> str:
+        """Material pattern the transport and the flow are solved on."""
+        ...
+
+    @property
+    def order(self) -> int:
+        """Element order of ``phi`` and ``c_i``."""
+        ...
+
+    @property
+    def flow(self) -> bool:
+        """Whether the flow block is solved."""
+        ...
+
+    @property
+    def variable_density(self) -> bool:
+        """Whether continuity and inertia carry ``rho~`` (PHY-07)."""
+        ...
+
+    @property
+    def inertia(self) -> bool:
+        """Whether the convective momentum term is assembled."""
+        ...
+
+    @property
+    def dielectric_gradient_forces(self) -> bool:
+        """Whether the PHY-23 deviation is assembled."""
+        ...
+
+    @property
+    def steric(self) -> bool:
+        """Whether ``beta_i`` is active."""
+        ...
+
+    @property
+    def log_variables(self) -> bool:
+        """Whether the NUM-02 log branch is solved."""
+        ...
+
+    @property
+    def pressure_constraint(self) -> bool:
+        """Whether a multiplier fixes the mean pressure."""
+        ...
+
+    @property
+    def stabilisation_model(self) -> StabilisationModel:
+        """The resolved stabilisation mode (NUM-11, NUM-13)."""
+        ...
+
+    def coefficients(
+        self, variables: ConcentrationVariables, wall_distance_nm: Expression
+    ) -> NondimensionalCoefficients:
+        """Return the nondimensional material coefficients for a state."""
+        ...
+
+    def concentration_variables(
+        self, functions: Mapping[str, Expression]
+    ) -> ConcentrationVariables:
+        """Return the NUM-02 concentration variables."""
+        ...
+
+    def transport_states(
+        self, functions: Mapping[str, Expression], wall_distance_nm: Expression
+    ) -> dict[str, TransportState]:
+        """Return one stabilisation state per species."""
+        ...
+
+    def cell_peclet(
+        self, state: GridFunction, wall_distance_nm: Expression
+    ) -> dict[str, Expression]:
+        """Return ``Pe_K`` per species (NUM-12)."""
+        ...
+
+    def permittivity(
+        self,
+        mesh: Mesh,
+        coefficients: NondimensionalCoefficients,
+        *,
+        solid_fraction: Expression | None = None,
+    ) -> Expression:
+        """Return ``eps~_r`` over all of Omega at a state."""
+        ...
+
+
+def relative_permittivity_field(
+    mesh: Mesh,
+    *,
+    model_name: str,
+    fluid: str,
+    fluid_permittivity: Expression,
+    permittivity_0: float,
+    scale_permittivity: float,
+    solid_permittivities: Mapping[str, float],
+    solid_fraction: Expression | None = None,
+) -> Expression:
+    """Return the relative permittivity ``eps~_r`` over all of Omega (PHY-03, PHY-20).
+
+    The one implementation of the material split and the section 4.4 ``chi``
+    blend, shared by :class:`CoupledModel` and :class:`PoissonModel` so that the
+    two cannot assign a solid differently (WP26 D8). They differ only in the
+    fluid's value: ``eps_r,f(<c>)/eps_r,f^0`` for the coupled models and 1, the
+    ion-free water of author ruling 13, for ``poisson``.
+
+    Each solid takes its own ratio ``eps_s/eps_r,f^0``. Any material that is
+    neither fluid nor named in ``solid_permittivities`` is reported and takes
+    ion-free water, except the ion-exclusion shell, which is water by design
+    (section 5.3.1 NOTE): Poisson is solved over the whole domain, so a missing
+    solid entry would leave the protein or the membrane at the electrolyte's
+    permittivity, about 24 times too large, with no solver diagnostic.
+
+    ``<c>`` has no meaning where ions do not exist (author ruling 13, section
+    4.4 NOTE), so ``eps_r,f(<c>)`` is never evaluated off the fluid.
+
+    Parameters
+    ----------
+    mesh
+        The deployed mesh.
+    model_name
+        Named in the warning.
+    fluid
+        Material pattern of the fluid.
+    fluid_permittivity
+        ``eps~_r`` in the fluid.
+    permittivity_0
+        ``eps_r,f^0``, from the electrolyte's parameter file (Gavish 2016,
+        ``data/corrections/willems2020_nacl.yaml``).
+    scale_permittivity
+        The permittivity of the NUM-09 scale set ``eps~_r`` is divided by.
+    solid_permittivities
+        Relative permittivity per solid material.
+    solid_fraction
+        The supplied ``chi`` of section 4.4's NOTE, if any. It replaces the
+        sharp material split by the blend ``chi * eps_p + (1 - chi) * eps_w``,
+        where ``eps_w`` is the fluid's value in the fluid and ``eps_r,f^0`` off
+        it, and ``eps_p`` is the element's own solid permittivity or, off the
+        solids, the nearest solid's
+        (:func:`~nanopnp.materials.fields.nearest_solid_permittivity`). With
+        ``chi`` the material indicator it reproduces the piecewise assignment
+        exactly — which is why this is a refinement of PHY-20 and not a
+        replacement for it.
+    """
+    # eps_r,f^0 over the scale the fluid permittivity is divided by: 1 exactly.
+    ion_free = permittivity_0 / scale_permittivity
+    fluid_mask = mesh.Materials(fluid).Mask()
+    off_fluid = {
+        material for index, material in enumerate(mesh.GetMaterials()) if not fluid_mask[index]
+    }
+    unassigned = sorted(
+        material
+        for material in off_fluid
+        if material not in solid_permittivities and material not in PERMITTIVITY_EXEMPT
+    )
+    if unassigned:
+        logger.warning(
+            "%r has no solid_permittivities entry for %s, so Poisson carries the "
+            "ion-free water permittivity eps_r,f^0 there (PHY-03)",
+            model_name,
+            ", ".join(unassigned),
+        )
+    named = {material: value / permittivity_0 for material, value in solid_permittivities.items()}
+    # Every off-fluid material that is not a named solid is ion-free water.
+    water_off_fluid = dict.fromkeys(sorted(off_fluid - set(named)), ion_free)
+    sharp: Expression = mesh.MaterialCF({**water_off_fluid, **named}, default=fluid_permittivity)
+    if solid_fraction is None:
+        return sharp
+    # The water branch: the fluid's value where the ions are, eps_r,f^0 where
+    # they are not. The solid branch: each element's own eps_p, or its nearest
+    # solid's where the transition reaches past the boundary. Written once, in
+    # materials.fields: a second copy of the blend here is a second place for it
+    # to drift.
+    water = mesh.MaterialCF(dict.fromkeys(sorted(off_fluid), ion_free), default=fluid_permittivity)
+    return blend(solid_fraction, nearest_solid_permittivity(mesh, named), water)
 
 
 @dataclass(frozen=True)
@@ -626,6 +946,24 @@ class CoupledModel:
                 "axis": "u_r = 0 essential, u_z natural",
             }
         return vocabulary
+
+    def essential_boundaries(
+        self, boundaries: CoupledBoundaries = DEFAULT_BOUNDARIES
+    ) -> dict[str, str]:
+        """Return the pattern of every essential condition :meth:`space` imposes.
+
+        Read off the same :class:`CoupledBoundaries` the space is built on, so the
+        mesh gate asks for exactly the names the Dirichlet sets select (VER-27):
+        the potential, each species' concentration and, with the flow block,
+        no-slip and the axis.
+        """
+        essential = {POTENTIAL: boundaries.potential}
+        for name in self.species:
+            essential[concentration_field_name(name)] = boundaries.concentration_boundary(name)
+        if self.flow:
+            essential[VELOCITY] = boundaries.velocity
+            essential[VELOCITY_AXIS] = boundaries.velocity_axis
+        return essential
 
     @property
     def scales(self) -> Scales:
@@ -860,45 +1198,32 @@ class CoupledModel:
             Nernst-Planck is still not solved inside the protein: the field
             smooths the coefficient, not the domain.
         """
-        fluid_permittivity = coefficients.relative_permittivity()
-        # eps_r,f^0 over the scale fluid_permittivity is divided by: 1 exactly.
-        ion_free = self.electrolyte.permittivity_0 / coefficients.scales.relative_permittivity
-        fluid_mask = mesh.Materials(self.fluid).Mask()
-        off_fluid = {
-            material for index, material in enumerate(mesh.GetMaterials()) if not fluid_mask[index]
-        }
-        unassigned = sorted(
-            material
-            for material in off_fluid
-            if material not in self.solid_permittivities and material not in PERMITTIVITY_EXEMPT
+        return relative_permittivity_field(
+            mesh,
+            model_name=self.name,
+            fluid=self.fluid,
+            fluid_permittivity=coefficients.relative_permittivity(),
+            permittivity_0=self.electrolyte.permittivity_0,
+            scale_permittivity=coefficients.scales.relative_permittivity,
+            solid_permittivities=self.solid_permittivities,
+            solid_fraction=solid_fraction,
         )
-        if unassigned:
-            logger.warning(
-                "%r has no solid_permittivities entry for %s, so Poisson carries the "
-                "ion-free water permittivity eps_r,f^0 there (PHY-03)",
-                self.name,
-                ", ".join(unassigned),
-            )
-        reference = self.electrolyte.permittivity_0
-        named = {
-            material: value / reference for material, value in self.solid_permittivities.items()
-        }
-        # Every off-fluid material that is not a named solid is ion-free water.
-        water_off_fluid = dict.fromkeys(sorted(off_fluid - set(named)), ion_free)
-        sharp: Expression = mesh.MaterialCF(
-            {**water_off_fluid, **named}, default=fluid_permittivity
+
+    def relative_permittivity(self, solution: ModelSolution) -> Expression:
+        """Return ``eps~_r`` as the solve used it, at the converged state.
+
+        Evaluated through the model's own coefficient chain against the
+        solution's *stored* distance field and ``chi``, so the permittivity a
+        consumer reports is the one the operator was assembled with and not a
+        second evaluation a different distance field could move.
+        """
+        values = {field.name: solution.component(field.name) for field in self.fields}
+        coefficients = self.coefficients(
+            self.concentration_variables(values), solution.wall_distance_nm
         )
-        if solid_fraction is None:
-            return sharp
-        # The water branch: eps_r,f(<c>) where the ions are, eps_r,f^0 where
-        # they are not. The solid branch: each element's own eps_p, or its
-        # nearest solid's where the transition reaches past the boundary.
-        # Written once, in materials.fields: a second copy of the blend here is a
-        # second place for it to drift.
-        water = mesh.MaterialCF(
-            dict.fromkeys(sorted(off_fluid), ion_free), default=fluid_permittivity
+        return self.permittivity(
+            solution.space.mesh, coefficients, solid_fraction=solution.solid_fraction
         )
-        return blend(solid_fraction, nearest_solid_permittivity(mesh, named), water)
 
     # -- weak form ---------------------------------------------------------
 
@@ -1463,7 +1788,7 @@ class CoupledModel:
 
 @dataclass(frozen=True)
 class ElectrostaticModel:
-    """``poisson``, ``pb`` and ``pb-linear``: one field, no transport (PHY-21).
+    """``pb`` and ``pb-linear``: one screened field, no transport (PHY-21).
 
     Poisson-Boltzmann is a **distinct model**, not the coupled solver evaluated
     at zero bias. In ePNP-NS the diffusivity and the mobility carry different
@@ -1471,20 +1796,38 @@ class ElectrostaticModel:
     finite concentration and its zero-bias limit is not a Boltzmann distribution
     (PHY-14, PHY-24).
 
+    The screening term is posed on all of Omega, so the model carries no solids,
+    no fixed charge and no ``chi``, and runs only on a mesh with no solid domain
+    (PHY-21 NOTE). ``lambda_D`` is the case's: :attr:`Scales.debye_length_nm` at
+    ``eps_r,f^0``, the electrolyte's temperature and ``c_0`` with unit valence
+    (NUM-09), which is exact for the symmetric monovalent salt the builder
+    insists on. It follows from the electrolyte and the concentration, which key
+    every solve, so it is not restated in :attr:`provenance`.
+
     Parameters
     ----------
     name
         Registered name.
     screening
-        ``"none"`` for plain Poisson, ``"linear"`` for Debye-Hueckel,
-        ``"sinh"`` for nonlinear Poisson-Boltzmann.
+        ``"linear"`` for Debye-Hueckel, ``"sinh"`` for nonlinear
+        Poisson-Boltzmann.
+    electrolyte
+        Reference properties; the NUM-09 scale set is read from it.
+    concentration_M
+        Bulk concentration ``c_0``, in mol/L.
     order
         Element order.
     """
 
     name: str
-    screening: Literal["none", "linear", "sinh"]
+    screening: Literal["linear", "sinh"]
+    electrolyte: Electrolyte
+    concentration_M: float = 1.0
     order: int = 2
+
+    @property
+    def species(self) -> tuple[str, ...]:  # noqa: D102 - documented on the protocol
+        return ()
 
     @property
     def fields(self) -> tuple[Field, ...]:  # noqa: D102
@@ -1503,6 +1846,16 @@ class ElectrostaticModel:
         }
 
     @property
+    def scales(self) -> Scales:
+        """The NUM-09 scale set of this case, on the mesh's nanometre unit."""
+        return mesh_unit_scales(self.electrolyte, self.concentration_M)
+
+    @property
+    def debye_length_nm(self) -> float:
+        """``lambda_D`` in nm, at ``eps_r,f^0``, the case temperature and ``c_0`` (NUM-09)."""
+        return self.scales.debye_length_nm
+
+    @property
     def provenance(self) -> Mapping[str, Any]:  # noqa: D102
         return {
             "model": self.name,
@@ -1510,6 +1863,16 @@ class ElectrostaticModel:
             "screening": self.screening,
             "deviations_from_validated_default": [],
         }
+
+    def essential_boundaries(
+        self, boundaries: CoupledBoundaries = DEFAULT_BOUNDARIES
+    ) -> dict[str, str]:
+        """Return the potential's essential set, the only one this model imposes."""
+        return {POTENTIAL: boundaries.potential}
+
+    def relative_permittivity(self, solution: ModelSolution) -> Expression | None:
+        """Return ``None``: the screened models carry no material permittivity."""
+        return None
 
     def space(self, mesh: Mesh, boundaries: CoupledBoundaries = DEFAULT_BOUNDARIES) -> FESpace:
         """Return the scalar space for ``phi~``."""
@@ -1526,8 +1889,6 @@ class ElectrostaticModel:
     ) -> GridFunction:
         """Return a fresh state on this model's space: ``phi~ = 0`` everywhere.
 
-        The signature matches :meth:`CoupledModel.cold_state` so the continuation
-        ladder can cold-start any model through one call;
         ``initial_concentrations`` has no meaning here and is rejected rather
         than ignored, because a caller passing it has misunderstood the model.
 
@@ -1536,13 +1897,9 @@ class ElectrostaticModel:
         TypeError
             If ``initial_concentrations`` is given.
         """
+        _refuse_concentrations(self.name, initial_concentrations)
         import ngsolve as ngs
 
-        if initial_concentrations is not None:
-            raise TypeError(
-                f"{self.name!r} solves no concentrations, so initial_concentrations has no "
-                "meaning for it"
-            )
         return ngs.GridFunction(self.space(mesh, boundaries), name="phi_tilde")
 
     def residual_form(
@@ -1551,27 +1908,31 @@ class ElectrostaticModel:
         measures: Measures,
         *,
         debye_length_nm: float | None = None,
-        permittivity: Expression = 1.0,
+        state: GridFunction | None = None,
         **kwargs: Option,
     ) -> IntegralTerm:
         """Return the weak residual in the trial function.
 
+        Parameters
+        ----------
+        debye_length_nm
+            Overrides the case's :attr:`debye_length_nm`; the NUM-18 ladder's
+            initialiser rungs pass their own.
+        state
+            Accepted so that a restore can rebuild every model's residual through
+            one call; no term of this model is evaluated at the state.
+
         Raises
         ------
-        ValueError
-            If a screened model is asked for without a Debye length.
         TypeError
             If a keyword this model does not understand is passed.
         """
         _reject_unknown(kwargs, f"{self.name!r}.residual_form")
         trial, test = space.TnT()
-        if self.screening == "none":
-            return poisson_operator(trial, test, measures, permittivity=permittivity)
-        if debye_length_nm is None:
-            raise ValueError(f"{self.name!r} needs a debye_length_nm; it screens with 1/lambda^2")
+        screening_nm = self.debye_length_nm if debye_length_nm is None else debye_length_nm
         if self.screening == "linear":
-            return linear_pb_operator(trial, test, measures, debye_length_nm=debye_length_nm)
-        return nonlinear_pb_residual(trial, test, measures, debye_length_nm=debye_length_nm)
+            return linear_pb_operator(trial, test, measures, debye_length_nm=screening_nm)
+        return nonlinear_pb_residual(trial, test, measures, debye_length_nm=screening_nm)
 
     def solve(
         self,
@@ -1586,10 +1947,13 @@ class ElectrostaticModel:
         solver: str = DEFAULT_SOLVER,
         **kwargs: Option,
     ) -> ModelSolution:
-        """Solve the electrostatic model, delegating to :mod:`nanopnp.physics.pb`.
+        """Solve the screened model, delegating to :mod:`nanopnp.physics.pb`.
 
         Parameters
         ----------
+        debye_length_nm
+            Overrides the case's :attr:`debye_length_nm`, as in
+            :meth:`residual_form`.
         initial
             A previous solution to warm-start from, on the same mesh and at the
             same order. Stage 2 of the NUM-18 ladder warm-starts nonlinear
@@ -1598,32 +1962,17 @@ class ElectrostaticModel:
 
         Raises
         ------
-        ValueError
-            If a screened model is asked for without a Debye length.
         TypeError
             If a keyword this model does not understand is passed.
         """
         import ngsolve as ngs
 
         _reject_unknown(kwargs, f"{self.name!r}.solve")
-
-        if self.screening == "none":
-            space = self.space(mesh, boundaries)
-            state = ngs.GridFunction(space, name="phi_tilde")
-            if initial is not None:
-                state.vec.data = initial.state.vec
-            set_boundary_values(state, potential_values, mesh.Boundaries(boundaries.potential))
-            a = ngs.BilinearForm(self.residual_form(space, measures)).Assemble()
-            f = ngs.LinearForm(space).Assemble()
-            solve_linear(a, f, state, solver=solver)
-            return ModelSolution(model=self, space=space, state=state, residual=a)
-
-        if debye_length_nm is None:
-            raise ValueError(f"{self.name!r} needs a debye_length_nm; it screens with 1/lambda^2")
+        screening_nm = self.debye_length_nm if debye_length_nm is None else debye_length_nm
         state, record = solve_pb_recorded(
             mesh,
             measures,
-            debye_length_nm=debye_length_nm,
+            debye_length_nm=screening_nm,
             dirichlet=boundaries.potential,
             boundary_values=potential_values,
             nonlinear=self.screening == "sinh",
@@ -1636,20 +1985,323 @@ class ElectrostaticModel:
         # owns its own; it is written in the same trial function and on the same
         # space, so the two are the same operator.
         residual = ngs.BilinearForm(state.space)
-        residual += self.residual_form(state.space, measures, debye_length_nm=debye_length_nm)
+        residual += self.residual_form(state.space, measures, debye_length_nm=screening_nm)
         return ModelSolution(
             model=self, space=state.space, state=state, newton=record, residual=residual
+        )
+
+
+RADIAL_WEIGHT_ORDER = 1
+"""The quadrature order ``poisson`` adds for the ``r`` weight (NUM-07 NOTE, WP26).
+
+NGSolve estimates an integrand's order from its trial and test functions and does
+not see the coordinate ``x``, so at P2 the stiffness ``eps grad(u).grad(v) r`` and
+the source ``rho v r`` -- both of degree 3 -- are integrated at order 2. On the
+three-layer capacitor of ``tests/tier2/test_poisson_layers.py``, whose exact
+solution P2 contains, that is an error of 0.38 ``V_T`` (3 %) next to the axis; one
+extra order makes it 1.1e-13. ``poisson`` is linear and is compared with APBS
+(VAL-06), so it pays the extra points. The coupled models keep their quadrature,
+and so their numbers (**[tested]**, ``.knowledge/06-numerics-fem.md`` section 2.2)."""
+
+
+@dataclass(frozen=True)
+class PoissonModel:
+    """``poisson``: electrostatics over all of Omega, no mobile ions (PHY-21 NOTE).
+
+    Solves ``-div(eps_0 eps_r grad(phi)) = rho_pore`` on the NUM-09 mesh-unit
+    scales, ``phi~ = phi/V_T`` and ``rho~ = rho a^2/(eps_0 eps_r,f^0 V_T)``:
+
+        int eps~ grad(phi~) . grad(v) r dr dz = int rho~_pore v r dr dz
+
+    with ``eps~ = eps_r/eps_r,f^0`` -- 1 in the fluid, which is ion-free water at
+    ``eps_r,f^0`` whatever the permittivity correction (author ruling 13), and
+    ``eps_s/eps_r,f^0`` in each solid, blended by ``chi`` when one is supplied.
+    It is the coupled model's Poisson block with ``rho_ion = 0`` and the fluid at
+    its ``c -> 0`` value, and the configuration VAL-06 compares with APBS. The
+    material split and the blend are :func:`relative_permittivity_field`, the
+    same function the coupled models assemble (WP26 D8).
+
+    Parameters
+    ----------
+    electrolyte
+        Supplies ``eps_r,f^0`` and the temperature of the scale set.
+    concentration_M
+        Bulk concentration of the case. It enters no term of this model and is
+        carried because the scale set is defined with one; the charge-density
+        and potential scales it provides do not depend on it.
+    name
+        Registered name.
+    order
+        Element order.
+    fluid
+        Material pattern of the fluid, where ``eps~ = 1``.
+    solid_permittivities
+        Relative permittivity per solid material, as the case gives it.
+    """
+
+    electrolyte: Electrolyte
+    concentration_M: float = 1.0
+    name: str = "poisson"
+    order: int = 2
+    fluid: str = ELECTROLYTE_DOMAINS
+    solid_permittivities: Mapping[str, float] = field(default_factory=dict)
+
+    @property
+    def species(self) -> tuple[str, ...]:  # noqa: D102 - documented on the protocol
+        return ()
+
+    @property
+    def fields(self) -> tuple[Field, ...]:  # noqa: D102
+        return (Field(POTENTIAL, "h1", self.order, None),)
+
+    @property
+    def boundary_conditions(self) -> Mapping[str, Mapping[str, str]]:  # noqa: D102
+        return {
+            POTENTIAL: {
+                "cis": "phi = 0",
+                "trans": "phi = V_bias",
+                "membrane": "n.D = 0, zero charge",
+                "wall": "continuity of n.D",
+                "axis": "natural",
+            }
+        }
+
+    @property
+    def scales(self) -> Scales:
+        """The NUM-09 scale set, on the mesh's nanometre unit."""
+        return mesh_unit_scales(self.electrolyte, self.concentration_M)
+
+    @property
+    def provenance(self) -> Mapping[str, Any]:  # noqa: D102
+        return {
+            "model": self.name,
+            "fields": {POTENTIAL: {"element": "h1", "order": self.order, "domain": None}},
+            "fluid": self.fluid,
+            "fluid_permittivity": "eps_r,f^0, ion-free water (author ruling 13)",
+            "solid_permittivities": dict(sorted(self.solid_permittivities.items())),
+            "scales": self.scales.summary(),
+            "deviations_from_validated_default": [],
+        }
+
+    def essential_boundaries(
+        self, boundaries: CoupledBoundaries = DEFAULT_BOUNDARIES
+    ) -> dict[str, str]:
+        """Return the potential's essential set, the only one this model imposes."""
+        return {POTENTIAL: boundaries.potential}
+
+    def permittivity(self, mesh: Mesh, *, solid_fraction: Expression | None = None) -> Expression:
+        """Return ``eps~_r`` over all of Omega: 1 in the fluid, each solid its own ratio."""
+        scale = self.scales.relative_permittivity
+        return relative_permittivity_field(
+            mesh,
+            model_name=self.name,
+            fluid=self.fluid,
+            fluid_permittivity=self.electrolyte.permittivity_0 / scale,
+            permittivity_0=self.electrolyte.permittivity_0,
+            scale_permittivity=scale,
+            solid_permittivities=self.solid_permittivities,
+            solid_fraction=solid_fraction,
+        )
+
+    def relative_permittivity(self, solution: ModelSolution) -> Expression:
+        """Return ``eps~_r`` with the ``chi`` the solve used."""
+        return self.permittivity(solution.space.mesh, solid_fraction=solution.solid_fraction)
+
+    def space(self, mesh: Mesh, boundaries: CoupledBoundaries = DEFAULT_BOUNDARIES) -> FESpace:
+        """Return the scalar space for ``phi~``."""
+        import ngsolve as ngs
+
+        return ngs.H1(mesh, order=self.order, dirichlet=boundaries.potential)
+
+    def cold_state(
+        self,
+        mesh: Mesh,
+        boundaries: CoupledBoundaries = DEFAULT_BOUNDARIES,
+        *,
+        initial_concentrations: Mapping[str, float] | None = None,
+    ) -> GridFunction:
+        """Return ``phi~ = 0`` on this model's space; concentrations are refused.
+
+        Raises
+        ------
+        TypeError
+            If ``initial_concentrations`` is given.
+        """
+        _refuse_concentrations(self.name, initial_concentrations)
+        import ngsolve as ngs
+
+        return ngs.GridFunction(self.space(mesh, boundaries), name="phi_tilde")
+
+    def _check_order(self, measures: Measures) -> None:
+        """Refuse a measure whose NUM-07 quadrature bonus is for another order."""
+        if measures.element_order != self.order:
+            raise ValueError(
+                f"measures.element_order is {measures.element_order} but {self.name!r} is order "
+                f"{self.order}; the NUM-07 quadrature bonus is computed from the element order"
+            )
+
+    def residual_form(
+        self,
+        space: FESpace,
+        measures: Measures,
+        *,
+        fixed_charge: Expression | None = None,
+        solid_fraction: Expression | None = None,
+        state: GridFunction | None = None,
+        **kwargs: Option,
+    ) -> IntegralTerm:
+        """Return ``int eps~ grad(phi~).grad(v) r - int rho~_pore v r``.
+
+        Parameters
+        ----------
+        fixed_charge
+            The dimensionless ``rho~_pore``, if any, on
+            :attr:`~nanopnp.core.scaling.Scales.charge_density_C_m3`.
+        solid_fraction
+            The supplied ``chi``, if any.
+        state
+            Accepted so a restore can rebuild every model's residual through one
+            call; no term here is evaluated at it.
+
+        Raises
+        ------
+        ValueError
+            If the measure's element order disagrees with the model's.
+        TypeError
+            If a keyword this model does not understand is passed.
+        """
+        _reject_unknown(kwargs, f"{self.name!r}.residual_form")
+        self._check_order(measures)
+        trial, test = space.TnT()
+        permittivity = self.permittivity(space.mesh, solid_fraction=solid_fraction)
+        residual = poisson_operator(
+            trial, test, measures, permittivity=permittivity, extra_order=RADIAL_WEIGHT_ORDER
+        )
+        if fixed_charge is not None:
+            residual -= charge_source(fixed_charge, test, measures, extra_order=RADIAL_WEIGHT_ORDER)
+        return residual
+
+    def solve(
+        self,
+        mesh: Mesh,
+        measures: Measures,
+        *,
+        boundaries: CoupledBoundaries = DEFAULT_BOUNDARIES,
+        potential_values: Expression = 0.0,
+        fixed_charge: Expression | None = None,
+        solid_fraction: Expression | None = None,
+        initial: ModelSolution | None = None,
+        settings: NewtonSettings = DEFAULT_SETTINGS,
+        solver: str = DEFAULT_SOLVER,
+        **kwargs: Option,
+    ) -> ModelSolution:
+        """Solve the linear problem once, with the direct solver of section 6.6.
+
+        The system solved is the Jacobian of :meth:`residual_form` itself, one
+        exact Newton step from the essential data: the operator and its source
+        are then integrated by one form, at the order NGSolve gives a bilinear
+        integrator (``2p``), exactly as the coupled models carry ``rho~_pore``
+        inside their residual. A separate ``LinearForm`` for the source would be
+        integrated at a lower default order, which leaves the ``r``-weighted
+        charge term under-integrated at P2 and the answer off by 1e-3 of the
+        potential on the three-layer capacitor, where this form is exact
+        (``tests/tier2/test_poisson_layers.py``).
+
+        Parameters
+        ----------
+        boundaries
+            The boundary vocabulary; the potential is essential on
+            ``boundaries.potential``.
+        potential_values
+            Essential data for ``phi~``, in units of ``V_T``.
+        fixed_charge, solid_fraction
+            As :meth:`residual_form`.
+        initial
+            Accepted for a uniform ladder interface; a linear solve does not
+            depend on where it starts, and the essential data overwrite it.
+        settings
+            Accepted and unused: there is no Newton iteration.
+        solver
+            The direct linear solver.
+
+        Raises
+        ------
+        TypeError
+            If a keyword this model does not understand is passed.
+        """
+        import ngsolve as ngs
+
+        _reject_unknown(kwargs, f"{self.name!r}.solve")
+        self._check_order(measures)
+        space = self.space(mesh, boundaries)
+        state = ngs.GridFunction(space, name="phi_tilde")
+        if initial is not None:
+            state.vec.data = initial.state.vec
+        set_boundary_values(state, potential_values, mesh.Boundaries(boundaries.potential))
+        residual = ngs.BilinearForm(space)
+        residual += self.residual_form(
+            space, measures, fixed_charge=fixed_charge, solid_fraction=solid_fraction
+        )
+        # Linear, so one undamped step from any state with the right essential
+        # data is the solution: J delta = -R(u), with R(u) = A u - f.
+        residual.AssembleLinearization(state.vec)
+        rhs = state.vec.CreateVector()
+        residual.Apply(state.vec, rhs)
+        rhs.data *= -1.0
+        correction = state.vec.CreateVector()
+        correction[:] = 0.0
+        solve_correction(residual.mat, rhs, correction, space.FreeDofs(), solver=solver)
+        state.vec.data += correction
+        return ModelSolution(
+            model=self, space=space, state=state, residual=residual, solid_fraction=solid_fraction
+        )
+
+
+def _refuse_concentrations(name: str, initial_concentrations: Mapping[str, float] | None) -> None:
+    """Refuse ion data offered to a model whose :attr:`PhysicsModel.species` is empty.
+
+    Raises
+    ------
+    TypeError
+        If ``initial_concentrations`` is given.
+    """
+    if initial_concentrations is not None:
+        raise TypeError(
+            f"{name!r} solves no concentrations, so initial_concentrations has no meaning for it"
         )
 
 
 ModelBuilder: TypeAlias = Callable[..., PhysicsModel]
 """Builds one physics model from case-file keywords."""
 
-_REGISTRY: dict[str, ModelBuilder] = {}
+
+@dataclass(frozen=True)
+class _Registration:
+    """A registered builder and its declaration, held together so neither can go missing."""
+
+    builder: ModelBuilder
+    declaration: ModelDeclaration
 
 
-def register(name: str, builder: ModelBuilder) -> None:
-    """Register a physics model under ``name``.
+_REGISTRY: dict[str, _Registration] = {}
+
+
+def register_model(name: str, builder: ModelBuilder, declaration: ModelDeclaration) -> None:
+    """Register a physics model under ``name``, with what it admits (section 5.4.3).
+
+    Parameters
+    ----------
+    name
+        The name a case file selects it by, ``physics.model``. The built model's
+        own :attr:`PhysicsModel.name` must be this name: the declaration is found
+        by it.
+    builder
+        Called with ``electrolyte``, ``concentration_M`` and the declared
+        ``options``; returns the model, and raises :class:`ValueError` or
+        :class:`TypeError` to refuse a configuration. Building must not import a
+        finite-element backend, because case resolution builds the model once.
+    declaration
+        Read without building.
 
     Raises
     ------
@@ -1659,12 +2311,32 @@ def register(name: str, builder: ModelBuilder) -> None:
     """
     if name in _REGISTRY:
         raise ValueError(f"physics model {name!r} is already registered")
-    _REGISTRY[name] = builder
+    _REGISTRY[name] = _Registration(builder=builder, declaration=declaration)
 
 
 def registered_models() -> tuple[str, ...]:
     """Return every selectable model name, sorted."""
     return tuple(sorted(_REGISTRY))
+
+
+def _registration(name: str) -> _Registration:
+    """Return one registration, or refuse listing the known names."""
+    try:
+        return _REGISTRY[name]
+    except KeyError:
+        known = ", ".join(registered_models())
+        raise KeyError(f"unknown physics model {name!r}; registered models are {known}") from None
+
+
+def declaration(name: str) -> ModelDeclaration:
+    """Return what the model registered as ``name`` admits, without building it.
+
+    Raises
+    ------
+    KeyError
+        If no such model is registered; the message lists the known names.
+    """
+    return _registration(name).declaration
 
 
 def create(name: str, **kwargs: Option) -> PhysicsModel:
@@ -1675,20 +2347,63 @@ def create(name: str, **kwargs: Option) -> PhysicsModel:
     name
         Registered model name, one of the table of PHY-21.
     **kwargs
-        Passed to the model's builder; ``electrolyte`` and ``concentration_M``
-        for the coupled family, ``order`` for all of them.
+        Passed to the model's builder: ``electrolyte`` and ``concentration_M``
+        for every model, and the declared options.
 
     Raises
     ------
     KeyError
         If no such model is registered; the message lists the known names.
     """
-    try:
-        builder = _REGISTRY[name]
-    except KeyError:
-        known = ", ".join(registered_models())
-        raise KeyError(f"unknown physics model {name!r}; registered models are {known}") from None
-    return builder(**kwargs)
+    return _registration(name).builder(**kwargs)
+
+
+def solves_transport(model: PhysicsModel) -> bool:
+    """Return whether ``model`` solves ionic transport, by its declaration.
+
+    A model built outside the registry, such as a manufactured-solution
+    configuration of :class:`CoupledModel` under its own name, answers by its
+    class: this is the one place that test is made, inside ``physics/``.
+    """
+    if model.name in _REGISTRY:
+        return _REGISTRY[model.name].declaration.transport
+    return isinstance(model, CoupledModel)
+
+
+def transport_model(subject: PhysicsModel | ModelSolution) -> TransportModel:
+    """Return the model, or the solution's model, as a :class:`TransportModel`.
+
+    The seam every transport consumer outside ``physics/`` goes through, in
+    place of an ``isinstance`` test on a class (section 5.4.3 NOTE).
+
+    Raises
+    ------
+    TypeError
+        If the model does not declare transport, naming it: the NUM-27
+        quantities, the NUM-28 force and the NUM-12 diagnostic are defined for
+        ionic transport only.
+    """
+    model = subject.model if isinstance(subject, ModelSolution) else subject
+    if not solves_transport(model):
+        raise TypeError(
+            f"{model.name!r} solves no ionic transport, so it has no species, no flux and no "
+            "current; the quantities of NUM-27 and NUM-28 are defined for a model that declares "
+            "transport"
+        )
+    return cast(TransportModel, model)
+
+
+if TYPE_CHECKING:  # pragma: no cover - checked by mypy, never executed
+
+    def _coupled_is_transport(model: CoupledModel) -> TransportModel:
+        """Fail type checking if :class:`CoupledModel` stops satisfying the protocol."""
+        return model
+
+    def _models_are_physics(
+        coupled: CoupledModel, screened: ElectrostaticModel, poisson: PoissonModel
+    ) -> tuple[PhysicsModel, PhysicsModel, PhysicsModel]:
+        """Fail type checking if a shipped model stops satisfying section 5.4.3."""
+        return coupled, screened, poisson
 
 
 def _coupled_electrolyte(
@@ -1758,19 +2473,150 @@ def _build_pnp(
     )
 
 
-def _electrostatic_builder(name: str, screening: Literal["none", "linear", "sinh"]) -> ModelBuilder:
-    """Return a builder for one of the single-field electrostatic models."""
+def _symmetric_monovalent(name: str, electrolyte: Electrolyte) -> Electrolyte:
+    """Return ``electrolyte`` if it is a symmetric monovalent salt, else refuse.
 
-    def build(*, order: int = 2, **kwargs: Option) -> PhysicsModel:
+    ``lambda_D`` with unit valence and the ``sinh`` form are exact for such a salt
+    and for no other (PHY-21 NOTE, FR-19).
+
+    Raises
+    ------
+    ValueError
+        Naming the model and the species with their valences.
+    """
+    valences = sorted(ion.valence for ion in electrolyte.species)
+    if valences != [-1, 1]:
+        carried = ", ".join(f"{ion.name} (z = {ion.valence:+d})" for ion in electrolyte.species)
+        raise ValueError(
+            f"{name!r} is posed for a symmetric monovalent salt, for which its Debye length and "
+            f"its screening term are exact; this electrolyte carries {carried}"
+        )
+    return electrolyte
+
+
+def _screened_builder(name: str, screening: Literal["linear", "sinh"]) -> ModelBuilder:
+    """Return a builder for one of the two Poisson-Boltzmann models."""
+
+    def build(
+        *,
+        electrolyte: Electrolyte | None = None,
+        corrections: str = "willems2020_nacl",
+        concentration_M: float = 1.0,
+        order: int = 2,
+        **kwargs: Option,
+    ) -> PhysicsModel:
         _reject_unknown(kwargs, f"the {name!r} builder")
-        return ElectrostaticModel(name=name, screening=screening, order=order)
+        resolved = (
+            electrolyte if electrolyte is not None else Electrolyte.from_parameter_file(corrections)
+        )
+        return ElectrostaticModel(
+            name=name,
+            screening=screening,
+            electrolyte=_symmetric_monovalent(name, resolved),
+            concentration_M=concentration_M,
+            order=order,
+        )
 
     return build
 
 
-register("epnp-ns", _build_epnp_ns)
-register("pnp-ns", _build_pnp_ns)
-register("pnp", _build_pnp)
-register("pb", _electrostatic_builder("pb", "sinh"))
-register("pb-linear", _electrostatic_builder("pb-linear", "linear"))
-register("poisson", _electrostatic_builder("poisson", "none"))
+def _build_poisson(
+    *,
+    electrolyte: Electrolyte | None = None,
+    corrections: str = "willems2020_nacl",
+    concentration_M: float = 1.0,
+    order: int = 2,
+    solid_permittivities: Mapping[str, float] | None = None,
+    **kwargs: Option,
+) -> PhysicsModel:
+    """Build ``poisson``: the electrolyte supplies ``eps_r,f^0`` and nothing else."""
+    _reject_unknown(kwargs, "the 'poisson' builder")
+    return PoissonModel(
+        electrolyte=(
+            electrolyte if electrolyte is not None else Electrolyte.from_parameter_file(corrections)
+        ),
+        concentration_M=concentration_M,
+        order=order,
+        solid_permittivities=dict(solid_permittivities or {}),
+    )
+
+
+_BOTH: tuple[bool, ...] = (False, True)
+
+_COUPLED_OPTIONS: tuple[str, ...] = (
+    "solid_permittivities",
+    "variable_density",
+    "inertia",
+    "dielectric_gradient_forces",
+    "order",
+    "velocity_order",
+    "pressure_order",
+    "stabilisation",
+)
+"""The case-derived keywords every coupled builder takes; ``flow`` besides, except ``pnp``."""
+
+_QUANTITIES: tuple[str, ...] = (
+    "current",
+    "transport_numbers",
+    "rectification",
+    "eof_rate",
+    "analyte_force",
+)
+"""The section 6.7 quantities a coupled model with a flow block provides."""
+
+_COUPLED = ModelDeclaration(
+    options=(*_COUPLED_OPTIONS, "flow"),
+    switches=dict.fromkeys(SWITCHES, _BOTH),
+    solids=True,
+    coefficients=COEFFICIENTS,
+    wall_distance=True,
+    strategies=("default_ladder", "none"),
+    quantities=_QUANTITIES,
+    transport=True,
+    reports_newton=True,
+)
+
+_ELECTROSTATIC_SWITCHES: dict[str, tuple[bool, ...]] = {
+    "flow": (False,),
+    "variable_density": (False,),
+    "inertia": (False,),
+    "dielectric_gradient_forces": (False,),
+}
+
+register_model("epnp-ns", _build_epnp_ns, _COUPLED)
+register_model("pnp-ns", _build_pnp_ns, _COUPLED)
+register_model(
+    "pnp",
+    _build_pnp,
+    # No flow, so no flow quantity; and the NUM-18 ladder carries the flow
+    # coupling from stage 6, so only the single rung solves ``pnp`` (section 6.5).
+    # ``variable_density`` and ``inertia`` keep both values: they are carried into
+    # the model and its provenance as the case gives them, as before WP26.
+    replace(
+        _COUPLED,
+        options=_COUPLED_OPTIONS,
+        switches={**dict.fromkeys(SWITCHES, _BOTH), "flow": (False,)},
+        strategies=("none",),
+        quantities=("current", "transport_numbers", "rectification"),
+    ),
+)
+register_model(
+    "pb",
+    _screened_builder("pb", "sinh"),
+    ModelDeclaration(options=("order",), switches=_ELECTROSTATIC_SWITCHES, solids=False),
+)
+register_model(
+    "pb-linear",
+    _screened_builder("pb-linear", "linear"),
+    ModelDeclaration(options=("order",), switches=_ELECTROSTATIC_SWITCHES, solids=False),
+)
+register_model(
+    "poisson",
+    _build_poisson,
+    ModelDeclaration(
+        options=("order", "solid_permittivities"),
+        switches=_ELECTROSTATIC_SWITCHES,
+        solids=True,
+        coefficients=COEFFICIENTS,
+    ),
+)

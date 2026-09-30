@@ -520,7 +520,6 @@ def render(request: RenderRequest) -> Rendered:
     from nanopnp.io.case import load_case
     from nanopnp.io.fields import attribute_name, field_scale
     from nanopnp.io.manifest import CASE_FILENAME
-    from nanopnp.physics.models import CoupledModel
     from nanopnp.solve.state import restore
 
     run = Path(request.run)
@@ -531,16 +530,9 @@ def render(request: RenderRequest) -> Rendered:
         case=case,
         mesh_artefact=_mesh_artefact(run, generated=case.inputs.mesh is None),
     )
+    # Any model: each reports the NUM-09 scale set that turns its nondimensional
+    # state into the SI numbers the attribute names promise (section 5.4.3).
     model = solution.model
-    if not isinstance(model, CoupledModel):
-        # The same refusal stage 12 makes for the IF-07 export, for the same
-        # reason: the NUM-09 scale set is what turns the nondimensional state
-        # into the SI numbers the attribute names promise, and a model that
-        # declares none has no SI picture to draw.
-        raise TypeError(
-            f"{model.name!r} declares no scale set, so its fields cannot be drawn in the SI units "
-            "their names carry"
-        )
     # The model's own declaration, named by the export's own vocabulary. A
     # "number"-element field is a scalar unknown with no spatial extent, so there
     # is nothing to draw of it.

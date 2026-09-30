@@ -61,7 +61,7 @@ from nanopnp.io.case import resolve
 from nanopnp.materials.stage import MaterialsStage
 from nanopnp.mesh.ingest import IngestedMesh, MeshStage, deployed_mesh
 from nanopnp.physics.measures import AXISYMMETRIC
-from nanopnp.physics.models import CoupledBoundaries, CoupledModel
+from nanopnp.physics.models import CoupledBoundaries, declaration
 from nanopnp.solve.continuation import Rung, run_ladder
 from nanopnp.solve.state import (
     STATE_FILENAME,
@@ -72,7 +72,7 @@ from nanopnp.solve.state import (
     cold_start,
     ladder,
     load_initial,
-    reads_wall,
+    reads_distance,
     save,
     wall_distance_field,
     warm_start_payload,
@@ -328,7 +328,7 @@ class SolveStage:
         order = int(resolved.model_options.get("order", AXISYMMETRIC.element_order))
         measures = replace(AXISYMMETRIC, element_order=order)
 
-        if reads_wall(resolved.electrolyte):
+        if reads_distance(resolved):
             report(progress, LOAD_FRACTION / 2, "solving for the wall distance field")
             check_cancelled(cancel, "the wall-distance solve")
         distance: Expression = wall_distance_field(resolved, mesh, order=order)
@@ -452,10 +452,10 @@ class SolveStage:
         the ladder's business: the ladder decides the *path*, the case decides
         how each rung is solved (NUM-16, NUM-20).
 
-        The Newton callback goes only to the coupled rungs. An electrostatic
-        model's ``solve`` rejects keywords it does not take, on purpose, so
-        handing one a callback would abort the run at stage 1 with a message
-        about an unknown argument rather than about the physics. That is also
+        The Newton callback goes only to the rungs whose model declares
+        ``reports_newton``. A model's ``solve`` rejects keywords it does not
+        take, on purpose, so handing one a callback would abort the run at stage
+        1 with a message about an unknown argument rather than about the physics. That is also
         why cancellation cannot ride the callback alone, and why ``on_rung``
         exists.
 
@@ -487,7 +487,7 @@ class SolveStage:
         # callback. Testing it separately where the hook is told and where the
         # callback is injected would let the two disagree, and the disagreement
         # would show as a band that promised steps and reported none.
-        reporting = tuple(isinstance(rung.model, CoupledModel) for rung in rungs)
+        reporting = tuple(declaration(rung.model.name).reports_newton for rung in rungs)
         # The rung the Newton callback is reporting within. A closure cell rather
         # than an argument because ``solve`` knows nothing about the ladder.
         current = [0]

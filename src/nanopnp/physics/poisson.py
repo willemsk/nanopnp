@@ -22,6 +22,7 @@ def poisson_operator(
     measures: Measures,
     *,
     permittivity: Numeric = 1.0,
+    extra_order: int = 0,
 ) -> IntegralTerm:
     """Return ``int eps grad(phi) . grad(v) r``, the Poisson stiffness term.
 
@@ -35,10 +36,13 @@ def poisson_operator(
     permittivity
         ``eps = eps_0 eps_r``, piecewise over the domains, in units consistent
         with the source term.
+    extra_order
+        Quadrature orders added to NGSolve's estimate, which does not count the
+        ``r`` weight (``.knowledge/06-numerics-fem.md`` section 2.2).
     """
     import ngsolve as ngs
 
-    return measures.volume(permittivity * ngs.grad(trial) * ngs.grad(test))
+    return measures.volume(permittivity * ngs.grad(trial) * ngs.grad(test), extra_order=extra_order)
 
 
 def charge_source(
