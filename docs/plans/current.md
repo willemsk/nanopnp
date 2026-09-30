@@ -12,7 +12,8 @@ evidence that an unmerged branch has shipped.
 - **After this report merges, the author** runs `.github/scripts/renumber-tags.sh --apply`, then
   tags the merge commit `v0.3.0`.
 - Phase 3 ([charge pipeline](phase-3-charge-pipeline.md), release `v0.4.0`) is **planned**:
-  WP26–WP32. **Next: `/wp-plan 26`**, the physics-model interface (FR-20).
+  WP26–WP32. [WP26](wp26-physics-model-interface.md), the physics-model interface (FR-20), is
+  planned. **Next: `/wp-implement`**.
 
 ## What Phase 3 must not re-decide
 
@@ -32,6 +33,8 @@ Each is recorded in full where it points.
   → VAL-16, VAL-17; §8.2.4 D6.
 - **The gate is 2WCD at Tier 2**, and the ensemble is recorded at Tier 3. → the phase plan's
   *Design decisions*.
+- **After WP26, layers read a model's declaration, never its name or class**: WP28 produces a
+  charge only for a model declaring `fixed_charge`. → §5.4.3 NOTE.
 
 ## Inherited from Phases 1 and 2, still binding
 
@@ -69,7 +72,7 @@ Each is recorded in full where it points.
 | Phase 3 scope, decisions and packages | `phase-3-charge-pipeline.md`; `SPECIFICATION.md` §4.4, §5.2 stage 7, §8.2.4 |
 | The consumer path stage 7 has today | `charge/stage.py`, `charge/fields.py`; VER-29, VER-30; WP9 plan |
 | Why the consumer leg aliases | §4.4 NOTEs; `.knowledge/04` §3–§3.2; `.knowledge/06` §8.1.1 |
-| The physics-model seams (WP26) | `physics/models.py` (`PhysicsModel`, the registry); `COUPLED_MODELS` in `io/case.py`; `solve/continuation.py`, `solve/state.py`; `post/` |
+| The physics-model seams (WP26) | The WP26 plan's *Design* §1 inventory; `physics/models.py` |
 | PDB2PQR, PROPKA and APBS facts | `.knowledge/07` §3; `density/radii.py` and `data/radii/` |
 | The reduction the charge reuses | `symmetry/annular.py`; VER-50 |
 | Case schema, option sets and supply chains | §5.3.1 and its NOTEs; `io/case.py` (`Charge`, `SUPPLY_CHAINS`, `_require_runnable`) |
