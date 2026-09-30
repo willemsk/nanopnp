@@ -948,6 +948,23 @@ the commit gate therefore run `-n auto --dist loadfile` with the three pinned, a
 `tests/tier2/test_stabilised_mode.py`, whose module fixture (146 s) cannot be split across workers
 (`.knowledge/06-numerics-fem.md` §4.3.3).
 
+Re-measured on 30 September 2026, four cores, 1504 tests in the default selection (tiers 1 and 2,
+`not slow`, the GUI file apart). Before the changes below: **353 s wall, 1147 s of test time**. The
+long pole was still `test_stabilised_mode.py` at 259 s, and six Tier-2 files each walked stages 2 and
+3 of the prepared 2WCD (19.7 s and 12.2 s). Two changes, neither touching a weak form or a tolerance:
+
+- the MMS sources are built with shared subexpressions (`06-numerics-fem.md` §4.3.3), which took
+  that module from 259 s to 60 s;
+- `tests/conftest.py`'s `seeded_2wcd` computes 2WCD's stages 1 to 3 once per session, under a
+  `FileLock` in a directory every worker shares, and copies those artefacts into each test's own
+  fresh store. The store is content-addressed, so the bytes are the ones the test's own walk would
+  write. Tests that assert a *cold* computation (VER-55's build, the example executors, the VER-49
+  budget) do not take the seed.
+
+After both: **271 s wall, 852 s of test time**, every test passing. `-m tier2` on the command line
+*replaces* the default `not slow` filter and pulls in the `slow` tests: the example-05 ClyA solve alone
+is about 30 min on one core. Pass `-m 'tier2 and not slow'` to time what the gate runs.
+
 `--dist loadfile` keeps each module's fixtures in one worker, so a module-scoped solve is paid once,
 as it is serially. A failure that appears only under `-n` means a test depends on the order it runs
 in, or on state another module leaves behind, and that is a real isolation defect.

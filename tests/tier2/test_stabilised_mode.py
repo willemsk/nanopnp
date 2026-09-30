@@ -258,7 +258,8 @@ def test_ver42_the_stabilised_mode_loses_an_order_and_no_more(
     NUM-14's NOTE predicts 2 rather than VER-18's 3, because the streamline term
     is built on a residual with every second derivative dropped. Measured
     **2.012 and 2.040** on ``maxh`` 0.4/0.2/0.1 nm in ``supg``, against ``none``'s
-    3 on the same meshes, in 152 s. The floor is :data:`STABILISED_RATE_FLOOR`;
+    3 on the same meshes, in 26 s (208 s before the manufactured sources were built with
+    shared subexpressions, ``.knowledge/06`` §4.3.3). The floor is :data:`STABILISED_RATE_FLOOR`;
     there is no ceiling, because a mode that converged faster than the prediction
     would be worth knowing about and is not a defect.
 

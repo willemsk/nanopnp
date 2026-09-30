@@ -13,6 +13,15 @@ need it at Tiers 1 and 2, and WP22's VAL-05 needs it next. MDAnalysis is importe
 inside the fixtures: a conftest at the root is loaded by every run, and the
 registry tests assert that listing the stages imports no extra.
 
+Stages 2 and 3 of the prepared entry take about 32 s, and six Tier-2 files walk
+through them. ``seeded_2wcd`` computes them once per session, in a directory every
+``pytest-xdist`` worker shares, and the function it returns copies the result
+into a test's own fresh store. The store is content-addressed, so a test that
+reads a seeded artefact reads the bytes its own walk would have written, computed
+by the same code in the same session; every stage from 4 on still runs in the
+test. A test that asserts a stage was *computed* rather than found -- VER-55's
+cold build -- does not take the seed.
+
 The ``gmsh_module`` fixture is the one way a test reaches the optional Gmsh
 backend (WP23 D11). It skips, naming the error, where ``gmsh`` does not import,
 and fails instead under ``NANOPNP_REQUIRE_GMSH=1``, which CI sets on the legs
@@ -24,6 +33,7 @@ from __future__ import annotations
 import logging
 import math
 import os
+import shutil
 import warnings
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -33,6 +43,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
+from filelock import FileLock
 
 if TYPE_CHECKING:
     import MDAnalysis as mda  # noqa: N813 - the alias the library documents
@@ -139,25 +150,103 @@ def dodecamer_2wcd() -> mda.AtomGroup:
     return universe.select_atoms("protein and chainID " + " ".join(DODECAMER.split(",")))
 
 
+def shared_directory(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """Return a directory every ``pytest-xdist`` worker of this session shares.
+
+    Each worker's base temporary directory is a sibling under one session root, so
+    that root is the shared one; without workers it is the base itself. Anything
+    written here must be written under a :class:`~filelock.FileLock`, once.
+    """
+    base = tmp_path_factory.getbasetemp()
+    return base.parent if os.environ.get("PYTEST_XDIST_WORKER") else base
+
+
 @pytest.fixture(scope="session")
 def prepared_2wcd(
     dodecamer_2wcd: mda.AtomGroup, tmp_path_factory: pytest.TempPathFactory
 ) -> Prepared2WCD:
-    """Chains A-L of 2WCD, rigidly moved to *cis* up, tilted 4° and shifted: a prepared file."""
+    """Chains A-L of 2WCD, rigidly moved to *cis* up, tilted 4° and shifted: a prepared file.
+
+    Written once per session to :func:`shared_directory`, so every worker's stage 1
+    reads one file and keys one artefact (stage 1 keys the source by its SHA-256).
+    """
     import MDAnalysis as mda  # noqa: N813 - the alias the library documents
     from MDAnalysis.coordinates.memory import MemoryReader
 
     group = dodecamer_2wcd
     rotation = _prepared_rotation(group)
     shift = np.asarray(PREPARED_SHIFT_NM)
-    moved = group.positions @ rotation.T + shift * 10.0
-    universe = mda.Merge(group)
-    universe.load_new(np.asarray(moved[None], dtype=np.float32), format=MemoryReader)
-    path = tmp_path_factory.mktemp("prepared") / "2wcd-prepared.pdb"
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        universe.atoms.write(str(path))
+    shared = shared_directory(tmp_path_factory)
+    path = shared / "prepared" / "2wcd-prepared.pdb"
+    with FileLock(str(shared / "prepared.lock")):
+        if not path.is_file():
+            moved = group.positions @ rotation.T + shift * 10.0
+            universe = mda.Merge(group)
+            universe.load_new(np.asarray(moved[None], dtype=np.float32), format=MemoryReader)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            staging = path.with_suffix(f".{os.getpid()}.pdb")
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                universe.atoms.write(str(staging))
+            staging.replace(path)
     return Prepared2WCD(path=path, tilt_deg=PREPARED_TILT_DEG, rotation=rotation, shift_nm=shift)
+
+
+SEED_CASE = """\
+schema: nanopnp/case/v2
+name: 2wcd-seed
+structure:
+  source: {{path: {pdb}}}
+  symmetry: {{point_group: C12}}
+electrolyte:
+  species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
+  concentration_M: 0.15
+  parameters: willems2020_nacl
+boundary_conditions: {{bias_V: 0.05, ground: cis}}
+physics: {{model: epnp-ns, solid_permittivities: {{protein: 20.0, membrane: 3.2}}}}
+"""
+"""The structure block and the default ``geometry.density`` every 2WCD file walks.
+
+Stages 1 to 3 key on these alone -- the source's digest, the point group and the
+density settings -- so a test's case with its own name, electrolyte and physics
+reads the seeded artefacts, and a case that changes one of them simply misses the
+seed and computes its own."""
+
+SEED_UPTO = "symmetry"
+"""The last seeded stage. Stages 2 and 3 are the 32 s; stage 4 and beyond stay each test's."""
+
+
+@pytest.fixture(scope="session")
+def seeded_2wcd(
+    prepared_2wcd: Prepared2WCD, tmp_path_factory: pytest.TempPathFactory
+) -> Callable[[Path], Path]:
+    """Return a function seeding a fresh store with stages 1 to 3 of the prepared 2WCD.
+
+    The stages are computed once per session: the first worker to ask computes them
+    under a lock, and the others wait and reuse the result. The function copies
+    them into the store root it is given and returns that root; the shared seed
+    itself is never handed out, so no test can write into it.
+    """
+    from nanopnp.io.run import run_case
+    from nanopnp.io.store import Store
+
+    shared = shared_directory(tmp_path_factory)
+    seed = shared / "2wcd-seed"
+    ready = seed / "READY"
+    with FileLock(str(shared / "2wcd-seed.lock")):
+        if not ready.is_file():
+            seed.mkdir(parents=True, exist_ok=True)
+            case = seed / "seed.case.yaml"
+            case.write_text(SEED_CASE.format(pdb=prepared_2wcd.path), encoding="utf-8")
+            run_case(case, store=Store(seed / "store"), upto=SEED_UPTO, write=False)
+            ready.write_text("", encoding="utf-8")
+
+    def seed_store(root: Path) -> Path:
+        """Copy the seeded artefacts into the store at ``root``; ``runs/`` stays the test's own."""
+        shutil.copytree(seed / "store" / "artefacts", root / "artefacts", dirs_exist_ok=True)
+        return root
+
+    return seed_store
 
 
 SYNTHETIC_RESIDUES = 8

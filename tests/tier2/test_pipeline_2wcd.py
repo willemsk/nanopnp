@@ -31,6 +31,9 @@ from nanopnp.structure.ensemble import AlignedEnsemble
 from nanopnp.validation.geometry import register_by_centroid
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+    from pathlib import Path
+
     from conftest import Prepared2WCD
 
 logger = logging.getLogger(__name__)
@@ -79,14 +82,19 @@ outputs: [current]
 
 
 @pytest.fixture(scope="module")
-def registered(prepared_2wcd: Prepared2WCD, tmp_path_factory: pytest.TempPathFactory):
+def registered(
+    prepared_2wcd: Prepared2WCD,
+    seeded_2wcd: Callable[[Path], Path],
+    tmp_path_factory: pytest.TempPathFactory,
+):
     """Return the store, the structure block and the membrane block registering 2WCD.
 
-    Stages 1 to 4 run once, and the registration is read off the aligned
-    structure stage 1 produced; every later run reuses them from the store.
+    Stages 1 to 3 come from the session's seed and stage 4 runs here, once; the
+    registration is read off the aligned structure stage 1 produced, and every later
+    run reuses them from the store.
     """
     root = tmp_path_factory.mktemp("2wcd")
-    store = Store(root / "store")
+    store = Store(seeded_2wcd(root / "store"))
     structure = STRUCTURE.format(pdb=prepared_2wcd.path)
     case = root / "contour.case.yaml"
     case.write_text(MESH_CASE.format(structure=structure, geometry=""), encoding="utf-8")
