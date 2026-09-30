@@ -308,6 +308,13 @@ predictors must be run separately and their states applied by hand.
 PDB2PQR ignores PROPKA's `chains` option (relevant for homo-oligomeric pores) but *does* log a
 warning — surface it rather than swallowing it.
 
+**Package facts, read from PyPI's metadata on 30 September 2026 [verified]:** `pdb2pqr` 3.7.1 is
+BSD-3, a pure-Python wheel, and requires Python ≥ 3.11, < 4. `propka` 3.5.1 is **LGPL-2.1** by its
+licence field and classifier, and is a pure-Python wheel. `SPECIFICATION.md` §2.6 called it BSD
+until that day. There is no `apbs` package on PyPI. `apbs-binary` 3.4.1.1 packages the BSD-3 APBS
+under Apache-2.0 and ships wheels for manylinux_2_28 x86_64, macOS 10.15 x86_64 and macOS 12
+arm64, **none for Windows**. So VAL-06 can run on the Linux and macOS CI legs only (§8.2.4 D3).
+
 APBS keywords for the cross-check: `chgm` ∈ {spl0, spl2, **spl4**} (spl4 = quintic B-spline,
 least grid-sensitive); `srfm` ∈ {mol, **smol**, spl2, spl4}. Note `spl2`/`spl4` surfaces "may
 produce unphysical results at non-zero ionic strengths" — run the cross-check at **zero** ionic
