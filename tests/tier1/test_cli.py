@@ -989,6 +989,49 @@ def test_ver32_stage_export_that_fails_leaves_no_file(
     assert list(tmp_path.iterdir()) == []
 
 
+def test_ver32_stage_export_replaces_a_structure_pair_whole_or_not_at_all(
+    tube_walk: tuple[Path, Path],
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A PDB never ends up beside another export's DCD (the IF-02 export NOTE).
+
+    An earlier pair sits at the destination. The rename of the new PDB fails after
+    the new DCD is in place: both earlier files come back byte for byte, and no
+    staging directory is left. Unpatched, the same export replaces both.
+    """
+    case, store = tube_walk
+    pdb, dcd = tmp_path / "aligned.pdb", tmp_path / "aligned.dcd"
+    pdb.write_bytes(b"an earlier export's PDB")
+    dcd.write_bytes(b"an earlier export's DCD")
+    argv = ["stage", "structure", str(case), "--store", str(store), "--export", str(pdb)]
+
+    replace = Path.replace
+    refused: list[Path] = []
+
+    def fails_once_onto_the_pdb(self: Path, target: str | Path) -> Path:
+        if Path(target) == pdb and self.parent != pdb.parent and not refused:
+            refused.append(self)
+            raise OSError("the PDB could not be renamed into place")
+        return replace(self, target)
+
+    monkeypatch.setattr(Path, "replace", fails_once_onto_the_pdb)
+    assert main(argv) == EXIT_UNEXPECTED
+    assert "the PDB could not be renamed into place" in capsys.readouterr().err
+    assert refused, "the failure was never injected"
+    assert pdb.read_bytes() == b"an earlier export's PDB"
+    assert dcd.read_bytes() == b"an earlier export's DCD"
+    assert sorted(path.name for path in tmp_path.iterdir()) == ["aligned.dcd", "aligned.pdb"]
+
+    monkeypatch.undo()
+    assert main(argv) == EXIT_OK
+    capsys.readouterr()
+    assert pdb.read_bytes() != b"an earlier export's PDB"
+    assert dcd.read_bytes() != b"an earlier export's DCD"
+    assert sorted(path.name for path in tmp_path.iterdir()) == ["aligned.dcd", "aligned.pdb"]
+
+
 def test_ver32_stage_export_help_imports_no_stage_module() -> None:
     """``stage --help`` lists the export table without importing a stage or NumPy."""
     code = (
