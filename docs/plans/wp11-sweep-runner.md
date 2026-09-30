@@ -580,7 +580,7 @@ NUM-26's `1 × 10⁻³`, unchanged since WP5.
 - **Scheduler integration.** No SLURM or PBS script is generated (CON-07). The plan prints the
   contiguous index range of each wave; the submission is the user's two lines.
 - **Figures.** §5.2's stage 12 mentions figures; nothing here plots. An I–V curve drawn from the
-  dataset is v0.9's reporting work.
+  dataset is v0.4's reporting work.
 - **Re-meshing to satisfy NUM-34.** The gate refuses an inadmissible mesh and names what it
   measured; it does not refine one. Automatic refinement in response to a gate is NUM-19's
   adaptivity, which is not exercised this phase, and a mesher that silently changes the mesh a

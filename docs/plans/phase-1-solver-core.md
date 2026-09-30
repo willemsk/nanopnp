@@ -1,6 +1,6 @@
 # Phase 1 (Solver core): the production solver on an externally supplied mesh
 
-**Status: WP7–WP16 delivered; end-of-phase report written 24 September 2026; released as `v0.5.0`**
+**Status: WP7–WP16 delivered; end-of-phase report written 24 September 2026; released as `v0.2.0`**
 (§8.2.3). Written 2 September 2026, after Phase 0
 (WP1–WP6) and its consolidation (WP-A1, WP-B1, WP-B2, WP-C1). It inherited a verified physics core
 and a bare pipeline: tiers 1 and 2 green, `mypy --strict` and `ruff` clean, and `io/`, `sweep/`,
@@ -8,7 +8,7 @@ and a bare pipeline: tiers 1 and 2 green, `mypy --strict` and `ruff` clean, and 
 and `mesh/` is complete for ingestion as of WP8, `sweep/` as of WP11; `charge/`, `structure/`,
 `density/`, `symmetry/` and `gui/` are still empty.
 
-This is the delivery plan for Phase 1 of `SPECIFICATION.md` §8.1 — release v0.5. The specification
+This is the delivery plan for Phase 1 of `SPECIFICATION.md` §8.1 — release v0.2. The specification
 remains normative: where this file and the specification disagree, the specification governs and
 this file is wrong. Requirement identifiers here are pointers into it, never restatements of it.
 
@@ -64,7 +64,7 @@ Everything an implementer would otherwise settle at 2 a.m., settled here.
 | Mesh vocabulary | Materials `electrolyte`/`cis`/`trans`, `membrane`, `pore`, `analyte`; boundaries `axis`, `wall`, `cis`, `trans`, `membrane_outer`. An ingested mesh carries an explicit group→name mapping in the case file | The names the solver already speaks (`mesh/primitives.py`, `DEFAULT_BOUNDARIES`, the `ELECTROLYTE_DOMAINS` regex). Everything downstream keeps working unchanged. |
 | Unmapped groups | Ingestion **aborts**, naming every unmapped group and every required name that no group supplies (QR-12) | An unmapped boundary silently becomes a natural condition: a no-flux wall turns into an open boundary and the current is wrong with no diagnostic. This is the single highest-value gate in the phase. |
 | Quality metric | SICN and gamma computed in project code from vertex coordinates, gate `min > 0.3`, worst element reported with its centroid and metric value; an *optional* Tier-1 test cross-checks our values against `gmsh.model.mesh.getElementQualities` and skips when the GPL extra is absent | Reverses the WP-B3 deferral on the ground that made it: the threshold is only meaningful against the measure it was calibrated for, so we implement the measure *and* calibrate it, rather than inventing a metric or linking gmsh on the default path (CON-10). Derivation in §Design. |
-| External charge/dielectric fields | One typed `FieldArtefact` with two admissible sources — a named analytic expression, or a gridded (r, z) table with documented interpolation — plus an OpenDX/CCP4 reader behind the `structure` extra (IF-05, import inside the function) | "Externally supplied material and charge fields" is the v0.5 release text. Reading is the consumer side and belongs here; *writing* those grids belongs with the producers in Phases 2–3. |
+| External charge/dielectric fields | One typed `FieldArtefact` with two admissible sources — a named analytic expression, or a gridded (r, z) table with documented interpolation — plus an OpenDX/CCP4 reader behind the `structure` extra (IF-05, import inside the function) | "Externally supplied material and charge fields" is the v0.2 release text. Reading is the consumer side and belongs here; *writing* those grids belongs with the producers in Phases 2–3. |
 | Conservation on ingest | If the artefact declares `Q_net`, assert `\|∫ρ 2πr dr dz − Q_net\|/\|Q_net\| < 10⁻³` on the deployed mesh and abort on failure. If it does not, **record that the check could not run** in the manifest | QR-03 / PHY-19's mesh half. Silently skipping an assertion because its reference is absent is how a conservation failure reaches a published number. The per-z-slice check against a sorted PQR (VER-02) needs the charge pipeline and stays Phase 3. |
 | Stage protocol | `core/stages.py`: `run(inputs, *, progress=None, cancel=None) -> Artefact`. Cancellation is **cooperative**, checked between Newton iterations (the existing `damped_newton` callback) and between rungs — never mid-factorisation | FR-27 asks for cancellable and progress-reporting. A cancel that must interrupt a UMFPACK factorisation means a subprocess and a kill signal; a cancel between iterations is a boolean. The GUI runs the solver in a background process anyway (ADR-004), so a hard kill remains available above this layer. |
 | Sweep dispatch | A sweep is a base case plus substitutions on dotted schema paths, validated against the schema so a typo names the key. The runner writes an index file; `nanopnp sweep run --index i` executes one point, which is what a SLURM/PBS array calls. Local execution is `multiprocessing` over the same entry point | FR-24 says "dispatch the points as independent jobs" and QR-06 wants linear scaling in independent workers. Depending on a scheduler library would put a scheduler on the end-user path (CON-07); an index file and an integer do not. |
@@ -73,7 +73,7 @@ Everything an implementer would otherwise settle at 2 a.m., settled here.
 | Stabilisation | `stabilisation: none | reference` resolving through a registry, exactly as corrections do; `none` stays the production default (NUM-11) | PHY-22's rule generalised: "off" is a named model, not a code branch. `CoupledModel.stabilisation` and its `SUPPORTED_STABILISATIONS` gate already exist from WP-B1 and were built for this. |
 | Tier-3 comparison surface | Our probe grid, shipped with the frozen case; COMSOL interpolates onto it. Goldens are `.npz` with a manifest naming the model file, COMSOL version, export date and the case hash | §7.4 asks for "a common probe grid". Making it *ours* means the comparison does not depend on COMSOL's mesh, and re-exporting later cannot silently move the sample points. |
 | Attribution, not agreement | WP13's report decomposes any discrepancy by re-running our solver in the matching configuration, each rung against the same golden. **Amended 18 September 2026 from three rungs to four**: `none`+P2/P1 → `supg`+P2/P1 → `reference`+P2/P1 → `reference`+P1/P1, reporting `Δ_total`, `Δ_transport`, `Δ_flow`, `Δ_pair` and `Δ_resid` | The phase gate is "differences attributed". A single number against a golden attributes nothing. The three-rung form was written before WP12 measured `reference` converging at **0.98** on a Taylor–Hood pair where `supg` converges at **2.01** — so its middle delta summed the transport stabilisation with a first-order flow operator and attributed neither. Splitting the rung at `supg`, which is second order on that pair, costs one solve per case and makes `Δ_transport` a clean number. `Δ_resid` remains the only part that can be a defect. Derivation: `wp13-tier3-comsol-comparison.md` §Design 1. |
-| GUI construction | The case editor is **generated from the pydantic schema**, not hand-laid-out; the field viewer is `webgui` in a `QWebEngineView`; the solver runs in a background process and reports through the existing `damped_newton` callback | QR-11 demands a graphical surface at every release from v0.5 onward, so the editor has to survive schema changes without GUI work. Generating it is what makes that true. RSK-15 is managed by keeping the GUI a shell with no physics in it (IF-09, ADR-004). |
+| GUI construction | The case editor is **generated from the pydantic schema**, not hand-laid-out; the field viewer is `webgui` in a `QWebEngineView`; the solver runs in a background process and reports through the existing `damped_newton` callback | QR-11 demands a graphical surface at every release from v0.2 onward, so the editor has to survive schema changes without GUI work. Generating it is what makes that true. RSK-15 is managed by keeping the GUI a shell with no physics in it (IF-09, ADR-004). |
 | Bundle linear solver | UMFPACK, with the GPL-2+ obligation accepted and stated (**CON-11 amended in this commit**) | The §6.6 measurement: SuperLU was OOM-killed on the reference-sized factorisation. A bundle that cannot run the published case is not a product. The library itself stays BSD-3 and depends on neither. |
 
 ## Design
@@ -200,7 +200,7 @@ VER-26 and six Appendix A rows.
 
 Delivered: the `nanopnp/case/v1` schema of §5.3.1 as pydantic models with `extra="forbid"`
 everywhere, rejecting an unknown key by naming the key *and* the block it appeared in, and refusing
-a v0.9 section (`structure:`, `geometry:`, `charge:`) with `UnsupportedCaseSection` rather than
+a v0.3 or v0.4 section (`structure:`, `geometry:`, `charge:`) with `UnsupportedCaseSection` rather than
 ignoring it; `resolve()` onto the Phase-0 electrolyte, model and solver objects, going through the
 WP1 resolution discipline rather than `replace(...)`; the content-addressed artefact base of §5.3.2
 with one canonical digest over schema, parameters and input hashes; the result store with
@@ -408,7 +408,7 @@ Seven things settled by the work that WP10 onwards inherit.
   between, 669 s to mesh); raising the order from 8 to 37 oscillated at the 1e-3 to 1e-2 level
   without settling. This is aliasing, not inaccuracy, and it is why the conservation gate reports
   the quadrature agreement beside the number rather than the number alone. The remedy is the
-  producer's — deposit onto the FE space and rescale to `Q_net` — and it belongs to v0.9's stage 7.
+  producer's — deposit onto the FE space and rescale to `Q_net` — and it belongs to v0.4's stage 7.
 - **OPN-06 is closed, and the answer is "the consumer's".** The delivered table's planar integral is
   the integer −72 e to 4.7e-12, so the published `−72.9 e` is COMSOL's own quadrature of its own
   table, not a smearing error; our own leg by the same route is −0.99 % — same size, opposite sign.
@@ -907,7 +907,7 @@ To be written at the end of the phase, naming numbers rather than adjectives:
   report flagged as most consequential for this phase's comparison.
 - Whether the Windows bundle built, and on what.
 
-Written 24 September 2026, on `main` at `b2ab533` (the `v0.5.0-alpha.10` code plus the Phase 2 plan).
+Written 24 September 2026, on `main` at `b2ab533` (the `v0.2.0-alpha.10` code plus the Phase 2 plan).
 Every number below is quoted from the Outcome, test or knowledge entry it cites. None is
 re-derived here.
 
@@ -915,7 +915,7 @@ re-derived here.
 **No difference against COMSOL has been attributed**, because the author's reference exports do
 not exist yet (WP13; `docs/validation/comsol-export-contract.md`). The §8.1 gate's last clause is
 therefore not met as written. By the author's ruling it is closed by `SPECIFICATION.md` §8.2.3 C1,
-in the manner of Phase 0's A2 and A4. v0.5.0 is released with the COMSOL attribution outstanding,
+in the manner of Phase 0's A2 and A4. v0.2.0 is released with the COMSOL attribution outstanding,
 and that attribution is reported as an addendum here when the exports land. Phase 0 criterion 4,
 the double-click, is still open as §8.2.1 leaves it. It is the author's, and Phase 2's ruling B1
 requires it before WP17.

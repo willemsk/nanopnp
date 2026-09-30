@@ -315,7 +315,7 @@ class SymmetrySpec(_Strict):
 
 
 class Structure(_Strict):
-    """Stage 1: structure ingestion and alignment (v0.9).
+    """Stage 1: structure ingestion and alignment (v0.3).
 
     The normative contract is the section 5.3.1 NOTE on ``structure:``.
     """
@@ -414,7 +414,7 @@ class SmearingSpec(_Strict):
 
 
 class Charge(_Strict):
-    """Stage 7: charge assembly (v0.9).
+    """Stage 7: charge assembly (v0.4).
 
     ``exclusion_offset_nm`` is FR-15's fitted exclusion offset and
     ``dielectric_transition_nm`` the width of PHY-20's transition to ``eps_w``.
@@ -563,7 +563,7 @@ class ElementsSpec(_Strict):
 
 
 class MeshSpec(_Strict):
-    """Stage 6: the mesher and its size field (v0.9).
+    """Stage 6: the mesher and its size field (v0.3).
 
     ``size_scale`` multiplies every element-size target of section 5.2.2 and
     NUM-30, the resolved ``wall_h_nm`` included, so that a mesh-convergence study
@@ -1690,7 +1690,7 @@ _ORDERS: dict[str, int] = {"P1": 1, "P2": 2, "P3": 3}
 _PIPELINE_SECTIONS: dict[str, str] = {
     "charge": "the PDB2PQR charge and dielectric pipeline (FR-12 to FR-15)",
 }
-"""Case-file sections whose stages land in v0.9, with what each one drives.
+"""Case-file sections whose stages land in v0.4, with what each one drives.
 
 ``structure:`` left this table in WP18 and ``geometry:`` in WP19. Since WP21 a
 ``structure:`` case walks the whole pipeline (section 5.3.1 NOTE on ``structure:``).
@@ -2111,7 +2111,7 @@ def _require_runnable(document: CaseDocument) -> SuppliedArtefact | None:
     for section, what in _PIPELINE_SECTIONS.items():
         if getattr(document, section) is not None:
             raise UnsupportedCaseSection(
-                f"case {document.name!r} carries a {section}: section; {what} is v0.9 "
+                f"case {document.name!r} carries a {section}: section; {what} is v0.4 "
                 f"(SPECIFICATION.md section 3). This release runs on artefacts supplied through "
                 "inputs:, which is FR-27's hand substitution at stage granularity"
             )
@@ -2131,7 +2131,7 @@ def _require_runnable(document: CaseDocument) -> SuppliedArtefact | None:
         if field.path is None:
             raise UnsupportedCaseSection(
                 f"inputs.{supplied}: artefact: names {what} in the store, which the charge "
-                f"pipeline of v0.9 fills; supply inputs.{supplied}: path: instead"
+                f"pipeline of v0.4 fills; supply inputs.{supplied}: path: instead"
             )
         if field.groups:
             raise CaseValidationError(
@@ -2177,12 +2177,12 @@ def _require_runnable(document: CaseDocument) -> SuppliedArtefact | None:
     if nonlinear.strategy != "newton":
         raise UnsupportedCaseSection(
             f"numerics.nonlinear.strategy {nonlinear.strategy!r} is the NUM-20 fallback ladder, "
-            "which is v0.5; this release solves every rung with the monolithic damped Newton of "
+            "which is v0.2; this release solves every rung with the monolithic damped Newton of "
             "NUM-16"
         )
     if nonlinear.damping != "residual":
         raise UnsupportedCaseSection(
-            f"numerics.nonlinear.damping {nonlinear.damping!r} is v0.5; this release uses the "
+            f"numerics.nonlinear.damping {nonlinear.damping!r} is v0.2; this release uses the "
             "residual-monotonicity damping of NUM-16, whose recovery rule the reference records"
         )
     walls = document.boundary_conditions.walls

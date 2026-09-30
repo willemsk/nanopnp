@@ -180,25 +180,35 @@ reference-solution generation; MD trajectories are supplied as input.
 | Release | Phase | Content |
 |---|---|---|
 | v0.1 | 0 | Spike. Analytic cylindrical/conical pore, coupled steady axisymmetric ePNP-NS, continuation ladder, analytic benchmarks, one COMSOL comparison. No structure pipeline, no GUI. |
-| v0.5 | 1 | Solver core on an externally supplied mesh and material/charge fields; full QoI extraction; pluggable correction models; frozen case-file schema; stable Python API; CLI; sweep runner. |
-| v0.9 | 2–3 | Full pipeline: structure and trajectory ingestion, density, symmetry reduction, contour, CAD, mesh; PDB2PQR to smeared ρ_fixed and dielectric field. Reproduces the paper end to end. |
+| v0.2 | 1 | Solver core on an externally supplied mesh and material/charge fields; full QoI extraction; pluggable correction models; frozen case-file schema; stable Python API; CLI; sweep runner. |
+| v0.3 | 2 | Geometry pipeline: structure and trajectory ingestion, density, symmetry reduction, contour, CAD, mesh. |
+| v0.4 | 3 | Charge pipeline: PDB2PQR to smeared ρ_fixed and dielectric field; the physics-model interface (FR-20). Reproduces the paper end to end. |
 | v1.0 | 4 | Validated release: V&V suite in CI, documentation, tutorials, JOSS submission, DOI-archived. |
 | v1.5 | 5 | Desktop application: packaged installers, in-app case builder, live convergence monitoring, field visualisation. |
 | post-1.0 | — | Backlog: 3D; transient; ion-specific rather than ionic-strength-based property models; MD-fitting toolkit for corrections; solid-state pores; charge regulation; multi-species electrolytes beyond binary; non-axisymmetric analytes. |
 
-Release tags in §3 take four values: v0.5, v0.9, v1.0, post-1.0. Items scheduled for v1.5 are
-tagged post-1.0.
+Release tags in §3 take five values: v0.2, v0.3, v0.4, v1.0, post-1.0. Items scheduled for v1.5
+are tagged post-1.0.
 
-NOTE (Versioning; **added 23 September 2026**): the releases above are git tags `vX.Y.Z` on the
-commit that closes the phase: `v0.1.0` for Phase 0, and `v0.5.0` for Phase 1 on the merge of its
-end-of-phase report (§8.1). Each merged work package is tagged `vX.Y.Z-alpha.N` on its last commit
+NOTE (Versioning; **added 23 September 2026, renumbered 30 September 2026**, §8.2.4 D1): the
+releases above are git tags `vX.Y.Z`, one minor version per phase, on the commit that merges the
+phase's end-of-phase report (§8.1): `v0.1.0` for Phase 0, `v0.2.0` for Phase 1, `v0.3.0` for
+Phase 2, `v0.4.0` for Phase 3 and `v1.0.0` for Phase 4. Each merged work package is tagged `vX.Y.Z-alpha.N` on its last commit
 on `main`, where N counts the phase's work packages toward that release. The history before this
 NOTE was tagged retroactively on the same rule. The tag names are SemVer, and PEP 440 reads them as
-`X.Y.ZaN` (`0.5.0a10`). The package version is derived from the tag (hatch-vcs), so a commit between
+`X.Y.ZaN` (`0.2.0a10`). The package version is derived from the tag (hatch-vcs), so a commit between
 tags installs as a development version naming that commit, and the provenance manifest's recorded
 `nanopnp` version identifies the code that produced a result (FR-25). The version enters no artefact
 key: the environment is recorded beside an artefact, never hashed into it (§5.3.2). `CHANGELOG.md`
 records every tag, and a milestone tag publishes a GitHub Release with its section as the notes.
+
+Until 30 September 2026 Phase 1 was released as v0.5, and Phases 2 and 3 were to be released
+together as v0.9. The author ruled a renumber so that the minor version names the phase, and the
+tags are re-created on the same commits: `v0.5.0-alpha.N` becomes `v0.2.0-alpha.N`, `v0.5.0`
+becomes `v0.2.0`, and `v0.9.0-alpha.N` becomes `v0.3.0-alpha.N`. Phase 0's tags do not move. The
+old names are retired and are never reused. A provenance manifest written before the renumber
+records the old version (`0.5.0a10`, `0.9.0a3`), and the mapping above takes it to its commit. A
+development version names its commit (`+g…`) under either scheme.
 
 ---
 
@@ -210,7 +220,7 @@ The subject of each requirement is the product unless stated otherwise.
 
 | ID | Requirement |
 |---|---|
-| **IF-01** | SHALL expose a Python API in which every pipeline stage is a separately importable, invocable object, stable from v0.5 onward. |
+| **IF-01** | SHALL expose a Python API in which every pipeline stage is a separately importable, invocable object, stable from v0.2 onward. |
 | **IF-02** | SHALL provide a CLI over the same stage objects, able to execute a case file, run one stage, and dispatch a sweep. |
 | **IF-03** | SHALL accept one declarative YAML case file, identified by `schema: nanopnp/case/v2`, as the complete run specification, rejecting unknown keys with a diagnostic naming the key. A document declaring `nanopnp/case/v1` SHALL be read losslessly as its v2 upgrade (§5.3.1). **Amended 24 September 2026** from v1 (§8.2.2 B3). |
 | **IF-04** | SHALL read structures in PDB and mmCIF, and trajectories in DCD, XTC, TRR and NetCDF. |
@@ -267,8 +277,8 @@ externally supplied mesh. So they do not change what a run solves, and the confi
 is not breached. `mesh reference` takes no geometric flag, since its preset is fixed by §5.2.2 and
 the geometry of record. Both commands print the written mesh's content hash and the
 `inputs.mesh.groups` mapping a case needs to read it. Both are subject to the mesh quality gate of
-VER-10. These commands are the v0.5 means of producing a mesh without Python, and they are not the
-meshing pipeline of FR-10, which remains v0.9.
+VER-10. These commands are the v0.2 means of producing a mesh without Python, and they are not the
+meshing pipeline of FR-10, which is v0.3.
 
 NOTE (IF-02, export; **added 29 September 2026**, WP25): `nanopnp stage <name> <case> --export
 PATH` writes the artefact that stage stored, in an interchange format chosen by the suffix of
@@ -307,33 +317,33 @@ the quantity-of-interest extraction. Heavy data is compressed.
 
 | ID | Requirement | Release |
 |---|---|---|
-| **FR-01** | SHALL ingest a structure and optional trajectory ensemble and superpose all frames on a reference frame's Cα set. | v0.9 |
-| **FR-02** | SHALL determine the Cₙ axis by chain-permutation superposition, taking the eigenvector of eigenvalue 1 of the chain-to-chain rotation, and place it on z at r = 0. | v0.9 |
-| **FR-03** | SHALL verify the expected oligomeric state (ClyA 12, αHL 7, MspA 8) and abort on missing chains. | v0.9 |
-| **FR-04** | SHALL build an ensemble-averaged density map from per-atom Gaussians whose width is tied to each atom's van der Waals radius, on a 0.25–0.5 Å grid. | v0.9 |
-| **FR-05** | SHALL reduce the 3D map to (r, z) by averaging the n rotated copies before azimuthal averaging, with area-weighted binning over exact annular volumes. | v0.9 |
-| **FR-06** | SHALL report residual azimuthal variance as a first-class output of every reduced geometry. | v0.9 |
-| **FR-07** | SHALL extract the pore surface as a closed contour of the reduced map at a configurable isolevel, default 0.25, and condition it to a watertight, non-self-intersecting polyline. | v0.9 |
-| **FR-08** | SHALL gate the conditioned contour on validity, simplicity, minimum vertex spacing, minimum local feature size, single closed loop and radius-profile agreement, aborting on failure. | v0.9 |
-| **FR-09** | SHALL assemble the (r, z) region from pore contour, membrane and reservoir half-discs, fragmented for conformal interfaces, the membrane being representable as a quadrilateral with a slanted inner edge. | v0.9 |
-| **FR-10** | SHALL generate a graded triangular mesh resolving the wall Debye length against the reservoir scale, isotropically by default, aborting with the worst element and its location reported when quality gates fail. | v0.9 |
+| **FR-01** | SHALL ingest a structure and optional trajectory ensemble and superpose all frames on a reference frame's Cα set. | v0.3 |
+| **FR-02** | SHALL determine the Cₙ axis by chain-permutation superposition, taking the eigenvector of eigenvalue 1 of the chain-to-chain rotation, and place it on z at r = 0. | v0.3 |
+| **FR-03** | SHALL verify the expected oligomeric state (ClyA 12, αHL 7, MspA 8) and abort on missing chains. | v0.3 |
+| **FR-04** | SHALL build an ensemble-averaged density map from per-atom Gaussians whose width is tied to each atom's van der Waals radius, on a 0.25–0.5 Å grid. | v0.3 |
+| **FR-05** | SHALL reduce the 3D map to (r, z) by averaging the n rotated copies before azimuthal averaging, with area-weighted binning over exact annular volumes. | v0.3 |
+| **FR-06** | SHALL report residual azimuthal variance as a first-class output of every reduced geometry. | v0.3 |
+| **FR-07** | SHALL extract the pore surface as a closed contour of the reduced map at a configurable isolevel, default 0.25, and condition it to a watertight, non-self-intersecting polyline. | v0.3 |
+| **FR-08** | SHALL gate the conditioned contour on validity, simplicity, minimum vertex spacing, minimum local feature size, single closed loop and radius-profile agreement, aborting on failure. | v0.3 |
+| **FR-09** | SHALL assemble the (r, z) region from pore contour, membrane and reservoir half-discs, fragmented for conformal interfaces, the membrane being representable as a quadrilateral with a slanted inner edge. | v0.3 |
+| **FR-10** | SHALL generate a graded triangular mesh resolving the wall Debye length against the reservoir scale, isotropically by default, aborting with the worst element and its location reported when quality gates fail. | v0.3 |
 | **FR-11** | MAY generate structured boundary layers along the pore wall as an element-count optimisation. | post-1.0 |
-| **FR-12** | SHALL derive protonation states and partial charges at a configurable pH and force field, and record the net charge Q_net. | v0.9 |
-| **FR-13** | SHALL assemble the axisymmetric fixed-charge density by depositing per-atom Gaussians in 3D Cartesian space, then projecting azimuthally over exact annular volumes with the configured axis guard. | v0.9 |
-| **FR-14** | SHALL assert charge conservation on the deployed finite-element mesh and check per-z-slice cumulative charge against the source charge list. | v0.9 |
-| **FR-15** | SHALL build the dielectric field and the ion-exclusion surface from the same density field, with independently configurable protein permittivity and exclusion offset. | v0.9 |
-| **FR-16** | SHALL implement each empirical correction as a named component registered by string, its fit coefficients held in versioned data files, so a new electrolyte or surface is a data file rather than a code change. | v0.5 |
-| **FR-17** | SHALL solve the steady 2D-axisymmetric ePNP-NS system across 0.005–5 M and ±200 mV with all corrections active, via a continuation ladder, without negative concentrations at any nonlinear iterate. | v0.5 |
-| **FR-18** | SHALL provide physics models `ePNP-NS`, `PNP-NS`, `PNP` and `Poisson`, selected by name in the case file, `PNP-NS` being a configuration of `ePNP-NS` with corrections disabled rather than separate code. | v0.5 |
-| **FR-19** | SHALL provide nonlinear Poisson–Boltzmann (`PB`) and Debye–Hückel (`PB-linear`) as separate equilibrium physics models. | v0.9 |
-| **FR-20** | SHALL admit a new physics model as one implementation of a documented interface (field set, weak-form contributions, boundary-condition vocabulary, default solve strategy), with no change to the mesh, geometry, charge, sweep, provenance or interface layers. | v0.9 |
+| **FR-12** | SHALL derive protonation states and partial charges at a configurable pH and force field, and record the net charge Q_net. | v0.4 |
+| **FR-13** | SHALL assemble the axisymmetric fixed-charge density by depositing per-atom Gaussians in 3D Cartesian space, then projecting azimuthally over exact annular volumes with the configured axis guard. | v0.4 |
+| **FR-14** | SHALL assert charge conservation on the deployed finite-element mesh and check per-z-slice cumulative charge against the source charge list. | v0.4 |
+| **FR-15** | SHALL build the dielectric field and the ion-exclusion surface from the same density field, with independently configurable protein permittivity and exclusion offset. | v0.4 |
+| **FR-16** | SHALL implement each empirical correction as a named component registered by string, its fit coefficients held in versioned data files, so a new electrolyte or surface is a data file rather than a code change. | v0.2 |
+| **FR-17** | SHALL solve the steady 2D-axisymmetric ePNP-NS system across 0.005–5 M and ±200 mV with all corrections active, via a continuation ladder, without negative concentrations at any nonlinear iterate. | v0.2 |
+| **FR-18** | SHALL provide physics models `ePNP-NS`, `PNP-NS`, `PNP` and `Poisson`, selected by name in the case file, `PNP-NS` being a configuration of `ePNP-NS` with corrections disabled rather than separate code. | v0.2 |
+| **FR-19** | SHALL provide nonlinear Poisson–Boltzmann (`PB`) and Debye–Hückel (`PB-linear`) as separate equilibrium physics models. | v0.4 |
+| **FR-20** | SHALL admit a new physics model as one implementation of a documented interface (field set, weak-form contributions, boundary-condition vocabulary, default solve strategy), with no change to the mesh, geometry, charge, sweep, provenance or interface layers. | v0.4 |
 | **FR-21** | SHALL support a rigid analyte body of revolution on the pore axis, subtracted from the fluid domain and treated as a hard dielectric with no ion flux, no-slip and a dielectric jump, charged as either a surface density or a smeared volumetric charge. | v1.0 |
 | **FR-22** | SHALL compute F^em(z), F^hd(z), their sum, and ΔU(z) = −∫F dz with barriers and minima in kT, over a series of axial analyte positions. | v1.0 |
-| **FR-23** | SHALL extract ionic current, cation and anion transport numbers, rectification ratio and EOF rate by two independent routes whose agreement is checked automatically. | v0.5 |
-| **FR-24** | SHALL sweep any case-file field, dispatch the points as independent jobs, warm-start each solve from a converged neighbour, and collect results into one dataset. | v0.5 |
-| **FR-25** | SHALL emit with every result a provenance manifest recording input hashes, library versions, mesh hash, solver settings, stabilisation mode and correction parameter file versions. | v0.5 |
-| **FR-26** | SHALL round-trip a case file, a written and re-read case yielding a semantically identical run configuration. | v0.5 |
-| **FR-27** | SHALL make every stage independently invocable, cancellable, progress-reporting and introspectable, emitting a typed, serialisable, content-hashed artefact that may be inspected, exported, edited and substituted by hand. | v0.5 |
+| **FR-23** | SHALL extract ionic current, cation and anion transport numbers, rectification ratio and EOF rate by two independent routes whose agreement is checked automatically. | v0.2 |
+| **FR-24** | SHALL sweep any case-file field, dispatch the points as independent jobs, warm-start each solve from a converged neighbour, and collect results into one dataset. | v0.2 |
+| **FR-25** | SHALL emit with every result a provenance manifest recording input hashes, library versions, mesh hash, solver settings, stabilisation mode and correction parameter file versions. | v0.2 |
+| **FR-26** | SHALL round-trip a case file, a written and re-read case yielding a semantically identical run configuration. | v0.2 |
+| **FR-27** | SHALL make every stage independently invocable, cancellable, progress-reporting and introspectable, emitting a typed, serialisable, content-hashed artefact that may be inspected, exported, edited and substituted by hand. | v0.2 |
 | **FR-28** | SHALL export figures, fields and the originating case file from a completed run. | v1.0 |
 | **FR-29** | MAY perform goal-oriented (dual-weighted-residual) mesh adaptivity targeting the ionic current. | post-1.0 |
 
@@ -366,14 +376,14 @@ cell–annulus overlaps. The §5.3.1 NOTE on `geometry.density` is the contract.
 | **QR-08** | Re-running a case file with the recorded library versions SHALL reproduce every scalar QoI to within the solver tolerance, the FR-25 manifest sufficing to reconstruct the run. | Reproducibility |
 | **QR-09** | SHALL install from binary wheels on Windows, macOS and Linux for Python 3.11–3.14, with no compilation on the target machine. **Amended 24 September 2026** from 3.10–3.14 (§8.2.2 B4). | Portability |
 | **QR-10** | A nanopore experimentalist without Python knowledge SHALL be able to load a structure, accept defaults and obtain a conductance prediction and a field visualisation in the desktop application unaided. | Usability |
-| **QR-11** | Each release from v0.5 onward SHALL ship a usable graphical surface over the functionality existing at that release. | Usability |
+| **QR-11** | Each release from v0.2 onward SHALL ship a usable graphical surface over the functionality existing at that release. | Usability |
 | **QR-12** | Every automatic gate failure SHALL abort the run with a diagnostic naming the gate, the offending quantity and its location. | Usability |
 | **QR-13** | The ePNP-NS weak forms SHALL be expressed once against the internal backend interface and SHALL NOT be duplicated per backend. | Maintainability |
 | **QR-14** | Adding a correction parameterisation SHALL require only a data file; adding a physics model SHALL require only one class (FR-20). | Maintainability |
 | **QR-15** | v1.0 SHALL ship user documentation, tutorials, a JOSS submission and a DOI-archived release. | Maintainability |
 
 NOTE (QR-15; **added 23 September 2026**): the user documentation and the worked examples are
-delivered incrementally from v0.5, by the documentation track of §8.1, each phase documenting what
+delivered incrementally from v0.2, by the documentation track of §8.1, each phase documenting what
 it ships. The requirement itself is unchanged. v1.0 is where it is met in full, including the JOSS
 submission and the DOI-archived release, which no earlier phase delivers. VER-45 and VER-46
 demonstrate the documentation part at every release. They do not demonstrate the JOSS or DOI parts.
@@ -1249,7 +1259,7 @@ NOTE (`inputs:`, FR-27): the optional top-level `inputs:` block is hand substitu
 at stage granularity. Each key names a stage output supplied from outside — a mesh, a charge field,
 a dielectric field — by path and format. A stage whose output is supplied does not run, and neither
 does anything upstream of it; the substituted file is hashed by content and enters the FR-25
-manifest as an input like any other. Releases before v0.9 accept an externally generated mesh
+manifest as an input like any other. Releases before v0.3 accept an externally generated mesh
 this way, which is what makes the solver core testable ahead of the meshing pipeline (§8.1).
 `inputs.profile` supplies stage 4's conditioned polyline as a `nanopnp/profile/v1` document
 (`format: profile1`), which is how a hand-edited contour enters a run (§8.1, GUI increment 2), and
@@ -1925,7 +1935,7 @@ child would inherit both the parent's Qt event loop and its already-imported num
 
 Consequences: every pipeline stage must be independently invocable, cancellable, progress-reporting
 and introspectable (FR-27), which §5.1 requires on scientific grounds in any case, so the interface
-is a thin shell over the stage objects the CLI drives (IF-09). Each release from v0.5 onward ships
+is a thin shell over the stage objects the CLI drives (IF-09). Each release from v0.2 onward ships
 a usable graphical surface over the functionality existing at that release (QR-11); the per-phase
 increments are in §8.1.
 
@@ -2897,8 +2907,9 @@ by a restatement of their equations:
 
 Phase 2 SHALL NOT start before the Phase 0 exit criteria are met.
 
-NOTE (FR-19, FR-20; **added 24 September 2026**): v0.9 is released by Phases 2 and 3 together.
-FR-19's `pb` and `pb-linear` models shipped in Phase 0. FR-20, the documented physics-model
+NOTE (FR-19, FR-20; **added 24 September 2026**, renumbered 30 September 2026): FR-19 is tagged
+v0.4, the end of the scope the old v0.9 named, and its `pb` and `pb-linear` models shipped in
+Phase 0. FR-20, the documented physics-model
 interface, is assigned to **Phase 3**, which is where the table above leaves room for it (§8.2.2 B7).
 
 ### 8.2 Phase 0 exit criteria
@@ -2934,7 +2945,7 @@ until amendment A4's build and observation have both happened.
 NOTE — **Criterion 4 closed, 24 September 2026.** The author double-clicked the bundle uploaded as
 `nanopnp-probe-windows` by the gated `bundle` job of CI run
 [36045057612](https://github.com/willemsk/nanopnp/actions/runs/36045057612), built from commit
-`52fd531` (reported version `0.5.0a11.dev4+g52fd531b4`), on a Windows desktop. The executable opened
+`52fd531` (reported version `0.5.0a11.dev4+g52fd531b4`, which is `0.2.0a11.dev4+g52fd531b4` under the renumbering of §2.7), on a Windows desktop. The executable opened
 a window drawing a basic mesh with its controls. The author called it "still a bit janky", which is
 a usability remark on the probe and not a packaging failure: the criterion asks that the bundle
 build and open, and it did. Amendment A4's build and observation have both happened, so criterion 4
@@ -2947,7 +2958,7 @@ Where a ruling changes a clause, the clause is amended in the commit named in th
 
 | # | Decision | Consequence | Clause changed, and when |
 |---|---|---|---|
-| B1 | Phase 2 starts only after the Phase 1 end-of-phase report has merged (tag `v0.5.0`) and the author has recorded the double-click observation of amendment A4 | The start condition of §8.1 is met as written, not amended: criterion 4 and RSK-13 close on the observation | None |
+| B1 | Phase 2 starts only after the Phase 1 end-of-phase report has merged (tag `v0.2.0`) and the author has recorded the double-click observation of amendment A4 | The start condition of §8.1 is met as written, not amended: criterion 4 and RSK-13 close on the observation | None |
 | B2 | VAL-05 is measured on two inputs. The public 2WCD entry (wwPDB, CC0) is vendored as test data and gated at Tier 2 to a looser tolerance. The author's 50-frame ClyA-AS ensemble, or the prepared structure it came from, is archived under `NANOPNP_REFERENCE_DATA` and run at Tier 3. The Phase 2 gate requires the ensemble leg | 2WCD lacks residues 1–7 at the *trans* constriction and the MD relaxation, so only the ensemble can be held to a tight tolerance. The 2WCD leg still exercises the whole pipeline on every push | §7.4 VAL-05, in the Phase 2 plan's commit. The tolerances are stated in the VAL-05 work package |
 | B3 | The case schema moves **once**, to `nanopnp/case/v2`, in the first Phase 2 work package. That move carries every key Phases 2 and 3 are foreseen to need, among them stage-4 hand substitution under `inputs:` and the membrane's axial position. A v1 document reads losslessly as v2 | The §5.3.1 compatibility rule stands: adding a key moves the version, and it moves once rather than once per phase | §5.3.1, in the first Phase 2 work package |
 | B4 | The Python floor rises to 3.11 (Python 3.10 reaches end of life in October 2026) | One MDAnalysis (2.10) and one GridDataFormats (1.2) across the supported range, as §2.6 names them. The IF-05 NOTE's conditional CCP4 write side is retired | QR-09 and §2.5, in the Phase 2 plan's commit. The IF-05 NOTE, `requires-python` and the CI matrix change with the code, in the first Phase 2 work package |
@@ -2965,11 +2976,21 @@ The end-of-phase report (`docs/plans/phase-1-solver-core.md`) measures the phase
 
 | # | Amendment | Consequence |
 |---|---|---|
-| C1 | The gate's last clause is met by Tier 3 being **enabled and its attribution machinery verified**: the four-rung ladder against a self-golden, with `golden_source: self` on every report. The attribution of differences **against COMSOL** is recorded as outstanding until the author's reference exports exist (VAL-03, `docs/validation/comsol-export-contract.md`). When they land, it is reported as an addendum to the Phase 1 report, and it gates nothing retroactively. v0.5.0 is released on this basis | Phase 1 closes without the one comparison that needs data the project does not yet hold. The consequence is the same as A2's: a risk stays open longer than planned, here RSK-09 (a Tier-3 discrepancy originating in the reference) and the attribution of any residual. Nothing in Phase 2 touches a weak form, so the addendum can land at any point without re-opening a Phase 2 result |
+| C1 | The gate's last clause is met by Tier 3 being **enabled and its attribution machinery verified**: the four-rung ladder against a self-golden, with `golden_source: self` on every report. The attribution of differences **against COMSOL** is recorded as outstanding until the author's reference exports exist (VAL-03, `docs/validation/comsol-export-contract.md`). When they land, it is reported as an addendum to the Phase 1 report, and it gates nothing retroactively. v0.2.0 is released on this basis | Phase 1 closes without the one comparison that needs data the project does not yet hold. The consequence is the same as A2's: a risk stays open longer than planned, here RSK-09 (a Tier-3 discrepancy originating in the reference) and the attribution of any residual. Nothing in Phase 2 touches a weak form, so the addendum can land at any point without re-opening a Phase 2 result |
 | C2 | The §8.3 reference sweep (3,675 points on 12 cores) is planned and checked in, but not run. QR-06's scaling is measured on 4 cores (VER-39, recorded and never gated) | QR-06 remains a SHOULD, measured only at the scale the development machine allows. The day-scale run is the author's to make, on HPC hardware |
 
 Phase 0 criterion 4 is not changed by this section. It was closed by the author's double-click,
 recorded in the NOTE to §8.2.1 on the same day, which met the last condition of §8.2.2 B1.
+
+#### 8.2.4 Phase 3 decisions, agreed 30 September 2026
+
+Rulings by the author, taken while closing Phase 2 and planning Phase 3
+(`docs/plans/phase-3-charge-pipeline.md`). Where a ruling changes a clause, the clause is amended in
+the commit named in the last column.
+
+| # | Decision | Consequence | Clause changed, and when |
+|---|---|---|---|
+| D1 | Versions are renumbered so that the minor version names the phase: Phase 0 is v0.1, Phase 1 v0.2, Phase 2 v0.3, Phase 3 v0.4 and Phase 4 v1.0. The existing tags are re-created on the same commits under the new names, and the old names are retired | Each phase closes with its own release, and no release spans two phases. A manifest written before the renumber records the old version, and §2.7's Versioning NOTE maps it | §2.7 (the table and the Versioning NOTE), the Release column of §3.2 and the §8.1 NOTE on FR-19 and FR-20, in the renumbering commit |
 
 ### 8.3 Effort estimate
 

@@ -71,7 +71,7 @@ numerics:
 
 outputs: [current, transport_numbers, rectification, eof_rate, analyte_force, fields]
 """
-"""The section 5.3.1 example, less the sections v0.9 owns."""
+"""The section 5.3.1 example, less the sections v0.3 and v0.4 own."""
 
 
 @pytest.fixture
@@ -244,7 +244,7 @@ def test_if03_a_supplied_artefact_names_exactly_one_source() -> None:
     [
         # geometry: left this list in WP19: it is read beside structure:, and
         # beside inputs.mesh it is refused naming both (tests/tier1/test_density.py).
-        ("charge:\n  ph: 7.5\n", "v0.9"),
+        ("charge:\n  ph: 7.5\n", "v0.4"),
     ],
 )
 def test_fr27_a_section_a_later_release_owns_names_the_section_and_the_release(

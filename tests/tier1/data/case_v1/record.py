@@ -4,7 +4,7 @@ Run once, on the unmodified v1 code, before the schema moved to v2::
 
     uv run tests/tier1/data/case_v1/record.py
 
-It copies every case file the project shipped at ``v0.5.0`` into ``corpus/``,
+It copies every case file the project shipped at ``v0.2.0`` into ``corpus/``,
 byte for byte, and writes two records beside it:
 
 - ``fields.txt``, the dotted paths :func:`nanopnp.io.case.case_fields` walked
@@ -50,7 +50,7 @@ SOURCES: tuple[str, ...] = (
     "docs/validation/cases/clya-3M-plus200mV.case.yaml",
     "docs/sweeps/phase1-reference.case.yaml",
 )
-"""Every case file shipped at ``v0.5.0``: seven examples, five validation cases, one sweep base."""
+"""Every case file shipped at ``v0.2.0``: seven examples, five validation cases, one sweep base."""
 
 
 def main() -> None:

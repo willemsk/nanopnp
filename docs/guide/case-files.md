@@ -42,7 +42,7 @@ by listing every correction as a deviation. To solve ePNP-NS, name the correctio
 | `numerics` | Element orders, the nonlinear and linear solvers, the continuation ladder, stabilisation, the wall-distance field, and the sizes of a generated mesh (`numerics.mesh`) |
 | `outputs` | Which quantities to report: `current`, `transport_numbers`, `eof_rate`, `rectification`, `analyte_force`, `fields` |
 | `structure`, `geometry` | The geometry pipeline: the structure file and its symmetry, the density map, the contour, the membrane and the reservoir. A `structure:` case walks every stage. See [Structures and trajectories](structures.md) and [From a structure to a mesh](geometry.md) |
-| `charge` | The v0.9 charge pipeline. Accepted by the schema, refused by this release, naming the section |
+| `charge` | The v0.4 charge pipeline. Accepted by the schema, refused by this release, naming the section |
 
 ## Validation
 
@@ -54,7 +54,7 @@ run cannot produce, such as `rectification` at one operating point. Every refusa
 
 ## Reading a v1 case file
 
-A file declaring `schema: nanopnp/case/v1`, written before v0.9, is still read. It is upgraded to
+A file declaring `schema: nanopnp/case/v1`, written before v0.3, is still read. It is upgraded to
 v2 as it is loaded, and it means exactly what it meant before: every key v2 added defaults to the
 validated configuration. Three keys are handled by the upgrade:
 
@@ -76,7 +76,7 @@ dump it from Python with `nanopnp.dump_case(nanopnp.load_case("old.case.yaml"), 
 which drops the comments.
 
 The upgrade changes no number, but it does change the cache key of every stored solve once. The
-v1 key included the schema string, and v2 leaves it out, so a store populated before v0.9 re-solves
+v1 key included the schema string, and v2 leaves it out, so a store populated before v0.3 re-solves
 each case the first time it is asked for.
 
 ## Dotted paths

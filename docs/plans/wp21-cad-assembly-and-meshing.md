@@ -1,7 +1,7 @@
 # WP21 — CAD assembly and graded meshing from a profile (stages 5 and 6)
 
 **Status: delivered, 26 September 2026.** Written 26 September 2026, after WP20 merged (PR
-[#41](https://github.com/willemsk/nanopnp/pull/41), to be tagged `v0.9.0-alpha.4`). This package
+[#41](https://github.com/willemsk/nanopnp/pull/41), to be tagged `v0.3.0-alpha.4`). This package
 inherits stage 4's `nanopnp/profile/v1` document. It is in the stage-1 frame, spaced at least h
 apart, with feature size above 2h (WP20 D9, D10). It also inherits `ReferenceGeometry` and
 `plane_crossings` in `mesh/reference.py`, stage 6's ingestion gate (VER-27, VER-10) in
@@ -139,7 +139,7 @@ the reference fixture and 2WCD. [Design §2](#2-the-wall-size): NUM-30 read lite
 7. **Specification and knowledge**: the Appendix A rows for VER-52 and VER-53 (FR-09, FR-10,
    FR-27, QR-12, CON-10); RSK-05 retired in §9; `.knowledge/04` §2 and `.knowledge/06` §8 gain the
    Design §1–§3 measurements, re-measured. The docs pages that say stages 1 to 4 run are updated,
-   and CHANGELOG `v0.9.0-alpha.5` is written.
+   and CHANGELOG `v0.3.0-alpha.5` is written.
 
 > **Outcome — every work item is delivered.** `nanopnp mesh reference` prints the pre-refactor
 > hash. The stage-5 region summary records `profile_vertices`, the input polygon's count (185 on

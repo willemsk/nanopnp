@@ -25,7 +25,7 @@ Three things come out of it, and only the first two are gates:
    1e-3 to 1e-2 level about the exact answer [tested]. Recorded here, with the
    numbers, because the fix belongs to the producer (deposit onto the finite
    element space and rescale, rather than sample an interpolant) and that is
-   v0.9's stage 7, not this one.
+   v0.4's stage 7, not this one.
 
 That third measurement also answers what the plan raised as OPN-06. The
 published ``-72.9 e`` sits +1.25 % from the table's exact ``-72 e``; our own

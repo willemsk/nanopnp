@@ -163,7 +163,7 @@ The consumer's budget is then spent on four things, in decreasing order of size.
 > with extrema a median 0.035 nm apart — below element scale, so the quadrature is aliased rather
 > than inaccurate. The tolerance was **not** slackened: the quadrature-agreement gate fires first,
 > at `9.273 × 10⁻³` against its own `10⁻⁴`, and reports that the mesh under-resolves the supplied
-> field. The remedy is the producer's (deposit onto the FE space and rescale) and is v0.9's stage 7.
+> field. The remedy is the producer's (deposit onto the FE space and rescale) and is v0.4's stage 7.
 > §4.4 of the specification gains a NOTE saying all of this normatively.
 
 ### Why the grid must be padded, not clamped
@@ -320,7 +320,7 @@ Each of these goes into `.knowledge/` at implementation time — 1, 2 and 5 into
 | `materials/fields.py` | `SolidFractionField`; `blend(chi, protein_permittivity, fluid_permittivity)`; the range gate and the per-material mean gate; the refusal of an absolute `ε_r` field naming PHY-11 | FR-15 (consumer half), PHY-20 |
 | `charge/stage.py` | `FieldStage`, stage 7, over `("case", "mesh")`, emitting `FieldsArtefact`; `key(inputs)` beside `run(inputs)`; progress and cooperative cancellation between the two fields and the gates | FR-27, IF-01 |
 | `io/artefact.py` (edit) | `FIELDS_SCHEMA = "nanopnp/fields/v1"` and `FieldsArtefact`, parameters carrying the grid descriptor and the value array's digest, the data file as payload | §5.3.2 |
-| `io/case.py` (edit) | Lift the `inputs.charge` / `inputs.eps_r` refusal; `ResolvedCase` gains both; the `charge:` *section* stays refused, being the v0.9 producer | IF-03 |
+| `io/case.py` (edit) | Lift the `inputs.charge` / `inputs.eps_r` refusal; `ResolvedCase` gains both; the `charge:` *section* stays refused, being the v0.4 producer | IF-03 |
 | `io/manifest.py` (edit) | The `charge` group populated from the conservation report — source, hash, quantity, units, grid descriptor, `Q_net`, `Q_grid`, `Q_mesh`, the two relative errors, the guard deficit, the ring maximum, the worst plane and its `z`, the interpolation kernel, and whether the producer check ran; `deviations_group(document, *, contributed=())`; the group's stale `not_run` reason corrected from "stages 4 and 5, FR-08 to FR-11" to stage 7, FR-12 to FR-15 | FR-25, IF-08 |
 | `mesh/ingest.py` (edit) | `exclusion` in `MATERIAL_VOCABULARY`, exempt from `check_solid_permittivities`; its presence contributed as a deviation | IF-06, PHY-03 |
 | `physics/models.py` (edit) | `permittivity()` accepts a blended fluid branch; the unassigned-material warning exempts `exclusion` | PHY-20 |
@@ -455,7 +455,7 @@ uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv ru
 
 - **The producer.** PDB2PQR, protonation, per-atom smearing, azimuthal projection over annular
   volumes, and the density map they share with the geometry — FR-12, FR-13 and the producer halves
-  of FR-14 and FR-15, all Phase 3 (v0.9). WP9 consumes a field somebody else made.
+  of FR-14 and FR-15, all Phase 3 (v0.4). WP9 consumes a field somebody else made.
 - **VER-01 and VER-02 proper.** VER-01 is the producer's conservation and VER-02 is the per-z-slice
   cumulative *against the PQR sorted by z*. WP9 delivers the consumer's counterpart of both —
   against `Q_grid` and against the source grid's own cumulative — which is what can be checked

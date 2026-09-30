@@ -1,7 +1,7 @@
 # WP20 — Contour extraction, conditioning and its gate (stage 4)
 
 **Status: delivered, 26 September 2026.** Written 26 September 2026, after WP19 was delivered on
-`claude/wp-plan-19-19570b` (its PR becomes `v0.9.0-alpha.3`). This package inherits stage 3's
+`claude/wp-plan-19-19570b` (its PR becomes `v0.3.0-alpha.3`). This package inherits stage 3's
 `ReducedMap`: the (r, z) mean on bins `r_j = j·h` with exact annular weights and no interpolated
 bin (WP19 D8), and `grids()`, which returns it as a `RadialGrid` indexed `[z, r]`. It inherits
 stage 1's aligned ensemble in the structure's frame (WP18 D8), the CHARMM radius set (WP19 D3),
@@ -124,7 +124,7 @@ resolved wall size (λ_D/5 × `size_scale`) exceeds h, WP21 decides, and VER-10 
    fixture, so a contour-gate failure cannot fail VER-50.
 7. **Specification, changelog and knowledge.** Add VER-51 to §7.2 with the text below. Map it in
    Appendix A: FR-07 → VER-51, VAL-05; FR-08 → VER-51. Recount the coverage line. Write
-   `CHANGELOG.md` `[0.9.0-alpha.4]`. Add Outcomes here and update `current.md`.
+   `CHANGELOG.md` `[0.3.0-alpha.4]`. Add Outcomes here and update `current.md`.
 
 ### Verification
 

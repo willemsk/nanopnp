@@ -153,7 +153,7 @@ def render_case_reference() -> str:
         lines += [f"## `{head}`" if head != "document" else "## Top level", ""]
         if head in _PIPELINE_SECTIONS:
             lines += [
-                f"This section drives {_PIPELINE_SECTIONS[head]}, which lands in v0.9. This",
+                f"This section drives {_PIPELINE_SECTIONS[head]}, which lands in v0.4. This",
                 "release refuses a case carrying it, naming the section; supply the artefact",
                 "it would produce through `inputs:` instead.",
                 "",

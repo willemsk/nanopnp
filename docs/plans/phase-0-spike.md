@@ -40,7 +40,7 @@ RSK-13 open; and the COMSOL comparison moves to Phase 1 in full.
   limiting current) are exact in planar geometry and misleading if forced onto an axisymmetric slab;
   the same weak-form code takes the measure as an argument.
 - **Configuration stays minimal and deliberately unfrozen** — a small pydantic model in `core/`, not
-  the `nanopnp/case/v1` schema. Freezing the case file is v0.5 / Phase 1 work (FR-26, VER-09), and
+  the `nanopnp/case/v1` schema. Freezing the case file is v0.2 / Phase 1 work (FR-26, VER-09), and
   freezing it against a spike's needs would be the wrong shape.
 - **New base dependency: `sympy`** (BSD, pure Python, wheels everywhere) for the manufactured
   solutions of VER-18. It is imported by `validation/`, a shipped module, so it belongs in the base

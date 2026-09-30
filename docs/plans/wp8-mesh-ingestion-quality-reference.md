@@ -538,7 +538,7 @@ runner installs them is a workflow decision, not this package's.
 
 - **Contour extraction and conditioning** — FR-07, FR-08, §5.2.1's marching-squares and Taubin
   pipeline. Phase 2. `reference.py` consumes a vertex table; it never produces one.
-- **Mesh *generation* from a case** — `numerics.mesh` stays the v0.9 block it is today, and stage 6
+- **Mesh *generation* from a case** — `numerics.mesh` stays the v0.3 block it is today, and stage 6
   ingests rather than meshes for any case the solver runs. `reference.py` generates one specific
   geometry for the Tier-3 comparison, which is a fixture, not the pipeline.
 - **Gmsh as a mesher backend** — ADR-002's optional backend. WP8 uses gmsh only as the quality

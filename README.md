@@ -58,8 +58,9 @@ release yet, and the comparison against the reference COMSOL model is recorded b
 | Release | Phase | Scope | State |
 |---|---|---|---|
 | v0.1 | 0 | Spike: the coupled model on an analytic pore, the continuation ladder, analytic benchmarks | **released**, [`v0.1.0`](CHANGELOG.md#010---2026-09-02) |
-| v0.5 | 1 | Solver core: external meshes and fields, QoI extraction, frozen case schema, API, CLI, sweeps | **released**, [`v0.5.0`](CHANGELOG.md#050---2026-09-24) |
-| v0.9 | 2–3 | Full pipeline from a PDB structure: density, symmetry reduction, contour, mesh, PDB2PQR charges | **in progress**, [Phase 2 plan](docs/plans/phase-2-geometry-pipeline.md) |
+| v0.2 | 1 | Solver core: external meshes and fields, QoI extraction, frozen case schema, API, CLI, sweeps | **released**, [`v0.2.0`](CHANGELOG.md#020---2026-09-24) |
+| v0.3 | 2 | Geometry pipeline from a PDB structure: alignment, density, symmetry reduction, contour, mesh | work packages merged, the end-of-phase report pending, [Phase 2 plan](docs/plans/phase-2-geometry-pipeline.md) |
+| v0.4 | 3 | Charge pipeline: PDB2PQR charges, smeared fixed charge and dielectric; reproduces the paper end to end | planned |
 | v1.0 | 4 | Validated release: V&V suite in CI, tutorials, JOSS submission, DOI archive | planned |
 
 Each merged work package is tagged `vX.Y.Z-alpha.N` toward its phase's release, and the package
@@ -84,7 +85,7 @@ default install is the solver core and uses binary wheels only. The extras add:
 |---|---|
 | `gui` | The PySide6 desktop shell, `nanopnp-gui` |
 | `examples` | Matplotlib, for the worked examples' plots |
-| `structure` | The structure-to-mesh pipeline's dependencies (v0.9) |
+| `structure` | The structure-to-mesh pipeline's dependencies (v0.3), and PDB2PQR for the charge pipeline (v0.4) |
 | `gmsh` | The optional gmsh mesher backend (GPL-2+, never on the default path) |
 
 A VS Code Dev Container and a GitHub Codespace configuration are in

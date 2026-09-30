@@ -1,7 +1,7 @@
 # WP24 — GUI increment 2: the geometry pipeline surfaced
 
 **Status: delivered, 29 September 2026.** Written 29 September 2026, after WP23 merged on `main`
-(`4232eeb`, tagged `v0.9.0-alpha.7`). This package inherits the desktop shell of WP14 and WP15:
+(`4232eeb`, tagged `v0.3.0-alpha.7`). This package inherits the desktop shell of WP14 and WP15:
 
 - the `RunEvent` queue from a spawned child;
 - `StageHook` and `SolveHook`, and the rule that a hook is never an input;
@@ -123,7 +123,7 @@ In dependency order.
 9. `gui/probe.py`, `packaging/nanopnp-probe.spec`, `packaging/LICENSES-BUNDLE.md`, and the
    `bundle` job (D16, D17). Measure the collection that each payload needs. `.knowledge/07` §5
    gains what is learned, marked **[tested]**.
-10. `docs/guide/desktop.md`: the Geometry tab. `CHANGELOG.md` under `v0.9.0-alpha.8`. The
+10. `docs/guide/desktop.md`: the Geometry tab. `CHANGELOG.md` under `v0.3.0-alpha.8`. The
     specification rows listed under [Pointers](#pointers).
 
 ### Verification

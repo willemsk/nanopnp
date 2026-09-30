@@ -5,11 +5,11 @@ evidence that an unmerged branch has shipped.
 
 ## Position
 
-- Phase 1 ([solver core](phase-1-solver-core.md)) is **closed** as `v0.5.0` (§8.2.3).
+- Phase 1 ([solver core](phase-1-solver-core.md)) is **closed** as `v0.2.0` (§8.2.3).
 - Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **in progress**. WP17 to WP24
-  are merged (to be tagged up to `v0.9.0-alpha.8`).
+  are merged (to be tagged up to `v0.3.0-alpha.8`).
 - **WP25** ([documentation increment 2](wp25-geometry-docs-and-example.md), criterion 5) is
-  **delivered on its branch**, awaiting `/wp-ship` and merge as `v0.9.0-alpha.9`.
+  **delivered on its branch**, awaiting `/wp-ship` and merge as `v0.3.0-alpha.9`.
 - **Phase criterion 3 stays open until `tests/tier3/test_val05_ensemble.py` runs on
   `$NANOPNP_REFERENCE_DATA`**. That run also pins `Z_MD`, and its numbers go into the
   [WP22 Outcomes](wp22-val05-reference-geometry.md#outcomes).

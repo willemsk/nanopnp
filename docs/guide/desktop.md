@@ -11,8 +11,8 @@ It needs the `gui` extra (PySide6). It opens the case you name. A case it cannot
 standard error with the diagnostic and exit code `nanopnp run` would give, not opened into an empty
 form.
 
-!!! note "v0.5: a development install"
-    In v0.5, run the shell from a development install (`uv run nanopnp-gui case.yaml`) or a pip
+!!! note "v0.2: a development install"
+    In v0.2, run the shell from a development install (`uv run nanopnp-gui case.yaml`) or a pip
     install with the `gui` extra. A double-clickable Windows bundle of the packaging probe is built
     and self-tested by CI on every push, and it has been confirmed to open and draw on a real
     desktop (§8.2 criterion 4, closed 24 September 2026). Installers for all three platforms come

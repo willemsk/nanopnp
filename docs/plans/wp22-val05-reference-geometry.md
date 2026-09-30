@@ -1,7 +1,7 @@
 # WP22 — VAL-05: the pipeline against the reference geometry
 
 **Status: delivered, 28 September 2026.** Written 28 September 2026. WP21 has merged (tagged
-`v0.9.0-alpha.5`), and so has the CODE_REVIEW_002 follow-up on `main`. This package inherits the
+`v0.3.0-alpha.5`), and so has the CODE_REVIEW_002 follow-up on `main`. This package inherits the
 whole geometry chain: stages 1–4 (WP18–WP20), which emit `nanopnp/profile/v1` in the stage-1 frame,
 and stages 5–6 (WP21), which apply `geometry.membrane.centre_z_nm` and mesh under the D9 wall-size
 gate. It also inherits the prepared 2WCD fixture in `tests/conftest.py`, the ensemble archive's
@@ -86,7 +86,7 @@ author's rulings of 28 September 2026 in `.knowledge/`.
 4. **Specification and knowledge.** Appendix A: the FR-07, FR-09 and FR-10 rows name the VAL-05
    test files, and FR-06 gains VAL-05 (recorded). `.knowledge/04` §1.4 takes the measurements
    again from the implementation. The docs page that lists the validation tiers names VAL-05. Write
-   CHANGELOG `v0.9.0-alpha.6`.
+   CHANGELOG `v0.3.0-alpha.6`.
 
 ### Verification
 

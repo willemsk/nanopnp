@@ -26,7 +26,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Physics",
 ]
 
-# Solver core only (SPECIFICATION.md v0.5). Pipeline stages that are not yet
+# Solver core only (SPECIFICATION.md v0.2). Pipeline stages that are not yet
 # implemented keep their dependencies in the extras below, so the default
 # install stays small and wheel-only (QR-09, CON-07).
 dependencies = [
@@ -41,7 +41,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# Structure -> density -> contour -> charge pipeline (v0.9, phases 2-3).
+# Structure -> density -> contour -> charge pipeline (v0.3 and v0.4, phases 2-3).
 # Floors are the versions SPECIFICATION.md section 2.6 names, one across the
 # supported 3.11-3.14 range (section 8.2.2 B4). GridDataFormats 1.2 is the
 # release that gained the MRC writer, so CCP4 is written unconditionally (IF-05).
