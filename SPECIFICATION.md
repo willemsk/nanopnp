@@ -163,8 +163,9 @@ The COMSOL model being replaced, as recorded in the model report and the ESI.
 | Gmsh | GPLv2+ | Optional mesher backend (ADR-002) |
 | MDAnalysis 2.10+ | LGPLv3 | Structure and trajectory input, alignment |
 | gemmi 0.7+ | MPL-2.0 | mmCIF structure input, which MDAnalysis 2.10 does not read (**added 25 September 2026**, WP18) |
-| PDB2PQR 3.7+, PROPKA3 | BSD | Protonation states and partial charges |
-| APBS 3.4.1 | BSD-3 | Poisson-only cross-check |
+| PDB2PQR 3.7+ | BSD-3 | Protonation states and partial charges |
+| PROPKA 3.5+ | LGPL-2.1 | pKa prediction, installed as a PDB2PQR dependency. **Corrected 30 September 2026**: this row said BSD, but PROPKA is LGPL-2.1 (its package metadata), acceptable under CON-09 |
+| APBS 3.4.1 | BSD-3 | Poisson-only cross-check (VAL-06), run from the `apbs-binary` wheels (Apache-2.0 packaging; Linux x86_64 and macOS) in a test-only dependency group, never on the end-user path (§8.2.4 D3) |
 | scikit-image, Shapely | BSD-3 | Contour extraction, polyline conditioning |
 | meshio (MIT), GridDataFormats (LGPL) | as noted | Mesh interchange; OpenDX/CCP4 grid IO |
 | SuiteSparse UMFPACK | GPL-2+ | Direct linear solver, default (built into the NGSolve wheel; CON-11) |
@@ -193,9 +194,9 @@ are tagged post-1.0.
 NOTE (Versioning; **added 23 September 2026, renumbered 30 September 2026**, §8.2.4 D1): the
 releases above are git tags `vX.Y.Z`, one minor version per phase, on the commit that merges the
 phase's end-of-phase report (§8.1): `v0.1.0` for Phase 0, `v0.2.0` for Phase 1, `v0.3.0` for
-Phase 2, `v0.4.0` for Phase 3 and `v1.0.0` for Phase 4. Each merged work package is tagged `vX.Y.Z-alpha.N` on its last commit
-on `main`, where N counts the phase's work packages toward that release. The history before this
-NOTE was tagged retroactively on the same rule. The tag names are SemVer, and PEP 440 reads them as
+Phase 2, `v0.4.0` for Phase 3 and `v1.0.0` for Phase 4. Each merged work package is tagged
+`vX.Y.Z-alpha.N` on its last commit on `main`, where N counts the phase's work packages toward
+that release. The history before this NOTE was tagged retroactively on the same rule. The tag names are SemVer, and PEP 440 reads them as
 `X.Y.ZaN` (`0.2.0a10`). The package version is derived from the tag (hatch-vcs), so a commit between
 tags installs as a development version naming that commit, and the provenance manifest's recorded
 `nanopnp` version identifies the code that produced a result (FR-25). The version enters no artefact
@@ -404,7 +405,7 @@ until those differences are matched.
 | **CON-06** | The single production FEM backend SHALL be NGSolve/Netgen 6.2.2606+ (LGPL-2.1), behind a thin internal interface sized only to make a future second backend bounded work. |
 | **CON-07** | No component on the end-user execution path SHALL require a C++ compiler, a source build or a JIT toolchain on the end-user machine. |
 | **CON-08** | The distributed wheels are serial-only and ship without MUMPS, and the reference model's PARDISO is equally unavailable; the desktop path SHALL use UMFPACK or scipy SuperLU. |
-| **CON-09** | The core library SHALL be licensed BSD-3-Clause. LGPL dependencies are acceptable under dynamic linking (NGSolve/Netgen LGPL-2.1, MDAnalysis LGPLv3, PySide6 LGPL-3). MPL-2.0 dependencies are acceptable used unmodified as separate packages (gemmi, the mmCIF reader of the `structure` extra; **added 25 September 2026**). The field viewer's renderer, npm `webgui` (LGPL-2.1-or-later, bundling three.js under MIT and dat.gui under Apache-2.0), MAY be redistributed with the package, **unmodified and as a separate file** loaded at run time, beside its licence texts and a notice naming its corresponding source, which the repository and the source distribution carry verbatim; nothing in the library SHALL be linked against it. PyQt SHALL NOT be used, being GPL-3 or commercial only. |
+| **CON-09** | The core library SHALL be licensed BSD-3-Clause. LGPL dependencies are acceptable under dynamic linking (NGSolve/Netgen LGPL-2.1, MDAnalysis LGPLv3, PROPKA LGPL-2.1, PySide6 LGPL-3). MPL-2.0 dependencies are acceptable used unmodified as separate packages (gemmi, the mmCIF reader of the `structure` extra; **added 25 September 2026**). The field viewer's renderer, npm `webgui` (LGPL-2.1-or-later, bundling three.js under MIT and dat.gui under Apache-2.0), MAY be redistributed with the package, **unmodified and as a separate file** loaded at run time, beside its licence texts and a notice naming its corresponding source, which the repository and the source distribution carry verbatim; nothing in the library SHALL be linked against it. PyQt SHALL NOT be used, being GPL-3 or commercial only. |
 | **CON-10** | Gmsh (GPLv2+) SHALL be an optional backend only; the default path SHALL NOT link Gmsh, and the core library SHALL remain functional without it. |
 | **CON-11** | SuiteSparse UMFPACK is GPL-2+, so a bundle defaulting to UMFPACK carries GPL obligations even though the library does not. The core library SHALL remain BSD-3 and SHALL NOT itself depend on UMFPACK; the redistributable bundle SHALL default to UMFPACK, SHALL be distributed under the resulting GPL-2+ obligations and SHALL state them in its licence notice, scipy SuperLU remaining selectable at runtime. **Amended 2 September 2026**, reversing the earlier "SHOULD default to scipy SuperLU with UMFPACK opt-in", on the §6.6 measurement: SuperLU did not factorise the reference-sized problem at all, so a SuperLU-default bundle could not run the published case. |
 | **CON-12** | Meshing components with distribution-restricting licences SHALL NOT be depended upon, specifically Triangle (and MeshPy, which wraps it) and TetGen 1.5 (AGPLv3). |
@@ -666,18 +667,31 @@ ions whose hydrodynamic radius is comparable to a solvent molecule being questio
 | 1 | Structure preparation | strip waters and ligands, verify oligomeric state, fill loops |
 | 2 | Ensemble | aligned MD frames (reference: 50, from the last 5 ns of a 30 ns run) |
 | 3 | Protonation, partial charges | PDB2PQR 3.7+ driving PROPKA at pH 7.5 with the CHARMM force field: `--ff=CHARMM --ffout=CHARMM --with-ph=7.5 --titration-state-method=propka --drop-water --keep-chain`; record `Q_net = Σ_i q_i` |
-| 4 | Per-atom smearing | normalised 3D Cartesian Gaussian, `σ_i = 0.5 · R_i` (`R_i` from the PQR); grid 0.005 nm; extend ≥ 4σ_max beyond the protein |
-| 5 | Azimuthal projection | bin to (r, z) by exact annular volume `π(r_out² − r_in²)Δz`; average over frames and over the Cₙ group |
-| 6 | Assembly | `scd_pore = if(r < 0.01[nm], 0, e_const * rhoq_pore(r,z) / (2*π*r))` [C m⁻³] |
+| 4 | Per-atom smearing | normalised 3D Cartesian Gaussian `ρ_i(x) = q_i e π^(−3/2) w_i^(−3) exp(−\|x − x_i\|²/w_i²)`, width `w_i = 0.5 · R_i` (`R_i` from the PQR) |
+| 5 | Azimuthal projection | the exact azimuthal mean of step 4, in closed form: `ρ̄_i(r, z) = q_i e π^(−3/2) w_i^(−3) exp(−((r − r_i)² + (z − z_i)²)/w_i²) · Ĩ₀(2 r r_i/w_i²)`, with `Ĩ₀(x) = e^(−x) I₀(x)` and `r_i = (x_i² + y_i²)^(1/2)`; summed over the atoms and averaged over the frames. The Cₙ average is contained in the azimuthal mean |
+| 6 | Assembly | `ρ_pore = Σ_i ρ̄_i`, deposited onto an element-wise field on the deployed mesh by `r`-weighted L² projection, each atom's element integrals renormalised to `q_i e` (PHY-18). The areal density `2πr ρ_pore`, sampled on a 0.005 nm (r, z) grid extending ≥ 4 w_max beyond the protein, is the exported artefact and the producer leg's grid. A supplied areal density keeps the reference's assembly, `scd_pore = if(r < 0.01[nm], 0, e_const * rhoq_pore(r,z) / (2*π*r))` [C m⁻³] |
 | 7 | Conservation check | `\|∫ρ_pore · 2πr dr dz − Q_net\| / \|Q_net\| < 10⁻³` |
+
+NOTE (PHY-16 steps 4–6; **amended 30 September 2026**, §8.2.4 D2): as first written, steps 4 and
+5 smeared each atom on a 3D grid at 0.005 nm and binned the grid to (r, z) by exact annular volume.
+The closed form of step 5 is that construction's limit as the spacing goes to zero, without its
+cost, which is about 10¹³ voxel updates for the 50-frame ClyA ensemble. Step 6 deposits onto the
+deployed mesh rather than sampling a grid there, which removes the aliasing of the consumer leg
+that the §4.4 NOTE measures on the delivered table. The reference built its table from a 2D Gaussian
+in (r, z) divided by `2πr` at the field point (`.knowledge/04` §3, gap G4). PHY-17 forbids that
+construction, so it is not reproduced. The two differ near each atom at order `(w_i/r_i)²`, and
+the difference on the ClyA ensemble is measured at Tier 3 rather than accommodated.
 
 **PHY-17.** Smearing SHALL be performed in 3D Cartesian space and only then averaged azimuthally.
 A Gaussian applied directly in (r, z) leaks charge across `r = 0` and SHALL NOT be used.
 
-**PHY-18.** The azimuthal contribution of each atom SHALL carry the `1/(2π r)` factor and the axis
-guard `r < 0.01 nm → 0` of the reference model. Deposition SHALL conserve charge, by quintic
-B-spline (PME `spl4`-equivalent) partition-of-unity or by renormalising each atom's kernel to
-`δ_i`.
+**PHY-18.** Where an areal density is converted to a volume density, as for a supplied
+`areal_charge_density` (§5.3.1 NOTE on `inputs.charge`), the conversion SHALL carry the
+`1/(2π r)` factor and the axis guard `r < 0.01 nm → 0` of the reference model. The closed form of
+PHY-16 step 5 is a volume density, regular on the axis, and needs neither. Deposition SHALL
+conserve charge by renormalising each atom's kernel to `q_i e` on the deployed mesh
+(**amended 30 September 2026**, §8.2.4 D2). The quintic B-spline partition of unity, the other
+option this clause first named, belongs to a Cartesian grid, and the producer no longer builds one.
 
 **PHY-19.** The conservation assertion of step 7 SHALL be evaluated on the deployed finite-element
 mesh, not on the source Cartesian grid. Per-z-slice cumulative charge SHALL additionally be checked
@@ -873,7 +887,7 @@ CLI and the desktop shell drive the same stage objects (IF-01, IF-02, IF-09).
 | 4 | Contour extraction and conditioning | Stage 3's (r, z) mean; the aligned ensemble and its radius set, for the probe-radius profile; isolevel, smoothing and simplification tolerance | Closed conditioned polyline, a `nanopnp/profile/v1` document | scikit-image, Shapely (both BSD-3) and numpy, per §5.2.1 (**amended 26 September 2026**, WP20) | §5.2.1 (FR-08) |
 | 5 | CAD assembly | Stage 4's polyline or a supplied `inputs.profile`, membrane specification with its `centre_z_nm` shift, reservoir radius, optional analyte | Fragmented (r, z) region, domains and boundaries tagged, as a declarative region record | `netgen.occ` (LGPL-2.1, OpenCASCADE, in-process). The optional Gmsh backend meshes this region at stage 6 and assembles none of its own (**amended 29 September 2026**, WP23 D1) | All bodies fragmented and imprinted, interfaces conformal, no gap or overlap at the membrane-to-pore junction, each domain one face, the membrane's inner edge strictly inside the body (FR-09; §5.2.1 NOTE on the membrane junction on any profile). **Amended 26 September 2026** (WP21) |
 | 6 | Meshing | Fragmented region, size fields | Graded triangular mesh | Netgen (LGPL-2.1) default, Gmsh (GPLv2+) optional, behind the mesh adapter | §5.2.2 (FR-10, QR-12): the VER-10 and VER-27 gates, as on an ingested mesh, and the wall-size gate of the §5.3.1 NOTE on `numerics.mesh` (**amended 26 September 2026**, WP21) |
-| 7 | Charge assembly | Prepared ensemble, pH, force field, **and the deployed mesh** (its gate is evaluated there, PHY-19); on the consumer path, a supplied field document instead of the ensemble | ρ_pore(r, z), Q_net, dielectric field, ion-exclusion surface | PDB2PQR 3.7+ (BSD-3) driving PROPKA3; quintic B-spline (`spl4`) deposition; APBS 3.4.1 (BSD-3) cross-check; settings per PHY-16 | Charge conservation to 10⁻³ of Q_net on the deployed FE mesh, plus the per-z-slice cumulative check (FR-14, QR-03, PHY-19) |
+| 7 | Charge assembly | Prepared ensemble, pH, force field, **and the deployed mesh** (its gate is evaluated there, PHY-19); on the consumer path, a supplied field document instead of the ensemble | ρ_pore(r, z), Q_net, dielectric field, ion-exclusion surface | PDB2PQR 3.7+ (BSD-3) driving PROPKA 3 (LGPL-2.1); the closed-form azimuthal kernel deposited on the deployed mesh (PHY-16, **amended 30 September 2026**, §8.2.4 D2); APBS 3.4.1 (BSD-3) cross-check through the test-only `apbs-binary` package; settings per PHY-16 | Charge conservation to 10⁻³ of Q_net on the deployed FE mesh, plus the per-z-slice cumulative check (FR-14, QR-03, PHY-19) |
 | 8 | Materials | Electrolyte specification, correction model names, coefficient files | D_i, μ_i, η, ϱ, ε_r as fields in ⟨c⟩ and d | Correction registry, `data/corrections/willems2020_nacl.yaml` | Conformance values of §4.3 reproduced; clamps above 5.3 M logged with location and property (PHY-13) |
 | 9 | Case assembly | Mesh, charge and dielectric fields, materials, boundary conditions, bias, analyte, numerics | Resolved case document, assembled discrete problem | `io/` schema validator, `physics/` model registry | Schema `nanopnp/case/v2` validates, a v1 document upgraded losslessly, unknown keys rejected with a diagnostic naming the key (IF-03); round trip semantically identical (FR-26) |
 | 10 | Solve | Assembled problem, continuation ladder, optional warm start | Converged fields, iteration history | NGSolve 6.2.2606+ (LGPL-2.1), damped Newton; UMFPACK (GPL-2+) or scipy SuperLU (BSD) (CON-08) | No negative concentration at any nonlinear iterate; ladder completed to the target rung (FR-17); §6.5, §6.6 govern |
@@ -2738,7 +2752,7 @@ differences are recorded and attributed rather than gated on.
 | **VAL-03** | Reference-solution generation and archival, in Phase 1 | Full reference set for the frozen cases archived with the generating model, independent of continued licence access, and **declaring** per field its source expression and its unit, and for the current its evaluation boundary and which electrode it references; a golden leaving any of those unstated is refused rather than interpreted |
 | **VAL-04** | Reference discretisation-error probe | The reference case re-solved at two refinement levels while licence access lasts, bounding the reference's own discretisation error |
 | **VAL-05** | Geometry pipeline against the published boundary | Auto-generated contour compared against the delivered reference pore polygon (§5.2.1): radius profile and constriction radius within a stated tolerance. Measured on two inputs (§8.2.2 B2): the public 2WCD entry, gated at Tier 2 to a looser tolerance, and the author's ClyA-AS ensemble, archived under `NANOPNP_REFERENCE_DATA` and run at Tier 3; the Phase 2 gate requires the ensemble leg. Each leg's metric, registration and tolerance are stated, with their argument, in the NOTE on VAL-05 below (**amended 28 September 2026**, WP22) |
-| **VAL-06** | Poisson-only comparison against APBS | Potential from the assembled fixed-charge and dielectric fields agrees with an APBS solve on the same structure within a stated tolerance |
+| **VAL-06** | Poisson-only comparison against APBS | Potential from the assembled fixed-charge and dielectric fields agrees with an APBS solve on the same structure within a stated tolerance. Two legs (**amended 30 September 2026**, §8.2.4 D3). The **gated** leg gives APBS, at zero ionic strength, our assembled charge and solid fraction as 3D maps, so that only the two solvers differ. The **recorded** leg runs APBS from the PQR with its own charge assignment and molecular surface, which measures the azimuthal averaging of CON-04. APBS runs from the test-only `apbs-binary` package on every CI leg its wheels cover, so VAL-06 is gated at Tier 2 on 2WCD and skips visibly where no wheel exists; the ensemble is recorded at Tier 3. The tolerance is stated, with its argument, by the work package that implements it, before the comparison is run |
 | **VAL-15** | The reference model's own `rhoq_pore` table, on our mesh | The delivered table reads with the grid its header declares, its planar integral is the declared `Q_net` to better than 10⁻⁹, and its boundary ring is negligible against its interior, so the producer leg of §4.4 is exact and the reference's 1.25 % is the consumer's (OPN-06); the consumer leg on the reference mesh is recorded with the mesh it came from, and the quadrature-agreement gate refuses it, per cent-level, rather than reporting a conserved number it cannot defend |
 
 NOTE (the comparison surface, and why VAL-01 reports two norms; WP13): the probe grid is **this
@@ -2991,6 +3005,10 @@ the commit named in the last column.
 | # | Decision | Consequence | Clause changed, and when |
 |---|---|---|---|
 | D1 | Versions are renumbered so that the minor version names the phase: Phase 0 is v0.1, Phase 1 v0.2, Phase 2 v0.3, Phase 3 v0.4 and Phase 4 v1.0. The existing tags are re-created on the same commits under the new names, and the old names are retired | Each phase closes with its own release, and no release spans two phases. A manifest written before the renumber records the old version, and §2.7's Versioning NOTE maps it | §2.7 (the table and the Versioning NOTE), the Release column of §3.2 and the §8.1 NOTE on FR-19 and FR-20, in the renumbering commit |
+| D2 | The fixed charge is each atom's 3D Gaussian averaged over the azimuth in closed form, and deposited onto the deployed mesh with each atom renormalised to its own charge. No 3D grid is built | The total is conserved by construction, so VER-01 guards the construction, while VER-02's per-slice check and a closed-form potential discriminate. VAL-15's consumer-leg aliasing cannot arise on the producer path. The reference's 2D (r, z) Gaussian is not reproduced (PHY-17), and its difference is measured at Tier 3 | PHY-16 steps 4–6 and a NOTE, PHY-18 and §5.2 stage 7, in the Phase 3 plan's commit |
+| D3 | VAL-06 runs APBS in CI, through the test-only `apbs-binary` package, with a gated like-for-like leg and a recorded leg from the PQR | The Phase 3 gate is evidence on every push, not a nightly record. `apbs-binary` has no Windows wheel, so VAL-06 skips visibly there and is required on Linux and macOS | VAL-06 in §7.4, §2.6 and §5.2 stage 7, in the Phase 3 plan's commit |
+| D4 | Protonation runs on every selected frame, as the reference did. `inputs.pqr` takes a single-frame PQR or a multi-MODEL PQR, one MODEL per frame | `Q_net` and the protonation states are recorded per frame, and a per-chain difference is a diagnostic, never symmetrised. The schema does not move: `inputs.pqr` keeps `format: pqr` and reads either form | The §5.3.1 NOTE on `inputs:`, in the work package that consumes `inputs.pqr` |
+| D5 | FR-15's ion-exclusion shell is built in Phase 3, beside the smoothed solid fraction | Both are deviations that default to off. A non-zero `charge.exclusion_offset_nm` adds the `exclusion` region to stages 5 and 6 | None: FR-15 stands as written |
 
 ### 8.3 Effort estimate
 
