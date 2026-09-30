@@ -1,6 +1,6 @@
 # WP26 — The physics-model interface (FR-20)
 
-**Status: planned, not started.** 30 September 2026. The first package of Phase 3. It inherits the
+**Status: delivered, 30 September 2026.** Planned 30 September 2026. The first package of Phase 3. It inherits the
 six registered models of PHY-21 (`physics/models.py`), the NUM-18 ladder (`solve/continuation.py`),
 the frozen case schema v2 (§8.2.2 B3), the stage-7 consumer path (WP9) and the stage-10 key of
 §5.3.2. Nothing in it depends on Phase 2's verdict.
@@ -44,6 +44,75 @@ permittivity; §6.5 NOTE; `physics/models.py`.
 | D15 | Stages 11, 12 | Without `transport`, stage 11 records the bias and an empty selection and builds no indicator; the transport path is unchanged. Export and GUI take `scales` and `relative_permittivity` from any model | Stage 12 walkable for `poisson` |
 | D16 | Public API | `PhysicsModel`, `TransportModel`, `ModelDeclaration`, `register_model`, `registered_models` join `nanopnp.PUBLIC` | FR-20; `test_public_api.py` |
 | D17 | Scalars "as before" | The three coupled models' stage-11 scalars on the quickstart case, before and after on one machine, bitwise, in the Outcomes. No cross-platform numeric golden | Netgen meshes are not bitwise portable |
+
+### Outcomes
+
+> **Outcome — D5, D14: nothing moved, against goldens taken before any code.** The quick-start case
+> as `epnp-ns`, `pnp-ns`, `pnp`, `pb` and `pb-linear` gives the same `solve_provenance` digest as
+> on `e58b2bf`, and both ladders' rungs build the same models; both are pinned in
+> `tests/tier1/test_model_interface.py`. The rung golden hashes each model's provenance *less
+> `scales`*, recorded from a worktree of `e58b2bf` and equal on this branch: `scales` carries
+> computed floats (`λ_D`, `Pe`, `Re`) whose last bit is the platform's `libm`, and CI runs Windows.
+> The solve digests carry case values only and are portable as they are. The ladder takes
+> `target=resolved.model`, builds every rung through `create`, and keeps passing its own
+> `debye_length_nm` to the two PB rungs, so those rungs are today's to the bit.
+
+> **Outcome — D17: the coupled scalars are bitwise unchanged.** `nanopnp run` on the quick-start
+> mesh (`nanopnp mesh cylinder` defaults, 392 elements, content hash `a2b027a9…`), stabilisation
+> `none`, this container, before and after: identical stage-10 and stage-11 artefact hashes and
+> every scalar equal to the last digit. `epnp-ns` (ladder): `current_A 6.622794735675069e-11`,
+> `transport_number 0.38497471059480837`, `eof_m3_s 2.2866603933854636e-23`, keys
+> `55ad504f3edf`/`569c14e5dc46`. `pnp-ns` (ladder, corrections `none`): `8.966952004255889e-11`,
+> `c22e05dc4155`/`9c775841bf94`. `pnp` (`continuation: none`): `6.622793234386395e-11`,
+> `3472832856fc`/`d651c025280b`.
+
+> **Outcome — D7 corrected: `poisson` integrates one order higher than the default.** The
+> *Design* §3 premise, that the `r`-weighted integrands are integrated at order 3, is false under the
+> default `Measures`: NGSolve's order estimate ignores the `r` weight, so at P2 both the stiffness and
+> the source were integrated at order 2, and the capacitor came out 0.38 `V_T` (3 %) off next to the
+> axis. `PoissonModel` adds `RADIAL_WEIGHT_ORDER = 1` to both terms, and solves one exact Newton
+> step on its own residual form rather than a separate `LinearForm`, so operator and source share
+> one quadrature. Measured error 1.1e-13 of `max |φ̃|` = 12.67 on 130 triangles. The coupled models
+> keep the default, which is why D17 holds; whether they should gain the order is open (NUM-07 NOTE
+> on the `r` weight, `.knowledge/06` §2.2).
+
+> **Outcome — D11: the switch check runs before the strategy check.** A case the model cannot pose
+> is the more precise diagnostic, and `pnp` with `flow: true` must say so under either
+> `continuation`. `test_phy24_an_electrostatic_model_has_no_transport_to_continue` now sets `pb`'s
+> switches to what it honours, so it still isolates the strategy refusal. `pnp` keeps both values of
+> `variable_density` and `inertia`: they were carried and recorded before, and refusing them would
+> refuse the existing corpus. It provides `current`, `transport_numbers` and `rectification`, not
+> `eof_rate` or `analyte_force`.
+
+> **Outcome — D12, D15: shapes chosen in implementation.** `essential_boundaries` is keyed by field,
+> with the axis constraint under `VELOCITY_AXIS`; the gate describes the potential, no-slip and the
+> axis as before and any other key generically (`the essential condition on c_Na+`). A model without
+> solids aborts on any solid domain, the exclusion shell included. Stage 11 without transport records
+> `{bias_V}` and no band: `QoIArtefact.indicator_band_nm` is absent from the key, as
+> `extension_shell_nm` already was, so every transport key is unchanged.
+
+> **Outcome — D10: building the model in `resolve` costs nothing measurable.** 1.62 ms per resolve
+> of the quick-start case as `epnp-ns` on `e58b2bf` and on this branch, 1.59 against 1.60 ms as
+> `pnp-ns` (mean of 50, this container). Resolving imports no NGSolve or Netgen, asserted in a fresh
+> process.
+
+> **Outcome — D4, D9: two details.** `transport_model` reads the declaration; a model built outside
+> the registry under its own name (the MMS configurations) is answered by its class, inside
+> `physics/`. `pb`'s provenance is unchanged, so `λ_D` is not restated there: it follows from the
+> electrolyte and the concentration, which key the solve.
+
+> **Outcome — the source walk is stricter than planned.** Comparisons alone let `default_ladder`
+> pass unexempted, so the exemption would have been vacuous. VER-56 also refuses a model name spelt
+> as a literal anywhere outside `physics/`, docstrings aside; `default_ladder` is exempt from all
+> rules, and the schema's default `physics.model` and the validated default case from the literal
+> rule. The test shows each rule and each exemption firing.
+
+> **Outcome — a pre-existing defect, not fixed here.** A `pnp-ns` case that leaves the electrolyte's
+> corrections on (the schema default) is refused at stage 10 *after* solving: the case reads `d` by
+> its electrolyte, but `pnp-ns` forces the classical switches, so no distance field reaches the
+> solution and `save` refuses it. Reproduced on `e58b2bf`; the D17 `pnp-ns` run sets the corrections
+> to `none`. It belongs with the declaration (resolve could refuse it, or `reads_distance` could ask
+> the built model) and is left for review rather than widened into this package.
 
 ### Work items
 
