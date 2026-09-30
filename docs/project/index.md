@@ -7,6 +7,7 @@ against a written specification. It is pre-alpha and single-maintainer.
 | Page | |
 |---|---|
 | [Contributing](contributing.md) | Setting up, the quality gate, and what a change has to carry |
+| [Adding a physics model](physics-models.md) | The §5.4.3 interface, walked through `poisson` |
 | [Citing](citing.md) | How to cite the software and the paper it implements |
 | [Release notes](../_generated/project/changelog.md) | Every tagged version, and what each work package delivered |
 | [Licence](licence.md) | BSD-3-Clause for the library; GPL-2+ for the desktop bundle, and why |

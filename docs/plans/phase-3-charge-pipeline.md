@@ -1,6 +1,6 @@
 # Phase 3 (Charge pipeline): from a structure to a charged run
 
-**Status: planned, not started.** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
+**Status: in progress. WP26 delivered, 30 September 2026; WP27–WP32 planned.** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
 the geometry pipeline (`main` at `v0.3.0-alpha.9`, formerly `v0.9.0-alpha.9`). Phase 2's
 end-of-phase report and its release, `v0.3.0`, wait for one Tier-3 run on the author's archive
 (criterion 3, VAL-05's ensemble leg). WP26 may start before that report merges, because nothing in
@@ -129,6 +129,18 @@ outside that class. The six shipped models give the same stage-10 keys and the s
 before. No module outside `physics/` names a model, which is asserted by walking the source. A
 `poisson` case with solids and a fixed charge solves, and `pb` beside a fixed charge is still refused
 (PHY-24).
+
+> **Delivered, 30 September 2026** ([plan](wp26-physics-model-interface.md), to be tagged
+> `v0.4.0-alpha.1`). `register_model` pairs each model with a `ModelDeclaration`, and case
+> validation, the mesh gate, the solve, stage 11, the export and the GUI read it; `COUPLED_MODELS`
+> and every `isinstance` on a model class are gone. `poisson` (`PoissonModel`) runs from a case
+> file with solids, `inputs.charge` and `inputs.eps_r`, which WP28 and WP29 build on; `pb` and
+> `pb-linear` run on a solid-free mesh with the case's `λ_D`. Discharges FR-20 and QR-14's model
+> half; adds VER-56 (`tests/tier1/test_model_interface.py`, `tests/tier2/test_poisson_layers.py`).
+> The five older models' stage-10 keys, both ladders' rung models and the coupled scalars are
+> unchanged. **Live for later packages:** `poisson` assembles one extra quadrature order for the
+> `r` weight and the coupled models do not (NUM-07 NOTE on the `r` weight, open); WP28 produces a
+> charge only for a model declaring `fixed_charge`.
 
 ### WP27 — Protonation: the PDB2PQR driver and the PQR artefact (FR-12)
 

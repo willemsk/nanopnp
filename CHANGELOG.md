@@ -17,6 +17,42 @@ Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before t
 version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
 
+## [0.4.0-alpha.1] - 2026-09-30
+
+WP26: the physics-model interface (FR-20, QR-14), the first package of Phase 3.
+
+### Added
+
+- **A model is one class and a declaration.** `register_model(name, builder, declaration)`
+  registers a model with a `ModelDeclaration` readable before anything is built: the options its
+  builder takes, the switch values it honours, whether it carries solids, which supplied
+  coefficients it accepts, whether it reads the PHY-02 distance field, the continuation strategies
+  it admits, the quantities it provides, and whether it solves transport. Case validation, the
+  mesh gate, the solve, stage 11, the IF-07 export and the GUI read the declaration and the built
+  model's members, and no longer the model's name or class (§5.4.3 NOTE, VER-56).
+- `PhysicsModel`, `TransportModel`, `ModelDeclaration`, `register_model` and `registered_models` are
+  public (IF-01).
+- **`poisson` runs from a case file**: electrostatics over the whole domain with the membrane and
+  protein at their `physics.solid_permittivities`, the fluid at `ε_r,f⁰`, and `inputs.charge` and
+  `inputs.eps_r` accepted. It is the configuration VAL-06 compares with APBS (PHY-21 NOTE).
+- **`pb` and `pb-linear` run from a case file** on a mesh with no solid domain, with the Debye
+  length of the case's own salt, temperature and `ε_r,f⁰`. A salt that is not symmetric
+  monovalent is refused (FR-19).
+- A developer page, *Adding a physics model*, walks `poisson` through the interface.
+
+### Changed
+
+- Every refusal a declaration makes names the model, the key and the values or models that are
+  admitted. `pnp` admits `numerics.continuation: none` only, as §6.5 already required. An
+  `outputs:` word the model does not provide is refused when the case is resolved rather than at
+  stage 11: `pnp` does not provide `eof_rate` or `analyte_force`, and the electrostatic models
+  provide no quantity (`outputs: []` or `[fields]`).
+- For a model without solids, a mesh carrying a solid domain is refused naming the model and the
+  domain, rather than asking for a `solid_permittivities` entry the case would then refuse.
+- The stage-10 key of every model runnable before this release, the model of every rung of the
+  NUM-18 ladder, and the coupled models' stage-11 scalars on the quick-start case are unchanged,
+  the scalars bit for bit (VER-56).
+
 ## [0.3.0] - 2026-09-30
 
 **Phase 2, the geometry pipeline.** A PDB entry or an MD trajectory becomes a gated mesh by six

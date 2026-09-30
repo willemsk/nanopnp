@@ -134,6 +134,7 @@ nav:
   - Project:
       - project/index.md
       - Contributing: project/contributing.md
+      - Adding a physics model: project/physics-models.md
       - Citing: project/citing.md
       - Release notes: _generated/project/changelog.md
       - Licence: project/licence.md
