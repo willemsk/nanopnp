@@ -383,6 +383,17 @@ frame).
   `Biomolecule.apply_force_field` could not parameterise, which the PQR leaves out. An atom
   written with no charge gets `0.0000` (`get_pqr_string`) **[verified]**, read from the 3.7.1
   source, 1 October 2026.
+- **PROPKA 3.5.1 fails on Python 3.14.** `Parameters.parse_line` dispatches on
+  `self.__annotations__`, and under PEP 649/749 annotations are a class attribute only: on an
+  instance the lookup raises `AttributeError: 'Parameters' object has no attribute '__annotations__'`
+  on the parameter file's first line, so every titrated PDB2PQR run fails (CI, Python 3.14.7;
+  reproduced on 3.14.0rc2). Assigning `Parameters.__annotations__` does not help, because the type's
+  descriptor stores it where instance lookup does not look. A `__getattr__` on the class answering
+  that one name from `type(self).__annotations__` does, and the dispatch is unchanged: the fragment
+  `GLU 18`–`LEU 26` at pH 2 gives byte-identical PQRs and equal pKas on 3.12 and on 3.14 with it.
+  3.5.1 is the latest release (PyPI, 1 October 2026). `charge/protonation.py`'s
+  `restore_propka_annotations` installs it only where the instance lacks the attribute
+  **[tested]**, 1 October 2026 (WP27).
 - **The stage's cost.** Protonating the prepared 2WCD dodecamer through the `protonation` stage
   takes 97.4 s and 0.44 GB peak RSS for one cold frame, in a fresh process; with the frame cached
   the stage's own work (reading the PQR, registering it, tabulating the states, checking the radii)

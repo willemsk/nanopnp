@@ -89,6 +89,13 @@ protonation keys; `.knowledge/07` §3.
 > fixture costs about 100 s of the push gate rather than 64 s. `Q_net` is recorded as an integer per
 > frame, with its residual beside it (an exact `fsum` of four-decimal charges leaves ~1e-16 e).
 
+> **Outcome — PROPKA 3.5.1 does not run on Python 3.14.** CI's 3.14 leg failed every titrated
+> run: PROPKA reads `self.__annotations__`, which PEP 649/749 leaves on the class only. No PROPKA
+> release fixes it, and QR-09 forbids narrowing the interpreter range, so the driver gives
+> `Parameters` a fallback for that one name, installed only where it is missing; on 3.12 and 3.14
+> the fragment's PQR and pKas are identical with it (`.knowledge/07` §3,
+> `test_ver57_propka_reads_its_parameters_on_every_supported_python`).
+
 > **Outcome — Tier 3 not run.** The archived PQRs are not under `$NANOPNP_REFERENCE_DATA` here.
 > `tests/tier3/test_protonation_archive.py` was dry-run against the 2WCD export as a stand-in
 > archive, so its reading, chain pairing and registration legs are exercised; its numbers are the

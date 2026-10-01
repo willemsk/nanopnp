@@ -562,6 +562,40 @@ def _require_pdb2pqr() -> None:
         ) from error
 
 
+def _instance_annotations(self: object, name: str) -> Any:  # noqa: ANN401 - mirrors __getattr__
+    """Answer ``self.__annotations__`` from the class, and refuse every other missing name."""
+    if name == "__annotations__":
+        return type(self).__annotations__
+    raise AttributeError(f"{type(self).__name__!r} object has no attribute {name!r}")
+
+
+def restore_propka_annotations() -> bool:
+    """Let PROPKA 3.5.1 read its parameter file on Python 3.14; return whether it had to.
+
+    ``propka.parameters.Parameters.parse_line`` dispatches on
+    ``self.__annotations__``. From Python 3.14 (PEP 649 and 749) annotations are
+    evaluated lazily and are an attribute of the class only, so on an instance
+    the lookup raises ``AttributeError`` and every PROPKA run fails before its
+    first residue. QR-09 holds the package to 3.11-3.14, and no PROPKA release
+    fixes it (3.5.1 is the latest, 1 October 2026), so the instance is given a
+    fallback that answers that one name from its class and nothing else.
+
+    Detected, not version-checked: where an instance already has
+    ``__annotations__``, as on 3.11-3.13 and on any PROPKA that stops reading
+    it, nothing is installed. The dispatch compares the annotation objects by
+    identity, and the class's evaluated annotations are those objects, so the
+    run is unchanged: on the fragment ``GLU 18``-``LEU 26`` at pH 2, 3.14 with
+    this fallback and 3.12 without it give byte-identical PQRs and equal pKas
+    (``.knowledge/07`` section 3).
+    """
+    from propka.parameters import Parameters
+
+    if hasattr(Parameters(), "__annotations__"):
+        return False
+    Parameters.__getattr__ = _instance_annotations  # type: ignore[attr-defined]
+    return True
+
+
 def run_pdb2pqr(pdb: Path, pqr: Path, settings: ResolvedProtonation) -> dict[str, Canonicalisable]:
     """Run PDB2PQR in-process on one PDB file and return what it reported (D6, D7).
 
@@ -584,6 +618,7 @@ def run_pdb2pqr(pdb: Path, pqr: Path, settings: ResolvedProtonation) -> dict[str
     """
     from pdb2pqr.main import run_pdb2pqr as pdb2pqr_main
 
+    restore_propka_annotations()
     source = pdb.resolve()
     if not source.is_file():
         raise FileNotFoundError(f"the frame PDB {source} is not a file")
