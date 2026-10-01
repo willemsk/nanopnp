@@ -407,6 +407,33 @@ cannot resolve, and an aliased integral converges in neither `h` nor order. The 
 producer side: depositing onto the finite-element space and rescaling to `Q_net` conserves by
 construction, where sampling somebody else's interpolant at quadrature points cannot.
 
+### 3.3 The closed-form kernel on the 0.005 nm lattice [tested, verified]
+
+PHY-16 step 5's kernel, `ρ̄_i = q_i π^(−3/2) w⁻³ exp(−((r − r_i)² + (z − z_i)²)/w²) Ĩ₀(2 r r_i/w²)` with
+`Ĩ₀ = scipy.special.i0e`, measured 1 October 2026 while planning WP28:
+
+| Atom | `∫ ρ̄ 2πr dr dz` (adaptive quadrature) | Trapezoid sum on the `h = 0.005` nm lattice, node on `r = 0` |
+|---|---|---|
+| `r_i = 0`, `w = 0.05` nm | 1 to 10⁻¹⁵ | −1.67 × 10⁻³ |
+| `r_i = 0.02`, `w = 0.05` | 1 | −1.42 × 10⁻³ |
+| `r_i = 0.05`, `w = 0.1` | 1 | −3.25 × 10⁻⁴ |
+| `r_i = 0.1`, `w = 0.0112` (CHARMM polar H) | 1 | −1.4 × 10⁻¹⁵ |
+| `r_i = 3`, `w = 0.0112` and `w = 0.1` | 1 | ≤ 10⁻¹⁵ |
+
+- **Off the axis the lattice sum is exact** even for the smallest CHARMM width, `w = 0.5 × 0.2245 Å`
+  (`w/h = 2.24`): the trapezoid rule on a Gaussian errs by `~2 exp(−π² w²/h²)`, 10⁻²¹ here.
+- **Near the axis it is short by `h²/(6 w²)`.** The integrand `2πr ρ̄` rises linearly from `r = 0`,
+  and the Euler–Maclaurin end correction `(h²/12) f'(0)` divided by the atom's charge gives
+  `h²/(6w²)`, which is −1.67 × 10⁻³ at `w = 0.05` nm: above QR-03's 10⁻³. Renormalising each atom on
+  the lattice removes it. ClyA's innermost atoms sit at `r ≳ 1.6` nm, where it does not arise.
+- **The kernel is separable**, `Z_i(z) · R_i(r)`, so a frame's lattice is one sparse product and an
+  atom's lattice sum is a product of two 1D sums. `exp(−(r − r_i)²/w²) · Ĩ₀(...)` overflows nowhere,
+  even at `2 r r_i/w² ~ 10⁶`.
+- **The z-marginal survives azimuthal averaging exactly**: `∫ ρ̄_i 2πr dr = q_i exp(−(z − z_i)²/w²)/(w√π)`.
+  So under the weight `½ erfc((z − p)/s)` an atom's charge below plane `p` is
+  `q_i ½ erfc((z_i − p)/√(s² + w²))`, which agrees with adaptive quadrature to round-off
+  [verified]. That is the closed-form per-plane reference of the §4.4 NOTE on the producer path.
+
 ---
 
 ## 4. Mesh

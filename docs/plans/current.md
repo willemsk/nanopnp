@@ -10,10 +10,10 @@ evidence that an unmerged branch has shipped.
 - Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **closed** as `v0.3.0`, with
   criterion 3 waived: the ensemble's ε_G is −5.56 % against 5 % (§8.2.4 D7). `Z_MD` is 5.655 nm.
 - Phase 3 ([charge pipeline](phase-3-charge-pipeline.md), release `v0.4.0`) is **in progress**:
-  WP26–WP32. [WP26](wp26-physics-model-interface.md) (FR-20, VER-56) is **merged** and tagged
-  `v0.4.0-alpha.1`. [WP27](wp27-protonation.md) (FR-12, VER-57), protonation, is **implemented on
-  its branch, PR open, independent review pending**. **Next: `/wp-ship`** on WP27, then tag
-  `v0.4.0-alpha.2`, then `/wp-plan 28`.
+  WP26–WP32. [WP26](wp26-physics-model-interface.md) (FR-20, VER-56) and
+  [WP27](wp27-protonation.md) (FR-12, VER-57) are **merged**, tagged `v0.4.0-alpha.1` and `.2`.
+  [WP28](wp28-charge-deposition.md) (FR-13, FR-14, QR-03; VER-01, VER-02, VER-58), deposition on
+  the deployed mesh, is **planned**. **Next: `/wp-implement`** on WP28.
 
 ## What Phase 3 must not re-decide
 
@@ -28,10 +28,13 @@ Each is recorded in full where it points.
   like-for-like leg and a recorded leg from the PQR. → VAL-06; §8.2.4 D3.
 - **Protonation is per frame.** `inputs.pqr` is a single- or multi-MODEL PQR, and the schema does
   not move. → §8.2.4 D4.
-- **`protonation` is stage 7's first half**, after `mesh`, run only as a walk's named target
-  until WP28 reads it (WP27 D3). PROPKA decides every state. Registration leaves PDB2PQR's flipped
-  amides and rings out. → §5.2 stage 7 note; PHY-16 step-3 NOTE; §5.3.1 NOTEs on the protonation
-  keys and `inputs:`.
+- **`protonation` is stage 7's first half**, after `mesh`. From WP28 both halves run when the case
+  protonates and its model declares `fixed_charge` (WP27 D3 retired). PROPKA decides every state.
+  Registration leaves PDB2PQR's flipped amides and rings out. → §5.2 stage 7 note; PHY-16 step-3
+  NOTE; §5.3.1 NOTEs on the protonation keys and `inputs:`.
+- **The deposit** is element-wise of the potential's order, in the model frame, gated per plane
+  against the source atoms, and read only from stage 7's artefact (WP28). → PHY-16 NOTE on the
+  deposition; §4.4 NOTE on the producer path.
 - **The exclusion shell is in Phase 3 (WP30)**, off by default. → §8.2.4 D5; FR-15.
 - **Tier 3 compares the published I–V and in-pore averages**, and gates v1.0, not Phase 3.
   → VAL-16, VAL-17; §8.2.4 D6.
@@ -40,8 +43,9 @@ Each is recorded in full where it points.
 - **Layers read a model's declaration, never its name or class** (VER-56 walks the source): WP28
   produces a charge only for a model declaring `fixed_charge`. → §5.4.3 NOTE.
 - **`poisson` is the VAL-06 target**, runnable with solids and `inputs.charge`. It adds one
-  quadrature order for the `r` weight; the coupled models do not, which is open. → PHY-21 NOTE;
-  NUM-07 NOTE on the `r` weight.
+  quadrature order for the `r` weight; the coupled models do not, which is open, and which leaves
+  them one order short on a deposited source (WP28 D13). → PHY-21 NOTE; NUM-07 NOTE on the `r`
+  weight.
 
 ## Inherited from Phases 1 and 2, still binding
 
@@ -49,17 +53,16 @@ Each is recorded in full where it points.
   regression.
 - **Schema v2 is frozen**: a need widens a value set, never adds a key (§8.2.2 B3).
   `physics.solid_permittivities` alone sets ε_protein and ε_membrane (WP17 D2, D3).
-- **A callback is not an input**: a watched run keys the same artefact (VER-44).
 - **The public API is `nanopnp.PUBLIC`**. Adding a name is a decision in
   `tests/tier1/test_public_api.py`.
+- **A callback is not an input**: a watched run keys the same artefact (VER-44).
 - **A generated mesh is read only through `deployed_mesh`**, keyed on its recipe, with its content
   hash recorded (WP21 D10, D12).
 - **Stage 1's frame is fixed**: the axis on z at r = 0, +z towards *cis*; stage 5 applies
   `centre_z_nm`. Tests orient the vendored 2WCD through `prepared_2wcd` (WP18 D16).
 - **Lengths at the interchange boundary follow the reader.** A 3D map is in Å (B10), and (r, z)
   grids stay in nm.
-- **Every phase documents what it ships**, and its commands run verbatim (VER-46). An example's tag
-  names its exit.
+- **Every phase documents what it ships**, and its commands run verbatim (VER-46).
 - **Generated references are built, never committed.** A new payload is declared in `PAYLOADS`
   and exercised by `--selftest`.
 
@@ -80,7 +83,8 @@ Each is recorded in full where it points.
 | Why the consumer leg aliases | §4.4 NOTEs; `.knowledge/04` §3–§3.2; `.knowledge/06` §8.1.1 |
 | The physics-model interface | `docs/project/physics-models.md`; the WP26 plan's Outcomes; `physics/models.py` |
 | PDB2PQR, PROPKA and APBS facts | `.knowledge/07` §3, incl. *as a per-frame driver*; `density/radii.py` and `data/radii/` |
-| The artefact WP28 deposits | `charge/protonation.py`; WP27 Outcomes; `protonated_2wcd` |
+| The artefact WP28 deposits | `charge/protonation.py` (`ProtonationTable`); WP27 Outcomes; `protonated_2wcd` |
+| The deposition and its gates | The WP28 plan; `.knowledge/04` §3.3; `charge/fields.py` |
 | The reduction the charge reuses | `symmetry/annular.py`; VER-50 |
 | Case schema, option sets and supply chains | §5.3.1 and its NOTEs; `io/case.py` (`Charge`, `SUPPLY_CHAINS`, `_require_runnable`) |
 | The desktop shell | `gui/`; WP24 Outcomes; `.knowledge/07` §5 |

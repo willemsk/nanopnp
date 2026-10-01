@@ -1,6 +1,6 @@
 # Phase 3 (Charge pipeline): from a structure to a charged run
 
-**Status: in progress. WP26 delivered, 30 September 2026; WP27 delivered, 1 October 2026 ([plan](wp27-protonation.md)); WP28–WP32 planned.** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
+**Status: in progress. WP26 delivered, 30 September 2026; WP27 delivered, 1 October 2026 ([plan](wp27-protonation.md)); WP28 planned in detail ([plan](wp28-charge-deposition.md)); WP29–WP32 planned.** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
 the geometry pipeline (`main` at `v0.3.0-alpha.9`, formerly `v0.9.0-alpha.9`). Phase 2's
 end-of-phase report and its release, `v0.3.0`, wait for one Tier-3 run on the author's archive
 (criterion 3, VAL-05's ensemble leg). WP26 may start before that report merges, because nothing in
@@ -192,6 +192,15 @@ charged walk solves. **Tier 3, recorded:** the archived PQRs deposited and compa
 delivered `rhoq_pore` table (the planar integral, and the field difference attributed to G4's
 `r_i` against `r`).
 
+> **Planned, 1 October 2026** ([plan](wp28-charge-deposition.md)). Two refinements of the text
+> above, both amended in the specification in the plan's commit. The consumer leg on a deposited
+> field integrates the deployed element-wise field, not the lattice's interpolant, which is what
+> removes VAL-15's aliasing, so "the existing gates apply unchanged" holds for their order and
+> tolerances but not for what the consumer leg integrates. The per-plane reference is the source
+> atoms in closed form, under a Gaussian-smoothed step of 0.5 nm, rather than the lattice under the
+> consumer path's 0.2 nm ramp (§4.4 NOTE on the producer path). The deposit is element-wise of the
+> potential's order (D3), and `axis_cutoff_nm` is refused away from its default (D10).
+
 ### WP29 — VAL-06: Poisson against APBS (the phase gate)
 
 The `apbs-binary` test group, a driver in `nanopnp.validation` that revolves our assembled charge and
@@ -247,7 +256,7 @@ without a documentation edit (VER-45).
 | Exclusion shell | In Phase 3 or deferred | **Settled by the author, 30 September 2026** (§8.2.4 D5): in Phase 3, as WP30 |
 | VAL-06 tolerance | The agreement required of the gated leg | WP29, argued and stated before the first comparison, and put to the author with the argument |
 | Stage numbering | Where `protonation` sits in §5.2's numbered table | **Settled by [WP27](wp27-protonation.md) D1**: it shares number 7 with `charge` and runs before it, so stages 8–12 keep their numbers (§5.2 design note) |
-| `axis_cutoff_nm` on the producer path | Applied for parity, or refused away from its default | WP28 |
+| `axis_cutoff_nm` on the producer path | Applied for parity, or refused away from its default | **Settled by [WP28](wp28-charge-deposition.md) D10**: refused away from its default on every path, naming PHY-18 (§5.3.1 NOTE on `charge.smearing`) |
 | OPN-04 | Which mutation list produced the ClyA-AS structure | **Author, open.** Needed for the provenance of `Q_net`, not for any gate. WP27 records `structure.source.variant` beside `Q_net` |
 
 ## Verification
