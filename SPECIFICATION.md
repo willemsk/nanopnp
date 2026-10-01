@@ -286,9 +286,12 @@ PATH` writes the artefact that stage stored, in an interchange format chosen by 
 `PATH`: the aligned ensemble as a PDB of its first frame with a DCD of every frame beside it
 (IF-04); the density map as `.npz`, OpenDX or CCP4/MRC (IF-05, in the units of the IF-05 NOTE on
 length units); the reduced map as `.npz`; the stage-4 profile as its stored `nanopnp/profile/v1`
-document; and a stage-6 mesh as its stored MSH 4.1 file (IF-06). The last two are copied byte for
-byte. `PATH` is an output location, so the configuration NOTE is not breached, and no artefact key
-depends on it. A stage without an export, or a suffix that stage does not write, SHALL be refused as
+document; a stage-6 mesh as its stored MSH 4.1 file (IF-06); and the protonation artefact as a
+`.pqr`, in stage 1's frame and in ångströms, one `MODEL` per frame where there is more than one
+(**added 1 October 2026**, WP27). The profile and the mesh are copied byte for byte, and the PQR
+read back through `inputs.pqr` gives the artefact's payload exactly. `PATH` is an output
+location, so the configuration NOTE is not breached, and no artefact key depends on it. A stage
+without an export, or a suffix that stage does not write, SHALL be refused as
 a usage error naming the accepted ones before any stage runs. No partial file SHALL be left behind
 by a failure. A profile exported this way and supplied through `inputs.profile` is a supplied
 profile (§5.3.1 NOTE on `geometry.contour`).
@@ -686,6 +689,23 @@ in (r, z) divided by `2πr` at the field point (`.knowledge/04` §3, gap G4). PH
 construction, so it is not reproduced. The two differ near each atom at order `(w_i/r_i)²`, and
 the difference on the ClyA ensemble is measured at Tier 3 rather than accommodated.
 
+NOTE (PHY-16 step 3, protonation as run; **added 1 October 2026**, WP27): PDB2PQR SHALL be run
+once per selected frame (§8.2.4 D4) on that frame's heavy atoms, with every hydrogen removed and
+every protonation-variant residue name (`HSD`, `HSE`, `HSP`, `HID`, `HIE`, `HIP`, `ASH`, `ASPP`,
+`GLH`, `GLUP`, `LYN`, `LSN`, `CYM`, `TYM`, `ARN`) written as its titratable parent, so that the
+states are PROPKA's at the case's pH and not the source file's. PDB2PQR 3.7.1 treats `HSD` and
+`HSE` as fixed residues that PROPKA does not titrate, and refuses `HSE` with its hydrogens present,
+so a CHARMM-named MD frame passed through verbatim would pin every histidine. The reference passed
+its frames verbatim to PDB2PQR 2.1.1, and its PQRs keep `HSE`; the difference is measured at Tier 3
+rather than reproduced. Under CHARMM, PDB2PQR cannot represent a neutral terminus, `CYS⁻`, `LYS⁰`,
+`TYR⁻` or `ARG⁰`, and keeps the standard state where PROPKA prefers one of these; it never applies
+PROPKA's terminal pKa at all. Every such residue SHALL be recorded per frame as an unapplied state,
+derived by comparing each residue's applied charge with the sum of PROPKA's group states at the pH,
+never parsed from log text. On 2WCD at pH 7.5 these are `CYS 285` (pKa 6.25) in every chain, and
+the N-terminus of `LYS 8` wherever its pKa, 7.48 to 7.50 across the chains, falls below the pH. They are the validated model's states, so they are recorded and
+not gated. The protonation states of the chains of a homo-oligomer are not symmetrised: a residue
+whose charge differs between chains of identical sequence is recorded as a per-chain diagnostic.
+
 **PHY-17.** Smearing SHALL be performed in 3D Cartesian space and only then averaged azimuthally.
 A Gaussian applied directly in (r, z) leaks charge across `r = 0` and SHALL NOT be used.
 
@@ -904,7 +924,8 @@ CLI and the desktop shell drive the same stage objects (IF-01, IF-02, IF-09).
 | 4 | Contour extraction and conditioning | Stage 3's (r, z) mean; the aligned ensemble and its radius set, for the probe-radius profile; isolevel, smoothing and simplification tolerance | Closed conditioned polyline, a `nanopnp/profile/v1` document | scikit-image, Shapely (both BSD-3) and numpy, per §5.2.1 (**amended 26 September 2026**, WP20) | §5.2.1 (FR-08) |
 | 5 | CAD assembly | Stage 4's polyline or a supplied `inputs.profile`, membrane specification with its `centre_z_nm` shift, reservoir radius, optional analyte | Fragmented (r, z) region, domains and boundaries tagged, as a declarative region record | `netgen.occ` (LGPL-2.1, OpenCASCADE, in-process). The optional Gmsh backend meshes this region at stage 6 and assembles none of its own (**amended 29 September 2026**, WP23 D1) | All bodies fragmented and imprinted, interfaces conformal, no gap or overlap at the membrane-to-pore junction, each domain one face, the membrane's inner edge strictly inside the body (FR-09; §5.2.1 NOTE on the membrane junction on any profile). **Amended 26 September 2026** (WP21) |
 | 6 | Meshing | Fragmented region, size fields | Graded triangular mesh | Netgen (LGPL-2.1) default, Gmsh (GPLv2+) optional, behind the mesh adapter | §5.2.2 (FR-10, QR-12): the VER-10 and VER-27 gates, as on an ingested mesh, and the wall-size gate of the §5.3.1 NOTE on `numerics.mesh` (**amended 26 September 2026**, WP21) |
-| 7 | Charge assembly | Prepared ensemble, pH, force field, **and the deployed mesh** (its gate is evaluated there, PHY-19); on the consumer path, a supplied field document instead of the ensemble | ρ_pore(r, z), Q_net, dielectric field, ion-exclusion surface | PDB2PQR 3.7+ (BSD-3) driving PROPKA 3 (LGPL-2.1); the closed-form azimuthal kernel deposited on the deployed mesh (PHY-16, **amended 30 September 2026**, §8.2.4 D2); APBS 3.4.1 (BSD-3) cross-check through the test-only `apbs-binary` package; settings per PHY-16 | Charge conservation to 10⁻³ of Q_net on the deployed FE mesh, plus the per-z-slice cumulative check (FR-14, QR-03, PHY-19) |
+| 7 | Protonation (`protonation`) | Stage 1's aligned ensemble, pH, force field, titration method; or a supplied `inputs.pqr` | Per-frame atom table in stage 1's frame (identity, coordinates, charge, radius), `Q_net` and every titratable residue's state per frame | PDB2PQR 3.7+ (BSD-3) driving PROPKA 3 (LGPL-2.1), one call per frame with the flags of PHY-16 step 3 (**added 1 October 2026**, WP27) | Every atom carries a charge and a radius, and every charged atom a positive radius; `Q_net` an integer to 10⁻⁶ e on every frame; a supplied frame registered to its stage-1 frame to 0.01 Å (§5.3.1 NOTE on `inputs:`) |
+| 7 | Charge assembly (`charge`) | The protonation artefact, **and the deployed mesh** (its gate is evaluated there, PHY-19); on the consumer path, a supplied field document instead | ρ_pore(r, z), Q_net, dielectric field, ion-exclusion surface | The closed-form azimuthal kernel deposited on the deployed mesh (PHY-16, **amended 30 September 2026**, §8.2.4 D2); APBS 3.4.1 (BSD-3) cross-check through the test-only `apbs-binary` package; settings per PHY-16 | Charge conservation to 10⁻³ of Q_net on the deployed FE mesh, plus the per-z-slice cumulative check (FR-14, QR-03, PHY-19) |
 | 8 | Materials | Electrolyte specification, correction model names, coefficient files | D_i, μ_i, η, ϱ, ε_r as fields in ⟨c⟩ and d | Correction registry, `data/corrections/willems2020_nacl.yaml` | Conformance values of §4.3 reproduced; clamps above 5.3 M logged with location and property (PHY-13) |
 | 9 | Case assembly | Mesh, charge and dielectric fields, materials, boundary conditions, bias, analyte, numerics | Resolved case document, assembled discrete problem | `io/` schema validator, `physics/` model registry | Schema `nanopnp/case/v2` validates, a v1 document upgraded losslessly, unknown keys rejected with a diagnostic naming the key (IF-03); round trip semantically identical (FR-26) |
 | 10 | Solve | Assembled problem, continuation ladder, optional warm start | Converged fields, iteration history | NGSolve 6.2.2606+ (LGPL-2.1), damped Newton; UMFPACK (GPL-2+) or scipy SuperLU (BSD) (CON-08) | No negative concentration at any nonlinear iterate; ladder completed to the target rung (FR-17); §6.5, §6.6 govern |
@@ -920,6 +941,7 @@ Design notes, recorded where an implementer would otherwise choose wrongly.
 | 3 | The n rotated copies are averaged before azimuthal averaging. Binning is area-weighted over exact annular volumes (about 6 cells per annulus of width h at r = h, about 630 at r = 5 nm, per slice at h = 0.05 nm). **Amended 25 September 2026** (WP19 plan, Design §2–§3): the overlap weights are exact, so no bin is interpolated. The earlier "innermost 2–3 bins interpolated" compensated for centre-assigned binning, and against exact weights every interpolant tried was worse somewhere. The rotated copies are averaged in the angular harmonic basis, where the average keeps the harmonics m ≡ 0 (mod n): it is exact and costs one deposition. Depositing n rotated copies costs n, and rotating the voxel map by interpolation smooths it, lowering the peak Cₙ variance of a C12 ring by 3–6 %. The binned mean is subtracted at each cell's own radius before any variance is taken, or the radial gradient across a bin reads as azimuthal variance. A 1° axis error adds about 0.2 nm of apparent radius to a 3.3 nm constriction. |
 | 3, 5 | The bilayer is absent from the density map. It is defined analytically in (r, z) over the hydrophobic belt and fragmented against the pore contour. |
 | 5 | Reference geometry: reservoir half-disc R = 250 nm, membrane thickness 2.8 nm, `z_cis` = 12.25 nm, `z_trans` = −1.85 nm. The membrane is a quadrilateral, not a rectangle: vertices (r = 2, z = −1.4), (3.5, +1.4), (250, +1.4), (250, −1.4) nm, inner edge slanted to meet the pore's outer surface. Code assuming a rectangle leaves a wedge of gap or overlap at the junction. CadQuery and build123d are 3D-solid-centric and unused; pythonocc serves BRep edge cases only. |
+| 7 | Stage 7 is two registered stages, `protonation` and then `charge`, sharing the number so that stages 8 to 12, which this specification, the CLI's output and every recorded manifest cite by number, do not move (**added 1 October 2026**, WP27). The registry lists stages by number and then in registration order. A run walks `protonation` after `mesh` and immediately before `charge`, so a walk truncated at the mesh, as the desktop shell's geometry build is, never protonates; protonating an ensemble costs about a minute per frame of a ClyA dodecamer (WP27 plan, *Design* §1). |
 
 #### 5.2.1 Contour conditioning and its gate
 
@@ -1286,6 +1308,27 @@ field (FR-24) rather than a code edit. It is a discretisation choice recorded wi
 deviation. With a supplied `inputs.mesh` a value other than `1` would be a knob with no effect, so
 it SHALL be refused.
 
+NOTE (`charge.ph`, `charge.forcefield`, `charge.titration`; the `protonation` stage, PHY-16 step 3,
+FR-12; **added 1 October 2026**, WP27): `ph` is a number in [0, 14], the range PDB2PQR accepts.
+`titration` is `propka` or `none`; `none` runs PDB2PQR without a titration method, so every
+residue keeps the force field's standard state and the pH reaches no calculation. A `ph` set away
+from its default beside `titration: none` is therefore a knob with no effect and SHALL be refused
+naming both keys, as `numerics.mesh.size_scale` is beside `inputs.mesh`. `forcefield` is one of
+`CHARMM`, `PEOEPB` and `SWANSON`, and is passed to PDB2PQR as both `--ff` and `--ffout`. PDB2PQR 3.7
+also ships `AMBER`, `PARSE` and `TYL06`, but each gives charged atoms a zero radius (53, 93 and 2269
+of them on one chain of 2WCD, measured 1 October 2026), and PHY-16 step 4's kernel width
+`w_i = 0.5 R_i` is then zero, so they are refused naming the atom count rather than admitted to
+fail at deposition; the stage refuses a charged atom with a radius that is not positive from any
+source, `inputs.pqr` included, naming the frame and the atom. The schema had admitted any string
+here, but no case carrying `charge:` was runnable before this package, so narrowing the value set
+breaks no document that ran. `titration` and `forcefield` are switches whose validated defaults
+are `propka` and `CHARMM` (PHY-16 step 3); any other value is a deviation that the FR-25 manifest
+records. `ph` is a condition of the experiment, as `concentration_M` is, and not a deviation. The
+case's `structure.source.variant` is recorded beside `Q_net`, which it is the provenance of
+(OPN-04). Until the stages that read them are delivered, `charge.smearing` set away from its
+default (stage 7's deposition, WP28) and a non-zero `charge.exclusion_offset_nm` or
+`charge.dielectric_transition_nm` (WP30) are refused naming the stage that will read them.
+
 NOTE (`inputs:`, FR-27): the optional top-level `inputs:` block is hand substitution (FR-27) applied
 at stage granularity. Each key names a stage output supplied from outside — a mesh, a charge field,
 a dielectric field — by path and format. A stage whose output is supplied does not run, and neither
@@ -1307,6 +1350,32 @@ both, by the upstream rule, and so are `geometry.density` and `geometry.contour`
 set away from its default; `geometry.membrane` and `geometry.reservoir` are read. A section set to
 its defaults is not refused, because a case dumped from its resolved document writes every section
 out, and FR-26 requires that dump to load back (**clarified 26 September 2026**, WP21).
+
+`inputs.pqr` is consumed by the `protonation` stage, the first half of stage 7 (**added 1 October
+2026**, WP27, §8.2.4 D4). It is named by `path` with `format: pqr`, and `artefact:` or `groups`
+beside it is refused. The file is a PQR of one frame, or one `MODEL` per frame; every frame SHALL
+hold the same residues, and every atom a charge and a radius. ATOM and HETATM records are read by
+the PDB columns through the coordinates and then by the two whitespace-separated numbers after
+them, which is the layout PDB2PQR writes, whose coordinate fields may run together; a line those
+columns do not read is read as whitespace-separated fields, and a line read both ways with
+different values is refused naming its line number. A residue is identified by chain, number and
+insertion code, and its name is the one its atoms carry other than PDB2PQR's `TER`. Unlike
+`inputs.profile`, `inputs.pqr` stands beside `structure:`, because stage 1 still runs for the
+geometry chain: there the PQR SHALL hold exactly the ensemble's frames, in order, and each frame is
+registered to its stage-1 frame by superposing its Cα atoms on the ensemble's, residue for residue,
+after which every heavy atom of the ensemble SHALL lie within 0.01 Å of a distinct heavy atom of the
+same residue of the PQR. 0.01 Å is about ten times the rounding of a PQR's coordinate columns
+and a hundredth of the shortest bond between heavy atoms, so a frame count that differs, a residue
+the two do not share, or a frame whose atoms have moved is refused naming the frame. Heavy atoms the PQR adds, as PDB2PQR
+adds a missing terminal oxygen, are counted, not refused; hydrogens are not compared. The
+registered coordinates are what the artefact carries, so a PQR written in another frame, as the
+reference's MD-frame PQRs are, lands in stage 1's. A frame whose heavy atoms already meet the
+criterion where they stand is not moved, so the stage's own export reads back exactly. Without
+`structure:` the coordinates are taken to be in stage 1's frame already, which is the frame the
+stage exports. Beside `inputs.pqr`,
+`charge.ph`, `charge.forcefield` and `charge.titration` configure a step that does not run, so any
+of them set away from its default SHALL be refused naming both keys, as `geometry.density` is beside
+`inputs.profile`.
 
 NOTE (`structure:`, stage 1, FR-01 to FR-03, IF-04; **added 25 September 2026**, WP18):
 `source.path` names a PDB or mmCIF file, optionally gzipped. MDAnalysis reads PDB and gemmi reads
@@ -1628,6 +1697,7 @@ when the plan is built, naming the axis, rather than collecting a column of abse
 |---|---|---|
 | 1 | Aligned ensemble: coordinates in nm, atom table (element, name, residue name, number and insertion code, chain) and axis-transform record | Native `.npz` (float32 coordinates) with its header record; exported as a PDB topology with a DCD trajectory (IF-04). **Amended 25 September 2026** (WP18) from "trajectory plus transform record": a trajectory file carries no atom table and no gate record |
 | 2, 3 | Density map (3D, float32), and the reduced (r, z) mean with its Cₙ-averaged and raw azimuthal variance | Native `.npz` with its header record; exported to, and read from, OpenDX or CCP4 via GridDataFormats (LGPL) (IF-05), the (r, z) grids as `RadialGrid`s with a singleton axis. **Amended 25 September 2026** (WP19) |
+| 7 | Protonation: the per-frame atom table (identity, coordinates in nm in stage 1's frame, charge, radius), `Q_net`, and each titratable residue's charge, PROPKA pKa, histidine tautomer and any unapplied state, per frame | Native `.npz` with its header record; exported as a PQR in ångströms, one `MODEL` per frame where there is more than one. Produced, it is keyed on the stage-1 key and the protonation parameters, among them the PDB2PQR argument list, and each frame is also stored under its own key, the digest of the heavy-atom PDB PDB2PQR is given, so a changed frame selection re-protonates only the new frames; the PDB2PQR and PROPKA versions are recorded beside the key. Supplied, it is keyed on the file's contents and, beside `structure:`, the stage-1 key (**added 1 October 2026**, WP27) |
 | 7 | ρ_pore, dielectric and exclusion fields | OpenDX or CCP4 via GridDataFormats (LGPL) (IF-05). Keyed on each field's grid digest and physical declarations, on the mesh, and on what its gates are evaluated at: the element order of the conservation quadrature and, with a dielectric field, the names of the solid materials its per-material means are classified by (**amended 28 September 2026**) |
 | 4 | Conditioned polyline | `nanopnp/profile/v1` YAML: the vertex table with its provenance block (§5.2.1). The conditioning and gate record is in the artefact's summary. **Amended 26 September 2026** (WP20) |
 | 5 | Tagged (r, z) region | `nanopnp/region/v1` YAML: a declarative record of the model-frame profile, the membrane with its derived inner edge, the reservoir and the tag counts, from which the OCC region is rebuilt deterministically. **Amended 26 September 2026** (WP21) from "OCC BRep plus tag map": a record hashes by content, where a BRep's bytes need not be stable |

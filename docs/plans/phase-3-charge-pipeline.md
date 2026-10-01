@@ -1,6 +1,6 @@
 # Phase 3 (Charge pipeline): from a structure to a charged run
 
-**Status: in progress. WP26 delivered, 30 September 2026; WP27–WP32 planned.** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
+**Status: in progress. WP26 delivered, 30 September 2026; WP27 planned in detail ([plan](wp27-protonation.md)); WP28–WP32 planned.** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
 the geometry pipeline (`main` at `v0.3.0-alpha.9`, formerly `v0.9.0-alpha.9`). Phase 2's
 end-of-phase report and its release, `v0.3.0`, wait for one Tier-3 run on the author's archive
 (criterion 3, VAL-05's ensemble leg). WP26 may start before that report merges, because nothing in
@@ -80,7 +80,7 @@ decisions table.
 | The electrostatic models on the pore | `poisson` accepts solid materials, `physics.solid_permittivities`, a fixed charge and `χ`, which it needs for VAL-06. `pb` and `pb-linear` stay as they are. The change is made through the FR-20 interface, as a declared capability rather than a new branch | §5.5 names `poisson` the APBS cross-check target. PHY-24 is untouched |
 | FR-20 first | The interface package comes first. Every model declares its field set, material and boundary vocabulary, the inputs it accepts (fixed charge, `χ`, solids) and its solve strategy. The `COUPLED_MODELS` and `isinstance` branches outside `physics/` read those declarations instead | It is cheapest while there are six models and no producer. It also unblocks `poisson` for VAL-06 without a seventh special case |
 | The phase gate's input | VER-01, VER-02 and VAL-06 are gated on 2WCD at Tier 2. The ensemble runs the same checks at Tier 3, recorded, together with the end-to-end charged comparison against the reference | Unlike VAL-05, these are properties of the implementation rather than reproductions of the reference, so the public structure is enough to gate them. Reproducing the paper's numbers is Phase 4: at Tier 3 against the published results (VAL-16, VAL-17; §8.2.4 D6) and at Tier 4 against experiment |
-| Optional dependencies | PDB2PQR and PROPKA stay in the `structure` extra, imported at the top of the protonation stage module, which is reached only through the lazy registry. `scipy.special` supplies `Ĩ₀` (`i0e`) | The `CLAUDE.md` import rule, and VER-25 introspection. The supplied-field path keeps working without the extra |
+| Optional dependencies | PDB2PQR and PROPKA stay in the `structure` extra, imported inside the protonation driver, so that `inputs.pqr` runs without the extra (**amended by WP27 D4**; the stage is reached only through the lazy registry). `scipy.special` supplies `Ĩ₀` (`i0e`) | The `CLAUDE.md` import rule, and VER-25 introspection. The supplied-field path keeps working without the extra |
 | Units at the interchange boundary | The (r, z) charge grids stay in nm, as their `field1` header declares (the IF-05 NOTE leaves this decision to Phase 3). No 3D charge map is written | A 2D (r, z) grid overlays no molecular viewer, so B10's argument for ångströms does not apply |
 
 ## Conventions established by Phases 1 and 2
@@ -236,7 +236,7 @@ without a documentation edit (VER-45).
 | Protonation of an ensemble | Per frame or once, and the form of `inputs.pqr` | **Settled by the author, 30 September 2026** (§8.2.4 D4): per frame, with a single- or multi-MODEL PQR |
 | Exclusion shell | In Phase 3 or deferred | **Settled by the author, 30 September 2026** (§8.2.4 D5): in Phase 3, as WP30 |
 | VAL-06 tolerance | The agreement required of the gated leg | WP29, argued and stated before the first comparison, and put to the author with the argument |
-| Stage numbering | Where `protonation` sits in §5.2's numbered table | WP27 |
+| Stage numbering | Where `protonation` sits in §5.2's numbered table | **Settled by [WP27](wp27-protonation.md) D1**: it shares number 7 with `charge` and runs before it, so stages 8–12 keep their numbers (§5.2 design note) |
 | `axis_cutoff_nm` on the producer path | Applied for parity, or refused away from its default | WP28 |
 | OPN-04 | Which mutation list produced the ClyA-AS structure | **Author, open.** Needed for the provenance of `Q_net`, not for any gate. WP27 records `structure.source.variant` beside `Q_net` |
 

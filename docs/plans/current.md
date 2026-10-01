@@ -1,6 +1,6 @@
 # Current work
 
-Updated 30 September 2026. This file is navigation only, and `SPECIFICATION.md` governs. It is not
+Updated 1 October 2026. This file is navigation only, and `SPECIFICATION.md` governs. It is not
 evidence that an unmerged branch has shipped.
 
 ## Position
@@ -9,11 +9,10 @@ evidence that an unmerged branch has shipped.
   `v0.5.0`, §8.2.4 D1).
 - Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **closed** as `v0.3.0`, with
   criterion 3 waived: the ensemble's ε_G is −5.56 % against 5 % (§8.2.4 D7). `Z_MD` is 5.655 nm.
-- **After this report merges, the author** runs `.github/scripts/renumber-tags.sh --apply`, then
-  tags the merge commit `v0.3.0`.
 - Phase 3 ([charge pipeline](phase-3-charge-pipeline.md), release `v0.4.0`) is **in progress**:
-  WP26–WP32. [WP26](wp26-physics-model-interface.md) (FR-20, VER-56) is **delivered on its branch,
-  awaiting `/wp-ship`**, then tag `v0.4.0-alpha.1`. **Next: `/wp-plan 27`**, protonation.
+  WP26–WP32. [WP26](wp26-physics-model-interface.md) (FR-20, VER-56) is **merged** and tagged
+  `v0.4.0-alpha.1`. [WP27](wp27-protonation.md) (FR-12, VER-57), protonation, is
+  **planned, not started**. **Next: `/wp-implement`** on WP27, then tag `v0.4.0-alpha.2`.
 
 ## What Phase 3 must not re-decide
 
@@ -28,6 +27,9 @@ Each is recorded in full where it points.
   like-for-like leg and a recorded leg from the PQR. → VAL-06; §8.2.4 D3.
 - **Protonation is per frame.** `inputs.pqr` is a single- or multi-MODEL PQR, and the schema does
   not move. → §8.2.4 D4.
+- **`protonation` is stage 7's first half**, walked after `mesh`. PROPKA decides every state;
+  the force fields are CHARMM, PEOEPB and SWANSON. → §5.2 stage 7 note; PHY-16 step-3 NOTE;
+  §5.3.1 NOTEs on the protonation keys and `inputs:`.
 - **The exclusion shell is in Phase 3 (WP30)**, off by default. → §8.2.4 D5; FR-15.
 - **Tier 3 compares the published I–V and in-pore averages**, and gates v1.0, not Phase 3.
   → VAL-16, VAL-17; §8.2.4 D6.
@@ -65,6 +67,7 @@ Each is recorded in full where it points.
   v1.0; the COMSOL field exports are no longer asked for (§8.2.4 D6).
 - **The Read the Docs project**, and **`$NANOPNP_REFERENCE_DATA` on the nightly runner**.
 - **OPN-04**, the ClyA-AS mutation list, which is the provenance of `Q_net`.
+- **The archived PQRs**, extracted under `$NANOPNP_REFERENCE_DATA` for WP27's Tier 3.
 
 ## Dependencies To Read On Demand
 
@@ -74,7 +77,7 @@ Each is recorded in full where it points.
 | The consumer path stage 7 has today | `charge/stage.py`, `charge/fields.py`; VER-29, VER-30; WP9 plan |
 | Why the consumer leg aliases | §4.4 NOTEs; `.knowledge/04` §3–§3.2; `.knowledge/06` §8.1.1 |
 | The physics-model interface | `docs/project/physics-models.md`; the WP26 plan's Outcomes; `physics/models.py` |
-| PDB2PQR, PROPKA and APBS facts | `.knowledge/07` §3; `density/radii.py` and `data/radii/` |
+| PDB2PQR, PROPKA and APBS facts | `.knowledge/07` §3, incl. *as a per-frame driver*; `density/radii.py` and `data/radii/` |
 | The reduction the charge reuses | `symmetry/annular.py`; VER-50 |
 | Case schema, option sets and supply chains | §5.3.1 and its NOTEs; `io/case.py` (`Charge`, `SUPPLY_CHAINS`, `_require_runnable`) |
 | The desktop shell | `gui/`; WP24 Outcomes; `.knowledge/07` §5 |
@@ -87,5 +90,5 @@ When planning or finishing a package, replace this brief's position and live dep
 not a delivery diary. Keep it to 800 words at most; measurements and derivations stay in the
 records that own them.
 
-The full quality gate and the independent shipping review remain required. Tier 3 is recorded and
-is not a push gate. No scientific requirement changes in this brief.
+The full gate and the independent shipping review remain required. Tier 3 is recorded, not
+gated. No scientific requirement changes in this brief.

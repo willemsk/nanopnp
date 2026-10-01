@@ -320,6 +320,59 @@ least grid-sensitive); `srfm` ∈ {mol, **smol**, spl2, spl4}. Note `spl2`/`spl4
 produce unphysical results at non-zero ionic strengths" — run the cross-check at **zero** ionic
 strength, which also isolates charge-projection error from model differences.
 
+### PDB2PQR 3.7.1 and PROPKA 3.5.1 as a per-frame driver **[tested]**, 1 October 2026
+
+Measured in this container while planning WP27, with `--ff=CHARMM --ffout=CHARMM --with-ph=7.5
+--titration-state-method=propka --drop-water --keep-chain` unless stated. Inputs were cut from the
+vendored `tests/data/structures/2wcd.pdb.gz` (chains A–L, 26,844 heavy atoms, no hydrogens, crystal
+frame).
+
+- **Python API.** `pdb2pqr.main.run_pdb2pqr(args)` runs in-process and returns
+  `(missed_residues, pka_df, biomolecule)`. It always writes the PQR to the output path in `args`,
+  and it does not set up logging. `pka_df` is a list of dicts with `res_name`, `res_num`,
+  `ins_code`, `chain_id`, `group_label`, `group_type` and `pKa`. Atoms carry `ffcharge` and
+  `radius`. `io.get_pdb_file` **fetches from rcsb.org when the input path is not a file**, so a
+  driver must pass a path that exists. A multi-MODEL input is read to its first model only.
+- **Cost.** The 2WCD dodecamer takes 63.7 s with PROPKA and 11.5 s without it. Chain A alone with
+  PROPKA takes 1.6 s, so the cost of PROPKA on the assembly is superlinear in its size. A nine-residue
+  fragment takes 0.1 s. Plan for about a minute per frame of a ClyA ensemble, 50 minutes for 50 frames.
+- **Q_net.** 2WCD at pH 7.5 gives −60 e, −5 e on every chain, with no residue whose charge
+  differs between chains. ClyA-AS is −72 e (`04-clya-geometry-and-charge.md` §3). OPN-04 lists 27
+  mutations between the 2WCD sequence and ClyA-AS; whether they account for the −1 e per chain is
+  not checked.
+- **States that CHARMM cannot hold.** `Biomolecule.apply_pka_values` logs a tuple warning and keeps
+  the standard state for `CYS⁻`, `LYS⁰`, `TYR⁻` and `ARG⁰` under CHARMM. On 2WCD that is
+  `('CYS 285 A', 'negative')` in every chain (pKa 6.25). Terminal pKas are **never applied**,
+  under any force field: the dictionary is filtered by `group_label.startswith(res_name)`, which
+  drops the `N+` and `C-` groups, so the terminal branches are dead. PROPKA puts the N-terminus of
+  `LYS 8` at pKa 7.48–7.50 across the chains (7.49 in chain A, below pH 7.5), and PDB2PQR keeps it
+  charged without a warning. Derive
+  unapplied states from `pka_df` and the applied charges, not from the log.
+- **Changeable states under CHARMM** are `ASP`/`ASH`, `GLU`/`GLH` and `HIS`/`HIP`. On the fragment
+  `GLU 18`–`LEU 26` of chain A, PROPKA at pH 2 gives +0 e, and at pH 8 −3 e. Without a titration
+  method, `--with-ph` changes nothing: pH 3 and pH 9 give identical charges.
+- **Histidine names pin the state.** With hydrogens stripped, a residue named `HSD` or `HSE` keeps
+  that tautomer and is not titrated by PROPKA. `HSE` with its hydrogens present makes PDB2PQR give
+  up with a `RuntimeError`. `HIS` is titrated. A driver must therefore strip hydrogens and rename
+  protonation variants to their parent before calling PDB2PQR.
+- **Output naming.** `--ffout=CHARMM` writes terminal-patch atoms under the residue name `TER`
+  (`N TER A 8`, `OT1 TER A 292`). It renames `ILE CD1` to `CD` and the C-terminal `O` and `OXT` to
+  `OT1` and `OT2`, and it writes histidines as `HIS` whatever their tautomer. PDB2PQR 2.1.1 had kept
+  the real residue name (`GLU HT1`) and `HSE`. Identify a residue by chain, number and insertion code.
+- **Coordinates move by relabelling.** Hydrogen-bond optimisation flips `ASN`/`GLN` amides and
+  `HIS` rings. On 2WCD, 140 heavy atoms carry another atom's position under their own name (about
+  2 Å away), and 12 terminal `OXT` are added by repair. Match heavy atoms by position within a residue,
+  never by name.
+- **Fused columns.** The PQR is written in PDB fixed columns, so a coordinate at or below −100 Å
+  runs into its neighbour (`-37.705-115.041`). `pdb2pqr.io.read_pqr` splits on whitespace and
+  cannot read PDB2PQR's own output in that case.
+- **Zero radii.** On chain A, `AMBER` gives 53 charged atoms radius 0, `PARSE` 93, and `TYL06`
+  2269. `CHARMM`, `PEOEPB` and `SWANSON` give none. Every force field gives −5 e on chain A, and
+  every printed charge has at most four decimals.
+- **Logging.** The loggers are `PDB2PQR3.7.1` (`pdb2pqr.main.VERSION`), `pdb2pqr.*` and
+  `propka.*`. PROPKA's full report is logged at INFO, about 400 kB for the dodecamer. Importing
+  `pdb2pqr` calls `logging.captureWarnings(True)`.
+
 ---
 
 ## 4. Geometry, meshing and I/O
