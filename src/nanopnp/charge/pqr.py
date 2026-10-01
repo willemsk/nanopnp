@@ -18,8 +18,10 @@ different values is refused naming its line number, because one of the two
 readings is a plausible wrong number and nothing here can say which (QR-12).
 
 **A residue is its chain, number and insertion code**, and its name is the one its
-atoms carry other than ``TER``: ``--ffout=CHARMM`` writes the terminal-patch
-atoms under the residue name ``TER`` (``N TER A 8``), and a residue patched to a
+atoms carry other than the patch names ``TER`` and ``DISU``: ``--ffout=CHARMM``
+writes the terminal-patch atoms under the residue name ``TER`` (``N TER A 8``) and
+a disulfide-bonded cysteine's ``CB`` and ``SG`` as ``1CB`` and ``1SG`` under
+``DISU`` (``1CBDISU A 285``), and a residue patched to a
 protonation variant with its backbone under the parent and its side chain under
 the variant (``ASP`` and ``ASPP``), whose name is then the variant. The protonation-variant
 names of the PHY-16 step-3 NOTE are read as their parent wherever two residue
@@ -48,7 +50,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
 __all__ = [
     "PARENT_RESIDUE",
-    "PATCH_RESIDUE",
+    "PATCH_RESIDUES",
     "PQRError",
     "PQRFrame",
     "chain_characters",
@@ -61,8 +63,14 @@ __all__ = [
     "write_pqr",
 ]
 
-PATCH_RESIDUE = "TER"
-"""The residue name ``--ffout=CHARMM`` gives terminal-patch atoms (``.knowledge/07`` section 3)."""
+PATCH_RESIDUES: frozenset[str] = frozenset({"TER", "DISU"})
+"""The residue names ``--ffout=CHARMM`` gives patch atoms, which name no residue.
+
+``TER`` for a terminal patch (``.knowledge/07`` section 3) and ``DISU`` for the
+``CB`` and ``SG`` of a disulfide-bonded cysteine, written ``1CB`` and ``1SG``
+(``CHARMM.names`` of PDB2PQR 3.7.1, measured 1 October 2026): without ``DISU``
+here every cysteine in a disulfide carries two names and is refused.
+"""
 
 PARENT_RESIDUE: Mapping[str, str] = {
     # The PHY-16 step-3 NOTE's table, verbatim: every protonation-variant residue
@@ -83,6 +91,10 @@ PARENT_RESIDUE: Mapping[str, str] = {
     "CYM": "CYS",
     "TYM": "TYR",
     "ARN": "ARG",
+    # The disulfide-bonded cysteine of the AMBER-named force fields: PDB2PQR
+    # writes it under SWANSON and PEOEPB, whose frames would otherwise name a
+    # residue the ensemble calls CYS (PHY-16 step-3 NOTE).
+    "CYX": "CYS",
 }
 """Protonation-variant residue names and the parent each is written as (PHY-16 step-3 NOTE)."""
 
@@ -241,6 +253,10 @@ def _fields(line: str) -> _Atom | None:
     layout ``pdb2pqr.io.read_pqr`` assumes.
     """
     tokens = line.split()
+    if tokens and tokens[0].startswith("HETATM") and tokens[0] != "HETATM":
+        # A six-character record runs into a five-digit serial (``HETATM12345``),
+        # which is PDB2PQR's own layout; read as one token it shifts every field.
+        tokens = ["HETATM", tokens[0][len("HETATM") :], *tokens[1:]]
     if len(tokens) not in (10, 11):
         return None
     middle = tokens[2:-6]
@@ -324,14 +340,14 @@ def _residue_name(names: set[str]) -> str | None:
 
 
 def _frame(atoms: Sequence[_Atom], index: int, source: str) -> PQRFrame:
-    """Assemble one frame, resolving each residue's name from its non-``TER`` atoms."""
+    """Assemble one frame, resolving each residue's name from its non-patch atoms."""
     import numpy as np
 
     names: dict[tuple[str, int, str], set[str]] = {}
     for atom in atoms:
         key = (atom.chain, atom.resid, atom.icode)
         names.setdefault(key, set())
-        if atom.resname != PATCH_RESIDUE:
+        if atom.resname not in PATCH_RESIDUES:
             names[key].add(atom.resname)
     resolved: dict[tuple[str, int, str], str] = {}
     for (chain, resid, icode), found in names.items():
@@ -340,7 +356,7 @@ def _frame(atoms: Sequence[_Atom], index: int, source: str) -> PQRFrame:
             what = (
                 f"carries the names {', '.join(sorted(found))}"
                 if found
-                else f"carries only {PATCH_RESIDUE} atoms"
+                else f"carries only patch atoms ({', '.join(sorted(PATCH_RESIDUES))})"
             )
             raise PQRError(
                 f"{source} frame {index}: residue {resid}{icode} of chain {chain or '-'!r} {what}; "

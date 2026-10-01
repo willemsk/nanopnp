@@ -96,6 +96,15 @@ protonation keys; `.knowledge/07` §3.
 > the fragment's PQR and pKas are identical with it (`.knowledge/07` §3,
 > `test_ver57_propka_reads_its_parameters_on_every_supported_python`).
 
+> **Outcome — the shipping review.** Corrected in review: a disulfide-bonded cysteine (`DISU`
+> patch atoms under CHARMM, `CYX` under SWANSON and PEOEPB) no longer stops the stage; a C-terminal
+> acid keeps both `COO` pKas (`group_label` joins the payload); PDB2PQR's bare `RuntimeError` is
+> named by frame; radii are compared only where they are CHARMM's (D14); a cached frame keeps the
+> versions that wrote it in the header rather than the installed ones (§5.3.2: recorded beside the
+> key, never invalidating it); and a supplied PQR missing a flippable atom is refused, counted by
+> element per `ASN`/`GLN`/`HIS` residue. Amended in the PHY-16 step-3 NOTE and the §5.3.1 NOTE on
+> `inputs:`.
+
 > **Outcome — Tier 3 not run.** The archived PQRs are not under `$NANOPNP_REFERENCE_DATA` here.
 > `tests/tier3/test_protonation_archive.py` was dry-run against the 2WCD export as a stand-in
 > archive, so its reading, chain pairing and registration legs are exercised; its numbers are the

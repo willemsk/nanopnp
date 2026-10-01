@@ -177,7 +177,7 @@ def _run(args: argparse.Namespace) -> int:
     payload = dict(result.record())
     lines = [f"run      {result.directory}", f"record   {record}"]
     lines += [
-        f"stage {entry.number:>2} {entry.name:<10} {'cached' if entry.cached else 'computed':<8} "
+        f"stage {entry.number:>2} {entry.name:<11} {'cached' if entry.cached else 'computed':<8} "
         f"{entry.hash[:12]} {entry.seconds:8.3f} s"
         for entry in result.stages
     ]

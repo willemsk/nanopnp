@@ -164,6 +164,35 @@ def test_ver57_a_patched_residue_is_named_by_its_variant() -> None:
         parse_pqr(text + text.splitlines()[1].replace("ASPP", "GLUP") + "\n")
 
 
+def test_ver57_a_disulfide_patched_cysteine_is_named_by_its_residue() -> None:
+    """``--ffout=CHARMM`` writes a bonded cysteine's ``CB`` and ``SG`` under ``DISU``.
+
+    The lines are PDB2PQR 3.7.1's for ``CYS 285`` of 2WCD chain A bonded to a
+    mirrored copy (measured 1 October 2026): ``DISU``, like ``TER``, is a patch
+    name and does not name the residue, which is ``CYS``.
+    """
+    text = (
+        "ATOM     32  CA  CYS A 285       4.676 -38.694-123.153  0.0700 2.2750\n"
+        "ATOM     35  1CBDISU A 285       5.179 -37.766-124.261 -0.1000 2.1750\n"
+        "ATOM     36  1SGDISU A 285       4.234 -36.205-124.373 -0.0800 1.9750\n"
+    )
+    (frame,) = parse_pqr(text)
+    assert frame.residues() == [("A", 285, "", "CYS")]
+    assert frame.name.tolist() == ["CA", "1CB", "1SG"]
+    assert parent_residue("CYX") == "CYS"
+
+
+def test_ver57_a_hetatm_record_run_into_its_serial_reads() -> None:
+    """``HETATM12345``: the record and a five-digit serial with nothing between them.
+
+    Split on whitespace as one token it shifts the atom name into the residue
+    name, and the two readings disagreed on a line PDB2PQR wrote.
+    """
+    text = "HETATM12345  CA  GLU A  18      -1.598   4.789 -35.571  0.3000 2.2750\n"
+    (frame,) = parse_pqr(text)
+    assert (frame.name[0], frame.resname[0], frame.chain[0]) == ("CA", "GLU", "A")
+
+
 def test_ver57_a_histidine_renamed_between_frames_is_one_residue() -> None:
     """PDB2PQR 2.1.1 wrote ``HSE`` or ``HSD`` per frame: the variants read as one parent."""
     line = "ATOM      1  CA  {} A 292      10.000  10.000  10.000  0.0700 2.2750\n"

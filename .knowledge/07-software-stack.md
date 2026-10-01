@@ -379,6 +379,16 @@ frame).
   residue patched to a protonation variant is written with its backbone under the parent and its
   side chain under the variant: `ASP 21` of the fragment `GLU 18`–`LEU 26` at pH 2 carries both `ASP`
   and `ASPP`. A reader that takes columns 18–21 reads `SPP` **[tested]**, 1 October 2026 (WP27).
+- **Disulfides, waters, `HETATM` and the C-terminal carboxyl.** Under `--ffout=CHARMM` a
+  disulfide-bonded cysteine's `CB` and `SG` are written `1CB` and `1SG` under the patch residue
+  `DISU` (`1CBDISU A 285`), its other atoms under `CYS`; under `SWANSON` and `PEOEPB` the whole
+  residue is `CYX`. A reader naming residues by their atoms must treat `DISU` as it treats `TER`
+  **[tested]**, 1 October 2026, `CYS 285` of 2WCD chain A bonded to a mirrored copy (WP27 review).
+  `--drop-water` drops only `HOH` and `WAT` (`aa.WAT.water_residue_names`), and a water kept under
+  CHARMM is `TP3M`. `HETATM` with a five-digit serial is written with nothing between them
+  (`HETATM12345`, `get_common_string_rep`) **[verified]**, read from the 3.7.1 source. PROPKA types
+  the C-terminus `COO`, as it does a side-chain carboxyl, and only its label says `C-`: a C-terminal
+  `ASP` or `GLU` carries two `COO` groups (`ASP  21 A`, `C-   21 A`) **[tested]**, 1 October 2026.
 - **`run_pdb2pqr`'s first return is missing atoms**, not residues: the atoms
   `Biomolecule.apply_force_field` could not parameterise, which the PQR leaves out. An atom
   written with no charge gets `0.0000` (`get_pqr_string`) **[verified]**, read from the 3.7.1

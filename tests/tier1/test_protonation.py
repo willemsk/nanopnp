@@ -295,6 +295,47 @@ def test_ver57_the_n_terminus_at_ph_9_is_unapplied(tmp_path: Path, fragment_2wcd
     }
 
 
+def test_ver57_a_c_terminal_acid_keeps_both_carboxyl_groups(
+    tmp_path: Path, fragment_2wcd: Fragment
+) -> None:
+    """``ASP 21`` ending the fragment carries two ``COO`` groups, its own and the terminus's.
+
+    PROPKA types both ``COO`` and labels them ``ASP  21 A`` and ``C-   21 A``; the
+    group table keeps each pKa, and the residue's expected charge sums both.
+    """
+    table, _ = _run(tmp_path, fragment_2wcd(18, 21), charge="ph: 8.0")
+    column = table.residue_resid.tolist().index(21)
+    owned = [
+        (str(kind), str(label).split()[0])
+        for owner, kind, label in zip(
+            table.group_residue.tolist(),
+            table.group_type.tolist(),
+            table.group_label.tolist(),
+            strict=True,
+        )
+        if owner == column
+    ]
+    assert sorted(owned) == [("COO", "ASP"), ("COO", "C-")]
+    assert table.expected_charge_e[0, column] == -2.0
+
+
+def test_ver57_pdb2pqr_giving_up_names_the_frame(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, fragment_2wcd: Fragment
+) -> None:
+    """PDB2PQR's own failure is a bare ``RuntimeError``; the stage names the frame and cause."""
+
+    def gives_up(pdb: Path, pqr: Path, settings: ResolvedProtonation) -> dict[str, Any]:
+        del pdb, pqr, settings
+        try:
+            raise ValueError("Unable to debump biomolecule.")
+        except ValueError as error:
+            raise RuntimeError from error
+
+    monkeypatch.setattr("nanopnp.charge.protonation.run_pdb2pqr", gives_up)
+    with pytest.raises(ProtonationError, match=r"frame 0: .*Unable to debump"):
+        _run(tmp_path, fragment_2wcd(*FRAGMENT))
+
+
 def _with_hydrogens(tmp_path: Path, ensemble: AlignedEnsemble) -> AlignedEnsemble:
     """Return ``ensemble`` protonated, hydrogens and patch names as PDB2PQR wrote them.
 
@@ -519,6 +560,34 @@ def test_ver57_a_moved_pqr_registers_to_its_ensemble(
     np.testing.assert_array_equal(supplied.charge_e, produced.charge_e)
 
 
+def test_ver57_a_pqr_missing_a_flippable_atom_is_refused(
+    tmp_path: Path, fragment_2wcd: Fragment
+) -> None:
+    """``NE2`` of ``HIS 292`` deleted: the flippable atoms are not compared, but are counted.
+
+    A flip moves an atom and never removes it, so a residue holding fewer heavy
+    atoms than the ensemble's is refused naming it (section 5.3.1 NOTE on ``inputs:``).
+    """
+    ensemble = fragment_2wcd(*HISTIDINE)
+    exported, _ = _produced(tmp_path, ensemble)
+    (frame,) = read_pqr(exported)
+    keep = ~((frame.resid == 292) & (frame.name == "NE2"))
+    assert int((~keep).sum()) == 1
+    edited = write_pqr(
+        tmp_path / "edited.pqr",
+        [
+            PQRFrame(
+                **{
+                    field.name: getattr(frame, field.name)[keep]
+                    for field in dataclasses.fields(PQRFrame)
+                }
+            )
+        ],
+    )
+    with pytest.raises(PQRError, match=r"frame 0 does not register.*holds 2 N atoms of HIS 292"):
+        _supply(tmp_path, ensemble, edited)
+
+
 def test_ver57_a_pqr_with_another_frame_count_is_refused(
     tmp_path: Path, fragment_2wcd: Fragment
 ) -> None:
@@ -604,6 +673,37 @@ def test_ver57_one_changed_frame_of_two_reprotonates_one(
     )
     assert len(calls) == 3
     assert second["cached_frames"] == 1
+
+
+def test_ver57_a_cached_frame_records_the_versions_that_wrote_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, fragment_2wcd: Fragment
+) -> None:
+    """The versions are beside the frame's key, not in it (section 5.3.2).
+
+    A frame an earlier PDB2PQR or PROPKA wrote is reused, and the artefact names
+    the versions that wrote it rather than the ones installed now (FR-25).
+    """
+    from nanopnp.charge import protonation
+
+    calls: list[Path] = []
+    real = protonation.run_pdb2pqr
+
+    def counted(pdb: Path, pqr: Path, settings: ResolvedProtonation) -> dict[str, Any]:
+        calls.append(pdb)
+        return real(pdb, pqr, settings)
+
+    monkeypatch.setattr("nanopnp.charge.protonation.run_pdb2pqr", counted)
+    store = Store(tmp_path / "store")
+    ensemble = fragment_2wcd(*FRAGMENT)
+    _, first = _run(tmp_path / "first", ensemble, store=store)
+    assert len(calls) == 1
+    monkeypatch.setattr(
+        "nanopnp.charge.protonation._versions", lambda: {"pdb2pqr": "9.9.9", "propka": "9.9.9"}
+    )
+    _, summary = _run(tmp_path / "second", ensemble, store=store)
+    assert len(calls) == 1
+    assert summary["cached_frames"] == 1
+    assert summary["versions"] == first["versions"] != {"pdb2pqr": "9.9.9", "propka": "9.9.9"}
 
 
 def test_ver57_cancellation_is_checked_between_frames(

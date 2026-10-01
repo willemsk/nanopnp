@@ -690,10 +690,14 @@ construction, so it is not reproduced. The two differ near each atom at order `(
 the difference on the ClyA ensemble is measured at Tier 3 rather than accommodated.
 
 NOTE (PHY-16 step 3, protonation as run; **added 1 October 2026**, WP27): PDB2PQR SHALL be run
-once per selected frame (§8.2.4 D4) on that frame's heavy atoms, with every hydrogen removed and
-every protonation-variant residue name (`HSD`, `HSE`, `HSP`, `HID`, `HIE`, `HIP`, `ASH`, `ASPP`,
+once per selected frame (§8.2.4 D4) on that frame's heavy atoms, with every hydrogen and every water
+removed (PDB2PQR 3.7.1's `--drop-water` drops only `HOH` and `WAT`; **amended 1 October 2026**, WP27
+review) and every protonation-variant residue name (`HSD`, `HSE`, `HSP`, `HID`, `HIE`, `HIP`, `ASH`, `ASPP`,
 `GLH`, `GLUP`, `LYN`, `LSN`, `CYM`, `TYM`, `ARN`) written as its titratable parent, so that the
-states are PROPKA's at the case's pH and not the source file's. PDB2PQR 3.7.1 treats `HSD` and
+states are PROPKA's at the case's pH and not the source file's. The disulfide name `CYX`, which
+PDB2PQR writes under `SWANSON` and `PEOEPB`, is read as `CYS` the same way (**amended 1 October
+2026**, WP27 review: without it every disulfide-bonded cysteine named a residue the ensemble does
+not hold). PDB2PQR 3.7.1 treats `HSD` and
 `HSE` as fixed residues that PROPKA does not titrate, and refuses `HSE` with its hydrogens present,
 so a CHARMM-named MD frame passed through verbatim would pin every histidine. The reference passed
 its frames verbatim to PDB2PQR 2.1.1, and its PQRs keep `HSE`; the difference is measured at Tier 3
@@ -1362,8 +1366,11 @@ different values is refused naming its line number. A whitespace field that cann
 name, a residue name or a chain (more than four, four and one characters) does not read the line:
 PDB2PQR writes a four-character residue name from the alternate-location column and runs a
 four-character atom field into it (`OD2ASPP`, measured 1 October 2026, WP27), which the columns
-read. A residue is identified by chain, number and insertion code, and its name is the one its
-atoms carry other than PDB2PQR's `TER`, or, where its atoms carry a parent and one of its
+read. A record type run into a five-digit serial (`HETATM12345`, PDB2PQR's own layout) is split
+before the fields are read. A residue is identified by chain, number and insertion code, and its
+name is the one its atoms carry other than PDB2PQR's CHARMM patch names `TER` and `DISU` (a
+disulfide-bonded cysteine's `CB` and `SG`, written `1CB` and `1SG`; **amended 1 October 2026**, WP27
+review), or, where its atoms carry a parent and one of its
 protonation variants, the variant: PDB2PQR writes a patched residue's backbone under the parent and
 its side chain under the variant (`ASP` and `ASPP` in one residue). Unlike
 `inputs.profile`, `inputs.pqr` stands beside `structure:`, because stage 1 still runs for the
@@ -1377,7 +1384,10 @@ group is not symmetric about that bond, so a flipped atom lands 0.13–0.40 Å f
 given (138 heavy atoms of the prepared 2WCD, measured 1 October 2026, WP27; **amended** the same
 day from a criterion over every heavy atom, which assumed a flip exchanged positions exactly and
 would have refused PDB2PQR's own output); they are not compared, their worst distance is recorded,
-and the rest of each residue fixes where it is. 0.01 Å is about ten times the rounding of a PQR's coordinate columns
+and the rest of each residue fixes where it is. A flip moves atoms and never removes them or changes their
+element, so a residue of these three whose PQR holds fewer heavy atoms of an element than the
+ensemble's is refused (**amended 1 October
+2026**, WP27 review: without it a PQR missing a flippable atom registered). 0.01 Å is about ten times the rounding of a PQR's coordinate columns
 and a hundredth of the shortest bond between heavy atoms, so a frame count that differs, a residue
 the two do not share, or a frame whose atoms have moved is refused naming the frame. Heavy atoms the PQR adds, as PDB2PQR
 adds a missing terminal oxygen, are counted, not refused; hydrogens are not compared. The
