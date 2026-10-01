@@ -25,6 +25,16 @@ wheels = [
 ]
 
 [[package]]
+name = "apbs-binary"
+version = "3.4.1.1"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/57/ee/380b357c5558e37090857ccdee6ca823a3d88f18b613db2d378483a4339a/apbs_binary-3.4.1.1-py3-none-macosx_10_15_x86_64.whl", hash = "sha256:cd87156bdc54edd2e8cb4440a20120610bf5d15c45fca3932e908c369a3b27c7", size = 944489, upload-time = "2024-10-19T01:22:03.576Z" },
+    { url = "https://files.pythonhosted.org/packages/c9/c8/0270565c86f0b76bc5544fbf092b2bfd485f821eec22dab6b464b6bc24f4/apbs_binary-3.4.1.1-py3-none-macosx_12_0_arm64.whl", hash = "sha256:d3e22d314e5ef15909f320f8f0dbb6b35d7d85e5a356d891fddb1259a282408f", size = 813600, upload-time = "2024-10-19T01:22:05.964Z" },
+    { url = "https://files.pythonhosted.org/packages/26/da/8ca1ee9cd8cd97c9910e9b0e93c8aa4a3ad05f84d28069c9693f8d300a58/apbs_binary-3.4.1.1-py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:7250244ab299eb6de4bcb6a2e90c5c6321a568ca4f6a69e6a5a1b6f18345ac1e", size = 9665535, upload-time = "2024-10-19T01:22:08.599Z" },
+]
+
+[[package]]
 name = "ast-serialize"
 version = "0.8.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1476,6 +1486,9 @@ structure = [
 ]
 
 [package.dev-dependencies]
+apbs = [
+    { name = "apbs-binary", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux') or sys_platform == 'darwin'" },
+]
 dev = [
     { name = "filelock" },
     { name = "mypy" },
@@ -1517,6 +1530,7 @@ requires-dist = [
 provides-extras = ["examples", "gmsh", "gui", "structure"]
 
 [package.metadata.requires-dev]
+apbs = [{ name = "apbs-binary", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux') or sys_platform == 'darwin'", specifier = "==3.4.1.1" }]
 dev = [
     { name = "filelock", specifier = ">=3.12" },
     { name = "mypy", specifier = ">=1.11" },
@@ -2388,7 +2402,7 @@ resolution-markers = [
     "python_full_version < '3.12'",
 ]
 dependencies = [
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" } },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/7a/97/5a3609c4f8d58b039179648e62dd220f89864f56f7357f5d4f45c29eb2cc/scipy-1.17.1.tar.gz", hash = "sha256:95d8e012d8cb8816c226aef832200b1d45109ed4464303e997c5b13122b297c0", size = 30573822, upload-time = "2026-02-23T00:26:24.851Z" }
 wheels = [
@@ -2462,7 +2476,7 @@ resolution-markers = [
     "python_full_version >= '3.12'",
 ]
 dependencies = [
-    { name = "numpy", version = "2.5.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "numpy", version = "2.5.2", source = { registry = "https://pypi.org/simple" } },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a7/25/c2700dfaf6442b4effaa91af24ebce5dc9d31bb4a69706313aae70d72cd0/scipy-1.18.0.tar.gz", hash = "sha256:67b2ad2ad54c72ca6d04975a9b2df8c3638c34ddd5b28738e94fc2b57929d378", size = 30774447, upload-time = "2026-06-19T15:01:43.456Z" }
 wheels = [
@@ -2627,7 +2641,7 @@ resolution-markers = [
     "python_full_version < '3.12'",
 ]
 dependencies = [
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" } },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/c5/cb/2f6d79c7576e22c116352a801f4c3c8ace5957e9aced862012430b62e14f/tifffile-2026.3.3.tar.gz", hash = "sha256:d9a1266bed6f2ee1dd0abde2018a38b4f8b2935cb843df381d70ac4eac5458b7", size = 388745, upload-time = "2026-03-03T19:14:38.134Z" }
 wheels = [
@@ -2642,7 +2656,7 @@ resolution-markers = [
     "python_full_version >= '3.12'",
 ]
 dependencies = [
-    { name = "numpy", version = "2.5.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "numpy", version = "2.5.2", source = { registry = "https://pypi.org/simple" } },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/4b/22/5de8a60ec7cd23436a9a5e2c5be8866556796307e0f54e0fbc2bf1981677/tifffile-2026.8.16.tar.gz", hash = "sha256:523a18b8183253e1e594162eed45f157c959d8cff6decde3f2d58f20a5a45389", size = 442370, upload-time = "2026-08-15T16:09:35.736Z" }
 wheels = [

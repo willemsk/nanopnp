@@ -40,6 +40,11 @@ env:
   # (tests/conftest.py): a backend whose every test can skip is untested. The
   # ubuntu jobs install the X and GL libraries the gmsh wheel loads at import.
   NANOPNP_REQUIRE_GMSH: "1"
+  # VAL-06 runs APBS from the test-only `apbs` group, whose apbs-binary wheel
+  # exists for Linux x86_64 and macOS only (WP29 D11). Its tests FAIL rather than
+  # skip where the variable is 1, which is every leg but Windows; Windows has no
+  # wheel and skips them by name (WP29 D12, the WP23 D11 rule).
+  NANOPNP_REQUIRE_APBS: "1"
 
 # Every checkout that installs the package fetches the whole history
 # (`fetch-depth: 0`): hatch-vcs derives the version from the nearest tag
@@ -148,6 +153,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       CODE: ${{ needs.changes.outputs.code }}
+      NANOPNP_REQUIRE_APBS: ${{ matrix.os == 'windows-latest' && '0' || '1' }}
     strategy:
       fail-fast: false
       matrix:
