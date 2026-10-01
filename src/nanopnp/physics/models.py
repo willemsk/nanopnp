@@ -1807,8 +1807,70 @@ class CoupledModel:
             )
 
 
+class _SingleFieldModel:
+    """The members ``pb``, ``pb-linear`` and ``poisson`` share: one potential, no species.
+
+    Methods only, so the dataclasses below keep their own fields, order and
+    defaults; their provenance is their own, and moves nothing here.
+    """
+
+    name: str
+    electrolyte: Electrolyte
+    concentration_M: float
+    order: int
+
+    @property
+    def species(self) -> tuple[str, ...]:
+        """No species: there is no transport to solve for."""
+        return ()
+
+    @property
+    def fields(self) -> tuple[Field, ...]:
+        """The one field, ``phi~``, on the whole mesh."""
+        return (Field(POTENTIAL, "h1", self.order, None),)
+
+    @property
+    def scales(self) -> Scales:
+        """The NUM-09 scale set of this case, on the mesh's nanometre unit."""
+        return mesh_unit_scales(self.electrolyte, self.concentration_M)
+
+    def essential_boundaries(
+        self, boundaries: CoupledBoundaries = DEFAULT_BOUNDARIES
+    ) -> dict[str, str]:
+        """Return the potential's essential set, the only one this model imposes."""
+        return {POTENTIAL: boundaries.potential}
+
+    def space(self, mesh: Mesh, boundaries: CoupledBoundaries = DEFAULT_BOUNDARIES) -> FESpace:
+        """Return the scalar space for ``phi~``."""
+        import ngsolve as ngs
+
+        return ngs.H1(mesh, order=self.order, dirichlet=boundaries.potential)
+
+    def cold_state(
+        self,
+        mesh: Mesh,
+        boundaries: CoupledBoundaries = DEFAULT_BOUNDARIES,
+        *,
+        initial_concentrations: Mapping[str, float] | None = None,
+    ) -> GridFunction:
+        """Return a fresh state on this model's space: ``phi~ = 0`` everywhere.
+
+        ``initial_concentrations`` has no meaning here and is rejected rather
+        than ignored, because a caller passing it has misunderstood the model.
+
+        Raises
+        ------
+        TypeError
+            If ``initial_concentrations`` is given.
+        """
+        _refuse_concentrations(self.name, initial_concentrations)
+        import ngsolve as ngs
+
+        return ngs.GridFunction(self.space(mesh, boundaries), name="phi_tilde")
+
+
 @dataclass(frozen=True)
-class ElectrostaticModel:
+class ElectrostaticModel(_SingleFieldModel):
     """``pb`` and ``pb-linear``: one screened field, no transport (PHY-21).
 
     Poisson-Boltzmann is a **distinct model**, not the coupled solver evaluated
@@ -1853,14 +1915,6 @@ class ElectrostaticModel:
     screening_length_nm: float | None = None
 
     @property
-    def species(self) -> tuple[str, ...]:  # noqa: D102 - documented on the protocol
-        return ()
-
-    @property
-    def fields(self) -> tuple[Field, ...]:  # noqa: D102
-        return (Field(POTENTIAL, "h1", self.order, None),)
-
-    @property
     def boundary_conditions(self) -> Mapping[str, Mapping[str, str]]:  # noqa: D102
         return {
             POTENTIAL: {
@@ -1871,11 +1925,6 @@ class ElectrostaticModel:
                 "axis": "natural",
             }
         }
-
-    @property
-    def scales(self) -> Scales:
-        """The NUM-09 scale set of this case, on the mesh's nanometre unit."""
-        return mesh_unit_scales(self.electrolyte, self.concentration_M)
 
     @property
     def debye_length_nm(self) -> float:
@@ -1896,43 +1945,9 @@ class ElectrostaticModel:
             "deviations_from_validated_default": [],
         }
 
-    def essential_boundaries(
-        self, boundaries: CoupledBoundaries = DEFAULT_BOUNDARIES
-    ) -> dict[str, str]:
-        """Return the potential's essential set, the only one this model imposes."""
-        return {POTENTIAL: boundaries.potential}
-
     def relative_permittivity(self, solution: ModelSolution) -> Expression | None:
         """Return ``None``: the screened models carry no material permittivity."""
         return None
-
-    def space(self, mesh: Mesh, boundaries: CoupledBoundaries = DEFAULT_BOUNDARIES) -> FESpace:
-        """Return the scalar space for ``phi~``."""
-        import ngsolve as ngs
-
-        return ngs.H1(mesh, order=self.order, dirichlet=boundaries.potential)
-
-    def cold_state(
-        self,
-        mesh: Mesh,
-        boundaries: CoupledBoundaries = DEFAULT_BOUNDARIES,
-        *,
-        initial_concentrations: Mapping[str, float] | None = None,
-    ) -> GridFunction:
-        """Return a fresh state on this model's space: ``phi~ = 0`` everywhere.
-
-        ``initial_concentrations`` has no meaning here and is rejected rather
-        than ignored, because a caller passing it has misunderstood the model.
-
-        Raises
-        ------
-        TypeError
-            If ``initial_concentrations`` is given.
-        """
-        _refuse_concentrations(self.name, initial_concentrations)
-        import ngsolve as ngs
-
-        return ngs.GridFunction(self.space(mesh, boundaries), name="phi_tilde")
 
     def residual_form(
         self,
@@ -2037,7 +2052,7 @@ and so their numbers (**[tested]**, ``.knowledge/06-numerics-fem.md`` section 2.
 
 
 @dataclass(frozen=True)
-class PoissonModel:
+class PoissonModel(_SingleFieldModel):
     """``poisson``: electrostatics over all of Omega, no mobile ions (PHY-21 NOTE).
 
     Solves ``-div(eps_0 eps_r grad(phi)) = rho_pore`` on the NUM-09 mesh-unit
@@ -2079,14 +2094,6 @@ class PoissonModel:
     solid_permittivities: Mapping[str, float] = field(default_factory=dict)
 
     @property
-    def species(self) -> tuple[str, ...]:  # noqa: D102 - documented on the protocol
-        return ()
-
-    @property
-    def fields(self) -> tuple[Field, ...]:  # noqa: D102
-        return (Field(POTENTIAL, "h1", self.order, None),)
-
-    @property
     def boundary_conditions(self) -> Mapping[str, Mapping[str, str]]:  # noqa: D102
         return {
             POTENTIAL: {
@@ -2099,11 +2106,6 @@ class PoissonModel:
         }
 
     @property
-    def scales(self) -> Scales:
-        """The NUM-09 scale set, on the mesh's nanometre unit."""
-        return mesh_unit_scales(self.electrolyte, self.concentration_M)
-
-    @property
     def provenance(self) -> Mapping[str, Any]:  # noqa: D102
         return {
             "model": self.name,
@@ -2114,12 +2116,6 @@ class PoissonModel:
             "scales": self.scales.summary(),
             "deviations_from_validated_default": [],
         }
-
-    def essential_boundaries(
-        self, boundaries: CoupledBoundaries = DEFAULT_BOUNDARIES
-    ) -> dict[str, str]:
-        """Return the potential's essential set, the only one this model imposes."""
-        return {POTENTIAL: boundaries.potential}
 
     def permittivity(self, mesh: Mesh, *, solid_fraction: Expression | None = None) -> Expression:
         """Return ``eps~_r`` over all of Omega: 1 in the fluid, each solid its own ratio."""
@@ -2138,31 +2134,6 @@ class PoissonModel:
     def relative_permittivity(self, solution: ModelSolution) -> Expression:
         """Return ``eps~_r`` with the ``chi`` the solve used."""
         return self.permittivity(solution.space.mesh, solid_fraction=solution.solid_fraction)
-
-    def space(self, mesh: Mesh, boundaries: CoupledBoundaries = DEFAULT_BOUNDARIES) -> FESpace:
-        """Return the scalar space for ``phi~``."""
-        import ngsolve as ngs
-
-        return ngs.H1(mesh, order=self.order, dirichlet=boundaries.potential)
-
-    def cold_state(
-        self,
-        mesh: Mesh,
-        boundaries: CoupledBoundaries = DEFAULT_BOUNDARIES,
-        *,
-        initial_concentrations: Mapping[str, float] | None = None,
-    ) -> GridFunction:
-        """Return ``phi~ = 0`` on this model's space; concentrations are refused.
-
-        Raises
-        ------
-        TypeError
-            If ``initial_concentrations`` is given.
-        """
-        _refuse_concentrations(self.name, initial_concentrations)
-        import ngsolve as ngs
-
-        return ngs.GridFunction(self.space(mesh, boundaries), name="phi_tilde")
 
     def _check_order(self, measures: Measures) -> None:
         """Refuse a measure whose NUM-07 quadrature bonus is for another order."""

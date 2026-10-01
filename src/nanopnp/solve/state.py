@@ -58,13 +58,18 @@ from nanopnp.physics.models import (
     PhysicsModel,
     declaration,
 )
-from nanopnp.solve.continuation import ELECTRODES, Rung, default_ladder
+from nanopnp.solve.continuation import (
+    ELECTRODES,
+    Rung,
+    default_ladder,
+    model_reads_wall,
+    reads_wall,
+)
 from nanopnp.solve.gates import FieldSampler, WallDistanceGate, WallDistanceMeasurement
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.core.typing import Expression, FESpace, GridFunction, Mesh
     from nanopnp.io.case import CaseDocument, ResolvedCase
-    from nanopnp.materials.electrolyte import Electrolyte
 
 __all__ = [
     "OPERATOR_KEYS",
@@ -311,29 +316,18 @@ def cold_start(reason: str) -> dict[str, Canonicalisable]:
     return {"status": "cold", "source": None, "reason": reason, "differing_operator_keys": []}
 
 
-def reads_wall(electrolyte: Electrolyte) -> bool:
-    """Return whether any resolved correction of ``electrolyte`` evaluates ``d``.
-
-    Asked of the corrections rather than of the model name, exactly as
-    :func:`~nanopnp.solve.continuation.default_ladder` asks it: a run whose wall
-    factors are all off must not pay for a screened-Poisson solve, and must not
-    record a distance field nothing read.
-    """
-    return any(
-        bool(getattr(correction, "use_wall", False))
-        for correction in electrolyte.corrections.values()
-    )
-
-
 def reads_distance(resolved: ResolvedCase) -> bool:
     """Return whether this case's solve reads the PHY-02 distance field.
 
-    Both halves are asked: the model must declare that it reads ``d`` at all
-    (section 5.4.3 NOTE), and some resolved correction must evaluate it
-    (:func:`reads_wall`). ``poisson`` beside an electrolyte whose corrections are
-    on reads no distance field, and must neither pay for one nor record it.
+    Asked of the model the case builds (:func:`~nanopnp.solve.continuation.model_reads_wall`),
+    the rule the ladder applies to each of its rungs: the model must declare
+    that it reads ``d`` at all (section 5.4.3 NOTE), and one of *its* resolved
+    corrections must evaluate it. ``poisson`` beside an electrolyte whose
+    corrections are on reads no distance field, and neither does ``pnp-ns``,
+    which resolves every correction to ``none`` whatever the case gave; neither
+    pays for one, gates one or stores one.
     """
-    return declaration(resolved.model).wall_distance and reads_wall(resolved.electrolyte)
+    return model_reads_wall(resolved.physics_model())
 
 
 def wall_distance_field(resolved: ResolvedCase, mesh: Mesh, *, order: int) -> Expression:

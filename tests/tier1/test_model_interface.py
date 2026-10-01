@@ -53,7 +53,7 @@ from nanopnp.physics.coefficients import SATURATED_WALL_DISTANCE_NM
 from nanopnp.physics.measures import AXISYMMETRIC
 from nanopnp.physics.models import ModelSolution, PhysicsModel
 from nanopnp.solve.continuation import default_ladder
-from nanopnp.solve.state import ladder, restore
+from nanopnp.solve.state import WALL_DISTANCE_ENTRY, ladder, restore
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
@@ -666,6 +666,44 @@ def test_ver56_a_model_defined_as_one_class_runs_from_a_case_file_to_stage_twelv
         case=loads_case(texts[forwarding_model]),
     )
     assert type(restored.model) is ForwardingModel
+
+
+def test_ver56_pnp_ns_beside_corrections_it_overrides_runs_and_restores(
+    pore_mesh: Path, tmp_path: Path
+) -> None:
+    """VER-56: whether ``d`` is read is asked of the built model, not of the case.
+
+    ``pnp-ns`` resolves every correction to ``none`` whatever the case gives, so
+    the quick-start case as ``pnp-ns`` -- its corrections on, the schema default
+    -- reads no distance field. Asked of the case's electrolyte, the solve then
+    paid for a field no term evaluated, and ``save`` refused the converged state
+    on the ladder and on the single rung alike. Now both run to stage 12, store
+    no distance field, restore, and equal the same case with every correction
+    written as ``none`` bit for bit.
+    """
+    import numpy as np
+
+    quickstart = (
+        QUICKSTART.read_text(encoding="utf-8")
+        .replace("model: epnp-ns", "model: pnp-ns")
+        .replace("path: pore.msh", f"path: {pore_mesh}")
+    )
+    classical = quickstart.replace("{model: willems2020_nacl}", "{model: none}").replace(
+        "{model: borukhov}", "{model: none}"
+    )
+    assert classical.count("{model: none}") == 6
+    texts = {
+        "ladder": quickstart,
+        "single": quickstart.replace("continuation: default_ladder", "continuation: none"),
+        "classical": classical,
+    }
+    runs = {name: _run(text, tmp_path / name) for name, text in texts.items()}
+    for name, result in runs.items():
+        state = Path(result.artefacts["solve"].payload["state"])
+        with np.load(state, allow_pickle=False) as archive:
+            assert WALL_DISTANCE_ENTRY not in archive.files, name
+        restore(state, case=loads_case(texts[name]))
+    assert runs["ladder"].artefacts["qoi"].summary == runs["classical"].artefacts["qoi"].summary
 
 
 # -- the electrostatic models from case files ---------------------------------
