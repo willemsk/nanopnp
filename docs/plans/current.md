@@ -13,7 +13,8 @@ evidence that an unmerged branch has shipped.
   WP26–WP32. [WP26](wp26-physics-model-interface.md) (FR-20, VER-56) and
   [WP27](wp27-protonation.md) (FR-12, VER-57) are **merged**, tagged `v0.4.0-alpha.1` and `.2`.
   [WP28](wp28-charge-deposition.md) (FR-13, FR-14, QR-03; VER-01, VER-02, VER-58), deposition on
-  the deployed mesh, is **planned**. **Next: `/wp-implement`** on WP28.
+  the deployed mesh, is **implemented on its branch, unmerged**, its PR awaiting the independent
+  review. **Next: `/wp-ship`** on WP28, then `/wp-plan` for WP29 (VAL-06, the phase gate).
 
 ## What Phase 3 must not re-decide
 
@@ -33,8 +34,8 @@ Each is recorded in full where it points.
   Registration leaves PDB2PQR's flipped amides and rings out. → §5.2 stage 7 note; PHY-16 step-3
   NOTE; §5.3.1 NOTEs on the protonation keys and `inputs:`.
 - **The deposit** is element-wise of the potential's order, in the model frame, gated per plane
-  against the source atoms, and read only from stage 7's artefact (WP28). → PHY-16 NOTE on the
-  deposition; §4.4 NOTE on the producer path.
+  against the source atoms, and read only from stage 7's artefact (WP28). A structure case solves
+  charged by default. → PHY-16 NOTE on the deposition; §4.4 NOTE on the producer path.
 - **The exclusion shell is in Phase 3 (WP30)**, off by default. → §8.2.4 D5; FR-15.
 - **Tier 3 compares the published I–V and in-pore averages**, and gates v1.0, not Phase 3.
   → VAL-16, VAL-17; §8.2.4 D6.
@@ -72,20 +73,20 @@ Each is recorded in full where it points.
   v1.0; the COMSOL field exports are no longer asked for (§8.2.4 D6).
 - **The Read the Docs project**, and **`$NANOPNP_REFERENCE_DATA` on the nightly runner**.
 - **OPN-04**, the ClyA-AS mutation list, which is the provenance of `Q_net`.
-- **The archived PQRs**, extracted under `$NANOPNP_REFERENCE_DATA` for WP27's Tier 3 (not yet run).
+- **The archived PQRs**, extracted under `$NANOPNP_REFERENCE_DATA` for WP27's and WP28's Tier 3
+  (neither yet run).
 
 ## Dependencies To Read On Demand
 
 | Need | Read |
 |---|---|
 | Phase 3 scope, decisions and packages | `phase-3-charge-pipeline.md`; `SPECIFICATION.md` §4.4, §5.2 stage 7, §8.2.4 |
-| The consumer path stage 7 has today | `charge/stage.py`, `charge/fields.py`; VER-29, VER-30; WP9 plan |
-| Why the consumer leg aliases | §4.4 NOTEs; `.knowledge/04` §3–§3.2; `.knowledge/06` §8.1.1 |
+| The consumer path, and why it aliases | VER-29; §4.4 NOTEs; `.knowledge/04` §3.2; `.knowledge/06` §8.1.1 |
 | The physics-model interface | `docs/project/physics-models.md`; the WP26 plan's Outcomes; `physics/models.py` |
 | PDB2PQR, PROPKA and APBS facts | `.knowledge/07` §3, incl. *as a per-frame driver*; `density/radii.py` and `data/radii/` |
-| The artefact WP28 deposits | `charge/protonation.py` (`ProtonationTable`); WP27 Outcomes; `protonated_2wcd` |
-| The deposition and its gates | The WP28 plan; `.knowledge/04` §3.3; `charge/fields.py` |
-| The reduction the charge reuses | `symmetry/annular.py`; VER-50 |
+| The protonation artefact | `charge/protonation.py` (`ProtonationTable`); WP27 Outcomes; `protonated_2wcd` |
+| The deposition and its gates | The WP28 plan and Outcomes; `.knowledge/04` §3.3; `charge/kernel.py`, `deposit.py`, `fields.py`, `stage.py` |
+| A charged 2WCD walk in a test | `seeded_protonated_2wcd` (`tests/conftest.py`); `tests/tier2/test_charge_2wcd.py` |
 | Case schema, option sets and supply chains | §5.3.1 and its NOTEs; `io/case.py` (`Charge`, `SUPPLY_CHAINS`, `_require_runnable`) |
 | The desktop shell | `gui/`; WP24 Outcomes; `.knowledge/07` §5 |
 

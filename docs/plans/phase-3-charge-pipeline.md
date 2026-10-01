@@ -1,6 +1,6 @@
 # Phase 3 (Charge pipeline): from a structure to a charged run
 
-**Status: in progress. WP26 delivered, 30 September 2026; WP27 delivered, 1 October 2026 ([plan](wp27-protonation.md)); WP28 planned in detail ([plan](wp28-charge-deposition.md)); WP29–WP32 planned.** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
+**Status: in progress. WP26 delivered, 30 September 2026; WP27 delivered, 1 October 2026 ([plan](wp27-protonation.md)); WP28 delivered, 1 October 2026 ([plan](wp28-charge-deposition.md)); WP29–WP32 planned.** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
 the geometry pipeline (`main` at `v0.3.0-alpha.9`, formerly `v0.9.0-alpha.9`). Phase 2's
 end-of-phase report and its release, `v0.3.0`, wait for one Tier-3 run on the author's archive
 (criterion 3, VAL-05's ensemble leg). WP26 may start before that report merges, because nothing in
@@ -200,6 +200,18 @@ delivered `rhoq_pore` table (the planar integral, and the field difference attri
 > atoms in closed form, under a Gaussian-smoothed step of 0.5 nm, rather than the lattice under the
 > consumer path's 0.2 nm ramp (§4.4 NOTE on the producer path). The deposit is element-wise of the
 > potential's order (D3), and `axis_cutoff_nm` is refused away from its default (D10).
+
+> **Delivered, 1 October 2026** ([plan](wp28-charge-deposition.md), to be tagged
+> `v0.4.0-alpha.3`). Stage 7 sums PHY-16 step 5's kernel on the 0.005 nm export lattice, cached as
+> `nanopnp/charge-grid/v1`. It deposits the sum on the deployed mesh as element-wise `P_k` of the
+> potential's order and gates both legs and 12 planes against the atoms. A `structure:` or
+> `inputs.pqr` case solves charged. Discharges FR-13, FR-14 and QR-03's producer path; retires
+> RSK-08; adds VER-01 and VER-02 in full, and VER-58 (`tests/tier1/test_charge_kernel.py`,
+> `test_charge_deposit.py`, `tests/tier2/test_charge_potential.py`, `test_charge_2wcd.py`,
+> `tests/tier3/test_charge_archive.py`, not yet run). 2WCD deposits with five orders to spare.
+> **Live for later packages:** the coupled models are one quadrature order short on a deposited
+> source (D13, open); consumers read the charge only from stage 7's artefact (D9);
+> `inputs.mesh: artefact:` is still refused; `seeded_protonated_2wcd` seeds a charged walk's store.
 
 ### WP29 — VAL-06: Poisson against APBS (the phase gate)
 

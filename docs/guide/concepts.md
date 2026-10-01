@@ -22,7 +22,8 @@ mesh through the `inputs:` block skips them, and a run walks these:
 |---|---|---|
 | 9 | case | the validated, resolved case |
 | 6 | mesh | the ingested, gated mesh |
-| 7 | charge | the fixed-charge and dielectric fields, deployed on the mesh and gated (only if the case supplies one) |
+| 7 | protonation | each frame's partial charges and radii, from PDB2PQR or `inputs.pqr` (a case that protonates, under a model with a fixed charge) |
+| 7 | charge | the fixed-charge and dielectric fields on the mesh, gated: read from `inputs.charge` and `inputs.eps_r`, or deposited from the protonation |
 | 8 | materials | the electrolyte's correction functions |
 | 10 | solve | the converged solution, reached by the continuation ladder |
 | 11 | qoi | the quantities of interest |

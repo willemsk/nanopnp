@@ -1,6 +1,6 @@
 # WP28 — Fixed-charge deposition on the deployed mesh and its gates (FR-13, FR-14)
 
-**Status: planned, not started.** Planned 1 October 2026, on `main` at `09e1c4d` (WP27 merged and
+**Status: delivered, 1 October 2026.** Planned 1 October 2026, on `main` at `09e1c4d` (WP27 merged and
 tagged `v0.4.0-alpha.2`). The third package of Phase 3. It inherits WP27's `ProtonationTable` and
 `protonated_2wcd`, WP26's model declarations (a charge is produced only for a model declaring
 `fixed_charge`), the consumer path's `ConservationReport` and gates (VER-29, the §4.4 NOTEs), WP21's
@@ -88,6 +88,61 @@ None blocking. Close calls the author may overrule without disturbing the rest: 
 `P0`/`P1`); D6's smoothed weight at 0.5 nm on the producer path, while the consumer path keeps its
 0.2 nm linear ramp (a spec amendment, made here); D10's refusal of `axis_cutoff_nm`; D4's threshold
 of half the absolute charge; D14's uncharged geometry comparison.
+
+### Outcomes
+
+> **Outcome — VER-58's sphere was a polygon, and the rate it read was the boundary's.** The first
+> run measured the `P2` deposit's disc error falling at 2.02 between the finest two levels at
+> `r_i = 1.5` nm, against ≥ 2.5, and failed at `r_i = 0` too. Netgen meshes are affine, so the grounded sphere's chords sag by
+> `h²/(8R)` and the potential carries an `O(h²)` error of the oracle's geometry; the arc followed
+> the far field's 1.6/0.8/0.4 nm. The arc is now 0.02 nm at every level (`ARC_NM`). The atom on the
+> axis then showed a second floor, its lattice end correction kept in its shape after
+> renormalisation (`O(H²/w²)`), so the benchmark's lattice is `w/100` = 0.0025 nm
+> (`.knowledge/04` §3.3, `.knowledge/06` §8.3). Measured on near-atom meshes of 0.2, 0.1 and
+> 0.05 nm, `w = 0.25` nm, `poisson`: rates `P2` 2.90 and 2.99 and `P0` 1.95 and 2.03 at `r_i = 0`;
+> `P2` 3.17 and 3.00 and `P0` 2.19 and 1.95 at `r_i = 1.5` nm. The finest `P2` errors are
+> 1.7 × 10⁻⁵ and 5.1 × 10⁻⁶, `P0`'s 2.0 × 10⁻⁴ at `r_i = 1.5`; the on-axis error there is
+> 7.6 × 10⁻⁵, 1.3 × 10⁻⁵ and 2.1 × 10⁻⁶. The unresolved atom (`w = 0.0112` nm, 0.1 nm elements) errs
+> by 1.2 × 10⁻⁵ at ≥ 1 nm with `P2` and 6.4 × 10⁻³ with `P0`. The tolerance did not move.
+
+> **Outcome — *Design* §3's estimate holds: the per-plane check's own error falls as `h³`.** The
+> worst mesh plane on the cylindrical test pore is 3.15 × 10⁻³ at `maxh` 1 nm, and 2.3 × 10⁻⁴,
+> 7.8 × 10⁻⁶ and 1.7 × 10⁻⁷ at 0.5, 0.25 and 0.125 nm (`.knowledge/04` §3.3). So the Tier 1
+> producer fixture meshes at 0.5 nm, and the re-deposit test goes from `P2` to `P3`, because `P1`
+> on 0.5 nm elements fails the gate by the check's error (4 × 10⁻³), as §3 predicts.
+
+> **Outcome — the PHY-16 NOTE corrected: the reference's 2D construction differs at first order.**
+> The NOTE said the two constructions differ near each atom at order `(w_i/r_i)²`. Pointwise they
+> differ by `(r − r_i)/(2 r_i)` of the local value, odd about the atom, so the charge and every
+> z-marginal agree and only the radial centroid moves, by `w_i²/(4 r_i)`. The NOTE was amended in the
+> same commit as the test that measured it (`tests/tier1/test_validation_charge.py`).
+
+> **Outcome — D14 as built.** `inputs.mesh: {artefact: …}` is refused (`mesh/ingest.py`), so WP22
+> D9's generated leg walks to the mesh at `size_scale` 2 and reads that mesh's `.msh` through
+> `inputs.mesh: path:`, at `size_scale` 1, which a supplied mesh requires. The leg is uncharged, as
+> its manifest asserts: `G_gen/G_ref − 1` = −6.59 % against `ε_G` −8.49 %. `seeded_protonated_2wcd`
+> copies the session's protonated store into a test's own.
+
+> **Outcome — measurements.** The protonated 2WCD at the default sizes (44,987 elements, `P2`):
+> `Q_net` −60 e on the atoms, the lattice and the mesh; both legs ≤ 4 × 10⁻¹⁴; worst plane
+> 5 × 10⁻¹⁵ (lattice) and 4.0 × 10⁻⁶ (mesh); ring 0; solid share 0.977. VER-53's charged walk at
+> `size_scale` 4 (6,185 elements): worst mesh plane 1.6 × 10⁻⁴, so the walk's coarse mesh passes with
+> six times margin; `I_Na` 3.19 × 10⁻¹¹ A and `I_Cl` 3.12 × 10⁻¹¹ A at +50 mV, 0.15 M; stage 7 in
+> 7.6 s and the solve in 14.4 s. Cost (`-m slow`, fresh process): stage 7 cold on 2WCD 9.0 s (sum
+> 2.7, deposit 5.5, gates 0.4) and 0.92 GB; 50 frames sum in 119.8 s, 2.40 s per frame, at 0.96 GB,
+> inside *Design* §6's 60 s and 2 GB per frame. Details in `.knowledge/04` §3.3.
+
+> **Outcome — Tier 3 not run, and its frozen-case legs as written.** The archive is not under
+> `$NANOPNP_REFERENCE_DATA` here, so `tests/tier3/test_charge_archive.py` skips. Its construction
+> and comparison are `validation/charge.py`, exercised at Tier 1 (`test_validation_charge.py`).
+> The table cannot be the reference-mesh leg's charge, because VAL-15's quadrature gate refuses
+> it on that mesh. So the frozen case runs on the pipeline's mesh and on the reference mesh, both
+> with the archive deposited, and the table's verdict is recorded beside them. The difference
+> between the export and `rhoq_pore` is split three ways: construction, registration and
+> reproduction.
+
+> **Outcome — D13 unchanged.** The coupled models still integrate a deposited source one order
+> short (NUM-07 NOTE, open). VER-58 solves with `poisson` and measures the deposit alone.
 
 ## Design
 

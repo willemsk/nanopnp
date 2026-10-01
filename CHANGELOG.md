@@ -17,6 +17,50 @@ Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before t
 version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
 
+## [0.4.0-alpha.3] - 2026-10-01
+
+WP28: fixed-charge deposition on the deployed mesh and its gates (FR-13, FR-14, QR-03's producer
+path; retires RSK-08), the third package of Phase 3.
+
+### Added
+
+- **Stage 7 deposits the fixed charge.** The `charge` stage sums PHY-16 step 5's closed-form
+  azimuthal mean of each atom's 3D Gaussian over the `protonation` artefact's atoms and frames, on
+  a 0.005 nm (r, z) export lattice in the model frame, each atom renormalised to its own charge. It
+  deposits the sum on the deployed mesh by `r`-weighted L² projection, as element-wise
+  polynomials of the potential's order, so the assembled source is the lattice's integral against
+  every test function (PHY-16 NOTE on the deposition, VER-58).
+- **Its gates**: the producer leg (lattice against `Q_net`), the consumer leg (mesh against
+  lattice), the quadrature agreement and the boundary ring, and the cumulative charge below 12
+  planes compared with the source atoms in closed form, for the lattice and for the mesh, each at
+  10⁻³ (VER-01, VER-02; §4.4 NOTE on the producer path). Lattice charge falling on no element, or
+  less than half of `Σ|q_i|` centred in the solids, is refused naming its location or the share and
+  the frame shift (QR-12).
+- The lattice is its own cached artefact, `nanopnp/charge-grid/v1`, keyed without the mesh, so a
+  change of mesh size or element order re-deposits without re-summing.
+- `nanopnp stage charge CASE --export X.yaml` writes the lattice as a `field1` document and its
+  `.npz`, which reads back through `inputs.charge` to the same digest; `.dx`, `.mrc` and `.ccp4`
+  write the grid (IF-05).
+- The manifest's Charge group records `Q_net`, the conservation report, the solid share, each
+  material's charge, the lattice and deposit sizes, and the timings (FR-25).
+
+### Changed
+
+- **A `structure:` or `inputs.pqr` case solves charged.** Where the case protonates and its model
+  declares `fixed_charge`, a walk runs `protonation` and `charge`; otherwise the manifest records
+  them as not run, with the reason (WP27 D3 retired). `inputs.pqr` beside a model without a fixed
+  charge is refused naming the model.
+- The solve, the restore of a solved state and the `rho_fixed` export read a deposited charge only
+  from stage 7's artefact; a producer case handed none is refused naming stage 7. The stage-7
+  artefact names the `protonation` and `charge_grid` artefacts among its inputs.
+- `charge.smearing.sharpness` is read, a switch whose validated default is 0.5, and
+  `charge.smearing.grid_spacing_nm` a configuration value; a spacing above half the narrowest
+  kernel width is refused naming the atom. `charge.smearing.axis_cutoff_nm` away from its default is
+  refused naming PHY-18, and either smearing key is refused beside `inputs.charge` or where the case
+  has nothing to deposit.
+- The PHY-16 NOTE on the reference's 2D construction is corrected: the two constructions differ
+  pointwise at first order in `w_i/r_i`, odd about each atom, and carry the same charge and z-marginal.
+
 ## [0.4.0-alpha.2] - 2026-10-01
 
 WP27: protonation, the PDB2PQR driver and the PQR artefact (FR-12; adds to IF-03, FR-27, QR-12),

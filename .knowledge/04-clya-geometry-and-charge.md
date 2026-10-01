@@ -434,6 +434,37 @@ PHY-16 step 5's kernel, `ρ̄_i = q_i π^(−3/2) w⁻³ exp(−((r − r_i)² +
   `q_i ½ erfc((z_i − p)/√(s² + w²))`, which agrees with adaptive quadrature to round-off
   [verified]. That is the closed-form per-plane reference of the §4.4 NOTE on the producer path.
 
+Measured implementing it (WP28, 1 October 2026) **[tested]**:
+
+- **A `2w` patch without renormalisation loses 0.83 %, not the continuum's 0.933 %.** The
+  continuum loss `1 − erf(2)²` is offset by the trapezoid rule's own end terms at the cut,
+  `2h e⁻⁴/(w√π)`, at `h = 0.005` and `w = 0.1` nm. The pipeline's box is `6 w_max` beyond the atoms
+  whatever the patch, so a truncated patch fails the producer leg, never the boundary ring.
+- **An atom on the axis keeps its end correction in its shape after renormalisation.** The total
+  is exact, but `O(h²/w²)` of the charge is redistributed near `r = 0` and does not fall with the
+  mesh. In VER-58's sphere (`w = 0.25` nm, `P2`, 0.05 nm near the atom) it is the disc error's
+  floor: 4.1 × 10⁻⁵, 1.9 × 10⁻⁵ and 1.7 × 10⁻⁵ at `h` = 0.01, 0.005 and 0.0025 nm, with the on-axis
+  error 1.2 × 10⁻³, 3.3 × 10⁻⁴ and 1.1 × 10⁻⁴. ClyA's innermost atoms are at `r ≳ 1.6` nm.
+- **The deposit's per-plane error is the mesh's `P2` fit to the erf weight, and falls as `h³`.** On
+  the cylindrical test pore (`P2`, `s = 0.5` nm) the worst mesh plane against the atoms is 3.15 ×
+  10⁻³, 2.30 × 10⁻⁴, 7.84 × 10⁻⁶ and 1.68 × 10⁻⁷ at `maxh` 1, 0.5, 0.25 and 0.125 nm, and about six
+  times smaller at `s = 1` nm. So a 1 nm mesh fails the 10⁻³ gate by the check's own error, as
+  *Design* §3 of the WP28 plan predicts, and the lattice side holds to 10⁻¹⁴ throughout.
+- **The protonated 2WCD deposits with five orders to spare.** At pH 7.5 (53,760 charged atoms,
+  `Q_net` −60 e) on its generated mesh at the default sizes (44,987 elements, `P2`), both legs hold
+  to 4 × 10⁻¹⁴, the worst lattice plane to 5 × 10⁻¹⁵ and the worst mesh plane to 4.0 × 10⁻⁶; at
+  `size_scale` 4 (6,185 elements) the mesh plane is 1.6 × 10⁻⁴. The lattice is 1334 × 3090 nodes.
+  97.7 % of `Σ|q_i|` has its atom centres in the solids, and the deposit puts −84.8 e in the protein,
+  +24.0 e in the electrolyte and +0.7 e in the membrane: the Gaussians of the surface's charged side
+  chains reach past the 25 % isolevel. Stage 7 cold takes 9.0 s (sum 2.7, deposit 5.5, gates 0.4)
+  and 0.92 GB peak; 50 frames sum in 119.8 s, 2.40 s per frame, at 0.96 GB.
+- **The reference's 2D construction differs from the azimuthal mean at first order, not second.**
+  Off the axis, `2πr ρ̄_i` is the 2D Gaussian times `(r/r_i)^½ (1 + O(w²/r r_i))`. The difference is
+  `(r − r_i)/(2 r_i)` of the local value, odd about the atom, and peaks at
+  `(w/2r_i)/√(2e) = 0.214 w/r_i` of the peak. The charge and every z-marginal agree, and the 3D
+  construction's radial centroid lies `w²/(4 r_i)` further out: 0.6 pm for a 0.1 nm atom at
+  `r_i = 1.6` nm.
+
 ---
 
 ## 4. Mesh
