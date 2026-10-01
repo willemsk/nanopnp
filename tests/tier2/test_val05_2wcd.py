@@ -365,18 +365,37 @@ def test_val05_2wcd_frozen_case_conductance(walked: Walked) -> None:
     Uncharged at 1 M, so G is geometric and ``ε_G`` is its bulk-resistor proxy;
     access resistance dilutes the difference, and by how much is the record.
     """
-    generated = run_case(
+    # WP28 D14: a structure case whose model declares a fixed charge now protonates
+    # and deposits it, so the generated leg reads the walked mesh through
+    # inputs.mesh and stays as uncharged as the fixture's. size_scale is the
+    # mesh's own (it is refused beside inputs.mesh).
+    walk = run_case(
         _write(
-            walked.root / "frozen-generated.case.yaml",
+            walked.root / "frozen-walk.case.yaml",
             FROZEN_CASE.format(
-                name="2wcd-frozen",
+                name="2wcd-frozen-walk",
                 source=walked.structure + walked.geometry,
                 size_scale=FROZEN_SIZE_SCALE,
             ),
         ),
         store=walked.store,
+        upto="mesh",
+        write=False,
+    )
+    mesh_file = walk.artefacts["mesh"].payload["mesh"]
+    generated = run_case(
+        _write(
+            walked.root / "frozen-generated.case.yaml",
+            FROZEN_CASE.format(
+                name="2wcd-frozen",
+                source=f"inputs:\n  mesh: {{path: {mesh_file}, format: msh41}}\n",
+                size_scale=1.0,
+            ),
+        ),
+        store=walked.store,
         workspace=walked.root / "frozen-generated",
     )
+    assert generated.manifest.charge["status"] == "not run", generated.manifest.charge
     fixture = run_case(
         _write(
             walked.root / "frozen-fixture.case.yaml",

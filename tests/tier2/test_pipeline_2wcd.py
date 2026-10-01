@@ -11,8 +11,11 @@ centroid of residues 8-292 is placed at the MD structure's ``Z_MD``, through
 The second half walks the same structure to stage 12 at ``size_scale`` 4 with
 ``pnp``, flow off and every correction off. That is the cheapest coupled model a
 structure case can solve: the electrostatic models refuse a solid domain with no
-transport to screen it (section 5.3.1 NOTE), and this case carries two. The
-manifest must key every stage and record the mesh the solve actually read.
+transport to screen it (section 5.3.1 NOTE), and this case carries two. Since
+WP28 it is exit criterion 4's charged walk (D14): ``pnp`` declares ``fixed_charge``,
+so both halves of stage 7 run, the protonation read from a store seeded with the
+session's ``protonated_2wcd``. The manifest must key every stage, record the mesh
+the solve actually read, and record ``Q_net`` and the conservation report.
 """
 
 from __future__ import annotations
@@ -84,17 +87,17 @@ outputs: [current]
 @pytest.fixture(scope="module")
 def registered(
     prepared_2wcd: Prepared2WCD,
-    seeded_2wcd: Callable[[Path], Path],
+    seeded_protonated_2wcd: Callable[[Path], Path],
     tmp_path_factory: pytest.TempPathFactory,
 ):
     """Return the store, the structure block and the membrane block registering 2WCD.
 
-    Stages 1 to 3 come from the session's seed and stage 4 runs here, once; the
-    registration is read off the aligned structure stage 1 produced, and every later
-    run reuses them from the store.
+    Stages 1 to 3 and the protonation come from the session's seed and stage 4 runs
+    here, once; the registration is read off the aligned structure stage 1
+    produced, and every later run reuses them from the store.
     """
     root = tmp_path_factory.mktemp("2wcd")
-    store = Store(seeded_2wcd(root / "store"))
+    store = Store(seeded_protonated_2wcd(root / "store"))
     structure = STRUCTURE.format(pdb=prepared_2wcd.path)
     case = root / "contour.case.yaml"
     case.write_text(MESH_CASE.format(structure=structure, geometry=""), encoding="utf-8")
@@ -160,33 +163,60 @@ def test_ver53_2wcd_meshes_at_the_default_sizes(registered) -> None:
 
 
 def test_ver53_2wcd_walks_to_the_report_and_the_manifest_keys_every_stage(registered) -> None:
-    """FR-27: every stage keyed in the manifest; the recorded mesh is the one on disk (FR-25)."""
+    """FR-27: every stage keyed in the manifest; the recorded mesh is the one on disk (FR-25).
+
+    The walk is charged (WP28 D14): every stage of :data:`PIPELINE` runs, the
+    protonation from the seeded store, and the manifest's Charge group records
+    ``Q_net`` and the conservation report the deposit was gated on.
+    """
     root, store, structure, geometry = registered
     case = root / "solve.case.yaml"
     case.write_text(SOLVE_CASE.format(structure=structure, geometry=geometry), encoding="utf-8")
     result = run_case(case, store=store, workspace=root / "work")
 
     ran = [record.name for record in result.stages]
-    # Neither half of stage 7 runs: the case supplies no field, and the protonation
-    # stage runs only when a walk names it until WP28 reads its artefact (WP27 D3),
-    # which the manifest says rather than leaving out.
-    assert ran == [name for name in PIPELINE if name not in ("protonation", "charge")]
-    protonation = result.manifest.charge["protonation"]
-    assert isinstance(protonation, dict)
-    assert protonation["status"] == "not run"
+    assert ran == list(PIPELINE)
+    assert "protonation" in {record.name for record in result.stages if record.cached}
+    group = result.manifest.charge
+    charge = group["charge"]
+    assert isinstance(charge, dict)
+    assert charge["source"] == "deposited"
+    assert charge["q_net_e"] == pytest.approx(-60.0, abs=1e-9)
+    conservation = charge["conservation"]
+    assert conservation == result.artefacts["charge"].summary["charge"]["conservation"]  # type: ignore[index]
+    assert group["protonation"]["source"] == "pdb2pqr"  # type: ignore[index]
+    assert result.artefacts["solve"].inputs["charge"] == result.artefacts["charge"].hash
+    logger.info(
+        "2WCD charged walk at size_scale 4 (%d elements): Q_net %.6f e, legs %.3e and %.3e, "
+        "worst plane %.3e (lattice) and %.3e (mesh), solid share %.3f",
+        result.artefacts["mesh"].summary["elements"],
+        charge["q_net_e"],
+        conservation["producer"]["relative_error"],  # type: ignore[index]
+        conservation["consumer"]["relative_error"],  # type: ignore[index]
+        conservation["per_plane"]["grid_worst_relative_error"],  # type: ignore[index]
+        conservation["per_plane"]["mesh_worst_relative_error"],  # type: ignore[index]
+        charge["solid_share"]["solid_share"],  # type: ignore[index]
+    )
     keyed = result.manifest.inputs["artefacts"]
     for record in result.stages:
         if record.name != "report":
             assert keyed[record.name]["hash"] == record.hash  # type: ignore[index]
 
-    group = result.manifest.geometry_and_mesh
-    assert group["generated"] is True
-    assert set(group) >= {"structure", "density", "reduction", "contour", "region", "sizing"}
+    geometry_group = result.manifest.geometry_and_mesh
+    assert geometry_group["generated"] is True
+    assert set(geometry_group) >= {
+        "structure",
+        "density",
+        "reduction",
+        "contour",
+        "region",
+        "sizing",
+    }
     payload = result.artefacts["mesh"].payload["mesh"]
-    assert read(payload, format="msh41").content_hash == group["content_hash"]
+    assert read(payload, format="msh41").content_hash == geometry_group["content_hash"]
 
     currents = result.quantities["currents_A"]
-    logger.info("2WCD pnp at +50 mV, 0.15 M, size_scale 4: currents %s A", currents)
+    logger.info("2WCD charged pnp at +50 mV, 0.15 M, size_scale 4: currents %s A", currents)
     logger.info(
         "2WCD walk stage times: %s s",
         {record.name: round(record.seconds, 2) for record in result.stages},
