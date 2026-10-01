@@ -3103,6 +3103,19 @@ the sharp ones. The tolerance is not re-argued after the comparison runs (§8.2.
 On the analytic ring of the same plan, each solver is gated against the exact series at half of
 each tolerance.
 
+Measured (**1 October 2026**, WP29, `tests/tier2/test_val06_2wcd.py`): on the protonated 2WCD at the
+default sizes (44,985 elements), over 569,541 probes and the 93 on the axis, the budget is 1.20 %,
+0.18 % and 0.59 % (APBS 0.95 %, 0.17 % and 0.58 %; ours 0.25 %, 0.010 % and 0.013 %). Zeroing the
+charge moves the probes by 45 % rms, where 10 `τ_rms` is required, so the charge and not the faces
+carries the comparison. The agreement is **0.41 %, 0.10 % and 0.23 %**, seven, ten and six times
+inside the tolerance. A focused 0.05 nm grid on the lumen measures APBS's order at 1.6 in both max
+and rms, so its 0.1-against-0.2 nm difference is the bound the budget assumes. On the ring
+(`tests/tier2/test_val06_ring.py`) APBS and our `P2` are within 0.13 % and 0.010 % of the series in
+the max norm, and each of the eight broken constructions exceeds half the tolerance. The recorded
+leg's ring means differ from ours by 15.7 %, 6.7 % and 13.6 %, and the spread around a ring reaches
+46 % of `max|φ|` (4.1 % rms). That is the azimuthal averaging of CON-04 together with APBS's own
+charge and surface models, recorded and not gated.
+
 ### 7.5 Tier 4 experimental reproduction
 
 | ID | Activity | Acceptance criterion |
@@ -3497,10 +3510,10 @@ needed.
 | FR-09 | VER-28, VER-52 (the membrane junction derived on any profile), VAL-05 (stage 5's model-frame polygon is the compared one: `tests/tier2/test_val05_2wcd.py`, `tests/tier3/test_val05_ensemble.py`) |
 | FR-10 | VER-10, VER-53 (the size fields, the wall-size gate and the generated mesh's gates), VER-54 (the same region meshed by the optional Gmsh backend through the same gates, and solved on both backends' meshes), VAL-05 (the generated mesh against §5.2.2's figures, and one frozen case's conductance on it against the fixture's, recorded: `tests/tier2/test_val05_2wcd.py`, `tests/tier3/test_val05_ensemble.py`) |
 | FR-11 | None yet |
-| FR-12 | VER-57 (the protonation stage: the force field's own charges, PROPKA's states, unapplied states recorded, the PQR artefact and `inputs.pqr`), VAL-06 |
-| FR-13 | VER-01, VER-02, VER-58, VAL-06 |
+| FR-12 | VER-57 (the protonation stage: the force field's own charges, PROPKA's states, unapplied states recorded, the PQR artefact and `inputs.pqr`), VAL-06 (the protonated 2WCD's potential against APBS, and the recorded leg from its PQR: `tests/tier2/test_val06_2wcd.py`; the archived PQRs: `tests/tier3/test_val06_archive.py`) |
+| FR-13 | VER-01, VER-02, VER-58, VAL-06 (the export lattice hat-weighted onto APBS's grid, against the deposit's potential: `tests/tier1/test_apbs_maps.py`, `tests/tier2/test_val06_ring.py`, `tests/tier2/test_val06_2wcd.py`) |
 | FR-14 | VER-01, VER-02, VER-29 (the deployed-mesh half), VER-58 (the deposit onto the deployed mesh), VAL-15 |
-| FR-15 | VER-30, VER-31, VAL-06 |
+| FR-15 | VER-30, VER-31, VAL-06 (the assembled permittivity as APBS's staggered harmonic maps: `tests/tier1/test_apbs_maps.py`, `tests/tier2/test_val06_ring.py`, `tests/tier2/test_val06_2wcd.py`) |
 | FR-16 | VER-03 |
 | FR-17 | VER-08, VER-16, VER-18 |
 | FR-18 | VER-13, VAL-10 |

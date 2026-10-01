@@ -1,6 +1,6 @@
 # Phase 3 (Charge pipeline): from a structure to a charged run
 
-**Status: in progress. WP26 delivered, 30 September 2026; WP27 delivered, 1 October 2026 ([plan](wp27-protonation.md)); WP28 delivered, 1 October 2026 ([plan](wp28-charge-deposition.md)); WP29 planned in detail, 1 October 2026 ([plan](wp29-val06-apbs.md)); WP30–WP32 planned.** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
+**Status: in progress. WP26 delivered, 30 September 2026; WP27 delivered, 1 October 2026 ([plan](wp27-protonation.md)); WP28 delivered, 1 October 2026 ([plan](wp28-charge-deposition.md)); WP29 delivered, 1 October 2026 ([plan](wp29-val06-apbs.md)); WP30–WP32 planned.** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
 the geometry pipeline (`main` at `v0.3.0-alpha.9`, formerly `v0.9.0-alpha.9`). Phase 2's
 end-of-phase report and its release, `v0.3.0`, wait for one Tier-3 run on the author's archive
 (criterion 3, VAL-05's ensemble leg). WP26 may start before that report merges, because nothing in
@@ -232,6 +232,17 @@ macOS and skips visibly on Windows. The ensemble leg is at Tier 3, recorded.
 > the axis. A refinement budget of half of each, re-measured on every run, must hold first; on 2WCD
 > it measured 1.22 %, 0.18 % and 0.58 %. The synthetic ring is a Gaussian ring in a grounded
 > dielectric sphere, with a closed-form series.
+
+> **Delivered, 1 October 2026** ([plan](wp29-val06-apbs.md), to be tagged `v0.4.0-alpha.4`).
+> `nanopnp.validation.apbs` gives APBS our problem as maps: the export lattice by hat weights, the
+> assembled permittivity by staggered harmonic maps, and our `P2` solution on the faces. It runs
+> the `apbs` group's binary and reads the result. Discharges VAL-06 and adds to FR-12, FR-13 and
+> FR-15 (`tests/tier1/test_apbs_maps.py`, `tests/tier2/test_val06_ring.py`,
+> `test_val06_2wcd.py`; `tests/tier3/test_val06_archive.py`, not yet run). On 2WCD the agreement
+> is 0.41 %, 0.10 % and 0.23 %, inside a re-measured budget of 1.20 %, 0.18 % and 0.59 %; the
+> numbers are in the §7.4 NOTE. Phase criterion 3 is met. **Live for later packages:** CI sets
+> `NANOPNP_REQUIRE_APBS=1` on every leg but Windows; the recorded leg and the focus run under
+> `-m slow`; the D13 quadrature order of the coupled models is still open.
 
 ### WP30 — The dielectric field and the ion-exclusion shell (FR-15)
 

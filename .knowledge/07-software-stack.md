@@ -483,6 +483,58 @@ the deck's `temp`.
   the two solvers was not formed; VAL-06's tolerance was stated first (`SPECIFICATION.md` §7.4
   NOTE on VAL-06).
 
+### APBS in the VAL-06 driver **[tested]**, 1 October 2026
+
+Measured while implementing WP29 (`src/nanopnp/validation/apbs.py`), in this container with 24
+cores, on `apbs-binary` 3.4.1.1 from the `apbs` dependency group.
+
+- **APBS's log reports its own memory**: `Final memory usage: … MB total, X MB high water`. The
+  child's `ru_maxrss` from `wait4` is not that number on Linux. It is a high-water mark kept across
+  `execve`, so it includes the pages of the Python process that forked it. Under pytest it read
+  1.42 GB for a 97³ run whose own high water was 0.24 GB. The driver reads the log.
+- **At `h` = 0.1 nm, "e per node" and "e per Å³" are the same number**, because a cell is 1 Å³. A
+  charge map left undivided by `h³` is therefore invisible at 0.1 nm. It shows at 0.2 nm as a factor
+  of 8, so the ring checks that broken construction on the nested grid.
+- **The ring in a grounded dielectric sphere** (`r_b` 1 nm, `z_b` 0.5 nm, `w` 0.1 nm, `a` 2 nm, ε 20
+  in `ε_r,f⁰`, `R` 20 nm), with the faces from the series, 65³ at 0.1 nm and about 18,000 fluid
+  probes. APBS is within 0.13 % max, 0.027 % rms and 0.13 % on the axis of the series. Our `P2`
+  deposit and solve (53,009 elements, 0.05 nm inside 6 nm) is within 0.010 %, 0.016 % and 0.010 %.
+  The broken constructions, against half the tolerance (1.5 %, 0.5 %, 0.75 %):
+
+  | Construction | max | rms | axis |
+  |---|---|---|---|
+  | No `1/h³`, on the 0.2 nm grid | 364 % | 208 % | 341 % |
+  | `2πr` dropped from the lattice mass | 44 % | 25 % | 41 % |
+  | Charge point-sampled, `w` = 0.0112 nm | 409 % | 234 % | 384 % |
+  | Node-centred diel declared staggered | 1.98 % | 0.59 % | 1.67 % |
+  | `temp` 310 K against 298.15 K | 1.96 % | 1.13 % | 1.99 % |
+  | Charge 0.5 nm off in z | 31 % | 11 % | 29 % |
+  | `bcfl zero` | 54 % | 74 % | 54 % |
+  | Charge zeroed | 52 % | 30 % | 49 % |
+
+  The temperature row is half of the 3.8 % that the ratio 310/298.15 predicts, because the faces
+  hold our potential and only the charge's part of the interior scales.
+- **The gated leg on 2WCD.** This is the protonated, prepared dodecamer at the default sizes
+  (44,985 elements), solved with `poisson` and both electrodes grounded. The box is 193³ at 0.1 nm
+  from (−9.6, −9.6, −4.35) nm, with 569,541 probes and 93 on the axis. The refinement estimates
+  and the agreement are in `SPECIFICATION.md` §7.4 (the NOTE on VAL-06): 0.41 %, 0.10 % and
+  0.23 %, inside a budget of 1.20 %, 0.18 % and 0.59 %. The largest difference, 0.080 `kT/e`
+  where ours is −17.8, lies at r = 1.80 nm, z = 0.25 nm, beside the constriction.
+- **APBS's order on 2WCD.** A focused 193³ grid at 0.05 nm on the axis takes its faces from the
+  0.1 nm solution, interpolated trilinearly, and the charge inside it, clipped. Over 34,637 probes,
+  `|φ(0.1) − φ(0.2)|` is 0.184 and `|φ(0.05) − φ(0.1)|` is 0.059 `kT/e` at most. That is an order of
+  1.64 in max and 1.61 in rms, so the 0.1-against-0.2 nm difference bounds APBS's error at 0.1 nm.
+- **The recorded leg on 2WCD.** APBS takes `spl4` and `smol` (`srad` 1.4 Å, `swin` 0.3 Å, `pdie`
+  20) from the same PQR in the model frame. 2,651,142 edges in our membrane are set to 3.2. The
+  comparison is over the 454,325 probes whose ring lies inside the box, at 24 angles. The ring means
+  differ from ours by 15.7 % max, 6.7 % rms and 13.6 % on the axis. APBS at the nodes differs by
+  77 % max, near atoms. The spread around a ring reaches 46 % of `max|φ|`, at 4.1 % rms.
+- **Cost on 2WCD.** The `P2` walk takes 15 s and the `P3` walk 8 s, with stages 1–3 and the
+  protonation seeded. The raster of 2.7 M cells takes 10 s and the maps 3 s. APBS takes 29 s at
+  193³ (1.83 GB high water) and 3.3 s at 97³ (0.24 GB). The test process peaks at 1.38 GB. Writing
+  one 193³ OpenDX map takes 3.5 s and 126 MB, and GridDataFormats reads it back in 2.4 s. The
+  module, with the recorded leg and the focus under `-m slow`, takes 5 minutes.
+
 ---
 
 ## 4. Geometry, meshing and I/O
