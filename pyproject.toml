@@ -102,6 +102,14 @@ docs = [
     "mkdocs-material>=9.5",
     "mkdocstrings[python]>=0.26",
 ]
+# VAL-06's second solver (SPECIFICATION.md section 8.2.4 D3; WP29 D11). Test-only:
+# a group never reaches a wheel, so APBS is not on the end-user path (CON-07).
+# A default group so that the gate runs VAL-06 wherever a wheel exists, which is
+# Linux x86_64 and macOS; one `py3-none` wheel serves every Python. Windows has
+# none, and the tests skip there by name (.knowledge/07-software-stack.md section 3).
+apbs = [
+    "apbs-binary==3.4.1.1 ; (platform_machine == 'x86_64' and sys_platform == 'linux') or sys_platform == 'darwin'",
+]
 
 [build-system]
 requires = ["hatchling", "hatch-vcs"]
@@ -129,7 +137,7 @@ packages = ["src/nanopnp"]
 "packaging/LICENSES-BUNDLE.md" = "nanopnp/LICENSES-BUNDLE.md"
 
 [tool.uv]
-default-groups = ["dev"]
+default-groups = ["dev", "apbs"]
 # Rebuild the editable install's metadata when HEAD or a tag moves, so that
 # `nanopnp.__version__` and the manifest's recorded version follow the checkout.
 cache-keys = [{ file = "pyproject.toml" }, { git = { commit = true, tags = true } }]
@@ -183,6 +191,7 @@ module = [
     "pdb2pqr.*",
     "gmsh",
     "sympy.*",
+    "apbs_binary",
 ]
 ignore_missing_imports = true
 
