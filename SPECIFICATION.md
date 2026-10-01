@@ -333,7 +333,7 @@ the quantity-of-interest extraction. Heavy data is compressed.
 | **FR-10** | SHALL generate a graded triangular mesh resolving the wall Debye length against the reservoir scale, isotropically by default, aborting with the worst element and its location reported when quality gates fail. | v0.3 |
 | **FR-11** | MAY generate structured boundary layers along the pore wall as an element-count optimisation. | post-1.0 |
 | **FR-12** | SHALL derive protonation states and partial charges at a configurable pH and force field, and record the net charge Q_net. | v0.4 |
-| **FR-13** | SHALL assemble the axisymmetric fixed-charge density by depositing per-atom Gaussians in 3D Cartesian space, then projecting azimuthally over exact annular volumes with the configured axis guard. | v0.4 |
+| **FR-13** | SHALL assemble the axisymmetric fixed-charge density from per-atom Gaussians in 3D Cartesian space, averaged exactly over the azimuth and deposited on the deployed finite-element mesh with each atom's charge conserved (PHY-16 to PHY-18). **Amended 1 October 2026** (WP28) from "projecting azimuthally over exact annular volumes with the configured axis guard", the construction §8.2.4 D2 replaced: the closed form is that construction's limit and is regular on the axis. | v0.4 |
 | **FR-14** | SHALL assert charge conservation on the deployed finite-element mesh and check per-z-slice cumulative charge against the source charge list. | v0.4 |
 | **FR-15** | SHALL build the dielectric field and the ion-exclusion surface from the same density field, with independently configurable protein permittivity and exclusion offset. | v0.4 |
 | **FR-16** | SHALL implement each empirical correction as a named component registered by string, its fit coefficients held in versioned data files, so a new electrolyte or surface is a data file rather than a code change. | v0.2 |
@@ -710,6 +710,27 @@ the N-terminus of `LYS 8` wherever its pKa, 7.48 to 7.50 across the chains, fall
 not gated. The protonation states of the chains of a homo-oligomer are not symmetrised: a residue
 whose charge differs between chains of identical sequence is recorded as a per-chain diagnostic.
 
+NOTE (PHY-16 steps 4–6, the deposition as run; **added 1 October 2026**, WP28): the closed form of
+step 5 SHALL be evaluated on the export lattice of step 6, whose spacing is
+`charge.smearing.grid_spacing_nm` and which carries a node on `r = 0`. Each atom's kernel is cut
+to a patch of half-width `6 w_i` about it in `r` and `z`, which leaves out `1 − erf(6)² =
+4.3 × 10⁻¹⁷` of its charge. Its trapezoid sum on the lattice is then renormalised to `q_i e`, divided
+by the number of frames. That renormalisation is PHY-18's: on the lattice the sum is exact to
+10⁻¹⁵ off the axis, but an atom within a few `w_i` of the axis is short by `h²/(6 w_i²)`
+(`.knowledge/04` §3.3). A spacing above half the smallest `w_i` of a charged atom SHALL be refused
+naming that atom. The lattice and the atoms are in the model frame, `z ← z −
+geometry.membrane.centre_z_nm` when the case generates its mesh, as stage 5 moves the profile, and
+unshifted beside a supplied mesh. Atoms of zero charge are not deposited. The `r`-weighted L²
+projection of step 6 is onto discontinuous polynomials of the potential's element order on each
+triangle, with its integrals taken by the lattice's trapezoid rule, each node counted in the one
+element containing it. Every test function of the potential's space is a polynomial of that order on
+each element, so the assembled source equals the lattice integral of the kernel against every test
+function, and the projection adds no error of its own. The charge is deposited on every material, as
+the reference applied `ρ_pore` across all computational domains (`.knowledge/04` §3). The deposit
+SHALL be refused, naming the quantity and its location (QR-12), where lattice charge falls on no
+element of the mesh, or where less than half of `Σ|q_i|` has its atom centres in solid materials,
+which is how a structure in another frame than its mesh shows.
+
 **PHY-17.** Smearing SHALL be performed in 3D Cartesian space and only then averaged azimuthally.
 A Gaussian applied directly in (r, z) leaks charge across `r = 0` and SHALL NOT be used.
 
@@ -812,6 +833,24 @@ until it exists (FR-13, FR-14, Phase 3): a charge deposited onto the finite-elem
 rescaled to `Q_net` conserves by construction, where sampling somebody else's interpolant at
 quadrature points cannot. Until then a supplied `areal_charge_density` of this character SHALL be
 ingested only with the gate's verdict recorded in the manifest.
+
+NOTE (the producer path's conservation report, PHY-19, FR-14, QR-03; **added 1 October 2026**,
+WP28): for a deposited charge, the producer leg compares the trapezoid integral of the exported
+lattice with `Q_net`, the mean over frames of `Σ q_i`. The consumer leg compares the deployed field,
+integrated at the solve's order, with the lattice. Both are exact by construction, the first by
+per-atom renormalisation and the second because each element carries its lattice charge, so they
+guard the construction and SHALL be shown to fail on a broken one. The discriminating check is the
+per-plane one, and PHY-19 names its reference: **the source atoms**, not the lattice. Azimuthal
+averaging keeps each atom's z-marginal, a Gaussian of variance `w_i²/2`, so under the weight
+`½ erfc((z − p)/s)` atom `i` contributes `q_i · ½ erfc((z_i − p)/√(s² + w_i²))` below plane `p`
+exactly. On this path the weight SHALL be that Gaussian-smoothed step, with `s = 0.5 nm`, and both
+the lattice and the deployed field SHALL agree with the atoms at every plane to QR-03's tolerance.
+The consumer path keeps its linear ramp. The smoothed weight is Lipschitz, as the NOTE above
+requires, and smooth: a polynomial of the deposit's order approximates it to about `0.064 h³ |W'''|`
+on an element of size `h`, `6 × 10⁻⁴` on ClyA's 0.1 nm protein elements. A 0.2 nm ramp's kinks
+leave `h/(16 s) = 0.03` there, which is too little margin for a gate meant to discriminate. The
+planes span the atoms' z-extent. The guard deficit the exported lattice would suffer if re-read
+through `inputs.charge` is recorded beside the legs.
 
 ### 4.5 Model variants and switches
 
@@ -945,7 +984,7 @@ Design notes, recorded where an implementer would otherwise choose wrongly.
 | 3 | The n rotated copies are averaged before azimuthal averaging. Binning is area-weighted over exact annular volumes (about 6 cells per annulus of width h at r = h, about 630 at r = 5 nm, per slice at h = 0.05 nm). **Amended 25 September 2026** (WP19 plan, Design §2–§3): the overlap weights are exact, so no bin is interpolated. The earlier "innermost 2–3 bins interpolated" compensated for centre-assigned binning, and against exact weights every interpolant tried was worse somewhere. The rotated copies are averaged in the angular harmonic basis, where the average keeps the harmonics m ≡ 0 (mod n): it is exact and costs one deposition. Depositing n rotated copies costs n, and rotating the voxel map by interpolation smooths it, lowering the peak Cₙ variance of a C12 ring by 3–6 %. The binned mean is subtracted at each cell's own radius before any variance is taken, or the radial gradient across a bin reads as azimuthal variance. A 1° axis error adds about 0.2 nm of apparent radius to a 3.3 nm constriction. |
 | 3, 5 | The bilayer is absent from the density map. It is defined analytically in (r, z) over the hydrophobic belt and fragmented against the pore contour. |
 | 5 | Reference geometry: reservoir half-disc R = 250 nm, membrane thickness 2.8 nm, `z_cis` = 12.25 nm, `z_trans` = −1.85 nm. The membrane is a quadrilateral, not a rectangle: vertices (r = 2, z = −1.4), (3.5, +1.4), (250, +1.4), (250, −1.4) nm, inner edge slanted to meet the pore's outer surface. Code assuming a rectangle leaves a wedge of gap or overlap at the junction. CadQuery and build123d are 3D-solid-centric and unused; pythonocc serves BRep edge cases only. |
-| 7 | Stage 7 is two registered stages, `protonation` and then `charge`, sharing the number so that stages 8 to 12, which this specification, the CLI's output and every recorded manifest cite by number, do not move (**added 1 October 2026**, WP27). The registry lists stages by number and then in registration order. A run walks `protonation` after `mesh` and immediately before `charge`, so a walk truncated at the mesh, as the desktop shell's geometry build is, never protonates; protonating an ensemble costs about a minute per frame of a ClyA dodecamer (WP27 plan, *Design* §1). |
+| 7 | Stage 7 is two registered stages, `protonation` and then `charge`, sharing the number so that stages 8 to 12, which this specification, the CLI's output and every recorded manifest cite by number, do not move (**added 1 October 2026**, WP27). The registry lists stages by number and then in registration order. A run walks `protonation` after `mesh` and immediately before `charge`, so a walk truncated at the mesh, as the desktop shell's geometry build is, never protonates; protonating an ensemble costs about a minute per frame of a ClyA dodecamer (WP27 plan, *Design* §1). Both halves run when the case has something to protonate (`structure:` or `inputs.pqr`, and no `inputs.charge`) and its model declares a fixed charge (§5.4.3), and are otherwise recorded as not run with the reason. A consumer of a deposited charge reads it from stage 7's artefact and from nowhere else (**added 1 October 2026**, WP28). |
 
 #### 5.2.1 Contour conditioning and its gate
 
@@ -1329,9 +1368,23 @@ breaks no document that ran. `titration` and `forcefield` are switches whose val
 are `propka` and `CHARMM` (PHY-16 step 3); any other value is a deviation that the FR-25 manifest
 records. `ph` is a condition of the experiment, as `concentration_M` is, and not a deviation. The
 case's `structure.source.variant` is recorded beside `Q_net`, which it is the provenance of
-(OPN-04). Until the stages that read them are delivered, `charge.smearing` set away from its
-default (stage 7's deposition, WP28) and a non-zero `charge.exclusion_offset_nm` or
-`charge.dielectric_transition_nm` (WP30) are refused naming the stage that will read them.
+(OPN-04). Until the stage that reads them is delivered, a non-zero `charge.exclusion_offset_nm`
+or `charge.dielectric_transition_nm` (WP30) is refused naming that stage. `charge.smearing` is read
+by stage 7's deposition (**amended 1 October 2026**, WP28; see the NOTE on `charge.smearing`).
+
+NOTE (`charge.smearing`, PHY-16 steps 4–6, PHY-18; **added 1 October 2026**, WP28): `sharpness`
+is the `0.5` of PHY-16 step 4's `w_i = 0.5 R_i`. It is a switch whose validated default is `0.5`,
+and any other value is a deviation that the FR-25 manifest records. `grid_spacing_nm` is the
+spacing of the export lattice, on which the kernel is summed and the deposit's integrals are taken.
+It is a discretisation choice recorded with the artefact, as `numerics.mesh.size_scale` is, and not
+a deviation. A spacing above half the smallest kernel width of a charged atom SHALL be refused naming
+that atom (PHY-16 NOTE on the deposition). `axis_cutoff_nm` set away from its default SHALL be
+refused naming PHY-18 on every path. The deposited kernel is regular on the axis and takes no
+guard, and a supplied field declares its own guard in its header (§5.3.1 NOTE on `inputs.charge`),
+so the key would change nothing. The exported field declares the default `0.01 nm` for a later
+re-read. As with the protonation keys, `charge.smearing` set away from its defaults beside
+`inputs.charge`, or in a case carrying neither `structure:` nor `inputs.pqr`, configures a step
+that does not run and SHALL be refused naming both keys.
 
 NOTE (`inputs:`, FR-27): the optional top-level `inputs:` block is hand substitution (FR-27) applied
 at stage granularity. Each key names a stage output supplied from outside — a mesh, a charge field,
@@ -1723,7 +1776,7 @@ when the plan is built, naming the axis, rather than collecting a column of abse
 | 1 | Aligned ensemble: coordinates in nm, atom table (element, name, residue name, number and insertion code, chain) and axis-transform record | Native `.npz` (float32 coordinates) with its header record; exported as a PDB topology with a DCD trajectory (IF-04). **Amended 25 September 2026** (WP18) from "trajectory plus transform record": a trajectory file carries no atom table and no gate record |
 | 2, 3 | Density map (3D, float32), and the reduced (r, z) mean with its Cₙ-averaged and raw azimuthal variance | Native `.npz` with its header record; exported to, and read from, OpenDX or CCP4 via GridDataFormats (LGPL) (IF-05), the (r, z) grids as `RadialGrid`s with a singleton axis. **Amended 25 September 2026** (WP19) |
 | 7 | Protonation: the per-frame atom table (identity, coordinates in nm in stage 1's frame, charge, radius), `Q_net`, and each titratable residue's charge, PROPKA pKa, histidine tautomer and any unapplied state, per frame | Native `.npz` with its header record; exported as a PQR in ångströms, one `MODEL` per frame where there is more than one. Produced, it is keyed on the stage-1 key and the protonation parameters, among them the PDB2PQR argument list, and each frame is also stored under its own key, the digest of the heavy-atom PDB PDB2PQR is given, so a changed frame selection re-protonates only the new frames; the PDB2PQR and PROPKA versions are recorded beside the key. Supplied, it is keyed on the file's contents and, beside `structure:`, the stage-1 key (**added 1 October 2026**, WP27) |
-| 7 | ρ_pore, dielectric and exclusion fields | OpenDX or CCP4 via GridDataFormats (LGPL) (IF-05). Keyed on each field's grid digest and physical declarations, on the mesh, and on what its gates are evaluated at: the element order of the conservation quadrature and, with a dielectric field, the names of the solid materials its per-material means are classified by (**amended 28 September 2026**) |
+| 7 | ρ_pore, dielectric and exclusion fields | OpenDX or CCP4 via GridDataFormats (LGPL) (IF-05). Keyed on each field's grid digest and physical declarations, on the mesh, and on what its gates are evaluated at: the element order of the conservation quadrature and, with a dielectric field, the names of the solid materials its per-material means are classified by (**amended 28 September 2026**). A deposited charge (PHY-16 NOTE on the deposition) is two entries. Its lattice is `nanopnp/charge-grid/v1`, keyed on the protonation artefact, `charge.smearing`'s sharpness and spacing, the patch half-width, the frame shift and the kernel, and not on the mesh, so a mesh-convergence sweep re-deposits without re-summing. Stage 7's artefact adds the protonation and lattice keys to its inputs and the deposit's element order and per-plane weight to its gates. Its payload is the `nanopnp/field/v1` document and its `.npz` lattice, which read back through `inputs.charge`, and the element-wise coefficients with a digest of the element geometry they belong to, which no other mesh is given (**added 1 October 2026**, WP28) |
 | 4 | Conditioned polyline | `nanopnp/profile/v1` YAML: the vertex table with its provenance block (§5.2.1). The conditioning and gate record is in the artefact's summary. **Amended 26 September 2026** (WP20) |
 | 5 | Tagged (r, z) region | `nanopnp/region/v1` YAML: a declarative record of the model-frame profile, the membrane with its derived inner edge, the reservoir and the tag counts, from which the OCC region is rebuilt deterministically. **Amended 26 September 2026** (WP21) from "OCC BRep plus tag map": a record hashes by content, where a BRep's bytes need not be stable |
 | 6 | Mesh | Gmsh MSH 4.1 archival, any meshio (MIT) format on read (IF-06). A supplied mesh is keyed on its canonical contents; a generated one on its recipe, the stage-5 key and the resolved size fields, with its content hash recorded beside the key (**amended 26 September 2026**, WP21) |
@@ -3238,7 +3291,7 @@ otherwise report unbounded throughput for a resumed sweep.
 | **RSK-05** | Contour to mesh produces slivers at the constriction | Low–Med | Low | The delivered 185-vertex pore polygon ships as a fixture (§5.2.1); the reference mesh used no boundary layers, only isotropic grading to 0.05 nm at the pore wall; contour validity gate (FR-08); isotropic fallback; mesh quality gates abort the run (VER-10). **Retired 26 September 2026**: the stage-4 profile of the prepared 2WCD assembles and meshes at the default sizes with minimum SICN 0.7111 and gamma 0.6196, above the reference mesh's 0.6378, and the wall-size gate passes (VER-53, WP21) | Phase 2 |
 | **RSK-06** | The author's contour script proves tightly coupled to its original context and is not portable | Med | Med | Read it in week 1 of Phase 2, before the rest of the phase is planned; fall back to the specified contour pipeline. **Retired 26 September 2026**: it was read (OPN-02). It is 20 lines, coupled to nothing beyond MDAnalysis, scikit-image and Shapely | Phase 2 |
 | **RSK-07** | Axisymmetric reduction invalid for a given pore through large azimuthal variance | Med | Med | Residual azimuthal variance reported as a first-class output (FR-06) and documented as a validity criterion | Phase 2 |
-| **RSK-08** | Charge non-conservation through smearing and 1/r projection | Med | Med | Exact annular volumes; analytic annulus integration; assertion on the deployed mesh and per-z-slice check (VER-01, VER-02) | Phase 3 |
+| **RSK-08** | Charge non-conservation through smearing and 1/r projection | Med | Med | The closed-form azimuthal mean of each atom's 3D Gaussian, renormalised per atom (PHY-16, PHY-18; **amended 1 October 2026**, WP28, from exact annular volumes, which §8.2.4 D2 replaced); assertion on the deployed mesh and per-z-slice check against the source atoms (VER-01, VER-02) | Phase 3 |
 | **RSK-09** | The reference model carries no mesh convergence study, so a Tier 3 discrepancy of a few per cent may originate in the reference | Med | Med–High | Quantify this project's discretisation error first (§7.3), then attribute the residual; the published results carry no error bar, so VAL-16 and VAL-17 state tolerances that include it (§8.2.4 D6); re-solving the reference at two refinement levels (VAL-04) is kept but not required; never adjust the solver to close such a gap | Tier 3 |
 | **RSK-10** | The NGSolve pip wheel ships without MUMPS, and UMFPACK or SuperLU may not handle production-size coupled factorisations | Med | Med | Two solver configurations (§6.6); measured on day one of Phase 0 (§8.2 criterion 3); iterative fieldsplit through ngsPETSc in reserve | Phase 0 |
 | **RSK-11** | NaN from 1/r terms at integration order 2, silent rather than a crash | Med | Med–High | Integration order ≥ 3 asserted on all 1/r forms; dedicated test on an axis-touching mesh (VER-07) | Tier 1 |
