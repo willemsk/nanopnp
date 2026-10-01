@@ -1,6 +1,6 @@
 # WP29 — VAL-06: Poisson against APBS (the phase gate)
 
-**Status: planned, not started.** Planned 1 October 2026, on `main` at `c6c0c0d` (WP28 merged). The
+**Status: delivered, 1 October 2026.** Planned 1 October 2026, on `main` at `c6c0c0d` (WP28 merged). The
 fourth package of Phase 3, and the one that carries its gate. It inherits WP26's `poisson` model
 with solids, `fixed_charge` and `solid_fraction` (PHY-21 NOTE), WP27's protonation artefact and
 PQR export, and WP28's export lattice, deposit and `seeded_protonated_2wcd`. It also inherits
@@ -89,6 +89,58 @@ can be overruled without disturbing the rest of the plan:
   carries 33 MB.
 - **D6, the probe distance of 0.3 nm.** At 0.5 nm the max norm tightens to 0.77 % but goes blind to
   the first 0.5 nm next to the wall.
+
+### Outcomes
+
+> **Outcome — VAL-06 passes on 2WCD, well inside its budget.** Agreement 0.41 %, 0.10 % and
+> 0.23 % (max, rms, axis) against 3 %, 1 % and 1.5 %. The budget is 1.20 %, 0.18 % and 0.59 %,
+> which is *Design* §4's 1.22 %, 0.18 % and 0.58 % reproduced. The charge visibility is 45 % against
+> D8's 10 %. The figures are in the §7.4 NOTE on VAL-06, and the run is in `.knowledge/07` §3
+> (*APBS in the VAL-06 driver*). The leg's probe set has 569,541 probes, not the spike's 555,535,
+> on 44,985 elements rather than 44,987.
+
+> **Outcome — D8's premise measured.** The focused 0.05 nm grid gives APBS an order of 1.64 (max)
+> and 1.61 (rms) on 2WCD, so `ê_A` bounds APBS's error at 0.1 nm. The focus takes its faces from
+> APBS's own 0.1 nm solution, interpolated trilinearly, and its charge clipped to the box
+> (`charge_map(clip=True)`): an interior node still receives `∫ρφ_j` over its own support.
+
+> **Outcome — *Design* §6's first row cannot fail at 0.1 nm, and was moved, not dropped.** At
+> `h` = 1 Å, "e per node" and "e per Å³" are the same number. The row runs on the nested 0.2 nm
+> grid, where the factor is 8, and exceeds half of τ by more than 200 times. The tier-1 test also
+> asserts the 0.2 nm map's unit directly. Every other row exceeds half of τ in every norm. The
+> temperature row reads 1.96 % rather than the predicted 3.8 %, because the faces hold our
+> potential. The "areal density read as volume" row is built as the lattice mass divided by
+> `2πr` in nm. A point-sampled `a = 2πrρ` would have been a units error at the scale of 10⁹ and
+> would localise nothing. Measured rows: `.knowledge/07` §3.
+
+> **Outcome — D13's peak memory comes from APBS's log, not the child's `ru_maxrss`.** On Linux,
+> `wait4`'s `ru_maxrss` includes the forked parent's pages: 1.42 GB under pytest for a 97³ run
+> whose own high water is 0.24 GB. `ApbsSolution.memory_GB` parses `Final memory usage … high
+> water`. APBS takes 1.83 GB at 193³. The maps are deleted once read (about 0.6 GB of text at 193³)
+> unless `keep_maps`.
+
+> **Outcome — two construction details D5 and D9 left implicit.** The raster reaches two fine
+> spacings beyond the box (`raster_extent`), so one raster serves the nested grid's staggered
+> edges. The recorded leg compares only the probes whose whole ring lies in the box, 454,325 of
+> them, because a probe near a box corner has a ring that leaves the box.
+
+> **Outcome — the recorded leg, measured (D9; `-m slow`).** On 2WCD the ring means differ from ours
+> by 15.7 %, 6.7 % and 13.6 %. APBS at the nodes differs by 77 % max, near atoms. The ring spread is
+> 46 % max and 4.1 % rms. 2,651,142 membrane edges are imposed. These figures are the size of
+> CON-04's azimuthal averaging together with APBS's `spl4` charge and `smol` surface, and they are
+> recorded, not gated.
+
+> **Outcome — measurements (D14).** On 2WCD the `P2` walk takes 15 s and the `P3` walk 8 s, with
+> the protonation seeded. The raster takes 10 s and the maps 3 s. APBS takes 29 s at 193³ and 3.3 s
+> at 97³. The test process peaks at 1.38 GB. The Tier-2 module takes 3 minutes, and 5 minutes with
+> `-m slow`. The ring module takes 27 s. All of this was measured in this container (24 cores).
+
+> **Outcome — Tier 3 written, not run.** `tests/tier3/test_val06_archive.py` skips here, because
+> `$NANOPNP_REFERENCE_DATA` is unset. When it runs, it walks PQRs 50–99 through `inputs.pqr` at `P2`
+> and `P3`. It runs the gated construction once on the frame-averaged deposit and logs its
+> verdict, then runs the recorded leg on every frame and on the frames' mean, about 100 APBS runs at
+> 193³. If the ensemble's charge does not fit the 19.2 nm box, the run is refused naming the face
+> rather than cutting the charge.
 
 ## Design
 
@@ -248,16 +300,17 @@ leg once on the frame-averaged charge.
 ### 6. Broken constructions and the norm each must exceed
 
 On the ring at 0.1 nm, against the series, each row must exceed ½ τ in the norm named. "Predicted"
-rows are confirmed by the implementation. A row that does not fail is an Outcome, and the row is
+rows are confirmed by the implementation; the measured max, rms and axis norms follow each
+(`tests/tier2/test_val06_ring.py`). A row that does not fail is an Outcome, and the row is
 strengthened, never dropped.
 
 | Construction | Exceeds | Status |
 |---|---|---|
-| Charge map in e per node (no `1/h³`) | all | Predicted: ×10³ |
-| Areal density `2πrρ` written as if a volume density | all | Predicted: the Jacobian |
-| Charge point-sampled at the nodes, with the ring at `w` = 0.0112 nm | all | Predicted: the ring falls between the nodes |
-| Diel values at the nodes, declared at the staggered origin | max | Tested: 2.05 % against 1.5 %, and 0.53 % rms |
-| APBS `temp` 310 K against the case's 298.15 K | all | Predicted: 3.8 % |
-| Charge map left 0.5 nm off in z (a frame shift not applied) | all | Predicted |
-| `bcfl zero` in place of the face map | max | Predicted |
-| Charge map zeroed | all | Predicted |
+| Charge map in e per node (no `1/h³`) | all | Predicted: ×10³. **Measured: invisible at 0.1 nm**, where `h³` is 1 Å³; on the 0.2 nm grid 364 %, 208 %, 341 % (Outcomes) |
+| Areal density `2πrρ` written as if a volume density | all | Predicted: the Jacobian. Measured, as the mass over `2πr` in nm: 44 %, 25 %, 41 % |
+| Charge point-sampled at the nodes, with the ring at `w` = 0.0112 nm | all | Predicted: the ring falls between the nodes. Measured: 409 %, 234 %, 384 % |
+| Diel values at the nodes, declared at the staggered origin | max | Tested: 2.05 % against 1.5 %, and 0.53 % rms. Measured: 1.98 %, 0.59 %, 1.67 % |
+| APBS `temp` 310 K against the case's 298.15 K | all | Predicted: 3.8 %. Measured: 1.96 %, 1.13 %, 1.99 %, halved because the faces hold our potential |
+| Charge map left 0.5 nm off in z (a frame shift not applied) | all | Predicted. Measured: 31 %, 11 %, 29 % |
+| `bcfl zero` in place of the face map | max | Predicted. Measured: 54 %, 74 %, 54 % |
+| Charge map zeroed | all | Predicted. Measured: 52 %, 30 %, 49 % |

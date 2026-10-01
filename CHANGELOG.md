@@ -17,6 +17,42 @@ Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before t
 version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
 
+## [0.4.0-alpha.4] - 2026-10-01
+
+WP29: VAL-06, Poisson against APBS, the fourth package of Phase 3 and the third leg of its gate.
+
+### Added
+
+- **VAL-06's driver**, `nanopnp.validation.apbs`. It gives APBS 3.4.1 our electrostatic problem
+  as maps on one cubic grid. Stage 7's export lattice goes on as hat weights, conserving its charge
+  and first moments to round-off. The assembled permittivity goes on as three staggered maps, each
+  edge the harmonic mean of eight samples. Our solution goes on the box faces (`bcfl map`). The
+  driver runs APBS and samples both potentials on the probes: nested-grid nodes in the fluid, at
+  least 0.3 nm from every solid and 0.4 nm inside the faces. A box that would cut the charge is
+  refused, naming the face. An APBS run that fails or hangs is named, with the end of its log.
+- **The gated leg** (`tests/tier2/test_val06_2wcd.py`). `poisson` is solved at `P2` and `P3` on
+  the protonated 2WCD and compared with APBS at 0.1 nm. The refinement budget (APBS at 0.1 against
+  0.2 nm, plus ours `P3` against `P2`) must lie within half the tolerance, and the charge must
+  move the probes by at least 10 `τ_rms`, before the agreement is read. The tolerance is 3 % max,
+  1 % rms and 1.5 % on the axis, and 2WCD measures 0.41 %, 0.10 % and 0.23 % (`SPECIFICATION.md`
+  §7.4, the NOTE on VAL-06). The report is written as JSON.
+- **A closed-form benchmark** (`tests/tier2/test_val06_ring.py`): a Gaussian ring in a grounded
+  dielectric sphere, summed as a three-region Legendre series. APBS and our `P2` are each held to
+  half the tolerance of it, and eight broken constructions of the maps must each exceed that.
+- Under `-m slow`: the recorded leg, with APBS's own `spl4` charge and `smol` surface from the PQR
+  and our membrane imposed, compared per probe ring. Also a focused 0.05 nm grid, which measures
+  APBS's order at 1.6 (`.knowledge/07` §3). At Tier 3, recorded: the ClyA-AS ensemble from the
+  archived PQRs (`tests/tier3/test_val06_archive.py`).
+- The test-only dependency group `apbs` (`apbs-binary` 3.4.1.1 on Linux x86_64 and macOS), a
+  default group so that the gate runs VAL-06. It never reaches a wheel (CON-07).
+
+### Changed
+
+- CI sets `NANOPNP_REQUIRE_APBS=1` on every leg but Windows, so VAL-06 fails rather than skips
+  where the wheel exists. Windows has none, and skips by name under `-rs`.
+- The driver's three refusals (`BoxError`, `ApbsError`, `Val06Error`) exit 4, as gates. The
+  VER-32 enumeration now counts `AssertionError` as a root, which it had missed.
+
 ## [0.4.0-alpha.3] - 2026-10-01
 
 WP28: fixed-charge deposition on the deployed mesh and its gates (FR-13, FR-14, QR-03's producer
