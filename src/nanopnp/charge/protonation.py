@@ -46,6 +46,7 @@ import dataclasses
 import hashlib
 import json
 import logging
+import math
 import tempfile
 from collections import Counter
 from collections.abc import Iterator, Mapping, Sequence
@@ -158,8 +159,16 @@ it, and the group is not symmetric about that bond, so a flipped atom lands
 the registration tolerance; the rest of each residue fixes where it is.
 """
 
-WATER_RESIDUES: frozenset[str] = frozenset({"HOH", "WAT", "H2O", "DOD", "SOL", "TIP3", "SPC"})
-"""Residues ``--drop-water`` removes, which a registration therefore does not ask for."""
+WATER_RESIDUES: frozenset[str] = frozenset(
+    {"HOH", "WAT", "H2O", "DOD", "SOL", "TIP3", "TP3M", "SPC"}
+)
+"""Water residue names, on neither side of a registration and never given to PDB2PQR.
+
+``--drop-water`` removes only ``HOH`` and ``WAT`` (``aa.WAT.water_residue_names``,
+PDB2PQR 3.7.1), so the frame PDB leaves the rest out itself rather than hand
+PDB2PQR a ``SOL`` it cannot parameterise or :func:`frame_pdb` a ``TIP3`` its
+columns cannot hold. ``TP3M`` is the name ``--ffout=CHARMM`` gives a water it keeps.
+"""
 
 _LOGGERS: tuple[str, ...] = ("pdb2pqr", "propka")
 """The library loggers raised to WARNING during a call (D7); the versioned one is added."""
@@ -276,11 +285,14 @@ class ProtonationTable:
         NaN where no group of *Design* §2 was computed.
     unapplied
         ``(frames, residues)`` bool: the applied and expected charges differ.
-    group_residue, group_type, group_pka
-        PROPKA's groups: the residue each belongs to, its type, and its pKa per
-        frame, ``(frames, groups)`` float64 with NaN where a frame lacks it.
+    group_residue, group_type, group_label, group_pka
+        PROPKA's groups: the residue each belongs to, its type, its label, and
+        its pKa per frame, ``(frames, groups)`` float64 with NaN where a frame
+        lacks it. The label tells apart the two ``COO`` groups of a C-terminal
+        ``ASP`` or ``GLU`` (``ASP  21 A`` and ``C-   21 A``).
     header
-        Settings, source, versions and the chain map, as plain data.
+        Settings, source, versions and the chain map (``chains``: each stage-1
+        chain key and the character a PQR writes it as), as plain data.
     """
 
     frame_offsets: np.ndarray
@@ -302,6 +314,7 @@ class ProtonationTable:
     unapplied: np.ndarray
     group_residue: np.ndarray
     group_type: np.ndarray
+    group_label: np.ndarray
     group_pka: np.ndarray
     header: Mapping[str, Canonicalisable]
 
@@ -325,6 +338,7 @@ class ProtonationTable:
         "unapplied",
         "group_residue",
         "group_type",
+        "group_label",
         "group_pka",
     )
     """Every array the ``.npz`` carries, beside ``header``."""
@@ -340,8 +354,6 @@ class ProtonationTable:
 
     def q_net_e(self) -> np.ndarray:
         """Return ``Q_net = Σ q_i`` per frame, in e."""
-        import math
-
         import numpy as np
 
         return np.array(
@@ -721,6 +733,13 @@ class _Reference:
     """Indices of the heavy atoms of :data:`FLIPPABLE`, which are not held to the tolerance."""
     calpha: dict[ResidueKey, int]
     """Each residue's one C-alpha, as an ensemble atom index."""
+    flippable_elements: Counter[tuple[ResidueKey, str]]
+    """Heavy atoms by residue and element, in each residue holding :data:`FLIPPABLE` atoms."""
+
+    @property
+    def flippable_residues(self) -> set[ResidueKey]:
+        """The residues holding :data:`FLIPPABLE` atoms."""
+        return {key for key, _ in self.flippable_elements}
 
 
 def _reference(ensemble: AlignedEnsemble) -> _Reference:
@@ -732,6 +751,7 @@ def _reference(ensemble: AlignedEnsemble) -> _Reference:
     heavy_residue: list[ResidueKey] = []
     heavy_name: list[str] = []
     flippable: list[int] = []
+    flippable_elements: Counter[tuple[ResidueKey, str]] = Counter()
     calphas: dict[ResidueKey, list[int]] = {}
     for atom, (chain, resid, icode, resname, name, element) in enumerate(
         zip(
@@ -750,6 +770,8 @@ def _reference(ensemble: AlignedEnsemble) -> _Reference:
         parent = residues.setdefault(key, parent_residue(str(resname)))
         if str(element).strip().upper() == "H":
             continue
+        if parent in FLIPPABLE:
+            flippable_elements[(key, _element(str(name)))] += 1
         if name in FLIPPABLE.get(parent, ()):
             flippable.append(atom)
             continue
@@ -765,7 +787,17 @@ def _reference(ensemble: AlignedEnsemble) -> _Reference:
         heavy_name=heavy_name,
         flippable=np.asarray(flippable, dtype=np.intp),
         calpha={key: atoms[0] for key, atoms in calphas.items() if len(atoms) == 1},
+        flippable_elements=flippable_elements,
     )
+
+
+def _element(name: str) -> str:
+    """Return a heavy atom's element as its name's first letter (``1SG`` is S).
+
+    Used only on the residues of :data:`FLIPPABLE`, whose atoms are C, N and O
+    and whose names begin with their element.
+    """
+    return name.lstrip("0123456789")[:1].upper()
 
 
 def _residue_mismatch(frame: PQRFrame, reference: _Reference) -> str | None:
@@ -890,6 +922,23 @@ def _register(
             )
         if len(np.unique(matched)) != len(matched):
             return worst, "two heavy atoms of the ensemble match one heavy atom of the PQR"
+        # The flippable atoms are not compared, but a flip moves them and never
+        # removes them or changes their element. Counted by element, because a
+        # terminal oxygen PDB2PQR adds would otherwise stand in for a lost N.
+        residues = reference.flippable_residues
+        held = Counter(
+            (keys[int(atom)], _element(str(frame.name[atom])))
+            for atom in candidates
+            if keys[int(atom)] in residues
+        )
+        for (key, element), count in reference.flippable_elements.items():
+            if held[(key, element)] < count:
+                chain, resid, icode = key
+                return worst, (
+                    f"it holds {held[(key, element)]} {element} atoms of "
+                    f"{_residue_label(reference.residues[key], resid, icode, chain)} and the "
+                    f"ensemble {count}; a flip moves heavy atoms and never removes them"
+                )
         return worst, None
 
     positions = frame.positions_A
@@ -936,8 +985,6 @@ def _gate(frame: PQRFrame, index: int) -> float:
         width ``w_i = 0.5 R_i`` cannot smear, or a ``Q_net`` further than 10⁻⁶ e
         from an integer, naming the frame and the atom.
     """
-    import math
-
     import numpy as np
 
     bad = np.flatnonzero((frame.charge_e != 0.0) & ~(frame.radius_A > 0.0))
@@ -1069,20 +1116,18 @@ def _radii(
     index_of = {key[:3]: i for i, key in enumerate(residues)}
     counts: Counter[tuple[str, str, float]] = Counter()
     for frame, tautomer in zip(frames, tautomers, strict=True):
-        for atom, (name, resname, key, radius) in enumerate(
-            zip(
-                frame.name.tolist(),
-                frame.resname.tolist(),
-                _residue_keys(frame),
-                frame.radius_A.tolist(),
-                strict=True,
-            )
+        for name, resname, key, radius in zip(
+            frame.name.tolist(),
+            frame.resname.tolist(),
+            _residue_keys(frame),
+            frame.radius_A.tolist(),
+            strict=True,
         ):
-            del atom
             lookup = tautomer[index_of[key]] or str(resname)
             counts[(lookup, str(name), float(radius))] += 1
     compared = differing = heavy_differing = unresolved = heavy_unresolved = 0
     worst: dict[str, Canonicalisable] | None = None
+    worst_difference = 0.0
     unresolved_names: list[str] = []
     for (resname, name, radius), count in sorted(counts.items()):
         try:
@@ -1099,7 +1144,8 @@ def _radii(
             continue
         differing += count
         heavy_differing += 0 if is_hydrogen(name) else count
-        if worst is None or difference > float(str(worst["difference_A"])):
+        if worst is None or difference > worst_difference:
+            worst_difference = difference
             worst = {
                 "residue": resname,
                 "atom": name,
@@ -1126,12 +1172,15 @@ def _assemble(
     *,
     ph: float,
     header: Mapping[str, Canonicalisable],
+    compare_radii: bool = True,
 ) -> tuple[ProtonationTable, dict[str, Canonicalisable]]:
     """Tabulate gated frames and their residue states; return the table and its record.
 
     ``frames`` carry stage 1's chain keys and Å coordinates already registered;
     they are put on the 0.001 Å lattice here, so every table this stage writes
-    exports and reads back exactly.
+    exports and reads back exactly. ``compare_radii`` is false for a frame
+    another force field than CHARMM produced, whose radii the stage-2 CHARMM
+    table does not describe (D14).
     """
     import numpy as np
 
@@ -1142,7 +1191,9 @@ def _assemble(
     residue_charge = np.zeros(shape)
     tautomer = np.full(shape, "", dtype="<U3")
     expected = np.full(shape, np.nan)
-    groups: dict[tuple[int, str], int] = {}
+    # Keyed on the label as well as the type: a C-terminal ASP or GLU carries
+    # two COO groups, its side chain's and the terminus's, which PROPKA types alike.
+    groups: dict[tuple[int, str, str], int] = {}
     group_values: list[dict[int, float]] = []
     q_net: list[float] = []
     for number, frame in enumerate(frames):
@@ -1162,7 +1213,8 @@ def _assemble(
             if residue is None or value is None:
                 continue
             group_type = str(row["group_type"])
-            values[groups.setdefault((residue, group_type), len(groups))] = float(str(value))
+            label = str(row.get("group_label", ""))
+            values[groups.setdefault((residue, group_type, label), len(groups))] = float(str(value))
             state = _group_state(group_type, float(str(value)), ph)
             if state is not None:
                 previous = expected[number, residue]
@@ -1198,6 +1250,7 @@ def _assemble(
         unapplied=unapplied,
         group_residue=np.array([group[0] for group in ordered], dtype=np.int64),
         group_type=np.array([group[1] for group in ordered], dtype=str),
+        group_label=np.array([group[2] for group in ordered], dtype=str),
         group_pka=group_pka,
         header=dict(header),
     )
@@ -1211,7 +1264,17 @@ def _assemble(
         "residues": count,
         "unapplied": _unapplied(residues, residue_charge, expected, unapplied),
         "chain_differences": _chain_differences(residues, residue_charge),
-        "radii": _radii(frames, tautomer.tolist(), residues),
+        "radii": (
+            _radii(frames, tautomer.tolist(), residues)
+            if compare_radii
+            else {
+                "set": RADIUS_SET,
+                "status": (
+                    f"not compared: the PQR's radii are {header.get('forcefield')}'s, and the "
+                    "stage-2 table is CHARMM's (D14)"
+                ),
+            }
+        ),
     }
     return table, record
 
@@ -1222,12 +1285,19 @@ def export_pqr(payload: Path, path: Path) -> Path:
     In ångströms and stage 1's frame. Read back through ``inputs.pqr`` beside the
     same ``structure:``, it gives this table exactly: the coordinates lie on the
     printed lattice, every charge and radius is printed so that it reads back to
-    the same double, and each chain key goes to the character
-    :func:`~nanopnp.charge.pqr.chain_characters` gives it, which the registration
-    maps back.
+    the same double, and each chain key goes to the character the header's chain
+    map gives it, which is the map the registration reads it back by. A table
+    with no map, read from a PQR without ``structure:``, takes
+    :func:`~nanopnp.charge.pqr.chain_characters` of its own chains.
     """
     table = ProtonationTable.read(payload)
-    return write_pqr(path, table.pqr_frames(), chains=chain_characters(table.chain.tolist()))
+    recorded = table.header.get("chains")
+    chains = (
+        {str(key): str(letter) for key, letter in recorded.items()}
+        if isinstance(recorded, Mapping)
+        else chain_characters(table.chain.tolist())
+    )
+    return write_pqr(path, table.pqr_frames(), chains=chains)
 
 
 # -- the stage ----------------------------------------------------------------
@@ -1275,7 +1345,11 @@ class ProtonationStage:
 
     def key(self, inputs: StageInputs) -> ProtonationArtefact:
         """Return the artefact key (D10, the section 5.3.2 stage-7 row)."""
-        resolved = _resolved(inputs)
+        return self._key(inputs, _resolved(inputs))
+
+    @staticmethod
+    def _key(inputs: StageInputs, resolved: ResolvedCase) -> ProtonationArtefact:
+        """Return the artefact key of an already resolved case."""
         if resolved.pqr is not None:
             assert resolved.pqr.path is not None
             keyed = {"pqr": file_hash(resolved.pqr.path)}
@@ -1308,7 +1382,7 @@ class ProtonationStage:
             If ``cancel`` turns true between frames. No artefact is written.
         """
         resolved = _resolved(inputs)
-        key = self.key(inputs)
+        key = self._key(inputs, resolved)
         ensemble = None
         if resolved.structure is not None:
             check_cancelled(cancel, "reading the aligned ensemble")
@@ -1341,19 +1415,31 @@ class ProtonationStage:
                 "arguments": list(pdb2pqr_arguments(settings)),
             }
         check_cancelled(cancel, "tabulating the protonation states")
+        # A produced table names the versions that wrote its frames, which a
+        # cached frame may not share with what is installed now (section 5.3.2).
+        versions = record.pop("versions", None) or _versions()
         frames_header = ensemble.header.get("frames") if ensemble is not None else None
         header: dict[str, Canonicalisable] = {
             **source,
-            "versions": _versions(),
+            "versions": versions,
             "frames": {
                 "count": len(frames),
                 "indices": frames_header.get("indices")
                 if isinstance(frames_header, dict)
                 else None,
             },
+            # The map each frame was written and registered by, which the export
+            # writes it back by; None where no structure: gave stage-1 keys.
+            "chains": (
+                dict(chain_characters(ensemble.chain.tolist())) if ensemble is not None else None
+            ),
         }
         table, states = _assemble(
-            frames, pka, ph=settings.ph if pka is not None else float("nan"), header=header
+            frames,
+            pka,
+            ph=settings.ph if pka is not None else float("nan"),
+            header=header,
+            compare_radii=resolved.pqr is not None or settings.forcefield == "CHARMM",
         )
         path = table.write(directory / f"{PAYLOAD_NAME}.npz")
         variant = resolved.structure.spec.source.variant if resolved.structure else None
@@ -1398,16 +1484,19 @@ class ProtonationStage:
 
         _require_pdb2pqr()
         reference = _reference(ensemble)
-        heavy = np.flatnonzero(np.char.upper(np.char.strip(ensemble.element.astype(str))) != "H")
+        heavy = np.flatnonzero(
+            (np.char.upper(np.char.strip(ensemble.element.astype(str))) != "H")
+            & ~np.isin(ensemble.resname.astype(str), sorted(WATER_RESIDUES))
+        )
         chains = chain_characters(ensemble.chain.tolist())
         keys = {letter: chain for chain, letter in chains.items()}
         parameters = protonation_parameters(settings)
+        produced_by: list[Canonicalisable] = []
         frames: list[PQRFrame] = []
         pka: list[list[dict[str, Canonicalisable]]] = []
+        registrations: list[_Registration] = []
         warnings: Counter[str] = Counter()
         cached = 0
-        worst = flipped = 0.0
-        added = moved_atoms = 0
         for index in range(ensemble.frames):
             check_cancelled(cancel, f"protonating frame {index}")
             report(progress, index / ensemble.frames, f"frame {index + 1} of {ensemble.frames}")
@@ -1423,9 +1512,20 @@ class ProtonationStage:
                 else None
             )
             if stored is None:
-                stored = self._protonate(frame_key, pdb, settings, directory / f"frame-{index}")
+                try:
+                    stored = self._protonate(frame_key, pdb, settings, directory / f"frame-{index}")
+                except (RuntimeError, ValueError) as error:
+                    # PDB2PQR raises a bare RuntimeError, with no message, for
+                    # what it gives up on (main_driver, 3.7.1): name the frame
+                    # and its cause (QR-12).
+                    cause = error.__cause__ or error
+                    raise ProtonationError(
+                        f"frame {index}: PDB2PQR gave up on the frame it was given: "
+                        f"{type(cause).__name__}: {cause}"
+                    ) from error
             else:
                 cached += 1
+            produced_by.append(stored.summary.get("versions"))
             text = Path(stored.payload["pqr"]).read_text(encoding="utf-8")
             reported = json.loads(Path(stored.payload["record"]).read_text(encoding="utf-8"))
             missing = list(reported.get("missing", []))
@@ -1451,10 +1551,7 @@ class ProtonationStage:
                     f"frame {index}: the PQR PDB2PQR wrote does not hold the frame it was given: "
                     f"{failure}"
                 )
-            worst = max(worst, registration.worst_A)
-            flipped = max(flipped, registration.flipped_A)
-            moved_atoms = max(moved_atoms, registration.flipped)
-            added = max(added, registration.added_heavy)
+            registrations.append(registration)
             frames.append(frame)
             pka.append(
                 [
@@ -1472,15 +1569,8 @@ class ProtonationStage:
             pka,
             {
                 "cached_frames": cached,
-                "registration": {
-                    "moved_frames": [],
-                    "worst_residual_A": worst,
-                    "flippable_atoms": len(reference.flippable),
-                    "worst_flipped_A": flipped,
-                    "flipped_atoms": moved_atoms,
-                    "added_heavy_atoms": added,
-                    "tolerance_A": REGISTRATION_TOLERANCE_A,
-                },
+                "versions": _frame_versions(produced_by),
+                "registration": _registration_record(registrations, reference, moved=[]),
                 "warnings": dict(sorted(warnings.items())),
             },
         )
@@ -1547,8 +1637,7 @@ def _supplied(
     keys = {letter: chain for chain, letter in chain_characters(ensemble.chain.tolist()).items()}
     frames: list[PQRFrame] = []
     moved: list[int] = []
-    worst = flipped = 0.0
-    added = moved_atoms = 0
+    registrations: list[_Registration] = []
     for index, frame in enumerate(read):
         check_cancelled(cancel, f"registering frame {index}")
         report(progress, index / len(read), f"registering frame {index + 1} of {len(read)}")
@@ -1568,20 +1657,35 @@ def _supplied(
             )
         if registration.moved:
             moved.append(index)
-        worst = max(worst, registration.worst_A)
-        flipped = max(flipped, registration.flipped_A)
-        moved_atoms = max(moved_atoms, registration.flipped)
-        added = max(added, registration.added_heavy)
+        registrations.append(registration)
         frames.append(dataclasses.replace(frame, positions_A=registration.positions_A))
     return frames, {
-        "registration": {
-            "moved_frames": moved,
-            "worst_residual_A": worst,
-            "flippable_atoms": len(reference.flippable),
-            "worst_flipped_A": flipped,
-            "flipped_atoms": moved_atoms,
-            "added_heavy_atoms": added,
-            "tolerance_A": REGISTRATION_TOLERANCE_A,
-        },
+        "registration": _registration_record(registrations, reference, moved=moved),
         "warnings": {},
+    }
+
+
+def _frame_versions(produced_by: Sequence[Canonicalisable]) -> Canonicalisable:
+    """Return the versions that produced the frames, recorded beside the key (section 5.3.2).
+
+    The frame cache is keyed without them, so a frame an earlier PDB2PQR or
+    PROPKA wrote is reused: one mapping where every frame shares it, otherwise
+    each frame's, in frame order.
+    """
+    distinct = {json.dumps(found, sort_keys=True) for found in produced_by}
+    return produced_by[0] if len(distinct) == 1 else list(produced_by)
+
+
+def _registration_record(
+    registrations: Sequence[_Registration], reference: _Reference, *, moved: list[int]
+) -> dict[str, Canonicalisable]:
+    """Return the registration record both routes write: each figure's worst over the frames."""
+    return {
+        "moved_frames": moved,
+        "worst_residual_A": max([0.0, *(found.worst_A for found in registrations)]),
+        "flippable_atoms": len(reference.flippable),
+        "worst_flipped_A": max([0.0, *(found.flipped_A for found in registrations)]),
+        "flipped_atoms": max([0, *(found.flipped for found in registrations)]),
+        "added_heavy_atoms": max([0, *(found.added_heavy for found in registrations)]),
+        "tolerance_A": REGISTRATION_TOLERANCE_A,
     }
