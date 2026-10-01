@@ -318,10 +318,12 @@ def producer_files(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, Path
     work = tmp_path_factory.mktemp("producer")
     mesh = work / "pore.vol"
     CylindricalPoreGeometry(
-        pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
-    # 0.5 nm elements: at 1 nm the deployed field's per-plane error under the
-    # 0.5 nm weight is 3.2e-3, which the gate refuses as it should; it falls to
-    # 2.3e-4 here (`.knowledge/04` section 3.3).
+        pore_radius_nm=2.0,
+        membrane_thickness_nm=6.0,
+        reservoir_radius_nm=10.0,
+        # 0.5 nm elements: at 1 nm the deployed field's per-plane error under the
+        # 0.5 nm weight is 3.2e-3, which the gate refuses as it should; it falls to
+        # 2.3e-4 here (`.knowledge/04` section 3.3).
     ).generate(maxh_nm=0.5, wall_h_nm=0.5).ngmesh.Save(str(mesh))
     pqr = work / "atoms.pqr"
     pqr.write_text(_pqr_text(), encoding="utf-8")

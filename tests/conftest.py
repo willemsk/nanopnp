@@ -512,3 +512,23 @@ def protonated_2wcd(
         protonation=protonation.hash,
         seconds=seconds,
     )
+
+
+@pytest.fixture(scope="session")
+def seeded_protonated_2wcd(protonated_2wcd: Protonated2WCD) -> Callable[[Path], Path]:
+    """Return a function seeding a fresh store with stages 1 to 3 and the protonation of 2WCD.
+
+    WP28 D14: a ``structure:`` case whose model declares a fixed charge walks both
+    halves of stage 7, so a charged walk reads the session's protonation from its
+    store rather than paying PROPKA again. The protonation key is the structure's
+    hash and the protonation block, so any case with the seed's structure block and
+    the default ``charge.protonation`` reads it. The shared store is copied, never
+    handed out.
+    """
+
+    def seed_store(root: Path) -> Path:
+        """Copy the protonated store's artefacts into ``root``; ``runs/`` stays the test's own."""
+        shutil.copytree(protonated_2wcd.store / "artefacts", root / "artefacts", dirs_exist_ok=True)
+        return root
+
+    return seed_store
