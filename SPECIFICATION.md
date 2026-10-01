@@ -686,8 +686,12 @@ cost, which is about 10¹³ voxel updates for the 50-frame ClyA ensemble. Step 6
 deployed mesh rather than sampling a grid there, which removes the aliasing of the consumer leg
 that the §4.4 NOTE measures on the delivered table. The reference built its table from a 2D Gaussian
 in (r, z) divided by `2πr` at the field point (`.knowledge/04` §3, gap G4). PHY-17 forbids that
-construction, so it is not reproduced. The two differ near each atom at order `(w_i/r_i)²`, and
-the difference on the ClyA ensemble is measured at Tier 3 rather than accommodated.
+construction, so it is not reproduced. Off the axis the two carry the same charge and the same
+z-marginal, and differ pointwise by `(r − r_i)/(2 r_i)` of the local value: first order in
+`w_i/r_i` and odd about the atom, so the 3D construction's radial centroid lies `w_i²/(4 r_i)`
+further out (**amended 1 October 2026**, WP28: first written as order `(w_i/r_i)²`, which is the
+order of the moments, not of the field; `.knowledge/04` §3.3 [tested]). The difference on the ClyA
+ensemble is measured at Tier 3 rather than accommodated.
 
 NOTE (PHY-16 step 3, protonation as run; **added 1 October 2026**, WP27): PDB2PQR SHALL be run
 once per selected frame (§8.2.4 D4) on that frame's heavy atoms, with every hydrogen and every water
