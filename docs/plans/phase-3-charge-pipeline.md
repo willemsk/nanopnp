@@ -269,6 +269,7 @@ without a documentation edit (VER-45).
 | VAL-06 tolerance | The agreement required of the gated leg | WP29, argued and stated before the first comparison, and put to the author with the argument |
 | Stage numbering | Where `protonation` sits in §5.2's numbered table | **Settled by [WP27](wp27-protonation.md) D1**: it shares number 7 with `charge` and runs before it, so stages 8–12 keep their numbers (§5.2 design note) |
 | `axis_cutoff_nm` on the producer path | Applied for parity, or refused away from its default | **Settled by [WP28](wp28-charge-deposition.md) D10**: refused away from its default on every path, naming PHY-18 (§5.3.1 NOTE on `charge.smearing`) |
+| OPN-07 | What identifies a deposited charge in a golden's `case_hash` | **Open, found by the WP28 review** (PR #57, finding #7). The identity currently ignores the structure, pH and smearing. Needed before any golden or VAL-16/VAL-17 recorded leg is compared on a deposited charge. The constraints are in §10 |
 | OPN-04 | Which mutation list produced the ClyA-AS structure | **Author, open.** Needed for the provenance of `Q_net`, not for any gate. WP27 records `structure.source.variant` beside `Q_net` |
 
 ## Verification

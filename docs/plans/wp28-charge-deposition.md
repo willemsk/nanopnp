@@ -144,6 +144,13 @@ of half the absolute charge; D14's uncharged geometry comparison.
 > **Outcome — D13 unchanged.** The coupled models still integrate a deposited source one order
 > short (NUM-07 NOTE, open). VER-58 solves with `poisson` and measures the deposit alone.
 
+> **Outcome — the golden identity does not see a deposited charge (OPN-07, open).** The `/wp-ship`
+> review (PR #57) found that `case_identity` hashes the solve provenance, where a deposited charge
+> leaves `fields.charge` false. So pH, smearing and structure do not move a producer case's
+> `case_hash`. This was tested on example 06's 2WCD case. The review fixes (`cda61c9`) leave it
+> alone, because the fix is a choice about the identity's representation, outside this package.
+> §10 OPN-07 records the evidence and the constraints for the WP that takes it.
+
 ## Design
 
 ### 1. The kernel on the lattice [verified, tested]
