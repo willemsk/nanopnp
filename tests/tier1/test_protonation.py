@@ -774,7 +774,15 @@ def test_ver57_the_force_fields_are_a_subset_of_pdb2pqrs() -> None:
             CaseValidationError,
             ("charge.ph", "nothing to protonate"),
         ),
-        ("smearing: {sharpness: 0.4}", {}, UnsupportedCaseSection, ("charge.smearing", "WP28")),
+        # charge.smearing is read by WP28's deposition: set beside a structure: it
+        # resolves, and beside a supplied mesh with nothing to protonate it is
+        # refused naming both keys (section 5.3.1 NOTE on charge.smearing).
+        (
+            "smearing: {sharpness: 0.4}",
+            {"structure": False, "mesh": True},
+            CaseValidationError,
+            ("charge.smearing.sharpness", "structure:"),
+        ),
     ],
 )
 def test_ver57_each_protonation_refusal_names_its_keys(

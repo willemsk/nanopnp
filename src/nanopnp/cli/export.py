@@ -12,7 +12,11 @@ table below is the whole of what is written:
 - ``mesh``: ``.msh``, the stored MSH 4.1 file (IF-06);
 - ``protonation``: ``.pqr``, the atom table in ångströms in stage 1's frame, one
   ``MODEL`` per frame where there is more than one, which reads back through
-  ``inputs.pqr`` to the stored payload exactly (WP27 D16).
+  ``inputs.pqr`` to the stored payload exactly (WP27 D16);
+- ``charge``: ``.yaml``, the deposited charge's export lattice as a
+  ``nanopnp/field/v1`` document with its ``.npz`` beside it, which reads back
+  through ``inputs.charge`` to the same digest; or OpenDX and CCP4/MRC, the
+  lattice alone, in nm (IF-05, WP28 D11).
 
 **A native payload is copied byte for byte**, so that the file a user holds has the
 hash the store records, and a profile exported here and supplied through
@@ -50,6 +54,7 @@ EXPORTS: Mapping[str, tuple[str, ...]] = {
     "contour": (".yaml",),
     "mesh": (".msh",),
     "protonation": (".pqr",),
+    "charge": (".yaml", ".dx", ".mrc", ".ccp4"),
 }
 """The suffixes each stage exports to, in the order the refusal names them."""
 
@@ -60,6 +65,7 @@ _PAYLOAD: Mapping[str, str] = {
     "contour": "profile",
     "mesh": "mesh",
     "protonation": "protonation",
+    "charge": "charge",
 }
 """Each exporting stage's payload key (the stages' ``PAYLOAD_NAME``), held as data here
 so that the refusal and ``--help`` import no stage module."""
@@ -92,8 +98,13 @@ def export_artefact(stage: str, artefact: Artefact, path: Path) -> tuple[Path, .
     """Write ``artefact``'s payload to ``path`` in the format its suffix names.
 
     ``path`` has passed :func:`refusal`. Returns every file written: two for a
-    structure, the PDB and then its DCD, and one otherwise.
+    structure, the PDB and then its DCD; two for a charge document, the ``.npz``
+    and then the document; and one otherwise.
     """
+    if stage == "charge":
+        from nanopnp.charge.stage import export_charge
+
+        return export_charge(artefact, path)
     source = Path(artefact.payload[_PAYLOAD[stage]])
     suffix = path.suffix.lower()
     if stage == "structure":

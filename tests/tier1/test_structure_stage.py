@@ -680,9 +680,13 @@ def test_ver48_walk_rules(prepared: Path, tmp_path: Path) -> None:
     case = _case(tmp_path, _block(prepared))
     store = Store(tmp_path / "store")
     assert "region" in selected_stages(resolve(load_case(case)), None)
-    assert selected_stages(resolve(load_case(case)), "materials")[-3:] == (
+    # Both halves of stage 7 follow the mesh: the case protonates and its model
+    # declares fixed_charge, so its charge is deposited (WP28 D8).
+    assert selected_stages(resolve(load_case(case)), "materials")[-5:] == (
         "region",
         "mesh",
+        "protonation",
+        "charge",
         "materials",
     )
     assert run_case(case, store=store, upto="case", write=False).stages[-1].name == "case"

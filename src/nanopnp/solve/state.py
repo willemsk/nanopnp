@@ -42,7 +42,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from nanopnp.charge.stage import ResolvedFields, gate_fields, read_fields
+from nanopnp.charge.stage import ResolvedFields, case_fields, read_fields
 from nanopnp.core.constants import thermal_voltage
 from nanopnp.core.hashing import Canonicalisable, content_hash
 from nanopnp.io.artefact import SOLUTION_SCHEMA, Artefact
@@ -463,10 +463,9 @@ def ladder(
     """
     if resolved.continuation == "none":
         return (single_rung(resolved, mesh, measures, distance, fields),)
-    # The producer pipeline is still v0.4, so the charge a run carries is the
-    # one it was handed through ``inputs.charge`` (FR-27, stage 7). With no
-    # field supplied the stage-4 ramp is empty rather than silently zero, and
-    # the ladder is the same one WP5 measured.
+    # The charge a run carries is the one stage 7 deposited or was handed
+    # through ``inputs.charge`` (FR-27, WP28 D9). With neither the stage-4 ramp
+    # is empty rather than silently zero, and the ladder is the one WP5 measured.
     return default_ladder(
         mesh,
         concentration_M=resolved.concentration_M,
@@ -1009,6 +1008,7 @@ def restore(
     case: CaseDocument,
     mesh_artefact: Artefact | None = None,
     fields: ResolvedFields | None = None,
+    charge_artefact: Artefact | None = None,
 ) -> ModelSolution:
     """Return the converged solution stored at ``path``, on this case's operator.
 
@@ -1035,6 +1035,9 @@ def restore(
         The case's supplied fields as :func:`~nanopnp.charge.stage.read_fields`
         returned them, for a caller that already holds them; read here when
         omitted. Gated here either way, on the mesh the state is restored onto.
+    charge_artefact
+        The run's stage-7 artefact, needed when the case deposits its charge:
+        the deposit is read from its payload and never re-deposited (WP28 D9).
 
     Returns
     -------
@@ -1066,10 +1069,10 @@ def restore(
     stored = _load_descriptor(path, data)
     distance, wall_ndof = _restore_distance(path, data, resolved, mesh, order=order)
 
-    supplied = ResolvedFields(charge=None, conservation=None, eps_r=None, material_means=())
+    read = None
     if resolved.charge is not None or resolved.eps_r is not None:
         read = fields if fields is not None else read_fields(resolved)
-        supplied = gate_fields(resolved, read, mesh, measures=measures)
+    supplied = case_fields(resolved, read, charge_artefact, mesh, measures=measures)
 
     top = ladder(resolved, mesh, measures, distance, supplied)[-1]
     model = top.model

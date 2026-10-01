@@ -422,6 +422,24 @@ def _state_path(run: Path) -> Path:
     return Path(payload)
 
 
+def _recorded_artefact(run: Path, stage: str) -> Artefact | None:
+    """Return the artefact the run recorded for ``stage``, or ``None`` if it has none.
+
+    The deposited charge of a producer case is read from its stage-7 artefact
+    and never re-deposited (WP28 D9); the restore refuses such a case handed none,
+    naming stage 7.
+    """
+    from nanopnp.io.run import RUN_RECORD_FILENAME
+    from nanopnp.io.store import Store
+
+    record = json.loads((run / RUN_RECORD_FILENAME).read_text(encoding="utf-8"))
+    entry = record.get("artefacts", {}).get(stage)
+    root = record.get("store")
+    if entry is None or root is None:
+        return None
+    return Store(Path(root)).get(str(entry["schema"]), str(entry["hash"]))
+
+
 def _mesh_artefact(run: Path, *, generated: bool) -> Artefact | None:
     """Return the stage-6 artefact the run recorded, or ``None`` if it recorded none.
 
@@ -529,6 +547,7 @@ def render(request: RenderRequest) -> Rendered:
         state,
         case=case,
         mesh_artefact=_mesh_artefact(run, generated=case.inputs.mesh is None),
+        charge_artefact=_recorded_artefact(run, "charge"),
     )
     # Any model: each reports the NUM-09 scale set that turns its nondimensional
     # state into the SI numbers the attribute names promise (section 5.4.3).

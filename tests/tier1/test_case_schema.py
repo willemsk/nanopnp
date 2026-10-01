@@ -245,8 +245,8 @@ def test_if03_a_supplied_artefact_names_exactly_one_source() -> None:
         # geometry: left this list in WP19: it is read beside structure:, and
         # beside inputs.mesh it is refused naming both (tests/tier1/test_density.py).
         # charge: left it in WP27, whose protonation stage reads ph, forcefield and
-        # titration; the keys a later package's stage reads are refused naming it.
-        ("charge:\n  smearing: {sharpness: 0.4}\n", "WP28"),
+        # titration, and charge.smearing in WP28, whose deposition reads it; the
+        # keys a later package's stage reads are refused naming it.
         ("charge:\n  exclusion_offset_nm: 0.1\n", "WP30"),
         ("charge:\n  dielectric_transition_nm: 0.2\n", "WP30"),
     ],
@@ -260,6 +260,50 @@ def test_fr27_a_section_a_later_release_owns_names_the_section_and_the_release(
     message = str(raised.value)
     assert section.split(":")[0] in message
     assert release in message
+
+
+@pytest.mark.parametrize(
+    ("smearing", "inputs", "fragments"),
+    [
+        # A supplied mesh and no structure: or inputs.pqr, so nothing deposits.
+        ("{sharpness: 0.4}", "", ("charge.smearing.sharpness", "structure:", "nothing to deposit")),
+        ("{grid_spacing_nm: 0.004}", "", ("charge.smearing.grid_spacing_nm", "structure:")),
+        (
+            "{sharpness: 0.4}",
+            "  charge: {path: rho.yaml, format: field1}\n",
+            ("charge.smearing.sharpness", "inputs.charge"),
+        ),
+        ("{axis_cutoff_nm: 0.02}", "", ("charge.smearing.axis_cutoff_nm", "PHY-18")),
+        ("{axis_cutoff_nm: 0.0}", "", ("charge.smearing.axis_cutoff_nm", "PHY-18")),
+        ("{sharpness: 0.0}", "", ("charge.smearing.sharpness", "finite and positive")),
+        ("{grid_spacing_nm: .inf}", "", ("charge.smearing.grid_spacing_nm", "finite")),
+    ],
+)
+def test_ver24_charge_smearing_refusals_name_their_keys(
+    smearing: str, inputs: str, fragments: tuple[str, ...]
+) -> None:
+    """WP28 D10: the section 5.3.1 NOTE on ``charge.smearing``, refusal by refusal."""
+    text = REFERENCE_CASE.replace("inputs:\n", f"inputs:\n{inputs}", 1)
+    with pytest.raises(CaseValidationError) as raised:
+        resolve(loads_case(text + f"charge:\n  smearing: {smearing}\n"))
+    message = str(raised.value)
+    assert all(fragment in message for fragment in fragments), message
+
+
+def test_ver24_a_pqr_beside_a_model_without_a_fixed_charge_is_refused_naming_it() -> None:
+    """WP28 D8: ``inputs.pqr`` for a model declaring no ``fixed_charge`` names the model."""
+    text = REFERENCE_CASE.replace(
+        "inputs:\n", "inputs:\n  pqr: {path: x.pqr, format: pqr}\n", 1
+    ).replace(
+        "model: epnp-ns\n  flow: true\n  variable_density: true\n  inertia: true",
+        "model: pb\n  flow: false\n  variable_density: false\n  inertia: false",
+    )
+    with pytest.raises(CaseValidationError) as raised:
+        resolve(loads_case(text))
+    message = str(raised.value)
+    assert "'pb'" in message
+    assert "inputs.pqr" in message
+    assert "poisson" in message
 
 
 def test_fr27_a_case_without_a_supplied_mesh_says_where_the_mesh_comes_from() -> None:

@@ -86,8 +86,17 @@ under this schema as it goes, so that a changed frame selection re-protonates
 only the frames it has not seen (section 5.3.2, the stage-7 artefact row).
 """
 
+CHARGE_GRID_SCHEMA = "nanopnp/charge-grid/v1"
+"""Stage 7's export lattice: the closed-form kernel summed over the protonation artefact (WP28 D7).
+
+Not the output of a registered stage: the ``charge`` stage stores it under its own
+key, which names the protonation artefact and the kernel's settings and not the
+mesh, so a mesh-convergence sweep re-deposits without re-summing (section 5.3.2,
+the stage-7 artefact row).
+"""
+
 FIELDS_SCHEMA = "nanopnp/fields/v1"
-"""Stage 7: the supplied fixed-charge and dielectric fields, gated (§5.2)."""
+"""Stage 7: the fixed-charge and dielectric fields, supplied or deposited, gated (§5.2)."""
 
 SOLUTION_SCHEMA = "nanopnp/solution/v2"
 """Stage 10: the converged field set and its iteration history.
@@ -513,6 +522,32 @@ class ProtonationArtefact(Artefact):
         )
 
 
+class ChargeGridArtefact(Artefact):
+    """Stage 7's export lattice, keyed on the protonation artefact and the kernel (WP28 D7).
+
+    The parameters are the kernel's identifier, ``charge.smearing``'s sharpness and
+    spacing, the patch half-width and the frame shift; the one input is the
+    protonation artefact's hash. The mesh is not an input: the lattice does not
+    depend on it, and a mesh-convergence sweep then reuses one lattice.
+    """
+
+    def __init__(
+        self,
+        *,
+        parameters: Mapping[str, Canonicalisable],
+        protonation_hash: str,
+        payload: Mapping[str, Path] | None = None,
+        summary: Mapping[str, Canonicalisable] | None = None,
+    ) -> None:
+        super().__init__(
+            schema=CHARGE_GRID_SCHEMA,
+            parameters=dict(parameters),
+            inputs={"protonation": protonation_hash},
+            payload=dict(payload or {}),
+            summary=summary or {},
+        )
+
+
 class FieldsArtefact(Artefact):
     """Stage 7: the external fields, keyed on their contents and on the mesh.
 
@@ -530,6 +565,10 @@ class FieldsArtefact(Artefact):
     alike would serve one mesh's gate from the other's cache entry. ``gates``
     keys the rest of what the gates were evaluated at, for the same reason:
     :func:`nanopnp.charge.stage.gate_parameters` says what that is.
+
+    A deposited charge adds two inputs, the protonation artefact and the export
+    lattice it was summed into (WP28 D7); a supplied one adds none, so its key is
+    the one it always had.
     """
 
     def __init__(
@@ -538,6 +577,7 @@ class FieldsArtefact(Artefact):
         fields: Mapping[str, Canonicalisable],
         gates: Mapping[str, Canonicalisable],
         mesh_hash: str,
+        upstream: Mapping[str, str] | None = None,
         payload: Mapping[str, Path] | None = None,
         summary: Mapping[str, Canonicalisable] | None = None,
     ) -> None:
@@ -547,7 +587,7 @@ class FieldsArtefact(Artefact):
                 "fields": dict(sorted(fields.items())),
                 "gates": dict(sorted(gates.items())),
             },
-            inputs={"mesh": mesh_hash},
+            inputs={"mesh": mesh_hash, **dict(upstream or {})},
             payload=dict(payload or {}),
             summary=summary or {},
         )

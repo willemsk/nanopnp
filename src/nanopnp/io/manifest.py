@@ -481,6 +481,7 @@ def build(
     charge: Mapping[str, Canonicalisable] | None = None,
     protonation: Mapping[str, Canonicalisable] | None = None,
     protonation_reason: str | None = None,
+    charge_reason: str | None = None,
     electrolyte: Electrolyte | None = None,
     clamp_activations: int | None = None,
     ladder: Mapping[str, Canonicalisable] | None = None,
@@ -559,6 +560,9 @@ def build(
     protonation_reason
         Why the protonation stage did not run, recorded in its place when
         ``protonation`` is ``None``.
+    charge_reason
+        Why stage 7 did not run, recorded in its place when ``charge`` is
+        ``None``.
     electrolyte
         The resolved electrolyte.
     clamp_activations
@@ -603,7 +607,7 @@ def build(
             contour=contour,
             region=region,
         ),
-        charge=_charge_group(charge, protonation, protonation_reason),
+        charge=_charge_group(charge, protonation, protonation_reason, charge_reason),
         materials=(
             materials_group(electrolyte, clamp_activations=clamp_activations)
             if electrolyte is not None
@@ -627,6 +631,7 @@ def _charge_group(
     charge: Mapping[str, Canonicalisable] | None,
     protonation: Mapping[str, Canonicalisable] | None,
     reason: str | None,
+    charge_reason: str | None = None,
 ) -> dict[str, Canonicalisable]:
     """Return the Charge group: stage 7's field record, with the protonation record beside it.
 
@@ -638,9 +643,8 @@ def _charge_group(
         dict(charge)
         if charge is not None
         else not_run(
-            "this run supplied neither inputs.charge nor inputs.eps_r, so stage 7's field "
-            "assembly did not run; deposition from the protonation artefact (FR-13, FR-14) is "
-            "WP28's"
+            charge_reason
+            or "this run supplied neither inputs.charge nor inputs.eps_r and deposited no charge"
         )
     )
     group["protonation"] = (

@@ -497,6 +497,8 @@ def test_ver49_resolution_and_walk_rules(synthetic_c12: Path, tmp_path: Path) ->
         "contour",
         "region",
         "mesh",
+        "protonation",
+        "charge",
         "materials",
         "solve",
         "qoi",

@@ -141,7 +141,17 @@ def reopen(directory: str | Path, *, store: Store | None = None) -> ReopenedRun:
             "run was made against another store, or the store has been pruned; point --store at "
             "the one the run used, or re-run the member"
         )
-    solution = restore(warm_start_payload(artefact), case=document, mesh_artefact=generated)
+    # A deposited charge is read from the run's own stage-7 artefact (WP28 D9).
+    charge = record.get("artefacts", {}).get("charge")
+    stage7 = None
+    if isinstance(charge, dict):
+        stage7 = holding.get(str(charge["schema"]), str(charge["hash"]))
+    solution = restore(
+        warm_start_payload(artefact),
+        case=document,
+        mesh_artefact=generated,
+        charge_artefact=stage7,
+    )
     quantities = record.get("quantities")
     return ReopenedRun(
         directory=source,
