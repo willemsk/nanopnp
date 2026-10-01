@@ -422,12 +422,29 @@ def _state_path(run: Path) -> Path:
     return Path(payload)
 
 
-def _recorded_artefact(run: Path, stage: str) -> Artefact | None:
-    """Return the artefact the run recorded for ``stage``, or ``None`` if it has none.
+def _recorded_artefact(run: Path, stage: str, *, needed: str | None) -> Artefact | None:
+    """Return the artefact the run recorded for ``stage``, or ``None`` if it recorded none.
 
-    The deposited charge of a producer case is read from its stage-7 artefact
-    and never re-deposited (WP28 D9); the restore refuses such a case handed none,
-    naming stage 7.
+    A run on a generated mesh is restored onto the file stage 6 wrote, which is
+    that artefact's payload (WP21 D12), and a producer case's deposited charge is
+    read from its stage-7 artefact and never re-deposited (WP28 D9); a run on a
+    supplied mesh or field re-reads ``inputs:`` and needs neither.
+    :func:`_state_path` has already checked the record and the store, so a missing
+    entry here is a run that recorded no such stage.
+
+    Parameters
+    ----------
+    needed
+        What the restore reads from the artefact, as the refusal names it, when it
+        reads it; ``None`` when the restore can do without it.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the artefact is ``needed`` and has been removed from the store, as
+        :func:`_state_path` refuses a removed state. Without this a removed
+        stage-7 artefact would reach the restore as none at all, which refuses it
+        as a run that never reached stage 7.
     """
     from nanopnp.io.run import RUN_RECORD_FILENAME
     from nanopnp.io.store import Store
@@ -437,36 +454,11 @@ def _recorded_artefact(run: Path, stage: str) -> Artefact | None:
     root = record.get("store")
     if entry is None or root is None:
         return None
-    return Store(Path(root)).get(str(entry["schema"]), str(entry["hash"]))
-
-
-def _mesh_artefact(run: Path, *, generated: bool) -> Artefact | None:
-    """Return the stage-6 artefact the run recorded, or ``None`` if it recorded none.
-
-    A run on a generated mesh is restored onto the file stage 6 wrote, which is
-    that artefact's payload (WP21 D12); a run on a supplied mesh re-reads
-    ``inputs.mesh`` and needs none. :func:`_state_path` has already checked the
-    record and the store, so a missing entry here is a run that recorded no mesh.
-
-    Raises
-    ------
-    FileNotFoundError
-        If the case generates its mesh and the recorded artefact has been
-        removed from the store, as :func:`_state_path` refuses a removed state.
-    """
-    from nanopnp.io.run import RUN_RECORD_FILENAME
-    from nanopnp.io.store import Store
-
-    record = json.loads((run / RUN_RECORD_FILENAME).read_text(encoding="utf-8"))
-    mesh = record.get("artefacts", {}).get("mesh")
-    root = record.get("store")
-    if mesh is None or root is None:
-        return None
-    artefact = Store(Path(root)).get(str(mesh["schema"]), str(mesh["hash"]))
-    if artefact is None and generated:
+    artefact = Store(Path(root)).get(str(entry["schema"]), str(entry["hash"]))
+    if artefact is None and needed is not None:
         raise FileNotFoundError(
-            f"{mesh['schema']} {mesh['hash'][:12]} is not in the store at {root}; the run "
-            "record refers to a generated mesh that has been removed"
+            f"{entry['schema']} {entry['hash'][:12]} is not in the store at {root}; the run "
+            f"record refers to {needed} that has been removed"
         )
     return artefact
 
@@ -535,7 +527,7 @@ def render(request: RenderRequest) -> Rendered:
         If ``field`` names an attribute this solution does not carry; the
         message lists the ones it does.
     """
-    from nanopnp.io.case import load_case
+    from nanopnp.io.case import load_case, resolve
     from nanopnp.io.fields import attribute_name, field_scale
     from nanopnp.io.manifest import CASE_FILENAME
     from nanopnp.solve.state import restore
@@ -546,8 +538,12 @@ def render(request: RenderRequest) -> Rendered:
     solution = restore(
         state,
         case=case,
-        mesh_artefact=_mesh_artefact(run, generated=case.inputs.mesh is None),
-        charge_artefact=_recorded_artefact(run, "charge"),
+        mesh_artefact=_recorded_artefact(
+            run, "mesh", needed="a generated mesh" if case.inputs.mesh is None else None
+        ),
+        charge_artefact=_recorded_artefact(
+            run, "charge", needed="a deposited charge" if resolve(case).deposits_charge else None
+        ),
     )
     # Any model: each reports the NUM-09 scale set that turns its nondimensional
     # state into the SI numbers the attribute names promise (section 5.4.3).
@@ -623,7 +619,9 @@ def render_mesh(request: MeshRequest) -> RenderedMesh:
 
     run = Path(request.run)
     resolved = resolve(load_case(run / CASE_FILENAME))
-    artefact = _mesh_artefact(run, generated=resolved.mesh is None)
+    artefact = _recorded_artefact(
+        run, "mesh", needed="a generated mesh" if resolved.mesh is None else None
+    )
     if artefact is None and resolved.mesh is None:
         raise FileNotFoundError(
             f"{run} records no stage-6 artefact, so there is no generated mesh to draw; run the "

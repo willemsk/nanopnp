@@ -468,8 +468,10 @@ class _CancelOnCall:
     ("at", "where"),
     [
         (1, "reading the fields"),
-        (2, "summing the kernel of frame 0"),
-        (3, "the solid-share gate"),
+        # The frame check before the sum: a misplaced structure is refused before
+        # it pays for every frame's kernel sum (D4).
+        (2, "the solid-share gate"),
+        (3, "summing the kernel of frame 0"),
         (4, "locating the lattice"),
         (5, "the projection onto the mesh"),
         (6, "the conservation gates"),

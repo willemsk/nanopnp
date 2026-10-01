@@ -392,6 +392,7 @@ class Deposit:
                 uncovered_at_nm=np.asarray(where if where is not None else (np.nan, np.nan)),
                 nodes=np.asarray(self.nodes),
                 weighted=np.asarray(self.weighted),
+                seconds=np.asarray(self.seconds),
             )
         return path
 
@@ -416,6 +417,10 @@ class Deposit:
                 ),
                 nodes=(nodes[0], nodes[1]),
                 weighted=bool(data["weighted"]),
+                # Read back rather than reset: every reader records this deposit's
+                # summary (the solve's ``fields`` record among them), and a deposit
+                # that took seconds must not read as one that took none.
+                seconds=float(data["seconds"]) if "seconds" in data.files else 0.0,
             )
 
     def charge_C(self) -> float:

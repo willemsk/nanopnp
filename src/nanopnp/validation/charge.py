@@ -26,7 +26,13 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
-from nanopnp.charge.kernel import PATCH_HALF_WIDTHS, TILE_NM, SourceAtoms, _patches, _scatter
+from nanopnp.charge.kernel import (
+    PATCH_HALF_WIDTHS,
+    TILE_NM,
+    SourceAtoms,
+    _accumulate,
+    _patches,
+)
 from nanopnp.core.constants import ELEMENTARY_CHARGE
 from nanopnp.density.grid import RadialGrid
 
@@ -132,14 +138,7 @@ def reference_construction(atoms: SourceAtoms, like: RadialGrid) -> RadialGrid:
             0.0,
         )
         scale = atoms.weight_e[tile] * ELEMENTARY_CHARGE / (math.pi * (w * NM_TO_M) ** 2)
-        z_low, r_low = int(z_first.min()), int(r_first.min())
-        z_high = int((z_first + z_span).max())
-        r_high = int((r_first + r_span).max())
-        z_window = _scatter(z_first - z_low, z_values * scale[:, None], z_high - z_low)
-        r_window = _scatter(r_first - r_low, r_values, r_high - r_low)
-        z_end, r_end = min(z_high, n_z), min(r_high, n_r)
-        product = z_window.T @ r_window
-        values[z_low:z_end, r_low:r_end] += product[: z_end - z_low, : r_end - r_low]
+        _accumulate(values, z_first, z_values * scale[:, None], r_first, r_values)
     return RadialGrid(origin_nm=like.origin_nm, spacing_nm=like.spacing_nm, values=values)
 
 

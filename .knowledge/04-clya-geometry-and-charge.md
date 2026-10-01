@@ -457,7 +457,8 @@ Measured implementing it (WP28, 1 October 2026) **[tested]**:
   97.7 % of `Σ|q_i|` has its atom centres in the solids, and the deposit puts −84.8 e in the protein,
   +24.0 e in the electrolyte and +0.7 e in the membrane: the Gaussians of the surface's charged side
   chains reach past the 25 % isolevel. Stage 7 cold takes 9.0 s (sum 2.7, deposit 5.5, gates 0.4)
-  and 0.92 GB peak; 50 frames sum in 119.8 s, 2.40 s per frame, at 0.96 GB.
+  and 0.92 GB peak, split as measured before the solid-share check moved ahead of the sum: it was
+  counted in `deposit` then and is in `gates` now, and the total is unchanged; 50 frames sum in 119.8 s, 2.40 s per frame, at 0.96 GB.
 - **The reference's 2D construction differs from the azimuthal mean at first order, not second.**
   Off the axis, `2πr ρ̄_i` is the 2D Gaussian times `(r/r_i)^½ (1 + O(w²/r r_i))`. The difference is
   `(r − r_i)/(2 r_i)` of the local value, odd about the atom, and peaks at
