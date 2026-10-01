@@ -1,37 +1,82 @@
-"""Stage 7 of §5.2: the external fixed-charge and dielectric fields (FR-27, IF-01).
+"""Stage 7 of §5.2: the fixed-charge and dielectric fields (FR-13, FR-14, FR-27, IF-01).
 
-The consumer path of the charge stage. Its producer half — PDB2PQR, protonation,
-per-atom smearing and the azimuthal projection — is v0.4; what runs here is
-everything downstream of the grid: read the header document, read the data,
-interpolate onto the deployed mesh, and gate.
+Two paths, one artefact (``nanopnp/fields/v1``).
 
-The stage takes ``("case", "mesh")`` and not the case alone, which the §5.1
-pipeline diagram does not show and §5.2's stage-7 row now does: PHY-19's
-assertion is evaluated **on the deployed finite-element mesh**, not on the source
-grid, so a field is not admissible in the abstract but only against the mesh it
-will be assembled on. That is also why the mesh's content hash is an input of the
-artefact: the same field on a different mesh is a different gate result.
+**The producer path** (WP28). A case that protonates -- ``structure:`` or
+``inputs.pqr`` -- and whose model declares ``fixed_charge`` deposits its charge
+here: the closed-form kernel of PHY-16 step 5 is summed over the ``protonation``
+artefact's atoms and frames on the export lattice (:mod:`nanopnp.charge.kernel`),
+the lattice is projected onto the deployed mesh as an element-wise polynomial of
+the potential's order (:mod:`nanopnp.charge.deposit`), and both are gated against
+the source atoms (:func:`~nanopnp.charge.fields.deposit_conservation`). The
+lattice is its own store entry, ``nanopnp/charge-grid/v1``, keyed without the
+mesh, so a mesh-convergence sweep re-deposits without re-summing (D7). The
+stage's payload is the lattice as a ``nanopnp/field/v1`` document and its
+``.npz``, which read back through ``inputs.charge``, and the deposit (D7, D11).
 
-Cancellation is checked between the two fields and before each set of gates,
-which is where the seconds are: the mesh integrals of :func:`conservation` are
-the only expensive thing this stage does.
+**The consumer path**. A supplied ``inputs.charge`` or ``inputs.eps_r`` is read
+from its header document, interpolated onto the deployed mesh and gated, as
+before. A supplied ``inputs.eps_r`` beside a deposited charge is gated the same
+way.
+
+The stage takes the mesh and not the case alone: PHY-19's assertion is evaluated
+**on the deployed finite-element mesh**, so a field is admissible only against the
+mesh it will be assembled on, and the mesh's hash is an input of the artefact.
+
+**The solve, the restore and the export read a deposited charge only from this
+stage's artefact**, through :func:`case_fields` and :func:`fixed_charge_density`
+(D9): one loader, which refuses a producer case handed no stage-7 artefact rather
+than solving it uncharged.
+
+Cancellation is checked between frames, before the projection and before each
+gate (D12, FR-27).
 """
 
 from __future__ import annotations
 
 import logging
+import shutil
 import tempfile
+import time
 from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import yaml
+
+from nanopnp.charge.deposit import (
+    DEPOSIT_PAYLOAD,
+    SOLID_SHARE_MIN,
+    UNCOVERED_TOL,
+    Deposit,
+    DepositedCharge,
+    check_solid_share,
+    deposit,
+)
 from nanopnp.charge.fields import (
+    DEFAULT_AXIS_CUTOFF_NM,
+    FIELD_SCHEMA,
+    PLANE_SMOOTHING_NM,
     ChargeField,
     ConservationReport,
     check_conservation,
+    check_deposit_conservation,
     conservation,
+    deposit_conservation,
     load_field,
 )
+from nanopnp.charge.kernel import (
+    KERNEL_ID,
+    PATCH_HALF_WIDTHS,
+    PLANE_COUNT,
+    KernelLattice,
+    SourceAtoms,
+    kernel_parameters,
+    source_atoms,
+    sum_kernel,
+)
+from nanopnp.charge.protonation import PAYLOAD_NAME as PROTONATION_PAYLOAD
+from nanopnp.charge.protonation import ProtonationTable
 from nanopnp.core.constants import ELEMENTARY_CHARGE
 from nanopnp.core.hashing import Canonicalisable, file_hash
 from nanopnp.core.paths import store_root
@@ -43,8 +88,8 @@ from nanopnp.core.stages import (
     describe,
     report,
 )
-from nanopnp.density.grid import write_grid
-from nanopnp.io.artefact import Artefact, FieldsArtefact, StageInputs
+from nanopnp.density.grid import read_grid, write_grid
+from nanopnp.io.artefact import Artefact, ChargeGridArtefact, FieldsArtefact, StageInputs
 from nanopnp.io.case import UnsupportedCaseSection, resolve
 from nanopnp.io.defaults import ContributedDeviation
 from nanopnp.materials.fields import (
@@ -57,13 +102,31 @@ from nanopnp.mesh.ingest import IngestedMesh, MeshStage, deployed_mesh
 from nanopnp.physics.measures import AXISYMMETRIC, Measures
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
-    from nanopnp.core.typing import Mesh
+    from nanopnp.core.typing import Expression, Mesh
     from nanopnp.io.case import ResolvedCase
+    from nanopnp.io.store import Store
 
 logger = logging.getLogger(__name__)
 
 WORKSPACE_DIRNAME = "tmp"
 """Directory under the store root the archival native copies are written to."""
+
+CHARGE_PAYLOAD = "charge"
+"""The payload key of the charge's lattice ``.npz``: the archival copy of a supplied
+field, or the export lattice of a deposited one."""
+
+CHARGE_DOCUMENT_PAYLOAD = "charge_document"
+"""The payload key of a deposited charge's ``nanopnp/field/v1`` document (D7, D11)."""
+
+LATTICE_PAYLOAD = "lattice"
+"""The charge-grid artefact's payload key: the export lattice as ``.npz``."""
+
+CHARGE_DOCUMENT = "charge.yaml"
+CHARGE_GRID_FILE = "charge.npz"
+DEPOSIT_FILE = "deposit.npz"
+
+DEPOSIT_PROVENANCE = "nanopnp stage 7: PHY-16 steps 4-6, deposited (WP28)"
+"""``provenance.source`` of the exported field document."""
 
 
 def smoothed_dielectric_deviations(*, smoothed: bool) -> tuple[ContributedDeviation, ...]:
@@ -111,7 +174,8 @@ class ResolvedFields:
     Parameters
     ----------
     charge
-        The fixed-charge field, or ``None`` if the case supplies none.
+        The fixed-charge field: supplied, or deposited and bound to the mesh;
+        ``None`` if the case has none.
     conservation
         Its PHY-19 report; ``None`` with no charge field.
     eps_r
@@ -120,7 +184,7 @@ class ResolvedFields:
         The mean of ``chi`` over each material, empty with no dielectric field.
     """
 
-    charge: ChargeField | None
+    charge: ChargeField | DepositedCharge | None
     conservation: ConservationReport | None
     eps_r: SolidFractionField | None
     material_means: tuple[MaterialMean, ...]
@@ -131,11 +195,12 @@ class ResolvedFields:
         The grid's digest rather than its values, and the header's *physical*
         declarations rather than the file's bytes: the same table written as
         ``.npz`` and as OpenDX is one entry, and a table whose values moved is
-        another (§5.3.2).
+        another (§5.3.2). A deposited charge is keyed by the stage that deposits
+        it (:func:`produced_parameters`) and is not entered here.
         """
         entries: dict[str, Canonicalisable] = {}
         for name, field in (("charge", self.charge), ("eps_r", self.eps_r)):
-            if field is None:
+            if field is None or isinstance(field, DepositedCharge):
                 continue
             entries[name] = {
                 "quantity": field.document.quantity,
@@ -150,7 +215,9 @@ class ResolvedFields:
     def summary(self) -> dict[str, Canonicalisable]:
         """Return the manifest's Charge group for this run (FR-25, §5.3.3)."""
         record: dict[str, Canonicalisable] = {}
-        if self.charge is not None:
+        if isinstance(self.charge, DepositedCharge):
+            record["charge"] = {"source": "deposited", **self.charge.deposit.summary()}
+        elif self.charge is not None:
             record["charge"] = {
                 **self.charge.document.summary(),
                 "document": self.charge.source.name,
@@ -304,7 +371,9 @@ def gate_fields(
     """
     charge = supplied.charge
     report_: ConservationReport | None = None
-    if charge is not None:
+    # A deposited charge was gated by the stage that deposited it, against its
+    # source atoms (D6); only a supplied one is gated here.
+    if isinstance(charge, ChargeField):
         check_cancelled(cancel, "the charge conservation gate")
         report(progress, 0.2, "assembling the fixed charge and checking its conservation")
         report_ = check_conservation(conservation(charge, mesh, measures))
@@ -358,22 +427,254 @@ def load_fields(
     )
 
 
+# -- the producer path -------------------------------------------------------------
+
+
+def frame_shift_nm(resolved: ResolvedCase) -> float:
+    """Return the shift into the model frame: ``centre_z_nm`` on a generated mesh, else 0 (D2).
+
+    Stage 5 moves the profile by ``z <- z - centre_z_nm``, so the atoms move with
+    it; a supplied mesh is in whatever frame it was made in, and its atoms are
+    not moved.
+    """
+    if resolved.generates_mesh and resolved.membrane is not None:
+        return float(resolved.membrane.centre_z_nm)
+    return 0.0
+
+
+def charge_grid_key(resolved: ResolvedCase, protonation: Artefact) -> ChargeGridArtefact:
+    """Return the export lattice's key: the protonation artefact and the kernel's settings (D7)."""
+    return ChargeGridArtefact(
+        parameters=kernel_parameters(
+            sharpness=resolved.smearing.sharpness,
+            spacing_nm=resolved.smearing.grid_spacing_nm,
+            shift_z_nm=frame_shift_nm(resolved),
+        ),
+        protonation_hash=protonation.hash,
+    )
+
+
+def produced_parameters(resolved: ResolvedCase) -> dict[str, Canonicalisable]:
+    """Return the stage-7 ``fields`` entry of a deposited charge (D7).
+
+    The lattice it was summed into is an input of the artefact, so what is left
+    to key is how it was deposited: the source and the element order.
+    """
+    return {"source": "deposited", "order": _element_order(resolved), "kernel": KERNEL_ID}
+
+
+def produced_gates(resolved: ResolvedCase) -> dict[str, Canonicalisable]:
+    """Return what a deposited charge's gates are evaluated at, for the stage-7 key (D7)."""
+    return {
+        "planes": PLANE_COUNT,
+        "plane_smoothing_nm": PLANE_SMOOTHING_NM,
+        "solids": sorted(resolved.document.physics.solid_permittivities),
+        "solid_share_min": SOLID_SHARE_MIN,
+        "uncovered_tol": UNCOVERED_TOL,
+    }
+
+
+def _missing_stage(resolved: ResolvedCase) -> KeyError:
+    """Return the refusal of a producer case handed no stage-7 artefact (D9)."""
+    return KeyError(
+        f"case {resolved.name!r} deposits its fixed charge in stage 7 ('charge'), and this stage "
+        "was handed no stage-7 artefact to read it from; run the pipeline through 'charge' "
+        "first. A consumer reads the deposited charge and never solves a producer case "
+        "uncharged (WP28 D9)"
+    )
+
+
+def deposited_charge(
+    resolved: ResolvedCase, artefact: Artefact | None, mesh: Mesh
+) -> DepositedCharge:
+    """Return the deposited charge of a producer case, bound to ``mesh`` (D9).
+
+    Raises
+    ------
+    KeyError
+        If no stage-7 artefact carrying a deposit was handed down, naming stage 7.
+    nanopnp.charge.fields.ChargeFieldError
+        If the deposit belongs to another mesh (D5).
+    """
+    if artefact is None or DEPOSIT_PAYLOAD not in artefact.payload:
+        raise _missing_stage(resolved)
+    return DepositedCharge.bind(Deposit.read(Path(artefact.payload[DEPOSIT_PAYLOAD])), mesh)
+
+
+def case_fields(
+    resolved: ResolvedCase,
+    supplied: ResolvedFields | None,
+    charge_artefact: Artefact | None,
+    mesh: Mesh,
+    *,
+    measures: Measures = AXISYMMETRIC,
+    cancel: CancelToken | None = None,
+) -> ResolvedFields:
+    """Return the fields a solve, a restore or an export assembles, on ``mesh`` (D9).
+
+    The supplied fields are gated as :func:`gate_fields` gates them; a producer
+    case's charge is read from the stage-7 artefact and from nowhere else.
+
+    Parameters
+    ----------
+    supplied
+        The fields :func:`read_fields` read, or ``None`` when the case supplies
+        none.
+    charge_artefact
+        The stage-7 artefact handed down, or ``None``.
+    """
+    fields = (
+        ResolvedFields(charge=None, conservation=None, eps_r=None, material_means=())
+        if supplied is None
+        else gate_fields(resolved, supplied, mesh, measures=measures, cancel=cancel)
+    )
+    if resolved.deposits_charge:
+        fields = replace(fields, charge=deposited_charge(resolved, charge_artefact, mesh))
+    return fields
+
+
+def require_charge_artefact(resolved: ResolvedCase, artefact: Artefact | None) -> None:
+    """Refuse a producer case handed no stage-7 artefact, before any work (D9).
+
+    Raises
+    ------
+    KeyError
+        Naming stage 7.
+    """
+    if resolved.deposits_charge and artefact is None:
+        raise _missing_stage(resolved)
+
+
+def fixed_charge_density(
+    resolved: ResolvedCase,
+    supplied: ResolvedFields | None,
+    charge_artefact: Artefact | None,
+    mesh: Mesh,
+) -> Expression | None:
+    """Return the volume charge density a run carried, on ``mesh``, or ``None`` (D9, IF-07).
+
+    The deposited field for a producer case, read from the stage-7 artefact; the
+    supplied field's interpolant otherwise; nothing for a run that had none. A
+    run without a charge writes no ``rho_fixed_C_m3`` attribute at all: "there was
+    no charge field" and "there was one and it was zero" are different runs, and a
+    colour map of a zero field says the second.
+    """
+    if resolved.deposits_charge:
+        return deposited_charge(resolved, charge_artefact, mesh).volume_density_C_m3()
+    if supplied is None or supplied.charge is None:
+        return None
+    return supplied.charge.volume_density_C_m3()
+
+
+def _field_document(lattice: KernelLattice, data: Path) -> dict[str, Canonicalisable]:
+    """Return the ``nanopnp/field/v1`` document the export lattice is written under (D7, D11).
+
+    ``inputs.charge`` reads it back to the same grid digest: the values are in the
+    canonical C m^-2, so no unit factor touches them. The axis cutoff is the
+    default PHY-18 guard, declared for a later re-read (section 5.3.1 NOTE on
+    ``charge.smearing``).
+    """
+    grid = lattice.grid
+    return {
+        "schema": FIELD_SCHEMA,
+        "name": "deposited fixed charge",
+        "quantity": "areal_charge_density",
+        "units": "C/m^2",
+        "provenance": {
+            "source": DEPOSIT_PROVENANCE,
+            "notes": (
+                f"{KERNEL_ID}, {lattice.atoms.count} charged atoms over {lattice.atoms.frames} "
+                f"frames, spacing {lattice.spacing_nm:g} nm, model frame shifted by "
+                f"{lattice.atoms.shift_z_nm:g} nm"
+            ),
+        },
+        "data": {"path": data.name, "format": "npz", "sha256": file_hash(data)},
+        "grid": {
+            "origin_nm": list(grid.origin_nm),
+            "spacing_nm": list(grid.spacing_nm),
+            "shape": list(grid.shape),
+        },
+        "axis_cutoff_nm": DEFAULT_AXIS_CUTOFF_NM,
+        "q_net_e": lattice.atoms.q_net_e(),
+    }
+
+
+def write_field_document(lattice: KernelLattice, data: Path, path: Path) -> Path:
+    """Write the export lattice's field document to ``path``, naming ``data`` beside it."""
+    path.write_text(
+        yaml.safe_dump(_field_document(lattice, data), sort_keys=False), encoding="utf-8"
+    )
+    return path
+
+
+def export_charge(artefact: Artefact, path: Path) -> tuple[Path, ...]:
+    """Write stage 7's charge to ``path`` in the format its suffix names (D11, IF-05).
+
+    ``.yaml`` writes the ``nanopnp/field/v1`` document and its ``.npz`` beside it,
+    under the document's stem, which ``inputs.charge`` reads back to the same
+    digest; ``.dx`` and ``.mrc`` (or ``.ccp4``) write the lattice through
+    GridDataFormats. Returns every file written, the document last.
+
+    Raises
+    ------
+    KeyError
+        If the artefact carries no deposited charge's document (``.yaml``) or no
+        lattice at all.
+    """
+    if CHARGE_PAYLOAD not in artefact.payload:
+        raise KeyError(
+            "stage 7's artefact carries no charge lattice: the run supplied only inputs.eps_r"
+        )
+    source = Path(artefact.payload[CHARGE_PAYLOAD])
+    if path.suffix.lower() != ".yaml":
+        grid = read_grid(source, format="npz")
+        partial = path.with_name(f".{path.stem}.partial{path.suffix}")
+        try:
+            write_grid(grid, partial)
+            partial.replace(path)
+        finally:
+            partial.unlink(missing_ok=True)
+        return (path,)
+    if CHARGE_DOCUMENT_PAYLOAD not in artefact.payload:
+        raise KeyError(
+            "stage 7's artefact carries no field document: its charge was supplied through "
+            "inputs.charge, whose own document is the one to keep"
+        )
+    data = path.with_suffix(".npz")
+    document = yaml.safe_load(
+        Path(artefact.payload[CHARGE_DOCUMENT_PAYLOAD]).read_text(encoding="utf-8")
+    )
+    shutil.copyfile(source, data)
+    document["data"]["path"] = data.name
+    partial = path.with_name(f".{path.stem}.partial.yaml")
+    try:
+        partial.write_text(yaml.safe_dump(document, sort_keys=False), encoding="utf-8")
+        partial.replace(path)
+    finally:
+        partial.unlink(missing_ok=True)
+    return (data, path)
+
+
 class FieldStage:
-    """Stage 7: supplied field documents to gated, content-addressed fields."""
+    """Stage 7: a deposited or supplied charge, and a supplied dielectric, gated and keyed."""
 
     name = "charge"
 
-    def __init__(self, *, workspace: Path | None = None) -> None:
+    def __init__(self, *, workspace: Path | None = None, store: Store | None = None) -> None:
         """Build the stage.
 
         Parameters
         ----------
         workspace
-            Directory the archival native copies are written to before the store
-            copies them in. Defaults to a fresh directory under the store root,
-            as :class:`~nanopnp.mesh.ingest.MeshStage` does.
+            Directory the payload is written to before the store copies it in.
+            Defaults to a fresh directory under the store root, as
+            :class:`~nanopnp.mesh.ingest.MeshStage` does.
+        store
+            Where the export lattice is cached under its own key (D7). Without
+            one, every run sums the kernel.
         """
         self._workspace = Path(workspace) if workspace is not None else None
+        self._store = store
 
     def describe(self) -> StageDescription:
         """Return the registry's description of this stage (FR-27)."""
@@ -386,25 +687,28 @@ class FieldStage:
         that artefact under ``inputs.upstream["charge"]``, so the answer comes
         from the ``fields`` parameter the artefact already records rather than
         from a second read of the field tables. The same sentence
-        :meth:`ResolvedFields.deviations` returns, from the same helper.
+        :meth:`ResolvedFields.deviations` returns, from the same helper. A
+        deposited charge contributes none: ``charge.smearing.sharpness`` away from
+        its default is a switch the case-file diff already sees.
         """
         fields = inputs.require(self.name).parameters["fields"]
         assert isinstance(fields, dict)  # FieldsArtefact writes it as one
         return smoothed_dielectric_deviations(smoothed="eps_r" in fields)
 
     def key(self, inputs: StageInputs) -> FieldsArtefact:
-        """Return the artefact key these fields will produce, without gating them.
+        """Return the artefact key, without depositing or gating anything.
 
-        Reads the grids, because their digests *are* the key, and does not
-        integrate over the mesh: the gate is what :meth:`run` adds. Nor does it
-        ingest the mesh where stage 6 handed its artefact down — the key needs
-        that artefact's hash and nothing else, and reading and quality-gating a
-        mesh to answer "is this already in the store?" is the whole cost the
-        cache exists to avoid.
+        A supplied field is keyed on its grid's digest, which means reading it; a
+        deposited charge on the protonation artefact's hash and the lattice's
+        key, which reads nothing (section 5.3.2). Neither ingests the mesh where
+        stage 6 handed its artefact down.
         """
         resolved, ingested, mesh_artefact = self._prepare(inputs, ingest_mesh=False)
         del ingested
-        return self.artefact(read_fields(resolved), mesh_artefact.hash, resolved=resolved)
+        supplied = read_fields(resolved)
+        if resolved.deposits_charge:
+            return self._produced_artefact(resolved, supplied, inputs, mesh_artefact.hash)
+        return self.artefact(supplied, mesh_artefact.hash, resolved=resolved)
 
     def run(
         self,
@@ -413,30 +717,36 @@ class FieldStage:
         progress: Progress | None = None,
         cancel: CancelToken | None = None,
     ) -> FieldsArtefact:
-        """Read, gate and archive the supplied fields, and emit the artefact.
+        """Deposit or read the fields, gate them, archive them, and emit the artefact.
 
         Raises
         ------
         Cancelled
             If ``cancel`` turns true. No artefact is written.
         nanopnp.io.case.UnsupportedCaseSection
-            If the case supplies no field at all, which describes no work for
-            this stage rather than an empty result.
+            If the case neither supplies a field nor deposits a charge, which
+            describes no work for this stage rather than an empty result.
+        nanopnp.charge.fields.ChargeFieldError
+            On any gate, naming the gate, the quantity and its location.
         """
-        check_cancelled(cancel, "reading the supplied fields")
+        check_cancelled(cancel, "reading the fields")
         resolved, ingested, mesh_artefact = self._prepare(inputs, ingest_mesh=True)
         assert ingested is not None  # ``ingest_mesh=True`` admits no other case
-        fields = load_fields(
-            resolved,
-            ingested.mesh,
-            measures=self._measures(resolved),
-            cancel=cancel,
-            progress=progress,
+        if not resolved.deposits_charge:
+            fields = load_fields(
+                resolved,
+                ingested.mesh,
+                measures=self._measures(resolved),
+                cancel=cancel,
+                progress=progress,
+            )
+            check_cancelled(cancel, "writing the archival field copies")
+            payload = self._write(fields)
+            report(progress, 1.0, "the supplied fields passed their gates")
+            return self.artefact(fields, mesh_artefact.hash, resolved=resolved, payload=payload)
+        return self._produce(
+            resolved, inputs, ingested, mesh_artefact, progress=progress, cancel=cancel
         )
-        check_cancelled(cancel, "writing the archival field copies")
-        payload = self._write(fields)
-        report(progress, 1.0, "the supplied fields passed their gates")
-        return self.artefact(fields, mesh_artefact.hash, resolved=resolved, payload=payload)
 
     def artefact(
         self,
@@ -446,7 +756,7 @@ class FieldStage:
         resolved: ResolvedCase,
         payload: dict[str, Path] | None = None,
     ) -> FieldsArtefact:
-        """Return the artefact for already-loaded fields, with or without payload.
+        """Return the artefact for already-loaded supplied fields, with or without payload.
 
         Public for the same reason :meth:`nanopnp.mesh.ingest.MeshStage.artefact`
         is: stage 10 has the :class:`ResolvedFields` in hand and needs its key,
@@ -463,6 +773,182 @@ class FieldStage:
             summary=fields.summary(),
         )
 
+    # -- the producer path ---------------------------------------------------------
+
+    def _produced_artefact(
+        self,
+        resolved: ResolvedCase,
+        supplied: ResolvedFields,
+        inputs: StageInputs,
+        mesh_hash: str,
+        *,
+        payload: dict[str, Path] | None = None,
+        summary: dict[str, Canonicalisable] | None = None,
+    ) -> FieldsArtefact:
+        """Return a producer case's stage-7 artefact: its key, and its payload when run (D7)."""
+        protonation = inputs.require("protonation")
+        grid_key = charge_grid_key(resolved, protonation)
+        return FieldsArtefact(
+            fields={**supplied.parameters(), "charge": produced_parameters(resolved)},
+            gates={**gate_parameters(resolved, supplied), **produced_gates(resolved)},
+            mesh_hash=mesh_hash,
+            upstream={"protonation": protonation.hash, "charge_grid": grid_key.hash},
+            payload=payload or {},
+            summary=summary or {},
+        )
+
+    def _produce(
+        self,
+        resolved: ResolvedCase,
+        inputs: StageInputs,
+        ingested: IngestedMesh,
+        mesh_artefact: Artefact,
+        *,
+        progress: Progress | None,
+        cancel: CancelToken | None,
+    ) -> FieldsArtefact:
+        """Sum, deposit and gate the charge of a producer case (D1-D6, D12)."""
+        started = time.perf_counter()
+        protonation = inputs.require("protonation")
+        table = ProtonationTable.read(Path(protonation.payload[PROTONATION_PAYLOAD]))
+        atoms = source_atoms(
+            table, sharpness=resolved.smearing.sharpness, shift_z_nm=frame_shift_nm(resolved)
+        )
+        directory = self._directory()
+        grid_artefact, lattice, cached = self._lattice(
+            resolved, protonation, atoms, directory, progress=progress, cancel=cancel
+        )
+        summed = time.perf_counter()
+
+        data = ingested.data
+        mesh = ingested.mesh
+        measures = self._measures(resolved)
+        solids = tuple(sorted(resolved.document.physics.solid_permittivities))
+        check_cancelled(cancel, "the solid-share gate")
+        report(progress, 0.6, "checking that the atoms sit in the mesh's solids")
+        share = check_solid_share(atoms, data, solids, cell_nm=lattice.spacing_nm)
+        report(progress, 0.65, f"depositing on P{measures.element_order}")
+        found = deposit(lattice.grid, data, measures.element_order, cancel=cancel)
+        charge = DepositedCharge.bind(found, mesh)
+        deposited = time.perf_counter()
+        check_cancelled(cancel, "the conservation gates")
+        report(progress, 0.8, "checking the deposited charge's conservation")
+        conserved = check_deposit_conservation(
+            deposit_conservation(atoms, lattice.grid, charge.volume_density_C_m3(), mesh, measures)
+        )
+        logger.info(
+            "deposited charge: Q_net %.6g e, producer leg %.3g, consumer leg %.3g, worst plane "
+            "%.3g (lattice) and %.3g (mesh), solid share %.3f",
+            atoms.q_net_e(),
+            conserved.producer_error,
+            conserved.consumer_error,
+            conserved.worst_plane("grid")[1],
+            conserved.worst_plane("mesh")[1],
+            share.share,
+        )
+
+        supplied = read_fields(resolved)
+        eps_r = supplied.eps_r
+        means: tuple[MaterialMean, ...] = ()
+        if eps_r is not None:
+            check_cancelled(cancel, "the dielectric gates")
+            report(progress, 0.9, f"checking the dielectric field from {eps_r.source.name}")
+            gated = gate_fields(resolved, supplied, mesh, measures=measures, cancel=cancel)
+            eps_r, means = gated.eps_r, gated.material_means
+        fields = ResolvedFields(charge=None, conservation=None, eps_r=eps_r, material_means=means)
+        gated_at = time.perf_counter()
+
+        check_cancelled(cancel, "writing the deposit")
+        lattice_file = Path(grid_artefact.payload[LATTICE_PAYLOAD])
+        payload = {
+            CHARGE_PAYLOAD: lattice_file,
+            CHARGE_DOCUMENT_PAYLOAD: write_field_document(
+                lattice, lattice_file, directory / CHARGE_DOCUMENT
+            ),
+            DEPOSIT_PAYLOAD: found.write(directory / DEPOSIT_FILE),
+        }
+        if eps_r is not None:
+            payload["eps_r"] = write_grid(eps_r.grid, directory / "eps_r.npz", format="npz")
+        record: dict[str, Canonicalisable] = {
+            **fields.summary(),
+            "charge": {
+                "source": "deposited",
+                "q_net_e": atoms.q_net_e(),
+                "order": found.order,
+                "document": CHARGE_DOCUMENT,
+                "lattice": {**dict(grid_artefact.summary), "cached": cached},
+                "deposit": found.summary(),
+                "solid_share": share.summary(),
+                "material_charge_e": dict(found.material_charges_e(data)),
+                "conservation": conserved.summary(),
+                "seconds": {
+                    "sum": summed - started,
+                    "deposit": deposited - summed,
+                    "gates": gated_at - deposited,
+                },
+            },
+        }
+        report(progress, 1.0, "the deposited charge passed its gates")
+        return self._produced_artefact(
+            resolved, supplied, inputs, mesh_artefact.hash, payload=payload, summary=record
+        )
+
+    def _lattice(
+        self,
+        resolved: ResolvedCase,
+        protonation: Artefact,
+        atoms: SourceAtoms,
+        directory: Path,
+        *,
+        progress: Progress | None,
+        cancel: CancelToken | None,
+    ) -> tuple[Artefact, KernelLattice, bool]:
+        """Return the export lattice, from the store when it holds it (D7).
+
+        Returns
+        -------
+        tuple
+            The stored charge-grid artefact, the lattice, and whether it was
+            served from the store.
+        """
+        key = charge_grid_key(resolved, protonation)
+        stored = self._store.get(key.schema, key.hash) if self._store is not None else None
+        if stored is not None:
+            grid = read_grid(Path(stored.payload[LATTICE_PAYLOAD]), format="npz")
+            seconds = stored.summary.get("seconds")
+            lattice = KernelLattice(
+                grid=grid,
+                atoms=atoms,
+                spacing_nm=resolved.smearing.grid_spacing_nm,
+                half_widths=PATCH_HALF_WIDTHS,
+                renormalised=True,
+                raw_deviation=(0.0, 0),
+                seconds=float(seconds) if isinstance(seconds, int | float) else 0.0,
+            )
+            report(progress, 0.55, "the export lattice was in the store")
+            return stored, lattice, True
+        lattice = sum_kernel(
+            atoms,
+            resolved.smearing.grid_spacing_nm,
+            cancel=cancel,
+            progress=None if progress is None else (lambda f, m: progress(0.55 * f, m)),
+        )
+        produced: Artefact = ChargeGridArtefact(
+            parameters=key.parameters,
+            protonation_hash=protonation.hash,
+            payload={
+                LATTICE_PAYLOAD: write_grid(
+                    lattice.grid, directory / CHARGE_GRID_FILE, format="npz"
+                )
+            },
+            summary=lattice.summary(),
+        )
+        if self._store is not None:
+            produced = self._store.put(produced)
+        return produced, lattice, False
+
+    # -- shared --------------------------------------------------------------------
+
     def _measures(self, resolved: ResolvedCase) -> Measures:
         """Return the quadrature policy the solve will assemble at."""
         return replace(AXISYMMETRIC, element_order=_element_order(resolved))
@@ -470,7 +956,7 @@ class FieldStage:
     def _prepare(
         self, inputs: StageInputs, *, ingest_mesh: bool
     ) -> tuple[ResolvedCase, IngestedMesh | None, Artefact]:
-        """Resolve the case, ingest the mesh, and refuse a case with no fields.
+        """Resolve the case, ingest the mesh, and refuse a case with no work here.
 
         Parameters
         ----------
@@ -480,11 +966,11 @@ class FieldStage:
             then ingested only where no upstream artefact names its hash.
         """
         resolved = resolve(inputs.case)
-        if resolved.charge is None and resolved.eps_r is None:
+        if resolved.charge is None and resolved.eps_r is None and not resolved.deposits_charge:
             raise UnsupportedCaseSection(
-                f"case {resolved.name!r} supplies neither inputs.charge nor inputs.eps_r, so "
-                "stage 7 has nothing to read; the producer pipeline that would build them is v0.4 "
-                "(SPECIFICATION.md section 3, FR-12 to FR-15)"
+                f"case {resolved.name!r} supplies neither inputs.charge nor inputs.eps_r and "
+                "deposits no charge: it carries no structure: section and no inputs.pqr, so "
+                "stage 7 has nothing to read (FR-12 to FR-15)"
             )
         mesh = inputs.upstream.get("mesh")
         ingested: IngestedMesh | None = None
@@ -495,21 +981,33 @@ class FieldStage:
             mesh = MeshStage().artefact(ingested)
         return resolved, ingested, mesh
 
+    def _directory(self) -> Path:
+        """Return the directory this run writes into: the workspace, or a fresh one.
+
+        A named workspace is the run's own, made fresh per run by the driver
+        (:mod:`nanopnp.io.run`), and is written into directly; without one, a
+        fresh directory under the store root.
+        """
+        if self._workspace is not None:
+            self._workspace.mkdir(parents=True, exist_ok=True)
+            return self._workspace
+        root = store_root() / WORKSPACE_DIRNAME
+        root.mkdir(parents=True, exist_ok=True)
+        return Path(tempfile.mkdtemp(prefix="fields-", dir=root))
+
     def _write(self, fields: ResolvedFields) -> dict[str, Path]:
-        """Write each field's grid in the native format and return the payload map.
+        """Write each supplied field's grid in the native format and return the payload map.
 
         Written in ``.npz`` from the *loaded* grid, so the archived copy is in
         canonical SI units and needs no header to be read back — which is what
         makes it an archive rather than a second copy of the input.
         """
-        directory = self._workspace
-        if directory is None:
-            root = store_root() / WORKSPACE_DIRNAME
-            root.mkdir(parents=True, exist_ok=True)
-            directory = Path(tempfile.mkdtemp(prefix="fields-", dir=root))
-        directory.mkdir(parents=True, exist_ok=True)
+        directory = self._directory()
         payload: dict[str, Path] = {}
-        for name, field in (("charge", fields.charge), ("eps_r", fields.eps_r)):
-            if field is not None:
-                payload[name] = write_grid(field.grid, directory / f"{name}.npz", format="npz")
+        if isinstance(fields.charge, ChargeField):
+            payload["charge"] = write_grid(
+                fields.charge.grid, directory / "charge.npz", format="npz"
+            )
+        if fields.eps_r is not None:
+            payload["eps_r"] = write_grid(fields.eps_r.grid, directory / "eps_r.npz", format="npz")
         return payload

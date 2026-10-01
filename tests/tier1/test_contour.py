@@ -650,6 +650,8 @@ def test_ver51_case_values_and_walk(tube: Path, tube_store: Store, tmp_path: Pat
         "contour",
         "region",
         "mesh",
+        "protonation",
+        "charge",
         "materials",
         "solve",
         "qoi",

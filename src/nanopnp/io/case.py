@@ -404,7 +404,13 @@ class Geometry(_Strict):
 
 
 class SmearingSpec(_Strict):
-    """Stage 7: quintic B-spline deposition of the partial charges (PHY-16)."""
+    """Stage 7: the kernel width and the export lattice of the deposition (PHY-16 steps 4-6).
+
+    ``sharpness`` is the ``0.5`` of ``w_i = 0.5 R_i``, a switch; ``grid_spacing_nm``
+    the export lattice's spacing, a discretisation choice; ``axis_cutoff_nm`` is
+    refused away from its default on every path, naming PHY-18 (section 5.3.1 NOTE
+    on ``charge.smearing``).
+    """
 
     sharpness: float = 0.5
     grid_spacing_nm: float = 0.005
@@ -1712,7 +1718,6 @@ PQR_FORMAT = "pqr"
 """``inputs.pqr.format``: a PQR of one frame or one ``MODEL`` per frame (section 5.3.1 NOTE)."""
 
 _UNREAD_CHARGE_KEYS: dict[str, str] = {
-    "smearing": "stage 7's charge deposition on the deployed mesh (WP28)",
     "exclusion_offset_nm": "stage 7's dielectric field and ion-exclusion shell (WP30)",
     "dielectric_transition_nm": "stage 7's dielectric field and ion-exclusion shell (WP30)",
 }
@@ -1721,8 +1726,12 @@ _UNREAD_CHARGE_KEYS: dict[str, str] = {
 Each is refused set away from its default, naming the stage, until the package
 that delivers the stage removes its entry (section 5.3.1 NOTE on the protonation
 keys). ``charge:`` itself left the table of unrun sections in WP27, when the
-``protonation`` stage made ``ph``, ``forcefield`` and ``titration`` runnable.
+``protonation`` stage made ``ph``, ``forcefield`` and ``titration`` runnable, and
+``smearing`` left it in WP28, when stage 7's deposition came to read it.
 """
+
+SMEARING_KEYS: tuple[str, ...] = ("sharpness", "grid_spacing_nm")
+"""The ``charge.smearing`` keys stage 7's deposition reads (PHY-16 steps 4-6, WP28 D10)."""
 
 PROTONATION_KEYS: tuple[str, ...] = ("ph", "forcefield", "titration")
 """The ``charge:`` keys the ``protonation`` stage reads (PHY-16 step 3, WP27 D13)."""
@@ -1849,6 +1858,8 @@ class ResolvedCase:
     """``inputs.pqr``, which the ``protonation`` stage reads in place of running PDB2PQR (WP27)."""
     protonation: ResolvedProtonation = dataclass_field(default_factory=ResolvedProtonation)
     """``charge.ph``, ``charge.forcefield`` and ``charge.titration`` (WP27 D13)."""
+    smearing: SmearingSpec = dataclass_field(default_factory=SmearingSpec)
+    """``charge.smearing``, at its defaults without ``charge:`` (WP28 D10)."""
 
     @property
     def protonates(self) -> bool:
@@ -1858,6 +1869,17 @@ class ResolvedCase:
         ``inputs.charge``, which would replace what stage 7 makes of either.
         """
         return (self.structure is not None or self.pqr is not None) and self.charge is None
+
+    @property
+    def deposits_charge(self) -> bool:
+        """Whether stage 7 deposits a charge from the protonation artefact (WP28 D8).
+
+        The case protonates and its model declares ``fixed_charge``: read from the
+        declaration, never from the model's name (section 5.4.3 NOTE). Both halves
+        of stage 7 then run, and the solve reads the charge from stage 7's
+        artefact (D9).
+        """
+        return self.protonates and "fixed_charge" in declaration(self.model).coefficients
 
     @property
     def name(self) -> str:
@@ -2277,12 +2299,13 @@ def _check_charge(document: CaseDocument) -> None:
     Raises
     ------
     UnsupportedCaseSection
-        Naming the stage, for ``charge.smearing``, ``charge.exclusion_offset_nm`` or
+        Naming the stage, for ``charge.exclusion_offset_nm`` or
         ``charge.dielectric_transition_nm`` set away from its default, which a
         later package's stage reads.
     CaseValidationError
         Naming the keys: ``artefact:``, ``groups`` or a format other than ``pqr``
-        on ``inputs.pqr``; ``charge.ph`` away from its default beside
+        on ``inputs.pqr``; the ``charge.smearing`` refusals of
+        :func:`_check_smearing`; ``charge.ph`` away from its default beside
         ``titration: none``; and a protonation key away from its default where
         the ``protonation`` stage does not run, which is beside ``inputs.pqr``,
         beside ``inputs.charge``, and in a case with neither ``structure:`` nor
@@ -2317,6 +2340,7 @@ def _check_charge(document: CaseDocument) -> None:
                 "delivered in this release, so it would change nothing (section 5.3.1 NOTE on "
                 "the protonation keys)"
             )
+    _check_smearing(document, charge.smearing, defaults.smearing)
     if charge.titration == "none" and charge.ph != defaults.ph:
         raise CaseValidationError(
             f"charge.ph is {charge.ph} beside charge.titration: none, which runs PDB2PQR "
@@ -2345,6 +2369,59 @@ def _check_charge(document: CaseDocument) -> None:
             f"{', '.join(changed)} {'is' if len(changed) == 1 else 'are'} set {where}; the "
             "protonation stage they configure does not run, so they would change nothing "
             "(section 5.3.1 NOTE on the protonation keys)"
+        )
+
+
+def _check_smearing(document: CaseDocument, smearing: SmearingSpec, defaults: SmearingSpec) -> None:
+    """Make the ``charge.smearing`` refusals (section 5.3.1 NOTE on ``charge.smearing``, WP28 D10).
+
+    Raises
+    ------
+    CaseValidationError
+        Naming the key: ``axis_cutoff_nm`` away from its default, on every path
+        (PHY-18); a ``sharpness`` or ``grid_spacing_nm`` that is not finite and
+        positive; and either set away from its default beside ``inputs.charge``,
+        or in a case with neither ``structure:`` nor ``inputs.pqr``, where the
+        deposition they configure does not run, naming both keys.
+    """
+    if smearing.axis_cutoff_nm != defaults.axis_cutoff_nm:
+        raise CaseValidationError(
+            f"charge.smearing.axis_cutoff_nm is {smearing.axis_cutoff_nm}; it is refused away "
+            f"from its default {defaults.axis_cutoff_nm} on every path (PHY-18). The deposited "
+            "kernel is regular on the axis and takes no guard, and a supplied field declares its "
+            "own axis_cutoff_nm in its header document, so the key would change nothing "
+            "(section 5.3.1 NOTE on charge.smearing)"
+        )
+    for key in SMEARING_KEYS:
+        value = getattr(smearing, key)
+        if not 0.0 < value < math.inf:
+            raise CaseValidationError(
+                f"charge.smearing.{key} is {value}; it must be finite and positive (PHY-16 "
+                "steps 4-6)"
+            )
+    changed = [
+        f"charge.smearing.{key}"
+        for key in SMEARING_KEYS
+        if getattr(smearing, key) != getattr(defaults, key)
+    ]
+    if not changed:
+        return
+    where = (
+        "beside inputs.charge, which supplies the field stage 7 would otherwise deposit"
+        if document.inputs.charge is not None
+        else "in a case with neither a structure: section nor inputs.pqr, so there is nothing "
+        "to deposit"
+        if document.structure is None and document.inputs.pqr is None
+        else None
+    )
+    if where is not None:
+        other = "inputs.charge" if document.inputs.charge is not None else "structure:"
+        raise CaseValidationError(
+            f"{', '.join(changed)} {'is' if len(changed) == 1 else 'are'} set {where} "
+            f"({other}); the deposition stage 7 would configure with "
+            f"{'it' if len(changed) == 1 else 'them'} does not run, so "
+            f"{'it' if len(changed) == 1 else 'they'} would change nothing (section 5.3.1 NOTE "
+            "on charge.smearing)"
         )
 
 
@@ -2559,6 +2636,12 @@ def _check_physics_switches(document: CaseDocument) -> None:
             "no solid domain (PHY-21 NOTE), and every mesh stages 5 and 6 generate carries a "
             "membrane and a protein; supply inputs.mesh with no solid domain. Models carrying "
             f"solids: {_admitting(lambda other: declaration(other).solids)}"
+        )
+    if document.inputs.pqr is not None and "fixed_charge" not in declared.coefficients:
+        raise CaseValidationError(
+            f"physics.model {model!r} takes no fixed-charge source, so inputs.pqr would be "
+            "protonated into a charge stage 7 never deposits and the solve never reads (WP28 D8). "
+            f"Models accepting it: {_accepting('fixed_charge')}"
         )
     for supplied, coefficient, what in (
         ("charge", "fixed_charge", "a fixed-charge source"),
@@ -2806,6 +2889,7 @@ def resolve(document: CaseDocument) -> ResolvedCase:
         reservoir=geometry.reservoir if mesh is None else None,
         pqr=document.inputs.pqr,
         protonation=_resolve_protonation(document),
+        smearing=(document.charge if document.charge is not None else Charge()).smearing,
     )
     # Built once and discarded, through the one call every consumer uses: a
     # builder's own refusal -- ``pb`` beside a salt that is not symmetric

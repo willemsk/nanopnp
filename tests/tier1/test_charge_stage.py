@@ -258,3 +258,257 @@ def test_val03_case_identity_carries_the_supplied_field_contents(
         if key not in MODEL_OPTION_DISCRETISATION_KEYS
     }
     assert identity(None) == content_hash(CASE_IDENTITY_SCHEMA, record)
+
+
+# -- the producer path (WP28) ----------------------------------------------------
+
+PRODUCER_ATOMS_A: tuple[tuple[str, float, float, float, float, float], ...] = (
+    # name, x, y, z (Å), charge (e), radius (Å): six atoms inside the membrane of
+    # the pore below (r in 2.0-10 nm, |z| < 3 nm), summing to -1 e.
+    ("N", 30.0, 5.0, -10.0, -0.5, 1.85),
+    ("CA", -35.0, 20.0, 5.0, -0.5, 2.275),
+    ("C", 0.0, 45.0, 12.0, 0.25, 2.0),
+    ("O", 40.0, -30.0, -15.0, -0.25, 1.7),
+    ("CB", 25.0, 25.0, 0.0, 0.5, 2.175),
+    ("CG", -50.0, -10.0, 18.0, -0.5, 2.175),
+)
+"""The supplied PQR's atoms: off-axis, of CHARMM-like radii, all in a solid."""
+
+
+def _pqr_text() -> str:
+    """Return the producer PQR in PDB2PQR's fixed columns."""
+    lines = []
+    for serial, (name, x, y, z, charge, radius) in enumerate(PRODUCER_ATOMS_A, start=1):
+        lines.append(
+            f"ATOM  {serial:5d} {name:<4} GLU A  18    {x:8.3f}{y:8.3f}{z:8.3f}"
+            f" {charge:7.4f} {radius:6.4f}"
+        )
+    return "\n".join(lines) + "\n"
+
+
+PRODUCER_CASE = """
+schema: nanopnp/case/v2
+name: producer-probe
+inputs:
+  mesh: {{path: {mesh}, format: vol, groups: {{default: interface}}}}
+  pqr: {{path: {pqr}, format: pqr}}
+electrolyte:
+  species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
+  concentration_M: 0.1
+  parameters: willems2020_nacl
+  corrections:
+    diffusivity:  {{model: none}}
+    mobility:     {{model: none}}
+    viscosity:    {{model: none}}
+    permittivity: {{model: none}}
+    density:      {{model: none}}
+    steric:       {{model: none}}
+boundary_conditions: {{bias_V: 0.02, ground: cis}}
+physics: {{model: pnp, flow: false, solid_permittivities: {{membrane: 3.2}}}}
+numerics: {{continuation: none, elements: {{phi: {order}, c: {order}}}}}
+outputs: [current, fields]
+"""
+
+
+@pytest.fixture(scope="module")
+def producer_files(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, Path]:
+    """Write the cheapest four-domain pore mesh and the producer PQR, once."""
+    from nanopnp.mesh.primitives import CylindricalPoreGeometry
+
+    work = tmp_path_factory.mktemp("producer")
+    mesh = work / "pore.vol"
+    CylindricalPoreGeometry(
+        pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
+    # 0.5 nm elements: at 1 nm the deployed field's per-plane error under the
+    # 0.5 nm weight is 3.2e-3, which the gate refuses as it should; it falls to
+    # 2.3e-4 here (`.knowledge/04` section 3.3).
+    ).generate(maxh_nm=0.5, wall_h_nm=0.5).ngmesh.Save(str(mesh))
+    pqr = work / "atoms.pqr"
+    pqr.write_text(_pqr_text(), encoding="utf-8")
+    return mesh, pqr
+
+
+def _producer_case(files: tuple[Path, Path], directory: Path, *, order: str = "P2") -> Path:
+    """Write the producer case at ``order`` and return its path."""
+    mesh, pqr = files
+    path = directory / f"producer-{order}.case.yaml"
+    path.write_text(PRODUCER_CASE.format(mesh=mesh, pqr=pqr, order=order), encoding="utf-8")
+    return path
+
+
+@pytest.fixture(scope="module")
+def produced(producer_files: tuple[Path, Path], tmp_path_factory: pytest.TempPathFactory):
+    """Walk the producer case through stage 7 once, into a store kept for the module."""
+    from nanopnp.io.run import run_case
+    from nanopnp.io.store import Store
+
+    work = tmp_path_factory.mktemp("produced")
+    store = Store(work / "store")
+    case = _producer_case(producer_files, work)
+    return case, store, run_case(case, store=store, upto="charge", write=False)
+
+
+def test_ver01_the_producer_stage_deposits_keys_and_records_its_report(produced) -> None:
+    """A ``pqr`` case walks both halves of stage 7; the artefact names both inputs (D7, D8)."""
+    from nanopnp.core.constants import ELEMENTARY_CHARGE
+    from nanopnp.io.artefact import CHARGE_GRID_SCHEMA
+
+    case, store, result = produced
+    assert [record.name for record in result.stages][-2:] == ["protonation", "charge"]
+    stage7 = result.artefacts["charge"]
+    assert set(stage7.inputs) == {"mesh", "protonation", "charge_grid"}
+    assert stage7.inputs["protonation"] == result.artefacts["protonation"].hash
+    fields = stage7.parameters["fields"]
+    gates = stage7.parameters["gates"]
+    assert fields["charge"] == {  # type: ignore[index]
+        "source": "deposited",
+        "order": 2,
+        "kernel": "azimuthal-mean-3d-gaussian/v1",
+    }
+    assert gates["planes"] == 12  # type: ignore[index]
+    assert gates["plane_smoothing_nm"] == 0.5  # type: ignore[index]
+    assert set(stage7.payload) == {"charge", "charge_document", "deposit"}
+    lattice = store.get(CHARGE_GRID_SCHEMA, stage7.inputs["charge_grid"])
+    assert lattice is not None
+    assert lattice.inputs == {"protonation": stage7.inputs["protonation"]}
+
+    record = stage7.summary["charge"]
+    conservation = record["conservation"]  # type: ignore[index]
+    assert record["q_net_e"] == pytest.approx(-1.0, abs=1e-12)  # type: ignore[index]
+    assert abs(conservation["producer"]["relative_error"]) < 1e-12  # type: ignore[index]
+    assert abs(conservation["consumer"]["relative_error"]) < 1e-12  # type: ignore[index]
+    plane = conservation["per_plane"]  # type: ignore[index]
+    assert plane["grid_worst_relative_error"] < 1e-12
+    assert plane["mesh_worst_relative_error"] < 1e-3
+    assert record["solid_share"]["solid_share"] == 1.0  # type: ignore[index]
+    assert record["material_charge_e"]["membrane"] == pytest.approx(-1.0)  # type: ignore[index]
+    # The manifest's Charge group is the stage's record, protonation beside it.
+    group = result.manifest.charge
+    assert group["charge"]["conservation"] == conservation  # type: ignore[index]
+    assert group["protonation"]["source"] == "inputs.pqr"  # type: ignore[index]
+    # And the key taken before the run is the artefact the run produced.
+    stage = FieldStage()
+    upstream = {name: result.artefacts[name] for name in ("mesh", "protonation")}
+    from nanopnp.io.case import load_case
+
+    key = stage.key(StageInputs(case=load_case(case), upstream=upstream))
+    assert key.hash == stage7.hash
+    assert record["lattice"]["q_net_e"] * ELEMENTARY_CHARGE == pytest.approx(  # type: ignore[index]
+        -ELEMENTARY_CHARGE
+    )
+
+
+def test_ver01_a_new_element_order_redeposits_without_resumming(
+    produced, producer_files: tuple[Path, Path], tmp_path: Path
+) -> None:
+    """The lattice is keyed without the mesh's discretisation: P3 re-deposits it from the store."""
+    from nanopnp.io.run import run_case
+
+    _, store, first = produced
+    case = _producer_case(producer_files, tmp_path, order="P3")
+    again = run_case(case, store=store, upto="charge", write=False)
+    stage7 = again.artefacts["charge"]
+    assert stage7.inputs["charge_grid"] == first.artefacts["charge"].inputs["charge_grid"]
+    assert stage7.hash != first.artefacts["charge"].hash
+    assert stage7.summary["charge"]["lattice"]["cached"] is True  # type: ignore[index]
+    assert stage7.summary["charge"]["order"] == 3  # type: ignore[index]
+
+
+def test_ver29_the_export_reads_back_through_inputs_charge_to_the_same_digest(
+    produced, tmp_path: Path
+) -> None:
+    """``stage charge --export X.yaml`` writes the document and its ``.npz`` (D11, IF-05)."""
+    from nanopnp.charge.fields import load_field
+    from nanopnp.charge.stage import export_charge
+    from nanopnp.density.grid import read_grid, writable_formats
+
+    _, _, result = produced
+    stage7 = result.artefacts["charge"]
+    written = export_charge(stage7, tmp_path / "exported.yaml")
+    assert [path.name for path in written] == ["exported.npz", "exported.yaml"]
+    field = load_field(tmp_path / "exported.yaml")
+    stored = read_grid(stage7.payload["charge"], format="npz")
+    assert field.grid.digest() == stored.digest()
+    assert field.document.q_net_e == pytest.approx(-1.0, abs=1e-12)
+    assert field.document.axis_cutoff_nm == 0.01
+    assert field.planar_integral_C() / 1.602176634e-19 == pytest.approx(-1.0, abs=1e-12)
+    if "dx" in writable_formats():
+        (dx,) = export_charge(stage7, tmp_path / "exported.dx")
+        assert read_grid(dx).shape == stored.shape
+
+
+def test_ver29_a_producer_case_handed_no_stage_7_artefact_is_refused_naming_it(
+    produced,
+) -> None:
+    """D9: the solve keys and reads a deposited charge only from stage 7's artefact."""
+    from nanopnp.io.case import load_case
+    from nanopnp.solve.stage import SolveStage
+
+    case, _, result = produced
+    upstream = {name: result.artefacts[name] for name in ("mesh",)}
+    with pytest.raises(KeyError, match="stage 7 \\('charge'\\)"):
+        SolveStage().key(StageInputs(case=load_case(case), upstream=upstream))
+
+
+class _CancelOnCall:
+    """A token that turns true on its ``at``-th question, counting from 1."""
+
+    def __init__(self, at: int) -> None:
+        self.at = at
+        self.asked = 0
+
+    def cancelled(self) -> bool:
+        self.asked += 1
+        return self.asked >= self.at
+
+
+@pytest.mark.parametrize(
+    ("at", "where"),
+    [
+        (1, "reading the fields"),
+        (2, "summing the kernel of frame 0"),
+        (3, "the solid-share gate"),
+        (4, "locating the lattice"),
+        (5, "the projection onto the mesh"),
+        (6, "the conservation gates"),
+        (7, "writing the deposit"),
+    ],
+)
+def test_ver25_the_producer_stage_cancels_between_frames_and_before_each_gate(
+    produced, tmp_path: Path, at: int, where: str
+) -> None:
+    """D12: between frames, before the projection and before each gate; nothing written."""
+    from nanopnp.io.case import load_case
+
+    case, _, result = produced
+    upstream = {name: result.artefacts[name] for name in ("mesh", "protonation")}
+    work = tmp_path / "work"
+    with pytest.raises(Cancelled, match=re.escape(where)):
+        FieldStage(workspace=work).run(
+            StageInputs(case=load_case(case), upstream=upstream), cancel=_CancelOnCall(at)
+        )
+    assert not (work / "deposit.npz").exists()
+
+
+def test_ver29_a_charged_walk_solves_and_exports_the_deposited_charge(
+    producer_files: tuple[Path, Path], tmp_path: Path
+) -> None:
+    """D9 end to end: the solve, the restore and the ``rho_fixed`` export read the deposit."""
+    from nanopnp.io.run import run_case
+    from nanopnp.io.store import Store
+
+    case = _producer_case(producer_files, tmp_path)
+    result = run_case(case, store=Store(tmp_path / "store"), workspace=tmp_path / "work")
+    assert [record.name for record in result.stages][-5:] == [
+        "charge",
+        "materials",
+        "solve",
+        "qoi",
+        "report",
+    ]
+    assert result.artefacts["solve"].inputs["charge"] == result.artefacts["charge"].hash
+    fields = result.artefacts["solve"].summary["fields"]
+    assert fields["charge"]["source"] == "deposited"  # type: ignore[index]
+    attributes = result.artefacts["report"].summary["files"]["attributes"]  # type: ignore[index]
+    assert any("rho_fixed_C_m3" in names for names in attributes.values())
+    assert result.quantities["currents_A"]

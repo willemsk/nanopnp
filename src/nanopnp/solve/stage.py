@@ -45,7 +45,13 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from zipfile import BadZipFile
 
-from nanopnp.charge.stage import FieldStage, ResolvedFields, gate_fields, read_fields
+from nanopnp.charge.stage import (
+    FieldStage,
+    ResolvedFields,
+    case_fields,
+    read_fields,
+    require_charge_artefact,
+)
 from nanopnp.core.paths import store_root
 from nanopnp.core.stages import (
     CancelToken,
@@ -271,6 +277,10 @@ class SolveStage:
         if materials is None:
             materials = MaterialsStage().run(StageInputs(case=inputs.case))
         fields = inputs.upstream.get("charge")
+        # A deposited charge is read only from the stage-7 artefact handed down,
+        # whose hash keys this solve; without one the case is refused naming
+        # stage 7 rather than solved uncharged (WP28 D9).
+        require_charge_artefact(resolved, fields)
         # Read, not gated: the key must be computable without integrating over
         # the mesh, and the gates run in :meth:`run`, on these same grids
         # (section 5.3.2, stage 7).
@@ -341,14 +351,16 @@ class SolveStage:
             resolved, mesh, distance, coordinates=measures.coordinate_names
         )
 
-        fields = ResolvedFields(charge=None, conservation=None, eps_r=None, material_means=())
-        if supplied is not None:
-            report(progress, LOAD_FRACTION, "gating the supplied fields")
-            check_cancelled(cancel, "the supplied fields")
-            # The grids ``_prepare`` already read, gated here rather than read
-            # again: the reference table is 77 MB of text, and two reads are two
-            # chances to key one field and assemble another.
-            fields = gate_fields(resolved, supplied, mesh, measures=measures, cancel=cancel)
+        if supplied is not None or resolved.deposits_charge:
+            report(progress, LOAD_FRACTION, "gating the supplied fields, reading the deposit")
+            check_cancelled(cancel, "the fields")
+        # The grids ``_prepare`` already read, gated here rather than read again:
+        # the reference table is 77 MB of text, and two reads are two chances to
+        # key one field and assemble another. A deposited charge comes from the
+        # stage-7 artefact that keys this solve, and from nowhere else (D9).
+        fields = case_fields(
+            resolved, supplied, fields_artefact, mesh, measures=measures, cancel=cancel
+        )
 
         rungs = ladder(resolved, mesh, measures, distance, fields)
         warm, cold_reason = self._warm(

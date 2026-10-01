@@ -188,11 +188,13 @@ driver would silently rebuild the stage with no workspace and write into the
 store root. A Tier-1 test asserts this set against the constructors themselves.
 """
 
-STORE_STAGES: frozenset[str] = frozenset({"protonation"})
+STORE_STAGES: frozenset[str] = frozenset({"protonation", "charge"})
 """Stages whose constructor takes the run's store, to cache parts of their work in it.
 
 ``protonation`` stores each frame under its own key, so a changed frame
-selection re-protonates only the frames it adds (WP27 D10). Enumerated, and
+selection re-protonates only the frames it adds (WP27 D10); ``charge`` stores its
+export lattice under a key without the mesh, so a mesh-convergence sweep
+re-deposits without re-summing (WP28 D7). Enumerated, and
 asserted against the constructors by a Tier-1 test, for the reason
 :data:`WORKSPACE_STAGES` gives.
 """
@@ -216,7 +218,9 @@ _WEIGHTS: Mapping[str, float] = {
     # About a minute per frame of a ClyA dodecamer, PROPKA included (WP27): when
     # it runs it is most of the walk, and it runs only as a walk's target.
     "protonation": 1.0,
-    "charge": 0.06,
+    # A deposit is seconds per frame of a ClyA dodecamer for the kernel's sum, and
+    # seconds more for the projection and its gates; reading a field is less.
+    "charge": 0.2,
     "materials": 0.01,
     "solve": 0.75,
     "qoi": 0.08,
@@ -433,9 +437,12 @@ class _Walk:
 def selected_stages(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]:
     """Return the stages this case runs, truncated after ``upto``.
 
-    ``charge`` is dropped when the case supplies neither ``inputs.charge`` nor
-    ``inputs.eps_r``: stage 7 refuses such a case as describing no work, and a
-    run with no field to gate has not skipped a gate. ``structure``, ``density``
+    ``protonation`` and ``charge`` run when the case protonates and its model
+    declares ``fixed_charge`` (WP28 D8): both halves of stage 7, and the charge is
+    deposited. ``charge`` otherwise runs only when the case supplies
+    ``inputs.charge`` or ``inputs.eps_r``: stage 7 refuses a case with neither as
+    describing no work, and a run with no field to gate has not skipped a gate.
+    ``protonation`` otherwise runs only as a walk's named target. ``structure``, ``density``
     ``symmetry`` and ``contour`` are dropped when the case carries no ``structure:`` section,
     for the same reason, which covers a case supplying ``inputs.profile``; and
     ``region`` is dropped when the case supplies ``inputs.mesh``, which stage 6
@@ -452,11 +459,12 @@ def selected_stages(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]
         gives it nothing to do.
     """
     supplied = resolved.charge is not None or resolved.eps_r is not None
-    dropped = set() if supplied else {"charge"}
-    if upto != "protonation" or not resolved.protonates:
-        # Until stage 7's deposition reads it (WP28), the protonation artefact
-        # feeds nothing, and a stage nothing reads is not run: it runs only as a
-        # walk's named target, and costs about a minute per frame (WP27 D3).
+    deposits = resolved.deposits_charge
+    dropped = set() if supplied or deposits else {"charge"}
+    if not deposits and (upto != "protonation" or not resolved.protonates):
+        # A protonation no deposition reads feeds nothing, and a stage nothing
+        # reads is not run: it runs only as a walk's named target, and costs about
+        # a minute per frame (WP27 D3, WP28 D8).
         dropped.add("protonation")
     if resolved.structure is None:
         dropped.update(STRUCTURE_STAGES)
@@ -490,7 +498,8 @@ def selected_stages(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]
     if upto in PIPELINE:
         raise UnknownStageError(
             f"stage {upto!r} is registered but case {resolved.name!r} supplies neither "
-            "inputs.charge nor inputs.eps_r, so there is nothing for it to read"
+            "inputs.charge nor inputs.eps_r and deposits no charge, so there is nothing for it "
+            "to read"
         )
     raise UnknownStageError(f"no stage {upto!r} in the pipeline; it walks {', '.join(stages)}")
 
@@ -790,6 +799,7 @@ def _manifest(walk: _Walk, *, case_text: str, case_path: Path | None) -> Manifes
         contour=_record(contour, CONTOUR_RECORD_KEYS),
         region=dict(region.summary) if region is not None else None,
         charge=dict(charge.summary) if charge is not None else None,
+        charge_reason=None if charge is not None else _charge_reason(walk),
         protonation=_record(protonation, PROTONATION_RECORD_KEYS),
         protonation_reason=None if protonation is not None else _protonation_reason(walk),
         electrolyte=walk.resolved.electrolyte,
@@ -807,16 +817,35 @@ def _manifest(walk: _Walk, *, case_text: str, case_path: Path | None) -> Manifes
 
 
 def _protonation_reason(walk: _Walk) -> str:
-    """Return why the ``protonation`` stage did not run in this walk (WP27 D3)."""
-    if not walk.resolved.protonates:
+    """Return why the ``protonation`` stage did not run in this walk (WP27 D3, WP28 D8)."""
+    resolved = walk.resolved
+    if not resolved.protonates:
         return (
             "this case supplies inputs.charge, which replaces what stage 7 makes of a protonation"
-            if walk.resolved.charge is not None
+            if resolved.charge is not None
             else "this case carries no structure: section and supplies no inputs.pqr"
         )
+    if not resolved.deposits_charge:
+        return (
+            f"physics.model {resolved.model!r} declares no fixed_charge, so nothing deposits a "
+            "protonation; it runs only when a walk names it, as `nanopnp stage protonation`"
+        )
+    return "the walk stopped before stage 7"
+
+
+def _charge_reason(walk: _Walk) -> str:
+    """Return why stage 7 did not run in this walk (WP28 D8)."""
+    resolved = walk.resolved
+    if resolved.deposits_charge or resolved.charge is not None or resolved.eps_r is not None:
+        return "the walk stopped before stage 7"
+    if resolved.protonates:
+        return (
+            f"physics.model {resolved.model!r} declares no fixed_charge, so stage 7 deposits "
+            "nothing, and the case supplies neither inputs.charge nor inputs.eps_r"
+        )
     return (
-        "the protonation stage runs only when a walk names it, as `nanopnp stage protonation`, "
-        "until stage 7's deposition reads its artefact (WP27 D3)"
+        "this run supplied neither inputs.charge nor inputs.eps_r and carries no structure: "
+        "section and no inputs.pqr, so stage 7 had nothing to deposit or read"
     )
 
 

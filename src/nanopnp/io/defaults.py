@@ -77,6 +77,9 @@ SWITCH_PATHS: tuple[str, ...] = (
     # condition of the experiment, as concentration_M is, and is not here.
     "charge.titration",
     "charge.forcefield",
+    # PHY-16 step 4: w_i = 0.5 R_i. A float, classified by hand (section 5.3.1
+    # NOTE on charge.smearing, WP28 D10).
+    "charge.smearing.sharpness",
     # NUM-11, NUM-16, NUM-18, PHY-02, CON-11.
     "numerics.stabilisation",
     "numerics.continuation",
@@ -138,6 +141,12 @@ CONFIGURATION_PATHS: dict[str, str] = {
         "group (section 5.3.1 NOTE on geometry.contour), so it is geometry input rather than "
         "a model switch"
     ),
+    "charge.smearing.grid_spacing_nm": (
+        "the export lattice's spacing, on which stage 7 sums the kernel and takes the deposit's "
+        "integrals; a discretisation choice recorded with the artefact, as "
+        "numerics.mesh.size_scale is, and refused above half the narrowest kernel width "
+        "(section 5.3.1 NOTE on charge.smearing)"
+    ),
     "geometry.analyte.shape": (
         "the analyte body of stage 5, WP21; a structure: case's walk is refused before stage 5, "
         "so nothing reads it yet, and a supplied mesh carries its analyte already"
@@ -184,6 +193,7 @@ _VALIDATED_DEFAULTS: dict[str, Any] = {
     "charge": {
         "titration": "propka",
         "forcefield": "CHARMM",
+        "smearing": {"sharpness": 0.5},
         "exclusion_offset_nm": 0.0,
         "dielectric_transition_nm": 0.0,
     },

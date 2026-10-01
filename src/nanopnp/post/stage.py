@@ -39,7 +39,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from nanopnp.charge.stage import ResolvedFields, read_fields
+from nanopnp.charge.stage import fixed_charge_density, read_fields
 from nanopnp.core.paths import store_root
 from nanopnp.core.stages import (
     CancelToken,
@@ -67,7 +67,6 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     from collections.abc import Mapping
 
     from nanopnp.core.hashing import Canonicalisable
-    from nanopnp.core.typing import Expression
     from nanopnp.io.case import ResolvedCase
     from nanopnp.mesh.adapter import MeshData
     from nanopnp.physics.models import ModelSolution
@@ -455,7 +454,10 @@ class QoIStage:
                 "from a summary alone"
             )
         solution = restore(
-            Path(state_path), case=inputs.case, mesh_artefact=inputs.upstream.get("mesh")
+            Path(state_path),
+            case=inputs.case,
+            mesh_artefact=inputs.upstream.get("mesh"),
+            charge_artefact=inputs.upstream.get("charge"),
         )
         order = int(prepared.resolved.model_options.get("order", AXISYMMETRIC.element_order))
         measures = replace(AXISYMMETRIC, element_order=order)
@@ -688,6 +690,7 @@ class ReportStage:
             case=inputs.case,
             mesh_artefact=inputs.upstream.get("mesh"),
             fields=supplied,
+            charge_artefact=inputs.upstream.get("charge"),
         )
         # Any model: every one reports its NUM-09 scale set and the permittivity
         # its solve used, or none, through the section 5.4.3 interface (WP26 D15).
@@ -698,7 +701,11 @@ class ReportStage:
             directory,
             scales=model.scales,
             relative_permittivity=model.relative_permittivity(restored),
-            fixed_charge_C_m3=_fixed_charge(supplied),
+            # Through stage 7's one loader: the deposit for a producer case,
+            # the supplied interpolant otherwise, and nothing for neither (D9).
+            fixed_charge_C_m3=fixed_charge_density(
+                resolved, supplied, inputs.upstream.get("charge"), restored.space.mesh
+            ),
         )
         payload = {path.name: path for path in export.paths()}
         record: dict[str, Canonicalisable] = {
@@ -717,16 +724,3 @@ class ReportStage:
             directory = Path(tempfile.mkdtemp(prefix=f"{safe}-fields-", dir=root))
         directory.mkdir(parents=True, exist_ok=True)
         return directory
-
-
-def _fixed_charge(fields: ResolvedFields | None) -> Expression | None:
-    """Return the supplied fixed-charge volume density, or ``None`` if there was none.
-
-    A run that supplied no ``inputs.charge`` writes no ``rho_fixed_C_m3``
-    attribute at all. "There was no charge field" and "there was one and it was
-    zero" are different runs, and a colour map of a zero field says the second.
-    """
-    if fields is None or fields.charge is None:
-        return None
-    density: Expression = fields.charge.volume_density_C_m3()
-    return density

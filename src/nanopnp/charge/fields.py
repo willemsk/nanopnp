@@ -57,6 +57,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
     import numpy as np
 
+    from nanopnp.charge.kernel import SourceAtoms
     from nanopnp.core.scaling import Scales
     from nanopnp.physics.measures import Measures
 
@@ -153,6 +154,15 @@ stays far below the ~14 nm over which the cumulative varies.
 
 DEFAULT_PLANE_COUNT = 12
 """Planes the per-``z`` cumulative is evaluated at when a caller names none."""
+
+PLANE_SMOOTHING_NM = 0.5
+"""``s`` of the producer path's per-plane weight ``1/2 erfc((z - p)/s)``, in nm (WP28 D6).
+
+The consumer path keeps its 0.2 nm ramp. A polynomial of the deposit's order
+approximates this smooth weight to about ``0.064 h^3 |W'''|`` on an element of
+size ``h``, 6e-4 on ClyA's 0.1 nm protein elements, where the ramp's kinks leave
+``h/(16 s) = 0.03`` (§4.4 NOTE on the producer path).
+"""
 
 
 class FieldDocumentError(ValueError):
@@ -895,6 +905,261 @@ def conservation(
         mesh_cumulative_C=field.mesh_cumulative_C(mesh, measures, planes, ramp_nm=ramp_nm),
         ramp_nm=ramp_nm,
     )
+
+
+@dataclass(frozen=True)
+class DepositConservation:
+    """PHY-19's assertion for a deposited charge: two legs, and every plane against the atoms.
+
+    The producer path of the §4.4 NOTE (WP28 D6). The producer leg compares the
+    lattice's trapezoid integral with ``Q_net``, the frames' mean of ``sum q_i``;
+    the consumer leg the deployed field, integrated at the solve's order, with the
+    lattice. Both are exact by construction, so they guard the construction. The
+    per-plane check is the discriminating one, and its reference is **the source
+    atoms** in closed form, under ``1/2 erfc((z - p)/s)``: the lattice and the
+    deployed field are each gated against them.
+
+    Parameters
+    ----------
+    q_net_C, q_grid_C, q_mesh_C, q_mesh_refined_C
+        ``Q_net``; the lattice's planar integral; the deployed field's integral at
+        the solve's order and :data:`QUADRATURE_REFINEMENT` orders above it.
+    guard_deficit_C
+        The charge PHY-18's axis guard would delete if the exported lattice were
+        re-read through ``inputs.charge``: recorded, not gated.
+    ring, interior_maximum
+        The lattice's boundary ring and its interior maximum, in C m^-2.
+    planes_nm, smoothing_nm
+        The planes and the ``s`` of their weight.
+    source_cumulative_C, grid_cumulative_C, mesh_cumulative_C
+        Each plane's charge under the weight: the atoms, the lattice, the mesh.
+    """
+
+    q_net_C: float
+    q_grid_C: float
+    q_mesh_C: float
+    q_mesh_refined_C: float
+    guard_deficit_C: float
+    ring: RingMaximum
+    interior_maximum: float
+    planes_nm: tuple[float, ...]
+    smoothing_nm: float
+    source_cumulative_C: tuple[float, ...]
+    grid_cumulative_C: tuple[float, ...]
+    mesh_cumulative_C: tuple[float, ...]
+
+    @property
+    def reference_C(self) -> float:
+        """``|Q_net|``: every relative error here is taken against it."""
+        return abs(self.q_net_C)
+
+    @property
+    def producer_error(self) -> float:
+        """``(Q_grid - Q_net) / |Q_net|``: the kernel and its renormalisation."""
+        return _relative(self.q_grid_C - self.q_net_C, abs(self.q_net_C))
+
+    @property
+    def consumer_error(self) -> float:
+        """``(Q_mesh - Q_grid) / |Q_grid|``: the projection and the mesh's coverage."""
+        return _relative(self.q_mesh_C - self.q_grid_C, abs(self.q_grid_C))
+
+    @property
+    def quadrature_error(self) -> float:
+        """``|Q_mesh(order) - Q_mesh(order + 3)| / |Q_net|``."""
+        return _relative(abs(self.q_mesh_C - self.q_mesh_refined_C), self.reference_C)
+
+    @property
+    def ring_ratio(self) -> float:
+        """The lattice's boundary ring against its interior maximum."""
+        return self.ring.value / self.interior_maximum if self.interior_maximum else 0.0
+
+    def worst_plane(self, side: str) -> tuple[float, float]:
+        """Return the plane where ``side`` (``grid`` or ``mesh``) is furthest from the atoms.
+
+        A NaN ranks above every number, as in :attr:`ConservationReport.worst_plane`.
+        """
+        values = self.grid_cumulative_C if side == "grid" else self.mesh_cumulative_C
+        if not self.planes_nm:
+            return (float("nan"), 0.0)
+        errors = [
+            (_relative(abs(found - source), self.reference_C), plane)
+            for plane, source, found in zip(
+                self.planes_nm, self.source_cumulative_C, values, strict=True
+            )
+        ]
+        error, plane = max(errors, key=lambda item: math.inf if math.isnan(item[0]) else item[0])
+        return (plane, error)
+
+    def summary(self) -> dict[str, object]:
+        """Return the manifest's record of this check (FR-25, §5.3.3)."""
+        grid_plane, grid_error = self.worst_plane("grid")
+        mesh_plane, mesh_error = self.worst_plane("mesh")
+        return {
+            "q_net_e": self.q_net_C / ELEMENTARY_CHARGE,
+            "q_grid_e": self.q_grid_C / ELEMENTARY_CHARGE,
+            "q_mesh_e": self.q_mesh_C / ELEMENTARY_CHARGE,
+            "producer": {"relative_error": self.producer_error, "tolerance": CONSERVATION_TOL},
+            "consumer": {"relative_error": self.consumer_error, "tolerance": CONSERVATION_TOL},
+            "quadrature_agreement": {
+                "relative_error": self.quadrature_error,
+                "tolerance": QUADRATURE_TOL,
+            },
+            "axis_guard_deficit_e": self.guard_deficit_C / ELEMENTARY_CHARGE,
+            "boundary_ring": {**self.ring.summary(), "ratio": self.ring_ratio},
+            "per_plane": {
+                "reference": "source atoms, in closed form",
+                "weight": "1/2 erfc((z - p)/s)",
+                "smoothing_nm": self.smoothing_nm,
+                "count": len(self.planes_nm),
+                "planes_nm": list(self.planes_nm),
+                "grid_worst_plane_z_nm": grid_plane,
+                "grid_worst_relative_error": grid_error,
+                "mesh_worst_plane_z_nm": mesh_plane,
+                "mesh_worst_relative_error": mesh_error,
+                "tolerance": CONSERVATION_TOL,
+            },
+            "interpolation": "deposited",
+        }
+
+
+def deposit_conservation(
+    atoms: SourceAtoms,
+    grid: RadialGrid,
+    density_C_m3: Expression,
+    mesh: Mesh,
+    measures: Measures,
+    *,
+    planes_nm: Sequence[float] | None = None,
+    smoothing_nm: float | None = None,
+) -> DepositConservation:
+    """Measure PHY-19's assertion for a deposited charge, without gating it (D6).
+
+    Parameters
+    ----------
+    atoms
+        The source atoms, in the model frame: ``Q_net`` and the per-plane
+        reference.
+    grid
+        The export lattice, areal density in C m^-2.
+    density_C_m3
+        The deployed field, as the solve will assemble it.
+    mesh, measures
+        The deployed mesh and the solve's quadrature policy.
+    planes_nm, smoothing_nm
+        The planes, by default :data:`~nanopnp.charge.kernel.PLANE_COUNT` across
+        the atoms' z-extent, and ``s``, by default :data:`PLANE_SMOOTHING_NM`.
+    """
+    import ngsolve as ngs
+    import numpy as np
+    from scipy.special import erfc
+
+    smoothing = PLANE_SMOOTHING_NM if smoothing_nm is None else smoothing_nm
+    planes = tuple(planes_nm) if planes_nm is not None else atoms.planes_nm()
+
+    def mesh_charge(integrand: Expression, *, extra: int = 0, what: str) -> float:
+        return (
+            2.0
+            * math.pi
+            * 1e-27
+            * measures.integrate(integrand, mesh, extra_order=extra, what=what)
+        )
+
+    mesh_cumulative = tuple(
+        mesh_charge(
+            density_C_m3 * 0.5 * (1.0 - ngs.erf((ngs.y - plane) / smoothing)),
+            what=f"the deposited charge below z = {plane:g} nm",
+        )
+        for plane in planes
+    )
+    return DepositConservation(
+        q_net_C=atoms.q_net_e() * ELEMENTARY_CHARGE,
+        q_grid_C=grid.planar_integral(),
+        q_mesh_C=mesh_charge(density_C_m3, what="the deposited fixed charge"),
+        q_mesh_refined_C=mesh_charge(
+            density_C_m3,
+            extra=measures.bonus_order() + QUADRATURE_REFINEMENT,
+            what="the deposited fixed charge, refined",
+        ),
+        guard_deficit_C=grid.integral(
+            weights={"r": grid.truncated_weights("r", DEFAULT_AXIS_CUTOFF_NM)}
+        ),
+        ring=grid.boundary_ring_maximum(),
+        interior_maximum=grid.interior_maximum(),
+        planes_nm=planes,
+        smoothing_nm=smoothing,
+        source_cumulative_C=tuple(
+            value * ELEMENTARY_CHARGE
+            for value in atoms.cumulative_e(planes, smoothing_nm=smoothing)
+        ),
+        grid_cumulative_C=tuple(
+            grid.integral(z_weight=0.5 * erfc((np.asarray(grid.z_nm) - plane) / smoothing))
+            for plane in planes
+        ),
+        mesh_cumulative_C=mesh_cumulative,
+    )
+
+
+def check_deposit_conservation(report: DepositConservation) -> DepositConservation:
+    """Gate a deposit's conservation report, aborting on the first failure (D6, QR-12).
+
+    The order of :func:`check_conservation`: truncation and quadrature first,
+    because each explains a conservation failure; then the producer leg, the
+    consumer leg, and every plane, the lattice before the mesh, so that a failure
+    names the side of the interface it belongs to. Every comparison fails on NaN.
+
+    Raises
+    ------
+    ChargeFieldError
+        Naming the gate, the quantity and, where there is one, its location.
+    """
+    if report.reference_C == 0.0:
+        raise ChargeFieldError(
+            "the protonation artefact carries no net charge",
+            "every leg of this check is relative to |Q_net|, which is zero, so no tolerance "
+            "means anything (QR-03)",
+        )
+    if not report.ring_ratio <= RING_TOL:
+        raise ChargeFieldError(
+            "the export lattice is truncated",
+            f"its boundary ring reaches {report.ring_ratio:.3g} of its interior maximum against "
+            f"{RING_TOL:g}; the lattice must extend 6 w beyond every atom (PHY-16 step 6)",
+            f"(r, z) = ({report.ring.r_nm:.4g}, {report.ring.z_nm:.4g}) nm",
+        )
+    if not report.quadrature_error <= QUADRATURE_TOL:
+        raise ChargeFieldError(
+            "the deposited field's integral depends on the quadrature order",
+            f"it moves by {report.quadrature_error:.3g} of Q_net between the solve's order and "
+            f"three orders above it, against {QUADRATURE_TOL:g}",
+        )
+    if not abs(report.producer_error) <= CONSERVATION_TOL:
+        raise ChargeFieldError(
+            "the export lattice does not carry Q_net (producer leg, QR-03)",
+            f"it integrates to {report.q_grid_C / ELEMENTARY_CHARGE:.9g} e against Q_net "
+            f"{report.q_net_C / ELEMENTARY_CHARGE:.9g} e, a relative error of "
+            f"{report.producer_error:.3g} against {CONSERVATION_TOL:g}. This leg is the "
+            "kernel's: its per-atom renormalisation and its patches",
+        )
+    if not abs(report.consumer_error) <= CONSERVATION_TOL:
+        raise ChargeFieldError(
+            "the deposited charge is not conserved on the deployed mesh (consumer leg, QR-03)",
+            f"the mesh carries {report.q_mesh_C / ELEMENTARY_CHARGE:.9g} e against the lattice's "
+            f"{report.q_grid_C / ELEMENTARY_CHARGE:.9g} e, a relative error of "
+            f"{report.consumer_error:.3g} against {CONSERVATION_TOL:g}. This leg is the "
+            "projection's: its r weight and the mesh's coverage of the lattice",
+        )
+    for side, what in (("grid", "the export lattice"), ("mesh", "the deployed field")):
+        plane, error = report.worst_plane(side)
+        if not error <= CONSERVATION_TOL:
+            raise ChargeFieldError(
+                f"the cumulative charge of {what} disagrees with the source atoms at a z plane "
+                "(PHY-19)",
+                f"{what} carries {error:.3g} of |Q_net| more or less than the atoms below this "
+                f"plane, under 1/2 erfc((z - p)/{report.smoothing_nm:g} nm), against "
+                f"{CONSERVATION_TOL:g}. A globally conserved charge can hide a compensating "
+                "Jacobian error, which is what this check is for",
+                f"z = {plane:.4g} nm",
+            )
+    return report
 
 
 def check_conservation(report: ConservationReport) -> ConservationReport:

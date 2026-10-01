@@ -591,20 +591,31 @@ def _pqr_case(case_file: Path, tmp_path: Path) -> Path:
     return path
 
 
-def test_ver57_protonation_runs_only_as_a_walks_target(case_file: Path, tmp_path: Path) -> None:
-    """WP27 D3: no walk reaches the stage unless it names it, and then it ends there.
+def test_ver57_protonation_runs_before_the_deposit_it_feeds(
+    case_file: Path, tmp_path: Path
+) -> None:
+    """WP28 D8, retiring WP27 D3: both halves of stage 7 run before the materials.
 
-    The stage sits after ``mesh`` and before ``charge`` (D2); until stage 7's
-    deposition reads its artefact, a walk that does not name it records it not
-    run, and a case with nothing to protonate refuses it naming why.
+    A case that protonates, under a model declaring ``fixed_charge``, deposits.
+    The stage still sits after ``mesh`` and before ``charge`` (WP27 D2); a walk
+    may still end there; and a case with nothing to protonate still refuses it
+    naming why.
     """
     from nanopnp.io.run import UnknownStageError, selected_stages
 
     supplied = resolve(loads_case(_pqr_case(case_file, tmp_path).read_text(encoding="utf-8")))
-    assert "protonation" not in selected_stages(supplied, None)
-    assert "protonation" not in selected_stages(supplied, "materials")
+    assert supplied.deposits_charge
+    assert selected_stages(supplied, "materials") == (
+        "case",
+        "mesh",
+        "protonation",
+        "charge",
+        "materials",
+    )
     assert selected_stages(supplied, "protonation") == ("case", "mesh", "protonation")
     bare = resolve(loads_case(case_file.read_text(encoding="utf-8")))
+    assert "protonation" not in selected_stages(bare, None)
+    assert "charge" not in selected_stages(bare, None)
     with pytest.raises(UnknownStageError, match="nothing for it to protonate"):
         selected_stages(bare, "protonation")
 
@@ -615,13 +626,15 @@ def test_ver57_a_walk_to_protonation_records_it_in_the_charge_group(
     """``inputs.pqr`` walked to the stage: the Charge group carries ``Q_net`` and the file.
 
     A walk to ``mesh`` records the stage not run with the reason, which is a
-    different fact from a stage that ran (WP27 D16).
+    different fact from a stage that ran (WP27 D16); so does stage 7, which a
+    walk stopped short of it did not reach (WP28 D8).
     """
     case = _pqr_case(case_file, tmp_path)
     store = Store(tmp_path / "store")
     result = run_case(case, store=store, upto="protonation", write=False)
     group = result.manifest.charge
     assert group["status"] == "not run"
+    assert "stopped before stage 7" in str(group["reason"])
     record = group["protonation"]
     assert isinstance(record, dict)
     assert record["q_net_e"] == [-1]
@@ -632,4 +645,4 @@ def test_ver57_a_walk_to_protonation_records_it_in_the_charge_group(
     skipped = truncated.manifest.charge["protonation"]
     assert isinstance(skipped, dict)
     assert skipped["status"] == "not run"
-    assert "names it" in str(skipped["reason"])
+    assert "stopped before stage 7" in str(skipped["reason"])
