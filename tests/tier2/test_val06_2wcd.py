@@ -52,6 +52,7 @@ from nanopnp.validation.apbs import (
     face_map_3d,
     fit_grid,
     gated_leg,
+    potential_sampler,
     raster_extent,
     raster_from_mesh,
     recorded_leg,
@@ -104,19 +105,7 @@ class Solved:
 
     def sampler(self) -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
         """Return the potential in ``kT/e`` at ``(r, z)`` arrays, through a whole-domain carrier."""
-        from nanopnp.io.fields import sample_at
-        from nanopnp.physics.models import POTENTIAL
-
-        mesh = self.solution.space.mesh
-        field = self.solution.component(POTENTIAL)
-        order = self.order
-        carriers: dict[tuple[int, int], object] = {}
-
-        def sample(r_nm: np.ndarray, z_nm: np.ndarray) -> np.ndarray:
-            points = np.stack([np.asarray(r_nm), np.asarray(z_nm)], axis=1)
-            return sample_at(mesh, field, points, order=order, carriers=carriers)[:, 0]  # type: ignore[arg-type]
-
-        return sample
+        return potential_sampler(self.solution, order=self.order)
 
 
 @dataclass(frozen=True)

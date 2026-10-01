@@ -54,6 +54,7 @@ from nanopnp.validation.apbs import (
     face_map,
     fit_grid,
     norms,
+    potential_sampler,
     probe_set,
     raster_extent,
     raster_from_mesh,
@@ -260,15 +261,6 @@ class Ring:
     elements: int
 
 
-def _sampler(mesh: object, values: object) -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
-    """Return a function evaluating an NGSolve field at ``(r, z)`` arrays."""
-
-    def sample(r_nm: np.ndarray, z_nm: np.ndarray) -> np.ndarray:
-        return np.asarray(values(mesh(r_nm, z_nm))).reshape(-1)  # type: ignore[operator]
-
-    return sample
-
-
 @pytest.fixture(scope="module")
 def ring() -> Ring:
     """Deposit and solve the ring at ``P2``, raster the solve and build APBS's maps at 0.1 nm."""
@@ -324,7 +316,7 @@ def ring() -> Ring:
     return Ring(
         series=series,
         lattice=lattice,
-        ours=_sampler(mesh, solution.state),
+        ours=potential_sampler(solution, order=2),
         raster=raster,
         grid=grid,
         probes=probes,

@@ -35,6 +35,7 @@ from __future__ import annotations
 
 import logging
 import math
+import platform
 import re
 import subprocess
 import sys
@@ -47,13 +48,16 @@ from typing import TYPE_CHECKING, Literal
 from pydantic import BaseModel, ConfigDict
 
 from nanopnp.core.constants import ELEMENTARY_CHARGE
+from nanopnp.io.fields import sample_at
+from nanopnp.physics.models import POTENTIAL
 
 if TYPE_CHECKING:
     import numpy as np
     from scipy.sparse import csc_matrix, csr_matrix
 
-    from nanopnp.core.typing import Expression, Mesh
+    from nanopnp.core.typing import Expression, FESpace, Mesh
     from nanopnp.density.grid import RadialGrid
+    from nanopnp.physics.models import ModelSolution
 
 __all__ = [
     "APBS_GROUP",
@@ -86,6 +90,7 @@ __all__ = [
     "impose_materials",
     "lattice_charges",
     "norms",
+    "potential_sampler",
     "probe_set",
     "raster_from_mesh",
     "read_dx",
@@ -182,16 +187,19 @@ def apbs_available() -> str | None:
     """Return why APBS cannot run here, or ``None`` if it can.
 
     The ``apbs-binary`` wheel exists for Linux x86_64 and macOS only (WP29 D11), so
-    a Windows checkout reports the absent wheel, and a covered platform without
-    the group reports the missing group.
+    any other platform (Windows, or Linux on ARM) reports the absent wheel, and a
+    covered platform without the group reports the missing group.
     """
     try:
         import apbs_binary
     except ImportError:
-        if sys.platform == "win32":
+        covered = sys.platform == "darwin" or (
+            sys.platform == "linux" and platform.machine() == "x86_64"
+        )
+        if not covered:
             return (
-                "apbs-binary publishes no Windows wheel, so APBS cannot run here (WP29 D11); "
-                "VAL-06 runs on the Linux and macOS legs"
+                f"apbs-binary publishes no wheel for {sys.platform} {platform.machine()}, so APBS "
+                "cannot run here (WP29 D11); VAL-06 runs on Linux x86_64 and macOS"
             )
         return (
             f"apbs-binary does not import; install the {APBS_GROUP!r} dependency group "
@@ -544,7 +552,9 @@ class MaterialRaster:
     materials: tuple[str, ...]
     fluid: frozenset[str]
     solids: frozenset[str]
-    _distance: list[np.ndarray] = field(default_factory=list, repr=False, compare=False)
+    # Not an init field, so ``dataclasses.replace`` starts a copy with an empty cache
+    # rather than handing it the distance transform of the materials it replaced.
+    _distance: list[np.ndarray] = field(default_factory=list, init=False, repr=False, compare=False)
 
     def r_index(self, r_nm: np.ndarray) -> np.ndarray:
         """Return the column of the cells holding radii ``r_nm``.
@@ -766,6 +776,27 @@ Sampler = Callable[["np.ndarray", "np.ndarray"], "np.ndarray"]
 """A potential in ``kT/e`` at arrays of ``r`` and ``z`` in nm: ours, or a closed form."""
 
 
+def potential_sampler(solution: ModelSolution, *, order: int) -> Sampler:
+    """Return our solution's potential as a :data:`Sampler`, read through ``sample_at`` (D6).
+
+    The one way a VAL-06 test reads our side: through a whole-domain carrier of
+    ``order`` (:func:`~nanopnp.io.fields.sample_at`), which is right on an interface
+    node where evaluating a restricted space directly is not. The carriers are
+    built once and reused by every call.
+    """
+    import numpy as np
+
+    mesh = solution.space.mesh
+    field = solution.component(POTENTIAL)
+    carriers: dict[tuple[int, int], FESpace] = {}
+
+    def sample(r_nm: np.ndarray, z_nm: np.ndarray) -> np.ndarray:
+        points = np.stack([np.asarray(r_nm), np.asarray(z_nm)], axis=1)
+        return np.asarray(sample_at(mesh, field, points, order=order, carriers=carriers)[:, 0])
+
+    return sample
+
+
 def face_map(grid: CubicGrid, potential: Sampler) -> np.ndarray:
     """Return a potential map, ``[ix, iy, iz]`` in ``kT/e``, carrying ``potential`` on the faces.
 
@@ -862,11 +893,20 @@ def read_dx(path: Path) -> tuple[np.ndarray, tuple[float, float, float], float]:
 
     Raises
     ------
+    ApbsError
+        If GridDataFormats, which is behind the ``structure`` extra, is not installed.
     ValueError
         If the map's spacing is not the same along the three axes.
     """
     import numpy as np
-    from gridData import Grid
+
+    try:
+        from gridData import Grid
+    except ImportError as error:
+        raise ApbsError(
+            f"reading the OpenDX map {path} needs GridDataFormats, which is behind the "
+            "'structure' extra: install it with `uv sync --all-extras`"
+        ) from error
 
     grid = Grid(str(path))
     delta = np.asarray(grid.delta, dtype=np.float64)
@@ -987,11 +1027,10 @@ def _deck(problem: ApbsProblem, molecule: str) -> str:
         keywords += ["bcfl map", "usemap pot 1"]
     else:
         keywords.append("bcfl zero")
-    surface = problem.surface
-    pdie = surface.pdie if surface is not None else problem.sdie
-    srad = surface.srad_nm if surface is not None else 0.14
-    swin = surface.swin_nm if surface is not None else 0.03
-    sdens = surface.sdens if surface is not None else 10.0
+    # Without a surface every input is a map, and the surface keywords take
+    # SmolSurface's own defaults, with the solvent's value as pdie.
+    surface = problem.surface or SmolSurface(pqr=Path(molecule), pdie=problem.sdie)
+    pdie, srad, swin, sdens = surface.pdie, surface.srad_nm, surface.swin_nm, surface.sdens
     h = grid.spacing_nm * NM_TO_ANGSTROM
     centre = " ".join(f"{value * NM_TO_ANGSTROM:.10f}" for value in grid.centre_nm)
     writes = ["write pot dx potential"]
@@ -1130,6 +1169,11 @@ def run_apbs(
     deck = write_inputs(problem, workspace / name)
     directory = deck.parent
     log = directory / "apbs.log"
+    output = directory / "potential.dx"
+    # A map an earlier run left here (kept, or abandoned by a failure) must not be
+    # read back as this run's: the check below is for the file APBS writes now.
+    for stale in (output, *(directory / f"apbs_diel{axis}.dx" for axis in "xyz")):
+        stale.unlink(missing_ok=True)
     started = time.perf_counter()
     with log.open("w", encoding="utf-8") as stream:
         process = apbs_binary.popen_apbs(
@@ -1137,7 +1181,6 @@ def run_apbs(
         )
         code = _wait(process, timeout_s=timeout_s, name=name, log=log)
     seconds = time.perf_counter() - started
-    output = directory / "potential.dx"
     if code != 0 or not output.is_file():
         tail = "\n".join(log.read_text(encoding="utf-8", errors="replace").splitlines()[-20:])
         raise ApbsError(
@@ -1145,10 +1188,13 @@ def run_apbs(
             f"{'wrote' if output.is_file() else 'wrote no'} potential; the end of {log}:\n{tail}"
         )
     potential, found_origin, spacing = read_dx(output)
+    # APBS writes the header's origin and delta at %12.6e, seven significant
+    # figures, so a grid whose numbers carry more is read back rounded to 5e-7
+    # relative (`.knowledge/07` section 3); a shift that matters is a fraction of h.
     if (
         potential.shape != (grid.dime,) * 3
-        or not np.allclose(found_origin, origin, atol=1e-6)
-        or not math.isclose(spacing, grid.spacing_nm, rel_tol=1e-9)
+        or not np.allclose(found_origin, origin, rtol=1e-6, atol=1e-4 * grid.spacing_nm)
+        or not math.isclose(spacing, grid.spacing_nm, rel_tol=1e-6)
     ):
         raise ValueError(
             f"APBS run {name!r} wrote a {potential.shape} map from {found_origin} nm at "
@@ -1243,13 +1289,21 @@ def probe_set(
     distance transform of the raster, and at least ``face_margin_nm`` inside every
     face. The probes on ``r = 0`` are a named subset.
 
+    ``stride`` is even, so that every probe is also a node of the nested ``2h``
+    grid (:meth:`CubicGrid.coarsened`) that ``ProbeSet.coarse`` indexes.
+
     Raises
     ------
     ValueError
-        If no node qualifies.
+        If ``stride`` is not a positive even number, or if no node qualifies.
     """
     import numpy as np
 
+    if stride <= 0 or stride % 2:
+        raise ValueError(
+            f"a probe stride of {stride} does not land every probe on the nested 2h grid; "
+            "it must be a positive even number"
+        )
     index = np.indices(((grid.dime - 1) // stride + 1,) * 3).reshape(3, -1).T * stride
     points = np.asarray(grid.origin_nm) + grid.spacing_nm * index
     lower = np.asarray(grid.origin_nm) + face_margin_nm
@@ -1266,7 +1320,7 @@ def probe_set(
     index, points, r = index[keep], points[keep], r[keep]
     return ProbeSet(
         fine=index,
-        coarse=index // stride,
+        coarse=index // 2,
         points_nm=points,
         axis=r <= 1e-9,
     )
@@ -1295,9 +1349,15 @@ class Norms(BaseModel):
         return Norms(max=self.max * factor, rms=self.rms * factor, axis=self.axis * factor)
 
     def exceeding(self, limit: Norms) -> list[str]:
-        """Return the names of the norms above ``limit``'s, in the order max, rms, axis."""
+        """Return the names of the norms above ``limit``'s, in the order max, rms, axis.
+
+        A norm that is not a number exceeds every limit: NaN compares false, and a
+        gate that read ``NaN > limit`` as a pass would report one it cannot defend.
+        """
         return [
-            name for name in ("max", "rms", "axis") if getattr(self, name) > getattr(limit, name)
+            name
+            for name in ("max", "rms", "axis")
+            if not getattr(self, name) <= getattr(limit, name)
         ]
 
 
@@ -1315,7 +1375,8 @@ def norms(difference: np.ndarray, reference: np.ndarray, axis: np.ndarray) -> No
     Raises
     ------
     ValueError
-        If no probe lies on the axis, or if either array is not finite.
+        If no probe lies on the axis, if either array is not finite, or if the
+        reference is zero over the probes or the axis, so no norm relative to it exists.
     """
     import numpy as np
 
@@ -1323,6 +1384,11 @@ def norms(difference: np.ndarray, reference: np.ndarray, axis: np.ndarray) -> No
         raise ValueError("a potential at a probe is not finite")
     if not np.any(axis):
         raise ValueError("no probe lies on the axis, so e_axis has nothing to measure")
+    if not (np.any(reference != 0.0) and np.any(reference[axis] != 0.0)):
+        raise ValueError(
+            "the reference potential is zero over every probe or every axis probe, so a norm "
+            "relative to it is undefined"
+        )
     return Norms(
         max=float(np.max(np.abs(difference)) / np.max(np.abs(reference))),
         rms=float(np.sqrt(np.mean(difference**2)) / np.sqrt(np.mean(reference**2))),
@@ -1393,7 +1459,8 @@ def check_report(report: Val06Report, *, tolerance: Norms = TOLERANCE) -> None:
             "wider tolerance (section 7.4 NOTE on VAL-06)"
         )
     floor = VISIBILITY * tolerance.rms
-    if report.charge_visibility < floor:
+    # Written so that a visibility that is not a number fails, as Norms.exceeding does.
+    if not report.charge_visibility >= floor:
         raise Val06Error(
             f"VAL-06's charge moves the probes by {report.charge_visibility:.4%} rms, under "
             f"{VISIBILITY:g} tau_rms = {floor:.2%}: the box faces, not the charge, carry the "
@@ -1491,12 +1558,27 @@ def gated_leg(
     Three APBS solves: ``h``, ``2h``, and ``2h`` with the charge zeroed. Then the
     probes, the budget ``e^_A + e^_F``, the charge visibility and the agreement,
     each relative to our solution at the probes.
+
+    The box and the probes are checked before any APBS run, so a grid that holds the
+    charge less than D3's margin inside a face, or a raster with no probe in it, is
+    refused before the solves rather than after them.
+
+    Raises
+    ------
+    BoxError
+        If ``grid`` does not hold the lattice's charge ``CHARGE_MARGIN_NM`` inside
+        every face (D3), whether or not :func:`fit_grid` made it.
     """
     import numpy as np
 
+    check_box(grid, charge_extent(inputs.lattice))
     seconds: dict[str, float] = {}
     memory: dict[str, float | None] = {}
     coarse = grid.coarsened()
+
+    started = time.perf_counter()
+    probes = probe_set(grid, inputs.raster)
+    probe_seconds = time.perf_counter() - started
 
     started = time.perf_counter()
     fine_problem = gated_problem(inputs, grid)
@@ -1515,7 +1597,6 @@ def gated_leg(
         memory[name] = solved.memory_GB
 
     started = time.perf_counter()
-    probes = probe_set(grid, inputs.raster)
     sampled = {
         "ours": probes.sample(inputs.ours),
         "apbs": probes.at(solutions["apbs"].potential),
@@ -1524,7 +1605,7 @@ def gated_leg(
     }
     if inputs.refined is not None:
         sampled["refined"] = probes.sample(inputs.refined)
-    seconds["probes"] = time.perf_counter() - started
+    seconds["probes"] = probe_seconds + time.perf_counter() - started
 
     ours = sampled["ours"]
     apbs_refinement = norms(sampled["apbs"] - sampled["apbs_coarse"], ours, probes.axis)
@@ -1706,6 +1787,13 @@ def recorded_leg(
     is compared with ours, and the spread is what the azimuthal averaging of CON-04
     removes. Only the probes whose whole ring lies in the box are compared; a
     probe towards a corner of the box has a ring that leaves it.
+
+    Returns
+    -------
+    tuple
+        The report, and the arrays over the compared probes: ``ours``, ``mean``,
+        ``spread``, ``nodes`` and ``axis``, the mask of those on ``r = 0``, so that a
+        caller combining frames needs no second copy of the subset's rule.
     """
     import numpy as np
 
@@ -1767,5 +1855,6 @@ def recorded_leg(
         "ours": ours,
         "mean": mean,
         "spread": spread,
-        "nodes": probes.at(solved.potential),
+        "nodes": nodes,
+        "axis": probes.axis,
     }
