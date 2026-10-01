@@ -38,7 +38,7 @@ PAYLOAD_NAME = "ensemble"
 ATOM_FIELDS: tuple[str, ...] = ("element", "name", "resname", "resid", "icode", "chain")
 """The atom-table arrays the payload carries, in order."""
 
-_CHAIN_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+CHAIN_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 """The single characters a PDB chain column can hold, which is what MDAnalysis's writer accepts."""
 
 ORIENTATION_RULE = (
@@ -213,13 +213,13 @@ class AlignedEnsemble:
         if single:
             chain_ids = self.chain.tolist()
         else:
-            if len(chains) > len(_CHAIN_CHARACTERS):
+            if len(chains) > len(CHAIN_CHARACTERS):
                 raise ValueError(
-                    f"{len(chains)} chains do not fit the {len(_CHAIN_CHARACTERS)} "
+                    f"{len(chains)} chains do not fit the {len(CHAIN_CHARACTERS)} "
                     "single-character chain identifiers of a PDB file, and their keys are "
                     "longer than one character"
                 )
-            chain_ids = [_CHAIN_CHARACTERS[segment_of[str(chain)]] for chain in self.chain]
+            chain_ids = [CHAIN_CHARACTERS[segment_of[str(chain)]] for chain in self.chain]
         universe.add_TopologyAttr("chainIDs", chain_ids)
         universe.add_TopologyAttr("resnames", [str(self.resname[i]) for i in starts])
         universe.add_TopologyAttr("resids", [int(self.resid[i]) for i in starts])
