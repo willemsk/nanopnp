@@ -717,3 +717,27 @@ def test_ver57_a_case_with_nothing_to_protonate_is_refused_by_the_stage(tmp_path
     case = _case(tmp_path, structure=False, mesh=True)
     with pytest.raises(UnsupportedCaseSection, match="no structure: section and supplies no"):
         ProtonationStage().key(StageInputs(case=case))
+
+
+def test_ver57_propka_reads_its_parameters_on_every_supported_python() -> None:
+    """QR-09: PROPKA 3.5.1's parameter dispatch works on 3.11-3.14 once the driver has run.
+
+    On 3.14 an instance has no ``__annotations__`` and PROPKA's ``parse_line``
+    fails on its first line; the driver installs a fallback for that one name.
+    Elsewhere it installs nothing, and on every interpreter the fallback answers
+    no other missing attribute.
+    """
+    from propka.parameters import Parameters
+
+    from nanopnp.charge.protonation import restore_propka_annotations
+
+    needed = not hasattr(Parameters(), "__annotations__")
+    assert restore_propka_annotations() is needed
+    assert restore_propka_annotations() is False
+    parameters = Parameters()
+    parameters.parse_line("version VersionA\n")
+    assert parameters.version == "VersionA"
+    with pytest.raises(AttributeError):
+        parameters.no_such_parameter  # noqa: B018 - the access is the assertion
+    if sys.version_info < (3, 14):
+        assert "__getattr__" not in vars(Parameters)
