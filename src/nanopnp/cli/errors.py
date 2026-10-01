@@ -203,6 +203,14 @@ EXIT_CODES: Final[dict[str, int]] = {
     "nanopnp.validation.geometry:GeometryComparisonError": EXIT_GATE,
     "nanopnp.validation.geometry:MissingPlaneError": EXIT_GATE,
     "nanopnp.validation.geometry:GeometryToleranceError": EXIT_GATE,
+    # VAL-06's refusals (WP29): a box that would cut the charge (named by its
+    # face), an APBS run that is absent, refused, failed or past its time limit
+    # (named, with the end of its log), and a budget, visibility or agreement
+    # outside its tolerance (named by the norm and both numbers). Each stops
+    # the comparison rather than report one it cannot defend (QR-12).
+    "nanopnp.validation.apbs:BoxError": EXIT_GATE,
+    "nanopnp.validation.apbs:ApbsError": EXIT_GATE,
+    "nanopnp.validation.apbs:Val06Error": EXIT_GATE,
     # A run directory that cannot be reopened for comparison. 3 and not 4: the
     # fix is to point at another directory or another store, or to re-run the
     # member, which is the same class as a file the case file named and that is
