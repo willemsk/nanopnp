@@ -495,6 +495,10 @@ cores, on `apbs-binary` 3.4.1.1 from the `apbs` dependency group.
 - **At `h` = 0.1 nm, "e per node" and "e per Å³" are the same number**, because a cell is 1 Å³. A
   charge map left undivided by `h³` is therefore invisible at 0.1 nm. It shows at 0.2 nm as a factor
   of 8, so the ring checks that broken construction on the nested grid.
+- **APBS writes an OpenDX header's `origin` and `delta` at `%12.6e`**, seven significant figures,
+  whatever precision the input maps carried. A 33³ grid at 0.1234567891 nm comes back at
+  0.1234568 nm, so a check that the output matches the problem's grid must allow about 5 × 10⁻⁷
+  relative (the driver allows 10⁻⁶, and 10⁻⁴ `h` on the origin). Found by the WP29 review.
 - **The ring in a grounded dielectric sphere** (`r_b` 1 nm, `z_b` 0.5 nm, `w` 0.1 nm, `a` 2 nm, ε 20
   in `ε_r,f⁰`, `R` 20 nm), with the faces from the series, 65³ at 0.1 nm and about 18,000 fluid
   probes. APBS is within 0.13 % max, 0.027 % rms and 0.13 % on the axis of the series. Our `P2`

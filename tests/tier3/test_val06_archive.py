@@ -33,10 +33,9 @@ from nanopnp.charge.stage import frame_shift_nm
 from nanopnp.core.paths import REFERENCE_DATA_VARIABLE, reference_file
 from nanopnp.density.grid import read_grid
 from nanopnp.io.case import load_case, resolve
-from nanopnp.io.fields import sample_at
 from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
-from nanopnp.physics.models import POTENTIAL, PoissonModel
+from nanopnp.physics.models import PoissonModel
 from nanopnp.solve.state import restore, warm_start_payload
 from nanopnp.validation.apbs import (
     GatedInputs,
@@ -47,6 +46,7 @@ from nanopnp.validation.apbs import (
     fit_grid,
     gated_leg,
     norms,
+    potential_sampler,
     raster_extent,
     raster_from_mesh,
     recorded_leg,
@@ -103,18 +103,6 @@ def _bundle(target: Path) -> Path:
     return target
 
 
-def _sampler(solution: object, order: int) -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
-    mesh = solution.space.mesh  # type: ignore[attr-defined]
-    field = solution.component(POTENTIAL)  # type: ignore[attr-defined]
-    carriers: dict[tuple[int, int], object] = {}
-
-    def sample(r_nm: np.ndarray, z_nm: np.ndarray) -> np.ndarray:
-        points = np.stack([r_nm, z_nm], axis=1)
-        return sample_at(mesh, field, points, order=order, carriers=carriers)[:, 0]  # type: ignore[arg-type]
-
-    return sample
-
-
 def test_val06_the_ensemble_against_apbs_gated_construction_and_per_frame(
     tmp_path_factory: pytest.TempPathFactory,
     ensemble_store: Store,
@@ -163,13 +151,13 @@ def test_val06_the_ensemble_against_apbs_gated_construction_and_per_frame(
         z_min_nm=z_min,
         z_max_nm=z_max,
     )
-    ours = _sampler(solution, 2)
+    ours = potential_sampler(solution, order=2)
     gated = gated_leg(
         GatedInputs(
             lattice=lattice,
             raster=raster,
             ours=ours,
-            refined=_sampler(solved[3][2], 3),
+            refined=potential_sampler(solved[3][2], order=3),
             temperature_K=resolved.temperature_K,
             sdie=resolved.electrolyte.permittivity_0,
             structure="ClyA-AS, the archived PQRs 50-99, frame-averaged",
@@ -217,12 +205,9 @@ def test_val06_the_ensemble_against_apbs_gated_construction_and_per_frame(
         )
         per_frame.append(report.agreement.model_dump())
         means.append(sampled["mean"])
-        reference = sampled["ours"]
+        reference, axis = sampled["ours"], sampled["axis"]
     averaged = np.mean(means, axis=0)
-    axis = np.hypot(*gated.probes.points_nm[:, :2].T) == 0.0
-    reach = min(-grid.origin_nm[0], grid.upper_nm[0])
-    inside = np.hypot(*gated.probes.points_nm[:, :2].T) <= reach
-    found = norms(averaged - reference, reference, axis[inside])
+    found = norms(averaged - reference, reference, axis)
     logger.info(
         "VAL-06 Tier 3, the recorded leg: per frame %s; the frames' mean of APBS's ring means "
         "against ours %s",

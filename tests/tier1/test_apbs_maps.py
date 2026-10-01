@@ -282,6 +282,12 @@ def test_val06_norms_and_the_check_read_the_budget_before_the_agreement() -> Non
         )
 
     check_report(report(small, small))
+    nan = float("nan")
+    assert Norms(max=nan, rms=0.0, axis=0.0).exceeding(TOLERANCE) == ["max"]
+    with pytest.raises(Val06Error, match="charge moves the probes"):
+        check_report(report(small, small, visibility=nan))
+    with pytest.raises(ValueError, match="reference potential is zero"):
+        norms(difference, np.zeros(4), axis)
     wide = Norms(max=0.02, rms=0.001, axis=0.001)
     with pytest.raises(Val06Error, match="refinement budget fails in the max norm"):
         check_report(report(wide, Norms(max=0.5, rms=0.5, axis=0.5)))
