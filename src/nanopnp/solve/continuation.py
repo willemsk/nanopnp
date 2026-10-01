@@ -99,7 +99,9 @@ __all__ = [
     "bias_schedule",
     "default_ladder",
     "mesh_report",
+    "model_reads_wall",
     "ramp_schedule",
+    "reads_wall",
     "run_ladder",
     "transfer",
 ]
@@ -327,6 +329,37 @@ class LadderResult:
             "max_cell_peclet": self.max_cell_peclet,
             "peclet": None if self.peclet is None else self.peclet.summary(),
         }
+
+
+def reads_wall(electrolyte: Electrolyte) -> bool:
+    """Return whether any resolved correction of ``electrolyte`` evaluates ``d``.
+
+    Asked of the corrections rather than of the model name: a run whose wall
+    factors are all off must not pay for a screened-Poisson solve, and must not
+    record a distance field nothing read.
+    """
+    return any(
+        bool(getattr(correction, "use_wall", False))
+        for correction in electrolyte.corrections.values()
+    )
+
+
+def model_reads_wall(model: PhysicsModel) -> bool:
+    """Return whether this *built* model evaluates the PHY-02 distance field.
+
+    The one rule the single rung, the ladder's rungs, ``save`` and ``restore``
+    share. The declaration says whether the model reads ``d`` at all (section
+    5.4.3 NOTE); a transport model then reads it only where one of its own
+    resolved corrections does. Asked of the model, never of the case's
+    electrolyte: ``pnp-ns`` resolves every correction to ``none`` whatever the
+    case gave, so a case-level answer computed, gated and stored a field no
+    term evaluated, and a ladder that never passed one then failed in ``save``.
+    """
+    if not declaration(model.name).wall_distance:
+        return False
+    if not solves_transport(model):
+        return True
+    return reads_wall(transport_model(model).electrolyte)
 
 
 def mesh_report(mesh: Mesh) -> dict[str, Option]:
@@ -1122,11 +1155,7 @@ def default_ladder(
         the manifest over something neither of them computed. Deriving it here
         means a reordered ladder, or another classical rung, cannot get it wrong.
         """
-        reads = any(
-            bool(getattr(correction, "use_wall", False))
-            for correction in transport_model(model).electrolyte.corrections.values()
-        )
-        return {"wall_distance_nm": wall_distance_nm} if reads else {}
+        return {"wall_distance_nm": wall_distance_nm} if model_reads_wall(model) else {}
 
     for stage, label, name, switches in physics_stages:
         model = _coupled(name, switches, flow=True, salt=build_M)

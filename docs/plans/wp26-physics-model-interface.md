@@ -107,12 +107,21 @@ permittivity; §6.5 NOTE; `physics/models.py`.
 > rules, and the schema's default `physics.model` and the validated default case from the literal
 > rule. The test shows each rule and each exemption firing.
 
-> **Outcome — a pre-existing defect, not fixed here.** A `pnp-ns` case that leaves the electrolyte's
-> corrections on (the schema default) is refused at stage 10 *after* solving: the case reads `d` by
-> its electrolyte, but `pnp-ns` forces the classical switches, so no distance field reaches the
-> solution and `save` refuses it. Reproduced on `e58b2bf`; the D17 `pnp-ns` run sets the corrections
-> to `none`. It belongs with the declaration (resolve could refuse it, or `reads_distance` could ask
-> the built model) and is left for review rather than widened into this package.
+> **Outcome — a pre-existing defect, fixed after review.** A `pnp-ns` case that leaves the
+> electrolyte's corrections on (the schema default) was refused at stage 10 *after* solving: the case
+> read `d` by its electrolyte, but `pnp-ns` forces the classical switches, so no distance field
+> reached the solution and `save` refused it. That held on the ladder **and** on a single rung, so no
+> such state was ever stored. Reproduced on `e58b2bf`. The author chose to ask the built model:
+> `solve.continuation.model_reads_wall` is the one rule, and `reads_distance` and every ladder rung
+> call it. Refusing the case at resolve was rejected, because some 15 test cases, and every user case
+> like them, run `pnp-ns` with the default corrections. The quick-start case as `pnp-ns` now runs to
+> stage 12 on the ladder, with `current_A 8.966952004255889e-11`. That is the D17 `pnp-ns` value with
+> corrections `none`, bitwise, as VER-56 asserts.
+>
+> **Outcome — two further review decisions.** The members `poisson`, `pb` and `pb-linear` share
+> verbatim (`species`, `fields`, `scales`, `essential_boundaries`, `space`, `cold_state`) moved to a
+> methods-only base, `_SingleFieldModel`. It has no fields, so no provenance or key moves. The push
+> gate's speed-up (`b8babf2`) stays in this package's PR at the author's choice.
 
 ### Work items
 

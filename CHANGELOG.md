@@ -58,6 +58,15 @@ WP26: the physics-model interface (FR-20, QR-14), the first package of Phase 3.
   NUM-18 ladder, and the coupled models' stage-11 scalars on the quick-start case are unchanged,
   the scalars bit for bit (VER-56).
 
+### Fixed
+
+- A `pnp-ns` case that left its corrections on, the schema default, solved and was then refused at
+  stage 10: whether the distance field is read was asked of the case's electrolyte, which `pnp-ns`
+  overrides to `none`. It is now asked of the model the case builds, the rule each ladder rung
+  already followed, so such a case stores and restores its state, and its results equal the same
+  case with every correction written as `none`, bit for bit. No stored state is affected, because
+  this configuration never stored one.
+
 ## [0.3.0] - 2026-09-30
 
 **Phase 2, the geometry pipeline.** A PDB entry or an MD trajectory becomes a gated mesh by six
