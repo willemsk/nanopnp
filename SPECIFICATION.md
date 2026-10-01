@@ -2966,7 +2966,7 @@ differences are recorded and attributed rather than gated on.
 | **VAL-03** | Reference-solution generation and archival, in Phase 1 | **Not required** (§8.2.4 D6), and not generated in Phase 1 (§8.2.3 C1); the harness ingests and refuses as below whenever a set arrives. Full reference set for the frozen cases archived with the generating model, independent of continued licence access, and **declaring** per field its source expression and its unit, and for the current its evaluation boundary and which electrode it references; a golden leaving any of those unstated is refused rather than interpreted |
 | **VAL-04** | Reference discretisation-error probe | **Not required** (§8.2.4 D6). The reference case re-solved at two refinement levels while licence access lasts, bounding the reference's own discretisation error |
 | **VAL-05** | Geometry pipeline against the published boundary | Auto-generated contour compared against the delivered reference pore polygon (§5.2.1): radius profile and constriction radius within a stated tolerance. Measured on two inputs (§8.2.2 B2): the public 2WCD entry, gated at Tier 2 to a looser tolerance, and the author's ClyA-AS ensemble, archived under `NANOPNP_REFERENCE_DATA` and run at Tier 3; the Phase 2 gate requires the ensemble leg. Each leg's metric, registration and tolerance are stated, with their argument, in the NOTE on VAL-05 below (**amended 28 September 2026**, WP22) |
-| **VAL-06** | Poisson-only comparison against APBS | Potential from the assembled fixed-charge and dielectric fields agrees with an APBS solve on the same structure within a stated tolerance. Two legs (**amended 30 September 2026**, §8.2.4 D3). The **gated** leg gives APBS, at zero ionic strength, our assembled charge and solid fraction as 3D maps, so that only the two solvers differ. The **recorded** leg runs APBS from the PQR with its own charge assignment and molecular surface, which measures the azimuthal averaging of CON-04. APBS runs from the test-only `apbs-binary` package on every CI leg its wheels cover, so VAL-06 is gated at Tier 2 on 2WCD and skips visibly where no wheel exists; the ensemble is recorded at Tier 3. The tolerance is stated, with its argument, by the work package that implements it, before the comparison is run |
+| **VAL-06** | Poisson-only comparison against APBS | Potential from the assembled fixed-charge and dielectric fields agrees with an APBS solve on the same structure within a stated tolerance. Two legs (**amended 30 September 2026**, §8.2.4 D3). The **gated** leg gives APBS, at zero ionic strength, our assembled charge and solid fraction as 3D maps, so that only the two solvers differ. The **recorded** leg runs APBS from the PQR with its own charge assignment and molecular surface, which measures the azimuthal averaging of CON-04. APBS runs from the test-only `apbs-binary` package on every CI leg its wheels cover, so VAL-06 is gated at Tier 2 on 2WCD and skips visibly where no wheel exists; the ensemble is recorded at Tier 3. The tolerance is stated, with its argument, by the work package that implements it, before the comparison is run: ≤ 3 % max, ≤ 1 % rms and ≤ 1.5 % on the axis, within a refinement budget of half of each (**stated 1 October 2026**, WP29 plan; NOTE on VAL-06 below) |
 | **VAL-15** | The reference model's own `rhoq_pore` table, on our mesh | The delivered table reads with the grid its header declares, its planar integral is the declared `Q_net` to better than 10⁻⁹, and its boundary ring is negligible against its interior, so the producer leg of §4.4 is exact and the reference's 1.25 % is the consumer's (OPN-06); the consumer leg on the reference mesh is recorded with the mesh it came from, and the quadrature-agreement gate refuses it, per cent-level, rather than reporting a conserved number it cannot defend |
 | **VAL-16** | Current–voltage relationships against the published results | The ionic current, conductance `G`, rectification ratio, cation transport number and electro-osmotic flow rate agree with the paper's published ePNP-NS results within a stated tolerance, at the published concentrations and biases. Two legs, as for VAL-06. The **gated** leg solves on the reference inputs, the §5.2.1 geometry and the delivered `rhoq_pore` table, so that only the solver differs. The **recorded** leg solves on the geometry and charge that stages 1–7 generate from the author's ensemble. Gates v1.0 (**added 30 September 2026**, §8.2.4 D6). The tolerance is stated, with its argument, by the work package that implements it, before the comparison is run |
 | **VAL-17** | In-pore averages against the published results | The pore-averaged ion concentrations, the peak radially averaged equilibrium potential, and the mobile charge in the pore with its wall and bulk split agree with the paper's published values within a stated tolerance. The same two legs, reference sources and tolerance rule as VAL-16. Gates v1.0 (**added 30 September 2026**, §8.2.4 D6) |
@@ -3060,6 +3060,48 @@ its hydrogens and the MD relaxation (§8.2.2 B2). No offset is fitted, and the i
 varied to pass. The isolevel sensitivity, the attribution to the erratum and the hand edit, one
 frozen case's conductance on both meshes, the mesh figures and the FR-06 variance are recorded
 beside the verdict (WP22 plan, D2–D11 and Design §1–§4).
+
+NOTE (VAL-06's construction, metric and tolerance; **added 1 October 2026**, WP29 plan; author
+ruling of the same date): the problem is `poisson` on the case's deployed mesh with its stage-7
+deposit, both electrodes grounded, and the fluid at the ion-free `ε_r,f⁰` (PHY-21 NOTE). APBS solves
+the same problem at zero ionic strength (`lpbe`, no ions) at the case temperature, on a cubic grid
+of 0.1 nm that holds all of the charge at least 1 nm inside each face. The box faces take our own
+solution (`bcfl map`). Our domain's grounded outer arc and the membrane's natural edge cannot be
+posed in APBS. A multipole boundary would assume a homogeneous far field, which the membrane slab
+breaks. With the face data imposed, the leg compares the two interior solves, which is what it is
+for.
+
+On the **gated** leg, APBS's charge map is the stage-7 export lattice moved onto the grid nodes by
+hat weights, conserving its charge and first moments. Its three staggered dielectric maps are the
+permittivity the solve assembled, sampled on the deployed mesh and harmonically averaged along each
+grid edge. The **recorded** leg keeps the box, grid and face data. It takes APBS's `spl4` charge
+from the PQR and its `smol` surface, with the mesh's membrane imposed wherever APBS's map is on the
+solvent side.
+
+The probes are the nodes of the nested 0.2 nm grid that lie in a fluid material, at least 0.3 nm
+from every solid and at least 0.4 nm inside the faces. APBS is read at its nodes. With
+`Δ = φ_APBS − φ_ours` over the probes, three quantities are gated:
+
+| Quantity | Tolerance |
+|---|---|
+| `e_max = max\|Δ\| / max\|φ_ours\|` | ≤ 3 % |
+| `e_rms = rms Δ / rms φ_ours` | ≤ 1 % |
+| `e_axis`, `e_max` over the probes on `r = 0` | ≤ 1.5 % |
+
+Before the comparison, each solver's own error SHALL be estimated by refinement in the same run:
+APBS by its 0.1 nm against its 0.2 nm solution, and ours by `P2` against `P3`. The difference is
+taken as the error, a first-order bound. The sum of the two estimates SHALL lie within half of
+each tolerance, or the run fails naming the budget, not the agreement.
+
+The argument follows (WP29 plan, *Design* §4). Measured on 2WCD without forming `Δ`, the two
+estimates sum to 1.22 %, 0.18 % and 0.58 % of the three norms. APBS's share is 0.98 %, 0.17 % and
+0.57 %: its staircase of the protein surface, largest in the constriction. Halving the tolerance
+for the two known errors leaves the other half for a disagreement, and a broken construction of
+either input exceeds it (*Design* §6). The max norm is the looser of the three, because the
+staircase layer meets the probes at 0.3 nm, which is three grid cells. The rms and axial norms are
+the sharp ones. The tolerance is not re-argued after the comparison runs (§8.2.4 D7's reasoning).
+On the analytic ring of the same plan, each solver is gated against the exact series at half of
+each tolerance.
 
 ### 7.5 Tier 4 experimental reproduction
 
