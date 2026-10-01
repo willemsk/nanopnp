@@ -23,7 +23,6 @@ from __future__ import annotations
 import json
 import logging
 import math
-import resource
 import sys
 import time
 from dataclasses import dataclass, replace
@@ -254,6 +253,10 @@ def gated(walked: Walked, apbs: None) -> GatedResult:
     )
     memory = dict(report.memory_GB)
     if sys.platform != "win32":
+        # Deferred: ``resource`` is Unix-only, and at module scope it fails
+        # collection on Windows before the APBS skip is read.
+        import resource
+
         scale = 1e9 if sys.platform == "darwin" else 1e6
         memory["pytest_peak_rss"] = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / scale
     report = report.model_copy(update={"seconds": seconds, "memory_GB": memory})
