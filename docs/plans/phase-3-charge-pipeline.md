@@ -1,6 +1,6 @@
 # Phase 3 (Charge pipeline): from a structure to a charged run
 
-**Status: in progress. WP26 delivered, 30 September 2026; WP27 planned in detail ([plan](wp27-protonation.md)); WP28–WP32 planned.** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
+**Status: in progress. WP26 delivered, 30 September 2026; WP27 delivered, 1 October 2026 ([plan](wp27-protonation.md)); WP28–WP32 planned.** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
 the geometry pipeline (`main` at `v0.3.0-alpha.9`, formerly `v0.9.0-alpha.9`). Phase 2's
 end-of-phase report and its release, `v0.3.0`, wait for one Tier-3 run on the author's archive
 (criterion 3, VAL-05's ensemble leg). WP26 may start before that report merges, because nothing in
@@ -160,6 +160,16 @@ the ensemble is refused naming the frame; the PQR radii agree with the CHARMM ta
 atom of 2WCD (Tier 2); the stage is listed without importing PDB2PQR. **Tier 3, recorded:** DCD
 frames 48–97 through our driver against the author's archived PQRs 50–99, as per-residue state
 agreement and `Q_net` per frame, against the −72 e of `.knowledge/04` §3.1.
+
+> **Delivered, 1 October 2026** ([plan](wp27-protonation.md), to be tagged `v0.4.0-alpha.2`). The
+> `protonation` stage (stage 7, before `charge`) drives PDB2PQR and PROPKA per frame, cached per
+> frame, or reads and registers `inputs.pqr`; it records unapplied states from PROPKA's groups and
+> exports a PQR that reads back bit for bit. Discharges FR-12; adds to IF-03, FR-27 and QR-12;
+> adds VER-57 (`tests/tier1/test_pqr.py`, `test_protonation.py`, `tests/tier2/test_protonation_2wcd.py`,
+> `tests/tier3/test_protonation_archive.py`, not yet run). **Live for later packages:** a walk runs
+> the stage only when it names it until WP28 reads the artefact (D3); `charge.smearing` is refused
+> naming WP28 and the exclusion keys naming WP30; flippable atoms are outside the 0.01 Å
+> registration (§5.3.1 NOTE); `protonated_2wcd` costs about 100 s of the push gate.
 
 ### WP28 — Fixed-charge deposition on the deployed mesh and its gates (FR-13, FR-14)
 

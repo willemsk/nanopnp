@@ -1,6 +1,6 @@
 # WP27 — Protonation: the PDB2PQR driver and the PQR artefact (FR-12)
 
-**Status: planned, not started.** Planned 1 October 2026, on `main` at `6a9478b` (WP26 merged, to be
+**Status: delivered, 1 October 2026.** Planned 1 October 2026, on `main` at `6a9478b` (WP26 merged, to be
 tagged `v0.4.0-alpha.1`). The second package of Phase 3. It inherits stage 1's `AlignedEnsemble`
 and frame (WP18 D16), the CHARMM radius set of `data/radii/` (WP19), the supply chains of
 `io/case.py` and the frozen schema v2 (§8.2.2 B3), and the stage registry and walk of `core/stages.py`
@@ -46,6 +46,53 @@ protonation keys; `.knowledge/07` §3.
 | D15 | Cancellation | Checked, and progress reported, between frames; a frame runs to completion (≈64 s on 2WCD); frames run serially | Cooperative tokens; the GUI's walk is a terminable child |
 | D16 | Manifest, export | A `PROTONATION_RECORD_KEYS` record feeds the *Charge* group (`Q_net`, force field, pH, titration); `propka` joins `DISTRIBUTIONS`; `--export X.pqr` per the IF-02 NOTE | §5.3.3; FR-27 |
 | D17 | Tier 2 cost | The prepared 2WCD dodecamer is protonated with PROPKA once per session (≈64 s), through the stage API rather than a walk, in a `protonated_2wcd` fixture under the `prepared_2wcd` lock, for WP28 and WP29 to reuse | The gate's 2WCD charge needs PROPKA anyway |
+
+### Outcomes
+
+> **Outcome — D12 and *Design* §1 corrected: a flip moves atoms, it does not exchange them.** The
+> plan matched heavy atoms by position on the premise that PDB2PQR's amide and ring flips leave 140
+> heavy atoms of 2WCD exactly on another atom's position. Measured on the dodecamer, they land
+> 0.13–0.15 Å (`ASN`/`GLN` amides) and 0.19–0.40 Å (one `HIS` ring) from every heavy atom they were
+> given; no other heavy atom moves. The 0.01 Å criterion over every heavy atom would have refused
+> PDB2PQR's own output and our own export. The flippable atoms (`ASN OD1 ND2`, `GLN OE1 NE2`,
+> `HIS ND1 CD2 CE1 NE2`) are now left out of the criterion, counted and their worst distance
+> recorded; the rest of each residue fixes the frame. Amended in the §5.3.1 NOTE on `inputs:` and
+> `.knowledge/07` §3. On the prepared dodecamer: 138 flipped, worst 0.397 Å, worst compared residual
+> 0.00085 Å.
+
+> **Outcome — two PDB2PQR layout facts the reader's own cross-check found.** On the fragment at
+> pH 2, PDB2PQR writes `ASPP` from column 17, fuses a four-character atom field into it
+> (`OD2ASPP`), and writes a patched residue's backbone as `ASP` and its side chain as `ASPP`. The
+> columns-against-fields cross-check refused the first two rather than misreading them: a residue
+> name is now read from column 17 where that column is not blank, a whitespace field longer than a
+> name can be does not read the line, and a parent beside one of its variants names the residue
+> by the variant. Amended in the §5.3.1 NOTE on `inputs:`; tested in `tests/tier1/test_pqr.py`.
+
+> **Outcome — the self-check D6 did not ask for.** The produced route runs the supplied route's
+> registration on PDB2PQR's PQR against the frame it was given, without moving it, and refuses a
+> frame whose residues or heavy atoms PDB2PQR did not keep. It is the gate that fires on dropped
+> atoms (`tests/tier1/test_protonation.py`).
+
+> **Outcome — D13 widened.** Beside `inputs.pqr` the protonation keys were refused set away from
+> their defaults; they now are also beside `inputs.charge`, and where the case has neither
+> `structure:` nor `inputs.pqr`, by the same rule. `charge.smearing`, `exclusion_offset_nm` and
+> `dielectric_transition_nm` raise `UnsupportedCaseSection` naming WP28 or WP30. Amended in the
+> §5.3.1 NOTE on `inputs:`.
+
+> **Outcome — measurements.** Prepared 2WCD dodecamer at pH 7.5, CHARMM, PROPKA, PDB2PQR 3.7.1,
+> PROPKA 3.5.1: `Q_net` −60 e, −5 e on every chain, pinned as the Tier-2 golden; 54,084 atoms
+> compared with the stage-2 table, none differing; 12 `OT2` added; `CYS 285` unapplied in every
+> chain; the `LYS 8` N+ pKa 7.481–7.499, below 7.5 in every chain, so every N-terminus is
+> unapplied. One cold frame costs **97.4 s and 0.44 GB** peak RSS in a fresh process (`-m slow`);
+> the stage's own work with the frame cached is 3.4 s, and PDB2PQR alone on the crystal frame took
+> 98 s in the same container that day, against the 63.7 s measured while planning, so D17's
+> fixture costs about 100 s of the push gate rather than 64 s. `Q_net` is recorded as an integer per
+> frame, with its residual beside it (an exact `fsum` of four-decimal charges leaves ~1e-16 e).
+
+> **Outcome — Tier 3 not run.** The archived PQRs are not under `$NANOPNP_REFERENCE_DATA` here.
+> `tests/tier3/test_protonation_archive.py` was dry-run against the 2WCD export as a stand-in
+> archive, so its reading, chain pairing and registration legs are exercised; its numbers are the
+> nightly's to record.
 
 ### Work items
 

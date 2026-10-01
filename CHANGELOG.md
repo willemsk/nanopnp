@@ -17,6 +17,48 @@ Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before t
 version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
 
+## [0.4.0-alpha.2] - 2026-10-01
+
+WP27: protonation, the PDB2PQR driver and the PQR artefact (FR-12; adds to IF-03, FR-27, QR-12),
+the second package of Phase 3.
+
+### Added
+
+- **A `protonation` stage**, the first half of stage 7, runs PDB2PQR 3.7 with PROPKA on every frame
+  of stage 1's ensemble with PHY-16 step 3's flags at `charge.ph` and `charge.forcefield`, and emits
+  a per-frame atom table in stage 1's frame: each atom's charge and radius, `Q_net` per frame, and
+  every titratable residue's charge, histidine tautomer and PROPKA pKa. A state PDB2PQR cannot apply
+  under CHARMM, `CYS 285` of 2WCD and a terminal pKa among them, is recorded as unapplied, derived
+  from PROPKA's groups and never from the log (PHY-16 step-3 NOTE). It shares the number 7 with
+  `charge`, so stages 8 to 12 keep their numbers (§5.2). Until WP28's deposition reads it, a walk
+  runs it only when it names it, as `nanopnp stage protonation` (VER-57).
+- Each frame is cached under its own key, the digest of the heavy-atom PDB PDB2PQR is given, so a
+  changed frame selection re-protonates only the frames it adds. PDB2PQR and PROPKA's warnings are
+  collected, counted and logged once each.
+- **`inputs.pqr` runs**: a PQR of one frame, or one `MODEL` per frame, read by PDB2PQR's fixed
+  columns with a whitespace-separated fallback, and refused naming the line where the two disagree.
+  Beside `structure:` each frame is registered to its stage-1 frame to 0.01 Å, and a frame count,
+  a residue or a frame that does not match is refused naming the frame. It needs no extra.
+- `nanopnp stage protonation CASE --export X.pqr` writes the artefact as a PQR in stage 1's frame,
+  which supplied back through `inputs.pqr` gives the atom table bit for bit (IF-02 export NOTE).
+- The manifest's Charge group records the protonation: `Q_net` per frame beside the structure's
+  `variant`, the force field, pH, titration, PDB2PQR and PROPKA versions, the unapplied states, the
+  radii checked against the stage-2 CHARMM table, and the registration. PROPKA's version is
+  recorded among the distributions.
+
+### Changed
+
+- `charge.ph` is a number in [0, 14], and `charge.forcefield` one of `CHARMM`, `PEOEPB` and
+  `SWANSON`: AMBER, PARSE and TYL06 give charged atoms a zero radius. `charge.titration` and
+  `charge.forcefield` are switches whose validated defaults are `propka` and `CHARMM`, listed as
+  deviations when set otherwise.
+- A case carrying `charge:` resolves. `charge.ph` away from its default is refused beside
+  `titration: none`; a protonation key away from its default is refused beside `inputs.pqr` or
+  `inputs.charge`, or where the case has nothing to protonate; and `charge.smearing`,
+  `charge.exclusion_offset_nm` and `charge.dielectric_transition_nm` away from their defaults are
+  refused naming the stage that will read them (WP28, WP30).
+- A protonation gate exits 4; a malformed or mismatched `inputs.pqr` exits 3 (IF-02).
+
 ## [0.4.0-alpha.1] - 2026-09-30
 
 WP26: the physics-model interface (FR-20, QR-14), the first package of Phase 3.
