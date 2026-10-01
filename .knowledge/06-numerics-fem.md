@@ -1207,6 +1207,14 @@ gradient- or cross-section-based extraction.
   2.9–3.6 for `φ`, 3.0–4.0 for `c_i`, 3.0–3.5 for `u`, and **2.7 for `p`**. The pressure rate is the
   P1 half of the P2/P1 pair, not a shortfall — asserting O(h³) there would be asserting something
   untrue of a correct solver. **[tested]**
+- **An uncurved mesh of a curved Dirichlet boundary costs the P2 rate an order.** Netgen meshes
+  are affine unless `Curve` is called, so a grounded sphere of radius `R` is a polygon whose chords
+  sag by `h²/(8R)`, and the potential inside carries that `O(h²)` geometric error whatever the
+  element order. In WP28's VER-58 benchmark (one smeared atom inside a 10 nm grounded sphere,
+  `poisson`, `P2`), letting the arc follow the far field's 1.6/0.8/0.4 nm held the disc error's rate
+  at 2.02 between the finest two levels; fixing the arc at 0.02 nm at every level gave 3.00, the
+  potential's own. An analytic benchmark on a curved boundary pins the boundary's element size, or
+  curves the mesh, before it reads a rate. **[tested]**
 - **`CoefficientFunction.Diff` and `Operator("hesse")` both work on a component of a product
   space**, and `Diff` works with respect to a `GridFunction` as well as a trial proxy. That is what
   makes the PHY-23 dielectric terms expressible: `∇ε_r = Σ_i (∂ε_r/∂c_i) ∇c_i` by the chain rule,

@@ -57,7 +57,27 @@ Z_ATOM_NM = 0.5
 AZIMUTHS = 512
 """Periodic trapezoid points of the azimuthal mean."""
 
-H = 0.005
+ARC_NM = 0.02
+"""Element size on the sphere, the same at every level.
+
+The mesh is affine, so the sphere is a polygon whose chords sag by ``h^2/(8R)``,
+which moves the grounded surface and costs an ``O(h^2)`` potential error of the
+oracle's geometry rather than of the deposit. With the arc tied to the coarse
+far field (1.6, 0.8, 0.4 nm) that error sets the P2 rate at 2.0 between the finest
+two levels, measured; at 0.02 nm everywhere it is a constant ``~ 1e-7`` of the
+potential, under the finest level's error by fifty, and the rate is the deposit's.
+"""
+
+H = 0.0025
+"""The lattice spacing, in nm: ``w/100``.
+
+An atom on the axis keeps the trapezoid's end correction in its shape after
+renormalisation, an ``O(H^2/w^2)`` redistribution near ``r = 0`` that does not fall
+with the mesh. Measured at ``r_i = 0`` on the 0.05 nm level (P2): the disc error
+4.1e-5, 1.9e-5, 1.7e-5 and the on-axis error 1.2e-3, 3.3e-4, 1.1e-4 at
+``H`` = 0.01, 0.005, 0.0025 nm. At 0.005 nm the floor holds the rate to 2.80; at
+0.0025 nm it is 2.99, the deposit's and the solve's.
+"""
 
 
 def exact_potential_V(
@@ -140,6 +160,7 @@ def _sphere(r_i: float, z_i: float, near_nm: float) -> MeshData:
             edge.name = "axis"
         elif all(abs(math.hypot(p[0], p[1]) - SPHERE_NM) < 1e-6 for p in (start, end)):
             edge.name = "cis" if start[1] + end[1] > 0 else "trans"
+            edge.maxh = ARC_NM
         else:
             edge.name = "interface"
     generated = occ.OCCGeometry(shape, dim=2).GenerateMesh(maxh=min(8.0 * near_nm, 1.6))
