@@ -167,7 +167,13 @@ def test_ver53_2wcd_walks_to_the_report_and_the_manifest_keys_every_stage(regist
     result = run_case(case, store=store, workspace=root / "work")
 
     ran = [record.name for record in result.stages]
-    assert ran == [name for name in PIPELINE if name != "charge"]
+    # Neither half of stage 7 runs: the case supplies no field, and the protonation
+    # stage runs only when a walk names it until WP28 reads its artefact (WP27 D3),
+    # which the manifest says rather than leaving out.
+    assert ran == [name for name in PIPELINE if name not in ("protonation", "charge")]
+    protonation = result.manifest.charge["protonation"]
+    assert isinstance(protonation, dict)
+    assert protonation["status"] == "not run"
     keyed = result.manifest.inputs["artefacts"]
     for record in result.stages:
         if record.name != "report":

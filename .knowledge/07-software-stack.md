@@ -359,13 +359,37 @@ frame).
   (`N TER A 8`, `OT1 TER A 292`). It renames `ILE CD1` to `CD` and the C-terminal `O` and `OXT` to
   `OT1` and `OT2`, and it writes histidines as `HIS` whatever their tautomer. PDB2PQR 2.1.1 had kept
   the real residue name (`GLU HT1`) and `HSE`. Identify a residue by chain, number and insertion code.
-- **Coordinates move by relabelling.** Hydrogen-bond optimisation flips `ASN`/`GLN` amides and
-  `HIS` rings. On 2WCD, 140 heavy atoms carry another atom's position under their own name (about
-  2 Å away), and 12 terminal `OXT` are added by repair. Match heavy atoms by position within a residue,
-  never by name.
+- **Coordinates move by relabelling, and flipped groups move a little.** PDB2PQR renames heavy
+  atoms in place (`ILE CD1` to `CD`, the C-terminal `O` to `OT1`) and adds 12 terminal `OXT`, as
+  `OT2`, by repair. Hydrogen-bond optimisation flips `ASN`/`GLN` amides and `HIS` rings through
+  180° about the bond to the group, which is not symmetric about it, so a flipped atom does **not**
+  land on its partner's position: on the 2WCD dodecamer in the crystal frame, 140 heavy atoms (the
+  `OD1`/`ND2` of 22 asparagines, the `OE1`/`NE2` of 46 glutamines, one histidine's `ND1`, `CD2`,
+  `CE1`, `NE2`) lie 0.13–0.15 Å (amides) and 0.19–0.40 Å (the ring) from every input heavy atom, and
+  no other heavy atom moves. On the prepared dodecamer of the tests it is 138, worst 0.397 Å. Match
+  heavy atoms by position within a residue, never by name, and leave the flippable atoms out of any
+  tight positional criterion **[tested]**, 1 October 2026 (WP27; this bullet first said the 140
+  carried another atom's position exactly).
 - **Fused columns.** The PQR is written in PDB fixed columns, so a coordinate at or below −100 Å
   runs into its neighbour (`-37.705-115.041`). `pdb2pqr.io.read_pqr` splits on whitespace and
   cannot read PDB2PQR's own output in that case.
+- **Four-character residue names and patched residues.** `Atom.get_common_string_rep` writes a
+  four-character residue name (`ASPP`, `GLUP`) from column 17, the PDB alternate-location column,
+  and a shorter one from column 18; a four-character atom field then runs into it (`OD2ASPP`). A
+  residue patched to a protonation variant is written with its backbone under the parent and its
+  side chain under the variant: `ASP 21` of the fragment `GLU 18`–`LEU 26` at pH 2 carries both `ASP`
+  and `ASPP`. A reader that takes columns 18–21 reads `SPP` **[tested]**, 1 October 2026 (WP27).
+- **`run_pdb2pqr`'s first return is missing atoms**, not residues: the atoms
+  `Biomolecule.apply_force_field` could not parameterise, which the PQR leaves out. An atom
+  written with no charge gets `0.0000` (`get_pqr_string`) **[verified]**, read from the 3.7.1
+  source, 1 October 2026.
+- **The stage's cost.** Protonating the prepared 2WCD dodecamer through the `protonation` stage
+  takes 97.4 s and 0.44 GB peak RSS for one cold frame, in a fresh process; with the frame cached
+  the stage's own work (reading the PQR, registering it, tabulating the states, checking the radii)
+  is 3.4 s. PDB2PQR alone on the crystal-frame dodecamer took 98 s in the same container that
+  day, against the 63.7 s above: the difference is the machine, not the stage. On that frame PROPKA puts the `LYS 8` N+ pKa at 7.481–7.499 in every chain, so all twelve
+  N-termini are unapplied at pH 7.5, and it warns `Missing atoms or failed protonation for HIS 292
+  A`; `Q_net` is −60 e **[tested]**, 1 October 2026 (WP27, `tests/tier2/test_protonation_2wcd.py`).
 - **Zero radii.** On chain A, `AMBER` gives 53 charged atoms radius 0, `PARSE` 93, and `TYL06`
   2269. `CHARMM`, `PEOEPB` and `SWANSON` give none. Every force field gives −5 e on chain A, and
   every printed charge has at most four decimals.

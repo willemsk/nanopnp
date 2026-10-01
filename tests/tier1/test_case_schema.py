@@ -244,13 +244,17 @@ def test_if03_a_supplied_artefact_names_exactly_one_source() -> None:
     [
         # geometry: left this list in WP19: it is read beside structure:, and
         # beside inputs.mesh it is refused naming both (tests/tier1/test_density.py).
-        ("charge:\n  ph: 7.5\n", "v0.4"),
+        # charge: left it in WP27, whose protonation stage reads ph, forcefield and
+        # titration; the keys a later package's stage reads are refused naming it.
+        ("charge:\n  smearing: {sharpness: 0.4}\n", "WP28"),
+        ("charge:\n  exclusion_offset_nm: 0.1\n", "WP30"),
+        ("charge:\n  dielectric_transition_nm: 0.2\n", "WP30"),
     ],
 )
 def test_fr27_a_section_a_later_release_owns_names_the_section_and_the_release(
     section: str, release: str
 ) -> None:
-    """A Phase-2 case must say which release runs it, not fail inside the solver."""
+    """A key a later package's stage reads must say which package, not fail inside the solver."""
     with pytest.raises(UnsupportedCaseSection) as raised:
         resolve(loads_case(REFERENCE_CASE + section))
     message = str(raised.value)

@@ -97,6 +97,7 @@ DISTRIBUTIONS: tuple[str, ...] = (
     "scikit-image",
     "shapely",
     "pdb2pqr",
+    "propka",
     "PySide6",
     "gmsh",
 )
@@ -478,6 +479,8 @@ def build(
     contour: Mapping[str, Canonicalisable] | None = None,
     region: Mapping[str, Canonicalisable] | None = None,
     charge: Mapping[str, Canonicalisable] | None = None,
+    protonation: Mapping[str, Canonicalisable] | None = None,
+    protonation_reason: str | None = None,
     electrolyte: Electrolyte | None = None,
     clamp_activations: int | None = None,
     ladder: Mapping[str, Canonicalisable] | None = None,
@@ -548,6 +551,14 @@ def build(
         supplied field's header, grid descriptor and digest, and for the charge
         the decomposed PHY-19 report. ``None`` when the run carried no field,
         which is a different fact from a field that carried no charge.
+    protonation
+        The protonation stage's record, recorded in the Charge group under
+        ``protonation``: ``Q_net`` per frame beside the structure's variant, the
+        force field, pH and titration, the PDB2PQR and PROPKA versions, the
+        unapplied states, the radii comparison and the registration (WP27 D16).
+    protonation_reason
+        Why the protonation stage did not run, recorded in its place when
+        ``protonation`` is ``None``.
     electrolyte
         The resolved electrolyte.
     clamp_activations
@@ -592,14 +603,7 @@ def build(
             contour=contour,
             region=region,
         ),
-        charge=(
-            dict(charge)
-            if charge is not None
-            else not_run(
-                "this run supplied neither inputs.charge nor inputs.eps_r, so stage 7 did not "
-                "run; the pipeline that would produce them (FR-12 to FR-15) lands in v0.4"
-            )
-        ),
+        charge=_charge_group(charge, protonation, protonation_reason),
         materials=(
             materials_group(electrolyte, clamp_activations=clamp_activations)
             if electrolyte is not None
@@ -617,6 +621,34 @@ def build(
         deviations=deviations(document),
         contributed_deviations=contributed_deviations,
     )
+
+
+def _charge_group(
+    charge: Mapping[str, Canonicalisable] | None,
+    protonation: Mapping[str, Canonicalisable] | None,
+    reason: str | None,
+) -> dict[str, Canonicalisable]:
+    """Return the Charge group: stage 7's field record, with the protonation record beside it.
+
+    Each half is recorded as :func:`not_run`, with its reason, where it did not
+    run; a run that protonated and stopped there says so rather than reading as
+    a run with no charge at all (WP27 D16).
+    """
+    group = (
+        dict(charge)
+        if charge is not None
+        else not_run(
+            "this run supplied neither inputs.charge nor inputs.eps_r, so stage 7's field "
+            "assembly did not run; deposition from the protonation artefact (FR-13, FR-14) is "
+            "WP28's"
+        )
+    )
+    group["protonation"] = (
+        dict(protonation)
+        if protonation is not None
+        else not_run(reason or "the protonation stage did not run")
+    )
+    return group
 
 
 def _geometry_group(

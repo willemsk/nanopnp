@@ -40,7 +40,6 @@ from nanopnp.io.case import (
     V2_RENAMED,
     CaseValidationError,
     ResolvedCase,
-    UnsupportedCaseSection,
     case_fields,
     dumps_case,
     load_case,
@@ -390,25 +389,22 @@ def test_ver47_refusals(
     assert not missing, f"{missing} not named in: {message}"
 
 
-@pytest.mark.parametrize(
-    ("supplied", "fragments"),
-    [
-        # inputs.profile left this table in WP21, when stage 5 began to read it;
-        # tests/tier1/test_region.py covers its refusals.
-        ("pqr", ("inputs.pqr", "stage 7", "Phase 3")),
-    ],
-)
-def test_ver47_a_new_input_is_refused_naming_the_stage_that_would_read_it(
-    supplied: str, fragments: tuple[str, ...]
-) -> None:
-    """``inputs.pqr`` validates, and is refused at resolution until Phase 3 reads it."""
+def test_ver47_every_new_input_is_read_by_the_stage_that_consumes_it() -> None:
+    """Each ``inputs:`` key v2 added is now read; the table of unread keys is empty (WP27).
+
+    ``inputs.profile`` left the table in WP21, when stage 5 began to read it, and
+    ``inputs.pqr`` in WP27, when the ``protonation`` stage did:
+    ``tests/tier1/test_region.py`` and ``tests/tier1/test_protonation.py`` cover
+    their refusals. A key added to the table later is refused by the same rule.
+    """
+    from nanopnp.io.case import _UNCONSUMED_INPUTS
+
+    assert _UNCONSUMED_INPUTS == {}
     raw = _v2()
-    raw["inputs"][supplied] = {"path": f"supplied.{supplied}"}
-    document = loads_case(_text(raw))
-    with pytest.raises(UnsupportedCaseSection) as caught:
-        resolve(document)
-    message = str(caught.value)
-    assert all(fragment in message for fragment in fragments), message
+    raw["inputs"]["pqr"] = {"path": "supplied.pqr", "format": "pqr"}
+    resolved = resolve(loads_case(_text(raw)))
+    assert resolved.pqr is not None
+    assert resolved.protonates
 
 
 # -- the two new switches -------------------------------------------------------

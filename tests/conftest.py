@@ -393,3 +393,122 @@ def write_parallelogram_profile(path: Path, *, citation: str = "tests/conftest.p
 def parallelogram_profile(tmp_path_factory: pytest.TempPathFactory) -> Path:
     """Return :func:`write_parallelogram_profile`'s file, written once per session."""
     return write_parallelogram_profile(tmp_path_factory.mktemp("parallelogram") / "profile.yaml")
+
+
+def cut_2wcd(chain: str, first: int, last: int) -> list[str]:
+    """Return the ATOM lines of residues ``first`` to ``last`` of one chain of the deposited 2WCD.
+
+    Read by columns from the vendored file, so a fragment needs neither MDAnalysis
+    nor stage 1, and the coordinates are the crystal frame's to 0.001 Å.
+    """
+    import gzip
+
+    with gzip.open(DEPOSITED_2WCD, "rt", encoding="ascii") as handle:
+        return [
+            line.rstrip("\n")
+            for line in handle
+            if line.startswith("ATOM")
+            and line[21] == chain
+            and first <= int(line[22:26]) <= last
+            and line[16] in " A"
+        ]
+
+
+@pytest.fixture(scope="session")
+def fragment_2wcd() -> Callable[..., object]:
+    """Return a function cutting a fragment of 2WCD into a stage-1 ensemble (WP27).
+
+    ``fragment(first, last, chain="A", frames=1)`` returns an
+    :class:`~nanopnp.structure.ensemble.AlignedEnsemble` of those residues, heavy
+    atoms only as deposited, in the crystal frame, with ``frames`` identical
+    frames; a test perturbs one to make the frames differ. No new vendored file:
+    the fragments are cut from ``2wcd.pdb.gz`` (WP27 work item 6).
+    """
+    from nanopnp.structure.ensemble import AlignedEnsemble
+
+    def fragment(first: int, last: int, *, chain: str = "A", frames: int = 1) -> AlignedEnsemble:
+        lines = cut_2wcd(chain, first, last)
+        positions = np.array(
+            [[float(line[30:38]), float(line[38:46]), float(line[46:54])] for line in lines]
+        )
+        return AlignedEnsemble(
+            positions_nm=np.repeat((positions / 10.0)[None], frames, axis=0).astype(np.float32),
+            element=np.array([line[76:78].strip() for line in lines]),
+            name=np.array([line[12:16].strip() for line in lines]),
+            resname=np.array([line[17:20].strip() for line in lines]),
+            resid=np.array([int(line[22:26]) for line in lines]),
+            icode=np.array([line[26].strip() for line in lines]),
+            chain=np.array([chain] * len(lines)),
+            header={"frames": {"indices": list(range(frames))}},
+        )
+
+    return fragment
+
+
+PROTONATED_2WCD_CASE = SEED_CASE.replace("name: 2wcd-seed", "name: 2wcd-protonated")
+"""The seed case: the prepared dodecamer at the default pH 7.5, CHARMM and PROPKA."""
+
+
+@dataclass(frozen=True)
+class Protonated2WCD:
+    """The prepared 2WCD dodecamer protonated once per session (WP27 D17)."""
+
+    store: Path
+    """A store holding stage 1 and the protonation artefact."""
+    case: Path
+    """The case that keys them."""
+    structure: str
+    """Stage 1's hash."""
+    protonation: str
+    """The protonation artefact's hash."""
+    seconds: float
+    """Wall time of the protonation, or of reading it from the shared store."""
+
+
+@pytest.fixture(scope="session")
+def protonated_2wcd(
+    prepared_2wcd: Prepared2WCD,
+    seeded_2wcd: Callable[[Path], Path],
+    tmp_path_factory: pytest.TempPathFactory,
+) -> Protonated2WCD:
+    """Protonate the prepared 2WCD dodecamer with PROPKA once per session (WP27 D17).
+
+    Through the stage API rather than a walk, so that stages 4 to 6 are not paid
+    for: stage 1 comes from the seed, and the ``protonation`` stage runs on it into
+    a store every ``pytest-xdist`` worker shares, under a lock, about a minute.
+    WP28 and WP29 reuse it.
+    """
+    import time
+
+    from nanopnp.core.stages import create
+    from nanopnp.io.artefact import StageInputs
+    from nanopnp.io.case import load_case
+    from nanopnp.io.store import Store
+
+    shared = shared_directory(tmp_path_factory)
+    root = shared / "2wcd-protonated"
+    with FileLock(str(shared / "2wcd-protonated.lock")):
+        store = Store(seeded_2wcd(root / "store"))
+        case = root / "protonated.case.yaml"
+        if not case.is_file():
+            case.write_text(PROTONATED_2WCD_CASE.format(pdb=prepared_2wcd.path), encoding="utf-8")
+        document = load_case(case)
+        structure_stage = create("structure")
+        key = structure_stage.key(StageInputs(case=document))  # type: ignore[attr-defined]
+        structure = store.get(key.schema, key.hash)
+        assert structure is not None, "the seed holds stage 1 of the prepared 2WCD"
+        inputs = StageInputs(case=document, upstream={"structure": structure})
+        stage = create("protonation", workspace=root / "workspace", store=store)
+        started = time.perf_counter()
+        protonation = store.get_or_compute(
+            stage.key(inputs),  # type: ignore[attr-defined]
+            lambda: stage.run(inputs),
+        )
+        seconds = time.perf_counter() - started
+    return Protonated2WCD(
+        store=store.root,
+        case=case,
+        structure=structure.hash,
+        protonation=protonation.hash,
+        seconds=seconds,
+    )

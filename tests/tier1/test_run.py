@@ -62,6 +62,7 @@ from nanopnp.io.run import (
     PIPELINE,
     RUN_RECORD_FILENAME,
     RUN_SCHEMA,
+    STORE_STAGES,
     WORKSPACE_DIRNAME,
     WORKSPACE_STAGES,
     MissingUpstreamError,
@@ -179,6 +180,23 @@ def test_ver32_workspace_stages_names_exactly_the_constructors_that_take_one() -
         if "workspace" in inspect.signature(factory).parameters:
             takes_one.add(name)
     assert takes_one == set(WORKSPACE_STAGES)
+
+
+def test_ver57_store_stages_names_exactly_the_constructors_that_take_one() -> None:
+    """The stages handed the run's store are the ones whose constructor takes it (WP27 D10).
+
+    ``protonation`` caches each frame under its own key in the store the walk
+    was given; a stage missing from :data:`~nanopnp.io.run.STORE_STAGES` would
+    protonate every frame on every walk, and one wrongly in it would be refused
+    by its constructor.
+    """
+    takes_one = set()
+    for name in PIPELINE:
+        module_name, _, attribute = _catalogue()[name].target.partition(":")
+        factory = getattr(importlib.import_module(module_name), attribute)
+        if "store" in inspect.signature(factory).parameters:
+            takes_one.add(name)
+    assert takes_one == set(STORE_STAGES)
 
 
 # -- the FR-25 deviations a stage reads off its own artefact -------------------
@@ -548,3 +566,70 @@ electrolyte:
 boundary_conditions: {bias_V: 0.1}
 physics: {model: pnp-ns}
 """
+
+
+# -- the protonation stage in the walk (WP27 D2, D3, D16) -----------------------
+
+_PQR_LINES = """\
+ATOM      1  N   GLU A  18      -2.661   5.770 -35.426 -0.3000 1.8500
+ATOM      2  CA  GLU A  18      -1.598   4.789 -35.571  0.3000 2.2750
+ATOM      3  C   GLU A  18      -2.071   3.395 -35.184  0.5100 2.0000
+ATOM      4  O   GLU A  18      -1.657   2.404 -35.775 -1.5100 1.7000
+"""
+"""A four-atom PQR whose charges sum to -1 e: enough for the walk to read and gate."""
+
+
+def _pqr_case(case_file: Path, tmp_path: Path) -> Path:
+    """Write the module's case with ``inputs.pqr`` beside its mesh."""
+    pqr = tmp_path / "supplied.pqr"
+    pqr.write_text(_PQR_LINES, encoding="utf-8")
+    text = case_file.read_text(encoding="utf-8").replace(
+        "inputs:\n", f"inputs:\n  pqr: {{path: {pqr}, format: pqr}}\n", 1
+    )
+    path = tmp_path / "pqr.case.yaml"
+    path.write_text(text, encoding="utf-8")
+    return path
+
+
+def test_ver57_protonation_runs_only_as_a_walks_target(case_file: Path, tmp_path: Path) -> None:
+    """WP27 D3: no walk reaches the stage unless it names it, and then it ends there.
+
+    The stage sits after ``mesh`` and before ``charge`` (D2); until stage 7's
+    deposition reads its artefact, a walk that does not name it records it not
+    run, and a case with nothing to protonate refuses it naming why.
+    """
+    from nanopnp.io.run import UnknownStageError, selected_stages
+
+    supplied = resolve(loads_case(_pqr_case(case_file, tmp_path).read_text(encoding="utf-8")))
+    assert "protonation" not in selected_stages(supplied, None)
+    assert "protonation" not in selected_stages(supplied, "materials")
+    assert selected_stages(supplied, "protonation") == ("case", "mesh", "protonation")
+    bare = resolve(loads_case(case_file.read_text(encoding="utf-8")))
+    with pytest.raises(UnknownStageError, match="nothing for it to protonate"):
+        selected_stages(bare, "protonation")
+
+
+def test_ver57_a_walk_to_protonation_records_it_in_the_charge_group(
+    case_file: Path, tmp_path: Path
+) -> None:
+    """``inputs.pqr`` walked to the stage: the Charge group carries ``Q_net`` and the file.
+
+    A walk to ``mesh`` records the stage not run with the reason, which is a
+    different fact from a stage that ran (WP27 D16).
+    """
+    case = _pqr_case(case_file, tmp_path)
+    store = Store(tmp_path / "store")
+    result = run_case(case, store=store, upto="protonation", write=False)
+    group = result.manifest.charge
+    assert group["status"] == "not run"
+    record = group["protonation"]
+    assert isinstance(record, dict)
+    assert record["q_net_e"] == [-1]
+    assert record["source"] == "inputs.pqr"
+    assert record["pqr_sha256"] == file_hash(tmp_path / "supplied.pqr")
+    assert "pqr" in result.manifest.inputs["files"]  # type: ignore[operator]
+    truncated = run_case(case, store=store, upto="mesh", write=False)
+    skipped = truncated.manifest.charge["protonation"]
+    assert isinstance(skipped, dict)
+    assert skipped["status"] == "not run"
+    assert "names it" in str(skipped["reason"])

@@ -25,7 +25,6 @@ from nanopnp import PUBLIC
 from nanopnp.cli import build_parser
 from nanopnp.cli.errors import EXCLUDED, EXIT_CODES, EXIT_MEANINGS
 from nanopnp.io.case import (
-    _PIPELINE_SECTIONS,
     SCHEMA,
     SEQUENCE_INDEX,
     FieldValue,
@@ -152,11 +151,15 @@ def render_case_reference() -> str:
 
     for head, rows in sections.items():
         lines += [f"## `{head}`" if head != "document" else "## Top level", ""]
-        if head in _PIPELINE_SECTIONS:
+        if head == "charge":
             lines += [
-                f"This section drives {_PIPELINE_SECTIONS[head]}, which lands in v0.4. This",
-                "release refuses a case carrying it, naming the section; supply the artefact",
-                "it would produce through `inputs:` instead.",
+                "Of this section, `ph`, `forcefield` and `titration` drive the `protonation`",
+                "stage, the first half of stage 7 (FR-12, PHY-16 step 3), which runs PDB2PQR",
+                "and PROPKA on every frame of a `structure:` case. Until stage 7's deposition",
+                "is delivered it runs only when named, as `nanopnp stage protonation`. The",
+                "other keys are read by stages not yet delivered and are refused set away from",
+                "their defaults, naming the stage. Beside `inputs.pqr` the three are refused",
+                "set away from their defaults, naming both.",
                 "",
             ]
         elif head == "structure":

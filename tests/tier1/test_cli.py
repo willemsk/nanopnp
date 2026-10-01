@@ -393,7 +393,8 @@ def test_ver32_stage_list_imports_no_stage_module(tmp_path: Path) -> None:
         "'nanopnp.post.stage', 'nanopnp.materials.stage', 'nanopnp.io.stage', "
         "'nanopnp.structure.stage', 'nanopnp.structure.read', 'MDAnalysis', 'gemmi', "
         "'nanopnp.density.stage', 'nanopnp.symmetry.stage', 'nanopnp.geometry.contour', "
-        "'nanopnp.geometry.region', 'nanopnp.mesh.generate', 'skimage', 'shapely'})\n"
+        "'nanopnp.geometry.region', 'nanopnp.mesh.generate', 'skimage', 'shapely', "
+        "'nanopnp.charge.protonation', 'nanopnp.charge.pqr', 'pdb2pqr', 'propka'})\n"
         "sys.stderr.write(json.dumps(loaded))\n"
     )
     result = subprocess.run(
@@ -401,7 +402,11 @@ def test_ver32_stage_list_imports_no_stage_module(tmp_path: Path) -> None:
     )
     assert json.loads(result.stderr) == []
     numbers = [line.split()[0] for line in result.stdout.splitlines()]
-    assert numbers == ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"]
+    # Stage 7 is two stages, protonation and then charge, sharing the number so
+    # that stages 8 to 12 keep theirs (WP27 D1).
+    assert numbers == ["1", "2", "3", "4", "5", "6", "7", "7", "8", "9", "10", "11", "12"]
+    names = [line.split()[1] for line in result.stdout.splitlines()]
+    assert names[6:8] == ["protonation", "charge"]
 
 
 def test_ver32_env_reports_the_store_and_the_reference_archive(
@@ -938,6 +943,8 @@ def test_ver32_stage_export_copies_the_generated_mesh(
         ("contour", "contour.yml", "writes .yaml"),
         ("structure", "aligned", "no suffix"),
         ("mesh", "missing/mesh.msh", "does not exist"),
+        # WP27 D16: the protonation artefact exports as a PQR and nothing else.
+        ("protonation", "protonation.pdb", "writes .pqr"),
     ],
 )
 def test_ver32_stage_export_refuses_before_any_stage_runs(

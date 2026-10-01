@@ -202,7 +202,7 @@ def _stage(args: argparse.Namespace) -> int:
             "stages": [description.summary() for description in descriptions]
         }
         lines = [
-            f"{description.number:>2}  {description.name:<10} {description.title:<28} "
+            f"{description.number:>2}  {description.name:<11} {description.title:<28} "
             f"{description.artefact_schema}"
             for description in descriptions
         ]

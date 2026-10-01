@@ -62,6 +62,7 @@ __all__ = [
     "PIPELINE",
     "RUN_RECORD_FILENAME",
     "RUN_SCHEMA",
+    "STORE_STAGES",
     "WORKSPACE_STAGES",
     "MissingUpstreamError",
     "RunResult",
@@ -97,6 +98,7 @@ PIPELINE: tuple[str, ...] = (
     "contour",
     "region",
     "mesh",
+    "protonation",
     "charge",
     "materials",
     "solve",
@@ -107,7 +109,10 @@ PIPELINE: tuple[str, ...] = (
 
 Not in section 5.2's *numbering* order: stage 9 resolves the case and stages 6,
 7 and 8 all consume it, so the numbers say what each stage is and this tuple
-says when it can run. A Tier-1 test asserts every name here is registered and
+says when it can run. ``protonation`` follows ``mesh`` so that a walk truncated
+at the mesh, as the desktop shell's geometry build is, never protonates (WP27
+D2); its declared inputs do not force that, which is why the walk stays a
+prefix rather than a dependency sort. A Tier-1 test asserts every name here is registered and
 that each stage's declared inputs are produced by the ones before it.
 """
 
@@ -161,7 +166,18 @@ def _scratch(store: Store) -> Path:
 
 
 WORKSPACE_STAGES: frozenset[str] = frozenset(
-    {"structure", "density", "symmetry", "contour", "region", "mesh", "charge", "solve", "report"}
+    {
+        "structure",
+        "density",
+        "symmetry",
+        "contour",
+        "region",
+        "mesh",
+        "protonation",
+        "charge",
+        "solve",
+        "report",
+    }
 )
 """Stages whose constructor takes the directory they write into.
 
@@ -170,6 +186,15 @@ Enumerated rather than discovered by catching :class:`TypeError` from
 stage's constructor would be indistinguishable from an unwanted keyword, and the
 driver would silently rebuild the stage with no workspace and write into the
 store root. A Tier-1 test asserts this set against the constructors themselves.
+"""
+
+STORE_STAGES: frozenset[str] = frozenset({"protonation"})
+"""Stages whose constructor takes the run's store, to cache parts of their work in it.
+
+``protonation`` stores each frame under its own key, so a changed frame
+selection re-protonates only the frames it adds (WP27 D10). Enumerated, and
+asserted against the constructors by a Tier-1 test, for the reason
+:data:`WORKSPACE_STAGES` gives.
 """
 
 _WEIGHTS: Mapping[str, float] = {
@@ -188,6 +213,9 @@ _WEIGHTS: Mapping[str, float] = {
     # Generating a mesh is seconds (6-8 s on the reference profile); reading one
     # is less. Either is small beside the ladder.
     "mesh": 0.05,
+    # About a minute per frame of a ClyA dodecamer, PROPKA included (WP27): when
+    # it runs it is most of the walk, and it runs only as a walk's target.
+    "protonation": 1.0,
     "charge": 0.06,
     "materials": 0.01,
     "solve": 0.75,
@@ -388,6 +416,8 @@ class _Walk:
         §5.3.2 requires it be recorded in provenance and kept out of the key.
         """
         extra = dict(self.arguments.get(name, {}))
+        if name in STORE_STAGES:
+            extra["store"] = self.store
         if name not in WORKSPACE_STAGES:
             return create(name, **extra)
         root = self.workspace
@@ -423,6 +453,11 @@ def selected_stages(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]
     """
     supplied = resolved.charge is not None or resolved.eps_r is not None
     dropped = set() if supplied else {"charge"}
+    if upto != "protonation" or not resolved.protonates:
+        # Until stage 7's deposition reads it (WP28), the protonation artefact
+        # feeds nothing, and a stage nothing reads is not run: it runs only as a
+        # walk's named target, and costs about a minute per frame (WP27 D3).
+        dropped.add("protonation")
     if resolved.structure is None:
         dropped.update(STRUCTURE_STAGES)
     if not resolved.generates_mesh:
@@ -436,6 +471,16 @@ def selected_stages(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]
         raise UnknownStageError(
             f"stage {upto!r} is registered but case {resolved.name!r} carries no structure: "
             "section, so there is nothing for it to read"
+        )
+    if upto == "protonation":
+        raise UnknownStageError(
+            f"stage 'protonation' is registered but case {resolved.name!r} "
+            + (
+                "supplies inputs.charge, which replaces what stage 7 makes of the protonation"
+                if resolved.charge is not None
+                else "carries no structure: section and supplies no inputs.pqr, so there is "
+                "nothing for it to protonate"
+            )
         )
     if upto == "region":
         raise UnknownStageError(
@@ -579,6 +624,7 @@ def input_files(resolved: ResolvedCase, case_path: Path | None) -> dict[str, Pat
         ("profile", resolved.profile),
         ("charge", resolved.charge),
         ("eps_r", resolved.eps_r),
+        ("pqr", resolved.pqr),
     ):
         if supplied is not None and supplied.path is not None:
             files[role] = supplied.path
@@ -652,6 +698,31 @@ CONTOUR_RECORD_KEYS: tuple[str, ...] = (
 """The stage-4 summary entries the Geometry group records as ``contour`` (WP20 D15)."""
 
 
+PROTONATION_RECORD_KEYS: tuple[str, ...] = (
+    "source",
+    "q_net_e",
+    "forcefield",
+    "ph",
+    "titration",
+    "arguments",
+    "variant",
+    "frames",
+    "versions",
+    "unapplied",
+    "chain_differences",
+    "radii",
+    "registration",
+    "warnings",
+    "pqr_sha256",
+    "payload_digest",
+)
+"""The protonation summary entries the manifest's Charge group records (WP27 D16).
+
+``Q_net`` per frame beside the structure's ``variant``, which is its provenance
+(OPN-04), and the force field, pH and titration that produced it.
+"""
+
+
 def _record(artefact: Artefact | None, keys: tuple[str, ...]) -> dict[str, Canonicalisable] | None:
     """Return a Geometry-group record: the named entries of one stage's summary.
 
@@ -681,6 +752,7 @@ def _manifest(walk: _Walk, *, case_text: str, case_path: Path | None) -> Manifes
     region = walk.artefacts.get("region")
     mesh = walk.artefacts.get("mesh")
     charge = walk.artefacts.get("charge")
+    protonation = walk.artefacts.get("protonation")
     solve = walk.artefacts.get("solve")
     qoi = walk.artefacts.get("qoi")
 
@@ -718,6 +790,8 @@ def _manifest(walk: _Walk, *, case_text: str, case_path: Path | None) -> Manifes
         contour=_record(contour, CONTOUR_RECORD_KEYS),
         region=dict(region.summary) if region is not None else None,
         charge=dict(charge.summary) if charge is not None else None,
+        protonation=_record(protonation, PROTONATION_RECORD_KEYS),
+        protonation_reason=None if protonation is not None else _protonation_reason(walk),
         electrolyte=walk.resolved.electrolyte,
         clamp_activations=clamps if isinstance(clamps, int) else None,
         ladder=solver,
@@ -729,6 +803,20 @@ def _manifest(walk: _Walk, *, case_text: str, case_path: Path | None) -> Manifes
         warm_start=warm_start,
         wall_distance=wall_distance,
         contributed_deviations=tuple(walk.contributed),
+    )
+
+
+def _protonation_reason(walk: _Walk) -> str:
+    """Return why the ``protonation`` stage did not run in this walk (WP27 D3)."""
+    if not walk.resolved.protonates:
+        return (
+            "this case supplies inputs.charge, which replaces what stage 7 makes of a protonation"
+            if walk.resolved.charge is not None
+            else "this case carries no structure: section and supplies no inputs.pqr"
+        )
+    return (
+        "the protonation stage runs only when a walk names it, as `nanopnp stage protonation`, "
+        "until stage 7's deposition reads its artefact (WP27 D3)"
     )
 
 

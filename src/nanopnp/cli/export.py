@@ -9,7 +9,10 @@ table below is the whole of what is written:
   (IF-05, §8.2.2 B10);
 - ``symmetry``: ``.npz``, the stored reduction;
 - ``contour``: ``.yaml``, the stored ``nanopnp/profile/v1`` document;
-- ``mesh``: ``.msh``, the stored MSH 4.1 file (IF-06).
+- ``mesh``: ``.msh``, the stored MSH 4.1 file (IF-06);
+- ``protonation``: ``.pqr``, the atom table in ångströms in stage 1's frame, one
+  ``MODEL`` per frame where there is more than one, which reads back through
+  ``inputs.pqr`` to the stored payload exactly (WP27 D16).
 
 **A native payload is copied byte for byte**, so that the file a user holds has the
 hash the store records, and a profile exported here and supplied through
@@ -46,6 +49,7 @@ EXPORTS: Mapping[str, tuple[str, ...]] = {
     "symmetry": (".npz",),
     "contour": (".yaml",),
     "mesh": (".msh",),
+    "protonation": (".pqr",),
 }
 """The suffixes each stage exports to, in the order the refusal names them."""
 
@@ -55,6 +59,7 @@ _PAYLOAD: Mapping[str, str] = {
     "symmetry": "reduced",
     "contour": "profile",
     "mesh": "mesh",
+    "protonation": "protonation",
 }
 """Each exporting stage's payload key (the stages' ``PAYLOAD_NAME``), held as data here
 so that the refusal and ``--help`` import no stage module."""
@@ -93,6 +98,10 @@ def export_artefact(stage: str, artefact: Artefact, path: Path) -> tuple[Path, .
     suffix = path.suffix.lower()
     if stage == "structure":
         return _export_structure(source, path)
+    if stage == "protonation":
+        from nanopnp.charge.protonation import export_pqr
+
+        return (_staged(path, lambda partial: export_pqr(source, partial)),)
     if stage == "density" and suffix != ".npz":
         from nanopnp.density.map import DensityMap
 

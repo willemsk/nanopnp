@@ -86,9 +86,11 @@ def test_ver25_every_stage_describes_itself_without_importing_it() -> None:
         " 'symmetry': 'nanopnp.symmetry.stage' in sys.modules,"
         " 'contour': 'nanopnp.geometry.contour' in sys.modules,"
         " 'region': 'nanopnp.geometry.region' in sys.modules,"
+        " 'protonation': 'nanopnp.charge.protonation' in sys.modules,"
         " 'netgen': 'netgen' in sys.modules,"
         " 'numpy': 'numpy' in sys.modules,"
-        " 'extras': sorted(m for m in ('MDAnalysis', 'gemmi', 'skimage', 'shapely')"
+        " 'extras': sorted(m for m in ('MDAnalysis', 'gemmi', 'skimage', 'shapely',"
+        " 'pdb2pqr', 'propka')"
         " if m in sys.modules),"
         " 'post': 'nanopnp.post.stage' in sys.modules}))"
     )
@@ -100,6 +102,7 @@ def test_ver25_every_stage_describes_itself_without_importing_it() -> None:
         "contour",
         "region",
         "mesh",
+        "protonation",
         "charge",
         "materials",
         "case",
@@ -125,6 +128,9 @@ def test_ver25_every_stage_describes_itself_without_importing_it() -> None:
     assert reported["solve"] is False
     assert reported["materials"] is False
     assert reported["charge"] is False
+    # VER-57, WP27 D4: the protonation stage is listed without importing its
+    # module, PDB2PQR or PROPKA.
+    assert reported["protonation"] is False
     assert reported["mesh"] is False
     assert reported["post"] is False
 
@@ -153,6 +159,7 @@ def test_ver25_the_pipeline_numbers_match_section_5_2() -> None:
         "contour": 4,
         "region": 5,
         "mesh": 6,
+        "protonation": 7,
         "charge": 7,
         "materials": 8,
         "case": 9,

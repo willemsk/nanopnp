@@ -75,6 +75,17 @@ imported: ``io`` imports nothing from ``mesh`` at run time (see the module
 docstring), and one schema naming one thing in two places is the intent.
 """
 
+PROTONATION_SCHEMA = "nanopnp/protonation/v1"
+"""Stage 7, first half: the per-frame atom table with charges and radii (FR-12, WP27 D10)."""
+
+PROTONATION_FRAME_SCHEMA = "nanopnp/protonation-frame/v1"
+"""One frame's PDB2PQR output, keyed on the digest of the PDB it was given (WP27 D10).
+
+Not the output of a registered stage: the ``protonation`` stage stores each frame
+under this schema as it goes, so that a changed frame selection re-protonates
+only the frames it has not seen (section 5.3.2, the stage-7 artefact row).
+"""
+
 FIELDS_SCHEMA = "nanopnp/fields/v1"
 """Stage 7: the supplied fixed-charge and dielectric fields, gated (§5.2)."""
 
@@ -468,6 +479,35 @@ class MeshArtefact(Artefact):
             schema=MESH_ARTEFACT_SCHEMA,
             parameters=parameters,
             inputs={"mesh": content_hash} if content_hash is not None else {"region": str(region)},
+            payload=dict(payload or {}),
+            summary=summary or {},
+        )
+
+
+class ProtonationArtefact(Artefact):
+    """Stage 7, first half: the protonation artefact (FR-12, WP27 D10).
+
+    Produced, it is keyed on the protonation parameters -- pH, force field,
+    titration method, the PDB2PQR argument list and the residue-name
+    normalisation table -- with stage 1's hash as its input. Supplied through
+    ``inputs.pqr``, it is keyed on the file's contents and, beside
+    ``structure:``, on stage 1's hash. The PDB2PQR and PROPKA versions are
+    recorded in the summary, beside the key and outside it (section 5.3.2), and
+    so is the payload's digest, re-checked on load (VER-23).
+    """
+
+    def __init__(
+        self,
+        *,
+        parameters: Mapping[str, Canonicalisable],
+        inputs: Mapping[str, str],
+        payload: Mapping[str, Path] | None = None,
+        summary: Mapping[str, Canonicalisable] | None = None,
+    ) -> None:
+        super().__init__(
+            schema=PROTONATION_SCHEMA,
+            parameters=dict(parameters),
+            inputs=dict(inputs),
             payload=dict(payload or {}),
             summary=summary or {},
         )
