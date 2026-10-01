@@ -216,7 +216,8 @@ _WEIGHTS: Mapping[str, float] = {
     # is less. Either is small beside the ladder.
     "mesh": 0.05,
     # About a minute per frame of a ClyA dodecamer, PROPKA included (WP27): when
-    # it runs it is most of the walk, and it runs only as a walk's target.
+    # it runs it is most of the walk. It runs in every charged walk (WP28 D8),
+    # usually served from the store, and otherwise only as a walk's target.
     "protonation": 1.0,
     # A deposit is seconds per frame of a ClyA dodecamer for the kernel's sum, and
     # seconds more for the projection and its gates; reading a field is less.

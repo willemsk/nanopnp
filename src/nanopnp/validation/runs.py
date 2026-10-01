@@ -141,11 +141,21 @@ def reopen(directory: str | Path, *, store: Store | None = None) -> ReopenedRun:
             "run was made against another store, or the store has been pruned; point --store at "
             "the one the run used, or re-run the member"
         )
-    # A deposited charge is read from the run's own stage-7 artefact (WP28 D9).
+    # A deposited charge is read from the run's own stage-7 artefact, never
+    # re-deposited (WP28 D9); a supplied one is re-read from inputs.charge.
     charge = record.get("artefacts", {}).get("charge")
-    stage7 = None
-    if isinstance(charge, dict):
-        stage7 = holding.get(str(charge["schema"]), str(charge["hash"]))
+    stage7 = (
+        holding.get(str(charge["schema"]), str(charge["hash"]))
+        if isinstance(charge, dict)
+        else None
+    )
+    if isinstance(charge, dict) and stage7 is None and resolved.deposits_charge:
+        raise RunError(
+            f"the store at {holding.root} holds no {charge['schema']} artefact "
+            f"{str(charge['hash'])[:12]}, which is the deposited charge {source} was solved with. "
+            "The run was made against another store, or the store has been pruned; point --store "
+            "at the one the run used, or re-run the member"
+        )
     solution = restore(
         warm_start_payload(artefact),
         case=document,

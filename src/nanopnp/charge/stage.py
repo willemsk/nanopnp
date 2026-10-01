@@ -35,7 +35,6 @@ gate (D12, FR-27).
 from __future__ import annotations
 
 import logging
-import shutil
 import tempfile
 import time
 from dataclasses import dataclass, replace
@@ -59,10 +58,12 @@ from nanopnp.charge.fields import (
     PLANE_SMOOTHING_NM,
     ChargeField,
     ConservationReport,
+    FieldDocument,
     check_conservation,
     check_deposit_conservation,
     conservation,
     deposit_conservation,
+    load_document,
     load_field,
 )
 from nanopnp.charge.kernel import (
@@ -71,6 +72,7 @@ from nanopnp.charge.kernel import (
     PLANE_COUNT,
     KernelLattice,
     SourceAtoms,
+    check_charged,
     kernel_parameters,
     source_atoms,
     sum_kernel,
@@ -92,6 +94,7 @@ from nanopnp.density.grid import read_grid, write_grid
 from nanopnp.io.artefact import Artefact, ChargeGridArtefact, FieldsArtefact, StageInputs
 from nanopnp.io.case import UnsupportedCaseSection, resolve
 from nanopnp.io.defaults import ContributedDeviation
+from nanopnp.io.store import atomic_write_bytes
 from nanopnp.materials.fields import (
     MaterialMean,
     SolidFractionField,
@@ -566,44 +569,52 @@ def fixed_charge_density(
     return supplied.charge.volume_density_C_m3()
 
 
-def _field_document(lattice: KernelLattice, data: Path) -> dict[str, Canonicalisable]:
+def _field_document(lattice: KernelLattice, data: Path) -> FieldDocument:
     """Return the ``nanopnp/field/v1`` document the export lattice is written under (D7, D11).
 
     ``inputs.charge`` reads it back to the same grid digest: the values are in the
     canonical C m^-2, so no unit factor touches them. The axis cutoff is the
     default PHY-18 guard, declared for a later re-read (section 5.3.1 NOTE on
-    ``charge.smearing``).
+    ``charge.smearing``). Validated as the reader will validate it, so a document
+    ``inputs.charge`` would refuse is never written.
     """
     grid = lattice.grid
-    return {
-        "schema": FIELD_SCHEMA,
-        "name": "deposited fixed charge",
-        "quantity": "areal_charge_density",
-        "units": "C/m^2",
-        "provenance": {
-            "source": DEPOSIT_PROVENANCE,
-            "notes": (
-                f"{KERNEL_ID}, {lattice.atoms.count} charged atoms over {lattice.atoms.frames} "
-                f"frames, spacing {lattice.spacing_nm:g} nm, model frame shifted by "
-                f"{lattice.atoms.shift_z_nm:g} nm"
-            ),
-        },
-        "data": {"path": data.name, "format": "npz", "sha256": file_hash(data)},
-        "grid": {
-            "origin_nm": list(grid.origin_nm),
-            "spacing_nm": list(grid.spacing_nm),
-            "shape": list(grid.shape),
-        },
-        "axis_cutoff_nm": DEFAULT_AXIS_CUTOFF_NM,
-        "q_net_e": lattice.atoms.q_net_e(),
-    }
+    return FieldDocument.model_validate(
+        {
+            "schema": FIELD_SCHEMA,
+            "name": "deposited fixed charge",
+            "quantity": "areal_charge_density",
+            "units": "C/m^2",
+            "provenance": {
+                "source": DEPOSIT_PROVENANCE,
+                "notes": (
+                    f"{KERNEL_ID}, {lattice.atoms.count} charged atoms over "
+                    f"{lattice.atoms.frames} frames, spacing {lattice.spacing_nm:g} nm, model "
+                    f"frame shifted by {lattice.atoms.shift_z_nm:g} nm"
+                ),
+            },
+            "data": {"path": data.name, "format": "npz", "sha256": file_hash(data)},
+            "grid": {
+                "origin_nm": list(grid.origin_nm),
+                "spacing_nm": list(grid.spacing_nm),
+                "shape": list(grid.shape),
+            },
+            "axis_cutoff_nm": DEFAULT_AXIS_CUTOFF_NM,
+            "q_net_e": lattice.atoms.q_net_e(),
+        }
+    )
+
+
+def _document_text(document: FieldDocument) -> str:
+    """Return a field document as the YAML ``load_document`` reads, unset keys left out."""
+    return yaml.safe_dump(
+        document.model_dump(mode="json", by_alias=True, exclude_none=True), sort_keys=False
+    )
 
 
 def write_field_document(lattice: KernelLattice, data: Path, path: Path) -> Path:
     """Write the export lattice's field document to ``path``, naming ``data`` beside it."""
-    path.write_text(
-        yaml.safe_dump(_field_document(lattice, data), sort_keys=False), encoding="utf-8"
-    )
+    path.write_text(_document_text(_field_document(lattice, data)), encoding="utf-8")
     return path
 
 
@@ -641,17 +652,16 @@ def export_charge(artefact: Artefact, path: Path) -> tuple[Path, ...]:
             "inputs.charge, whose own document is the one to keep"
         )
     data = path.with_suffix(".npz")
-    document = yaml.safe_load(
-        Path(artefact.payload[CHARGE_DOCUMENT_PAYLOAD]).read_text(encoding="utf-8")
+    stored = load_document(Path(artefact.payload[CHARGE_DOCUMENT_PAYLOAD]))
+    if stored.data is None:  # the stage writes ``data:``, never ``form:``
+        raise KeyError("stage 7's field document names no data file to export beside it")
+    document = stored.model_copy(
+        update={"data": stored.data.model_copy(update={"path": Path(data.name)})}
     )
-    shutil.copyfile(source, data)
-    document["data"]["path"] = data.name
-    partial = path.with_name(f".{path.stem}.partial.yaml")
-    try:
-        partial.write_text(yaml.safe_dump(document, sort_keys=False), encoding="utf-8")
-        partial.replace(path)
-    finally:
-        partial.unlink(missing_ok=True)
+    # Each file through a sibling and a rename, as every other export is written
+    # (cli/export.py): a failure leaves the file that was there, never a torn one.
+    atomic_write_bytes(data, source.read_bytes())
+    atomic_write_bytes(path, _document_text(document).encode("utf-8"))
     return (data, path)
 
 
@@ -814,20 +824,27 @@ class FieldStage:
         atoms = source_atoms(
             table, sharpness=resolved.smearing.sharpness, shift_z_nm=frame_shift_nm(resolved)
         )
+        data = ingested.data
+        mesh = ingested.mesh
+        measures = self._measures(resolved)
+        solids = tuple(sorted(resolved.document.physics.solid_permittivities))
+        # Before the sum: the frame check reads only the atoms and the mesh, so a
+        # structure in another frame than its mesh is refused without first paying
+        # for every frame's kernel sum (D4). With no charged atom at all it would
+        # report a share of nothing, so that cause is refused first.
+        check_charged(atoms)
+        check_cancelled(cancel, "the solid-share gate")
+        report(progress, 0.0, "checking that the atoms sit in the mesh's solids")
+        share_started = time.perf_counter()
+        share = check_solid_share(atoms, data, solids, cell_nm=resolved.smearing.grid_spacing_nm)
+        checked = time.perf_counter()
+
         directory = self._directory()
         grid_artefact, lattice, cached = self._lattice(
             resolved, protonation, atoms, directory, progress=progress, cancel=cancel
         )
         summed = time.perf_counter()
-
-        data = ingested.data
-        mesh = ingested.mesh
-        measures = self._measures(resolved)
-        solids = tuple(sorted(resolved.document.physics.solid_permittivities))
-        check_cancelled(cancel, "the solid-share gate")
-        report(progress, 0.6, "checking that the atoms sit in the mesh's solids")
-        share = check_solid_share(atoms, data, solids, cell_nm=lattice.spacing_nm)
-        report(progress, 0.65, f"depositing on P{measures.element_order}")
+        report(progress, 0.6, f"depositing on P{measures.element_order}")
         found = deposit(lattice.grid, data, measures.element_order, cancel=cancel)
         charge = DepositedCharge.bind(found, mesh)
         deposited = time.perf_counter()
@@ -882,9 +899,9 @@ class FieldStage:
                 "material_charge_e": dict(found.material_charges_e(data)),
                 "conservation": conserved.summary(),
                 "seconds": {
-                    "sum": summed - started,
+                    "sum": (share_started - started) + (summed - checked),
                     "deposit": deposited - summed,
-                    "gates": gated_at - deposited,
+                    "gates": (checked - share_started) + (gated_at - deposited),
                 },
             },
         }
@@ -931,16 +948,19 @@ class FieldStage:
             atoms,
             resolved.smearing.grid_spacing_nm,
             cancel=cancel,
-            progress=None if progress is None else (lambda f, m: progress(0.55 * f, m)),
+            progress=None if progress is None else (lambda f, m: progress(0.05 + 0.5 * f, m)),
         )
+        written = write_grid(lattice.grid, directory / CHARGE_GRID_FILE, format="npz")
+        # The .npz carries the axes, not the origin and spacing, and reads back with
+        # the z spacing off in its last bits. Deposit and record the grid as stored,
+        # so a run served this lattice from the store deposits the same grid, and the
+        # digest recorded is the one the file (and its re-read through inputs.charge)
+        # carries.
+        lattice = replace(lattice, grid=read_grid(written, format="npz"))
         produced: Artefact = ChargeGridArtefact(
             parameters=key.parameters,
             protonation_hash=protonation.hash,
-            payload={
-                LATTICE_PAYLOAD: write_grid(
-                    lattice.grid, directory / CHARGE_GRID_FILE, format="npz"
-                )
-            },
+            payload={LATTICE_PAYLOAD: written},
             summary=lattice.summary(),
         )
         if self._store is not None:

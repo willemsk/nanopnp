@@ -155,6 +155,15 @@ stays far below the ~14 nm over which the cumulative varies.
 DEFAULT_PLANE_COUNT = 12
 """Planes the per-``z`` cumulative is evaluated at when a caller names none."""
 
+NEUTRAL_Q_NET_E = 1e-6
+"""``|Q_net|`` at or below which a deposited charge is net-neutral, in e (WP28 D6).
+
+The protonation gate holds every frame's ``Q_net`` to within this of an integer
+(``charge.protonation.Q_NET_TOLERANCE_E``, WP27), so a frame mean this small is a
+zero summed in floating point: ``fsum`` of CHARMM's decimal charges is ~1e-17 e,
+not 0, and every relative leg against it is round-off over round-off.
+"""
+
 PLANE_SMOOTHING_NM = 0.5
 """``s`` of the producer path's per-plane weight ``1/2 erfc((z - p)/s)``, in nm (WP28 D6).
 
@@ -1112,11 +1121,12 @@ def check_deposit_conservation(report: DepositConservation) -> DepositConservati
     ChargeFieldError
         Naming the gate, the quantity and, where there is one, its location.
     """
-    if report.reference_C == 0.0:
+    if not report.reference_C > NEUTRAL_Q_NET_E * ELEMENTARY_CHARGE:
         raise ChargeFieldError(
             "the protonation artefact carries no net charge",
-            "every leg of this check is relative to |Q_net|, which is zero, so no tolerance "
-            "means anything (QR-03)",
+            f"|Q_net| is {report.reference_C / ELEMENTARY_CHARGE:.3g} e, a net-neutral structure "
+            f"to within {NEUTRAL_Q_NET_E:g} e, and every leg of this check is relative to it, "
+            "so no tolerance means anything (QR-03)",
         )
     if not report.ring_ratio <= RING_TOL:
         raise ChargeFieldError(

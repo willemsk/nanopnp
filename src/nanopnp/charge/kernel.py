@@ -62,6 +62,7 @@ __all__ = [
     "SourceAtoms",
     "areal_density",
     "atom_lattice_sum",
+    "check_charged",
     "check_spacing",
     "kernel_parameters",
     "lattice_axes",
@@ -228,6 +229,22 @@ def source_atoms(
         shift_z_nm=shift_z_nm,
         table=table,
     )
+
+
+def check_charged(atoms: SourceAtoms) -> None:
+    """Refuse a protonation artefact with no charged atom (PHY-16 step 4).
+
+    Raises
+    ------
+    ChargeFieldError
+        If every atom has ``q_i = 0``: there is no fixed charge to deposit, and
+        every later gate would name a consequence rather than this cause.
+    """
+    if atoms.count == 0:
+        raise ChargeFieldError(
+            "the protonation artefact carries no charged atom (PHY-16 step 4)",
+            "every atom has q_i = 0, so there is no fixed charge to deposit",
+        )
 
 
 def check_spacing(atoms: SourceAtoms, spacing_nm: float) -> None:
@@ -521,11 +538,7 @@ def sum_kernel(
     import numpy as np
 
     started = time.perf_counter()
-    if atoms.count == 0:
-        raise ChargeFieldError(
-            "the protonation artefact carries no charged atom (PHY-16 step 4)",
-            "every atom has q_i = 0, so there is no fixed charge to deposit",
-        )
+    check_charged(atoms)
     check_spacing(atoms, spacing_nm)
     h = spacing_nm
     # The box is 6 w_max beyond the atoms whatever the patch: a narrower patch
@@ -562,15 +575,7 @@ def sum_kernel(
                 scale = charge_C / (z_sum * r_sum * (h * NM_TO_M) ** 2)
             else:
                 scale = charge_C * math.pi**-1.5 * (atoms.width_nm[tile] * NM_TO_M) ** -3 * NM_TO_M
-            z_low = int(z_first.min())
-            z_high = int((z_first + z_values.shape[1]).max())
-            r_low = int(r_first.min())
-            r_high = int((r_first + r_values.shape[1]).max())
-            z_window = _scatter(z_first - z_low, z_values * scale[:, None], z_high - z_low)
-            r_window = _scatter(r_first - r_low, r_values, r_high - r_low)
-            z_end, r_end = min(z_high, n_z), min(r_high, n_r)
-            product = z_window.T @ r_window
-            values[z_low:z_end, r_low:r_end] += product[: z_end - z_low, : r_end - r_low]
+            _accumulate(values, z_first, z_values * scale[:, None], r_first, r_values)
     grid = RadialGrid(origin_nm=(0.0, k0 * h), spacing_nm=(h, h), values=values)
     seconds = time.perf_counter() - started
     report(progress, 1.0, f"{atoms.count} charged atoms summed in {seconds:.1f} s")
@@ -583,6 +588,31 @@ def sum_kernel(
         raw_deviation=worst,
         seconds=seconds,
     )
+
+
+def _accumulate(
+    values: np.ndarray,
+    z_first: np.ndarray,
+    z_values: np.ndarray,
+    r_first: np.ndarray,
+    r_values: np.ndarray,
+) -> None:
+    """Add the rank-one patches ``sum_i Z_i (x) R_i`` into ``values[z, r]``, in place.
+
+    One dense product over the window the patches cover, clipped to the lattice,
+    beyond which every factor is zero. Each factor is ``(first index, values[atoms,
+    nodes])`` along its axis, as :func:`_factors` returns it.
+    """
+    n_z, n_r = values.shape
+    z_low = int(z_first.min())
+    z_high = int((z_first + z_values.shape[1]).max())
+    r_low = int(r_first.min())
+    r_high = int((r_first + r_values.shape[1]).max())
+    z_window = _scatter(z_first - z_low, z_values, z_high - z_low)
+    r_window = _scatter(r_first - r_low, r_values, r_high - r_low)
+    z_end, r_end = min(z_high, n_z), min(r_high, n_r)
+    product = z_window.T @ r_window
+    values[z_low:z_end, r_low:r_end] += product[: z_end - z_low, : r_end - r_low]
 
 
 def _scatter(first: np.ndarray, values: np.ndarray, length: int) -> np.ndarray:
