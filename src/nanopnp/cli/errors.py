@@ -82,6 +82,7 @@ EXIT_CODES: Final[dict[str, int]] = {
     # IF-03: a case rejected by validation or by schema. The fix is an edit to
     # the case file, so a job array must not retry the member.
     "nanopnp.io.case:CaseValidationError": EXIT_CASE,
+    "nanopnp.charge.pqr:PQRError": EXIT_CASE,
     "nanopnp.io.case:UnsupportedCaseSection": EXIT_CASE,
     "pydantic_core._pydantic_core:ValidationError": EXIT_CASE,
     # `outputs:` asked for a quantity this run cannot produce -- `rectification`
@@ -158,6 +159,10 @@ EXIT_CODES: Final[dict[str, int]] = {
     "nanopnp.mesh.gmsh_backend:GmshMeshingError": EXIT_GATE,
     "nanopnp.charge.fields:FieldDocumentError": EXIT_GATE,
     "nanopnp.charge.fields:ChargeFieldError": EXIT_GATE,
+    # WP27 D9: a protonation gate -- an atom PDB2PQR could not parameterise, a
+    # charged atom without a positive radius, a non-integral Q_net -- names the
+    # frame; a malformed or mismatched inputs.pqr is the case's, and exits 3.
+    "nanopnp.charge.protonation:ProtonationError": EXIT_GATE,
     "nanopnp.solve.state:StateMismatchError": EXIT_GATE,
     # A neighbour's converged state that does not describe a space this run
     # could load into. A subclass of the above and classified the same way; it

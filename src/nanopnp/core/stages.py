@@ -387,10 +387,19 @@ def register(description: StageDescription, target: str, *, extra: str | None = 
 
 
 def registered_stages() -> tuple[StageDescription, ...]:
-    """Return every registered stage's description, ordered by pipeline number."""
+    """Return every registered stage's description, by pipeline number and then registration.
+
+    Two stages may share a number: stage 7 is ``protonation`` and then ``charge``,
+    so that stages 8 to 12 keep the numbers this specification, the CLI's output
+    and every recorded manifest cite them by (section 5.2 design note, WP27 D1).
+    Registration order, not the name, orders them, because it is their order in
+    the pipeline.
+    """
+    order = {name: index for index, name in enumerate(_REGISTRY)}
     return tuple(
         sorted(
-            (entry.description for entry in _REGISTRY.values()), key=lambda d: (d.number, d.name)
+            (entry.description for entry in _REGISTRY.values()),
+            key=lambda d: (d.number, order[d.name]),
         )
     )
 
@@ -536,6 +545,23 @@ def _register_builtins() -> None:
             artefact_schema="nanopnp/mesh/v1",
         ),
         "nanopnp.mesh.ingest:MeshStage",
+    )
+    register(
+        StageDescription(
+            name="protonation",
+            number=7,
+            title="Protonation",
+            inputs=("case", "structure"),
+            outputs=(
+                "per-frame atom table with charges and radii",
+                "Q_net per frame",
+                "titratable residue states",
+            ),
+            artefact_schema="nanopnp/protonation/v1",
+        ),
+        # No extra (WP27 D4): inputs.pqr runs without PDB2PQR, which the stage
+        # imports only when it protonates, naming the extra if it is missing.
+        "nanopnp.charge.protonation:ProtonationStage",
     )
     register(
         StageDescription(

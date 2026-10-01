@@ -42,6 +42,7 @@ import math
 import re
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
+from dataclasses import field as dataclass_field
 from pathlib import Path
 from typing import Any, Literal, TypeAlias, get_args, get_origin
 
@@ -420,9 +421,32 @@ class Charge(_Strict):
     protein's permittivity is ``physics.solid_permittivities.protein`` (PHY-20).
     """
 
-    ph: float = 7.5
-    forcefield: str = "CHARMM"
-    titration: Literal["propka", "none"] = "propka"
+    ph: float = Field(
+        default=7.5,
+        ge=0.0,
+        le=14.0,
+        allow_inf_nan=False,
+        description=(
+            "The pH PROPKA assigns protonation states at, in [0, 14] (PHY-16 step 3). A condition "
+            "of the experiment, not a deviation; refused away from its default beside "
+            "titration: none, where it reaches no calculation"
+        ),
+    )
+    forcefield: Literal["CHARMM", "PEOEPB", "SWANSON"] = Field(
+        default="CHARMM",
+        description=(
+            "The PDB2PQR force field, passed as both --ff and --ffout. AMBER, PARSE and TYL06 give "
+            "charged atoms a zero radius and are refused (section 5.3.1 NOTE on the protonation "
+            "keys)"
+        ),
+    )
+    titration: Literal["propka", "none"] = Field(
+        default="propka",
+        description=(
+            "propka: PROPKA's states at charge.ph. none: every residue keeps the force field's "
+            "standard state"
+        ),
+    )
     smearing: SmearingSpec = Field(default_factory=SmearingSpec)
     exclusion_offset_nm: float = Field(default=0.0, ge=0.0, allow_inf_nan=False)
     dielectric_transition_nm: float = Field(default=0.0, ge=0.0, allow_inf_nan=False)
@@ -1684,14 +1708,24 @@ def dumps_case(document: CaseDocument) -> str:
 _ORDERS: dict[str, int] = {"P1": 1, "P2": 2, "P3": 3}
 """Element labels of section 5.3.1 against their polynomial order."""
 
-_PIPELINE_SECTIONS: dict[str, str] = {
-    "charge": "the PDB2PQR charge and dielectric pipeline (FR-12 to FR-15)",
-}
-"""Case-file sections whose stages land in v0.4, with what each one drives.
+PQR_FORMAT = "pqr"
+"""``inputs.pqr.format``: a PQR of one frame or one ``MODEL`` per frame (section 5.3.1 NOTE)."""
 
-``structure:`` left this table in WP18 and ``geometry:`` in WP19. Since WP21 a
-``structure:`` case walks the whole pipeline (section 5.3.1 NOTE on ``structure:``).
+_UNREAD_CHARGE_KEYS: dict[str, str] = {
+    "smearing": "stage 7's charge deposition on the deployed mesh (WP28)",
+    "exclusion_offset_nm": "stage 7's dielectric field and ion-exclusion shell (WP30)",
+    "dielectric_transition_nm": "stage 7's dielectric field and ion-exclusion shell (WP30)",
+}
+"""``charge:`` keys a later package's stage reads, with that stage.
+
+Each is refused set away from its default, naming the stage, until the package
+that delivers the stage removes its entry (section 5.3.1 NOTE on the protonation
+keys). ``charge:`` itself left the table of unrun sections in WP27, when the
+``protonation`` stage made ``ph``, ``forcefield`` and ``titration`` runnable.
 """
+
+PROTONATION_KEYS: tuple[str, ...] = ("ph", "forcefield", "titration")
+"""The ``charge:`` keys the ``protonation`` stage reads (PHY-16 step 3, WP27 D13)."""
 
 PROFILE_FORMAT = "profile1"
 """``inputs.profile.format``: a ``nanopnp/profile/v1`` document (section 5.3.1 NOTE)."""
@@ -1702,16 +1736,13 @@ GRID_SPACING_RANGE_NM: tuple[float, float] = (0.025, 0.05)
 _POINT_GROUP = re.compile(r"C([1-9][0-9]*)")
 """``symmetry.point_group``: a cyclic group ``C<n>``, n >= 1 (section 5.3.1 NOTE)."""
 
-_UNCONSUMED_INPUTS: dict[str, str] = {
-    "pqr": (
-        "stage 7's charge deposition from per-atom charges and radii, which reads a supplied "
-        "PQR file (Phase 3)"
-    ),
-}
+_UNCONSUMED_INPUTS: dict[str, str] = {}
 """``inputs:`` keys ``nanopnp/case/v2`` accepts ahead of the stage that reads them.
 
 Each is refused naming that stage until the stage is delivered, and the package
-that delivers it removes its entry (section 5.3.1 NOTE on ``inputs:``).
+that delivers it removes its entry (section 5.3.1 NOTE on ``inputs:``). Empty
+since WP27, whose ``protonation`` stage reads ``inputs.pqr``; kept, because the
+rule outlives the last key that needed it.
 """
 
 
@@ -1761,6 +1792,19 @@ class ResolvedStructure:
 
 
 @dataclass(frozen=True)
+class ResolvedProtonation:
+    """What the ``protonation`` stage is configured with (PHY-16 step 3, WP27 D13).
+
+    The ``charge:`` block's three protonation keys, at their defaults when the
+    case has no ``charge:`` block.
+    """
+
+    ph: float = 7.5
+    forcefield: str = "CHARMM"
+    titration: str = "propka"
+
+
+@dataclass(frozen=True)
 class ResolvedCase:
     """A case document turned into the objects a run is made of.
 
@@ -1801,6 +1845,19 @@ class ResolvedCase:
     case has no ``geometry:`` block; ``None`` on a case supplying ``inputs.mesh``."""
     reservoir: ReservoirSpec | None = None
     """``geometry.reservoir``, likewise."""
+    pqr: SuppliedArtefact | None = None
+    """``inputs.pqr``, which the ``protonation`` stage reads in place of running PDB2PQR (WP27)."""
+    protonation: ResolvedProtonation = dataclass_field(default_factory=ResolvedProtonation)
+    """``charge.ph``, ``charge.forcefield`` and ``charge.titration`` (WP27 D13)."""
+
+    @property
+    def protonates(self) -> bool:
+        """Whether the ``protonation`` stage has something to read (WP27 D3).
+
+        A ``structure:`` section to protonate or an ``inputs.pqr`` to read, and no
+        ``inputs.charge``, which would replace what stage 7 makes of either.
+        """
+        return (self.structure is not None or self.pqr is not None) and self.charge is None
 
     @property
     def name(self) -> str:
@@ -2114,13 +2171,7 @@ def _require_runnable(document: CaseDocument) -> SuppliedArtefact | None:
         ``inputs.profile`` may omit it, and stages 5 and 6 build the mesh. Any
         other case without one describes no run at all.
     """
-    for section, what in _PIPELINE_SECTIONS.items():
-        if getattr(document, section) is not None:
-            raise UnsupportedCaseSection(
-                f"case {document.name!r} carries a {section}: section; {what} is v0.4 "
-                f"(SPECIFICATION.md section 3). This release runs on artefacts supplied through "
-                "inputs:, which is FR-27's hand substitution at stage granularity"
-            )
+    _check_charge(document)
     for supplied, consumer in _UNCONSUMED_INPUTS.items():
         if getattr(document.inputs, supplied) is not None:
             raise UnsupportedCaseSection(
@@ -2210,6 +2261,91 @@ def _require_runnable(document: CaseDocument) -> SuppliedArtefact | None:
         _check_ladder_can_honour(document.physics)
     _check_outputs(document)
     return mesh
+
+
+def _resolve_protonation(document: CaseDocument) -> ResolvedProtonation:
+    """Return the ``protonation`` stage's settings, at their defaults without ``charge:``."""
+    charge = document.charge if document.charge is not None else Charge()
+    return ResolvedProtonation(
+        ph=charge.ph, forcefield=charge.forcefield, titration=charge.titration
+    )
+
+
+def _check_charge(document: CaseDocument) -> None:
+    """Make the ``charge:`` and ``inputs.pqr`` refusals (section 5.3.1 NOTEs, WP27 D13).
+
+    Raises
+    ------
+    UnsupportedCaseSection
+        Naming the stage, for ``charge.smearing``, ``charge.exclusion_offset_nm`` or
+        ``charge.dielectric_transition_nm`` set away from its default, which a
+        later package's stage reads.
+    CaseValidationError
+        Naming the keys: ``artefact:``, ``groups`` or a format other than ``pqr``
+        on ``inputs.pqr``; ``charge.ph`` away from its default beside
+        ``titration: none``; and a protonation key away from its default where
+        the ``protonation`` stage does not run, which is beside ``inputs.pqr``,
+        beside ``inputs.charge``, and in a case with neither ``structure:`` nor
+        ``inputs.pqr``.
+    """
+    pqr = document.inputs.pqr
+    if pqr is not None:
+        if pqr.path is None:
+            raise CaseValidationError(
+                "inputs.pqr: artefact: names a protonation artefact in the store; the stage's "
+                "own artefact is reached through a structure: section, and a supplied PQR is "
+                "named by inputs.pqr: path: (section 5.3.1 NOTE on inputs:)"
+            )
+        if pqr.groups:
+            raise CaseValidationError(
+                "inputs.pqr.groups is the mesh's vocabulary mapping (IF-06) and means nothing "
+                "for a PQR file (section 5.3.1 NOTE on inputs:)"
+            )
+        if pqr.format not in (None, PQR_FORMAT):
+            raise CaseValidationError(
+                f"inputs.pqr.format is {pqr.format!r}; a supplied PQR file of one frame or one "
+                f"MODEL per frame has format {PQR_FORMAT!r} (section 5.3.1 NOTE on inputs:)"
+            )
+    charge = document.charge
+    if charge is None:
+        return
+    defaults = Charge()
+    for key, stage in _UNREAD_CHARGE_KEYS.items():
+        if getattr(charge, key) != getattr(defaults, key):
+            raise UnsupportedCaseSection(
+                f"charge.{key} is set away from its default; {stage} reads it and is not "
+                "delivered in this release, so it would change nothing (section 5.3.1 NOTE on "
+                "the protonation keys)"
+            )
+    if charge.titration == "none" and charge.ph != defaults.ph:
+        raise CaseValidationError(
+            f"charge.ph is {charge.ph} beside charge.titration: none, which runs PDB2PQR "
+            "without a titration method, so the pH reaches no calculation; remove charge.ph or "
+            "set charge.titration: propka (section 5.3.1 NOTE on the protonation keys)"
+        )
+    changed = [
+        f"charge.{key}"
+        for key in PROTONATION_KEYS
+        if getattr(charge, key) != getattr(defaults, key)
+    ]
+    if not changed:
+        return
+    where = (
+        "beside inputs.pqr, which supplies the charges and radii PDB2PQR would compute"
+        if pqr is not None
+        else "beside inputs.charge, which supplies the field stage 7 would make of them"
+        if document.inputs.charge is not None
+        else "in a case with neither a structure: section nor inputs.pqr, so there is nothing "
+        "to protonate"
+        if document.structure is None
+        else None
+    )
+    if where is not None:
+        raise CaseValidationError(
+            f"{', '.join(changed)} {'is' if len(changed) == 1 else 'are'} set {where}; the "
+            "protonation stage they configure does not run, so they would change nothing "
+            "(section 5.3.1 NOTE on the protonation keys)"
+        )
 
 
 def _check_profile(document: CaseDocument) -> None:
@@ -2668,6 +2804,8 @@ def resolve(document: CaseDocument) -> ResolvedCase:
         profile=document.inputs.profile,
         membrane=geometry.membrane if mesh is None else None,
         reservoir=geometry.reservoir if mesh is None else None,
+        pqr=document.inputs.pqr,
+        protonation=_resolve_protonation(document),
     )
     # Built once and discarded, through the one call every consumer uses: a
     # builder's own refusal -- ``pb`` beside a salt that is not symmetric

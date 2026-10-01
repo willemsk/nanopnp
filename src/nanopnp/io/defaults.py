@@ -72,6 +72,11 @@ SWITCH_PATHS: tuple[str, ...] = (
     # they are classified here by hand.
     "charge.exclusion_offset_nm",
     "charge.dielectric_transition_nm",
+    # PHY-16 step 3: the titration method and the force field PDB2PQR is run with
+    # (section 5.3.1 NOTE on the protonation keys, WP27 D13). charge.ph is a
+    # condition of the experiment, as concentration_M is, and is not here.
+    "charge.titration",
+    "charge.forcefield",
     # NUM-11, NUM-16, NUM-18, PHY-02, CON-11.
     "numerics.stabilisation",
     "numerics.continuation",
@@ -137,7 +142,6 @@ CONFIGURATION_PATHS: dict[str, str] = {
         "the analyte body of stage 5, WP21; a structure: case's walk is refused before stage 5, "
         "so nothing reads it yet, and a supplied mesh carries its analyte already"
     ),
-    "charge.titration": "v0.4; resolve() refuses a case carrying a charge: section",
 }
 """Switch-typed fields that are deliberately *not* deviations, each with its reason.
 
@@ -177,7 +181,12 @@ _VALIDATED_DEFAULTS: dict[str, Any] = {
     },
     # Present at its defaults so that every switch path reads off this document;
     # a case without a charge: block reads the same values (see deviations()).
-    "charge": {"exclusion_offset_nm": 0.0, "dielectric_transition_nm": 0.0},
+    "charge": {
+        "titration": "propka",
+        "forcefield": "CHARMM",
+        "exclusion_offset_nm": 0.0,
+        "dielectric_transition_nm": 0.0,
+    },
     "physics": {
         "model": "epnp-ns",
         "flow": True,
@@ -204,8 +213,8 @@ flux on; variable-density flow and inertia on; the dielectric-gradient forces of
 PHY-02 distance field measured from the pore wall alone; UMFPACK (CON-11 as
 amended); no exclusion shell and a sharp material permittivity (FR-15, PHY-20).
 
-It carries a ``charge:`` block, which :func:`~nanopnp.io.case.resolve` refuses in
-this release: the document is read path by path and never resolved.
+It carries a ``charge:`` block and a placeholder mesh, and names no geometry a
+run could build: the document is read path by path and never resolved.
 """
 
 
