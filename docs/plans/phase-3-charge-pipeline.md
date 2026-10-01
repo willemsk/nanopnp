@@ -1,6 +1,6 @@
 # Phase 3 (Charge pipeline): from a structure to a charged run
 
-**Status: in progress. WP26 delivered, 30 September 2026; WP27 delivered, 1 October 2026 ([plan](wp27-protonation.md)); WP28 delivered, 1 October 2026 ([plan](wp28-charge-deposition.md)); WP29–WP32 planned.** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
+**Status: in progress. WP26 delivered, 30 September 2026; WP27 delivered, 1 October 2026 ([plan](wp27-protonation.md)); WP28 delivered, 1 October 2026 ([plan](wp28-charge-deposition.md)); WP29 planned in detail, 1 October 2026 ([plan](wp29-val06-apbs.md)); WP30–WP32 planned.** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
 the geometry pipeline (`main` at `v0.3.0-alpha.9`, formerly `v0.9.0-alpha.9`). Phase 2's
 end-of-phase report and its release, `v0.3.0`, wait for one Tier-3 run on the author's archive
 (criterion 3, VAL-05's ensemble leg). WP26 may start before that report merges, because nothing in
@@ -224,6 +224,15 @@ and is stated before the comparison is run. Discharges VAL-06, and adds to FR-12
 Tier 2 on 2WCD and on a synthetic charged ring with a known potential. It is required on Linux and
 macOS and skips visibly on Windows. The ensemble leg is at Tier 3, recorded.
 
+> **Planned, 1 October 2026** ([plan](wp29-val06-apbs.md)). Three refinements of the text above,
+> with the tolerance written into VAL-06 and a §7.4 NOTE in the plan's commit. The gated leg has no
+> focusing and no `chgm`: one 0.1 nm grid takes **our** solution on its faces (`bcfl map`), and its
+> charge is the export lattice moved onto the nodes by hat weights. `spl4` belongs to the recorded
+> leg. The tolerance, ruled by the author on the plan's argument, is 3 % max, 1 % rms and 1.5 % on
+> the axis. A refinement budget of half of each, re-measured on every run, must hold first; on 2WCD
+> it measured 1.22 %, 0.18 % and 0.58 %. The synthetic ring is a Gaussian ring in a grounded
+> dielectric sphere, with a closed-form series.
+
 ### WP30 — The dielectric field and the ion-exclusion shell (FR-15)
 
 A non-zero `charge.dielectric_transition_nm` builds `χ` from the stage-3 mean across the stage-4
@@ -266,7 +275,7 @@ without a documentation edit (VER-45).
 | APBS | How VAL-06 runs | **Settled by the author, 30 September 2026** (§8.2.4 D3): `apbs-binary` in CI, a gated like-for-like leg and a recorded leg |
 | Protonation of an ensemble | Per frame or once, and the form of `inputs.pqr` | **Settled by the author, 30 September 2026** (§8.2.4 D4): per frame, with a single- or multi-MODEL PQR |
 | Exclusion shell | In Phase 3 or deferred | **Settled by the author, 30 September 2026** (§8.2.4 D5): in Phase 3, as WP30 |
-| VAL-06 tolerance | The agreement required of the gated leg | WP29, argued and stated before the first comparison, and put to the author with the argument |
+| VAL-06 tolerance | The agreement required of the gated leg | **Settled by the author, 1 October 2026**, on [WP29](wp29-val06-apbs.md)'s argument: 3 % max, 1 % rms, 1.5 % on the axis, within a measured refinement budget of half of each (§7.4 NOTE on VAL-06) |
 | Stage numbering | Where `protonation` sits in §5.2's numbered table | **Settled by [WP27](wp27-protonation.md) D1**: it shares number 7 with `charge` and runs before it, so stages 8–12 keep their numbers (§5.2 design note) |
 | `axis_cutoff_nm` on the producer path | Applied for parity, or refused away from its default | **Settled by [WP28](wp28-charge-deposition.md) D10**: refused away from its default on every path, naming PHY-18 (§5.3.1 NOTE on `charge.smearing`) |
 | OPN-07 | What identifies a deposited charge in a golden's `case_hash` | **Open, found by the WP28 review** (PR #57, finding #7). The identity currently ignores the structure, pH and smearing. Needed before any golden or VAL-16/VAL-17 recorded leg is compared on a deposited charge. The constraints are in §10 |

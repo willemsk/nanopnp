@@ -418,6 +418,71 @@ frame).
   `propka.*`. PROPKA's full report is logged at INFO, about 400 kB for the dodecamer. Importing
   `pdb2pqr` calls `logging.captureWarnings(True)`.
 
+### APBS 3.4.1 driven by maps **[tested]**, 1 October 2026
+
+Measured in this container while planning WP29 (VAL-06), with `apbs-binary` 3.4.1.1 installed into
+a scratch environment. Lengths in the deck and the maps are in Å, and the potential is in `kT/e` at
+the deck's `temp`.
+
+- **The package.** The Linux wheel is tagged `py3-none-manylinux_2_28_x86_64`, so one wheel serves
+  every Python. It holds a static `apbs` (banner `APBS 3.4.1`, built 29 April 2022) and the tools,
+  33 MB in all. On macOS arm64 the binary needs `DYLD_LIBRARY_PATH` set to the package's `lib/`.
+  `apbs_binary.run_apbs` and `popen_apbs` set it, and they take `subprocess.run` and `Popen`
+  arguments.
+- **A molecule is mandatory.** A deck with every input supplied as a map, but no `mol`, stops with
+  `PBEparm_check: MOL not set!`. A one-atom, zero-charge PQR placed outside the box satisfies it.
+- **`READ charge` is in e Å⁻³.** A unit Gaussian sampled at the nodes is reported as `Charge map
+  integral = 1.00e+00 e`. With `usemap charge`, `chgm` has no effect on the map.
+- **The three `READ diel` maps are staggered.** The x-map's origin is the grid's plus `h/2` in x,
+  and likewise for y and z. APBS samples each at the edge midpoints. An x-map on the node grid
+  aborts with `Vpmg_fillco: Off dielXMap at: (x,y,z) = …` and `VASSERT: ASSERTION FAILURE` at
+  `vpmg.c:4191`.
+- **No kappa map at zero ionic strength.** A deck with no `ion` line and no `kappa` map runs.
+- **`bcfl map` exists.** It needs `usemap pot`, takes the face values of the potential map, and warns
+  `External energies are not used in BCFL_MAP calculations`.
+- **Accuracy on closed forms.** All runs use `bcfl map` from the exact potential.
+  - **A unit Gaussian** (`w` = 0.1 nm) in uniform ε, point-sampled, has a maximum interior error of
+    0.32, 0.079 and 0.020 `kT/e` at `h` = 0.0625, 0.031 and 0.016 nm. That is second order.
+  - **A Gaussian ring in a dielectric sphere** has radius 1 nm, height 0.5 nm and `w` = 0.1 nm. The
+    sphere has `a` = 2 nm and ε 20, in water at 78.15. The charge map is hat-weighted from an
+    (r, z) lattice and conserves to 10⁻¹⁶. The table gives the maximum fluid error, at least
+    0.2 nm outside the sphere, relative to the fluid's maximum |φ|.
+
+    | `h` (nm) | Point-sampled diel | Harmonic mean (8 per edge) |
+    |---|---|---|
+    | 0.2 | 0.53 % | 0.27 % |
+    | 0.1 | 0.25 % | 0.14 % |
+    | 0.05 | 0.11 % | 0.043 % |
+
+    Point sampling is first order. Inside the sphere the harmonic mean's rms error falls by 4 per
+    halving. Averaging arithmetically across each edge's dual face before the harmonic mean is
+    *worse* than the harmonic mean alone: 0.42 % and 0.25 % at 0.2 and 0.1 nm.
+  - **Node-centred values declared at the staggered origin** give 2.05 % max and 0.53 % rms on the
+    fluid at 0.1 nm. That is wrong, but within a loose gate, so it is caught against the closed
+    form and not by a two-solver comparison.
+- **Cost.**
+
+  | Grid | Wall-clock | Peak RSS |
+  |---|---|---|
+  | 65³ | 1 s | 0.11 GB |
+  | 129³ | 11 s | 0.52 GB |
+  | 193³ | 44 s | 1.9 GB |
+
+  This is about 250 B per node.
+- **Self-refinement on 2WCD.** The problem is `poisson` on the protonated, prepared 2WCD at the
+  default mesh (44,987 elements), with both electrodes grounded. The box is 19.2 nm, with the faces
+  from our own `P2` solution. The probes are 555,535 fluid nodes of the 0.2 nm grid, at least 0.3 nm
+  from every solid. On them, max |φ| is 19.3 `V_T` (0.50 V) and the rms is 7.2 `V_T`.
+
+  | Difference | max | rms | axis, 93 nodes |
+  |---|---|---|---|
+  | APBS 0.1 nm against 0.2 nm | 0.189 `V_T` (0.98 %) | 0.17 % | 0.57 % |
+  | Our `P3` against `P2` | 0.047 `V_T` (0.24 %) | 0.01 % | 0.013 % |
+
+  APBS's maximum lies in the lumen. At 0.5 nm from the solids it is 0.77 %. The difference between
+  the two solvers was not formed; VAL-06's tolerance was stated first (`SPECIFICATION.md` §7.4
+  NOTE on VAL-06).
+
 ---
 
 ## 4. Geometry, meshing and I/O
