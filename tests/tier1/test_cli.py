@@ -180,6 +180,7 @@ def _public_exception_classes() -> dict[str, str]:
         "TypeError",
         "OSError",
         "ArithmeticError",
+        "AssertionError",
         "ImportError",
         "LookupError",
     }

@@ -82,6 +82,29 @@ def gmsh_module() -> ModuleType:
     return import_gmsh()
 
 
+def require_apbs() -> None:
+    """Skip naming why APBS cannot run here; under ``NANOPNP_REQUIRE_APBS=1`` fail instead.
+
+    WP29 D12, the rule of WP23 D11: CI sets the variable on the Linux and macOS
+    legs, where the ``apbs-binary`` wheel exists, so VAL-06 cannot skip unseen
+    there; Windows has no wheel and skips, named, under ``-rs``.
+    """
+    from nanopnp.validation.apbs import REQUIRE_APBS, apbs_available
+
+    reason = apbs_available()
+    if reason is None:
+        return
+    if os.environ.get(REQUIRE_APBS) == "1":  # pragma: no cover - environment-dependent
+        pytest.fail(f"{REQUIRE_APBS}=1 and {reason}")
+    pytest.skip(reason)  # pragma: no cover - environment-dependent
+
+
+@pytest.fixture(scope="session")
+def apbs() -> None:
+    """Require APBS through :func:`require_apbs`: a test or fixture taking this one runs it."""
+    require_apbs()
+
+
 PREPARED_TILT_DEG = 4.0
 """The tilt the prepared copy is left with, so the frame transform is not the identity."""
 
