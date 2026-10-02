@@ -64,7 +64,7 @@ import json
 import logging
 import multiprocessing
 import queue as queue_module
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from string import Template
 from typing import TYPE_CHECKING, Literal, TypeAlias
@@ -75,6 +75,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
     from nanopnp.core.typing import Expression, Mesh
     from nanopnp.io.artefact import Artefact
+    from nanopnp.io.case import ResolvedCase
     from nanopnp.physics.measures import Measures
 
 logger = logging.getLogger(__name__)
@@ -548,6 +549,40 @@ def _recorded_artefact(run: Path, stage: str, *, needed: str | None) -> Artefact
     return artefact
 
 
+def _stage7_need(resolved: ResolvedCase) -> str | None:
+    """Return what a case reads from its stage-7 artefact, as a refusal names it, or ``None``.
+
+    A deposited charge and a derived ``chi`` are read from that artefact and from
+    nowhere else (WP28 D9, WP30 D5); a supplied field is re-read from ``inputs:``.
+    """
+    if resolved.deposits_charge:
+        return "a deposited charge"
+    if resolved.derives_eps_r:
+        return "a derived solid fraction"
+    return None
+
+
+def _write_scene(
+    run: Path, stem: str, scene: dict[str, object], *, renderer: str, title: str
+) -> tuple[Path, Path]:
+    """Write a scene and its host document to ``viewer/<stem>.*``, each through a rename.
+
+    Returns
+    -------
+    tuple
+        The scene's path and the document's path.
+    """
+    directory = run / VIEWER_DIRNAME
+    directory.mkdir(parents=True, exist_ok=True)
+    scene_path = directory / f"{stem}.json"
+    document_path = directory / f"{stem}.html"
+    payload = json.dumps(scene)
+    _replace(scene_path, payload)
+    _replace(document_path, host_document(payload, renderer=renderer, title=title))
+    logger.info("%s scene written to %s (%d bytes)", title, document_path, len(payload))
+    return scene_path, document_path
+
+
 def _element_count(mesh: Mesh, domain: str | None) -> int:
     """Return how many elements the drawn region carries.
 
@@ -621,21 +656,13 @@ def render(request: RenderRequest) -> Rendered:
     state = _state_path(run)
     case = load_case(run / CASE_FILENAME)
     resolved = resolve(case)
-    # Both are read from stage 7's artefact and from nowhere else (WP28 D9, WP30 D5).
-    stage7 = (
-        "a deposited charge"
-        if resolved.deposits_charge
-        else "a derived solid fraction"
-        if resolved.derives_eps_r
-        else None
-    )
     solution = restore(
         state,
         case=case,
         mesh_artefact=_recorded_artefact(
             run, "mesh", needed="a generated mesh" if case.inputs.mesh is None else None
         ),
-        charge_artefact=_recorded_artefact(run, "charge", needed=stage7),
+        charge_artefact=_recorded_artefact(run, "charge", needed=_stage7_need(resolved)),
     )
     # Any model: each reports the NUM-09 scale set that turns its nondimensional
     # state into the SI numbers the attribute names promise (section 5.4.3).
@@ -738,14 +765,9 @@ def render_mesh(request: MeshRequest) -> RenderedMesh:
     sizing = artefact.summary.get("sizing") if artefact is not None else None
     wall = dict(sizing.get("wall_statistics", {})) if isinstance(sizing, dict) else {}
 
-    directory = run / VIEWER_DIRNAME
-    directory.mkdir(parents=True, exist_ok=True)
-    scene_path = directory / f"{MESH_SCENE_STEM}.json"
-    document_path = directory / f"{MESH_SCENE_STEM}.html"
-    payload = json.dumps(scene)
-    _replace(scene_path, payload)
-    _replace(document_path, host_document(payload, renderer=request.renderer, title="mesh"))
-    logger.info("mesh scene written to %s (%d bytes)", document_path, len(payload))
+    scene_path, document_path = _write_scene(
+        run, MESH_SCENE_STEM, scene, renderer=request.renderer, title="mesh"
+    )
     return RenderedMesh(
         document=str(document_path),
         scene=str(scene_path),
@@ -797,8 +819,6 @@ def deployed_coefficient(run: Path, quantity: ChargeQuantity) -> DeployedCoeffic
         If the run carries no such coefficient: no fixed charge, or a sharp
         permittivity per material with no ``chi`` at all.
     """
-    from dataclasses import replace
-
     from nanopnp.charge.fields import CANONICAL_UNITS
     from nanopnp.charge.stage import case_fields, read_fields
     from nanopnp.io.case import load_case, resolve
@@ -817,13 +837,7 @@ def deployed_coefficient(run: Path, quantity: ChargeQuantity) -> DeployedCoeffic
             f"{run} records no stage-6 artefact, so there is no deployed mesh to draw on; run "
             "the build through 'charge' first"
         )
-    stage7 = (
-        "a deposited charge"
-        if resolved.deposits_charge
-        else "a derived solid fraction"
-        if resolved.derives_eps_r
-        else None
-    )
+    stage7 = _stage7_need(resolved)
     charge_artefact = _recorded_artefact(run, "charge", needed=stage7)
     if stage7 is not None and charge_artefact is None:
         raise FileNotFoundError(
@@ -900,14 +914,9 @@ def render_charge(request: ChargeRequest) -> RenderedCharge:
         "colormap_max": colour_range[1],
     }
 
-    directory = run / VIEWER_DIRNAME
-    directory.mkdir(parents=True, exist_ok=True)
-    scene_path = directory / f"{request.quantity}.json"
-    document_path = directory / f"{request.quantity}.html"
-    payload = json.dumps(scene)
-    _replace(scene_path, payload)
-    _replace(document_path, host_document(payload, renderer=request.renderer, title=deployed.name))
-    logger.info("%s scene written to %s (%d bytes)", deployed.name, document_path, len(payload))
+    scene_path, document_path = _write_scene(
+        run, request.quantity, scene, renderer=request.renderer, title=deployed.name
+    )
     return RenderedCharge(
         document=str(document_path),
         scene=str(scene_path),

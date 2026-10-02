@@ -273,16 +273,7 @@ class ChargeWidget(QtWidgets.QWidget):
         except (ValueError, NotImplementedError, KeyError) as error:
             self._status.setText(f"not built: {error}")
             return False
-        self._stop_render()
-        for future in self._loading.values():
-            future.cancel()
-        self._loading.clear()
-        self._requested.clear()
-        self._errors.clear()
-        self._protonation = None
-        self._charge = None
-        self._drawn = None
-        self._draw_problem = ""
+        self._forget()
         self._model = self._control.model
         self._stages = planned
         self._settled = False
@@ -301,11 +292,30 @@ class ChargeWidget(QtWidgets.QWidget):
             self._render.terminate()
         self._render = None
 
-    def shutdown(self) -> None:
-        """Stop everything this tab started: the render child and the view loads.
+    def _forget(self) -> None:
+        """Drop everything shown of the walk this tab followed: views, loads, errors, picture.
 
-        The walk is the Geometry tab's to stop when the window shares it; a tab
-        standing alone cancels its own.
+        One reset for both ways a walk stops being this tab's (a new **Build
+        charge**, or a later build on the shared control), so neither can leave
+        the previous run's deployed field or diagnostics under the next one.
+        """
+        self._stop_render()
+        for future in self._loading.values():
+            future.cancel()
+        self._loading.clear()
+        self._requested.clear()
+        self._errors.clear()
+        self._protonation = None
+        self._charge = None
+        self._drawn = None
+        self._draw_problem = ""
+
+    def shutdown(self) -> None:
+        """Stop everything this tab started: the walk, the render child and the view loads.
+
+        The control is cancelled whether or not the window shares it with the
+        Geometry tab: this is called as the window closes, when that tab
+        cancels the same walk too.
         """
         self._timer.stop()
         self._control.cancel()
@@ -326,9 +336,7 @@ class ChargeWidget(QtWidgets.QWidget):
             self._model = None
             self._stages = StageList(())
             self._rows = ()
-            self._protonation = None
-            self._charge = None
-            self._stop_render()
+            self._forget()
             self._status.setText("a later build replaced this one; build charge to see stage 7")
             self._show_rows()
             self._show_panes()
@@ -354,7 +362,11 @@ class ChargeWidget(QtWidgets.QWidget):
         return model
 
     def _landed(self, name: str, future: Future[ProtonationView | ChargeView]) -> None:
-        """Keep a loaded view and show it."""
+        """Keep a loaded view and show it in the panes it fills.
+
+        Only those panes: re-showing the protonation pane when stage 7's view
+        lands would reset the frame the user has selected to frame 0.
+        """
         try:
             view = future.result()
         except Exception as error:  # the pane shows it; the tab stays usable
@@ -364,7 +376,12 @@ class ChargeWidget(QtWidgets.QWidget):
                 self._protonation = view
             else:
                 self._charge = view
-        self._show_panes()
+        if name == CHARGE_STAGES[0]:
+            self._show_protonation()
+        else:
+            self._show_map()
+            self._show_field()
+            self._show_conservation()
 
     def _maybe_draw(self, model: RunModel) -> None:
         """Ask for the deployed field once the walk has finished and stage 7 is read."""
@@ -430,6 +447,9 @@ class ChargeWidget(QtWidgets.QWidget):
 
     def _field_loaded(self, ok: bool) -> None:
         """Ask the document whether it drew, as the Fields panel does."""
+        if self._drawn is None:
+            # A document of a walk this tab no longer follows: its answer applies to nothing.
+            return
         if not ok:
             self._draw_problem = "the deployed-field document did not load"
             self._show_field()
@@ -438,10 +458,14 @@ class ChargeWidget(QtWidgets.QWidget):
 
     def _field_answered(self, answer: object) -> None:
         """Keep the document's own account of a picture that did not draw."""
+        if self._drawn is None:
+            return
         try:
-            state = json.loads(answer) if isinstance(answer, str) else {}
+            parsed = json.loads(answer) if isinstance(answer, str) else None
         except json.JSONDecodeError:
-            state = {}
+            parsed = None
+        # Any JSON that is not an object is no answer, as ``scene.py`` reads it.
+        state: dict[str, object] = parsed if isinstance(parsed, dict) else {}
         if not state.get("ready"):
             self._draw_problem = (
                 f"the deployed field did not draw: {state.get('error') or 'no answer'} "
@@ -475,7 +499,10 @@ class ChargeWidget(QtWidgets.QWidget):
             index,
             ""
             if walks
-            else "this case supplies its charge through inputs.charge, so nothing is protonated",
+            else (
+                "this case deposits no charge: it supplies inputs.charge, or carries only a "
+                "solid fraction, so nothing is protonated"
+            ),
         )
         view = self._protonation
         self._frame.blockSignals(True)
@@ -528,7 +555,12 @@ class ChargeWidget(QtWidgets.QWidget):
         if view is None or view.charge is None:
             reason = self._errors.get(BUILD_UPTO, "")
             if view is not None:
-                reason = "stage 7 recorded no export lattice: the case supplies its charge"
+                # A supplied charge is archived as a lattice too; only a case with
+                # no fixed charge at all, a solid fraction alone, records none.
+                reason = (
+                    "stage 7 recorded no charge lattice: the case carries no fixed charge, only "
+                    "a solid fraction"
+                )
             self._canvas.clear(reason or "stage 7: the charge map", frame=MODEL_FRAME)
             self._map_notes.setPlainText(reason)
             return
@@ -576,6 +608,12 @@ class ChargeWidget(QtWidgets.QWidget):
             lines.append(self._draw_problem)
             self._pictures.setCurrentWidget(self._web_message)
             self._web_message.setText(self._draw_problem)
+        elif self._drawn is None:
+            # Nothing of this walk is drawn: never leave a previous run's picture
+            # showing under it. A render in flight keeps its own "drawing" line.
+            self._pictures.setCurrentWidget(self._web_message)
+            if self._render is None:
+                self._web_message.setText("no deployed field yet")
         if view is not None:
             lines += ["dielectric:", *(f"  {line}" for line in view.dielectric)]
         self._field_notes.setPlainText("\n".join(lines))

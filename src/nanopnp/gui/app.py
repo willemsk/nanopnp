@@ -46,6 +46,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from nanopnp.cli.errors import classify
 from nanopnp.gui.case_model import CaseEditor
 from nanopnp.gui.charge import BUILD_UPTO as CHARGE_UPTO
+from nanopnp.gui.charge import build_offer
 from nanopnp.gui.run_model import RunControl
 from nanopnp.gui.widgets import (
     CaseEditorWidget,
@@ -184,6 +185,13 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         path = self._saved_case()
         if path is None:
+            return
+        # Asked of the committed document before the walk starts: the commit
+        # above may have staged away stage 7's work, and a walk started for a
+        # tab that then declines to follow it would run on unwatched.
+        offer = build_offer(self._case.editor.document)
+        if not offer.offered:
+            self.statusBar().showMessage(f"the charge was not built: {offer.reason}")
             return
         if self._geometry.build(path, upto=CHARGE_UPTO) and self._charge.follow(path):
             self.statusBar().showMessage(f"building the charge of {path}")

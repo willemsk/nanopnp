@@ -443,7 +443,8 @@ class ImageModel:
 
         low, high = self.scale
         span = high - low if high > low else 1.0
-        last = len(lookup_table(self.palette)) - 1
+        # The table's size, not the table: building it is :meth:`rgba`'s job.
+        last = _PALETTES[self.palette][1] - 1
         fraction = np.clip((np.asarray(values, dtype=np.float64) - low) / span, 0.0, 1.0)
         index: np.ndarray = np.round(fraction * last).astype(np.intp)
         return index

@@ -38,6 +38,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, TypeAlias
 
@@ -122,7 +123,8 @@ def build_offer(document: CaseDocument) -> BuildOffer:
     try:
         selected_stages(resolved, BUILD_UPTO)
     except UnknownStageError as error:
-        return BuildOffer(offered=False, reason=str(error.args[0]) if error.args else str(error))
+        # Its ``__str__`` is the sentence as written, without ``KeyError``'s quoting.
+        return BuildOffer(offered=False, reason=str(error))
     return BuildOffer(offered=True)
 
 
@@ -155,26 +157,42 @@ def block_size(shape: tuple[int, int], limit: int = MAX_PIXELS) -> int:
     return max(1, math.ceil(max(shape) / limit))
 
 
-def _block_sums(
-    values: np.ndarray, weights_z: np.ndarray, weights_r: np.ndarray, block: int
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Return each block's weighted sum, its area, and its unweighted mean.
+def _block_starts(values: np.ndarray, block: int) -> tuple[np.ndarray, np.ndarray]:
+    """Return where each block starts along ``z`` and along ``r``.
 
     Blocks start every ``block`` nodes along each axis; the last is cut short
     where the axis is not a multiple of it.
     """
     import numpy as np
 
-    starts_z = np.arange(0, values.shape[0], block)
-    starts_r = np.arange(0, values.shape[1], block)
+    return np.arange(0, values.shape[0], block), np.arange(0, values.shape[1], block)
+
+
+def _block_sums(
+    values: np.ndarray, weights_z: np.ndarray, weights_r: np.ndarray, block: int
+) -> tuple[np.ndarray, np.ndarray]:
+    """Return each block's weighted sum and its area."""
+    import numpy as np
+
+    starts_z, starts_r = _block_starts(values, block)
     weighted = values * weights_z[:, None] * weights_r[None, :]
     sums = np.add.reduceat(np.add.reduceat(weighted, starts_z, axis=0), starts_r, axis=1)
     areas = np.outer(np.add.reduceat(weights_z, starts_z), np.add.reduceat(weights_r, starts_r))
+    return sums, areas
+
+
+def _plain_means(values: np.ndarray, block: int) -> np.ndarray:
+    """Return each block's unweighted mean: what a block of zero weight is drawn at."""
+    import numpy as np
+
+    starts_z, starts_r = _block_starts(values, block)
     counts = np.outer(
         np.diff(np.append(starts_z, values.shape[0])), np.diff(np.append(starts_r, values.shape[1]))
     )
-    plain = np.add.reduceat(np.add.reduceat(values, starts_z, axis=0), starts_r, axis=1) / counts
-    return sums, areas, plain
+    plain: np.ndarray = (
+        np.add.reduceat(np.add.reduceat(values, starts_z, axis=0), starts_r, axis=1) / counts
+    )
+    return plain
 
 
 @dataclass(frozen=True)
@@ -250,10 +268,14 @@ def charge_image(
     if k < 1:
         raise ValueError(f"a block is at least one node wide, not {k}")
     weights_z, weights_r = lattice.weights_m()
-    sums, areas, plain = _block_sums(grid.values, weights_z, weights_r, k)
-    # A block whose weight is zero (the axis column of a volume density, whose
-    # weight carries r) carries no charge; it is drawn at its plain mean.
-    means = np.divide(sums, areas, out=plain.copy(), where=areas > 0.0)
+    sums, areas = _block_sums(grid.values, weights_z, weights_r, k)
+    carried = areas > 0.0
+    means = np.divide(sums, areas, out=np.zeros_like(sums), where=carried)
+    if not carried.all():
+        # A block whose weight is zero (the axis column of a volume density, whose
+        # weight carries r) carries no charge; it is drawn at its plain mean. Only
+        # then is the lattice summed a second time.
+        means = np.where(carried, means, _plain_means(grid.values, k))
     finite = means[np.isfinite(means)]
     limit = float(np.max(np.abs(finite))) if finite.size else 0.0
     shown = limit if limit > 0.0 else 1.0
@@ -594,6 +616,9 @@ class ProtonationView:
             is a table and a record of different runs.
         """
         view = cls(table=table, summary=summary)
+        # Summed here, on the loader's thread, and kept: the pane reads it on
+        # every frame it shows, and the 2WCD table is 50 frames of ~30,000 atoms.
+        _ = view.q_net_e
         flagged = view.unapplied_residues()
         recorded = {
             (str(entry.get("chain")), str(entry.get("residue")))
@@ -612,9 +637,9 @@ class ProtonationView:
         """Number of frames."""
         return self.table.frames
 
-    @property
+    @cached_property
     def q_net_e(self) -> tuple[float, ...]:
-        """``Q_net`` per frame, summed from the table's atoms."""
+        """``Q_net`` per frame, summed from the table's atoms once and kept."""
         return tuple(float(value) for value in self.table.q_net_e())
 
     @property
