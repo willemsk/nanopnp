@@ -609,8 +609,12 @@ def protonated_2wcd(
 
     shared = shared_directory(tmp_path_factory)
     root = shared / "2wcd-protonated"
+    ready = root / "READY"
     with FileLock(str(shared / "2wcd-protonated.lock")):
-        store = Store(seeded_2wcd(root / "store"))
+        # Seeded once. A later worker that re-seeded it would rewrite files that a
+        # worker already past this lock may be copying out (:func:`seeded_protonated_2wcd`);
+        # on Windows that copy fails on the open file (WinError 32).
+        store = Store(root / "store") if ready.is_file() else Store(seeded_2wcd(root / "store"))
         case = root / "protonated.case.yaml"
         if not case.is_file():
             case.write_text(PROTONATED_2WCD_CASE.format(pdb=prepared_2wcd.path), encoding="utf-8")
@@ -627,6 +631,7 @@ def protonated_2wcd(
             lambda: stage.run(inputs),
         )
         seconds = time.perf_counter() - started
+        ready.write_text("", encoding="utf-8")
     return Protonated2WCD(
         store=store.root,
         case=case,
