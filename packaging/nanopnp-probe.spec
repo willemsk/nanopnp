@@ -112,6 +112,27 @@ for _package in ("MDAnalysis", "gemmi", "skimage", "shapely"):
     _binaries += _package_binaries
     _hiddenimports += _package_hidden
 
+# STAGE 7'S PROTONATION (WP31 D14, D15). PDB2PQR and PROPKA are pure Python, so
+# what can defeat the bundle is their data, not a shared library: PDB2PQR finds
+# its force-field files in `pdb2pqr/dat/` and PROPKA its `propka.cfg` and
+# `protein_bonds.json`, each through `Path(__file__).parent`, so the files must
+# sit beside the modules. `collect_all` carries both trees; `--selftest`
+# protonates a shipped fragment at two pH values and fails naming the payload
+# whose tree is missing.
+for _package in ("pdb2pqr", "propka"):
+    _package_datas, _package_binaries, _package_hidden = collect_all(_package)
+    _datas += _package_datas
+    _binaries += _package_binaries
+    _hiddenimports += _package_hidden
+
+# THE LGPL COMPONENTS WRITTEN IN PYTHON ARE COLLECTED AS SOURCE (ADR-004's
+# packaging NOTE, CON-11). The LGPL is met by leaving the covered files
+# replaceable, and a module inside the PYZ archive is not a replaceable file. So
+# PROPKA, MDAnalysis and GridDataFormats go to `_internal/` as `.py` files
+# (`module_collection_mode="py"`); MDAnalysis's compiled extensions are shared
+# libraries beside them either way.
+_SOURCE_COLLECTED = {"propka": "py", "MDAnalysis": "py", "gridData": "py"}
+
 # GMSH, AND WHY `collect_all("gmsh")` WOULD NOT CARRY IT (section 8.2.2 B8).
 #
 # The wheel installs `gmsh.py` in site-packages and its library OUTSIDE it, as
@@ -171,6 +192,7 @@ a = Analysis(
     # a GPL-3 library inside an LGPL bundle.
     excludes=["PyQt5", "PyQt6", "tkinter", "matplotlib"],
     noarchive=False,
+    module_collection_mode=_SOURCE_COLLECTED,
 )
 # Swap the dist-info PyInstaller collected (it follows `load_occ_libs`'s
 # `metadata("netgen-occt")` call) for the rewritten one above. A TOC entry is

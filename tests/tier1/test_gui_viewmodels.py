@@ -26,6 +26,7 @@ here rather than in a widget.
 
 from __future__ import annotations
 
+import ast
 import math
 import subprocess
 import sys
@@ -88,7 +89,14 @@ VOCABULARY = (
     "no_slip",
     "supg",
     "taubin",
-    "propka",
+    # ``charge.titration`` and ``charge.forcefield`` (WP31 D16). ``propka`` is
+    # matched as a string literal only, because the probe imports the module of
+    # that name, and its ``PAYLOADS`` entry is exempt below.
+    '"propka"',
+    "'propka'",
+    "CHARMM",
+    "PEOEPB",
+    "SWANSON",
     # And the IF-07 attribute vocabulary, extended for WP15: the viewer's field
     # names come from :func:`~nanopnp.io.fields.attribute_name` over the model's
     # own declarations, so a name written here would be the interface saying
@@ -155,6 +163,29 @@ def test_if09_the_view_models_import_no_qt_and_no_ngsolve() -> None:
     assert found.stdout.strip() == "[]", found.stdout
 
 
+def _without_payloads(source: str) -> str:
+    """Return ``source`` with a module-level ``PAYLOADS`` assignment blanked, found by AST.
+
+    The probe's ``PAYLOADS`` names modules, not case values: ``"propka"`` there
+    is the package the bundle must carry, and ``test_gui_probe.py`` checks it
+    against the probe's imports (WP31 D16). Only that one assignment is exempt.
+    """
+    tree = ast.parse(source)
+    for node in tree.body:
+        targets = (
+            [node.target]
+            if isinstance(node, ast.AnnAssign)
+            else node.targets
+            if isinstance(node, ast.Assign)
+            else []
+        )
+        if any(isinstance(target, ast.Name) and target.id == "PAYLOADS" for target in targets):
+            segment = ast.get_source_segment(source, node)
+            assert segment is not None
+            return source.replace(segment, "")
+    return source
+
+
 def test_if09_no_option_list_is_written_in_the_shell() -> None:
     """No value of the case vocabulary appears anywhere under ``gui/``.
 
@@ -168,7 +199,7 @@ def test_if09_no_option_list_is_written_in_the_shell() -> None:
         f"{path.relative_to(root)}: {value}"
         for path in root.rglob("*.py")
         for value in VOCABULARY
-        if value in path.read_text(encoding="utf-8")
+        if value in _without_payloads(path.read_text(encoding="utf-8"))
     }
     assert not offenders, (
         f"{sorted(offenders)} name case-file values inside gui/; every enumeration must come "

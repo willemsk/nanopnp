@@ -862,6 +862,18 @@ The same call draws a **two-component vector** field without special handling: a
 the `epnp-ns` family (the potential, two concentrations, the velocity and the pressure) produce a
 scene from one code path, the vector one costing about 1.5x the scalars.
 
+### A fixed colour range needs the scene's keys and the viewer's own settings **[verified]**
+
+webgui 0.2.39 has one colour map per scene, and by default it autoscales to the sampled
+`funcmin`/`funcmax`, which `Draw(...).GetData()` returns. A diverging map centred on zero, or χ on
+[0, 1], needs that range fixed, and the scene keys alone do not fix it. `funcmin`, `funcmax` and
+`autoscale: false` in the scene set the defaults. The viewer then reads `gui_settings`, maps its
+`autoscale`, `colormap_min` and `colormap_max` onto its `Colormap` settings, and autoscales again
+unless `gui_settings.autoscale` is false too. So `gui/render.py` writes all five. Read from the
+shipped `webgui.js` and from the scenes the render child writes, 2 October 2026 (WP31 D8). The
+fixed range has not been watched drawing in a browser here, because this container has no GPU for
+WebGL.
+
 ### `QWebEngineView` can be constructed in this container with the Playwright GL shim **[tested]**
 
 Measured 21 September 2026. With `libEGL.so.1` and `libGLESv2.so.2` symlinked from
@@ -963,6 +975,48 @@ The whole bundle is 1.3 GB, 501 MB of it PySide6, and builds in 74 s. The five e
 ndarray and raises `AttributeError: 'list' object has no attribute 'shape'` on a nested list. The
 probe therefore builds its 3 × 3 input with `skimage.morphology.disk(1)`, so that it imports no
 undeclared NumPy.
+
+### PDB2PQR and PROPKA bundle through `collect_all`, and fail inside PDB2PQR's run **[tested]**
+
+Measured 2 October 2026 on a Linux rebuild of the probe recipe in this container (WP31 D14, D15),
+with PyInstaller 6.22.3, PDB2PQR 3.7.1 and PROPKA 3.5.1. As with the geometry payloads, Windows
+is the `bundle` job's to confirm.
+
+**Both are pure Python, and both find their data through `Path(__file__).parent`.** For PDB2PQR
+that is `pdb2pqr/dat/`, the force-field and naming files. For PROPKA it is `propka.cfg` and
+`protein_bonds.json`. `collect_all` puts both trees beside the modules in `_internal/`. The frozen
+`--selftest` then protonates `GLU 18`–`LEU 26` of 2WCD chain A to +0 e at pH 2 and −3 e at pH 8,
+the unfrozen values. The cost to the bundle is small:
+
+| Payload | Size in `_internal/` |
+|---|---|
+| PDB2PQR | 1.1 MB, of which `dat/` is 0.50 MB |
+| PROPKA | 0.34 MB, as 26 source files and its two data files |
+| GridDataFormats | 0.12 MB, as source files |
+
+The whole bundle is 1.23 GB and builds in 2 min 25 s from clean. The exercise takes 0.82 s unfrozen
+in a fresh process, and 0.23 s once warm.
+
+**A missing data file surfaces out of PDB2PQR's run.** With `propka.cfg` removed from the built
+bundle, the run raises `FileNotFoundError` naming the file. With `pdb2pqr/dat/` removed, it raises
+a bare `AssertionError` from `pdb2pqr.io.test_for_file` (`assert dirpath_dat.is_dir()`). Both come
+out of `pdb2pqr.main.run_pdb2pqr`, so a probe that named the failing call would name PDB2PQR for
+PROPKA's missing file. The probe names the library whose code is in the traceback instead. PDB2PQR
+calls PROPKA and PROPKA never calls back, so a traceback that enters PROPKA's directory is PROPKA's
+failure. Rebuilt and rerun, the bundle without `propka.cfg` fails naming `propka`.
+
+**`module_collection_mode="py"` puts the modules on disk.** With it set for `propka`, `MDAnalysis`
+and `gridData`, each package's modules are in `_internal/` as `.py` files. MDAnalysis keeps its
+compiled extensions beside them, at the same 45.7 MB. A traceback through them then carries real
+file paths, which is what lets the probe tell PROPKA's failure from PDB2PQR's.
+
+**Without a titration method, the pH reaches nothing.** With `--with-ph` and
+`--titration-state-method` removed, PDB2PQR runs cleanly and gives equal charges at pH 2 and pH 8
+(section 3). So the probe compares the two charges, and fails naming PROPKA when they are equal.
+
+In this container the frozen `--selftest` stops at Gmsh, because `libGLU.so.1` is not installed.
+The figures above come from a local build whose selftest left Gmsh out. That edit was never
+committed.
 
 ### The geometry tab's view-models stay under the schema's cost **[tested]**
 

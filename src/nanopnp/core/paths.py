@@ -2,9 +2,9 @@
 
 The correction parameter files live at the repository root (``data/corrections``)
 as specified in ``SPECIFICATION.md`` section 11, and are force-included into the
-wheel under ``nanopnp/data``; ``data/geometry`` and ``data/radii`` ship the same way and by
-the same rule. Both layouts resolve here so that code and tests never have to know which
-one they are running against.
+wheel under ``nanopnp/data``; ``data/geometry``, ``data/radii`` and ``data/structures`` ship the
+same way and by the same rule. Both layouts resolve here so that code and tests never have to
+know which one they are running against.
 """
 
 from __future__ import annotations
@@ -32,6 +32,10 @@ GEOMETRY_DIR: Path = DATA_DIR / "geometry"
 
 RADII_DIR: Path = DATA_DIR / "radii"
 """Van der Waals radius sets for the stage-2 density kernel (section 5.3.1 NOTE)."""
+
+
+STRUCTURES_DIR: Path = DATA_DIR / "structures"
+"""Shipped structure fixtures: the fragment the packaging probe protonates (WP31 D14)."""
 
 
 def available_corrections() -> tuple[str, ...]:
@@ -116,6 +120,34 @@ def radii_file(name: str) -> Path:
     path = RADII_DIR / f"{name}.yaml"
     if not path.is_file():
         raise FileNotFoundError(f"no radius set {name!r} in {RADII_DIR}")
+    return path
+
+
+def structure_file(name: str) -> Path:
+    """Return the path of a named structure fixture in :data:`STRUCTURES_DIR`.
+
+    Parameters
+    ----------
+    name
+        Fixture name without its suffix, e.g. ``"2wcd-a-18-26"``.
+
+    Returns
+    -------
+    Path
+        Path to ``<name>.pdb``.
+
+    Raises
+    ------
+    FileNotFoundError
+        If no such fixture is installed; the message names the directory searched,
+        as :func:`correction_file` does. Raised rather than returning the path
+        regardless, because PDB2PQR fetches a path that is not a file from
+        rcsb.org (``.knowledge/07`` section 3), and a probe must not reach the
+        network.
+    """
+    path = STRUCTURES_DIR / f"{name}.pdb"
+    if not path.is_file():
+        raise FileNotFoundError(f"no structure fixture {name!r} in {STRUCTURES_DIR}")
     return path
 
 
