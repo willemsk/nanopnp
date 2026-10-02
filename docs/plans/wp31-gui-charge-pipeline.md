@@ -1,6 +1,6 @@
 # WP31 — GUI increment 3: the charge pipeline surfaced
 
-**Status: planned, not started.** Written 2 October 2026, after WP30 merged on `main` (`11bc2c8`,
+**Status: delivered, 2 October 2026.** Written 2 October 2026, after WP30 merged on `main` (`11bc2c8`,
 to be tagged `v0.4.0-alpha.5`). This package inherits the desktop shell of WP14, WP15 and WP24:
 
 - the spawned child, its `RunEvent` queue and `RunRequest.upto`;
@@ -95,6 +95,41 @@ not met.
 | D16 | The vocabulary check | `test_if09_no_option_list_is_written_in_the_shell` matches `"propka"` and `'propka'` as string literals only, and gains `CHARMM`, `PEOEPB` and `SWANSON`. The `PAYLOADS` tuple is exempt, by AST, because its entries are module names, and the import walk already checks them | A module name is not a case value. WP24 narrowed `hand-edit` in the same way. The probe writes no titration or force-field literal (D14) |
 | D17 | The shell | The **Mesh** view already colours by material, so the `exclusion` shell shows as its own material. VER-60 asserts that it is listed. There is no new geometry view | WP30's out-of-scope row. Material-generic drawing is WP24 D12 |
 
+> **Outcome — what changed against the decisions** (2 October 2026). The decisions stand except
+> where these say otherwise; each names its evidence.
+>
+> - **D2: the Charge tab drives the Geometry tab's run control.** *Build charge* starts that control
+>   with `upto: charge`, so stages 1 to 6 fill the Geometry tab's list as they land and one
+>   *Cancel* stops either. The Charge tab follows the walk. If a later geometry build replaces the
+>   model, the Charge tab clears itself rather than showing a stage 7 of another mesh
+>   (`test_gui_widgets.py::test_ver60_the_charge_tab_builds_stage_7_and_shows_its_panes`).
+> - **D6: a partial last block is drawn at a full block's width.** The pixel is centred on a full
+>   block, so the map's last row and column overhang the lattice by less than a block. Its weight
+>   is the partial block's own, so the integral is unchanged: at `k` = 7 on the tube's 781 × 1041
+>   lattice it is `q_grid_e` to 10⁻¹² (`test_gui_charge.py`). The default `k` there is 2.
+> - **D8: fixing the colour range takes the viewer's own settings too.** `funcmin`, `funcmax` and
+>   `autoscale: false` in the scene set only the defaults. webgui 0.2.39 then reads `gui_settings`,
+>   and autoscales again unless its `autoscale`, `colormap_min` and `colormap_max` are set as well.
+>   The render child writes all five (`.knowledge/07` §5). The fixed range has not been watched
+>   drawing in a browser here.
+> - **D13: `NEUTRAL_SECTIONS` is `charge` alone.** An empty `charge:` keys stages 1 to 8 and 10 as
+>   its absence. Stage 9's key is the validated dump, so it moves with the case hash, and the QoI
+>   and the report move with it. An empty `geometry:` is refused beside `inputs.mesh`, so it is not
+>   listed (`test_case_fields.py`).
+> - **D14: the probe names the library whose code raised.** A bundle without `propka.cfg` fails
+>   out of PDB2PQR's run with a `FileNotFoundError`, so naming the failing call would have named
+>   PDB2PQR. The exercise names PROPKA whenever the traceback enters PROPKA's directory, which a
+>   frozen rebuild without the file confirmed. `exercise_payloads` takes the payloads to run, because
+>   Gmsh does not load in a container without `libGLU.so.1`. The shipped fragment is the stage's
+>   own `frame_pdb` of the deposited residues, with two `REMARK` lines naming its source, and a test
+>   holds the two equal.
+> - **The charged tube needs `size_scale` 5.** At 20 and 10 the PHY-19 per-plane error is 5.7e-3
+>   and 1.9e-3 against the 1e-3 gate; at 5 it is 1.2e-4. With the derived dielectric and the shell,
+>   the shell is refused at or below 0.1 nm, twice the 0.05 nm lattice spacing, so the tests use
+>   `δ` = 0.2 nm and `a` = 0.3 nm, and the tube walks to stage 7 in about 3 s.
+> - **Not fixed: stage 7 records its wall-clock seconds in its summary**, so no two charged runs
+>   share a manifest hash. This predates WP31.
+
 ### Work items
 
 In dependency order.
@@ -139,6 +174,18 @@ uv run pytest tests/tier1/test_gui_charge.py tests/tier1/test_gui_charge_protona
 uv run pytest tests/tier2/test_charge_2wcd.py -v
 .claude/hooks/gate.sh run
 ```
+
+> **Outcome — measured** (2 October 2026; netgen, no stabilisation, `P2`).
+>
+> - 2WCD at Tier 2, the default sizes, 44,987 elements: the map is 773 × 334 pixels at `k` = 4, and
+>   carries −59.999999999999 e, equal to `q_grid_e` to 10⁻¹². The producer leg is 1.6e-14, so the
+>   picture is −60 e to 10⁻¹² as planned. The unapplied rows are `CYS 285` and the `LYS 8`
+>   N-terminus in all twelve chains.
+> - The probe's exercise takes 0.82 s unfrozen in a fresh process, and 0.23 s warm. A Linux rebuild
+>   of the recipe, PyInstaller 6.22.3, is 1.23 GB and builds in 2 min 25 s. PDB2PQR adds 1.1 MB to
+>   `_internal/`, of which `dat/` is 0.50 MB; PROPKA 0.34 MB as source files; GridDataFormats
+>   0.12 MB. MDAnalysis is 45.7 MB either way (`.knowledge/07` §5). Its frozen selftest gave +0 e
+>   and −3 e. The Windows bundle is the `bundle` job's to confirm.
 
 ### Out of scope
 

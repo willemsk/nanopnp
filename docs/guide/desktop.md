@@ -18,7 +18,7 @@ form.
     desktop (§8.2 criterion 4, closed 24 September 2026). Installers for all three platforms come
     after v1.0.
 
-## The six panels
+## The seven panels
 
 ![The case editor](img/editor.png)
 
@@ -27,6 +27,13 @@ as the [case-file reference](../_generated/reference/case-file.md). The editor o
 values the installed registries admit: correction files, models and stabilisation modes. A value is
 checked against its declared type as you type it, and the whole document is re-validated when you
 save, with the same diagnostics as the command line.
+
+A number whose schema gives it both a lower and an upper bound, such as `charge.ph` (0 to 14), is a
+spin box over exactly that range. It shows three decimals, and it writes only when you change it,
+so a loaded `7.1234` stays `7.1234` in the file. A field whose section the case lacks is greyed out
+and marked absent. *Add section: charge* writes an empty `charge:` section, which runs exactly as
+no section does, and the pH and force field then become editable. The editor offers this only for a
+section whose empty form changes nothing; it never adds a section that would change the physics.
 
 **Geometry.** Stages 1 to 6, built from the shell and shown as each one lands. *Build geometry*
 saves the case and runs it as far as the mesh, which is `nanopnp run --upto mesh` in the same
@@ -76,6 +83,29 @@ provenance records `source: hand-edit`, and the digest and name of what it was e
 hand-edited reference fixture is therefore no longer accepted as the reference.
 [Editing the contour by hand](geometry.md#editing-the-contour-by-hand) compares this route with
 editing a profile document as text.
+
+**Charge.** Stages 1 to 7, built from the shell. *Build charge* saves the case and runs it as far
+as stage 7, `nanopnp run --upto charge`, on the Geometry tab's run control, so that tab's stage
+list fills in as well, and *Cancel* stops either. The build is offered for a case that generates
+its mesh and carries a charge, from a `structure:` or from `inputs.pqr`, and a greyed-out button
+says why it is not. The list on the left shows stage 7's two halves, protonation and the charge
+itself, with each artefact's hash. Every number in the four panes is read from those artefacts:
+
+- **Protonation:** one row per titratable group in the selected frame, with its chain, residue,
+  applied charge, pKa and the charge PROPKA expects at the pH. A state PDB2PQR could not apply,
+  such as `CYS⁻` under CHARMM or a terminal pKa, is flagged *unapplied*, as recorded. Below the
+  table are `Q_net` per frame, any per-chain differences and PDB2PQR's warnings. A supplied PQR
+  shows its own charges, with the pKa marked as not computed.
+- **Charge map:** the deposited areal charge density in (r, z), in the model frame, on a red–blue
+  scale centred on zero. Large lattices are shown as block means, and the picture still carries
+  the recorded charge. The worst planes of the per-plane check are marked as dashed lines.
+- **Deployed field:** the charge density the solve assembles on the mesh, or the solid fraction χ
+  where the case derives one, drawn by the same `webgui` renderer as the field viewer. It is drawn
+  in a separate process into the run's `viewer/` directory and is never stored as an artefact.
+- **Conservation:** each leg of the conservation report, with its value, its tolerance and the
+  share of the tolerance it uses. A leg the stage did not run is shown as not run, with its reason.
+
+A later geometry build that replaces the model clears the Charge tab until you build charge again.
 
 ![Run control](img/run.png)
 

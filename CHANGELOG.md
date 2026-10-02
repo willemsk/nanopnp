@@ -17,6 +17,45 @@ Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before t
 version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
 
+## [0.4.0-alpha.6] - 2026-10-02
+
+WP31: GUI increment 3, the charge pipeline surfaced in the desktop shell (IF-09, QR-10, QR-11), the
+sixth package of Phase 3 and its phase criterion 6. No weak form, gate, tolerance, stage key or case
+key changes; every number the shell shows is read from a stage's own artefact.
+
+### Added
+
+- **The Charge tab.** *Build charge* runs stages 1 to 7 (`upto: charge`) on the Geometry tab's run
+  control, and the tab shows four panes. *Protonation* shows the titratable groups of each frame,
+  with applied charge, pKa, expected charge, the recorded unapplied states, per-chain differences
+  and warnings. *Charge map* shows the export lattice in the model frame, reduced by
+  trapezoid-weighted block means that keep its recorded charge to 10⁻¹², on a diverging scale
+  centred on zero, with the worst planes marked. *Deployed field* shows the coefficient the solve
+  assembles, ρ or the derived χ, drawn by the render child into `viewer/charge.*` and
+  `viewer/chi.*`. *Conservation* shows each leg against its recorded tolerance, and a leg not run
+  with its reason.
+- **Bounded numbers and *Add section* in the case editor.** A number whose schema declares both
+  bounds, such as `charge.ph`, is a spin box over exactly that range, and it writes only on an
+  edit. *Add section* writes an empty section, for the sections whose empty form resolves exactly
+  as their absence (`io.case.NEUTRAL_SECTIONS`, today `charge` alone).
+- **The probe carries PDB2PQR and PROPKA** (RSK-13, CON-11). `--selftest` protonates
+  `GLU 18`–`LEU 26` of 2WCD chain A, shipped as `data/structures/2wcd-a-18-26.pdb`, at pH 2 and
+  pH 8, and requires 0 e and −3 e. A missing PDB2PQR data tree fails naming `pdb2pqr`. Charges that
+  ignore the pH, or a missing `propka.cfg`, fail naming `propka`. The licence notice gains both,
+  and PDB2PQR's own dependencies.
+- **VER-60.** The views, the render child and the probe at Tier 1 on a charged tube and the 2WCD
+  fragment, and the prepared 2WCD dodecamer at Tier 2: its picture carries −60 e to 10⁻¹², its
+  conservation view is its record, and its protonation view shows −60 e, no chain difference and
+  `CYS 285` and the `LYS 8` N-terminus unapplied in every chain.
+
+### Changed
+
+- PROPKA, MDAnalysis and GridDataFormats are collected into the bundle as source files rather than
+  into its module archive, so that each LGPL component can be replaced in place (ADR-004's
+  packaging NOTE).
+- The IF-09 vocabulary check matches `propka` only as a string literal, and gains `CHARMM`,
+  `PEOEPB` and `SWANSON`.
+
 ## [0.4.0-alpha.5] - 2026-10-02
 
 WP30: the dielectric field and the ion-exclusion shell (FR-15), the fifth package of Phase 3. Both
