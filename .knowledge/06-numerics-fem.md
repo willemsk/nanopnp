@@ -1197,14 +1197,41 @@ polygon is the least of four endpoint distances (`chord_clearances`).
 The closing moves the surface outward where it fills a groove. On 2WCD at `a` = 0.25 nm, 8 % of the
 `wall` nodes lie beyond `a + 10⁻⁶` nm (`04` §2.2).
 
-**The ring's spacing is set by `h_c`, and the wall-size gate by the wall target.** Every ring edge
-is at least `1.05 h_c` = 0.0525 nm, and netgen leaves each as one segment once the target falls
-below about `h_c`. On the VER-59 parallelogram at `a` = 0.25 nm and `size_scale` 1 (code review of
-WP30, 2 October 2026) **[tested]**: at 1 M the `auto` target is the 0.05 nm ceiling and the wall
-segments average 1.03 × it; at 3 M it is 0.0350 nm, they average 1.453 ×, and stage 6 refuses the
-mesh against the 1.15 bound; an explicit `wall_h_nm` of 0.04 nm at 1 M averages 1.287 × and is
-refused too. So a generated shell meshes only where the resolved target is at least about
-0.046 nm: `auto` below about 1.8 M, and `size_scale` no smaller than about 0.9.
+**Netgen keeps every ring vertex and rounds each edge's segment count, so a shell's wall fails the
+gate in bands of wall target** **[tested]** (WP30 review, 2 October 2026, netgen 6.2.2606). Given
+`maxh = h` on a straight edge of length `L` whose ends it must keep, netgen cuts it into about
+`⌊L/h + 0.4⌋` segments: one up to `L/h` ≈ 1.5, two from about 1.6, three from about 2.6. The ring's
+edges are 1.05–1.15 `h_c` ≈ 0.0525 nm, so the mean segment is up to 1.6 × the target wherever the
+target is a little under `L` or under `L/2`, and the wall-size gate's 1.15 refuses it. Measured at
+`a` = 0.25 nm, `size_scale` 1, mean wall segment over the target, refusals in bold:
+
+| Target (nm) | 0.05 | 0.045 | 0.04 | 0.035 | 0.03 | 0.0272 | 0.0225 |
+|---|---|---|---|---|---|---|---|
+| Parallelogram, ring edges whole | 1.030 | 1.144 | **1.287** | **1.455** | 0.873 | 0.962 | **1.164** |
+| 2WCD, ring edges whole | 1.045 | **1.163** | **1.306** | **1.457** | 0.884 | 0.964 | **1.165** |
+| 2WCD, cut into `⌈L/(1.1h)⌉` | 1.045 | 0.583 | 0.655 | 0.749 | 0.874 | 0.962 | 0.776 |
+| 2WCD, Gmsh 4.15.2, unaided | 0.524 | 0.583 | 0.655 | 0.749 | 0.873 | 0.963 | 0.776 |
+
+`auto` reaches the refused targets between about 1.5 and 1.9 M and at 3 M (0.0350 nm); 5 M
+(0.0272 nm) passes by the rounding alone. A shell-free profile does not see this: step 6 leaves
+its edges long (2WCD's median 0.22 nm, the ClyA reference table's longer), and plain 2WCD and the
+reference passed at every target above with means of 1.04–1.09. Stage 6 therefore sets each shell
+`wall` edge's `maxh` to `L/n`, `n = ⌈L/(1.1h)⌉`, keeping `h` where `n` = 1
+(`mesh/sizing.py` `EXCLUSION_WALL_DIVISION`). The count is then `n` whatever the rounding; netgen
+added one node once, where the membrane cuts a 0.01 nm edge off the ring. The 0.05 nm default
+leaves every 2WCD ring edge whole, so that mesh is the one measured before (51,599 triangles). At
+3 M, 2WCD's shelled mesh has 68,477 triangles, min SICN 0.695, wall mean 0.748 and max 0.941.
+Gmsh cuts each edge into `⌈L/h⌉` unaided, so it gets no rule.
+
+Two other routes were measured and set aside. One periodic OCC spline through the ring
+(`SplineInterpolation`) leaves netgen no forced vertices and passed every target at means of
+1.04–1.10, with as many elements as a plain profile. But it bulges past the offset between
+vertices (2WCD wall nodes to 0.2908 nm against the polyline's 0.2818; the parallelogram's 0.2 pm
+past `a + 10⁻⁶`), and the Gmsh backend's `geo` kernel cannot reproduce OCC's curve. OCC's own
+offset (`WorkPlane.Offset`) gives the exact dilation, lines and arcs at exactly `a`, in 0.8 s on
+2WCD. But netgen's binding casts the result to one wire, and raises
+`Standard_TypeMismatch: TopoDS::Wire` whenever the dilation encloses a pocket, even at a single
+offset by `a`, which VER-59's necked pocket requires.
 
 ### 8.1.2 An unstructured netgen mesh is not a portable measurement
 

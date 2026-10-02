@@ -28,7 +28,9 @@ switches stay off by default, the validated model, and at 0 every key and record
   `a` with round joins, closes it by `2h_c`, fills and records any pocket it encloses, resamples
   its ring at arc length near `h_c`, and gates the ring. The shell is a fourth domain, `exclusion`, carved against an unchanged membrane. `wall`
   moves to its outer surface, so the no-slip and no-flux surfaces and the PHY-02 distance source
-  move with it. Its seams are `interface`. It is meshed at the wall size. An offset that closes the
+  move with it. Its seams are `interface`. It is meshed at the wall size, and on netgen each of its
+  `wall` edges is cut into `⌈L/(1.1 h)⌉` equal segments, so it meshes at every wall target the
+  salt range resolves to, 3 M included. An offset that closes the
   constriction is refused naming the z interval, and so is an outer surface deeper than
   `max(h_c²/a, a/100)` inside the offset.
 - **The derived solid fraction** (`charge.dielectric_transition_nm`, `δ`). Stage 7 builds
@@ -40,7 +42,8 @@ switches stay off by default, the validated model, and at 0 every key and record
   (`tests/tier2/test_exclusion_keys.py`). The shell's geometry and refusals, and the dielectric's
   step, gates and refusals, at Tier 1. Gauss's law across a generated shell on a cylindrical tube at
   Tier 2, to 1.3e-4 against 1 % (`tests/tier2/test_exclusion_stern.py`). VER-31's slab rebuilt from
-  a generated shell. 2WCD with the shell meshed, and with both switches walked to stage 12.
+  a generated shell. 2WCD with the shell meshed at 0.15 M and at 3 M, and with both switches walked
+  to stage 12.
 
 ### Changed
 

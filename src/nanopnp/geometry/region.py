@@ -149,7 +149,8 @@ offset than the thickness bound allows: 0.0106 nm on a rectangle, against 0.01
 join of radius ``2 h_c``, so step 6 has nothing to merge. The factor is no
 larger because an edge must stay near the default wall target, 0.05 nm: netgen
 leaves an edge of 1.5 times its size target as one segment, and the wall-size
-gate then refuses the mesh [tested].
+gate then refuses the mesh [tested]. Below that target stage 6 cuts each edge
+into equal segments (:data:`nanopnp.mesh.sizing.EXCLUSION_WALL_DIVISION`).
 """
 
 EXCLUSION_CONSTANTS: Mapping[str, Canonicalisable] = {

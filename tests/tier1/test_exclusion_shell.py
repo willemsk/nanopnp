@@ -36,8 +36,16 @@ from nanopnp.geometry.region import (
 )
 from nanopnp.io.artefact import StageInputs
 from nanopnp.io.case import CaseValidationError, MembraneSpec, ReservoirSpec, loads_case, resolve
+from nanopnp.mesh.generate import sizing_parameters, wall_statistics
 from nanopnp.mesh.ingest import MeshStage, deployed_mesh
 from nanopnp.mesh.profile import load_profile
+from nanopnp.mesh.sizing import (
+    EXCLUSION_WALL_DIVISION,
+    SIZES,
+    divided_wall_size,
+    resolve_wall_size,
+    wall_divisions,
+)
 
 OFFSET_NM = 0.25
 """``a``: ``a_Na/2`` of ``willems2020_nacl`` and VER-31's ``lambda_S`` (WP30 D15)."""
@@ -326,7 +334,67 @@ def test_ver59_the_offset_keys_stage_5_and_6_only_when_it_is_non_zero(
     explicit = loads_case(case_text(parallelogram_profile, charge=_offset(0.0)))
     assert RegionStage().key(StageInputs(case=explicit)).hash == plain.hash
     assert mesh.parameters["sizing"]["exclusion"] == "wall_h_nm"  # type: ignore[index]
+    assert (
+        mesh.parameters["sizing"]["exclusion_wall"]  # type: ignore[index]
+        == "ceil(L/(1.1 wall_h)) equal segments"
+    )
     assert "exclusion" in mesh.parameters["materials"]  # type: ignore[operator]
+    # Gmsh divides the ring's edges finely enough unaided, so its recipe has no rule.
+    wall = resolve_wall_size(loads_case(case_text(parallelogram_profile, charge=_offset())))
+    gmsh = sizing_parameters(wall, SIZES.scaled(wall.size_scale), "gmsh", exclusion=True)
+    assert "exclusion_wall" not in gmsh
+    assert gmsh["exclusion"] == "wall_h_nm"
+
+
+@pytest.mark.parametrize(
+    ("length_nm", "wall_h_nm", "count", "size_nm"),
+    [
+        (0.0525, 0.05, 1, 0.05),
+        (0.0575, 0.05, 2, 0.02875),
+        (0.0525, 0.045, 2, 0.02625),
+        (0.0525, 0.035, 2, 0.02625),
+        (0.0525, 0.0225, 3, 0.0175),
+        (0.0525, 0.25, 1, 0.25),
+    ],
+)
+def test_ver59_netgen_cuts_a_shell_wall_edge_into_equal_segments_of_at_most_1_1_h(
+    length_nm: float, wall_h_nm: float, count: int, size_nm: float
+) -> None:
+    """``n = ceil(L / 1.1 h)``; ``maxh`` is ``L/n``, or the target itself where ``n`` is 1."""
+    assert wall_divisions(length_nm, wall_h_nm) == count
+    assert divided_wall_size(length_nm, wall_h_nm) == pytest.approx(size_nm, rel=1e-12)
+    assert length_nm / count <= EXCLUSION_WALL_DIVISION * wall_h_nm
+
+
+def test_ver59_the_shell_meshes_at_a_wall_target_its_whole_edges_failed(
+    parallelogram_profile: Path, tmp_path: Path
+) -> None:
+    """At 3 M the ``auto`` target is 0.035 nm, 1.5 of whose ring edges netgen left whole.
+
+    The wall-size gate refused that mesh at a mean of 1.455 (``.knowledge/06``
+    section 8.1.4). Now every ``wall`` edge is cut into at least
+    :func:`wall_divisions` segments, and the mesh passes the gate.
+    """
+    text = case_text(parallelogram_profile, charge=_offset(), scale=1.0)
+    case = loads_case(text.replace("concentration_M: 1.0", "concentration_M: 3.0"))
+    region = RegionStage(workspace=tmp_path / "region").run(StageInputs(case=case))
+    mesh = MeshStage(workspace=tmp_path / "mesh").run(
+        StageInputs(case=case, upstream={"region": region})
+    )
+    target = resolve_wall_size(case).wall_h_nm
+    assert target == pytest.approx(0.03505, abs=5e-5)
+    shape = build_region(_record(region))
+    expected = sum(
+        wall_divisions(float(edge.mass), target)
+        for edge in set(shape.edges)  # a glued edge is listed once per face it bounds
+        if edge.name == "wall"
+    )
+    data = deployed_mesh(resolve(case), mesh).data
+    statistics = wall_statistics(data, target)
+    # At least the asked-for count: netgen may add a node, as it did once here
+    # at the 0.01 nm edge the membrane cuts off the ring, but never leaves fewer.
+    assert expected <= statistics.count <= expected + 2
+    assert statistics.mean_ratio <= EXCLUSION_WALL_DIVISION
 
 
 def test_ver59_a_sweep_over_the_offset_severs_its_warm_starts(

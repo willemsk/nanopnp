@@ -47,6 +47,7 @@ from nanopnp.mesh.adapter import from_ngsolve, write_msh41
 from nanopnp.mesh.ingest import IngestedMesh, ingest
 from nanopnp.mesh.sizing import (
     EXCLUSION_SIZE,
+    EXCLUSION_WALL_RULE,
     GMSH_ALGORITHM,
     GMSH_FIELD_RULES,
     GMSH_SMOOTHING,
@@ -217,7 +218,9 @@ def sizing_parameters(
     version is not here: it is the environment's, recorded beside the key.
 
     A region with an ion-exclusion shell adds what the ``exclusion`` domain is
-    sized at, on either backend; a shell-free recipe is unchanged (WP30 D9).
+    sized at, on either backend, and on netgen how its ``wall`` edges are
+    divided (:data:`~nanopnp.mesh.sizing.EXCLUSION_WALL_DIVISION`); a
+    shell-free recipe is unchanged (WP30 D9).
     """
     recipe: dict[str, Canonicalisable] = {
         "backend": backend,
@@ -236,6 +239,8 @@ def sizing_parameters(
     recipe["gate"] = dict(GATE_CONSTANTS)
     if exclusion:
         recipe["exclusion"] = EXCLUSION_SIZE
+        if backend != "gmsh":
+            recipe["exclusion_wall"] = EXCLUSION_WALL_RULE
     return recipe
 
 
@@ -329,7 +334,13 @@ def mesh_region(
     from netgen import config
 
     shape = build_region(record)
-    apply_sizes(shape, wall_h_nm=wall_h_nm, axis_extent_nm=record.axis_split_nm, sizes=sizes)
+    apply_sizes(
+        shape,
+        wall_h_nm=wall_h_nm,
+        axis_extent_nm=record.axis_split_nm,
+        sizes=sizes,
+        divide_wall=record.exclusion is not None,
+    )
     return from_ngsolve(mesh_shape(shape, sizes)), str(config.version).lstrip("v").split("-")[0]
 
 

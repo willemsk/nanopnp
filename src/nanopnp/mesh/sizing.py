@@ -30,6 +30,7 @@ mesher.
 from __future__ import annotations
 
 import logging
+import math
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING
 
@@ -301,6 +302,54 @@ when its region carries a shell, so no shell-free key moves.
 """
 
 
+EXCLUSION_WALL_DIVISION = 1.1
+"""On netgen, a shell's ``wall`` edge is cut into ``ceil(L / (1.1 wall_h))`` equal segments (WP30).
+
+The shell's outer surface is a ring of straight edges ``L`` = 1.05-1.15 ``h_c``
+long (:data:`nanopnp.geometry.region.EXCLUSION_RESAMPLE`), and netgen must keep
+a node at each of their ends. Given only ``maxh = wall_h``, it cuts an edge into
+about ``floor(L / wall_h + 0.4)`` segments [tested], so a wall target a little
+under ``L``, or under ``L/2``, leaves segments up to 1.6 times it, and the
+wall-size gate's 1.15 refuses the mesh. On 2WCD at ``a`` = 0.25 nm it did so at
+0.045, 0.04, 0.035 and 0.0225 nm, which ``auto`` reaches between about 1.5 and
+1.9 M and at 3 M, while 0.05, 0.03 and 0.0272 nm passed (``.knowledge/06``
+section 8.1.4). Setting each such edge's ``maxh`` to ``L/n`` makes the count
+``n`` whatever netgen's rounding, so the segments average at most 1.1 times
+the target, under the gate's 1.15. Netgen's optimisation moves nodes along an
+edge, and the longest measured was 1.15 times the target, against the gate's 2.
+Where ``n`` is 1 the edge keeps ``wall_h``, so a mesh that needed no division
+is unchanged: the default 0.05 nm leaves every edge of 2WCD's ring whole. Gmsh
+needs no rule: it already cuts each edge into ``ceil(L / wall_h)`` segments, and
+passes at every one of those targets [tested].
+"""
+
+EXCLUSION_WALL_RULE = f"ceil(L/({EXCLUSION_WALL_DIVISION:g} wall_h)) equal segments"
+"""The rule as a netgen recipe with a shell records it, so that a change to it moves the key."""
+
+
+def wall_divisions(length_nm: float, wall_h_nm: float) -> int:
+    """Return how many equal segments a shell's ``wall`` edge is cut into on netgen.
+
+    Parameters
+    ----------
+    length_nm
+        The edge's length.
+    wall_h_nm
+        The resolved wall target.
+    """
+    return max(1, math.ceil(length_nm / (EXCLUSION_WALL_DIVISION * wall_h_nm)))
+
+
+def divided_wall_size(length_nm: float, wall_h_nm: float) -> float:
+    """Return the ``maxh`` that cuts a shell's ``wall`` edge into :func:`wall_divisions` segments.
+
+    The target itself where one segment is enough, so that no undivided edge
+    changes; otherwise ``L/n``, which is below the target.
+    """
+    count = wall_divisions(length_nm, wall_h_nm)
+    return wall_h_nm if count == 1 else length_nm / count
+
+
 def domain_size(name: str, sizes: SizeTable, *, wall_h_nm: float | None = None) -> float | None:
     """Return the section 5.2.2 size of a named domain, or ``None`` for the global size.
 
@@ -322,12 +371,14 @@ def apply_sizes(
     wall_h_nm: float | None,
     axis_extent_nm: tuple[float, float],
     sizes: SizeTable = SIZES,
+    divide_wall: bool = False,
 ) -> None:
     """Set the section 5.2.2 size fields on a named region, in place, for netgen.
 
     Applied by name, after naming, so the one table reaches every region the
     same way, through :func:`edge_size` and :func:`domain_size`. The global size
-    is the mesher's ``maxh``.
+    is the mesher's ``maxh``. With ``divide_wall``, set for a region with an
+    ion-exclusion shell, each ``wall`` edge is sized by :func:`divided_wall_size`.
 
     Parameters
     ----------
@@ -339,16 +390,23 @@ def apply_sizes(
         The pore's axial extent, where the axis is split.
     sizes
         The table, with ``size_scale`` already applied.
+    divide_wall
+        Whether ``wall`` edges are cut into equal segments
+        (:data:`EXCLUSION_WALL_DIVISION`).
     """
     for edge in shape.edges:
         z_mid = 0.5 * (float(edge.start[1]) + float(edge.end[1]))
+        name = str(edge.name)
         size = edge_size(
-            str(edge.name),
+            name,
             z_mid,
             wall_h_nm=wall_h_nm,
             axis_extent_nm=axis_extent_nm,
             sizes=sizes,
         )
+        if divide_wall and name == "wall" and wall_h_nm is not None:
+            # ``mass`` is an edge's length.
+            size = divided_wall_size(float(edge.mass), wall_h_nm)
         if size is not None:
             edge.maxh = size
     for face in shape.faces:

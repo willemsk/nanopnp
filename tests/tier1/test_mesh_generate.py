@@ -179,8 +179,14 @@ def test_ver53_the_wall_gate_fires_when_the_wall_field_is_withheld(
     """D9: without its size field the wall is meshed by the protein's, twice as coarse."""
     from nanopnp.mesh import sizing
 
-    def without_wall(shape, *, wall_h_nm, axis_extent_nm, sizes) -> None:  # type: ignore[no-untyped-def]
-        sizing.apply_sizes(shape, wall_h_nm=None, axis_extent_nm=axis_extent_nm, sizes=sizes)
+    def without_wall(shape, *, wall_h_nm, axis_extent_nm, sizes, divide_wall) -> None:  # type: ignore[no-untyped-def]
+        sizing.apply_sizes(
+            shape,
+            wall_h_nm=None,
+            axis_extent_nm=axis_extent_nm,
+            sizes=sizes,
+            divide_wall=divide_wall,
+        )
 
     monkeypatch.setattr(generate_module, "apply_sizes", without_wall)
     record = read_region(region.payload["region"])
