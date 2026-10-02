@@ -1,6 +1,6 @@
 # Phase 3 (Charge pipeline): from a structure to a charged run
 
-**Status: in progress. WP26 delivered, 30 September 2026; WP27 delivered, 1 October 2026 ([plan](wp27-protonation.md)); WP28 delivered, 1 October 2026 ([plan](wp28-charge-deposition.md)); WP29 delivered, 1 October 2026 ([plan](wp29-val06-apbs.md)); WP30 planned in detail, 2 October 2026 ([plan](wp30-dielectric-and-exclusion.md)); WP31–WP32 planned.** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
+**Status: in progress. WP26 delivered, 30 September 2026; WP27 delivered, 1 October 2026 ([plan](wp27-protonation.md)); WP28 delivered, 1 October 2026 ([plan](wp28-charge-deposition.md)); WP29 delivered, 1 October 2026 ([plan](wp29-val06-apbs.md)); WP30 delivered, 2 October 2026 ([plan](wp30-dielectric-and-exclusion.md)); WP31–WP32 planned.** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
 the geometry pipeline (`main` at `v0.3.0-alpha.9`, formerly `v0.9.0-alpha.9`). Phase 2's
 end-of-phase report and its release, `v0.3.0`, wait for one Tier-3 run on the author's archive
 (criterion 3, VAL-05's ensemble leg). WP26 may start before that report merges, because nothing in
@@ -272,6 +272,18 @@ the z where it does.
 > - **VER-31's Stern benchmark is reproduced through the pipeline in cylindrical form.** The check
 >   is Gauss's law across a generated shell, solved with `pnp`. The planar slab is rebuilt from the
 >   generated shell.
+
+> **Delivered, 2 October 2026** ([plan](wp30-dielectric-and-exclusion.md), to be tagged
+> `v0.4.0-alpha.5`). Stage 5 builds the `exclusion` shell from the profile's offset and moves
+> `wall` to it; stage 7 derives `χ` from the same profile on a `δ/20` lattice. Both are off by
+> default, and at 0 the D16 goldens hold. Discharges FR-15 and adds VER-59, extending VER-30 and
+> VER-31 (`tests/tier1/test_exclusion_shell.py`, `test_derived_dielectric.py`;
+> `tests/tier2/test_exclusion_keys.py`, `test_exclusion_stern.py`, `test_exclusion_2wcd.py`,
+> `test_stern_layer.py`). Gauss's law across a generated shell holds to 1.3e-4. The shell's ring
+> is resampled before step 6, whose merges had breached the thickness bound on a rectangle, and
+> the bound is now a stage-5 gate; the §5.2.1 NOTE is amended. **Live for later packages:** a derived `χ`, like a deposited charge,
+> is invisible to a golden's identity (OPN-07). The shell and `χ` are not yet shown in the GUI
+> (WP31), and the guide to the switches is WP32's.
 
 ### WP31 — GUI increment 3: the charge pipeline surfaced
 
