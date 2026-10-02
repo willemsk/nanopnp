@@ -535,15 +535,22 @@ def render(request: RenderRequest) -> Rendered:
     run = Path(request.run)
     state = _state_path(run)
     case = load_case(run / CASE_FILENAME)
+    resolved = resolve(case)
+    # Both are read from stage 7's artefact and from nowhere else (WP28 D9, WP30 D5).
+    stage7 = (
+        "a deposited charge"
+        if resolved.deposits_charge
+        else "a derived solid fraction"
+        if resolved.derives_eps_r
+        else None
+    )
     solution = restore(
         state,
         case=case,
         mesh_artefact=_recorded_artefact(
             run, "mesh", needed="a generated mesh" if case.inputs.mesh is None else None
         ),
-        charge_artefact=_recorded_artefact(
-            run, "charge", needed="a deposited charge" if resolve(case).deposits_charge else None
-        ),
+        charge_artefact=_recorded_artefact(run, "charge", needed=stage7),
     )
     # Any model: each reports the NUM-09 scale set that turns its nondimensional
     # state into the SI numbers the attribute names promise (section 5.4.3).

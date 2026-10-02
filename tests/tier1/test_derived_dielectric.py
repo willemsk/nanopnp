@@ -90,7 +90,7 @@ def derived(parallelogram_profile: Path, tmp_path_factory: pytest.TempPathFactor
         f"dielectric_transition_nm: {DELTA_NM}",
         tmp_path_factory.mktemp("chi"),
     )
-    field, means, _ = derive_fields(resolved, record, ingested.mesh, measures=AXISYMMETRIC)
+    field, means = derive_fields(resolved, record, ingested.mesh, measures=AXISYMMETRIC)
     return resolved, record, ingested, field, means
 
 
@@ -197,7 +197,7 @@ def test_ver59_the_shell_registers_below_one_half_on_a_thin_shell(
         tmp_path,
         scale=2.0,
     )
-    _, means, _ = derive_fields(resolved, record, ingested.mesh, measures=AXISYMMETRIC)
+    _, means = derive_fields(resolved, record, ingested.mesh, measures=AXISYMMETRIC)
     shell = next(mean for mean in means if mean.material == "exclusion")
     # The planar estimate is 0.156; the body's convex corners spread the step
     # over more shell, and its foot on the membrane less.
@@ -206,6 +206,34 @@ def test_ver59_the_shell_registers_below_one_half_on_a_thin_shell(
     assert not MaterialMean(material="exclusion", mean=0.5, branch="fluid").within
     assert MaterialMean(material="exclusion", mean=0.49, branch="fluid").within
     assert not MaterialMean(material="electrolyte", mean=0.11, branch="fluid").within
+
+
+def test_ver59_a_consumer_reads_stage_7s_chi_with_the_means_it_recorded(
+    parallelogram_profile: Path, tmp_path: Path
+) -> None:
+    """D5: the solve's ``chi`` is stage 7's, and so are the means its record carries.
+
+    Without them the solve's FR-25 record of the derived ``chi`` would list no
+    material at all, as if nothing had been measured.
+    """
+    from nanopnp.charge.stage import FieldStage, case_fields
+
+    case = loads_case(case_text(parallelogram_profile, f"dielectric_transition_nm: {DELTA_NM}"))
+    region = RegionStage(workspace=tmp_path / "region").run(StageInputs(case=case))
+    mesh = MeshStage(workspace=tmp_path / "mesh").run(
+        StageInputs(case=case, upstream={"region": region})
+    )
+    fields = FieldStage(workspace=tmp_path / "fields").run(
+        StageInputs(case=case, upstream={"region": region, "mesh": mesh})
+    )
+    resolved = resolve(case)
+    consumed = case_fields(resolved, None, fields, deployed_mesh(resolved, mesh).mesh)
+    assert isinstance(consumed.eps_r, DerivedSolidFraction)
+    assert consumed.eps_r.grid.digest() == fields.summary["eps_r"]["grid_digest"]  # type: ignore[index]
+    recorded = fields.summary["eps_r"]["material_means"]  # type: ignore[index]
+    assert recorded
+    assert [mean.summary() for mean in consumed.material_means] == recorded
+    assert consumed.summary()["eps_r"] == fields.summary["eps_r"]
 
 
 def test_ver59_the_blend_takes_the_derived_chi_inside_the_protein_and_in_the_fluid(

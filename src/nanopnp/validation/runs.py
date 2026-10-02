@@ -141,18 +141,26 @@ def reopen(directory: str | Path, *, store: Store | None = None) -> ReopenedRun:
             "run was made against another store, or the store has been pruned; point --store at "
             "the one the run used, or re-run the member"
         )
-    # A deposited charge is read from the run's own stage-7 artefact, never
-    # re-deposited (WP28 D9); a supplied one is re-read from inputs.charge.
+    # A deposited charge and a derived chi are read from the run's own stage-7
+    # artefact, never made again (WP28 D9, WP30 D5); a supplied field is re-read
+    # from inputs:.
     charge = record.get("artefacts", {}).get("charge")
     stage7 = (
         holding.get(str(charge["schema"]), str(charge["hash"]))
         if isinstance(charge, dict)
         else None
     )
-    if isinstance(charge, dict) and stage7 is None and resolved.deposits_charge:
+    needed = (
+        "deposited charge"
+        if resolved.deposits_charge
+        else "derived solid fraction"
+        if resolved.derives_eps_r
+        else None
+    )
+    if isinstance(charge, dict) and stage7 is None and needed is not None:
         raise RunError(
             f"the store at {holding.root} holds no {charge['schema']} artefact "
-            f"{str(charge['hash'])[:12]}, which is the deposited charge {source} was solved with. "
+            f"{str(charge['hash'])[:12]}, which is the {needed} {source} was solved with. "
             "The run was made against another store, or the store has been pruned; point --store "
             "at the one the run used, or re-run the member"
         )

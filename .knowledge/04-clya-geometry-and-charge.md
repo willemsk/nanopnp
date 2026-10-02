@@ -320,8 +320,8 @@ vertices, and step 6 removes none of them. No pocket closes, so no hole is fille
 | Mesh at the default sizes | 51,599 triangles, min SICN 0.634, min gamma 0.586; wall segments mean 1.045 and max 1.050 × the target |
 | Stage 5 / stage 6 | 1.2 s / 11 s |
 | `χ` means at `size_scale` 4 with the deposit (`pnp`, 14,036 triangles) | protein 0.985, `exclusion` 0.056, membrane 1, electrolyte 0 |
-| `χ` lattice at `δ` = 0.15 nm | 584 × 1926 samples, 0.25 s, 46 MB peak allocation |
-| `χ` lattice at `δ = h_c` | 1669 × 5694 samples (76 MB), 2.1 s, 390 MB peak allocation |
+| `χ` lattice at `δ` = 0.15 nm | 584 × 1926 samples, 0.28 s, 20 MB peak allocation |
+| `χ` lattice at `δ = h_c` | 1669 × 5694 samples (76 MB), 1.4 s, 171 MB peak allocation: 2.25 lattices, with the step taken in place (390 MB, five lattices, through `smooth_step`'s temporaries) |
 | `χ` worst error in the band, clear of the membrane | 7.8e-3 at `δ = h_c`, 1.1e-2 at 0.15 nm; 95th percentile 1.3e-3 |
 
 - **The shell's mean `χ` is the planar estimate.** `3δ/(32a)` = 0.0563 at these values, measured

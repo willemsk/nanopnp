@@ -71,6 +71,7 @@ from nanopnp.mesh.primitives import TOL_NM
 from nanopnp.mesh.profile import (
     PoreProfile,
     load_profile,
+    min_vertex_spacing,
     plane_crossings,
     profile_digest,
 )
@@ -643,8 +644,6 @@ def exclusion_shell(
     except ImportError as error:
         raise _missing_shapely(error) from error
     import numpy as np
-
-    from nanopnp.mesh.profile import min_vertex_spacing
 
     body = Polygon(points)
     radius = EXCLUSION_CLOSING * h_c_nm

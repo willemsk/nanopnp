@@ -329,6 +329,37 @@ def test_ver59_the_offset_keys_stage_5_and_6_only_when_it_is_non_zero(
     assert "exclusion" in mesh.parameters["materials"]  # type: ignore[operator]
 
 
+def test_ver59_a_sweep_over_the_offset_severs_its_warm_starts(
+    parallelogram_profile: Path, tmp_path: Path
+) -> None:
+    """The offset moves the mesh, so each of its values is a cold root, and the plan says so.
+
+    A chain across it would be refused member by member at the solve, whose
+    warm start gates on the mesh hash (section 5.3.2); the transition moves only
+    a coefficient on one mesh, and keeps its chain.
+    """
+    from nanopnp.sweep.plan import plan_from_document
+
+    base = case_text(parallelogram_profile, charge=_offset(0.0))
+    (tmp_path / "base.yaml").write_text(base, encoding="utf-8")
+    roots = {}
+    for key, values in (
+        ("exclusion_offset_nm", "[0.0, 0.25]"),
+        ("dielectric_transition_nm", "[0.0, 0.15]"),
+    ):
+        sweep = tmp_path / f"{key}.yaml"
+        sweep.write_text(
+            "schema: nanopnp/sweep/v1\nname: probe\nbase: base.yaml\naxes:\n"
+            f"  - name: knob\n    path: charge.{key}\n    values: {values}\n",
+            encoding="utf-8",
+        )
+        plan = plan_from_document(sweep, check_meshes=False)
+        roots[key] = sum(1 for point in plan.points if point.parent is None)
+        if key == "exclusion_offset_nm":
+            assert any("charge.exclusion_offset_nm" in warning for warning in plan.warnings)
+    assert roots == {"exclusion_offset_nm": 2, "dielectric_transition_nm": 1}
+
+
 def test_ver59_the_gmsh_region_graph_reads_the_four_faces(shelled) -> None:
     """WP23's graph reads the shelled region: four closed loops, counts and areas the record's."""
     record = _record(shelled[1])

@@ -93,7 +93,12 @@ from nanopnp.core.stages import (
 )
 from nanopnp.density.grid import read_grid, write_grid
 from nanopnp.geometry.region import PAYLOAD_NAME as REGION_PAYLOAD
-from nanopnp.geometry.region import read_region
+from nanopnp.geometry.region import (
+    build_region,
+    distance_to_segments,
+    protein_water_edges,
+    read_region,
+)
 from nanopnp.io.artefact import Artefact, ChargeGridArtefact, FieldsArtefact, StageInputs
 from nanopnp.io.case import UnsupportedCaseSection, resolve
 from nanopnp.io.defaults import ContributedDeviation
@@ -520,8 +525,6 @@ def check_water_facing(record: RegionRecord, segments: np.ndarray) -> None:
     """
     import numpy as np
 
-    from nanopnp.geometry.region import build_region, protein_water_edges
-
     edges = np.asarray(protein_water_edges(build_region(record)), dtype=np.float64)
     expected = float(np.hypot(*(edges[:, 1] - edges[:, 0]).T).sum()) if edges.size else 0.0
     found = float(np.hypot(*(segments[:, 1] - segments[:, 0]).T).sum()) if segments.size else 0.0
@@ -533,8 +536,6 @@ def check_water_facing(record: RegionRecord, segments: np.ndarray) -> None:
         )
     if not segments.size:
         return
-    from nanopnp.geometry.region import distance_to_segments
-
     midpoints = 0.5 * (segments[:, 0] + segments[:, 1])
     off = distance_to_segments(midpoints, edges)
     worst = int(np.argmax(off))
@@ -555,13 +556,13 @@ def derive_fields(
     measures: Measures,
     cancel: CancelToken | None = None,
     progress: Progress | None = None,
-) -> tuple[DerivedSolidFraction, tuple[MaterialMean, ...], float]:
+) -> tuple[DerivedSolidFraction, tuple[MaterialMean, ...]]:
     """Derive ``chi`` from stage 5's record, bind it to ``mesh`` and gate it (WP30 D1-D6).
 
     Returns
     -------
     tuple
-        The bound field, its per-material means, and the derivation's seconds.
+        The bound field and its per-material means.
 
     Raises
     ------
@@ -602,7 +603,7 @@ def derive_fields(
         seconds,
         ", ".join(f"{mean.material} {mean.mean:.4f}" for mean in means),
     )
-    return field, means, seconds
+    return field, means
 
 
 # -- the producer path -------------------------------------------------------------
@@ -710,8 +711,36 @@ def case_fields(
         fields = replace(fields, charge=deposited_charge(resolved, charge_artefact, mesh))
     if resolved.derives_eps_r:
         # Gated by stage 7 on this mesh, whose hash keys that artefact (WP30 D5).
-        fields = replace(fields, eps_r=derived_solid_fraction(resolved, charge_artefact, mesh))
+        # Its means come from that gate's record, so that a solve's record of
+        # this chi does not claim no material was measured.
+        fields = replace(
+            fields,
+            eps_r=derived_solid_fraction(resolved, charge_artefact, mesh),
+            material_means=_recorded_means(charge_artefact),
+        )
     return fields
+
+
+def _recorded_means(artefact: Artefact | None) -> tuple[MaterialMean, ...]:
+    """Return the per-material means stage 7 recorded for the ``chi`` it derived (WP30 D5).
+
+    Read from the artefact's record rather than integrated again: stage 7 gated
+    that ``chi`` on the mesh whose hash keys the artefact. Empty when the
+    artefact records none.
+    """
+    record = artefact.summary.get(EPS_R_PAYLOAD) if artefact is not None else None
+    recorded = record.get("material_means") if isinstance(record, dict) else None
+    if not isinstance(recorded, list):
+        return ()
+    return tuple(
+        MaterialMean(
+            material=str(entry["material"]),
+            mean=float(entry["mean"]),
+            branch=str(entry["branch"]),
+        )
+        for entry in recorded
+        if isinstance(entry, dict)
+    )
 
 
 def require_charge_artefact(resolved: ResolvedCase, artefact: Artefact | None) -> None:
@@ -814,7 +843,8 @@ def export_charge(artefact: Artefact, path: Path) -> tuple[Path, ...]:
     """
     if CHARGE_PAYLOAD not in artefact.payload:
         raise KeyError(
-            "stage 7's artefact carries no charge lattice: the run supplied only inputs.eps_r"
+            "stage 7's artefact carries no charge lattice: the run supplied inputs.eps_r or "
+            "derived its solid fraction from charge.dielectric_transition_nm, and has no charge"
         )
     source = Path(artefact.payload[CHARGE_PAYLOAD])
     if path.suffix.lower() != ".yaml":
@@ -952,7 +982,7 @@ class FieldStage:
         resolved, ingested, mesh_artefact = self._prepare(inputs, ingest_mesh=True)
         assert ingested is not None  # ``ingest_mesh=True`` admits no other case
         region = _region(resolved, inputs)
-        derived: tuple[DerivedSolidFraction, tuple[MaterialMean, ...], float] | None = None
+        derived: tuple[DerivedSolidFraction, tuple[MaterialMean, ...]] | None = None
         if region is not None:
             derived = derive_fields(
                 resolved,
@@ -1049,7 +1079,7 @@ class FieldStage:
         ingested: IngestedMesh,
         mesh_artefact: Artefact,
         *,
-        derived: tuple[DerivedSolidFraction, tuple[MaterialMean, ...], float] | None,
+        derived: tuple[DerivedSolidFraction, tuple[MaterialMean, ...]] | None,
         progress: Progress | None,
         cancel: CancelToken | None,
     ) -> FieldsArtefact:

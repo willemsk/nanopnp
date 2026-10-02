@@ -1896,7 +1896,7 @@ class ResolvedCase:
         default on any other, where :func:`_check_profile` refuses it set away
         from that default.
         """
-        return (self.density if self.density is not None else DensitySpec()).grid_spacing_nm
+        return _contour_spacing_nm(self.document)
 
     @property
     def derives_eps_r(self) -> bool:
@@ -2415,6 +2415,20 @@ def _check_charge(document: CaseDocument) -> None:
         )
 
 
+def _contour_spacing_nm(document: CaseDocument) -> float:
+    """Return ``h_c``, the density grid spacing the contour is placed on (section 5.2.1 NOTE).
+
+    ``geometry.density`` counts only beside ``structure:``: on any other case
+    stages 2 to 4 do not run, and :func:`_check_profile` refuses it set.
+    """
+    density = (
+        document.geometry.density
+        if document.geometry is not None and document.structure is not None
+        else DensitySpec()
+    )
+    return density.grid_spacing_nm
+
+
 def _check_profile_keys(document: CaseDocument, charge: Charge) -> None:
     """Make the refusals of the two keys built from the stage-4 profile (WP30 D11, D12).
 
@@ -2452,12 +2466,7 @@ def _check_profile_keys(document: CaseDocument, charge: Charge) -> None:
             "inputs.eps_r; both supply the solid fraction chi, so the case names one quantity "
             "twice; remove one of them (section 5.3.1 NOTE on the v2 keys that change a number)"
         )
-    density = (
-        document.geometry.density
-        if document.geometry is not None and document.structure is not None
-        else DensitySpec()
-    )
-    h_c = density.grid_spacing_nm
+    h_c = _contour_spacing_nm(document)
     delta = charge.dielectric_transition_nm
     if 0.0 < delta < h_c:
         raise CaseValidationError(

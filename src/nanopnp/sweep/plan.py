@@ -123,6 +123,10 @@ WARM_START_BARRIERS: tuple[str, ...] = (
     "structure",
     "geometry",
     "inputs.profile",
+    # Under ``charge:`` but a geometry key all the same: a non-zero offset makes
+    # stage 5 build the ion-exclusion shell, which moves the mesh (WP30 D7).
+    # ``dielectric_transition_nm`` moves only a coefficient, and does not sever.
+    "charge.exclusion_offset_nm",
     # The element spaces. A coefficient vector is a function only relative to a
     # space, and ``load_initial`` gates on ``model.elements`` exactly as
     # ``restore`` does.
