@@ -546,8 +546,12 @@ class GeometryWidget(QtWidgets.QWidget):
         """Relay the button press; the window saves the case before :meth:`build`."""
         self.buildRequested.emit()
 
-    def build(self, case_path: str | Path) -> bool:
+    def build(self, case_path: str | Path, *, upto: str = BUILD_UPTO) -> bool:
         """Walk the saved case through stage 6 in the spawned child (WP24 D3).
+
+        The Charge tab's **Build charge** is this walk taken on through
+        ``upto="charge"``: one child and one cancel token, and this tab still
+        shows stages 1 to 6 as they land (WP31 D2).
 
         Nothing about the previous build is dropped until this one has started:
         a case the window committed with staged edits :func:`can_build` never
@@ -559,6 +563,9 @@ class GeometryWidget(QtWidgets.QWidget):
         case_path
             The case file as saved, which is what the child reads and what a
             hand edit's derived case is written beside.
+        upto
+            The last stage to walk: stage 6 by default, ``"charge"`` for the
+            Charge tab's build.
 
         Returns
         -------
@@ -572,7 +579,7 @@ class GeometryWidget(QtWidgets.QWidget):
             self._status.setText(f"not built: {error}")
             return False
         try:
-            self._control.start(case_path, store=self._store, upto=BUILD_UPTO)
+            self._control.start(case_path, store=self._store, upto=upto)
         except RuntimeError as error:
             self._status.setText(f"not built: {error}")
             return False
@@ -593,7 +600,7 @@ class GeometryWidget(QtWidgets.QWidget):
         self._mesh = None
         self._mesh_problem = ""
         self._settled = False
-        self._status.setText(f"building {self._case_path} through stage 6")
+        self._status.setText(f"building {self._case_path} through {upto!r}")
         self.refresh()
         return True
 

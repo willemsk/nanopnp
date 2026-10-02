@@ -188,6 +188,8 @@ def test_ver60_the_recorded_worst_planes_are_marked_at_their_z(tube) -> None:
     plane = _record(result)["conservation"]["per_plane"]  # type: ignore[index]
     view = load_charge(_produced(result, store, "charge"))
     assert view.charge is not None
+    # A deposit and a sharp dielectric: the deployed pane offers the charge alone.
+    assert view.quantities == ("charge",)
     picture = view.charge
     assert dict(picture.planes) == {
         "worst plane (lattice)": plane["grid_worst_plane_z_nm"],

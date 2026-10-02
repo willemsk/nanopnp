@@ -1,7 +1,7 @@
 """The desktop shell (IF-09): a window over the view-models, and nothing more.
 
 ADR-004's consequence, stated: "the interface is a thin shell over the stage
-objects the CLI drives". This module assembles six panels and wires them to
+objects the CLI drives". This module assembles seven panels and wires them to
 each other; it decides nothing about a case, a run, a result or a picture,
 exactly as :mod:`nanopnp.cli` decides nothing about them.
 
@@ -9,7 +9,8 @@ exactly as :mod:`nanopnp.cli` decides nothing about them.
 the FR-25 manifest names it. So "Run" commits the staged edits, writes the file,
 and runs the file — never a document held only in memory, whose manifest would
 name an input that does not exist. "Build geometry" on the Geometry tab does the
-same, and walks the saved file through stage 6 (WP24 D3).
+same, and walks the saved file through stage 6 (WP24 D3); "Build charge" on the
+Charge tab walks it on through stage 7, as the Geometry tab's own build (WP31 D2).
 
 **It prints for the same reason the command line does.** ``nanopnp-gui`` is a shell like
 ``nanopnp``, and a case file it cannot open is refused on standard error in the words
@@ -18,8 +19,10 @@ same, and walks the saved file through stage 6 (WP24 D3).
 **This release's increment.** QR-11 asks each release for a usable graphical
 surface over the functionality that exists at it: the schema-generated editor,
 run control, the result panel, the live convergence plot and the ``webgui``
-field viewer, five tabs over one run; and since WP24, Phase 2's increment, the
-Geometry tab, which builds stages 1 to 6 and edits the contour by hand.
+field viewer, five tabs over one run; since WP24, Phase 2's increment, the
+Geometry tab, which builds stages 1 to 6 and edits the contour by hand; and since
+WP31, Phase 3's, the Charge tab, which builds stage 7 and shows the protonation
+table, the charge map, the deployed field and the conservation report.
 
 **The plot and the viewer are fed from the same two places the rest is.** The
 convergence panel draws the :class:`~nanopnp.gui.convergence.ConvergenceModel`
@@ -42,9 +45,11 @@ from PySide6 import QtCore, QtGui, QtWidgets
 
 from nanopnp.cli.errors import classify
 from nanopnp.gui.case_model import CaseEditor
+from nanopnp.gui.charge import BUILD_UPTO as CHARGE_UPTO
 from nanopnp.gui.run_model import RunControl
 from nanopnp.gui.widgets import (
     CaseEditorWidget,
+    ChargeWidget,
     ConvergenceWidget,
     GeometryWidget,
     ResultWidget,
@@ -69,7 +74,7 @@ rather than ten."""
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    """The shell's window: the case, its geometry, the run, its convergence, the result, the fields.
+    """The shell's window: the case, its geometry and charge, the run and what it produced.
 
     Parameters
     ----------
@@ -85,6 +90,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self._control = RunControl()
         self._case = CaseEditorWidget(editor)
         self._geometry = GeometryWidget(editor, store=store)
+        # The Geometry tab's control: one walk, one cancel token, both tabs (WP31 D2).
+        self._charge = ChargeWidget(editor, self._geometry.control, store=store)
         self._run = RunControlWidget(self._control)
         self._convergence = ConvergenceWidget(self._control.model.convergence)
         self._result = ResultWidget()
@@ -95,6 +102,8 @@ class MainWindow(QtWidgets.QMainWindow):
         # After Case (WP24 D15): the geometry is built from the case and
         # before the run, which reads it back from the store.
         tabs.addTab(self._geometry, "Geometry")
+        # After Geometry (WP31 D3): stage 7 reads the region and the mesh.
+        tabs.addTab(self._charge, "Charge")
         tabs.addTab(self._run, "Run")
         tabs.addTab(self._convergence, "Convergence")
         tabs.addTab(self._result, "Result")
@@ -105,6 +114,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._run.startRequested.connect(self.start_run)
         self._geometry.buildRequested.connect(self.build_geometry)
+        self._charge.buildRequested.connect(self.build_charge)
         self._geometry.structureLoaded.connect(self._show_structure)
         self._run.settled.connect(self._show_result)
         self._refresh = QtCore.QTimer(self)
@@ -166,6 +176,20 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self.statusBar().showMessage("the geometry was not built; see the Geometry tab")
 
+    def build_charge(self) -> None:
+        """Commit, save and build the case through stage 7 (WP31 D2).
+
+        Through the Geometry tab's build, so that tab shows stages 1 to 6 as
+        they land; this tab follows the same walk.
+        """
+        path = self._saved_case()
+        if path is None:
+            return
+        if self._geometry.build(path, upto=CHARGE_UPTO) and self._charge.follow(path):
+            self.statusBar().showMessage(f"building the charge of {path}")
+        else:
+            self.statusBar().showMessage("the charge was not built; see the Charge tab")
+
     def _show_structure(self, path: str) -> None:
         """Show a structure the Geometry tab staged in the Case tab's field.
 
@@ -177,7 +201,8 @@ class MainWindow(QtWidgets.QMainWindow):
             field.setText(path)
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
-        """Stop the Geometry tab's build and children with the window."""
+        """Stop the Geometry and Charge tabs' builds and children with the window."""
+        self._charge.shutdown()
         self._geometry.shutdown()
         super().closeEvent(event)
 

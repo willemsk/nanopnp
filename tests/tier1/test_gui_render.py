@@ -736,10 +736,17 @@ def test_ver60_the_chi_scene_is_the_derived_chi_on_the_unit_range(charged_run: P
     assert 0.0 < recorded["protein"] < 1.0
 
 
-def test_ver60_a_generated_shell_s_mesh_lists_exclusion(charged_run: Path) -> None:
-    """The geometry tab's picture and the charge pictures both name the shell's material."""
-    assert "exclusion" in render_mesh(MeshRequest(run=str(charged_run))).materials
-    assert "exclusion" in render_charge(ChargeRequest(run=str(charged_run))).materials
+def test_ver60_the_deployed_picture_names_a_generated_shell_s_material(
+    charged_run: Path,
+) -> None:
+    """The deployed field is drawn over the whole mesh, ``exclusion`` included, and says so.
+
+    ``test_gui_charge.py`` asserts the same of the Mesh view; this is the picture
+    the charge tab shows beside it, on the run whose stage 7 read the shell.
+    """
+    rendered = render_charge(ChargeRequest(run=str(charged_run)))
+    assert "exclusion" in rendered.materials
+    assert set(rendered.materials) == set(render_mesh(MeshRequest(run=str(charged_run))).materials)
 
 
 def test_ver60_a_run_with_no_charge_and_no_chi_is_refused_by_name(finished_run: Path) -> None:

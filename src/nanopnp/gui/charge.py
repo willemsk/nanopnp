@@ -46,6 +46,7 @@ from nanopnp.charge.protonation import ProtonationTable
 from nanopnp.charge.stage import StoredLattice, stored_lattice
 from nanopnp.core.constants import ELEMENTARY_CHARGE
 from nanopnp.gui.geometry import MODEL_FRAME, ImageModel, StageList, stored_artefact
+from nanopnp.gui.render import ChargeQuantity
 from nanopnp.io.case import resolve
 from nanopnp.io.run import UnknownStageError, selected_stages
 
@@ -440,11 +441,17 @@ class ChargeView:
         One line per entry of the dielectric record, or the statement that the
         dielectric is the material split when the case has neither a supplied
         nor a derived ``chi``.
+    quantities
+        What the deployed-field pane may ask the render child for: ``charge``
+        when stage 7 recorded a charge, ``chi`` when it recorded a solid
+        fraction. Read from the record, so a sharp dielectric is never offered
+        as a picture of zeros (D3, D7).
     """
 
     charge: ChargeMap | None
     conservation: ConservationView | None
     dielectric: tuple[str, ...]
+    quantities: tuple[ChargeQuantity, ...] = ()
     frame: str = MODEL_FRAME
 
 
@@ -497,7 +504,17 @@ def load_charge(event: Produced, *, block: int | None = None) -> ChargeView:
             lattice, block=block, planes=conservation.planes if conservation is not None else ()
         )
     )
-    return ChargeView(charge=charge, conservation=conservation, dielectric=_dielectric(summary))
+    quantities: list[ChargeQuantity] = []
+    if isinstance(record, dict):
+        quantities.append("charge")
+    if isinstance(summary.get("eps_r"), dict):
+        quantities.append("chi")
+    return ChargeView(
+        charge=charge,
+        conservation=conservation,
+        dielectric=_dielectric(summary),
+        quantities=tuple(quantities),
+    )
 
 
 # -- the protonation table -------------------------------------------------------
