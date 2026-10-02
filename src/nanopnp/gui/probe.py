@@ -49,6 +49,7 @@ import logging
 import math
 import os
 import sys
+import traceback
 from importlib import metadata
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -283,8 +284,6 @@ def _passes_through(error: BaseException, module_file: str | None) -> bool:
     library on its behalf. That is how a missing ``propka.cfg``, which surfaces
     as an exception out of PDB2PQR's run, is still named PROPKA.
     """
-    import traceback
-
     if module_file is None:
         return False
     package = Path(module_file).resolve().parent
@@ -305,13 +304,20 @@ def _exercise_protonation(scratch: Path) -> str:
     Raises
     ------
     PayloadError
-        Naming PROPKA when the failure was raised inside PROPKA's own code, as a
-        missing ``propka.cfg`` is, or when the two pH values give equal charges:
+        Naming PROPKA when it does not import, when the failure was raised inside
+        PROPKA's own code, as a missing ``propka.cfg`` is, or when the two pH
+        values give equal charges:
         PDB2PQR ran, and nothing titrated. Any other failure is raised as it
         came, and the caller names PDB2PQR.
     """
     import pdb2pqr
-    import propka
+
+    try:
+        import propka
+    except ImportError as error:
+        # Named by the import system rather than by a literal here (D16): a
+        # missing PROPKA is PROPKA's failure, not PDB2PQR's.
+        raise PayloadError(error.name or pdb2pqr.__name__, error) from error
 
     from nanopnp.charge.pqr import read_pqr
     from nanopnp.charge.protonation import run_pdb2pqr
