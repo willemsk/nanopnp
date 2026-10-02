@@ -7,7 +7,8 @@ It is walked through stage 8 and stage 10 is keyed without solving.
 
 The literals below were recorded on ``bbca737``, the WP30 plan's commit, before
 any of WP30's code existed. Every key is a hash of parameters and upstream keys,
-never of a computed field, so it is the same on every platform. The region
+never of a computed field, so it is the same on every platform, given the
+same input bytes: the PQR, keyed on its bytes, is therefore written with LF. The region
 record's bytes are not quite: its face areas are OCC's own integrals, which may
 differ in their last bits between platforms. The record is therefore compared
 byte for byte with its ``face_areas_nm2`` line taken out, and the areas to 1e-12.
@@ -99,7 +100,9 @@ def write_golden_case(directory: Path, profile: Path, *, charge: str = "") -> Pa
         for serial, (name, x, y, z, q, r) in enumerate(ATOMS, start=1)
     ]
     pqr = directory / "atoms.pqr"
-    pqr.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    # Stage 7 keys a supplied PQR on its bytes, so it is written with LF on every
+    # platform: Windows would otherwise write CRLF and move the charge key.
+    pqr.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
     case = directory / "golden.case.yaml"
     case.write_text(CASE.format(profile=profile, pqr=pqr, charge=charge), encoding="utf-8")
     return case
