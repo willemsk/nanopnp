@@ -101,6 +101,9 @@ VOCABULARY = (
     # come from ``io.case.with_profile`` and ``mesh.profile.HAND_EDIT_SOURCE``.
     "profile1",
     '"hand-edit"',
+    # And WP31's: the deployed charge picture is titled with IF-07's own name,
+    # ``io.fields.FIXED_CHARGE_ATTRIBUTE``, so the picture and the export agree.
+    "rho_fixed_C_m3",
 )
 
 

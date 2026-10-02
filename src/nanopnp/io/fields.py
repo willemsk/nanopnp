@@ -72,6 +72,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
 __all__ = [
     "EXPORT_SCHEMA",
+    "FIXED_CHARGE_ATTRIBUTE",
     "OMEGA_STEM",
     "OMEGA_W_STEM",
     "FieldExport",
@@ -98,6 +99,13 @@ OMEGA_STEM = "fields_omega"
 
 OMEGA_W_STEM = "fields_omega_w"
 """Stem of the fluid-only file pair."""
+
+FIXED_CHARGE_ATTRIBUTE = "rho_fixed_C_m3"
+"""IF-07's name for the fixed volume charge density a run carried, in C m^-3.
+
+Written only for a run that carried a charge; the desktop shell's deployed-charge
+picture is titled with it, so the picture and the export name one quantity once.
+"""
 
 MATERIAL_ID = "material_id"
 """Cell attribute naming each element's material by its index in ``GetMaterials()``."""
@@ -454,7 +462,7 @@ def export_fields(
         target[name] = _as_vector(values) if field.element == "vector_h1" else values[:, 0]
 
     if fixed_charge_C_m3 is not None:
-        whole["rho_fixed_C_m3"] = sample_at(
+        whole[FIXED_CHARGE_ATTRIBUTE] = sample_at(
             mesh,
             fixed_charge_C_m3,
             omega.points_nm,

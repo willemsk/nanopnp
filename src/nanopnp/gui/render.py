@@ -43,6 +43,15 @@ cannot redirect the renderer through it. The document is a stylesheet, a script
 tag and four lines of initialisation; building it is what makes the renderer
 source a single constant.
 
+**The charge picture is the coefficient the solve assembles** (WP31 D7). The
+deployed ``rho`` and the stage-7 ``chi`` are drawn through
+:func:`deployed_coefficient`, which reaches them by the solve's own route: the
+deployed mesh, then :func:`~nanopnp.charge.stage.case_fields` on the stage-7
+artefact the run recorded. Neither is re-deposited or re-derived, and neither
+picture is an artefact. ``rho`` is drawn on ``[-L, L]``, ``L`` the largest
+magnitude the scene samples, so zero sits at the centre of the colour map and
+a neutral region never reads as charged (D8); ``chi`` on ``[0, 1]``, fixed.
+
 **Nothing here names a field or a unit.** The vocabulary is
 :func:`nanopnp.io.fields.attribute_name` and the §6.3 scale table beside it —
 the same two the IF-07 export uses, so the viewer and the file cannot disagree
@@ -58,18 +67,20 @@ import queue as queue_module
 from dataclasses import dataclass, field
 from pathlib import Path
 from string import Template
-from typing import TYPE_CHECKING, TypeAlias
+from typing import TYPE_CHECKING, Literal, TypeAlias
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from multiprocessing.process import BaseProcess
     from multiprocessing.queues import Queue
 
-    from nanopnp.core.typing import Mesh
+    from nanopnp.core.typing import Expression, Mesh
     from nanopnp.io.artefact import Artefact
+    from nanopnp.physics.measures import Measures
 
 logger = logging.getLogger(__name__)
 
 __all__ = [
+    "CHI_RANGE",
     "MESH_SCENE_STEM",
     "READY_FLAG",
     "RENDERER_DIRECTORY",
@@ -77,15 +88,21 @@ __all__ = [
     "RENDERER_SOURCE",
     "RENDERER_VERSION",
     "VIEWER_DIRNAME",
+    "ChargeQuantity",
+    "ChargeRequest",
+    "DeployedCoefficient",
     "MeshRequest",
     "RenderFailed",
     "RenderProcess",
     "RenderRequest",
     "Rendered",
+    "RenderedCharge",
     "RenderedMesh",
+    "deployed_coefficient",
     "host_document",
     "readiness_script",
     "render",
+    "render_charge",
     "render_mesh",
     "renderer_source",
 ]
@@ -142,6 +159,16 @@ MESH_SCENE_STEM = "mesh"
 
 Not ``scene-*``, so a field render's sweep of its own previous pair leaves the
 mesh picture alone, and the other way round."""
+
+ChargeQuantity: TypeAlias = Literal["charge", "chi"]
+"""What the charge tab's deployed picture shows: the fixed charge or the solid fraction.
+
+Each is also the stem of its pair under ``viewer/`` (WP31 D7)."""
+
+CHI_RANGE = (0.0, 1.0)
+"""The colour range of a ``chi`` picture, fixed: a solid fraction lies in [0, 1]
+(VER-30's range gate), so a scale that followed the data would make a field
+held at 1 look like one that varies (WP31 D8)."""
 
 READY_FLAG = "__nanopnp_viewer"
 """Name of the global the document sets while it tries to draw.
@@ -365,7 +392,65 @@ class RenderedMesh:
     wall: dict[str, object]
 
 
-RenderEvent: TypeAlias = Rendered | RenderedMesh | RenderFailed
+@dataclass(frozen=True)
+class ChargeRequest:
+    """What the charge tab asks for: a run's deployed charge or ``chi`` (WP31 D7).
+
+    Parameters
+    ----------
+    run
+        The run directory, holding ``run.json`` and ``case.yaml``; a walk
+        through stage 7 writes one, ``--upto charge`` included.
+    quantity
+        ``"charge"`` for the fixed volume charge density, ``"chi"`` for the
+        solid fraction.
+    renderer
+        The URL the document loads the renderer from.
+    """
+
+    run: str
+    quantity: ChargeQuantity = "charge"
+    renderer: str = RENDERER_SOURCE
+
+
+@dataclass(frozen=True)
+class RenderedCharge:
+    """The deployed coefficient was drawn, and this is where, on what scale.
+
+    Parameters
+    ----------
+    document, scene
+        The host document and the scene JSON, ``viewer/<quantity>.*``.
+    quantity
+        What was drawn.
+    name, units
+        The quantity's name and unit: IF-07's
+        :data:`~nanopnp.io.fields.FIXED_CHARGE_ATTRIBUTE` in C m^-3, or the
+        solid fraction, dimensionless.
+    colour_range
+        The fixed ``(min, max)`` of the colour map: ``(-L, L)`` for the charge,
+        :data:`CHI_RANGE` for ``chi`` (D8).
+    limit
+        ``L``, the largest magnitude the scene samples, printed beside the
+        picture; for ``chi`` the largest value sampled.
+    elements
+        Triangles drawn: the whole deployed mesh.
+    materials
+        The mesh's materials, so a generated exclusion shell is named.
+    """
+
+    document: str
+    scene: str
+    quantity: ChargeQuantity
+    name: str
+    units: str
+    colour_range: tuple[float, float]
+    limit: float
+    elements: int
+    materials: tuple[str, ...]
+
+
+RenderEvent: TypeAlias = Rendered | RenderedMesh | RenderedCharge | RenderFailed
 """Everything the render child may post. Frozen, picklable and plain."""
 
 
@@ -671,7 +756,176 @@ def render_mesh(request: MeshRequest) -> RenderedMesh:
     )
 
 
-def _worker(request: RenderRequest | MeshRequest, events: Queue[RenderEvent]) -> None:
+@dataclass(frozen=True)
+class DeployedCoefficient:
+    """A run's deployed charge or ``chi``, as the solve assembles it (WP31 D7).
+
+    Parameters
+    ----------
+    mesh
+        The deployed mesh.
+    coefficient
+        ``rho`` in C m^-3, or ``chi``.
+    measures
+        The solve's quadrature policy, at its element order: the order the
+        picture samples at, and the one its charge is integrated at.
+    name, units
+        As :class:`RenderedCharge` names them.
+    """
+
+    mesh: Mesh
+    coefficient: Expression
+    measures: Measures
+    name: str
+    units: str
+
+
+def deployed_coefficient(run: Path, quantity: ChargeQuantity) -> DeployedCoefficient:
+    """Return the coefficient a run's solve reads for ``quantity``, on its deployed mesh.
+
+    The route :func:`nanopnp.solve.state.restore` takes: the deployed mesh, then
+    :func:`~nanopnp.charge.stage.case_fields` over the supplied fields and the
+    stage-7 artefact the run recorded. A producer's charge and a derived ``chi``
+    are read from that artefact and from nowhere else (WP28 D9, WP30 D5).
+
+    Raises
+    ------
+    FileNotFoundError
+        If the run records no stage-6 or stage-7 artefact it needs, or one has
+        left the store.
+    KeyError
+        If the run carries no such coefficient: no fixed charge, or a sharp
+        permittivity per material with no ``chi`` at all.
+    """
+    from dataclasses import replace
+
+    from nanopnp.charge.fields import CANONICAL_UNITS
+    from nanopnp.charge.stage import case_fields, read_fields
+    from nanopnp.io.case import load_case, resolve
+    from nanopnp.io.fields import FIXED_CHARGE_ATTRIBUTE
+    from nanopnp.io.manifest import CASE_FILENAME
+    from nanopnp.materials.fields import SOLID_FRACTION
+    from nanopnp.mesh.ingest import deployed_mesh
+    from nanopnp.physics.measures import AXISYMMETRIC
+
+    resolved = resolve(load_case(run / CASE_FILENAME))
+    mesh_artefact = _recorded_artefact(
+        run, "mesh", needed="a generated mesh" if resolved.mesh is None else None
+    )
+    if mesh_artefact is None and resolved.mesh is None:
+        raise FileNotFoundError(
+            f"{run} records no stage-6 artefact, so there is no deployed mesh to draw on; run "
+            "the build through 'charge' first"
+        )
+    stage7 = (
+        "a deposited charge"
+        if resolved.deposits_charge
+        else "a derived solid fraction"
+        if resolved.derives_eps_r
+        else None
+    )
+    charge_artefact = _recorded_artefact(run, "charge", needed=stage7)
+    if stage7 is not None and charge_artefact is None:
+        raise FileNotFoundError(
+            f"{run} records no stage-7 artefact, and case {resolved.name!r} reads {stage7} from "
+            "one; run the build through 'charge' first"
+        )
+    mesh = deployed_mesh(resolved, mesh_artefact).mesh
+    order = int(resolved.model_options.get("order", AXISYMMETRIC.element_order))
+    measures = replace(AXISYMMETRIC, element_order=order)
+    read = None
+    if resolved.charge is not None or resolved.eps_r is not None:
+        read = read_fields(resolved)
+    fields = case_fields(resolved, read, charge_artefact, mesh, measures=measures)
+    if quantity == "charge":
+        if fields.charge is None:
+            raise KeyError(
+                f"case {resolved.name!r} carries no fixed charge: it neither deposits one in "
+                "stage 7 nor supplies one through inputs.charge, so there is nothing to draw"
+            )
+        return DeployedCoefficient(
+            mesh=mesh,
+            coefficient=fields.charge.volume_density_C_m3(),
+            measures=measures,
+            name=FIXED_CHARGE_ATTRIBUTE,
+            units=CANONICAL_UNITS["volume_charge_density"],
+        )
+    if fields.eps_r is None:
+        raise KeyError(
+            f"case {resolved.name!r} has no solid fraction: its permittivity is sharp, one value "
+            "per material, so there is no chi to draw"
+        )
+    return DeployedCoefficient(
+        mesh=mesh,
+        coefficient=fields.eps_r.chi(),
+        measures=measures,
+        name=SOLID_FRACTION,
+        units=CANONICAL_UNITS[SOLID_FRACTION],
+    )
+
+
+def render_charge(request: ChargeRequest) -> RenderedCharge:
+    """Draw a run's deployed charge or ``chi`` into its ``viewer/`` (WP31 D7, D8).
+
+    Raises
+    ------
+    FileNotFoundError, KeyError
+        As :func:`deployed_coefficient` raises them.
+    """
+    run = Path(request.run)
+    deployed = deployed_coefficient(run, request.quantity)
+
+    from ngsolve.webgui import Draw
+
+    mesh = deployed.mesh
+    scene = Draw(
+        deployed.coefficient, mesh, show=False, order=deployed.measures.element_order
+    ).GetData()
+    # The extremes webgui sampled are what is drawn; the range is then fixed,
+    # so the viewer's autoscale cannot move zero off the centre (D8).
+    sampled = (float(scene["funcmin"]), float(scene["funcmax"]))
+    if request.quantity == "charge":
+        limit = max(abs(sampled[0]), abs(sampled[1]))
+        # An all-zero field still needs a range a colour map can divide by.
+        colour_range = (-limit, limit) if limit > 0.0 else (-1.0, 1.0)
+    else:
+        limit = sampled[1]
+        colour_range = CHI_RANGE
+    scene["funcmin"], scene["funcmax"] = colour_range
+    scene["autoscale"] = False
+    scene["gui_settings"] = {
+        **scene.get("gui_settings", {}),
+        "autoscale": False,
+        "colormap_min": colour_range[0],
+        "colormap_max": colour_range[1],
+    }
+
+    directory = run / VIEWER_DIRNAME
+    directory.mkdir(parents=True, exist_ok=True)
+    scene_path = directory / f"{request.quantity}.json"
+    document_path = directory / f"{request.quantity}.html"
+    payload = json.dumps(scene)
+    _replace(scene_path, payload)
+    _replace(document_path, host_document(payload, renderer=request.renderer, title=deployed.name))
+    logger.info("%s scene written to %s (%d bytes)", deployed.name, document_path, len(payload))
+    return RenderedCharge(
+        document=str(document_path),
+        scene=str(scene_path),
+        quantity=request.quantity,
+        name=deployed.name,
+        units=deployed.units,
+        colour_range=colour_range,
+        limit=limit,
+        elements=int(mesh.ne),
+        materials=tuple(str(name) for name in mesh.GetMaterials()),
+    )
+
+
+AnyRequest: TypeAlias = RenderRequest | MeshRequest | ChargeRequest
+"""Everything the render child may be asked for."""
+
+
+def _worker(request: AnyRequest, events: Queue[RenderEvent]) -> None:
     """Render one scene and post where it went, or why it did not.
 
     Never raises, for the reason :func:`nanopnp.gui.solver._worker` gives: an
@@ -679,7 +933,12 @@ def _worker(request: RenderRequest | MeshRequest, events: Queue[RenderEvent]) ->
     never carry another event.
     """
     try:
-        events.put(render_mesh(request) if isinstance(request, MeshRequest) else render(request))
+        if isinstance(request, MeshRequest):
+            events.put(render_mesh(request))
+        elif isinstance(request, ChargeRequest):
+            events.put(render_charge(request))
+        else:
+            events.put(render(request))
     except BaseException as error:
         events.put(RenderFailed(error=type(error).__qualname__, message=str(error)))
 
@@ -701,7 +960,7 @@ class RenderProcess:
     finish.
     """
 
-    request: RenderRequest | MeshRequest
+    request: AnyRequest
     _process: BaseProcess | None = field(default=None, repr=False)
     _events: Queue[RenderEvent] | None = field(default=None, repr=False)
     answered: bool = field(default=False, repr=False)
