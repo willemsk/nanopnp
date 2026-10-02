@@ -24,6 +24,14 @@ that path, which is what refuses ``"lots"`` in ``bias_V`` the moment it is typed
 registry check and the cross-field rules live (§5.3.4). Both diagnostics are the
 ones the command line prints for the same mistake: one error vocabulary, not two.
 
+**A section is added only when its absence and its empty form are one case.**
+:meth:`CaseEditor.add_section` writes an empty block through
+:func:`~nanopnp.io.case.with_section`, which admits only
+:data:`~nanopnp.io.case.NEUTRAL_SECTIONS`. Without it the pH of a structure case
+that carries no ``charge:`` block could not be set at all (QR-10); with any
+other section it would be the shell changing the physics from a default
+(WP31 D13).
+
 **The unit of work is a file on disk.** §5.3.1 makes the case file the unit of
 reproducibility, so the editor opens one, edits it and saves it, and the shell
 runs the saved file. A run from an in-memory document would emit a manifest
@@ -38,6 +46,7 @@ from types import UnionType
 from typing import Literal, TypeAlias, Union, get_args, get_origin
 
 from nanopnp.io.case import (
+    NEUTRAL_SECTIONS,
     CaseDocument,
     CaseValidationError,
     FieldReference,
@@ -47,11 +56,13 @@ from nanopnp.io.case import (
     case_fields,
     dump_case,
     field_at,
+    field_bounds,
     load_case,
     options_at,
     render_problems,
     substitute,
     value_at,
+    with_section,
 )
 
 __all__ = [
@@ -62,10 +73,10 @@ __all__ = [
     "FieldState",
 ]
 
-FieldKind: TypeAlias = Literal["flag", "choice", "selection", "number", "text"]
-"""How a field is edited: a check box, a combo box, a multiple selection, a
-numeric entry or a free line. Derived from the type the schema declares, never
-from a table of paths."""
+FieldKind: TypeAlias = Literal["flag", "choice", "selection", "bounded", "number", "text"]
+"""How a field is edited: a check box, a combo box, a multiple selection, a spin
+box over a closed range, a numeric entry or a free line. Derived from the type
+and the bounds the schema declares, never from a table of paths."""
 
 
 class Absent:
@@ -106,6 +117,11 @@ class FieldState:
         How to edit it.
     staged
         Whether :attr:`value` is an uncommitted edit rather than the document's.
+    bounds
+        The closed range ``(ge, le)`` the schema declares, for a ``"bounded"``
+        field, and ``None`` otherwise. Always
+        :func:`~nanopnp.io.case.field_bounds` of the path: the shell writes no
+        bound of its own (IF-09, WP31 D12).
     """
 
     reference: FieldReference
@@ -113,6 +129,7 @@ class FieldState:
     options: tuple[str, ...] | None
     kind: FieldKind
     staged: bool = False
+    bounds: tuple[float, float] | None = None
 
     @property
     def path(self) -> str:
@@ -139,7 +156,12 @@ def _members(annotation: FieldType) -> tuple[FieldType, ...]:
     return (annotation,)
 
 
-def _kind(reference: FieldReference, options: tuple[str, ...] | None) -> FieldKind:
+def _kind(
+    reference: FieldReference,
+    options: tuple[str, ...] | None,
+    *,
+    closed: bool = False,
+) -> FieldKind:
     """Return how a field is edited, from the type the schema declares.
 
     The order matters where a type is two things at once.
@@ -150,12 +172,18 @@ def _kind(reference: FieldReference, options: tuple[str, ...] | None) -> FieldKi
     registry rather than from its annotation — and is a combo box for that
     reason, which is the whole point of asking
     :func:`~nanopnp.io.case.options_at` rather than the annotation alone.
+
+    A number with both ends declared, such as ``charge.ph`` in [0, 14], is a
+    spin box over exactly that range (WP31 D12). One open end, ``ge=0`` alone,
+    leaves it a numeric entry: a spin box has no way to say "unbounded".
     """
     members = _members(reference.annotation)
     numeric = any(member in (int, float) for member in members)
     if bool in members:
         return "flag"
     if options is None:
+        if numeric and closed:
+            return "bounded"
         return "number" if numeric else "text"
     if _origin(reference.annotation) in (list, tuple, frozenset, set):
         return "selection"
@@ -216,13 +244,17 @@ class CaseEditor:
         """
         reference = field_at(path)
         options = options_at(path)
+        lower, upper = field_bounds(path)
+        closed = (lower, upper) if lower is not None and upper is not None else None
+        kind = _kind(reference, options, closed=closed is not None)
         staged = path in self._edits
         return FieldState(
             reference=reference,
             value=self._edits[path] if staged else self.value(path),
             options=options,
-            kind=_kind(reference, options),
+            kind=kind,
             staged=staged,
+            bounds=closed if kind == "bounded" else None,
         )
 
     def states(self) -> tuple[FieldState, ...]:
@@ -336,6 +368,36 @@ class CaseEditor:
         return render_problems(
             str(self.source) if self.source is not None else "<case>", error.errors
         )
+
+    # -- sections -----------------------------------------------------------
+
+    def addable(self) -> tuple[str, ...]:
+        """Return the sections **Add section** may write into this document, sorted.
+
+        Those of :data:`~nanopnp.io.case.NEUTRAL_SECTIONS` the committed
+        document does not carry: their fields read :data:`ABSENT` until one is
+        added, and adding one changes nothing the run resolves (WP31 D13).
+        """
+        return tuple(
+            name for name in sorted(NEUTRAL_SECTIONS) if getattr(self.document, name) is None
+        )
+
+    def add_section(self, name: str) -> CaseDocument:
+        """Write the empty section ``name`` into the document, so its fields can be edited.
+
+        Staged edits stay staged, since they name paths rather than a document.
+        The new document is unsaved, like any committed edit.
+
+        Raises
+        ------
+        ValueError
+            If ``name`` is not a section :func:`~nanopnp.io.case.with_section`
+            adds, or the document already carries it, in that function's words.
+        """
+        self.document = with_section(self.document, name)
+        self._problems = None
+        self._unsaved = True
+        return self.document
 
     # -- the file -----------------------------------------------------------
 

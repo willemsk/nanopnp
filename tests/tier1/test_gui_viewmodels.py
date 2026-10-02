@@ -329,6 +329,104 @@ def test_if09_a_field_absent_from_the_document_reads_as_absent(case_file: Path) 
     assert editor.state("inputs.mesh.artefact").value is None
 
 
+def _schema_bounds(path: str) -> tuple[float, float] | None:
+    """Return ``(minimum, maximum)`` the case's JSON Schema gives a path, or ``None``.
+
+    The second route to a field's bounds: pydantic's JSON Schema projection,
+    walked through ``$ref``, ``anyOf``, ``items`` and ``additionalProperties``,
+    rather than the field metadata :func:`~nanopnp.io.case.field_bounds` reads.
+    """
+    from nanopnp.io.case import CaseDocument
+
+    schema = CaseDocument.model_json_schema()
+    definitions = schema.get("$defs", {})
+
+    def alternatives(node: dict[str, object]) -> list[dict[str, object]]:
+        if "$ref" in node:
+            return alternatives(definitions[str(node["$ref"]).rsplit("/", 1)[-1]])
+        found = [node]
+        for key in ("anyOf", "allOf", "oneOf"):
+            for member in node.get(key, ()):  # type: ignore[attr-defined]
+                found.extend(alternatives(member))
+        return found
+
+    nodes = alternatives(schema)
+    for component in path.split("."):
+        stepped: list[dict[str, object]] = []
+        for node in nodes:
+            if component.isdigit() and isinstance(node.get("items"), dict):
+                stepped.extend(alternatives(node["items"]))  # type: ignore[arg-type]
+            elif component in node.get("properties", {}):  # type: ignore[operator]
+                stepped.extend(alternatives(node["properties"][component]))  # type: ignore[index]
+            elif isinstance(node.get("additionalProperties"), dict):
+                stepped.extend(alternatives(node["additionalProperties"]))  # type: ignore[arg-type]
+        nodes = stepped
+    numeric = [node for node in nodes if node.get("type") in ("number", "integer")]
+    lower = {node["minimum"] for node in numeric if "minimum" in node}
+    upper = {node["maximum"] for node in numeric if "maximum" in node}
+    if not lower or not upper:
+        return None
+    assert len(lower) == len(upper) == 1, (path, lower, upper)
+    return float(lower.pop()), float(upper.pop())  # type: ignore[arg-type]
+
+
+def test_ver60_a_bounded_number_spins_over_exactly_the_schema_s_range(case_file: Path) -> None:
+    """Every closed-range number is a spin box over its schema bounds, and nothing else is (D12).
+
+    Both directions, against the JSON Schema rather than the metadata the editor
+    reads: a field the schema closes on both ends and the editor leaves a free
+    entry would let a typed value fail only at commit, and a spin range the
+    editor invented would be a bound written in ``gui/`` (IF-09, VER-43).
+    """
+    editor = CaseEditor.open(case_file)
+    shown = {state.path: state.bounds for state in editor.states() if state.kind == "bounded"}
+    declared = {
+        reference.path: bounds
+        for reference in case_fields()
+        if (bounds := _schema_bounds(reference.path)) is not None
+    }
+    assert shown == declared
+    assert shown["charge.ph"] == (0.0, 14.0)
+    # One open end is not a range a spin box can show: ``ge=0`` alone stays an entry.
+    assert editor.state("charge.exclusion_offset_nm").kind == "number"
+    assert editor.state("charge.exclusion_offset_nm").bounds is None
+    assert editor.state("boundary_conditions.bias_V").bounds is None
+
+
+def test_ver60_add_section_writes_only_a_section_whose_empty_form_changes_nothing(
+    case_file: Path,
+) -> None:
+    """**Add section** creates ``charge: {}``, after which the pH is editable; nothing else (D13).
+
+    The case carries no ``charge:`` block, so its pH reads ``ABSENT`` and the
+    shell could not set it at all without this. What is added is exactly
+    ``with_section``'s empty mapping, which loads back as the default block, and
+    any section outside ``NEUTRAL_SECTIONS`` is refused in that function's words.
+    """
+    from nanopnp.io.case import NEUTRAL_SECTIONS, Charge
+
+    editor = CaseEditor.open(case_file)
+    assert editor.addable() == tuple(sorted(NEUTRAL_SECTIONS)) == ("charge",)
+    assert editor.state("charge.ph").value is ABSENT
+    assert not editor.dirty
+
+    editor.add_section("charge")
+    assert editor.addable() == ()
+    assert editor.dirty
+    assert editor.state("charge.ph").value == Charge().ph
+    with pytest.raises(ValueError, match="already carries"):
+        editor.add_section("charge")
+    with pytest.raises(ValueError, match="cannot be added from a default"):
+        editor.add_section("geometry")
+    with pytest.raises(ValueError, match="cannot be added from a default"):
+        editor.add_section("structure")
+
+    editor.stage("charge.ph", 7.25)
+    editor.commit()
+    assert editor.ensure_saved() == case_file
+    assert load_case(case_file).charge == Charge(ph=7.25)
+
+
 # -- run control --------------------------------------------------------------
 
 
