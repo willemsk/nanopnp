@@ -1484,6 +1484,55 @@ def with_profile(document: CaseDocument, path: str | Path) -> CaseDocument:
         ) from None
 
 
+NEUTRAL_SECTIONS: frozenset[str] = frozenset({"charge"})
+"""The optional top-level sections whose empty mapping resolves exactly as their absence (WP31 D13).
+
+``charge: {}`` and no ``charge:`` both resolve through ``Charge()``: every reader
+writes ``document.charge or Charge()``, and :func:`_check_charge` refuses only keys
+set away from their defaults. Kept as a set and checked in both directions by
+``tests/tier1/test_case_fields.py``, never derived: of the other two optional
+sections, ``structure: {}`` does not validate (it needs its point group), and
+``geometry: {}`` is refused beside ``inputs.mesh`` where its absence is accepted.
+Neutral means the run is unchanged, not the record: stage 9's key is the
+validated dump, which carries the explicit block, so it moves as the case hash
+does, and the stages keyed on it with it; every other key of stages 1 to 10 stays.
+"""
+
+
+def with_section(document: CaseDocument, name: str) -> CaseDocument:
+    """Return ``document`` with the empty section ``name`` written into it (WP31 D13).
+
+    How the desktop shell's **Add section** makes a block's fields editable. Only
+    a section of :data:`NEUTRAL_SECTIONS` is added, because only its empty form is
+    known to change nothing; a block whose presence is the physics, such as
+    ``geometry.analyte``, is never added from a default.
+
+    Raises
+    ------
+    ValueError
+        If ``name`` is not in :data:`NEUTRAL_SECTIONS`, or the document already
+        carries it.
+    CaseValidationError
+        If the rewritten document is not a valid case.
+    """
+    if name not in NEUTRAL_SECTIONS:
+        raise ValueError(
+            f"section {name!r} cannot be added from a default: only "
+            f"{', '.join(sorted(NEUTRAL_SECTIONS))} resolves empty exactly as its absence, so "
+            "any other would change the run or be refused; write it in the case file"
+        )
+    if getattr(document, name) is not None:
+        raise ValueError(f"case {document.name!r} already carries a {name}: section")
+    payload = document.model_dump(by_alias=True, mode="json")
+    payload[name] = {}
+    try:
+        return CaseDocument.model_validate(payload)
+    except ValidationError as error:
+        raise CaseValidationError(
+            render_problems(f"<{document.name} with {name}: {{}}>", error), error
+        ) from None
+
+
 def _set_at(payload: dict[str, FieldValue], path: str, value: FieldValue) -> None:
     """Set ``value`` into a dumped case document at a dotted path.
 

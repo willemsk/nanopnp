@@ -20,11 +20,30 @@ everywhere else, and the failure names it.
 
 from __future__ import annotations
 
-import pytest
-from pydantic import BaseModel
+from collections.abc import Callable
+from dataclasses import fields
+from pathlib import Path
 
-from nanopnp.io.case import _walk_fields, case_fields, field_at
+import pytest
+from pydantic import BaseModel, ValidationError
+
+from nanopnp.core.stages import create, describe
+from nanopnp.io.artefact import StageInputs
+from nanopnp.io.case import (
+    NEUTRAL_SECTIONS,
+    CaseDocument,
+    CaseValidationError,
+    _walk_fields,
+    case_fields,
+    dump_case,
+    field_at,
+    load_case,
+    resolve,
+    with_section,
+)
 from nanopnp.io.defaults import CONFIGURATION_PATHS, SWITCH_PATHS
+from nanopnp.io.run import run_case, stored_upstream
+from nanopnp.io.store import Store
 
 SCHEMA_PATHS: tuple[str, ...] = (
     "schema",
@@ -218,3 +237,115 @@ def test_if09_the_walk_reaches_a_block_behind_an_optional_and_a_sequence() -> No
     paths = {reference.path for reference in case_fields()}
     assert "geometry.analyte.shape" in paths
     assert "electrolyte.species.0.name" in paths
+
+
+# -- VER-60: the sections an empty mapping leaves unchanged (WP31 D13) ---------
+
+QUICKSTART = Path(__file__).parents[2] / "examples" / "01-quickstart" / "quickstart.case.yaml"
+"""A supplied-mesh case: the one beside which ``geometry: {}`` is refused."""
+
+
+def _optional_sections() -> tuple[str, ...]:
+    """Return the top-level sections the schema lets a case omit, read off the schema."""
+    return tuple(
+        name
+        for name, info in CaseDocument.model_fields.items()
+        if not info.is_required() and info.default is None
+    )
+
+
+def _without(document: CaseDocument, name: str) -> CaseDocument:
+    """Return ``document`` with the top-level section ``name`` removed."""
+    payload = document.model_dump(by_alias=True, mode="json")
+    payload.pop(name, None)
+    return CaseDocument.model_validate(payload)
+
+
+def _resolution(document: CaseDocument) -> dict[str, object]:
+    """Return everything a document resolves to, but the document it was resolved from."""
+    resolved = resolve(document)
+    return {
+        item.name: getattr(resolved, item.name)
+        for item in fields(resolved)
+        if item.name != "document"
+    }
+
+
+def _bases(directory: Path, write_tube: Callable[..., Path]) -> tuple[CaseDocument, ...]:
+    """Return the cases each section is tried on: a supplied mesh, and a deposited charge."""
+    return (load_case(QUICKSTART), load_case(write_tube(directory)))
+
+
+def test_ver60_the_neutral_sections_are_optional_sections_of_the_schema() -> None:
+    """The set names only top-level sections a case may omit; ``charge`` is one."""
+    optional = set(_optional_sections())
+    assert optional == {"structure", "geometry", "charge"}
+    assert optional >= NEUTRAL_SECTIONS
+    assert "charge" in NEUTRAL_SECTIONS
+
+
+def test_ver60_a_listed_section_resolves_empty_as_absent(tmp_path: Path, charged_tube) -> None:
+    """Each listed section, written empty, resolves to what its absence resolves to (D13)."""
+    for base in _bases(tmp_path, charged_tube.write):
+        for name in NEUTRAL_SECTIONS:
+            absent = _without(base, name)
+            added = with_section(absent, name)
+            assert getattr(added, name) is not None
+            assert _resolution(added) == _resolution(absent), (base.name, name)
+
+
+def test_ver60_every_unlisted_optional_section_is_refused_empty_or_resolves_differently(
+    tmp_path: Path, charged_tube
+) -> None:
+    """The other direction: an optional section left out of the set is not neutral somewhere."""
+    for name in sorted(set(_optional_sections()) - NEUTRAL_SECTIONS):
+        evidence: list[str] = []
+        for base in _bases(tmp_path, charged_tube.write):
+            payload = _without(base, name).model_dump(by_alias=True, mode="json")
+            payload[name] = {}
+            try:
+                empty = CaseDocument.model_validate(payload)
+                if _resolution(empty) != _resolution(_without(base, name)):
+                    evidence.append(f"{base.name}: resolves differently")
+            except (ValidationError, CaseValidationError) as error:
+                evidence.append(f"{base.name}: refused ({type(error).__name__})")
+        assert evidence, f"{name}: {{}} resolves as its absence on every base case; list it"
+
+
+def test_ver60_with_section_refuses_an_unlisted_or_present_section(tmp_path: Path) -> None:
+    """Only a listed section is added from a default, and never over one already there."""
+    base = load_case(QUICKSTART)
+    for name in ("structure", "geometry", "analyte", "physics"):
+        with pytest.raises(ValueError, match="cannot be added from a default"):
+            with_section(base, name)
+    present = with_section(_without(base, "charge"), "charge")
+    with pytest.raises(ValueError, match="already carries a charge: section"):
+        with_section(present, "charge")
+
+
+def test_ver60_an_empty_charge_section_keys_every_physics_stage_as_its_absence(
+    tmp_path: Path, charged_tube
+) -> None:
+    """Stages 1 to 10 key the same with ``charge: {}`` as without it, but for stage 9.
+
+    Stage 9's key is the validated dump, which carries the explicit block, so it
+    moves as the case hash does (the :data:`~nanopnp.io.case.NEUTRAL_SECTIONS`
+    docstring). Every stage that carries physics, the solve included, keeps its key,
+    so the run is served from the store; that is what makes the section neutral.
+    """
+    absent = _without(load_case(charged_tube.write(tmp_path / "tube")), "charge")
+    added = with_section(absent, "charge")
+    store = Store(tmp_path / "store")
+    run_case(dump_case(absent, tmp_path / "absent.yaml"), store=store, upto="materials")
+
+    def keys(document: CaseDocument) -> dict[str, str]:
+        found = stored_upstream(document, store=store, upto="materials")
+        found["solve"] = create("solve").key(  # type: ignore[attr-defined]
+            StageInputs(case=document, upstream=dict(found))
+        )
+        return {name: artefact.hash for name, artefact in found.items()}
+
+    before, after = keys(absent), keys(added)
+    assert set(before) == set(after)
+    assert {name for name in before if before[name] != after[name]} == {"case"}
+    assert all(describe(name).number <= 10 for name in before)

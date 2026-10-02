@@ -418,6 +418,99 @@ def parallelogram_profile(tmp_path_factory: pytest.TempPathFactory) -> Path:
     return write_parallelogram_profile(tmp_path_factory.mktemp("parallelogram") / "profile.yaml")
 
 
+CHARGED_TUBE_ATOMS: tuple[tuple[str, float, float, float, float], ...] = (
+    ("NZ", 32.5, 0.0, -15.0, 1.0),
+    ("OE1", 0.0, 47.5, 15.0, -2.0),
+)
+"""The charged tube's two atoms: name, ``x, y, z`` in Å, and the charge of frame 0 in e.
+
+On the parallelogram's midline, at ``(r, z) = (3.25, -1.5)`` and ``(4.75, 1.5)`` nm,
+so each sits half a nanometre inside the body; the second off the ``x`` axis, so a
+picture that dropped ``y`` would put it at ``r = 0`` (WP31's VER-60). Opposite in
+sign and unequal, because a net-neutral deposit is refused (WP28 D6).
+"""
+
+CHARGED_TUBE_RADIUS_A = 1.5
+"""Their radius: ``w = 0.75`` Å, so an areal peak sits ``w^2/2r`` < 0.001 nm off its atom."""
+
+CHARGED_TUBE_SECOND_FRAME_E: tuple[float, float] = (1.0, -3.0)
+"""The second frame's charges, where a two-frame tube is asked for: ``Q_net`` -2 e."""
+
+
+def write_charged_tube(directory: Path, *, frames: int = 1, size_scale: float = 5.0) -> Path:
+    """Write the cheapest case that deposits a charge, and return its path (WP31's VER-60).
+
+    The parallelogram through ``inputs.profile`` in a 30 nm reservoir, with an
+    ``inputs.pqr`` of :data:`CHARGED_TUBE_ATOMS`. A walk through stage 7 takes
+    about two seconds. ``size_scale`` 5 rather than the 20 of the uncharged hook
+    case: at 20 the deployed field's worst plane is off by 5.7e-3 of ``Q_net``
+    and at 10 by 1.9e-3, both refused by PHY-19's 1e-3 gate; at 5 it is 1.2e-4.
+
+    Parameters
+    ----------
+    frames
+        1, or 2 for a PQR whose second ``MODEL`` carries
+        :data:`CHARGED_TUBE_SECOND_FRAME_E`.
+    """
+    directory.mkdir(parents=True, exist_ok=True)
+    profile = write_parallelogram_profile(directory / "profile.yaml")
+    charges = [tuple(atom[4] for atom in CHARGED_TUBE_ATOMS), CHARGED_TUBE_SECOND_FRAME_E]
+    lines: list[str] = []
+    for frame in range(frames):
+        if frames > 1:
+            lines.append(f"MODEL     {frame + 1:4d}")
+        for serial, ((name, x, y, z, _), charge) in enumerate(
+            zip(CHARGED_TUBE_ATOMS, charges[frame], strict=True), start=1
+        ):
+            lines.append(
+                f"ATOM  {serial:5d} {name:<4} GLU A  18    {x:8.3f}{y:8.3f}{z:8.3f}"
+                f" {charge:7.4f} {CHARGED_TUBE_RADIUS_A:6.4f}"
+            )
+        if frames > 1:
+            lines.append("ENDMDL")
+    pqr = directory / "atoms.pqr"
+    pqr.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    case = directory / "case.yaml"
+    case.write_text(
+        f"""schema: nanopnp/case/v2
+name: charged-tube
+inputs:
+  profile: {{path: {profile}}}
+  pqr: {{path: {pqr}, format: pqr}}
+geometry: {{reservoir: {{radius_nm: 30.0}}}}
+electrolyte:
+  species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
+  concentration_M: 1.0
+boundary_conditions: {{bias_V: 0.05, ground: cis}}
+physics: {{model: pnp-ns, solid_permittivities: {{protein: 20.0, membrane: 3.2}}}}
+numerics: {{mesh: {{size_scale: {size_scale}}}}}
+""",
+        encoding="utf-8",
+    )
+    return case
+
+
+@dataclass(frozen=True)
+class ChargedTube:
+    """What a test of the charged tube needs: the writer, and the atoms it writes."""
+
+    write: Callable[..., Path]
+    atoms: tuple[tuple[str, float, float, float, float], ...]
+    radius_A: float
+    second_frame_e: tuple[float, float]
+
+
+@pytest.fixture(scope="session")
+def charged_tube() -> ChargedTube:
+    """Return :func:`write_charged_tube` and its atoms; each test writes into its own directory."""
+    return ChargedTube(
+        write=write_charged_tube,
+        atoms=CHARGED_TUBE_ATOMS,
+        radius_A=CHARGED_TUBE_RADIUS_A,
+        second_frame_e=CHARGED_TUBE_SECOND_FRAME_E,
+    )
+
+
 def cut_2wcd(chain: str, first: int, last: int) -> list[str]:
     """Return the ATOM lines of residues ``first`` to ``last`` of one chain of the deposited 2WCD.
 
