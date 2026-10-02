@@ -568,7 +568,9 @@ def _register_builtins() -> None:
             name="charge",
             number=7,
             title="Charge assembly",
-            inputs=("case", "mesh", "protonation"),
+            # ``region`` only for a derived chi (WP30 D5), as ``protonation`` only
+            # for a deposited charge.
+            inputs=("case", "mesh", "protonation", "region"),
             outputs=(
                 "fixed-charge field, deposited on the mesh or supplied",
                 "export lattice, a nanopnp/field/v1 document",

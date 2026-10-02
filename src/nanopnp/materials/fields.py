@@ -41,6 +41,7 @@ from nanopnp.charge.fields import (
 )
 from nanopnp.core.typing import Expression, Mesh
 from nanopnp.density.grid import RadialGrid, coefficient
+from nanopnp.mesh.profile import signed_area
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from collections.abc import Iterable, Mapping, Sequence
@@ -101,11 +102,19 @@ are 0, as the padding ring is.
 PROBE_NM = 1e-6
 """How far outward of a profile piece's midpoint its side is probed, in nm (WP30 D2)."""
 
+MEMBRANE_HOLD_CELLS = 2.0
+"""Lattice nodes in the membrane within this many spacings of the body are held at 1 (WP30 D3).
+
+They are the nodes a protein element beside the membrane interpolates from
+(WP30 Outcomes, D3).
+"""
+
 DERIVED_CONSTANTS: dict[str, object] = {
     "transition": TRANSITION_ID,
     "lattice": f"delta/{LATTICE_DIVISIONS}",
     "widening": f"{BOX_WIDENING:g}delta",
     "probe_nm": PROBE_NM,
+    "membrane_hold": f"{MEMBRANE_HOLD_CELLS:g}h",
 }
 """Every code constant that moves a sample of the derived ``chi``, as the stage-7 key records it."""
 
@@ -542,8 +551,6 @@ def water_facing(
     """
     import numpy as np
 
-    from nanopnp.mesh.profile import signed_area
-
     loop = np.asarray(points, dtype=np.float64)
     if signed_area(loop) < 0.0:
         loop = loop[::-1]
@@ -650,7 +657,8 @@ def derive_solid_fraction(
     at ``r = 0``. Distances are taken only in the band ``|s| < delta/2 + 2h``,
     outside which ``chi`` is 1 inside the body and 0 outside it.
 
-    Nodes outside the body but in the membrane, within ``2h`` of the body, are 1:
+    Nodes outside the body but in the membrane, within ``2h`` of the body
+    (:data:`MEMBRANE_HOLD_CELLS`), are 1:
     the membrane is held at 1 (D3), and those are the nodes a protein element
     beside the membrane interpolates from. On the mesh the membrane is held at 1
     by its material (:class:`DerivedSolidFraction`), past the box as well.
@@ -685,14 +693,21 @@ def derive_solid_fraction(
     inside = _inside(loop, r_nm, z_nm)
     distance = _band_distance(water, r_nm, z_nm, 0.5 * transition_nm + 2.0 * spacing)
     # In place, so that the lattice-sized temporaries are the distance, the sign
-    # and the values: at delta = h_c on 2WCD each is 76 MB (WP30 Outcomes).
+    # and the values: at delta = h_c on 2WCD each is 76 MB (WP30 Outcomes). The
+    # step is :func:`smooth_step`'s ``x^2 (3 - 2x)``, operation for operation, so
+    # the samples are its bits; called on the lattice it would hold four more.
     np.negative(distance, out=distance, where=~inside)
     distance /= transition_nm
     distance += 0.5
-    values = smooth_step(distance)
+    np.clip(distance, 0.0, 1.0, out=distance)
+    values = distance * distance
+    distance *= -2.0
+    distance += 3.0
+    values *= distance
     del distance
 
-    near = _band_distance(membrane_facing, r_nm, z_nm, 2.0 * spacing) <= 2.0 * spacing
+    hold = MEMBRANE_HOLD_CELLS * spacing
+    near = _band_distance(membrane_facing, r_nm, z_nm, hold) <= hold
     near &= ~inside
     near &= _in_membrane(
         r_nm[None, :],

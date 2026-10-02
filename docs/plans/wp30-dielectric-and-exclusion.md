@@ -120,8 +120,9 @@ D9 and D11.
 > - 2WCD, both switches on, `pnp` at `size_scale` 4 (14,036 triangles): it walks to stage 12. The
 >   `χ` means are protein 0.985, `exclusion` 0.056 and electrolyte 0. Stage 7 takes 6.6 s with the
 >   deposit, and the solve 32 s.
-> - `χ` cost on 2WCD (`-m slow`): at `δ = h_c` the lattice is 1669 × 5694 (76 MB), derived in 2.1 s
->   with a 390 MB allocation peak. At `δ` = 0.15 nm it is 584 × 1926, 0.25 s and 46 MB.
+> - `χ` cost on 2WCD (`-m slow`): at `δ = h_c` the lattice is 1669 × 5694 (76 MB), derived in 1.4 s
+>   with a 171 MB allocation peak, the step taken in place (390 MB before the review). At `δ` =
+>   0.15 nm it is 584 × 1926, 0.28 s and 20 MB.
 > - `χ` error on 2WCD against the exact step, anywhere in the band and clear of the membrane:
 >   7.8e-3 at `δ = h_c` and 1.1e-2 at 0.15 nm, against *Design* §1's 0.04 estimate at the medial
 >   axis. The 95th percentile is 1.3e-3.

@@ -1197,6 +1197,15 @@ polygon is the least of four endpoint distances (`chord_clearances`).
 The closing moves the surface outward where it fills a groove. On 2WCD at `a` = 0.25 nm, 8 % of the
 `wall` nodes lie beyond `a + 10⁻⁶` nm (`04` §2.2).
 
+**The ring's spacing is set by `h_c`, and the wall-size gate by the wall target.** Every ring edge
+is at least `1.05 h_c` = 0.0525 nm, and netgen leaves each as one segment once the target falls
+below about `h_c`. On the VER-59 parallelogram at `a` = 0.25 nm and `size_scale` 1 (code review of
+WP30, 2 October 2026) **[tested]**: at 1 M the `auto` target is the 0.05 nm ceiling and the wall
+segments average 1.03 × it; at 3 M it is 0.0350 nm, they average 1.453 ×, and stage 6 refuses the
+mesh against the 1.15 bound; an explicit `wall_h_nm` of 0.04 nm at 1 M averages 1.287 × and is
+refused too. So a generated shell meshes only where the resolved target is at least about
+0.046 nm: `auto` below about 1.8 M, and `size_scale` no smaller than about 0.9.
+
 ### 8.1.2 An unstructured netgen mesh is not a portable measurement
 
 A corollary of §8.1.1 that only shows up on a CI matrix. Because the aliased quadrature error is a
