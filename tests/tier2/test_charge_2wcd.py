@@ -12,6 +12,11 @@ share at 0.5 (D4). ``Q_net`` is WP27's golden -60 e. Recorded: the solid share,
 each material's charge, the worst plane of each side and the stage's seconds;
 peak memory in a fresh process under ``-m slow``. The export is read back
 through ``inputs.charge`` to the same grid digest (D11).
+
+VER-60 reads the same artefacts as the desktop shell's Charge tab reads them
+(WP31): the map carries the record's lattice charge, the conservation pane is the
+record, and the protonation pane shows -60 e, no chain difference and the
+recorded unapplied states. No second deposit is made.
 """
 
 from __future__ import annotations
@@ -26,6 +31,8 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 
+from nanopnp.gui.charge import load_charge, load_protonation
+from nanopnp.gui.solver import Produced
 from nanopnp.io.run import RunResult, run_case
 from nanopnp.io.store import Store
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
@@ -181,6 +188,102 @@ def test_ver29_the_2wcd_export_reads_back_through_inputs_charge_to_the_same_dige
     assert field.grid.digest() == stored.digest()
     assert field.document.q_net_e == pytest.approx(GOLDEN_Q_NET_E, abs=1e-9)
     assert field.planar_integral_C() / 1.602176634e-19 == pytest.approx(GOLDEN_Q_NET_E, rel=1e-9)
+
+
+def _event(deposited: Deposited, name: str) -> Produced:
+    """Return the walk's artefact for ``name`` as the build reports it to the shell."""
+    artefact = deposited.result.artefacts[name]
+    return Produced(
+        name=name,
+        schema=artefact.schema,
+        hash=artefact.hash,
+        cached=False,
+        store=str(deposited.store.root),
+    )
+
+
+def test_ver60_the_2wcd_charge_tab_shows_its_record(deposited: Deposited) -> None:
+    """The map integrates to the record's lattice charge, and the report is the record (D6, D10).
+
+    The map's block means, weighted by their areas, sum to ``q_grid`` to
+    round-off: the picture is the deposit, reduced, never a field rebuilt for
+    display. The deposit conserves ``Q_net`` to round-off too (its producer leg
+    is about 1e-14, gated at 1e-3), so the picture carries -60 e to 1e-12.
+    """
+    view = load_charge(_event(deposited, "charge"))
+    record = deposited.record
+    conservation = record["conservation"]
+    assert view.charge is not None
+    assert view.charge.integral_e == pytest.approx(conservation["q_grid_e"], rel=1e-12)
+    assert view.charge.integral_e == pytest.approx(GOLDEN_Q_NET_E, rel=1e-12)
+    assert view.quantities[0] == "charge"
+
+    shown = view.conservation
+    assert shown is not None
+    assert shown.source == "deposited"
+    for key in ("q_net_e", "q_grid_e", "q_mesh_e", "axis_guard_deficit_e", "boundary_ring"):
+        assert shown.figures[key] == conservation[key]
+    assert shown.figures["material_charge_e"] == record["material_charge_e"]
+    assert shown.figures["solid_share"] == record["solid_share"]
+    legs = {leg.name: leg for leg in shown.legs}
+    for name, key in (
+        ("producer", "producer"),
+        ("consumer", "consumer"),
+        ("quadrature agreement", "quadrature_agreement"),
+    ):
+        assert legs[name].value == conservation[key]["relative_error"]
+        assert legs[name].tolerance == conservation[key].get("tolerance")
+    plane = conservation["per_plane"]
+    assert legs["worst plane (lattice)"].value == plane["grid_worst_relative_error"]
+    assert legs["worst plane (mesh)"].value == plane["mesh_worst_relative_error"]
+    assert dict(shown.planes) == {
+        "worst plane (lattice)": plane["grid_worst_plane_z_nm"],
+        "worst plane (mesh)": plane["mesh_worst_plane_z_nm"],
+    }
+    logger.info(
+        "VER-60 2WCD map: %s pixels of up to %d x %d lattice nodes each, %.12f e against "
+        "q_grid %.12f e",
+        view.charge.areas.shape,
+        view.charge.block,
+        view.charge.block,
+        view.charge.integral_e,
+        conservation["q_grid_e"],
+    )
+
+
+def test_ver60_the_2wcd_protonation_pane_shows_the_recorded_states(deposited: Deposited) -> None:
+    """-60 e, no chain difference, and the unapplied rows: ``CYS 285`` everywhere, ``LYS 8``'s N+.
+
+    Under CHARMM a ``CYS⁻`` cannot be held, so ``CYS 285`` (pKa 6.25) is
+    unapplied in every chain. PDB2PQR never applies a terminal pKa, so a chain
+    whose ``LYS 8`` N-terminus PROPKA places below pH 7.5 is unapplied there
+    (`.knowledge/07` section 3). The pane reads both from the table and checks
+    them against the record (D11).
+    """
+    event = _event(deposited, "protonation")
+    view = load_protonation(event)
+    summary = deposited.result.artefacts["protonation"].summary
+
+    assert view.titrated
+    assert all(q == pytest.approx(GOLDEN_Q_NET_E, abs=1e-6) for q in view.q_net_e)
+    assert view.chain_differences == ()
+    recorded = {(entry["chain"], entry["residue"]) for entry in summary["unapplied"]}  # type: ignore[union-attr, index]
+    chains = {chain for chain, _ in recorded}
+    assert chains == set("ABCDEFGHIJKL")
+    assert {(chain, "CYS 285") for chain in chains} <= recorded
+    assert {residue for _, residue in recorded} <= {"CYS 285", "LYS 8"}
+
+    shown: set[tuple[str, str]] = set()
+    for index in range(view.frames):
+        frame = view.frame(index)
+        assert frame.q_net_e == pytest.approx(GOLDEN_Q_NET_E, abs=1e-6)
+        shown |= {(row.chain, row.residue) for row in frame.rows if row.unapplied}
+    assert shown == recorded
+    logger.info(
+        "VER-60 2WCD protonation pane: %d frame(s), unapplied %s",
+        view.frames,
+        sorted(recorded),
+    )
 
 
 _MEASURE = """\
