@@ -35,6 +35,7 @@ import base64
 import hashlib
 import importlib.util
 import json
+import math
 import re
 import tarfile
 from pathlib import Path
@@ -42,25 +43,30 @@ from pathlib import Path
 import pytest
 
 from nanopnp.gui.render import (
+    CHI_RANGE,
     READY_FLAG,
     RENDERER_DIRECTORY,
     RENDERER_INTEGRITY,
     RENDERER_SOURCE,
     RENDERER_VERSION,
     VIEWER_DIRNAME,
+    ChargeRequest,
     MeshRequest,
     Rendered,
+    RenderedCharge,
     RenderedMesh,
     RenderFailed,
     RenderProcess,
     RenderRequest,
+    deployed_coefficient,
     host_document,
     readiness_script,
     render,
+    render_charge,
     render_mesh,
     renderer_source,
 )
-from nanopnp.io.fields import attribute_name
+from nanopnp.io.fields import FIXED_CHARGE_ATTRIBUTE, attribute_name
 from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
@@ -602,6 +608,161 @@ def test_ver55_the_mesh_request_crosses_the_boundary(built_mesh: Path, tmp_path:
     events = process.drain()
     assert len(events) == 1 and isinstance(events[0], RenderFailed), events
     assert events[0].error == "FileNotFoundError"
+
+
+# -- VER-60: the deployed charge and chi ----------------------------------------
+
+DELTA_AND_SHELL = "{dielectric_transition_nm: 0.2, exclusion_offset_nm: 0.3}"
+"""A transition width and an ion-exclusion shell, so the walk derives a ``chi``
+and generates the ``exclusion`` material. 0.3 nm, because the shell is refused at
+or below twice the density grid spacing, 0.1 nm on this case."""
+
+
+@pytest.fixture(scope="module")
+def charged_run(tmp_path_factory: pytest.TempPathFactory, charged_tube) -> Path:
+    """Walk the charged tube, with ``delta`` and a shell, through stage 7; return its run."""
+    work = tmp_path_factory.mktemp("charge-picture")
+    case = charged_tube.write(work / "case", charge_block=DELTA_AND_SHELL)
+    return run_case(case, store=Store(work / "store"), upto="charge").directory
+
+
+def _charge_record(run: Path) -> dict[str, object]:
+    """Return the stage-7 artefact's summary the run recorded, read from the store."""
+    record = json.loads((run / "run.json").read_text(encoding="utf-8"))
+    entry = record["artefacts"]["charge"]
+    artefact = Store(Path(record["store"])).get(entry["schema"], entry["hash"])
+    assert artefact is not None
+    return artefact.summary
+
+
+def test_ver60_the_charge_request_draws_rho_on_a_zero_centred_range_and_stores_nothing(
+    charged_run: Path,
+) -> None:
+    """``viewer/charge.*``, on ``[-L, L]`` with autoscale off, and no artefact (D7, D8).
+
+    ``L`` is checked against a second draw of the same coefficient left to
+    autoscale: the extremes it samples are what the picture shows, so the larger
+    magnitude is the limit, and the two signs of the tube's atoms are both in it.
+    """
+    from ngsolve.webgui import Draw
+
+    record = json.loads((charged_run / "run.json").read_text(encoding="utf-8"))
+    before = _stored_files(charged_run)
+
+    rendered = render_charge(ChargeRequest(run=str(charged_run)))
+
+    assert rendered.quantity == "charge"
+    assert rendered.name == FIXED_CHARGE_ATTRIBUTE
+    assert rendered.units == "C/m^3"
+    assert Path(rendered.scene) == charged_run / VIEWER_DIRNAME / "charge.json"
+    assert Path(rendered.document) == charged_run / VIEWER_DIRNAME / "charge.html"
+    assert json.loads((charged_run / "run.json").read_text(encoding="utf-8")) == record
+    assert _stored_files(charged_run) == before
+
+    deployed = deployed_coefficient(charged_run, "charge")
+    free = Draw(
+        deployed.coefficient, deployed.mesh, show=False, order=deployed.measures.element_order
+    ).GetData()
+    assert free["funcmin"] < 0.0 < free["funcmax"]
+    assert rendered.limit == max(abs(free["funcmin"]), abs(free["funcmax"]))
+    assert rendered.colour_range == (-rendered.limit, rendered.limit)
+    assert rendered.elements == int(deployed.mesh.ne)
+
+    scene = json.loads(Path(rendered.scene).read_text(encoding="utf-8"))
+    assert (scene["funcmin"], scene["funcmax"]) == rendered.colour_range
+    assert scene["autoscale"] is False
+    assert scene["gui_settings"]["autoscale"] is False
+    assert (
+        scene["gui_settings"]["colormap_min"],
+        scene["gui_settings"]["colormap_max"],
+    ) == rendered.colour_range
+    assert FIXED_CHARGE_ATTRIBUTE in Path(rendered.document).read_text(encoding="utf-8")
+
+
+def test_ver60_the_drawn_rho_integrates_to_the_record_s_q_mesh(charged_run: Path) -> None:
+    """``2 pi int rho r dA`` of the drawn coefficient, at the solve's order, is ``q_mesh_e`` (D7).
+
+    To 1e-12 relative against the stage-7 record, and to the consumer leg's
+    tolerance against the atoms' ``Q_net`` of -1 e: the first says the picture is
+    the coefficient stage 7 measured, the second that the measurement is of the
+    tube's own charge, units and ``2 pi`` included.
+    """
+    from scipy.constants import elementary_charge
+
+    deployed = deployed_coefficient(charged_run, "charge")
+    integral_C = (
+        2.0
+        * math.pi
+        * 1e-27
+        * deployed.measures.integrate(deployed.coefficient, deployed.mesh, what="the picture")
+    )
+    conservation = _charge_record(charged_run)["charge"]["conservation"]  # type: ignore[index]
+    assert integral_C / elementary_charge == pytest.approx(conservation["q_mesh_e"], rel=1e-12)
+    assert integral_C / elementary_charge == pytest.approx(
+        conservation["q_net_e"], rel=conservation["consumer"]["tolerance"]
+    )
+
+
+def test_ver60_the_chi_scene_is_the_derived_chi_on_the_unit_range(charged_run: Path) -> None:
+    """``viewer/chi.*`` on [0, 1] fixed, its mean over ``protein`` the record's (D7, D8).
+
+    The mean is the ``r``-weighted one stage 7 gated, taken here over the drawn
+    coefficient on the deployed mesh, so a picture of a re-derived or
+    differently-bound ``chi`` fails on the number. The charge pair from the test
+    above is left in place: the two pictures do not sweep each other.
+    """
+    import ngsolve as ngs
+
+    render_charge(ChargeRequest(run=str(charged_run)))
+    rendered = render_charge(ChargeRequest(run=str(charged_run), quantity="chi"))
+
+    assert rendered.quantity == "chi"
+    assert rendered.units == "1"
+    assert rendered.colour_range == CHI_RANGE == (0.0, 1.0)
+    assert 0.0 < rendered.limit <= 1.0
+    assert Path(rendered.scene) == charged_run / VIEWER_DIRNAME / "chi.json"
+    assert (charged_run / VIEWER_DIRNAME / "charge.json").is_file()
+
+    deployed = deployed_coefficient(charged_run, "chi")
+    protein = deployed.mesh.Materials("protein")
+    mean = deployed.measures.integrate(
+        deployed.coefficient, deployed.mesh, definedon=protein, what="chi over protein"
+    ) / deployed.measures.integrate(ngs.CF(1.0), deployed.mesh, definedon=protein)
+    recorded = {
+        entry["material"]: entry["mean"]
+        for entry in _charge_record(charged_run)["eps_r"]["material_means"]  # type: ignore[index]
+    }
+    assert mean == pytest.approx(recorded["protein"], rel=1e-12)
+    assert 0.0 < recorded["protein"] < 1.0
+
+
+def test_ver60_a_generated_shell_s_mesh_lists_exclusion(charged_run: Path) -> None:
+    """The geometry tab's picture and the charge pictures both name the shell's material."""
+    assert "exclusion" in render_mesh(MeshRequest(run=str(charged_run))).materials
+    assert "exclusion" in render_charge(ChargeRequest(run=str(charged_run))).materials
+
+
+def test_ver60_a_run_with_no_charge_and_no_chi_is_refused_by_name(finished_run: Path) -> None:
+    """A run that carried neither is named, never drawn as a zero field (IF-07, QR-12).
+
+    "There was no charge" and "there was one and it was zero" are different
+    runs, and a colour map of zeros says the second.
+    """
+    with pytest.raises(KeyError, match="carries no fixed charge"):
+        render_charge(ChargeRequest(run=str(finished_run)))
+    with pytest.raises(KeyError, match="no solid fraction"):
+        render_charge(ChargeRequest(run=str(finished_run), quantity="chi"))
+    assert not (finished_run / VIEWER_DIRNAME / "charge.json").exists()
+
+
+def test_ver60_the_charge_request_crosses_the_boundary(charged_run: Path) -> None:
+    """Spawned, the charge picture comes back as plain data."""
+    process = RenderProcess(ChargeRequest(run=str(charged_run), quantity="chi"))
+    process.start()
+    process.join(600.0)
+    events = process.drain()
+    assert len(events) == 1 and isinstance(events[0], RenderedCharge), events
+    assert events[0].colour_range == CHI_RANGE
 
 
 class _DeafChild:

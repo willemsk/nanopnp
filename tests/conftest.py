@@ -437,7 +437,9 @@ CHARGED_TUBE_SECOND_FRAME_E: tuple[float, float] = (1.0, -3.0)
 """The second frame's charges, where a two-frame tube is asked for: ``Q_net`` -2 e."""
 
 
-def write_charged_tube(directory: Path, *, frames: int = 1, size_scale: float = 5.0) -> Path:
+def write_charged_tube(
+    directory: Path, *, frames: int = 1, size_scale: float = 5.0, charge_block: str | None = None
+) -> Path:
     """Write the cheapest case that deposits a charge, and return its path (WP31's VER-60).
 
     The parallelogram through ``inputs.profile`` in a 30 nm reservoir, with an
@@ -451,6 +453,9 @@ def write_charged_tube(directory: Path, *, frames: int = 1, size_scale: float = 
     frames
         1, or 2 for a PQR whose second ``MODEL`` carries
         :data:`CHARGED_TUBE_SECOND_FRAME_E`.
+    charge_block
+        A ``charge:`` block as a YAML flow mapping, such as
+        ``"{dielectric_transition_nm: 0.2}"``; none is written by default.
     """
     directory.mkdir(parents=True, exist_ok=True)
     profile = write_parallelogram_profile(directory / "profile.yaml")
@@ -484,7 +489,8 @@ electrolyte:
 boundary_conditions: {{bias_V: 0.05, ground: cis}}
 physics: {{model: pnp-ns, solid_permittivities: {{protein: 20.0, membrane: 3.2}}}}
 numerics: {{mesh: {{size_scale: {size_scale}}}}}
-""",
+"""
+        + ("" if charge_block is None else f"charge: {charge_block}\n"),
         encoding="utf-8",
     )
     return case
