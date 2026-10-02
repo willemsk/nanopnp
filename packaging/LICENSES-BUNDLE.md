@@ -28,22 +28,32 @@ regardless of which solver a case selects. Gmsh, carried as the optional mesher 
 | GEOS (inside the Shapely wheel) | LGPL-2.1 | Shapely's geometry engine, dynamically linked |
 | Gmsh | **GPL-2+** | The optional mesher backend (`numerics.mesh.backend: gmsh`); never imported on the default path (CON-10). Its library sits at the bundle root and its licence text in `gmsh-licence/` |
 | The geometry payloads' pure-Python dependencies (NetworkX, imageio, tifffile, Pillow, lazy_loader, mmtf-python, mda-xdrlib, tqdm, threadpoolctl) | BSD / MIT / Apache-2.0 / PSF / MPL-2.0 | Imported by the readers above; unmodified |
+| PDB2PQR 3.7.1, with its `pdb2pqr/dat/` force-field files | BSD-3-Clause | Stage 7's protonation, partial charges and radii, unmodified, with its `dat/` tree beside it. Its notice and licence are below |
+| PROPKA 3.5.1, with `propka.cfg` | LGPL-2.1 | The pKa calculation PDB2PQR titrates with, unmodified; collected as source files, with its parameter file beside them |
+| PDB2PQR's pure-Python dependencies (requests, urllib3, idna, charset-normalizer, certifi, mmcif-pdbx) | Apache-2.0 / MIT / BSD-3-Clause / MPL-2.0 / CC0-1.0 | Imported by PDB2PQR; unmodified. nanopnp never lets it reach the network: it is always given a file |
 | PDB2PQR 3.7.1 `CHARMM.DAT` (radius column only) | BSD-3-Clause | The stage-2 density map's van der Waals radii, transcribed as data into `nanopnp/data/radii/pdb2pqr_charmm.yaml`; its notice and licence are below |
 
 ## Your rights under the LGPL components
 
-NGSolve, Netgen, Open CASCADE, PySide6, Qt, `webgui`, MDAnalysis, GridDataFormats and GEOS are used
-under their LGPL options, which give you the right to replace them with your own versions. The bundle is built **one-dir** rather than one-file precisely
-so that you can: every shared library is an ordinary file in the bundle directory and may be
-replaced in place. Nothing in the bundle is statically linked against an LGPL component.
-The renderer is likewise an ordinary file, `_internal/nanopnp/gui/assets/webgui/webgui.js`, and
-the viewer loads whatever build is at that path.
+NGSolve, Netgen, Open CASCADE, PySide6, Qt, `webgui`, MDAnalysis, GridDataFormats, PROPKA and GEOS
+are used under their LGPL options, which give you the right to replace them with your own versions.
+The bundle is built **one-dir** rather than one-file precisely so that you can: every shared library
+is an ordinary file in the bundle directory and may be replaced in place. Nothing in the bundle is
+statically linked against an LGPL component. The renderer is likewise an ordinary file,
+`_internal/nanopnp/gui/assets/webgui/webgui.js`, and the viewer loads whatever build is at that path.
 
-## PDB2PQR's radius table
+The LGPL components written in Python are collected as **source files**, not into the bundle's
+compressed module archive: PROPKA as `_internal/propka/*.py`, MDAnalysis as `_internal/MDAnalysis/`
+(its compiled extensions beside its `.py` files), and GridDataFormats as `_internal/gridData/`. A
+module inside the archive could not be replaced without rebuilding it; a source file can be
+replaced in place, and the bundle imports whatever is at that path.
 
-`data/radii/pdb2pqr_charmm.yaml` carries the atomic radii of PDB2PQR's `pdb2pqr/dat/CHARMM.DAT`
-(version 3.7.1), which the density map of `SPECIFICATION.md` §5.3.1 uses by an author ruling. It is
-redistributed under PDB2PQR's licence, reproduced here verbatim from the 3.7.1 distribution:
+## PDB2PQR, and its radius table
+
+The bundle carries PDB2PQR 3.7.1 itself, with its force-field files, and
+`data/radii/pdb2pqr_charmm.yaml` carries the atomic radii of its `pdb2pqr/dat/CHARMM.DAT`, which the
+density map of `SPECIFICATION.md` §5.3.1 uses by an author ruling. Both are redistributed under
+PDB2PQR's licence, reproduced here verbatim from the 3.7.1 distribution:
 
 > Copyright (c) 2002-2024, Jens Erik Nielsen; Nathan A. Baker; Battelle Memorial Institute, Developed at the Pacific Northwest National Laboratory, operated by Battelle Memorial Institute, Pacific Northwest Division for the U.S. Department Energy.; Paul Czodrowski & Gerhard Klebe, University of Marburg.
 >
@@ -76,7 +86,9 @@ The current bundle is the **packaging probe** of `SPECIFICATION.md` §8.2 criter
 §8.2.1 A4: a trivial application that imports PySide6, Qt WebEngine, NGSolve, Netgen and
 `ngsolve.webgui` in one process, and exercises the geometry pipeline's compiled payloads once each —
 MDAnalysis and gemmi read a three-atom structure, scikit-image extracts a contour, Shapely checks a
-polygon through GEOS, and Gmsh meshes a unit square — so that RSK-13, desktop packaging defeated by
+polygon through GEOS, Gmsh meshes a unit square, and PDB2PQR with PROPKA protonates a nine-residue
+fragment of 2WCD (shipped as `nanopnp/data/structures/2wcd-a-18-26.pdb`, from the CC0 PDB entry)
+at pH 2 and pH 8 — so that RSK-13, desktop packaging defeated by
 a binary dependency, is detected on every push rather than once. It is not the desktop shell, and it solves
 nothing. The licence obligations above are stated with the first bundle rather than with the first
 useful one, because a licence statement cannot be retrofitted to something already distributed.

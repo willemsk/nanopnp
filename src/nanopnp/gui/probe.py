@@ -13,7 +13,8 @@ Netgen extensions, and the ``ngsolve.webgui`` scene generator — because a prob
 omitting WebEngine would retire RSK-13 without exercising the dependency most
 likely to defeat packaging (ADR-004's packaging NOTE, §8.2.1 A4) — and, since
 WP24, the geometry pipeline's compiled readers, contour extraction, polygon
-checks and the optional Gmsh backend, each exercised once. :data:`PAYLOADS`
+checks and the optional Gmsh backend, and since WP31 PDB2PQR and PROPKA, each
+exercised once. :data:`PAYLOADS`
 names that set, and ``tests/tier1/test_gui_probe.py`` reads this module's own
 import statements to assert the two cannot drift apart.
 
@@ -45,22 +46,25 @@ from __future__ import annotations
 
 import argparse
 import logging
+import math
 import os
 import sys
 from importlib import metadata
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from nanopnp.core.paths import PACKAGE_ROOT
+from nanopnp.core.paths import PACKAGE_ROOT, structure_file
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
-    from collections.abc import Callable, Sequence
+    from collections.abc import Callable, Collection, Sequence
 
     from PySide6.QtWidgets import QApplication, QMainWindow
 
 logger = logging.getLogger(__name__)
 
 __all__ = [
+    "FRAGMENT",
+    "FRAGMENT_Q_NET_E",
     "LICENCE_NOTICE_FILENAME",
     "PAYLOADS",
     "SELFTEST_TIMEOUT_MS",
@@ -84,14 +88,22 @@ PAYLOADS: tuple[str, ...] = (
     "skimage.measure",
     "shapely.geometry",
     "gmsh",
+    "pdb2pqr",
+    "propka",
 )
 """The binary payloads the bundle must carry, named by §8.2.1 amendment A4.
 
-The last five are the geometry pipeline's compiled readers and meshers (WP24
-D16, D17): stage 1's two structure readers, stage 4's contour extraction and
-polygon checks, and the optional Gmsh backend (§8.2.2 B8). Each is **exercised**
-by :func:`exercise_payloads`, not only imported: RSK-13's failure is an extension
+Five are the geometry pipeline's compiled readers and meshers (WP24 D16, D17):
+stage 1's two structure readers, stage 4's contour extraction and polygon
+checks, and the optional Gmsh backend (§8.2.2 B8). Each is **exercised** by
+:func:`exercise_payloads`, not only imported: RSK-13's failure is an extension
 that imports and then cannot load the library it wraps.
+
+The last two are stage 7's protonation (WP31 D14). They are pure Python, so what
+can defeat the bundle is not a shared library but a data tree found through
+``Path(__file__).parent``: PDB2PQR's force-field files and PROPKA's parameter
+file. The exercise protonates a shipped fragment at two pH values, which only
+works if both trees travelled.
 
 Not a list this module keeps beside its code: ``tests/tier1/test_gui_probe.py``
 parses the import statements below and asserts the set they name is exactly this
@@ -173,6 +185,27 @@ _THREE_ATOMS = (
 """A three-atom PDB: the smallest structure both stage-1 readers accept."""
 
 
+FRAGMENT = "2wcd-a-18-26"
+"""The structure the protonation exercise reads, through :func:`~nanopnp.core.paths.structure_file`.
+
+``GLU 18`` to ``LEU 26`` of 2WCD chain A, heavy atoms as deposited, written by
+the stage's own :func:`~nanopnp.charge.protonation.frame_pdb`. A shipped file,
+because PDB2PQR fetches a path that is not a file from rcsb.org.
+"""
+
+FRAGMENT_Q_NET_E: dict[float, float] = {2.0: 0.0, 8.0: -3.0}
+"""``Q_net`` of :data:`FRAGMENT` at each pH, in e (`.knowledge/07` section 3, WP27).
+
+Three acids and both termini: everything is neutral at pH 2, and the three
+carboxylates are charged at pH 8 (PDB2PQR never applies a terminal pKa). Two
+values rather than one, because only PROPKA moves them: without a titration
+method the two pH values give equal charges.
+"""
+
+Q_NET_INTEGER_E = 1e-6
+"""How far each ``Q_net`` may be from its integer, the stage's own gate (WP27 D9)."""
+
+
 def _exercise_mdanalysis(structure: Path) -> str:
     """Read the three-atom structure with MDAnalysis."""
     import MDAnalysis
@@ -242,8 +275,100 @@ def _exercise_gmsh() -> str:
     return f"Gmsh {gmsh.__version__}: meshed the unit square into {triangles} triangles"
 
 
-def exercise_payloads() -> dict[str, str]:
-    """Exercise each geometry payload once, and report what each did (WP24 D17).
+def _passes_through(error: BaseException, module_file: str | None) -> bool:
+    """Return whether ``error`` was raised through the package that holds ``module_file``.
+
+    PDB2PQR calls PROPKA and PROPKA never calls back, so a traceback that enters
+    PROPKA's directory was raised inside PROPKA, or below it in the standard
+    library on its behalf. That is how a missing ``propka.cfg``, which surfaces
+    as an exception out of PDB2PQR's run, is still named PROPKA.
+    """
+    import traceback
+
+    if module_file is None:
+        return False
+    package = Path(module_file).resolve().parent
+    return any(
+        Path(frame.filename).resolve().is_relative_to(package)
+        for frame in traceback.extract_tb(error.__traceback__)
+    )
+
+
+def _exercise_protonation(scratch: Path) -> str:
+    """Protonate :data:`FRAGMENT` at each pH of :data:`FRAGMENT_Q_NET_E`, as stage 7 does.
+
+    Through :func:`~nanopnp.charge.protonation.run_pdb2pqr`, the stage's own
+    driver, so the arguments, the logging and the Python 3.14 PROPKA fallback are
+    the ones a run uses. Settings are ``Charge()``'s defaults with only ``ph``
+    set: the probe writes no force field or titration method of its own (D14).
+
+    Raises
+    ------
+    PayloadError
+        Naming PROPKA when the failure was raised inside PROPKA's own code, as a
+        missing ``propka.cfg`` is, or when the two pH values give equal charges:
+        PDB2PQR ran, and nothing titrated. Any other failure is raised as it
+        came, and the caller names PDB2PQR.
+    """
+    import pdb2pqr
+    import propka
+
+    from nanopnp.charge.pqr import read_pqr
+    from nanopnp.charge.protonation import run_pdb2pqr
+    from nanopnp.io.case import Charge, ResolvedProtonation
+
+    source = structure_file(FRAGMENT)
+    found: dict[float, float] = {}
+    for ph in FRAGMENT_Q_NET_E:
+        charge = Charge(ph=ph)
+        settings = ResolvedProtonation(
+            ph=charge.ph, forcefield=charge.forcefield, titration=charge.titration
+        )
+        pqr = scratch / f"{FRAGMENT}-ph{ph:g}.pqr"
+        try:
+            report = run_pdb2pqr(source, pqr, settings)
+        except Exception as error:
+            if _passes_through(error, propka.__file__):
+                raise PayloadError(propka.__name__, error) from error
+            raise
+        if report["missing"]:
+            raise ValueError(f"could not parameterise {report['missing']} at pH {ph:g}")
+        frames = read_pqr(pqr)
+        if not frames or frames[0].atoms == 0:
+            raise ValueError(f"wrote no charged atoms at pH {ph:g}")
+        found[ph] = math.fsum(frames[0].charge_e.tolist())
+    if len(set(found.values())) == 1:
+        raise PayloadError(
+            propka.__name__,
+            ValueError(
+                f"Q_net is {next(iter(found.values())):+.6f} e at every pH of "
+                f"{sorted(found)}, so no titration state was computed"
+            ),
+        )
+    for ph, expected in FRAGMENT_Q_NET_E.items():
+        if abs(found[ph] - expected) > Q_NET_INTEGER_E:
+            raise ValueError(
+                f"Q_net of {FRAGMENT} at pH {ph:g} is {found[ph]:+.6f} e, not {expected:+.0f} e"
+            )
+    charges = ", ".join(f"{round(found[ph]):+d} e at pH {ph:g}" for ph in FRAGMENT_Q_NET_E)
+    return (
+        f"PDB2PQR {metadata.version(pdb2pqr.__name__)} with PROPKA "
+        f"{metadata.version(propka.__name__)}: protonated {FRAGMENT}, {charges}"
+    )
+
+
+def exercise_payloads(only: Collection[str] | None = None) -> dict[str, str]:
+    """Exercise each geometry and protonation payload once, and report what each did.
+
+    WP24 D17 for the geometry payloads, WP31 D14 for PDB2PQR and PROPKA.
+
+    Parameters
+    ----------
+    only
+        The exercises to run, by the payload each is keyed on; all of them by
+        default. PDB2PQR's exercise covers PROPKA too. A test selects one where
+        another payload's library is absent from the machine (Gmsh needs
+        ``libGLU``).
 
     Returns
     -------
@@ -269,10 +394,15 @@ def exercise_payloads() -> dict[str, str]:
             ("skimage.measure", _exercise_skimage),
             ("shapely.geometry", _exercise_shapely),
             ("gmsh", _exercise_gmsh),
+            ("pdb2pqr", lambda: _exercise_protonation(Path(scratch))),
         )
         for payload, exercise in exercises:
+            if only is not None and payload not in only:
+                continue
             try:
                 report[payload] = exercise()
+            except PayloadError:
+                raise
             except Exception as error:
                 raise PayloadError(payload, error) from error
     return report
@@ -490,7 +620,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         prog="nanopnp-probe",
         description=(
             "The RSK-13 packaging probe: PySide6, Qt WebEngine, NGSolve, Netgen, "
-            "ngsolve.webgui and the geometry pipeline's compiled payloads in one process "
+            "ngsolve.webgui, the geometry pipeline's compiled payloads and stage 7's protonation "
+            "in one process "
             "(SPECIFICATION.md section 8.2 criterion 4)."
         ),
     )
@@ -502,8 +633,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     arguments = parser.parse_args(argv)
 
     if arguments.selftest:
-        # The geometry payloads first, each exercised once: a bundle that cannot
-        # read a structure or mesh a square fails naming the payload, before Qt.
+        # The geometry and protonation payloads first, each exercised once: a
+        # bundle that cannot read a structure, mesh a square or protonate a
+        # fragment fails naming the payload, before Qt.
         try:
             exercised = exercise_payloads()
         except PayloadError as error:

@@ -14,16 +14,37 @@ fails here instead of shipping a bundle that proves less than it claims.
 Nothing here constructs a Qt object, or imports one: ``PySide6.QtWidgets`` does
 not import at all on the Linux push gate (`.knowledge/07-software-stack.md` §5),
 and this test runs there.
+
+WP31 adds PDB2PQR and PROPKA (VER-60, D14). Their exercise runs here unfrozen, as
+the frozen ``--selftest`` runs it on ``windows-latest``, and it is made to fail
+twice, once naming each payload.
 """
 
 from __future__ import annotations
 
 import ast
+import importlib.util
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
+import numpy as np
+import pytest
+
+from nanopnp.charge import protonation
+from nanopnp.charge.pqr import chain_characters
+from nanopnp.core.paths import STRUCTURES_DIR, structure_file
 from nanopnp.gui import probe
-from nanopnp.gui.probe import LICENCE_NOTICE_FILENAME, PAYLOADS, licence_notice
+from nanopnp.gui.probe import (
+    FRAGMENT,
+    FRAGMENT_Q_NET_E,
+    LICENCE_NOTICE_FILENAME,
+    PAYLOADS,
+    PayloadError,
+    exercise_payloads,
+    licence_notice,
+)
+from nanopnp.io.case import ResolvedProtonation
 
 AMENDED_PAYLOAD_SET = frozenset(
     {
@@ -38,9 +59,26 @@ AMENDED_PAYLOAD_SET = frozenset(
         "skimage.measure",
         "shapely.geometry",
         "gmsh",
+        # WP31 D14: stage 7's protonation, pure Python with data trees.
+        "pdb2pqr",
+        "propka",
     }
 )
 """The import set §8.2.1 amendment A4 names, written out from the specification."""
+
+NOTICE_NAMES = {
+    "PySide6": "PySide6",
+    "ngsolve": "NGSolve",
+    "netgen": "Netgen",
+    "MDAnalysis": "MDAnalysis",
+    "gemmi": "gemmi",
+    "skimage": "scikit-image",
+    "shapely": "Shapely",
+    "gmsh": "Gmsh",
+    "pdb2pqr": "PDB2PQR",
+    "propka": "PROPKA",
+}
+"""Each payload's top-level package, by the name the CON-11 notice gives its row."""
 
 BINARY_ROOTS = frozenset(
     {"PySide6", "ngsolve", "netgen", "MDAnalysis", "gemmi", "skimage", "shapely", "gmsh"}
@@ -117,3 +155,126 @@ def test_con11_the_licence_notice_states_the_bundle_licence() -> None:
         assert obligation in text, f"the bundle licence notice does not name {obligation}"
     assert "This bundle is distributed under" in text
     assert "UMFPACK" in text and "BSD-3-Clause" in text
+
+
+def test_ver60_the_notice_has_a_row_for_each_payload() -> None:
+    """Every payload the bundle carries has a row in the CON-11 notice's table (WP31 D15)."""
+    assert set(NOTICE_NAMES) == {payload.split(".")[0] for payload in PAYLOADS}
+    rows = [
+        line.split("|")[1]
+        for line in licence_notice().read_text(encoding="utf-8").splitlines()
+        if line.startswith("| ")
+    ]
+    unlisted = sorted(
+        name for name in NOTICE_NAMES.values() if not any(name in row for row in rows)
+    )
+    assert not unlisted, f"the bundle licence notice has no row for {unlisted}"
+
+
+def test_ver60_the_shipped_fragment_is_the_deposited_one(
+    fragment_2wcd: Callable[..., object],
+) -> None:
+    """The probe's structure is what the stage gives PDB2PQR for ``GLU 18``-``LEU 26`` (D14).
+
+    Its atom records are :func:`~nanopnp.charge.protonation.frame_pdb`'s bytes
+    for the fragment cut from the vendored 2WCD, so ``FRAGMENT_Q_NET_E`` is about
+    the fragment `.knowledge/07` section 3 measured, and an unknown name is refused
+    rather than handed to PDB2PQR, which would fetch it.
+    """
+    ensemble = fragment_2wcd(18, 26)
+    heavy = np.flatnonzero(np.char.upper(ensemble.element.astype(str)) != "H")  # type: ignore[attr-defined]
+    written = protonation.frame_pdb(
+        ensemble,  # type: ignore[arg-type]
+        0,
+        heavy,
+        chain_characters(ensemble.chain.tolist()),  # type: ignore[attr-defined]
+    ).decode("ascii")
+    shipped = structure_file(FRAGMENT).read_text(encoding="ascii")
+    assert [line for line in shipped.splitlines() if not line.startswith("REMARK")] == (
+        written.splitlines()
+    )
+    with pytest.raises(FileNotFoundError, match="2wcd-not-shipped") as refused:
+        structure_file("2wcd-not-shipped")
+    assert str(STRUCTURES_DIR) in str(refused.value)
+
+
+pdb2pqr_installed = pytest.mark.skipif(
+    not all(importlib.util.find_spec(name) for name in ("pdb2pqr", "propka")),
+    reason="the structure extra carries PDB2PQR and PROPKA",
+)
+
+
+@pdb2pqr_installed
+def test_ver60_the_probe_protonates_the_fragment_at_both_ph_values() -> None:
+    """The unfrozen exercise reports the fragment's ``Q_net`` at pH 2 and pH 8 (D14)."""
+    assert FRAGMENT_Q_NET_E == {2.0: 0.0, 8.0: -3.0}
+    report = exercise_payloads({"pdb2pqr"})
+    assert list(report) == ["pdb2pqr"]
+    assert f"protonated {FRAGMENT}, +0 e at pH 2, -3 e at pH 8" in report["pdb2pqr"]
+
+
+@pdb2pqr_installed
+def test_ver60_a_missing_data_tree_fails_naming_pdb2pqr(monkeypatch: pytest.MonkeyPatch) -> None:
+    """With PDB2PQR's data lookup stubbed to raise, the exercise names PDB2PQR.
+
+    The lookup is where a bundle without ``pdb2pqr/dat/`` fails: PDB2PQR finds
+    its force-field files through ``Path(__file__).parent``.
+    """
+    import pdb2pqr.io
+
+    def absent(name: str, type_: str = "DAT") -> Path:
+        raise FileNotFoundError(f"Unable to find {type_} file for {name}")
+
+    monkeypatch.setattr(pdb2pqr.io, "test_for_file", absent)
+    with pytest.raises(PayloadError) as failed:
+        exercise_payloads({"pdb2pqr"})
+    assert failed.value.payload == "pdb2pqr"
+    assert "Unable to find" in str(failed.value)
+
+
+@pdb2pqr_installed
+def test_ver60_charges_that_ignore_the_ph_fail_naming_propka(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """With the titration arguments removed, PDB2PQR runs and the exercise names PROPKA.
+
+    Without a titration method the pH reaches nothing, so both runs give the
+    standard states' charges: what a bundle that lost ``propka.cfg``, and with it
+    the titration, would look like if PDB2PQR carried on without it.
+    """
+    arguments = protonation.pdb2pqr_arguments
+
+    def untitrated(settings: ResolvedProtonation) -> tuple[str, ...]:
+        return tuple(
+            flag
+            for flag in arguments(settings)
+            if not flag.startswith(("--with-ph", "--titration-state-method"))
+        )
+
+    monkeypatch.setattr(protonation, "pdb2pqr_arguments", untitrated)
+    with pytest.raises(PayloadError) as failed:
+        exercise_payloads({"pdb2pqr"})
+    assert failed.value.payload == "propka"
+    assert "at every pH" in str(failed.value)
+
+
+@pdb2pqr_installed
+def test_ver60_a_missing_parameter_file_fails_naming_propka(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """With PROPKA's ``propka.cfg`` out of reach, the exercise names PROPKA, not PDB2PQR.
+
+    PROPKA looks for it beside its own modules, at ``Path(__file__).parent``, as a
+    bundle that dropped the file would have it look. The exception surfaces out of
+    PDB2PQR's run, and the exercise names the library whose code raised it. A frozen
+    bundle with the file removed failed this way (`.knowledge/07` section 5).
+    """
+    import propka.input
+    import propka.lib
+
+    monkeypatch.setattr(propka.input, "__file__", str(tmp_path / "input.py"))
+    monkeypatch.setattr(propka.lib, "__file__", str(tmp_path / "lib.py"))
+    with pytest.raises(PayloadError) as failed:
+        exercise_payloads({"pdb2pqr"})
+    assert failed.value.payload == "propka"
+    assert "propka.cfg" in str(failed.value)
