@@ -57,6 +57,7 @@ from nanopnp.charge.fields import (
     FIELD_SCHEMA,
     PLANE_SMOOTHING_NM,
     ChargeField,
+    ChargeFieldError,
     ConservationReport,
     FieldDocument,
     check_conservation,
@@ -91,21 +92,32 @@ from nanopnp.core.stages import (
     report,
 )
 from nanopnp.density.grid import read_grid, write_grid
+from nanopnp.geometry.region import PAYLOAD_NAME as REGION_PAYLOAD
+from nanopnp.geometry.region import read_region
 from nanopnp.io.artefact import Artefact, ChargeGridArtefact, FieldsArtefact, StageInputs
 from nanopnp.io.case import UnsupportedCaseSection, resolve
 from nanopnp.io.defaults import ContributedDeviation
 from nanopnp.io.store import atomic_write_bytes
 from nanopnp.materials.fields import (
+    DERIVED_CONSTANTS,
+    DERIVED_SOURCE,
+    DerivedSolidFraction,
     MaterialMean,
     SolidFractionField,
+    derive_solid_fraction,
+    derived_summary,
     load_solid_fraction,
+    water_facing,
 )
 from nanopnp.materials.fields import summary as solid_fraction_summary
 from nanopnp.mesh.ingest import IngestedMesh, MeshStage, deployed_mesh
 from nanopnp.physics.measures import AXISYMMETRIC, Measures
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
+    import numpy as np
+
     from nanopnp.core.typing import Expression, Mesh
+    from nanopnp.geometry.region import RegionRecord
     from nanopnp.io.case import ResolvedCase
     from nanopnp.io.store import Store
 
@@ -127,6 +139,12 @@ LATTICE_PAYLOAD = "lattice"
 CHARGE_DOCUMENT = "charge.yaml"
 CHARGE_GRID_FILE = "charge.npz"
 DEPOSIT_FILE = "deposit.npz"
+
+EPS_R_PAYLOAD = "eps_r"
+"""The payload key of the solid fraction's lattice ``.npz``: a supplied field's archival
+copy, or the lattice of a derived one (WP30 D4)."""
+
+EPS_R_FILE = "eps_r.npz"
 
 DEPOSIT_PROVENANCE = "nanopnp stage 7: PHY-16 steps 4-6, deposited (WP28)"
 """``provenance.source`` of the exported field document."""
@@ -182,14 +200,15 @@ class ResolvedFields:
     conservation
         Its PHY-19 report; ``None`` with no charge field.
     eps_r
-        The solid-fraction field, or ``None``.
+        The solid-fraction field: supplied, or derived from the stage-4 profile
+        and bound to the mesh (WP30); ``None`` if the case has none.
     material_means
         The mean of ``chi`` over each material, empty with no dielectric field.
     """
 
     charge: ChargeField | DepositedCharge | None
     conservation: ConservationReport | None
-    eps_r: SolidFractionField | None
+    eps_r: SolidFractionField | DerivedSolidFraction | None
     material_means: tuple[MaterialMean, ...]
 
     def parameters(self) -> dict[str, Canonicalisable]:
@@ -198,12 +217,13 @@ class ResolvedFields:
         The grid's digest rather than its values, and the header's *physical*
         declarations rather than the file's bytes: the same table written as
         ``.npz`` and as OpenDX is one entry, and a table whose values moved is
-        another (§5.3.2). A deposited charge is keyed by the stage that deposits
-        it (:func:`produced_parameters`) and is not entered here.
+        another (§5.3.2). A deposited charge and a derived ``chi`` are keyed by
+        the stage that makes them (:func:`produced_parameters`,
+        :func:`derived_parameters`) and are not entered here.
         """
         entries: dict[str, Canonicalisable] = {}
         for name, field in (("charge", self.charge), ("eps_r", self.eps_r)):
-            if field is None or isinstance(field, DepositedCharge):
+            if field is None or isinstance(field, DepositedCharge | DerivedSolidFraction):
                 continue
             entries[name] = {
                 "quantity": field.document.quantity,
@@ -231,7 +251,9 @@ class ResolvedFields:
                     self.conservation.summary() if self.conservation is not None else None
                 ),
             }
-        if self.eps_r is not None:
+        if isinstance(self.eps_r, DerivedSolidFraction):
+            record["eps_r"] = derived_summary(self.eps_r, self.material_means)
+        elif self.eps_r is not None:
             # Through ``materials.fields.summary`` rather than beside it: a second
             # literal dict here is a second place for the dielectric's FR-25
             # record to drift, and it already had — the copy written here carried
@@ -257,7 +279,7 @@ class ResolvedFields:
         layer that went unrecorded because stage 7 had nothing to read would be
         exactly the silent departure FR-25 exists to prevent.
         """
-        return smoothed_dielectric_deviations(smoothed=self.eps_r is not None)
+        return smoothed_dielectric_deviations(smoothed=isinstance(self.eps_r, SolidFractionField))
 
 
 def _field_path(supplied: object, *, key: str) -> Path:
@@ -301,7 +323,7 @@ def gate_parameters(resolved: ResolvedCase, fields: ResolvedFields) -> dict[str,
     never reads the set.
     """
     gates: dict[str, Canonicalisable] = {"element_order": _element_order(resolved)}
-    if fields.eps_r is not None:
+    if fields.eps_r is not None or resolved.derives_eps_r:
         gates["solids"] = sorted(resolved.document.physics.solid_permittivities)
     return gates
 
@@ -391,7 +413,8 @@ def gate_fields(
 
     eps_r = supplied.eps_r
     means: tuple[MaterialMean, ...] = ()
-    if eps_r is not None:
+    # A derived chi was gated by the stage that derived it, on this mesh (WP30 D5).
+    if isinstance(eps_r, SolidFractionField):
         check_cancelled(cancel, "the dielectric range gate")
         report(progress, 0.6, f"checking the dielectric field from {eps_r.source.name}")
         eps_r.check_range()
@@ -428,6 +451,158 @@ def load_fields(
         cancel=cancel,
         progress=progress,
     )
+
+
+# -- the derived solid fraction (WP30) ---------------------------------------------
+
+
+def held_solids(resolved: ResolvedCase) -> tuple[str, ...]:
+    """Return the solids a derived ``chi`` holds at 1: every one but ``protein`` (WP30 D3)."""
+    return tuple(sorted(set(resolved.document.physics.solid_permittivities) - {"protein"}))
+
+
+def derived_parameters(resolved: ResolvedCase) -> dict[str, Canonicalisable]:
+    """Return the stage-7 ``fields`` entry of a derived ``chi`` (WP30 D5).
+
+    The region it is built from is an input of the artefact, so what is left to
+    key is how: the width, the construction's constants and the solids held at 1.
+    """
+    return {
+        "source": DERIVED_SOURCE,
+        "transition_nm": resolved.dielectric_transition_nm,
+        "held_at_one": list(held_solids(resolved)),
+        "constants": dict(DERIVED_CONSTANTS),
+    }
+
+
+def _missing_derived(resolved: ResolvedCase) -> KeyError:
+    """Return the refusal of a deriving case handed no stage-7 artefact holding its ``chi``."""
+    return KeyError(
+        f"case {resolved.name!r} derives its solid fraction in stage 7 ('charge') from "
+        "charge.dielectric_transition_nm, and this stage was handed no stage-7 artefact holding "
+        "it; run the pipeline through 'charge' first. A consumer reads the derived chi and never "
+        "solves with a sharp permittivity in its place (WP30 D5)"
+    )
+
+
+def derived_solid_fraction(
+    resolved: ResolvedCase, artefact: Artefact | None, mesh: Mesh
+) -> DerivedSolidFraction:
+    """Return the derived ``chi`` of a case, read from stage 7's artefact and bound to ``mesh``.
+
+    Raises
+    ------
+    KeyError
+        If no stage-7 artefact holding a derived ``chi`` was handed down.
+    """
+    if artefact is None or EPS_R_PAYLOAD not in artefact.payload:
+        raise _missing_derived(resolved)
+    return DerivedSolidFraction(
+        grid=read_grid(Path(artefact.payload[EPS_R_PAYLOAD]), format="npz"),
+        transition_nm=resolved.dielectric_transition_nm,
+        held=held_solids(resolved),
+        mesh=mesh,
+    )
+
+
+def check_water_facing(record: RegionRecord, segments: np.ndarray) -> None:
+    """Abort unless ``W`` is the region's protein-to-water boundary as stage 5 named it (WP30 D2).
+
+    The protein's edges against the electrolyte or the shell, read from the
+    rebuilt region's adjacency, against the pieces :func:`water_facing` probed:
+    the same total length, and every piece's midpoint on one of those edges. A
+    frame or orientation slip between the two fails both.
+
+    Raises
+    ------
+    nanopnp.charge.fields.ChargeFieldError
+        Naming the two lengths, or the first piece off the boundary.
+    """
+    import numpy as np
+
+    from nanopnp.geometry.region import build_region, protein_water_edges
+
+    edges = np.asarray(protein_water_edges(build_region(record)), dtype=np.float64)
+    expected = float(np.hypot(*(edges[:, 1] - edges[:, 0]).T).sum()) if edges.size else 0.0
+    found = float(np.hypot(*(segments[:, 1] - segments[:, 0]).T).sum()) if segments.size else 0.0
+    if not abs(found - expected) <= 1e-9 * max(1.0, expected):
+        raise ChargeFieldError(
+            "the water-facing profile is not the region's protein-to-water boundary",
+            f"W is {found:.9g} nm long and the region's protein-to-water edges {expected:.9g} nm "
+            "(section 4.4 NOTE on the derived solid fraction)",
+        )
+    if not segments.size:
+        return
+    from nanopnp.geometry.region import distance_to_segments
+
+    midpoints = 0.5 * (segments[:, 0] + segments[:, 1])
+    off = distance_to_segments(midpoints, edges)
+    worst = int(np.argmax(off))
+    if off[worst] > 1e-9:
+        raise ChargeFieldError(
+            "the water-facing profile is not the region's protein-to-water boundary",
+            f"a piece of W has its midpoint {float(off[worst]):.3e} nm off every protein edge "
+            "facing the electrolyte or the shell (section 4.4 NOTE on the derived solid fraction)",
+            f"(r, z) = ({float(midpoints[worst, 0]):.4f}, {float(midpoints[worst, 1]):.4f}) nm",
+        )
+
+
+def derive_fields(
+    resolved: ResolvedCase,
+    record: RegionRecord,
+    mesh: Mesh,
+    *,
+    measures: Measures,
+    cancel: CancelToken | None = None,
+    progress: Progress | None = None,
+) -> tuple[DerivedSolidFraction, tuple[MaterialMean, ...], float]:
+    """Derive ``chi`` from stage 5's record, bind it to ``mesh`` and gate it (WP30 D1-D6).
+
+    Returns
+    -------
+    tuple
+        The bound field, its per-material means, and the derivation's seconds.
+
+    Raises
+    ------
+    nanopnp.charge.fields.ChargeFieldError
+        On the water-facing check, the range gate or the registration gate.
+    """
+    started = time.perf_counter()
+    check_cancelled(cancel, "deriving the solid fraction")
+    report(progress, 0.0, "deriving the solid fraction from the profile")
+    points = record.points()
+    membrane = record.membrane
+    shape = {
+        "half_thickness_nm": membrane.half_thickness_nm,
+        "inner_trans_nm": membrane.inner_trans_nm,
+        "inner_cis_nm": membrane.inner_cis_nm,
+    }
+    water, _ = water_facing(points, **shape)
+    check_water_facing(record, water)
+    grid = derive_solid_fraction(points, transition_nm=resolved.dielectric_transition_nm, **shape)
+    seconds = time.perf_counter() - started
+    field = DerivedSolidFraction(
+        grid=grid,
+        transition_nm=resolved.dielectric_transition_nm,
+        held=held_solids(resolved),
+        mesh=mesh,
+    )
+    check_cancelled(cancel, "the derived solid fraction's gates")
+    report(progress, 0.5, "checking the derived solid fraction against the mesh materials")
+    field.check_range()
+    means = field.check_materials(
+        mesh, measures, solids=resolved.document.physics.solid_permittivities
+    )
+    logger.info(
+        "derived chi: delta %g nm on a %d x %d lattice in %.3f s; means %s",
+        resolved.dielectric_transition_nm,
+        grid.shape[1],
+        grid.shape[0],
+        seconds,
+        ", ".join(f"{mean.material} {mean.mean:.4f}" for mean in means),
+    )
+    return field, means, seconds
 
 
 # -- the producer path -------------------------------------------------------------
@@ -533,11 +708,14 @@ def case_fields(
     )
     if resolved.deposits_charge:
         fields = replace(fields, charge=deposited_charge(resolved, charge_artefact, mesh))
+    if resolved.derives_eps_r:
+        # Gated by stage 7 on this mesh, whose hash keys that artefact (WP30 D5).
+        fields = replace(fields, eps_r=derived_solid_fraction(resolved, charge_artefact, mesh))
     return fields
 
 
 def require_charge_artefact(resolved: ResolvedCase, artefact: Artefact | None) -> None:
-    """Refuse a producer case handed no stage-7 artefact, before any work (D9).
+    """Refuse a producer or deriving case handed no stage-7 artefact, before any work (D9).
 
     Raises
     ------
@@ -546,6 +724,8 @@ def require_charge_artefact(resolved: ResolvedCase, artefact: Artefact | None) -
     """
     if resolved.deposits_charge and artefact is None:
         raise _missing_stage(resolved)
+    if resolved.derives_eps_r and artefact is None:
+        raise _missing_derived(resolved)
 
 
 def fixed_charge_density(
@@ -665,8 +845,31 @@ def export_charge(artefact: Artefact, path: Path) -> tuple[Path, ...]:
     return (data, path)
 
 
+def _region(resolved: ResolvedCase, inputs: StageInputs) -> Artefact | None:
+    """Return stage 5's artefact when the case derives ``chi`` from it, else ``None`` (WP30 D5).
+
+    Raises
+    ------
+    KeyError
+        If the case derives ``chi`` and no ``region`` artefact was handed down.
+    """
+    return inputs.require("region") if resolved.derives_eps_r else None
+
+
+def _derived_entries(
+    resolved: ResolvedCase, region: Artefact | None
+) -> tuple[dict[str, Canonicalisable], dict[str, str]]:
+    """Return a derived ``chi``'s ``fields`` entry and upstream hash, or nothing (WP30 D5).
+
+    Nothing at ``delta = 0``, so every key that existed before WP30 is unchanged.
+    """
+    if region is None:
+        return {}, {}
+    return {"eps_r": derived_parameters(resolved)}, {"region": region.hash}
+
+
 class FieldStage:
-    """Stage 7: a deposited or supplied charge, and a supplied dielectric, gated and keyed."""
+    """Stage 7: a deposited or supplied charge, and a supplied or derived dielectric, gated."""
 
     name = "charge"
 
@@ -703,7 +906,11 @@ class FieldStage:
         """
         fields = inputs.require(self.name).parameters["fields"]
         assert isinstance(fields, dict)  # FieldsArtefact writes it as one
-        return smoothed_dielectric_deviations(smoothed="eps_r" in fields)
+        # A derived chi is the switch charge.dielectric_transition_nm, which the
+        # case-file diff already records (WP30 D14); only a supplied one is told here.
+        entry = fields.get("eps_r")
+        supplied = isinstance(entry, dict) and entry.get("source") != DERIVED_SOURCE
+        return smoothed_dielectric_deviations(smoothed=supplied)
 
     def key(self, inputs: StageInputs) -> FieldsArtefact:
         """Return the artefact key, without depositing or gating anything.
@@ -718,7 +925,9 @@ class FieldStage:
         supplied = read_fields(resolved)
         if resolved.deposits_charge:
             return self._produced_artefact(resolved, supplied, inputs, mesh_artefact.hash)
-        return self.artefact(supplied, mesh_artefact.hash, resolved=resolved)
+        return self.artefact(
+            supplied, mesh_artefact.hash, resolved=resolved, region=_region(resolved, inputs)
+        )
 
     def run(
         self,
@@ -742,6 +951,16 @@ class FieldStage:
         check_cancelled(cancel, "reading the fields")
         resolved, ingested, mesh_artefact = self._prepare(inputs, ingest_mesh=True)
         assert ingested is not None  # ``ingest_mesh=True`` admits no other case
+        region = _region(resolved, inputs)
+        derived: tuple[DerivedSolidFraction, tuple[MaterialMean, ...], float] | None = None
+        if region is not None:
+            derived = derive_fields(
+                resolved,
+                read_region(Path(region.payload[REGION_PAYLOAD])),
+                ingested.mesh,
+                measures=self._measures(resolved),
+                cancel=cancel,
+            )
         if not resolved.deposits_charge:
             fields = load_fields(
                 resolved,
@@ -750,12 +969,22 @@ class FieldStage:
                 cancel=cancel,
                 progress=progress,
             )
+            if derived is not None:
+                fields = replace(fields, eps_r=derived[0], material_means=derived[1])
             check_cancelled(cancel, "writing the archival field copies")
             payload = self._write(fields)
-            report(progress, 1.0, "the supplied fields passed their gates")
-            return self.artefact(fields, mesh_artefact.hash, resolved=resolved, payload=payload)
+            report(progress, 1.0, "the fields passed their gates")
+            return self.artefact(
+                fields, mesh_artefact.hash, resolved=resolved, payload=payload, region=region
+            )
         return self._produce(
-            resolved, inputs, ingested, mesh_artefact, progress=progress, cancel=cancel
+            resolved,
+            inputs,
+            ingested,
+            mesh_artefact,
+            derived=derived,
+            progress=progress,
+            cancel=cancel,
         )
 
     def artefact(
@@ -765,6 +994,7 @@ class FieldStage:
         *,
         resolved: ResolvedCase,
         payload: dict[str, Path] | None = None,
+        region: Artefact | None = None,
     ) -> FieldsArtefact:
         """Return the artefact for already-loaded supplied fields, with or without payload.
 
@@ -773,12 +1003,16 @@ class FieldStage:
         and two loadings of one file are two chances to disagree.
 
         ``resolved`` supplies what the gates are evaluated at, which
-        :func:`gate_parameters` puts in the key beside the fields.
+        :func:`gate_parameters` puts in the key beside the fields. ``region`` is
+        stage 5's artefact, which a derived ``chi`` is built from and keyed on
+        (WP30 D5).
         """
+        derived, upstream = _derived_entries(resolved, region)
         return FieldsArtefact(
-            fields=fields.parameters(),
+            fields={**fields.parameters(), **derived},
             gates=gate_parameters(resolved, fields),
             mesh_hash=mesh_hash,
+            upstream=upstream,
             payload=payload or {},
             summary=fields.summary(),
         )
@@ -798,11 +1032,12 @@ class FieldStage:
         """Return a producer case's stage-7 artefact: its key, and its payload when run (D7)."""
         protonation = inputs.require("protonation")
         grid_key = charge_grid_key(resolved, protonation)
+        derived, region = _derived_entries(resolved, _region(resolved, inputs))
         return FieldsArtefact(
-            fields={**supplied.parameters(), "charge": produced_parameters(resolved)},
+            fields={**supplied.parameters(), "charge": produced_parameters(resolved), **derived},
             gates={**gate_parameters(resolved, supplied), **produced_gates(resolved)},
             mesh_hash=mesh_hash,
-            upstream={"protonation": protonation.hash, "charge_grid": grid_key.hash},
+            upstream={"protonation": protonation.hash, "charge_grid": grid_key.hash, **region},
             payload=payload or {},
             summary=summary or {},
         )
@@ -814,10 +1049,15 @@ class FieldStage:
         ingested: IngestedMesh,
         mesh_artefact: Artefact,
         *,
+        derived: tuple[DerivedSolidFraction, tuple[MaterialMean, ...], float] | None,
         progress: Progress | None,
         cancel: CancelToken | None,
     ) -> FieldsArtefact:
-        """Sum, deposit and gate the charge of a producer case (D1-D6, D12)."""
+        """Sum, deposit and gate the charge of a producer case (D1-D6, D12).
+
+        ``derived`` is the ``chi`` :func:`derive_fields` already built and gated
+        on this mesh, if the case derives one (WP30).
+        """
         started = time.perf_counter()
         protonation = inputs.require("protonation")
         table = ProtonationTable.read(Path(protonation.payload[PROTONATION_PAYLOAD]))
@@ -865,9 +1105,11 @@ class FieldStage:
         )
 
         supplied = read_fields(resolved)
-        eps_r = supplied.eps_r
+        eps_r: SolidFractionField | DerivedSolidFraction | None = supplied.eps_r
         means: tuple[MaterialMean, ...] = ()
-        if eps_r is not None:
+        if derived is not None:
+            eps_r, means = derived[0], derived[1]
+        elif isinstance(eps_r, SolidFractionField):
             check_cancelled(cancel, "the dielectric gates")
             report(progress, 0.9, f"checking the dielectric field from {eps_r.source.name}")
             gated = gate_fields(resolved, supplied, mesh, measures=measures, cancel=cancel)
@@ -885,7 +1127,7 @@ class FieldStage:
             DEPOSIT_PAYLOAD: found.write(directory / DEPOSIT_FILE),
         }
         if eps_r is not None:
-            payload["eps_r"] = write_grid(eps_r.grid, directory / "eps_r.npz", format="npz")
+            payload[EPS_R_PAYLOAD] = write_grid(eps_r.grid, directory / EPS_R_FILE, format="npz")
         record: dict[str, Canonicalisable] = {
             **fields.summary(),
             "charge": {
@@ -986,10 +1228,16 @@ class FieldStage:
             then ingested only where no upstream artefact names its hash.
         """
         resolved = resolve(inputs.case)
-        if resolved.charge is None and resolved.eps_r is None and not resolved.deposits_charge:
+        if (
+            resolved.charge is None
+            and resolved.eps_r is None
+            and not resolved.deposits_charge
+            and not resolved.derives_eps_r
+        ):
             raise UnsupportedCaseSection(
-                f"case {resolved.name!r} supplies neither inputs.charge nor inputs.eps_r and "
-                "deposits no charge: it carries no structure: section and no inputs.pqr, so "
+                f"case {resolved.name!r} supplies neither inputs.charge nor inputs.eps_r, "
+                "deposits no charge and derives no solid fraction: it carries no structure: "
+                "section and no inputs.pqr, and charge.dielectric_transition_nm is 0, so "
                 "stage 7 has nothing to read (FR-12 to FR-15)"
             )
         mesh = inputs.upstream.get("mesh")
@@ -1029,5 +1277,7 @@ class FieldStage:
                 fields.charge.grid, directory / "charge.npz", format="npz"
             )
         if fields.eps_r is not None:
-            payload["eps_r"] = write_grid(fields.eps_r.grid, directory / "eps_r.npz", format="npz")
+            payload[EPS_R_PAYLOAD] = write_grid(
+                fields.eps_r.grid, directory / EPS_R_FILE, format="npz"
+            )
         return payload

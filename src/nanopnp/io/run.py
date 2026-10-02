@@ -441,7 +441,8 @@ def selected_stages(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]
     ``protonation`` and ``charge`` run when the case protonates and its model
     declares ``fixed_charge`` (WP28 D8): both halves of stage 7, and the charge is
     deposited. ``charge`` otherwise runs only when the case supplies
-    ``inputs.charge`` or ``inputs.eps_r``: stage 7 refuses a case with neither as
+    ``inputs.charge`` or ``inputs.eps_r``, or derives ``chi`` from a non-zero
+    ``charge.dielectric_transition_nm`` (WP30 D5): stage 7 refuses a case with neither as
     describing no work, and a run with no field to gate has not skipped a gate.
     ``protonation`` otherwise runs only as a walk's named target. ``structure``, ``density``
     ``symmetry`` and ``contour`` are dropped when the case carries no ``structure:`` section,
@@ -459,7 +460,7 @@ def selected_stages(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]
         does, and says separately when the stage is registered but this case
         gives it nothing to do.
     """
-    supplied = resolved.charge is not None or resolved.eps_r is not None
+    supplied = resolved.charge is not None or resolved.eps_r is not None or resolved.derives_eps_r
     deposits = resolved.deposits_charge
     dropped = set() if supplied or deposits else {"charge"}
     if not deposits and (upto != "protonation" or not resolved.protonates):
@@ -837,7 +838,12 @@ def _protonation_reason(walk: _Walk) -> str:
 def _charge_reason(walk: _Walk) -> str:
     """Return why stage 7 did not run in this walk (WP28 D8)."""
     resolved = walk.resolved
-    if resolved.deposits_charge or resolved.charge is not None or resolved.eps_r is not None:
+    if (
+        resolved.deposits_charge
+        or resolved.charge is not None
+        or resolved.eps_r is not None
+        or resolved.derives_eps_r
+    ):
         return "the walk stopped before stage 7"
     if resolved.protonates:
         return (
