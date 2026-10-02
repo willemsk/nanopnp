@@ -886,7 +886,10 @@ class MeshStage:
             boundaries=tuple(sorted(record.edge_counts)),
             groups={},
             sizing=sizing_parameters(
-                wall, SIZES.scaled(wall.size_scale), resolved.document.numerics.mesh.backend
+                wall,
+                SIZES.scaled(wall.size_scale),
+                resolved.document.numerics.mesh.backend,
+                exclusion=record.exclusion is not None,
             ),
             payload=payload,
             summary=summary,

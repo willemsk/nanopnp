@@ -58,6 +58,7 @@ from nanopnp.core.hashing import Canonicalisable
 from nanopnp.core.paths import store_root
 from nanopnp.core.stages import (
     CancelToken,
+    MissingExtraError,
     Progress,
     StageDescription,
     check_cancelled,
@@ -126,6 +127,29 @@ WORKSPACE_DIRNAME = "tmp"
 
 DOMAINS: tuple[str, str, str] = ("electrolyte", "membrane", "protein")
 """The region's three domains, in assembly order (VER-28)."""
+
+EXCLUSION = "exclusion"
+"""The fourth domain, the ion-exclusion shell, present only with ``a > 0`` (FR-15, WP30)."""
+
+EXCLUSION_QUAD_SEGS = 8
+"""Segments per quarter circle of the offset's round joins (WP20 D5, WP30 D7)."""
+
+EXCLUSION_CLOSING = 2.0
+"""The offset's closing radius, in units of ``h_c``: step 3 of section 5.2.1's, for its reason."""
+
+EXCLUSION_CONSTANTS: Mapping[str, Canonicalisable] = {
+    "join": "round",
+    "quad_segs": EXCLUSION_QUAD_SEGS,
+    "closing": f"{EXCLUSION_CLOSING:g}h_c",
+    "holes": "filled",
+    "spacing": "h_c",
+    "axis_clearance": "h_c",
+}
+"""Every code constant that moves a vertex of the shell or a verdict of its gate (WP30 D10).
+
+In the stage-5 key only when the shell is built, beside the offset and ``h_c``,
+so that :data:`KEY_CONSTANTS`, and with it every shell-free key, is unchanged.
+"""
 
 _ARC_RTOL = 1e-9
 """Relative tolerance for deciding that a point lies on the reservoir arc."""
@@ -201,6 +225,65 @@ class MembraneRecord(_Strict):
         return 0.5 * self.thickness_nm
 
 
+class FilledHoles(_Strict):
+    """The pockets of fluid the offset enclosed, which no ion can reach, filled and recorded."""
+
+    count: int
+    area_nm2: float
+    centroids_nm: list[tuple[float, float]] = Field(default_factory=list)
+
+
+class ExclusionRecord(_Strict):
+    """The ion-exclusion shell's outer loop and what its construction measured (WP30 D10).
+
+    Parameters
+    ----------
+    offset_nm
+        ``charge.exclusion_offset_nm``, ``a``.
+    h_c_nm
+        The contour's size target, the density grid spacing.
+    constants
+        :data:`EXCLUSION_CONSTANTS`.
+    loop
+        The offset's outer ring ``O`` in the model frame, after the closing, the
+        hole filling and step 6, in nm. Stage 6 rebuilds the shell from it, so
+        no Shapely is needed there.
+    holes
+        The pockets the offset enclosed and step 3 filled.
+    removed_vertices
+        How many vertices step 6 removed.
+    distance_nm
+        ``[min, max]`` of the loop's vertices' distance to the profile: ``a``
+        less the sagitta of a merged chord, and more where the closing filled a
+        groove.
+    """
+
+    offset_nm: float
+    h_c_nm: float
+    constants: dict[str, Canonicalisable]
+    loop: list[tuple[float, float]]
+    holes: FilledHoles
+    removed_vertices: int
+    distance_nm: tuple[float, float]
+
+    def points(self) -> np.ndarray:
+        """Return the loop as an ``(n, 2)`` float64 array."""
+        import numpy as np
+
+        return np.asarray(self.loop, dtype=np.float64).reshape(-1, 2)
+
+    def summary(self) -> dict[str, Canonicalisable]:
+        """Return the shell's entry in the manifest's Geometry group."""
+        return {
+            "offset_nm": self.offset_nm,
+            "h_c_nm": self.h_c_nm,
+            "loop_vertices": len(self.loop),
+            "removed_vertices": self.removed_vertices,
+            "holes": self.holes.model_dump(mode="json"),
+            "distance_nm": list(self.distance_nm),
+        }
+
+
 class RegionRecord(_Strict):
     """Stage 5's artefact: everything :func:`build_region` needs, and what it measured.
 
@@ -225,6 +308,10 @@ class RegionRecord(_Strict):
         Each domain's area, as assembled.
     edge_counts
         Each boundary name's count of unique edges, as assembled.
+    exclusion
+        The ion-exclusion shell, or ``None`` without one. Omitted from the
+        written record when absent, so a shell-free record's bytes are those of
+        a record written before the shell existed (WP30 D10).
     """
 
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
@@ -237,6 +324,7 @@ class RegionRecord(_Strict):
     junction_nm: dict[str, float]
     face_areas_nm2: dict[str, float] = Field(default_factory=dict)
     edge_counts: dict[str, int] = Field(default_factory=dict)
+    exclusion: ExclusionRecord | None = None
 
     def points(self) -> np.ndarray:
         """Return the model-frame profile as an ``(n, 2)`` float64 array."""
@@ -245,8 +333,11 @@ class RegionRecord(_Strict):
         return np.asarray(self.profile, dtype=np.float64).reshape(-1, 2)
 
     def summary(self) -> dict[str, Canonicalisable]:
-        """Return what the manifest's Geometry group records as ``region`` (WP21 D16)."""
-        return {
+        """Return what the manifest's Geometry group records as ``region`` (WP21 D16).
+
+        The shell's entry is there only when the region has one.
+        """
+        summary: dict[str, Canonicalisable] = {
             "frame_shift_nm": self.membrane.centre_z_nm,
             "thickness_nm": self.membrane.thickness_nm,
             "reservoir_radius_nm": self.reservoir_radius_nm,
@@ -261,6 +352,9 @@ class RegionRecord(_Strict):
             "edge_counts": dict(sorted(self.edge_counts.items())),
             "profile_vertices": len(self.profile),
         }
+        if self.exclusion is not None:
+            summary["exclusion"] = self.exclusion.summary()
+        return summary
 
 
 def write_region(record: RegionRecord, path: Path) -> Path:
@@ -271,6 +365,10 @@ def write_region(record: RegionRecord, path: Path) -> Path:
     """
     document = record.model_dump(by_alias=True, mode="json")
     document["profile"] = [[float(r), float(z)] for r, z in record.profile]
+    if record.exclusion is None:
+        del document["exclusion"]
+    else:
+        document["exclusion"]["loop"] = [[float(r), float(z)] for r, z in record.exclusion.loop]
     path.parent.mkdir(parents=True, exist_ok=True)
     text = yaml.safe_dump(document, sort_keys=False, default_flow_style=None, width=100)
     path.write_text(text, encoding="utf-8")
@@ -447,6 +545,149 @@ def _check_inside_reservoir(points: np.ndarray, radius_nm: float) -> None:
         )
 
 
+# -- the ion-exclusion shell (WP30) ------------------------------------------------------
+
+
+def distance_to_segments(points: np.ndarray, segments: np.ndarray) -> np.ndarray:
+    """Return each point's least distance to the ``(k, 2, 2)`` segments, in nm."""
+    distance: np.ndarray = _point_segment_distance(
+        points[:, None, :], segments[None, :, 0, :], segments[None, :, 1, :]
+    ).min(axis=1)
+    return distance
+
+
+def distance_to_loop(points: np.ndarray, loop: np.ndarray) -> np.ndarray:
+    """Return each point's least distance to the closed polygon ``loop``, in nm."""
+    import numpy as np
+
+    return distance_to_segments(points, np.stack([loop, np.roll(loop, -1, axis=0)], axis=1))
+
+
+def _missing_shapely(error: ImportError) -> MissingExtraError:
+    """Return the refusal of an exclusion shell without the ``structure`` extra (WP30 D7)."""
+    missing = getattr(error, "name", None) or "shapely"
+    return MissingExtraError(
+        f"charge.exclusion_offset_nm builds the ion-exclusion shell by offsetting the profile "
+        f"with Shapely, which is in the 'structure' extra: importing {missing!r} failed. Install "
+        "the extras with `uv sync --all-extras`, or set charge.exclusion_offset_nm: 0 (section "
+        "5.2.1 NOTE on the ion-exclusion shell)",
+        name=missing,
+    )
+
+
+def exclusion_shell(
+    points: np.ndarray, offset_nm: float, h_c_nm: float, *, reservoir_radius_nm: float
+) -> ExclusionRecord:
+    """Return the ion-exclusion shell's outer loop, built and gated (section 5.2.1 NOTE, WP30 D7).
+
+    1. ``O``, the dilation of the profile by ``a``, with round joins at
+       :data:`EXCLUSION_QUAD_SEGS` segments per quarter circle;
+    2. closed by a disc of radius ``2 h_c``, as step 3 of section 5.2.1;
+    3. every hole filled and recorded: fluid enclosed by the shell, which no ion
+       can reach;
+    4. step 6 of section 5.2.1 on its ring;
+    5. the ring's validity, simplicity and spacing, its clearance of ``h_c`` from
+       the axis, and every vertex strictly inside the reservoir disc.
+
+    Parameters
+    ----------
+    points
+        The model-frame profile ``P``.
+    offset_nm
+        ``a``, positive; the case resolver has refused ``a <= 2 h_c``.
+    h_c_nm
+        The contour's size target.
+    reservoir_radius_nm
+        The disc every vertex must lie strictly inside.
+
+    Raises
+    ------
+    RegionGateError
+        Naming the criterion, the value, the threshold and where: an offset
+        within ``h_c`` of the axis, which closes the constriction, with the z
+        interval and the body's least radius over it; a vertex outside the
+        reservoir; a ring that is invalid, not simple or more than one face.
+    MissingExtraError
+        Without Shapely, naming the ``structure`` extra and the key.
+    """
+    try:
+        from shapely import box
+        from shapely.geometry import LinearRing, MultiPolygon, Polygon
+
+        from nanopnp.geometry.contour import enforce_spacing
+    except ImportError as error:
+        raise _missing_shapely(error) from error
+    import numpy as np
+
+    from nanopnp.mesh.profile import min_vertex_spacing
+
+    body = Polygon(points)
+    radius = EXCLUSION_CLOSING * h_c_nm
+    dilated = body.buffer(offset_nm, quad_segs=EXCLUSION_QUAD_SEGS)
+    closed = dilated.buffer(radius, quad_segs=EXCLUSION_QUAD_SEGS).buffer(
+        -radius, quad_segs=EXCLUSION_QUAD_SEGS
+    )
+    if isinstance(closed, MultiPolygon) or not isinstance(closed, Polygon):
+        parts = list(getattr(closed, "geoms", [closed]))
+        raise RegionGateError(
+            "exclusion offset topology",
+            f"{len(parts)} components after the offset by {offset_nm:g} nm and its closing",
+            "one face",
+            "with centroids "
+            + "; ".join(f"({part.centroid.x:.4f}, {part.centroid.y:.4f}) nm" for part in parts),
+        )
+    holes = [Polygon(ring) for ring in closed.interiors]
+    outer = Polygon(closed.exterior)
+
+    lowest = float(outer.bounds[0])
+    if lowest < h_c_nm:
+        coordinates = np.asarray(outer.exterior.coords, dtype=np.float64)
+        near = coordinates[coordinates[:, 0] < h_c_nm]
+        z_low, z_high = float(near[:, 1].min()), float(near[:, 1].max())
+        band = body.intersection(box(-1.0, z_low, 2.0 * reservoir_radius_nm, z_high))
+        least = float(band.bounds[0]) if not band.is_empty else float(body.bounds[0])
+        raise RegionGateError(
+            "exclusion offset clears the axis",
+            f"the offset by a = {offset_nm:g} nm reaches r = {lowest:.4f} nm, closing the "
+            f"constriction over z = [{z_low:.4f}, {z_high:.4f}] nm, where the body's least radius "
+            f"is {least:.4f} nm",
+            f"r >= h_c = {h_c_nm:g} nm, so a body radius of at least a + h_c = "
+            f"{offset_nm + h_c_nm:.4f} nm",
+            f"over z = [{z_low:.4f}, {z_high:.4f}] nm in the model frame",
+        )
+
+    ring = np.asarray(outer.exterior.coords, dtype=np.float64)[:-1]
+    ring, removed = enforce_spacing(ring, h_c_nm)
+    linear = LinearRing(ring)
+    if not (linear.is_valid and linear.is_simple):
+        raise RegionGateError(
+            "exclusion ring validity",
+            "an invalid or self-intersecting ring after step 6",
+            "LinearRing.is_valid and is_simple",
+            "over the whole offset loop",
+        )
+    spacing = min_vertex_spacing(ring)
+    if spacing < h_c_nm:  # pragma: no cover - enforce_spacing stops only at 3 vertices
+        raise RegionGateError(
+            "exclusion ring spacing", f"{spacing:.4g} nm", f">= h_c = {h_c_nm:g} nm", "on the ring"
+        )
+    _check_inside_reservoir(ring, reservoir_radius_nm)
+    distance = distance_to_loop(ring, points)
+    return ExclusionRecord(
+        offset_nm=offset_nm,
+        h_c_nm=h_c_nm,
+        constants=dict(EXCLUSION_CONSTANTS),
+        loop=[(float(r), float(z)) for r, z in ring],
+        holes=FilledHoles(
+            count=len(holes),
+            area_nm2=float(sum(hole.area for hole in holes)),
+            centroids_nm=[(float(hole.centroid.x), float(hole.centroid.y)) for hole in holes],
+        ),
+        removed_vertices=removed,
+        distance_nm=(float(distance.min()), float(distance.max())),
+    )
+
+
 # -- the junction: assembly in OCC --------------------------------------------------------
 
 
@@ -524,13 +765,16 @@ def _membrane_face(membrane: MembraneRecord, radius_nm: float) -> Shape:
     )
 
 
-def assemble_faces(record: RegionRecord) -> tuple[Shape, Shape, Shape]:
-    """Return the three named faces, electrolyte, membrane and pore, unglued.
+def assemble_faces(record: RegionRecord) -> tuple[Shape, ...]:
+    """Return the named faces, electrolyte, membrane, pore and any shell, unglued.
 
     The booleans are the assembly: the membrane is the quadrilateral clipped to
     the reservoir and cut by the pore body, and the electrolyte is what the
-    half-disc has left once both are removed. Names are set after the booleans,
-    because a face's name does not survive being cut.
+    half-disc has left once both are removed. With an exclusion shell, whose
+    outer loop is ``O``, the shell is ``O - P - M`` and the electrolyte
+    ``D - M - O``; the membrane is unchanged (section 5.2.1 NOTE on the
+    ion-exclusion shell). Names are set after the booleans, because a face's name
+    does not survive being cut.
 
     Raises
     ------
@@ -543,8 +787,23 @@ def assemble_faces(record: RegionRecord) -> tuple[Shape, Shape, Shape]:
     quad = _membrane_face(record.membrane, record.reservoir_radius_nm)
 
     membrane = (quad * disc) - pore
-    electrolyte = (disc - quad) - pore
-    named = ((electrolyte, "electrolyte"), (membrane, "membrane"), (pore, "protein"))
+    named: tuple[tuple[Shape, str], ...]
+    if record.exclusion is None:
+        electrolyte = (disc - quad) - pore
+        named = ((electrolyte, "electrolyte"), (membrane, "membrane"), (pore, "protein"))
+    else:
+        offset = _pore_face(record.exclusion.points())
+        shell = (offset - pore) - quad
+        # ``O`` contains ``P`` by construction; the pore is cut as well so that a
+        # loop that does not (a record edited by hand, FR-27) leaves no
+        # electrolyte overlapping the protein, and the naming gate sees the edge.
+        electrolyte = ((disc - quad) - offset) - pore
+        named = (
+            (electrolyte, "electrolyte"),
+            (membrane, "membrane"),
+            (pore, "protein"),
+            (shell, EXCLUSION),
+        )
     for face, name in named:
         face.name = name
     for shape, name in named:
@@ -561,7 +820,7 @@ def assemble_faces(record: RegionRecord) -> tuple[Shape, Shape, Shape]:
                 "exactly one",
                 f"the faces being {listed or 'none'}",
             )
-    return electrolyte, membrane, pore
+    return tuple(face for face, _ in named)
 
 
 def _endpoints(edge: Shape) -> tuple[tuple[float, float], tuple[float, float]]:
@@ -589,20 +848,28 @@ def name_region(shape: Shape, *, reservoir_radius_nm: float) -> None:
     By adjacency in the glued shape (see the module docstring), after two
     positional tests that adjacency cannot make: ``r = 0`` is ``axis``, and the
     reservoir arc is split into ``membrane_outer`` and ``cis``/``trans`` by the
-    face it bounds and the side of ``z = 0`` it lies on.
+    face it bounds and the side of ``z = 0`` it lies on. With an exclusion shell
+    its outer surface, against the electrolyte, is ``wall``, and its seams with
+    the protein and the membrane are ``interface``, as the protein's with the
+    membrane is (WP30 D8).
 
     Raises
     ------
     RegionGateError
         If an edge bounds none of the combinations the vocabulary names, which
-        means the assembly produced a seam no boundary condition would select.
+        means the assembly produced a seam no boundary condition would select,
+        and, beside a shell, if a protein edge faces the electrolyte: the shell
+        did not cover the body there.
     """
     edges_of = {
-        str(face.name): set(face.edges) for face in shape.faces if face.name in set(DOMAINS)
+        str(face.name): set(face.edges)
+        for face in shape.faces
+        if face.name in {*DOMAINS, EXCLUSION}
     }
     electrolyte = edges_of.get("electrolyte", set())
     membrane = edges_of.get("membrane", set())
     protein = edges_of.get("protein", set())
+    shell = edges_of.get(EXCLUSION)
     for edge in set(shape.edges):
         r_mid, z_mid = _curve_midpoint(edge)
         on_arc = (
@@ -611,8 +878,15 @@ def name_region(shape: Shape, *, reservoir_radius_nm: float) -> None:
         if abs(r_mid) < TOL_NM:
             edge.name = "axis"
         elif edge in protein:
-            if edge in membrane:
+            if edge in membrane or (shell is not None and edge in shell):
                 edge.name = "interface"
+            elif edge in electrolyte and shell is not None:
+                raise RegionGateError(
+                    "edge naming",
+                    "a pore-boundary edge facing the electrolyte beside an exclusion shell",
+                    "every pore edge covered by the shell or the membrane",
+                    _at(r_mid, z_mid),
+                )
             elif edge in electrolyte:
                 edge.name = "wall"
             else:
@@ -620,6 +894,18 @@ def name_region(shape: Shape, *, reservoir_radius_nm: float) -> None:
                     "edge naming",
                     "a pore-boundary edge bounding neither membrane nor electrolyte",
                     "every pore edge faces one of them",
+                    _at(r_mid, z_mid),
+                )
+        elif shell is not None and edge in shell:
+            if edge in electrolyte:
+                edge.name = "wall"
+            elif edge in membrane:
+                edge.name = "interface"
+            else:
+                raise RegionGateError(
+                    "edge naming",
+                    "a shell edge bounding neither the electrolyte, the membrane nor the protein",
+                    "every shell edge faces one of them",
                     _at(r_mid, z_mid),
                 )
         elif on_arc:
@@ -638,6 +924,21 @@ def name_region(shape: Shape, *, reservoir_radius_nm: float) -> None:
             )
 
 
+def protein_water_edges(
+    shape: Shape,
+) -> list[tuple[tuple[float, float], tuple[float, float]]]:
+    """Return the protein's edges against the electrolyte or a shell, as endpoint pairs.
+
+    Read from the glued region's adjacency, as :func:`name_region` reads it: what
+    a derived ``chi`` takes as the body's water-facing part (WP30 D2).
+    """
+    edges_of: dict[str, set[Shape]] = {}
+    for face in shape.faces:
+        edges_of.setdefault(str(face.name), set()).update(face.edges)
+    water = edges_of.get("electrolyte", set()) | edges_of.get(EXCLUSION, set())
+    return [_endpoints(edge) for edge in edges_of.get("protein", set()) if edge in water]
+
+
 def build_region(record: RegionRecord) -> Shape:
     """Rebuild the glued, named region from the record alone (D5).
 
@@ -647,8 +948,7 @@ def build_region(record: RegionRecord) -> Shape:
     """
     import netgen.occ as occ
 
-    electrolyte, membrane, pore = assemble_faces(record)
-    glued = occ.Glue([electrolyte, membrane, pore])
+    glued = occ.Glue(list(assemble_faces(record)))
     name_region(glued, reservoir_radius_nm=record.reservoir_radius_nm)
     return glued
 
@@ -904,8 +1204,29 @@ def region_graph(shape: Shape, record: RegionRecord) -> RegionGraph:
     return graph
 
 
+def _membrane_surface(shape: Shape) -> list[Shape]:
+    """Return the membrane's edges on its faces against the fluid side: the electrolyte or a shell.
+
+    Without a shell these are the ``membrane`` edges. With one, the seam between
+    the membrane and the shell, an ``interface``, runs from the junction to the
+    shell's outer foot, so it is taken by adjacency and not by name; an edge the
+    membrane shares with the protein is not on its surface.
+    """
+    if not any(face.name == EXCLUSION for face in shape.faces):
+        return [edge for edge in shape.edges if edge.name == "membrane"]
+    edges_of: dict[str, set[Shape]] = {}
+    for face in shape.faces:
+        edges_of.setdefault(str(face.name), set()).update(face.edges)
+    fluid_side = edges_of.get("electrolyte", set()) | edges_of.get(EXCLUSION, set())
+    return [
+        edge
+        for edge in edges_of.get("membrane", set())
+        if edge in fluid_side and edge not in edges_of.get("protein", set())
+    ]
+
+
 def membrane_radii(shape: Shape, half_thickness_nm: float) -> tuple[float, float]:
-    """Return the innermost radius the ``membrane`` boundary reaches on each plane.
+    """Return the innermost radius the membrane's fluid-side surface reaches on each plane.
 
     Raises
     ------
@@ -913,12 +1234,12 @@ def membrane_radii(shape: Shape, half_thickness_nm: float) -> tuple[float, float
         If either plane carries no ``membrane`` edge: the quadrilateral did not
         meet the pore body there.
     """
+    surface = _membrane_surface(shape)
     found: list[float] = []
     for plane, label in ((-half_thickness_nm, "trans"), (half_thickness_nm, "cis")):
         radii = [
             point[0]
-            for edge in shape.edges
-            if edge.name == "membrane"
+            for edge in surface
             for point in _endpoints(edge)
             if abs(point[1] - plane) < TOL_NM
         ]
@@ -956,7 +1277,12 @@ def check_junction(record: RegionRecord, shape: Shape) -> None:
 
 
 def derive_region(
-    profile: PoreProfile, membrane: MembraneSpec, reservoir: ReservoirSpec
+    profile: PoreProfile,
+    membrane: MembraneSpec,
+    reservoir: ReservoirSpec,
+    *,
+    exclusion_offset_nm: float = 0.0,
+    h_c_nm: float | None = None,
 ) -> RegionRecord:
     """Assemble ``profile`` into the tagged region and return its record (D2-D6).
 
@@ -967,6 +1293,12 @@ def derive_region(
     membrane, reservoir
         ``geometry.membrane`` and ``geometry.reservoir``, validated by the case
         resolver as finite and positive.
+    exclusion_offset_nm
+        ``charge.exclusion_offset_nm``, ``a``. With ``a > 0`` the region gains
+        the ion-exclusion shell of :func:`exclusion_shell` (WP30); at ``0`` none
+        of it runs.
+    h_c_nm
+        The contour's size target, required with ``a > 0``.
 
     Returns
     -------
@@ -1007,6 +1339,11 @@ def derive_region(
         axis_split_nm=(float(points[:, 1].min()), float(points[:, 1].max())),
         junction_nm={"trans": trans[1], "cis": cis[1]},
     )
+    if exclusion_offset_nm > 0.0:
+        if h_c_nm is None:
+            raise ValueError("an exclusion shell needs h_c_nm, the contour's size target")
+        shell = exclusion_shell(points, exclusion_offset_nm, h_c_nm, reservoir_radius_nm=radius)
+        record = record.model_copy(update={"exclusion": shell})
     shape = build_region(record)
     check_junction(record, shape)
     areas, counts = measure(shape)
@@ -1039,14 +1376,30 @@ def _profile_input(inputs: StageInputs, resolved: ResolvedCase) -> tuple[str, Pa
 
 
 def region_parameters(
-    membrane: MembraneSpec, reservoir: ReservoirSpec
+    membrane: MembraneSpec,
+    reservoir: ReservoirSpec,
+    *,
+    exclusion_offset_nm: float = 0.0,
+    h_c_nm: float | None = None,
 ) -> dict[str, Canonicalisable]:
-    """Return the stage-5 key's parameters (D5): the membrane, the reservoir and the constants."""
-    return {
+    """Return the stage-5 key's parameters (D5): the membrane, the reservoir and the constants.
+
+    With an exclusion shell, the offset, ``h_c`` and the shell's constants join
+    them under ``exclusion``; without one nothing is added, so every shell-free
+    key is the key it was before the shell existed (WP30 D10).
+    """
+    parameters: dict[str, Canonicalisable] = {
         "membrane": membrane.model_dump(mode="json"),
         "reservoir": reservoir.model_dump(mode="json"),
         "constants": dict(KEY_CONSTANTS),
     }
+    if exclusion_offset_nm > 0.0:
+        parameters["exclusion"] = {
+            "offset_nm": exclusion_offset_nm,
+            "h_c_nm": h_c_nm,
+            "constants": dict(EXCLUSION_CONSTANTS),
+        }
+    return parameters
 
 
 class RegionStage:
@@ -1079,7 +1432,12 @@ class RegionStage:
         """Return the key from the resolved case and a profile identity already in hand."""
         assert resolved.membrane is not None and resolved.reservoir is not None
         return RegionArtefact(
-            parameters=region_parameters(resolved.membrane, resolved.reservoir),
+            parameters=region_parameters(
+                resolved.membrane,
+                resolved.reservoir,
+                exclusion_offset_nm=resolved.exclusion_offset_nm,
+                h_c_nm=resolved.contour_spacing_nm,
+            ),
             inputs={"profile": identity},
         )
 
@@ -1110,7 +1468,13 @@ class RegionStage:
 
         check_cancelled(cancel, "assembling the region")
         report(progress, 0.2, f"assembling the region around {len(profile.vertices)} vertices")
-        record = derive_region(profile, resolved.membrane, resolved.reservoir)
+        record = derive_region(
+            profile,
+            resolved.membrane,
+            resolved.reservoir,
+            exclusion_offset_nm=resolved.exclusion_offset_nm,
+            h_c_nm=resolved.contour_spacing_nm,
+        )
 
         directory = self._workspace
         if directory is None:
