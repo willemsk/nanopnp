@@ -1,6 +1,6 @@
 # Phase 3 (Charge pipeline): from a structure to a charged run
 
-**Status: in progress. WP26 delivered, 30 September 2026; WP27 delivered, 1 October 2026 ([plan](wp27-protonation.md)); WP28 delivered, 1 October 2026 ([plan](wp28-charge-deposition.md)); WP29 delivered, 1 October 2026 ([plan](wp29-val06-apbs.md)); WP30–WP32 planned.** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
+**Status: in progress. WP26 delivered, 30 September 2026; WP27 delivered, 1 October 2026 ([plan](wp27-protonation.md)); WP28 delivered, 1 October 2026 ([plan](wp28-charge-deposition.md)); WP29 delivered, 1 October 2026 ([plan](wp29-val06-apbs.md)); WP30 planned in detail, 2 October 2026 ([plan](wp30-dielectric-and-exclusion.md)); WP31–WP32 planned.** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
 the geometry pipeline (`main` at `v0.3.0-alpha.9`, formerly `v0.9.0-alpha.9`). Phase 2's
 end-of-phase report and its release, `v0.3.0`, wait for one Tier-3 run on the author's archive
 (criterion 3, VAL-05's ensemble leg). WP26 may start before that report merges, because nothing in
@@ -257,6 +257,21 @@ whose 0.5-level lies on the contour and whose width is `δ` to a stated toleranc
 and outer surfaces are `exclusion_offset_nm` apart, measured on the mesh; VER-31's Stern benchmark is
 reproduced through a generated shell; a shell that would close the constriction is refused naming
 the z where it does.
+
+> **Planned, 2 October 2026** ([plan](wp30-dielectric-and-exclusion.md)). The plan's commit amends
+> the specification with a §4.4 NOTE and a §5.2.1 NOTE, and adds the VER-59 row. It refines the
+> text above in three ways:
+>
+> - **`χ` comes from the stage-4 profile, not from a remap of the stage-3 mean.** It is a C¹ cubic
+>   step over a signed distance, with its 1/2-level on the meshed interface. That is what makes
+>   δ → 0 recover the material split, and it gives a width that is exactly δ. The membrane keeps
+>   `χ` = 1.
+> - **The shell is a dilation of the profile by `a`, closed by 2h_c, with enclosed pockets filled
+>   and recorded.** It is carved against the membrane, which does not change. Its solid-to-solid
+>   seams are `interface`.
+> - **VER-31's Stern benchmark is reproduced through the pipeline in cylindrical form.** The check
+>   is Gauss's law across a generated shell, solved with `pnp`. The planar slab is rebuilt from the
+>   generated shell.
 
 ### WP31 — GUI increment 3: the charge pipeline surfaced
 
