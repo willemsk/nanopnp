@@ -2249,7 +2249,15 @@ geometry pipeline's compiled payloads, MDAnalysis and gemmi reading a structure,
 contour extraction, Shapely's polygon checks through GEOS, and Gmsh meshing a square (§8.2.2 B8).
 An extension that imports and then cannot load its library is RSK-13's failure, which an import
 alone does not detect: Gmsh's Python module imports with its library missing and fails on its first
-call (`.knowledge/07-software-stack.md` §5). The background solver
+call (`.knowledge/07-software-stack.md` §5). Since WP31 the bundle also carries the charge
+pipeline's protonation payloads, PDB2PQR and PROPKA, with the data files each reads beside its own
+modules. `--selftest` protonates a nine-residue peptide at two pH values and requires the two net
+charges measured for it, so that a bundle missing PROPKA's parameter file fails naming PROPKA,
+where a single run without titration would pass (**amended 2 October 2026**, WP31 D14). A
+pure-Python payload used under the LGPL SHALL be collected as source files on disk, and not into
+the bundle's module archive: a module inside the archive cannot be replaced in place, and the
+one-dir layout exists so that an LGPL component can be. That applies to PROPKA (LGPL-2.1),
+MDAnalysis and GridDataFormats (LGPL-3.0-or-later) (**amended 2 October 2026**, WP31 D15). The background solver
 process SHALL be started with the `spawn` start method: it is the only one Windows has, and a forked
 child would inherit both the parent's Qt event loop and its already-imported numerical libraries.
 
