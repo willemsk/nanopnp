@@ -1287,12 +1287,11 @@ def _field_named(owner: type[BaseModel], component: str) -> FieldInfo | None:
     return None
 
 
-def field_description(path: str) -> str | None:
-    """Return the description a field of the schema declares, or ``None``.
+def _declaration(path: str) -> FieldInfo | None:
+    """Return the pydantic declaration of the block field a dotted path ends on, or ``None``.
 
-    The generated case-file reference prints it under its section (VER-45), so a
-    normative contract written on a field — the section 5.3.1 NOTE on
-    ``structure:`` — reaches the documentation without a hand-written copy.
+    ``None`` for a path that is not a declared field of a block: an entry of a
+    mapping or of a sequence carries no declaration of its own.
     """
     owner: type[BaseModel] = CaseDocument
     parts = path.split(".")
@@ -1303,13 +1302,46 @@ def field_description(path: str) -> str | None:
         if field is None:
             return None
         if index == len(parts) - 1:
-            return field.description
+            return field
         entry = _entry_annotation(field.annotation)
         nested = _model_of(entry[0] if entry is not None else field.annotation)
         if nested is None:
             return None
         owner = nested
     return None
+
+
+def field_description(path: str) -> str | None:
+    """Return the description a field of the schema declares, or ``None``.
+
+    The generated case-file reference prints it under its section (VER-45), so a
+    normative contract written on a field — the section 5.3.1 NOTE on
+    ``structure:`` — reaches the documentation without a hand-written copy.
+    """
+    field = _declaration(path)
+    return None if field is None else field.description
+
+
+def field_bounds(path: str) -> tuple[float | None, float | None]:
+    """Return the inclusive bounds ``(ge, le)`` a field of the schema declares.
+
+    Read from the field's own metadata, the constraints ``Field(ge=..., le=...)``
+    puts there, so a graphical editor can size a spin box without a bound of its
+    own (IF-09, WP31 D12). A bound the field does not declare, and any exclusive
+    one (``gt``, ``lt``), is ``None``: a spin box cannot represent an open end.
+
+    Raises
+    ------
+    UnknownCasePathError
+        If the path is not one the schema declares.
+    """
+    field_at(path)
+    field = _declaration(path)
+    if field is None:
+        return None, None
+    lower = [float(item.ge) for item in field.metadata if getattr(item, "ge", None) is not None]
+    upper = [float(item.le) for item in field.metadata if getattr(item, "le", None) is not None]
+    return (max(lower) if lower else None), (min(upper) if upper else None)
 
 
 def value_at(document: CaseDocument, path: str) -> FieldValue:
