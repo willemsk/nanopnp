@@ -17,11 +17,19 @@ line gives for the same mistake.
 Phase-1 case has no ``structure:`` block, and
 :func:`~nanopnp.io.case.substitute` refuses to write into one that is absent —
 "give the base case that section first". Hiding the field would make that
-refusal look like a missing feature.
+refusal look like a missing feature. **Add section** is offered for exactly the
+sections :meth:`~nanopnp.gui.case_model.CaseEditor.addable` names, whose empty
+form resolves as their absence, and enables their fields (WP31 D13).
+
+**A bounded number is a spin box over the schema's own range** (WP31 D12), and
+it stages a value only when the user changes it. A spin box rounds what it
+shows to its decimals, so staging on display would rewrite a loaded ``7.125``
+as ``7.13`` without anyone having touched it.
 """
 
 from __future__ import annotations
 
+import math
 from typing import TYPE_CHECKING
 
 import yaml
@@ -34,6 +42,9 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     from collections.abc import Callable
 
 __all__ = ["CaseEditorWidget"]
+
+SPIN_DECIMALS = 3
+"""Digits a bounded number's spin box shows: enough for a pH to the thousandth."""
 
 
 def _display(value: FieldValue | Absent) -> str:
@@ -77,10 +88,23 @@ class CaseEditorWidget(QtWidgets.QWidget):
         self._editor = editor
         self._rows: dict[str, QtWidgets.QWidget] = {}
         self._labels: dict[str, QtWidgets.QLabel] = {}
+        self._adders: dict[str, QtWidgets.QPushButton] = {}
 
         layout = QtWidgets.QVBoxLayout(self)
         self._status = QtWidgets.QLabel()
         self._status.setWordWrap(True)
+        sections = QtWidgets.QHBoxLayout()
+        for name in editor.addable():
+            button = QtWidgets.QPushButton(f"Add section: {name}")
+            button.setToolTip(
+                f"write an empty {name}: block, which resolves exactly as its absence, so its "
+                "fields can be edited"
+            )
+            button.clicked.connect(lambda *_, section=name: self.add_section(section))
+            self._adders[name] = button
+            sections.addWidget(button)
+        sections.addStretch(1)
+        layout.addLayout(sections)
         area = QtWidgets.QScrollArea()
         area.setWidgetResizable(True)
         inner = QtWidgets.QWidget()
@@ -104,27 +128,22 @@ class CaseEditorWidget(QtWidgets.QWidget):
     # -- construction -------------------------------------------------------
 
     def _build(self, state: FieldState) -> QtWidgets.QWidget:
-        """Return the widget one field is edited through."""
-        absent = isinstance(state.value, Absent)
+        """Return the widget one field is edited through, showing the field's value."""
         widget: QtWidgets.QWidget
         if state.kind == "flag":
             box = QtWidgets.QCheckBox()
-            box.setChecked(bool(state.value) if not absent else False)
             box.toggled.connect(self._setter(state.path, box.isChecked))
             widget = box
         elif state.kind == "choice":
             combo = QtWidgets.QComboBox()
             combo.addItems(list(state.options or ()))
-            combo.setCurrentText(_display(state.value))
             combo.currentTextChanged.connect(self._setter(state.path, combo.currentText))
             widget = combo
         elif state.kind == "selection":
             listing = QtWidgets.QListWidget()
             listing.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.MultiSelection)
-            chosen = set(state.value) if isinstance(state.value, list) else set()
             for option in state.options or ():
-                item = QtWidgets.QListWidgetItem(option, listing)
-                item.setSelected(option in chosen)
+                QtWidgets.QListWidgetItem(option, listing)
             listing.setMaximumHeight(120)
             listing.itemSelectionChanged.connect(
                 self._setter(
@@ -133,8 +152,20 @@ class CaseEditorWidget(QtWidgets.QWidget):
                 )
             )
             widget = listing
+        elif state.kind == "bounded" and state.bounds is not None:
+            spin = QtWidgets.QDoubleSpinBox()
+            lower, upper = state.bounds
+            spin.setDecimals(SPIN_DECIMALS)
+            spin.setRange(lower, upper)
+            span = upper - lower
+            spin.setSingleStep(10.0 ** math.floor(math.log10(span / 100.0)) if span > 0 else 1.0)
+            spin.setKeyboardTracking(False)
+            # ``valueChanged`` and not ``editingFinished``: the latter fires on a
+            # focus change with nothing edited, and would stage the rounded display.
+            spin.valueChanged.connect(self._setter(state.path, spin.value))
+            widget = spin
         else:
-            line = QtWidgets.QLineEdit(_display(state.value))
+            line = QtWidgets.QLineEdit()
             if state.options:
                 # Enumerated values beside a free one (``wall_h_nm``): offered as
                 # a completion rather than as the only choice, which is what
@@ -142,13 +173,47 @@ class CaseEditorWidget(QtWidgets.QWidget):
                 line.setCompleter(QtWidgets.QCompleter(list(state.options), line))
             line.editingFinished.connect(self._setter(state.path, lambda: _parse(line.text())))
             widget = line
-        if absent:
-            widget.setEnabled(False)
-            widget.setToolTip(
-                f"{state.path.rsplit('.', 1)[0]} is not in this case file, so there is no block "
-                "to substitute into; add that section to the file first"
-            )
+        self._present(widget, state)
         return widget
+
+    def _present(self, widget: QtWidgets.QWidget, state: FieldState) -> None:
+        """Show a field's value in its widget and enable it, staging nothing.
+
+        Signals are blocked while the value is set: showing a value is not an
+        edit, and a staged copy of what the file already says would mark an
+        untouched case dirty and rewrite it on the next run.
+        """
+        absent = isinstance(state.value, Absent)
+        widget.blockSignals(True)
+        try:
+            if isinstance(widget, QtWidgets.QCheckBox):
+                widget.setChecked(bool(state.value) if not absent else False)
+            elif isinstance(widget, QtWidgets.QComboBox):
+                widget.setCurrentText(_display(state.value))
+            elif isinstance(widget, QtWidgets.QListWidget):
+                chosen = set(state.value) if isinstance(state.value, list) else set()
+                for index in range(widget.count()):
+                    item = widget.item(index)
+                    item.setSelected(item.text() in chosen)
+            elif isinstance(widget, QtWidgets.QDoubleSpinBox):
+                # Nothing to show for a field the document lacks: the minimum,
+                # labelled as absent rather than read as a value.
+                widget.setSpecialValueText("absent" if absent else "")
+                if isinstance(state.value, int | float) and not isinstance(state.value, bool):
+                    widget.setValue(float(state.value))
+                else:
+                    widget.setValue(widget.minimum())
+            elif isinstance(widget, QtWidgets.QLineEdit):
+                widget.setText(_display(state.value))
+        finally:
+            widget.blockSignals(False)
+        widget.setEnabled(not absent)
+        widget.setToolTip(
+            f"{state.path.rsplit('.', 1)[0]} is not in this case file, so there is no block "
+            "to substitute into; add that section first"
+            if absent
+            else ""
+        )
 
     def _setter(self, path: str, read: Callable[[], FieldValue]) -> Callable[..., None]:
         """Return a slot staging what ``read`` returns at ``path``."""
@@ -189,6 +254,38 @@ class CaseEditorWidget(QtWidgets.QWidget):
     def widget_at(self, path: str) -> QtWidgets.QWidget:
         """Return the widget bound to one path."""
         return self._rows[path]
+
+    def addable(self) -> tuple[str, ...]:
+        """Return the sections the form currently offers to add."""
+        return tuple(name for name, button in self._adders.items() if button.isEnabled())
+
+    def add_section(self, name: str) -> bool:
+        """Write the empty section ``name`` and enable its fields (WP31 D13).
+
+        Returns
+        -------
+        bool
+            Whether the section was added; a refusal is shown as the editor
+            words it.
+        """
+        try:
+            self._editor.add_section(name)
+        except ValueError as error:
+            self._status.setText(str(error))
+            return False
+        prefix = f"{name}."
+        for path, widget in self._rows.items():
+            if path.startswith(prefix):
+                self._present(widget, self._editor.state(path))
+        button = self._adders.get(name)
+        if button is not None:
+            button.setEnabled(False)
+        self._status.setText(
+            f"{name}: added as an empty section, which resolves as its absence; its fields can "
+            "now be edited"
+        )
+        self.changed.emit()
+        return True
 
     def commit(self) -> bool:
         """Commit the staged edits, showing the whole-document diagnostic on failure.

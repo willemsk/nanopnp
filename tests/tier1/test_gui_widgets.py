@@ -22,6 +22,11 @@ That last one is a size claim rather than a style one. ``setHtml``
 percent-encodes its argument into a data URL and a scene of the reference mesh is
 23 to 39 MB (`.knowledge/07-software-stack.md` §5), so the call that must never
 happen is asserted to never happen rather than merely not written.
+
+WP31 adds VER-60's widget half: a bounded number is a spin box over the schema's
+range that stages nothing until the user moves it, **Add section** enables a
+block's fields, and the Charge tab builds stage 7 through the Geometry tab's walk
+and fills its four panes.
 """
 
 from __future__ import annotations
@@ -53,6 +58,7 @@ try:
     from nanopnp.gui.app import MainWindow
     from nanopnp.gui.widgets import (
         CaseEditorWidget,
+        ChargeWidget,
         ConvergenceWidget,
         GeometryWidget,
         RunControlWidget,
@@ -173,10 +179,10 @@ def test_if09_a_choice_offers_exactly_the_registered_values(
     assert offered == editor.state("physics.model").options
 
 
-def test_if09_the_window_assembles_its_six_panels(
+def test_if09_the_window_assembles_its_seven_panels(
     application: QtWidgets.QApplication, editor: CaseEditor
 ) -> None:
-    """The whole window builds offscreen: the five panels of QR-11 and WP24's Geometry tab.
+    """The whole window builds offscreen: QR-11's five panels, WP24's Geometry and WP31's Charge.
 
     Constructed rather than merely imported, because the failures this catches
     are construction-time ones — a signal connected to a slot that does not take
@@ -190,6 +196,7 @@ def test_if09_the_window_assembles_its_six_panels(
     assert [tabs.tabText(index) for index in range(tabs.count())] == [
         "Case",
         "Geometry",
+        "Charge",
         "Run",
         "Convergence",
         "Result",
@@ -197,10 +204,18 @@ def test_if09_the_window_assembles_its_six_panels(
     ]
     assert window.windowTitle().endswith("case.yaml")
 
+    # The Charge tab shares the Geometry tab's control: one walk, one cancel (WP31 D2).
+    charge = tabs.widget(2)
+    assert isinstance(charge, ChargeWidget)
+    assert charge.control is tabs.widget(1).control
+    # This case supplies its mesh and no charge: nothing to build, and the driver says why.
+    assert not charge.build_button.isEnabled()
+    assert charge.reason()
+
     # The run panel polls a control that has never been started: it must read as
     # idle rather than raise, because that is its state for as long as the user
     # is editing.
-    run = tabs.widget(2)
+    run = tabs.widget(3)
     model = run.refresh()
     assert model.state == "idle"
     assert model.fraction == 0.0
@@ -677,3 +692,159 @@ def _mesh_shown(tab: GeometryWidget) -> bool:
     """Whether the mesh pane carries the render child's gate figures."""
     tab._select("mesh")
     return "minimum SICN" in tab.details()
+
+
+# -- WP31: the case editor's bounded numbers and the Charge tab -------------------
+
+STRUCTURE_CASE = """\
+schema: nanopnp/case/v2
+name: fragment
+structure:
+  source: {{path: {path}}}
+  symmetry: {{point_group: C1, axis: z}}
+{charge}
+electrolyte:
+  species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
+  concentration_M: 0.15
+  parameters: willems2020_nacl
+boundary_conditions: {{bias_V: 0.05, ground: cis}}
+physics: {{model: epnp-ns, solid_permittivities: {{protein: 20.0, membrane: 3.2}}}}
+"""
+
+
+def _structure_case(tmp_path: Path, charge: str) -> Path:
+    """Write a structure case with the given ``charge:`` line; the structure need not exist."""
+    path = tmp_path / "case.yaml"
+    path.write_text(
+        STRUCTURE_CASE.format(path=tmp_path / "fragment.pdb", charge=charge), encoding="utf-8"
+    )
+    return path
+
+
+@pytest.mark.parametrize(("written", "shown"), [("7.25", 7.25), ("7.1234", 7.123)])
+def test_ver60_a_loaded_ph_is_shown_and_not_rewritten(
+    application: QtWidgets.QApplication, tmp_path: Path, written: str, shown: float
+) -> None:
+    """A spin box over the schema's [0, 14] shows the pH, and showing it stages nothing (D12).
+
+    ``7.1234`` is shown to the spin box's three decimals: the display rounds,
+    the document does not, and a run made from the untouched file runs its bytes.
+    """
+    path = _structure_case(tmp_path, f"charge: {{ph: {written}}}")
+    before = path.read_bytes()
+    editor = CaseEditor.open(path)
+    widget = CaseEditorWidget(editor)
+    spin = widget.widget_at("charge.ph")
+    assert isinstance(spin, QtWidgets.QDoubleSpinBox)
+    assert (spin.minimum(), spin.maximum()) == editor.state("charge.ph").bounds == (0.0, 14.0)
+    assert spin.isEnabled()
+    assert spin.value() == pytest.approx(shown, abs=1e-12)
+
+    spin.editingFinished.emit()
+    application.processEvents()
+    assert editor.staged == {}
+    assert not editor.dirty
+    assert editor.ensure_saved() == path
+    assert path.read_bytes() == before
+    assert load_case(path).charge.ph == float(written)  # type: ignore[union-attr]
+
+    # A user's edit is staged, and committed through the whole-document check.
+    spin.setValue(6.5)
+    assert editor.staged == {"charge.ph": 6.5}
+    assert widget.commit()
+    assert editor.document.charge.ph == 6.5  # type: ignore[union-attr]
+
+
+def test_ver60_add_section_creates_charge_and_enables_the_ph(
+    application: QtWidgets.QApplication, tmp_path: Path
+) -> None:
+    """Without a ``charge:`` block the pH is disabled; **Add section** writes ``{}`` and enables it.
+
+    What is written is the empty block, which loads as ``Charge()``: the pH shown
+    is the schema's default, and nothing is staged until the user moves it (D13).
+    """
+    from nanopnp.io.case import Charge
+
+    path = _structure_case(tmp_path, "")
+    editor = CaseEditor.open(path)
+    widget = CaseEditorWidget(editor)
+    spin = widget.widget_at("charge.ph")
+    assert isinstance(spin, QtWidgets.QDoubleSpinBox)
+    assert not spin.isEnabled()
+    assert widget.addable() == ("charge",)
+
+    assert widget.add_section("charge")
+    assert spin.isEnabled()
+    assert spin.value() == Charge().ph
+    assert widget.widget_at("charge.forcefield").isEnabled()
+    assert widget.addable() == ()
+    assert editor.staged == {}
+    assert editor.dirty
+    assert editor.ensure_saved() == path
+    assert load_case(path).charge == Charge()
+
+
+def test_ver60_the_charge_tab_builds_stage_7_and_shows_its_panes(
+    application: QtWidgets.QApplication, tmp_path: Path, charged_tube
+) -> None:
+    """**Build charge** from the window: one walk feeds both tabs, and each pane is filled (D2, D3).
+
+    On the charged tube with a dielectric transition, so the deployed pane offers
+    both quantities. The Geometry tab shows stages 5 and 6 from the same walk;
+    the Charge tab's rows carry the run record's hashes; the protonation pane
+    shows the supplied PQR's one residue with no pKa; the map marks two
+    planes; the conservation pane has the five legs; the deployed field is drawn.
+    """
+    import json
+
+    from nanopnp.io.fields import FIXED_CHARGE_ATTRIBUTE
+
+    case = charged_tube.write(tmp_path / "case", charge_block="{dielectric_transition_nm: 0.2}")
+    window = MainWindow(CaseEditor.open(case), store=tmp_path / "store")
+    tabs = window.centralWidget()
+    assert isinstance(tabs, QtWidgets.QTabWidget)
+    geometry, charge = tabs.widget(1), tabs.widget(2)
+    assert isinstance(geometry, GeometryWidget) and isinstance(charge, ChargeWidget)
+    assert charge.build_button.isEnabled(), charge.reason()
+
+    window.build_charge()
+    deadline = time.monotonic() + BUILD_TIMEOUT_S
+    while time.monotonic() < deadline:
+        application.processEvents()
+        geometry.refresh()
+        model = charge.refresh()
+        if (
+            model is not None
+            and model.settled
+            and (model.state != "finished" or charge.drawn is not None)
+        ):
+            break
+        time.sleep(0.05)
+    model = charge.control.model
+    assert model.state == "finished", model.log
+    assert charge.drawn is not None, charge.notes("Deployed field")
+
+    record = json.loads((model.directory / "run.json").read_text(encoding="utf-8"))
+    assert [row.name for row in geometry.rows] == ["region", "mesh"]
+    assert [row.name for row in charge.rows] == ["protonation", "charge"]
+    for row in (*geometry.rows, *charge.rows):
+        assert row.status == "stored"
+        assert row.hash == record["artefacts"][row.name]["hash"]
+
+    # The PQR's two atoms are one residue, GLU 18 of chain A, carrying their sum.
+    table = charge.protonation_table
+    q_net_e = sum(atom[4] for atom in charged_tube.atoms)
+    assert table.rowCount() == 1
+    assert [table.item(0, column).text() for column in (0, 1, 3, 4)] == [
+        "A",
+        "GLU 18",
+        f"{q_net_e:+.4g}",
+        "not computed",
+    ]
+    assert len(charge.canvas.planes) == 2
+    assert charge.canvas.caption.endswith(MODEL_FRAME)
+    assert charge.conservation_table.rowCount() == 5
+    assert charge.drawn.name == FIXED_CHARGE_ATTRIBUTE
+    assert MODEL_FRAME in charge.notes("Deployed field")
+    assert "transition_nm" in charge.notes("Deployed field")
+    window.close()
