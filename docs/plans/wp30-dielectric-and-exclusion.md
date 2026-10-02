@@ -94,6 +94,15 @@ D9 and D11.
 > - **D9: `GMSH_FIELD_RULES` is unchanged.** Adding an identifier to it would move every Gmsh key,
 >   shell-free ones included. Instead `domain_size` sizes `exclusion` at the wall target on both
 >   backends, and the recipe gains `exclusion: wall_h_nm` only when the region has a shell.
+> - **D9, from the review: on netgen a shell's `wall` edges are cut into `⌈L/(1.1 h)⌉` equal
+>   segments.** Netgen keeps every ring vertex and cuts an edge into about `⌊L/h + 0.4⌋`
+>   segments, so with whole ring edges the shell failed the wall-size gate at targets a little
+>   under `L` or `L/2`: on 2WCD at 0.045, 0.04, 0.035 (3 M) and 0.0225 nm. `maxh = L/n` fixes the
+>   count. An edge needing one segment keeps the target, so the default-size meshes are unchanged.
+>   The recipe gains `exclusion_wall` on netgen only, because Gmsh already cuts at `⌈L/h⌉` and
+>   passed at every target. A spline surface and OCC's exact offset were measured and set aside.
+>   The first is not reproducible in the Gmsh backend's `geo` kernel. The second cannot be built
+>   through netgen's binding when the dilation encloses a pocket (`.knowledge/06` §8.1.4).
 > - **D12: the declaration refusal of `δ` runs before the generated-mesh solids refusal**, so `pb`
 >   names the key rather than its missing solids.
 > - **D17 and *Design* §3: the analysis plane is 12 nm from the bilayer.** With the membrane on
@@ -117,6 +126,9 @@ D9 and D11.
 >   has 51,599 triangles at min SICN 0.634, the wall segments 1.045 × the target on average.
 > - 2WCD, shell recorded, not gated: 8.1 % of the wall nodes lie beyond `a + 1e-6`, and the shell
 >   is 7.88 nm² against the protein's 28.11. Stage 5 takes 1.2 s and stage 6 11 s.
+> - 2WCD, shell at 3 M (`auto` 0.03505 nm), with the edges divided: 68,477 triangles, min SICN
+>   0.695, the wall segments 0.748 × the target on average and 0.941 at most. With the edges whole
+>   the gate refused it at 1.457.
 > - 2WCD, both switches on, `pnp` at `size_scale` 4 (14,036 triangles): it walks to stage 12. The
 >   `χ` means are protein 0.985, `exclusion` 0.056 and electrolyte 0. Stage 7 takes 6.6 s with the
 >   deposit, and the solve 32 s.
@@ -165,7 +177,7 @@ D9 and D11.
 | `tests/tier2/test_exclusion_keys.py` | 2 | VER-59 (invariance) | With both keys at 0 the D16 keys and bytes are equal | Equality |
 | `tests/tier2/test_stern_layer.py` | 2 | VER-31, VER-59 | The slab's shell from `exclusion_shell` equals the drawn `[0, λ_S] × [0, H]`, and `φ_0` is unchanged | 10⁻¹² nm, and the solver tolerance |
 | `tests/tier2/test_exclusion_stern.py` | 2 | VER-59, FR-15 | On the cylindrical body: the mid-plane drop across the shell against Gauss's law, φ at `√(R(R − a))` against the mean of the ends, and the drop ≥ 10 % of the wall potential | 1 % (VER-31's own), 10⁻³ of the drop; *Design* §3 |
-| `tests/tier2/test_exclusion_2wcd.py` | 2 | VER-59, FR-10 | 2WCD at `a` = 0.25: the lower distance band at every `wall` node, VER-10 and the wall-size gate, the closed share recorded. Adding `δ` = 0.15, the WP28 charged walk runs to stage 12 with every gate passing and the three deviations in the manifest | The *Design* §2 lower bound |
+| `tests/tier2/test_exclusion_2wcd.py` | 2 | VER-59, FR-10 | 2WCD at `a` = 0.25: the lower distance band at every `wall` node, VER-10 and the wall-size gate, the closed share recorded, and the mesh at 3 M. Adding `δ` = 0.15, the WP28 charged walk runs to stage 12 with every gate passing and the three deviations in the manifest | The *Design* §2 lower bound |
 | same file, `-m slow` | — | — | `χ` derivation time and memory at `δ = h_c` on 2WCD, and the largest interpolation error near the vertices | Recorded |
 
 ```bash

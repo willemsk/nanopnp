@@ -189,6 +189,44 @@ def test_ver59_2wcd_with_a_shell_meshes_and_every_wall_node_clears_the_lower_bou
     )
 
 
+def test_ver59_2wcd_with_a_shell_meshes_at_3_m(registered) -> None:  # type: ignore[no-untyped-def]
+    """At 3 M the ``auto`` wall target is 0.035 nm, where the ring's whole edges were refused.
+
+    Netgen left each 0.0525 nm ring edge as one segment, and the wall-size gate
+    refused the mean of 1.457 (``.knowledge/06`` section 8.1.4). Cut into
+    ``ceil(L / 1.1 h)`` segments, the mesh passes VER-10 and the gate.
+    """
+    root, store, structure, geometry = registered
+    case = root / "shell-3m.case.yaml"
+    case.write_text(
+        MESH_CASE.format(
+            structure=structure,
+            geometry=geometry,
+            charge=f"charge: {{exclusion_offset_nm: {OFFSET_NM}}}\n",
+        ).replace("concentration_M: 0.15", "concentration_M: 3.0"),
+        encoding="utf-8",
+    )
+    mesh = run_case(case, store=store, upto="mesh", write=False).artefacts["mesh"]
+    sizing = mesh.summary["sizing"]
+    statistics = sizing["wall_statistics"]
+    quality = mesh.summary["quality"]
+    assert sizing["wall"]["wall_h_nm"] == pytest.approx(0.03505, abs=5e-5)
+    assert statistics["mean_ratio"] <= 1.1
+    assert statistics["max_ratio"] <= 2.0
+    assert quality["min_sicn"] > QUALITY_FLOOR
+    assert quality["min_gamma"] > QUALITY_FLOOR
+    logger.info(
+        "VER-59 2WCD shell at 3 M: %d triangles, min SICN %.4f, %d wall segments, mean %.3f and "
+        "max %.3f x the %.5f nm target",
+        mesh.summary["elements"],
+        quality["min_sicn"],
+        statistics["segments"],
+        statistics["mean_ratio"],
+        statistics["max_ratio"],
+        sizing["wall"]["wall_h_nm"],
+    )
+
+
 def test_ver59_2wcd_with_the_shell_and_a_derived_chi_walks_to_the_report(registered) -> None:  # type: ignore[no-untyped-def]
     """WP28's charged walk with both switches on: every gate, both switches and the material."""
     root, store, structure, geometry = registered
