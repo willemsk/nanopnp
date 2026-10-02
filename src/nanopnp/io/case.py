@@ -454,8 +454,28 @@ class Charge(_Strict):
         ),
     )
     smearing: SmearingSpec = Field(default_factory=SmearingSpec)
-    exclusion_offset_nm: float = Field(default=0.0, ge=0.0, allow_inf_nan=False)
-    dielectric_transition_nm: float = Field(default=0.0, ge=0.0, allow_inf_nan=False)
+    exclusion_offset_nm: float = Field(
+        default=0.0,
+        ge=0.0,
+        allow_inf_nan=False,
+        description=(
+            "The ion-exclusion shell's width a, in nm: stage 5 offsets the profile by a and "
+            "meshes the shell as material exclusion, with wall on its outer surface. 0, the "
+            "validated default, builds none; refused at or below twice the density grid spacing, "
+            "and beside inputs.mesh (section 5.2.1 NOTE on the ion-exclusion shell)"
+        ),
+    )
+    dielectric_transition_nm: float = Field(
+        default=0.0,
+        ge=0.0,
+        allow_inf_nan=False,
+        description=(
+            "The width delta, in nm, of the protein's dielectric transition to water: stage 7 "
+            "derives chi from the profile as a C1 step of width delta. 0, the validated default, "
+            "keeps PHY-20's sharp split; refused below the density grid spacing, beside "
+            "inputs.eps_r and beside inputs.mesh (section 4.4 NOTE on the derived solid fraction)"
+        ),
+    )
 
 
 # -- electrolyte --------------------------------------------------------------

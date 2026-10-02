@@ -1155,6 +1155,48 @@ geometry formula to about 4 × 10⁻¹⁶ nm and not exactly. Assert such an ide
 `MeshData` with exact coordinates, and assert the meshed one to a tolerance far below any length in
 the problem; an `==` against a meshed extent is a test that will fail on some other platform's OCC.
 
+### 8.1.4 A GEOS round-join offset, then step 6, is not "within a chord's sagitta" of the offset **[tested]**
+
+Found building stage 5's ion-exclusion shell (WP30). `Polygon(P).buffer(a, quad_segs=8)` places
+every vertex of its round joins exactly on the offset circle: the vertex distance to `P` equals `a`
+to 1e-12 at `a` = 0.12, 0.25, 0.5 and 1 nm on the VER-59 parallelogram. Its straight offset edges lie
+at exactly `a`. So the raw offset lies inside the exact one only by its chords' sagittas,
+`a(1 − cos(π/32))` = 0.0048a. Each arc chord is `aπ/16` long: 0.0244 nm at `a` = 0.12 and 0.0491
+at 0.25, just under `h_c` = 0.05.
+
+§5.2.1's step 6 drops the cheapest endpoint of the shortest edge until no edge is shorter than
+`h_c`. On such a ring it merges **runs** of chords, not pairs: a sub-`h_c` chord left between two
+merged ones merges into one of them. The longest chord it leaves reaches about `3h_c`. Its sagitta
+exceeds the `h_c²/a` that a chord of `2h_c` would give, and the shell's thickness bound,
+`max(h_c²/a, a/100)`, was argued on that `2h_c`. The closing by `2h_c` re-discretises the joins,
+even on a convex body, so the chord lengths are not the buffer's own. The ratio of the deepest edge
+to the bound, with offset, closing and step 6 alone:
+
+| `a` (nm) | 0.11 | 0.12 | 0.2 | 0.25 | 0.5 | 1.0 |
+|---|---|---|---|---|---|---|
+| Rectangle | 0.55 | 0.77 | 0.79 | **1.06** | 0.67 | 0.58 |
+| Keyhole (a necked pocket) | 0.55 | 0.66 | 0.42 | 0.62 | **1.09** | 0.58 |
+| Parallelogram | 0.85 | 0.92 | 0.85 | 0.94 | 0.72 | 0.62 |
+
+Choosing the segment count per `a`, so that the joins' chords are at least `h_c`, fixes small `a`
+and still fails the keyhole at 0.5 nm. What works is to **resample the ring at uniform arc length
+before step 6**, at `s = L/⌊L/(F h_c)⌋`:
+
+- `F` = 1.0 leaves chords under `h_c` on the curves, step 6 chains again, and the ratio reaches
+  1.15.
+- `F` = 1.05 and 1.5 leave nothing to merge, and the ratio is at most 0.53 and 0.76.
+- `F` = 2 reaches 1.02 at `a` = 0.5 nm, from the chord's own sagitta.
+
+The construction is `F` = 1.05, because netgen leaves an edge of 1.5 times its size target as one
+segment. At `F` = 1.5 the Stern tube's mean wall segment was 1.49 times the 0.05 nm target, and
+stage 6's wall-size gate refused it. With `F` = 1.05 every chord is above `h_c`, and the surface is
+at most `0.0048a + s²/(8a)` inside the offset, with `s < 1.15 h_c`, which is 0.62 of the bound at
+worst [verified]. Stage 5 also gates the bound on every edge: the least distance of a segment to a
+polygon is the least of four endpoint distances (`chord_clearances`).
+
+The closing moves the surface outward where it fills a groove. On 2WCD at `a` = 0.25 nm, 8 % of the
+`wall` nodes lie beyond `a + 10⁻⁶` nm (`04` §2.2).
+
 ### 8.1.2 An unstructured netgen mesh is not a portable measurement
 
 A corollary of §8.1.1 that only shows up on a CI matrix. Because the aliased quadrature error is a
