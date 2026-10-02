@@ -17,6 +17,39 @@ Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before t
 version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
 
+## [0.4.0-alpha.5] - 2026-10-02
+
+WP30: the dielectric field and the ion-exclusion shell (FR-15), the fifth package of Phase 3. Both
+switches stay off by default, the validated model, and at 0 every key and record is unchanged.
+
+### Added
+
+- **The ion-exclusion shell** (`charge.exclusion_offset_nm`, `a`). Stage 5 dilates the profile by
+  `a` with round joins, closes it by `2h_c`, fills and records any pocket it encloses, resamples
+  its ring at arc length near `h_c`, and gates the ring. The shell is a fourth domain, `exclusion`, carved against an unchanged membrane. `wall`
+  moves to its outer surface, so the no-slip and no-flux surfaces and the PHY-02 distance source
+  move with it. Its seams are `interface`. It is meshed at the wall size. An offset that closes the
+  constriction is refused naming the z interval, and so is an outer surface deeper than
+  `max(h_c²/a, a/100)` inside the offset.
+- **The derived solid fraction** (`charge.dielectric_transition_nm`, `δ`). Stage 7 builds
+  `χ = S(s/δ + 1/2)`, a C¹ cubic step over the signed distance to the profile's water-facing part,
+  on a `δ/20` lattice, with every solid but the protein held at 1. It is gated by VER-30's range
+  and registration gates, and the solve, the restore and the export read it from stage 7's
+  artefact.
+- **VER-59.** The goldens of the zero-key case, recorded before the code changed
+  (`tests/tier2/test_exclusion_keys.py`). The shell's geometry and refusals, and the dielectric's
+  step, gates and refusals, at Tier 1. Gauss's law across a generated shell on a cylindrical tube at
+  Tier 2, to 1.3e-4 against 1 % (`tests/tier2/test_exclusion_stern.py`). VER-31's slab rebuilt from
+  a generated shell. 2WCD with the shell meshed, and with both switches walked to stage 12.
+
+### Changed
+
+- `exclusion`'s mean `χ` is held below 1/2 rather than 0.1, for a supplied `χ` as for a derived
+  one (VER-30).
+- The case refuses either key beside `inputs.mesh` or without a profile, `δ` beside
+  `inputs.eps_r` or a model declaring no solid fraction, `0 < δ < h_c` and `0 < a ≤ 2h_c`. The
+  "not delivered" refusal of the two keys is gone.
+
 ## [0.4.0-alpha.4] - 2026-10-01
 
 WP29: VAL-06, Poisson against APBS, the fourth package of Phase 3 and the third leg of its gate.

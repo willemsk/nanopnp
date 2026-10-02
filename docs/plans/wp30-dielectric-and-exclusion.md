@@ -1,6 +1,6 @@
 # WP30 — The dielectric field and the ion-exclusion shell (FR-15)
 
-**Status: planned, not started.** Planned 2 October 2026, on `main` at `aa3a743`, with WP29 merged.
+**Status: delivered, 2 October 2026.** Planned 2 October 2026, on `main` at `aa3a743`, with WP29 merged.
 This is the fifth package of Phase 3. It inherits the following:
 
 - from WP21: stage 5's model frame, junction and `RegionRecord`, and stage 6's sizing and gates;
@@ -66,6 +66,65 @@ D9 and D11.
 | D15 | Test values | `a` = 0.25 nm, which is `a_Na/2` from `willems2020_nacl` and VER-31's `λ_S`. `δ` = 0.15 nm, the middle of PHY-20's 1–2 Å | Each traces to a cited source, and neither is a fit |
 | D16 | Goldens | Before the first code change, record on `main` the region, mesh, fields and stage-10 keys, and the region record's bytes, for VER-53's coarse synthetic region walked to stage 10 at a cheap `size_scale` | The invariance claim is only meaningful if the comparison is against keys recorded before the change |
 | D17 | Stern through the pipeline | Use the cylindrical Gauss form on a stage-5 body through `inputs.profile`, solved with `pnp` at zero bias at 0.1 M. The slab of VER-31 is rebuilt from the generated shell | *Design* §3. A planar Stern problem cannot be posed through stage 5's axisymmetric region |
+
+> **Outcome — what changed against the decisions** (2 October 2026). The decisions stand except
+> where these say otherwise; each names its evidence.
+>
+> - **D2: the check against `name_region` is a stage-7 gate**, not only a test.
+>   `check_water_facing` rebuilds the region and compares `W` with the protein's edges against the
+>   electrolyte or the shell, by total length and by every piece's midpoint, and a frame slip
+>   fails it (`tests/tier1/test_derived_dielectric.py`). It costs one region rebuild per derivation.
+> - **D3: the held solids are 1 by their material, on the mesh.** The lattice covers only the
+>   body's box, and the membrane runs to the reservoir's edge, where a lattice-only rule would
+>   leave it at 0. `DerivedSolidFraction.chi` is the material indicator plus `(1 − indicator)` times
+>   the lattice. Lattice nodes in the membrane within `2h` of the body are also 1, so that a protein
+>   element beside the membrane does not interpolate towards 0.
+> - **D7 and *Design* §2: the ring is resampled before step 6, and the thickness bound is gated.**
+>   *Design* §2's premise was that step 6 leaves no round-join chord longer than `2h_c`. It is
+>   false: at 8 segments the chords are `aπ/16`, just under `h_c` at `a` = 0.25 nm, and step 6
+>   merges runs of them into chords near `3h_c`. On a rectangle at `a` = 0.25 nm, the body of
+>   VER-31's slab and of the Stern tube, the surface came 0.0106 nm inside the offset, against the
+>   0.01 bound. Stage 5 now resamples `O`'s ring at uniform arc length `L/⌊L/(1.05 h_c)⌋`, so every
+>   chord is between `h_c` and `1.15 h_c` and step 6 removes nothing. The bound then holds by
+>   argument, at 0.62 of it at worst, and is also gated on every edge. The factor 1.05 keeps an
+>   edge near the default wall target, because netgen leaves an edge of 1.5 × its target unsplit
+>   and the wall-size gate refuses that. The §5.2.1 NOTE is amended in the same commit
+>   (`.knowledge/06` §8.1.4). The electrolyte is also cut by the profile as well as by `O`, so a
+>   hand-edited loop that does not contain the body reaches the naming gate.
+> - **D9: `GMSH_FIELD_RULES` is unchanged.** Adding an identifier to it would move every Gmsh key,
+>   shell-free ones included. Instead `domain_size` sizes `exclusion` at the wall target on both
+>   backends, and the recipe gains `exclusion: wall_h_nm` only when the region has a shell.
+> - **D12: the declaration refusal of `δ` runs before the generated-mesh solids refusal**, so `pb`
+>   names the key rather than its missing solids.
+> - **D17 and *Design* §3: the analysis plane is 12 nm from the bilayer.** With the membrane on
+>   the plane the drop missed Gauss's law by 6 %. The bilayer curves `φ` in `z` across the 2 nm
+>   body, and the shell's Gauss law needs `∂²φ/∂z² = 0`, not only `∂φ/∂z = 0`. The tube is 30 nm
+>   long, with `centre_z_nm` = −12, and the fixed charge is a smooth band, because a sharp slab fails
+>   the consumer's quadrature gate (0.0073 against 1e-4). The result is 1.3e-4 against the 1 %
+>   budget (`.knowledge/08` §2.1.1).
+>
+> **Outcome — measured** (2 October 2026; netgen, no stabilisation, `P2`).
+>
+> - Stern through the pipeline: 6.5365 mV against Gauss's 6.5357 mV. The drop is 17.8 % of the
+>   wall potential, and the log-profile midpoint is right to 2e-6 of the drop. 49,629 triangles,
+>   44 s to stage 10.
+> - Parallelogram at `δ` = 0.15 nm: the worst error along the edge-midpoint normals is 1.6e-3
+>   against the 4e-3 asserted. The means are protein 0.972, `exclusion` 0.0539 (planar estimate
+>   0.0563) and membrane 1. On a 0.12 nm shell at `δ` = 0.2 nm, `exclusion` averages under 1/2.
+> - 2WCD, shell at `a` = 0.25 nm and the default sizes, the gated numbers: the resampled ring has
+>   692 vertices and step 6 removes none, no hole is filled, the deepest ring edge is 0.24689 nm
+>   from the body against the 0.24 bound, the wall nodes lie in [0.2475, 0.2818] nm, and the mesh
+>   has 51,599 triangles at min SICN 0.634, the wall segments 1.045 × the target on average.
+> - 2WCD, shell recorded, not gated: 8.1 % of the wall nodes lie beyond `a + 1e-6`, and the shell
+>   is 7.88 nm² against the protein's 28.11. Stage 5 takes 1.2 s and stage 6 11 s.
+> - 2WCD, both switches on, `pnp` at `size_scale` 4 (14,036 triangles): it walks to stage 12. The
+>   `χ` means are protein 0.985, `exclusion` 0.056 and electrolyte 0. Stage 7 takes 6.6 s with the
+>   deposit, and the solve 32 s.
+> - `χ` cost on 2WCD (`-m slow`): at `δ = h_c` the lattice is 1669 × 5694 (76 MB), derived in 2.1 s
+>   with a 390 MB allocation peak. At `δ` = 0.15 nm it is 584 × 1926, 0.25 s and 46 MB.
+> - `χ` error on 2WCD against the exact step, anywhere in the band and clear of the membrane:
+>   7.8e-3 at `δ = h_c` and 1.1e-2 at 0.15 nm, against *Design* §1's 0.04 estimate at the medial
+>   axis. The 95th percentile is 1.3e-3.
 
 ### Work items
 

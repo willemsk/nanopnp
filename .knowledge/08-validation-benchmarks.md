@@ -41,6 +41,28 @@ was checked numerically where marked **[verified]**.
 Mutually consistent to 6 digits by numerical differentiation. **[verified]**
 Tests: Poisson + Boltzmann equilibrium.
 
+### 2.1.1 Gouy–Chapman–Stern through stage 5: Gauss's law across a cylindrical shell **[tested]**
+
+A planar Stern layer (VER-31) cannot be posed through stage 5, whose region is axisymmetric, so
+VER-59 poses it on a long tube, `r ∈ [3, 5]` nm, with stage 5's shell of `a` = 0.25 nm on its lumen
+side. On a plane where `φ` is flat in `z`, the charge-free shell carries the flux of the mobile
+charge it encloses:
+
+```
+φ(R − a) − φ(R) = λ_enc ln(R/(R − a)) / (2π ε₀ ε_r,f⁰),   λ_enc = F Σ z_i ∫₀^{R−a} c_i 2πr dr
+```
+
+and `φ` takes the mean of its ends at `√(R(R − a))`. The trap: `∂φ/∂z = 0` by symmetry is not
+enough, because Gauss's law in the shell needs `∂²φ/∂z² = 0` too. **With the bilayer on the analysis
+plane the drop missed the closed form by 6 %**: the membrane (`ε` = 3.2) against the body's outer
+side curves `φ` in `z` across the 2 nm body. With the bilayer moved 12 nm away
+(`geometry.membrane.centre_z_nm` = −12 on a 30 nm tube) the drop is 6.5365 mV against 6.5357 mV,
+1.3e-4 relative, at 0.1 M, `pnp`, zero bias, the default sizes (49,629 triangles, 44 s to stage 10),
+and the geometric-mean point is the mean of the ends to 2e-6 of the drop. At `size_scale` 2 the
+agreement is 3.6e-3: what moves is `λ_enc`, the lumen's concentration integral, not the drop. The
+shell is 17.8 % of the wall potential (−36.8 mV), so a shell holding ions cannot pass.
+`tests/tier2/test_exclusion_stern.py`.
+
 ### 2.2 Debye–Hückel in a cylinder
 ```
 φ(r) = ζ · I₀(r/λ_D) / I₀(a/λ_D)

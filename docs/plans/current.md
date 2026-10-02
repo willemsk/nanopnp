@@ -1,7 +1,7 @@
 # Current work
 
-Updated 2 October 2026 (WP30 planned). This file is navigation only, and `SPECIFICATION.md`
-governs. Nothing here is evidence that an unmerged branch has shipped.
+Updated 2 October 2026 (WP30 delivered on its branch). This file is navigation only;
+`SPECIFICATION.md` governs. Nothing here is evidence that an unmerged branch has shipped.
 
 ## Position
 
@@ -13,9 +13,9 @@ governs. Nothing here is evidence that an unmerged branch has shipped.
   - WP26–WP29 are **merged**, with `main` at `aa3a743`. `v0.4.0-alpha.1` and `.2` are tagged;
     `.3` (WP28, `c6c0c0d`) and `.4` (WP29) are not yet.
   - WP29 met the phase gate, VAL-06 (§7.4 NOTE).
-  - [WP30](wp30-dielectric-and-exclusion.md) (FR-15, VER-59) is **planned**. The specification
-    amendments are in its plan's commit. **Next: `/wp-implement`** on WP30, then `/wp-plan` for
-    WP31 (the GUI increment).
+  - [WP30](wp30-dielectric-and-exclusion.md) (FR-15, VER-59) is **delivered** on
+    `claude/laughing-dijkstra-dr34rd`, awaiting review, to be tagged `v0.4.0-alpha.5`. **Next:
+    `/wp-ship`** on WP30 from a fresh session, then `/wp-plan` for WP31 (the GUI increment).
 
 ## What Phase 3 must not re-decide
 
@@ -34,12 +34,13 @@ Each is recorded in full where it points.
 - **The deposit** is element-wise at the potential's order, gated per plane against the atoms, and
   read only from stage 7's artefact. → PHY-16 NOTE on the deposition; WP28.
 - **WP30's two switches are built from the stage-4 profile.**
-  - `χ` is a C¹ step over the signed distance to the profile's water-facing part, with the membrane
-    held at `χ = 1`.
-  - The shell is the profile's dilation, carved against an unchanged membrane, with `wall` moved
-    outward.
-  - Both are off by default, and at 0 every key is unchanged.
-  - → §4.4 NOTE on the derived solid fraction; §5.2.1 NOTE on the ion-exclusion shell; WP30 D1–D17.
+  - `χ` is a C¹ step over the signed distance to the profile's water-facing part, with every solid
+    but the protein held at `χ = 1` by its material. It is read only from stage 7's artefact.
+  - The shell is the profile's dilation, carved against an unchanged membrane, `wall` moved
+    outward. Its thickness bound is a stage-5 gate.
+  - Both are off by default, and at 0 every key is unchanged (VER-59's goldens).
+  - → §4.4 NOTE on the derived solid fraction; §5.2.1 NOTE on the ion-exclusion shell; the WP30
+    plan's decisions and Outcomes.
 - **Tier 3 compares the published I–V and in-pore averages**, and gates v1.0, not Phase 3.
   → VAL-16, VAL-17; §8.2.4 D6.
 - **Layers read a model's declaration, never its name or class** (VER-56). → §5.4.3 NOTE.
@@ -73,10 +74,8 @@ Each is recorded in full where it points.
 | Need | Read |
 |---|---|
 | Phase 3 scope and packages | `phase-3-charge-pipeline.md`; §4.4, §5.2 stage 7, §8.2.4 |
-| WP30's construction | The WP30 plan, *Design* §1–§4; the two NOTEs above; VER-59 |
-| Stage 5 and the region record | `geometry/region.py`; WP21's Design §1; VER-52 |
-| The `χ` blend and its gates | `materials/fields.py`; `physics/models.py` `relative_permittivity_field`; VER-30 |
-| The `exclusion` material today | `mesh/ingest.py` (`exclusion_deviations`); `mesh/primitives.py` `SlabGeometry`; `tests/tier2/test_stern_layer.py` |
+| Stage 5, the shell and the region record | `geometry/region.py`; WP21's Design §1; the WP30 plan and Outcomes; VER-52, VER-59 |
+| The `χ` blend, its derivation and its gates | `materials/fields.py`; `physics/models.py` `relative_permittivity_field`; VER-30 |
 | The physics-model interface | `docs/project/physics-models.md`; `physics/models.py` |
 | The deposition and stage 7 | The WP28 plan and Outcomes; `charge/stage.py` |
 | PDB2PQR, PROPKA and APBS | `.knowledge/07` §3; the WP29 plan |

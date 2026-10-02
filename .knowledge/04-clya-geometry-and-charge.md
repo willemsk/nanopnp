@@ -303,6 +303,39 @@ profile (SPECIFICATION.md §5.2.1 NOTE on the membrane junction).
 - **The 1.85 nm trans-tip offset is the fixture's own** (pore axial extent −1.85 ≤ z, bilayer
   centre 0). Applying it to 2WCD is a test-time registration, not a VAL-05 claim.
 
+### 2.2 The ion-exclusion shell and the derived `χ` on 2WCD, measured [tested]
+
+WP30 (FR-15, VER-59), on the prepared 2WCD registered by its C-alpha centroid (VAL-05's frame),
+`h_c` = 0.05 nm, with the shell at `a` = 0.25 nm (`a_Na/2`) and `δ` = 0.15 nm
+(`tests/tier2/test_exclusion_2wcd.py`). Stage 5 offsets the 2WCD profile, which has about 160
+vertices, closes it and resamples its ring at uniform arc length near `1.05 h_c`. The ring has 692
+vertices, and step 6 removes none of them. No pocket closes, so no hole is filled.
+
+| Quantity | Value |
+|---|---|
+| Deepest ring edge from the body | 0.24689 nm, against the gated 0.24 nm (`.knowledge/06` §8.1.4) |
+| Farthest ring vertex | 0.29891 nm: grooves the `2h_c` closing filled |
+| `wall` nodes of the default-size mesh | [0.24753, 0.28177] nm from the body; 8.1 % of 605 beyond `a + 10⁻⁶` |
+| Areas (nm²) | shell 7.885, protein 28.109 (unchanged by the shell) |
+| Mesh at the default sizes | 51,599 triangles, min SICN 0.634, min gamma 0.586; wall segments mean 1.045 and max 1.050 × the target |
+| Stage 5 / stage 6 | 1.2 s / 11 s |
+| `χ` means at `size_scale` 4 with the deposit (`pnp`, 14,036 triangles) | protein 0.985, `exclusion` 0.056, membrane 1, electrolyte 0 |
+| `χ` lattice at `δ` = 0.15 nm | 584 × 1926 samples, 0.25 s, 46 MB peak allocation |
+| `χ` lattice at `δ = h_c` | 1669 × 5694 samples (76 MB), 2.1 s, 390 MB peak allocation |
+| `χ` worst error in the band, clear of the membrane | 7.8e-3 at `δ = h_c`, 1.1e-2 at 0.15 nm; 95th percentile 1.3e-3 |
+
+- **The shell's mean `χ` is the planar estimate.** `3δ/(32a)` = 0.0563 at these values, measured
+  0.056 on 2WCD and 0.0539 on the convex VER-59 parallelogram, where the corners spread the step.
+  A remap of the stage-3 mean would not have given a width independent of `|∇ρ|` (WP30 plan,
+  *Design* §1). **[verified]** by the arithmetic, **[tested]** by the means.
+- **The worst `χ` error sits at the profile's concave vertices**, where the medial axis crosses the
+  band and `χ` has a kink. Measured, it is 1.1e-2 against *Design* §1's estimate of `0.75 h · 3/δ`
+  ≈ 0.04 there. Off the vertices the bilinear bound `0.75 (h/δ)²` = 1.9e-3 holds: the 95th
+  percentile is 1.3e-3.
+- **The shell does not reach the membrane's outer region.** It is carved against the unchanged
+  quadrilateral and starts at the junction `r₂` on each plane, so the membrane, its chord and its
+  junction are the shell-free region's, and so is the protein's area.
+
 ---
 
 ## 3. Fixed-charge pipeline
