@@ -239,27 +239,10 @@ def test_if03_a_supplied_artefact_names_exactly_one_source() -> None:
         loads_case(REFERENCE_CASE.replace("{path: clya.msh, format: msh41,", "{format: msh41,"))
 
 
-@pytest.mark.parametrize(
-    ("section", "release"),
-    [
-        # geometry: left this list in WP19: it is read beside structure:, and
-        # beside inputs.mesh it is refused naming both (tests/tier1/test_density.py).
-        # charge: left it in WP27, whose protonation stage reads ph, forcefield and
-        # titration, and charge.smearing in WP28, whose deposition reads it; the
-        # keys a later package's stage reads are refused naming it.
-        ("charge:\n  exclusion_offset_nm: 0.1\n", "WP30"),
-        ("charge:\n  dielectric_transition_nm: 0.2\n", "WP30"),
-    ],
-)
-def test_fr27_a_section_a_later_release_owns_names_the_section_and_the_release(
-    section: str, release: str
-) -> None:
-    """A key a later package's stage reads must say which package, not fail inside the solver."""
-    with pytest.raises(UnsupportedCaseSection) as raised:
-        resolve(loads_case(REFERENCE_CASE + section))
-    message = str(raised.value)
-    assert section.split(":")[0] in message
-    assert release in message
+# No section or charge: key is refused as a later package's any more: geometry:
+# left the list in WP19, charge: in WP27, charge.smearing in WP28, and the two
+# keys built from the stage-4 profile in WP30, whose refusals beside inputs.mesh
+# and below their resolution limits are VER-59's (tests/tier1/test_exclusion_shell.py).
 
 
 @pytest.mark.parametrize(

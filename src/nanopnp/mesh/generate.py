@@ -46,6 +46,7 @@ from nanopnp.io.case import SuppliedArtefact
 from nanopnp.mesh.adapter import from_ngsolve, write_msh41
 from nanopnp.mesh.ingest import IngestedMesh, ingest
 from nanopnp.mesh.sizing import (
+    EXCLUSION_SIZE,
     GMSH_ALGORITHM,
     GMSH_FIELD_RULES,
     GMSH_SMOOTHING,
@@ -203,7 +204,7 @@ def check_wall_size(statistics: WallStatistics) -> None:
 
 
 def sizing_parameters(
-    document_wall: WallSize, sizes: SizeTable, backend: str = "netgen"
+    document_wall: WallSize, sizes: SizeTable, backend: str = "netgen", *, exclusion: bool = False
 ) -> dict[str, Canonicalisable]:
     """Return the stage-6 recipe's ``sizing`` parameter (WP21 D10, WP23 D8).
 
@@ -214,6 +215,9 @@ def sizing_parameters(
     one WP21 keyed, so no stored key moves; Gmsh's names its algorithm, its
     smoothing and its size-field rules, and has no ``optsteps2d``. The mesher's
     version is not here: it is the environment's, recorded beside the key.
+
+    A region with an ion-exclusion shell adds what the ``exclusion`` domain is
+    sized at, on either backend; a shell-free recipe is unchanged (WP30 D9).
     """
     recipe: dict[str, Canonicalisable] = {
         "backend": backend,
@@ -230,6 +234,8 @@ def sizing_parameters(
     else:
         recipe["optsteps2d"] = OPTIMISATION_STEPS
     recipe["gate"] = dict(GATE_CONSTANTS)
+    if exclusion:
+        recipe["exclusion"] = EXCLUSION_SIZE
     return recipe
 
 
@@ -347,6 +353,8 @@ class GeneratedMesh:
         ``numerics.mesh.backend``.
     backend_version
         The mesher's version, recorded beside the key and never in it (WP23 D8).
+    exclusion
+        Whether the region carries an ion-exclusion shell, which keys its size (WP30 D9).
     """
 
     ingested: IngestedMesh
@@ -356,11 +364,12 @@ class GeneratedMesh:
     corrected_ratio: float
     backend: str
     backend_version: str
+    exclusion: bool = False
 
     def sizing(self) -> dict[str, Canonicalisable]:
         """Return the manifest's ``sizing`` block (D16), the mesher's version beside it."""
         return {
-            **sizing_parameters(self.wall, self.sizes, self.backend),
+            **sizing_parameters(self.wall, self.sizes, self.backend, exclusion=self.exclusion),
             "backend_version": self.backend_version,
             "debye_target_nm": self.wall.debye_target_nm,
             "num30_ratio": self.wall.wall_h_nm / self.wall.debye_target_nm,
@@ -447,4 +456,5 @@ def generate(record: RegionRecord, resolved: ResolvedCase, directory: Path) -> G
         corrected_ratio=corrected_debye_ratio(resolved, wall),
         backend=backend,
         backend_version=version,
+        exclusion=record.exclusion is not None,
     )

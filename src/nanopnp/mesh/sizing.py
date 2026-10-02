@@ -291,10 +291,26 @@ def edge_size(
     return None
 
 
-def domain_size(name: str, sizes: SizeTable) -> float | None:
-    """Return the section 5.2.2 size of a named domain, or ``None`` for the global size."""
+EXCLUSION_SIZE = "wall_h_nm"
+"""What the ``exclusion`` domain is sized at: the resolved wall target (WP30 D9).
+
+A 0.25 nm shell then has about five elements across it at the default wall size,
+and the protein-to-shell dielectric jump keeps the resolution the wall had there
+before the shell moved ``wall`` outward. Keyed in a generated mesh's recipe only
+when its region carries a shell, so no shell-free key moves.
+"""
+
+
+def domain_size(name: str, sizes: SizeTable, *, wall_h_nm: float | None = None) -> float | None:
+    """Return the section 5.2.2 size of a named domain, or ``None`` for the global size.
+
+    ``exclusion`` takes the wall target, or the protein's size where the wall
+    is left to the other fields (:data:`EXCLUSION_SIZE`).
+    """
     if name == "protein":
         return sizes.protein_nm
+    if name == "exclusion":
+        return sizes.protein_nm if wall_h_nm is None else wall_h_nm
     if name == "electrolyte":
         return sizes.electrolyte_nm
     return None
@@ -336,6 +352,6 @@ def apply_sizes(
         if size is not None:
             edge.maxh = size
     for face in shape.faces:
-        size = domain_size(str(face.name), sizes)
+        size = domain_size(str(face.name), sizes, wall_h_nm=wall_h_nm)
         if size is not None:
             face.maxh = size

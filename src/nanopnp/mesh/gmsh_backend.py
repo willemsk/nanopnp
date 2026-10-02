@@ -253,7 +253,11 @@ def size_targets(
                 edge.name, z_mid, wall_h_nm=wall_h_nm, axis_extent_nm=axis_extent_nm, sizes=sizes
             )
         )
-    domains = {name: size for name in graph.faces if (size := domain_size(name, sizes)) is not None}
+    domains = {
+        name: size
+        for name in graph.faces
+        if (size := domain_size(name, sizes, wall_h_nm=wall_h_nm)) is not None
+    }
     domains["membrane"] = membrane_thickness_nm
     return own, domains
 

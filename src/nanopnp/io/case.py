@@ -1717,18 +1717,21 @@ _ORDERS: dict[str, int] = {"P1": 1, "P2": 2, "P3": 3}
 PQR_FORMAT = "pqr"
 """``inputs.pqr.format``: a PQR of one frame or one ``MODEL`` per frame (section 5.3.1 NOTE)."""
 
-_UNREAD_CHARGE_KEYS: dict[str, str] = {
-    "exclusion_offset_nm": "stage 7's dielectric field and ion-exclusion shell (WP30)",
-    "dielectric_transition_nm": "stage 7's dielectric field and ion-exclusion shell (WP30)",
-}
+_UNREAD_CHARGE_KEYS: dict[str, str] = {}
 """``charge:`` keys a later package's stage reads, with that stage.
 
 Each is refused set away from its default, naming the stage, until the package
 that delivers the stage removes its entry (section 5.3.1 NOTE on the protonation
 keys). ``charge:`` itself left the table of unrun sections in WP27, when the
 ``protonation`` stage made ``ph``, ``forcefield`` and ``titration`` runnable, and
-``smearing`` left it in WP28, when stage 7's deposition came to read it.
+``smearing`` left it in WP28, when stage 7's deposition came to read it. Empty
+since WP30, whose stages 5 and 7 read ``exclusion_offset_nm`` and
+``dielectric_transition_nm``; kept, because the rule outlives the last key that
+needed it.
 """
+
+PROFILE_KEYS: tuple[str, ...] = ("exclusion_offset_nm", "dielectric_transition_nm")
+"""The ``charge:`` keys built from the stage-4 profile (WP30 D12)."""
 
 SMEARING_KEYS: tuple[str, ...] = ("sharpness", "grid_spacing_nm")
 """The ``charge.smearing`` keys stage 7's deposition reads (PHY-16 steps 4-6, WP28 D10)."""
@@ -1860,6 +1863,25 @@ class ResolvedCase:
     """``charge.ph``, ``charge.forcefield`` and ``charge.titration`` (WP27 D13)."""
     smearing: SmearingSpec = dataclass_field(default_factory=SmearingSpec)
     """``charge.smearing``, at its defaults without ``charge:`` (WP28 D10)."""
+    exclusion_offset_nm: float = 0.0
+    """``charge.exclusion_offset_nm``, ``a``: stage 5's ion-exclusion shell when non-zero (WP30)."""
+    dielectric_transition_nm: float = 0.0
+    """``charge.dielectric_transition_nm``, ``delta``: stage 7's derived ``chi`` when non-zero."""
+
+    @property
+    def contour_spacing_nm(self) -> float:
+        """``h_c``: the density grid spacing, the contour's size target (section 5.2.1 NOTE).
+
+        ``geometry.density.grid_spacing_nm`` on a case carrying ``structure:``; its
+        default on any other, where :func:`_check_profile` refuses it set away
+        from that default.
+        """
+        return (self.density if self.density is not None else DensitySpec()).grid_spacing_nm
+
+    @property
+    def derives_eps_r(self) -> bool:
+        """Whether stage 7 derives ``chi`` from the stage-4 profile (section 4.4 NOTE, WP30 D5)."""
+        return self.dielectric_transition_nm > 0.0
 
     @property
     def protonates(self) -> bool:
@@ -2299,12 +2321,12 @@ def _check_charge(document: CaseDocument) -> None:
     Raises
     ------
     UnsupportedCaseSection
-        Naming the stage, for ``charge.exclusion_offset_nm`` or
-        ``charge.dielectric_transition_nm`` set away from its default, which a
-        later package's stage reads.
+        Naming the stage, for a ``charge:`` key a later package's stage reads
+        (:data:`_UNREAD_CHARGE_KEYS`, empty since WP30).
     CaseValidationError
-        Naming the keys: ``artefact:``, ``groups`` or a format other than ``pqr``
-        on ``inputs.pqr``; the ``charge.smearing`` refusals of
+        Naming the keys: the refusals of :func:`_check_profile_keys`;
+        ``artefact:``, ``groups`` or a format other than ``pqr`` on
+        ``inputs.pqr``; the ``charge.smearing`` refusals of
         :func:`_check_smearing`; ``charge.ph`` away from its default beside
         ``titration: none``; and a protonation key away from its default where
         the ``protonation`` stage does not run, which is beside ``inputs.pqr``,
@@ -2340,6 +2362,7 @@ def _check_charge(document: CaseDocument) -> None:
                 "delivered in this release, so it would change nothing (section 5.3.1 NOTE on "
                 "the protonation keys)"
             )
+    _check_profile_keys(document, charge)
     _check_smearing(document, charge.smearing, defaults.smearing)
     if charge.titration == "none" and charge.ph != defaults.ph:
         raise CaseValidationError(
@@ -2369,6 +2392,67 @@ def _check_charge(document: CaseDocument) -> None:
             f"{', '.join(changed)} {'is' if len(changed) == 1 else 'are'} set {where}; the "
             "protonation stage they configure does not run, so they would change nothing "
             "(section 5.3.1 NOTE on the protonation keys)"
+        )
+
+
+def _check_profile_keys(document: CaseDocument, charge: Charge) -> None:
+    """Make the refusals of the two keys built from the stage-4 profile (WP30 D11, D12).
+
+    Raises
+    ------
+    CaseValidationError
+        Naming both keys: either set away from ``0`` beside ``inputs.mesh``, or in
+        a case with neither ``structure:`` nor ``inputs.profile``, where there is
+        no profile to build it from (a knob with no effect); a non-zero
+        ``dielectric_transition_nm`` beside ``inputs.eps_r``, which supplies the
+        same quantity; ``0 < dielectric_transition_nm < h_c`` and
+        ``0 < exclusion_offset_nm <= 2 h_c``, with ``h_c`` the density grid
+        spacing (section 4.4 NOTE on the derived solid fraction; section 5.2.1
+        NOTE on the ion-exclusion shell).
+    """
+    changed = [f"charge.{key}" for key in PROFILE_KEYS if getattr(charge, key) != 0.0]
+    if not changed:
+        return
+    named = f"{', '.join(changed)} {'is' if len(changed) == 1 else 'are'} set away from 0"
+    if document.inputs.mesh is not None:
+        raise CaseValidationError(
+            f"{named} beside inputs.mesh; both are built from the stage-4 profile, and a "
+            "supplied mesh has none, so they would change nothing (section 5.3.1 NOTE on the "
+            "v2 keys that change a number)"
+        )
+    if document.structure is None and document.inputs.profile is None:
+        raise CaseValidationError(
+            f"{named} in a case with neither a structure: section nor inputs.profile; both are "
+            "built from the stage-4 profile, and there is none (section 5.3.1 NOTE on the v2 keys "
+            "that change a number)"
+        )
+    if charge.dielectric_transition_nm > 0.0 and document.inputs.eps_r is not None:
+        raise CaseValidationError(
+            f"charge.dielectric_transition_nm is {charge.dielectric_transition_nm} nm beside "
+            "inputs.eps_r; both supply the solid fraction chi, so the case names one quantity "
+            "twice; remove one of them (section 5.3.1 NOTE on the v2 keys that change a number)"
+        )
+    density = (
+        document.geometry.density
+        if document.geometry is not None and document.structure is not None
+        else DensitySpec()
+    )
+    h_c = density.grid_spacing_nm
+    delta = charge.dielectric_transition_nm
+    if 0.0 < delta < h_c:
+        raise CaseValidationError(
+            f"charge.dielectric_transition_nm is {delta} nm, below "
+            f"geometry.density.grid_spacing_nm = {h_c} nm: the transition would be finer than "
+            "the grid the contour it is built on is placed on (section 4.4 NOTE on the derived "
+            "solid fraction)"
+        )
+    offset = charge.exclusion_offset_nm
+    if 0.0 < offset <= 2.0 * h_c:
+        raise CaseValidationError(
+            f"charge.exclusion_offset_nm is {offset} nm, at most twice "
+            f"geometry.density.grid_spacing_nm = {h_c} nm: the shell is a face of width a, and "
+            f"section 5.2.1's feature-size criterion admits nothing narrower than 2 h_c = "
+            f"{2.0 * h_c:g} nm (section 5.2.1 NOTE on the ion-exclusion shell)"
         )
 
 
@@ -2621,6 +2705,14 @@ def _check_physics_switches(document: CaseDocument) -> None:
                 f"the manifest and never applied. Models honouring {str(value).lower()}: "
                 f"{_honouring(name, value)}"
             )
+    transition = (document.charge or Charge()).dielectric_transition_nm
+    if transition > 0.0 and "solid_fraction" not in declared.coefficients:
+        raise CaseValidationError(
+            f"physics.model {model!r} takes no material permittivity field, so "
+            f"charge.dielectric_transition_nm = {transition} nm would derive a chi stage 7 gates "
+            "and the solve ignores, as it refuses inputs.eps_r (PHY-24, section 5.4.3). Models "
+            f"accepting it: {_accepting('solid_fraction')}"
+        )
     if physics.solid_permittivities and not declared.solids:
         raise CaseValidationError(
             f"physics.model {model!r} carries no solid materials, so "
@@ -2890,6 +2982,8 @@ def resolve(document: CaseDocument) -> ResolvedCase:
         pqr=document.inputs.pqr,
         protonation=_resolve_protonation(document),
         smearing=(document.charge if document.charge is not None else Charge()).smearing,
+        exclusion_offset_nm=(document.charge or Charge()).exclusion_offset_nm,
+        dielectric_transition_nm=(document.charge or Charge()).dielectric_transition_nm,
     )
     # Built once and discarded, through the one call every consumer uses: a
     # builder's own refusal -- ``pb`` beside a salt that is not symmetric

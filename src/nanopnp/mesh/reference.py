@@ -224,7 +224,7 @@ class ReferenceGeometry:
             },
         )
 
-    def faces(self) -> tuple[Shape, Shape, Shape]:
+    def faces(self) -> tuple[Shape, ...]:
         """Return the three named faces - electrolyte, membrane, pore - unglued.
 
         :func:`nanopnp.geometry.region.assemble_faces` on :meth:`record`, which
