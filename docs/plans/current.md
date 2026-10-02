@@ -1,6 +1,6 @@
 # Current work
 
-Updated 2 October 2026 (WP30 delivered on its branch). This file is navigation only;
+Updated 2 October 2026 (WP30 merged; WP31 planned). This file is navigation only;
 `SPECIFICATION.md` governs. Nothing here is evidence that an unmerged branch has shipped.
 
 ## Position
@@ -10,12 +10,11 @@ Updated 2 October 2026 (WP30 delivered on its branch). This file is navigation o
   criterion 3 waived (§8.2.4 D7). `Z_MD` is 5.655 nm.
 - Phase 3 ([charge pipeline](phase-3-charge-pipeline.md), release `v0.4.0`) is **in progress**,
   covering WP26–WP32.
-  - WP26–WP29 are **merged**, with `main` at `aa3a743`. `v0.4.0-alpha.1` and `.2` are tagged;
-    `.3` (WP28, `c6c0c0d`) and `.4` (WP29) are not yet.
-  - WP29 met the phase gate, VAL-06 (§7.4 NOTE).
-  - [WP30](wp30-dielectric-and-exclusion.md) (FR-15, VER-59) is **delivered** on
-    `claude/laughing-dijkstra-dr34rd`, awaiting review, to be tagged `v0.4.0-alpha.5`. **Next:
-    `/wp-ship`** on WP30 from a fresh session, then `/wp-plan` for WP31 (the GUI increment).
+  - WP26–WP30 are **merged**, with `main` at `11bc2c8`. `v0.4.0-alpha.1` and `.2` are tagged;
+    `.3` (WP28, `c6c0c0d`), `.4` (WP29) and `.5` (WP30) are not yet.
+  - [WP31](wp31-gui-charge-pipeline.md) (VER-60; IF-09, QR-11, RSK-13) is **planned** on
+    `ccr-f25f5e29-fm712t`, to be tagged `v0.4.0-alpha.6`. **Next: `/wp-implement`** on WP31, then
+    `/wp-plan` for WP32.
 
 ## What Phase 3 must not re-decide
 
@@ -41,8 +40,7 @@ Each is recorded in full where it points.
   - Both are off by default, and at 0 every key is unchanged (VER-59's goldens).
   - → §4.4 NOTE on the derived solid fraction; §5.2.1 NOTE on the ion-exclusion shell; the WP30
     plan's decisions and Outcomes.
-- **Tier 3 compares the published I–V and in-pore averages**, and gates v1.0, not Phase 3.
-  → VAL-16, VAL-17; §8.2.4 D6.
+- **Tier 3 compares the published I–V and in-pore averages**, and gates v1.0 (VAL-16, VAL-17).
 - **Layers read a model's declaration, never its name or class** (VER-56). → §5.4.3 NOTE.
 - **`poisson` adds one quadrature order for the `r` weight; the coupled models do not.** That is
   still open (WP28 D13). → PHY-21 NOTE; NUM-07 NOTE.
@@ -77,6 +75,7 @@ Each is recorded in full where it points.
 | Stage 5, the shell and the region record | `geometry/region.py`; WP21's Design §1; the WP30 plan and Outcomes; VER-52, VER-59 |
 | The `χ` blend, its derivation and its gates | `materials/fields.py`; `physics/models.py` `relative_permittivity_field`; VER-30 |
 | The physics-model interface | `docs/project/physics-models.md`; `physics/models.py` |
+| The desktop shell, its hooks and the probe bundle | The WP24 plan and Outcomes; `gui/`; `.knowledge/07` §5; ADR-004 |
 | The deposition and stage 7 | The WP28 plan and Outcomes; `charge/stage.py` |
 | PDB2PQR, PROPKA and APBS | `.knowledge/07` §3; the WP29 plan |
 | Case schema and supply chains | §5.3.1 NOTEs; `io/case.py` |

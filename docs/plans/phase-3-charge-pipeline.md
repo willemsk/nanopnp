@@ -1,6 +1,6 @@
 # Phase 3 (Charge pipeline): from a structure to a charged run
 
-**Status: in progress. WP26 delivered, 30 September 2026; WP27 delivered, 1 October 2026 ([plan](wp27-protonation.md)); WP28 delivered, 1 October 2026 ([plan](wp28-charge-deposition.md)); WP29 delivered, 1 October 2026 ([plan](wp29-val06-apbs.md)); WP30 delivered, 2 October 2026 ([plan](wp30-dielectric-and-exclusion.md)); WP31–WP32 planned.** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
+**Status: in progress. WP26 delivered, 30 September 2026; WP27 delivered, 1 October 2026 ([plan](wp27-protonation.md)); WP28 delivered, 1 October 2026 ([plan](wp28-charge-deposition.md)); WP29 delivered, 1 October 2026 ([plan](wp29-val06-apbs.md)); WP30 delivered, 2 October 2026 ([plan](wp30-dielectric-and-exclusion.md)); WP31 planned, 2 October 2026 ([plan](wp31-gui-charge-pipeline.md)); WP32 planned.** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
 the geometry pipeline (`main` at `v0.3.0-alpha.9`, formerly `v0.9.0-alpha.9`). Phase 2's
 end-of-phase report and its release, `v0.3.0`, wait for one Tier-3 run on the author's archive
 (criterion 3, VAL-05's ensemble leg). WP26 may start before that report merges, because nothing in
@@ -294,6 +294,18 @@ bundle carries PDB2PQR and PROPKA with their data files, and `--selftest` proton
 (RSK-13). No physics enters the shell (RSK-15). Adds **VER-60**, extending VER-43, VER-44 and
 VER-55 to the charge views, with the view-models importing no Qt.
 
+> **Planned, 2 October 2026** ([plan](wp31-gui-charge-pipeline.md)). The plan's commit amends the
+> ADR-004 packaging NOTE. Three refinements of the text above:
+>
+> - **The charge map shows the lattice's areal density, reduced by charge-keeping block means.**
+>   The integral of the picture is the producer leg's integral. The deployed field is the solve's
+>   own coefficient, drawn by the render child, and its integral is the consumer leg's.
+> - **The selftest protonates `GLU 18`–`LEU 26` at pH 2 and pH 8**, and requires 0 e and −3 e, so
+>   that a missing PROPKA parameter file fails by name. Every pure-Python LGPL payload is collected
+>   as source, and that includes MDAnalysis and GridDataFormats.
+> - **The editor can add an empty `charge:` section**, from a set of sections whose empty form is
+>   shown to resolve as their absence, so the pH selector works on every structure case.
+
 ### WP32 — Documentation increment 3
 
 The §8.1 increment: a guide to protonation, force fields, smearing, the conservation report,
@@ -337,7 +349,7 @@ uv run pytest -m slow --log-cli-level=INFO      # protonation and deposition bud
 | WP28 | 1, 2, 3 (recorded) | VER-01, VER-02, VER-58, VER-29 (on a produced field) |
 | WP29 | 2, 3 (recorded) | VAL-06 |
 | WP30 | 1, 2 | VER-59, VER-30, VER-31 |
-| WP31 | 1 | VER-60 |
+| WP31 | 1, 2 | VER-60 |
 | WP32 | 1, 2 | VER-45, VER-46 |
 
 The phase is complete when:
