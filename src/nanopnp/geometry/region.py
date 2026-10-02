@@ -137,13 +137,29 @@ EXCLUSION_QUAD_SEGS = 8
 EXCLUSION_CLOSING = 2.0
 """The offset's closing radius, in units of ``h_c``: step 3 of section 5.2.1's, for its reason."""
 
+EXCLUSION_RESAMPLE = 1.05
+"""The ring's resampling arc length is at least this many ``h_c`` (WP30 Outcomes).
+
+Uniform, at ``L / floor(L / (1.05 h_c))``, before step 6. At 8 segments a
+quarter circle's chords are ``a pi/16``, just under ``h_c`` at ``a`` = 0.25 nm,
+and step 6 merges runs of them into chords near ``3 h_c``, deeper inside the
+offset than the thickness bound allows: 0.0106 nm on a rectangle, against 0.01
+[tested]. Resampled at 1.05 ``h_c`` every chord stays above ``h_c``, even round a
+join of radius ``2 h_c``, so step 6 has nothing to merge. The factor is no
+larger because an edge must stay near the default wall target, 0.05 nm: netgen
+leaves an edge of 1.5 times its size target as one segment, and the wall-size
+gate then refuses the mesh [tested].
+"""
+
 EXCLUSION_CONSTANTS: Mapping[str, Canonicalisable] = {
     "join": "round",
     "quad_segs": EXCLUSION_QUAD_SEGS,
     "closing": f"{EXCLUSION_CLOSING:g}h_c",
     "holes": "filled",
+    "resample": f"L/floor(L/{EXCLUSION_RESAMPLE:g}h_c)",
     "spacing": "h_c",
     "axis_clearance": "h_c",
+    "inner_bound": "max(h_c^2/a, a/100)",
 }
 """Every code constant that moves a vertex of the shell or a verdict of its gate (WP30 D10).
 
@@ -253,9 +269,10 @@ class ExclusionRecord(_Strict):
     removed_vertices
         How many vertices step 6 removed.
     distance_nm
-        ``[min, max]`` of the loop's vertices' distance to the profile: ``a``
-        less the sagitta of a merged chord, and more where the closing filled a
-        groove.
+        ``[min, max]`` distance to the profile: the least over the loop's edges,
+        exactly, which is ``a`` less the sagitta of the longest merged chord, and
+        the greatest over its vertices, which exceeds ``a`` where the closing
+        filled a groove.
     """
 
     offset_nm: float
@@ -585,9 +602,16 @@ def exclusion_shell(
     2. closed by a disc of radius ``2 h_c``, as step 3 of section 5.2.1;
     3. every hole filled and recorded: fluid enclosed by the shell, which no ion
        can reach;
-    4. step 6 of section 5.2.1 on its ring;
+    4. its ring resampled at uniform arc length no shorter than
+       :data:`EXCLUSION_RESAMPLE` ``h_c``, then step 6 of section 5.2.1;
     5. the ring's validity, simplicity and spacing, its clearance of ``h_c`` from
-       the axis, and every vertex strictly inside the reservoir disc.
+       the axis, every vertex strictly inside the reservoir disc, and every edge
+       at least ``a - max(h_c^2/a, a/100)`` from the body.
+
+    The last is a gate as well as an argument. A ring at least ``2 pi a > 4 pi h_c``
+    long is cut into at least 11 arcs, so its chords are ``s < 1.15 h_c``, and
+    they sit at most ``a (1 - cos(pi/32)) + s^2/(8a)`` inside the offset. That
+    is within the bound for every ``a`` (WP30 Outcomes) [verified].
 
     Parameters
     ----------
@@ -606,7 +630,8 @@ def exclusion_shell(
         Naming the criterion, the value, the threshold and where: an offset
         within ``h_c`` of the axis, which closes the constriction, with the z
         interval and the body's least radius over it; a vertex outside the
-        reservoir; a ring that is invalid, not simple or more than one face.
+        reservoir; a ring that is invalid, not simple or more than one face; an
+        edge closer to the body than the inner bound.
     MissingExtraError
         Without Shapely, naming the ``structure`` extra and the key.
     """
@@ -614,7 +639,7 @@ def exclusion_shell(
         from shapely import box
         from shapely.geometry import LinearRing, MultiPolygon, Polygon
 
-        from nanopnp.geometry.contour import enforce_spacing
+        from nanopnp.geometry.contour import enforce_spacing, resample
     except ImportError as error:
         raise _missing_shapely(error) from error
     import numpy as np
@@ -657,7 +682,9 @@ def exclusion_shell(
         )
 
     ring = np.asarray(outer.exterior.coords, dtype=np.float64)[:-1]
-    ring, removed = enforce_spacing(ring, h_c_nm)
+    length = float(np.linalg.norm(np.roll(ring, -1, axis=0) - ring, axis=1).sum())
+    count = max(3, math.floor(length / (EXCLUSION_RESAMPLE * h_c_nm)))
+    ring, removed = enforce_spacing(resample(ring, length / count), h_c_nm)
     linear = LinearRing(ring)
     if not (linear.is_valid and linear.is_simple):
         raise RegionGateError(
@@ -672,6 +699,20 @@ def exclusion_shell(
             "exclusion ring spacing", f"{spacing:.4g} nm", f">= h_c = {h_c_nm:g} nm", "on the ring"
         )
     _check_inside_reservoir(ring, reservoir_radius_nm)
+    following = np.roll(ring, -1, axis=0)
+    # Exact for a segment against a polygon: the least of four endpoint distances,
+    # or zero where they cross (chord_clearances).
+    clearance = chord_clearances(ring, following, points)
+    nearest = int(np.argmin(clearance))
+    bound = offset_nm - max(h_c_nm**2 / offset_nm, offset_nm / 100.0)
+    if not clearance[nearest] >= bound:
+        r_mid, z_mid = 0.5 * (ring[nearest] + following[nearest])
+        raise RegionGateError(
+            "exclusion shell thickness",
+            f"an outer-surface edge {float(clearance[nearest]):.5f} nm from the body",
+            f"at least a - max(h_c^2/a, a/100) = {bound:.5f} nm",
+            _at(float(r_mid), float(z_mid)),
+        )
     distance = distance_to_loop(ring, points)
     return ExclusionRecord(
         offset_nm=offset_nm,
@@ -684,7 +725,7 @@ def exclusion_shell(
             centroids_nm=[(float(hole.centroid.x), float(hole.centroid.y)) for hole in holes],
         ),
         removed_vertices=removed,
-        distance_nm=(float(distance.min()), float(distance.max())),
+        distance_nm=(float(clearance.min()), float(distance.max())),
     )
 
 

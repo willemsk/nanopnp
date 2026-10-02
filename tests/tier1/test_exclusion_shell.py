@@ -1,10 +1,10 @@
 """VER-59, the shell: stage 5's ion-exclusion shell on a convex body (FR-15, FR-09, QR-12).
 
 The body is the parallelogram of ``tests/conftest.py``, in a 30 nm reservoir. It
-is convex, so its offset ``O`` is convex and the closing of step 2 changes
+is convex, so its offset ``O`` is convex and the closing of step 2 fills
 nothing: the outer surface then lies within the exact offset on both sides, to
-the sagitta of a merged chord inside and to 1e-6 nm outside (WP30 plan,
-*Design* section 2). The shell's construction is the section 5.2.1 NOTE on the
+the sagitta of a resampled chord inside and to 1e-6 nm outside (WP30 Outcomes,
+on *Design* section 2). The shell's construction is the section 5.2.1 NOTE on the
 ion-exclusion shell; its case refusals are the section 5.3.1 NOTE on the v2 keys
 that change a number.
 """
@@ -185,6 +185,26 @@ def test_ver59_an_offset_closing_the_constriction_is_refused_naming_its_z() -> N
     assert "a + h_c = 0.3000 nm" in message
 
 
+def test_ver59_an_outer_surface_inside_the_bound_is_refused_naming_where(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The thickness bound is a gate: one chord per quarter circle sags 0.073 nm, and is refused.
+
+    The resampling of step 4 keeps every chord near ``1.25 h_c`` and the surface
+    within the bound by argument; the gate is what asserts it on every shell.
+    """
+    from nanopnp.geometry import region
+
+    monkeypatch.setattr(region, "EXCLUSION_QUAD_SEGS", 1)
+    points = np.array([(2.0, -3.0), (3.0, -3.0), (6.0, 3.0), (5.0, 3.0)])
+    with pytest.raises(RegionGateError) as raised:
+        exclusion_shell(points, OFFSET_NM, H_C_NM, reservoir_radius_nm=30.0)
+    message = str(raised.value)
+    assert "exclusion shell thickness" in message
+    assert "at least a - max(h_c^2/a, a/100) = 0.24000 nm" in message
+    assert "(r, z) = (" in message
+
+
 def test_ver59_a_necked_pocket_is_filled_and_recorded() -> None:
     """A notch whose mouth is under ``2a`` wide encloses fluid no ion reaches: filled, recorded."""
     points = np.array(
@@ -294,8 +314,10 @@ def test_ver59_the_offset_keys_stage_5_and_6_only_when_it_is_non_zero(
             "quad_segs": 8,
             "closing": "2h_c",
             "holes": "filled",
+            "resample": "L/floor(L/1.05h_c)",
             "spacing": "h_c",
             "axis_clearance": "h_c",
+            "inner_bound": "max(h_c^2/a, a/100)",
         },
     }
     assert {k: v for k, v in region.parameters.items() if k != "exclusion"} == dict(

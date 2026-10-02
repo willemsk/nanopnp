@@ -684,22 +684,24 @@ def derive_solid_fraction(
     )
     inside = _inside(loop, r_nm, z_nm)
     distance = _band_distance(water, r_nm, z_nm, 0.5 * transition_nm + 2.0 * spacing)
-    signed = np.where(inside, distance, -distance)
-    values = smooth_step(signed / transition_nm + 0.5)
+    # In place, so that the lattice-sized temporaries are the distance, the sign
+    # and the values: at delta = h_c on 2WCD each is 76 MB (WP30 Outcomes).
+    np.negative(distance, out=distance, where=~inside)
+    distance /= transition_nm
+    distance += 0.5
+    values = smooth_step(distance)
+    del distance
 
-    rr, zz = np.meshgrid(r_nm, z_nm)
-    held = (
-        ~inside
-        & _in_membrane(
-            rr,
-            zz,
-            half_thickness_nm=half_thickness_nm,
-            inner_trans_nm=inner_trans_nm,
-            inner_cis_nm=inner_cis_nm,
-        )
-        & (_band_distance(membrane_facing, r_nm, z_nm, 2.0 * spacing) <= 2.0 * spacing)
+    near = _band_distance(membrane_facing, r_nm, z_nm, 2.0 * spacing) <= 2.0 * spacing
+    near &= ~inside
+    near &= _in_membrane(
+        r_nm[None, :],
+        z_nm[:, None],
+        half_thickness_nm=half_thickness_nm,
+        inner_trans_nm=inner_trans_nm,
+        inner_cis_nm=inner_cis_nm,
     )
-    values[held] = 1.0
+    values[near] = 1.0
     return RadialGrid.from_axes(r_nm, z_nm, values)
 
 
