@@ -389,3 +389,48 @@ def test_ver55_cancelling_a_geometry_build_writes_no_artefact(
     assert any(isinstance(event, Cancelled) for event in events), events
     written = [path for path in store.rglob("*") if path.is_file()] if store.exists() else []
     assert not written, f"a cancelled build left {written} in the store"
+
+
+def test_ver60_a_spawned_charge_build_reports_both_halves_of_stage_7(
+    charged_tube, tmp_path: Path
+) -> None:
+    """``upto="charge"`` posts ``region``, ``mesh``, ``protonation``, ``charge``, then ``Finished``.
+
+    **Build charge** runs through the same spawned child as **Build geometry**
+    (WP31 D2), so the Geometry tab still receives stages 1 to 6 and the Charge
+    tab reads stage 7's halves from the store the events name.
+    """
+    from nanopnp.gui.solver import Produced
+    from nanopnp.io.store import Store
+
+    case = charged_tube.write(tmp_path / "case")
+    store = tmp_path / "store"
+    process = SolverProcess(RunRequest(case=str(case), store=str(store), upto="charge"))
+    process.start()
+    events = _settle(process)
+
+    produced = [event for event in events if isinstance(event, Produced)]
+    assert [event.name for event in produced] == [
+        "case",
+        "region",
+        "mesh",
+        "protonation",
+        "charge",
+    ]
+    assert isinstance(events[-1], Finished), [type(event).__name__ for event in events]
+    for event in produced:
+        assert Store(event.store).get(event.schema, event.hash) is not None, event.name
+
+
+def test_ver60_cancelling_a_charge_build_writes_no_artefact(charged_tube, tmp_path: Path) -> None:
+    """A cancelled **Build charge** leaves the store empty, as a cancelled geometry build does."""
+    case = charged_tube.write(tmp_path / "case")
+    store = tmp_path / "store"
+    process = SolverProcess(RunRequest(case=str(case), store=str(store), upto="charge"))
+    process.start()
+    process.cancel()
+    events = _settle(process)
+
+    assert any(isinstance(event, Cancelled) for event in events), events
+    written = [path for path in store.rglob("*") if path.is_file()] if store.exists() else []
+    assert not written, f"a cancelled build left {written} in the store"

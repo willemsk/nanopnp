@@ -100,6 +100,7 @@ __all__ = [
     "ImageModel",
     "ImageView",
     "OutlineView",
+    "Palette",
     "ProfileEditor",
     "StageList",
     "StageRow",
@@ -111,10 +112,12 @@ __all__ = [
     "density_section",
     "load_structure",
     "load_view",
+    "lookup_table",
     "membrane_slab",
     "nearest_edge",
     "nearest_vertex",
     "reduced_image",
+    "stored_artefact",
 ]
 
 GEOMETRY_STAGES: tuple[str, ...] = (*STRUCTURE_STAGES, "region", "mesh")
@@ -300,14 +303,37 @@ Perceptually uniform and monotone in lightness, so a density of 0.25 reads as a
 quarter of the way up in greyscale too; the isolevel is not a colour boundary."""
 
 
-def _lookup() -> np.ndarray:
-    """Return the 256 x 4 RGBA lookup table interpolated from :data:`_VIRIDIS`."""
+_DIVERGING: tuple[tuple[int, int, int], ...] = (
+    (59, 76, 192),
+    (221, 221, 221),
+    (180, 4, 38),
+)
+"""Moreland's cool-to-warm diverging map (Moreland 2009, *Diverging Color Maps for
+Scientific Visualization*): blue, a neutral grey, red, interpolated to 255 entries.
+
+An odd count, so that the middle entry *is* the neutral anchor and a value of zero
+on a scale ``[-L, L]`` lands on it exactly; negative is blue and positive red
+(WP31 D8)."""
+
+Palette: TypeAlias = Literal["viridis", "diverging"]
+"""Which lookup table an image is coloured with: sequential, or diverging about zero."""
+
+_PALETTES: dict[str, tuple[tuple[tuple[int, int, int], ...], int]] = {
+    "viridis": (_VIRIDIS, 256),
+    "diverging": (_DIVERGING, 255),
+}
+"""Each palette's anchors and its entry count."""
+
+
+def lookup_table(palette: Palette = "viridis") -> np.ndarray:
+    """Return a palette's N x 4 RGBA lookup table, interpolated from its anchors."""
     import numpy as np
 
-    anchors = np.asarray(_VIRIDIS, dtype=np.float64)
+    colours, size = _PALETTES[palette]
+    anchors = np.asarray(colours, dtype=np.float64)
     positions = np.linspace(0.0, 1.0, len(anchors))
-    samples = np.linspace(0.0, 1.0, 256)
-    table = np.empty((256, 4), dtype=np.uint8)
+    samples = np.linspace(0.0, 1.0, size)
+    table = np.empty((size, 4), dtype=np.uint8)
     for channel in range(3):
         table[:, channel] = np.round(np.interp(samples, positions, anchors[:, channel]))
     table[:, 3] = 255
@@ -332,6 +358,9 @@ class ImageModel:
         The horizontal axis: ``r`` for a reduced map, ``x`` for a section.
     frame
         :data:`STAGE_1_FRAME` or :data:`MODEL_FRAME`.
+    palette
+        The lookup table: ``viridis`` for a density, ``diverging`` for a signed
+        charge on a scale symmetric about zero (WP31 D8).
     """
 
     values: np.ndarray
@@ -341,6 +370,7 @@ class ImageModel:
     title: str
     x_label: str
     frame: str
+    palette: Palette = "viridis"
 
     @property
     def width(self) -> int:
@@ -400,15 +430,23 @@ class ImageModel:
         """
         import numpy as np
 
-        low, high = self.scale
-        span = high - low if high > low else 1.0
         shown = self.display()
         finite = np.isfinite(shown)
-        fraction = np.clip((np.where(finite, shown, low) - low) / span, 0.0, 1.0)
-        index = np.round(fraction * 255.0).astype(np.intp)
-        pixels = _lookup()[index]
+        index = self.colour_index(np.where(finite, shown, self.scale[0]))
+        pixels = lookup_table(self.palette)[index]
         pixels[~finite] = 0
         return bytes(np.ascontiguousarray(pixels, dtype=np.uint8).tobytes())
+
+    def colour_index(self, values: np.ndarray | float) -> np.ndarray:
+        """Return the lookup-table entry each value is coloured with, clipped to the scale."""
+        import numpy as np
+
+        low, high = self.scale
+        span = high - low if high > low else 1.0
+        last = len(lookup_table(self.palette)) - 1
+        fraction = np.clip((np.asarray(values, dtype=np.float64) - low) / span, 0.0, 1.0)
+        index: np.ndarray = np.round(fraction * last).astype(np.intp)
+        return index
 
 
 def reduced_image(
@@ -671,7 +709,7 @@ def _lines(summary: Mapping[str, object], keys: Sequence[str]) -> tuple[str, ...
     return tuple(f"{key}: {_format(summary[key])}" for key in keys if key in summary)
 
 
-def _artefact(event: Produced) -> Artefact:
+def stored_artefact(event: Produced) -> Artefact:
     """Return the stored artefact an event names, or say it is gone."""
     found = Store(event.store).get(event.schema, event.hash)
     if found is None:
@@ -708,7 +746,7 @@ def load_view(
     ValueError
         If the stage is not one of stages 1 to 6.
     """
-    artefact = _artefact(event)
+    artefact = stored_artefact(event)
     summary = dict(artefact.summary)
     if event.name == "structure":
         return SummaryView(name=event.name, lines=_lines(summary, STRUCTURE_RECORD_KEYS))
@@ -725,7 +763,7 @@ def load_view(
             slab=membrane_slab(document),
         )
     if event.name in ("symmetry", "contour"):
-        symmetry = artefact if event.name == "symmetry" else _artefact(produced["symmetry"])
+        symmetry = artefact if event.name == "symmetry" else stored_artefact(produced["symmetry"])
         reduced = ReducedMap.read(symmetry.payload[REDUCED_PAYLOAD])
         # The contour is drawn over the mean alone, so its view builds no variance.
         quantities = QUANTITIES if event.name == "symmetry" else ("mean",)

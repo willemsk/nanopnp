@@ -53,6 +53,7 @@ from nanopnp.charge.deposit import (
     deposit,
 )
 from nanopnp.charge.fields import (
+    CANONICAL_UNITS,
     DEFAULT_AXIS_CUTOFF_NM,
     FIELD_SCHEMA,
     PLANE_SMOOTHING_NM,
@@ -122,6 +123,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
 
     from nanopnp.core.typing import Expression, Mesh
+    from nanopnp.density.grid import RadialGrid
     from nanopnp.geometry.region import RegionRecord
     from nanopnp.io.case import ResolvedCase
     from nanopnp.io.store import Store
@@ -873,6 +875,64 @@ def export_charge(artefact: Artefact, path: Path) -> tuple[Path, ...]:
     atomic_write_bytes(data, source.read_bytes())
     atomic_write_bytes(path, _document_text(document).encode("utf-8"))
     return (data, path)
+
+
+@dataclass(frozen=True)
+class StoredLattice:
+    """The charge lattice stage 7's artefact carries, as it is stored (WP31 D1, D5).
+
+    Parameters
+    ----------
+    grid
+        The lattice, in the canonical SI unit of its quantity, in the model frame.
+    quantity
+        Its ``nanopnp/field/v1`` quantity: ``areal_charge_density`` for a deposited
+        charge, whatever the header declared for a supplied one.
+    units
+        That quantity's canonical unit, from :data:`~nanopnp.charge.fields.CANONICAL_UNITS`.
+    """
+
+    grid: RadialGrid
+    quantity: str
+    units: str
+
+    def weights_m(self) -> tuple[np.ndarray, np.ndarray]:
+        """Return the trapezoid weights along ``z`` and ``r``, in metres, that integrate it.
+
+        ``w_z @ values @ w_r`` is the charge in coulombs: the planar integral of an
+        areal density, and the ``2 pi r``-weighted one of a volume density, as
+        :meth:`~nanopnp.charge.fields.ChargeField.planar_integral_C` takes them. The
+        same sum as :meth:`~nanopnp.density.grid.RadialGrid.integral`, separated so
+        that a picture can partition it (WP31 Design section 1).
+        """
+        import numpy as np
+
+        weights_z = self.grid.trapezium_weights("z") * 1e-9
+        weights_r = self.grid.trapezium_weights("r") * 1e-9
+        if self.quantity != "areal_charge_density":
+            weights_r = weights_r * (2.0 * np.pi * self.grid.r_nm * 1e-9)
+        return weights_z, weights_r
+
+
+def stored_lattice(artefact: Artefact) -> StoredLattice | None:
+    """Return the charge lattice a stage-7 artefact carries, or ``None`` if it has none (WP31 D1).
+
+    Read from the artefact's own payload and record, never from the internal
+    ``charge-grid`` cache (WP28 D9): a deposited charge's quantity from the field
+    document stage 7 wrote beside it, a supplied one's from the header it recorded.
+    The archival copy is in the canonical unit either way.
+    """
+    if CHARGE_PAYLOAD not in artefact.payload:
+        return None
+    grid = read_grid(Path(artefact.payload[CHARGE_PAYLOAD]), format="npz")
+    if CHARGE_DOCUMENT_PAYLOAD in artefact.payload:
+        quantity = load_document(Path(artefact.payload[CHARGE_DOCUMENT_PAYLOAD])).quantity
+    else:
+        record = artefact.summary.get("charge")
+        if not isinstance(record, dict) or not isinstance(record.get("quantity"), str):
+            raise KeyError("stage 7's artefact carries a charge lattice but records no quantity")
+        quantity = str(record["quantity"])
+    return StoredLattice(grid=grid, quantity=quantity, units=CANONICAL_UNITS[quantity])
 
 
 def _region(resolved: ResolvedCase, inputs: StageInputs) -> Artefact | None:
