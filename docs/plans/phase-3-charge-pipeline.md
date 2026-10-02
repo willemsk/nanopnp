@@ -1,6 +1,6 @@
 # Phase 3 (Charge pipeline): from a structure to a charged run
 
-**Status: in progress. WP26 delivered, 30 September 2026; WP27 delivered, 1 October 2026 ([plan](wp27-protonation.md)); WP28 delivered, 1 October 2026 ([plan](wp28-charge-deposition.md)); WP29 delivered, 1 October 2026 ([plan](wp29-val06-apbs.md)); WP30 delivered, 2 October 2026 ([plan](wp30-dielectric-and-exclusion.md)); WP31 planned, 2 October 2026 ([plan](wp31-gui-charge-pipeline.md)); WP32 planned.** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
+**Status: in progress. WP26 delivered, 30 September 2026; WP27 delivered, 1 October 2026 ([plan](wp27-protonation.md)); WP28 delivered, 1 October 2026 ([plan](wp28-charge-deposition.md)); WP29 delivered, 1 October 2026 ([plan](wp29-val06-apbs.md)); WP30 delivered, 2 October 2026 ([plan](wp30-dielectric-and-exclusion.md)); WP31 delivered, 2 October 2026 ([plan](wp31-gui-charge-pipeline.md)); WP32 planned.** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
 the geometry pipeline (`main` at `v0.3.0-alpha.9`, formerly `v0.9.0-alpha.9`). Phase 2's
 end-of-phase report and its release, `v0.3.0`, wait for one Tier-3 run on the author's archive
 (criterion 3, VAL-05's ensemble leg). WP26 may start before that report merges, because nothing in
@@ -305,6 +305,18 @@ VER-55 to the charge views, with the view-models importing no Qt.
 >   as source, and that includes MDAnalysis and GridDataFormats.
 > - **The editor can add an empty `charge:` section**, from a set of sections whose empty form is
 >   shown to resolve as their absence, so the pH selector works on every structure case.
+
+> **Delivered, 2 October 2026** ([plan](wp31-gui-charge-pipeline.md), to be tagged
+> `v0.4.0-alpha.6`). The seventh tab, **Charge**, builds stages 1–7 on the Geometry tab's run
+> control and shows the protonation table, the lattice map, the deployed `ρ` or `χ` and the
+> conservation report, each read from its artefact. The editor gains bounded spin boxes and *Add
+> section* (`NEUTRAL_SECTIONS` is `charge` alone). The probe protonates the shipped 2WCD fragment
+> and names PROPKA when its code raised. Discharges phase criterion 6 and adds VER-60
+> (`tests/tier1/test_gui_charge.py`, `test_gui_charge_protonation.py`, `test_gui_probe.py`,
+> `test_gui_render.py`, `test_gui_widgets.py`; `tests/tier2/test_charge_2wcd.py`). The 2WCD
+> picture carries −60 e to 10⁻¹². **Live for later packages:** the colour range is set in
+> webgui's `gui_settings` as well as the scene, and has not been watched drawing (`.knowledge/07`
+> §5); stage 7's summary records wall-clock seconds, so no two charged runs share a manifest hash.
 
 ### WP32 — Documentation increment 3
 

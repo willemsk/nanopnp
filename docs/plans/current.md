@@ -1,6 +1,6 @@
 # Current work
 
-Updated 2 October 2026 (WP30 merged; WP31 planned). This file is navigation only;
+Updated 2 October 2026 (WP30 merged; WP31 delivered on its branch). This file is navigation only;
 `SPECIFICATION.md` governs. Nothing here is evidence that an unmerged branch has shipped.
 
 ## Position
@@ -12,9 +12,9 @@ Updated 2 October 2026 (WP30 merged; WP31 planned). This file is navigation only
   covering WP26–WP32.
   - WP26–WP30 are **merged**, with `main` at `11bc2c8`. `v0.4.0-alpha.1` and `.2` are tagged;
     `.3` (WP28, `c6c0c0d`), `.4` (WP29) and `.5` (WP30) are not yet.
-  - [WP31](wp31-gui-charge-pipeline.md) (VER-60; IF-09, QR-11, RSK-13) is **planned** on
-    `ccr-f25f5e29-fm712t`, to be tagged `v0.4.0-alpha.6`. **Next: `/wp-implement`** on WP31, then
-    `/wp-plan` for WP32.
+  - [WP31](wp31-gui-charge-pipeline.md) (VER-60; IF-09, QR-11, RSK-13) is **delivered** on
+    `ccr-b33d9919-kdjchc`, with its PR open against `main`, to be tagged `v0.4.0-alpha.6` once
+    merged. **Next: `/wp-ship`** on WP31, then `/wp-plan` for WP32.
 
 ## What Phase 3 must not re-decide
 
@@ -40,6 +40,8 @@ Each is recorded in full where it points.
   - Both are off by default, and at 0 every key is unchanged (VER-59's goldens).
   - → §4.4 NOTE on the derived solid fraction; §5.2.1 NOTE on the ion-exclusion shell; the WP30
     plan's decisions and Outcomes.
+- **The shell reads every charge number from a stage's artefact**, and the bundle collects its
+  Python LGPL payloads as source. → ADR-004 packaging NOTE; VER-60; the WP31 Outcomes.
 - **Tier 3 compares the published I–V and in-pore averages**, and gates v1.0 (VAL-16, VAL-17).
 - **Layers read a model's declaration, never its name or class** (VER-56). → §5.4.3 NOTE.
 - **`poisson` adds one quadrature order for the `r` weight; the coupled models do not.** That is
@@ -75,7 +77,7 @@ Each is recorded in full where it points.
 | Stage 5, the shell and the region record | `geometry/region.py`; WP21's Design §1; the WP30 plan and Outcomes; VER-52, VER-59 |
 | The `χ` blend, its derivation and its gates | `materials/fields.py`; `physics/models.py` `relative_permittivity_field`; VER-30 |
 | The physics-model interface | `docs/project/physics-models.md`; `physics/models.py` |
-| The desktop shell, its hooks and the probe bundle | The WP24 plan and Outcomes; `gui/`; `.knowledge/07` §5; ADR-004 |
+| The desktop shell, its hooks and the probe bundle | The WP24 and WP31 plans and Outcomes; `gui/`; `.knowledge/07` §5; ADR-004 |
 | The deposition and stage 7 | The WP28 plan and Outcomes; `charge/stage.py` |
 | PDB2PQR, PROPKA and APBS | `.knowledge/07` §3; the WP29 plan |
 | Case schema and supply chains | §5.3.1 NOTEs; `io/case.py` |
