@@ -152,3 +152,73 @@ def test_ver55_a_watched_walk_keys_what_an_unwatched_one_keys(
     assert stripped(watched_result.record()) == stripped(unwatched_result.record())
     assert _entries(watched) == _entries(quiet)
     assert watched_result.manifest.hash == unwatched_result.manifest.hash
+
+
+# -- VER-60: the two halves of stage 7 are reported as every other stage is -------
+
+
+def test_ver60_the_hook_reports_protonation_then_charge_after_each_is_stored(
+    charged_tube, tmp_path: Path
+) -> None:
+    """On a charged tube the hook fires for ``protonation`` and then ``charge`` (WP31 D1).
+
+    No new hook or event: the charge tab reads both through the one that already
+    reports every stage, so what is asserted is that it reaches stage 7's halves,
+    after their entries exist, and reports them cached on a re-run.
+    """
+    case = charged_tube.write(tmp_path / "case")
+    store = Store(tmp_path / "store")
+    recorder = Recorder(store)
+    result = run_case(case, store=store, upto="charge", write=False, on_artefact=recorder)
+
+    assert [call[0] for call in recorder.calls] == [
+        "case",
+        "region",
+        "mesh",
+        "protonation",
+        "charge",
+    ]
+    assert recorder.calls == [
+        (record.name, record.schema, record.hash, record.cached) for record in result.stages
+    ]
+    assert all(recorder.present), recorder.calls
+
+    again = Recorder(store)
+    run_case(case, store=Store(store.root), upto="charge", write=False, on_artefact=again)
+    assert [call[3] for call in again.calls] == [True] * 5
+    assert [call[2] for call in again.calls] == [call[2] for call in recorder.calls]
+
+
+def test_ver60_a_watched_charged_walk_keys_what_an_unwatched_one_keys(
+    charged_tube, tmp_path: Path
+) -> None:
+    """One set of artefact hashes, store entries and manifest through stage 7, watched or not.
+
+    The manifests are compared with every ``seconds`` entry removed: stage 7's
+    record carries its wall times (WP28), so two charged runs never share a
+    manifest hash, watched or not, and an unwatched pair differs exactly as much.
+    """
+    case = charged_tube.write(tmp_path / "case")
+    quiet = Store(tmp_path / "quiet")
+    watched = Store(tmp_path / "watched")
+    unwatched_result = run_case(case, store=quiet, upto="charge", write=False)
+    watched_result = run_case(
+        case, store=watched, upto="charge", write=False, on_artefact=Recorder(watched)
+    )
+    assert [record.hash for record in watched_result.stages] == [
+        record.hash for record in unwatched_result.stages
+    ]
+    assert _entries(watched) == _entries(quiet)
+    assert _timeless(watched_result.manifest.charge) == _timeless(unwatched_result.manifest.charge)
+    assert _timeless(watched_result.record()["stages"]) == _timeless(
+        unwatched_result.record()["stages"]
+    )
+
+
+def _timeless(value: object) -> object:
+    """Return ``value`` with every ``seconds`` entry removed, at any depth."""
+    if isinstance(value, dict):
+        return {key: _timeless(item) for key, item in value.items() if key != "seconds"}
+    if isinstance(value, list | tuple):
+        return [_timeless(item) for item in value]
+    return value

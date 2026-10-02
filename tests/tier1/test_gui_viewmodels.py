@@ -132,15 +132,19 @@ def test_if09_the_view_models_import_no_qt_and_no_ngsolve() -> None:
     them the geometry pipeline's libraries (VER-55): MDAnalysis, scikit-image
     and Shapely are for the child that measures a contour, and Gmsh is CON-10's
     optional backend, so none of them belongs in the process that draws.
+
+    WP31 adds the charge tab's view-model, and PDB2PQR and PROPKA to the absent
+    set (VER-60): the protonation table is read from the stored artefact, so the
+    process that draws it never runs either.
     """
     probe = (
         "import sys;"
         "import nanopnp.gui.case_model, nanopnp.gui.run_model,"
         " nanopnp.gui.solver, nanopnp.gui.probe,"
         " nanopnp.gui.convergence, nanopnp.gui.scene, nanopnp.gui.render,"
-        " nanopnp.gui.geometry, nanopnp.gui.assess;"
+        " nanopnp.gui.geometry, nanopnp.gui.assess, nanopnp.gui.charge;"
         "print(sorted(m for m in ('PySide6','PyQt5','PyQt6','ngsolve','netgen',"
-        " 'MDAnalysis','skimage','shapely','gmsh') if m in sys.modules))"
+        " 'MDAnalysis','skimage','shapely','gmsh','pdb2pqr','propka') if m in sys.modules))"
     )
     found = subprocess.run(
         [sys.executable, "-c", probe], capture_output=True, text=True, check=True
