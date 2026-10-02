@@ -856,6 +856,37 @@ leave `h/(16 s) = 0.03` there, which is too little margin for a gate meant to di
 planes span the atoms' z-extent. The guard deficit the exported lattice would suffer if re-read
 through `inputs.charge` is recorded beside the legs.
 
+NOTE (the derived solid fraction, FR-15, PHY-20; **added 2 October 2026**, WP30): a non-zero
+`charge.dielectric_transition_nm`, `δ`, makes stage 7 derive `χ` from the stage-4 profile as stage 5
+placed it in the model frame. Let `W` be the profile's water-facing part, meaning its edges, split
+at the bilayer planes, whose outward side is not membrane. Let `s` be the distance to `W`, positive
+inside the body and negative outside. Then
+
+```
+χ = S(s/δ + 1/2),   S(x) = 3x² − 2x³ on [0, 1],  0 below it,  1 above it
+```
+
+which is C¹, is exactly `1/2` on `W`, and changes only where `|s| < δ/2`. On every solid material
+other than `protein` `χ` SHALL be 1, because the membrane is analytic and not drawn from the
+density, and its interface stays sharp. `χ` is built from the profile and not by remapping the
+stage-3 mean. The mesh's material interface is the conditioned profile, and conditioning moves it
+off the raw isolevel by up to the closing radius. A remap would put its 1/2-level on that isolevel
+and give it a width that varies with `|∇ρ|`. The limit δ → 0 of the profile's `χ` is the material
+indicator, and therefore PHY-20's piecewise assignment exactly. FR-15's "same density field" holds
+because the shell is offset from the same profile (§5.2.1 NOTE on the ion-exclusion shell).
+
+`χ` is sampled at the nodes of a lattice of spacing `δ/20` and read bilinearly, as a supplied field
+is. The lattice covers the body's bounding box widened by `δ` and clipped at `r = 0`, so its
+boundary samples are 0 by construction. Away from the profile's vertices the interpolation error is
+then at most `0.75 (h/δ)² = 1.9 × 10⁻³` (WP30 plan, *Design* §1). A `δ` below
+`geometry.density.grid_spacing_nm` would be finer than the grid the contour is placed on, and SHALL
+be refused naming both keys.
+
+VER-30's range and registration gates apply, with one amendment that holds for every `χ`, supplied
+or derived. `exclusion` lies wholly on the water side of the dielectric contour, so its mean `χ`
+SHALL be below 1/2. The fluid ceiling does not apply to it, because a 1–2 Å transition into a thin
+shell exceeds that ceiling: a planar shell of width `a` averages `3δ/(32a)`.
+
 ### 4.5 Model variants and switches
 
 **PHY-21.** The following physics models SHALL be selectable by name in the case file.
@@ -988,7 +1019,7 @@ Design notes, recorded where an implementer would otherwise choose wrongly.
 | 3 | The n rotated copies are averaged before azimuthal averaging. Binning is area-weighted over exact annular volumes (about 6 cells per annulus of width h at r = h, about 630 at r = 5 nm, per slice at h = 0.05 nm). **Amended 25 September 2026** (WP19 plan, Design §2–§3): the overlap weights are exact, so no bin is interpolated. The earlier "innermost 2–3 bins interpolated" compensated for centre-assigned binning, and against exact weights every interpolant tried was worse somewhere. The rotated copies are averaged in the angular harmonic basis, where the average keeps the harmonics m ≡ 0 (mod n): it is exact and costs one deposition. Depositing n rotated copies costs n, and rotating the voxel map by interpolation smooths it, lowering the peak Cₙ variance of a C12 ring by 3–6 %. The binned mean is subtracted at each cell's own radius before any variance is taken, or the radial gradient across a bin reads as azimuthal variance. A 1° axis error adds about 0.2 nm of apparent radius to a 3.3 nm constriction. |
 | 3, 5 | The bilayer is absent from the density map. It is defined analytically in (r, z) over the hydrophobic belt and fragmented against the pore contour. |
 | 5 | Reference geometry: reservoir half-disc R = 250 nm, membrane thickness 2.8 nm, `z_cis` = 12.25 nm, `z_trans` = −1.85 nm. The membrane is a quadrilateral, not a rectangle: vertices (r = 2, z = −1.4), (3.5, +1.4), (250, +1.4), (250, −1.4) nm, inner edge slanted to meet the pore's outer surface. Code assuming a rectangle leaves a wedge of gap or overlap at the junction. CadQuery and build123d are 3D-solid-centric and unused; pythonocc serves BRep edge cases only. |
-| 7 | Stage 7 is two registered stages, `protonation` and then `charge`, sharing the number so that stages 8 to 12, which this specification, the CLI's output and every recorded manifest cite by number, do not move (**added 1 October 2026**, WP27). The registry lists stages by number and then in registration order. A run walks `protonation` after `mesh` and immediately before `charge`, so a walk truncated at the mesh, as the desktop shell's geometry build is, never protonates; protonating an ensemble costs about a minute per frame of a ClyA dodecamer (WP27 plan, *Design* §1). Both halves run when the case has something to protonate (`structure:` or `inputs.pqr`, and no `inputs.charge`) and its model declares a fixed charge (§5.4.3), and are otherwise recorded as not run with the reason. A consumer of a deposited charge reads it from stage 7's artefact and from nowhere else (**added 1 October 2026**, WP28). |
+| 7 | Stage 7 is two registered stages, `protonation` and then `charge`, sharing the number so that stages 8 to 12, which this specification, the CLI's output and every recorded manifest cite by number, do not move (**added 1 October 2026**, WP27). The registry lists stages by number and then in registration order. A run walks `protonation` after `mesh` and immediately before `charge`, so a walk truncated at the mesh, as the desktop shell's geometry build is, never protonates; protonating an ensemble costs about a minute per frame of a ClyA dodecamer (WP27 plan, *Design* §1). Both halves run when the case has something to protonate (`structure:` or `inputs.pqr`, and no `inputs.charge`) and its model declares a fixed charge (§5.4.3), and are otherwise recorded as not run with the reason. A consumer of a deposited charge reads it from stage 7's artefact and from nowhere else (**added 1 October 2026**, WP28). With a non-zero `charge.dielectric_transition_nm` the `charge` half also runs, reading stage 5's record, to derive `χ` (§4.4 NOTE on the derived solid fraction), whether or not it deposits a charge; the solve reads that `χ` from stage 7's artefact likewise (**added 2 October 2026**, WP30). |
 
 #### 5.2.1 Contour conditioning and its gate
 
@@ -1102,6 +1133,42 @@ naming the criterion, the measured value, the threshold and the (r, z), on any o
 The last criterion is VER-28's junction measure, made generic. The shipped reference geometry keeps
 its drawn corners (2.0, 3.5), and its mesh is unchanged. The fixture assembled with either chord
 meshes to one connectivity, with vertices within 4.2 × 10⁻⁹ nm (WP21 plan, Design §1).
+
+NOTE (the ion-exclusion shell, stage 5, FR-15, PHY-20; **added 2 October 2026**, WP30): a non-zero
+`charge.exclusion_offset_nm`, `a`, makes stage 5 build the exclusion contour from the model-frame
+profile `P`, with `h_c` as in the NOTE on the contour's size target:
+
+1. `O` is the dilation of `P` by `a`, with round joins at 8 segments per quarter circle (WP20 D5).
+2. `O` is closed by a disc of radius `2h_c`, as in step 3 of §5.2.1 and for the same reason.
+3. Every hole of `O` is filled and recorded with its centroid and area. A hole is fluid enclosed by
+   the shell, which no ion can reach.
+4. Step 6 of §5.2.1 runs on `O`'s ring.
+5. §5.2.1's validity, simplicity and spacing criteria are applied to that ring, together with its
+   clearance of `h_c` from the axis.
+
+The shell is `O − P − M` and the electrolyte is `D − M − O`, where `M` is the membrane quadrilateral
+and `D` is the reservoir disc. The membrane, its chord and its junction are unchanged. The shell
+SHALL be one face. It runs from the membrane's upper face round the cap, down the lumen, and round
+the *trans* end to the membrane's lower face. Its outer surface, against the electrolyte, is `wall`.
+The no-slip surface, the no-flux surface and the PHY-02 distance source therefore move there, with
+no change to `numerics.wall_distance.sources`. The shell's seams with the protein and with the
+membrane are `interface`. Away from the closing and the filled holes, the outer surface lies at most
+`max(h_c²/a, a/100)` inside the exact offset, which is twice the sagitta of its longest chord
+(0.01 nm at `a` = 0.25 nm). It never lies more than 10⁻⁶ nm outside the exact offset (WP30 plan,
+*Design* §2). The `exclusion` domain is meshed at the wall size.
+
+Stage 5 SHALL abort, naming the criterion, the value, the threshold and the (r, z), on any of these:
+
+- an offset that comes within `h_c` of the axis and so closes the constriction, naming the z
+  interval and the body's least radius over it;
+- an offset vertex that is not strictly inside the reservoir disc;
+- a domain assembled as other than one face.
+
+`0 < a ≤ 2h_c` SHALL be refused naming both keys. The shell is a face of width `a`, and §5.2.1's
+feature-size criterion admits nothing narrower than `2h_c`. The construction reads Shapely, which
+is in the `structure` extra. Without the extra, the case SHALL be refused naming the extra and the
+key. The record carries the offset loop, so stage 6 rebuilds the region without Shapely. With
+`a = 0` none of this NOTE runs, and the record, its key and the mesh are those of §5.2.1.
 
 NOTE (vertex counts): the model report's geometry section records **190 vertices for the pore
 polygon** and **3 domains, 198 boundaries and 196 vertices for the assembled region**. Earlier
@@ -1348,7 +1415,14 @@ and `charge.dielectric_transition_nm` are the fitted exclusion offset of FR-15 a
 PHY-20's transition to `ε_w`. Both SHALL be non-negative, and both are switches whose validated
 default is `0`: the validated model has no exclusion shell and a sharp material permittivity (PHY-20
 NOTEs). A non-zero value is therefore a deviation that the FR-25 manifest records. When the
-`charge:` block is absent, each reads as its validated default. `numerics.mesh.size_scale`, default
+`charge:` block is absent, each reads as its validated default. Both are built from the stage-4
+profile (§5.2.1 NOTE on the ion-exclusion shell; §4.4 NOTE on the derived solid fraction), so
+either set away from `0` beside `inputs.mesh`, or in a case carrying neither `structure:` nor
+`inputs.profile`, is a knob with no effect and SHALL be refused naming both keys. A non-zero
+`dielectric_transition_nm` beside `inputs.eps_r` supplies one quantity twice and SHALL be refused
+naming both. Each is refused below its resolution limit as its NOTE says, and a model that declares
+no solid fraction refuses the transition as it refuses `inputs.eps_r` (§5.4.3) (**amended 2 October
+2026**, WP30). `numerics.mesh.size_scale`, default
 `1`, SHALL multiply every element-size target of §5.2.2 and NUM-30, the resolved `wall_h_nm`
 included. It exists so that a mesh-convergence study (RSK-09, §6.8) is a sweep over a case-file
 field (FR-24) rather than a code edit. It is a discretisation choice recorded with the mesh, not a
@@ -1372,8 +1446,9 @@ breaks no document that ran. `titration` and `forcefield` are switches whose val
 are `propka` and `CHARMM` (PHY-16 step 3); any other value is a deviation that the FR-25 manifest
 records. `ph` is a condition of the experiment, as `concentration_M` is, and not a deviation. The
 case's `structure.source.variant` is recorded beside `Q_net`, which it is the provenance of
-(OPN-04). Until the stage that reads them is delivered, a non-zero `charge.exclusion_offset_nm`
-or `charge.dielectric_transition_nm` (WP30) is refused naming that stage. `charge.smearing` is read
+(OPN-04). `charge.exclusion_offset_nm` is read by stage 5 and `charge.dielectric_transition_nm`
+by stage 7 (**amended 2 October 2026**, WP30; see the NOTE on the v2 keys that change a number,
+which says when each is refused). `charge.smearing` is read
 by stage 7's deposition (**amended 1 October 2026**, WP28; see the NOTE on `charge.smearing`).
 
 NOTE (`charge.smearing`, PHY-16 steps 4–6, PHY-18; **added 1 October 2026**, WP28): `sharpness`
@@ -1619,7 +1694,10 @@ way round. The vocabulary is fixed and carries no aliases: materials `electrolyt
 Poisson is solved on and Nernst–Planck and the flow are not; `pore` is deliberately **not** a name,
 because it reads as both that body and the lumen fluid, and a mesh that uses it SHALL disambiguate
 through the mapping. `interface` is the interior fluid-to-fluid seam a fragmented region carries —
-the pore-mouth interfaces the reservoir-to-lumen split leaves behind — and **nothing selects on it**;
+the pore-mouth interfaces the reservoir-to-lumen split leaves behind — and, in a region stage 5
+generates, every solid-to-solid seam: the protein against the membrane and, with an exclusion
+shell, the shell against the protein and the membrane (**amended 2 October 2026**, WP30). **Nothing
+selects on it**;
 it is in the vocabulary because every group must be claimed by some name, and calling an interior
 seam `wall` would put it in the PHY-02 distance source set and impose no-slip across the middle of
 the electrolyte. `exclusion` is the ion-exclusion region of FR-15 — the shell between the dielectric
@@ -2859,6 +2937,7 @@ archive, so the push gate is unaffected by whether it is present.
 | **VER-56** | The physics-model interface | A walk of the package source outside `physics/` finds no concrete model class, no comparison or `match` against a registered model name and no model name spelt as a literal, except in `default_ladder`, which §6.5 defines as a path through named models, and, for the literal alone, the schema's default `physics.model` and the validated default case; the walk is shown to fire on the registry, on each form of dispatch it names and on each exempt scope once the exemption is lifted. Every refusal a declaration makes — an unhonoured switch value, solids or a supplied `inputs.charge` or `inputs.eps_r` beside a model that does not accept them (`pb` beside a fixed charge among them, PHY-24), an unadmitted `numerics.continuation`, an undeclared `outputs:` quantity, a builder's own refusal, a generated mesh beside a model without solids, and a solid domain on the mesh of a model without solids — names the model, the key and what is admitted; resolving a case builds its model and imports no NGSolve or Netgen. A declaration admitting `default_ladder` for a model the ladder does not end at is refused at registration, and a builder returning a model under another name is refused by `create`; the ladder's two Poisson–Boltzmann rungs, which state their own `λ_D`, are built for a salt the case-file `pb` refuses. Whether the PHY-02 distance field is read is asked of the built model, the rule every rung follows: the quick-start case as `pnp-ns` with its corrections on, which `pnp-ns` resolves to `none`, runs to stage 12 on the ladder and on a single rung, stores no distance field, restores, and equals the same case with every correction `none` bitwise. The stage-10 keys of `epnp-ns`, `pnp-ns`, `pnp`, `pb` and `pb-linear` on the quick-start case, and the model of every rung of both NUM-18 ladders on it, equal goldens recorded before the interface existed. A forwarding class defined in the test tree, subclassing no shipped model and registered at run time, runs a case file through stages 10 to 12; its state and stage-11 summary equal `pnp`'s on the same case bitwise, and stage 11 restores the forwarding class. `pb-linear` and `poisson` run from case files on a solid-free slab and equal direct API solves to 1e-12 relative, `pb-linear`'s with `λ_D` from `case_debye_length_nm`; a `poisson` case with a membrane and a supplied `volume_charge_density` equals the API solve given `fields.charge.assemble(scales)` likewise, and differs from the uncharged solve. At Tier 2 `poisson` reproduces the three-layer capacitor of PHY-20, whose piecewise-quadratic solution the P2 space contains, to 1e-10 of `max |φ̃|` (FR-20, FR-19, QR-14, PHY-20, PHY-21, PHY-24, §5.4.3; **added 30 September 2026**, WP26) |
 | **VER-57** | Protonation and the PQR artefact | On fragments of 2WCD chain A, every atom's charge equals `CHARMM.DAT`'s, parsed independently of PDB2PQR, to 10⁻⁶ e, and `Q_net` the hand count of the standard states; `titration: none` passes neither the pH nor a titration method, and gives identical charges at two pH values; PROPKA at a pH across a residue's pKa changes exactly that residue (`GLU 18`, `ASP 21`, `ASP 25` between pH 2 and 8); a histidine named `HSE`, with or without its hydrogens, protonates as the `HIS`-named one; a terminal pKa PDB2PQR does not apply is recorded as unapplied from PROPKA's groups and the applied charges. Each gate — an atom PDB2PQR could not parameterise, an atom without a charge or radius, a charged atom whose radius is not positive, a `Q_net` further than 10⁻⁶ e from an integer, a PQR not holding the frame it was given — fires on its defect and names the frame. The PQR reader reads PDB2PQR's fixed columns, its fused coordinates, its four-character residue names and fused atom fields, a patched residue by its variant name, and a whitespace-separated file, and refuses, naming the line, a line the two readings read differently; `MODEL` frames holding different residues are refused naming the frame; the writer reads back exactly. A supplied `inputs.pqr` with another frame count, a residue the ensemble lacks or the frames out of order is refused naming the frame; one rigidly moved registers to 0.01 Å; the stage's export re-supplied beside the same `structure:` gives the atom table bit for bit. One frame changed of two re-protonates one. Without PDB2PQR a `structure:` case is refused naming the extra before its first frame and `inputs.pqr` runs. The stage is listed, and a walk that does not name it records it not run, without importing PDB2PQR or PROPKA; each protonation key's refusal names its keys. At Tier 2 the prepared 2WCD dodecamer at pH 7.5 gives its pinned `Q_net` of −60 e, −5 e on every chain, with the PDB2PQR and PROPKA versions named on failure; every heavy atom's radius equals the stage-2 CHARMM table's; twelve terminal oxygens are added; `CYS 285` is unapplied in every chain and the `LYS 8` N-terminus exactly where its pKa is below the pH; the export supplied beside the structure gives the payload. At Tier 3, recorded, DCD frames 48–97 are compared residue by residue with the archived PQRs 50–99, and the archived PQRs register through `inputs.pqr` (FR-12, IF-03, FR-27, QR-12, PHY-16 step 3; **added 1 October 2026**, WP27) |
 | **VER-58** | The deposited fixed charge | PHY-16 step 5's kernel integrates to `q_i` to 10⁻¹² at `r_i/w` ∈ {0, 0.3, 1, 3, 30, 600}, is finite and even on the axis, and is the limit of the 3D Cartesian deposition binned by exact annular volumes, which converges to it at ≥ 3.5× per halving; the tiled separable sum equals the direct one to 10⁻¹³; an atom on the axis is short by `h²/(6w²)` unrenormalised and exact renormalised; a spacing above `w_min/2` is refused naming the atom. The projection's element moments against every monomial of degree ≤ `k` equal the lattice's to 10⁻¹², NGSolve's field equals the payload's, and a payload on a permuted mesh is refused by its geometry digest. At Tier 2 one atom in a grounded sphere, solved with `poisson`, against its Kelvin-image closed form: the `r`-weighted L² error over a 2 nm disc about the atom falls at a rate ≥ 2.5 between the finest two of three near-atom meshes with the `P2` deposit, and `P0`'s falls slower; the on-axis error and an unresolved atom beside `P0`'s are recorded (FR-13, FR-14, QR-03, PHY-16 steps 5–6, PHY-18; **added 1 October 2026**, WP28) |
+| **VER-59** | The dielectric field and the ion-exclusion shell | With both keys at 0, the region, mesh, fields and stage-10 keys of a profile-driven case, and its region record's bytes, equal goldens recorded before WP30. **The shell:** on a parallelogram body every `wall` node lies at a distance in `[a − max(h_c²/a, a/100), a + 10⁻⁶]` nm from the body; the shell is one `exclusion` face, `wall` outside and `interface` against the protein and the membrane, and a body edge left facing the electrolyte beside a shell is refused naming it; the membrane, its chord and its junction equal the shell-free region's; a body within `a + h_c` of the axis is refused naming the z interval; a necked pocket is filled and recorded; `0 < a ≤ 2h_c`, the key beside `inputs.mesh` or without a profile, and a missing `structure` extra are each refused naming the keys; the record round-trips, rebuilds equal areas without Shapely and keys `a` only when it is non-zero; the Gmsh region graph reads its four faces; the manifest lists the switch and the mesh-material deviation. **The dielectric:** on the same body, along the normal at each water-facing edge's midpoint, the lattice `χ` equals `S(s/δ + 1/2)` to 4 × 10⁻³ for `\|s\| ≤ δ`, so its 1/2-level lies on the profile and its width is `δ`; `χ` is 1 in the membrane and in the protein away from water; the lattice's boundary samples are 0; `W` equals the region's protein-to-water edges; the range and registration gates pass, with `exclusion` below 1/2 on a 0.12 nm shell at δ = 0.2 nm, and an inverted derived `χ` fails registration; `δ < h_c` and `δ` beside `inputs.eps_r` are refused naming both keys. **At Tier 2:** through a generated shell on a cylindrical body at 0.1 M, solved with `pnp` at zero bias, the mid-plane potential across the shell is logarithmic in `r` and drops by `λ_enc ln(R/(R − a)) / (2π ε₀ ε_r,f⁰)` to 1 %, where `R` is the body's inner radius and `λ_enc` the mobile charge per unit length the shell encloses, and that drop is at least 10 % of the wall potential; VER-31's slab with its shell generated by this construction equals the drawn slab; the prepared 2WCD with `a` = 0.25 nm has every `wall` node at least `a − max(h_c²/a, a/100)` from the body, records the share beyond `a + 10⁻⁶` nm that the closing and the filled holes leave, and passes VER-10 and the wall-size gate, and with δ = 0.15 nm added walks to stage 12 with every gate passing and both deviations in its manifest (FR-15, FR-09, FR-10, PHY-02, PHY-20, QR-12; §4.4 NOTE on the derived solid fraction; §5.2.1 NOTE on the ion-exclusion shell; **added 2 October 2026**, WP30) |
 
 ### 7.3 Tier 2 analytic benchmarks
 
@@ -3376,7 +3455,7 @@ otherwise report unbounded throughput for a resumed sweep.
 | **OPN-04** | ClyA-AS mutation list: 8 mutations relative to the *S. typhi* wild type in one place, 27 relative to the *E. coli* 2WCD structure in another. Both internally correct | Author, with the structure-preparation stage | Provenance of `Q_net` (FR-12); the structure-preparation stage must record which list was applied to which PDB |
 | **OPN-05** | Pore-polygon vertex table. **Delivered** as `data/geometry/clya_as_radial_geometry.csv`, 185 vertices, extents as published. **Closed by the author, 5 September 2026: the delivered table is the geometry of record**, and the model report's 190 is the count after COMSOL's import conditioning. §2.2 and §5.2.1 are amended to it; the §5.2.1 fixture, `mesh/reference.py` and VAL-05 all cite it | Closed | Closed |
 | **OPN-06** | Attribution of the reference's own charge-conservation gap: `−72.9 e` against `−72 e` atomistic is 1.25 %, twelve times QR-03's budget. **Answered from the delivered `rhoq_pore` table, 6 September 2026: it is the consumer's.** The table's own planar integral is `−71.999999999663 e`, exact to `4.7 × 10⁻¹²`, so the producer leg is not where the 1.25 % went, and the published net charges are not different constructs on this axis. Our own consumer leg on a comparable mesh is `−0.99 %` by the same interpolate-and-integrate route — the same size and character, opposite sign — which is aliasing of a sub-element-scale field, not lost charge (§4.4 NOTE) | Closed | Closed: any Tier-3 comparison of pore charge (VAL-06, WP13) compares two consumer legs, and ours is gated ten times more strictly than the reference achieved |
-| **OPN-07** | A golden's `case_hash` does not identify a **deposited** fixed charge. `validation/comsol.py` `case_identity` hashes `ResolvedCase.solve_provenance`, whose `fields.charge` says only whether `inputs.charge` was *supplied*. It replaces a supplied field with its contents' record (VAL-03), and on that rule two cases that differ only in their charge table are two cases. Since WP28 (FR-13, FR-14), stage 7 deposits a charge from `structure:` or `inputs.pqr`, and that charge reaches no key in the solve provenance. Its structure, `charge.ph`, `charge.forcefield`, `charge.titration` and `charge.smearing` are all invisible to the identity, and `fields.charge` reads `False`. **[tested]** on `examples/06-pdb-to-mesh/2wcd.case.yaml`, 1 October 2026: pH 7.5 (default), pH 5, pH 9 and `smearing.sharpness` 0.8 all give `case_hash` `8559ee13…`; only the model moves it. Such a case is therefore indistinguishable from the same physics on a supplied mesh with no fixed charge at all. Found by the WP28 review (PR #57, finding #7). The solve's own key is not affected, because the stage-7 artefact's hash already carries the protonation and the deposit (§5.3.2). The decision for the WP that resolves it: what represents a deposited charge in the identity. The candidates are the stage-7 inputs (the protonation key and the smearing parameters, not the mesh, which §7.4 deliberately leaves out), or the export lattice's grid digest, as a supplied field contributes it. Constraints: do not do it by setting `fields.charge` true in the provenance, which would move every producer case's solve key; leave every non-producer case's identity unchanged; and test it with a `test_val03_…` that fails on the example above | Next WP touching `validation/comsol.py` or Tier 3 goldens; author to confirm the representation | Any golden, and any recorded leg of VAL-16 or VAL-17, for a case whose charge stage 7 deposits. Nothing today: no golden declares such a case |
+| **OPN-07** | A golden's `case_hash` does not identify a **deposited** fixed charge. `validation/comsol.py` `case_identity` hashes `ResolvedCase.solve_provenance`, whose `fields.charge` says only whether `inputs.charge` was *supplied*. It replaces a supplied field with its contents' record (VAL-03), and on that rule two cases that differ only in their charge table are two cases. Since WP28 (FR-13, FR-14), stage 7 deposits a charge from `structure:` or `inputs.pqr`, and that charge reaches no key in the solve provenance. Its structure, `charge.ph`, `charge.forcefield`, `charge.titration` and `charge.smearing` are all invisible to the identity, and `fields.charge` reads `False`. **[tested]** on `examples/06-pdb-to-mesh/2wcd.case.yaml`, 1 October 2026: pH 7.5 (default), pH 5, pH 9 and `smearing.sharpness` 0.8 all give `case_hash` `8559ee13…`; only the model moves it. Such a case is therefore indistinguishable from the same physics on a supplied mesh with no fixed charge at all. A `χ` that stage 7 derives (§4.4 NOTE on the derived solid fraction; WP30) is invisible in the same way, and for the same reason it does not set `fields.eps_r`. Found by the WP28 review (PR #57, finding #7). The solve's own key is not affected, because the stage-7 artefact's hash already carries the protonation and the deposit (§5.3.2). The decision for the WP that resolves it: what represents a deposited charge in the identity. The candidates are the stage-7 inputs (the protonation key and the smearing parameters, not the mesh, which §7.4 deliberately leaves out), or the export lattice's grid digest, as a supplied field contributes it. Constraints: do not do it by setting `fields.charge` true in the provenance, which would move every producer case's solve key; leave every non-producer case's identity unchanged; and test it with a `test_val03_…` that fails on the example above | Next WP touching `validation/comsol.py` or Tier 3 goldens; author to confirm the representation | Any golden, and any recorded leg of VAL-16 or VAL-17, for a case whose charge stage 7 deposits. Nothing today: no golden declares such a case |
 
 ---
 
