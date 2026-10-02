@@ -27,6 +27,7 @@ from __future__ import annotations
 import math
 
 import ngsolve as ngs
+import numpy as np
 import pytest
 
 from nanopnp.core.constants import (
@@ -176,3 +177,42 @@ def test_ver31_a_shell_that_is_silently_fluid_fails_by_a_quarter() -> None:
     ignored_V = float(ignored(ignored_mesh(0.0, 0.5 * lam))) * thermal_voltage()
 
     assert (stern_V - ignored_V) / stern_V == pytest.approx(0.2344, rel=2e-2)
+
+
+def test_ver59_the_slabs_shell_generated_by_stage_5_is_the_drawn_shell() -> None:
+    """VER-31's slab with its shell from :func:`~nanopnp.geometry.region.exclusion_shell` (WP30).
+
+    The wall is the right face of a solid body; its offset by ``lambda_S``,
+    clipped to the slab, is the drawn ``[0, lambda_S] x [0, H]`` to 1e-12 nm,
+    and the slab meshed with the generated width gives the drawn ``phi_0``. The
+    body stands in ``x`` in ``[1, 3]``, clear of the axis clearance the
+    construction gates, and taller than the slab so that its round corners fall
+    outside the clip.
+    """
+    from shapely.geometry import MultiPoint, Point, Polygon, box
+
+    from nanopnp.geometry.region import exclusion_shell
+
+    lam = debye_length_nm(CONCENTRATION_M)
+    wall_nm, height = 3.0, lam
+    body = np.array([(1.0, -1.0), (wall_nm, -1.0), (wall_nm, height + 1.0), (1.0, height + 1.0)])
+    shell = exclusion_shell(body, STERN_THICKNESS_NM, 0.05, reservoir_radius_nm=100.0)
+    clipped = Polygon(shell.loop).intersection(box(wall_nm, 0.0, wall_nm + 20.0 * lam, height))
+    drawn = box(wall_nm, 0.0, wall_nm + STERN_THICKNESS_NM, height)
+    # The same set: no vertex off the drawn rectangle's boundary, and equal areas.
+    # The resampled ring leaves collinear vertices along x = lambda_S, which the
+    # rectangle does not need.
+    vertices = np.asarray(clipped.exterior.coords)
+    assert float(drawn.exterior.distance(MultiPoint(vertices))) == 0.0
+    assert max(float(drawn.exterior.distance(Point(v))) for v in vertices) <= 1e-12
+    assert abs(clipped.area - drawn.area) <= 1e-12
+    width = float(vertices[:, 0].max()) - wall_nm
+    assert abs(width - STERN_THICKNESS_NM) <= 1e-12
+
+    sigma = _surface_charge_C_m2(DIFFUSE_ZETA)
+    drawn_mesh, drawn_solution = _solve(
+        exclusion_nm=STERN_THICKNESS_NM, maxh_nm=lam / 8.0, sigma_C_m2=sigma
+    )
+    mesh, solution = _solve(exclusion_nm=width, maxh_nm=lam / 8.0, sigma_C_m2=sigma)
+    drawn_wall = float(drawn_solution(drawn_mesh(0.0, 0.5 * lam)))
+    assert float(solution(mesh(0.0, 0.5 * lam))) == pytest.approx(drawn_wall, rel=1e-10)
