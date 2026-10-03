@@ -111,6 +111,15 @@ seam each change what a verified contract means, so each needs its own decision.
 > - **Verification, the shell.** `test_gui_widgets.py` had been skipping in this container for a
 >   missing `libEGL`; with the system's EGL and X libraries installed it ran, the VER-60 tests
 >   included.
+> - **D15, from the `/wp-ship` review: the schemas move to v2.** A store filled before WP32 kept
+>   serving stage 7 entries with `seconds` in them, because the key had not moved. The author chose
+>   to bump them to `nanopnp/fields/v2` and `nanopnp/charge-grid/v2` (§5.3.2 stage-7 row amended;
+>   `.knowledge/07` §15). Every stage 7 key moves once, and no test pinned one. The `slow` WP28 cost
+>   benchmark reads the sum, deposit and gates split from stage 7's log record (`extra` `timings`),
+>   never from the artefact: 4.9 s cold on 2WCD at 44,985 elements (sum 2.49, deposit 1.65, gates
+>   0.56) and 0.88 GB peak RSS. `copy_example` copies a file named directly in `examples/` on its
+>   own, rather than mirroring every example
+>   (`test_examples_plan.py::test_ver46_a_file_beside_the_examples_is_copied_alone`).
 
 ### Work items
 

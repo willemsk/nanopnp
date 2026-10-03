@@ -577,7 +577,7 @@ def _register_builtins() -> None:
                 "dielectric solid fraction",
                 "charge-conservation report",
             ),
-            artefact_schema="nanopnp/fields/v1",
+            artefact_schema="nanopnp/fields/v2",
         ),
         "nanopnp.charge.stage:FieldStage",
     )

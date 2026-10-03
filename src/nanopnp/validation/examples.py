@@ -143,9 +143,10 @@ def copy_example(example: Path, root: Path, *, repository: Path) -> Path:
     ``root``, so the same relative path resolves in the copy: ``../../<path>``
     reaches a repository file, and ``../<sibling>/<file>`` runs a sibling
     example's script rather than a copy of it, so the two cannot drift apart
-    (WP32 D5). Nothing an example generated in the source tree is copied: only
-    tracked-looking inputs, never ``store/`` or a written mesh, which the test
-    must produce itself.
+    (WP32 D5). A word naming a file directly in ``examples/`` copies that file
+    alone: its directory holds every example. Nothing an example generated in
+    the source tree is copied: only tracked-looking inputs, never ``store/`` or
+    a written mesh, which the test must produce itself.
 
     What counts as generated is read from ``examples/.gitignore``, the one list of
     what running an example writes, so that list and this copy cannot drift. It
@@ -168,8 +169,17 @@ def copy_example(example: Path, root: Path, *, repository: Path) -> Path:
         for word in argv[1:]:
             if not word.startswith(UP):
                 continue
-            source = (example / word).resolve().parent
+            named = (example / word).resolve()
+            source = named.parent
             if not source.is_relative_to(repository) or source == example.resolve():
+                continue
+            if source == examples:
+                # A file beside the examples, not inside one: mirroring its
+                # directory would copy every example. The file alone, if it exists.
+                if named.is_file():
+                    target = root / named.relative_to(repository)
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(named, target)
                 continue
             patterns = generated if source.is_relative_to(examples) else ("*.msh",)
             # Merged rather than skipped when the target exists: a directory

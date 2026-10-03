@@ -1320,3 +1320,10 @@ to the log and to the run record's per-stage `seconds`, which no key or manifest
 `tests/tier1/test_artefact_hashing.py::test_ver23_a_charged_walk_writes_the_same_bytes_into_two_stores`
 walks a charged tube into two empty stores, finds every payload byte-identical, and shows that
 restoring one `seconds` entry breaks it. Source: WP32 plan D15 and its Outcomes.
+
+**Removing the time is a schema change, not just a code change [verified].** A store hit serves the
+stored payload and summary unchanged, and the content hash covers the schema, the parameters and the
+input hashes, not the payload. An entry written before the change keeps its key, so it keeps being
+served with its old timings. Stage 7 therefore moved to `nanopnp/fields/v2` and
+`nanopnp/charge-grid/v2`, which makes every old entry a miss (§5.3.2 stage-7 row, amended for WP32).
+Source: the WP32 `/wp-ship` review.

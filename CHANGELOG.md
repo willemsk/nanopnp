@@ -21,7 +21,7 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 WP32: documentation increment 3, the charge pipeline documented and executed (QR-15 in part), the
 seventh package of Phase 3 and its phase criterion 7. No weak form, gate, tolerance or case key
-changes. Stage 7's artefacts stop recording wall-clock time, which changes their bytes but no key.
+changes. Stage 7's artefacts stop recording wall-clock time, and their schema versions move to v2.
 
 ### Added
 
@@ -45,7 +45,9 @@ changes. Stage 7's artefacts stop recording wall-clock time, which changes their
 - **Stage 7 records no wall-clock time** (VER-23). `deposit.npz`, the `charge-grid` summary and the
   `charge` summary drop their `seconds`; the timings go to the log, and the stage's total stays in
   the run record. The same deposit now writes the same bytes, and two charged runs of one case share
-  a manifest. A deposit stored before this release still loads.
+  a manifest. Stage 7's schemas move to `nanopnp/fields/v2` and `nanopnp/charge-grid/v2`, so an
+  entry stored before this release is a cache miss and stage 7 runs once more, rather than serving
+  the old timings into a new manifest.
 - **The case editor's bounded numbers** (VER-60). A bounded integer is a `QSpinBox` stepping by
   one, and a field that admits `null` is never a spin box, which cannot say "unset". No field of
   today's schema changes widget.

@@ -288,7 +288,7 @@ def test_ver60_the_2wcd_protonation_pane_shows_the_recorded_states(deposited: De
 
 
 _MEASURE = """\
-import json, resource, sys, time
+import json, logging, resource, sys, time
 from pathlib import Path
 from nanopnp.core.stages import create
 from nanopnp.io.artefact import StageInputs
@@ -300,13 +300,20 @@ upstream = {
     "mesh": Store(store).get("nanopnp/mesh/v1", mesh),
     "protonation": Store(store).get("nanopnp/protonation/v1", protonation),
 }
+parts = {}
+class Parts(logging.Handler):
+    def emit(self, record):
+        parts.update(getattr(record, "timings", {}))
+source = logging.getLogger("nanopnp.charge.stage")
+source.setLevel(logging.INFO)
+source.addHandler(Parts())
 stage = create("charge", workspace=Path(workspace))
 started = time.perf_counter()
 done = stage.run(StageInputs(case=document, upstream=upstream))
 seconds = time.perf_counter() - started
 scale = 1e9 if sys.platform == "darwin" else 1e6
 peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / scale
-print(json.dumps({"seconds": seconds, "peak_GB": peak}))
+print(json.dumps({"seconds": seconds, "peak_GB": peak, "parts": parts}))
 """
 """Stage 7 cold in a fresh process, with no store: the lattice summed, and a peak RSS its own."""
 
@@ -333,12 +340,15 @@ def test_ver01_cost_of_the_2wcd_deposit(deposited: Deposited, tmp_path: Path) ->
     )
     measured = json.loads(result.stdout.strip().splitlines()[-1])
     logger.info(
-        "WP28: stage 7 on 2WCD (%d elements), cold, %.1f s and %.2f GB peak RSS",
+        "WP28: stage 7 on 2WCD (%d elements), cold, %.1f s (%s) and %.2f GB peak RSS",
         artefacts["mesh"].summary["elements"],
         measured["seconds"],
+        {key: round(value, 2) for key, value in measured["parts"].items()},
         measured["peak_GB"],
     )
     assert measured["seconds"] > 0.0
+    # The parts come from stage 7's log record, never its artefact (WP32 D15).
+    assert set(measured["parts"]) == {"sum", "deposit", "gates"}, measured["parts"]
 
 
 _MEASURE_FRAMES = """\
