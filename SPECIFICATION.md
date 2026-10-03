@@ -183,18 +183,19 @@ reference-solution generation; MD trajectories are supplied as input.
 | v0.1 | 0 | Spike. Analytic cylindrical/conical pore, coupled steady axisymmetric ePNP-NS, continuation ladder, analytic benchmarks, one COMSOL comparison. No structure pipeline, no GUI. |
 | v0.2 | 1 | Solver core on an externally supplied mesh and material/charge fields; full QoI extraction; pluggable correction models; frozen case-file schema; stable Python API; CLI; sweep runner. |
 | v0.3 | 2 | Geometry pipeline: structure and trajectory ingestion, density, symmetry reduction, contour, CAD, mesh. |
-| v0.4 | 3 | Charge pipeline: PDB2PQR to smeared ρ_fixed and dielectric field; the physics-model interface (FR-20). Runs the paper's pipeline end to end, from structure to current; the reproduction of the published results is measured at v1.0 (VAL-16, VAL-17; §8.2.4 D6). |
-| v1.0 | 4 | Validated release: V&V suite in CI, the published current–voltage relationships and in-pore averages reproduced (VAL-16, VAL-17), documentation, tutorials, JOSS submission, DOI-archived. |
+| v0.4 | 3 | Charge pipeline: PDB2PQR to smeared ρ_fixed and dielectric field; the physics-model interface (FR-20). Runs the paper's pipeline end to end, from structure to current; the reproduction of the published results is measured at v0.5 (VAL-16, VAL-17; §8.2.4 D6). |
+| v0.5 | 4 | Validated release: V&V suite in CI, the published current–voltage relationships and in-pore averages reproduced (VAL-16, VAL-17), documentation, tutorials, JOSS submission, DOI-archived. Released before the stable version (**amended 3 October 2026**, §8.2.5 E2). |
+| v1.0 | — | Stable release: the API stability promise of IF-01. Its content and gate are the author's to define (OPN-08). |
 | v1.5 | 5 | Desktop application: packaged installers, in-app case builder, live convergence monitoring, field visualisation. |
 | post-1.0 | — | Backlog: 3D; transient; ion-specific rather than ionic-strength-based property models; MD-fitting toolkit for corrections; solid-state pores; charge regulation; multi-species electrolytes beyond binary; non-axisymmetric analytes. |
 
-Release tags in §3 take five values: v0.2, v0.3, v0.4, v1.0, post-1.0. Items scheduled for v1.5
+Release tags in §3 take five values: v0.2, v0.3, v0.4, v0.5, post-1.0 (v1.0 until §8.2.5 E2 retagged Phase 4's requirements v0.5). Items scheduled for v1.5
 are tagged post-1.0.
 
 NOTE (Versioning; **added 23 September 2026, renumbered 30 September 2026**, §8.2.4 D1): the
 releases above are git tags `vX.Y.Z`, one minor version per phase, on the commit that merges the
 phase's end-of-phase report (§8.1): `v0.1.0` for Phase 0, `v0.2.0` for Phase 1, `v0.3.0` for
-Phase 2, `v0.4.0` for Phase 3 and `v1.0.0` for Phase 4. Each merged work package is tagged
+Phase 2, `v0.4.0` for Phase 3 and `v0.5.0` for Phase 4 (**amended 3 October 2026**, §8.2.5 E2; it was `v1.0.0`). Each merged work package is tagged
 `vX.Y.Z-alpha.N` on its last commit on `main`, where N counts the phase's work packages toward
 that release. The history before this NOTE was tagged retroactively on the same rule. The tag names are SemVer, and PEP 440 reads them as
 `X.Y.ZaN` (`0.2.0a10`). The package version is derived from the tag (hatch-vcs), so a commit between
@@ -210,6 +211,13 @@ becomes `v0.2.0`, and `v0.9.0-alpha.N` becomes `v0.3.0-alpha.N`. Phase 0's tags 
 old names are retired and are never reused. A provenance manifest written before the renumber
 records the old version (`0.5.0a10`, `0.9.0a3`), and the mapping above takes it to its commit. A
 development version names its commit (`+g…`) under either scheme.
+
+On 3 October 2026 the author ruled that Phase 4 is released as v0.5, not v1.0 (§8.2.5 E2), and the
+retired `v0.5.0` names are therefore **reused** for Phase 4, with its work packages tagged
+`v0.5.0-alpha.1` onwards. That supersedes "never reused" above for those names alone; the retired
+`v0.9.0` names stay retired. A manifest recording `0.5.0aN` or `0.5.0` is then read by its
+`created_at`: before 30 September 2026 it is Phase 1's, mapped by `.github/renumbered-tags.txt`,
+and after it, Phase 4's.
 
 ---
 
@@ -341,14 +349,14 @@ the quantity-of-interest extraction. Heavy data is compressed.
 | **FR-18** | SHALL provide physics models `ePNP-NS`, `PNP-NS`, `PNP` and `Poisson`, selected by name in the case file, `PNP-NS` being a configuration of `ePNP-NS` with corrections disabled rather than separate code. | v0.2 |
 | **FR-19** | SHALL provide nonlinear Poisson–Boltzmann (`PB`) and Debye–Hückel (`PB-linear`) as separate equilibrium physics models. | v0.4 |
 | **FR-20** | SHALL admit a new physics model as one implementation of a documented interface (field set, weak-form contributions, boundary-condition vocabulary, default solve strategy), with no change to the mesh, geometry, charge, sweep, provenance or interface layers. | v0.4 |
-| **FR-21** | SHALL support a rigid analyte body of revolution on the pore axis, subtracted from the fluid domain and treated as a hard dielectric with no ion flux, no-slip and a dielectric jump, charged as either a surface density or a smeared volumetric charge. | v1.0 |
-| **FR-22** | SHALL compute F^em(z), F^hd(z), their sum, and ΔU(z) = −∫F dz with barriers and minima in kT, over a series of axial analyte positions. | v1.0 |
+| **FR-21** | SHALL support a rigid analyte body of revolution on the pore axis, subtracted from the fluid domain and treated as a hard dielectric with no ion flux, no-slip and a dielectric jump, charged as either a surface density or a smeared volumetric charge. | v0.5 |
+| **FR-22** | SHALL compute F^em(z), F^hd(z), their sum, and ΔU(z) = −∫F dz with barriers and minima in kT, over a series of axial analyte positions. | v0.5 |
 | **FR-23** | SHALL extract ionic current, cation and anion transport numbers, rectification ratio and EOF rate by two independent routes whose agreement is checked automatically. | v0.2 |
 | **FR-24** | SHALL sweep any case-file field, dispatch the points as independent jobs, warm-start each solve from a converged neighbour, and collect results into one dataset. | v0.2 |
 | **FR-25** | SHALL emit with every result a provenance manifest recording input hashes, library versions, mesh hash, solver settings, stabilisation mode and correction parameter file versions. | v0.2 |
 | **FR-26** | SHALL round-trip a case file, a written and re-read case yielding a semantically identical run configuration. | v0.2 |
 | **FR-27** | SHALL make every stage independently invocable, cancellable, progress-reporting and introspectable, emitting a typed, serialisable, content-hashed artefact that may be inspected, exported, edited and substituted by hand. | v0.2 |
-| **FR-28** | SHALL export figures, fields and the originating case file from a completed run. | v1.0 |
+| **FR-28** | SHALL export figures, fields and the originating case file from a completed run. | v0.5 |
 | **FR-29** | MAY perform goal-oriented (dual-weighted-residual) mesh adaptivity targeting the ionic current. | post-1.0 |
 
 Rationale (FR-23): continuous-Galerkin fluxes are not pointwise conservative, so a current obtained
@@ -371,7 +379,7 @@ cell–annulus overlaps. The §5.3.1 NOTE on `geometry.density` is the contract.
 | ID | Requirement | Class |
 |---|---|---|
 | **QR-01** | Tier-2 analytic benchmarks SHALL pass, including Maxwell–Hall access conductance to better than 2 % and MMS convergence at O(h³) in L² for P2 on the full coupled axisymmetric system. | Correctness |
-| **QR-02** | By v1.0, the current–voltage relationships and in-pore averages computed in the validated configuration on the reference inputs SHALL agree with the published ePNP-NS results within the tolerances VAL-16 and VAL-17 state. A field comparison against exported COMSOL solutions, where exports exist, SHALL agree to better than 1 % relative L² error on fields and 0.5 % on integrated QoIs once the matching stabilised mode exists and meshes are convergence-matched; it is not required. Until a comparison is gated, differences SHALL be recorded and attributed, not gated on. **Amended 30 September 2026** (§8.2.4 D6). | Correctness |
+| **QR-02** | By v0.5 (Phase 4; §8.2.5 E2), the current–voltage relationships and in-pore averages computed in the validated configuration on the reference inputs SHALL agree with the published ePNP-NS results within the tolerances VAL-16 and VAL-17 state. A field comparison against exported COMSOL solutions, where exports exist, SHALL agree to better than 1 % relative L² error on fields and 0.5 % on integrated QoIs once the matching stabilised mode exists and meshes are convergence-matched; it is not required. Until a comparison is gated, differences SHALL be recorded and attributed, not gated on. **Amended 30 September 2026** (§8.2.4 D6). | Correctness |
 | **QR-03** | Assembled fixed charge SHALL be conserved to better than 0.1 % of Q_net on the deployed mesh. | Correctness |
 | **QR-04** | The two current-extraction routes of FR-23 SHALL agree within a stated tolerance, checked in CI. | Correctness |
 | **QR-05** | End-to-end reproduction of published conductance, transport-number and rectification data SHALL agree with experiment no worse than the source work's own agreement with experiment. | Correctness |
@@ -384,11 +392,11 @@ cell–annulus overlaps. The §5.3.1 NOTE on `geometry.density` is the contract.
 | **QR-12** | Every automatic gate failure SHALL abort the run with a diagnostic naming the gate, the offending quantity and its location. | Usability |
 | **QR-13** | The ePNP-NS weak forms SHALL be expressed once against the internal backend interface and SHALL NOT be duplicated per backend. | Maintainability |
 | **QR-14** | Adding a correction parameterisation SHALL require only a data file; adding a physics model SHALL require only one class (FR-20). | Maintainability |
-| **QR-15** | v1.0 SHALL ship user documentation, tutorials, a JOSS submission and a DOI-archived release. | Maintainability |
+| **QR-15** | v0.5 (Phase 4; §8.2.5 E2) SHALL ship user documentation, tutorials, a JOSS submission and a DOI-archived release. | Maintainability |
 
 NOTE (QR-15; **added 23 September 2026**): the user documentation and the worked examples are
 delivered incrementally from v0.2, by the documentation track of §8.1, each phase documenting what
-it ships. The requirement itself is unchanged. v1.0 is where it is met in full, including the JOSS
+it ships. The requirement itself is unchanged. v0.5, the Phase 4 release (§8.2.5 E2), is where it is met in full, including the JOSS
 submission and the DOI-archived release, which no earlier phase delivers. VER-45 and VER-46
 demonstrate the documentation part at every release. They do not demonstrate the JOSS or DOI parts.
 
@@ -3065,7 +3073,7 @@ so it carries no tolerance.
 ### 7.4 Tier 3 cross-implementation comparison
 
 This implementation is compared with the reference on what the paper publishes: the current–voltage
-relationships and the in-pore averages of its ePNP-NS results (VAL-16, VAL-17), which gate v1.0.
+relationships and the in-pore averages of its ePNP-NS results (VAL-16, VAL-17), which gate v0.5, the Phase 4 release (§8.2.5 E2).
 The reference numbers are the paper's tables, shipped as test data, and the data behind its
 figures, which the author supplies under `NANOPNP_REFERENCE_DATA`. **Amended 30 September 2026**
 (§8.2.4 D6): the tier was first specified as a field-by-field comparison against exported COMSOL
@@ -3092,8 +3100,8 @@ differences are recorded and attributed rather than gated on.
 | **VAL-05** | Geometry pipeline against the published boundary | Auto-generated contour compared against the delivered reference pore polygon (§5.2.1): radius profile and constriction radius within a stated tolerance. Measured on two inputs (§8.2.2 B2): the public 2WCD entry, gated at Tier 2 to a looser tolerance, and the author's ClyA-AS ensemble, archived under `NANOPNP_REFERENCE_DATA` and run at Tier 3; the Phase 2 gate requires the ensemble leg. Each leg's metric, registration and tolerance are stated, with their argument, in the NOTE on VAL-05 below (**amended 28 September 2026**, WP22) |
 | **VAL-06** | Poisson-only comparison against APBS | Potential from the assembled fixed-charge and dielectric fields agrees with an APBS solve on the same structure within a stated tolerance. Two legs (**amended 30 September 2026**, §8.2.4 D3). The **gated** leg gives APBS, at zero ionic strength, our assembled charge and solid fraction as 3D maps, so that only the two solvers differ. The **recorded** leg runs APBS from the PQR with its own charge assignment and molecular surface, which measures the azimuthal averaging of CON-04. APBS runs from the test-only `apbs-binary` package on every CI leg its wheels cover, so VAL-06 is gated at Tier 2 on 2WCD and skips visibly where no wheel exists; the ensemble is recorded at Tier 3. The tolerance is stated, with its argument, by the work package that implements it, before the comparison is run: ≤ 3 % max, ≤ 1 % rms and ≤ 1.5 % on the axis, within a refinement budget of half of each (**stated 1 October 2026**, WP29 plan; NOTE on VAL-06 below) |
 | **VAL-15** | The reference model's own `rhoq_pore` table, on our mesh | The delivered table reads with the grid its header declares, its planar integral is the declared `Q_net` to better than 10⁻⁹, and its boundary ring is negligible against its interior, so the producer leg of §4.4 is exact and the reference's 1.25 % is the consumer's (OPN-06); the consumer leg on the reference mesh is recorded with the mesh it came from, and the quadrature-agreement gate refuses it, per cent-level, rather than reporting a conserved number it cannot defend |
-| **VAL-16** | Current–voltage relationships against the published results | The ionic current, conductance `G`, rectification ratio, cation transport number and electro-osmotic flow rate agree with the paper's published ePNP-NS results within a stated tolerance, at the published concentrations and biases. Two legs, as for VAL-06. The **gated** leg solves on the reference inputs, the §5.2.1 geometry and the delivered `rhoq_pore` table, so that only the solver differs. The **recorded** leg solves on the geometry and charge that stages 1–7 generate from the author's ensemble. Gates v1.0 (**added 30 September 2026**, §8.2.4 D6). The tolerance is stated, with its argument, by the work package that implements it, before the comparison is run |
-| **VAL-17** | In-pore averages against the published results | The pore-averaged ion concentrations, the peak radially averaged equilibrium potential, and the mobile charge in the pore with its wall and bulk split agree with the paper's published values within a stated tolerance. The same two legs, reference sources and tolerance rule as VAL-16. Gates v1.0 (**added 30 September 2026**, §8.2.4 D6) |
+| **VAL-16** | Current–voltage relationships against the published results | The ionic current, conductance `G`, rectification ratio, cation transport number and electro-osmotic flow rate agree with the paper's published ePNP-NS results within a stated tolerance, at the published concentrations and biases. Two legs, as for VAL-06. The **gated** leg solves on the reference inputs, the §5.2.1 geometry and the delivered `rhoq_pore` table, so that only the solver differs. The **recorded** leg solves on the geometry and charge that stages 1–7 generate from the author's ensemble. Gates v0.5, the Phase 4 release (**added 30 September 2026**, §8.2.4 D6; §8.2.5 E2). The tolerance is stated, with its argument, by the work package that implements it, before the comparison is run |
+| **VAL-17** | In-pore averages against the published results | The pore-averaged ion concentrations, the peak radially averaged equilibrium potential, and the mobile charge in the pore with its wall and bulk split agree with the paper's published values within a stated tolerance. The same two legs, reference sources and tolerance rule as VAL-16. Gates v0.5, the Phase 4 release (**added 30 September 2026**, §8.2.4 D6; §8.2.5 E2) |
 
 NOTE (the comparison surface, and why VAL-01 reports two norms; WP13): the probe grid is **this
 project's**, a content-hashed document of named tensor-product patches that the reference is
@@ -3322,7 +3330,7 @@ same claim on the same kind of input.
 | 1. Solver core | Production solver on an externally supplied mesh, full QoI extraction, frozen case-file schema, sweep runner | Tier 1 and Tier 2 pass; Tier 3 enabled and differences attributed; met as amended by §8.2.3 | 6–10 weeks |
 | 2. Geometry pipeline | Structure and trajectory ingestion, density, symmetry reduction, contour, CAD, mesh | VAL-05: the auto-generated mesh reproduces the hand-conditioned reference geometry; met as amended by §8.2.4 D7 | 8–12 weeks |
 | 3. Charge pipeline | PDB2PQR to smeared volumetric `ρ_fixed` and dielectric field | VER-01, VER-02 and VAL-06 pass | 3–5 weeks |
-| 4. Validation and release | Full V&V suite in CI, documentation, JOSS paper, v1.0 | Tier 4 passes (VAL-07 to VAL-10), and Tier 3 against the published results passes (VAL-16, VAL-17; **amended 30 September 2026**, §8.2.4 D6) | 4–6 weeks |
+| 4. Validation and release | Full V&V suite in CI, documentation, JOSS paper, v0.5 (§8.2.5 E2) | Tier 4 passes (VAL-07 to VAL-10), and Tier 3 against the published results passes (VAL-16, VAL-17; **amended 30 September 2026**, §8.2.4 D6) | 4–6 weeks |
 | GUI | Continuous track from Phase 0 onward, one increment per phase | QR-10: an experimentalist runs a case unaided | continuous |
 | Documentation | Continuous track from Phase 1 onward, one increment per phase (**added 23 September 2026**) | VER-45 and VER-46 pass on every push | continuous |
 
@@ -3347,7 +3355,7 @@ by a restatement of their equations:
 | 1 | Documentation site and its build; user guide for the solver core, the case file, meshes and fields, runs, sweeps, provenance and the desktop shell; generated case-file, command-line and exit-code references; the API reference over the IF-01 public surface; worked examples on an idealised pore and on the reference geometry |
 | 2 | The geometry pipeline: structure and trajectory input, density, symmetry reduction, contour, meshing; an example from a PDB entry to a mesh |
 | 3 | The charge pipeline: protonation, force field, smearing, the conservation report; an example from a PDB entry to a charged run |
-| 4 | Tutorials completed against the validated release, the JOSS paper, and the DOI-archived v1.0 (QR-15 in full) |
+| 4 | Tutorials completed against the validated release, the JOSS paper, and the DOI-archived v0.5 (QR-15 in full; §8.2.5 E2) |
 | post-1.0 | In-application tutorials, with the GUI track |
 
 Phase 2 SHALL NOT start before the Phase 0 exit criteria are met.
@@ -3443,9 +3451,23 @@ the commit named in the last column.
 | D6 | Tier 3 compares the current–voltage relationships and in-pore averages the paper publishes (VAL-16, VAL-17), and that comparison gates v1.0. The reference is the paper's tables, shipped as test data, and the data behind its figures, which the author supplies under `NANOPNP_REFERENCE_DATA`. The gated leg runs on the reference geometry and charge, and a recorded leg on the pipeline's. The COMSOL field-export route (VAL-01 to VAL-04) and its harness are kept, but no release waits on them | The author chose the published results over producing the field exports of the export contract, and asked for the comparison to gate v1.0 so that the reference data can follow. Those results are what the model is cited for, need no licence and cannot lapse, which retires RSK-14. They localise a discrepancy less than fields would, so the Tier-2 benchmarks keep that job, and the ablation percentages are recorded beside the verdict. The Phase 1 addendum of §8.2.3 C1 is withdrawn. Phases 2 and 3 are unaffected | §2.7, QR-02 and its rationale, §7.4 (its preamble, VAL-01 to VAL-04, the new VAL-16 and VAL-17, and their NOTE), §8.1 Phase 4, §8.2.3 C1, RSK-09, RSK-14 and Appendix A, in this commit |
 | D7 | Phase 2 closes with criterion 3 waived. On the ensemble leg VAL-05 measures `ε_G` = −5.56 % against the 5 % tolerance, while `Δr_c` = −0.039 nm and the rms of 0.089 nm pass. The tolerance is not changed, and the Tier-3 test keeps asserting it. `Z_MD` is corrected to 5.655 nm, as WP22 D6 provides | The miss is 0.56 pp, inside the definitional uncertainty the tolerance was argued from: on the ensemble, ±0.1 of isolevel moves `ε_G` by −7.4 and +6.6 pp, not the ±5 pp measured on 2WCD. The D7 attribution puts the gap in the reference's hand edit, which widened the lumen by 0.187 nm and which the method does not reproduce by design. A solve on the generated mesh gives a conductance 4.40 % below the fixture's. Re-arguing the tolerance after the result would weaken every tolerance stated before its run (VAL-06, VAL-16, VAL-17), so the miss is recorded, not absorbed. What the geometry costs in current is measured at v1.0 by VAL-16's recorded leg. The measured `Z_MD` is 5.6553 nm, 0.025 nm above the constant, which had included residue 7 (5.6293 nm). Re-registered, the 2WCD leg passes D5 at `ε_G` −8.49 % | §8.1 (Phase 2) and the §7.4 NOTE on VAL-05 (the 2WCD registration), in the Phase 2 report's commit. v0.3.0 is released on this basis |
 
+#### 8.2.5 Phase 3 exit and the Phase 4 release, agreed 3 October 2026
+
+Rulings by the author, taken while planning WP34, the last Phase 3 work package
+(`docs/plans/wp34-phase-3-close.md`). Where a ruling changes a clause, the clause is amended in the
+commit named in the last column.
+
+| # | Decision | Consequence | Clause changed, and when |
+|---|---|---|---|
+| E1 | Phase 3 closes on its Tier 1 and Tier 2 evidence. The ensemble half of the phase's second criterion (VER-01 and VER-02 on the ensemble at Tier 3) and the end-of-phase report's numbers that need the author's archive are waived from the Phase 3 close and carried to Phase 4. Those numbers are `Q_net` per frame, protonation agreement with the archived PQRs, the deposition against the delivered `rhoq_pore` table, VAL-06's recorded leg on the ensemble, and the end-to-end charged case against the reference mesh and table | Every waived item was a recorded Tier-3 leg that gated nothing, and none is a property the 2WCD legs do not already gate. The Tier-3 tests stay as written and run when the archive is supplied. Their numbers are reported in Phase 4's end-of-phase report, beside VAL-16's recorded leg, which needs the same archive. v0.4.0 is released on this basis | None in this section's text. The Phase 3 plan's verification section and end-of-phase report record the waiver, in WP34 |
+| E2 | Phase 4 is released as **v0.5**, not v1.0, because the project is not yet ready for a stable release. Phase 4 keeps its deliverable and its gate (§8.1). v1.0 becomes a later stable release whose content and gate the author defines (OPN-08). The retired `v0.5.0` tag names are reused for Phase 4, and a pre-renumber manifest recording `0.5.0aN` is read by its `created_at` | Every requirement tagged v1.0 is a Phase 4 requirement and is retagged v0.5. Where an earlier ruling in §8.2 (A1, C1, D1, D6, D7) says v1.0 for Phase 4's release, it now reads v0.5. Phase 5's v1.5 and the post-1.0 backlog do not move, and IF-01's "before v1.0" still names the stable release. The stray retired tag `v0.5.0-alpha.5`, left on origin by the 30 September renumber on the commit of `v0.2.0-alpha.5`, is deleted before Phase 4 tags its first package | §2.7 (the table, the tag values and the Versioning NOTE), the Release column of FR-21, FR-22 and FR-28, QR-02, QR-15 and its NOTE, §7.4 and VAL-16 and VAL-17, §8.1 (Phase 4 and the documentation increment), §8.3 and Appendix A, in the WP34 plan's commit |
+| E3 | A golden's case identity represents a fixed charge that stage 7 deposits by the **stage-7 recipe**. That is the protonation artefact's key, which carries the structure or PQR digest, the frames, pH, force field and titration, together with the kernel's physical parameters. A `χ` that stage 7 derives is represented by its derivation parameters and the structure's key. The export lattice's spacing and the element order are left out, as discretisation | It closes OPN-07. The identity is still computed from the resolved case without running a stage, and it reads no lattice. Non-producer identities and every solve key are unchanged, and `fields.charge` keeps meaning "supplied" | §10 OPN-07, in the WP34 plan's commit. The implementation and its VAL-03 test are WP34's |
+| E4 | NUM-07's open question, whether the coupled models' `r`-weighted forms gain one quadrature order as `poisson`'s do, is measured in WP34 and decided in Phase 4 | No number moves in v0.4.0. The measurement goes into the NUM-07 NOTE, and the decision is taken with VAL-16 and VAL-17, which can judge it | The NUM-07 NOTE, in WP34 |
+| E5 | The end-of-phase report is written in WP34, and WP34's last commit on `main` is tagged `v0.4.0` alone, with no `v0.4.0-alpha.9` | The release commit is the one that merges the report, as the Versioning NOTE of §2.7 requires, without a second tag on the same commit | None |
+
 ### 8.3 Effort estimate
 
-Estimate to a validated v1.0 without the desktop GUI: 6–9 months of part-time work. With the
+Estimate to the validated Phase 4 release (v0.5, §8.2.5 E2) without the desktop GUI: 6–9 months of part-time work. With the
 desktop GUI: 9–14 months. Both figures are for one person; the calendar halves at full-time effort.
 
 Factors making the work more tractable:
@@ -3520,7 +3542,8 @@ otherwise report unbounded throughput for a resumed sweep.
 | **OPN-04** | ClyA-AS mutation list: 8 mutations relative to the *S. typhi* wild type in one place, 27 relative to the *E. coli* 2WCD structure in another. Both internally correct | Author, with the structure-preparation stage | Provenance of `Q_net` (FR-12); the structure-preparation stage must record which list was applied to which PDB |
 | **OPN-05** | Pore-polygon vertex table. **Delivered** as `data/geometry/clya_as_radial_geometry.csv`, 185 vertices, extents as published. **Closed by the author, 5 September 2026: the delivered table is the geometry of record**, and the model report's 190 is the count after COMSOL's import conditioning. §2.2 and §5.2.1 are amended to it; the §5.2.1 fixture, `mesh/reference.py` and VAL-05 all cite it | Closed | Closed |
 | **OPN-06** | Attribution of the reference's own charge-conservation gap: `−72.9 e` against `−72 e` atomistic is 1.25 %, twelve times QR-03's budget. **Answered from the delivered `rhoq_pore` table, 6 September 2026: it is the consumer's.** The table's own planar integral is `−71.999999999663 e`, exact to `4.7 × 10⁻¹²`, so the producer leg is not where the 1.25 % went, and the published net charges are not different constructs on this axis. Our own consumer leg on a comparable mesh is `−0.99 %` by the same interpolate-and-integrate route — the same size and character, opposite sign — which is aliasing of a sub-element-scale field, not lost charge (§4.4 NOTE) | Closed | Closed: any Tier-3 comparison of pore charge (VAL-06, WP13) compares two consumer legs, and ours is gated ten times more strictly than the reference achieved |
-| **OPN-07** | A golden's `case_hash` does not identify a **deposited** fixed charge. `validation/comsol.py` `case_identity` hashes `ResolvedCase.solve_provenance`, whose `fields.charge` says only whether `inputs.charge` was *supplied*. It replaces a supplied field with its contents' record (VAL-03), and on that rule two cases that differ only in their charge table are two cases. Since WP28 (FR-13, FR-14), stage 7 deposits a charge from `structure:` or `inputs.pqr`, and that charge reaches no key in the solve provenance. Its structure, `charge.ph`, `charge.forcefield`, `charge.titration` and `charge.smearing` are all invisible to the identity, and `fields.charge` reads `False`. **[tested]** on `examples/06-pdb-to-mesh/2wcd.case.yaml`, 1 October 2026: pH 7.5 (default), pH 5, pH 9 and `smearing.sharpness` 0.8 all give `case_hash` `8559ee13…`; only the model moves it. Such a case is therefore indistinguishable from the same physics on a supplied mesh with no fixed charge at all. A `χ` that stage 7 derives (§4.4 NOTE on the derived solid fraction; WP30) is invisible in the same way, and for the same reason it does not set `fields.eps_r`. Found by the WP28 review (PR #57, finding #7). The solve's own key is not affected, because the stage-7 artefact's hash already carries the protonation and the deposit (§5.3.2). The decision for the WP that resolves it: what represents a deposited charge in the identity. The candidates are the stage-7 inputs (the protonation key and the smearing parameters, not the mesh, which §7.4 deliberately leaves out), or the export lattice's grid digest, as a supplied field contributes it. Constraints: do not do it by setting `fields.charge` true in the provenance, which would move every producer case's solve key; leave every non-producer case's identity unchanged; and test it with a `test_val03_…` that fails on the example above | Next WP touching `validation/comsol.py` or Tier 3 goldens; author to confirm the representation | Any golden, and any recorded leg of VAL-16 or VAL-17, for a case whose charge stage 7 deposits. Nothing today: no golden declares such a case |
+| **OPN-07** | A golden's `case_hash` does not identify a **deposited** fixed charge. `validation/comsol.py` `case_identity` hashes `ResolvedCase.solve_provenance`, whose `fields.charge` says only whether `inputs.charge` was *supplied*. It replaces a supplied field with its contents' record (VAL-03), and on that rule two cases that differ only in their charge table are two cases. Since WP28 (FR-13, FR-14), stage 7 deposits a charge from `structure:` or `inputs.pqr`, and that charge reaches no key in the solve provenance. Its structure, `charge.ph`, `charge.forcefield`, `charge.titration` and `charge.smearing` are all invisible to the identity, and `fields.charge` reads `False`. **[tested]** on `examples/06-pdb-to-mesh/2wcd.case.yaml`, 1 October 2026: pH 7.5 (default), pH 5, pH 9 and `smearing.sharpness` 0.8 all give `case_hash` `8559ee13…`; only the model moves it. Such a case is therefore indistinguishable from the same physics on a supplied mesh with no fixed charge at all. A `χ` that stage 7 derives (§4.4 NOTE on the derived solid fraction; WP30) is invisible in the same way, and for the same reason it does not set `fields.eps_r`. Found by the WP28 review (PR #57, finding #7). The solve's own key is not affected, because the stage-7 artefact's hash already carries the protonation and the deposit (§5.3.2). The decision for the WP that resolves it: what represents a deposited charge in the identity. The candidates are the stage-7 inputs (the protonation key and the smearing parameters, not the mesh, which §7.4 deliberately leaves out), or the export lattice's grid digest, as a supplied field contributes it. Constraints: do not do it by setting `fields.charge` true in the provenance, which would move every producer case's solve key; leave every non-producer case's identity unchanged; and test it with a `test_val03_…` that fails on the example above **Representation decided by the author, 3 October 2026 (§8.2.5 E3): the stage-7 recipe**, with the lattice spacing and the element order left out as discretisation | WP34, which implements E3 and closes this item | Any golden, and any recorded leg of VAL-16 or VAL-17, for a case whose charge stage 7 deposits. Nothing today: no golden declares such a case |
+| **OPN-08** | The content and gate of the stable v1.0 release, now that Phase 4 is released as v0.5 (§8.2.5 E2). IF-01's stability promise is v1.0's | Author | Nothing in Phase 4. The §2.7 row for v1.0 and any requirement retagged to it |
 
 ---
 
@@ -3673,7 +3696,7 @@ needed.
 | FR-28 | None yet |
 | FR-29 | None yet |
 | QR-01 | VER-12 to VER-22, in particular VER-17 and VER-18 |
-| QR-02 | VAL-16, VAL-17 (gating v1.0); VAL-01, VAL-02 (kept, not required) |
+| QR-02 | VAL-16, VAL-17 (gating v0.5); VAL-01, VAL-02 (kept, not required) |
 | QR-03 | VER-01, VER-29, VER-58, VAL-15 |
 | QR-04 | VER-11, VER-40 (the route disagreement as a resolution gate), VER-42 (the identity under a stabilisation mode) |
 | QR-05 | VAL-07, VAL-08, VAL-09 |
@@ -3686,7 +3709,7 @@ needed.
 | QR-12 | VER-10, VER-32, VER-40, VER-41, VER-48 (the stage-1 input and symmetry gates), VER-49 (the radius refusal and the density bounds gate), VER-51 (each contour gate criterion names its value, threshold and (r, z)), VER-52 (each stage-5 criterion likewise), VER-53 (the wall-size gate names the segment), VER-54 (the region graph's refusals name the edge's midpoint), VER-57 (each protonation gate names its frame), VER-59 (the shell's refusals name the z interval or the edge, and the derived `chi`'s gates name the material) |
 | QR-13 | None yet |
 | QR-14 | VER-03 (a correction is a data file), VER-56 (a physics model is one class) |
-| QR-15 | VER-45, VER-46 — the documentation part only, delivered incrementally by the §8.1 documentation track; the JOSS submission and the DOI-archived release remain unverified until v1.0 |
+| QR-15 | VER-45, VER-46 — the documentation part only, delivered incrementally by the §8.1 documentation track; the JOSS submission and the DOI-archived release remain unverified until v0.5 |
 | CON-01 | None yet |
 | CON-02 | VER-20, VER-22 |
 | CON-03 | None yet |
