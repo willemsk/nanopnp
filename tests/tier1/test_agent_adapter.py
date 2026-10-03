@@ -104,6 +104,8 @@ def test_agent_gate_receives_the_working_directory(agent_repo: Path, tmp_path: P
         (r"\\wsl$\Arch\home\u\a.py", "/home/u/a.py"),
         ("//wsl.localhost/Debian/home/u/a.py", "/home/u/a.py"),
         (r"C:\Users\u\a.py", "/mnt/c/Users/u/a.py"),
+        (r"c:\Users\u\a.py", "/mnt/c/Users/u/a.py"),
+        (r"D:\Data\file.txt", "/mnt/d/Data/file.txt"),
         ("/home/u/a.py", "/home/u/a.py"),
     ],
 )

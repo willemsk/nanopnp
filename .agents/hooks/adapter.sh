@@ -55,16 +55,22 @@ $(printf '%s' "$output" | tail -40)"
 
   post-tool)
     input=$(cat)
-    # Extract file path from Antigravity (.toolCall.args.TargetFile) or Claude (.tool_input.file_path)
-    raw_path=$(printf '%s' "$input" | jq -r '.toolCall.args.TargetFile // .tool_input.file_path // ""' 2>/dev/null || true)
-    if [[ -z "$raw_path" ]]; then
-      exit 0
-    fi
-
+    # Extract and normalise file path from Antigravity (.toolCall.args.TargetFile) or Claude (.tool_input.file_path).
     # Normalise a Windows-side path to the native Linux one: a WSL network path
     # (\\wsl.localhost\<distro>\... or \\wsl$\<distro>\..., either slash, any
     # distribution) loses its prefix, and a drive path (C:\...) becomes /mnt/c/...
-    norm_path=$(printf '%s' "$raw_path" | sed -E 's|\\|/|g; s#^//wsl(\.localhost|\$)/[^/]+##I; s#^([A-Za-z]):/#/mnt/\L\1/#')
+    norm_path=$(printf '%s' "$input" | jq -r '
+      (.toolCall.args.TargetFile // .tool_input.file_path // "")
+      | if . == "" then empty
+        else
+          gsub("\\\\"; "/")
+          | sub("^//wsl(\\.localhost|\\$)/[^/]+"; ""; "i")
+          | sub("^(?<d>[A-Za-z]):/"; "/mnt/" + (.d | ascii_downcase) + "/")
+        end
+    ' 2>/dev/null || true)
+    if [[ -z "$norm_path" ]]; then
+      exit 0
+    fi
 
     # Synthesize Claude Code PostToolUse payload for format.sh
     claude_payload=$(jq -n --arg p "$norm_path" '{"tool_name": "Edit", "tool_input": {"file_path": $p}}')
