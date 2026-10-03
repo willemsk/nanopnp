@@ -5,7 +5,7 @@ Every notable change to nanopnp, newest first. The format follows
 [SPECIFICATION.md](SPECIFICATION.md) §2.7:
 
 - a **release** `vX.Y.Z` closes a phase, one minor version per phase: v0.1 is Phase 0, v0.2 is
-  Phase 1, v0.3 is Phase 2, v0.4 is Phase 3 and v1.0 is Phase 4;
+  Phase 1, v0.3 is Phase 2, v0.4 is Phase 3 and v0.5 is Phase 4 (v1.0 is the post-Phase 4 stable release);
 - a **work-package pre-release** `vX.Y.Z-alpha.N` marks the merge of the N-th work package toward
   that release.
 
@@ -16,6 +16,45 @@ every provenance manifest records (FR-25). The versions were renumbered on 30 Se
 Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before then records the old
 version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
+
+## [0.4.0] - 2026-10-03
+
+**Phase 3, the charge pipeline.** A PDB structure or MD ensemble is protonated and converted into an
+axisymmetric fixed charge on the deployed mesh by stage 7, closing the atomistic-to-continuum pipeline
+(PHY-16). `poisson`, `pb` and `pb-linear` join the solver under a unified `ModelDeclaration` interface
+(FR-20, QR-14). VAL-06 validates Poisson potential against APBS within 0.16 % max and 0.04 % rms on
+2WCD at Tier 2. Fixed charge and solid fraction derived by stage 7 are identified by their recipe in
+golden case identity (OPN-07, VAL-03). The axis weight order seam NUM-07 is measured across MMS and
+the frozen ClyA reference case. The test suite is accelerated by 15–20 % while preserving every gate
+(WP33).
+
+The release gathers nine work packages, each tagged, each with its own entry in this file:
+
+- WP26, the physics-model interface (`v0.4.0-alpha.1`);
+- WP27, protonation, the PDB2PQR driver and the PQR artefact (`v0.4.0-alpha.2`);
+- WP28, closed-form charge deposition, charge_grid and stage 7 (`v0.4.0-alpha.3`);
+- WP29, VAL-06 against APBS (`v0.4.0-alpha.4`);
+- WP30, derived solid fraction and exclusion shell (`v0.4.0-alpha.5`);
+- WP31, charge pipeline in the desktop shell (`v0.4.0-alpha.6`);
+- WP32, documentation increment 3 and example 07 (`v0.4.0-alpha.7`);
+- WP33, test suite duration cut without losing checks (`v0.4.0-alpha.8`);
+- WP34, Phase 3 close, open items resolution, and end-of-phase report (`v0.4.0`).
+
+### Added
+
+- The Phase 3 end-of-phase report in `docs/plans/phase-3-charge-pipeline.md`, and `SPECIFICATION.md`
+  §8.2.5 E1–E4.
+- `weight_extra_order` seam in `Measures` (NUM-07), tested under MMS and example 05.
+- Golden `case_identity` incorporates `deposited_charge` and `derived_eps_r` stage-7 recipes (OPN-07,
+  VAL-03).
+- Dedicated identity tests in `tests/tier1/test_validation_identity.py` (VAL-03, VER-23).
+
+### Changed
+
+- §10 OPN-07 marked closed.
+- Version numbering outside specification updated: Phase 4 targets `v0.5.0` rather than `v1.0.0`
+  (§8.2.5 E2), reserving `v1.0` for stable post-Phase 4 release.
+- Stale `.github/scripts/renumber-tags.sh` removed.
 
 ## [0.4.0-alpha.8] - 2026-10-03
 

@@ -1,6 +1,6 @@
 # WP34 — Phase 3 closed: the open items resolved, and the end-of-phase report
 
-**Status: planned, not started.** Written 3 October 2026, after WP33 merged (`main` at `4375797`,
+**Status: delivered, 3 October 2026.** Written 3 October 2026, after WP33 merged (`main` at `4375797`,
 tagged `v0.4.0-alpha.8`). WP34 inherits everything the [current brief](current.md) lists as not to
 be re-decided, and in particular:
 
@@ -156,3 +156,30 @@ in context and classed as Phase 4 (→ v0.5) or stable (kept). `src/nanopnp/__in
 `cli/reference.py` say "before v1.0" of the API, which is the stable meaning, so they are kept. A
 refusal message that changes is covered by its existing test's match, and that match is updated with
 it.
+
+## Outcomes
+
+Delivered 3 October 2026, closing Phase 3 and tagging `v0.4.0`.
+
+1. **OPN-07 closed (VAL-03, §8.2.5 E3, D1–D6)**: `case_identity` in `src/nanopnp/validation/comsol.py`
+   incorporates `deposited_charge` (structure/PQR, protonation parameters, smearing parameters, frame shift,
+   omitting grid spacing and element order) and `derived_eps_r` (structure and derived solid-fraction
+   parameters). Tested in `tests/tier1/test_validation_identity.py`: 2WCD at pH 5, 7.5, 9, and sharpness 0.8
+   yield 4 distinct hashes, while grid spacing and element order leave the hash invariant. All non-producer
+   golden identities remain byte-identical (D4), and `fields.charge` / `fields.eps_r` remain untouched in
+   solve provenance (D5). §10 OPN-07 marked closed.
+2. **NUM-07 measured (D7–D8, §8.2.5 E4)**: `weight_extra_order` seam added to `Measures` (`src/nanopnp/physics/measures.py`)
+   and exercised in `tests/tier2/test_axis_weight_order.py`. Coupled MMS shows +1 lowers error at fixed h
+   while preserving asymptotic rates (P2: 3.0, P1: 2.7), proving consistency-constant behavior. Decision
+   carried to Phase 4.
+3. **`with_section` decision recorded (D9)**: documented in `tests/tier1/test_public_api.py` why
+   `with_section` is kept out of `nanopnp.PUBLIC`.
+4. **Relabelling outside specification (D12, §8.2.5 E2)**: Phase 4 updated from v1.0 to v0.5 across all
+   documentation, guides, examples, and test files; stable v1.0 references preserved.
+5. **Renumbering script removed (D10)**: `.github/scripts/renumber-tags.sh` removed; header updated in
+   `.github/renumbered-tags.txt`.
+6. **Stray tag deleted locally (D11)**: local tag `v0.5.0-alpha.5` deleted.
+7. **Release metadata (D14, E5)**: `CHANGELOG.md` updated with `0.4.0` section; `CITATION.cff` updated to
+   version `0.4.0` with date `2026-10-03`.
+8. **End-of-phase report (D13, E1)**: written in `docs/plans/phase-3-charge-pipeline.md`, with archive-dependent
+   Tier 3 legs carried to Phase 4.

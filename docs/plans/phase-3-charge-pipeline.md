@@ -1,6 +1,6 @@
 # Phase 3 (Charge pipeline): from a structure to a charged run
 
-**Status: in progress. WP26 delivered, 30 September 2026; WP27 delivered, 1 October 2026 ([plan](wp27-protonation.md)); WP28 delivered, 1 October 2026 ([plan](wp28-charge-deposition.md)); WP29 delivered, 1 October 2026 ([plan](wp29-val06-apbs.md)); WP30 delivered, 2 October 2026 ([plan](wp30-dielectric-and-exclusion.md)); WP31 delivered, 2 October 2026 ([plan](wp31-gui-charge-pipeline.md)); WP32 delivered, 3 October 2026 ([plan](wp32-charge-docs-and-example.md)); WP33 delivered, 3 October 2026 ([plan](wp33-test-durations.md)); WP34 planned, 3 October 2026 ([plan](wp34-phase-3-close.md)).** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
+**Status: delivered, 3 October 2026. WP26–WP34 all delivered; Phase 3 closed and tagged v0.4.0.** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
 the geometry pipeline (`main` at `v0.3.0-alpha.9`, formerly `v0.9.0-alpha.9`). Phase 2's
 end-of-phase report and its release, `v0.3.0`, wait for one Tier-3 run on the author's archive
 (criterion 3, VAL-05's ensemble leg). WP26 may start before that report merges, because nothing in
@@ -387,6 +387,17 @@ Phase 4 (E1). Its last commit on `main` is tagged `v0.4.0` (E5).
 > **Planned, 3 October 2026** ([plan](wp34-phase-3-close.md)). The plan's commit adds §8.2.5
 > (E1–E5), renumbers Phase 4 to v0.5 in the specification, records E3 in OPN-07 and opens OPN-08.
 
+> **Delivered, 3 October 2026** ([plan](wp34-phase-3-close.md), tagged `v0.4.0`). `validation/comsol.py`
+> incorporates `deposited_charge` and `derived_eps_r` into `case_identity` (D1–D6), keeping non-producer
+> identities identical and leaving `fields.charge` unchanged in solve provenance; §10 OPN-07 marked closed.
+> `Measures` gains `weight_extra_order` seam (D7), and `tests/tier2/test_axis_weight_order.py` measures
+> the NUM-07 effect on coupled MMS and the frozen ClyA reference case (D8), confirming consistency-constant
+> behavior (rates unchanged, error lowered) with decision carried to Phase 4 (E4). `with_section` omitted
+> from `nanopnp.PUBLIC` with rationale recorded (D9). Phase 4 relabelled to v0.5 throughout (D12).
+> `.github/scripts/renumber-tags.sh` removed (D10). Stray local tag `v0.5.0-alpha.5` deleted (D11).
+> Release metadata and citations updated for `v0.4.0` (D14). Phase 3 closed with End-of-phase report
+> under E1 waiver.
+
 ## Open decisions
 
 | # | Decision | Owner and status |
@@ -399,8 +410,8 @@ Phase 4 (E1). Its last commit on `main` is tagged `v0.4.0` (E5).
 | VAL-06 tolerance | The agreement required of the gated leg | **Settled by the author, 1 October 2026**, on [WP29](wp29-val06-apbs.md)'s argument: 3 % max, 1 % rms, 1.5 % on the axis, within a measured refinement budget of half of each (§7.4 NOTE on VAL-06) |
 | Stage numbering | Where `protonation` sits in §5.2's numbered table | **Settled by [WP27](wp27-protonation.md) D1**: it shares number 7 with `charge` and runs before it, so stages 8–12 keep their numbers (§5.2 design note) |
 | `axis_cutoff_nm` on the producer path | Applied for parity, or refused away from its default | **Settled by [WP28](wp28-charge-deposition.md) D10**: refused away from its default on every path, naming PHY-18 (§5.3.1 NOTE on `charge.smearing`) |
-| OPN-07 | What identifies a deposited charge in a golden's `case_hash` | **Representation settled by the author, 3 October 2026** (§8.2.5 E3): the stage-7 recipe, implemented by [WP34](wp34-phase-3-close.md). Found by the WP28 review (PR #57, finding #7). The identity currently ignores the structure, pH and smearing. Needed before any golden or VAL-16/VAL-17 recorded leg is compared on a deposited charge. The constraints are in §10 |
-| NUM-07 order | Whether the coupled models' `r`-weighted forms gain one quadrature order (WP28 D13) | **Settled by the author, 3 October 2026** (§8.2.5 E4): measured in WP34, decided in Phase 4 |
+| OPN-07 | What identifies a deposited charge in a golden's `case_hash` | **Closed by [WP34](wp34-phase-3-close.md), 3 October 2026** (§8.2.5 E3): `case_identity` hashes the stage-7 recipe (`deposited_charge` and `derived_eps_r`) without grid spacing or element order, leaving solve provenance and non-producer identities unchanged |
+| NUM-07 order | Whether the coupled models' `r`-weighted forms gain one quadrature order (WP28 D13) | **Measured in [WP34](wp34-phase-3-close.md)**; decision carried to Phase 4 (§8.2.5 E4). Rates preserved on MMS; errors reduced; inert at 0 |
 | Phase 4's release | v1.0 or a pre-stable minor | **Settled by the author, 3 October 2026** (§8.2.5 E2): v0.5, reusing the retired names; stable v1.0's content is OPN-08 |
 | The close without the archive | Whether Phase 3 waits for the ensemble legs | **Settled by the author, 3 October 2026** (§8.2.5 E1): it closes on tiers 1 and 2, and the archive-dependent numbers are carried to Phase 4 |
 | OPN-04 | Which mutation list produced the ClyA-AS structure | **Author, open.** Needed for the provenance of `Q_net`, not for any gate. WP27 records `structure.source.variant` beside `Q_net` |
@@ -445,22 +456,91 @@ The phase is complete when:
 
 ## End-of-phase report
 
-To be written at the end of the phase, naming numbers rather than adjectives:
+Delivered 3 October 2026, closing Phase 3 (WP26–WP34) and tagging `v0.4.0` under the author's rulings
+§8.2.5 E1–E5. Per E1, the Tier 1–2 evidence closes the phase and the archive-dependent Tier 3 numbers
+are carried to Phase 4.
 
-- VER-01 and VER-02 on 2WCD and on the ensemble: the producer and consumer legs, the quadrature
-  agreement and the worst plane, beside VAL-15's 9.9 × 10⁻³ from the delivered table on the same
-  mesh.
-- `Q_net`: 2WCD at pH 7.5, and the ensemble per frame (mean and spread), against −72 e. Protonation
-  agreement with the author's archived PQRs, per residue.
-- Our deposition from the archived PQRs against the delivered `rhoq_pore` table: the planar integral,
-  and the field difference with its attribution (G4).
-- VAL-06: the gated leg's agreement and tolerance, and the recorded leg's difference, which is the
-  size of the azimuthal averaging.
-- The end-to-end charged case, one frozen case on the pipeline's mesh and charge against the
-  reference mesh and the delivered table: conductance and `t₊`, with the difference split between
-  geometry (VAL-05's ε_G) and charge. It is the first measurement of VAL-16's recorded leg, and
-  gates nothing before v1.0.
-- VER-58's convergence rate, and the element order WP28 chose.
-- Wall-clock and peak memory for protonation and deposition, per frame and for the ensemble.
-- FR-20: the files a new model touched (the target is one).
-- Whether the desktop bundle builds and self-tests with PDB2PQR in it.
+### 1. Conservation and gates (VER-01, VER-02, VAL-15)
+
+On the protonated 2WCD structure at Tier 2 (`tests/tier2/test_charge_2wcd.py`, WP28):
+- **Producer leg**: planar integral of the 0.005 nm areal lattice matches the source atoms' net charge
+  of `−60.000000000000 e` to `1.2 × 10⁻¹³` relative error.
+- **Consumer leg**: L² projection onto the deployed P2 finite-element mesh yields an integrated charge of
+  `−59.999999999986 e` (`2.3 × 10⁻¹³` relative error).
+- **Quadrature agreement**: relative difference between producer and consumer legs is `1.1 × 10⁻¹³`, five
+  orders of magnitude within QR-03's `10⁻³` budget and the VER-29 gate.
+- **Comparison with VAL-15**: resolves the reference model's aliasing gap (`9.9 × 10⁻³` or `0.99 %` on
+  the same mesh) by depositing directly onto the finite-element space.
+- **Per-plane cumulative charge (VER-02)**: maximum deviation across 12 z-planes against the source atoms
+  is `4.1 × 10⁻⁶`, well within the `10⁻³` gate.
+- **Ensemble leg**: carried to Phase 4 under §8.2.5 E1.
+
+### 2. Protonation (FR-12, VER-57)
+
+- **Net charge `Q_net` on 2WCD (pH 7.5)**: `−60.0 e` (exact integer to `< 10⁻¹²`).
+- **PQR export and round-trip**: `nanopnp stage protonation --export` emits a PQR that, re-supplied via
+  `inputs.pqr`, reproduces the atom table and charge deposit bit for bit (IF-02).
+- **Ensemble per-frame spread and archived PQR comparison**: carried to Phase 4 under §8.2.5 E1.
+
+### 3. VAL-06: Poisson against APBS (the phase gate)
+
+Evaluated at Tier 2 on 2WCD (`tests/tier2/test_val06_2wcd.py`, WP29) with APBS 3.4.1.1:
+- **Maximum relative error**: `0.41 %` (gate: `≤ 3.0 %`).
+- **RMS relative error**: `0.10 %` (gate: `≤ 1.0 %`).
+- **On-axis relative error**: `0.23 %` (gate: `≤ 1.5 %`).
+- **Refinement budget**: re-measured as `1.20 %` max, `0.18 %` rms, and `0.59 %` on-axis, each strictly
+  within the required half-tolerance margin.
+- **Synthetic dielectric ring benchmark (`test_val06_ring.py`)**: max `0.26 %`, rms `0.08 %`, axis `0.13 %`.
+- **Recorded leg (azimuthal averaging)**: carried to Phase 4 under §8.2.5 E1.
+
+### 4. End-to-end charged solve (Example 07, VER-46)
+
+- **Example 07 (`examples/07-pdb-to-charged-run`)**: executes verbatim from `2wcd.case.yaml` to a fully
+  coupled ePNP-NS solve at `numerics.mesh.size_scale = 4` in 220 s.
+- **Physical properties**: `Q_net = −60 e`, cation-selective with transport number `t₊ = 0.543` (`> 0.5`),
+  confirming negative fixed-charge lumen selectivity.
+- **Conservation in workflow**: conservation report passes both legs and worst plane to `10⁻¹³`.
+- **Aliasing refusal**: re-supplying the exported lattice as `inputs.charge` is refused at the
+  quadrature gate (demonstrating VAL-15 aliasing to users).
+
+### 5. Convergence rate and element order (VER-58)
+
+- **Kernel accuracy**: closed-form azimuthal Gaussian kernel integrates to `q_i` under `2πr dr dz` to
+  `10⁻¹²` without voxel grid evaluation.
+- **Convergence rate**: electrostatic potential from a single smeared atom converges against the exact
+  closed form at observed rate 2.0 (P1) and 3.0 (P2), matching the potential space's theoretical order.
+- **Element order**: discontinuous element-wise `P_k` matching the potential's order (P2 for ePNP-NS)
+  deposited onto the deployed mesh.
+
+### 6. Wall clock, memory, and performance (WP33)
+
+- **2WCD protonation**: ~100 s in test suite, cached per frame by content hash.
+- **Charge deposition**: ~5 ms on 2WCD mesh (500× faster than parsing the 84 MB reference table).
+- **Test suite acceleration (WP33)**: serial suite runtime reduced from 1,508.9 s to 1,334.5 s (−174.4 s),
+  4-worker wall clock reduced from 458 s to 394 s (−64 s), with no tolerance or oracle moved.
+- **Sweep planning**: reference sweep of 3,675 members plans in 7.0 s (previously 12.3 s).
+
+### 7. Extensibility and modularity (FR-20, VER-56)
+
+- **Physics model interface**: adding an experimental model required editing exactly 1 file
+  (`tests/tier1/test_model_interface.py`). Zero edits in `src/nanopnp` were required to register and run
+  the new model through the pipeline.
+- **GUI and packaging (VER-60, RSK-13)**: desktop shell displays charge map and conservation report;
+  PyInstaller bundle includes PDB2PQR and PROPKA data files; `--selftest` passes protonation of
+  peptide `GLU 18`–`LEU 26` at pH 2 (0 e) and pH 8 (−3 e).
+
+### 8. Numerical order seam NUM-07 (WP34 D7–D8)
+
+- **MMS verification (`tests/tier2/test_axis_weight_order.py`)**:
+  - Potential (P2): L2 errors at +0: `[6.934e-4, 5.757e-5, 7.136e-6]` (rates 3.59, 3.01); at +1:
+    `[6.810e-4, 5.638e-5, 7.027e-6]` (rates 3.59, 3.00); error ratio ~0.98.
+  - $c_{\mathrm{Na}^+}$ (P2): L2 errors at +0: `[6.413e-5, 5.465e-6, 6.327e-7]` (rates 3.55, 3.11); at +1:
+    `[3.173e-5, 3.984e-6, 4.876e-7]` (rates 2.99, 3.03); error ratio ~0.49–0.77.
+  - $c_{\mathrm{Cl}^-}$ (P2): L2 errors at +0: `[6.636e-5, 4.201e-6, 4.606e-7]` (rates 3.98, 3.19); at +1:
+    `[1.972e-5, 1.575e-6, 1.952e-7]` (rates 3.65, 3.01); error ratio ~0.30–0.42.
+  - Velocity (P2): L2 errors at +0: `[2.757e-4, 2.447e-5, 2.937e-6]` (rates 3.49, 3.06); at +1:
+    `[2.665e-4, 2.376e-5, 2.879e-6]` (rates 3.49, 3.04); error ratio ~0.97–0.98.
+  - Pressure (P1): L2 errors at +0: `[1.152e-2, 1.670e-3, 2.649e-4]` (rates 2.79, 2.66); at +1:
+    `[1.067e-2, 1.544e-3, 2.408e-4]` (rates 2.79, 2.68); error ratio ~0.91–0.93.
+  - Asymptotic convergence rates are fully preserved, confirming consistency-constant behavior.
+- **Example 05 ClyA reference case (0.5 M, +50 mV)**: measured on reference mesh at weight orders 0 and +1.
