@@ -21,8 +21,9 @@ refusal look like a missing feature. **Add section** is offered for exactly the
 sections :meth:`~nanopnp.gui.case_model.CaseEditor.addable` names, whose empty
 form resolves as their absence, and enables their fields (WP31 D13).
 
-**A bounded number is a spin box over the schema's own range** (WP31 D12), and
-it stages a value only when the user changes it. A spin box rounds what it
+**A bounded number is a spin box over the schema's own range** (WP31 D12): a
+``QSpinBox`` stepping by one for an integer field, a ``QDoubleSpinBox`` for a
+float (WP32 D12). It stages a value only when the user changes it. A spin box rounds what it
 shows to its decimals, so staging on display would rewrite a loaded ``7.125``
 as ``7.13`` without anyone having touched it.
 """
@@ -152,6 +153,14 @@ class CaseEditorWidget(QtWidgets.QWidget):
                 )
             )
             widget = listing
+        elif state.kind == "bounded" and state.bounds is not None and state.integral:
+            whole = QtWidgets.QSpinBox()
+            lower, upper = state.bounds
+            whole.setRange(math.ceil(lower), math.floor(upper))
+            whole.setSingleStep(1)
+            whole.setKeyboardTracking(False)
+            whole.valueChanged.connect(self._setter(state.path, whole.value))
+            widget = whole
         elif state.kind == "bounded" and state.bounds is not None:
             spin = QtWidgets.QDoubleSpinBox()
             lower, upper = state.bounds
@@ -201,6 +210,12 @@ class CaseEditorWidget(QtWidgets.QWidget):
                 widget.setSpecialValueText("absent" if absent else "")
                 if isinstance(state.value, int | float) and not isinstance(state.value, bool):
                     widget.setValue(float(state.value))
+                else:
+                    widget.setValue(widget.minimum())
+            elif isinstance(widget, QtWidgets.QSpinBox):
+                widget.setSpecialValueText("absent" if absent else "")
+                if isinstance(state.value, int) and not isinstance(state.value, bool):
+                    widget.setValue(state.value)
                 else:
                     widget.setValue(widget.minimum())
             elif isinstance(widget, QtWidgets.QLineEdit):

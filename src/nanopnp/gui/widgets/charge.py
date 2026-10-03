@@ -122,9 +122,9 @@ class ChargeWidget(QtWidgets.QWidget):
         The case open for editing; whether a build is offered is read from it.
     control
         The build's view-model. The window passes the Geometry tab's, so the
-        two tabs share one walk (D2); a test may pass a fresh one.
-    store
-        The artefact store's root, or ``None`` for the process default.
+        two tabs share one walk (D2); a test may pass a fresh one. The tab
+        starts no walk of its own: the window starts it through the Geometry
+        tab and calls :meth:`follow` (WP32 D13).
     """
 
     buildRequested = QtCore.Signal()
@@ -135,13 +135,11 @@ class ChargeWidget(QtWidgets.QWidget):
         editor: CaseEditor,
         control: RunControl,
         *,
-        store: Path | None = None,
         parent: QtWidgets.QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self._case_editor = editor
         self._control = control
-        self._store = store
         self._model: RunModel | None = None
         self._settled = True
         self._stages = StageList(())
@@ -234,29 +232,6 @@ class ChargeWidget(QtWidgets.QWidget):
         self._show_buttons()
 
     # -- building --------------------------------------------------------------------
-
-    def build(self, case_path: str | Path) -> bool:
-        """Start a walk through ``charge`` on this tab's control, and follow it.
-
-        The window starts the walk through the Geometry tab instead, so that
-        tab shows stages 1 to 6, and calls :meth:`follow`; this is the same
-        walk for a tab that stands alone.
-
-        Returns
-        -------
-        bool
-            Whether the build started.
-        """
-        offer = build_offer(self._case_editor.document)
-        if not offer.offered:
-            self._status.setText(f"not built: {offer.reason}")
-            return False
-        try:
-            self._control.start(case_path, store=self._store, upto=BUILD_UPTO)
-        except RuntimeError as error:
-            self._status.setText(f"not built: {error}")
-            return False
-        return self.follow(case_path)
 
     def follow(self, case_path: str | Path) -> bool:
         """Show the walk the control has just started as this tab's build (D2).
