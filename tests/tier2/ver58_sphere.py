@@ -1,4 +1,4 @@
-"""VER-58 at Tier 2: one smeared atom deposited and solved, against its closed-form potential.
+"""VER-58's problem: one smeared atom deposited and solved, against its closed-form potential.
 
 *Design* §4 of the WP28 plan. A unit charge smeared as PHY-16 step 4's 3D Gaussian
 sits at ``(r_i, z_i)`` in a uniform dielectric inside a grounded sphere of radius
@@ -21,15 +21,25 @@ to half an element and shows as ``O(h^2)`` (*Design* §2). The error is computed
 a degree-8 rule of this file's own on the elements of the disc, sampling the
 NGSolve field through its own point location, so the measurement does not share
 the projection's quadrature.
+
+The tests are in ``test_charge_potential_axis.py`` (``r_i = 0``) and
+``test_charge_potential_off_axis.py`` (``r_i = 1.5`` nm), two files so that the
+scheduler of ``--dist loadfile`` can run them at once (WP33 D4). Everything a
+solve needs that does not depend on the deposit's order -- the mesh, the lattice,
+and the closed form at the quadrature points -- is computed once per process and
+read by both orders (:func:`_reference`). The closed form was nine tenths of a
+solve's time, and it is the same numbers for ``P2`` and ``P0``.
 """
 
 from __future__ import annotations
 
+import functools
 import logging
 import math
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
-import pytest
 from scipy.special import erf
 
 from nanopnp.charge.deposit import deposit, gridfunction, triangle_rule
@@ -40,7 +50,8 @@ from nanopnp.mesh.adapter import MeshData, from_ngsolve, to_ngsolve
 from nanopnp.physics import models
 from nanopnp.physics.measures import AXISYMMETRIC
 
-logger = logging.getLogger(__name__)
+if TYPE_CHECKING:
+    from nanopnp.charge.kernel import RadialGrid
 
 SPHERE_NM = 10.0
 """``R``: the grounded sphere."""
@@ -79,6 +90,24 @@ with the mesh. Measured at ``r_i = 0`` on the 0.05 nm level (P2): the disc error
 0.0025 nm it is 2.99, the deposit's and the solve's.
 """
 
+LEVELS_NM = (0.2, 0.1, 0.05)
+"""The near-atom element sizes: halved twice, so VER-58 asserts a rate between the finest two."""
+
+
+def _azimuths() -> tuple[np.ndarray, np.ndarray]:
+    """Return the distinct azimuths of the :data:`AZIMUTHS`-point trapezoid rule and their weights.
+
+    Both integrands depend on ``theta`` only through ``cos(theta)``, so the points
+    ``theta`` and ``2 pi - theta`` carry the same value: the rule is evaluated on
+    ``0 <= theta <= pi`` with every interior point counted twice (WP33 D4). It is
+    the same rule; only the duplicated evaluations are gone.
+    """
+    half = AZIMUTHS // 2
+    theta = 2.0 * math.pi * np.arange(half + 1) / AZIMUTHS
+    weights = np.full(half + 1, 2.0 / AZIMUTHS)
+    weights[0] = weights[-1] = 1.0 / AZIMUTHS
+    return theta, weights
+
 
 def exact_potential_V(
     r_nm: np.ndarray, z_nm: np.ndarray, r_i: float, z_i: float, width_nm: float, permittivity: float
@@ -86,7 +115,7 @@ def exact_potential_V(
     """Return the closed form of *Design* §4 for a unit charge, in volts."""
     r = np.asarray(r_nm, dtype=np.float64)[..., None] * 1e-9
     z = np.asarray(z_nm, dtype=np.float64)[..., None] * 1e-9
-    theta = 2.0 * math.pi * np.arange(AZIMUTHS) / AZIMUTHS
+    theta, weights = _azimuths()
     ri, zi, w, sphere = r_i * 1e-9, z_i * 1e-9, width_nm * 1e-9, SPHERE_NM * 1e-9
     distance = np.sqrt(r**2 + ri**2 - 2.0 * r * ri * np.cos(theta) + (z - zi) ** 2)
     # erf(d/w)/d -> 2/(w sqrt(pi)) as d -> 0, its finite limit at the ring itself.
@@ -102,37 +131,9 @@ def exact_potential_V(
         image_distance = np.sqrt(
             r**2 + (scale * ri) ** 2 - 2.0 * r * scale * ri * np.cos(theta) + (z - scale * zi) ** 2
         )
-        image = (sphere / a) * np.mean(1.0 / image_distance, axis=-1)
+        image = (sphere / a) * ((1.0 / image_distance) @ weights)
     prefactor = ELEMENTARY_CHARGE / (4.0 * math.pi * permittivity)
-    return np.asarray(prefactor * (np.mean(direct, axis=-1) - image))
-
-
-def test_ver58_the_closed_form_vanishes_on_the_sphere() -> None:
-    """The oracle first: the potential is zero on the grounded sphere, to 1e-17 of its peak."""
-    eps = VACUUM_PERMITTIVITY * 78.15
-    for r_i in (0.0, 1.5):
-        angles = np.linspace(-0.5 * math.pi, 0.5 * math.pi, 41)
-        on_sphere = exact_potential_V(
-            SPHERE_NM * np.cos(angles), SPHERE_NM * np.sin(angles), r_i, Z_ATOM_NM, WIDTH_NM, eps
-        )
-        peak = float(
-            exact_potential_V(
-                np.array([r_i]), np.array([Z_ATOM_NM]), r_i, Z_ATOM_NM, WIDTH_NM, eps
-            )[0]
-        )
-        assert np.max(np.abs(on_sphere)) <= 1e-12 * abs(peak)
-    # On the axis every ring point is equidistant: the closed form's own special case.
-    rho = math.hypot(1.5, 2.0 - Z_ATOM_NM) * 1e-9
-    a = math.hypot(1.5, Z_ATOM_NM)
-    scale = SPHERE_NM**2 / a**2
-    rho_image = math.hypot(scale * 1.5, 2.0 - scale * Z_ATOM_NM) * 1e-9
-    axis = (
-        ELEMENTARY_CHARGE
-        / (4 * math.pi * eps)
-        * (math.erf(rho / (WIDTH_NM * 1e-9)) / rho - SPHERE_NM / a / rho_image)
-    )
-    found = exact_potential_V(np.array([0.0]), np.array([2.0]), 1.5, Z_ATOM_NM, WIDTH_NM, eps)
-    assert float(found[0]) == pytest.approx(axis, rel=1e-13)
+    return np.asarray(prefactor * (direct @ weights - image))
 
 
 def _sphere(r_i: float, z_i: float, near_nm: float) -> MeshData:
@@ -167,23 +168,17 @@ def _sphere(r_i: float, z_i: float, near_nm: float) -> MeshData:
     return from_ngsolve(ngs.Mesh(generated))
 
 
-def _solve_error(
-    r_i: float, width_nm: float, near_nm: float, deposit_order: int, *, beyond_nm: float = 0.0
-) -> tuple[float, float, int]:
-    """Deposit, solve ``poisson`` at P2, and return the disc error, the axis error and the size.
-
-    The disc error is ``(int (phi_h - phi)^2 r)^(1/2) / (int phi^2 r)^(1/2)`` over the
-    elements of the disc whose centroid is at least ``beyond_nm`` from the atom;
-    the axis error the largest ``|phi_h - phi|`` on ``r = 0`` within the disc,
-    relative to ``max |phi|`` there.
-    """
-    import ngsolve as ngs
-
-    electrolyte = Electrolyte.from_parameter_file("willems2020_nacl")
-    permittivity = VACUUM_PERMITTIVITY * electrolyte.permittivity_0
+@functools.cache
+def _mesh(r_i: float, near_nm: float) -> tuple[MeshData, Any]:
+    """Return :func:`_sphere`'s mesh and its NGSolve form, built once per ``(r_i, near_nm)``."""
     data = _sphere(r_i, Z_ATOM_NM, near_nm)
     assert {"cis", "trans", "axis"} <= set(data.boundaries), data.boundaries
-    mesh = to_ngsolve(data)
+    return data, to_ngsolve(data)
+
+
+@functools.cache
+def _lattice(r_i: float, width_nm: float) -> RadialGrid:
+    """Return the atom's lattice at :data:`H`: it depends on neither the mesh nor the order."""
     atoms = SourceAtoms(
         r_nm=np.array([r_i]),
         z_nm=np.array([Z_ATOM_NM]),
@@ -194,9 +189,82 @@ def _solve_error(
         frames=1,
         shift_z_nm=0.0,
     )
-    lattice = sum_kernel(atoms, H).grid
-    found = deposit(lattice, data, deposit_order)
-    model = models.create("poisson", electrolyte=electrolyte)
+    return sum_kernel(atoms, H).grid
+
+
+@functools.cache
+def _electrolyte() -> Electrolyte:
+    return Electrolyte.from_parameter_file("willems2020_nacl")
+
+
+@dataclass(frozen=True)
+class Reference:
+    """What one mesh's error measurement needs that no deposit order changes."""
+
+    located: Any
+    """The quadrature points, located in the NGSolve mesh."""
+    weight: np.ndarray
+    """The quadrature weight times ``r`` at each point."""
+    exact: np.ndarray
+    """The closed form at each point, in volts."""
+    norm: float
+    """``(int phi^2 r)^(1/2)`` over the measured elements."""
+    axis_located: Any
+    """The axis samples within the disc, located; ``None`` where the disc misses the axis."""
+    axis_exact: np.ndarray | None
+    """The closed form at them."""
+
+
+@functools.cache
+def _reference(r_i: float, width_nm: float, near_nm: float, beyond_nm: float) -> Reference:
+    """Return the closed form on the disc's elements at least ``beyond_nm`` from the atom."""
+    data, mesh = _mesh(r_i, near_nm)
+    permittivity = VACUUM_PERMITTIVITY * _electrolyte().permittivity_0
+    near = data.materials.index("near")
+    elements = np.flatnonzero(data.triangle_material == near)
+    corners = data.vertices[data.triangles[elements]]
+    centroid = corners.mean(axis=1)
+    keep = np.hypot(centroid[:, 0] - r_i, centroid[:, 1] - Z_ATOM_NM) >= beyond_nm
+    corners = corners[keep]
+    barycentric, weights = triangle_rule(8)
+    points = np.einsum("qv,mvd->mqd", barycentric, corners).reshape(-1, 2)
+    edges = corners[:, 1:] - corners[:, :1]
+    area = 0.5 * np.abs(edges[:, 0, 0] * edges[:, 1, 1] - edges[:, 0, 1] * edges[:, 1, 0])
+    exact = exact_potential_V(points[:, 0], points[:, 1], r_i, Z_ATOM_NM, width_nm, permittivity)
+    weight = (np.outer(area, weights).reshape(-1)) * points[:, 0]
+    norm = math.sqrt(float(np.sum(weight * exact**2)))
+    axis_located: Any = None
+    axis_exact: np.ndarray | None = None
+    if r_i < DISC_NM:
+        axis_z = np.linspace(Z_ATOM_NM - 0.95 * DISC_NM, Z_ATOM_NM + 0.95 * DISC_NM, 201)
+        axis_located = mesh(np.zeros_like(axis_z), axis_z)
+        axis_exact = exact_potential_V(
+            np.zeros_like(axis_z), axis_z, r_i, Z_ATOM_NM, width_nm, permittivity
+        )
+    return Reference(
+        located=mesh(points[:, 0], points[:, 1]),
+        weight=weight,
+        exact=exact,
+        norm=norm,
+        axis_located=axis_located,
+        axis_exact=axis_exact,
+    )
+
+
+def solve_error(
+    r_i: float, width_nm: float, near_nm: float, deposit_order: int, *, beyond_nm: float = 0.0
+) -> tuple[float, float, int]:
+    """Deposit, solve ``poisson`` at P2, and return the disc error, the axis error and the size.
+
+    The disc error is ``(int (phi_h - phi)^2 r)^(1/2) / (int phi^2 r)^(1/2)`` over the
+    elements of the disc whose centroid is at least ``beyond_nm`` from the atom;
+    the axis error the largest ``|phi_h - phi|`` on ``r = 0`` within the disc,
+    relative to ``max |phi|`` there.
+    """
+    data, mesh = _mesh(r_i, near_nm)
+    reference = _reference(r_i, width_nm, near_nm, beyond_nm)
+    found = deposit(_lattice(r_i, width_nm), data, deposit_order)
+    model = models.create("poisson", electrolyte=_electrolyte())
     scales = model.scales
     solution = model.solve(
         mesh,
@@ -204,46 +272,26 @@ def _solve_error(
         potential_values=mesh.BoundaryCF({"cis": 0.0, "trans": 0.0}),
         fixed_charge=gridfunction(found, mesh) / scales.charge_density_C_m3,
     )
-
-    near = data.materials.index("near")
-    elements = np.flatnonzero(data.triangle_material == near)
-    corners = data.vertices[data.triangles[elements]]
-    centroid = corners.mean(axis=1)
-    keep = np.hypot(centroid[:, 0] - r_i, centroid[:, 1] - Z_ATOM_NM) >= beyond_nm
-    elements, corners = elements[keep], corners[keep]
-    barycentric, weights = triangle_rule(8)
-    points = np.einsum("qv,mvd->mqd", barycentric, corners).reshape(-1, 2)
-    edges = corners[:, 1:] - corners[:, :1]
-    area = 0.5 * np.abs(edges[:, 0, 0] * edges[:, 1, 1] - edges[:, 0, 1] * edges[:, 1, 0])
-    located = mesh(points[:, 0], points[:, 1])
-    computed = solution.state(located).reshape(-1) * scales.potential_V
-    exact = exact_potential_V(points[:, 0], points[:, 1], r_i, Z_ATOM_NM, width_nm, permittivity)
-    weight = (np.outer(area, weights).reshape(-1)) * points[:, 0]
-    error = math.sqrt(float(np.sum(weight * (computed - exact) ** 2)))
-    norm = math.sqrt(float(np.sum(weight * exact**2)))
-
-    axis_z = np.linspace(Z_ATOM_NM - 0.95 * DISC_NM, Z_ATOM_NM + 0.95 * DISC_NM, 201)
-    if r_i >= DISC_NM:
+    computed = solution.state(reference.located).reshape(-1) * scales.potential_V
+    error = math.sqrt(float(np.sum(reference.weight * (computed - reference.exact) ** 2)))
+    if reference.axis_exact is None:
         axis_error = float("nan")
     else:
-        on_axis = mesh(np.zeros_like(axis_z), axis_z)
-        axis_h = solution.state(on_axis).reshape(-1) * scales.potential_V
-        axis_exact = exact_potential_V(
-            np.zeros_like(axis_z), axis_z, r_i, Z_ATOM_NM, width_nm, permittivity
+        axis_h = solution.state(reference.axis_located).reshape(-1) * scales.potential_V
+        axis_error = float(
+            np.max(np.abs(axis_h - reference.axis_exact)) / np.max(np.abs(reference.axis_exact))
         )
-        axis_error = float(np.max(np.abs(axis_h - axis_exact)) / np.max(np.abs(axis_exact)))
-    del ngs
-    return error / norm, axis_error, data.element_count
+    return error / reference.norm, axis_error, data.element_count
 
 
-@pytest.mark.parametrize("r_i", [0.0, 1.5])
-def test_ver58_deposited_potential_converges_at_the_potentials_own_rate(r_i: float) -> None:
-    """The P2 deposit's potential error falls at >= 2.5 between the finest two meshes; P0's at 2."""
-    sizes = (0.2, 0.1, 0.05)
+def errors_and_rates(
+    r_i: float, logger: logging.Logger
+) -> tuple[dict[int, list[float]], dict[int, list[float]]]:
+    """Return the disc errors at each of :data:`LEVELS_NM` and the rates between them, by order."""
     errors: dict[int, list[float]] = {2: [], 0: []}
     for order in (2, 0):
-        for near in sizes:
-            error, axis, elements = _solve_error(r_i, WIDTH_NM, near, order)
+        for near in LEVELS_NM:
+            error, axis, elements = solve_error(r_i, WIDTH_NM, near, order)
             errors[order].append(error)
             logger.info(
                 "VER-58 r_i = %.1f nm, w = %.2f nm, near h = %.3f nm (%d elements), P%d deposit: "
@@ -261,24 +309,4 @@ def test_ver58_deposited_potential_converges_at_the_potentials_own_rate(r_i: flo
         for order, found in errors.items()
     }
     logger.info("VER-58 r_i = %.1f nm: rates P2 %s, P0 %s", r_i, rates[2], rates[0])
-    assert rates[2][-1] >= 2.5
-    assert rates[0][-1] < rates[2][-1]
-    assert errors[2][-1] < errors[0][-1]
-
-
-def test_ver58_an_unresolved_atom_is_recorded_beside_p0() -> None:
-    """Recorded: a CHARMM polar hydrogen on 0.1 nm elements, the error at >= 1 nm from it."""
-    width = 0.0112
-    found = {}
-    for order in (2, 0):
-        error, _, elements = _solve_error(1.5, width, 0.1, order, beyond_nm=1.0)
-        found[order] = error
-        logger.info(
-            "VER-58 unresolved atom (w = %.4f nm) on 0.1 nm elements (%d), P%d deposit: L2(r) "
-            "error at >= 1 nm from it %.3e",
-            width,
-            elements,
-            order,
-            error,
-        )
-    assert all(math.isfinite(value) for value in found.values())
+    return errors, rates
