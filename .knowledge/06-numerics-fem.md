@@ -88,7 +88,11 @@ the axis inside the membrane; with `bonus_intorder=1` on both terms, 1.1e-13. Th
 a uniform-permittivity problem with no source are exact at the default. With uniform permittivity
 and the source the error is 3.4e-2 `V_T`: the source is short too. `poisson` assembles with
 `RADIAL_WEIGHT_ORDER = 1`; the coupled models keep the default (SPECIFICATION.md NUM-07 NOTE on the
-`r` weight). Source: WP26 implementation session, 30 September 2026.
+`r` weight). Source: WP26 implementation session, 30 September 2026. Measured on the coupled MMS in
+WP34 (**[tested]**, 3 October 2026; `tests/tier2/test_axis_weight_order.py`): `weight_extra_order = 1`
+at `maxh` 0.4, 0.2, 0.1 nm lowers error at fixed h (ratios ~0.98 for potential and velocity,
+0.30–0.77 for concentrations, 0.91–0.93 for pressure) while preserving asymptotic rates (P2: 3.0;
+P1: 2.7), confirming it acts as a consistency constant. Decision carried to Phase 4 (E4).
 
 ### 2.3 `specialcf.mesh_size` is `sqrt(2|K|)`, and it evaluates pointwise **[tested]**
 

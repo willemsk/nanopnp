@@ -62,11 +62,31 @@ class Measures:
 
     symmetry: Symmetry = "axisymmetric"
     element_order: int = 2
+    weight_extra_order: int = 0
+    """Orders added for the ``r`` weight to every non-singular axisymmetric term.
+
+    NGSolve estimates an integrand's order from its trial and test functions and
+    does not see the coordinate, so a non-singular ``r``-weighted form is
+    integrated one order short of its degree (NUM-07 NOTE on the ``r`` weight).
+    This is the seam WP34 measures that shortfall through on the coupled models
+    (D7, section 8.2.5 E4). No case key, model option or CLI flag reaches it, and
+    nothing keys on it: at the default 0 every assembled form is the one it was,
+    so a run at 1 must not share a store with a run at 0, whose solve key it
+    would collide with. A singular term is untouched, because its bonus is
+    already at least ``SINGULAR_MIN_ORDER`` and covers the weight.
+    """
 
     @property
     def is_axisymmetric(self) -> bool:
         """Whether integrals carry the ``r`` weight."""
         return self.symmetry == "axisymmetric"
+
+    def _term_bonus(self, *, singular: bool, extra: int) -> int:
+        """Return the bonus of one assembled term: :meth:`bonus_order` plus the weight's."""
+        bonus = self.bonus_order(singular=singular, extra=extra)
+        if self.is_axisymmetric and not singular:
+            bonus += self.weight_extra_order
+        return bonus
 
     @property
     def coordinate_names(self) -> tuple[str, str]:
@@ -146,7 +166,7 @@ class Measures:
 
         if "bonus_intorder" in kwargs:
             raise ValueError("pass extra_order, not bonus_intorder, so the 1/r guarantee holds")
-        bonus = self.bonus_order(singular=singular, extra=extra_order)
+        bonus = self._term_bonus(singular=singular, extra=extra_order)
         return integrand * self.radial_weight * ngs.dx(bonus_intorder=bonus, **kwargs)
 
     def surface(
@@ -167,7 +187,7 @@ class Measures:
 
         if "bonus_intorder" in kwargs:
             raise ValueError("pass extra_order, not bonus_intorder, so the 1/r guarantee holds")
-        bonus = self.bonus_order(singular=singular, extra=extra_order)
+        bonus = self._term_bonus(singular=singular, extra=extra_order)
         return integrand * self.radial_weight * ngs.ds(bonus_intorder=bonus, **kwargs)
 
     def integrate(
