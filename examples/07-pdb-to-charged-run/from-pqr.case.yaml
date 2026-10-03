@@ -1,0 +1,27 @@
+# The same run, with the PQR exported from 2wcd.case.yaml's protonation supplied
+# back through inputs.pqr. The PQR replaces the step the protonation keys
+# configure, so there is no charge block: PDB2PQR and PROPKA do not run. The
+# structure stays, because stages 1 to 6 still build the geometry from it.
+schema: nanopnp/case/v2
+name: 2wcd-from-pqr
+structure:
+  source: {path: 2wcd-prepared.pdb}
+  symmetry: {point_group: C12}
+inputs:
+  pqr: {path: 2wcd.pqr, format: pqr}
+electrolyte:
+  species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]
+  concentration_M: 0.15
+  parameters: willems2020_nacl
+  corrections:                     # the validated model: no deviation recorded
+    diffusivity:  {model: willems2020_nacl}
+    mobility:     {model: willems2020_nacl}
+    viscosity:    {model: willems2020_nacl}
+    permittivity: {model: willems2020_nacl}
+    density:      {model: willems2020_nacl}
+    steric:       {model: borukhov}
+boundary_conditions: {bias_V: 0.05, ground: cis}
+physics: {model: epnp-ns, solid_permittivities: {protein: 20.0, membrane: 3.2}}
+numerics:
+  mesh: {size_scale: 4.0}
+outputs: [current, transport_numbers]

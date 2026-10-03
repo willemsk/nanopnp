@@ -1,0 +1,27 @@
+# The charge lattice exported from 2wcd.case.yaml's stage 7, supplied back as a
+# field through inputs.charge. Stage 7 samples a supplied field at quadrature
+# points, and on this mesh the lattice's structure is finer than an element, so
+# its quadrature-agreement gate refuses it. Within nanopnp, deposit from the PQR.
+schema: nanopnp/case/v2
+name: 2wcd-resupplied
+structure:
+  source: {path: 2wcd-prepared.pdb}
+  symmetry: {point_group: C12}
+inputs:
+  charge: {path: charge.field.yaml, format: field1}
+electrolyte:
+  species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]
+  concentration_M: 0.15
+  parameters: willems2020_nacl
+  corrections:
+    diffusivity:  {model: willems2020_nacl}
+    mobility:     {model: willems2020_nacl}
+    viscosity:    {model: willems2020_nacl}
+    permittivity: {model: willems2020_nacl}
+    density:      {model: willems2020_nacl}
+    steric:       {model: borukhov}
+boundary_conditions: {bias_V: 0.05, ground: cis}
+physics: {model: epnp-ns, solid_permittivities: {protein: 20.0, membrane: 3.2}}
+numerics:
+  mesh: {size_scale: 4.0}
+outputs: [current, transport_numbers]

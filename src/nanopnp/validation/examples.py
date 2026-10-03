@@ -65,8 +65,12 @@ PROGRAMS: tuple[str, ...] = ("nanopnp", "python")
 EXPECTED_EXIT: Mapping[str, int] = {"run": EXIT_OK, "plan": EXIT_OK, "refused": EXIT_GATE}
 """The tags a README may use, against the exit status each command in the block must return."""
 
-UP = "../../"
-"""The prefix a command uses to reach a repository file from an example directory."""
+UP = "../"
+"""The prefix a command uses to reach a file outside its example directory.
+
+``../../<path>`` reaches a repository file and ``../<sibling>/<file>`` a sibling
+example's (WP32 D5).
+"""
 
 GENERATED = ("__pycache__",)
 """Ignored when copying an example, beside the patterns of ``examples/.gitignore``."""
@@ -133,38 +137,49 @@ def _program(name: str) -> str:
 def copy_example(example: Path, root: Path, *, repository: Path) -> Path:
     """Copy an example directory into ``root``, laid out as in the repository.
 
-    The example lands at ``root/examples/<name>``. A command that reaches a
-    repository file by ``../../<path>`` gets that file's directory mirrored at
-    ``root/<dir>`` too, so the same relative path resolves in the copy. Nothing
-    the example generated in the source tree is copied: only tracked-looking
-    inputs, never ``store/`` or a written mesh, which the test must produce itself.
+    The example lands at ``root/examples/<name>``. A command word that starts
+    with ``../`` and resolves, against the example directory, to a file inside
+    ``repository`` gets that file's directory mirrored at the same place under
+    ``root``, so the same relative path resolves in the copy: ``../../<path>``
+    reaches a repository file, and ``../<sibling>/<file>`` runs a sibling
+    example's script rather than a copy of it, so the two cannot drift apart
+    (WP32 D5). Nothing an example generated in the source tree is copied: only
+    tracked-looking inputs, never ``store/`` or a written mesh, which the test
+    must produce itself.
 
     What counts as generated is read from ``examples/.gitignore``, the one list of
-    what running an example writes, so that list and this copy cannot drift.
+    what running an example writes, so that list and this copy cannot drift. It
+    filters the example and any sibling mirrored beside it; a directory outside
+    ``examples/`` loses only its ``*.msh``.
 
     Returns
     -------
     Path
         The copied example directory, to run the commands in.
     """
+    generated = _generated_patterns(example.parent / ".gitignore")
     destination = root / "examples" / example.name
-    shutil.copytree(
-        example,
-        destination,
-        ignore=shutil.ignore_patterns(*_generated_patterns(example.parent / ".gitignore")),
-    )
+    shutil.copytree(example, destination, ignore=shutil.ignore_patterns(*generated))
+    repository = repository.resolve()
+    examples = example.parent.resolve()
     readme = example / "README.md"
     commands = [command for tag in EXPECTED_EXIT for command in tagged_commands(readme, tag)]
     for argv in commands:
         for word in argv[1:]:
-            if word.startswith(UP):
-                source = (repository / word[len(UP) :]).parent
-                target = root / source.relative_to(repository)
-                # Merged rather than skipped when the target exists: a directory
-                # mirrored for an earlier word may be this one's ancestor or child.
-                shutil.copytree(
-                    source, target, ignore=shutil.ignore_patterns("*.msh"), dirs_exist_ok=True
-                )
+            if not word.startswith(UP):
+                continue
+            source = (example / word).resolve().parent
+            if not source.is_relative_to(repository) or source == example.resolve():
+                continue
+            patterns = generated if source.is_relative_to(examples) else ("*.msh",)
+            # Merged rather than skipped when the target exists: a directory
+            # mirrored for an earlier word may be this one's ancestor or child.
+            shutil.copytree(
+                source,
+                root / source.relative_to(repository),
+                ignore=shutil.ignore_patterns(*patterns),
+                dirs_exist_ok=True,
+            )
     return destination
 
 
