@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import subprocess
@@ -73,3 +74,102 @@ def test_session_start_preserves_remote_frozen_sync(
     assert "sync-call" not in result.stdout
     assert ("sync-call: sync --all-extras --frozen" in result.stderr) == remote
     assert ("workflow:" in result.stdout) == (not remote or exit_code == 0)
+
+
+_GATE = Path(__file__).resolve().parents[2] / ".claude/hooks/gate.sh"
+
+
+def _git(repo: Path, *args: str) -> str:
+    return subprocess.run(
+        ["git", "-C", str(repo), *args], check=True, capture_output=True, text=True
+    ).stdout.strip()
+
+
+@pytest.fixture
+def worktree_pair(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Path, Path]:
+    """Return a main checkout whose tree is stamped as passed, and a worktree with an edit.
+
+    ``uv`` on ``PATH`` always fails, so any tree the gate actually checks is refused:
+    an empty stdout from the hook means it gated nothing, or a stamped tree.
+    """
+    if shutil.which("jq") is None:
+        pytest.skip("the gate hook reads its payload with jq")
+    for name in ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE"):
+        monkeypatch.delenv(name, raising=False)
+    main = tmp_path / "main"
+    (main / "src/nanopnp").mkdir(parents=True)
+    (main / "pyproject.toml").write_text("[project]\nname = 'fake'\n", encoding="utf-8")
+    (main / "src/nanopnp/__init__.py").write_text("", encoding="utf-8")
+    subprocess.run(["git", "init", "-q", str(main)], check=True)
+    _git(main, "add", "-A")
+    _git(main, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "init")
+    worktree = tmp_path / "worktree"
+    _git(main, "worktree", "add", "-q", str(worktree))
+    (worktree / "src/nanopnp/__init__.py").write_text("broken = (\n", encoding="utf-8")
+    # The stamp the gate writes after a pass: the tree id of the working copy.
+    (Path(_git(main, "rev-parse", "--absolute-git-dir")) / "nanopnp-gate.pass").write_text(
+        _git(main, "write-tree"), encoding="utf-8"
+    )
+    binaries = tmp_path / "bin"
+    binaries.mkdir()
+    uv = binaries / "uv"
+    uv.write_text("#!/bin/sh\necho 'fake uv refused' >&2\nexit 1\n", encoding="utf-8")
+    uv.chmod(0o755)
+    monkeypatch.setenv("PATH", f"{binaries}{os.pathsep}{os.environ['PATH']}")
+    monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(main))
+    return main, worktree
+
+
+def _hook(started_in: Path, session_dir: Path, command: str) -> str:
+    """Run the gate in hook mode from ``started_in``, as the harness does, and return stdout."""
+    assert _BASH is not None
+    payload = json.dumps({"cwd": str(session_dir), "tool_input": {"command": command}})
+    result = subprocess.run(
+        [_BASH, str(_GATE)],
+        cwd=started_in,
+        input=payload,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stderr
+    return result.stdout
+
+
+@pytest.mark.parametrize(
+    ("session", "command"),
+    [
+        ("worktree", "git commit -m 'edit'"),
+        ("worktree", "git add -A && git commit -m 'edit'"),
+        ("parent", "git -C worktree commit -m 'edit'"),
+    ],
+    ids=["plain", "compound", "relative-C"],
+)
+def test_gate_hook_gates_the_worktree_a_session_commits_from(
+    worktree_pair: tuple[Path, Path], session: str, command: str
+) -> None:
+    """Started from the stamped main checkout, the hook still gates the session's worktree.
+
+    The harness starts the hook in the project directory, the main checkout, and
+    the payload's ``cwd`` says where the command runs; a relative ``-C`` resolves
+    against it, as git resolves it. Gating the hook's own directory let a worktree
+    commit through on the main checkout's stamp (WP32).
+    """
+    main, worktree = worktree_pair
+    session_dir = worktree if session == "worktree" else worktree.parent
+    output = json.loads(_hook(main, session_dir, command))["hookSpecificOutput"]
+    assert output["permissionDecision"] == "deny"
+    assert "fake uv refused" in output["permissionDecisionReason"]
+
+
+def test_gate_hook_follows_a_cd_before_the_commit(worktree_pair: tuple[Path, Path]) -> None:
+    """``cd <worktree> && git commit`` gates the worktree, wherever the session stood."""
+    main, worktree = worktree_pair
+    decision = json.loads(_hook(main, main, f"cd {worktree} && git add -A && git commit -m x"))
+    assert decision["hookSpecificOutput"]["permissionDecision"] == "deny"
+
+
+def test_gate_hook_still_lets_a_stamped_tree_through(worktree_pair: tuple[Path, Path]) -> None:
+    """The session in the stamped main checkout commits without re-running anything."""
+    main, _ = worktree_pair
+    assert _hook(main, main, "git commit -m 'edit'") == ""
