@@ -358,8 +358,10 @@ class Deposit:
     weighted
         Whether the Gram carried the ``r`` weight; ``False`` only for the broken
         construction VER-01's consumer leg must fail (*Design* §5).
-    seconds
-        Wall time of the projection.
+
+    No wall-clock time is held: the same projection writes the same bytes, so
+    its recorded digest is reproducible (VER-23, WP32 D15). The time goes to the
+    log.
     """
 
     coefficients: np.ndarray
@@ -371,7 +373,6 @@ class Deposit:
     uncovered: tuple[float, tuple[float, float] | None]
     nodes: tuple[int, int]
     weighted: bool = True
-    seconds: float = 0.0
 
     def write(self, path: Path) -> Path:
         """Write the deposit as ``.npz``; return the path."""
@@ -392,7 +393,6 @@ class Deposit:
                 uncovered_at_nm=np.asarray(where if where is not None else (np.nan, np.nan)),
                 nodes=np.asarray(self.nodes),
                 weighted=np.asarray(self.weighted),
-                seconds=np.asarray(self.seconds),
             )
         return path
 
@@ -416,11 +416,8 @@ class Deposit:
                     None if math.isnan(where[0]) else (where[0], where[1]),
                 ),
                 nodes=(nodes[0], nodes[1]),
+                # A deposit stored before WP32 also carries ``seconds``; it is not read.
                 weighted=bool(data["weighted"]),
-                # Read back rather than reset: every reader records this deposit's
-                # summary (the solve's ``fields`` record among them), and a deposit
-                # that took seconds must not read as one that took none.
-                seconds=float(data["seconds"]) if "seconds" in data.files else 0.0,
             )
 
     def charge_C(self) -> float:
@@ -467,7 +464,6 @@ class Deposit:
             "uncovered_nodes": self.nodes[1],
             "uncovered_largest_ratio": ratio,
             "uncovered_largest_at_nm": list(where) if where is not None else None,
-            "seconds": self.seconds,
         }
 
 
@@ -542,6 +538,7 @@ def deposit(
     charges = 2.0 * math.pi * 1e-27 * moments[:, 0]
     seconds = time.perf_counter() - started
     report(progress, 1.0, f"deposited on {data.element_count} elements in {seconds:.1f} s")
+    logger.info("deposited on P%d on %d elements in %.3f s", order, data.element_count, seconds)
     return Deposit(
         coefficients=coefficients,
         order=order,
@@ -552,7 +549,6 @@ def deposit(
         uncovered=uncovered,
         nodes=(int(masses.size), int(missing.sum())),
         weighted=weighted,
-        seconds=seconds,
     )
 
 

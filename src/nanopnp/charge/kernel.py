@@ -457,8 +457,9 @@ class KernelLattice:
     raw_deviation
         The largest ``|S_i - 1|`` of the atoms' unrenormalised lattice sums, and
         the atom it belongs to: what the renormalisation removed.
-    seconds
-        Wall time of the sum.
+
+    No wall-clock time is held, so the charge-grid summary is the same for the
+    same sum (VER-23, WP32 D15); the time goes to the log.
     """
 
     grid: RadialGrid
@@ -467,7 +468,6 @@ class KernelLattice:
     half_widths: float
     renormalised: bool
     raw_deviation: tuple[float, int]
-    seconds: float
 
     def summary(self) -> dict[str, Canonicalisable]:
         """Return the charge-grid artefact's record of the sum (FR-25)."""
@@ -486,7 +486,6 @@ class KernelLattice:
                 "largest_correction": deviation,
                 "atom": self.atoms.label(row) if self.atoms.count else None,
             },
-            "seconds": self.seconds,
         }
 
 
@@ -579,6 +578,9 @@ def sum_kernel(
     grid = RadialGrid(origin_nm=(0.0, k0 * h), spacing_nm=(h, h), values=values)
     seconds = time.perf_counter() - started
     report(progress, 1.0, f"{atoms.count} charged atoms summed in {seconds:.1f} s")
+    logger.info(
+        "kernel sum: %d charged atoms over %d frames in %.3f s", atoms.count, atoms.frames, seconds
+    )
     return KernelLattice(
         grid=grid,
         atoms=atoms,
@@ -586,7 +588,6 @@ def sum_kernel(
         half_widths=half_widths,
         renormalised=renormalise,
         raw_deviation=worst,
-        seconds=seconds,
     )
 
 

@@ -1230,13 +1230,17 @@ class FieldStage:
                 "solid_share": share.summary(),
                 "material_charge_e": dict(found.material_charges_e(data)),
                 "conservation": conserved.summary(),
-                "seconds": {
-                    "sum": (share_started - started) + (summed - checked),
-                    "deposit": deposited - summed,
-                    "gates": (checked - share_started) + (gated_at - deposited),
-                },
             },
         }
+        # The log, not the record: a summary that moved with the clock would give
+        # every charged run its own manifest (VER-23, WP32 D15). The stage's total
+        # stays in the run record's per-stage seconds.
+        logger.info(
+            "stage 7 timings: sum %.3f s, deposit %.3f s, gates %.3f s",
+            (share_started - started) + (summed - checked),
+            deposited - summed,
+            (checked - share_started) + (gated_at - deposited),
+        )
         report(progress, 1.0, "the deposited charge passed its gates")
         return self._produced_artefact(
             resolved, supplied, inputs, mesh_artefact.hash, payload=payload, summary=record
@@ -1264,7 +1268,6 @@ class FieldStage:
         stored = self._store.get(key.schema, key.hash) if self._store is not None else None
         if stored is not None:
             grid = read_grid(Path(stored.payload[LATTICE_PAYLOAD]), format="npz")
-            seconds = stored.summary.get("seconds")
             lattice = KernelLattice(
                 grid=grid,
                 atoms=atoms,
@@ -1272,7 +1275,6 @@ class FieldStage:
                 half_widths=PATCH_HALF_WIDTHS,
                 renormalised=True,
                 raw_deviation=(0.0, 0),
-                seconds=float(seconds) if isinstance(seconds, int | float) else 0.0,
             )
             report(progress, 0.55, "the export lattice was in the store")
             return stored, lattice, True

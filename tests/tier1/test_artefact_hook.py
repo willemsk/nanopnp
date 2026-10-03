@@ -194,9 +194,9 @@ def test_ver60_a_watched_charged_walk_keys_what_an_unwatched_one_keys(
 ) -> None:
     """One set of artefact hashes, store entries and manifest through stage 7, watched or not.
 
-    The manifests are compared with every ``seconds`` entry removed: stage 7's
-    record carries its wall times (WP28), so two charged runs never share a
-    manifest hash, watched or not, and an unwatched pair differs exactly as much.
+    The charge groups are compared whole, with no key removed: stage 7 records no
+    wall-clock time (VER-23, WP32 D15), so two charged runs share a manifest. Only
+    the run record's per-stage ``seconds`` may differ.
     """
     case = charged_tube.write(tmp_path / "case")
     quiet = Store(tmp_path / "quiet")
@@ -209,16 +209,13 @@ def test_ver60_a_watched_charged_walk_keys_what_an_unwatched_one_keys(
         record.hash for record in unwatched_result.stages
     ]
     assert _entries(watched) == _entries(quiet)
-    assert _timeless(watched_result.manifest.charge) == _timeless(unwatched_result.manifest.charge)
-    assert _timeless(watched_result.record()["stages"]) == _timeless(
-        unwatched_result.record()["stages"]
-    )
+    assert watched_result.manifest.charge == unwatched_result.manifest.charge
+    assert watched_result.manifest.hash == unwatched_result.manifest.hash
 
+    def untimed(record: dict[str, object]) -> list[dict[str, object]]:
+        return [
+            {key: value for key, value in stage.items() if key != "seconds"}
+            for stage in record["stages"]  # type: ignore[attr-defined]
+        ]
 
-def _timeless(value: object) -> object:
-    """Return ``value`` with every ``seconds`` entry removed, at any depth."""
-    if isinstance(value, dict):
-        return {key: _timeless(item) for key, item in value.items() if key != "seconds"}
-    if isinstance(value, list | tuple):
-        return [_timeless(item) for item in value]
-    return value
+    assert untimed(watched_result.record()) == untimed(unwatched_result.record())

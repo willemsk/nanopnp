@@ -228,7 +228,7 @@ def test_ver01_the_archived_pqrs_deposit_on_the_generated_mesh(charged) -> None:
                 "conservation": conservation_record,
                 "solid_share": record["solid_share"],  # type: ignore[index]
                 "material_charge_e": record["material_charge_e"],  # type: ignore[index]
-                "seconds": record["seconds"],  # type: ignore[index]
+                "seconds": next(stage.seconds for stage in result.stages if stage.name == "charge"),
             },
             sort_keys=False,
         ),

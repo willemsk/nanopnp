@@ -261,3 +261,53 @@ def test_ver23_store_writes_are_atomic(tmp_path: Path) -> None:
     record = json.loads((directory / "meta.json").read_text(encoding="utf-8"))
     assert record["hash"] == artefact.hash
     assert "created_at" in record
+
+
+def test_ver23_a_charged_walk_writes_the_same_bytes_into_two_stores(
+    charged_tube, tmp_path: Path
+) -> None:
+    """Every payload file byte-identical, and every record equal but its creation time (D15).
+
+    A charged tube walked to stage 7 into two empty stores. Stage 7 wrote wall-clock
+    seconds into ``deposit.npz`` and both of its summaries until WP32, so the same
+    deposit had a different recorded digest each run, and its manifest group never
+    compared equal. The control restores one ``seconds`` entry and must differ.
+    """
+    import numpy as np
+
+    from nanopnp.charge.stage import DEPOSIT_FILE
+    from nanopnp.io.run import run_case
+
+    case = charged_tube.write(tmp_path / "case")
+    roots = []
+    for name in ("first", "second"):
+        store = Store(tmp_path / name)
+        run_case(case, store=store, upto="charge", write=False)
+        roots.append(store.root / "artefacts")
+
+    def files(root: Path) -> dict[str, Path]:
+        return {str(path.relative_to(root)): path for path in root.rglob("*") if path.is_file()}
+
+    first, second = files(roots[0]), files(roots[1])
+    assert set(first) == set(second)
+    schemas = {name.split("/")[0] for name in first}
+    assert {f"nanopnp-{name}-v1" for name in ("protonation", "charge-grid", "fields")} <= schemas
+    for name, path in first.items():
+        if path.name == "meta.json":
+            left = json.loads(path.read_text(encoding="utf-8"))
+            right = json.loads(second[name].read_text(encoding="utf-8"))
+            left.pop("created_at", None)
+            right.pop("created_at", None)
+            assert left == right, name
+        else:
+            assert path.read_bytes() == second[name].read_bytes(), name
+
+    (deposit,) = [path for name, path in first.items() if path.name == DEPOSIT_FILE]
+    with np.load(deposit, allow_pickle=False) as data:
+        arrays = {key: data[key] for key in data.files}
+    assert "seconds" not in arrays
+    restored = tmp_path / "restored.npz"
+    with restored.open("wb") as handle:
+        np.savez(handle, **arrays, seconds=np.asarray(0.25))
+    assert restored.read_bytes() != deposit.read_bytes()
+    assert file_hash(restored) != file_hash(deposit)
