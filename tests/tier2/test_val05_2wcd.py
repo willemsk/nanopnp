@@ -146,6 +146,16 @@ def _write(path: Path, text: str) -> Path:
     return path
 
 
+def _stage_time(result: RunResult, name: str) -> str:
+    """Return a stage's time for a log line, or say it was read from the store.
+
+    The default-size mesh is the session seed's (WP33 D2): its lookup time is not
+    stage 6's, which the seed logs once where it computes it.
+    """
+    record = next(entry for entry in result.stages if entry.name == name)
+    return "read from the store" if record.cached else f"{record.seconds:.2f} s"
+
+
 @pytest.fixture(scope="module")
 def reference() -> np.ndarray:
     """Return the delivered 185-vertex polygon, in the model frame."""
@@ -305,7 +315,7 @@ def test_val05_2wcd_mesh_against_the_reference_figures(walked: Walked) -> None:
     logger.info(
         "2WCD mesh at the default sizes (D10): %d triangles (reference %d), min SICN %.4f, "
         "mean SICN %.4f, min gamma %.4f, mean gamma %.4f (reference min %.4f, mean %.4f, by a "
-        "measure the model report does not state); %.2f s",
+        "measure the model report does not state); stage 6 %s",
         mesh["elements"],
         REFERENCE_TRIANGLES,
         quality["min_sicn"],  # type: ignore[index]
@@ -314,7 +324,7 @@ def test_val05_2wcd_mesh_against_the_reference_figures(walked: Walked) -> None:
         quality["mean_gamma"],  # type: ignore[index]
         REFERENCE_MIN_QUALITY,
         REFERENCE_MEAN_QUALITY,
-        next(entry.seconds for entry in result.stages if entry.name == "mesh"),
+        _stage_time(result, "mesh"),
     )
     reduction = result.artefacts["symmetry"].summary
     for quantity, where in reduction["maximum"].items():  # type: ignore[union-attr]
@@ -350,7 +360,7 @@ def test_val05_2wcd_mesh_on_both_backends(gmsh_module: ModuleType, walked: Walke
         logger.info(
             "2WCD mesh on %s at the default sizes (WP23 D13): %d triangles, min SICN %.4f, "
             "mean SICN %.4f, min gamma %.4f, mean gamma %.4f; wall %d segments, mean %.3f, max "
-            "%.3f x the target; stage 6 %.2f s",
+            "%.3f x the target; stage 6 %s",
             backend,
             mesh["elements"],
             quality["min_sicn"],  # type: ignore[index]
@@ -360,7 +370,7 @@ def test_val05_2wcd_mesh_on_both_backends(gmsh_module: ModuleType, walked: Walke
             statistics["segments"],
             statistics["mean_ratio"],
             statistics["max_ratio"],
-            next(entry.seconds for entry in result.stages if entry.name == "mesh"),
+            _stage_time(result, "mesh"),
         )
 
 
@@ -371,7 +381,9 @@ def test_val05_2wcd_frozen_case_conductance(walked: Walked) -> None:
     Uncharged at 1 M, so G is geometric and ``ε_G`` is its bulk-resistor proxy;
     access resistance dilutes the difference, and by how much is the record.
     ``slow`` since the follow-up to WP33: §7.4 records this conductance and gates
-    nothing on it, and the 20 s it costs asserted only that both are positive.
+    nothing on it. The 20 s it costs asserted that both are positive and that the
+    generated leg, read through ``inputs.mesh``, ran no stage 7; the second is
+    WP28 D14's rule, which ``test_run.py``'s stage selection gates on every push.
     """
     # WP28 D14: a structure case whose model declares a fixed charge now protonates
     # and deposits it, so the generated leg reads the walked mesh through

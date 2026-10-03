@@ -33,7 +33,8 @@
 #   the working copy and the selection that passed, so any edit invalidates it,
 #   and a development pass does not stand in for `run`;
 # - when every changed path is prose, the lock check, mypy and pytest are
-#   skipped. Prose is Markdown nothing reads; .github/scripts/prose-only.sh
+#   skipped: changed since HEAD for a commit, since the upstream (or main) for
+#   `run`. Prose is Markdown nothing reads; .github/scripts/prose-only.sh
 #   holds the rule (not docs/ as a whole: tests read its YAML) and CI uses the
 #   same script. Anything else is code, data/corrections/*.yaml and this hook
 #   included.
@@ -169,10 +170,23 @@ if [[ -n $state && ( $passed == "$state extended" || $passed == "$state $selecti
     exit 0
 fi
 
-# The prose rule lives in one script that CI's `changes` job uses too.
+# The prose rule lives in one script that CI's `changes` job uses too. A commit
+# is judged against HEAD, which was gated when it was committed. `run` gates what
+# a push would send, as CI's push range does: everything since the upstream, or
+# since main on a branch never pushed. Against HEAD alone, the clean tree the
+# skills run it on reads as prose, and the `extended` tests would never run. No
+# base found is code.
+base=HEAD
+if [[ $mode == run ]]; then
+    base=$(git merge-base HEAD '@{upstream}' 2>/dev/null) ||
+        base=$(git merge-base HEAD origin/main 2>/dev/null) ||
+        base=$(git merge-base HEAD main 2>/dev/null) || base=""
+fi
 docs_only=false
-{ git diff --name-only HEAD; git ls-files --others --exclude-standard; } 2>/dev/null |
-    .github/scripts/prose-only.sh && docs_only=true
+if [[ -n $base ]]; then
+    { git diff --name-only "$base"; git ls-files --others --exclude-standard; } 2>/dev/null |
+        .github/scripts/prose-only.sh && docs_only=true
+fi
 
 if [[ $mode == run ]]; then
     lead="The gate"
@@ -250,8 +264,10 @@ if $docs_only; then
     say "gate: only prose changed; lock check, mypy and pytest skipped."
 else
     check "mypy --strict"   uv run mypy src/
+    # The `+` form: bash before 4.4 (macOS's /bin/bash is 3.2) treats an empty
+    # array as unset under `set -u`, and would end the hook ungated.
     check "pytest ($selection)" uv run pytest -q -n auto --dist loadfile \
-        --ignore=tests/tier1/test_gui_widgets.py "${pytest_extra[@]}"
+        --ignore=tests/tier1/test_gui_widgets.py ${pytest_extra[@]+"${pytest_extra[@]}"}
     # Serially and alone, as in CI: it waits on a real QtWebEngine page by the
     # wall clock, which busy xdist workers can starve (ci.yml, run 113). Exit 5
     # ("no tests ran") is the module skipping itself where PySide6 cannot
@@ -260,7 +276,8 @@ else
     check "pytest (GUI)"    bash -c 'uv run pytest -q tests/tier1/test_gui_widgets.py; s=$?; ((s == 5)) && s=0; exit $s'
 fi
 
-$docs_only && selection=extended  # nothing a selection decides was run or needed
+# A hook's prose-only pass is stamped `development`, never `extended`: it was
+# judged against HEAD, and code committed since the upstream is still `run`'s.
 [[ -n $state ]] && printf '%s\n' "$state $selection" >"$stamp_file"
 say "gate: passed."
 exit 0

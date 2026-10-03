@@ -21,7 +21,8 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 WP33: the tier 1–2 suite's duration cut without losing a check, under the §7.6 NOTE on a gated
 test's runtime. Serial test time 1,508.9 s → 1,334.5 s, and the four-worker wall 458 s → 394 s.
-No assertion, tolerance or oracle changes.
+No kept test's tolerance or oracle changes; seven duplicated tests are removed and one recorded
+test is `slow`, as listed below.
 
 ### Changed
 

@@ -105,7 +105,11 @@ def _azimuths() -> tuple[np.ndarray, np.ndarray]:
     half = AZIMUTHS // 2
     theta = 2.0 * math.pi * np.arange(half + 1) / AZIMUTHS
     weights = np.full(half + 1, 2.0 / AZIMUTHS)
-    weights[0] = weights[-1] = 1.0 / AZIMUTHS
+    weights[0] = 1.0 / AZIMUTHS
+    if AZIMUTHS % 2 == 0:
+        # theta = pi is its own mirror only for an even count; for an odd one the
+        # last point pairs with the next, and counts twice like the others.
+        weights[-1] = 1.0 / AZIMUTHS
     return theta, weights
 
 
@@ -310,3 +314,15 @@ def errors_and_rates(
     }
     logger.info("VER-58 r_i = %.1f nm: rates P2 %s, P0 %s", r_i, rates[2], rates[0])
     return errors, rates
+
+
+def release() -> None:
+    """Drop every mesh, lattice and closed form computed here.
+
+    The caches live as long as the process, and a ``pytest-xdist`` worker goes
+    on to other files: each VER-58 file releases them when it is done, so the
+    0.05 nm level's mesh and its located quadrature points are not held through
+    the rest of the session. Nothing is shared between the two files' atoms.
+    """
+    for cached in (_mesh, _lattice, _reference, _electrolyte):
+        cached.cache_clear()
