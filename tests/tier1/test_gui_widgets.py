@@ -32,6 +32,7 @@ and fills its four panes.
 from __future__ import annotations
 
 import os
+import sys
 import time
 from pathlib import Path
 
@@ -47,6 +48,10 @@ from nanopnp.gui.solver import Failed, Finished, Iteration, Progress, Rung, Star
 from nanopnp.io.case import case_fields, load_case
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+# In offscreen mode on Linux, unset DISPLAY so Chromium and Qt do not attempt
+# to open a hardware GLX context on an X server that does not support it.
+if sys.platform.startswith("linux") and os.environ.get("QT_QPA_PLATFORM") == "offscreen":
+    os.environ.pop("DISPLAY", None)
 # As the probe's selftest sets it: a runner has no GPU for Qt WebEngine's
 # Chromium child, which otherwise aborts before a document load begins.
 os.environ.setdefault("QTWEBENGINE_CHROMIUM_FLAGS", "--disable-gpu --no-sandbox")
