@@ -8,7 +8,8 @@ The prepared 2WCD, registered as VAL-05 registers it (WP22 D6), with stages 1 to
 rather than bounded (section 5.2.1 NOTE on the ion-exclusion shell). With
 ``delta`` = 0.15 nm added, WP28's charged walk at ``size_scale`` 4 runs to stage
 12 with every gate passing, and its manifest names both switches and the mesh's
-``exclusion`` material.
+``exclusion`` material: that walk is ``test_exclusion_2wcd_walk.py``, a file of its own
+so the shell meshes here do not wait on PROPKA (WP33 D7).
 
 Under ``-m slow``: the derivation of ``chi`` at ``delta = h_c``, its time and the
 peak of its allocations, and the largest error of the lattice against the exact
@@ -28,19 +29,14 @@ import pytest
 
 from nanopnp.geometry.region import distance_to_loop, distance_to_segments, read_region
 from nanopnp.io.case import resolve
-from nanopnp.io.run import PIPELINE, run_case
+from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
 from nanopnp.materials.fields import derive_solid_fraction, smooth_step, water_facing
 from nanopnp.mesh.ingest import deployed_mesh
 from nanopnp.mesh.quality import QUALITY_FLOOR
-from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
-from nanopnp.structure.ensemble import AlignedEnsemble
-from nanopnp.validation.geometry import register_by_centroid
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
-    from conftest import Prepared2WCD
+    from conftest import Prepared2WCD, Seed2WCD
 
 logger = logging.getLogger(__name__)
 
@@ -70,51 +66,24 @@ boundary_conditions: {{bias_V: 0.05, ground: cis}}
 physics: {{model: epnp-ns, solid_permittivities: {{protein: 20.0, membrane: 3.2}}}}
 {charge}"""
 
-SOLVE_CASE = """\
-schema: nanopnp/case/v2
-name: 2wcd-shell-solve
-{structure}{geometry}electrolyte:
-  species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
-  concentration_M: 0.15
-  parameters: willems2020_nacl
-  corrections:
-    diffusivity:  {{model: none}}
-    mobility:     {{model: none}}
-    viscosity:    {{model: none}}
-    permittivity: {{model: none}}
-    density:      {{model: none}}
-    steric:       {{model: none}}
-boundary_conditions: {{bias_V: 0.05, ground: cis}}
-physics:
-  model: pnp
-  flow: false
-  solid_permittivities: {{protein: 20.0, membrane: 3.2}}
-numerics:
-  continuation: none
-  mesh: {{size_scale: 4.0}}
-{charge}outputs: [current]
-"""
-
 
 @pytest.fixture(scope="module")
 def registered(
     prepared_2wcd: Prepared2WCD,
-    seeded_protonated_2wcd: Callable[[Path], Path],
+    seeded_2wcd: Seed2WCD,
     tmp_path_factory: pytest.TempPathFactory,
 ):  # type: ignore[no-untyped-def]
-    """Return the store, the structure block and the membrane block registering 2WCD."""
+    """Return the store, the structure block and the membrane block registering 2WCD.
+
+    Stages 1 to 4 and the registration are the session's seed (WP33 D2). The
+    shell gives stage 5 a key of its own, so stages 5 and 6 run here. The
+    protonation is not needed by the shell meshes, so this module does not wait
+    on PROPKA: the charged walk is ``test_exclusion_2wcd_walk.py`` (WP33 D7).
+    """
     root = tmp_path_factory.mktemp("2wcd-shell")
-    store = Store(seeded_protonated_2wcd(root / "store"))
+    store = Store(seeded_2wcd(root / "store"))
     structure = STRUCTURE.format(pdb=prepared_2wcd.path)
-    case = root / "contour.case.yaml"
-    case.write_text(MESH_CASE.format(structure=structure, geometry="", charge=""), encoding="utf-8")
-    result = run_case(case, store=store, upto="contour", write=False)
-    ensemble = AlignedEnsemble.read(result.artefacts["structure"].payload[ENSEMBLE_PAYLOAD])
-    centre = register_by_centroid(
-        ensemble.positions_nm, name=ensemble.name, resid=ensemble.resid, chain=ensemble.chain
-    )
-    geometry = f"geometry: {{membrane: {{centre_z_nm: {centre!r}}}}}\n"
-    return root, store, structure, geometry
+    return root, store, structure, seeded_2wcd.geometry
 
 
 @pytest.fixture(scope="module")
@@ -224,44 +193,6 @@ def test_ver59_2wcd_with_a_shell_meshes_at_3_m(registered) -> None:  # type: ign
         statistics["mean_ratio"],
         statistics["max_ratio"],
         sizing["wall"]["wall_h_nm"],
-    )
-
-
-def test_ver59_2wcd_with_the_shell_and_a_derived_chi_walks_to_the_report(registered) -> None:  # type: ignore[no-untyped-def]
-    """WP28's charged walk with both switches on: every gate, both switches and the material."""
-    root, store, structure, geometry = registered
-    case = root / "solve.case.yaml"
-    charge = f"charge: {{exclusion_offset_nm: {OFFSET_NM}, dielectric_transition_nm: {DELTA_NM}}}\n"
-    case.write_text(
-        SOLVE_CASE.format(structure=structure, geometry=geometry, charge=charge),
-        encoding="utf-8",
-    )
-    result = run_case(case, store=store, workspace=root / "work")
-    assert [record.name for record in result.stages] == list(PIPELINE)
-    stage7 = result.artefacts["charge"]
-    assert stage7.inputs["region"] == result.artefacts["region"].hash
-    assert stage7.parameters["fields"]["eps_r"]["source"] == "derived"  # type: ignore[index]
-    record = stage7.summary["eps_r"]
-    means = {mean["material"]: mean for mean in record["material_means"]}  # type: ignore[index]
-    assert means["exclusion"]["mean"] < 0.5
-    assert means["protein"]["mean"] >= 0.9
-    assert means["electrolyte"]["mean"] <= 0.1
-    manifest = result.manifest
-    paths = {deviation.path for deviation in manifest.deviations}
-    assert {"charge.exclusion_offset_nm", "charge.dielectric_transition_nm"} <= paths
-    sources = {deviation.source for deviation in manifest.contributed_deviations}
-    assert "mesh material 'exclusion'" in sources
-    assert "inputs.eps_r" not in sources
-    assert manifest.charge["eps_r"]["source"] == "derived"  # type: ignore[index]
-    logger.info(
-        "VER-59 2WCD charged walk with a = %g nm and delta = %g nm at size_scale 4 (%d "
-        "elements): chi means %s; currents %s A; stage times %s s",
-        OFFSET_NM,
-        DELTA_NM,
-        result.artefacts["mesh"].summary["elements"],
-        {name: round(mean["mean"], 5) for name, mean in means.items()},
-        result.quantities["currents_A"],
-        {record.name: round(record.seconds, 2) for record in result.stages},
     )
 
 

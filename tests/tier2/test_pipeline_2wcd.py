@@ -29,15 +29,12 @@ from nanopnp.io.run import PIPELINE, run_case
 from nanopnp.io.store import Store
 from nanopnp.mesh.adapter import read
 from nanopnp.mesh.quality import QUALITY_FLOOR
-from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
-from nanopnp.structure.ensemble import AlignedEnsemble
-from nanopnp.validation.geometry import register_by_centroid
 
 if TYPE_CHECKING:
     from collections.abc import Callable
     from pathlib import Path
 
-    from conftest import Prepared2WCD
+    from conftest import Prepared2WCD, Seed2WCD
 
 logger = logging.getLogger(__name__)
 
@@ -87,32 +84,21 @@ outputs: [current]
 @pytest.fixture(scope="module")
 def registered(
     prepared_2wcd: Prepared2WCD,
+    seeded_2wcd: Seed2WCD,
     seeded_protonated_2wcd: Callable[[Path], Path],
     tmp_path_factory: pytest.TempPathFactory,
 ):
     """Return the store, the structure block and the membrane block registering 2WCD.
 
-    Stages 1 to 3 and the protonation come from the session's seed and stage 4 runs
-    here, once; the registration is read off the aligned structure stage 1
-    produced, and every later run reuses them from the store.
+    Stages 1 to 6 and the protonation come from the session's seeds, and so does
+    the registration, read off the aligned structure stage 1 produced (WP33 D2);
+    every later run reuses them from the store.
     """
     root = tmp_path_factory.mktemp("2wcd")
     store = Store(seeded_protonated_2wcd(root / "store"))
     structure = STRUCTURE.format(pdb=prepared_2wcd.path)
-    case = root / "contour.case.yaml"
-    case.write_text(MESH_CASE.format(structure=structure, geometry=""), encoding="utf-8")
-    result = run_case(case, store=store, upto="contour", write=False)
-    ensemble = AlignedEnsemble.read(result.artefacts["structure"].payload[ENSEMBLE_PAYLOAD])
-    centre = register_by_centroid(
-        ensemble.positions_nm, name=ensemble.name, resid=ensemble.resid, chain=ensemble.chain
-    )
-    logger.info(
-        "2WCD stages 1-4: %s s; centre_z_nm = %.4f nm by the C-alpha centroid",
-        {record.name: round(record.seconds, 2) for record in result.stages},
-        centre,
-    )
-    geometry = f"geometry: {{membrane: {{centre_z_nm: {centre!r}}}}}\n"
-    return root, store, structure, geometry
+    logger.info("2WCD centre_z_nm = %.4f nm by the C-alpha centroid", seeded_2wcd.centre_z_nm)
+    return root, store, structure, seeded_2wcd.geometry
 
 
 def test_ver53_2wcd_meshes_at_the_default_sizes(registered) -> None:
@@ -122,7 +108,7 @@ def test_ver53_2wcd_meshes_at_the_default_sizes(registered) -> None:
     case.write_text(MESH_CASE.format(structure=structure, geometry=geometry), encoding="utf-8")
     result = run_case(case, store=store, upto="mesh", write=False)
     cached = {record.name for record in result.stages if record.cached}
-    assert {"structure", "density", "symmetry", "contour"} <= cached
+    assert {"structure", "density", "symmetry", "contour", "region", "mesh"} <= cached
 
     region = result.artefacts["region"].summary
     mesh = result.artefacts["mesh"].summary

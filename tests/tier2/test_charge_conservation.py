@@ -39,7 +39,6 @@ from nanopnp.charge.fields import (
 )
 from nanopnp.core.constants import ELEMENTARY_CHARGE
 from nanopnp.density.grid import RadialGrid
-from nanopnp.mesh.reference import ReferenceGeometry
 from nanopnp.physics.measures import AXISYMMETRIC
 
 SMEARING_WIDTH_NM = 0.085
@@ -162,9 +161,9 @@ def field() -> ChargeField:
 
 
 @pytest.fixture(scope="module")
-def mesh():
-    """Return the WP8 ClyA reference mesh, at the §5.2.2 size fields."""
-    return ReferenceGeometry.from_fixture().generate(check_quality=False)
+def mesh(clya_reference_mesh):  # type: ignore[no-untyped-def]
+    """Return the WP8 ClyA reference mesh, at the §5.2.2 size fields (generated once, WP33 D10)."""
+    return clya_reference_mesh()
 
 
 @pytest.fixture(scope="module")

@@ -35,14 +35,11 @@ from nanopnp.gui.charge import load_charge, load_protonation
 from nanopnp.gui.solver import Produced
 from nanopnp.io.run import RunResult, run_case
 from nanopnp.io.store import Store
-from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
-from nanopnp.structure.ensemble import AlignedEnsemble
-from nanopnp.validation.geometry import register_by_centroid
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from conftest import Prepared2WCD
+    from conftest import Prepared2WCD, Seed2WCD
 
 logger = logging.getLogger(__name__)
 
@@ -83,30 +80,33 @@ class Deposited:
 @pytest.fixture(scope="module")
 def deposited(
     prepared_2wcd: Prepared2WCD,
+    seeded_2wcd: Seed2WCD,
     seeded_protonated_2wcd: Callable[[Path], Path],
     tmp_path_factory: pytest.TempPathFactory,
 ) -> Deposited:
-    """Register 2WCD by its C-alpha centroid (WP22 D6), then walk to stage 7 at default sizes."""
+    """Walk 2WCD, registered by its C-alpha centroid (WP22 D6), to stage 7 at default sizes.
+
+    Stages 1 to 6 and the protonation are the session's seeds (WP33 D2), the
+    registration included; stage 7 runs here.
+    """
     root = tmp_path_factory.mktemp("2wcd-charge")
     store = Store(seeded_protonated_2wcd(root / "store"))
-    contour = root / "contour.case.yaml"
-    contour.write_text(CASE.format(pdb=prepared_2wcd.path, geometry=""), encoding="utf-8")
-    stage1 = run_case(contour, store=store, upto="contour", write=False)
-    ensemble = AlignedEnsemble.read(stage1.artefacts["structure"].payload[ENSEMBLE_PAYLOAD])
-    centre = register_by_centroid(
-        ensemble.positions_nm, name=ensemble.name, resid=ensemble.resid, chain=ensemble.chain
-    )
+    centre = seeded_2wcd.centre_z_nm
     case = root / "charge.case.yaml"
     case.write_text(
-        CASE.format(
-            pdb=prepared_2wcd.path,
-            geometry=f"geometry: {{membrane: {{centre_z_nm: {centre!r}}}}}\n",
-        ),
-        encoding="utf-8",
+        CASE.format(pdb=prepared_2wcd.path, geometry=seeded_2wcd.geometry), encoding="utf-8"
     )
     result = run_case(case, store=store, upto="charge", workspace=root / "work", write=False)
     cached = {record.name for record in result.stages if record.cached}
-    assert {"structure", "density", "symmetry", "protonation"} <= cached
+    assert {
+        "structure",
+        "density",
+        "symmetry",
+        "contour",
+        "region",
+        "mesh",
+        "protonation",
+    } <= cached
     logger.info(
         "2WCD to stage 7 at the default sizes, centre_z_nm = %.4f nm: %s s",
         centre,

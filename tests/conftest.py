@@ -15,12 +15,14 @@ registry tests assert that listing the stages imports no extra.
 
 Stages 2 and 3 of the prepared entry take about 32 s, and six Tier-2 files walk
 through them. ``seeded_2wcd`` computes them once per session, in a directory every
-``pytest-xdist`` worker shares, and the function it returns copies the result
-into a test's own fresh store. The store is content-addressed, so a test that
-reads a seeded artefact reads the bytes its own walk would have written, computed
-by the same code in the same session; every stage from 4 on still runs in the
-test. A test that asserts a stage was *computed* rather than found -- VER-55's
-cold build -- does not take the seed.
+``pytest-xdist`` worker shares, and the object it returns copies the result into
+a test's own fresh store. Since WP33 D2 it runs on to stage 6: the contour, the
+registration and the 0.15 M default-size mesh that four modules walk to. The
+store is content-addressed, so a test that reads a seeded artefact reads the
+bytes its own walk would have written, computed by the same code in the same
+session; every stage the seed does not key alike still runs in the test. A test
+that asserts a stage was *computed* rather than found -- VER-55's cold build, the
+example executors, VER-49's budget -- does not take the seed.
 
 The ``gmsh_module`` fixture is the one way a test reaches the optional Gmsh
 backend (WP23 D11). It skips, naming the error, where ``gmsh`` does not import,
@@ -47,6 +49,7 @@ from filelock import FileLock
 
 if TYPE_CHECKING:
     import MDAnalysis as mda  # noqa: N813 - the alias the library documents
+    import ngsolve
 
 logger = logging.getLogger(__name__)
 
@@ -235,20 +238,96 @@ density settings -- so a test's case with its own name, electrolyte and physics
 reads the seeded artefacts, and a case that changes one of them simply misses the
 seed and computes its own."""
 
-SEED_UPTO = "symmetry"
-"""The last seeded stage. Stages 2 and 3 are the 32 s; stage 4 and beyond stay each test's."""
+SEED_UPTO = "mesh"
+"""The last seeded stage (WP33 D2).
+
+Stages 2 and 3 are the 32 s. Stage 4 keys on the same block as they do, so it is
+seeded with them, and so are stages 5 and 6 at the C-alpha registration
+(:attr:`Seed2WCD.centre_z_nm`) and the default sizes at 0.15 M: that 8 s mesh is
+the one the ``charge``, ``val06``, ``pipeline`` and ``val05`` modules all walk to,
+measured to key alike. A case that differs from :data:`SEED_CASE` in anything a
+stage keys on misses that stage's seed and computes its own."""
+
+
+def _structure_case(directory: Path, pdb: Path, name: str = "seed.case.yaml") -> Path:
+    """Write :data:`SEED_CASE` for ``pdb`` into ``directory`` and return its path."""
+    case = directory / name
+    case.write_text(SEED_CASE.format(pdb=pdb), encoding="utf-8")
+    return case
+
+
+@pytest.fixture(scope="session")
+def structure_2wcd(prepared_2wcd: Prepared2WCD, tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """Return a shared store holding stage 1 of the prepared 2WCD, computed once per session.
+
+    Both seeds start from it, so neither waits on the other (WP33 D2): the
+    protonation reads only stage 1 (``charge/protonation.py``), and under
+    ``pytest-xdist`` PROPKA runs in one worker while another computes stages 2
+    to 6. Copied out, never handed out.
+    """
+    from nanopnp.io.run import run_case
+    from nanopnp.io.store import Store
+
+    shared = shared_directory(tmp_path_factory)
+    seed = shared / "2wcd-structure"
+    ready = seed / "READY"
+    with FileLock(str(shared / "2wcd-structure.lock")):
+        if not ready.is_file():
+            seed.mkdir(parents=True, exist_ok=True)
+            case = _structure_case(seed, prepared_2wcd.path)
+            run_case(case, store=Store(seed / "store"), upto="structure", write=False)
+            ready.write_text("", encoding="utf-8")
+    return seed / "store"
+
+
+@dataclass(frozen=True)
+class Seed2WCD:
+    """Seeds a fresh store with stages 1 to 6 of the prepared 2WCD; called like a function.
+
+    ``seed(root)`` copies the seeded artefacts into the store at ``root`` and
+    returns ``root``; ``runs/`` stays the test's own. The shared seed itself is
+    never handed out, so no test can write into it.
+    """
+
+    store: Path
+    """The shared seed store. Read it only through a call."""
+    centre_z_nm: float
+    """The C-alpha-centroid registration of WP22 D6, ``register_by_centroid``'s."""
+
+    @property
+    def geometry(self) -> str:
+        """Return the ``geometry:`` block that registers the dodecamer, as the modules write it."""
+        return f"geometry: {{membrane: {{centre_z_nm: {self.centre_z_nm!r}}}}}\n"
+
+    def __call__(self, root: Path) -> Path:
+        """Copy the seeded artefacts into the store at ``root`` and return ``root``."""
+        shutil.copytree(self.store / "artefacts", root / "artefacts", dirs_exist_ok=True)
+        return root
+
+
+def register_2wcd(structure_artefact: object) -> float:
+    """Return the C-alpha-centroid registration (WP22 D6) of a stage-1 artefact of 2WCD."""
+    from nanopnp.structure.ensemble import PAYLOAD_NAME, AlignedEnsemble
+    from nanopnp.validation.geometry import register_by_centroid
+
+    ensemble = AlignedEnsemble.read(structure_artefact.payload[PAYLOAD_NAME])  # type: ignore[attr-defined]
+    return register_by_centroid(
+        ensemble.positions_nm, name=ensemble.name, resid=ensemble.resid, chain=ensemble.chain
+    )
 
 
 @pytest.fixture(scope="session")
 def seeded_2wcd(
-    prepared_2wcd: Prepared2WCD, tmp_path_factory: pytest.TempPathFactory
-) -> Callable[[Path], Path]:
-    """Return a function seeding a fresh store with stages 1 to 3 of the prepared 2WCD.
+    prepared_2wcd: Prepared2WCD,
+    structure_2wcd: Path,
+    tmp_path_factory: pytest.TempPathFactory,
+) -> Seed2WCD:
+    """Return a :class:`Seed2WCD`: stages 1 to 6 of the prepared 2WCD, computed once per session.
 
-    The stages are computed once per session: the first worker to ask computes them
-    under a lock, and the others wait and reuse the result. The function copies
-    them into the store root it is given and returns that root; the shared seed
-    itself is never handed out, so no test can write into it.
+    The first worker to ask computes them under a lock, from the stage-1 store,
+    and the others wait and reuse the result. Stage 4 runs on the seed case as
+    it stands; the registration is read off stage 1, and stages 5 and 6 run on
+    the seed case with that ``geometry:`` block added.
     """
     from nanopnp.io.run import run_case
     from nanopnp.io.store import Store
@@ -256,20 +335,61 @@ def seeded_2wcd(
     shared = shared_directory(tmp_path_factory)
     seed = shared / "2wcd-seed"
     ready = seed / "READY"
+    centre_file = seed / "centre_z_nm"
     with FileLock(str(shared / "2wcd-seed.lock")):
         if not ready.is_file():
             seed.mkdir(parents=True, exist_ok=True)
-            case = seed / "seed.case.yaml"
-            case.write_text(SEED_CASE.format(pdb=prepared_2wcd.path), encoding="utf-8")
-            run_case(case, store=Store(seed / "store"), upto=SEED_UPTO, write=False)
+            store = Store(seed / "store")
+            shutil.copytree(structure_2wcd / "artefacts", store.root / "artefacts")
+            case = _structure_case(seed, prepared_2wcd.path)
+            stage4 = run_case(case, store=store, upto="contour", write=False)
+            centre = register_2wcd(stage4.artefacts["structure"])
+            seeded = Seed2WCD(store=store.root, centre_z_nm=centre)
+            meshed = seed / "mesh.case.yaml"
+            meshed.write_text(
+                SEED_CASE.format(pdb=prepared_2wcd.path).replace(
+                    "electrolyte:", seeded.geometry + "electrolyte:", 1
+                ),
+                encoding="utf-8",
+            )
+            run_case(meshed, store=store, upto=SEED_UPTO, write=False)
+            centre_file.write_text(repr(centre), encoding="utf-8")
             ready.write_text("", encoding="utf-8")
+    return Seed2WCD(store=seed / "store", centre_z_nm=float(centre_file.read_text("utf-8")))
 
-    def seed_store(root: Path) -> Path:
-        """Copy the seeded artefacts into the store at ``root``; ``runs/`` stays the test's own."""
-        shutil.copytree(seed / "store" / "artefacts", root / "artefacts", dirs_exist_ok=True)
-        return root
 
-    return seed_store
+@pytest.fixture(scope="session")
+def clya_reference_mesh(tmp_path_factory: pytest.TempPathFactory) -> Callable[[], ngsolve.Mesh]:
+    """Return a function giving a fresh copy of the WP8 ClyA reference mesh (WP33 D10).
+
+    ``ReferenceGeometry.from_fixture().generate(check_quality=False)``, at the
+    section 5.2.2 size fields: about 7 s, and five modules built it. It is meshed
+    once per session under a lock and pickled into :func:`shared_directory`;
+    each call unpickles a copy of its own, so no test can change another's mesh.
+    A pickle and not a ``.vol``: NGSolve's pickle round-trips the vertices to the
+    bit, and the ``.vol`` text moves them by up to 5.6e-17 nm, which changes the
+    mesh's geometry digest (measured, WP33 Outcomes).
+    """
+    import pickle
+
+    shared = shared_directory(tmp_path_factory)
+    path = shared / "reference-mesh" / "mesh.pickle"
+    with FileLock(str(shared / "reference-mesh.lock")):
+        if not path.is_file():
+            from nanopnp.mesh.reference import ReferenceGeometry
+
+            mesh = ReferenceGeometry.from_fixture().generate(check_quality=False)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            staging = path.with_suffix(f".{os.getpid()}.pickle")
+            staging.write_bytes(pickle.dumps(mesh))
+            staging.replace(path)
+
+    def load() -> ngsolve.Mesh:
+        """Return a copy of the reference mesh, unpickled from the session's file."""
+        mesh: ngsolve.Mesh = pickle.loads(path.read_bytes())
+        return mesh
+
+    return load
 
 
 SYNTHETIC_RESIDUES = 8
@@ -590,15 +710,16 @@ class Protonated2WCD:
 @pytest.fixture(scope="session")
 def protonated_2wcd(
     prepared_2wcd: Prepared2WCD,
-    seeded_2wcd: Callable[[Path], Path],
+    structure_2wcd: Path,
     tmp_path_factory: pytest.TempPathFactory,
 ) -> Protonated2WCD:
     """Protonate the prepared 2WCD dodecamer with PROPKA once per session (WP27 D17).
 
-    Through the stage API rather than a walk, so that stages 4 to 6 are not paid
-    for: stage 1 comes from the seed, and the ``protonation`` stage runs on it into
-    a store every ``pytest-xdist`` worker shares, under a lock, about a minute.
-    WP28 and WP29 reuse it.
+    Through the stage API rather than a walk, so that stages 2 to 6 are not paid
+    for: stage 1 comes from :func:`structure_2wcd`, and the ``protonation`` stage
+    runs on it into a store every ``pytest-xdist`` worker shares, under a lock,
+    about a minute, while another worker may be computing :func:`seeded_2wcd`
+    (WP33 D2). WP28 and WP29 reuse it.
     """
     import time
 
@@ -614,7 +735,11 @@ def protonated_2wcd(
         # Seeded once. A later worker that re-seeded it would rewrite files that a
         # worker already past this lock may be copying out (:func:`seeded_protonated_2wcd`);
         # on Windows that copy fails on the open file (WinError 32).
-        store = Store(root / "store") if ready.is_file() else Store(seeded_2wcd(root / "store"))
+        store = Store(root / "store")
+        if not ready.is_file():
+            shutil.copytree(
+                structure_2wcd / "artefacts", store.root / "artefacts", dirs_exist_ok=True
+            )
         case = root / "protonated.case.yaml"
         if not case.is_file():
             case.write_text(PROTONATED_2WCD_CASE.format(pdb=prepared_2wcd.path), encoding="utf-8")
@@ -642,8 +767,10 @@ def protonated_2wcd(
 
 
 @pytest.fixture(scope="session")
-def seeded_protonated_2wcd(protonated_2wcd: Protonated2WCD) -> Callable[[Path], Path]:
-    """Return a function seeding a fresh store with stages 1 to 3 and the protonation of 2WCD.
+def seeded_protonated_2wcd(
+    seeded_2wcd: Seed2WCD, protonated_2wcd: Protonated2WCD
+) -> Callable[[Path], Path]:
+    """Return a function seeding a fresh store with stages 1 to 6 and the protonation of 2WCD.
 
     WP28 D14: a ``structure:`` case whose model declares a fixed charge walks both
     halves of stage 7, so a charged walk reads the session's protonation from its
@@ -654,7 +781,8 @@ def seeded_protonated_2wcd(protonated_2wcd: Protonated2WCD) -> Callable[[Path], 
     """
 
     def seed_store(root: Path) -> Path:
-        """Copy the protonated store's artefacts into ``root``; ``runs/`` stays the test's own."""
+        """Copy both seeds' artefacts into ``root``; ``runs/`` stays the test's own."""
+        seeded_2wcd(root)
         shutil.copytree(protonated_2wcd.store / "artefacts", root / "artefacts", dirs_exist_ok=True)
         return root
 

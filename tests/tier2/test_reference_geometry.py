@@ -44,9 +44,12 @@ def geometry() -> ReferenceGeometry:
 
 
 @pytest.fixture(scope="module")
-def meshed(geometry: ReferenceGeometry):
-    """Return the reference region meshed at the section 5.2.2 size fields."""
-    return from_ngsolve(geometry.generate(check_quality=False))
+def meshed(clya_reference_mesh):  # type: ignore[no-untyped-def]
+    """Return the reference region meshed at the section 5.2.2 size fields.
+
+    The session's mesh of ``ReferenceGeometry.from_fixture()`` (WP33 D10).
+    """
+    return from_ngsolve(clya_reference_mesh())
 
 
 def _inside_polygon(profile: PoreProfile, points: np.ndarray) -> np.ndarray:

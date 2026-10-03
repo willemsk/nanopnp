@@ -46,15 +46,13 @@ def _document(**patch: object) -> str:
 
 
 @pytest.fixture(scope="module")
-def reference_mesh():
+def reference_mesh(clya_reference_mesh):  # type: ignore[no-untyped-def]
     """Return the WP8 reference mesh, once for this module.
 
-    Module-scoped because generating it costs about seven seconds and every mask
-    assertion below is about the same geometry.
+    Module-scoped because every mask assertion below is about the same geometry;
+    the mesh itself is generated once per session (``tests/conftest.py``, WP33 D10).
     """
-    from nanopnp.mesh.reference import ReferenceGeometry
-
-    return ReferenceGeometry.from_fixture().generate(check_quality=False)
+    return clya_reference_mesh()
 
 
 @pytest.fixture(scope="module")
