@@ -115,6 +115,11 @@ surface of the profile, assembles the electrolyte, protein and membrane domains,
 boundary. It gates the junction where the membrane meets the protein, so neither a gap nor an
 overlap is left there.
 
+`charge.exclusion_offset_nm`, off by default, adds an ion-exclusion shell here: the profile offset
+outward by that distance, meshed as an `exclusion` material that ions cannot enter, with the wall on
+its outer surface. It is one of the two FR-15 switches, and [From a structure to a
+charge](charge.md#the-two-fr-15-switches) covers both.
+
 ## Stage 6: the mesh
 
 Stage 6 meshes the region under the size table of

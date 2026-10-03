@@ -49,18 +49,18 @@ that can reconstruct the run.
 ## Status and roadmap
 
 **Pre-alpha.** The solver core, the case file, the command line, parameter sweeps, provenance, a
-desktop shell, and the user documentation with six worked examples are implemented and tested.
+desktop shell, and the user documentation with seven worked examples are implemented and tested.
 Meshes are supplied from outside, generated for an idealised pore or the ClyA reference geometry,
-or built from a PDB structure by the geometry pipeline (Phase 2). Charge maps are still supplied
-from outside; assigning them from a structure is Phase 3. Nothing is a validated
-release yet. The comparison against the paper's published results gates v1.0.
+or built from a PDB structure by the geometry pipeline (Phase 2). Fixed charge is supplied as a
+field, or protonated with PDB2PQR and PROPKA and deposited on the mesh by the charge pipeline
+(Phase 3, toward v0.4). Nothing is a validated release yet. The comparison against the paper's published results gates v1.0.
 
 | Release | Phase | Scope | State |
 |---|---|---|---|
 | v0.1 | 0 | Spike: the coupled model on an analytic pore, the continuation ladder, analytic benchmarks | **released**, [`v0.1.0`](CHANGELOG.md#010---2026-09-02) |
 | v0.2 | 1 | Solver core: external meshes and fields, QoI extraction, frozen case schema, API, CLI, sweeps | **released**, [`v0.2.0`](CHANGELOG.md#020---2026-09-24) |
 | v0.3 | 2 | Geometry pipeline from a PDB structure: alignment, density, symmetry reduction, contour, mesh | **released**, [`v0.3.0`](CHANGELOG.md#030---2026-09-30) |
-| v0.4 | 3 | Charge pipeline: PDB2PQR charges, smeared fixed charge and dielectric; the paper's pipeline end to end | planned, [Phase 3 plan](docs/plans/phase-3-charge-pipeline.md) |
+| v0.4 | 3 | Charge pipeline: PDB2PQR charges, smeared fixed charge and dielectric; the paper's pipeline end to end | in progress, [Phase 3 plan](docs/plans/phase-3-charge-pipeline.md) |
 | v1.0 | 4 | Validated release: the published results reproduced, V&V suite in CI, tutorials, JOSS submission, DOI archive | planned |
 
 Each merged work package is tagged `vX.Y.Z-alpha.N` toward its phase's release, and the package
@@ -105,8 +105,8 @@ uv run nanopnp reproduce run
 
 It meshes an idealised pore, solves the validated ePNP-NS model on it, reads the run's provenance
 back, and re-solves it to check that every number reproduces. The
-[worked examples](examples/) go on to a charged pore, an I–V sweep, the Python API, and the ClyA
-reference geometry on a cluster.
+[worked examples](examples/) go on to a charged pore, an I–V sweep, the Python API, the ClyA
+reference geometry on a cluster, and a PDB entry taken to a mesh and then to a charged run.
 
 To run the test suite: `uv run pytest`. To build the documentation: `uv sync --all-extras --group
 docs && uv run docs/scripts/generate.py && uv run mkdocs build --strict` (`uv sync` is exact, so

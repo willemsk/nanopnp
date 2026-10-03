@@ -35,14 +35,14 @@ by listing every correction as a deviation. To solve ePNP-NS, name the correctio
 
 | Section | Holds |
 |---|---|
-| `inputs` | Stage outputs supplied from outside, each by `path` and `format` (the §5.3.1 `inputs:` NOTE): a `mesh`, or a pore `profile` that stages 5 and 6 assemble and mesh, and optionally `charge` and `eps_r`. `pqr` is accepted by the schema and refused by this release, naming the stage that will read it |
+| `inputs` | Stage outputs supplied from outside, each by `path` and `format` (the §5.3.1 `inputs:` NOTE): a `mesh`, or a pore `profile` that stages 5 and 6 assemble and mesh, and optionally `charge` and `eps_r`, or a `pqr` of the structure's charges and radii, which replaces PDB2PQR and PROPKA (see [From a structure to a charge](charge.md#supplying-a-pqr)) |
 | `electrolyte` | Species and valences, concentration, temperature, the correction parameter file, and each correction's model and parts |
 | `boundary_conditions` | The bias, which electrode is grounded, and the wall conditions |
 | `physics` | The model (`epnp-ns`, `pnp-ns`, `pnp`, `pb`, `pb-linear`, `poisson`), the flow switches, and the solid permittivities, which are set here and nowhere else |
 | `numerics` | Element orders, the nonlinear and linear solvers, the continuation ladder, stabilisation, the wall-distance field, and the sizes of a generated mesh (`numerics.mesh`) |
 | `outputs` | Which quantities to report: `current`, `transport_numbers`, `eof_rate`, `rectification`, `analyte_force`, `fields` |
 | `structure`, `geometry` | The geometry pipeline: the structure file and its symmetry, the density map, the contour, the membrane and the reservoir. A `structure:` case walks every stage. See [Structures and trajectories](structures.md) and [From a structure to a mesh](geometry.md) |
-| `charge` | The v0.4 charge pipeline. Accepted by the schema, refused by this release, naming the section |
+| `charge` | Stage 7 on a structure: the pH, force field and titration of the protonation, the smearing of the deposit, and the two FR-15 switches, the ion-exclusion shell and the derived dielectric. See [From a structure to a charge](charge.md) |
 
 ## Validation
 
