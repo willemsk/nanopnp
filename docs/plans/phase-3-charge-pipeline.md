@@ -1,6 +1,6 @@
 # Phase 3 (Charge pipeline): from a structure to a charged run
 
-**Status: in progress. WP26 delivered, 30 September 2026; WP27 delivered, 1 October 2026 ([plan](wp27-protonation.md)); WP28 delivered, 1 October 2026 ([plan](wp28-charge-deposition.md)); WP29 delivered, 1 October 2026 ([plan](wp29-val06-apbs.md)); WP30 delivered, 2 October 2026 ([plan](wp30-dielectric-and-exclusion.md)); WP31 delivered, 2 October 2026 ([plan](wp31-gui-charge-pipeline.md)); WP32 delivered, 3 October 2026 ([plan](wp32-charge-docs-and-example.md)); WP33 delivered, 3 October 2026 ([plan](wp33-test-durations.md)).** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
+**Status: in progress. WP26 delivered, 30 September 2026; WP27 delivered, 1 October 2026 ([plan](wp27-protonation.md)); WP28 delivered, 1 October 2026 ([plan](wp28-charge-deposition.md)); WP29 delivered, 1 October 2026 ([plan](wp29-val06-apbs.md)); WP30 delivered, 2 October 2026 ([plan](wp30-dielectric-and-exclusion.md)); WP31 delivered, 2 October 2026 ([plan](wp31-gui-charge-pipeline.md)); WP32 delivered, 3 October 2026 ([plan](wp32-charge-docs-and-example.md)); WP33 delivered, 3 October 2026 ([plan](wp33-test-durations.md)); WP34 planned, 3 October 2026 ([plan](wp34-phase-3-close.md)).** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
 the geometry pipeline (`main` at `v0.3.0-alpha.9`, formerly `v0.9.0-alpha.9`). Phase 2's
 end-of-phase report and its release, `v0.3.0`, wait for one Tier-3 run on the author's archive
 (criterion 3, VAL-05's ensemble leg). WP26 may start before that report merges, because nothing in
@@ -375,6 +375,18 @@ stays cold, and nothing gated is left ungated. The baseline is 1,420 s of serial
 > or tolerance moved. **Live for later packages:** the seeds' keys and `Seed2WCD` in
 > `tests/conftest.py`; `.knowledge/07` §12.
 
+### WP34 — Phase 3 closed: the open items resolved, and the end-of-phase report
+
+Added at the author's request on 3 October 2026, as the phase's last package. It closes OPN-07 with
+the stage-7 recipe in a golden's case identity (VAL-03; §8.2.5 E3). It measures NUM-07's open
+quadrature order for the coupled models and carries the decision to Phase 4 (E4). It keeps
+`with_section` out of `nanopnp.PUBLIC`. It relabels Phase 4's release as v0.5 across the repository
+(E2), and writes the end-of-phase report on the Tier 1–2 evidence, with the ensemble legs carried to
+Phase 4 (E1). Its last commit on `main` is tagged `v0.4.0` (E5).
+
+> **Planned, 3 October 2026** ([plan](wp34-phase-3-close.md)). The plan's commit adds §8.2.5
+> (E1–E5), renumbers Phase 4 to v0.5 in the specification, records E3 in OPN-07 and opens OPN-08.
+
 ## Open decisions
 
 | # | Decision | Owner and status |
@@ -387,7 +399,10 @@ stays cold, and nothing gated is left ungated. The baseline is 1,420 s of serial
 | VAL-06 tolerance | The agreement required of the gated leg | **Settled by the author, 1 October 2026**, on [WP29](wp29-val06-apbs.md)'s argument: 3 % max, 1 % rms, 1.5 % on the axis, within a measured refinement budget of half of each (§7.4 NOTE on VAL-06) |
 | Stage numbering | Where `protonation` sits in §5.2's numbered table | **Settled by [WP27](wp27-protonation.md) D1**: it shares number 7 with `charge` and runs before it, so stages 8–12 keep their numbers (§5.2 design note) |
 | `axis_cutoff_nm` on the producer path | Applied for parity, or refused away from its default | **Settled by [WP28](wp28-charge-deposition.md) D10**: refused away from its default on every path, naming PHY-18 (§5.3.1 NOTE on `charge.smearing`) |
-| OPN-07 | What identifies a deposited charge in a golden's `case_hash` | **Open, found by the WP28 review** (PR #57, finding #7). The identity currently ignores the structure, pH and smearing. Needed before any golden or VAL-16/VAL-17 recorded leg is compared on a deposited charge. The constraints are in §10 |
+| OPN-07 | What identifies a deposited charge in a golden's `case_hash` | **Representation settled by the author, 3 October 2026** (§8.2.5 E3): the stage-7 recipe, implemented by [WP34](wp34-phase-3-close.md). Found by the WP28 review (PR #57, finding #7). The identity currently ignores the structure, pH and smearing. Needed before any golden or VAL-16/VAL-17 recorded leg is compared on a deposited charge. The constraints are in §10 |
+| NUM-07 order | Whether the coupled models' `r`-weighted forms gain one quadrature order (WP28 D13) | **Settled by the author, 3 October 2026** (§8.2.5 E4): measured in WP34, decided in Phase 4 |
+| Phase 4's release | v1.0 or a pre-stable minor | **Settled by the author, 3 October 2026** (§8.2.5 E2): v0.5, reusing the retired names; stable v1.0's content is OPN-08 |
+| The close without the archive | Whether Phase 3 waits for the ensemble legs | **Settled by the author, 3 October 2026** (§8.2.5 E1): it closes on tiers 1 and 2, and the archive-dependent numbers are carried to Phase 4 |
 | OPN-04 | Which mutation list produced the ClyA-AS structure | **Author, open.** Needed for the provenance of `Q_net`, not for any gate. WP27 records `structure.source.variant` beside `Q_net` |
 
 ## Verification
@@ -411,12 +426,14 @@ uv run pytest -m slow --log-cli-level=INFO      # protonation and deposition bud
 | WP31 | 1, 2 | VER-60 |
 | WP32 | 1, 2 | VER-45, VER-46 |
 | WP33 | 1, 2 | none new; every changed test keeps its identifiers and assertions (§7.6 NOTE) |
+| WP34 | 1, 2 | VAL-03 (a deposited charge's identity); NUM-07 measured, recorded |
 
 The phase is complete when:
 
 1. **Tiers 1 and 2 pass**, including every earlier phase's gate.
 2. **VER-01 and VER-02 pass on the deployed mesh** for 2WCD at Tier 2, with the legs and the worst
-   plane in the manifest, and on the ensemble at Tier 3, recorded.
+   plane in the manifest, and on the ensemble at Tier 3, recorded. **The ensemble half is waived to
+   Phase 4** (§8.2.5 E1).
 3. **VAL-06's gated leg passes** within the tolerance WP29 states.
 4. **A case with `structure:` and no `inputs.mesh` or `inputs.charge` runs from the CLI to a
    charged solve**, and its manifest records every stage's artefact hash, `Q_net` and the

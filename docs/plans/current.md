@@ -1,20 +1,19 @@
 # Current work
 
-Updated 3 October 2026 (WP33 delivered, not yet merged). This file is navigation only;
-`SPECIFICATION.md` governs. Nothing here is evidence that an unmerged branch has shipped.
+Updated 3 October 2026 (WP34 planned). This file is navigation only; `SPECIFICATION.md` governs.
+Nothing here is evidence that an unmerged branch has shipped.
 
 ## Position
 
 - Phase 1 ([solver core](phase-1-solver-core.md)) is **closed** as `v0.2.0` (§8.2.3; §8.2.4 D1).
 - Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **closed** as `v0.3.0`, with
   criterion 3 waived (§8.2.4 D7). `Z_MD` is 5.655 nm.
-- Phase 3 ([charge pipeline](phase-3-charge-pipeline.md), release `v0.4.0`) is **in progress**,
-  covering WP26–WP33.
-  - WP26–WP32 are **merged**, with `main` at `00b7aa4`. `v0.4.0-alpha.1` and `.2` are tagged;
-    `.3` (WP28, `c6c0c0d`) to `.7` (WP32) are not yet.
-  - [WP33](wp33-test-durations.md) (the §7.6 NOTE on a gated test's runtime; no new identifier) is
-    **delivered** on `ccr-5551b5b0-9vgkvf`, to be tagged `v0.4.0-alpha.8`, 5.6 s short of its target.
-    **Next: `/wp-ship`** on WP33, from a fresh session. Then the phase close and `v0.4.0`.
+- Phase 3 ([charge pipeline](phase-3-charge-pipeline.md), release `v0.4.0`) is **in progress**.
+  - WP26–WP33 are **merged**, with `main` at `4375797`, and tagged `v0.4.0-alpha.1` to `.8`.
+  - [WP34](wp34-phase-3-close.md), the phase close (§8.2.5 E1–E5), is **planned**, to be tagged
+    `v0.4.0`. **Next: `/wp-implement`** on WP34.
+- **Phase 4 is released as `v0.5.0`**, not v1.0, and reuses the retired `v0.5.0` names (§2.7
+  Versioning NOTE; §8.2.5 E2). Stable v1.0's content is OPN-08, the author's.
 
 ## What Phase 3 must not re-decide
 
@@ -39,10 +38,11 @@ Each is recorded in full where it points.
   Python LGPL payloads as source. → ADR-004 packaging NOTE; VER-60; the WP31 Outcomes.
 - **No payload or stage-7 summary records wall-clock time** (VER-23; WP32 D15).
 - **A gated test gets cheaper only by the §7.6 NOTE's four levers.** → the WP33 Outcomes.
-- **Tier 3 compares the published I–V and in-pore averages**, and gates v1.0 (VAL-16, VAL-17).
+- **Tier 3 compares the published I–V and in-pore averages**, and gates v0.5, Phase 4's release
+  (VAL-16, VAL-17; §8.2.5 E2).
 - **Layers read a model's declaration, never its name or class** (VER-56). → §5.4.3 NOTE.
-- **`poisson` adds one quadrature order for the `r` weight; the coupled models do not.** That is
-  still open (WP28 D13). → PHY-21 NOTE; NUM-07 NOTE.
+- **`poisson` adds one quadrature order for the `r` weight; the coupled models do not.** WP34
+  measures it, and Phase 4 decides (§8.2.5 E4). → PHY-21 NOTE; NUM-07 NOTE.
 
 ## Inherited from Phases 1 and 2, still binding
 
@@ -59,11 +59,10 @@ Each is recorded in full where it points.
 
 ## What is still somebody else's
 
-- **The data behind the paper's published figures**, needed for VAL-16 and VAL-17 at v1.0
-  (§8.2.4 D6).
+- **The data behind the paper's published figures**, needed for VAL-16 and VAL-17 at v0.5
+  (§8.2.4 D6). The ensemble legs Phase 3 waived (§8.2.5 E1) need the same archive.
 - **The Read the Docs project**, and **`$NANOPNP_REFERENCE_DATA` on the nightly runner**.
-- **OPN-04**, the ClyA-AS mutation list. **OPN-07**, a golden's identity for a deposited charge,
-  and now for a derived `χ` too.
+- **OPN-04**, the ClyA-AS mutation list. **OPN-08**, what stable v1.0 contains.
 - **The archived PQRs** for WP27–WP29's Tier 3, none of which has run yet.
 
 ## Dependencies To Read On Demand
