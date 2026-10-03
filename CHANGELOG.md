@@ -35,6 +35,18 @@ No assertion, tolerance or oracle changes.
   ClyA reference mesh is generated once per session; the duplicated climbs of the stabilised-mode,
   solution-state and VER-55 files are shared or coarsened where their gates allow (VER-34, VER-42,
   VER-49, VER-55, VER-58, VER-59, NUM-12, NUM-14, NUM-17).
+- **`uv run pytest` is the development selection**: it leaves out the 54 `extended` tests, the
+  executed examples and the 2WCD walks, and runs in 168 s on four workers rather than 394 s.
+  `uv run pytest --extended` is the whole of Tiers 1–2. CI runs it on every push, on every leg, and
+  so does `.claude/hooks/gate.sh run` before a skill pushes; the commit hook runs the development
+  selection (§7.6 NOTE, VER-46).
+- VAL-05's recorded frozen-case conductance on 2WCD is `slow`.
+
+### Removed
+
+- Seven Tier-1 tests whose claim another test on every push already gates on the same input: a
+  refactor pin on the wall size, the profile fixture's digest and conditioning, the packaged
+  correction file's existence, the example-tag literal, and two schema-constant checks.
 
 ## [0.4.0-alpha.7] - 2026-10-03
 

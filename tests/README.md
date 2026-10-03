@@ -10,6 +10,12 @@ applied by each directory's `conftest.py`, so placing a file decides its tier.
 | `tier3/` | Cross-implementation comparison (§7.4): the published results (VAL-16, VAL-17), COMSOL fields where exported (VAL-01 … VAL-04), VAL-05, VAL-06, VAL-15 | hours | nightly |
 | `tier4/` | Experimental reproduction (§7.5, VAL-07 … VAL-14) | hours | before a release |
 
+A test that walks the pipeline end to end, an executed example or the 2WCD entry through the
+stages, is marked `extended` (`pytestmark = pytest.mark.extended`). `uv run pytest` leaves it out,
+and `uv run pytest --extended` and CI run it, on every push (§7.6 NOTE). Never mark an analytic
+benchmark `extended`: it is the test that localises a failure. `slow` is different: a `slow` test is
+measured and recorded, and no push gates it.
+
 Name each test for the requirement it discharges — `test_ver03_correction_check_values`,
 `test_val05_contour_against_published_polygon` — so that the traceability matrix in
 Appendix A can be checked mechanically.

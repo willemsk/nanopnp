@@ -9,9 +9,12 @@
 # convention.
 #
 # Two ways in:
-#   gate.sh          hook mode: reads the PreToolUse payload on stdin
+#   gate.sh          hook mode: reads the PreToolUse payload on stdin, and runs
+#                    pytest's development selection, without the `extended`
+#                    end-to-end walks
 #   gate.sh run      runs the gate directly, prints each stage, exits non-zero
-#                    on failure; what the skills call instead of the && chain
+#                    on failure; adds `--extended`, so it is the whole of what CI
+#                    gates on every push. What the skills call before they push
 #
 # It is wired up in .claude/settings.json. The matcher is the bare Bash tool
 # rather than an `if: Bash(git commit*)` filter, because that filter is a
@@ -26,8 +29,9 @@
 # 4 cores; .knowledge/07-software-stack.md).
 #
 # Two things keep it from costing even that on every commit:
-# - a tree state that already passed (by either entry point) is not re-run;
-#   the stamp is the tree id of the working copy, so any edit invalidates it;
+# - a tree state that already passed is not re-run; the stamp is the tree id of
+#   the working copy and the selection that passed, so any edit invalidates it,
+#   and a development pass does not stand in for `run`;
 # - when every changed path is prose, the lock check, mypy and pytest are
 #   skipped. Prose is Markdown nothing reads; .github/scripts/prose-only.sh
 #   holds the rule (not docs/ as a whole: tests read its YAML) and CI uses the
@@ -149,8 +153,19 @@ state=$(state_hash) || state=""
 
 say() { [[ $mode == run ]] && printf '%s\n' "$*"; return 0; }
 
-if [[ -n $state && -f $stamp_file && $(cat "$stamp_file") == "$state" ]]; then
-    say "gate: this tree state already passed; nothing to re-run."
+# Hook mode runs the development selection; `run` adds the `extended` tests, as
+# CI does on every push (SPECIFICATION.md section 7.6 NOTE). A full pass also
+# covers a later commit of the same tree, but a development pass never stands in
+# for `run`, which is what the skills call before they push.
+selection=development
+pytest_extra=()
+if [[ $mode == run ]]; then
+    selection=extended
+    pytest_extra=(--extended)
+fi
+passed=$(cat "$stamp_file" 2>/dev/null) || passed=""
+if [[ -n $state && ( $passed == "$state extended" || $passed == "$state $selection" ) ]]; then
+    say "gate: this tree state already passed ($selection selection); nothing to re-run."
     exit 0
 fi
 
@@ -235,8 +250,8 @@ if $docs_only; then
     say "gate: only prose changed; lock check, mypy and pytest skipped."
 else
     check "mypy --strict"   uv run mypy src/
-    check "pytest"          uv run pytest -q -n auto --dist loadfile \
-        --ignore=tests/tier1/test_gui_widgets.py
+    check "pytest ($selection)" uv run pytest -q -n auto --dist loadfile \
+        --ignore=tests/tier1/test_gui_widgets.py "${pytest_extra[@]}"
     # Serially and alone, as in CI: it waits on a real QtWebEngine page by the
     # wall clock, which busy xdist workers can starve (ci.yml, run 113). Exit 5
     # ("no tests ran") is the module skipping itself where PySide6 cannot
@@ -245,6 +260,7 @@ else
     check "pytest (GUI)"    bash -c 'uv run pytest -q tests/tier1/test_gui_widgets.py; s=$?; ((s == 5)) && s=0; exit $s'
 fi
 
-[[ -n $state ]] && printf '%s\n' "$state" >"$stamp_file"
+$docs_only && selection=extended  # nothing a selection decides was run or needed
+[[ -n $state ]] && printf '%s\n' "$state $selection" >"$stamp_file"
 say "gate: passed."
 exit 0

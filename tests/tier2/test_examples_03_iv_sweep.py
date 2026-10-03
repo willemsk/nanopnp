@@ -24,6 +24,8 @@ from nanopnp.core.hashing import decode_floats
 from nanopnp.post.qoi import ROUTE_AGREEMENT_TOLERANCE
 from nanopnp.validation.examples import CommandResult, copy_example, run_tagged
 
+pytestmark = pytest.mark.extended
+
 REPOSITORY = Path(__file__).resolve().parents[2]
 
 

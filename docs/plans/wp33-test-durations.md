@@ -129,6 +129,41 @@ VAL-05, VAL-06, NUM-12, NUM-14 and NUM-17. No requirement's assertion changes. *
 > this package's profiling read 1,488.3 s; per-file times varied by up to 20 % between the two
 > baselines (`charge_potential` 96.7 and 119.0 s), so a single file's figure is good to about that.
 > CI legs' times are not recorded here: they are read from this branch's first CI run.
+>
+> **Follow-up — the development selection** (3 October 2026, at the author's request: "these tests
+> still take way too long for efficient development"). Two read-only audits, one per tier, read
+> every test for a claim gated twice on the same kind of input, a pin on one past bug or amendment,
+> or an assertion that checks only itself. They found little to delete. Tier 1 had about 1 s of it,
+> and every slow Tier 2 test was the only gate of some clause. The time is in the end-to-end walks.
+> The §7.6 NOTE added in this commit therefore splits the selection, not the gate:
+>
+> - **`extended`**: the executed examples 01–04, 06 and 07, and the ten files that walk the
+>   vendored 2WCD entry (`charge`, `contour`, `density`, `exclusion`, `exclusion_2wcd_walk`,
+>   `gui_geometry`, `pipeline`, `protonation`, `val05`, `val06`): 54 tests. `uv run pytest` and the
+>   commit hook leave them out. `--extended`, CI on every leg, and `gate.sh run` (which the skills
+>   call before they push) run them; a development pass's stamp does not stand in for `run`. No
+>   analytic benchmark is marked.
+> - **Deleted**, each because another test on every push gates the same claim:
+>   - `wall_element_size_still_reaches_the_wall`, a refactor pin that VER-10's 8,141-element count
+>     at `wall_h` 0.05 covers;
+>   - the profile fixture's digest and its two conditioning criteria, which the re-derivation test
+>     and the published-properties test cover;
+>   - the packaged-correction-file existence check, which every correction test covers;
+>   - the `EXPECTED_EXIT` literal, which the exit tests exercise;
+>   - VER-09's schema-identifier history and VER-47's registry constant, which every v2 load covers.
+> - **`slow`**: VAL-05's frozen-case conductance on 2WCD. §7.4 records it, gates nothing on it,
+>   and the test asserted only that both conductances were positive.
+> - **Looked at and kept:**
+>   - VER-42's unstabilised control, because the VER-42 row requires it on the same meshes;
+>   - VER-58's on-axis atom, a rate gate on the axis kernel;
+>   - the NaN guards, whose docstrings tell a past bug while the QR-12 rule they gate is live.
+>
+> Measured on the same container, four workers, `-n auto --dist loadfile`, one BLAS thread:
+>
+> | Selection | Tests | Test time | Wall |
+> |---|---|---|---|
+> | Tiers 1–2 as of the Outcome above (now `--extended`) | 1,781 + 17 skipped | 1,334.5 s | 394 s |
+> | Development selection (`uv run pytest`, the commit hook) | 1,722 + 15 skipped | 542.9 s | 168 s |
 
 ### Work items
 

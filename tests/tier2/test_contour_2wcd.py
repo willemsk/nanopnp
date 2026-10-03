@@ -21,6 +21,8 @@ from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
 from nanopnp.mesh.profile import PIPELINE_SOURCE, load_profile, min_feature_size
 
+pytestmark = pytest.mark.extended
+
 if TYPE_CHECKING:
     from conftest import Prepared2WCD, Seed2WCD
 

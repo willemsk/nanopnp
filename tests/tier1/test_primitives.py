@@ -67,15 +67,3 @@ def test_name_edges_leaves_an_already_named_edge_alone() -> None:
 
     assert on_the_wall[0].name == "analyte"
     assert {edge.name for edge in shape.edges} >= {"axis", "analyte", "cis", "trans"}
-
-
-def test_wall_element_size_still_reaches_the_wall() -> None:
-    """``wall_h_nm`` grades the pore wall through the split, as NUM-30 needs it to.
-
-    Measured as a mesh count rather than an element size: the point is that the
-    request survives the refactor, and a wall size an order of magnitude below
-    the global one cannot leave the mesh the same size.
-    """
-    coarse = PORE.generate(maxh_nm=2.0)
-    graded = PORE.generate(maxh_nm=2.0, wall_h_nm=0.2)
-    assert graded.ne > 2 * coarse.ne

@@ -36,6 +36,8 @@ from nanopnp.gui.solver import Produced
 from nanopnp.io.run import RunResult, run_case
 from nanopnp.io.store import Store
 
+pytestmark = pytest.mark.extended
+
 if TYPE_CHECKING:
     from collections.abc import Callable
 

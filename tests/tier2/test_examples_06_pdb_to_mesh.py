@@ -43,6 +43,8 @@ from nanopnp.mesh.profile import PIPELINE_SOURCE, load_profile
 from nanopnp.structure.axis import ORIENTATION_LIMIT_DEG
 from nanopnp.validation.examples import CommandResult, copy_example, run_tagged
 
+pytestmark = pytest.mark.extended
+
 logger = logging.getLogger(__name__)
 
 REPOSITORY = Path(__file__).resolve().parents[2]

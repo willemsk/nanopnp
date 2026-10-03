@@ -106,9 +106,10 @@ def worktree_pair(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Path
     worktree = tmp_path / "worktree"
     _git(main, "worktree", "add", "-q", str(worktree))
     (worktree / "src/nanopnp/__init__.py").write_text("broken = (\n", encoding="utf-8")
-    # The stamp the gate writes after a pass: the tree id of the working copy.
+    # The stamp the gate writes after a pass: the tree id of the working copy and
+    # the selection that passed, here the commit hook's own.
     (Path(_git(main, "rev-parse", "--absolute-git-dir")) / "nanopnp-gate.pass").write_text(
-        _git(main, "write-tree"), encoding="utf-8"
+        f"{_git(main, 'write-tree')} development", encoding="utf-8"
     )
     binaries = tmp_path / "bin"
     binaries.mkdir()
@@ -173,3 +174,21 @@ def test_gate_hook_still_lets_a_stamped_tree_through(worktree_pair: tuple[Path, 
     """The session in the stamped main checkout commits without re-running anything."""
     main, _ = worktree_pair
     assert _hook(main, main, "git commit -m 'edit'") == ""
+
+
+def test_gate_run_does_not_take_a_development_pass_for_its_own(
+    worktree_pair: tuple[Path, Path],
+) -> None:
+    """``gate.sh run`` adds the ``extended`` tests, so the hook's pass does not stand in for it.
+
+    The skills run it before they push, and CI gates the ``extended`` tests on every
+    push (section 7.6 NOTE): a tree that passed only the development selection is
+    gated again, here reaching the fake ``uv`` that refuses.
+    """
+    assert _BASH is not None
+    main, _ = worktree_pair
+    result = subprocess.run(
+        [_BASH, str(_GATE), "run"], cwd=main, capture_output=True, text=True, timeout=60
+    )
+    assert result.returncode != 0
+    assert "already passed" not in result.stdout

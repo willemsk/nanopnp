@@ -3299,6 +3299,17 @@ oracle weakened to save time. A test that asserts a cold computation is never gi
 A test moves to `slow` only if another test on every push gates the same claim on the same kind of
 input, so that no requirement this tier gates is left ungated.
 
+NOTE (the development selection; **added 3 October 2026**, the WP33 follow-up): a Tier-1 or Tier-2
+test that walks the pipeline end to end carries the marker `extended`: an executed worked example
+of VER-46, or the vendored 2WCD entry taken through the stages. CI runs these tests on every push,
+on every leg, so the table above is unchanged and no requirement leaves the push gate. The
+development selection leaves them out unless `--extended` is passed or the test's file is named.
+That selection is what `uv run pytest` and the commit hook run; the skills run the whole gate before
+they push. The marker never goes on an analytic benchmark, which is the test that localises a
+failure (§7.1); it goes only on the walks that compose stages whose claims a faster test also
+exercises. A test is deleted, rather than marked, only when another test on every push gates the
+same claim on the same kind of input.
+
 ---
 
 ## 8. Implementation plan
