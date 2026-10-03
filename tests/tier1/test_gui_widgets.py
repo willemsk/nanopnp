@@ -822,6 +822,32 @@ def test_ver60_a_bounded_integer_steps_by_whole_numbers(
     assert editor.staged == {}
 
 
+def test_ver60_an_integer_range_a_spin_box_cannot_hold_is_a_numeric_entry(
+    application: QtWidgets.QApplication, tmp_path: Path
+) -> None:
+    """A ``QSpinBox`` holds a C ``int``: a wider bounded integer is a line, not a narrowed box.
+
+    Clamping would show a range the schema does not declare (WP31 D12), and an
+    unclamped ``setRange`` overflows in PySide6.
+    """
+    from nanopnp.gui.case_model import FieldState
+    from nanopnp.io.case import FieldReference
+
+    editor = CaseEditor.open(_structure_case(tmp_path, "charge: {ph: 7.0}"))
+    widget = CaseEditorWidget(editor)
+    state = FieldState(
+        reference=FieldReference(path="charge.synthetic", annotation=int),  # type: ignore[arg-type]
+        value=1,
+        options=None,
+        kind="bounded",
+        bounds=(0.0, 1e10),
+    )
+    built = widget._build(state)
+    assert isinstance(built, QtWidgets.QLineEdit)
+    assert built.text() == "1"
+    assert editor.staged == {}
+
+
 def test_ver60_the_charge_tab_starts_no_walk_of_its_own() -> None:
     """``ChargeWidget.build`` is gone: the window walks through the Geometry tab (WP32 D13)."""
     assert not hasattr(ChargeWidget, "build")

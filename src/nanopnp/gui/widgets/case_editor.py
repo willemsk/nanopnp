@@ -47,6 +47,10 @@ __all__ = ["CaseEditorWidget"]
 SPIN_DECIMALS = 3
 """Digits a bounded number's spin box shows: enough for a pH to the thousandth."""
 
+SPIN_INT_RANGE = (-(2**31), 2**31 - 1)
+"""What a ``QSpinBox`` holds, a C ``int``. A bounded integer whose range does not fit is
+a numeric entry instead: narrowing the schema's range would misstate it (WP31 D12)."""
+
 
 def _display(value: FieldValue | Absent) -> str:
     """Render a case value as the text a reader would have typed for it."""
@@ -153,7 +157,13 @@ class CaseEditorWidget(QtWidgets.QWidget):
                 )
             )
             widget = listing
-        elif state.kind == "bounded" and state.bounds is not None and state.integral:
+        elif (
+            state.kind == "bounded"
+            and state.bounds is not None
+            and state.integral
+            and SPIN_INT_RANGE[0] <= state.bounds[0]
+            and state.bounds[1] <= SPIN_INT_RANGE[1]
+        ):
             whole = QtWidgets.QSpinBox()
             lower, upper = state.bounds
             whole.setRange(math.ceil(lower), math.floor(upper))
@@ -161,7 +171,7 @@ class CaseEditorWidget(QtWidgets.QWidget):
             whole.setKeyboardTracking(False)
             whole.valueChanged.connect(self._setter(state.path, whole.value))
             widget = whole
-        elif state.kind == "bounded" and state.bounds is not None:
+        elif state.kind == "bounded" and state.bounds is not None and not state.integral:
             spin = QtWidgets.QDoubleSpinBox()
             lower, upper = state.bounds
             spin.setDecimals(SPIN_DECIMALS)

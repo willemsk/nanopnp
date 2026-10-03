@@ -398,7 +398,10 @@ class Deposit:
 
     @classmethod
     def read(cls, path: Path) -> Deposit:
-        """Read a deposit written by :meth:`write`."""
+        """Read a deposit written by :meth:`write`.
+
+        A deposit stored before WP32 also carries ``seconds``; it is not read.
+        """
         import numpy as np
 
         with np.load(path, allow_pickle=False) as data:
@@ -416,7 +419,6 @@ class Deposit:
                     None if math.isnan(where[0]) else (where[0], where[1]),
                 ),
                 nodes=(nodes[0], nodes[1]),
-                # A deposit stored before WP32 also carries ``seconds``; it is not read.
                 weighted=bool(data["weighted"]),
             )
 
