@@ -120,7 +120,10 @@ further code:
 - a case switching `flow` on, or supplying `outputs: [current]`, is refused naming `poisson`, the
   key and what is admitted;
 - `physics.solid_permittivities` and `inputs.charge` are accepted, and the solve passes the charge
-  as `fixed_charge` on the model's own `scales`;
+  as `fixed_charge` on the model's own `scales`. A charge deposited from a structure reaches the
+  model the same way, as the element-wise field stage 7 deposited, and a structure case protonates
+  only for a model that declares `fixed_charge` ([From a structure to a
+  charge](../guide/charge.md#which-models-take-a-charge));
 - the mesh gate asks for the potential's boundaries and the two electrodes, and not for the
   distance sources or any concentration boundary;
 - `numerics.continuation` must be `none`, and stage 11 records the bias with an empty selection;

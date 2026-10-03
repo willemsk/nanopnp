@@ -12,7 +12,7 @@ decodes for reading.
 | `inputs` | every input file, including the case, the mesh and any field, by content hash |
 | `environment` | the nanopnp version, Python, the platform, and the versions of the numerical libraries |
 | `geometry_and_mesh` | the mesh's content hash, counts, groups and the mapping applied to them, and its quality statistics |
-| `charge` | the supplied fields, their declared and deployed charge, and every conservation check |
+| `charge` | the supplied or deposited fields, their declared and deployed charge, and every conservation check; for a structure, the protonation record (its source, each frame's `Q_net`, unapplied states and per-chain differences), the structure's variant beside `Q_net`, and the deposit's conservation report |
 | `materials` | the correction parameter file and version, and how often the concentration clamp was active |
 | `solver` | the element orders, the nonlinear and linear settings, and the continuation ladder rung by rung |
 | `stabilisation` | the mode that produced the numbers, its parameters, and its own contribution to the current |
@@ -33,6 +33,12 @@ runs. But a number from a run with deviations was not produced by the model that
 its manifest says so where nobody can miss it. Some deviations come from what is supplied rather
 than from a switch: a mesh carrying an ion-exclusion shell is one, because the validated model has
 no Stern layer. Those are listed under `deviations.contributed`.
+
+The `charge:` block's switches are listed like any other: `forcefield`, `titration` and
+`smearing.sharpness` away from their defaults, and `exclusion_offset_nm` or
+`dielectric_transition_nm` set above `0`. `ph` is a condition of the experiment, and
+`smearing.grid_spacing_nm` a discretisation choice, so neither is a deviation. See [From a
+structure to a charge](charge.md).
 
 The schema's own defaults are **not** the validated defaults. A correction not named in the case
 defaults to `none`. See [Case files](case-files.md).

@@ -1,6 +1,6 @@
 # WP32 — Documentation increment 3: the charge pipeline and example 07
 
-**Status: planned, not started.** Written 3 October 2026, after WP31 merged on `main` (`35524c1`,
+**Status: delivered, 3 October 2026.** Written 3 October 2026, after WP31 merged on `main` (`35524c1`,
 to be tagged `v0.4.0-alpha.6`). Stage 7 produces a charge from a structure, gates it and records it
 (WP27, WP28), with the two FR-15 switches beside it (WP30), and the desktop shell shows all of it
 (WP31). The only prose on it is the Charge panel of `guide/desktop.md`. `guide/fields.md` and
@@ -78,6 +78,40 @@ seam each change what a verified contract means, so each needs its own decision.
 | D15 | Wall-clock time in stage 7 | **No artefact of stage 7 records wall-clock time**, in its payload or its summary. Three places change. `Deposit` drops `seconds` from `deposit.npz` and from its summary. `KernelLattice` drops it from the `charge-grid` summary, and `_lattice` stops reading it back. The `charge` summary loses its `seconds` block. Each timing still goes to the log at INFO, as the stage's caption already reports it, and the stage's total stays in the run record's `stages[].seconds`. `test_artefact_hook`'s `_timeless` goes: the watched and unwatched manifests' charge groups are then compared whole. The Tier 3 archive record logs the stage record's seconds instead. **Out of the rule:** stage 10's ladder record, whose per-rung seconds sit in the solution artefact's summary and the manifest's `solver.run`. Its payload, `state.npz`, carries none, and the ladder record is how the run was obtained (§6.5) | Found while planning: the same PQR deposited twice gave equal arrays and different bytes. A payload's digest is recorded beside its key, and an edited payload loads as hand-substituted (VER-23), so a payload that changes with the clock defeats both. The summary is copied whole into the FR-25 charge group, so it took the manifest with it (WP31's live item). The `.npz` reader already tolerates a missing `seconds` (`deposit.py`), so stored deposits still load |
 | D14 | Housekeeping | `examples/.gitignore` gains `2wcd.pqr`, `charge.field.yaml` and `charge.field.npz`, the names the prototype wrote. `docs/examples/index.md` says seven examples. `mkdocs.yml` gains the guide page and example 07. `CHANGELOG.md` gains `0.4.0-alpha.7`, and the README's v0.4 row loses "planned" | A pattern such as `*.yaml` would hide case files |
 
+> **Outcome — what changed against the decisions** (3 October 2026). The decisions stand except
+> where these say otherwise; each names its evidence.
+>
+> - **D5: the sibling is filtered as the example is, and nothing else changes.** A word starting
+>   `../` is resolved against the example directory. When it lands in the repository, its parent
+>   directory is mirrored at the same place under the copy. A directory under `examples/` is
+>   filtered by `examples/.gitignore` and `*.msh`, and any other loses only its `*.msh`, as a
+>   `../../` word did before. The example itself is never mirrored over its own copy
+>   (`test_examples_plan.py::test_ver46_copy_mirrors_a_sibling_example_without_its_generated_files`).
+> - **D7 (h): the refusal names the supplied field and the two orders, not the gate's name.**
+>   Stage 7's message reads "the deployed mesh under-resolves the supplied field: the charge
+>   integral moves by 0.689 of the reference charge between the assembly order and three orders
+>   above it, against the 0.0001 this gate allows". The test asserts those two phrases.
+> - **D12: an integral bounded field is read from the annotation.** `FieldState.integral` is true
+>   for an `int` that is not also a `float`, and the editor builds a `QSpinBox` over
+>   `[ceil(ge), floor(le)]` stepping by 1. A field admitting `None` is never `bounded`, and the
+>   schema walk of `test_ver60_a_bounded_number_spins_over_exactly_the_schema_s_range` excludes
+>   such fields from both sides. No field of today's schema changes widget.
+> - **D13: `ChargeWidget`'s `store` argument went with `build`.** Nothing else read it, and the
+>   window no longer passes it.
+> - **D14: two more stale scope lines.** `docs/index.md`'s pre-alpha box and the README's status
+>   paragraph still said charge maps were only supplied from outside. Both now name the charge
+>   pipeline, delivered toward v0.4.
+> - **Verification, the reproducible payloads.** The test is
+>   `tests/tier1/test_artefact_hashing.py::test_ver23_a_charged_walk_writes_the_same_bytes_into_two_stores`,
+>   in VER-23's own Tier 1 file: `test_artefact_cache.py` is a Tier 2 file of solve caching. It
+>   compares every payload byte for byte and every `meta.json` but its `created_at`, which is
+>   stronger than the two summaries planned. It fails on the pre-D15 source, at `deposit.npz`.
+>   `test_artefact_hook.py` now also asserts the watched and unwatched manifests' hashes equal.
+>   `.knowledge/07` §15 records the rule.
+> - **Verification, the shell.** `test_gui_widgets.py` had been skipping in this container for a
+>   missing `libEGL`; with the system's EGL and X libraries installed it ran, the VER-60 tests
+>   included.
+
 ### Work items
 
 1. **`validation/examples.py`** (D5): the `../` mirroring. Extend `tests/tier1/test_examples_plan.py`
@@ -111,6 +145,20 @@ Commands: the full gate (`.claude/hooks/gate.sh run`);
 `OMP_NUM_THREADS=1 uv run pytest tests/tier2/test_examples_07_pdb_to_charged_run.py -v --durations=0 --log-cli-level=INFO`;
 `uv run pytest tests/tier1/test_gui_widgets.py -v`;
 `uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run mkdocs build --strict`.
+
+> **Outcome — measured** (3 October 2026; netgen, `size_scale` 4, no stabilisation, `P2`; one
+> core, `OMP_NUM_THREADS=1`, a cold store).
+>
+> - **D9:** the test file's `run` block took 278.4 s and its `refused` block 1.8 s, against the
+>   480 s target. A second cold walk recorded the stage times: protonation 64.4 s, density 15.4 s,
+>   symmetry 6.9 s, stage 7's deposit 5.7 s, mesh 1.3 s, and the solve 188.6 s on the default
+>   ladder.
+> - **D7:** `Q_net` −60 e, and the PQR's charge column sums to it within 10⁻⁹. Producer leg
+>   1.6 × 10⁻¹⁴, consumer 1.5 × 10⁻¹⁴, quadrature agreement 1.8 × 10⁻¹⁴, worst planes 1.1 × 10⁻¹³
+>   on the lattice and 2.6 × 10⁻⁴ on the mesh, against 10⁻³. **`t₊` = 0.5428**, and the FR-23 routes
+>   agree to 2.6 × 10⁻⁴. The switches' mesh has 14,252 elements, with an `exclusion` material
+>   carrying +24.9 e of the deposit. The re-supplied lattice moves by 0.689 of `Q_net` between the
+>   assembly order and three above it, against 10⁻⁴, as Design §2 found.
 
 ### Out of scope
 

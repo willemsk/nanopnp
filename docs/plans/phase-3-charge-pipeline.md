@@ -1,6 +1,6 @@
 # Phase 3 (Charge pipeline): from a structure to a charged run
 
-**Status: in progress. WP26 delivered, 30 September 2026; WP27 delivered, 1 October 2026 ([plan](wp27-protonation.md)); WP28 delivered, 1 October 2026 ([plan](wp28-charge-deposition.md)); WP29 delivered, 1 October 2026 ([plan](wp29-val06-apbs.md)); WP30 delivered, 2 October 2026 ([plan](wp30-dielectric-and-exclusion.md)); WP31 delivered, 2 October 2026 ([plan](wp31-gui-charge-pipeline.md)); WP32 planned, 3 October 2026 ([plan](wp32-charge-docs-and-example.md)); WP33 planned, 3 October 2026 ([plan](wp33-test-durations.md)).** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
+**Status: in progress. WP26 delivered, 30 September 2026; WP27 delivered, 1 October 2026 ([plan](wp27-protonation.md)); WP28 delivered, 1 October 2026 ([plan](wp28-charge-deposition.md)); WP29 delivered, 1 October 2026 ([plan](wp29-val06-apbs.md)); WP30 delivered, 2 October 2026 ([plan](wp30-dielectric-and-exclusion.md)); WP31 delivered, 2 October 2026 ([plan](wp31-gui-charge-pipeline.md)); WP32 delivered, 3 October 2026 ([plan](wp32-charge-docs-and-example.md)); WP33 planned, 3 October 2026 ([plan](wp33-test-durations.md)).** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
 the geometry pipeline (`main` at `v0.3.0-alpha.9`, formerly `v0.9.0-alpha.9`). Phase 2's
 end-of-phase report and its release, `v0.3.0`, wait for one Tier-3 run on the author's archive
 (criterion 3, VAL-05's ensemble leg). WP26 may start before that report merges, because nothing in
@@ -338,6 +338,19 @@ without a documentation edit (VER-45).
 > - **The guide is one page, `guide/charge.md`.** The generated references need no edit.
 > - **Two WP31 carry-overs** ride along: a bounded integer or optional field gets the right
 >   widget, and `ChargeWidget.build`, which nothing calls, is deleted.
+
+> **Delivered, 3 October 2026** ([plan](wp32-charge-docs-and-example.md), to be tagged
+> `v0.4.0-alpha.7`). The guide page *From a structure to a charge*, the D3 edits that link it, and
+> example 07, executed by VER-46 at Tier 2 (`tests/tier2/test_examples_07_pdb_to_charged_run.py`):
+> 2WCD to a charged solve at `size_scale` 4, `Q_net` against the exported PQR, the conservation
+> report, `t₊ > ½`, the PQR fed back to a byte-identical deposit, both FR-15 switches as
+> deviations, and the re-supplied lattice refused (VAL-15). The executor mirrors a sibling example
+> named by `../`. Stage 7 records no wall-clock time, so its payloads reproduce byte for byte and two
+> charged runs share a manifest (VER-23, `tests/tier1/test_artefact_hashing.py`). The editor's
+> bounded integer and optional fields, and the deleted `ChargeWidget.build`, close WP31's
+> carry-overs (VER-60). Discharges phase criterion 7. **Live for later packages:** WP33's baseline
+> gains this file, the suite's longest Tier 2 file; the webgui colour range is still not watched
+> drawing.
 
 ### WP33 — The test suite's duration, cut without losing a check
 

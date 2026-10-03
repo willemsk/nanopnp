@@ -1,8 +1,10 @@
 # Charge and permittivity fields
 
-A pore's fixed charge, and optionally its dielectric, are supplied as fields on a regular `(r, z)`
-grid through `inputs.charge` and `inputs.eps_r`. Producing them from a structure (PDB2PQR,
-protonation, smearing) is the v0.4 charge pipeline. Stage 7 consumes them.
+A pore's fixed charge, and optionally its dielectric, can be supplied as fields on a regular
+`(r, z)` grid through `inputs.charge` and `inputs.eps_r`. Stage 7 deploys them on the mesh and gates
+them. This page is about those supplied fields. A charge produced from a structure, by PDB2PQR,
+PROPKA and smearing, is deposited on the mesh instead of read from a grid: see [From a structure
+to a charge](charge.md).
 
 ## The field header
 
@@ -52,3 +54,8 @@ much, and where, and the report lands in the manifest's charge group.
 
 A field on a grid finer than the mesh can pass the producer leg and fail the consumer leg: the mesh
 cannot carry it. Refine the mesh where the charge is, or smear the charge more widely.
+
+A charge deposited from a structure is checked differently (the §4.4 NOTE on the producer path's
+conservation report). Its two legs are exact by construction, it takes no axis guard, and its
+per-plane check compares against the atoms rather than the grid. [The conservation
+report](charge.md#the-conservation-report) describes it.

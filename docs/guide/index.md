@@ -12,7 +12,8 @@ an equation.
 | [Meshes](meshes.md) | Supplying a mesh, the group vocabulary, the quality gate, the generators |
 | [Structures and trajectories](structures.md) | Stage 1: the structure file, chains, ensembles, the axis and its gates, preparation |
 | [From a structure to a mesh](geometry.md) | Stages 2 to 6, the membrane's registration, hand edits, and exports |
-| [Charge and permittivity fields](fields.md) | Field headers, the three quantities, the conservation gate |
+| [From a structure to a charge](charge.md) | Stage 7: protonation, the deposit, the conservation report, the two FR-15 switches |
+| [Charge and permittivity fields](fields.md) | Supplied fields: headers, the three quantities, the conservation gate |
 | [Running and exit codes](running.md) | `run`, `stage`, `inspect`, `reproduce`; logging; exit codes |
 | [Sweeps and HPC](sweeps.md) | Sweep documents, waves, warm starts, job arrays, rectification |
 | [Outputs and quantities](outputs.md) | What a run reports, its sign convention, and the two current routes |

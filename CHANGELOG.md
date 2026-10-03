@@ -17,6 +17,44 @@ Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before t
 version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
 
+## [0.4.0-alpha.7] - 2026-10-03
+
+WP32: documentation increment 3, the charge pipeline documented and executed (QR-15 in part), the
+seventh package of Phase 3 and its phase criterion 7. No weak form, gate, tolerance or case key
+changes. Stage 7's artefacts stop recording wall-clock time, which changes their bytes but no key.
+
+### Added
+
+- **The guide page *From a structure to a charge*** (`docs/guide/charge.md`): protonation and its
+  keys, `inputs.pqr` and the `.pqr` export, the deposit and why it is not interpolated, the
+  conservation report and where to read it, the two FR-15 switches, and which models take a charge.
+  *Charge and permittivity fields* becomes the supplied-field page, and the case-file, provenance,
+  concepts, geometry, desktop and physics-model pages link the new one.
+- **Example 07, from a PDB entry to a charged run** (VER-46). The prepared 2WCD entry walks every
+  stage to an ePNP-NS solve, exports its PQR and its charge, deposits the same charge from the PQR
+  supplied back, turns both FR-15 switches on, and shows the exported lattice refused by stage 7's
+  quadrature-agreement check when supplied back through `inputs.charge`. Its test asserts `Q_net`
+  against the PQR's charge column, each conservation leg and worst plane against its tolerance,
+  `t₊ > ½`, the FR-23 route agreement, the PQR's byte-identical deposit, and the switches'
+  deviations.
+- **The examples' executor mirrors a sibling example** that a command names by `../`, so example 07
+  runs example 06's `prepare.py` rather than a copy of it.
+
+### Changed
+
+- **Stage 7 records no wall-clock time** (VER-23). `deposit.npz`, the `charge-grid` summary and the
+  `charge` summary drop their `seconds`; the timings go to the log, and the stage's total stays in
+  the run record. The same deposit now writes the same bytes, and two charged runs of one case share
+  a manifest. A deposit stored before this release still loads.
+- **The case editor's bounded numbers** (VER-60). A bounded integer is a `QSpinBox` stepping by
+  one, and a field that admits `null` is never a spin box, which cannot say "unset". No field of
+  today's schema changes widget.
+
+### Removed
+
+- `ChargeWidget.build` and its `store` argument, which nothing called: the window builds the charge
+  through the Geometry tab and calls `follow`.
+
 ## [0.4.0-alpha.6] - 2026-10-02
 
 WP31: GUI increment 3, the charge pipeline surfaced in the desktop shell (IF-09, QR-10, QR-11), the

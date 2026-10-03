@@ -94,6 +94,7 @@ nav:
       - Meshes: guide/meshes.md
       - Structures and trajectories: guide/structures.md
       - From a structure to a mesh: guide/geometry.md
+      - From a structure to a charge: guide/charge.md
       - Charge and permittivity fields: guide/fields.md
       - Running and exit codes: guide/running.md
       - Sweeps and HPC: guide/sweeps.md
@@ -109,6 +110,7 @@ nav:
       - 04 The Python API: _generated/examples/04-python-api.md
       - 05 The ClyA reference: _generated/examples/05-clya-reference.md
       - 06 From a PDB entry to a mesh: _generated/examples/06-pdb-to-mesh.md
+      - 07 From a PDB entry to a charged run: _generated/examples/07-pdb-to-charged-run.md
   - Reference:
       - reference/index.md
       - Case file: _generated/reference/case-file.md

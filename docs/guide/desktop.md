@@ -106,6 +106,7 @@ itself, with each artefact's hash. Every number in the four panes is read from t
   share of the tolerance it uses. A leg the stage did not run is shown as not run, with its reason.
 
 A later geometry build that replaces the model clears the Charge tab until you build charge again.
+[From a structure to a charge](charge.md) says what each step and each check is.
 
 ![Run control](img/run.png)
 
