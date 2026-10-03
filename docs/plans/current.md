@@ -13,7 +13,8 @@ Updated 3 October 2026 (WP31 merged; WP32 planned). This file is navigation only
   - WP26–WP31 are **merged**, with `main` at `35524c1`. `v0.4.0-alpha.1` and `.2` are tagged;
     `.3` (WP28, `c6c0c0d`) to `.6` (WP31) are not yet.
   - [WP32](wp32-charge-docs-and-example.md) (VER-46, VER-60; QR-15, phase criterion 7) is
-    **planned** on `ccr-a6e3df11-3e0qmp`, to be tagged `v0.4.0-alpha.7`. It is the phase's last
+    **planned** on `ccr-a6e3df11-3e0qmp`, to be tagged `v0.4.0-alpha.7`. It also takes stage 7's
+    wall-clock time out of its artefacts (D15). It is the phase's last
     package. **Next: `/wp-implement`** on WP32. Then comes the phase close: the end-of-phase
     report and `v0.4.0`.
 
@@ -64,8 +65,6 @@ Each is recorded in full where it points.
 - **OPN-04**, the ClyA-AS mutation list. **OPN-07**, a golden's identity for a deposited charge,
   and now for a derived `χ` too.
 - **The archived PQRs** for WP27–WP29's Tier 3, none of which has run yet.
-- **Stage 7 stores wall-clock seconds in its payload and summary**, so two identical deposits
-  never share bytes or a content hash. No owner yet (found while planning WP32).
 
 ## Dependencies To Read On Demand
 
