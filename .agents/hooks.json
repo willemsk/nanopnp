@@ -1,0 +1,43 @@
+{
+  "commit-gate": {
+    "PreToolUse": [
+      {
+        "matcher": "run_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$(git rev-parse --show-toplevel)/.agents/hooks/adapter.sh\" pre-tool",
+            "timeout": 1800
+          }
+        ]
+      }
+    ]
+  },
+  "auto-format": {
+    "PostToolUse": [
+      {
+        "matcher": "replace_file_content|write_to_file",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$(git rev-parse --show-toplevel)/.agents/hooks/adapter.sh\" post-tool",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  },
+  "session-init": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$(git rev-parse --show-toplevel)/.agents/hooks/adapter.sh\" session-start",
+            "timeout": 600
+          }
+        ]
+      }
+    ]
+  }
+}
