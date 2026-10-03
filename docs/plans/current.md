@@ -9,14 +9,16 @@ Updated 3 October 2026 (WP31 merged; WP32 planned). This file is navigation only
 - Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **closed** as `v0.3.0`, with
   criterion 3 waived (§8.2.4 D7). `Z_MD` is 5.655 nm.
 - Phase 3 ([charge pipeline](phase-3-charge-pipeline.md), release `v0.4.0`) is **in progress**,
-  covering WP26–WP32.
+  covering WP26–WP33.
   - WP26–WP31 are **merged**, with `main` at `35524c1`. `v0.4.0-alpha.1` and `.2` are tagged;
     `.3` (WP28, `c6c0c0d`) to `.6` (WP31) are not yet.
   - [WP32](wp32-charge-docs-and-example.md) (VER-46, VER-60; QR-15, phase criterion 7) is
     **planned** on `ccr-a6e3df11-3e0qmp`, to be tagged `v0.4.0-alpha.7`. It also takes stage 7's
-    wall-clock time out of its artefacts (D15). It is the phase's last
-    package. **Next: `/wp-implement`** on WP32. Then comes the phase close: the end-of-phase
-    report and `v0.4.0`.
+    wall-clock time out of its artefacts (D15). **Next: `/wp-implement`** on WP32.
+  - [WP33](wp33-test-durations.md) (to be `v0.4.0-alpha.8`) cuts the Tier 1–2 suite's duration under the §7.6 NOTE, and is the
+    phase's last package. It
+    starts after WP32 merges, from a baseline re-measured there. Then comes the phase close: the
+    end-of-phase report and `v0.4.0`.
 
 ## What Phase 3 must not re-decide
 
