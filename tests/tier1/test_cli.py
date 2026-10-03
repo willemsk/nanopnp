@@ -61,7 +61,6 @@ from nanopnp.core.hashing import CanonicalisationError
 from nanopnp.core.paths import (
     REFERENCE_DATA_VARIABLE,
     STORE_ROOT_VARIABLE,
-    correction_file,
     reference_data_root,
     reference_file,
 )
@@ -125,10 +124,6 @@ def test_cli_env_reports_data_location(capsys: pytest.CaptureFixture[str]) -> No
     out = capsys.readouterr().out
     assert __version__ in out
     assert "corrections" in out or "data" in out
-
-
-def test_packaged_correction_file_is_installed() -> None:
-    assert correction_file("willems2020_nacl").is_file()
 
 
 def test_val15_the_reference_archive_is_absent_rather_than_broken(

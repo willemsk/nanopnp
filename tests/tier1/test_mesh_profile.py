@@ -85,15 +85,6 @@ def test_the_shipped_fixture_is_the_delivered_table_re_derived() -> None:
     assert derived == fixture
 
 
-def test_the_fixture_records_the_sha256_of_the_table_it_came_from() -> None:
-    """The digest is over the delivered bytes, CRLF line endings included."""
-    import hashlib
-
-    fixture = load_profile(REFERENCE)
-    assert fixture.provenance.sha256 == hashlib.sha256(CSV.read_bytes()).hexdigest()
-    assert fixture.provenance.sha256.startswith("d0c2008140dc43d4")
-
-
 def test_the_delivered_table_has_the_published_properties() -> None:
     """Section 5.2.1's measured row, to 1e-9: extent, count, topology, area.
 
@@ -116,21 +107,6 @@ def test_the_reference_fixture_is_accepted_for_tier_three_work() -> None:
     fixture = load_profile(REFERENCE)
     assert fixture.is_reference
     fixture.require_reference("a VAL-01 comparison")
-
-
-def test_the_fixture_fails_two_conditioning_criteria_and_is_shipped_anyway() -> None:
-    """Section 5.2.1 NOTE: the gate is on contours FR-08 produces, not on a fixture.
-
-    Pinned because it is the surprising half of the amendment. At the reference
-    wall size of 0.05 nm this polygon's spacing and feature size are below the
-    thresholds, and it is still what the reference mesh was built from. A later
-    change that started gating the fixture on them would fail here rather than
-    quietly refuse to load the reference geometry.
-    """
-    wall_size_nm = 0.05
-    points = load_profile(REFERENCE).as_array()
-    assert min_vertex_spacing(points) < wall_size_nm
-    assert min_feature_size(points) < 2.0 * wall_size_nm
 
 
 # --- the measures ----------------------------------------------------------

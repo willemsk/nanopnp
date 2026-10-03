@@ -25,7 +25,6 @@ import yaml
 from packaging.specifiers import SpecifierSet
 
 from nanopnp.core.hashing import content_hash
-from nanopnp.core.stages import describe
 from nanopnp.io.artefact import (
     CASE_SCHEMA,
     CASE_SCHEMA_V1,
@@ -201,11 +200,6 @@ def test_ver47_the_v1_tree_maps_onto_v2_in_both_directions() -> None:
         "physics.solid_permittivities"
     }
     assert "physics.solid_permittivities" in v2
-
-
-def test_ver47_the_case_stage_declares_the_schema_it_emits() -> None:
-    """The stage registry names the schema the stage-9 artefact carries."""
-    assert describe("case").artefact_schema == CASE_SCHEMA
 
 
 # -- the upgrade ---------------------------------------------------------------

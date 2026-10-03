@@ -29,7 +29,8 @@ and no bare `python`.
 
 ```bash
 uv sync --all-extras     # create or refresh .venv from uv.lock
-uv run pytest            # tiers 1 and 2 — the default selection
+uv run pytest            # tiers 1 and 2, without the end-to-end walks — the development selection
+uv run pytest --extended # the whole of tiers 1 and 2, as CI gates it on every push
 ```
 
 A VS Code Dev Container and a GitHub Codespace configuration are in [`.devcontainer/`](.devcontainer)
@@ -42,6 +43,12 @@ Everything must pass before a commit:
 ```bash
 uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv run pytest
 ```
+
+and before a push, with `uv run pytest --extended`. The tests marked `extended` walk the pipeline
+end to end: the executed worked examples and the vendored 2WCD entry. They take most of the suite's
+time, so the development selection leaves them out, and CI runs them on every push
+(`SPECIFICATION.md` §7.6 NOTE). Naming one's file, `uv run pytest tests/tier2/test_charge_2wcd.py`,
+runs it without the flag.
 
 CI runs the same four stages on Python 3.12, plus the test suite on 3.11–3.14 on Linux and on 3.12
 on Windows and macOS, and the strict documentation build on every push, prose-only ones included. `uv.lock` is committed and CI resolves nothing: if you edit `pyproject.toml`,

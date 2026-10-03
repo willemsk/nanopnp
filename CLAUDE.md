@@ -41,8 +41,9 @@ matches `pyproject.toml`: if you edit `pyproject.toml` by hand, run `uv lock` be
 
 | Command | Purpose |
 |---|---|
-| `uv run pytest` | Tiers 1 and 2 — the default selection, and the push gate |
-| `uv run pytest -n auto --dist loadfile` | The same, in parallel as CI and the gate run it; set `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS` and `MKL_NUM_THREADS` to 1 or the workers oversubscribe (`.knowledge/07` §12). CI and the gate run `tests/tier1/test_gui_widgets.py` separately and serially, because it waits on a real web page by the wall clock |
+| `uv run pytest` | Tiers 1 and 2 without the `extended` end-to-end walks: the development selection, and what the commit hook runs |
+| `uv run pytest --extended` | The whole of Tiers 1 and 2, adding the executed examples and the 2WCD walks: the push gate, as CI runs it on every push (§7.6 NOTE). Naming an `extended` test's file runs it without the flag |
+| `uv run pytest -n auto --dist loadfile` | Either selection, in parallel as CI and the gate run it; set `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS` and `MKL_NUM_THREADS` to 1 or the workers oversubscribe (`.knowledge/07` §12). CI and the gate run `tests/tier1/test_gui_widgets.py` separately and serially, because it waits on a real web page by the wall clock |
 | `uv run pytest -m tier1` | Unit and property tests only (seconds) |
 | `uv run pytest -m tier3` | Comparison with the reference and the author's archive; nightly, not a push gate |
 | `uv run pytest -m slow --log-cli-level=INFO` | Benchmarks and envelope runs; measured, never gated |
@@ -53,11 +54,14 @@ matches `pyproject.toml`: if you edit `pyproject.toml` by hand, run `uv lock` be
 | `uv run nanopnp --env` | Report the resolved environment and data locations |
 | `uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run mkdocs build --strict` | The documentation site, as CI's `docs` job builds it (VER-45); generated pages go to the gitignored `docs/_generated/` |
 
-Before committing, run the whole gate:
+Before committing, run the gate:
 
 ```bash
 uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv run pytest
 ```
+
+Before pushing, run it with `uv run pytest --extended`: CI gates the `extended` tests on every push,
+and a walk that composes the stages can fail where each stage's own tests pass.
 
 `.claude/hooks/gate.sh` runs that gate, plus `uv lock --check`, automatically before any `git commit`
 Claude Code makes, and refuses the commit with the failing output if a stage fails or its 25-minute
@@ -66,7 +70,9 @@ not re-run. When only prose changed it runs ruff alone. Prose means Markdown out
 `src/`, `data/` and `examples/`; `docs/` as a whole doesn't count, because tests read its YAML, and
 an example's README is executed by its test (VER-46). The rule is `.github/scripts/prose-only.sh`,
 and CI uses the same script. CI's strict documentation build runs on every push, prose included.
-`.claude/hooks/gate.sh run` runs the same gate by hand; the skills use it. `git commit --no-verify`
+`.claude/hooks/gate.sh run` runs the gate by hand with `--extended`, the whole of what CI gates; the
+skills use it before they push, and a pass of the hook's development selection does not stand in for
+it. `git commit --no-verify`
 (or `-n`) skips it. It does not fire for commits you make yourself in a terminal.
 
 ## Project structure
@@ -239,7 +245,8 @@ elsewhere cite them. The skill writes `CODE_REVIEW.md` at the repo root by defau
 
 - Conventional commits: `feat:`, `fix:`, `test:`, `docs:`, `chore:`.
 - Name the requirement identifier the commit discharges in the body (`VER-03`, `FR-16`).
-- Run the full gate above before committing (`.claude/hooks/gate.sh run`).
+- Run the gate above before committing, and the whole of it (`.claude/hooks/gate.sh run`) before
+  pushing.
 - Versions are git tags, never a number in `pyproject.toml` or the package (§2.7 Versioning).
   A WP's PR writes its `CHANGELOG.md` section under `vX.Y.Z-alpha.N`, and after it merges its last
   commit on `main` is tagged so; `CONTRIBUTING.md` *Versions and releases* has the steps.

@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from nanopnp.cli.errors import EXIT_GATE, EXIT_OK
+from nanopnp.cli.errors import EXIT_GATE
 from nanopnp.io.case import load_case, resolve
 from nanopnp.validation.comsol import case_identity
 from nanopnp.validation.examples import (
@@ -64,11 +64,6 @@ def test_ver46_every_readme_has_a_tagged_block_of_runnable_commands(example: Pat
     assert commands, f"{readme} has no <!-- example: run --> block"
     tags = set(re.findall(r"<!--\s*example:\s*([\w-]+)\s*-->", readme.read_text("utf-8")))
     assert tags <= set(EXPECTED_EXIT), f"{readme} uses a tag no test executes: {tags}"
-
-
-def test_ver46_the_tags_are_run_plan_and_refused() -> None:
-    """``refused`` expects the gate class, 4; ``run`` and ``plan`` expect 0 (WP25 D10)."""
-    assert dict(EXPECTED_EXIT) == {"run": EXIT_OK, "plan": EXIT_OK, "refused": EXIT_GATE}
 
 
 @pytest.mark.parametrize(

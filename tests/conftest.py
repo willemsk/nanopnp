@@ -60,6 +60,45 @@ DODECAMER = "A,B,C,D,E,F,G,H,I,J,K,L"
 REQUIRE_GMSH = "NANOPNP_REQUIRE_GMSH"
 """Set to ``1`` where ``gmsh`` must import, so its tests fail rather than skip (WP23 D11)."""
 
+EXTENDED = "--extended"
+"""Selects the ``extended`` tests, which the development selection leaves out (section 7.6)."""
+
+
+def pytest_addoption(parser: pytest.Parser) -> None:
+    parser.addoption(
+        EXTENDED,
+        action="store_true",
+        help="also run the tests marked extended: the executed examples and the 2WCD "
+        "walks, which CI gates on every push (SPECIFICATION.md section 7.6)",
+    )
+
+
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+    """Leave out the ``extended`` tests unless asked for, or their file is named.
+
+    An ``extended`` test is an end-to-end walk -- an executed example or the 2WCD
+    entry through the pipeline -- whose claims CI gates on every push with
+    ``--extended``. The development selection, which ``uv run pytest`` and the
+    commit hook run, leaves them out; a file or test named on the command line runs
+    whole, so ``uv run pytest tests/tier2/test_charge_2wcd.py`` needs no flag.
+    """
+    if config.getoption(EXTENDED):
+        return
+    named = {
+        Path(argument.split("::")[0]).resolve()
+        for argument in config.args
+        if Path(argument.split("::")[0]).is_file()
+    }
+    kept, left_out = [], []
+    for item in items:
+        if item.get_closest_marker("extended") and Path(item.path).resolve() not in named:
+            left_out.append(item)
+        else:
+            kept.append(item)
+    if left_out:
+        config.hook.pytest_deselected(items=left_out)
+        items[:] = kept
+
 
 def import_gmsh() -> ModuleType:
     """Import ``gmsh``, or skip naming why; under :data:`REQUIRE_GMSH` fail instead.

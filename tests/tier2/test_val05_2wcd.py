@@ -51,6 +51,8 @@ from nanopnp.validation.geometry import (
     zero_crossing,
 )
 
+pytestmark = pytest.mark.extended
+
 if TYPE_CHECKING:
     from conftest import Prepared2WCD, Seed2WCD
 
@@ -362,11 +364,14 @@ def test_val05_2wcd_mesh_on_both_backends(gmsh_module: ModuleType, walked: Walke
         )
 
 
+@pytest.mark.slow
 def test_val05_2wcd_frozen_case_conductance(walked: Walked) -> None:
     """D9, recorded: G on the generated mesh against the fixture's, beside ε_G.
 
     Uncharged at 1 M, so G is geometric and ``ε_G`` is its bulk-resistor proxy;
     access resistance dilutes the difference, and by how much is the record.
+    ``slow`` since the follow-up to WP33: §7.4 records this conductance and gates
+    nothing on it, and the 20 s it costs asserted only that both are positive.
     """
     # WP28 D14: a structure case whose model declares a fixed charge now protonates
     # and deposits it, so the generated leg reads the walked mesh through

@@ -29,6 +29,8 @@ from nanopnp.io.artefact import StageInputs
 from nanopnp.io.case import load_case, loads_case
 from nanopnp.io.store import Store
 
+pytestmark = pytest.mark.extended
+
 if TYPE_CHECKING:
     from conftest import Protonated2WCD
 

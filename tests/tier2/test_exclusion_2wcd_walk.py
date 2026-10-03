@@ -18,6 +18,8 @@ import pytest
 from nanopnp.io.run import PIPELINE, run_case
 from nanopnp.io.store import Store
 
+pytestmark = pytest.mark.extended
+
 if TYPE_CHECKING:
     from collections.abc import Callable
     from pathlib import Path

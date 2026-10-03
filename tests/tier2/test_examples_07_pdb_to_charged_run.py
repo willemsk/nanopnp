@@ -59,6 +59,8 @@ from nanopnp.io.store import Store
 from nanopnp.post.qoi import ROUTE_AGREEMENT_TOLERANCE
 from nanopnp.validation.examples import CommandResult, copy_example, run_tagged
 
+pytestmark = pytest.mark.extended
+
 logger = logging.getLogger(__name__)
 
 REPOSITORY = Path(__file__).resolve().parents[2]

@@ -30,6 +30,8 @@ from nanopnp.io.store import Store
 from nanopnp.mesh.adapter import read
 from nanopnp.mesh.quality import QUALITY_FLOOR
 
+pytestmark = pytest.mark.extended
+
 if TYPE_CHECKING:
     from collections.abc import Callable
     from pathlib import Path

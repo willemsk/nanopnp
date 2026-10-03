@@ -35,6 +35,8 @@ from nanopnp.materials.fields import derive_solid_fraction, smooth_step, water_f
 from nanopnp.mesh.ingest import deployed_mesh
 from nanopnp.mesh.quality import QUALITY_FLOOR
 
+pytestmark = pytest.mark.extended
+
 if TYPE_CHECKING:
     from conftest import Prepared2WCD, Seed2WCD
 

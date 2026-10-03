@@ -34,6 +34,10 @@ env:
   OMP_NUM_THREADS: "1"
   OPENBLAS_NUM_THREADS: "1"
   MKL_NUM_THREADS: "1"
+  # The push gate is the whole of Tiers 1 and 2, so both test jobs pass
+  # --extended: the executed examples and the 2WCD walks, which `uv run pytest`
+  # and the commit hook leave out for the development loop (SPECIFICATION.md
+  # section 7.6 NOTE). CI is where they are gated, on every push.
   # Every pytest call below passes -rs, so each skip is listed with its reason:
   # a skip is missing evidence, and an unnamed one cannot be audited (WP23 D11).
   # The optional Gmsh backend's tests FAIL rather than skip on every leg
@@ -124,7 +128,7 @@ jobs:
       - if: env.CODE == 'true'
         run: >-
           uv run pytest -rs -n auto --dist loadfile --ignore=tests/tier1/test_gui_widgets.py
-          --cov=src/nanopnp --cov-report=term-missing
+          --extended --cov=src/nanopnp --cov-report=term-missing
 
   # VER-45's strict documentation build (section 7.6). It runs on EVERY push,
   # prose-only ones included, and so has no `changes` dependency: a broken link
@@ -192,7 +196,9 @@ jobs:
       # coverage at the price of a portability promise per runner image
       # (.knowledge/07-software-stack.md section 5).
       - if: env.CODE == 'true'
-        run: uv run pytest -rs -n auto --dist loadfile --ignore=tests/tier1/test_gui_widgets.py
+        run: >-
+          uv run pytest -rs -n auto --dist loadfile --ignore=tests/tier1/test_gui_widgets.py
+          --extended
         env:
           QT_QPA_PLATFORM: offscreen
       # A nonzero exit here, 5 ("no tests ran") included, is a real failure: on

@@ -1269,6 +1269,15 @@ What was learnt on the way, each measured:
   file's time also varied by up to 20 %.
 - **`copy.deepcopy` and per-call `TypeAdapter` construction** were half of `build_plan` on the
   3,675-member sweep (12.3 s → 7.0 s once removed, WP33 D12).
+- **Where the suite's time goes** **[tested]**, after WP33. The 54 `extended` tests are the
+  executed examples and the 2WCD walks. They are 3 % of the tests and 59 % of the test time: the
+  development selection without them is 542.9 s of test time and 168 s of four-worker wall, against
+  1,334.5 s and 394 s with them. Deleting duplicated or history-pinning tests recovered about 1 s.
+  A walk is slow because it composes the stages, not because it repeats a check.
+- **pytest: a custom option, not `addopts -m`, for a selection a named file should override.**
+  `--extended` is read in the root conftest's `pytest_collection_modifyitems`, which keeps an
+  `extended` item whose file is named on the command line. A `-m` in `addopts` would deselect it
+  even then, and the user would have to restate the whole marker expression.
 
 ## 13. Documentation tooling: MkDocs, Material and Zensical
 

@@ -26,6 +26,8 @@ from nanopnp.physics.models import (
 )
 from nanopnp.validation.examples import copy_example, run_tagged
 
+pytestmark = pytest.mark.extended
+
 REPOSITORY = Path(__file__).resolve().parents[2]
 
 

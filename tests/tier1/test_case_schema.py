@@ -532,15 +532,3 @@ def test_if03_an_unregistered_stabilisation_mode_is_refused_naming_the_registry(
     assert "numerics.stabilisation" in message
     for mode in ("none", "supg", "reference"):
         assert mode in message
-
-
-def test_ver09_the_widened_stabilisation_literal_left_the_schema_identifier_alone() -> None:
-    """A new admissible value of an existing field is not a schema revision.
-
-    ``supg`` and ``reference`` widened what ``numerics.stabilisation`` accepts
-    under v1 without moving it (IF-03). The move to v2 was made by adding,
-    renaming and removing keys (section 5.3.1 v2 NOTE, VER-47), and the widening
-    is part of neither map.
-    """
-    assert SCHEMA == "nanopnp/case/v2"
-    assert loads_case(REFERENCE_CASE).schema_id == SCHEMA

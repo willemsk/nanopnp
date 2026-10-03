@@ -204,6 +204,7 @@ markers = [
     "tier3: COMSOL cross-implementation comparison, hours, nightly (section 7.4)",
     "tier4: experimental reproduction, hours, before a tagged release (section 7.5)",
     "slow: takes more than a minute regardless of tier",
+    "extended: an end-to-end walk, gated in CI on every push and left out of the development selection unless --extended (section 7.6)",
 ]
 
 [tool.coverage.run]
