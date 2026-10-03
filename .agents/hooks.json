@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .agents/hooks/adapter.sh pre-tool",
+            "command": "bash \"$(git rev-parse --show-toplevel)/.agents/hooks/adapter.sh\" pre-tool",
             "timeout": 1800
           }
         ]
@@ -20,7 +20,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .agents/hooks/adapter.sh post-tool",
+            "command": "bash \"$(git rev-parse --show-toplevel)/.agents/hooks/adapter.sh\" post-tool",
             "timeout": 60
           }
         ]
@@ -33,7 +33,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .agents/hooks/adapter.sh session-start",
+            "command": "bash \"$(git rev-parse --show-toplevel)/.agents/hooks/adapter.sh\" session-start",
             "timeout": 600
           }
         ]

@@ -1,5 +1,3 @@
-@[CLAUDE.md](CLAUDE.md)
-
 @CLAUDE.md
 
-Refer to [CLAUDE.md](CLAUDE.md) as the normative single source of truth for all instructions, physics/numerics rules, and implementation workflows.
+`CLAUDE.md` is the normative single source of truth for all instructions, physics/numerics rules and implementation workflows. If your agent does not expand the `@CLAUDE.md` import above, read [CLAUDE.md](CLAUDE.md) in full before doing anything else.
