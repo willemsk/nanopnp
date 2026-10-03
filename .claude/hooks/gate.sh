@@ -48,6 +48,15 @@ if [[ $mode == hook ]]; then
     payload=$(cat)
     command=$(printf '%s' "$payload" | jq -r '.tool_input.command // ""' 2>/dev/null) || exit 0
 
+    # The directory the command runs in is the payload's `cwd`, not this hook's:
+    # the hook is started from the project directory, which in a worktree
+    # session is the main checkout. Gating that tree, already stamped as passed,
+    # let every worktree commit through ungated (WP32, 06fd43b).
+    session_dir=$(printf '%s' "$payload" | jq -r '.cwd // ""' 2>/dev/null) || session_dir=""
+    if [[ -n $session_dir && -d $session_dir ]]; then
+        cd "$session_dir" || exit 0
+    fi
+
     # A `git commit` as a command word, not `git commit-graph` and not a bare
     # mention. Anything else leaves the tool call untouched.
     # The regex lives in a variable: bash parses an unquoted =~ operand as shell
@@ -65,6 +74,7 @@ if [[ $mode == hook ]]; then
     seg="[^;&|"$'\n'"]"
     commit_re="(^|[;&|(]|[[:space:]])git(${git_opt})*[[:space:]]+commit(\$|[[:space:]]${seg}*)"
     [[ $command =~ $commit_re ]] || exit 0
+    matched=${BASH_REMATCH[0]}
 
     # --no-verify / -n count only as options of that commit: quoted strings
     # are removed first, so `-m "document --no-verify"` is still gated.
@@ -76,7 +86,7 @@ if [[ $mode == hook ]]; then
     # itself, so a `-C` inside a quoted message is never taken for one. A
     # repeated option leaves the last value, which is git's own reading for
     # absolute paths.
-    options=${BASH_REMATCH[0]%"$args"}
+    options=${matched%"$args"}
     options=${options%commit}
     option_re='(^|[[:space:]])(-C|--work-tree)(=|[[:space:]]+)([^[:space:]]+)'
     while [[ $options =~ $option_re ]]; do
@@ -86,6 +96,23 @@ if [[ $mode == hook ]]; then
     target_dir=${target_dir#[\"\']}
     target_dir=${target_dir%[\"\']}
     [[ $target_dir == "~" || $target_dir == "~/"* ]] && target_dir=$HOME${target_dir:1}
+
+    # A `cd` earlier in the same command moves where the commit runs, as in
+    # `cd <dir> && git commit`: the last one before the commit is followed, and
+    # a relative `-C` above then resolves against it, as git would.
+    prefix=${command%%"$matched"*}
+    cd_re='(^|[;&|(])[[:space:]]*cd[[:space:]]+([^[:space:];&|)]+)'
+    moved=""
+    while [[ $prefix =~ $cd_re ]]; do
+        moved=${BASH_REMATCH[2]}
+        prefix=${prefix#*"${BASH_REMATCH[0]}"}
+    done
+    moved=${moved#[\"\']}
+    moved=${moved%[\"\']}
+    [[ $moved == "~" || $moved == "~/"* ]] && moved=$HOME${moved:1}
+    if [[ -n $moved ]]; then
+        cd "$moved" 2>/dev/null || exit 0
+    fi
 
     args=$(printf '%s' "$args" | sed -E "s/\"[^\"]*\"//g; s/'[^']*'//g")
     set -f
