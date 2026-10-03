@@ -145,13 +145,14 @@ def test_ver01_2wcd_deposit_conserves_its_charge_on_its_generated_mesh(
         conservation["boundary_ring"]["ratio"],
         conservation["axis_guard_deficit_e"],
     )
+    (stage,) = [record for record in deposited.result.stages if record.name == "charge"]
     logger.info(
-        "VER-01 2WCD solid share %s; material charge %s e; lattice %s; deposit %s; seconds %s",
+        "VER-01 2WCD solid share %s; material charge %s e; lattice %s; deposit %s; stage 7 %.2f s",
         share,
         record["material_charge_e"],
-        {key: record["lattice"].get(key) for key in ("atoms", "grid", "seconds", "cached")},
+        {key: record["lattice"].get(key) for key in ("atoms", "grid", "cached")},
         record["deposit"],
-        record["seconds"],
+        stage.seconds,
     )
 
 
@@ -305,7 +306,7 @@ done = stage.run(StageInputs(case=document, upstream=upstream))
 seconds = time.perf_counter() - started
 scale = 1e9 if sys.platform == "darwin" else 1e6
 peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / scale
-print(json.dumps({"seconds": seconds, "peak_GB": peak, "parts": done.summary["charge"]["seconds"]}))
+print(json.dumps({"seconds": seconds, "peak_GB": peak}))
 """
 """Stage 7 cold in a fresh process, with no store: the lattice summed, and a peak RSS its own."""
 
@@ -332,10 +333,9 @@ def test_ver01_cost_of_the_2wcd_deposit(deposited: Deposited, tmp_path: Path) ->
     )
     measured = json.loads(result.stdout.strip().splitlines()[-1])
     logger.info(
-        "WP28: stage 7 on 2WCD (%d elements), cold, %.1f s (%s) and %.2f GB peak RSS",
+        "WP28: stage 7 on 2WCD (%d elements), cold, %.1f s and %.2f GB peak RSS",
         artefacts["mesh"].summary["elements"],
         measured["seconds"],
-        {key: round(value, 2) for key, value in measured["parts"].items()},
         measured["peak_GB"],
     )
     assert measured["seconds"] > 0.0
