@@ -1,6 +1,6 @@
 # Phase 3 (Charge pipeline): from a structure to a charged run
 
-**Status: in progress. WP26 delivered, 30 September 2026; WP27 delivered, 1 October 2026 ([plan](wp27-protonation.md)); WP28 delivered, 1 October 2026 ([plan](wp28-charge-deposition.md)); WP29 delivered, 1 October 2026 ([plan](wp29-val06-apbs.md)); WP30 delivered, 2 October 2026 ([plan](wp30-dielectric-and-exclusion.md)); WP31 delivered, 2 October 2026 ([plan](wp31-gui-charge-pipeline.md)); WP32 delivered, 3 October 2026 ([plan](wp32-charge-docs-and-example.md)); WP33 planned, 3 October 2026 ([plan](wp33-test-durations.md)).** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
+**Status: in progress. WP26 delivered, 30 September 2026; WP27 delivered, 1 October 2026 ([plan](wp27-protonation.md)); WP28 delivered, 1 October 2026 ([plan](wp28-charge-deposition.md)); WP29 delivered, 1 October 2026 ([plan](wp29-val06-apbs.md)); WP30 delivered, 2 October 2026 ([plan](wp30-dielectric-and-exclusion.md)); WP31 delivered, 2 October 2026 ([plan](wp31-gui-charge-pipeline.md)); WP32 delivered, 3 October 2026 ([plan](wp32-charge-docs-and-example.md)); WP33 delivered, 3 October 2026 ([plan](wp33-test-durations.md)).** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
 the geometry pipeline (`main` at `v0.3.0-alpha.9`, formerly `v0.9.0-alpha.9`). Phase 2's
 end-of-phase report and its release, `v0.3.0`, wait for one Tier-3 run on the author's archive
 (criterion 3, VAL-05's ensemble leg). WP26 may start before that report merges, because nothing in
@@ -363,6 +363,17 @@ stays cold, and nothing gated is left ungated. The baseline is 1,420 s of serial
 
 > **Planned, 3 October 2026** ([plan](wp33-test-durations.md)). The plan's commit adds the §7.6
 > NOTE on a gated test's runtime.
+
+> **Delivered, 3 October 2026** ([plan](wp33-test-durations.md), to be tagged `v0.4.0-alpha.8`).
+> Serial tier 1–2 test time 1,508.9 s → 1,334.5 s against a clean baseline on WP32's merge, and the
+> four-worker wall 458 s → 394 s. That is 174.4 s, **5.6 s short of the 180 s target**, and
+> `charge_2wcd` (the first file to pay the session's seeds) and `val06_2wcd` stay over 90 s; both
+> shortfalls are recorded, not chased with a lever §7.6 forbids. The 2WCD seed runs to the
+> default-size mesh and PROPKA starts from stage 1; VER-58 shares its oracle and is split; the
+> ClyA reference mesh is built once; D9 was corrected so VER-34's round trip keeps a live state.
+> One product change: planning the §8.3 sweep takes 7.0 s rather than 12.3 s (D12). No assertion
+> or tolerance moved. **Live for later packages:** the seeds' keys and `Seed2WCD` in
+> `tests/conftest.py`; `.knowledge/07` §12.
 
 ## Open decisions
 

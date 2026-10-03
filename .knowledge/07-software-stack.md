@@ -1250,6 +1250,26 @@ to Chromium's helper processes being starved of CPU. It is not proven, because m
 reproducible from here. CI and the gate therefore run `tests/tier1/test_gui_widgets.py` serially and
 alone. The wait and the assertion are unchanged.
 
+Re-measured on 3 October 2026 for WP33, one core, `OMP_NUM_THREADS=1`, the same four-core
+container, 1,781 tests: **1,508.9 s of test time before and 1,334.5 s after**; four workers under
+`-n auto --dist loadfile`, 458 s and 394 s of wall clock. Example 07 alone is 312 s, cold by design.
+What was learnt on the way, each measured:
+
+- **Profile before sharing.** In VER-58's grounded-sphere test the mesh was 3 s and the lattice
+  0.08 s of a 21 s solve; the closed-form oracle at 257,750 quadrature points was 19.4 s. A test's
+  own oracle can be the cost, and evaluating it once per mesh rather than once per deposit order is
+  sharing, not weakening it. A periodic trapezoid rule over an integrand even in `θ` can be summed on
+  `[0, π]` with interior points doubled: the same rule, 7× cheaper there, equal to 9.5 × 10⁻¹⁶.
+- **On 2WCD, stage 4 is 0.41 s and the C-alpha registration 3 ms; the default-size mesh is 8.2 s.**
+  Seeding to the mesh is what saves time; seeding to the contour saves nothing.
+- **An NGSolve mesh pickles to the bit, and a `.vol` does not**: the text format moved the ClyA
+  reference mesh's vertices by up to 5.6 × 10⁻¹⁷ nm, enough to change its geometry digest.
+- **Under the serial order, the first file to ask for a session seed carries it** (`charge_2wcd`,
+  99.9 s of setup). Read a per-file time with that in mind; between two baseline runs a single
+  file's time also varied by up to 20 %.
+- **`copy.deepcopy` and per-call `TypeAdapter` construction** were half of `build_plan` on the
+  3,675-member sweep (12.3 s → 7.0 s once removed, WP33 D12).
+
 ## 13. Documentation tooling: MkDocs, Material and Zensical
 
 Read 23 September 2026 from the publishers' own announcements. **Not tested here**; the WP16

@@ -1,6 +1,6 @@
 # Current work
 
-Updated 3 October 2026 (WP32 delivered, not yet merged). This file is navigation only;
+Updated 3 October 2026 (WP33 delivered, not yet merged). This file is navigation only;
 `SPECIFICATION.md` governs. Nothing here is evidence that an unmerged branch has shipped.
 
 ## Position
@@ -10,15 +10,11 @@ Updated 3 October 2026 (WP32 delivered, not yet merged). This file is navigation
   criterion 3 waived (§8.2.4 D7). `Z_MD` is 5.655 nm.
 - Phase 3 ([charge pipeline](phase-3-charge-pipeline.md), release `v0.4.0`) is **in progress**,
   covering WP26–WP33.
-  - WP26–WP31 are **merged**, with `main` at `35524c1`. `v0.4.0-alpha.1` and `.2` are tagged;
-    `.3` (WP28, `c6c0c0d`) to `.6` (WP31) are not yet.
-  - [WP32](wp32-charge-docs-and-example.md) (VER-23, VER-46, VER-60; QR-15, phase criterion 7) is
-    **delivered** on `ccr-0edc2b71-glragv`, to be tagged `v0.4.0-alpha.7`: the guide page
-    `guide/charge.md`, example 07, and stage 7 without wall-clock time (D15). **Next: `/wp-ship`**
-    on WP32, from a fresh session.
-  - [WP33](wp33-test-durations.md) (`v0.4.0-alpha.8`), the last package, cuts the Tier 1–2
-    suite's duration under the §7.6 NOTE, from a baseline re-measured after WP32 merges. Then the
-    phase close: the end-of-phase report and `v0.4.0`.
+  - WP26–WP32 are **merged**, with `main` at `00b7aa4`. `v0.4.0-alpha.1` and `.2` are tagged;
+    `.3` (WP28, `c6c0c0d`) to `.7` (WP32) are not yet.
+  - [WP33](wp33-test-durations.md) (the §7.6 NOTE on a gated test's runtime; no new identifier) is
+    **delivered** on `ccr-5551b5b0-9vgkvf`, to be tagged `v0.4.0-alpha.8`, 5.6 s short of its target.
+    **Next: `/wp-ship`** on WP33, from a fresh session. Then the phase close and `v0.4.0`.
 
 ## What Phase 3 must not re-decide
 
@@ -42,6 +38,7 @@ Each is recorded in full where it points.
 - **The shell reads every charge number from a stage's artefact**, and the bundle collects its
   Python LGPL payloads as source. → ADR-004 packaging NOTE; VER-60; the WP31 Outcomes.
 - **No payload or stage-7 summary records wall-clock time** (VER-23; WP32 D15).
+- **A gated test gets cheaper only by the §7.6 NOTE's four levers.** → the WP33 Outcomes.
 - **Tier 3 compares the published I–V and in-pore averages**, and gates v1.0 (VAL-16, VAL-17).
 - **Layers read a model's declaration, never its name or class** (VER-56). → §5.4.3 NOTE.
 - **`poisson` adds one quadrature order for the `r` weight; the coupled models do not.** That is
