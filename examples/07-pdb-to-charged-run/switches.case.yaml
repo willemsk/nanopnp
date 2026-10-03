@@ -1,0 +1,31 @@
+# 2wcd.case.yaml with both FR-15 switches on: an ion-exclusion shell 0.25 nm
+# thick around the protein, built at stage 5, and a permittivity that steps
+# from the protein's to water's over 0.15 nm, derived at stage 7. Both are off
+# by default, so the manifest lists each as a deviation from the validated model.
+schema: nanopnp/case/v2
+name: 2wcd-switches
+structure:
+  source: {path: 2wcd-prepared.pdb}
+  symmetry: {point_group: C12}
+charge:
+  ph: 7.5
+  forcefield: CHARMM
+  titration: propka
+  exclusion_offset_nm: 0.25
+  dielectric_transition_nm: 0.15
+electrolyte:
+  species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]
+  concentration_M: 0.15
+  parameters: willems2020_nacl
+  corrections:
+    diffusivity:  {model: willems2020_nacl}
+    mobility:     {model: willems2020_nacl}
+    viscosity:    {model: willems2020_nacl}
+    permittivity: {model: willems2020_nacl}
+    density:      {model: willems2020_nacl}
+    steric:       {model: borukhov}
+boundary_conditions: {bias_V: 0.05, ground: cis}
+physics: {model: epnp-ns, solid_permittivities: {protein: 20.0, membrane: 3.2}}
+numerics:
+  mesh: {size_scale: 4.0}
+outputs: [current, transport_numbers]

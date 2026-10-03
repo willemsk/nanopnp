@@ -17,3 +17,6 @@ aligned.pdb
 aligned.dcd
 density.mrc
 contour.profile.yaml
+2wcd.pqr
+charge.field.yaml
+charge.field.npz

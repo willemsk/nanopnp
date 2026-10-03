@@ -43,8 +43,8 @@ REFERENCE_WAVES = 42
 """The wave count docs/sweeps/README.md states for the reference sweep."""
 
 
-def test_ver46_the_six_examples_exist() -> None:
-    """The examples of the Phase-1 and Phase-2 documentation increments (section 8.1)."""
+def test_ver46_the_seven_examples_exist() -> None:
+    """The examples of the Phase-1 to Phase-3 documentation increments (section 8.1)."""
     assert [path.name for path in EXAMPLES] == [
         "01-quickstart",
         "02-charged-pore",
@@ -52,6 +52,7 @@ def test_ver46_the_six_examples_exist() -> None:
         "04-python-api",
         "05-clya-reference",
         "06-pdb-to-mesh",
+        "07-pdb-to-charged-run",
     ]
 
 
@@ -123,6 +124,42 @@ def test_ver46_copy_mirrors_the_repository_files_of_every_tag(tmp_path: Path) ->
     copied = copy_example(example, tmp_path / "copy", repository=repository)
     assert (copied / "../../data/a/x.txt").resolve().read_text(encoding="utf-8") == "a/x.txt"
     assert (copied / "../../data/b/y.txt").resolve().read_text(encoding="utf-8") == "b/y.txt"
+
+
+def test_ver46_copy_mirrors_a_sibling_example_without_its_generated_files(
+    tmp_path: Path,
+) -> None:
+    """``../sibling/script.py`` runs the sibling's own script, from a copy beside it (WP32 D5).
+
+    The sibling is filtered by ``examples/.gitignore`` as the example is, so a store
+    or mesh it wrote in the source tree is not carried into the copy; a ``../../``
+    word in the same block still mirrors its repository directory.
+    """
+    repository = tmp_path / "source"
+    examples = repository / "examples"
+    example = examples / "99-scratch"
+    sibling = examples / "98-sibling"
+    for directory in (example, sibling / "store", repository / "data"):
+        directory.mkdir(parents=True)
+    (examples / ".gitignore").write_text("store/\n*.msh\nwritten.pdb\n", encoding="utf-8")
+    (example / "README.md").write_text(
+        "<!-- example: run -->\n```console\n"
+        "$ python ../98-sibling/prepare.py ../../data/x.txt written.pdb\n```\n",
+        encoding="utf-8",
+    )
+    (sibling / "prepare.py").write_text("print('prepared')\n", encoding="utf-8")
+    (sibling / "case.yaml").write_text("name: sibling\n", encoding="utf-8")
+    (sibling / "store" / "entry").write_text("generated", encoding="utf-8")
+    (sibling / "pore.msh").write_text("generated", encoding="utf-8")
+    (sibling / "written.pdb").write_text("generated", encoding="utf-8")
+    (repository / "data" / "x.txt").write_text("x", encoding="utf-8")
+
+    copied = copy_example(example, tmp_path / "copy", repository=repository)
+    mirrored = (copied / "../98-sibling").resolve()
+    assert sorted(path.name for path in mirrored.iterdir()) == ["case.yaml", "prepare.py"]
+    assert (copied / "../../data/x.txt").resolve().read_text(encoding="utf-8") == "x"
+    (result,) = run_tagged(copied, "run")
+    assert result.stdout == "prepared\n"
 
 
 @pytest.fixture(scope="module")
