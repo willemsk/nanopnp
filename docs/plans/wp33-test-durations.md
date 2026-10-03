@@ -1,6 +1,6 @@
 # WP33 — The test suite's duration, cut without losing a check
 
-**Status: planned, not started.** Written 3 October 2026, beside the WP32 plan and after WP31 merged
+**Status: delivered, 3 October 2026.** Written 3 October 2026, beside the WP32 plan and after WP31 merged
 on `main` (`35524c1`). WP33 starts after WP32 merges. WP32 adds example 07, which will be the
 longest Tier 2 file, and it changes three test files this package also touches. WP33 inherits:
 
@@ -62,6 +62,73 @@ VAL-05, VAL-06, NUM-12, NUM-14 and NUM-17. No requirement's assertion changes. *
 | D13 | `test_density.py`'s VER-49 round trip (21 s, Tier 1) | **Profile first.** If writing the five interchange formats of the whole map dominates, the formats are exercised on the stage's map cropped to its occupied box, and the header and lattice assertions keep their full form. Otherwise unchanged | Levers (a) and (b), conditional on measurement |
 | D14 | Files kept as they are | `test_val06_2wcd` (the P2 and P3 deposits and three APBS runs are each asserted; it benefits from D2), `test_sweep` (warm against cold needs all five climbs), `test_examples_01`–`03` (README verbatim; `reproduce` is QR-08's oracle), `test_val06_ring` (each broken construction must fail on its own), `test_electrophoretic_mobility` (κa = 16.5 is the stated budget limit), `test_current_routes` (the regime points are the claims) and `test_pipeline_2wcd` | Their costs are their claims. Listed so that nobody re-reviews them |
 | D15 | Targets | Measured on the same machine, serially, against the baseline re-measured on WP32's merge commit. **At least 180 s of serial tier 1–2 test time saved**, which is about 13 % of today's 1,420 s; 240 s if D12 or D13 lands. **No file except the cold examples over 90 s.** Tier 1 under 220 s. The CI legs' times are recorded too. Missing a target is recorded as an Outcome. It is never a reason to weaken a test | An absolute saving, because example 07 will add about 420 s of cold run to the baseline that no lever here may touch (D3). The baseline must include it to be honest. The estimate of the savings is in [Design §2](#2-where-the-time-goes-and-what-each-decision-saves) |
+
+> **Outcome — what changed against the decisions** (3 October 2026). Measured serially on one
+> core, `OMP_NUM_THREADS=1`, on the same four-core container, before (`main` at `00b7aa4`) and after
+> (`417c1ba`); no stabilisation choice moves in any test. The decisions stand except where these say
+> otherwise.
+>
+> - **D2: the saving is the mesh, not the walk.** Measured on 2WCD: stage 4 takes 0.41 s and the
+>   C-alpha registration 3 ms, so sharing them saves almost nothing. The default-size 0.15 M mesh
+>   takes 8.2 s, and its key is shared by `charge`, `val06` (P2 and P3), `pipeline`'s VER-53 test
+>   and `val05`'s D10 test, each now asserting it `cached`. `Seed2WCD` carries the registration;
+>   `val05` still computes its own and asserts it equal to the seed's, bit for bit. `structure_2wcd`
+>   holds stage 1 alone, and both seeds start from it.
+> - **D4: the cost was the oracle, not the mesh or the lattice.** Profiled at `r_i` = 1.5 nm on the
+>   0.05 nm level: mesh 3.0 s, lattice 0.08 s, closed form at the 257,750 quadrature points 19.4 s
+>   of a 21 s solve. All three are now computed once per `(r_i, w, level)` and read by both orders
+>   (`tests/tier2/ver58_sphere.py`). The azimuthal rule is evaluated on `[0, π]` with interior
+>   points doubled, because both integrands depend on `θ` only through `cos θ`. It is the same
+>   512-point rule: 23.2 s → 3.4 s on that level, and the potential agrees with the old evaluation
+>   to 9.5 × 10⁻¹⁶ of its peak. **The 10⁻¹² check is met on the gated quantity in relative terms
+>   to 3.9 × 10⁻¹², not 10⁻¹²:** the disc errors are 5 × 10⁻⁶ of the potential, so a reordered
+>   sum that moves the potential by 10⁻¹⁶ moves them by up to 2 × 10⁻¹¹ relative. The recorded
+>   on-axis error moves by 3.1 × 10⁻¹⁰ relative. Every rate gate is unchanged and passes.
+> - **D6: kept at the default sizes, as expected.** At `size_scale` 2 the Gauss gate has 2.80×
+>   headroom (and 2.80× at 4); the mesh barely shrinks (28,057 and 25,348 elements), because the
+>   shell's wall sizes dominate it. The "tenth of the wall potential" check is a physical margin of
+>   1.78× at every size, not a discretisation gate.
+> - **D9: corrected. The fixture is the stage's run, and the live state is kept.** Restoring the
+>   stage's payload into `solved.solution` would have made the bit-for-bit test compare a restore
+>   with itself, a weaker oracle that D1 forbids. `_KeepingStage` subclasses `SolveStage` and keeps
+>   the solution the stage hands to its own writer, so the round trip still compares Newton's state
+>   with the payload, and the wiring test reads the same run.
+> - **D10: a pickle, not a `.vol`.** NGSolve's pickle round-trips the reference mesh to the bit;
+>   the `.vol` text moves its vertices by up to 5.6 × 10⁻¹⁷ nm and changes the geometry digest.
+> - **D11: not taken.** Stage 1 on the prepared 2WCD takes 0.43–0.6 s, and only three tests could
+>   read a shared hit (the relabelling test needs a miss on the same key): about 1 s.
+> - **D12: taken, in `io/case.py` and `materials/corrections.py` rather than `sweep/`.** Profiled:
+>   `load_corrections` deep-copied the cached YAML tree on each of 24,255 calls, and
+>   `FieldReference.validate` built a pydantic `TypeAdapter` for each of 86,830 validations. The
+>   tree is now copied structurally and the adapters are cached: `build_plan` on the 3,675 members
+>   12.3 s → 7.0 s, one core. VER-36's assertions are unchanged.
+> - **D13: taken.** The test spent two thirds of its time writing OpenDX. The two off-lattice
+>   refusals, which read only the header, now write a 5³ corner of the map; the full map still
+>   round-trips through every format. 16.3 s → 8.8 s.
+>
+> **Outcome — measured against D15** (3 October 2026). Test time from the JUnit report,
+> `-o junit_duration_report=total`; 1,781 passed and 17 skipped in both runs.
+>
+> | Measure | Before (`00b7aa4`) | After | Target |
+> |---|---|---|---|
+> | Tiers 1–2, serial test time | 1,508.9 s (25 min 14 s wall) | 1,334.5 s (22 min 19 s) | ≥ 180 s saved: **174.4 s, missed by 5.6 s** |
+> | Tier 1 | 235.9 s | 215.5 s | under 220 s: met |
+> | Files over 90 s, cold examples apart | `charge_potential` 119.0, `val06_2wcd` 110.8, `charge_2wcd` 98.5 | `charge_2wcd` 100.2, `val06_2wcd` 97.2 | none: **missed** |
+> | `-n auto --dist loadfile`, four workers, wall | 458 s | 394 s | recorded |
+>
+> The 240 s stretch target is missed as well, though D12 and D13 both landed. Of the two files over
+> 90 s, `charge_2wcd` (99.9 s of module setup) is the first serial file to ask for the session's
+> seeds, so it carries stages 1–6 and PROPKA for every later 2WCD file. `val06_2wcd` (97.2 s of
+> setup) runs after it, so that time is its own: the P2 and P3 solves and three APBS runs, which
+> D14 keeps. Per file: `charge_potential` 119.0 s →
+> 17.6 + 31.1 s; `exclusion_2wcd` 72.4 → 29.3 + 41.8 s (the walk); `gui_geometry_2wcd` 50.2 →
+> 29.4 s; `val05_2wcd` 34.0 → 24.6 s; `pipeline_2wcd` 28.6 → 17.9 s; `region_reference` 26.0 →
+> 18.9 s; `reference_geometry` 7.6 → 0.4 s; `charge_conservation` 10.6 → 3.4 s;
+> `solution_state` 34.6 → 28.9 s; `stabilised_mode` 49.1 → 44.9 s; `test_density` 23.4 → 16.7 s;
+> `sweep_plan` 16.7 → 9.0 s; `examples_plan` 13.3 → 8.4 s. A first baseline run that overlapped
+> this package's profiling read 1,488.3 s; per-file times varied by up to 20 % between the two
+> baselines (`charge_potential` 96.7 and 119.0 s), so a single file's figure is good to about that.
+> CI legs' times are not recorded here: they are read from this branch's first CI run.
 
 ### Work items
 

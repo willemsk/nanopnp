@@ -17,6 +17,25 @@ Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before t
 version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
 
+## [0.4.0-alpha.8] - 2026-10-03
+
+WP33: the tier 1–2 suite's duration cut without losing a check, under the §7.6 NOTE on a gated
+test's runtime. Serial test time 1,508.9 s → 1,334.5 s, and the four-worker wall 458 s → 394 s.
+No assertion, tolerance or oracle changes.
+
+### Changed
+
+- **Planning a sweep is faster**: the §8.3 reference sweep's 3,675 members plan in 7.0 s rather than
+  12.3 s. A correction file's cached parse is copied structurally rather than with `copy.deepcopy`,
+  and a case field's validator is built once per declared type (VER-36's assertions unchanged).
+- **The shared 2WCD seed runs to the default-size mesh**, and the protonation starts from stage 1,
+  so under `pytest-xdist` PROPKA no longer waits for the density. Each seeded module asserts the
+  stages it reads `cached`.
+- **VER-58 computes each mesh, lattice and closed form once** and is split into two files; the
+  ClyA reference mesh is generated once per session; the duplicated climbs of the stabilised-mode,
+  solution-state and VER-55 files are shared or coarsened where their gates allow (VER-34, VER-42,
+  VER-49, VER-55, VER-58, VER-59, NUM-12, NUM-14, NUM-17).
+
 ## [0.4.0-alpha.7] - 2026-10-03
 
 WP32: documentation increment 3, the charge pipeline documented and executed (QR-15 in part), the
