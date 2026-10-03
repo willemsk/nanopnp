@@ -13,6 +13,13 @@ record's bytes are not quite: its face areas are OCC's own integrals, which may
 differ in their last bits between platforms. The record is therefore compared
 byte for byte with its ``face_areas_nm2`` line taken out, and the areas to 1e-12.
 On the platform the literals were recorded on, the whole file is compared too.
+
+WP32 moved stage 7's schema to ``nanopnp/fields/v2`` (D15, the author's decision)
+and its lattice's to ``nanopnp/charge-grid/v2``, which moves the stage-7 key and,
+through it, the stage-10 key. Both are compared at v2, and also recomputed under
+the ``v1`` strings, where they must equal the ``bbca737`` literals: the schema
+strings are then shown to be the only thing that moved, so the clause still
+compares against what WP30 found.
 """
 
 from __future__ import annotations
@@ -24,7 +31,8 @@ from pathlib import Path
 
 import pytest
 
-from nanopnp.io.artefact import StageInputs
+from nanopnp.core.hashing import content_hash
+from nanopnp.io.artefact import CHARGE_GRID_SCHEMA, StageInputs
 from nanopnp.io.case import load_case
 from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
@@ -36,7 +44,20 @@ KEYS = {
     "charge": "79a2f7e5ff8a8743784e8f448711789a72dcbfeaed447c764730dabac9d42f7d",
     "solve": "6e3f8992206e2820221b04c4e2acd12405d4af11fa32b4932ca30c14e8c0b210",
 }
-"""The stage-5, stage-6, stage-7 and stage-10 keys on ``bbca737`` (D16)."""
+"""The stage-5, stage-6, stage-7 and stage-10 keys on ``bbca737`` (D16), stage 7 at ``v1``."""
+
+KEYS_V2 = {
+    **KEYS,
+    "charge": "3810c50e598c543d147a8bd8a804a68d7875c30ec00dfe94d5575f4cc79792dc",
+    "solve": "ee0900fc50ce0796f42f2305c920e637eaab75b02e3e2b2a78f763eaefe273bc",
+}
+"""The same keys with stage 7 at ``nanopnp/fields/v2`` (WP32 D15); region and mesh unchanged."""
+
+FIELDS_SCHEMA_V1 = "nanopnp/fields/v1"
+"""The stage-7 schema ``KEYS`` was recorded under."""
+
+CHARGE_GRID_SCHEMA_V1 = "nanopnp/charge-grid/v1"
+"""The lattice's schema then; its key is one of stage 7's inputs."""
 
 RECORD_SHA256 = "03da655ef254808e3403034ac9dd188335edc2f9630edb6565d967528c8583d7"
 """``region.yaml``'s digest on ``bbca737``, Linux x86_64, CPython 3.12."""
@@ -129,14 +150,28 @@ def test_ver59_with_both_keys_at_zero_every_key_and_the_record_are_unchanged(
 ) -> None:
     """The region, mesh, fields and solve keys, and the record's bytes, equal ``bbca737``'s."""
     case = write_golden_case(tmp_path / "case", parallelogram_profile, charge=charge)
-    result = run_case(
-        case, store=Store(tmp_path / "store"), workspace=tmp_path / "work", upto="materials"
-    )
+    store = Store(tmp_path / "store")
+    result = run_case(case, store=store, workspace=tmp_path / "work", upto="materials")
     artefacts = result.artefacts
     solve = SolveStage().key(StageInputs(case=load_case(case), upstream=dict(artefacts)))
     found = {name: artefacts[name].hash for name in ("region", "mesh", "charge")}
     found["solve"] = solve.hash
-    assert found == KEYS
+    assert found == KEYS_V2
+
+    # Under the v1 strings, the bbca737 literals: the schemas are all that moved.
+    # Each digest is recomputed as ``Artefact.hash`` takes it, checked on v2 first.
+    charge = artefacts["charge"]
+    grid = store.get(CHARGE_GRID_SCHEMA, charge.inputs["charge_grid"])
+    assert grid is not None
+    for artefact in (grid, charge, solve):
+        assert content_hash(artefact.schema, artefact.parameters, artefact.inputs) == artefact.hash
+    assert solve.inputs["charge"] == charge.hash
+    grid_v1 = content_hash(CHARGE_GRID_SCHEMA_V1, grid.parameters, grid.inputs)
+    charge_v1 = content_hash(
+        FIELDS_SCHEMA_V1, charge.parameters, {**charge.inputs, "charge_grid": grid_v1}
+    )
+    solve_v1 = content_hash(solve.schema, solve.parameters, {**solve.inputs, "charge": charge_v1})
+    assert {**found, "charge": charge_v1, "solve": solve_v1} == KEYS
 
     record = Path(artefacts["region"].payload["region"])
     text = record.read_text(encoding="utf-8")
