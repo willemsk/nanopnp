@@ -784,6 +784,51 @@ def test_ver60_add_section_creates_charge_and_enables_the_ph(
     assert load_case(path).charge == Charge()
 
 
+@pytest.mark.parametrize(
+    ("annotation", "spin_type", "bounds", "step"),
+    [(int, "QSpinBox", (1, 9), 1), (float, "QDoubleSpinBox", (0.0, 14.0), 0.1)],
+    ids=["int", "float"],
+)
+def test_ver60_a_bounded_integer_steps_by_whole_numbers(
+    application: QtWidgets.QApplication,
+    tmp_path: Path,
+    annotation: type,
+    spin_type: str,
+    bounds: tuple[float, float],
+    step: float,
+) -> None:
+    """An ``int`` bounded state builds a ``QSpinBox``, a ``float`` a ``QDoubleSpinBox`` (D12).
+
+    Synthetic states, because no bounded integer is in today's schema: three
+    decimals on an integer would show a value the field cannot hold.
+    """
+    from nanopnp.gui.case_model import FieldState
+    from nanopnp.io.case import FieldReference
+
+    editor = CaseEditor.open(_structure_case(tmp_path, "charge: {ph: 7.0}"))
+    widget = CaseEditorWidget(editor)
+    state = FieldState(
+        reference=FieldReference(path="charge.synthetic", annotation=annotation),  # type: ignore[arg-type]
+        value=bounds[0],
+        options=None,
+        kind="bounded",
+        bounds=(float(bounds[0]), float(bounds[1])),
+    )
+    built = widget._build(state)
+    assert type(built).__name__ == spin_type
+    assert isinstance(built, QtWidgets.QSpinBox | QtWidgets.QDoubleSpinBox)
+    assert (built.minimum(), built.maximum()) == bounds
+    assert built.singleStep() == step
+    assert editor.staged == {}
+
+
+def test_ver60_the_charge_tab_starts_no_walk_of_its_own() -> None:
+    """``ChargeWidget.build`` is gone: the window walks through the Geometry tab (WP32 D13)."""
+    assert not hasattr(ChargeWidget, "build")
+    assert hasattr(ChargeWidget, "follow")
+    assert hasattr(MainWindow, "build_charge")
+
+
 def test_ver60_the_charge_tab_builds_stage_7_and_shows_its_panes(
     application: QtWidgets.QApplication, tmp_path: Path, charged_tube
 ) -> None:

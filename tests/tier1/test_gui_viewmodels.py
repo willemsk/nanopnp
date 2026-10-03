@@ -418,6 +418,8 @@ def test_ver60_a_bounded_number_spins_over_exactly_the_schema_s_range(case_file:
         reference.path: bounds
         for reference in case_fields()
         if (bounds := _schema_bounds(reference.path)) is not None
+        # A field that admits null stays an entry however it is bounded (WP32 D12).
+        and type(None) not in get_args(reference.annotation)
     }
     assert shown == declared
     assert shown["charge.ph"] == (0.0, 14.0)
@@ -425,6 +427,45 @@ def test_ver60_a_bounded_number_spins_over_exactly_the_schema_s_range(case_file:
     assert editor.state("charge.exclusion_offset_nm").kind == "number"
     assert editor.state("charge.exclusion_offset_nm").bounds is None
     assert editor.state("boundary_conditions.bias_V").bounds is None
+
+
+@pytest.mark.parametrize(
+    ("annotation", "kind", "integral"),
+    [
+        (float, "bounded", False),
+        (int, "bounded", True),
+        (float | None, "number", False),
+        (int | None, "number", True),
+    ],
+    ids=["float", "int", "optional-float", "optional-int"],
+)
+def test_ver60_only_a_field_that_cannot_be_unset_is_a_spin_box(
+    annotation: object, kind: str, integral: bool
+) -> None:
+    """``_kind`` on synthetic references closed on both ends (WP32 D12).
+
+    A spin box cannot say "unset", so a field admitting ``None`` stays a numeric
+    entry, where an empty line is ``None``. An ``int`` steps by whole numbers.
+    No field of today's schema is an optional bounded number or a bounded
+    integer, so the rule is asserted here, on the references a later field
+    would bring.
+    """
+    from nanopnp.gui.case_model import FieldState, _kind
+    from nanopnp.io.case import FieldReference
+
+    reference = FieldReference(path="charge.synthetic", annotation=annotation)  # type: ignore[arg-type]
+    found = _kind(reference, None, closed=True)
+    assert found == kind
+    state = FieldState(
+        reference=reference,
+        value=ABSENT,
+        options=None,
+        kind=found,
+        bounds=(1.0, 9.0) if found == "bounded" else None,
+    )
+    assert state.integral is integral
+    # One open end is never a spin box, optional or not.
+    assert _kind(reference, None, closed=False) == "number"
 
 
 def test_ver60_add_section_writes_only_a_section_whose_empty_form_changes_nothing(

@@ -92,7 +92,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._case = CaseEditorWidget(editor)
         self._geometry = GeometryWidget(editor, store=store)
         # The Geometry tab's control: one walk, one cancel token, both tabs (WP31 D2).
-        self._charge = ChargeWidget(editor, self._geometry.control, store=store)
+        self._charge = ChargeWidget(editor, self._geometry.control)
         self._run = RunControlWidget(self._control)
         self._convergence = ConvergenceWidget(self._control.model.convergence)
         self._result = ResultWidget()

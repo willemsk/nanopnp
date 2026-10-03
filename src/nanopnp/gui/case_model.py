@@ -136,6 +136,16 @@ class FieldState:
         """The dotted path, for a caller that wants only that."""
         return self.reference.path
 
+    @property
+    def integral(self) -> bool:
+        """Whether the field takes whole numbers only: an ``int`` that is not also a ``float``.
+
+        A bounded integral field steps by whole numbers, and shows no decimals
+        that would misrepresent it (WP32 D12).
+        """
+        members = _members(self.reference.annotation)
+        return int in members and float not in members
+
 
 def _origin(annotation: FieldType) -> object:
     """Return ``get_origin`` widened to ``object``.
@@ -154,6 +164,12 @@ def _members(annotation: FieldType) -> tuple[FieldType, ...]:
     if origin is Union or origin is UnionType:
         return tuple(member for member in get_args(annotation) if member is not type(None))
     return (annotation,)
+
+
+def _optional(annotation: FieldType) -> bool:
+    """Return whether a field's annotation admits ``None``."""
+    origin = _origin(annotation)
+    return (origin is Union or origin is UnionType) and type(None) in get_args(annotation)
 
 
 def _kind(
@@ -175,14 +191,16 @@ def _kind(
 
     A number with both ends declared, such as ``charge.ph`` in [0, 14], is a
     spin box over exactly that range (WP31 D12). One open end, ``ge=0`` alone,
-    leaves it a numeric entry: a spin box has no way to say "unbounded".
+    leaves it a numeric entry: a spin box has no way to say "unbounded". Nor
+    can it say "unset", so a field that admits ``None`` stays a numeric entry
+    however it is bounded, where an empty line is ``None`` (WP32 D12).
     """
     members = _members(reference.annotation)
     numeric = any(member in (int, float) for member in members)
     if bool in members:
         return "flag"
     if options is None:
-        if numeric and closed:
+        if numeric and closed and not _optional(reference.annotation):
             return "bounded"
         return "number" if numeric else "text"
     if _origin(reference.annotation) in (list, tuple, frozenset, set):
