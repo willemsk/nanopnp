@@ -34,10 +34,12 @@ and the mesh it came from, and the module constants carry the measured values.
 
 from __future__ import annotations
 
+import functools
 import itertools
 import logging
 import math
 from dataclasses import replace
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -61,6 +63,9 @@ from nanopnp.validation.mms import (
     convergence_rates,
     weighted_l2_error,
 )
+
+if TYPE_CHECKING:
+    from ngsolve import Mesh
 
 logger = logging.getLogger(__name__)
 
@@ -508,6 +513,16 @@ nothing; the surviving margin is recorded in the module docstring of the plan.
 MEMBRANE_PERMITTIVITY = {"membrane": 2.0}
 
 
+@functools.cache
+def _pore_mesh(wall_h_nm: float) -> Mesh:
+    """Return :data:`COARSE_PORE` meshed at ``maxh`` 5 nm and ``wall_h_nm``, once per module.
+
+    Every climb on one spacing solves on the same mesh, so it is generated once and
+    shared (WP33 D8); a climb builds its own spaces on it and changes nothing in it.
+    """
+    return COARSE_PORE.generate(maxh_nm=5.0, wall_h_nm=wall_h_nm)
+
+
 def _climb(wall_h_nm: float, mode: str, *, charge_C_m2: float = COARSE_CHARGE_C_M2) -> LadderResult:
     """Climb the classical rungs of the NUM-18 ladder in one mode.
 
@@ -515,7 +530,7 @@ def _climb(wall_h_nm: float, mode: str, *, charge_C_m2: float = COARSE_CHARGE_C_
     transport operator's stability, and the flow block would add cost and a second
     explanation for every difference.
     """
-    mesh = COARSE_PORE.generate(maxh_nm=5.0, wall_h_nm=wall_h_nm)
+    mesh = _pore_mesh(wall_h_nm)
     rungs = default_ladder(
         mesh,
         concentration_M=COARSE_CONCENTRATION_M,
@@ -649,7 +664,19 @@ def test_num12_the_crosswind_is_active_where_the_cell_peclet_exceeds_one(
         assert largest > 0.0
 
 
-def test_num14_the_crosswind_contributes_exactly_zero_on_a_resolved_mesh() -> None:
+@pytest.fixture(scope="module")
+def resolved_reference() -> LadderResult:
+    """Return the climb in ``reference`` on the resolved spacing at ``-0.05 C/m^2``.
+
+    Read by NUM-14's test and by the current-convergence test, whose finest level
+    climbs this identical case (WP33 D8).
+    """
+    return _climb(RESOLVED_WALL_H_NM, "reference", charge_C_m2=-0.05)
+
+
+def test_num14_the_crosswind_contributes_exactly_zero_on_a_resolved_mesh(
+    resolved_reference: LadderResult,
+) -> None:
     """On a mesh meeting NUM-30 the term is zero, asserted on the assembled integrand.
 
     This is what makes ``reference`` safe to compare against the validated
@@ -662,7 +689,7 @@ def test_num14_the_crosswind_contributes_exactly_zero_on_a_resolved_mesh() -> No
     import ngsolve as ngs
     import numpy as np
 
-    result = _climb(RESOLVED_WALL_H_NM, "reference", charge_C_m2=-0.05)
+    result = resolved_reference
     logger.info(
         "reference on wall_h %.1f nm (mesh %s): max cell Peclet %.4f",
         RESOLVED_WALL_H_NM,
@@ -738,7 +765,9 @@ the assertions below are on the *ratio falling* and on the measured rate, becaus
 """
 
 
-def test_ver42_the_two_modes_currents_converge_to_each_other_under_refinement() -> None:
+def test_ver42_the_two_modes_currents_converge_to_each_other_under_refinement(
+    resolved_reference: LadderResult,
+) -> None:
     """The stabilisation bias is a discretisation error and falls like one.
 
     If it did not, ``reference`` would not be a *discretisation* of the same
@@ -757,7 +786,11 @@ def test_ver42_the_two_modes_currents_converge_to_each_other_under_refinement() 
     for wall_h_nm in CURRENT_WALL_H_NM:
         currents: dict[str, float] = {}
         for mode in ("none", "reference"):
-            result = _climb(wall_h_nm, mode, charge_C_m2=-0.05)
+            result = (
+                resolved_reference
+                if (wall_h_nm, mode) == (RESOLVED_WALL_H_NM, "reference")
+                else _climb(wall_h_nm, mode, charge_C_m2=-0.05)
+            )
             currents[mode] = qoi.total_current(qoi.reaction_flux_currents(result.solution, "cis"))
         difference = abs(currents["reference"] - currents["none"]) / abs(currents["none"])
         differences.append(difference)
@@ -798,7 +831,7 @@ def test_ver42_the_two_modes_currents_converge_to_each_other_under_refinement() 
 
 def _climb_equal_order(mode: str) -> LadderResult:
     """Climb to stage 6 with an equal-order velocity-pressure pair."""
-    mesh = COARSE_PORE.generate(maxh_nm=5.0, wall_h_nm=0.4)
+    mesh = _pore_mesh(0.4)
     rungs = default_ladder(
         mesh,
         concentration_M=COARSE_CONCENTRATION_M,
@@ -854,7 +887,7 @@ def test_ver42_the_equal_order_pair_is_recorded_and_not_gated() -> None:
     import ngsolve as ngs
 
     equal = _climb_equal_order("reference")
-    mesh = COARSE_PORE.generate(maxh_nm=5.0, wall_h_nm=0.4)
+    mesh = _pore_mesh(0.4)
     taylor_hood = run_ladder(
         [
             rung

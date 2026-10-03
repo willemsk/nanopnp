@@ -58,7 +58,11 @@ structure:
   parameters: willems2020_nacl
 boundary_conditions: {{bias_V: 0.05, ground: cis}}
 physics: {{model: epnp-ns, solid_permittivities: {{protein: 20.0, membrane: 3.2}}}}
+numerics: {{mesh: {{size_scale: 4.0}}}}
 """
+"""At ``size_scale`` 4 (WP33 D5): VER-55's claims are about the shell's plumbing and the
+stage-4 gate, and none depends on element size. The default-size 2WCD mesh is gated by
+``test_pipeline_2wcd.py`` (VER-53)."""
 
 TIMEOUT_S = 900.0
 """A cold walk of 2WCD through stage 6 takes tens of seconds; the wait is not the test."""

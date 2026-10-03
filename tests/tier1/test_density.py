@@ -397,8 +397,10 @@ def test_ver49_map_round_trip_and_export(synthetic_c12: Path, tmp_path: Path) ->
         density.export(tmp_path / "map.vtk")
     # An origin off the lattice, by half a spacing in x and y or 0.013 nm in z, is
     # refused rather than rounded onto it, which would move every value. Written in
-    # Å, as the reader expects.
-    raw = np.transpose(density.values, (2, 1, 0))
+    # Å, as the reader expects. A 5^3 corner of the map: the refusal reads the
+    # header, and OpenDX writing the whole map twice more was a third of this
+    # test (WP33 D13).
+    raw = np.transpose(density.values, (2, 1, 0))[:5, :5, :5]
     for origin in ((x0 - h / 2, y0 - h / 2, z0), (x0, y0, z0 + 0.013)):
         off = tmp_path / "off-lattice.dx"
         Grid(

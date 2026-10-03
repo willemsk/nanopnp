@@ -42,12 +42,12 @@ from typing import Any
 import pytest
 
 from nanopnp.charge.stage import ResolvedFields
-from nanopnp.io.artefact import SOLUTION_SCHEMA, StageInputs
-from nanopnp.io.case import CaseDocument, loads_case, resolve
+from nanopnp.io.artefact import SOLUTION_SCHEMA, Artefact, StageInputs
+from nanopnp.io.case import CaseDocument, ResolvedCase, loads_case, resolve
 from nanopnp.mesh.ingest import ingest
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
 from nanopnp.physics.measures import AXISYMMETRIC
-from nanopnp.physics.models import ModelSolution
+from nanopnp.physics.models import CoupledBoundaries, ModelSolution
 from nanopnp.post.indicator import axial_indicator
 from nanopnp.post.qoi import indicator_currents, reaction_flux_currents, total_current
 from nanopnp.solve.continuation import run_ladder
@@ -140,47 +140,69 @@ class Solved:
     solution: ModelSolution
     path: Path
     work: Path
+    artefact: Artefact | None = None
+    """Stage 10's artefact, where the solve ran through the stage."""
+
+
+class _KeepingStage(SolveStage):
+    """Stage 10, keeping the converged solution it writes, as Newton left it."""
+
+    kept: ModelSolution | None = None
+
+    def _write(
+        self,
+        solution: ModelSolution,
+        *,
+        resolved: ResolvedCase,
+        mesh_content_hash: str,
+        boundaries: CoupledBoundaries,
+    ) -> dict[str, Path]:
+        self.kept = solution
+        return super()._write(
+            solution,
+            resolved=resolved,
+            mesh_content_hash=mesh_content_hash,
+            boundaries=boundaries,
+        )
 
 
 @pytest.fixture(scope="module")
-def solved(tmp_path_factory: pytest.TempPathFactory) -> Solved:
-    """Solve a small ePNP-NS case and save it, keeping the in-memory solution.
+def mesh_path(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """Write the module's one mesh (see :data:`WALL_H_NM`) once, for every solve here."""
+    path = tmp_path_factory.mktemp("mesh") / "pore.vol"
+    PORE.generate(maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM).ngmesh.Save(str(path))
+    return path
 
-    The ladder is climbed here rather than through
-    :class:`~nanopnp.solve.stage.SolveStage` because the round-trip assertion
-    needs the coefficients as Newton left them, and the stage returns an
-    artefact rather than a state. It is the same construction either way: the
-    stage calls :func:`~nanopnp.solve.state.ladder` and this calls it too, which
-    is why that function was moved out of the stage in the first place.
+
+@pytest.fixture(scope="module")
+def solved(mesh_path: Path) -> Solved:
+    """Solve a small ePNP-NS case through stage 10, keeping the in-memory solution.
+
+    Through :class:`~nanopnp.solve.stage.SolveStage` itself (WP33 D9), so the
+    payload every test here restores is the one the stage writes, gated by
+    NUM-34 on the way. The round-trip assertion needs the coefficients as Newton
+    left them, and the stage returns an artefact rather than a state, so the
+    stage is subclassed to keep the solution it hands to its own writer: the
+    object :func:`~nanopnp.solve.state.save` serialised, not a reconstruction.
     """
-    work = tmp_path_factory.mktemp("state")
-    mesh_path = work / "pore.vol"
-    PORE.generate(maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM).ngmesh.Save(str(mesh_path))
-
+    work = mesh_path.parent
     document = loads_case(
         CASE.format(mesh_path=mesh_path, concentration_M=CONCENTRATION_M, bias_V=BIAS_V)
     )
-    resolved = resolve(document)
-    ingested = ingest(resolved.mesh, resolved)
-    order = int(resolved.model_options.get("order", AXISYMMETRIC.element_order))
-    measures = replace(AXISYMMETRIC, element_order=order)
-    distance = wall_distance_field(resolved, ingested.mesh, order=order)
-    empty = ResolvedFields(charge=None, conservation=None, eps_r=None, material_means=())
-    rungs = ladder(resolved, ingested.mesh, measures, distance, empty)
-    result = run_ladder(rungs)
-
-    path = save(
-        result.solution,
-        work / STATE_FILENAME,
-        resolved=resolved,
-        mesh_content_hash=ingested.content_hash,
-        boundaries=rungs[-1].boundaries,
+    stage = _KeepingStage(workspace=work / "fields")
+    artefact = stage.run(StageInputs(case=document))
+    assert stage.kept is not None
+    return Solved(
+        document=document,
+        solution=stage.kept,
+        path=artefact.payload["state"],
+        work=work,
+        artefact=artefact,
     )
-    return Solved(document=document, solution=result.solution, path=path, work=work)
 
 
 @pytest.fixture(scope="module")
-def stabilised(tmp_path_factory: pytest.TempPathFactory) -> Solved:
+def stabilised(tmp_path_factory: pytest.TempPathFactory, mesh_path: Path) -> Solved:
     """Solve the same case in ``supg`` and save it: an operator carrying a term.
 
     Separate from :func:`solved` rather than a parametrisation of it, because the
@@ -189,9 +211,6 @@ def stabilised(tmp_path_factory: pytest.TempPathFactory) -> Solved:
     all, and that is what the single test using this fixture asserts.
     """
     work = tmp_path_factory.mktemp("stabilised")
-    mesh_path = work / "pore.vol"
-    PORE.generate(maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM).ngmesh.Save(str(mesh_path))
-
     document = loads_case(
         CASE.format(mesh_path=mesh_path, concentration_M=CONCENTRATION_M, bias_V=BIAS_V).replace(
             "stabilisation: none", "stabilisation: supg"
@@ -346,38 +365,29 @@ def test_ver34_the_wall_distance_field_is_restored_and_not_re_solved(
 
 
 def test_ver34_the_stage_payload_is_a_state_file_this_module_can_restore(
-    tmp_path: Path,
+    solved: Solved,
 ) -> None:
     """Stage 10 writes the payload this module reads (FR-27, section 5.3.2).
 
-    The stage and the fixture above build the ladder through the same function,
-    so what is at stake is only the wiring — the filename, the boundaries handed
+    What is at stake is only the wiring — the filename, the boundaries handed
     to :func:`~nanopnp.solve.state.save`, and the mesh hash. Each of those is a
     silent failure: a payload keyed on the wrong boundaries restores into a
     space with different constraints, and the NUM-25 reaction flux is then taken
     over a boundary the solve left free.
 
-    On the module's own mesh: it used to run on a coarser one, because nothing
-    here reads a number out of the solution, but NUM-34's floor on ``wall_h``
-    leaves nothing meaningfully cheaper that the gate admits (see
-    :data:`WALL_H_NM`). Running through the stage rather than through
-    :func:`~nanopnp.solve.state.ladder` is also what puts that gate on this
-    path at all, which the fixture above deliberately bypasses.
+    On the stage's own run, the :func:`solved` fixture's (WP33 D9): every
+    round-trip test above restores that payload, so this one only checks the
+    artefact names it. Running through the stage rather than through
+    :func:`~nanopnp.solve.state.ladder` is also what puts the NUM-34 gate on
+    this path at all.
     """
-    work = tmp_path / "wiring"
-    work.mkdir()
-    mesh_path = work / "pore.vol"
-    PORE.generate(maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM).ngmesh.Save(str(mesh_path))
-    document = loads_case(
-        CASE.format(mesh_path=mesh_path, concentration_M=CONCENTRATION_M, bias_V=BIAS_V)
-    )
-
-    artefact = SolveStage(workspace=work / "fields").run(StageInputs(case=document))
+    artefact = solved.artefact
+    assert artefact is not None
     assert artefact.schema == SOLUTION_SCHEMA
     payload = artefact.payload["state"]
     assert payload.name == STATE_FILENAME
 
-    restored = restore(payload, case=document)
+    restored = restore(payload, case=solved.document)
     assert restored.residual is not None
     assert set(reaction_flux_currents(restored)) == {"Na+", "Cl-"}
 
