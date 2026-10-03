@@ -286,7 +286,10 @@ def test_ver23_a_charged_walk_writes_the_same_bytes_into_two_stores(
         roots.append(store.root / "artefacts")
 
     def files(root: Path) -> dict[str, Path]:
-        return {str(path.relative_to(root)): path for path in root.rglob("*") if path.is_file()}
+        # POSIX names, so the schema is the first component on Windows too.
+        return {
+            path.relative_to(root).as_posix(): path for path in root.rglob("*") if path.is_file()
+        }
 
     first, second = files(roots[0]), files(roots[1])
     assert set(first) == set(second)

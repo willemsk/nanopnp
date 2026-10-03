@@ -168,7 +168,8 @@ def test_ver46_07_the_prepared_entry_walks_every_stage_to_a_charged_solve(ran: R
     assert group["charge"]["source"] == "deposited"  # type: ignore[index]
     assert group["protonation"]["source"] == "pdb2pqr"  # type: ignore[index]
     # ``inspect run`` shows the report where the guide says to read it.
-    assert "run/manifest.json" in walked[2].stdout
+    # The path as the platform writes it: ``run\\manifest.json`` on Windows.
+    assert str(Path("run") / "manifest.json") in walked[2].stdout
     assert '"conservation"' in walked[2].stdout
 
 
