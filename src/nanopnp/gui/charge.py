@@ -10,7 +10,7 @@ of the seven matrix jobs.
 **Every number is read from a stage's own artefact** (WP31 D1). The walk's
 :class:`~nanopnp.core.stages.ArtefactHook` reports ``protonation`` and ``charge``
 as it reports every stage, and the views read ``Store(store).get(schema, hash)``:
-the lattice and the conservation record from stage 7's ``nanopnp/fields/v1``,
+the lattice and the conservation record from stage 7's ``nanopnp/fields/v2``,
 the table from the ``protonation`` artefact. The internal ``charge-grid`` and
 ``protonation-frame`` caches are never read, because WP28 D9 makes stage 7's
 artefact the one place a consumer reads the charge from.

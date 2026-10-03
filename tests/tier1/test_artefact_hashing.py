@@ -294,7 +294,7 @@ def test_ver23_a_charged_walk_writes_the_same_bytes_into_two_stores(
     first, second = files(roots[0]), files(roots[1])
     assert set(first) == set(second)
     schemas = {name.split("/")[0] for name in first}
-    assert {f"nanopnp-{name}-v1" for name in ("protonation", "charge-grid", "fields")} <= schemas
+    assert {"nanopnp-protonation-v1", "nanopnp-charge-grid-v2", "nanopnp-fields-v2"} <= schemas
     for name, path in first.items():
         if path.name == "meta.json":
             left = json.loads(path.read_text(encoding="utf-8"))

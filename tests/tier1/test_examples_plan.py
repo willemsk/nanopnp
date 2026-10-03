@@ -162,6 +162,26 @@ def test_ver46_copy_mirrors_a_sibling_example_without_its_generated_files(
     assert result.stdout == "prepared\n"
 
 
+def test_ver46_a_file_beside_the_examples_is_copied_alone(tmp_path: Path) -> None:
+    """``../<file>`` in ``examples/`` copies that file, not every example beside it (WP32 D5)."""
+    repository = tmp_path / "source"
+    examples = repository / "examples"
+    example = examples / "99-scratch"
+    other = examples / "97-other"
+    for directory in (example, other):
+        directory.mkdir(parents=True)
+    (examples / "shared.txt").write_text("shared", encoding="utf-8")
+    (other / "case.yaml").write_text("name: other\n", encoding="utf-8")
+    (example / "README.md").write_text(
+        "<!-- example: run -->\n```console\n$ python -c pass ../shared.txt ../missing.txt\n```\n",
+        encoding="utf-8",
+    )
+
+    copied = copy_example(example, tmp_path / "copy", repository=repository)
+    assert sorted(path.name for path in copied.parent.iterdir()) == ["99-scratch", "shared.txt"]
+    assert (copied / "../shared.txt").resolve().read_text(encoding="utf-8") == "shared"
+
+
 @pytest.fixture(scope="module")
 def planned(tmp_path_factory: pytest.TempPathFactory) -> Path:
     """Run example 05's ``plan`` block verbatim in a copy, and return the copy."""

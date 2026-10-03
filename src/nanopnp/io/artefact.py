@@ -86,8 +86,13 @@ under this schema as it goes, so that a changed frame selection re-protonates
 only the frames it has not seen (section 5.3.2, the stage-7 artefact row).
 """
 
-CHARGE_GRID_SCHEMA = "nanopnp/charge-grid/v1"
+CHARGE_GRID_SCHEMA = "nanopnp/charge-grid/v2"
 """Stage 7's export lattice: the closed-form kernel summed over the protonation artefact (WP28 D7).
+
+``v2`` because the summary contract changed: ``v1`` recorded the sum's wall-clock
+``seconds``, which ``v2`` does not (WP32 D15). The summary is served from the
+store unchanged on a hit, so a ``v1`` entry would carry the clock into every
+manifest that read it; a new version makes it a miss (section 5.3.2).
 
 Not the output of a registered stage: the ``charge`` stage stores it under its own
 key, which names the protonation artefact and the kernel's settings and not the
@@ -95,8 +100,14 @@ mesh, so a mesh-convergence sweep re-deposits without re-summing (section 5.3.2,
 the stage-7 artefact row).
 """
 
-FIELDS_SCHEMA = "nanopnp/fields/v1"
-"""Stage 7: the fixed-charge and dielectric fields, supplied or deposited, gated (§5.2)."""
+FIELDS_SCHEMA = "nanopnp/fields/v2"
+"""Stage 7: the fixed-charge and dielectric fields, supplied or deposited, gated (§5.2).
+
+``v2`` because the payload and summary contract changed: ``v1``'s ``deposit.npz``
+and ``charge`` summary carried wall-clock ``seconds``, which ``v2``'s do not
+(VER-23, WP32 D15). A ``v1`` entry would still load, but as a hit whose bytes
+and manifest group moved with the clock; the new version makes it a miss.
+"""
 
 SOLUTION_SCHEMA = "nanopnp/solution/v2"
 """Stage 10: the converged field set and its iteration history.

@@ -1,6 +1,6 @@
 """Stage 7 of §5.2: the fixed-charge and dielectric fields (FR-13, FR-14, FR-27, IF-01).
 
-Two paths, one artefact (``nanopnp/fields/v1``).
+Two paths, one artefact (``nanopnp/fields/v2``).
 
 **The producer path** (WP28). A case that protonates -- ``structure:`` or
 ``inputs.pqr`` -- and whose model declares ``fixed_charge`` deposits its charge
@@ -9,7 +9,7 @@ artefact's atoms and frames on the export lattice (:mod:`nanopnp.charge.kernel`)
 the lattice is projected onto the deployed mesh as an element-wise polynomial of
 the potential's order (:mod:`nanopnp.charge.deposit`), and both are gated against
 the source atoms (:func:`~nanopnp.charge.fields.deposit_conservation`). The
-lattice is its own store entry, ``nanopnp/charge-grid/v1``, keyed without the
+lattice is its own store entry, ``nanopnp/charge-grid/v2``, keyed without the
 mesh, so a mesh-convergence sweep re-deposits without re-summing (D7). The
 stage's payload is the lattice as a ``nanopnp/field/v1`` document and its
 ``.npz``, which read back through ``inputs.charge``, and the deposit (D7, D11).
@@ -1234,12 +1234,19 @@ class FieldStage:
         }
         # The log, not the record: a summary that moved with the clock would give
         # every charged run its own manifest (VER-23, WP32 D15). The stage's total
-        # stays in the run record's per-stage seconds.
+        # stays in the run record's per-stage seconds; the parts ride on the log
+        # record as ``timings``, for a benchmark's handler to collect.
+        timings = {
+            "sum": (share_started - started) + (summed - checked),
+            "deposit": deposited - summed,
+            "gates": (checked - share_started) + (gated_at - deposited),
+        }
         logger.info(
             "stage 7 timings: sum %.3f s, deposit %.3f s, gates %.3f s",
-            (share_started - started) + (summed - checked),
-            deposited - summed,
-            (checked - share_started) + (gated_at - deposited),
+            timings["sum"],
+            timings["deposit"],
+            timings["gates"],
+            extra={"timings": timings},
         )
         report(progress, 1.0, "the deposited charge passed its gates")
         return self._produced_artefact(
