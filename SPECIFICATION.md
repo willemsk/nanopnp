@@ -3290,6 +3290,15 @@ model, and provides no stress-tensor force profile. Detail in
 Every run SHALL emit a provenance manifest recording input hashes, library versions, mesh hash,
 solver settings, stabilisation mode and correction parameter file versions (FR-25).
 
+NOTE (a gated test's runtime; **added 3 October 2026**, WP33): every push pays for the tests of
+Tiers 1 and 2, so their runtime is a cost. It is reduced in four ways only: by sharing identical
+work, by dropping work whose result no assertion reads, by coarsening a discretisation where every
+gate the test carries is measured to pass at the coarser setting with at least three times its
+headroom, or by splitting a file so that its parts run in parallel. No tolerance is loosened and no
+oracle weakened to save time. A test that asserts a cold computation is never given a warm store.
+A test moves to `slow` only if another test on every push gates the same claim on the same kind of
+input, so that no requirement this tier gates is left ungated.
+
 ---
 
 ## 8. Implementation plan

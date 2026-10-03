@@ -1,6 +1,6 @@
 # Phase 3 (Charge pipeline): from a structure to a charged run
 
-**Status: in progress. WP26 delivered, 30 September 2026; WP27 delivered, 1 October 2026 ([plan](wp27-protonation.md)); WP28 delivered, 1 October 2026 ([plan](wp28-charge-deposition.md)); WP29 delivered, 1 October 2026 ([plan](wp29-val06-apbs.md)); WP30 delivered, 2 October 2026 ([plan](wp30-dielectric-and-exclusion.md)); WP31 delivered, 2 October 2026 ([plan](wp31-gui-charge-pipeline.md)); WP32 planned, 3 October 2026 ([plan](wp32-charge-docs-and-example.md)).** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
+**Status: in progress. WP26 delivered, 30 September 2026; WP27 delivered, 1 October 2026 ([plan](wp27-protonation.md)); WP28 delivered, 1 October 2026 ([plan](wp28-charge-deposition.md)); WP29 delivered, 1 October 2026 ([plan](wp29-val06-apbs.md)); WP30 delivered, 2 October 2026 ([plan](wp30-dielectric-and-exclusion.md)); WP31 delivered, 2 October 2026 ([plan](wp31-gui-charge-pipeline.md)); WP32 planned, 3 October 2026 ([plan](wp32-charge-docs-and-example.md)); WP33 planned, 3 October 2026 ([plan](wp33-test-durations.md)).** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
 the geometry pipeline (`main` at `v0.3.0-alpha.9`, formerly `v0.9.0-alpha.9`). Phase 2's
 end-of-phase report and its release, `v0.3.0`, wait for one Tier-3 run on the author's archive
 (criterion 3, VAL-05's ensemble leg). WP26 may start before that report merges, because nothing in
@@ -339,6 +339,18 @@ without a documentation edit (VER-45).
 > - **Two WP31 carry-overs** ride along: a bounded integer or optional field gets the right
 >   widget, and `ChargeWidget.build`, which nothing calls, is deleted.
 
+### WP33 — The test suite's duration, cut without losing a check
+
+Added at the author's request on 3 October 2026. It is not a §8.1 increment, and it runs after
+WP32 and before the phase close. Every Tier 1–2 file is reviewed for work done twice, for work only
+a log reads, and for a discretisation finer than its gates need. The time is cut under one rule,
+which this package's plan writes into §7.6 as a NOTE. No tolerance or oracle moves, a cold test
+stays cold, and nothing gated is left ungated. The baseline is 1,420 s of serial test time at
+`35524c1`. The target is at least 180 s saved, with no file but the cold examples over 90 s.
+
+> **Planned, 3 October 2026** ([plan](wp33-test-durations.md)). The plan's commit adds the §7.6
+> NOTE on a gated test's runtime.
+
 ## Open decisions
 
 | # | Decision | Owner and status |
@@ -374,6 +386,7 @@ uv run pytest -m slow --log-cli-level=INFO      # protonation and deposition bud
 | WP30 | 1, 2 | VER-59, VER-30, VER-31 |
 | WP31 | 1, 2 | VER-60 |
 | WP32 | 1, 2 | VER-45, VER-46 |
+| WP33 | 1, 2 | none new; every changed test keeps its identifiers and assertions (§7.6 NOTE) |
 
 The phase is complete when:
 
