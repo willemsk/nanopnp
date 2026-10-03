@@ -1,6 +1,6 @@
 # Current work
 
-Updated 2 October 2026 (WP30 merged; WP31 delivered on its branch). This file is navigation only;
+Updated 3 October 2026 (WP31 merged; WP32 planned). This file is navigation only;
 `SPECIFICATION.md` governs. Nothing here is evidence that an unmerged branch has shipped.
 
 ## Position
@@ -10,11 +10,12 @@ Updated 2 October 2026 (WP30 merged; WP31 delivered on its branch). This file is
   criterion 3 waived (§8.2.4 D7). `Z_MD` is 5.655 nm.
 - Phase 3 ([charge pipeline](phase-3-charge-pipeline.md), release `v0.4.0`) is **in progress**,
   covering WP26–WP32.
-  - WP26–WP30 are **merged**, with `main` at `11bc2c8`. `v0.4.0-alpha.1` and `.2` are tagged;
-    `.3` (WP28, `c6c0c0d`), `.4` (WP29) and `.5` (WP30) are not yet.
-  - [WP31](wp31-gui-charge-pipeline.md) (VER-60; IF-09, QR-11, RSK-13) is **delivered** on
-    `ccr-b33d9919-kdjchc`, with its PR open against `main`, to be tagged `v0.4.0-alpha.6` once
-    merged. **Next: `/wp-ship`** on WP31, then `/wp-plan` for WP32.
+  - WP26–WP31 are **merged**, with `main` at `35524c1`. `v0.4.0-alpha.1` and `.2` are tagged;
+    `.3` (WP28, `c6c0c0d`) to `.6` (WP31) are not yet.
+  - [WP32](wp32-charge-docs-and-example.md) (VER-46, VER-60; QR-15, phase criterion 7) is
+    **planned** on `ccr-a6e3df11-3e0qmp`, to be tagged `v0.4.0-alpha.7`. It is the phase's last
+    package. **Next: `/wp-implement`** on WP32. Then comes the phase close: the end-of-phase
+    report and `v0.4.0`.
 
 ## What Phase 3 must not re-decide
 
@@ -32,14 +33,9 @@ Each is recorded in full where it points.
   stage-7 note.
 - **The deposit** is element-wise at the potential's order, gated per plane against the atoms, and
   read only from stage 7's artefact. → PHY-16 NOTE on the deposition; WP28.
-- **WP30's two switches are built from the stage-4 profile.**
-  - `χ` is a C¹ step over the signed distance to the profile's water-facing part, with every solid
-    but the protein held at `χ = 1` by its material. It is read only from stage 7's artefact.
-  - The shell is the profile's dilation, carved against an unchanged membrane, `wall` moved
-    outward. Its thickness bound is a stage-5 gate.
-  - Both are off by default, and at 0 every key is unchanged (VER-59's goldens).
-  - → §4.4 NOTE on the derived solid fraction; §5.2.1 NOTE on the ion-exclusion shell; the WP30
-    plan's decisions and Outcomes.
+- **WP30's two switches are built from the stage-4 profile**: `χ` read only from stage 7's
+  artefact, the shell a stage-5 dilation. Both are off by default, and at 0 every key is unchanged
+  (VER-59). → §4.4 NOTE on the derived solid fraction; §5.2.1 NOTE on the shell; WP30 Outcomes.
 - **The shell reads every charge number from a stage's artefact**, and the bundle collects its
   Python LGPL payloads as source. → ADR-004 packaging NOTE; VER-60; the WP31 Outcomes.
 - **Tier 3 compares the published I–V and in-pore averages**, and gates v1.0 (VAL-16, VAL-17).
@@ -68,6 +64,8 @@ Each is recorded in full where it points.
 - **OPN-04**, the ClyA-AS mutation list. **OPN-07**, a golden's identity for a deposited charge,
   and now for a derived `χ` too.
 - **The archived PQRs** for WP27–WP29's Tier 3, none of which has run yet.
+- **Stage 7 stores wall-clock seconds in its payload and summary**, so two identical deposits
+  never share bytes or a content hash. No owner yet (found while planning WP32).
 
 ## Dependencies To Read On Demand
 
@@ -79,6 +77,7 @@ Each is recorded in full where it points.
 | The physics-model interface | `docs/project/physics-models.md`; `physics/models.py` |
 | The desktop shell, its hooks and the probe bundle | The WP24 and WP31 plans and Outcomes; `gui/`; `.knowledge/07` §5; ADR-004 |
 | The deposition and stage 7 | The WP28 plan and Outcomes; `charge/stage.py` |
+| Example 07 and the charge guide | The WP32 plan; `validation/examples.py`; example 06 |
 | PDB2PQR, PROPKA and APBS | `.knowledge/07` §3; the WP29 plan |
 | Case schema and supply chains | §5.3.1 NOTEs; `io/case.py` |
 

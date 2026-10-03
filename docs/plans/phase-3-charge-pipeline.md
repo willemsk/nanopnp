@@ -1,6 +1,6 @@
 # Phase 3 (Charge pipeline): from a structure to a charged run
 
-**Status: in progress. WP26 delivered, 30 September 2026; WP27 delivered, 1 October 2026 ([plan](wp27-protonation.md)); WP28 delivered, 1 October 2026 ([plan](wp28-charge-deposition.md)); WP29 delivered, 1 October 2026 ([plan](wp29-val06-apbs.md)); WP30 delivered, 2 October 2026 ([plan](wp30-dielectric-and-exclusion.md)); WP31 delivered, 2 October 2026 ([plan](wp31-gui-charge-pipeline.md)); WP32 planned.** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
+**Status: in progress. WP26 delivered, 30 September 2026; WP27 delivered, 1 October 2026 ([plan](wp27-protonation.md)); WP28 delivered, 1 October 2026 ([plan](wp28-charge-deposition.md)); WP29 delivered, 1 October 2026 ([plan](wp29-val06-apbs.md)); WP30 delivered, 2 October 2026 ([plan](wp30-dielectric-and-exclusion.md)); WP31 delivered, 2 October 2026 ([plan](wp31-gui-charge-pipeline.md)); WP32 planned, 3 October 2026 ([plan](wp32-charge-docs-and-example.md)).** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
 the geometry pipeline (`main` at `v0.3.0-alpha.9`, formerly `v0.9.0-alpha.9`). Phase 2's
 end-of-phase report and its release, `v0.3.0`, wait for one Tier-3 run on the author's archive
 (criterion 3, VAL-05's ensemble leg). WP26 may start before that report merges, because nothing in
@@ -327,6 +327,17 @@ oracle is a model property rather than a transcribed number: for example, the co
 legs pass, `Q_net` is the integer the PQR sums to, and the negatively charged lumen is
 cation-selective (`t₊ > 0.5`) at 0.15 M. The generated references pick up the new option sets
 without a documentation edit (VER-45).
+
+> **Planned, 3 October 2026** ([plan](wp32-charge-docs-and-example.md)). The plan's commit amends
+> VER-46, VER-60 and Appendix A. Refinements of the text above:
+>
+> - **Example 07 solves at `numerics.mesh.size_scale` 4.** At the default sizes the validated
+>   solve had not finished after 27 min on one core. At 4 it takes 220 s and gives `t₊` = 0.543.
+> - **Its refused block re-supplies the exported lattice through `inputs.charge`**, which stage 7
+>   refuses at the quadrature-agreement check. That is VAL-15's aliasing, shown to a user.
+> - **The guide is one page, `guide/charge.md`.** The generated references need no edit.
+> - **Two WP31 carry-overs** ride along: a bounded integer or optional field gets the right
+>   widget, and `ChargeWidget.build`, which nothing calls, is deleted.
 
 ## Open decisions
 
