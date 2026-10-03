@@ -53,7 +53,7 @@ desktop shell, and the user documentation with seven worked examples are impleme
 Meshes are supplied from outside, generated for an idealised pore or the ClyA reference geometry,
 or built from a PDB structure by the geometry pipeline (Phase 2). Fixed charge is supplied as a
 field, or protonated with PDB2PQR and PROPKA and deposited on the mesh by the charge pipeline
-(Phase 3, toward v0.4). Nothing is a validated release yet. The comparison against the paper's published results gates v1.0.
+(Phase 3, toward v0.4). Nothing is a validated release yet. The comparison against the paper's published results gates v0.5 (§8.2.5 E2).
 
 | Release | Phase | Scope | State |
 |---|---|---|---|
@@ -61,7 +61,7 @@ field, or protonated with PDB2PQR and PROPKA and deposited on the mesh by the ch
 | v0.2 | 1 | Solver core: external meshes and fields, QoI extraction, frozen case schema, API, CLI, sweeps | **released**, [`v0.2.0`](CHANGELOG.md#020---2026-09-24) |
 | v0.3 | 2 | Geometry pipeline from a PDB structure: alignment, density, symmetry reduction, contour, mesh | **released**, [`v0.3.0`](CHANGELOG.md#030---2026-09-30) |
 | v0.4 | 3 | Charge pipeline: PDB2PQR charges, smeared fixed charge and dielectric; the paper's pipeline end to end | in progress, [Phase 3 plan](docs/plans/phase-3-charge-pipeline.md) |
-| v1.0 | 4 | Validated release: the published results reproduced, V&V suite in CI, tutorials, JOSS submission, DOI archive | planned |
+| v0.5 | 4 | Validated release: the published results reproduced, V&V suite in CI, tutorials, JOSS submission, DOI archive | planned |
 
 Each merged work package is tagged `vX.Y.Z-alpha.N` toward its phase's release, and the package
 version is derived from the tag. The history is in [`CHANGELOG.md`](CHANGELOG.md), and the full
@@ -69,7 +69,7 @@ release plan is in [`SPECIFICATION.md`](SPECIFICATION.md) §2.7 and §8.
 
 ## Installation
 
-`nanopnp` is not on PyPI yet; that comes with v1.0. Install it from source with
+`nanopnp` is not on PyPI yet; that comes with v0.5. Install it from source with
 [uv](https://docs.astral.sh/uv/):
 
 ```bash

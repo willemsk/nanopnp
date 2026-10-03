@@ -184,7 +184,7 @@ Tests live in `tests/tier{1,2,3,4}/`, matching the four verification tiers of §
 |---|---|---|---|
 | 1 | Unit and property tests (VER-01 … VER-11) | seconds | every push |
 | 2 | Analytic benchmarks (VER-12 … VER-22) | minutes | every push |
-| 3 | Cross-implementation comparison: the published results (VAL-16, VAL-17, gating v1.0), VAL-05, VAL-06, and COMSOL fields where exported (VAL-01 … VAL-04) | hours | nightly, recorded not gated |
+| 3 | Cross-implementation comparison: the published results (VAL-16, VAL-17, gating v0.5), VAL-05, VAL-06, and COMSOL fields where exported (VAL-01 … VAL-04) | hours | nightly, recorded not gated |
 | 4 | Experimental reproduction (VAL-07 … VAL-14) | hours | before a tagged release |
 
 - **Name tests for the requirement they discharge**: `test_ver03_ion_wall_function_check_values`,

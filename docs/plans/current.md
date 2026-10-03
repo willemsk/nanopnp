@@ -1,6 +1,6 @@
 # Current work
 
-Updated 3 October 2026 (WP34 planned). This file is navigation only; `SPECIFICATION.md` governs.
+Updated 3 October 2026 (WP34 delivered, Phase 3 closed). This file is navigation only; `SPECIFICATION.md` governs.
 Nothing here is evidence that an unmerged branch has shipped.
 
 ## Position
@@ -8,12 +8,12 @@ Nothing here is evidence that an unmerged branch has shipped.
 - Phase 1 ([solver core](phase-1-solver-core.md)) is **closed** as `v0.2.0` (§8.2.3; §8.2.4 D1).
 - Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **closed** as `v0.3.0`, with
   criterion 3 waived (§8.2.4 D7). `Z_MD` is 5.655 nm.
-- Phase 3 ([charge pipeline](phase-3-charge-pipeline.md), release `v0.4.0`) is **in progress**.
-  - WP26–WP33 are **merged**, with `main` at `4375797`, and tagged `v0.4.0-alpha.1` to `.8`.
-  - [WP34](wp34-phase-3-close.md), the phase close (§8.2.5 E1–E5), is **planned**, to be tagged
-    `v0.4.0`. **Next: `/wp-implement`** on WP34.
+- Phase 3 ([charge pipeline](phase-3-charge-pipeline.md), release `v0.4.0`) is **closed** as `v0.4.0`
+  (§8.2.5 E1–E5).
+  - WP26–WP34 are **delivered**, with Phase 3 closed, OPN-07 closed and Phase 4 planned as `v0.5.0`.
 - **Phase 4 is released as `v0.5.0`**, not v1.0, and reuses the retired `v0.5.0` names (§2.7
   Versioning NOTE; §8.2.5 E2). Stable v1.0's content is OPN-08, the author's.
+  - Next: Phase 4 planning ([phase-4 plan](phase-4-published-reproduction.md) or `/wp-plan 35`).
 
 ## What Phase 3 must not re-decide
 

@@ -279,7 +279,7 @@ REFERENCE_BODY = SpheroidBody(semi_radial_nm=2.9, semi_axial_nm=3.35)
 """The reference analyte: haemoglobin "approximated by a smooth cylinder-like
 particle (h = 6.7 nm, w = 5.8 nm)", taken as the spheroid of those axes
 (``.knowledge/05-analyte-and-forces.md`` section 10.3). Held at the lumen centre;
-the z-sweep that would make an energy landscape out of this is FR-22 v1.0 work,
+the z-sweep that would make an energy landscape out of this is FR-22 v0.5 work (§8.2.5 E2),
 which amendment A1 leaves out of the spike."""
 
 REFERENCE_CHARGE_E = -4.0

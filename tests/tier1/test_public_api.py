@@ -53,6 +53,10 @@ EXPECTED = {
     "ModelDeclaration",
     "register_model",
     "registered_models",
+    # WP34 D9: ``with_section`` (WP31) is an editor affordance over a frozen
+    # schema; it changes no resolved case (WP31 D13) and is not added to the
+    # public API. Adding it later costs nothing, whereas withdrawing it would
+    # break callers.
 }
 """Written out, not derived: adding to the stable API is a decision, and this is where
 it is seen being made."""

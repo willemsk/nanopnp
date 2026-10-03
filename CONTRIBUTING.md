@@ -136,9 +136,9 @@ derived from them by hatch-vcs. Neither `pyproject.toml` nor the package names a
 is no version to bump.
 
 There is one minor version per phase: v0.1 is Phase 0, v0.2 Phase 1, v0.3 Phase 2, v0.4 Phase 3 and
-v1.0 Phase 4. Phase 1's and Phase 2's tags were renamed to this scheme on 30 September 2026, and
-[`.github/renumbered-tags.txt`](.github/renumbered-tags.txt) maps each retired name to its new one.
-Never reuse a retired name.
+v0.5 Phase 4 (amended 3 October 2026, §8.2.5 E2). Phase 1's and Phase 2's tags were renamed to this
+scheme on 30 September 2026, and [`.github/renumbered-tags.txt`](.github/renumbered-tags.txt) maps
+each retired name to its new one. Phase 4 reuses the retired v0.5.0 tag names (§8.2.5 E2).
 
 - **A work package's PR writes its own [`CHANGELOG.md`](CHANGELOG.md) section** under the version
   it will be tagged, `vX.Y.Z-alpha.N`, where `vX.Y.Z` is the phase's release and N counts the phase's

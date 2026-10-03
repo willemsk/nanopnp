@@ -54,7 +54,9 @@ from typing import TYPE_CHECKING, Literal
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
-from nanopnp.charge.stage import read_fields
+from nanopnp.charge.kernel import kernel_parameters
+from nanopnp.charge.protonation import ProtonationStage
+from nanopnp.charge.stage import derived_parameters, frame_shift_nm, read_fields
 from nanopnp.core.hashing import canonical, content_hash, decode_floats
 from nanopnp.density.grid import (
     COMSOL_DATA_HEADER,
@@ -288,8 +290,10 @@ def case_identity(resolved: ResolvedCase) -> str:
     the stage-7 key's own record of it — the header's physical declarations and
     the grid's digest — so that the same table written in another format is the
     same case, and a table whose values moved is another. That reads the table,
-    about 1.6 s for the 84 MB reference charge (measured 2026-09-28). A case
-    supplying no field keeps the identity it had.
+    about 1.6 s for the 84 MB reference charge (measured 2026-09-28); for a case
+    depositing its charge or deriving its permittivity, hashing the structure
+    files' contents through the stage-1 key takes about 5 ms for 2WCD (measured
+    2026-10-03). A case supplying no field keeps the identity it had.
     """
     record: dict[str, object] = {
         key: value
@@ -307,6 +311,45 @@ def case_identity(resolved: ResolvedCase) -> str:
             for key, value in sorted(options.items())
             if key not in MODEL_OPTION_DISCRETISATION_KEYS
         }
+
+    deposits_charge = getattr(resolved, "deposits_charge", False)
+    derives_eps_r = getattr(resolved, "derives_eps_r", False)
+    structure = getattr(resolved, "structure", None)
+    document = getattr(resolved, "document", None)
+
+    structure_artefact = None
+    if (deposits_charge or derives_eps_r) and structure is not None and document is not None:
+        from nanopnp.io.artefact import StageInputs
+        from nanopnp.structure.stage import StructureStage
+
+        structure_artefact = StructureStage().key(StageInputs(case=document))
+
+    if deposits_charge and document is not None:
+        from nanopnp.io.artefact import StageInputs
+
+        upstream = {"structure": structure_artefact} if structure_artefact is not None else {}
+        inputs = StageInputs(case=document, upstream=upstream)
+        protonation = ProtonationStage._key(inputs, resolved)
+        kernel = {
+            key: value
+            for key, value in kernel_parameters(
+                sharpness=resolved.smearing.sharpness,
+                spacing_nm=resolved.smearing.grid_spacing_nm,
+                shift_z_nm=frame_shift_nm(resolved),
+            ).items()
+            if key != "grid_spacing_nm"
+        }
+        record["deposited_charge"] = {
+            "kernel": kernel,
+            "protonation": protonation.hash,
+        }
+
+    if derives_eps_r:
+        record["derived_eps_r"] = {
+            "parameters": derived_parameters(resolved),
+            "structure": structure_artefact.hash if structure_artefact is not None else None,
+        }
+
     return content_hash(CASE_IDENTITY_SCHEMA, record)
 
 
