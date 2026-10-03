@@ -1,8 +1,9 @@
 # Tags re-created by the version renumbering of 30 September 2026
-# (SPECIFICATION.md section 2.7, the Versioning NOTE; section 8.2.4 D1).
+# (SPECIFICATION.md section 2.7, the Versioning NOTE; section 8.2.4 D1; section 8.2.5 E2).
 # One line per tag: the new name, then the retired name it replaces on the same
-# commit. .github/scripts/renumber-tags.sh reads it, and release.yml waives its
-# CITATION.cff check for a tag listed here. The retired names are never reused.
+# commit. The renumbering script ran once on 30 September 2026 and is gone (WP34 D10).
+# release.yml waives its CITATION.cff check for a tag listed here.
+# Phase 4 reuses the retired v0.5.0 tag names (section 8.2.5 E2).
 v0.2.0 v0.5.0
 v0.2.0-alpha.1 v0.5.0-alpha.1
 v0.2.0-alpha.2 v0.5.0-alpha.2
