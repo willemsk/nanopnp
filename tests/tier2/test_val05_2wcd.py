@@ -20,7 +20,6 @@ runs on its own store, as ``test_contour_2wcd.py`` does, because
 from __future__ import annotations
 
 import logging
-from collections.abc import Callable
 from dataclasses import dataclass
 from itertools import pairwise
 from pathlib import Path
@@ -53,7 +52,7 @@ from nanopnp.validation.geometry import (
 )
 
 if TYPE_CHECKING:
-    from conftest import Prepared2WCD
+    from conftest import Prepared2WCD, Seed2WCD
 
 logger = logging.getLogger(__name__)
 
@@ -154,13 +153,15 @@ def reference() -> np.ndarray:
 @pytest.fixture(scope="module")
 def walked(
     prepared_2wcd: Prepared2WCD,
-    seeded_2wcd: Callable[[Path], Path],
+    seeded_2wcd: Seed2WCD,
     tmp_path_factory: pytest.TempPathFactory,
     reference: np.ndarray,
 ) -> Walked:
     """Run stages 1-4, register by the C-alpha centroid (D6), then stage 5, and compare (D2, D3).
 
-    Stages 1 to 3 are the session's seed (``seeded_2wcd``); stage 4 on runs here.
+    Stages 1 to 6 are the session's seed (``seeded_2wcd``, WP33 D2), so each is
+    found rather than computed here. The registration is computed here as well,
+    and must be the seed's to the bit: the seed's stages 5 and 6 are keyed on it.
     """
     root = tmp_path_factory.mktemp("2wcd-val05")
     store = Store(seeded_2wcd(root / "store"))
@@ -173,13 +174,14 @@ def walked(
     atoms = {"name": ensemble.name, "resid": ensemble.resid, "chain": ensemble.chain}
     centroid = calpha_centroid_z_nm(ensemble.positions_nm, **atoms)
     centre = register_by_centroid(ensemble.positions_nm, **atoms)
+    assert centre == seeded_2wcd.centre_z_nm
 
     geometry = f"geometry: {{membrane: {{centre_z_nm: {centre!r}}}}}\n"
     case = _write(
         root / "region.case.yaml", GEOMETRY_CASE.format(structure=structure, geometry=geometry)
     )
     region = run_case(case, store=store, upto="region", write=False)
-    assert {"structure", "density", "symmetry", "contour"} <= {
+    assert {"structure", "density", "symmetry", "contour", "region"} <= {
         record.name for record in region.stages if record.cached
     }
     record = read_region(region.artefacts["region"].payload[REGION_PAYLOAD])
@@ -295,6 +297,7 @@ def test_val05_2wcd_mesh_against_the_reference_figures(walked: Walked) -> None:
         GEOMETRY_CASE.format(structure=walked.structure, geometry=walked.geometry),
     )
     result = run_case(case, store=walked.store, upto="mesh", write=False)
+    assert all(record.cached for record in result.stages if record.name != "case")
     mesh = result.artefacts["mesh"].summary
     quality = mesh["quality"]
     logger.info(

@@ -25,7 +25,6 @@ from nanopnp.mesh.adapter import from_ngsolve, read
 from nanopnp.mesh.primitives import TOL_NM
 from nanopnp.mesh.profile import PoreProfile, load_profile
 from nanopnp.mesh.quality import QUALITY_FLOOR
-from nanopnp.mesh.reference import ReferenceGeometry
 
 logger = logging.getLogger(__name__)
 
@@ -142,10 +141,12 @@ def test_ver53_the_generated_mesh_is_conformal_with_no_bilayer_in_the_fluid(at_1
     assert np.all(_inside_polygon(profile, centroids("protein")))
 
 
-def test_ver10_the_generated_mesh_matches_the_drawn_one_and_meets_the_band(at_1M) -> None:
+def test_ver10_the_generated_mesh_matches_the_drawn_one_and_meets_the_band(
+    at_1M, clya_reference_mesh
+) -> None:
     """Element count within 0.1 % of ``ReferenceGeometry``'s; quality in section 5.2.2's band."""
     summary = at_1M.artefacts["mesh"].summary
-    drawn = from_ngsolve(ReferenceGeometry.from_fixture().generate(check_quality=False))
+    drawn = from_ngsolve(clya_reference_mesh())
     generated = int(summary["elements"])
     assert abs(generated - drawn.element_count) <= ELEMENT_COUNT_TOLERANCE * drawn.element_count
     quality = summary["quality"]

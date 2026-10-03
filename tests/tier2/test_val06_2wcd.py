@@ -35,8 +35,6 @@ import pytest
 from nanopnp.io.case import load_case, resolve
 from nanopnp.io.run import RunResult, run_case
 from nanopnp.io.store import Store
-from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
-from nanopnp.structure.ensemble import AlignedEnsemble
 from nanopnp.validation.apbs import (
     TOLERANCE,
     ApbsProblem,
@@ -60,12 +58,11 @@ from nanopnp.validation.apbs import (
     trilinear,
     write_pqr,
 )
-from nanopnp.validation.geometry import register_by_centroid
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from conftest import Prepared2WCD
+    from conftest import Prepared2WCD, Seed2WCD
     from nanopnp.density.grid import RadialGrid
     from nanopnp.physics.models import ModelSolution
 
@@ -142,23 +139,22 @@ def _walk(case: Path, store: Store, root: Path, order: int) -> Solved:
 @pytest.fixture(scope="module")
 def walked(
     prepared_2wcd: Prepared2WCD,
+    seeded_2wcd: Seed2WCD,
     seeded_protonated_2wcd: Callable[[Path], Path],
     tmp_path_factory: pytest.TempPathFactory,
 ) -> Walked:
-    """Register 2WCD by its C-alpha centroid (WP22 D6), solve at P2 and P3, raster the solve."""
+    """Register 2WCD by its C-alpha centroid (WP22 D6), solve at P2 and P3, raster the solve.
+
+    Stages 1 to 6, the registration and the protonation are the session's seeds
+    (WP33 D2): the default-size mesh both orders solve on is the seeded one.
+    """
     from nanopnp.density.grid import read_grid
     from nanopnp.physics.models import PoissonModel
 
     root = tmp_path_factory.mktemp("2wcd-val06")
     store = Store(seeded_protonated_2wcd(root / "store"))
-    contour = root / "contour.case.yaml"
-    contour.write_text(CASE.format(pdb=prepared_2wcd.path, geometry="", order=2), encoding="utf-8")
-    stage1 = run_case(contour, store=store, upto="contour", write=False)
-    ensemble = AlignedEnsemble.read(stage1.artefacts["structure"].payload[ENSEMBLE_PAYLOAD])
-    centre = register_by_centroid(
-        ensemble.positions_nm, name=ensemble.name, resid=ensemble.resid, chain=ensemble.chain
-    )
-    geometry = f"geometry: {{membrane: {{centre_z_nm: {centre!r}}}}}\n"
+    centre = seeded_2wcd.centre_z_nm
+    geometry = seeded_2wcd.geometry
     solved = {}
     for order in (2, 3):
         case = root / f"p{order}.case.yaml"
@@ -166,6 +162,8 @@ def walked(
             CASE.format(pdb=prepared_2wcd.path, geometry=geometry, order=order), encoding="utf-8"
         )
         solved[order] = _walk(case, store, root, order)
+        cached = {record.name for record in solved[order].result.stages if record.cached}
+        assert {"structure", "density", "symmetry", "contour", "region", "mesh"} <= cached
     p2, p3 = solved[2], solved[3]
     assert p2.result.artefacts["mesh"].hash == p3.result.artefacts["mesh"].hash, (
         "P3 must solve on P2's mesh, so that e^_F is the order's alone"

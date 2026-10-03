@@ -11,7 +11,6 @@ recorded in the WP20 plan's Outcomes beside the prototype's (Design §6).
 from __future__ import annotations
 
 import logging
-from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -23,7 +22,7 @@ from nanopnp.io.store import Store
 from nanopnp.mesh.profile import PIPELINE_SOURCE, load_profile, min_feature_size
 
 if TYPE_CHECKING:
-    from conftest import Prepared2WCD
+    from conftest import Prepared2WCD, Seed2WCD
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +48,7 @@ def _case(tmp_path: Path, pdb: Path) -> Path:
 
 
 def test_ver51_2wcd_contour(
-    prepared_2wcd: Prepared2WCD, seeded_2wcd: Callable[[Path], Path], tmp_path: Path
+    prepared_2wcd: Prepared2WCD, seeded_2wcd: Seed2WCD, tmp_path: Path
 ) -> None:
     """2WCD runs to stage 4: the gate passes and the payload is a loadable profile.
 
@@ -59,11 +58,12 @@ def test_ver51_2wcd_contour(
     """
     result = run_case(
         _case(tmp_path, prepared_2wcd.path),
-        # Stages 1 to 3 from the session's seed; stage 4 runs here.
+        # Stages 1 to 4 from the session's seed, which ran stage 4's gate on this key.
         store=Store(seeded_2wcd(tmp_path / "store")),
         upto="contour",
         write=False,
     )
+    assert all(record.cached for record in result.stages if record.name != "case")
     seconds = {record.name: round(record.seconds, 2) for record in result.stages}
     logger.info("2WCD stage times: %s s", seconds)
     artefact = result.artefacts["contour"]
