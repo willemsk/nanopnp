@@ -20,6 +20,7 @@ import copy
 from collections.abc import Mapping
 from functools import lru_cache
 from pathlib import Path
+from typing import cast
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -245,6 +246,25 @@ def _parse(text: str) -> Mapping[str, object]:
     return raw
 
 
+def _fresh(node: object) -> object:
+    """Return a copy of a parsed YAML tree that shares no mutable container with it.
+
+    ``yaml.safe_load`` builds dicts, lists and sets around immutable scalars, so
+    copying the containers is a deep copy; anything else falls back to
+    :func:`copy.deepcopy`. A third of planning the §8.3 reference sweep went to
+    ``copy.deepcopy``'s memo bookkeeping on these trees (WP33 D12).
+    """
+    if isinstance(node, dict):
+        return {key: _fresh(value) for key, value in node.items()}
+    if isinstance(node, list):
+        return [_fresh(value) for value in node]
+    if isinstance(node, (str, int, float, bool, type(None))):
+        return node
+    if isinstance(node, set):
+        return {_fresh(value) for value in node}
+    return copy.deepcopy(node)
+
+
 def load_corrections(name_or_path: str | Path) -> CorrectionDocument:
     """Load and validate a correction parameter file by registered name or by path.
 
@@ -271,9 +291,10 @@ def load_corrections(name_or_path: str | Path) -> CorrectionDocument:
         if Path(name_or_path).suffix == ".yaml"
         else correction_file(str(name_or_path))
     )
-    # Copied, so no caller can mutate the cached tree; validation still runs on
-    # every call and every document returned is a fresh object.
-    raw = copy.deepcopy(_parse(path.read_text(encoding="utf-8")))
+    # Copied, so no caller can mutate the cached tree: the ``extra="allow"``
+    # blocks keep their extra values by reference. Validation still runs on every
+    # call and every document returned is a fresh object.
+    raw = cast("Mapping[str, object]", _fresh(_parse(path.read_text(encoding="utf-8"))))
     # The schema is checked before structural validation so a file written to a
     # future schema fails with a message naming the file and the version found,
     # rather than with a wall of field errors against a shape it never claimed.

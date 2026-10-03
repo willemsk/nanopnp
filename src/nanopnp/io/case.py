@@ -1037,13 +1037,33 @@ class FieldReference:
             thousands of them (FR-24).
         """
         try:
-            return TypeAdapter(self.annotation).validate_python(value)
+            return _adapter(self.annotation).validate_python(value)
         except ValidationError as error:
             reasons = "; ".join(problem["msg"] for problem in error.errors())
             raise CaseValidationError(
                 f"{self.path}: {value!r} is not a value this field accepts "
                 f"({_annotation_name(self.annotation)}): {reasons}"
             ) from None
+
+
+_ADAPTERS: dict[object, TypeAdapter[object]] = {}
+"""One :class:`~pydantic.TypeAdapter` per declared type, built on first use.
+
+Building an adapter compiles a core schema, and a sweep validates every
+assignment of every member: building them anew was a quarter of planning the
+§8.3 reference sweep (WP33 D12). An adapter holds no state between validations.
+"""
+
+
+def _adapter(annotation: FieldType) -> TypeAdapter[object]:
+    """Return the cached adapter for ``annotation``, or a new one if it is unhashable."""
+    try:
+        adapter = _ADAPTERS.get(annotation)
+    except TypeError:
+        return TypeAdapter(annotation)
+    if adapter is None:
+        adapter = _ADAPTERS[annotation] = TypeAdapter(annotation)
+    return adapter
 
 
 def _annotation_name(annotation: FieldType) -> str:
