@@ -10,10 +10,19 @@ from __future__ import annotations
 
 import logging
 import math
+from collections.abc import Iterator
 
-from ver58_sphere import errors_and_rates, solve_error
+import pytest
+from ver58_sphere import errors_and_rates, release, solve_error
 
 logger = logging.getLogger(__name__)
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _released() -> Iterator[None]:
+    """Release :mod:`ver58_sphere`'s caches once this file's tests are done."""
+    yield
+    release()
 
 
 def test_ver58_deposited_potential_converges_at_the_potentials_own_rate_off_the_axis() -> None:

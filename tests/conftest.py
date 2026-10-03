@@ -35,6 +35,7 @@ from __future__ import annotations
 import logging
 import math
 import os
+import pickle
 import shutil
 import warnings
 from collections.abc import Callable
@@ -81,6 +82,11 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
     ``--extended``. The development selection, which ``uv run pytest`` and the
     commit hook run, leaves them out; a file or test named on the command line runs
     whole, so ``uv run pytest tests/tier2/test_charge_2wcd.py`` needs no flag.
+
+    A ``slow`` test is never in the development selection, which ``addopts``
+    already bounds to ``not slow``: it is selected only by an explicit
+    ``-m slow``, and that request is kept, so the recorded measurements of an
+    ``extended`` file still run under CLAUDE.md's ``uv run pytest -m slow``.
     """
     if config.getoption(EXTENDED):
         return
@@ -91,7 +97,11 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
     }
     kept, left_out = [], []
     for item in items:
-        if item.get_closest_marker("extended") and Path(item.path).resolve() not in named:
+        if (
+            item.get_closest_marker("extended")
+            and not item.get_closest_marker("slow")
+            and Path(item.path).resolve() not in named
+        ):
             left_out.append(item)
         else:
             kept.append(item)
@@ -379,7 +389,11 @@ def seeded_2wcd(
         if not ready.is_file():
             seed.mkdir(parents=True, exist_ok=True)
             store = Store(seed / "store")
-            shutil.copytree(structure_2wcd / "artefacts", store.root / "artefacts")
+            # dirs_exist_ok: a worker whose seeding raised left the copy behind,
+            # and the next worker to take the lock must meet that error, not this.
+            shutil.copytree(
+                structure_2wcd / "artefacts", store.root / "artefacts", dirs_exist_ok=True
+            )
             case = _structure_case(seed, prepared_2wcd.path)
             stage4 = run_case(case, store=store, upto="contour", write=False)
             centre = register_2wcd(stage4.artefacts["structure"])
@@ -391,7 +405,18 @@ def seeded_2wcd(
                 ),
                 encoding="utf-8",
             )
-            run_case(meshed, store=store, upto=SEED_UPTO, write=False)
+            walked = run_case(meshed, store=store, upto=SEED_UPTO, write=False)
+            # The one place stages 4 to 6 of the default-size 2WCD are computed in a
+            # session: the modules that read them log a store lookup, not this.
+            logger.info(
+                "2WCD seed, centre_z_nm = %.4f nm: stage times %s s",
+                centre,
+                {
+                    record.name: round(record.seconds, 2)
+                    for record in (*stage4.stages, *walked.stages)
+                    if not record.cached
+                },
+            )
             centre_file.write_text(repr(centre), encoding="utf-8")
             ready.write_text("", encoding="utf-8")
     return Seed2WCD(store=seed / "store", centre_z_nm=float(centre_file.read_text("utf-8")))
@@ -409,8 +434,6 @@ def clya_reference_mesh(tmp_path_factory: pytest.TempPathFactory) -> Callable[[]
     bit, and the ``.vol`` text moves them by up to 5.6e-17 nm, which changes the
     mesh's geometry digest (measured, WP33 Outcomes).
     """
-    import pickle
-
     shared = shared_directory(tmp_path_factory)
     path = shared / "reference-mesh" / "mesh.pickle"
     with FileLock(str(shared / "reference-mesh.lock")):

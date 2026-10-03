@@ -8,14 +8,29 @@ from __future__ import annotations
 
 import logging
 import math
+from collections.abc import Iterator
 
 import numpy as np
 import pytest
-from ver58_sphere import SPHERE_NM, WIDTH_NM, Z_ATOM_NM, errors_and_rates, exact_potential_V
+from ver58_sphere import (
+    SPHERE_NM,
+    WIDTH_NM,
+    Z_ATOM_NM,
+    errors_and_rates,
+    exact_potential_V,
+    release,
+)
 
 from nanopnp.core.constants import ELEMENTARY_CHARGE, VACUUM_PERMITTIVITY
 
 logger = logging.getLogger(__name__)
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _released() -> Iterator[None]:
+    """Release :mod:`ver58_sphere`'s caches once this file's tests are done."""
+    yield
+    release()
 
 
 def test_ver58_the_closed_form_vanishes_on_the_sphere() -> None:
