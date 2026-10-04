@@ -62,6 +62,24 @@ class Measures:
 
     symmetry: Symmetry = "axisymmetric"
     element_order: int = 2
+    weight_extra_order: int = 0
+    """Orders added to every non-singular axisymmetric :meth:`volume` and :meth:`surface` term.
+
+    NUM-07's NOTE on the ``r`` weight: NGSolve does not count the coordinate when
+    it estimates an integrand's order, so those terms are integrated one order
+    short of their degree in ``r``. This is the seam WP34 measures that through
+    (D7, D8). No case key, model option or CLI flag reaches it, and at 0 every
+    form is assembled exactly as before; the decision is Phase 6's (section 8.2.6
+    F1). :meth:`integrate` and singular terms, already at NUM-07's floor, ignore it.
+    """
+
+    def __post_init__(self) -> None:
+        """Refuse a negative ``weight_extra_order``, which would lower NUM-07's quadrature."""
+        if self.weight_extra_order < 0:
+            raise ValueError(
+                f"weight_extra_order is {self.weight_extra_order}; it adds orders for the r "
+                "weight and cannot remove any (NUM-07 NOTE on the r weight)"
+            )
 
     @property
     def is_axisymmetric(self) -> bool:
@@ -81,6 +99,13 @@ class Measures:
         import ngsolve as ngs
 
         return ngs.x
+
+    def _form_bonus(self, *, singular: bool, extra: int) -> int:
+        """Return a :meth:`volume` or :meth:`surface` term's bonus, with ``weight_extra_order``."""
+        bonus = self.bonus_order(singular=singular, extra=extra)
+        if self.is_axisymmetric and not singular:
+            bonus += self.weight_extra_order
+        return bonus
 
     def bonus_order(self, *, singular: bool = False, extra: int = 0) -> int:
         """Return the quadrature bonus to add for one term.
@@ -146,7 +171,7 @@ class Measures:
 
         if "bonus_intorder" in kwargs:
             raise ValueError("pass extra_order, not bonus_intorder, so the 1/r guarantee holds")
-        bonus = self.bonus_order(singular=singular, extra=extra_order)
+        bonus = self._form_bonus(singular=singular, extra=extra_order)
         return integrand * self.radial_weight * ngs.dx(bonus_intorder=bonus, **kwargs)
 
     def surface(
@@ -167,7 +192,7 @@ class Measures:
 
         if "bonus_intorder" in kwargs:
             raise ValueError("pass extra_order, not bonus_intorder, so the 1/r guarantee holds")
-        bonus = self.bonus_order(singular=singular, extra=extra_order)
+        bonus = self._form_bonus(singular=singular, extra=extra_order)
         return integrand * self.radial_weight * ngs.ds(bonus_intorder=bonus, **kwargs)
 
     def integrate(
