@@ -98,11 +98,11 @@ its 1,200 target**, because it carries five unrelated items, each needing its ow
 >
 > **Outcome — D9 to D12.** D9's comment is in `test_public_api.py`, the set unchanged. D10: the
 > script is deleted and the mapping's header rewritten; `release.yml` matches the first column
-> only, so the reused `v0.5.0` names in the second are never waived. **D11 is the author's to
-> finish.** The tag resolves to `5abcf42` as expected, and the author approved the deletion, but
-> this session's git proxy refused the push (`unexpected disconnect`, twice); the branch push is
-> the only ref it admits. Run `git push origin :refs/tags/v0.5.0-alpha.5` before Phase 4 tags
-> `v0.5.0-alpha.1` (§8.2.6 F2). D12 as inventoried, with three readings: the README's release table
+> only, so the reused `v0.5.0` names in the second are never waived. **D11 is done, by the author.** The tag resolved to `5abcf42` as expected, and the author
+> approved the deletion. This session's git proxy refused the push (`unexpected disconnect`, twice),
+> because it admits the branch push only, so the author ran `git push origin
+> :refs/tags/v0.5.0-alpha.5` on 4 October 2026; `git ls-remote --tags origin` lists no `v0.5.0`
+> name since. D12 as inventoried, with three readings: the README's release table
 > keeps a v1.0 row for the stable release beside the new v0.5–v0.7 rows; FR-11's "after v1.0" in
 > the `boundary_layer` refusal is the backlog and stays; and `.knowledge/00` ruling 10 (PlyAB after
 > v1.0) is OPN-03's post-release generalisation and stays. No refusal test matched "v1.0".
