@@ -163,12 +163,17 @@ format or at another path is one (**added 28 September 2026**). None of the five
 supplies a field, so none of their hashes moved.
 
 A case whose charge stage 7 deposits, from `structure:` or `inputs.pqr`, hashes that charge's
-recipe instead: the protonation (the structure's or the PQR's contents, the pH, the force field
-and the titration) and the kernel's settings. The export lattice's spacing and the element order
-are discretisation and leave it unchanged. A case deriving `χ` from
-`charge.dielectric_transition_nm` hashes the width and the structure (**added 4 October 2026**,
-`SPECIFICATION.md` §8.2.5 E3). None of the five frozen cases does either, so none of their hashes
-moved.
+recipe instead: the structure's or the PQR's contents, the pH, the force field, the titration
+and the kernel's settings. The export lattice's spacing, the element order and the tolerances of
+the protonation's gates leave it unchanged. A case deriving `χ` from
+`charge.dielectric_transition_nm` hashes the width and the structure, and a case with a non-zero
+`charge.exclusion_offset_nm` hashes the offset (`SPECIFICATION.md` VAL-03, §8.2.5 E3). None of
+the five frozen cases does any of these, so none of their hashes moved.
+
+For such a case, run `validate case-hash` from the directory its paths resolve against, with the
+structure or PQR the run will use: the command hashes those files. `validate compare` and
+`validate export-golden` read the structure and protonation the run recorded instead, so they work
+from any directory and describe what was solved even if the file has changed since.
 
 ### The two declarations only you can make
 

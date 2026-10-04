@@ -83,6 +83,7 @@ __all__ = [
     "MANIFEST_NAME",
     "MODEL_OPTION_DISCRETISATION_KEYS",
     "PROBE_FIELDS",
+    "PROTONATION_VERDICT_KEYS",
     "Golden",
     "GoldenError",
     "GoldenManifest",
@@ -199,11 +200,25 @@ KERNEL_DISCRETISATION_KEYS: frozenset[str] = frozenset({"grid_spacing_nm"})
 """Entries of the charge-grid key's parameters that :func:`case_identity` leaves out.
 
 A deposited charge enters the identity by its stage-7 recipe (section 8.2.5 E3,
-WP34 D1): the protonation key and the kernel's parameters. Only the export
-lattice's spacing is removed, because it converges like any other mesh (D2), and
-the element order the deposit is assembled at never reaches these parameters.
-Everything else is taken whole rather than picked by name, so a parameter added
-to the kernel later reaches the identity by default.
+WP34 D1): the structure, the protonation and the kernel's parameters. Only the
+export lattice's spacing is removed, because it converges like any other mesh
+(D2), and the element order the deposit is assembled at never reaches these
+parameters. Everything else is taken whole rather than picked by name, so a
+parameter added to the kernel later reaches the identity by default.
+"""
+
+PROTONATION_VERDICT_KEYS: frozenset[str] = frozenset({"gates"})
+"""Entries of the protonation key's parameters that :func:`case_identity` leaves out.
+
+The gate tolerances (``registration_tolerance_A``, ``q_net_tolerance_e``,
+``minimum_calpha``) decide whether a protonation is *accepted*, never which
+charges it assigns, so tightening one must not turn every golden of a depositing
+case into the golden of another case. The rest of the key's parameters (the
+source, pH, force field, titration, PDB2PQR's arguments, the residue-name
+normalisation and the coordinate rounding) each move a charge or a position,
+and stay. The identity takes the stage keys' *parameters* and never their
+hashes, so an artefact schema string bumped by a refactor does not move it
+either.
 """
 
 AXIS_TOL_NM = 1e-6
@@ -267,13 +282,22 @@ def field_unit(field: str) -> str:
     )
 
 
-def case_identity(resolved: ResolvedCase) -> str:
+def case_identity(resolved: ResolvedCase, *, recorded: Mapping[str, Artefact] | None = None) -> str:
     """Return the ``case_hash`` a golden for this case must declare.
 
     Parameters
     ----------
     resolved
         The resolved frozen case, or any run of it at any discretisation.
+    recorded
+        A finished run's own ``structure`` and ``protonation`` artefacts, as
+        :attr:`~nanopnp.validation.runs.ReopenedRun.upstream` holds them. With
+        them, a depositing or deriving case's recipe is read from what the run
+        recorded, so the identity describes the structure the run solved, from
+        any working directory, even if the file has since moved or changed.
+        Without them, the recipe is built through the stages' own key functions
+        from the files the case names, which is how ``nanopnp validate
+        case-hash`` gives a golden's author the hash before any run exists.
 
     Returns
     -------
@@ -294,10 +318,12 @@ def case_identity(resolved: ResolvedCase) -> str:
         For a ``structure:`` case built without the ``structure`` extra, which
         stage 1 would refuse in the same words.
     nanopnp.structure.read.StructureInputError
-        If a depositing or deriving case's structure file is not on disk at the
-        path the case names, as stage 1's key would refuse it.
+        Without ``recorded``, if a depositing or deriving case's structure file
+        is not on disk at the path the case names, as stage 1's key would refuse it.
     FileNotFoundError
-        If a depositing case's ``inputs.pqr`` is not on disk.
+        Without ``recorded``, if a depositing case's ``inputs.pqr`` is not on disk.
+    KeyError
+        If ``recorded`` lacks an artefact the case's recipe needs.
 
     Notes
     -----
@@ -314,19 +340,25 @@ def case_identity(resolved: ResolvedCase) -> str:
 
     A charge that stage 7 *deposits*, from ``structure:`` or ``inputs.pqr``, is
     represented by its recipe instead (section 8.2.5 E3, closing OPN-07): a key
-    ``deposited_charge`` holding the protonation artefact's key hash, which
-    carries the structure's or the PQR's digest, the frames, the pH, the force
-    field and the titration, and the kernel's parameters without
+    ``deposited_charge`` holding the stage-1 key's parameters (the structure
+    block, each file by its digest), the protonation key's parameters without
+    :data:`PROTONATION_VERDICT_KEYS` and its input digests (the PQR's, when one
+    is supplied), and the kernel's parameters without
     :data:`KERNEL_DISCRETISATION_KEYS`. A ``chi`` that stage 7 *derives* adds a
-    key ``derived_eps_r`` holding its derivation parameters and the structure
-    key's hash; the geometry recipe stays out, as the mesh does (WP34 D3). Both
-    keys are built through the stages' own key functions, so no stage runs and
-    no lattice is read. The cost is hashing the structure files: 12 ms on the
-    9.2 MB deposited 2WCD, an upper bound for example 06's prepared chains A-L,
-    plus 0.7 s on the first call to import stage 1's module and MDAnalysis
-    (measured 2026-10-04, WP34 D6). ``fields.charge`` keeps
-    meaning "supplied", so no solve key moves (D5), and a case that neither
-    supplies, deposits nor derives a field keeps the identity it had (D4).
+    key ``derived_eps_r`` holding its derivation parameters and the stage-1
+    key's parameters; the density and contour recipe stays out, as the mesh
+    does (WP34 D3). A non-zero ``charge.exclusion_offset_nm`` adds a key
+    ``exclusion_shell`` holding the offset: the shell is a physics switch away
+    from the validated model, not a refinement of its geometry, and its
+    construction constants scale with the contour's size target, so they stay
+    out with it. The recipe is built through the stages' own key functions, or
+    read from ``recorded``, so no stage runs and no lattice is read. The cost
+    without ``recorded`` is hashing the structure files: 12 ms on the 9.2 MB
+    deposited 2WCD, an upper bound for example 06's prepared chains A-L, plus
+    0.7 s on the first call to import stage 1's module and MDAnalysis (WP34 D6).
+    ``fields.charge`` keeps meaning "supplied", so no solve key moves (D5), and
+    a case that neither supplies, deposits nor derives a field, and builds no
+    shell, keeps the identity it had (D4).
     """
     record: dict[str, object] = {
         key: value
@@ -344,11 +376,15 @@ def case_identity(resolved: ResolvedCase) -> str:
             for key, value in sorted(options.items())
             if key not in MODEL_OPTION_DISCRETISATION_KEYS
         }
-    record.update(_stage7_recipe(resolved))
+    record.update(_stage7_recipe(resolved, recorded))
+    if resolved.exclusion_offset_nm > 0.0:
+        record["exclusion_shell"] = {"offset_nm": resolved.exclusion_offset_nm}
     return content_hash(CASE_IDENTITY_SCHEMA, record)
 
 
-def _stage7_recipe(resolved: ResolvedCase) -> dict[str, Canonicalisable]:
+def _stage7_recipe(
+    resolved: ResolvedCase, recorded: Mapping[str, Artefact] | None
+) -> dict[str, Canonicalisable]:
     """Return the identity's record of what stage 7 makes rather than reads (E3, WP34 D1, D3).
 
     Empty for a case that neither deposits a charge nor derives ``chi``, so its
@@ -356,19 +392,28 @@ def _stage7_recipe(resolved: ResolvedCase) -> dict[str, Canonicalisable]:
     """
     if not (resolved.deposits_charge or resolved.derives_eps_r):
         return {}
-    upstream: dict[str, Artefact] = {}
-    if resolved.structure is not None:
-        upstream["structure"] = create("structure").key(  # type: ignore[attr-defined]
-            StageInputs(case=resolved.document)
-        )
+    structure = (
+        _upstream(resolved, recorded, "structure", {}) if resolved.structure is not None else None
+    )
+    upstream = {} if structure is None else {"structure": structure}
+    described = None if structure is None else dict(structure.parameters)
     recipe: dict[str, Canonicalisable] = {}
     if resolved.deposits_charge:
-        protonation = create("protonation").key(  # type: ignore[attr-defined]
-            StageInputs(case=resolved.document, upstream=upstream)
-        )
+        protonation = _upstream(resolved, recorded, "protonation", upstream)
         kernel = charge_grid_key(resolved, protonation).parameters
         recipe["deposited_charge"] = {
-            "protonation": protonation.hash,
+            "structure": described,
+            "protonation": {
+                key: value
+                for key, value in sorted(protonation.parameters.items())
+                if key not in PROTONATION_VERDICT_KEYS
+            },
+            # The PQR's digest; the structure's key hash is described above, by its parameters.
+            "inputs": {
+                key: value
+                for key, value in sorted(protonation.inputs.items())
+                if key != "structure"
+            },
             "kernel": {
                 key: value
                 for key, value in sorted(kernel.items())
@@ -376,12 +421,31 @@ def _stage7_recipe(resolved: ResolvedCase) -> dict[str, Canonicalisable]:
             },
         }
     if resolved.derives_eps_r:
-        structure = upstream.get("structure")
         recipe["derived_eps_r"] = {
             "derivation": derived_parameters(resolved),
-            "structure": structure.hash if structure is not None else None,
+            "structure": described,
         }
     return recipe
+
+
+def _upstream(
+    resolved: ResolvedCase,
+    recorded: Mapping[str, Artefact] | None,
+    name: str,
+    upstream: Mapping[str, Artefact],
+) -> Artefact:
+    """Return the ``name`` artefact the recipe is read from: the run's own, or its key."""
+    if recorded is None:
+        return create(name).key(  # type: ignore[attr-defined, no-any-return]
+            StageInputs(case=resolved.document, upstream=dict(upstream))
+        )
+    found = recorded.get(name)
+    if found is None:
+        raise KeyError(
+            f"case {resolved.name!r}: the recorded artefacts hold no {name!r} artefact, which its "
+            "identity is read from; reopen the run with the store it was made against"
+        )
+    return found
 
 
 def table_name(field: str, patch: str) -> str:

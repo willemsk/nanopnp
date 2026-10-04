@@ -30,7 +30,8 @@ from nanopnp.io.run import RUN_RECORD_FILENAME
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.core.scaling import Scales
-    from nanopnp.io.case import CaseDocument
+    from nanopnp.io.artefact import Artefact
+    from nanopnp.io.case import CaseDocument, ResolvedCase
     from nanopnp.io.store import Store
     from nanopnp.physics.models import ModelSolution
 
@@ -66,6 +67,12 @@ class ReopenedRun:
         :func:`~nanopnp.validation.compare.sample_on_probe` needs to return SI.
     quantities
         What the run *recorded* — the stage-11 summary, floats restored.
+    upstream
+        The run's own ``structure`` and ``protonation`` artefacts, read from the
+        store, for a case whose charge stage 7 deposits or whose ``chi`` it
+        derives; empty otherwise. The case identity is read from these, so it
+        describes the structure the run solved rather than whatever the path in
+        its case file holds now (VAL-03).
     """
 
     directory: Path
@@ -73,6 +80,7 @@ class ReopenedRun:
     solution: ModelSolution
     scales: Scales
     quantities: Mapping[str, Canonicalisable]
+    upstream: Mapping[str, Artefact]
 
 
 def reopen(directory: str | Path, *, store: Store | None = None) -> ReopenedRun:
@@ -164,6 +172,7 @@ def reopen(directory: str | Path, *, store: Store | None = None) -> ReopenedRun:
             "The run was made against another store, or the store has been pruned; point --store "
             "at the one the run used, or re-run the member"
         )
+    upstream = _upstream(source, record, holding, resolved) if needed is not None else {}
     solution = restore(
         warm_start_payload(artefact),
         case=document,
@@ -177,7 +186,42 @@ def reopen(directory: str | Path, *, store: Store | None = None) -> ReopenedRun:
         solution=solution,
         scales=mesh_unit_scales(resolved.electrolyte, resolved.concentration_M),
         quantities=dict(quantities) if isinstance(quantities, dict) else {},
+        upstream=upstream,
     )
+
+
+def _upstream(
+    source: Path, record: Mapping[str, Canonicalisable], holding: Store, resolved: ResolvedCase
+) -> dict[str, Artefact]:
+    """Return the run's stage-1 and protonation artefacts, which its identity is read from.
+
+    Raises
+    ------
+    RunError
+        If the run record names neither, or the store does not hold one it names.
+    """
+    names = (["structure"] if resolved.structure is not None else []) + (
+        ["protonation"] if resolved.deposits_charge else []
+    )
+    artefacts = record.get("artefacts", {})
+    found: dict[str, Artefact] = {}
+    for name in names:
+        entry = artefacts.get(name) if isinstance(artefacts, dict) else None
+        if not isinstance(entry, dict):
+            raise RunError(
+                f"{source} records no {name!r} artefact, which the case's identity is read from; "
+                "re-run the member"
+            )
+        artefact = holding.get(str(entry["schema"]), str(entry["hash"]))
+        if artefact is None:
+            raise RunError(
+                f"the store at {holding.root} holds no {entry['schema']} artefact "
+                f"{str(entry['hash'])[:12]}, which is the {name} {source} was solved from. The "
+                "run was made against another store, or the store has been pruned; point --store "
+                "at the one the run used, or re-run the member"
+            )
+        found[name] = artefact
+    return found
 
 
 def _record(directory: Path) -> Mapping[str, Canonicalisable]:

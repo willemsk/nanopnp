@@ -88,6 +88,19 @@ its 1,200 target**, because it carries five unrelated items, each needing its ow
 > unchanged (D4). [`test_validation_identity.py`](../../tests/tier1/test_validation_identity.py)
 > fails two of its four tests with `comsol.py` reverted.
 >
+> **Outcome — the review pass.** Three findings of `/code-review` on PR 72 changed D1, D3 and
+> D6, by the author's decision. (1) The recipe holds the stage keys' *parameters*, not their
+> hashes, and drops the protonation `gates`, so a tightened tolerance or a bumped artefact schema
+> no longer moves every depositing case's identity (`PROTONATION_VERDICT_KEYS`). (2) A non-zero
+> `charge.exclusion_offset_nm` enters as `exclusion_shell`: it is a physics switch, and D3's
+> "the geometry recipe stays out, as the mesh does" holds for the density and contour settings
+> but not for it. Example 07 with the shell at 0.25 nm hashed as without it. (3) A finished run's
+> identity is read from its own recorded stage-1 and protonation artefacts
+> (`ReopenedRun.upstream`), so `validate compare` and `export-golden` work from any directory and
+> describe the structure that was solved, not the file on disk now. `validate case-hash` still
+> hashes the files, because a golden's author needs the hash before any run. No frozen case
+> deposits, derives or builds a shell, so no golden's hash moved.
+>
 > **Outcome — D7, the seam.** `Measures.weight_extra_order` is added in `Measures._form_bonus`,
 > used by `volume` and `surface` only, so `integrate`, `bonus_order`, `integration_order` and
 > singular terms are untouched and a negative value is refused. `poisson`'s own
