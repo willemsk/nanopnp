@@ -396,7 +396,7 @@ Phase 4 (E1). Its last commit on `main` is tagged `v0.4.0` (E5).
 
 | # | Decision | Owner and status |
 |---|---|---|
-| Versioning | The scheme, and whether the existing tags move | **Settled by the author, 30 September 2026** (§8.2.4 D1): phase = minor, and the existing tags are re-created under their new names through `.github/scripts/renumber-tags.sh` |
+| Versioning | The scheme, and whether the existing tags move | **Settled by the author, 30 September 2026** (§8.2.4 D1): phase = minor, and the existing tags are re-created under their new names through `.github/scripts/renumber-tags.sh`, which ran once and was deleted by [WP34](wp34-phase-3-close.md) D10. The `v0.5.0` names are reused for Phase 4 (§8.2.5 E2, §8.2.6 F2) |
 | Kernel and deposition | Literal PHY-16, or the closed form deposited on the mesh | **Settled by the author, 30 September 2026** (§8.2.4 D2). PHY-16 to PHY-18 are amended in this plan's commit |
 | APBS | How VAL-06 runs | **Settled by the author, 30 September 2026** (§8.2.4 D3): `apbs-binary` in CI, a gated like-for-like leg and a recorded leg |
 | Protonation of an ensemble | Per frame or once, and the form of `inputs.pqr` | **Settled by the author, 30 September 2026** (§8.2.4 D4): per frame, with a single- or multi-MODEL PQR |
@@ -404,10 +404,10 @@ Phase 4 (E1). Its last commit on `main` is tagged `v0.4.0` (E5).
 | VAL-06 tolerance | The agreement required of the gated leg | **Settled by the author, 1 October 2026**, on [WP29](wp29-val06-apbs.md)'s argument: 3 % max, 1 % rms, 1.5 % on the axis, within a measured refinement budget of half of each (§7.4 NOTE on VAL-06) |
 | Stage numbering | Where `protonation` sits in §5.2's numbered table | **Settled by [WP27](wp27-protonation.md) D1**: it shares number 7 with `charge` and runs before it, so stages 8–12 keep their numbers (§5.2 design note) |
 | `axis_cutoff_nm` on the producer path | Applied for parity, or refused away from its default | **Settled by [WP28](wp28-charge-deposition.md) D10**: refused away from its default on every path, naming PHY-18 (§5.3.1 NOTE on `charge.smearing`) |
-| OPN-07 | What identifies a deposited charge in a golden's `case_hash` | **Representation settled by the author, 3 October 2026** (§8.2.5 E3): the stage-7 recipe, implemented by [WP34](wp34-phase-3-close.md). Found by the WP28 review (PR #57, finding #7). The identity currently ignores the structure, pH and smearing. Needed before any golden or VAL-16/VAL-17 recorded leg is compared on a deposited charge. The constraints are in §10 |
-| NUM-07 order | Whether the coupled models' `r`-weighted forms gain one quadrature order (WP28 D13) | **Settled by the author, 3 October 2026** (§8.2.5 E4): measured in WP34, decided in Phase 4 |
-| Phase 4's release | v1.0 or a pre-stable minor | **Settled by the author, 3 October 2026** (§8.2.5 E2): v0.5, reusing the retired names; stable v1.0's content is OPN-08 |
-| The close without the archive | Whether Phase 3 waits for the ensemble legs | **Settled by the author, 3 October 2026** (§8.2.5 E1): it closes on tiers 1 and 2, and the archive-dependent numbers are carried to Phase 4 |
+| OPN-07 | What identifies a deposited charge in a golden's `case_hash` | **Closed by [WP34](wp34-phase-3-close.md), 4 October 2026**, on the author's representation (§8.2.5 E3): the stage-7 recipe, as `deposited_charge` and `derived_eps_r` in the identity's record. Found by the WP28 review (PR #57, finding #7). §10 OPN-07 records the test |
+| NUM-07 order | Whether the coupled models' `r`-weighted forms gain one quadrature order (WP28 D13) | **Measured by [WP34](wp34-phase-3-close.md)**, and the numbers are in the NUM-07 NOTE. **Decided in Phase 6** with VAL-16 and VAL-17 (§8.2.5 E4, §8.2.6 F1). Carried open |
+| Phase 4's release | v1.0 or a pre-stable minor | **Settled by the author, 3 October 2026** (§8.2.5 E2): v0.5, reusing the retired names; stable v1.0's content is OPN-08. **Amended 4 October 2026** (§8.2.6 F1, F2): the validated release is v0.7 and Phase 6, and v0.5 is Phase 4, polish and user testing |
+| The close without the archive | Whether Phase 3 waits for the ensemble legs | **Settled by the author, 3 October 2026** (§8.2.5 E1): it closes on tiers 1 and 2, and the archive-dependent numbers are carried to Phase 6's report (§8.2.6 F1) |
 | The phases after this one | Where the validation release sits, and what precedes it | **Settled by the author, 4 October 2026** (§8.2.6 F1–F5): Phase 4 polishes and user-tests the physics, numerics, API and CLI (v0.5), opened by a modularity exploration; Phase 5 is the graphical interface (v0.6), opened by a design and requirements document, mockups and a visual-feedback workflow; validation is Phase 6 (v0.7). The schema and API may change until v1.0 |
 | OPN-04 | Which mutation list produced the ClyA-AS structure | **Author, open.** Needed for the provenance of `Q_net`, not for any gate. WP27 records `structure.source.variant` beside `Q_net` |
 
@@ -439,7 +439,7 @@ The phase is complete when:
 1. **Tiers 1 and 2 pass**, including every earlier phase's gate.
 2. **VER-01 and VER-02 pass on the deployed mesh** for 2WCD at Tier 2, with the legs and the worst
    plane in the manifest, and on the ensemble at Tier 3, recorded. **The ensemble half is waived to
-   Phase 4** (§8.2.5 E1).
+   Phase 6** (§8.2.5 E1, §8.2.6 F1).
 3. **VAL-06's gated leg passes** within the tolerance WP29 states.
 4. **A case with `structure:` and no `inputs.mesh` or `inputs.charge` runs from the CLI to a
    charged solve**, and its manifest records every stage's artefact hash, `Q_net` and the

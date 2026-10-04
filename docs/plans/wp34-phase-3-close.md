@@ -75,6 +75,38 @@ its 1,200 target**, because it carries five unrelated items, each needing its ow
 | D15 | Phases 4 and 5 | **Not planned in WP34.** `current.md` points at `/wp-plan phase-4` after `v0.4.0`, and the Phase 4 plan's first package is the modularity exploration, whose report precedes the user-testing protocol (F3). Phase 5's design document, mockups and visual-feedback workflow are planned by `/wp-plan phase-5` once v0.5 is released (F5) | F3 makes the modularity report the input to the rest of Phase 4's planning, so planning that phase inside a closing package would decide its work packages before their evidence exists |
 | D14 | Release | WP34's `CHANGELOG.md` section is `v0.4.0`, and `CITATION.cff` names `0.4.0` with its date. After merge, the last commit on `main` is tagged `v0.4.0` alone (E5) | `CONTRIBUTING.md` *Versions and releases*; `release.yml`'s CITATION check |
 
+> **Outcome — the identity, D1–D6** (4 October 2026). `validation/comsol.py` `_stage7_recipe`
+> builds `deposited_charge` and `derived_eps_r` through `create("structure").key` and
+> `create("protonation").key`, so the structure key's own `structure_parameters` and
+> `ProtonationStage._key` decide what they hold, and through `charge_grid_key` for the kernel
+> minus `KERNEL_DISCRETISATION_KEYS = {"grid_spacing_nm"}`. A `structure:` case now needs the
+> `structure` extra and its files on disk to have an identity, which stage 1 needs anyway, and is
+> refused with stage 1's `MissingExtraError` otherwise. D6: 12 ms per call on the 9.2 MB deposited
+> 2WCD, an upper bound for example 06's prepared chains A–L, plus 0.7 s on the first call to import
+> stage 1 and MDAnalysis. `test_case_schema_v2.py`'s v1 stand-in gains `deposits_charge` and
+> `derives_eps_r` as `False`, which v1 could not be otherwise; the corpus's recorded identities are
+> unchanged (D4). [`test_validation_identity.py`](../../tests/tier1/test_validation_identity.py)
+> fails two of its four tests with `comsol.py` reverted.
+>
+> **Outcome — D7, the seam.** `Measures.weight_extra_order` is added in `Measures._form_bonus`,
+> used by `volume` and `surface` only, so `integrate`, `bonus_order`, `integration_order` and
+> singular terms are untouched and a negative value is refused. `poisson`'s own
+> `RADIAL_WEIGHT_ORDER` stacks with it. The localising test is Tier 2,
+> `test_num07_weight_extra_order_closes_the_r_weight_deficit` in `test_axis_quadrature.py`: the
+> weighted P2 stiffness of `u = z²` on an axis-touching mesh is 1.0 × 10⁻⁶ short at 0 and exact to
+> 3 × 10⁻¹⁵ at +1.
+>
+> **Outcome — D9 to D12.** D9's comment is in `test_public_api.py`, the set unchanged. D10: the
+> script is deleted and the mapping's header rewritten; `release.yml` matches the first column
+> only, so the reused `v0.5.0` names in the second are never waived. **D11 is the author's to
+> finish.** The tag resolves to `5abcf42` as expected, and the author approved the deletion, but
+> this session's git proxy refused the push (`unexpected disconnect`, twice); the branch push is
+> the only ref it admits. Run `git push origin :refs/tags/v0.5.0-alpha.5` before Phase 4 tags
+> `v0.5.0-alpha.1` (§8.2.6 F2). D12 as inventoried, with three readings: the README's release table
+> keeps a v1.0 row for the stable release beside the new v0.5–v0.7 rows; FR-11's "after v1.0" in
+> the `boundary_layer` refusal is the backlog and stays; and `.knowledge/00` ruling 10 (PlyAB after
+> v1.0) is OPN-03's post-release generalisation and stays. No refusal test matched "v1.0".
+
 ### Work items
 
 1. `validation/comsol.py`: `deposited_charge` and `derived_eps_r` (D1–D6). Build the keys through
