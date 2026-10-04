@@ -53,7 +53,7 @@ desktop shell, and the user documentation with seven worked examples are impleme
 Meshes are supplied from outside, generated for an idealised pore or the ClyA reference geometry,
 or built from a PDB structure by the geometry pipeline (Phase 2). Fixed charge is supplied as a
 field, or protonated with PDB2PQR and PROPKA and deposited on the mesh by the charge pipeline
-(Phase 3, toward v0.4). Nothing is a validated release yet. The comparison against the paper's published results gates v0.7.
+(Phase 3, v0.4). Nothing is a validated release yet. The comparison against the paper's published results gates v0.7.
 The case schema and the Python API may still change until the stable v1.0 (`SPECIFICATION.md` §8.2.6 F4).
 
 | Release | Phase | Scope | State |
@@ -61,7 +61,7 @@ The case schema and the Python API may still change until the stable v1.0 (`SPEC
 | v0.1 | 0 | Spike: the coupled model on an analytic pore, the continuation ladder, analytic benchmarks | **released**, [`v0.1.0`](CHANGELOG.md#010---2026-09-02) |
 | v0.2 | 1 | Solver core: external meshes and fields, QoI extraction, frozen case schema, API, CLI, sweeps | **released**, [`v0.2.0`](CHANGELOG.md#020---2026-09-24) |
 | v0.3 | 2 | Geometry pipeline from a PDB structure: alignment, density, symmetry reduction, contour, mesh | **released**, [`v0.3.0`](CHANGELOG.md#030---2026-09-30) |
-| v0.4 | 3 | Charge pipeline: PDB2PQR charges, smeared fixed charge and dielectric; the paper's pipeline end to end | in progress, [Phase 3 plan](docs/plans/phase-3-charge-pipeline.md) |
+| v0.4 | 3 | Charge pipeline: PDB2PQR charges, smeared fixed charge and dielectric; the paper's pipeline end to end | **released**, [`v0.4.0`](CHANGELOG.md#040---2026-10-04) |
 | v0.5 | 4 | Polish and user testing: the architecture's modularity explored, then the physics, numerics, API and CLI tested by a user | planned |
 | v0.6 | 5 | Graphical interface: a design and requirements document with mockups, then the desktop application | planned |
 | v0.7 | 6 | Validated release: the published results reproduced, V&V suite in CI, tutorials, JOSS submission, DOI archive | planned |

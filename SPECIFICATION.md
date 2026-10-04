@@ -2418,9 +2418,11 @@ models keep the default here, and whether their forms should gain the same order
 every number they produce, so it is a decision with a measurement, not a side effect of WP26
 (`.knowledge/06-numerics-fem.md` §2.2). **Measured by WP34, 4 October 2026**, through `Measures.weight_extra_order`, a seam no case key,
 option or flag reaches (`tests/tier2/test_axis_weight_order.py`, `slow`, stabilisation `none`). On
-VER-18's coupled manufactured solution at `maxh` 0.4, 0.2 and 0.1 nm, one extra order leaves every
-observed rate unchanged, about 3 for the P2 fields and 2.7 for the P1 pressure, and lowers the error
-at fixed `h`. At 0.1 nm the error ratio is 0.42 for `c_Cl−`, 0.77 for `c_Na+`, 0.98 for `φ` and `u`
+VER-18's coupled manufactured solution at `maxh` 0.4, 0.2 and 0.1 nm, one extra order leaves the
+finest-pair rates at about 3 for the P2 fields and 2.7 for the P1 pressure (`c_Cl−` 3.19 → 3.01,
+`c_Na+` 3.11 → 3.03), and lowers the error at fixed `h`. The coarse-pair rates of the
+concentrations fall, `c_Cl−` 3.98 → 3.65 and `c_Na+` 3.55 → 2.99: at 0 the quadrature error is a
+larger share of the coarse-mesh error, and its faster decay inflates the observed rate. At 0.1 nm the error ratio is 0.42 for `c_Cl−`, 0.77 for `c_Na+`, 0.98 for `φ` and `u`
 and 0.91 for `p`. So it is a consistency constant of the same order as the discretisation error, as
 this NOTE predicts. On example 05's frozen case, 0.5 M at +50 mV on the reference mesh, each state
 is a root of its own form (`|R|` about 2 × 10⁻¹¹) and violates the other's at 7.3 × 10⁻⁴. The

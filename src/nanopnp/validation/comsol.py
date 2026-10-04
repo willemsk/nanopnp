@@ -290,6 +290,14 @@ def case_identity(resolved: ResolvedCase) -> str:
     ------
     nanopnp.charge.fields.FieldDocumentError
         If a supplied field's document is invalid, as stage 7 would refuse it.
+    nanopnp.core.stages.MissingExtraError
+        For a ``structure:`` case built without the ``structure`` extra, which
+        stage 1 would refuse in the same words.
+    nanopnp.structure.read.StructureInputError
+        If a depositing or deriving case's structure file is not on disk at the
+        path the case names, as stage 1's key would refuse it.
+    FileNotFoundError
+        If a depositing case's ``inputs.pqr`` is not on disk.
 
     Notes
     -----
@@ -319,12 +327,6 @@ def case_identity(resolved: ResolvedCase) -> str:
     (measured 2026-10-04, WP34 D6). ``fields.charge`` keeps
     meaning "supplied", so no solve key moves (D5), and a case that neither
     supplies, deposits nor derives a field keeps the identity it had (D4).
-
-    Raises
-    ------
-    nanopnp.core.stages.MissingExtraError
-        For a ``structure:`` case built without the ``structure`` extra, which
-        stage 1 would refuse in the same words.
     """
     record: dict[str, object] = {
         key: value

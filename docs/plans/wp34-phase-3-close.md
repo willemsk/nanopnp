@@ -97,7 +97,7 @@ its 1,200 target**, because it carries five unrelated items, each needing its ow
 > 3 × 10⁻¹⁵ at +1.
 >
 > **Outcome — D8, measured** (4 October 2026). The numbers are in the NUM-07 NOTE and
-> `.knowledge/06` §2.2. (a) +1 leaves every rate of VER-18 unchanged and lowers the error at fixed
+> `.knowledge/06` §2.2. (a) +1 leaves VER-18's finest-pair rates unchanged and lowers the error at fixed
 > `h`, most for the concentrations: at 0.1 nm, ×0.42 for `c_Cl−` and ×0.77 for `c_Na+`. (b) On
 > example 05 the states differ by 4.9 × 10⁻⁷, and no compared number moves by more than
 > 7.6 × 10⁻⁸ relative (the EOF; `I`, `G` and `t₊` by 10⁻¹⁰ or less). Two changes to the test as

@@ -53,7 +53,7 @@ The release gathers nine work packages, each tagged except the last:
   its files on disk, to have an identity.
 - `Measures.weight_extra_order`, the seam NUM-07's measurement runs through. No case key reaches it,
   and at 0 every form is unchanged. The measurement is in the NUM-07 NOTE. One extra quadrature
-  order for the `r` weight leaves VER-18's rates unchanged and lowers its error at fixed `h`. On
+  order for the `r` weight leaves VER-18's finest-pair rates unchanged and lowers its error at fixed `h`. On
   example 05 it moves no compared number by more than 7.6 × 10⁻⁸ relative. Phase 6 decides.
 - `SPECIFICATION.md` §8.2.5 (E1–E5) and §8.2.6 (F1–F6), and the Phase 3 end-of-phase report.
 
