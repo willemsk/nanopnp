@@ -27,6 +27,7 @@ asserts: VER-18's rates, and example 05's route agreement.
 from __future__ import annotations
 
 import contextlib
+import importlib
 import json
 import logging
 import math
@@ -38,8 +39,10 @@ from pathlib import Path
 import ngsolve as ngs
 import numpy as np
 import pytest
+from test_mms import BOUNDARIES, LENGTH_NM, MESH_SIZES_NM, RADIUS_NM, _model
 
 from nanopnp.cli import main
+from nanopnp.core.constants import AVOGADRO
 from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
 from nanopnp.mesh.primitives import CylinderGeometry
@@ -47,6 +50,7 @@ from nanopnp.mesh.profile import load_profile
 from nanopnp.physics.measures import AXISYMMETRIC, Measures
 from nanopnp.physics.models import POTENTIAL, PRESSURE, VELOCITY, ModelSolution
 from nanopnp.post.qoi import ROUTE_AGREEMENT_TOLERANCE
+from nanopnp.solve import state as solve_state
 from nanopnp.validation.examples import copy_example
 from nanopnp.validation.mms import ManufacturedSolution, convergence_rates, weighted_l2_error
 from nanopnp.validation.runs import reopen
@@ -68,9 +72,6 @@ PORE_Z_NM = (-1.85, 12.25)
 SURFACE_LAYER_NM = 0.5
 """``is_inside_pore_surface`` is ``wdf.wd <= 0.5 nm`` (``.knowledge/09`` C)."""
 
-AVOGADRO = 6.02214076e23
-"""CODATA 2018, exact (``core/constants``)."""
-
 STAGE_MODULES = (
     "nanopnp.solve.stage",
     "nanopnp.solve.state",
@@ -78,12 +79,15 @@ STAGE_MODULES = (
     "nanopnp.post.stage",
     "nanopnp.charge.stage",
 )
-"""Every module that builds the solve's measures from its own ``AXISYMMETRIC``.
+"""Every module that binds the shared ``AXISYMMETRIC``.
 
 Rebinding the name in each is how the in-process run takes the seam without a
-case key, model option or flag reaching it (D7). The fixture refuses a module
-that no longer binds the shared instance, so a refactor cannot leave a stage at
-0 unnoticed.
+case key, model option or flag reaching it (D7). It reaches only a lookup made
+at run time, such as each stage's ``replace(AXISYMMETRIC, ...)``: a default
+argument was bound at import, so ``nanopnp.solve.continuation``, whose binding
+is only the defaults of ``Rung.measures`` and ``default_ladder``, is unaffected,
+and the stages hand the ladder their measures explicitly. The fixture refuses a
+module that no longer binds the shared instance.
 """
 
 
@@ -92,8 +96,6 @@ that no longer binds the shared instance, so a refactor cannot leave a stage at
 
 def _mms_errors(measures: Measures) -> dict[str, list[float]]:
     """Return VER-18's L2 errors on its three levels, assembled with ``measures``."""
-    from test_mms import BOUNDARIES, LENGTH_NM, MESH_SIZES_NM, RADIUS_NM, _model
-
     model = _model()
     manufactured = ManufacturedSolution.polynomial(model)
     exact = manufactured.coefficient_functions()
@@ -123,8 +125,6 @@ def _mms_errors(measures: Measures) -> dict[str, list[float]]:
 
 def test_num07_weight_order_on_the_coupled_manufactured_solution() -> None:
     """D8 (a): L2 errors and rates at 0 and +1; at 0, VER-18's rates are reproduced."""
-    from test_mms import MESH_SIZES_NM, _model
-
     errors = {extra: _mms_errors(Measures(weight_extra_order=extra)) for extra in ORDERS}
     for name in errors[0]:
         rates = {extra: convergence_rates(errors[extra][name], MESH_SIZES_NM) for extra in ORDERS}
@@ -150,8 +150,6 @@ def test_num07_weight_order_on_the_coupled_manufactured_solution() -> None:
 @pytest.fixture
 def weight_order(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     """Rebind every stage module's ``AXISYMMETRIC`` to carry ``weight_extra_order = 1``."""
-    import importlib
-
     raised = replace(AXISYMMETRIC, weight_extra_order=1)
     for name in STAGE_MODULES:
         module = importlib.import_module(name)
@@ -264,16 +262,14 @@ def _solve_example_05(root: Path, mesh: Path) -> tuple[dict[str, float], dict[st
 
 def _restored(example: Path, extra: int) -> ModelSolution:
     """Restore the run in ``example`` with its residual assembled at ``weight_extra_order``."""
-    import nanopnp.solve.state as state
-
     run = next(path.parent for path in (example / "store").rglob("run.json"))
-    held = state.AXISYMMETRIC
-    state.AXISYMMETRIC = replace(AXISYMMETRIC, weight_extra_order=extra)
+    held = solve_state.AXISYMMETRIC
+    solve_state.AXISYMMETRIC = replace(AXISYMMETRIC, weight_extra_order=extra)
     try:
         with contextlib.chdir(example):
             return reopen(run, store=Store(example / "store")).solution
     finally:
-        state.AXISYMMETRIC = held
+        solve_state.AXISYMMETRIC = held
 
 
 def _cross_residuals(examples: Mapping[int, Path]) -> dict[tuple[int, int], float]:
@@ -313,16 +309,16 @@ def test_num07_weight_order_on_example_05(tmp_path: Path, request: pytest.Fixtur
     mesh = tmp_path / "clya-reference.msh"
     # The CLI configures logging with force=True, which is right for a command and
     # removes pytest's capture handler here; put it back, or this test logs nothing.
-    root = logging.getLogger()
-    handlers, level = list(root.handlers), root.level
+    root_logger = logging.getLogger()
+    handlers, level = list(root_logger.handlers), root_logger.level
     try:
         assert main(["mesh", "reference", "--out", str(mesh)]) == 0
     finally:
-        for handler in list(root.handlers):
-            root.removeHandler(handler)
+        for handler in list(root_logger.handlers):
+            root_logger.removeHandler(handler)
         for handler in handlers:
-            root.addHandler(handler)
-        root.setLevel(level)
+            root_logger.addHandler(handler)
+        root_logger.setLevel(level)
     results: dict[int, tuple[dict[str, float], dict[str, float]]] = {}
     examples: dict[int, Path] = {}
     for extra in ORDERS:

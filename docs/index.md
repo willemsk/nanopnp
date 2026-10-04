@@ -20,11 +20,11 @@ electro-osmotic flow rate. It is built around three rules:
 - **The model is data and configuration.** The fitted corrections live in data files, and
   classical PNP-NS is ePNP-NS with its corrections switched off, not a second code path.
 
-!!! warning "Pre-alpha: toward the v0.4 scope"
+!!! warning "Pre-alpha: the v0.4 scope"
     The solver core, the case file, the command line, parameter sweeps, provenance, the desktop
     shell and the v0.3 geometry pipeline, from a PDB structure to a mesh, are delivered. The v0.4
     charge pipeline, which protonates the structure and deposits its charge on the mesh, is
-    delivered on `main` as alpha releases toward v0.4. Nothing here is a validated release yet, and the comparison against the paper's
+    released as v0.4.0. Nothing here is a validated release yet, and the comparison against the paper's
     published results gates v0.7, the Phase 6 release.
 
 ## Where to start

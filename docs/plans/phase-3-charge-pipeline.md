@@ -490,7 +490,7 @@ executed README (VER-46) in the gate.
 | Cost, deposition | Stage 7 on 2WCD, cold: 7.0 s (sum 2.67, deposit 3.37, gates 0.68) and 0.93 GB peak. The kernel over 50 frames: 91.2 s, 1.82 s per frame, 0.93 GB peak, Q −60.000000000 e | `test_charge_2wcd.py` (slow) |
 | FR-20 | One class and one registration, against the target of one file: a model so defined runs from a case file to stage 12, its state and summary bit-identical to `pnp`'s (VER-56) | `test_model_interface.py` |
 | OPN-07 | Closed. pH 5, 7.5, 9 and `sharpness` 0.8 give four identities | `test_validation_identity.py` |
-| NUM-07, coupled models at +1 order | Rates unchanged, error lower at fixed `h`; on example 05 no compared number moves more than 7.6 × 10⁻⁸ relative. Decided in Phase 6 | NUM-07 NOTE; `test_axis_weight_order.py` (slow) |
+| NUM-07, coupled models at +1 order | Finest-pair rates unchanged, error lower at fixed `h`; on example 05 no compared number moves more than 7.6 × 10⁻⁸ relative. Decided in Phase 6 | NUM-07 NOTE; `test_axis_weight_order.py` (slow) |
 
 **Carried to Phase 6** (§8.2.5 E1, §8.2.6 F1). These need the author's archive, and their Tier-3
 tests run when it is supplied: VER-01 and VER-02 on the ensemble; `Q_net` per frame (mean and

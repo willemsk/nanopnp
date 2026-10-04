@@ -96,7 +96,7 @@ and the source the error is 3.4e-2 `V_T`: the source is short too. `poisson` ass
 
 | Case | At 0 → at +1 |
 |---|---|
-| VER-18 MMS, L2 error at `maxh` 0.1 nm | `c_Cl-` 4.61e-7 → 1.95e-7; `c_Na+` 6.33e-7 → 4.88e-7; `phi` 7.14e-6 → 7.03e-6; `u` 2.94e-6 → 2.88e-6; `p` 2.65e-4 → 2.41e-4. Rates over 0.4/0.2/0.1 unchanged (about 3; `p` about 2.7) |
+| VER-18 MMS, L2 error at `maxh` 0.1 nm | `c_Cl-` 4.61e-7 → 1.95e-7; `c_Na+` 6.33e-7 → 4.88e-7; `phi` 7.14e-6 → 7.03e-6; `u` 2.94e-6 → 2.88e-6; `p` 2.65e-4 → 2.41e-4. Finest-pair rates unchanged (about 3; `p` about 2.7); the coarse-pair rates of `c_Cl-` and `c_Na+` fall from 3.98 and 3.55 to 3.65 and 2.99, inflated at 0 by the quadrature error |
 | Example 05, 0.5 M, +50 mV, reference mesh | States differ by 4.9e-7 relative. `I` 2.414877e-10 A and `G` 4.829754e-9 S move by 1.7e-12 relative, `t+` 0.3746647 by 1.3e-10, `Q_EOF` 2.3335e-21 m³/s by 7.6e-8. In-pore (lumen within -1.85 ≤ z ≤ 12.25 nm, element centroids): `<c_Na+>` 0.50292 M, `<c_Cl->` 0.49632 M, mobile charge 1.530 e (1.098 e within 0.5 nm of the wall), all by ≤ 1e-9 |
 
 The example-05 change is real and not solver noise: each converged state is a root of its own form
