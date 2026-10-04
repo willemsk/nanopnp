@@ -19,6 +19,63 @@ Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before t
 version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
 
+## [0.4.0] - 2026-10-04
+
+**Phase 3, the charge pipeline.** A PDB entry, or a supplied PQR, is protonated with PDB2PQR and
+PROPKA, and its fixed charge is deposited on the deployed mesh as the closed-form azimuthal mean of
+each atom's Gaussian. It is gated for conservation per plane and handed to the solve. The run goes
+from a structure to a current. VAL-06 compares our Poisson with APBS on 2WCD: max 0.41 %, rms
+0.10 % and axis 0.23 %, against 3 %, 1 % and 1.5 %. The phase closes on its Tier 1 and Tier 2
+evidence. The ensemble legs that need the author's archive are carried to Phase 6
+(`SPECIFICATION.md` §8.2.5 E1, §8.2.6 F1). The end-of-phase report is in
+[docs/plans/phase-3-charge-pipeline.md](docs/plans/phase-3-charge-pipeline.md).
+
+The release gathers nine work packages, each tagged except the last:
+
+- WP26, the physics-model interface (`v0.4.0-alpha.1`);
+- WP27, protonation and the PQR artefact (`v0.4.0-alpha.2`);
+- WP28, fixed-charge deposition on the deployed mesh (`v0.4.0-alpha.3`);
+- WP29, VAL-06 against APBS (`v0.4.0-alpha.4`);
+- WP30, the derived dielectric and the ion-exclusion shell (`v0.4.0-alpha.5`);
+- WP31, the charge pipeline in the desktop shell (`v0.4.0-alpha.6`);
+- WP32, documentation increment 3 and example 07 (`v0.4.0-alpha.7`);
+- WP33, the test suite's duration (`v0.4.0-alpha.8`);
+- WP34, the phase close, described here and tagged `v0.4.0` alone (§8.2.5 E5).
+
+### Added
+
+- **A golden's case identity names a deposited charge and a derived `χ`** (VAL-03; §8.2.5 E3;
+  closes OPN-07). A depositing case's identity carries the protonation key and the kernel's
+  parameters. A deriving case's carries the dielectric transition and the structure's key. pH,
+  force field, titration, `smearing.sharpness`, the structure and a PQR's contents now move it.
+  The export lattice's spacing and the element order do not. Non-producer identities, every solve
+  key and `fields.charge` are unchanged. A `structure:` case now needs the `structure` extra, and
+  its files on disk, to have an identity.
+- `Measures.weight_extra_order`, the seam NUM-07's measurement runs through. No case key reaches it,
+  and at 0 every form is unchanged. The measurement is in the NUM-07 NOTE. One extra quadrature
+  order for the `r` weight leaves VER-18's rates unchanged and lowers its error at fixed `h`. On
+  example 05 it moves no compared number by more than 7.6 × 10⁻⁸ relative. Phase 6 decides.
+- `SPECIFICATION.md` §8.2.5 (E1–E5) and §8.2.6 (F1–F6), and the Phase 3 end-of-phase report.
+
+### Changed
+
+- **The phases are re-planned** (§8.2.6). Phase 4 is polish and user testing (v0.5), opened by an
+  exploration of the architecture's modularity. Phase 5 is the graphical interface (v0.6). The
+  validated release is Phase 6 (v0.7). Stable v1.0 follows, its content the author's (OPN-08). The
+  repository's mentions of the validated release now say v0.7 and Phase 6, including FR-21's
+  `geometry.analyte` refusal, which now names v0.7.
+- **The case schema and the public API may change in any phase before v1.0** (§8.2.6 F4,
+  superseding "stable from v0.2 onward"). Each break will be listed here with its migration.
+- `with_section` stays out of `nanopnp.PUBLIC`. Phase 4's API pass reviews it with the rest of the
+  surface.
+
+### Removed
+
+- `.github/scripts/renumber-tags.sh`, which ran once on 30 September 2026. Re-run after Phase 4's
+  first tag, it would retire live tags. `.github/renumbered-tags.txt` stays for `release.yml`. The
+  stray retired tag `v0.5.0-alpha.5` is deleted from origin, and the `v0.5.0` names are now Phase
+  4's (§8.2.5 E2, §8.2.6 F2).
+
 ## [0.4.0-alpha.8] - 2026-10-03
 
 WP33: the tier 1–2 suite's duration cut without losing a check, under the §7.6 NOTE on a gated

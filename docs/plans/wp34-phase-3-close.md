@@ -1,6 +1,6 @@
 # WP34 — Phase 3 closed: the open items resolved, and the end-of-phase report
 
-**Status: planned, not started.** Written 3 October 2026, amended 4 October 2026, after WP33 merged (`main` at `4375797`,
+**Status: delivered, 4 October 2026.** Written 3 October 2026, amended 4 October 2026, after WP33 merged (`main` at `4375797`,
 tagged `v0.4.0-alpha.8`). WP34 inherits everything the [current brief](current.md) lists as not to
 be re-decided, and in particular:
 
