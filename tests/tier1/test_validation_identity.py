@@ -21,7 +21,10 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from nanopnp.charge.protonation import ProtonationStage
+from nanopnp.io.artefact import StageInputs
 from nanopnp.io.case import loads_case, resolve
+from nanopnp.structure.stage import StructureStage
 from nanopnp.validation.comsol import case_identity
 
 if TYPE_CHECKING:
@@ -129,3 +132,10 @@ def test_val03_ver23_solve_key_and_stage7_key_unchanged(
 
     assert resolved.deposits_charge
     assert not resolved.derives_eps_r
+
+    # Stage-7 recipe key is computable, deterministic, and 64-char hash (D1).
+    structure_artefact = StructureStage().key(StageInputs(case=doc))
+    protonation = ProtonationStage._key(
+        StageInputs(case=doc, upstream={"structure": structure_artefact}), resolved
+    )
+    assert len(protonation.hash) == 64

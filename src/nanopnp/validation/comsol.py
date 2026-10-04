@@ -65,7 +65,9 @@ from nanopnp.density.grid import (
     RadialGrid,
     read_grid,
 )
+from nanopnp.io.artefact import StageInputs
 from nanopnp.io.case import CaseValidationError, render_problems
+from nanopnp.structure.stage import StructureStage
 from nanopnp.validation.probe import ProbeDocument, ProbePatch, load_probe
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
@@ -319,14 +321,9 @@ def case_identity(resolved: ResolvedCase) -> str:
 
     structure_artefact = None
     if (deposits_charge or derives_eps_r) and structure is not None and document is not None:
-        from nanopnp.io.artefact import StageInputs
-        from nanopnp.structure.stage import StructureStage
-
         structure_artefact = StructureStage().key(StageInputs(case=document))
 
     if deposits_charge and document is not None:
-        from nanopnp.io.artefact import StageInputs
-
         upstream = {"structure": structure_artefact} if structure_artefact is not None else {}
         inputs = StageInputs(case=document, upstream=upstream)
         protonation = ProtonationStage._key(inputs, resolved)
