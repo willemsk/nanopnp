@@ -27,6 +27,7 @@ asserts: VER-18's rates, and example 05's route agreement.
 from __future__ import annotations
 
 import contextlib
+import json
 import logging
 import math
 import shutil
@@ -44,7 +45,7 @@ from nanopnp.io.store import Store
 from nanopnp.mesh.primitives import CylinderGeometry
 from nanopnp.mesh.profile import load_profile
 from nanopnp.physics.measures import AXISYMMETRIC, Measures
-from nanopnp.physics.models import POTENTIAL, PRESSURE, VELOCITY
+from nanopnp.physics.models import POTENTIAL, PRESSURE, VELOCITY, ModelSolution
 from nanopnp.post.qoi import ROUTE_AGREEMENT_TOLERANCE
 from nanopnp.validation.examples import copy_example
 from nanopnp.validation.mms import ManufacturedSolution, convergence_rates, weighted_l2_error
@@ -244,10 +245,11 @@ def _numbers(quantities: Mapping[str, object], prefix: str = "") -> dict[str, fl
     return flat
 
 
-def _solve_example_05(root: Path, mesh: Path) -> tuple[dict[str, float], dict[str, float]]:
-    """Run example 05 in its own copy and store; return its quantities and in-pore averages.
+def _solve_example_05(root: Path, mesh: Path) -> tuple[dict[str, float], dict[str, float], Path]:
+    """Run example 05 in its own copy and store.
 
-    The case names its mesh relative to the working directory, as the README runs
+    Returns its quantities, its in-pore averages and the copy's directory. The
+    case names its mesh relative to the working directory, as the README runs
     it, so the run is made from the copy.
     """
     example = copy_example(
@@ -257,23 +259,94 @@ def _solve_example_05(root: Path, mesh: Path) -> tuple[dict[str, float], dict[st
     store = Store(example / "store")
     with contextlib.chdir(example):
         result = run_case(Path(CASE_NAME), store=store)
-        return _numbers(result.quantities), _in_pore(result.directory, store)
+        return _numbers(result.quantities), _in_pore(result.directory, store), example
+
+
+def _restored(example: Path, extra: int) -> ModelSolution:
+    """Restore the run in ``example`` with its residual assembled at ``weight_extra_order``."""
+    import nanopnp.solve.state as state
+
+    run = next(path.parent for path in (example / "store").rglob("run.json"))
+    held = state.AXISYMMETRIC
+    state.AXISYMMETRIC = replace(AXISYMMETRIC, weight_extra_order=extra)
+    try:
+        with contextlib.chdir(example):
+            return reopen(run, store=Store(example / "store")).solution
+    finally:
+        state.AXISYMMETRIC = held
+
+
+def _cross_residuals(examples: Mapping[int, Path]) -> dict[tuple[int, int], float]:
+    """Return ``|R_form(state)|`` over the free dofs, for each variant's form on each state.
+
+    The third route the comparison needs: integrated quantities that barely move
+    are what a seam that never reached the solve would also give. Each state must
+    be a root of its own form and not of the other's.
+    """
+    states = {k: _restored(examples[k], 0).state.vec.FV().NumPy().copy() for k in ORDERS}
+    norms: dict[tuple[int, int], float] = {}
+    for form_extra in ORDERS:
+        solution = _restored(examples[0], form_extra)
+        free = np.array(list(solution.space.FreeDofs()), dtype=bool)
+        vector = solution.state.vec
+        out = vector.CreateVector()
+        for state_extra in ORDERS:
+            vector.FV().NumPy()[:] = states[state_extra]
+            solution.residual.Apply(vector, out)
+            norms[(form_extra, state_extra)] = float(np.linalg.norm(out.FV().NumPy()[free]))
+    relative = np.linalg.norm(states[1] - states[0]) / np.linalg.norm(states[0])
+    logger.info(
+        "NUM-07 example 05: states differ by %.3e relative; |R| form 0 on 0 %.3e, on 1 %.3e; "
+        "form +1 on 0 %.3e, on 1 %.3e",
+        relative,
+        norms[(0, 0)],
+        norms[(0, 1)],
+        norms[(1, 0)],
+        norms[(1, 1)],
+    )
+    return norms
 
 
 def test_num07_weight_order_on_example_05(tmp_path: Path, request: pytest.FixtureRequest) -> None:
     """D8 (b): example 05's quantities and in-pore averages at 0 and +1, logged."""
     # The README's own mesh command, once; both variants solve on its bytes.
     mesh = tmp_path / "clya-reference.msh"
-    assert main(["mesh", "reference", "--out", str(mesh)]) == 0
+    # The CLI configures logging with force=True, which is right for a command and
+    # removes pytest's capture handler here; put it back, or this test logs nothing.
+    root = logging.getLogger()
+    handlers, level = list(root.handlers), root.level
+    try:
+        assert main(["mesh", "reference", "--out", str(mesh)]) == 0
+    finally:
+        for handler in list(root.handlers):
+            root.removeHandler(handler)
+        for handler in handlers:
+            root.addHandler(handler)
+        root.setLevel(level)
     results: dict[int, tuple[dict[str, float], dict[str, float]]] = {}
+    examples: dict[int, Path] = {}
     for extra in ORDERS:
         root = tmp_path / f"extra-{extra}"
         root.mkdir()
         if extra:
             request.getfixturevalue("weight_order")
-        results[extra] = _solve_example_05(root, mesh)
+        quantities, in_pore, examples[extra] = _solve_example_05(root, mesh)
+        results[extra] = (quantities, in_pore)
     base_q, base_p = results[0]
     raised_q, raised_p = results[1]
+    norms = _cross_residuals(examples)
+    record = tmp_path / "num07-example-05.json"
+    record.write_text(
+        json.dumps(
+            {
+                **{str(k): v for k, v in results.items()},
+                "residuals": {f"form {f} on state {k}": n for (f, k), n in norms.items()},
+            },
+            indent=1,
+        ),
+        "utf-8",
+    )
+    logger.info("NUM-07 example 05: every number is in %s", record)
     for label, base, raised in (("quantity", base_q, raised_q), ("in-pore", base_p, raised_p)):
         for key in sorted(base.keys() & raised.keys()):
             a, b = base[key], raised[key]
@@ -288,3 +361,7 @@ def test_num07_weight_order_on_example_05(tmp_path: Path, request: pytest.Fixtur
                 relative,
             )
     assert base_q["route_agreement.relative_difference"] < ROUTE_AGREEMENT_TOLERANCE
+    # The seam reached the solve: each state is a root of its own form, not the other's.
+    for extra in ORDERS:
+        other = 1 - extra
+        assert norms[(extra, extra)] < 1e-3 * norms[(extra, other)], norms
