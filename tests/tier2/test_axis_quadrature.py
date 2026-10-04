@@ -97,3 +97,42 @@ def test_num04_the_measure_applies_the_radial_weight(axis_mesh: ngs.Mesh) -> Non
     assert Measures(symmetry="axisymmetric").integrate(ngs.CF(1.0), axis_mesh) == pytest.approx(
         0.5, rel=1e-12
     )
+
+
+def _weighted_stiffness_energy(mesh: ngs.Mesh, measures: Measures) -> tuple[float, float]:
+    """Return ``a(u, u)`` of the r-weighted stiffness for ``u = z^2``, assembled and exact.
+
+    ``u`` is in the P2 space, so the only error left is quadrature: the integrand
+    ``4 z^2 r`` is of degree 3, and NGSolve estimates a P2 gradient-gradient term
+    at order 2 without counting the ``r`` weight (NUM-07 NOTE on the ``r`` weight).
+    """
+    space = ngs.H1(mesh, order=2)
+    trial, test = space.TnT()
+    u = ngs.GridFunction(space)
+    u.Set(ngs.y**2)
+    form = ngs.BilinearForm(measures.volume(ngs.grad(trial) * ngs.grad(test))).Assemble()
+    assembled = ngs.InnerProduct(u.vec, form.mat * u.vec)
+    exact = ngs.Integrate(4.0 * ngs.y**2 * ngs.x, mesh, order=8)
+    return float(assembled), float(exact)
+
+
+def test_num07_weight_extra_order_closes_the_r_weight_deficit(axis_mesh: ngs.Mesh) -> None:
+    """WP34 D7: one extra order makes the weighted P2 stiffness exact; 0 leaves it as it was."""
+    default, exact = _weighted_stiffness_energy(axis_mesh, Measures())
+    raised, _ = _weighted_stiffness_energy(axis_mesh, Measures(weight_extra_order=1))
+    assert abs(default - exact) / exact > 1e-9, "the default should be one order short"
+    assert abs(raised - exact) / exact < 1e-13
+
+
+def test_num07_weight_extra_order_leaves_the_rest_alone() -> None:
+    """D7: at 0 every bonus is as before; singular terms, planar terms and integrals ignore it."""
+    default = Measures()
+    raised = Measures(weight_extra_order=1)
+    planar = Measures(symmetry="planar", weight_extra_order=1)
+    assert default._form_bonus(singular=False, extra=0) == default.bonus_order()
+    assert raised._form_bonus(singular=False, extra=1) == 2
+    assert raised._form_bonus(singular=True, extra=0) == default.bonus_order(singular=True)
+    assert planar._form_bonus(singular=False, extra=0) == 0
+    assert raised.integration_order() == default.integration_order()
+    with pytest.raises(ValueError, match="weight_extra_order"):
+        Measures(weight_extra_order=-1)
