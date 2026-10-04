@@ -2416,7 +2416,18 @@ one extra order: on the three-layer capacitor of VER-56, whose exact solution th
 the error is 0.38 `V_T` (3 %) next to the axis at the default and 1.1 × 10⁻¹³ with it. The coupled
 models keep the default here, and whether their forms should gain the same order is open: it moves
 every number they produce, so it is a decision with a measurement, not a side effect of WP26
-(`.knowledge/06-numerics-fem.md` §2.2).
+(`.knowledge/06-numerics-fem.md` §2.2). **Measured by WP34, 4 October 2026**, through `Measures.weight_extra_order`, a seam no case key,
+option or flag reaches (`tests/tier2/test_axis_weight_order.py`, `slow`, stabilisation `none`). On
+VER-18's coupled manufactured solution at `maxh` 0.4, 0.2 and 0.1 nm, one extra order leaves every
+observed rate unchanged, about 3 for the P2 fields and 2.7 for the P1 pressure, and lowers the error
+at fixed `h`. At 0.1 nm the error ratio is 0.42 for `c_Cl−`, 0.77 for `c_Na+`, 0.98 for `φ` and `u`
+and 0.91 for `p`. So it is a consistency constant of the same order as the discretisation error, as
+this NOTE predicts. On example 05's frozen case, 0.5 M at +50 mV on the reference mesh, each state
+is a root of its own form (`|R|` about 2 × 10⁻¹¹) and violates the other's at 7.3 × 10⁻⁴. The
+states differ by 4.9 × 10⁻⁷ relative. The current, the conductance and `t₊` move by about 10⁻¹⁰
+relative or less, the electro-osmotic flow by 7.6 × 10⁻⁸, and the in-pore concentrations, mobile
+charge and mean potential by 10⁻⁹ or less. At the reference mesh, the order is invisible in every
+number VAL-16 and VAL-17 compare. Phase 6 decides (§8.2.5 E4, §8.2.6 F1).
 
 ### 6.3 Scaling
 
