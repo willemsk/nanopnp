@@ -74,6 +74,7 @@ Each is recorded in full where it points.
 | The desktop shell, its hooks and the probe bundle | The WP24 and WP31 plans and Outcomes; `gui/`; `.knowledge/07` §5; ADR-004 |
 | The deposition and stage 7 | The WP28 plan and Outcomes; `charge/stage.py` |
 | Planning Phase 4 | §8.1 and §8.2.6 F3–F6; `okf-knowledge-bundle.md`; the Phase 3 end-of-phase report |
+| Removing pre-v1 historical prose | [`history-prose-review.md`](history-prose-review.md): reviewed, awaiting the author's checklist; its own branch after `v0.4.0` |
 | Case schema and supply chains | §5.3.1 NOTEs; `io/case.py` |
 
 The Outcomes of a delivered plan override its decisions table, so read the two together.
