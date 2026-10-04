@@ -13,8 +13,8 @@ governs, and nothing here is evidence that an unmerged branch has shipped.
   - [WP34](wp34-phase-3-close.md), the phase close (§8.2.5 E1–E5, §8.2.6 F1–F5), is **planned**,
     to be tagged `v0.4.0`. **Next: `/wp-implement`** on WP34.
 - **Re-planned 4 October 2026** (§8.2.6). Phase 4, `v0.5.0`: polish and user testing of the
-  physics, numerics, API and CLI, opened by a modularity exploration (F3); after `v0.4.0`,
-  **`/wp-plan phase-4`**. Phase 5, `v0.6.0`: the GUI, opened by a design and requirements document,
+  physics, numerics, API and CLI, opened by a modularity exploration (F3), then the knowledge base
+  as an OKF bundle ([F6](okf-knowledge-bundle.md)); after `v0.4.0`, **`/wp-plan phase-4`**. Phase 5, `v0.6.0`: the GUI, opened by a design and requirements document,
   mockups and a visual-feedback workflow (F5). Phase 6, `v0.7.0`: validation, the former Phase 4
   (F1). Stable v1.0 is OPN-08.
 
@@ -37,8 +37,8 @@ Each is recorded in full where it points.
   is unchanged (VER-59). → §4.4 NOTE on the derived solid fraction; §5.2.1 NOTE; WP30 Outcomes.
 - **The shell reads every charge number from a stage's artefact**, and the bundle collects its
   Python LGPL payloads as source. → ADR-004 packaging NOTE; VER-60; the WP31 Outcomes.
-- **No payload or stage-7 summary records wall-clock time** (VER-23; WP32 D15).
-- **A gated test gets cheaper only by the §7.6 NOTE's four levers.** → the WP33 Outcomes.
+- **No payload or stage-7 summary records wall-clock time** (VER-23). **A gated test gets cheaper
+  only by the §7.6 NOTE's four levers** (WP33).
 - **Tier 3 compares the published I–V and in-pore averages**, gating v0.7 (VAL-16, VAL-17; F1).
 - **Layers read a model's declaration, never its name or class** (VER-56). → §5.4.3 NOTE.
 - **Only `poisson` adds a quadrature order for the `r` weight.** WP34 measures the coupled
@@ -59,9 +59,9 @@ Each is recorded in full where it points.
 
 - **The data behind the paper's figures**, for VAL-16 and VAL-17 at v0.7 (§8.2.4 D6) and the
   ensemble legs E1 waived.
-- **The Read the Docs project**, and **`$NANOPNP_REFERENCE_DATA` on the nightly runner**.
+- **The Read the Docs project**; **`$NANOPNP_REFERENCE_DATA` on the nightly runner**.
 - **OPN-04**, the ClyA-AS mutation list. **OPN-08**, what stable v1.0 contains.
-- **The archived PQRs** for WP27–WP29's Tier 3, none of which has run yet.
+- **The archived PQRs** for WP27–WP29's Tier 3, not yet run.
 
 ## Dependencies To Read On Demand
 
