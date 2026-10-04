@@ -155,7 +155,7 @@ A flip turns an amide or an imidazole ring through 180 degrees about the bond to
 it, and the group is not symmetric about that bond, so a flipped atom lands
 0.13-0.40 Å from every atom it was given: on 2WCD at pH 7.5, 140 heavy atoms, in
 44 asparagines, 92 glutamines and one histidine, and no other atom moved
-(``.knowledge/07`` section 3, measured 1 October 2026). They are not held to
+(``.knowledge/07`` section 3, measured). They are not held to
 the registration tolerance; the rest of each residue fixes where it is.
 """
 
@@ -589,7 +589,7 @@ def restore_propka_annotations() -> bool:
     evaluated lazily and are an attribute of the class only, so on an instance
     the lookup raises ``AttributeError`` and every PROPKA run fails before its
     first residue. QR-09 holds the package to 3.11-3.14, and no PROPKA release
-    fixes it (3.5.1 is the latest, 1 October 2026), so the instance is given a
+    fixes it (3.5.1 is the latest), so the instance is given a
     fallback that answers that one name from its class and nothing else.
 
     Detected, not version-checked: where an instance already has

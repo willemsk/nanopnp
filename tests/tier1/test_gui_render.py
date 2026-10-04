@@ -242,7 +242,7 @@ def test_ver44_the_document_has_one_rendering_path_and_names_its_renderer() -> N
 def test_ver44_the_renderer_source_is_one_constant() -> None:
     """The address is read through one function, and it is the shipped file.
 
-    WP15 OQ-1 was ruled on 22 September 2026: the renderer ships with the package,
+    WP15 OQ-1 ruled: the renderer ships with the package,
     so the document needs no network. The source is a ``file:`` URL to a file
     that exists, and it is read through one function so that the viewer, the
     probe and these tests cannot disagree about it.

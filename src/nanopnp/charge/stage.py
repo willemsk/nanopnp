@@ -374,7 +374,7 @@ def gate_fields(
     which reads them to key its own artefact — gates the grids it has rather than
     reading them a second time. The reference table is 77 MB of text, and a
     second parse of it is a second chance to disagree as well as a second pass
-    over it (about 1.6 s for an 84 MB table, measured 2026-09-28).
+    over it (about 1.6 s for an 84 MB table).
 
     Parameters
     ----------
@@ -951,7 +951,7 @@ def _derived_entries(
 ) -> tuple[dict[str, Canonicalisable], dict[str, str]]:
     """Return a derived ``chi``'s ``fields`` entry and upstream hash, or nothing (WP30 D5).
 
-    Nothing at ``delta = 0``, so every key that existed before WP30 is unchanged.
+    Nothing at ``delta = 0``, so a case without a derived ``chi`` keeps its keys unchanged.
     """
     if region is None:
         return {}, {}

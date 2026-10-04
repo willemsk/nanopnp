@@ -1365,7 +1365,7 @@ TOLERANCE = Norms(max=0.03, rms=0.01, axis=0.015)
 """VAL-06's tolerance: 3 % max, 1 % rms and 1.5 % on the axis.
 
 ``SPECIFICATION.md`` section 7.4, the VAL-06 row and its NOTE; ruled by the author on
-1 October 2026 on the WP29 plan's *Design* section 4.
+the WP29 plan's *Design* section 4.
 """
 
 

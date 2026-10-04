@@ -106,7 +106,7 @@ V2_MOVED: dict[str, str] = {
     "geometry.membrane.eps_r": "physics.solid_permittivities.membrane",
 }
 """v1 path to the v2 entry its value moves to. ``physics.solid_permittivities`` is
-the one place a solid's permittivity is set (PHY-20; author ruling, 24 September 2026)."""
+the one place a solid's permittivity is set (PHY-20; author ruling)."""
 
 FieldType: TypeAlias = Any
 """The type the case schema declares at one dotted path.
@@ -1843,12 +1843,10 @@ _UNREAD_CHARGE_KEYS: dict[str, str] = {}
 
 Each is refused set away from its default, naming the stage, until the package
 that delivers the stage removes its entry (section 5.3.1 NOTE on the protonation
-keys). ``charge:`` itself left the table of unrun sections in WP27, when the
-``protonation`` stage made ``ph``, ``forcefield`` and ``titration`` runnable, and
-``smearing`` left it in WP28, when stage 7's deposition came to read it. Empty
-since WP30, whose stages 5 and 7 read ``exclusion_offset_nm`` and
-``dielectric_transition_nm``; kept, because the rule outlives the last key that
-needed it.
+keys). The table is empty: the ``protonation`` stage reads ``ph``,
+``forcefield`` and ``titration``, stage 7's deposition reads ``smearing``, and
+stages 5 and 7 read ``exclusion_offset_nm`` and ``dielectric_transition_nm``; kept,
+because the rule outlives the last key that needed it.
 """
 
 PROFILE_KEYS: tuple[str, ...] = ("exclusion_offset_nm", "dielectric_transition_nm")
@@ -1873,9 +1871,9 @@ _UNCONSUMED_INPUTS: dict[str, str] = {}
 """``inputs:`` keys ``nanopnp/case/v2`` accepts ahead of the stage that reads them.
 
 Each is refused naming that stage until the stage is delivered, and the package
-that delivers it removes its entry (section 5.3.1 NOTE on ``inputs:``). Empty
-since WP27, whose ``protonation`` stage reads ``inputs.pqr``; kept, because the
-rule outlives the last key that needed it.
+that delivers it removes its entry (section 5.3.1 NOTE on ``inputs:``). Empty:
+the ``protonation`` stage reads ``inputs.pqr``; kept, because the rule outlives
+the last key that needed it.
 """
 
 
@@ -2443,7 +2441,7 @@ def _check_charge(document: CaseDocument) -> None:
     ------
     UnsupportedCaseSection
         Naming the stage, for a ``charge:`` key a later package's stage reads
-        (:data:`_UNREAD_CHARGE_KEYS`, empty since WP30).
+        (:data:`_UNREAD_CHARGE_KEYS`, currently empty).
     CaseValidationError
         Naming the keys: the refusals of :func:`_check_profile_keys`;
         ``artefact:``, ``groups`` or a format other than ``pqr`` on

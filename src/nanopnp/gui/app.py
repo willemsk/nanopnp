@@ -19,10 +19,10 @@ Charge tab walks it on through stage 7, as the Geometry tab's own build (WP31 D2
 **This release's increment.** QR-11 asks each release for a usable graphical
 surface over the functionality that exists at it: the schema-generated editor,
 run control, the result panel, the live convergence plot and the ``webgui``
-field viewer, five tabs over one run; since WP24, Phase 2's increment, the
-Geometry tab, which builds stages 1 to 6 and edits the contour by hand; and since
-WP31, Phase 3's, the Charge tab, which builds stage 7 and shows the protonation
-table, the charge map, the deployed field and the conservation report.
+field viewer, five tabs over one run; the Geometry tab (Phase 2), which builds
+stages 1 to 6 and edits the contour by hand; and the Charge tab (Phase 3), which
+builds stage 7 and shows the protonation table, the charge map, the deployed
+field and the conservation report.
 
 **The plot and the viewer are fed from the same two places the rest is.** The
 convergence panel draws the :class:`~nanopnp.gui.convergence.ConvergenceModel`

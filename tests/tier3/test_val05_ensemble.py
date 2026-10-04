@@ -148,7 +148,7 @@ def test_val05_ensemble_against_the_reference_polygon(
     the isolevel sweep (D8) and the conditioning's share are recorded first, so
     a miss still leaves them in the log.
 
-    The run of 30 September 2026 measured ε_G = -5.56 % and failed here. Phase 2
+    The earlier run measured ε_G = -5.56 % and failed here. Phase 2
     closed on the author's waiver (``SPECIFICATION.md`` §8.2.4 D7), and the
     tolerance stands, so this test keeps failing on the archive until the method
     or the reference changes. That failure is the record.

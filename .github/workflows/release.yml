@@ -70,18 +70,8 @@ jobs:
             echo "::notice::$TAG builds as $built, a version from before hatch-vcs; no distributions are attached"
           fi
           # A milestone cut under hatch-vcs must also be the version CITATION.cff
-          # names, or "Cite this repository" cites the wrong release. A tag
-          # re-created by the renumbering of 30 September 2026 (SPECIFICATION.md
-          # section 2.7) sits on a commit whose CITATION.cff names its old
-          # version, so the check is waived for the tags the default branch's
-          # .github/renumbered-tags.txt lists.
-          renumbered=false
-          if git show "origin/$DEFAULT_BRANCH:.github/renumbered-tags.txt" 2>/dev/null |
-               awk -v t="$TAG" '$1 == t { f = 1 } END { exit !f }'; then
-            renumbered=true
-            echo "::notice::$TAG was renumbered; its commit's CITATION.cff names the old version"
-          fi
-          if [[ $milestone == true && $matches == true && $renumbered == false ]]; then
+          # names, or "Cite this repository" cites the wrong release.
+          if [[ $milestone == true && $matches == true ]]; then
             cited=$(sed -n 's/^version: *//p' CITATION.cff | tr -d "\"'")
             if [[ $cited != "$version" ]]; then
               echo "::error::CITATION.cff names version $cited, not $version"

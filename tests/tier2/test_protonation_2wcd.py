@@ -42,7 +42,7 @@ GOLDEN_Q_NET_E = -60
 """``Q_net`` of the prepared dodecamer at pH 7.5, CHARMM and PROPKA, in stage 1's frame.
 
 -5 e per chain, as measured in the crystal frame while planning (``.knowledge/07``
-section 3), re-measured on 1 October 2026 through the stage and pinned.
+section 3), re-measured through the stage and pinned.
 """
 
 CHAINS = 12

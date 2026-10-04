@@ -19,8 +19,7 @@ Report's own summary: *"the full implementation of the ePNP-NS equations … all
 variables, functions, geometries, solver settings and mesh settings needed to reproduce the
 results."*
 
-**Pagination correction.** This file previously recorded the ESI as 143 pages. 143 is the ToC page
-number of §5 *Results*; the document runs to p. 162. **[verified]**
+**Pagination.** The document runs to p. 162; 143 is the ToC page number of §5 *Results*. **[verified]**
 
 All values below are transcribed from the report. Anything the report does not print is marked
 **NOT IN REPORT** — meaning COMSOL's default applied and was not exported, not that the setting

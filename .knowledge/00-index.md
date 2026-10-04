@@ -126,6 +126,6 @@ Answers given directly by the author. Where they conflict with a printed source,
    velocities. Unreachable from this environment; the author holds the model.
    → `05-analyte-and-forces.md` §10.
 
-The permittivity fit parameters (formerly open here) are **settled**: the model used Gavish
+The permittivity fit parameters are **settled**: the model used Gavish
 (30.08, 11.5), which govern; ruling 2 above and `SPECIFICATION.md` §4.6 erratum 6 record the
 arithmetic. → `09-comsol-reference-settings.md` §D3.

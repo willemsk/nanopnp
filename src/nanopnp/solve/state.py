@@ -1,7 +1,7 @@
 """Persisting a converged state, and restoring the operator it solves (FR-27, QR-08).
 
-Stage 10's payload used to be ``state.gfu`` — NGSolve's own serialisation of a
-``GridFunction``. It round-trips the numbers and nothing else, which is enough
+Stage 10's payload is not ``state.gfu``, NGSolve's own serialisation of a
+``GridFunction``: that round-trips the numbers and nothing else, which is enough
 to look at a field and not enough to do anything with one. A restored solution
 has to be able to answer the NUM-24 and NUM-25 routes, and NUM-25 is *the
 assembled residual evaluated on the constrained degrees of freedom*: without the

@@ -1,9 +1,9 @@
 # The COMSOL export contract (VAL-03, VAL-04, RSK-14)
 
 !!! note "Kept, but not required"
-    Since 30 September 2026 (`SPECIFICATION.md` §8.2.4 D6), Tier 3 compares the paper's
+    Tier 3 compares (`SPECIFICATION.md` §8.2.4 D6) the paper's
     published current–voltage relationships and in-pore averages (VAL-16, VAL-17), and that
-    comparison gates v0.7 (§8.2.6 F1). The field exports described here are no longer asked for. The
+    comparison gates v0.7 (§8.2.6 F1). The field exports described here are not asked for. The
     harness stays, and ingests and refuses exactly as below if an export ever arrives.
 
 What the author produces from the reference model, and what `nanopnp validate ingest-golden`
@@ -34,7 +34,7 @@ changes its identity and invalidates every golden that declares it.
 
 Five cases × two refinements × six fields × five patches.
 
-**Cases** (§7.4 NOTE, author ruling of 18 September 2026):
+**Cases** (§7.4 NOTE, author ruling):
 
 | Case | Salt | Bias |
 |---|---|---|
@@ -151,15 +151,14 @@ quantities:
   eof_m3_s: 3.1e-18
 ```
 
-Take `case_hash` from the command, not from this page. It moved once, on 24 September 2026, when
-the case schema moved to `nanopnp/case/v2` and the schema string left the key
-(`SPECIFICATION.md` §5.3.2 NOTE). A golden declaring the earlier value, `7e9ca188…`, is
-refused when it is compared, naming both hashes.
+Take `case_hash` from the command, not from this page. The schema string is not part of the key
+(`SPECIFICATION.md` §5.3.2 NOTE), so a golden declaring a `nanopnp/case/v1` value, such as
+`7e9ca188…`, is refused when it is compared, naming both hashes.
 
 A case that supplies a charge or `ε_r` field under `inputs:` hashes that field's contents into
 its `case_hash`: the header's physical declarations and the grid's digest, as stage 7 keys them.
 Two cases differing only in their charge table are then two cases, and the same table in another
-format or at another path is one (**added 28 September 2026**). None of the five frozen cases
+format or at another path is one. None of the five frozen cases
 supplies a field, so none of their hashes moved.
 
 A case whose charge stage 7 deposits, from `structure:` or `inputs.pqr`, hashes that charge's

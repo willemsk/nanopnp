@@ -137,7 +137,7 @@ bundle's PyInstaller recipe puts it at the same path relative to this module.
 RENDERER_SOURCE = (RENDERER_DIRECTORY / "webgui.js").as_uri()
 """The ``file:`` URL the host document loads the renderer from.
 
-Shipped, not fetched (WP15 OQ-1, ruled 22 September 2026; CON-09): the npm
+Shipped, not fetched (WP15 OQ-1; CON-09): the npm
 ``webgui`` build is LGPL-2.1-or-later and bundles three.js (MIT) and dat.gui
 (Apache-2.0), redistributed unmodified as a separate file beside their licence
 texts and a NOTICE naming the corresponding source. A document fetching from a

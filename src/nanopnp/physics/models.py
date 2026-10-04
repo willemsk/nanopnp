@@ -804,7 +804,7 @@ class CoupledModel:
         ``velocity_order`` overrides it.
     velocity_order
         Element order of ``u``. ``None`` means ``order``, which is the two-order
-        model every case before WP12 was written against; the reference
+        model; the reference
         configuration of section 7.4 is ``phi`` and ``c`` at P2 with ``u`` and
         ``p`` at P1, which needs the third order (NUM-03).
     pressure_order
@@ -2629,7 +2629,7 @@ register_model(
     # No flow, so no flow quantity; and the NUM-18 ladder carries the flow
     # coupling from stage 6, so only the single rung solves ``pnp`` (section 6.5).
     # ``variable_density`` and ``inertia`` keep both values: they are carried into
-    # the model and its provenance as the case gives them, as before WP26.
+    # the model and its provenance as the case gives them.
     replace(
         _COUPLED,
         options=_COUPLED_OPTIONS,

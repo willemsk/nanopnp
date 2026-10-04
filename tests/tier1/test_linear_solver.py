@@ -250,7 +250,7 @@ def test_num10_a_well_scaled_system_is_quiet(
 
 
 def test_num10_a_single_field_space_reports_one_block(slab: ngs.Mesh) -> None:
-    """A non-compound space is one block, so the diagnostic works before WP4."""
+    """A non-compound space is one block, so the diagnostic needs no compound space."""
     space = ngs.H1(slab, order=1)
     trial, test = space.TnT()
     form = ngs.BilinearForm(trial * test * ngs.dx).Assemble()

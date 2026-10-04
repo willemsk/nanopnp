@@ -515,7 +515,7 @@ def test_ver36_the_member_case_carries_the_identity_and_drops_rectification(
 
 
 def test_ver36_an_axis_over_the_mesh_warns_and_does_not_refuse(base: Path) -> None:
-    """The author's ruling of 8 September 2026: warn, do not refuse.
+    """The author's ruling: warn, do not refuse.
 
     ``transfer`` refuses a cross-mesh interpolation deliberately, so the forest
     degenerates to one-point trees and every member is cold — correct, only

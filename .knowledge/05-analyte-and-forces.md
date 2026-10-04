@@ -19,11 +19,10 @@ integral, no hydrodynamic-stress integral, no ALE/moving mesh, no analyte surfac
 Navier–Stokes domain, no computed force profile F(z). The single force number quoted (9 pN) comes
 from a **fitted charge parameter**, not a stress integral.
 
-> **⚠ SUPERSEDED IN PART — read §10 first.** Everything in this section remains true *of the thesis
-> and of ACS Nano 2019*. But the conclusion once drawn from it — that no continuum force computation
-> exists anywhere in this body of work — is **wrong**. Willems published exactly that calculation
-> for PlyAB + haemoglobin in **Angew. Chem. Int. Ed. 2022, 61, e202206227**, after the thesis. See
-> **§10**. The "future work" sentence below was written *before* that paper existed.
+> **Scope: the thesis and ACS Nano 2019 only — read §10 for the force calculation.** A continuum
+> force computation does exist in this body of work: Willems published it for PlyAB + haemoglobin in
+> **Angew. Chem. Int. Ed. 2022, 61, e202206227**, after the thesis. See **§10**. The "future work"
+> sentence below describes the thesis's own position.
 
 Coupled ePNP-NS with an embedded particle is **future work** (`conclusion.tex
 §sec:con:perspectives`: "*low-hanging fruits: … (2) computing the net force exerted on
@@ -247,7 +246,7 @@ rises ≈ 2.5 % from −60 → −100 mV (position shift, not stretching — unf
 
 1. **Stress-tensor forces on an analyte are absent from the trapping chapters.** The tensor
    expressions come from background ch. 2 and were never evaluated for an analyte *in the thesis*.
-   **Partly superseded — see §10:** they *were* evaluated, for PlyAB + haemoglobin, in Angew. Chem.
+   **See §10:** they are evaluated, for PlyAB + haemoglobin, in Angew. Chem.
    2022; §10.6 gives regression targets. Analytic tests (isolated sphere: Maxwell integral → qE;
    Stokes sphere → 6πηaU) remain the right first check.
 
@@ -313,7 +312,7 @@ drawn in §0 and §9.1: that no continuum force computation exists anywhere in t
 that spec G5 is a new capability. **It exists.** Here an analyte sits inside the ePNP-NS domain and
 **F(z) is computed by the solver**. The tensor framework quoted in §4 as "the *general* framework
 the author endorses" is the one he **actually implemented**. G5 is therefore a
-**re-implementation**, not an invention; §9.1's "Nothing to regress against" is superseded by §10.6.
+**re-implementation**, not an invention, with regression targets in §10.6.
 
 ### 10.2 The continuum model
 

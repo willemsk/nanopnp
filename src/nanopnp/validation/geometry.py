@@ -79,7 +79,7 @@ Z_MD_NM = 5.655
 """The MD structure's C-alpha centroid z, residues 8-292, over DCD frames 48-97, in the MD frame.
 
 The Tier-3 leg measures it on the 50-frame ensemble mean and asserts it within
-:data:`Z_MD_TOLERANCE_NM` (D6). It measured 5.6553 nm on 30 September 2026. The
+:data:`Z_MD_TOLERANCE_NM` (D6). It measures 5.6553 nm. The
 5.63 nm first pinned from ``.knowledge/04`` §1.1 was the centroid with residue 7
 included (5.6293 nm), and was corrected as D6 provides (``SPECIFICATION.md`` §8.2.4 D7).
 """
@@ -155,7 +155,7 @@ class Tolerance(_Strict):
 
 
 TOLERANCES: Mapping[str, Tolerance] = {
-    # Author ruling 14, 28 September 2026 (SPECIFICATION.md section 7.4 NOTE on VAL-05).
+    # Author ruling 14 (SPECIFICATION.md section 7.4 NOTE on VAL-05).
     "ensemble": Tolerance(conductance_deviation=0.05, constriction_nm=0.1, rms_nm=0.1),
     "2wcd": Tolerance(conductance_deviation=0.10, constriction_nm=0.1, rms_nm=0.2),
 }
