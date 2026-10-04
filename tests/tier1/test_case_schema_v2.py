@@ -82,10 +82,15 @@ def _identity_of(solve_provenance: dict[str, Any]) -> str:
     """Return :func:`case_identity` of a recorded solve provenance.
 
     For a case supplying no field, :func:`case_identity` reads nothing of the
-    resolved case but its solve provenance, so a stand-in carrying the recorded
-    one asks it what v1 hashed.
+    resolved case but its solve provenance and whether stage 7 deposits a charge
+    or derives ``chi`` (WP34 D1, D3). A v1 case does neither, because v1 had no
+    stage 7 producer, so a stand-in carrying the recorded provenance asks it what
+    v1 hashed.
     """
-    return case_identity(cast(ResolvedCase, SimpleNamespace(solve_provenance=solve_provenance)))
+    stand_in = SimpleNamespace(
+        solve_provenance=solve_provenance, deposits_charge=False, derives_eps_r=False
+    )
+    return case_identity(cast(ResolvedCase, stand_in))
 
 
 def _supplies_a_field(solve_provenance: dict[str, Any]) -> bool:
