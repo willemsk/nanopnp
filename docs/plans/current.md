@@ -1,24 +1,23 @@
 # Current work
 
-Updated 4 October 2026 (WP34 amended). Navigation only; `SPECIFICATION.md`
-governs, and nothing here is evidence that an unmerged branch has shipped.
+Updated 4 October 2026 (WP34 delivered). Navigation only; `SPECIFICATION.md`
+governs, and nothing here is evidence an unmerged branch shipped.
 
 ## Position
 
 - Phase 1 ([solver core](phase-1-solver-core.md)) is **closed** as `v0.2.0` (§8.2.3; §8.2.4 D1).
 - Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **closed** as `v0.3.0`, with
-  criterion 3 waived (§8.2.4 D7). `Z_MD` is 5.655 nm.
-- Phase 3 ([charge pipeline](phase-3-charge-pipeline.md), release `v0.4.0`) is **in progress**.
-  - WP26–WP33 are **merged**, with `main` at `4375797`, and tagged `v0.4.0-alpha.1` to `.8`.
-  - [WP34](wp34-phase-3-close.md), the phase close (§8.2.5 E1–E5, §8.2.6 F1–F5), is **planned**,
-    to be tagged `v0.4.0`. **Next: `/wp-implement`** on WP34.
-- **Re-planned 4 October 2026** (§8.2.6). Phase 4, `v0.5.0`: polish and user testing of the
-  physics, numerics, API and CLI, opened by a modularity exploration (F3), then the knowledge base
-  as an OKF bundle ([F6](okf-knowledge-bundle.md)); after `v0.4.0`, **`/wp-plan phase-4`**. Phase 5, `v0.6.0`: the GUI, opened by a design and requirements document,
-  mockups and a visual-feedback workflow (F5). Phase 6, `v0.7.0`: validation, the former Phase 4
-  (F1). Stable v1.0 is OPN-08.
+  criterion 3 waived (§8.2.4 D7).
+- Phase 3 ([charge pipeline](phase-3-charge-pipeline.md)) **closes as `v0.4.0` when WP34 merges**.
+  WP26–WP33 are merged and tagged `v0.4.0-alpha.1` to `.8`. [WP34](wp34-phase-3-close.md) is
+  delivered on its branch with the end-of-phase report. **Next: `/wp-ship`** on WP34; after the
+  merge, tag its last commit `v0.4.0` alone (E5).
+- **Next phases** (§8.2.6). Phase 4, `v0.5.0`: a modularity exploration (F3), the knowledge base as
+  an OKF bundle ([F6](okf-knowledge-bundle.md)), then user testing; after `v0.4.0`,
+  **`/wp-plan phase-4`**. Phase 5, `v0.6.0`: the GUI, opened by a design document, mockups and a
+  visual-feedback workflow (F5). Phase 6, `v0.7.0`: validation (F1). Stable v1.0 is OPN-08.
 
-## What Phase 3 must not re-decide
+## Not to be re-decided
 
 Each is recorded in full where it points.
 
@@ -41,8 +40,12 @@ Each is recorded in full where it points.
   only by the §7.6 NOTE's four levers** (WP33).
 - **Tier 3 compares the published I–V and in-pore averages**, gating v0.7 (VAL-16, VAL-17; F1).
 - **Layers read a model's declaration, never its name or class** (VER-56). → §5.4.3 NOTE.
-- **Only `poisson` adds a quadrature order for the `r` weight.** WP34 measures the coupled
-  models, and Phase 6 decides (E4, F1). → NUM-07 NOTE.
+- **Only `poisson` adds a quadrature order for the `r` weight.** WP34 measured the coupled
+  models through `Measures.weight_extra_order`, a seam no key reaches, and Phase 6 decides (E4,
+  F1). → NUM-07 NOTE; `.knowledge/06` §2.2.
+- **A golden's identity carries the stage-7 recipe** of a deposited charge or a derived `χ`, so a
+  `structure:` case needs the `structure` extra to have one (E3; OPN-07, closed). → VAL-03;
+  `validation/comsol.py`.
 
 ## Inherited from Phases 1 and 2, still binding
 
@@ -57,11 +60,10 @@ Each is recorded in full where it points.
 
 ## What is still somebody else's
 
-- **The data behind the paper's figures**, for VAL-16 and VAL-17 at v0.7 (§8.2.4 D6) and the
-  ensemble legs E1 waived.
+- **The paper's figure data**, for VAL-16 and VAL-17 at v0.7 (§8.2.4 D6), and E1's ensemble legs.
 - **The Read the Docs project**; **`$NANOPNP_REFERENCE_DATA` on the nightly runner**.
 - **OPN-04**, the ClyA-AS mutation list. **OPN-08**, what stable v1.0 contains.
-- **The archived PQRs** for WP27–WP29's Tier 3, not yet run.
+- **The archived PQRs** for WP27–WP29's Tier 3; Phase 6 reports them (E1, F1).
 
 ## Dependencies To Read On Demand
 
@@ -71,8 +73,7 @@ Each is recorded in full where it points.
 | The physics-model interface | `docs/project/physics-models.md`; `physics/models.py` |
 | The desktop shell, its hooks and the probe bundle | The WP24 and WP31 plans and Outcomes; `gui/`; `.knowledge/07` §5; ADR-004 |
 | The deposition and stage 7 | The WP28 plan and Outcomes; `charge/stage.py` |
-| Example 07 and the charge guide | The WP32 plan and Outcomes; `examples/07-pdb-to-charged-run/`; `docs/guide/charge.md`; `validation/examples.py` |
-| PDB2PQR, PROPKA and APBS | `.knowledge/07` §3; the WP29 plan |
+| Planning Phase 4 | §8.1 and §8.2.6 F3–F6; `okf-knowledge-bundle.md`; the Phase 3 end-of-phase report |
 | Case schema and supply chains | §5.3.1 NOTEs; `io/case.py` |
 
 The Outcomes of a delivered plan override its decisions table, so read the two together.

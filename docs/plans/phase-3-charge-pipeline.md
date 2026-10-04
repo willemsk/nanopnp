@@ -1,6 +1,6 @@
 # Phase 3 (Charge pipeline): from a structure to a charged run
 
-**Status: in progress. WP26 delivered, 30 September 2026; WP27 delivered, 1 October 2026 ([plan](wp27-protonation.md)); WP28 delivered, 1 October 2026 ([plan](wp28-charge-deposition.md)); WP29 delivered, 1 October 2026 ([plan](wp29-val06-apbs.md)); WP30 delivered, 2 October 2026 ([plan](wp30-dielectric-and-exclusion.md)); WP31 delivered, 2 October 2026 ([plan](wp31-gui-charge-pipeline.md)); WP32 delivered, 3 October 2026 ([plan](wp32-charge-docs-and-example.md)); WP33 delivered, 3 October 2026 ([plan](wp33-test-durations.md)); WP34 planned, 3 October 2026 ([plan](wp34-phase-3-close.md)).** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
+**Status: closed, 4 October 2026, as `v0.4.0` on WP34's merge (end-of-phase report below; §8.2.5 E1, E5). WP26 delivered, 30 September 2026; WP27 delivered, 1 October 2026 ([plan](wp27-protonation.md)); WP28 delivered, 1 October 2026 ([plan](wp28-charge-deposition.md)); WP29 delivered, 1 October 2026 ([plan](wp29-val06-apbs.md)); WP30 delivered, 2 October 2026 ([plan](wp30-dielectric-and-exclusion.md)); WP31 delivered, 2 October 2026 ([plan](wp31-gui-charge-pipeline.md)); WP32 delivered, 3 October 2026 ([plan](wp32-charge-docs-and-example.md)); WP33 delivered, 3 October 2026 ([plan](wp33-test-durations.md)); WP34 delivered, 4 October 2026 ([plan](wp34-phase-3-close.md)).** Written 30 September 2026, after Phase 2 (WP17–WP25) delivered
 the geometry pipeline (`main` at `v0.3.0-alpha.9`, formerly `v0.9.0-alpha.9`). Phase 2's
 end-of-phase report and its release, `v0.3.0`, wait for one Tier-3 run on the author's archive
 (criterion 3, VAL-05's ensemble leg). WP26 may start before that report merges, because nothing in
@@ -391,6 +391,16 @@ Phase 4 (E1). Its last commit on `main` is tagged `v0.4.0` (E5).
 > validation phase is postponed to v0.7 as Phase 6, after Phase 4 (polish and user testing, v0.5)
 > and Phase 5 (graphical interface, v0.6). What this entry carries "to Phase 4" (E1's numbers, E4's
 > NUM-07 decision) now goes to Phase 6, and WP34 relabels the repository to match.
+>
+> **Delivered, 4 October 2026** ([plan](wp34-phase-3-close.md), to be tagged `v0.4.0` alone).
+> OPN-07 closed: `case_identity` carries `deposited_charge` and `derived_eps_r`, built through the
+> stages' own keys (VAL-03, `test_validation_identity.py`). NUM-07 measured through
+> `Measures.weight_extra_order`; the numbers are in its NOTE, and Phase 6 decides. `with_section`
+> stays out of `PUBLIC` (D9). The validated release is relabelled v0.7 and Phase 6 across the
+> repository. The renumbering script is deleted, and the stray `v0.5.0-alpha.5` tag was deleted by
+> the author. The end-of-phase report below was re-run on WP34's tree. **Live for later
+> packages:** the identity needs the `structure` extra for a `structure:` case; the seam is
+> measurement-only and no key reaches it; the archive-dependent legs are Phase 6's.
 
 ## Open decisions
 
@@ -451,22 +461,41 @@ The phase is complete when:
 
 ## End-of-phase report
 
-To be written at the end of the phase, naming numbers rather than adjectives:
+Written 4 October 2026 by [WP34](wp34-phase-3-close.md), on `main`'s WP33 merge plus WP34. Every
+number below was logged by a test that passed on WP34's tree. The run was serial, one thread, with
+slow tests included:
+`uv run pytest tests/tier2/test_{charge,protonation,val06,pipeline}_2wcd.py
+tests/tier2/test_charge_potential_{axis,off_axis}.py tests/tier1/test_model_interface.py
+tests/tier2/test_poisson_layers.py -m "tier1 or tier2" --log-cli-level=INFO` (67 passed, 569 s). No
+number is carried forward from an Outcome (D13). Stabilisation is `none` throughout. **Phase 3
+closes on its Tier 1 and Tier 2 evidence (§8.2.5 E1).** The archive-dependent legs below are carried
+to Phase 6's report (§8.2.6 F1).
 
-- VER-01 and VER-02 on 2WCD and on the ensemble: the producer and consumer legs, the quadrature
-  agreement and the worst plane, beside VAL-15's 9.9 × 10⁻³ from the delivered table on the same
-  mesh.
-- `Q_net`: 2WCD at pH 7.5, and the ensemble per frame (mean and spread), against −72 e. Protonation
-  agreement with the author's archived PQRs, per residue.
-- Our deposition from the archived PQRs against the delivered `rhoq_pore` table: the planar integral,
-  and the field difference with its attribution (G4).
-- VAL-06: the gated leg's agreement and tolerance, and the recorded leg's difference, which is the
-  size of the azimuthal averaging.
-- The end-to-end charged case, one frozen case on the pipeline's mesh and charge against the
-  reference mesh and the delivered table: conductance and `t₊`, with the difference split between
-  geometry (VAL-05's ε_G) and charge. It is the first measurement of VAL-16's recorded leg, and
-  gates nothing before v1.0.
-- VER-58's convergence rate, and the element order WP28 chose.
-- Wall-clock and peak memory for protonation and deposition, per frame and for the ensemble.
-- FR-20: the files a new model touched (the target is one).
-- Whether the desktop bundle builds and self-tests with PDB2PQR in it.
+**The criteria.** 1: the full gate, `--extended`, is green on WP34's head. 2: met on 2WCD and waived
+on the ensemble. 3: met. 4: met, by `test_pipeline_2wcd.py`'s charged walk from `structure:` with
+no `inputs.mesh` or `inputs.charge`. 5: met. 6: met; the bundle is CI's `bundle` job, which builds
+with PDB2PQR in it and runs `--selftest` on every push, WP34's included. 7: met, by example 07's
+executed README (VER-46) in the gate.
+
+| Item | Number on WP34's tree | Source test |
+|---|---|---|
+| VER-01, 2WCD, P2 on the 44,987-element default-size mesh | `Q_net` −60.000000000 e on the lattice and the mesh. Producer leg 1.6 × 10⁻¹⁴, consumer 3.8 × 10⁻¹⁴, quadrature 8.5 × 10⁻¹⁵. Ring and axis guard 0 e. Solid share 0.977 against the 0.5 floor. Beside VAL-15's 9.9 × 10⁻³ from the delivered table on the reference mesh | `test_charge_2wcd.py` |
+| VER-02, 2WCD, 12 planes at s = 0.5 nm | Worst lattice 1.1 × 10⁻¹³ at z = 8.004 nm, worst mesh 4.0 × 10⁻⁶ at z = 9.087 nm | same |
+| VER-01/02 at `size_scale` 4, charged walk (6,185 elements) | Legs 1.6 × 10⁻¹⁴ and 2.9 × 10⁻¹⁴, worst plane 1.6 × 10⁻⁴ on the mesh. The charged `pnp` solve at +50 mV, 0.15 M gives 3.19 × 10⁻¹¹ A Na⁺ and 3.12 × 10⁻¹¹ A Cl⁻ | `test_pipeline_2wcd.py` |
+| `Q_net`, 2WCD at pH 7.5, CHARMM, PROPKA | −60 e, one frame. All 54,084 radii are CHARMM's table's. 12 terminal oxygens are added, and 138 of 744 flippable atoms are flipped (worst 0.40 Å). LYS 8's N-terminus pKa is 7.48–7.50 on every chain, so it is unapplied at pH 7.5, as is CYS 285. −60 e is the 2WCD construct, not the archived ClyA-AS −72 e (`.knowledge/00` ruling 8) | `test_protonation_2wcd.py` |
+| VAL-06, gated leg (2WCD, P2 against APBS) | max 0.41 %, rms 0.10 %, axis 0.23 %, against 3 %, 1 % and 1.5 %. Refinement budget max 1.2 %, rms 0.18 %, axis 0.59 %, within half of each. The largest difference is −0.080 kT/e at (1.80, 0.25) nm, where ours is −17.79 kT/e | `test_val06_2wcd.py` |
+| VAL-06, recorded leg | The ring mean against ours: max 0.157, rms 0.067, axis 0.136. The ring spread, which is the size of the azimuthal averaging: max 0.465, rms 0.041. APBS converges at order 1.64 in max and 1.61 in rms on a grid focused to 0.05 nm | same |
+| VER-58, the element order WP28 chose (P2) | On axis, `r_i` = 0: L² rates 2.90 and 2.99 at P2, against 1.95 and 2.03 at P0. Off axis, `r_i` = 1.5 nm: 3.17 and 3.00 at P2, 2.19 and 1.95 at P0. An unresolved atom, 1 nm away on 0.1 nm elements: 1.2 × 10⁻⁵ at P2, 6.4 × 10⁻³ at P0 | `test_charge_potential_{axis,off_axis}.py` |
+| Cost, protonation | One dodecamer frame, cold: 61.7 s, 0.93 GB peak RSS | `test_protonation_2wcd.py` (slow) |
+| Cost, deposition | Stage 7 on 2WCD, cold: 7.0 s (sum 2.67, deposit 3.37, gates 0.68) and 0.93 GB peak. The kernel over 50 frames: 91.2 s, 1.82 s per frame, 0.93 GB peak, Q −60.000000000 e | `test_charge_2wcd.py` (slow) |
+| FR-20 | One class and one registration, against the target of one file: a model so defined runs from a case file to stage 12, its state and summary bit-identical to `pnp`'s (VER-56) | `test_model_interface.py` |
+| OPN-07 | Closed. pH 5, 7.5, 9 and `sharpness` 0.8 give four identities | `test_validation_identity.py` |
+| NUM-07, coupled models at +1 order | Rates unchanged, error lower at fixed `h`; on example 05 no compared number moves more than 7.6 × 10⁻⁸ relative. Decided in Phase 6 | NUM-07 NOTE; `test_axis_weight_order.py` (slow) |
+
+**Carried to Phase 6** (§8.2.5 E1, §8.2.6 F1). These need the author's archive, and their Tier-3
+tests run when it is supplied: VER-01 and VER-02 on the ensemble; `Q_net` per frame (mean and
+spread) against −72 e, and protonation agreement with the archived PQRs per residue; our
+deposition from the archived PQRs against the delivered `rhoq_pore` table (G4); VAL-06's recorded
+leg on the ensemble; and the end-to-end charged case against the reference mesh and table, which is
+VAL-16's first recorded leg. Also carried, unowned until Phase 5's design document (F5): watching
+the webgui charge colour range draw.
