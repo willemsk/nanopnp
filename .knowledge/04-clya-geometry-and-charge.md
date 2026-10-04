@@ -145,9 +145,9 @@ frame, whose bilayer centre is z = 0 (G9) (WP20 plan, Design §6).
 
 ### 1.4 2WCD against the reference polygon, and the isolevel lever [tested]
 
-> **Re-registered, 30 September 2026.** The bullets below place 2WCD at `Z_MD` = 5.63 nm. The
-> ensemble measured `Z_MD` = 5.6553 nm over residues 8–292 (§1.5), and 5.63 was the centroid
-> with residue 7 included. At the corrected 5.655 nm, `centre_z_nm` = 4.5477 nm and, at isolevel
+> **Registration.** 2WCD sits at `Z_MD` = 5.6553 nm over residues 8–292 (§1.5); the bullets below
+> were computed at 5.63 nm, the centroid with residue 7 included, and are a sensitivity reference.
+> At 5.655 nm, `centre_z_nm` = 4.5477 nm and, at isolevel
 > 0.25, ε_G = −8.49 % (exact −8.54 %), Δr_c = −0.0203 nm (1.6297 nm at z = −1.425), rms 0.159 nm,
 > mean Δ −0.136 nm, max |Δ| 0.339 nm at z = 3.425, on 280 planes (−1.825 and −1.775 fall in the
 > tip band). The sweep is −12.95, −10.86, −8.49, −6.07, −3.50, −0.87 and +4.41 %, crossing zero
@@ -647,7 +647,7 @@ to ~25 %, as expected for a partly flattened profile. Treat both as loose target
 
 - **G1 — "every 100 fs" is impossible.** T L280-281 says the 50 frames were taken from the final 5 ns
   "i.e. every 100 fs". 50 frames over 5 ns is **every 100 ps**, and coordinates were only written
-  every 5 ps (T L273-274). Assume 100 ps. **Evidence, 25 September 2026 (§1.1):** the archived PQR
+  every 5 ps (T L273-274). Assume 100 ps. **Evidence (§1.1):** the archived PQR
   files are named `…_aligned_100ps_NN`, 99 of them, and the analysis notebook reads the DCD at
   `dt=100`. **CLOSED [tested], §1.1:** the DCD frames are the PQRs at 100 ps, in time order. The final
   5 ns are PQRs 50–99 (DCD frames 48–97).
@@ -659,7 +659,7 @@ to ~25 %, as expected for a partly flattened profile. Treat both as loose target
 - **G3 — the manual vertex edit is unreproducible.** The final boundary polyline is not published and
   its vertex count is not stated; the 30-degree-wedge claim is qualitative. Without the vertex list a
   bit-for-bit geometry match is impossible; treat +-1 % on conductance as the tolerance floor.
-  **Superseded for VAL-05, 28 September 2026:** the list is delivered, and its construction
+  **For VAL-05 the list is delivered**, and its construction
   (`pqr2grid` binning at L = 15 nm, then a hand edit that moved vertices; §1.2, §1.4) puts ±1 %
   out of reach. The author's tolerances are in the `SPECIFICATION.md` §7.4 NOTE on VAL-05.
 - **G4 — `q_i/(2 pi r_i)` vs `/(2 pi r)`.** The prose (T L404-408) divides by the **atom's** radial
@@ -688,10 +688,10 @@ to ~25 %, as expected for a partly flattened profile. Treat both as loose target
   centred at z = 0 (spanning -1.4 to +1.4 nm) is the obvious reading, but it is an inference.
   Compounding this, the MD/electrostatics frame places the structure's centre of mass at
   (0, 0, 55 Angstrom) (TA `eq:internal_radius` discussion) — the shift from MD coordinates to model
-  coordinates is not given anywhere. **Evidence, 25 September 2026 (§1.1):** the protein-only MD
+  coordinates is not given anywhere. **Evidence (§1.1):** the protein-only MD
   archive carries no lipids, so the bilayer cannot fix it. But the MD frame's all-atom extent
   brackets the model's pore extent to within 0.3–0.4 nm at each end, which is consistent with an
-  offset near zero. **CLOSED by the author, 25 September 2026:** the MD trajectory was centred on
+  offset near zero. **CLOSED by the author:** the MD trajectory was centred on
   the middle of the bilayer, so ClyA's `centre_z_nm` is 0 in the MD frame.
 - **G10 — CLOSED [tested], §3.1.** `r` in [0, 7] nm, `z` in [-3.5, 13.5] nm at 0.005 nm:
   1401 x 3401 = 4.76e6 nodes, the order the estimate predicted.

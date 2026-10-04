@@ -65,7 +65,7 @@ exceed the target; never omit a required check to meet a word count.
 
 Leave the **Outcome** annotations out. They are blockquotes `> **Outcome — <what changed>.**` added
 in place by `/wp-implement` when predictions change. A plan whose predictions hold needs no invented
-corrections. Keep the execution brief current; preserve superseded reasoning as labelled history.
+corrections. Keep the execution brief current; a plan is a record, so its Outcomes may keep the history of what changed.
 
 ### A phase plan
 

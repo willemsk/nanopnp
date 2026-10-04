@@ -604,8 +604,7 @@ def test_ver51_case_value_refusals(
 def test_ver51_case_values_and_walk(tube: Path, tube_store: Store, tmp_path: Path) -> None:
     """A ``structure:`` case walks to stage 4, and on to stage 5, which gates the junction.
 
-    Until WP21 a full walk, a mesh walk and a sweep were refused naming stage 5
-    (WP20 D1). Now the walk selects every stage, the sweep plans, and stage 5
+    The walk selects every stage, the sweep plans (WP20 D1), and stage 5
     refuses a bilayer at the default ``centre_z_nm = 0`` that misses the tube,
     naming the key (WP21 D4).
 

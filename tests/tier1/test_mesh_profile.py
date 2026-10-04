@@ -236,8 +236,9 @@ def test_a_stand_in_profile_is_refused_for_tier_three_work() -> None:
 def test_a_path_is_read_as_a_path_whatever_its_suffix(tmp_path: Path) -> None:
     """Only a string can name a shipped fixture; a ``Path`` never does (CODE_REVIEW_003 CR-11).
 
-    A supplied ``inputs.profile.path`` need not end in ``.yaml``, and one that did not
-    used to be looked up as a fixture name under the package's data directory.
+    A supplied ``inputs.profile.path`` need not end in ``.yaml``, and one that does not
+    is still read as a path, never looked up as a fixture name under the package's
+    data directory.
     """
     bare = tmp_path / "pore"
     bare.write_text(profile_file(REFERENCE).read_text(encoding="utf-8"), encoding="utf-8")

@@ -1,10 +1,11 @@
 # Historical prose in nanopnp: keep or remove
 
-**Status: reviewed, not decided.** Written 4 October 2026, during WP34's `/wp-ship`, at the request
-of the author, who finds that pre-v1 history (how and when things were renamed, amended or
-superseded) adds noise rather than value. This note is the input to one cleanup change. It is not a
-work-package plan, and `SPECIFICATION.md` still governs: a cleanup that changes specified behaviour
-(category K) changes the specification in the same commit.
+**Status: decided and done, 4 October 2026.** The author chose: L, A, C, D, E, F and G; B with the
+decision reference kept, `(b)`; H and I left in place; K left in place (the v1 reader and the pre-WP32
+deposit tolerance stay). Written during WP34's `/wp-ship` at the request of the author, who finds
+that pre-v1 history (how and when things were renamed, amended or superseded) adds noise rather than
+value. The body below is the review as written; its checklist is answered above. It is not a
+work-package plan, and `SPECIFICATION.md` still governs.
 
 **How to pick this up in a new session.**
 

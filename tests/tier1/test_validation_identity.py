@@ -8,9 +8,9 @@ export lattice's spacing and the element order are discretisation and stay out
 (D2), and so do the protonation gates' tolerances, which move a verdict and
 never a charge. A non-zero ion-exclusion offset is a physics switch and enters.
 A finished run's identity is read from the artefacts the run recorded, never
-from the files its case names now. On ``main`` before WP34, pH 5, 7.5 and 9 and
-``sharpness`` 0.8 of example 06 all gave ``8559ee13...``; the first test fails
-there.
+from the files its case names now. pH 5, 7.5 and 9 and
+``sharpness`` 0.8 of example 06 must not share one identity (the old value was
+``8559ee13...``); the first test fails on a hash that ignores them.
 
 The identity hashes the structure file's bytes and never reads its atoms, so
 the deposited 2WCD stands in for example 06's prepared copy: these tests are

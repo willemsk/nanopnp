@@ -100,7 +100,7 @@ def _supplies_a_field(solve_provenance: dict[str, Any]) -> bool:
     """Return whether a recorded case supplies a charge or ``eps_r`` field.
 
     The identity of such a case hashes the field's contents as well
-    (**28 September 2026**, the ``comsol-export-contract`` page), which its
+    (the ``comsol-export-contract`` page), which its
     solve provenance does not carry, so it is not the hash of the recorded
     record and v1's value is history. No frozen validation case supplies one.
     """

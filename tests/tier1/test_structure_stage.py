@@ -673,8 +673,7 @@ def test_ver48_rigid_move_superposes_to_zero(prepared: Path, tmp_path: Path) -> 
 def test_ver48_walk_rules(prepared: Path, tmp_path: Path) -> None:
     """A full walk selects every stage; ``upto`` must name a stage the case has (IF-02).
 
-    A full walk was refused naming stage 2 until WP19, stage 4 until WP20 and
-    stage 5 until WP21 delivered stages 5 and 6 (section 5.3.1 NOTE on
+    A ``structure:`` case's full walk reaches every stage (section 5.3.1 NOTE on
     ``structure:``). The walk itself is Tier 2's (``test_pipeline_2wcd.py``).
     """
     case = _case(tmp_path, _block(prepared))
@@ -701,7 +700,7 @@ def test_ver48_walk_rules(prepared: Path, tmp_path: Path) -> None:
 
 
 def test_ver48_a_sweep_over_a_structure_case_plans(prepared: Path, tmp_path: Path) -> None:
-    """A sweep over a ``structure:`` case plans; before WP21 its builder refused it at stage 5."""
+    """A sweep over a ``structure:`` case plans through stage 5."""
     from nanopnp.sweep.plan import plan_from_document
 
     case = _case(tmp_path, _block(prepared))

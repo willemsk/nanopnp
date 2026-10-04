@@ -68,7 +68,7 @@ PATCH_RESIDUES: frozenset[str] = frozenset({"TER", "DISU"})
 
 ``TER`` for a terminal patch (``.knowledge/07`` section 3) and ``DISU`` for the
 ``CB`` and ``SG`` of a disulfide-bonded cysteine, written ``1CB`` and ``1SG``
-(``CHARMM.names`` of PDB2PQR 3.7.1, measured 1 October 2026): without ``DISU``
+(``CHARMM.names`` of PDB2PQR 3.7.1): without ``DISU``
 here every cysteine in a disulfide carries two names and is refused.
 """
 
@@ -328,7 +328,7 @@ def _residue_name(names: set[str]) -> str | None:
     One name, or a parent and one of its variants: PDB2PQR writes a residue it
     patched to a protonation variant with its backbone under the parent and its
     side chain under the variant (``ASP`` and ``ASPP`` in one ``ASP 21`` at pH 2,
-    PDB2PQR 3.7.1, measured 1 October 2026), and the variant is the state.
+    PDB2PQR 3.7.1), and the variant is the state.
     """
     parents = {parent_residue(name) for name in names}
     if len(parents) != 1:

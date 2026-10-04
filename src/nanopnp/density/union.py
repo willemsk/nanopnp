@@ -261,7 +261,7 @@ def _accumulate(
     because the ``"ij"`` meshgrid puts z slowest, so each atom's in-slab offsets
     are one contiguous run of it; at fine spacing a slab is a few planes of a
     stencil tens of planes deep, and evaluating the whole stencil in every slab
-    it reaches did 6.8x the work at h = 0.025 nm (measured 2026-09-28). The
+    it reaches did 6.8x the work at h = 0.025 nm. The
     kept terms, and their order into the sum, are those of the whole-stencil
     evaluation, so the map is unchanged to the bit.
     """

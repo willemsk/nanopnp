@@ -40,7 +40,7 @@ TER
 END
 """
 """Lines as PDB2PQR 3.7.1 writes them under ``--ffout=CHARMM``: the N-terminal patch atoms
-of ``GLU 18`` carry the residue name ``TER`` (measured on 2WCD chain A, 1 October 2026)."""
+of ``GLU 18`` carry the residue name ``TER`` (measured on 2WCD chain A)."""
 
 
 def test_ver57_pdb2pqr_lines_read_by_their_columns_with_ter_named_by_the_residue() -> None:
@@ -168,7 +168,7 @@ def test_ver57_a_disulfide_patched_cysteine_is_named_by_its_residue() -> None:
     """``--ffout=CHARMM`` writes a bonded cysteine's ``CB`` and ``SG`` under ``DISU``.
 
     The lines are PDB2PQR 3.7.1's for ``CYS 285`` of 2WCD chain A bonded to a
-    mirrored copy (measured 1 October 2026): ``DISU``, like ``TER``, is a patch
+    mirrored copy (measured): ``DISU``, like ``TER``, is a patch
     name and does not name the residue, which is ``CYS``.
     """
     text = (

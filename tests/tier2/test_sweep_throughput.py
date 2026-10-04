@@ -5,7 +5,7 @@ QR-06 is a SHOULD with two halves: *3,675 solves within a day-scale wall clock o
 workers*.
 
 The first half is the author's machine and a Phase-1 end-of-phase number. It is
-**not** measured here, by the author's ruling of 8 September 2026: a day-scale run
+**not** measured here, by the author's ruling: a day-scale run
 inside a package's own gate is not a gate. What WP11 owes it instead is that the
 run be one command against a document under version control, which is
 ``docs/sweeps/phase1-reference.sweep.yaml`` and is checked at Tier 1.

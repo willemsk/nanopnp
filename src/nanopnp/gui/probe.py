@@ -11,10 +11,9 @@ author's double-click closes the criterion.
 real shell will — Qt's widgets *and* Qt WebEngine, the compiled NGSolve and
 Netgen extensions, and the ``ngsolve.webgui`` scene generator — because a probe
 omitting WebEngine would retire RSK-13 without exercising the dependency most
-likely to defeat packaging (ADR-004's packaging NOTE, §8.2.1 A4) — and, since
-WP24, the geometry pipeline's compiled readers, contour extraction, polygon
-checks and the optional Gmsh backend, and since WP31 PDB2PQR and PROPKA, each
-exercised once. :data:`PAYLOADS`
+likely to defeat packaging (ADR-004's packaging NOTE, §8.2.1 A4) — and the
+geometry pipeline's compiled readers, contour extraction, polygon checks and the
+optional Gmsh backend, and PDB2PQR and PROPKA, each exercised once. :data:`PAYLOADS`
 names that set, and ``tests/tier1/test_gui_probe.py`` reads this module's own
 import statements to assert the two cannot drift apart.
 

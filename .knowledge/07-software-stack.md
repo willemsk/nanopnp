@@ -106,28 +106,27 @@ predict, all found while building the `(r, z)` grid IO:
   the box; with the axes fully transposed, 89 % of atoms read below the single-frame bound; with x
   and y alone swapped, 57 % do **[tested]**, WP25, 29 September 2026.
 
-**The MRC writer is not in every gridData a supported interpreter resolves to [tested].**
-GridDataFormats 1.2.0 requires Python ≥ 3.11, so on 3.10 a resolver takes **1.0.2**, whose
+**GridDataFormats before 1.2 has no MRC writer [tested].**
+GridDataFormats 1.2.0 requires Python ≥ 3.11, so a Python 3.10 resolver takes **1.0.2**, whose
 `Grid()._exporters` registry is `DX, PKL, PICKLE, PYTHON` — no `MRC` and no `VDB`. Its `_loaders`
 registry *does* carry `CCP4, DX, MRC, PLT, PKL, PICKLE, PYTHON`, and `gridData.mrc` imports on both,
 so **reading** MRC and CCP4 works on 1.0.2 and only **writing** them does not. Measured by running
 each version: `griddataformats==1.0.2` on 3.10 exports a `(4, 3, 1)` grid to DX and refuses MRC with
 `ValueError: File format MRC not available`; 1.2.0 on 3.12 does both.
 
-Two consequences for anything that writes these formats across a 3.10–3.14 matrix:
+Two consequences for anything that writes these formats across versions of gridData:
 
 - `hasattr(gridData, "mrc")` and the module version are both **the wrong capability test** — the
   first is true on 1.0.2 and the second is a proxy. `Grid()._exporters` is the registry
   `Grid.export` itself looks the format up in, so it is the only authoritative answer. It is
   private; guard the read and fall back to translating the `ValueError`.
 - A test guarded on "is gridData importable?" passes on 3.10 and then fails inside the writer. Guard
-  on **writer availability** and assert the refusal on the other branch, so both interpreters
-  assert something rather than one of them skipping.
+  on **writer availability**.
 
-**Superseded by the 3.11 floor, 24 September 2026 [tested].** With `requires-python = ">=3.11"`
-and `GridDataFormats>=1.2`, every supported interpreter resolves to 1.2.0 and writes MRC, so the
-writer-availability branch and its refusal were deleted (§8.2.2 B4, WP17). The facts above still
-describe 1.0.2, should an older environment turn up.
+**The 3.11 floor makes this moot [tested].** With `requires-python = ">=3.11"` and
+`GridDataFormats>=1.2`, every supported interpreter resolves to 1.2.0 and writes MRC, so the code has
+no writer-availability branch (§8.2.2 B4). The facts above describe 1.0.2, should an older
+environment turn up.
 
 **Symmetry-axis detection:** do not use raw principal axes. Use **chain-permutation
 superposition**: superpose chain A onto chain B, and the rotation's eigenvector with eigenvalue 1
@@ -156,8 +155,7 @@ the Cα set:
 
 **MDAnalysis 2.10 reads no mmCIF [tested].** `mda._PARSERS` and `mda._READERS` in 2.10.0 have no
 `CIF`, `MMCIF` or `PDBX` entry, and `MDAnalysis.topology.PDBxParser` does not import. Only the
-retired `MMTF` format is there. The row above once claimed mmCIF as **[tested]**, which was wrong.
-IF-04's mmCIF leg goes through gemmi (§2.6, WP18).
+retired `MMTF` format is there. IF-04's mmCIF leg goes through gemmi (§2.6, WP18).
 
 **What the readers do with a blank or odd field [tested].** Measured 25 September 2026 on MDAnalysis
 2.10.0 and gemmi 0.7.5, while building stage 1 (WP18):
@@ -1339,12 +1337,12 @@ line.
 `numpy.savez` writes a zip whose entries carry a fixed modification date, so the same arrays saved
 twice give the same bytes, seconds apart. A payload's recorded digest is therefore reproducible as
 long as the arrays are. One scalar that is not, such as a wall-clock duration saved beside the
-data, changes the bytes and so the digest: stage 7 wrote `seconds` into `deposit.npz` until WP32,
+data, changes the bytes and so the digest: stage 7 once wrote `seconds` into `deposit.npz`,
 and the same deposit computed twice read as two different payloads, and a reloaded one would have
 read as hand-substituted (VER-23). The same holds for a summary the manifest copies: a time in it
 gives every run its own manifest hash.
 
-The rule since WP32 (D15): no payload, and no stage-7 summary, records wall-clock time. Timings go
+The rule (WP32 D15): no payload, and no stage-7 summary, records wall-clock time. Timings go
 to the log and to the run record's per-stage `seconds`, which no key or manifest reads.
 `tests/tier1/test_artefact_hashing.py::test_ver23_a_charged_walk_writes_the_same_bytes_into_two_stores`
 walks a charged tube into two empty stores, finds every payload byte-identical, and shows that

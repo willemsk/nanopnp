@@ -473,8 +473,7 @@ def test_ver49_resolution_refusals(
 def test_ver49_resolution_and_walk_rules(synthetic_c12: Path, tmp_path: Path) -> None:
     """A ``structure:`` case walks to stage 3, and its full walk and its sweep reach the solve.
 
-    Until WP21 delivered stages 5 and 6 a full walk and a sweep were refused
-    naming the next undelivered stage (WP20 D1, WP21 D1).
+    The full walk selects every stage and the sweep plans (WP20 D1, WP21 D1).
 
     ``geometry:`` beside ``inputs.mesh`` is refused naming both, by the upstream
     rule; ``geometry:`` with neither ``structure:`` nor a mesh describes no run

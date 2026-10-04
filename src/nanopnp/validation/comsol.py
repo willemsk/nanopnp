@@ -336,7 +336,7 @@ def case_identity(resolved: ResolvedCase, *, recorded: Mapping[str, Artefact] | 
     the stage-7 key's own record of it — the header's physical declarations and
     the grid's digest — so that the same table written in another format is the
     same case, and a table whose values moved is another. That reads the table,
-    about 1.6 s for the 84 MB reference charge (measured 2026-09-28).
+    about 1.6 s for the 84 MB reference charge.
 
     A charge that stage 7 *deposits*, from ``structure:`` or ``inputs.pqr``, is
     represented by its recipe instead (section 8.2.5 E3, closing OPN-07): a key

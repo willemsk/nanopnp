@@ -16,7 +16,7 @@ registry tests assert that listing the stages imports no extra.
 Stages 2 and 3 of the prepared entry take about 32 s, and six Tier-2 files walk
 through them. ``seeded_2wcd`` computes them once per session, in a directory every
 ``pytest-xdist`` worker shares, and the object it returns copies the result into
-a test's own fresh store. Since WP33 D2 it runs on to stage 6: the contour, the
+a test's own fresh store. It runs on to stage 6 (WP33 D2): the contour, the
 registration and the 0.15 M default-size mesh that four modules walk to. The
 store is content-addressed, so a test that reads a seeded artefact reads the
 bytes its own walk would have written, computed by the same code in the same

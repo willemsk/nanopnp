@@ -15,7 +15,7 @@ form.
     In v0.2, run the shell from a development install (`uv run nanopnp-gui case.yaml`) or a pip
     install with the `gui` extra. A double-clickable Windows bundle of the packaging probe is built
     and self-tested by CI on every push, and it has been confirmed to open and draw on a real
-    desktop (§8.2 criterion 4, closed 24 September 2026). Installers for all three platforms come
+    desktop (§8.2 criterion 4). Installers for all three platforms come
     after v1.0.
 
 ## The seven panels

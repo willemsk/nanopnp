@@ -1427,8 +1427,8 @@ Phase-1 headline gate. Recorded for whoever owns it next.
 On a 144,628-element mesh, `FieldSampler` over the fluid holds 1,012,396 points (duplicates kept on
 purpose, so each stays inside its own element) and takes 2.7 s to build and **21.7 s** to locate;
 over the whole mesh, 434,885 points take 2.9 s and 9.4 s. Evaluating a field on the located points
-takes 0.23 s. Before the codebase review of 2026-09-28 each rung built two samplers and each solve
-three more, about 36 s a rung at that size. `FieldSampler.shared` keeps one per mesh and material
+takes 0.23 s. Building a sampler per rung and per solve would cost about 36 s a rung at that size.
+`FieldSampler.shared` keeps one per mesh and material
 set, cached **on the mesh object**: `ngsolve.comp.Mesh` is unhashable, so a `WeakKeyDictionary`
 raises `TypeError`, but it takes attributes and weak references, and the mesh ↔ sampler reference
 cycle is collected with the mesh. **[tested]**

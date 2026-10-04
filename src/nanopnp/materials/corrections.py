@@ -7,8 +7,8 @@ evaluation of the correction forms belongs to the model classes of section 5.4.2
 
 The schema is the one Phase-0 serialisation boundary given a Pydantic model
 rather than a raw ``dict`` (CLAUDE.md: "Pydantic models at every serialisation
-boundary"). Before it, a renamed or missing coefficient key surfaced as a
-``KeyError`` deep in assembly; now a fit block is checked against the coefficients
+boundary"). A renamed or missing coefficient key would otherwise surface as a
+``KeyError`` deep in assembly; a fit block is checked against the coefficients
 its form actually reads (:data:`~nanopnp.materials.forms.FORM_PARAMETERS`) and the
 offending key is named at load, the diagnostic IF-03 sets as the house standard.
 This model is also the template the Phase-1 case-file schema (FR-26/VER-09) copies.

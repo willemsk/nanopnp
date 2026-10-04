@@ -1,9 +1,9 @@
 """The stage-2 radius set: CHARMM van der Waals radii by residue and atom (WP19 D3).
 
 The ``gaussian_vdw`` kernel gives each atom the width ``sigma R_i``, and R_i is its
-CHARMM Rmin/2 as PDB2PQR's ``CHARMM.DAT`` lists it. That is an **author ruling of
-25 September 2026**: the reference ensemble's per-frame PQR files carry exactly
-this set (``.knowledge/04-clya-geometry-and-charge.md`` §1.1). The table is data,
+CHARMM Rmin/2 as PDB2PQR's ``CHARMM.DAT`` lists it. That is an **author ruling**:
+the reference ensemble's per-frame PQR files carry exactly this set
+(``.knowledge/04-clya-geometry-and-charge.md`` §1.1). The table is data,
 ``data/radii/pdb2pqr_charmm.yaml``, transcribed verbatim, and so are the rules
 that map a structure file's names onto it.
 

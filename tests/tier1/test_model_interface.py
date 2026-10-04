@@ -12,7 +12,7 @@ each against something other than the code under test:
   gate that can only pass.
 - **Refusals from the declaration.** Every refusal names the model, the key and
   what is admitted, so a reader can act on it without reading the declaration.
-- **Nothing moved.** The stage-10 keys of the five models runnable before WP26,
+- **Nothing moved.** The stage-10 keys of the five pre-existing models,
   and the model of every rung of both ladders, equal goldens recorded from
   ``main`` at ``e58b2bf`` before any of this package's code existed (WP26 D5, D14).
 - **One class is enough.** A forwarding model defined *here*, subclassing no
@@ -414,8 +414,8 @@ def test_fr19_poisson_boltzmann_refuses_a_salt_that_is_not_symmetric_monovalent(
 def test_fr19_the_ladder_initialisers_state_their_own_debye_length_for_any_salt() -> None:
     """NUM-18's stages 1 and 2 are initialisers with their own ``lambda_D``, not case models.
 
-    Built through the registry they must still take every electrolyte the ladder
-    took before WP26: the refusal is of the case's *default* ``lambda_D``, which a
+    Built through the registry they must take every electrolyte the ladder
+    takes: the refusal is of the case's *default* ``lambda_D``, which a
     stated one replaces.
     """
     divalent = _divalent()
@@ -500,7 +500,7 @@ print(sorted(name for name in ("ngsolve", "netgen") if name in sys.modules))
 
 
 def _quickstart_variants() -> dict[str, str]:
-    """Return the quick-start case as each of the five models runnable before WP26."""
+    """Return the quick-start case as each of the five pre-existing models."""
     base = QUICKSTART.read_text(encoding="utf-8")
     electrostatic = (
         base.replace(

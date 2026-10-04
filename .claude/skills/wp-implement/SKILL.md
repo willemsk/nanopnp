@@ -15,8 +15,8 @@ into `/wp-ship`: independent review and CI stewardship remain a separate invocat
    binding, subject to the specification. Read each work item's linked Design sections before
    implementing it; do not reload unrelated delivered packages. For legacy plans, read Decisions,
    Work items, Verification and their correcting Outcomes first, then the relevant Design sections.
-   Correct a wrong decision in the brief and, if needed, the specification, preserving the original
-   argument as labelled history (see **Keeping the record straight** below).
+   Correct a wrong decision in the brief and, if needed, the specification, stating the corrected rule
+   in the present tense (see **Keeping the record straight** below).
 2. `.knowledge/00-index.md`, then the relevant sections of the files the package touches.
 3. The `SPECIFICATION.md` sections and Appendix A rows the plan cites.
 4. `uv sync --all-extras --frozen` if `.venv` is not already current (the `SessionStart` hook does
@@ -61,6 +61,11 @@ never slackened to accommodate a number: either the number is wrong, or the spec
 the wrong quantity and the amendment says so in those terms (§7.3's Henry/Smoluchowski amendment is
 the worked example).
 
+State every rule in the specification, the knowledge base, the docs and the code in the present
+tense. Do not stamp text with `added`/`amended` dates or narrate renames and supersessions: history
+lives in git, `CHANGELOG.md`, the delivered plans and §8.2. A WP plan's own Outcomes may keep
+history, because a plan is a record.
+
 Three records move together as the work lands:
 
 | Record | Gets |
@@ -71,7 +76,7 @@ Three records move together as the work lands:
 
 The phase plan's `### WP<n>` section gains a short delivered summary (target 150 words): scope,
 identifiers, live inherited constraints and links to evidence. Do not repeat derivations or measurement
-tables from the specification, knowledge base or WP plan. Preserve existing historical summaries.
+tables from the specification, knowledge base or WP plan. Leave existing delivered summaries as they are.
 Update `docs/plans/current.md` in place with the current position, next package and live dependency
 links (target 800 words). It is navigation, not another source of requirements.
 

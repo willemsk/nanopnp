@@ -14,10 +14,9 @@ and forgetting the manifest then fails at Tier 1, in seconds, rather than in a
 comparison against COMSOL six months later.
 
 The schema itself is enumerated by :func:`~nanopnp.io.case.case_fields`, not by a
-walk written here. It used to be written here, and that was two walks over one
-schema: the one that drifts silently is the one no test reads, and a field the
-local walk missed was a field the manifest never classified *and* the desktop
-editor never offered. VER-43 froze the enumeration in
+walk written here: a second walk over one schema is the one that drifts
+silently, and a field a local walk missed would be a field the manifest never
+classified *and* the desktop editor never offered. VER-43 froze the enumeration in
 ``tests/tier1/test_case_fields.py``; what is left below is the classification.
 
 The second is

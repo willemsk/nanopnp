@@ -138,11 +138,7 @@ is no version to bump.
 There is one minor version per phase: v0.1 is Phase 0, v0.2 Phase 1, v0.3 Phase 2, v0.4 Phase 3,
 v0.5 Phase 4 (polish and user testing), v0.6 Phase 5 (the graphical interface) and v0.7 Phase 6
 (the validated release). The stable v1.0 follows, its content the author's to define
-(`SPECIFICATION.md` §8.2.6, OPN-08). Phase 1's and Phase 2's tags were renamed to this scheme on
-30 September 2026, and [`.github/renumbered-tags.txt`](.github/renumbered-tags.txt) maps each
-retired name to its new one. Never reuse a retired name, except the `v0.5.0` names, which Phase 4
-takes (§8.2.5 E2, §8.2.6 F2): a manifest recording `0.5.0aN` is read by its `created_at`, and
-after 30 September 2026 it is Phase 4's.
+(`SPECIFICATION.md` §8.2.6, OPN-08).
 
 - **A work package's PR writes its own [`CHANGELOG.md`](CHANGELOG.md) section** under the version
   it will be tagged, `vX.Y.Z-alpha.N`, where `vX.Y.Z` is the phase's release and N counts the phase's
