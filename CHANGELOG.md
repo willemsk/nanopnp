@@ -5,7 +5,9 @@ Every notable change to nanopnp, newest first. The format follows
 [SPECIFICATION.md](SPECIFICATION.md) §2.7:
 
 - a **release** `vX.Y.Z` closes a phase, one minor version per phase: v0.1 is Phase 0, v0.2 is
-  Phase 1, v0.3 is Phase 2, v0.4 is Phase 3 and v1.0 is Phase 4;
+  Phase 1, v0.3 is Phase 2, v0.4 is Phase 3, v0.5 is Phase 4 (polish and user testing), v0.6 is
+  Phase 5 (the graphical interface) and v0.7 is Phase 6 (the validated release), before the
+  stable v1.0 (§8.2.6);
 - a **work-package pre-release** `vX.Y.Z-alpha.N` marks the merge of the N-th work package toward
   that release.
 

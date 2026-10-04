@@ -74,7 +74,7 @@ larger than the default sizes. That is a discretisation choice, not a deviation,
 with the mesh. At the default sizes the solve takes tens of minutes. The transport number from this
 mesh is a property check, not a prediction: the double layer at the pore wall is under-resolved.
 The published values come from the reference geometry at converged resolution, which nanopnp
-compares against at v1.0.
+compares against at v0.7.
 
 ## Supplying the exported density back is refused
 

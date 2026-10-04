@@ -118,11 +118,12 @@ feature has **no reference implementation to regress against**. Verify against a
 
 The oracle tier, available because the author retains a COMSOL licence.
 
-> **Re-scoped 30 September 2026** (`SPECIFICATION.md` §8.2.4 D6). The comparison that gates v1.0
+> **Re-scoped 30 September 2026** (`SPECIFICATION.md` §8.2.4 D6). The comparison that gates v0.7
 > is against the paper's *published* current–voltage relationships and in-pore averages (VAL-16,
 > VAL-17), which need no licence. The field comparison below is kept, but not required. What a
 > published-results comparison cannot do is localise: see the ablation paragraph below, and
-> `04-clya-geometry-and-charge.md` §6.5, for the part of localisation it can recover.
+> `04-clya-geometry-and-charge.md` §6.5, for the part of localisation it can recover. The
+> validated release was renumbered v0.7 on 4 October 2026 (`SPECIFICATION.md` §8.2.6 F1).
 
 For a frozen set of cases spanning the envelope, compare field-by-field against exported COMSOL
 solutions — `φ`, `c_i`, `u`, `p` sampled on a common probe grid — plus every scalar QoI.

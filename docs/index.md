@@ -25,7 +25,7 @@ electro-osmotic flow rate. It is built around three rules:
     shell and the v0.3 geometry pipeline, from a PDB structure to a mesh, are delivered. The v0.4
     charge pipeline, which protonates the structure and deposits its charge on the mesh, is
     delivered on `main` as alpha releases toward v0.4. Nothing here is a validated release yet, and the comparison against the paper's
-    published results gates v1.0.
+    published results gates v0.7, the Phase 6 release.
 
 ## Where to start
 
