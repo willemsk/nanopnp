@@ -53,6 +53,10 @@ EXPECTED = {
     "ModelDeclaration",
     "register_model",
     "registered_models",
+    # WP34 D9: ``with_section``, parked by WP31, is deliberately not here. It is an
+    # editor affordance that changes no resolved case (WP31 D13), so adding it later
+    # costs nothing, and Phase 4's API pass reviews it with the rest of the public
+    # surface (section 8.2.6 F3, F4).
 }
 """Written out, not derived: adding to the stable API is a decision, and this is where
 it is seen being made."""
