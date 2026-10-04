@@ -2,11 +2,15 @@
 
 Section 8.2.5 E3 closes OPN-07: a deposited charge enters
 :func:`~nanopnp.validation.comsol.case_identity` by its stage-7 recipe, the
-protonation key and the kernel's physical parameters, and a derived ``chi`` by
-its derivation parameters and the structure's key (WP34 D1, D3). The export
-lattice's spacing and the element order are discretisation and stay out (D2).
-On ``main`` before WP34, pH 5, 7.5 and 9 and ``sharpness`` 0.8 of example 06 all
-gave ``8559ee13...``; the first test fails there.
+stage-1 and protonation keys' parameters and the kernel's, and a derived ``chi``
+by its derivation parameters and the stage-1 key's parameters (WP34 D1, D3). The
+export lattice's spacing and the element order are discretisation and stay out
+(D2), and so do the protonation gates' tolerances, which move a verdict and
+never a charge. A non-zero ion-exclusion offset is a physics switch and enters.
+A finished run's identity is read from the artefacts the run recorded, never
+from the files its case names now. On ``main`` before WP34, pH 5, 7.5 and 9 and
+``sharpness`` 0.8 of example 06 all gave ``8559ee13...``; the first test fails
+there.
 
 The identity hashes the structure file's bytes and never reads its atoms, so
 the deposited 2WCD stands in for example 06's prepared copy: these tests are
@@ -23,8 +27,13 @@ from typing import Any
 import pytest
 import yaml
 
+from nanopnp.charge import protonation as protonation_module
 from nanopnp.core.hashing import content_hash
+from nanopnp.core.stages import create
+from nanopnp.io.artefact import Artefact, StageInputs
 from nanopnp.io.case import ResolvedCase, load_case, resolve
+from nanopnp.io.store import Store
+from nanopnp.validation import runs
 from nanopnp.validation.comsol import (
     CASE_IDENTITY_SCHEMA,
     DISCRETISATION_KEYS,
@@ -181,3 +190,100 @@ def test_val03_non_producer_identity_is_unchanged() -> None:
         if key not in MODEL_OPTION_DISCRETISATION_KEYS
     }
     assert case_identity(resolved) == content_hash(CASE_IDENTITY_SCHEMA, record)
+
+
+def test_val03_identity_ignores_the_protonation_gate_tolerances(
+    identity: Callable[..., str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """VAL-03: a gate tolerance moves whether a protonation is accepted, not the case.
+
+    Tightening one must not give every depositing case a new identity, or every
+    golden made before it would refuse every later run of the same physics.
+    """
+    default = identity()
+    monkeypatch.setattr(protonation_module, "Q_NET_TOLERANCE_E", 1e-9)
+    monkeypatch.setattr(protonation_module, "REGISTRATION_TOLERANCE_A", 1e-9)
+    monkeypatch.setattr(protonation_module, "MINIMUM_CALPHA", 1)
+    assert identity() == default
+    assert identity(_charge(ph=5.0)) != default
+
+
+def test_val03_case_identity_names_the_exclusion_shell(identity: Callable[..., str]) -> None:
+    """VAL-03, FR-15: a non-zero ``exclusion_offset_nm`` moves the identity; 0 does not (D4)."""
+    default = identity()
+    assert identity(_charge(exclusion_offset_nm=0.0)) == default
+    shells = {identity(_charge(exclusion_offset_nm=offset)) for offset in (0.2, 0.3)}
+    assert len(shells) == 2
+    assert default not in shells
+    # The shell and the derived chi are two switches, and each moves the identity alone.
+    both = identity(_charge(exclusion_offset_nm=0.3, dielectric_transition_nm=0.15))
+    transition = identity(_charge(dielectric_transition_nm=0.15))
+    assert len({default, both, transition, identity(_charge(exclusion_offset_nm=0.3))}) == 4
+
+
+def _recorded(resolved: ResolvedCase) -> dict[str, Artefact]:
+    """Return the stage-1 and protonation keys a run of ``resolved`` records."""
+    structure = create("structure").key(StageInputs(case=resolved.document))
+    protonation = create("protonation").key(
+        StageInputs(case=resolved.document, upstream={"structure": structure})
+    )
+    return {"structure": structure, "protonation": protonation}
+
+
+def test_val03_run_identity_is_read_from_the_recorded_artefacts(
+    example_06: Callable[..., ResolvedCase], tmp_path: Path
+) -> None:
+    """VAL-03: a finished run's identity describes the structure it solved, from anywhere.
+
+    Read from the recorded artefacts, the identity is the one the case gives
+    before any run, and it stays so when the structure file has since gone or
+    changed, where the case alone would refuse or move.
+    """
+    resolved = example_06()
+    recorded = _recorded(resolved)
+    expected = case_identity(resolved)
+    assert case_identity(resolved, recorded=recorded) == expected
+    for edit in (_charge(dielectric_transition_nm=0.15), _charge(exclusion_offset_nm=0.3)):
+        changed = example_06(edit)
+        assert case_identity(changed, recorded=_recorded(changed)) == case_identity(changed)
+
+    structure = tmp_path / "2wcd.pdb.gz"
+    original = structure.read_bytes()
+    structure.write_bytes(original + b"\n")
+    assert case_identity(resolved) != expected
+    assert case_identity(resolved, recorded=recorded) == expected
+    structure.unlink()
+    with pytest.raises(ValueError, match="does not exist"):
+        case_identity(resolved)
+    assert case_identity(resolved, recorded=recorded) == expected
+
+    with pytest.raises(KeyError, match="'protonation'"):
+        case_identity(resolved, recorded={"structure": recorded["structure"]})
+
+
+def test_val03_reopen_reads_the_runs_own_upstream_artefacts(
+    example_06: Callable[..., ResolvedCase], tmp_path: Path
+) -> None:
+    """VAL-03: a run's stage-1 and protonation artefacts come from its store, or it is refused."""
+    resolved = example_06()
+    store = Store(tmp_path / "store")
+    stored = {name: store.put(artefact) for name, artefact in _recorded(resolved).items()}
+    record = {
+        "artefacts": {
+            name: {"schema": artefact.schema, "hash": artefact.hash}
+            for name, artefact in stored.items()
+        }
+    }
+    upstream = runs._upstream(tmp_path, record, store, resolved)
+    assert sorted(upstream) == ["protonation", "structure"]
+    assert case_identity(resolved, recorded=upstream) == case_identity(resolved)
+
+    with pytest.raises(runs.RunError, match="holds no"):
+        runs._upstream(tmp_path, record, Store(tmp_path / "empty"), resolved)
+    with pytest.raises(runs.RunError, match="records no 'protonation'"):
+        runs._upstream(
+            tmp_path,
+            {"artefacts": {"structure": record["artefacts"]["structure"]}},
+            store,
+            resolved,
+        )

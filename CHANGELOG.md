@@ -45,12 +45,14 @@ The release gathers nine work packages, each tagged except the last:
 ### Added
 
 - **A golden's case identity names a deposited charge and a derived `χ`** (VAL-03; §8.2.5 E3;
-  closes OPN-07). A depositing case's identity carries the protonation key and the kernel's
-  parameters. A deriving case's carries the dielectric transition and the structure's key. pH,
-  force field, titration, `smearing.sharpness`, the structure and a PQR's contents now move it.
-  The export lattice's spacing and the element order do not. Non-producer identities, every solve
-  key and `fields.charge` are unchanged. A `structure:` case now needs the `structure` extra, and
-  its files on disk, to have an identity.
+  closes OPN-07). A depositing case's identity carries the structure, the protonation and the
+  kernel's parameters. A deriving case's carries the dielectric transition and the structure, and
+  a non-zero `charge.exclusion_offset_nm` now moves any case's. pH, force field, titration,
+  `smearing.sharpness`, the structure and a PQR's contents move it. The export lattice's spacing,
+  the element order and the protonation gates' tolerances do not. Non-producer identities, every
+  solve key and `fields.charge` are unchanged. `nanopnp validate case-hash` on a `structure:` case
+  needs the `structure` extra and its files on disk; `validate compare` and `export-golden` read
+  the structure and protonation the run recorded instead.
 - `Measures.weight_extra_order`, the seam NUM-07's measurement runs through. No case key reaches it,
   and at 0 every form is unchanged. The measurement is in the NUM-07 NOTE. One extra quadrature
   order for the `r` weight leaves VER-18's finest-pair rates unchanged and lowers its error at fixed `h`. On

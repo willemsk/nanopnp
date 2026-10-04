@@ -708,7 +708,6 @@ def _validate_export_golden(args: argparse.Namespace) -> int:
     from nanopnp.validation.comsol import (
         GOLDEN_SCHEMA,
         GoldenManifest,
-        case_identity,
         export_golden,
     )
 
@@ -717,7 +716,7 @@ def _validate_export_golden(args: argparse.Namespace) -> int:
         {
             "schema": GOLDEN_SCHEMA,
             "case": resolved.case.name,
-            "case_hash": case_identity(_resolved(resolved.case)),
+            "case_hash": _identity(resolved),
             "probe": document.name,
             "probe_hash": document.hash,
             "refinement": args.refinement,
@@ -760,11 +759,11 @@ def _validate_compare(args: argparse.Namespace) -> int:
         compare_quantities,
         unavailable_quantities,
     )
-    from nanopnp.validation.comsol import case_identity, load_golden
+    from nanopnp.validation.comsol import load_golden
 
     document, sampled, resolved = _sampled_run(args)
     golden = load_golden(args.golden)
-    golden.check_case(case_identity(_resolved(resolved.case)))
+    golden.check_case(_identity(resolved))
     golden.check_probe(document)
     grid = _probe_grid(document, resolved)
     fields = compare_fields(sampled, golden, grid)
@@ -832,7 +831,7 @@ def _validate_report(args: argparse.Namespace) -> int:
         if rung_index is None or rung_index in by_rung:
             continue
         resolved = reopen(member.directory, store=store)
-        if _identity(resolved.case) != golden.manifest.case_hash:
+        if _identity(resolved) != golden.manifest.case_hash:
             continue
         grid = rung_grid = _probe_grid(document, resolved)
         sampled = _sample(resolved, grid)
@@ -917,11 +916,11 @@ def _resolved(case: CaseDocument) -> ResolvedCase:
     return resolve(case)
 
 
-def _identity(case: CaseDocument) -> str:
-    """Return a case document's Tier-3 identity hash."""
+def _identity(run: ReopenedRun) -> str:
+    """Return a finished run's Tier-3 identity hash, read from what the run recorded (VAL-03)."""
     from nanopnp.validation.comsol import case_identity
 
-    return case_identity(_resolved(case))
+    return case_identity(_resolved(run.case), recorded=run.upstream)
 
 
 def _unit(field: str) -> str:

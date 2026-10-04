@@ -288,7 +288,7 @@ def test_val01_val02_val04_attribution_against_the_archive() -> None:
             if member.status != "ok" or member.directory is None:
                 continue
             run = reopen(member.directory)
-            if case_identity(resolve(run.case)) != golden.manifest.case_hash:
+            if case_identity(resolve(run.case), recorded=run.upstream) != golden.manifest.case_hash:
                 continue
             rung = plan.point(index).coordinates[0]
             grid = rung_grid = ProbeGrid.on_mesh(
