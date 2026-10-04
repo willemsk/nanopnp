@@ -1,6 +1,6 @@
 # WP34 — Phase 3 closed: the open items resolved, and the end-of-phase report
 
-**Status: planned, not started.** Written 3 October 2026, after WP33 merged (`main` at `4375797`,
+**Status: planned, not started.** Written 3 October 2026, amended 4 October 2026, after WP33 merged (`main` at `4375797`,
 tagged `v0.4.0-alpha.8`). WP34 inherits everything the [current brief](current.md) lists as not to
 be re-decided, and in particular:
 
@@ -13,7 +13,14 @@ This is the last work package of the [Phase 3 plan](phase-3-charge-pipeline.md).
 governs, and identifiers below are pointers into it. **Spec amendment, made in this commit:** the
 new §8.2.5, rulings E1–E5 by the author on 3 October 2026. It renumbers Phase 4's release to v0.5
 throughout (§2.7, §3, QR-02, QR-15, §7.4, §8.1, §8.3 and Appendix A), records E3's representation in
-§10 OPN-07, and opens OPN-08.
+§10 OPN-07, and opens OPN-08. **Second amendment, 4 October 2026, made in the commit amending this
+plan:** the new §8.2.6, rulings F1–F5 by the author. The validation phase is postponed to v0.7 as
+Phase 6, and two phases are inserted before it: Phase 4, polish and user testing (v0.5), opened by
+an exploration of the architecture's modularity, and Phase 5, the graphical interface (v0.6), opened
+by a design and requirements document, mockups and a visual-feedback workflow. The case schema and
+the public API may change until v1.0 (F4). The amendment rewrites §2.7, IF-01 and its NOTE, the
+Release column of FR-21, FR-22 and FR-28, QR-02, QR-15, §7.4, VAL-16, VAL-17, §8.1, §8.3, RSK-15,
+OPN-08 and Appendix A. WP34 carries F1–F5 into the repository with E2 (D12, D15).
 
 ## Execution brief
 
@@ -25,15 +32,18 @@ them, plus the phase close:
 1. **OPN-07.** A golden's `case_hash` ignores a charge that stage 7 deposits, and a `χ` that it
    derives (E3).
 2. **NUM-07 / WP28 D13.** The coupled models integrate their `r`-weighted forms one order short.
-   WP34 measures this and records it; Phase 4 decides (E4).
+   WP34 measures this and records it; Phase 6, the validation phase, decides (E4, F1).
 3. **`with_section` in `nanopnp.PUBLIC`.** Parked by WP31.
-4. **Phase 4 is v0.5 (E2).** The repository is relabelled outside the specification, the stray
-   retired tag is deleted, and the renumbering script is retired.
+4. **The phases re-planned (E2, F1–F5).** The validation release is v0.7 and Phase 6, after Phase
+   4 (polish and user testing, v0.5) and Phase 5 (graphical interface, v0.6). The repository is
+   relabelled outside the specification, the stray retired tag is deleted, and the renumbering
+   script is retired. Phases 4 and 5 are not planned here (D15).
 5. **The end-of-phase report**, written on the Tier 1–2 evidence (E1), and `v0.4.0` (E5).
 
 Discharges VAL-03 (for a deposited charge), and closes OPN-07. Touches NUM-07, VER-45 (the public
-surface), and the phase criteria of the Phase 3 plan. No new identifier. **The brief is about 1,350 words, over
-its 1,200 target**, because it carries five unrelated items, and each needs its own decision.
+surface), and the phase criteria of the Phase 3 plan. No new identifier. **The brief is about 1,550 words, over
+its 1,200 target**, because it carries five unrelated items, each needing its own decision, and the
+4 October re-plan.
 
 ### Pointers
 
@@ -42,7 +52,7 @@ its 1,200 target**, because it carries five unrelated items, and each needs its 
 | OPN-07's evidence and constraints | §10 OPN-07; WP28 Outcomes, review finding #7 |
 | The identity | `validation/comsol.py` `case_identity`, `DISCRETISATION_KEYS`; `charge/stage.py` `charge_grid_key`, `derived_parameters`; `charge/protonation.py` `_key` |
 | NUM-07 | §6 NUM-07 and its NOTE on the `r` weight; `physics/measures.py`; WP28 D13 |
-| Versioning | §2.7 Versioning NOTE; §8.2.5 E2; `.github/renumbered-tags.txt`; `CONTRIBUTING.md` *Versions and releases* |
+| Versioning and the re-plan | §2.7 and its Versioning NOTE; §8.2.5 E2; §8.2.6 F1–F5; §8.1; `.github/renumbered-tags.txt`; `CONTRIBUTING.md` *Versions and releases* |
 | The report's numbers | The Phase 3 plan's *End-of-phase report*; the Outcomes of WP27–WP32 |
 
 ### Decisions
@@ -57,11 +67,12 @@ its 1,200 target**, because it carries five unrelated items, and each needs its 
 | D6 | The cost of the identity | It hashes the structure files' contents through the stage-1 key, and is measured on example 06 and recorded in the docstring | It replaces the "about 1.6 s" note with the producer path's own number |
 | D7 | NUM-07's measurement seam | `Measures` gains `weight_extra_order: int = 0`, which is added to the bonus of every non-singular axisymmetric `volume` and `surface` term. No case key, model option or CLI flag reaches it | E4. The measurement must not ship a switch, and at 0 the path is unchanged: VER-23's constants and every stage key stay fixed |
 | D8 | What NUM-07 measures | (a) VER-18's coupled MMS on its three levels, with L² errors at 0 and +1. (b) Example 05's frozen ClyA case at 0 and +1: the current, `G`, `t₊` and the in-pore averages of VAL-17's list. Both are `slow`, logged and never gated | (a) localises the effect to the quadrature, against an exact solution. (b) is the size of it on the case VAL-16 will judge. [Design §2](#2-num-07-the-measurement) |
-| D9 | `with_section` | **Not added** to `nanopnp.PUBLIC`. A comment in `test_public_api.py` records the decision | It is an editor affordance over a frozen schema. It changes no resolved case (WP31 D13), and adding it later costs nothing, whereas withdrawing it would break callers |
-| D10 | The renumbering script | `.github/scripts/renumber-tags.sh` is deleted, and the mapping file's header says the script ran once on 30 September 2026 and is gone | Re-run after Phase 4 tags `v0.5.0-alpha.1`, it would retire live tags. The mapping stays for `release.yml` and for reading old manifests (E2) |
-| D11 | The stray tag | `git push origin :refs/tags/v0.5.0-alpha.5`, after confirming it resolves to `v0.2.0-alpha.5`'s commit, `5abcf42`. Confirm with the author before pushing | E2. Deleting a remote tag is outward-facing |
-| D12 | Relabelling outside the specification | "v1.0" becomes "v0.5" wherever it means Phase 4's release, and stays wherever it means the stable release (IF-01's "before v1.0") or the backlog ("post-1.0"). CHANGELOG sections already released are history and stay | E2. The inventory is in [Design §3](#3-the-relabel-inventory) |
+| D9 | `with_section` | **Not added** to `nanopnp.PUBLIC`. A comment in `test_public_api.py` records the decision, and that Phase 4's API pass reviews it with the rest of the public surface (F3, F4) | It is an editor affordance. It changes no resolved case (WP31 D13), and adding it later costs nothing. Withdrawing it is no longer forbidden before v1.0 (F4), but it would still break callers, so the pass that reviews the whole surface decides, not WP34 |
+| D10 | The renumbering script | `.github/scripts/renumber-tags.sh` is deleted, and the mapping file's header says the script ran once on 30 September 2026 and is gone, and that the `v0.5.0` names are now the polish phase's (F2) | Re-run after Phase 4 tags `v0.5.0-alpha.1`, it would retire live tags. The mapping stays for `release.yml` and for reading old manifests (E2, F2) |
+| D11 | The stray tag | `git push origin :refs/tags/v0.5.0-alpha.5`, after confirming it resolves to `v0.2.0-alpha.5`'s commit, `5abcf42`. Confirm with the author before pushing | E2, F2. Deleting a remote tag is outward-facing |
+| D12 | Relabelling outside the specification | "v1.0" becomes "v0.7" wherever it means the validation release, and "Phase 4" becomes "Phase 6" wherever it means the validation phase. "v1.0" stays wherever it means the stable release (IF-01's "before v1.0") or the backlog ("post-1.0"). The phase-to-version lists in `CONTRIBUTING.md` and the `CHANGELOG.md` preamble name all seven phases. A claim that the schema is frozen or the API stable before v1.0 is corrected to F4. CHANGELOG sections already released, and delivered plans, are history and stay | E2, F1, F4. The inventory is in [Design §3](#3-the-relabel-inventory) |
 | D13 | The report's evidence | Each number is read from a test that asserts or logs it on WP34's tree, never copied forward from an Outcome without being re-run. The waived Tier-3 numbers are listed as carried to Phase 4 (E1) | The memory rule: a run cut short is not evidence. The report names numbers, not adjectives |
+| D15 | Phases 4 and 5 | **Not planned in WP34.** `current.md` points at `/wp-plan phase-4` after `v0.4.0`, and the Phase 4 plan's first package is the modularity exploration, whose report precedes the user-testing protocol (F3). Phase 5's design document, mockups and visual-feedback workflow are planned by `/wp-plan phase-5` once v0.5 is released (F5) | F3 makes the modularity report the input to the rest of Phase 4's planning, so planning that phase inside a closing package would decide its work packages before their evidence exists |
 | D14 | Release | WP34's `CHANGELOG.md` section is `v0.4.0`, and `CITATION.cff` names `0.4.0` with its date. After merge, the last commit on `main` is tagged `v0.4.0` alone (E5) | `CONTRIBUTING.md` *Versions and releases*; `release.yml`'s CITATION check |
 
 ### Work items
@@ -77,8 +88,9 @@ its 1,200 target**, because it carries five unrelated items, and each needs its 
 4. `tests/tier1/test_public_api.py`: the D9 comment.
 5. The relabel (D12), the script's removal (D10) and the tag (D11).
 6. The phase plan: its status, the WP34 entry, the open-decisions rows (OPN-07 closed, NUM-07
-   carried, versioning amended), the verification criteria with E1's waiver, and the
-   **End-of-phase report** (D13). Then `current.md` points at Phase 4.
+   carried to Phase 6, versioning and the phases amended), the verification criteria with E1's
+   waiver, and the **End-of-phase report** (D13), whose carried items name Phase 6. Then
+   `current.md` points at Phase 4, the polish phase, and `/wp-plan phase-4` (D15).
 7. `CHANGELOG.md` `v0.4.0` and `CITATION.cff` (D14).
 
 ### Verification
@@ -97,16 +109,21 @@ its 1,200 target**, because it carries five unrelated items, and each needs its 
 
 - The ensemble legs and the archive-dependent report numbers. They are carried to Phase 4's report
   (E1).
-- NUM-07's decision (Phase 4, E4).
+- NUM-07's decision (Phase 6, E4, F1).
+- Planning Phases 4 and 5 (D15).
 - The content of stable v1.0 (OPN-08, the author).
-- Watching the webgui charge colour range draw. It has no owner, and the report lists it as a
-  residual for the Phase 4 GUI increment.
+- Watching the webgui charge colour range draw. It has no owner, and the report lists it as an
+  input to the Phase 5 design document (F5), which is where the visual-feedback workflow that can
+  watch it is built.
 - OPN-04 (the author).
 
 ### Open questions
 
 None blocking. D3 (the geometry recipe left out of a deriving case's identity) and D9 (no
 `with_section`) are the close calls, and the author may overrule either. D11 asks before it pushes.
+The 4 October re-plan was settled with the author before this amendment (§8.2.6): the phases
+renumbered so that the minor version names the phase, breaking changes allowed until v1.0, the v1.5
+row folded into Phase 5, and Phase 4's user testing run by the author in scripted sessions.
 
 ## Design
 
@@ -152,7 +169,18 @@ From `git grep -E 'v1\.0|1\.0\.0'` at `4375797`, outside `SPECIFICATION.md` and 
 READMEs of examples 04 and 07, `.knowledge/00-index.md`, `.knowledge/08-validation-benchmarks.md`,
 `.github/workflows/release.yml`'s header comment, `src/nanopnp/io/case.py` (the FR-21 refusal),
 `src/nanopnp/geometry/analyte.py`, and `tests/tier2/test_force_convergence.py`. Each mention is read
-in context and classed as Phase 4 (→ v0.5) or stable (kept). `src/nanopnp/__init__.py` and
+in context and classed as the validation release (→ v0.7) or stable (kept). `src/nanopnp/__init__.py` and
 `cli/reference.py` say "before v1.0" of the API, which is the stable meaning, so they are kept. A
 refusal message that changes is covered by its existing test's match, and that match is updated with
 it.
+
+The re-plan of §8.2.6 adds three kinds of mention. "Phase 4" meaning the validation phase, from
+`git grep 'Phase 4'` outside `SPECIFICATION.md` and the delivered plans: the phase-to-version lists of
+`CONTRIBUTING.md` *Versions and releases* and the `CHANGELOG.md` preamble, and the Tier 3 comment
+in `.github/workflows/ci.yml`. Each becomes Phase 6, and the two lists name Phases 4 to 6 with their
+versions. The release table of `README.md` gains the v0.5 and v0.6 rows, and its v1.0 row becomes
+v0.7 and Phase 6. `git grep -i 'frozen\|stable from'` at `8f46ae7` finds no live claim that the
+schema is frozen or the API stable before v1.0 outside `current.md`, which this amendment corrects,
+and the README's "frozen case schema" describes what v0.2 shipped, so it stays. The desktop guide's
+"Installers for all three platforms come after v1.0" stays, because F5 keeps the installers
+post-1.0.

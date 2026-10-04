@@ -386,6 +386,11 @@ Phase 4 (E1). Its last commit on `main` is tagged `v0.4.0` (E5).
 
 > **Planned, 3 October 2026** ([plan](wp34-phase-3-close.md)). The plan's commit adds §8.2.5
 > (E1–E5), renumbers Phase 4 to v0.5 in the specification, records E3 in OPN-07 and opens OPN-08.
+>
+> **Amended, 4 October 2026.** The author re-planned the phases after this one (§8.2.6 F1–F5): the
+> validation phase is postponed to v0.7 as Phase 6, after Phase 4 (polish and user testing, v0.5)
+> and Phase 5 (graphical interface, v0.6). What this entry carries "to Phase 4" (E1's numbers, E4's
+> NUM-07 decision) now goes to Phase 6, and WP34 relabels the repository to match.
 
 ## Open decisions
 
@@ -403,6 +408,7 @@ Phase 4 (E1). Its last commit on `main` is tagged `v0.4.0` (E5).
 | NUM-07 order | Whether the coupled models' `r`-weighted forms gain one quadrature order (WP28 D13) | **Settled by the author, 3 October 2026** (§8.2.5 E4): measured in WP34, decided in Phase 4 |
 | Phase 4's release | v1.0 or a pre-stable minor | **Settled by the author, 3 October 2026** (§8.2.5 E2): v0.5, reusing the retired names; stable v1.0's content is OPN-08 |
 | The close without the archive | Whether Phase 3 waits for the ensemble legs | **Settled by the author, 3 October 2026** (§8.2.5 E1): it closes on tiers 1 and 2, and the archive-dependent numbers are carried to Phase 4 |
+| The phases after this one | Where the validation release sits, and what precedes it | **Settled by the author, 4 October 2026** (§8.2.6 F1–F5): Phase 4 polishes and user-tests the physics, numerics, API and CLI (v0.5), opened by a modularity exploration; Phase 5 is the graphical interface (v0.6), opened by a design and requirements document, mockups and a visual-feedback workflow; validation is Phase 6 (v0.7). The schema and API may change until v1.0 |
 | OPN-04 | Which mutation list produced the ClyA-AS structure | **Author, open.** Needed for the provenance of `Q_net`, not for any gate. WP27 records `structure.source.variant` beside `Q_net` |
 
 ## Verification
