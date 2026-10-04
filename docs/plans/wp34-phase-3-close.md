@@ -96,6 +96,21 @@ its 1,200 target**, because it carries five unrelated items, each needing its ow
 > weighted P2 stiffness of `u = z²` on an axis-touching mesh is 1.0 × 10⁻⁶ short at 0 and exact to
 > 3 × 10⁻¹⁵ at +1.
 >
+> **Outcome — D8, measured** (4 October 2026). The numbers are in the NUM-07 NOTE and
+> `.knowledge/06` §2.2. (a) +1 leaves every rate of VER-18 unchanged and lowers the error at fixed
+> `h`, most for the concentrations: at 0.1 nm, ×0.42 for `c_Cl−` and ×0.77 for `c_Na+`. (b) On
+> example 05 the states differ by 4.9 × 10⁻⁷, and no compared number moves by more than
+> 7.6 × 10⁻⁸ relative (the EOF; `I`, `G` and `t₊` by 10⁻¹⁰ or less). Two changes to the test as
+> planned. **A third route was needed:** changes that small are also what a seam that never reached
+> the solve would give, so the test now evaluates each state in both forms and asserts that each is a
+> root of its own (`|R|` about 2 × 10⁻¹¹) and not of the other's (7.3 × 10⁻⁴). **`nanopnp mesh`
+> called in-process** runs `logging.basicConfig(force=True)`, which silenced the first run's log;
+> the test now restores the root handlers and writes every number to a JSON file. The first run's
+> numbers were read back from its stores with the test's own helpers, and the full test was re-run
+> as amended. In-pore here is the element-centroid lumen between `z` = −1.85 and 12.25 nm. The
+> peak radially averaged *equilibrium* potential needs a 0 V solve and is not measured. Each solve
+> took about 30 minutes on two threads.
+
 > **Outcome — D9 to D12.** D9's comment is in `test_public_api.py`, the set unchanged. D10: the
 > script is deleted and the mapping's header rewritten; `release.yml` matches the first column
 > only, so the reused `v0.5.0` names in the second are never waived. **D11 is done, by the author.** The tag resolved to `5abcf42` as expected, and the author
