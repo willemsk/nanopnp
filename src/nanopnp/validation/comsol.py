@@ -54,8 +54,9 @@ from typing import TYPE_CHECKING, Literal
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
-from nanopnp.charge.stage import read_fields
-from nanopnp.core.hashing import canonical, content_hash, decode_floats
+from nanopnp.charge.stage import charge_grid_key, derived_parameters, read_fields
+from nanopnp.core.hashing import Canonicalisable, canonical, content_hash, decode_floats
+from nanopnp.core.stages import create
 from nanopnp.density.grid import (
     COMSOL_DATA_HEADER,
     COMSOL_GRID_HEADER,
@@ -63,6 +64,7 @@ from nanopnp.density.grid import (
     RadialGrid,
     read_grid,
 )
+from nanopnp.io.artefact import Artefact, StageInputs
 from nanopnp.io.case import CaseValidationError, render_problems
 from nanopnp.validation.probe import ProbeDocument, ProbePatch, load_probe
 
@@ -77,6 +79,7 @@ __all__ = [
     "CASE_IDENTITY_SCHEMA",
     "DISCRETISATION_KEYS",
     "GOLDEN_SCHEMA",
+    "KERNEL_DISCRETISATION_KEYS",
     "MANIFEST_NAME",
     "MODEL_OPTION_DISCRETISATION_KEYS",
     "PROBE_FIELDS",
@@ -192,6 +195,17 @@ top-level key. Everything else in the mapping is a physics switch and stays in
 the hash.
 """
 
+KERNEL_DISCRETISATION_KEYS: frozenset[str] = frozenset({"grid_spacing_nm"})
+"""Entries of the charge-grid key's parameters that :func:`case_identity` leaves out.
+
+A deposited charge enters the identity by its stage-7 recipe (section 8.2.5 E3,
+WP34 D1): the protonation key and the kernel's parameters. Only the export
+lattice's spacing is removed, because it converges like any other mesh (D2), and
+the element order the deposit is assembled at never reaches these parameters.
+Everything else is taken whole rather than picked by name, so a parameter added
+to the kernel later reaches the identity by default.
+"""
+
 AXIS_TOL_NM = 1e-6
 """Agreement required between an exported table's axes and the patch's own, in nm.
 
@@ -288,8 +302,29 @@ def case_identity(resolved: ResolvedCase) -> str:
     the stage-7 key's own record of it — the header's physical declarations and
     the grid's digest — so that the same table written in another format is the
     same case, and a table whose values moved is another. That reads the table,
-    about 1.6 s for the 84 MB reference charge (measured 2026-09-28). A case
-    supplying no field keeps the identity it had.
+    about 1.6 s for the 84 MB reference charge (measured 2026-09-28).
+
+    A charge that stage 7 *deposits*, from ``structure:`` or ``inputs.pqr``, is
+    represented by its recipe instead (section 8.2.5 E3, closing OPN-07): a key
+    ``deposited_charge`` holding the protonation artefact's key hash, which
+    carries the structure's or the PQR's digest, the frames, the pH, the force
+    field and the titration, and the kernel's parameters without
+    :data:`KERNEL_DISCRETISATION_KEYS`. A ``chi`` that stage 7 *derives* adds a
+    key ``derived_eps_r`` holding its derivation parameters and the structure
+    key's hash; the geometry recipe stays out, as the mesh does (WP34 D3). Both
+    keys are built through the stages' own key functions, so no stage runs and
+    no lattice is read. The cost is hashing the structure files: 12 ms on the
+    9.2 MB deposited 2WCD, an upper bound for example 06's prepared chains A-L,
+    plus 0.7 s on the first call to import stage 1's module and MDAnalysis
+    (measured 2026-10-04, WP34 D6). ``fields.charge`` keeps
+    meaning "supplied", so no solve key moves (D5), and a case that neither
+    supplies, deposits nor derives a field keeps the identity it had (D4).
+
+    Raises
+    ------
+    nanopnp.core.stages.MissingExtraError
+        For a ``structure:`` case built without the ``structure`` extra, which
+        stage 1 would refuse in the same words.
     """
     record: dict[str, object] = {
         key: value
@@ -307,7 +342,44 @@ def case_identity(resolved: ResolvedCase) -> str:
             for key, value in sorted(options.items())
             if key not in MODEL_OPTION_DISCRETISATION_KEYS
         }
+    record.update(_stage7_recipe(resolved))
     return content_hash(CASE_IDENTITY_SCHEMA, record)
+
+
+def _stage7_recipe(resolved: ResolvedCase) -> dict[str, Canonicalisable]:
+    """Return the identity's record of what stage 7 makes rather than reads (E3, WP34 D1, D3).
+
+    Empty for a case that neither deposits a charge nor derives ``chi``, so its
+    identity is byte-identical to the one it had before (D4).
+    """
+    if not (resolved.deposits_charge or resolved.derives_eps_r):
+        return {}
+    upstream: dict[str, Artefact] = {}
+    if resolved.structure is not None:
+        upstream["structure"] = create("structure").key(  # type: ignore[attr-defined]
+            StageInputs(case=resolved.document)
+        )
+    recipe: dict[str, Canonicalisable] = {}
+    if resolved.deposits_charge:
+        protonation = create("protonation").key(  # type: ignore[attr-defined]
+            StageInputs(case=resolved.document, upstream=upstream)
+        )
+        kernel = charge_grid_key(resolved, protonation).parameters
+        recipe["deposited_charge"] = {
+            "protonation": protonation.hash,
+            "kernel": {
+                key: value
+                for key, value in sorted(kernel.items())
+                if key not in KERNEL_DISCRETISATION_KEYS
+            },
+        }
+    if resolved.derives_eps_r:
+        structure = upstream.get("structure")
+        recipe["derived_eps_r"] = {
+            "derivation": derived_parameters(resolved),
+            "structure": structure.hash if structure is not None else None,
+        }
+    return recipe
 
 
 def table_name(field: str, patch: str) -> str:

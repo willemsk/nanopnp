@@ -162,6 +162,14 @@ Two cases differing only in their charge table are then two cases, and the same 
 format or at another path is one (**added 28 September 2026**). None of the five frozen cases
 supplies a field, so none of their hashes moved.
 
+A case whose charge stage 7 deposits, from `structure:` or `inputs.pqr`, hashes that charge's
+recipe instead: the protonation (the structure's or the PQR's contents, the pH, the force field
+and the titration) and the kernel's settings. The export lattice's spacing and the element order
+are discretisation and leave it unchanged. A case deriving `χ` from
+`charge.dielectric_transition_nm` hashes the width and the structure (**added 4 October 2026**,
+`SPECIFICATION.md` §8.2.5 E3). None of the five frozen cases does either, so none of their hashes
+moved.
+
 ### The two declarations only you can make
 
 **`current_boundary`** — which boundary `tds.ntflux_i` was evaluated on. The model report does
