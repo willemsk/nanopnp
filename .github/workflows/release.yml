@@ -3,7 +3,7 @@
 # gets a Release whose notes are that version's CHANGELOG.md section. A
 # work-package tag, vX.Y.Z-alpha.N, is only built, so a tag that no longer
 # builds fails here rather than at the milestone. Nothing goes to PyPI: that is
-# the DOI-archived v1.0 of QR-15.
+# the DOI-archived v0.7 of QR-15.
 #
 # A single push of more than three tags triggers no workflow, so a Release for a
 # tag pushed in bulk (the retroactive history) is made by dispatching this

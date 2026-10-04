@@ -255,7 +255,7 @@ jobs:
   # Tier 3 is RECORDED, NOT GATED (section 7.1, section 7.6): `continue-on-error`
   # is the whole point, and removing it would make a per-cent-level discrepancy
   # against a different discretisation on a different mesh fail the build. The
-  # acceptance targets of section 7.4 become a gate in Phase 4, and only once both
+  # acceptance targets of section 7.4 become a gate in Phase 6, and only once both
   # of that section's preconditions hold.
   #
   # The goldens are named and never vendored (section 7.1 NOTE): five cases x six

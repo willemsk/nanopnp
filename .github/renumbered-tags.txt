@@ -1,8 +1,13 @@
 # Tags re-created by the version renumbering of 30 September 2026
 # (SPECIFICATION.md section 2.7, the Versioning NOTE; section 8.2.4 D1).
 # One line per tag: the new name, then the retired name it replaces on the same
-# commit. .github/scripts/renumber-tags.sh reads it, and release.yml waives its
-# CITATION.cff check for a tag listed here. The retired names are never reused.
+# commit. release.yml waives its CITATION.cff check for a tag in the first
+# column, and a reader of a manifest recording a retired version finds its new
+# name here.
+# The script that applied it ran once, on 30 September 2026, and was deleted in
+# WP34 (D10): re-run once Phase 4 tags v0.5.0-alpha.1, it would retire live tags.
+# The v0.5.0 names in the second column are now Phase 4's, polish and user
+# testing (section 8.2.5 E2, section 8.2.6 F2); the v0.9.0 names stay retired.
 v0.2.0 v0.5.0
 v0.2.0-alpha.1 v0.5.0-alpha.1
 v0.2.0-alpha.2 v0.5.0-alpha.2

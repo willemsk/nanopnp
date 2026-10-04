@@ -2697,7 +2697,7 @@ def _check_generation(document: CaseDocument) -> None:
     ------
     UnsupportedCaseSection
         Naming the key and its value: ``boundary_layer: true`` (FR-11,
-        post-1.0) and ``geometry.analyte`` (FR-21, v1.0). ``backend: gmsh`` is
+        post-1.0) and ``geometry.analyte`` (FR-21, v0.7). ``backend: gmsh`` is
         not refused here: it resolves on any install, and stage 6 refuses it
         naming the extra when ``gmsh`` does not import (WP23 D9).
     CaseValidationError
@@ -2714,7 +2714,7 @@ def _check_generation(document: CaseDocument) -> None:
     if geometry is not None and geometry.analyte is not None:
         raise UnsupportedCaseSection(
             f"geometry.analyte is a {geometry.analyte.shape}; an analyte in a generated region "
-            "is FR-21, v1.0. The benchmark geometries embed one (PHY-11)"
+            "is FR-21, v0.7. The benchmark geometries embed one (PHY-11)"
         )
     membrane = geometry.membrane if geometry is not None else MembraneSpec()
     reservoir = geometry.reservoir if geometry is not None else ReservoirSpec()

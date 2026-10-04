@@ -4,7 +4,7 @@ Phase 0 needs an analyte for one reason: VER-19 to VER-22 are the four
 outstanding benchmarks of exit criterion 1 and every one of them is a force on an
 embedded body. Amendment A1 pulls that much of FR-21 and FR-22 into the spike
 "to the extent the benchmarks exercise them"; the case-file surface for analytes
-is v1.0 work and is not here.
+is v0.7 work (Phase 6) and is not here.
 
 **The body is a named domain, glued, not a hole.** Poisson is solved over all of
 Omega with a piecewise permittivity, so the dielectric jump PHY-09 asks for *is*

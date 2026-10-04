@@ -3,7 +3,7 @@
 !!! note "Kept, but not required"
     Since 30 September 2026 (`SPECIFICATION.md` §8.2.4 D6), Tier 3 compares the paper's
     published current–voltage relationships and in-pore averages (VAL-16, VAL-17), and that
-    comparison gates v1.0. The field exports described here are no longer asked for. The
+    comparison gates v0.7 (§8.2.6 F1). The field exports described here are no longer asked for. The
     harness stays, and ingests and refuses exactly as below if an export ever arrives.
 
 What the author produces from the reference model, and what `nanopnp validate ingest-golden`
