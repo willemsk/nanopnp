@@ -1,6 +1,6 @@
 # Current work
 
-Updated 5 October 2026 (Phase 4 planned). Navigation only; `SPECIFICATION.md`
+Updated 5 October 2026 (WP35 planned). Navigation only; `SPECIFICATION.md`
 governs; nothing here is evidence an unmerged branch shipped.
 
 ## Position
@@ -8,8 +8,11 @@ governs; nothing here is evidence an unmerged branch shipped.
 - Phases 1 to 3 are **closed** as `v0.2.0`, `v0.3.0` (criterion 3 waived, §8.2.4 D7) and `v0.4.0`
   (§8.2.5 E1, E5).
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
-  **planned, not started** (§8.2.7 G1–G11). WP35, the modularity exploration, is planned in full.
-  Everything after it is provisional until `/phase-plan amend 4`. **Next: `/wp-plan 35`**.
+  **in progress** (§8.2.7 G1–G11). **WP35, the modularity exploration, is planned, not started:**
+  [wp35-modularity-exploration.md](wp35-modularity-exploration.md): the report, its `MOD-nn`
+  log and VER-61 to VER-63, with no refactor. Everything after it is provisional until
+  `/phase-plan amend 4`. **Next: `/wp-implement`**; `v0.5.0-alpha.1` after merge. Its golden is
+  keyed per platform (D13), and its first CI run is expected red off Linux (D14).
 - After WP35 the author rules every `MOD-nn` finding. `/phase-plan amend 4` then plans these, in
   order: the refactors, the OKF bundle and its backfill, and the user-testing protocol. The
   author's sessions follow, and a second amendment plans the fixes, the documentation increment

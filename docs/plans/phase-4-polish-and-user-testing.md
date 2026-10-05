@@ -1,7 +1,8 @@
 # Phase 4 (Polish and user testing): a codebase whose seams are measured and whose surface has been used
 
 **Status: planned, not started.** Written 5 October 2026, after Phase 3 closed as `v0.4.0`.
-Planned: WP35, the modularity exploration, in full. Provisional, and planned by
+Planned: WP35, the modularity exploration, in full; its brief is
+[wp35-modularity-exploration.md](wp35-modularity-exploration.md). Provisional, and planned by
 `/phase-plan amend 4`: the refactors, the OKF bundle and its backfill, the user-testing protocol,
 the fixes, and the documentation increment. The close package is planned below; its number is
 assigned at the first amendment. Release: **v0.5** (`v0.5.0`).
@@ -175,8 +176,9 @@ Proposed identifiers:
   and so does a removed edge left unrecorded. It needs no new dependency (G1). Oracle: the
   report's matrix; fed a synthetic violating import, the guard must fail.
 - **VER-62, the number-stability golden.** WP35 records QoIs that the gated walks already compute
-  on `v0.4.0`'s tree. Among them are example 05's currents and the 2WCD charged walk's Na⁺ and Cl⁻
-  currents. WP35 argues the 10⁻⁸ relative tolerance from a rerun on every CI platform, and the
+  on `v0.4.0`'s tree. Among them are the 2WCD charged walk's Na⁺ and Cl⁻ currents. Example 05's
+  solve is `slow`, recorded and not gated, so it cannot feed the golden; WP35 D11 lists the gated
+  walks that do. WP35 argues the 10⁻⁸ relative tolerance from a rerun on every CI platform, and the
   predicted spread is below 10⁻¹⁰. The assertions attach to existing tests, by the §7.6 lever of
   shared work (G10).
 - **VER-63, the findings-log check.** It is a Tier-1 parse of every findings log under `docs/`
