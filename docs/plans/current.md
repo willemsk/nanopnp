@@ -14,7 +14,7 @@ governs, and nothing here is evidence an unmerged branch shipped.
   merge, tag its last commit `v0.4.0` alone (E5).
 - **Next phases** (§8.2.6). Phase 4, `v0.5.0`: a modularity exploration (F3), the knowledge base as
   an OKF bundle ([F6](okf-knowledge-bundle.md)), then user testing; after `v0.4.0`,
-  **`/wp-plan phase-4`**. Phase 5, `v0.6.0`: the GUI, opened by a design document, mockups and a
+  **`/phase-plan 4`**. Phase 5, `v0.6.0`: the GUI, opened by a design document, mockups and a
   visual-feedback workflow (F5). Phase 6, `v0.7.0`: validation (F1). Stable v1.0 is OPN-08.
 
 ## Not to be re-decided

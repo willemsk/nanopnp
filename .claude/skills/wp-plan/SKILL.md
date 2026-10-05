@@ -1,11 +1,11 @@
 ---
 name: wp-plan
-description: Write the implementation plan for a nanopnp work package or phase into docs/plans/ and commit it. Use when the user asks to plan a work package, plan the next phase, start WP7, break a phase into work packages, or invokes /wp-plan.
+description: Write the implementation plan for a nanopnp work package into docs/plans/ and commit it. Use when the user asks to plan a work package, start WP7, or invokes /wp-plan. Planning or amending a whole phase is /phase-plan.
 ---
 
 # Plan a work package
 
-Step 1 of the implementation workflow: turn a line in `SPECIFICATION.md` §8.1 into a plan detailed
+Step 1 of the implementation workflow: turn a package of the phase plan (`/phase-plan`) into a plan detailed
 enough that `/wp-implement` can execute it without re-deciding anything that matters. The plan is a
 commit under `docs/plans/`, not a chat message.
 
@@ -43,7 +43,7 @@ a single term — that ordering is the point of §7.1 and it is what makes a fai
 
 ## What to write
 
-`docs/plans/wp<n>-<slug>.md` for a work package; `docs/plans/phase-<n>-<slug>.md` for a phase.
+`docs/plans/wp<n>-<slug>.md`.
 
 ### A work-package plan
 
@@ -69,12 +69,9 @@ corrections. Keep the execution brief current; a plan is a record, so its Outcom
 
 ### A phase plan
 
-Same voice, one level up: `## Context` (what the phase is *for*, and what it deliberately excludes),
-`## Design decisions` spanning the phase, `## Conventions established by <earlier phase>`,
-`## Work packages` as `### WP<n> — <name>` with a paragraph of scope and its identifiers each,
-`## Open decisions`, `## Verification`, and an empty `## End-of-phase report` naming the numbers the
-phase must report. Amendments to the specification's own phase definition go in `SPECIFICATION.md`
-§8.2.x, not here.
+Not this skill. `/phase-plan <n>` plans a phase, with a ruling round before the write-up, and
+`/phase-plan amend` changes one in flight. A package that is not in its phase plan, or that the plan
+lists as provisional, goes through `/phase-plan amend` before it is planned here.
 
 Keep `docs/plans/current.md` as the bounded entry point (target 800 words): current phase/WP links,
 status, live dependency constraints and open decisions. Replace obsolete entries; do not append

@@ -1,8 +1,8 @@
 # Sub-agent model policy
 
-Which model a delegated task runs on. Referenced from `CLAUDE.md` and from the `wp-plan`,
-`wp-implement`, `wp-ship` and `steward` skills; it applies to *every* `Agent` call in this
-repository, not only the ones those skills make.
+Which model a delegated task runs on. Referenced from `CLAUDE.md` and from the `phase-plan`,
+`wp-plan`, `wp-implement`, `wp-ship` and `steward` skills; it applies to *every* `Agent` call in
+this repository, not only the ones those skills make.
 
 ## The rule
 
