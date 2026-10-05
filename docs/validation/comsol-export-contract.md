@@ -1,8 +1,8 @@
 # The COMSOL export contract (VAL-03, VAL-04, RSK-14)
 
 !!! note "Kept, but not required"
-    Tier 3 compares (`SPECIFICATION.md` §8.2.4 D6) the paper's
-    published current–voltage relationships and in-pore averages (VAL-16, VAL-17), and that
+    Tier 3 compares the paper's published current–voltage relationships and in-pore averages
+    (VAL-16, VAL-17; `SPECIFICATION.md` §8.2.4 D6), and that
     comparison gates v0.7 (§8.2.6 F1). The field exports described here are not asked for. The
     harness stays, and ingests and refuses exactly as below if an export ever arrives.
 
