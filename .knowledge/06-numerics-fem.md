@@ -1280,9 +1280,20 @@ cases), 03 (four sweep members, warm-started across waves on two workers) and 07
 2WCD walk with and without the ion-exclusion shell. Every current, conductance, transport number,
 EOF rate and the deposited `q_mesh_e` agreed **exactly**, relative drift 0, and so did each deployed
 mesh's content hash. Process placement, worker count and the sweep's worker assignment do not
-enter the numbers, so a nonzero drift within one key is a code change, not noise. Across platforms
-the mesh itself differs (§8.1.2, `07` §5), which is why the golden is keyed per platform and asserts
-the mesh hash before any number.
+enter the numbers. Across platforms the mesh itself differs (§8.1.2, `07` §5), which is why the
+golden is keyed per platform and asserts the mesh hash before any number.
+
+**Within one `<platform>-<machine>` key, NumPy's SIMD dispatch moves a PDB-derived mesh**
+**[tested]** (WP35 review, 5 October 2026). WP35's first CI run on `ubuntu-latest` produced a
+different deployed mesh for the 2WCD shell walk (`289b175e…`) from the one recorded on an AVX-512
+build machine (`47b8e51f…`), both `linux-x86_64`, same `uv.lock`, threads pinned to 1. Locally,
+`NPY_DISABLE_CPU_FEATURES="X86_V4 AVX512_ICL AVX512_SPR"` reproduces CI's hash exactly, while
+`OPENBLAS_CORETYPE=Haswell` alone leaves the recorded one: the cause is NumPy's runtime-dispatched
+kernels (last-bit differences upstream of meshing, in the structure → density → contour stages),
+not BLAS. On the other mesh the shell walk's current moves by 2.6 × 10⁻⁵ relative (`Cl⁻` 5.2 × 10⁻⁵,
+`Na⁺` 4.5 × 10⁻⁶) and `q_mesh_e` by 1.6 × 10⁻¹⁴. The profile-driven examples 01–03 kept their meshes
+and held to ≤ 1.9 × 10⁻¹³. So equal mesh hashes and zero drift hold on one machine's dispatch level,
+not across every machine sharing a platform key.
 
 ### 8.2 Measured: the reaction flux really is worth it
 
