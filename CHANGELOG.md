@@ -14,7 +14,7 @@ Every notable change to nanopnp, newest first. The format follows
 The package version comes from the tag (hatch-vcs). A commit between two tags installs as a
 development version that names it, for example `0.2.0a11.dev3+g1a2b3c4`, and that is the version
 every provenance manifest records (FR-25). The versions were renumbered on 30 September 2026
-(`SPECIFICATION.md` §2.7, the Versioning NOTE): Phase 1's tags were `v0.5.0-alpha.1` to `v0.5.0` and
+(`SPECIFICATION.md` §8.2.4 D1): Phase 1's tags were `v0.5.0-alpha.1` to `v0.5.0` and
 Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before then records the old
 version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.

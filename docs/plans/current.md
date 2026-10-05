@@ -22,7 +22,7 @@ governs, and nothing here is evidence an unmerged branch shipped.
 Each is recorded in full where it points.
 
 - **Versions:** one minor per phase; a retired name is never reused, except `v0.5.0` for Phase 4
-  (E2, F2). → §2.7 NOTE; `.github/renumbered-tags.txt`.
+  (E2, F2). → §2.7 NOTE; §8.2.4 D1; the head of `CHANGELOG.md`.
 - **The kernel is the closed-form azimuthal mean** of each atom's 3D Gaussian. It is deposited on
   the deployed mesh and renormalised per atom, and no 3D grid is built. → PHY-16 steps 4–6, PHY-18;
   §8.2.4 D2.
