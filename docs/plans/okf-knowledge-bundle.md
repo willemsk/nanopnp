@@ -70,7 +70,11 @@ One Tier-1 test, given a VER identifier by the plan, refuses:
 
 ## Open for the package's plan
 
-These go to the author through `/phase-plan 4`; none is decided here.
+These went to the author through `/phase-plan 4` on 5 October 2026 (`SPECIFICATION.md` §8.2.7).
+Question 1 is settled by G3: two packages, joined by a committed list of unbacked claims that may
+only shrink. Question 2 is settled by G8: a test where the arithmetic can be executed, and
+otherwise `[verified]` with its source footnote under `process:arithmetic`. Questions 3 to 7 are
+left to the bundle package's `/wp-plan` (G9). The text below is the questions as they were put.
 
 1. **Size and split.** K6 means up to 189 new tests (fewer where an existing test already covers a claim unnamed), some `slow`, on top of a mechanical
    restructure and 439 citation rewrites. One package, or two (the bundle and its checks, then the
