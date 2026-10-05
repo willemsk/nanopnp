@@ -235,6 +235,8 @@ carry them. Each package:
 
 ### WP36 — The stage protocol and the walk (MOD-01, MOD-02, MOD-12; FR-27)
 
+Plan: [wp36-stage-protocol-and-walk.md](wp36-stage-protocol-and-walk.md).
+
 `key()` joins the `Stage` protocol in `core/stages.py`. `MaterialsStage` and `CaseStage` define it,
 returning the hash `run` would, and the two `# type: ignore[attr-defined]` calls go
 (`validation/comsol.py`, `gui/assess.py`). The facts the walk now keeps in its own lists move into

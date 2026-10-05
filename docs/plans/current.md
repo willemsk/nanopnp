@@ -1,6 +1,6 @@
 # Current work
 
-Updated 5 October 2026 (`MOD-nn` ruled). Navigation only; `SPECIFICATION.md`
+Updated 5 October 2026 (WP36 planned). Navigation only; `SPECIFICATION.md`
 governs; nothing here is evidence an unmerged branch shipped.
 
 ## Position
@@ -10,10 +10,10 @@ governs; nothing here is evidence an unmerged branch shipped.
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
   **in progress** (§8.2.7 G1–G11; §8.2.8 H1–H9), estimated at 3–5 weeks. WP35 merged as
   `v0.5.0-alpha.1`, and the author has ruled all 17 `MOD-nn` (§8.2.8).
-- **Next: `/wp-plan 36`**, the stage protocol and the walk (`MOD-01`, `MOD-02`, `MOD-12`). Then
-  WP37 (cycle cuts, exit codes, backend guard), WP38 (`io` split), WP39 (backend registries, and
-  H6's acyclicity target measured), WP40 (stale refusals), WP41 (OKF bundle), WP42 (backfill),
-  WP43 (user-testing protocol). The author's sessions follow, and a second amendment plans and
+- **Next: `/wp-implement`** for WP36, the stage protocol and the walk (`MOD-01`, `MOD-02`,
+  `MOD-12`; [plan](wp36-stage-protocol-and-walk.md)). Then WP37 (cycle cuts, exit codes, backend
+  guard), WP38 (`io` split), WP39 (backend registries, and H6's acyclicity target measured), WP40
+  (stale refusals), WP41 (OKF bundle), WP42 (backfill), WP43 (user-testing protocol). The author's sessions follow, and a second amendment plans and
   numbers the fixes, the documentation increment and the close.
 - Phase 5 (`v0.6.0`) is the GUI (F5), Phase 6 (`v0.7.0`) validation (F1); v1.0 is OPN-08.
 
