@@ -1,6 +1,6 @@
 # WP35 — The modularity exploration: report, findings log, guard and golden
 
-**Status: planned, not started.** Written 5 October 2026, on `main` at `e63a32e`, after Phase 3
+**Status: delivered, 5 October 2026.** Written 5 October 2026, on `main` at `e63a32e`, after Phase 3
 closed as `v0.4.0`. WP35 inherits everything the [current brief](current.md) lists as not to be
 re-decided. In particular it inherits:
 
@@ -73,6 +73,38 @@ The package ends when the PR merges. The author then rules each `MOD-nn` through
 | D18 | MOD areas | `stages`, `coupling`, `extension`, `surface` | The phase plan's four areas |
 | D19 | Prose-only | `prose-only.sh` treats `*findings.md` as not prose, with a case in `test_workflow_hooks.py` | VER-63 reads these files. Without this, a ruling edit to a log would skip the test that checks it |
 | D20 | Release | `CHANGELOG.md` `[0.5.0-alpha.1]`. After merge the author or session tags `v0.5.0-alpha.1` (G11). No `v0.5.0-*` tag exists locally or on `origin` (checked 5 October 2026) | §2.7; F2's stray tag is already gone |
+
+> **Outcome — the measurement module and the relation (D1–D8).** `validation/modularity.py` reads
+> the tree by AST and names the modules it reads by path, never as a dotted `nanopnp` name: an
+> early draft spelt `"nanopnp.core.stages"` and so added six `string` edges `validation → …` of its
+> own, and VER-61 now asserts that the measuring modules add none. At `97f2b3d`: 806 import edges
+> (460 `top`, 112 `deferred`, 132 `typing`, 102 `string`), 101 static and 27 string subpackage edges,
+> and a `top` SCC of exactly the ten members seed 3 predicted. The module-level `top` graph is
+> acyclic. The corrections registry's members are the YAML stems under `data/corrections/` (D8 c),
+> because `materials/models.py` registers only `none` in code. A measurement of `97f2b3d` and of
+> WP35's tree differs only in the size table, where `render_measurements` itself enters the top ten.
+>
+> **Outcome — the findings (D9, D10).** All 14 seeds are MOD-01 to MOD-14, in the seed order. None
+> was dropped or merged. Three were added by measurement: MOD-15 (`core/stages.py:44`, `core`'s one
+> upward `TYPE_CHECKING` import, which puts `core` in the static cycle), MOD-16 (the stabilisation
+> registry closed by `Literal["none", "supg", "reference"]` at `io/case.py:662`), and MOD-17
+> (`willems2020_nacl` as a default in eight signatures). The YAML annotates each edge pointing up the
+> report's stated layer order with its finding. The order is the report's reading, not a rule.
+> `nanopnp.validation.findings:LogFormatError` joined `cli/errors.py`'s `EXCLUDED`, with its reason,
+> because VER-32's enumeration requires every public exception to be classified or excluded.
+>
+> **Outcome — D15, the tree computes as `v0.4.0`.** Every file of `src/`, `data/` and `examples/`
+> at `v0.4.0` was compared with WP35's tree, by bytes and then, for Python, by AST with every bare
+> string statement removed. 167 files are common: 150 are byte-identical, 16 Python modules differ
+> in docstrings or comments only, and `data/geometry/README.md` differs as prose. The only additions
+> are `validation/modularity.py` and `validation/findings.py`, which no walk imports.
+>
+> **Outcome — D13, D14 and Design §2, the golden on Linux.** Recorded under
+> `pytest -n auto --dist loadfile` (6 min, 24 tests), then asserted serially (9.9 min): the largest
+> relative drift of every walk is **0**, and every mesh hash equal (`.knowledge/06` §8.1.5). The
+> 2WCD walks record no `transport_number` or `eof_m3_s`, because their case asks for `current`
+> only and has no flow: D12's "every scalar the walk produces". Example 03 holds 20 values, five per
+> member, named `point-<index>.`. The other keys come from the PR's first CI run, as D14 expects.
 
 ### Work items
 
