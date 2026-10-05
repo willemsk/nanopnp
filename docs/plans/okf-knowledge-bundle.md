@@ -2,7 +2,7 @@
 
 **Status: decided, not planned.** Written 4 October 2026. This note is the input to the Phase 4 work
 package that §8.2.6 F6 schedules after the modularity report and before the user-testing protocol.
-It is not a work-package plan: `/wp-plan phase-4` allocates the package its number, its identifiers
+It is not a work-package plan: `/phase-plan 4` allocates the package its number, its identifiers
 and its brief, and settles the open questions at the end. `SPECIFICATION.md` governs.
 
 ## What OKF is
@@ -68,7 +68,7 @@ One Tier-1 test, given a VER identifier by the plan, refuses:
 
 ## Open for the package's plan
 
-These go to the author through `/wp-plan phase-4`; none is decided here.
+These go to the author through `/phase-plan 4`; none is decided here.
 
 1. **Size and split.** K6 means up to 189 new tests (fewer where an existing test already covers a claim unnamed), some `slow`, on top of a mechanical
    restructure and 439 citation rewrites. One package, or two (the bundle and its checks, then the

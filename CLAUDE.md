@@ -206,7 +206,7 @@ reconstruct the run is not a result.
 ## Implementation workflow
 
 Work is delivered one work package at a time, one PR per package, green on tiers 1 and 2 before the
-next starts. Four steps, in three skills under `.claude/skills/`:
+next starts. Four steps, in three skills under `.claude/skills/`, below a phase planned by a fourth:
 
 For planning or resuming work, start at `docs/plans/current.md`, then the requested WP's Execution
 brief and its cited sections. Load historical summaries and derivations on demand, not by default.
@@ -215,7 +215,8 @@ specification, knowledge or plan section. A brief never overrides a normative re
 
 | Step | Command | What it does |
 |---|---|---|
-| 1 | `/wp-plan <n\|phase-n>` | Writes the implementation plan into `docs/plans/` and commits it. The decisions table is the deliverable |
+| 0 | `/phase-plan <n\|amend>` | Once per phase, and to amend one in flight. Puts the phase's decisions to the author, then writes the rulings into §8.2 and the phase plan into `docs/plans/`, ending in a close package |
+| 1 | `/wp-plan <n>` | Writes the implementation plan into `docs/plans/` and commits it. The decisions table is the deliverable |
 | 2 | `/wp-implement` | Executes the plan; keeps the specification, knowledge and Outcomes in step; gates, pushes, opens or reuses the PR, then stops |
 | 3–4 | `/wp-ship` | Gates, pushes, reuses the PR (opens one if missing), runs `/code-review xhigh --fix`, then drives CI to green |
 

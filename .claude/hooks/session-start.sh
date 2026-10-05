@@ -51,6 +51,6 @@ else
     echo "- current brief unavailable; locate the requested plan in docs/plans/ when needed"
 fi
 
-echo "- workflow: /wp-plan -> /wp-implement -> /wp-ship; CLAUDE.md 'Implementation workflow'"
+echo "- workflow: /wp-plan -> /wp-implement -> /wp-ship, under a phase planned by /phase-plan; CLAUDE.md 'Implementation workflow'"
 
 exit 0
