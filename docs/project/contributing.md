@@ -40,3 +40,17 @@ mkdocs serve` previews the site locally.
 request, and the test's name. Changing specified behaviour means changing the specification in the
 same commit. A tolerance is never loosened to let a number pass. A documented example is executed by
 a test, and a number in the documentation must be one a test asserts.
+
+Two guards hold the architecture and the numbers still while Phase 4 refactors (§8.2.7 G1, G10):
+
+- **The layering (VER-61).** `docs/project/modularity-layering.yaml` lists every import edge
+  between subpackages, as the [modularity report](modularity.md) records it. A commit that adds or
+  removes an edge edits that file in the same commit, naming the `MOD-nn` finding the edge bears
+  on. `tests/tier1/test_layering.py` names the module and the line of an edge the file lacks.
+- **The number-stability golden (VER-62).** Seven gated walks assert their currents, conductances,
+  transport numbers, electro-osmotic flow and deposited charge at 10⁻⁸ relative against
+  `tests/tier2/data/number_stability.json`, keyed per platform, with the deployed mesh's hash
+  asserted first. A miss is investigated, never re-pinned to pass. Either the change is reverted,
+  or it is ruled a deliberate fix: that commit amends the clause the fix changes and re-pins the
+  golden, stating the drift. Re-pin by recording with `NANOPNP_RECORD_STABILITY=<dir>` and folding
+  the files in with `uv run tests/tier2/data/merge_number_stability.py <dir> --replace`.

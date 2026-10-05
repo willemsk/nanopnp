@@ -1,11 +1,11 @@
 # Phase 4 (Polish and user testing): a codebase whose seams are measured and whose surface has been used
 
-**Status: planned, not started.** Written 5 October 2026, after Phase 3 closed as `v0.4.0`.
-Planned: WP35, the modularity exploration, in full; its brief is
-[wp35-modularity-exploration.md](wp35-modularity-exploration.md). Provisional, and planned by
-`/phase-plan amend 4`: the refactors, the OKF bundle and its backfill, the user-testing protocol,
-the fixes, and the documentation increment. The close package is planned below; its number is
-assigned at the first amendment. Release: **v0.5** (`v0.5.0`).
+**Status: in progress.** Written 5 October 2026, after Phase 3 closed as `v0.4.0`.
+Delivered: WP35, the modularity exploration
+([wp35-modularity-exploration.md](wp35-modularity-exploration.md)). Provisional, and planned by
+`/phase-plan amend 4` once the author has ruled every `MOD-nn`: the refactors, the OKF bundle and
+its backfill, the user-testing protocol, the fixes, and the documentation increment. The close
+package is planned below; its number is assigned at the first amendment. Release: **v0.5** (`v0.5.0`).
 
 This is the delivery plan for Phase 4 of `SPECIFICATION.md` §8.1. The specification is normative.
 Where this file and the specification disagree, the specification governs and this file is wrong.
@@ -191,6 +191,16 @@ Proposed identifiers:
   Oracle: it must fail on constructed bad logs.
 
 No Tier 3 leg. Ends with the author ruling every `MOD-nn`, through `/phase-plan amend 4`.
+
+> **Delivered, 5 October 2026** ([plan](wp35-modularity-exploration.md), to be tagged
+> `v0.5.0-alpha.1`). The [report](../project/modularity.md) logs 17 findings in
+> [modularity-findings.md](../project/modularity-findings.md), header `open`: 2 high (MOD-01, the
+> missing `key()`; MOD-10, no §5.4.1 interface), 8 medium and 7 low, measured at `97f2b3d` by
+> `validation/modularity.py`. VER-61 pins the 101 static and 27 string subpackage edges in
+> `docs/project/modularity-layering.yaml`; VER-63 checks every findings log; VER-62's golden holds
+> seven walks, recorded on a tree D15 shows computes as `v0.4.0`, with zero drift on a Linux rerun.
+> Every later package keeps all three green, edits the YAML with any edge it moves, and re-pins the
+> golden only by a G10 ruling. Next: the author rules each `MOD-nn` through `/phase-plan amend 4`.
 
 ### Refactor packages — Provisional
 

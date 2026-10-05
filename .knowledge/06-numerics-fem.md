@@ -1271,6 +1271,19 @@ The rule: **a test that asserts a quadrature-error magnitude must run on a struc
 that asserts a converged physical quantity may use whatever mesh the pipeline deploys, because that
 number is mesh-independent by construction and an unstructured mesh is then the more honest one.
 
+### 8.1.5 Within one build, a deployed walk's quantities repeat bit for bit **[tested]**
+
+The converse of §8.1.2, measured for VER-62 (WP35). On one Linux x86-64 build (Python 3.12,
+`uv.lock` at `v0.4.0`, `OMP_NUM_THREADS=OPENBLAS_NUM_THREADS=MKL_NUM_THREADS=1`), seven gated walks
+were run twice: once under `pytest -n auto --dist loadfile`, once serially. Examples 01, 02 (both
+cases), 03 (four sweep members, warm-started across waves on two workers) and 07, and the charged
+2WCD walk with and without the ion-exclusion shell. Every current, conductance, transport number,
+EOF rate and the deposited `q_mesh_e` agreed **exactly**, relative drift 0, and so did each deployed
+mesh's content hash. Process placement, worker count and the sweep's worker assignment do not
+enter the numbers, so a nonzero drift within one key is a code change, not noise. Across platforms
+the mesh itself differs (§8.1.2, `07` §5), which is why the golden is keyed per platform and asserts
+the mesh hash before any number.
+
 ### 8.2 Measured: the reaction flux really is worth it
 
 Gouy-Chapman at 0.1 M, ζ̃ = 2, P2, planar slab. Wall gradient recovered two ways and compared with

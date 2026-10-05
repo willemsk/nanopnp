@@ -19,6 +19,34 @@ Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before t
 version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
 
+## [0.5.0-alpha.1] - 2026-10-05
+
+WP35: the modularity exploration (`SPECIFICATION.md` §8.2.7 G1, G4, G10). It measures the
+architecture against FR-16, FR-20, FR-27, QR-13, QR-14, ADR-002 and ADR-005 and logs 17 findings,
+`MOD-01` to `MOD-17`, for the author to rule. It refactors nothing: every file of `src/`, `data/`
+and `examples/` computes as it did at `v0.4.0`.
+
+### Added
+
+- **The modularity report** (`docs/project/modularity.md`) and its findings log
+  (`docs/project/modularity-findings.md`), with the measurements page generated from
+  `nanopnp.validation.modularity` on every documentation build.
+- **VER-61, the layering guard**: the subpackage import relation, read from the syntax tree in
+  four kinds, equals `docs/project/modularity-layering.yaml` in both directions, and module-level
+  imports stay acyclic.
+- **VER-62, the number-stability golden**: seven gated walks assert their quantities at 10⁻⁸
+  relative against values recorded on `v0.4.0`'s tree, keyed per platform with the mesh hash
+  asserted first. The largest drift per walk is printed at the end of a run.
+- **VER-63, the findings-log check**: every `docs/**/*findings.md` is parsed and checked, and a
+  log whose header says `closed` refuses a row that is not terminal.
+
+### Changed
+
+- `.github/scripts/prose-only.sh` reads a `*findings.md` as not prose, so a ruling edit runs the
+  check that reads it.
+
+Discharges VER-61, VER-62 and VER-63.
+
 ## [0.4.0] - 2026-10-04
 
 **Phase 3, the charge pipeline.** A PDB entry, or a supplied PQR, is protonated with PDB2PQR and
