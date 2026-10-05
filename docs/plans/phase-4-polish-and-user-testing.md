@@ -195,7 +195,7 @@ No Tier 3 leg. Ends with the author ruling every `MOD-nn`, through `/phase-plan 
 > **Delivered, 5 October 2026** ([plan](wp35-modularity-exploration.md), to be tagged
 > `v0.5.0-alpha.1`). The [report](../project/modularity.md) logs 17 findings in
 > [modularity-findings.md](../project/modularity-findings.md), header `open`: 2 high (MOD-01, the
-> missing `key()`; MOD-10, no §5.4.1 interface), 8 medium and 7 low, measured at `97f2b3d` by
+> missing `key()`; MOD-10, no §5.4.1 interface), 7 medium and 8 low, measured at `97f2b3d` by
 > `validation/modularity.py`. VER-61 pins the 101 static and 27 string subpackage edges in
 > `docs/project/modularity-layering.yaml`; VER-63 checks every findings log; VER-62's golden holds
 > seven walks, recorded on a tree D15 shows computes as `v0.4.0`, with zero drift on a Linux rerun.

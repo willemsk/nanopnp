@@ -67,8 +67,9 @@ and a walk that composes the stages can fail where each stage's own tests pass.
 Claude Code makes, and refuses the commit with the failing output if a stage fails or its 25-minute
 budget runs out. It gates the working tree and remembers a pass, so a tree that already passed is
 not re-run. When only prose changed it runs ruff alone. Prose means Markdown outside `packaging/`,
-`src/`, `data/` and `examples/`; `docs/` as a whole doesn't count, because tests read its YAML, and
-an example's README is executed by its test (VER-46). The rule is `.github/scripts/prose-only.sh`,
+`src/`, `data/` and `examples/`, other than a `*findings.md` log, whose table VER-63 checks;
+`docs/` as a whole doesn't count, because tests read its YAML, and an example's README is executed
+by its test (VER-46). The rule is `.github/scripts/prose-only.sh`,
 and CI uses the same script. CI's strict documentation build runs on every push, prose included.
 `.claude/hooks/gate.sh run` runs the gate by hand with `--extended`, the whole of what CI gates; the
 skills use it before they push, and a pass of the hook's development selection does not stand in for

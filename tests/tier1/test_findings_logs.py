@@ -134,7 +134,7 @@ def test_ver63_a_valid_log_passes_and_counts(repository: Path) -> None:
         ("| MOD-02 | stages | high | open | — | [x](report.md#mod-03) |", "anchor #mod-03"),
         (
             "| MOD-02 | stages | high | open | — | [x](gone.md#mod-02) |",
-            "'gone.md', which does not exist",
+            "'gone.md', which is not a file",
         ),
     ],
 )
@@ -170,3 +170,25 @@ def test_ver63_front_matter_and_file_name_go_together(repository: Path) -> None:
 def test_ver63_a_log_status_other_than_open_or_closed_is_refused(repository: Path) -> None:
     path = _log(repository, GOOD, status="done")
     assert any("neither open nor closed" in error for error in check_log(path, repository))
+
+
+def test_ver63_a_fixed_ruling_may_link_a_section_of_its_plan(repository: Path) -> None:
+    """A plan link with an anchor still names the plan; the anchor is not part of the file."""
+    fixed = f"| MOD-02 | coupling | low | fixed | [WP36](../plans/wp36.md#outcome) | {ANOTHER} |"
+    assert check_log(_log(repository, GOOD, fixed), repository) == ()
+
+
+def test_ver63_a_finding_linking_a_heading_of_the_log_itself_is_checked(repository: Path) -> None:
+    """``#anchor`` alone is a heading of the log: checked against it, never read as a directory."""
+    own = "| MOD-02 | stages | high | open | — | [x](#log) |"
+    assert check_log(_log(repository, GOOD, own), repository) == ()
+    gone = "| MOD-02 | stages | high | open | — | [x](#nowhere) |"
+    errors = check_log(_log(repository, GOOD, gone), repository)
+    assert any("anchor #nowhere names no heading of x-findings.md" in e for e in errors), errors
+
+
+def test_ver63_front_matter_that_is_not_yaml_is_refused_by_name(repository: Path) -> None:
+    named = repository / "docs" / "project" / "z-findings.md"
+    named.write_text("---\nfindings: [\n---\n\n# Log\n", encoding="utf-8")
+    assert "declares no findings front matter" in check_log(named, repository)[0]
+    assert named in logs(repository)

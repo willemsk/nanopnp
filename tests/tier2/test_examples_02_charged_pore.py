@@ -88,13 +88,25 @@ def _mesh_hash(run: Path) -> str:
     return str(group["content_hash"])
 
 
-def test_ver62_example_02_holds_the_number_stability_golden(
+def _quantities(run: Path) -> dict[str, object]:
+    quantities = _read(run / "run.json")["quantities"]
+    assert isinstance(quantities, dict)
+    return quantities
+
+
+# One test per case, not one for both: on a key with no entry the first assertion
+# fails, and the second case's entry would not be printed until another CI run (D14).
+def test_ver62_example_02_epnpns_holds_the_number_stability_golden(
     ran: tuple[Path, list[CommandResult]], number_stability: NumberStability
 ) -> None:
-    """VER-62: both cases' numbers hold the golden recorded on v0.4.0's tree (G10)."""
-    example, _ = ran
-    validated = _read(example / "run-epnpns" / "run.json")["quantities"]
-    classical = _read(example / "run-classical" / "run.json")["quantities"]
-    assert isinstance(validated, dict) and isinstance(classical, dict)
-    number_stability("example-02-epnpns", _mesh_hash(example / "run-epnpns"), validated)
-    number_stability("example-02-classical", _mesh_hash(example / "run-classical"), classical)
+    """VER-62: the validated case's numbers hold the golden recorded on v0.4.0's tree (G10)."""
+    run = ran[0] / "run-epnpns"
+    number_stability("example-02-epnpns", _mesh_hash(run), _quantities(run))
+
+
+def test_ver62_example_02_classical_holds_the_number_stability_golden(
+    ran: tuple[Path, list[CommandResult]], number_stability: NumberStability
+) -> None:
+    """VER-62: the classical case's numbers hold the golden recorded on v0.4.0's tree (G10)."""
+    run = ran[0] / "run-classical"
+    number_stability("example-02-classical", _mesh_hash(run), _quantities(run))

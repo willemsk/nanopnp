@@ -2,7 +2,8 @@
 
 A walk run with ``NANOPNP_RECORD_STABILITY=<dir>`` writes ``<dir>/<walk>.json``.
 This script folds every such file in ``<dir>`` into ``number_stability.json``
-under the key each file was recorded on, which must be the running machine's::
+under the key each file was recorded on, which must be the running machine's,
+or its ``-py3.N`` split where the golden has one (D13)::
 
     NANOPNP_RECORD_STABILITY=rec uv run pytest --extended <the seven walks>
     uv run tests/tier2/data/merge_number_stability.py rec
@@ -28,8 +29,14 @@ SCHEMA = "nanopnp/golden/stability/v1"
 logger = logging.getLogger("merge_number_stability")
 
 
-def _key() -> str:
-    return f"{sys.platform}-{platform.machine()}"
+def _keys() -> tuple[str, str]:
+    """Return the running machine's key and its per-Python split (WP35 D13).
+
+    A walk records under the split key when the golden already has it, because
+    that is the entry the assertion reads on this interpreter.
+    """
+    key = f"{sys.platform}-{platform.machine()}"
+    return key, f"{key}-py3.{sys.version_info.minor}"
 
 
 def _load() -> dict[str, object]:
@@ -56,8 +63,12 @@ def main(argv: list[str] | None = None) -> int:
     if arguments.directory is not None:
         for path in sorted(arguments.directory.glob("*.json")):
             record = json.loads(path.read_text(encoding="utf-8"))
-            if record.get("schema") != SCHEMA or record["key"] != _key():
-                raise SystemExit(f"{path}: recorded on {record.get('key')!r}, not {_key()!r}")
+            if record.get("schema") != SCHEMA:
+                raise SystemExit(f"{path}: schema {record.get('schema')!r}, not {SCHEMA!r}")
+            if record.get("key") not in _keys():
+                raise SystemExit(
+                    f"{path}: recorded on {record.get('key')!r}, not {' or '.join(_keys())}"
+                )
             incoming.setdefault(record["key"], {})[record["walk"]] = {
                 "mesh_hash": record["mesh_hash"],
                 "values": record["values"],
