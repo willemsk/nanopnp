@@ -1,6 +1,6 @@
 # Current work
 
-Updated 5 October 2026 (WP36 planned). Navigation only; `SPECIFICATION.md`
+Updated 5 October 2026 (WP36 delivered). Navigation only; `SPECIFICATION.md`
 governs; nothing here is evidence an unmerged branch shipped.
 
 ## Position
@@ -8,13 +8,14 @@ governs; nothing here is evidence an unmerged branch shipped.
 - Phases 1 to 3 are **closed** as `v0.2.0`, `v0.3.0` (criterion 3 waived, §8.2.4 D7) and `v0.4.0`
   (§8.2.5 E1, E5).
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
-  **in progress** (§8.2.7 G1–G11; §8.2.8 H1–H9), estimated at 3–5 weeks. WP35 merged as
-  `v0.5.0-alpha.1`, and the author has ruled all 17 `MOD-nn` (§8.2.8).
-- **Next: `/wp-implement`** for WP36, the stage protocol and the walk (`MOD-01`, `MOD-02`,
-  `MOD-12`; [plan](wp36-stage-protocol-and-walk.md)). Then WP37 (cycle cuts, exit codes, backend
-  guard), WP38 (`io` split), WP39 (backend registries, and H6's acyclicity target measured), WP40
-  (stale refusals), WP41 (OKF bundle), WP42 (backfill), WP43 (user-testing protocol). The author's sessions follow, and a second amendment plans and
-  numbers the fixes, the documentation increment and the close.
+  **in progress** (§8.2.7 G1–G11; §8.2.8 H1–H9). WP35 merged as
+  `v0.5.0-alpha.1`, and the author has ruled all 17 `MOD-nn` (§8.2.8). WP36, the stage protocol
+  and the walk (`MOD-01`, `MOD-02`, `MOD-12`; VER-64; [plan](wp36-stage-protocol-and-walk.md)), is
+  delivered, to be tagged `v0.5.0-alpha.2`.
+- **Next: `/wp-ship`** for WP36, then `/wp-plan 37`: WP37 (cycle cuts, exit codes, backend
+  guard), WP38 (`io` split), WP39 (backend registries; H6 measured), WP40 (stale refusals), WP41
+  (OKF bundle), WP42 (backfill), WP43 (user-testing protocol). Then the author's sessions, and a
+  second amendment plans the fixes and the close.
 - Phase 5 (`v0.6.0`) is the GUI (F5), Phase 6 (`v0.7.0`) validation (F1); v1.0 is OPN-08.
 
 ## Not to be re-decided
@@ -22,21 +23,21 @@ governs; nothing here is evidence an unmerged branch shipped.
 Each is recorded in full where it points.
 
 - **Versions:** one minor per phase; a retired name is never reused, except `v0.5.0` for Phase 4
-  (E2, F2). The close takes `v0.5.0` alone, and the session pushes each tag if its access allows
-  it (G11). → §2.7 NOTE; §8.2.4 D1; the head of `CHANGELOG.md`.
+  (E2, F2). The close takes `v0.5.0` alone; the session pushes each tag its access allows (G11). → §2.7 NOTE; §8.2.4 D1; the head of `CHANGELOG.md`.
 - **Phase 4's shape:** accepted refactors before the protocol (G2); two OKF packages and a
   ratchet (G3, G8); checked findings logs (G4); protocol scripts gated, findings only from the
   author's sessions (G7); the VER-62 golden (G10). → §8.2.7.
 - **The `MOD-nn` rulings:** `MOD-11` waits for the sessions (H2); QR-13 restated and the backend
   confined (H3); an acyclic `top` relation, a miss ruled, never forced (H6); three backend
   registries, no schema move (H7). → §8.2.8.
-- **Phase 3's charge pipeline**: the closed-form kernel on the deployed mesh (D2; WP28),
-  protonation per frame (D4), VAL-06's tolerance (D3), WP30's switches off (VER-59), charges
-  read from artefacts (VER-60). → §8.2.4.
+- **Phase 3's charge pipeline**: the kernel on the deployed mesh, protonation per frame, VAL-06's
+  tolerance, WP30's switches off, charges read from artefacts. → §8.2.4; VER-59, VER-60.
 - **No payload records wall-clock time** (VER-23). **A gated test gets cheaper
   only by the §7.6 NOTE's four levers** (WP33).
 - **An edge moved edits `modularity-layering.yaml` in the same commit (VER-61); a VER-62 miss is
   reverted, or ruled and re-pinned (G10).** → `docs/project/contributing.md`.
+- **A stage declares its walk facts in the registry and defines `key`.** The walk runs stages in
+  registration order (VER-64; WP36 D3–D5).
 - **Tier 3 compares the published I–V and in-pore averages**, gating v0.7 (VAL-16, VAL-17; F1).
 - **Layers read a model's declaration, never its name or class** (VER-56). → §5.4.3 NOTE.
 - **Only `poisson` adds a quadrature order for the `r` weight**; Phase 6 decides (E4, F1).
@@ -52,7 +53,7 @@ Each is recorded in full where it points.
   NOTE). An API change is decided in `test_public_api.py`, and each break goes in `CHANGELOG.md`.
   `physics.solid_permittivities` alone sets ε_protein and ε_membrane.
 - **A callback is not an input** (VER-44). **A generated mesh is read only through
-  `deployed_mesh`** (WP21 D10, D12). **Stage 1's frame is fixed**; tests use `prepared_2wcd`.
+  `deployed_mesh`** (WP21). **Stage 1's frame is fixed**; tests use `prepared_2wcd`.
 - **Every phase documents what it ships**, and the commands in that documentation run verbatim
   (VER-46). **Generated references are built, never committed.**
 

@@ -3,8 +3,9 @@
 **Status: in progress.** Written 5 October 2026, after Phase 3 closed as `v0.4.0`; amended the
 same day, after the author ruled every `MOD-nn` (§8.2.8).
 Delivered: WP35, the modularity exploration
-([wp35-modularity-exploration.md](wp35-modularity-exploration.md)), tagged `v0.5.0-alpha.1`.
-Planned: WP36, the stage protocol and the walk; WP37, the cycle cuts, the exit codes and the
+([wp35-modularity-exploration.md](wp35-modularity-exploration.md)), tagged `v0.5.0-alpha.1`;
+WP36, the stage protocol and the walk ([wp36-stage-protocol-and-walk.md](wp36-stage-protocol-and-walk.md)).
+Planned: WP37, the cycle cuts, the exit codes and the
 backend guard; WP38, the `io` split; WP39, the backend registries; WP40, the stale refusals; WP41,
 the OKF bundle; WP42, its backfill; WP43, the user-testing protocol. Provisional, and planned by the
 second `/phase-plan amend 4` once the author has run the sessions and ruled every `UT-nn`: the
@@ -254,6 +255,17 @@ Break: `nanopnp.Stage` gains `key`, so a stage written outside the package must 
 `validation.modularity.stage_conformance`, and that every stage collection the walk uses is derived
 from the registry. Oracle: a synthetic stage without `key` is refused, and so is a registry entry
 missing a fact. VER-62 must show zero drift: the walk's order does not change.
+
+> **Delivered, 5 October 2026** ([plan](wp36-stage-protocol-and-walk.md), to be tagged
+> `v0.5.0-alpha.2`). `MOD-01`, `MOD-02` and `MOD-12` are `fixed`. `Stage.key(inputs)` is on the
+> protocol, and `StageDescription` carries five required facts: `takes_workspace`, `takes_store`,
+> `key_is_artefact`, `weight` and `needs_section`. The walk is registration order, read live by
+> `core.stages.walk_order()`, with `case` registered first. `register` refuses an input not
+> registered before the stage and a weight that is not finite and positive. `io/run.py` keeps no
+> stage set (VER-64), and `STRUCTURE_STAGES` became `needs_section`. VER-62 shows zero drift, and
+> VER-61's relation is unchanged. Inherited constraints:
+> - a new stage declares its facts and defines `key`;
+> - a test that registers a stage restores the registry.
 
 ### WP37 — The cycle cuts outside `io`, the exit codes, and the backend guard (MOD-03, MOD-05, MOD-10; QR-13)
 
