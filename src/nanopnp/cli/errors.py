@@ -255,6 +255,10 @@ EXCLUDED: Final[dict[str, str]] = {
         "the payload and exits 1 itself (WP24 D17); no command of the CLI reaches the probe, and "
         "a broken bundle is a packaging defect rather than a case, gate or convergence class"
     ),
+    "nanopnp.validation.findings:LogFormatError": (
+        "raised only by the VER-63 findings-log check, which catches it and returns it as one of "
+        "the log's errors; no command of the CLI reads a findings log"
+    ),
 }
 """Public exception classes deliberately left unclassified, with the reason.
 
