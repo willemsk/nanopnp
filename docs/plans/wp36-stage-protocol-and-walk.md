@@ -1,6 +1,6 @@
 # WP36 — The stage protocol and the walk
 
-**Status: planned, not started.** Written 5 October 2026, on `ccr-8378e74e-taeua5` at `e987c8d`,
+**Status: delivered, 5 October 2026.** Written 5 October 2026, on `ccr-8378e74e-taeua5` at `e987c8d`,
 after WP35 merged as `v0.5.0-alpha.1` and the author ruled every `MOD-nn` (§8.2.8). It inherits
 everything the [current brief](current.md) lists as not to be re-decided. In particular it inherits
 the stage registry of `core/stages.py` with VER-25's introspection rule, the walk of `io/run.py`,
@@ -89,6 +89,12 @@ In dependency order. Read *Design* §1 before item 1.
 | mypy strict | — | `MOD-01` | Clean with both `type: ignore`s removed |
 
 Commands: the phase plan's *Verification* block (gate, `.claude/hooks/gate.sh run`, docs build).
+
+> **Outcome — the `key == run` check reads the quickstart case.** Stages 8 and 9 need only a case
+> that resolves, and `examples/01-quickstart` resolves without generating the mesh `test_run.py`'s
+> case names. The moved `takes_workspace` and `takes_store` checks sit in the VER-64 file, and
+> `test_run.py` keeps VER-32's dependency-order test, read against `walk_order()`. VER-25's
+> fresh-process test also reads the facts, since its clause now names them.
 
 ### Out of scope
 
