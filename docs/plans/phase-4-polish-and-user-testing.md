@@ -262,7 +262,7 @@ missing a fact. VER-62 must show zero drift: the walk's order does not change.
 > `key_is_artefact`, `weight` and `needs_section`. The walk is registration order, read live by
 > `core.stages.walk_order()`, with `case` registered first. `register` refuses an input not
 > registered before the stage and a weight that is not finite and positive. `io/run.py` keeps no
-> stage set (VER-64), and `STRUCTURE_STAGES` became `needs_section`. VER-62 shows zero drift, and
+> stage set (VER-64), and `STRUCTURE_STAGES` became `needs_section`. VER-62's golden holds, and
 > VER-61's relation is unchanged. Inherited constraints:
 > - a new stage declares its facts and defines `key`;
 > - a test that registers a stage restores the registry.
