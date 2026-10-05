@@ -237,3 +237,53 @@ def test_gate_run_on_a_clean_tree_runs_the_extended_tests_on_unpushed_code(
     assert any("pytest" in call and "--extended" in call for call in ran), ran
     stamp = Path(_git(repo, "rev-parse", "--absolute-git-dir")) / "nanopnp-gate.pass"
     assert stamp.read_text(encoding="utf-8").split()[-1] == "extended"
+
+
+def test_gate_run_on_an_already_pushed_branch_still_runs_the_extended_tests(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """``gate.sh run`` judges the whole branch against ``main``, not its upstream.
+
+    ``/wp-ship`` and the steward run it on a branch already pushed, often from a
+    fresh container with no stamp. Against the upstream that clean branch has
+    nothing to send, reads as prose, and passed on ruff alone while stamping the
+    extended selection; CI's pull_request check compares base...head and runs
+    pytest (section 7.6 NOTE, PR 74 review).
+    """
+    assert _BASH is not None
+    for name in ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE"):
+        monkeypatch.delenv(name, raising=False)
+    origin = tmp_path / "origin.git"
+    subprocess.run(["git", "init", "-q", "--bare", "-b", "main", str(origin)], check=True)
+    repo = tmp_path / "repo"
+    (repo / "src/nanopnp").mkdir(parents=True)
+    (repo / ".github/scripts").mkdir(parents=True)
+    (repo / "pyproject.toml").write_text("[project]\nname = 'fake'\n", encoding="utf-8")
+    (repo / "src/nanopnp/__init__.py").write_text("", encoding="utf-8")
+    shutil.copy(_GATE.parents[2] / ".github/scripts/prose-only.sh", repo / ".github/scripts")
+    subprocess.run(["git", "init", "-q", "-b", "main", str(repo)], check=True)
+    identity = ("-c", "user.name=t", "-c", "user.email=t@t")
+    _git(repo, "add", "-A")
+    _git(repo, *identity, "commit", "-qm", "init")
+    _git(repo, "remote", "add", "origin", str(origin))
+    _git(repo, "push", "-q", "-u", "origin", "main")
+    _git(repo, "checkout", "-qb", "work")
+    (repo / "src/nanopnp/code.py").write_text("x = 1\n", encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, *identity, "commit", "-qm", "code")
+    _git(repo, "push", "-q", "-u", "origin", "work")
+    assert _git(repo, "rev-parse", "@{upstream}") == _git(repo, "rev-parse", "HEAD")
+    calls = tmp_path / "uv-calls"
+    binaries = tmp_path / "bin"
+    binaries.mkdir()
+    uv = binaries / "uv"
+    uv.write_text(f'#!/bin/sh\necho "$*" >> "{calls}"\nexit 0\n', encoding="utf-8")
+    uv.chmod(0o755)
+    monkeypatch.setenv("PATH", f"{binaries}{os.pathsep}{os.environ['PATH']}")
+
+    result = subprocess.run(
+        [_BASH, str(_GATE), "run"], cwd=repo, capture_output=True, text=True, timeout=60
+    )
+    assert result.returncode == 0, result.stderr
+    ran = calls.read_text(encoding="utf-8").splitlines()
+    assert any("pytest" in call and "--extended" in call for call in ran), ran

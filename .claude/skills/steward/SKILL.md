@@ -61,10 +61,9 @@ macOS only, because it waits on a real QtWebEngine page by the wall clock and bu
   small its last push.
 - **`check`** — ubuntu, 3.12: `ruff check`, `ruff format --check`, `mypy src/`, then
   `pytest --extended --cov`: the whole of tiers 1 and 2, the executed examples and the 2WCD walks
-  included (§7.6 NOTE). Reproduce a failure with the step's own command, `uv run pytest -rs -n auto
-  --dist loadfile --ignore=tests/tier1/test_gui_widgets.py --extended`. Bare `uv run pytest` leaves
-  the `extended` tests out, and `.claude/hooks/gate.sh run` judges only what is not yet pushed: on a
-  clean branch already pushed it reads as prose, skips pytest and reports a pass.
+  included (§7.6 NOTE). Reproduce with `.claude/hooks/gate.sh run`, which judges the whole branch
+  against `main` as the PR's `changes` job does, not bare `uv run pytest`, which leaves the
+  `extended` tests out.
 - **`docs`** — VER-45's strict build: `docs/scripts/generate.py`, then `mkdocs build --strict`. It
   has no `changes` dependency and runs on **every** push, prose-only ones included, because a broken
   link or anchor is exactly what a prose edit introduces. Reproduce with `uv sync --all-extras

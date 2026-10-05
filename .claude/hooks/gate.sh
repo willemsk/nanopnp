@@ -33,7 +33,7 @@
 #   the working copy and the selection that passed, so any edit invalidates it,
 #   and a development pass does not stand in for `run`;
 # - when every changed path is prose, the lock check, mypy and pytest are
-#   skipped: changed since HEAD for a commit, since the upstream (or main) for
+#   skipped: changed since HEAD for a commit, since the branch left main for
 #   `run`. Prose is Markdown nothing reads; .github/scripts/prose-only.sh
 #   holds the rule (not docs/ as a whole: tests read its YAML) and CI uses the
 #   same script. Anything else is code, data/corrections/*.yaml and this hook
@@ -171,15 +171,16 @@ if [[ -n $state && ( $passed == "$state extended" || $passed == "$state $selecti
 fi
 
 # The prose rule lives in one script that CI's `changes` job uses too. A commit
-# is judged against HEAD, which was gated when it was committed. `run` gates what
-# a push would send, as CI's push range does: everything since the upstream, or
-# since main on a branch never pushed. Against HEAD alone, the clean tree the
-# skills run it on reads as prose, and the `extended` tests would never run. No
-# base found is code.
+# is judged against HEAD, which was gated when it was committed. `run` judges the
+# whole branch since it left main, as CI's pull_request range (base...head) does,
+# the run a PR is merged on. Against HEAD alone, the clean tree the skills run it
+# on reads as prose, and the `extended` tests would never run; against the
+# upstream, so does an already-pushed branch, which is where /wp-ship and the
+# steward run it from a fresh container (PR 74 review). A stale or shallow
+# origin/main only widens the range. No base found is code.
 base=HEAD
 if [[ $mode == run ]]; then
-    base=$(git merge-base HEAD '@{upstream}' 2>/dev/null) ||
-        base=$(git merge-base HEAD origin/main 2>/dev/null) ||
+    base=$(git merge-base HEAD origin/main 2>/dev/null) ||
         base=$(git merge-base HEAD main 2>/dev/null) || base=""
 fi
 docs_only=false
