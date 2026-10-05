@@ -50,8 +50,9 @@ sections. Historical phase summaries and unrelated knowledge files are not routi
 
 `.github/workflows/ci.yml`, with `UV_LOCKED: "1"` throughout, so a `uv.lock` that no longer matches
 `pyproject.toml` fails every job at `uv sync`. pytest runs `-n auto --dist loadfile` with
-`OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS` and `MKL_NUM_THREADS` set to 1 (`.knowledge/07` §12),
-except `tests/tier1/test_gui_widgets.py`. That module runs serially in its own step on Windows and
+`OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS` and `MKL_NUM_THREADS` set to 1 (`.knowledge/07` §12), and
+NumPy's SIMD dispatch capped at `X86_V3` by `NPY_DISABLE_CPU_FEATURES` (VER-62's reference environment,
+`.knowledge/06` §8.1.5), except `tests/tier1/test_gui_widgets.py`. That module runs serially in its own step on Windows and
 macOS only, because it waits on a real QtWebEngine page by the wall clock and busy workers starved it
 (run 113). On ubuntu it skips itself, because PySide6 does not import there.
 
@@ -105,6 +106,7 @@ failure, reproduce under that interpreter (`uv run --python 3.11 pytest …`).
 | A tier 1 property test | A real regression in a unit | Root-cause it. These are seconds long and localise precisely |
 | Fails under `-n`, passes serially | The test depends on order, or on state another module leaves (a global, a patched module attribute, the process store, a cwd) | Name the shared state and isolate it. Never drop `-n`, never pin a test to one worker to get green without naming the mechanism, and never call it a flake |
 | A tier 2 analytic benchmark | **Evidence.** See below | Read the next section before touching it |
+| VER-62 number stability | Which message it prints decides. *On a recorded mesh*: a change moved a number, G10 evidence like any Tier 2 miss. *Reference environment, mesh moved*: the change moved the mesh. *Unseen mesh, no or exceeded mesh-moved tolerance* on a non-reference leg: a platform deployed a mesh the golden has not seen | The first two: investigate, then revert or rule and re-pin (§8.2.7 G10). The third: check the printed record's drift is a mesh wobble, not a moved number, then fold it in with `tests/tier2/data/merge_number_stability.py --entry`. That is a reviewed act that widens the walk's tolerance, so say it in the PR. Never fold a record from the reference environment to get green, and never edit `moved_tolerance` by hand: the Tier-1 check derives it |
 | Timeout or OOM in a job | A benchmark outgrew the gate budget | Reduce the *mesh*, never the assertion; if the test genuinely cannot gate, that is a scope decision — ask |
 
 ## Tier 2 failures are physics evidence

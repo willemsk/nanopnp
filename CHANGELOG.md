@@ -34,9 +34,14 @@ and `examples/` computes as it did at `v0.4.0`.
 - **VER-61, the layering guard**: the subpackage import relation, read from the syntax tree in
   four kinds, equals `docs/project/modularity-layering.yaml` in both directions, and module-level
   imports stay acyclic.
-- **VER-62, the number-stability golden**: seven gated walks assert their quantities at 10⁻⁸
-  relative against values recorded on `v0.4.0`'s tree, keyed per platform with the mesh hash
-  asserted first. The largest drift per walk is printed at the end of a run.
+- **VER-62, the number-stability golden**: seven gated walks assert their quantities against
+  values recorded on `v0.4.0`'s tree, keyed by the deployed mesh: at 10⁻⁸ relative on a recorded
+  mesh, and at a tolerance derived from the measured spread between recorded meshes (capped at
+  10⁻³) on an unseen one, except in the pinned reference environment, where an unseen mesh fails.
+  `nanopnp.validation.stability` holds the mechanism for any later golden. The largest drift per
+  walk, and which comparison it answered, is printed at the end of a run.
+- **NumPy's SIMD dispatch is capped at `X86_V3`** in CI and the commit gate
+  (`NPY_DISABLE_CPU_FEATURES`), so every x86-64 Linux leg deploys the same PDB-derived mesh.
 - **VER-63, the findings-log check**: every `docs/**/*findings.md` is parsed and checked, and a
   log whose header says `closed` refuses a row that is not terminal.
 

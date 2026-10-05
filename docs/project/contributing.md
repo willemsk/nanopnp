@@ -48,9 +48,15 @@ Two guards hold the architecture and the numbers still while Phase 4 refactors (
   removes an edge edits that file in the same commit, naming the `MOD-nn` finding the edge bears
   on. `tests/tier1/test_layering.py` names the module and the line of an edge the file lacks.
 - **The number-stability golden (VER-62).** Seven gated walks assert their currents, conductances,
-  transport numbers, electro-osmotic flow and deposited charge at 10⁻⁸ relative against
-  `tests/tier2/data/number_stability.json`, keyed per platform, with the deployed mesh's hash
-  asserted first. A miss is investigated, never re-pinned to pass. Either the change is reverted,
-  or it is ruled a deliberate fix: that commit amends the clause the fix changes and re-pins the
-  golden, stating the drift. Re-pin by recording with `NANOPNP_RECORD_STABILITY=<dir>` and folding
-  the files in with `uv run tests/tier2/data/merge_number_stability.py <dir> --replace`.
+  transport numbers, electro-osmotic flow and deposited charge against
+  `tests/tier2/data/number_stability.json`, keyed by the deployed mesh's content hash. On a mesh
+  the golden holds they hold 10⁻⁸ relative. On a mesh it does not hold they hold the walk's
+  mesh-moved tolerance, derived from the spread between its recorded meshes and capped at 10⁻³,
+  except on the reference environment (`linux-x86_64/X86_V3`, which CI and the commit gate pin
+  with `NPY_DISABLE_CPU_FEATURES`), where an unseen mesh fails. A miss is investigated, never
+  re-pinned to pass. Either the change is reverted, or it is ruled a deliberate fix: that commit
+  amends the clause the fix changes and re-pins the golden, stating the drift. Re-pin by recording
+  with `NANOPNP_RECORD_STABILITY=<dir>` and folding the files in with
+  `uv run tests/tier2/data/merge_number_stability.py <dir> --replace`. A leg that deploys a new
+  mesh prints a record; folding it in with `--entry` widens that walk's tolerance, so it is a
+  reviewed change, stated in the PR.

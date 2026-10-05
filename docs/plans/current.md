@@ -29,7 +29,7 @@ Each is recorded in full where it points.
 - **Phase 4's shape:** a report and guard, with no refactor in that PR (G1); every accepted
   refactor before the protocol (G2); two OKF packages joined by a ratchet (G3, G8); findings logs
   in the repository, checked, with a closable header (G4); protocol scripts executed by the gate,
-  and findings only from the author's sessions (G7); a number-stability golden at 10⁻⁸ (G10).
+  and findings only from the author's sessions (G7); a number-stability golden at 10⁻⁸ on a recorded mesh, and a measured, capped tolerance on an unseen one (G10; VER-62).
   → §8.2.7; the Phase 4 plan.
 - **Phase 3's charge pipeline**: the closed-form azimuthal kernel, deposited element-wise on the
   deployed mesh (§8.2.4 D2; PHY-16 to PHY-18; WP28); protonation per frame (D4); VAL-06 from

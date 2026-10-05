@@ -32,14 +32,11 @@ where it does: a backend whose every test can skip unseen is untested.
 
 from __future__ import annotations
 
-import json
 import logging
 import math
 import os
 import pickle
-import platform
 import shutil
-import sys
 import warnings
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
@@ -859,11 +856,6 @@ def seeded_protonated_2wcd(
 STABILITY_GOLDEN = Path(__file__).parent / "tier2" / "data" / "number_stability.json"
 """The golden every gated walk computing a current asserts (WP35 D13)."""
 
-STABILITY_SCHEMA = "nanopnp/golden/stability/v1"
-
-STABILITY_TOLERANCE = 1e-8
-"""Relative, on every value of a walk within its key (G10; WP35 Design section 2)."""
-
 STABILITY_RECORD = "NANOPNP_RECORD_STABILITY"
 """Names a directory: each assertion writes ``<dir>/<walk>.json`` and passes (WP35 D14)."""
 
@@ -874,12 +866,7 @@ STABILITY_QUANTITIES = ("current_A", "currents_A", "conductance_S", "transport_n
 drift of a difference amplifies round-off by the inverse of its size."""
 
 STABILITY_PROPERTY = "number_stability"
-"""The ``record_property`` name of each ``(walk, quantity, relative drift)`` (WP35 D16)."""
-
-
-def stability_key() -> str:
-    """Return the running platform's golden key, ``<sys.platform>-<machine>`` (WP35 D13)."""
-    return f"{sys.platform}-{platform.machine()}"
+"""The ``record_property`` name of each ``(walk, mode, quantity, relative drift)`` (WP35 D16)."""
 
 
 def stability_values(
@@ -913,22 +900,18 @@ class NumberStability:
         quantities: Mapping[str, object],
         extra: Mapping[str, float] | None = None,
     ) -> None:
-        """Assert ``walk``'s mesh hash exactly and each value at 1e-8 relative, or record them.
+        """Assert ``walk``'s values against the golden, or record them.
 
         The values are :func:`stability_values` of the run's ``quantities``, and
-        ``extra`` adds a walk's own scalars, such as stage 7's ``q_mesh_e``.
-
-        Recording refuses a zero or non-finite value; a key with no entry fails,
-        printing the entry to commit once the values have been checked.
+        ``extra`` adds a walk's own scalars, such as stage 7's ``q_mesh_e``. On a
+        mesh the golden holds they are held at 1e-8 relative; on an unseen mesh, at
+        the walk's measured mesh-moved tolerance, except in the reference
+        environment (:mod:`nanopnp.validation.stability`).
         """
+        from nanopnp.validation.stability import StabilityGolden, compare, entry_for, environment
+
         values = stability_values(quantities, extra)
-        entry = {"mesh_hash": mesh_hash, "values": {q: float(v).hex() for q, v in values.items()}}
-        keys = json.loads(STABILITY_GOLDEN.read_text(encoding="utf-8"))["keys"]
-        # The key this interpreter asserts against, and so the one it records under:
-        # once D13 splits a key by Python, a re-pin must reach the split entry.
-        key = stability_key()
-        python = f"{key}-py3.{sys.version_info.minor}"
-        chosen = python if python in keys else key
+        where = environment()
         directory = os.environ.get(STABILITY_RECORD)
         if directory:
             if os.environ.get("CI"):
@@ -938,37 +921,13 @@ class NumberStability:
                 pytest.fail(f"{walk}: {zero} are zero or not finite; a golden cannot hold them")
             path = Path(directory) / f"{walk}.json"
             path.parent.mkdir(parents=True, exist_ok=True)
-            record = {"schema": STABILITY_SCHEMA, "key": chosen, "walk": walk, **entry}
-            path.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+            path.write_text(entry_for(walk, mesh_hash, values, where) + "\n", encoding="utf-8")
             return
-        expected = keys.get(chosen, {}).get(walk)
-        if expected is None:
-            printed = json.dumps({chosen: {walk: entry}}, indent=2, sort_keys=True)
-            pytest.fail(
-                f"no number-stability golden for walk {walk!r} on key {chosen!r}; after "
-                f"checking these values, commit this entry to {STABILITY_GOLDEN.name}:\n{printed}"
-            )
-        assert mesh_hash == expected["mesh_hash"], (
-            f"{walk} on {chosen}: the deployed mesh moved ({mesh_hash} against the golden's "
-            f"{expected['mesh_hash']}), so the golden's numbers do not apply; investigate the "
-            "mesh before the numbers (section 8.2.7 G10)"
-        )
-        golden_values = {q: float.fromhex(v) for q, v in expected["values"].items()}
-        assert set(values) == set(golden_values), (
-            f"{walk}: the walk computes {sorted(values)}, the golden holds {sorted(golden_values)}"
-        )
-        misses = []
-        for quantity, value in sorted(values.items()):
-            reference = golden_values[quantity]
-            drift = abs(value - reference) / abs(reference)
-            self.record_property(STABILITY_PROPERTY, (walk, quantity, drift))
-            if not abs(value - reference) <= STABILITY_TOLERANCE * abs(reference):
-                misses.append(f"{quantity}: {value!r} against {reference!r}, drift {drift:.3e}")
-        assert not misses, (
-            f"{walk} on {chosen} moved beyond {STABILITY_TOLERANCE:g} relative (section 8.2.7 "
-            "G10): investigate, then revert, or rule it a deliberate fix that amends its clause "
-            "and re-pins the golden in the same commit\n" + "\n".join(misses)
-        )
+        verdict = compare(StabilityGolden.read(STABILITY_GOLDEN), walk, mesh_hash, values, where)
+        for quantity, drift in verdict.drifts.items():
+            self.record_property(STABILITY_PROPERTY, (walk, verdict.mode, quantity, drift))
+        if verdict.failure is not None:
+            pytest.fail(verdict.failure, pytrace=False)
 
 
 @pytest.fixture
@@ -978,17 +937,21 @@ def number_stability(record_property: Callable[[str, object], None]) -> NumberSt
 
 
 def pytest_terminal_summary(terminalreporter: pytest.TerminalReporter) -> None:
-    """Print the largest VER-62 drift per walk, which works under xdist (WP35 D16)."""
-    largest: dict[str, tuple[float, str]] = {}
+    """Print the largest VER-62 drift per walk and which question it answered (WP35 D16)."""
+    largest: dict[str, tuple[float, str, str]] = {}
     for reports in terminalreporter.stats.values():
         for report in reports:
             for name, value in getattr(report, "user_properties", ()):
                 if name != STABILITY_PROPERTY:
                     continue
-                walk, quantity, drift = value
+                walk, mode, quantity, drift = value
                 if walk not in largest or drift > largest[walk][0]:
-                    largest[walk] = (float(drift), str(quantity))
+                    largest[walk] = (float(drift), str(mode), str(quantity))
     if largest:
-        terminalreporter.section(f"number stability on {stability_key()}")
-        for walk, (drift, quantity) in sorted(largest.items()):
-            terminalreporter.write_line(f"{walk}: largest relative drift {drift:.3e} ({quantity})")
+        from nanopnp.validation.stability import environment
+
+        terminalreporter.section(f"number stability on {environment()}")
+        for walk, (drift, mode, quantity) in sorted(largest.items()):
+            terminalreporter.write_line(
+                f"{walk}: {mode}, largest relative drift {drift:.3e} ({quantity})"
+            )

@@ -1,17 +1,19 @@
 """Fold recorded VER-62 walks into the number-stability golden (WP35 D14).
 
-A walk run with ``NANOPNP_RECORD_STABILITY=<dir>`` writes ``<dir>/<walk>.json``.
-This script folds every such file in ``<dir>`` into ``number_stability.json``
-under the key each file was recorded on, which must be the running machine's,
-or its ``-py3.N`` split where the golden has one (D13)::
+A walk run with ``NANOPNP_RECORD_STABILITY=<dir>`` writes ``<dir>/<walk>.json``,
+and a walk that fails on a mesh the golden does not hold prints the same record.
+This script folds records in, mesh by mesh, and re-derives each walk's mesh-moved
+tolerance from the spread between its meshes
+(:func:`nanopnp.validation.stability.fold`)::
 
     NANOPNP_RECORD_STABILITY=rec uv run pytest --extended <the seven walks>
     uv run tests/tier2/data/merge_number_stability.py rec
 
-A key from another platform comes from the entry a failing CI leg prints, which
-is already in the golden's shape: pass that file with ``--entry`` instead. An
-existing entry is replaced only with ``--replace``, which a G10 re-pin uses in the
-commit that rules the change (section 8.2.7 G10).
+A record a CI leg printed is saved to a file and passed with ``--entry``. Folding
+one in is a reviewed act: it widens that walk's tolerance for every unseen mesh,
+and a record that would push it past the ceiling is refused. A known mesh's
+values are replaced only with ``--replace``, which a G10 re-pin uses in the commit
+that rules the change (section 8.2.7 G10).
 """
 
 from __future__ import annotations
@@ -19,69 +21,46 @@ from __future__ import annotations
 import argparse
 import json
 import logging
-import platform
 import sys
 from pathlib import Path
 
+from nanopnp.validation.stability import FoldError, StabilityGolden, fold
+
 GOLDEN = Path(__file__).resolve().parent / "number_stability.json"
-SCHEMA = "nanopnp/golden/stability/v1"
 
 logger = logging.getLogger("merge_number_stability")
 
 
-def _keys() -> tuple[str, str]:
-    """Return the running machine's key and its per-Python split (WP35 D13).
-
-    A walk records under the split key when the golden already has it, because
-    that is the entry the assertion reads on this interpreter.
-    """
-    key = f"{sys.platform}-{platform.machine()}"
-    return key, f"{key}-py3.{sys.version_info.minor}"
-
-
-def _load() -> dict[str, object]:
-    if GOLDEN.exists():
-        golden: dict[str, object] = json.loads(GOLDEN.read_text(encoding="utf-8"))
-        return golden
-    return {"schema": SCHEMA, "tolerance": 1e-8, "keys": {}}
-
-
 def main(argv: list[str] | None = None) -> int:
-    """Fold recorded walks, or a printed CI entry, into the golden."""
+    """Fold recorded walks, or records a CI leg printed, into the golden."""
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("directory", nargs="?", type=Path, help="the recording directory")
-    parser.add_argument("--entry", type=Path, help="a JSON entry a CI leg printed")
-    parser.add_argument("--replace", action="store_true", help="replace an existing walk")
+    parser.add_argument(
+        "--entry", type=Path, action="append", default=[], help="a record a CI leg printed"
+    )
+    parser.add_argument("--replace", action="store_true", help="re-pin a known mesh's values")
     arguments = parser.parse_args(argv)
-    golden = _load()
-    keys = golden["keys"]
-    assert isinstance(keys, dict)
-    incoming: dict[str, dict[str, object]] = {}
-    if arguments.entry is not None:
-        incoming = json.loads(arguments.entry.read_text(encoding="utf-8"))
+    golden = StabilityGolden.read(GOLDEN) if GOLDEN.exists() else StabilityGolden.empty()
+    paths = list(arguments.entry)
     if arguments.directory is not None:
-        for path in sorted(arguments.directory.glob("*.json")):
-            record = json.loads(path.read_text(encoding="utf-8"))
-            if record.get("schema") != SCHEMA:
-                raise SystemExit(f"{path}: schema {record.get('schema')!r}, not {SCHEMA!r}")
-            if record.get("key") not in _keys():
-                raise SystemExit(
-                    f"{path}: recorded on {record.get('key')!r}, not {' or '.join(_keys())}"
-                )
-            incoming.setdefault(record["key"], {})[record["walk"]] = {
-                "mesh_hash": record["mesh_hash"],
-                "values": record["values"],
-            }
-    for key, walks in incoming.items():
-        existing = keys.setdefault(key, {})
-        for walk, entry in walks.items():
-            if walk in existing and existing[walk] != entry and not arguments.replace:
-                raise SystemExit(f"{key} {walk}: already in the golden; pass --replace to re-pin")
-            existing[walk] = entry
-            logger.info("%s %s: %d values", key, walk, len(entry["values"]))  # type: ignore[index]
-    golden["keys"] = {key: dict(sorted(keys[key].items())) for key in sorted(keys)}
-    GOLDEN.write_text(json.dumps(golden, indent=2) + "\n", encoding="utf-8")
+        paths += sorted(arguments.directory.glob("*.json"))
+    for path in paths:
+        record = json.loads(path.read_text(encoding="utf-8"))
+        try:
+            golden = fold(golden, record, replace=arguments.replace)
+        except FoldError as error:
+            raise SystemExit(f"{path}: {error}") from error
+        walk = golden.walks[record["walk"]]
+        logger.info(
+            "%s on %s: mesh %s, %d meshes, mesh-moved tolerance %s",
+            record["walk"],
+            record["environment"],
+            record["mesh_hash"][:12],
+            len(walk.meshes),
+            "none" if walk.moved_tolerance is None else f"{walk.moved_tolerance:.3e}",
+        )
+    golden.write(GOLDEN)
     return 0
 
 

@@ -65,8 +65,8 @@ The package ends when the PR merges. The author then rules each `MOD-nn` through
 | D10 | The seed findings | [Design §4](#4-seed-findings) lists 14 measured candidates. The implementer may merge, split or add, but may not drop one without saying why in an Outcome | The phase predicts 10–25. Listing them now keeps the scope a decision, not a discovery |
 | D11 | VER-62's walks | Seven walks, which are every gated walk that computes a current: example 01; example 02's two cases; example 03's charged sweep; example 07; the 2WCD charged walk (`test_pipeline_2wcd.py:153`); and the 2WCD walk with the shell and derived `χ` (`test_exclusion_2wcd_walk.py:83`). Example 05 is `slow` and is not included | Correction to the phase plan. Between them the walks cover corrections on and off, the sweep runner, protonation, deposition, and WP30's switches. Each adds no solve |
 | D12 | VER-62's quantities | Per walk, every scalar of `current_A`, `currents_A[*]`, `conductance_S`, `transport_number` and `eof_m3_s` that the walk produces, plus, for the two charged 2WCD walks, `q_mesh_e`. A difference or an error estimate (`route_agreement`) and a quantity recorded as zero are refused at recording. Each value is read from a JSON record, or from a CSV that round-trips `float64`, checked at recording | [Design §2](#2-the-golden-tolerance-and-keying). Relative drift of a difference amplifies round-off by the inverse of its size |
-| D13 | VER-62's keying and file | `tests/tier2/data/number_stability.json`, schema `nanopnp/golden/stability/v1`. It is keyed by `"<sys.platform>-<platform.machine()>"`. Each walk entry carries the deployed mesh's content hash, asserted exactly, and its values, asserted at `abs(x - g) <= 1e-8 * abs(g)`. If a key's Python legs disagree beyond 10⁻⁸, that key gains `-py3.N`. The tolerance does not move | Netgen's mesh differs between platforms (`.knowledge/07` §5), so one cross-platform value cannot hold at 10⁻⁸. Asserting the mesh hash first tells "the mesh moved" apart from "the number moved". [Design §2](#2-the-golden-tolerance-and-keying) |
-| D14 | Recording | `NANOPNP_RECORD_STABILITY=<dir>` makes each assertion write `<dir>/<walk>.json` and pass. It is refused when `CI` is set. `tests/tier2/data/merge_number_stability.py` folds the files in under the running key. A key with no entry fails, printing the entry to commit. Linux is recorded locally. The other keys come from the PR's first CI run, which is therefore expected red on Windows and macOS | No CI workflow change. A gate can never record through itself |
+| D13 | VER-62's keying and file (amended after review) | `tests/tier2/data/number_stability.json`, schema `nanopnp/golden/stability/v2`, read and compared by `nanopnp.validation.stability`. Each walk holds its recorded meshes by content hash, each with its values and the environments (`<sys.platform>-<machine>/<NumPy SIMD level>`) that deployed it, plus a reference mesh and a derived mesh-moved tolerance. On a recorded mesh, `abs(x - g) <= 1e-8 * abs(g)`. On an unseen mesh, the same test against the reference mesh at the mesh-moved tolerance: 10 times the largest relative spread between the walk's meshes, at least 10⁻⁸, refused above 10⁻³, and none while one mesh is recorded. In the reference environment `linux-x86_64/X86_V3`, which CI and the gate pin with `NPY_DISABLE_CPU_FEATURES`, an unseen mesh fails. The same-mesh tolerance does not move | First recorded keyed by `<sys.platform>-<machine>`, mesh hash asserted exactly. CI's first run showed NumPy's SIMD dispatch moving the three PDB-derived meshes within that key, by 2.6 × 10⁻⁵ in the shell walk's current (`.knowledge/06` §8.1.5), so a platform key cannot promise one mesh. The author ruled, 5 October 2026, that the mesh hash classifies rather than asserts: round-off holds where the mesh is the same, a measured discretisation spread where it is not. [Design §2](#2-the-golden-tolerance-and-keying) |
+| D14 | Recording | `NANOPNP_RECORD_STABILITY=<dir>` makes each assertion write `<dir>/<walk>.json` and pass. It is refused when `CI` is set. `tests/tier2/data/merge_number_stability.py` folds them in mesh by mesh (`fold`), re-deriving each walk's mesh-moved tolerance. A walk that cannot be held prints the record to fold. The reference environment is recorded locally. A mesh a CI leg deploys comes from its printed record, folded with `--entry` as a reviewed change | A gate can never record through itself. The amended D13 adds one CI change, the dispatch pin |
 | D15 | "On `v0.4.0`'s tree" | Before recording, an AST comparison with docstrings stripped shows that every file of `src/`, `data/` and `examples/` at `v0.4.0` equals WP35's tree (the survey: `v0.4.0..e63a32e` touched docstrings and comments only). The result goes in an Outcome | G10. It records the golden without a worktree of a commit that has no hook to record from |
 | D16 | Drift visibility | Each VER-62 assertion attaches `(walk, quantity, relative drift)` through `record_property`. A `pytest_terminal_summary` in `tests/conftest.py` prints the largest drift per walk, which works under xdist | The spread on each CI leg has to be read from somewhere. The end-of-phase report takes these numbers from here (Phase 4 plan) |
 | D17 | Log format (VER-63) | A log is any `docs/**/*findings.md`. It carries YAML front matter `findings: {prefix, status: open\|closed, areas: [...]}`, and the check requires the front matter and the file name to go together, in both directions. Its table is `ID \| Area \| Severity \| Status \| Ruling \| Finding`. [Design §3](#3-the-findings-log) defines the statuses and the resolution of a ruling pointer | G4. The front matter makes the header machine-read |
@@ -108,6 +108,18 @@ The package ends when the PR merges. The author then rules each `MOD-nn` through
 > 2WCD walks record no `transport_number` or `eof_m3_s`, because their case asks for `current`
 > only and has no flow: D12's "every scalar the walk produces". Example 03 holds 20 values, five per
 > member, named `point-<index>.`. The other keys come from the PR's first CI run, as D14 expects.
+>
+> **Outcome — D13 amended, the golden keyed by mesh.** CI's first run deployed different meshes for
+> the three PDB-derived walks under the same `linux-x86_64` key (`.knowledge/06` §8.1.5), and the
+> author ruled that the mesh hash classifies rather than asserts (Design §2). The golden is now
+> `nanopnp/golden/stability/v2`, read by `nanopnp.validation.stability`. It was rebuilt from three
+> recordings of the same tree: the original one on an AVX-512 machine (labelled `X86_V4`, its exact
+> top level not recorded), and two on an AVX2 machine at `X86_V3`, the reference environment, and
+> at `X86_V2`. The last two agree bit for bit. Derived mesh-moved tolerances: the shell walk
+> **5.2 × 10⁻⁴** (spread 5.2 × 10⁻⁵, `Cl⁻`); 2WCD charged and example 07 **10⁻⁸** (their meshes moved,
+> their numbers by ≤ 2.4 × 10⁻¹⁴); examples 01–03 **none**, since every recording deployed one mesh.
+> CI and the gate cap NumPy's dispatch at `X86_V3`. Windows and macOS legs that deploy an unseen
+> mesh print a record to fold in, as D14 expects.
 
 ### Work items
 
@@ -209,7 +221,7 @@ forward-error bound. The phase predicts below 10⁻¹⁰, and 10⁻⁸ is two or
 drops one Newton step. That moves a quantity by up to the size of that last step. If it is seen, it
 is a finding about the convergence test, and never a reason to loosen 10⁻⁸.
 
-**Why the key is per platform.** Netgen's advancing front decides on floating-point comparisons
+**Why the key is per platform** (superseded by the amended D13, below). Netgen's advancing front decides on floating-point comparisons
 that the compiler controls: 8141 against 8147 triangles on one geometry (`.knowledge/07` §5). Every
 walk here meshes with netgen, so the values are per build, and the mesh content hash is asserted
 first. Within the Ubuntu key, the legs run Python 3.11 to 3.14, and `uv.lock` resolves numpy 2.4.6
@@ -217,6 +229,21 @@ for one range and 2.5.2 for the other. If those legs disagree beyond 10⁻⁸, D
 Python minor, and the measured spread goes in an Outcome. A future `uv.lock` bump or a change of
 runner image that moves a value is a G10 miss like any other: it is investigated, ruled, and
 re-pinned in the same commit, with the drift stated.
+
+**Why the mesh classifies rather than asserts (the amended D13).** A platform key cannot promise
+one mesh: within `linux-x86_64`, NumPy's runtime SIMD dispatch moves the three PDB-derived meshes
+(`.knowledge/06` §8.1.5), and adding the dispatch level to the key would only split it again
+whenever the hosted fleet, the runner image or NumPy moved. The golden instead asks each run the
+question its mesh can answer. On a recorded mesh, whether a change moved a number, at 10⁻⁸ as
+argued above. On an unseen mesh, whether the answer is still right, at a tolerance derived from
+what moving the mesh is measured to do: ten times the largest spread between the walk's recorded
+meshes, under a 10⁻³ ceiling. The ceiling is a tenth of the ±1 % conductance floor that no geometry
+comparison of this model resolves below (`.knowledge/04`). The reference environment keeps G10 at
+full strength for a change that moves the mesh itself: CI and the gate cap NumPy's dispatch at
+`X86_V3`, so every x86-64 Linux leg deploys the reference mesh, and there an unseen mesh fails.
+A walk with one recorded mesh has no measured spread, so on an unseen mesh it fails, printing the
+record whose fold supplies the spread. The rule is §7.6's NOTE on goldens, so a later golden
+reuses `nanopnp.validation.stability` rather than re-arguing it.
 
 **Measuring.** Before the recording is committed, the 2WCD walks run twice on Linux, serially and
 under `-n auto`. The repeat spread is recorded. The CI legs' spread is read from D16's summary on
