@@ -34,6 +34,13 @@ env:
   OMP_NUM_THREADS: "1"
   OPENBLAS_NUM_THREADS: "1"
   MKL_NUM_THREADS: "1"
+  # NumPy's runtime SIMD dispatch, capped at X86_V3 (AVX2): above it, last-bit
+  # differences in the structure -> contour stages move a PDB-derived mesh, so
+  # the hosted fleet's AVX-512 and AVX2 machines would deploy different meshes.
+  # Capped, every x86-64 leg deploys the mesh of VER-62's reference environment
+  # (src/nanopnp/validation/stability.py; .knowledge/06 section 8.1.5). Names a
+  # platform does not dispatch are ignored, so the arm64 legs are unaffected.
+  NPY_DISABLE_CPU_FEATURES: "X86_V4 AVX512_ICL AVX512_SPR"
   # The push gate is the whole of Tiers 1 and 2, so both test jobs pass
   # --extended: the executed examples and the 2WCD walks, which `uv run pytest`
   # and the commit hook leave out for the development loop (SPECIFICATION.md

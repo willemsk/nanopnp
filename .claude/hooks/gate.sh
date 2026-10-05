@@ -135,6 +135,9 @@ cd "$root" || exit 0
 # not something `uv run` should quietly rewrite.
 export UV_LOCKED=1
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
+# As CI: cap NumPy's SIMD dispatch at X86_V3, the VER-62 reference environment,
+# so an AVX-512 machine deploys the mesh CI does (.knowledge/06 section 8.1.5).
+export NPY_DISABLE_CPU_FEATURES="X86_V4 AVX512_ICL AVX512_SPR"
 
 # The tree the working copy would commit as with `git add -A`, built in a
 # throwaway index: content-addressed, independent of HEAD and of how the

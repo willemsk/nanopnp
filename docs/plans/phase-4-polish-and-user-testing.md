@@ -29,7 +29,7 @@ The gate (§8.1, as amended by §8.2.7) has five parts:
 - the modularity report is merged, with every finding ruled;
 - the user-testing findings log is closed;
 - both logs pass the G4 check with their headers set to `closed`;
-- the number-stability golden holds to 10⁻⁸ (G10);
+- the number-stability golden holds (10⁻⁸ on a recorded mesh; G10, VER-62);
 - Tiers 1 and 2 pass.
 
 No requirement in Appendix A is tagged v0.5, so the evidence is the report, the two logs, the golden
@@ -106,7 +106,7 @@ contents and the guard's form, and the first OKF package decides open questions 
 | Findings | One Markdown log per study under `docs/`. Each row gives the id, area, severity, status and the ruling pointer. A Tier-1 check refuses a malformed row at any time, and a non-terminal row once the header says `closed` (G4) | The gate's "each finding ruled" becomes a test |
 | The protocol | Its scripts run verbatim in the push gate, as an example's do. Findings come from the author's sessions only, and an agent dry run records none (G7) | The protocol cannot go stale before the sessions, and the tester did not write the code |
 | The case schema | It moves as needed. A move takes the release's identifier, starting with `nanopnp/case/v0.5`. It may change between alpha packages and is fixed at the tag. Earlier identifiers are read as their upgrade (G6; the §5.3.1 NOTE) | The author's ruling: the schema keeps step with the package until v1.0 fixes it |
-| Number stability | A golden recorded in WP35 on `v0.4.0`'s tree and asserted at 10⁻⁸ relative by every later package (G10) | A polish phase must not move a result inside a benchmark's tolerance unnoticed |
+| Number stability | A golden recorded in WP35 on `v0.4.0`'s tree and asserted by every later package, at 10⁻⁸ relative on a recorded mesh (G10; VER-62) | A polish phase must not move a result inside a benchmark's tolerance unnoticed |
 | The public API | It may break (F4). Each break is decided in `test_public_api.py` and listed in `CHANGELOG.md` with its migration. The shell follows it in the same PR (QR-11) | IF-01's promise starts at v1.0 |
 | Close and tags | `v0.5.0` alone on the close package's last commit. The session pushes each tag if its access allows, and otherwise prints the commands (G11) | As E5 did for Phase 3 |
 
@@ -210,7 +210,7 @@ the rulings allow, so that one schema identifier, `nanopnp/case/v0.5`, and one l
 carry them. Each package:
 
 - keeps VER-61 green, updating the accepted relation in the same commit as the code;
-- keeps VER-62 within 10⁻⁸;
+- keeps VER-62 green (10⁻⁸ on a recorded mesh);
 - lists each break and its migration in `CHANGELOG.md`;
 - carries the shell along (QR-11, VER-43, VER-60).
 
@@ -289,7 +289,7 @@ Its last commit on `main` is tagged `v0.5.0` alone (G11).
 | Sequence | As in *Work packages* | **Settled by the author, 5 October 2026** (G5) |
 | Schema moves | As needed; the identifier names the release | **Settled by the author, 5 October 2026** (G6; the §5.3.1 NOTE) |
 | Protocol | Executed by the gate; findings from the author's sessions only | **Settled by the author, 5 October 2026** (G7) |
-| Number stability | Golden at 10⁻⁸ relative | **Settled by the author, 5 October 2026** (G10). WP35 argues the figure from measurement, and a re-argued figure is a spec amendment |
+| Number stability | Golden at 10⁻⁸ relative on a recorded mesh; on an unseen mesh, 10 × the measured spread between recorded meshes, capped at 10⁻³ | **Settled by the author, 5 October 2026** (G10); the mesh-moved tolerance **ruled by the author, 5 October 2026**, after CI's first run showed NumPy's SIMD dispatch moving a PDB-derived mesh (VER-62; WP35 D13 as amended). WP35 argues the figure from measurement, and a re-argued figure is a spec amendment |
 | Close and tags | `v0.5.0` alone; the session tags if it can | **Settled by the author, 5 October 2026** (G11) |
 | OKF open questions 3–7 | Preamble, root index, `type` vocabulary, `log.md`, docs site | **Open**, owned by the OKF bundle package's `/wp-plan` (G9) |
 | Each `MOD-nn` | Fix in Phase 4, defer, or post-1.0 | **Author**, through `/phase-plan amend 4` after WP35 |
@@ -345,7 +345,9 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
    amended. The check is never relaxed.
 5. **The user-testing log is closed**: every `UT-nn` is terminal under VER-63, and every protocol
    script runs in the gate (G7). If it misses, the response is the same as for criterion 2.
-6. **VER-62 holds at 10⁻⁸ relative** on every CI platform, against the golden recorded on `v0.4.0`.
+6. **VER-62 holds** on every CI platform, against the golden recorded on `v0.4.0`: at 10⁻⁸ relative
+   on a recorded mesh, and within the walk's measured mesh-moved tolerance (at most 10⁻³) on an
+   unseen one, an unseen mesh failing in the reference environment.
    Prediction: zero drift beyond round-off. If it misses, the change is investigated, then
    reverted, or ruled a deliberate fix that amends its clause and re-pins the golden (G10).
 7. **The shell follows** (QR-11): VER-43, VER-44, VER-55 and VER-60 pass, and the bundle

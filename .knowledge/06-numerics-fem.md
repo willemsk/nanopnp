@@ -1295,6 +1295,32 @@ not BLAS. On the other mesh the shell walk's current moves by 2.6 × 10⁻⁵ re
 and held to ≤ 1.9 × 10⁻¹³. So equal mesh hashes and zero drift hold on one machine's dispatch level,
 not across every machine sharing a platform key.
 
+**The split is AVX-512 against everything below it, and a moved mesh is not always a moved number**
+**[tested]** (WP35 amendment, 5 October 2026; NumPy 2.5.2, Python 3.12, threads pinned to 1). The
+seven walks were recorded on an AVX2 machine at its native `X86_V3` and again with
+`NPY_DISABLE_CPU_FEATURES` capping it at the `X86_V2` baseline. All seven deploy the same mesh at both
+levels, and every value agrees **bit for bit**. Against the `X86_V4` (AVX-512) recording:
+
+| walk | mesh | largest relative drift |
+|---|---|---|
+| examples 01, 02 (both), 03 | same | 1.4 × 10⁻¹³ (example 01's EOF); ≤ 8 × 10⁻¹⁶ otherwise |
+| example 07 | moved | 9.1 × 10⁻¹⁵ |
+| 2WCD charged | moved | 2.4 × 10⁻¹⁴ (`q_mesh_e`) |
+| 2WCD with the exclusion shell | moved | 5.2 × 10⁻⁵ (`Cl⁻` current) |
+
+Three lessons for any golden. A content hash moves on a last-bit coordinate difference that changes
+no number, so it is the wrong thing to assert. The same mesh across dispatch levels agrees to round-off,
+not bit for bit, because the solve-side NumPy kernels dispatch too. And only the shell walk, whose
+offset surface adds a geometric construction downstream of the contour, moves materially. VER-62 now
+uses the hash only to choose its tolerance: 10⁻⁸ on a recorded mesh, and ten times the measured
+spread between meshes on an unseen one (`nanopnp.validation.stability`; SPECIFICATION §7.6 NOTE).
+
+**`NPY_DISABLE_CPU_FEATURES` ignores a name the platform does not dispatch** **[tested]**. NumPy
+2.4.6 (Python 3.11) and 2.5.2 (Python 3.12) both start silently with ARM names on x86-64, and both
+report the cap through `numpy._core._multiarray_umath.__cpu_features__`. The converse, x86 names
+on arm64, was not run locally: CI's macOS leg, which sets `"X86_V4 AVX512_ICL AVX512_SPR"` like
+every leg, is its first test.
+
 ### 8.2 Measured: the reaction flux really is worth it
 
 Gouy-Chapman at 0.1 M, ζ̃ = 2, P2, planar slab. Wall gradient recovered two ways and compared with

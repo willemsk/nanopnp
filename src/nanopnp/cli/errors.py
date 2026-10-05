@@ -259,6 +259,10 @@ EXCLUDED: Final[dict[str, str]] = {
         "raised only by the VER-63 findings-log check, which catches it and returns it as one of "
         "the log's errors; no command of the CLI reads a findings log"
     ),
+    "nanopnp.validation.stability:FoldError": (
+        "raised only when the VER-62 golden's merge script folds a recorded walk in; no command "
+        "of the CLI reads or writes the number-stability golden"
+    ),
 }
 """Public exception classes deliberately left unclassified, with the reason.
 
