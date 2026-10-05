@@ -28,20 +28,23 @@ Nothing is committed in this turn. It ends with the author's rulings in hand.
 
 1. Check the branch. If it is `main`, switch to the development branch this session was given; if
    none was given, stop and ask (the same rule as `wp-plan` and `wp-implement`).
-2. Phase n−1 is closed: its close package has merged, its end-of-phase report is written, and its
-   `vX.Y.0` tag exists or is the author's next step. If it is not, say so **before anything else**
-   and put the close first in the ruling round: finish it (its own package, or `/phase-plan amend
-   <n−1>` if it was never planned), or rule that Phase n overlaps it. An overlap is itself a ruling
-   (Phase 3 started before `v0.3.0`), and it names what Phase n may not do before the close lands
-   (for example, tag). Phase 2's plan merged before Phase 1's end-of-phase report existed, and the
-   branch had to be restarted from `main`; that is the case this step prevents.
-3. Versions agree everywhere before a new one is named: §2.7's table and Versioning NOTE, the
-   Release column of §3, §8.1, the head of `CHANGELOG.md`, `current.md` and the existing tags
-   (`git tag -l 'v0.*'`). One minor per phase, packages `v0.<m>.0-alpha.N`, the close tagged
-   `v0.<m>.0` alone. A disagreement goes into the ruling round; it is not resolved silently, and it is
-   not left for the close (it forced a renumbering of every tag in the middle of Phase 3's planning).
-4. If a `docs/plans/phase-<n>-*.md` already exists, this is an amendment: switch to
-   § *Amending a phase*.
+2. If a `docs/plans/phase-<n>-*.md` already exists, this is an amendment: switch to
+   § *Amending a phase* now, before the checks below, which belong to a phase not yet planned.
+3. Phase n−1 is closed: its close package has merged, its end-of-phase report is written, and its
+   `vX.Y.0` tag is published (step 4) or is the author's next step. If it is not, say so **before
+   anything else** and put the close first in the ruling round: finish it (its own package, or
+   `/phase-plan amend <n−1>` if it was never planned), or rule that Phase n overlaps it. An overlap
+   is itself a ruling (Phase 3 started before `v0.3.0`), and it names what Phase n may not do before
+   the close lands (for example, tag). Phase 2's plan merged before Phase 1's end-of-phase report
+   existed, and the branch had to be restarted from `main`; that is the case this step prevents.
+4. Versions agree everywhere before a new one is named: §2.7's table and Versioning NOTE, the
+   Release column of §3, §8.1, the head of `CHANGELOG.md`, `current.md` and the published tags
+   (`git ls-remote --tags origin 'v0.*'`; a hosted session clones shallow, and its `git tag -l`
+   lists only the tags its truncated history reaches). One minor per phase: packages
+   `v0.<m>.0-alpha.N`, and the release `v0.<m>.0` on the commit that merges the end-of-phase report
+   (the §2.7 Versioning NOTE). A disagreement goes into the ruling round; it is not resolved
+   silently, and it is not left for the close (it forced a renumbering of every tag in the middle of
+   Phase 3's planning).
 
 ### 2. Collect what the phase inherits
 
@@ -86,7 +89,8 @@ phase needs, versioning and the close. Always cover:
   figure data), rulings only they can give, and observations by a person (QR-10). Each with the
   package that needs it and what happens if it does not arrive;
 - **who merges and who tags.** The author merges. A session's GitHub access may not push tags, so
-  the plan says whether the close tags or prints the commands for the author.
+  the plan says whether the close tags or prints the commands for the author, and whether the close
+  takes the release tag alone, with no `-alpha.N` beside it (as §8.2.5 E5 ruled for Phase 3).
 
 Draft each decision with:
 
@@ -108,7 +112,8 @@ Ask through `AskUserQuestion`, at most four questions a call, with enough contex
 and option that the author can rule without scrolling back: the clause at stake, the cost of each
 option, and what is already ruled. Ask the decisions that change the work-package sequence first,
 then the sequence itself, then the rest. A ruling the author gives in prose is recorded in their
-words.
+words. Where the session has no `AskUserQuestion`, put the questions in one message, numbered, and
+end the turn there: the author's reply opens Turn 2.
 
 A scope change the author volunteers mid-round (Phase 3's move of Tier 3 to the published I–V
 curves) is a ruling like any other: record it, then re-check which drafted decisions and packages it
@@ -134,9 +139,10 @@ with the package that must settle it.
   surface.
 - **The close package is always last**, planned now: it resolves or carries each open decision,
   re-runs the end-of-phase report's numbers on its own tree, writes the report, sets the
-  `CHANGELOG.md` section and `CITATION.cff` for the release, and its last commit on `main` is
-  tagged `v0.<n+1>.0` alone (the §2.7 Versioning NOTE; §8.2.5 E5). It is not
-  improvised at the end of the phase.
+  `CHANGELOG.md` section and `CITATION.cff` for the release, and its last commit on `main` takes
+  the release tag `v0.<n+1>.0` (the §2.7 Versioning NOTE). The NOTE would also give that commit a
+  `-alpha.N`; taking the release tag alone is a ruling of the round (step 4), as §8.2.5 E5 was
+  for Phase 3. It is not improvised at the end of the phase.
 - Number packages on from the highest existing `wp<n>`. Proposed `VER-`/`VAL-` identifiers continue
   from the highest in Appendix A, and each package claims its own when it implements them.
 
@@ -153,7 +159,7 @@ change, and §8.1's row if the deliverable, gate or estimate moved.
 
 | Section | Content |
 |---|---|
-| Title + status | `# Phase <n> (<name>): <what it achieves>`, then **Status: planned, not started**, the date, and the release `v0.<n+1>` |
+| Title + status | `# Phase <n> (<name>): <what it achieves>`, then **Status: planned, not started**, with the packages listed as planned (`/wp-implement` moves each to a delivered list), the date, and the release `v0.<n+1>` |
 | Normativity note | That `SPECIFICATION.md` governs, that identifiers are pointers, and that the rulings are §8.2.<k> and are not re-argued here |
 | `## Context` | The question the phase answers; its gate; the "true of the codebase today" list; the `RSK-` it retires; what it deliberately excludes and where each goes |
 | `## Design decisions` | `Decision \| Choice \| Why`, each citing its §8.2.<k> ruling. What each package's `/wp-plan` will decide instead is said in one line above the table |
@@ -180,7 +186,10 @@ workflow itself.
    the identifiers and ruling numbers in the body. A plan that only touches Markdown outside
    `packaging/`, `src/`, `data/` and `examples/` is prose-only and the gate hook runs ruff alone
    (`.github/scripts/prose-only.sh`).
-2. `git push -u origin <branch>`. The plan is the brief every package's `/wp-plan` starts from, and
+2. Before the push, run `.claude/hooks/gate.sh run` (`CLAUDE.md`, *Git*) and the strict
+   documentation build as `CLAUDE.md`'s *Commands* table gives it: the build renders the amended
+   specification, and CI's `docs` job gates it on every push, prose-only ones included. Then
+   `git push -u origin <branch>`. The plan is the brief every package's `/wp-plan` starts from, and
    it may be read from another session on another machine.
 3. Report to the author: the paths, the rulings as recorded, the package sequence with what is
    provisional, the open decisions and their owners, **what the author must supply and when**, and
@@ -199,12 +208,14 @@ workflow itself.
   rows, and the later phase plans or input notes that exist.
 
 The same two turns apply: rulings first, then the write-up. New rulings get a new §8.2.x
-subsection, never edits to an agreed one. In the phase plan, an amended package entry gains a
+subsection. An agreed ruling's text is not rewritten: one that a new ruling supersedes gains only a
+pointer to it, as §8.2.3 C1 points to §8.2.4 D6. In the phase plan, an amended package entry gains a
 `> **Amended, <date>.**` blockquote stating what changed and the ruling behind it; the original
 paragraph stays, because the plan is a record. Update the plan's **Status** line, `## Open
 decisions`, `## What the author supplies`, `## Verification`, the Execution brief of every planned
 package the change moves, and `docs/plans/current.md`, all in the one commit. Commit as
-`docs: amend the Phase <n> plan — <what changed>`, push, report and stop.
+`docs: amend the Phase <n> plan — <what changed>`, gate it as in *Finishing*, push, report and
+stop.
 
 ## Rules the plan must respect
 

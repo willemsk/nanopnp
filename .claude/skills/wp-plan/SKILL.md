@@ -29,6 +29,8 @@ never a quiet divergence.
    or stale, locate the requested phase/WP headings and repair the brief from those sources.
    For legacy plans without an execution brief, read Decisions, Work items, Verification and the
    Outcomes that amend them; open Design sections only for the decisions this package depends on.
+   A package that is not in its phase plan, or that the plan lists as **Provisional**, is not
+   planned here: it goes through `/phase-plan amend` first.
 4. Survey the code the package builds on: what exists, what is an empty package reserving a slot,
    which seams already take the argument you need. Delegate this survey (`Explore`, Sonnet — see
    `.claude/model-policy.md`); keep every physics and numerics decision yourself, on Opus.
@@ -43,7 +45,8 @@ a single term — that ordering is the point of §7.1 and it is what makes a fai
 
 ## What to write
 
-`docs/plans/wp<n>-<slug>.md`.
+`docs/plans/wp<n>-<slug>.md`. A phase plan is not this skill's: `/phase-plan <n>` plans a phase,
+with a ruling round before the write-up, and `/phase-plan amend` changes one in flight.
 
 ### A work-package plan
 
@@ -68,11 +71,7 @@ in place by `/wp-implement` when predictions change. A plan whose predictions ho
 corrections. Keep the execution brief current; a plan is a record, so its Outcomes may keep the
 history of what changed.
 
-### A phase plan
-
-Not this skill. `/phase-plan <n>` plans a phase, with a ruling round before the write-up, and
-`/phase-plan amend` changes one in flight. A package that is not in its phase plan, or that the plan
-lists as provisional, goes through `/phase-plan amend` before it is planned here.
+### `docs/plans/current.md`
 
 Keep `docs/plans/current.md` as the bounded entry point (target 800 words): current phase/WP links,
 status, live dependency constraints and open decisions. Replace obsolete entries; do not append

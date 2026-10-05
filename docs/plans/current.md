@@ -1,6 +1,6 @@
 # Current work
 
-Updated 4 October 2026 (WP34 delivered). Navigation only; `SPECIFICATION.md`
+Updated 5 October 2026 (Phase 3 closed). Navigation only; `SPECIFICATION.md`
 governs, and nothing here is evidence an unmerged branch shipped.
 
 ## Position
@@ -8,14 +8,13 @@ governs, and nothing here is evidence an unmerged branch shipped.
 - Phase 1 ([solver core](phase-1-solver-core.md)) is **closed** as `v0.2.0` (§8.2.3; §8.2.4 D1).
 - Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **closed** as `v0.3.0`, with
   criterion 3 waived (§8.2.4 D7).
-- Phase 3 ([charge pipeline](phase-3-charge-pipeline.md)) **closes as `v0.4.0` when WP34 merges**.
-  WP26–WP33 are merged and tagged `v0.4.0-alpha.1` to `.8`. [WP34](wp34-phase-3-close.md) is
-  delivered on its branch with the end-of-phase report. **Next: `/wp-ship`** on WP34; after the
-  merge, tag its last commit `v0.4.0` alone (E5).
+- Phase 3 ([charge pipeline](phase-3-charge-pipeline.md)) is **closed** as `v0.4.0` (§8.2.5 E1).
+  WP26–WP33 are tagged `v0.4.0-alpha.1` to `.8`, and [WP34](wp34-phase-3-close.md)'s last commit
+  is tagged `v0.4.0` alone (E5).
 - **Next phases** (§8.2.6). Phase 4, `v0.5.0`: a modularity exploration (F3), the knowledge base as
-  an OKF bundle ([F6](okf-knowledge-bundle.md)), then user testing; after `v0.4.0`,
-  **`/phase-plan 4`**. Phase 5, `v0.6.0`: the GUI, opened by a design document, mockups and a
-  visual-feedback workflow (F5). Phase 6, `v0.7.0`: validation (F1). Stable v1.0 is OPN-08.
+  an OKF bundle ([F6](okf-knowledge-bundle.md)), then user testing. **Next: `/phase-plan 4`**.
+  Phase 5, `v0.6.0`: the GUI, opened by a design document, mockups and a visual-feedback workflow
+  (F5). Phase 6, `v0.7.0`: validation (F1). Stable v1.0 is OPN-08.
 
 ## Not to be re-decided
 
