@@ -5,8 +5,8 @@ description: Write the implementation plan for a nanopnp work package into docs/
 
 # Plan a work package
 
-Step 1 of the implementation workflow: turn a package of the phase plan (`/phase-plan`) into a plan detailed
-enough that `/wp-implement` can execute it without re-deciding anything that matters. The plan is a
+Step 1 of the implementation workflow: turn a package of the phase plan (`/phase-plan`) into a plan
+detailed enough that `/wp-implement` can execute it without re-deciding anything that matters. The plan is a
 commit under `docs/plans/`, not a chat message.
 
 `SPECIFICATION.md` is normative. This plan is a pointer into it, never a restatement of it, and
@@ -65,7 +65,8 @@ exceed the target; never omit a required check to meet a word count.
 
 Leave the **Outcome** annotations out. They are blockquotes `> **Outcome — <what changed>.**` added
 in place by `/wp-implement` when predictions change. A plan whose predictions hold needs no invented
-corrections. Keep the execution brief current; a plan is a record, so its Outcomes may keep the history of what changed.
+corrections. Keep the execution brief current; a plan is a record, so its Outcomes may keep the
+history of what changed.
 
 ### A phase plan
 
@@ -92,7 +93,7 @@ gate failure aborts with the quantity and its location; integration order ≥ 3 
 2. Commit on the working branch — if you are on `main`, switch to the development branch this
    session was given, and if none was given, stop and ask (the same rule as `wp-implement`):
    `docs: WP<n> implementation plan`, with the identifiers it discharges in the body.
-   The gate hook sees a prose-only change (Markdown outside `packaging/`, `src/` and `data/`; see
+   The gate hook sees a prose-only change (Markdown outside `packaging/`, `src/`, `data/` and `examples/`; see
    `.github/scripts/prose-only.sh`) and runs ruff alone. A plan that also moves code, data or the
    YAML under `docs/sweeps/` or `docs/validation/` pays for the whole gate.
    Then `git push -u origin <branch>`. The plan is the brief `/wp-implement` works from, and it may

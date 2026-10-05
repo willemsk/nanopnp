@@ -20,7 +20,9 @@ Do not push a tree you have not gated. Run `.claude/hooks/gate.sh run`; on a tre
 passed (typically the commit `/wp-implement` ended on) it returns at once.
 
 Also confirm: `git status` clean; every `VER-`/`VAL-` the plan claimed has a test named for it;
-`SPECIFICATION.md`, `.knowledge/` and the plan's Outcome annotations are committed. The gate's
+`SPECIFICATION.md`, `.knowledge/` and the plan's Outcome annotations are committed; `CHANGELOG.md`
+has the package's section under the version it will be tagged (`CONTRIBUTING.md` *Versions and
+releases*). The gate's
 `uv lock --check` covers `uv.lock` (CI runs `UV_LOCKED`, so a stale lock fails every job).
 
 If the branch is `main`, stop and ask. If the branch is behind `main`, merge `main` in and re-gate.
@@ -119,6 +121,8 @@ be reported as an automation limit; do not claim a watch was established when it
 ## 6. Report once
 
 When CI is green and the PR is mergeable, tell the user in one message: the PR link, the checks that
-passed, what the review pass changed, and anything left for them to decide. Cancel any outstanding
+passed, what the review pass changed, anything left for them to decide, and the tag to put on its
+last commit on `main` once merged (`git tag -a <version> -m "…"`, then `git push origin <version>`),
+since the merge and the tag are theirs. Cancel any outstanding
 fallback check-in (or make an already queued wake a no-op), then stop; the merge is theirs. A later
 event with a new head, failure, conflict or actionable review restarts attention under `steward`.

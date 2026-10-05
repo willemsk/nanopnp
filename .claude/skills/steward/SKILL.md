@@ -56,16 +56,24 @@ macOS only, because it waits on a real QtWebEngine page by the wall clock and bu
 (run 113). On ubuntu it skips itself, because PySide6 does not import there.
 
 - **`changes`** — diffs the whole PR (`base...head`), or the push range on `main`, through
-  `.github/scripts/prose-only.sh`. When everything is prose, the jobs below skip their steps and
-  report success. A PR with any code in it always gets the full run, however small its last push.
-- **`check`** — ubuntu, 3.12: `ruff check`, `ruff format --check`, `mypy src/`, `pytest --cov`.
-- **`test-matrix`** — `pytest` on ubuntu × 3.11, 3.13 and 3.14, plus 3.12 on windows and macOS.
-  Ubuntu 3.12 is the `check` job (QR-09, CON-13).
+  `.github/scripts/prose-only.sh`. When everything is prose, `check`, `test-matrix` and `bundle`
+  skip their steps and report success. A PR with any code in it always gets the full run, however
+  small its last push.
+- **`check`** — ubuntu, 3.12: `ruff check`, `ruff format --check`, `mypy src/`, then
+  `pytest --extended --cov`: the whole of tiers 1 and 2, the executed examples and the 2WCD walks
+  included (§7.6 NOTE). Reproduce with `.claude/hooks/gate.sh run`, not bare `uv run pytest`, which
+  leaves the `extended` tests out.
+- **`docs`** — VER-45's strict build: `docs/scripts/generate.py`, then `mkdocs build --strict`. It
+  has no `changes` dependency and runs on **every** push, prose-only ones included, because a broken
+  link or anchor is exactly what a prose edit introduces. Reproduce with `uv sync --all-extras
+  --group docs && uv run docs/scripts/generate.py && uv run mkdocs build --strict`.
+- **`test-matrix`** — `pytest --extended` on ubuntu × 3.11, 3.13 and 3.14, plus 3.12 on windows and
+  macOS. Ubuntu 3.12 is the `check` job (QR-09, CON-13).
 - **`bundle`** — **gated**. Windows PyInstaller build of `packaging/nanopnp-probe.spec`, then the
   bundle's own `--selftest` (RSK-13, §8.2.1 A4). It also runs nightly, as the runner-image drift
   probe.
-- **`tier3`** — nightly and on `workflow_dispatch` only (the nightly skips `check` and `test-matrix`), `continue-on-error`: recorded, never gated
-  (§7.1, §7.6). Without `$NANOPNP_REFERENCE_DATA` every Tier 3 test skips visibly; a skip there is
+- **`tier3`** — nightly and on `workflow_dispatch` only (the nightly skips `check`, `docs` and
+  `test-matrix`), `continue-on-error`: recorded, never gated (§7.1, §7.6). Without `$NANOPNP_REFERENCE_DATA` every Tier 3 test skips visibly; a skip there is
   missing evidence, not a defect.
 
 The default `pytest` selection is tiers 1 and 2. Tier 4 gates releases; `-m slow` is measured, never
@@ -87,6 +95,7 @@ failure, reproduce under that interpreter (`uv run --python 3.11 pytest …`).
 |---|---|---|
 | `ruff format --check` | Formatting drift | `uv run ruff format .` |
 | `ruff check` | A real lint | Fix the code. A `noqa` needs a reason on the same line and is a last resort |
+| `docs` (`mkdocs build --strict`) | A broken link, anchor or nav entry, or a generated page the schema change moved | Fix the reference or the page. Never drop `--strict` or exclude the page |
 | `mypy src/` | Strict-mode gap | Annotate properly. NGSolve ships no type information: extend the protocol aliases in `core/typing.py` rather than reaching for `Any` or a bare `type: ignore` |
 | Lockfile out of date | `pyproject.toml` moved without `uv lock` | `uv lock`, commit it |
 | `bundle` build or `--selftest` | A binary dependency defeating desktop packaging — RSK-13's detector doing its job | Root-cause it on the spec or the dependency. Never add `continue-on-error`: demotion is recorded with the failure that caused it (ci.yml comment, §8.2.1 A4), and that is the author's call |
@@ -126,8 +135,8 @@ dependency, or trade off a `CON-`/`QR-` constraint goes to the user first.
 The standing constraints a hurried fix tends to break: corrections are data in
 `data/corrections/*.yaml`, never coefficients in Python; deviations from the validated model go
 behind a flag, default off, and into the FR-25 manifest; `ngsolve`, `netgen` and `numpy` are
-imported inside the function that uses them, as is an optional extra's package in a module that must work without it, and nothing else is deferred; no `gmsh` on the default
-path (CON-10); PySide6 never PyQt (CON-09); nothing on the end-user path that needs a compiler
+imported inside the function that uses them, as is an optional extra's package in a module that
+must work without it, and nothing else is deferred; no `gmsh` on the default path (CON-10); PySide6 never PyQt (CON-09); nothing on the end-user path that needs a compiler
 (CON-07); no `import *`, no `print()`, no `os.path`.
 
 ## Commits and reporting

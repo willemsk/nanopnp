@@ -103,6 +103,10 @@ Before handing off, confirm every one of these yourself:
 - `.claude/hooks/gate.sh run` is green on the current tree;
 - the specification, the knowledge base and the plan's Outcome annotations are all committed;
 - both **Status** lines and `docs/plans/current.md` are updated;
+- `CHANGELOG.md` has the package's section under the version it will be tagged,
+  `vX.Y.Z-alpha.N` (N counts the phase's packages), or `vX.Y.Z` alone for the phase's close
+  package, which also sets `CITATION.cff`'s `version` and `date-released` (`CONTRIBUTING.md`
+  *Versions and releases*);
 - `git status` is clean, and the branch is pushed (`git push -u origin <branch>`).
 
 Then open or reuse the branch's PR against `main`, without asking again. Follow only the PR lookup
@@ -112,7 +116,8 @@ When resuming an existing PR, preserve its review evidence and human edits; do n
 or create a duplicate. If PR creation is blocked by authentication or unavailable tooling, report
 the blocker and pushed branch rather than claiming a PR exists.
 
-Stop and report the PR link, identifiers discharged, and readiness for `/wp-ship`. Do not start the
+Stop and report the PR link, identifiers discharged, the tag its last commit on `main` takes after
+the merge, and readiness for `/wp-ship`. Do not start the
 review pass, subscribe to PR activity, or schedule CI monitoring from this session. It carries the
 physics reasoning behind the implementation; `wp-ship`'s independent review (§4) should run from a
 fresh session so it can challenge those decisions. The user starts `/wp-ship` when ready.

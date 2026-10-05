@@ -33,8 +33,8 @@ Nothing is committed in this turn. It ends with the author's rulings in hand.
    and put the close first in the ruling round: finish it (its own package, or `/phase-plan amend
    <n−1>` if it was never planned), or rule that Phase n overlaps it. An overlap is itself a ruling
    (Phase 3 started before `v0.3.0`), and it names what Phase n may not do before the close lands
-   (for example, tag). Phase 1's plan merged before Phase 1's report existed, and the branch had to
-   be restarted from `main`; that is the case this step prevents.
+   (for example, tag). Phase 2's plan merged before Phase 1's end-of-phase report existed, and the
+   branch had to be restarted from `main`; that is the case this step prevents.
 3. Versions agree everywhere before a new one is named: §2.7's table and Versioning NOTE, the
    Release column of §3, §8.1, the head of `CHANGELOG.md`, `current.md` and the existing tags
    (`git tag -l 'v0.*'`). One minor per phase, packages `v0.<m>.0-alpha.N`, the close tagged
@@ -80,8 +80,8 @@ phase needs, versioning and the close. Always cover:
 - **the gate, pre-registered.** Each completion criterion names its test, its tolerance and where
   that tolerance was argued, a predicted value where one can be made, and the **fallback on a
   miss**: investigate, re-argue the tolerance (a spec amendment, never a quiet slackening), or
-  waive and carry. Phases 1 and 2 each closed on a criterion that missed and needed a fresh ruling
-  at the close; a fallback ruled now turns that into a recorded step;
+  waive and carry. Phases 1 and 2 each closed only after a fresh ruling on a criterion they did
+  not meet (§8.2.3 C1, §8.2.4 D7); a fallback ruled now turns that into a recorded step;
 - **what the author supplies**: data from their archive or machine (Tier 3 runs, reference sets,
   figure data), rulings only they can give, and observations by a person (QR-10). Each with the
   package that needs it and what happens if it does not arrive;
@@ -133,8 +133,9 @@ with the package that must settle it.
 - **The GUI and documentation increments** of §8.1 are packages of their own, after the work they
   surface.
 - **The close package is always last**, planned now: it resolves or carries each open decision,
-  re-runs the end-of-phase report's numbers on its own tree, writes the report, and its last
-  commit on `main` is tagged `v0.<n+1>.0` alone (the §2.7 Versioning NOTE; §8.2.5 E5). It is not
+  re-runs the end-of-phase report's numbers on its own tree, writes the report, sets the
+  `CHANGELOG.md` section and `CITATION.cff` for the release, and its last commit on `main` is
+  tagged `v0.<n+1>.0` alone (the §2.7 Versioning NOTE; §8.2.5 E5). It is not
   improvised at the end of the phase.
 - Number packages on from the highest existing `wp<n>`. Proposed `VER-`/`VAL-` identifiers continue
   from the highest in Appendix A, and each package claims its own when it implements them.
