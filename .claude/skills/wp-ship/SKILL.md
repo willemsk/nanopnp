@@ -92,7 +92,9 @@ changes before accepting the report; evidence for an old revision does not certi
    against the specification and the plan before keeping it. Revert any fix that is wrong, and say
    in the PR thread why it was wrong; a reviewer proposing a change that would violate a spec clause
    is the case this step exists to catch. That confirmation is what keeps a proposed fix from
-   becoming a plausible wrong one — do not skip it.
+   becoming a plausible wrong one — do not skip it. It stays in this session, on Opus, and is never
+   handed to a Sonnet sub-agent (`.claude/model-policy.md`); the review skill forks its own agent,
+   which the policy does not govern.
 2. Findings the pass raised but could not fix: fix them yourself here, or record them in the PR body
    under **Deliberately not done** with the reason. Do not leave a confirmed finding unmentioned.
 3. If fixes changed the tree, re-run `.claude/hooks/gate.sh run`.

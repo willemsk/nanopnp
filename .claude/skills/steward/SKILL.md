@@ -127,6 +127,9 @@ If the failure means the physics or the discretisation is wrong, stop and report
 the failing quantity, its location, and what you think it implies. That is the outcome the whole
 verification strategy is built to produce; do not paper over it to get a green tick.
 
+Delegate by `.claude/model-policy.md`: a sub-agent may read a long CI log and report the failing
+line on Sonnet, but diagnosing a Tier 2 failure stays with this session, on Opus.
+
 ## Fixes stay in scope
 
 Fix what the failure needs and no more. A fix that changes what the software does needs the matching
