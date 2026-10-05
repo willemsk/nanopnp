@@ -47,7 +47,7 @@ from pathlib import Path
 
 import pytest
 
-from nanopnp.core.stages import SolveReporting, create
+from nanopnp.core.stages import SolveReporting, create, walk_order
 from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
@@ -147,9 +147,7 @@ def test_fr27_only_the_solve_stage_offers_the_reporting_capability() -> None:
     keyword they can only ignore. Asserted in both directions, so a stage that
     grew a ``with_solve_hook`` by accident fails here.
     """
-    from nanopnp.io.run import PIPELINE
-
-    reporting = {name for name in PIPELINE if isinstance(create(name), SolveReporting)}
+    reporting = {name for name in walk_order() if isinstance(create(name), SolveReporting)}
     assert reporting == {"solve"}
 
 

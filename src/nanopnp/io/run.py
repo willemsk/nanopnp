@@ -47,6 +47,7 @@ from nanopnp.core.stages import (
     create,
     describe,
     report,
+    walk_order,
 )
 from nanopnp.io.artefact import Artefact, CaseArtefact, StageInputs
 from nanopnp.io.case import loads_case, resolve
@@ -58,12 +59,8 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.io.defaults import ContributedDeviation
 
 __all__ = [
-    "PAYLOAD_FREE",
-    "PIPELINE",
     "RUN_RECORD_FILENAME",
     "RUN_SCHEMA",
-    "STORE_STAGES",
-    "WORKSPACE_STAGES",
     "MissingUpstreamError",
     "RunResult",
     "StageRecord",
@@ -89,46 +86,6 @@ this says which artefacts it produced and where they are. Separating them is
 what lets a reader with a run directory and no store tell a run that was served
 from a cache from one that solved.
 """
-
-PIPELINE: tuple[str, ...] = (
-    "case",
-    "structure",
-    "density",
-    "symmetry",
-    "contour",
-    "region",
-    "mesh",
-    "protonation",
-    "charge",
-    "materials",
-    "solve",
-    "qoi",
-    "report",
-)
-"""The stages a run walks, in dependency order.
-
-Not in section 5.2's *numbering* order: stage 9 resolves the case and stages 6,
-7 and 8 all consume it, so the numbers say what each stage is and this tuple
-says when it can run. ``protonation`` follows ``mesh`` so that a walk truncated
-at the mesh, as the desktop shell's geometry build is, never protonates (WP27
-D2); its declared inputs do not force that, which is why the walk stays a
-prefix rather than a dependency sort. A Tier-1 test asserts every name here is registered and
-that each stage's declared inputs are produced by the ones before it.
-"""
-
-PAYLOAD_FREE: frozenset[str] = frozenset({"case", "materials"})
-"""Stages whose artefact is a hash over the case and carries no file.
-
-They are exactly the two stages with no ``key`` method, and for the same reason:
-running one *is* computing its key, because resolving a validated case document
-writes nothing and evaluates no fit. That is what lets ``only`` resolve them
-rather than demand them from the store — there is no payload for a hand
-substitution (FR-27) to substitute, so recomputing one cannot read past an
-edited file.
-"""
-
-STRUCTURE_STAGES: tuple[str, ...] = ("structure", "density", "symmetry", "contour")
-"""The stages a case runs only when it carries ``structure:`` (stages 1 to 4)."""
 
 WORKSPACE_DIRNAME = "tmp"
 """Directory under the store root that a run's scratch workspaces are made in.
@@ -163,71 +120,6 @@ def _scratch(store: Store) -> Path:
     root = store.root / WORKSPACE_DIRNAME
     root.mkdir(parents=True, exist_ok=True)
     return Path(tempfile.mkdtemp(prefix="run-", dir=root))
-
-
-WORKSPACE_STAGES: frozenset[str] = frozenset(
-    {
-        "structure",
-        "density",
-        "symmetry",
-        "contour",
-        "region",
-        "mesh",
-        "protonation",
-        "charge",
-        "solve",
-        "report",
-    }
-)
-"""Stages whose constructor takes the directory they write into.
-
-Enumerated rather than discovered by catching :class:`TypeError` from
-:func:`~nanopnp.core.stages.create`: a genuine ``TypeError`` raised *inside* a
-stage's constructor would be indistinguishable from an unwanted keyword, and the
-driver would silently rebuild the stage with no workspace and write into the
-store root. A Tier-1 test asserts this set against the constructors themselves.
-"""
-
-STORE_STAGES: frozenset[str] = frozenset({"protonation", "charge"})
-"""Stages whose constructor takes the run's store, to cache parts of their work in it.
-
-``protonation`` stores each frame under its own key, so a changed frame
-selection re-protonates only the frames it adds (WP27 D10); ``charge`` stores its
-export lattice under a key without the mesh, so a mesh-convergence sweep
-re-deposits without re-summing (WP28 D7). Enumerated, and
-asserted against the constructors by a Tier-1 test, for the reason
-:data:`WORKSPACE_STAGES` gives.
-"""
-
-_WEIGHTS: Mapping[str, float] = {
-    # The solve is the run. The rest is reading files, hashing them and
-    # integrating over a converged state, and a progress bar giving them equal
-    # weight would sit at 5/7 for the whole of the ladder.
-    "case": 0.01,
-    "structure": 0.05,
-    # Stage 2 deposits every frame's atoms, which is the longest thing a walk
-    # through stage 3 does: seconds for a crystal structure, minutes for an ensemble.
-    "density": 0.2,
-    "symmetry": 0.05,
-    # The probe profile is frames x atoms x planes distances: seconds on an ensemble.
-    "contour": 0.03,
-    "region": 0.01,
-    # Generating a mesh is seconds (6-8 s on the reference profile); reading one
-    # is less. Either is small beside the ladder.
-    "mesh": 0.05,
-    # About a minute per frame of a ClyA dodecamer, PROPKA included (WP27): when
-    # it runs it is most of the walk. It runs in every charged walk (WP28 D8),
-    # usually served from the store, and otherwise only as a walk's target.
-    "protonation": 1.0,
-    # A deposit is seconds per frame of a ClyA dodecamer for the kernel's sum, and
-    # seconds more for the projection and its gates; reading a field is less.
-    "charge": 0.2,
-    "materials": 0.01,
-    "solve": 0.75,
-    "qoi": 0.08,
-    "report": 0.04,
-}
-"""Share of the overall progress fraction each stage is given."""
 
 
 class MissingUpstreamError(RuntimeError):
@@ -421,9 +313,10 @@ class _Walk:
         §5.3.2 requires it be recorded in provenance and kept out of the key.
         """
         extra = dict(self.arguments.get(name, {}))
-        if name in STORE_STAGES:
+        description = describe(name)
+        if description.takes_store:
             extra["store"] = self.store
-        if name not in WORKSPACE_STAGES:
+        if not description.takes_workspace:
             return create(name, **extra)
         root = self.workspace
         if root is None:
@@ -444,9 +337,11 @@ def selected_stages(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]
     ``inputs.charge`` or ``inputs.eps_r``, or derives ``chi`` from a non-zero
     ``charge.dielectric_transition_nm`` (WP30 D5): stage 7 refuses a case with neither as
     describing no work, and a run with no field to gate has not skipped a gate.
-    ``protonation`` otherwise runs only as a walk's named target. ``structure``, ``density``
-    ``symmetry`` and ``contour`` are dropped when the case carries no ``structure:`` section,
-    for the same reason, which covers a case supplying ``inputs.profile``; and
+    ``protonation`` otherwise runs only as a walk's named target. A stage whose
+    description names a ``needs_section`` is dropped when the case leaves that
+    section out, for the same reason: ``structure``, ``density``, ``symmetry`` and
+    ``contour`` without ``structure:``, which covers a case supplying
+    ``inputs.profile``; and
     ``region`` is dropped when the case supplies ``inputs.mesh``, which stage 6
     then reads instead of generating (section 5.3.1 NOTE on ``inputs:``).
 
@@ -468,19 +363,25 @@ def selected_stages(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]
         # reads is not run: it runs only as a walk's named target, and costs about
         # a minute per frame (WP27 D3, WP28 D8).
         dropped.add("protonation")
-    if resolved.structure is None:
-        dropped.update(STRUCTURE_STAGES)
+    order = walk_order()
+    absent = {
+        name: section
+        for name in order
+        if (section := describe(name).needs_section) is not None
+        and getattr(resolved.document, section) is None
+    }
+    dropped.update(absent)
     if not resolved.generates_mesh:
         dropped.add("region")
-    stages = tuple(name for name in PIPELINE if name not in dropped)
+    stages = tuple(name for name in order if name not in dropped)
     if upto is None:
         return stages
     if upto in stages:
         return stages[: stages.index(upto) + 1]
-    if upto in STRUCTURE_STAGES:
+    if upto in absent:
         raise UnknownStageError(
-            f"stage {upto!r} is registered but case {resolved.name!r} carries no structure: "
-            "section, so there is nothing for it to read"
+            f"stage {upto!r} is registered but case {resolved.name!r} carries no "
+            f"{absent[upto]}: section, so there is nothing for it to read"
         )
     if upto == "protonation":
         raise UnknownStageError(
@@ -497,28 +398,13 @@ def selected_stages(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]
             f"stage 'region' is registered but case {resolved.name!r} supplies inputs.mesh, so "
             "there is no region to assemble"
         )
-    if upto in PIPELINE:
+    if upto in order:
         raise UnknownStageError(
             f"stage {upto!r} is registered but case {resolved.name!r} supplies neither "
             "inputs.charge nor inputs.eps_r and deposits no charge, so there is nothing for it "
             "to read"
         )
     raise UnknownStageError(f"no stage {upto!r} in the pipeline; it walks {', '.join(stages)}")
-
-
-def _probe(stage: Stage, inputs: StageInputs) -> Artefact:
-    """Return the artefact a stage will produce, without doing its work.
-
-    A stage with a ``key`` method answers directly. The two of
-    :data:`PAYLOAD_FREE` have none, because for them the key *is* the artefact:
-    resolving a validated case writes no file and evaluates no fit, so there is
-    nothing cheaper to compute than the answer itself.
-    """
-    key = getattr(stage, "key", None)
-    if key is None:
-        return stage.run(inputs)
-    probed: Artefact = key(inputs)
-    return probed
 
 
 def _contributed(stage: Stage, inputs: StageInputs) -> tuple[ContributedDeviation, ...]:
@@ -594,10 +480,11 @@ def _resolve_stage(
     """
     if on_solve is not None and isinstance(stage, SolveReporting):
         stage = stage.with_solve_hook(on_solve)
-    if name in PAYLOAD_FREE:
-        # ``_probe`` already ran it. Running it again would be the whole stage
-        # twice for an artefact that carries no file, so the key is the answer;
-        # it still goes into the store, so the run record points somewhere.
+    if describe(name).key_is_artefact:
+        # The key is the whole artefact. Running the stage as well would be its
+        # whole work twice for an artefact that carries no file, so the key is
+        # the answer; it still goes into the store, so the run record points
+        # somewhere.
         if walk.store.contains(key):
             walk.store.hits += 1
             return key
@@ -1012,8 +899,8 @@ def stored_upstream(
     """
     artefacts: dict[str, Artefact] = {}
     for name in selected_stages(resolve(document), upto):
-        key = _probe(create(name), StageInputs(case=document, upstream=dict(artefacts)))
-        if name in PAYLOAD_FREE:
+        key = create(name).key(StageInputs(case=document, upstream=dict(artefacts)))
+        if describe(name).key_is_artefact:
             artefacts[name] = key
             continue
         found = store.get(key.schema, key.hash)
@@ -1042,7 +929,7 @@ def _walk(
     """Run the stages of :func:`run_document`, which owns the scratch they write into."""
     document = walk.document
     stages = selected_stages(walk.resolved, upto)
-    weights = [_WEIGHTS[name] for name in stages]
+    weights = [describe(name).weight for name in stages]
     total = sum(weights)
     offsets = [sum(weights[:index]) / total for index in range(len(stages) + 1)]
 
@@ -1061,7 +948,7 @@ def _walk(
             stage,
             name,
             inputs,
-            _probe(stage, inputs),
+            stage.key(inputs),
             substitute=walk.only and index < len(stages) - 1,
             progress=_slice(progress, low, high, name),
             cancel=cancel,
@@ -1100,7 +987,8 @@ def _walk(
     manifest = _manifest(walk, case_text=case_text, case_path=case_path)
     # A truncated walk is another record of the same case; it must not replace the
     # run record a complete walk wrote, because QR-08 reproduces from that one.
-    label = document.name if stages[-1] == PIPELINE[-1] else f"{document.name}-upto-{stages[-1]}"
+    complete = stages[-1] == walk_order()[-1]
+    label = document.name if complete else f"{document.name}-upto-{stages[-1]}"
     result = RunResult(
         directory=walk.store.run_directory(label, manifest.case_hash),
         manifest=manifest,

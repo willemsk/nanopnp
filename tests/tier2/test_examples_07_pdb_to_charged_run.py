@@ -11,7 +11,7 @@ refuse it with exit 4 (WP32 D4, D8; VAL-15).
 Each oracle is a property of the model, not a transcribed number (WP32 D7), and
 fails loudly on a specific error:
 
-- (a) the walk records every :data:`~nanopnp.io.run.PIPELINE` stage and no deviation,
+- (a) the walk records every :func:`~nanopnp.core.stages.walk_order` stage and no deviation,
   with a deposited charge from a PDB2PQR protonation;
 - (b) ``Q_net`` is the integer the exported PQR's charge column sums to, parsed here
   independently of nanopnp: a lost frame or residue moves it;
@@ -54,8 +54,8 @@ from nanopnp.charge.protonation import PAYLOAD_NAME as PROTONATION_PAYLOAD
 from nanopnp.charge.protonation import ProtonationTable
 from nanopnp.charge.stage import CHARGE_PAYLOAD
 from nanopnp.core.hashing import decode_floats
+from nanopnp.core.stages import walk_order
 from nanopnp.io.artefact import FIELDS_SCHEMA, PROTONATION_SCHEMA
-from nanopnp.io.run import PIPELINE
 from nanopnp.io.store import Store
 from nanopnp.post.qoi import ROUTE_AGREEMENT_TOLERANCE
 from nanopnp.validation.examples import CommandResult, copy_example, run_tagged
@@ -163,7 +163,7 @@ def test_ver46_07_the_prepared_entry_walks_every_stage_to_a_charged_solve(ran: R
         ("nanopnp", "inspect"),
     ]
     artefacts = _artefacts(example, "run")
-    assert set(PIPELINE) <= set(artefacts), sorted(artefacts)
+    assert set(walk_order()) <= set(artefacts), sorted(artefacts)
     assert not any(entry["hand_substituted"] for entry in artefacts.values())
     manifest = _read(example / "run" / "manifest.json")
     deviations = manifest["deviations"]

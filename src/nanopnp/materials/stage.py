@@ -73,6 +73,19 @@ class MaterialsStage:
         """
         check_cancelled(cancel, "materials")
         report(progress, 0.0, "resolving the electrolyte")
+        artefact = self.key(inputs)
+        report(progress, 1.0, f"electrolyte resolved from {artefact.summary['parameter_file']!r}")
+        return artefact
+
+    def key(self, inputs: StageInputs) -> MaterialsArtefact:
+        """Return the stage-8 artefact, which is its own key (FR-27, section 5.3.2).
+
+        The whole of :meth:`run`'s result, summary included: resolution reads one
+        YAML file and evaluates no fit, so there is nothing cheaper to key than
+        the answer, and the walk stores this key as the artefact
+        (``key_is_artefact``). :meth:`run` calls this, so the two cannot drift
+        apart.
+        """
         resolved = resolve(inputs.case)
         electrolyte = resolved.electrolyte
         parameter_file = electrolyte.parameter_file
@@ -85,7 +98,6 @@ class MaterialsStage:
         named = {model.name for model in electrolyte.corrections.values()}
         read = named.intersection(available_corrections()) - {parameter_file}
         others = {name: file_hash(correction_file(name)) for name in sorted(read)}
-        report(progress, 1.0, f"electrolyte resolved from {parameter_file!r}")
         return MaterialsArtefact(
             electrolyte,
             concentration_M=resolved.concentration_M,

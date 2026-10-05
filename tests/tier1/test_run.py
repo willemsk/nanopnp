@@ -1,20 +1,16 @@
 """VER-32 — the pipeline driver: one case file to one run directory (FR-27, IF-01).
 
-Four claims, each of which fails quietly rather than loudly.
+Three claims, each of which fails quietly rather than loudly.
 
 **The pipeline is a dependency order, not the section 5.2 numbering.** Stage 9
 resolves the case and stages 6, 7 and 8 all consume it, so
-:data:`~nanopnp.io.run.PIPELINE` cannot be sorted by stage number. Nothing in
-the driver checks that the order it hard-codes actually satisfies each stage's
-declared inputs; a stage added to the registry with a new input, or moved,
-would raise a ``KeyError`` from deep inside a stage rather than here.
-
-**The two sets the driver keys its behaviour on are hand-written.**
-:data:`~nanopnp.io.run.PAYLOAD_FREE` claims to be exactly the stages with no
-``key`` method and :data:`~nanopnp.io.run.WORKSPACE_STAGES` exactly those whose
-constructor takes one. Both are enumerated deliberately — see their docstrings
-— and both are therefore assertions about code elsewhere, checked here against
-that code rather than against a second copy of the list.
+:func:`~nanopnp.core.stages.walk_order` cannot be sorted by stage number.
+:func:`~nanopnp.core.stages.register` refuses a stage whose inputs are not
+registered before it; this checks the order that results, so a stage that
+reached the registry some other way would fail here rather than with a
+``KeyError`` from deep inside a stage. The facts the walk reads off each
+stage's description are checked against the stages by VER-64
+(``test_stage_conformance.py``).
 
 **A stage's FR-25 deviations are read off its own artefact.** The driver calls
 ``deviations(inputs)`` after the artefact is recorded, so
@@ -36,8 +32,6 @@ only a converged solve reveals is not a driver defect. Stabilisation is ``none``
 
 from __future__ import annotations
 
-import importlib
-import inspect
 import os
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -52,19 +46,15 @@ from nanopnp.charge.stage import (
     smoothed_dielectric_deviations,
 )
 from nanopnp.core.hashing import file_hash
-from nanopnp.core.stages import _catalogue, create, describe
+from nanopnp.core.stages import _catalogue, describe, walk_order
 from nanopnp.io import run as run_module
 from nanopnp.io.artefact import StageInputs
 from nanopnp.io.case import ResolvedCase, loads_case, resolve
 from nanopnp.io.manifest import CASE_FILENAME, MANIFEST_FILENAME, MANIFEST_SCHEMA
 from nanopnp.io.run import (
-    PAYLOAD_FREE,
-    PIPELINE,
     RUN_RECORD_FILENAME,
     RUN_SCHEMA,
-    STORE_STAGES,
     WORKSPACE_DIRNAME,
-    WORKSPACE_STAGES,
     MissingUpstreamError,
     run_case,
 )
@@ -138,65 +128,17 @@ def test_ver32_the_pipeline_is_registered_and_in_dependency_order() -> None:
     than the ordering that made it absent.
     """
     produced = {"case_path"}
-    for name in PIPELINE:
+    for name in walk_order():
         description = describe(name)  # raises if it is not registered
         missing = sorted(set(description.inputs) - produced)
         assert not missing, f"stage {name!r} consumes {missing}, which nothing before it produces"
         produced.add(name)
-    assert set(PIPELINE) == {description.name for description in _catalogue_descriptions()}
+    assert set(walk_order()) == {description.name for description in _catalogue_descriptions()}
 
 
 def _catalogue_descriptions() -> tuple[object, ...]:
     """Return every registered stage description, for the coverage assertion above."""
     return tuple(entry.description for entry in _catalogue().values())
-
-
-def test_ver32_payload_free_names_exactly_the_stages_with_no_key_method() -> None:
-    """The set the driver branches on, checked against the stages themselves.
-
-    ``PAYLOAD_FREE`` decides two things: that ``_probe`` may run the stage to
-    learn its key, and that ``only`` resolves it rather than demanding it from
-    the store. Both are sound only because running one writes no file. A stage
-    that gained a payload and kept its place in the set would have ``only``
-    recompute it past a substituted input.
-    """
-    keyless = {name for name in PIPELINE if not hasattr(create(name), "key")}
-    assert keyless == set(PAYLOAD_FREE)
-
-
-def test_ver32_workspace_stages_names_exactly_the_constructors_that_take_one() -> None:
-    """Enumerated rather than discovered, and so asserted against the signatures.
-
-    Discovering it by catching :class:`TypeError` from
-    :func:`~nanopnp.core.stages.create` is what this set exists to avoid: a
-    genuine ``TypeError`` from inside a constructor would be indistinguishable
-    from an unwanted keyword, and the driver would silently rebuild the stage
-    with no workspace and write its payload into the store root.
-    """
-    takes_one = set()
-    for name in PIPELINE:
-        module_name, _, attribute = _catalogue()[name].target.partition(":")
-        factory = getattr(importlib.import_module(module_name), attribute)
-        if "workspace" in inspect.signature(factory).parameters:
-            takes_one.add(name)
-    assert takes_one == set(WORKSPACE_STAGES)
-
-
-def test_ver57_store_stages_names_exactly_the_constructors_that_take_one() -> None:
-    """The stages handed the run's store are the ones whose constructor takes it (WP27 D10).
-
-    ``protonation`` caches each frame under its own key in the store the walk
-    was given; a stage missing from :data:`~nanopnp.io.run.STORE_STAGES` would
-    protonate every frame on every walk, and one wrongly in it would be refused
-    by its constructor.
-    """
-    takes_one = set()
-    for name in PIPELINE:
-        module_name, _, attribute = _catalogue()[name].target.partition(":")
-        factory = getattr(importlib.import_module(module_name), attribute)
-        if "store" in inspect.signature(factory).parameters:
-            takes_one.add(name)
-    assert takes_one == set(STORE_STAGES)
 
 
 # -- the FR-25 deviations a stage reads off its own artefact -------------------

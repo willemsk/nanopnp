@@ -436,9 +436,7 @@ def _upstream(
 ) -> Artefact:
     """Return the ``name`` artefact the recipe is read from: the run's own, or its key."""
     if recorded is None:
-        return create(name).key(  # type: ignore[attr-defined, no-any-return]
-            StageInputs(case=resolved.document, upstream=dict(upstream))
-        )
+        return create(name).key(StageInputs(case=resolved.document, upstream=dict(upstream)))
     found = recorded.get(name)
     if found is None:
         raise KeyError(

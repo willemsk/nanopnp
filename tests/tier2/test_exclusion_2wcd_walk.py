@@ -15,7 +15,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from nanopnp.io.run import PIPELINE, run_case
+from nanopnp.core.stages import walk_order
+from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
 
 pytestmark = pytest.mark.extended
@@ -92,7 +93,7 @@ def test_ver59_2wcd_with_the_shell_and_a_derived_chi_walks_to_the_report(  # typ
         encoding="utf-8",
     )
     result = run_case(case, store=store, workspace=root / "work")
-    assert [record.name for record in result.stages] == list(PIPELINE)
+    assert [record.name for record in result.stages] == list(walk_order())
     stage7 = result.artefacts["charge"]
     assert stage7.inputs["region"] == result.artefacts["region"].hash
     assert stage7.parameters["fields"]["eps_r"]["source"] == "derived"  # type: ignore[index]

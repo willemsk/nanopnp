@@ -25,7 +25,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from nanopnp.io.run import PIPELINE, run_case
+from nanopnp.core.stages import walk_order
+from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
 from nanopnp.mesh.adapter import read
 from nanopnp.mesh.quality import QUALITY_FLOOR
@@ -155,7 +156,7 @@ def test_ver53_2wcd_walks_to_the_report_and_the_manifest_keys_every_stage(
 ) -> None:
     """FR-27: every stage keyed in the manifest; the recorded mesh is the one on disk (FR-25).
 
-    The walk is charged (WP28 D14): every stage of :data:`PIPELINE` runs, the
+    The walk is charged (WP28 D14): every stage of :func:`~nanopnp.core.stages.walk_order` runs, the
     protonation from the seeded store, and the manifest's Charge group records
     ``Q_net`` and the conservation report the deposit was gated on.
     """
@@ -165,7 +166,7 @@ def test_ver53_2wcd_walks_to_the_report_and_the_manifest_keys_every_stage(
     result = run_case(case, store=store, workspace=root / "work")
 
     ran = [record.name for record in result.stages]
-    assert ran == list(PIPELINE)
+    assert ran == list(walk_order())
     assert "protonation" in {record.name for record in result.stages if record.cached}
     group = result.manifest.charge
     charge = group["charge"]
