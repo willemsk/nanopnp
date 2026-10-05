@@ -42,7 +42,7 @@ None.
 
 ## Verification
 
-- [ ] `uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv run pytest` green on this branch
+- [ ] `.claude/hooks/gate.sh run` green on this branch (lint, format, types, the lock, and `pytest --extended`, as CI gates it)
 - [ ] Every `VER-`/`VAL-` claimed above has a test named for the requirement, in the tier directory that marks it
 - [ ] No test was skipped, `xfail`ed, or had its tolerance loosened to make this pass
 - [ ] `uv.lock` regenerated if `pyproject.toml` moved
