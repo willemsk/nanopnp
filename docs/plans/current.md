@@ -1,40 +1,37 @@
 # Current work
 
-Updated 5 October 2026 (Phase 3 closed). Navigation only; `SPECIFICATION.md`
-governs, and nothing here is evidence an unmerged branch shipped.
+Updated 5 October 2026 (Phase 4 planned). Navigation only; `SPECIFICATION.md`
+governs; nothing here is evidence an unmerged branch shipped.
 
 ## Position
 
-- Phase 1 ([solver core](phase-1-solver-core.md)) is **closed** as `v0.2.0` (§8.2.3; §8.2.4 D1).
-- Phase 2 ([geometry pipeline](phase-2-geometry-pipeline.md)) is **closed** as `v0.3.0`, with
-  criterion 3 waived (§8.2.4 D7).
-- Phase 3 ([charge pipeline](phase-3-charge-pipeline.md)) is **closed** as `v0.4.0` (§8.2.5 E1).
-  WP26–WP33 are tagged `v0.4.0-alpha.1` to `.8`, and [WP34](wp34-phase-3-close.md)'s last commit
-  is tagged `v0.4.0` alone (E5).
-- **Next phases** (§8.2.6). Phase 4, `v0.5.0`: a modularity exploration (F3), the knowledge base as
-  an OKF bundle ([F6](okf-knowledge-bundle.md)), then user testing. **Next: `/phase-plan 4`**.
-  Phase 5, `v0.6.0`: the GUI, opened by a design document, mockups and a visual-feedback workflow
-  (F5). Phase 6, `v0.7.0`: validation (F1). Stable v1.0 is OPN-08.
+- Phases 1 to 3 are **closed** as `v0.2.0`, `v0.3.0` (criterion 3 waived, §8.2.4 D7) and `v0.4.0`
+  (§8.2.5 E1, E5).
+- **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
+  **planned, not started** (§8.2.7 G1–G11). WP35, the modularity exploration, is planned in full.
+  Everything after it is provisional until `/phase-plan amend 4`. **Next: `/wp-plan 35`**.
+- After WP35 the author rules every `MOD-nn` finding. `/phase-plan amend 4` then plans these, in
+  order: the refactors, the OKF bundle and its backfill, and the user-testing protocol. The
+  author's sessions follow, and a second amendment plans the fixes, the documentation increment
+  and the close.
+- Phase 5 (`v0.6.0`) is the GUI (F5), Phase 6 (`v0.7.0`) validation (F1); v1.0 is OPN-08.
 
 ## Not to be re-decided
 
 Each is recorded in full where it points.
 
 - **Versions:** one minor per phase; a retired name is never reused, except `v0.5.0` for Phase 4
-  (E2, F2). → §2.7 NOTE; §8.2.4 D1; the head of `CHANGELOG.md`.
-- **The kernel is the closed-form azimuthal mean** of each atom's 3D Gaussian. It is deposited on
-  the deployed mesh and renormalised per atom, and no 3D grid is built. → PHY-16 steps 4–6, PHY-18;
-  §8.2.4 D2.
-- **VAL-06 runs APBS from `apbs-binary`**, test-only, required except on Windows; its tolerance is
-  not re-argued. → VAL-06 and its §7.4 NOTE; WP29 D11, D12.
-- **Protonation is per frame.** It is stage 7's first half, run after `mesh`. → §8.2.4 D4; §5.2
-  stage-7 note.
-- **The deposit** is element-wise at the potential's order, gated per plane against the atoms, and
-  read only from stage 7's artefact. → PHY-16 NOTE on the deposition; WP28.
-- **WP30's two switches are built from the stage-4 profile**, off by default, and at 0 every key
-  is unchanged (VER-59). → §4.4 NOTE on the derived solid fraction; §5.2.1 NOTE; WP30 Outcomes.
-- **The shell reads every charge number from a stage's artefact**, and the bundle collects its
-  Python LGPL payloads as source. → ADR-004 packaging NOTE; VER-60; the WP31 Outcomes.
+  (E2, F2). The close takes `v0.5.0` alone, and the session pushes each tag if its access allows
+  it (G11). → §2.7 NOTE; §8.2.4 D1; the head of `CHANGELOG.md`.
+- **Phase 4's shape:** a report and guard, with no refactor in that PR (G1); every accepted
+  refactor before the protocol (G2); two OKF packages joined by a ratchet (G3, G8); findings logs
+  in the repository, checked, with a closable header (G4); protocol scripts executed by the gate,
+  and findings only from the author's sessions (G7); a number-stability golden at 10⁻⁸ (G10).
+  → §8.2.7; the Phase 4 plan.
+- **Phase 3's charge pipeline**: the closed-form azimuthal kernel, deposited element-wise on the
+  deployed mesh (§8.2.4 D2; PHY-16 to PHY-18; WP28); protonation per frame (D4); VAL-06 from
+  `apbs-binary`, with its tolerance not re-argued (D3; WP29); WP30's switches off by default
+  (VER-59); and the shell reads every charge number from an artefact (VER-60).
 - **No payload or stage-7 summary records wall-clock time** (VER-23). **A gated test gets cheaper
   only by the §7.6 NOTE's four levers** (WP33).
 - **Tier 3 compares the published I–V and in-pore averages**, gating v0.7 (VAL-16, VAL-17; F1).
@@ -49,9 +46,11 @@ Each is recorded in full where it points.
 ## Inherited from Phases 1 and 2, still binding
 
 - **The VAL-05 ensemble test fails on the archive by design** (§8.2.4 D7).
-- **The schema and `nanopnp.PUBLIC` may change until v1.0** (§8.2.6 F4, superseding B3), the
-  schema version moving by the §5.3.1 rule, an API change decided in `test_public_api.py`, each
-  break in `CHANGELOG.md`. `physics.solid_permittivities` alone sets ε_protein and ε_membrane.
+- **The schema and `nanopnp.PUBLIC` may change until v1.0** (§8.2.6 F4, superseding B3). A move
+  takes the release's identifier, `nanopnp/case/v0.5` first. It may change between alpha packages,
+  it is fixed at the tag, and an earlier identifier reads as its upgrade (§8.2.7 G6; the §5.3.1
+  NOTE). An API change is decided in `test_public_api.py`, and each break goes in `CHANGELOG.md`.
+  `physics.solid_permittivities` alone sets ε_protein and ε_membrane.
 - **A callback is not an input** (VER-44). **A generated mesh is read only through
   `deployed_mesh`** (WP21 D10, D12). **Stage 1's frame is fixed**; tests use `prepared_2wcd`.
 - **Every phase documents what it ships**, and the commands in that documentation run verbatim
@@ -62,18 +61,18 @@ Each is recorded in full where it points.
 - **The paper's figure data**, for VAL-16 and VAL-17 at v0.7 (§8.2.4 D6), and E1's ensemble legs.
 - **The Read the Docs project**; **`$NANOPNP_REFERENCE_DATA` on the nightly runner**.
 - **OPN-04**, the ClyA-AS mutation list. **OPN-08**, what stable v1.0 contains.
+- **Phase 4's rulings on each `MOD-nn` and `UT-nn`, and the user-testing sessions themselves**
+  (G4, G7).
 - **The archived PQRs** for WP27–WP29's Tier 3; Phase 6 reports them (E1, F1).
 
 ## Dependencies To Read On Demand
 
 | Need | Read |
 |---|---|
-| Phase 3 scope and packages | `phase-3-charge-pipeline.md`; §4.4, §5.2 stage 7, §8.2.4 |
-| The physics-model interface | `docs/project/physics-models.md`; `physics/models.py` |
 | The desktop shell, its hooks and the probe bundle | The WP24 and WP31 plans and Outcomes; `gui/`; `.knowledge/07` §5; ADR-004 |
-| The deposition and stage 7 | The WP28 plan and Outcomes; `charge/stage.py` |
-| Planning Phase 4 | §8.1 and §8.2.6 F3–F6; `okf-knowledge-bundle.md`; the Phase 3 end-of-phase report |
-| Removing pre-v1 historical prose | [`history-prose-review.md`](history-prose-review.md): reviewed, awaiting the author's checklist; its own branch after `v0.4.0` |
+| Phase 4 scope and packages | `phase-4-polish-and-user-testing.md`; §8.2.6 F3–F6, §8.2.7 |
+| The OKF package's binding decisions | `okf-knowledge-bundle.md` (K1–K11); §8.2.7 G3, G8, G9 |
+| Stages, registries and the walk | `core/stages.py`; `io/run.py`; `physics/models.py` and `docs/project/physics-models.md`; `materials/models.py` |
 | Case schema and supply chains | §5.3.1 NOTEs; `io/case.py` |
 
 The Outcomes of a delivered plan override its decisions table, so read the two together.
