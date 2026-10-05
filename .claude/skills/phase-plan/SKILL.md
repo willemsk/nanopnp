@@ -29,10 +29,18 @@ Nothing is committed in this turn. It ends with the author's rulings in hand.
 1. Check the branch. If it is `main`, switch to the development branch this session was given; if
    none was given, stop and ask (the same rule as `wp-plan` and `wp-implement`).
 2. Phase n−1 is closed: its close package has merged, its end-of-phase report is written, and its
-   `vX.Y.0` tag exists or is the author's next step. If it is not, say so and ask whether Phase n
-   is to overlap it. An overlap is itself a ruling (Phase 3 started before `v0.3.0`), recorded with
-   the rest, and it names what Phase n may not do before the close lands (for example, tag).
-3. If a `docs/plans/phase-<n>-*.md` already exists, this is an amendment: switch to
+   `vX.Y.0` tag exists or is the author's next step. If it is not, say so **before anything else**
+   and put the close first in the ruling round: finish it (its own package, or `/phase-plan amend
+   <n−1>` if it was never planned), or rule that Phase n overlaps it. An overlap is itself a ruling
+   (Phase 3 started before `v0.3.0`), and it names what Phase n may not do before the close lands
+   (for example, tag). Phase 1's plan merged before Phase 1's report existed, and the branch had to
+   be restarted from `main`; that is the case this step prevents.
+3. Versions agree everywhere before a new one is named: §2.7's table and Versioning NOTE, the
+   Release column of §3, §8.1, the head of `CHANGELOG.md`, `current.md` and the existing tags
+   (`git tag -l 'v0.*'`). One minor per phase, packages `v0.<m>.0-alpha.N`, the close tagged
+   `v0.<m>.0` alone. A disagreement goes into the ruling round; it is not resolved silently, and it is
+   not left for the close (it forced a renumbering of every tag in the middle of Phase 3's planning).
+4. If a `docs/plans/phase-<n>-*.md` already exists, this is an amendment: switch to
    § *Amending a phase*.
 
 ### 2. Collect what the phase inherits
@@ -66,8 +74,21 @@ judgement on Opus.
 
 A phase decision is one that more than one work package depends on, or that the author must own:
 the order of evidence, a kernel or a discretisation choice that every later package inherits, what
-goes in this phase and what is deferred, a dependency that enters the lock, how the gate is
-measured, versioning and the close. Draft each with:
+goes in this phase and what is deferred, a dependency that enters the lock, a spec amendment the
+phase needs, versioning and the close. Always cover:
+
+- **the gate, pre-registered.** Each completion criterion names its test, its tolerance and where
+  that tolerance was argued, a predicted value where one can be made, and the **fallback on a
+  miss**: investigate, re-argue the tolerance (a spec amendment, never a quiet slackening), or
+  waive and carry. Phases 1 and 2 each closed on a criterion that missed and needed a fresh ruling
+  at the close; a fallback ruled now turns that into a recorded step;
+- **what the author supplies**: data from their archive or machine (Tier 3 runs, reference sets,
+  figure data), rulings only they can give, and observations by a person (QR-10). Each with the
+  package that needs it and what happens if it does not arrive;
+- **who merges and who tags.** The author merges. A session's GitHub access may not push tags, so
+  the plan says whether the close tags or prints the commands for the author.
+
+Draft each decision with:
 
 - the question, in one sentence, with the identifiers it touches;
 - two to four options, each with its consequence for correctness, scope and the push gate's
@@ -88,6 +109,10 @@ and option that the author can rule without scrolling back: the clause at stake,
 option, and what is already ruled. Ask the decisions that change the work-package sequence first,
 then the sequence itself, then the rest. A ruling the author gives in prose is recorded in their
 words.
+
+A scope change the author volunteers mid-round (Phase 3's move of Tier 3 to the published I–V
+curves) is a ruling like any other: record it, then re-check which drafted decisions and packages it
+moves before asking the rest.
 
 Stop when every decision is ruled or explicitly left open with an owner. Do not write the plan on a
 guess: an unruled correctness-relevant decision is either asked or carried into `## Open decisions`
@@ -134,7 +159,8 @@ change, and §8.1's row if the deliverable, gate or estimate moved.
 | `## Conventions established by earlier phases` | The inherited rules no package re-decides, each with its pointer. Bring forward the previous phase plan's list, dropping what has been superseded |
 | `## Work packages` | `### WP<n> — <name> (<identifiers>)`: a paragraph of scope, the identifiers it discharges, the proposed `VER-`/`VAL-` with their oracle, its Tier 3 legs (recorded). Provisional packages say **Provisional** and what they wait on. The close package last. Tags `v0.<n+1>.0-alpha.N` |
 | `## Open decisions` | `# \| Decision \| Owner and status`: everything not ruled, with the package that must settle it, and the rulings just taken as **Settled by the author, <date>** (§8.2.<k> <id>) |
-| `## Verification` | The gate commands; a `Package \| Tier \| Identifiers` table; then **The phase is complete when:** the numbered criteria |
+| `## What the author supplies` | `Item \| Needed by \| If it does not arrive`: data, runs on the author's machine, observations, the merge and the tag |
+| `## Verification` | The gate commands; a `Package \| Tier \| Identifiers` table; then **The phase is complete when:** the numbered criteria, each with its test, tolerance, prediction and ruled fallback |
 | `## End-of-phase report` | Empty except for the list of numbers it must report, each with the test that will log it. The close package fills it |
 
 Target 3,000 words for the plan, excluding the end-of-phase report. Link derivations; do not
@@ -156,8 +182,8 @@ workflow itself.
 2. `git push -u origin <branch>`. The plan is the brief every package's `/wp-plan` starts from, and
    it may be read from another session on another machine.
 3. Report to the author: the paths, the rulings as recorded, the package sequence with what is
-   provisional, the open decisions and their owners, and the next step (`/wp-plan <first WP>`). Then
-   stop. Planning a package is `/wp-plan`, in its own turn.
+   provisional, the open decisions and their owners, **what the author must supply and when**, and
+   the next step (`/wp-plan <first WP>`). Then stop. Planning a package is `/wp-plan`, in its own turn.
 
 ## Amending a phase
 
@@ -175,7 +201,8 @@ The same two turns apply: rulings first, then the write-up. New rulings get a ne
 subsection, never edits to an agreed one. In the phase plan, an amended package entry gains a
 `> **Amended, <date>.**` blockquote stating what changed and the ruling behind it; the original
 paragraph stays, because the plan is a record. Update the plan's **Status** line, `## Open
-decisions`, `## Verification` and `docs/plans/current.md` to match. Commit as
+decisions`, `## What the author supplies`, `## Verification`, the Execution brief of every planned
+package the change moves, and `docs/plans/current.md`, all in the one commit. Commit as
 `docs: amend the Phase <n> plan — <what changed>`, push, report and stop.
 
 ## Rules the plan must respect
