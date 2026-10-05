@@ -61,8 +61,10 @@ macOS only, because it waits on a real QtWebEngine page by the wall clock and bu
   small its last push.
 - **`check`** — ubuntu, 3.12: `ruff check`, `ruff format --check`, `mypy src/`, then
   `pytest --extended --cov`: the whole of tiers 1 and 2, the executed examples and the 2WCD walks
-  included (§7.6 NOTE). Reproduce with `.claude/hooks/gate.sh run`, not bare `uv run pytest`, which
-  leaves the `extended` tests out.
+  included (§7.6 NOTE). Reproduce a failure with the step's own command, `uv run pytest -rs -n auto
+  --dist loadfile --ignore=tests/tier1/test_gui_widgets.py --extended`. Bare `uv run pytest` leaves
+  the `extended` tests out, and `.claude/hooks/gate.sh run` judges only what is not yet pushed: on a
+  clean branch already pushed it reads as prose, skips pytest and reports a pass.
 - **`docs`** — VER-45's strict build: `docs/scripts/generate.py`, then `mkdocs build --strict`. It
   has no `changes` dependency and runs on **every** push, prose-only ones included, because a broken
   link or anchor is exactly what a prose edit introduces. Reproduce with `uv sync --all-extras
@@ -76,10 +78,10 @@ macOS only, because it waits on a real QtWebEngine page by the wall clock and bu
   `test-matrix`), `continue-on-error`: recorded, never gated (§7.1, §7.6). Without `$NANOPNP_REFERENCE_DATA` every Tier 3 test skips visibly; a skip there is
   missing evidence, not a defect.
 
-The default `pytest` selection is tiers 1 and 2. Tier 4 gates releases; `-m slow` is measured, never
-gated. Nothing in the suite reaches the network or needs a COMSOL licence, so a failure in `ruff`,
-`mypy` or `pytest` is always a real one — a lint, a type error, or a tier 1–2 assertion, never an
-environment excuse.
+The default `pytest` selection is tiers 1 and 2 without the `extended` tests, which CI adds. Tier 4
+gates releases; `-m slow` is measured, never gated. Nothing in the suite reaches the network or
+needs a COMSOL licence, so a failure in `ruff`, `mypy` or `pytest` is always a real one — a lint, a
+type error, or a tier 1–2 assertion, never an environment excuse.
 
 The steps that do reach the network are `astral-sh/setup-uv`, `uv sync` and the artefact uploads. A
 failure there is infrastructure: re-run the job. Read the log and establish which of the two you

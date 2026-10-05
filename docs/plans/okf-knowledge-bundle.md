@@ -2,8 +2,10 @@
 
 **Status: decided, not planned.** Written 4 October 2026. This note is the input to the Phase 4 work
 package that §8.2.6 F6 schedules after the modularity report and before the user-testing protocol.
-It is not a work-package plan: `/phase-plan 4` allocates the package its number, its identifiers
-and its brief, and settles the open questions at the end. `SPECIFICATION.md` governs.
+It is not a work-package plan. `/phase-plan 4` puts the open questions at the end to the author and
+lists the package as provisional behind the modularity report (F3); `/phase-plan amend` gives it its
+identifiers once that report has merged, and `/wp-plan` writes its brief. `SPECIFICATION.md`
+governs.
 
 ## What OKF is
 

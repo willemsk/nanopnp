@@ -104,9 +104,10 @@ Before handing off, confirm every one of these yourself:
 - the specification, the knowledge base and the plan's Outcome annotations are all committed;
 - both **Status** lines and `docs/plans/current.md` are updated;
 - `CHANGELOG.md` has the package's section under the version it will be tagged,
-  `vX.Y.Z-alpha.N` (N counts the phase's packages), or `vX.Y.Z` alone for the phase's close
-  package, which also sets `CITATION.cff`'s `version` and `date-released` (`CONTRIBUTING.md`
-  *Versions and releases*);
+  `vX.Y.Z-alpha.N`, where N counts the phase's packages (`CONTRIBUTING.md` *Versions and
+  releases*). The phase's close package also writes the release `vX.Y.Z` section and sets
+  `CITATION.cff`'s `version` and `date-released`; it takes the release tag alone, with no
+  `-alpha.N`, only where its phase's rulings say so, as §8.2.5 E5 did for Phase 3;
 - `git status` is clean, and the branch is pushed (`git push -u origin <branch>`).
 
 Then open or reuse the branch's PR against `main`, without asking again. Follow only the PR lookup
