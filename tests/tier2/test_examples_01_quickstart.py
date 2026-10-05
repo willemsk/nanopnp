@@ -12,12 +12,16 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
 from nanopnp.core.hashing import decode_floats
 from nanopnp.post.qoi import ROUTE_AGREEMENT_TOLERANCE
 from nanopnp.validation.examples import CommandResult, copy_example, run_tagged
+
+if TYPE_CHECKING:
+    from conftest import NumberStability
 
 pytestmark = pytest.mark.extended
 
@@ -67,3 +71,20 @@ def test_ver46_quickstart_records_no_deviation(ran: tuple[Path, list[CommandResu
     deviations = _read(example / "run" / "manifest.json")["deviations"]
     assert isinstance(deviations, dict)
     assert deviations["count"] == 0, deviations
+
+
+def _mesh_hash(run: Path) -> str:
+    """Return the deployed mesh's content hash, as the run's manifest records it."""
+    group = _read(run / "manifest.json")["geometry_and_mesh"]
+    assert isinstance(group, dict)
+    return str(group["content_hash"])
+
+
+def test_ver62_quickstart_holds_the_number_stability_golden(
+    ran: tuple[Path, list[CommandResult]], number_stability: NumberStability
+) -> None:
+    """VER-62: the quick start's numbers hold the golden recorded on v0.4.0's tree (G10)."""
+    example, _ = ran
+    quantities = _read(example / "run" / "run.json")["quantities"]
+    assert isinstance(quantities, dict)
+    number_stability("example-01", _mesh_hash(example / "run"), quantities)

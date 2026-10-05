@@ -17,12 +17,16 @@ from __future__ import annotations
 import csv
 import json
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
 from nanopnp.core.hashing import decode_floats
 from nanopnp.post.qoi import ROUTE_AGREEMENT_TOLERANCE
 from nanopnp.validation.examples import CommandResult, copy_example, run_tagged
+
+if TYPE_CHECKING:
+    from conftest import NumberStability
 
 pytestmark = pytest.mark.extended
 
@@ -81,3 +85,27 @@ def test_ver46_the_charged_pore_has_a_ratio_at_each_bias_magnitude(
     assert sorted(pair["bias_V"] for pair in pairs) == [0.05, 0.1]
     with (example / "iv.csv").open(encoding="utf-8") as stream:
         assert len(list(csv.DictReader(stream))) == 6
+
+
+def test_ver62_charged_sweep_holds_the_number_stability_golden(
+    ran: tuple[Path, list[CommandResult]], number_stability: NumberStability
+) -> None:
+    """VER-62: every member of the charged sweep holds the golden of v0.4.0's tree (G10).
+
+    One entry for the sweep, each value named by its member's index, so the sweep
+    runner's warm starts are part of what the golden pins.
+    """
+    example, _ = ran
+    rows = _dataset(example / "iv-charged")["rows"]
+    assert isinstance(rows, list) and len(rows) == 4
+    values: dict[str, float] = {}
+    meshes = set()
+    for row in rows:
+        member = number_stability.values(row["quantities"])
+        values.update({f"point-{row['index']}.{name}": value for name, value in member.items()})
+        manifest = decode_floats(
+            json.loads((Path(row["directory"]) / "manifest.json").read_text(encoding="utf-8"))
+        )
+        meshes.add(manifest["geometry_and_mesh"]["content_hash"])
+    assert len(meshes) == 1, meshes
+    number_stability("example-03-charged", meshes.pop(), {}, values)

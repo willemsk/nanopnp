@@ -32,13 +32,16 @@ where it does: a backend whose every test can skip unseen is untested.
 
 from __future__ import annotations
 
+import json
 import logging
 import math
 import os
 import pickle
+import platform
 import shutil
+import sys
 import warnings
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
@@ -849,3 +852,142 @@ def seeded_protonated_2wcd(
         return root
 
     return seed_store
+
+
+# -- VER-62: the number-stability golden (WP35 D12-D16; section 8.2.7 G10) ----------
+
+STABILITY_GOLDEN = Path(__file__).parent / "tier2" / "data" / "number_stability.json"
+"""The golden every gated walk computing a current asserts (WP35 D13)."""
+
+STABILITY_SCHEMA = "nanopnp/golden/stability/v1"
+
+STABILITY_TOLERANCE = 1e-8
+"""Relative, on every value of a walk within its key (G10; WP35 Design section 2)."""
+
+STABILITY_RECORD = "NANOPNP_RECORD_STABILITY"
+"""Names a directory: each assertion writes ``<dir>/<walk>.json`` and passes (WP35 D14)."""
+
+STABILITY_QUANTITIES = ("current_A", "currents_A", "conductance_S", "transport_number", "eof_m3_s")
+"""The quantities a walk's golden holds, each scalar of each (WP35 D12).
+
+``route_agreement`` is left out: it is a difference of two routes, and the relative
+drift of a difference amplifies round-off by the inverse of its size."""
+
+STABILITY_PROPERTY = "number_stability"
+"""The ``record_property`` name of each ``(walk, quantity, relative drift)`` (WP35 D16)."""
+
+
+def stability_key() -> str:
+    """Return the running platform's golden key, ``<sys.platform>-<machine>`` (WP35 D13)."""
+    return f"{sys.platform}-{platform.machine()}"
+
+
+def stability_values(
+    quantities: Mapping[str, object], extra: Mapping[str, float] | None = None
+) -> dict[str, float]:
+    """Return the golden's scalars of one run's quantities, flattened as ``currents_A[Na+]``."""
+    values: dict[str, float] = {}
+    for name in STABILITY_QUANTITIES:
+        value = quantities.get(name)
+        if isinstance(value, Mapping):
+            values.update({f"{name}[{species}]": float(v) for species, v in value.items()})
+        elif value is not None:
+            values[name] = float(value)  # type: ignore[arg-type]
+    values.update(extra or {})
+    return values
+
+
+@dataclass(frozen=True)
+class NumberStability:
+    """Asserts one walk's values against the golden, or records them (WP35 D13, D14)."""
+
+    record_property: Callable[[str, object], None]
+
+    values = staticmethod(stability_values)
+    """:func:`stability_values`, for a walk that combines several runs into one entry."""
+
+    def __call__(
+        self,
+        walk: str,
+        mesh_hash: str,
+        quantities: Mapping[str, object],
+        extra: Mapping[str, float] | None = None,
+    ) -> None:
+        """Assert ``walk``'s mesh hash exactly and each value at 1e-8 relative, or record them.
+
+        The values are :func:`stability_values` of the run's ``quantities``, and
+        ``extra`` adds a walk's own scalars, such as stage 7's ``q_mesh_e``.
+
+        Recording refuses a zero or non-finite value; a key with no entry fails,
+        printing the entry to commit once the values have been checked.
+        """
+        values = stability_values(quantities, extra)
+        key = stability_key()
+        entry = {"mesh_hash": mesh_hash, "values": {q: float(v).hex() for q, v in values.items()}}
+        directory = os.environ.get(STABILITY_RECORD)
+        if directory:
+            if os.environ.get("CI"):
+                pytest.fail(f"{STABILITY_RECORD} is refused under CI: a gate never records itself")
+            zero = sorted(q for q, v in values.items() if v == 0.0 or not math.isfinite(v))
+            if zero:
+                pytest.fail(f"{walk}: {zero} are zero or not finite; a golden cannot hold them")
+            path = Path(directory) / f"{walk}.json"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            record = {"schema": STABILITY_SCHEMA, "key": key, "walk": walk, **entry}
+            path.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+            return
+        golden = json.loads(STABILITY_GOLDEN.read_text(encoding="utf-8"))
+        keys = golden["keys"]
+        python = f"{key}-py3.{sys.version_info.minor}"
+        chosen = python if python in keys else key
+        expected = keys.get(chosen, {}).get(walk)
+        if expected is None:
+            printed = json.dumps({chosen: {walk: entry}}, indent=2, sort_keys=True)
+            pytest.fail(
+                f"no number-stability golden for walk {walk!r} on key {chosen!r}; after "
+                f"checking these values, commit this entry to {STABILITY_GOLDEN.name}:\n{printed}"
+            )
+        assert mesh_hash == expected["mesh_hash"], (
+            f"{walk} on {chosen}: the deployed mesh moved ({mesh_hash} against the golden's "
+            f"{expected['mesh_hash']}), so the golden's numbers do not apply; investigate the "
+            "mesh before the numbers (section 8.2.7 G10)"
+        )
+        golden_values = {q: float.fromhex(v) for q, v in expected["values"].items()}
+        assert set(values) == set(golden_values), (
+            f"{walk}: the walk computes {sorted(values)}, the golden holds {sorted(golden_values)}"
+        )
+        misses = []
+        for quantity, value in sorted(values.items()):
+            reference = golden_values[quantity]
+            drift = abs(value - reference) / abs(reference)
+            self.record_property(STABILITY_PROPERTY, (walk, quantity, drift))
+            if not abs(value - reference) <= STABILITY_TOLERANCE * abs(reference):
+                misses.append(f"{quantity}: {value!r} against {reference!r}, drift {drift:.3e}")
+        assert not misses, (
+            f"{walk} on {chosen} moved beyond {STABILITY_TOLERANCE:g} relative (section 8.2.7 "
+            "G10): investigate, then revert, or rule it a deliberate fix that amends its clause "
+            "and re-pins the golden in the same commit\n" + "\n".join(misses)
+        )
+
+
+@pytest.fixture
+def number_stability(record_property: Callable[[str, object], None]) -> NumberStability:
+    """Return the VER-62 assertion; a walk calls it as ``number_stability("<walk>", ...)``."""
+    return NumberStability(record_property)
+
+
+def pytest_terminal_summary(terminalreporter: pytest.TerminalReporter) -> None:
+    """Print the largest VER-62 drift per walk, which works under xdist (WP35 D16)."""
+    largest: dict[str, tuple[float, str]] = {}
+    for reports in terminalreporter.stats.values():
+        for report in reports:
+            for name, value in getattr(report, "user_properties", ()):
+                if name != STABILITY_PROPERTY:
+                    continue
+                walk, quantity, drift = value
+                if walk not in largest or drift > largest[walk][0]:
+                    largest[walk] = (float(drift), str(quantity))
+    if largest:
+        terminalreporter.section(f"number stability on {stability_key()}")
+        for walk, (drift, quantity) in sorted(largest.items()):
+            terminalreporter.write_line(f"{walk}: largest relative drift {drift:.3e} ({quantity})")

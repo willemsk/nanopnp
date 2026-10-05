@@ -44,6 +44,7 @@ import math
 import re
 import time
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 import yaml
@@ -58,6 +59,9 @@ from nanopnp.io.run import PIPELINE
 from nanopnp.io.store import Store
 from nanopnp.post.qoi import ROUTE_AGREEMENT_TOLERANCE
 from nanopnp.validation.examples import CommandResult, copy_example, run_tagged
+
+if TYPE_CHECKING:
+    from conftest import NumberStability
 
 pytestmark = pytest.mark.extended
 
@@ -301,3 +305,14 @@ def test_ver46_07_the_resupplied_lattice_is_refused_by_the_quadrature_gate(ran: 
     assert "Traceback" not in result.stderr
     assert "under-resolves the supplied field" in result.stderr, result.stderr
     assert re.search(r"between the assembly order and three orders above it", result.stderr)
+
+
+def test_ver62_07_the_charged_run_holds_the_number_stability_golden(
+    ran: Ran, number_stability: NumberStability
+) -> None:
+    """VER-62: the charged run's numbers hold the golden recorded on v0.4.0's tree (G10)."""
+    example = ran[0]
+    quantities = _read(example / "run" / "run.json")["quantities"]
+    group = _read(example / "run" / "manifest.json")["geometry_and_mesh"]
+    assert isinstance(quantities, dict) and isinstance(group, dict)
+    number_stability("example-07", str(group["content_hash"]), quantities)

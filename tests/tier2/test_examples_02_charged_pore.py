@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -21,6 +22,9 @@ from nanopnp.core.hashing import decode_floats
 from nanopnp.io.case import CORRECTION_PROPERTIES
 from nanopnp.post.qoi import ROUTE_AGREEMENT_TOLERANCE
 from nanopnp.validation.examples import CommandResult, copy_example, run_tagged
+
+if TYPE_CHECKING:
+    from conftest import NumberStability
 
 pytestmark = pytest.mark.extended
 
@@ -75,3 +79,22 @@ def test_ver46_classical_pnp_ns_lists_every_none_as_a_deviation(
     validated = _read(example / "run-epnpns" / "manifest.json")["deviations"]
     assert isinstance(validated, dict)
     assert validated["count"] == 0, validated
+
+
+def _mesh_hash(run: Path) -> str:
+    """Return the deployed mesh's content hash, as the run's manifest records it."""
+    group = _read(run / "manifest.json")["geometry_and_mesh"]
+    assert isinstance(group, dict)
+    return str(group["content_hash"])
+
+
+def test_ver62_example_02_holds_the_number_stability_golden(
+    ran: tuple[Path, list[CommandResult]], number_stability: NumberStability
+) -> None:
+    """VER-62: both cases' numbers hold the golden recorded on v0.4.0's tree (G10)."""
+    example, _ = ran
+    validated = _read(example / "run-epnpns" / "run.json")["quantities"]
+    classical = _read(example / "run-classical" / "run.json")["quantities"]
+    assert isinstance(validated, dict) and isinstance(classical, dict)
+    number_stability("example-02-epnpns", _mesh_hash(example / "run-epnpns"), validated)
+    number_stability("example-02-classical", _mesh_hash(example / "run-classical"), classical)
