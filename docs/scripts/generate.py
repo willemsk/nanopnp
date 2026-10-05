@@ -4,7 +4,7 @@ Run before every build, and never committed (WP16 D4, D5)::
 
     uv run docs/scripts/generate.py && uv run mkdocs build --strict
 
-Four kinds of page, all derived:
+Five kinds of page, all derived:
 
 - **The model.** ``SPECIFICATION.md`` and every ``.knowledge/*.md``, copied verbatim.
   The model is documented by rendering its normative records, never by restating
@@ -16,6 +16,8 @@ Four kinds of page, all derived:
   git tags themselves (``SPECIFICATION.md`` section 2.7, Versioning).
 - **The references.** The case-file, command-line, exit-code and API pages, rendered
   from the live objects by :mod:`nanopnp.cli.reference`.
+- **The modularity measurements.** The numbers the modularity report quotes, measured
+  on this tree by :func:`nanopnp.validation.modularity.render_measurements` (WP35 D1).
 
 Only links are touched in the copies. A relative link to another copied page is
 pointed at its copy, and one to any other repository file is pointed at the file on
@@ -38,6 +40,7 @@ from nanopnp.cli.reference import (
     render_cli_reference,
     render_exit_codes,
 )
+from nanopnp.validation.modularity import render_measurements
 
 logger = logging.getLogger("generate")
 
@@ -141,6 +144,7 @@ def main() -> int:
         "reference/cli.md": render_cli_reference(),
         "reference/exit-codes.md": render_exit_codes(),
         "reference/api.md": render_api_reference(),
+        "project/modularity-measurements.md": render_measurements(),
     }
     for name, text in rendered.items():
         path = OUTPUT / name
