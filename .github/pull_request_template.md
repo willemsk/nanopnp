@@ -42,7 +42,7 @@ None.
 
 ## Verification
 
-- [ ] `.claude/hooks/gate.sh run` green before each push (lint, format, types, the lock and `pytest --extended`). It skips pytest when nothing unpushed is code, so on a branch already pushed run `uv run pytest --extended` instead
+- [ ] `.claude/hooks/gate.sh run` green on this branch (lint, format, types, the lock and `pytest --extended`, as CI gates it; ruff alone when the branch changes only prose)
 - [ ] The strict documentation build green (`uv run docs/scripts/generate.py && uv run mkdocs build --strict`), which CI's `docs` job gates on every push, prose-only ones included
 - [ ] Every `VER-`/`VAL-` claimed above has a test named for the requirement, in the tier directory that marks it
 - [ ] No test was skipped, `xfail`ed, or had its tolerance loosened to make this pass
