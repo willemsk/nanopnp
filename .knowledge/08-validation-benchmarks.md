@@ -101,10 +101,11 @@ Uncharged pore at 1 M; **reproduce to < 2 %**.
 On the **full coupled axisymmetric system** with `r`-weighted forms. **The only way to verify the
 `u_r/r²` hoop term and the axis treatment.** Expect O(h³) in L² for P2.
 
-### 2.8 Analyte force benchmarks (new — no prior results exist)
-Because the thesis's trapping work used equilibrium APBS on a bead model with a 1D analytic rate
-model — no stress-tensor integrals, no force profile (see `05-analyte-and-forces.md`) — the force
-feature has **no reference implementation to regress against**. Verify against analytics instead:
+### 2.8 Analyte force benchmarks
+The thesis's trapping work used equilibrium APBS on a bead model with a 1D analytic rate model,
+with no stress-tensor integrals and no force profile (see `05-analyte-and-forces.md` §0–§9). The
+only published force profile is Angew. Chem. 2022 (`05` §10), which gives main-text targets
+(`05` §10.6) but no code or field data. Verify against analytics first, then those targets:
 
 - Stokes drag on a sphere: `F = 6πηaU` (and the axisymmetric-tube correction for confinement).
 - Maxwell stress on a dielectric sphere in a uniform field — closed form available.

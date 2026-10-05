@@ -698,13 +698,15 @@ alone would not notice both routes being scaled by the same wrong constant.
 `T_H = −pI + η(∇u + ∇uᵀ)`, but **evaluate in domain form** for the same superconvergence reason:
 `F_z = −∫_Ω (T_M + T_H) : ∇w dV` with `w` a smooth extension of `e_z` from the body.
 
-> **No reference implementation exists for this.** The thesis's trapping work used equilibrium
-> APBS Poisson–Boltzmann on a coarse-grained bead model plus a 1D analytic rate model — there is
-> no Maxwell/hydrodynamic stress integral and no computed force profile anywhere in it, and
-> embedded-particle force computation is listed as *future work*. See `05-analyte-and-forces.md`.
-> Consequence: the analyte force feature must be verified against **analytic** benchmarks
+> **No code or field data to regress against.** The thesis's trapping work used equilibrium APBS
+> Poisson–Boltzmann on a coarse-grained bead model plus a 1D analytic rate model, with no
+> Maxwell/hydrodynamic stress integral and no computed force profile. The one published continuum
+> force computation, Angew. Chem. 2022 (PlyAB + haemoglobin), evaluates exactly this tensor
+> framework, but its simulation details sit in a Supporting Information that was not retrievable;
+> the main-text values are the regression targets of `05-analyte-and-forces.md` §10.6.
+> Consequence: verify the analyte force first against **analytic** benchmarks
 > (Smoluchowski/Hückel electrophoretic mobility limits, Stokes drag on a sphere, Maxwell stress on
-> a sphere in a uniform field), not against prior results.
+> a sphere in a uniform field), then against those published targets.
 
 **Pore-averaged quantities.** The thesis's pore averages appear to omit the `2πr` Jacobian while
 being described as volume averages (flagged in `04-clya-geometry-and-charge.md`). Any regression

@@ -69,14 +69,20 @@ jobs:
           if [[ $matches == false ]]; then
             echo "::notice::$TAG builds as $built, a version from before hatch-vcs; no distributions are attached"
           fi
-          # A milestone cut under hatch-vcs must also be the version CITATION.cff
-          # names, or "Cite this repository" cites the wrong release.
-          if [[ $milestone == true && $matches == true ]]; then
+          # The highest milestone tag must also be the version CITATION.cff names,
+          # or "Cite this repository" cites the wrong release. An older milestone's
+          # CITATION.cff is fixed in its own commit, so re-releasing it is not
+          # held to the check (SPECIFICATION.md section 2.7, Versioning NOTE).
+          latest=$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' |
+                   sort -V | tail -n 1)
+          if [[ $milestone == true && $matches == true && $TAG == "$latest" ]]; then
             cited=$(sed -n 's/^version: *//p' CITATION.cff | tr -d "\"'")
             if [[ $cited != "$version" ]]; then
               echo "::error::CITATION.cff names version $cited, not $version"
               exit 1
             fi
+          elif [[ $milestone == true && $matches == true ]]; then
+            echo "::notice::$TAG is not the latest milestone ($latest); CITATION.cff is not checked"
           fi
           {
             echo "version=$version"
