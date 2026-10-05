@@ -40,7 +40,8 @@ from nanopnp.core.stages import (
     walk_order,
 )
 from nanopnp.io.artefact import StageInputs
-from nanopnp.io.case import CaseDocument, load_case
+from nanopnp.io.case import NEUTRAL_SECTIONS, CaseDocument, load_case, resolve
+from nanopnp.io.run import selected_stages
 from nanopnp.validation.modularity import (
     STAGE_KEY,
     STAGE_RUN,
@@ -205,7 +206,12 @@ def test_ver64_a_key_that_is_its_artefact_is_what_run_returns() -> None:
 
 
 def test_ver64_needs_section_names_an_optional_top_level_case_field() -> None:
-    """The walk drops a stage whose section the case leaves out, so it must be one it can."""
+    """The walk drops a stage whose section the case leaves out, so it must be one it can.
+
+    Not a section of :data:`~nanopnp.io.case.NEUTRAL_SECTIONS` either: the walk tests the
+    document for ``None``, and such a section written empty resolves as its absence, so
+    two cases that resolve alike would walk differently.
+    """
     declared = {name: describe(name).needs_section for name in walk_order()}
     assert {name for name, section in declared.items() if section is not None} == {
         "structure",
@@ -219,6 +225,7 @@ def test_ver64_needs_section_names_an_optional_top_level_case_field() -> None:
         field = CaseDocument.model_fields.get(section)
         assert field is not None, f"stage {name!r} needs {section!r}, which is no case field"
         assert not field.is_required() and field.default is None, (name, section)
+        assert section not in NEUTRAL_SECTIONS, (name, section)
 
 
 def test_ver64_every_weight_is_finite_and_positive() -> None:
@@ -271,6 +278,15 @@ def test_ver64_a_description_missing_a_fact_is_a_type_error() -> None:
             key_is_artefact=False,
             needs_section=None,
         )
+
+
+def test_ver64_a_needs_section_naming_no_case_section_is_named_by_the_walk(
+    scratch_registry: dict[str, object],
+) -> None:
+    """``register`` cannot read the case schema, so the walk names the stage and the section."""
+    register(_description(needs_section="structur"), "nanopnp.external:ExternalStage")
+    with pytest.raises(ValueError, match=r"'external' declares needs_section 'structur'"):
+        selected_stages(resolve(load_case(QUICKSTART)), None)
 
 
 def test_ver64_a_stage_registered_later_is_walked_after_the_rest(

@@ -354,6 +354,8 @@ def selected_stages(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]
         If ``upto`` is not a stage this run walks; the message lists the ones it
         does, and says separately when the stage is registered but this case
         gives it nothing to do.
+    ValueError
+        If a registered stage's ``needs_section`` names no top-level case section.
     """
     supplied = resolved.charge is not None or resolved.eps_r is not None or resolved.derives_eps_r
     deposits = resolved.deposits_charge
@@ -364,12 +366,22 @@ def selected_stages(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]
         # a minute per frame (WP27 D3, WP28 D8).
         dropped.add("protonation")
     order = walk_order()
-    absent = {
-        name: section
-        for name in order
-        if (section := describe(name).needs_section) is not None
-        and getattr(resolved.document, section) is None
-    }
+    sections = type(resolved.document).model_fields
+    absent: dict[str, str] = {}
+    for name in order:
+        section = describe(name).needs_section
+        if section is None:
+            continue
+        if section not in sections:
+            # ``register`` cannot check this: ``core`` does not import the case
+            # schema. Named here rather than left to ``getattr``, because every
+            # walk reads every registered stage's section, whatever its target.
+            raise ValueError(
+                f"stage {name!r} declares needs_section {section!r}, which is not a top-level "
+                f"case section; the sections are {', '.join(sorted(sections))}"
+            )
+        if getattr(resolved.document, section) is None:
+            absent[name] = section
     dropped.update(absent)
     if not resolved.generates_mesh:
         dropped.add("region")
@@ -987,7 +999,9 @@ def _walk(
     manifest = _manifest(walk, case_text=case_text, case_path=case_path)
     # A truncated walk is another record of the same case; it must not replace the
     # run record a complete walk wrote, because QR-08 reproduces from that one.
-    complete = stages[-1] == walk_order()[-1]
+    # Complete when it reaches the last stage this case walks, which is not the
+    # last registered stage when this case drops that one.
+    complete = stages[-1] == selected_stages(walk.resolved, None)[-1]
     label = document.name if complete else f"{document.name}-upto-{stages[-1]}"
     result = RunResult(
         directory=walk.store.run_directory(label, manifest.case_hash),

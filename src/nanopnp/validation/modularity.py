@@ -512,20 +512,28 @@ class StageConformance:
 
     name: str
     target: str
-    has_key: bool
     has_describe: bool
-    has_run: bool
     run_signature: str | None
+    """``run``'s parameters as :func:`_signature` writes them, or ``None`` if it has none."""
     key_signature: str | None
+    """``key``'s parameters as :func:`_signature` writes them, or ``None`` if it has none."""
+
+    @property
+    def has_key(self) -> bool:
+        """Whether the class defines ``key``, whatever its parameters."""
+        return self.key_signature is not None
+
+    @property
+    def has_run(self) -> bool:
+        """Whether the class defines ``run``, whatever its parameters."""
+        return self.run_signature is not None
 
     @property
     def conforms(self) -> bool:
         """Whether ``describe``, ``key`` and ``run`` exist with the protocol's parameters."""
         return (
             self.has_describe
-            and self.has_key
             and self.key_signature == STAGE_KEY
-            and self.has_run
             and self.run_signature == STAGE_RUN
         )
 
@@ -654,9 +662,7 @@ def stage_conformance(
             StageConformance(
                 name=name,
                 target=target,
-                has_key=key is not None,
                 has_describe="describe" in methods,
-                has_run=run is not None,
                 run_signature=None if run is None else _signature(run),
                 key_signature=None if key is None else _signature(key),
             )
@@ -1076,9 +1082,10 @@ def render_measurements(root: Path | None = None) -> str:
             f"{'yes' if stage.has_describe else '**no**'} | `{stage.run_signature}` |"
         )
     out += ["", "Stage sets written into `io/run.py`, measured by `stage_sets`:", ""]
-    for stage_set in stage_sets(root):
+    written = stage_sets(root)
+    for stage_set in written:
         out.append(f"- `{stage_set.name}` (line {stage_set.line}): {len(stage_set.members)} stages")
-    if not stage_sets(root):
+    if not written:
         out.append("- none")
     out += [
         "",
