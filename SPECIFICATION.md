@@ -204,7 +204,13 @@ that release. The tag names are SemVer, and PEP 440 reads them as
 tags installs as a development version naming that commit, and the provenance manifest's recorded
 `nanopnp` version identifies the code that produced a result (FR-25). The version enters no artefact
 key: the environment is recorded beside an artefact, never hashed into it (§5.3.2). `CHANGELOG.md`
-records every tag, and a milestone tag publishes a GitHub Release with its section as the notes.
+records every tag, and a milestone tag publishes a GitHub Release with its section as the notes. A tag name is never moved to another commit once published and never reused for
+another phase. The names `v0.5.0` and `v0.5.0-alpha.N` are Phase 4's; a manifest recording
+`0.5.0` or `0.5.0aN` from code that does not descend from `v0.4.0` is Phase 1's `0.2.0` or `0.2.0aN`,
+and a recorded `0.9.0aN` is Phase 2's `0.3.0aN` (`CHANGELOG.md`, head). A milestone tag's
+release workflow enforces that `CITATION.cff` names its version only for the highest milestone
+tag, the release that *Cite this repository* shows; an older milestone's citation metadata is
+fixed in its commit and a re-release cannot change it.
 
 ---
 

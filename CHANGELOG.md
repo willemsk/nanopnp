@@ -74,9 +74,11 @@ The release gathers nine work packages, each tagged except the last:
 ### Removed
 
 - `.github/scripts/renumber-tags.sh`, which ran once on 30 September 2026. Re-run after Phase 4's
-  first tag, it would retire live tags. `.github/renumbered-tags.txt` stays for `release.yml`. The
-  stray retired tag `v0.5.0-alpha.5` is deleted from origin, and the `v0.5.0` names are now Phase
-  4's (§8.2.5 E2, §8.2.6 F2).
+  first tag, it would retire live tags. `.github/renumbered-tags.txt` is removed too: `release.yml`
+  now checks `CITATION.cff` against the version only for the highest milestone tag, so
+  re-dispatching an older milestone's release no longer needs a list of exceptions (§2.7,
+  Versioning NOTE). The stray retired tag `v0.5.0-alpha.5` is deleted from origin, and the
+  `v0.5.0` names are now Phase 4's (§8.2.5 E2, §8.2.6 F2).
 
 ## [0.4.0-alpha.8] - 2026-10-03
 
