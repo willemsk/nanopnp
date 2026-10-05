@@ -3155,6 +3155,16 @@ class CaseStage:
         """
         check_cancelled(cancel, "case")
         report(progress, 0.0, f"resolving case {inputs.case.name!r}")
-        resolved = resolve(inputs.case)
+        artefact = self.key(inputs)
         report(progress, 1.0, f"case {inputs.case.name!r} resolved")
-        return CaseArtefact(inputs.case, summary=resolved.provenance)
+        return artefact
+
+    def key(self, inputs: StageInputs) -> CaseArtefact:
+        """Return the stage-9 artefact, which is its own key (FR-27, section 5.3.2).
+
+        The whole of :meth:`run`'s result, summary included: resolving writes no
+        file, so there is nothing cheaper to key than the answer, and the walk
+        stores this key as the artefact (``key_is_artefact``). :meth:`run` calls
+        this, so the two cannot drift apart.
+        """
+        return CaseArtefact(inputs.case, summary=resolve(inputs.case).provenance)

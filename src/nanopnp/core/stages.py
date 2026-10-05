@@ -29,8 +29,9 @@ parsing a caption, which makes a display format into an interface.
 from __future__ import annotations
 
 import importlib
+import math
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import KW_ONLY, dataclass
 from typing import TYPE_CHECKING, Any, Protocol, TypeAlias, runtime_checkable
 
 StageOption: TypeAlias = Any
@@ -279,6 +280,31 @@ class StageDescription:
         What the artefact carries, for a caller deciding whether to run it.
     artefact_schema
         Schema identifier of the artefact it emits.
+    takes_workspace
+        Whether its constructor takes ``workspace``, the directory it writes
+        into. Declared rather than discovered by catching :class:`TypeError`
+        from :func:`create`: a genuine ``TypeError`` raised inside a constructor
+        would be indistinguishable from an unwanted keyword, and the walk would
+        rebuild the stage with no workspace and write into the store root.
+    takes_store
+        Whether its constructor takes ``store``, the run's store, to cache parts
+        of its work in it.
+    key_is_artefact
+        Whether :meth:`Stage.key` returns the stage's artefact entire, summary
+        included: the stage writes no payload, and computing its key *is*
+        running it. The walk stores such a key as the artefact, and under
+        ``only`` resolves it rather than demanding it from the store, because
+        there is no payload for a hand substitution (FR-27) to substitute.
+    weight
+        The stage's share of a walk's progress fraction; finite and positive.
+    needs_section
+        The top-level case section the stage reads, named as its
+        :class:`~nanopnp.io.case.CaseDocument` field, or ``None``. A walk drops
+        the stage when the case leaves that section out.
+
+    The last five are keyword-only and required, so a description missing one
+    is a :class:`TypeError` where it is written rather than a default the walk
+    acts on.
     """
 
     name: str
@@ -287,6 +313,12 @@ class StageDescription:
     inputs: tuple[str, ...]
     outputs: tuple[str, ...]
     artefact_schema: str
+    _: KW_ONLY
+    takes_workspace: bool
+    takes_store: bool
+    key_is_artefact: bool
+    weight: float
+    needs_section: str | None
 
     def summary(self) -> dict[str, Any]:
         """Return this description as plain data, for the CLI and the GUI."""
@@ -297,6 +329,11 @@ class StageDescription:
             "inputs": list(self.inputs),
             "outputs": list(self.outputs),
             "artefact_schema": self.artefact_schema,
+            "takes_workspace": self.takes_workspace,
+            "takes_store": self.takes_store,
+            "key_is_artefact": self.key_is_artefact,
+            "weight": self.weight,
+            "needs_section": self.needs_section,
         }
 
 
@@ -307,6 +344,16 @@ class Stage(Protocol):
 
     def describe(self) -> StageDescription:
         """Return the registry's description of this stage."""
+
+    def key(self, inputs: StageInputs) -> Artefact:
+        """Return the artefact :meth:`run` will produce, without its payload.
+
+        Taken before the stage runs, which is what makes the store a cache
+        (section 5.3.2), so it must be cheap: it hashes the parameters and the
+        upstream hashes and does the stage's work only where that work is
+        computing the key. For a stage whose description declares
+        ``key_is_artefact`` it is the artefact entire, summary included.
+        """
 
     def run(
         self,
@@ -373,7 +420,13 @@ def register(description: StageDescription, target: str, *, extra: str | None = 
     ValueError
         If the name is already registered, or if ``target`` is not of the form
         ``module:attribute``. A silently replaced stage would make two runs with
-        the same manifest execute different code.
+        the same manifest execute different code. Also if an input is neither
+        ``case_path`` nor a stage registered before this one, because
+        registration order is the walk's order (:func:`walk_order`) and a stage
+        walked before its input would find nothing to read; or if ``weight`` is
+        not finite and positive, because the walk divides by the total weight
+        and a negative share would make its progress non-monotone. A refused
+        stage leaves the registry as it was.
     """
     if description.name in _REGISTRY:
         raise ValueError(
@@ -383,7 +436,35 @@ def register(description: StageDescription, target: str, *, extra: str | None = 
         )
     if target.count(":") != 1:
         raise ValueError(f"stage target {target!r} must be of the form 'module:attribute'")
+    for name in description.inputs:
+        if name != "case_path" and name not in _REGISTRY:
+            raise ValueError(
+                f"stage {description.name!r} takes input {name!r}, which is neither 'case_path' "
+                "nor a stage registered before it; the walk runs stages in registration order, "
+                "so register its inputs first"
+            )
+    if not (math.isfinite(description.weight) and description.weight > 0):
+        raise ValueError(
+            f"stage {description.name!r} has progress weight {description.weight!r}; a weight "
+            "must be finite and positive"
+        )
     _REGISTRY[description.name] = StageEntry(description=description, target=target, extra=extra)
+
+
+def walk_order() -> tuple[str, ...]:
+    """Return every registered stage's name in the order a walk runs them.
+
+    Registration order, read when called, so a stage registered after import is
+    walked as much as a built-in one. It differs from :func:`registered_stages`,
+    which sorts by section 5.2's numbers: stage 9 resolves the case that stages 1
+    to 8 consume, so it is registered, and walked, first. ``protonation``
+    follows ``mesh`` so that a walk truncated at the mesh, as the desktop shell's
+    geometry build is, never protonates (WP27 D2); its inputs do not force that,
+    which is why the walk is this order rather than a dependency sort.
+    :func:`register` refuses a stage whose inputs are not registered before it,
+    so the order is a dependency order by construction.
+    """
+    return tuple(_REGISTRY)
 
 
 def registered_stages() -> tuple[StageDescription, ...]:
@@ -471,6 +552,28 @@ def _register_builtins() -> None:
     ``describe()`` returns its registry entry, and a Tier-1 test asserts the two
     cannot drift apart.
     """
+    # Registration order is the walk's order (walk_order), and stage 9 comes
+    # first because every other stage consumes the case it resolves.
+    register(
+        StageDescription(
+            name="case",
+            number=9,
+            title="Case assembly",
+            inputs=("case_path",),
+            outputs=("resolved case document",),
+            artefact_schema="nanopnp/case/v2",
+            takes_workspace=False,
+            takes_store=False,
+            key_is_artefact=True,
+            # Each weight is the stage's share of a walk's progress fraction. The
+            # solve is the run; the rest is reading files, hashing them and
+            # integrating over a converged state, and equal weights would hold a
+            # progress bar near its end for the whole of the ladder.
+            weight=0.01,
+            needs_section=None,
+        ),
+        "nanopnp.io.case:CaseStage",
+    )
     register(
         StageDescription(
             name="structure",
@@ -479,6 +582,11 @@ def _register_builtins() -> None:
             inputs=("case",),
             outputs=("aligned ensemble", "Cn axis on z at r = 0", "symmetry-gate record"),
             artefact_schema="nanopnp/structure/v1",
+            takes_workspace=True,
+            takes_store=False,
+            key_is_artefact=False,
+            weight=0.05,
+            needs_section="structure",
         ),
         "nanopnp.structure.stage:StructureStage",
         extra="structure",
@@ -491,6 +599,13 @@ def _register_builtins() -> None:
             inputs=("case", "structure"),
             outputs=("ensemble-mean union density on a canonical 3D grid", "radius-set record"),
             artefact_schema="nanopnp/density/v1",
+            takes_workspace=True,
+            takes_store=False,
+            key_is_artefact=False,
+            # Stage 2 deposits every frame's atoms, the longest thing a walk through
+            # stage 3 does: seconds for a crystal structure, minutes for an ensemble.
+            weight=0.2,
+            needs_section="structure",
         ),
         "nanopnp.density.stage:DensityStage",
     )
@@ -502,6 +617,11 @@ def _register_builtins() -> None:
             inputs=("case", "density"),
             outputs=("(r, z) mean", "Cn-averaged and raw azimuthal variance"),
             artefact_schema="nanopnp/reduced/v1",
+            takes_workspace=True,
+            takes_store=False,
+            key_is_artefact=False,
+            weight=0.05,
+            needs_section="structure",
         ),
         "nanopnp.symmetry.stage:SymmetryStage",
     )
@@ -517,6 +637,13 @@ def _register_builtins() -> None:
                 "probe-radius profile",
             ),
             artefact_schema="nanopnp/profile/v1",
+            takes_workspace=True,
+            takes_store=False,
+            key_is_artefact=False,
+            # The probe profile is frames x atoms x planes distances: seconds on an
+            # ensemble.
+            weight=0.03,
+            needs_section="structure",
         ),
         "nanopnp.geometry.contour:ContourStage",
         extra="structure",
@@ -532,6 +659,11 @@ def _register_builtins() -> None:
                 "membrane inner edge and junction-gate record",
             ),
             artefact_schema="nanopnp/region/v1",
+            takes_workspace=True,
+            takes_store=False,
+            key_is_artefact=False,
+            weight=0.01,
+            needs_section=None,
         ),
         "nanopnp.geometry.region:RegionStage",
     )
@@ -543,6 +675,13 @@ def _register_builtins() -> None:
             inputs=("case", "region"),
             outputs=("tagged mesh", "element-quality report", "size-field record"),
             artefact_schema="nanopnp/mesh/v1",
+            takes_workspace=True,
+            takes_store=False,
+            key_is_artefact=False,
+            # Generating a mesh is seconds (6-8 s on the reference profile); reading
+            # one is less. Either is small beside the ladder.
+            weight=0.05,
+            needs_section=None,
         ),
         "nanopnp.mesh.ingest:MeshStage",
     )
@@ -558,6 +697,17 @@ def _register_builtins() -> None:
                 "titratable residue states",
             ),
             artefact_schema="nanopnp/protonation/v1",
+            takes_workspace=True,
+            # Each frame is stored under its own key, so a changed frame selection
+            # re-protonates only the frames it adds (WP27 D10).
+            takes_store=True,
+            key_is_artefact=False,
+            # About a minute per frame of a ClyA dodecamer, PROPKA included (WP27):
+            # when it runs it is most of the walk. It runs in every charged walk
+            # (WP28 D8), usually served from the store, and otherwise only as a
+            # walk's target.
+            weight=1.0,
+            needs_section=None,
         ),
         # No extra (WP27 D4): inputs.pqr runs without PDB2PQR, which the stage
         # imports only when it protonates, naming the extra if it is missing.
@@ -578,6 +728,16 @@ def _register_builtins() -> None:
                 "charge-conservation report",
             ),
             artefact_schema="nanopnp/fields/v2",
+            takes_workspace=True,
+            # The export lattice is stored under a key without the mesh, so a
+            # mesh-convergence sweep re-deposits without re-summing (WP28 D7).
+            takes_store=True,
+            key_is_artefact=False,
+            # A deposit is seconds per frame of a ClyA dodecamer for the kernel's
+            # sum, and seconds more for the projection and its gates; reading a
+            # field is less.
+            weight=0.2,
+            needs_section=None,
         ),
         "nanopnp.charge.stage:FieldStage",
     )
@@ -589,19 +749,13 @@ def _register_builtins() -> None:
             inputs=("case",),
             outputs=("electrolyte", "correction models", "resolved coefficient set"),
             artefact_schema="nanopnp/materials/v1",
+            takes_workspace=False,
+            takes_store=False,
+            key_is_artefact=True,
+            weight=0.01,
+            needs_section=None,
         ),
         "nanopnp.materials.stage:MaterialsStage",
-    )
-    register(
-        StageDescription(
-            name="case",
-            number=9,
-            title="Case assembly",
-            inputs=("case_path",),
-            outputs=("resolved case document",),
-            artefact_schema="nanopnp/case/v2",
-        ),
-        "nanopnp.io.case:CaseStage",
     )
     register(
         StageDescription(
@@ -611,6 +765,11 @@ def _register_builtins() -> None:
             inputs=("case", "materials", "mesh"),
             outputs=("converged fields", "iteration history"),
             artefact_schema="nanopnp/solution/v2",
+            takes_workspace=True,
+            takes_store=False,
+            key_is_artefact=False,
+            weight=0.75,
+            needs_section=None,
         ),
         "nanopnp.solve.stage:SolveStage",
     )
@@ -622,6 +781,11 @@ def _register_builtins() -> None:
             inputs=("case", "solve"),
             outputs=("scalar quantities of interest", "route-agreement record"),
             artefact_schema="nanopnp/qoi/v1",
+            takes_workspace=False,
+            takes_store=False,
+            key_is_artefact=False,
+            weight=0.08,
+            needs_section=None,
         ),
         "nanopnp.post.stage:QoIStage",
     )
@@ -633,6 +797,11 @@ def _register_builtins() -> None:
             inputs=("case", "qoi", "solve"),
             outputs=("field export", "run record"),
             artefact_schema="nanopnp/report/v1",
+            takes_workspace=True,
+            takes_store=False,
+            key_is_artefact=False,
+            weight=0.04,
+            needs_section=None,
         ),
         "nanopnp.post.stage:ReportStage",
     )

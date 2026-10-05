@@ -19,6 +19,42 @@ Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before t
 version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
 
+## [0.5.0-alpha.2] - 2026-10-05
+
+WP36: the stage protocol and the walk (`SPECIFICATION.md` §8.2.8 H1). It fixes `MOD-01`,
+`MOD-02` and `MOD-12` of the modularity findings log, discharging VER-64 under FR-27 and IF-01.
+Every walk computes what it computed before: the order, the keys and the work are unchanged
+(VER-62).
+
+### Changed
+
+- **`nanopnp.Stage` gains `key(inputs)`**, returning the artefact `run` will produce without its
+  payload. **Break:** a stage written outside the package must now define it. The case and
+  materials stages define it too, and their `run` returns their `key`.
+- **The walk reads each stage's facts from the registry.** `StageDescription` gains five required
+  keyword-only fields: `takes_workspace`, `takes_store`, `key_is_artefact`, `weight` and
+  `needs_section`. `registered_stages()` descriptions and `nanopnp stage --list --json` carry them,
+  an additive change. A description built by hand must now give all five.
+- **The walk runs the stages in registration order**, read by the new
+  `nanopnp.core.stages.walk_order()`, with the case stage registered first. A stage registered
+  later is walked after the built-in ones.
+- **`register()` refuses more**: an input that is neither `case_path` nor a stage registered
+  before it, and a progress weight that is not finite and positive.
+
+### Removed
+
+- `nanopnp.io.run`'s `PIPELINE`, `PAYLOAD_FREE`, `STRUCTURE_STAGES`, `WORKSPACE_STAGES` and
+  `STORE_STAGES`. They were never in `PUBLIC` (IF-01), but anyone who imported them should use
+  `walk_order()` and `describe(name).<fact>` instead.
+
+### Added
+
+- **VER-64, stage conformance**: every registered stage defines `describe`, `key(inputs)` and
+  `run(inputs, *, progress, cancel)`, read from the syntax tree. Each declared fact is checked
+  against the code it describes, and `io/run.py` writes no collection of stage names.
+- **The `PUBLIC` mirror check** (`MOD-12`, under VER-45): `nanopnp.PUBLIC` and its
+  `TYPE_CHECKING` re-exports name the same set.
+
 ## [0.5.0-alpha.1] - 2026-10-05
 
 WP35: the modularity exploration (`SPECIFICATION.md` §8.2.7 G1, G4, G10). It measures the

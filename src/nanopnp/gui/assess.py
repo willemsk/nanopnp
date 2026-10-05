@@ -334,9 +334,7 @@ def seed(request: AssessRequest) -> Seed:
     assert resolved.contour is not None and resolved.density is not None
     reduced = ReducedMap.read(context.symmetry.payload[REDUCED_PAYLOAD])
     conditioned = contour.condition_map(reduced, resolved.contour, resolved.density)
-    key = create("contour").key(  # type: ignore[attr-defined]
-        StageInputs(case=context.document, upstream=dict(context.upstream))
-    )
+    key = create("contour").key(StageInputs(case=context.document, upstream=dict(context.upstream)))
     loop = conditioned.loop
     return Seed(
         vertices=tuple((float(r), float(z)) for r, z in loop),

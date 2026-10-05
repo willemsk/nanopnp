@@ -5,7 +5,9 @@ API reference is generated from the same table, so this file pins three things: 
 set is what the documentation says it is, in both directions; every name is the
 object at its documented module path rather than a copy or a wrapper; and the
 top-level import stays solver-free, because the command line, the desktop shell and
-the sweep runner all import the package purely to introspect it.
+the sweep runner all import the package purely to introspect it. The ``TYPE_CHECKING``
+mirror the type checker reads is a second, hand-kept copy of the table, so it is
+checked against it in both directions (``MOD-12``).
 """
 
 from __future__ import annotations
@@ -20,6 +22,7 @@ import pytest
 
 import nanopnp
 from nanopnp.cli.reference import render_api_reference
+from nanopnp.validation.modularity import surface
 
 EXPECTED = {
     "__version__",
@@ -89,6 +92,32 @@ def test_ver45_an_unknown_name_raises_attribute_error() -> None:
     """The lazy lookup answers a misspelling the way a module does."""
     with pytest.raises(AttributeError, match="run_cases"):
         _ = nanopnp.run_cases  # type: ignore[attr-defined]
+
+
+def test_ver45_the_type_checking_mirror_is_public() -> None:
+    """``PUBLIC`` and its ``TYPE_CHECKING`` re-exports name the same set (``MOD-12``).
+
+    The mirror is what mypy and the linter read, since neither can follow the
+    lazy lookup. A name added to one and not the other type-checks a name that
+    does not resolve, or resolves a name that does not type-check. Read from the
+    syntax tree, and checked against the runtime table so the two readings agree.
+    """
+    shown = surface()
+    assert shown.mirror_differs == ()
+    assert set(shown.public) == set(nanopnp.PUBLIC)
+
+
+def test_ver45_a_name_dropped_from_the_mirror_is_named() -> None:
+    """The oracle: a package written by hand, one name short in its mirror."""
+    sources = {
+        "__init__.py": (
+            "from typing import TYPE_CHECKING\n"
+            "if TYPE_CHECKING:\n"
+            "    from nanopnp.io.run import run_case as run_case\n"
+            'PUBLIC = {"run_case": "nanopnp.io.run", "Store": "nanopnp.io.store"}\n'
+        ),
+    }
+    assert surface(sources=sources).mirror_differs == ("Store",)
 
 
 def test_ver45_import_nanopnp_imports_no_solver_and_no_numpy() -> None:

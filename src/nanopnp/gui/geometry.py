@@ -45,7 +45,7 @@ from typing import TYPE_CHECKING, Literal, TypeAlias
 
 from pydantic import ValidationError
 
-from nanopnp.core.stages import describe
+from nanopnp.core.stages import describe, walk_order
 from nanopnp.density.map import PAYLOAD_NAME as DENSITY_PAYLOAD
 from nanopnp.density.map import DensityMap
 from nanopnp.geometry.region import PAYLOAD_NAME as REGION_PAYLOAD
@@ -63,7 +63,6 @@ from nanopnp.io.run import (
     DENSITY_RECORD_KEYS,
     REDUCTION_RECORD_KEYS,
     STRUCTURE_RECORD_KEYS,
-    STRUCTURE_STAGES,
     selected_stages,
 )
 from nanopnp.io.store import Store
@@ -120,8 +119,16 @@ __all__ = [
     "stored_artefact",
 ]
 
-GEOMETRY_STAGES: tuple[str, ...] = (*STRUCTURE_STAGES, "region", "mesh")
-"""Stages 1 to 6: the ones the geometry tab lists, in the order a walk runs them."""
+GEOMETRY_STAGES: tuple[str, ...] = (
+    *(name for name in walk_order() if describe(name).needs_section == "structure"),
+    "region",
+    "mesh",
+)
+"""Stages 1 to 6: the ones the geometry tab lists, in the order a walk runs them.
+
+The structure stages come from the registry, each declaring the case section it
+needs; ``region`` and ``mesh`` are this tab's own choice of view.
+"""
 
 BUILD_UPTO = "mesh"
 """Where **Build geometry** stops: the command line's ``run --upto mesh`` (WP24 D3)."""

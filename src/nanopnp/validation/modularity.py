@@ -77,6 +77,9 @@ BACKEND_INTERFACE: tuple[str, ...] = (
 STAGE_RUN = "(inputs, *, progress, cancel)"
 """The parameters of :meth:`nanopnp.core.stages.Stage.run`, as :func:`_signature` writes them."""
 
+STAGE_KEY = "(inputs)"
+"""The parameters of :meth:`nanopnp.core.stages.Stage.key`, as :func:`_signature` writes them."""
+
 
 # -- parsing ---------------------------------------------------------------------
 
@@ -513,11 +516,18 @@ class StageConformance:
     has_describe: bool
     has_run: bool
     run_signature: str | None
+    key_signature: str | None
 
     @property
     def conforms(self) -> bool:
-        """Whether ``describe`` and ``run`` exist and ``run`` takes the protocol's parameters."""
-        return self.has_describe and self.has_run and self.run_signature == STAGE_RUN
+        """Whether ``describe``, ``key`` and ``run`` exist with the protocol's parameters."""
+        return (
+            self.has_describe
+            and self.has_key
+            and self.key_signature == STAGE_KEY
+            and self.has_run
+            and self.run_signature == STAGE_RUN
+        )
 
 
 @dataclass(frozen=True)
@@ -632,21 +642,23 @@ def _signature(function: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
 def stage_conformance(
     root: Path | None = None, sources: Mapping[str, str] | None = None
 ) -> tuple[StageConformance, ...]:
-    """Return each registered stage's protocol members and the signature of its ``run``."""
+    """Return each registered stage's protocol members and the signatures of ``key`` and ``run``."""
     modules = _module_map(parse_package(root, sources))
     found = []
     for name, target in _registered_stages(modules["core/stages.py"]):
         module_name, _, class_name = target.partition(":")
         methods = _class_methods(modules, module_name, class_name)
         run = methods.get("run")
+        key = methods.get("key")
         found.append(
             StageConformance(
                 name=name,
                 target=target,
-                has_key="key" in methods,
+                has_key=key is not None,
                 has_describe="describe" in methods,
                 has_run=run is not None,
                 run_signature=None if run is None else _signature(run),
+                key_signature=None if key is None else _signature(key),
             )
         )
     return tuple(found)
@@ -1048,19 +1060,26 @@ def render_measurements(root: Path | None = None) -> str:
         "",
         "## Stage conformance",
         "",
-        "Measured by `stage_conformance`, against `Stage.run" + STAGE_RUN + "`.",
+        "Measured by `stage_conformance`, against `Stage.key"
+        + STAGE_KEY
+        + "` and `Stage.run"
+        + STAGE_RUN
+        + "`.",
         "",
-        "| Stage | Class | `key` | `describe` | `run` signature |",
+        "| Stage | Class | `key` signature | `describe` | `run` signature |",
         "|---|---|---|---|---|",
     ]
     for stage in stage_conformance(root):
         out.append(
-            f"| `{stage.name}` | `{stage.target}` | {'yes' if stage.has_key else '**no**'} | "
+            f"| `{stage.name}` | `{stage.target}` | "
+            f"{f'`{stage.key_signature}`' if stage.has_key else '**no**'} | "
             f"{'yes' if stage.has_describe else '**no**'} | `{stage.run_signature}` |"
         )
     out += ["", "Stage sets written into `io/run.py`, measured by `stage_sets`:", ""]
     for stage_set in stage_sets(root):
         out.append(f"- `{stage_set.name}` (line {stage_set.line}): {len(stage_set.members)} stages")
+    if not stage_sets(root):
+        out.append("- none")
     out += [
         "",
         "## Extension points",

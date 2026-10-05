@@ -58,7 +58,7 @@ def _write(root: Path) -> Path:
 
 def test_stage_conformance_follows_a_base_imported_under_another_name(tmp_path: Path) -> None:
     (stage,) = stage_conformance(_write(tmp_path))
-    assert stage == StageConformance("x", "nanopnp.x.s:XStage", True, True, True, STAGE_RUN)
+    assert stage == StageConformance("x", "nanopnp.x.s:XStage", True, True, True, STAGE_RUN, "()")
 
 
 def test_surface_reads_public_however_it_is_assigned(tmp_path: Path) -> None:
