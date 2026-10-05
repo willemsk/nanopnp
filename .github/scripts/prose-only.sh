@@ -8,7 +8,9 @@
 #               asserted by tests/tier1/test_gui_probe.py (CON-11);
 #   src/, data/ package data;
 #   examples/   the worked examples, whose READMEs tests/tier2/test_examples_*.py
-#               executes (VER-46).
+#               executes (VER-46);
+#   *findings.md a findings log, whose table tests/tier1/test_findings_logs.py
+#               checks (VER-63), so a ruling edit runs the test that reads it.
 # docs/ is NOT prose as a directory: docs/sweeps/ and docs/validation/ hold the
 # YAML that tests/tier1 reads (the section 8.3 reference sweep, the frozen
 # cases, the probe grid). Only its Markdown is.
@@ -20,6 +22,7 @@ while IFS= read -r path; do
     [[ -z $path ]] && continue
     case $path in
         packaging/* | src/* | data/* | examples/*) exit 1 ;;
+        *findings.md) exit 1 ;;
         *.md) ;;
         *) exit 1 ;;
     esac

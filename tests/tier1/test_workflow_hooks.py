@@ -287,3 +287,24 @@ def test_gate_run_on_an_already_pushed_branch_still_runs_the_extended_tests(
     assert result.returncode == 0, result.stderr
     ran = calls.read_text(encoding="utf-8").splitlines()
     assert any("pytest" in call and "--extended" in call for call in ran), ran
+
+
+_PROSE_ONLY = Path(__file__).resolve().parents[2] / ".github/scripts/prose-only.sh"
+
+
+@pytest.mark.parametrize(
+    ("path", "prose"),
+    [
+        ("docs/x/notes.md", True),
+        ("docs/x/findings.md", False),
+        ("docs/project/modularity-findings.md", False),
+        ("docs/project/modularity-layering.yaml", False),
+    ],
+)
+def test_prose_only_reads_a_findings_log_as_not_prose(path: str, prose: bool) -> None:
+    """A findings log is read by VER-63, so editing one must run the tests (WP35 D19)."""
+    assert _BASH is not None
+    result = subprocess.run(
+        [_BASH, str(_PROSE_ONLY)], input=f"{path}\n", capture_output=True, text=True, timeout=10
+    )
+    assert result.returncode == (0 if prose else 1)
