@@ -1,0 +1,143 @@
+# The accepted subpackage import relation of src/nanopnp (WP35 D6; VER-61).
+#
+# One row per subpackage edge: `from` imports `to`. `relation` is `static` (an import
+# at module scope, inside a function or under `if TYPE_CHECKING:`) or `string` (a
+# string constant naming the module, as the stage registry and PUBLIC do). `finding`
+# names the MOD-nn of docs/project/modularity-findings.md that bears on the edge, or
+# is null. tests/tier1/test_layering.py asserts that this list equals the relation
+# nanopnp.validation.modularity measures, in both directions: a commit that adds or
+# removes an edge edits this file in the same commit (docs/project/contributing.md).
+#
+# `finding` follows the order the report reads the layers in, lowest first: core,
+# structure, density, symmetry, geometry, mesh, charge, materials, physics, solve,
+# post, io, sweep, validation, cli, gui, nanopnp. An edge pointing up that order is
+# annotated with the finding that explains it.
+edges:
+  - {from: charge, to: core, relation: static, finding: null}
+  - {from: charge, to: density, relation: static, finding: null}
+  - {from: charge, to: geometry, relation: static, finding: null}
+  - {from: charge, to: io, relation: static, finding: MOD-04}
+  - {from: charge, to: materials, relation: static, finding: MOD-03}
+  - {from: charge, to: mesh, relation: static, finding: null}
+  - {from: charge, to: physics, relation: static, finding: MOD-03}
+  - {from: charge, to: structure, relation: static, finding: null}
+  - {from: cli, to: charge, relation: static, finding: null}
+  - {from: cli, to: core, relation: static, finding: null}
+  - {from: cli, to: density, relation: static, finding: null}
+  - {from: cli, to: io, relation: static, finding: null}
+  - {from: cli, to: mesh, relation: static, finding: null}
+  - {from: cli, to: nanopnp, relation: static, finding: null}
+  - {from: cli, to: structure, relation: static, finding: null}
+  - {from: cli, to: sweep, relation: static, finding: null}
+  - {from: cli, to: validation, relation: static, finding: null}
+  - {from: core, to: io, relation: static, finding: MOD-15}
+  - {from: density, to: core, relation: static, finding: null}
+  - {from: density, to: io, relation: static, finding: MOD-04}
+  - {from: density, to: structure, relation: static, finding: null}
+  - {from: geometry, to: core, relation: static, finding: null}
+  - {from: geometry, to: density, relation: static, finding: null}
+  - {from: geometry, to: io, relation: static, finding: MOD-04}
+  - {from: geometry, to: mesh, relation: static, finding: MOD-03}
+  - {from: geometry, to: structure, relation: static, finding: null}
+  - {from: geometry, to: symmetry, relation: static, finding: null}
+  - {from: gui, to: charge, relation: static, finding: null}
+  - {from: gui, to: cli, relation: static, finding: MOD-05}
+  - {from: gui, to: core, relation: static, finding: null}
+  - {from: gui, to: density, relation: static, finding: null}
+  - {from: gui, to: geometry, relation: static, finding: null}
+  - {from: gui, to: io, relation: static, finding: null}
+  - {from: gui, to: materials, relation: static, finding: null}
+  - {from: gui, to: mesh, relation: static, finding: null}
+  - {from: gui, to: nanopnp, relation: static, finding: null}
+  - {from: gui, to: physics, relation: static, finding: null}
+  - {from: gui, to: solve, relation: static, finding: null}
+  - {from: gui, to: structure, relation: static, finding: null}
+  - {from: gui, to: symmetry, relation: static, finding: null}
+  - {from: io, to: charge, relation: static, finding: MOD-04}
+  - {from: io, to: core, relation: static, finding: null}
+  - {from: io, to: materials, relation: static, finding: MOD-04}
+  - {from: io, to: mesh, relation: static, finding: MOD-04}
+  - {from: io, to: physics, relation: static, finding: MOD-04}
+  - {from: io, to: solve, relation: static, finding: MOD-04}
+  - {from: materials, to: charge, relation: static, finding: null}
+  - {from: materials, to: core, relation: static, finding: null}
+  - {from: materials, to: density, relation: static, finding: null}
+  - {from: materials, to: io, relation: static, finding: MOD-04}
+  - {from: materials, to: mesh, relation: static, finding: null}
+  - {from: materials, to: physics, relation: static, finding: MOD-03}
+  - {from: mesh, to: core, relation: static, finding: null}
+  - {from: mesh, to: geometry, relation: static, finding: null}
+  - {from: mesh, to: io, relation: static, finding: MOD-04}
+  - {from: mesh, to: materials, relation: static, finding: MOD-03}
+  - {from: mesh, to: physics, relation: static, finding: MOD-03}
+  - {from: mesh, to: solve, relation: static, finding: MOD-03}
+  - {from: nanopnp, to: core, relation: static, finding: null}
+  - {from: nanopnp, to: io, relation: static, finding: null}
+  - {from: nanopnp, to: physics, relation: static, finding: null}
+  - {from: nanopnp, to: sweep, relation: static, finding: null}
+  - {from: physics, to: core, relation: static, finding: null}
+  - {from: physics, to: materials, relation: static, finding: null}
+  - {from: physics, to: mesh, relation: static, finding: null}
+  - {from: physics, to: solve, relation: static, finding: MOD-03}
+  - {from: post, to: charge, relation: static, finding: null}
+  - {from: post, to: core, relation: static, finding: null}
+  - {from: post, to: geometry, relation: static, finding: null}
+  - {from: post, to: io, relation: static, finding: MOD-04}
+  - {from: post, to: mesh, relation: static, finding: null}
+  - {from: post, to: physics, relation: static, finding: null}
+  - {from: post, to: solve, relation: static, finding: null}
+  - {from: solve, to: charge, relation: static, finding: null}
+  - {from: solve, to: core, relation: static, finding: null}
+  - {from: solve, to: io, relation: static, finding: MOD-04}
+  - {from: solve, to: materials, relation: static, finding: null}
+  - {from: solve, to: mesh, relation: static, finding: null}
+  - {from: solve, to: physics, relation: static, finding: null}
+  - {from: structure, to: core, relation: static, finding: null}
+  - {from: structure, to: io, relation: static, finding: MOD-04}
+  - {from: sweep, to: cli, relation: static, finding: MOD-05}
+  - {from: sweep, to: core, relation: static, finding: null}
+  - {from: sweep, to: io, relation: static, finding: null}
+  - {from: sweep, to: mesh, relation: static, finding: null}
+  - {from: sweep, to: physics, relation: static, finding: null}
+  - {from: sweep, to: post, relation: static, finding: null}
+  - {from: sweep, to: solve, relation: static, finding: null}
+  - {from: symmetry, to: core, relation: static, finding: null}
+  - {from: symmetry, to: density, relation: static, finding: null}
+  - {from: symmetry, to: io, relation: static, finding: MOD-04}
+  - {from: validation, to: charge, relation: static, finding: null}
+  - {from: validation, to: cli, relation: static, finding: MOD-05}
+  - {from: validation, to: core, relation: static, finding: null}
+  - {from: validation, to: density, relation: static, finding: null}
+  - {from: validation, to: geometry, relation: static, finding: null}
+  - {from: validation, to: io, relation: static, finding: null}
+  - {from: validation, to: materials, relation: static, finding: null}
+  - {from: validation, to: mesh, relation: static, finding: null}
+  - {from: validation, to: physics, relation: static, finding: null}
+  - {from: validation, to: solve, relation: static, finding: null}
+  - {from: cli, to: charge, relation: string, finding: null}
+  - {from: cli, to: core, relation: string, finding: null}
+  - {from: cli, to: density, relation: string, finding: null}
+  - {from: cli, to: geometry, relation: string, finding: null}
+  - {from: cli, to: gui, relation: string, finding: MOD-05}
+  - {from: cli, to: io, relation: string, finding: null}
+  - {from: cli, to: mesh, relation: string, finding: null}
+  - {from: cli, to: physics, relation: string, finding: null}
+  - {from: cli, to: post, relation: string, finding: null}
+  - {from: cli, to: solve, relation: string, finding: null}
+  - {from: cli, to: structure, relation: string, finding: null}
+  - {from: cli, to: sweep, relation: string, finding: null}
+  - {from: cli, to: validation, relation: string, finding: null}
+  - {from: core, to: charge, relation: string, finding: MOD-15}
+  - {from: core, to: density, relation: string, finding: MOD-15}
+  - {from: core, to: geometry, relation: string, finding: MOD-15}
+  - {from: core, to: io, relation: string, finding: MOD-15}
+  - {from: core, to: materials, relation: string, finding: MOD-15}
+  - {from: core, to: mesh, relation: string, finding: MOD-15}
+  - {from: core, to: post, relation: string, finding: MOD-15}
+  - {from: core, to: solve, relation: string, finding: MOD-15}
+  - {from: core, to: structure, relation: string, finding: MOD-15}
+  - {from: core, to: symmetry, relation: string, finding: MOD-15}
+  - {from: nanopnp, to: core, relation: string, finding: null}
+  - {from: nanopnp, to: io, relation: string, finding: null}
+  - {from: nanopnp, to: physics, relation: string, finding: null}
+  - {from: nanopnp, to: sweep, relation: string, finding: null}
