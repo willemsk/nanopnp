@@ -45,8 +45,9 @@ from nanopnp.charge.stage import (
     gate_parameters,
     smoothed_dielectric_deviations,
 )
+from nanopnp.core import stages as stages_module
 from nanopnp.core.hashing import file_hash
-from nanopnp.core.stages import _catalogue, describe, walk_order
+from nanopnp.core.stages import StageDescription, _catalogue, describe, register, walk_order
 from nanopnp.io import run as run_module
 from nanopnp.io.artefact import StageInputs
 from nanopnp.io.case import ResolvedCase, loads_case, resolve
@@ -361,6 +362,39 @@ def test_qr08_a_truncated_walk_does_not_overwrite_the_record_of_the_full_run(
     assert (full.directory / RUN_RECORD_FILENAME).read_bytes() == recorded
     assert (full.directory / MANIFEST_FILENAME).read_bytes() == manifest
     assert (truncated.directory / RUN_RECORD_FILENAME).is_file()
+
+
+def test_qr08_a_complete_walk_is_complete_when_its_case_drops_the_last_registered_stage(
+    case_file: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A walk is complete at the last stage *this case* walks, not the last registered.
+
+    A stage registered after ``report`` that needs ``structure:`` is dropped from this
+    case, which has none. The walk still ends where the case's walk ends, so its record is
+    the case's own run record rather than a truncated one written beside it (QR-08).
+    """
+    monkeypatch.setattr(stages_module, "_REGISTRY", dict(stages_module._REGISTRY))
+    register(
+        StageDescription(
+            name="external",
+            number=13,
+            title="External",
+            inputs=("case", "solve"),
+            outputs=(),
+            artefact_schema="external/v1",
+            takes_workspace=False,
+            takes_store=False,
+            key_is_artefact=False,
+            weight=0.1,
+            needs_section="structure",
+        ),
+        "nanopnp.external:ExternalStage",
+    )
+    result = run_case(
+        case_file, store=Store(tmp_path / "store"), workspace=tmp_path / "work", write=False
+    )
+    assert result.stages[-1].name == "report"
+    assert not result.directory.name.startswith("run-probe-upto-"), result.directory.name
 
 
 @pytest.mark.parametrize("linesep", ["\n", "\r\n"])

@@ -129,6 +129,17 @@ asserts that every registered stage is walked, so this is today's invariant made
 new one. A test that registers a stage successfully must restore the registry (`monkeypatch` on a
 copy of `_REGISTRY`), or that stage joins every later walk in the process.
 
+> **Outcome (shipping review): "only if its inputs exist" is not what the walk does.** The walk drops
+> a stage only by its `needs_section` and by `selected_stages`' case rules. A stage registered from
+> outside the package whose declared input this case drops (`contour` on an `inputs.profile` case)
+> is still walked, and fails loudly on the missing input; it computes nothing wrong. A general
+> "drop when an input is dropped" rule would drop `charge` on every `inputs.mesh` case, since
+> `charge` declares `region` and reads it only when the mesh is generated. Which declared inputs a
+> stage needs is a protocol question, left to the author (PR #79). The review also found the
+> complete-walk label compared with the last *registered* stage; it now compares with the last
+> stage the case walks, so a dropped outside stage cannot mark a full walk truncated (QR-08), and
+> a `needs_section` naming no case section is refused by the walk, naming the stage (VER-64).
+
 ### 2. The facts of the built-in stages
 
 Read from today's `WORKSPACE_STAGES`, `STORE_STAGES`, `PAYLOAD_FREE`, `STRUCTURE_STAGES` and
