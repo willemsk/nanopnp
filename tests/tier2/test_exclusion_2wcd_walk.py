@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from pathlib import Path
 
-    from conftest import Prepared2WCD, Seed2WCD
+    from conftest import NumberStability, Prepared2WCD, Seed2WCD
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +80,9 @@ def registered(
     return root, store, structure, seeded_2wcd.geometry
 
 
-def test_ver59_2wcd_with_the_shell_and_a_derived_chi_walks_to_the_report(registered) -> None:  # type: ignore[no-untyped-def]
+def test_ver59_2wcd_with_the_shell_and_a_derived_chi_walks_to_the_report(  # type: ignore[no-untyped-def]
+    registered, number_stability: NumberStability
+) -> None:
     """WP28's charged walk with both switches on: every gate, both switches and the material."""
     root, store, structure, geometry = registered
     case = root / "solve.case.yaml"
@@ -106,6 +108,13 @@ def test_ver59_2wcd_with_the_shell_and_a_derived_chi_walks_to_the_report(registe
     assert "mesh material 'exclusion'" in sources
     assert "inputs.eps_r" not in sources
     assert manifest.charge["eps_r"]["source"] == "derived"  # type: ignore[index]
+    # VER-62 (G10): the walk with both switches on holds the golden of v0.4.0's tree.
+    number_stability(
+        "2wcd-shell",
+        manifest.geometry_and_mesh["content_hash"],  # type: ignore[arg-type]
+        result.quantities,
+        {"q_mesh_e": manifest.charge["charge"]["conservation"]["q_mesh_e"]},  # type: ignore[index]
+    )
     logger.info(
         "VER-59 2WCD charged walk with a = %g nm and delta = %g nm at size_scale 4 (%d "
         "elements): chi means %s; currents %s A; stage times %s s",

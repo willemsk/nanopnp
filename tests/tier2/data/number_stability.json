@@ -1,0 +1,96 @@
+{
+  "schema": "nanopnp/golden/stability/v1",
+  "tolerance": 1e-08,
+  "keys": {
+    "linux-x86_64": {
+      "2wcd-charged": {
+        "mesh_hash": "f7a54456bbb25a4f89e43d78de739c5fa63769a14b7187957428e994c46da70e",
+        "values": {
+          "conductance_S": "0x1.5b399e4a96522p-30",
+          "current_A": "0x1.15c7b1d5450e8p-34",
+          "currents_A[Cl-]": "0x1.128814beb2ddcp-35",
+          "currents_A[Na+]": "0x1.19074eebd73f3p-35",
+          "q_mesh_e": "-0x1.dfffffffffe84p+5"
+        }
+      },
+      "2wcd-shell": {
+        "mesh_hash": "47b8e51f7225d9deea531156ddafa0ad9990a24a05570944583b36285a0d9084",
+        "values": {
+          "conductance_S": "0x1.f9856a4018662p-31",
+          "current_A": "0x1.946abb6679eb5p-35",
+          "currents_A[Cl-]": "0x1.71482db743ff8p-36",
+          "currents_A[Na+]": "0x1.b78d4915afd72p-36",
+          "q_mesh_e": "-0x1.dffffffffff3cp+5"
+        }
+      },
+      "example-01": {
+        "mesh_hash": "a2b027a926c0a0c87763c9b57f98b4fc5f95fb5a0275ebf0267648690a6b4b26",
+        "values": {
+          "conductance_S": "0x1.6c178cb915dfbp-30",
+          "current_A": "0x1.23460a2dab196p-34",
+          "currents_A[Cl-]": "0x1.66480017f5656p-35",
+          "currents_A[Na+]": "0x1.c0882886c19aap-36",
+          "eof_m3_s": "0x1.ba4df033b1d12p-76",
+          "transport_number": "0x1.8a36cf7f2ac4ep-2"
+        }
+      },
+      "example-02-classical": {
+        "mesh_hash": "a2b027a926c0a0c87763c9b57f98b4fc5f95fb5a0275ebf0267648690a6b4b26",
+        "values": {
+          "conductance_S": "0x1.da91806ff6042p-30",
+          "current_A": "0x1.7ba799f32b368p-34",
+          "currents_A[Cl-]": "0x1.5173dda089b2bp-35",
+          "currents_A[Na+]": "0x1.a5db5645ccba5p-35",
+          "eof_m3_s": "0x1.b96ba2405d37cp-63",
+          "transport_number": "0x1.1c74ed0add873p-1"
+        }
+      },
+      "example-02-epnpns": {
+        "mesh_hash": "a2b027a926c0a0c87763c9b57f98b4fc5f95fb5a0275ebf0267648690a6b4b26",
+        "values": {
+          "conductance_S": "0x1.59a9e8cbfaf2cp-30",
+          "current_A": "0x1.1487ed6ffbf57p-34",
+          "currents_A[Cl-]": "0x1.fa10bfba14381p-36",
+          "currents_A[Na+]": "0x1.2c077b02edceep-35",
+          "eof_m3_s": "0x1.3ed9de02080f3p-63",
+          "transport_number": "0x1.15c0ee0f1971ep-1"
+        }
+      },
+      "example-03-charged": {
+        "mesh_hash": "a2b027a926c0a0c87763c9b57f98b4fc5f95fb5a0275ebf0267648690a6b4b26",
+        "values": {
+          "point-0.conductance_S": "0x1.49e4187595fd8p-30",
+          "point-0.current_A": "0x1.07e9ad2ade647p-34",
+          "point-0.currents_A[Cl-]": "0x1.ee20e3b72e3d4p-36",
+          "point-0.currents_A[Na+]": "0x1.18c2e87a25aa4p-35",
+          "point-0.transport_number": "0x1.1057e8e00df90p-1",
+          "point-1.conductance_S": "0x1.6a87bdf259eb0p-30",
+          "point-1.current_A": "-0x1.2206318eae55ap-34",
+          "point-1.currents_A[Cl-]": "-0x1.1666321270205p-35",
+          "point-1.currents_A[Na+]": "-0x1.2da6310aec8aep-35",
+          "point-1.transport_number": "0x1.0a42de65163d1p-1",
+          "point-2.conductance_S": "0x1.3d1f22467015fp-30",
+          "point-2.current_A": "0x1.fb6503a3e6899p-34",
+          "point-2.currents_A[Cl-]": "0x1.d8d5b9395dc36p-35",
+          "point-2.currents_A[Na+]": "0x1.0efa270737a7ep-34",
+          "point-2.transport_number": "0x1.116fcc05d732cp-1",
+          "point-3.conductance_S": "0x1.7a7e57480d718p-30",
+          "point-3.current_A": "-0x1.2ecb79067127ap-33",
+          "point-3.currents_A[Cl-]": "-0x1.275a32460ca53p-34",
+          "point-3.currents_A[Na+]": "-0x1.363cbfc6d5aa2p-34",
+          "point-3.transport_number": "0x1.064ad44b0a47fp-1"
+        }
+      },
+      "example-07": {
+        "mesh_hash": "e2030d0fd6e8c3ef47d069d5464822ce6a9cf6ed3fe2d2badcde32a862b81101",
+        "values": {
+          "conductance_S": "0x1.0b9340a2e974bp-30",
+          "current_A": "0x1.ac1ecdd175878p-35",
+          "currents_A[Cl-]": "0x1.877bb188685b5p-36",
+          "currents_A[Na+]": "0x1.d0c1ea1a82b3cp-36",
+          "transport_number": "0x1.15e85bc75bd93p-1"
+        }
+      }
+    }
+  }
+}

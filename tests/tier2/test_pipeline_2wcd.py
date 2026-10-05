@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from pathlib import Path
 
-    from conftest import Prepared2WCD, Seed2WCD
+    from conftest import NumberStability, Prepared2WCD, Seed2WCD
 
 logger = logging.getLogger(__name__)
 
@@ -150,7 +150,9 @@ def test_ver53_2wcd_meshes_at_the_default_sizes(registered) -> None:
     )
 
 
-def test_ver53_2wcd_walks_to_the_report_and_the_manifest_keys_every_stage(registered) -> None:
+def test_ver53_2wcd_walks_to_the_report_and_the_manifest_keys_every_stage(
+    registered, number_stability: NumberStability
+) -> None:
     """FR-27: every stage keyed in the manifest; the recorded mesh is the one on disk (FR-25).
 
     The walk is charged (WP28 D14): every stage of :data:`PIPELINE` runs, the
@@ -203,6 +205,14 @@ def test_ver53_2wcd_walks_to_the_report_and_the_manifest_keys_every_stage(regist
     payload = result.artefacts["mesh"].payload["mesh"]
     assert read(payload, format="msh41").content_hash == geometry_group["content_hash"]
 
+    # VER-62 (G10): the charged walk's numbers and its deposited charge hold the
+    # golden recorded on v0.4.0's tree, the mesh hash asserted first.
+    number_stability(
+        "2wcd-charged",
+        geometry_group["content_hash"],
+        result.quantities,
+        {"q_mesh_e": conservation["q_mesh_e"]},  # type: ignore[index]
+    )
     currents = result.quantities["currents_A"]
     logger.info("2WCD charged pnp at +50 mV, 0.15 M, size_scale 4: currents %s A", currents)
     logger.info(
