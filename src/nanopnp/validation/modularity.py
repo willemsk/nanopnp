@@ -269,14 +269,11 @@ def import_edges(
             for target in _resolve(module, statement, known):
                 if target != module.name:
                     edges.add(ImportEdge(module.name, target, kind, statement.lineno, module.path))
-        for constant in _strings(module.tree):
-            text = str(constant.value)
+        for text, line in _module_strings(module):
             if MODULE_STRING.match(text):
                 target = text.partition(":")[0]
                 if target in known and target != module.name:
-                    edges.add(
-                        ImportEdge(module.name, target, "string", constant.lineno, module.path)
-                    )
+                    edges.add(ImportEdge(module.name, target, "string", line, module.path))
     return tuple(sorted(edges))
 
 
@@ -308,12 +305,28 @@ def measured_relations(
     return {name: subpackage_relation(collected, kinds) for name, kinds in RELATIONS.items()}
 
 
-def module_graph(edges: Iterable[ImportEdge], kinds: Collection[str]) -> dict[str, set[str]]:
-    """Return the module-to-module graph of the given kinds."""
+def module_graph(
+    edges: Iterable[ImportEdge], kinds: Collection[str], *, packages: bool = False
+) -> dict[str, set[str]]:
+    """Return the module-to-module graph of the given kinds.
+
+    With ``packages``, an import also reaches every package whose ``__init__``
+    Python runs on the way to its target, except the importer's own, which are
+    already initialising: ``from nanopnp.cli.errors import classify`` runs
+    ``cli/__init__.py`` first, so a load-time cycle through a package's
+    ``__init__`` is a cycle of this graph and not only of the interpreter.
+    """
     graph: dict[str, set[str]] = defaultdict(set)
     for edge in edges:
-        if edge.kind in kinds:
-            graph[edge.source].add(edge.target)
+        if edge.kind not in kinds:
+            continue
+        graph[edge.source].add(edge.target)
+        if packages:
+            parts = edge.target.split(".")
+            for end in range(2, len(parts)):
+                package = ".".join(parts[:end])
+                if package != edge.source and not edge.source.startswith(f"{package}."):
+                    graph[edge.source].add(package)
     return dict(graph)
 
 
@@ -583,16 +596,18 @@ def _class_methods(
     if definition is None:
         return {}
     methods: dict[str, ast.FunctionDef | ast.AsyncFunctionDef] = {}
+    # Local name -> (home module, the name the home defines): a base imported
+    # ``as`` another name is looked up under its own.
     imported = {
-        alias.asname or alias.name: node.module
+        alias.asname or alias.name: (node.module, alias.name)
         for node in module.tree.body
         if isinstance(node, ast.ImportFrom) and node.module and _in_package(node.module)
         for alias in node.names
     }
     for base in definition.bases:
         if isinstance(base, ast.Name):
-            home = imported.get(base.id, module_name)
-            methods.update(_class_methods(modules, home, base.id, seen))
+            home, defined = imported.get(base.id, (module_name, base.id))
+            methods.update(_class_methods(modules, home, defined, seen))
     for node in definition.body:
         if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
             methods[node.name] = node
@@ -882,13 +897,9 @@ def surface(root: Path | None = None, sources: Mapping[str, str] | None = None) 
     public: list[str] = []
     mirror: list[str] = []
     for node in init.tree.body:
-        if (
-            isinstance(node, ast.AnnAssign)
-            and isinstance(node.target, ast.Name)
-            and node.target.id == "PUBLIC"
-            and isinstance(node.value, ast.Dict)
-        ):
-            public = [str(k.value) for k in node.value.keys if isinstance(k, ast.Constant)]
+        assigned = _assignment(node)
+        if assigned is not None and assigned[0] == "PUBLIC" and isinstance(assigned[1], ast.Dict):
+            public = [str(k.value) for k in assigned[1].keys if isinstance(k, ast.Constant)]
         if isinstance(node, ast.If) and _is_type_checking(node.test):
             mirror = [
                 alias.asname or alias.name
@@ -928,6 +939,9 @@ def sizes(root: Path | None = None, sources: Mapping[str, str] | None = None) ->
                         length = (child.end_lineno or child.lineno) - child.lineno + 1
                         functions.append((module.path, name, length))
                     stack.append((child, f"{name}."))
+                else:
+                    # A definition under ``if``, ``try`` or ``with`` keeps its scope's prefix.
+                    stack.append((child, prefix))
     return Sizes(
         tuple(sorted(((m.path, m.lines) for m in modules), key=lambda s: (-s[1], s[0]))),
         tuple(sorted(functions, key=lambda f: (-f[2], f[0], f[1]))),
@@ -950,8 +964,14 @@ def version_literals(
 
 
 def _matrix(relation: Mapping[tuple[str, str], Collection[ImportEdge]], nodes: list[str]) -> str:
-    """Render a relation as a matrix of import-statement counts, rows importing columns."""
-    counts = Counter({pair: len(found) for pair, found in relation.items()})
+    """Render a relation as a matrix of import-statement counts, rows importing columns.
+
+    A statement importing two modules of one subpackage is two edges and one
+    statement, so the count is of ``(path, line)``, as :func:`component_edges` counts.
+    """
+    counts = Counter(
+        {pair: len({_place(edge) for edge in found}) for pair, found in relation.items()}
+    )
     header = "| from \\ to | " + " | ".join(f"`{n}`" for n in nodes) + " |"
     rows = [header, "|---|" + "---:|" * len(nodes)]
     for source in nodes:
@@ -1020,10 +1040,11 @@ def render_measurements(root: Path | None = None) -> str:
                 + ". Lightest edges: "
                 + ", ".join(f"`{s} → {t}` ({n})" for s, t, n in cuts[:6])
             )
-    cycles = components(module_graph(edges, {"top"}))
+    cycles = components(module_graph(edges, {"top"}, packages=True))
     out += [
         "",
-        f"Module-level cycles among `top` imports: {len(cycles)}.",
+        "Module-level cycles among `top` imports, each package `__init__` an import runs "
+        f"included: {len(cycles)}.",
         "",
         "## Stage conformance",
         "",

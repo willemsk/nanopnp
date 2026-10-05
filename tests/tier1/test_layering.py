@@ -21,6 +21,7 @@ from pathlib import Path
 
 import pytest
 
+from nanopnp.validation.findings import REPOSITORY, parse_log
 from nanopnp.validation.modularity import (
     PACKAGE,
     AcceptedEdge,
@@ -42,6 +43,13 @@ def test_ver61_live_relation_equals_the_recorded_layering() -> None:
     assert comparison.equal, comparison.describe()
 
 
+def test_ver61_every_annotated_edge_names_a_finding_of_the_log() -> None:
+    """An edge's ``finding`` is a ``MOD-nn`` row of the log, so a typo or a dropped row fails."""
+    log = parse_log(REPOSITORY / "docs" / "project" / "modularity-findings.md")
+    named = {edge.finding for edge in accepted_relation()} - {None}
+    assert named <= {row.id for row in log.rows}, sorted(named - {row.id for row in log.rows})
+
+
 def test_ver61_the_measurement_adds_no_edge_of_its_own() -> None:
     """The measuring modules name what they read by path, so they couple to nothing."""
     own = {"validation/modularity.py", "validation/findings.py"}
@@ -49,8 +57,28 @@ def test_ver61_the_measurement_adds_no_edge_of_its_own() -> None:
 
 
 def test_ver61_top_level_module_imports_are_acyclic() -> None:
-    graph = module_graph(import_edges(), {"top"})
+    graph = module_graph(import_edges(), {"top"}, packages=True)
     assert components(graph) == ()
+
+
+def test_ver61_a_cycle_through_a_package_init_is_a_cycle() -> None:
+    """A load-time cycle that no two modules close between themselves.
+
+    ``a.m`` imports ``b.n``, which runs ``b/__init__`` first; that imports ``b.k``,
+    which imports ``a.m``, and Python meets ``a.m`` half-initialised.
+    """
+    edges = (
+        ImportEdge("nanopnp.a.m", "nanopnp.b.n", "top", 1, "a/m.py"),
+        ImportEdge("nanopnp.b", "nanopnp.b.k", "top", 1, "b/__init__.py"),
+        ImportEdge("nanopnp.b.k", "nanopnp.a.m", "top", 1, "b/k.py"),
+        ImportEdge("nanopnp.b.k", "nanopnp.b.n", "top", 2, "b/k.py"),
+    )
+    assert components(module_graph(edges, {"top"})) == ()
+    graph = module_graph(edges, {"top"}, packages=True)
+    assert graph["nanopnp.a.m"] == {"nanopnp.b.n", "nanopnp.b"}
+    # ``b.k`` reaches ``a``'s ``__init__`` on the way to ``a.m``, but not its own ``b``'s.
+    assert graph["nanopnp.b.k"] == {"nanopnp.a", "nanopnp.a.m", "nanopnp.b.n"}
+    assert components(graph) == (("nanopnp.a.m", "nanopnp.b", "nanopnp.b.k"),)
 
 
 def test_ver61_upward_import_fails_naming_edge_module_and_line() -> None:

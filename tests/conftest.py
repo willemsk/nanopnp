@@ -922,8 +922,13 @@ class NumberStability:
         printing the entry to commit once the values have been checked.
         """
         values = stability_values(quantities, extra)
-        key = stability_key()
         entry = {"mesh_hash": mesh_hash, "values": {q: float(v).hex() for q, v in values.items()}}
+        keys = json.loads(STABILITY_GOLDEN.read_text(encoding="utf-8"))["keys"]
+        # The key this interpreter asserts against, and so the one it records under:
+        # once D13 splits a key by Python, a re-pin must reach the split entry.
+        key = stability_key()
+        python = f"{key}-py3.{sys.version_info.minor}"
+        chosen = python if python in keys else key
         directory = os.environ.get(STABILITY_RECORD)
         if directory:
             if os.environ.get("CI"):
@@ -933,13 +938,9 @@ class NumberStability:
                 pytest.fail(f"{walk}: {zero} are zero or not finite; a golden cannot hold them")
             path = Path(directory) / f"{walk}.json"
             path.parent.mkdir(parents=True, exist_ok=True)
-            record = {"schema": STABILITY_SCHEMA, "key": key, "walk": walk, **entry}
+            record = {"schema": STABILITY_SCHEMA, "key": chosen, "walk": walk, **entry}
             path.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8")
             return
-        golden = json.loads(STABILITY_GOLDEN.read_text(encoding="utf-8"))
-        keys = golden["keys"]
-        python = f"{key}-py3.{sys.version_info.minor}"
-        chosen = python if python in keys else key
         expected = keys.get(chosen, {}).get(walk)
         if expected is None:
             printed = json.dumps({chosen: {walk: entry}}, indent=2, sort_keys=True)

@@ -102,11 +102,19 @@ class LogFormatError(ValueError):
 
 
 def front_matter(text: str) -> dict[str, object] | None:
-    """Return a page's YAML front matter as a mapping, or ``None`` if it has none."""
+    """Return a page's YAML front matter as a mapping, or ``None`` if it has none.
+
+    Front matter that is not valid YAML, or not a mapping, counts as none, so that
+    :func:`logs` scanning every page under ``docs/`` cannot be stopped by one, and
+    :func:`check_log` refuses a log carrying it by name rather than by a traceback.
+    """
     match = FRONT_MATTER.match(text)
     if match is None:
         return None
-    loaded = yaml.safe_load(match.group(1))
+    try:
+        loaded = yaml.safe_load(match.group(1))
+    except yaml.YAMLError:
+        return None
     return loaded if isinstance(loaded, dict) else None
 
 
@@ -215,14 +223,16 @@ def _row_errors(log: FindingsLog, row: Row, repository: Path) -> Iterator[str]:
         elif (spec.group(1), spec.group(2)) not in _spec_rows(repository / "SPECIFICATION.md"):
             yield f"ruling {ruling!r} names no row of SPECIFICATION.md section 8.2.{spec.group(1)}"
     elif status == "fixed":
-        target = _link(ruling)
+        # A link to a section of the plan is a link to the plan: the anchor is not
+        # part of the file's name.
+        plan = (_link(ruling) or "").partition("#")[0]
         plans = (repository / "docs" / "plans").resolve()
-        resolved = (log.path.parent / target).resolve() if target else None
+        resolved = (log.path.parent / plan).resolve() if plan else None
         if (
             resolved is None
             or resolved.parent != plans
             or resolved.suffix != ".md"
-            or not resolved.exists()
+            or not resolved.is_file()
         ):
             yield f"is fixed, so its ruling must link to a plan under docs/plans/, not {ruling!r}"
     if log.status == "closed" and status not in TERMINAL:
@@ -232,11 +242,12 @@ def _row_errors(log: FindingsLog, row: Row, repository: Path) -> Iterator[str]:
         yield "its finding must link to its section of the report, with an anchor"
     else:
         page, _, anchor = target.partition("#")
-        resolved_page = (log.path.parent / page).resolve()
-        if not resolved_page.exists():
-            yield f"its finding links to {page!r}, which does not exist"
+        # ``#anchor`` alone names a heading of the log itself.
+        resolved_page = (log.path.parent / page).resolve() if page else log.path.resolve()
+        if not resolved_page.is_file():
+            yield f"its finding links to {page!r}, which is not a file"
         elif anchor not in _anchors(resolved_page):
-            yield f"its finding's anchor #{anchor} names no heading of {page}"
+            yield f"its finding's anchor #{anchor} names no heading of {page or log.path.name}"
 
 
 def check_log(path: Path, repository: Path = REPOSITORY) -> tuple[str, ...]:
@@ -255,7 +266,10 @@ def check_log(path: Path, repository: Path = REPOSITORY) -> tuple[str, ...]:
     if has_header and not named:
         return (f"{path}: declares findings front matter but is not named *{LOG_SUFFIX}",)
     if not has_header:
-        return (f"{path}: is named *{LOG_SUFFIX} but declares no findings front matter",)
+        return (
+            f"{path}: is named *{LOG_SUFFIX} but declares no findings front matter "
+            "(none, or not a YAML mapping)",
+        )
     try:
         log = parse_log(path)
     except LogFormatError as error:

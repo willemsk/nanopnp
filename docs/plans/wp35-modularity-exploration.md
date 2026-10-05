@@ -82,7 +82,9 @@ The package ends when the PR merges. The author then rules each `MOD-nn` through
 > and a `top` SCC of exactly the ten members seed 3 predicted. The module-level `top` graph is
 > acyclic. The corrections registry's members are the YAML stems under `data/corrections/` (D8 c),
 > because `materials/models.py` registers only `none` in code. A measurement of `97f2b3d` and of
-> WP35's tree differs only in the size table, where `render_measurements` itself enters the top ten.
+> WP35's tree differs in the size table, where `render_measurements` itself enters the top ten, and
+> by one `string` import edge (807 edges, 103 `string`): `cli/errors.py`'s `EXCLUDED` naming
+> `LogFormatError`, which adds no subpackage edge.
 >
 > **Outcome — the findings (D9, D10).** All 14 seeds are MOD-01 to MOD-14, in the seed order. None
 > was dropped or merged. Three were added by measurement: MOD-15 (`core/stages.py:44`, `core`'s one
@@ -97,7 +99,8 @@ The package ends when the PR merges. The author then rules each `MOD-nn` through
 > at `v0.4.0` was compared with WP35's tree, by bytes and then, for Python, by AST with every bare
 > string statement removed. 167 files are common: 150 are byte-identical, 16 Python modules differ
 > in docstrings or comments only, and `data/geometry/README.md` differs as prose. The only additions
-> are `validation/modularity.py` and `validation/findings.py`, which no walk imports.
+> are `validation/modularity.py` and `validation/findings.py`, which no walk imports, and the
+> `LogFormatError` entry in `cli/errors.py`'s `EXCLUDED`, which no walk reads.
 >
 > **Outcome — D13, D14 and Design §2, the golden on Linux.** Recorded under
 > `pytest -n auto --dist loadfile` (6 min, 24 tests), then asserted serially (9.9 min): the largest
