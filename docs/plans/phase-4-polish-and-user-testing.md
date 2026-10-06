@@ -1,23 +1,27 @@
 # Phase 4 (Polish and user testing): a codebase whose seams are measured and whose surface has been used
 
-**Status: in progress.** Written 5 October 2026, after Phase 3 closed as `v0.4.0`; amended the
-same day, after the author ruled every `MOD-nn` (§8.2.8).
+**Status: in progress.** Written 5 October 2026, after Phase 3 closed as `v0.4.0`. Amended the
+same day, after the author ruled every `MOD-nn` (§8.2.8). Amended again on 6 October 2026, after
+the author ruled the review register (§8.2.9).
 Delivered: WP35, the modularity exploration
 ([wp35-modularity-exploration.md](wp35-modularity-exploration.md)), tagged `v0.5.0-alpha.1`;
-WP36, the stage protocol and the walk ([wp36-stage-protocol-and-walk.md](wp36-stage-protocol-and-walk.md));
-WP37, the cycle cuts, the exit codes and the backend guard
-([wp37-cycle-cuts-exit-codes-backend-guard.md](wp37-cycle-cuts-exit-codes-backend-guard.md)).
-Planned: WP38, the `io` split; WP39, the backend registries; WP40, the stale refusals; WP41,
-the OKF bundle; WP42, its backfill; WP43, the user-testing protocol. Provisional, and planned by the
-second `/phase-plan amend 4` once the author has run the sessions and ruled every `UT-nn`: the
-fixes, the documentation increment and the close, which take their numbers then (§8.2.8 H8).
-Estimate: 3–5 weeks (H9). Release: **v0.5** (`v0.5.0`).
+WP36, the stage protocol and the walk ([wp36-stage-protocol-and-walk.md](wp36-stage-protocol-and-walk.md)),
+tagged `v0.5.0-alpha.2`; WP37, the cycle cuts, the exit codes and the backend guard
+([wp37-cycle-cuts-exit-codes-backend-guard.md](wp37-cycle-cuts-exit-codes-backend-guard.md)),
+tagged `v0.5.0-alpha.3`.
+Planned: WP38, the `io` split; WP39, the backend registries; WP40, the stale refusals; WP41, the
+accuracy fixes; WP42, the verification checks; WP43, the small fixes; WP44, the OKF bundle; WP45,
+its backfill; WP46, the user-testing protocol (§8.2.9 I1). Provisional, and planned by the second
+`/phase-plan amend 4` once the author has run the sessions and ruled every `UT-nn`: the fixes, from
+WP47, then the documentation increment and the close, which take their numbers then.
+Estimate: 4–6 weeks (§8.2.9 I5). Release: **v0.5** (`v0.5.0`).
 
 This is the delivery plan for Phase 4 of `SPECIFICATION.md` §8.1. The specification is normative.
 Where this file and the specification disagree, the specification governs and this file is wrong.
 Requirement identifiers here are pointers into the specification, never restatements of it. The
-author's rulings behind this plan are §8.2.6 F3, F4 and F6, §8.2.7 G1 to G11, and, on the
-modularity report, §8.2.8 H1 to H9. They are not re-argued here.
+author's rulings behind this plan are §8.2.6 F3, F4 and F6, §8.2.7 G1 to G11, §8.2.8 H1 to H12 (on
+the modularity report and the review register), and §8.2.9 I1 to I5 (on planning the register's
+items). They are not re-argued here.
 
 ## Context
 
@@ -93,6 +97,12 @@ The rulings on the report, 5 October 2026: 13 findings accepted for Phase 4 (`MO
 restated, and `MOD-08` and `MOD-17` post-1.0. `MOD-06` and `MOD-07` are fixed now, against the
 report's recommendation to defer them (H7). `MOD-11` alone waits for the sessions (H2).
 
+The rulings on the review register (§8.2.9), 6 October 2026, cover the 56 items left open by the
+packages up to WP36. 37 are planned into Phase 4: 30 into three new packages
+before the OKF bundle (WP41 to WP43), three each into WP38 and WP39, and one into the close; REV-03
+and REV-05 were already WP38's and WP39's. 15 are deferred to Phase 5 or 6, two are post-1.0, and two
+are declined (I1 to I3).
+
 Deliberately excluded:
 
 - any GUI work beyond following the API and the schema (QR-11; §8.1, GUI increment 4). Screens,
@@ -125,6 +135,9 @@ contents and the guard's form, and the first OKF package decides open questions 
 | QR-13 | Met by the single statement of the weak forms. The backend's subpackages are a recorded set that only shrinks without a ruling (H3; VER-65) | An interface with one implementation cannot be tested for the property it exists for |
 | Backend keys | The mesher, linear solver and stabilisation become registries, and their schema keys strings checked against them. Each is a widening, so the identifier stays (H7; the §5.3.1 NOTE) | QR-14's one-class extension, for the three branches the report measured |
 | Refactor order | Stage protocol, cuts, `io` split, registries, refusals (H8) | The interface later packages read goes first, and the split precedes the schema edits |
+| The review register's items | Those accepted for Phase 4 land in three packages by kind, WP41 to WP43, after WP40 and before the OKF bundle. The OKF bundle, the backfill and the protocol become WP44 to WP46 (§8.2.9 I1, I2) | Numbers settle before the ledger re-establishes them and before the testers see them |
+| The open `REV-nn` rows | Each one ruled: into a Phase 4 package, deferred to Phase 5 or 6, post-1.0, or declined (I3) | Every item of the register has an owner |
+| An accuracy fix and the golden | WP41's plan argues a bound for each VER-62 QoI before the change. A drift within that bound is re-pinned in the same commit as the amended clause; a drift beyond it stops the package (I4) | G10's ruling is given in advance for a fix whose purpose is to move a number, and only within a bound registered beforehand |
 
 ## Conventions established by earlier phases
 
@@ -322,6 +335,14 @@ module of `core`. `PUBLIC` names keep their meaning, and internal paths are not 
 
 No new identifier: VER-61 records the new relation, and VER-62 must show zero drift.
 
+> **Amended, 6 October 2026** (§8.2.8 H12; §8.2.9 I3). WP38 also resolves four review items:
+> - REV-03: the solution-field names get one home, in the base;
+> - REV-27: `nanopnp validate` runs the checks the assembler makes, the inf-sup check among them;
+> - REV-54: the `MOD-12` assertion compares the module each mirrored name comes from, as well as
+>   the name, so a module the split moves cannot leave the mirror pointing at the old one;
+> - REV-63: the walk visits only the input closure of the requested stage, so `protonation` no
+>   longer walks through meshing. VER-64's derivation from the registry is kept.
+
 ### WP39 — The backend registries (MOD-06, MOD-07, MOD-16; ADR-002, QR-14)
 
 The mesher, the linear solver and the stabilisation mode become registries, each in the shape of
@@ -339,6 +360,13 @@ and stabilisation mode. A case naming each validates, and is dispatched to the s
 outside the test edited. An unregistered name is refused naming the registered ones (IF-03).
 VER-24's classification is unchanged.
 
+> **Amended, 6 October 2026** (§8.2.8 H12; §8.2.9 I3). WP39 also resolves four review items:
+> - REV-05: where the facade's version and `PUBLIC` sit (WP37 D11);
+> - REV-36: the Gmsh session no longer stops a logger it borrowed;
+> - REV-37: a wheel that imports but fails to initialise is refused at use, naming the extra, as a
+>   missing one is;
+> - REV-38: the cleanup's `gmsh.model.remove()` cannot mask the error it follows.
+
 ### WP40 — The stale refusals (MOD-14; IF-02)
 
 The seven release-naming strings `MOD-14` lists are rewritten. Each refusal names its requirement,
@@ -349,6 +377,96 @@ goes. Break: CLI refusal texts change. Exit codes do not (VER-47).
 `validation.modularity.version_literals` refuses a non-docstring string naming a release that is
 already tagged. The plan fixes how "already tagged" is read without the network. Oracle: a synthetic
 refusal naming `v0.2` is refused.
+
+### WP41 — The accuracy fixes (REV-06 to REV-09, REV-17, REV-26)
+
+*Added, 6 October 2026* (§8.2.9 I1, I2). These are the register's physics and numerics items.
+Each one is a property that a number depends on and that, today, is held only by convention.
+Planned and implemented on Opus (`.claude/model-policy.md`).
+
+- **REV-06.** The specification states the frame of a supplied `inputs.charge` or `inputs.eps_r`
+  field beside a `structure:` case whose `centre_z_nm ≠ 0`. The code then applies the field in
+  that frame, or refuses the combination, naming it (QR-12). This amends the §5.3.1 NOTE on
+  `inputs:`.
+- **REV-07.** The conservation gate and the Poisson source integrate an areal fixed charge by one
+  rule (`charge/fields.py`). The plan shows which rule is right from the quadrature's own error
+  on the synthetic alternating field. The gate then measures the charge the solve actually sees.
+- **REV-08.** Newton's update test (`numerics/newton.py`) is measured per block on the gated
+  walks. If the flow blocks pass with a looser relative convergence than the ion blocks, the test
+  becomes per field, and NUM-16 is amended in the same commit. If they do not, NUM-16 gains a NOTE
+  recording the measurement, and nothing moves.
+- **REV-09.** A clamp of the ionic-strength driver is logged whenever it is applied
+  (`materials/electrolyte.py`), as the per-species clamps already are. This is checked on a
+  constructed multivalent parameter file, because no shipped file is multivalent.
+- **REV-17.** A warm start compares the stabilisation provenance's settings and not its `note`
+  prose (`solve/state.py`). A changed setting still refuses the warm start (VER-37).
+- **REV-26.** `stabilisation_parameters` refuses, or names the mode, for a model that is not
+  coupled (`solve/continuation.py`), and no longer returns an empty mapping.
+
+**The golden.** Before changing any code, the plan argues a bound for each VER-62 QoI that REV-07 or
+REV-08 can move. A drift within that bound is recorded, the clause is amended, and the golden is
+re-pinned in one commit. A drift beyond the bound stops the package for the author (I4). No
+other item may move the golden.
+
+No new identifier: each fix's test is named for the requirement it holds (QR-03, NUM-16, PHY-13,
+VER-37).
+
+### WP42 — The verification checks (REV-11 to REV-13, REV-23, REV-29, REV-34, REV-42, REV-44, REV-48)
+
+*Added, 6 October 2026* (§8.2.9 I1, I2). Two checks that turn conventions into tests, and the test
+hygiene that the register found.
+
+**VER-70, no gate passes a NaN** (proposed; REV-11). A Tier-1 AST walk over the modules that
+hold gates (`numerics/gates.py`, the charge and mesh quality gates, and the plan names the rest).
+It refuses a comparison that a NaN would pass: `if value > tol: fail` with no finiteness test on
+the same value. Oracle: a synthetic gate written that way is refused, naming its line, and the
+same gate guarded by `math.isfinite` passes.
+
+**VER-71, no inert case leaf** (proposed; REV-12). For every leaf of `CaseDocument`, a test shows
+one of two things: a perturbation of the leaf changes the assembled forms or a stage key, or the
+leaf is listed as provenance-only. The list is classified both ways, as VER-24's is. Oracle: a
+leaf added to the schema and consumed nowhere fails. **REV-42** is the instance it finds: under
+`pnp`, `variable_density` and `inertia` are refused, naming the model. That is a narrowing, so
+the schema takes `nanopnp/case/v0.5`, and `CHANGELOG.md` gives the migration (G6).
+
+With them:
+
+- REV-13: example 06's key test covers stage 7;
+- REV-23: the corrections test bounds each ion by its own range;
+- REV-29, REV-34 and REV-48: the copied fixtures and constants each get one home;
+- REV-44: the Stern-layer test stops re-solving the slab it drew.
+
+These last are moves, not new assertions. The §7.6 NOTE's levers bound their cost.
+
+### WP43 — The small fixes (REV-14 to REV-16, REV-18, REV-19, and eleven low items)
+
+*Added, 6 October 2026* (§8.2.9 I1, I2). Local fixes, each with its own test, and none moving a
+number:
+
+- **REV-14**: `density/grid.py`'s `.npz` carries the origin and spacing, and `charge/stage.py`'s
+  workaround goes;
+- **REV-15**: example 05 writes `#SBATCH` values as sbatch reads them, and refuses a value it
+  cannot pass;
+- **REV-16**: below the concentration at which λ_D stops changing the wall size, the stage-6 key
+  no longer carries λ_D, so a salt sweep meshes once. The key changes, and VER-62 compares
+  numbers, not keys;
+- **REV-18**: `Store.put` (`io/store.py`) is made atomic, write to a temporary file and rename,
+  and a test races two writers;
+- **REV-19**: a zero-frame trajectory is refused, naming the file, and duplicated Cα keys in one
+  chain are refused rather than overwritten;
+- **REV-24**: the SI-expression build is measured, and its duplication removed if it is there;
+- **REV-25 and REV-55**: a post stage or a stage with no workspace writes its scratch to a
+  workspace it is given, never to the process-default store or `mkdtemp`;
+- **REV-40**: a density map with no unit marker, or one written in nm, is refused (§8.2.2 B10);
+- **REV-43, REV-49, REV-50 and REV-51**: each duplicate gets one home, and the redundant reopen
+  goes;
+- **REV-57**: `frame_times` reads the times without decoding the coordinates, and a chain split
+  across the periodic box is refused (QR-12);
+- **REV-59**: `attribute_to_construction` refuses a lax comparison, saying that, and does not
+  raise `MissingPlaneError`.
+
+The plan may give the purely mechanical items to Sonnet. REV-16's key and REV-57's gate stay on
+Opus. No new identifier.
 
 ### OKF bundle and checks — Provisional
 
@@ -367,6 +485,9 @@ Its `/wp-plan` puts open questions 3 to 7 to the author (G9). `generate.py` has 
 > test node ids WP36 to WP40 leave, which is G5's reason for the order. Open questions 3 to 7
 > stay with this package's `/wp-plan` (G9).
 
+> **Amended, 6 October 2026** (§8.2.9 I1). This is now **WP44**, after WP43. It is written against
+> the test node ids that WP36 to WP43 leave. VER-68 stays its proposed identifier.
+
 ### OKF backfill — Provisional
 
 It waits on the bundle package. Every listed claim gets its test: a Tier-1 or Tier-2 test that
@@ -377,6 +498,9 @@ reason to loosen the test.
 
 > **Amended, 5 October 2026.** This is **WP42** (§8.2.8 H8). It claims no new identifier: each new
 > test is named for the claim it backs, and VER-68's list reaching empty is the package's end.
+
+> **Amended, 6 October 2026** (§8.2.9 I1). This is now **WP45**. A claim about Newton's
+> convergence test or the areal-charge quadrature is backed against WP41's tree, not the one before it.
 
 ### User-testing protocol — Provisional
 
@@ -398,6 +522,8 @@ protocol. **The sessions themselves are the author's**, and their findings are l
 > which must fail. The protocol includes a task touching `with_section` and stage registration, so
 > that the sessions inform `MOD-11` (H2).
 
+> **Amended, 6 October 2026** (§8.2.9 I1). This is now **WP46**. VER-69 stays its proposed identifier.
+
 ### Fix packages — Provisional
 
 They wait on the sessions and on the author's ruling of each `UT-nn`. A second `/phase-plan amend 4`
@@ -406,6 +532,10 @@ shell following, and schema moves under `nanopnp/case/v0.5` (G6).
 
 > **Amended, 5 October 2026.** They also carry `MOD-11`, decided by the author's ruling of the
 > sessions' findings (§8.2.8 H2). Their numbers are assigned by the second amendment, from WP44 (H8).
+
+> **Amended, 6 October 2026** (§8.2.9 I1, I3). They are numbered from **WP47**. They carry no review
+> item that §8.2.9 placed elsewhere. An item a later review adds goes to them only by a ruling
+> recorded in the register.
 
 ### Documentation increment 4 — Provisional
 
@@ -435,6 +565,12 @@ Its last commit on `main` is tagged `v0.5.0` alone (G11).
 > **Amended, 5 October 2026.** The second amendment, not the first, gives this package and the
 > documentation increment their numbers, after the fix packages (§8.2.8 H8).
 
+> **Amended, 6 October 2026** (§8.2.9 I3). The close also resolves REV-47: it reports the push
+> gate's serial and parallel durations on its own tree against WP33 D15's targets: at least 180 s
+> of serial time saved, and no file over 90 s. It then states, in the end-of-phase report, whether
+> each target is met, re-argued or retired. It also confirms that every `REV-nn` row whose ruling
+> places it in a Phase 4 package is `fixed` (criterion 10).
+
 ## Open decisions
 
 | # | Decision | Owner and status |
@@ -457,7 +593,12 @@ Its last commit on `main` is tagged `v0.5.0` alone (G11).
 | The wall-distance solve's home | `physics`, `solve`, or reported back | **Settled by WP37's plan, 6 October 2026**: `physics/distance.py`, once the kernel is in `numerics/` (H11) |
 | WP37's edge list, and `physics ↔ solve` | The named nine, or the edges pointing up the order; how the 2-cycle is cut | **Settled by the author, 6 October 2026** (H11) |
 | Each `UT-nn` | Fix or defer | **Author**, through the second amendment |
-| Phase estimate | §8.1's "Set by the phase plan" | **Settled by the author, 5 October 2026**: 3–5 weeks (H9; §8.1, §8.3) |
+| Phase estimate | §8.1's "Set by the phase plan" | **Settled by the author, 5 October 2026**: 3–5 weeks (H9; §8.1, §8.3). **Re-settled, 6 October 2026**: 4–6 weeks (§8.2.9 I5) |
+| The review register's accepted items | At the second amendment, or before the OKF bundle | **Settled by the author, 6 October 2026** (§8.2.9 I1): WP41 to WP43, before WP44 |
+| Their grouping | By kind, two packages, or one per area | **Settled by the author, 6 October 2026** (I2): accuracy, verification, small fixes |
+| `REV-23` to `REV-65` | Phase 4, Phase 5, Phase 6, post-1.0 or declined, each | **Settled by the author, 6 October 2026** (I3) |
+| An accuracy fix that moves VER-62 | Stop (G10), pre-rule, or diagnose only | **Settled by the author, 6 October 2026** (I4): pre-ruled within a bound WP41's plan argues |
+| REV-06's frame, and whether REV-08 makes NUM-16's test per field | — | **Open**, owned by WP41's `/wp-plan`, from measurement. Each is a spec amendment in WP41's PR |
 | `with_section`, `register` in `PUBLIC` | Add or keep out | Carried from WP34 D9 as `MOD-11`. **Accepted, and decided after the sessions** (H2), by the author's ruling, in a fix package |
 | NUM-07 order; the archive-dependent legs | — | **Phase 6** (E1, E4, F1). Not this phase's |
 | OPN-04, OPN-08 | — | **Author, open.** Not on this phase's path |
@@ -467,10 +608,12 @@ Its last commit on `main` is tagged `v0.5.0` alone (G11).
 | Item | Needed by | If it does not arrive |
 |---|---|---|
 | A ruling on every `MOD-nn` | The first amendment | **Given, 5 October 2026** (§8.2.8) |
+| A ruling on every `REV-nn` left open | This amendment | **Given, 6 October 2026** (§8.2.9). A row a later review adds is ruled when it is added (H12) |
 | A ruling on any residual cycle H6's target leaves, and on any subpackage VER-65's set would gain | WP37 to WP39, as they report it | The package stops at the edge and carries it. VER-61 and VER-65 stay red until the ruling is recorded |
 | The `MOD-11` choice | The fix packages | `MOD-11` stays `accepted`, and VER-63 refuses the close |
 | The scripted sessions, run by the author, with findings logged | The second amendment, then the fix packages | The phase waits. No agent session substitutes (G7) |
 | A ruling on every `UT-nn` | The fix packages and the close | As for `MOD-nn` |
+| A ruling on a WP41 drift beyond its argued bound | WP41, if it happens | The package stops at the fix and carries it, and VER-62 stays red until the ruling (I4) |
 | Open questions 3–7 of the OKF note | The OKF bundle package's plan | That plan carries them as open and blocks on them |
 | The merge of every PR | Every package | — |
 | The tags, if the session cannot push them | After each merge (`v0.5.0-alpha.N`) and at the close (`v0.5.0`) | The session prints the `git tag -a` and `git push` commands (G11) |
@@ -493,11 +636,14 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP38 | 1, 2 | VER-61 re-recorded |
 | WP39 | 1, 2 | VER-66 (proposed); VER-61 gains H6's acyclicity, or the residual is ruled |
 | WP40 | 1 | VER-67 (proposed) |
-| WP41, OKF bundle | 1 | VER-68 (proposed), the F6 check |
-| WP42, OKF backfill | 1, 2 | Tests named by claim; no new identifier |
-| WP43, protocol | 1 or 2 | VER-69 (proposed) |
+| WP41, accuracy | 1, 2 | Tests named for QR-03, NUM-16, PHY-13, VER-37; VER-62 re-pinned only under I4 |
+| WP42, verification | 1, 2 | VER-70, VER-71 (proposed) |
+| WP43, small fixes | 1, 2 | Tests named by item; no new identifier |
+| WP44, OKF bundle | 1 | VER-68 (proposed), the F6 check |
+| WP45, OKF backfill | 1, 2 | Tests named by claim; no new identifier |
+| WP46, protocol | 1 or 2 | VER-69 (proposed) |
 | Every refactor | 1, 2 | VER-61, VER-62 and VER-63 kept green |
-| Fixes | 1, 2 | Claimed at the second amendment |
+| Fixes, from WP47 | 1, 2 | Claimed at the second amendment |
 | Documentation | 1, 2 | VER-45, VER-46 |
 | Close | 1, 2 | VER-63 against closed logs |
 
@@ -533,6 +679,11 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 9. *Added, 5 October 2026* (H3). **VER-65 passes**: no subpackage imports NGSolve or Netgen beyond
    the recorded set. If it misses, the import is removed, or the author rules the set wider in the
    same commit.
+10. *Added, 6 October 2026* (§8.2.9 I1 to I3). **Every `REV-nn` row placed in a Phase 4 package
+    is `fixed`**, read from the register that VER-63 checks. The register stays `open`, because it is
+    rolling (H12), so the close lists the rows whose ruling names WP38 to WP43 or the close.
+    Prediction: all 39 (37 from I3 and I2, with REV-03 and REV-05). If one misses, it is deferred
+    by an explicit ruling, never left `accepted` past the close.
 
 ## End-of-phase report
 
@@ -550,6 +701,8 @@ Empty until the close package fills it. It reports:
 - **The ledger:** the count of `[tested: …]` claims, their distinct tests, the `[verified]` claims
   that remain under `process:arithmetic`, and the concepts carrying `tested_with`. Source: the F6
   check.
+- **The review register:** the `REV-nn` rows by status at the close, those fixed in Phase 4 by
+  package, and those deferred by destination. Source: VER-63 on the register.
 - **User testing:** the number of sessions and `UT-nn` findings by area and severity, and how many
   were fixed or deferred. Source: VER-63.
 - **Breaks:** the schema identifier at the release, the `PUBLIC` names added and removed, and the

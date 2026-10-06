@@ -79,7 +79,7 @@ layering file's own header.
 model frame but not which frame a supplied field is in. A field in the structure's frame would be
 applied offset by `centre_z_nm`.
 
-**Resolves it.** Phase 4's second amendment, which plans it into a fix package before `v0.5.0`.
+**Resolves it.** WP41, the accuracy fixes (§8.2.9 I1, I2).
 
 ### REV-07 — The conservation gate and the Poisson source integrate an areal charge differently
 
@@ -90,7 +90,7 @@ applied offset by `centre_z_nm`.
 synthetic alternating field the two differed by 1e-5 to 1e-3 relative. Whether that exceeds QR-03 on
 the aliased ClyA table needs that table.
 
-**Resolves it.** Phase 4's second amendment, which plans it into a fix package before `v0.5.0`.
+**Resolves it.** WP41, the accuracy fixes (§8.2.9 I1, I2).
 
 ### REV-08 — Newton's update test takes one norm over every field
 
@@ -101,7 +101,7 @@ fields. With `a = 1 nm`, ũ ~ 1e-3, so the velocity and pressure blocks may be o
 relatively converged when the test passes. The code matches NUM-16 as written, so this is a question
 of the specification, for EOF and hydrodynamic-force accuracy.
 
-**Resolves it.** Phase 4's second amendment, which plans it into a fix package before `v0.5.0`.
+**Resolves it.** WP41, the accuracy fixes (§8.2.9 I1, I2).
 
 ### REV-09 — A driver clamp under the ionic-strength driver is never logged
 
@@ -114,7 +114,7 @@ premise that the driver it returns never exceeds the validity limit. Under the o
 M, but `I = 6 M`. The correction model clamps the driver (`materials/models.py`, PHY-13 holds), and
 no clamp is logged, against §5.1's stage-8 test target. No shipped parameter file is multivalent.
 
-**Resolves it.** Phase 4's second amendment, which plans it into a fix package before `v0.5.0`.
+**Resolves it.** WP41, the accuracy fixes (§8.2.9 I1, I2).
 
 ### REV-10 — The prose rule let a ruling or a report heading change without VER-63
 
@@ -135,7 +135,7 @@ taken.
 **Measured.** A gate written `if value > tol: fail` passes a NaN. The instances found were fixed one
 by one, and nothing stops a new one: the review's proposed lint over gate modules was not written.
 
-**Resolves it.** Phase 4's second amendment, which plans it into a fix package before `v0.5.0`.
+**Resolves it.** WP42, the verification checks, as proposed VER-70 (§8.2.9 I1, I2).
 
 ### REV-12 — No test shows every case leaf changes the forms or is provenance-only
 
@@ -146,7 +146,7 @@ taken.
 to show it either changes the assembled forms or is listed as provenance-only, so an inert key can
 enter the schema unnoticed.
 
-**Resolves it.** Phase 4's second amendment, which plans it into a fix package before `v0.5.0`.
+**Resolves it.** WP42, the verification checks, as proposed VER-71 (§8.2.9 I1, I2).
 
 ### REV-13 — Example 06's key test cannot see a stage-7 key change
 
@@ -155,7 +155,7 @@ enter the schema unnoticed.
 **Measured.** The check that every key of example 06 is unchanged does not cover stage 7, so a
 change to the charge stage's key would pass it.
 
-**Resolves it.** Phase 4's second amendment, which plans it into a fix package before `v0.5.0`.
+**Resolves it.** WP42, the verification checks (§8.2.9 I1, I2).
 
 ### REV-14 — A radial grid's .npz does not round-trip its spacing exactly
 
@@ -165,7 +165,7 @@ change to the charge stage's key would pass it.
 spacing off in its last bits. `charge/stage.py` works around it by depositing the grid as re-read;
 the root fix belongs in `density/grid.py`.
 
-**Resolves it.** Phase 4's second amendment, which plans it into a fix package before `v0.5.0`.
+**Resolves it.** WP43, the small fixes (§8.2.9 I1, I2).
 
 ### REV-15 — Example 05 quotes #SBATCH directives as shell words
 
@@ -176,7 +176,7 @@ through `shlex.quote` into `#SBATCH` lines. sbatch does not read a directive as 
 value that needs quoting does not reach it as written; the review of PR #34 confirmed the finding
 and left it unfixed.
 
-**Resolves it.** Phase 4's second amendment, which plans it into a fix package before `v0.5.0`.
+**Resolves it.** WP43, the small fixes (§8.2.9 I1, I2).
 
 ### REV-16 — A salt sweep regenerates an identical mesh at each concentration
 
@@ -186,7 +186,7 @@ and left it unfixed.
 longer changes, each concentration of a sweep re-meshes an identical mesh. Warm starts are
 unaffected.
 
-**Resolves it.** Phase 4's second amendment, which plans it into a fix package before `v0.5.0`.
+**Resolves it.** WP43, the small fixes (§8.2.9 I1, I2).
 
 ### REV-17 — A warm start is gated on free prose in the stabilisation provenance
 
@@ -197,7 +197,7 @@ author.
 including its `note` prose (`physics/stabilisation.py`), so a reworded note refuses a valid warm
 start. It fails closed.
 
-**Resolves it.** Phase 4's second amendment, which plans it into a fix package before `v0.5.0`.
+**Resolves it.** WP41, the accuracy fixes (§8.2.9 I1, I2).
 
 ### REV-18 — Concurrent sweep members may write the same store key
 
@@ -206,7 +206,7 @@ start. It fails closed.
 **Measured.** Job-array members generate and `put` the same stage 1–6 keys at the same time. Whether
 that is safe depends on how atomic `Store.put` is, which has not been measured.
 
-**Resolves it.** Phase 4's second amendment, which plans it into a fix package before `v0.5.0`.
+**Resolves it.** WP43, the small fixes (§8.2.9 I1, I2).
 
 ### REV-19 — A zero-frame trajectory raises a bare IndexError
 
@@ -216,7 +216,7 @@ that is safe depends on how atomic `Store.put` is, which has not been measured.
 than a refusal naming the file (QR-12). Two Cα with the same `(resid, icode)` in one chain also
 overwrite each other in `per_chain`.
 
-**Resolves it.** Phase 4's second amendment, which plans it into a fix package before `v0.5.0`.
+**Resolves it.** WP43, the small fixes (§8.2.9 I1, I2).
 
 ### REV-20 — The desktop shell has no multiprocessing.freeze_support
 
@@ -252,12 +252,16 @@ array, against `CLAUDE.md`'s f-string rule, because one pass is what keeps the w
 **Measured.** `tests/tier1/test_corrections.py` asserts the monotonic rise of the ratio with ranges
 that fit both ions, not per-ion bounds.
 
+**Resolves it.** WP42, the verification checks (§8.2.9 I1, I2).
+
 ### REV-24 — Sampler construction may still be duplicated
 
 *Area:* process. *Severity:* low. *Found:* PR #13 (Phase 0 consolidation); not re-measured.
 
 **Measured.** The per-point sampler rebuild was fixed by `FieldSampler.shared`; whether the
 SI-expression building is still duplicated was not checked.
+
+**Resolves it.** WP43, the small fixes, which measures the duplication first and removes it if it is there (§8.2.9 I2).
 
 ### REV-25 — A post stage run without a solve writes scratch to the default store
 
@@ -266,12 +270,16 @@ SI-expression building is still duplicated was not checked.
 **Measured.** A library caller invoking `QoIStage` or `ReportStage` with no upstream `solve` sends
 its scratch to the process-default store root.
 
+**Resolves it.** WP43, the small fixes (§8.2.9 I1, I2).
+
 ### REV-26 — stabilisation_parameters returns an empty mapping off the coupled model
 
 *Area:* interface. *Severity:* low. *Found:* PR #28 (WP12).
 
 **Measured.** `LadderResult.stabilisation_parameters` returns `{}` for a model that is not a
 `CoupledModel`, rather than refusing or naming the mode.
+
+**Resolves it.** WP41, the accuracy fixes (§8.2.9 I1, I2).
 
 ### REV-27 — The inf-sup check runs at resolve, not at validation
 
@@ -280,11 +288,15 @@ its scratch to the process-default store root.
 **Measured.** The inf-sup check runs in `io.case.resolve()`, so `nanopnp validate` does not report
 it.
 
+**Resolves it.** WP38, the `io` split, which moves the registry checks to the assembler and runs them under `nanopnp validate` (§8.2.9 I3).
+
 ### REV-28 — The viewer renders every finished run eagerly
 
 *Area:* performance. *Severity:* low. *Found:* PR #32 (WP15).
 
 **Measured.** Each finished run is rendered whether or not it is viewed.
+
+**Deferred.** Phase 5, with the shell, the bundle and `MOD-13`'s CLI split (§8.2.9 I3).
 
 ### REV-29 — The cylindrical-pore fixture is copied into four test modules
 
@@ -292,11 +304,15 @@ it.
 
 **Measured.** Four Tier-1 modules each define the same cylindrical-pore fixture.
 
+**Resolves it.** WP42, the verification checks (§8.2.9 I1, I2).
+
 ### REV-30 — The viewer's scene is written twice
 
 *Area:* performance. *Severity:* low. *Found:* PR #32 (WP15).
 
 **Measured.** The scene file is written twice per render.
+
+**Deferred.** Phase 5, with the shell, the bundle and `MOD-13`'s CLI split (§8.2.9 I3).
 
 ### REV-31 — The bundle's size is not recorded
 
@@ -304,11 +320,15 @@ it.
 
 **Measured.** No document records the Windows bundle's size.
 
+**Deferred.** Phase 5, with the shell, the bundle and `MOD-13`'s CLI split (§8.2.9 I3).
+
 ### REV-32 — Old store entries are neither migrated nor removed
 
 *Area:* interface. *Severity:* low. *Found:* PR #38 (WP17).
 
 **Measured.** Entries written under an earlier schema stay in the store, unread and unremoved.
+
+**Deferred.** Phase 5, with the shell, the bundle and `MOD-13`'s CLI split (§8.2.9 I3).
 
 ### REV-33 — writable_formats assumes the extra's floor
 
@@ -317,6 +337,8 @@ it.
 **Measured.** `density/grid.py`'s `writable_formats()` reports `mrc` writable wherever
 GridDataFormats imports, which holds only at the extra's floor, 1.2, and above.
 
+**Declined.** The extra's floor is GridDataFormats 1.2, at which `mrc` is writable, so the report holds wherever the extra is installed (§8.2.9 I3).
+
 ### REV-34 — Two reference tests duplicate the frozen case
 
 *Area:* verification. *Severity:* low. *Found:* PR #46 (WP22).
@@ -324,11 +346,15 @@ GridDataFormats imports, which holds only at the extra's floor, 1.2, and above.
 **Measured.** `FROZEN_CASE`, `as_yaml` and the D10 figures are copied between the Tier-2 and Tier-3
 VAL-05 files.
 
+**Resolves it.** WP42, the verification checks (§8.2.9 I1, I2).
+
 ### REV-35 — _second_crossings loops in Python
 
 *Area:* performance. *Severity:* low. *Found:* PR #46 (WP22).
 
 **Measured.** The second-crossing search iterates in Python where it could be vectorised.
+
+**Post-1.0.** A saving no gate needs (§8.2.9 I3).
 
 ### REV-36 — The gmsh session stops a caller's logger
 
@@ -337,6 +363,8 @@ VAL-05 files.
 **Measured.** `_session` calls `gmsh.logger.stop()` in a session it borrowed. No caller in the
 repository holds a logger.
 
+**Resolves it.** WP39, the backend registries, which makes the mesher a registry and a missing or broken extra a refusal at use (§8.2.9 I3).
+
 ### REV-37 — A broken gmsh wheel is not a refusal
 
 *Area:* interface. *Severity:* low. *Found:* PR #47 (WP23), a review finding not fixed.
@@ -344,17 +372,23 @@ repository holds a logger.
 **Measured.** A gmsh wheel that imports but fails to initialise surfaces as an exception, not as
 `MissingExtraError` naming the extra.
 
+**Resolves it.** WP39, the backend registries, which makes the mesher a registry and a missing or broken extra a refusal at use (§8.2.9 I3).
+
 ### REV-38 — gmsh.model.remove() can mask the error it follows
 
 *Area:* interface. *Severity:* low. *Found:* PR #47 (WP23), a review finding not fixed.
 
 **Measured.** The cleanup's `gmsh.model.remove()` can raise over the error that triggered it.
 
+**Resolves it.** WP39, the backend registries, which makes the mesher a registry and a missing or broken extra a refusal at use (§8.2.9 I3).
+
 ### REV-39 — A case supplying inputs.profile gets no contour editor
 
 *Area:* interface. *Severity:* low. *Found:* PR #48 (WP24).
 
 **Measured.** The Geometry tab offers its contour editor only for a profile the pipeline extracts.
+
+**Deferred.** Phase 5, with the shell, the bundle and `MOD-13`'s CLI split (§8.2.9 I3).
 
 ### REV-40 — DensityMap.read accepts a file written in nm
 
@@ -363,12 +397,16 @@ repository holds a logger.
 **Measured.** A density map written before the ångström convention of §8.2.2 B10 is read without
 refusal, ten times off.
 
+**Resolves it.** WP43, the small fixes (§8.2.9 I1, I2).
+
 ### REV-41 — No prepare command, upto on reproduce, or region export
 
 *Area:* interface. *Severity:* low. *Found:* PR #50 (WP25).
 
 **Measured.** `nanopnp prepare`, `reproduce --upto` and a region export were left out of WP25 with
 no later owner.
+
+**Deferred.** Phase 5, with the shell, the bundle and `MOD-13`'s CLI split (§8.2.9 I3).
 
 ### REV-42 — pnp carries inert flow keys
 
@@ -377,11 +415,15 @@ no later owner.
 **Measured.** The `pnp` model accepts `variable_density` and `inertia` as given, though without flow
 they do nothing.
 
+**Resolves it.** WP42, the verification checks, beside the case-leaf check that would find it. Refusing the keys is a narrowing, so the schema takes `nanopnp/case/v0.5` (§8.2.9 I2; §8.2.7 G6).
+
 ### REV-43 — chain_characters duplicates the export's mapping
 
 *Area:* process. *Severity:* low. *Found:* PR #55 (WP27).
 
 **Measured.** `chain_characters` repeats the mapping inside `AlignedEnsemble.export`.
+
+**Resolves it.** WP43, the small fixes (§8.2.9 I1, I2).
 
 ### REV-44 — The Stern-layer test re-solves the drawn slab
 
@@ -389,11 +431,15 @@ they do nothing.
 
 **Measured.** `test_stern_layer.py`'s generated-slab clause re-solves the slab it already drew.
 
+**Resolves it.** WP42, the verification checks (§8.2.9 I1, I2).
+
 ### REV-45 — The derived χ field has no export
 
 *Area:* interface. *Severity:* low. *Found:* PR #60 (WP30).
 
 **Measured.** WP31 shows χ in the GUI; no command exports it.
+
+**Deferred.** Phase 5, with the shell, the bundle and `MOD-13`'s CLI split (§8.2.9 I3).
 
 ### REV-46 — Example 07 is not run at default sizes or on the ensemble
 
@@ -402,12 +448,16 @@ they do nothing.
 **Measured.** Example 07 runs at reduced mesh sizes on one frame, not at the default sizes or on the
 50-frame ensemble.
 
+**Deferred.** Phase 6, with the ensemble legs (§8.2.5 E1; §8.2.9 I3).
+
 ### REV-47 — The test-duration targets are missed
 
 *Area:* process. *Severity:* low. *Found:* PR #67 (WP33).
 
 **Measured.** The 180 s gated target and the 90 s per-file bound were missed, recorded only in the
 PR and the plan's Outcomes.
+
+**Resolves it.** Phase 4's close package, which reports the gate's durations on its own tree and re-argues or retires WP33's targets (§8.2.9 I3).
 
 ### REV-48 — The 2WCD walk test copies its constants
 
@@ -416,11 +466,15 @@ PR and the plan's Outcomes.
 **Measured.** `test_exclusion_2wcd_walk.py` copies constants from `test_exclusion_2wcd.py`, which
 can drift apart.
 
+**Resolves it.** WP42, the verification checks (§8.2.9 I1, I2).
+
 ### REV-49 — AXISYMMETRIC is replaced repeatedly
 
 *Area:* process. *Severity:* low. *Found:* PR #72 (WP34), a review finding not acted on.
 
 **Measured.** The same `replace(AXISYMMETRIC, …)` is repeated at several call sites.
+
+**Resolves it.** WP43, the small fixes (§8.2.9 I1, I2).
 
 ### REV-50 — _inner_wall_nm re-implements innermost_crossings
 
@@ -428,11 +482,15 @@ can drift apart.
 
 **Measured.** `_inner_wall_nm` repeats the logic of `innermost_crossings`.
 
+**Resolves it.** WP43, the small fixes (§8.2.9 I1, I2).
+
 ### REV-51 — A redundant reopen and resolve in WP34's walk
 
 *Area:* performance. *Severity:* low. *Found:* PR #72 (WP34), a review finding not acted on.
 
 **Measured.** A case is reopened and resolved where the resolved case is already at hand.
+
+**Resolves it.** WP43, the small fixes (§8.2.9 I1, I2).
 
 ### REV-52 — deviations and SolveReporting are off the stage protocol
 
@@ -441,11 +499,15 @@ can drift apart.
 **Measured.** The protocol declares `name`, `describe`, `key` and `run`; `deviations` and
 `SolveReporting` stay conventions of some stages.
 
+**Deferred.** Phase 5, with the shell, the bundle and `MOD-13`'s CLI split (§8.2.9 I3).
+
 ### REV-53 — Some walk rules stay as case logic
 
 *Area:* interface. *Severity:* low. *Found:* PR #79 (WP36).
 
 **Measured.** Not every walk rule is a declared stage fact; some remain conditions in the case.
+
+**Declined.** WP36 ruled the drop rules of `selected_stages` case logic (§8.2.9 I3). REV-63, the cost of the walk, is WP38's.
 
 ### REV-54 — The MOD-12 check compares names, not modules
 
@@ -454,11 +516,15 @@ can drift apart.
 **Measured.** The check of `PUBLIC`'s type-checker mirror compares names only, not the module each
 mirrored import comes from.
 
+**Resolves it.** WP38, the `io` split, which moves modules `PUBLIC` mirrors (§8.2.9 I3).
+
 ### REV-55 — Per-stage mkdtemp fallbacks
 
 *Area:* interface. *Severity:* low. *Found:* PR #43 (CR-1 to CR-17), left as they were.
 
 **Measured.** Some stages fall back to `mkdtemp` for scratch rather than the store's workspace.
+
+**Resolves it.** WP43, the small fixes (§8.2.9 I1, I2).
 
 ### REV-56 — The geometry editor's simplicity check runs on the Qt thread
 
@@ -467,6 +533,8 @@ mirrored import comes from.
 **Measured.** `gui/widgets/geometry.py`'s O(n²) `_check_simple` re-runs on every `_show_row`, 0.63 s
 at 600 vertices. *Seed from refusal* and a rebuild drop unsaved edits without confirmation.
 
+**Deferred.** Phase 5, with the shell, the bundle and `MOD-13`'s CLI split (§8.2.9 I3).
+
 ### REV-57 — frame_times decodes every frame
 
 *Area:* performance. *Severity:* low. *Found:* CODE_REVIEW_003 (PR #49), *Leads not investigated*.
@@ -474,12 +542,16 @@ at 600 vertices. *Seed from refusal* and a rebuild drop unsaved edits without co
 **Measured.** `structure/read.py`'s `frame_times` decodes every frame only to read its time, and no
 PBC or RMSD gate catches a chain split across the periodic box.
 
+**Resolves it.** WP43, the small fixes (§8.2.9 I1, I2).
+
 ### REV-58 — The azimuthal reduction projects cells it then drops
 
 *Area:* performance. *Severity:* low. *Found:* CODE_REVIEW_003 (PR #49), *Leads not investigated*.
 
 **Measured.** `symmetry/reduce.py` multiplies and projects all cells for every harmonic though only
 bins with `K_j ≥ k` are kept, up to about 2× work. Correct.
+
+**Post-1.0.** A saving no gate needs (§8.2.9 I3).
 
 ### REV-59 — attribute_to_construction raises the wrong error on a lax comparison
 
@@ -489,12 +561,16 @@ bins with `K_j ≥ k` are kept, up to about 2× work. Correct.
 comparison, raises `MissingPlaneError` rather than saying the comparisons do not match. In-repo
 callers pass strict comparisons.
 
+**Resolves it.** WP43, the small fixes (§8.2.9 I1, I2).
+
 ### REV-60 — UMFPACK repeats its symbolic analysis every Newton step
 
 *Area:* performance. *Severity:* low. *Found:* CODE_REVIEW_002 (PR #44), *Leads not settled*.
 
 **Measured.** `numerics/linear.py` redoes the symbolic factorisation on every Newton iteration; the
 saving from reusing it is unmeasured.
+
+**Deferred.** Phase 6, measured with the envelope's throughput (§8.2.9 I3).
 
 ### REV-61 — No B-spline fit or HOLE cross-check of the contour
 
@@ -503,12 +579,16 @@ saving from reusing it is unmeasured.
 **Measured.** The optional B-spline fit of the extracted contour and the HOLE cross-check (B5) were
 left out of WP20, and nothing in `src/` or the specification owns them.
 
+**Deferred.** Phase 6, the HOLE cross-check (§8.2.2 B5) with VAL-05; the B-spline fit with it (§8.2.9 I3).
+
 ### REV-62 — A mesh named by store key is refused
 
 *Area:* interface. *Severity:* low. *Found:* PR #57 (WP28); verified open at `5559c7e`.
 
 **Measured.** `inputs.mesh: {artefact: …}` is refused (`mesh/ingest.py`), so a mesh can be supplied
 only as a file.
+
+**Deferred.** Phase 5, with the shell, the bundle and `MOD-13`'s CLI split (§8.2.9 I3).
 
 ### REV-63 — The protonation stage walks through meshing
 
@@ -518,12 +598,16 @@ only as a file.
 `selected_stages(resolved, 'protonation')` on example 07 walks density, symmetry, contour, region
 and mesh first, because the walk runs in registration order (WP36).
 
+**Resolves it.** WP38, the `io` split, whose assembler holds the walk: a requested stage walks its input closure only (§8.2.9 I3).
+
 ### REV-64 — A sweep's plan-time NUM-34 gate skips generated meshes
 
 *Area:* verification. *Severity:* low. *Found:* PR #42 (WP21); verified open at `5559c7e`.
 
 **Measured.** `sweep/plan.py` skips a generated mesh, which does not exist until the member's stage
 6, so a NUM-34 violation on one surfaces at the member's solve rather than in seconds at plan time.
+
+**Deferred.** Phase 6, with the envelope sweeps (§8.2.9 I3). The violation is loud, at the member's solve.
 
 ### REV-65 — The Windows bundle exposes no mesh command
 
@@ -532,3 +616,5 @@ and mesh first, because the walk runs in registration order (WP36).
 
 **Measured.** The bundle carries no `nanopnp mesh`; WP16 left it a GUI item unless the author ruled
 otherwise.
+
+**Deferred.** Phase 5, with the shell, the bundle and `MOD-13`'s CLI split (§8.2.9 I3).
