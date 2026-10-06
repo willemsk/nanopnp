@@ -77,8 +77,10 @@ and CI uses the same script. CI's strict documentation build runs on every push,
 skills use it before they push, and a pass of the hook's development selection does not stand in for
 it. Like CI's lint job, `run` measures branch coverage and runs `diff-cover` against the merge base
 with `main`: every changed line of `src/nanopnp/` outside `gui/` must be executed down each of its
-branches, or carry `# pragma: no cover - <reason>` (VER-72). That finds a branch no test takes; it
-cannot find code that is missing, which is what a plan's `planned:` tests are for. `run` also sets
+branches, or carry `# pragma: no cover - <reason>` (VER-72). That finds a statement or a branch
+no test takes. It cannot see an untaken arm of a conditional expression (`a if c else b`), nor code
+that is missing; WP39's dead remedy text and its absent `try` were both, and a plan's `planned:`
+tests, which assert the text and the state after failure, are what catch them. `run` also sets
 `NANOPNP_REQUIRE_GMSH=1`, as CI does, so a Gmsh that cannot import fails rather than skips (the
 failure names the `apt-get` line; the session-start hook installs the libraries where it can); the
 commit hook sets it only when the change touches the Gmsh backend or its tests. Both list skipped
