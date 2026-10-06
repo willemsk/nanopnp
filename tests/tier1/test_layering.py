@@ -98,6 +98,9 @@ def test_ver61_an_annotation_cut_returning_to_module_scope_fails_as_upward() -> 
     message = comparison.describe()
     assert "new upward edge geometry -> mesh" in message
     assert f"geometry/analyte.py:{line}" in message
+    # The ratchet only shrinks, so its diagnostic must not offer recording the edge.
+    assert "only shrinks" in message
+    assert "record the edge" not in message
 
 
 def test_ver61_an_unplaced_subpackage_is_refused_naming_it() -> None:

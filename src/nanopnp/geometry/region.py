@@ -72,6 +72,7 @@ from nanopnp.geometry.profile import (
     min_vertex_spacing,
     plane_crossings,
     profile_digest,
+    signed_area,
 )
 from nanopnp.io.artefact import RegionArtefact
 from nanopnp.io.case import MembraneSpec, ReservoirSpec, UnsupportedCaseSection, resolve
@@ -742,8 +743,6 @@ def _pore_face(points: np.ndarray) -> Shape:
     fixed here, once.
     """
     import netgen.occ as occ
-
-    from nanopnp.geometry.profile import signed_area
 
     vertices = points[::-1] if signed_area(points) < 0.0 else points
     plane = occ.WorkPlane().MoveTo(float(vertices[0][0]), float(vertices[0][1]))

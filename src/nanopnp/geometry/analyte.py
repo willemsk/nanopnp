@@ -349,7 +349,7 @@ class PoreWithAnalyte:
     configuration RSK-04 is stated on. The pore's whole vocabulary — ``axis``,
     ``wall``, ``membrane``, ``membrane_outer``, ``cis``, ``trans`` and the three
     fluid domains — survives untouched, so ``lumen_band``, ``axial_indicator``
-    and the default :class:`~nanopnp.physics.models.CoupledBoundaries` keep
+    and the default :class:`~nanopnp.mesh.primitives.CoupledBoundaries` keep
     working and only ``analyte`` is new.
     """
 
