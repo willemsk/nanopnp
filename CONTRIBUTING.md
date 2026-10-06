@@ -50,6 +50,13 @@ time, so the development selection leaves them out, and CI runs them on every pu
 (`SPECIFICATION.md` §7.6 NOTE). Naming one's file, `uv run pytest tests/tier2/test_charge_2wcd.py`,
 runs it without the flag.
 
+Before a push, every line your branch changes in `src/nanopnp/`, outside `gui/`, must also be
+executed down each of its branches. CI's lint job and `.claude/hooks/gate.sh run` check it with
+`diff-cover` against the merge base with `main`; a line no test can reach says why, as
+`# pragma: no cover - <reason>`. The Gmsh backend's tests fail rather than skip there
+(`NANOPNP_REQUIRE_GMSH=1`): on Debian or Ubuntu, Gmsh needs `apt-get install
+libglu1-mesa libxft2 libxinerama1 libxcursor1`.
+
 CI runs the same four stages on Python 3.12, plus the test suite on 3.11–3.14 on Linux and on 3.12
 on Windows and macOS, and the strict documentation build on every push, prose-only ones included. `uv.lock` is committed and CI resolves nothing: if you edit `pyproject.toml`,
 run `uv lock` in the same commit.

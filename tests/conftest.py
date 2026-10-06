@@ -125,7 +125,10 @@ def import_gmsh() -> ModuleType:
     except (ImportError, OSError) as error:  # pragma: no cover - environment-dependent
         reason = f"gmsh does not import: {type(error).__name__}: {error}"
         if os.environ.get(REQUIRE_GMSH) == "1":
-            pytest.fail(f"{REQUIRE_GMSH}=1 and {reason}")
+            pytest.fail(
+                f"{REQUIRE_GMSH}=1 and {reason}. On Debian or Ubuntu: apt-get install -y "
+                "--no-install-recommends libglu1-mesa libxft2 libxinerama1 libxcursor1"
+            )
         pytest.skip(reason)
     return gmsh
 
