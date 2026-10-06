@@ -387,6 +387,7 @@ def test_qr08_a_complete_walk_is_complete_when_its_case_drops_the_last_registere
             key_is_artefact=False,
             weight=0.1,
             needs_section="structure",
+            optional_inputs=(),
         ),
         "nanopnp.external:ExternalStage",
     )

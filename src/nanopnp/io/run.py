@@ -343,7 +343,11 @@ def selected_stages(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]
     ``contour`` without ``structure:``, which covers a case supplying
     ``inputs.profile``; and
     ``region`` is dropped when the case supplies ``inputs.mesh``, which stage 6
-    then reads instead of generating (section 5.3.1 NOTE on ``inputs:``).
+    then reads instead of generating (section 5.3.1 NOTE on ``inputs:``). A
+    stage is dropped too when the case drops one of its inputs that its
+    description does not declare optional (WP36 D13); every built-in stage
+    declares optional each input a case can drop, so the rule reaches only a
+    stage registered from outside the package.
 
     Public so that the desktop shell lists the stages a build will walk from
     this rule rather than from a restatement of it (WP24).
@@ -385,6 +389,19 @@ def selected_stages(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]
     dropped.update(absent)
     if not resolved.generates_mesh:
         dropped.add("region")
+    # A stage whose case drops one of its required inputs has nothing to read.
+    # One pass suffices: registration order is a dependency order, so an input
+    # is decided before the stage reading it.
+    unfed: dict[str, str] = {}
+    for name in order:
+        if name in dropped:
+            continue
+        description = describe(name)
+        for needed in description.inputs:
+            if needed not in description.optional_inputs and needed in dropped:
+                unfed[name] = needed
+                dropped.add(name)
+                break
     stages = tuple(name for name in order if name not in dropped)
     if upto is None:
         return stages
@@ -394,6 +411,11 @@ def selected_stages(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]
         raise UnknownStageError(
             f"stage {upto!r} is registered but case {resolved.name!r} carries no "
             f"{absent[upto]}: section, so there is nothing for it to read"
+        )
+    if upto in unfed:
+        raise UnknownStageError(
+            f"stage {upto!r} is registered but case {resolved.name!r} does not walk "
+            f"{unfed[upto]!r}, an input it requires, so there is nothing for it to read"
         )
     if upto == "protonation":
         raise UnknownStageError(

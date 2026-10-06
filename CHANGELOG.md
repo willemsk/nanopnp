@@ -31,15 +31,20 @@ Every walk computes what it computed before: the order, the keys and the work ar
 - **`nanopnp.Stage` gains `key(inputs)`**, returning the artefact `run` will produce without its
   payload. **Break:** a stage written outside the package must now define it. The case and
   materials stages define it too, and their `run` returns their `key`.
-- **The walk reads each stage's facts from the registry.** `StageDescription` gains five required
-  keyword-only fields: `takes_workspace`, `takes_store`, `key_is_artefact`, `weight` and
-  `needs_section`. `registered_stages()` descriptions and `nanopnp stage --list --json` carry them,
-  an additive change. A description built by hand must now give all five.
+- **The walk reads each stage's facts from the registry.** `StageDescription` gains six required
+  keyword-only fields: `takes_workspace`, `takes_store`, `key_is_artefact`, `weight`,
+  `needs_section` and `optional_inputs`. `registered_stages()` descriptions and
+  `nanopnp stage --list --json` carry them, an additive change. A description built by hand must
+  now give all six.
+- **A stage whose case drops one of its required inputs is not walked**, and naming it as the
+  walk's target is refused, naming the input. `optional_inputs` lists the inputs a stage runs
+  without; every built-in stage declares the ones a case can drop, so no built-in walk changes.
 - **The walk runs the stages in registration order**, read by the new
   `nanopnp.core.stages.walk_order()`, with the case stage registered first. A stage registered
   later is walked after the built-in ones.
 - **`register()` refuses more**: an input that is neither `case_path` nor a stage registered
-  before it, and a progress weight that is not finite and positive.
+  before it, a progress weight that is not finite and positive, and an optional input that is not
+  one of the stage's inputs. A walk refuses a `needs_section` that names no case section.
 
 ### Removed
 

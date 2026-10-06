@@ -301,8 +301,14 @@ class StageDescription:
         The top-level case section the stage reads, named as its
         :class:`~nanopnp.io.case.CaseDocument` field, or ``None``. A walk drops
         the stage when the case leaves that section out.
+    optional_inputs
+        The members of ``inputs`` the stage runs without, because a case may
+        drop the stage producing them and the stage then reads the case instead:
+        ``region`` without ``contour`` on an ``inputs.profile`` case, for one.
+        Every other input is required, and a walk drops the stage when its case
+        drops one, refusing it as the walk's target (WP36 D13).
 
-    The last five are keyword-only and required, so a description missing one
+    The last six are keyword-only and required, so a description missing one
     is a :class:`TypeError` where it is written rather than a default the walk
     acts on.
     """
@@ -319,6 +325,7 @@ class StageDescription:
     key_is_artefact: bool
     weight: float
     needs_section: str | None
+    optional_inputs: tuple[str, ...]
 
     def summary(self) -> dict[str, Any]:
         """Return this description as plain data, for the CLI and the GUI."""
@@ -334,6 +341,7 @@ class StageDescription:
             "key_is_artefact": self.key_is_artefact,
             "weight": self.weight,
             "needs_section": self.needs_section,
+            "optional_inputs": list(self.optional_inputs),
         }
 
 
@@ -425,8 +433,9 @@ def register(description: StageDescription, target: str, *, extra: str | None = 
         registration order is the walk's order (:func:`walk_order`) and a stage
         walked before its input would find nothing to read; or if ``weight`` is
         not finite and positive, because the walk divides by the total weight
-        and a negative share would make its progress non-monotone. A refused
-        stage leaves the registry as it was.
+        and a negative share would make its progress non-monotone; or if an
+        optional input is not one of its inputs. A refused stage leaves the
+        registry as it was.
     """
     if description.name in _REGISTRY:
         raise ValueError(
@@ -443,6 +452,12 @@ def register(description: StageDescription, target: str, *, extra: str | None = 
                 "nor a stage registered before it; the walk runs stages in registration order, "
                 "so register its inputs first"
             )
+    stray = [name for name in description.optional_inputs if name not in description.inputs]
+    if stray:
+        raise ValueError(
+            f"stage {description.name!r} declares optional input {stray[0]!r}, which is not one "
+            f"of its inputs {description.inputs}"
+        )
     if not (math.isfinite(description.weight) and description.weight > 0):
         raise ValueError(
             f"stage {description.name!r} has progress weight {description.weight!r}; a weight "
@@ -571,6 +586,7 @@ def _register_builtins() -> None:
             # progress bar near its end for the whole of the ladder.
             weight=0.01,
             needs_section=None,
+            optional_inputs=(),
         ),
         "nanopnp.io.case:CaseStage",
     )
@@ -587,6 +603,7 @@ def _register_builtins() -> None:
             key_is_artefact=False,
             weight=0.05,
             needs_section="structure",
+            optional_inputs=(),
         ),
         "nanopnp.structure.stage:StructureStage",
         extra="structure",
@@ -606,6 +623,7 @@ def _register_builtins() -> None:
             # stage 3 does: seconds for a crystal structure, minutes for an ensemble.
             weight=0.2,
             needs_section="structure",
+            optional_inputs=(),
         ),
         "nanopnp.density.stage:DensityStage",
     )
@@ -622,6 +640,7 @@ def _register_builtins() -> None:
             key_is_artefact=False,
             weight=0.05,
             needs_section="structure",
+            optional_inputs=(),
         ),
         "nanopnp.symmetry.stage:SymmetryStage",
     )
@@ -644,6 +663,7 @@ def _register_builtins() -> None:
             # ensemble.
             weight=0.03,
             needs_section="structure",
+            optional_inputs=(),
         ),
         "nanopnp.geometry.contour:ContourStage",
         extra="structure",
@@ -664,6 +684,8 @@ def _register_builtins() -> None:
             key_is_artefact=False,
             weight=0.01,
             needs_section=None,
+            # An inputs.profile case drops stages 1 to 4 and region reads the profile.
+            optional_inputs=("contour",),
         ),
         "nanopnp.geometry.region:RegionStage",
     )
@@ -682,6 +704,8 @@ def _register_builtins() -> None:
             # one is less. Either is small beside the ladder.
             weight=0.05,
             needs_section=None,
+            # An inputs.mesh case drops region and the stage reads the mesh.
+            optional_inputs=("region",),
         ),
         "nanopnp.mesh.ingest:MeshStage",
     )
@@ -708,6 +732,8 @@ def _register_builtins() -> None:
             # walk's target.
             weight=1.0,
             needs_section=None,
+            # An inputs.pqr case protonates without a structure: section.
+            optional_inputs=("structure",),
         ),
         # No extra (WP27 D4): inputs.pqr runs without PDB2PQR, which the stage
         # imports only when it protonates, naming the extra if it is missing.
@@ -738,6 +764,8 @@ def _register_builtins() -> None:
             # field is less.
             weight=0.2,
             needs_section=None,
+            # protonation only for a deposited charge, region only for a derived chi.
+            optional_inputs=("protonation", "region"),
         ),
         "nanopnp.charge.stage:FieldStage",
     )
@@ -754,6 +782,7 @@ def _register_builtins() -> None:
             key_is_artefact=True,
             weight=0.01,
             needs_section=None,
+            optional_inputs=(),
         ),
         "nanopnp.materials.stage:MaterialsStage",
     )
@@ -770,6 +799,7 @@ def _register_builtins() -> None:
             key_is_artefact=False,
             weight=0.75,
             needs_section=None,
+            optional_inputs=(),
         ),
         "nanopnp.solve.stage:SolveStage",
     )
@@ -786,6 +816,7 @@ def _register_builtins() -> None:
             key_is_artefact=False,
             weight=0.08,
             needs_section=None,
+            optional_inputs=(),
         ),
         "nanopnp.post.stage:QoIStage",
     )
@@ -802,6 +833,7 @@ def _register_builtins() -> None:
             key_is_artefact=False,
             weight=0.04,
             needs_section=None,
+            optional_inputs=(),
         ),
         "nanopnp.post.stage:ReportStage",
     )
