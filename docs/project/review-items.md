@@ -627,3 +627,19 @@ declares, and `validation.modularity.undeclared_reads` finds a read the declarat
 otherwise.
 
 **Deferred.** Phase 5, with the shell, the bundle and `MOD-13`'s CLI split (§8.2.9 I3).
+
+### REV-66 — A model without flow is refused on its element pair before its flow switch
+
+*Area:* interface. *Severity:* low. *Found:* PR #82 (WP38), the `/wp-ship` review; reproduced at
+`0b406b2`.
+
+**Measured.** WP38 D8 moves the inf-sup check from `resolve` to `pipeline.checks.check_document`,
+which runs at load, ahead of `require_runnable`'s switch checks. A case with `physics.model: pb`,
+`physics.flow` left at its default `true`, `numerics.elements.u: P1` and
+`numerics.stabilisation: none` is now refused naming the inf-sup velocity–pressure pair of a model
+that solves no velocity or pressure. Before WP38 it was refused naming `pb honours physics.flow:
+false only (PHY-21)`, the real mistake, which now surfaces only once the element pair is changed.
+The document is refused either way; only the first diagnostic misleads (QR-12).
+
+**Open.** Gating the load-time inf-sup check on the model declaring a flow field would let
+`load_case` accept a document it refuses today, which changes D8's reading. The author rules.

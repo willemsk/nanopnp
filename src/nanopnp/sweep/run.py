@@ -44,6 +44,8 @@ from nanopnp.core.hashing import Canonicalisable, canonical
 from nanopnp.io.artefact import SOLUTION_SCHEMA, Artefact, StageInputs
 from nanopnp.io.case import CaseDocument, dumps_case
 from nanopnp.io.store import Store, atomic_write_bytes
+from nanopnp.pipeline.case import resolve
+from nanopnp.pipeline.run import MissingUpstreamError, run_document, stored_upstream
 from nanopnp.sweep.plan import PLAN_FILENAME, Point, SweepPlan, read_plan
 
 logger = logging.getLogger(__name__)
@@ -191,11 +193,6 @@ def _parent_artefact(
     """
     if point.parent is None:
         return None, "this point is the root of its tree and has no neighbour to start from"
-    from nanopnp.pipeline.case import resolve
-    from nanopnp.pipeline.run import (
-        MissingUpstreamError,
-        stored_upstream,
-    )
     from nanopnp.solve.stage import SolveStage
 
     parent = plan.point(point.parent)
@@ -254,7 +251,6 @@ def run_point(
         :data:`MEMBERS_DIRNAME` inside it.
     """
     from nanopnp.core.stages import Cancelled
-    from nanopnp.pipeline.run import run_document
 
     point = plan.point(index)
     started = time.perf_counter()

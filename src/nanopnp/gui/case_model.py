@@ -20,9 +20,11 @@ should not pay for a solver.
 :meth:`CaseEditor.stage` checks one value against the type the schema declares at
 that path, which is what refuses ``"lots"`` in ``bias_V`` the moment it is typed.
 :meth:`CaseEditor.commit` re-validates the *whole* document through
-:func:`~nanopnp.io.case_paths.substitute`, which is where ``extra="forbid"``, the
-registry check and the cross-field rules live (§5.3.4). Both diagnostics are the
-ones the command line prints for the same mistake: one error vocabulary, not two.
+:func:`~nanopnp.io.case_paths.substitute`, which is where ``extra="forbid"`` and the
+schema's cross-field rules live (§5.3.4), and then through
+:func:`~nanopnp.pipeline.checks.check_document`, which is where the registry and
+element-order checks live (WP38 D7). Both diagnostics are the ones the command
+line prints for the same mistake: one error vocabulary, not two.
 
 **A section is added only when its absence and its empty form are one case.**
 :meth:`CaseEditor.add_section` writes an empty block through

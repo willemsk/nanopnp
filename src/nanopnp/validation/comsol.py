@@ -66,6 +66,7 @@ from nanopnp.density.grid import (
 )
 from nanopnp.io.artefact import Artefact, StageInputs
 from nanopnp.io.case import CaseValidationError, render_problems
+from nanopnp.pipeline.run import offered
 from nanopnp.validation.probe import ProbeDocument, ProbePatch, load_probe
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
@@ -434,9 +435,13 @@ def _upstream(
     name: str,
     upstream: Mapping[str, Artefact],
 ) -> Artefact:
-    """Return the ``name`` artefact the recipe is read from: the run's own, or its key."""
+    """Return the ``name`` artefact the recipe is read from: the run's own, or its key.
+
+    Keyed on the inputs the walk would hand the stage, :func:`~nanopnp.pipeline.run.offered`,
+    so that the key cannot differ from the one a run made (WP38 D11).
+    """
     if recorded is None:
-        return create(name).key(StageInputs(resolved=resolved, upstream=dict(upstream)))
+        return create(name).key(StageInputs(resolved=resolved, upstream=offered(name, upstream)))
     found = recorded.get(name)
     if found is None:
         raise KeyError(

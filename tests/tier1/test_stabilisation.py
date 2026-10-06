@@ -626,6 +626,7 @@ def _coupled(mode: str) -> tuple[object, ngs.Mesh, object, ngs.GridFunction]:
     identically zero. A test that asserted on that state would pass with the terms
     unwired, which is why the fields below are set to something with a gradient.
     """
+    from nanopnp.io.vocabulary import POTENTIAL, PRESSURE, VELOCITY
     from nanopnp.mesh.primitives import CylinderGeometry
     from nanopnp.physics import models
 
@@ -637,11 +638,11 @@ def _coupled(mode: str) -> tuple[object, ngs.Mesh, object, ngs.GridFunction]:
     space = model.space(mesh, boundaries)
     state = ngs.GridFunction(space, name="state")
     fields = {f.name: c for f, c in zip(model.fields, state.components, strict=True)}
-    fields[models.POTENTIAL].Set(0.4 * ngs.y + 0.2 * ngs.x)
+    fields[POTENTIAL].Set(0.4 * ngs.y + 0.2 * ngs.x)
     fields["c_Na+"].Set(1.0 + 0.15 * ngs.x)
     fields["c_Cl-"].Set(1.0 - 0.1 * ngs.y)
-    fields[models.VELOCITY].Set(ngs.CF((0.05 * ngs.x, 0.2)))
-    fields[models.PRESSURE].Set(0.3 * ngs.y)
+    fields[VELOCITY].Set(ngs.CF((0.05 * ngs.x, 0.2)))
+    fields[PRESSURE].Set(0.3 * ngs.y)
     return model, mesh, space, state
 
 
@@ -809,12 +810,12 @@ def _diagnostic(mode: str, potential: ngs.CoefficientFunction) -> object:
     stabilisation: NUM-12's second NOTE requires it in every mode, and NUM-11 puts
     production in the one where nothing is assembled.
     """
+    from nanopnp.io.vocabulary import POTENTIAL
     from nanopnp.numerics.gates import FieldSampler, PecletDiagnostic
-    from nanopnp.physics import models
 
     model, mesh, _, state = _coupled(mode)
     fields = {f.name: c for f, c in zip(model.fields, state.components, strict=True)}  # type: ignore[attr-defined]
-    fields[models.POTENTIAL].Set(potential)
+    fields[POTENTIAL].Set(potential)
     return PecletDiagnostic(
         FieldSampler(mesh, materials="electrolyte"),
         model.cell_peclet(state, ngs.CF(1.0)),  # type: ignore[attr-defined]

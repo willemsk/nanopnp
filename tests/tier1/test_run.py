@@ -631,3 +631,23 @@ def test_ver57_a_walk_to_protonation_records_it_in_the_charge_group(
     assert isinstance(skipped, dict)
     assert skipped["status"] == "not run"
     assert "stopped before stage 7" in str(skipped["reason"])
+
+
+def test_ver64_a_walk_past_stage_7_that_skips_it_says_so_in_the_charge_group(
+    case_file: Path, tmp_path: Path
+) -> None:
+    """A walk to ``materials`` runs its input closure, which holds no stage 7 (WP38 D11).
+
+    It ends past stage 7, so the Charge group must not record that it stopped
+    before stage 7: it records that the walk's target does not read it.
+    """
+    case = _pqr_case(case_file, tmp_path)
+    result = run_case(case, store=Store(tmp_path / "store"), upto="materials", write=False)
+    assert [record.name for record in result.stages] == ["case", "materials"]
+    group = result.manifest.charge
+    assert group["status"] == "not run"
+    assert "stopped before stage 7" not in str(group["reason"])
+    assert "the walk to 'materials' does not read stage 7" in str(group["reason"])
+    skipped = group["protonation"]
+    assert isinstance(skipped, dict)
+    assert "the walk to 'materials' does not read stage 7" in str(skipped["reason"])

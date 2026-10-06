@@ -756,8 +756,9 @@ the stage-6 rung upwards, which is the ladder's own path rather than a switch --
 and leaves ``variable_density``, ``inertia`` and ``dielectric_gradient_forces``
 at the :class:`~nanopnp.physics.models.CoupledModel` defaults recorded above.
 Only ``numerics.continuation: none`` threads the case's four through to the
-model builder (:func:`_model_options`). The values here are therefore what the
-*top* rung carries, which is the rung the result and its manifest come from."""
+model builder (:func:`nanopnp.pipeline.case._model_options`). The values here are
+therefore what the *top* rung carries, which is the rung the result and its
+manifest come from."""
 
 
 def _check_ladder_can_honour(physics: PhysicsSpec) -> None:

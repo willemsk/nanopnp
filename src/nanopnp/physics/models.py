@@ -46,7 +46,6 @@ from nanopnp.core.typing import (
     Mesh,
     Option,
 )
-from nanopnp.io.case import CaseValidationError
 from nanopnp.io.vocabulary import (
     POTENTIAL,
     PRESSURE,
@@ -195,9 +194,9 @@ def inf_sup_problem(*, velocity_order: int, pressure_order: int, stabilisation: 
     checkerboard mode the solve will happily converge to.
 
     One implementation, two callers: :meth:`CoupledModel.__post_init__` gates the
-    model and :func:`nanopnp.pipeline.case.resolve` gates the case, so that a case is
-    refused while it is being resolved rather than after the continuation ladder
-    has been built on it. Two separate copies of the condition could disagree
+    model and :func:`nanopnp.pipeline.checks.check_document` gates the case, so that a
+    case is refused when it is loaded or resolved rather than after the continuation
+    ladder has been built on it. Two separate copies of the condition could disagree
     about which pairs are admissible, and the one that mattered would be
     whichever ran first.
 
@@ -2334,20 +2333,20 @@ def build_case_model(
     The one call site of a case's builder: every builder receives the
     electrolyte and the concentration beside the declared options. Building
     imports no finite-element backend, so :func:`nanopnp.pipeline.case.resolve`
-    does it once to surface a builder's own refusal while the case is resolved.
+    does it once to surface a builder's own refusal while the case is resolved,
+    and reports it there as the case error it is. A resolved case's model has
+    therefore been built once already, and :func:`case_model` builds it again
+    with the same arguments.
 
     Raises
     ------
-    CaseValidationError
-        If the builder refuses the configuration, naming ``physics.model`` and
-        carrying the builder's reason.
+    TypeError, ValueError
+        If the builder refuses the configuration, with the builder's reason.
+        Not wrapped here: the case error is ``resolve``'s, so that this module
+        need not import the case schema, which would double what importing it
+        costs a caller that only introspects or registers a model (FR-27).
     """
-    try:
-        return create(model, electrolyte=electrolyte, concentration_M=concentration_M, **options)
-    except (TypeError, ValueError) as error:
-        raise CaseValidationError(
-            f"physics.model {model!r} cannot be built for this case: {error}"
-        ) from error
+    return create(model, electrolyte=electrolyte, concentration_M=concentration_M, **options)
 
 
 def case_model(resolved: ResolvedCase) -> PhysicsModel:
