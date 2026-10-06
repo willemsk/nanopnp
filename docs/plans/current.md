@@ -1,6 +1,6 @@
 # Current work
 
-Updated 6 October 2026 (Phase 4 amended, §8.2.9). Navigation only; `SPECIFICATION.md` governs;
+Updated 6 October 2026 (WP38 planned). Navigation only; `SPECIFICATION.md` governs;
 nothing here is evidence an unmerged branch shipped.
 
 ## Position
@@ -10,10 +10,12 @@ nothing here is evidence an unmerged branch shipped.
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
   **in progress** (§8.2.7 G1–G11; §8.2.8 H1–H12; §8.2.9 I1–I5). WP35 to WP37 merged as
   `v0.5.0-alpha.1` to `v0.5.0-alpha.3`.
-- **Next: `/wp-plan 38`**, the `io` split and four review items. Then WP39
-  (registries; H6 measured), WP40 (refusals), WP41–WP43 (accuracy, verification and small fixes
-  from the review register; I1, I2), WP44–WP46 (OKF bundle, backfill, protocol); then the
-  author's sessions and the second amendment, numbering the fixes from WP47.
+- **Next: `/wp-implement`** of [WP38, the `io` split](wp38-io-split.md), planned 6 October 2026:
+  `io` becomes the base above `core`, a new `pipeline/` the assembler; stages are handed the
+  resolved case (`StageInputs.resolved`); REV-03, REV-27, REV-54, REV-63. Then WP39 (registries;
+  H6 asserted), WP40 (refusals), WP41–WP43 (accuracy, verification and small fixes from the review
+  register; I1, I2), WP44–WP46 (OKF bundle, backfill, protocol); then the author's sessions and
+  the second amendment, numbering the fixes from WP47.
 - Phase 5 (`v0.6.0`) is the GUI (F5), Phase 6 (`v0.7.0`) validation (F1); v1.0 is OPN-08.
 
 ## Not to be re-decided
@@ -74,8 +76,8 @@ nothing here is evidence an unmerged branch shipped.
 | Phase 4 scope and packages | `phase-4-polish-and-user-testing.md`; §8.2.6 F3–F6, §8.2.7, §8.2.8 |
 | The OKF package's binding decisions | `okf-knowledge-bundle.md` (K1–K11); §8.2.7 G3, G8, G9 |
 | The findings being fixed | `docs/project/modularity.md`, `modularity-layering.yaml`; `review-items.md` and the two logs |
-| Stages, registries and the walk | `core/stages.py`; `io/run.py`; `physics/models.py` and `docs/project/physics-models.md`; `materials/models.py` |
-| Case schema and supply chains | §5.3.1 NOTEs; `io/case.py` |
+| Stages, registries and the walk | `core/stages.py`; `io/run.py` (`pipeline/run.py` from WP38); `physics/models.py` and `docs/project/physics-models.md`; `materials/models.py` |
+| Case schema and supply chains | §5.3.1 NOTEs; `io/case.py` (split by WP38 D2, D3) |
 
 The Outcomes of a delivered plan override its decisions table, so read the two together.
 
