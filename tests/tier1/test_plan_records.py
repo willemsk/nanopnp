@@ -76,7 +76,7 @@ def stale_planned_markers(tests: Path = TESTS, plans: Path = PLANS) -> list[str]
             match = PLANNED.match(reason.value)
             if match is None:
                 continue
-            place = f"{path.relative_to(tests.parent)}:{marker.lineno}"
+            place = f"{path.relative_to(tests.parent).as_posix()}:{marker.lineno}"
             number = int(match.group(1))
             plan = _plan(number, plans)
             strict = keywords.get("strict")
@@ -218,7 +218,7 @@ def _checked_plans(plans: Path = PLANS, first: int = FIRST_CHECKED) -> list[Path
 def test_ver72_every_name_an_outcome_quotes_exists() -> None:
     names, modules = defined_names(parse_package())
     missing = [
-        f"{path.relative_to(REPOSITORY)}:{line}: `{quoted}()` is not defined in src/nanopnp"
+        f"{path.relative_to(REPOSITORY).as_posix()}:{line}: `{quoted}()` is not in src/nanopnp"
         for path in _checked_plans()
         for line, quoted in unresolved_outcome_names(
             path.read_text(encoding="utf-8"), names, modules
