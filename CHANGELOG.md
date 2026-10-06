@@ -19,6 +19,59 @@ Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before t
 version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
 
+## [0.5.0-alpha.4] - 2026-10-06
+
+WP38: the `io` split (`SPECIFICATION.md` §5.1; §8.2.8 H1, H6, H12; §8.2.9 I3). `io` is the base
+layer, directly above `core`, and a new subpackage, `nanopnp.pipeline`, is the assembler above the
+stages. It fixes `MOD-04`, `MOD-15`, the `io/case.py` part of `MOD-13`, and `MOD-03`, whose only
+upward edge left is `cli -> nanopnp`. It resolves REV-03, REV-27, REV-54 and REV-63, extending
+VER-45, VER-61, VER-64 and VER-65. No number moves, and no artefact key changes (VER-62).
+
+### Added
+
+- **`nanopnp validate case <file>`** loads and resolves a case and makes every check a run makes
+  before it meshes, printing the model, the stabilisation and the stages a run would walk; a
+  refusal exits 3 with a run's text. `--json` prints the same as an object (REV-27).
+
+### Changed
+
+- **A stage is handed the resolved case.** `StageInputs(case=…)` is `StageInputs(resolved=…)`, a
+  `ResolvedCase` the assembler builds once, and `solve.state.restore` takes `resolved=`. Anyone
+  implementing `Stage` reads `inputs.resolved` rather than resolving `inputs.case`.
+- **`ResolvedCase.physics_model()` and `.model_declaration()` are removed.** The declaration and
+  the essential boundaries are the fields `ResolvedCase.declaration` and
+  `ResolvedCase.essential_boundaries`, and `physics.models.case_model(resolved)` builds the model.
+- **`load_case` and `loads_case` refuse an inf-sup-unstable element pair**, and an unregistered
+  model, stabilisation mode or linear solver, when the case is loaded rather than when it is
+  resolved; the text is unchanged (NUM-03, IF-03). The desktop shell's commit refuses them too
+  (QR-11). A document with an uninstalled correction or parameter file reports that first, alone.
+- **`nanopnp run --upto X` walks the stages X reads, and no others** (REV-63): `--upto protonation`
+  on example 07 is `case`, `structure`, `protonation`. `--upto materials` therefore no longer
+  meshes or builds the charge. Each stage is handed only the artefacts it declares; `solve`
+  declares `charge`, and `qoi` and `report` declare `mesh` and `charge` (FR-27, VER-64).
+- **`pipeline.run.stored_upstream` takes `feeding=`**, the stage whose inputs it gathers (`"solve"`
+  by default), instead of walking to `materials`.
+- The solution-field names `POTENTIAL`, `VELOCITY`, `VELOCITY_AXIS`, `PRESSURE` and
+  `PRESSURE_MEAN` live in `nanopnp.io.vocabulary` (REV-03). `physics.models` no longer exports
+  `VELOCITY_AXIS` or `PRESSURE_MEAN`.
+- Six of `PUBLIC`'s module strings move: `load_case`, `loads_case` and `resolve` are at
+  `nanopnp.pipeline.case`, and `run_case`, `run_document` and `RunResult` at
+  `nanopnp.pipeline.run`. Their meaning is unchanged, and `from nanopnp import …` is unaffected.
+  The type-checker mirror is checked module by module (REV-54, VER-45).
+- No import path is kept at an old location (IF-01: internal paths are not API):
+
+  | Was | Is |
+  |---|---|
+  | `nanopnp.io.case`'s `load_case`, `loads_case`, `resolve`, `CaseStage`, `GRID_SPACING_RANGE_NM` | `nanopnp.pipeline.case` |
+  | `nanopnp.io.case`'s `registry_options`, `options_at`, `PROFILE_KEYS`, `SMEARING_KEYS`, `PROTONATION_KEYS` | `nanopnp.pipeline.checks` |
+  | `nanopnp.io.case`'s `ResolvedCase`, `ResolvedStructure`, `ResolvedProtonation`, `SOLVE_IRRELEVANT_PROVENANCE`, `parse_chains` | `nanopnp.io.resolved` |
+  | `nanopnp.io.case`'s `UnknownCasePathError`, `FieldReference`, `field_at`, `case_fields`, `schema_default`, `field_description`, `field_bounds`, `value_at`, `substitute`, `with_profile`, `with_section`, `NEUTRAL_SECTIONS`, `SEQUENCE_INDEX` | `nanopnp.io.case_paths` |
+  | `nanopnp.io.case.build_model` | `nanopnp.physics.models.build_case_model` |
+  | `nanopnp.io.run` | `nanopnp.pipeline.run` |
+  | `nanopnp.io.reproduce` | `nanopnp.pipeline.reproduce` |
+  | `nanopnp.io.fields` | `nanopnp.post.export` |
+  | `nanopnp.mesh.primitives`'s `POTENTIAL`, `VELOCITY`, `VELOCITY_AXIS`; `nanopnp.physics.models`'s `PRESSURE`, `PRESSURE_MEAN` | `nanopnp.io.vocabulary` |
+
 ## [0.5.0-alpha.3] - 2026-10-06
 
 WP37: the cycle cuts outside `io`, the exit codes, and the backend guard (`SPECIFICATION.md`

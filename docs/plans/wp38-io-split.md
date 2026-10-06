@@ -1,6 +1,6 @@
 # WP38 — The `io` split
 
-**Status: planned, not started.** Written 6 October 2026 on `claude/wp-plan-38-gm0s7s` at
+**Status: delivered, 6 October 2026.** Written 6 October 2026 on `claude/wp-plan-38-gm0s7s` at
 `fd4308f`, after WP37 merged as `v0.5.0-alpha.3` and the Phase 4 plan was amended for the review
 register (§8.2.9). It inherits everything the [current brief](current.md) lists as not to be
 re-decided, and in particular:
@@ -90,6 +90,39 @@ No `OPN-` is open here. The phase plan's open decision "the base half of `io`" c
 | D17 | Numbers and keys | Zero drift: VER-62 at 10⁻⁸, and no artefact key changes. A key that moves is an Outcome to explain, not a value to re-pin | Keys are taken from the document and from `provenance`, neither of which changes. `StageInputs` is not hashed. G10 |
 | D18 | Records | `MOD-03` (per D15), `MOD-04`, `MOD-13` and `MOD-15` become `fixed`. `MOD-13`'s remainder stays deferred by H1, to Phase 5 and Phase 6. REV-03, REV-27, REV-54 and REV-63 become `fixed`, and REV-27's section records D8's reading of "`nanopnp validate`" | VER-63; §8.2.8 H12 |
 | D19 | Release | `v0.5.0-alpha.4`, with a `CHANGELOG.md` section listing the breaks above and a table of moves | §2.7; G11 |
+
+> **Outcome — the author ruled open question 1: `nanopnp validate case <file>` is added (D8).** It
+> loads and resolves the case, so it makes the registry, element-order and inf-sup checks and every
+> check `resolve` makes against the parameter file, and prints the model, the stabilisation and the
+> stages a run walks; a refusal exits 3 with a run's text (`tests/tier1/test_cli.py`). D8's
+> "no new command" no longer holds; REV-27's section records the ruling.
+
+> **Outcome — `build_model` became `physics.models.build_case_model`, beside `case_model` (D5).**
+> `resolve` builds the model before the `ResolvedCase` exists, to fill `declaration` and
+> `essential_boundaries` and to surface a builder's refusal, so it calls `build_case_model` on the
+> parts. `case_model(resolved)` calls the same function, for `solve/state.py` and the stages. There
+> is still one place a case's model is built.
+
+> **Outcome — a document failing both a structural check and a registry check reports the
+> structural one alone (D7).** The installed-file checks (corrections, parameters, outputs) stay in
+> the schema and the three registry checks run after it, so a document naming both an uninstalled
+> correction file and an unregistered model is refused for the correction file only, where the
+> schema used to list both in one refusal. Each refusal's text is unchanged; the second appears
+> once the first is fixed.
+
+> **Outcome — `--upto materials` no longer stages the solve's inputs (D11), so `stored_upstream`
+> takes `feeding=`.** A sweep keyed a warm-start parent by walking it to `materials`, which used
+> to mesh and build the charge on the way; under the closure that walk is `case`, `materials`, and
+> the parent's solve key could not be made, which the sweep runner takes as a cold start: a
+> silently slower sweep, not a failure. `pipeline.run.stored_upstream(…, feeding="solve")` walks
+> the closure of the stage it feeds instead, and the shell's assessment uses `feeding="contour"`.
+> `tests/tier2/test_exclusion_keys.py` and example 04's `tour.py` keyed the solve the same way and
+> now walk to `charge` (or `mesh`) and then to `materials`; the keys equal `KEYS_V2` unchanged.
+
+> **Outcome — the modules D14 bounds, measured.** `io/case.py` 1,058 lines, `io/case_paths.py`
+> 676, `io/resolved.py` 280, `pipeline/checks.py` 954, `pipeline/case.py` 436; `pipeline/run.py`
+> is 1,119. All are under 1,266 (`tests/tier1/test_layering.py`). `pipeline/checks.py` is larger
+> than predicted because the pure checks `resolve` calls went with it, as *Design* §2 says.
 
 ### Work items
 

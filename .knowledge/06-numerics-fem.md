@@ -1434,8 +1434,8 @@ Measured under WP11 on the toy pore (`a` = 2 nm, `L` = 6 nm, reservoir 10 nm) at
   key needs the mesh artefact, and a generated mesh exists only as stage 6's stored artefact, keyed
   on the stage-5 recipe. Keying the parent from its bare case raised for every such sweep, and the
   runner's broad `except` turned that into a cold start, so every member climbed the ladder:
-  44 Newton iterations instead of 5 on the Tier-1 synthetic profile. `io.run.stored_upstream` now
-  keys the parent's walk through `materials` with every payload taken from the store, and only a
+  44 Newton iterations instead of 5 on the Tier-1 synthetic profile. `pipeline.run.stored_upstream` now
+  keys the parent's walk through the solve's inputs with every payload taken from the store, and only a
   missing artefact is a cold fallback (CR-1, `tests/tier2/test_sweep_generated_mesh.py`).
 
 ### 8.4.1 A sweep axis over a space key severs the forest, and the gate that fires is `fields` **[tested]**

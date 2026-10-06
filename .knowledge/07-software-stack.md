@@ -854,7 +854,7 @@ because it carries only the retained elements.
 That matters for honesty rather than for size. A field declared on the fluid alone evaluates to
 zero inside the membrane, and a whole-mesh draw of a concentration therefore paints a zero *inside
 a wall* that a reader cannot distinguish from a converged depletion — which is the same trap
-`io/fields.py` documents for the IF-07 export, and it is avoided the same way.
+`post/export.py` documents for the IF-07 export, and it is avoided the same way.
 
 The same call draws a **two-component vector** field without special handling: all five fields of
 the `epnp-ns` family (the potential, two concentrations, the velocity and the pressure) produce a
@@ -1040,9 +1040,13 @@ PyYAML building the `nanopnp/case/v1` model tree, paid once.
 
 So a caller can enumerate, display and validate an entire case document without the solver — which
 is what lets a schema-generated editor stay near the CLI's 56 ms stage-introspection budget in
-spirit, with NGSolve imported only in whatever process actually solves. Note that `io/case.py` does
-import `nanopnp.physics.models` at module scope for its registry check; that module defers its own
-NGSolve import, which is why the claim above holds.
+spirit, with NGSolve imported only in whatever process actually solves. `io/case.py` imports only
+`core` at run time: the registry checks that need `materials` and `physics` live in
+`pipeline/checks.py`. After `import nanopnp.io.case` the only `nanopnp` subpackages in
+`sys.modules` are `core` and `io` **[tested]**, 6 October 2026. `import nanopnp.pipeline.case`,
+which `load_case` and `resolve` come from, also loads `charge`, `density`, `geometry`, `materials`,
+`mesh`, `numerics` and `physics`, and still leaves `ngsolve` and `numpy` out of `sys.modules`; that
+holds because those modules defer their own NGSolve and NumPy imports.
 
 **Re-measured 20 September 2026 on an idle container: 349 ms cold (no `__pycache__`), 253 ms warm**,
 against the 622 ms first recorded the same day. Neither cache state reproduces 622 ms here, so that
@@ -1059,7 +1063,7 @@ Measured 20 September 2026, best of three on an idle container, warm cache:
 |---|---|---|
 | `nanopnp.io.case` | 253 ms | pydantic and PyYAML building the `nanopnp/case/v1` model tree |
 | `nanopnp.gui.case_model` | 251 ms | the above, and about a millisecond of its own |
-| `nanopnp.gui.run_model` | 273 ms | the above, plus `io/manifest.py` and `io/run.py` |
+| `nanopnp.gui.run_model` | 273 ms | the above, plus `io/manifest.py` and `pipeline/run.py` |
 | `nanopnp.gui.solver` | 73 ms | `core/errors.py` and `multiprocessing`; everything else is deferred into the child |
 | `nanopnp.gui.probe` | 59 ms | `core/paths.py` only — every payload is deferred |
 | `nanopnp.cli` | 62 ms | the comparison, and the budget the deferred-import rule protects |
@@ -1203,7 +1207,7 @@ is `$NANOPNP_STORE` or `./nanopnp-store`, the *process* default, never the `Stor
 handed the run. Running the test suite from a checkout therefore left a `nanopnp-store/tmp/mesh-*`
 behind while every artefact lived in a `tmp_path` store.
 
-`io.run.run_case` now names a fresh workspace under the store in use when the caller gives none.
+`pipeline.run.run_case` now names a fresh workspace under the store in use when the caller gives none.
 Fresh per run and not a fixed `tmp/mesh`: two runs into one store hold different meshes, and a
 deterministic name has the second overwrite a file the first's artefact still points at.
 

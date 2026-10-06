@@ -1,6 +1,6 @@
 # Current work
 
-Updated 6 October 2026 (WP38 planned). Navigation only; `SPECIFICATION.md` governs;
+Updated 6 October 2026 (WP38 delivered, awaiting `/wp-ship`). Navigation only; `SPECIFICATION.md` governs;
 nothing here is evidence an unmerged branch shipped.
 
 ## Position
@@ -10,9 +10,10 @@ nothing here is evidence an unmerged branch shipped.
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
   **in progress** (§8.2.7 G1–G11; §8.2.8 H1–H12; §8.2.9 I1–I5). WP35 to WP37 merged as
   `v0.5.0-alpha.1` to `v0.5.0-alpha.3`.
-- **Next: `/wp-implement`** of [WP38, the `io` split](wp38-io-split.md), planned 6 October 2026:
-  `io` becomes the base above `core`, a new `pipeline/` the assembler; stages are handed the
-  resolved case (`StageInputs.resolved`); REV-03, REV-27, REV-54, REV-63. Then WP39 (registries;
+- [WP38, the `io` split](wp38-io-split.md), is delivered on its branch and awaits `/wp-ship`, to
+  be tagged `v0.5.0-alpha.4`: `io` is the base above `core`, `pipeline/` the assembler; stages are
+  handed `StageInputs.resolved`; a walk runs its target's input closure; `nanopnp validate case`.
+- **Next: `/wp-plan 39`**, after WP38 merges. Then WP39 (registries;
   H6 asserted), WP40 (refusals), WP41–WP43 (accuracy, verification and small fixes from the review
   register; I1, I2), WP44–WP46 (OKF bundle, backfill, protocol); then the author's sessions and
   the second amendment, numbering the fixes from WP47.
@@ -39,7 +40,8 @@ nothing here is evidence an unmerged branch shipped.
   is resolved (H12), written by `/wp-implement` and `/wp-ship`. A row placed in Phase 4 is
   `fixed` by the close (§8.2.9 I3).
 - **A stage declares its walk facts in the registry and defines `key`.** The walk runs stages in
-  registration order (VER-64; WP36 D3–D5).
+  registration order (VER-64; WP36 D3–D5). A stage declares every upstream artefact it reads and is
+  handed only those; a walk runs its target's input closure (WP38 D11).
 - **Tier 3 compares the published I–V and in-pore averages**, gating v0.7 (VAL-16, VAL-17; F1).
 - **Layers read a model's declaration, never its name or class** (VER-56). → §5.4.3 NOTE.
 - **Only `poisson` adds a quadrature order for the `r` weight**; Phase 6 decides (E4, F1).
@@ -76,8 +78,8 @@ nothing here is evidence an unmerged branch shipped.
 | Phase 4 scope and packages | `phase-4-polish-and-user-testing.md`; §8.2.6 F3–F6, §8.2.7, §8.2.8 |
 | The OKF package's binding decisions | `okf-knowledge-bundle.md` (K1–K11); §8.2.7 G3, G8, G9 |
 | The findings being fixed | `docs/project/modularity.md`, `modularity-layering.yaml`; `review-items.md` and the two logs |
-| Stages, registries and the walk | `core/stages.py`; `io/run.py` (`pipeline/run.py` from WP38); `physics/models.py` and `docs/project/physics-models.md`; `materials/models.py` |
-| Case schema and supply chains | §5.3.1 NOTEs; `io/case.py` (split by WP38 D2, D3) |
+| Stages, registries and the walk | `core/stages.py`; `pipeline/run.py`; `physics/models.py` and `docs/project/physics-models.md`; `materials/models.py` |
+| Case schema and supply chains | §5.3.1 NOTEs; `io/case.py`, `io/case_paths.py`, `io/resolved.py` (the base); `pipeline/case.py`, `pipeline/checks.py` (resolution and its checks; WP39's registries replace three of them) |
 
 The Outcomes of a delivered plan override its decisions table, so read the two together.
 
