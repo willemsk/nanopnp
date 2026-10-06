@@ -180,6 +180,16 @@ register_solver("umfpack", UmfpackSolver)
 register_solver("superlu", SuperluSolver)
 
 
+def rejection(name: str) -> str | None:
+    """Return NUM-21's reason for refusing an unregistered ``name``, or ``None``.
+
+    ``None`` for a registered solver, and for a name NUM-21 says nothing about,
+    which is refused as unknown instead. The one reading of the rejected table
+    that :func:`check_solver` and the case checks share.
+    """
+    return None if name in _REGISTRY else _REJECTED.get(name)
+
+
 def check_solver(name: str) -> str:
     """Return ``name`` if it is usable on this build, else explain why it is not.
 
@@ -191,8 +201,9 @@ def check_solver(name: str) -> str:
     """
     if name in _REGISTRY:
         return name
-    if name in _REJECTED:
-        raise ValueError(f"linear solver {name!r} is not usable: {_REJECTED[name]}")
+    reason = rejection(name)
+    if reason is not None:
+        raise ValueError(f"linear solver {name!r} is not usable: {reason}")
     known = list(registered_solvers())
     raise ValueError(f"unknown linear solver {name!r}; this build offers {known}")
 

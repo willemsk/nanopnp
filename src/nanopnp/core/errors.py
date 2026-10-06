@@ -268,10 +268,10 @@ EXCLUDED: Final[dict[str, str]] = {
         "raised only when the VER-62 golden's merge script folds a recorded walk in; no command "
         "of the CLI reads or writes the number-stability golden"
     ),
-    "nanopnp.mesh.gmsh_backend:GmshInitializationError": (
+    "nanopnp.mesh.gmsh_backend:GmshInitialisationError": (
         "an internal backend error caught by the Gmsh mesher entry and translated into "
         "MissingExtraError naming gmsh (D11 b); it never reaches the CLI directly, and "
-        "MissingExtraError is already classified as EXIT_EXTRA"
+        "MissingExtraError is already classified, as EXIT_CASE"
     ),
 }
 """Public exception classes deliberately left unclassified, with the reason.

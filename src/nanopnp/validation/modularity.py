@@ -1263,18 +1263,13 @@ class Surface:
 def surface(root: Path | None = None, sources: Mapping[str, str] | None = None) -> Surface:
     """Return the public surface as ``core/public.py`` and the facade write it."""
     modules = _module_map(parse_package(root, sources))
-    init = modules.get(ROOT_NODE)
-    public_mod = modules.get(f"{ROOT_NODE}.core.public")
+    init = modules[ROOT_NODE]
+    home = modules.get("core/public.py")
     public: list[tuple[str, str]] = []
     mirror: list[tuple[str, str]] = []
-
-    nodes_for_public: list[ast.stmt] = []
-    if public_mod is not None:
-        nodes_for_public.extend(public_mod.tree.body)
-    if init is not None:
-        nodes_for_public.extend(init.tree.body)
-
-    for node in nodes_for_public:
+    # ``core/public.py`` first, where WP39 D9 placed ``PUBLIC``; the facade's own
+    # body is read too, so that a package which assigns it there is measured.
+    for node in [*(home.tree.body if home is not None else []), *init.tree.body]:
         assigned = _assignment(node)
         if assigned is not None and assigned[0] == "PUBLIC" and isinstance(assigned[1], ast.Dict):
             public = [
@@ -1283,16 +1278,14 @@ def surface(root: Path | None = None, sources: Mapping[str, str] | None = None) 
                 if isinstance(key, ast.Constant)
             ]
             break
-
-    if init is not None:
-        for node in init.tree.body:
-            if isinstance(node, ast.If) and _is_type_checking(node.test):
-                mirror = [
-                    (alias.asname or alias.name, statement.module or "")
-                    for statement in node.body
-                    if isinstance(statement, ast.ImportFrom)
-                    for alias in statement.names
-                ]
+    for node in init.tree.body:
+        if isinstance(node, ast.If) and _is_type_checking(node.test):
+            mirror = [
+                (alias.asname or alias.name, statement.module or "")
+                for statement in node.body
+                if isinstance(statement, ast.ImportFrom)
+                for alias in statement.names
+            ]
     names = tuple(name for name, _ in public)
     outside = tuple(name for name in ("with_section", "register") if name not in names)
     return Surface(

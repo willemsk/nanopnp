@@ -25,7 +25,9 @@ from nanopnp.io.case import CaseDocument, CaseValidationError
 from nanopnp.io.store import Store
 from nanopnp.mesh import meshers
 from nanopnp.mesh.adapter import read as read_mesh
+from nanopnp.mesh.generate import sizing_parameters
 from nanopnp.mesh.meshers import create_mesher, register_mesher
+from nanopnp.mesh.sizing import SIZES, WallSize
 from nanopnp.numerics import linear
 from nanopnp.numerics.linear import create_solver, register_solver
 from nanopnp.physics import stabilisation as stabilisation_mod
@@ -136,15 +138,18 @@ def registered_stubs() -> Iterator[tuple[_StubMesher, _StubSolver, _StubStabilis
     solver = _StubSolver("umfpack")
     stabilisation = _StubStabilisation("none")
 
-    register_mesher("stub-mesher", lambda: mesher)
-    register_solver("stub-solver", lambda: solver)
-    register_stabilisation("stub-mode", lambda: stabilisation)
+    # Registered inside the ``try``, so that one refused registration cannot
+    # leave the others behind for the rest of the session, where the exact
+    # registered tuples of ``test_linear_solver.py`` would then fail.
     try:
+        register_mesher("stub-mesher", lambda: mesher)
+        register_solver("stub-solver", lambda: solver)
+        register_stabilisation("stub-mode", lambda: stabilisation)
         yield mesher, solver, stabilisation
     finally:
-        del meshers._REGISTRY["stub-mesher"]
-        del linear._REGISTRY["stub-solver"]
-        del stabilisation_mod._REGISTRY["stub-mode"]
+        meshers._REGISTRY.pop("stub-mesher", None)
+        linear._REGISTRY.pop("stub-solver", None)
+        stabilisation_mod._REGISTRY.pop("stub-mode", None)
 
 
 @pytest.fixture(scope="module")
@@ -430,6 +435,56 @@ numerics:
     assert code == EXIT_CASE
     captured = capsys.readouterr()
     assert expected_fragment in captured.err
+
+
+def test_ver66_an_unregistered_rejected_solver_is_refused_naming_num21(
+    capsys: pytest.CaptureFixture[str], tmp_path: Path
+) -> None:
+    """``mumps``, unregistered, is refused with NUM-21's reason, not as merely unknown (D3, D7)."""
+    fixture_path = profile_file("clya_reference_profile")
+    case_text = f"""\
+schema: nanopnp/case/v2
+name: rejected-solver
+inputs:
+  profile: {{path: {fixture_path}}}
+electrolyte:
+  species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
+  concentration_M: 1.0
+  parameters: willems2020_nacl
+boundary_conditions: {{bias_V: 0.1}}
+physics: {{model: pnp-ns, solid_permittivities: {{protein: 20.0, membrane: 3.2}}}}
+numerics:
+  linear: {{solver: mumps}}
+"""
+    expected = (
+        "numerics.linear.solver 'mumps' is not usable: MUMPS is absent from the NGSolve wheel"
+    )
+    with pytest.raises(CaseValidationError) as caught:
+        loads_case(case_text)
+    assert expected in str(caught.value)
+    assert "NUM-21" in str(caught.value)
+    case_file = tmp_path / "case.yaml"
+    case_file.write_text(case_text, encoding="utf-8")
+    assert main(["validate", "case", str(case_file)]) == EXIT_CASE
+    assert expected in capsys.readouterr().err
+
+
+def test_ver66_a_mesher_naming_a_common_recipe_entry_is_refused() -> None:
+    """A mesher's settings cannot overwrite the recipe entries every backend shares (D2)."""
+
+    class Clashing:
+        name = "clashing"
+
+        def settings(self, *, exclusion: bool = False) -> dict[str, object]:
+            return {"backend": "netgen", "optsteps2d": 5}
+
+    register_mesher("clashing", Clashing)  # type: ignore[arg-type]
+    try:
+        wall = WallSize(wall_h_nm=0.1, source="explicit", debye_length_nm=0.5, size_scale=1.0)
+        with pytest.raises(ValueError, match="mesher 'clashing' returns settings backend"):
+            sizing_parameters(wall, SIZES, "clashing")
+    finally:
+        meshers._REGISTRY.pop("clashing", None)
 
 
 def test_ver66_registered_meshers_in_fresh_process_imports_no_backend() -> None:

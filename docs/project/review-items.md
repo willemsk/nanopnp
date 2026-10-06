@@ -368,22 +368,22 @@ VAL-05 files.
 repository holds a logger.
 
 **Resolved.** WP39 D11: a borrowed session leaves the caller's logger untouched; `start()` and `stop()` are only called for sessions owned by nanopnp.
- 
+
 ### REV-37 — A broken gmsh wheel is not a refusal
- 
+
 *Area:* interface. *Severity:* low. *Found:* PR #47 (WP23), a review finding not fixed.
- 
+
 **Measured.** A gmsh wheel that imports but fails to initialise surfaces as an exception, not as
 `MissingExtraError` naming the extra.
- 
-**Resolved.** WP39 D11: `gmsh.initialize()` failure raises `GmshInitializationError`, which `meshers.py` translates to `MissingExtraError` naming `gmsh` and the underlying error.
- 
+
+**Resolved.** WP39 D11: `gmsh.initialize()` failure raises `GmshInitialisationError`, which `meshers.py` translates to `MissingExtraError` naming `gmsh` and the underlying error.
+
 ### REV-38 — gmsh.model.remove() can mask the error it follows
- 
+
 *Area:* interface. *Severity:* low. *Found:* PR #47 (WP23), a review finding not fixed.
- 
+
 **Measured.** The cleanup's `gmsh.model.remove()` can raise over the error that triggered it.
- 
+
 **Resolved.** WP39 D11: `_session` runs each cleanup step in sequence; if an exception is active, cleanup failures are logged at WARNING and added via `add_note`, never masking the original exception.
 
 ### REV-39 — A case supplying inputs.profile gets no contour editor
@@ -645,7 +645,7 @@ The document is refused either way; only the first diagnostic misleads (QR-12).
 
 ### REV-67 — Public registration functions for backend registries (MOD-11)
 
-*Area:* interface. *Severity:* low. *Found:* WP39 (PR #83); verified open at `WP39`.
+*Area:* interface. *Severity:* low. *Found:* WP39 (PR #84); verified open at `WP39`.
 
 **Measured.** WP39 added six internal registration functions across `mesh/meshers.py` and
 `numerics/linear.py` (`register_mesher`, `registered_meshers`, `create_mesher`, `register_solver`,

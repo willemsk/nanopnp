@@ -96,7 +96,7 @@ No `OPN-` is open here. The phase plan's open decision on the coupling target is
 > `MeshSpec.backend`, `LinearSpec.solver` and `NumericsSpec.stabilisation` are `str` in `io/case.py`.
 > `pipeline/checks.py` validates them via `check_document`, preserving specific refusal texts (IF-03).
 > `registry_options` maps the three paths, and the GUI viewmodels read live registries (`registered_meshers()`,
-> `registered_solvers()`, `registered_modes()`) without hard-coded choices (QR-11, VER-43).
+> `registered_solvers()`, `registered_stabilisations()`) without hard-coded choices (QR-11, VER-43).
 
 > **Outcome — VER-24 switch classification preserved under stringification (D8).**
 > `tests/tier1/test_manifest.py`'s `_is_switch` checks `registry_options` for `str` annotations,
@@ -111,7 +111,7 @@ No `OPN-` is open here. The phase plan's open decision on the coupling target is
 
 > **Outcome — Gmsh session cleanup hardened against logger corruption and masked exceptions (D11).**
 > In `gmsh_backend._session`, borrowed sessions leave caller loggers untouched (REV-36).
-> `gmsh.initialize()` failures raise `GmshInitializationError`, translated to `MissingExtraError` (REV-37).
+> `gmsh.initialize()` failures raise `GmshInitialisationError`, translated to `MissingExtraError` (REV-37).
 > All cleanup steps run sequentially; failures are logged at WARNING and attached via `add_note`
 > to active exceptions, ensuring the session is always finalised without masking the error (REV-38).
 

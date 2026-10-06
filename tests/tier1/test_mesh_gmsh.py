@@ -463,6 +463,52 @@ def test_ver54_initialize_failure_gives_missing_extra_error(
     message = str(caught.value)
     assert "'gmsh' extra" in message
     assert "simulated initialize failure" in message
+    # The remedy is the initialisation's, not the missing module's: installing
+    # the extra again would not change a wheel that loads and fails to start.
+    assert "initialising gmsh failed with GmshInitialisationError" in message
+    assert "failed to initialise" in message
+    assert "uv sync --all-extras" not in message
+
+
+def test_ver54_a_setup_failure_finalises_an_opened_session(gmsh_module: ModuleType) -> None:
+    """An option the installed Gmsh lacks still leaves no session open (REV-38, D11 c)."""
+    from nanopnp.mesh import gmsh_backend as backend
+
+    if gmsh_module.isInitialized():
+        gmsh_module.finalize()
+    with (
+        pytest.raises(Exception, match=r"Mesh\.NoSuchOption"),
+        backend._session({"Mesh.NoSuchOption": 1.0}),
+    ):
+        pass  # pragma: no cover - the session refuses the option on entry
+    assert not gmsh_module.isInitialized()
+
+
+def test_ver54_a_borrowed_session_keeps_the_callers_model_on_a_setup_failure(
+    gmsh_module: ModuleType, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A model that was never added is never removed: the caller's survives, its error first."""
+    from nanopnp.mesh import gmsh_backend as backend
+
+    gmsh_module.initialize(readConfigFiles=False, interruptible=False)
+    try:
+        gmsh_module.model.add("caller")
+
+        def refuse(name: str) -> None:
+            raise Exception("add failed by test")
+
+        monkeypatch.setattr(gmsh_module.model, "add", refuse)
+        with (
+            pytest.raises(Exception, match="add failed by test"),
+            backend._session({"Mesh.Algorithm": 6}),
+        ):
+            pass  # pragma: no cover - the session fails on entry
+        monkeypatch.undo()
+        assert "caller" in gmsh_module.model.list()
+        assert gmsh_module.model.getCurrent() == "caller"
+    finally:
+        if gmsh_module.isInitialized():
+            gmsh_module.finalize()
 
 
 def test_ver54_model_remove_failure_handled_in_failing_and_successful_mesh(
