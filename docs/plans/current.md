@@ -1,6 +1,6 @@
 # Current work
 
-Updated 5 October 2026 (WP36 delivered). Navigation only; `SPECIFICATION.md`
+Updated 6 October 2026 (WP37 planned). Navigation only; `SPECIFICATION.md`
 governs; nothing here is evidence an unmerged branch shipped.
 
 ## Position
@@ -8,14 +8,11 @@ governs; nothing here is evidence an unmerged branch shipped.
 - Phases 1 to 3 are **closed** as `v0.2.0`, `v0.3.0` (criterion 3 waived, §8.2.4 D7) and `v0.4.0`
   (§8.2.5 E1, E5).
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
-  **in progress** (§8.2.7 G1–G11; §8.2.8 H1–H9). WP35 merged as
-  `v0.5.0-alpha.1`, and the author has ruled all 18 `MOD-nn` (§8.2.8; `MOD-18`, from WP36's review, by H10). WP36, the stage protocol
-  and the walk (`MOD-01`, `MOD-02`, `MOD-12`; VER-64; [plan](wp36-stage-protocol-and-walk.md)), is
-  delivered, to be tagged `v0.5.0-alpha.2`.
-- **Next: `/wp-ship`** for WP36, then `/wp-plan 37`: WP37 (cycle cuts, exit codes, backend
-  guard), WP38 (`io` split), WP39 (backend registries; H6 measured), WP40 (stale refusals), WP41
-  (OKF bundle), WP42 (backfill), WP43 (user-testing protocol). Then the author's sessions, and a
-  second amendment plans the fixes and the close.
+  **in progress** (§8.2.7 G1–G11; §8.2.8 H1–H11). WP35 merged as `v0.5.0-alpha.1`, WP36
+  as `a346419`, to be tagged `v0.5.0-alpha.2`. All 18 `MOD-nn` are ruled.
+- **Next: `/wp-implement 37`** ([plan](wp37-cycle-cuts-exit-codes-backend-guard.md); H11):
+  upward cuts outside `io`, `numerics/`, `core/errors.py`, VER-65. Then WP38 (`io` split), WP39
+  (registries; H6 measured), WP40–WP43; then the author's sessions and a second amendment.
 - Phase 5 (`v0.6.0`) is the GUI (F5), Phase 6 (`v0.7.0`) validation (F1); v1.0 is OPN-08.
 
 ## Not to be re-decided
@@ -29,7 +26,8 @@ Each is recorded in full where it points.
   author's sessions (G7); the VER-62 golden (G10). → §8.2.7.
 - **The `MOD-nn` rulings:** `MOD-09` and `MOD-18` go to Phase 5 (H4, H10); `MOD-11` waits for the sessions (H2); QR-13 restated and the backend
   confined (H3); an acyclic `top` relation, a miss ruled, never forced (H6); three backend
-  registries, no schema move (H7). → §8.2.8.
+  registries, no schema move (H7); cuts follow the order, and the solver kernel is `numerics/`,
+  after `mesh` (H11). → §8.2.8.
 - **Phase 3's charge pipeline**: the kernel on the deployed mesh, protonation per frame, VAL-06's
   tolerance, WP30's switches off, charges read from artefacts. → §8.2.4; VER-59, VER-60.
 - **No payload records wall-clock time** (VER-23). **A gated test gets cheaper

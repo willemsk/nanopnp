@@ -86,10 +86,11 @@ it. `git commit --no-verify`
 - `symmetry/` — Cₙ averaging, azimuthal reduction to (r, z), variance diagnostics
 - `geometry/` — contour extraction, polyline conditioning, CAD assembly, analyte bodies
 - `mesh/` — mesher adapters (netgen, gmsh), size fields, boundary layers, quality gates
+- `numerics/` — linear-solver adapters, damped Newton, state and increment gates, the axisymmetric measure
 - `charge/` — PDB2PQR driver, partial charges, smearing, axisymmetric projection, dielectric
 - `materials/` — electrolyte models and the pluggable correction registry
-- `physics/` — weak forms: Poisson, Nernst–Planck, Navier–Stokes; axisymmetric measures
-- `solve/` — backend adapters, continuation ladder, nonlinear and linear strategies, warm start
+- `physics/` — weak forms: Poisson, Nernst–Planck, Navier–Stokes; the wall-distance field
+- `solve/` — continuation ladder, warm start, the solve stage
 - `post/` — QoI extraction: current, transport number, EOF, rectification, forces
 - `sweep/` — parameter sweeps, job-array dispatch, result collection
 - `io/` — case-file schema, result store, provenance manifests

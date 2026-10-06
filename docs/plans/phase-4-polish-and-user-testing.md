@@ -5,7 +5,7 @@ same day, after the author ruled every `MOD-nn` (§8.2.8).
 Delivered: WP35, the modularity exploration
 ([wp35-modularity-exploration.md](wp35-modularity-exploration.md)), tagged `v0.5.0-alpha.1`;
 WP36, the stage protocol and the walk ([wp36-stage-protocol-and-walk.md](wp36-stage-protocol-and-walk.md)).
-Planned: WP37, the cycle cuts, the exit codes and the
+Planned: WP37 ([wp37-cycle-cuts-exit-codes-backend-guard.md](wp37-cycle-cuts-exit-codes-backend-guard.md)), the cycle cuts, the exit codes and the
 backend guard; WP38, the `io` split; WP39, the backend registries; WP40, the stale refusals; WP41,
 the OKF bundle; WP42, its backfill; WP43, the user-testing protocol. Provisional, and planned by the
 second `/phase-plan amend 4` once the author has run the sessions and ruled every `UT-nn`: the
@@ -270,6 +270,8 @@ missing a fact. VER-62 must show zero drift: the walk's order does not change.
 
 ### WP37 — The cycle cuts outside `io`, the exit codes, and the backend guard (MOD-03, MOD-05, MOD-10; QR-13)
 
+Plan: [wp37-cycle-cuts-exit-codes-backend-guard.md](wp37-cycle-cuts-exit-codes-backend-guard.md).
+
 The single-import cuts of `MOD-03`'s table that do not start in `io`: `charge → mesh`,
 `charge → physics`, `geometry → density`, `materials → charge`, `materials → density`,
 `materials → mesh`, `mesh → materials`, `mesh → solve` and `physics → mesh`. With them, the
@@ -284,6 +286,16 @@ Each removed edge leaves `modularity-layering.yaml` in the same commit.
 subpackage that gains the import fails, naming its module and line. A recorded one that loses it
 fails until the record shrinks. Oracle: an `import ngsolve` substituted into `structure/` is
 refused. QR-13's Appendix A row names it.
+
+> **Amended, 6 October 2026** (§8.2.8 H11; [plan](wp37-cycle-cuts-exit-codes-backend-guard.md)).
+> Measured at `a346419`, the nine edges above and WP38's split leave a `top` cycle of five, through
+> `geometry ↔ mesh` and `physics ↔ solve`. The author ruled that WP37 cuts the `top` edges that
+> point up the order, outside `io`: `charge → physics`, `charge → materials`, `geometry → mesh`,
+> `mesh → materials`, `mesh → physics` and `mesh → solve`. `charge → mesh`, `geometry → density` and
+> `physics → mesh` point down and stay. The solver kernel (`gates`, `linear`, `newton`) and the
+> axisymmetric measure move to a new subpackage, `numerics/`, after `mesh` in the order. The
+> wall-distance solve goes to `physics`. VER-65's set starts at twelve, and VER-61 gains a recorded
+> list of upward `top` edges, which WP38 and WP39 shrink.
 
 ### WP38 — The `io` split (MOD-04, MOD-13 for `io/case.py`, MOD-15, and `io`'s cuts of MOD-03)
 
@@ -301,7 +313,7 @@ No new identifier: VER-61 records the new relation, and VER-62 must show zero dr
 ### WP39 — The backend registries (MOD-06, MOD-07, MOD-16; ADR-002, QR-14)
 
 The mesher, the linear solver and the stabilisation mode become registries, each in the shape of
-the nearest existing one (H5). `numerics.mesh.backend`, `numerics.linear.solver` and
+the nearest existing one (H5). The linear solver's registry lives in `numerics/linear.py` (H11). `numerics.mesh.backend`, `numerics.linear.solver` and
 `numerics.stabilisation` become strings, checked by the assembler against the registry as
 `physics.model` is. Registering the Gmsh mesher imports nothing (CON-10), and a missing extra is
 still `MissingExtraError` at use. The schema's import of `solve.linear` goes. That is the last of
@@ -430,7 +442,8 @@ Its last commit on `main` is tagged `v0.5.0` alone (G11).
 | QR-13 and `MOD-10` | Build §5.4.1, or restate QR-13 and confine the backend | **Settled by the author, 5 October 2026** (H3) |
 | Refactor sequence | Stages first, or the `io` split first | **Settled by the author, 5 October 2026** (H8) |
 | The base half of `io` | A new subpackage, or a module of `core` | **Open**, owned by WP38's `/wp-plan` |
-| The wall-distance solve's home | `physics`, `solve`, or reported back | **Open**, owned by WP37's `/wp-plan` (H6) |
+| The wall-distance solve's home | `physics`, `solve`, or reported back | **Settled by WP37's plan, 6 October 2026**: `physics/distance.py`, once the kernel is in `numerics/` (H11) |
+| WP37's edge list, and `physics ↔ solve` | The named nine, or the edges pointing up the order; how the 2-cycle is cut | **Settled by the author, 6 October 2026** (H11) |
 | Each `UT-nn` | Fix or defer | **Author**, through the second amendment |
 | Phase estimate | §8.1's "Set by the phase plan" | **Settled by the author, 5 October 2026**: 3–5 weeks (H9; §8.1, §8.3) |
 | `with_section`, `register` in `PUBLIC` | Add or keep out | Carried from WP34 D9 as `MOD-11`. **Accepted, and decided after the sessions** (H2), by the author's ruling, in a fix package |
