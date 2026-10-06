@@ -1305,5 +1305,5 @@ def main(argv: Sequence[str] | None = None) -> int:
     return code
 
 
-if __name__ == "__main__":  # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover - run as a script, never imported by a test
     sys.exit(main())

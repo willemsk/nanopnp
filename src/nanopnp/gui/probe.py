@@ -17,9 +17,10 @@ optional Gmsh backend, and PDB2PQR and PROPKA, each exercised once. :data:`PAYLO
 names that set, and ``tests/tier1/test_gui_probe.py`` reads this module's own
 import statements to assert the two cannot drift apart.
 
-**Every import is deferred.** ``PySide6.QtWidgets`` does not import at all on a
+**Every payload import is deferred.** ``PySide6.QtWidgets`` does not import at all on a
 machine without the GL libraries (`.knowledge/07-software-stack.md` §5), and
-``ngsolve`` costs ~370 ms; so nothing here is imported at module scope, and the
+``ngsolve`` costs ~370 ms; so no payload is imported at module scope, only the
+standard library and ``nanopnp.core``, and the
 Tier-1 test that reads :data:`PAYLOADS` runs on the push gate where neither can
 be imported.
 
@@ -44,10 +45,12 @@ why criterion 4 still ends at the author's double-click.
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import math
 import os
 import sys
+import tempfile
 import traceback
 from importlib import metadata
 from pathlib import Path
@@ -389,8 +392,6 @@ def exercise_payloads(only: Collection[str] | None = None) -> dict[str, str]:
         that imports and then cannot load its library is RSK-13's failure, so
         importing alone would prove nothing.
     """
-    import tempfile
-
     report: dict[str, str] = {}
     with tempfile.TemporaryDirectory(prefix="nanopnp-probe-") as scratch:
         structure = Path(scratch) / "three-atoms.pdb"
@@ -455,9 +456,6 @@ def scene_document() -> Path:
     origin to load that renderer from — the same reason the viewer loads a file
     (WP15 D9).
     """
-    import json
-    import tempfile
-
     import ngsolve
     from netgen.occ import unit_square
     from ngsolve.webgui import Draw
@@ -539,8 +537,6 @@ def _selftest(application: QApplication, window: QMainWindow) -> int:
         dependency; §8.2.1 A4's criterion is closed by the author's double-click
         either way.
     """
-    import json
-
     from PySide6 import QtCore
     from PySide6.QtWebEngineWidgets import QWebEngineView
 
