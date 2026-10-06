@@ -43,7 +43,7 @@ from nanopnp.charge.kernel import SourceAtoms, sum_kernel
 from nanopnp.core.constants import ELEMENTARY_CHARGE
 from nanopnp.density.grid import RadialGrid
 from nanopnp.mesh.adapter import MeshData, from_ngsolve, to_ngsolve
-from nanopnp.physics.measures import AXISYMMETRIC
+from nanopnp.numerics.measures import AXISYMMETRIC
 
 logger = logging.getLogger(__name__)
 

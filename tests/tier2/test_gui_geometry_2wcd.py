@@ -28,6 +28,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pytest
 
+from nanopnp.geometry.profile import load_profile
 from nanopnp.geometry.region import read_region
 from nanopnp.gui.assess import AssessRequest, assess
 from nanopnp.gui.geometry import ProfileEditor
@@ -35,7 +36,6 @@ from nanopnp.gui.solver import Cancelled, Failed, Finished, Produced, RunRequest
 from nanopnp.io.case import load_case
 from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
-from nanopnp.mesh.profile import load_profile
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
 from nanopnp.structure.ensemble import AlignedEnsemble
 from nanopnp.validation.geometry import register_by_centroid

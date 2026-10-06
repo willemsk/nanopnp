@@ -67,9 +67,7 @@ from nanopnp.core.stages import (
 )
 from nanopnp.density.radii import KERNEL_RADII, ResolvedRadii, radius_set_digest, resolve_radii
 from nanopnp.geometry.probe import probe_radius_profile
-from nanopnp.io.artefact import ProfileArtefact
-from nanopnp.io.case import ContourSpec, DensitySpec, UnsupportedCaseSection, resolve
-from nanopnp.mesh.profile import (
+from nanopnp.geometry.profile import (
     LOCAL_EDGES,
     PIPELINE_SOURCE,
     PROFILE_SCHEMA,
@@ -81,6 +79,8 @@ from nanopnp.mesh.profile import (
     signed_area,
     write_profile,
 )
+from nanopnp.io.artefact import ProfileArtefact
+from nanopnp.io.case import ContourSpec, DensitySpec, UnsupportedCaseSection, resolve
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
 from nanopnp.structure.ensemble import AlignedEnsemble
 from nanopnp.symmetry.reduce import PAYLOAD_NAME as REDUCED_PAYLOAD
@@ -510,7 +510,7 @@ def mid_planes(loops: Sequence[np.ndarray], z_nm: np.ndarray) -> np.ndarray:
 def innermost_crossings(loops: Sequence[np.ndarray], planes: np.ndarray) -> np.ndarray:
     """Return the smallest radius at which any loop crosses each plane; ``nan`` where none does.
 
-    The interval test is half-open in z, as :func:`nanopnp.mesh.profile.plane_crossings`
+    The interval test is half-open in z, as :func:`nanopnp.geometry.profile.plane_crossings`
     takes it, so a vertex on the plane is counted once.
     """
     import numpy as np

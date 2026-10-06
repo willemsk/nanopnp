@@ -35,7 +35,6 @@ from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING
 
 from nanopnp.core.scaling import debye_length_nm
-from nanopnp.materials.corrections import load_corrections
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.core.hashing import Canonicalisable
@@ -186,22 +185,30 @@ def ionic_strength_M(document: CaseDocument) -> float:
     return 0.5 * sum(species.z**2 * concentration for species in document.electrolyte.species)
 
 
-def case_debye_length_nm(document: CaseDocument) -> float:
+def case_debye_length_nm(document: CaseDocument, *, permittivity_0: float) -> float:
     """Return section 6.3's ``lambda_D`` for the case, at ``eps_r,f0`` (WP21 D7).
 
     ``sqrt(eps_0 eps_r,f0 R T / (2 F^2 I))``, through the one implementation in
     :func:`nanopnp.core.scaling.debye_length_nm`: a unit valence and the ionic
     strength in place of the concentration is the same formula for any salt.
+
+    Parameters
+    ----------
+    document
+        The validated case.
+    permittivity_0
+        ``eps_r,f0``, the solvent's infinite-dilution relative permittivity from
+        the case's parameter file: ``ResolvedCase.electrolyte.permittivity_0``.
+        Passed in so that meshing reads no correction file of its own.
     """
-    permittivity = load_corrections(document.electrolyte.parameters).solvent.permittivity.eps_r0
     return debye_length_nm(
         ionic_strength_M(document),
-        relative_permittivity=permittivity,
+        relative_permittivity=permittivity_0,
         temperature_K=document.electrolyte.temperature_K,
     )
 
 
-def resolve_wall_size(document: CaseDocument) -> WallSize:
+def resolve_wall_size(document: CaseDocument, *, permittivity_0: float) -> WallSize:
     """Return the wall target a generated mesh uses (section 5.3.1 NOTE on ``numerics.mesh``).
 
     ``auto`` is ``size_scale * min(0.05 nm, lambda_D / 5)``; an explicit number is
@@ -213,9 +220,12 @@ def resolve_wall_size(document: CaseDocument) -> WallSize:
     document
         The validated case. Taken rather than the resolved case so that a sweep
         plan can ask it of every point cheaply.
+    permittivity_0
+        ``eps_r,f0`` of the case's parameter file, as
+        :func:`case_debye_length_nm` takes it.
     """
     mesh = document.numerics.mesh
-    debye = case_debye_length_nm(document)
+    debye = case_debye_length_nm(document, permittivity_0=permittivity_0)
     if mesh.wall_h_nm == "auto":
         base = min(WALL_CEILING_NM, debye / DEBYE_FRACTION)
         source = "auto"

@@ -19,6 +19,54 @@ Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before t
 version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
 
+## [0.5.0-alpha.3] - 2026-10-06
+
+WP37: the cycle cuts outside `io`, the exit codes, and the backend guard (`SPECIFICATION.md`
+§8.2.8 H1, H3, H6, H11). It fixes `MOD-05` of the modularity findings log and works toward
+`MOD-03`, discharging VER-65 under QR-13 and extending VER-61. No number moves: the moves change no
+arithmetic, and no artefact key changes (VER-62).
+
+### Changed
+
+- **A new subpackage, `nanopnp.numerics`, holds the solver kernel**, below the weak forms and the
+  ladder (H11). Every module-scope import that pointed up the layer order outside `io` is cut, so
+  the five-subpackage cycle `MOD-03` measured outside `io` is gone. Nothing in `PUBLIC` moves, and
+  no import path is kept at an old location (IF-01: internal paths are not API). Anyone who
+  imported a moved module should import it from its new home:
+
+  | Was | Is |
+  |---|---|
+  | `nanopnp.solve.gates` | `nanopnp.numerics.gates` |
+  | `nanopnp.solve.linear` | `nanopnp.numerics.linear` |
+  | `nanopnp.solve.newton` | `nanopnp.numerics.newton` |
+  | `nanopnp.physics.measures` | `nanopnp.numerics.measures` |
+  | `nanopnp.mesh.distance` | `nanopnp.physics.distance` |
+  | `nanopnp.mesh.profile` | `nanopnp.geometry.profile` |
+  | `nanopnp.materials.fields`, except `blend` and `nearest_solid_permittivity` | `nanopnp.charge.dielectric` |
+  | `nanopnp.mesh.primitives.TOL_NM` | `nanopnp.geometry.profile.TOL_NM` |
+  | `nanopnp.physics.models`'s `POTENTIAL`, `VELOCITY`, `VELOCITY_AXIS`, `CoupledBoundaries`, `DEFAULT_BOUNDARIES` | `nanopnp.mesh.primitives` (`physics.models` still imports the last three) |
+  | `nanopnp.cli.errors` | `nanopnp.core.errors` (`cli.errors` re-exports it) |
+
+- **The exit-code table and `classify` live in `nanopnp.core.errors`** (`MOD-05`), so the sweep
+  runner, the example walker and the desktop shell no longer import the CLI. The codes are
+  unchanged (VER-47).
+- **`resolve_wall_size` and `case_debye_length_nm` take `permittivity_0`**, the case's
+  `eps_r,f0`, as a keyword argument, so meshing reads no correction file of its own. Stage 6 and
+  the mesh stage pass `resolved.electrolyte.permittivity_0`; a sweep plan reads the same number
+  from the parameter file.
+- `ResolvedCase.model_declaration()` returns the case model's declaration, beside
+  `physics_model()`.
+
+### Added
+
+- **VER-65, the backend guard** (QR-13, H3): the subpackages that import NGSolve or Netgen, in any
+  of the four kinds, equal the `backend:` list of `docs/project/modularity-layering.yaml`, twelve
+  of them. A new one fails naming the module and the line; one that stops fails until the record
+  shrinks.
+- **VER-61's upward ratchet**: the module-scope edges pointing up the layer order equal the file's
+  `upward:` list, so an import cut by moving it under `TYPE_CHECKING` cannot come back unnoticed.
+  It holds the nine edges into `io`, which WP38 cuts, and `cli -> nanopnp`.
+
 ## [0.5.0-alpha.2] - 2026-10-05
 
 WP36: the stage protocol and the walk (`SPECIFICATION.md` §8.2.8 H1). It fixes `MOD-01`,

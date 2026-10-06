@@ -13,7 +13,7 @@ coefficient array per field component, **the wall-distance coefficient vector**,
 and a descriptor naming what the arrays mean. The distance field is stored rather
 than recomputed because a residual reassembled against a freshly solved distance
 field is a different operator — the screened-Poisson solve behind
-:func:`nanopnp.mesh.distance.wall_distance` is not bit-reproducible across
+:func:`nanopnp.physics.distance.wall_distance` is not bit-reproducible across
 library versions, and a flux taken against the resulting operator would be wrong
 with no diagnostic at all.
 
@@ -49,8 +49,9 @@ from nanopnp.io.artefact import SOLUTION_SCHEMA, Artefact
 from nanopnp.io.case import resolve
 from nanopnp.mesh.ingest import deployed_mesh
 from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS
+from nanopnp.numerics.gates import FieldSampler, WallDistanceGate, WallDistanceMeasurement
+from nanopnp.numerics.measures import AXISYMMETRIC, Measures
 from nanopnp.physics.coefficients import SATURATED_WALL_DISTANCE_NM
-from nanopnp.physics.measures import AXISYMMETRIC, Measures
 from nanopnp.physics.models import (
     DEFAULT_BOUNDARIES,
     CoupledBoundaries,
@@ -65,7 +66,6 @@ from nanopnp.solve.continuation import (
     model_reads_wall,
     reads_wall,
 )
-from nanopnp.solve.gates import FieldSampler, WallDistanceGate, WallDistanceMeasurement
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.core.typing import Expression, FESpace, GridFunction, Mesh
@@ -339,7 +339,7 @@ def wall_distance_field(resolved: ResolvedCase, mesh: Mesh, *, order: int) -> Ex
     """
     if not reads_distance(resolved):
         return SATURATED_WALL_DISTANCE_NM
-    from nanopnp.mesh.distance import wall_distance
+    from nanopnp.physics.distance import wall_distance
 
     return wall_distance(
         mesh,
@@ -380,8 +380,8 @@ def check_wall_distance(
 
     Raises
     ------
-    nanopnp.solve.gates.GateViolationError
-        If the field samples below :data:`~nanopnp.solve.gates.MINIMUM_WALL_DISTANCE_NM`
+    nanopnp.numerics.gates.GateViolationError
+        If the field samples below :data:`~nanopnp.numerics.gates.MINIMUM_WALL_DISTANCE_NM`
         anywhere in the fluid (QR-12).
     """
     if not reads_distance(resolved):
@@ -739,7 +739,7 @@ def _restore_distance(
 ) -> tuple[Expression, int | None]:
     """Return the stored PHY-02 distance field, rebuilt on its own space.
 
-    Stored rather than re-solved: :func:`nanopnp.mesh.distance.wall_distance`
+    Stored rather than re-solved: :func:`nanopnp.physics.distance.wall_distance`
     runs a screened-Poisson solve whose result is not reproducible to the last
     bit across library versions, and the residual assembled against a field that
     differs in the last bits is a different operator (§5.3.2 NOTE).

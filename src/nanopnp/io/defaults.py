@@ -301,7 +301,7 @@ def value_at(document: CaseDocument, path: str) -> SwitchValue:
         this module's own exception rather than propagating the case-level one:
         the switch paths are a frozen enumeration checked by VER-24 in both
         directions, so an unknown one here means *this build* is inconsistent,
-        which is why :data:`nanopnp.cli.errors.EXCLUDED` leaves it unclassified.
+        which is why :data:`nanopnp.core.errors.EXCLUDED` leaves it unclassified.
     """
     try:
         return case_value_at(document, path)

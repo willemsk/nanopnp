@@ -41,8 +41,8 @@ from __future__ import annotations
 import math
 
 from nanopnp.core.typing import GridFunction, Mesh
-from nanopnp.physics.measures import Measures
-from nanopnp.solve.linear import DEFAULT_SOLVER, solve_linear
+from nanopnp.numerics.linear import DEFAULT_SOLVER, solve_linear
+from nanopnp.numerics.measures import Measures
 
 DEFAULT_MAX_DISTANCE_NM = 3.0
 """Cap on the field, in nm; every wall correction has saturated well before it."""

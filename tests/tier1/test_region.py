@@ -21,6 +21,16 @@ import yaml
 
 from nanopnp.core.paths import profile_file
 from nanopnp.geometry import region as region_module
+from nanopnp.geometry.profile import (
+    PROFILE_SCHEMA,
+    PoreProfile,
+    ProfileProvenance,
+    load_profile,
+    min_feature_size,
+    min_vertex_spacing,
+    signed_area,
+    write_profile,
+)
 from nanopnp.geometry.region import (
     JUNCTION_CLEARANCE_NM,
     KEY_CONSTANTS,
@@ -48,16 +58,6 @@ from nanopnp.io.case import (
 )
 from nanopnp.io.run import selected_stages
 from nanopnp.io.store import Store
-from nanopnp.mesh.profile import (
-    PROFILE_SCHEMA,
-    PoreProfile,
-    ProfileProvenance,
-    load_profile,
-    min_feature_size,
-    min_vertex_spacing,
-    signed_area,
-    write_profile,
-)
 from nanopnp.mesh.reference import ReferenceGeometry
 
 FIXTURE = "clya_reference_profile"

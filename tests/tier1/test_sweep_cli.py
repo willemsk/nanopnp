@@ -37,7 +37,7 @@ from pathlib import Path
 import pytest
 
 from nanopnp.cli import build_parser, main
-from nanopnp.cli.errors import EXIT_CASE, EXIT_GATE, EXIT_OK
+from nanopnp.core.errors import EXIT_CASE, EXIT_GATE, EXIT_OK
 from nanopnp.core.hashing import decode_floats
 from nanopnp.sweep.collect import DATASET_CSV, DATASET_FILENAME, collect, write_csv
 from nanopnp.sweep.plan import PLAN_FILENAME, plan_from_document, write_plan
@@ -222,7 +222,7 @@ def test_ver38_both_sweep_exceptions_are_in_the_exit_enumeration() -> None:
     fix is to run the missing ones — a gate in the QR-12 sense rather than a
     case error.
     """
-    from nanopnp.cli.errors import EXIT_CODES
+    from nanopnp.core.errors import EXIT_CODES
 
     assert EXIT_CODES["nanopnp.sweep.plan:SweepPlanError"] == EXIT_CASE
     assert EXIT_CODES["nanopnp.sweep.collect:SweepCollectionError"] == EXIT_GATE
@@ -232,22 +232,22 @@ def test_ver38_both_sweep_exceptions_are_in_the_exit_enumeration() -> None:
     ("error", "expected"),
     [
         ("nanopnp.io.case:CaseValidationError", EXIT_CASE),
-        ("nanopnp.solve.gates:GateViolationError", EXIT_GATE),
-        ("nanopnp.solve.newton:NewtonDivergenceError", 5),
+        ("nanopnp.numerics.gates:GateViolationError", EXIT_GATE),
+        ("nanopnp.numerics.newton:NewtonDivergenceError", 5),
         ("nanopnp.core.stages:Cancelled", 130),
     ],
 )
 def test_ver38_a_member_records_the_exit_class_of_what_it_raised(error: str, expected: int) -> None:
     """Each failure class of the §3.1 NOTE reaches the member's row as its own code.
 
-    Classified through the same :func:`~nanopnp.cli.errors.classify` the CLI
+    Classified through the same :func:`~nanopnp.core.errors.classify` the CLI
     uses, so a member dispatched with ``--index`` exits exactly as the same
     failure would from ``nanopnp run``. The four classes are the four a sweep
     member can actually produce: a bad case, a gate abort, non-convergence — the
     one a sweep may usefully re-dispatch from another neighbour — and
     cancellation.
     """
-    from nanopnp.cli.errors import classify
+    from nanopnp.core.errors import classify
 
     module, _, name = error.partition(":")
     raised = getattr(__import__(module, fromlist=[name]), name)

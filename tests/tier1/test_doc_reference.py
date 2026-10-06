@@ -14,12 +14,12 @@ import argparse
 import re
 
 from nanopnp.cli import build_parser
-from nanopnp.cli.errors import EXCLUDED, EXIT_CODES, EXIT_MEANINGS
 from nanopnp.cli.reference import (
     render_case_reference,
     render_cli_reference,
     render_exit_codes,
 )
+from nanopnp.core.errors import EXCLUDED, EXIT_CODES, EXIT_MEANINGS
 from nanopnp.io.case import case_fields, options_at, schema_default
 from nanopnp.io.defaults import SWITCH_PATHS
 

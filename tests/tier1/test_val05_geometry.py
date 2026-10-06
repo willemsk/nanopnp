@@ -21,8 +21,8 @@ import pytest
 
 from nanopnp.core.paths import profile_file
 from nanopnp.geometry.contour import innermost_crossings
+from nanopnp.geometry.profile import load_profile
 from nanopnp.geometry.region import to_model_frame
-from nanopnp.mesh.profile import load_profile
 from nanopnp.validation.geometry import (
     CONSTRICTION_WINDOW_NM,
     TOLERANCES,

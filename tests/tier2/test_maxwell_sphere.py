@@ -42,7 +42,8 @@ import pytest
 from nanopnp.core.constants import ELEMENTARY_CHARGE
 from nanopnp.core.scaling import REFERENCE_PERMITTIVITY, Scales
 from nanopnp.geometry.analyte import AnalyteInBoxGeometry, SphereBody
-from nanopnp.physics.measures import AXISYMMETRIC
+from nanopnp.numerics.linear import solve_linear
+from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics.models import set_boundary_values
 from nanopnp.physics.poisson import charge_source, poisson_operator
 from nanopnp.post.forces import (
@@ -50,7 +51,6 @@ from nanopnp.post.forces import (
     electrostatic_domain_force,
     electrostatic_surface_force,
 )
-from nanopnp.solve.linear import solve_linear
 
 RADIUS_NM, OUTER_NM = 1.0, 10.0
 """Sphere radius and the far boundary, in nm."""

@@ -92,9 +92,9 @@ from dataclasses import dataclass
 from typing import Protocol, TypeAlias
 
 from nanopnp.core.typing import Expression, IntegralTerm, Mesh, Numeric, Option
+from nanopnp.numerics.measures import Measures
 from nanopnp.physics.coefficients import NondimensionalCoefficients
 from nanopnp.physics.flow import axisymmetric_divergence
-from nanopnp.physics.measures import Measures
 from nanopnp.physics.nernst_planck import ConcentrationVariables, steric_flux
 
 __all__ = [
@@ -186,7 +186,7 @@ STREAMLINE_BONUS_ORDER = 4
 """Quadrature bonus for the streamline term (NUM-15).
 
 NUM-15 asks for integration order 4, and its NOTE reads that as a lower bound:
-:class:`~nanopnp.physics.measures.Measures` takes a *bonus* over an
+:class:`~nanopnp.numerics.measures.Measures` takes a *bonus* over an
 integrand-dependent estimate rather than an absolute order, so a bonus of 4
 guarantees at least 4. Overshoot costs quadrature points, not correctness.
 """
@@ -280,9 +280,9 @@ class StabilisationIntegrand:
     """One stabilisation contribution, with the quadrature it must be taken at.
 
     The contributions are produced once and consumed twice: assembled into the
-    residual through :meth:`~nanopnp.physics.measures.Measures.volume`, and
+    residual through :meth:`~nanopnp.numerics.measures.Measures.volume`, and
     evaluated against the NUM-24 indicator through
-    :meth:`~nanopnp.physics.measures.Measures.integrate`. One expression, two
+    :meth:`~nanopnp.numerics.measures.Measures.integrate`. One expression, two
     routes — which is what makes the NUM-26 agreement an identity rather than a
     coincidence (section 6.7's NOTE).
 

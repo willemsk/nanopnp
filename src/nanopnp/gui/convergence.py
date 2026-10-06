@@ -82,7 +82,7 @@ side of the Qt boundary where it can be asserted."""
 class Step:
     """One accepted Newton step, as it crossed the process boundary.
 
-    The fields of :class:`~nanopnp.solve.newton.NewtonStep`, as numbers. They are
+    The fields of :class:`~nanopnp.numerics.newton.NewtonStep`, as numbers. They are
     the solver's own: the hook forwards them structurally, never recovered from
     the ``:.3e`` of a progress caption (VER-44).
     """

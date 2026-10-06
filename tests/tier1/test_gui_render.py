@@ -489,7 +489,7 @@ def built_mesh(tmp_path_factory: pytest.TempPathFactory) -> Path:
     """
     import numpy as np
 
-    from nanopnp.mesh.profile import (
+    from nanopnp.geometry.profile import (
         PROFILE_SCHEMA,
         PoreProfile,
         ProfileProvenance,

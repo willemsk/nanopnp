@@ -30,17 +30,17 @@ from nanopnp.core.constants import (
 )
 from nanopnp.core.scaling import REFERENCE_PERMITTIVITY, debye_length_nm
 from nanopnp.core.typing import Expression, GridFunction, IntegralTerm, Mesh, Option
-from nanopnp.physics.measures import Measures
-from nanopnp.physics.poisson import poisson_operator
-from nanopnp.physics.spaces import set_boundary_values
-from nanopnp.solve.gates import FieldSampler, PotentialIncrementGate
-from nanopnp.solve.linear import DEFAULT_SOLVER, solve_linear
-from nanopnp.solve.newton import (
+from nanopnp.numerics.gates import FieldSampler, PotentialIncrementGate
+from nanopnp.numerics.linear import DEFAULT_SOLVER, solve_linear
+from nanopnp.numerics.measures import Measures
+from nanopnp.numerics.newton import (
     DEFAULT_SETTINGS,
     NewtonResult,
     NewtonSettings,
     damped_newton,
 )
+from nanopnp.physics.poisson import poisson_operator
+from nanopnp.physics.spaces import set_boundary_values
 
 __all__ = [
     "ELECTROLYTE_PERMITTIVITY",

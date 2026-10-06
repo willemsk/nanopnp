@@ -28,13 +28,13 @@ import pytest
 
 from nanopnp.materials.electrolyte import CorrectionSwitches, Electrolyte
 from nanopnp.mesh.primitives import SlabGeometry
+from nanopnp.numerics.measures import Measures
 from nanopnp.physics import stabilisation as stab
 from nanopnp.physics.coefficients import (
     SATURATED_WALL_DISTANCE_NM,
     NondimensionalCoefficients,
     mesh_unit_scales,
 )
-from nanopnp.physics.measures import Measures
 from nanopnp.physics.nernst_planck import ConcentrationVariables, species_flux
 
 CONCENTRATION_M = 1.0
@@ -655,7 +655,7 @@ def _applied(
     same vector either way, so the difference between them is the stabilisation and
     nothing else.
     """
-    from nanopnp.physics.measures import AXISYMMETRIC
+    from nanopnp.numerics.measures import AXISYMMETRIC
 
     extra = {"state": at} if lagged else {}
     form = ngs.BilinearForm(space)
@@ -761,8 +761,8 @@ def test_ver41_the_linearisation_is_finite_at_the_zero_wind_cold_state(mode: str
     import numpy as np
 
     from nanopnp.mesh.primitives import CylinderGeometry
+    from nanopnp.numerics.measures import AXISYMMETRIC
     from nanopnp.physics import models
-    from nanopnp.physics.measures import AXISYMMETRIC
 
     mesh = CylinderGeometry(radius_nm=2.0, length_nm=4.0).generate(maxh_nm=1.0)
     boundaries = models.CoupledBoundaries(
@@ -793,7 +793,7 @@ def test_num16_a_stabilised_assembly_without_a_state_is_refused() -> None:
     tuned for — a silent change of solver behaviour rather than a wrong answer, and
     therefore worth a refusal rather than a fallback.
     """
-    from nanopnp.physics.measures import AXISYMMETRIC
+    from nanopnp.numerics.measures import AXISYMMETRIC
 
     model, _, space, _ = _coupled("reference")
     with pytest.raises(ValueError, match="needs the solve state") as raised:
@@ -809,8 +809,8 @@ def _diagnostic(mode: str, potential: ngs.CoefficientFunction) -> object:
     stabilisation: NUM-12's second NOTE requires it in every mode, and NUM-11 puts
     production in the one where nothing is assembled.
     """
+    from nanopnp.numerics.gates import FieldSampler, PecletDiagnostic
     from nanopnp.physics import models
-    from nanopnp.solve.gates import FieldSampler, PecletDiagnostic
 
     model, mesh, _, state = _coupled(mode)
     fields = {f.name: c for f, c in zip(model.fields, state.components, strict=True)}  # type: ignore[attr-defined]
@@ -832,7 +832,7 @@ def test_num12_the_peclet_diagnostic_warns_naming_the_species_value_and_place(
     stabilisation is on never runs in production, where NUM-11 requires it off.
     """
     diagnostic = _diagnostic(mode, 2.0 * ngs.y * ngs.y)
-    with caplog.at_level("INFO", logger="nanopnp.solve.gates"):
+    with caplog.at_level("INFO", logger="nanopnp.numerics.gates"):
         found = diagnostic.report()  # type: ignore[attr-defined]
 
     assert found.maximum > 1.0
@@ -857,7 +857,7 @@ def test_num12_the_peclet_diagnostic_is_silent_below_the_threshold(
 ) -> None:
     """Below 1 it reports at INFO and never at WARNING: it is a warning, not a gate."""
     diagnostic = _diagnostic("reference", 0.4 * ngs.y + 0.2 * ngs.x)
-    with caplog.at_level("INFO", logger="nanopnp.solve.gates"):
+    with caplog.at_level("INFO", logger="nanopnp.numerics.gates"):
         found = diagnostic.report()  # type: ignore[attr-defined]
 
     assert found.maximum < 1.0
@@ -875,7 +875,7 @@ def test_num12_the_peclet_diagnostic_never_aborts_a_run() -> None:
     then a hard failure and the lower rungs of the continuation ladder, which are
     deliberately coarse, stop converging.
     """
-    from nanopnp.solve.gates import PecletDiagnostic
+    from nanopnp.numerics.gates import PecletDiagnostic
 
     assert not hasattr(PecletDiagnostic, "check")
 
@@ -886,7 +886,7 @@ def test_num12_the_peclet_diagnostic_refuses_an_empty_species_mapping() -> None:
     A passing number from a diagnostic that sampled nothing is the quiet wrong
     answer QR-12 exists to prevent.
     """
-    from nanopnp.solve.gates import FieldSampler, PecletDiagnostic
+    from nanopnp.numerics.gates import FieldSampler, PecletDiagnostic
 
     _, mesh, _, _ = _coupled("reference")
     diagnostic = PecletDiagnostic(FieldSampler(mesh, materials="electrolyte"), {})

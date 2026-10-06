@@ -23,19 +23,26 @@ import pytest
 
 from nanopnp.validation.findings import REPOSITORY, parse_log
 from nanopnp.validation.modularity import (
+    LAYER_ORDER,
     PACKAGE,
+    UPWARD,
     AcceptedEdge,
     ImportEdge,
     accepted_relation,
+    accepted_upward,
     compare,
     component_edges,
     components,
     import_edges,
     measured_relations,
     module_graph,
+    node_of,
+    parse_package,
+    upward_edges,
 )
 
 CONSTANTS = PACKAGE / "core" / "constants.py"
+ANALYTE = PACKAGE / "geometry" / "analyte.py"
 
 
 def test_ver61_live_relation_equals_the_recorded_layering() -> None:
@@ -46,7 +53,7 @@ def test_ver61_live_relation_equals_the_recorded_layering() -> None:
 def test_ver61_every_annotated_edge_names_a_finding_of_the_log() -> None:
     """An edge's ``finding`` is a ``MOD-nn`` row of the log, so a typo or a dropped row fails."""
     log = parse_log(REPOSITORY / "docs" / "project" / "modularity-findings.md")
-    named = {edge.finding for edge in accepted_relation()} - {None}
+    named = {edge.finding for edge in (*accepted_relation(), *accepted_upward())} - {None}
     assert named <= {row.id for row in log.rows}, sorted(named - {row.id for row in log.rows})
 
 
@@ -54,6 +61,57 @@ def test_ver61_the_measurement_adds_no_edge_of_its_own() -> None:
     """The measuring modules name what they read by path, so they couple to nothing."""
     own = {"validation/modularity.py", "validation/findings.py"}
     assert [edge for edge in import_edges() if edge.path in own] == []
+
+
+def test_ver61_upward_top_edges_equal_the_recorded_ratchet() -> None:
+    """The ``top`` edges pointing up the layer order are exactly the ``upward:`` rows (H11).
+
+    WP37 left the edges into ``io``, which WP38 cuts, and ``cli -> nanopnp`` (D11).
+    """
+    comparison = compare({UPWARD: upward_edges(import_edges())}, accepted_upward())
+    assert comparison.equal, comparison.describe()
+    into_io = ("structure", "density", "symmetry", "geometry", "mesh", "charge", "materials")
+    assert {(edge.source, edge.target) for edge in accepted_upward()} == {
+        *((node, "io") for node in (*into_io, "solve", "post")),
+        ("cli", "nanopnp"),
+    }
+
+
+def test_ver61_the_layer_order_places_every_subpackage_once() -> None:
+    assert len(set(LAYER_ORDER)) == len(LAYER_ORDER)
+    assert set(LAYER_ORDER) == {node_of(module.name) for module in parse_package()}
+
+
+def test_ver61_an_annotation_cut_returning_to_module_scope_fails_as_upward() -> None:
+    """``geometry -> mesh`` is a ``typing`` edge after D6, so the static relation keeps it.
+
+    Moving ``CylindricalPoreGeometry`` back out of ``TYPE_CHECKING`` changes no row
+    of ``edges:``; only the ratchet sees it, naming the edge, the module and the line.
+    """
+    text = ANALYTE.read_text(encoding="utf-8")
+    line = len(text.splitlines()) + 1
+    restored = f"{text}from nanopnp.mesh.primitives import CylindricalPoreGeometry\n"
+    edges = import_edges(sources={"geometry/analyte.py": restored})
+    assert compare(measured_relations(edges), accepted_relation()).equal
+    comparison = compare({UPWARD: upward_edges(edges)}, accepted_upward())
+    assert [pair for _, pair, _ in comparison.added] == [("geometry", "mesh")]
+    message = comparison.describe()
+    assert "new upward edge geometry -> mesh" in message
+    assert f"geometry/analyte.py:{line}" in message
+
+
+def test_ver61_an_unplaced_subpackage_is_refused_naming_it() -> None:
+    edges = (ImportEdge("nanopnp.core.x", "nanopnp.extra.y", "top", 1, "core/x.py"),)
+    with pytest.raises(ValueError, match="extra has no place in the layer order"):
+        upward_edges(edges)
+
+
+def test_ver61_accepted_upward_refuses_a_repeated_row(tmp_path: Path) -> None:
+    path = tmp_path / "layering.yaml"
+    row = "  - {from: mesh, to: io, finding: MOD-04}\n"
+    path.write_text(f"upward:\n{row}{row}", encoding="utf-8")
+    with pytest.raises(ValueError, match="upward edge 2 repeats mesh -> io"):
+        accepted_upward(path)
 
 
 def test_ver61_top_level_module_imports_are_acyclic() -> None:

@@ -21,15 +21,15 @@ import ngsolve as ngs
 import pytest
 
 from nanopnp.mesh.primitives import SlabGeometry
-from nanopnp.physics.measures import PLANAR
-from nanopnp.physics.pb import debye_length_nm, nonlinear_pb_residual
-from nanopnp.solve.gates import FieldSampler, GateViolationError, PotentialIncrementGate
-from nanopnp.solve.newton import (
+from nanopnp.numerics.gates import FieldSampler, GateViolationError, PotentialIncrementGate
+from nanopnp.numerics.measures import PLANAR
+from nanopnp.numerics.newton import (
     DEFAULT_SETTINGS,
     NewtonDivergenceError,
     NewtonSettings,
     damped_newton,
 )
+from nanopnp.physics.pb import debye_length_nm, nonlinear_pb_residual
 
 CONCENTRATION_M = 0.1
 """Bulk concentration of the test problem, in mol/L."""
@@ -376,7 +376,7 @@ def test_num16_minimally_damped_step_is_accepted_not_aborted(
         initial_damping=0.5, minimum_damping=0.5, max_iterations=3, growth_factor=1.0
     )
 
-    with caplog.at_level(logging.WARNING, logger="nanopnp.solve.newton"):
+    with caplog.at_level(logging.WARNING, logger="nanopnp.numerics.newton"):
         result = damped_newton(form, state, raise_on_failure=False, settings=settings)
 
     assert result.forced_steps >= 1
@@ -442,7 +442,7 @@ def test_ver44_every_step_records_the_undamped_relative_update(
     the *damped* step instead would leave the ratio at exactly ``λ``, which on
     the opening steps of this problem is 0.2 — a plot still six orders deep and
     still wrong, and the number the solver tests against
-    :attr:`~nanopnp.solve.newton.NewtonSettings.relative_tolerance` is the
+    :attr:`~nanopnp.numerics.newton.NewtonSettings.relative_tolerance` is the
     undamped one (NUM-16 NOTE). Taking the denominator at the *new* iterate
     rather than the one the step started from would be a relative error of one
     step's size, which is invisible at convergence and largest exactly where the
@@ -485,11 +485,11 @@ def test_ver44_the_newton_summary_gains_no_per_iteration_key(
 ) -> None:
     """The manifest record is the same set of keys the history is not in.
 
-    :meth:`~nanopnp.solve.newton.NewtonResult.summary` reaches the stage-10
+    :meth:`~nanopnp.numerics.newton.NewtonResult.summary` reaches the stage-10
     artefact's summary, which is inside the §5.3.2 content hash. A per-iteration
     series there would make every solve its own cache entry and move the hash of
     every run already in a store — so the live plot reads
-    :attr:`~nanopnp.solve.newton.NewtonResult.history` in the process that
+    :attr:`~nanopnp.numerics.newton.NewtonResult.history` in the process that
     produced it, and this asserts the boundary in the direction it could move.
     """
     mesh, space, screening_nm = problem

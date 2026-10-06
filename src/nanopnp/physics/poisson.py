@@ -13,7 +13,7 @@ with the ``r`` weight supplied by ``Measures`` rather than by the call site.
 from __future__ import annotations
 
 from nanopnp.core.typing import Expression, IntegralTerm, Numeric
-from nanopnp.physics.measures import Measures
+from nanopnp.numerics.measures import Measures
 
 
 def poisson_operator(

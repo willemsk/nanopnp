@@ -99,7 +99,7 @@ class SolveHook(Protocol):
     different facts and neither is visible from the silence itself.
 
     Plain scalars only. This module is on the command line's import path, and
-    naming :class:`~nanopnp.solve.newton.NewtonStep` here would import NGSolve
+    naming :class:`~nanopnp.numerics.newton.NewtonStep` here would import NGSolve
     for a type the CLI never constructs.
     """
 
@@ -143,7 +143,7 @@ class SolveHook(Protocol):
     ) -> None:
         """Report one accepted Newton step of the rung most recently announced.
 
-        The fields of :class:`~nanopnp.solve.newton.NewtonStep`, as numbers:
+        The fields of :class:`~nanopnp.numerics.newton.NewtonStep`, as numbers:
         ``residual`` after the step, ``update`` the relative update on the
         *undamped* direction, and ``forced`` whether NUM-16 accepted the step at
         minimum damping without reducing the residual.

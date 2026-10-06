@@ -25,7 +25,7 @@ refuses any row that is not terminal.
 | MOD-02 | stages | medium | fixed | [WP36](../plans/wp36-stage-protocol-and-walk.md) | [The walk holds what the stages should declare](modularity.md#mod-02-the-walk-holds-what-the-stages-should-declare) |
 | MOD-03 | coupling | medium | accepted | §8.2.8 H6 | [Ten subpackages form one import cycle](modularity.md#mod-03-ten-subpackages-form-one-import-cycle) |
 | MOD-04 | coupling | medium | accepted | §8.2.8 H6 | [io is both the base layer and the assembler](modularity.md#mod-04-io-is-both-the-base-layer-and-the-assembler) |
-| MOD-05 | coupling | low | accepted | §8.2.8 H1 | [The exit-code table lives in the shell and the library imports it](modularity.md#mod-05-the-exit-code-table-lives-in-the-shell-and-the-library-imports-it) |
+| MOD-05 | coupling | low | fixed | [WP37](../plans/wp37-cycle-cuts-exit-codes-backend-guard.md) | [The exit-code table lives in the shell and the library imports it](modularity.md#mod-05-the-exit-code-table-lives-in-the-shell-and-the-library-imports-it) |
 | MOD-06 | extension | medium | accepted | §8.2.8 H7 | [The mesher is a branch, not a registry](modularity.md#mod-06-the-mesher-is-a-branch-not-a-registry) |
 | MOD-07 | extension | medium | accepted | §8.2.8 H7 | [The linear solver is a branch, and the schema reads its list](modularity.md#mod-07-the-linear-solver-is-a-branch-and-the-schema-reads-its-list) |
 | MOD-08 | extension | low | post-1.0 | §8.2.8 H5 | [Five registries in four shapes](modularity.md#mod-08-five-registries-in-four-shapes) |

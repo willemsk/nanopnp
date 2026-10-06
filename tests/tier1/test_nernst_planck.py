@@ -15,6 +15,7 @@ import pytest
 
 from nanopnp.materials.electrolyte import CorrectionChoice, CorrectionSwitches, Electrolyte
 from nanopnp.mesh.primitives import SlabGeometry
+from nanopnp.numerics.gates import PackingFractionGate
 from nanopnp.physics.coefficients import (
     SATURATED_WALL_DISTANCE_NM,
     NondimensionalCoefficients,
@@ -27,7 +28,6 @@ from nanopnp.physics.nernst_planck import (
     species_flux,
     steric_flux,
 )
-from nanopnp.solve.gates import PackingFractionGate
 
 CONCENTRATION_M = 1.0
 SAMPLE = (0.5, 0.25)

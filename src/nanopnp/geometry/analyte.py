@@ -45,11 +45,14 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from nanopnp.core.constants import ELEMENTARY_CHARGE
 from nanopnp.core.typing import Mesh, Shape
-from nanopnp.mesh.primitives import TOL_NM, CylindricalPoreGeometry
+from nanopnp.geometry.profile import TOL_NM
+
+if TYPE_CHECKING:  # pragma: no cover - annotations only
+    from nanopnp.mesh.primitives import CylindricalPoreGeometry
 
 __all__ = [
     "ANALYTE_BOUNDARY",

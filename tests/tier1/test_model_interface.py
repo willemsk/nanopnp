@@ -43,14 +43,15 @@ from nanopnp.io.artefact import SOLUTION_SCHEMA
 from nanopnp.io.case import CaseValidationError, loads_case, resolve
 from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
+from nanopnp.materials.corrections import load_corrections
 from nanopnp.materials.electrolyte import Electrolyte
 from nanopnp.mesh.adapter import from_ngsolve, write_msh41
 from nanopnp.mesh.ingest import MeshVocabularyError, deployed_mesh, ingest, required_names
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
 from nanopnp.mesh.sizing import case_debye_length_nm
+from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics import models
 from nanopnp.physics.coefficients import SATURATED_WALL_DISTANCE_NM
-from nanopnp.physics.measures import AXISYMMETRIC
 from nanopnp.physics.models import ModelSolution, PhysicsModel
 from nanopnp.solve.continuation import default_ladder
 from nanopnp.solve.state import WALL_DISTANCE_ENTRY, ladder, restore
@@ -61,7 +62,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.core.typing import Mesh, Option
     from nanopnp.io.case import ResolvedCase
     from nanopnp.io.run import RunResult
-    from nanopnp.physics.measures import Measures
+    from nanopnp.numerics.measures import Measures
 
 PACKAGE = Path(nanopnp.__file__).parent
 REPOSITORY = PACKAGE.parents[1]
@@ -837,10 +838,11 @@ def test_fr19_pb_linear_from_a_case_file_equals_the_api_solve(tmp_path: Path) ->
     assert run.artefacts["qoi"].summary == {"bias_V": 0.05}
     assert run.artefacts["report"].summary["exports"] == ["fields"]
 
-    resolved, direct = _direct(text, debye_length_nm=case_debye_length_nm(loads_case(text)))
-    assert direct.model.scales.debye_length_nm == pytest.approx(
-        case_debye_length_nm(resolved.document), rel=1e-12
-    )
+    document = loads_case(text)
+    eps_r0 = load_corrections(document.electrolyte.parameters).solvent.permittivity.eps_r0
+    debye_nm = case_debye_length_nm(document, permittivity_0=eps_r0)
+    _, direct = _direct(text, debye_length_nm=debye_nm)
+    assert direct.model.scales.debye_length_nm == pytest.approx(debye_nm, rel=1e-12)
     case_state = _state(run)["field.potential"]
     assert _relative(case_state, np.asarray(direct.state.vec.FV().NumPy())) < 1e-12
 

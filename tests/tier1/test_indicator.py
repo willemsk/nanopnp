@@ -15,7 +15,7 @@ import ngsolve as ngs
 import pytest
 
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
-from nanopnp.physics.measures import AXISYMMETRIC
+from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.post.indicator import (
     IndicatorError,
     axial_indicator,

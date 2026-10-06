@@ -43,7 +43,7 @@ from typing import TYPE_CHECKING
 import yaml
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from nanopnp.cli.errors import classify
+from nanopnp.core.errors import classify
 from nanopnp.gui.case_model import CaseEditor
 from nanopnp.gui.charge import BUILD_UPTO as CHARGE_UPTO
 from nanopnp.gui.charge import build_offer
@@ -248,7 +248,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     -------
     int
         The Qt event loop's exit status, or the §3.1 exit class
-        :func:`~nanopnp.cli.errors.classify` gives when the case file named on
+        :func:`~nanopnp.core.errors.classify` gives when the case file named on
         the command line cannot be opened — refused here, in the words and with
         the code the command line uses, rather than opened into an empty form.
         A file that is not there and a file that is not YAML are refusals as

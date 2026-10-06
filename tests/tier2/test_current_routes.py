@@ -37,8 +37,8 @@ import ngsolve as ngs
 import pytest
 
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics import models
-from nanopnp.physics.measures import AXISYMMETRIC
 from nanopnp.post import qoi
 from nanopnp.post.indicator import axial_indicator, lumen_band
 from nanopnp.solve.continuation import default_ladder, run_ladder
@@ -393,7 +393,7 @@ def test_ver40_the_coarse_mesh_is_refused_rather_than_returning_a_current(tmp_pa
     it merely returns a wrong current. Neither is a result, and the gate is what
     makes the run stop rather than report one.
     """
-    from nanopnp.solve.gates import GateViolationError
+    from nanopnp.numerics.gates import GateViolationError
 
     with pytest.raises(GateViolationError) as raised:
         _run_corrected(tmp_path, INADMISSIBLE_WALL_H_NM)
@@ -424,10 +424,10 @@ def test_ver40_the_plausible_mesh_passes_num26_and_is_still_refused(tmp_path) ->
     from nanopnp.charge.stage import ResolvedFields
     from nanopnp.io.case import loads_case, resolve
     from nanopnp.mesh.ingest import ingest
-    from nanopnp.physics.measures import AXISYMMETRIC as MEASURES
+    from nanopnp.numerics.gates import GateViolationError
+    from nanopnp.numerics.measures import AXISYMMETRIC as MEASURES
     from nanopnp.post.indicator import axial_indicator
     from nanopnp.solve.continuation import run_ladder as climb
-    from nanopnp.solve.gates import GateViolationError
     from nanopnp.solve.state import check_wall_distance, ladder, wall_distance_field
 
     work = tmp_path / "plausible"

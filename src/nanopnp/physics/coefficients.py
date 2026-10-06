@@ -36,7 +36,7 @@ from nanopnp.core.scaling import NM_PER_M, Scales
 from nanopnp.core.typing import Expression, Numeric
 from nanopnp.materials.electrolyte import Electrolyte
 from nanopnp.materials.forms import NGSOLVE_OPS, MathOps
-from nanopnp.solve.gates import excluded_volume_m3_per_mol
+from nanopnp.numerics.gates import excluded_volume_m3_per_mol
 
 __all__ = [
     "MESH_LENGTH_UNIT_NM",

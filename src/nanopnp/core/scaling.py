@@ -206,7 +206,7 @@ class Scales:
         whatever pore the case is posed on.
 
         NUM-28 integrals arrive here as ``int f r dr dz``, short of the ``2 pi``
-        that :class:`~nanopnp.physics.measures.Measures` cancelled from the weak
+        that :class:`~nanopnp.numerics.measures.Measures` cancelled from the weak
         form; :mod:`nanopnp.post.forces` restores it, once (NUM-27 NOTE).
         """
         return self.permittivity * self.potential_V**2

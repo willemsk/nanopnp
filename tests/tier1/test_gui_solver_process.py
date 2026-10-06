@@ -269,7 +269,7 @@ def test_fr27_a_case_the_schema_refuses_comes_back_as_the_case_exit_class(
     all: an exception that escaped ``_worker`` would leave the parent waiting on
     a queue that never carries another event.
     """
-    from nanopnp.cli.errors import EXIT_CASE
+    from nanopnp.core.errors import EXIT_CASE
 
     path = tmp_path / "broken.yaml"
     path.write_text("schema: nanopnp/case/v2\nname: broken\n", encoding="utf-8")
@@ -305,7 +305,7 @@ def profile_case(tmp_path_factory: pytest.TempPathFactory) -> Path:
     """Write a slanted 1 nm body across the slab and a coarse case naming it."""
     import numpy as np
 
-    from nanopnp.mesh.profile import (
+    from nanopnp.geometry.profile import (
         PROFILE_SCHEMA,
         PoreProfile,
         ProfileProvenance,

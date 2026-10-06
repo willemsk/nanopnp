@@ -20,7 +20,7 @@ agreement in continuous integration, against the tolerance declared as
 
 The ``2 pi`` convention (NUM-27's NOTE)
 ---------------------------------------
-:class:`~nanopnp.physics.measures.Measures` writes every axisymmetric integral as
+:class:`~nanopnp.numerics.measures.Measures` writes every axisymmetric integral as
 ``int f r dr dz``, the ``2 pi`` having cancelled from both sides of the weak form.
 Every integral in this project therefore arrives here short of that factor, and
 **this module restores it, once**. Both routes inherit the same convention, so
@@ -53,11 +53,11 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 
 from nanopnp.core.typing import AssembledForm, Expression, GridFunction, Option
+from nanopnp.mesh.primitives import POTENTIAL, VELOCITY
+from nanopnp.numerics.gates import FieldSampler
+from nanopnp.numerics.measures import Measures
 from nanopnp.physics.coefficients import species_concentrations_SI
-from nanopnp.physics.measures import Measures
 from nanopnp.physics.models import (
-    POTENTIAL,
-    VELOCITY,
     ModelSolution,
     TransportModel,
     concentration_field_name,
@@ -65,7 +65,6 @@ from nanopnp.physics.models import (
 )
 from nanopnp.physics.nernst_planck import species_flux
 from nanopnp.post.reaction_flux import boundary_reaction_flux
-from nanopnp.solve.gates import FieldSampler
 
 __all__ = [
     "ROUTE_AGREEMENT_TOLERANCE",

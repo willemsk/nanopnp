@@ -39,7 +39,7 @@ and QR-06's scaling claim would be measuring the pool. One interactive solve
 makes no such claim and wants the threads.
 
 **One classification of failure, not two.** The child classifies its own
-exception through :func:`nanopnp.cli.errors.classify` and reports the §3.1 exit
+exception through :func:`nanopnp.core.errors.classify` and reports the §3.1 exit
 class, so a case that exits 3 from ``nanopnp run`` is diagnosed as a case error
 in the shell as well. A second classifier would be a second contract to keep in
 step.
@@ -54,7 +54,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, TypeAlias
 
-from nanopnp.cli.errors import EXIT_CANCELLED, EXIT_OK, classify
+from nanopnp.core.errors import EXIT_CANCELLED, EXIT_OK, classify
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from multiprocessing.process import BaseProcess
@@ -191,7 +191,7 @@ class Rung:
 class Iteration:
     """One accepted Newton step of the rung most recently announced.
 
-    The fields of :class:`~nanopnp.solve.newton.NewtonStep`, as numbers. The
+    The fields of :class:`~nanopnp.numerics.newton.NewtonStep`, as numbers. The
     residual reaches :class:`Progress` only inside a ``:.3e`` caption and the
     relative update reaches it not at all, which is the whole reason this
     variant exists (VER-44).
@@ -228,7 +228,7 @@ class Failed:
     Parameters
     ----------
     exit_code
-        :func:`nanopnp.cli.errors.classify` of the exception — ``3`` the case,
+        :func:`nanopnp.core.errors.classify` of the exception — ``3`` the case,
         ``4`` a QR-12 gate, ``5`` convergence, ``1`` unclassified.
     error
         The exception's qualified class name, for a caller that wants to say
@@ -395,7 +395,7 @@ def failure_event(error: BaseException) -> Failed:
     agreement between the shell and the command line is testable without
     spawning anything: what is asserted is that a case error reports ``3``, a
     QR-12 gate ``4`` and a divergence ``5`` — the §3.1 codes themselves, not
-    that two callers of :func:`~nanopnp.cli.errors.classify` agree.
+    that two callers of :func:`~nanopnp.core.errors.classify` agree.
     """
     return Failed(
         exit_code=classify(error),

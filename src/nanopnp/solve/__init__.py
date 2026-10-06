@@ -1,1 +1,1 @@
-"""Backend adapters, continuation ladder, nonlinear and linear strategies, warm start."""
+"""Continuation ladder, warm start, the solve stage."""

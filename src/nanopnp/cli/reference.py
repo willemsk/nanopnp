@@ -3,7 +3,7 @@
 Each function here turns a live object of the package into Markdown: the case-file
 schema walk (:func:`nanopnp.io.case.case_fields`), the argument parser
 (:func:`nanopnp.cli.build_parser`), the exit-code enumeration
-(:mod:`nanopnp.cli.errors`) and the public surface (:data:`nanopnp.PUBLIC`). Nothing
+(:mod:`nanopnp.core.errors`) and the public surface (:data:`nanopnp.PUBLIC`). Nothing
 generated is committed: ``docs/scripts/generate.py`` calls these at build time, so a
 field, a flag or an exit class added later appears in the documentation without an
 edit to it, and a reference page cannot drift from the code it describes.
@@ -23,7 +23,7 @@ import yaml
 
 from nanopnp import PUBLIC
 from nanopnp.cli import build_parser
-from nanopnp.cli.errors import EXCLUDED, EXIT_CODES, EXIT_MEANINGS
+from nanopnp.core.errors import EXCLUDED, EXIT_CODES, EXIT_MEANINGS
 from nanopnp.io.case import (
     SCHEMA,
     SEQUENCE_INDEX,
@@ -278,7 +278,7 @@ def render_exit_codes() -> str:
         "",
         "The exit status of every `nanopnp` command is a contract (the IF-02 exit-code NOTE):",
         "a job array branches on it, and a member that *failed* must be distinguishable from",
-        "one that was *refused*. Generated from `nanopnp.cli.errors`.",
+        "one that was *refused*. Generated from `nanopnp.core.errors`.",
         "",
         "| Code | Meaning |",
         "|---|---|",

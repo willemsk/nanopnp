@@ -49,7 +49,7 @@ from nanopnp.density.grid import read_grid
 from nanopnp.io.run import RunResult, run_case
 from nanopnp.io.store import Store
 from nanopnp.mesh.reference import ReferenceGeometry
-from nanopnp.physics.measures import AXISYMMETRIC
+from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.post.qoi import transport_number
 from nanopnp.validation.charge import AreaComparison, compare_areal, reference_construction
 

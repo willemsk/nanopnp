@@ -14,8 +14,8 @@ import pytest
 from nanopnp.core.scaling import Scales
 from nanopnp.geometry.analyte import AnalyteInBoxGeometry, PoreWithAnalyte, SphereBody
 from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS, CylindricalPoreGeometry
+from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics import models
-from nanopnp.physics.measures import AXISYMMETRIC
 from nanopnp.physics.models import ModelSolution
 from nanopnp.post import qoi
 from nanopnp.post.forces import (

@@ -55,7 +55,7 @@ from nanopnp.io.case import resolve
 from nanopnp.io.defaults import ContributedDeviation
 from nanopnp.io.fields import export_fields
 from nanopnp.mesh.ingest import deployed_mesh
-from nanopnp.physics.measures import AXISYMMETRIC, Measures
+from nanopnp.numerics.measures import AXISYMMETRIC, Measures
 from nanopnp.physics.models import declaration
 from nanopnp.post import forces as force_post
 from nanopnp.post import qoi as qoi_post

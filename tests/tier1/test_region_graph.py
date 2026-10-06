@@ -17,6 +17,15 @@ import sys
 import numpy as np
 import pytest
 
+from nanopnp.geometry.profile import (
+    PROFILE_SCHEMA,
+    PoreProfile,
+    ProfileProvenance,
+    load_profile,
+    min_feature_size,
+    min_vertex_spacing,
+    signed_area,
+)
 from nanopnp.geometry.region import (
     GRAPH_AREA_RTOL,
     RegionGateError,
@@ -27,15 +36,6 @@ from nanopnp.geometry.region import (
     region_graph,
 )
 from nanopnp.io.case import MembraneSpec, ReservoirSpec
-from nanopnp.mesh.profile import (
-    PROFILE_SCHEMA,
-    PoreProfile,
-    ProfileProvenance,
-    load_profile,
-    min_feature_size,
-    min_vertex_spacing,
-    signed_area,
-)
 
 PARALLELOGRAM = [(2.0, -3.0), (3.0, -3.0), (6.0, 3.0), (5.0, 3.0)]
 """The slanted body of ``test_mesh_generate.py``, counter-clockwise."""
@@ -158,7 +158,7 @@ GRAPH_IN_A_FRESH_PROCESS = """
 import sys
 from nanopnp.geometry.region import build_region, derive_region, region_graph
 from nanopnp.io.case import MembraneSpec, ReservoirSpec
-from nanopnp.mesh.profile import load_profile
+from nanopnp.geometry.profile import load_profile
 
 record = derive_region(load_profile("clya_reference_profile"), MembraneSpec(), ReservoirSpec())
 region_graph(build_region(record), record)

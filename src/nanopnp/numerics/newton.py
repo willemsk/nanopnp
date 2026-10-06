@@ -34,8 +34,8 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 
 from nanopnp.core.typing import Expression, GridFunction, Option
-from nanopnp.solve.gates import Gate, GateViolationError, check_all
-from nanopnp.solve.linear import DEFAULT_SOLVER, check_solver, solve_correction
+from nanopnp.numerics.gates import Gate, GateViolationError, check_all
+from nanopnp.numerics.linear import DEFAULT_SOLVER, check_solver, solve_correction
 
 logger = logging.getLogger(__name__)
 
@@ -240,7 +240,7 @@ def damped_newton(
     state_gates
         NUM-17 gates checked on the entry state and on each accepted iterate:
         concentration positivity and packing fraction. A violation propagates as
-        :class:`~nanopnp.solve.gates.GateViolationError`, restores the last
+        :class:`~nanopnp.numerics.gates.GateViolationError`, restores the last
         admissible iterate and stops the solve. Checking on entry matters
         because a warm start whose entry residual is already at the floor
         returns without taking a step, and an unphysical state would otherwise
@@ -279,7 +279,7 @@ def damped_newton(
         If ``increment_gates`` is given without the ``increment`` they inspect.
     NewtonDivergenceError
         If the iteration cap is reached and ``raise_on_failure``.
-    nanopnp.solve.gates.GateViolationError
+    nanopnp.numerics.gates.GateViolationError
         If any NUM-17 assertion fails.
     """
     import ngsolve as ngs

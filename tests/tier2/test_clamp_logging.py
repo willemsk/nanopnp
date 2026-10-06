@@ -19,8 +19,8 @@ import logging
 import pytest
 
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics import models
-from nanopnp.physics.measures import AXISYMMETRIC
 from nanopnp.post import qoi
 
 PORE = CylindricalPoreGeometry(

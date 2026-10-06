@@ -431,7 +431,7 @@ def generate(record: RegionRecord, resolved: ResolvedCase, directory: Path) -> G
     nanopnp.core.stages.MissingExtraError
         On ``backend: gmsh`` without the ``gmsh`` extra (WP23 D9).
     """
-    wall = resolve_wall_size(resolved.document)
+    wall = resolve_wall_size(resolved.document, permittivity_0=resolved.electrolyte.permittivity_0)
     sizes = SIZES.scaled(wall.size_scale)
     backend = resolved.document.numerics.mesh.backend
     if wall.coarser_than_num30:

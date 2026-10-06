@@ -48,6 +48,18 @@ from pydantic import ValidationError
 from nanopnp.core.stages import describe, walk_order
 from nanopnp.density.map import PAYLOAD_NAME as DENSITY_PAYLOAD
 from nanopnp.density.map import DensityMap
+from nanopnp.geometry.profile import (
+    HAND_EDIT_SOURCE,
+    PROFILE_SCHEMA,
+    PoreProfile,
+    ProfileProvenance,
+    load_profile,
+    min_feature_size,
+    min_vertex_spacing,
+    profile_digest,
+    signed_area,
+    write_profile,
+)
 from nanopnp.geometry.region import PAYLOAD_NAME as REGION_PAYLOAD
 from nanopnp.geometry.region import read_region
 from nanopnp.io.case import (
@@ -66,18 +78,6 @@ from nanopnp.io.run import (
     selected_stages,
 )
 from nanopnp.io.store import Store
-from nanopnp.mesh.profile import (
-    HAND_EDIT_SOURCE,
-    PROFILE_SCHEMA,
-    PoreProfile,
-    ProfileProvenance,
-    load_profile,
-    min_feature_size,
-    min_vertex_spacing,
-    profile_digest,
-    signed_area,
-    write_profile,
-)
 from nanopnp.symmetry.reduce import PAYLOAD_NAME as REDUCED_PAYLOAD
 from nanopnp.symmetry.reduce import QUANTITIES, ReducedMap
 
@@ -863,7 +863,7 @@ class ProfileEditor:
         The loop being edited, in the stage-1 frame.
     parent_digest
         ``provenance.sha256`` the edit records: the canonical
-        :func:`~nanopnp.mesh.profile.profile_digest` of the profile it was
+        :func:`~nanopnp.geometry.profile.profile_digest` of the profile it was
         edited from, or under §8.2.2 B9 the stage-3 payload digest stage 4
         would have recorded (WP24 D5).
     parent_name
@@ -990,7 +990,7 @@ class ProfileEditor:
     def document(self) -> PoreProfile:
         """Return the edit as a validated ``nanopnp/profile/v1`` document (WP24 D5).
 
-        ``provenance.source`` is :data:`~nanopnp.mesh.profile.HAND_EDIT_SOURCE`,
+        ``provenance.source`` is :data:`~nanopnp.geometry.profile.HAND_EDIT_SOURCE`,
         never a reference source; ``sha256`` is the parent's digest; every
         measurement is re-derived from the edited vertices, which the loader
         re-checks, so a stale block cannot be written.

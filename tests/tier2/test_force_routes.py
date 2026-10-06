@@ -38,8 +38,8 @@ import ngsolve as ngs
 import pytest
 
 from nanopnp.geometry.analyte import AnalyteInBoxGeometry, SphereBody
+from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics import models
-from nanopnp.physics.measures import AXISYMMETRIC
 from nanopnp.physics.models import CoupledBoundaries, CoupledModel
 from nanopnp.post.forces import FORCE_ROUTE_TOLERANCE_N, AnalyteForces, axial_extension, extract
 

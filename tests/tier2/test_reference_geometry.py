@@ -17,10 +17,9 @@ from collections import Counter
 import numpy as np
 import pytest
 
+from nanopnp.geometry.profile import TOL_NM, PoreProfile
 from nanopnp.mesh.adapter import from_ngsolve
 from nanopnp.mesh.ingest import BOUNDARY_VOCABULARY, FLUID_MATERIALS
-from nanopnp.mesh.primitives import TOL_NM
-from nanopnp.mesh.profile import PoreProfile
 from nanopnp.mesh.quality import QUALITY_FLOOR, check_quality
 from nanopnp.mesh.reference import (
     ReferenceGeometry,

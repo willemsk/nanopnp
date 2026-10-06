@@ -38,19 +38,85 @@ domains - ``electrolyte`` for the lumen and ``cis``/``trans`` for the reservoirs
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from nanopnp.core.typing import Mesh, Shape
+from nanopnp.geometry.profile import TOL_NM
 from nanopnp.mesh.adapter import from_ngsolve
 from nanopnp.mesh.quality import check_quality as _check_quality
 
-TOL_NM = 1e-9
-"""Geometric tolerance for classifying an edge by its centre of mass.
+if TYPE_CHECKING:  # pragma: no cover - annotations only
+    from collections.abc import Mapping
 
-Public because :mod:`nanopnp.geometry.analyte` classifies against the same
-tolerance when it embeds a body in one of these geometries; two tolerances that
-can drift apart would put an edge in one geometry's vocabulary and not the
-other's.
-"""
+# -- the vocabulary a coupled solve is posed on -----------------------------------
+
+POTENTIAL = "potential"
+"""Name of the potential field, shared by every model."""
+
+VELOCITY = "velocity"
+"""Name of the velocity field of the flow-carrying models."""
+
+VELOCITY_AXIS = "velocity_axis"
+"""Key of the axis constraint ``u_r = 0`` among a model's essential boundaries.
+
+:meth:`nanopnp.physics.models.PhysicsModel.essential_boundaries` returns it. The
+one essential set that is not a whole field: the axis constrains one component
+of ``u`` and leaves ``u_z`` natural (NUM-06), so it is reported beside the
+velocity's own no-slip set rather than folded into it."""
+
+
+@dataclass(frozen=True)
+class CoupledBoundaries:
+    """The boundary-name vocabulary a coupled solve is posed on (PHY-09).
+
+    Parameters
+    ----------
+    potential
+        Boundaries carrying an essential condition on ``phi``.
+    concentration
+        Boundaries carrying ``c_i = c_bulk``, either shared by every species or
+        given per species. A benchmark needs the per-species form — the 1D
+        limiting-current problem of VER-16 blocks the anion at the electrode
+        while the cation is consumed there — and the reference case does not.
+    velocity
+        Boundaries carrying no-slip ``u = 0``.
+    velocity_axis
+        The axis, carrying ``u_r = 0`` and nothing else. It is a separate entry
+        because it constrains one component only: ``u_z``, ``phi`` and ``c_i``
+        are natural there and imposing them is a modelling error (NUM-06).
+    """
+
+    potential: str = "cis|trans"
+    concentration: str | Mapping[str, str] = "cis|trans"
+    velocity: str = "wall|membrane"
+    velocity_axis: str = "axis"
+
+    def concentration_boundary(self, species: str) -> str:
+        """Return the boundaries carrying essential data for one species.
+
+        Raises
+        ------
+        KeyError
+            If a per-species mapping omits the species. There is deliberately no
+            fallback: a missing entry would leave that species with no essential
+            condition anywhere, and a pure-Neumann Nernst-Planck equation has a
+            constant null mode that a direct solver factorises without complaint
+            (see ``.knowledge/06-numerics-fem.md`` section 8.1).
+        """
+        if isinstance(self.concentration, str):
+            return self.concentration
+        try:
+            return self.concentration[species]
+        except KeyError:
+            known = ", ".join(sorted(self.concentration))
+            raise KeyError(
+                f"no concentration boundary for {species!r}; the mapping names {known}"
+            ) from None
+
+
+DEFAULT_BOUNDARIES = CoupledBoundaries()
+"""The boundary vocabulary of the analytic pore geometry of this module."""
+
 
 PERMITTIVITY_EXEMPT: frozenset[str] = frozenset({"exclusion"})
 """Solid materials that need no ``physics.solid_permittivities`` entry.
@@ -63,9 +129,10 @@ so ``<c>`` has no meaning there and the water is ion-free: ``eps_r,f^0``, which
 the fluid that has no entry of its own (§5.3.1 NOTE, author ruling 13). Demanding
 a value for it would invite one to be invented.
 
-Here rather than in :mod:`nanopnp.mesh.ingest`, beside the fluid set and for the
-same reason: ``physics/`` reads both, and ``ingest`` imports ``physics``, so the
-vocabulary constants the forms consult live on this side of that edge.
+Here rather than in :mod:`nanopnp.mesh.ingest`, beside the fluid set and the
+boundary vocabulary and for the same reason: ``physics/`` and ``mesh/ingest`` read
+all of them, and ``mesh/`` sits below ``physics/`` (section 8.2.8 H11), so the
+vocabulary the forms consult lives on the lower side of that edge.
 """
 
 ELECTROLYTE_DOMAINS = "electrolyte|cis|trans"

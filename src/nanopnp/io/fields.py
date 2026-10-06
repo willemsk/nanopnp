@@ -59,11 +59,9 @@ from typing import TYPE_CHECKING
 
 from nanopnp.core.scaling import Scales
 from nanopnp.core.typing import Expression, FESpace, Mesh
-from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS
+from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS, POTENTIAL, VELOCITY
 from nanopnp.physics.models import (
-    POTENTIAL,
     PRESSURE,
-    VELOCITY,
     ModelSolution,
 )
 

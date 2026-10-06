@@ -50,10 +50,10 @@ from nanopnp.geometry.analyte import (
     SphereBody,
     SpheroidBody,
 )
-from nanopnp.mesh.distance import wall_distance
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics import models
-from nanopnp.physics.measures import AXISYMMETRIC
+from nanopnp.physics.distance import wall_distance
 from nanopnp.physics.models import CoupledBoundaries, CoupledModel
 from nanopnp.post.forces import FORCE_ROUTE_TOLERANCE_N, AnalyteForces, axial_extension, extract
 from nanopnp.solve.continuation import default_ladder, mesh_report, run_ladder

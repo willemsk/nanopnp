@@ -467,7 +467,7 @@ constant because the two places that read it -- the per-solve gate and the
 per-mesh check a sweep plan runs -- must not be able to disagree.
 
 It cannot be zero. ``GridFunction.Set`` projects element-wise, and although
-:func:`nanopnp.mesh.distance.wall_distance` zeroes the constrained degrees of
+:func:`nanopnp.physics.distance.wall_distance` zeroes the constrained degrees of
 freedom outright so that the wall itself is exact, the interior residual is a
 few times ``1e-4`` nm with a platform-dependent sign; a gate at zero would gate
 the rounding mode.

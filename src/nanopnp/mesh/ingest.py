@@ -73,16 +73,16 @@ from nanopnp.io.artefact import MeshArtefact
 from nanopnp.io.case import SuppliedArtefact, UnsupportedCaseSection, resolve
 from nanopnp.io.defaults import ContributedDeviation
 from nanopnp.mesh.adapter import MeshData, detect_format, read, write_msh41
-from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS, PERMITTIVITY_EXEMPT
-from nanopnp.mesh.quality import QualityReport, check_quality, check_radii, element_quality
-from nanopnp.mesh.sizing import SIZES, resolve_wall_size
-from nanopnp.physics.models import (
+from nanopnp.mesh.primitives import (
     DEFAULT_BOUNDARIES,
+    ELECTROLYTE_DOMAINS,
+    PERMITTIVITY_EXEMPT,
     POTENTIAL,
     VELOCITY,
     VELOCITY_AXIS,
-    declaration,
 )
+from nanopnp.mesh.quality import QualityReport, check_quality, check_radii, element_quality
+from nanopnp.mesh.sizing import SIZES, resolve_wall_size
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.core.typing import Mesh
@@ -345,7 +345,7 @@ def required_names(resolved: ResolvedCase) -> RequiredNames:
     # and a mesh that cannot supply them is not a mesh this case can run on. An
     # ablation with every wall correction off would otherwise pass a gate the
     # validated configuration fails.
-    if declaration(resolved.model).wall_distance:
+    if resolved.model_declaration().wall_distance:
         boundaries.append(
             Requirement(
                 purpose="the PHY-02 wall-distance sources, numerics.wall_distance.sources",
@@ -742,7 +742,7 @@ def ingest(supplied: SuppliedArtefact, resolved: ResolvedCase) -> IngestedMesh:
         dict(resolved.document.physics.solid_permittivities),
         where=where,
         model=resolved.model,
-        solids=declaration(resolved.model).solids,
+        solids=resolved.model_declaration().solids,
     )
 
     quality = element_quality(mapped)
@@ -879,7 +879,9 @@ class MeshStage:
 
         region = inputs.require("region")
         record = read_region(region.payload[PAYLOAD_NAME])
-        wall = resolve_wall_size(resolved.document)
+        wall = resolve_wall_size(
+            resolved.document, permittivity_0=resolved.electrolyte.permittivity_0
+        )
         return MeshArtefact(
             region=region.hash,
             materials=tuple(sorted(record.face_areas_nm2)),

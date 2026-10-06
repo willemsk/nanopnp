@@ -51,7 +51,7 @@ from nanopnp.core.stages import SolveReporting, create, walk_order
 from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
-from nanopnp.solve.newton import DEFAULT_SETTINGS
+from nanopnp.numerics.newton import DEFAULT_SETTINGS
 
 PORE = CylindricalPoreGeometry(
     pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0

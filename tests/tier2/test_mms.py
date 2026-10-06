@@ -26,7 +26,7 @@ import pytest
 
 from nanopnp.materials.electrolyte import CorrectionSwitches, Electrolyte
 from nanopnp.mesh.primitives import CylinderGeometry
-from nanopnp.physics.measures import Measures
+from nanopnp.numerics.measures import Measures
 from nanopnp.physics.models import (
     POTENTIAL,
     PRESSURE,

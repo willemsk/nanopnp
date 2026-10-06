@@ -6,7 +6,7 @@ axisymmetric term is integrated one order short of its degree in ``r``.
 ``poisson`` adds the order; the coupled models do not, and whether they should is
 decided in Phase 6 with VAL-16 and VAL-17 (section 8.2.5 E4, section 8.2.6 F1).
 WP34 measures it (D7, D8) through
-:attr:`~nanopnp.physics.measures.Measures.weight_extra_order`, a seam no case
+:attr:`~nanopnp.numerics.measures.Measures.weight_extra_order`, a seam no case
 key reaches, and records the numbers in the NOTE and ``.knowledge/06`` section 2.2.
 
 Two legs, both ``slow``, logged and never gated:
@@ -43,11 +43,11 @@ from test_mms import BOUNDARIES, LENGTH_NM, MESH_SIZES_NM, RADIUS_NM, _model
 
 from nanopnp.cli import main
 from nanopnp.core.constants import AVOGADRO
+from nanopnp.geometry.profile import load_profile
 from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
 from nanopnp.mesh.primitives import CylinderGeometry
-from nanopnp.mesh.profile import load_profile
-from nanopnp.physics.measures import AXISYMMETRIC, Measures
+from nanopnp.numerics.measures import AXISYMMETRIC, Measures
 from nanopnp.physics.models import POTENTIAL, PRESSURE, VELOCITY, ModelSolution
 from nanopnp.post.qoi import ROUTE_AGREEMENT_TOLERANCE
 from nanopnp.solve import state as solve_state

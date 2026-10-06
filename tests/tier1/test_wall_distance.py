@@ -10,15 +10,15 @@ import pytest
 
 from nanopnp.io.case import loads_case, resolve
 from nanopnp.mesh.adapter import from_ngsolve, write_msh41
-from nanopnp.mesh.distance import gradient_jump, mollify, wall_distance
 from nanopnp.mesh.ingest import ingest
 from nanopnp.mesh.primitives import CylinderGeometry, CylindricalPoreGeometry
+from nanopnp.physics.distance import gradient_jump, mollify, wall_distance
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.core.typing import Mesh
     from nanopnp.io.case import ResolvedCase
     from nanopnp.materials.models import CorrectionModel
-    from nanopnp.solve.gates import WallDistanceGate
+    from nanopnp.numerics.gates import WallDistanceGate
 
 ACCURACY_TOL_NM = 5e-3
 """Stated tolerance on d within the range where the wall corrections vary."""
@@ -323,7 +323,7 @@ def test_num34_threshold_is_one_named_constant_between_the_root_and_the_residual
     at zero would gate the rounding mode.
     """
     from nanopnp.materials.corrections import load_corrections
-    from nanopnp.solve.gates import MINIMUM_WALL_DISTANCE_NM, WallDistanceGate
+    from nanopnp.numerics.gates import MINIMUM_WALL_DISTANCE_NM, WallDistanceGate
 
     document = load_corrections("willems2020_nacl")
     root_nm = -float(document.ion_wall_function.coefficients["P2"])
@@ -336,7 +336,7 @@ def test_num34_threshold_is_one_named_constant_between_the_root_and_the_residual
 def _measure(wall_h_nm: float) -> WallDistanceGate:
     """Return the NUM-34 gate over the toy pore at one wall spacing."""
     from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS
-    from nanopnp.solve.gates import FieldSampler, WallDistanceGate
+    from nanopnp.numerics.gates import FieldSampler, WallDistanceGate
 
     mesh = CLAMPED_PORE.generate(maxh_nm=4.0, wall_h_nm=wall_h_nm)
     distance = wall_distance(mesh, "wall", order=2, max_distance_nm=3.0)
@@ -372,7 +372,7 @@ def test_num34_the_coarse_mesh_is_refused_naming_everything_it_measured() -> Non
     is the re-entrant corner of the pore mouth, which is where the undershoot was
     measured (``.knowledge/06`` section 7.1.1).
     """
-    from nanopnp.solve.gates import GateViolationError
+    from nanopnp.numerics.gates import GateViolationError
 
     gate = _measure(INADMISSIBLE_WALL_H_NM)
     found = gate.measure()
@@ -455,7 +455,7 @@ def test_num34_a_corrected_run_on_the_same_mesh_is_gated(tmp_path) -> None:
     geometry. Disabling a correction selects the registered ``none`` model
     rather than taking a code branch, which is why the fallback costs no code.
     """
-    from nanopnp.solve.gates import GateViolationError
+    from nanopnp.numerics.gates import GateViolationError
     from nanopnp.solve.state import check_wall_distance, wall_distance_field
 
     resolved, mesh = _resolved(tmp_path, INADMISSIBLE_WALL_H_NM, corrections=True)
@@ -485,7 +485,7 @@ def test_num34_the_gate_reads_the_mollified_field_where_smoothing_is_on() -> Non
     have content.
     """
     from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS
-    from nanopnp.solve.gates import FieldSampler, WallDistanceGate
+    from nanopnp.numerics.gates import FieldSampler, WallDistanceGate
 
     mesh = CLAMPED_PORE.generate(maxh_nm=4.0, wall_h_nm=ADMISSIBLE_WALL_H_NM)
     plain = wall_distance(mesh, "wall", order=2, max_distance_nm=3.0)

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import math
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -18,18 +19,35 @@ from nanopnp.core.paths import profile_file
 from nanopnp.io.case import (
     CaseValidationError,
     UnsupportedCaseSection,
+    load_case,
     loads_case,
     resolve,
 )
+from nanopnp.materials.corrections import load_corrections
 from nanopnp.mesh.generate import GATE_CONSTANTS, sizing_parameters
 from nanopnp.mesh.sizing import (
     SIZES,
     WALL_CEILING_NM,
+    WallSize,
     case_debye_length_nm,
     ionic_strength_M,
     resolve_wall_size,
 )
 from nanopnp.sweep.plan import SweepPlanError, plan_from_document
+
+if TYPE_CHECKING:  # pragma: no cover - annotations only
+    from nanopnp.io.case import CaseDocument
+
+
+def eps_r0(document: CaseDocument) -> float:
+    """Return ``eps_r,f0`` read straight from the case's parameter file."""
+    return load_corrections(document.electrolyte.parameters).solvent.permittivity.eps_r0
+
+
+def wall_size(document: CaseDocument) -> WallSize:
+    """Return :func:`resolve_wall_size` at the parameter file's ``eps_r,f0``."""
+    return resolve_wall_size(document, permittivity_0=eps_r0(document))
+
 
 CASE = """\
 schema: nanopnp/case/v2
@@ -87,14 +105,14 @@ def test_ver53_auto_is_the_ceiling_or_num30_whichever_is_finer(
     concentration: float, debye_nm: float, auto_nm: float
 ) -> None:
     """NUM-30's lambda_D at eps_r,f0, and ``min(0.05, lambda_D / 5)`` (D7)."""
-    wall = resolve_wall_size(loads_case(case(concentration)))
+    wall = wall_size(loads_case(case(concentration)))
     assert wall.debye_length_nm == pytest.approx(debye_nm, abs=5e-4)
     assert wall.wall_h_nm == pytest.approx(auto_nm, abs=1e-4)
     assert wall.source == "auto"
     # ``auto`` at size_scale 1 is never coarser than NUM-30; only a scale or an
     # explicit size makes it so, and that is recorded rather than refused.
     assert wall.coarser_than_num30 is False
-    coarse = resolve_wall_size(
+    coarse = wall_size(
         loads_case(case(concentration, extra="numerics: {mesh: {size_scale: 4.0}}\n"))
     )
     assert coarse.coarser_than_num30 is (4.0 * auto_nm > debye_nm / 5.0)
@@ -102,8 +120,8 @@ def test_ver53_auto_is_the_ceiling_or_num30_whichever_is_finer(
 
 def test_ver53_num30_alone_would_be_coarse_at_low_salt() -> None:
     """lambda_D / 5 is 0.27 nm at 0.05 M and 0.035 nm at 3 M; the ceiling holds below 1.474 M."""
-    low = resolve_wall_size(loads_case(case(0.05)))
-    high = resolve_wall_size(loads_case(case(3.0)))
+    low = wall_size(loads_case(case(0.05)))
+    high = wall_size(loads_case(case(3.0)))
     assert low.debye_target_nm == pytest.approx(0.27, abs=2e-3)
     assert high.debye_target_nm == pytest.approx(0.035, abs=1e-4)
     assert low.wall_h_nm == WALL_CEILING_NM
@@ -123,27 +141,27 @@ def test_ver53_the_crossover_is_at_1_4741_molar() -> None:
         / 1e3
     )
     assert crossover_M == pytest.approx(1.4741, abs=1e-4)
-    below = resolve_wall_size(loads_case(case(crossover_M * 0.999)))
-    above = resolve_wall_size(loads_case(case(crossover_M * 1.001)))
+    below = wall_size(loads_case(case(crossover_M * 0.999)))
+    above = wall_size(loads_case(case(crossover_M * 1.001)))
     assert below.wall_h_nm == WALL_CEILING_NM
     assert above.wall_h_nm < WALL_CEILING_NM
 
 
 def test_ver53_size_scale_multiplies_every_size_and_temperature_enters_as_sqrt_t() -> None:
     """``size_scale`` scales the wall and the table alike; lambda_D goes as sqrt(T) at fixed I."""
-    scaled = resolve_wall_size(loads_case(case(3.0, extra="numerics: {mesh: {size_scale: 2.0}}\n")))
-    plain = resolve_wall_size(loads_case(case(3.0)))
+    scaled = wall_size(loads_case(case(3.0, extra="numerics: {mesh: {size_scale: 2.0}}\n")))
+    plain = wall_size(loads_case(case(3.0)))
     assert scaled.wall_h_nm == pytest.approx(2.0 * plain.wall_h_nm, rel=1e-15)
     table = SIZES.scaled(2.0).summary()
     for key, value in SIZES.summary().items():
         assert table[key] == pytest.approx(2.0 * float(value), rel=1e-15)  # type: ignore[arg-type]
 
-    warm = resolve_wall_size(loads_case(case(3.0, temperature=350.0)))
+    warm = wall_size(loads_case(case(3.0, temperature=350.0)))
     assert warm.debye_length_nm / plain.debye_length_nm == pytest.approx(
         math.sqrt(350.0 / 298.15), rel=1e-12
     )
 
-    explicit = resolve_wall_size(
+    explicit = wall_size(
         loads_case(case(1.0, extra="numerics: {mesh: {wall_h_nm: 0.04, size_scale: 0.5}}\n"))
     )
     assert explicit.wall_h_nm == pytest.approx(0.02)
@@ -154,7 +172,9 @@ def test_ver53_the_ionic_strength_weights_valence_squared() -> None:
     """``I = 1/2 sum z_i^2 c``: c for NaCl, and lambda_D follows it."""
     document = loads_case(case(0.5))
     assert ionic_strength_M(document) == pytest.approx(0.5)
-    assert case_debye_length_nm(document) == pytest.approx(0.4292, abs=1e-4)
+    assert case_debye_length_nm(document, permittivity_0=eps_r0(document)) == pytest.approx(
+        0.4292, abs=1e-4
+    )
 
 
 def test_ver53_the_recipe_carries_the_backend_the_sizes_and_the_gate() -> None:
@@ -163,7 +183,7 @@ def test_ver53_the_recipe_carries_the_backend_the_sizes_and_the_gate() -> None:
     Netgen's recipe keeps WP21's keys in WP21's order (WP23 D8), so its canonical
     bytes, and every stored key, are unchanged.
     """
-    wall = resolve_wall_size(loads_case(case(3.0)))
+    wall = wall_size(loads_case(case(3.0)))
     recipe = sizing_parameters(wall, SIZES)
     assert list(recipe) == ["backend", "wall", "table", "grading", "optsteps2d", "gate"]
     assert recipe["backend"] == "netgen"
@@ -299,3 +319,24 @@ def test_ver53_upstream_geometry_axes_are_barriers(tmp_path: Path) -> None:
     )
     plan = plan_from_document(sweep)
     assert [point.parent for point in plan.points] == [None, None]
+
+
+SHIPPED_CASES = sorted((Path(__file__).parents[2] / "examples").glob("*/*.case.yaml"))
+"""Every case file the repository ships, each a document a user runs as written."""
+
+
+@pytest.mark.parametrize("path", SHIPPED_CASES, ids=lambda path: path.name)
+def test_ver53_the_mesher_and_the_sweep_plan_size_the_wall_at_one_eps_r0(path: Path) -> None:
+    """Stage 6 sizes at the resolved electrolyte's ``eps_r,f0``; a sweep plan at the file's.
+
+    A sweep plan decides its warm-start barriers from the wall size before any
+    case is resolved, so it reads ``eps_r,f0`` from the parameter file, while the
+    generator and the ingest stage pass ``resolved.electrolyte.permittivity_0``.
+    The two must be one number, exactly, or a plan would place a barrier where
+    the mesh does not move, and an ``auto`` wall would differ between them.
+    """
+    document = load_case(path)
+    resolved = resolve(document)
+    assert resolved.electrolyte.permittivity_0 == eps_r0(document)
+    generated = resolve_wall_size(document, permittivity_0=resolved.electrolyte.permittivity_0)
+    assert generated == wall_size(document)

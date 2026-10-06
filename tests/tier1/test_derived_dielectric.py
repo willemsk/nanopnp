@@ -16,13 +16,7 @@ import numpy as np
 import pytest
 from scipy.interpolate import RegularGridInterpolator
 
-from nanopnp.charge.fields import ChargeFieldError
-from nanopnp.charge.stage import check_water_facing, derive_fields
-from nanopnp.density.grid import RadialGrid
-from nanopnp.geometry.region import RegionRecord, RegionStage, read_region
-from nanopnp.io.artefact import StageInputs
-from nanopnp.io.case import CaseValidationError, ResolvedCase, loads_case, resolve
-from nanopnp.materials.fields import (
+from nanopnp.charge.dielectric import (
     EXCLUSION_MEAN_CEILING,
     DerivedSolidFraction,
     MaterialMean,
@@ -30,8 +24,14 @@ from nanopnp.materials.fields import (
     smooth_step,
     water_facing,
 )
+from nanopnp.charge.fields import ChargeFieldError
+from nanopnp.charge.stage import check_water_facing, derive_fields
+from nanopnp.density.grid import RadialGrid
+from nanopnp.geometry.region import RegionRecord, RegionStage, read_region
+from nanopnp.io.artefact import StageInputs
+from nanopnp.io.case import CaseValidationError, ResolvedCase, loads_case, resolve
 from nanopnp.mesh.ingest import IngestedMesh, MeshStage, deployed_mesh
-from nanopnp.physics.measures import AXISYMMETRIC
+from nanopnp.numerics.measures import AXISYMMETRIC
 
 DELTA_NM = 0.15
 """``delta``: the middle of PHY-20's 1-2 Angstrom (WP30 D15)."""

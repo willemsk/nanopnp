@@ -76,7 +76,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.core.typing import Expression, Mesh
     from nanopnp.io.artefact import Artefact
     from nanopnp.io.case import ResolvedCase
-    from nanopnp.physics.measures import Measures
+    from nanopnp.numerics.measures import Measures
 
 logger = logging.getLogger(__name__)
 
@@ -819,14 +819,14 @@ def deployed_coefficient(run: Path, quantity: ChargeQuantity) -> DeployedCoeffic
         If the run carries no such coefficient: no fixed charge, or a sharp
         permittivity per material with no ``chi`` at all.
     """
+    from nanopnp.charge.dielectric import SOLID_FRACTION
     from nanopnp.charge.fields import CANONICAL_UNITS
     from nanopnp.charge.stage import case_fields, read_fields
     from nanopnp.io.case import load_case, resolve
     from nanopnp.io.fields import FIXED_CHARGE_ATTRIBUTE
     from nanopnp.io.manifest import CASE_FILENAME
-    from nanopnp.materials.fields import SOLID_FRACTION
     from nanopnp.mesh.ingest import deployed_mesh
-    from nanopnp.physics.measures import AXISYMMETRIC
+    from nanopnp.numerics.measures import AXISYMMETRIC
 
     resolved = resolve(load_case(run / CASE_FILENAME))
     mesh_artefact = _recorded_artefact(

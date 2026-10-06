@@ -66,7 +66,7 @@ from nanopnp.io.artefact import Artefact, SolutionArtefact, StageInputs
 from nanopnp.io.case import resolve
 from nanopnp.materials.stage import MaterialsStage
 from nanopnp.mesh.ingest import IngestedMesh, MeshStage, deployed_mesh
-from nanopnp.physics.measures import AXISYMMETRIC
+from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics.models import CoupledBoundaries, declaration
 from nanopnp.solve.continuation import Rung, run_ladder
 from nanopnp.solve.state import (
@@ -87,10 +87,10 @@ from nanopnp.solve.state import (
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.core.typing import Expression, Mesh
     from nanopnp.io.case import ResolvedCase
-    from nanopnp.physics.measures import Measures
+    from nanopnp.numerics.gates import WallDistanceMeasurement
+    from nanopnp.numerics.measures import Measures
+    from nanopnp.numerics.newton import NewtonStep
     from nanopnp.physics.models import ModelSolution
-    from nanopnp.solve.gates import WallDistanceMeasurement
-    from nanopnp.solve.newton import NewtonStep
 
 logger = logging.getLogger(__name__)
 
@@ -484,7 +484,7 @@ class SolveStage:
         same test that injects it, because a rung reports no step for two
         unrelated reasons and a reader cannot tell them apart from the silence.
         A rung whose model takes no callback reports none by construction; a
-        coupled rung reports none when :func:`~nanopnp.solve.newton.damped_newton`
+        coupled rung reports none when :func:`~nanopnp.numerics.newton.damped_newton`
         found the entry residual already below its target and returned before the
         first step — which is not a missing record but the NUM-16 warm-start case
         itself, and is what most of the ladder does once a neighbour has been

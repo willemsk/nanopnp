@@ -1,1 +1,1 @@
-"""Weak forms: Poisson, Nernst-Planck, Navier-Stokes; axisymmetric measures."""
+"""Weak forms: Poisson, Nernst-Planck, Navier-Stokes; the wall-distance field."""

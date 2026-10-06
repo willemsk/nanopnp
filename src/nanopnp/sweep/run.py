@@ -39,7 +39,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
-from nanopnp.cli.errors import EXIT_OK, classify
+from nanopnp.core.errors import EXIT_OK, classify
 from nanopnp.core.hashing import Canonicalisable, canonical
 from nanopnp.io.artefact import SOLUTION_SCHEMA, Artefact, StageInputs
 from nanopnp.io.case import CaseDocument, dumps_case
@@ -231,7 +231,7 @@ def run_point(
     Never raises for a member's own failure. A sweep is the first thing in this
     project that runs unattended, and a member that fails for a reason nobody
     records is indistinguishable from one that was never dispatched (QR-06); so
-    the exception is classified through the same :func:`~nanopnp.cli.errors.classify`
+    the exception is classified through the same :func:`~nanopnp.core.errors.classify`
     the CLI uses, its message is kept verbatim, and the row says so. The caller
     decides what a failure means: ``--index`` exits with the member's own class,
     a local sweep records it and carries on.

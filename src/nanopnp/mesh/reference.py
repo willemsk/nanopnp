@@ -3,7 +3,7 @@
 This is the CAD half of FR-09 and nothing more. The contour that becomes the
 pore polygon is produced by the Phase-2 density and marching-squares pipeline
 (FR-07, FR-08); here the polygon arrives as a validated fixture
-(:mod:`nanopnp.mesh.profile`) and the job is to put a region around it: a
+(:mod:`nanopnp.geometry.profile`) and the job is to put a region around it: a
 reservoir, a bilayer, and a conformal junction between the three.
 
 The region, all lengths in nm and all from section 5.2.1, section 5.2.2 and
@@ -69,6 +69,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 
 from nanopnp.core.typing import Mesh, Shape
+from nanopnp.geometry.profile import PoreProfile, load_profile, plane_crossings
 from nanopnp.geometry.region import (
     MembraneRecord,
     RegionRecord,
@@ -78,7 +79,6 @@ from nanopnp.geometry.region import (
     name_region,
 )
 from nanopnp.mesh.adapter import from_ngsolve
-from nanopnp.mesh.profile import PoreProfile, load_profile, plane_crossings
 from nanopnp.mesh.quality import QualityReport, check_quality
 from nanopnp.mesh.sizing import SIZES, WALL_CEILING_NM, apply_sizes
 

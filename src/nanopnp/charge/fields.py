@@ -11,7 +11,7 @@ three quantities it is, and the difference between them is a factor of ``2*pi*r`
 
 The document lives here rather than in ``density/`` because §5.1 gives
 ``density/`` the grid IO and this is a description of a *physical field* — which
-is also why :mod:`nanopnp.materials.fields` imports it rather than defining a
+is also why :mod:`nanopnp.charge.dielectric` imports it rather than defining a
 second header for the solid fraction. One header shape for every quantity keeps
 the gates in one place.
 
@@ -59,7 +59,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
     from nanopnp.charge.kernel import SourceAtoms
     from nanopnp.core.scaling import Scales
-    from nanopnp.physics.measures import Measures
+    from nanopnp.numerics.measures import Measures
 
 FIELD_SCHEMA = "nanopnp/field/v1"
 """Schema identifier every supplied field document declares (§5.3.1)."""
@@ -119,7 +119,7 @@ QUADRATURE_REFINEMENT = 3
 """Quadrature orders the agreement check adds on top of the assembly order.
 
 Added to the bonus the assembly already carries, not passed as ``extra_order``
-on its own: :meth:`~nanopnp.physics.measures.Measures.bonus_order` takes
+on its own: :meth:`~nanopnp.numerics.measures.Measures.bonus_order` takes
 ``max(extra, 3)`` on a singular form, so ``extra_order=3`` on the ``1/r`` field
 of PHY-16 step 6 evaluates at *exactly* the same order as ``extra_order=0`` and
 the two integrals agree to the last bit [tested]. A gate that passes because its
@@ -574,7 +574,7 @@ class ChargeField:
         ------
         FieldDocumentError
             If the document carries a solid fraction. That is the dielectric's
-            field (:mod:`nanopnp.materials.fields`), and assembling it as a
+            field (:mod:`nanopnp.charge.dielectric`), and assembling it as a
             charge would put a dimensionless number where C m^-3 belongs.
         """
         if self.document.quantity not in CHARGE_QUANTITIES:
@@ -650,7 +650,7 @@ class ChargeField:
         """Return ``Q_mesh``: the assembled density integrated over the mesh.
 
         The ``2*pi`` is restored here, once and in this layer.
-        :meth:`~nanopnp.physics.measures.Measures.integrate` applies the ``r``
+        :meth:`~nanopnp.numerics.measures.Measures.integrate` applies the ``r``
         weight of the axisymmetric forms and not the ``2*pi``, which cancels from
         both sides of every weak form and does not cancel from a charge; the
         Phase-0 rule names ``io/``, ``sweep/`` and ``gui/`` as the layers that

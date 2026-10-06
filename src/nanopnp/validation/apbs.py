@@ -49,7 +49,7 @@ from pydantic import BaseModel, ConfigDict
 
 from nanopnp.core.constants import ELEMENTARY_CHARGE
 from nanopnp.io.fields import sample_at
-from nanopnp.physics.models import POTENTIAL
+from nanopnp.mesh.primitives import POTENTIAL
 
 if TYPE_CHECKING:
     import numpy as np

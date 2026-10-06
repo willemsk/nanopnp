@@ -36,7 +36,7 @@ from typing import Literal, get_args, get_origin
 
 import pytest
 
-from nanopnp.cli.errors import EXIT_CANCELLED, EXIT_CASE, EXIT_CONVERGENCE, EXIT_GATE
+from nanopnp.core.errors import EXIT_CANCELLED, EXIT_CASE, EXIT_CONVERGENCE, EXIT_GATE
 from nanopnp.core.paths import available_corrections
 from nanopnp.core.stages import Cancelled as CancelledError
 from nanopnp.gui.case_model import ABSENT, CaseEditor
@@ -61,8 +61,8 @@ from nanopnp.io.case import (
     load_case,
     options_at,
 )
+from nanopnp.numerics.linear import AVAILABLE_SOLVERS
 from nanopnp.physics.models import registered_models, registered_stabilisations
-from nanopnp.solve.linear import AVAILABLE_SOLVERS
 
 CASE = """
 schema: nanopnp/case/v2
@@ -546,11 +546,11 @@ def test_if09_failure_carries_the_cli_exit_class() -> None:
 
     One representative of each class, asserted against the literal codes of
     §3.1 rather than against a second call to
-    :func:`~nanopnp.cli.errors.classify` — which would only establish that the
+    :func:`~nanopnp.core.errors.classify` — which would only establish that the
     classifier agrees with itself.
     """
+    from nanopnp.numerics.newton import NewtonDivergenceError
     from nanopnp.post.qoi import RouteDisagreementError
-    from nanopnp.solve.newton import NewtonDivergenceError
 
     expected = {
         CaseValidationError("the case is wrong"): EXIT_CASE,
