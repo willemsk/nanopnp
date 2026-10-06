@@ -324,6 +324,8 @@ refused. QR-13's Appendix A row names it.
 
 ### WP38 — The `io` split (MOD-04, MOD-13 for `io/case.py`, MOD-15, and `io`'s cuts of MOD-03)
 
+Plan: [wp38-io-split.md](wp38-io-split.md).
+
 `io` splits into a base, holding the artefact types, the store, the defaults and the resolved-case
 types, imported downward only, and an assembler, holding resolution, the walk and reproduction,
 which imports the stages. `io/case.py`, at 3,160 lines, divides along the same line. `core/stages.py`'s
@@ -589,7 +591,7 @@ Its last commit on `main` is tagged `v0.5.0` alone (G11).
 | The coupling target | Acyclic `top` relation, or whatever the cuts leave | **Settled by the author, 5 October 2026** (H6). Measured by WP39 |
 | QR-13 and `MOD-10` | Build §5.4.1, or restate QR-13 and confine the backend | **Settled by the author, 5 October 2026** (H3) |
 | Refactor sequence | Stages first, or the `io` split first | **Settled by the author, 5 October 2026** (H8) |
-| The base half of `io` | A new subpackage, or a module of `core` | **Open**, owned by WP38's `/wp-plan` |
+| The base half of `io` | A new subpackage, or a module of `core` | **Settled by WP38's plan, 6 October 2026**: `io` is the base, directly above `core`, and the assembler is a new subpackage, `pipeline/`, in `io`'s old place in the order (WP38 D1) |
 | The wall-distance solve's home | `physics`, `solve`, or reported back | **Settled by WP37's plan, 6 October 2026**: `physics/distance.py`, once the kernel is in `numerics/` (H11) |
 | WP37's edge list, and `physics ↔ solve` | The named nine, or the edges pointing up the order; how the 2-cycle is cut | **Settled by the author, 6 October 2026** (H11) |
 | Each `UT-nn` | Fix or defer | **Author**, through the second amendment |

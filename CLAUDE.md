@@ -94,7 +94,9 @@ it. `git commit --no-verify`
 - `solve/` — continuation ladder, warm start, the solve stage
 - `post/` — QoI extraction: current, transport number, EOF, rectification, forces
 - `sweep/` — parameter sweeps, job-array dispatch, result collection
-- `io/` — case-file schema, result store, provenance manifests
+- `io/` — case-file schema, artefact and resolved-case types, result store, provenance manifests;
+  the base layer, importing only `core` at run time
+- `pipeline/` — case resolution against the registries, the walk, reproduction; the assembler
 - `cli/`, `gui/` — thin shells over the stage objects; they hold no physics
 - `validation/` — benchmarks, MMS, COMSOL comparison harness, regression fixtures
 

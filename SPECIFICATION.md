@@ -986,7 +986,8 @@ CLI and the desktop shell drive the same stage objects (IF-01, IF-02, IF-09).
 | `solve/` | Continuation ladder, warm start, the solve stage |
 | `post/` | QoI extraction: current, transport number, EOF, rectification, forces |
 | `sweep/` | Parameter sweeps, job-array dispatch, result collection |
-| `io/` | Case-file schema, result store, provenance manifests |
+| `io/` | Case-file schema, artefact and resolved-case types, the solution-field vocabulary, result store, provenance manifests: the base every stage imports, importing only `core` at run time (`MOD-04`; WP38) |
+| `pipeline/` | Case resolution and the checks against the registries, the pipeline walk, reproduction: the assembler, which imports the stages (`MOD-04`; WP38) |
 | `cli/` | Command-line entry points |
 | `gui/` | Desktop application |
 | `validation/` | Benchmarks, MMS, COMSOL comparison harness, regression fixtures |
