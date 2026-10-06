@@ -14,15 +14,10 @@
 #                    end-to-end walks
 #   gate.sh run      runs the gate directly, prints each stage, exits non-zero
 #                    on failure; adds `--extended`, so it is the whole of what CI
-#                    gates on every push, and the branch coverage of the lines the
-#                    branch changes (diff-cover, as CI's lint job). What the skills
-#                    call before they push
+#                    gates on every push, with diff-cover on the changed lines.
+#                    What the skills call before they push
 #
-# Every pytest call passes -rs, as CI does, so each skip is listed with its
-# reason: a skip is missing evidence. `run` sets NANOPNP_REQUIRE_GMSH=1, as CI
-# does, so a Gmsh that cannot import fails the push gate instead of skipping its
-# tests; the hook sets it only when the change touches the Gmsh backend or its
-# tests, so a session without Gmsh's system libraries can still commit elsewhere.
+# pytest passes -rs, as CI does: a skip is missing evidence and is listed.
 #
 # It is wired up in .claude/settings.json. The matcher is the bare Bash tool
 # rather than an `if: Bash(git commit*)` filter, because that filter is a
@@ -208,9 +203,8 @@ else
     lead="The commit was not made: the gate"
 fi
 
-# The Gmsh backend's tests fail rather than skip where it cannot import
-# (tests/conftest.py), always in `run` and in the hook when the change is
-# Gmsh's own; elsewhere a commit is not refused for a library it does not touch.
+# Gmsh's tests fail rather than skip where it cannot import: always in `run`,
+# as in CI; in the hook only for a change to Gmsh's own code or tests.
 gmsh_paths='^(src/nanopnp/mesh/gmsh_backend\.py|src/nanopnp/mesh/meshers\.py|tests/tier2/test_mesh_backends\.py|tests/.*gmsh[^/]*)$'
 if [[ $mode == run ]] ||
     { git diff --name-only HEAD; git ls-files --others --exclude-standard; } 2>/dev/null |
@@ -306,12 +300,8 @@ else
     # import, the usual Linux case (no libEGL); CI's desktop runners, where it
     # must run, treat 5 as the failure it is there.
     check "pytest (GUI)"    bash -c 'uv run pytest -q -rs tests/tier1/test_gui_widgets.py; s=$?; ((s == 5)) && s=0; exit $s'
-    # Every changed line of src/nanopnp, gui/ aside (its widgets run only on the
-    # desktop legs), is executed on both sides of each of its branches, against
-    # the same base the prose rule judged. It finds a branch no test takes; it
-    # cannot see an untaken arm of a conditional expression, nor code that is
-    # missing, which is what a plan's planned tests are for (.claude/skills/wp-plan). A line no test can reach says why in its
-    # `# pragma: no cover - <reason>` (VER-72).
+    # Full branch coverage of changed src/nanopnp lines, gui/ aside (its widgets
+    # run only on the desktop legs), against the base the prose rule used.
     if [[ -n $coverage_xml ]]; then
         if [[ -n $base ]]; then
             check "diff-cover"  uv run diff-cover "$coverage_xml" --compare-branch="$base" \

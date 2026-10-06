@@ -1,22 +1,12 @@
-"""VER-72: what the work-package plans and the planned tests claim is checked against the code.
+"""VER-72 (d, e): the planned tests and the plans' Outcomes agree with the code.
 
-Two records a review used to have to catch by reading:
-
-- **Planned tests.** ``/wp-plan`` commits the tests of a decision whose failure is
-  a silent pass as strict expected failures, ``@pytest.mark.xfail(strict=True,
-  reason="planned: WP<n> …")``, and ``/wp-implement`` turns each green by deleting
-  its marker. Strictness makes a marker left on a passing test fail; this guard
-  makes a marker left on a *delivered* package fail, and a planned marker that is
-  not strict, or names a package with no plan, fail too.
-- **Names in Outcomes.** A ``> **Outcome — …**`` block of a plan from
-  :data:`FIRST_CHECKED` on records what was built, so every ``name()`` it quotes
-  must be a function, class or module-level assignment of ``src/nanopnp``, found
-  by syntax tree. WP39's pre-review record named a ``registered_modes()`` that
-  never existed. Only the call form is checked: on WP35 to WP39 a dotted
-  ``module.name`` was a case path, a file name or a model field as often as code
-  (eight of seventeen), and a check that noisy would be silenced, not read. A
-  dotted call whose first part is not a ``nanopnp`` module or name, such as
-  ``gmsh.initialize()``, is a third-party API and is not checked either.
+- **Planned tests** (``xfail(strict=True, reason="planned: WP<n> …")``) must be
+  strict and name a planned package that is not yet delivered.
+- **Names in Outcomes**: every ``name()`` quoted in an Outcome of a plan from
+  :data:`FIRST_CHECKED` on is a function, class or module-level assignment of
+  ``src/nanopnp``. Only the call form is checked, because a dotted name in a plan
+  is as often a case path or a field as code; a dotted call whose first part is
+  not a ``nanopnp`` name, such as ``gmsh.initialize()``, is third-party.
 """
 
 from __future__ import annotations
@@ -144,7 +134,7 @@ def test_ver72_a_planned_marker_on_an_open_package_is_kept(records: tuple[Path, 
 @pytest.mark.parametrize(
     ("reason", "strict", "expected"),
     [
-        ("planned: WP91 D11(c)", "True", "WP91 is delivered (wp91-done.md)"),
+        ("planned: WP91 D2", "True", "WP91 is delivered (wp91-done.md)"),
         ("planned: WP92 D1", "True", "names WP92, which has no plan"),
         ("planned: WP90 D3", "False", "is not strict=True"),
     ],
@@ -245,7 +235,7 @@ OUTCOME = """# WP90
 
 Prose outside an Outcome may say `registered_widgets()`.
 """
-"""WP39's real slip, ``registered_modes()``, beside names that resolve or are not checked."""
+"""A missing ``registered_modes()``, beside names that resolve or are not checked."""
 
 
 def test_ver72_an_outcome_naming_a_missing_function_is_named() -> None:

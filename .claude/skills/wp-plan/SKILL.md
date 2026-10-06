@@ -56,66 +56,45 @@ with a ruling round before the write-up, and `/phase-plan amend` changes one in 
 | Normativity note | One paragraph: which phase plan it belongs to, that `SPECIFICATION.md` governs, that identifiers are pointers |
 | `## Execution brief` | Current scope and dependencies, requirement/section pointers, and the subsections below. Target at most 1,200 words; link evidence rather than retelling prior packages |
 | `### Decisions` | A table `Decision \| Choice \| Why/source`. **This is the deliverable.** Resolve choices that affect correctness before implementation; give a short reason and a link to the derivation where needed |
-| `### Work items` | A checklist in dependency order, one commit per item: `- [ ] 3. [Opus] <files and deliverable> (D11) — done when <named tests> pass`. Every item carries a model marker and a done-criterion; see *Work items* below. Include any required Design section to read before touching that item |
-| `### Verification` | Test file, tier, identifiers, assertion/oracle, tolerance source and command. Every claimed `VER-`/`VAL-` appears here, and every planned test (see *Planned tests* below) by name |
+| `### Work items` | A checklist in dependency order, one commit per item: `- [ ] 3. [Opus] — <reason>. <files and deliverable> (D4); done when <tests> pass`. See *Work items* below. Include any required Design section to read before touching that item |
+| `### Verification` | Test file, tier, identifiers, assertion/oracle, tolerance source and command. Every claimed `VER-`/`VAL-` and every planned test appears here |
 | `### Out of scope` | Deferrals and their owner |
 | `### Open questions` | Author rulings needed before implementation. Ask blocking questions before committing |
 | `## Design` | Only new load-bearing derivations, in full arithmetic, with signs and units. Link existing specification/knowledge sections instead of reproducing them. This evidence is outside the brief's word budget |
 
 The brief is an index and execution contract, not a substitute for normative sources or derivations.
 If its budget cannot hold the correctness-critical decisions, split the package or state why it must
-exceed the target; never omit a required check to meet a word count. A brief over 1,200 words, or a
-package of more than about ten decisions, either splits or argues in the brief's first paragraph why
-it must not (WP39 argued, and that remains an option).
+exceed the target; never omit a required check to meet a word count. A brief over 1,200 words or
+about ten decisions splits the package or says why not in its first paragraph.
 
 ### Work items
 
-The plan may be implemented by a session on another model, through another harness, with the same
-skills and gate (`.claude/model-policy.md`, *Who implements a plan*). The work items are written so
-that such a session cannot drift past the point where it should stop.
-
-- **Every item carries `[Opus]` or `[any]`**, written in the item itself, not in a sentence above
-  the list. An item is `[Opus]` when a mistake in it would pass the gate as a plausible wrong
-  answer: physics or numerics, a refusal or its text, a cleanup or error path, a classification, a
-  cache key, a check that could pass silently. Give the reason in one clause: `[Opus] — a cleanup
-  path, whose failure leaks a session silently`. Everything loud (an import move, a rename, a test
-  scaffold whose assertions the plan already states, records) is `[any]`. When unsure, `[Opus]`.
-- **Every item is one commit with a done-criterion**: the named tests that pass when it is done.
-  "Implement D7" is not a criterion; "`test_ver66_unregistered_solver_refused_in_check_document`
-  passes, unmarked" is.
-- Leave the boxes unticked. `/wp-implement` ticks each as `[x] <short sha>` when its commit lands,
-  so a second session resumes from the first unticked item.
+- Each item is marked `[Opus]` or `[any]` in the item itself (`.claude/model-policy.md`, *Who
+  implements a plan*). `[Opus]`: a mistake would pass the gate as a plausible wrong answer
+  (physics, numerics, a refusal or its text, a cleanup or error path, a classification, a key);
+  give the reason in one clause. `[any]`: anything whose failure is loud. Unsure means `[Opus]`.
+- Each item is one commit, with a done-criterion naming the tests that then pass.
+- Leave the boxes unticked; `/wp-implement` ticks them.
 
 ### Planned tests
 
-A review catches an absent `try` only by reading; coverage cannot see code that is not there, nor
-the dead arm of a conditional expression (WP39's remedy text was one, and the gate's `diff-cover`
-passed it), and a
-test the implementer writes for their own code tests what they built, not what was decided. So for
-every `[Opus]` decision whose failure would be a **silent pass** (a refusal, a cleanup or error
-path, a classification, a key), **this plan's commit writes the tests**, with their exact
-assertions: the refusal text and the remedy text it names, the state after the failure (session
-finalised, caller's model intact, nothing written), the classification. Each is a strict expected
-failure until the implementation lands:
+Coverage sees neither missing code nor an untaken arm of a conditional expression, and an
+implementer's own tests check what was built rather than what was decided. So for every `[Opus]`
+decision whose failure would be a silent pass, this plan's commit writes the tests, with exact
+assertions: the refusal and remedy text, the state after the failure. Each is a strict expected
+failure until implemented:
 
 ```python
-@pytest.mark.xfail(strict=True, reason="planned: WP40 D11(c)")
-def test_ver54_a_setup_failure_finalises_an_opened_session(gmsh_module): ...
+@pytest.mark.xfail(strict=True, reason="planned: WP<n> D<k>")
 ```
 
-A planned test imports what the package will add inside its own body, never at module scope, so
-that its file collects before the code exists and the expected failure is the assertion's or the
-import's, not a collection error. `strict=True` turns an unexpected pass into a failure, so a marker
-cannot be left on a test that passes; VER-72 (`tests/tier1/test_plan_records.py`) fails a `planned:` marker that is not strict,
-names a package with no plan, or outlives its package's delivery.
+A planned test imports new code inside its body, so its file collects before the code exists.
+VER-72 fails a `planned:` marker that is not strict, names no existing plan, or outlives its
+package's delivery.
 
-**Enumerate the failure points of every universal claim.** Where a decision says *never*, *always*
-or *every* ("a finalise is never skipped", "every cleanup step runs"), the verification row lists
-each point at which it could fail (each setup step, each cleanup step, a borrowed and an owned
-session) and gives each its own assertion. WP39's D11(c) promised that a finalise is never skipped
-and tested only a failing `model.remove()`; the setup steps before the `try` leaked a session, and
-no test reached them. An oracle looser than its decision is the plan's defect, not the
-implementer's.
+Where a decision says *never*, *always* or *every*, its verification row enumerates each point of
+failure (each setup step, each cleanup step) with one assertion each. An oracle looser than its
+decision is a defect of the plan.
 
 Leave the **Outcome** annotations out. They are blockquotes `> **Outcome — <what changed>.**` added
 in place by `/wp-implement` when predictions change. A plan whose predictions hold needs no invented
@@ -147,7 +126,7 @@ gate failure aborts with the quantity and its location; integration order ≥ 3 
    log; see
    `.github/scripts/prose-only.sh`) and runs ruff alone. A plan that also commits its planned tests,
    or moves code, data or the YAML under `docs/sweeps/` or `docs/validation/`, pays for the whole
-   gate; each planned test must then be collected and fail as expected (`xfailed`, not `error`).
+   gate; each planned test must report `xfailed`, not `error`.
    Then `git push -u origin <branch>`. The plan is the brief `/wp-implement` works from, and it may
    be a different session on a different machine — an unpushed commit is one reclaimed container
    away from gone.

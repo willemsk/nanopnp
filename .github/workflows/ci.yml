@@ -137,12 +137,8 @@ jobs:
           uv run pytest -rs -n auto --dist loadfile --ignore=tests/tier1/test_gui_widgets.py
           --extended --cov=src/nanopnp --cov-branch --cov-report=term-missing
           --cov-report=xml:coverage.xml
-      # Every changed line of src/nanopnp, gui/ aside (its widgets run only on the
-      # desktop legs), executed on both sides of each of its branches, as
-      # `.claude/hooks/gate.sh run` requires before a push. The base is the PR's
-      # base, or the commit a push to main moved from; the checkout's full
-      # history (fetch-depth: 0) holds both. A line no test can reach says why in
-      # its `# pragma: no cover - <reason>` (VER-72).
+      # Full branch coverage of changed src/nanopnp lines, gui/ aside, as
+      # `gate.sh run` requires; the base is the PR's base or the push's parent.
       - if: env.CODE == 'true'
         shell: bash
         env:
