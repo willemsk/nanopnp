@@ -514,13 +514,13 @@ class Comparison:
         """Return a diagnostic naming each differing edge, its import and the file to edit."""
         lines = []
         for relation, (source, target), edge in self.added:
-            # The ratchet's list only shrinks (section 8.2.8 H11, WP37 D12), so an
-            # upward edge is never fixed by recording it.
+            # The ratchet's lists only shrink (section 8.2.8 H11, H12; WP37 D12), so
+            # an upward edge is never fixed by recording it.
             remedy = (
-                f"The {UPWARD}: list of {path.name} only shrinks: cut the dependency by "
+                f"The {relation}: list of {path.name} only shrinks: cut the dependency by "
                 "moving the definition down, passing it in as an argument, or putting an "
                 "annotation-only import under TYPE_CHECKING; a deferred import is not a cut"
-                if relation == UPWARD
+                if relation in RATCHETS
                 else f"Remove the import, or record the edge in {path.name}"
             )
             lines.append(
@@ -556,11 +556,25 @@ def compare(
 UPWARD = "upward"
 """The relation name :func:`compare` reports an upward ``top`` edge under."""
 
+DEFERRED_UPWARD = "deferred_upward"
+"""The relation name :func:`compare` reports an upward ``deferred`` edge under (H12)."""
+
+RATCHETS: dict[str, tuple[str, ...]] = {UPWARD: ("top",), DEFERRED_UPWARD: ("deferred",)}
+"""Each ratchet list of ``modularity-layering.yaml`` and the import kinds it records.
+
+An import moved into a function is not a cut (WP37 D12), and the static relation
+cannot tell it from the ``TYPE_CHECKING`` import it may replace, so the deferred
+upward edges are recorded too and only shrink (section 8.2.8 H12).
+"""
+
 
 def upward_edges(
-    edges: Iterable[ImportEdge], order: Sequence[str] = LAYER_ORDER
+    edges: Iterable[ImportEdge],
+    order: Sequence[str] = LAYER_ORDER,
+    *,
+    kinds: Collection[str] = ("top",),
 ) -> dict[tuple[str, str], tuple[ImportEdge, ...]]:
-    """Return the ``top`` subpackage edges that point up ``order``, with their imports.
+    """Return the subpackage edges of ``kinds`` that point up ``order``, with their imports.
 
     Raises
     ------
@@ -569,7 +583,7 @@ def upward_edges(
         place in the order before its edges can be judged.
     """
     rank = {node: position for position, node in enumerate(order)}
-    relation = subpackage_relation(edges, kinds=("top",))
+    relation = subpackage_relation(edges, kinds=kinds)
     unplaced = sorted({node for pair in relation for node in pair} - set(rank))
     if unplaced:
         raise ValueError(
@@ -579,25 +593,29 @@ def upward_edges(
     return {pair: found for pair, found in relation.items() if rank[pair[0]] < rank[pair[1]]}
 
 
-def accepted_upward(path: Path = LAYERING) -> tuple[AcceptedEdge, ...]:
-    """Read the recorded upward ``top`` edges, the ``upward:`` list (VER-61).
+def accepted_upward(path: Path = LAYERING, ratchet: str = UPWARD) -> tuple[AcceptedEdge, ...]:
+    """Read one recorded ratchet list, ``upward:`` by default (VER-61).
 
     Raises
     ------
     ValueError
-        If a row lacks a key or repeats an edge.
+        If ``ratchet`` is not one of :data:`RATCHETS`, or a row lacks a key or
+        repeats an edge.
     """
+    if ratchet not in RATCHETS:
+        raise ValueError(f"{ratchet!r} is not a ratchet; expected one of {', '.join(RATCHETS)}")
+    label = ratchet.replace("_", " ")
     accepted: list[AcceptedEdge] = []
     seen: set[tuple[str, str]] = set()
-    for number, row in enumerate(_rows(path, UPWARD), start=1):
+    for number, row in enumerate(_rows(path, ratchet), start=1):
         if not isinstance(row, dict) or set(row) != {"from", "to", "finding"}:
-            raise ValueError(f"{path}: upward edge {number} needs exactly from, to and finding")
+            raise ValueError(f"{path}: {label} edge {number} needs exactly from, to and finding")
         pair = (str(row["from"]), str(row["to"]))
         if pair in seen:
-            raise ValueError(f"{path}: upward edge {number} repeats {pair[0]} -> {pair[1]}")
+            raise ValueError(f"{path}: {label} edge {number} repeats {pair[0]} -> {pair[1]}")
         seen.add(pair)
         finding = row["finding"]
-        accepted.append(AcceptedEdge(*pair, UPWARD, None if finding is None else str(finding)))
+        accepted.append(AcceptedEdge(*pair, ratchet, None if finding is None else str(finding)))
     return tuple(accepted)
 
 

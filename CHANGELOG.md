@@ -44,9 +44,9 @@ arithmetic, and no artefact key changes (VER-62).
   | `nanopnp.mesh.distance` | `nanopnp.physics.distance` |
   | `nanopnp.mesh.profile` | `nanopnp.geometry.profile` |
   | `nanopnp.materials.fields`, except `blend` and `nearest_solid_permittivity` | `nanopnp.charge.dielectric` |
-  | `nanopnp.mesh.primitives.TOL_NM` | `nanopnp.geometry.profile.TOL_NM` |
+  | `nanopnp.mesh.primitives.TOL_NM` | `nanopnp.geometry.tolerance.TOL_NM` |
   | `nanopnp.physics.models`'s `POTENTIAL`, `VELOCITY`, `VELOCITY_AXIS`, `CoupledBoundaries`, `DEFAULT_BOUNDARIES` | `nanopnp.mesh.primitives` (`physics.models` still re-exports the last three) |
-  | `nanopnp.cli.errors` | `nanopnp.core.errors` (`cli.errors` re-exports it) |
+  | `nanopnp.cli.errors` | `nanopnp.core.errors` (`nanopnp.cli.errors` is removed) |
 
 - **The exit-code table and `classify` live in `nanopnp.core.errors`** (`MOD-05`), so the sweep
   runner, the example walker and the desktop shell no longer import the CLI. The codes are
@@ -67,6 +67,17 @@ arithmetic, and no artefact key changes (VER-62).
 - **VER-61's upward ratchet**: the module-scope edges pointing up the layer order equal the file's
   `upward:` list, so an import cut by moving it under `TYPE_CHECKING` cannot come back unnoticed.
   It holds the nine edges into `io`, which WP38 cuts, and `cli -> nanopnp`.
+- **VER-61's deferred ratchet** (§8.2.8 H12): the edges pointing up the layer order from an import
+  inside a function equal the file's `deferred_upward:` list, so a cut cannot come back as a
+  deferred import (WP37 D12). It holds `gui -> nanopnp`. Every row of either ratchet names its
+  finding.
+- **The review register** (§8.2.8 H12): `docs/project/review-findings.md`, `REV-nn`, with
+  `docs/project/review-items.md`, keeps what a work package's implementation or review leaves
+  open until it is resolved. VER-63 checks it.
+- **The commit gate's prose rule** treats `SPECIFICATION.md` and the findings reports as read by
+  tests, so an edit to a ruling or a finding's heading runs VER-63 (REV-10). `CLAUDE.md` exempts
+  `scipy` from the import rule and one `%` over a whole numeric array from the f-string rule
+  (REV-21, REV-22).
 
 ## [0.5.0-alpha.2] - 2026-10-05
 

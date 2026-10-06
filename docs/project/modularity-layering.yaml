@@ -1,12 +1,13 @@
 # The accepted subpackage import relation of src/nanopnp (WP35 D6; VER-61), the
-# recorded upward edges (VER-61, section 8.2.8 H11) and the subpackages that reach
+# recorded upward edges (VER-61, section 8.2.8 H11, H12) and the subpackages that reach
 # the finite-element backend (VER-65, section 8.2.8 H3).
 #
 # `edges`: one row per subpackage edge: `from` imports `to`. `relation` is `static`
 # (an import at module scope, inside a function or under `if TYPE_CHECKING:`) or
 # `string` (a string constant naming the module, as the stage registry, PUBLIC and
 # the exit-code table of core/errors.py do). `finding` names the MOD-nn of
-# docs/project/modularity-findings.md that bears on the edge, or is null.
+# docs/project/modularity-findings.md or the REV-nn of
+# docs/project/review-findings.md that bears on the edge, or is null.
 # tests/tier1/test_layering.py asserts that this list equals the relation
 # nanopnp.validation.modularity measures, in both directions: a commit that adds or
 # removes an edge edits this file in the same commit (docs/project/contributing.md).
@@ -21,6 +22,11 @@
 # import moves under TYPE_CHECKING, so this list is what keeps a cut from coming
 # back. tests/tier1/test_layering.py asserts it equals the measured upward edges in
 # both directions. WP38 removes the edges into io, and WP39 empties the list.
+#
+# `deferred_upward`: the same ratchet over imports inside a function, which are
+# no cut (WP37 D12) and which the static relation cannot tell from the
+# TYPE_CHECKING import they may replace (section 8.2.8 H12). Every upward edge in
+# either list names its finding, and both lists only shrink.
 #
 # `backend`: the subpackages with a module that imports ngsolve or netgen in any
 # kind, or names one of their submodules in a string. tests/tier1/test_backend_guard.py
@@ -146,7 +152,7 @@ edges:
   - {from: nanopnp, to: sweep, relation: string, finding: null}
 upward:
   - {from: charge, to: io, finding: MOD-04}
-  - {from: cli, to: nanopnp, finding: null}
+  - {from: cli, to: nanopnp, finding: REV-05}
   - {from: density, to: io, finding: MOD-04}
   - {from: geometry, to: io, finding: MOD-04}
   - {from: materials, to: io, finding: MOD-04}
@@ -155,6 +161,8 @@ upward:
   - {from: solve, to: io, finding: MOD-04}
   - {from: structure, to: io, finding: MOD-04}
   - {from: symmetry, to: io, finding: MOD-04}
+deferred_upward:
+  - {from: gui, to: nanopnp, finding: REV-05}
 backend:
   - charge
   - density

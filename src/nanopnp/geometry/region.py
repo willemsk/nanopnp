@@ -66,7 +66,6 @@ from nanopnp.core.stages import (
     report,
 )
 from nanopnp.geometry.profile import (
-    TOL_NM,
     PoreProfile,
     load_profile,
     min_vertex_spacing,
@@ -74,6 +73,7 @@ from nanopnp.geometry.profile import (
     profile_digest,
     signed_area,
 )
+from nanopnp.geometry.tolerance import TOL_NM
 from nanopnp.io.artefact import RegionArtefact
 from nanopnp.io.case import MembraneSpec, ReservoirSpec, UnsupportedCaseSection, resolve
 

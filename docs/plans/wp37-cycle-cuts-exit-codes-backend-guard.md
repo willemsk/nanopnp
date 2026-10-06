@@ -125,6 +125,15 @@ which needs a reading of WP30's χ code (Opus).
 > resolves each of the 15 shipped case files and asserts `resolved.electrolyte.permittivity_0` equals
 > the parameter file's `eps_r0` exactly, and the two wall sizes are equal.
 
+> **Outcome — the shipping review, ruled 6 October 2026 (§8.2.8 H12).** `/code-review xhigh` on
+> PR #80 raised 13 findings; eight were applied in `5559c7e`. Of the five left, the author ruled:
+> `TOL_NM` moves to an import-free `geometry/tolerance.py`, since D6's home loaded pydantic and
+> yaml (REV-01; `mesh.primitives` 179 ms → 62 ms); D9's re-export is removed, `core/errors.py`
+> being the table's one home as D10 asks (REV-02); the split field vocabulary goes to WP38
+> (REV-03); D12 becomes a test, a `deferred_upward:` ratchet holding `gui → nanopnp` (REV-04);
+> and D11's `cli → nanopnp`, with `gui → nanopnp`, cites REV-05 for WP39. The rows are in
+> [the review register](../project/review-findings.md).
+
 > **Outcome — D15 held.** The seven VER-62 walks pass at 10⁻⁸ against the recorded golden on
 > `2400c1b`, in `.claude/hooks/gate.sh run` (extended selection, the GUI test serially), and no
 > artefact key moved. The strict documentation build passes.

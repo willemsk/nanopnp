@@ -66,13 +66,14 @@ tense. Do not stamp text with `added`/`amended` dates or narrate renames and sup
 lives in git, `CHANGELOG.md`, the delivered plans and §8.2. A WP plan's own Outcomes may keep
 history, because a plan is a record.
 
-Three records move together as the work lands:
+Four records move together as the work lands:
 
 | Record | Gets |
 |---|---|
 | `SPECIFICATION.md` | Amendments, NOTEs, argued tolerances — normative changes only |
 | `.knowledge/<file>.md` | Durable findings, marked **[tested]** (verified by running code) or **[verified]** (verified by arithmetic), with the source. No status, no task lists, no scope opinions |
 | `docs/plans/wp<n>-*.md` | Current Execution brief and concise `> **Outcome — <what changed>.**` annotations linking the evidence; measured numbers the plan requested, unless already recorded at a linked authoritative location |
+| `docs/project/review-findings.md` | A `REV-nn` row, with its section in `docs/project/review-items.md`, for every item the package leaves open: a work item deferred, a known limitation, a question for the author (§8.2.8 H12). A row it resolves is set `fixed`, its ruling linking the plan |
 
 The phase plan's `### WP<n>` section gains a short delivered summary (target 150 words): scope,
 identifiers, live inherited constraints and links to evidence. Do not repeat derivations or measurement
@@ -98,7 +99,9 @@ evidence. Record the stabilisation mode with every number.
 
 Before handing off, confirm every one of these yourself:
 
-- every work item in the plan is done, or explicitly deferred with a reason written into the plan;
+- every work item in the plan is done, or explicitly deferred with a reason written into the plan
+  and a `REV-nn` row in `docs/project/review-findings.md`; nothing left open lives only in the PR
+  body (§8.2.8 H12);
 - every `VER-`/`VAL-` identifier the plan claimed has a test named for it, and it passes;
 - `.claude/hooks/gate.sh run` is green on the current tree;
 - the specification, the knowledge base and the plan's Outcome annotations are all committed;

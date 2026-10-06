@@ -95,8 +95,12 @@ changes before accepting the report; evidence for an old revision does not certi
    becoming a plausible wrong one — do not skip it. It stays in this session, on Opus, and is never
    handed to a Sonnet sub-agent (`.claude/model-policy.md`); the review skill forks its own agent,
    which the policy does not govern.
-2. Findings the pass raised but could not fix: fix them yourself here, or record them in the PR body
-   under **Deliberately not done** with the reason. Do not leave a confirmed finding unmentioned.
+2. Findings the pass raised but could not fix: fix them yourself here, or record each one as a
+   `REV-nn` row in `docs/project/review-findings.md`, with its section in
+   `docs/project/review-items.md` (§8.2.8 H12), and list it in the PR body under **Deliberately
+   not done** with the reason. A finding the author has not ruled on is `open`, its ruling `—`;
+   put it to the author before the report. Do not leave a confirmed finding unmentioned, and do not
+   leave it only in the PR body.
 3. If fixes changed the tree, re-run `.claude/hooks/gate.sh run`.
 4. Commit accepted changes — `fix: close the review gaps in <what>`, identifiers in the body — and
   push to the PR branch. No empty commit or cosmetic edit is needed for a clean review. The commits

@@ -35,15 +35,6 @@ from nanopnp.core.paths import profile_file
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
 
-TOL_NM = 1e-9
-"""Geometric tolerance for classifying an edge by its centre of mass.
-
-Public because :mod:`nanopnp.mesh.primitives` names the edges of its analytic
-geometries against it and :mod:`nanopnp.geometry.analyte` classifies against the
-same tolerance when it embeds a body in one of them; two tolerances that can
-drift apart would put an edge in one geometry's vocabulary and not the other's.
-"""
-
 PROFILE_SCHEMA: str = "nanopnp/profile/v1"
 """Schema identifier every profile fixture must declare."""
 
