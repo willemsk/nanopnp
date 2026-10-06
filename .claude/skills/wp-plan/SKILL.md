@@ -56,15 +56,64 @@ with a ruling round before the write-up, and `/phase-plan amend` changes one in 
 | Normativity note | One paragraph: which phase plan it belongs to, that `SPECIFICATION.md` governs, that identifiers are pointers |
 | `## Execution brief` | Current scope and dependencies, requirement/section pointers, and the subsections below. Target at most 1,200 words; link evidence rather than retelling prior packages |
 | `### Decisions` | A table `Decision \| Choice \| Why/source`. **This is the deliverable.** Resolve choices that affect correctness before implementation; give a short reason and a link to the derivation where needed |
-| `### Work items` | Files, deliverables and identifiers, in dependency order; include any required Design section to read before touching that item |
-| `### Verification` | Test file, tier, identifiers, assertion/oracle, tolerance source and command. Every claimed `VER-`/`VAL-` appears here |
+| `### Work items` | A checklist in dependency order, one commit per item: `- [ ] 3. [Opus] <files and deliverable> (D11) — done when <named tests> pass`. Every item carries a model marker and a done-criterion; see *Work items* below. Include any required Design section to read before touching that item |
+| `### Verification` | Test file, tier, identifiers, assertion/oracle, tolerance source and command. Every claimed `VER-`/`VAL-` appears here, and every planned test (see *Planned tests* below) by name |
 | `### Out of scope` | Deferrals and their owner |
 | `### Open questions` | Author rulings needed before implementation. Ask blocking questions before committing |
 | `## Design` | Only new load-bearing derivations, in full arithmetic, with signs and units. Link existing specification/knowledge sections instead of reproducing them. This evidence is outside the brief's word budget |
 
 The brief is an index and execution contract, not a substitute for normative sources or derivations.
 If its budget cannot hold the correctness-critical decisions, split the package or state why it must
-exceed the target; never omit a required check to meet a word count.
+exceed the target; never omit a required check to meet a word count. A brief over 1,200 words, or a
+package of more than about ten decisions, either splits or argues in the brief's first paragraph why
+it must not (WP39 argued, and that remains an option).
+
+### Work items
+
+The plan may be implemented by a session on another model, through another harness, with the same
+skills and gate (`.claude/model-policy.md`, *Who implements a plan*). The work items are written so
+that such a session cannot drift past the point where it should stop.
+
+- **Every item carries `[Opus]` or `[any]`**, written in the item itself, not in a sentence above
+  the list. An item is `[Opus]` when a mistake in it would pass the gate as a plausible wrong
+  answer: physics or numerics, a refusal or its text, a cleanup or error path, a classification, a
+  cache key, a check that could pass silently. Give the reason in one clause: `[Opus] — a cleanup
+  path, whose failure leaks a session silently`. Everything loud (an import move, a rename, a test
+  scaffold whose assertions the plan already states, records) is `[any]`. When unsure, `[Opus]`.
+- **Every item is one commit with a done-criterion**: the named tests that pass when it is done.
+  "Implement D7" is not a criterion; "`test_ver66_unregistered_solver_refused_in_check_document`
+  passes, unmarked" is.
+- Leave the boxes unticked. `/wp-implement` ticks each as `[x] <short sha>` when its commit lands,
+  so a second session resumes from the first unticked item.
+
+### Planned tests
+
+A review catches an absent `try` only by reading; coverage cannot see code that is not there, and a
+test the implementer writes for their own code tests what they built, not what was decided. So for
+every `[Opus]` decision whose failure would be a **silent pass** (a refusal, a cleanup or error
+path, a classification, a key), **this plan's commit writes the tests**, with their exact
+assertions: the refusal text and the remedy text it names, the state after the failure (session
+finalised, caller's model intact, nothing written), the classification. Each is a strict expected
+failure until the implementation lands:
+
+```python
+@pytest.mark.xfail(strict=True, reason="planned: WP40 D11(c)")
+def test_ver54_a_setup_failure_finalises_an_opened_session(gmsh_module): ...
+```
+
+A planned test imports what the package will add inside its own body, never at module scope, so
+that its file collects before the code exists and the expected failure is the assertion's or the
+import's, not a collection error. `strict=True` turns an unexpected pass into a failure, so a marker
+cannot be left on a test that passes; VER-72 (`tests/tier1/test_plan_records.py`) fails a `planned:` marker that is not strict,
+names a package with no plan, or outlives its package's delivery.
+
+**Enumerate the failure points of every universal claim.** Where a decision says *never*, *always*
+or *every* ("a finalise is never skipped", "every cleanup step runs"), the verification row lists
+each point at which it could fail (each setup step, each cleanup step, a borrowed and an owned
+session) and gives each its own assertion. WP39's D11(c) promised that a finalise is never skipped
+and tested only a failing `model.remove()`; the setup steps before the `try` leaked a session, and
+no test reached them. An oracle looser than its decision is the plan's defect, not the
+implementer's.
 
 Leave the **Outcome** annotations out. They are blockquotes `> **Outcome — <what changed>.**` added
 in place by `/wp-implement` when predictions change. A plan whose predictions hold needs no invented
@@ -94,10 +143,11 @@ gate failure aborts with the quantity and its location; integration order ≥ 3 
    `docs: WP<n> implementation plan`, with the identifiers it discharges in the body.
    The gate hook sees a prose-only change (Markdown outside `packaging/`, `src/`, `data/` and `examples/`, other than a `*findings.md`
    log; see
-   `.github/scripts/prose-only.sh`) and runs ruff alone. A plan that also moves code, data or the
-   YAML under `docs/sweeps/` or `docs/validation/` pays for the whole gate.
+   `.github/scripts/prose-only.sh`) and runs ruff alone. A plan that also commits its planned tests,
+   or moves code, data or the YAML under `docs/sweeps/` or `docs/validation/`, pays for the whole
+   gate; each planned test must then be collected and fail as expected (`xfailed`, not `error`).
    Then `git push -u origin <branch>`. The plan is the brief `/wp-implement` works from, and it may
    be a different session on a different machine — an unpushed commit is one reclaimed container
    away from gone.
-3. Report to the user: the path, the decisions that were close calls, any spec amendment made, and
-   the open questions — then stop. Implementation is `/wp-implement`, and it is a separate turn.
+3. Report to the user: the path, the decisions that were close calls, any spec amendment made, the
+   `[Opus]` items and the planned tests, and the open questions — then stop. Implementation is `/wp-implement`, and it is a separate turn.

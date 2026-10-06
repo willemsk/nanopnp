@@ -25,17 +25,37 @@ into `/wp-ship`: independent review and CI stewardship remain a separate invocat
    none was given, stop and ask before writing anything — `wp-ship` §1 refuses to ship from `main`,
    and by the time it says so the whole package has already been committed there.
 
-Then build a task list from the plan's work items, in dependency order, and work it. Physics and
-numerics decisions stay with the orchestrator on Opus; delegate surveys, mechanical edits and long
-test runs per `.claude/model-policy.md`, saying which model you chose and why.
+Then build a task list from the plan's work items, in dependency order, starting at the first
+unticked one: a ticked item (`[x] <sha>`) is done, and its commit says how. Physics and numerics
+decisions stay with the orchestrator on Opus; delegate surveys, mechanical edits and long test runs
+per `.claude/model-policy.md`, saying which model you chose and why.
+
+**If this session is not Opus**, or cannot tell which model it runs on, it implements only the
+`[any]` items, in plan order, up to the first `[Opus]` item, committing and ticking each. There it
+**stops**, and reports the `[Opus]` items left for an Opus session, by number. It does not implement
+an `[Opus]` item, draft it for later or work around it, and it does not open the PR: **Finishing**
+comes only after every item is done (`.claude/model-policy.md`, *Who implements a plan*). It does
+not skip past the `[Opus]` item to later `[any]` ones: the ticks stay a prefix of the list, which is
+what lets the next session start from the first unticked item. A plan whose items carry no marker
+is treated as all `[Opus]`.
 
 ## How the work lands
 
-**One commit per coherent unit**, not one per file and not one at the end. Conventional prefix,
-requirement identifier in the body (`VER-19`, `NUM-28`). The gate hook runs the whole gate before
+**One commit per work item**, not one per file and not one at the end; the plan states each item's
+done-criterion, the tests that pass when it is done. Conventional prefix, requirement identifier in
+the body (`VER-19`, `NUM-28`). After each item's commit, tick it in the plan's `### Work items` as
+`[x] <short sha>`, in that commit or the next, so that a second session, or an Opus session taking
+over the `[Opus]` items, starts from the first unticked item instead of re-deriving progress. The gate hook runs the whole gate before
 each commit and refuses it with the failing output, so a commit is proof the tree was green. It
 gates the working tree and remembers a pass, so a tree gated once can be split into several commits
 without paying for the gate again.
+
+**Planned tests.** The plan's commit may already hold the tests of an item, marked
+`@pytest.mark.xfail(strict=True, reason="planned: WP<n> …")`. Turn each green by implementing the
+item and **deleting the marker**; strictness fails the run if a planned test passes with its marker
+still on, and VER-72 fails one left on a delivered package. **Never edit a planned test's
+assertions, its expected text or its setup.** If one is wrong, or cannot pass as written, stop and
+report it: the plan is the thing in error, and its author amends it.
 
 A unit is done when its test exists and passes, not when the code compiles. Name every test for the
 requirement it discharges — `test_ver19_stokes_drag_against_six_pi_eta_a_u` — and place it in the
@@ -99,9 +119,10 @@ evidence. Record the stabilisation mode with every number.
 
 Before handing off, confirm every one of these yourself:
 
-- every work item in the plan is done, or explicitly deferred with a reason written into the plan
-  and a `REV-nn` row in `docs/project/review-findings.md`; nothing left open lives only in the PR
-  body (§8.2.8 H12);
+- every work item in the plan is done and ticked with its commit, or explicitly deferred with a
+  reason written into the plan and a `REV-nn` row in `docs/project/review-findings.md`; nothing left
+  open lives only in the PR body (§8.2.8 H12). Every `[Opus]` item was done in an Opus session;
+- no `planned: WP<n>` marker of this package remains (`grep -rn "planned: WP<n>" tests/`);
 - every `VER-`/`VAL-` identifier the plan claimed has a test named for it, and it passes;
 - `.claude/hooks/gate.sh run` is green on the current tree;
 - the specification, the knowledge base and the plan's Outcome annotations are all committed;
