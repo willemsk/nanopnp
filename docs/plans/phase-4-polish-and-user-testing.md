@@ -8,8 +8,8 @@ Delivered: WP35, the modularity exploration
 WP36, the stage protocol and the walk ([wp36-stage-protocol-and-walk.md](wp36-stage-protocol-and-walk.md)),
 tagged `v0.5.0-alpha.2`; WP37, the cycle cuts, the exit codes and the backend guard
 ([wp37-cycle-cuts-exit-codes-backend-guard.md](wp37-cycle-cuts-exit-codes-backend-guard.md)),
-tagged `v0.5.0-alpha.3`; WP38, the `io` split ([wp38-io-split.md](wp38-io-split.md)), to be tagged
-`v0.5.0-alpha.4`.
+tagged `v0.5.0-alpha.3`; WP38, the `io` split ([wp38-io-split.md](wp38-io-split.md)),
+tagged `v0.5.0-alpha.4`.
 Planned: WP39, the backend registries; WP40, the stale refusals; WP41, the
 accuracy fixes; WP42, the verification checks; WP43, the small fixes; WP44, the OKF bundle; WP45,
 its backfill; WP46, the user-testing protocol (§8.2.9 I1). Provisional, and planned by the second
@@ -346,7 +346,7 @@ No new identifier: VER-61 records the new relation, and VER-62 must show zero dr
 > - REV-63: the walk visits only the input closure of the requested stage, so `protonation` no
 >   longer walks through meshing. VER-64's derivation from the registry is kept.
 
-> **Delivered, 6 October 2026** ([plan](wp38-io-split.md), to be tagged `v0.5.0-alpha.4`).
+> **Delivered, 6 October 2026** ([plan](wp38-io-split.md), tagged `v0.5.0-alpha.4`).
 > `io` is the base, importing only `core` at run time: the schema, the case paths, the resolved
 > types and the field vocabulary. `pipeline/` is the assembler: loading, resolution and its checks,
 > the walk and reproduction. The IF-07 export is `post/export.py`. A stage is handed
