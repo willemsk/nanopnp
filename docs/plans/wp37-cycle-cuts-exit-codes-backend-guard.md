@@ -1,6 +1,6 @@
 # WP37 — The cycle cuts outside `io`, the exit codes, and the backend guard
 
-**Status: planned, not started.** Written 6 October 2026 on `ccr-60ae37bd-edif2r` at `a346419`, after
+**Status: delivered, 6 October 2026.** Written 6 October 2026 on `ccr-60ae37bd-edif2r` at `a346419`, after
 WP36 merged. It inherits everything the [current brief](current.md) lists as not to be re-decided,
 and in particular:
 
@@ -98,6 +98,36 @@ which needs a reading of WP30's χ code (Opus).
    `upward:`; the order constant (D2, D13, D14).
 9. Tests, the specification rows (VER-65; VER-61's clause; Appendix A for QR-13 and VER-61), the
    findings log, `CHANGELOG.md`, and the phase plan's Outcome.
+
+> **Outcome — the moves landed as one commit.** Each move touches files another touches
+> (`physics/models.py`, `io/case.py`, `core/errors.py`'s strings), and VER-61 pins the YAML both
+> ways, so a commit per move would need a relation regenerated for a tree no one gates. The code,
+> the YAML, the tests and the specification rows land together; the records follow.
+>
+> **Outcome — measured after the moves.** `upward_edges(import_edges())` is exactly the nine
+> `X → io` edges and `cli → nanopnp`, and with the edges out of `io` removed `components` finds
+> none: *Design* §1's prediction holds on the real tree. The `edges:` list lost 26 rows and gained
+> 14: each consumer's `→ numerics`, `sweep → materials` (D7), and `core → gui`, `→ numerics`,
+> `→ sweep`, `→ validation` as string edges of the exit table, annotated `MOD-05` (D9).
+>
+> **Outcome — D8, the field names.** `mypy --strict` does not let a module re-export a name it only
+> imports, so `io/fields.py`, `post/qoi.py`, `post/forces.py`, `validation/apbs.py`,
+> `validation/compare.py` and `validation/mms.py` import `POTENTIAL` and `VELOCITY` from
+> `mesh.primitives`. `physics.models` keeps `CoupledBoundaries`, `DEFAULT_BOUNDARIES` and
+> `VELOCITY_AXIS` in its `__all__`, as before.
+>
+> **Outcome — D13, the string kind.** A backend string must name a submodule or an attribute
+> (`"ngsolve.webgui"`): a bare `"netgen"` is also the mesher's name in the case schema, and counting
+> it would have added `io`'s schema and `mesh/adapter.py`'s format table for no coupling. One string
+> reference exists, `gui/probe.py:85`; the live set is the twelve D13 predicts.
+>
+> **Outcome — D7's oracle.** `test_ver53_the_mesher_and_the_sweep_plan_size_the_wall_at_one_eps_r0`
+> resolves each of the 15 shipped case files and asserts `resolved.electrolyte.permittivity_0` equals
+> the parameter file's `eps_r0` exactly, and the two wall sizes are equal.
+
+> **Outcome — D15 held.** The seven VER-62 walks pass at 10⁻⁸ against the recorded golden on
+> `2400c1b`, in `.claude/hooks/gate.sh run` (extended selection, the GUI test serially), and no
+> artefact key moved. The strict documentation build passes.
 
 ### Verification
 

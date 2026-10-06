@@ -1,6 +1,6 @@
 # Current work
 
-Updated 6 October 2026 (WP37 planned). Navigation only; `SPECIFICATION.md`
+Updated 6 October 2026 (WP37 delivered on its branch). Navigation only; `SPECIFICATION.md`
 governs; nothing here is evidence an unmerged branch shipped.
 
 ## Position
@@ -9,9 +9,9 @@ governs; nothing here is evidence an unmerged branch shipped.
   (§8.2.5 E1, E5).
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
   **in progress** (§8.2.7 G1–G11; §8.2.8 H1–H11). WP35 merged as `v0.5.0-alpha.1`, WP36
-  as `a346419`, to be tagged `v0.5.0-alpha.2`. All 18 `MOD-nn` are ruled.
-- **Next: `/wp-implement 37`** ([plan](wp37-cycle-cuts-exit-codes-backend-guard.md); H11):
-  upward cuts outside `io`, `numerics/`, `core/errors.py`, VER-65. Then WP38 (`io` split), WP39
+  as `a346419`, to be tagged `v0.5.0-alpha.2`.
+- **WP37** ([plan](wp37-cycle-cuts-exit-codes-backend-guard.md); H11) is delivered on its branch,
+  to be tagged `v0.5.0-alpha.3`. **Next: `/wp-ship`**, then `/wp-plan 38` (`io` split), WP39
   (registries; H6 measured), WP40–WP43; then the author's sessions and a second amendment.
 - Phase 5 (`v0.6.0`) is the GUI (F5), Phase 6 (`v0.7.0`) validation (F1); v1.0 is OPN-08.
 
@@ -26,14 +26,14 @@ Each is recorded in full where it points.
   author's sessions (G7); the VER-62 golden (G10). → §8.2.7.
 - **The `MOD-nn` rulings:** `MOD-09` and `MOD-18` go to Phase 5 (H4, H10); `MOD-11` waits for the sessions (H2); QR-13 restated and the backend
   confined (H3); an acyclic `top` relation, a miss ruled, never forced (H6); three backend
-  registries, no schema move (H7); cuts follow the order, and the solver kernel is `numerics/`,
-  after `mesh` (H11). → §8.2.8.
-- **Phase 3's charge pipeline**: the kernel on the deployed mesh, protonation per frame, VAL-06's
-  tolerance, WP30's switches off, charges read from artefacts. → §8.2.4; VER-59, VER-60.
+  registries, no schema move (H7); cuts follow the order, kernel in `numerics/` (H11). → §8.2.8.
+- **Phase 3's charge pipeline** stands as delivered. → §8.2.4; VER-59, VER-60.
 - **No payload records wall-clock time** (VER-23). **A gated test gets cheaper
   only by the §7.6 NOTE's four levers** (WP33).
 - **An edge moved edits `modularity-layering.yaml` in the same commit (VER-61); a VER-62 miss is
   reverted, or ruled and re-pinned (G10).** → `docs/project/contributing.md`.
+- **`upward:` only shrinks; `backend:` grows only by ruling** (VER-61, VER-65). A cut removes a
+  dependency, never defers it (WP37 D12).
 - **A stage declares its walk facts in the registry and defines `key`.** The walk runs stages in
   registration order (VER-64; WP36 D3–D5).
 - **Tier 3 compares the published I–V and in-pore averages**, gating v0.7 (VAL-16, VAL-17; F1).
@@ -79,7 +79,6 @@ The Outcomes of a delivered plan override its decisions table, so read the two t
 
 ## Handoff Rules
 
-When planning or finishing a package, replace this brief's position and live dependencies. It is
-not a delivery diary. Keep it to 800 words at most; measurements and derivations stay in the
-records that own them. The full gate and the independent shipping review remain required. Tier 3
+When planning or finishing a package, replace this brief's position and live dependencies. Keep
+it to 800 words at most; measurements stay in the records that own them. The full gate and the independent shipping review remain required. Tier 3
 is recorded, not gated.
