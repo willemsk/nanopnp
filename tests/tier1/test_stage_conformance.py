@@ -11,13 +11,14 @@ stage runs (section 5.3.2); a stage without one would be probed by running it,
 which is what ``MOD-01`` found the walk doing for two stages.
 
 **The walk holds no knowledge of the stages that the stages do not declare.**
-Each registry description carries the five facts the walk acts on, and
+Each registry description carries the six facts the walk acts on, and
 :func:`~nanopnp.validation.modularity.stage_sets` finds no collection of stage
 names written into ``io/run.py`` (``MOD-02``). Each fact is checked here
 against the code it describes: the constructors for ``takes_workspace`` and
-``takes_store``, the stage's own ``run`` for ``key_is_artefact``, and the case
-schema for ``needs_section``. :func:`~nanopnp.core.stages.register` refuses an
-entry the walk could not run, and the walk's order is written out below, so it
+``takes_store``, the stage's own ``run`` for ``key_is_artefact``, the case
+schema for ``needs_section`` and the shipped cases for ``optional_inputs``.
+:func:`~nanopnp.core.stages.register` refuses an entry the walk could not run,
+and the walk's order is written out below, so it
 cannot change unseen (VER-62).
 """
 
@@ -40,8 +41,8 @@ from nanopnp.core.stages import (
     walk_order,
 )
 from nanopnp.io.artefact import StageInputs
-from nanopnp.io.case import NEUTRAL_SECTIONS, CaseDocument, load_case, resolve
-from nanopnp.io.run import selected_stages
+from nanopnp.io.case import NEUTRAL_SECTIONS, CaseDocument, ResolvedCase, load_case, resolve
+from nanopnp.io.run import UnknownStageError, selected_stages
 from nanopnp.validation.modularity import (
     STAGE_KEY,
     STAGE_RUN,
@@ -53,6 +54,30 @@ ROOT = Path(__file__).resolve().parents[2]
 
 QUICKSTART = ROOT / "examples" / "01-quickstart" / "quickstart.case.yaml"
 """A case whose stages 8 and 9 resolve without a mesh, a structure or a solve."""
+
+EXAMPLES = ROOT / "examples"
+
+
+def _shipped_cases() -> dict[str, ResolvedCase]:
+    """Cases between them dropping every input a built-in stage declares optional.
+
+    Resolving reads no file the cases name, so none of the examples' prepared
+    inputs is needed. ``pqr-profile`` protonates without a ``structure:``
+    section: ``from-profile``'s geometry with ``from-pqr``'s ``inputs.pqr``.
+    """
+    profile = load_case(EXAMPLES / "06-pdb-to-mesh" / "from-profile.case.yaml")
+    pqr = load_case(EXAMPLES / "07-pdb-to-charged-run" / "from-pqr.case.yaml")
+    pqr_profile = profile.model_copy(
+        update={"inputs": profile.inputs.model_copy(update={"pqr": pqr.inputs.pqr})}
+    )
+    return {
+        "quickstart": resolve(load_case(QUICKSTART)),
+        "supplied-charge": resolve(load_case(EXAMPLES / "02-charged-pore" / "classical.case.yaml")),
+        "profile": resolve(profile),
+        "pqr-profile": resolve(pqr_profile),
+        "structure": resolve(pqr),
+    }
+
 
 WALK = (
     "case",
@@ -91,6 +116,7 @@ def _description(**facts: object) -> StageDescription:
         "key_is_artefact": False,
         "weight": 0.1,
         "needs_section": None,
+        "optional_inputs": (),
     }
     fields.update(facts)
     return StageDescription(**fields)  # type: ignore[arg-type]
@@ -228,6 +254,71 @@ def test_ver64_needs_section_names_an_optional_top_level_case_field() -> None:
         assert section not in NEUTRAL_SECTIONS, (name, section)
 
 
+def test_ver64_each_optional_input_is_one_a_case_drops() -> None:
+    """Declared optional where a case walks the stage without it, and nowhere else.
+
+    The walks are written out, so the required-input rule (WP36 D13) is seen to
+    drop no built-in stage from any of them (VER-62). Each declared optional
+    input is then shown absent from a walk that runs its stage: a declaration
+    no case needs would hide a stage the rule should drop.
+    """
+    walks = {name: selected_stages(case, None) for name, case in _shipped_cases().items()}
+    tail = ("materials", "solve", "qoi", "report")
+    assert walks == {
+        "quickstart": ("case", "mesh", *tail),
+        "supplied-charge": ("case", "mesh", "charge", *tail),
+        "profile": ("case", "region", "mesh", *tail),
+        "pqr-profile": ("case", "region", "mesh", "protonation", "charge", *tail),
+        "structure": WALK,
+    }
+    declared = {
+        (name, optional) for name in walk_order() for optional in describe(name).optional_inputs
+    }
+    assert declared == {
+        ("region", "contour"),
+        ("mesh", "region"),
+        ("protonation", "structure"),
+        ("charge", "protonation"),
+        ("charge", "region"),
+    }
+    for name, optional in declared:
+        assert optional in describe(name).inputs, (name, optional)
+        assert any(name in walk and optional not in walk for walk in walks.values()), (
+            f"no case walks {name!r} without {optional!r}"
+        )
+
+
+def test_ver64_a_stage_whose_case_drops_a_required_input_is_not_walked(
+    scratch_registry: dict[str, object],
+) -> None:
+    """Dropped from the walk, and refused as its target naming the input (WP36 D13)."""
+    register(_description(inputs=("case", "contour")), "nanopnp.external:ExternalStage")
+    profile = _shipped_cases()["profile"]
+    assert "external" not in selected_stages(profile, None)
+    with pytest.raises(UnknownStageError, match=r"does not walk 'contour', an input it requires"):
+        selected_stages(profile, "external")
+    assert selected_stages(_shipped_cases()["structure"], None) == (*WALK, "external")
+
+
+def test_ver64_a_stage_walks_without_an_optional_input_its_case_drops(
+    scratch_registry: dict[str, object],
+) -> None:
+    register(
+        _description(inputs=("case", "contour"), optional_inputs=("contour",)),
+        "nanopnp.external:ExternalStage",
+    )
+    assert selected_stages(_shipped_cases()["profile"], None)[-1] == "external"
+
+
+def test_ver64_register_refuses_an_optional_input_it_does_not_take(
+    scratch_registry: dict[str, object],
+) -> None:
+    before = dict(scratch_registry)
+    with pytest.raises(ValueError, match=r"optional input 'mesh', which is not one of its inputs"):
+        register(_description(optional_inputs=("mesh",)), "nanopnp.external:ExternalStage")
+    assert scratch_registry == before
+
+
 def test_ver64_every_weight_is_finite_and_positive() -> None:
     """The walk divides each stage's weight by the total, and progress must be monotone."""
     for name in walk_order():
@@ -277,6 +368,7 @@ def test_ver64_a_description_missing_a_fact_is_a_type_error() -> None:
             takes_store=False,
             key_is_artefact=False,
             needs_section=None,
+            optional_inputs=(),
         )
 
 

@@ -9,7 +9,7 @@ governs; nothing here is evidence an unmerged branch shipped.
   (§8.2.5 E1, E5).
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
   **in progress** (§8.2.7 G1–G11; §8.2.8 H1–H9). WP35 merged as
-  `v0.5.0-alpha.1`, and the author has ruled all 17 `MOD-nn` (§8.2.8). WP36, the stage protocol
+  `v0.5.0-alpha.1`, and the author has ruled all 18 `MOD-nn` (§8.2.8; `MOD-18`, from WP36's review, by H10). WP36, the stage protocol
   and the walk (`MOD-01`, `MOD-02`, `MOD-12`; VER-64; [plan](wp36-stage-protocol-and-walk.md)), is
   delivered, to be tagged `v0.5.0-alpha.2`.
 - **Next: `/wp-ship`** for WP36, then `/wp-plan 37`: WP37 (cycle cuts, exit codes, backend
@@ -27,7 +27,7 @@ Each is recorded in full where it points.
 - **Phase 4's shape:** accepted refactors before the protocol (G2); two OKF packages and a
   ratchet (G3, G8); checked findings logs (G4); protocol scripts gated, findings only from the
   author's sessions (G7); the VER-62 golden (G10). → §8.2.7.
-- **The `MOD-nn` rulings:** `MOD-11` waits for the sessions (H2); QR-13 restated and the backend
+- **The `MOD-nn` rulings:** `MOD-09` and `MOD-18` go to Phase 5 (H4, H10); `MOD-11` waits for the sessions (H2); QR-13 restated and the backend
   confined (H3); an acyclic `top` relation, a miss ruled, never forced (H6); three backend
   registries, no schema move (H7). → §8.2.8.
 - **Phase 3's charge pipeline**: the kernel on the deployed mesh, protonation per frame, VAL-06's

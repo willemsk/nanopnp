@@ -52,6 +52,7 @@ and the [report](../project/modularity.md)'s three findings. No `OPN-` is open h
 | D10 | `MOD-12`'s check | `validation.modularity.surface()` read live: `mirror_differs == ()`, and `set(public) == set(nanopnp.PUBLIC)` so the syntax tree and the runtime agree. Named for VER-45 | The report's recommendation. No new identifier (phase plan) |
 | D11 | The findings log | `MOD-01`, `MOD-02` and `MOD-12` become `fixed`, their ruling linking this plan | VER-63: a `fixed` row's ruling links a plan |
 | D12 | Release | `v0.5.0-alpha.2`, and a `CHANGELOG.md` section of that name | §2.7; G11 |
+| D13 | Required and optional inputs (added by the author's ruling on the shipping review, 6 October 2026) | A sixth required fact, `optional_inputs`, a subset of `inputs` that `register` checks. `selected_stages` drops a stage whose case drops a required input, in one pass in walk order, and refuses it as `upto` naming the input. The built-ins declare `region`: `contour`; `mesh`: `region`; `protonation`: `structure`; `charge`: `protonation`, `region` | Design §1 promised "walked only if its inputs exist", which the walk did not do. A rule over every declared input would drop four built-in stages, so the stage says which inputs it can do without. Dropping matches `needs_section`'s handling; refusing every walk would fail a case for a stage it never asked for |
 
 ### Work items
 
@@ -129,21 +130,27 @@ asserts that every registered stage is walked, so this is today's invariant made
 new one. A test that registers a stage successfully must restore the registry (`monkeypatch` on a
 copy of `_REGISTRY`), or that stage joins every later walk in the process.
 
-> **Outcome (shipping review): "only if its inputs exist" is not what the walk does.** The walk drops
-> a stage only by its `needs_section` and by `selected_stages`' case rules. A stage registered from
-> outside the package whose declared input this case drops (`contour` on an `inputs.profile` case)
-> is still walked, and fails loudly on the missing input; it computes nothing wrong. A general
-> "drop when an input is dropped" rule would drop `charge` on every `inputs.mesh` case, since
-> `charge` declares `region` and reads it only when the mesh is generated. Which declared inputs a
-> stage needs is a protocol question, left to the author (PR #79). The review also found the
+> **Outcome (shipping review, ruled 6 October 2026): D13 makes "only if its inputs exist" true.**
+> The walk had dropped a stage only by its `needs_section` and `selected_stages`' case rules, so a
+> stage registered from outside the package whose input the case drops (`contour` on an
+> `inputs.profile` case) was walked and failed on the missing input. A rule over every declared
+> input would have dropped `region`, `mesh`, `protonation` and `charge` from shipped cases, each of
+> which declares an input it reads only on some cases. The author chose a sixth fact,
+> `optional_inputs` (D13): a stage whose case drops a required input is not walked, and is refused
+> as the target, naming the input. VER-64 checks each built-in declaration against the shipped
+> case that drops it, and writes their walks out, unchanged. The review also found the
 > complete-walk label compared with the last *registered* stage; it now compares with the last
-> stage the case walks, so a dropped outside stage cannot mark a full walk truncated (QR-08), and
-> a `needs_section` naming no case section is refused by the walk, naming the stage (VER-64).
+> stage the case walks (QR-08), and a `needs_section` naming no case section is refused by the walk,
+> naming the stage (VER-64). Its finding that the Geometry tab cannot show a stage it has no view
+> for is `MOD-18`, deferred to Phase 5 (§8.2.8 H10).
 
 ### 2. The facts of the built-in stages
 
 Read from today's `WORKSPACE_STAGES`, `STORE_STAGES`, `PAYLOAD_FREE`, `STRUCTURE_STAGES` and
 `_WEIGHTS`, at `e987c8d`.
+
+`optional_inputs`, D13's, is `()` except for `region` (`contour`), `mesh` (`region`), `protonation`
+(`structure`) and `charge` (`protonation`, `region`).
 
 | Stage | `takes_workspace` | `takes_store` | `key_is_artefact` | `weight` | `needs_section` |
 |---|---|---|---|---|---|

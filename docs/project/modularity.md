@@ -427,6 +427,27 @@ default means nine edits.
 
 **User-visible.** No.
 
+### MOD-18 — The Geometry tab has a view only for the stages it knows
+
+*Area:* extension. *Severity:* low. *Added after the report, by WP36's shipping review (PR #79),
+read from the code at `a9fad80` rather than measured by `nanopnp.validation.modularity`.*
+
+**Measured.** `gui/geometry.py` computes `GEOMETRY_STAGES` once, when the module is imported, from
+the stages whose `needs_section` is `structure`, plus `region` and `mesh`. `load_view` has a view
+for each built-in stage of 1 to 6 and raises `ValueError` for any other.
+
+**Consequence.** A `structure` stage registered from outside the package before the shell is
+imported is listed on the Geometry tab and then refused by `load_view`, which names it among the
+geometry stages. One registered after the import is walked but never listed. Neither affects a
+built-in stage.
+
+**Recommendation.** Defer to Phase 5, with `MOD-09`. The shell's design document decides how a
+stage without a view of its own is shown, and the tab reads its stages from the registry when it
+lists them.
+
+**User-visible.** Only to someone registering a stage, which `PUBLIC` does not yet offer
+(`MOD-11`).
+
 ## Seed findings merged or added
 
 WP35's plan listed 14 measured candidates (Design §4). All 14 are here, as MOD-01 to MOD-14 in
@@ -435,5 +456,7 @@ the plan's order. The measurement added three:
 - **MOD-15**: `core`'s single upward annotation import.
 - **MOD-16**: the stabilisation `Literal`.
 - **MOD-17**: the repeated default correction set.
+
+WP36's shipping review added **MOD-18**, the Geometry tab's views, after the report was dated.
 
 None was dropped or merged.

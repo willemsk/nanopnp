@@ -9,7 +9,7 @@ findings:
 
 The findings log of the [modularity report](modularity.md) (§8.2.7 G1, G4). Each row is one
 finding; its section in the report gives what was measured, the consequence, the recommendation
-and whether a fix is visible to users. The author ruled every row on 5 October 2026 (§8.2.8), and a row moves to `fixed` in the commit
+and whether a fix is visible to users. The author ruled `MOD-01` to `MOD-17` on 5 October 2026 and `MOD-18` on 6 October (§8.2.8), and a row moves to `fixed` in the commit
 that fixes it.
 
 **Status** is `open` until ruled; then `accepted` (to be fixed in this phase), `fixed` (the ruling
@@ -38,3 +38,4 @@ refuses any row that is not terminal.
 | MOD-15 | coupling | low | accepted | §8.2.8 H1 | [core reaches upward, once by an annotation and into ten subpackages by the registry](modularity.md#mod-15-core-reaches-upward-once-by-an-annotation-and-into-ten-subpackages-by-the-registry) |
 | MOD-16 | extension | medium | accepted | §8.2.8 H7 | [The stabilisation registry is closed by a Literal in the schema](modularity.md#mod-16-the-stabilisation-registry-is-closed-by-a-literal-in-the-schema) |
 | MOD-17 | extension | low | post-1.0 | §8.2.8 H5 | [The validated correction set is a default in eight signatures](modularity.md#mod-17-the-validated-correction-set-is-a-default-in-eight-signatures) |
+| MOD-18 | extension | low | deferred | §8.2.8 H10 | [The Geometry tab has a view only for the stages it knows](modularity.md#mod-18-the-geometry-tab-has-a-view-only-for-the-stages-it-knows) |

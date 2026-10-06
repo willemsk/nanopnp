@@ -76,7 +76,8 @@ def test_ver25_every_stage_describes_itself_without_importing_it() -> None:
         "from nanopnp.core.stages import registered_stages;"
         "names = [d.name for d in registered_stages()];"
         "facts = {d.name: [d.summary()[k] for k in ('takes_workspace', 'takes_store',"
-        " 'key_is_artefact', 'weight', 'needs_section')] for d in registered_stages()};"
+        " 'key_is_artefact', 'weight', 'needs_section', 'optional_inputs')]"
+        " for d in registered_stages()};"
         "print(json.dumps({'names': names, 'facts': facts,"
         " 'ngsolve': 'ngsolve' in sys.modules,"
         " 'solve': 'nanopnp.solve.stage' in sys.modules,"
@@ -113,8 +114,9 @@ def test_ver25_every_stage_describes_itself_without_importing_it() -> None:
         "report",
     ]
     # WP36 D3: the facts a walk acts on are introspected with the rest.
-    assert reported["facts"]["solve"] == [True, False, False, 0.75, None]
-    assert reported["facts"]["structure"] == [True, False, False, 0.05, "structure"]
+    assert reported["facts"]["solve"] == [True, False, False, 0.75, None, []]
+    assert reported["facts"]["structure"] == [True, False, False, 0.05, "structure", []]
+    assert reported["facts"]["charge"][-1] == ["protonation", "region"]
     assert reported["ngsolve"] is False
     # VER-48, WP18 D13: stage 1's dependencies are behind the `structure` extra,
     # and introspecting it must not need them.
@@ -237,6 +239,7 @@ def test_ver25_a_stage_cannot_be_registered_twice() -> None:
         key_is_artefact=False,
         weight=1.0,
         needs_section=None,
+        optional_inputs=(),
     )
     with pytest.raises(ValueError, match="already registered"):
         register(description, "nanopnp.solve.stage:SolveStage")
@@ -256,6 +259,7 @@ def test_ver25_a_malformed_target_is_refused() -> None:
         key_is_artefact=False,
         weight=1.0,
         needs_section=None,
+        optional_inputs=(),
     )
     with pytest.raises(ValueError, match="module:attribute"):
         register(description, "nanopnp.solve.stage.SolveStage")

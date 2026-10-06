@@ -258,8 +258,9 @@ missing a fact. VER-62 must show zero drift: the walk's order does not change.
 
 > **Delivered, 5 October 2026** ([plan](wp36-stage-protocol-and-walk.md), to be tagged
 > `v0.5.0-alpha.2`). `MOD-01`, `MOD-02` and `MOD-12` are `fixed`. `Stage.key(inputs)` is on the
-> protocol, and `StageDescription` carries five required facts: `takes_workspace`, `takes_store`,
-> `key_is_artefact`, `weight` and `needs_section`. The walk is registration order, read live by
+> protocol, and `StageDescription` carries six required facts: `takes_workspace`, `takes_store`,
+> `key_is_artefact`, `weight`, `needs_section` and `optional_inputs` (D13, from the review).
+> A stage whose case drops a required input is not walked. The walk is registration order, read live by
 > `core.stages.walk_order()`, with `case` registered first. `register` refuses an input not
 > registered before the stage and a weight that is not finite and positive. `io/run.py` keeps no
 > stage set (VER-64), and `STRUCTURE_STAGES` became `needs_section`. VER-62's golden holds, and
