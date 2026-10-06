@@ -1,7 +1,7 @@
 # WP39 — The backend registries
 
 **Status: planned, not started.** Written 6 October 2026 on `ccr-ecd28ca7-5baf25` at `ae463d9`,
-after WP38 merged, to be tagged `v0.5.0-alpha.4`. It inherits everything the
+after WP38 merged and was tagged `v0.5.0-alpha.4`. It inherits everything the
 [current brief](current.md) lists as not to be re-decided, and in particular:
 
 - WP36's stage protocol and walk, and WP38's split: `io` is the base, `pipeline/` the assembler,

@@ -8,8 +8,8 @@ nothing here is evidence an unmerged branch shipped.
 - Phases 1 to 3 are **closed** as `v0.2.0`, `v0.3.0` (criterion 3 waived, §8.2.4 D7) and `v0.4.0`
   (§8.2.5 E1, E5).
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
-  **in progress** (§8.2.7 G1–G11; §8.2.8 H1–H12; §8.2.9 I1–I5). WP35 to WP38 merged;
-  `v0.5.0-alpha.4`, WP38's tag on `ae463d9`, is not yet pushed (G11).
+  **in progress** (§8.2.7 G1–G11; §8.2.8 H1–H12; §8.2.9 I1–I5). WP35 to WP38 merged, as
+  `v0.5.0-alpha.1` to `v0.5.0-alpha.4`.
 - [WP39, the backend registries](wp39-backend-registries.md), is **planned** (`v0.5.0-alpha.5`):
   mesher, solver and stabilisation registries; `__version__` and `PUBLIC` to `core/public.py`,
   emptying both upward lists (REV-05); H6 asserted; REV-36 to REV-38. **Next: `/wp-implement`.**
