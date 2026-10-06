@@ -42,9 +42,10 @@ from typing import TYPE_CHECKING, Any, TypeAlias
 
 from nanopnp.core.stages import MissingExtraError, create
 from nanopnp.io.artefact import StageInputs
-from nanopnp.io.case import UnsupportedCaseSection, load_case, resolve
-from nanopnp.io.run import stored_upstream
+from nanopnp.io.case import UnsupportedCaseSection
 from nanopnp.io.store import Store
+from nanopnp.pipeline.case import load_case, resolve
+from nanopnp.pipeline.run import stored_upstream
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
 from nanopnp.structure.ensemble import AlignedEnsemble
 from nanopnp.symmetry.reduce import PAYLOAD_NAME as REDUCED_PAYLOAD
@@ -230,7 +231,7 @@ def _context(request: AssessRequest) -> _Context:
     """Load the case and take its stage-1 and stage-3 artefacts from the store.
 
     Keyed exactly as a walk keys them, through
-    :func:`~nanopnp.io.run.stored_upstream`, and never computed: an assessment
+    :func:`~nanopnp.pipeline.run.stored_upstream`, and never computed: an assessment
     that ran stage 2 would be minutes of work the shell did not ask for.
 
     Raises
@@ -238,7 +239,7 @@ def _context(request: AssessRequest) -> _Context:
     nanopnp.io.case.UnsupportedCaseSection
         If the case carries no ``structure:`` section: there is then no structure
         to measure a probe radius on.
-    nanopnp.io.run.MissingUpstreamError
+    nanopnp.pipeline.run.MissingUpstreamError
         If stages 1 to 3 have not run into this store.
     """
     document = load_case(Path(request.case))
@@ -249,7 +250,7 @@ def _context(request: AssessRequest) -> _Context:
             "from; the §5.2.1 criteria are measured against those"
         )
     store = Store(Path(request.store)) if request.store is not None else Store()
-    upstream = stored_upstream(document, store=store, upto="symmetry")
+    upstream = stored_upstream(document, store=store, feeding="contour")
     return _Context(
         document=document,
         structure=upstream["structure"],
@@ -334,7 +335,7 @@ def seed(request: AssessRequest) -> Seed:
     assert resolved.contour is not None and resolved.density is not None
     reduced = ReducedMap.read(context.symmetry.payload[REDUCED_PAYLOAD])
     conditioned = contour.condition_map(reduced, resolved.contour, resolved.density)
-    key = create("contour").key(StageInputs(case=context.document, upstream=dict(context.upstream)))
+    key = create("contour").key(StageInputs(resolved=resolved, upstream=dict(context.upstream)))
     loop = conditioned.loop
     return Seed(
         vertices=tuple((float(r), float(z)) for r, z in loop),

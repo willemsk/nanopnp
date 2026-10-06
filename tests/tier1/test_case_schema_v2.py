@@ -33,21 +33,25 @@ from nanopnp.io.artefact import (
     StageInputs,
 )
 from nanopnp.io.case import (
-    SOLVE_IRRELEVANT_PROVENANCE,
     V2_ADDED,
     V2_MOVED,
     V2_RENAMED,
     CaseValidationError,
-    ResolvedCase,
-    case_fields,
     dumps_case,
+    upgrade_v1,
+)
+from nanopnp.io.case_paths import case_fields
+from nanopnp.io.defaults import deviations
+from nanopnp.io.resolved import (
+    SOLVE_IRRELEVANT_PROVENANCE,
+    ResolvedCase,
+)
+from nanopnp.materials.stage import MaterialsStage
+from nanopnp.pipeline.case import (
     load_case,
     loads_case,
     resolve,
-    upgrade_v1,
 )
-from nanopnp.io.defaults import deviations
-from nanopnp.materials.stage import MaterialsStage
 from nanopnp.validation.comsol import case_identity
 
 DATA = Path(__file__).parent / "data" / "case_v1"
@@ -163,7 +167,7 @@ def test_ver47_the_v1_corpus_resolves_to_its_recorded_solve(relative: str) -> No
     if not _supplies_a_field(expected):
         assert case_identity(resolved) == _identity_of(expected)
 
-    materials = MaterialsStage().run(StageInputs(case=resolved.document))
+    materials = MaterialsStage().run(StageInputs(resolved=resolve(resolved.document)))
     assert materials.hash == recorded["materials_key"]
 
 
@@ -399,7 +403,7 @@ def test_ver47_every_new_input_is_read_by_the_stage_that_consumes_it() -> None:
     ``tests/tier1/test_region.py`` and ``tests/tier1/test_protonation.py`` cover
     their refusals. A key added to the table later is refused by the same rule.
     """
-    from nanopnp.io.case import _UNCONSUMED_INPUTS
+    from nanopnp.pipeline.checks import _UNCONSUMED_INPUTS
 
     assert _UNCONSUMED_INPUTS == {}
     raw = _v2()

@@ -43,8 +43,8 @@ from nanopnp.gui.solver import (
     Started,
 )
 from nanopnp.io.manifest import CASE_FILENAME, MANIFEST_FILENAME
-from nanopnp.io.run import RUN_RECORD_FILENAME
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.pipeline.run import RUN_RECORD_FILENAME
 
 PORE = CylindricalPoreGeometry(
     pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0

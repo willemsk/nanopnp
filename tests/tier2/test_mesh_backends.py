@@ -31,10 +31,13 @@ import pytest
 from nanopnp.core.paths import profile_file
 from nanopnp.geometry.region import PAYLOAD_NAME as REGION_PAYLOAD
 from nanopnp.geometry.region import read_region
-from nanopnp.io.run import RunResult, run_case
 from nanopnp.io.store import Store
 from nanopnp.mesh.adapter import read
 from nanopnp.mesh.quality import QUALITY_FLOOR
+from nanopnp.pipeline.run import (
+    RunResult,
+    run_case,
+)
 
 logger = logging.getLogger(__name__)
 

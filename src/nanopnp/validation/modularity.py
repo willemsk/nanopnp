@@ -75,6 +75,7 @@ to the backend's code.
 
 LAYER_ORDER: tuple[str, ...] = (
     "core",
+    "io",
     "structure",
     "density",
     "symmetry",
@@ -86,7 +87,7 @@ LAYER_ORDER: tuple[str, ...] = (
     "physics",
     "solve",
     "post",
-    "io",
+    "pipeline",
     "sweep",
     "validation",
     "cli",
@@ -786,10 +787,135 @@ def stage_conformance(
     return tuple(found)
 
 
+@dataclass(frozen=True)
+class UndeclaredRead:
+    """A stage reading an upstream artefact by a literal name its description does not declare."""
+
+    stage: str
+    name: str
+    path: str
+    line: int
+
+    def describe(self) -> str:
+        """Return the diagnostic: the stage, the name, and where it is read."""
+        return (
+            f"stage {self.stage!r} reads the {self.name!r} artefact at {self.path}:{self.line} "
+            f"and does not declare it among its inputs; the walk hands a stage only what it "
+            f"declares (WP38 D11), so declare {self.name!r} in core/stages.py, as optional "
+            "if a case can drop it"
+        )
+
+
+def undeclared_reads(
+    root: Path | None = None, sources: Mapping[str, str] | None = None
+) -> tuple[UndeclaredRead, ...]:
+    """Return each literal upstream read a registered stage makes without declaring it.
+
+    A read is ``inputs.require("x")``, ``inputs.upstream.get("x")`` or
+    ``inputs.upstream["x"]``, on any receiver, in a method of the stage's class
+    or in a function of its module those methods call, transitively. A stage's
+    own name is admitted: the deviations pass hands a stage its own artefact. A
+    read whose name is not a literal is not judged here; the walk's filtering
+    starves it of an undeclared input whatever the name (REV-63).
+    """
+    modules = _module_map(parse_package(root, sources))
+    stages = modules["core/stages.py"]
+    found: list[UndeclaredRead] = []
+    for name, target, declared in _registered_inputs(stages):
+        module_name, _, class_name = target.partition(":")
+        module = modules.get(module_name)
+        if module is None:
+            continue
+        for literal, line in _reads_reaching(
+            module, _class_methods(modules, module_name, class_name)
+        ):
+            if literal not in declared and literal != name:
+                found.append(UndeclaredRead(name, literal, module.path, line))
+    return tuple(sorted(found, key=lambda read: (read.stage, read.path, read.line)))
+
+
+def _registered_inputs(stages: Module) -> list[tuple[str, str, frozenset[str]]]:
+    """Return ``(name, target, inputs)`` of every registration, read from its description."""
+    found = []
+    for node in ast.walk(stages.tree):
+        if not (isinstance(node, ast.Call) and _called(node) == "register" and len(node.args) >= 2):
+            continue
+        description, target = node.args[0], node.args[1]
+        if not (isinstance(target, ast.Constant) and isinstance(target.value, str)):
+            continue
+        if not isinstance(description, ast.Call):
+            continue
+        facts = {keyword.arg: keyword.value for keyword in description.keywords}
+        name, inputs = facts.get("name"), facts.get("inputs")
+        if isinstance(name, ast.Constant) and isinstance(inputs, ast.Tuple):
+            declared = frozenset(
+                str(item.value) for item in inputs.elts if isinstance(item, ast.Constant)
+            )
+            found.append((str(name.value), target.value, declared))
+    return found
+
+
+def _reads_reaching(
+    module: Module, methods: Mapping[str, ast.FunctionDef | ast.AsyncFunctionDef]
+) -> list[tuple[str, int]]:
+    """Return ``(name, line)`` of every literal upstream read the methods reach in ``module``."""
+    functions = {
+        node.name: node
+        for node in module.tree.body
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef)
+    }
+    pending: list[ast.AST] = list(methods.values())
+    visited: set[int] = set()
+    reads: list[tuple[str, int]] = []
+    while pending:
+        body = pending.pop()
+        if id(body) in visited:
+            continue
+        visited.add(id(body))
+        for node in ast.walk(body):
+            literal = _upstream_literal(node)
+            if literal is not None:
+                reads.append((literal, getattr(node, "lineno", 0)))
+            if isinstance(node, ast.Call):
+                callee = node.func
+                if isinstance(callee, ast.Name) and callee.id in functions:
+                    pending.append(functions[callee.id])
+                elif (
+                    isinstance(callee, ast.Attribute)
+                    and isinstance(callee.value, ast.Name)
+                    and callee.value.id == "self"
+                    and callee.attr in methods
+                ):
+                    pending.append(methods[callee.attr])
+    return reads
+
+
+def _upstream_literal(node: ast.AST) -> str | None:
+    """Return the literal name an upstream read takes, or ``None`` if ``node`` is none."""
+    if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.args:
+        first = node.args[0]
+        if not (isinstance(first, ast.Constant) and isinstance(first.value, str)):
+            return None
+        if node.func.attr == "require":
+            return first.value
+        receiver = node.func.value
+        if node.func.attr == "get" and isinstance(receiver, ast.Attribute):
+            return first.value if receiver.attr == "upstream" else None
+    if (
+        isinstance(node, ast.Subscript)
+        and isinstance(node.value, ast.Attribute)
+        and node.value.attr == "upstream"
+        and isinstance(node.slice, ast.Constant)
+        and isinstance(node.slice.value, str)
+    ):
+        return node.slice.value
+    return None
+
+
 def stage_sets(
     root: Path | None = None,
     sources: Mapping[str, str] | None = None,
-    module: str = "io/run.py",
+    module: str = "pipeline/run.py",
 ) -> tuple[StageSet, ...]:
     """Return the module-level collections of two or more stage names in ``module``.
 
@@ -820,7 +946,7 @@ def function_literals(
     function: str,
     root: Path | None = None,
     sources: Mapping[str, str] | None = None,
-    module: str = "io/run.py",
+    module: str = "pipeline/run.py",
 ) -> tuple[tuple[str, int], ...]:
     """Return ``(literal, line)`` of each string in ``names`` that ``function`` writes."""
     modules = _module_map(parse_package(root, sources))
@@ -1109,31 +1235,60 @@ class Surface:
     mirror: tuple[str, ...]
     outside: tuple[str, ...]
     """Of ``with_section`` and ``core.stages.register``, those not in ``PUBLIC`` (WP34 D9)."""
+    public_modules: tuple[tuple[str, str], ...] = ()
+    """``(name, module)`` as ``PUBLIC`` writes each name's defining module."""
+    mirror_modules: tuple[tuple[str, str], ...] = ()
+    """``(name, module)`` as the mirror imports each name (REV-54, WP38 D12)."""
 
     @property
     def mirror_differs(self) -> tuple[str, ...]:
         """Names in exactly one of ``PUBLIC`` and its mirror."""
         return tuple(sorted(set(self.public) ^ set(self.mirror)))
 
+    @property
+    def module_differs(self) -> tuple[tuple[str, str, str], ...]:
+        """``(name, PUBLIC's module, the mirror's module)`` for each name the two place apart.
+
+        A name mirrored from the module it used to live in type-checks against
+        a definition ``PUBLIC`` no longer resolves to (REV-54).
+        """
+        imported = dict(self.mirror_modules)
+        return tuple(
+            (name, module, imported[name])
+            for name, module in sorted(self.public_modules)
+            if name in imported and imported[name] != module
+        )
+
 
 def surface(root: Path | None = None, sources: Mapping[str, str] | None = None) -> Surface:
     """Return the public surface as ``__init__.py`` writes it (D8 e)."""
     init = _module_map(parse_package(root, sources))[ROOT_NODE]
-    public: list[str] = []
-    mirror: list[str] = []
+    public: list[tuple[str, str]] = []
+    mirror: list[tuple[str, str]] = []
     for node in init.tree.body:
         assigned = _assignment(node)
         if assigned is not None and assigned[0] == "PUBLIC" and isinstance(assigned[1], ast.Dict):
-            public = [str(k.value) for k in assigned[1].keys if isinstance(k, ast.Constant)]
+            public = [
+                (str(key.value), str(value.value) if isinstance(value, ast.Constant) else "")
+                for key, value in zip(assigned[1].keys, assigned[1].values, strict=True)
+                if isinstance(key, ast.Constant)
+            ]
         if isinstance(node, ast.If) and _is_type_checking(node.test):
             mirror = [
-                alias.asname or alias.name
+                (alias.asname or alias.name, statement.module or "")
                 for statement in node.body
                 if isinstance(statement, ast.ImportFrom)
                 for alias in statement.names
             ]
-    outside = tuple(name for name in ("with_section", "register") if name not in public)
-    return Surface(tuple(public), tuple(mirror), outside)
+    names = tuple(name for name, _ in public)
+    outside = tuple(name for name in ("with_section", "register") if name not in names)
+    return Surface(
+        names,
+        tuple(name for name, _ in mirror),
+        outside,
+        public_modules=tuple(public),
+        mirror_modules=tuple(mirror),
+    )
 
 
 # -- size and version literals (D8 f, g) ---------------------------------------------
@@ -1288,7 +1443,7 @@ def render_measurements(root: Path | None = None) -> str:
             f"{f'`{stage.key_signature}`' if stage.has_key else '**no**'} | "
             f"{'yes' if stage.has_describe else '**no**'} | `{stage.run_signature}` |"
         )
-    out += ["", "Stage sets written into `io/run.py`, measured by `stage_sets`:", ""]
+    out += ["", "Stage sets written into `pipeline/run.py`, measured by `stage_sets`:", ""]
     written = stage_sets(root)
     for stage_set in written:
         out.append(f"- `{stage_set.name}` (line {stage_set.line}): {len(stage_set.members)} stages")

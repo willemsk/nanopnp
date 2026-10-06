@@ -56,13 +56,13 @@ from nanopnp.gui.solver import (
 )
 from nanopnp.io.case import (
     CaseValidationError,
-    case_fields,
     dumps_case,
-    load_case,
-    options_at,
 )
+from nanopnp.io.case_paths import case_fields
 from nanopnp.numerics.linear import AVAILABLE_SOLVERS
 from nanopnp.physics.models import registered_models, registered_stabilisations
+from nanopnp.pipeline.case import load_case
+from nanopnp.pipeline.checks import options_at
 
 CASE = """
 schema: nanopnp/case/v2
@@ -98,7 +98,7 @@ VOCABULARY = (
     "PEOEPB",
     "SWANSON",
     # And the IF-07 attribute vocabulary, extended for WP15: the viewer's field
-    # names come from :func:`~nanopnp.io.fields.attribute_name` over the model's
+    # names come from :func:`~nanopnp.post.export.attribute_name` over the model's
     # own declarations, so a name written here would be the interface saying
     # what a number means in a second place from the file that holds it.
     "phi_V",
@@ -203,7 +203,7 @@ def test_if09_no_option_list_is_written_in_the_shell() -> None:
     }
     assert not offenders, (
         f"{sorted(offenders)} name case-file values inside gui/; every enumeration must come "
-        "from the schema or from a live registry, through nanopnp.io.case.options_at"
+        "from the schema or from a live registry, through nanopnp.pipeline.checks.options_at"
     )
 
 
@@ -230,7 +230,7 @@ def test_if09_editor_reports_registry_problems_as_the_cli_does(case_file: Path) 
     """The interface's whole-document diagnostic is the command line's, character for character.
 
     ``electrolyte.parameters`` is a plain ``str``, so the field check cannot
-    refuse an uninstalled parameter file; ``_check_registries`` does, on the
+    refuse an uninstalled parameter file; ``_check_installed`` does, on the
     whole document, which is exactly the second stage of validation §5.3.4 asks
     for. What is asserted is that the user reads the same sentence either way.
     """
@@ -249,6 +249,46 @@ def test_if09_editor_reports_registry_problems_as_the_cli_does(case_file: Path) 
 
     assert from_the_shell == str(refused.value)
     assert "not_installed" in str(refused.value)
+
+
+@pytest.mark.parametrize(
+    ("path", "value", "written", "named"),
+    [
+        ("physics.model", "pnp-nz", "model: pnp-ns,", "is not registered"),
+        ("numerics.elements.u", "P1", None, "inf-sup"),
+    ],
+)
+def test_qr11_editor_refuses_what_check_document_refuses_in_the_cli_words(
+    case_file: Path, path: str, value: str, written: str | None, named: str
+) -> None:
+    """A model no registry has, or an unstable element pair, is refused at commit (WP38 D7, D8).
+
+    The registries left the schema for :func:`~nanopnp.pipeline.checks.check_document`,
+    and the editor runs it after substituting, so the shell still refuses what
+    ``nanopnp run`` refuses, in the same sentence.
+    """
+    editor = CaseEditor.open(case_file)
+    before = dumps_case(editor.document)
+    editor.stage(path, value)
+    with pytest.raises(CaseValidationError):
+        editor.commit()
+    from_the_shell = editor.problems()
+    assert dumps_case(editor.document) == before
+
+    edited = (
+        CASE.replace(written, f"model: {value},")
+        if written is not None
+        else CASE.replace(
+            "numerics: {continuation: default_ladder, stabilisation: none}",
+            "numerics: {continuation: default_ladder, stabilisation: none, elements: {u: P1}}",
+        )
+    )
+    assert edited != CASE
+    case_file.write_text(edited, encoding="utf-8")
+    with pytest.raises(CaseValidationError) as refused:
+        load_case(case_file)
+    assert from_the_shell == str(refused.value)
+    assert named in str(refused.value)
 
 
 def test_if09_editor_offers_only_what_the_schema_and_registries_name(case_file: Path) -> None:
@@ -294,7 +334,7 @@ def test_if09_editor_refuses_to_run_a_document_that_is_not_on_disk() -> None:
     document would write a manifest naming an input that does not exist, so the
     refusal belongs here rather than in the manifest.
     """
-    from nanopnp.io.case import loads_case
+    from nanopnp.pipeline.case import loads_case
 
     editor = CaseEditor(document=loads_case(CASE))
     with pytest.raises(ValueError, match="unit of reproducibility"):
@@ -351,7 +391,7 @@ def test_if09_a_field_absent_from_the_document_reads_as_absent(case_file: Path) 
     conflated the two would show ``structure.source.path`` as set to nothing
     rather than as living in a block this case has not got — which is a fact
     about the document, and the distinction
-    :func:`~nanopnp.io.case.substitute` acts on when it refuses to write into a
+    :func:`~nanopnp.io.case_paths.substitute` acts on when it refuses to write into a
     section that is not there.
     """
     editor = CaseEditor.open(case_file)
@@ -368,7 +408,7 @@ def _schema_bounds(path: str) -> tuple[float, float] | None:
 
     The second route to a field's bounds: pydantic's JSON Schema projection,
     walked through ``$ref``, ``anyOf``, ``items`` and ``additionalProperties``,
-    rather than the field metadata :func:`~nanopnp.io.case.field_bounds` reads.
+    rather than the field metadata :func:`~nanopnp.io.case_paths.field_bounds` reads.
     """
     from nanopnp.io.case import CaseDocument
 
@@ -451,7 +491,7 @@ def test_ver60_only_a_field_that_cannot_be_unset_is_a_spin_box(
     would bring.
     """
     from nanopnp.gui.case_model import FieldState, _kind
-    from nanopnp.io.case import FieldReference
+    from nanopnp.io.case_paths import FieldReference
 
     reference = FieldReference(path="charge.synthetic", annotation=annotation)  # type: ignore[arg-type]
     found = _kind(reference, None, closed=True)
@@ -478,7 +518,8 @@ def test_ver60_add_section_writes_only_a_section_whose_empty_form_changes_nothin
     ``with_section``'s empty mapping, which loads back as the default block, and
     any section outside ``NEUTRAL_SECTIONS`` is refused in that function's words.
     """
-    from nanopnp.io.case import NEUTRAL_SECTIONS, Charge
+    from nanopnp.io.case import Charge
+    from nanopnp.io.case_paths import NEUTRAL_SECTIONS
 
     editor = CaseEditor.open(case_file)
     assert editor.addable() == tuple(sorted(NEUTRAL_SECTIONS)) == ("charge",)

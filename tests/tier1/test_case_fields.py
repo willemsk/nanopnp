@@ -1,11 +1,11 @@
 """VER-43 — the one walk over ``nanopnp/case/v2``, and what is built on it.
 
-:func:`~nanopnp.io.case.case_fields` is what makes the desktop editor *generated*
+:func:`~nanopnp.io.case_paths.case_fields` is what makes the desktop editor *generated*
 rather than hand-written (IF-09), and it is also what the FR-25 switch
 classification is checked against. Both directions matter, and they fail
 differently.
 
-A path the walk yields that :func:`~nanopnp.io.case.field_at` cannot resolve is
+A path the walk yields that :func:`~nanopnp.io.case_paths.field_at` cannot resolve is
 an editor offering a field nothing can read or write. A field of the schema the
 walk *misses* is worse and quieter: it becomes silently uneditable, and — because
 :mod:`nanopnp.io.defaults`'s enumeration is checked against this same walk — it
@@ -30,20 +30,24 @@ from pydantic import BaseModel, ValidationError
 from nanopnp.core.stages import create, describe
 from nanopnp.io.artefact import StageInputs
 from nanopnp.io.case import (
-    NEUTRAL_SECTIONS,
     CaseDocument,
     CaseValidationError,
+    dump_case,
+)
+from nanopnp.io.case_paths import (
+    NEUTRAL_SECTIONS,
     _walk_fields,
     case_fields,
-    dump_case,
     field_at,
-    load_case,
-    resolve,
     with_section,
 )
 from nanopnp.io.defaults import CONFIGURATION_PATHS, SWITCH_PATHS
-from nanopnp.io.run import run_case, stored_upstream
 from nanopnp.io.store import Store
+from nanopnp.pipeline.case import load_case, resolve
+from nanopnp.pipeline.run import (
+    run_case,
+    stored_upstream,
+)
 
 SCHEMA_PATHS: tuple[str, ...] = (
     "schema",
@@ -329,19 +333,22 @@ def test_ver60_an_empty_charge_section_keys_every_physics_stage_as_its_absence(
     """Stages 1 to 10 key the same with ``charge: {}`` as without it, but for stage 9.
 
     Stage 9's key is the validated dump, which carries the explicit block, so it
-    moves as the case hash does (the :data:`~nanopnp.io.case.NEUTRAL_SECTIONS`
+    moves as the case hash does (the :data:`~nanopnp.io.case_paths.NEUTRAL_SECTIONS`
     docstring). Every stage that carries physics, the solve included, keeps its key,
     so the run is served from the store; that is what makes the section neutral.
     """
     absent = _without(load_case(charged_tube.write(tmp_path / "tube")), "charge")
     added = with_section(absent, "charge")
     store = Store(tmp_path / "store")
-    run_case(dump_case(absent, tmp_path / "absent.yaml"), store=store, upto="materials")
+    # The solve's inputs, without the solve: the charge and the materials walks
+    # between them cover every stage the solve reads (WP38 D11).
+    for upto in ("charge", "materials"):
+        run_case(dump_case(absent, tmp_path / "absent.yaml"), store=store, upto=upto)
 
     def keys(document: CaseDocument) -> dict[str, str]:
-        found = stored_upstream(document, store=store, upto="materials")
+        found = stored_upstream(document, store=store)
         found["solve"] = create("solve").key(  # type: ignore[attr-defined]
-            StageInputs(case=document, upstream=dict(found))
+            StageInputs(resolved=resolve(document), upstream=dict(found))
         )
         return {name: artefact.hash for name, artefact in found.items()}
 

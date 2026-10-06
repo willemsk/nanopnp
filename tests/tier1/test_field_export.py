@@ -31,7 +31,10 @@ import pytest
 
 from nanopnp.core.scaling import Scales
 from nanopnp.core.typing import Expression, Mesh, Numeric
-from nanopnp.io.fields import (
+from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS, CylindricalPoreGeometry
+from nanopnp.physics import models
+from nanopnp.physics.models import ModelSolution
+from nanopnp.post.export import (
     EXPORT_SCHEMA,
     OMEGA_STEM,
     OMEGA_W_STEM,
@@ -39,15 +42,12 @@ from nanopnp.io.fields import (
     export_fields,
     p2_nodes,
 )
-from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS, CylindricalPoreGeometry
-from nanopnp.physics import models
-from nanopnp.physics.models import ModelSolution
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import meshio
 
     from nanopnp.charge.stage import ResolvedFields
-    from nanopnp.io.case import ResolvedCase
+    from nanopnp.io.resolved import ResolvedCase
 
 PORE = CylindricalPoreGeometry(
     pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
@@ -505,8 +505,8 @@ def test_if07_the_report_exports_the_fixed_charge_it_read_for_the_restore(
     import nanopnp.solve.state as solve_state
     from nanopnp.charge.stage import read_fields
     from nanopnp.cli import main
-    from nanopnp.io.run import run_case
     from nanopnp.io.store import Store
+    from nanopnp.pipeline.run import run_case
 
     example = Path(__file__).resolve().parents[2] / "examples" / "02-charged-pore"
     field = Path(shutil.copy(example / "ring.field.yaml", tmp_path))

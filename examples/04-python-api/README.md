@@ -15,8 +15,8 @@ the command line cannot:
    `cancel=CancelFlag()` and call `.cancel()` from another thread to stop it between stages or
    between Newton steps. A cancelled stage writes nothing.
 3. **Substitutes an input by hand (FR-27).** It builds a second `CaseDocument` whose
-   `inputs.mesh.path` names another mesh and runs it with `run_document(..., upto="materials")`,
-   which stops before the solve. Every stage's key is the hash of what it reads, so the mesh
+   `inputs.mesh.path` names another mesh and walks it to the mesh and to the materials with
+   `run_document(..., upto=...)`. A walk runs its target's inputs alone, so neither walk solves. Every stage's key is the hash of what it reads, so the mesh
    artefact's key changes. The materials artefact's key does not, because materials never read the
    mesh. A byte-identical copy of the mesh under another name keeps the same key: a mesh is
    identified by its content, not its path.

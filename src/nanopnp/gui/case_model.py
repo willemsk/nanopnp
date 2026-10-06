@@ -1,8 +1,8 @@
 """The case editor's view-model: a case file, its fields, and what may be typed into them.
 
-Generated from the schema, not written out (IF-09). :func:`~nanopnp.io.case.case_fields`
+Generated from the schema, not written out (IF-09). :func:`~nanopnp.io.case_paths.case_fields`
 enumerates every editable dotted path of the case schema and
-:func:`~nanopnp.io.case.options_at` says what each one admits, so this module holds
+:func:`~nanopnp.pipeline.checks.options_at` says what each one admits, so this module holds
 no default, no unit and no option list of its own. A second list of stabilisation
 modes here would be a graphical interface offering a mode the solver does not
 apply — a run whose FR-25 manifest describes something that never happened
@@ -20,14 +20,14 @@ should not pay for a solver.
 :meth:`CaseEditor.stage` checks one value against the type the schema declares at
 that path, which is what refuses ``"lots"`` in ``bias_V`` the moment it is typed.
 :meth:`CaseEditor.commit` re-validates the *whole* document through
-:func:`~nanopnp.io.case.substitute`, which is where ``extra="forbid"``, the
+:func:`~nanopnp.io.case_paths.substitute`, which is where ``extra="forbid"``, the
 registry check and the cross-field rules live (§5.3.4). Both diagnostics are the
 ones the command line prints for the same mistake: one error vocabulary, not two.
 
 **A section is added only when its absence and its empty form are one case.**
 :meth:`CaseEditor.add_section` writes an empty block through
-:func:`~nanopnp.io.case.with_section`, which admits only
-:data:`~nanopnp.io.case.NEUTRAL_SECTIONS`. Without it the pH of a structure case
+:func:`~nanopnp.io.case_paths.with_section`, which admits only
+:data:`~nanopnp.io.case_paths.NEUTRAL_SECTIONS`. Without it the pH of a structure case
 that carries no ``charge:`` block could not be set at all (QR-10); with any
 other section it would be the shell changing the physics from a default
 (WP31 D13).
@@ -46,24 +46,26 @@ from types import UnionType
 from typing import Literal, TypeAlias, Union, get_args, get_origin
 
 from nanopnp.io.case import (
-    NEUTRAL_SECTIONS,
     CaseDocument,
     CaseValidationError,
-    FieldReference,
     FieldType,
     FieldValue,
+    dump_case,
+    render_problems,
+)
+from nanopnp.io.case_paths import (
+    NEUTRAL_SECTIONS,
+    FieldReference,
     UnknownCasePathError,
     case_fields,
-    dump_case,
     field_at,
     field_bounds,
-    load_case,
-    options_at,
-    render_problems,
     substitute,
     value_at,
     with_section,
 )
+from nanopnp.pipeline.case import load_case
+from nanopnp.pipeline.checks import check_document, options_at
 
 __all__ = [
     "ABSENT",
@@ -84,7 +86,7 @@ class Absent:
 
     ``structure.source.path`` is a field of the case schema whatever a given
     case says, and a Phase-1 case carries no ``structure:`` block at all. That is
-    a fact about the document, not about the path (:func:`~nanopnp.io.case.value_at`
+    a fact about the document, not about the path (:func:`~nanopnp.io.case_paths.value_at`
     says so in those words), and it is not ``None`` either: ``None`` is a value
     several fields may legitimately hold.
     """
@@ -105,14 +107,14 @@ class FieldState:
     Parameters
     ----------
     reference
-        The schema's declaration, exactly as :func:`~nanopnp.io.case.field_at`
+        The schema's declaration, exactly as :func:`~nanopnp.io.case_paths.field_at`
         returns it.
     value
         What this document holds there, or :data:`ABSENT` when the block it
         lives in is not in this document, or the staged edit when there is one.
     options
         Every value the field admits, or ``None`` where they are not
-        enumerable. Always :func:`~nanopnp.io.case.options_at` of the path.
+        enumerable. Always :func:`~nanopnp.pipeline.checks.options_at` of the path.
     kind
         How to edit it.
     staged
@@ -120,7 +122,7 @@ class FieldState:
     bounds
         The closed range ``(ge, le)`` the schema declares, for a ``"bounded"``
         field, and ``None`` otherwise. Always
-        :func:`~nanopnp.io.case.field_bounds` of the path: the shell writes no
+        :func:`~nanopnp.io.case_paths.field_bounds` of the path: the shell writes no
         bound of its own (IF-09, WP31 D12).
     """
 
@@ -187,7 +189,7 @@ def _kind(
     is the mirror image — a plain ``str`` whose admissible values come from a
     registry rather than from its annotation — and is a combo box for that
     reason, which is the whole point of asking
-    :func:`~nanopnp.io.case.options_at` rather than the annotation alone.
+    :func:`~nanopnp.pipeline.checks.options_at` rather than the annotation alone.
 
     A number with both ends declared, such as ``charge.ph`` in [0, 14], is a
     spin box over exactly that range (WP31 D12). One open end, ``ge=0`` alone,
@@ -257,7 +259,7 @@ class CaseEditor:
 
         Raises
         ------
-        nanopnp.io.case.UnknownCasePathError
+        nanopnp.io.case_paths.UnknownCasePathError
             If the path is not one the schema declares.
         """
         reference = field_at(path)
@@ -298,12 +300,12 @@ class CaseEditor:
 
         Raises
         ------
-        nanopnp.io.case.UnknownCasePathError
+        nanopnp.io.case_paths.UnknownCasePathError
             If the path is not one the schema declares.
         nanopnp.io.case.CaseValidationError
             If the declared type refuses the value, naming the path, the value
             and the type — the diagnostic
-            :meth:`~nanopnp.io.case.FieldReference.validate` already writes, so
+            :meth:`~nanopnp.io.case_paths.FieldReference.validate` already writes, so
             the interface and the sweep planner refuse a bad value in the same
             words.
         """
@@ -352,14 +354,18 @@ class CaseEditor:
         Raises
         ------
         nanopnp.io.case.CaseValidationError
-            If the substituted document is not an admissible case. The document
+            If the substituted document is not an admissible case, against the
+            schema or against :func:`~nanopnp.pipeline.checks.check_document`. The document
             is left exactly as it was, the edits stay staged so the user can fix
             one of them, and :meth:`problems` returns the diagnostic — rendered
             against this editor's own source, so it is character for character
             what the command line prints for a file holding the same mistake.
         """
         try:
-            document = substitute(self.document, self._edits)
+            # The registry and element-order checks a loaded file passes, run on
+            # the substituted document, so the editor refuses what the command
+            # line refuses, in the same words (QR-11, WP38 D7).
+            document = check_document(substitute(self.document, self._edits))
         except CaseValidationError as error:
             self._problems = self._render(error)
             raise CaseValidationError(self._problems, error.errors) from None
@@ -376,7 +382,7 @@ class CaseEditor:
     def _render(self, error: CaseValidationError) -> str:
         """Re-render a substitution failure against this editor's own source.
 
-        :func:`~nanopnp.io.case.substitute` names the document and the paths it
+        :func:`~nanopnp.io.case_paths.substitute` names the document and the paths it
         substituted, which is right for a sweep member assembled in memory and
         wrong here: the user is looking at a file, and the message must be the
         one they would get from ``nanopnp run`` on it.
@@ -392,7 +398,7 @@ class CaseEditor:
     def addable(self) -> tuple[str, ...]:
         """Return the sections **Add section** may write into this document, sorted.
 
-        Those of :data:`~nanopnp.io.case.NEUTRAL_SECTIONS` the committed
+        Those of :data:`~nanopnp.io.case_paths.NEUTRAL_SECTIONS` the committed
         document does not carry: their fields read :data:`ABSENT` until one is
         added, and adding one changes nothing the run resolves (WP31 D13).
         """
@@ -409,7 +415,7 @@ class CaseEditor:
         Raises
         ------
         ValueError
-            If ``name`` is not a section :func:`~nanopnp.io.case.with_section`
+            If ``name`` is not a section :func:`~nanopnp.io.case_paths.with_section`
             adds, or the document already carries it, in that function's words.
         """
         self.document = with_section(self.document, name)

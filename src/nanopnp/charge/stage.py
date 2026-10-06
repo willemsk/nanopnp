@@ -113,7 +113,7 @@ from nanopnp.geometry.region import (
     read_region,
 )
 from nanopnp.io.artefact import Artefact, ChargeGridArtefact, FieldsArtefact, StageInputs
-from nanopnp.io.case import UnsupportedCaseSection, resolve
+from nanopnp.io.case import UnsupportedCaseSection
 from nanopnp.io.defaults import ContributedDeviation
 from nanopnp.io.store import atomic_write_bytes
 from nanopnp.mesh.ingest import IngestedMesh, MeshStage, deployed_mesh
@@ -125,7 +125,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.core.typing import Expression, Mesh
     from nanopnp.density.grid import RadialGrid
     from nanopnp.geometry.region import RegionRecord
-    from nanopnp.io.case import ResolvedCase
+    from nanopnp.io.resolved import ResolvedCase
     from nanopnp.io.store import Store
 
 logger = logging.getLogger(__name__)
@@ -1326,7 +1326,7 @@ class FieldStage:
             :meth:`run` does, and gets it; :meth:`key` does not, and the mesh is
             then ingested only where no upstream artefact names its hash.
         """
-        resolved = resolve(inputs.case)
+        resolved = inputs.resolved
         if (
             resolved.charge is None
             and resolved.eps_r is None
@@ -1352,7 +1352,7 @@ class FieldStage:
         """Return the directory this run writes into: the workspace, or a fresh one.
 
         A named workspace is the run's own, made fresh per run by the driver
-        (:mod:`nanopnp.io.run`), and is written into directly; without one, a
+        (:mod:`nanopnp.pipeline.run`), and is written into directly; without one, a
         fresh directory under the store root.
         """
         if self._workspace is not None:

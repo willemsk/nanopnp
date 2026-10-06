@@ -13,7 +13,7 @@ refusals asserted here are the two ways a run directory can fail to yield one:
 no record at all, and a record the gate rejects.
 
 **The field vocabulary is the export's.** The names the render child reports are
-:func:`nanopnp.io.fields.attribute_name` over the model's own declared fields —
+:func:`nanopnp.post.export.attribute_name` over the model's own declared fields —
 the same function and the same order the IF-07 export writes — so the selector
 cannot offer a name the file does not use, and the number under a name cannot be
 in different units in the two places.
@@ -66,10 +66,14 @@ from nanopnp.gui.render import (
     render_mesh,
     renderer_source,
 )
-from nanopnp.io.fields import FIXED_CHARGE_ATTRIBUTE, attribute_name
-from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.pipeline.case import resolve
+from nanopnp.pipeline.run import run_case
+from nanopnp.post.export import (
+    FIXED_CHARGE_ATTRIBUTE,
+    attribute_name,
+)
 from nanopnp.solve.state import STATE_KEY, StateMismatchError
 
 PORE = CylindricalPoreGeometry(
@@ -128,11 +132,11 @@ def _expected_fields(run: Path) -> tuple[str, ...]:
     fails against the model rather than against a copy of its own answer.
     """
     from nanopnp.gui.render import _state_path
-    from nanopnp.io.case import load_case
     from nanopnp.io.manifest import CASE_FILENAME
+    from nanopnp.pipeline.case import load_case
     from nanopnp.solve.state import restore
 
-    solution = restore(_state_path(run), case=load_case(run / CASE_FILENAME))
+    solution = restore(_state_path(run), resolved=resolve(load_case(run / CASE_FILENAME)))
     return tuple(
         attribute_name(declared.name)
         for declared in solution.model.fields
@@ -342,8 +346,8 @@ def test_ver44_a_state_the_gate_refuses_is_reported_as_the_gate_wrote_it(
     solved.
     """
     from nanopnp.gui.render import _state_path
-    from nanopnp.io.case import load_case
     from nanopnp.io.manifest import CASE_FILENAME
+    from nanopnp.pipeline.case import load_case
     from nanopnp.solve.state import restore
 
     state = _state_path(finished_run)
@@ -368,7 +372,7 @@ def test_ver44_a_state_the_gate_refuses_is_reported_as_the_gate_wrote_it(
         render(RenderRequest(run=str(moved)))
 
     with pytest.raises(StateMismatchError) as directly:
-        restore(state, case=load_case(moved / CASE_FILENAME))
+        restore(state, resolved=resolve(load_case(moved / CASE_FILENAME)))
 
     assert str(refused.value) == str(directly.value)
 

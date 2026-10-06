@@ -25,8 +25,9 @@ from dataclasses import dataclass
 from typing import Any, TypeAlias
 
 from nanopnp.io.artefact import CASE_SCHEMA
-from nanopnp.io.case import CaseDocument, UnknownCasePathError
-from nanopnp.io.case import value_at as case_value_at
+from nanopnp.io.case import CaseDocument
+from nanopnp.io.case_paths import UnknownCasePathError
+from nanopnp.io.case_paths import value_at as case_value_at
 
 SwitchValue: TypeAlias = Any
 """The value of one switch: a ``bool``, a correction model name, a solver
@@ -288,7 +289,7 @@ class UnknownSwitchPathError(KeyError):
 def value_at(document: CaseDocument, path: str) -> SwitchValue:
     """Return the value a dotted path names in a case document.
 
-    A thin translation over :func:`nanopnp.io.case.value_at`, which walks the
+    A thin translation over :func:`nanopnp.io.case_paths.value_at`, which walks the
     *schema* first and only then the document. One walker rather than two: the
     enumeration here and the sweep axes of FR-24 name paths in the same
     vocabulary, and two implementations of "what does this path mean" could

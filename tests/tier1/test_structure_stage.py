@@ -34,13 +34,17 @@ import pytest
 from MDAnalysis.coordinates.memory import MemoryReader
 
 from nanopnp.core.stages import create
-from nanopnp.io.case import (
-    CaseValidationError,
+from nanopnp.io.case import CaseValidationError
+from nanopnp.io.store import Store
+from nanopnp.pipeline.case import (
     load_case,
     resolve,
 )
-from nanopnp.io.run import UnknownStageError, run_case, selected_stages
-from nanopnp.io.store import Store
+from nanopnp.pipeline.run import (
+    UnknownStageError,
+    run_case,
+    selected_stages,
+)
 from nanopnp.structure.axis import SymmetryGateError, measure_axis, minimal_rotation
 from nanopnp.structure.ensemble import AlignedEnsemble
 from nanopnp.structure.read import (
@@ -540,8 +544,8 @@ def test_ver48_artefact_round_trip_and_export(prepared: Path, tmp_path: Path) ->
     script = (
         "from nanopnp.core.stages import create\n"
         "from nanopnp.io.artefact import StageInputs\n"
-        "from nanopnp.io.case import load_case\n"
-        f"print(create('structure').key(StageInputs(case=load_case({str(case)!r}))).hash)\n"
+        "from nanopnp.pipeline.case import load_case, resolve\n"
+        f"print(create('structure').key(StageInputs(resolved=resolve(load_case({str(case)!r})))).hash)\n"
     )
     other = subprocess.run(
         [sys.executable, "-c", script], capture_output=True, text=True, check=True
@@ -681,12 +685,13 @@ def test_ver48_walk_rules(prepared: Path, tmp_path: Path) -> None:
     assert "region" in selected_stages(resolve(load_case(case)), None)
     # Both halves of stage 7 follow the mesh: the case protonates and its model
     # declares fixed_charge, so its charge is deposited (WP28 D8).
-    assert selected_stages(resolve(load_case(case)), "materials")[-5:] == (
+    assert selected_stages(resolve(load_case(case)), "solve")[-6:] == (
         "region",
         "mesh",
         "protonation",
         "charge",
         "materials",
+        "solve",
     )
     assert run_case(case, store=store, upto="case", write=False).stages[-1].name == "case"
     ran = run_case(case, store=store, upto="structure", write=False)

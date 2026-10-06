@@ -23,8 +23,9 @@ import pytest
 from nanopnp.charge.stage import FieldStage
 from nanopnp.core.stages import CancelFlag, Cancelled, create, describe
 from nanopnp.io.artefact import StageInputs
-from nanopnp.io.case import UnsupportedCaseSection, loads_case
+from nanopnp.io.case import UnsupportedCaseSection
 from nanopnp.mesh.adapter import from_ngsolve, write_msh41
+from nanopnp.pipeline.case import loads_case, resolve
 
 RING = "{centre_r_nm: 2.0, centre_z_nm: 4.0, width_nm: 0.3, charge_e: -12.0}"
 """The Tier-1 ring of ``test_charge_fields``: 0.3 nm wide, so that a mesh this
@@ -96,7 +97,7 @@ numerics: {{continuation: none, elements: {{phi: {order}, c: {order}}}}}
 
 def _inputs(mesh_path: Path, field_path: Path | None, *, order: str = "P2") -> StageInputs:
     """Return the stage inputs for a case naming these two files."""
-    return StageInputs(case=loads_case(case_text(mesh_path, field_path, order=order)))
+    return StageInputs(resolved=resolve(loads_case(case_text(mesh_path, field_path, order=order))))
 
 
 # -- introspection -------------------------------------------------------------
@@ -225,7 +226,7 @@ def test_val03_case_identity_carries_the_supplied_field_contents(
     identity it had, which is what every published ``case_hash`` rests on.
     """
     from nanopnp.core.hashing import content_hash
-    from nanopnp.io.case import resolve
+    from nanopnp.pipeline.case import resolve
     from nanopnp.validation.comsol import (
         CASE_IDENTITY_SCHEMA,
         DISCRETISATION_KEYS,
@@ -341,8 +342,8 @@ def _producer_case(files: tuple[Path, Path], directory: Path, *, order: str = "P
 @pytest.fixture(scope="module")
 def produced(producer_files: tuple[Path, Path], tmp_path_factory: pytest.TempPathFactory):
     """Walk the producer case through stage 7 once, into a store kept for the module."""
-    from nanopnp.io.run import run_case
     from nanopnp.io.store import Store
+    from nanopnp.pipeline.run import run_case
 
     work = tmp_path_factory.mktemp("produced")
     store = Store(work / "store")
@@ -391,9 +392,9 @@ def test_ver01_the_producer_stage_deposits_keys_and_records_its_report(produced)
     # And the key taken before the run is the artefact the run produced.
     stage = FieldStage()
     upstream = {name: result.artefacts[name] for name in ("mesh", "protonation")}
-    from nanopnp.io.case import load_case
+    from nanopnp.pipeline.case import load_case
 
-    key = stage.key(StageInputs(case=load_case(case), upstream=upstream))
+    key = stage.key(StageInputs(resolved=resolve(load_case(case)), upstream=upstream))
     assert key.hash == stage7.hash
     assert record["lattice"]["q_net_e"] * ELEMENTARY_CHARGE == pytest.approx(  # type: ignore[index]
         -ELEMENTARY_CHARGE
@@ -404,7 +405,7 @@ def test_ver01_a_new_element_order_redeposits_without_resumming(
     produced, producer_files: tuple[Path, Path], tmp_path: Path
 ) -> None:
     """The lattice is keyed without the mesh's discretisation: P3 re-deposits it from the store."""
-    from nanopnp.io.run import run_case
+    from nanopnp.pipeline.run import run_case
 
     _, store, first = produced
     case = _producer_case(producer_files, tmp_path, order="P3")
@@ -443,13 +444,13 @@ def test_ver29_a_producer_case_handed_no_stage_7_artefact_is_refused_naming_it(
     produced,
 ) -> None:
     """D9: the solve keys and reads a deposited charge only from stage 7's artefact."""
-    from nanopnp.io.case import load_case
+    from nanopnp.pipeline.case import load_case
     from nanopnp.solve.stage import SolveStage
 
     case, _, result = produced
     upstream = {name: result.artefacts[name] for name in ("mesh",)}
     with pytest.raises(KeyError, match="stage 7 \\('charge'\\)"):
-        SolveStage().key(StageInputs(case=load_case(case), upstream=upstream))
+        SolveStage().key(StageInputs(resolved=resolve(load_case(case)), upstream=upstream))
 
 
 class _CancelOnCall:
@@ -482,14 +483,15 @@ def test_ver25_the_producer_stage_cancels_between_frames_and_before_each_gate(
     produced, tmp_path: Path, at: int, where: str
 ) -> None:
     """D12: between frames, before the projection and before each gate; nothing written."""
-    from nanopnp.io.case import load_case
+    from nanopnp.pipeline.case import load_case
 
     case, _, result = produced
     upstream = {name: result.artefacts[name] for name in ("mesh", "protonation")}
     work = tmp_path / "work"
     with pytest.raises(Cancelled, match=re.escape(where)):
         FieldStage(workspace=work).run(
-            StageInputs(case=load_case(case), upstream=upstream), cancel=_CancelOnCall(at)
+            StageInputs(resolved=resolve(load_case(case)), upstream=upstream),
+            cancel=_CancelOnCall(at),
         )
     assert not (work / "deposit.npz").exists()
 
@@ -498,8 +500,8 @@ def test_ver29_a_charged_walk_solves_and_exports_the_deposited_charge(
     producer_files: tuple[Path, Path], tmp_path: Path
 ) -> None:
     """D9 end to end: the solve, the restore and the ``rho_fixed`` export read the deposit."""
-    from nanopnp.io.run import run_case
     from nanopnp.io.store import Store
+    from nanopnp.pipeline.run import run_case
 
     case = _producer_case(producer_files, tmp_path)
     result = run_case(case, store=Store(tmp_path / "store"), workspace=tmp_path / "work")

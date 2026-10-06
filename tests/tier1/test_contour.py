@@ -54,9 +54,13 @@ from nanopnp.geometry.profile import (
     write_profile,
 )
 from nanopnp.io.artefact import Artefact, StageInputs
-from nanopnp.io.case import CaseValidationError, load_case, resolve
-from nanopnp.io.run import run_case, selected_stages
+from nanopnp.io.case import CaseValidationError
 from nanopnp.io.store import Store
+from nanopnp.pipeline.case import load_case, resolve
+from nanopnp.pipeline.run import (
+    run_case,
+    selected_stages,
+)
 
 H = 0.05
 
@@ -480,12 +484,13 @@ _KEY_SCRIPT = """
 import sys
 from nanopnp.core.stages import create
 from nanopnp.io.artefact import StageInputs
-from nanopnp.io.case import load_case
+from nanopnp.pipeline.case import load_case, resolve
 case = load_case(sys.argv[1])
-structure = create("structure").key(StageInputs(case=case))
-density = create("density").key(StageInputs(case=case, upstream={"structure": structure}))
-symmetry = create("symmetry").key(StageInputs(case=case, upstream={"density": density}))
-inputs = StageInputs(case=case, upstream={"structure": structure, "symmetry": symmetry})
+resolved = resolve(case)
+structure = create("structure").key(StageInputs(resolved=resolved))
+density = create("density").key(StageInputs(resolved=resolved, upstream={"structure": structure}))
+symmetry = create("symmetry").key(StageInputs(resolved=resolved, upstream={"density": density}))
+inputs = StageInputs(resolved=resolved, upstream={"structure": structure, "symmetry": symmetry})
 print(create("contour").key(inputs).hash)
 """
 
@@ -493,14 +498,16 @@ print(create("contour").key(inputs).hash)
 def _key_artefact(case_path: Path) -> Artefact:
     """Return the stage-4 key artefact for a case, computed from keys alone."""
     case = load_case(case_path)
-    structure = create("structure").key(StageInputs(case=case))  # type: ignore[attr-defined]
+    structure = create("structure").key(StageInputs(resolved=resolve(case)))  # type: ignore[attr-defined]
     density = create("density").key(  # type: ignore[attr-defined]
-        StageInputs(case=case, upstream={"structure": structure})
+        StageInputs(resolved=resolve(case), upstream={"structure": structure})
     )
     symmetry = create("symmetry").key(  # type: ignore[attr-defined]
-        StageInputs(case=case, upstream={"density": density})
+        StageInputs(resolved=resolve(case), upstream={"density": density})
     )
-    inputs = StageInputs(case=case, upstream={"structure": structure, "symmetry": symmetry})
+    inputs = StageInputs(
+        resolved=resolve(case), upstream={"structure": structure, "symmetry": symmetry}
+    )
     key: Artefact = create("contour").key(inputs)  # type: ignore[attr-defined]
     return key
 

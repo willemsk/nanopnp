@@ -50,20 +50,6 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
 # -- the vocabulary a coupled solve is posed on -----------------------------------
 
-POTENTIAL = "potential"
-"""Name of the potential field, shared by every model."""
-
-VELOCITY = "velocity"
-"""Name of the velocity field of the flow-carrying models."""
-
-VELOCITY_AXIS = "velocity_axis"
-"""Key of the axis constraint ``u_r = 0`` among a model's essential boundaries.
-
-:meth:`nanopnp.physics.models.PhysicsModel.essential_boundaries` returns it. The
-one essential set that is not a whole field: the axis constrains one component
-of ``u`` and leaves ``u_z`` natural (NUM-06), so it is reported beside the
-velocity's own no-slip set rather than folded into it."""
-
 
 @dataclass(frozen=True)
 class CoupledBoundaries:

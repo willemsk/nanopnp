@@ -49,8 +49,14 @@ by listing every correction as a deviation. To solve ePNP-NS, name the correctio
 A case is validated before anything is solved. An unknown key is refused with a diagnostic naming
 the key and suggesting the nearest accepted one (IF-03). A value of the wrong type is refused naming
 its dotted path. So is a correction model no installed parameter file provides, or an output this
-run cannot produce, such as `rectification` at one operating point. Every refusal exits with code
-`3`.
+run cannot produce, such as `rectification` at one operating point. So is a physics model, a
+stabilisation mode or a linear solver this install does not register, and a velocity-pressure
+element pair that is not inf-sup stable in the case's stabilisation mode. Every refusal exits with
+code `3`.
+
+`nanopnp validate case case.yaml` makes every check a run makes before it meshes anything, the
+parameter file's included, and prints the stages the case walks. It reads no file the case supplies
+and solves nothing.
 
 ## Reading a v1 case file
 

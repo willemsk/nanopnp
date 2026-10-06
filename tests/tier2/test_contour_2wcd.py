@@ -18,8 +18,8 @@ import pytest
 
 from nanopnp.geometry.contour import PAYLOAD_NAME
 from nanopnp.geometry.profile import PIPELINE_SOURCE, load_profile, min_feature_size
-from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
+from nanopnp.pipeline.run import run_case
 
 pytestmark = pytest.mark.extended
 

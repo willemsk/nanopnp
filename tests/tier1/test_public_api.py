@@ -107,14 +107,43 @@ def test_ver45_the_type_checking_mirror_is_public() -> None:
     assert set(shown.public) == set(nanopnp.PUBLIC)
 
 
+def test_ver45_each_mirrored_name_comes_from_the_module_public_names() -> None:
+    """The mirror imports each name from the module ``PUBLIC`` resolves it from (REV-54).
+
+    WP38 moved ``resolve``, ``load_case`` and ``loads_case`` to the assembler, and
+    a mirror left importing them from ``nanopnp.io.case`` would type-check a name
+    against a definition that is not the one a user gets.
+    """
+    shown = surface()
+    assert shown.module_differs == ()
+    assert dict(shown.public_modules) == nanopnp.PUBLIC
+    assert nanopnp.PUBLIC["resolve"] == "nanopnp.pipeline.case"
+    assert nanopnp.PUBLIC["run_case"] == "nanopnp.pipeline.run"
+
+
+def test_ver45_a_name_mirrored_from_another_module_is_named() -> None:
+    """The oracle: ``resolve`` mirrored from the module it lived in before WP38."""
+    sources = {
+        "__init__.py": (
+            "from typing import TYPE_CHECKING\n"
+            "if TYPE_CHECKING:\n"
+            "    from nanopnp.io.case import resolve as resolve\n"
+            'PUBLIC = {"resolve": "nanopnp.pipeline.case"}\n'
+        ),
+    }
+    assert surface(sources=sources).module_differs == (
+        ("resolve", "nanopnp.pipeline.case", "nanopnp.io.case"),
+    )
+
+
 def test_ver45_a_name_dropped_from_the_mirror_is_named() -> None:
     """The oracle: a package written by hand, one name short in its mirror."""
     sources = {
         "__init__.py": (
             "from typing import TYPE_CHECKING\n"
             "if TYPE_CHECKING:\n"
-            "    from nanopnp.io.run import run_case as run_case\n"
-            'PUBLIC = {"run_case": "nanopnp.io.run", "Store": "nanopnp.io.store"}\n'
+            "    from nanopnp.pipeline.run import run_case as run_case\n"
+            'PUBLIC = {"run_case": "nanopnp.pipeline.run", "Store": "nanopnp.io.store"}\n'
         ),
     }
     assert surface(sources=sources).mirror_differs == ("Store",)

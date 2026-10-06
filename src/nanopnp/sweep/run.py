@@ -191,7 +191,11 @@ def _parent_artefact(
     """
     if point.parent is None:
         return None, "this point is the root of its tree and has no neighbour to start from"
-    from nanopnp.io.run import MissingUpstreamError, stored_upstream
+    from nanopnp.pipeline.case import resolve
+    from nanopnp.pipeline.run import (
+        MissingUpstreamError,
+        stored_upstream,
+    )
     from nanopnp.solve.stage import SolveStage
 
     parent = plan.point(point.parent)
@@ -209,7 +213,7 @@ def _parent_artefact(
             f"the store holds no converged state for parent point {parent.index} "
             f"({parent.point_id}); not even its upstream artefacts are stored: {error}"
         )
-    key = SolveStage().key(StageInputs(case=document, upstream=upstream))
+    key = SolveStage().key(StageInputs(resolved=resolve(document), upstream=upstream))
     found = store.get(SOLUTION_SCHEMA, key.hash)
     if found is None:
         return None, (
@@ -250,7 +254,7 @@ def run_point(
         :data:`MEMBERS_DIRNAME` inside it.
     """
     from nanopnp.core.stages import Cancelled
-    from nanopnp.io.run import run_document
+    from nanopnp.pipeline.run import run_document
 
     point = plan.point(index)
     started = time.perf_counter()

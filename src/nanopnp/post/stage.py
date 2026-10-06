@@ -51,14 +51,13 @@ from nanopnp.core.stages import (
 )
 from nanopnp.geometry.analyte import ANALYTE_BOUNDARY, ANALYTE_DOMAIN
 from nanopnp.io.artefact import Artefact, CaseArtefact, QoIArtefact, ReportArtefact, StageInputs
-from nanopnp.io.case import resolve
 from nanopnp.io.defaults import ContributedDeviation
-from nanopnp.io.fields import export_fields
 from nanopnp.mesh.ingest import deployed_mesh
 from nanopnp.numerics.measures import AXISYMMETRIC, Measures
 from nanopnp.physics.models import declaration
 from nanopnp.post import forces as force_post
 from nanopnp.post import qoi as qoi_post
+from nanopnp.post.export import export_fields
 from nanopnp.post.indicator import axial_indicator
 from nanopnp.solve.stage import SolveStage
 from nanopnp.solve.state import STATE_FILENAME, STATE_KEY, restore
@@ -67,7 +66,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     from collections.abc import Mapping
 
     from nanopnp.core.hashing import Canonicalisable
-    from nanopnp.io.case import ResolvedCase
+    from nanopnp.io.resolved import ResolvedCase
     from nanopnp.mesh.adapter import MeshData
     from nanopnp.physics.models import ModelSolution
 
@@ -369,7 +368,7 @@ class QoIStage:
             it once to answer the probe and once to do the work, and the probe's
             contract is that it does not do the work.
         """
-        resolved = resolve(inputs.case)
+        resolved = inputs.resolved
         ingested = deployed_mesh(resolved, inputs.upstream.get("mesh"))
         outputs = tuple(resolved.outputs)
         _check_selection(outputs)
@@ -383,7 +382,7 @@ class QoIStage:
         band = _band(ingested.data, inputs.options) if transport else None
         solution = _solution(inputs, solving=solving)
         case = inputs.upstream.get("case")
-        case_hash = case.hash if case is not None else CaseArtefact(inputs.case).hash
+        case_hash = case.hash if case is not None else CaseArtefact(inputs.resolved.document).hash
         return _Prepared(
             resolved=resolved,
             data=ingested.data,
@@ -455,7 +454,7 @@ class QoIStage:
             )
         solution = restore(
             Path(state_path),
-            case=inputs.case,
+            resolved=inputs.resolved,
             mesh_artefact=inputs.upstream.get("mesh"),
             charge_artefact=inputs.upstream.get("charge"),
         )
@@ -594,7 +593,7 @@ class ReportStage:
 
     def _exports(self, inputs: StageInputs) -> tuple[str, ...]:
         """Return the export selection: ``("fields",)`` or nothing."""
-        return ("fields",) if "fields" in resolve(inputs.case).outputs else ()
+        return ("fields",) if "fields" in inputs.resolved.outputs else ()
 
     def _hashes(self, inputs: StageInputs, *, solving: bool) -> tuple[str, Artefact, Artefact]:
         """Return the case hash and the two upstream artefacts this report describes.
@@ -606,7 +605,7 @@ class ReportStage:
         qoi = inputs.require("qoi")
         solution = _solution(inputs, solving=solving)
         case = inputs.upstream.get("case")
-        case_hash = case.hash if case is not None else CaseArtefact(inputs.case).hash
+        case_hash = case.hash if case is not None else CaseArtefact(inputs.resolved.document).hash
         return case_hash, qoi, solution
 
     def run(
@@ -663,7 +662,7 @@ class ReportStage:
         """Write the IF-07 pair(s) and return the payload map and the record.
 
         The permittivity and the fixed charge are supplied here rather than left
-        to :mod:`nanopnp.io.fields` to find, because only the run knows them: the
+        to :mod:`nanopnp.post.export` to find, because only the run knows them: the
         first is the model's own ``eps_r`` evaluated through the correction chain
         against the *stored* distance field, and the second is whatever stage 7
         assembled, if anything. A field the run did not have is simply absent
@@ -678,7 +677,7 @@ class ReportStage:
                 f"record); it carries {carried}. "
                 "The IF-07 export is of the converged fields and there is nothing to export from"
             )
-        resolved = resolve(inputs.case)
+        resolved = inputs.resolved
         # Read once, for the restore to gate and for the fixed charge to export.
         supplied = (
             read_fields(resolved)
@@ -687,7 +686,7 @@ class ReportStage:
         )
         restored = restore(
             Path(state_path),
-            case=inputs.case,
+            resolved=inputs.resolved,
             mesh_artefact=inputs.upstream.get("mesh"),
             fields=supplied,
             charge_artefact=inputs.upstream.get("charge"),

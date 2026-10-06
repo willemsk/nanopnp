@@ -39,9 +39,9 @@ from nanopnp.gui.assess import (
     seed,
 )
 from nanopnp.gui.geometry import ProfileEditor
-from nanopnp.io.case import load_case, resolve
-from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
+from nanopnp.pipeline.case import load_case, resolve
+from nanopnp.pipeline.run import run_case
 from nanopnp.symmetry.reduce import ReducedMap
 
 CASE = """\

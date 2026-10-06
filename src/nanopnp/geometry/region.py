@@ -75,14 +75,18 @@ from nanopnp.geometry.profile import (
 )
 from nanopnp.geometry.tolerance import TOL_NM
 from nanopnp.io.artefact import RegionArtefact
-from nanopnp.io.case import MembraneSpec, ReservoirSpec, UnsupportedCaseSection, resolve
+from nanopnp.io.case import (
+    MembraneSpec,
+    ReservoirSpec,
+    UnsupportedCaseSection,
+)
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
 
     from nanopnp.core.typing import Shape
     from nanopnp.io.artefact import StageInputs
-    from nanopnp.io.case import ResolvedCase
+    from nanopnp.io.resolved import ResolvedCase
 
 logger = logging.getLogger(__name__)
 
@@ -1408,8 +1412,8 @@ def _profile_input(inputs: StageInputs, resolved: ResolvedCase) -> tuple[str, Pa
         return profile_digest(load_profile(path)), path
     if resolved.structure is None:
         raise UnsupportedCaseSection(
-            f"case {inputs.case.name!r} supplies inputs.mesh, so there is no region for stage 5 "
-            "to assemble"
+            f"case {inputs.resolved.name!r} supplies inputs.mesh, so there is no region for "
+            "stage 5 to assemble"
         )
     contour = inputs.require("contour")
     return contour.hash, contour.payload["profile"]
@@ -1464,7 +1468,7 @@ class RegionStage:
 
     def key(self, inputs: StageInputs) -> RegionArtefact:
         """Return the key: the membrane, the reservoir, the constants and the profile."""
-        resolved = resolve(inputs.case)
+        resolved = inputs.resolved
         identity, _ = _profile_input(inputs, resolved)
         return self._key(resolved, identity)
 
@@ -1500,7 +1504,7 @@ class RegionStage:
         """
         check_cancelled(cancel, "reading the profile")
         report(progress, 0.0, "reading the profile")
-        resolved = resolve(inputs.case)
+        resolved = inputs.resolved
         identity, path = _profile_input(inputs, resolved)
         key = self._key(resolved, identity)
         assert resolved.membrane is not None and resolved.reservoir is not None

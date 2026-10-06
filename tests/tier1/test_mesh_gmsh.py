@@ -45,13 +45,13 @@ from nanopnp.geometry.region import (
     region_graph,
 )
 from nanopnp.io.artefact import StageInputs
-from nanopnp.io.case import loads_case, resolve
 from nanopnp.mesh import generate as generate_module
 from nanopnp.mesh.adapter import MeshData
 from nanopnp.mesh.generate import generate, gmsh_backend
 from nanopnp.mesh.ingest import MeshStage
 from nanopnp.mesh.quality import QUALITY_FLOOR, inverted_elements
 from nanopnp.mesh.sizing import SIZES
+from nanopnp.pipeline.case import loads_case, resolve
 
 REPOSITORY = Path(__file__).resolve().parents[2]
 
@@ -128,7 +128,7 @@ def workspace(tmp_path_factory: pytest.TempPathFactory) -> Path:
 def region(workspace: Path):
     """Return the stage-5 artefact of the parallelogram; the backend does not key it (D1)."""
     case = loads_case(_case_text(workspace, "netgen"))
-    return RegionStage(workspace=workspace / "region").run(StageInputs(case=case))
+    return RegionStage(workspace=workspace / "region").run(StageInputs(resolved=resolve(case)))
 
 
 def _chord_corrected_areas(record: RegionRecord, data: MeshData) -> dict[str, float]:
@@ -164,7 +164,7 @@ def test_ver54_the_same_region_passes_the_same_gates_on_both_backends(
     if backend == "gmsh":
         request.getfixturevalue("gmsh_module")
     case = loads_case(_case_text(workspace, backend))
-    inputs = StageInputs(case=case, upstream={"region": region})
+    inputs = StageInputs(resolved=resolve(case), upstream={"region": region})
     stage = MeshStage(workspace=workspace / f"mesh-{backend}")
     artefact = stage.run(inputs)
     assert artefact.hash == stage.key(inputs).hash
@@ -211,11 +211,11 @@ def test_ver54_a_clockwise_profile_meshes_with_no_inverted_element(
     from nanopnp.mesh import gmsh_backend as backend
 
     case = loads_case(_case_text(workspace, "gmsh", profile="clockwise.yaml"))
-    region = RegionStage(workspace=workspace / "region-cw").run(StageInputs(case=case))
+    region = RegionStage(workspace=workspace / "region-cw").run(StageInputs(resolved=resolve(case)))
     record = read_region(region.payload["region"])
     assert record.profile[0] == (5.0, 3.0)  # the profile as supplied, clockwise
     stage = MeshStage(workspace=workspace / "mesh-cw")
-    stage.run(StageInputs(case=case, upstream={"region": region}))
+    stage.run(StageInputs(resolved=resolve(case), upstream={"region": region}))
 
     graph = region_graph(build_region(record), record)
     faces = dict(graph.faces)
@@ -237,13 +237,16 @@ import json, sys
 from pathlib import Path
 from nanopnp.geometry.region import RegionStage
 from nanopnp.io.artefact import StageInputs
-from nanopnp.io.case import loads_case
+from nanopnp.pipeline.case import loads_case, resolve
 from nanopnp.mesh.ingest import MeshStage
 
 root = Path(sys.argv[1])
 case = loads_case(Path(sys.argv[2]).read_text())
-region = RegionStage(workspace=root / "region").run(StageInputs(case=case))
-mesh = MeshStage(workspace=root / "mesh").run(StageInputs(case=case, upstream={"region": region}))
+resolved = resolve(case)
+region = RegionStage(workspace=root / "region").run(StageInputs(resolved=resolved))
+mesh = MeshStage(workspace=root / "mesh").run(
+    StageInputs(resolved=resolved, upstream={"region": region})
+)
 sys.stderr.write(json.dumps({"content_hash": mesh.summary["content_hash"], "key": mesh.hash}))
 """
 
@@ -278,8 +281,10 @@ def test_ver54_the_key_moves_with_the_backend_and_netgen_s_does_not_move(
     for backend in ("netgen", "gmsh"):
         case = loads_case(_case_text(workspace, backend))
         # D1: stage 5 is netgen.occ on either backend, so its key does not move.
-        assert RegionStage().key(StageInputs(case=case)).hash == region.hash
-        keys[backend] = MeshStage().key(StageInputs(case=case, upstream={"region": region}))
+        assert RegionStage().key(StageInputs(resolved=resolve(case))).hash == region.hash
+        keys[backend] = MeshStage().key(
+            StageInputs(resolved=resolve(case), upstream={"region": region})
+        )
     assert keys["netgen"].hash == NETGEN_KEY
     assert keys["gmsh"].hash != NETGEN_KEY
     netgen = keys["netgen"].parameters["sizing"]
@@ -395,7 +400,7 @@ def test_ver54_a_missing_extra_is_refused_naming_it(
     monkeypatch.setattr(sys, "meta_path", [_Refuse(error), *sys.meta_path])
     case = loads_case(_case_text(workspace, "gmsh"))
     resolve(case)  # a case refusal would fire here; there is none
-    inputs = StageInputs(case=case, upstream={"region": region})
+    inputs = StageInputs(resolved=resolve(case), upstream={"region": region})
     with pytest.raises(MissingExtraError) as caught:
         MeshStage(workspace=workspace / "missing").run(inputs)
     message = str(caught.value)
@@ -427,14 +432,14 @@ import sys
 from pathlib import Path
 from nanopnp.geometry.region import RegionStage
 from nanopnp.io.artefact import StageInputs
-from nanopnp.io.case import loads_case, resolve
+from nanopnp.pipeline.case import loads_case, resolve
 from nanopnp.mesh.ingest import MeshStage
 
 root = Path(sys.argv[1])
 case = loads_case(Path(sys.argv[2]).read_text())
 resolve(case)
-region = RegionStage(workspace=root / "region").run(StageInputs(case=case))
-MeshStage().key(StageInputs(case=case, upstream={"region": region}))
+region = RegionStage(workspace=root / "region").run(StageInputs(resolved=resolve(case)))
+MeshStage().key(StageInputs(resolved=resolve(case), upstream={"region": region}))
 print("gmsh" in sys.modules)
 """
 

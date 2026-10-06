@@ -65,9 +65,12 @@ from nanopnp.core.paths import (
     reference_file,
 )
 from nanopnp.io.manifest import MANIFEST_SCHEMA
-from nanopnp.io.run import RUN_RECORD_FILENAME, RUN_SCHEMA
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
 from nanopnp.numerics.gates import GateViolationError
+from nanopnp.pipeline.run import (
+    RUN_RECORD_FILENAME,
+    RUN_SCHEMA,
+)
 
 PORE = CylindricalPoreGeometry(
     pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
@@ -231,7 +234,7 @@ def test_ver32_every_public_exception_class_is_classified_or_excluded() -> None:
         ("nanopnp.post.stage:SelectionError", EXIT_CASE),
         ("nanopnp.numerics.gates:GateViolationError", EXIT_GATE),
         ("nanopnp.post.qoi:RouteDisagreementError", EXIT_GATE),
-        ("nanopnp.io.run:MissingUpstreamError", EXIT_GATE),
+        ("nanopnp.pipeline.run:MissingUpstreamError", EXIT_GATE),
         ("nanopnp.numerics.newton:NewtonDivergenceError", EXIT_CONVERGENCE),
         ("nanopnp.core.stages:Cancelled", EXIT_CANCELLED),
         ("nanopnp.core.stages:MissingExtraError", EXIT_CASE),
@@ -493,9 +496,7 @@ def test_ver32_only_with_an_empty_store_exits_four(
     proves the stage read the substituted file rather than recomputing past it,
     and that only holds if a miss aborts.
     """
-    code = main(
-        ["stage", "materials", str(case_file), "--only", "--store", str(tmp_path / "empty")]
-    )
+    code = main(["stage", "solve", str(case_file), "--only", "--store", str(tmp_path / "empty")])
     assert code == EXIT_GATE
     captured = capsys.readouterr()
     assert captured.out == ""
@@ -527,7 +528,7 @@ def test_ver32_an_unclassified_failure_exits_one_and_says_to_ask_for_the_traceba
     def explode(*_args: object, **_kwargs: object) -> None:
         raise ZeroDivisionError("a bug, not a refusal")
 
-    monkeypatch.setattr("nanopnp.io.run.run_case", explode)
+    monkeypatch.setattr("nanopnp.pipeline.run.run_case", explode)
     assert main(["run", str(tmp_path / "absent.yaml")]) == EXIT_UNEXPECTED
     captured = capsys.readouterr()
     assert "a bug, not a refusal" in captured.err
@@ -562,8 +563,8 @@ def test_ver32_stdout_carries_the_result_and_stderr_carries_the_log(
     assert code == EXIT_OK
     captured = capsys.readouterr()
     assert json.loads(captured.out)["schema"] == RUN_SCHEMA  # parses whole: nothing else on stdout
-    assert "nanopnp.io.run" in captured.err
-    assert "nanopnp.io.run" in log.read_text(encoding="utf-8")
+    assert "nanopnp.pipeline.run" in captured.err
+    assert "nanopnp.pipeline.run" in log.read_text(encoding="utf-8")
 
 
 def test_ver32_inspect_reads_a_run_directory_back(
@@ -637,7 +638,7 @@ def test_val03_validate_case_hash_matches_every_rung_of_the_ladder(
     ``manifest.yaml``, so the command and the library must not be able to
     disagree about it.
     """
-    from nanopnp.io.case import load_case, resolve
+    from nanopnp.pipeline.case import load_case, resolve
     from nanopnp.validation.comsol import case_identity
 
     case = Path("docs/validation/cases/clya-0.5M-plus50mV.case.yaml")
@@ -716,8 +717,8 @@ def test_ver32_mesh_cylinder_writes_a_mesh_its_printed_groups_ingest(
         .replace("groups: {default: interface}", f"groups: {{{groups}}}"),
         encoding="utf-8",
     )
-    from nanopnp.io.run import run_case
     from nanopnp.io.store import Store
+    from nanopnp.pipeline.run import run_case
 
     result = run_case(case, store=Store(tmp_path / "store"), upto="mesh")
     assert result.manifest.geometry_and_mesh["content_hash"] == printed["content_hash"]
@@ -1053,3 +1054,49 @@ def test_ver32_stage_export_help_imports_no_stage_module() -> None:
     )
     assert json.loads(result.stderr) == []
     assert "--export" in result.stdout and ".mrc" in result.stdout
+
+
+# -- nanopnp validate case ---------------------------------------------------------
+
+
+def test_rev27_validate_case_accepts_a_runnable_case_and_lists_its_walk(
+    case_file: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """``nanopnp validate case`` checks a case as a run would, and solves nothing (WP38)."""
+    code = main(["validate", "case", str(case_file), "--json"])
+    assert code == EXIT_OK
+    reported = json.loads(capsys.readouterr().out)
+    assert reported["valid"] is True
+    assert reported["model"] == "epnp-ns"
+    assert reported["stages"][0] == "case"
+    assert reported["stages"][-1] == "report"
+
+
+@pytest.mark.parametrize(
+    ("old", "new", "named"),
+    [
+        ("model: epnp-ns", "model: epnp-nz", "is not registered"),
+        ("stabilisation: none", "stabilisation: none\n  elements: {u: P1}", "inf-sup"),
+    ],
+)
+def test_rev27_validate_case_refuses_in_the_words_run_uses(
+    case_file: Path,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    old: str,
+    new: str,
+    named: str,
+) -> None:
+    """A registry or inf-sup refusal exits 3 with the sentence ``nanopnp run`` prints (IF-02)."""
+    text = case_file.read_text(encoding="utf-8")
+    assert old in text
+    bad = tmp_path / "bad.case.yaml"
+    bad.write_text(text.replace(old, new), encoding="utf-8")
+
+    assert main(["validate", "case", str(bad)]) == EXIT_CASE
+    checked = capsys.readouterr()
+    assert checked.out == ""
+    assert main(["run", str(bad), "--store", str(tmp_path / "store")]) == EXIT_CASE
+    ran = capsys.readouterr()
+    assert named in checked.err
+    assert checked.err.removeprefix("nanopnp validate: ") == ran.err.removeprefix("nanopnp run: ")

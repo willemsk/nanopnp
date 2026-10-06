@@ -53,7 +53,7 @@ magnitude the scene samples, so zero sits at the centre of the colour map and
 a neutral region never reads as charged (D8); ``chi`` on ``[0, 1]``, fixed.
 
 **Nothing here names a field or a unit.** The vocabulary is
-:func:`nanopnp.io.fields.attribute_name` and the §6.3 scale table beside it —
+:func:`nanopnp.post.export.attribute_name` and the §6.3 scale table beside it —
 the same two the IF-07 export uses, so the viewer and the file cannot disagree
 about what a number means.
 """
@@ -75,7 +75,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
     from nanopnp.core.typing import Expression, Mesh
     from nanopnp.io.artefact import Artefact
-    from nanopnp.io.case import ResolvedCase
+    from nanopnp.io.resolved import ResolvedCase
     from nanopnp.numerics.measures import Measures
 
 logger = logging.getLogger(__name__)
@@ -267,7 +267,7 @@ def host_document(scene: str, *, renderer: str, title: str) -> str:
         The URL the document loads the renderer from.
     title
         The document title; the field's own attribute name, which comes from
-        :func:`nanopnp.io.fields.attribute_name` and never from this package.
+        :func:`nanopnp.post.export.attribute_name` and never from this package.
     """
     return _DOCUMENT.substitute(
         title=title,
@@ -296,7 +296,7 @@ class RenderRequest:
         The run directory, holding ``run.json`` and ``case.yaml``.
     field
         The field's attribute name, or ``""`` for the model's first field. The
-        vocabulary is :func:`nanopnp.io.fields.attribute_name`'s, so a name the
+        vocabulary is :func:`nanopnp.post.export.attribute_name`'s, so a name the
         shell offers is a name the export writes.
     renderer
         The URL the document loads the renderer from.
@@ -426,7 +426,7 @@ class RenderedCharge:
         What was drawn.
     name, units
         The quantity's name and unit: IF-07's
-        :data:`~nanopnp.io.fields.FIXED_CHARGE_ATTRIBUTE` in C m^-3, or the
+        :data:`~nanopnp.post.export.FIXED_CHARGE_ATTRIBUTE` in C m^-3, or the
         solid fraction, dimensionless.
     colour_range
         The fixed ``(min, max)`` of the colour map: ``(-L, L)`` for the charge,
@@ -468,8 +468,8 @@ def _state_path(run: Path) -> Path:
         or if the artefact the record names is not in the store any more. Each
         is a different sentence, because each has a different remedy.
     """
-    from nanopnp.io.run import RUN_RECORD_FILENAME
     from nanopnp.io.store import Store
+    from nanopnp.pipeline.run import RUN_RECORD_FILENAME
     from nanopnp.solve.state import STATE_KEY
 
     record_path = run / RUN_RECORD_FILENAME
@@ -532,8 +532,8 @@ def _recorded_artefact(run: Path, stage: str, *, needed: str | None) -> Artefact
         stage-7 artefact would reach the restore as none at all, which refuses it
         as a run that never reached stage 7.
     """
-    from nanopnp.io.run import RUN_RECORD_FILENAME
     from nanopnp.io.store import Store
+    from nanopnp.pipeline.run import RUN_RECORD_FILENAME
 
     record = json.loads((run / RUN_RECORD_FILENAME).read_text(encoding="utf-8"))
     entry = record.get("artefacts", {}).get(stage)
@@ -593,7 +593,7 @@ def _element_count(mesh: Mesh, domain: str | None) -> int:
     attributable to the scene's size rather than to the mesh's.
 
     Counted through the material mask, as
-    :func:`nanopnp.io.fields.p2_nodes` counts the same restriction for the
+    :func:`nanopnp.post.export.p2_nodes` counts the same restriction for the
     IF-07 export, so the picture and the file agree about what was drawn. The
     mask has one bit per *material*, so its ``NumSet()`` is not the count; the
     elements' own 1-based material indices are looked up in it as an array,
@@ -647,9 +647,12 @@ def render(request: RenderRequest) -> Rendered:
         If ``field`` names an attribute this solution does not carry; the
         message lists the ones it does.
     """
-    from nanopnp.io.case import load_case, resolve
-    from nanopnp.io.fields import attribute_name, field_scale
     from nanopnp.io.manifest import CASE_FILENAME
+    from nanopnp.pipeline.case import load_case, resolve
+    from nanopnp.post.export import (
+        attribute_name,
+        field_scale,
+    )
     from nanopnp.solve.state import restore
 
     run = Path(request.run)
@@ -658,7 +661,7 @@ def render(request: RenderRequest) -> Rendered:
     resolved = resolve(case)
     solution = restore(
         state,
-        case=case,
+        resolved=resolved,
         mesh_artefact=_recorded_artefact(
             run, "mesh", needed="a generated mesh" if case.inputs.mesh is None else None
         ),
@@ -732,9 +735,9 @@ def render_mesh(request: MeshRequest) -> RenderedMesh:
     FileNotFoundError
         If the run records no stage-6 artefact, or it has left the store.
     """
-    from nanopnp.io.case import load_case, resolve
     from nanopnp.io.manifest import CASE_FILENAME
     from nanopnp.mesh.ingest import deployed_mesh
+    from nanopnp.pipeline.case import load_case, resolve
 
     run = Path(request.run)
     resolved = resolve(load_case(run / CASE_FILENAME))
@@ -822,11 +825,11 @@ def deployed_coefficient(run: Path, quantity: ChargeQuantity) -> DeployedCoeffic
     from nanopnp.charge.dielectric import SOLID_FRACTION
     from nanopnp.charge.fields import CANONICAL_UNITS
     from nanopnp.charge.stage import case_fields, read_fields
-    from nanopnp.io.case import load_case, resolve
-    from nanopnp.io.fields import FIXED_CHARGE_ATTRIBUTE
     from nanopnp.io.manifest import CASE_FILENAME
     from nanopnp.mesh.ingest import deployed_mesh
     from nanopnp.numerics.measures import AXISYMMETRIC
+    from nanopnp.pipeline.case import load_case, resolve
+    from nanopnp.post.export import FIXED_CHARGE_ATTRIBUTE
 
     resolved = resolve(load_case(run / CASE_FILENAME))
     mesh_artefact = _recorded_artefact(

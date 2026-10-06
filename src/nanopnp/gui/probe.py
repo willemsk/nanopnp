@@ -320,7 +320,8 @@ def _exercise_protonation(scratch: Path) -> str:
 
     from nanopnp.charge.pqr import read_pqr
     from nanopnp.charge.protonation import run_pdb2pqr
-    from nanopnp.io.case import Charge, ResolvedProtonation
+    from nanopnp.io.case import Charge
+    from nanopnp.io.resolved import ResolvedProtonation
 
     source = structure_file(FRAGMENT)
     found: dict[float, float] = {}

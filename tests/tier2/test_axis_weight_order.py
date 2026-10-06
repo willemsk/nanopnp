@@ -44,11 +44,16 @@ from test_mms import BOUNDARIES, LENGTH_NM, MESH_SIZES_NM, RADIUS_NM, _model
 from nanopnp.cli import main
 from nanopnp.core.constants import AVOGADRO
 from nanopnp.geometry.profile import load_profile
-from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
+from nanopnp.io.vocabulary import (
+    POTENTIAL,
+    PRESSURE,
+    VELOCITY,
+)
 from nanopnp.mesh.primitives import CylinderGeometry
 from nanopnp.numerics.measures import AXISYMMETRIC, Measures
-from nanopnp.physics.models import POTENTIAL, PRESSURE, VELOCITY, ModelSolution
+from nanopnp.physics.models import ModelSolution
+from nanopnp.pipeline.run import run_case
 from nanopnp.post.qoi import ROUTE_AGREEMENT_TOLERANCE
 from nanopnp.solve import state as solve_state
 from nanopnp.validation.examples import copy_example

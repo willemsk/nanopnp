@@ -37,7 +37,11 @@ from nanopnp.geometry.region import (
     write_region,
 )
 from nanopnp.io.artefact import StageInputs
-from nanopnp.io.case import CaseValidationError, MembraneSpec, ReservoirSpec, loads_case, resolve
+from nanopnp.io.case import (
+    CaseValidationError,
+    MembraneSpec,
+    ReservoirSpec,
+)
 from nanopnp.materials.corrections import load_corrections
 from nanopnp.mesh.generate import sizing_parameters, wall_statistics
 from nanopnp.mesh.ingest import MeshStage, deployed_mesh
@@ -49,6 +53,7 @@ from nanopnp.mesh.sizing import (
     resolve_wall_size,
     wall_divisions,
 )
+from nanopnp.pipeline.case import loads_case, resolve
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.io.case import CaseDocument
@@ -100,9 +105,9 @@ def shelled(parallelogram_profile: Path, tmp_path_factory: pytest.TempPathFactor
     """Return the case, and its stage-5 and stage-6 artefacts, at ``a`` = 0.25 nm."""
     work = tmp_path_factory.mktemp("shell")
     case = loads_case(case_text(parallelogram_profile, charge=_offset()))
-    region = RegionStage(workspace=work / "region").run(StageInputs(case=case))
+    region = RegionStage(workspace=work / "region").run(StageInputs(resolved=resolve(case)))
     mesh = MeshStage(workspace=work / "mesh").run(
-        StageInputs(case=case, upstream={"region": region})
+        StageInputs(resolved=resolve(case), upstream={"region": region})
     )
     return case, region, mesh
 
@@ -112,7 +117,7 @@ def plain(parallelogram_profile: Path, tmp_path_factory: pytest.TempPathFactory)
     """Return the shell-free stage-5 artefact of the same body."""
     work = tmp_path_factory.mktemp("plain")
     case = loads_case(case_text(parallelogram_profile))
-    return RegionStage(workspace=work / "region").run(StageInputs(case=case))
+    return RegionStage(workspace=work / "region").run(StageInputs(resolved=resolve(case)))
 
 
 def _record(artefact) -> RegionRecord:  # type: ignore[no-untyped-def]
@@ -303,7 +308,7 @@ def test_ver59_the_case_without_shapely_is_refused_naming_the_extra_and_the_key(
     monkeypatch.setitem(sys.modules, "shapely", None)
     case = loads_case(case_text(parallelogram_profile, charge=_offset()))
     with pytest.raises(MissingExtraError) as raised:
-        RegionStage(workspace=tmp_path).run(StageInputs(case=case))
+        RegionStage(workspace=tmp_path).run(StageInputs(resolved=resolve(case)))
     message = str(raised.value)
     assert "'structure' extra" in message
     assert "charge.exclusion_offset_nm" in message
@@ -349,7 +354,7 @@ def test_ver59_the_offset_keys_stage_5_and_6_only_when_it_is_non_zero(
         plain.parameters
     )
     explicit = loads_case(case_text(parallelogram_profile, charge=_offset(0.0)))
-    assert RegionStage().key(StageInputs(case=explicit)).hash == plain.hash
+    assert RegionStage().key(StageInputs(resolved=resolve(explicit))).hash == plain.hash
     assert mesh.parameters["sizing"]["exclusion"] == "wall_h_nm"  # type: ignore[index]
     assert (
         mesh.parameters["sizing"]["exclusion_wall"]  # type: ignore[index]
@@ -394,9 +399,9 @@ def test_ver59_the_shell_meshes_at_a_wall_target_its_whole_edges_failed(
     """
     text = case_text(parallelogram_profile, charge=_offset(), scale=1.0)
     case = loads_case(text.replace("concentration_M: 1.0", "concentration_M: 3.0"))
-    region = RegionStage(workspace=tmp_path / "region").run(StageInputs(case=case))
+    region = RegionStage(workspace=tmp_path / "region").run(StageInputs(resolved=resolve(case)))
     mesh = MeshStage(workspace=tmp_path / "mesh").run(
-        StageInputs(case=case, upstream={"region": region})
+        StageInputs(resolved=resolve(case), upstream={"region": region})
     )
     target = wall_size(case).wall_h_nm
     assert target == pytest.approx(0.03505, abs=5e-5)
@@ -459,8 +464,8 @@ def test_ver59_the_manifest_lists_the_switch_and_the_mesh_material_deviation(
     parallelogram_profile: Path, tmp_path: Path
 ) -> None:
     """FR-25 with no new code: the switch, and ``exclusion`` on the mesh (D14)."""
-    from nanopnp.io.run import run_case
     from nanopnp.io.store import Store
+    from nanopnp.pipeline.run import run_case
 
     case = tmp_path / "shell.case.yaml"
     case.write_text(case_text(parallelogram_profile, charge=_offset()), encoding="utf-8")

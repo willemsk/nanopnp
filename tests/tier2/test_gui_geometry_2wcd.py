@@ -33,9 +33,9 @@ from nanopnp.geometry.region import read_region
 from nanopnp.gui.assess import AssessRequest, assess
 from nanopnp.gui.geometry import ProfileEditor
 from nanopnp.gui.solver import Cancelled, Failed, Finished, Produced, RunRequest, SolverProcess
-from nanopnp.io.case import load_case
-from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
+from nanopnp.pipeline.case import load_case
+from nanopnp.pipeline.run import run_case
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
 from nanopnp.structure.ensemble import AlignedEnsemble
 from nanopnp.validation.geometry import register_by_centroid

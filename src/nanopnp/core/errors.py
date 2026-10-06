@@ -103,7 +103,7 @@ EXIT_CODES: Final[dict[str, int]] = {
     # names a registered stage, and it is the *case* that gives it nothing to
     # read -- and because 2 stays argparse's own code, raised where argparse
     # raises it and nowhere else.
-    "nanopnp.io.run:UnknownStageError": EXIT_CASE,
+    "nanopnp.pipeline.run:UnknownStageError": EXIT_CASE,
     # An optional-dependency extra a registered stage needs is not installed:
     # nothing numerical went wrong, and a retry fails identically until it is.
     "nanopnp.core.stages:MissingExtraError": EXIT_CASE,
@@ -111,7 +111,7 @@ EXIT_CODES: Final[dict[str, int]] = {
     # axis, or a switch path this build and the schema disagree about. 3 for the
     # same reason as every other 3: the fix is an edit to the document that
     # named it, and a job array retrying the member fails identically (FR-24).
-    "nanopnp.io.case:UnknownCasePathError": EXIT_CASE,
+    "nanopnp.io.case_paths:UnknownCasePathError": EXIT_CASE,
     # A sweep that cannot be planned as written -- an axis naming a path the case
     # schema does not have, a value of the wrong type, a point the schema refuses,
     # or `rectification` asked for with no opposite-bias pair to produce it from.
@@ -177,7 +177,7 @@ EXIT_CODES: Final[dict[str, int]] = {
     # refused neighbour falls back to the full ladder and records the reason.
     "nanopnp.solve.state:WarmStartError": EXIT_GATE,
     "nanopnp.io.store:StoreError": EXIT_GATE,
-    "nanopnp.io.run:MissingUpstreamError": EXIT_GATE,
+    "nanopnp.pipeline.run:MissingUpstreamError": EXIT_GATE,
     # A dataset that cannot be built from the members that ran -- an unreadable
     # member record, or a pair whose recorded biases are not the opposite ones it
     # was paired on. A gate in the QR-12 sense: rather than report a table it
@@ -188,8 +188,8 @@ EXIT_CODES: Final[dict[str, int]] = {
     # The reproduction refusals are gates in exactly the QR-12 sense: rather
     # than report a comparison it cannot make honestly, the check stops and
     # names what is wrong (an input that moved, a solve served from the store).
-    "nanopnp.io.reproduce:InputMovedError": EXIT_GATE,
-    "nanopnp.io.reproduce:ReproductionError": EXIT_GATE,
+    "nanopnp.pipeline.reproduce:InputMovedError": EXIT_GATE,
+    "nanopnp.pipeline.reproduce:ReproductionError": EXIT_GATE,
     # The Tier-3 refusals, and gates in exactly the same sense: rather than
     # report a comparison it cannot defend, the harness stops and names the
     # patch, the field or the point. A probe grid whose mask disagrees with the

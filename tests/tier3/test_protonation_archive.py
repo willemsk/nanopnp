@@ -35,9 +35,9 @@ from nanopnp.charge.protonation import ProtonationTable
 from nanopnp.core.paths import REFERENCE_DATA_VARIABLE, reference_file
 from nanopnp.core.stages import create
 from nanopnp.io.artefact import Artefact, StageInputs
-from nanopnp.io.case import load_case
-from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
+from nanopnp.pipeline.case import load_case, resolve
+from nanopnp.pipeline.run import run_case
 from nanopnp.structure.ensemble import AlignedEnsemble
 
 logger = logging.getLogger(__name__)
@@ -108,7 +108,7 @@ def test_ver57_the_driver_against_the_archived_pqrs(
 ) -> None:
     """DCD frames 48-97 through our driver, residue by residue against PQRs 50-99; recorded."""
     case, structure = clya_structure
-    inputs = StageInputs(case=load_case(case), upstream={"structure": structure})
+    inputs = StageInputs(resolved=resolve(load_case(case)), upstream={"structure": structure})
     stage = create("protonation", workspace=tmp_path / "workspace", store=ensemble_store)
     artefact = ensemble_store.get_or_compute(
         stage.key(inputs),  # type: ignore[attr-defined]
@@ -207,7 +207,7 @@ def test_ver57_the_archived_pqrs_register_through_inputs_pqr(
     supplied_case.write_text(text, encoding="utf-8")
     stage = create("protonation", workspace=tmp_path / "workspace")
     artefact = stage.run(
-        StageInputs(case=load_case(supplied_case), upstream={"structure": structure})
+        StageInputs(resolved=resolve(load_case(supplied_case)), upstream={"structure": structure})
     )
     registration = artefact.summary["registration"]
     ensemble = AlignedEnsemble.read(structure.payload["ensemble"])

@@ -8,15 +8,15 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pytest
 
-from nanopnp.io.case import loads_case, resolve
 from nanopnp.mesh.adapter import from_ngsolve, write_msh41
 from nanopnp.mesh.ingest import ingest
 from nanopnp.mesh.primitives import CylinderGeometry, CylindricalPoreGeometry
 from nanopnp.physics.distance import gradient_jump, mollify, wall_distance
+from nanopnp.pipeline.case import loads_case, resolve
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.core.typing import Mesh
-    from nanopnp.io.case import ResolvedCase
+    from nanopnp.io.resolved import ResolvedCase
     from nanopnp.materials.models import CorrectionModel
     from nanopnp.numerics.gates import WallDistanceGate
 

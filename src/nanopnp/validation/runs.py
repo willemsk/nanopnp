@@ -26,12 +26,13 @@ from typing import TYPE_CHECKING
 
 from nanopnp.core.hashing import Canonicalisable, decode_floats
 from nanopnp.io.manifest import CASE_FILENAME
-from nanopnp.io.run import RUN_RECORD_FILENAME
+from nanopnp.pipeline.run import RUN_RECORD_FILENAME
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.core.scaling import Scales
     from nanopnp.io.artefact import Artefact
-    from nanopnp.io.case import CaseDocument, ResolvedCase
+    from nanopnp.io.case import CaseDocument
+    from nanopnp.io.resolved import ResolvedCase
     from nanopnp.io.store import Store
     from nanopnp.physics.models import ModelSolution
 
@@ -108,9 +109,9 @@ def reopen(directory: str | Path, *, store: Store | None = None) -> ReopenedRun:
         because "no state" and "the state is elsewhere" are different problems
         with different fixes.
     """
-    from nanopnp.io.case import load_case, resolve
     from nanopnp.io.store import Store
     from nanopnp.physics.coefficients import mesh_unit_scales
+    from nanopnp.pipeline.case import load_case, resolve
     from nanopnp.solve.state import restore, warm_start_payload
 
     source = Path(directory)
@@ -175,7 +176,7 @@ def reopen(directory: str | Path, *, store: Store | None = None) -> ReopenedRun:
     upstream = _upstream(source, record, holding, resolved) if needed is not None else {}
     solution = restore(
         warm_start_payload(artefact),
-        case=document,
+        resolved=resolved,
         mesh_artefact=generated,
         charge_artefact=stage7,
     )

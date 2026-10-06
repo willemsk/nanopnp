@@ -52,13 +52,15 @@ from nanopnp.io.case import (
     CaseValidationError,
     MembraneSpec,
     ReservoirSpec,
+)
+from nanopnp.io.store import Store
+from nanopnp.mesh.reference import ReferenceGeometry
+from nanopnp.pipeline.case import (
     load_case,
     loads_case,
     resolve,
 )
-from nanopnp.io.run import selected_stages
-from nanopnp.io.store import Store
-from nanopnp.mesh.reference import ReferenceGeometry
+from nanopnp.pipeline.run import selected_stages
 
 FIXTURE = "clya_reference_profile"
 """The shipped ClyA profile (section 5.2.1)."""
@@ -386,7 +388,7 @@ def test_ver52_structure_beside_a_supplied_profile_is_refused_naming_both(tmp_pa
 
 def _key(text: str) -> str:
     """Return the stage-5 key of a profile case."""
-    return RegionStage().key(StageInputs(case=loads_case(text))).hash
+    return RegionStage().key(StageInputs(resolved=resolve(loads_case(text)))).hash
 
 
 def test_ver52_the_key_is_stable_across_processes_and_moves_with_each_input(
@@ -400,8 +402,8 @@ def test_ver52_the_key_is_stable_across_processes_and_moves_with_each_input(
         "import sys\n"
         "from nanopnp.geometry.region import RegionStage\n"
         "from nanopnp.io.artefact import StageInputs\n"
-        "from nanopnp.io.case import loads_case\n"
-        "print(RegionStage().key(StageInputs(case=loads_case(sys.stdin.read()))).hash)\n"
+        "from nanopnp.pipeline.case import loads_case, resolve\n"
+        "print(RegionStage().key(StageInputs(resolved=resolve(loads_case(sys.stdin.read())))).hash)\n"
     )
     fresh = subprocess.run(
         [sys.executable, "-c", code],
@@ -445,8 +447,8 @@ def test_ver52_the_stage_writes_its_record_and_a_hand_edit_is_recorded(tmp_path:
     stage = RegionStage(workspace=tmp_path / "work")
     assert stage.describe().number == 5
     store = Store(tmp_path / "store")
-    key = stage.key(StageInputs(case=case))
-    artefact = store.get_or_compute(key, lambda: stage.run(StageInputs(case=case)))
+    key = stage.key(StageInputs(resolved=resolve(case)))
+    artefact = store.get_or_compute(key, lambda: stage.run(StageInputs(resolved=resolve(case))))
     assert artefact.hash == key.hash
     record = read_region(artefact.payload["region"])
     assert record.membrane.clearance_nm == pytest.approx(0.2364583547, abs=1e-9)

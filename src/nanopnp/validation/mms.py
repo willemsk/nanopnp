@@ -50,16 +50,19 @@ from typing import Any, TypeAlias
 import sympy as sp
 
 from nanopnp.core.typing import Expression, Mesh, Option
+from nanopnp.io.vocabulary import (
+    POTENTIAL,
+    PRESSURE,
+    PRESSURE_MEAN,
+    VELOCITY,
+)
 from nanopnp.materials.forms import NUMPY_OPS
-from nanopnp.mesh.primitives import POTENTIAL, VELOCITY
 from nanopnp.numerics.measures import Measures
 from nanopnp.physics.coefficients import (
     SATURATED_WALL_DISTANCE_NM,
     NondimensionalCoefficients,
 )
 from nanopnp.physics.models import (
-    PRESSURE,
-    PRESSURE_MEAN,
     TransportModel,
     concentration_field_name,
 )

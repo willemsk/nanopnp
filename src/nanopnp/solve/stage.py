@@ -1,7 +1,7 @@
 """Stage 10 of section 5.2: the solve (IF-01, FR-25, FR-27).
 
 The stage that turns a case document into a converged state. Everything it needs
-is already built: :func:`nanopnp.io.case.resolve` turns the document into models
+is already built: :func:`nanopnp.pipeline.case.resolve` turns the document into models
 and settings, :func:`nanopnp.solve.continuation.default_ladder` builds the NUM-18
 ladder, and :func:`nanopnp.solve.continuation.run_ladder` climbs it. What this
 module adds is the three things FR-27 asks of every stage.
@@ -63,7 +63,6 @@ from nanopnp.core.stages import (
     report,
 )
 from nanopnp.io.artefact import Artefact, SolutionArtefact, StageInputs
-from nanopnp.io.case import resolve
 from nanopnp.materials.stage import MaterialsStage
 from nanopnp.mesh.ingest import IngestedMesh, MeshStage, deployed_mesh
 from nanopnp.numerics.measures import AXISYMMETRIC
@@ -86,7 +85,7 @@ from nanopnp.solve.state import (
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.core.typing import Expression, Mesh
-    from nanopnp.io.case import ResolvedCase
+    from nanopnp.io.resolved import ResolvedCase
     from nanopnp.numerics.gates import WallDistanceMeasurement
     from nanopnp.numerics.measures import Measures
     from nanopnp.numerics.newton import NewtonStep
@@ -174,7 +173,7 @@ class SolveStage:
             reported, as numbers (:class:`~nanopnp.core.stages.SolveHook`).
             Normally set through :meth:`with_solve_hook` rather than here. It is
             a callback and not an input: it reaches neither
-            :attr:`~nanopnp.io.case.ResolvedCase.solve_provenance` nor
+            :attr:`~nanopnp.io.resolved.ResolvedCase.solve_provenance` nor
             :meth:`key`, so a run watched from the desktop shell keys the same
             artefact as the same run from the command line (§5.3.2).
         """
@@ -224,7 +223,7 @@ class SolveStage:
         ``name`` and ``outputs`` are excluded from that provenance because
         neither reaches the operator, so asking a converged case for one more
         quantity is a cache hit rather than another solve
-        (:attr:`~nanopnp.io.case.ResolvedCase.solve_provenance`).
+        (:attr:`~nanopnp.io.resolved.ResolvedCase.solve_provenance`).
 
         Returns
         -------
@@ -268,14 +267,14 @@ class SolveStage:
             skip the read entirely when stage 7 already handed its artefact
             down, and the digest is therefore known without opening a file.
         """
-        resolved = resolve(inputs.case)
+        resolved = inputs.resolved
         mesh = inputs.upstream.get("mesh")
         ingested = deployed_mesh(resolved, mesh)
         if mesh is None:
             mesh = MeshStage().artefact(ingested)
         materials = inputs.upstream.get("materials")
         if materials is None:
-            materials = MaterialsStage().run(StageInputs(case=inputs.case))
+            materials = MaterialsStage().run(StageInputs(resolved=inputs.resolved))
         fields = inputs.upstream.get("charge")
         # A deposited charge is read only from the stage-7 artefact handed down,
         # whose hash keys this solve; without one the case is refused naming

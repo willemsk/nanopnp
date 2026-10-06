@@ -19,8 +19,8 @@ from pathlib import Path
 import pytest
 
 from nanopnp.core.paths import REFERENCE_DATA_VARIABLE, reference_file
-from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
+from nanopnp.pipeline.run import run_case
 
 logger = logging.getLogger(__name__)
 

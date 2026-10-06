@@ -57,7 +57,7 @@ from nanopnp.gui.solver import (
     Started,
 )
 from nanopnp.io.manifest import DEVIATIONS_GROUP, MANIFEST_FILENAME
-from nanopnp.io.run import RUN_RECORD_FILENAME
+from nanopnp.pipeline.run import RUN_RECORD_FILENAME
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from collections.abc import Iterable, Mapping

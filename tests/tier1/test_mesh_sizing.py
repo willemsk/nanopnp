@@ -19,9 +19,6 @@ from nanopnp.core.paths import profile_file
 from nanopnp.io.case import (
     CaseValidationError,
     UnsupportedCaseSection,
-    load_case,
-    loads_case,
-    resolve,
 )
 from nanopnp.materials.corrections import load_corrections
 from nanopnp.mesh.generate import GATE_CONSTANTS, sizing_parameters
@@ -32,6 +29,11 @@ from nanopnp.mesh.sizing import (
     case_debye_length_nm,
     ionic_strength_M,
     resolve_wall_size,
+)
+from nanopnp.pipeline.case import (
+    load_case,
+    loads_case,
+    resolve,
 )
 from nanopnp.sweep.plan import SweepPlanError, plan_from_document
 

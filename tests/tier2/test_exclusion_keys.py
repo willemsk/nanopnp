@@ -33,9 +33,9 @@ import pytest
 
 from nanopnp.core.hashing import content_hash
 from nanopnp.io.artefact import CHARGE_GRID_SCHEMA, StageInputs
-from nanopnp.io.case import load_case
-from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
+from nanopnp.pipeline.case import load_case, resolve
+from nanopnp.pipeline.run import run_case
 from nanopnp.solve.stage import SolveStage
 
 KEYS = {
@@ -151,9 +151,15 @@ def test_ver59_with_both_keys_at_zero_every_key_and_the_record_are_unchanged(
     """The region, mesh, fields and solve keys, and the record's bytes, equal ``bbca737``'s."""
     case = write_golden_case(tmp_path / "case", parallelogram_profile, charge=charge)
     store = Store(tmp_path / "store")
-    result = run_case(case, store=store, workspace=tmp_path / "work", upto="materials")
-    artefacts = result.artefacts
-    solve = SolveStage().key(StageInputs(case=load_case(case), upstream=dict(artefacts)))
+    # The solve's inputs without the solve: a walk runs its target's inputs alone
+    # (WP38 D11), so the charge and the materials are walked to in turn.
+    artefacts = {}
+    for upto in ("charge", "materials"):
+        result = run_case(case, store=store, workspace=tmp_path / "work", upto=upto)
+        artefacts.update(result.artefacts)
+    solve = SolveStage().key(
+        StageInputs(resolved=resolve(load_case(case)), upstream=dict(artefacts))
+    )
     found = {name: artefacts[name].hash for name in ("region", "mesh", "charge")}
     found["solve"] = solve.hash
     assert found == KEYS_V2

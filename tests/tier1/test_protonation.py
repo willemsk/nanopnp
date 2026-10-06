@@ -45,12 +45,11 @@ from nanopnp.io.artefact import StageInputs, StructureArtefact
 from nanopnp.io.case import (
     CaseDocument,
     CaseValidationError,
-    ResolvedProtonation,
     UnsupportedCaseSection,
-    loads_case,
-    resolve,
 )
+from nanopnp.io.resolved import ResolvedProtonation
 from nanopnp.io.store import Store
+from nanopnp.pipeline.case import loads_case, resolve
 from nanopnp.structure.ensemble import AlignedEnsemble
 
 pytest.importorskip("pdb2pqr", reason="the structure extra carries PDB2PQR")
@@ -117,7 +116,7 @@ def _inputs(tmp_path: Path, ensemble: AlignedEnsemble, case: CaseDocument) -> St
     structure = StructureArtefact(
         parameters={"ensemble": ensemble.digest()}, payload={"ensemble": path}
     )
-    return StageInputs(case=case, upstream={"structure": structure})
+    return StageInputs(resolved=resolve(case), upstream={"structure": structure})
 
 
 def _run(
@@ -639,7 +638,7 @@ def test_ver57_a_pqr_without_structure_is_read_as_it_stands(
     exported, produced = _produced(tmp_path, fragment_2wcd(*FRAGMENT))
     case = _case(tmp_path, pqr=exported, structure=False, mesh=True)
     stage = ProtonationStage(workspace=tmp_path / "alone")
-    artefact = stage.run(StageInputs(case=case))
+    artefact = stage.run(StageInputs(resolved=resolve(case)))
     table = ProtonationTable.read(artefact.payload["protonation"])
     assert table.positions_nm.tobytes() == produced.positions_nm.tobytes()
     assert artefact.inputs.keys() == {"pqr"}
@@ -731,7 +730,7 @@ def test_ver57_without_pdb2pqr_a_structure_is_refused_and_a_pqr_runs(
     with pytest.raises(MissingExtraError, match="'structure' extra"):
         _run(tmp_path / "refused", fragment_2wcd(*FRAGMENT))
     case = _case(tmp_path, pqr=exported, structure=False, mesh=True)
-    artefact = ProtonationStage(workspace=tmp_path / "pqr").run(StageInputs(case=case))
+    artefact = ProtonationStage(workspace=tmp_path / "pqr").run(StageInputs(resolved=resolve(case)))
     assert artefact.summary["q_net_e"] == [-3.0]
 
 
@@ -824,7 +823,7 @@ def test_ver57_a_case_with_nothing_to_protonate_is_refused_by_the_stage(tmp_path
     """Neither ``structure:`` nor ``inputs.pqr``: the stage names what is missing."""
     case = _case(tmp_path, structure=False, mesh=True)
     with pytest.raises(UnsupportedCaseSection, match="no structure: section and supplies no"):
-        ProtonationStage().key(StageInputs(case=case))
+        ProtonationStage().key(StageInputs(resolved=resolve(case)))
 
 
 def test_ver57_propka_reads_its_parameters_on_every_supported_python() -> None:

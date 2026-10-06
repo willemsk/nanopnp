@@ -276,7 +276,7 @@ def test_ver23_a_charged_walk_writes_the_same_bytes_into_two_stores(
     import numpy as np
 
     from nanopnp.charge.stage import DEPOSIT_FILE
-    from nanopnp.io.run import run_case
+    from nanopnp.pipeline.run import run_case
 
     case = charged_tube.write(tmp_path / "case")
     roots = []

@@ -43,14 +43,16 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from nanopnp.io.vocabulary import (
+    POTENTIAL,
+    VELOCITY,
+)
 from nanopnp.materials.electrolyte import CorrectionSwitches, Electrolyte
 from nanopnp.mesh.primitives import CylinderGeometry, CylindricalPoreGeometry
 from nanopnp.numerics.gates import GateViolationError
 from nanopnp.numerics.measures import AXISYMMETRIC, Measures
 from nanopnp.physics import stabilisation as stabilisation_module
 from nanopnp.physics.models import (
-    POTENTIAL,
-    VELOCITY,
     CoupledBoundaries,
     CoupledModel,
     ModelSolution,

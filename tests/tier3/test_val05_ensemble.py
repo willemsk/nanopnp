@@ -39,8 +39,8 @@ from nanopnp.geometry.contour import PAYLOAD_NAME as CONTOUR_PAYLOAD
 from nanopnp.geometry.profile import load_profile
 from nanopnp.geometry.region import PAYLOAD_NAME as REGION_PAYLOAD
 from nanopnp.geometry.region import read_region
-from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
+from nanopnp.pipeline.run import run_case
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
 from nanopnp.structure.ensemble import AlignedEnsemble
 from nanopnp.validation.geometry import (

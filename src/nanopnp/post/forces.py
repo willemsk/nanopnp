@@ -87,13 +87,17 @@ from nanopnp.core.typing import (
     Option,
 )
 from nanopnp.geometry.analyte import ANALYTE_BOUNDARY
-from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS, POTENTIAL, VELOCITY
+from nanopnp.io.vocabulary import (
+    POTENTIAL,
+    PRESSURE,
+    VELOCITY,
+)
+from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS
 from nanopnp.numerics.measures import Measures
 from nanopnp.physics.coefficients import NondimensionalCoefficients
 from nanopnp.physics.distance import wall_distance
 from nanopnp.physics.flow import permittivity_gradient
 from nanopnp.physics.models import (
-    PRESSURE,
     ModelSolution,
     TransportModel,
     transport_model,

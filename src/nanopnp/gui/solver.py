@@ -415,8 +415,8 @@ def _worker(request: RunRequest, events: Queue[RunEvent], cancel: EventType) -> 
     queue that will never carry another event.
     """
     from nanopnp.core.stages import Cancelled as CancelledError
-    from nanopnp.io.run import run_case
     from nanopnp.io.store import Store
+    from nanopnp.pipeline.run import run_case
 
     events.put(Started(case=request.case, store=request.store))
     try:

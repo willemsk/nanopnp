@@ -215,7 +215,7 @@ LADDER: tuple[Rung, ...] = (
 """The four rungs, in the order a reader should read them.
 
 ``supg.permits_equal_order`` is ``False``, so rung 1 is P2/P1 by construction and
-not by choice; :func:`nanopnp.io.case.resolve` refuses it at equal order.
+not by choice; :func:`nanopnp.pipeline.case.resolve` refuses it at equal order.
 """
 
 DELTA_LABELS: tuple[str, ...] = ("total", "transport", "flow", "pair")

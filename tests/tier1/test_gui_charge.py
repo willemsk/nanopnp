@@ -33,9 +33,12 @@ from nanopnp.gui.charge import (
 )
 from nanopnp.gui.geometry import MODEL_FRAME, lookup_table
 from nanopnp.gui.solver import Produced
-from nanopnp.io.case import load_case
-from nanopnp.io.run import RunResult, run_case
 from nanopnp.io.store import Store
+from nanopnp.pipeline.case import load_case
+from nanopnp.pipeline.run import (
+    RunResult,
+    run_case,
+)
 
 
 def _produced(result: RunResult, store: Store, name: str) -> Produced:

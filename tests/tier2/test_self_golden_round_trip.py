@@ -267,8 +267,8 @@ patches:
 @pytest.fixture(scope="module")
 def archived_run(tmp_path_factory: pytest.TempPathFactory):
     """Run one case end to end and keep its directory, store and probe document."""
-    from nanopnp.io.run import run_case
     from nanopnp.io.store import Store
+    from nanopnp.pipeline.run import run_case
 
     work = tmp_path_factory.mktemp("validate")
     mesh_path = work / "pore.vol"

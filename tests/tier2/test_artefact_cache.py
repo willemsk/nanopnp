@@ -30,12 +30,13 @@ from nanopnp.core.hashing import file_hash
 from nanopnp.core.stages import CancelFlag, Cancelled
 from nanopnp.io import manifest as manifest_module
 from nanopnp.io.artefact import CaseArtefact, SolutionArtefact, StageInputs
-from nanopnp.io.case import CaseDocument, loads_case, resolve
+from nanopnp.io.case import CaseDocument
 from nanopnp.io.store import Store
 from nanopnp.materials.stage import MaterialsStage
 from nanopnp.mesh.adapter import read, write_msh41
 from nanopnp.mesh.ingest import MeshStage, MeshVocabularyError, ingest
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.pipeline.case import loads_case, resolve
 from nanopnp.solve.stage import SolveStage
 
 logger = logging.getLogger(__name__)
@@ -112,7 +113,7 @@ def solved(tmp_path_factory: pytest.TempPathFactory) -> Run:
     document = loads_case(text)
     store = Store(work / "store")
     stage = SolveStage(workspace=work / "fields")
-    inputs = StageInputs(case=document)
+    inputs = StageInputs(resolved=resolve(document))
 
     computations: list[int] = []
 
@@ -166,10 +167,10 @@ def test_ver26_the_key_is_the_same_whether_or_not_stage_8_was_supplied(solved: R
     from an earlier stage have to give the same hash — otherwise a pipeline run
     and a stage-alone run would fill the store with two entries for one answer.
     """
-    inputs = StageInputs(case=solved.document)
+    inputs = StageInputs(resolved=resolve(solved.document))
     materials = MaterialsStage().run(inputs)
     with_upstream = SolveStage().key(
-        StageInputs(case=solved.document, upstream={"materials": materials})
+        StageInputs(resolved=resolve(solved.document), upstream={"materials": materials})
     )
     assert with_upstream.hash == solved.key.hash
     assert solved.key.inputs["materials"] == materials.hash
@@ -183,7 +184,7 @@ def test_ver26_solving_the_same_case_again_is_a_store_hit(solved: Run) -> None:
     call count is.
     """
     stage = SolveStage()
-    inputs = StageInputs(case=solved.document)
+    inputs = StageInputs(resolved=resolve(solved.document))
 
     before = len(solved.computations)
     hits, misses = solved.store.hits, solved.store.misses
@@ -215,7 +216,7 @@ def test_ver26_changing_the_bias_misses_the_cache(solved: Run) -> None:
     cost of the file for no extra information.
     """
     other = loads_case(case_text(solved.mesh_path, bias_V=BIAS_V + 0.01))
-    key = SolveStage().key(StageInputs(case=other))
+    key = SolveStage().key(StageInputs(resolved=resolve(other)))
 
     assert key.hash != solved.key.hash
     assert key.inputs == solved.key.inputs, "only the case changed, not the inputs it consumed"
@@ -244,7 +245,7 @@ def test_ver26_the_mesh_enters_the_key_by_content_and_not_by_its_bytes(
     """
     copied = tmp_path / "elsewhere.vol"
     copied.write_bytes(solved.mesh_path.read_bytes())
-    same = SolveStage().key(StageInputs(case=loads_case(case_text(copied))))
+    same = SolveStage().key(StageInputs(resolved=resolve(loads_case(case_text(copied)))))
     assert same.hash == solved.key.hash
 
     # Rewritten by another tool, into another format: MSH 4.1 out of the same
@@ -252,7 +253,7 @@ def test_ver26_the_mesh_enters_the_key_by_content_and_not_by_its_bytes(
     # [tested], which is the claim content addressing is making.
     rewritten = write_msh41(read(solved.mesh_path), tmp_path / "rewritten.msh")
     as_msh = SolveStage().key(
-        StageInputs(case=loads_case(case_text(rewritten, mesh_format="gmsh")))
+        StageInputs(resolved=resolve(loads_case(case_text(rewritten, mesh_format="gmsh"))))
     )
     assert as_msh.inputs["mesh"] == solved.key.inputs["mesh"]
     assert as_msh.hash == solved.key.hash
@@ -261,7 +262,7 @@ def test_ver26_the_mesh_enters_the_key_by_content_and_not_by_its_bytes(
     # finer, so the wall elements move and the vertex count changes.
     finer_path = tmp_path / "finer.vol"
     PORE.generate(maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM / 2).ngmesh.Save(str(finer_path))
-    finer = SolveStage().key(StageInputs(case=loads_case(case_text(finer_path))))
+    finer = SolveStage().key(StageInputs(resolved=resolve(loads_case(case_text(finer_path)))))
     assert finer.inputs["mesh"] != solved.key.inputs["mesh"]
     assert finer.hash != solved.key.hash
 
@@ -283,7 +284,7 @@ def test_ver27_a_boundary_the_run_selects_on_and_the_mesh_lacks_aborts(
         "groups: {default: interface}", "groups: {default: interface, wall: interface}"
     )
     with pytest.raises(MeshVocabularyError) as raised:
-        SolveStage().key(StageInputs(case=loads_case(text)))
+        SolveStage().key(StageInputs(resolved=resolve(loads_case(text))))
     message = str(raised.value)
     assert "wall" in message
     assert "NUM-06" in message
@@ -311,7 +312,7 @@ def test_ver26_cancelling_mid_ladder_leaves_no_artefact_in_the_store(
             flag.cancel()
 
     stage = SolveStage(workspace=tmp_path / "fields")
-    inputs = StageInputs(case=solved.document)
+    inputs = StageInputs(resolved=resolve(solved.document))
     key = stage.key(inputs)
     store = Store(tmp_path / "store")
 
@@ -350,7 +351,7 @@ def test_ver26_cancelling_inside_a_coupled_rung_stops_between_newton_iterations(
             flag.cancel()
 
     stage = SolveStage(workspace=tmp_path / "fields")
-    inputs = StageInputs(case=solved.document)
+    inputs = StageInputs(resolved=resolve(solved.document))
     store = Store(tmp_path / "store")
     key = stage.key(inputs)
 
@@ -379,7 +380,7 @@ def test_ver26_the_manifest_names_every_input_hash_the_run_consumed(solved: Run)
     resolved = resolve(solved.document)
     ingested = ingest(resolved.mesh, resolved)
     mesh_artefact = MeshStage().artefact(ingested)
-    materials = MaterialsStage().run(StageInputs(case=solved.document))
+    materials = MaterialsStage().run(StageInputs(resolved=resolve(solved.document)))
     case_artefact = CaseArtefact(solved.document)
 
     record = manifest_module.build(
@@ -456,7 +457,7 @@ def test_ver26_the_manifest_names_every_input_hash_the_run_consumed(solved: Run)
 
 def test_ver26_the_manifest_written_beside_the_run_round_trips(solved: Run, tmp_path: Path) -> None:
     """Written and read back, the manifest is byte-identical in content and hash."""
-    materials = MaterialsStage().run(StageInputs(case=solved.document))
+    materials = MaterialsStage().run(StageInputs(resolved=resolve(solved.document)))
     case_artefact = CaseArtefact(solved.document)
     record = manifest_module.build(
         solved.document,

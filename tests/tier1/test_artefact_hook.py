@@ -30,8 +30,8 @@ from nanopnp.geometry.profile import (
     signed_area,
     write_profile,
 )
-from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
+from nanopnp.pipeline.run import run_case
 
 CASE = """\
 schema: nanopnp/case/v2

@@ -27,10 +27,14 @@ import logging
 import ngsolve as ngs
 import pytest
 
+from nanopnp.io.vocabulary import (
+    POTENTIAL,
+    PRESSURE,
+    VELOCITY,
+)
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
 from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics.distance import wall_distance
-from nanopnp.physics.models import POTENTIAL, PRESSURE, VELOCITY
 from nanopnp.solve.continuation import LadderResult, default_ladder, run_ladder, transfer
 
 logger = logging.getLogger(__name__)

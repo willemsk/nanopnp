@@ -34,16 +34,19 @@ from pathlib import Path
 
 import pytest
 
-from nanopnp.io.reproduce import (
+from nanopnp.io.store import Store
+from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.pipeline.reproduce import (
     DEFAULT_TOLERANCE,
     InputMovedError,
     ReproductionError,
     compare,
     reproduce,
 )
-from nanopnp.io.run import RUN_RECORD_FILENAME, run_case
-from nanopnp.io.store import Store
-from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.pipeline.run import (
+    RUN_RECORD_FILENAME,
+    run_case,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -191,7 +194,7 @@ def test_ver35_a_library_difference_is_reported_and_only_fatal_when_asked(
     the assertion that matters. Refusing on the version instead would make the
     check fail for a reason it cannot connect to any number.
     """
-    from nanopnp.io import reproduce as module
+    from nanopnp.pipeline import reproduce as module
 
     # Captured before the patch: ``drifted`` reads through the same name it is
     # about to replace, so reaching for it through the module would recur.

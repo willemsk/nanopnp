@@ -31,6 +31,7 @@ from nanopnp.core.hashing import Canonicalisable, content_hash, file_hash, short
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only; io must not import at runtime
     from nanopnp.io.case import CaseDocument
+    from nanopnp.io.resolved import ResolvedCase
     from nanopnp.materials.electrolyte import Electrolyte
 
 CASE_SCHEMA = "nanopnp/case/v2"
@@ -742,14 +743,17 @@ class SweepArtefact(Artefact):
 
 @dataclass(frozen=True)
 class StageInputs:
-    """What a stage is handed: the case, its upstream artefacts, and options.
+    """What a stage is handed: the resolved case, its upstream artefacts, and options.
 
     One type for every stage is what keeps a stage independently invocable
     (FR-27): the CLI, the GUI and the sweep runner all build this and none of
-    them needs to know which stage takes what.
+    them needs to know which stage takes what. The case arrives *resolved*: the
+    walk resolves it once, and a stage run alone is handed
+    ``StageInputs(resolved=resolve(document))``. No stage resolves a case
+    itself, so none imports the registries resolution consults (WP38 D4).
     """
 
-    case: CaseDocument
+    resolved: ResolvedCase
     upstream: Mapping[str, Artefact] = field(default_factory=dict)
     options: Mapping[str, Canonicalisable] = field(default_factory=dict)
 

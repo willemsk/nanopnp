@@ -48,8 +48,11 @@ from nanopnp.charge.stage import StoredLattice, stored_lattice
 from nanopnp.core.constants import ELEMENTARY_CHARGE
 from nanopnp.gui.geometry import MODEL_FRAME, ImageModel, StageList, stored_artefact
 from nanopnp.gui.render import ChargeQuantity
-from nanopnp.io.case import resolve
-from nanopnp.io.run import UnknownStageError, selected_stages
+from nanopnp.pipeline.case import resolve
+from nanopnp.pipeline.run import (
+    UnknownStageError,
+    selected_stages,
+)
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from collections.abc import Mapping
@@ -111,7 +114,7 @@ class BuildOffer:
 def build_offer(document: CaseDocument) -> BuildOffer:
     """Return whether a walk through ``charge`` has anything to build, in the driver's words.
 
-    :func:`~nanopnp.io.run.selected_stages` is asked for a walk through
+    :func:`~nanopnp.pipeline.run.selected_stages` is asked for a walk through
     ``charge``, so its refusal of a case that gives stage 7 nothing to read is
     the reason shown, and the shell does not restate its rule (WP24). A case
     that does not resolve is refused with the loader's diagnostic.
@@ -138,7 +141,7 @@ def charge_stages(document: CaseDocument) -> StageList:
     ------
     nanopnp.io.case.CaseValidationError
         If the case does not resolve.
-    nanopnp.io.run.UnknownStageError
+    nanopnp.pipeline.run.UnknownStageError
         If the case walks no stage 7; :func:`build_offer` says so first.
     """
     walked = selected_stages(resolve(document), BUILD_UPTO)

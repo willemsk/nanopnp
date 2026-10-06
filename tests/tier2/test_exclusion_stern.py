@@ -49,10 +49,10 @@ from nanopnp.geometry.profile import (
     signed_area,
     write_profile,
 )
-from nanopnp.io.case import load_case
-from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
 from nanopnp.materials.corrections import load_corrections
+from nanopnp.pipeline.case import load_case, resolve
+from nanopnp.pipeline.run import run_case
 from nanopnp.solve.stage import warm_start_payload
 from nanopnp.solve.state import restore
 
@@ -174,7 +174,7 @@ def solved(tmp_path_factory: pytest.TempPathFactory):  # type: ignore[no-untyped
     seconds = time.perf_counter() - started
     solution = restore(
         warm_start_payload(result.artefacts["solve"]),
-        case=load_case(case),
+        resolved=resolve(load_case(case)),
         mesh_artefact=result.artefacts["mesh"],
         charge_artefact=result.artefacts["charge"],
     )

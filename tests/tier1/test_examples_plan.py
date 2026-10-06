@@ -23,7 +23,7 @@ from pathlib import Path
 import pytest
 
 from nanopnp.core.errors import EXIT_GATE
-from nanopnp.io.case import load_case, resolve
+from nanopnp.pipeline.case import load_case, resolve
 from nanopnp.validation.comsol import case_identity
 from nanopnp.validation.examples import (
     EXPECTED_EXIT,

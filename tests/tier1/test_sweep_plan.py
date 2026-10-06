@@ -33,7 +33,8 @@ from pathlib import Path
 import pytest
 
 from nanopnp.core.hashing import file_hash
-from nanopnp.io.case import CaseValidationError, loads_case
+from nanopnp.io.case import CaseValidationError
+from nanopnp.pipeline.case import loads_case
 from nanopnp.sweep.document import loads_sweep
 from nanopnp.sweep.plan import (
     SweepPlan,
@@ -409,7 +410,7 @@ def test_ver36_a_point_the_case_schema_refuses_fails_when_the_plan_is_built(base
     """The NUM-18 ladder refusal, reached through substitution rather than by hand.
 
     ``physics.flow: false`` with ``continuation: default_ladder`` is refused by
-    :func:`~nanopnp.io.case.resolve` — flow is enabled at rung 6, so a run
+    :func:`~nanopnp.pipeline.case.resolve` — flow is enabled at rung 6, so a run
     without it is not a rung of this ladder but a different run. The plan runs
     that refusal over every point *before a single solve*, which is the whole
     argument for resolving at plan time, and the message names the point.

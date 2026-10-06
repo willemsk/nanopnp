@@ -19,7 +19,7 @@ array can be submitted over (§5.3.4).
 
 **Everything is checked here.** Every point is substituted, validated and
 ``resolve()``d when the plan is built, before a single solve, because
-:func:`~nanopnp.io.case.resolve` is pure Python — no NGSolve, no mesh — and it is
+:func:`~nanopnp.pipeline.case.resolve` is pure Python — no NGSolve, no mesh — and it is
 where the NUM-18 refusals live. A 3,675-point plan whose two-thousandth point is
 inadmissible must fail in seconds rather than at hour twenty-two. The NUM-34
 wall-distance gate runs here too, once per *distinct mesh* where any point
@@ -56,17 +56,18 @@ from nanopnp.io.case import (
     CaseDocument,
     CaseValidationError,
     FieldValue,
-    ResolvedCase,
+)
+from nanopnp.io.case_paths import (
     UnknownCasePathError,
     field_at,
-    load_case,
-    resolve,
     substitute,
 )
-from nanopnp.io.run import input_files
+from nanopnp.io.resolved import ResolvedCase
 from nanopnp.io.store import atomic_write_bytes
 from nanopnp.materials.corrections import load_corrections
 from nanopnp.mesh.sizing import resolve_wall_size
+from nanopnp.pipeline.case import load_case, resolve
+from nanopnp.pipeline.run import input_files
 from nanopnp.sweep.document import SweepDocument, load_sweep, merged
 
 logger = logging.getLogger(__name__)
@@ -667,9 +668,9 @@ def _depth(
 def _check_axes(document: SweepDocument) -> None:
     """Check every path and every value against the case schema, before any point exists.
 
-    Two loud failures rather than one: :func:`~nanopnp.io.case.field_at` names a
+    Two loud failures rather than one: :func:`~nanopnp.io.case_paths.field_at` names a
     component that does not exist and the prefix that does, and
-    :meth:`~nanopnp.io.case.FieldReference.validate` names a value the declared
+    :meth:`~nanopnp.io.case_paths.FieldReference.validate` names a value the declared
     type would not accept. Re-validating each substituted document would catch
     both, but only per point and only after the plan had committed to thousands
     of them.

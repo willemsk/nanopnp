@@ -85,7 +85,8 @@ from nanopnp.io.artefact import (
     Artefact,
     ProtonationArtefact,
 )
-from nanopnp.io.case import ResolvedProtonation, UnsupportedCaseSection, resolve
+from nanopnp.io.case import UnsupportedCaseSection
+from nanopnp.io.resolved import ResolvedProtonation
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
 from nanopnp.structure.ensemble import AlignedEnsemble
 
@@ -93,7 +94,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
 
     from nanopnp.io.artefact import StageInputs
-    from nanopnp.io.case import ResolvedCase
+    from nanopnp.io.resolved import ResolvedCase
     from nanopnp.io.store import Store
 
 __all__ = [
@@ -1305,10 +1306,10 @@ def export_pqr(payload: Path, path: Path) -> Path:
 
 def _resolved(inputs: StageInputs) -> ResolvedCase:
     """Return the resolved case, refusing one the stage has nothing to read from (D3)."""
-    resolved = resolve(inputs.case)
+    resolved = inputs.resolved
     if not resolved.protonates:
         raise UnsupportedCaseSection(
-            f"case {inputs.case.name!r} has nothing for the protonation stage to read: it "
+            f"case {inputs.resolved.name!r} has nothing for the protonation stage to read: it "
             + (
                 "supplies inputs.charge, which replaces what stage 7 makes of the protonation"
                 if resolved.charge is not None

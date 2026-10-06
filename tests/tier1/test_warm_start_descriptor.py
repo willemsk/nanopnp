@@ -33,10 +33,11 @@ import pytest
 
 from nanopnp.charge.stage import ResolvedFields
 from nanopnp.io.artefact import SOLUTION_SCHEMA, Artefact
-from nanopnp.io.case import CaseDocument, loads_case, resolve
+from nanopnp.io.case import CaseDocument
 from nanopnp.mesh.ingest import ingest
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
 from nanopnp.numerics.measures import AXISYMMETRIC
+from nanopnp.pipeline.case import loads_case, resolve
 from nanopnp.solve.continuation import run_ladder
 from nanopnp.solve.state import (
     DESCRIPTOR_ENTRY,
@@ -411,7 +412,7 @@ def test_val01_a_warm_start_across_an_element_order_is_refused(neighbour: Neighb
     than the only thing standing between a P2 state and a P3 space.
 
     P3 rather than P1 because P1/P1 is not inf-sup stable and
-    :func:`~nanopnp.io.case.resolve` refuses it outside the reference
+    :func:`~nanopnp.pipeline.case.resolve` refuses it outside the reference
     stabilisation (NUM-03); the point here is the *order*, not the pair.
 
     The plan-time half — each rung its own warm-start component, so the sweep

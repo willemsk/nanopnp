@@ -19,7 +19,10 @@ from pathlib import Path
 import pytest
 
 from nanopnp.core.hashing import Canonicalisable, file_hash
-from nanopnp.io.reproduce import InputMovedError, check_inputs
+from nanopnp.pipeline.reproduce import (
+    InputMovedError,
+    check_inputs,
+)
 
 # On Windows the path separator supplies the backslash ``repr`` would double; on
 # POSIX a backslash in the file name does, and is a legal name there.

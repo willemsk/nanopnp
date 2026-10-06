@@ -26,10 +26,10 @@ from typing import TYPE_CHECKING
 import pytest
 
 from nanopnp.core.stages import walk_order
-from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
 from nanopnp.mesh.adapter import read
 from nanopnp.mesh.quality import QUALITY_FLOOR
+from nanopnp.pipeline.run import run_case
 
 pytestmark = pytest.mark.extended
 

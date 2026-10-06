@@ -7,7 +7,7 @@ Run once, on the unmodified v1 code, before the schema moved to v2::
 It copies every case file the project shipped at ``v0.2.0`` into ``corpus/``,
 byte for byte, and writes two records beside it:
 
-- ``fields.txt``, the dotted paths :func:`nanopnp.io.case.case_fields` walked
+- ``fields.txt``, the dotted paths :func:`nanopnp.io.case_paths.case_fields` walked
   under v1, one per line;
 - ``golden.json``, per corpus file, the solve provenance the v1 resolver built,
   decoded, together with the three keys computed from it and the stage-8
@@ -28,8 +28,9 @@ from pathlib import Path
 
 from nanopnp.core.hashing import content_hash
 from nanopnp.io.artefact import CASE_SCHEMA, SOLUTION_SCHEMA, StageInputs
-from nanopnp.io.case import case_fields, load_case, resolve
+from nanopnp.io.case_paths import case_fields
 from nanopnp.materials.stage import MaterialsStage
+from nanopnp.pipeline.case import load_case, resolve
 from nanopnp.validation.comsol import case_identity
 
 HERE = Path(__file__).resolve().parent
@@ -67,7 +68,7 @@ def main() -> None:
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ROOT / relative, target)
         resolved = resolve(load_case(target))
-        materials = MaterialsStage().run(StageInputs(case=resolved.document))
+        materials = MaterialsStage().run(StageInputs(resolved=resolve(resolved.document)))
         golden[relative] = {
             "restore_digest": content_hash(SOLUTION_SCHEMA, resolved.solve_provenance),
             "materials_key": materials.hash,

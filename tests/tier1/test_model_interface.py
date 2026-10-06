@@ -40,8 +40,7 @@ from nanopnp.charge.stage import ResolvedFields, read_fields
 from nanopnp.core.constants import thermal_voltage
 from nanopnp.core.hashing import content_hash
 from nanopnp.io.artefact import SOLUTION_SCHEMA
-from nanopnp.io.case import CaseValidationError, loads_case, resolve
-from nanopnp.io.run import run_case
+from nanopnp.io.case import CaseValidationError
 from nanopnp.io.store import Store
 from nanopnp.materials.corrections import load_corrections
 from nanopnp.materials.electrolyte import Electrolyte
@@ -53,6 +52,8 @@ from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics import models
 from nanopnp.physics.coefficients import SATURATED_WALL_DISTANCE_NM
 from nanopnp.physics.models import ModelSolution, PhysicsModel
+from nanopnp.pipeline.case import loads_case, resolve
+from nanopnp.pipeline.run import run_case
 from nanopnp.solve.continuation import default_ladder
 from nanopnp.solve.state import WALL_DISTANCE_ENTRY, ladder, restore
 
@@ -60,9 +61,9 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
 
     from nanopnp.core.typing import Mesh, Option
-    from nanopnp.io.case import ResolvedCase
-    from nanopnp.io.run import RunResult
+    from nanopnp.io.resolved import ResolvedCase
     from nanopnp.numerics.measures import Measures
+    from nanopnp.pipeline.run import RunResult
 
 PACKAGE = Path(nanopnp.__file__).parent
 REPOSITORY = PACKAGE.parents[1]
@@ -484,7 +485,8 @@ def test_ver56_building_a_model_while_resolving_imports_no_backend() -> None:
     """WP26 D10: resolve builds every model, and the CLI's import budget must survive it."""
     script = f"""
 import sys
-from nanopnp.io.case import loads_case, resolve
+from nanopnp.pipeline.case import loads_case, resolve
+from nanopnp.pipeline.case import resolve
 texts = {[case_text(), case_text(physics=ELECTROSTATIC_PHYSICS % "pb", outputs="[]")]!r}
 texts.append({case_text(physics=ELECTROSTATIC_PHYSICS % "poisson", outputs="[]")!r})
 for text in texts:
@@ -664,7 +666,7 @@ def test_ver56_a_model_defined_as_one_class_runs_from_a_case_file_to_stage_twelv
 
     restored = restore(
         Path(forwarded.artefacts["solve"].payload["state"]),
-        case=loads_case(texts[forwarding_model]),
+        resolved=resolve(loads_case(texts[forwarding_model])),
     )
     assert type(restored.model) is ForwardingModel
 
@@ -703,7 +705,7 @@ def test_ver56_pnp_ns_beside_corrections_it_overrides_runs_and_restores(
         state = Path(result.artefacts["solve"].payload["state"])
         with np.load(state, allow_pickle=False) as archive:
             assert WALL_DISTANCE_ENTRY not in archive.files, name
-        restore(state, case=loads_case(texts[name]))
+        restore(state, resolved=resolve(loads_case(texts[name])))
     assert runs["ladder"].artefacts["qoi"].summary == runs["classical"].artefacts["qoi"].summary
 
 

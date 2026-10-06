@@ -65,19 +65,21 @@ from nanopnp.geometry.region import read_region
 from nanopnp.io.case import (
     CaseDocument,
     MembraneSpec,
-    UnknownCasePathError,
     dump_case,
-    resolve,
+)
+from nanopnp.io.case_paths import (
+    UnknownCasePathError,
     value_at,
     with_profile,
 )
-from nanopnp.io.run import (
+from nanopnp.io.store import Store
+from nanopnp.pipeline.case import resolve
+from nanopnp.pipeline.run import (
     DENSITY_RECORD_KEYS,
     REDUCTION_RECORD_KEYS,
     STRUCTURE_RECORD_KEYS,
     selected_stages,
 )
-from nanopnp.io.store import Store
 from nanopnp.symmetry.reduce import PAYLOAD_NAME as REDUCED_PAYLOAD
 from nanopnp.symmetry.reduce import QUANTITIES, ReducedMap
 
@@ -177,8 +179,8 @@ def planned_stages(document: CaseDocument) -> tuple[str, ...]:
     """Return the geometry stages this case walks, in order.
 
     Stages 1 to 4 need ``structure:``; stage 5 needs a generated mesh. The
-    rule :func:`nanopnp.io.run.run_case` applies, taken from the driver's own
-    :func:`~nanopnp.io.run.selected_stages` so the list cannot drift from the walk.
+    rule :func:`nanopnp.pipeline.run.run_case` applies, taken from the driver's own
+    :func:`~nanopnp.pipeline.run.selected_stages` so the list cannot drift from the walk.
 
     Raises
     ------

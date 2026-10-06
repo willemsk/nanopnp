@@ -23,8 +23,8 @@ from nanopnp.charge.protonation import ProtonationStage, ProtonationTable
 from nanopnp.gui.charge import load_protonation
 from nanopnp.gui.solver import Produced
 from nanopnp.io.artefact import StageInputs, StructureArtefact
-from nanopnp.io.case import loads_case
 from nanopnp.io.store import Store
+from nanopnp.pipeline.case import loads_case, resolve
 
 pytest.importorskip("pdb2pqr", reason="the structure extra carries PDB2PQR")
 
@@ -55,7 +55,7 @@ def _produce(directory: Path, fragment_2wcd: Callable[..., object], ph: float) -
     case = loads_case(CASE.format(path=directory / "fragment.pdb", ph=ph))
     store = Store(directory / "store")
     artefact = ProtonationStage(workspace=directory / "work", store=store).run(
-        StageInputs(case=case, upstream={"structure": structure})
+        StageInputs(resolved=resolve(case), upstream={"structure": structure})
     )
     stored = store.put(artefact)
     return Produced(

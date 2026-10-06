@@ -269,7 +269,7 @@ def test_val01_val02_val04_attribution_against_the_archive() -> None:
             "and point it at that sweep directory"
         )
 
-    from nanopnp.io.case import resolve
+    from nanopnp.pipeline.case import resolve
     from nanopnp.sweep.collect import read_members
     from nanopnp.sweep.plan import PLAN_FILENAME, read_plan
     from nanopnp.validation.comsol import case_identity
