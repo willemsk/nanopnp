@@ -39,7 +39,8 @@ from nanopnp.io.case import (
 from nanopnp.io.case_paths import _literal_options, field_at
 from nanopnp.io.resolved import contour_spacing_nm
 from nanopnp.materials.electrolyte import Electrolyte
-from nanopnp.numerics.linear import AVAILABLE_SOLVERS
+from nanopnp.mesh.meshers import registered_meshers
+from nanopnp.numerics.linear import _REJECTED, registered_solvers
 from nanopnp.physics.models import (
     LADDER_STRATEGY,
     SWITCHES,
@@ -75,10 +76,12 @@ def registry_options(path: str) -> tuple[str, ...] | None:
     """
     if path == "physics.model":
         return registered_models()
+    if path == "numerics.mesh.backend":
+        return registered_meshers()
     if path == "numerics.stabilisation":
         return registered_stabilisations()
     if path == "numerics.linear.solver":
-        return tuple(sorted(AVAILABLE_SOLVERS))
+        return registered_solvers()
     if path == "electrolyte.parameters":
         return available_corrections()
     if path in _CORRECTION_MODEL_PATHS:
@@ -103,10 +106,11 @@ def check_document(document: CaseDocument, *, source: str | None = None) -> Case
     The checks :class:`~nanopnp.io.case.CaseDocument` cannot make without
     importing above ``core`` (WP38 D7, D8):
 
-    - ``physics.model``, ``numerics.stabilisation`` and ``numerics.linear.solver``
-      against the installed registries, reported in the IF-03 rendering a schema
-      refusal takes, so the text a user reads is the one :meth:`CaseDocument.
-      model_validate` gave when the schema asked the registries itself;
+    - ``physics.model``, ``numerics.mesh.backend``, ``numerics.stabilisation``
+      and ``numerics.linear.solver`` against the installed registries, reported
+      in the IF-03 rendering a schema refusal takes, so the text a user reads
+      is the one :meth:`CaseDocument.model_validate` gave when the schema asked
+      the registries itself;
     - the element-order checks of :func:`element_orders`: the labels, ``phi``
       and ``c`` at one order, and the inf-sup pair (NUM-03).
 
@@ -140,6 +144,11 @@ def check_document(document: CaseDocument, *, source: str | None = None) -> Case
             f"physics.model {document.physics.model!r} is not registered; the models are "
             f"{', '.join(registered_models())}"
         )
+    if document.numerics.mesh.backend not in registered_meshers():
+        problems.append(
+            f"numerics.mesh.backend {document.numerics.mesh.backend!r} is not a registered "
+            f"mesher; the meshers are {', '.join(registered_meshers())}"
+        )
     if document.numerics.stabilisation not in registered_stabilisations():
         problems.append(
             f"numerics.stabilisation {document.numerics.stabilisation!r} is not a registered "
@@ -147,11 +156,15 @@ def check_document(document: CaseDocument, *, source: str | None = None) -> Case
             "Recording a mode the solver does not apply would make the FR-25 manifest "
             "describe a run that never happened"
         )
-    if document.numerics.linear.solver not in AVAILABLE_SOLVERS:
-        problems.append(
-            f"numerics.linear.solver {document.numerics.linear.solver!r} is not available; the "
-            f"solvers are {', '.join(sorted(AVAILABLE_SOLVERS))}"
-        )
+    if document.numerics.linear.solver not in registered_solvers():
+        solver = document.numerics.linear.solver
+        if solver in _REJECTED:
+            problems.append(f"numerics.linear.solver {solver!r} is not usable: {_REJECTED[solver]}")
+        else:
+            problems.append(
+                f"numerics.linear.solver {solver!r} is not available; the "
+                f"solvers are {', '.join(registered_solvers())}"
+            )
     if problems:
         # Rendered as the schema renders a document-level refusal, which is how
         # these three read when ``CaseDocument`` asked the registries itself: a

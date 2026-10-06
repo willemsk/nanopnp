@@ -38,8 +38,10 @@ from nanopnp.validation.modularity import (
     import_edges,
     measured_relations,
     module_graph,
+    node_graph,
     node_of,
     parse_package,
+    subpackage_relation,
     upward_edges,
 )
 
@@ -81,13 +83,12 @@ def test_ver61_the_measurement_adds_no_edge_of_its_own() -> None:
 def test_ver61_upward_top_edges_equal_the_recorded_ratchet() -> None:
     """The ``top`` edges pointing up the layer order are exactly the ``upward:`` rows (H11).
 
-    WP38's split leaves one, ``cli -> nanopnp``, which WP39 removes (REV-05): the
-    stages read the base ``io`` and are handed the resolved case, so none imports
-    the assembler ``pipeline`` above them.
+    WP39 empties the list (REV-05): the facade's version and public surface live
+    in ``core/public.py``, so no module imports upward at top level.
     """
     comparison = compare({UPWARD: upward_edges(import_edges())}, accepted_upward())
     assert comparison.equal, comparison.describe()
-    assert {(edge.source, edge.target) for edge in accepted_upward()} == {("cli", "nanopnp")}
+    assert {(edge.source, edge.target) for edge in accepted_upward()} == set()
 
 
 def test_ver61_a_stage_importing_the_assembler_fails_naming_the_edge() -> None:
@@ -122,13 +123,13 @@ def test_ver61_the_base_importing_materials_at_run_time_fails_naming_the_edge() 
 def test_ver61_upward_deferred_edges_equal_the_recorded_ratchet() -> None:
     """Imports inside a function that point up the order are the ``deferred_upward:`` rows (H12).
 
-    One is left: the desktop shell's probe reads ``nanopnp.__version__`` (REV-05).
+    WP39 empties the list (REV-05): the desktop shell's probe reads ``core.public``.
     """
     measured = upward_edges(import_edges(), kinds=RATCHETS[DEFERRED_UPWARD])
     accepted = accepted_upward(ratchet=DEFERRED_UPWARD)
     comparison = compare({DEFERRED_UPWARD: measured}, accepted)
     assert comparison.equal, comparison.describe()
-    assert {(edge.source, edge.target) for edge in accepted} == {("gui", "nanopnp")}
+    assert {(edge.source, edge.target) for edge in accepted} == set()
 
 
 def test_ver61_an_annotation_cut_deferred_into_a_function_fails_as_deferred_upward() -> None:
@@ -200,6 +201,16 @@ def test_ver61_accepted_upward_refuses_a_repeated_row(tmp_path: Path) -> None:
 def test_ver61_top_level_module_imports_are_acyclic() -> None:
     graph = module_graph(import_edges(), {"top"}, packages=True)
     assert components(graph) == ()
+    assert components(node_graph(subpackage_relation(import_edges(), {"top"}))) == ()
+
+
+def test_ver61_top_subpackage_cycle_is_detected_naming_components() -> None:
+    """The oracle for D10: a module-scope import closing a cycle between subpackages."""
+    text = ANALYTE.read_text(encoding="utf-8")
+    restored = f"{text}from nanopnp.mesh.primitives import CylindricalPoreGeometry\n"
+    edges = import_edges(sources={"geometry/analyte.py": restored})
+    sccs = components(node_graph(subpackage_relation(edges, {"top"})))
+    assert sccs == (("geometry", "mesh"),)
 
 
 def test_ver61_a_cycle_through_a_package_init_is_a_cycle() -> None:

@@ -585,7 +585,10 @@ class MeshSpec(_Strict):
     edit. A discretisation choice recorded with the mesh, not a deviation.
     """
 
-    backend: Literal["netgen", "gmsh"] = "netgen"
+    backend: str = Field(
+        default="netgen",
+        description="The mesher backend, checked against the mesher registry (section 5.5).",
+    )
     wall_h_nm: float | Literal["auto"] = "auto"
     size_scale: float = Field(default=1.0, gt=0.0, allow_inf_nan=False)
     boundary_layer: bool = False
@@ -603,7 +606,10 @@ class NonlinearSpec(_Strict):
 class LinearSpec(_Strict):
     """The direct linear solver of section 6.6."""
 
-    solver: Literal["umfpack", "superlu"] = "umfpack"
+    solver: str = Field(
+        default="umfpack",
+        description="Direct linear solver, checked against the solver registry (section 5.5).",
+    )
 
 
 class WallDistanceSpec(_Strict):
@@ -626,7 +632,12 @@ class NumericsSpec(_Strict):
     mesh: MeshSpec = Field(default_factory=MeshSpec)
     nonlinear: NonlinearSpec = Field(default_factory=NonlinearSpec)
     continuation: Literal["default_ladder", "none"] = "default_ladder"
-    stabilisation: Literal["none", "supg", "reference"] = "none"
+    stabilisation: str = Field(
+        default="none",
+        description=(
+            "Residual stabilisation mode, checked against the stabilisation registry (section 5.5)."
+        ),
+    )
     wall_distance: WallDistanceSpec = Field(default_factory=WallDistanceSpec)
     linear: LinearSpec = Field(default_factory=LinearSpec)
 

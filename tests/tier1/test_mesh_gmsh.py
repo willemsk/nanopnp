@@ -45,10 +45,10 @@ from nanopnp.geometry.region import (
     region_graph,
 )
 from nanopnp.io.artefact import StageInputs
-from nanopnp.mesh import generate as generate_module
 from nanopnp.mesh.adapter import MeshData
-from nanopnp.mesh.generate import generate, gmsh_backend
+from nanopnp.mesh.generate import generate
 from nanopnp.mesh.ingest import MeshStage
+from nanopnp.mesh.meshers import _gmsh_backend
 from nanopnp.mesh.quality import QUALITY_FLOOR, inverted_elements
 from nanopnp.mesh.sizing import SIZES
 from nanopnp.pipeline.case import loads_case, resolve
@@ -409,7 +409,7 @@ def test_ver54_a_missing_extra_is_refused_naming_it(
     assert str(error).split(":")[0] in message
     assert classify(caught.value) == EXIT_CASE
     with pytest.raises(MissingExtraError):
-        gmsh_backend()
+        _gmsh_backend()
 
 
 def test_ver54_an_import_error_of_another_module_is_not_blamed_on_gmsh(
@@ -423,8 +423,75 @@ def test_ver54_an_import_error_of_another_module_is_not_blamed_on_gmsh(
     monkeypatch.setitem(sys.modules, "gmsh", ModuleType("gmsh"))
     monkeypatch.setitem(sys.modules, "nanopnp.mesh.adapter", None)
     with pytest.raises(ModuleNotFoundError) as caught:
-        generate_module.gmsh_backend()
+        _gmsh_backend()
     assert not isinstance(caught.value, MissingExtraError)
+
+
+def test_ver54_borrowed_session_preserves_callers_log(
+    gmsh_module: ModuleType, workspace: Path, region
+) -> None:
+    """A borrowed session does not stop or clear the caller's logger (REV-36)."""
+    gmsh_module.initialize(readConfigFiles=False, interruptible=False)
+    try:
+        gmsh_module.logger.start()
+        gmsh_module.logger.write("caller custom log message")
+        resolved = resolve(loads_case(_case_text(workspace, "gmsh")))
+        generate(read_region(region.payload["region"]), resolved, workspace / "borrowed")
+        messages = gmsh_module.logger.get()
+        assert any("caller custom log message" in m for m in messages)
+        gmsh_module.logger.stop()
+    finally:
+        if gmsh_module.isInitialized():
+            gmsh_module.finalize()
+
+
+def test_ver54_initialize_failure_gives_missing_extra_error(
+    gmsh_module: ModuleType, workspace: Path, region, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A failure of gmsh.initialize raises MissingExtraError (REV-37)."""
+    if gmsh_module.isInitialized():
+        gmsh_module.finalize()
+
+    def fail_init(*args: object, **kwargs: object) -> None:
+        raise RuntimeError("simulated initialize failure")
+
+    monkeypatch.setattr(gmsh_module, "initialize", fail_init)
+    resolved = resolve(loads_case(_case_text(workspace, "gmsh")))
+    inputs = StageInputs(resolved=resolved, upstream={"region": region})
+    with pytest.raises(MissingExtraError) as caught:
+        MeshStage(workspace=workspace / "init_fail").run(inputs)
+    message = str(caught.value)
+    assert "'gmsh' extra" in message
+    assert "simulated initialize failure" in message
+
+
+def test_ver54_model_remove_failure_handled_in_failing_and_successful_mesh(
+    gmsh_module: ModuleType, workspace: Path, region, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """model.remove failure is added as note on meshing error, or raised on success (REV-38)."""
+    from nanopnp.mesh import gmsh_backend as backend
+
+    def refuse(dimension: int) -> None:
+        raise Exception("meshing failed by test")
+
+    def fail_remove() -> None:
+        raise RuntimeError("remove failed by test")
+
+    monkeypatch.setattr(gmsh_module.model.mesh, "generate", refuse)
+    monkeypatch.setattr(gmsh_module.model, "remove", fail_remove)
+
+    resolved = resolve(loads_case(_case_text(workspace, "gmsh")))
+    with pytest.raises(backend.GmshMeshingError) as caught:
+        generate(read_region(region.payload["region"]), resolved, workspace / "fail1")
+    assert "meshing failed by test" in str(caught.value)
+    assert any("remove failed by test" in note for note in getattr(caught.value, "__notes__", []))
+    assert not gmsh_module.isInitialized()
+
+    monkeypatch.undo()
+    monkeypatch.setattr(gmsh_module.model, "remove", fail_remove)
+    with pytest.raises(RuntimeError, match="remove failed by test"):
+        generate(read_region(region.payload["region"]), resolved, workspace / "fail2")
+    assert not gmsh_module.isInitialized()
 
 
 KEY_IN_A_FRESH_PROCESS = """

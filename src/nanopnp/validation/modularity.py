@@ -998,8 +998,8 @@ EXTENSION_POINTS: tuple[_Point, ...] = (
     _Point("physics models", "registry", "physics/models.py", "call:register_model"),
     _Point("stabilisation", "registry", "physics/stabilisation.py", "call:register"),
     _Point("charge forms", "registry", "charge/fields.py", "call:register_form"),
-    _Point("mesher", "branch", "io/case.py", "literal:backend"),
-    _Point("linear solver", "branch", "numerics/linear.py", "assign:AVAILABLE_SOLVERS"),
+    _Point("mesher", "registry", "mesh/meshers.py", "call:register_mesher"),
+    _Point("linear solver", "registry", "numerics/linear.py", "call:register_solver"),
     _Point("outputs", "branch", "io/case.py", "assign:OUTPUTS"),
     _Point("steric models", "branch", "io/case.py", "assign:STERIC_MODELS"),
     _Point("correction forms", "branch", "materials/forms.py", "assign:FORMS"),
@@ -1261,11 +1261,20 @@ class Surface:
 
 
 def surface(root: Path | None = None, sources: Mapping[str, str] | None = None) -> Surface:
-    """Return the public surface as ``__init__.py`` writes it (D8 e)."""
-    init = _module_map(parse_package(root, sources))[ROOT_NODE]
+    """Return the public surface as ``core/public.py`` and the facade write it."""
+    modules = _module_map(parse_package(root, sources))
+    init = modules.get(ROOT_NODE)
+    public_mod = modules.get(f"{ROOT_NODE}.core.public")
     public: list[tuple[str, str]] = []
     mirror: list[tuple[str, str]] = []
-    for node in init.tree.body:
+
+    nodes_for_public: list[ast.stmt] = []
+    if public_mod is not None:
+        nodes_for_public.extend(public_mod.tree.body)
+    if init is not None:
+        nodes_for_public.extend(init.tree.body)
+
+    for node in nodes_for_public:
         assigned = _assignment(node)
         if assigned is not None and assigned[0] == "PUBLIC" and isinstance(assigned[1], ast.Dict):
             public = [
@@ -1273,13 +1282,17 @@ def surface(root: Path | None = None, sources: Mapping[str, str] | None = None) 
                 for key, value in zip(assigned[1].keys, assigned[1].values, strict=True)
                 if isinstance(key, ast.Constant)
             ]
-        if isinstance(node, ast.If) and _is_type_checking(node.test):
-            mirror = [
-                (alias.asname or alias.name, statement.module or "")
-                for statement in node.body
-                if isinstance(statement, ast.ImportFrom)
-                for alias in statement.names
-            ]
+            break
+
+    if init is not None:
+        for node in init.tree.body:
+            if isinstance(node, ast.If) and _is_type_checking(node.test):
+                mirror = [
+                    (alias.asname or alias.name, statement.module or "")
+                    for statement in node.body
+                    if isinstance(statement, ast.ImportFrom)
+                    for alias in statement.names
+                ]
     names = tuple(name for name, _ in public)
     outside = tuple(name for name in ("with_section", "register") if name not in names)
     return Surface(

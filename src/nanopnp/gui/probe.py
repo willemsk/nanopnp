@@ -438,7 +438,7 @@ def payload_versions() -> dict[str, str]:
 
 def _nanopnp_version() -> str:
     """Return this package's version without importing a stage module."""
-    from nanopnp import __version__
+    from nanopnp.core.public import __version__
 
     return str(__version__)
 

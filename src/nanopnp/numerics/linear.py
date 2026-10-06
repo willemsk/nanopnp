@@ -32,7 +32,8 @@ when it is large enough to matter.
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Protocol, TypeAlias
 
 if TYPE_CHECKING:
     import numpy as np
@@ -58,8 +59,125 @@ _REJECTED = {
 }
 
 
-AVAILABLE_SOLVERS = frozenset({"umfpack", "superlu"})
-"""Solvers this build can actually use."""
+class LinearSolver(Protocol):
+    """Direct linear solver on the free degrees of freedom (NUM-21)."""
+
+    name: str
+
+    def solve(
+        self,
+        matrix: Expression,
+        rhs: Expression,
+        correction: Expression,
+        freedofs: Option,
+    ) -> None:
+        """Solve ``matrix @ correction = rhs`` on the free degrees of freedom, in place."""
+        ...
+
+
+class UmfpackSolver:
+    """UMFPACK sparse direct solver (SuiteSparse, GPL-2+)."""
+
+    name: str = "umfpack"
+
+    def solve(
+        self,
+        matrix: Expression,
+        rhs: Expression,
+        correction: Expression,
+        freedofs: Option,
+    ) -> None:
+        """Solve a linear system in place using NGSolve's UMFPACK wrapper.
+
+        Parameters
+        ----------
+        matrix : Expression
+            The assembled matrix or bilinear form.
+        rhs : Expression
+            The assembled right-hand side vector.
+        correction : Expression
+            The solution / correction vector updated in place.
+        freedofs : Option
+            Free degrees of freedom mask.
+        """
+        correction.data = matrix.Inverse(freedofs, inverse=self.name) * rhs
+
+
+class SuperluSolver:
+    """Scipy SuperLU sparse direct solver (BSD-3)."""
+
+    name: str = "superlu"
+
+    def solve(
+        self,
+        matrix: Expression,
+        rhs: Expression,
+        correction: Expression,
+        freedofs: Option,
+    ) -> None:
+        """Solve a linear system in place using SciPy's SuperLU wrapper.
+
+        Parameters
+        ----------
+        matrix : Expression
+            The assembled matrix or bilinear form.
+        rhs : Expression
+            The assembled right-hand side vector.
+        correction : Expression
+            The solution / correction vector updated in place.
+        freedofs : Option
+            Free degrees of freedom mask.
+        """
+        correction.FV().NumPy()[:] = solve_superlu(matrix, rhs, freedofs)
+
+
+SolverBuilder: TypeAlias = Callable[[], LinearSolver]
+"""Builds one linear solver."""
+
+_REGISTRY: dict[str, SolverBuilder] = {}
+
+
+def register_solver(name: str, builder: SolverBuilder) -> None:
+    """Register a linear solver under ``name``.
+
+    Raises
+    ------
+    ValueError
+        If ``name`` is ``"sparsecholesky"`` (NUM-21), or if ``name`` is already
+        registered.
+    """
+    if name == "sparsecholesky":
+        raise ValueError(
+            f"linear solver 'sparsecholesky' cannot be registered: {_REJECTED['sparsecholesky']}"
+        )
+    if name in _REGISTRY:
+        raise ValueError(f"linear solver {name!r} is already registered")
+    _REGISTRY[name] = builder
+
+
+def registered_solvers() -> tuple[str, ...]:
+    """Return every selectable solver name, sorted."""
+    return tuple(sorted(_REGISTRY))
+
+
+def create_solver(name: str) -> LinearSolver:
+    """Build the linear solver registered as ``name``.
+
+    Raises
+    ------
+    KeyError
+        If no such solver is registered; the message lists the known names.
+    """
+    try:
+        builder = _REGISTRY[name]
+    except KeyError:
+        known = ", ".join(registered_solvers())
+        raise KeyError(f"unknown linear solver {name!r}; registered solvers are {known}") from None
+    return builder()
+
+
+register_solver("umfpack", UmfpackSolver)
+register_solver("superlu", SuperluSolver)
 
 
 def check_solver(name: str) -> str:
@@ -68,16 +186,15 @@ def check_solver(name: str) -> str:
     Raises
     ------
     ValueError
-        If the solver is one this project rejects, or is unavailable in the
-        installed NGSolve. The message says which and why.
+        If the solver is one this project rejects, or is not registered.
+        The message says which and why.
     """
+    if name in _REGISTRY:
+        return name
     if name in _REJECTED:
         raise ValueError(f"linear solver {name!r} is not usable: {_REJECTED[name]}")
-    if name not in AVAILABLE_SOLVERS:
-        raise ValueError(
-            f"unknown linear solver {name!r}; this build offers {sorted(AVAILABLE_SOLVERS)}"
-        )
-    return name
+    known = list(registered_solvers())
+    raise ValueError(f"unknown linear solver {name!r}; this build offers {known}")
 
 
 def solve_linear(
@@ -149,10 +266,7 @@ def solve_correction(
         Direct solver name; see :func:`check_solver`.
     """
     check_solver(solver)
-    if solver == "superlu":
-        correction.FV().NumPy()[:] = solve_superlu(matrix, rhs, freedofs)
-        return
-    correction.data = matrix.Inverse(freedofs, inverse=solver) * rhs
+    create_solver(solver).solve(matrix, rhs, correction, freedofs)
 
 
 def to_scipy(matrix: Expression) -> csr_matrix:

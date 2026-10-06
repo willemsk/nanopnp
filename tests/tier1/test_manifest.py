@@ -71,6 +71,7 @@ from nanopnp.io.manifest import GROUPS, MANIFEST_SCHEMA, build, read
 from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics.models import CoupledModel
 from nanopnp.pipeline.case import loads_case, resolve
+from nanopnp.pipeline.checks import registry_options
 
 MINIMAL = """
 schema: nanopnp/case/v2
@@ -98,10 +99,9 @@ def _manifest(document: CaseDocument, **kwargs: object) -> manifest_module.Manif
 def _is_switch(reference: FieldReference) -> bool:
     """Return whether a field of the schema is switch-typed.
 
-    Switch-typed means ``bool`` or carrying a ``Literal`` — the shapes a
-    configuration flag takes in this schema — or named ``model``, which is how a
-    correction or physics model is selected by a registry name. Free-form
-    strings and numbers are not detected here and are covered instead by
+    Switch-typed means ``bool``, carrying a ``Literal``, named ``model``, or a
+    ``str`` field governed by an installed registry via :func:`registry_options`.
+    Free-form strings and numbers are not detected here and are covered instead by
     :func:`test_ver24_every_classified_path_still_names_a_field`, which walks the
     two mappings in the other direction.
     """
@@ -109,7 +109,30 @@ def _is_switch(reference: FieldReference) -> bool:
     literal = get_origin(annotation) is Literal or any(
         get_origin(argument) is Literal for argument in get_args(annotation)
     )
-    return annotation is bool or literal or reference.path.rsplit(".", 1)[-1] == "model"
+    is_registry_str = annotation is str and registry_options(reference.path) is not None
+    return (
+        annotation is bool
+        or literal
+        or reference.path.rsplit(".", 1)[-1] == "model"
+        or is_registry_str
+    )
+
+
+def test_ver24_backend_registry_paths_are_detected_as_switches() -> None:
+    """The three backend registry paths are recognised as switch-typed fields (D8).
+
+    Converting the mesher, solver and stabilisation fields to strings checked
+    against runtime registries must not cause VER-24's classifier to lose them.
+    """
+    fields_by_path = {ref.path: ref for ref in case_fields()}
+    backend_paths = (
+        "numerics.mesh.backend",
+        "numerics.linear.solver",
+        "numerics.stabilisation",
+    )
+    for path in backend_paths:
+        assert path in fields_by_path, f"{path} is not a schema field"
+        assert _is_switch(fields_by_path[path]), f"{path} should be recognised as a switch"
 
 
 def test_ver24_every_switch_typed_field_of_the_schema_is_classified() -> None:

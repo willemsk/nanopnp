@@ -27,7 +27,6 @@ from nanopnp.geometry.profile import (
 )
 from nanopnp.geometry.region import RegionStage, read_region
 from nanopnp.io.artefact import StageInputs
-from nanopnp.mesh import generate as generate_module
 from nanopnp.mesh.adapter import read
 from nanopnp.mesh.generate import WallSizeGateError, generate
 from nanopnp.mesh.ingest import MeshStage, MeshVocabularyError, deployed_mesh
@@ -180,7 +179,7 @@ def test_ver53_the_wall_gate_fires_when_the_wall_field_is_withheld(
     workspace: Path, region, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """D9: without its size field the wall is meshed by the protein's, twice as coarse."""
-    from nanopnp.mesh import sizing
+    from nanopnp.mesh import meshers, sizing
 
     def without_wall(shape, *, wall_h_nm, axis_extent_nm, sizes, divide_wall) -> None:  # type: ignore[no-untyped-def]
         sizing.apply_sizes(
@@ -191,7 +190,7 @@ def test_ver53_the_wall_gate_fires_when_the_wall_field_is_withheld(
             divide_wall=divide_wall,
         )
 
-    monkeypatch.setattr(generate_module, "apply_sizes", without_wall)
+    monkeypatch.setattr(meshers, "apply_sizes", without_wall)
     record = read_region(region.payload["region"])
     resolved = resolve(loads_case(_case_text(workspace)))
     with pytest.raises(WallSizeGateError) as caught:

@@ -18,10 +18,12 @@ import pytest
 
 from nanopnp.mesh.primitives import SlabGeometry
 from nanopnp.numerics.linear import (
-    AVAILABLE_SOLVERS,
     check_solver,
+    create_solver,
     diagonal_block_norms,
     field_row_scaling,
+    register_solver,
+    registered_solvers,
     report_block_scaling,
     solve_superlu,
     to_scipy,
@@ -68,9 +70,62 @@ def test_num21_unknown_solver_lists_the_alternatives() -> None:
 
 def test_num21_both_licensed_paths_are_available() -> None:
     """UMFPACK (GPL-2+) and SuperLU (BSD) are both usable; CON-11 needs the second."""
-    assert {"umfpack", "superlu"} == AVAILABLE_SOLVERS
+    assert registered_solvers() == ("superlu", "umfpack")
     assert check_solver("umfpack") == "umfpack"
     assert check_solver("superlu") == "superlu"
+
+
+def test_num21_register_solver_rejects_sparsecholesky() -> None:
+    """Registering sparsecholesky is refused, naming NUM-21 (D3)."""
+
+    class Dummy:
+        name = "sparsecholesky"
+
+        def solve(self, matrix: object, rhs: object, correction: object, freedofs: object) -> None:
+            pass
+
+    with pytest.raises(ValueError, match="NUM-21") as caught:
+        register_solver("sparsecholesky", Dummy)
+    assert "cannot be registered" in str(caught.value)
+    assert "sparsecholesky" in str(caught.value)
+
+
+def test_num21_register_solver_rejects_duplicate() -> None:
+    """Registering a duplicate solver is refused (D1)."""
+
+    class Dummy:
+        name = "umfpack"
+
+        def solve(self, matrix: object, rhs: object, correction: object, freedofs: object) -> None:
+            pass
+
+    with pytest.raises(ValueError, match="already registered"):
+        register_solver("umfpack", Dummy)
+
+
+def test_num21_create_solver_unknown_raises_key_error() -> None:
+    """create_solver raises KeyError naming the registered solvers."""
+    with pytest.raises(KeyError, match="registered solvers are superlu, umfpack"):
+        create_solver("nonexistent")
+
+
+def test_num21_pardiso_and_mumps_may_be_registered() -> None:
+    """Pardiso and mumps may be registered, passing check_solver when registered (D3)."""
+
+    class Dummy:
+        name = "mumps"
+
+        def solve(self, matrix: object, rhs: object, correction: object, freedofs: object) -> None:
+            pass
+
+    try:
+        register_solver("mumps", Dummy)
+        assert "mumps" in registered_solvers()
+        assert check_solver("mumps") == "mumps"
+    finally:
+        from nanopnp.numerics.linear import _REGISTRY
+
+        _REGISTRY.pop("mumps", None)
 
 
 def test_con11_superlu_agrees_with_umfpack(slab: ngs.Mesh) -> None:

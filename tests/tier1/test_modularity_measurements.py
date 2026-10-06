@@ -15,6 +15,7 @@ from nanopnp.validation.modularity import (
     ImportEdge,
     StageConformance,
     _matrix,
+    extension_points,
     import_edges,
     render_measurements,
     sizes,
@@ -99,3 +100,15 @@ def test_the_measurements_page_renders_every_section_of_the_live_tree() -> None:
     ):
         assert f"\n{heading}\n" in page, heading
     assert f"\n{len(import_edges())} import edges between `nanopnp` modules" in page
+
+
+def test_extension_points_lists_mesher_and_linear_solver_as_registries() -> None:
+    """The mesher and linear solver extension points are registries at their homes (D14)."""
+    points = {p.name: p for p in extension_points()}
+    assert points["mesher"].kind == "registry"
+    assert points["mesher"].home == "mesh/meshers.py"
+    assert set(points["mesher"].members) == {"netgen", "gmsh"}
+
+    assert points["linear solver"].kind == "registry"
+    assert points["linear solver"].home == "numerics/linear.py"
+    assert set(points["linear solver"].members) == {"umfpack", "superlu"}
