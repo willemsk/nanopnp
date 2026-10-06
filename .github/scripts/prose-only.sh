@@ -11,6 +11,9 @@
 #               executes (VER-46);
 #   *findings.md a findings log, whose table tests/tier1/test_findings_logs.py
 #               checks (VER-63), so a ruling edit runs the test that reads it.
+#   SPECIFICATION.md, docs/project/modularity.md, docs/project/review-items.md
+#               the pages VER-63 reads beside a log: a ruling names a section 8.2
+#               row, and a finding links to a report heading (section 8.2.8 H12).
 # docs/ is NOT prose as a directory: docs/sweeps/ and docs/validation/ hold the
 # YAML that tests/tier1 reads (the section 8.3 reference sweep, the frozen
 # cases, the probe grid). Only its Markdown is.
@@ -23,6 +26,7 @@ while IFS= read -r path; do
     case $path in
         packaging/* | src/* | data/* | examples/*) exit 1 ;;
         *findings.md) exit 1 ;;
+        SPECIFICATION.md | docs/project/modularity.md | docs/project/review-items.md) exit 1 ;;
         *.md) ;;
         *) exit 1 ;;
     esac

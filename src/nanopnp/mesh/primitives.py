@@ -41,7 +41,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from nanopnp.core.typing import Mesh, Shape
-from nanopnp.geometry.profile import TOL_NM
+from nanopnp.geometry.tolerance import TOL_NM
 from nanopnp.mesh.adapter import from_ngsolve
 from nanopnp.mesh.quality import check_quality as _check_quality
 

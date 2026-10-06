@@ -140,6 +140,8 @@ nav:
       - Modularity report: project/modularity.md
       - Modularity findings: project/modularity-findings.md
       - Modularity measurements: _generated/project/modularity-measurements.md
+      - Review register: project/review-items.md
+      - Review findings: project/review-findings.md
       - Citing: project/citing.md
       - Release notes: _generated/project/changelog.md
       - Licence: project/licence.md

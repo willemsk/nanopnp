@@ -67,7 +67,8 @@ and a walk that composes the stages can fail where each stage's own tests pass.
 Claude Code makes, and refuses the commit with the failing output if a stage fails or its 25-minute
 budget runs out. It gates the working tree and remembers a pass, so a tree that already passed is
 not re-run. When only prose changed it runs ruff alone. Prose means Markdown outside `packaging/`,
-`src/`, `data/` and `examples/`, other than a `*findings.md` log, whose table VER-63 checks;
+`src/`, `data/` and `examples/`, other than a `*findings.md` log, whose table VER-63 checks, and
+the pages VER-63 reads with it: `SPECIFICATION.md` and the reports a log links to;
 `docs/` as a whole doesn't count, because tests read its YAML, and an example's README is executed
 by its test (VER-46). The rule is `.github/scripts/prose-only.sh`,
 and CI uses the same script. CI's strict documentation build runs on every push, prose included.
@@ -158,15 +159,17 @@ CLI, the GUI and the sweep runner all depend on.
 - **SI internally, units in the name at the boundary**: `radius_nm`, `bias_V`, `temperature_K`. A
   bare float in an interface is a bug waiting to happen.
 - British spelling in prose and identifiers (`normalise`, `analyse`), matching the specification.
-- `pathlib.Path`, never `os.path`. f-strings, never `%` or `.format()`.
+- `pathlib.Path`, never `os.path`. f-strings, never `%` or `.format()` — except one `%` over a
+  whole numeric array, as `validation/apbs.py`'s `write_dx` formats a map body in a single pass
+  (§8.2.8 H12), and the lazy `%` arguments of a `logging` call.
 - Pydantic models at every serialisation boundary — case files, artefacts, manifests. Never pass
   raw dicts across a stage boundary.
 - `logging`, never `print()`, outside the CLI's own output.
 - Cite the source of every physical constant and fit coefficient in a comment, pointing at the
   `.knowledge/` file or the specification section it came from.
-- **Imports go at the top of the module. `ngsolve`, `netgen` and `numpy` are the exceptions**, and
-  are imported inside the function that uses them. `import ngsolve` costs ~370 ms and `import numpy`
-  ~67 ms, and the CLI, the GUI and the sweep runner all import stage modules purely to introspect a
+- **Imports go at the top of the module. `ngsolve`, `netgen`, `numpy` and `scipy` are the
+  exceptions**, and are imported inside the function that uses them. `import ngsolve` costs ~370 ms,
+  `import numpy` ~67 ms and `import scipy.sparse` ~260 ms (§8.2.8 H12), and the CLI, the GUI and the sweep runner all import stage modules purely to introspect a
   stage (FR-27) without ever assembling a form — so a sweep dispatching a job array pays that per
   process. Deferring keeps `import nanopnp.cli` at ~70 ms; at module scope the physics and mesh
   modules alone would cost 424 ms rather than 56 ms. The one other exception is **an optional
@@ -243,6 +246,13 @@ A report from the `/codebase-review` skill is archived in `docs/code_reviews/` a
 is one above the highest already in the directory; never reuse or renumber one, because findings
 elsewhere cite them. The skill writes `CODE_REVIEW.md` at the repo root by default: pass
 `out=docs/code_reviews/CODE_REVIEW_NNN.md` so no copy is left there.
+
+## Open items
+
+Anything a work package's implementation or review leaves open — a confirmed finding not fixed, a
+deferral, a question for the author — is a `REV-nn` row of `docs/project/review-findings.md`, with
+its section in `docs/project/review-items.md`, until the commit that resolves it sets it `fixed`
+(§8.2.8 H12). A PR body may summarise them; it is never their only record.
 
 ## Git
 

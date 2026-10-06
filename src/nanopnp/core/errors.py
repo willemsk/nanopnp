@@ -21,9 +21,9 @@ object's ``__mro__``, so classifying an error costs no import at all and
 (CLAUDE.md). Naming a base class covers its subclasses for free.
 
 **Here in ``core/``, below every consumer** (``MOD-05``). The CLI, the sweep
-runner, the example walker and the desktop shell all classify by this one table;
-:mod:`nanopnp.cli.errors` re-exports it under the CLI's name. The table's keys
-name modules of every layer as strings, which couples nothing at import time.
+runner, the example walker and the desktop shell all classify by this one table,
+and it has no second home (WP37 D9, D10; REV-02). The table's keys name modules
+of every layer as strings, which couples nothing at import time.
 """
 
 from __future__ import annotations

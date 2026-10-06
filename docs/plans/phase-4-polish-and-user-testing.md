@@ -279,7 +279,7 @@ The single-import cuts of `MOD-03`'s table that do not start in `io`: `charge �
 wall-distance solve leaves `mesh/distance.py`, taking `mesh → physics` with it. Its new home must
 not make the corrections in `materials/` import upward. The plan decides it, and if no move does,
 that edge is reported back (H6). The exit classification and codes of `cli/errors.py` move to
-`core`, and `cli` re-exports them (`MOD-05`). VER-47's codes and `test_cli.py`'s table do not change.
+`core` (`MOD-05`), which is their one home (§8.2.8 H12). VER-47's codes and `test_cli.py`'s table do not change.
 Each removed edge leaves `modularity-layering.yaml` in the same commit.
 
 **VER-65, the backend guard** (proposed; H3). A Tier-1 check that the set of subpackages importing

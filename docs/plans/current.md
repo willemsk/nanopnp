@@ -34,6 +34,8 @@ Each is recorded in full where it points.
   reverted, or ruled and re-pinned (G10).** → `docs/project/contributing.md`.
 - **`upward:` only shrinks; `backend:` grows only by ruling** (VER-61, VER-65). A cut removes a
   dependency, never defers it (WP37 D12).
+- **What a package leaves open is a `REV-nn` row** of `docs/project/review-findings.md` until it
+  is resolved (§8.2.8 H12); `/wp-implement` and `/wp-ship` write it.
 - **A stage declares its walk facts in the registry and defines `key`.** The walk runs stages in
   registration order (VER-64; WP36 D3–D5).
 - **Tier 3 compares the published I–V and in-pore averages**, gating v0.7 (VAL-16, VAL-17; F1).

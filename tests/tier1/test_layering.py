@@ -23,8 +23,10 @@ import pytest
 
 from nanopnp.validation.findings import REPOSITORY, parse_log
 from nanopnp.validation.modularity import (
+    DEFERRED_UPWARD,
     LAYER_ORDER,
     PACKAGE,
+    RATCHETS,
     UPWARD,
     AcceptedEdge,
     ImportEdge,
@@ -51,10 +53,23 @@ def test_ver61_live_relation_equals_the_recorded_layering() -> None:
 
 
 def test_ver61_every_annotated_edge_names_a_finding_of_the_log() -> None:
-    """An edge's ``finding`` is a ``MOD-nn`` row of the log, so a typo or a dropped row fails."""
-    log = parse_log(REPOSITORY / "docs" / "project" / "modularity-findings.md")
-    named = {edge.finding for edge in (*accepted_relation(), *accepted_upward())} - {None}
-    assert named <= {row.id for row in log.rows}, sorted(named - {row.id for row in log.rows})
+    """An edge's ``finding`` is a ``MOD-nn`` or ``REV-nn`` row, so a typo or a dropped row fails."""
+    project = REPOSITORY / "docs" / "project"
+    ids = {
+        row.id
+        for name in ("modularity-findings.md", "review-findings.md")
+        for row in parse_log(project / name).rows
+    }
+    recorded = (*accepted_relation(), *(e for r in RATCHETS for e in accepted_upward(ratchet=r)))
+    named = {edge.finding for edge in recorded} - {None}
+    assert named <= ids, sorted(named - ids)
+
+
+def test_ver61_every_ratchet_row_names_its_finding() -> None:
+    """An edge kept against the order says why, so the YAML header's rule is a test (H12)."""
+    for ratchet in RATCHETS:
+        unexplained = [e for e in accepted_upward(ratchet=ratchet) if e.finding is None]
+        assert unexplained == [], (ratchet, unexplained)
 
 
 def test_ver61_the_measurement_adds_no_edge_of_its_own() -> None:
@@ -75,6 +90,44 @@ def test_ver61_upward_top_edges_equal_the_recorded_ratchet() -> None:
         *((node, "io") for node in (*into_io, "solve", "post")),
         ("cli", "nanopnp"),
     }
+
+
+def test_ver61_upward_deferred_edges_equal_the_recorded_ratchet() -> None:
+    """Imports inside a function that point up the order are the ``deferred_upward:`` rows (H12).
+
+    One is left: the desktop shell's probe reads ``nanopnp.__version__`` (REV-05).
+    """
+    measured = upward_edges(import_edges(), kinds=RATCHETS[DEFERRED_UPWARD])
+    accepted = accepted_upward(ratchet=DEFERRED_UPWARD)
+    comparison = compare({DEFERRED_UPWARD: measured}, accepted)
+    assert comparison.equal, comparison.describe()
+    assert {(edge.source, edge.target) for edge in accepted} == {("gui", "nanopnp")}
+
+
+def test_ver61_an_annotation_cut_deferred_into_a_function_fails_as_deferred_upward() -> None:
+    """``geometry -> mesh`` stays a static edge, so only the deferred ratchet sees this (D12)."""
+    text = ANALYTE.read_text(encoding="utf-8")
+    line = len(text.splitlines()) + 2
+    late = "def _late():\n    from nanopnp.mesh.primitives import CylindricalPoreGeometry\n"
+    deferred = f"{text}{late}"
+    edges = import_edges(sources={"geometry/analyte.py": deferred})
+    assert compare(measured_relations(edges), accepted_relation()).equal
+    assert compare({UPWARD: upward_edges(edges)}, accepted_upward()).equal
+    comparison = compare(
+        {DEFERRED_UPWARD: upward_edges(edges, kinds=RATCHETS[DEFERRED_UPWARD])},
+        accepted_upward(ratchet=DEFERRED_UPWARD),
+    )
+    assert [pair for _, pair, _ in comparison.added] == [("geometry", "mesh")]
+    message = comparison.describe()
+    assert "new deferred_upward edge geometry -> mesh" in message
+    assert f"geometry/analyte.py:{line}" in message
+    assert "only shrinks" in message
+    assert "a deferred import is not a cut" in message
+
+
+def test_ver61_accepted_upward_refuses_an_unknown_ratchet() -> None:
+    with pytest.raises(ValueError, match="'edges' is not a ratchet"):
+        accepted_upward(ratchet="edges")
 
 
 def test_ver61_the_layer_order_places_every_subpackage_once() -> None:

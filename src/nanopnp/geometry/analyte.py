@@ -49,7 +49,7 @@ from typing import TYPE_CHECKING, Protocol
 
 from nanopnp.core.constants import ELEMENTARY_CHARGE
 from nanopnp.core.typing import Mesh, Shape
-from nanopnp.geometry.profile import TOL_NM
+from nanopnp.geometry.tolerance import TOL_NM
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.mesh.primitives import CylindricalPoreGeometry

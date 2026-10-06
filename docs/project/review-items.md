@@ -1,0 +1,534 @@
+# Review register
+
+What a work package's implementation or review left open, one numbered item each, `REV-nn`,
+until it is resolved (§8.2.8 H12). `/wp-implement` and `/wp-ship` add an item in the commit that
+leaves it open: a confirmed review finding not fixed, a deferral to a later package, or a question
+put to the author. The commit that resolves one sets its row `fixed`. The status of each item is in
+[the findings log](review-findings.md), which VER-63 checks; this page says what each one is.
+
+Each item gives where it was found, what was measured, and what resolves it. Unlike the
+[modularity findings](modularity-findings.md), the register is never closed: it is not one of the
+two logs Phase 4's gate closes.
+
+## Items
+
+### REV-01 — TOL_NM's home loaded pydantic and yaml
+
+*Area:* performance. *Severity:* low. *Found:* WP37's shipping review (PR #80).
+
+**Measured.** WP37 D6 moved `TOL_NM` into `geometry/profile.py`, which imports pydantic and yaml
+at module scope. A bare `import nanopnp.mesh.primitives` rose from 71 ms on `a346419` to 179 ms,
+and `nanopnp.geometry.analyte` to 151 ms (`python -X importtime`, warm cache). The CLI and GUI
+entry points were unaffected, because they load pydantic anyway.
+
+**Resolved.** `TOL_NM` lives in `geometry/tolerance.py`, which imports nothing: 62 ms and 54 ms.
+
+### REV-02 — cli/errors.py was a re-export nothing imported
+
+*Area:* coupling. *Severity:* low. *Found:* WP37's shipping review (PR #80).
+
+**Measured.** WP37 D9 kept `cli/errors.py` as a re-export of `core/errors.py`, and no module of
+`src/` or `tests/` imported it, against D10's "no shim at an old path".
+
+**Resolved.** The module is removed; `core/errors.py` is the exit table's one home (IF-01: an
+internal path is not API). `CHANGELOG.md` lists the removal.
+
+### REV-03 — The solution-field names live in two layers
+
+*Area:* coupling. *Severity:* low. *Found:* WP37's shipping review (PR #80).
+
+**Measured.** After WP37 D8, `POTENTIAL`, `VELOCITY` and `VELOCITY_AXIS` are defined in
+`mesh/primitives.py` and `PRESSURE` and `PRESSURE_MEAN` in `physics/models.py`.
+`io/fields.py`, `post/qoi.py`, `validation/compare.py` and `validation/mms.py` import field names
+from both, and a new field has two possible homes.
+
+**Resolves it.** WP38, which splits `io` into its base and its assembler and so decides where the
+field vocabulary sits; moving it in WP37 would have moved it twice.
+
+### REV-04 — VER-61's ratchet did not see an import moved into a function
+
+*Area:* verification. *Severity:* medium. *Found:* WP37's shipping review (PR #80).
+
+**Measured.** The `upward:` list covered only `top` imports. An upward edge already in the static
+relation as a `TYPE_CHECKING` import (`geometry → mesh`) could come back as an import inside a
+function, and neither the static relation nor `upward:` would change: WP37 D12, "a deferred import
+is not a cut", was held by review alone. One such edge existed, `gui → nanopnp`.
+
+**Resolved.** A `deferred_upward:` list records it, VER-61 asserts it both ways, and a
+function-scope import of `nanopnp.mesh.primitives` in `geometry/analyte.py` fails naming the edge,
+the module and the line.
+
+### REV-05 — The shells read the nanopnp facade
+
+*Area:* coupling. *Severity:* low. *Found:* WP37's shipping review (PR #80).
+
+**Measured.** `cli → nanopnp` (`from nanopnp import __version__` and `PUBLIC`) is the one `top`
+edge pointing up the order outside `io`, and `gui → nanopnp` (`gui/probe.py`, inside a function)
+the one deferred one. Neither closes a cycle. Its `upward:` row carried no finding, against the
+layering file's own header.
+
+**Resolves it.** WP39, which measures H6's target and places the facade's version and `PUBLIC`
+(WP37 D11). Both rows now cite this item.
+
+### REV-06 — A supplied charge or permittivity field has no stated frame beside a moved structure
+
+*Area:* physics. *Severity:* medium. *Found:* CODE_REVIEW_003 (PR #49), *Leads not investigated*.
+
+**Measured.** A supplied `inputs.charge` or `inputs.eps_r` field beside a `structure:` case with
+`centre_z_nm ≠ 0` is accepted, and the specification says the deposited lattice and atoms are in the
+model frame but not which frame a supplied field is in. A field in the structure's frame would be
+applied offset by `centre_z_nm`.
+
+**Resolves it.** Phase 4's second amendment, which plans it into a fix package before `v0.5.0`.
+
+### REV-07 — The conservation gate and the Poisson source integrate an areal charge differently
+
+*Area:* numerics. *Severity:* medium. *Found:* CODE_REVIEW_002 (PR #44), *Leads not settled*.
+
+**Measured.** The gate integrates the assembled fixed charge with `singular=True` for an areal field
+(`charge/fields.py`, `assembled_total_C`), while the Poisson source assembles without it. On a
+synthetic alternating field the two differed by 1e-5 to 1e-3 relative. Whether that exceeds QR-03 on
+the aliased ClyA table needs that table.
+
+**Resolves it.** Phase 4's second amendment, which plans it into a fix package before `v0.5.0`.
+
+### REV-08 — Newton's update test takes one norm over every field
+
+*Area:* numerics. *Severity:* medium. *Found:* CODE_REVIEW_002 (PR #44), *Leads not settled*.
+
+**Measured.** `numerics/newton.py` tests `‖δu‖ / max(‖u‖, reference_norm)` with one ℓ2 norm over all
+fields. With `a = 1 nm`, ũ ~ 1e-3, so the velocity and pressure blocks may be only about 1e-3
+relatively converged when the test passes. The code matches NUM-16 as written, so this is a question
+of the specification, for EOF and hydrodynamic-force accuracy.
+
+**Resolves it.** Phase 4's second amendment, which plans it into a fix package before `v0.5.0`.
+
+### REV-09 — A driver clamp under the ionic-strength driver is never logged
+
+*Area:* physics. *Severity:* medium. *Found:* This register's sweep of PR #13 (Phase 0
+consolidation), verified at `5559c7e`.
+
+**Measured.** `report_clamp_activations` (`materials/electrolyte.py`) logs per-species clamps on the
+premise that the driver it returns never exceeds the validity limit. Under the opt-in
+`ionic_strength` driver, `I = ½ Σ zᵢ² cᵢ`: for CaCl₂ at 2 M Ca²⁺ and 4 M Cl⁻ no species exceeds 5.3
+M, but `I = 6 M`. The correction model clamps the driver (`materials/models.py`, PHY-13 holds), and
+no clamp is logged, against §5.1's stage-8 test target. No shipped parameter file is multivalent.
+
+**Resolves it.** Phase 4's second amendment, which plans it into a fix package before `v0.5.0`.
+
+### REV-10 — The prose rule let a ruling or a report heading change without VER-63
+
+*Area:* verification. *Severity:* medium. *Found:* PR #77 (WP35), *Deliberately not done*.
+
+**Measured.** `.github/scripts/prose-only.sh` counted `SPECIFICATION.md` and the report pages as
+prose, so a commit deleting a §8.2 row a ruling cites, or renaming a finding's heading, ran ruff
+alone in the commit hook.
+
+**Resolved.** The script treats `SPECIFICATION.md`, `docs/project/modularity.md` and
+`docs/project/review-items.md` as read by tests, and `test_workflow_hooks.py` asserts each.
+
+### REV-11 — No check catches a NaN-permissive gate comparison
+
+*Area:* verification. *Severity:* medium. *Found:* PR #43 (CR-1 to CR-17), a proposed test not
+taken.
+
+**Measured.** A gate written `if value > tol: fail` passes a NaN. The instances found were fixed one
+by one, and nothing stops a new one: the review's proposed lint over gate modules was not written.
+
+**Resolves it.** Phase 4's second amendment, which plans it into a fix package before `v0.5.0`.
+
+### REV-12 — No test shows every case leaf changes the forms or is provenance-only
+
+*Area:* verification. *Severity:* medium. *Found:* PR #43 (CR-1 to CR-17), a proposed test not
+taken.
+
+**Measured.** VER-24 classifies the switches both ways, but no test walks every `CaseDocument` leaf
+to show it either changes the assembled forms or is listed as provenance-only, so an inert key can
+enter the schema unnoticed.
+
+**Resolves it.** Phase 4's second amendment, which plans it into a fix package before `v0.5.0`.
+
+### REV-13 — Example 06's key test cannot see a stage-7 key change
+
+*Area:* verification. *Severity:* medium. *Found:* PR #72 (WP34), review findings not acted on.
+
+**Measured.** The check that every key of example 06 is unchanged does not cover stage 7, so a
+change to the charge stage's key would pass it.
+
+**Resolves it.** Phase 4's second amendment, which plans it into a fix package before `v0.5.0`.
+
+### REV-14 — A radial grid's .npz does not round-trip its spacing exactly
+
+*Area:* numerics. *Severity:* low. *Found:* PR #57 (WP28).
+
+**Measured.** The `.npz` carries the axes, not the origin and spacing, and reads back with the z
+spacing off in its last bits. `charge/stage.py` works around it by depositing the grid as re-read;
+the root fix belongs in `density/grid.py`.
+
+**Resolves it.** Phase 4's second amendment, which plans it into a fix package before `v0.5.0`.
+
+### REV-15 — Example 05 quotes #SBATCH directives as shell words
+
+*Area:* interface. *Severity:* low. *Found:* PR #34 (WP16), a confirmed review finding not fixed.
+
+**Measured.** `examples/05-clya-reference/render_slurm.py` passes the job name and working directory
+through `shlex.quote` into `#SBATCH` lines. sbatch does not read a directive as a shell would, so a
+value that needs quoting does not reach it as written; the review of PR #34 confirmed the finding
+and left it unfixed.
+
+**Resolves it.** Phase 4's second amendment, which plans it into a fix package before `v0.5.0`.
+
+### REV-16 — A salt sweep regenerates an identical mesh at each concentration
+
+*Area:* performance. *Severity:* low. *Found:* PR #42 (WP21), left for the author.
+
+**Measured.** The stage-6 recipe key carries λ_D, so below 1.474 M, where the wall size it drives no
+longer changes, each concentration of a sweep re-meshes an identical mesh. Warm starts are
+unaffected.
+
+**Resolves it.** Phase 4's second amendment, which plans it into a fix package before `v0.5.0`.
+
+### REV-17 — A warm start is gated on free prose in the stabilisation provenance
+
+*Area:* numerics. *Severity:* low. *Found:* PR #28 (WP12), a VER-37 semantics question for the
+author.
+
+**Measured.** `solve/state.py` compares the whole `model.stabilisation_provenance` subtree,
+including its `note` prose (`physics/stabilisation.py`), so a reworded note refuses a valid warm
+start. It fails closed.
+
+**Resolves it.** Phase 4's second amendment, which plans it into a fix package before `v0.5.0`.
+
+### REV-18 — Concurrent sweep members may write the same store key
+
+*Area:* interface. *Severity:* low. *Found:* CODE_REVIEW_003 (PR #49), *Leads not investigated*.
+
+**Measured.** Job-array members generate and `put` the same stage 1–6 keys at the same time. Whether
+that is safe depends on how atomic `Store.put` is, which has not been measured.
+
+**Resolves it.** Phase 4's second amendment, which plans it into a fix package before `v0.5.0`.
+
+### REV-19 — A zero-frame trajectory raises a bare IndexError
+
+*Area:* interface. *Severity:* low. *Found:* CODE_REVIEW_003 (PR #49), *Leads not investigated*.
+
+**Measured.** `structure/read.py` raises a bare `IndexError` on a trajectory with no frames, rather
+than a refusal naming the file (QR-12). Two Cα with the same `(resid, icode)` in one chain also
+overwrite each other in `per_chain`.
+
+**Resolves it.** Phase 4's second amendment, which plans it into a fix package before `v0.5.0`.
+
+### REV-20 — The desktop shell has no multiprocessing.freeze_support
+
+*Area:* process. *Severity:* low. *Found:* CODE_REVIEW_003 (PR #49), *Leads not investigated*.
+
+**Measured.** No `multiprocessing.freeze_support()` exists in `src/`. It is needed when the frozen
+shell spawns children on Windows.
+
+**Resolves it.** Phase 5, which makes the shell the bundle's executable (QR-10).
+
+### REV-21 — numerics/linear.py imports scipy inside its functions
+
+*Area:* process. *Severity:* low. *Found:* PR #4 (WP3), a convention decision for the author.
+
+**Measured.** `numerics/linear.py` imports `scipy.sparse` and `scipy.sparse.linalg` inside
+functions, which `CLAUDE.md`'s import rule did not exempt. `import scipy.sparse` costs about 260 ms.
+
+**Declined.** `CLAUDE.md` exempts `scipy` beside `numpy`, for the same reason.
+
+### REV-22 — write_dx formats with %
+
+*Area:* process. *Severity:* low. *Found:* PR #58 (WP29), the author's call.
+
+**Measured.** `validation/apbs.py`'s `write_dx` formats the map body with one `%` over the whole
+array, against `CLAUDE.md`'s f-string rule, because one pass is what keeps the write fast.
+
+**Declined.** `CLAUDE.md` allows one `%` over a whole numeric array, naming this case.
+
+### REV-23 — The corrections test bounds both ions by one range
+
+*Area:* verification. *Severity:* low. *Found:* PR #2 (WP1).
+
+**Measured.** `tests/tier1/test_corrections.py` asserts the monotonic rise of the ratio with ranges
+that fit both ions, not per-ion bounds.
+
+### REV-24 — Sampler construction may still be duplicated
+
+*Area:* process. *Severity:* low. *Found:* PR #13 (Phase 0 consolidation); not re-measured.
+
+**Measured.** The per-point sampler rebuild was fixed by `FieldSampler.shared`; whether the
+SI-expression building is still duplicated was not checked.
+
+### REV-25 — A post stage run without a solve writes scratch to the default store
+
+*Area:* interface. *Severity:* low. *Found:* PR #24 (WP10).
+
+**Measured.** A library caller invoking `QoIStage` or `ReportStage` with no upstream `solve` sends
+its scratch to the process-default store root.
+
+### REV-26 — stabilisation_parameters returns an empty mapping off the coupled model
+
+*Area:* interface. *Severity:* low. *Found:* PR #28 (WP12).
+
+**Measured.** `LadderResult.stabilisation_parameters` returns `{}` for a model that is not a
+`CoupledModel`, rather than refusing or naming the mode.
+
+### REV-27 — The inf-sup check runs at resolve, not at validation
+
+*Area:* interface. *Severity:* low. *Found:* PR #28 (WP12).
+
+**Measured.** The inf-sup check runs in `io.case.resolve()`, so `nanopnp validate` does not report
+it.
+
+### REV-28 — The viewer renders every finished run eagerly
+
+*Area:* performance. *Severity:* low. *Found:* PR #32 (WP15).
+
+**Measured.** Each finished run is rendered whether or not it is viewed.
+
+### REV-29 — The cylindrical-pore fixture is copied into four test modules
+
+*Area:* verification. *Severity:* low. *Found:* PR #32 (WP15).
+
+**Measured.** Four Tier-1 modules each define the same cylindrical-pore fixture.
+
+### REV-30 — The viewer's scene is written twice
+
+*Area:* performance. *Severity:* low. *Found:* PR #32 (WP15).
+
+**Measured.** The scene file is written twice per render.
+
+### REV-31 — The bundle's size is not recorded
+
+*Area:* documentation. *Severity:* low. *Found:* PR #37 (Phase 1 close).
+
+**Measured.** No document records the Windows bundle's size.
+
+### REV-32 — Old store entries are neither migrated nor removed
+
+*Area:* interface. *Severity:* low. *Found:* PR #38 (WP17).
+
+**Measured.** Entries written under an earlier schema stay in the store, unread and unremoved.
+
+### REV-33 — writable_formats assumes the extra's floor
+
+*Area:* interface. *Severity:* low. *Found:* PR #38 (WP17), a review finding not applied.
+
+**Measured.** `density/grid.py`'s `writable_formats()` reports `mrc` writable wherever
+GridDataFormats imports, which holds only at the extra's floor, 1.2, and above.
+
+### REV-34 — Two reference tests duplicate the frozen case
+
+*Area:* verification. *Severity:* low. *Found:* PR #46 (WP22).
+
+**Measured.** `FROZEN_CASE`, `as_yaml` and the D10 figures are copied between the Tier-2 and Tier-3
+VAL-05 files.
+
+### REV-35 — _second_crossings loops in Python
+
+*Area:* performance. *Severity:* low. *Found:* PR #46 (WP22).
+
+**Measured.** The second-crossing search iterates in Python where it could be vectorised.
+
+### REV-36 — The gmsh session stops a caller's logger
+
+*Area:* interface. *Severity:* low. *Found:* PR #47 (WP23), a review finding not fixed.
+
+**Measured.** `_session` calls `gmsh.logger.stop()` in a session it borrowed. No caller in the
+repository holds a logger.
+
+### REV-37 — A broken gmsh wheel is not a refusal
+
+*Area:* interface. *Severity:* low. *Found:* PR #47 (WP23), a review finding not fixed.
+
+**Measured.** A gmsh wheel that imports but fails to initialise surfaces as an exception, not as
+`MissingExtraError` naming the extra.
+
+### REV-38 — gmsh.model.remove() can mask the error it follows
+
+*Area:* interface. *Severity:* low. *Found:* PR #47 (WP23), a review finding not fixed.
+
+**Measured.** The cleanup's `gmsh.model.remove()` can raise over the error that triggered it.
+
+### REV-39 — A case supplying inputs.profile gets no contour editor
+
+*Area:* interface. *Severity:* low. *Found:* PR #48 (WP24).
+
+**Measured.** The Geometry tab offers its contour editor only for a profile the pipeline extracts.
+
+### REV-40 — DensityMap.read accepts a file written in nm
+
+*Area:* interface. *Severity:* low. *Found:* PR #50 (WP25).
+
+**Measured.** A density map written before the ångström convention of §8.2.2 B10 is read without
+refusal, ten times off.
+
+### REV-41 — No prepare command, upto on reproduce, or region export
+
+*Area:* interface. *Severity:* low. *Found:* PR #50 (WP25).
+
+**Measured.** `nanopnp prepare`, `reproduce --upto` and a region export were left out of WP25 with
+no later owner.
+
+### REV-42 — pnp carries inert flow keys
+
+*Area:* interface. *Severity:* low. *Found:* PR #53 (WP26).
+
+**Measured.** The `pnp` model accepts `variable_density` and `inertia` as given, though without flow
+they do nothing.
+
+### REV-43 — chain_characters duplicates the export's mapping
+
+*Area:* process. *Severity:* low. *Found:* PR #55 (WP27).
+
+**Measured.** `chain_characters` repeats the mapping inside `AlignedEnsemble.export`.
+
+### REV-44 — The Stern-layer test re-solves the drawn slab
+
+*Area:* verification. *Severity:* low. *Found:* PR #60 (WP30).
+
+**Measured.** `test_stern_layer.py`'s generated-slab clause re-solves the slab it already drew.
+
+### REV-45 — The derived χ field has no export
+
+*Area:* interface. *Severity:* low. *Found:* PR #60 (WP30).
+
+**Measured.** WP31 shows χ in the GUI; no command exports it.
+
+### REV-46 — Example 07 is not run at default sizes or on the ensemble
+
+*Area:* verification. *Severity:* low. *Found:* PR #65 (WP32).
+
+**Measured.** Example 07 runs at reduced mesh sizes on one frame, not at the default sizes or on the
+50-frame ensemble.
+
+### REV-47 — The test-duration targets are missed
+
+*Area:* process. *Severity:* low. *Found:* PR #67 (WP33).
+
+**Measured.** The 180 s gated target and the 90 s per-file bound were missed, recorded only in the
+PR and the plan's Outcomes.
+
+### REV-48 — The 2WCD walk test copies its constants
+
+*Area:* verification. *Severity:* low. *Found:* PR #67 (WP33), review finding 13.
+
+**Measured.** `test_exclusion_2wcd_walk.py` copies constants from `test_exclusion_2wcd.py`, which
+can drift apart.
+
+### REV-49 — AXISYMMETRIC is replaced repeatedly
+
+*Area:* process. *Severity:* low. *Found:* PR #72 (WP34), a review finding not acted on.
+
+**Measured.** The same `replace(AXISYMMETRIC, …)` is repeated at several call sites.
+
+### REV-50 — _inner_wall_nm re-implements innermost_crossings
+
+*Area:* process. *Severity:* low. *Found:* PR #72 (WP34), a review finding not acted on.
+
+**Measured.** `_inner_wall_nm` repeats the logic of `innermost_crossings`.
+
+### REV-51 — A redundant reopen and resolve in WP34's walk
+
+*Area:* performance. *Severity:* low. *Found:* PR #72 (WP34), a review finding not acted on.
+
+**Measured.** A case is reopened and resolved where the resolved case is already at hand.
+
+### REV-52 — deviations and SolveReporting are off the stage protocol
+
+*Area:* interface. *Severity:* low. *Found:* PR #79 (WP36).
+
+**Measured.** The protocol declares `name`, `describe`, `key` and `run`; `deviations` and
+`SolveReporting` stay conventions of some stages.
+
+### REV-53 — Some walk rules stay as case logic
+
+*Area:* interface. *Severity:* low. *Found:* PR #79 (WP36).
+
+**Measured.** Not every walk rule is a declared stage fact; some remain conditions in the case.
+
+### REV-54 — The MOD-12 check compares names, not modules
+
+*Area:* verification. *Severity:* low. *Found:* PR #79 (WP36).
+
+**Measured.** The check of `PUBLIC`'s type-checker mirror compares names only, not the module each
+mirrored import comes from.
+
+### REV-55 — Per-stage mkdtemp fallbacks
+
+*Area:* interface. *Severity:* low. *Found:* PR #43 (CR-1 to CR-17), left as they were.
+
+**Measured.** Some stages fall back to `mkdtemp` for scratch rather than the store's workspace.
+
+### REV-56 — The geometry editor's simplicity check runs on the Qt thread
+
+*Area:* performance. *Severity:* low. *Found:* CODE_REVIEW_003 (PR #49), *Leads not investigated*.
+
+**Measured.** `gui/widgets/geometry.py`'s O(n²) `_check_simple` re-runs on every `_show_row`, 0.63 s
+at 600 vertices. *Seed from refusal* and a rebuild drop unsaved edits without confirmation.
+
+### REV-57 — frame_times decodes every frame
+
+*Area:* performance. *Severity:* low. *Found:* CODE_REVIEW_003 (PR #49), *Leads not investigated*.
+
+**Measured.** `structure/read.py`'s `frame_times` decodes every frame only to read its time, and no
+PBC or RMSD gate catches a chain split across the periodic box.
+
+### REV-58 — The azimuthal reduction projects cells it then drops
+
+*Area:* performance. *Severity:* low. *Found:* CODE_REVIEW_003 (PR #49), *Leads not investigated*.
+
+**Measured.** `symmetry/reduce.py` multiplies and projects all cells for every harmonic though only
+bins with `K_j ≥ k` are kept, up to about 2× work. Correct.
+
+### REV-59 — attribute_to_construction raises the wrong error on a lax comparison
+
+*Area:* interface. *Severity:* low. *Found:* CODE_REVIEW_003 (PR #49), *Leads not investigated*.
+
+**Measured.** `validation/geometry.py`'s `attribute_to_construction`, given a `strict=False`
+comparison, raises `MissingPlaneError` rather than saying the comparisons do not match. In-repo
+callers pass strict comparisons.
+
+### REV-60 — UMFPACK repeats its symbolic analysis every Newton step
+
+*Area:* performance. *Severity:* low. *Found:* CODE_REVIEW_002 (PR #44), *Leads not settled*.
+
+**Measured.** `numerics/linear.py` redoes the symbolic factorisation on every Newton iteration; the
+saving from reusing it is unmeasured.
+
+### REV-61 — No B-spline fit or HOLE cross-check of the contour
+
+*Area:* interface. *Severity:* low. *Found:* PR #41 (WP20); verified open at `5559c7e`.
+
+**Measured.** The optional B-spline fit of the extracted contour and the HOLE cross-check (B5) were
+left out of WP20, and nothing in `src/` or the specification owns them.
+
+### REV-62 — A mesh named by store key is refused
+
+*Area:* interface. *Severity:* low. *Found:* PR #57 (WP28); verified open at `5559c7e`.
+
+**Measured.** `inputs.mesh: {artefact: …}` is refused (`mesh/ingest.py`), so a mesh can be supplied
+only as a file.
+
+### REV-63 — The protonation stage walks through meshing
+
+*Area:* performance. *Severity:* low. *Found:* PR #55 (WP27); verified open at `5559c7e`.
+
+**Measured.** Protonation declares `case` and `structure` as its inputs, yet
+`selected_stages(resolved, 'protonation')` on example 07 walks density, symmetry, contour, region
+and mesh first, because the walk runs in registration order (WP36).
+
+### REV-64 — A sweep's plan-time NUM-34 gate skips generated meshes
+
+*Area:* verification. *Severity:* low. *Found:* PR #42 (WP21); verified open at `5559c7e`.
+
+**Measured.** `sweep/plan.py` skips a generated mesh, which does not exist until the member's stage
+6, so a NUM-34 violation on one surfaces at the member's solve rather than in seconds at plan time.
+
+### REV-65 — The Windows bundle exposes no mesh command
+
+*Area:* interface. *Severity:* low. *Found:* PR #34 (WP16), open question 2; verified open at
+`5559c7e`.
+
+**Measured.** The bundle carries no `nanopnp mesh`; WP16 left it a GUI item unless the author ruled
+otherwise.
