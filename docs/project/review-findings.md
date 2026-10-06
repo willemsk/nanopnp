@@ -24,7 +24,7 @@ is a rolling register, and its header stays `open`.
 | REV-02 | coupling | low | fixed | [WP37](../plans/wp37-cycle-cuts-exit-codes-backend-guard.md) | [cli/errors.py was a re-export nothing imported](review-items.md#rev-02-clierrorspy-was-a-re-export-nothing-imported) |
 | REV-03 | coupling | low | fixed | [WP38](../plans/wp38-io-split.md) | [The solution-field names lived in two layers](review-items.md#rev-03-the-solution-field-names-lived-in-two-layers) |
 | REV-04 | verification | medium | fixed | [WP37](../plans/wp37-cycle-cuts-exit-codes-backend-guard.md) | [VER-61's ratchet did not see an import moved into a function](review-items.md#rev-04-ver-61s-ratchet-did-not-see-an-import-moved-into-a-function) |
-| REV-05 | coupling | low | accepted | §8.2.8 H12 | [The shells read the nanopnp facade](review-items.md#rev-05-the-shells-read-the-nanopnp-facade) |
+| REV-05 | coupling | low | fixed | [WP39](../plans/wp39-backend-registries.md) | [The shells read the nanopnp facade](review-items.md#rev-05-the-shells-read-the-nanopnp-facade) |
 | REV-06 | physics | medium | accepted | §8.2.9 I2 | [A supplied charge or permittivity field has no stated frame beside a moved structure](review-items.md#rev-06-a-supplied-charge-or-permittivity-field-has-no-stated-frame-beside-a-moved-structure) |
 | REV-07 | numerics | medium | accepted | §8.2.9 I2 | [The conservation gate and the Poisson source integrate an areal charge differently](review-items.md#rev-07-the-conservation-gate-and-the-poisson-source-integrate-an-areal-charge-differently) |
 | REV-08 | numerics | medium | accepted | §8.2.9 I2 | [Newton's update test takes one norm over every field](review-items.md#rev-08-newtons-update-test-takes-one-norm-over-every-field) |
@@ -55,9 +55,9 @@ is a rolling register, and its header stays `open`.
 | REV-33 | interface | low | declined | §8.2.9 I3 | [writable_formats assumes the extra's floor](review-items.md#rev-33-writable_formats-assumes-the-extras-floor) |
 | REV-34 | verification | low | accepted | §8.2.9 I2 | [Two reference tests duplicate the frozen case](review-items.md#rev-34-two-reference-tests-duplicate-the-frozen-case) |
 | REV-35 | performance | low | post-1.0 | §8.2.9 I3 | [_second_crossings loops in Python](review-items.md#rev-35-_second_crossings-loops-in-python) |
-| REV-36 | interface | low | accepted | §8.2.9 I3 | [The gmsh session stops a caller's logger](review-items.md#rev-36-the-gmsh-session-stops-a-callers-logger) |
-| REV-37 | interface | low | accepted | §8.2.9 I3 | [A broken gmsh wheel is not a refusal](review-items.md#rev-37-a-broken-gmsh-wheel-is-not-a-refusal) |
-| REV-38 | interface | low | accepted | §8.2.9 I3 | [gmsh.model.remove() can mask the error it follows](review-items.md#rev-38-gmshmodelremove-can-mask-the-error-it-follows) |
+| REV-36 | interface | low | fixed | [WP39](../plans/wp39-backend-registries.md) | [The gmsh session stops a caller's logger](review-items.md#rev-36-the-gmsh-session-stops-a-callers-logger) |
+| REV-37 | interface | low | fixed | [WP39](../plans/wp39-backend-registries.md) | [A broken gmsh wheel is not a refusal](review-items.md#rev-37-a-broken-gmsh-wheel-is-not-a-refusal) |
+| REV-38 | interface | low | fixed | [WP39](../plans/wp39-backend-registries.md) | [gmsh.model.remove() can mask the error it follows](review-items.md#rev-38-gmshmodelremove-can-mask-the-error-it-follows) |
 | REV-39 | interface | low | deferred | §8.2.9 I3 | [A case supplying inputs.profile gets no contour editor](review-items.md#rev-39-a-case-supplying-inputsprofile-gets-no-contour-editor) |
 | REV-40 | interface | low | accepted | §8.2.9 I2 | [DensityMap.read accepts a file written in nm](review-items.md#rev-40-densitymapread-accepts-a-file-written-in-nm) |
 | REV-41 | interface | low | deferred | §8.2.9 I3 | [No prepare command, upto on reproduce, or region export](review-items.md#rev-41-no-prepare-command-upto-on-reproduce-or-region-export) |
@@ -86,3 +86,4 @@ is a rolling register, and its header stays `open`.
 | REV-64 | verification | low | deferred | §8.2.9 I3 | [A sweep's plan-time NUM-34 gate skips generated meshes](review-items.md#rev-64-a-sweeps-plan-time-num-34-gate-skips-generated-meshes) |
 | REV-65 | interface | low | deferred | §8.2.9 I3 | [The Windows bundle exposes no mesh command](review-items.md#rev-65-the-windows-bundle-exposes-no-mesh-command) |
 | REV-66 | interface | low | open | — | [A model without flow is refused on its element pair before its flow switch](review-items.md#rev-66-a-model-without-flow-is-refused-on-its-element-pair-before-its-flow-switch) |
+| REV-67 | interface | low | deferred | §8.2.8 H2 | [Public registration functions for backend registries (MOD-11)](review-items.md#rev-67-public-registration-functions-for-backend-registries-mod-11) |

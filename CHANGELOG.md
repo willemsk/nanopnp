@@ -19,6 +19,37 @@ Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before t
 version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
 
+## [0.5.0-alpha.5] - 2026-10-06
+
+WP39: the backend registries (`SPECIFICATION.md` §5.1, §5.3.1, §5.5; §8.2.8 H5 to H7, H11, H12;
+§8.2.9 I3). The mesher, linear solver and stabilisation mode each become a registry in uniform
+shape; `numerics.mesh.backend`, `numerics.linear.solver` and `numerics.stabilisation` become
+strings validated against them. It fixes `MOD-06`, `MOD-07` and `MOD-16`, asserts H6's target
+acyclic `top` relation, and resolves REV-05, REV-36, REV-37 and REV-38, discharging VER-66,
+QR-14, IF-03 and QR-11. `core/public.py` empties both upward layering lists. No number moves, and
+no stage key changes (VER-62).
+
+### Added
+
+- **Backend registries**: `nanopnp.mesh.meshers` (`register_mesher`, `registered_meshers`,
+  `create_mesher`), `nanopnp.numerics.linear` (`register_solver`, `registered_solvers`,
+  `create_solver`), matching `nanopnp.physics.stabilisation`.
+- **`nanopnp.core.public`** holds `__version__` and `PUBLIC` (REV-05).
+- **Subpackage acyclicity**: VER-61 asserts that the `top` subpackage import relation has no
+  components of more than one subpackage (H6).
+
+### Changed
+
+- **Breaking:** The JSON schema of `numerics.mesh.backend`, `numerics.linear.solver` and
+  `numerics.stabilisation` is now `str` rather than a closed enumeration. Every valid document
+  remains valid; unregistered values are refused by `check_document` and on validation (F4).
+- **Breaking:** Internal `numerics.linear.AVAILABLE_SOLVERS` and `mesh.generate.gmsh_backend` are
+  removed (IF-01).
+- **Gmsh session cleanup:** A borrowed session leaves the caller's logger untouched (REV-36).
+  Failure of `gmsh.initialize()` raises `GmshInitializationError`, translated to
+  `MissingExtraError` naming `gmsh` (REV-37). All cleanup steps run sequentially and attach
+  failures as notes without masking active meshing exceptions (REV-38).
+
 ## [0.5.0-alpha.4] - 2026-10-06
 
 WP38: the `io` split (`SPECIFICATION.md` §5.1; §8.2.8 H1, H6, H12; §8.2.9 I3). `io` is the base

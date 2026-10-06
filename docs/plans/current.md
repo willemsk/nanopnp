@@ -1,6 +1,6 @@
 # Current work
 
-Updated 6 October 2026 (WP38 merged; WP39 planned). Navigation only; `SPECIFICATION.md` governs;
+Updated 6 October 2026 (WP39 delivered; WP40 planned). Navigation only; `SPECIFICATION.md` governs;
 nothing here is evidence an unmerged branch shipped.
 
 ## Position
@@ -10,9 +10,9 @@ nothing here is evidence an unmerged branch shipped.
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
   **in progress** (§8.2.7 G1–G11; §8.2.8 H1–H12; §8.2.9 I1–I5). WP35 to WP38 merged, as
   `v0.5.0-alpha.1` to `v0.5.0-alpha.4`.
-- [WP39, the backend registries](wp39-backend-registries.md), is **planned** (`v0.5.0-alpha.5`):
+- [WP39, the backend registries](wp39-backend-registries.md), is **delivered** (`v0.5.0-alpha.5`):
   mesher, solver and stabilisation registries; `__version__` and `PUBLIC` to `core/public.py`,
-  emptying both upward lists (REV-05); H6 asserted; REV-36 to REV-38. **Next: `/wp-implement`.**
+  emptying both upward lists (REV-05); H6 asserted; REV-36 to REV-38. **Next: WP40 (`/wp-plan 40`).**
 - Then WP40 (refusals), WP41–WP43 (the review register's fixes; I1, I2), WP44–WP46 (OKF bundle,
   backfill, protocol); then the author's sessions and the second amendment, fixes from WP47.
 - Phase 5 (`v0.6.0`) is the GUI (F5), Phase 6 (`v0.7.0`) validation (F1); v1.0 is OPN-08.

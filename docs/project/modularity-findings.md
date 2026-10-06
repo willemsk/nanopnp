@@ -26,8 +26,8 @@ refuses any row that is not terminal.
 | MOD-03 | coupling | medium | fixed | [WP38](../plans/wp38-io-split.md) | [Ten subpackages form one import cycle](modularity.md#mod-03-ten-subpackages-form-one-import-cycle) |
 | MOD-04 | coupling | medium | fixed | [WP38](../plans/wp38-io-split.md) | [io is both the base layer and the assembler](modularity.md#mod-04-io-is-both-the-base-layer-and-the-assembler) |
 | MOD-05 | coupling | low | fixed | [WP37](../plans/wp37-cycle-cuts-exit-codes-backend-guard.md) | [The exit-code table lives in the shell and the library imports it](modularity.md#mod-05-the-exit-code-table-lives-in-the-shell-and-the-library-imports-it) |
-| MOD-06 | extension | medium | accepted | §8.2.8 H7 | [The mesher is a branch, not a registry](modularity.md#mod-06-the-mesher-is-a-branch-not-a-registry) |
-| MOD-07 | extension | medium | accepted | §8.2.8 H7 | [The linear solver is a branch, and the schema reads its list](modularity.md#mod-07-the-linear-solver-is-a-branch-and-the-schema-reads-its-list) |
+| MOD-06 | extension | medium | fixed | [WP39](../plans/wp39-backend-registries.md) | [The mesher is a branch, not a registry](modularity.md#mod-06-the-mesher-is-a-branch-not-a-registry) |
+| MOD-07 | extension | medium | fixed | [WP39](../plans/wp39-backend-registries.md) | [The linear solver is a branch, and the schema reads its list](modularity.md#mod-07-the-linear-solver-is-a-branch-and-the-schema-reads-its-list) |
 | MOD-08 | extension | low | post-1.0 | §8.2.8 H5 | [Five registries in four shapes](modularity.md#mod-08-five-registries-in-four-shapes) |
 | MOD-09 | extension | low | deferred | §8.2.8 H4 | [Outputs and steric models are closed enumerations in the assembler](modularity.md#mod-09-outputs-and-steric-models-are-closed-enumerations-in-the-assembler) |
 | MOD-10 | extension | high | deferred | §8.2.8 H3 | [The backend interface of section 5.4.1 does not exist](modularity.md#mod-10-the-backend-interface-of-section-541-does-not-exist) |
@@ -36,6 +36,6 @@ refuses any row that is not terminal.
 | MOD-13 | surface | low | fixed | [WP38](../plans/wp38-io-split.md) | [Three modules and two functions are past review size](modularity.md#mod-13-three-modules-and-two-functions-are-past-review-size) |
 | MOD-14 | surface | medium | accepted | §8.2.8 H1 | [Refusals name releases that have shipped](modularity.md#mod-14-refusals-name-releases-that-have-shipped) |
 | MOD-15 | coupling | low | fixed | [WP38](../plans/wp38-io-split.md) | [core reaches upward, once by an annotation and into ten subpackages by the registry](modularity.md#mod-15-core-reaches-upward-once-by-an-annotation-and-into-ten-subpackages-by-the-registry) |
-| MOD-16 | extension | medium | accepted | §8.2.8 H7 | [The stabilisation registry is closed by a Literal in the schema](modularity.md#mod-16-the-stabilisation-registry-is-closed-by-a-literal-in-the-schema) |
+| MOD-16 | extension | medium | fixed | [WP39](../plans/wp39-backend-registries.md) | [The stabilisation registry is closed by a Literal in the schema](modularity.md#mod-16-the-stabilisation-registry-is-closed-by-a-literal-in-the-schema) |
 | MOD-17 | extension | low | post-1.0 | §8.2.8 H5 | [The validated correction set is a default in eight signatures](modularity.md#mod-17-the-validated-correction-set-is-a-default-in-eight-signatures) |
 | MOD-18 | extension | low | deferred | §8.2.8 H10 | [The Geometry tab has a view only for the stages it knows](modularity.md#mod-18-the-geometry-tab-has-a-view-only-for-the-stages-it-knows) |

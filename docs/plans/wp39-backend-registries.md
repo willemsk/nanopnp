@@ -1,6 +1,6 @@
 # WP39 — The backend registries
 
-**Status: planned, not started.** Written 6 October 2026 on `ccr-ecd28ca7-5baf25` at `ae463d9`,
+**Status: delivered, 6 October 2026.** Written 6 October 2026 on `ccr-ecd28ca7-5baf25` at `ae463d9`,
 after WP38 merged and was tagged `v0.5.0-alpha.4`. It inherits everything the
 [current brief](current.md) lists as not to be re-decided, and in particular:
 
@@ -84,6 +84,43 @@ No `OPN-` is open here. The phase plan's open decision on the coupling target is
 | D13 | Numbers and keys | Zero drift: VER-62 at 10⁻⁸, and no artefact key moves. The netgen and gmsh recipes are the same dictionaries, and the solver and mode names are unchanged | *Design* §2. A moved key is an Outcome to explain, not a value to re-pin (G10) |
 | D14 | Records | `MOD-06`, `MOD-07` and `MOD-16` become `fixed` in the findings log, and REV-05, REV-36, REV-37 and REV-38 in the register. `extension_points` reads the mesher and the linear solver as registries (`mesh/meshers.py`, `call:register_mesher`; `numerics/linear.py`, `call:register_solver`). The YAML's header loses its "WP39 removes" sentence | VER-63; H12 |
 | D15 | Release | `v0.5.0-alpha.5`, with a `CHANGELOG.md` section listing D6's and D7's breaks and the moves of D2 and D9 | §2.7; G11 |
+
+> **Outcome — The backend registries copy `physics/stabilisation.py`'s uniform shape (D1 to D5).**
+> `mesh/meshers.py` holds the `Mesher` protocol, Netgen and Gmsh implementations and registry.
+> `numerics/linear.py` holds the `LinearSolver` protocol, UMFPACK and SuperLU implementations and registry.
+> `physics/stabilisation.py` keeps its existing shape. Built-in entries register with literal names.
+> Registration functions reject duplicates (`ValueError`); `create_*` raises `KeyError` naming valid options.
+> `register_solver` rejects `sparsecholesky` citing NUM-21. Gmsh registration imports nothing until meshing.
+
+> **Outcome — Case schema keys stringified and validated against registries (D6, D7).**
+> `MeshSpec.backend`, `LinearSpec.solver` and `NumericsSpec.stabilisation` are `str` in `io/case.py`.
+> `pipeline/checks.py` validates them via `check_document`, preserving specific refusal texts (IF-03).
+> `registry_options` maps the three paths, and the GUI viewmodels read live registries (`registered_meshers()`,
+> `registered_solvers()`, `registered_modes()`) without hard-coded choices (QR-11, VER-43).
+
+> **Outcome — VER-24 switch classification preserved under stringification (D8).**
+> `tests/tier1/test_manifest.py`'s `_is_switch` checks `registry_options` for `str` annotations,
+> ensuring `numerics.mesh.backend`, `numerics.linear.solver` and `numerics.stabilisation` remain classified
+> as switches rather than falling through unclassified.
+
+> **Outcome — Upward layering lists emptied and subpackage acyclicity asserted (D9, D10).**
+> `core/public.py` holds `__version__` and `PUBLIC`. All shell and validation callers re-pointed.
+> Both `upward:` and `deferred_upward:` in `modularity-layering.yaml` are emptied (`[]`).
+> VER-61 asserts that the `top` subpackage relation is acyclic via Tarjan's algorithm (H6),
+> verified by `test_ver61_top_subpackage_cycle_is_detected_naming_components`.
+
+> **Outcome — Gmsh session cleanup hardened against logger corruption and masked exceptions (D11).**
+> In `gmsh_backend._session`, borrowed sessions leave caller loggers untouched (REV-36).
+> `gmsh.initialize()` failures raise `GmshInitializationError`, translated to `MissingExtraError` (REV-37).
+> All cleanup steps run sequentially; failures are logged at WARNING and attached via `add_note`
+> to active exceptions, ensuring the session is always finalised without masking the error (REV-38).
+
+> **Outcome — Public exposure of registry functions deferred to Phase 5 (D12).**
+> The six registration functions are internal, matching `physics/stabilisation.py`.
+> Deferral recorded as `REV-67` for Phase 5 consideration alongside `MOD-11` and `with_section` (§8.2.8 H2).
+
+> **Outcome — Zero drift on numbers and stage keys (D13).**
+> Netgen and Gmsh stage-6 recipes remain identical to prior dictionaries. VER-62 holds at 10⁻⁸.
 
 ### Work items
 
