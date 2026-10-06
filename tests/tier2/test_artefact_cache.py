@@ -434,7 +434,7 @@ def test_ver26_the_manifest_names_every_input_hash_the_run_consumed(solved: Run)
     #
     # The five remaining entries are ``None`` and not absent, and not zero. This
     # manifest is assembled by hand from the artefact summary rather than by
-    # ``io.run``, so nothing handed it the mode's constants, its per-species
+    # ``pipeline.run``, so nothing handed it the mode's constants, its per-species
     # stabilisation current or the NUM-12 measurement -- and "not measured" is a
     # different fact from "measured and found to be zero", which is what the
     # ``none`` mode genuinely contributes. Collapsing the two would make an

@@ -45,7 +45,7 @@ from nanopnp.io.artefact import StageInputs
 from nanopnp.io.case import UnsupportedCaseSection
 from nanopnp.io.store import Store
 from nanopnp.pipeline.case import load_case, resolve
-from nanopnp.pipeline.run import stored_upstream
+from nanopnp.pipeline.run import offered, stored_upstream
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
 from nanopnp.structure.ensemble import AlignedEnsemble
 from nanopnp.symmetry.reduce import PAYLOAD_NAME as REDUCED_PAYLOAD
@@ -335,7 +335,9 @@ def seed(request: AssessRequest) -> Seed:
     assert resolved.contour is not None and resolved.density is not None
     reduced = ReducedMap.read(context.symmetry.payload[REDUCED_PAYLOAD])
     conditioned = contour.condition_map(reduced, resolved.contour, resolved.density)
-    key = create("contour").key(StageInputs(resolved=resolved, upstream=dict(context.upstream)))
+    key = create("contour").key(
+        StageInputs(resolved=resolved, upstream=offered("contour", context.upstream))
+    )
     loop = conditioned.loop
     return Seed(
         vertices=tuple((float(r), float(z)) for r, z in loop),

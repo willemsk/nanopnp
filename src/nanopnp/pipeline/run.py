@@ -6,10 +6,12 @@ deliberately the only one: the CLI, the desktop shell (ADR-004) and the sweep
 runner (FR-24) each drive a run, and three walks over the same graph are three
 chances for one of them to key a stage differently from the others.
 
-**It lives in ``io/`` and not in ``core/``.** The driver needs
+**It lives in ``pipeline/``, the assembler, and not in ``io/`` or ``core/``.**
+The driver resolves the case through :func:`nanopnp.pipeline.case.resolve`,
+which consults the model, stabilisation and solver registries, and it needs
 :mod:`nanopnp.io.store`, :mod:`nanopnp.io.manifest` and the lazy
-:func:`nanopnp.core.stages.create`; putting it in ``core`` would make the base
-layer depend on ``io``, which is the wrong direction in section 5.1's table.
+:func:`nanopnp.core.stages.create`; in ``io``, the base every stage reads, it
+would make the base depend on the registries above it (section 5.1, WP38 D1).
 
 **Every stage goes through the store, and its key is computed before it runs.**
 That is what makes :meth:`~nanopnp.io.store.Store.get_or_compute` a cache rather
@@ -67,6 +69,7 @@ __all__ = [
     "StageRecord",
     "UnknownStageError",
     "input_files",
+    "offered",
     "run_case",
     "run_document",
     "selected_stages",
@@ -764,6 +767,21 @@ def _manifest(walk: _Walk, *, case_text: str, case_path: Path | None) -> Manifes
     )
 
 
+def _short_of_stage_7(walk: _Walk) -> str:
+    """Return why a walk that a complete one would take through stage 7 did not run it.
+
+    A walk to a stage runs that stage's input closure (WP38 D11), so it can end
+    past stage 7 without running it -- ``--upto materials`` does -- and it then did
+    not stop before stage 7: its target does not read it.
+    """
+    order = walk_order()
+    if walk.records and "charge" in order:
+        target = walk.records[-1].name
+        if target in order and order.index(target) > order.index("charge"):
+            return f"the walk to {target!r} does not read stage 7, so it did not run it"
+    return "the walk stopped before stage 7"
+
+
 def _protonation_reason(walk: _Walk) -> str:
     """Return why the ``protonation`` stage did not run in this walk (WP27 D3, WP28 D8)."""
     resolved = walk.resolved
@@ -778,7 +796,7 @@ def _protonation_reason(walk: _Walk) -> str:
             f"physics.model {resolved.model!r} declares no fixed_charge, so nothing deposits a "
             "protonation; it runs only when a walk names it, as `nanopnp stage protonation`"
         )
-    return "the walk stopped before stage 7"
+    return _short_of_stage_7(walk)
 
 
 def _charge_reason(walk: _Walk) -> str:
@@ -790,7 +808,7 @@ def _charge_reason(walk: _Walk) -> str:
         or resolved.eps_r is not None
         or resolved.derives_eps_r
     ):
-        return "the walk stopped before stage 7"
+        return _short_of_stage_7(walk)
     if resolved.protonates:
         return (
             f"physics.model {resolved.model!r} declares no fixed_charge, so stage 7 deposits "
@@ -1049,9 +1067,10 @@ def _walk(
     manifest = _manifest(walk, case_text=case_text, case_path=case_path)
     # A truncated walk is another record of the same case; it must not replace the
     # run record a complete walk wrote, because QR-08 reproduces from that one.
-    # Complete when it reaches the last stage this case walks, which is not the
-    # last registered stage when this case drops that one.
-    complete = stages[-1] == selected_stages(walk.resolved, None)[-1]
+    # Complete when it walks every stage this case walks. Reaching the last one is
+    # not enough: a walk runs its target's input closure (WP38 D11), so a target
+    # walked last that reads only some of the stages before it is still truncated.
+    complete = stages == selected_stages(walk.resolved, None)
     label = document.name if complete else f"{document.name}-upto-{stages[-1]}"
     result = RunResult(
         directory=walk.store.run_directory(label, manifest.case_hash),

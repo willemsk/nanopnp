@@ -492,10 +492,11 @@ def substitute(document: CaseDocument, assignments: Mapping[str, FieldValue]) ->
     (§5.3.4). Re-validation is what makes a substitution that produces an
     inadmissible case fail with the diagnostic a hand-written case would get, for
     free: a typo hits ``extra="forbid"`` and :func:`render_problems`'s "did you mean"
-    message, and a cross-field rule such as the NUM-18 ladder refusal in
-    :func:`resolve` still runs. ``model_copy(update=...)`` would accept the typo,
-    and rebuilding the object field by field would make a configuration that
-    names itself stop being itself.
+    message. The registry checks and the release's cross-field rules, such as the
+    NUM-18 ladder refusal, are not the schema's: they run when the result is
+    resolved, by :func:`nanopnp.pipeline.case.resolve` (WP38 D7).
+    ``model_copy(update=...)`` would accept the typo, and rebuilding the object
+    field by field would make a configuration that names itself stop being itself.
 
     Parameters
     ----------
@@ -556,8 +557,9 @@ def with_profile(document: CaseDocument, path: str | Path) -> CaseDocument:
 
     :func:`substitute` cannot do this, because it sets values inside blocks the
     document already has and ``inputs.profile`` is absent from a structure case.
-    The result is accepted by :func:`resolve`'s ``inputs.profile`` refusals by
-    construction, and a command-line user writing it by hand gets the same file.
+    The result is accepted by the ``inputs.profile`` refusals of
+    :func:`nanopnp.pipeline.case.resolve` by construction, and a command-line user
+    writing it by hand gets the same file.
 
     Parameters
     ----------

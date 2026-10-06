@@ -341,9 +341,14 @@ def resolve(document: CaseDocument) -> ResolvedCase:
     # case error, and is reported now rather than when stage 10 builds the model
     # again (WP26 D10). What a stage below ``physics`` reads of it is kept as
     # data on the resolved case (WP38 D5).
-    model = build_case_model(
-        physics.model, electrolyte, document.electrolyte.concentration_M, options
-    )
+    try:
+        model = build_case_model(
+            physics.model, electrolyte, document.electrolyte.concentration_M, options
+        )
+    except (TypeError, ValueError) as error:
+        raise CaseValidationError(
+            f"physics.model {physics.model!r} cannot be built for this case: {error}"
+        ) from error
     resolved = ResolvedCase(
         document=document,
         electrolyte=electrolyte,

@@ -106,11 +106,11 @@ VOCABULARY = (
     "p_Pa",
     "mol_m3",
     # And WP24's: the derived case's profile format and a hand edit's source
-    # come from ``io.case.with_profile`` and ``geometry.profile.HAND_EDIT_SOURCE``.
+    # come from ``io.case_paths.with_profile`` and ``geometry.profile.HAND_EDIT_SOURCE``.
     "profile1",
     '"hand-edit"',
     # And WP31's: the deployed charge picture is titled with IF-07's own name,
-    # ``io.fields.FIXED_CHARGE_ATTRIBUTE``, so the picture and the export agree.
+    # ``post.export.FIXED_CHARGE_ATTRIBUTE``, so the picture and the export agree.
     "rho_fixed_C_m3",
 )
 

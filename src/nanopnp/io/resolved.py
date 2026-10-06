@@ -143,8 +143,8 @@ class ResolvedCase:
         """``h_c``: the density grid spacing, the contour's size target (section 5.2.1 NOTE).
 
         ``geometry.density.grid_spacing_nm`` on a case carrying ``structure:``; its
-        default on any other, where :func:`_check_profile` refuses it set away
-        from that default.
+        default on any other, where :func:`nanopnp.pipeline.checks._check_profile`
+        refuses it set away from that default.
         """
         return contour_spacing_nm(self.document)
 
@@ -270,7 +270,8 @@ def contour_spacing_nm(document: CaseDocument) -> float:
     """Return ``h_c``, the density grid spacing the contour is placed on (section 5.2.1 NOTE).
 
     ``geometry.density`` counts only beside ``structure:``: on any other case
-    stages 2 to 4 do not run, and :func:`_check_profile` refuses it set.
+    stages 2 to 4 do not run, and :func:`nanopnp.pipeline.checks._check_profile`
+    refuses it set.
     """
     density = (
         document.geometry.density
