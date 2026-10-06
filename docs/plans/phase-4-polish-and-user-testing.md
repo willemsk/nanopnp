@@ -362,6 +362,8 @@ No new identifier: VER-61 records the new relation, and VER-62 must show zero dr
 
 ### WP39 — The backend registries (MOD-06, MOD-07, MOD-16; ADR-002, QR-14)
 
+Plan: [wp39-backend-registries.md](wp39-backend-registries.md).
+
 The mesher, the linear solver and the stabilisation mode become registries, each in the shape of
 the nearest existing one (H5). The linear solver's registry lives in `numerics/linear.py` (H11). `numerics.mesh.backend`, `numerics.linear.solver` and
 `numerics.stabilisation` become strings, checked by the assembler against the registry as

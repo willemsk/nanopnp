@@ -1,6 +1,6 @@
 # Current work
 
-Updated 6 October 2026 (WP38 delivered, awaiting `/wp-ship`). Navigation only; `SPECIFICATION.md` governs;
+Updated 6 October 2026 (WP38 merged; WP39 planned). Navigation only; `SPECIFICATION.md` governs;
 nothing here is evidence an unmerged branch shipped.
 
 ## Position
@@ -8,15 +8,13 @@ nothing here is evidence an unmerged branch shipped.
 - Phases 1 to 3 are **closed** as `v0.2.0`, `v0.3.0` (criterion 3 waived, §8.2.4 D7) and `v0.4.0`
   (§8.2.5 E1, E5).
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
-  **in progress** (§8.2.7 G1–G11; §8.2.8 H1–H12; §8.2.9 I1–I5). WP35 to WP37 merged as
-  `v0.5.0-alpha.1` to `v0.5.0-alpha.3`.
-- [WP38, the `io` split](wp38-io-split.md), is delivered on its branch and awaits `/wp-ship`, to
-  be tagged `v0.5.0-alpha.4`: `io` is the base above `core`, `pipeline/` the assembler; stages are
-  handed `StageInputs.resolved`; a walk runs its target's input closure; `nanopnp validate case`.
-- **Next: `/wp-plan 39`**, after WP38 merges. Then WP39 (registries;
-  H6 asserted), WP40 (refusals), WP41–WP43 (accuracy, verification and small fixes from the review
-  register; I1, I2), WP44–WP46 (OKF bundle, backfill, protocol); then the author's sessions and
-  the second amendment, numbering the fixes from WP47.
+  **in progress** (§8.2.7 G1–G11; §8.2.8 H1–H12; §8.2.9 I1–I5). WP35 to WP38 merged;
+  `v0.5.0-alpha.4`, WP38's tag on `ae463d9`, is not yet pushed (G11).
+- [WP39, the backend registries](wp39-backend-registries.md), is **planned** (`v0.5.0-alpha.5`):
+  mesher, solver and stabilisation registries; `__version__` and `PUBLIC` to `core/public.py`,
+  emptying both upward lists (REV-05); H6 asserted; REV-36 to REV-38. **Next: `/wp-implement`.**
+- Then WP40 (refusals), WP41–WP43 (the review register's fixes; I1, I2), WP44–WP46 (OKF bundle,
+  backfill, protocol); then the author's sessions and the second amendment, fixes from WP47.
 - Phase 5 (`v0.6.0`) is the GUI (F5), Phase 6 (`v0.7.0`) validation (F1); v1.0 is OPN-08.
 
 ## Not to be re-decided
@@ -34,7 +32,7 @@ nothing here is evidence an unmerged branch shipped.
   only by the §7.6 NOTE's four levers** (WP33).
 - **An edge moved edits `modularity-layering.yaml` in the same commit (VER-61); a VER-62 miss is
   reverted, or ruled and re-pinned (G10); WP41 re-pins only within a bound argued first (I4).** → `docs/project/contributing.md`.
-- **`upward:` only shrinks; `backend:` grows only by ruling** (VER-61, VER-65). A cut removes a
+- **`upward:` only shrinks, and is empty from WP39; `backend:` grows only by ruling** (VER-61, VER-65). A cut removes a
   dependency, never defers it (WP37 D12).
 - **What a package leaves open is a `REV-nn` row** of `docs/project/review-findings.md` until it
   is resolved (H12), written by `/wp-implement` and `/wp-ship`. A row placed in Phase 4 is
@@ -79,7 +77,8 @@ nothing here is evidence an unmerged branch shipped.
 | The OKF package's binding decisions | `okf-knowledge-bundle.md` (K1–K11); §8.2.7 G3, G8, G9 |
 | The findings being fixed | `docs/project/modularity.md`, `modularity-layering.yaml`; `review-items.md` and the two logs |
 | Stages, registries and the walk | `core/stages.py`; `pipeline/run.py`; `physics/models.py` and `docs/project/physics-models.md`; `materials/models.py` |
-| Case schema and supply chains | §5.3.1 NOTEs; `io/case.py`, `io/case_paths.py`, `io/resolved.py` (the base); `pipeline/case.py`, `pipeline/checks.py` (resolution and its checks; WP39's registries replace three of them) |
+| Case schema and supply chains | §5.3.1 NOTEs; `io/case.py`, `io/case_paths.py`, `io/resolved.py` (the base); `pipeline/case.py`, `pipeline/checks.py` (resolution and its checks) |
+| The backend registries | WP39 D1–D7; `physics/stabilisation.py` (the shape copied); §5.5, QR-14 |
 
 The Outcomes of a delivered plan override its decisions table, so read the two together.
 

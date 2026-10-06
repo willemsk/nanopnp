@@ -386,7 +386,7 @@ cell–annulus overlaps. The §5.3.1 NOTE on `geometry.density` is the contract.
 | **QR-11** | Each release from v0.2 onward SHALL ship a usable graphical surface over the functionality existing at that release. | Usability |
 | **QR-12** | Every automatic gate failure SHALL abort the run with a diagnostic naming the gate, the offending quantity and its location. | Usability |
 | **QR-13** | The ePNP-NS weak forms SHALL be expressed once and SHALL NOT be duplicated per backend. Until a second backend is planned they are expressed against NGSolve directly, and the subpackages that import NGSolve or Netgen SHALL stay within a recorded set, which may shrink and grows only by the author's ruling (§5.4.1 NOTE; §8.2.8 H3). | Maintainability |
-| **QR-14** | Adding a correction parameterisation SHALL require only a data file; adding a physics model SHALL require only one class (FR-20). | Maintainability |
+| **QR-14** | Adding a correction parameterisation SHALL require only a data file; adding a physics model SHALL require only one class (FR-20); adding a mesher, a linear solver or a stabilisation mode SHALL require only a registration, with no file of the package edited (§5.5; §8.2.8 H7). | Maintainability |
 | **QR-15** | v0.7 (Phase 6; §8.2.5 E2, §8.2.6 F1) SHALL ship user documentation, tutorials, a JOSS submission and a DOI-archived release. | Maintainability |
 
 NOTE (QR-15): the user documentation and the worked examples are
@@ -1794,8 +1794,9 @@ the size as a target, and 1.045–1.078 and 1.25–1.62 are the measured means a
 Design §3). `backend: gmsh` meshes the stage-5 region with the optional backend of ADR-002, under
 the §5.2.2 NOTE on its size field, and passes the same three gates. It needs the `gmsh` extra.
 Without it, stage 6 refuses the run, naming the extra and the import error, whether that error is a
-missing module or a native library the wheel could not load (CON-10). The resolved case is not
-refused. A generated mesh's key records the backend and that backend's own settings, and the Gmsh
+missing module, a native library the wheel could not load, or a library that loads and then fails
+to initialise (CON-10; REV-37). The resolved case is not refused: `backend` is checked only against
+the registered meshers, `netgen` and `gmsh` as shipped (§5.5). A generated mesh's key records the backend and that backend's own settings, and the Gmsh
 version is recorded beside the key (WP23 D8, D9).
 `boundary_layer: true` is refused naming FR-11. `geometry.analyte` on a generated mesh is refused naming FR-21.
 Beside `inputs.mesh`, any `numerics.mesh` key away from its default is refused naming it, because
@@ -1830,10 +1831,12 @@ and the desktop shell's commit make it with the same text as a run. All three or
 in the run provenance record (NUM-03).
 
 NOTE (`numerics.stabilisation`, and the compatibility rule for the case schema): the value set is
-`none | supg | reference`. `none` is the validated default and the production policy of NUM-11;
+the registered modes, shipped as `none | supg | reference`; a mode registered at run time widens it
+(§5.5; §8.2.8 H7). `none` is the validated default and the production policy of NUM-11;
 `supg` is NUM-11's flag, the streamline term alone; `reference` is the mode of NUM-14, streamline
 and crosswind on the transport operator together with the flow stabilisation of §6.4.2, and is the
-only value permitting an equal-order velocity–pressure pair. More generally: **widening the accepted
+only shipped value permitting an equal-order velocity–pressure pair; a registered mode permits
+one by declaring it (`permits_equal_order`). More generally: **widening the accepted
 value set of an existing key is compatible and SHALL NOT move the schema version, because every
 document that validated before still validates; adding, removing, renaming or narrowing a key SHALL
 move it.** The mode a run actually solved is in its FR-25 manifest, so no artefact of an earlier
@@ -2133,7 +2136,14 @@ models it ends at, `epnp-ns` and `pnp-ns`, may admit it.
 
 ### 5.5 Extension points
 
-Pluggability has two levels, matching the two kinds of change users make (QR-14).
+Pluggability has two levels, matching the two kinds of change users make (QR-14). Below them, the
+backends of the discretisation are registries as well (§8.2.8 H7): a mesher (`numerics.mesh.backend`,
+`mesh/meshers.py`), a linear solver (`numerics.linear.solver`, `numerics/linear.py`) and a
+stabilisation mode (`numerics.stabilisation`, `physics/stabilisation.py`) are each added by one
+registration, and each key is a string checked against its registry when a case is loaded, as
+`physics.model` is. Registering the Gmsh mesher imports nothing (CON-10), and `sparsecholesky`
+cannot be registered (NUM-21). Whether the registering functions are public waits for `MOD-11`'s
+ruling (§8.2.8 H2).
 
 | Level | Unit of extension | Requires | Obtained free |
 |---|---|---|---|
