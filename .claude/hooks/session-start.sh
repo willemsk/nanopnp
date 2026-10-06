@@ -20,6 +20,36 @@ fi
 
 set +e
 
+# Gmsh's wheel loads X and GL libraries at import, and a bare container lacks
+# them (.knowledge/07-software-stack.md section 5). `gate.sh run` requires Gmsh,
+# as CI does, so install them where that needs no prompt, or say so in one line.
+# The import is tried only when the loader cannot already see libGLU.
+gmsh_libs="libglu1-mesa libxft2 libxinerama1 libxcursor1"
+# Both are captured, not piped: under pipefail a failing import, or ldconfig
+# cut short by an early grep, fails the pipeline whatever grep found.
+python=.venv/bin/python
+loader=$(ldconfig -p 2>/dev/null)
+if [ -x "$python" ] && [[ $loader != *libGLU.so.1* ]]; then
+    gmsh_error=$("$python" -c "import gmsh" 2>&1 >/dev/null)
+    if [[ $gmsh_error == *libGLU* ]]; then
+        as_root=none
+        if [ "$(id -u)" = "0" ]; then
+            as_root=""
+        elif sudo -n true 2>/dev/null; then
+            as_root="sudo -n"
+        fi
+        # shellcheck disable=SC2086  # $as_root and $gmsh_libs split on purpose
+        if [ "$as_root" != none ] && command -v apt-get >/dev/null 2>&1 &&
+            { $as_root apt-get install -y -qq --no-install-recommends $gmsh_libs >&2 ||
+                { $as_root apt-get update -qq >&2 &&
+                    $as_root apt-get install -y -qq --no-install-recommends $gmsh_libs >&2; }; }; then
+            echo "- installed Gmsh's system libraries (${gmsh_libs}) so its tests can run"
+        else
+            echo "- warning: gmsh cannot import (libGLU.so.1); install ${gmsh_libs}, or its tests fail the push gate"
+        fi
+    fi
+fi
+
 branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
 [ -n "$branch" ] || exit 0
 

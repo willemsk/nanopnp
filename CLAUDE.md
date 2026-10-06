@@ -49,6 +49,7 @@ matches `pyproject.toml`: if you edit `pyproject.toml` by hand, run `uv lock` be
 | `uv run pytest -m slow --log-cli-level=INFO` | Benchmarks and envelope runs; measured, never gated |
 | `uv run pytest tests/tier1/test_corrections.py::test_ver03_ion_wall_function_check_values -v` | One test |
 | `uv run pytest --cov=src/nanopnp --cov-report=term-missing` | Coverage |
+| `uv run pytest --extended --cov=src/nanopnp --cov-branch --cov-report=xml && uv run diff-cover coverage.xml --compare-branch=origin/main --branch-coverage --fail-under=100 --include 'src/nanopnp/**/*.py' --exclude '*/src/nanopnp/gui/*'` | Branch coverage of the lines the branch changes, as `gate.sh run` and CI's lint job gate it |
 | `uv run ruff check . && uv run ruff format .` | Lint and format |
 | `uv run mypy src/` | Type check (strict) |
 | `uv run nanopnp --env` | Report the resolved environment and data locations |
@@ -74,7 +75,14 @@ by its test (VER-46). The rule is `.github/scripts/prose-only.sh`,
 and CI uses the same script. CI's strict documentation build runs on every push, prose included.
 `.claude/hooks/gate.sh run` runs the gate by hand with `--extended`, the whole of what CI gates; the
 skills use it before they push, and a pass of the hook's development selection does not stand in for
-it. `git commit --no-verify`
+it. Like CI's lint job, `run` measures branch coverage and runs `diff-cover` against the merge base
+with `main`: every changed line of `src/nanopnp/` outside `gui/` must be executed down each of its
+branches, or carry `# pragma: no cover - <reason>` (VER-72). That finds a branch no test takes; it
+cannot find code that is missing, which is what a plan's `planned:` tests are for. `run` also sets
+`NANOPNP_REQUIRE_GMSH=1`, as CI does, so a Gmsh that cannot import fails rather than skips (the
+failure names the `apt-get` line; the session-start hook installs the libraries where it can); the
+commit hook sets it only when the change touches the Gmsh backend or its tests. Both list skipped
+tests (`-rs`). `git commit --no-verify`
 (or `-n`) skips it. It does not fire for commits you make yourself in a terminal.
 
 ## Project structure

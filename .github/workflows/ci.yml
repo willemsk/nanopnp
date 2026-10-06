@@ -135,7 +135,26 @@ jobs:
       - if: env.CODE == 'true'
         run: >-
           uv run pytest -rs -n auto --dist loadfile --ignore=tests/tier1/test_gui_widgets.py
-          --extended --cov=src/nanopnp --cov-report=term-missing
+          --extended --cov=src/nanopnp --cov-branch --cov-report=term-missing
+          --cov-report=xml:coverage.xml
+      # Every changed line of src/nanopnp, gui/ aside (its widgets run only on the
+      # desktop legs), executed on both sides of each of its branches, as
+      # `.claude/hooks/gate.sh run` requires before a push. The base is the PR's
+      # base, or the commit a push to main moved from; the checkout's full
+      # history (fetch-depth: 0) holds both. A line no test can reach says why in
+      # its `# pragma: no cover - <reason>` (VER-72).
+      - if: env.CODE == 'true'
+        shell: bash
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          base=$BASE
+          if [[ -z $base || $base == 0000000000000000000000000000000000000000 ]]; then
+            base=origin/main
+          fi
+          uv run diff-cover coverage.xml --compare-branch="$base" --branch-coverage \
+            --fail-under=100 --show-uncovered \
+            --include 'src/nanopnp/**/*.py' --exclude '*/src/nanopnp/gui/*'
 
   # VER-45's strict documentation build (section 7.6). It runs on EVERY push,
   # prose-only ones included, and so has no `changes` dependency: a broken link

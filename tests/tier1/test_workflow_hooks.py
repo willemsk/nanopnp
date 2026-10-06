@@ -76,6 +76,46 @@ def test_session_start_preserves_remote_frozen_sync(
     assert ("workflow:" in result.stdout) == (not remote or exit_code == 0)
 
 
+@pytest.mark.parametrize("apt_works", [True, False])
+def test_session_start_installs_gmsh_libraries_or_names_them(
+    hook_repo: Path, monkeypatch: pytest.MonkeyPatch, apt_works: bool
+) -> None:
+    """A Gmsh that cannot find libGLU gets its libraries, or one line naming them.
+
+    ``gate.sh run`` requires Gmsh as CI does, so a fresh container without the
+    libraries would fail the push gate; installing them at start-up, where no
+    prompt is needed, keeps Gmsh's tests running instead of failing or skipping.
+    """
+    venv = hook_repo / ".venv/bin"
+    venv.mkdir(parents=True)
+    fake_python = venv / "python"
+    fake_python.write_text(
+        "#!/bin/sh\necho 'OSError: libGLU.so.1: cannot open shared object file' >&2\nexit 1\n",
+        encoding="utf-8",
+    )
+    fake_python.chmod(0o755)
+    binaries = hook_repo / "bin"
+    binaries.mkdir()
+    calls = hook_repo / "apt-calls"
+    scripts = {
+        "ldconfig": "exit 0\n",
+        "sudo": '[ "$1" = -n ] && shift\nexec "$@"\n',
+        "apt-get": f'echo "$*" >> "{calls}"\nexit {0 if apt_works else 1}\n',
+    }
+    for name, body in scripts.items():
+        (binaries / name).write_text(f"#!/bin/sh\n{body}", encoding="utf-8")
+        (binaries / name).chmod(0o755)
+    monkeypatch.setenv("PATH", f"{binaries}{os.pathsep}{os.environ['PATH']}")
+    result = _startup(hook_repo)
+    assert result.returncode == 0, result.stderr
+    assert "libglu1-mesa libxft2 libxinerama1 libxcursor1" in calls.read_text(encoding="utf-8")
+    if apt_works:
+        assert "- installed Gmsh's system libraries" in result.stdout
+    else:
+        assert "- warning: gmsh cannot import (libGLU.so.1)" in result.stdout
+    assert "workflow:" in result.stdout
+
+
 _GATE = Path(__file__).resolve().parents[2] / ".claude/hooks/gate.sh"
 
 
@@ -312,3 +352,124 @@ def test_prose_only_reads_a_findings_log_as_not_prose(path: str, prose: bool) ->
         [_BASH, str(_PROSE_ONLY)], input=f"{path}\n", capture_output=True, text=True, timeout=10
     )
     assert result.returncode == (0 if prose else 1)
+
+
+def _branch_repo(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, changed: str) -> Path:
+    """Return a repository on a branch ``work`` whose one commit past ``main`` adds ``changed``."""
+    for name in ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE"):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.delenv("NANOPNP_REQUIRE_GMSH", raising=False)
+    repo = tmp_path / "repo"
+    (repo / "src/nanopnp").mkdir(parents=True)
+    (repo / ".github/scripts").mkdir(parents=True)
+    (repo / "pyproject.toml").write_text("[project]\nname = 'fake'\n", encoding="utf-8")
+    (repo / "src/nanopnp/__init__.py").write_text("", encoding="utf-8")
+    shutil.copy(_PROSE_ONLY, repo / ".github/scripts")
+    subprocess.run(["git", "init", "-q", "-b", "main", str(repo)], check=True)
+    identity = ("-c", "user.name=t", "-c", "user.email=t@t")
+    _git(repo, "add", "-A")
+    _git(repo, *identity, "commit", "-qm", "init")
+    _git(repo, "checkout", "-qb", "work")
+    (repo / changed).parent.mkdir(parents=True, exist_ok=True)
+    (repo / changed).write_text("x = 1\n", encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, *identity, "commit", "-qm", "code")
+    return repo
+
+
+def _recording_uv(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, body: str = "") -> Path:
+    """Put a fake ``uv`` on ``PATH`` that logs ``<NANOPNP_REQUIRE_GMSH>|<args>`` per call."""
+    calls = tmp_path / "uv-calls"
+    binaries = tmp_path / "bin"
+    binaries.mkdir()
+    uv = binaries / "uv"
+    uv.write_text(
+        f'#!/bin/sh\necho "${{NANOPNP_REQUIRE_GMSH:-unset}}|$*" >> "{calls}"\n{body}exit 0\n',
+        encoding="utf-8",
+    )
+    uv.chmod(0o755)
+    monkeypatch.setenv("PATH", f"{binaries}{os.pathsep}{os.environ['PATH']}")
+    return calls
+
+
+def test_gate_run_requires_gmsh_and_checks_the_branch_coverage_of_changed_lines(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """``gate.sh run`` gates as CI's lint job: branch coverage, skips listed, Gmsh required.
+
+    pytest writes a branch-coverage XML report, and diff-cover judges it against
+    the merge base with ``main``, the base the prose rule uses, at 100 % of the
+    changed lines of ``src/nanopnp`` outside ``gui/`` (VER-72; the workflow rulings).
+    """
+    assert _BASH is not None
+    repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/code.py")
+    calls = _recording_uv(tmp_path, monkeypatch)
+    result = subprocess.run(
+        [_BASH, str(_GATE), "run"], cwd=repo, capture_output=True, text=True, timeout=60
+    )
+    assert result.returncode == 0, result.stderr
+    ran = calls.read_text(encoding="utf-8").splitlines()
+    tests = [call for call in ran if "pytest" in call and "--extended" in call]
+    assert len(tests) == 1, ran
+    assert tests[0].startswith("1|")
+    arguments = tests[0].split("|", 1)[1].split()
+    for flag in ("-rs", "--cov=src/nanopnp", "--cov-branch"):
+        assert flag in arguments, (flag, tests[0])
+    assert any(argument.startswith("--cov-report=xml:") for argument in arguments), tests[0]
+    covered = [call for call in ran if "diff-cover" in call]
+    assert len(covered) == 1, ran
+    base = _git(repo, "merge-base", "HEAD", "main")
+    for flag in (
+        f"--compare-branch={base}",
+        "--branch-coverage",
+        "--fail-under=100",
+        "src/nanopnp/**/*.py",
+        "*/src/nanopnp/gui/*",
+    ):
+        assert flag in covered[0], (flag, covered[0])
+
+
+@pytest.mark.parametrize(
+    ("changed", "required"),
+    [
+        ("src/nanopnp/mesh/gmsh_backend.py", "1"),
+        ("tests/tier1/test_mesh_gmsh.py", "1"),
+        ("tests/tier2/test_mesh_backends.py", "1"),
+        ("src/nanopnp/core/units.py", "unset"),
+    ],
+)
+def test_gate_hook_requires_gmsh_only_for_a_change_to_gmsh(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, changed: str, required: str
+) -> None:
+    """The commit hook fails Gmsh's tests on a missing library only when the change is Gmsh's."""
+    if shutil.which("jq") is None:
+        pytest.skip("the gate hook reads its payload with jq")
+    repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/other.py")
+    (repo / changed).parent.mkdir(parents=True, exist_ok=True)
+    (repo / changed).write_text("y = 2\n", encoding="utf-8")
+    calls = _recording_uv(tmp_path, monkeypatch)
+    _hook(repo, repo, "git commit -am x")
+    ran = calls.read_text(encoding="utf-8").splitlines()
+    tests = [call for call in ran if "pytest" in call and "-rs" in call.split("|", 1)[1].split()]
+    assert tests, ran
+    assert {call.split("|", 1)[0] for call in tests} == {required}
+    assert not any("diff-cover" in call for call in ran)
+
+
+def test_gate_names_the_system_libraries_when_gmsh_cannot_import(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A Gmsh that cannot import fails ``run`` with the ``apt-get`` line that fixes it."""
+    assert _BASH is not None
+    repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/code.py")
+    failing = (
+        'case "$*" in *--extended*) echo "Failed: NANOPNP_REQUIRE_GMSH=1 and gmsh does not '
+        'import: OSError: libGLU.so.1"; exit 1;; esac\n'
+    )
+    _recording_uv(tmp_path, monkeypatch, failing)
+    result = subprocess.run(
+        [_BASH, str(_GATE), "run"], cwd=repo, capture_output=True, text=True, timeout=60
+    )
+    assert result.returncode != 0
+    assert "libGLU.so.1" in result.stderr
+    assert "apt-get install -y --no-install-recommends libglu1-mesa" in result.stderr

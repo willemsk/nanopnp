@@ -14,7 +14,15 @@
 #                    end-to-end walks
 #   gate.sh run      runs the gate directly, prints each stage, exits non-zero
 #                    on failure; adds `--extended`, so it is the whole of what CI
-#                    gates on every push. What the skills call before they push
+#                    gates on every push, and the branch coverage of the lines the
+#                    branch changes (diff-cover, as CI's lint job). What the skills
+#                    call before they push
+#
+# Every pytest call passes -rs, as CI does, so each skip is listed with its
+# reason: a skip is missing evidence. `run` sets NANOPNP_REQUIRE_GMSH=1, as CI
+# does, so a Gmsh that cannot import fails the push gate instead of skipping its
+# tests; the hook sets it only when the change touches the Gmsh backend or its
+# tests, so a session without Gmsh's system libraries can still commit elsewhere.
 #
 # It is wired up in .claude/settings.json. The matcher is the bare Bash tool
 # rather than an `if: Bash(git commit*)` filter, because that filter is a
@@ -163,9 +171,11 @@ say() { [[ $mode == run ]] && printf '%s\n' "$*"; return 0; }
 # for `run`, which is what the skills call before they push.
 selection=development
 pytest_extra=()
+coverage_xml=""
 if [[ $mode == run ]]; then
     selection=extended
-    pytest_extra=(--extended)
+    coverage_xml="$(git rev-parse --absolute-git-dir)/nanopnp-gate-coverage.xml"
+    pytest_extra=(--extended --cov=src/nanopnp --cov-branch "--cov-report=xml:${coverage_xml}")
 fi
 passed=$(cat "$stamp_file" 2>/dev/null) || passed=""
 if [[ -n $state && ( $passed == "$state extended" || $passed == "$state $selection" ) ]]; then
@@ -197,6 +207,18 @@ if [[ $mode == run ]]; then
 else
     lead="The commit was not made: the gate"
 fi
+
+# The Gmsh backend's tests fail rather than skip where it cannot import
+# (tests/conftest.py), always in `run` and in the hook when the change is
+# Gmsh's own; elsewhere a commit is not refused for a library it does not touch.
+gmsh_paths='^(src/nanopnp/mesh/gmsh_backend\.py|src/nanopnp/mesh/meshers\.py|tests/tier2/test_mesh_backends\.py|tests/.*gmsh[^/]*)$'
+if [[ $mode == run ]] ||
+    { git diff --name-only HEAD; git ls-files --others --exclude-standard; } 2>/dev/null |
+    grep -Eq "$gmsh_paths"; then
+    export NANOPNP_REQUIRE_GMSH=1
+fi
+gmsh_remedy="Gmsh's wheel loads X and GL libraries at import (.knowledge/07-software-stack.md section 5).
+On Debian or Ubuntu: apt-get install -y --no-install-recommends libglu1-mesa libxft2 libxinerama1 libxcursor1"
 
 fail() {
     local reason=$1
@@ -248,6 +270,12 @@ Last 40 lines:
 
 $(printf '%s' "$output" | tail -40)"
     fi
+    local remedy=""
+    if [[ $output == *"NANOPNP_REQUIRE_GMSH=1 and gmsh does not import"* ]]; then
+        remedy="
+
+${gmsh_remedy}"
+    fi
     fail "${lead} failed at \`${name}\`.
 
 CLAUDE.md requires the whole gate — ruff check, ruff format --check, mypy src/,
@@ -256,7 +284,7 @@ anyway, add --no-verify.
 
 Last 40 lines of \`$*\`:
 
-$(printf '%s' "$output" | tail -40)"
+$(printf '%s' "$output" | tail -40)${remedy}"
 }
 
 # The lock first: under UV_LOCKED a stale lock would otherwise surface as a
@@ -270,14 +298,29 @@ else
     check "mypy --strict"   uv run mypy src/
     # The `+` form: bash before 4.4 (macOS's /bin/bash is 3.2) treats an empty
     # array as unset under `set -u`, and would end the hook ungated.
-    check "pytest ($selection)" uv run pytest -q -n auto --dist loadfile \
+    check "pytest ($selection)" uv run pytest -q -rs -n auto --dist loadfile \
         --ignore=tests/tier1/test_gui_widgets.py ${pytest_extra[@]+"${pytest_extra[@]}"}
     # Serially and alone, as in CI: it waits on a real QtWebEngine page by the
     # wall clock, which busy xdist workers can starve (ci.yml, run 113). Exit 5
     # ("no tests ran") is the module skipping itself where PySide6 cannot
     # import, the usual Linux case (no libEGL); CI's desktop runners, where it
     # must run, treat 5 as the failure it is there.
-    check "pytest (GUI)"    bash -c 'uv run pytest -q tests/tier1/test_gui_widgets.py; s=$?; ((s == 5)) && s=0; exit $s'
+    check "pytest (GUI)"    bash -c 'uv run pytest -q -rs tests/tier1/test_gui_widgets.py; s=$?; ((s == 5)) && s=0; exit $s'
+    # Every changed line of src/nanopnp, gui/ aside (its widgets run only on the
+    # desktop legs), is executed on both sides of each of its branches, against
+    # the same base the prose rule judged. It finds a branch no test takes; it
+    # cannot find code that is missing, which is what a plan's planned tests are
+    # for (.claude/skills/wp-plan). A line no test can reach says why in its
+    # `# pragma: no cover - <reason>` (VER-72).
+    if [[ -n $coverage_xml ]]; then
+        if [[ -n $base ]]; then
+            check "diff-cover"  uv run diff-cover "$coverage_xml" --compare-branch="$base" \
+                --branch-coverage --include-untracked --fail-under=100 --show-uncovered \
+                --include 'src/nanopnp/**/*.py' --exclude '*/src/nanopnp/gui/*'
+        else
+            check "diff-cover"  bash -c 'echo "no merge base with main to compare against" >&2; exit 1'
+        fi
+    fi
 fi
 
 # A hook's prose-only pass is stamped `development`, never `extended`: it was
