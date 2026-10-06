@@ -12,7 +12,6 @@ recipe, and meshes stage 5's region through :meth:`Mesher.mesh`.
 from __future__ import annotations
 
 import importlib
-import logging
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Protocol, TypeAlias
 
@@ -36,8 +35,6 @@ if TYPE_CHECKING:
 
     from nanopnp.core.typing import Mesh, Shape
     from nanopnp.mesh.adapter import MeshData
-
-logger = logging.getLogger(__name__)
 
 GMSH_EXTRA = "gmsh"
 """The ``pyproject.toml`` extra the Gmsh backend needs (CON-10, WP23 D9)."""
@@ -138,25 +135,27 @@ class NetgenMesher:
         )
 
 
-def _missing_gmsh(error: Exception) -> MissingExtraError:
+def _missing_gmsh(error: Exception, *, initialising: bool = False) -> MissingExtraError:
     """Return the refusal of ``numerics.mesh.backend: gmsh`` on an install that lacks it.
 
     The remedy follows the error: a missing module wants the extra, an
     ``OSError`` means the wheel is installed and a system library it loads is
-    not, and an initialisation error means the library loaded and then failed to
-    initialise (CON-10, REV-37).
+    not, and ``initialising`` means the library loaded and then failed to
+    initialise (CON-10, REV-37). Installing the extra again would change neither
+    of the last two.
     """
+    step = "initialising" if initialising else "importing"
     remedy = (
-        "The gmsh wheel is installed but could not load a native library; install the system "
-        "library the error names"
+        "The gmsh wheel is installed but failed to initialise; install the system library the "
+        "error names"
+        if initialising
+        else "The gmsh wheel is installed but could not load a native library; install the "
+        "system library the error names"
         if isinstance(error, OSError)
-        else "The gmsh wheel is installed but failed to initialise; install the system "
-        "library the error names"
-        if "initialize" in type(error).__name__.lower()
         else "Install the extras with `uv sync --all-extras`"
     )
     return MissingExtraError(
-        f"numerics.mesh.backend is 'gmsh', which needs the {GMSH_EXTRA!r} extra: importing gmsh "
+        f"numerics.mesh.backend is 'gmsh', which needs the {GMSH_EXTRA!r} extra: {step} gmsh "
         f"failed with {type(error).__name__}: {error}. {remedy}, or mesh with the default "
         "backend, netgen (CON-10, ADR-002)",
         name="gmsh",
@@ -234,8 +233,8 @@ class GmshMesher:
                 membrane_thickness_nm=record.membrane.thickness_nm,
                 axis_extent_nm=record.axis_split_nm,
             )
-        except getattr(module, "GmshInitializationError", ()) as error:
-            raise _missing_gmsh(error) from error
+        except module.GmshInitialisationError as error:
+            raise _missing_gmsh(error, initialising=True) from error
         return data, str(module.version())
 
 

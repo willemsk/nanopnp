@@ -72,6 +72,11 @@ GATE_CONSTANTS: Mapping[str, Canonicalisable] = {
 }
 """The wall-size gate's thresholds, which key the stage-6 artefact (D10)."""
 
+COMMON_RECIPE_KEYS: frozenset[str] = frozenset(
+    {"backend", "wall", "table", "grading", "gate", "exclusion"}
+)
+"""The stage-6 recipe's entries every backend shares; a mesher's own settings name none of them."""
+
 MESH_FILENAME = "mesh.msh"
 """The generated mesh's file in the stage-6 workspace, and its payload file name."""
 
@@ -208,15 +213,29 @@ def sizing_parameters(
     sized at, on either backend, and on netgen how its ``wall`` edges are
     divided (:data:`~nanopnp.mesh.sizing.EXCLUSION_WALL_DIVISION`); a
     shell-free recipe is unchanged (WP30 D9).
+
+    Raises
+    ------
+    ValueError
+        If the mesher's own settings name a common entry. Merged over it, they
+        would key two different meshes alike, and the store would hand one back
+        for the other (WP39 Design section 2).
     """
+    settings = create_mesher(backend).settings(exclusion=exclusion)
+    clash = sorted(set(settings) & COMMON_RECIPE_KEYS)
+    if clash:
+        raise ValueError(
+            f"mesher {backend!r} returns settings {', '.join(clash)}, which the common stage-6 "
+            "recipe already keys; a mesher's settings carry only its own entries"
+        )
     recipe: dict[str, Canonicalisable] = {
         "backend": backend,
         "wall": document_wall.summary(),
         "table": sizes.summary(),
         "grading": GRADING,
+        **settings,
+        "gate": dict(GATE_CONSTANTS),
     }
-    recipe.update(create_mesher(backend).settings(exclusion=exclusion))
-    recipe["gate"] = dict(GATE_CONSTANTS)
     if exclusion:
         recipe["exclusion"] = EXCLUSION_SIZE
     return recipe

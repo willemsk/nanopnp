@@ -44,11 +44,17 @@ no stage key changes (VER-62).
   `numerics.stabilisation` is now `str` rather than a closed enumeration. Every valid document
   remains valid; unregistered values are refused by `check_document` and on validation (F4).
 - **Breaking:** Internal `numerics.linear.AVAILABLE_SOLVERS` and `mesh.generate.gmsh_backend` are
-  removed (IF-01).
+  removed, and `mesh.generate.mesh_shape` moves to `mesh.meshers.mesh_shape` (IF-01, D2).
+- **Stage-6 recipe:** a mesher whose settings name an entry every backend shares (`backend`,
+  `wall`, `table`, `grading`, `gate` or `exclusion`) is refused rather than merged over it, which
+  would key two different meshes alike.
 - **Gmsh session cleanup:** A borrowed session leaves the caller's logger untouched (REV-36).
-  Failure of `gmsh.initialize()` raises `GmshInitializationError`, translated to
-  `MissingExtraError` naming `gmsh` (REV-37). All cleanup steps run sequentially and attach
-  failures as notes without masking active meshing exceptions (REV-38).
+  Failure of `gmsh.initialize()` raises `GmshInitialisationError`, translated to
+  `MissingExtraError` naming `gmsh` and the initialisation's own remedy (REV-37). Each undo step
+  is recorded once its change is made and every one runs, in reverse order, so a session this
+  module opened is finalised even when the setup fails, a borrowed session's model is never removed
+  in place of one that was never added, and a cleanup failure is a note on the error in flight
+  rather than raised over it (REV-38).
 
 ## [0.5.0-alpha.4] - 2026-10-06
 

@@ -1,10 +1,10 @@
 """The optional Gmsh backend of ADR-002: stage 5's region meshed with the ``gmsh`` API (WP23).
 
 Reached only through stage 6's dispatch on ``numerics.mesh.backend: gmsh``
-(:func:`nanopnp.mesh.generate.generate`), so ``gmsh`` is imported at the top:
-the default path never imports this module (CON-10), and a missing extra is
-refused there, naming it. The ``gmsh`` API is called directly, never through
-pygmsh (CON-12, section 5.2.2).
+(the ``gmsh`` entry of :mod:`nanopnp.mesh.meshers`), so ``gmsh`` is imported at
+the top: the default path never imports this module (CON-10), and a missing
+extra, or a library that fails to initialise, is refused there, naming it. The
+``gmsh`` API is called directly, never through pygmsh (CON-12, section 5.2.2).
 
 **The region is stage 5's, not Gmsh's own** (WP23 D1, D2). The glued, named
 netgen shape is read into a :class:`~nanopnp.geometry.region.RegionGraph` and
@@ -44,7 +44,7 @@ from __future__ import annotations
 import itertools
 import logging
 import math
-from collections.abc import Iterator, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
@@ -84,7 +84,7 @@ class GmshMeshingError(RuntimeError):
     """Gmsh refused the region or failed to mesh it; its own log is quoted (QR-12)."""
 
 
-class GmshInitializationError(RuntimeError):
+class GmshInitialisationError(RuntimeError):
     """Gmsh failed to initialise (REV-37)."""
 
 
@@ -133,76 +133,87 @@ def _session(options: Mapping[str, float]) -> Iterator[None]:
 
     On exit Gmsh's log is forwarded to :mod:`logging`, the model is removed,
     every option is restored, the previous model is made current again, and a
-    session this call opened is finalised.
+    session this call opened is finalised (WP39 D11). Each undo step is recorded
+    only once the change it reverses has been made, and they run in reverse
+    order, so a setup step that fails undoes exactly what came before it: a
+    borrowed session's own model is never removed in place of one this call
+    never added, and a session this call opened is finalised however far the
+    setup got.
     """
-    from collections.abc import Callable
-
     opened = not gmsh.isInitialized()
     if opened:
         try:
             gmsh.initialize(readConfigFiles=False, interruptible=False)
         except Exception as error:
-            raise GmshInitializationError(f"gmsh.initialize failed: {error}") from error
-    # Silence the terminal before anything else can print.
-    previous_terminal = gmsh.option.getNumber("General.Terminal")
-    gmsh.option.setNumber("General.Terminal", 0)
-    previous_model = None if opened else gmsh.model.getCurrent()
-    saved = {name: gmsh.option.getNumber(name) for name in options}
-    saved["General.Terminal"] = previous_terminal
+            raise GmshInitialisationError(f"gmsh.initialize failed: {error}") from error
+    undo: list[Callable[[], None]] = []
     messages: list[str] = []
-    if opened:
-        gmsh.logger.start()
-
-    cleanup_steps: list[Callable[[], None]] = []
-    if opened:
-        cleanup_steps.append(lambda: messages.extend(gmsh.logger.get()))
-    cleanup_steps.append(lambda: gmsh.model.remove())
-    if opened:
-        cleanup_steps.append(lambda: gmsh.logger.stop())
-
-        def _log_messages() -> None:
-            for message in messages:
-                logger.debug("gmsh: %s", message)
-
-        cleanup_steps.append(_log_messages)
-        cleanup_steps.append(lambda: gmsh.finalize())
-    else:
-
-        def _restore_options() -> None:
-            for name, value in saved.items():
-                gmsh.option.setNumber(name, value)
-
-        cleanup_steps.append(_restore_options)
-        if previous_model is not None:
-            cleanup_steps.append(lambda: gmsh.model.setCurrent(previous_model))
-
     propagating: BaseException | None = None
     try:
+        if opened:
+            undo.append(lambda: gmsh.finalize())
+        # Silence the terminal before anything else can print.
+        saved = {"General.Terminal": gmsh.option.getNumber("General.Terminal")}
+        if not opened:
+            undo.append(lambda: _restore_options(saved))
+        gmsh.option.setNumber("General.Terminal", 0)
+        if opened:
+            # Only a session opened here starts and stops the logger. A borrowed
+            # session's logger is the caller's, and so are its messages (REV-36).
+            gmsh.logger.start()
+            undo.append(lambda: _forward(messages))
+            undo.append(lambda: gmsh.logger.stop())
+        else:
+            previous_model = gmsh.model.getCurrent()
+            undo.append(lambda: gmsh.model.setCurrent(previous_model))
+            saved.update({name: gmsh.option.getNumber(name) for name in options})
         for name, value in options.items():
             gmsh.option.setNumber(name, value)
         gmsh.model.add(f"nanopnp-region-{next(_MODEL_IDS)}")
-        try:
-            yield
-        except BaseException as error:
-            propagating = error
-            raise
+        undo.append(lambda: gmsh.model.remove())
+        if opened:
+            undo.append(lambda: messages.extend(gmsh.logger.get()))
+        yield
+    except BaseException as error:
+        propagating = error
+        raise
     finally:
-        first_failure: BaseException | None = None
-        for step in cleanup_steps:
-            try:
-                step()
-            except BaseException as cleanup_error:
-                if propagating is not None:
-                    logger.warning("Gmsh session cleanup failed: %s", cleanup_error)
-                    propagating.add_note(f"Gmsh session cleanup failed: {cleanup_error}")
-                else:
-                    if first_failure is None:
-                        first_failure = cleanup_error
-                    else:
-                        logger.warning("Gmsh session cleanup failed: %s", cleanup_error)
-                        first_failure.add_note(f"Gmsh session cleanup failed: {cleanup_error}")
-        if propagating is None and first_failure is not None:
-            raise first_failure
+        _undo(reversed(undo), propagating)
+
+
+def _restore_options(saved: Mapping[str, float]) -> None:
+    """Set each option of a borrowed session back to the value it had."""
+    for name, value in saved.items():
+        gmsh.option.setNumber(name, value)
+
+
+def _forward(messages: list[str]) -> None:
+    """Forward Gmsh's log to :mod:`logging` at DEBUG, never to standard output (IF-02)."""
+    for message in messages:
+        logger.debug("gmsh: %s", message)
+
+
+def _undo(steps: Iterable[Callable[[], None]], propagating: BaseException | None) -> None:
+    """Run every undo step, whichever fail (REV-38).
+
+    A failure beside an error already propagating is logged at WARNING and
+    added to that error as a note, never raised over it. Without one, the first
+    failure is raised once every step has run, carrying any later ones as notes.
+    """
+    first: BaseException | None = None
+    for step in steps:
+        try:
+            step()
+        except BaseException as error:
+            if propagating is None and first is None:
+                first = error
+                continue
+            logger.warning("Gmsh session cleanup failed: %s", error)
+            target = propagating if propagating is not None else first
+            if target is not None:
+                target.add_note(f"Gmsh session cleanup failed: {error}")
+    if first is not None:
+        raise first
 
 
 def _build(graph: RegionGraph) -> tuple[list[int], list[int], dict[str, int]]:

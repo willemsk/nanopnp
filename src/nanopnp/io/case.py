@@ -668,8 +668,9 @@ class CaseDocument(_Strict):
     def _check_installed(self) -> CaseDocument:
         """Check every correction file and output the document names.
 
-        The three names an installed *registry* governs -- ``physics.model``,
-        ``numerics.stabilisation`` and ``numerics.linear.solver`` -- are checked
+        The four names an installed *registry* governs -- ``physics.model``,
+        ``numerics.mesh.backend``, ``numerics.stabilisation`` and
+        ``numerics.linear.solver`` -- are checked
         by :func:`nanopnp.pipeline.checks.check_document`, above the registries,
         so that this schema imports nothing above ``core`` (WP38 D7).
 

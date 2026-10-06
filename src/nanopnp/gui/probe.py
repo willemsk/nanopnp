@@ -54,6 +54,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from nanopnp.core.paths import PACKAGE_ROOT, structure_file
+from nanopnp.core.public import __version__
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from collections.abc import Callable, Collection, Sequence
@@ -427,20 +428,13 @@ def payload_versions() -> dict[str, str]:
     from PySide6 import QtCore
 
     return {
-        "nanopnp": _nanopnp_version(),
+        "nanopnp": __version__,
         "Python": sys.version.split()[0],
         "PySide6": _pyside_version(),
         "Qt": QtCore.qVersion(),
         "NGSolve": str(ngsolve.__version__),
         "Netgen": str(netgen.version.__version__),
     }
-
-
-def _nanopnp_version() -> str:
-    """Return this package's version without importing a stage module."""
-    from nanopnp.core.public import __version__
-
-    return str(__version__)
 
 
 def _pyside_version() -> str:

@@ -40,7 +40,7 @@ from nanopnp.io.case_paths import _literal_options, field_at
 from nanopnp.io.resolved import contour_spacing_nm
 from nanopnp.materials.electrolyte import Electrolyte
 from nanopnp.mesh.meshers import registered_meshers
-from nanopnp.numerics.linear import _REJECTED, registered_solvers
+from nanopnp.numerics.linear import registered_solvers, rejection
 from nanopnp.physics.models import (
     LADDER_STRATEGY,
     SWITCHES,
@@ -156,19 +156,19 @@ def check_document(document: CaseDocument, *, source: str | None = None) -> Case
             "Recording a mode the solver does not apply would make the FR-25 manifest "
             "describe a run that never happened"
         )
-    if document.numerics.linear.solver not in registered_solvers():
-        solver = document.numerics.linear.solver
-        if solver in _REJECTED:
-            problems.append(f"numerics.linear.solver {solver!r} is not usable: {_REJECTED[solver]}")
-        else:
-            problems.append(
-                f"numerics.linear.solver {solver!r} is not available; the "
-                f"solvers are {', '.join(registered_solvers())}"
-            )
+    solver = document.numerics.linear.solver
+    if solver not in registered_solvers():
+        reason = rejection(solver)
+        problems.append(
+            f"numerics.linear.solver {solver!r} is not usable: {reason}"
+            if reason is not None
+            else f"numerics.linear.solver {solver!r} is not available; the solvers are "
+            f"{', '.join(registered_solvers())}"
+        )
     if problems:
         # Rendered as the schema renders a document-level refusal, which is how
-        # these three read when ``CaseDocument`` asked the registries itself: a
-        # caller matching the text, or reading ``errors``, sees no difference.
+        # these read when ``CaseDocument`` asked the registries itself: a caller
+        # matching the text, or reading ``errors``, sees no difference.
         error = ValidationError.from_exception_data(
             title=CaseDocument.__name__,
             line_errors=[
