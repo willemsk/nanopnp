@@ -46,7 +46,6 @@ from nanopnp.charge.stage import ResolvedFields, case_fields, read_fields
 from nanopnp.core.constants import thermal_voltage
 from nanopnp.core.hashing import Canonicalisable, content_hash
 from nanopnp.io.artefact import SOLUTION_SCHEMA, Artefact
-from nanopnp.io.case import resolve
 from nanopnp.mesh.ingest import deployed_mesh
 from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS
 from nanopnp.numerics.gates import FieldSampler, WallDistanceGate, WallDistanceMeasurement
@@ -58,6 +57,7 @@ from nanopnp.physics.models import (
     CoupledBoundaries,
     ModelSolution,
     PhysicsModel,
+    case_model,
     declaration,
 )
 from nanopnp.solve.continuation import (
@@ -70,7 +70,7 @@ from nanopnp.solve.continuation import (
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.core.typing import Expression, FESpace, GridFunction, Mesh
-    from nanopnp.io.case import CaseDocument, ResolvedCase
+    from nanopnp.io.resolved import ResolvedCase
 
 __all__ = [
     "OPERATOR_KEYS",
@@ -159,7 +159,7 @@ those moved rather than the twentieth field of a model provenance that differs
 only because of it.
 
 ``solve_hash`` is the digest of
-:attr:`~nanopnp.io.case.ResolvedCase.solve_provenance` and deliberately not of
+:attr:`~nanopnp.io.resolved.ResolvedCase.solve_provenance` and deliberately not of
 the case document: the document carries ``name`` and ``outputs``, neither of
 which reaches the operator, and a gate keyed on them would refuse a converged
 state to a run that differs only in what it intends to *report*. It is the same
@@ -328,7 +328,7 @@ def reads_distance(resolved: ResolvedCase) -> bool:
     which resolves every correction to ``none`` whatever the case gave; neither
     pays for one, gates one or stores one.
     """
-    return model_reads_wall(resolved.physics_model())
+    return model_reads_wall(case_model(resolved))
 
 
 def wall_distance_field(resolved: ResolvedCase, mesh: Mesh, *, order: int) -> Expression:
@@ -410,7 +410,7 @@ def single_rung(
     converged, plausible, wrong answer -- and one :func:`save` then refuses to
     store, after the solve has been paid for.
     """
-    model = resolved.physics_model()
+    model = case_model(resolved)
     declared = declaration(resolved.model)
     driven = next(iter(ELECTRODES - {resolved.ground}))
     supplied: dict[str, Expression] = {}
@@ -1004,7 +1004,7 @@ def _gate_space(stored: Mapping[str, Any], expected: Mapping[str, Any], path: Pa
 def restore(
     path: Path,
     *,
-    case: CaseDocument,
+    resolved: ResolvedCase,
     mesh_artefact: Artefact | None = None,
     fields: ResolvedFields | None = None,
     charge_artefact: Artefact | None = None,
@@ -1021,8 +1021,8 @@ def restore(
     ----------
     path
         The ``.npz`` payload of a ``nanopnp/solution/v2`` artefact.
-    case
-        The case document the state is being restored into. Its mesh is ingested
+    resolved
+        The resolved case the state is being restored into (WP38 D4). Its mesh is ingested
         and gated exactly as a solve would ingest it, because the space the
         coefficients are loaded onto is built on that mesh.
     mesh_artefact
@@ -1056,7 +1056,6 @@ def restore(
     import ngsolve as ngs
     import numpy as np
 
-    resolved = resolve(case)
     ingested = deployed_mesh(resolved, mesh_artefact)
     mesh = ingested.mesh
     order = int(resolved.model_options.get("order", AXISYMMETRIC.element_order))

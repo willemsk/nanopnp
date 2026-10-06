@@ -23,8 +23,8 @@ import pytest
 
 from nanopnp.density.map import PAYLOAD_NAME as DENSITY_PAYLOAD
 from nanopnp.density.map import DensityMap
-from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
+from nanopnp.pipeline.run import run_case
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
 from nanopnp.structure.ensemble import AlignedEnsemble
 from nanopnp.symmetry.annular import annular_weights
@@ -128,7 +128,7 @@ def test_ver49_ver50_2wcd_to_stage_three(
 
 _BUDGET_SCRIPT = """
 import json, resource, sys
-from nanopnp.io.run import run_case
+from nanopnp.pipeline.run import run_case
 from nanopnp.io.store import Store
 result = run_case(sys.argv[1], store=Store(sys.argv[2]), upto="symmetry", write=False)
 print(json.dumps({

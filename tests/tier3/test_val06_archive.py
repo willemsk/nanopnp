@@ -32,10 +32,10 @@ from nanopnp.charge.protonation import ProtonationTable
 from nanopnp.charge.stage import frame_shift_nm
 from nanopnp.core.paths import REFERENCE_DATA_VARIABLE, reference_file
 from nanopnp.density.grid import read_grid
-from nanopnp.io.case import load_case, resolve
-from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
 from nanopnp.physics.models import PoissonModel
+from nanopnp.pipeline.case import load_case, resolve
+from nanopnp.pipeline.run import run_case
 from nanopnp.solve.state import restore, warm_start_payload
 from nanopnp.validation.apbs import (
     GatedInputs,
@@ -127,7 +127,7 @@ def test_val06_the_ensemble_against_apbs_gated_construction_and_per_frame(
         result = run_case(case, store=ensemble_store, upto="solve", workspace=root / "work")
         solution = restore(
             warm_start_payload(result.artefacts["solve"]),
-            case=load_case(case),
+            resolved=resolve(load_case(case)),
             mesh_artefact=result.artefacts["mesh"],
             charge_artefact=result.artefacts["charge"],
         )

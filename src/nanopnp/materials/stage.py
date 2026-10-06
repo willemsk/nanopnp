@@ -1,6 +1,6 @@
 """Stage 8 of section 5.2: the resolved material coefficient set (IF-01, FR-27).
 
-The work is :func:`nanopnp.io.case.resolve`'s already — the electrolyte, its
+The work is :func:`nanopnp.pipeline.case.resolve`'s already — the electrolyte, its
 species and every correction switch come out of the case. What this stage adds is
 the artefact: a content hash over the electrolyte's provenance *and* over the
 digest of the ``data/corrections/*.yaml`` it resolved through, so that editing a
@@ -26,7 +26,6 @@ from nanopnp.core.stages import (
     report,
 )
 from nanopnp.io.artefact import MaterialsArtefact
-from nanopnp.io.case import resolve
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.io.artefact import StageInputs
@@ -86,7 +85,7 @@ class MaterialsStage:
         (``key_is_artefact``). :meth:`run` calls this, so the two cannot drift
         apart.
         """
-        resolved = resolve(inputs.case)
+        resolved = inputs.resolved
         electrolyte = resolved.electrolyte
         parameter_file = electrolyte.parameter_file
         # The correction file's content hash is its version (FR-25): the

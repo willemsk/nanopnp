@@ -59,11 +59,13 @@ from typing import TYPE_CHECKING
 
 from nanopnp.core.scaling import Scales
 from nanopnp.core.typing import Expression, FESpace, Mesh
-from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS, POTENTIAL, VELOCITY
-from nanopnp.physics.models import (
+from nanopnp.io.vocabulary import (
+    POTENTIAL,
     PRESSURE,
-    ModelSolution,
+    VELOCITY,
 )
+from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS
+from nanopnp.physics.models import ModelSolution
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np

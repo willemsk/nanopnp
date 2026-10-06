@@ -48,16 +48,15 @@ from nanopnp.gui.geometry import (
 )
 from nanopnp.gui.run_model import RunModel
 from nanopnp.gui.solver import Failed, Finished, Produced, Stage, Started
-from nanopnp.io.case import (
+from nanopnp.io.case_paths import (
     UnknownCasePathError,
     case_fields,
-    load_case,
-    resolve,
     value_at,
     with_profile,
 )
-from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
+from nanopnp.pipeline.case import load_case, resolve
+from nanopnp.pipeline.run import run_case
 
 H = 0.05
 

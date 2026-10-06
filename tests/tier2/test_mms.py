@@ -24,13 +24,15 @@ from dataclasses import replace
 
 import pytest
 
+from nanopnp.io.vocabulary import (
+    POTENTIAL,
+    PRESSURE,
+    VELOCITY,
+)
 from nanopnp.materials.electrolyte import CorrectionSwitches, Electrolyte
 from nanopnp.mesh.primitives import CylinderGeometry
 from nanopnp.numerics.measures import Measures
 from nanopnp.physics.models import (
-    POTENTIAL,
-    PRESSURE,
-    VELOCITY,
     CoupledBoundaries,
     CoupledModel,
 )

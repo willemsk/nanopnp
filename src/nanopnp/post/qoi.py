@@ -53,7 +53,10 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 
 from nanopnp.core.typing import AssembledForm, Expression, GridFunction, Option
-from nanopnp.mesh.primitives import POTENTIAL, VELOCITY
+from nanopnp.io.vocabulary import (
+    POTENTIAL,
+    VELOCITY,
+)
 from nanopnp.numerics.gates import FieldSampler
 from nanopnp.numerics.measures import Measures
 from nanopnp.physics.coefficients import species_concentrations_SI

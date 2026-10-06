@@ -3,7 +3,7 @@
 The CLI drives the same stage objects as the Python API and the desktop shell
 (SPECIFICATION.md section 5.1); it holds no logic of its own. Every subcommand
 here is a few lines of argument marshalling in front of one call into
-:mod:`nanopnp.io.run`, :mod:`nanopnp.io.reproduce` or the stage registry, which
+:mod:`nanopnp.pipeline.run`, :mod:`nanopnp.pipeline.reproduce` or the stage registry, which
 is what makes the three shells demonstrably the same program.
 
 **No flag changes what is solved** (section 3.1 NOTE, IF-02). Flags choose where
@@ -56,7 +56,8 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
     from nanopnp.core.hashing import Canonicalisable
     from nanopnp.io.artefact import SweepArtefact
-    from nanopnp.io.case import CaseDocument, ResolvedCase
+    from nanopnp.io.case import CaseDocument
+    from nanopnp.io.resolved import ResolvedCase
     from nanopnp.io.store import Store
     from nanopnp.sweep.plan import SweepPlan
     from nanopnp.validation.comsol import Golden
@@ -158,8 +159,8 @@ def _env(args: argparse.Namespace) -> int:
 
 def _run(args: argparse.Namespace) -> int:
     """``nanopnp run`` — walk the pipeline for one case file (FR-27, IF-01)."""
-    from nanopnp.io.run import run_case
     from nanopnp.io.store import Store
+    from nanopnp.pipeline.run import run_case
 
     result = run_case(
         args.case,
@@ -220,8 +221,8 @@ def _stage(args: argparse.Namespace) -> int:
         if why is not None:
             args.parser.error(why)
 
-    from nanopnp.io.run import run_case
     from nanopnp.io.store import Store
+    from nanopnp.pipeline.run import run_case
 
     result = run_case(
         args.case,
@@ -267,7 +268,7 @@ def _inspect(args: argparse.Namespace) -> int:
     from nanopnp.core.hashing import decode_floats
     from nanopnp.io.manifest import MANIFEST_FILENAME
     from nanopnp.io.manifest import read as read_manifest
-    from nanopnp.io.run import RUN_RECORD_FILENAME
+    from nanopnp.pipeline.run import RUN_RECORD_FILENAME
 
     target = Path(args.target)
     if target.is_dir():
@@ -305,8 +306,8 @@ def _inspect(args: argparse.Namespace) -> int:
 
 def _reproduce(args: argparse.Namespace) -> int:
     """``nanopnp reproduce`` — re-run an archived run and compare it (QR-08)."""
-    from nanopnp.io.reproduce import reproduce
     from nanopnp.io.store import Store
+    from nanopnp.pipeline.reproduce import reproduce
 
     finding = reproduce(
         args.directory,
@@ -607,9 +608,11 @@ def _sweep_dataset(args: argparse.Namespace, plan: SweepPlan, directory: Path) -
 
 
 def _validate(args: argparse.Namespace) -> int:
-    """``nanopnp validate`` — the Tier-3 harness (VAL-01 … VAL-04, section 7.4).
+    """``nanopnp validate`` — a case's checks, and the Tier-3 harness (VAL-01 … VAL-04, §7.4).
 
-    Six actions over one probe grid, and none of them changes what is solved:
+    ``case`` runs every check a case file can fail without meshing or solving
+    (REV-27, WP38 D8). The other six act over one probe grid, and none of them
+    changes what is solved:
     ``export-grid`` and ``case-hash`` emit what the author pastes into COMSOL and
     declares in a manifest; ``ingest-golden`` turns delivered tables into the
     archive; ``export-golden`` writes one of *our* runs in the same format, which
@@ -622,6 +625,7 @@ def _validate(args: argparse.Namespace) -> int:
     (:mod:`nanopnp.validation.runs`).
     """
     actions = {
+        "case": _validate_case,
         "export-grid": _validate_export_grid,
         "case-hash": _validate_case_hash,
         "ingest-golden": _validate_ingest_golden,
@@ -630,6 +634,39 @@ def _validate(args: argparse.Namespace) -> int:
         "report": _validate_report,
     }
     return actions[args.action](args)
+
+
+def _validate_case(args: argparse.Namespace) -> int:
+    """Check a case file as a run would, and print what it resolves to.
+
+    :func:`~nanopnp.pipeline.case.load_case` and
+    :func:`~nanopnp.pipeline.case.resolve`: the schema, the installed registries,
+    the element orders and the inf-sup pair, the release's refusals and the
+    parameter file. A refusal is raised with the text ``nanopnp run`` gives the
+    same file, and exits 3 as every case error does (IF-02). Nothing is meshed,
+    solved or written, and no supplied file the case names is read.
+    """
+    from nanopnp.pipeline.case import load_case, resolve
+    from nanopnp.pipeline.run import selected_stages
+
+    document = load_case(args.case)
+    resolved = resolve(document)
+    stages = selected_stages(resolved, None)
+    payload: dict[str, Canonicalisable] = {
+        "case": document.name,
+        "valid": True,
+        "model": resolved.model,
+        "stabilisation": resolved.stabilisation,
+        "stages": list(stages),
+    }
+    lines = [
+        f"case          {document.name}: valid",
+        f"model         {resolved.model}",
+        f"stabilisation {resolved.stabilisation}",
+        f"stages        {' '.join(stages)}",
+    ]
+    _emit(payload, lines, as_json=args.json)
+    return EXIT_OK
 
 
 def _validate_export_grid(args: argparse.Namespace) -> int:
@@ -663,7 +700,7 @@ def _validate_export_grid(args: argparse.Namespace) -> int:
 
 def _validate_case_hash(args: argparse.Namespace) -> int:
     """Print the ``case_hash`` a golden for this case must declare."""
-    from nanopnp.io.case import load_case, resolve
+    from nanopnp.pipeline.case import load_case, resolve
     from nanopnp.validation.comsol import case_identity
 
     document = load_case(args.case)
@@ -911,7 +948,7 @@ def _store(args: argparse.Namespace) -> Store:
 
 def _resolved(case: CaseDocument) -> ResolvedCase:
     """Return a case document resolved, for the identity hash."""
-    from nanopnp.io.case import resolve
+    from nanopnp.pipeline.case import resolve
 
     return resolve(case)
 
@@ -1141,9 +1178,15 @@ def build_parser() -> argparse.ArgumentParser:
     collector.set_defaults(handler=_sweep)
 
     validate = subparsers.add_parser(
-        "validate", help="the Tier-3 COMSOL comparison harness (section 7.4)"
+        "validate", help="check a case file; the Tier-3 COMSOL comparison harness (section 7.4)"
     )
     steps = validate.add_subparsers(dest="action", required=True)
+
+    checked = _common(
+        steps.add_parser("case", help="check a case file as a run would, without solving it")
+    )
+    checked.add_argument("case", type=Path, help="the case file")
+    checked.set_defaults(handler=_validate)
 
     # ``%%`` throughout the help strings below: argparse percent-formats help text,
     # and a bare ``%G`` makes ``--help`` raise rather than print.
@@ -1239,7 +1282,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     _configure_logging(args.verbose, args.log_file)
     if args.command == "reproduce" and args.tolerance is None:
-        from nanopnp.io.reproduce import DEFAULT_TOLERANCE
+        from nanopnp.pipeline.reproduce import DEFAULT_TOLERANCE
 
         args.tolerance = DEFAULT_TOLERANCE
 

@@ -37,33 +37,33 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only; resolved lazily below
     from nanopnp.io.case import CaseDocument as CaseDocument
     from nanopnp.io.case import dump_case as dump_case
     from nanopnp.io.case import dumps_case as dumps_case
-    from nanopnp.io.case import load_case as load_case
-    from nanopnp.io.case import loads_case as loads_case
-    from nanopnp.io.case import resolve as resolve
-    from nanopnp.io.run import RunResult as RunResult
-    from nanopnp.io.run import run_case as run_case
-    from nanopnp.io.run import run_document as run_document
     from nanopnp.io.store import Store as Store
     from nanopnp.physics.models import ModelDeclaration as ModelDeclaration
     from nanopnp.physics.models import PhysicsModel as PhysicsModel
     from nanopnp.physics.models import TransportModel as TransportModel
     from nanopnp.physics.models import register_model as register_model
     from nanopnp.physics.models import registered_models as registered_models
+    from nanopnp.pipeline.case import load_case as load_case
+    from nanopnp.pipeline.case import loads_case as loads_case
+    from nanopnp.pipeline.case import resolve as resolve
+    from nanopnp.pipeline.run import RunResult as RunResult
+    from nanopnp.pipeline.run import run_case as run_case
+    from nanopnp.pipeline.run import run_document as run_document
     from nanopnp.sweep.plan import plan_from_document as plan_from_document
     from nanopnp.sweep.run import run_plan as run_plan
 
 PUBLIC: dict[str, str] = {
     # Running a case (FR-27, IF-01).
-    "run_case": "nanopnp.io.run",
-    "run_document": "nanopnp.io.run",
-    "RunResult": "nanopnp.io.run",
+    "run_case": "nanopnp.pipeline.run",
+    "run_document": "nanopnp.pipeline.run",
+    "RunResult": "nanopnp.pipeline.run",
     # The case file (IF-03, section 5.3.1).
     "CaseDocument": "nanopnp.io.case",
-    "load_case": "nanopnp.io.case",
-    "loads_case": "nanopnp.io.case",
+    "load_case": "nanopnp.pipeline.case",
+    "loads_case": "nanopnp.pipeline.case",
     "dump_case": "nanopnp.io.case",
     "dumps_case": "nanopnp.io.case",
-    "resolve": "nanopnp.io.case",
+    "resolve": "nanopnp.pipeline.case",
     # The artefact store (section 5.3.2).
     "Store": "nanopnp.io.store",
     # The physics-model interface (FR-20, section 5.4.3): one class and a

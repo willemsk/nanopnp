@@ -44,7 +44,7 @@ from nanopnp.post.indicator import axial_indicator, lumen_band
 from nanopnp.solve.continuation import default_ladder, run_ladder
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
-    from nanopnp.io.run import RunResult
+    from nanopnp.pipeline.run import RunResult
 
 logger = logging.getLogger(__name__)
 
@@ -360,14 +360,14 @@ assertions below are on that difference rather than on this number. **[tested]**
 def _run_corrected(tmp_path: Path, wall_h_nm: float) -> RunResult:
     """Run the corrected case on one mesh, through the production path.
 
-    Through :func:`~nanopnp.io.run.run_document` rather than by building a ladder
+    Through :func:`~nanopnp.pipeline.run.run_document` rather than by building a ladder
     here, because the NUM-34 gate lives in stage 10 and what is under test is
     that a run *cannot reach Newton* on an inadmissible field. A test that
     assembled its own ladder would bypass the very thing it is asserting.
     """
-    from nanopnp.io.case import loads_case
-    from nanopnp.io.run import run_document
     from nanopnp.io.store import Store
+    from nanopnp.pipeline.case import loads_case
+    from nanopnp.pipeline.run import run_document
 
     work = tmp_path / f"wall-{wall_h_nm}"
     work.mkdir(parents=True, exist_ok=True)
@@ -422,10 +422,10 @@ def test_ver40_the_plausible_mesh_passes_num26_and_is_still_refused(tmp_path) ->
     from dataclasses import replace as replace_dataclass
 
     from nanopnp.charge.stage import ResolvedFields
-    from nanopnp.io.case import loads_case, resolve
     from nanopnp.mesh.ingest import ingest
     from nanopnp.numerics.gates import GateViolationError
     from nanopnp.numerics.measures import AXISYMMETRIC as MEASURES
+    from nanopnp.pipeline.case import loads_case, resolve
     from nanopnp.post.indicator import axial_indicator
     from nanopnp.solve.continuation import run_ladder as climb
     from nanopnp.solve.state import check_wall_distance, ladder, wall_distance_field

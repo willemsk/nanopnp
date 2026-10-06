@@ -41,7 +41,8 @@ from nanopnp.core.stages import (
     report,
 )
 from nanopnp.io.artefact import StructureArtefact
-from nanopnp.io.case import ResolvedStructure, UnsupportedCaseSection, resolve
+from nanopnp.io.case import UnsupportedCaseSection
+from nanopnp.io.resolved import ResolvedStructure
 from nanopnp.structure.axis import (
     ANGLE_TOLERANCE_DEG,
     ORIENTATION_LIMIT_DEG,
@@ -79,10 +80,10 @@ WORKSPACE_DIRNAME = "tmp"
 
 def _structure(inputs: StageInputs) -> ResolvedStructure:
     """Return the case's resolved ``structure:`` block, or refuse a case without one."""
-    resolved = resolve(inputs.case)
+    resolved = inputs.resolved
     if resolved.structure is None:
         raise UnsupportedCaseSection(
-            f"case {inputs.case.name!r} carries no structure: section, so stage 1 has nothing "
+            f"case {inputs.resolved.name!r} carries no structure: section, so stage 1 has nothing "
             "to read"
         )
     return resolved.structure

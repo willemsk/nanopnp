@@ -48,8 +48,8 @@ from typing import TYPE_CHECKING, Literal
 from pydantic import BaseModel, ConfigDict
 
 from nanopnp.core.constants import ELEMENTARY_CHARGE
-from nanopnp.io.fields import sample_at
-from nanopnp.mesh.primitives import POTENTIAL
+from nanopnp.io.vocabulary import POTENTIAL
+from nanopnp.post.export import sample_at
 
 if TYPE_CHECKING:
     import numpy as np
@@ -780,7 +780,7 @@ def potential_sampler(solution: ModelSolution, *, order: int) -> Sampler:
     """Return our solution's potential as a :data:`Sampler`, read through ``sample_at`` (D6).
 
     The one way a VAL-06 test reads our side: through a whole-domain carrier of
-    ``order`` (:func:`~nanopnp.io.fields.sample_at`), which is right on an interface
+    ``order`` (:func:`~nanopnp.post.export.sample_at`), which is right on an interface
     node where evaluating a restricted space directly is not. The carriers are
     built once and reused by every call.
     """

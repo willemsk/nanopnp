@@ -39,7 +39,8 @@ from nanopnp.core.scaling import debye_length_nm
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.core.hashing import Canonicalisable
     from nanopnp.core.typing import Shape
-    from nanopnp.io.case import CaseDocument, ResolvedCase
+    from nanopnp.io.case import CaseDocument
+    from nanopnp.io.resolved import ResolvedCase
 
 logger = logging.getLogger(__name__)
 

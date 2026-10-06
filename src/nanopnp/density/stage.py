@@ -39,7 +39,10 @@ from nanopnp.density.union import (
     deposit,
 )
 from nanopnp.io.artefact import DensityArtefact
-from nanopnp.io.case import DensitySpec, UnsupportedCaseSection, resolve
+from nanopnp.io.case import (
+    DensitySpec,
+    UnsupportedCaseSection,
+)
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
 from nanopnp.structure.ensemble import AlignedEnsemble
 
@@ -54,10 +57,10 @@ WORKSPACE_DIRNAME = "tmp"
 
 def _density(inputs: StageInputs) -> DensitySpec:
     """Return the case's resolved ``geometry.density``, or refuse a case without ``structure:``."""
-    resolved = resolve(inputs.case)
+    resolved = inputs.resolved
     if resolved.density is None:
         raise UnsupportedCaseSection(
-            f"case {inputs.case.name!r} carries no structure: section, so stage 2 has no "
+            f"case {inputs.resolved.name!r} carries no structure: section, so stage 2 has no "
             "ensemble to deposit"
         )
     return resolved.density

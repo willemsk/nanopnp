@@ -5,12 +5,13 @@
 | Command | Does |
 |---|---|
 | `nanopnp run case.yaml` | Walks the pipeline for one case and writes a run directory |
-| `nanopnp stage <name> case.yaml` | Runs up to one stage and prints its artefact; `--only` refuses to compute anything upstream |
+| `nanopnp stage <name> case.yaml` | Runs one stage and the stages it reads, and prints its artefact; `--only` refuses to compute anything upstream |
 | `nanopnp stage --list` | Lists the stages, without importing any of them |
 | `nanopnp inspect <path>` | Reads a run directory, a stored artefact or a record back |
 | `nanopnp reproduce <run>` | Re-solves an archived run in a fresh store and compares every scalar (QR-08) |
 | `nanopnp mesh cylinder\|reference` | Writes a gated mesh ([Meshes](meshes.md)) |
 | `nanopnp sweep plan\|run\|collect` | Plans, dispatches and collects a sweep ([Sweeps](sweeps.md)) |
+| `nanopnp validate case case.yaml` | Checks a case as a run would, without meshing or solving it |
 | `nanopnp validate …` | The Tier-3 COMSOL comparison harness |
 | `nanopnp env` | Reports the version, the data locations and the store |
 
@@ -19,6 +20,12 @@ Every option is in the generated [command-line reference](../_generated/referenc
 **No flag changes what is solved.** Flags choose where output goes (`--store`, `--run-dir`), which
 stages run (`--upto`, `--only`), and how much is logged. Every quantity that changes a number lives
 in the case file, so the manifest records one source of truth.
+
+`--upto <stage>` runs that stage and every stage it reads, directly or through another, in the
+walk's order, and nothing else. `--upto mesh` runs the geometry stages and the mesh;
+`--upto protonation` runs the structure and the protonation, without the geometry between them;
+`--upto materials` runs the case and the materials alone. A stage is handed only the artefacts it
+declares, so a truncated walk cannot hand a stage less than a complete one does.
 
 ## Output streams
 

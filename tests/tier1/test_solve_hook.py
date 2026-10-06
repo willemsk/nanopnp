@@ -48,10 +48,11 @@ from pathlib import Path
 import pytest
 
 from nanopnp.core.stages import SolveReporting, create, walk_order
-from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
 from nanopnp.numerics.newton import DEFAULT_SETTINGS
+from nanopnp.pipeline.case import resolve
+from nanopnp.pipeline.run import run_case
 
 PORE = CylindricalPoreGeometry(
     pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
@@ -262,10 +263,10 @@ def test_ver44_the_hook_is_not_reachable_from_the_stage_key(
     the constructor's arguments fails here rather than by scattering a store.
     """
     from nanopnp.io.artefact import StageInputs
-    from nanopnp.io.case import load_case
+    from nanopnp.pipeline.case import load_case
 
     document = load_case(case_file)
-    inputs = StageInputs(case=document, upstream={}, options={})
+    inputs = StageInputs(resolved=resolve(document), upstream={}, options={})
     bare = create("solve", workspace=tmp_path / "bare")
     assert isinstance(bare, SolveReporting)
     watched = bare.with_solve_hook(Recorder())

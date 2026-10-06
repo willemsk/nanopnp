@@ -39,7 +39,7 @@ import pytest
 
 from nanopnp.core.hashing import decode_floats
 from nanopnp.geometry.profile import PIPELINE_SOURCE, load_profile
-from nanopnp.io.case import load_case
+from nanopnp.pipeline.case import load_case
 from nanopnp.structure.axis import ORIENTATION_LIMIT_DEG
 from nanopnp.validation.examples import CommandResult, copy_example, run_tagged
 
@@ -162,7 +162,7 @@ def test_ver46_06_the_exported_map_overlays_the_aligned_structure(
     from gridData import Grid
 
     from nanopnp.density.radii import ANGSTROM_TO_NM, KERNEL_RADII, RadiusSet
-    from nanopnp.io.case import resolve
+    from nanopnp.pipeline.case import resolve
 
     example, _, _ = ran
     density = resolve(load_case(example / "2wcd.case.yaml")).density

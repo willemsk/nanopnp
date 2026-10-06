@@ -81,15 +81,42 @@ def test_ver61_the_measurement_adds_no_edge_of_its_own() -> None:
 def test_ver61_upward_top_edges_equal_the_recorded_ratchet() -> None:
     """The ``top`` edges pointing up the layer order are exactly the ``upward:`` rows (H11).
 
-    WP37 left the edges into ``io``, which WP38 cuts, and ``cli -> nanopnp`` (D11).
+    WP38's split leaves one, ``cli -> nanopnp``, which WP39 removes (REV-05): the
+    stages read the base ``io`` and are handed the resolved case, so none imports
+    the assembler ``pipeline`` above them.
     """
     comparison = compare({UPWARD: upward_edges(import_edges())}, accepted_upward())
     assert comparison.equal, comparison.describe()
-    into_io = ("structure", "density", "symmetry", "geometry", "mesh", "charge", "materials")
-    assert {(edge.source, edge.target) for edge in accepted_upward()} == {
-        *((node, "io") for node in (*into_io, "solve", "post")),
-        ("cli", "nanopnp"),
-    }
+    assert {(edge.source, edge.target) for edge in accepted_upward()} == {("cli", "nanopnp")}
+
+
+def test_ver61_a_stage_importing_the_assembler_fails_naming_the_edge() -> None:
+    """A stage that resolved its own case again would import ``pipeline`` upward (WP38 D4)."""
+    ingest = PACKAGE / "mesh" / "ingest.py"
+    text = ingest.read_text(encoding="utf-8")
+    line = len(text.splitlines()) + 1
+    edges = import_edges(
+        sources={"mesh/ingest.py": f"{text}from nanopnp.pipeline.case import resolve\n"}
+    )
+    comparison = compare({UPWARD: upward_edges(edges)}, accepted_upward())
+    assert [pair for _, pair, _ in comparison.added] == [("mesh", "pipeline")]
+    message = comparison.describe()
+    assert "new upward edge mesh -> pipeline" in message
+    assert f"mesh/ingest.py:{line}" in message
+
+
+def test_ver61_the_base_importing_materials_at_run_time_fails_naming_the_edge() -> None:
+    """The resolved case annotates the electrolyte; importing it is ``io -> materials`` (D2)."""
+    resolved = PACKAGE / "io" / "resolved.py"
+    text = resolved.read_text(encoding="utf-8")
+    guarded = "    from nanopnp.materials.electrolyte import Electrolyte\n"
+    assert guarded in text
+    moved = text.replace(guarded, "") + "from nanopnp.materials.electrolyte import Electrolyte\n"
+    edges = import_edges(sources={"io/resolved.py": moved})
+    assert compare(measured_relations(edges), accepted_relation()).equal
+    comparison = compare({UPWARD: upward_edges(edges)}, accepted_upward())
+    assert [pair for _, pair, _ in comparison.added] == [("io", "materials")]
+    assert "new upward edge io -> materials" in comparison.describe()
 
 
 def test_ver61_upward_deferred_edges_equal_the_recorded_ratchet() -> None:
@@ -293,3 +320,25 @@ def test_ver61_components_match_a_graph_solved_by_hand() -> None:
         ("c", "a", 1),
         ("a", "b", 2),
     )
+
+
+SPLIT_BOUND = 1266
+"""``MOD-13``'s bound for the modules WP38's split produces: the smallest module the
+finding names (``cli/__init__.py`` at ``fd4308f``), since the finding states none."""
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "io/case.py",
+        "io/case_paths.py",
+        "io/resolved.py",
+        "io/vocabulary.py",
+        "pipeline/case.py",
+        "pipeline/checks.py",
+    ],
+)
+def test_mod13_no_module_of_the_io_split_exceeds_the_bound(path: str) -> None:
+    """Each module ``io/case.py`` became is at most 1,266 lines (WP38 D14)."""
+    lines = len((PACKAGE / path).read_text(encoding="utf-8").splitlines())
+    assert lines <= SPLIT_BOUND, f"{path} has {lines} lines"

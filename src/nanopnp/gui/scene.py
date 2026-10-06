@@ -7,7 +7,7 @@ matrix jobs where ``PySide6.QtWidgets`` imports at all
 
 **The field list is the solution's, never this package's.** The render child
 enumerates the model's own declared fields and names them with
-:func:`nanopnp.io.fields.attribute_name`, which is the vocabulary the IF-07
+:func:`nanopnp.post.export.attribute_name`, which is the vocabulary the IF-07
 export writes and carries the unit in the name. Nothing here invents a name, a
 unit or an order, so the picture and the file cannot disagree about what a
 number means.

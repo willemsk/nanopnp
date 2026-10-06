@@ -39,14 +39,13 @@ def test_ver65_live_backend_set_equals_the_record() -> None:
     assert comparison.equal, comparison.describe()
 
 
-def test_ver65_the_record_holds_the_twelve_subpackages_of_h3_and_h11() -> None:
-    """The eleven of the modularity report, and ``numerics``, the kernel H11 made a subpackage."""
+def test_ver65_the_record_holds_the_eleven_subpackages_of_h3_h11_and_wp38() -> None:
+    """H3's eleven and H11's ``numerics``, less ``io``, whose export WP38 D10 moved to ``post``."""
     assert set(accepted_backend()) == {
         "charge",
         "density",
         "geometry",
         "gui",
-        "io",
         "materials",
         "mesh",
         "numerics",

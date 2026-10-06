@@ -72,7 +72,8 @@ from nanopnp.gui.render import (
     readiness_script,
 )
 from nanopnp.gui.run_model import RunControl, RunModel
-from nanopnp.io.case import CaseValidationError, UnknownCasePathError
+from nanopnp.io.case import CaseValidationError
+from nanopnp.io.case_paths import UnknownCasePathError
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.gui.case_model import CaseEditor

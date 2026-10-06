@@ -13,15 +13,19 @@
 # removes an edge edits this file in the same commit (docs/project/contributing.md).
 #
 # The layer order, lowest first, is LAYER_ORDER of nanopnp.validation.modularity:
-# core, structure, density, symmetry, geometry, mesh, numerics, charge, materials,
-# physics, solve, post, io, sweep, validation, cli, gui, nanopnp. An edge pointing
-# up that order is annotated with the finding that explains it.
+# core, io, structure, density, symmetry, geometry, mesh, numerics, charge, materials,
+# physics, solve, post, pipeline, sweep, validation, cli, gui, nanopnp. `io` is the
+# base, which imports only core and io at module scope; `pipeline` is the assembler
+# (section 5.1). An edge pointing up that order is annotated with the finding that
+# explains it: io's annotation-only imports of the electrolyte, the Newton settings
+# and the model declaration are MOD-04's, and core's of the stage-input types is
+# MOD-15's.
 #
 # `upward`: every edge of `top` imports (at module scope, outside TYPE_CHECKING)
 # that points up the layer order. The static relation does not change when an
 # import moves under TYPE_CHECKING, so this list is what keeps a cut from coming
 # back. tests/tier1/test_layering.py asserts it equals the measured upward edges in
-# both directions. WP38 removes the edges into io, and WP39 empties the list.
+# both directions. One edge is left, cli -> nanopnp, which WP39 removes (REV-05).
 #
 # `deferred_upward`: the same ratchet over imports inside a function, which are
 # no cut (WP37 D12) and which the static relation cannot tell from the
@@ -37,7 +41,7 @@ edges:
   - {from: charge, to: core, relation: static, finding: null}
   - {from: charge, to: density, relation: static, finding: null}
   - {from: charge, to: geometry, relation: static, finding: null}
-  - {from: charge, to: io, relation: static, finding: MOD-04}
+  - {from: charge, to: io, relation: static, finding: null}
   - {from: charge, to: mesh, relation: static, finding: null}
   - {from: charge, to: numerics, relation: static, finding: null}
   - {from: charge, to: structure, relation: static, finding: null}
@@ -47,16 +51,17 @@ edges:
   - {from: cli, to: io, relation: static, finding: null}
   - {from: cli, to: mesh, relation: static, finding: null}
   - {from: cli, to: nanopnp, relation: static, finding: null}
+  - {from: cli, to: pipeline, relation: static, finding: null}
   - {from: cli, to: structure, relation: static, finding: null}
   - {from: cli, to: sweep, relation: static, finding: null}
   - {from: cli, to: validation, relation: static, finding: null}
   - {from: core, to: io, relation: static, finding: MOD-15}
   - {from: density, to: core, relation: static, finding: null}
-  - {from: density, to: io, relation: static, finding: MOD-04}
+  - {from: density, to: io, relation: static, finding: null}
   - {from: density, to: structure, relation: static, finding: null}
   - {from: geometry, to: core, relation: static, finding: null}
   - {from: geometry, to: density, relation: static, finding: null}
-  - {from: geometry, to: io, relation: static, finding: MOD-04}
+  - {from: geometry, to: io, relation: static, finding: null}
   - {from: geometry, to: mesh, relation: static, finding: MOD-03}
   - {from: geometry, to: structure, relation: static, finding: null}
   - {from: geometry, to: symmetry, relation: static, finding: null}
@@ -68,69 +73,81 @@ edges:
   - {from: gui, to: mesh, relation: static, finding: null}
   - {from: gui, to: nanopnp, relation: static, finding: null}
   - {from: gui, to: numerics, relation: static, finding: null}
+  - {from: gui, to: pipeline, relation: static, finding: null}
+  - {from: gui, to: post, relation: static, finding: null}
   - {from: gui, to: solve, relation: static, finding: null}
   - {from: gui, to: structure, relation: static, finding: null}
   - {from: gui, to: symmetry, relation: static, finding: null}
-  - {from: io, to: charge, relation: static, finding: MOD-04}
   - {from: io, to: core, relation: static, finding: null}
   - {from: io, to: materials, relation: static, finding: MOD-04}
-  - {from: io, to: mesh, relation: static, finding: MOD-04}
-  - {from: io, to: numerics, relation: static, finding: null}
+  - {from: io, to: numerics, relation: static, finding: MOD-04}
   - {from: io, to: physics, relation: static, finding: MOD-04}
   - {from: materials, to: core, relation: static, finding: null}
-  - {from: materials, to: io, relation: static, finding: MOD-04}
+  - {from: materials, to: io, relation: static, finding: null}
   - {from: mesh, to: core, relation: static, finding: null}
   - {from: mesh, to: geometry, relation: static, finding: null}
-  - {from: mesh, to: io, relation: static, finding: MOD-04}
+  - {from: mesh, to: io, relation: static, finding: null}
   - {from: nanopnp, to: core, relation: static, finding: null}
   - {from: nanopnp, to: io, relation: static, finding: null}
   - {from: nanopnp, to: physics, relation: static, finding: null}
+  - {from: nanopnp, to: pipeline, relation: static, finding: null}
   - {from: nanopnp, to: sweep, relation: static, finding: null}
   - {from: numerics, to: core, relation: static, finding: null}
   - {from: physics, to: core, relation: static, finding: null}
+  - {from: physics, to: io, relation: static, finding: null}
   - {from: physics, to: materials, relation: static, finding: null}
   - {from: physics, to: mesh, relation: static, finding: null}
   - {from: physics, to: numerics, relation: static, finding: null}
+  - {from: pipeline, to: charge, relation: static, finding: null}
+  - {from: pipeline, to: core, relation: static, finding: null}
+  - {from: pipeline, to: io, relation: static, finding: null}
+  - {from: pipeline, to: materials, relation: static, finding: null}
+  - {from: pipeline, to: mesh, relation: static, finding: null}
+  - {from: pipeline, to: numerics, relation: static, finding: null}
+  - {from: pipeline, to: physics, relation: static, finding: null}
   - {from: post, to: charge, relation: static, finding: null}
   - {from: post, to: core, relation: static, finding: null}
   - {from: post, to: geometry, relation: static, finding: null}
-  - {from: post, to: io, relation: static, finding: MOD-04}
+  - {from: post, to: io, relation: static, finding: null}
   - {from: post, to: mesh, relation: static, finding: null}
   - {from: post, to: numerics, relation: static, finding: null}
   - {from: post, to: physics, relation: static, finding: null}
   - {from: post, to: solve, relation: static, finding: null}
   - {from: solve, to: charge, relation: static, finding: null}
   - {from: solve, to: core, relation: static, finding: null}
-  - {from: solve, to: io, relation: static, finding: MOD-04}
+  - {from: solve, to: io, relation: static, finding: null}
   - {from: solve, to: materials, relation: static, finding: null}
   - {from: solve, to: mesh, relation: static, finding: null}
   - {from: solve, to: numerics, relation: static, finding: null}
   - {from: solve, to: physics, relation: static, finding: null}
   - {from: structure, to: core, relation: static, finding: null}
-  - {from: structure, to: io, relation: static, finding: MOD-04}
+  - {from: structure, to: io, relation: static, finding: null}
   - {from: sweep, to: core, relation: static, finding: null}
   - {from: sweep, to: io, relation: static, finding: null}
   - {from: sweep, to: materials, relation: static, finding: null}
   - {from: sweep, to: mesh, relation: static, finding: null}
   - {from: sweep, to: numerics, relation: static, finding: null}
+  - {from: sweep, to: pipeline, relation: static, finding: null}
   - {from: sweep, to: post, relation: static, finding: null}
   - {from: sweep, to: solve, relation: static, finding: null}
   - {from: symmetry, to: core, relation: static, finding: null}
   - {from: symmetry, to: density, relation: static, finding: null}
-  - {from: symmetry, to: io, relation: static, finding: MOD-04}
+  - {from: symmetry, to: io, relation: static, finding: null}
   - {from: validation, to: charge, relation: static, finding: null}
   - {from: validation, to: core, relation: static, finding: null}
   - {from: validation, to: density, relation: static, finding: null}
   - {from: validation, to: geometry, relation: static, finding: null}
   - {from: validation, to: io, relation: static, finding: null}
   - {from: validation, to: materials, relation: static, finding: null}
-  - {from: validation, to: mesh, relation: static, finding: null}
   - {from: validation, to: numerics, relation: static, finding: null}
   - {from: validation, to: physics, relation: static, finding: null}
+  - {from: validation, to: pipeline, relation: static, finding: null}
+  - {from: validation, to: post, relation: static, finding: null}
   - {from: validation, to: solve, relation: static, finding: null}
   - {from: cli, to: core, relation: string, finding: null}
   - {from: cli, to: io, relation: string, finding: null}
   - {from: cli, to: physics, relation: string, finding: null}
+  - {from: cli, to: pipeline, relation: string, finding: null}
   - {from: cli, to: sweep, relation: string, finding: null}
   - {from: core, to: charge, relation: string, finding: MOD-15}
   - {from: core, to: density, relation: string, finding: MOD-15}
@@ -140,6 +157,7 @@ edges:
   - {from: core, to: materials, relation: string, finding: MOD-15}
   - {from: core, to: mesh, relation: string, finding: MOD-15}
   - {from: core, to: numerics, relation: string, finding: MOD-05}
+  - {from: core, to: pipeline, relation: string, finding: null}
   - {from: core, to: post, relation: string, finding: MOD-15}
   - {from: core, to: solve, relation: string, finding: MOD-15}
   - {from: core, to: structure, relation: string, finding: MOD-15}
@@ -149,18 +167,10 @@ edges:
   - {from: nanopnp, to: core, relation: string, finding: null}
   - {from: nanopnp, to: io, relation: string, finding: null}
   - {from: nanopnp, to: physics, relation: string, finding: null}
+  - {from: nanopnp, to: pipeline, relation: string, finding: null}
   - {from: nanopnp, to: sweep, relation: string, finding: null}
 upward:
-  - {from: charge, to: io, finding: MOD-04}
   - {from: cli, to: nanopnp, finding: REV-05}
-  - {from: density, to: io, finding: MOD-04}
-  - {from: geometry, to: io, finding: MOD-04}
-  - {from: materials, to: io, finding: MOD-04}
-  - {from: mesh, to: io, finding: MOD-04}
-  - {from: post, to: io, finding: MOD-04}
-  - {from: solve, to: io, finding: MOD-04}
-  - {from: structure, to: io, finding: MOD-04}
-  - {from: symmetry, to: io, finding: MOD-04}
 deferred_upward:
   - {from: gui, to: nanopnp, finding: REV-05}
 backend:
@@ -168,7 +178,6 @@ backend:
   - density
   - geometry
   - gui
-  - io
   - materials
   - mesh
   - numerics

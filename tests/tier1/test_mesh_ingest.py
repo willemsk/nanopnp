@@ -21,7 +21,7 @@ import pytest
 
 from nanopnp.core.stages import CancelFlag, Cancelled, create, describe
 from nanopnp.io.artefact import StageInputs
-from nanopnp.io.case import CaseDocument, loads_case, resolve
+from nanopnp.io.case import CaseDocument
 from nanopnp.mesh.adapter import MeshData, read, write_msh41
 from nanopnp.mesh.ingest import (
     BOUNDARY_VOCABULARY,
@@ -33,6 +33,7 @@ from nanopnp.mesh.ingest import (
     required_names,
 )
 from nanopnp.mesh.quality import MeshQualityError
+from nanopnp.pipeline.case import loads_case, resolve
 
 FILE_GROUPS = (
     "{PoreFluid: electrolyte, Membrane: membrane, "
@@ -405,18 +406,20 @@ def test_ver27_the_artefact_key_is_the_contents_and_the_mapping(
     solve's answer out of the other's cache entry (section 5.3.2).
     """
     stage = MeshStage(workspace=tmp_path / "work")
-    first = stage.key(StageInputs(case=loads_case(case_text(mesh_file))))
+    first = stage.key(StageInputs(resolved=resolve(loads_case(case_text(mesh_file)))))
 
     copied = tmp_path / "renamed.msh"
     copied.write_bytes(mesh_file.read_bytes())
-    same = stage.key(StageInputs(case=loads_case(case_text(copied))))
+    same = stage.key(StageInputs(resolved=resolve(loads_case(case_text(copied)))))
     assert same.hash == first.hash
 
     other_map = (
         "{PoreFluid: electrolyte, Membrane: membrane, "
         "Axis: axis, Wall: wall, Bilayer: interface, Top: cis, Bottom: trans}"
     )
-    remapped = stage.key(StageInputs(case=loads_case(case_text(mesh_file, groups=other_map))))
+    remapped = stage.key(
+        StageInputs(resolved=resolve(loads_case(case_text(mesh_file, groups=other_map))))
+    )
     assert remapped.hash != first.hash
 
 
@@ -427,14 +430,17 @@ def test_ver25_the_mesh_stage_reports_progress_ending_at_one(
     reports: list[tuple[float, str]] = []
     stage = MeshStage(workspace=tmp_path / "work")
     artefact = stage.run(
-        StageInputs(case=loads_case(case_text(mesh_file))),
+        StageInputs(resolved=resolve(loads_case(case_text(mesh_file)))),
         progress=lambda fraction, message: reports.append((fraction, message)),
     )
 
     fractions = [fraction for fraction, _ in reports]
     assert fractions == sorted(fractions)
     assert fractions[-1] == pytest.approx(1.0)
-    assert artefact.hash == stage.key(StageInputs(case=loads_case(case_text(mesh_file)))).hash
+    assert (
+        artefact.hash
+        == stage.key(StageInputs(resolved=resolve(loads_case(case_text(mesh_file))))).hash
+    )
     assert artefact.payload["mesh"].is_file()
     # Written from the mapped mesh, so reading it back needs no mapping at all.
     written, applied = apply_groups(read(artefact.payload["mesh"]), {})
@@ -448,6 +454,6 @@ def test_ver25_a_cancelled_mesh_stage_writes_nothing(mesh_file: Path, tmp_path: 
     flag.cancel()
     with pytest.raises(Cancelled, match="mesh"):
         MeshStage(workspace=tmp_path / "work").run(
-            StageInputs(case=loads_case(case_text(mesh_file))), cancel=flag
+            StageInputs(resolved=resolve(loads_case(case_text(mesh_file)))), cancel=flag
         )
     assert not (tmp_path / "work").exists()

@@ -44,7 +44,7 @@ from nanopnp.gui.probe import (
     exercise_payloads,
     licence_notice,
 )
-from nanopnp.io.case import ResolvedProtonation
+from nanopnp.io.resolved import ResolvedProtonation
 
 AMENDED_PAYLOAD_SET = frozenset(
     {

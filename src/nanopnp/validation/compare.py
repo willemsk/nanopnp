@@ -42,9 +42,11 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from nanopnp.io.fields import field_scale, sample_at
-from nanopnp.mesh.primitives import VELOCITY
-from nanopnp.physics.models import PRESSURE
+from nanopnp.io.vocabulary import PRESSURE, VELOCITY
+from nanopnp.post.export import (
+    field_scale,
+    sample_at,
+)
 from nanopnp.validation.comsol import Golden, GoldenQuantities
 from nanopnp.validation.probe import ProbeGrid, ProbeGridError
 
@@ -213,7 +215,7 @@ def sample_on_probe(
         The probe grid, already bound to this solution's mesh.
     scales
         The NUM-09 scale set the state was solved in, as
-        :func:`~nanopnp.io.fields.export_fields` takes it. Passed rather than
+        :func:`~nanopnp.post.export.export_fields` takes it. Passed rather than
         read off the model, because :class:`~nanopnp.physics.models.PhysicsModel`
         is a protocol and a scale set is a property of the *case*.
 

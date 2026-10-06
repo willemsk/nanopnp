@@ -26,8 +26,12 @@ from nanopnp.charge.protonation import (
     export_pqr,
 )
 from nanopnp.io.artefact import StageInputs
-from nanopnp.io.case import load_case, loads_case
 from nanopnp.io.store import Store
+from nanopnp.pipeline.case import (
+    load_case,
+    loads_case,
+    resolve,
+)
 
 pytestmark = pytest.mark.extended
 
@@ -167,7 +171,7 @@ def test_ver57_the_export_resupplied_beside_the_structure_is_the_payload(
     structure = store.get("nanopnp/structure/v1", protonated_2wcd.structure)
     assert structure is not None
     stage = ProtonationStage(workspace=tmp_path / "supplied")
-    artefact = stage.run(StageInputs(case=case, upstream={"structure": structure}))
+    artefact = stage.run(StageInputs(resolved=resolve(case), upstream={"structure": structure}))
     supplied = ProtonationTable.read(artefact.payload["protonation"])
     for key in (
         "frame_offsets",
@@ -194,14 +198,14 @@ import json, resource, sys, time
 from pathlib import Path
 from nanopnp.core.stages import create
 from nanopnp.io.artefact import StageInputs
-from nanopnp.io.case import load_case
 from nanopnp.io.store import Store
+from nanopnp.pipeline.case import load_case, resolve
 store, case, structure, workspace = sys.argv[1:5]
 document = load_case(Path(case))
 artefact = Store(store).get("nanopnp/structure/v1", structure)
 stage = create("protonation", workspace=Path(workspace))
 started = time.perf_counter()
-done = stage.run(StageInputs(case=document, upstream={"structure": artefact}))
+done = stage.run(StageInputs(resolved=resolve(document), upstream={"structure": artefact}))
 seconds = time.perf_counter() - started
 scale = 1e9 if sys.platform == "darwin" else 1e6
 peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / scale

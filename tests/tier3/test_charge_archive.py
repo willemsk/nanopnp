@@ -46,10 +46,13 @@ from nanopnp.charge.protonation import ProtonationTable
 from nanopnp.charge.stage import export_charge
 from nanopnp.core.paths import REFERENCE_DATA_VARIABLE, profile_file, reference_file
 from nanopnp.density.grid import read_grid
-from nanopnp.io.run import RunResult, run_case
 from nanopnp.io.store import Store
 from nanopnp.mesh.reference import ReferenceGeometry
 from nanopnp.numerics.measures import AXISYMMETRIC
+from nanopnp.pipeline.run import (
+    RunResult,
+    run_case,
+)
 from nanopnp.post.qoi import transport_number
 from nanopnp.validation.charge import AreaComparison, compare_areal, reference_construction
 

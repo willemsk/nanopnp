@@ -18,8 +18,8 @@ import pytest
 
 from nanopnp.cli import main
 from nanopnp.core.errors import EXIT_OK
-from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
+from nanopnp.pipeline.run import run_case
 
 REPOSITORY = Path(__file__).resolve().parents[2]
 FROZEN = REPOSITORY / "examples" / "05-clya-reference" / "clya-0.5M-plus50mV.case.yaml"

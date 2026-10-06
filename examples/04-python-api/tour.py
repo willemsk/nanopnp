@@ -22,7 +22,6 @@ import meshio
 
 from nanopnp import (
     CaseDocument,
-    RunResult,
     Store,
     dumps_case,
     load_case,
@@ -62,14 +61,12 @@ def main() -> None:
     # 4. Substitute the mesh by hand (FR-27): the same document with one input
     #    changed. A stage's key moves exactly when one of its inputs does, so the
     #    mesh artefact moves and the materials artefact, which never reads the
-    #    mesh, does not. Stopping at stage 8 costs no solve.
+    #    mesh, does not. A walk to a stage runs that stage's inputs and nothing
+    #    else, so one walk to the mesh and one to the materials cost no solve.
     before = {record.name: record.hash for record in result.stages}
     shutil.copyfile("pore.msh", "renamed.msh")
     after = {
-        path: {
-            record.name: record.hash
-            for record in _substituted(Path("tour.case.yaml"), path, store).stages
-        }
+        path: _substituted(Path("tour.case.yaml"), path, store)
         for path in ("finer.msh", "renamed.msh")
     }
     for path, hashes in after.items():
@@ -110,14 +107,22 @@ def _species(case: Path) -> list[str]:
     return [species.name for species in load_case(case).electrolyte.species]
 
 
-def _substituted(case: Path, mesh: str, store: Store) -> RunResult:
-    """Return the case run to stage 8 with ``inputs.mesh.path`` replaced."""
+def _substituted(case: Path, mesh: str, store: Store) -> dict[str, str]:
+    """Return each stage's hash for the case with ``inputs.mesh.path`` replaced.
+
+    Walked to the mesh and to the materials: each walk runs its target's inputs
+    alone, and neither runs the solve.
+    """
     data = load_case(case).model_dump(mode="json", by_alias=True, exclude_none=True)
     data["inputs"]["mesh"]["path"] = mesh
     variant = CaseDocument.model_validate(data)
-    return run_document(
-        variant, case_text=dumps_case(variant), store=store, upto="materials", write=False
-    )
+    hashes: dict[str, str] = {}
+    for upto in ("mesh", "materials"):
+        result = run_document(
+            variant, case_text=dumps_case(variant), store=store, upto=upto, write=False
+        )
+        hashes.update({record.name: record.hash for record in result.stages})
+    return hashes
 
 
 def _plot(coordinates: object, potential: object) -> None:

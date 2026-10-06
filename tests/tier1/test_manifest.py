@@ -13,7 +13,7 @@ refuses any bool-or-``Literal`` field of the schema that is in neither
 and forgetting the manifest then fails at Tier 1, in seconds, rather than in a
 comparison against COMSOL six months later.
 
-The schema itself is enumerated by :func:`~nanopnp.io.case.case_fields`, not by a
+The schema itself is enumerated by :func:`~nanopnp.io.case_paths.case_fields`, not by a
 walk written here: a second walk over one schema is the one that drifts
 silently, and a field a local walk missed would be a field the manifest never
 classified *and* the desktop editor never offered. VER-43 froze the enumeration in
@@ -53,10 +53,10 @@ from nanopnp.io.artefact import CaseArtefact
 from nanopnp.io.case import (
     CaseDocument,
     CaseValidationError,
+)
+from nanopnp.io.case_paths import (
     FieldReference,
     case_fields,
-    loads_case,
-    resolve,
 )
 from nanopnp.io.defaults import (
     CONFIGURATION_PATHS,
@@ -70,6 +70,7 @@ from nanopnp.io.defaults import (
 from nanopnp.io.manifest import GROUPS, MANIFEST_SCHEMA, build, read
 from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics.models import CoupledModel
+from nanopnp.pipeline.case import loads_case, resolve
 
 MINIMAL = """
 schema: nanopnp/case/v2
@@ -245,7 +246,7 @@ def test_ver24_the_model_and_the_case_agree_on_the_switches_they_share() -> None
     document.physics.dielectric_gradient_forces = True
     document.electrolyte.corrections.steric.model = "none"
     # The NUM-18 ladder builds every rung with a fixed set of physics options
-    # and would silently drop this deviation (io/case.py::_check_ladder_can_honour);
+    # and would silently drop this deviation (pipeline/checks.py::_check_ladder_can_honour);
     # this test is about the model and the case agreeing on what they name, which
     # a single rung, resolved and built directly below, exercises just as well.
     document.numerics.continuation = "none"

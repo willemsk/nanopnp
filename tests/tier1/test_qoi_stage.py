@@ -38,11 +38,15 @@ import pytest
 
 from nanopnp.io import manifest as manifest_io
 from nanopnp.io.artefact import QOI_SCHEMA, REPORT_SCHEMA, CaseArtefact, StageInputs
-from nanopnp.io.case import CaseDocument, loads_case, resolve
-from nanopnp.io.fields import OMEGA_STEM, OMEGA_W_STEM
+from nanopnp.io.case import CaseDocument
 from nanopnp.mesh.adapter import MeshData
 from nanopnp.mesh.ingest import ingest
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.pipeline.case import loads_case, resolve
+from nanopnp.post.export import (
+    OMEGA_STEM,
+    OMEGA_W_STEM,
+)
 from nanopnp.post.indicator import lumen_band
 from nanopnp.post.stage import (
     BAND_FRACTION,
@@ -160,7 +164,9 @@ class Solved:
     ) -> StageInputs:
         """Return stage inputs carrying the converged solve and ``options``."""
         return StageInputs(
-            case=self.case(outputs), upstream={"solve": self.solution}, options=dict(options)
+            resolved=resolve(self.case(outputs)),
+            upstream={"solve": self.solution},
+            options=dict(options),
         )
 
 
@@ -177,7 +183,7 @@ def solved(tmp_path_factory: pytest.TempPathFactory) -> Solved:
         outputs="current, transport_numbers, eof_rate",
     )
     document = loads_case(text)
-    solution = SolveStage(workspace=work / "solve").run(StageInputs(case=document))
+    solution = SolveStage(workspace=work / "solve").run(StageInputs(resolved=resolve(document)))
     return Solved(document=document, text=text, solution=solution, mesh_path=mesh_path, work=work)
 
 
@@ -364,8 +370,14 @@ def test_num27_grounding_trans_reports_the_quantities_of_the_same_state_grounded
         outputs="current, transport_numbers, eof_rate",
     ).replace("ground: cis", "ground: trans")
     document = loads_case(text)
-    solution = SolveStage(workspace=solved.work / "solve-trans").run(StageInputs(case=document))
-    trans = QoIStage().run(StageInputs(case=document, upstream={"solve": solution})).summary
+    solution = SolveStage(workspace=solved.work / "solve-trans").run(
+        StageInputs(resolved=resolve(document))
+    )
+    trans = (
+        QoIStage()
+        .run(StageInputs(resolved=resolve(document), upstream={"solve": solution}))
+        .summary
+    )
     cis = QoIStage().run(solved.inputs()).summary
     assert trans["bias_V"] == pytest.approx(BIAS_V, rel=1e-15)
     assert isinstance(trans["conductance_S"], float)
@@ -392,8 +404,14 @@ def test_num27_a_zero_bias_case_reports_its_currents_and_leaves_the_ratios_undef
         outputs=outputs,
     )
     document = loads_case(text)
-    solution = SolveStage(workspace=solved.work / "solve-zero").run(StageInputs(case=document))
-    summary = QoIStage().run(StageInputs(case=document, upstream={"solve": solution})).summary
+    solution = SolveStage(workspace=solved.work / "solve-zero").run(
+        StageInputs(resolved=resolve(document))
+    )
+    summary = (
+        QoIStage()
+        .run(StageInputs(resolved=resolve(document), upstream={"solve": solution}))
+        .summary
+    )
     assert summary["bias_V"] == 0.0
     assert summary["routes_checked"] is False
     assert "route_agreement" not in summary
@@ -575,7 +593,7 @@ def test_if07_the_report_writes_the_field_export_when_outputs_asks_for_it(
 ) -> None:
     """``fields`` in ``outputs:`` produces the IF-07 pair for each domain."""
     inputs = StageInputs(
-        case=solved.case("current, fields"),
+        resolved=resolve(solved.case("current, fields")),
         upstream={
             "solve": solved.solution,
             "qoi": QoIStage().run(solved.inputs("current")),
@@ -606,7 +624,7 @@ def test_if07_a_run_that_did_not_ask_for_fields_writes_nothing(
     """
     directory = tmp_path / "fields"
     inputs = StageInputs(
-        case=solved.case("current"),
+        resolved=resolve(solved.case("current")),
         upstream={
             "solve": solved.solution,
             "qoi": QoIStage().run(solved.inputs("current")),
@@ -624,13 +642,13 @@ def test_fr23_the_report_is_keyed_on_the_case_the_solve_and_the_extraction(
     """All three input hashes enter the key, so no report outlives what it describes."""
     qoi = QoIStage().run(solved.inputs("current"))
     inputs = StageInputs(
-        case=solved.case("current"),
+        resolved=resolve(solved.case("current")),
         upstream={"solve": solved.solution, "qoi": qoi},
     )
     stage = ReportStage(workspace=tmp_path / "fields")
     key = stage.key(inputs)
     assert key.inputs == {
-        "case": CaseArtefact(inputs.case).hash,
+        "case": CaseArtefact(inputs.resolved.document).hash,
         "qoi": qoi.hash,
         "solution": solved.solution.hash,
     }
@@ -641,6 +659,8 @@ def test_fr23_a_report_without_the_extraction_it_describes_is_refused(
     solved: Solved, tmp_path: Path
 ) -> None:
     """Stage 12 names the artefact it is missing; running it alone is the case."""
-    inputs = StageInputs(case=solved.case("current"), upstream={"solve": solved.solution})
+    inputs = StageInputs(
+        resolved=resolve(solved.case("current")), upstream={"solve": solved.solution}
+    )
     with pytest.raises(KeyError, match="qoi"):
         ReportStage(workspace=tmp_path / "fields").run(inputs)

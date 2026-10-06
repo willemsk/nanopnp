@@ -36,7 +36,7 @@ from nanopnp.core.stages import (
     report,
 )
 from nanopnp.io.artefact import StageInputs
-from nanopnp.io.case import loads_case
+from nanopnp.pipeline.case import loads_case, resolve
 
 MINIMAL = """
 schema: nanopnp/case/v2
@@ -114,7 +114,7 @@ def test_ver25_every_stage_describes_itself_without_importing_it() -> None:
         "report",
     ]
     # WP36 D3: the facts a walk acts on are introspected with the rest.
-    assert reported["facts"]["solve"] == [True, False, False, 0.75, None, []]
+    assert reported["facts"]["solve"] == [True, False, False, 0.75, None, ["charge"]]
     assert reported["facts"]["structure"] == [True, False, False, 0.05, "structure", []]
     assert reported["facts"]["charge"][-1] == ["protonation", "region"]
     assert reported["ngsolve"] is False
@@ -306,7 +306,7 @@ def test_ver25_the_materials_stage_reports_progress_ending_at_one() -> None:
     seen: list[float] = []
     stage = create("materials")
     artefact = stage.run(
-        StageInputs(case=loads_case(MINIMAL)),
+        StageInputs(resolved=resolve(loads_case(MINIMAL))),
         progress=lambda fraction, message: seen.append(fraction),
     )
     assert seen == sorted(seen)
@@ -320,11 +320,11 @@ def test_ver25_a_cancelled_stage_returns_no_artefact() -> None:
     flag = CancelFlag()
     flag.cancel()
     with pytest.raises(Cancelled):
-        create("materials").run(StageInputs(case=loads_case(MINIMAL)), cancel=flag)
+        create("materials").run(StageInputs(resolved=resolve(loads_case(MINIMAL))), cancel=flag)
 
 
 def test_ver25_a_stage_invoked_without_its_upstream_says_which_one() -> None:
     """Running a stage alone is exactly when a missing input shows up."""
-    inputs = StageInputs(case=loads_case(MINIMAL))
+    inputs = StageInputs(resolved=resolve(loads_case(MINIMAL)))
     with pytest.raises(KeyError, match="materials"):
         inputs.require("materials")

@@ -80,7 +80,11 @@ from nanopnp.geometry.profile import (
     write_profile,
 )
 from nanopnp.io.artefact import ProfileArtefact
-from nanopnp.io.case import ContourSpec, DensitySpec, UnsupportedCaseSection, resolve
+from nanopnp.io.case import (
+    ContourSpec,
+    DensitySpec,
+    UnsupportedCaseSection,
+)
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
 from nanopnp.structure.ensemble import AlignedEnsemble
 from nanopnp.symmetry.reduce import PAYLOAD_NAME as REDUCED_PAYLOAD
@@ -975,10 +979,10 @@ WORKSPACE_DIRNAME = "tmp"
 
 def _specs(inputs: StageInputs) -> tuple[ContourSpec, DensitySpec]:
     """Return ``geometry.contour`` and ``geometry.density``, or refuse a case without them."""
-    resolved = resolve(inputs.case)
+    resolved = inputs.resolved
     if resolved.contour is None or resolved.density is None:
         raise UnsupportedCaseSection(
-            f"case {inputs.case.name!r} carries no structure: section, so stage 4 has no map "
+            f"case {inputs.resolved.name!r} carries no structure: section, so stage 4 has no map "
             "to contour"
         )
     return resolved.contour, resolved.density

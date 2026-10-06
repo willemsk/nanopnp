@@ -29,9 +29,11 @@ from nanopnp.charge.stage import check_water_facing, derive_fields
 from nanopnp.density.grid import RadialGrid
 from nanopnp.geometry.region import RegionRecord, RegionStage, read_region
 from nanopnp.io.artefact import StageInputs
-from nanopnp.io.case import CaseValidationError, ResolvedCase, loads_case, resolve
+from nanopnp.io.case import CaseValidationError
+from nanopnp.io.resolved import ResolvedCase
 from nanopnp.mesh.ingest import IngestedMesh, MeshStage, deployed_mesh
 from nanopnp.numerics.measures import AXISYMMETRIC
+from nanopnp.pipeline.case import loads_case, resolve
 
 DELTA_NM = 0.15
 """``delta``: the middle of PHY-20's 1-2 Angstrom (WP30 D15)."""
@@ -74,9 +76,9 @@ def _walk(
 ) -> tuple[ResolvedCase, RegionRecord, IngestedMesh]:
     """Return the resolved case, its record and its deployed mesh."""
     case = loads_case(case_text(profile, charge, scale=scale))
-    region = RegionStage(workspace=directory / "region").run(StageInputs(case=case))
+    region = RegionStage(workspace=directory / "region").run(StageInputs(resolved=resolve(case)))
     mesh = MeshStage(workspace=directory / "mesh").run(
-        StageInputs(case=case, upstream={"region": region})
+        StageInputs(resolved=resolve(case), upstream={"region": region})
     )
     resolved = resolve(case)
     return resolved, read_region(Path(region.payload["region"])), deployed_mesh(resolved, mesh)
@@ -219,12 +221,12 @@ def test_ver59_a_consumer_reads_stage_7s_chi_with_the_means_it_recorded(
     from nanopnp.charge.stage import FieldStage, case_fields
 
     case = loads_case(case_text(parallelogram_profile, f"dielectric_transition_nm: {DELTA_NM}"))
-    region = RegionStage(workspace=tmp_path / "region").run(StageInputs(case=case))
+    region = RegionStage(workspace=tmp_path / "region").run(StageInputs(resolved=resolve(case)))
     mesh = MeshStage(workspace=tmp_path / "mesh").run(
-        StageInputs(case=case, upstream={"region": region})
+        StageInputs(resolved=resolve(case), upstream={"region": region})
     )
     fields = FieldStage(workspace=tmp_path / "fields").run(
-        StageInputs(case=case, upstream={"region": region, "mesh": mesh})
+        StageInputs(resolved=resolve(case), upstream={"region": region, "mesh": mesh})
     )
     resolved = resolve(case)
     consumed = case_fields(resolved, None, fields, deployed_mesh(resolved, mesh).mesh)

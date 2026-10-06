@@ -46,15 +46,20 @@ from nanopnp.core.typing import (
     Mesh,
     Option,
 )
+from nanopnp.io.case import CaseValidationError
+from nanopnp.io.vocabulary import (
+    POTENTIAL,
+    PRESSURE,
+    PRESSURE_MEAN,
+    VELOCITY,
+    VELOCITY_AXIS,
+)
 from nanopnp.materials.electrolyte import CorrectionSwitches, Electrolyte
 from nanopnp.materials.fields import blend, nearest_solid_permittivity
 from nanopnp.mesh.primitives import (
     DEFAULT_BOUNDARIES,
     ELECTROLYTE_DOMAINS,
     PERMITTIVITY_EXEMPT,
-    POTENTIAL,
-    VELOCITY,
-    VELOCITY_AXIS,
     CoupledBoundaries,
 )
 from nanopnp.numerics.gates import (
@@ -109,14 +114,15 @@ from nanopnp.physics.stabilisation import (
 from nanopnp.physics.stabilisation import cell_peclet as species_cell_peclet
 from nanopnp.physics.stabilisation import create as create_stabilisation
 
+if TYPE_CHECKING:
+    from nanopnp.io.resolved import ResolvedCase
+
 __all__ = [
     "COEFFICIENTS",
     "DEFAULT_BOUNDARIES",
     "LADDER_STRATEGY",
     "LADDER_TARGETS",
-    "PRESSURE_MEAN",
     "SWITCHES",
-    "VELOCITY_AXIS",
     "CoupledBoundaries",
     "CoupledModel",
     "ElectrostaticModel",
@@ -142,10 +148,6 @@ logger = logging.getLogger(__name__)
 
 ElementKind: TypeAlias = Literal["h1", "vector_h1", "number"]
 """The element families a field may be discretised with (NUM-01)."""
-
-PRESSURE = "pressure"
-PRESSURE_MEAN = "pressure_mean"
-"""Name of the scalar multiplier fixing the pressure level; see ``pressure_constraint``."""
 
 SWITCHES: tuple[str, ...] = ("flow", "variable_density", "inertia", "dielectric_gradient_forces")
 """The ``physics:`` switches a :class:`ModelDeclaration` states a value set for (PHY-22)."""
@@ -193,7 +195,7 @@ def inf_sup_problem(*, velocity_order: int, pressure_order: int, stabilisation: 
     checkerboard mode the solve will happily converge to.
 
     One implementation, two callers: :meth:`CoupledModel.__post_init__` gates the
-    model and :func:`nanopnp.io.case.resolve` gates the case, so that a case is
+    model and :func:`nanopnp.pipeline.case.resolve` gates the case, so that a case is
     refused while it is being resolved rather than after the continuation ladder
     has been built on it. Two separate copies of the condition could disagree
     about which pairs are admissible, and the one that mattered would be
@@ -2322,6 +2324,43 @@ def create(name: str, **kwargs: Option) -> PhysicsModel:
             "(section 5.4.3)"
         )
     return model
+
+
+def build_case_model(
+    model: str, electrolyte: Electrolyte, concentration_M: float, options: Mapping[str, Option]
+) -> PhysicsModel:
+    """Build the named model at a case's operating point (WP26 D6, D10).
+
+    The one call site of a case's builder: every builder receives the
+    electrolyte and the concentration beside the declared options. Building
+    imports no finite-element backend, so :func:`nanopnp.pipeline.case.resolve`
+    does it once to surface a builder's own refusal while the case is resolved.
+
+    Raises
+    ------
+    CaseValidationError
+        If the builder refuses the configuration, naming ``physics.model`` and
+        carrying the builder's reason.
+    """
+    try:
+        return create(model, electrolyte=electrolyte, concentration_M=concentration_M, **options)
+    except (TypeError, ValueError) as error:
+        raise CaseValidationError(
+            f"physics.model {model!r} cannot be built for this case: {error}"
+        ) from error
+
+
+def case_model(resolved: ResolvedCase) -> PhysicsModel:
+    """Build a resolved case's model at its operating point (WP26 D6, WP38 D5).
+
+    Every consumer that needs the built model -- the single rung and a restore
+    among them -- builds it here, so none of them can pass the builder a
+    different set of keywords from the one :func:`build_case_model` was given
+    when the case was resolved.
+    """
+    return build_case_model(
+        resolved.model, resolved.electrolyte, resolved.concentration_M, resolved.model_options
+    )
 
 
 def solves_transport(model: PhysicsModel) -> bool:

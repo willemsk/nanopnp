@@ -29,6 +29,7 @@ from nanopnp.materials.electrolyte import (
     log_clamp_activations,
 )
 from nanopnp.materials.forms import FORM_PARAMETERS, FORMS
+from nanopnp.pipeline.case import resolve
 
 REL_TOL = 5e-4  # the published check values are quoted to four significant figures
 FAR_FROM_WALL_NM = 50.0  # f^w is 1 to machine precision well away from the wall
@@ -392,8 +393,8 @@ def test_fr16_editing_a_second_correction_file_moves_the_materials_key(
     """
     from nanopnp.core import paths
     from nanopnp.io.artefact import StageInputs
-    from nanopnp.io.case import loads_case
     from nanopnp.materials.stage import MaterialsStage
+    from nanopnp.pipeline.case import loads_case
 
     shipped = correction_file("willems2020_nacl").read_text(encoding="utf-8")
     (tmp_path / "willems2020_nacl.yaml").write_text(shipped, encoding="utf-8")
@@ -404,15 +405,15 @@ def test_fr16_editing_a_second_correction_file_moves_the_materials_key(
 
     document = loads_case(SECOND_FILE_CASE)
     single = loads_case(SECOND_FILE_CASE.replace("refitted_nacl", "willems2020_nacl"))
-    before = MaterialsStage().run(StageInputs(case=document))
-    reference = MaterialsStage().run(StageInputs(case=single))
+    before = MaterialsStage().run(StageInputs(resolved=resolve(document)))
+    reference = MaterialsStage().run(StageInputs(resolved=resolve(single)))
     assert set(before.inputs) == {"corrections", "corrections:refitted_nacl"}
     assert set(reference.inputs) == {"corrections"}
 
     second.write_text(shipped + "\n# refitted\n", encoding="utf-8")
-    after = MaterialsStage().run(StageInputs(case=document))
+    after = MaterialsStage().run(StageInputs(resolved=resolve(document)))
     assert after.hash != before.hash
-    assert MaterialsStage().run(StageInputs(case=single)).hash == reference.hash
+    assert MaterialsStage().run(StageInputs(resolved=resolve(single))).hash == reference.hash
 
 
 def test_fr16_an_edited_correction_file_is_read_again_in_the_same_process(

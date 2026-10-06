@@ -48,6 +48,8 @@ import numpy as np
 import pytest
 from filelock import FileLock
 
+from nanopnp.pipeline.case import resolve
+
 if TYPE_CHECKING:
     import MDAnalysis as mda  # noqa: N813 - the alias the library documents
     import ngsolve
@@ -314,8 +316,8 @@ def structure_2wcd(prepared_2wcd: Prepared2WCD, tmp_path_factory: pytest.TempPat
     ``pytest-xdist`` PROPKA runs in one worker while another computes stages 2
     to 6. Copied out, never handed out.
     """
-    from nanopnp.io.run import run_case
     from nanopnp.io.store import Store
+    from nanopnp.pipeline.run import run_case
 
     shared = shared_directory(tmp_path_factory)
     seed = shared / "2wcd-structure"
@@ -378,8 +380,8 @@ def seeded_2wcd(
     it stands; the registration is read off stage 1, and stages 5 and 6 run on
     the seed case with that ``geometry:`` block added.
     """
-    from nanopnp.io.run import run_case
     from nanopnp.io.store import Store
+    from nanopnp.pipeline.run import run_case
 
     shared = shared_directory(tmp_path_factory)
     seed = shared / "2wcd-seed"
@@ -787,8 +789,8 @@ def protonated_2wcd(
 
     from nanopnp.core.stages import create
     from nanopnp.io.artefact import StageInputs
-    from nanopnp.io.case import load_case
     from nanopnp.io.store import Store
+    from nanopnp.pipeline.case import load_case
 
     shared = shared_directory(tmp_path_factory)
     root = shared / "2wcd-protonated"
@@ -807,10 +809,10 @@ def protonated_2wcd(
             case.write_text(PROTONATED_2WCD_CASE.format(pdb=prepared_2wcd.path), encoding="utf-8")
         document = load_case(case)
         structure_stage = create("structure")
-        key = structure_stage.key(StageInputs(case=document))  # type: ignore[attr-defined]
+        key = structure_stage.key(StageInputs(resolved=resolve(document)))  # type: ignore[attr-defined]
         structure = store.get(key.schema, key.hash)
         assert structure is not None, "the seed holds stage 1 of the prepared 2WCD"
-        inputs = StageInputs(case=document, upstream={"structure": structure})
+        inputs = StageInputs(resolved=resolve(document), upstream={"structure": structure})
         stage = create("protonation", workspace=root / "workspace", store=store)
         started = time.perf_counter()
         protonation = store.get_or_compute(

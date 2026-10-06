@@ -49,20 +49,21 @@ from nanopnp.charge.stage import (
 from nanopnp.core import stages as stages_module
 from nanopnp.core.hashing import file_hash
 from nanopnp.core.stages import StageDescription, _catalogue, describe, register, walk_order
-from nanopnp.io import run as run_module
 from nanopnp.io.artefact import StageInputs
-from nanopnp.io.case import ResolvedCase, loads_case, resolve
 from nanopnp.io.manifest import CASE_FILENAME, MANIFEST_FILENAME, MANIFEST_SCHEMA
-from nanopnp.io.run import (
+from nanopnp.io.resolved import ResolvedCase
+from nanopnp.io.store import Store
+from nanopnp.mesh.ingest import IngestedMesh, MeshStage, exclusion_deviations
+from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.pipeline import run as run_module
+from nanopnp.pipeline.case import loads_case, resolve
+from nanopnp.pipeline.run import (
     RUN_RECORD_FILENAME,
     RUN_SCHEMA,
     WORKSPACE_DIRNAME,
     MissingUpstreamError,
     run_case,
 )
-from nanopnp.io.store import Store
-from nanopnp.mesh.ingest import IngestedMesh, MeshStage, exclusion_deviations
-from nanopnp.mesh.primitives import CylindricalPoreGeometry
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.mesh.adapter import MeshData
@@ -205,7 +206,7 @@ def test_ver32_the_mesh_stage_reads_the_exclusion_deviation_off_its_artefact(
     """
     ingested = _ingested(materials)
     artefact = MeshStage().artefact(ingested)
-    inputs = StageInputs(case=loads_case(_MINIMAL), upstream={"mesh": artefact})
+    inputs = StageInputs(resolved=resolve(loads_case(_MINIMAL)), upstream={"mesh": artefact})
 
     assert MeshStage().deviations(inputs) == ingested.deviations()
     assert bool(ingested.deviations()) is ("exclusion" in materials)
@@ -227,7 +228,7 @@ def test_ver32_the_field_stage_reads_the_dielectric_deviation_off_its_artefact()
 
     case = loads_case(_MINIMAL)
     artefact = FieldStage().artefact(fields, "0" * 64, resolved=resolve(case))
-    inputs = StageInputs(case=case, upstream={"charge": artefact})
+    inputs = StageInputs(resolved=resolve(case), upstream={"charge": artefact})
     assert FieldStage().deviations(inputs) == fields.deviations()
     assert smoothed_dielectric_deviations(smoothed=False) == ()
 
@@ -510,7 +511,7 @@ def test_ver32_only_refuses_an_upstream_the_store_does_not_hold(
         run_case(
             case_file,
             store=Store(tmp_path / "store"),
-            upto="materials",
+            upto="solve",
             only=True,
             workspace=tmp_path / "work",
         )
@@ -578,18 +579,25 @@ def test_ver57_protonation_runs_before_the_deposit_it_feeds(
     may still end there; and a case with nothing to protonate still refuses it
     naming why.
     """
-    from nanopnp.io.run import UnknownStageError, selected_stages
+    from nanopnp.pipeline.run import (
+        UnknownStageError,
+        selected_stages,
+    )
 
     supplied = resolve(loads_case(_pqr_case(case_file, tmp_path).read_text(encoding="utf-8")))
     assert supplied.deposits_charge
-    assert selected_stages(supplied, "materials") == (
+    assert selected_stages(supplied, "solve") == (
         "case",
         "mesh",
         "protonation",
         "charge",
         "materials",
+        "solve",
     )
-    assert selected_stages(supplied, "protonation") == ("case", "mesh", "protonation")
+    # A walk to a stage runs that stage's input closure (WP38 D11): the
+    # protonation reads the case alone here, so the mesh is not walked.
+    assert selected_stages(supplied, "protonation") == ("case", "protonation")
+    assert selected_stages(supplied, "materials") == ("case", "materials")
     bare = resolve(loads_case(case_file.read_text(encoding="utf-8")))
     assert "protonation" not in selected_stages(bare, None)
     assert "charge" not in selected_stages(bare, None)

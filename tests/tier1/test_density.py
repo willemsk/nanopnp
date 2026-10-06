@@ -35,9 +35,13 @@ from nanopnp.density.union import (
     deposit,
     gate_density,
 )
-from nanopnp.io.case import CaseValidationError, load_case, resolve
-from nanopnp.io.run import run_case, selected_stages
+from nanopnp.io.case import CaseValidationError
 from nanopnp.io.store import Store
+from nanopnp.pipeline.case import load_case, resolve
+from nanopnp.pipeline.run import (
+    run_case,
+    selected_stages,
+)
 
 if TYPE_CHECKING:
     from conftest import Prepared2WCD
@@ -411,7 +415,7 @@ def test_ver49_map_round_trip_and_export(synthetic_c12: Path, tmp_path: Path) ->
 
     script = (
         "from nanopnp.core.stages import create\n"
-        "from nanopnp.io.run import run_case\n"
+        "from nanopnp.pipeline.run import run_case\n"
         "from nanopnp.io.store import Store\n"
         f"result = run_case({str(case)!r}, store=Store({str(tmp_path / 'store')!r}), "
         "upto='density', write=False)\n"
@@ -438,8 +442,8 @@ def test_ver49_the_key_moves_with_every_input(synthetic_c12: Path, tmp_path: Pat
 
     def key(geometry: str) -> str:
         case = load_case(_case(tmp_path, synthetic_c12, geometry=geometry))
-        structure = create("structure").key(StageInputs(case=case))  # type: ignore[attr-defined]
-        inputs = StageInputs(case=case, upstream={"structure": structure})
+        structure = create("structure").key(StageInputs(resolved=resolve(case)))  # type: ignore[attr-defined]
+        inputs = StageInputs(resolved=resolve(case), upstream={"structure": structure})
         return str(create("density").key(inputs).hash)  # type: ignore[attr-defined]
 
     base = key("")

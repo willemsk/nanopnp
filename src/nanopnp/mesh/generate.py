@@ -65,7 +65,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     from types import ModuleType
 
     from nanopnp.core.typing import Mesh, Shape
-    from nanopnp.io.case import ResolvedCase
+    from nanopnp.io.resolved import ResolvedCase
     from nanopnp.mesh.adapter import MeshData
 
 logger = logging.getLogger(__name__)

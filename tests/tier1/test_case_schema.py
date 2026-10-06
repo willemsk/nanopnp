@@ -21,6 +21,9 @@ from nanopnp.io.case import (
     CaseValidationError,
     UnsupportedCaseSection,
     dump_case,
+)
+from nanopnp.io.case_paths import substitute
+from nanopnp.pipeline.case import (
     load_case,
     loads_case,
     resolve,
@@ -476,12 +479,12 @@ def test_num03_the_reference_element_set_resolves_to_three_independent_orders() 
 def test_num03_an_equal_order_pair_is_refused_in_a_mode_that_supplies_no_flow_term() -> None:
     """The same element set without the stabilisation names inf-sup and the remedy.
 
-    Refused by :func:`resolve` rather than at solve time for the reason
-    :meth:`CaseDocument._check_registries` gives for the registry checks: the
-    continuation ladder is built before the first model is, so a case that cannot
-    run must not survive resolution. The condition needs the resolved orders and
-    the ``physics.flow`` switch together, which is why it sits there rather than
-    in the document's own validators.
+    Refused when the case is loaded, by :func:`~nanopnp.pipeline.checks.check_document`
+    (WP38 D8, REV-27), and again by :func:`resolve` for a document built in
+    memory: the continuation ladder is built before the first model is, so a case
+    that cannot run must not survive validation. The condition needs the element
+    orders, the ``physics.flow`` switch and the stabilisation registry together,
+    which is why it sits above the schema rather than in its validators.
     """
     text = REFERENCE_CASE.replace(
         "elements: {phi: P2, c: P2, u: P2, p: P1}", "elements: {phi: P2, c: P2, u: P1, p: P1}"
@@ -532,3 +535,59 @@ def test_if03_an_unregistered_stabilisation_mode_is_refused_naming_the_registry(
     assert "numerics.stabilisation" in message
     for mode in ("none", "supg", "reference"):
         assert mode in message
+
+
+INF_SUP_UNSTABLE = REFERENCE_CASE.replace(
+    "elements: {phi: P2, c: P2, u: P2, p: P1}", "elements: {phi: P2, c: P2, u: P1, p: P1}"
+)
+
+
+def test_num03_an_unstable_pair_is_refused_at_load_naming_inf_sup() -> None:
+    """``load_case`` reports the inf-sup check, not only ``resolve`` (WP38 D8, REV-27)."""
+    with pytest.raises(CaseValidationError, match="inf-sup"):
+        loads_case(INF_SUP_UNSTABLE)
+    accepted = loads_case(
+        INF_SUP_UNSTABLE.replace("stabilisation: none", "stabilisation: reference")
+    )
+    assert accepted.numerics.elements.u == "P1"
+
+
+def test_if03_a_registry_refusal_reads_as_the_schema_wrote_it() -> None:
+    """The three registry checks left the schema with their text unchanged (WP38 D7).
+
+    The rendering is the IF-03 one a document-level schema refusal takes, so a
+    reader, or a script matching the text, sees what it saw when the schema
+    asked the registries itself.
+    """
+    text = REFERENCE_CASE.replace("model: epnp-ns", "model: epnp-nz")
+    with pytest.raises(CaseValidationError) as refused:
+        loads_case(text, source="case.yaml")
+    assert str(refused.value) == (
+        "case.yaml: 1 problem(s) in the case document\n"
+        "  <document>: Value error, physics.model 'epnp-nz' is not registered; the models "
+        "are epnp-ns, pb, pb-linear, pnp, pnp-ns, poisson"
+    )
+    assert refused.value.errors is not None
+
+
+def test_if03_a_substituted_unregistered_model_is_refused_at_resolve() -> None:
+    """A document built in memory is checked when it is resolved (WP38 D7)."""
+    document = substitute(loads_case(REFERENCE_CASE), {"physics.model": "epnp-nz"})
+    with pytest.raises(CaseValidationError, match="'epnp-nz' is not registered"):
+        resolve(document)
+
+
+def test_phy21_the_resolved_declaration_and_boundaries_are_the_registry_s() -> None:
+    """``ResolvedCase`` carries what stage 6 reads, so no stage below ``physics`` asks it (D5)."""
+    from nanopnp.mesh.primitives import DEFAULT_BOUNDARIES
+    from nanopnp.physics.models import case_model, declaration
+
+    resolved = resolve(loads_case(REFERENCE_CASE))
+    assert resolved.declaration == declaration("epnp-ns")
+    model = case_model(resolved)
+    assert dict(resolved.essential_boundaries) == dict(
+        model.essential_boundaries(DEFAULT_BOUNDARIES)
+    )
+    assert list(resolved.essential_boundaries) == list(
+        model.essential_boundaries(DEFAULT_BOUNDARIES)
+    )

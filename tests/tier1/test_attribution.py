@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from nanopnp.io.case import load_case, resolve
+from nanopnp.pipeline.case import load_case, resolve
 from nanopnp.sweep.document import load_sweep
 from nanopnp.sweep.plan import WARM_START_BARRIERS, build_plan
 from nanopnp.validation.attribution import (

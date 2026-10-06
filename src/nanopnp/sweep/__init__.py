@@ -2,7 +2,7 @@
 
 A sweep is a set of runs, not a pipeline stage: it produces no field, and a stage
 keyed on thousands of upstream artefacts has no meaningful key and no meaningful
-progress fraction. So this package is a driver over :mod:`nanopnp.io.run`,
+progress fraction. So this package is a driver over :mod:`nanopnp.pipeline.run`,
 registered in no stage registry, in four modules:
 
 - :mod:`~nanopnp.sweep.document` — the ``nanopnp/sweep/v1`` specification: a base

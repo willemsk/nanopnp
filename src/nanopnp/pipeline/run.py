@@ -50,13 +50,14 @@ from nanopnp.core.stages import (
     walk_order,
 )
 from nanopnp.io.artefact import Artefact, CaseArtefact, StageInputs
-from nanopnp.io.case import loads_case, resolve
 from nanopnp.io.manifest import Manifest, build
 from nanopnp.io.store import Store, atomic_write_bytes
+from nanopnp.pipeline.case import loads_case, resolve
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
-    from nanopnp.io.case import CaseDocument, ResolvedCase
+    from nanopnp.io.case import CaseDocument
     from nanopnp.io.defaults import ContributedDeviation
+    from nanopnp.io.resolved import ResolvedCase
 
 __all__ = [
     "RUN_RECORD_FILENAME",
@@ -283,16 +284,19 @@ class _Walk:
     scratch: Path | None = None
     """The workspace :func:`_scratch` made, once a stage has needed one."""
 
-    def inputs(self, name: str) -> StageInputs:
-        """Return the inputs one stage is handed.
+    def inputs(self, name: str, *, own: bool = False) -> StageInputs:
+        """Return the inputs one stage is handed: the resolved case and its declared inputs.
 
-        Every artefact produced so far is offered, not only the ones the stage
-        declares: a stage takes what it needs from the mapping by name (FR-27),
-        and filtering here would mean this module knew each stage's signature.
+        Only the artefacts the stage's description declares are offered (REV-63,
+        WP38 D11), so a stage reading an input it does not declare finds nothing
+        in every walk, rather than finding it in a complete walk and missing it
+        in a truncated one -- where ``solve`` would converge the uncharged
+        problem under another key and nothing would fail. ``own`` adds the
+        stage's own artefact under its own name, for the deviations pass.
         """
         return StageInputs(
-            case=self.document,
-            upstream=dict(self.artefacts),
+            resolved=self.resolved,
+            upstream=offered(name, self.artefacts, own=own),
             options=dict(self.options.get(name, {})),
         )
 
@@ -328,8 +332,25 @@ class _Walk:
         return create(name, workspace=directory, **extra)
 
 
+def offered(
+    name: str, artefacts: Mapping[str, Artefact], *, own: bool = False
+) -> dict[str, Artefact]:
+    """Return the artefacts a stage is handed: those its description declares, as produced.
+
+    ``own`` adds the stage's own artefact, which the deviations pass reads
+    (:meth:`~nanopnp.core.stages.Stage.deviations`). A declared input the walk
+    did not produce is absent, as an optional input the case drops is.
+    """
+    declared = set(describe(name).inputs) | ({name} if own else set())
+    return {key: artefact for key, artefact in artefacts.items() if key in declared}
+
+
 def selected_stages(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]:
-    """Return the stages this case runs, truncated after ``upto``.
+    """Return the stages this case runs: every one, or the inputs of ``upto`` and ``upto``.
+
+    A walk to ``upto`` runs ``upto`` and its declared inputs, transitively, in
+    walk order (REV-63, WP38 D11): ``--upto protonation`` runs ``case``,
+    ``structure`` and ``protonation``, and not the geometry stages between them.
 
     ``protonation`` and ``charge`` run when the case protonates and its model
     declares ``fixed_charge`` (WP28 D8): both halves of stage 7, and the charge is
@@ -406,7 +427,11 @@ def selected_stages(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]
     if upto is None:
         return stages
     if upto in stages:
-        return stages[: stages.index(upto) + 1]
+        closure = {upto}
+        for name in reversed(stages[: stages.index(upto) + 1]):
+            if name in closure:
+                closure.update(describe(name).inputs)
+        return tuple(name for name in stages if name in closure)
     if upto in absent:
         raise UnknownStageError(
             f"stage {upto!r} is registered but case {resolved.name!r} carries no "
@@ -900,9 +925,9 @@ def run_document(
 
 
 def stored_upstream(
-    document: CaseDocument, *, store: Store, upto: str = "materials"
+    document: CaseDocument, *, store: Store, feeding: str = "solve"
 ) -> dict[str, Artefact]:
-    """Return the artefacts a walk through ``upto`` hands on, every payload from the store.
+    """Return the artefacts a walk hands ``feeding``, every payload from the store.
 
     How a sweep member finds its parent's converged state (FR-24). The parent's
     solve key is its solve provenance and the hashes of the mesh, fields and
@@ -922,8 +947,10 @@ def stored_upstream(
         The validated case whose upstream artefacts are wanted.
     store
         Where the payload-writing stages' artefacts are looked up.
-    upto
-        The last stage to key. ``"materials"`` is the one before ``solve``.
+    feeding
+        The stage whose inputs are wanted. Every stage in its input closure is
+        keyed, ``feeding`` itself excepted: for ``"solve"`` that is the mesh, the
+        stage-7 field where the case has one, and the materials (WP38 D11).
 
     Raises
     ------
@@ -932,8 +959,9 @@ def stored_upstream(
         sweep parent means it has not run yet.
     """
     artefacts: dict[str, Artefact] = {}
-    for name in selected_stages(resolve(document), upto):
-        key = create(name).key(StageInputs(case=document, upstream=dict(artefacts)))
+    resolved = resolve(document)
+    for name in selected_stages(resolved, feeding)[:-1]:
+        key = create(name).key(StageInputs(resolved=resolved, upstream=offered(name, artefacts)))
         if describe(name).key_is_artefact:
             artefacts[name] = key
             continue
@@ -993,7 +1021,7 @@ def _walk(
         # stage's own artefact is present under its own name: a stage that
         # already wrote what it found into its parameters answers from there
         # rather than reading and gating its input a second time.
-        walk.contributed.extend(_contributed(stage, walk.inputs(name)))
+        walk.contributed.extend(_contributed(stage, walk.inputs(name, own=True)))
         walk.records.append(
             StageRecord(
                 name=name,

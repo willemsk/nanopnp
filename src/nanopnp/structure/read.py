@@ -44,7 +44,7 @@ import MDAnalysis as mda  # noqa: N813 - the alias the library documents
 from MDAnalysis.coordinates.memory import MemoryReader
 from MDAnalysis.exceptions import SelectionError
 
-from nanopnp.io.case import parse_chains
+from nanopnp.io.resolved import parse_chains
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np

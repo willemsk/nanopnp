@@ -71,7 +71,7 @@ from nanopnp.validation.probe import ProbeDocument, ProbePatch, load_probe
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
 
-    from nanopnp.io.case import ResolvedCase
+    from nanopnp.io.resolved import ResolvedCase
 
 __all__ = [
     "ARCHIVE_MANIFEST_NAME",
@@ -168,7 +168,7 @@ to catch a golden compared against the wrong case would instead refuse three
 rungs of the right one.
 
 The mesh is absent for the same reason, one level up:
-:attr:`~nanopnp.io.case.ResolvedCase.solve_provenance` does not carry it, and
+:attr:`~nanopnp.io.resolved.ResolvedCase.solve_provenance` does not carry it, and
 which mesh either implementation used is precisely what section 7.4 is measuring
 (VAL-04, RSK-09) rather than something to gate on. ``name`` and ``outputs`` are
 already outside the solve provenance, so a sweep member and the frozen case file
@@ -303,7 +303,7 @@ def case_identity(resolved: ResolvedCase, *, recorded: Mapping[str, Artefact] | 
     -------
     str
         Content hash over
-        :attr:`~nanopnp.io.case.ResolvedCase.solve_provenance` with
+        :attr:`~nanopnp.io.resolved.ResolvedCase.solve_provenance` with
         :data:`DISCRETISATION_KEYS` removed, and with
         :data:`MODEL_OPTION_DISCRETISATION_KEYS` removed from within
         ``model_options`` — see those constants for why each one is left out, and
@@ -436,7 +436,7 @@ def _upstream(
 ) -> Artefact:
     """Return the ``name`` artefact the recipe is read from: the run's own, or its key."""
     if recorded is None:
-        return create(name).key(StageInputs(case=resolved.document, upstream=dict(upstream)))
+        return create(name).key(StageInputs(resolved=resolved, upstream=dict(upstream)))
     found = recorded.get(name)
     if found is None:
         raise KeyError(

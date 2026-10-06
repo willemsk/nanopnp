@@ -6,7 +6,7 @@ it reads, so a different mesh moves the stage-6 key and leaves stage 8's — whi
 never reads the mesh — where it was, and a byte-identical copy under another name
 moves nothing, because a mesh is keyed by content and not by path (section 5.3.2).
 And the exported fields carry exactly the IF-07 attribute names of this model's
-fields, taken from :func:`nanopnp.io.fields.attribute_name` rather than written out.
+fields, taken from :func:`nanopnp.post.export.attribute_name` rather than written out.
 Stabilisation is ``none`` (NUM-11).
 """
 
@@ -17,12 +17,15 @@ from pathlib import Path
 
 import pytest
 
-from nanopnp.io.fields import WALL_DISTANCE, attribute_name
-from nanopnp.physics.models import (
+from nanopnp.io.vocabulary import (
     POTENTIAL,
     PRESSURE,
     VELOCITY,
-    concentration_field_name,
+)
+from nanopnp.physics.models import concentration_field_name
+from nanopnp.post.export import (
+    WALL_DISTANCE,
+    attribute_name,
 )
 from nanopnp.validation.examples import copy_example, run_tagged
 

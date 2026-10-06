@@ -32,9 +32,12 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pytest
 
-from nanopnp.io.case import load_case, resolve
-from nanopnp.io.run import RunResult, run_case
 from nanopnp.io.store import Store
+from nanopnp.pipeline.case import load_case, resolve
+from nanopnp.pipeline.run import (
+    RunResult,
+    run_case,
+)
 from nanopnp.validation.apbs import (
     TOLERANCE,
     ApbsProblem,
@@ -131,7 +134,7 @@ def _walk(case: Path, store: Store, root: Path, order: int) -> Solved:
     artefacts = result.artefacts
     solution = restore(
         warm_start_payload(artefacts["solve"]),
-        case=load_case(case),
+        resolved=resolve(load_case(case)),
         mesh_artefact=artefacts["mesh"],
         charge_artefact=artefacts["charge"],
     )

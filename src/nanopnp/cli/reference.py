@@ -1,7 +1,7 @@
 """Renderers for the generated reference pages of the user documentation (VER-45).
 
 Each function here turns a live object of the package into Markdown: the case-file
-schema walk (:func:`nanopnp.io.case.case_fields`), the argument parser
+schema walk (:func:`nanopnp.io.case_paths.case_fields`), the argument parser
 (:func:`nanopnp.cli.build_parser`), the exit-code enumeration
 (:mod:`nanopnp.core.errors`) and the public surface (:data:`nanopnp.PUBLIC`). Nothing
 generated is committed: ``docs/scripts/generate.py`` calls these at build time, so a
@@ -26,14 +26,16 @@ from nanopnp.cli import build_parser
 from nanopnp.core.errors import EXCLUDED, EXIT_CODES, EXIT_MEANINGS
 from nanopnp.io.case import (
     SCHEMA,
-    SEQUENCE_INDEX,
     FieldValue,
+)
+from nanopnp.io.case_paths import (
+    SEQUENCE_INDEX,
     case_fields,
     field_description,
-    options_at,
     schema_default,
 )
 from nanopnp.io.defaults import SWITCH_PATHS, VALIDATED_DEFAULT_CASE, value_at
+from nanopnp.pipeline.checks import options_at
 
 __all__ = [
     "API_SECTIONS",
@@ -48,8 +50,9 @@ USAGE_WIDTH = 88
 the terminal that ran the build."""
 
 API_SECTIONS: dict[str, str] = {
-    "nanopnp.io.run": "Running a case",
+    "nanopnp.pipeline.run": "Running a case",
     "nanopnp.io.case": "Case files",
+    "nanopnp.pipeline.case": "Case files",
     "nanopnp.io.store": "The artefact store",
     "nanopnp.physics.models": "Physics models",
     "nanopnp.sweep.plan": "Sweeps",
@@ -106,9 +109,9 @@ def _cell(text: str) -> str:
 def render_case_reference() -> str:
     """Return the case-file reference: every editable field of the current case schema.
 
-    One row per path of :func:`~nanopnp.io.case.case_fields`, grouped by section,
+    One row per path of :func:`~nanopnp.io.case_paths.case_fields`, grouped by section,
     with the declared type, the schema's default, the values accepted where a
-    type or a live registry restricts them (:func:`~nanopnp.io.case.options_at`),
+    type or a live registry restricts them (:func:`~nanopnp.pipeline.checks.options_at`),
     and, for a switch, the validated default the FR-25 manifest measures
     deviations against (:data:`~nanopnp.io.defaults.VALIDATED_DEFAULT_CASE`).
     """

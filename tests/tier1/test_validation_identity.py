@@ -31,8 +31,9 @@ from nanopnp.charge import protonation as protonation_module
 from nanopnp.core.hashing import content_hash
 from nanopnp.core.stages import create
 from nanopnp.io.artefact import Artefact, StageInputs
-from nanopnp.io.case import ResolvedCase, load_case, resolve
+from nanopnp.io.resolved import ResolvedCase
 from nanopnp.io.store import Store
+from nanopnp.pipeline.case import load_case, resolve
 from nanopnp.validation import runs
 from nanopnp.validation.comsol import (
     CASE_IDENTITY_SCHEMA,
@@ -223,9 +224,9 @@ def test_val03_case_identity_names_the_exclusion_shell(identity: Callable[..., s
 
 def _recorded(resolved: ResolvedCase) -> dict[str, Artefact]:
     """Return the stage-1 and protonation keys a run of ``resolved`` records."""
-    structure = create("structure").key(StageInputs(case=resolved.document))
+    structure = create("structure").key(StageInputs(resolved=resolve(resolved.document)))
     protonation = create("protonation").key(
-        StageInputs(case=resolved.document, upstream={"structure": structure})
+        StageInputs(resolved=resolve(resolved.document), upstream={"structure": structure})
     )
     return {"structure": structure, "protonation": protonation}
 

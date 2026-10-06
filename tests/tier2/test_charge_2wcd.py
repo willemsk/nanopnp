@@ -33,8 +33,11 @@ import pytest
 
 from nanopnp.gui.charge import load_charge, load_protonation
 from nanopnp.gui.solver import Produced
-from nanopnp.io.run import RunResult, run_case
 from nanopnp.io.store import Store
+from nanopnp.pipeline.run import (
+    RunResult,
+    run_case,
+)
 
 pytestmark = pytest.mark.extended
 
@@ -294,7 +297,7 @@ import json, logging, resource, sys, time
 from pathlib import Path
 from nanopnp.core.stages import create
 from nanopnp.io.artefact import StageInputs
-from nanopnp.io.case import load_case
+from nanopnp.pipeline.case import load_case, resolve
 from nanopnp.io.store import Store
 store, case, mesh, protonation, workspace = sys.argv[1:6]
 document = load_case(Path(case))
@@ -311,7 +314,7 @@ source.setLevel(logging.INFO)
 source.addHandler(Parts())
 stage = create("charge", workspace=Path(workspace))
 started = time.perf_counter()
-done = stage.run(StageInputs(case=document, upstream=upstream))
+done = stage.run(StageInputs(resolved=resolve(document), upstream=upstream))
 seconds = time.perf_counter() - started
 scale = 1e9 if sys.platform == "darwin" else 1e6
 peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / scale

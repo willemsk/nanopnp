@@ -43,11 +43,13 @@ import pytest
 
 from nanopnp.charge.stage import ResolvedFields
 from nanopnp.io.artefact import SOLUTION_SCHEMA, Artefact, StageInputs
-from nanopnp.io.case import CaseDocument, ResolvedCase, loads_case, resolve
+from nanopnp.io.case import CaseDocument
+from nanopnp.io.resolved import ResolvedCase
 from nanopnp.mesh.ingest import ingest
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
 from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics.models import CoupledBoundaries, ModelSolution
+from nanopnp.pipeline.case import loads_case, resolve
 from nanopnp.post.indicator import axial_indicator
 from nanopnp.post.qoi import indicator_currents, reaction_flux_currents, total_current
 from nanopnp.solve.continuation import run_ladder
@@ -190,7 +192,7 @@ def solved(mesh_path: Path) -> Solved:
         CASE.format(mesh_path=mesh_path, concentration_M=CONCENTRATION_M, bias_V=BIAS_V)
     )
     stage = _KeepingStage(workspace=work / "fields")
-    artefact = stage.run(StageInputs(case=document))
+    artefact = stage.run(StageInputs(resolved=resolve(document)))
     assert stage.kept is not None
     return Solved(
         document=document,
@@ -287,7 +289,7 @@ def test_ver34_every_component_coefficient_returns_bit_for_bit(solved: Solved) -
     """
     import numpy as np
 
-    restored = restore(solved.path, case=solved.document)
+    restored = restore(solved.path, resolved=resolve(solved.document))
     assert restored.space.ndof == solved.solution.space.ndof
     names = [field.name for field in solved.solution.model.fields]
     for name, before, after in zip(
@@ -309,7 +311,7 @@ def test_ver34_the_restored_operator_gives_the_same_reaction_flux(solved: Solved
     to the live solution's flux is what says it is the same form.
     """
     live = reaction_flux_currents(solved.solution)
-    recovered = reaction_flux_currents(restore(solved.path, case=solved.document))
+    recovered = reaction_flux_currents(restore(solved.path, resolved=resolve(solved.document)))
     assert set(recovered) == set(live)
     for species, value in live.items():
         assert recovered[species] == pytest.approx(value, rel=1e-12), species
@@ -332,7 +334,9 @@ def test_ver34_a_stabilised_state_restores_with_the_operator_it_converged_on(
     route with the unstabilised number.
     """
     live = reaction_flux_currents(stabilised.solution)
-    recovered = reaction_flux_currents(restore(stabilised.path, case=stabilised.document))
+    recovered = reaction_flux_currents(
+        restore(stabilised.path, resolved=resolve(stabilised.document))
+    )
     assert set(recovered) == set(live)
     for species, value in live.items():
         assert recovered[species] == pytest.approx(value, rel=1e-12), species
@@ -359,7 +363,7 @@ def test_ver34_the_wall_distance_field_is_restored_and_not_re_solved(
     arrays[WALL_DISTANCE_ENTRY] = moved
     path = _rewrite(tmp_path / STATE_FILENAME, arrays)
 
-    restored = restore(path, case=solved.document)
+    restored = restore(path, resolved=resolve(solved.document))
     recovered = np.asarray(restored.wall_distance_nm.vec.FV().NumPy(), dtype=np.float64)
     assert np.max(np.abs(recovered - moved)) == 0.0
 
@@ -387,7 +391,7 @@ def test_ver34_the_stage_payload_is_a_state_file_this_module_can_restore(
     payload = artefact.payload["state"]
     assert payload.name == STATE_FILENAME
 
-    restored = restore(payload, case=solved.document)
+    restored = restore(payload, resolved=resolve(solved.document))
     assert restored.residual is not None
     assert set(reaction_flux_currents(restored)) == {"Na+", "Cl-"}
 
@@ -408,7 +412,7 @@ def test_ver34_the_restored_operator_agrees_with_a_route_that_never_sees_it(
     The tolerance is NUM-26's own 1e-3, and the mesh is the one that meets it;
     see :data:`MAXH_NM`.
     """
-    restored = restore(solved.path, case=solved.document)
+    restored = restore(solved.path, resolved=resolve(solved.document))
     # Read from the case rather than pinned, exactly as the solve reads it: an
     # indicator built at a different order than the model integrates a different
     # discretisation and the cross-check stops being one (NUM-01).
@@ -462,7 +466,7 @@ def test_ver34_a_descriptor_that_differs_in_one_key_aborts_naming_it(
     path = _with_descriptor(solved, tmp_path, {**stored, key: changed})
 
     with pytest.raises(StateMismatchError) as raised:
-        restore(path, case=solved.document)
+        restore(path, resolved=resolve(solved.document))
     message = str(raised.value)
     assert f"different {key}" in message
     assert json.dumps(changed, sort_keys=True) in message
@@ -491,7 +495,7 @@ def test_ver34_a_case_differing_only_in_what_it_reports_restores(solved: Solved)
     assert resolve(other).provenance != resolve(solved.document).provenance
     assert resolve(other).solve_provenance == resolve(solved.document).solve_provenance
 
-    restored = restore(solved.path, case=other)
+    restored = restore(solved.path, resolved=resolve(other))
     assert restored.space.ndof == solved.solution.space.ndof
 
 
@@ -518,7 +522,7 @@ def test_ver34_a_descriptor_missing_a_key_is_refused_rather_than_skipped(
     del stored["ndof"]
     path = _with_descriptor(solved, tmp_path, stored)
     with pytest.raises(StateMismatchError, match="missing \\['ndof'\\]"):
-        restore(path, case=solved.document)
+        restore(path, resolved=resolve(solved.document))
 
 
 def test_ver34_a_descriptor_carrying_an_unknown_key_is_refused(
@@ -527,7 +531,7 @@ def test_ver34_a_descriptor_carrying_an_unknown_key_is_refused(
     """A payload written by a later version is refused, not partially read."""
     path = _with_descriptor(solved, tmp_path, {**_stored_descriptor(solved), "temperature": 310.0})
     with pytest.raises(StateMismatchError, match="unexpected \\['temperature'\\]"):
-        restore(path, case=solved.document)
+        restore(path, resolved=resolve(solved.document))
 
 
 def test_ver34_a_payload_without_a_descriptor_is_refused_by_schema(
@@ -544,7 +548,7 @@ def test_ver34_a_payload_without_a_descriptor_is_refused_by_schema(
     del arrays[DESCRIPTOR_ENTRY]
     path = _rewrite(tmp_path / STATE_FILENAME, arrays)
     with pytest.raises(StateMismatchError, match=SOLUTION_SCHEMA):
-        restore(path, case=solved.document)
+        restore(path, resolved=resolve(solved.document))
 
 
 def test_ver34_the_solution_schema_is_v2(solved: Solved) -> None:
@@ -577,7 +581,7 @@ def test_ver34_a_truncated_coefficient_array_is_refused_by_length(
     arrays[name] = np.asarray(arrays[name], dtype=np.float64)[:-1]
     path = _rewrite(tmp_path / STATE_FILENAME, arrays)
     with pytest.raises(StateMismatchError, match="coefficients for field"):
-        restore(path, case=solved.document)
+        restore(path, resolved=resolve(solved.document))
 
 
 def test_ver34_a_missing_component_array_names_what_the_file_holds(
@@ -589,7 +593,7 @@ def test_ver34_a_missing_component_array_names_what_the_file_holds(
     del arrays[name]
     path = _rewrite(tmp_path / STATE_FILENAME, arrays)
     with pytest.raises(StateMismatchError, match="carries no"):
-        restore(path, case=solved.document)
+        restore(path, resolved=resolve(solved.document))
 
 
 def test_ver34_a_case_reading_d_without_a_stored_distance_is_refused(
@@ -606,7 +610,7 @@ def test_ver34_a_case_reading_d_without_a_stored_distance_is_refused(
     del arrays[WALL_DISTANCE_ENTRY]
     path = _rewrite(tmp_path / STATE_FILENAME, arrays)
     with pytest.raises(StateMismatchError, match=WALL_DISTANCE_ENTRY):
-        restore(path, case=solved.document)
+        restore(path, resolved=resolve(solved.document))
 
 
 def test_ver34_a_cold_solve_carries_the_wall_distance_the_ladder_carries(solved: Solved) -> None:

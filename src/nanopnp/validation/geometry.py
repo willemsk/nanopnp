@@ -54,9 +54,10 @@ from pydantic import BaseModel, ConfigDict
 
 from nanopnp.geometry.profile import PoreProfile, load_profile, plane_crossings
 from nanopnp.geometry.region import to_model_frame
-from nanopnp.io.case import Geometry, load_case
-from nanopnp.io.run import run_case
+from nanopnp.io.case import Geometry
 from nanopnp.io.store import Store
+from nanopnp.pipeline.case import load_case
+from nanopnp.pipeline.run import run_case
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np

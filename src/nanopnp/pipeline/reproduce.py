@@ -41,14 +41,17 @@ from typing import TYPE_CHECKING
 from nanopnp.core.hashing import Canonicalisable, decode_floats, file_hash
 from nanopnp.io.manifest import CASE_FILENAME, MANIFEST_FILENAME, environment
 from nanopnp.io.manifest import read as read_manifest
-from nanopnp.io.run import RUN_RECORD_FILENAME, run_case
 from nanopnp.io.store import Store
+from nanopnp.pipeline.run import (
+    RUN_RECORD_FILENAME,
+    run_case,
+)
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from collections.abc import Mapping
 
     from nanopnp.core.stages import CancelToken, Progress
-    from nanopnp.io.run import RunResult
+    from nanopnp.pipeline.run import RunResult
 
 __all__ = [
     "DEFAULT_TOLERANCE",

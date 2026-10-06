@@ -1,6 +1,6 @@
 """The case form, built from the schema at run time (IF-09).
 
-One row per field :func:`~nanopnp.io.case.case_fields` yields, in declaration
+One row per field :func:`~nanopnp.io.case_paths.case_fields` yields, in declaration
 order, grouped by the block it lives in. The widget chosen for a row comes from
 :attr:`~nanopnp.gui.case_model.FieldState.kind` and its contents from
 :attr:`~nanopnp.gui.case_model.FieldState.options`; no option list, no default
@@ -15,7 +15,7 @@ line gives for the same mistake.
 
 **A field the document does not carry is shown and disabled**, not hidden. A
 Phase-1 case has no ``structure:`` block, and
-:func:`~nanopnp.io.case.substitute` refuses to write into one that is absent —
+:func:`~nanopnp.io.case_paths.substitute` refuses to write into one that is absent —
 "give the base case that section first". Hiding the field would make that
 refusal look like a missing feature. **Add section** is offered for exactly the
 sections :meth:`~nanopnp.gui.case_model.CaseEditor.addable` names, whose empty
@@ -270,7 +270,7 @@ class CaseEditorWidget(QtWidgets.QWidget):
     def bound_paths(self) -> tuple[str, ...]:
         """Return every path the form binds, in the order it shows them.
 
-        Equal to :func:`~nanopnp.io.case.case_fields`, which
+        Equal to :func:`~nanopnp.io.case_paths.case_fields`, which
         ``tests/tier1/test_gui_widgets.py`` asserts: a form that bound a subset
         would leave part of the schema uneditable with nothing to say so.
         """

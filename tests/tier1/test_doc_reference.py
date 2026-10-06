@@ -20,8 +20,12 @@ from nanopnp.cli.reference import (
     render_exit_codes,
 )
 from nanopnp.core.errors import EXCLUDED, EXIT_CODES, EXIT_MEANINGS
-from nanopnp.io.case import case_fields, options_at, schema_default
+from nanopnp.io.case_paths import (
+    case_fields,
+    schema_default,
+)
 from nanopnp.io.defaults import SWITCH_PATHS
+from nanopnp.pipeline.checks import options_at
 
 
 def _rows(text: str) -> dict[str, list[str]]:

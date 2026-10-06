@@ -44,7 +44,8 @@ from nanopnp.gui.geometry import MODEL_FRAME, STAGE_1_FRAME, ProfileEditor
 from nanopnp.gui.render import Rendered, RenderFailed, RenderProcess
 from nanopnp.gui.run_model import RunControl, RunModel
 from nanopnp.gui.solver import Failed, Finished, Iteration, Progress, Rung, Started
-from nanopnp.io.case import case_fields, load_case
+from nanopnp.io.case_paths import case_fields
+from nanopnp.pipeline.case import load_case
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 # As the probe's selftest sets it: a runner has no GPU for Qt WebEngine's
@@ -106,7 +107,7 @@ def test_if09_the_form_binds_every_schema_field(
 
     A form that bound a subset would leave part of the schema uneditable with
     nothing to say so — which is the same failure
-    :func:`~nanopnp.io.case.case_fields` exists to prevent one level down, and
+    :func:`~nanopnp.io.case_paths.case_fields` exists to prevent one level down, and
     the reason the two are asserted equal rather than merely overlapping.
     """
     widget = CaseEditorWidget(editor)
@@ -139,7 +140,7 @@ def test_if09_a_widget_refuses_what_the_schema_refuses(
 ) -> None:
     """A value the field cannot hold is reported at the field, not at the commit.
 
-    And the message is the one :meth:`~nanopnp.io.case.FieldReference.validate`
+    And the message is the one :meth:`~nanopnp.io.case_paths.FieldReference.validate`
     writes, which is what the sweep planner prints for the same mistake — one
     error vocabulary rather than one per shell.
     """
@@ -159,7 +160,7 @@ def test_if09_a_field_the_case_does_not_carry_is_shown_disabled(
 ) -> None:
     """A field of a block this case omits is visible and not editable.
 
-    :func:`~nanopnp.io.case.substitute` refuses to write into a section that is
+    :func:`~nanopnp.io.case_paths.substitute` refuses to write into a section that is
     not there — "give the base case that section first" — so the form shows the
     refusal rather than hiding the field and making it look unimplemented.
     """
@@ -803,7 +804,7 @@ def test_ver60_a_bounded_integer_steps_by_whole_numbers(
     decimals on an integer would show a value the field cannot hold.
     """
     from nanopnp.gui.case_model import FieldState
-    from nanopnp.io.case import FieldReference
+    from nanopnp.io.case_paths import FieldReference
 
     editor = CaseEditor.open(_structure_case(tmp_path, "charge: {ph: 7.0}"))
     widget = CaseEditorWidget(editor)
@@ -831,7 +832,7 @@ def test_ver60_an_integer_range_a_spin_box_cannot_hold_is_a_numeric_entry(
     unclamped ``setRange`` overflows in PySide6.
     """
     from nanopnp.gui.case_model import FieldState
-    from nanopnp.io.case import FieldReference
+    from nanopnp.io.case_paths import FieldReference
 
     editor = CaseEditor.open(_structure_case(tmp_path, "charge: {ph: 7.0}"))
     widget = CaseEditorWidget(editor)
@@ -868,7 +869,7 @@ def test_ver60_the_charge_tab_builds_stage_7_and_shows_its_panes(
     """
     import json
 
-    from nanopnp.io.fields import FIXED_CHARGE_ATTRIBUTE
+    from nanopnp.post.export import FIXED_CHARGE_ATTRIBUTE
 
     case = charged_tube.write(tmp_path / "case", charge_block="{dielectric_transition_nm: 0.2}")
     window = MainWindow(CaseEditor.open(case), store=tmp_path / "store")

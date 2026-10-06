@@ -70,16 +70,20 @@ from nanopnp.core.stages import (
 )
 from nanopnp.geometry.region import PAYLOAD_NAME, read_region
 from nanopnp.io.artefact import MeshArtefact
-from nanopnp.io.case import SuppliedArtefact, UnsupportedCaseSection, resolve
+from nanopnp.io.case import (
+    SuppliedArtefact,
+    UnsupportedCaseSection,
+)
 from nanopnp.io.defaults import ContributedDeviation
-from nanopnp.mesh.adapter import MeshData, detect_format, read, write_msh41
-from nanopnp.mesh.primitives import (
-    DEFAULT_BOUNDARIES,
-    ELECTROLYTE_DOMAINS,
-    PERMITTIVITY_EXEMPT,
+from nanopnp.io.vocabulary import (
     POTENTIAL,
     VELOCITY,
     VELOCITY_AXIS,
+)
+from nanopnp.mesh.adapter import MeshData, detect_format, read, write_msh41
+from nanopnp.mesh.primitives import (
+    ELECTROLYTE_DOMAINS,
+    PERMITTIVITY_EXEMPT,
 )
 from nanopnp.mesh.quality import QualityReport, check_quality, check_radii, element_quality
 from nanopnp.mesh.sizing import SIZES, resolve_wall_size
@@ -87,7 +91,7 @@ from nanopnp.mesh.sizing import SIZES, resolve_wall_size
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.core.typing import Mesh
     from nanopnp.io.artefact import Artefact, StageInputs
-    from nanopnp.io.case import ResolvedCase
+    from nanopnp.io.resolved import ResolvedCase
 
 logger = logging.getLogger(__name__)
 
@@ -285,7 +289,7 @@ def required_names(resolved: ResolvedCase) -> RequiredNames:
     Parameters
     ----------
     resolved
-        The case as :func:`nanopnp.io.case.resolve` returned it.
+        The case as :func:`nanopnp.pipeline.case.resolve` returned it.
 
     Returns
     -------
@@ -306,7 +310,7 @@ def required_names(resolved: ResolvedCase) -> RequiredNames:
     # species' concentration, and no-slip and the axis where a flow block exists.
     # The potential is listed first, as it always has been, but it is asked for
     # only where the model reports it: the protocol does not promise it.
-    essential = dict(resolved.physics_model().essential_boundaries(DEFAULT_BOUNDARIES))
+    essential = dict(resolved.essential_boundaries)
     potential = essential.pop(POTENTIAL, None)
     boundaries: list[Requirement] = []
     if potential is not None:
@@ -345,7 +349,7 @@ def required_names(resolved: ResolvedCase) -> RequiredNames:
     # and a mesh that cannot supply them is not a mesh this case can run on. An
     # ablation with every wall correction off would otherwise pass a gate the
     # validated configuration fails.
-    if resolved.model_declaration().wall_distance:
+    if resolved.declaration.wall_distance:
         boundaries.append(
             Requirement(
                 purpose="the PHY-02 wall-distance sources, numerics.wall_distance.sources",
@@ -742,7 +746,7 @@ def ingest(supplied: SuppliedArtefact, resolved: ResolvedCase) -> IngestedMesh:
         dict(resolved.document.physics.solid_permittivities),
         where=where,
         model=resolved.model,
-        solids=resolved.model_declaration().solids,
+        solids=resolved.declaration.solids,
     )
 
     quality = element_quality(mapped)
@@ -857,7 +861,7 @@ class MeshStage:
         MeshArtefact
             The same schema and parameters :meth:`run` returns, with no payload.
         """
-        resolved = resolve(inputs.case)
+        resolved = inputs.resolved
         if resolved.generates_mesh:
             return self._recipe(inputs, resolved)
         return self.artefact(self._ingest(inputs))
@@ -928,7 +932,7 @@ class MeshStage:
         Cancelled
             If ``cancel`` turns true. No artefact is written.
         """
-        resolved = resolve(inputs.case)
+        resolved = inputs.resolved
         if resolved.generates_mesh:
             return self._generate(inputs, resolved, progress=progress, cancel=cancel)
         check_cancelled(cancel, "reading the mesh")
@@ -982,7 +986,7 @@ class MeshStage:
 
     def _ingest(self, inputs: StageInputs) -> IngestedMesh:
         """Resolve the case and run the gate; shared by :meth:`key` and :meth:`run`."""
-        resolved = resolve(inputs.case)
+        resolved = inputs.resolved
         assert resolved.mesh is not None  # only reached for a supplied mesh
         return ingest(resolved.mesh, resolved)
 

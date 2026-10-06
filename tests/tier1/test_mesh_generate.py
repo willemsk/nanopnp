@@ -27,12 +27,12 @@ from nanopnp.geometry.profile import (
 )
 from nanopnp.geometry.region import RegionStage, read_region
 from nanopnp.io.artefact import StageInputs
-from nanopnp.io.case import loads_case, resolve
 from nanopnp.mesh import generate as generate_module
 from nanopnp.mesh.adapter import read
 from nanopnp.mesh.generate import WallSizeGateError, generate
 from nanopnp.mesh.ingest import MeshStage, MeshVocabularyError, deployed_mesh
 from nanopnp.mesh.quality import QUALITY_FLOOR
+from nanopnp.pipeline.case import loads_case, resolve
 
 CASE = """\
 schema: nanopnp/case/v2
@@ -91,7 +91,7 @@ def _case_text(workspace: Path, solids: str = SOLIDS) -> str:
 def region(workspace: Path):
     """Return the stage-5 artefact of the synthetic profile."""
     case = loads_case(_case_text(workspace))
-    return RegionStage(workspace=workspace / "region").run(StageInputs(case=case))
+    return RegionStage(workspace=workspace / "region").run(StageInputs(resolved=resolve(case)))
 
 
 def test_ver53_a_generated_mesh_passes_the_gates_and_is_keyed_on_its_recipe(
@@ -99,7 +99,7 @@ def test_ver53_a_generated_mesh_passes_the_gates_and_is_keyed_on_its_recipe(
 ) -> None:
     """VER-27, VER-10 and D9 pass; the key is the recipe, the content hash is recorded (D10)."""
     case = loads_case(_case_text(workspace))
-    inputs = StageInputs(case=case, upstream={"region": region})
+    inputs = StageInputs(resolved=resolve(case), upstream={"region": region})
     stage = MeshStage(workspace=workspace / "mesh")
     key = stage.key(inputs)
     artefact = stage.run(inputs)
@@ -139,13 +139,16 @@ import json, sys
 from pathlib import Path
 from nanopnp.geometry.region import RegionStage
 from nanopnp.io.artefact import StageInputs
-from nanopnp.io.case import loads_case
+from nanopnp.pipeline.case import loads_case, resolve
 from nanopnp.mesh.ingest import MeshStage
 
 root = Path(sys.argv[1])
 case = loads_case(Path(sys.argv[2]).read_text())
-region = RegionStage(workspace=root / "region").run(StageInputs(case=case))
-mesh = MeshStage(workspace=root / "mesh").run(StageInputs(case=case, upstream={"region": region}))
+resolved = resolve(case)
+region = RegionStage(workspace=root / "region").run(StageInputs(resolved=resolved))
+mesh = MeshStage(workspace=root / "mesh").run(
+    StageInputs(resolved=resolved, upstream={"region": region})
+)
 print(json.dumps({
     "content_hash": mesh.summary["content_hash"],
     "key": mesh.hash,
@@ -205,7 +208,7 @@ def test_ver53_a_generated_mesh_without_a_protein_permittivity_is_refused(
 ) -> None:
     """D11: a generated mesh carries a structure's body, gated as an ingested mesh is."""
     case = loads_case(_case_text(workspace, solids="membrane: 3.2"))
-    inputs = StageInputs(case=case, upstream={"region": region})
+    inputs = StageInputs(resolved=resolve(case), upstream={"region": region})
     with pytest.raises(
         MeshVocabularyError, match=r"'protein' with no physics\.solid_permittivities"
     ):
@@ -218,7 +221,10 @@ def test_qr08_a_reproduced_mesh_with_another_content_hash_aborts_naming_both(
     """D13: a mesher difference is named as an input drift, not left to surface as a QoI drift."""
     from types import SimpleNamespace
 
-    from nanopnp.io.reproduce import InputMovedError, check_mesh
+    from nanopnp.pipeline.reproduce import (
+        InputMovedError,
+        check_mesh,
+    )
 
     manifest = {"geometry_and_mesh": {"generated": True, "content_hash": "a" * 64}}
     same = SimpleNamespace(artefacts={"mesh": SimpleNamespace(summary={"content_hash": "a" * 64})})
@@ -260,8 +266,8 @@ def test_ver53_every_consumer_reads_the_generated_mesh_through_to_the_export(
     of :func:`~nanopnp.mesh.ingest.deployed_mesh`; the solve, the extraction and
     the export each restore the mesh by a separate call.
     """
-    from nanopnp.io.run import run_case
     from nanopnp.io.store import Store
+    from nanopnp.pipeline.run import run_case
 
     head = _case_text(workspace).split("electrolyte:")[0].replace("name: coarse", "name: walk")
     case = tmp_path / "walk.case.yaml"

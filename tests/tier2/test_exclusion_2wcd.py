@@ -29,11 +29,11 @@ import pytest
 
 from nanopnp.charge.dielectric import derive_solid_fraction, smooth_step, water_facing
 from nanopnp.geometry.region import distance_to_loop, distance_to_segments, read_region
-from nanopnp.io.case import resolve
-from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
 from nanopnp.mesh.ingest import deployed_mesh
 from nanopnp.mesh.quality import QUALITY_FLOOR
+from nanopnp.pipeline.case import resolve
+from nanopnp.pipeline.run import run_case
 
 pytestmark = pytest.mark.extended
 
@@ -108,7 +108,7 @@ def test_ver59_2wcd_with_a_shell_meshes_and_every_wall_node_clears_the_lower_bou
     meshed,
 ) -> None:  # type: ignore[no-untyped-def]
     """The lower band at every ``wall`` node; VER-10 and D9 pass; the closed share recorded."""
-    from nanopnp.io.case import load_case
+    from nanopnp.pipeline.case import load_case
 
     case, result = meshed
     record = read_region(Path(result.artefacts["region"].payload["region"]))

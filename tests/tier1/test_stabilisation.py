@@ -696,7 +696,7 @@ def test_num14_the_stabilisation_leaves_the_poisson_row_untouched() -> None:
     difference must be exactly zero while the others are not. A term added against
     the wrong test function would pass a norm test on the whole vector.
     """
-    from nanopnp.physics.models import POTENTIAL
+    from nanopnp.io.vocabulary import POTENTIAL
 
     plain, _, space, state = _coupled("none")
     stabilised, _, _, _ = _coupled("reference")

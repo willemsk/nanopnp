@@ -65,7 +65,7 @@ class StageHook(Protocol):
     """Called before each stage of a pipeline walk, with the stage's position.
 
     The structural counterpart of the ``"stage <name>"`` line
-    :func:`~nanopnp.io.run.run_document` reports through :class:`Progress`. Both
+    :func:`~nanopnp.pipeline.run.run_document` reports through :class:`Progress`. Both
     exist because they answer different questions and only one of them can be
     answered honestly by a string: a progress bar wants a fraction and a caption,
     and a caller that has to *act* on the stage — the desktop shell's run panel,
@@ -588,7 +588,7 @@ def _register_builtins() -> None:
             needs_section=None,
             optional_inputs=(),
         ),
-        "nanopnp.io.case:CaseStage",
+        "nanopnp.pipeline.case:CaseStage",
     )
     register(
         StageDescription(
@@ -791,7 +791,7 @@ def _register_builtins() -> None:
             name="solve",
             number=10,
             title="Solve",
-            inputs=("case", "materials", "mesh"),
+            inputs=("case", "charge", "materials", "mesh"),
             outputs=("converged fields", "iteration history"),
             artefact_schema="nanopnp/solution/v2",
             takes_workspace=True,
@@ -799,7 +799,9 @@ def _register_builtins() -> None:
             key_is_artefact=False,
             weight=0.75,
             needs_section=None,
-            optional_inputs=(),
+            # Stage 7's artefact, where the case deposits or supplies a field; a case
+            # with neither drops stage 7, and the solve runs without a fixed charge.
+            optional_inputs=("charge",),
         ),
         "nanopnp.solve.stage:SolveStage",
     )
@@ -808,7 +810,7 @@ def _register_builtins() -> None:
             name="qoi",
             number=11,
             title="Quantities of interest",
-            inputs=("case", "solve"),
+            inputs=("case", "charge", "mesh", "solve"),
             outputs=("scalar quantities of interest", "route-agreement record"),
             artefact_schema="nanopnp/qoi/v1",
             takes_workspace=False,
@@ -816,7 +818,9 @@ def _register_builtins() -> None:
             key_is_artefact=False,
             weight=0.08,
             needs_section=None,
-            optional_inputs=(),
+            # The route-agreement extraction restores the state onto the mesh and the
+            # stage-7 field the solve read (WP38 D11).
+            optional_inputs=("charge",),
         ),
         "nanopnp.post.stage:QoIStage",
     )
@@ -825,7 +829,7 @@ def _register_builtins() -> None:
             name="report",
             number=12,
             title="Report",
-            inputs=("case", "qoi", "solve"),
+            inputs=("case", "charge", "mesh", "qoi", "solve"),
             outputs=("field export", "run record"),
             artefact_schema="nanopnp/report/v1",
             takes_workspace=True,
@@ -833,7 +837,8 @@ def _register_builtins() -> None:
             key_is_artefact=False,
             weight=0.04,
             needs_section=None,
-            optional_inputs=(),
+            # The field export restores the state as stage 11 does (WP38 D11).
+            optional_inputs=("charge",),
         ),
         "nanopnp.post.stage:ReportStage",
     )

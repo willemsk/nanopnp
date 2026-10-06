@@ -31,7 +31,7 @@ from nanopnp.core.stages import (
 from nanopnp.density.map import PAYLOAD_NAME as DENSITY_PAYLOAD
 from nanopnp.density.map import DensityMap
 from nanopnp.io.artefact import ReducedArtefact
-from nanopnp.io.case import UnsupportedCaseSection, resolve
+from nanopnp.io.case import UnsupportedCaseSection
 from nanopnp.symmetry.reduce import DETREND, HARMONICS, PAYLOAD_NAME, reduce_map
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
@@ -45,10 +45,10 @@ WORKSPACE_DIRNAME = "tmp"
 
 def reduction_parameters(inputs: StageInputs) -> dict[str, Canonicalisable]:
     """Return the stage-3 key's parameters (WP19 D11), or refuse a case without ``structure:``."""
-    resolved = resolve(inputs.case)
+    resolved = inputs.resolved
     if resolved.structure is None or resolved.density is None:
         raise UnsupportedCaseSection(
-            f"case {inputs.case.name!r} carries no structure: section, so stage 3 has no point "
+            f"case {inputs.resolved.name!r} carries no structure: section, so stage 3 has no point "
             "group to reduce by"
         )
     return {

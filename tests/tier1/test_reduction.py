@@ -24,8 +24,8 @@ from nanopnp.density.grid import read_grid, write_grid
 from nanopnp.density.map import DensityMap
 from nanopnp.density.radii import RadiusSet
 from nanopnp.density.union import DensityGrid, canonical_grid, deposit
-from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
+from nanopnp.pipeline.run import run_case
 from nanopnp.symmetry.annular import annular_weights
 from nanopnp.symmetry.reduce import (
     ReducedMap,

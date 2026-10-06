@@ -21,10 +21,13 @@ from nanopnp.core.paths import profile_file
 from nanopnp.geometry.profile import PoreProfile, load_profile
 from nanopnp.geometry.region import build_region, read_region
 from nanopnp.geometry.tolerance import TOL_NM
-from nanopnp.io.run import RunResult, run_case
 from nanopnp.io.store import Store
 from nanopnp.mesh.adapter import from_ngsolve, read
 from nanopnp.mesh.quality import QUALITY_FLOOR
+from nanopnp.pipeline.run import (
+    RunResult,
+    run_case,
+)
 
 logger = logging.getLogger(__name__)
 

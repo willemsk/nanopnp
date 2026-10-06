@@ -20,7 +20,7 @@ it tried.
 
 **It never enumerates a field.** The selector is filled from the render child's
 report, which names the model's own declared fields through
-:func:`nanopnp.io.fields.attribute_name` — the vocabulary the IF-07 export
+:func:`nanopnp.post.export.attribute_name` — the vocabulary the IF-07 export
 writes. A list here would be a second source of truth about what a number means.
 
 The picture itself is the meshed half-plane exactly as it was computed: no

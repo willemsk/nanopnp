@@ -13,7 +13,7 @@ which is what ``MOD-01`` found the walk doing for two stages.
 **The walk holds no knowledge of the stages that the stages do not declare.**
 Each registry description carries the six facts the walk acts on, and
 :func:`~nanopnp.validation.modularity.stage_sets` finds no collection of stage
-names written into ``io/run.py`` (``MOD-02``). Each fact is checked here
+names written into ``pipeline/run.py`` (``MOD-02``). Each fact is checked here
 against the code it describes: the constructors for ``takes_workspace`` and
 ``takes_store``, the stage's own ``run`` for ``key_is_artefact``, the case
 schema for ``needs_section`` and the shipped cases for ``optional_inputs``.
@@ -41,13 +41,21 @@ from nanopnp.core.stages import (
     walk_order,
 )
 from nanopnp.io.artefact import StageInputs
-from nanopnp.io.case import NEUTRAL_SECTIONS, CaseDocument, ResolvedCase, load_case, resolve
-from nanopnp.io.run import UnknownStageError, selected_stages
+from nanopnp.io.case import CaseDocument
+from nanopnp.io.case_paths import NEUTRAL_SECTIONS
+from nanopnp.io.resolved import ResolvedCase
+from nanopnp.pipeline.case import load_case, resolve
+from nanopnp.pipeline.run import (
+    UnknownStageError,
+    offered,
+    selected_stages,
+)
 from nanopnp.validation.modularity import (
     STAGE_KEY,
     STAGE_RUN,
     stage_conformance,
     stage_sets,
+    undeclared_reads,
 )
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -222,7 +230,7 @@ def test_ver64_a_key_that_is_its_artefact_is_what_run_returns() -> None:
     assert declared == ["case", "materials"]
     for name in declared:
         stage = create(name)
-        inputs = StageInputs(case=document)
+        inputs = StageInputs(resolved=resolve(document))
         keyed, ran = stage.key(inputs).meta(), stage.run(inputs).meta()
         keyed.pop("created_at")
         ran.pop("created_at")
@@ -234,7 +242,7 @@ def test_ver64_a_key_that_is_its_artefact_is_what_run_returns() -> None:
 def test_ver64_needs_section_names_an_optional_top_level_case_field() -> None:
     """The walk drops a stage whose section the case leaves out, so it must be one it can.
 
-    Not a section of :data:`~nanopnp.io.case.NEUTRAL_SECTIONS` either: the walk tests the
+    Not a section of :data:`~nanopnp.io.case_paths.NEUTRAL_SECTIONS` either: the walk tests the
     document for ``None``, and such a section written empty resolves as its absence, so
     two cases that resolve alike would walk differently.
     """
@@ -280,6 +288,10 @@ def test_ver64_each_optional_input_is_one_a_case_drops() -> None:
         ("protonation", "structure"),
         ("charge", "protonation"),
         ("charge", "region"),
+        # Stage 7's artefact, which a case with no field drops (WP38 D11).
+        ("solve", "charge"),
+        ("qoi", "charge"),
+        ("report", "charge"),
     }
     for name, optional in declared:
         assert optional in describe(name).inputs, (name, optional)
@@ -388,3 +400,71 @@ def test_ver64_a_stage_registered_later_is_walked_after_the_rest(
     register(_description(), "nanopnp.external:ExternalStage")
     assert walk_order() == (*WALK, "external")
     assert describe("external").summary()["weight"] == 0.1
+
+
+# -- REV-63: a stage reads what it declares, and a walk to it runs what it reads --
+
+
+STAGES = Path(stages.__file__)
+SOLVE = STAGES.parent.parent / "solve" / "stage.py"
+
+
+def test_ver64_no_stage_reads_an_input_it_does_not_declare() -> None:
+    """Every literal upstream read is of a declared input or the stage's own artefact (D11 d)."""
+    assert [read.describe() for read in undeclared_reads()] == []
+
+
+def test_ver64_an_undeclared_read_is_refused_naming_stage_input_and_line() -> None:
+    """The oracle: ``solve`` declared as it was before WP38, without ``charge``.
+
+    ``solve/stage.py`` reads ``inputs.upstream.get("charge")``; without the
+    declaration a walk to ``solve`` would not run stage 7 and the solve would
+    converge the uncharged problem (REV-63).
+    """
+    text = STAGES.read_text(encoding="utf-8")
+    current = 'inputs=("case", "charge", "materials", "mesh"),'
+    assert text.count(current) == 1
+    line = next(
+        number
+        for number, content in enumerate(SOLVE.read_text(encoding="utf-8").splitlines(), 1)
+        if 'inputs.upstream.get("charge")' in content
+    )
+    sources = {"core/stages.py": text.replace(current, 'inputs=("case", "materials", "mesh"),')}
+    found = undeclared_reads(sources=sources)
+    assert [(read.stage, read.name, read.path, read.line) for read in found] == [
+        ("solve", "charge", "solve/stage.py", line)
+    ]
+    message = found[0].describe()
+    assert "stage 'solve' reads the 'charge' artefact" in message
+    assert f"solve/stage.py:{line}" in message
+
+
+def test_ver64_a_read_reached_through_a_module_function_is_seen() -> None:
+    """Stage 11's restore reads ``mesh`` and ``charge`` in a helper its methods call."""
+    text = STAGES.read_text(encoding="utf-8")
+    current = 'inputs=("case", "charge", "mesh", "solve"),'
+    assert text.count(current) == 1
+    sources = {"core/stages.py": text.replace(current, 'inputs=("case", "solve"),')}
+    named = {(read.stage, read.name) for read in undeclared_reads(sources=sources)}
+    assert named == {("qoi", "mesh"), ("qoi", "charge")}
+
+
+def test_ver64_each_stage_is_handed_exactly_its_declared_inputs() -> None:
+    """The walk filters what it offers by the description, and adds a stage's own on request."""
+    produced = {name: object() for name in walk_order()}
+    for name in walk_order():
+        handed = offered(name, produced)  # type: ignore[arg-type]
+        assert set(handed) == set(describe(name).inputs) - {"case_path"}, name
+        assert set(offered(name, produced, own=True)) == {*handed, name}  # type: ignore[arg-type]
+
+
+def test_ver64_a_walk_to_a_stage_runs_its_input_closure_in_walk_order() -> None:
+    """``--upto`` walks the target's transitive inputs (D11 c), and the full walk is unchanged."""
+    structure = _shipped_cases()["structure"]
+    assert structure.deposits_charge
+    assert selected_stages(structure, "protonation") == ("case", "structure", "protonation")
+    assert selected_stages(structure, "materials") == ("case", "materials")
+    assert "charge" in selected_stages(structure, "solve")
+    assert selected_stages(structure, "contour") == WALK[: WALK.index("contour") + 1]
+    assert selected_stages(structure, "mesh") == WALK[: WALK.index("mesh") + 1]
+    assert selected_stages(structure, None) == WALK
