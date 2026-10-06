@@ -309,8 +309,8 @@ else
     # Every changed line of src/nanopnp, gui/ aside (its widgets run only on the
     # desktop legs), is executed on both sides of each of its branches, against
     # the same base the prose rule judged. It finds a branch no test takes; it
-    # cannot find code that is missing, which is what a plan's planned tests are
-    # for (.claude/skills/wp-plan). A line no test can reach says why in its
+    # cannot see an untaken arm of a conditional expression, nor code that is
+    # missing, which is what a plan's planned tests are for (.claude/skills/wp-plan). A line no test can reach says why in its
     # `# pragma: no cover - <reason>` (VER-72).
     if [[ -n $coverage_xml ]]; then
         if [[ -n $base ]]; then

@@ -88,7 +88,9 @@ that such a session cannot drift past the point where it should stop.
 
 ### Planned tests
 
-A review catches an absent `try` only by reading; coverage cannot see code that is not there, and a
+A review catches an absent `try` only by reading; coverage cannot see code that is not there, nor
+the dead arm of a conditional expression (WP39's remedy text was one, and the gate's `diff-cover`
+passed it), and a
 test the implementer writes for their own code tests what they built, not what was decided. So for
 every `[Opus]` decision whose failure would be a **silent pass** (a refusal, a cleanup or error
 path, a classification, a key), **this plan's commit writes the tests**, with their exact
