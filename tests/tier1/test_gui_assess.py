@@ -29,6 +29,7 @@ import numpy as np
 import pytest
 
 from nanopnp.geometry.contour import ContourGateError, condition
+from nanopnp.geometry.profile import load_profile
 from nanopnp.gui.assess import (
     AssessFailed,
     AssessProcess,
@@ -41,7 +42,6 @@ from nanopnp.gui.geometry import ProfileEditor
 from nanopnp.io.case import load_case, resolve
 from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
-from nanopnp.mesh.profile import load_profile
 from nanopnp.symmetry.reduce import ReducedMap
 
 CASE = """\

@@ -16,7 +16,7 @@ import ngsolve as ngs
 import pytest
 
 from nanopnp.mesh.primitives import SlabGeometry
-from nanopnp.solve.gates import (
+from nanopnp.numerics.gates import (
     ION_DIAMETER_NM,
     WATER_DIAMETER_NM,
     FieldSampler,
@@ -132,7 +132,7 @@ def test_ver08_packing_gate_warns_before_it_aborts(
     warm = ngs.CF(6000.0)  # Phi = 0.903, above the warning threshold, below 1
     gate = PackingFractionGate(sampler, {"c_Na": warm, "c_Cl": warm})
 
-    with caplog.at_level(logging.WARNING, logger="nanopnp.solve.gates"):
+    with caplog.at_level(logging.WARNING, logger="nanopnp.numerics.gates"):
         gate.check()
 
     assert "approaching the singularity" in caplog.text

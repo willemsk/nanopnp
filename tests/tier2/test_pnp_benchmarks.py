@@ -56,8 +56,8 @@ import pytest
 from nanopnp.core.scaling import REFERENCE_DIFFUSIVITY_M2_S, debye_length_nm
 from nanopnp.materials.electrolyte import Electrolyte, IonSpecies
 from nanopnp.mesh.primitives import SlabGeometry
+from nanopnp.numerics.measures import PLANAR
 from nanopnp.physics import models
-from nanopnp.physics.measures import PLANAR
 from nanopnp.post.reaction_flux import boundary_reaction_flux
 
 LENGTH_NM = 2000.0

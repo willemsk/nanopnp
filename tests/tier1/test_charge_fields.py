@@ -46,7 +46,7 @@ from nanopnp.density.grid import (
     writable_formats,
     write_grid,
 )
-from nanopnp.physics.measures import AXISYMMETRIC
+from nanopnp.numerics.measures import AXISYMMETRIC
 
 
 def _has_griddata() -> bool:

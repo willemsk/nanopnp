@@ -36,7 +36,7 @@ from nanopnp.io.artefact import SOLUTION_SCHEMA, Artefact
 from nanopnp.io.case import CaseDocument, loads_case, resolve
 from nanopnp.mesh.ingest import ingest
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
-from nanopnp.physics.measures import AXISYMMETRIC
+from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.solve.continuation import run_ladder
 from nanopnp.solve.state import (
     DESCRIPTOR_ENTRY,

@@ -46,8 +46,8 @@ import pytest
 from nanopnp.core.constants import FARADAY
 from nanopnp.materials.electrolyte import Electrolyte
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics import models
-from nanopnp.physics.measures import AXISYMMETRIC
 from nanopnp.post import qoi
 from nanopnp.post.indicator import axial_indicator, lumen_band
 

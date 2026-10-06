@@ -52,6 +52,18 @@ from nanopnp.charge.deposit import (
     check_solid_share,
     deposit,
 )
+from nanopnp.charge.dielectric import (
+    DERIVED_CONSTANTS,
+    DERIVED_SOURCE,
+    DerivedSolidFraction,
+    MaterialMean,
+    SolidFractionField,
+    derive_solid_fraction,
+    derived_summary,
+    load_solid_fraction,
+    water_facing,
+)
+from nanopnp.charge.dielectric import summary as solid_fraction_summary
 from nanopnp.charge.fields import (
     CANONICAL_UNITS,
     DEFAULT_AXIS_CUTOFF_NM,
@@ -104,20 +116,8 @@ from nanopnp.io.artefact import Artefact, ChargeGridArtefact, FieldsArtefact, St
 from nanopnp.io.case import UnsupportedCaseSection, resolve
 from nanopnp.io.defaults import ContributedDeviation
 from nanopnp.io.store import atomic_write_bytes
-from nanopnp.materials.fields import (
-    DERIVED_CONSTANTS,
-    DERIVED_SOURCE,
-    DerivedSolidFraction,
-    MaterialMean,
-    SolidFractionField,
-    derive_solid_fraction,
-    derived_summary,
-    load_solid_fraction,
-    water_facing,
-)
-from nanopnp.materials.fields import summary as solid_fraction_summary
 from nanopnp.mesh.ingest import IngestedMesh, MeshStage, deployed_mesh
-from nanopnp.physics.measures import AXISYMMETRIC, Measures
+from nanopnp.numerics.measures import AXISYMMETRIC, Measures
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
@@ -261,7 +261,7 @@ class ResolvedFields:
         if isinstance(self.eps_r, DerivedSolidFraction):
             record["eps_r"] = derived_summary(self.eps_r, self.material_means)
         elif self.eps_r is not None:
-            # Through ``materials.fields.summary`` rather than beside it: a second
+            # Through ``charge.dielectric.summary`` rather than beside it: a second
             # literal dict here is a second place for the dielectric's FR-25
             # record to drift, and it already had — the copy written here carried
             # no ``interpolation`` key while the one under test did.

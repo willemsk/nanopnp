@@ -346,7 +346,7 @@ def test_num18_surface_charge_enters_poisson_as_its_boundary_term() -> None:
     import ngsolve as ngs
 
     from nanopnp.mesh.primitives import CylinderGeometry
-    from nanopnp.physics.measures import AXISYMMETRIC
+    from nanopnp.numerics.measures import AXISYMMETRIC
 
     surface_density = 0.37
     model = models.create("pnp", classical=True, fluid="electrolyte")
@@ -386,7 +386,7 @@ def test_fr23_a_solve_carries_its_residual_and_distance_field_on_the_solution() 
     import ngsolve as ngs
 
     from nanopnp.mesh.primitives import CylinderGeometry
-    from nanopnp.physics.measures import AXISYMMETRIC
+    from nanopnp.numerics.measures import AXISYMMETRIC
 
     distance = ngs.x + 0.25
     model = models.create("pnp", classical=True, fluid="electrolyte")

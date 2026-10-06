@@ -38,8 +38,8 @@ from nanopnp.core.constants import BOLTZMANN, ELEMENTARY_CHARGE, VACUUM_PERMITTI
 from nanopnp.density.grid import RadialGrid
 from nanopnp.materials.electrolyte import Electrolyte
 from nanopnp.mesh.adapter import from_ngsolve, to_ngsolve
+from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics import models
-from nanopnp.physics.measures import AXISYMMETRIC
 from nanopnp.validation.apbs import (
     TOLERANCE,
     ApbsProblem,

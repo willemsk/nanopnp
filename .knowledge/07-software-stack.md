@@ -1060,7 +1060,7 @@ Measured 20 September 2026, best of three on an idle container, warm cache:
 | `nanopnp.io.case` | 253 ms | pydantic and PyYAML building the `nanopnp/case/v1` model tree |
 | `nanopnp.gui.case_model` | 251 ms | the above, and about a millisecond of its own |
 | `nanopnp.gui.run_model` | 273 ms | the above, plus `io/manifest.py` and `io/run.py` |
-| `nanopnp.gui.solver` | 73 ms | `cli/errors.py` and `multiprocessing`; everything else is deferred into the child |
+| `nanopnp.gui.solver` | 73 ms | `core/errors.py` and `multiprocessing`; everything else is deferred into the child |
 | `nanopnp.gui.probe` | 59 ms | `core/paths.py` only — every payload is deferred |
 | `nanopnp.cli` | 62 ms | the comparison, and the budget the deferred-import rule protects |
 

@@ -38,7 +38,7 @@ from nanopnp.core.constants import (
 )
 from nanopnp.core.typing import GridFunction, Mesh
 from nanopnp.mesh.primitives import SlabGeometry
-from nanopnp.physics.measures import PLANAR
+from nanopnp.numerics.measures import PLANAR
 from nanopnp.physics.pb import (
     ELECTROLYTE_PERMITTIVITY,
     debye_length_nm,

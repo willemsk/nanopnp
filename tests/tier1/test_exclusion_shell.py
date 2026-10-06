@@ -14,11 +14,13 @@ from __future__ import annotations
 import re
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
 
 from nanopnp.core.stages import MissingExtraError
+from nanopnp.geometry.profile import load_profile
 from nanopnp.geometry.region import (
     EXCLUSION,
     RegionGateError,
@@ -36,16 +38,31 @@ from nanopnp.geometry.region import (
 )
 from nanopnp.io.artefact import StageInputs
 from nanopnp.io.case import CaseValidationError, MembraneSpec, ReservoirSpec, loads_case, resolve
+from nanopnp.materials.corrections import load_corrections
 from nanopnp.mesh.generate import sizing_parameters, wall_statistics
 from nanopnp.mesh.ingest import MeshStage, deployed_mesh
-from nanopnp.mesh.profile import load_profile
 from nanopnp.mesh.sizing import (
     EXCLUSION_WALL_DIVISION,
     SIZES,
+    WallSize,
     divided_wall_size,
     resolve_wall_size,
     wall_divisions,
 )
+
+if TYPE_CHECKING:  # pragma: no cover - annotations only
+    from nanopnp.io.case import CaseDocument
+
+
+def eps_r0(document: CaseDocument) -> float:
+    """Return ``eps_r,f0`` read from the case's parameter file, as the sizing took it before D7."""
+    return load_corrections(document.electrolyte.parameters).solvent.permittivity.eps_r0
+
+
+def wall_size(document: CaseDocument) -> WallSize:
+    """Return :func:`resolve_wall_size` at the parameter file's ``eps_r,f0``."""
+    return resolve_wall_size(document, permittivity_0=eps_r0(document))
+
 
 OFFSET_NM = 0.25
 """``a``: ``a_Na/2`` of ``willems2020_nacl`` and VER-31's ``lambda_S`` (WP30 D15)."""
@@ -340,7 +357,7 @@ def test_ver59_the_offset_keys_stage_5_and_6_only_when_it_is_non_zero(
     )
     assert "exclusion" in mesh.parameters["materials"]  # type: ignore[operator]
     # Gmsh divides the ring's edges finely enough unaided, so its recipe has no rule.
-    wall = resolve_wall_size(loads_case(case_text(parallelogram_profile, charge=_offset())))
+    wall = wall_size(loads_case(case_text(parallelogram_profile, charge=_offset())))
     gmsh = sizing_parameters(wall, SIZES.scaled(wall.size_scale), "gmsh", exclusion=True)
     assert "exclusion_wall" not in gmsh
     assert gmsh["exclusion"] == "wall_h_nm"
@@ -381,7 +398,7 @@ def test_ver59_the_shell_meshes_at_a_wall_target_its_whole_edges_failed(
     mesh = MeshStage(workspace=tmp_path / "mesh").run(
         StageInputs(case=case, upstream={"region": region})
     )
-    target = resolve_wall_size(case).wall_h_nm
+    target = wall_size(case).wall_h_nm
     assert target == pytest.approx(0.03505, abs=5e-5)
     shape = build_region(_record(region))
     expected = sum(

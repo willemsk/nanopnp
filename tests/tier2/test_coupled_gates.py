@@ -19,9 +19,9 @@ import pytest
 from nanopnp.core.scaling import REFERENCE_DIFFUSIVITY_M2_S, debye_length_nm
 from nanopnp.materials.electrolyte import Electrolyte, IonSpecies
 from nanopnp.mesh.primitives import CylinderGeometry, CylindricalPoreGeometry, SlabGeometry
+from nanopnp.numerics.gates import GateViolationError, maximum_packing_M
+from nanopnp.numerics.measures import PLANAR, Measures
 from nanopnp.physics import models
-from nanopnp.physics.measures import PLANAR, Measures
-from nanopnp.solve.gates import GateViolationError, maximum_packing_M
 
 AXISYMMETRIC = Measures(symmetry="axisymmetric", element_order=2)
 

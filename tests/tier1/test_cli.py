@@ -45,7 +45,7 @@ import pytest
 import nanopnp
 from nanopnp import __version__
 from nanopnp.cli import build_parser, main
-from nanopnp.cli.errors import (
+from nanopnp.core.errors import (
     EXCLUDED,
     EXIT_CANCELLED,
     EXIT_CASE,
@@ -67,7 +67,7 @@ from nanopnp.core.paths import (
 from nanopnp.io.manifest import MANIFEST_SCHEMA
 from nanopnp.io.run import RUN_RECORD_FILENAME, RUN_SCHEMA
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
-from nanopnp.solve.gates import GateViolationError
+from nanopnp.numerics.gates import GateViolationError
 
 PORE = CylindricalPoreGeometry(
     pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
@@ -212,13 +212,13 @@ def test_ver32_every_public_exception_class_is_classified_or_excluded() -> None:
 
     unclassified = sorted(set(classes) - listed)
     assert not unclassified, (
-        f"{unclassified} is a public exception class in src/nanopnp that cli/errors.py neither "
+        f"{unclassified} is a public exception class in src/nanopnp that core/errors.py neither "
         "classifies nor excludes with a reason; it would exit 1 as 'unexpected' by accident"
     )
 
     ours = {key for key in listed if key.startswith("nanopnp.")}
     stale = sorted(ours - set(classes))
-    assert not stale, f"{stale} is listed in cli/errors.py but no longer exists in src/nanopnp"
+    assert not stale, f"{stale} is listed in core/errors.py but no longer exists in src/nanopnp"
 
     assert not set(EXIT_CODES) & set(EXCLUDED), "a class is both classified and excluded"
     assert all(reason.strip() for reason in EXCLUDED.values()), "an exclusion carries no reason"
@@ -229,10 +229,10 @@ def test_ver32_every_public_exception_class_is_classified_or_excluded() -> None:
     [
         ("nanopnp.io.case:CaseValidationError", EXIT_CASE),
         ("nanopnp.post.stage:SelectionError", EXIT_CASE),
-        ("nanopnp.solve.gates:GateViolationError", EXIT_GATE),
+        ("nanopnp.numerics.gates:GateViolationError", EXIT_GATE),
         ("nanopnp.post.qoi:RouteDisagreementError", EXIT_GATE),
         ("nanopnp.io.run:MissingUpstreamError", EXIT_GATE),
-        ("nanopnp.solve.newton:NewtonDivergenceError", EXIT_CONVERGENCE),
+        ("nanopnp.numerics.newton:NewtonDivergenceError", EXIT_CONVERGENCE),
         ("nanopnp.core.stages:Cancelled", EXIT_CANCELLED),
         ("nanopnp.core.stages:MissingExtraError", EXIT_CASE),
         ("nanopnp.structure.read:StructureInputError", EXIT_GATE),
@@ -276,13 +276,13 @@ def test_ver32_classifying_imports_no_exception_module() -> None:
 
     The table is strings and :func:`classify` walks ``type(error).__mro__``
     exactly so that the CLI's import cost stays at the ~70 ms the deferred-import
-    rule protects. Importing ``nanopnp.solve.newton`` to classify a
+    rule protects. Importing ``nanopnp.numerics.newton`` to classify a
     ``NewtonDivergenceError`` would drag NGSolve in behind it.
     """
     listed = sorted({key.partition(":")[0] for key in EXIT_CODES} - {"builtins"})
     code = (
         "import sys, json\n"
-        "import nanopnp.cli, nanopnp.cli.errors\n"
+        "import nanopnp.cli, nanopnp.core.errors\n"
         f"print(json.dumps([m for m in {listed!r} if m in sys.modules]))\n"
     )
     result = subprocess.run(
@@ -867,7 +867,7 @@ def test_ver32_stage_export_writes_each_interchange_file(
     import numpy as np
 
     from nanopnp.density.map import DensityMap
-    from nanopnp.mesh.profile import load_profile
+    from nanopnp.geometry.profile import load_profile
     from nanopnp.structure.ensemble import AlignedEnsemble
 
     case, store = tube_walk

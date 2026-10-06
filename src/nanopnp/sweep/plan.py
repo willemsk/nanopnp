@@ -65,6 +65,7 @@ from nanopnp.io.case import (
 )
 from nanopnp.io.run import input_files
 from nanopnp.io.store import atomic_write_bytes
+from nanopnp.materials.corrections import load_corrections
 from nanopnp.mesh.sizing import resolve_wall_size
 from nanopnp.sweep.document import SweepDocument, load_sweep, merged
 
@@ -597,7 +598,10 @@ def _wall_size_barriers(
             sizes[coordinates] = None
             continue
         try:
-            sizes[coordinates] = resolve_wall_size(member).wall_h_nm
+            parameters = load_corrections(member.electrolyte.parameters)
+            sizes[coordinates] = resolve_wall_size(
+                member, permittivity_0=parameters.solvent.permittivity.eps_r0
+            ).wall_h_nm
         except (ValueError, FileNotFoundError) as error:
             raise SweepPlanError(
                 f"the point {dict(assignments)} generates its mesh with wall_h_nm: auto, and its "
@@ -768,7 +772,7 @@ def build_plan(
         one the declared type accepts, if a point produces an inadmissible case,
         if two points are identical, or if ``rectification`` was asked for and
         the axes produce no exactly-opposite bias pair.
-    nanopnp.solve.gates.GateViolationError
+    nanopnp.numerics.gates.GateViolationError
         If a mesh a point would solve on violates NUM-34.
     """
     _check_axes(document)
@@ -891,7 +895,7 @@ def _gate_meshes(plan: SweepPlan, members: Sequence[ResolvedCase]) -> SweepPlan:
 
     Raises
     ------
-    nanopnp.solve.gates.GateViolationError
+    nanopnp.numerics.gates.GateViolationError
         Propagated unchanged from the gate, naming the mesh, the measured
         minimum, its location and the fraction of samples below zero (QR-12).
         Not wrapped in a :class:`SweepPlanError`: it is the same abort a member
@@ -899,7 +903,7 @@ def _gate_meshes(plan: SweepPlan, members: Sequence[ResolvedCase]) -> SweepPlan:
         one.
     """
     from nanopnp.mesh.ingest import IngestedMesh, ingest
-    from nanopnp.physics.measures import AXISYMMETRIC
+    from nanopnp.numerics.measures import AXISYMMETRIC
     from nanopnp.solve.state import check_wall_distance, reads_distance, wall_distance_field
 
     measured: dict[str, Canonicalisable] = {}

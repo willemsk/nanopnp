@@ -38,6 +38,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from nanopnp.charge.dielectric import SolidFractionField
 from nanopnp.charge.fields import FieldDocument, FormSpec, create_form
 from nanopnp.charge.stage import (
     FieldStage,
@@ -60,7 +61,6 @@ from nanopnp.io.run import (
     run_case,
 )
 from nanopnp.io.store import Store
-from nanopnp.materials.fields import SolidFractionField
 from nanopnp.mesh.ingest import IngestedMesh, MeshStage, exclusion_deviations
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
 

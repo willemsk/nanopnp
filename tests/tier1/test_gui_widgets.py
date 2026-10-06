@@ -630,7 +630,7 @@ def test_ver55_the_tab_builds_through_stage_6_and_draws_the_mesh(
     """
     import json
 
-    from nanopnp.mesh.profile import (
+    from nanopnp.geometry.profile import (
         PROFILE_SCHEMA,
         PoreProfile,
         ProfileProvenance,

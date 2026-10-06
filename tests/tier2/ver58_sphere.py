@@ -47,8 +47,8 @@ from nanopnp.charge.kernel import SourceAtoms, sum_kernel
 from nanopnp.core.constants import ELEMENTARY_CHARGE, VACUUM_PERMITTIVITY
 from nanopnp.materials.electrolyte import Electrolyte
 from nanopnp.mesh.adapter import MeshData, from_ngsolve, to_ngsolve
+from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics import models
-from nanopnp.physics.measures import AXISYMMETRIC
 
 if TYPE_CHECKING:
     from nanopnp.charge.kernel import RadialGrid

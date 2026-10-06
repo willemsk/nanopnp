@@ -59,7 +59,7 @@ No ``1/r``, and why
 ``w`` is axial, so ``(grad w)_phi,phi = w_r / r = 0`` and the hoop components of
 both tensors are contracted against zero: ``T : grad(w) = T_rz d_r w_z +
 T_zz d_z w_z``. The integrals still go through
-:class:`~nanopnp.physics.measures.Measures`, for the ``r`` weight, the
+:class:`~nanopnp.numerics.measures.Measures`, for the ``r`` weight, the
 integration-order floor and the non-finite abort, but ``singular=True`` would be
 cargo cult here and is not claimed. The same holds for every consistency term.
 
@@ -87,15 +87,13 @@ from nanopnp.core.typing import (
     Option,
 )
 from nanopnp.geometry.analyte import ANALYTE_BOUNDARY
-from nanopnp.mesh.distance import wall_distance
-from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS
+from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS, POTENTIAL, VELOCITY
+from nanopnp.numerics.measures import Measures
 from nanopnp.physics.coefficients import NondimensionalCoefficients
+from nanopnp.physics.distance import wall_distance
 from nanopnp.physics.flow import permittivity_gradient
-from nanopnp.physics.measures import Measures
 from nanopnp.physics.models import (
-    POTENTIAL,
     PRESSURE,
-    VELOCITY,
     ModelSolution,
     TransportModel,
     transport_model,
@@ -214,12 +212,12 @@ def axial_extension(
         The distance field to build the shell from. Defaults to a Varadhan solve
         against ``body``. Its *accuracy* barely matters - the total force is
         independent of ``w`` - but its exactness at ``d = 0`` does, and
-        :func:`~nanopnp.mesh.distance.wall_distance` zeroes the source degrees of
+        :func:`~nanopnp.physics.distance.wall_distance` zeroes the source degrees of
         freedom outright for that reason.
 
         The default solve is run at a diffusion length of a quarter of the shell
         width rather than at
-        :data:`~nanopnp.mesh.distance.DEFAULT_DIFFUSION_LENGTH_NM`, which is
+        :data:`~nanopnp.physics.distance.DEFAULT_DIFFUSION_LENGTH_NM`, which is
         sized for the sub-nanometre wall corrections. An unresolved screened
         Poisson oscillates, and where it undershoots the exponential floor the
         recovered ``d`` jumps to the cap *inside an element touching the body* -

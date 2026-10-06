@@ -33,15 +33,15 @@ import pytest
 from scipy.special import i0
 
 from nanopnp.mesh.primitives import CylinderGeometry
+from nanopnp.numerics.linear import solve_linear
+from nanopnp.numerics.measures import Measures
 from nanopnp.physics.flow import (
     continuity_term,
     electrical_body_force,
     pressure_term,
     viscous_operator,
 )
-from nanopnp.physics.measures import Measures
 from nanopnp.physics.pb import solve_pb
-from nanopnp.solve.linear import solve_linear
 
 AXISYMMETRIC = Measures(symmetry="axisymmetric", element_order=2)
 RADIUS_NM, LENGTH_NM = 2.0, 8.0

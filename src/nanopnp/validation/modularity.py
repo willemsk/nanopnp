@@ -16,7 +16,7 @@ The nodes of the import relation are the subpackages of ``nanopnp``, plus
 - ``typing``: inside ``if TYPE_CHECKING:``;
 - ``string``: a non-docstring string constant naming an existing ``nanopnp``
   module, as ``module`` or ``module:attribute``, which is how the stage registry,
-  ``PUBLIC`` and the exit-code table of ``cli/errors.py`` reach a module.
+  ``PUBLIC`` and the exit-code table of ``core/errors.py`` reach a module.
 
 The **static** relation is the union of the first three, and the **string**
 relation is the fourth (D5). A deferral or an annotation still couples two layers,
@@ -28,7 +28,7 @@ from __future__ import annotations
 import ast
 import re
 from collections import Counter, defaultdict
-from collections.abc import Collection, Iterable, Iterator, Mapping
+from collections.abc import Collection, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
@@ -64,6 +64,40 @@ VERSION_LITERAL = re.compile(r"\bv0\.\d+\b")
 
 BACKEND_PACKAGES: frozenset[str] = frozenset({"ngsolve", "netgen"})
 """The finite-element backend's top-level packages (QR-13, section 5.4.1)."""
+
+BACKEND_STRING = re.compile(r"^(ngsolve|netgen)((\.\w+)+(:[\w.]+)?|:[\w.]+)$")
+"""A string naming a backend module below its top level, or an attribute of one (VER-65).
+
+A dot or a colon is required, as :data:`MODULE_STRING` requires one: a bare
+``"netgen"`` is also the mesher's name in the case schema, which couples nothing
+to the backend's code.
+"""
+
+LAYER_ORDER: tuple[str, ...] = (
+    "core",
+    "structure",
+    "density",
+    "symmetry",
+    "geometry",
+    "mesh",
+    "numerics",
+    "charge",
+    "materials",
+    "physics",
+    "solve",
+    "post",
+    "io",
+    "sweep",
+    "validation",
+    "cli",
+    "gui",
+    ROOT_NODE,
+)
+"""The accepted order of the relation's nodes, lowest first (section 8.2.8 H6, H11).
+
+An edge from a node to one later in this order points **up** it. VER-61's
+``upward:`` list records the ``top`` edges that do, until WP39 empties it.
+"""
 
 BACKEND_INTERFACE: tuple[str, ...] = (
     "FunctionSpace",
@@ -315,7 +349,7 @@ def module_graph(
 
     With ``packages``, an import also reaches every package whose ``__init__``
     Python runs on the way to its target, except the importer's own, which are
-    already initialising: ``from nanopnp.cli.errors import classify`` runs
+    already initialising: ``from nanopnp.core.errors import classify`` runs
     ``cli/__init__.py`` first, so a load-time cycle through a package's
     ``__init__`` is a cycle of this graph and not only of the interpreter.
     """
@@ -501,6 +535,64 @@ def compare(
     measured_pairs = {(relation, pair) for relation, pairs in measured.items() for pair in pairs}
     removed = sorted(rows - measured_pairs)
     return Comparison(tuple(sorted(added, key=lambda a: (a[0], a[1]))), tuple(removed))
+
+
+# -- the upward ratchet (VER-61, section 8.2.8 H11) ---------------------------------
+
+UPWARD = "upward"
+"""The relation name :func:`compare` reports an upward ``top`` edge under."""
+
+
+def upward_edges(
+    edges: Iterable[ImportEdge], order: Sequence[str] = LAYER_ORDER
+) -> dict[tuple[str, str], tuple[ImportEdge, ...]]:
+    """Return the ``top`` subpackage edges that point up ``order``, with their imports.
+
+    Raises
+    ------
+    ValueError
+        If an edge has a node ``order`` does not place: a new subpackage needs a
+        place in the order before its edges can be judged.
+    """
+    rank = {node: position for position, node in enumerate(order)}
+    relation = subpackage_relation(edges, kinds=("top",))
+    unplaced = sorted({node for pair in relation for node in pair} - set(rank))
+    if unplaced:
+        raise ValueError(
+            f"{', '.join(unplaced)} has no place in the layer order; add it to LAYER_ORDER "
+            "and to the header of modularity-layering.yaml"
+        )
+    return {pair: found for pair, found in relation.items() if rank[pair[0]] < rank[pair[1]]}
+
+
+def _rows(path: Path, key: str) -> list[object]:
+    document = yaml.safe_load(path.read_text(encoding="utf-8"))
+    rows = document.get(key) if isinstance(document, dict) else None
+    if not isinstance(rows, list):
+        raise ValueError(f"{path}: expected a mapping with a {key!r} list")
+    return rows
+
+
+def accepted_upward(path: Path = LAYERING) -> tuple[AcceptedEdge, ...]:
+    """Read the recorded upward ``top`` edges, the ``upward:`` list (VER-61).
+
+    Raises
+    ------
+    ValueError
+        If a row lacks a key or repeats an edge.
+    """
+    accepted: list[AcceptedEdge] = []
+    seen: set[tuple[str, str]] = set()
+    for number, row in enumerate(_rows(path, UPWARD), start=1):
+        if not isinstance(row, dict) or set(row) != {"from", "to", "finding"}:
+            raise ValueError(f"{path}: upward edge {number} needs exactly from, to and finding")
+        pair = (str(row["from"]), str(row["to"]))
+        if pair in seen:
+            raise ValueError(f"{path}: upward edge {number} repeats {pair[0]} -> {pair[1]}")
+        seen.add(pair)
+        finding = row["finding"]
+        accepted.append(AcceptedEdge(*pair, UPWARD, None if finding is None else str(finding)))
+    return tuple(accepted)
 
 
 # -- stage conformance (D8 b) ------------------------------------------------------
@@ -757,7 +849,7 @@ EXTENSION_POINTS: tuple[_Point, ...] = (
     _Point("stabilisation", "registry", "physics/stabilisation.py", "call:register"),
     _Point("charge forms", "registry", "charge/fields.py", "call:register_form"),
     _Point("mesher", "branch", "io/case.py", "literal:backend"),
-    _Point("linear solver", "branch", "solve/linear.py", "assign:AVAILABLE_SOLVERS"),
+    _Point("linear solver", "branch", "numerics/linear.py", "assign:AVAILABLE_SOLVERS"),
     _Point("outputs", "branch", "io/case.py", "assign:OUTPUTS"),
     _Point("steric models", "branch", "io/case.py", "assign:STERIC_MODELS"),
     _Point("correction forms", "branch", "materials/forms.py", "assign:FORMS"),
@@ -849,45 +941,136 @@ def extension_points(
 # -- the backend (D8 d) ------------------------------------------------------------
 
 
+@dataclass(frozen=True, order=True)
+class BackendImport:
+    """One reference to ``ngsolve`` or ``netgen`` from a module of the package."""
+
+    node: str
+    """The importing module's subpackage."""
+    path: str
+    """The importing module's file, relative to the package directory."""
+    line: int
+    kind: str
+    """One of :data:`KINDS`; ``string`` is a constant matching :data:`BACKEND_STRING`."""
+    target: str
+    """The backend module or ``module:attribute`` named."""
+
+
 @dataclass(frozen=True)
 class BackendUse:
     """Who imports the finite-element backend, and whether section 5.4.1's interface exists."""
 
-    modules: dict[str, tuple[str, ...]]
-    """Per subpackage, the modules importing ``ngsolve`` or ``netgen`` at any scope."""
+    imports: tuple[BackendImport, ...]
+    """Every reference to the backend, in any of the four kinds, by path and line."""
     interface: tuple[str, ...]
     """The names of :data:`BACKEND_INTERFACE` the package defines at module level."""
 
     @property
+    def modules(self) -> dict[str, tuple[str, ...]]:
+        """Per subpackage, the modules referring to the backend, sorted."""
+        found: dict[str, set[str]] = defaultdict(set)
+        for reference in self.imports:
+            found[reference.node].add(reference.path)
+        return {node: tuple(sorted(paths)) for node, paths in sorted(found.items())}
+
+    @property
     def module_count(self) -> int:
-        """The number of modules importing the backend."""
+        """The number of modules referring to the backend."""
         return sum(len(found) for found in self.modules.values())
 
 
 def backend_imports(
     root: Path | None = None, sources: Mapping[str, str] | None = None
 ) -> BackendUse:
-    """Return the modules importing NGSolve or Netgen, by subpackage (QR-13, D8 d)."""
+    """Return every reference to NGSolve or Netgen, with its path, line and kind (QR-13, VER-65)."""
     modules = parse_package(root, sources)
-    found: dict[str, list[str]] = defaultdict(list)
+    found: set[BackendImport] = set()
     defined: set[str] = set()
     for module in modules:
-        names: set[str] = set()
-        for node in ast.walk(module.tree):
-            if isinstance(node, ast.Import):
-                names |= {alias.name.split(".")[0] for alias in node.names}
-            elif isinstance(node, ast.ImportFrom) and node.module and not node.level:
-                names.add(node.module.split(".")[0])
-        if names & BACKEND_PACKAGES:
-            found[node_of(module.name)].append(module.path)
+        node = node_of(module.name)
+        for statement, kind in _scoped_imports(module.tree):
+            if isinstance(statement, ast.Import):
+                names = [alias.name for alias in statement.names]
+            elif statement.module and not statement.level:
+                names = [statement.module]
+            else:
+                names = []
+            for name in names:
+                if name.split(".")[0] in BACKEND_PACKAGES:
+                    found.add(BackendImport(node, module.path, statement.lineno, kind, name))
+        for text, line in _module_strings(module):
+            if BACKEND_STRING.match(text):
+                found.add(BackendImport(node, module.path, line, "string", text))
         defined |= {
             statement.name
             for statement in module.tree.body
             if isinstance(statement, ast.ClassDef | ast.FunctionDef)
         }
     return BackendUse(
-        {node: tuple(paths) for node, paths in sorted(found.items())},
+        tuple(sorted(found)),
         tuple(name for name in BACKEND_INTERFACE if name in defined),
+    )
+
+
+def accepted_backend(path: Path = LAYERING) -> tuple[str, ...]:
+    """Read the recorded subpackages that reach the backend, the ``backend:`` list (VER-65).
+
+    Raises
+    ------
+    ValueError
+        If an entry is not a subpackage name or repeats one.
+    """
+    recorded: list[str] = []
+    for number, row in enumerate(_rows(path, "backend"), start=1):
+        if not isinstance(row, str):
+            raise ValueError(f"{path}: backend entry {number} is not a subpackage name")
+        if row in recorded:
+            raise ValueError(f"{path}: backend entry {number} repeats {row}")
+        recorded.append(row)
+    return tuple(recorded)
+
+
+@dataclass(frozen=True)
+class BackendComparison:
+    """The difference between the subpackages reaching the backend and the record (VER-65)."""
+
+    gained: tuple[BackendImport, ...]
+    """The first reference of each subpackage that reaches the backend and is not recorded."""
+    lost: tuple[str, ...]
+    """Recorded subpackages that no longer reach the backend."""
+
+    @property
+    def equal(self) -> bool:
+        """Whether the live set and the record agree in both directions."""
+        return not self.gained and not self.lost
+
+    def describe(self, path: Path = LAYERING) -> str:
+        """Return a diagnostic naming each gain's module and line, and each loss's subpackage."""
+        lines = [
+            f"{reference.node} now reaches the finite-element backend: {reference.path}:"
+            f"{reference.line} names {reference.target} ({reference.kind}). Section 5.4.1 keeps "
+            "NGSolve behind the backend interface (QR-13): move the code below one of the "
+            f"recorded subpackages, or record {reference.node} under backend: in {path.name}"
+            for reference in self.gained
+        ]
+        lines += [
+            f"{node} no longer reaches the finite-element backend. Delete it from backend: "
+            f"in {path.name}, so the record shrinks with the code"
+            for node in self.lost
+        ]
+        return "\n".join(lines)
+
+
+def compare_backend(use: BackendUse, recorded: Iterable[str]) -> BackendComparison:
+    """Compare the subpackages reaching the backend with the record, in both directions."""
+    expected = set(recorded)
+    first: dict[str, BackendImport] = {}
+    for reference in use.imports:
+        if reference.node not in expected and reference.node not in first:
+            first[reference.node] = reference
+    return BackendComparison(
+        tuple(first[node] for node in sorted(first)),
+        tuple(sorted(expected - set(use.modules))),
     )
 
 

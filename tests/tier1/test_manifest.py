@@ -39,6 +39,7 @@ from typing import Literal, get_args, get_origin
 
 import pytest
 
+from nanopnp.charge.dielectric import SolidFractionField
 from nanopnp.charge.fields import (
     ChargeField,
     FieldDocument,
@@ -67,8 +68,7 @@ from nanopnp.io.defaults import (
     value_at,
 )
 from nanopnp.io.manifest import GROUPS, MANIFEST_SCHEMA, build, read
-from nanopnp.materials.fields import SolidFractionField
-from nanopnp.physics.measures import AXISYMMETRIC
+from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics.models import CoupledModel
 
 MINIMAL = """

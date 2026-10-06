@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 
 from nanopnp.cli import main
-from nanopnp.cli.errors import EXIT_OK
+from nanopnp.core.errors import EXIT_OK
 from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
 

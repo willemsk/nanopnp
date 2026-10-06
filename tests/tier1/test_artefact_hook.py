@@ -21,9 +21,7 @@ import numpy as np
 import pytest
 
 from nanopnp.core.stages import ArtefactHook
-from nanopnp.io.run import run_case
-from nanopnp.io.store import Store
-from nanopnp.mesh.profile import (
+from nanopnp.geometry.profile import (
     PROFILE_SCHEMA,
     PoreProfile,
     ProfileProvenance,
@@ -32,6 +30,8 @@ from nanopnp.mesh.profile import (
     signed_area,
     write_profile,
 )
+from nanopnp.io.run import run_case
+from nanopnp.io.store import Store
 
 CASE = """\
 schema: nanopnp/case/v2

@@ -23,8 +23,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 
 from nanopnp.core.typing import Expression, IntegralTerm, Option
+from nanopnp.numerics.measures import Measures
 from nanopnp.physics.coefficients import NondimensionalCoefficients
-from nanopnp.physics.measures import Measures
 
 __all__ = [
     "ConcentrationVariables",

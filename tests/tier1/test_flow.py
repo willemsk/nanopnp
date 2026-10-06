@@ -20,6 +20,7 @@ import ngsolve as ngs
 import pytest
 
 from nanopnp.mesh.primitives import CylinderGeometry
+from nanopnp.numerics.measures import SINGULAR_MIN_ORDER, Measures
 from nanopnp.physics.flow import (
     axisymmetric_divergence,
     continuity_term,
@@ -28,7 +29,6 @@ from nanopnp.physics.flow import (
     strain_rate,
     viscous_operator,
 )
-from nanopnp.physics.measures import SINGULAR_MIN_ORDER, Measures
 
 RADIUS_NM, LENGTH_NM = 3.0, 2.0
 AXISYMMETRIC = Measures(symmetry="axisymmetric", element_order=2)

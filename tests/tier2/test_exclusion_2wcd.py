@@ -27,11 +27,11 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pytest
 
+from nanopnp.charge.dielectric import derive_solid_fraction, smooth_step, water_facing
 from nanopnp.geometry.region import distance_to_loop, distance_to_segments, read_region
 from nanopnp.io.case import resolve
 from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
-from nanopnp.materials.fields import derive_solid_fraction, smooth_step, water_facing
 from nanopnp.mesh.ingest import deployed_mesh
 from nanopnp.mesh.quality import QUALITY_FLOOR
 
@@ -209,7 +209,7 @@ def test_ver59_2wcd_chi_at_delta_h_c_costs_and_errors_are_recorded(meshed) -> No
     """
     from scipy.interpolate import RegularGridInterpolator
 
-    from nanopnp.materials.fields import _inside
+    from nanopnp.charge.dielectric import _inside
 
     _, result = meshed
     record = read_region(Path(result.artefacts["region"].payload["region"]))

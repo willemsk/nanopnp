@@ -14,7 +14,7 @@ import pytest
 import yaml
 
 from nanopnp.core.paths import GEOMETRY_DIR, profile_file
-from nanopnp.mesh.profile import (
+from nanopnp.geometry.profile import (
     LOCAL_EDGES,
     PROFILE_SCHEMA,
     PoreProfile,

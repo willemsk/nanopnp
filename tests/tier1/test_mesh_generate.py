@@ -16,14 +16,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from nanopnp.geometry.region import RegionStage, read_region
-from nanopnp.io.artefact import StageInputs
-from nanopnp.io.case import loads_case, resolve
-from nanopnp.mesh import generate as generate_module
-from nanopnp.mesh.adapter import read
-from nanopnp.mesh.generate import WallSizeGateError, generate
-from nanopnp.mesh.ingest import MeshStage, MeshVocabularyError, deployed_mesh
-from nanopnp.mesh.profile import (
+from nanopnp.geometry.profile import (
     PROFILE_SCHEMA,
     PoreProfile,
     ProfileProvenance,
@@ -32,6 +25,13 @@ from nanopnp.mesh.profile import (
     signed_area,
     write_profile,
 )
+from nanopnp.geometry.region import RegionStage, read_region
+from nanopnp.io.artefact import StageInputs
+from nanopnp.io.case import loads_case, resolve
+from nanopnp.mesh import generate as generate_module
+from nanopnp.mesh.adapter import read
+from nanopnp.mesh.generate import WallSizeGateError, generate
+from nanopnp.mesh.ingest import MeshStage, MeshVocabularyError, deployed_mesh
 from nanopnp.mesh.quality import QUALITY_FLOOR
 
 CASE = """\

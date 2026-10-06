@@ -565,7 +565,7 @@ def write_parallelogram_profile(path: Path, *, citation: str = "tests/conftest.p
     a second (``tests/tier1/test_mesh_generate.py``). The nanopnp imports are here
     for the reason the module docstring gives for MDAnalysis's.
     """
-    from nanopnp.mesh.profile import (
+    from nanopnp.geometry.profile import (
         PROFILE_SCHEMA,
         PoreProfile,
         ProfileProvenance,

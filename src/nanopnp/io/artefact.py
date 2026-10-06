@@ -51,7 +51,7 @@ REDUCED_SCHEMA = "nanopnp/reduced/v1"
 PROFILE_ARTEFACT_SCHEMA = "nanopnp/profile/v1"
 """Stage 4: the conditioned, gated contour, a ``nanopnp/profile/v1`` document (FR-07, FR-08).
 
-The same string as :data:`nanopnp.mesh.profile.PROFILE_SCHEMA`, repeated rather
+The same string as :data:`nanopnp.geometry.profile.PROFILE_SCHEMA`, repeated rather
 than imported for the reason :data:`MESH_ARTEFACT_SCHEMA` gives: the payload *is*
 a profile document, which ``inputs.profile`` reads back (WP20 D12).
 """

@@ -43,7 +43,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from nanopnp.io.fields import field_scale, sample_at
-from nanopnp.physics.models import PRESSURE, VELOCITY
+from nanopnp.mesh.primitives import VELOCITY
+from nanopnp.physics.models import PRESSURE
 from nanopnp.validation.comsol import Golden, GoldenQuantities
 from nanopnp.validation.probe import ProbeGrid, ProbeGridError
 

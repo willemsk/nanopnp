@@ -40,11 +40,7 @@ from scipy.integrate import simpson
 from nanopnp.core.constants import FARADAY, VACUUM_PERMITTIVITY
 from nanopnp.core.hashing import file_hash
 from nanopnp.density.grid import RadialGrid, read_grid, write_grid
-from nanopnp.io.case import load_case
-from nanopnp.io.run import run_case
-from nanopnp.io.store import Store
-from nanopnp.materials.corrections import load_corrections
-from nanopnp.mesh.profile import (
+from nanopnp.geometry.profile import (
     PROFILE_SCHEMA,
     PoreProfile,
     ProfileProvenance,
@@ -53,6 +49,10 @@ from nanopnp.mesh.profile import (
     signed_area,
     write_profile,
 )
+from nanopnp.io.case import load_case
+from nanopnp.io.run import run_case
+from nanopnp.io.store import Store
+from nanopnp.materials.corrections import load_corrections
 from nanopnp.solve.stage import warm_start_payload
 from nanopnp.solve.state import restore
 

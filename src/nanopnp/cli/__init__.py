@@ -36,8 +36,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
 from nanopnp import __version__
-from nanopnp.cli.errors import EXIT_OK, EXIT_UNEXPECTED, classify
 from nanopnp.cli.export import EXPORTS, export_artefact, refusal
+from nanopnp.core.errors import EXIT_OK, EXIT_UNEXPECTED, classify
 from nanopnp.core.paths import (
     CORRECTIONS_DIR,
     DATA_DIR,
@@ -1224,7 +1224,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     int
         The process exit status of section 3.1's NOTE (IF-02): ``0`` success,
         ``1`` unexpected, ``2`` usage, ``3`` the case, ``4`` a gate, ``5``
-        non-convergence, ``130`` cancellation. :func:`nanopnp.cli.errors.classify`
+        non-convergence, ``130`` cancellation. :func:`nanopnp.core.errors.classify`
         maps the exception to the code; a traceback is printed only under
         ``--traceback``, because a gate abort's diagnostic *is* the message.
     """

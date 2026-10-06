@@ -15,7 +15,7 @@ import ngsolve as ngs
 import pytest
 
 from nanopnp.mesh.primitives import CylinderGeometry
-from nanopnp.physics.measures import SINGULAR_MIN_ORDER, Measures
+from nanopnp.numerics.measures import SINGULAR_MIN_ORDER, Measures
 
 
 @pytest.fixture(scope="module")

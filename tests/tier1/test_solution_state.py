@@ -46,7 +46,7 @@ from nanopnp.io.artefact import SOLUTION_SCHEMA, Artefact, StageInputs
 from nanopnp.io.case import CaseDocument, ResolvedCase, loads_case, resolve
 from nanopnp.mesh.ingest import ingest
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
-from nanopnp.physics.measures import AXISYMMETRIC
+from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics.models import CoupledBoundaries, ModelSolution
 from nanopnp.post.indicator import axial_indicator
 from nanopnp.post.qoi import indicator_currents, reaction_flux_currents, total_current

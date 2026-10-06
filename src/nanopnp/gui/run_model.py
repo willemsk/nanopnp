@@ -14,7 +14,7 @@ a stage that has already been superseded. A bar that went backwards would be
 reporting the transport rather than the run, so the model keeps the maximum.
 
 **A failure is diagnosed once.** The §3.1 exit class arrives on the event, from
-:func:`nanopnp.cli.errors.classify` in the child; this module names it and shows
+:func:`nanopnp.core.errors.classify` in the child; this module names it and shows
 the QR-12 diagnostic the gate already wrote, and never re-derives either.
 
 **The convergence history is a projection of the same event stream.** The rung
@@ -40,7 +40,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
-from nanopnp.cli.errors import EXIT_OK, EXIT_UNEXPECTED
+from nanopnp.core.errors import EXIT_OK, EXIT_UNEXPECTED
 from nanopnp.gui.convergence import ConvergenceModel
 from nanopnp.gui.solver import (
     Cancelled,

@@ -35,8 +35,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from nanopnp.core.typing import Expression, IntegralTerm, Numeric, Option
+from nanopnp.numerics.measures import Measures
 from nanopnp.physics.coefficients import NondimensionalCoefficients
-from nanopnp.physics.measures import Measures
 from nanopnp.physics.nernst_planck import ConcentrationVariables
 
 __all__ = [

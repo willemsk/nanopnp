@@ -28,7 +28,7 @@ import pytest
 import yaml
 
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
-from nanopnp.physics.measures import AXISYMMETRIC
+from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.post import qoi
 from nanopnp.post.indicator import axial_indicator, lumen_band
 from nanopnp.solve.continuation import default_ladder, run_ladder

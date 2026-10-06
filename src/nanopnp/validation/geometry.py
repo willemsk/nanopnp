@@ -10,7 +10,7 @@ the mid-planes ``z_k = z_lo + (k + 1/2) h`` over the reference's z extent, 282 o
 them for the delivered table at ``h = 0.05`` nm. On each plane the lumen radius is
 a polygon's innermost crossing (:func:`~nanopnp.geometry.contour.innermost_crossings`)
 and its outer surface is the second crossing
-(:func:`~nanopnp.mesh.profile.plane_crossings`). The generated polygon must cross
+(:func:`~nanopnp.geometry.profile.plane_crossings`). The generated polygon must cross
 every plane except within 2h of the reference's tips, where a rounded end one
 plane short is admitted; anywhere else a missing plane is refused naming z (QR-12).
 
@@ -52,11 +52,11 @@ from typing import TYPE_CHECKING, Literal
 import yaml
 from pydantic import BaseModel, ConfigDict
 
+from nanopnp.geometry.profile import PoreProfile, load_profile, plane_crossings
 from nanopnp.geometry.region import to_model_frame
 from nanopnp.io.case import Geometry, load_case
 from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
-from nanopnp.mesh.profile import PoreProfile, load_profile, plane_crossings
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np

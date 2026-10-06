@@ -38,8 +38,8 @@ import numpy as np
 import pytest
 
 from nanopnp.core.hashing import decode_floats
+from nanopnp.geometry.profile import PIPELINE_SOURCE, load_profile
 from nanopnp.io.case import load_case
-from nanopnp.mesh.profile import PIPELINE_SOURCE, load_profile
 from nanopnp.structure.axis import ORIENTATION_LIMIT_DEG
 from nanopnp.validation.examples import CommandResult, copy_example, run_tagged
 

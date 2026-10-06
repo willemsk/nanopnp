@@ -781,7 +781,7 @@ leave `wall_h` alone.
 
 Note also that the residual `Set` leaves behind here is a few times `10⁻⁶` nm and *positive*, two
 orders inside NUM-34's threshold — the "few times `10⁻⁴` with a platform-dependent sign" of §8.1
-below is the unzeroed-projection case, which `mesh/distance.py` does not produce.
+below is the unzeroed-projection case, which `physics/distance.py` does not produce.
 
 **The clamp alone would have been worse than nothing, and this is the measurement that says so.
 [tested]** With the driver clamped, the toy pore at 0.1 M and +20 mV gives:

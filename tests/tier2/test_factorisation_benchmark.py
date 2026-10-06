@@ -34,8 +34,8 @@ import numpy as np
 import pytest
 
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
-from nanopnp.physics.measures import AXISYMMETRIC
-from nanopnp.solve.linear import to_scipy
+from nanopnp.numerics.linear import to_scipy
+from nanopnp.numerics.measures import AXISYMMETRIC
 
 logger = logging.getLogger(__name__)
 

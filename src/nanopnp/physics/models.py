@@ -48,7 +48,31 @@ from nanopnp.core.typing import (
 )
 from nanopnp.materials.electrolyte import CorrectionSwitches, Electrolyte
 from nanopnp.materials.fields import blend, nearest_solid_permittivity
-from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS, PERMITTIVITY_EXEMPT
+from nanopnp.mesh.primitives import (
+    DEFAULT_BOUNDARIES,
+    ELECTROLYTE_DOMAINS,
+    PERMITTIVITY_EXEMPT,
+    POTENTIAL,
+    VELOCITY,
+    VELOCITY_AXIS,
+    CoupledBoundaries,
+)
+from nanopnp.numerics.gates import (
+    FieldSampler,
+    Gate,
+    PackingFractionGate,
+    PositivityGate,
+    PotentialIncrementGate,
+)
+from nanopnp.numerics.linear import DEFAULT_SOLVER, solve_correction
+from nanopnp.numerics.measures import Measures
+from nanopnp.numerics.newton import (
+    DEFAULT_SETTINGS,
+    NewtonResult,
+    NewtonSettings,
+    NewtonStep,
+    damped_newton,
+)
 from nanopnp.physics.coefficients import (
     SATURATED_WALL_DISTANCE_NM,
     NondimensionalCoefficients,
@@ -64,7 +88,6 @@ from nanopnp.physics.flow import (
     pressure_term,
     viscous_operator,
 )
-from nanopnp.physics.measures import Measures
 from nanopnp.physics.nernst_planck import (
     ConcentrationVariables,
     nernst_planck_residual,
@@ -85,21 +108,6 @@ from nanopnp.physics.stabilisation import (
 )
 from nanopnp.physics.stabilisation import cell_peclet as species_cell_peclet
 from nanopnp.physics.stabilisation import create as create_stabilisation
-from nanopnp.solve.gates import (
-    FieldSampler,
-    Gate,
-    PackingFractionGate,
-    PositivityGate,
-    PotentialIncrementGate,
-)
-from nanopnp.solve.linear import DEFAULT_SOLVER, solve_correction
-from nanopnp.solve.newton import (
-    DEFAULT_SETTINGS,
-    NewtonResult,
-    NewtonSettings,
-    NewtonStep,
-    damped_newton,
-)
 
 __all__ = [
     "COEFFICIENTS",
@@ -135,20 +143,9 @@ logger = logging.getLogger(__name__)
 ElementKind: TypeAlias = Literal["h1", "vector_h1", "number"]
 """The element families a field may be discretised with (NUM-01)."""
 
-POTENTIAL = "potential"
-"""Name of the potential field, shared by every model."""
-
-VELOCITY = "velocity"
 PRESSURE = "pressure"
 PRESSURE_MEAN = "pressure_mean"
 """Name of the scalar multiplier fixing the pressure level; see ``pressure_constraint``."""
-
-VELOCITY_AXIS = "velocity_axis"
-"""Key of the axis constraint ``u_r = 0`` in :meth:`PhysicsModel.essential_boundaries`.
-
-The one essential set that is not a whole field: the axis constrains one
-component of ``u`` and leaves ``u_z`` natural (NUM-06), so it is reported beside
-the velocity's own no-slip set rather than folded into it."""
 
 SWITCHES: tuple[str, ...] = ("flow", "variable_density", "inertia", "dielectric_gradient_forces")
 """The ``physics:`` switches a :class:`ModelDeclaration` states a value set for (PHY-22)."""
@@ -275,59 +272,6 @@ class Field:
     element: ElementKind
     order: int
     domain: str | None = None
-
-
-@dataclass(frozen=True)
-class CoupledBoundaries:
-    """The boundary-name vocabulary a coupled solve is posed on (PHY-09).
-
-    Parameters
-    ----------
-    potential
-        Boundaries carrying an essential condition on ``phi``.
-    concentration
-        Boundaries carrying ``c_i = c_bulk``, either shared by every species or
-        given per species. A benchmark needs the per-species form — the 1D
-        limiting-current problem of VER-16 blocks the anion at the electrode
-        while the cation is consumed there — and the reference case does not.
-    velocity
-        Boundaries carrying no-slip ``u = 0``.
-    velocity_axis
-        The axis, carrying ``u_r = 0`` and nothing else. It is a separate entry
-        because it constrains one component only: ``u_z``, ``phi`` and ``c_i``
-        are natural there and imposing them is a modelling error (NUM-06).
-    """
-
-    potential: str = "cis|trans"
-    concentration: str | Mapping[str, str] = "cis|trans"
-    velocity: str = "wall|membrane"
-    velocity_axis: str = "axis"
-
-    def concentration_boundary(self, species: str) -> str:
-        """Return the boundaries carrying essential data for one species.
-
-        Raises
-        ------
-        KeyError
-            If a per-species mapping omits the species. There is deliberately no
-            fallback: a missing entry would leave that species with no essential
-            condition anywhere, and a pure-Neumann Nernst-Planck equation has a
-            constant null mode that a direct solver factorises without complaint
-            (see ``.knowledge/06-numerics-fem.md`` section 8.1).
-        """
-        if isinstance(self.concentration, str):
-            return self.concentration
-        try:
-            return self.concentration[species]
-        except KeyError:
-            known = ", ".join(sorted(self.concentration))
-            raise KeyError(
-                f"no concentration boundary for {species!r}; the mapping names {known}"
-            ) from None
-
-
-DEFAULT_BOUNDARIES = CoupledBoundaries()
-"""The boundary vocabulary of the analytic pore geometry of ``mesh/primitives``."""
 
 
 @dataclass
@@ -1671,7 +1615,7 @@ class CoupledModel:
         settings, solver
             Newton policy and the direct linear solver.
         callback
-            Called with every accepted :class:`~nanopnp.solve.newton.NewtonStep`,
+            Called with every accepted :class:`~nanopnp.numerics.newton.NewtonStep`,
             for continuation logging and progress reporting (FR-27).
 
         Returns
@@ -1681,10 +1625,10 @@ class CoupledModel:
 
         Raises
         ------
-        nanopnp.solve.gates.GateViolationError
+        nanopnp.numerics.gates.GateViolationError
             If any NUM-17 assertion fails. The state is then the last admissible
             iterate, not the rejected one.
-        nanopnp.solve.newton.NewtonDivergenceError
+        nanopnp.numerics.newton.NewtonDivergenceError
             If Newton reaches its iteration cap.
         """
         import ngsolve as ngs

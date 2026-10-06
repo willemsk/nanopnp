@@ -18,8 +18,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from nanopnp.io.store import Store
-from nanopnp.mesh.profile import (
+from nanopnp.geometry.profile import (
     PROFILE_SCHEMA,
     PoreProfile,
     ProfileProvenance,
@@ -28,6 +27,7 @@ from nanopnp.mesh.profile import (
     signed_area,
     write_profile,
 )
+from nanopnp.io.store import Store
 from nanopnp.sweep.plan import plan_from_document, write_plan
 from nanopnp.sweep.run import MemberResult, run_plan
 

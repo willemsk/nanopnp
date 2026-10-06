@@ -39,7 +39,7 @@ from nanopnp.charge.fields import (
 )
 from nanopnp.core.constants import ELEMENTARY_CHARGE
 from nanopnp.density.grid import RadialGrid
-from nanopnp.physics.measures import AXISYMMETRIC
+from nanopnp.numerics.measures import AXISYMMETRIC
 
 SMEARING_WIDTH_NM = 0.085
 """``sigma R_i`` at the reference's own smearing: ``0.5 x 0.17 nm`` (PHY-16 step 3)."""

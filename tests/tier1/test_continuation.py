@@ -14,8 +14,8 @@ from itertools import pairwise
 import pytest
 
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics import models
-from nanopnp.physics.measures import AXISYMMETRIC
 from nanopnp.solve.continuation import (
     BIAS_ONSET_V,
     COARSE_BIAS_STEP_V,

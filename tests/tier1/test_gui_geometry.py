@@ -29,6 +29,11 @@ import numpy as np
 import pytest
 import yaml
 
+from nanopnp.geometry.profile import (
+    HAND_EDIT_SOURCE,
+    load_profile,
+    profile_digest,
+)
 from nanopnp.gui.geometry import (
     STAGE_1_FRAME,
     ProfileEditor,
@@ -53,11 +58,6 @@ from nanopnp.io.case import (
 )
 from nanopnp.io.run import run_case
 from nanopnp.io.store import Store
-from nanopnp.mesh.profile import (
-    HAND_EDIT_SOURCE,
-    load_profile,
-    profile_digest,
-)
 
 H = 0.05
 

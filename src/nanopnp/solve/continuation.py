@@ -75,8 +75,9 @@ from nanopnp.core.scaling import debye_length_nm
 from nanopnp.core.stages import Cancelled
 from nanopnp.core.typing import Expression, GridFunction, Mesh, Option
 from nanopnp.materials.electrolyte import CorrectionSwitches, Electrolyte
+from nanopnp.numerics.gates import FieldSampler, PecletDiagnostic, PecletMeasurement
+from nanopnp.numerics.measures import AXISYMMETRIC, Measures
 from nanopnp.physics.coefficients import SATURATED_WALL_DISTANCE_NM
-from nanopnp.physics.measures import AXISYMMETRIC, Measures
 from nanopnp.physics.models import (
     DEFAULT_BOUNDARIES,
     LADDER_TARGETS,
@@ -89,7 +90,6 @@ from nanopnp.physics.models import (
     solves_transport,
     transport_model,
 )
-from nanopnp.solve.gates import FieldSampler, PecletDiagnostic, PecletMeasurement
 
 __all__ = [
     "LadderResult",
@@ -640,7 +640,7 @@ def run_ladder(
     ------
     ValueError
         If the ladder is empty.
-    nanopnp.solve.gates.GateViolationError
+    nanopnp.numerics.gates.GateViolationError
         If any NUM-17 assertion fails on any rung. It is allowed to propagate
         with the rung named: a ladder that swallowed a gate and carried on would
         be doing exactly what the gate exists to prevent (QR-12).

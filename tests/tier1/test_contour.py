@@ -45,11 +45,7 @@ from nanopnp.geometry.contour import (
     taubin,
 )
 from nanopnp.geometry.probe import probe_radius_profile
-from nanopnp.io.artefact import Artefact, StageInputs
-from nanopnp.io.case import CaseValidationError, load_case, resolve
-from nanopnp.io.run import run_case, selected_stages
-from nanopnp.io.store import Store
-from nanopnp.mesh.profile import (
+from nanopnp.geometry.profile import (
     PIPELINE_SOURCE,
     load_profile,
     min_feature_size,
@@ -57,6 +53,10 @@ from nanopnp.mesh.profile import (
     signed_area,
     write_profile,
 )
+from nanopnp.io.artefact import Artefact, StageInputs
+from nanopnp.io.case import CaseValidationError, load_case, resolve
+from nanopnp.io.run import run_case, selected_stages
+from nanopnp.io.store import Store
 
 H = 0.05
 

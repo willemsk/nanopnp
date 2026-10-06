@@ -33,8 +33,8 @@ import pytest
 
 from nanopnp.core.constants import VACUUM_PERMITTIVITY, thermal_voltage
 from nanopnp.materials.electrolyte import Electrolyte
+from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics import models
-from nanopnp.physics.measures import AXISYMMETRIC
 
 LENGTH_NM = 10.0
 LOWER_NM = 4.0

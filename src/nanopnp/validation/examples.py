@@ -40,7 +40,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
-from nanopnp.cli.errors import EXIT_GATE, EXIT_OK
+from nanopnp.core.errors import EXIT_GATE, EXIT_OK
 
 __all__ = [
     "EXPECTED_EXIT",

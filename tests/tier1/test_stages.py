@@ -292,7 +292,7 @@ def test_ver25_cancellation_is_not_an_error_subclass_of_the_gates() -> None:
     ``except`` an operator uses for a gate violation, "I stopped it" and "it
     produced a wrong answer" would read identically in the log.
     """
-    from nanopnp.solve.gates import GateViolationError
+    from nanopnp.numerics.gates import GateViolationError
 
     assert not issubclass(Cancelled, GateViolationError)
     assert issubclass(Cancelled, RuntimeError)

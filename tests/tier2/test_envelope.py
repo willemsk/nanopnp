@@ -58,10 +58,10 @@ import pytest
 
 from nanopnp.core.scaling import debye_length_nm
 from nanopnp.materials.electrolyte import CorrectionSwitches, Electrolyte
-from nanopnp.mesh.distance import wall_distance
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics.coefficients import SATURATED_WALL_DISTANCE_NM
-from nanopnp.physics.measures import AXISYMMETRIC
+from nanopnp.physics.distance import wall_distance
 from nanopnp.physics.models import CoupledModel, ModelSolution
 from nanopnp.post import qoi
 from nanopnp.post.indicator import axial_indicator, lumen_band

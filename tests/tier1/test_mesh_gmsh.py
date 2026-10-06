@@ -26,8 +26,17 @@ from types import ModuleType
 import numpy as np
 import pytest
 
-from nanopnp.cli.errors import EXIT_CASE, EXIT_GATE, classify
+from nanopnp.core.errors import EXIT_CASE, EXIT_GATE, classify
 from nanopnp.core.stages import MissingExtraError
+from nanopnp.geometry.profile import (
+    PROFILE_SCHEMA,
+    PoreProfile,
+    ProfileProvenance,
+    min_feature_size,
+    min_vertex_spacing,
+    signed_area,
+    write_profile,
+)
 from nanopnp.geometry.region import (
     RegionRecord,
     RegionStage,
@@ -41,15 +50,6 @@ from nanopnp.mesh import generate as generate_module
 from nanopnp.mesh.adapter import MeshData
 from nanopnp.mesh.generate import generate, gmsh_backend
 from nanopnp.mesh.ingest import MeshStage
-from nanopnp.mesh.profile import (
-    PROFILE_SCHEMA,
-    PoreProfile,
-    ProfileProvenance,
-    min_feature_size,
-    min_vertex_spacing,
-    signed_area,
-    write_profile,
-)
 from nanopnp.mesh.quality import QUALITY_FLOOR, inverted_elements
 from nanopnp.mesh.sizing import SIZES
 

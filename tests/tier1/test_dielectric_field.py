@@ -24,6 +24,13 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+from nanopnp.charge.dielectric import (
+    FLUID_MEAN_CEILING,
+    SOLID_MEAN_FLOOR,
+    SolidFractionField,
+    load_solid_fraction,
+    summary,
+)
 from nanopnp.charge.fields import (
     ChargeFieldError,
     FieldDocument,
@@ -33,22 +40,15 @@ from nanopnp.charge.fields import (
     load_document,
 )
 from nanopnp.materials.electrolyte import Electrolyte
-from nanopnp.materials.fields import (
-    FLUID_MEAN_CEILING,
-    SOLID_MEAN_FLOOR,
-    SolidFractionField,
-    blend,
-    load_solid_fraction,
-    summary,
-)
+from nanopnp.materials.fields import blend
 from nanopnp.mesh.primitives import CylindricalPoreGeometry, SlabGeometry
+from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics import models
 from nanopnp.physics.coefficients import (
     SATURATED_WALL_DISTANCE_NM,
     NondimensionalCoefficients,
     mesh_unit_scales,
 )
-from nanopnp.physics.measures import AXISYMMETRIC
 from nanopnp.physics.nernst_planck import ConcentrationVariables
 
 PORE = CylindricalPoreGeometry(

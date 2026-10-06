@@ -57,7 +57,7 @@ from nanopnp.charge.fields import (
 from nanopnp.core.constants import ELEMENTARY_CHARGE
 from nanopnp.core.paths import REFERENCE_DATA_VARIABLE, reference_file
 from nanopnp.mesh.reference import ReferenceGeometry
-from nanopnp.physics.measures import AXISYMMETRIC
+from nanopnp.numerics.measures import AXISYMMETRIC
 
 TABLE = "prod5_clya_charge"
 """The delivered table's name within the reference archive."""

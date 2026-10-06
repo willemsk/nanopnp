@@ -45,8 +45,9 @@ import pytest
 
 from nanopnp.materials.electrolyte import CorrectionSwitches, Electrolyte
 from nanopnp.mesh.primitives import CylinderGeometry, CylindricalPoreGeometry
+from nanopnp.numerics.gates import GateViolationError
+from nanopnp.numerics.measures import AXISYMMETRIC, Measures
 from nanopnp.physics import stabilisation as stabilisation_module
-from nanopnp.physics.measures import AXISYMMETRIC, Measures
 from nanopnp.physics.models import (
     POTENTIAL,
     VELOCITY,
@@ -57,7 +58,6 @@ from nanopnp.physics.models import (
 )
 from nanopnp.post import qoi
 from nanopnp.solve.continuation import LadderResult, default_ladder, run_ladder
-from nanopnp.solve.gates import GateViolationError
 from nanopnp.validation.mms import (
     ManufacturedSolution,
     convergence_rates,
@@ -600,7 +600,7 @@ def _crosswind_samples(solution: ModelSolution) -> dict[str, tuple[int, int, int
     quantities sampled at points: ``h_K`` is element-constant, so a positive sample
     does localise to one element.
     """
-    from nanopnp.solve.gates import FieldSampler
+    from nanopnp.numerics.gates import FieldSampler
 
     model = solution.model
     functions = {field.name: solution.component(field.name) for field in model.fields}

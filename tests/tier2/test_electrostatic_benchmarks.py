@@ -25,7 +25,7 @@ from nanopnp.core.constants import (
     thermal_voltage,
 )
 from nanopnp.mesh.primitives import CylinderGeometry, SlabGeometry
-from nanopnp.physics.measures import AXISYMMETRIC, PLANAR
+from nanopnp.numerics.measures import AXISYMMETRIC, PLANAR
 from nanopnp.physics.pb import (
     ELECTROLYTE_PERMITTIVITY,
     debye_length_nm,

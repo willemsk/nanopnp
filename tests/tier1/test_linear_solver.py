@@ -17,9 +17,7 @@ import numpy as np
 import pytest
 
 from nanopnp.mesh.primitives import SlabGeometry
-from nanopnp.physics.measures import PLANAR
-from nanopnp.physics.pb import debye_length_nm, solve_pb
-from nanopnp.solve.linear import (
+from nanopnp.numerics.linear import (
     AVAILABLE_SOLVERS,
     check_solver,
     diagonal_block_norms,
@@ -28,6 +26,8 @@ from nanopnp.solve.linear import (
     solve_superlu,
     to_scipy,
 )
+from nanopnp.numerics.measures import PLANAR
+from nanopnp.physics.pb import debye_length_nm, solve_pb
 
 CONCENTRATION_M = 0.1
 """Bulk concentration of the test problem, in mol/L."""
@@ -226,7 +226,7 @@ def test_num10_a_badly_scaled_system_is_reported(
     form += (1e6 * ngs.grad(first) * ngs.grad(test_first) + 1e-6 * second * test_second) * ngs.dx
     form.Assemble()
 
-    with caplog.at_level(logging.WARNING, logger="nanopnp.solve.linear"):
+    with caplog.at_level(logging.WARNING, logger="nanopnp.numerics.linear"):
         norms = report_block_scaling(form.mat, space)
 
     assert "NUM-10" in caplog.text
@@ -243,7 +243,7 @@ def test_num10_a_well_scaled_system_is_quiet(
     form += (ngs.grad(first) * ngs.grad(test_first) + second * test_second) * ngs.dx
     form.Assemble()
 
-    with caplog.at_level(logging.WARNING, logger="nanopnp.solve.linear"):
+    with caplog.at_level(logging.WARNING, logger="nanopnp.numerics.linear"):
         report_block_scaling(form.mat, space)
 
     assert caplog.text == ""

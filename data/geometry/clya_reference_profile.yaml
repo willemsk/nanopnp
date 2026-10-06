@@ -1,7 +1,7 @@
 # The reference pore boundary, SPECIFICATION.md section 5.2.1.
 #
 # Derived from data/geometry/clya_as_radial_geometry.csv by
-# nanopnp.mesh.profile.profile_from_csv; the sha256 below is that table's, over its
+# nanopnp.geometry.profile.profile_from_csv; the sha256 below is that table's, over its
 # bytes as delivered. Do not edit by hand: tests/tier1/test_mesh_profile.py re-derives
 # this file from the table and fails if the two have drifted.
 #

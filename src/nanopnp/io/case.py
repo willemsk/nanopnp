@@ -66,9 +66,12 @@ from nanopnp.materials.electrolyte import (
     CorrectionSwitches,
     Electrolyte,
 )
+from nanopnp.numerics.linear import AVAILABLE_SOLVERS
+from nanopnp.numerics.newton import DEFAULT_SETTINGS, NewtonSettings
 from nanopnp.physics.models import (
     LADDER_STRATEGY,
     SWITCHES,
+    ModelDeclaration,
     PhysicsModel,
     create,
     declaration,
@@ -76,8 +79,6 @@ from nanopnp.physics.models import (
     registered_models,
     registered_stabilisations,
 )
-from nanopnp.solve.linear import AVAILABLE_SOLVERS
-from nanopnp.solve.newton import DEFAULT_SETTINGS, NewtonSettings
 
 SCHEMA: str = CASE_SCHEMA
 """Schema identifier every case file must declare.
@@ -2035,6 +2036,15 @@ class ResolvedCase:
         different set of keywords.
         """
         return build_model(self.model, self.electrolyte, self.concentration_M, self.model_options)
+
+    def model_declaration(self) -> ModelDeclaration:
+        """Return what this case's model admits, without building it.
+
+        Beside :meth:`physics_model` so that a stage below ``physics/`` -- the mesh
+        gate of stage 6 among them -- reads the declaration through the resolved
+        case rather than importing the model registry upward (section 8.2.8 H11).
+        """
+        return declaration(self.model)
 
     @property
     def generates_mesh(self) -> bool:
