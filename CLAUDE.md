@@ -49,7 +49,7 @@ matches `pyproject.toml`: if you edit `pyproject.toml` by hand, run `uv lock` be
 | `uv run pytest -m slow --log-cli-level=INFO` | Benchmarks and envelope runs; measured, never gated |
 | `uv run pytest tests/tier1/test_corrections.py::test_ver03_ion_wall_function_check_values -v` | One test |
 | `uv run pytest --cov=src/nanopnp --cov-report=term-missing` | Coverage |
-| `uv run pytest --extended --cov=src/nanopnp --cov-branch --cov-report=xml && uv run diff-cover coverage.xml --compare-branch=origin/main --branch-coverage --fail-under=100 --include 'src/nanopnp/**/*.py' --exclude '*/src/nanopnp/gui/*'` | Branch coverage of the lines the branch changes, as `gate.sh run` and CI's lint job gate it |
+| `uv run pytest --extended --cov=src/nanopnp --cov-branch --cov-report=xml && uv run diff-cover coverage.xml --compare-branch=origin/main --branch-coverage --fail-under=100 --include 'src/nanopnp/**/*.py' --exclude '*/src/nanopnp/gui/*'` | Branch coverage of changed lines, as `gate.sh run` and CI gate it |
 | `uv run ruff check . && uv run ruff format .` | Lint and format |
 | `uv run mypy src/` | Type check (strict) |
 | `uv run nanopnp --env` | Report the resolved environment and data locations |
@@ -75,16 +75,10 @@ by its test (VER-46). The rule is `.github/scripts/prose-only.sh`,
 and CI uses the same script. CI's strict documentation build runs on every push, prose included.
 `.claude/hooks/gate.sh run` runs the gate by hand with `--extended`, the whole of what CI gates; the
 skills use it before they push, and a pass of the hook's development selection does not stand in for
-it. Like CI's lint job, `run` measures branch coverage and runs `diff-cover` against the merge base
-with `main`: every changed line of `src/nanopnp/` outside `gui/` must be executed down each of its
-branches, or carry `# pragma: no cover - <reason>` (VER-72). That finds a statement or a branch
-no test takes. It cannot see an untaken arm of a conditional expression (`a if c else b`), nor code
-that is missing; WP39's dead remedy text and its absent `try` were both, and a plan's `planned:`
-tests, which assert the text and the state after failure, are what catch them. `run` also sets
-`NANOPNP_REQUIRE_GMSH=1`, as CI does, so a Gmsh that cannot import fails rather than skips (the
-failure names the `apt-get` line; the session-start hook installs the libraries where it can); the
-commit hook sets it only when the change touches the Gmsh backend or its tests. Both list skipped
-tests (`-rs`). `git commit --no-verify`
+it. `run` also requires, as CI does, full branch coverage of the lines changed in `src/nanopnp/`
+outside `gui/` (`diff-cover` against `main`; an exempt line says `# pragma: no cover - <reason>`),
+and sets `NANOPNP_REQUIRE_GMSH=1`, so a Gmsh that cannot import fails rather than skips. Coverage
+misses missing code and untaken arms of `a if c else b`; planned tests cover those. `git commit --no-verify`
 (or `-n`) skips it. It does not fire for commits you make yourself in a terminal.
 
 ## Project structure
@@ -182,7 +176,7 @@ CLI, the GUI and the sweep runner all depend on.
 - **Imports go at the top of the module. `ngsolve`, `netgen`, `numpy`, `scipy`, `meshio` and
   `h5py` are the exceptions**, and are imported inside the function that uses them. `import ngsolve`
   costs ~370 ms, `import numpy` ~67 ms, `import scipy.sparse` ~260 ms (§8.2.8 H12), `import meshio`
-  ~170 ms and `import h5py` ~140–180 ms (`python -X importtime`, cumulative), and the CLI, the GUI and the sweep runner all import stage modules purely to introspect a
+  ~170 ms and `import h5py` ~140–180 ms, and the CLI, the GUI and the sweep runner all import stage modules purely to introspect a
   stage (FR-27) without ever assembling a form — so a sweep dispatching a job array pays that per
   process. Deferring keeps `import nanopnp.cli` at ~70 ms; at module scope the physics and mesh
   modules alone would cost 424 ms rather than 56 ms. The one other exception is **an optional
@@ -191,7 +185,7 @@ CLI, the GUI and the sweep runner all depend on.
   `AlignedEnsemble` reads without MDAnalysis and exports with it, and how `density/grid.py` reads
   OpenDX through GridDataFormats. A module reached only through `create()`, such as
   `structure/read.py`, imports its extra at the top. Defer nothing else: a stdlib import buys
-  microseconds and just makes the module harder to read. VER-72 enforces the list (`tests/tier1/test_source_conventions.py`).
+  microseconds and just makes the module harder to read. VER-72 enforces this.
 
 ## Testing
 
@@ -243,10 +237,8 @@ failure class means here, and why a failing Tier 2 benchmark is evidence rather 
 read automatically when a PR event wakes a session, so it governs the autofix loop whether or not
 `/wp-ship` started it.
 
-A plan marks each work item `[Opus]` or `[any]`, and the model policy binds whoever implements it,
-not only `Agent` calls: a session on any other model, Claude or not, implements the `[any]` items,
-commits and ticks each, and stops at the first `[Opus]` one (`.claude/model-policy.md`, *Who
-implements a plan*).
+Plans mark each work item `[Opus]` or `[any]`; a non-Opus session does the `[any]` items and stops
+at the first `[Opus]` one (`.claude/model-policy.md`, *Who implements a plan*).
 
 Step 2 does not chain into step 3. The user starts `/wp-ship` in a fresh session, so the review
 pass runs from a session that did not make the physics decisions; `wp-ship` §4 says how that pass is

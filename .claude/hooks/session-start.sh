@@ -20,13 +20,10 @@ fi
 
 set +e
 
-# Gmsh's wheel loads X and GL libraries at import, and a bare container lacks
-# them (.knowledge/07-software-stack.md section 5). `gate.sh run` requires Gmsh,
-# as CI does, so install them where that needs no prompt, or say so in one line.
-# The import is tried only when the loader cannot already see libGLU.
+# `gate.sh run` requires Gmsh, whose wheel needs X and GL libraries
+# (.knowledge/07 section 5): install them if that needs no prompt, else warn.
 gmsh_libs="libglu1-mesa libxft2 libxinerama1 libxcursor1"
-# Both are captured, not piped: under pipefail a failing import, or ldconfig
-# cut short by an early grep, fails the pipeline whatever grep found.
+# Captured, not piped into grep: pipefail would fail the pipeline.
 python=.venv/bin/python
 loader=$(ldconfig -p 2>/dev/null)
 if [ -x "$python" ] && [[ $loader != *libGLU.so.1* ]]; then

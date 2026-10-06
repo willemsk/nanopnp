@@ -18,9 +18,7 @@ first three from the syntax tree, through
 Checks (d) and (e) are the plans' records, in ``test_plan_records.py``.
 
 Each check is shown to fire on a source substituted into the package, naming the
-file, the line and the name, so none can pass by accepting everything. WP39's
-pre-review head broke (a) to (c), each gate-green (the replay is in the PR that
-added this file).
+file, the line and the name, so none can pass by accepting everything.
 """
 
 from __future__ import annotations
@@ -275,7 +273,6 @@ def oracle(tmp_path: Path) -> Callable[[str], tuple[Module, ...]]:
 def test_ver72_a_function_level_stdlib_import_is_named(
     source: str, line: int, name: str, oracle: Callable[[str], tuple[Module, ...]]
 ) -> None:
-    """WP39's pre-review head deferred ``Callable`` inside ``gmsh_backend``: this is that slip."""
     violations = [v for v in deferred_imports(oracle(source)) if v.path == ORACLE]
     assert [(v.line, v.name) for v in violations] == [(line, name)]
     assert f"src/nanopnp/{ORACLE}:{line}: {name}" in _report(violations)
@@ -296,7 +293,6 @@ def test_ver72_deferrable_and_type_checking_imports_are_admitted(
 def test_ver72_a_private_import_across_modules_is_named(
     oracle: Callable[[str], tuple[Module, ...]],
 ) -> None:
-    """WP39's pre-review ``pipeline/checks.py`` imported ``numerics.linear._REJECTED``."""
     source = "from nanopnp.numerics.linear import _REJECTED, __all__\n"
     found = [violation for violation, _ in private_imports(oracle(source))]
     named = [v for v in found if v.path == ORACLE]
@@ -326,7 +322,6 @@ def test_ver72_an_unused_allowlist_entry_is_stale() -> None:
 def test_ver72_an_american_spelling_is_named(
     source: str, line: int, name: str, oracle: Callable[[str], tuple[Module, ...]]
 ) -> None:
-    """WP39's pre-review head defined ``GmshInitializationError``: the first case."""
     violations = [v for v in american_names(oracle(source)) if v.path == ORACLE]
     assert [(v.line, v.name) for v in violations] == [(line, name)]
     assert f"src/nanopnp/{ORACLE}:{line}: {name}" in _report(violations)
