@@ -669,8 +669,6 @@ class ChargeField:
             order, for the agreement check. See that constant for why the
             refinement is computed from the bonus rather than passed as it.
         """
-        import math
-
         extra_order = 0
         if refined:
             extra_order = measures.bonus_order(singular=self.is_areal) + QUADRATURE_REFINEMENT
@@ -694,8 +692,6 @@ class ChargeField:
         ramp_nm: float = DEFAULT_RAMP_NM,
     ) -> tuple[float, ...]:
         """Return the mesh-side cumulative below each plane, ramped (§4.4 NOTE)."""
-        import math
-
         import ngsolve as ngs
 
         density = self.volume_density_C_m3()
