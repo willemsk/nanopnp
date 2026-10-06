@@ -45,7 +45,7 @@ None.
 - [ ] `.claude/hooks/gate.sh run` green on this branch (lint, format, types, the lock and `pytest --extended`, as CI gates it; ruff alone when the branch changes only prose)
 - [ ] The strict documentation build green (`uv run docs/scripts/generate.py && uv run mkdocs build --strict`), which CI's `docs` job gates on every push, prose-only ones included
 - [ ] Every `VER-`/`VAL-` claimed above has a test named for the requirement, in the tier directory that marks it
-- [ ] No test was skipped, `xfail`ed, or had its tolerance loosened to make this pass
+- [ ] No test was skipped, `xfail`ed, or had its tolerance loosened to make this pass (no `planned:` marker remains)
 - [ ] `uv.lock` regenerated if `pyproject.toml` moved
 - [ ] Any switch away from the validated default is opt-in, default off, and recorded in the FR-25 manifest
 - [ ] Durable findings written into `.knowledge/`, marked **[tested]** or **[verified]** with their source

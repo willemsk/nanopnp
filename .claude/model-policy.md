@@ -1,7 +1,8 @@
 # Sub-agent model policy
 
 Which model a delegated task runs on. Referenced from `CLAUDE.md`; it applies to *every* `Agent`
-call in this repository. The skills cite it where they delegate, so there is no list of them here to
+call in this repository, and to the session implementing a plan whatever model it runs on (*Who
+implements a plan*). The skills cite it where they delegate, so there is no list of them here to
 keep in step.
 
 ## The rule
@@ -49,6 +50,26 @@ docstrings is a Sonnet task; deciding one sign in one weak form is an Opus task.
 
 Only for bulk mechanical retrieval where the result is checked immediately — listing files,
 counting matches. Rarely worth the spawn.
+
+## Who implements a plan
+
+The policy binds **whoever implements**, not only the `Agent` calls a Claude session makes. A
+session may run on another model, Claude or not, through another harness, with the same skills and
+gate. The gate cannot tell a plausible wrong answer from a right one, and that is exactly the
+failure the rule above exists for.
+
+- `/wp-plan` marks every work item `[Opus]` or `[any]`, and an `[Opus]` item says in one clause why
+  (`.claude/skills/wp-plan/SKILL.md`).
+- An `[Opus]` item is done only in an Opus session. A session on any other model implements the
+  `[any]` items in plan order up to the first `[Opus]` item, commits and ticks each one, and then
+  **stops** there, without skipping ahead to later `[any]` items: it reports the `[Opus]` items left, and it neither implements them, drafts them
+  for later, nor opens the PR. The next Opus session resumes from the first unticked item
+  (`.claude/skills/wp-implement/SKILL.md`).
+- A session that cannot tell which model it runs on treats itself as not Opus.
+
+WP39 shows why this is a rule and not advice. Its plan said in a sentence that D3, D7, D8 and D11
+"run on Opus"; the implementing session was another model, nothing enforced the sentence, and all
+three defects its review then found were in D11, each having passed the gate.
 
 ## Applying it
 

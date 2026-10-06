@@ -241,6 +241,11 @@ failure class means here, and why a failing Tier 2 benchmark is evidence rather 
 read automatically when a PR event wakes a session, so it governs the autofix loop whether or not
 `/wp-ship` started it.
 
+A plan marks each work item `[Opus]` or `[any]`, and the model policy binds whoever implements it,
+not only `Agent` calls: a session on any other model, Claude or not, implements the `[any]` items,
+commits and ticks each, and stops at the first `[Opus]` one (`.claude/model-policy.md`, *Who
+implements a plan*).
+
 Step 2 does not chain into step 3. The user starts `/wp-ship` in a fresh session, so the review
 pass runs from a session that did not make the physics decisions; `wp-ship` §4 says how that pass is
 invoked and what counts as its completion.
