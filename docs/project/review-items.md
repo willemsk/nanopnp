@@ -33,7 +33,7 @@ entry points were unaffected, because they load pydantic anyway.
 **Resolved.** The module is removed; `core/errors.py` is the exit table's one home (IF-01: an
 internal path is not API). `CHANGELOG.md` lists the removal.
 
-### REV-03 — The solution-field names live in two layers
+### REV-03 — The solution-field names lived in two layers
 
 *Area:* coupling. *Severity:* low. *Found:* WP37's shipping review (PR #80).
 
@@ -42,8 +42,8 @@ internal path is not API). `CHANGELOG.md` lists the removal.
 `io/fields.py`, `post/qoi.py`, `validation/compare.py` and `validation/mms.py` import field names
 from both, and a new field has two possible homes.
 
-**Resolves it.** WP38, which splits `io` into its base and its assembler and so decides where the
-field vocabulary sits; moving it in WP37 would have moved it twice.
+**Resolved.** WP38 D9: the five names live in `io/vocabulary.py`, in the base layer, and
+`mesh/primitives.py` and `physics/models.py` import them from there.
 
 ### REV-04 — VER-61's ratchet did not see an import moved into a function
 
@@ -281,14 +281,19 @@ its scratch to the process-default store root.
 
 **Resolves it.** WP41, the accuracy fixes (§8.2.9 I1, I2).
 
-### REV-27 — The inf-sup check runs at resolve, not at validation
+### REV-27 — The inf-sup check ran at resolve, not at validation
 
 *Area:* interface. *Severity:* low. *Found:* PR #28 (WP12).
 
 **Measured.** The inf-sup check runs in `io.case.resolve()`, so `nanopnp validate` does not report
 it.
 
-**Resolves it.** WP38, the `io` split, which moves the registry checks to the assembler and runs them under `nanopnp validate` (§8.2.9 I3).
+**Resolved.** WP38 D8: `pipeline.checks.check_document` makes the registry checks and the inf-sup
+check, and `load_case`, `resolve` and the desktop shell's commit all run it, with a run's refusal
+text. The author ruled that "`nanopnp validate`" means a new subcommand, `nanopnp validate case
+<file>`, beside the Tier-3 comparison harness: it loads and resolves the case, makes every check a
+run makes before it meshes, and prints the model, the stabilisation and the stages a run would
+walk (open question 1 of the [WP38 plan](../plans/wp38-io-split.md)).
 
 ### REV-28 — The viewer renders every finished run eagerly
 
@@ -509,14 +514,16 @@ can drift apart.
 
 **Declined.** WP36 ruled the drop rules of `selected_stages` case logic (§8.2.9 I3). REV-63, the cost of the walk, is WP38's.
 
-### REV-54 — The MOD-12 check compares names, not modules
+### REV-54 — The MOD-12 check compared names, not modules
 
 *Area:* verification. *Severity:* low. *Found:* PR #79 (WP36).
 
 **Measured.** The check of `PUBLIC`'s type-checker mirror compares names only, not the module each
 mirrored import comes from.
 
-**Resolves it.** WP38, the `io` split, which moves modules `PUBLIC` mirrors (§8.2.9 I3).
+**Resolved.** WP38 D12: `validation.modularity.Surface` reads the module each mirrored import
+comes from, and the check refuses a name mirrored from a module other than `PUBLIC`'s, naming the
+name and both modules (VER-45).
 
 ### REV-55 — Per-stage mkdtemp fallbacks
 
@@ -590,7 +597,7 @@ only as a file.
 
 **Deferred.** Phase 5, with the shell, the bundle and `MOD-13`'s CLI split (§8.2.9 I3).
 
-### REV-63 — The protonation stage walks through meshing
+### REV-63 — The protonation stage walked through meshing
 
 *Area:* performance. *Severity:* low. *Found:* PR #55 (WP27); verified open at `5559c7e`.
 
@@ -598,7 +605,9 @@ only as a file.
 `selected_stages(resolved, 'protonation')` on example 07 walks density, symmetry, contour, region
 and mesh first, because the walk runs in registration order (WP36).
 
-**Resolves it.** WP38, the `io` split, whose assembler holds the walk: a requested stage walks its input closure only (§8.2.9 I3).
+**Resolved.** WP38 D11: a walk to a stage runs its transitive input closure, so example 07's walk
+to `protonation` is `case`, `structure`, `protonation`. Each stage is handed only the inputs it
+declares, and `validation.modularity.undeclared_reads` finds a read the declaration misses (VER-64).
 
 ### REV-64 — A sweep's plan-time NUM-34 gate skips generated meshes
 

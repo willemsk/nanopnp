@@ -22,7 +22,7 @@ is a rolling register, and its header stays `open`.
 |---|---|---|---|---|---|
 | REV-01 | performance | low | fixed | [WP37](../plans/wp37-cycle-cuts-exit-codes-backend-guard.md) | [TOL_NM's home loaded pydantic and yaml](review-items.md#rev-01-tol_nms-home-loaded-pydantic-and-yaml) |
 | REV-02 | coupling | low | fixed | [WP37](../plans/wp37-cycle-cuts-exit-codes-backend-guard.md) | [cli/errors.py was a re-export nothing imported](review-items.md#rev-02-clierrorspy-was-a-re-export-nothing-imported) |
-| REV-03 | coupling | low | accepted | §8.2.8 H12 | [The solution-field names live in two layers](review-items.md#rev-03-the-solution-field-names-live-in-two-layers) |
+| REV-03 | coupling | low | fixed | [WP38](../plans/wp38-io-split.md) | [The solution-field names lived in two layers](review-items.md#rev-03-the-solution-field-names-lived-in-two-layers) |
 | REV-04 | verification | medium | fixed | [WP37](../plans/wp37-cycle-cuts-exit-codes-backend-guard.md) | [VER-61's ratchet did not see an import moved into a function](review-items.md#rev-04-ver-61s-ratchet-did-not-see-an-import-moved-into-a-function) |
 | REV-05 | coupling | low | accepted | §8.2.8 H12 | [The shells read the nanopnp facade](review-items.md#rev-05-the-shells-read-the-nanopnp-facade) |
 | REV-06 | physics | medium | accepted | §8.2.9 I2 | [A supplied charge or permittivity field has no stated frame beside a moved structure](review-items.md#rev-06-a-supplied-charge-or-permittivity-field-has-no-stated-frame-beside-a-moved-structure) |
@@ -46,7 +46,7 @@ is a rolling register, and its header stays `open`.
 | REV-24 | process | low | accepted | §8.2.9 I2 | [Sampler construction may still be duplicated](review-items.md#rev-24-sampler-construction-may-still-be-duplicated) |
 | REV-25 | interface | low | accepted | §8.2.9 I2 | [A post stage run without a solve writes scratch to the default store](review-items.md#rev-25-a-post-stage-run-without-a-solve-writes-scratch-to-the-default-store) |
 | REV-26 | interface | low | accepted | §8.2.9 I2 | [stabilisation_parameters returns an empty mapping off the coupled model](review-items.md#rev-26-stabilisation_parameters-returns-an-empty-mapping-off-the-coupled-model) |
-| REV-27 | interface | low | accepted | §8.2.9 I3 | [The inf-sup check runs at resolve, not at validation](review-items.md#rev-27-the-inf-sup-check-runs-at-resolve-not-at-validation) |
+| REV-27 | interface | low | fixed | [WP38](../plans/wp38-io-split.md) | [The inf-sup check ran at resolve, not at validation](review-items.md#rev-27-the-inf-sup-check-ran-at-resolve-not-at-validation) |
 | REV-28 | performance | low | deferred | §8.2.9 I3 | [The viewer renders every finished run eagerly](review-items.md#rev-28-the-viewer-renders-every-finished-run-eagerly) |
 | REV-29 | verification | low | accepted | §8.2.9 I2 | [The cylindrical-pore fixture is copied into four test modules](review-items.md#rev-29-the-cylindrical-pore-fixture-is-copied-into-four-test-modules) |
 | REV-30 | performance | low | deferred | §8.2.9 I3 | [The viewer's scene is written twice](review-items.md#rev-30-the-viewers-scene-is-written-twice) |
@@ -73,7 +73,7 @@ is a rolling register, and its header stays `open`.
 | REV-51 | performance | low | accepted | §8.2.9 I2 | [A redundant reopen and resolve in WP34's walk](review-items.md#rev-51-a-redundant-reopen-and-resolve-in-wp34s-walk) |
 | REV-52 | interface | low | deferred | §8.2.9 I3 | [deviations and SolveReporting are off the stage protocol](review-items.md#rev-52-deviations-and-solvereporting-are-off-the-stage-protocol) |
 | REV-53 | interface | low | declined | §8.2.9 I3 | [Some walk rules stay as case logic](review-items.md#rev-53-some-walk-rules-stay-as-case-logic) |
-| REV-54 | verification | low | accepted | §8.2.9 I3 | [The MOD-12 check compares names, not modules](review-items.md#rev-54-the-mod-12-check-compares-names-not-modules) |
+| REV-54 | verification | low | fixed | [WP38](../plans/wp38-io-split.md) | [The MOD-12 check compared names, not modules](review-items.md#rev-54-the-mod-12-check-compared-names-not-modules) |
 | REV-55 | interface | low | accepted | §8.2.9 I2 | [Per-stage mkdtemp fallbacks](review-items.md#rev-55-per-stage-mkdtemp-fallbacks) |
 | REV-56 | performance | low | deferred | §8.2.9 I3 | [The geometry editor's simplicity check runs on the Qt thread](review-items.md#rev-56-the-geometry-editors-simplicity-check-runs-on-the-qt-thread) |
 | REV-57 | performance | low | accepted | §8.2.9 I2 | [frame_times decodes every frame](review-items.md#rev-57-frame_times-decodes-every-frame) |
@@ -82,6 +82,6 @@ is a rolling register, and its header stays `open`.
 | REV-60 | performance | low | deferred | §8.2.9 I3 | [UMFPACK repeats its symbolic analysis every Newton step](review-items.md#rev-60-umfpack-repeats-its-symbolic-analysis-every-newton-step) |
 | REV-61 | interface | low | deferred | §8.2.9 I3 | [No B-spline fit or HOLE cross-check of the contour](review-items.md#rev-61-no-b-spline-fit-or-hole-cross-check-of-the-contour) |
 | REV-62 | interface | low | deferred | §8.2.9 I3 | [A mesh named by store key is refused](review-items.md#rev-62-a-mesh-named-by-store-key-is-refused) |
-| REV-63 | performance | low | accepted | §8.2.9 I3 | [The protonation stage walks through meshing](review-items.md#rev-63-the-protonation-stage-walks-through-meshing) |
+| REV-63 | performance | low | fixed | [WP38](../plans/wp38-io-split.md) | [The protonation stage walked through meshing](review-items.md#rev-63-the-protonation-stage-walked-through-meshing) |
 | REV-64 | verification | low | deferred | §8.2.9 I3 | [A sweep's plan-time NUM-34 gate skips generated meshes](review-items.md#rev-64-a-sweeps-plan-time-num-34-gate-skips-generated-meshes) |
 | REV-65 | interface | low | deferred | §8.2.9 I3 | [The Windows bundle exposes no mesh command](review-items.md#rev-65-the-windows-bundle-exposes-no-mesh-command) |
