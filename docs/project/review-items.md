@@ -67,8 +67,7 @@ edge pointing up the order outside `io`, and `gui → nanopnp` (`gui/probe.py`, 
 the one deferred one. Neither closes a cycle. Its `upward:` row carried no finding, against the
 layering file's own header.
 
-**Resolves it.** WP39, which measures H6's target and places the facade's version and `PUBLIC`
-(WP37 D11). Both rows now cite this item.
+**Resolved.** WP39 D9: a new `core/public.py` holds `__version__` and `PUBLIC`. The facade imports both, and `cli/__init__.py`, `cli/reference.py` and `gui/probe.py` import from `nanopnp.core.public`. The `upward:` and `deferred_upward:` lists in `modularity-layering.yaml` are now empty.
 
 ### REV-06 — A supplied charge or permittivity field has no stated frame beside a moved structure
 
@@ -368,24 +367,24 @@ VAL-05 files.
 **Measured.** `_session` calls `gmsh.logger.stop()` in a session it borrowed. No caller in the
 repository holds a logger.
 
-**Resolves it.** WP39, the backend registries, which makes the mesher a registry and a missing or broken extra a refusal at use (§8.2.9 I3).
-
+**Resolved.** WP39 D11: a borrowed session leaves the caller's logger untouched; `start()` and `stop()` are only called for sessions owned by nanopnp.
+ 
 ### REV-37 — A broken gmsh wheel is not a refusal
-
+ 
 *Area:* interface. *Severity:* low. *Found:* PR #47 (WP23), a review finding not fixed.
-
+ 
 **Measured.** A gmsh wheel that imports but fails to initialise surfaces as an exception, not as
 `MissingExtraError` naming the extra.
-
-**Resolves it.** WP39, the backend registries, which makes the mesher a registry and a missing or broken extra a refusal at use (§8.2.9 I3).
-
+ 
+**Resolved.** WP39 D11: `gmsh.initialize()` failure raises `GmshInitializationError`, which `meshers.py` translates to `MissingExtraError` naming `gmsh` and the underlying error.
+ 
 ### REV-38 — gmsh.model.remove() can mask the error it follows
-
+ 
 *Area:* interface. *Severity:* low. *Found:* PR #47 (WP23), a review finding not fixed.
-
+ 
 **Measured.** The cleanup's `gmsh.model.remove()` can raise over the error that triggered it.
-
-**Resolves it.** WP39, the backend registries, which makes the mesher a registry and a missing or broken extra a refusal at use (§8.2.9 I3).
+ 
+**Resolved.** WP39 D11: `_session` runs each cleanup step in sequence; if an exception is active, cleanup failures are logged at WARNING and added via `add_note`, never masking the original exception.
 
 ### REV-39 — A case supplying inputs.profile gets no contour editor
 
@@ -643,3 +642,15 @@ The document is refused either way; only the first diagnostic misleads (QR-12).
 
 **Open.** Gating the load-time inf-sup check on the model declaring a flow field would let
 `load_case` accept a document it refuses today, which changes D8's reading. The author rules.
+
+### REV-67 — Public registration functions for backend registries (MOD-11)
+
+*Area:* interface. *Severity:* low. *Found:* WP39 (PR #83); verified open at `WP39`.
+
+**Measured.** WP39 added six internal registration functions across `mesh/meshers.py` and
+`numerics/linear.py` (`register_mesher`, `registered_meshers`, `create_mesher`, `register_solver`,
+`registered_solvers`, `create_solver`), matching `physics/stabilisation.py`. None are exposed in
+`PUBLIC` (D12).
+
+**Deferred.** Phase 5, evaluated with `MOD-11` and the extension point public surface ruling (§8.2.8 H2).
+

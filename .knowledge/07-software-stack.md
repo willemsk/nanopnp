@@ -716,6 +716,7 @@ Outcomes):
   `libGLU.so.1`. After `apt-get install --no-install-recommends libglu1-mesa libxft2 libxinerama1
   libxcursor1`, Gmsh 4.15 imports and meshes on Python 3.11 to 3.14 (WP23 PR, run 36574260470,
   29 September 2026).
+- **Session cleanup and borrowed sessions [tested].** `gmsh_backend._session` runs all cleanup steps sequentially (`gmsh.model.remove()`, restoring options, and `gmsh.finalize()`), ensuring the session is always finalised even if an intermediate step fails. When an exception is active during cleanup, secondary failures are logged at WARNING and attached to the exception via `add_note()`, preventing the original error from being masked (REV-38). A borrowed session (`is_initialized() == True`) leaves the caller's logger untouched (no `start` or `stop`), preserving caller messages (REV-36). If `gmsh.initialize()` fails, a `GmshInitializationError` is raised, translated to `MissingExtraError` naming `gmsh` (REV-37).
 
 ---
 

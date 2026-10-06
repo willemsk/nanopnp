@@ -9,8 +9,9 @@ WP36, the stage protocol and the walk ([wp36-stage-protocol-and-walk.md](wp36-st
 tagged `v0.5.0-alpha.2`; WP37, the cycle cuts, the exit codes and the backend guard
 ([wp37-cycle-cuts-exit-codes-backend-guard.md](wp37-cycle-cuts-exit-codes-backend-guard.md)),
 tagged `v0.5.0-alpha.3`; WP38, the `io` split ([wp38-io-split.md](wp38-io-split.md)),
-tagged `v0.5.0-alpha.4`.
-Planned: WP39, the backend registries; WP40, the stale refusals; WP41, the
+tagged `v0.5.0-alpha.4`; WP39, the backend registries ([wp39-backend-registries.md](wp39-backend-registries.md)),
+to be tagged `v0.5.0-alpha.5`.
+Planned: WP40, the stale refusals; WP41, the
 accuracy fixes; WP42, the verification checks; WP43, the small fixes; WP44, the OKF bundle; WP45,
 its backfill; WP46, the user-testing protocol (§8.2.9 I1). Provisional, and planned by the second
 `/phase-plan amend 4` once the author has run the sessions and ruled every `UT-nn`: the fixes, from
@@ -386,6 +387,21 @@ VER-24's classification is unchanged.
 >   missing one is;
 > - REV-38: the cleanup's `gmsh.model.remove()` cannot mask the error it follows.
 
+> **Delivered, 6 October 2026** ([plan](wp39-backend-registries.md), to be tagged `v0.5.0-alpha.5`).
+> The mesher (`mesh/meshers.py`), linear solver (`numerics/linear.py`) and stabilisation mode
+> (`physics/stabilisation.py`) are registries in uniform shape; `MeshSpec.backend`,
+> `LinearSpec.solver` and `NumericsSpec.stabilisation` are `str` validated in `pipeline/checks.py`.
+> VER-66 verifies dynamic registration of stubs and refusal of unknown names. VER-61 asserts
+> subpackage acyclicity on the `top` relation via Tarjan's algorithm (H6). `core/public.py` holds
+> `__version__` and `PUBLIC`, emptying `upward:` and `deferred_upward:` in `modularity-layering.yaml`.
+> `gmsh_backend._session` respects borrowed loggers, translates init failures to
+> `MissingExtraError`, and runs non-masking sequential cleanup. `MOD-06`, `MOD-07`, `MOD-16`,
+> REV-05, REV-36, REV-37 and REV-38 are `fixed`. VER-62's golden and all stage keys hold with zero
+> drift. Inherited constraints:
+> - The six registration functions are internal; public exposure is deferred to Phase 5 (`MOD-11`, REV-67);
+> - `upward:` and `deferred_upward:` remain empty;
+> - The `top` subpackage relation remains acyclic.
+
 ### WP40 — The stale refusals (MOD-14; IF-02)
 
 The seven release-naming strings `MOD-14` lists are rewritten. Each refusal names its requirement,
@@ -653,7 +669,7 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP36 | 1, 2 | VER-64 (proposed); `MOD-12`'s assertion in `test_public_api.py` |
 | WP37 | 1, 2 | VER-65 (proposed); VER-47 unchanged |
 | WP38 | 1, 2 | VER-61 re-recorded |
-| WP39 | 1, 2 | VER-66 (proposed); VER-61 gains H6's acyclicity, or the residual is ruled |
+| WP39 | 1, 2 | VER-66; VER-61 gains H6's acyclicity; QR-14, IF-03, QR-11 |
 | WP40 | 1 | VER-67 (proposed) |
 | WP41, accuracy | 1, 2 | Tests named for QR-03, NUM-16, PHY-13, VER-37; VER-62 re-pinned only under I4 |
 | WP42, verification | 1, 2 | VER-70, VER-71 (proposed) |
