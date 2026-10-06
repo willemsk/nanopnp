@@ -52,6 +52,7 @@ from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS
 from nanopnp.numerics.gates import FieldSampler, WallDistanceGate, WallDistanceMeasurement
 from nanopnp.numerics.measures import AXISYMMETRIC, Measures
 from nanopnp.physics.coefficients import SATURATED_WALL_DISTANCE_NM
+from nanopnp.physics.distance import wall_distance
 from nanopnp.physics.models import (
     DEFAULT_BOUNDARIES,
     CoupledBoundaries,
@@ -339,8 +340,6 @@ def wall_distance_field(resolved: ResolvedCase, mesh: Mesh, *, order: int) -> Ex
     """
     if not reads_distance(resolved):
         return SATURATED_WALL_DISTANCE_NM
-    from nanopnp.physics.distance import wall_distance
-
     return wall_distance(
         mesh,
         resolved.wall_distance_sources,

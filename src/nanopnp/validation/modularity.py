@@ -350,7 +350,7 @@ def module_graph(
     With ``packages``, an import also reaches every package whose ``__init__``
     Python runs on the way to its target, except the importer's own, which are
     already initialising: ``from nanopnp.core.errors import classify`` runs
-    ``cli/__init__.py`` first, so a load-time cycle through a package's
+    ``core/__init__.py`` first, so a load-time cycle through a package's
     ``__init__`` is a cycle of this graph and not only of the interpreter.
     """
     graph: dict[str, set[str]] = defaultdict(set)
@@ -460,6 +460,15 @@ class AcceptedEdge:
     finding: str | None = field(default=None, compare=False)
 
 
+def _rows(path: Path, key: str) -> list[object]:
+    """Return the list under ``key`` of ``modularity-layering.yaml``, refusing any other shape."""
+    document = yaml.safe_load(path.read_text(encoding="utf-8"))
+    rows = document.get(key) if isinstance(document, dict) else None
+    if not isinstance(rows, list):
+        raise ValueError(f"{path}: expected a mapping with a {key!r} list")
+    return rows
+
+
 def accepted_relation(path: Path = LAYERING) -> tuple[AcceptedEdge, ...]:
     """Read the accepted subpackage relation (D6).
 
@@ -468,13 +477,9 @@ def accepted_relation(path: Path = LAYERING) -> tuple[AcceptedEdge, ...]:
     ValueError
         If a row lacks a key, names an unknown relation, or repeats an edge.
     """
-    document = yaml.safe_load(path.read_text(encoding="utf-8"))
-    rows = document.get("edges") if isinstance(document, dict) else None
-    if not isinstance(rows, list):
-        raise ValueError(f"{path}: expected a mapping with an 'edges' list")
     accepted: list[AcceptedEdge] = []
     seen: set[tuple[str, str, str]] = set()
-    for number, row in enumerate(rows, start=1):
+    for number, row in enumerate(_rows(path, "edges"), start=1):
         if not isinstance(row, dict) or set(row) != {"from", "to", "relation", "finding"}:
             raise ValueError(f"{path}: edge {number} needs exactly from, to, relation and finding")
         if row["relation"] not in RELATIONS:
@@ -509,9 +514,18 @@ class Comparison:
         """Return a diagnostic naming each differing edge, its import and the file to edit."""
         lines = []
         for relation, (source, target), edge in self.added:
+            # The ratchet's list only shrinks (section 8.2.8 H11, WP37 D12), so an
+            # upward edge is never fixed by recording it.
+            remedy = (
+                f"The {UPWARD}: list of {path.name} only shrinks: cut the dependency by "
+                "moving the definition down, passing it in as an argument, or putting an "
+                "annotation-only import under TYPE_CHECKING; a deferred import is not a cut"
+                if relation == UPWARD
+                else f"Remove the import, or record the edge in {path.name}"
+            )
             lines.append(
                 f"new {relation} edge {source} -> {target}: {edge.path}:{edge.line} imports "
-                f"{edge.target} ({edge.kind}). Remove the import, or record the edge in {path.name}"
+                f"{edge.target} ({edge.kind}). {remedy}"
             )
         for relation, (source, target) in self.removed:
             lines.append(
@@ -563,14 +577,6 @@ def upward_edges(
             "and to the header of modularity-layering.yaml"
         )
     return {pair: found for pair, found in relation.items() if rank[pair[0]] < rank[pair[1]]}
-
-
-def _rows(path: Path, key: str) -> list[object]:
-    document = yaml.safe_load(path.read_text(encoding="utf-8"))
-    rows = document.get(key) if isinstance(document, dict) else None
-    if not isinstance(rows, list):
-        raise ValueError(f"{path}: expected a mapping with a {key!r} list")
-    return rows
 
 
 def accepted_upward(path: Path = LAYERING) -> tuple[AcceptedEdge, ...]:

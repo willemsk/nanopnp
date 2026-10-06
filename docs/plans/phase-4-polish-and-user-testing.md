@@ -328,7 +328,7 @@ The mesher, the linear solver and the stabilisation mode become registries, each
 the nearest existing one (H5). The linear solver's registry lives in `numerics/linear.py` (H11). `numerics.mesh.backend`, `numerics.linear.solver` and
 `numerics.stabilisation` become strings, checked by the assembler against the registry as
 `physics.model` is. Registering the Gmsh mesher imports nothing (CON-10), and a missing extra is
-still `MissingExtraError` at use. The schema's import of `solve.linear` goes. That is the last of
+still `MissingExtraError` at use. The schema's import of `numerics.linear` goes. That is the last of
 the edges H6's target needs, so **this package measures the target**: if the `top` relation is
 acyclic, VER-61 gains the assertion; if not, the residual cycle goes to the author with the cut it
 would need. The generated case-file reference loses three enumerations, which `CHANGELOG.md`

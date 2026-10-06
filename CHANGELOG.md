@@ -30,7 +30,8 @@ arithmetic, and no artefact key changes (VER-62).
 
 - **A new subpackage, `nanopnp.numerics`, holds the solver kernel**, below the weak forms and the
   ladder (H11). Every module-scope import that pointed up the layer order outside `io` is cut, so
-  the five-subpackage cycle `MOD-03` measured outside `io` is gone. Nothing in `PUBLIC` moves, and
+  the five-subpackage cycle `MOD-03` measured outside `io` is gone; only `cli -> nanopnp`, which
+  closes no cycle, is left, for WP39. Nothing in `PUBLIC` moves, and
   no import path is kept at an old location (IF-01: internal paths are not API). Anyone who
   imported a moved module should import it from its new home:
 
@@ -44,7 +45,7 @@ arithmetic, and no artefact key changes (VER-62).
   | `nanopnp.mesh.profile` | `nanopnp.geometry.profile` |
   | `nanopnp.materials.fields`, except `blend` and `nearest_solid_permittivity` | `nanopnp.charge.dielectric` |
   | `nanopnp.mesh.primitives.TOL_NM` | `nanopnp.geometry.profile.TOL_NM` |
-  | `nanopnp.physics.models`'s `POTENTIAL`, `VELOCITY`, `VELOCITY_AXIS`, `CoupledBoundaries`, `DEFAULT_BOUNDARIES` | `nanopnp.mesh.primitives` (`physics.models` still imports the last three) |
+  | `nanopnp.physics.models`'s `POTENTIAL`, `VELOCITY`, `VELOCITY_AXIS`, `CoupledBoundaries`, `DEFAULT_BOUNDARIES` | `nanopnp.mesh.primitives` (`physics.models` still re-exports the last three) |
   | `nanopnp.cli.errors` | `nanopnp.core.errors` (`cli.errors` re-exports it) |
 
 - **The exit-code table and `classify` live in `nanopnp.core.errors`** (`MOD-05`), so the sweep
