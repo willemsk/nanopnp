@@ -25,7 +25,7 @@
 # that points up the layer order. The static relation does not change when an
 # import moves under TYPE_CHECKING, so this list is what keeps a cut from coming
 # back. tests/tier1/test_layering.py asserts it equals the measured upward edges in
-# both directions. One edge is left, cli -> nanopnp, which WP39 removes (REV-05).
+# both directions.
 #
 # `deferred_upward`: the same ratchet over imports inside a function, which are
 # no cut (WP37 D12) and which the static relation cannot tell from the
@@ -50,7 +50,6 @@ edges:
   - {from: cli, to: density, relation: static, finding: null}
   - {from: cli, to: io, relation: static, finding: null}
   - {from: cli, to: mesh, relation: static, finding: null}
-  - {from: cli, to: nanopnp, relation: static, finding: null}
   - {from: cli, to: pipeline, relation: static, finding: null}
   - {from: cli, to: structure, relation: static, finding: null}
   - {from: cli, to: sweep, relation: static, finding: null}
@@ -71,7 +70,6 @@ edges:
   - {from: gui, to: geometry, relation: static, finding: null}
   - {from: gui, to: io, relation: static, finding: null}
   - {from: gui, to: mesh, relation: static, finding: null}
-  - {from: gui, to: nanopnp, relation: static, finding: null}
   - {from: gui, to: numerics, relation: static, finding: null}
   - {from: gui, to: pipeline, relation: static, finding: null}
   - {from: gui, to: post, relation: static, finding: null}
@@ -157,6 +155,7 @@ edges:
   - {from: core, to: materials, relation: string, finding: MOD-15}
   - {from: core, to: mesh, relation: string, finding: MOD-15}
   - {from: core, to: numerics, relation: string, finding: MOD-05}
+  - {from: core, to: physics, relation: string, finding: null}
   - {from: core, to: pipeline, relation: string, finding: null}
   - {from: core, to: post, relation: string, finding: MOD-15}
   - {from: core, to: solve, relation: string, finding: MOD-15}
@@ -164,15 +163,8 @@ edges:
   - {from: core, to: sweep, relation: string, finding: MOD-05}
   - {from: core, to: symmetry, relation: string, finding: MOD-15}
   - {from: core, to: validation, relation: string, finding: MOD-05}
-  - {from: nanopnp, to: core, relation: string, finding: null}
-  - {from: nanopnp, to: io, relation: string, finding: null}
-  - {from: nanopnp, to: physics, relation: string, finding: null}
-  - {from: nanopnp, to: pipeline, relation: string, finding: null}
-  - {from: nanopnp, to: sweep, relation: string, finding: null}
-upward:
-  - {from: cli, to: nanopnp, finding: REV-05}
-deferred_upward:
-  - {from: gui, to: nanopnp, finding: REV-05}
+upward: []
+deferred_upward: []
 backend:
   - charge
   - density

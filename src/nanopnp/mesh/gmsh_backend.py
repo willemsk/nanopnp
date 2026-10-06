@@ -84,6 +84,10 @@ class GmshMeshingError(RuntimeError):
     """Gmsh refused the region or failed to mesh it; its own log is quoted (QR-12)."""
 
 
+class GmshInitializationError(RuntimeError):
+    """Gmsh failed to initialise (REV-37)."""
+
+
 def version() -> str:
     """Return the installed Gmsh's version, which the manifest records beside the key (D8)."""
     return str(gmsh.__version__)
@@ -131,9 +135,14 @@ def _session(options: Mapping[str, float]) -> Iterator[None]:
     every option is restored, the previous model is made current again, and a
     session this call opened is finalised.
     """
+    from collections.abc import Callable
+
     opened = not gmsh.isInitialized()
     if opened:
-        gmsh.initialize(readConfigFiles=False, interruptible=False)
+        try:
+            gmsh.initialize(readConfigFiles=False, interruptible=False)
+        except Exception as error:
+            raise GmshInitializationError(f"gmsh.initialize failed: {error}") from error
     # Silence the terminal before anything else can print.
     previous_terminal = gmsh.option.getNumber("General.Terminal")
     gmsh.option.setNumber("General.Terminal", 0)
@@ -141,27 +150,59 @@ def _session(options: Mapping[str, float]) -> Iterator[None]:
     saved = {name: gmsh.option.getNumber(name) for name in options}
     saved["General.Terminal"] = previous_terminal
     messages: list[str] = []
-    gmsh.logger.start()
+    if opened:
+        gmsh.logger.start()
+
+    cleanup_steps: list[Callable[[], None]] = []
+    if opened:
+        cleanup_steps.append(lambda: messages.extend(gmsh.logger.get()))
+    cleanup_steps.append(lambda: gmsh.model.remove())
+    if opened:
+        cleanup_steps.append(lambda: gmsh.logger.stop())
+
+        def _log_messages() -> None:
+            for message in messages:
+                logger.debug("gmsh: %s", message)
+
+        cleanup_steps.append(_log_messages)
+        cleanup_steps.append(lambda: gmsh.finalize())
+    else:
+
+        def _restore_options() -> None:
+            for name, value in saved.items():
+                gmsh.option.setNumber(name, value)
+
+        cleanup_steps.append(_restore_options)
+        if previous_model is not None:
+            cleanup_steps.append(lambda: gmsh.model.setCurrent(previous_model))
+
+    propagating: BaseException | None = None
     try:
         for name, value in options.items():
             gmsh.option.setNumber(name, value)
         gmsh.model.add(f"nanopnp-region-{next(_MODEL_IDS)}")
         try:
             yield
-        finally:
-            messages.extend(gmsh.logger.get())
-            gmsh.model.remove()
+        except BaseException as error:
+            propagating = error
+            raise
     finally:
-        gmsh.logger.stop()
-        for message in messages:
-            logger.debug("gmsh: %s", message)
-        if opened:
-            gmsh.finalize()
-        else:
-            for name, value in saved.items():
-                gmsh.option.setNumber(name, value)
-            if previous_model is not None:
-                gmsh.model.setCurrent(previous_model)
+        first_failure: BaseException | None = None
+        for step in cleanup_steps:
+            try:
+                step()
+            except BaseException as cleanup_error:
+                if propagating is not None:
+                    logger.warning("Gmsh session cleanup failed: %s", cleanup_error)
+                    propagating.add_note(f"Gmsh session cleanup failed: {cleanup_error}")
+                else:
+                    if first_failure is None:
+                        first_failure = cleanup_error
+                    else:
+                        logger.warning("Gmsh session cleanup failed: %s", cleanup_error)
+                        first_failure.add_note(f"Gmsh session cleanup failed: {cleanup_error}")
+        if propagating is None and first_failure is not None:
+            raise first_failure
 
 
 def _build(graph: RegionGraph) -> tuple[list[int], list[int], dict[str, int]]:

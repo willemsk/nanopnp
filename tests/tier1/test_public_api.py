@@ -21,6 +21,7 @@ import sys
 import pytest
 
 import nanopnp
+import nanopnp.core.public
 from nanopnp.cli.reference import render_api_reference
 from nanopnp.validation.modularity import surface
 
@@ -71,6 +72,8 @@ def test_ver45_all_is_the_documented_public_surface() -> None:
     Read back from the rendered page's mkdocstrings directives, both directions,
     with each directive's module path the one the name is resolved from.
     """
+    assert nanopnp.PUBLIC is nanopnp.core.public.PUBLIC
+    assert nanopnp.__version__ is nanopnp.core.public.__version__
     assert set(nanopnp.__all__) == EXPECTED
     assert len(nanopnp.__all__) == len(set(nanopnp.__all__)), "a name is listed twice"
     directives = re.findall(r"^::: ([\w.]+)\.(\w+)$", render_api_reference(), flags=re.M)
@@ -128,8 +131,8 @@ def test_ver45_a_name_mirrored_from_another_module_is_named() -> None:
             "from typing import TYPE_CHECKING\n"
             "if TYPE_CHECKING:\n"
             "    from nanopnp.io.case import resolve as resolve\n"
-            'PUBLIC = {"resolve": "nanopnp.pipeline.case"}\n'
         ),
+        "core/public.py": ('PUBLIC = {"resolve": "nanopnp.pipeline.case"}\n'),
     }
     assert surface(sources=sources).module_differs == (
         ("resolve", "nanopnp.pipeline.case", "nanopnp.io.case"),
@@ -143,6 +146,8 @@ def test_ver45_a_name_dropped_from_the_mirror_is_named() -> None:
             "from typing import TYPE_CHECKING\n"
             "if TYPE_CHECKING:\n"
             "    from nanopnp.pipeline.run import run_case as run_case\n"
+        ),
+        "core/public.py": (
             'PUBLIC = {"run_case": "nanopnp.pipeline.run", "Store": "nanopnp.io.store"}\n'
         ),
     }

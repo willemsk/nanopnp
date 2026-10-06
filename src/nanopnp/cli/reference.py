@@ -21,9 +21,9 @@ from typing import Literal, Union, get_args, get_origin
 
 import yaml
 
-from nanopnp import PUBLIC
 from nanopnp.cli import build_parser
 from nanopnp.core.errors import EXCLUDED, EXIT_CODES, EXIT_MEANINGS
+from nanopnp.core.public import PUBLIC
 from nanopnp.io.case import (
     SCHEMA,
     FieldValue,

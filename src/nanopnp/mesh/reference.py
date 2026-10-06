@@ -284,7 +284,7 @@ class ReferenceGeometry:
         Mesh
             The NGSolve mesh, domains and boundaries named.
         """
-        from nanopnp.mesh.generate import mesh_shape
+        from nanopnp.mesh.meshers import mesh_shape
 
         mesh = mesh_shape(self.shape(wall_h_nm=wall_h_nm), replace(SIZES, global_nm=maxh_nm))
         if check_quality:

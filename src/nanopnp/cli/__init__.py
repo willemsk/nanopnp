@@ -35,7 +35,6 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
-from nanopnp import __version__
 from nanopnp.cli.export import EXPORTS, export_artefact, refusal
 from nanopnp.core.errors import EXIT_OK, EXIT_UNEXPECTED, classify
 from nanopnp.core.paths import (
@@ -47,6 +46,7 @@ from nanopnp.core.paths import (
     reference_data_root,
     store_root,
 )
+from nanopnp.core.public import __version__
 from nanopnp.io.artefact import CASE_SCHEMA
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only

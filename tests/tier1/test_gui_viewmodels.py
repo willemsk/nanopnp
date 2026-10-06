@@ -59,7 +59,8 @@ from nanopnp.io.case import (
     dumps_case,
 )
 from nanopnp.io.case_paths import case_fields
-from nanopnp.numerics.linear import AVAILABLE_SOLVERS
+from nanopnp.mesh.meshers import registered_meshers
+from nanopnp.numerics.linear import registered_solvers
 from nanopnp.physics.models import registered_models, registered_stabilisations
 from nanopnp.pipeline.case import load_case
 from nanopnp.pipeline.checks import options_at
@@ -303,7 +304,8 @@ def test_if09_editor_offers_only_what_the_schema_and_registries_name(case_file: 
     registered = {
         "physics.model": registered_models(),
         "numerics.stabilisation": registered_stabilisations(),
-        "numerics.linear.solver": tuple(sorted(AVAILABLE_SOLVERS)),
+        "numerics.linear.solver": registered_solvers(),
+        "numerics.mesh.backend": registered_meshers(),
         "electrolyte.parameters": available_corrections(),
         "electrolyte.corrections.density.model": ("none", *available_corrections()),
     }

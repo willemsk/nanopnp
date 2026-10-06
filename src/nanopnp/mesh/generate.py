@@ -32,7 +32,6 @@ own settings; the mesher's version is the environment's, recorded beside it
 
 from __future__ import annotations
 
-import importlib
 import logging
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -40,38 +39,26 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from nanopnp.core.hashing import Canonicalisable
-from nanopnp.core.stages import MissingExtraError
-from nanopnp.geometry.region import RegionRecord, build_region, region_graph
+from nanopnp.geometry.region import RegionRecord
 from nanopnp.io.case import SuppliedArtefact
-from nanopnp.mesh.adapter import from_ngsolve, write_msh41
+from nanopnp.mesh.adapter import write_msh41
 from nanopnp.mesh.ingest import IngestedMesh, ingest
+from nanopnp.mesh.meshers import create_mesher
 from nanopnp.mesh.sizing import (
     EXCLUSION_SIZE,
-    EXCLUSION_WALL_RULE,
-    GMSH_ALGORITHM,
-    GMSH_FIELD_RULES,
-    GMSH_SMOOTHING,
     GRADING,
-    OPTIMISATION_STEPS,
     SIZES,
     SizeTable,
     WallSize,
-    apply_sizes,
     corrected_debye_ratio,
     resolve_wall_size,
 )
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
-    from types import ModuleType
-
-    from nanopnp.core.typing import Mesh, Shape
     from nanopnp.io.resolved import ResolvedCase
     from nanopnp.mesh.adapter import MeshData
 
 logger = logging.getLogger(__name__)
-
-GMSH_EXTRA = "gmsh"
-"""The ``pyproject.toml`` extra the Gmsh backend needs (CON-10, WP23 D9)."""
 
 WALL_MEAN_BOUND = 1.15
 """The ``wall`` segments' mean length may be at most this times the target (D9)."""
@@ -228,80 +215,11 @@ def sizing_parameters(
         "table": sizes.summary(),
         "grading": GRADING,
     }
-    if backend == "gmsh":
-        recipe["gmsh"] = {
-            "algorithm": GMSH_ALGORITHM,
-            "smoothing": GMSH_SMOOTHING,
-            "fields": list(GMSH_FIELD_RULES),
-        }
-    else:
-        recipe["optsteps2d"] = OPTIMISATION_STEPS
+    recipe.update(create_mesher(backend).settings(exclusion=exclusion))
     recipe["gate"] = dict(GATE_CONSTANTS)
     if exclusion:
         recipe["exclusion"] = EXCLUSION_SIZE
-        if backend != "gmsh":
-            recipe["exclusion_wall"] = EXCLUSION_WALL_RULE
     return recipe
-
-
-def gmsh_backend() -> ModuleType:
-    """Import the Gmsh backend, or refuse naming the extra (CON-10, WP23 D9).
-
-    Only stage 6's Gmsh branch calls this, so the default path never imports
-    ``gmsh``. A missing module and a native library the wheel could not load
-    (``OSError: libGLU.so.1`` in a bare container, ``.knowledge/07`` section 5)
-    are one refusal: the installation, not the case, is what is wrong.
-
-    Raises
-    ------
-    MissingExtraError
-        Naming the ``gmsh`` extra and the underlying error.
-    """
-    try:
-        module = importlib.import_module("nanopnp.mesh.gmsh_backend")
-    except ModuleNotFoundError as error:
-        if error.name is None or error.name.split(".")[0] != "gmsh":
-            raise
-        raise _missing_gmsh(error) from error
-    except OSError as error:
-        raise _missing_gmsh(error) from error
-    return module
-
-
-def _missing_gmsh(error: Exception) -> MissingExtraError:
-    """Return the refusal of ``numerics.mesh.backend: gmsh`` on an install that lacks it.
-
-    The remedy follows the error: a missing module wants the extra, and an
-    ``OSError`` means the wheel is installed and a system library it loads is
-    not, which installing the extra again would not change.
-    """
-    remedy = (
-        "The gmsh wheel is installed but could not load a native library; install the system "
-        "library the error names"
-        if isinstance(error, OSError)
-        else "Install the extras with `uv sync --all-extras`"
-    )
-    return MissingExtraError(
-        f"numerics.mesh.backend is 'gmsh', which needs the {GMSH_EXTRA!r} extra: importing gmsh "
-        f"failed with {type(error).__name__}: {error}. {remedy}, or mesh with the default "
-        "backend, netgen (CON-10, ADR-002)",
-        name="gmsh",
-    )
-
-
-def mesh_shape(shape: Shape, sizes: SizeTable) -> Mesh:
-    """Mesh a named, sized region with netgen at the table's global size.
-
-    The one call both the reference geometry and stage 6 make, so the two cannot
-    mesh the same region with different mesher settings.
-    """
-    import netgen.occ as occ
-    import ngsolve as ngs
-
-    geometry = occ.OCCGeometry(shape, dim=2)
-    return ngs.Mesh(
-        geometry.GenerateMesh(maxh=sizes.global_nm, grading=GRADING, optsteps2d=OPTIMISATION_STEPS)
-    )
 
 
 def mesh_region(
@@ -320,28 +238,7 @@ def mesh_region(
     nanopnp.core.stages.MissingExtraError
         On ``gmsh`` without its extra.
     """
-    if backend == "gmsh":
-        module = gmsh_backend()
-        graph = region_graph(build_region(record), record)
-        data = module.mesh_region(
-            graph,
-            wall_h_nm,
-            sizes,
-            membrane_thickness_nm=record.membrane.thickness_nm,
-            axis_extent_nm=record.axis_split_nm,
-        )
-        return data, str(module.version())
-    from netgen import config
-
-    shape = build_region(record)
-    apply_sizes(
-        shape,
-        wall_h_nm=wall_h_nm,
-        axis_extent_nm=record.axis_split_nm,
-        sizes=sizes,
-        divide_wall=record.exclusion is not None,
-    )
-    return from_ngsolve(mesh_shape(shape, sizes)), str(config.version).lstrip("v").split("-")[0]
+    return create_mesher(backend).mesh(record, wall_h_nm, sizes)
 
 
 @dataclass(frozen=True)
