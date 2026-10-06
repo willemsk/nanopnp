@@ -4,9 +4,10 @@
 same day, after the author ruled every `MOD-nn` (§8.2.8).
 Delivered: WP35, the modularity exploration
 ([wp35-modularity-exploration.md](wp35-modularity-exploration.md)), tagged `v0.5.0-alpha.1`;
-WP36, the stage protocol and the walk ([wp36-stage-protocol-and-walk.md](wp36-stage-protocol-and-walk.md)).
-Planned: WP37 ([wp37-cycle-cuts-exit-codes-backend-guard.md](wp37-cycle-cuts-exit-codes-backend-guard.md)), the cycle cuts, the exit codes and the
-backend guard; WP38, the `io` split; WP39, the backend registries; WP40, the stale refusals; WP41,
+WP36, the stage protocol and the walk ([wp36-stage-protocol-and-walk.md](wp36-stage-protocol-and-walk.md));
+WP37, the cycle cuts, the exit codes and the backend guard
+([wp37-cycle-cuts-exit-codes-backend-guard.md](wp37-cycle-cuts-exit-codes-backend-guard.md)).
+Planned: WP38, the `io` split; WP39, the backend registries; WP40, the stale refusals; WP41,
 the OKF bundle; WP42, its backfill; WP43, the user-testing protocol. Provisional, and planned by the
 second `/phase-plan amend 4` once the author has run the sessions and ruled every `UT-nn`: the
 fixes, the documentation increment and the close, which take their numbers then (§8.2.8 H8).
@@ -296,6 +297,17 @@ refused. QR-13's Appendix A row names it.
 > axisymmetric measure move to a new subpackage, `numerics/`, after `mesh` in the order. The
 > wall-distance solve goes to `physics`. VER-65's set starts at twelve, and VER-61 gains a recorded
 > list of upward `top` edges, which WP38 and WP39 shrink.
+
+> **Delivered, 6 October 2026** ([plan](wp37-cycle-cuts-exit-codes-backend-guard.md), to be tagged
+> `v0.5.0-alpha.3`). `MOD-05` is `fixed`; `MOD-03` stays `accepted` for WP38. `numerics/` holds
+> `gates`, `linear`, `newton` and `measures`; the wall distance is `physics/distance.py`, the profile
+> `geometry/profile.py`, the χ field `charge/dielectric.py`, the exit table `core/errors.py`.
+> Measured on the tree, the only upward `top` edges are the nine into `io` and `cli → nanopnp`, and
+> without `io`'s edges the `top` relation is acyclic. VER-65 pins twelve backend subpackages and
+> VER-61 the `upward:` list. VER-62's golden holds. Inherited constraints:
+> - `upward:` only shrinks, and `backend:` grows only by the author's ruling;
+> - a cut removes a dependency; a deferred import is not a cut (D12);
+> - WP39's linear-solver registry lands in `numerics/linear.py`.
 
 ### WP38 — The `io` split (MOD-04, MOD-13 for `io/case.py`, MOD-15, and `io`'s cuts of MOD-03)
 
