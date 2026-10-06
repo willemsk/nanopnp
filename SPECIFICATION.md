@@ -979,10 +979,11 @@ CLI and the desktop shell drive the same stage objects (IF-01, IF-02, IF-09).
 | `symmetry/` | Cₙ averaging, azimuthal reduction to (r, z), variance diagnostics |
 | `geometry/` | Contour extraction, polyline conditioning, CAD assembly, analyte bodies |
 | `mesh/` | Mesher adapters (netgen, gmsh), size fields, boundary layers, quality gates |
+| `numerics/` | Linear-solver adapters, damped Newton, the state and increment gates, the axisymmetric measure (§8.2.8 H11) |
 | `charge/` | PDB2PQR driver, partial charges, smearing, axisymmetric projection, dielectric |
 | `materials/` | Electrolyte models and the pluggable correction registry |
-| `physics/` | Weak forms: Poisson, Nernst–Planck, Navier–Stokes; axisymmetric measures |
-| `solve/` | Backend adapters, continuation ladder, nonlinear and linear strategies, warm start |
+| `physics/` | Weak forms: Poisson, Nernst–Planck, Navier–Stokes; the wall-distance field |
+| `solve/` | Continuation ladder, warm start, the solve stage |
 | `post/` | QoI extraction: current, transport number, EOF, rectification, forces |
 | `sweep/` | Parameter sweeps, job-array dispatch, result collection |
 | `io/` | Case-file schema, result store, provenance manifests |
@@ -3529,7 +3530,7 @@ commit named in the last column.
 
 Rulings by the author, taken through `/phase-plan amend 4` after WP35 merged as `v0.5.0-alpha.1`,
 on the 17 findings of the modularity report (`docs/project/modularity.md`), and, as H10, on
-`MOD-18`, which WP36's shipping review added. Each `MOD-nn` row of
+`MOD-18`, which WP36's shipping review added, and, as H11, on WP37's plan. Each `MOD-nn` row of
 `docs/project/modularity-findings.md` names the ruling below that sets its status. Where a ruling
 changes a clause, the clause is amended in the commit named in the last column.
 
@@ -3545,6 +3546,7 @@ changes a clause, the clause is amended in the commit named in the last column.
 | H8 | **The sequence**: WP36, the stage protocol and the walk (`MOD-01`, `MOD-02`, `MOD-12`); WP37, the cycle cuts outside `io`, the exit codes and the backend guard (`MOD-03`, `MOD-05`, `MOD-10`); WP38, the `io` split (`MOD-04`, `MOD-13`, `MOD-15`, and `io`'s cuts of `MOD-03`); WP39, the backend registries (`MOD-06`, `MOD-07`, `MOD-16`); WP40, the stale refusals (`MOD-14`); then WP41, the OKF bundle; WP42, its backfill; WP43, the user-testing protocol. The fix packages, the documentation increment and the close take their numbers at the second amendment | The interface later packages read goes first. The `io` split follows the cuts that do not touch it, and the registries follow the split that moves the schema they edit. Numbering the close once the fixes are counted keeps the numbers in order | None. G5's order stands, refined |
 | H9 | **Phase 4 is estimated at 3–5 weeks**: about two for WP36 to WP43, and the rest for the author's sessions, the rulings of each `UT-nn`, the fixes and the close | §8.1's "Set by the phase plan" is replaced | §8.1 (Phase 4's estimate) and §8.3, in this commit |
 | H10 | **`MOD-18`, the Geometry tab's closed set of views, is deferred to Phase 5 with `MOD-09`** (added 6 October 2026, ruled by the author on WP36's shipping review, PR #79). The shell's design document decides how it shows a stage it has no view for, and `GEOMETRY_STAGES` is read from the registry when it is asked for, not at import | Phase 5's plan inherits the finding. A stage registered from outside the package is walked but has no Geometry-tab view until then | None |
+| H11 | **WP37's cuts follow the accepted order, and the solver kernel becomes a subpackage of its own** (ruled 6 October 2026 on WP37's plan, the author asking for the most stable and long-term maintainable cut of `physics ↔ solve`). (a) The cuts H6's target needs are the `top` edges that point up the order, outside `io`. Of `MOD-03`'s single-import edges, those pointing down the order (`charge → mesh`, `geometry → density`, `physics → mesh`) stay. The upward edges the table did not list (`charge → materials`, `geometry → mesh`, and `mesh → physics` through `mesh/ingest.py`) are cut. (b) `physics ↔ solve` is cut by moving `solve/gates.py`, `solve/linear.py`, `solve/newton.py` and `physics/measures.py`, which import only `core`, into a new subpackage, `numerics/`. In the order it comes after `mesh` and before `charge` | Measured at `a346419`, H6's routes leave a `top` cycle of five subpackages (`charge`, `geometry`, `mesh`, `physics`, `solve`) even with `io` split (WP37 plan, Design §1). With (a), (b) and WP38's split, none is left. `numerics` joins VER-65's recorded set, which therefore starts at twelve. WP39's linear-solver registry (H7) lives in `numerics/` | §5.1, in this commit, and `CLAUDE.md`'s structure list with it. H6's order gains `numerics` from WP37's `modularity-layering.yaml`. VER-61's and VER-65's rows, in WP37 |
 
 ### 8.3 Effort estimate
 
