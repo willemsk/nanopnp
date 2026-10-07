@@ -9,8 +9,8 @@ first three from the syntax tree, through
   costly core packages and an optional extra's package (:data:`DEFERRABLE`);
 - (b) no module imports another module's private name, beyond the recorded
   :data:`PRIVATE_IMPORTS`, a list that only shrinks;
-- (c) every name the package defines is spelt the British way: ``-ise``, not
-  ``-ize`` (:data:`AMERICAN`);
+- (c) every name the package defines is spelt the British way: ``-ise`` and ``-yse``,
+  not ``-ize`` and ``-yze`` (:data:`AMERICAN`);
 - (f) every ``# pragma: no cover`` gives its reason on the same line, as
   ``# pragma: no cover - <reason>``: the push gate requires every changed line
   of ``src/nanopnp`` to be covered, and an exclusion is a claim a reviewer reads.
@@ -92,11 +92,18 @@ helper public removes its row in the same commit, and a new private import is
 never fixed by recording it (VER-72 b).
 """
 
-AMERICAN = re.compile(r"iz(e|es|ed|ing|er|ers|ation|ations)", re.IGNORECASE)
-"""An ``-ize`` family ending (VER-72 c)."""
+AMERICAN = re.compile(r"[iy]z(?:es|ed|ing|ers|er|ation|ations|e)")
+"""An ``-ize`` or ``-yze`` family ending inside one lower-cased word of a name (VER-72 c)."""
 
-STEMS = ("siz", "seiz", "priz")
-"""Stems whose ``z`` is not the ``-ize`` suffix: ``size``, ``seize``, ``prize``."""
+WORDS = re.compile(r"[A-Z]+(?![a-z])|[A-Z]?[a-z]+")
+"""One word of a snake_case, CamelCase or UPPER_CASE name."""
+
+SIZE_STEM = re.compile(r"(?:re|over|under|down|up|out|cap|sub|pre)?(?:s|se|pr)")
+"""What may precede ``iz`` in ``size``, ``seize`` and ``prize`` and their compounds.
+
+Only these: a stem ending in ``s`` is no excuse, or ``emphasize`` and
+``synthesize`` would pass as ``size`` does.
+"""
 
 
 @dataclass(frozen=True, order=True)
@@ -157,6 +164,22 @@ def private_imports(modules: tuple[Module, ...]) -> list[tuple[Violation, tuple[
     return sorted(found)
 
 
+def unrecorded_private_imports(
+    found: list[tuple[Violation, tuple[str, str, str]]],
+    recorded: Mapping[tuple[str, str, str], str] = PRIVATE_IMPORTS,
+) -> list[Violation]:
+    """Return the private imports in ``found`` that ``recorded`` does not list."""
+    return [violation for violation, key in found if key not in recorded]
+
+
+def stale_private_imports(
+    found: list[tuple[Violation, tuple[str, str, str]]],
+    recorded: Mapping[tuple[str, str, str], str] = PRIVATE_IMPORTS,
+) -> list[tuple[str, str, str]]:
+    """Return the ``recorded`` entries that ``found`` no longer imports."""
+    return sorted(set(recorded) - {key for _, key in found})
+
+
 def _defined_names(tree: ast.AST) -> Iterator[tuple[str, int]]:
     """Yield ``(name, line)`` of each name a module defines.
 
@@ -176,14 +199,16 @@ def _defined_names(tree: ast.AST) -> Iterator[tuple[str, int]]:
 
 
 def _is_american(name: str) -> bool:
-    lowered = name.lower()
-    return any(
-        not lowered[: match.start() + 2].endswith(STEMS) for match in AMERICAN.finditer(lowered)
-    )
+    for word in WORDS.findall(name):
+        lowered = word.lower()
+        for match in AMERICAN.finditer(lowered):
+            if not SIZE_STEM.fullmatch(lowered[: match.start()]):
+                return True
+    return False
 
 
 def american_names(modules: tuple[Module, ...]) -> list[Violation]:
-    """Return each defined name with an ``-ize`` ending (CLAUDE.md: British spelling)."""
+    """Return each defined name with an ``-ize`` or ``-yze`` ending (British spelling)."""
     found = {
         Violation(module.path, line, name, "American spelling; nanopnp writes -ise")
         for module in modules
@@ -193,8 +218,12 @@ def american_names(modules: tuple[Module, ...]) -> list[Violation]:
     return sorted(found)
 
 
-PRAGMA = re.compile(r"#\s*pragma:\s*no cover(?!\s*-\s*\S)")
-"""A ``no cover`` pragma with no ``- <reason>`` after it (VER-72 f)."""
+PRAGMA = re.compile(r"#\s*pragma[:\s]?\s*no\s*cover(?!\s*-\s*\S)", re.IGNORECASE)
+"""A ``no cover`` pragma with no ``- <reason>`` after it (VER-72 f).
+
+It reads every spelling coverage.py's own exclusion pattern does (``# pragma no
+cover``, ``#pragma:no  cover``, upper case), because each of them excludes the line.
+"""
 
 
 def bare_pragmas(texts: Mapping[str, str]) -> list[Violation]:
@@ -222,9 +251,9 @@ def test_ver72_functions_import_only_costly_or_optional_packages() -> None:
 
 def test_ver72_no_private_name_crosses_a_module_beyond_the_shrinking_list() -> None:
     found = private_imports(parse_package())
-    unrecorded = [violation for violation, key in found if key not in PRIVATE_IMPORTS]
+    unrecorded = unrecorded_private_imports(found)
     assert unrecorded == [], _report(unrecorded)
-    stale = sorted(set(PRIVATE_IMPORTS) - {key for _, key in found})
+    stale = stale_private_imports(found)
     assert stale == [], f"no longer imported; delete from PRIVATE_IMPORTS: {stale}"
 
 
@@ -304,9 +333,21 @@ def test_ver72_an_unused_allowlist_entry_is_stale() -> None:
     """The list shrinks: delete the import, and the recorded row is reported."""
     source = "from nanopnp.core.errors import classify\n"
     modules = parse_package(sources={"density/map.py": source})
-    keys = {key for _, key in private_imports(modules)}
-    assert ("density/map.py", "nanopnp.density.grid", "_grid_data_module") not in keys
-    assert ("density/map.py", "nanopnp.density.grid", "_grid_data_module") in PRIVATE_IMPORTS
+    entry = ("density/map.py", "nanopnp.density.grid", "_grid_data_module")
+    assert entry in PRIVATE_IMPORTS
+    assert stale_private_imports(private_imports(modules)) == [entry]
+    assert stale_private_imports(private_imports(parse_package())) == []
+
+
+def test_ver72_a_private_import_missing_from_the_list_is_unrecorded(
+    oracle: Callable[[str], tuple[Module, ...]],
+) -> None:
+    source = "from nanopnp.numerics.linear import _REJECTED\n"
+    found = private_imports(oracle(source))
+    unrecorded = [v for v in unrecorded_private_imports(found) if v.path == ORACLE]
+    assert [(v.line, v.name) for v in unrecorded] == [(1, "_REJECTED")]
+    recorded = {(ORACLE, "nanopnp.numerics.linear", "_REJECTED"): "a reason"}
+    assert [v for v in unrecorded_private_imports(found, recorded) if v.path == ORACLE] == []
 
 
 @pytest.mark.parametrize(
@@ -317,6 +358,13 @@ def test_ver72_an_unused_allowlist_entry_is_stale() -> None:
         ("def f(optimizer):\n    return optimizer\n", 1, "optimizer"),
         ("x = 1\nlinearized = x\n", 2, "linearized"),
         ("class A:\n    def f(self):\n        self.discretization = 1\n", 3, "discretization"),
+        # `size` is no excuse for a stem that merely ends in `s`, and CLAUDE.md's own
+        # example of the British spelling is `analyse`.
+        ("def emphasize(x):\n    return x\n", 1, "emphasize"),
+        ("def f(synthesizer):\n    return synthesizer\n", 1, "synthesizer"),
+        ("class Hypothesizer:\n    pass\n", 1, "Hypothesizer"),
+        ("def analyze(x):\n    return x\n", 1, "analyze"),
+        ("def f(x):\n    wall_analyzer = x\n    return wall_analyzer\n", 2, "wall_analyzer"),
     ],
 )
 def test_ver72_an_american_spelling_is_named(
@@ -334,6 +382,7 @@ def test_ver72_size_seize_prize_and_foreign_calls_are_not_american(
         "def sizing(wall_size, sizes, seized, prized):\n"
         "    gmsh.initialize()\n    model.isInitialized()\n    a.AssembleLinearization(b)\n"
         "class WallSize:\n    resize = 1\n    horizon = 2\n"
+        "def oversized(capsize, presizing, downsized, sizeof, seizes, outsize):\n    pass\n"
     )
     assert [v for v in american_names(oracle(source)) if v.path == ORACLE] == []
 
@@ -345,10 +394,17 @@ def test_ver72_a_coverage_exclusion_without_a_reason_is_named() -> None:
         "if b:  # pragma: no cover\n"
         "    pass\n"
         "if c:  # pragma: no cover -\n"
+        "if d:  # pragma no cover\n"
+        "if e:  # PRAGMA: NO COVER\n"
+        "if f:  #pragma:no  cover\n"
+        "if g:  # pragma no cover - spelt without a colon, with a reason\n"
     )
     violations = bare_pragmas({ORACLE: source})
     assert [(v.line, v.name) for v in violations] == [
         (3, "pragma: no cover"),
         (5, "pragma: no cover"),
+        (6, "pragma: no cover"),
+        (7, "pragma: no cover"),
+        (8, "pragma: no cover"),
     ]
     assert f"src/nanopnp/{ORACLE}:3: pragma: no cover" in _report(violations)
