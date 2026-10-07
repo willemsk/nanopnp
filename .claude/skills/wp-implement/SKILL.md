@@ -30,9 +30,12 @@ Physics and numerics
 decisions stay with the orchestrator on Opus; delegate surveys, mechanical edits and long test runs
 per `.claude/model-policy.md`, saying which model you chose and why.
 
-**If this session is not Opus**, or is unsure, it does the `[any]` items in order and stops at the
-first `[Opus]` item, without skipping past it: it reports the items left and does not open the PR
-(`.claude/model-policy.md`, *Who implements a plan*). Unmarked items count as `[Opus]`.
+**If this session is not Opus**, or is unsure, it may still do an `[Opus]` item, but only by the
+extra-effort steps of `.claude/model-policy.md`, *Who implements a plan*: the planned tests run and
+fail first (written first, in their own `test:` commit, if the item has none), the commit body
+states the decision with its signs, units, tolerances and route, the tick reads
+`[x] <short sha> non-Opus`, and the PR body lists the item under **Done outside Opus**. Unmarked
+items count as `[Opus]`.
 
 ## How the work lands
 
@@ -111,7 +114,8 @@ Before handing off, confirm every one of these yourself:
 
 - every work item in the plan is done and ticked, or explicitly deferred with a reason written into
   the plan and a `REV-nn` row in `docs/project/review-findings.md`; nothing left open lives only in
-  the PR body (§8.2.8 H12). Every `[Opus]` item was done in an Opus session;
+  the PR body (§8.2.8 H12). Every `[Opus]` item was done in an Opus session, or is ticked
+  `non-Opus` and listed under **Done outside Opus** in the PR body;
 - no `planned: WP<n>` marker of this package remains;
 - every `VER-`/`VAL-` identifier the plan claimed has a test named for it, and it passes;
 - `.claude/hooks/gate.sh run` is green on the current tree;

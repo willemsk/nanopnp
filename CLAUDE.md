@@ -30,7 +30,7 @@ Python 3.11–3.14, developed on 3.12.
 | Command | Purpose |
 |---|---|
 | `uv run pytest` | Tiers 1–2 without `extended` tests; the commit hook's selection |
-| `uv run pytest --extended` | All of tiers 1–2; the push gate, as CI runs it |
+| `uv run pytest --extended` | All of tiers 1–2; the push gate, as CI runs it. Naming an `extended` test's file runs it without the flag |
 | `uv run pytest -n auto --dist loadfile` | Parallel; set `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS`, `MKL_NUM_THREADS` to 1. `tests/tier1/test_gui_widgets.py` runs separately and serially |
 | `uv run pytest -m tier1` / `-m tier3` / `-m slow` | Unit tests / reference comparison (nightly, not gated) / benchmarks (not gated) |
 | `uv run pytest <file>::<test> -v` | One test |
@@ -44,10 +44,39 @@ Gate before pushing: `.claude/hooks/gate.sh run` (the above with `--extended`, p
 `.claude/hooks/gate.sh` runs automatically before each `git commit` Claude Code makes; `--no-verify`
 skips it. A pass of the hook's development selection never stands in for `run`.
 
+- `run` requires, as CI does, full branch coverage of the lines changed in `src/nanopnp/` outside
+  `gui/` (`diff-cover` against `main`). An exempt line says `# pragma: no cover - <reason>`.
+- Coverage sees neither missing code nor the untaken arm of `a if c else b`; planned tests cover those.
+- `run` sets `NANOPNP_REQUIRE_GMSH=1` (and `NANOPNP_REQUIRE_APBS=1` where the APBS wheel exists), so
+  a backend that cannot import fails rather than skips.
+- When only prose changed, the hook runs ruff alone. `.github/scripts/prose-only.sh` decides what is
+  prose; `SPECIFICATION.md`, `docs/` and example READMEs are not. CI's strict documentation build
+  runs on every push, prose included.
+
 ## Project structure
 
-`src/nanopnp/` has one subpackage per module of SPECIFICATION.md §5.1. `cli/` and `gui/` are thin
-shells holding no physics. Outside it: `data/corrections/*.yaml` (fitted parameters, shipped in the
+`src/nanopnp/` has one subpackage per module of SPECIFICATION.md §5.1:
+
+- `core/` — units, constants, validation, provenance, caching, logging
+- `structure/` — PDB/mmCIF and trajectory IO, alignment, symmetry-axis detection
+- `density/` — Gaussian smearing to grid, ensemble averaging, grid IO
+- `symmetry/` — Cₙ averaging, azimuthal reduction to (r, z), variance diagnostics
+- `geometry/` — contour extraction, polyline conditioning, CAD assembly, analyte bodies
+- `mesh/` — mesher adapters (netgen, gmsh), size fields, boundary layers, quality gates
+- `numerics/` — linear-solver adapters, damped Newton, state and increment gates, the axisymmetric measure
+- `charge/` — PDB2PQR driver, partial charges, smearing, axisymmetric projection, dielectric
+- `materials/` — electrolyte models and the pluggable correction registry
+- `physics/` — weak forms: Poisson, Nernst–Planck, Navier–Stokes; the wall-distance field
+- `solve/` — continuation ladder, warm start, the solve stage
+- `post/` — QoI extraction: current, transport number, EOF, rectification, forces
+- `sweep/` — parameter sweeps, job-array dispatch, result collection
+- `io/` — case-file schema, artefact and resolved-case types, result store, provenance manifests;
+  the base layer, importing only `core` at run time
+- `pipeline/` — case resolution against the registries, the walk, reproduction; the assembler
+- `cli/`, `gui/` — thin shells over the stage objects; they hold no physics
+- `validation/` — benchmarks, MMS, COMSOL comparison harness, regression fixtures
+
+Outside it: `data/corrections/*.yaml` (fitted parameters, shipped in the
 wheel), `.knowledge/`, `tests/tier{1,2,3,4}/`, `docs/`, `docs/plans/` (delivery plan for the current
 phase; planning, not requirements — `SPECIFICATION.md` wins).
 
@@ -63,9 +92,10 @@ stage must stay independently invocable, cancellable and introspectable (FR-27).
 - **Deviations from the validated model go behind a flag, default off**, and must be verified against
   COMSOL before becoming default (e.g. dielectric-gradient body force, mollified distance field, an
   added mobility correction).
-- **`⟨c⟩` is `(1/n)Σcᵢ`, not the ionic strength.** `d` is the distance to the nearest **pore**
+- **`⟨c⟩` is `(1/n)Σcᵢ`, not the ionic strength**; they coincide only for a symmetric 1:1 salt. `d` is the distance to the nearest **pore**
   boundary; the membrane is excluded.
-- **Einstein holds only at infinite dilution.** Never assert `D_i/μ_i = kT/e` at finite concentration
+- **Einstein holds only at infinite dilution.** `D_i/μ_i` drifts to 1.2–1.7 × kT/e between 0.15 M
+  and 3 M. Never assert `D_i/μ_i = kT/e` at finite concentration
   (VER-05, PHY-14). Poisson–Boltzmann is not "PNP at zero bias" (PHY-24).
 - **Ion wall function: `1 − exp(−6.2(d̄ + 0.01))`** — plus, 6.2 nm⁻¹. The viscosity wall function takes
   a minus. Steric `β_i` enters the flux bracket with `+`, and the bracket is negated; a flipped sign
@@ -101,12 +131,20 @@ stage must stay independently invocable, cancellable and introspectable (FR-27).
 - **Imports at the top of the module.** Exceptions, imported inside the function that uses them:
   `ngsolve`, `netgen`, `numpy`, `scipy`, `meshio`, `h5py` (import cost; stage modules are imported
   just to introspect), and an optional extra's package in a module that must work without it (a
-  missing extra is refused naming it). Defer nothing else; VER-72 (a) checks it.
+  missing extra is refused naming it). A module reached only through `create()`, such as
+  `structure/read.py`, imports its extra at the top. Defer nothing else; VER-72 (a) checks it.
 
 ## Testing
 
 Tests live in `tests/tier{1,2,3,4}/` (tiers per SPECIFICATION.md §7.1); the directory's `conftest.py`
 sets the marker, so the file's location decides its tier.
+
+| Tier | Content | Runtime | When |
+|---|---|---|---|
+| 1 | Unit and property tests (VER-01 … VER-11) | seconds | every push |
+| 2 | Analytic benchmarks (VER-12 … VER-22) | minutes | every push |
+| 3 | Cross-implementation comparison: the published results (VAL-16, VAL-17), VAL-05, VAL-06, COMSOL fields where exported (VAL-01 … VAL-04) | hours | nightly, recorded not gated |
+| 4 | Experimental reproduction (VAL-07 … VAL-14) | hours | before a tagged release |
 
 - Name tests for the requirement they discharge: `test_ver03_ion_wall_function_check_values`.
 - Fix Tier 2 before chasing a Tier 3 discrepancy; an analytic test localises an error, a whole-model
@@ -134,12 +172,19 @@ a brief never overrides a normative requirement.
 | 2 | `/wp-implement` | Executes the plan, keeps specification/knowledge/plan in step, gates, pushes, opens or reuses the PR, stops |
 | 3–4 | `/wp-ship` | Gates, pushes, runs `/code-review xhigh --fix`, drives CI to green |
 
-Step 2 does not chain into 3: the user starts `/wp-ship` in a fresh session. `.claude/skills/steward/SKILL.md`
+Step 2 does not chain into 3: the user starts `/wp-ship` in a fresh session, so the review comes from
+a session that did not make the physics decisions (`wp-ship` §4). `.claude/skills/steward/SKILL.md`
 governs a PR in flight and is read when a PR event wakes a session.
 
 **Sub-agent models:** work whose error would be a plausible wrong number runs on Opus; work whose error
 is loud (lint, types, search, mechanical edits) runs on Sonnet. State the choice when delegating
 (`.claude/model-policy.md`).
+
+**Plans mark each work item `[Opus]` or `[any]`.** A non-Opus session may do an `[Opus]` item only at
+extra effort and on the record: its planned tests run and fail first (if it has none, the session
+writes them first in their own commit), the commit body states the decision with its signs, units
+and route, the tick reads `non-Opus`, and the PR lists it under **Done outside Opus** for the Opus
+review in `/wp-ship` (`.claude/model-policy.md`, *Who implements a plan*).
 
 **Code review reports** from `/codebase-review` go to `docs/code_reviews/CODE_REVIEW_NNN.md`, numbered
 one above the highest present, never reused; pass `out=` so no root `CODE_REVIEW.md` remains.
@@ -158,8 +203,8 @@ that resolves one sets it `fixed` (§8.2.8 H12). A PR body may summarise them, n
 
 ## Durable learnings
 
-Write a durable fact into the relevant `.knowledge/` file, marked **[tested]** or **[verified]** with
-its source. Keep status, task lists and scope opinions out of `.knowledge/`; they belong in the specification.
+Write a durable fact into the relevant `.knowledge/` file, with its source, marked **[tested]**
+(verified by running code) or **[verified]** (verified by arithmetic). Keep status, task lists and scope opinions out of `.knowledge/`; they belong in the specification.
 
 ## Do NOT
 
