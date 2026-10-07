@@ -83,7 +83,7 @@ here.
 > `tagged_releases` = `v0.1`–`v0.4`. It reads the live tree through `render_measurements`'s
 > *Version literals* section.
 
-- [ ] 5. [any] The author's rulings of REV-68 to REV-70: D10's check and its tests; the §5.3.1 NOTE, VER-47 and VER-67 rows; `test_ver47_every_inputs_key_is_hashed_and_read_by_a_stage`; REV-68 to REV-70 `fixed`; the changelog. Done when `test_stale_refusals.py` passes and `.claude/hooks/gate.sh run` is green.
+- [x] 1d5bb44 5. [any] The author's rulings of REV-68 to REV-70: D10's check and its tests; the §5.3.1 NOTE, VER-47 and VER-67 rows; `test_ver47_every_inputs_key_is_hashed_and_read_by_a_stage`; REV-68 to REV-70 `fixed`; the changelog. Done when `test_stale_refusals.py` passes and `.claude/hooks/gate.sh run` is green.
 
 ### Verification
 
