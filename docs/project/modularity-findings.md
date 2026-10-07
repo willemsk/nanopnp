@@ -34,7 +34,7 @@ refuses any row that is not terminal.
 | MOD-11 | surface | low | accepted | §8.2.8 H2 | [with_section and register are outside PUBLIC](modularity.md#mod-11-with_section-and-register-are-outside-public) |
 | MOD-12 | surface | low | fixed | [WP36](../plans/wp36-stage-protocol-and-walk.md) | [PUBLIC is mirrored by hand for the type checker](modularity.md#mod-12-public-is-mirrored-by-hand-for-the-type-checker) |
 | MOD-13 | surface | low | fixed | [WP38](../plans/wp38-io-split.md) | [Three modules and two functions are past review size](modularity.md#mod-13-three-modules-and-two-functions-are-past-review-size) |
-| MOD-14 | surface | medium | accepted | §8.2.8 H1 | [Refusals name releases that have shipped](modularity.md#mod-14-refusals-name-releases-that-have-shipped) |
+| MOD-14 | surface | medium | fixed | [WP40](../plans/wp40-stale-refusals.md) | [Refusals name releases that have shipped](modularity.md#mod-14-refusals-name-releases-that-have-shipped) |
 | MOD-15 | coupling | low | fixed | [WP38](../plans/wp38-io-split.md) | [core reaches upward, once by an annotation and into ten subpackages by the registry](modularity.md#mod-15-core-reaches-upward-once-by-an-annotation-and-into-ten-subpackages-by-the-registry) |
 | MOD-16 | extension | medium | fixed | [WP39](../plans/wp39-backend-registries.md) | [The stabilisation registry is closed by a Literal in the schema](modularity.md#mod-16-the-stabilisation-registry-is-closed-by-a-literal-in-the-schema) |
 | MOD-17 | extension | low | post-1.0 | §8.2.8 H5 | [The validated correction set is a default in eight signatures](modularity.md#mod-17-the-validated-correction-set-is-a-default-in-eight-signatures) |
