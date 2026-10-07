@@ -145,7 +145,6 @@ MESH_REFUSAL = (
 )
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP40 D5")
 @pytest.mark.parametrize(
     ("key", "what"), [("charge", "a fixed-charge field"), ("eps_r", "a dielectric field")]
 )
@@ -164,7 +163,6 @@ def test_fr27_a_field_named_by_store_hash_is_refused_at_resolution_and_at_the_st
     assert str(caught.value) == expected
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP40 D5")
 def test_fr27_a_mesh_named_by_store_hash_is_refused_at_resolution_and_at_the_stage() -> None:
     from nanopnp.io.case import SuppliedArtefact, UnsupportedCaseSection
     from nanopnp.mesh.ingest import _source_path
@@ -177,7 +175,6 @@ def test_fr27_a_mesh_named_by_store_hash_is_refused_at_resolution_and_at_the_sta
     assert str(caught.value) == MESH_REFUSAL
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP40 D5")
 def test_ver47_validate_case_refuses_a_stored_mesh_with_exit_three(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

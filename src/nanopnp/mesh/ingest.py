@@ -70,10 +70,7 @@ from nanopnp.core.stages import (
 )
 from nanopnp.geometry.region import PAYLOAD_NAME, read_region
 from nanopnp.io.artefact import MeshArtefact
-from nanopnp.io.case import (
-    SuppliedArtefact,
-    UnsupportedCaseSection,
-)
+from nanopnp.io.case import SuppliedArtefact, stored_artefact_refused
 from nanopnp.io.defaults import ContributedDeviation
 from nanopnp.io.vocabulary import (
     POTENTIAL,
@@ -694,16 +691,14 @@ def _source_path(supplied: SuppliedArtefact) -> Path:
     Raises
     ------
     UnsupportedCaseSection
-        If the mesh is named by store hash rather than by path, which needs the
-        meshing pipeline of v0.3.
+        If the mesh is named by store hash rather than by path: reading it from
+        the store is REV-62, deferred to v0.6 (``resolve`` refuses it earlier with
+        the same text; this is the guard for a stage invoked directly).
     FileNotFoundError
         If the file is not there.
     """
     if supplied.path is None:
-        raise UnsupportedCaseSection(
-            "inputs.mesh: artefact: names a mesh in the store, which the meshing "
-            "pipeline of v0.3 fills; supply inputs.mesh: path: instead"
-        )
+        raise stored_artefact_refused("mesh")
     if not supplied.path.is_file():
         # Quoted rather than ``!r``, which doubles a Windows path's separators.
         raise FileNotFoundError(f"inputs.mesh.path '{supplied.path}' does not exist")
