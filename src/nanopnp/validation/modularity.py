@@ -67,6 +67,12 @@ A pre-release names its minor (``v0.2.0-alpha.3`` names ``v0.2``). The look-behi
 refuses a schema identifier such as ``nanopnp/case/v0.5``, which names no release.
 """
 
+REQUIREMENT_ROW = re.compile(r"^\| \*\*(FR-\d+)\*\* \|.*\| (v\d+\.\d+|post-1\.0) \|$", re.MULTILINE)
+"""A row of section 3.2's table: the requirement and its Release column (VER-67)."""
+FR_ID = re.compile(r"\bFR-\d+\b")
+"""A functional requirement named in a string."""
+REVIEW_ROW = re.compile(r"\bREV-\d+\b")
+"""A review row named in a string: the release it names is that row's deferral (VER-67)."""
 MILESTONE = re.compile(r"^## \[(\d+)\.(\d+)\.0\]", re.MULTILINE)
 """A ``CHANGELOG.md`` heading of a release ``X.Y.0``, never a pre-release (WP40 D2)."""
 
@@ -1432,6 +1438,66 @@ def stale_release_literals(
         for release in {f"v{major}.{minor}" for major, minor in VERSION_LITERAL.findall(text)}
         if release in released
     }
+    return tuple(sorted(found))
+
+
+def requirement_releases(specification_text: str) -> dict[str, str]:
+    """Return each functional requirement's Release column from section 3.2 (VER-67).
+
+    Parameters
+    ----------
+    specification_text
+        The text of ``SPECIFICATION.md``.
+
+    Returns
+    -------
+    dict
+        ``{"FR-21": "v0.7", ...}``; ``post-1.0`` for a requirement no release schedules.
+        Only section 3.2's table has a Release column, so the other requirement tables,
+        whose last column is a category, are not read.
+    """
+    return dict(REQUIREMENT_ROW.findall(specification_text))
+
+
+def release_pairing_mismatches(
+    requirements: Mapping[str, str],
+    root: Path | None = None,
+    sources: Mapping[str, str] | None = None,
+) -> tuple[tuple[str, int, str, str, str, str], ...]:
+    """Return each string pairing a requirement with a release its row does not give (VER-67).
+
+    A string naming exactly one functional requirement and exactly one release is read
+    as a claim that the requirement is scheduled for that release. It agrees with
+    section 3.2 when the row's Release is that release, or, for a ``post-1.0`` row,
+    when the release is ``v1.0``, the stable release the row is after. A string naming
+    several requirements or several releases pairs nothing unambiguously and is not
+    checked, nor is one naming a ``REV-nn`` row, whose deferral schedules the release
+    (section 8.2.9 I3). A requirement absent from the table is a mismatch.
+
+    Parameters
+    ----------
+    requirements
+        The Release column, as :func:`requirement_releases` returns it.
+    root, sources
+        As for :func:`parse_package`.
+
+    Returns
+    -------
+    tuple
+        ``(path, line, requirement, release, expected, text)``, sorted.
+    """
+    found = set()
+    for module in parse_package(root, sources):
+        for text, line in _module_strings(module):
+            named = set(FR_ID.findall(text))
+            releases = {f"v{major}.{minor}" for major, minor in VERSION_LITERAL.findall(text)}
+            if len(named) != 1 or len(releases) != 1 or REVIEW_ROW.search(text):
+                continue
+            (requirement,) = named
+            (release,) = releases
+            expected = requirements.get(requirement, "absent from section 3.2")
+            if release != ("v1.0" if expected == "post-1.0" else expected):
+                found.add((module.path, line, requirement, release, expected, text))
     return tuple(sorted(found))
 
 

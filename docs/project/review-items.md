@@ -664,8 +664,9 @@ reads yet "is refused as unsupported naming the stage that would consume it". D8
 enforces the sentence. A key added to `Inputs` later is accepted and hashed into the manifest
 although nothing reads it (FR-25).
 
-**Open.** Either amend the spec text, or add a test over `Inputs.model_fields` that each key is read
-by a stage. The author rules.
+**Fixed.** The author ruled both (6 October 2026): the §5.3.1 NOTE and the VER-47 row now say every
+`inputs:` key is read by the stage that consumes it, and `test_ver47_every_inputs_key_is_hashed_and_read_by_a_stage`
+fails on a key the resolved case does not carry, `input_files` does not hash or no stage reads.
 
 ### REV-69 — VER-67 defers its refusal texts to a plan
 
@@ -675,8 +676,8 @@ by a stage. The author rules.
 is planning, not requirements, and the texts are repeated in code, tests, the plan and the
 changelog, so archiving the plan leaves the row undefined.
 
-**Open.** Move the texts into the specification, or state the rule (requirement named, release
-named or none) in the row and leave the wording to the code. The author rules.
+**Fixed.** The author ruled the rule goes in the row: VER-67 states that a refusal names its
+requirement and the release that schedules it or that none does, and no longer cites the plan.
 
 ### REV-70 — WP40 D5 and D8 go beyond MOD-14's letter
 
@@ -686,5 +687,6 @@ named or none) in the row and leave the wording to the code. The author rules.
 `nanopnp validate case` exits 3 where it exited 0. D8 removes `_UNREAD_CHARGE_KEYS` too. A check
 that a string pairing a requirement with a release matches §3's Release column is not built.
 
-**Open.** The author rules whether D5 and D8 stand, and whether the Release-column check is wanted.
+**Fixed.** The author ruled D5 and D8 stand, and that the Release-column check is built in this
+package: VER-67 gains `requirement_releases` and `release_pairing_mismatches`.
 

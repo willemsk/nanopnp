@@ -30,7 +30,11 @@ No number moves, and no stage key changes (VER-62).
 
 - **VER-67**: `nanopnp.validation.modularity.tagged_releases` reads the tagged releases from this
   file's milestone headings, and `stale_release_literals` finds every non-docstring string of the
-  package naming one; a Tier-1 test keeps the package free of them.
+  package naming one; a Tier-1 test keeps the package free of them. `requirement_releases` and
+  `release_pairing_mismatches` also find a string pairing one requirement with a release its row
+  in §3.2 does not give.
+- A Tier-1 test fails on an `inputs:` key the resolved case does not carry, `input_files` does not
+  hash or no stage reads (VER-47).
 
 ### Changed
 

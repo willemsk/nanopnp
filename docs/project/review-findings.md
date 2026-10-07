@@ -87,6 +87,6 @@ is a rolling register, and its header stays `open`.
 | REV-65 | interface | low | deferred | §8.2.9 I3 | [The Windows bundle exposes no mesh command](review-items.md#rev-65-the-windows-bundle-exposes-no-mesh-command) |
 | REV-66 | interface | low | open | — | [A model without flow is refused on its element pair before its flow switch](review-items.md#rev-66-a-model-without-flow-is-refused-on-its-element-pair-before-its-flow-switch) |
 | REV-67 | interface | low | deferred | §8.2.8 H2 | [Public registration functions for backend registries (MOD-11)](review-items.md#rev-67-public-registration-functions-for-backend-registries-mod-11) |
-| REV-68 | verification | low | open | — | [The spec still promises a refusal that D8 removed](review-items.md#rev-68-the-spec-still-promises-a-refusal-that-d8-removed) |
-| REV-69 | verification | low | open | — | [VER-67 defers its refusal texts to a plan](review-items.md#rev-69-ver-67-defers-its-refusal-texts-to-a-plan) |
-| REV-70 | interface | low | open | — | [WP40 D5 and D8 go beyond MOD-14's letter](review-items.md#rev-70-wp40-d5-and-d8-go-beyond-mod-14s-letter) |
+| REV-68 | verification | low | fixed | [WP40](../plans/wp40-stale-refusals.md) | [The spec still promises a refusal that D8 removed](review-items.md#rev-68-the-spec-still-promises-a-refusal-that-d8-removed) |
+| REV-69 | verification | low | fixed | [WP40](../plans/wp40-stale-refusals.md) | [VER-67 defers its refusal texts to a plan](review-items.md#rev-69-ver-67-defers-its-refusal-texts-to-a-plan) |
+| REV-70 | interface | low | fixed | [WP40](../plans/wp40-stale-refusals.md) | [WP40 D5 and D8 go beyond MOD-14's letter](review-items.md#rev-70-wp40-d5-and-d8-go-beyond-mod-14s-letter) |

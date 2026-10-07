@@ -2,13 +2,15 @@
 
 The release-name check reads the source with no checked module imported, and reads
 which releases are tagged from ``CHANGELOG.md``'s milestone headings, never from git:
-a CI checkout carries no tags (WP40 D2). The refusal texts are those of the WP40 plan,
-*Design* §1; each names its requirement and the release that schedules it, or says that
-none does, and exits as it did (VER-47).
+a CI checkout carries no tags (WP40 D2). Each refusal names its requirement and the release
+that schedules it, or says that none does, and exits as it did (VER-47); the texts are the WP40
+plan's *Design* §1. A string pairing a requirement with a release agrees with §3.2 (D10).
 """
 
 from __future__ import annotations
 
+import dataclasses
+import inspect
 from pathlib import Path
 from typing import Any
 
@@ -18,15 +20,23 @@ import yaml
 from nanopnp.charge.stage import _field_path
 from nanopnp.cli import main
 from nanopnp.core.errors import EXIT_CASE
-from nanopnp.io.case import SuppliedArtefact, UnsupportedCaseSection
+from nanopnp.io.case import Inputs, SuppliedArtefact, UnsupportedCaseSection
 from nanopnp.io.defaults import CONFIGURATION_PATHS
+from nanopnp.io.resolved import ResolvedCase
 from nanopnp.mesh.ingest import _source_path
 from nanopnp.pipeline import checks
 from nanopnp.pipeline.case import loads_case, resolve
-from nanopnp.validation.modularity import stale_release_literals, tagged_releases
+from nanopnp.pipeline.run import input_files
+from nanopnp.validation.modularity import (
+    release_pairing_mismatches,
+    requirement_releases,
+    stale_release_literals,
+    tagged_releases,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 CHANGELOG = ROOT / "CHANGELOG.md"
+SPECIFICATION = ROOT / "SPECIFICATION.md"
 QUICKSTART = ROOT / "examples" / "01-quickstart" / "quickstart.case.yaml"
 STORE_HASH = "a" * 64
 
@@ -120,6 +130,81 @@ def test_ver67_no_string_in_the_package_names_a_tagged_release() -> None:
         f"src/nanopnp/{path}:{line} names {release}, which is tagged: {text!r}"
         for path, line, release, text in stale
     )
+
+
+def test_ver67_the_requirement_releases_are_read_from_the_release_column() -> None:
+    table = (
+        "| ID | Requirement | Release |\n|---|---|---|\n"
+        "| **FR-01** | SHALL ingest. | v0.3 |\n| **FR-11** | MAY mesh. | post-1.0 |\n"
+        "| **QR-02** | By v0.7 SHALL match. | Correctness |\n"
+    )
+    assert requirement_releases(table) == {"FR-01": "v0.3", "FR-11": "post-1.0"}
+    live = requirement_releases(SPECIFICATION.read_text(encoding="utf-8"))
+    assert live["FR-21"] == "v0.7"
+    assert live["FR-11"] == "post-1.0"
+    assert len(live) == 29
+
+
+def test_ver67_a_string_pairing_a_requirement_with_another_release_is_found(
+    tmp_path: Path,
+) -> None:
+    sources = {
+        "pair.py": (
+            '"""FR-21 is v0.2 here, in a docstring, so it is not checked."""\n'
+            "OK = 'an analyte is FR-21, v0.7'\n"
+            "WRONG = 'an analyte is FR-21, v0.4'\n"
+            "LATER = 'boundary layers are FR-11, after v1.0'\n"
+            "EARLY = 'boundary layers are FR-11, v0.7'\n"
+            "TWO = 'FR-21 and FR-11 are scheduled in v0.4'\n"
+            "NONE = 'FR-21 is scheduled'\n"
+            "DEFERRED = 'FR-27 reads it, REV-62, deferred to v0.6'\n"
+            "GONE = 'FR-99, v0.4'\n"
+        )
+    }
+    for relative, text in sources.items():
+        (tmp_path / relative).write_text(text, encoding="utf-8")
+    table = {"FR-21": "v0.7", "FR-11": "post-1.0"}
+    assert release_pairing_mismatches(table, tmp_path) == (
+        ("pair.py", 3, "FR-21", "v0.4", "v0.7", "an analyte is FR-21, v0.4"),
+        ("pair.py", 5, "FR-11", "v0.7", "post-1.0", "boundary layers are FR-11, v0.7"),
+        ("pair.py", 9, "FR-99", "v0.4", "absent from section 3.2", "FR-99, v0.4"),
+    )
+
+
+def test_ver67_no_string_pairs_a_requirement_with_a_release_its_row_does_not_give() -> None:
+    table = requirement_releases(SPECIFICATION.read_text(encoding="utf-8"))
+    wrong = release_pairing_mismatches(table)
+    assert wrong == (), "\n".join(
+        f"src/nanopnp/{path}:{line} pairs {requirement} with {release}, but section 3.2 "
+        f"gives {expected}: {text!r}"
+        for path, line, requirement, release, expected, text in wrong
+    )
+
+
+# -- every inputs: key has a reader (REV-68, VER-47) ----------------------------------
+
+
+def test_ver47_every_inputs_key_is_hashed_and_read_by_a_stage() -> None:
+    package = ROOT / "src" / "nanopnp"
+    stage_side = {
+        path: path.read_text(encoding="utf-8")
+        for path in package.rglob("*.py")
+        if path.relative_to(package).parts[0] not in {"io", "pipeline", "sweep", "cli", "gui"}
+    }
+    declared = set(Inputs.model_fields)
+    carried = {field.name for field in dataclasses.fields(ResolvedCase)}
+    assert declared <= carried, (
+        f"keys the resolved case does not carry: {sorted(declared - carried)}"
+    )
+    hashing = inspect.getsource(input_files)
+    hashed = {key for key in declared if f'("{key}", resolved.{key})' in hashing}
+    readers = {
+        key: [path for path, text in stage_side.items() if f"resolved.{key}" in text]
+        for key in declared
+    }
+    assert hashed == declared, f"keys input_files does not hash: {sorted(declared - hashed)}"
+    unread = sorted(key for key, found in readers.items() if not found)
+    assert unread == [], f"inputs: keys no stage reads (FR-25: hashed, never used): {unread}"
 
 
 # -- the refusals (D4 to D8) ----------------------------------------------------------
