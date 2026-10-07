@@ -31,6 +31,7 @@ from collections import Counter, defaultdict
 from collections.abc import Collection, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import lru_cache
+from itertools import pairwise
 from pathlib import Path
 
 import yaml
@@ -59,8 +60,15 @@ RELATIONS: dict[str, frozenset[str]] = {
 MODULE_STRING = re.compile(r"^nanopnp(\.\w+)+(:[\w.]+)?$")
 """A string naming a ``nanopnp`` module, optionally with ``:attribute`` (D4)."""
 
-VERSION_LITERAL = re.compile(r"\bv0\.\d+\b")
-"""A release name, ``v0.N``, written into a string the code uses (D8 g)."""
+VERSION_LITERAL = re.compile(r"(?<![\w/.-])v(\d+)\.(\d+)(?!\d)")
+"""A release name, ``vX.Y``, written into a string the code uses (D8 g; WP40 D1).
+
+A pre-release names its minor (``v0.2.0-alpha.3`` names ``v0.2``). The look-behind
+refuses a schema identifier such as ``nanopnp/case/v0.5``, which names no release.
+"""
+
+MILESTONE = re.compile(r"^## \[(\d+)\.(\d+)\.0\]", re.MULTILINE)
+"""A ``CHANGELOG.md`` heading of a release ``X.Y.0``, never a pre-release (WP40 D2)."""
 
 BACKEND_PACKAGES: frozenset[str] = frozenset({"ngsolve", "netgen"})
 """The finite-element backend's top-level packages (QR-13, section 5.4.1)."""
@@ -1346,6 +1354,63 @@ def version_literals(
     return tuple(sorted(found))
 
 
+def tagged_releases(changelog_text: str) -> tuple[str, ...]:
+    """Return the releases ``CHANGELOG.md`` records as tagged, oldest first (VER-67).
+
+    A release is a ``## [X.Y.0]`` heading; a pre-release is not one. The tags are
+    read from the changelog rather than from git, because a CI checkout carries no
+    tags and section 2.7 has the changelog record every tag (WP40 D2).
+
+    Raises
+    ------
+    ValueError
+        If the text names no release, or a major's minors skip one, naming the
+        missing release: an empty or gapped read would pass every string.
+    """
+    found = sorted({(int(major), int(minor)) for major, minor in MILESTONE.findall(changelog_text)})
+    if not found:
+        raise ValueError("the changelog names no release: no '## [X.Y.0]' heading")
+    for (major, minor), (after_major, after_minor) in pairwise(found):
+        if after_major == major and after_minor != minor + 1:
+            raise ValueError(
+                f"the changelog skips v{major}.{minor + 1}: it records v{major}.{minor} "
+                f"and v{after_major}.{after_minor} but nothing between"
+            )
+    return tuple(f"v{major}.{minor}" for major, minor in found)
+
+
+def stale_release_literals(
+    tagged: Collection[str], root: Path | None = None, sources: Mapping[str, str] | None = None
+) -> tuple[tuple[str, int, str, str], ...]:
+    """Return each non-docstring string naming a release already tagged (VER-67; WP40 D3).
+
+    Every string is checked, not only refusals: a reason or a label a user reads is
+    as stale as a refusal. Docstrings and comments are not, since a docstring's
+    "(v0.3)" records when a section arrived, which stays true.
+
+    Parameters
+    ----------
+    tagged
+        The tagged releases, as :func:`tagged_releases` returns them.
+    root, sources
+        As for :func:`parse_package`.
+
+    Returns
+    -------
+    tuple
+        ``(path, line, release, text)``, sorted, one row per release a string names.
+    """
+    released = set(tagged)
+    found = {
+        (module.path, line, release, text)
+        for module in parse_package(root, sources)
+        for text, line in _module_strings(module)
+        for release in {f"v{major}.{minor}" for major, minor in VERSION_LITERAL.findall(text)}
+        if release in released
+    }
+    return tuple(sorted(found))
+
+
 # -- the generated page (D1, D7) -----------------------------------------------------
 
 
@@ -1510,8 +1575,8 @@ def render_measurements(root: Path | None = None) -> str:
         "",
         "## Version literals",
         "",
-        f"{len(versions)} non-docstring strings name a release `v0.N`, measured by "
-        "`version_literals`.",
+        f"{len(versions)} non-docstring strings name a release `vX.Y`, measured by "
+        "`version_literals`; VER-67 refuses one naming a tagged release.",
         "",
         *(f"- `{path}:{line}`" for path, line, _ in versions),
         "",
