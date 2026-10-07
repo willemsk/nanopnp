@@ -473,3 +473,40 @@ def test_gate_names_the_system_libraries_when_gmsh_cannot_import(
     assert result.returncode != 0
     assert "libGLU.so.1" in result.stderr
     assert "apt-get install -y --no-install-recommends libglu1-mesa" in result.stderr
+
+
+def test_gate_hook_requires_gmsh_for_a_tracked_change_beside_an_untracked_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A tracked Gmsh change still counts when an untracked file follows it in the path list.
+
+    ``grep -q`` exits at the first match; piped under ``pipefail`` the writer's
+    SIGPIPE once made the match read as a miss.
+    """
+    if shutil.which("jq") is None:
+        pytest.skip("the gate hook reads its payload with jq")
+    repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/mesh/gmsh_backend.py")
+    (repo / "src/nanopnp/mesh/gmsh_backend.py").write_text("x = 2\n", encoding="utf-8")
+    (repo / "src/nanopnp/untracked.py").write_text("z = 3\n", encoding="utf-8")
+    calls = _recording_uv(tmp_path, monkeypatch)
+    _hook(repo, repo, "git commit -am x")
+    ran = calls.read_text(encoding="utf-8").splitlines()
+    tests = [call for call in ran if "pytest" in call and "-rs" in call.split("|", 1)[1].split()]
+    assert tests, ran
+    assert {call.split("|", 1)[0] for call in tests} == {"1"}
+
+
+def test_gate_run_without_a_merge_base_fails_before_the_selection(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """``gate.sh run`` names the fetch that supplies the merge base, and runs nothing first."""
+    assert _BASH is not None
+    repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/code.py")
+    _git(repo, "branch", "-m", "main", "trunk")
+    calls = _recording_uv(tmp_path, monkeypatch)
+    result = subprocess.run(
+        [_BASH, str(_GATE), "run"], cwd=repo, capture_output=True, text=True, timeout=60
+    )
+    assert result.returncode == 1
+    assert "git fetch origin main" in result.stderr
+    assert not calls.exists() or "pytest" not in calls.read_text(encoding="utf-8")

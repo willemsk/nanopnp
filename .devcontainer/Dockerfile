@@ -5,7 +5,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
 
 WORKDIR /workspace
 
-# The gmsh wheel needs X and GL libraries at import (.knowledge/07 section 5).
+# The gmsh wheel needs X and GL libraries at import (.knowledge/07 section 4).
 RUN apt-get update \
     && apt-get install -y --no-install-recommends libglu1-mesa libxft2 libxinerama1 libxcursor1 \
     && rm -rf /var/lib/apt/lists/*

@@ -170,6 +170,8 @@ coverage_xml=""
 if [[ $mode == run ]]; then
     selection=extended
     coverage_xml="$(git rev-parse --absolute-git-dir)/nanopnp-gate-coverage.xml"
+    # CI requires the apbs binary on Linux and macOS (VAL-06); so does `run`.
+    [[ $(uname -s) == MINGW* || $(uname -s) == MSYS* || $(uname -s) == CYGWIN* ]] || export NANOPNP_REQUIRE_APBS=1
     pytest_extra=(--extended --cov=src/nanopnp --cov-branch "--cov-report=xml:${coverage_xml}")
 fi
 passed=$(cat "$stamp_file" 2>/dev/null) || passed=""
@@ -190,6 +192,12 @@ base=HEAD
 if [[ $mode == run ]]; then
     base=$(git merge-base HEAD origin/main 2>/dev/null) ||
         base=$(git merge-base HEAD main 2>/dev/null) || base=""
+    if [[ -z $base ]]; then
+        # Before the long selection, not after it: the diff-cover stage needs a base.
+        printf '%s\n' "The gate needs a merge base with main for its diff-cover stage, and none was found." \
+            "Fetch it: git fetch origin main:refs/remotes/origin/main (add --unshallow if the clone is shallow)." >&2
+        exit 1
+    fi
 fi
 docs_only=false
 if [[ -n $base ]]; then
@@ -206,12 +214,13 @@ fi
 # Gmsh's tests fail rather than skip where it cannot import: always in `run`,
 # as in CI; in the hook only for a change to Gmsh's own code or tests.
 gmsh_paths='^(src/nanopnp/mesh/gmsh_backend\.py|src/nanopnp/mesh/meshers\.py|tests/tier2/test_mesh_backends\.py|tests/.*gmsh[^/]*)$'
-if [[ $mode == run ]] ||
-    { git diff --name-only HEAD; git ls-files --others --exclude-standard; } 2>/dev/null |
-    grep -Eq "$gmsh_paths"; then
+# The paths are collected first: `grep -q` exits at its first match, and under
+# pipefail the writer's SIGPIPE would turn a match into a failed pipeline.
+changed_paths=$({ git diff --name-only HEAD; git ls-files --others --exclude-standard; } 2>/dev/null)
+if [[ $mode == run ]] || grep -Eq "$gmsh_paths" <<<"$changed_paths"; then
     export NANOPNP_REQUIRE_GMSH=1
 fi
-gmsh_remedy="Gmsh's wheel loads X and GL libraries at import (.knowledge/07-software-stack.md section 5).
+gmsh_remedy="Gmsh's wheel loads X and GL libraries at import (.knowledge/07-software-stack.md section 4).
 On Debian or Ubuntu: apt-get install -y --no-install-recommends libglu1-mesa libxft2 libxinerama1 libxcursor1"
 
 fail() {
