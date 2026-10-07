@@ -101,8 +101,13 @@ changes before accepting the report; evidence for an old revision does not certi
    not done** with the reason. A finding the author has not ruled on is `open`, its ruling `—`;
    put it to the author before the report. Do not leave a confirmed finding unmentioned, and do not
    leave it only in the PR body.
-3. If fixes changed the tree, re-run `.claude/hooks/gate.sh run`.
-4. Commit accepted changes — `fix: close the review gaps in <what>`, identifiers in the body — and
+3. Every item the PR body lists under **Done outside Opus** (ticked `non-Opus` in the plan):
+   read its diff and commit body against its decision row and specification clause, and any
+   tests that session wrote against the plan's verification rows, here on Opus. Fix or revert
+   what disagrees; record each item confirmed, with its sha, under **Verification**
+   (`.claude/model-policy.md`, *Who implements a plan*).
+4. If fixes changed the tree, re-run `.claude/hooks/gate.sh run`.
+5. Commit accepted changes — `fix: close the review gaps in <what>`, identifiers in the body — and
   push to the PR branch. No empty commit or cosmetic edit is needed for a clean review. The commits
   belong on the branch, not in a comment; the commit hook remains mandatory.
 

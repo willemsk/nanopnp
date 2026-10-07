@@ -56,9 +56,18 @@ The policy binds whoever implements a plan, on any model or harness, not only `A
 gate cannot tell a plausible wrong answer from a right one.
 
 - `/wp-plan` marks each work item `[Opus]` or `[any]`.
-- Only an Opus session does an `[Opus]` item. Any other session does the `[any]` items in order,
-  commits and ticks each, and stops at the first `[Opus]` item: it reports what is left and opens
-  no PR.
+- Any session may do an `[any]` item. A session that is not Opus may also do an `[Opus]` item, at
+  extra effort and on the record:
+  1. Before writing the implementation, it runs the item's planned tests (strict `xfail`, written
+     on Opus at plan time) and confirms each fails. If the item has none, it first writes tests
+     from the plan's decision and verification rows, with exact assertions, as strict `xfail`
+     markers in a commit of their own (`test:`), and only then implements.
+  2. The item's commit body states the decision it implements, and every sign, unit, tolerance and
+     route it relied on, citing the plan's decision row and the specification clause.
+  3. It ticks the item `[x] <short sha> non-Opus`, and the PR body lists every such item, and any
+     tests it wrote, under **Done outside Opus**.
+- `/wp-ship`'s Opus review confirms each **Done outside Opus** item (and the tests, where the
+  session wrote them) against its decision row before the package counts as reviewed.
 - A session unsure of its model is not Opus.
 
 ## Applying it
