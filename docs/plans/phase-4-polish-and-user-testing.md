@@ -11,7 +11,7 @@ tagged `v0.5.0-alpha.2`; WP37, the cycle cuts, the exit codes and the backend gu
 tagged `v0.5.0-alpha.3`; WP38, the `io` split ([wp38-io-split.md](wp38-io-split.md)),
 tagged `v0.5.0-alpha.4`; WP39, the backend registries ([wp39-backend-registries.md](wp39-backend-registries.md)),
 to be tagged `v0.5.0-alpha.5`.
-Planned: WP40, the stale refusals; WP41, the
+Planned: WP40, the stale refusals ([wp40-stale-refusals.md](wp40-stale-refusals.md)); WP41, the
 accuracy fixes; WP42, the verification checks; WP43, the small fixes; WP44, the OKF bundle; WP45,
 its backfill; WP46, the user-testing protocol (§8.2.9 I1). Provisional, and planned by the second
 `/phase-plan amend 4` once the author has run the sessions and ruled every `UT-nn`: the fixes, from
@@ -403,6 +403,8 @@ VER-24's classification is unchanged.
 > - The `top` subpackage relation remains acyclic.
 
 ### WP40 — The stale refusals (MOD-14; IF-02)
+
+Plan: [wp40-stale-refusals.md](wp40-stale-refusals.md).
 
 The seven release-naming strings `MOD-14` lists are rewritten. Each refusal names its requirement,
 and either the release that schedules it or that none does. The empty `_UNCONSUMED_INPUTS` loop
