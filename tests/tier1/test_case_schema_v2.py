@@ -396,16 +396,12 @@ def test_ver47_refusals(
 
 
 def test_ver47_every_new_input_is_read_by_the_stage_that_consumes_it() -> None:
-    """Each ``inputs:`` key v2 added is now read; the table of unread keys is empty (WP27).
+    """Each ``inputs:`` key v2 added is read by its stage (WP27; WP40 D8).
 
-    ``inputs.profile`` left the table in WP21, when stage 5 began to read it, and
-    ``inputs.pqr`` in WP27, when the ``protonation`` stage did:
+    Stage 5 reads ``inputs.profile`` and the ``protonation`` stage ``inputs.pqr``:
     ``tests/tier1/test_region.py`` and ``tests/tier1/test_protonation.py`` cover
-    their refusals. A key added to the table later is refused by the same rule.
+    their refusals. A key added later brings its own refusal and test.
     """
-    from nanopnp.pipeline.checks import _UNCONSUMED_INPUTS
-
-    assert _UNCONSUMED_INPUTS == {}
     raw = _v2()
     raw["inputs"]["pqr"] = {"path": "supplied.pqr", "format": "pqr"}
     resolved = resolve(loads_case(_text(raw)))

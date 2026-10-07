@@ -557,7 +557,7 @@ class ReportStage:
     from the cache for a different case, a different solve or a different
     extraction.
 
-    Figures are v0.4. What this stage writes today is the IF-07 field export, and
+    Figures are FR-28, v0.7. What this stage writes today is the IF-07 field export, and
     it writes it only when ``outputs:`` asks for ``fields``: the export is of
     order ten megabytes per solve, and an envelope sweep (FR-24) of thousands of
     points would otherwise write tens of gigabytes nobody requested.

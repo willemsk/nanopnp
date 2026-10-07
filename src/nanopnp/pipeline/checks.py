@@ -268,18 +268,6 @@ _ORDERS: dict[str, int] = {"P1": 1, "P2": 2, "P3": 3}
 """Element labels of section 5.3.1 against their polynomial order."""
 
 
-_UNREAD_CHARGE_KEYS: dict[str, str] = {}
-"""``charge:`` keys a later package's stage reads, with that stage.
-
-Each is refused set away from its default, naming the stage, until the package
-that delivers the stage removes its entry (section 5.3.1 NOTE on the protonation
-keys). The table is empty: the ``protonation`` stage reads ``ph``,
-``forcefield`` and ``titration``, stage 7's deposition reads ``smearing``, and
-stages 5 and 7 read ``exclusion_offset_nm`` and ``dielectric_transition_nm``; kept,
-because the rule outlives the last key that needed it.
-"""
-
-
 PROFILE_KEYS: tuple[str, ...] = ("exclusion_offset_nm", "dielectric_transition_nm")
 """The ``charge:`` keys built from the stage-4 profile (WP30 D12)."""
 
@@ -290,16 +278,6 @@ SMEARING_KEYS: tuple[str, ...] = ("sharpness", "grid_spacing_nm")
 
 PROTONATION_KEYS: tuple[str, ...] = ("ph", "forcefield", "titration")
 """The ``charge:`` keys the ``protonation`` stage reads (PHY-16 step 3, WP27 D13)."""
-
-
-_UNCONSUMED_INPUTS: dict[str, str] = {}
-"""``inputs:`` keys ``nanopnp/case/v2`` accepts ahead of the stage that reads them.
-
-Each is refused naming that stage until the stage is delivered, and the package
-that delivers it removes its entry (section 5.3.1 NOTE on ``inputs:``). Empty:
-the ``protonation`` stage reads ``inputs.pqr``; kept, because the rule outlives
-the last key that needed it.
-"""
 
 
 def _order(label: str, field: str) -> int:
@@ -431,14 +409,16 @@ def require_runnable(document: CaseDocument) -> SuppliedArtefact | None:
     nonlinear = document.numerics.nonlinear
     if nonlinear.strategy != "newton":
         raise UnsupportedCaseSection(
-            f"numerics.nonlinear.strategy {nonlinear.strategy!r} is the NUM-20 fallback ladder, "
-            "which is v0.2; this release solves every rung with the monolithic damped Newton of "
-            "NUM-16"
+            f"numerics.nonlinear.strategy {nonlinear.strategy!r} selects NUM-20's hybrid "
+            "segregated fallback, which no release of SPECIFICATION.md schedules; every rung is "
+            "solved by the monolithic damped Newton of NUM-16 (strategy: newton)"
         )
     if nonlinear.damping != "residual":
         raise UnsupportedCaseSection(
-            f"numerics.nonlinear.damping {nonlinear.damping!r} is v0.2; this release uses the "
-            "residual-monotonicity damping of NUM-16, whose recovery rule the reference records"
+            f"numerics.nonlinear.damping {nonlinear.damping!r} selects NUM-20's damped Newton "
+            "with l2 backtracking, which no release of SPECIFICATION.md schedules; the damping is "
+            "NUM-16's, adapted on residual reduction (damping: residual), whose recovery rule the "
+            "reference records"
         )
     walls = document.boundary_conditions.walls
     if walls.slip != "no_slip" or walls.ion_flux != "no_flux":
@@ -466,9 +446,6 @@ def _check_charge(document: CaseDocument) -> None:
 
     Raises
     ------
-    UnsupportedCaseSection
-        Naming the stage, for a ``charge:`` key a later package's stage reads
-        (:data:`_UNREAD_CHARGE_KEYS`, currently empty).
     CaseValidationError
         Naming the keys: the refusals of :func:`_check_profile_keys`;
         ``artefact:``, ``groups`` or a format other than ``pqr`` on
@@ -501,13 +478,6 @@ def _check_charge(document: CaseDocument) -> None:
     if charge is None:
         return
     defaults = Charge()
-    for key, stage in _UNREAD_CHARGE_KEYS.items():
-        if getattr(charge, key) != getattr(defaults, key):
-            raise UnsupportedCaseSection(
-                f"charge.{key} is set away from its default; {stage} reads it and is not "
-                "delivered in this release, so it would change nothing (section 5.3.1 NOTE on "
-                "the protonation keys)"
-            )
     _check_profile_keys(document, charge)
     _check_smearing(document, charge.smearing, defaults.smearing)
     if charge.titration == "none" and charge.ph != defaults.ph:
