@@ -929,8 +929,9 @@ def _gate_meshes(plan: SweepPlan, members: Sequence[ResolvedCase]) -> SweepPlan:
             # gates NUM-34 on the mesh it generated, as every solve does.
             continue
         order = int(resolved.model_options.get("order", AXISYMMETRIC.element_order))
+        assert supplied.path is not None  # resolve refuses artefact: on inputs.mesh (WP40 D5)
         source = (
-            str(supplied.path or supplied.artefact),
+            str(supplied.path),
             supplied.format,
             tuple(sorted(supplied.groups.items())),
         )

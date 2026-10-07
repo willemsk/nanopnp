@@ -654,3 +654,37 @@ The document is refused either way; only the first diagnostic misleads (QR-12).
 
 **Deferred.** Phase 5, evaluated with `MOD-11` and the extension point public surface ruling (§8.2.8 H2).
 
+### REV-68 — The spec still promises a refusal that D8 removed
+
+*Area:* verification. *Severity:* low. *Found:* PR #86 (WP40), the `/wp-ship` review at `bccf29f`.
+
+**Measured.** SPECIFICATION.md's §5.3.1 NOTE on `inputs:` and the VER-47 row say a key no stage
+reads yet "is refused as unsupported naming the stage that would consume it". D8 removed
+`_UNCONSUMED_INPUTS` and `_UNREAD_CHARGE_KEYS` and the VER-47 assertion, so no code or test
+enforces the sentence. A key added to `Inputs` later is accepted and hashed into the manifest
+although nothing reads it (FR-25).
+
+**Open.** Either amend the spec text, or add a test over `Inputs.model_fields` that each key is read
+by a stage. The author rules.
+
+### REV-69 — VER-67 defers its refusal texts to a plan
+
+*Area:* verification. *Severity:* low. *Found:* PR #86 (WP40), the `/wp-ship` review at `bccf29f`.
+
+**Measured.** The VER-67 row points to "WP40 Design §1" for the exact refusal texts. `docs/plans/`
+is planning, not requirements, and the texts are repeated in code, tests, the plan and the
+changelog, so archiving the plan leaves the row undefined.
+
+**Open.** Move the texts into the specification, or state the rule (requirement named, release
+named or none) in the row and leave the wording to the code. The author rules.
+
+### REV-70 — WP40 D5 and D8 go beyond MOD-14's letter
+
+*Area:* interface. *Severity:* low. *Found:* PR #86 (WP40), the `/wp-ship` review at `bccf29f`.
+
+**Measured.** D5 refuses `artefact:` on `inputs.mesh`, `charge` and `eps_r` at resolution, so
+`nanopnp validate case` exits 3 where it exited 0. D8 removes `_UNREAD_CHARGE_KEYS` too. A check
+that a string pairing a requirement with a release matches §3's Release column is not built.
+
+**Open.** The author rules whether D5 and D8 stand, and whether the Release-column check is wanted.
+

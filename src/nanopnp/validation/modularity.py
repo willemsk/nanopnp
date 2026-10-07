@@ -1361,19 +1361,43 @@ def tagged_releases(changelog_text: str) -> tuple[str, ...]:
     read from the changelog rather than from git, because a CI checkout carries no
     tags and section 2.7 has the changelog record every tag (WP40 D2).
 
+    Parameters
+    ----------
+    changelog_text
+        The text of ``CHANGELOG.md``.
+
+    Returns
+    -------
+    tuple of str
+        ``vX.Y`` for each release, ascending.
+
     Raises
     ------
     ValueError
-        If the text names no release, or a major's minors skip one, naming the
-        missing release: an empty or gapped read would pass every string.
+        If the text names no release, a major's minors skip one, or a major's
+        first minor is missing (``v0.1`` for major 0, ``vN.0`` after it), naming
+        the missing release: an empty, gapped or truncated read would pass every
+        string naming a release it dropped.
     """
     found = sorted({(int(major), int(minor)) for major, minor in MILESTONE.findall(changelog_text)})
     if not found:
         raise ValueError("the changelog names no release: no '## [X.Y.0]' heading")
+    first_major, first_minor = found[0]
+    opening = 1 if first_major == 0 else 0  # there was never a v0.0
+    if first_minor != opening:
+        raise ValueError(
+            f"the changelog skips v{first_major}.{opening}: its oldest release is "
+            f"v{first_major}.{first_minor}, and nothing before it"
+        )
     for (major, minor), (after_major, after_minor) in pairwise(found):
         if after_major == major and after_minor != minor + 1:
             raise ValueError(
                 f"the changelog skips v{major}.{minor + 1}: it records v{major}.{minor} "
+                f"and v{after_major}.{after_minor} but nothing between"
+            )
+        if after_major != major and after_minor != 0:
+            raise ValueError(
+                f"the changelog skips v{after_major}.0: it records v{major}.{minor} "
                 f"and v{after_major}.{after_minor} but nothing between"
             )
     return tuple(f"v{major}.{minor}" for major, minor in found)

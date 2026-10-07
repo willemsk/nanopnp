@@ -23,6 +23,7 @@ from nanopnp.io.case import (
     OUTPUTS,
     PQR_FORMAT,
     PROFILE_FORMAT,
+    SUPPLIED_FIELDS,
     CaseDocument,
     CaseValidationError,
     Charge,
@@ -359,10 +360,7 @@ def require_runnable(document: CaseDocument) -> SuppliedArtefact | None:
             # Stage 6 and stage 7 read a supplied output by path only; refused here so
             # that ``nanopnp validate case`` sees what ``run`` would (WP40 D5).
             raise stored_artefact_refused(supplied)
-    for supplied, what in (
-        ("charge", "a fixed-charge field"),
-        ("eps_r", "a dielectric field"),
-    ):
+    for supplied, what in SUPPLIED_FIELDS.items():
         field: SuppliedArtefact | None = getattr(document.inputs, supplied)
         if field is None:
             continue

@@ -149,11 +149,11 @@ class CaseValidationError(ValueError):
 
 
 class UnsupportedCaseSection(NotImplementedError):  # noqa: N818 - a release gap, not a failure
-    """The case asks for a pipeline stage this release does not implement.
+    """The case asks for something this release does not run.
 
-    Raised by :func:`nanopnp.pipeline.case.resolve` naming the section and the release that owns it,
-    so that a Phase-2 case run against the solver core says which release will
-    run it rather than failing somewhere inside the solver.
+    Raised by :func:`nanopnp.pipeline.case.resolve` naming the section and its requirement,
+    and the release that schedules it or that no release does, so that a case run
+    against a release that cannot run it says so rather than failing somewhere inside the solver.
     """
 
 
@@ -173,8 +173,9 @@ class SuppliedArtefact(_Strict):
     (section 8.1).
 
     Exactly one of ``path`` and ``artefact`` is given: a file on disk, or the
-    hash of an artefact already in the store. The store form is what keeps a
-    sweep from re-hashing the same mesh at every operating point.
+    hash of an artefact already in the store. Only the file is read: ``artefact:``
+    on any ``inputs:`` key is refused when the case is resolved (WP40 D5;
+    :func:`stored_artefact_refused`).
     """
 
     path: Path | None = None
@@ -193,11 +194,11 @@ class SuppliedArtefact(_Strict):
         return self
 
 
-_STORED_FIELDS: dict[str, str] = {
+SUPPLIED_FIELDS: dict[str, str] = {
     "charge": "a fixed-charge field",
     "eps_r": "a dielectric field",
 }
-"""The supplied fields, with what each names, as their store-form refusal words them."""
+"""The supplied fields, with what each names, as the refusals of ``inputs.<key>`` word them."""
 
 
 def stored_artefact_refused(key: str) -> UnsupportedCaseSection:
@@ -221,7 +222,7 @@ def stored_artefact_refused(key: str) -> UnsupportedCaseSection:
             "8.2.9 I3); supply inputs.mesh: path: instead"
         )
     return UnsupportedCaseSection(
-        f"inputs.{key}: artefact: names {_STORED_FIELDS[key]} by its store hash. FR-27's "
+        f"inputs.{key}: artefact: names {SUPPLIED_FIELDS[key]} by its store hash. FR-27's "
         "substitution reads a supplied field by path only, and no release of SPECIFICATION.md "
         f"schedules the store form; supply inputs.{key}: path: instead"
     )

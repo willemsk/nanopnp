@@ -572,9 +572,11 @@ def input_files(resolved: ResolvedCase, case_path: Path | None) -> dict[str, Pat
 
     Shared with the sweep plan, which binds itself to the same files (CODE_REVIEW_003 CR-5).
 
-    Only files that exist as paths: a mesh or a field named by store hash rather
-    than by path is already recorded as an upstream artefact, and hashing it a
-    second time under a made-up path would put one input in the manifest twice.
+    Only files that exist as paths. ``resolve`` refuses ``artefact:`` on every
+    ``inputs:`` key (WP40 D5), so a resolved case names each supplied input by path;
+    the ``path is not None`` test narrows the type for a resolved case built by hand,
+    and hashing a store hash under a made-up path would put one input in the manifest
+    twice.
     """
     files: dict[str, Path] = {}
     if case_path is not None:

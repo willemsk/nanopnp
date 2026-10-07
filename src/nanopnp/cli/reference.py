@@ -158,11 +158,11 @@ def render_case_reference() -> str:
             lines += [
                 "Of this section, `ph`, `forcefield` and `titration` drive the `protonation`",
                 "stage, the first half of stage 7 (FR-12, PHY-16 step 3), which runs PDB2PQR",
-                "and PROPKA on every frame of a `structure:` case. Until stage 7's deposition",
-                "is delivered it runs only when named, as `nanopnp stage protonation`. The",
-                "other keys are read by stages not yet delivered and are refused set away from",
-                "their defaults, naming the stage. Beside `inputs.pqr` the three are refused",
-                "set away from their defaults, naming both.",
+                "and PROPKA on every frame of a `structure:` case, and which",
+                "`nanopnp stage protonation` runs alone. `smearing` is read by stage 7's",
+                "deposition, `exclusion_offset_nm` by stage 5 and `dielectric_transition_nm`",
+                "by stage 7. Beside `inputs.pqr` the three protonation keys are refused set",
+                "away from their defaults, naming both.",
                 "",
             ]
         elif head == "structure":
