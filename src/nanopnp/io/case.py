@@ -193,6 +193,40 @@ class SuppliedArtefact(_Strict):
         return self
 
 
+_STORED_FIELDS: dict[str, str] = {
+    "charge": "a fixed-charge field",
+    "eps_r": "a dielectric field",
+}
+"""The supplied fields, with what each names, as their store-form refusal words them."""
+
+
+def stored_artefact_refused(key: str) -> UnsupportedCaseSection:
+    """Return the refusal of ``inputs.<key>: artefact:``, a supplied output named by hash.
+
+    FR-27's substitution reads a supplied mesh or field by path only. The mesh's store
+    form is REV-62, which section 8.2.9 I3 defers to v0.6; no release of
+    SPECIFICATION.md schedules a field's. ``pipeline.checks.require_runnable`` raises
+    it at resolution, and the stage guards raise the same text for a stage invoked
+    directly (IF-02; WP40 D4, D5).
+
+    Parameters
+    ----------
+    key
+        ``mesh``, ``charge`` or ``eps_r``.
+    """
+    if key == "mesh":
+        return UnsupportedCaseSection(
+            "inputs.mesh: artefact: names a mesh by its store hash. FR-27's substitution reads "
+            "a supplied mesh by path only; the store form is REV-62, deferred to v0.6 (section "
+            "8.2.9 I3); supply inputs.mesh: path: instead"
+        )
+    return UnsupportedCaseSection(
+        f"inputs.{key}: artefact: names {_STORED_FIELDS[key]} by its store hash. FR-27's "
+        "substitution reads a supplied field by path only, and no release of SPECIFICATION.md "
+        f"schedules the store form; supply inputs.{key}: path: instead"
+    )
+
+
 class Inputs(_Strict):
     """Supplied upstream artefacts, by the stage whose output each replaces."""
 

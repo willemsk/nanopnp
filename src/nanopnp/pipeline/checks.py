@@ -35,6 +35,7 @@ from nanopnp.io.case import (
     SuppliedArtefact,
     UnsupportedCaseSection,
     render_problems,
+    stored_artefact_refused,
 )
 from nanopnp.io.case_paths import _literal_options, field_at
 from nanopnp.io.resolved import contour_spacing_nm
@@ -374,12 +375,12 @@ def require_runnable(document: CaseDocument) -> SuppliedArtefact | None:
         other case without one describes no run at all.
     """
     _check_charge(document)
-    for supplied, consumer in _UNCONSUMED_INPUTS.items():
-        if getattr(document.inputs, supplied) is not None:
-            raise UnsupportedCaseSection(
-                f"case {document.name!r} supplies inputs.{supplied}; {consumer} is not delivered "
-                "in this release, so nothing would read it (section 5.3.1 NOTE on inputs:)"
-            )
+    for supplied in ("mesh", "charge", "eps_r"):
+        given: SuppliedArtefact | None = getattr(document.inputs, supplied)
+        if given is not None and given.path is None:
+            # Stage 6 and stage 7 read a supplied output by path only; refused here so
+            # that ``nanopnp validate case`` sees what ``run`` would (WP40 D5).
+            raise stored_artefact_refused(supplied)
     for supplied, what in (
         ("charge", "a fixed-charge field"),
         ("eps_r", "a dielectric field"),
@@ -387,11 +388,6 @@ def require_runnable(document: CaseDocument) -> SuppliedArtefact | None:
         field: SuppliedArtefact | None = getattr(document.inputs, supplied)
         if field is None:
             continue
-        if field.path is None:
-            raise UnsupportedCaseSection(
-                f"inputs.{supplied}: artefact: names {what} in the store, which the charge "
-                f"pipeline of v0.4 fills; supply inputs.{supplied}: path: instead"
-            )
         if field.groups:
             raise CaseValidationError(
                 f"inputs.{supplied}.groups is the mesh's vocabulary mapping (IF-06) and means "

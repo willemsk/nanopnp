@@ -113,7 +113,7 @@ from nanopnp.geometry.region import (
     read_region,
 )
 from nanopnp.io.artefact import Artefact, ChargeGridArtefact, FieldsArtefact, StageInputs
-from nanopnp.io.case import UnsupportedCaseSection
+from nanopnp.io.case import UnsupportedCaseSection, stored_artefact_refused
 from nanopnp.io.defaults import ContributedDeviation
 from nanopnp.io.store import atomic_write_bytes
 from nanopnp.mesh.ingest import IngestedMesh, MeshStage, deployed_mesh
@@ -295,17 +295,15 @@ def _field_path(supplied: object, *, key: str) -> Path:
     Raises
     ------
     UnsupportedCaseSection
-        If the field is named by store hash rather than by path (``resolve``
-        refuses that earlier; this is the guard for a stage invoked directly).
+        If the field is named by store hash rather than by path, which no release
+        of SPECIFICATION.md schedules (``resolve`` refuses it earlier with the same
+        text; this is the guard for a stage invoked directly).
     FileNotFoundError
         If the document is not there.
     """
     path = getattr(supplied, "path", None)
     if path is None:
-        raise UnsupportedCaseSection(
-            f"inputs.{key}: artefact: names a field in the store, which the charge pipeline of "
-            f"v0.4 fills; supply inputs.{key}: path: instead"
-        )
+        raise stored_artefact_refused(key)
     if not Path(path).is_file():
         # Quoted rather than ``!r``, which doubles a Windows path's separators.
         raise FileNotFoundError(f"inputs.{key}.path '{path}' does not exist")

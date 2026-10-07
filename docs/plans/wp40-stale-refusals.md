@@ -65,7 +65,7 @@ here.
 
 ### Work items
 
-- [ ] 1. [Opus] — a pattern or a CHANGELOG read that misses a name passes every string. `validation/modularity.py`: `VERSION_LITERAL`, `tagged_releases`, `stale_release_literals` (D1–D3); `render_measurements` keeps its section, counting the widened pattern. Done when the three synthetic `test_ver67_*` tests pass.
+- [x] 88f3bc3 1. [Opus] — a pattern or a CHANGELOG read that misses a name passes every string. `validation/modularity.py`: `VERSION_LITERAL`, `tagged_releases`, `stale_release_literals` (D1–D3); `render_measurements` keeps its section, counting the widened pattern. Done when the three synthetic `test_ver67_*` tests pass.
 - [ ] 2. [Opus] — a refusal's text and where it fires. `io/case.py` `stored_artefact_refused`; `pipeline/checks.py` `require_runnable` refusing the three keys; the stage guards; their docstrings (D5, D9). Done when `test_fr27_a_*_named_by_store_hash_*` and `test_ver47_validate_case_refuses_a_stored_mesh_with_exit_three` pass.
 - [ ] 3. [Opus] — refusal texts and the removal of a refusal path. The NUM-20 texts (D6), the configuration reason (D7), the empty tables (D8) and `ReportStage`'s docstring (D9). Done when every test of `test_stale_refusals.py` passes, `test_ver67_no_string_in_the_package_names_a_tagged_release` included, with `test_case_schema.py` and `test_case_schema_v2.py`.
 - [ ] 4. [any] Records: VER-67's row in §7 and IF-02's Appendix A pointer; `MOD-14` `fixed` in `modularity-findings.md`; `CHANGELOG.md` `0.5.0-alpha.6`, *Changed*, with the breaks; this plan's status and the brief. Done when VER-63, VER-72 and the strict docs build pass.
