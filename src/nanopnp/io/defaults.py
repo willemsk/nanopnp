@@ -149,8 +149,8 @@ CONFIGURATION_PATHS: dict[str, str] = {
         "(section 5.3.1 NOTE on charge.smearing)"
     ),
     "geometry.analyte.shape": (
-        "the analyte body of stage 5, WP21; a structure: case's walk is refused before stage 5, "
-        "so nothing reads it yet, and a supplied mesh carries its analyte already"
+        "the analyte body of stage 5 (FR-21): a generated region refuses it, so nothing reads "
+        "it, and a supplied mesh carries its analyte already"
     ),
 }
 """Switch-typed fields that are deliberately *not* deviations, each with its reason.

@@ -307,8 +307,9 @@ def resolve(document: CaseDocument) -> ResolvedCase:
     Raises
     ------
     UnsupportedCaseSection
-        If the case asks for a pipeline stage a later release owns; the message
-        names the section and the release.
+        If the case asks for something this release does not run; the message
+        names the section, its requirement, and the release that schedules it or
+        that no release does.
     CaseValidationError
         If the document is internally inconsistent — a species the parameter file
         does not carry, a steric diameter or a temperature disagreeing with it, an element label

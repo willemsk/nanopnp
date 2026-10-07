@@ -15,6 +15,16 @@ from typing import Any
 import pytest
 import yaml
 
+from nanopnp.charge.stage import _field_path
+from nanopnp.cli import main
+from nanopnp.core.errors import EXIT_CASE
+from nanopnp.io.case import SuppliedArtefact, UnsupportedCaseSection
+from nanopnp.io.defaults import CONFIGURATION_PATHS
+from nanopnp.mesh.ingest import _source_path
+from nanopnp.pipeline import checks
+from nanopnp.pipeline.case import loads_case, resolve
+from nanopnp.validation.modularity import stale_release_literals, tagged_releases
+
 ROOT = Path(__file__).resolve().parents[2]
 CHANGELOG = ROOT / "CHANGELOG.md"
 QUICKSTART = ROOT / "examples" / "01-quickstart" / "quickstart.case.yaml"
@@ -28,9 +38,6 @@ def _quickstart() -> dict[str, Any]:
 
 def _refusal(raw: dict[str, Any]) -> str:
     """Return the text of the refusal resolving ``raw`` raises, checking its class."""
-    from nanopnp.io.case import UnsupportedCaseSection
-    from nanopnp.pipeline.case import loads_case, resolve
-
     with pytest.raises(UnsupportedCaseSection) as caught:
         resolve(loads_case(yaml.safe_dump(raw, sort_keys=False)))
     return str(caught.value)
@@ -40,8 +47,6 @@ def _refusal(raw: dict[str, Any]) -> str:
 
 
 def test_ver67_tagged_releases_are_the_changelog_milestones() -> None:
-    from nanopnp.validation.modularity import tagged_releases
-
     text = (
         "# Changelog\n\n## [0.3.0-alpha.1] - 2026-09-25\n\n## [0.2.0] - 2026-09-24\n\n"
         "### Added\n\n## [0.2.0-alpha.10] - 2026-09-23\n\n## [0.1.0] - 2026-09-02\n"
@@ -49,21 +54,34 @@ def test_ver67_tagged_releases_are_the_changelog_milestones() -> None:
     assert tagged_releases(text) == ("v0.1", "v0.2")
     live = tagged_releases(CHANGELOG.read_text(encoding="utf-8"))
     assert live[:4] == ("v0.1", "v0.2", "v0.3", "v0.4")
-    assert live == tuple(f"v0.{minor}" for minor in range(1, len(live) + 1))
 
 
 def test_ver67_a_changelog_that_names_no_release_or_skips_one_is_refused() -> None:
-    from nanopnp.validation.modularity import tagged_releases
-
     with pytest.raises(ValueError, match=r"no release"):
         tagged_releases("# Changelog\n\n## [0.5.0-alpha.1] - 2026-10-05\n")
     with pytest.raises(ValueError, match=r"v0\.2"):
         tagged_releases("## [0.3.0] - 2026-09-30\n\n## [0.1.0] - 2026-09-02\n")
 
 
-def test_ver67_a_synthetic_refusal_naming_a_tagged_release_is_refused(tmp_path: Path) -> None:
-    from nanopnp.validation.modularity import stale_release_literals
+def test_ver67_a_changelog_that_lost_its_oldest_releases_is_refused() -> None:
+    # A truncated head would un-tag v0.1 and v0.2, and pass every string naming them.
+    with pytest.raises(ValueError, match=r"v0\.1"):
+        tagged_releases("## [0.3.0] - 2026-09-30\n")
+    with pytest.raises(ValueError, match=r"v1\.0"):
+        tagged_releases("## [1.1.0] - x\n\n## [0.2.0] - x\n\n## [0.1.0] - x\n")
+    # A major other than 0 opens at its minor 0.
+    assert tagged_releases("## [1.0.0] - x\n") == ("v1.0",)
+    with pytest.raises(ValueError, match=r"v1\.0"):
+        tagged_releases("## [1.1.0] - x\n")
+    # The stable release follows the last minor of major 0 without a gap.
+    assert tagged_releases("## [1.0.0] - x\n\n## [0.2.0] - x\n\n## [0.1.0] - x\n") == (
+        "v0.1",
+        "v0.2",
+        "v1.0",
+    )
 
+
+def test_ver67_a_synthetic_refusal_naming_a_tagged_release_is_refused(tmp_path: Path) -> None:
     root = tmp_path / "pkg"
     root.mkdir()
     sources = {
@@ -97,8 +115,6 @@ def test_ver67_a_synthetic_refusal_naming_a_tagged_release_is_refused(tmp_path: 
 
 
 def test_ver67_no_string_in_the_package_names_a_tagged_release() -> None:
-    from nanopnp.validation.modularity import stale_release_literals, tagged_releases
-
     stale = stale_release_literals(tagged_releases(CHANGELOG.read_text(encoding="utf-8")))
     assert stale == (), "\n".join(
         f"src/nanopnp/{path}:{line} names {release}, which is tagged: {text!r}"
@@ -130,11 +146,15 @@ def test_fr27_the_num20_damping_is_refused_naming_its_schedule() -> None:
     )
 
 
-FIELD_REFUSAL = (
-    "inputs.{key}: artefact: names {what} by its store hash. FR-27's substitution reads a "
-    "supplied field by path only, and no release of SPECIFICATION.md schedules the store "
-    "form; supply inputs.{key}: path: instead"
-)
+def _field_refusal(key: str, what: str) -> str:
+    """Return the refusal of ``inputs.<key>: artefact:`` on a supplied field, as WP40 words it."""
+    return (
+        f"inputs.{key}: artefact: names {what} by its store hash. FR-27's substitution reads a "
+        "supplied field by path only, and no release of SPECIFICATION.md schedules the store "
+        f"form; supply inputs.{key}: path: instead"
+    )
+
+
 MESH_REFUSAL = (
     "inputs.mesh: artefact: names a mesh by its store hash. FR-27's substitution reads a "
     "supplied mesh by path only; the store form is REV-62, deferred to v0.6 (section 8.2.9 "
@@ -148,10 +168,7 @@ MESH_REFUSAL = (
 def test_fr27_a_field_named_by_store_hash_is_refused_at_resolution_and_at_the_stage(
     key: str, what: str
 ) -> None:
-    from nanopnp.charge.stage import _field_path
-    from nanopnp.io.case import SuppliedArtefact, UnsupportedCaseSection
-
-    expected = FIELD_REFUSAL.format(key=key, what=what)
+    expected = _field_refusal(key, what)
     raw = _quickstart()
     raw["inputs"][key] = {"artefact": STORE_HASH}
     assert _refusal(raw) == expected
@@ -161,9 +178,6 @@ def test_fr27_a_field_named_by_store_hash_is_refused_at_resolution_and_at_the_st
 
 
 def test_fr27_a_mesh_named_by_store_hash_is_refused_at_resolution_and_at_the_stage() -> None:
-    from nanopnp.io.case import SuppliedArtefact, UnsupportedCaseSection
-    from nanopnp.mesh.ingest import _source_path
-
     raw = _quickstart()
     raw["inputs"]["mesh"] = {"artefact": STORE_HASH, "format": "msh41"}
     assert _refusal(raw) == MESH_REFUSAL
@@ -175,9 +189,6 @@ def test_fr27_a_mesh_named_by_store_hash_is_refused_at_resolution_and_at_the_sta
 def test_ver47_validate_case_refuses_a_stored_mesh_with_exit_three(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    from nanopnp.cli import main
-    from nanopnp.core.errors import EXIT_CASE
-
     raw = _quickstart()
     raw["inputs"]["mesh"] = {"artefact": STORE_HASH, "format": "msh41"}
     case_file = tmp_path / "stored.case.yaml"
@@ -189,8 +200,6 @@ def test_ver47_validate_case_refuses_a_stored_mesh_with_exit_three(
 
 
 def test_ver24_the_mesher_reason_names_its_requirement_not_a_release() -> None:
-    from nanopnp.io.defaults import CONFIGURATION_PATHS
-
     assert CONFIGURATION_PATHS["numerics.mesh.backend"] == (
         "the mesher is stage 6's choice (FR-10), recorded in the Geometry and mesh group of "
         "the manifest (section 5.3.3); it changes the discretisation, not the model"
@@ -198,8 +207,6 @@ def test_ver24_the_mesher_reason_names_its_requirement_not_a_release() -> None:
 
 
 def test_fr27_the_empty_refusal_tables_are_gone() -> None:
-    from nanopnp.pipeline import checks
-
     assert not hasattr(checks, "_UNCONSUMED_INPUTS")
     assert not hasattr(checks, "_UNREAD_CHARGE_KEYS")
     assert "not delivered in this release" not in Path(checks.__file__).read_text(encoding="utf-8")
