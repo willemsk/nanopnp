@@ -13,7 +13,7 @@ tagged `v0.5.0-alpha.4`; WP39, the backend registries ([wp39-backend-registries.
 to be tagged `v0.5.0-alpha.5`; WP40, the stale refusals ([wp40-stale-refusals.md](wp40-stale-refusals.md)),
 to be tagged `v0.5.0-alpha.6`.
 Planned: WP41, the
-accuracy fixes; WP42, the verification checks; WP43, the small fixes; WP44, the OKF bundle; WP45,
+accuracy fixes ([wp41-accuracy-fixes.md](wp41-accuracy-fixes.md)); WP42, the verification checks; WP43, the small fixes; WP44, the OKF bundle; WP45,
 its backfill; WP46, the user-testing protocol (§8.2.9 I1). Provisional, and planned by the second
 `/phase-plan amend 4` once the author has run the sessions and ruled every `UT-nn`: the fixes, from
 WP47, then the documentation increment and the close, which take their numbers then.
@@ -431,6 +431,8 @@ refusal naming `v0.2` is refused.
 
 ### WP41 — The accuracy fixes (REV-06 to REV-09, REV-17, REV-26)
 
+Plan: [wp41-accuracy-fixes.md](wp41-accuracy-fixes.md).
+
 *Added, 6 October 2026* (§8.2.9 I1, I2). These are the register's physics and numerics items.
 Each one is a property that a number depends on and that, today, is held only by convention.
 Planned and implemented on Opus (`.claude/model-policy.md`).
@@ -649,7 +651,7 @@ Its last commit on `main` is tagged `v0.5.0` alone (G11).
 | Their grouping | By kind, two packages, or one per area | **Settled by the author, 6 October 2026** (I2): accuracy, verification, small fixes |
 | `REV-23` to `REV-65` | Phase 4, Phase 5, Phase 6, post-1.0 or declined, each | **Settled by the author, 6 October 2026** (I3) |
 | An accuracy fix that moves VER-62 | Stop (G10), pre-rule, or diagnose only | **Settled by the author, 6 October 2026** (I4): pre-ruled within a bound WP41's plan argues |
-| REV-06's frame, and whether REV-08 makes NUM-16's test per field | — | **Open**, owned by WP41's `/wp-plan`, from measurement. Each is a spec amendment in WP41's PR |
+| REV-06's frame, and whether REV-08 makes NUM-16's test per field | — | **Settled by WP41's plan, 7 October 2026**, from measurement: a supplied field is in the model frame, and a declared other frame is refused (WP41 D1, amended in the plan's commit); the test becomes per field, and the relative residual test no longer closes a rung (WP41 D4, amended in its item's commit, I4) |
 | `with_section`, `register` in `PUBLIC` | Add or keep out | Carried from WP34 D9 as `MOD-11`. **Accepted, and decided after the sessions** (H2), by the author's ruling, in a fix package |
 | NUM-07 order; the archive-dependent legs | — | **Phase 6** (E1, E4, F1). Not this phase's |
 | OPN-04, OPN-08 | — | **Author, open.** Not on this phase's path |
