@@ -39,7 +39,6 @@ def _refusal(raw: dict[str, Any]) -> str:
 # -- the check (D1 to D3) -------------------------------------------------------------
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP40 D2")
 def test_ver67_tagged_releases_are_the_changelog_milestones() -> None:
     from nanopnp.validation.modularity import tagged_releases
 
@@ -53,7 +52,6 @@ def test_ver67_tagged_releases_are_the_changelog_milestones() -> None:
     assert live == tuple(f"v0.{minor}" for minor in range(1, len(live) + 1))
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP40 D2")
 def test_ver67_a_changelog_that_names_no_release_or_skips_one_is_refused() -> None:
     from nanopnp.validation.modularity import tagged_releases
 
@@ -63,7 +61,6 @@ def test_ver67_a_changelog_that_names_no_release_or_skips_one_is_refused() -> No
         tagged_releases("## [0.3.0] - 2026-09-30\n\n## [0.1.0] - 2026-09-02\n")
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP40 D1")
 def test_ver67_a_synthetic_refusal_naming_a_tagged_release_is_refused(tmp_path: Path) -> None:
     from nanopnp.validation.modularity import stale_release_literals
 
