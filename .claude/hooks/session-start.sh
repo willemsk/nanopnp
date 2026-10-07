@@ -21,28 +21,36 @@ fi
 set +e
 
 # `gate.sh run` requires Gmsh, whose wheel needs X and GL libraries
-# (.knowledge/07 section 5): install them if that needs no prompt, else warn.
+# (.knowledge/07 section 4): install them if that needs no prompt, else warn.
 gmsh_libs="libglu1-mesa libxft2 libxinerama1 libxcursor1"
 # Captured, not piped into grep: pipefail would fail the pipeline.
 python=.venv/bin/python
 loader=$(ldconfig -p 2>/dev/null)
-if [ -x "$python" ] && [[ $loader != *libGLU.so.1* ]]; then
+# Every soname the wheel needs must be present before the import probe is skipped.
+gmsh_loaded=true
+for soname in libGLU.so.1 libXft.so.2 libXinerama.so.1 libXcursor.so.1; do
+    [[ $loader == *"$soname"* ]] || gmsh_loaded=false
+done
+if [ -x "$python" ] && ! $gmsh_loaded; then
     gmsh_error=$("$python" -c "import gmsh" 2>&1 >/dev/null)
-    if [[ $gmsh_error == *libGLU* ]]; then
+    if [[ $gmsh_error == *"cannot open shared object file"* ]]; then
+        gmsh_missing=$(grep -Eo 'lib[A-Za-z0-9_+.-]+\.so[.0-9]*' <<<"$gmsh_error" | head -1)
+        apt_timeout=""
+        command -v timeout >/dev/null 2>&1 && apt_timeout="timeout 120"
         as_root=none
         if [ "$(id -u)" = "0" ]; then
             as_root=""
         elif sudo -n true 2>/dev/null; then
             as_root="sudo -n"
         fi
-        # shellcheck disable=SC2086  # $as_root and $gmsh_libs split on purpose
+        # shellcheck disable=SC2086  # $as_root, $apt_timeout and $gmsh_libs split on purpose
         if [ "$as_root" != none ] && command -v apt-get >/dev/null 2>&1 &&
-            { $as_root apt-get install -y -qq --no-install-recommends $gmsh_libs >&2 ||
-                { $as_root apt-get update -qq >&2 &&
-                    $as_root apt-get install -y -qq --no-install-recommends $gmsh_libs >&2; }; }; then
+            { $as_root $apt_timeout apt-get install -y -qq --no-install-recommends $gmsh_libs >&2 ||
+                { $as_root $apt_timeout apt-get update -qq >&2 &&
+                    $as_root $apt_timeout apt-get install -y -qq --no-install-recommends $gmsh_libs >&2; }; }; then
             echo "- installed Gmsh's system libraries (${gmsh_libs}) so its tests can run"
         else
-            echo "- warning: gmsh cannot import (libGLU.so.1); install ${gmsh_libs}, or its tests fail the push gate"
+            echo "- warning: gmsh cannot import (${gmsh_missing:-a system library}); install ${gmsh_libs}, or its tests fail the push gate"
         fi
     fi
 fi
