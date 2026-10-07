@@ -19,6 +19,31 @@ Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before t
 version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
 
+## [0.5.0-alpha.6] - 2026-10-07
+
+WP40: the stale refusals (`SPECIFICATION.md` §5.3.1 NOTEs on `inputs:` and `numerics.nonlinear`;
+§8.2.8 H1, H8). Every refusal that schedules a feature names its requirement and either the
+release that schedules it or that none does. It fixes `MOD-14` and discharges VER-67 and IF-02.
+No number moves, and no stage key changes (VER-62).
+
+### Added
+
+- **VER-67**: `nanopnp.validation.modularity.tagged_releases` reads the tagged releases from this
+  file's milestone headings, and `stale_release_literals` finds every non-docstring string of the
+  package naming one; a Tier-1 test keeps the package free of them.
+
+### Changed
+
+- **Breaking:** `inputs.mesh: artefact:` is refused when the case is resolved, so `nanopnp validate
+  case` exits 3 on it where it exited 0; `run` refused it at stage 6 before, with the same exit
+  code. The text names REV-62, deferred to v0.6.
+- **Breaking:** The refusal texts of `inputs.mesh`, `inputs.charge` and `inputs.eps_r` named by
+  store hash, of `numerics.nonlinear.strategy: hybrid` and of `numerics.nonlinear.damping:
+  backtracking`, and the configuration reason of `numerics.mesh.backend`, name their requirement
+  rather than a release that has shipped. Exit codes do not change (VER-47).
+- Internal `pipeline.checks._UNCONSUMED_INPUTS` and `_UNREAD_CHARGE_KEYS`, both empty, are removed
+  with their refusal loops. `validation.modularity.VERSION_LITERAL` matches any `vX.Y`.
+
 ## [0.5.0-alpha.5] - 2026-10-06
 
 WP39: the backend registries (`SPECIFICATION.md` §5.1, §5.3.1, §5.5; §8.2.8 H5 to H7, H11, H12;

@@ -1,6 +1,6 @@
 # Current work
 
-Updated 7 October 2026 (WP39 delivered; WP40 planned). Navigation only; `SPECIFICATION.md` governs;
+Updated 7 October 2026 (WP40 delivered; WP41 next). Navigation only; `SPECIFICATION.md` governs;
 nothing here is evidence an unmerged branch shipped.
 
 ## Position
@@ -11,8 +11,8 @@ nothing here is evidence an unmerged branch shipped.
   **in progress** (§8.2.7 G1–G11; §8.2.8 H1–H12; §8.2.9 I1–I5). WP35 to WP38 merged, as
   `v0.5.0-alpha.1` to `v0.5.0-alpha.4`.
 - [WP39, the backend registries](wp39-backend-registries.md), is **delivered** (`v0.5.0-alpha.5`).
-- [WP40, the stale refusals](wp40-stale-refusals.md), is **planned** (`MOD-14`, VER-67; planned
-  tests in `tests/tier1/test_stale_refusals.py`). **Next: `/wp-implement`.**
+- [WP40, the stale refusals](wp40-stale-refusals.md), is **delivered** (`v0.5.0-alpha.6`; `MOD-14`,
+  VER-67). **Next: `/wp-ship`, then `/wp-plan 41`.**
 - Then WP41–WP43 (the review register's fixes; I1, I2), WP44–WP46 (OKF bundle,
   backfill, protocol); then the author's sessions and the second amendment, fixes from WP47.
 - Phase 5 (`v0.6.0`) is the GUI (F5), Phase 6 (`v0.7.0`) validation (F1); v1.0 is OPN-08.
@@ -42,6 +42,8 @@ nothing here is evidence an unmerged branch shipped.
   handed only those; a walk runs its target's input closure (WP38 D11).
 - **Tier 3 compares the published I–V and in-pore averages**, gating v0.7 (VAL-16, VAL-17; F1).
 - **Layers read a model's declaration, never its name or class** (VER-56). → §5.4.3 NOTE.
+- **A refusal names its requirement, and the release that schedules it or that none does**;
+  VER-67 fails a string naming a release `CHANGELOG.md` records as tagged (WP40 D1–D4).
 - **Only `poisson` adds a quadrature order for the `r` weight**; Phase 6 decides (E4, F1).
   → NUM-07 NOTE.
 - **A golden's identity carries the stage-7 recipe** (E3; OPN-07, closed). → VAL-03.
@@ -79,7 +81,7 @@ nothing here is evidence an unmerged branch shipped.
 | Stages, registries and the walk | `core/stages.py`; `pipeline/run.py`; `physics/models.py` and `docs/project/physics-models.md`; `materials/models.py` |
 | Case schema and supply chains | §5.3.1 NOTEs; `io/case.py`, `io/case_paths.py`, `io/resolved.py` (the base); `pipeline/case.py`, `pipeline/checks.py` (resolution and its checks) |
 | The backend registries | WP39 D1–D7; `physics/stabilisation.py` (the shape copied); §5.5, QR-14 |
-| The refusal texts and VER-67 | WP40 D1–D9, *Design* §1; `pipeline/checks.py`; `validation/modularity.py` `version_literals` |
+| The refusal texts and VER-67 | WP40 D1–D9, *Design* §1, Outcomes; `pipeline/checks.py`; `validation/modularity.py` `stale_release_literals` |
 
 The Outcomes of a delivered plan override its decisions table, so read the two together.
 

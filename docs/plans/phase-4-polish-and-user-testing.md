@@ -10,8 +10,9 @@ tagged `v0.5.0-alpha.2`; WP37, the cycle cuts, the exit codes and the backend gu
 ([wp37-cycle-cuts-exit-codes-backend-guard.md](wp37-cycle-cuts-exit-codes-backend-guard.md)),
 tagged `v0.5.0-alpha.3`; WP38, the `io` split ([wp38-io-split.md](wp38-io-split.md)),
 tagged `v0.5.0-alpha.4`; WP39, the backend registries ([wp39-backend-registries.md](wp39-backend-registries.md)),
-to be tagged `v0.5.0-alpha.5`.
-Planned: WP40, the stale refusals ([wp40-stale-refusals.md](wp40-stale-refusals.md)); WP41, the
+to be tagged `v0.5.0-alpha.5`; WP40, the stale refusals ([wp40-stale-refusals.md](wp40-stale-refusals.md)),
+to be tagged `v0.5.0-alpha.6`.
+Planned: WP41, the
 accuracy fixes; WP42, the verification checks; WP43, the small fixes; WP44, the OKF bundle; WP45,
 its backfill; WP46, the user-testing protocol (§8.2.9 I1). Provisional, and planned by the second
 `/phase-plan amend 4` once the author has run the sessions and ruled every `UT-nn`: the fixes, from
@@ -414,6 +415,19 @@ goes. Break: CLI refusal texts change. Exit codes do not (VER-47).
 `validation.modularity.version_literals` refuses a non-docstring string naming a release that is
 already tagged. The plan fixes how "already tagged" is read without the network. Oracle: a synthetic
 refusal naming `v0.2` is refused.
+
+> **Delivered, 7 October 2026** ([plan](wp40-stale-refusals.md), to be tagged `v0.5.0-alpha.6`).
+> VER-67 reads the tagged releases from `CHANGELOG.md`'s milestone headings, never git, refusing
+> an empty or gapped read, and fails on any non-docstring string of `src/nanopnp` naming one
+> (`validation/modularity.py`). The store form of `inputs.mesh`, `inputs.charge` and
+> `inputs.eps_r` is refused at resolution and by the stage guards in one text per key
+> (`io.case.stored_artefact_refused`); the mesh's names REV-62, deferred to v0.6, so
+> `nanopnp validate case` now exits 3 on it. The NUM-20 refusals and the mesher's configuration
+> reason name their requirements. `_UNCONSUMED_INPUTS` and `_UNREAD_CHARGE_KEYS` are gone.
+> `MOD-14` is `fixed`; REV-62 stays open. No stage key moves (VER-62). Inherited constraints:
+> - a string naming a release fails VER-67 once `CHANGELOG.md` records that release: REV-62's
+>   text at `v0.6.0`, FR-21's at `v0.7.0`, unless each ships first;
+> - a refusal names its requirement, and the release that schedules it or that none does.
 
 ### WP41 — The accuracy fixes (REV-06 to REV-09, REV-17, REV-26)
 
