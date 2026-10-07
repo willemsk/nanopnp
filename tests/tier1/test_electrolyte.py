@@ -215,3 +215,35 @@ def test_phy21_an_ablated_sub_switch_is_caught_too() -> None:
     for ion in honest.species:
         assert honest.correction("mobility", ion.name).use_wall is False
         assert honest.correction("diffusivity", ion.name).use_wall is True
+
+
+@pytest.mark.xfail(strict=True, reason="planned: WP41 D7")
+def test_phy13_a_clamp_of_the_ionic_strength_driver_is_logged(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """No species exceeds 5.3 M, but ``I = 1/2 (4 * 2 + 1 * 4) = 6 M`` does, and is logged.
+
+    The correction model clamps the driver (PHY-13 holds); before WP41 nothing
+    logged it, because the log ran over the species alone (REV-09). No shipped
+    parameter file is multivalent, so the cation is made divalent in place, keeping
+    the name its corrections resolve under. Under the average driver the same
+    samples give 3 M and log nothing.
+    """
+    ionic = Electrolyte.from_parameter_file("willems2020_nacl", driver="ionic_strength")
+    divalent = replace(ionic, species=(replace(ionic.ion("Na+"), valence=2), ionic.ion("Cl-")))
+    samples = [np.array([2000.0]), np.array([4000.0])]  # mol/m^3: 2 M and 4 M
+
+    with caplog.at_level("WARNING", logger="nanopnp.materials.electrolyte"):
+        count = divalent.report_clamp_activations(samples, coordinates=[(1.0, 2.0)])
+    assert count == 1
+    (record,) = caplog.records
+    assert record.getMessage() == (
+        "correction driver (ionic strength): concentration correction clamped at 5.3 M for "
+        "1 sample(s); peak driver 6 M is outside the fit range. worst at (1.0, 2.0)"
+    )
+
+    caplog.clear()
+    averaged = replace(divalent, driver="average")
+    with caplog.at_level("WARNING", logger="nanopnp.materials.electrolyte"):
+        assert averaged.report_clamp_activations(samples, coordinates=[(1.0, 2.0)]) == 0
+    assert not caplog.records

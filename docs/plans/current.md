@@ -1,6 +1,6 @@
 # Current work
 
-Updated 7 October 2026 (WP40 delivered; WP41 next). Navigation only; `SPECIFICATION.md` governs;
+Updated 7 October 2026 (WP41 planned). Navigation only; `SPECIFICATION.md` governs;
 nothing here is evidence an unmerged branch shipped.
 
 ## Position
@@ -8,12 +8,13 @@ nothing here is evidence an unmerged branch shipped.
 - Phases 1 to 3 are **closed** as `v0.2.0`, `v0.3.0` (criterion 3 waived, §8.2.4 D7) and `v0.4.0`
   (§8.2.5 E1, E5).
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
-  **in progress** (§8.2.7 G1–G11; §8.2.8 H1–H12; §8.2.9 I1–I5). WP35 to WP38 merged, as
-  `v0.5.0-alpha.1` to `v0.5.0-alpha.4`.
-- [WP39, the backend registries](wp39-backend-registries.md), is **delivered** (`v0.5.0-alpha.5`).
-- [WP40, the stale refusals](wp40-stale-refusals.md), is **delivered** (`v0.5.0-alpha.6`; `MOD-14`,
-  VER-67). **Next: `/wp-ship`, then `/wp-plan 41`.**
-- Then WP41–WP43 (the review register's fixes; I1, I2), WP44–WP46 (OKF bundle,
+  **in progress** (§8.2.7 G1–G11; §8.2.8 H1–H12; §8.2.9 I1–I5). WP35 to WP40 merged, as
+  `v0.5.0-alpha.1` to `v0.5.0-alpha.6`, the last two [WP39](wp39-backend-registries.md) and
+  [WP40](wp40-stale-refusals.md).
+- [WP41, the accuracy fixes](wp41-accuracy-fixes.md), is **planned** (REV-06 to REV-09, REV-17,
+  REV-26). **Next: `/wp-implement`.** Its items 1 and 2 move VER-62's golden only within the bounds
+  its D3 and D5 registered (I4); a drift beyond one stops the package for the author.
+- Then WP42–WP43 (the review register's other fixes; I1, I2), WP44–WP46 (OKF bundle,
   backfill, protocol); then the author's sessions and the second amendment, fixes from WP47.
 - Phase 5 (`v0.6.0`) is the GUI (F5), Phase 6 (`v0.7.0`) validation (F1); v1.0 is OPN-08.
 
@@ -82,6 +83,7 @@ nothing here is evidence an unmerged branch shipped.
 | Case schema and supply chains | §5.3.1 NOTEs; `io/case.py`, `io/case_paths.py`, `io/resolved.py` (the base); `pipeline/case.py`, `pipeline/checks.py` (resolution and its checks) |
 | The backend registries | WP39 D1–D7; `physics/stabilisation.py` (the shape copied); §5.5, QR-14 |
 | The refusal texts and VER-67 | WP40 D1–D9, *Design* §1, Outcomes; `pipeline/checks.py`; `validation/modularity.py` `stale_release_literals` |
+| WP41's measurements and bounds | WP41 *Design* §1–§3; `numerics/newton.py`, `charge/fields.py`, `numerics/measures.py`; `tests/tier2/data/merge_number_stability.py` |
 
 The Outcomes of a delivered plan override its decisions table, so read the two together.
 

@@ -1516,6 +1516,8 @@ A supplied artefact is read by `path`. `artefact:`, a store hash, on `inputs.mes
 `inputs.eps_r` SHALL be refused as an unsupported section when the case is resolved, naming the key:
 no release schedules the store form of the two fields, and the mesh's is REV-62, deferred to
 Phase 5 (§8.2.9 I3) (WP40).
+A supplied `inputs.charge` or `inputs.eps_r` is in the model frame, beside a moved structure as
+anywhere else (the NOTE on `inputs.charge`, `inputs.eps_r`; WP41).
 `inputs.profile` is consumed by stage 5 (WP21). It is named by `path`
 with `format: profile1`, and `artefact:` or `groups` beside it is refused. The profile is
 hashed by the canonical digest of its validated payload. `structure:` beside it is refused naming
@@ -1713,6 +1715,15 @@ all, is invisible in the conservation check of PHY-19, for the reason given ther
 SHALL be zero outside the grid box rather than continued by its edge value, and a grid whose
 boundary values are not negligible against its interior SHALL be refused rather than truncated
 silently. An `inputs.eps_r` field SHALL supply a solid fraction, not an absolute `ε_r`: see §4.4.
+A supplied field is in the **model frame**, the frame of the mesh the solve runs on, and SHALL be
+applied at that mesh's coordinates without a shift. For a case that generates its mesh, that frame
+is stage 1's moved by stage 5's `z ← z − geometry.membrane.centre_z_nm`, the frame stage 7 deposits
+and exports in; beside a supplied mesh it is that mesh's own. The header MAY declare the frame it
+was written in as `model_frame_centre_z_nm`, the `centre_z_nm` of the case it belongs to, and stage
+7's export SHALL declare it. Beside a case that generates its mesh, a declared value other than the
+case's `geometry.membrane.centre_z_nm` SHALL be refused, naming both values and the offset every
+feature would be applied at (QR-12). A header that declares none is read in the model frame, as
+before the key existed, so no document that ran is refused (WP41 D1, REV-06).
 
 NOTE (`inputs.mesh.groups`, IF-06, QR-12): the mapping reads **file group name → vocabulary name**.
 The key is the physical-group name the mesh file carries; the value is the name the solver selects

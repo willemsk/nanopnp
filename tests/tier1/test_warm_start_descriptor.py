@@ -489,3 +489,32 @@ def test_ver37_a_superseded_payload_schema_is_refused_by_schema(neighbour: Neigh
 
     good = Artefact(schema=SOLUTION_SCHEMA, parameters={}, payload={STATE_KEY: neighbour.path})
     assert warm_start_payload(good) == neighbour.path
+
+
+@pytest.mark.xfail(strict=True, reason="planned: WP41 D8")
+def test_ver37_a_reworded_stabilisation_note_loads_and_is_recorded(neighbour: Neighbour) -> None:
+    """Prose in the mode's provenance is recorded when it differs, not gated (REV-17).
+
+    The mode and its tuning constants stay gated, through ``model.stabilisation``
+    and ``model.stabilisation_parameters``; a reworded ``note`` changes neither the
+    space nor the operator, and refusing on it failed a valid warm start closed.
+    """
+    import numpy as np
+
+    with np.load(neighbour.path, allow_pickle=False) as archive:
+        arrays = {name: archive[name] for name in archive.files}
+    descriptor = json.loads(str(arrays[DESCRIPTOR_ENTRY]))
+    provenance = descriptor["model"]["stabilisation_provenance"]
+    provenance["note"] = f"{provenance['note']}, reworded"
+    arrays[DESCRIPTOR_ENTRY] = np.array(json.dumps(descriptor, sort_keys=True))
+    path = neighbour.path.parent / "reworded-note.npz"
+    with path.open("wb") as handle:
+        np.savez_compressed(handle, **arrays)
+
+    warm = _load(neighbour, _document(neighbour.mesh_path), path=path)
+    assert warm.differing == ("model.stabilisation_provenance",)
+    assert "model.stabilisation_provenance" in OPERATOR_KEYS
+    assert "model.stabilisation_provenance" not in SPACE_KEYS
+    assert {"stabilisation", "model.stabilisation", "model.stabilisation_parameters"} <= set(
+        SPACE_KEYS
+    )
