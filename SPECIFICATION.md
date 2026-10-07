@@ -1511,6 +1511,10 @@ dielectric field comes from the density (FR-15). Supplying an artefact together 
 of it on the same chain SHALL be refused, naming both. The upstream one would be hashed into the
 manifest as an input to a run that never read it. Until the stage that consumes a supplied
 artefact is delivered, the case is refused as an unsupported section, naming that stage.
+A supplied artefact is read by `path`. `artefact:`, a store hash, on `inputs.mesh`, `inputs.charge` or
+`inputs.eps_r` SHALL be refused as an unsupported section when the case is resolved, naming the key:
+no release schedules the store form of the two fields, and the mesh's is REV-62, deferred to
+Phase 5 (§8.2.9 I3) (WP40).
 `inputs.profile` is consumed by stage 5 (WP21). It is named by `path`
 with `format: profile1`, and `artefact:` or `groups` beside it is refused. The profile is
 hashed by the canonical digest of its validated payload. `structure:` beside it is refused naming
@@ -1819,7 +1823,8 @@ file's while its manifest recorded the case's (code review CR-1).
 NOTE (`numerics.nonlinear`): the values shown are the NUM-16 reference settings — the monolithic
 damped Newton of the reference model, 100 iterations, relative tolerance 10⁻⁶, tested on the
 residual and on the relative update alike. `strategy: hybrid` and `damping: backtracking` select
-the NUM-20 fallbacks.
+the NUM-20 fallbacks, which no release schedules, so a case selecting either SHALL be refused as an
+unsupported section naming NUM-20 and its fallback (WP40).
 
 NOTE (`numerics.elements`, NUM-03): `phi` and `c_i` carry one element order; `u` is independent of
 them and `p` is independent of both, so the reference implementation's own discretisation —
