@@ -181,11 +181,13 @@ def defined_names(modules: tuple[Module, ...]) -> tuple[frozenset[str], frozense
 
 
 def _outcome_lines(text: str) -> Iterator[tuple[int, str]]:
+    """Yield ``(line, text)`` of each line of an Outcome blockquote, an indented one included."""
     inside = False
     for number, line in enumerate(text.splitlines(), start=1):
-        if line.startswith("> **Outcome"):
+        quoted = line.lstrip()
+        if quoted.startswith("> **Outcome"):
             inside = True
-        elif not line.startswith(">"):
+        elif not quoted.startswith(">"):
             inside = False
         if inside:
             yield number, line
@@ -234,13 +236,20 @@ OUTCOME = """# WP90
 > `mesh.meshers.create_mesher()`; Gmsh opens with `gmsh.initialize()`.
 
 Prose outside an Outcome may say `registered_widgets()`.
+
+- A work item, annotated in place:
+
+  > **Outcome — measured.** `registered_panels()` was not needed.
 """
-"""A missing ``registered_modes()``, beside names that resolve or are not checked."""
+"""Missing ``registered_modes()`` and ``registered_panels()``, beside names not checked."""
 
 
 def test_ver72_an_outcome_naming_a_missing_function_is_named() -> None:
     names, modules = defined_names(parse_package())
-    assert unresolved_outcome_names(OUTCOME, names, modules) == [(4, "registered_modes")]
+    assert unresolved_outcome_names(OUTCOME, names, modules) == [
+        (4, "registered_modes"),
+        (11, "registered_panels"),
+    ]
 
 
 def test_ver72_outcomes_are_checked_from_wp40_on(tmp_path: Path) -> None:

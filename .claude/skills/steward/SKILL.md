@@ -15,7 +15,7 @@ evidence rather than chores.
 no activated venv, no bare `python` or `pytest` — a fix validated outside `uv run` is not validated.
 The `SessionStart` hook syncs automatically in web sessions.
 
-The gate is `.claude/hooks/gate.sh run` (the CLAUDE.md chain plus `uv lock --check`). The hook
+The gate is `.claude/hooks/gate.sh run` (the CLAUDE.md chain plus `uv lock --check` and `diff-cover`). The hook
 runs the same script before every commit and skips a working tree that has already passed, so run
 it once on the finished fix and let the commit reuse the pass. `--no-verify` exists and is not for you.
 
@@ -61,10 +61,11 @@ macOS only, because it waits on a real QtWebEngine page by the wall clock and bu
   skip their steps and report success. A PR with any code in it always gets the full run, however
   small its last push.
 - **`check`** — ubuntu, 3.12: `ruff check`, `ruff format --check`, `mypy src/`, then
-  `pytest --extended --cov`: the whole of tiers 1 and 2, the executed examples and the 2WCD walks
-  included (§7.6 NOTE). Reproduce with `.claude/hooks/gate.sh run`, which judges the whole branch
-  against `main` as the PR's `changes` job does, not bare `uv run pytest`, which leaves the
-  `extended` tests out.
+  `pytest --extended --cov --cov-branch`: the whole of tiers 1 and 2, the executed examples and the
+  2WCD walks included (§7.6 NOTE), then `diff-cover` at 100 % of the changed `src/nanopnp` lines
+  outside `gui/` (§7.6 NOTE, VER-72 f). Reproduce with `.claude/hooks/gate.sh run`, which judges
+  the whole branch against `main` as the PR's `changes` job does, not bare `uv run pytest`, which
+  leaves the `extended` tests out.
 - **`docs`** — VER-45's strict build: `docs/scripts/generate.py`, then `mkdocs build --strict`. It
   has no `changes` dependency and runs on **every** push, prose-only ones included, because a broken
   link or anchor is exactly what a prose edit introduces. Reproduce with `uv sync --all-extras
@@ -104,6 +105,8 @@ failure, reproduce under that interpreter (`uv run --python 3.11 pytest …`).
 | One Python version only | A compatibility gap (3.11 syntax floors, 3.13/3.14 stdlib moves) | Fix compatibly across 3.11–3.14. **Never** narrow `requires-python` or drop a matrix entry — QR-09 is a requirement |
 | Windows or macOS only | Path handling, line endings, thread counts, float repr | `pathlib` everywhere, never `os.path`; pin thread counts in the test, not in the library |
 | A tier 1 property test | A real regression in a unit | Root-cause it. These are seconds long and localise precisely |
+| `diff-cover` below 100 % | A changed `src/nanopnp` line, or one arm of its branch, that no gated test executes | Write the test that executes it and asserts what it does. `# pragma: no cover - <reason>` only for a line no test on this leg can reach (a platform arm, an absent extra), never to get green; a pragma is a claim the review reads (VER-72 f) |
+| `NANOPNP_REQUIRE_GMSH=1 and gmsh does not import` | The runner lacks the X and GL libraries the gmsh wheel loads | Install them (`libglu1-mesa libxft2 libxinerama1 libxcursor1`, `.knowledge/07` §4). Never unset the variable or turn the failure into a skip |
 | Fails under `-n`, passes serially | The test depends on order, or on state another module leaves (a global, a patched module attribute, the process store, a cwd) | Name the shared state and isolate it. Never drop `-n`, never pin a test to one worker to get green without naming the mechanism, and never call it a flake |
 | A tier 2 analytic benchmark | **Evidence.** See below | Read the next section before touching it |
 | VER-62 number stability | Which message it prints decides. *On a recorded mesh*: a change moved a number, G10 evidence like any Tier 2 miss. *Reference environment, mesh moved*: the change moved the mesh. *Unseen mesh, no or exceeded mesh-moved tolerance* on a non-reference leg: a platform deployed a mesh the golden has not seen | The first two: investigate, then revert or rule and re-pin (§8.2.7 G10). The third: check the printed record's drift is a mesh wobble, not a moved number, then fold it in with `tests/tier2/data/merge_number_stability.py --entry`. That is a reviewed act that widens the walk's tolerance, so say it in the PR. Never fold a record from the reference environment to get green, and never edit `moved_tolerance` by hand: the Tier-1 check derives it |

@@ -31,7 +31,7 @@ from pathlib import Path
 
 import pytest
 
-from nanopnp.validation.modularity import PACKAGE, Module, parse_package
+from nanopnp.validation.modularity import PACKAGE, Module, _scoped_imports, parse_package
 
 DEFERRABLE: frozenset[str] = frozenset(
     {
@@ -92,17 +92,26 @@ helper public removes its row in the same commit, and a new private import is
 never fixed by recording it (VER-72 b).
 """
 
-AMERICAN = re.compile(r"[iy]z(?:es|ed|ing|ers|er|ation|ations|e)")
-"""An ``-ize`` or ``-yze`` family ending inside one lower-cased word of a name (VER-72 c)."""
+AMERICAN = re.compile(r"[iy]z(?:e|ing|ation|abl)")
+"""An ``-ize`` or ``-yze`` family ending inside one lower-cased word of a name (VER-72 c).
+
+``-ize``, ``-izes``, ``-ized``, ``-izer``, ``-izing``, ``-ization`` and ``-izable``
+(*serializable*, *analyzable*), and the same after ``y``.
+"""
 
 WORDS = re.compile(r"[A-Z]+(?![a-z])|[A-Z]?[a-z]+")
 """One word of a snake_case, CamelCase or UPPER_CASE name."""
 
-SIZE_STEM = re.compile(r"(?:re|over|under|down|up|out|cap|sub|pre)?(?:s|se|pr)")
+SIZE_STEM = re.compile(
+    r"(?:re|over|under|down|up|out|cap|sub|pre"
+    r"|max|min|step|chunk|batch|cell|mesh|grid|block|file|page)?(?:s|se|pr)"
+)
 """What may precede ``iz`` in ``size``, ``seize`` and ``prize`` and their compounds.
 
 Only these: a stem ending in ``s`` is no excuse, or ``emphasize`` and
-``synthesize`` would pass as ``size`` does.
+``synthesize`` would pass as ``size`` does. The compounds are written out, the
+run-together ones of numerical code (``maxsize``, ``stepsize``, ``chunksize``)
+among them.
 """
 
 
@@ -121,14 +130,24 @@ class Violation:
 
 
 def _function_imports(module: Module) -> Iterator[ast.Import | ast.ImportFrom]:
-    """Yield each import statement inside a function or lambda, once."""
-    seen: set[int] = set()
-    for node in ast.walk(module.tree):
-        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.Lambda):
-            for inner in ast.walk(node):
-                if isinstance(inner, ast.Import | ast.ImportFrom) and id(inner) not in seen:
-                    seen.add(id(inner))
-                    yield inner
+    """Yield each import statement inside a function or lambda, once.
+
+    VER-61's own reading of the syntax tree, whose ``deferred`` kind is exactly
+    this, so the two checks cannot disagree on what a function-level import is.
+    """
+    for statement, kind in _scoped_imports(module.tree):
+        if kind == "deferred":
+            yield statement
+
+
+def _absolute(module: Module, node: ast.ImportFrom) -> str:
+    """Return the module an ``import from`` names, a relative one resolved against ``module``."""
+    if not node.level:
+        return node.module or ""
+    package = module.name if module.is_package else module.name.rpartition(".")[0]
+    for _ in range(node.level - 1):
+        package = package.rpartition(".")[0]
+    return f"{package}.{node.module}" if node.module else package
 
 
 def deferred_imports(modules: tuple[Module, ...]) -> list[Violation]:
@@ -148,19 +167,24 @@ def deferred_imports(modules: tuple[Module, ...]) -> list[Violation]:
 
 
 def private_imports(modules: tuple[Module, ...]) -> list[tuple[Violation, tuple[str, str, str]]]:
-    """Return each ``from nanopnp.x import _name`` of another module, with its allowlist key."""
+    """Return each ``from nanopnp.x import _name`` of another module, with its allowlist key.
+
+    A relative import is resolved first, so ``from .kernel import _accumulate`` is
+    the same breach as its absolute spelling.
+    """
     found = []
     for module in modules:
         for node in ast.walk(module.tree):
-            if not isinstance(node, ast.ImportFrom) or node.level or not node.module:
+            if not isinstance(node, ast.ImportFrom):
                 continue
-            if not node.module.startswith("nanopnp") or node.module == module.name:
+            source = _absolute(module, node)
+            if source.split(".")[0] != "nanopnp" or source == module.name:
                 continue
             for alias in node.names:
                 if alias.name.startswith("_") and not alias.name.startswith("__"):
-                    rule = f"private name of {node.module}; make it public or keep it there"
+                    rule = f"private name of {source}; make it public or keep it there"
                     violation = Violation(module.path, node.lineno, alias.name, rule)
-                    found.append((violation, (module.path, node.module, alias.name)))
+                    found.append((violation, (module.path, source, alias.name)))
     return sorted(found)
 
 
@@ -319,14 +343,21 @@ def test_ver72_deferrable_and_type_checking_imports_are_admitted(
     assert [v for v in deferred_imports(oracle(source)) if v.path == ORACLE] == []
 
 
+@pytest.mark.parametrize(
+    ("source", "module"),
+    [
+        ("from nanopnp.numerics.linear import _REJECTED, __all__\n", "nanopnp.numerics.linear"),
+        # Relative, resolved against the oracle's package, nanopnp.mesh.
+        ("from .meshers import _REJECTED, __all__\n", "nanopnp.mesh.meshers"),
+        ("from ..numerics.linear import _REJECTED, __all__\n", "nanopnp.numerics.linear"),
+    ],
+)
 def test_ver72_a_private_import_across_modules_is_named(
-    oracle: Callable[[str], tuple[Module, ...]],
+    source: str, module: str, oracle: Callable[[str], tuple[Module, ...]]
 ) -> None:
-    source = "from nanopnp.numerics.linear import _REJECTED, __all__\n"
-    found = [violation for violation, _ in private_imports(oracle(source))]
-    named = [v for v in found if v.path == ORACLE]
-    assert [(v.line, v.name) for v in named] == [(1, "_REJECTED")]
-    assert f"src/nanopnp/{ORACLE}:1: _REJECTED" in _report(named)
+    found = [(v, key) for v, key in private_imports(oracle(source)) if v.path == ORACLE]
+    assert [(v.line, v.name, key[1]) for v, key in found] == [(1, "_REJECTED", module)]
+    assert f"src/nanopnp/{ORACLE}:1: _REJECTED" in _report([v for v, _ in found])
 
 
 def test_ver72_an_unused_allowlist_entry_is_stale() -> None:
@@ -365,6 +396,8 @@ def test_ver72_a_private_import_missing_from_the_list_is_unrecorded(
         ("class Hypothesizer:\n    pass\n", 1, "Hypothesizer"),
         ("def analyze(x):\n    return x\n", 1, "analyze"),
         ("def f(x):\n    wall_analyzer = x\n    return wall_analyzer\n", 2, "wall_analyzer"),
+        ("def f(serializable):\n    return serializable\n", 1, "serializable"),
+        ("ANALYZABLE = 1\n", 1, "ANALYZABLE"),
     ],
 )
 def test_ver72_an_american_spelling_is_named(
@@ -383,6 +416,7 @@ def test_ver72_size_seize_prize_and_foreign_calls_are_not_american(
         "    gmsh.initialize()\n    model.isInitialized()\n    a.AssembleLinearization(b)\n"
         "class WallSize:\n    resize = 1\n    horizon = 2\n"
         "def oversized(capsize, presizing, downsized, sizeof, seizes, outsize):\n    pass\n"
+        "def batched(maxsize, stepsize, chunksize, resizable, sizable):\n    pass\n"
     )
     assert [v for v in american_names(oracle(source)) if v.path == ORACLE] == []
 
