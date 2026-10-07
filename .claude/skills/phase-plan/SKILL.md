@@ -186,7 +186,7 @@ workflow itself.
    the identifiers and ruling numbers in the body. A plan that only touches Markdown outside
    `packaging/`, `src/`, `data/` and `examples/` is prose-only and the gate hook runs ruff alone
    (`.github/scripts/prose-only.sh`).
-2. Before the push, run `.claude/hooks/gate.sh run` (`CLAUDE.md`, *Git*) and the strict
+2. Before the push, run `.claude/hooks/gate.sh run` (`CLAUDE.md`, *Commands*) and the strict
    documentation build as `CLAUDE.md`'s *Commands* table gives it: the build renders the amended
    specification, and CI's `docs` job gates it on every push, prose-only ones included. Then
    `git push -u origin <branch>`. The plan is the brief every package's `/wp-plan` starts from, and

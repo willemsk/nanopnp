@@ -17,7 +17,10 @@
 #                    gates on every push, with diff-cover on the changed lines.
 #                    What the skills call before they push
 #
-# pytest passes -rs, as CI does: a skip is missing evidence and is listed.
+# pytest passes -rsfE: skips listed, as CI's -rs lists them (a skip is missing
+# evidence), and failures kept. A bare -rs replaces pytest's default -rfE, so the
+# FAILED lines would leave the summary and the 40-line tail below would show
+# only skips.
 #
 # It is wired up in .claude/settings.json. The matcher is the bare Bash tool
 # rather than an `if: Bash(git commit*)` filter, because that filter is a
@@ -170,8 +173,12 @@ coverage_xml=""
 if [[ $mode == run ]]; then
     selection=extended
     coverage_xml="$(git rev-parse --absolute-git-dir)/nanopnp-gate-coverage.xml"
-    # CI requires the apbs binary on Linux and macOS (VAL-06); so does `run`.
-    [[ $(uname -s) == MINGW* || $(uname -s) == MSYS* || $(uname -s) == CYGWIN* ]] || export NANOPNP_REQUIRE_APBS=1
+    # CI requires the apbs binary where the apbs-binary wheel exists (VAL-06;
+    # pyproject.toml's `apbs` group: Linux x86_64 and macOS); so does `run`.
+    # Elsewhere (Windows, Linux aarch64) uv installs no binary and VAL-06 skips.
+    case "$(uname -s)/$(uname -m)" in
+        Darwin/* | Linux/x86_64) export NANOPNP_REQUIRE_APBS=1 ;;
+    esac
     pytest_extra=(--extended --cov=src/nanopnp --cov-branch "--cov-report=xml:${coverage_xml}")
 fi
 passed=$(cat "$stamp_file" 2>/dev/null) || passed=""
@@ -187,7 +194,7 @@ fi
 # on reads as prose, and the `extended` tests would never run; against the
 # upstream, so does an already-pushed branch, which is where /wp-ship and the
 # steward run it from a fresh container (PR 74 review). A stale or shallow
-# origin/main only widens the range. No base found is code.
+# origin/main only widens the range. `run` with no base found refuses below.
 base=HEAD
 if [[ $mode == run ]]; then
     base=$(git merge-base HEAD origin/main 2>/dev/null) ||
@@ -212,14 +219,25 @@ else
 fi
 
 # Gmsh's tests fail rather than skip where it cannot import: always in `run`,
-# as in CI; in the hook only for a change to Gmsh's own code or tests.
+# as in CI; in the hook only for a change to Gmsh's own code or tests. A test
+# file is Gmsh's when it takes the fixture (tests/conftest.py's `import_gmsh` or
+# `gmsh_module`), wherever it lives, conftest.py itself included.
 gmsh_paths='^(src/nanopnp/mesh/gmsh_backend\.py|src/nanopnp/mesh/meshers\.py|tests/tier2/test_mesh_backends\.py|tests/.*gmsh[^/]*)$'
 # The paths are collected first: `grep -q` exits at its first match, and under
 # pipefail the writer's SIGPIPE would turn a match into a failed pipeline.
 changed_paths=$({ git diff --name-only HEAD; git ls-files --others --exclude-standard; } 2>/dev/null)
+gmsh_required=false
 if [[ $mode == run ]] || grep -Eq "$gmsh_paths" <<<"$changed_paths"; then
-    export NANOPNP_REQUIRE_GMSH=1
+    gmsh_required=true
+else
+    while IFS= read -r path; do
+        if [[ $path == tests/*.py && -f $path ]] && grep -qE 'import_gmsh|gmsh_module' "$path"; then
+            gmsh_required=true
+            break
+        fi
+    done <<<"$changed_paths"
 fi
+$gmsh_required && export NANOPNP_REQUIRE_GMSH=1
 gmsh_remedy="Gmsh's wheel loads X and GL libraries at import (.knowledge/07-software-stack.md section 4).
 On Debian or Ubuntu: apt-get install -y --no-install-recommends libglu1-mesa libxft2 libxinerama1 libxcursor1"
 
@@ -299,26 +317,26 @@ if $docs_only; then
     say "gate: only prose changed; lock check, mypy and pytest skipped."
 else
     check "mypy --strict"   uv run mypy src/
+    # A previous run's report must not stand in for this one's: were pytest to
+    # write none (PYTEST_ADDOPTS=--no-cov), diff-cover would judge the old one.
+    [[ -n $coverage_xml ]] && rm -f "$coverage_xml"
     # The `+` form: bash before 4.4 (macOS's /bin/bash is 3.2) treats an empty
     # array as unset under `set -u`, and would end the hook ungated.
-    check "pytest ($selection)" uv run pytest -q -rs -n auto --dist loadfile \
+    check "pytest ($selection)" uv run pytest -q -rsfE -n auto --dist loadfile \
         --ignore=tests/tier1/test_gui_widgets.py ${pytest_extra[@]+"${pytest_extra[@]}"}
     # Serially and alone, as in CI: it waits on a real QtWebEngine page by the
     # wall clock, which busy xdist workers can starve (ci.yml, run 113). Exit 5
     # ("no tests ran") is the module skipping itself where PySide6 cannot
     # import, the usual Linux case (no libEGL); CI's desktop runners, where it
     # must run, treat 5 as the failure it is there.
-    check "pytest (GUI)"    bash -c 'uv run pytest -q -rs tests/tier1/test_gui_widgets.py; s=$?; ((s == 5)) && s=0; exit $s'
+    check "pytest (GUI)"    bash -c 'uv run pytest -q -rsfE tests/tier1/test_gui_widgets.py; s=$?; ((s == 5)) && s=0; exit $s'
     # Full branch coverage of changed src/nanopnp lines, gui/ aside (its widgets
-    # run only on the desktop legs), against the base the prose rule used.
+    # run only on the desktop legs), against the base the prose rule used; `run`
+    # has refused above when there is none.
     if [[ -n $coverage_xml ]]; then
-        if [[ -n $base ]]; then
-            check "diff-cover"  uv run diff-cover "$coverage_xml" --compare-branch="$base" \
-                --branch-coverage --include-untracked --fail-under=100 --show-uncovered \
-                --include 'src/nanopnp/**/*.py' --exclude '*/src/nanopnp/gui/*'
-        else
-            check "diff-cover"  bash -c 'echo "no merge base with main to compare against" >&2; exit 1'
-        fi
+        check "diff-cover"  uv run diff-cover "$coverage_xml" --compare-branch="$base" \
+            --branch-coverage --include-untracked --fail-under=100 --show-uncovered \
+            --include 'src/nanopnp/**/*.py' --exclude '*/src/nanopnp/gui/*'
     fi
 fi
 

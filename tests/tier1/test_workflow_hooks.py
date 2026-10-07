@@ -413,7 +413,7 @@ def test_gate_run_requires_gmsh_and_checks_the_branch_coverage_of_changed_lines(
     assert len(tests) == 1, ran
     assert tests[0].startswith("1|")
     arguments = tests[0].split("|", 1)[1].split()
-    for flag in ("-rs", "--cov=src/nanopnp", "--cov-branch"):
+    for flag in ("-rsfE", "--cov=src/nanopnp", "--cov-branch"):
         assert flag in arguments, (flag, tests[0])
     assert any(argument.startswith("--cov-report=xml:") for argument in arguments), tests[0]
     covered = [call for call in ran if "diff-cover" in call]
@@ -430,27 +430,67 @@ def test_gate_run_requires_gmsh_and_checks_the_branch_coverage_of_changed_lines(
 
 
 @pytest.mark.parametrize(
-    ("changed", "required"),
+    ("system", "machine", "required"),
     [
-        ("src/nanopnp/mesh/gmsh_backend.py", "1"),
-        ("tests/tier1/test_mesh_gmsh.py", "1"),
-        ("tests/tier2/test_mesh_backends.py", "1"),
-        ("src/nanopnp/core/units.py", "unset"),
+        ("Linux", "x86_64", "1"),
+        ("Darwin", "arm64", "1"),
+        ("Linux", "aarch64", "unset"),
+        ("MINGW64_NT-10.0", "x86_64", "unset"),
+    ],
+)
+def test_gate_run_requires_apbs_only_where_its_wheel_installs(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, system: str, machine: str, required: str
+) -> None:
+    """``gate.sh run`` requires APBS where ``apbs-binary`` installs, as CI's legs do (VAL-06).
+
+    The wheel exists for Linux x86_64 and macOS only (``pyproject.toml``, the
+    ``apbs`` group); elsewhere uv installs no binary, and requiring one would fail
+    VAL-06 on every run of the gate.
+    """
+    assert _BASH is not None
+    monkeypatch.delenv("NANOPNP_REQUIRE_APBS", raising=False)
+    repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/code.py")
+    seen = tmp_path / "apbs-seen"
+    _recording_uv(tmp_path, monkeypatch, f'echo "${{NANOPNP_REQUIRE_APBS:-unset}}" >> "{seen}"\n')
+    uname = tmp_path / "bin" / "uname"
+    uname.write_text(
+        f'#!/bin/sh\ncase "$1" in -m) echo {machine};; *) echo {system};; esac\n',
+        encoding="utf-8",
+    )
+    uname.chmod(0o755)
+    result = subprocess.run(
+        [_BASH, str(_GATE), "run"], cwd=repo, capture_output=True, text=True, timeout=60
+    )
+    assert result.returncode == 0, result.stderr
+    assert set(seen.read_text(encoding="utf-8").split()) == {required}
+
+
+@pytest.mark.parametrize(
+    ("changed", "content", "required"),
+    [
+        ("src/nanopnp/mesh/gmsh_backend.py", "y = 2\n", "1"),
+        ("tests/tier1/test_mesh_gmsh.py", "y = 2\n", "1"),
+        ("tests/tier2/test_mesh_backends.py", "y = 2\n", "1"),
+        # A test taking the fixture is Gmsh's wherever it lives, and so is the fixture.
+        ("tests/tier1/test_mesh_quality.py", "def test_x(gmsh_module):\n    pass\n", "1"),
+        ("tests/conftest.py", "def import_gmsh():\n    pass\n", "1"),
+        ("tests/tier1/test_mesh_quality.py", "y = 2\n", "unset"),
+        ("src/nanopnp/core/units.py", "y = 2\n", "unset"),
     ],
 )
 def test_gate_hook_requires_gmsh_only_for_a_change_to_gmsh(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, changed: str, required: str
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, changed: str, content: str, required: str
 ) -> None:
     """The commit hook fails Gmsh's tests on a missing library only when the change is Gmsh's."""
     if shutil.which("jq") is None:
         pytest.skip("the gate hook reads its payload with jq")
     repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/other.py")
     (repo / changed).parent.mkdir(parents=True, exist_ok=True)
-    (repo / changed).write_text("y = 2\n", encoding="utf-8")
+    (repo / changed).write_text(content, encoding="utf-8")
     calls = _recording_uv(tmp_path, monkeypatch)
     _hook(repo, repo, "git commit -am x")
     ran = calls.read_text(encoding="utf-8").splitlines()
-    tests = [call for call in ran if "pytest" in call and "-rs" in call.split("|", 1)[1].split()]
+    tests = [call for call in ran if "pytest" in call and "-rsfE" in call.split("|", 1)[1].split()]
     assert tests, ran
     assert {call.split("|", 1)[0] for call in tests} == {required}
     assert not any("diff-cover" in call for call in ran)
@@ -491,7 +531,7 @@ def test_gate_hook_requires_gmsh_for_a_tracked_change_beside_an_untracked_file(
     calls = _recording_uv(tmp_path, monkeypatch)
     _hook(repo, repo, "git commit -am x")
     ran = calls.read_text(encoding="utf-8").splitlines()
-    tests = [call for call in ran if "pytest" in call and "-rs" in call.split("|", 1)[1].split()]
+    tests = [call for call in ran if "pytest" in call and "-rsfE" in call.split("|", 1)[1].split()]
     assert tests, ran
     assert {call.split("|", 1)[0] for call in tests} == {"1"}
 
