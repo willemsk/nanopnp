@@ -61,6 +61,7 @@ here.
 | D6 | NUM-20 | The strategy and damping texts of *Design* §1. Spec amendment to the NOTE on `numerics.nonlinear` | NUM-20 carries no release; the schema's `Literal` admits exactly `hybrid` and `backtracking`, so each text names its fallback |
 | D7 | The rest of the seven | `CONFIGURATION_PATHS["numerics.mesh.backend"]` names FR-10 (*Design* §1). The `geometry.analyte` refusal stays verbatim; so does FR-11's "after v1.0" | Both conform to D4. VER-67 fails the FR-21 text at the `v0.7.0` tag unless FR-21 ships, which is the ratchet working |
 | D8 | The empty tables | `_UNCONSUMED_INPUTS`, `_UNREAD_CHARGE_KEYS` and their loops go. The §5.3.1 rule stays in the specification. `test_ver47_every_new_input_is_read_by_the_stage_that_consumes_it` loses its assertion on the table | `MOD-14` rules the first. The second is the same dead refusal saying "this release"; a later key adds its own refusal and test |
+| D10 | The Release column | `requirement_releases(specification_text)` reads §3.2's table; `release_pairing_mismatches(requirements, root=None, sources=None)` returns `(path, line, requirement, release, expected, text)` for each non-docstring string naming exactly one `FR-nn` and exactly one release, and no `REV-nn`, whose release is not the row's (`v1.0` for a `post-1.0` row). A string naming two of either, or a `REV-nn`, is not checked | A string pairing one requirement with one release claims a schedule; with several the pairing is ambiguous, and a `REV-nn` row schedules its own deferral (§8.2.9 I3), as `io/case.py`'s FR-27 text does | REV-70; the author's ruling |
 | D9 | Docstrings with a false schedule | Rewritten beside their refusals: `_source_path`, `_field_path`, `_check_charge`'s Raises, and `ReportStage`'s "Figures are v0.4" (FR-28 is v0.7). Not checked by VER-67 (D3) | Coverage cannot see a stale docstring; the four are the ones touched or provably false |
 
 ### Work items
@@ -82,6 +83,8 @@ here.
 > `tagged_releases` = `v0.1`–`v0.4`. It reads the live tree through `render_measurements`'s
 > *Version literals* section.
 
+- [ ] 5. [any] The author's rulings of REV-68 to REV-70: D10's check and its tests; the §5.3.1 NOTE, VER-47 and VER-67 rows; `test_ver47_every_inputs_key_is_hashed_and_read_by_a_stage`; REV-68 to REV-70 `fixed`; the changelog. Done when `test_stale_refusals.py` passes and `.claude/hooks/gate.sh run` is green.
+
 ### Verification
 
 | Test | Tier | Identifiers | Oracle |
@@ -97,15 +100,13 @@ Tier 2 is not touched; VER-62 is not re-pinned.
 ### Out of scope
 
 - Reading a mesh from the store: REV-62, Phase 5 (§8.2.9 I3). A store-form field: unscheduled.
-- A check that a string pairing a requirement with a release agrees with §3's Release column. Not
-  ruled; VER-67 checks only the tags.
 - Refusals that name no release and no requirement (`walls`): not `MOD-14`'s; WP46's sessions.
 
 ### Open questions
 
-None blocking. D5 (refusing the stored mesh at resolution) and D8 (removing
-`_UNREAD_CHARGE_KEYS` as well) go slightly past `MOD-14`'s letter; each is a one-line revert
-if the author rules otherwise.
+None. The author ruled on 7 October 2026, in the `/wp-ship` review (REV-68 to REV-70): D5 and D8
+stand, VER-67 states its rule instead of citing this plan, the `inputs:` rule is enforced by a
+test, and the Release-column check is built (D10, item 5).
 
 ## Design
 
