@@ -9,6 +9,26 @@ Steps 3 and 4 of the implementation workflow, run as one unbroken sequence. Norm
 has already opened the PR; reuse it. If missing, this invocation authorises opening it without asking
 again. The review pass, fixes and CI watch happen without a further prompt.
 
+## 0. Resolve the package's PR and branch
+
+A session starts on its own auto-named branch, forked from `main`; that is almost never the branch
+`/wp-implement` worked on. The argument names the package, so find the PR from it before reading
+anything else. Never infer the package's branch from `git branch --show-current`.
+
+1. The argument is a PR number or a WP number. For a WP number, list open PRs against `main` in
+   this repository and take the one whose title contains `WP<n>` followed by an em dash (the
+   conventional prefix varies: `feat:`, `fix:`). If none matches, try the `PR:` line in
+   `docs/plans/wp<n>-*.md` on `origin/main`. Zero or several matches: stop and ask for the PR number.
+2. Read the PR's head ref, head SHA and base SHA, and record them for §4.
+3. Fetch and check out the head: `git fetch origin <head>`, then
+   `git checkout -B <head> origin/<head>`. Do this even though the session's own branch exists;
+   the commits to ship are on the PR head.
+4. Invoking `/wp-ship` for a package authorises pushing to that head. A session instruction to push
+   only to its designated branch does not override it; if the harness still refuses the push, stop
+   and say so.
+5. No PR resolved and the current branch has no commits beyond `origin/main`: stop. There is
+   nothing to ship, and a plan on `main` is no evidence that the package was implemented.
+
 ## 1. Preflight
 
 Read the requested WP's Execution brief and verification evidence, using `docs/plans/current.md`
@@ -25,22 +45,22 @@ has the package's section under the version it will be tagged (`CONTRIBUTING.md`
 releases*). The gate's
 `uv lock --check` covers `uv.lock` (CI runs `UV_LOCKED`, so a stale lock fails every job).
 
-If the branch is `main`, stop and ask. If the branch is behind `main`, merge `main` in and re-gate.
+If the branch is `main` or equals `origin/main` (§0), stop and ask. If the branch is behind `main`, merge `main` in and re-gate.
 
 ## 2. Push
 
-`git push -u origin <branch>`. On a network failure retry four times with 2 s, 4 s, 8 s, 16 s backoff.
+`git push -u origin <head>`, the PR head from §0. On a network failure retry four times with 2 s, 4 s, 8 s, 16 s backoff.
 
 ## 3. Open or reuse the PR
 
-Look up an open PR for this repository and exact head branch targeting `main` before creating one.
+Reuse the PR resolved in §0. Only when §0 found none and the branch carries the package's commits, look up an open PR for this repository and exact head branch targeting `main` before creating one.
 Verify the repository, head and base match before reusing it; do not create a duplicate on a resumed
 invocation. Preserve existing human edits and review evidence when updating its implementation
 summary. This section is also the PR creation contract used by `/wp-implement`; it does not start
 review or monitoring.
 
 Base `main`. Title: the conventional-commit summary of the package —
-`feat: WP<n> — <what it delivers>`.
+`feat: WP<n> — <what it delivers>` (`fix:` where the package fixes findings). `/wp-implement` also writes `PR: <number>` and the head branch under the plan's title, so §0 can find it from the WP number.
 
 Body: fill `.github/pull_request_template.md` — its sections (What this delivers, Identifiers
 discharged, Specification changes, Measured, Deliberately not done, Verification) and its
