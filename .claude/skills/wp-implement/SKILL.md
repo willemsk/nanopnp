@@ -135,6 +135,11 @@ When resuming an existing PR, preserve its review evidence and human edits; do n
 or create a duplicate. If PR creation is blocked by authentication or unavailable tooling, report
 the blocker and pushed branch rather than claiming a PR exists.
 
+Once the PR exists, write `PR: [#<n>](<url>), branch <head>` on the line under the title of
+`docs/plans/wp<n>-*.md`, commit it (`docs: record WP<n>'s PR`) and push. `/wp-ship` starts on a
+session branch of its own, forked from `main`, and finds the package's PR and head from this line
+and from the PR title's `WP<n>` (`wp-ship` §0).
+
 Stop and report the PR link, identifiers discharged, the tag its last commit on `main` takes after
 the merge, and readiness for `/wp-ship`. Do not start the
 review pass, subscribe to PR activity, or schedule CI monitoring from this session. It carries the
