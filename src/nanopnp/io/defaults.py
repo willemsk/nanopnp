@@ -117,8 +117,8 @@ CONFIGURATION_PATHS: dict[str, str] = {
         "recorded in the resolved case rather than as a deviation"
     ),
     "numerics.mesh.backend": (
-        "mesh generation is v0.3 and is recorded in the Geometry and mesh group of the "
-        "manifest (section 5.3.3); it changes the discretisation, not the model"
+        "the mesher is stage 6's choice (FR-10), recorded in the Geometry and mesh group of "
+        "the manifest (section 5.3.3); it changes the discretisation, not the model"
     ),
     "numerics.mesh.boundary_layer": (
         "as numerics.mesh.backend: a discretisation choice, recorded with the mesh"

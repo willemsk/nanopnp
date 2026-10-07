@@ -96,7 +96,6 @@ def test_ver67_a_synthetic_refusal_naming_a_tagged_release_is_refused(tmp_path: 
     )
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP40 D3")
 def test_ver67_no_string_in_the_package_names_a_tagged_release() -> None:
     from nanopnp.validation.modularity import stale_release_literals, tagged_releases
 
@@ -110,7 +109,6 @@ def test_ver67_no_string_in_the_package_names_a_tagged_release() -> None:
 # -- the refusals (D4 to D8) ----------------------------------------------------------
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP40 D6")
 def test_fr27_the_num20_strategy_is_refused_naming_its_schedule() -> None:
     raw = _quickstart()
     raw.setdefault("numerics", {})["nonlinear"] = {"strategy": "hybrid"}
@@ -121,7 +119,6 @@ def test_fr27_the_num20_strategy_is_refused_naming_its_schedule() -> None:
     )
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP40 D6")
 def test_fr27_the_num20_damping_is_refused_naming_its_schedule() -> None:
     raw = _quickstart()
     raw.setdefault("numerics", {})["nonlinear"] = {"damping": "backtracking"}
@@ -191,7 +188,6 @@ def test_ver47_validate_case_refuses_a_stored_mesh_with_exit_three(
     assert "Traceback" not in captured.err
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP40 D7")
 def test_ver24_the_mesher_reason_names_its_requirement_not_a_release() -> None:
     from nanopnp.io.defaults import CONFIGURATION_PATHS
 
@@ -201,7 +197,6 @@ def test_ver24_the_mesher_reason_names_its_requirement_not_a_release() -> None:
     )
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP40 D8")
 def test_fr27_the_empty_refusal_tables_are_gone() -> None:
     from nanopnp.pipeline import checks
 
