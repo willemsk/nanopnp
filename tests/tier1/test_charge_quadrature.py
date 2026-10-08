@@ -113,6 +113,29 @@ def test_qr03_an_explicit_rule_below_num07_s_floor_is_refused() -> None:
         AXISYMMETRIC.volume(test, rule_order=8, singular=True)
     with pytest.raises(ValueError, match="rule_order"):
         AXISYMMETRIC.volume(test, rule_order=8, extra_order=1)
+    with pytest.raises(ValueError, match="rule_order"):
+        AXISYMMETRIC.integrate(ngs.CoefficientFunction(1.0), mesh, rule_order=8, singular=True)
+    with pytest.raises(ValueError, match="rule_order"):
+        AXISYMMETRIC.integrate(ngs.CoefficientFunction(1.0), mesh, rule_order=8, extra_order=1)
+
+
+def test_qr03_default_ladder_threads_fixed_charge_rule_order() -> None:
+    """default_ladder passes fixed_charge_rule_order to charged rungs."""
+    import ngsolve as ngs
+
+    from nanopnp.solve.continuation import default_ladder
+
+    mesh = PORE.generate(maxh_nm=4.0)
+    rungs = default_ladder(
+        mesh,
+        fixed_charge_field=ngs.CF(1.0),
+        fixed_charge_rule_order=8,
+        charge_steps=1,
+    )
+    charged_rungs = [r for r in rungs if "fixed_charge_rule_order" in r.solve_kwargs]
+    assert len(charged_rungs) > 0
+    for r in charged_rungs:
+        assert r.solve_kwargs["fixed_charge_rule_order"] == 8
 
 
 def test_qr03_a_deposited_charge_keeps_the_model_s_default_rule() -> None:
