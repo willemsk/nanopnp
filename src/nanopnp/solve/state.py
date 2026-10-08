@@ -204,10 +204,11 @@ SPACE_KEYS: tuple[str, ...] = (
     # not one. The tuning constants sit beside the mode name for the same reason:
     # ``reference`` at ``C_cw = 1`` and at ``C_cw = 0.35`` are different operators,
     # and the mode name alone would let a warm start cross between them (FR-25).
+    # Provenance prose is in OPERATOR_KEYS so a reworded note does not fail a
+    # valid warm start (REV-17, D8).
     "stabilisation",
     "model.stabilisation",
     "model.stabilisation_parameters",
-    "model.stabilisation_provenance",
     # Derived from the mesh and the element order, so a difference here means
     # one of those moved.
     "wall_distance.ndof",
@@ -242,6 +243,9 @@ OPERATOR_KEYS: tuple[str, ...] = (
     # read (section 5.3.2 warm-start NOTE).
     "wall_distance.sources",
     "wall_distance.max_distance_nm",
+    # Prose in the stabilisation mode's provenance is recorded when it differs,
+    # not gated: mode and parameters stay gated in SPACE_KEYS (REV-17, D8).
+    "model.stabilisation_provenance",
 )
 """Descriptor keys a warm start permits to differ, and records when they do.
 
