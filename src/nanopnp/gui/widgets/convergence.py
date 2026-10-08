@@ -15,7 +15,7 @@ the push gate, where ``PySide6.QtWidgets`` does not import at all
 coordinates onto pixels and strokes them.
 
 **No threshold line is drawn**, because NUM-16's criterion is per rung and
-disjunctive — the residual relative to its value on entry, *or* the relative
+disjunctive — the absolute residual floor, *or* the per-field relative
 update on the undamped direction — and one horizontal rule would claim a
 criterion the solver does not use. What the panel says instead is
 :meth:`~nanopnp.gui.convergence.Band.note`, one line per band under the plot:

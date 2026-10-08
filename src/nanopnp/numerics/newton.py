@@ -61,18 +61,12 @@ class NewtonSettings:
     max_iterations
         Iteration cap. 100 in the reference.
     relative_tolerance
-        Convergence tolerance, 1e-6 in the reference. Two tests share it and
-        either one suffices: the residual has fallen to this multiple of its
-        value on entry, or the relative Newton update ``||du|| / ||u||`` is
-        below it.
-
-        The second test is the one the reference actually used — COMSOL's
-        relative tolerance is on the solution update, not on the residual — and
-        it is what makes a warm start idempotent. A residual-only criterion
-        measured against the entry residual has the pathology that re-solving an
-        already-converged state demands another six orders of magnitude, which
-        is exactly the operation the continuation ladder performs at every rung
-        (NUM-18).
+        Convergence tolerance, 1e-6 in the reference. Evaluated as a per-field
+        relative-update test on the undamped Newton direction (NUM-16, WP41 D4):
+        ``max_f ||du_f|| / max(||u_f||, field_floor_ratio * max(||u||, reference_norm))``
+        at or below ``relative_tolerance``. The relative residual test closes
+        nothing; only the absolute residual floor ``||R|| <= absolute_tolerance``
+        operates beside it.
     absolute_tolerance
         Residual floor, for the case where the initial residual is already at
         round-off.
@@ -80,6 +74,10 @@ class NewtonSettings:
         Floor on the solution norm in the relative-update test, so that a state
         near zero does not make every update look large. 1 is the right value
         because NUM-09 leaves every field O(1).
+    field_floor_ratio
+        Floor ratio on per-field norms in the relative-update test, so that a
+        field near or at zero converges against a fraction of the global norm
+        (1e-6 by default; NUM-16, WP41 D4).
     """
 
     initial_damping: float = 0.2
@@ -90,6 +88,7 @@ class NewtonSettings:
     relative_tolerance: float = 1.0e-6
     absolute_tolerance: float = 1.0e-12
     reference_norm: float = 1.0
+    field_floor_ratio: float = 1.0e-6
 
     def __post_init__(self) -> None:
         """Reject settings that cannot describe a damping schedule."""
@@ -108,6 +107,8 @@ class NewtonSettings:
             )
         if self.max_iterations < 1:
             raise ValueError(f"max_iterations must be positive, got {self.max_iterations}")
+        if self.field_floor_ratio <= 0.0:
+            raise ValueError(f"field_floor_ratio must be positive, got {self.field_floor_ratio}")
 
 
 DEFAULT_SETTINGS = NewtonSettings()
@@ -125,14 +126,12 @@ class NewtonStep:
     residual
         Residual norm *after* the step.
     update
-        ``‖δu‖ / max(‖u‖, reference_norm)`` on the **undamped** direction, at the
-        iterate the step started from. The other half of NUM-16's disjunctive
-        criterion, and the half that moves on a warm start: the entry residual is
-        already at its floor there, so a record carrying the residual alone shows
-        a rung converging while its curve is flat. Recorded rather than
-        recomputed because it is already in scope where this step is built, and a
-        second computation would be a second chance to take the norm of the
-        damped step instead.
+        ``max_f ‖δu_f‖ / max(‖u_f‖, field_floor_ratio · max(‖u‖, reference_norm))``
+        on the **undamped** direction, at the iterate the step started from (NUM-16,
+        WP41 D4). The maximum relative update across all fields, and what moves
+        on a warm start. Recorded rather than recomputed because it is already
+        in scope where this step is built, and a second computation would be a
+        second chance to take the norm of the damped step instead.
     damping
         Damping factor the step was taken with.
     trials
@@ -299,6 +298,7 @@ def damped_newton(
     direction = solution.vec.CreateVector()
     residual = solution.vec.CreateVector()
     previous = solution.vec.CreateVector()
+    direction_gf = ngs.GridFunction(space)
 
     def residual_norm() -> float:
         """Return the free-DOF norm of the residual at the current iterate."""
@@ -308,9 +308,11 @@ def damped_newton(
 
     check_all(state_gates)  # NUM-17 also holds of the state the caller handed in
     initial = residual_norm()
-    target = max(settings.relative_tolerance * initial, settings.absolute_tolerance)
     result = NewtonResult(
-        converged=initial <= target, iterations=0, initial_residual=initial, residual=initial
+        converged=initial <= settings.absolute_tolerance,
+        iterations=0,
+        initial_residual=initial,
+        residual=initial,
     )
     if result.converged:
         logger.debug("Newton: initial residual %.3e already below tolerance", initial)
@@ -323,9 +325,19 @@ def damped_newton(
         residual_form.AssembleLinearization(solution.vec)
         solve_correction(residual_form.mat, residual, direction, freedofs, solver=solver)
         previous.data = solution.vec
-        relative_update = float(ngs.Norm(direction)) / max(
-            float(ngs.Norm(solution.vec)), settings.reference_norm
-        )
+
+        global_ref = max(float(ngs.Norm(solution.vec)), settings.reference_norm)
+        field_floor = settings.field_floor_ratio * global_ref
+        if solution.components:
+            direction_gf.vec.data = direction
+            relative_update = max(
+                float(ngs.Norm(d_comp.vec)) / max(float(ngs.Norm(s_comp.vec)), field_floor)
+                for d_comp, s_comp in zip(direction_gf.components, solution.components, strict=True)
+            )
+        else:
+            relative_update = float(ngs.Norm(direction)) / max(
+                float(ngs.Norm(solution.vec)), field_floor
+            )
 
         trials = 0
         forced = False
@@ -395,7 +407,9 @@ def damped_newton(
 
         # The update test is damping-independent because it uses the full Newton
         # direction, not the damped step; a forced step is never convergence.
-        if current <= target or (not forced and relative_update <= settings.relative_tolerance):
+        if current <= settings.absolute_tolerance or (
+            not forced and relative_update <= settings.relative_tolerance
+        ):
             result.converged = True
             return result
 
