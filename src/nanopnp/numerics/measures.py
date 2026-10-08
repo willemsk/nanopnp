@@ -145,6 +145,7 @@ class Measures:
         *,
         singular: bool = False,
         extra_order: int = 0,
+        rule_order: int | None = None,
         **kwargs: Option,
     ) -> IntegralTerm:
         """Return the weighted volume integral term of ``integrand``.
@@ -158,6 +159,10 @@ class Measures:
             integration order to at least ``SINGULAR_MIN_ORDER`` (NUM-07).
         extra_order
             Additional quadrature orders.
+        rule_order
+            An explicit integration rule order, which replaces NGSolve's order
+            estimate and the bonus logic with an explicit rule on every element
+            type of the mesh (WP41 D2).
         **kwargs
             Passed to ``ngsolve.dx``, e.g. ``definedon``.
 
@@ -165,12 +170,28 @@ class Measures:
         ------
         ValueError
             If a caller passes ``bonus_intorder`` directly, which would bypass
-            the singular guarantee.
+            the singular guarantee; or if ``rule_order`` is below NUM-07's
+            minimum of 3 or combined with ``singular`` or ``extra_order``.
         """
         import ngsolve as ngs
 
         if "bonus_intorder" in kwargs:
             raise ValueError("pass extra_order, not bonus_intorder, so the 1/r guarantee holds")
+        if rule_order is not None:
+            if rule_order < SINGULAR_MIN_ORDER:
+                raise ValueError(
+                    f"rule_order is {rule_order}; it must be at least NUM-07's minimum of "
+                    f"{SINGULAR_MIN_ORDER}"
+                )
+            if singular:
+                raise ValueError("rule_order cannot be combined with singular=True")
+            if extra_order != 0:
+                raise ValueError(f"rule_order cannot be combined with extra_order={extra_order}")
+            intrules = {
+                ngs.TRIG: ngs.IntegrationRule(ngs.TRIG, rule_order),
+                ngs.QUAD: ngs.IntegrationRule(ngs.QUAD, rule_order),
+            }
+            return integrand * self.radial_weight * ngs.dx(intrules=intrules, **kwargs)
         bonus = self._form_bonus(singular=singular, extra=extra_order)
         return integrand * self.radial_weight * ngs.dx(bonus_intorder=bonus, **kwargs)
 
@@ -202,6 +223,7 @@ class Measures:
         *,
         singular: bool = False,
         extra_order: int = 0,
+        rule_order: int | None = None,
         what: str = "integral",
         **kwargs: Option,
     ) -> float:
@@ -214,11 +236,24 @@ class Measures:
         Raises
         ------
         ValueError
-            If the result is NaN or infinite.
+            If the result is NaN or infinite; or if ``rule_order`` is below
+            NUM-07's minimum of 3 or combined with ``singular`` or ``extra_order``.
         """
         import ngsolve as ngs
 
-        order = self.integration_order(singular=singular, extra=extra_order)
+        if rule_order is not None:
+            if rule_order < SINGULAR_MIN_ORDER:
+                raise ValueError(
+                    f"rule_order is {rule_order}; it must be at least NUM-07's minimum of "
+                    f"{SINGULAR_MIN_ORDER}"
+                )
+            if singular:
+                raise ValueError("rule_order cannot be combined with singular=True")
+            if extra_order != 0:
+                raise ValueError(f"rule_order cannot be combined with extra_order={extra_order}")
+            order = rule_order
+        else:
+            order = self.integration_order(singular=singular, extra=extra_order)
         value = float(ngs.Integrate(integrand * self.radial_weight, mesh, order=order, **kwargs))
         if not math.isfinite(value):
             raise ValueError(

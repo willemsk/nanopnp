@@ -1141,6 +1141,16 @@ made the fluid side of a χ blend discard χ, because its solid branch defaulted
 Any expression evaluated on a material its inputs are not defined on has to be given a value there
 deliberately. (Codebase review of 2026-09-28, CR-2.) **[tested]**
 
+**20. An explicit integration rule in `dx` agrees with `Integrate(·, order=...)` to round-off.**
+`dx(intrules={ngs.TRIG: ngs.IntegrationRule(ngs.TRIG, n), ngs.QUAD: ngs.IntegrationRule(ngs.QUAD, n)})`
+in a `LinearForm` (and in a residual `BilinearForm` applied to zero) gives the same number as
+`ngsolve.Integrate(·, mesh, order=n)` to 4 × 10⁻¹⁶. Without the explicit rule, NGSolve assembles
+`fixed_charge · v · r · dx` at its own estimate, order 3, while `Integrate` floors at 5; on a
+resolved 0.5 nm alternating field, order 3 against 8 was 1.2 × 10⁻² off, leaving the solve with
+a charge 12 times QR-03's conservation budget while the order-8 gate passed at 2 × 10⁻⁵.
+Sharing one rule through `Measures.volume(..., rule_order=n)` and `Measures.integrate(..., rule_order=n)`
+makes the operator and its gate one rule exactly. **[tested]**
+
 ### 8.1.1 Mesh-integral error on a sub-element-scale field converges in neither `h` nor order
 
 The finding that costs the most to rediscover, from ingesting the reference model's own 0.005 nm

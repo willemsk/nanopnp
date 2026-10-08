@@ -38,7 +38,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, TypeAlias
+from typing import TYPE_CHECKING, ClassVar, Literal, TypeAlias
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
@@ -111,6 +111,9 @@ CHARGE_QUANTITIES: frozenset[str] = frozenset({"areal_charge_density", "volume_c
 
 DEFAULT_AXIS_CUTOFF_NM = 0.01
 """PHY-18's axis guard: ``r < 0.01 nm -> 0``, as the reference model applies it."""
+
+FIELD_QUADRATURE_ORDER = 8
+"""Explicit integration rule order evaluated by the source and every conservation leg (WP41 D2)."""
 
 CONSERVATION_TOL = 1.0e-3
 """QR-03's budget on each leg of the conservation check."""
@@ -566,6 +569,7 @@ class ChargeField:
     document: FieldDocument
     grid: RadialGrid
     source: Path
+    quadrature_order: ClassVar[int] = FIELD_QUADRATURE_ORDER
 
     def __post_init__(self) -> None:
         """Refuse a quantity that is not a charge.
@@ -669,14 +673,11 @@ class ChargeField:
             order, for the agreement check. See that constant for why the
             refinement is computed from the bonus rather than passed as it.
         """
-        extra_order = 0
-        if refined:
-            extra_order = measures.bonus_order(singular=self.is_areal) + QUADRATURE_REFINEMENT
+        rule_order = self.quadrature_order + (QUADRATURE_REFINEMENT if refined else 0)
         integral_nm = measures.integrate(
             self.volume_density_C_m3(),
             mesh,
-            singular=self.is_areal,
-            extra_order=extra_order,
+            rule_order=rule_order,
             what="the assembled fixed charge",
         )
         # nm^3 -> m^3 for the (r dr dz) the measure returned, and the 2 pi the
@@ -706,7 +707,7 @@ class ChargeField:
                 * measures.integrate(
                     density * weight,
                     mesh,
-                    singular=self.is_areal,
+                    rule_order=self.quadrature_order,
                     what=f"the cumulative fixed charge below z = {plane:g} nm",
                 )
             )

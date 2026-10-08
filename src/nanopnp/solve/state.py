@@ -422,6 +422,8 @@ def single_rung(
     # wall factor rather than fail (PHY-02).
     if fields.charge is not None and "fixed_charge" in declared.coefficients:
         supplied["fixed_charge"] = fields.charge.assemble(model.scales)
+        if fields.charge.quadrature_order is not None:
+            supplied["fixed_charge_rule_order"] = fields.charge.quadrature_order
     if fields.eps_r is not None and "solid_fraction" in declared.coefficients:
         supplied["solid_fraction"] = fields.eps_r.chi()
     if declared.wall_distance:
@@ -483,6 +485,7 @@ def ladder(
         # a plausible wrong current with no diagnostic (PHY-03, PHY-20).
         solid_permittivities=dict(resolved.document.physics.solid_permittivities),
         fixed_charge_field=(None if fields.charge is None else fields.charge.volume_density_C_m3()),
+        fixed_charge_rule_order=(None if fields.charge is None else fields.charge.quadrature_order),
         solid_fraction=None if fields.eps_r is None else fields.eps_r.chi(),
         # Read off ``model_options`` rather than off the document, so that the
         # ladder's models and the single-rung model of :func:`single_rung` -- which

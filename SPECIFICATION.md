@@ -838,6 +838,13 @@ rescaled to `Q_net` conserves by construction, where sampling somebody else's in
 quadrature points cannot. Until then a supplied `areal_charge_density` of this character SHALL be
 ingested only with the gate's verdict recorded in the manifest.
 
+A supplied field's source term and every leg of its conservation check SHALL be evaluated by one
+explicit integration rule, of order 8, so that the gate measures the charge the solve assembles.
+NGSolve's own estimate for the source was order 3, and on a 0.5 nm alternating field the deployed
+mesh resolves it put the solved charge 1.2 × 10⁻² from the grid's while the order-8 gate passed at
+2 × 10⁻⁵ (WP41 D2, REV-07). A deposited charge keeps the model's default: its total is exact there,
+and its per-entry order is NUM-07's open question.
+
 NOTE (the producer path's conservation report, PHY-19, FR-14, QR-03; WP28): for a deposited charge, the producer leg compares the trapezoid integral of the exported
 lattice with `Q_net`, the mean over frames of `Σ q_i`. The consumer leg compares the deployed field,
 integrated at the solve's order, with the lattice. Both are exact by construction, the first by
@@ -2427,7 +2434,8 @@ one extra order: on the three-layer capacitor of VER-56, whose exact solution th
 the error is 0.38 `V_T` (3 %) next to the axis at the default and 1.1 × 10⁻¹³ with it. The coupled
 models keep the default here, and whether their forms should gain the same order is open: it moves
 every number they produce, so it is a decision with a measurement, not a side effect of WP26
-(`.knowledge/06-numerics-fem.md` §2.2). **Measured by WP34**, through `Measures.weight_extra_order`, a seam no case key,
+(`.knowledge/06-numerics-fem.md` §2.2). A supplied field's source term is assembled at order 8
+(PHY-19's NOTE on one rule), which settles that term and not this question. **Measured by WP34**, through `Measures.weight_extra_order`, a seam no case key,
 option or flag reaches (`tests/tier2/test_axis_weight_order.py`, `slow`, stabilisation `none`). On
 VER-18's coupled manufactured solution at `maxh` 0.4, 0.2 and 0.1 nm, one extra order leaves the
 finest-pair rates at about 3 for the P2 fields and 2.7 for the P1 pressure (`c_Cl−` 3.19 → 3.01,

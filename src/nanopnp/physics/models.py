@@ -1200,6 +1200,7 @@ class CoupledModel:
         *,
         wall_distance_nm: Expression = SATURATED_WALL_DISTANCE_NM,
         fixed_charge: Expression | None = None,
+        fixed_charge_rule_order: int | None = None,
         solid_fraction: Expression | None = None,
         surface_charge: Expression | None = None,
         surface_charge_boundary: str = "wall",
@@ -1322,7 +1323,9 @@ class CoupledModel:
             definedon=fluid,
         )
         if fixed_charge is not None:
-            residual -= charge_source(fixed_charge, potential_test, measures)
+            residual -= charge_source(
+                fixed_charge, potential_test, measures, rule_order=fixed_charge_rule_order
+            )
         if surface_charge is not None:
             # The Poisson boundary term is +int_Gamma sigma_s v r ds on the
             # right-hand side, so it is subtracted from the residual exactly as
@@ -1568,6 +1571,7 @@ class CoupledModel:
         velocity_values: Expression | None = None,
         wall_distance_nm: Expression = SATURATED_WALL_DISTANCE_NM,
         fixed_charge: Expression | None = None,
+        fixed_charge_rule_order: int | None = None,
         solid_fraction: Expression | None = None,
         surface_charge: Expression | None = None,
         surface_charge_boundary: str = "wall",
@@ -1652,6 +1656,7 @@ class CoupledModel:
             measures,
             wall_distance_nm=wall_distance_nm,
             fixed_charge=fixed_charge,
+            fixed_charge_rule_order=fixed_charge_rule_order,
             solid_fraction=solid_fraction,
             surface_charge=surface_charge,
             surface_charge_boundary=surface_charge_boundary,
@@ -2094,6 +2099,7 @@ class PoissonModel(_SingleFieldModel):
         measures: Measures,
         *,
         fixed_charge: Expression | None = None,
+        fixed_charge_rule_order: int | None = None,
         solid_fraction: Expression | None = None,
         state: GridFunction | None = None,
         **kwargs: Option,
@@ -2126,7 +2132,16 @@ class PoissonModel(_SingleFieldModel):
             trial, test, measures, permittivity=permittivity, extra_order=RADIAL_WEIGHT_ORDER
         )
         if fixed_charge is not None:
-            residual -= charge_source(fixed_charge, test, measures, extra_order=RADIAL_WEIGHT_ORDER)
+            extra = (
+                {} if fixed_charge_rule_order is not None else {"extra_order": RADIAL_WEIGHT_ORDER}
+            )
+            residual -= charge_source(
+                fixed_charge,
+                test,
+                measures,
+                rule_order=fixed_charge_rule_order,
+                **extra,
+            )
         return residual
 
     def solve(
@@ -2137,6 +2152,7 @@ class PoissonModel(_SingleFieldModel):
         boundaries: CoupledBoundaries = DEFAULT_BOUNDARIES,
         potential_values: Expression = 0.0,
         fixed_charge: Expression | None = None,
+        fixed_charge_rule_order: int | None = None,
         solid_fraction: Expression | None = None,
         initial: ModelSolution | None = None,
         settings: NewtonSettings = DEFAULT_SETTINGS,
@@ -2188,7 +2204,11 @@ class PoissonModel(_SingleFieldModel):
         set_boundary_values(state, potential_values, mesh.Boundaries(boundaries.potential))
         residual = ngs.BilinearForm(space)
         residual += self.residual_form(
-            space, measures, fixed_charge=fixed_charge, solid_fraction=solid_fraction
+            space,
+            measures,
+            fixed_charge=fixed_charge,
+            fixed_charge_rule_order=fixed_charge_rule_order,
+            solid_fraction=solid_fraction,
         )
         # Linear, so one undamped step from any state with the right essential
         # data is the solution: J delta = -R(u), with R(u) = A u - f.
