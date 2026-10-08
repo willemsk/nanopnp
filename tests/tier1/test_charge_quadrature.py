@@ -137,6 +137,15 @@ def test_qr03_default_ladder_threads_fixed_charge_rule_order() -> None:
     for r in charged_rungs:
         assert r.solve_kwargs["fixed_charge_rule_order"] == 8
 
+    # Exercise fixed_charge_rule_order=None branch
+    rungs_none = default_ladder(
+        mesh,
+        fixed_charge_field=ngs.CF(1.0),
+        fixed_charge_rule_order=None,
+        charge_steps=1,
+    )
+    assert not any("fixed_charge_rule_order" in r.solve_kwargs for r in rungs_none)
+
 
 def test_qr03_a_deposited_charge_keeps_the_model_s_default_rule() -> None:
     """A deposit's total is exact at the default order; its rule is Phase 6's (D13, E4)."""
