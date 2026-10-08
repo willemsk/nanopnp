@@ -514,18 +514,19 @@ class Electrolyte:
         import numpy as np
 
         limit = self.validity_M[1]
+        samples = [np.asarray(values, dtype=float) for values in concentrations]
         species_count = sum(
             log_clamp_activations(
-                np.asarray(values, dtype=float) * MOLAR_PER_SI,
+                values * MOLAR_PER_SI,
                 label=f"{ion.name} concentration",
                 limit=limit,
                 coordinates=coordinates,
             )
-            for ion, values in zip(self.species, concentrations, strict=True)
+            for ion, values in zip(self.species, samples, strict=True)
         )
         driver_label = f"correction driver ({self.driver.replace('_', ' ')})"
         driver_count = log_clamp_activations(
-            self.average_concentration(concentrations),
+            self.average_concentration(samples),
             label=driver_label,
             limit=limit,
             coordinates=coordinates,
