@@ -11,9 +11,9 @@ tagged `v0.5.0-alpha.2`; WP37, the cycle cuts, the exit codes and the backend gu
 tagged `v0.5.0-alpha.3`; WP38, the `io` split ([wp38-io-split.md](wp38-io-split.md)),
 tagged `v0.5.0-alpha.4`; WP39, the backend registries ([wp39-backend-registries.md](wp39-backend-registries.md)),
 to be tagged `v0.5.0-alpha.5`; WP40, the stale refusals ([wp40-stale-refusals.md](wp40-stale-refusals.md)),
-to be tagged `v0.5.0-alpha.6`.
-Planned: WP41, the
-accuracy fixes ([wp41-accuracy-fixes.md](wp41-accuracy-fixes.md)); WP42, the verification checks; WP43, the small fixes; WP44, the OKF bundle; WP45,
+to be tagged `v0.5.0-alpha.6`; WP41, the accuracy fixes ([wp41-accuracy-fixes.md](wp41-accuracy-fixes.md)),
+to be tagged `v0.5.0-alpha.7`.
+Planned: WP42, the verification checks; WP43, the small fixes; WP44, the OKF bundle; WP45,
 its backfill; WP46, the user-testing protocol (§8.2.9 I1). Provisional, and planned by the second
 `/phase-plan amend 4` once the author has run the sessions and ruled every `UT-nn`: the fixes, from
 WP47, then the documentation increment and the close, which take their numbers then.
@@ -463,6 +463,22 @@ other item may move the golden.
 
 No new identifier: each fix's test is named for the requirement it holds (QR-03, NUM-16, PHY-13,
 VER-37).
+
+> **Delivered, 8 October 2026** ([plan](wp41-accuracy-fixes.md), to be tagged `v0.5.0-alpha.7`).
+> Fixed-charge assembly shares an explicit order-8 quadrature rule with the conservation gate
+> (`charge/fields.py`, `numerics/measures.py`, `physics/models.py`), matching to 4 × 10⁻¹⁶ (D2).
+> Newton converges on a per-field relative-update criterion with an absolute residual floor
+> (`numerics/newton.py`, D4). Supplied field model frame is declared and checked against mesh
+> generation (`charge/fields.py`, `charge/stage.py`, D1). The ionic-strength correction driver clamp
+> is logged and counted (`materials/electrolyte.py`, D7). Stabilisation provenance is moved to operator
+> keys in warm start gating (`solve/state.py`, D8). Electrostatic models name stabilisation `none` and
+> `LadderResult` refuses missing or non-mapping entries (`physics/models.py`, `solve/continuation.py`, D9).
+> REV-06, REV-07, REV-08, REV-09, REV-17, and REV-26 are `fixed`. The number-stability golden is
+> re-pinned within D3's and D5's bounds (I4). Inherited constraints:
+> - Order-8 quadrature rule is shared between source assembly and gate legs;
+> - Newton converges per field with floor ratio 10⁻⁶ beside absolute floor 10⁻¹²;
+> - Every model's provenance names its stabilisation mode, parameters, and provenance.
+
 
 ### WP42 — The verification checks (REV-11 to REV-13, REV-23, REV-29, REV-34, REV-42, REV-44, REV-48)
 

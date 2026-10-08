@@ -19,6 +19,43 @@ Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before t
 version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
 
+## [0.5.0-alpha.7] - 2026-10-08
+
+WP41: the accuracy fixes (`SPECIFICATION.md` §4.4, §5.3.1 NOTEs on `inputs:`, `inputs.charge`,
+`inputs.eps_r`, NUM-07, NUM-16; §8.2.9 I2, I4). Fixed charge assembly threads an explicit order-8
+quadrature rule through all models; Newton converges on a per-field relative-update criterion
+with an absolute residual floor; a supplied field's model frame is declared and checked against
+mesh generation; the ionic-strength correction driver clamp is logged and counted; stabilisation
+provenance is classified as operator keys so prose rewrites do not fail warm starts; electrostatic
+models explicitly record stabilisation `none` and `LadderResult` refuses missing or non-mapping
+entries. It resolves REV-06, REV-07, REV-08, REV-09, REV-17, and REV-26, discharging QR-03,
+NUM-07, NUM-13, NUM-16, PHY-13, PHY-19, FR-25, FR-27, IF-05, QR-12, and VER-37.
+
+### Added
+
+- Optional `model_frame_centre_z_nm` field to `FieldDocument` (`nanopnp/field/v1`), exported by stage 7
+  and validated on mesh generation (FR-27, IF-05, QR-12).
+- `Measures.volume` and `Measures.integrate` accept explicit `rule_order` (NUM-07, PHY-19).
+- `field_floor_ratio: float = 1e-6` in `NewtonSettings` (NUM-16).
+
+### Changed
+
+- **Breaking:** A case with a supplied fixed-charge field solves with its source assembled at order 8,
+  matching the conservation gate to 4 × 10⁻¹⁶; the number-stability golden moves within D3's bounds
+  (2.9 × 10⁻⁵ on `example-02-epnpns`, 2.7 × 10⁻⁵ on `example-02-classical`, 1.1 × 10⁻⁵ on
+  `example-03-charged`; 10⁻⁸ elsewhere) (QR-03, PHY-19).
+- **Breaking:** Newton convergence stops on per-field relative updates (`max_f ||δu_f|| / max(||u_f||, ρ max(||u||, 1)) ≤ rtol`)
+  or absolute residual floor 10⁻¹²; the relative residual test `||R|| ≤ rtol ||R0||` no longer closes
+  rungs; the golden moves within D5's bounds (8.1 × 10⁻⁷ on `2wcd-charged`, 3.4 × 10⁻⁷ on
+  `example-03-charged`, 2.1 × 10⁻⁸ on `example-07`; 10⁻⁸ elsewhere) (NUM-16).
+- **Breaking:** Electrostatic models (`poisson`, `pb`, `pb-linear`) record stabilisation `none`,
+  `{}` and `create("none").provenance`. `LadderResult.stabilisation*` and per-rung records read
+  without defaults, raising `ValueError` on missing or non-mapping entries (NUM-13, FR-25).
+- **Breaking:** `model.stabilisation_provenance` is moved from `SPACE_KEYS` to `OPERATOR_KEYS`
+  in `solve/state.py`; differences are recorded in the solution manifest rather than refusing
+  valid warm starts (VER-37).
+- Both golden stability re-pins applied to recorded meshes under D3 and D5 bounds.
+
 ## [0.5.0-alpha.6] - 2026-10-07
 
 WP40: the stale refusals (`SPECIFICATION.md` §5.3.1 NOTEs on `inputs:` and `numerics.nonlinear`;

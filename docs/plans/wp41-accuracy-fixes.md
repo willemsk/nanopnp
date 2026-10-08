@@ -1,6 +1,6 @@
 # WP41 — The accuracy fixes
 
-**Status: planned, not started.** Written 7 October 2026 at `f5d17cc`, after WP40 was delivered as
+**Status: delivered, 8 October 2026.** Written 7 October 2026 at `f5d17cc`, after WP40 was delivered as
 `v0.5.0-alpha.6`. It inherits everything the [current brief](current.md) lists as not to be
 re-decided, and in particular:
 
@@ -63,13 +63,13 @@ is open here, and no identifier is new.
 
 ### Work items
 
-- [ ] 1. [Opus] — a quadrature rule threaded through the solve; a wrong seam moves numbers inside every tolerance. Read *Design* §1, §3, §6 first. `numerics/measures.py` (`rule_order`), `charge/fields.py`, `charge/deposit.py`, `solve/state.py`, `solve/continuation.py`, `physics/models.py`; the PHY-19 and NUM-07 NOTE text of *Design* §6; `.knowledge/06` §8.1 **[tested]**; the re-pin of D3, D6 (D2, D3). Done when `test_charge_quadrature.py` passes, `test_charge_fields.py` and `test_dielectric_field.py` (VER-30) stay green, and the three walks move within D3 and the other four not at all.
-- [ ] 2. [Opus] — a convergence criterion; a mistake ends rungs early inside every tolerance. Read *Design* §2, §3, §6 first. `numerics/newton.py`; NUM-16's NOTE; `.knowledge/06` §5 **[tested]**; the NUM-16 prose of `gui/convergence.py` and `gui/widgets/convergence.py` (QR-11); the re-pin; the gate's duration before and after, in the commit body (D4, D5, D6). Done when `test_newton_per_field.py` and the zero-field test pass and the walks move within D5.
-- [ ] 3. [Opus] — a frame check and its refusal text. `charge/fields.py`, `charge/stage.py` (`read_fields`, `_field_document`) (D1). Done when `test_field_frame.py` passes.
-- [ ] 4. [Opus] — a missing log is silent. `materials/electrolyte.py` (D7). Done when `test_phy13_a_clamp_of_the_ionic_strength_driver_is_logged` passes.
-- [ ] 5. [Opus] — a key's classification. `solve/state.py` (D8). Done when `test_warm_start_descriptor.py` passes with the mode-settings test.
-- [ ] 6. [Opus] — a refusal and a default removed. `physics/models.py`, `solve/continuation.py` (D9). Done when `test_ladder_stabilisation.py` passes.
-- [ ] 7. [any] Records: REV-06 to REV-09, REV-17, REV-26 `fixed`; `CHANGELOG.md` `0.5.0-alpha.7` with the breaks and both re-pins; this plan's status, the phase plan, the brief. Done when VER-63, VER-72 and the strict docs build pass.
+- [x] 656232a non-Opus 1. [Opus] — a quadrature rule threaded through the solve; a wrong seam moves numbers inside every tolerance. Read *Design* §1, §3, §6 first. `numerics/measures.py` (`rule_order`), `charge/fields.py`, `charge/deposit.py`, `solve/state.py`, `solve/continuation.py`, `physics/models.py`; the PHY-19 and NUM-07 NOTE text of *Design* §6; `.knowledge/06` §8.1 **[tested]**; the re-pin of D3, D6 (D2, D3). Done when `test_charge_quadrature.py` passes, `test_charge_fields.py` and `test_dielectric_field.py` (VER-30) stay green, and the three walks move within D3 and the other four not at all.
+- [x] 0328546 non-Opus 2. [Opus] — a convergence criterion; a mistake ends rungs early inside every tolerance. Read *Design* §2, §3, §6 first. `numerics/newton.py`; NUM-16's NOTE; `.knowledge/06` §5 **[tested]**; the NUM-16 prose of `gui/convergence.py` and `gui/widgets/convergence.py` (QR-11); the re-pin; the gate's duration before and after, in the commit body (D4, D5, D6). Done when `test_newton_per_field.py` and the zero-field test pass and the walks move within D5.
+- [x] 3a15a72 non-Opus 3. [Opus] — a frame check and its refusal text. `charge/fields.py`, `charge/stage.py` (`read_fields`, `_field_document`) (D1). Done when `test_field_frame.py` passes.
+- [x] b9d4a78 non-Opus 4. [Opus] — a missing log is silent. `materials/electrolyte.py` (D7). Done when `test_phy13_a_clamp_of_the_ionic_strength_driver_is_logged` passes.
+- [x] 5f021fe non-Opus 5. [Opus] — a key's classification. `solve/state.py` (D8). Done when `test_warm_start_descriptor.py` passes with the mode-settings test.
+- [x] 4ff74f3 non-Opus 6. [Opus] — a refusal and a default removed. `physics/models.py`, `solve/continuation.py` (D9). Done when `test_ladder_stabilisation.py` passes.
+- [x] 7. [any] Records: REV-06 to REV-09, REV-17, REV-26 `fixed`; `CHANGELOG.md` `0.5.0-alpha.7` with the breaks and both re-pins; this plan's status, the phase plan, the brief. Done when VER-63, VER-72 and the strict docs build pass.
 
 ### Verification
 
