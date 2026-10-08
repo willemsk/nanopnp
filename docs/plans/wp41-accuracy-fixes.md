@@ -1,5 +1,7 @@
 # WP41 — The accuracy fixes
 
+PR: [#89](https://github.com/willemsk/nanopnp/pull/89), branch feat/wp41-accuracy-fixes
+
 **Status: delivered, 8 October 2026.** Written 7 October 2026 at `f5d17cc`, after WP40 was delivered as
 `v0.5.0-alpha.6`. It inherits everything the [current brief](current.md) lists as not to be
 re-decided, and in particular:
