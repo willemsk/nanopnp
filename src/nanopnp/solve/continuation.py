@@ -173,6 +173,25 @@ class Rung:
     solve_kwargs: Mapping[str, Option] = field(default_factory=dict)
 
 
+def _read_stabilisation_entry(model: object, key: str, *, expect_mapping: bool = False) -> object:
+    """Read a stabilisation entry, refusing missing or non-mapping values."""
+    name = getattr(model, "name", "unknown")
+    provenance = getattr(model, "provenance", {})
+    if key not in provenance:
+        raise ValueError(
+            f"model {name!r} records no {key} in its provenance; every model names its "
+            "stabilisation mode, that mode's parameters and their provenance, 'none' where it "
+            "assembles no transport term (NUM-13, section 5.3.3)"
+        )
+    value = provenance[key]
+    if expect_mapping and not isinstance(value, Mapping):
+        raise ValueError(
+            f"model {name!r} records {key} as {type(value).__name__}, not a mapping "
+            "(NUM-13, section 5.3.3)"
+        )
+    return value
+
+
 @dataclass(frozen=True)
 class RungResult:
     """What one rung cost and how it converged, for the FR-25 manifest."""
@@ -183,6 +202,7 @@ class RungResult:
     seconds: float
     transferred_fields: tuple[str, ...]
     cold_fields: tuple[str, ...]
+    stabilisation: str
     newton: Mapping[str, Option] | None
     deviations: tuple[str, ...] = ()
     """Every switch of this rung's model set away from the validated default.
@@ -191,22 +211,6 @@ class RungResult:
     them: ``dielectric_gradient_forces`` or ``variable_density=off`` on one rung
     would otherwise appear nowhere in the ladder's record, and the run would not
     be reconstructible from it.
-    """
-
-    stabilisation: str = "none"
-    """The mode *this* rung was assembled in, read off its own model.
-
-    :attr:`LadderResult.stabilisation` records the top rung's, which is the one
-    the reported number was produced on. This is the per-rung breakdown, and it
-    exists because "record the stabilisation mode with every number" applies to
-    the intermediate numbers too: a ladder that changed discretisation partway
-    would present its top rung as a warm start onto an operator its parent never
-    solved, and the record is where that shows (NUM-13, NUM-18, FR-25).
-
-    ``"none"`` for a rung whose model carries no stabilisation at all -- stages 1
-    and 2 solve for ``phi`` alone -- which is the honest answer rather than a
-    missing one: an unstabilised operator is the ``none`` model, not the absence
-    of a choice (PHY-22).
     """
 
     @property
@@ -274,12 +278,10 @@ class LadderResult:
         """The stabilisation mode the top rung's number was produced on (NUM-13, §5.3.3).
 
         Read from the converged model rather than assumed, so the manifest cannot
-        disagree with the discretisation. Every Phase-0 model is unstabilised, so
-        this is ``"none"`` until NUM-14 adds the stabilised mode, which then flows
-        through unchanged: §6.4/§7.4 make the mode load-bearing because a number
-        recorded without it is not comparable to the reference COMSOL run.
+        disagree with the discretisation. Every model names its mode, ``none`` where
+        it assembles no transport term (NUM-13, D9).
         """
-        return str(self.solution.model.provenance.get("stabilisation", "none"))
+        return str(_read_stabilisation_entry(self.solution.model, "stabilisation"))
 
     @property
     def stabilisation_parameters(self) -> Mapping[str, Option]:
@@ -289,14 +291,20 @@ class LadderResult:
         ``C_cw = 0.35`` are different discretisations, and a manifest recording
         only the name could not tell two such runs apart.
         """
-        found = self.solution.model.provenance.get("stabilisation_parameters", {})
-        return dict(found) if isinstance(found, Mapping) else {}
+        found = _read_stabilisation_entry(
+            self.solution.model, "stabilisation_parameters", expect_mapping=True
+        )
+        assert isinstance(found, Mapping)
+        return dict(found)
 
     @property
     def stabilisation_provenance(self) -> Mapping[str, Option]:
         """Where the mode's constants came from, as the mode itself reports them."""
-        found = self.solution.model.provenance.get("stabilisation_provenance", {})
-        return dict(found) if isinstance(found, Mapping) else {}
+        found = _read_stabilisation_entry(
+            self.solution.model, "stabilisation_provenance", expect_mapping=True
+        )
+        assert isinstance(found, Mapping)
+        return dict(found)
 
     @property
     def max_cell_peclet(self) -> float | None:
@@ -715,9 +723,9 @@ def run_ladder(
             seconds=seconds,
             transferred_fields=transferred_fields,
             cold_fields=cold_fields,
+            stabilisation=str(_read_stabilisation_entry(rung.model, "stabilisation")),
             newton=solution.newton.summary() if solution.newton is not None else None,
             deviations=tuple(rung.model.provenance.get("deviations_from_validated_default", ())),
-            stabilisation=str(rung.model.provenance.get("stabilisation", "none")),
         )
         records.append(record)
         logger.info(
