@@ -118,3 +118,15 @@ def test_num16_a_warm_start_onto_its_own_state_closes_in_one_step() -> None:
     assert second.iterations == 1
     assert not second.history[-1].forced
     assert second.history[-1].update <= settings.relative_tolerance
+
+
+def test_num16_field_floor_ratio_validation() -> None:
+    """field_floor_ratio must be positive."""
+    import pytest
+
+    from nanopnp.numerics.newton import NewtonSettings
+
+    with pytest.raises(ValueError, match="field_floor_ratio must be positive"):
+        NewtonSettings(field_floor_ratio=0.0)
+    with pytest.raises(ValueError, match="field_floor_ratio must be positive"):
+        NewtonSettings(field_floor_ratio=-1.0e-6)
