@@ -217,7 +217,6 @@ def test_phy21_an_ablated_sub_switch_is_caught_too() -> None:
         assert honest.correction("diffusivity", ion.name).use_wall is True
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP41 D7")
 def test_phy13_a_clamp_of_the_ionic_strength_driver_is_logged(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
