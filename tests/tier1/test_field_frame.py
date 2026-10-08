@@ -75,7 +75,6 @@ def _resolved(key: str, path: Path, *, centre_z_nm: float, generates_mesh: bool)
     )
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP41 D1")
 def test_fr27_a_field_document_declares_its_model_frame(tmp_path: Path) -> None:
     """The header key is optional, a finite length in nm, and absent means undeclared."""
     from nanopnp.charge.fields import load_document
@@ -84,7 +83,6 @@ def test_fr27_a_field_document_declares_its_model_frame(tmp_path: Path) -> None:
     assert load_document(_document(tmp_path, "eps_r", None)).model_frame_centre_z_nm is None
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP41 D1")
 @pytest.mark.parametrize("key", ["charge", "eps_r"])
 def test_fr27_a_field_declaring_another_frame_than_a_generated_mesh_is_refused(
     tmp_path: Path, key: str
@@ -105,7 +103,6 @@ def test_fr27_a_field_declaring_another_frame_than_a_generated_mesh_is_refused(
     )
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP41 D1")
 @pytest.mark.parametrize("key", ["charge", "eps_r"])
 def test_fr27_a_matching_undeclared_or_supplied_mesh_frame_is_read(
     tmp_path: Path, key: str
@@ -123,7 +120,6 @@ def test_fr27_a_matching_undeclared_or_supplied_mesh_frame_is_read(
         assert read.document.model_frame_centre_z_nm == declared
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP41 D1")
 def test_fr27_stage_7_declares_the_frame_its_lattice_was_exported_in(tmp_path: Path) -> None:
     """The export writes the shift its atoms were moved by, which a re-read checks."""
     import numpy as np

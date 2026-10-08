@@ -279,6 +279,7 @@ class FieldDocument(_Strict):
     # Finite, or every ``> tol`` conservation test downstream passes on NaN.
     axis_cutoff_nm: float = Field(default=DEFAULT_AXIS_CUTOFF_NM, allow_inf_nan=False)
     q_net_e: float | None = Field(default=None, allow_inf_nan=False)
+    model_frame_centre_z_nm: float | None = Field(default=None, allow_inf_nan=False)
 
     @model_validator(mode="after")
     def _check(self) -> FieldDocument:

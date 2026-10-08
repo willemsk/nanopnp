@@ -73,6 +73,7 @@ from nanopnp.charge.fields import (
     ChargeFieldError,
     ConservationReport,
     FieldDocument,
+    FieldDocumentError,
     check_conservation,
     check_deposit_conservation,
     conservation,
@@ -354,6 +355,21 @@ def read_fields(resolved: ResolvedCase) -> ResolvedFields:
         if resolved.eps_r is None
         else load_solid_fraction(_field_path(resolved.eps_r, key="eps_r"))
     )
+    if resolved.generates_mesh and hasattr(resolved, "membrane") and resolved.membrane is not None:
+        centre = resolved.membrane.centre_z_nm
+        for key, field in (("charge", charge), ("eps_r", eps_r)):
+            if field is not None and field.document.model_frame_centre_z_nm is not None:
+                declared = field.document.model_frame_centre_z_nm
+                if declared != centre:
+                    offset = centre - declared
+                    raise FieldDocumentError(
+                        f"inputs.{key} declares model_frame_centre_z_nm {declared:g} nm and "
+                        f"geometry.membrane.centre_z_nm is {centre:g} nm: the field was written in "
+                        f"another model frame than the mesh stage 5 generates, so every feature "
+                        f"would sit {offset:+g} nm along z from where it was written "
+                        f"(section 5.3.1 NOTE on inputs.charge, inputs.eps_r); export the field "
+                        f"from this case, or correct the declaration"
+                    )
     return ResolvedFields(charge=charge, conservation=None, eps_r=eps_r, material_means=())
 
 
@@ -810,6 +826,7 @@ def _field_document(lattice: KernelLattice, data: Path) -> FieldDocument:
             },
             "axis_cutoff_nm": DEFAULT_AXIS_CUTOFF_NM,
             "q_net_e": lattice.atoms.q_net_e(),
+            "model_frame_centre_z_nm": lattice.atoms.shift_z_nm,
         }
     )
 
