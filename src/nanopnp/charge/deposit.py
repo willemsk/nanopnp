@@ -37,7 +37,7 @@ import math
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from nanopnp.charge.fields import ChargeFieldError
 from nanopnp.core.hashing import Canonicalisable, content_hash
@@ -685,7 +685,8 @@ class DepositedCharge:
     deposit: Deposit
     field: Expression
 
-    is_areal = False
+    is_areal: ClassVar[bool] = False
+    quadrature_order: ClassVar[int | None] = None
 
     @classmethod
     def bind(cls, deposit: Deposit, mesh: Mesh) -> DepositedCharge:

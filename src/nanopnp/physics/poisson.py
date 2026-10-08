@@ -49,10 +49,12 @@ def charge_source(
     charge_density: Numeric,
     test: Expression,
     measures: Measures,
+    *,
+    rule_order: int | None = None,
     **kwargs: Expression,
 ) -> IntegralTerm:
     """Return ``int rho v r``, the volumetric charge source term."""
-    return measures.volume(charge_density * test, **kwargs)
+    return measures.volume(charge_density * test, rule_order=rule_order, **kwargs)
 
 
 def surface_charge_source(

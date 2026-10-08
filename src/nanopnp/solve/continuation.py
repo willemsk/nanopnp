@@ -782,6 +782,7 @@ def default_ladder(
     fixed_charge_C_m3: float = 0.0,
     fixed_charge_domain: str | None = None,
     fixed_charge_field: Expression | None = None,
+    fixed_charge_rule_order: int | None = None,
     solid_fraction: Expression | None = None,
     wall_potential_V: float = 0.0,
     wall_distance_nm: Expression = SATURATED_WALL_DISTANCE_NM,
@@ -1085,6 +1086,8 @@ def default_ladder(
         charges: dict[str, Option] = {}
         if fixed_charge_field is not None:
             charges["fixed_charge"] = fraction * fixed_charge_field / charge_scale
+            if fixed_charge_rule_order is not None:
+                charges["fixed_charge_rule_order"] = fixed_charge_rule_order
         elif fixed_charge_C_m3 != 0.0:
             density = fraction * fixed_charge_C_m3 / charge_scale
             charges["fixed_charge"] = (

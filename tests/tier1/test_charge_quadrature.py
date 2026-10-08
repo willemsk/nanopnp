@@ -25,7 +25,6 @@ PORE = CylindricalPoreGeometry(
 )
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP41 D2")
 @pytest.mark.parametrize("quantity", ["areal_charge_density", "volume_charge_density"])
 def test_qr03_the_gate_measures_the_charge_the_solve_assembles(quantity: str) -> None:
     """The source term, applied to ``v = 1``, is the gate's ``Q_mesh`` to round-off.
@@ -74,7 +73,6 @@ def test_qr03_the_gate_measures_the_charge_the_solve_assembles(quantity: str) ->
     )
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP41 D2")
 def test_qr03_every_fixed_charge_source_carries_the_charge_s_rule() -> None:
     """Each model's ``charge_source(fixed_charge, ...)`` passes ``rule_order``.
 
@@ -99,7 +97,6 @@ def test_qr03_every_fixed_charge_source_carries_the_charge_s_rule() -> None:
         assert "rule_order" in keywords, f"physics/models.py:{call.lineno} omits rule_order"
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP41 D2")
 def test_qr03_an_explicit_rule_below_num07_s_floor_is_refused() -> None:
     """``rule_order`` replaces the bonus logic, so it carries NUM-07's floor itself."""
     import ngsolve as ngs
@@ -118,7 +115,6 @@ def test_qr03_an_explicit_rule_below_num07_s_floor_is_refused() -> None:
         AXISYMMETRIC.volume(test, rule_order=8, extra_order=1)
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP41 D2")
 def test_qr03_a_deposited_charge_keeps_the_model_s_default_rule() -> None:
     """A deposit's total is exact at the default order; its rule is Phase 6's (D13, E4)."""
     from nanopnp.charge.deposit import DepositedCharge

@@ -815,6 +815,8 @@ def _direct(
         charge = read_fields(resolved).charge
         assert charge is not None
         keywords["fixed_charge"] = charge.assemble(model.scales)
+        if charge.quadrature_order is not None:
+            keywords["fixed_charge_rule_order"] = charge.quadrature_order
     return resolved, model.solve(mesh, AXISYMMETRIC, **keywords)
 
 
