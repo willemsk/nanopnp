@@ -514,7 +514,7 @@ class Electrolyte:
         import numpy as np
 
         limit = self.validity_M[1]
-        return sum(
+        species_count = sum(
             log_clamp_activations(
                 np.asarray(values, dtype=float) * MOLAR_PER_SI,
                 label=f"{ion.name} concentration",
@@ -523,6 +523,14 @@ class Electrolyte:
             )
             for ion, values in zip(self.species, concentrations, strict=True)
         )
+        driver_label = f"correction driver ({self.driver.replace('_', ' ')})"
+        driver_count = log_clamp_activations(
+            self.average_concentration(concentrations),
+            label=driver_label,
+            limit=limit,
+            coordinates=coordinates,
+        )
+        return species_count + driver_count
 
     @property
     def provenance(self) -> Mapping[str, Any]:
