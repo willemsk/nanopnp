@@ -22,7 +22,7 @@ warm-start case, and what most of a warm ladder does. The hook says which
 (:class:`~nanopnp.core.stages.SolveHook`), and :meth:`Band.note` says it back.
 
 **No convergence threshold is drawn.** NUM-16's criterion is per rung and
-disjunctive: the residual relative to its value on entry, *or* the relative
+disjunctive: the absolute residual floor, *or* the per-field relative
 update on the undamped direction, and never on a forced step. One horizontal rule
 would have to be drawn at one of the two, on an axis whose zero is per rung, and
 a reader would take it for the thing the solver tested. What the band says
@@ -157,11 +157,11 @@ class Band:
         the recorded numbers support:
 
         - a last step that was **forced** cannot have met the update test, which
-          NUM-16 excludes on a forced step, so the residual test ended the rung;
+          NUM-16 excludes on a forced step, so the residual floor ended the rung;
         - a last step whose relative update exceeds :attr:`tolerance` fails the
-          update test, so again the residual test ended it;
+          update test, so again the residual floor ended it;
         - otherwise the update test *was* met at that step, and this says so
-          without also claiming the residual test was not.
+          without also claiming the residual floor was not.
 
         Returns
         -------

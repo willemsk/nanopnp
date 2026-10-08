@@ -2605,10 +2605,13 @@ than the solve aborted. The reference settings SHALL be the starting point for t
 NOTE on the relative tolerance. A criterion measured on the residual alone, relative to the
 residual on entry, makes a warm start onto an already-converged state demand a further six orders of
 magnitude from a residual already at its floor — which is the operation every rung of the ladder in
-NUM-18 performs. The implementation therefore converges on **either** the residual test **or** a
-relative-update test `‖δu‖ / max(‖u‖, 1) ≤ rtol` evaluated on the *undamped* Newton direction, the
-latter being the criterion the reference itself used. A step that failed to reduce the residual
-never counts as convergence.
+NUM-18 performs. The implementation therefore converges on a relative-update test evaluated on the undamped
+Newton direction, field by field: for every field `f`, `‖δu_f‖ ≤ rtol · max(‖u_f‖, 10⁻⁶ · max(‖u‖, 1))`,
+or when the residual is at its absolute floor, 10⁻¹². One norm over all fields is dominated by the
+largest, and the residual relative to its entry value is one norm too: measured on the seven gated
+walks, it closed every rung but one, and on a warm-started rung of example 03 it left the velocity
+8.2 × 10⁻⁶ and the pressure 2.0 × 10⁻⁶ relatively unconverged with the ions at 2 × 10⁻⁸ (WP41 D4,
+REV-08). A step that failed to reduce the residual never counts as convergence.
 
 **NUM-17.** The following SHALL be asserted at every Newton step, and a violation SHALL abort the
 solve with a diagnostic naming the field and the spatial location:

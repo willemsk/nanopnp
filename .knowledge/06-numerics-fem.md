@@ -459,16 +459,21 @@ residual that is already at its floor, so a warm start onto its own solution eit
 iteration cap or fails outright. That is precisely the operation every rung of the ladder performs.
 **[tested]**
 
-COMSOL's own "relative tolerance" is on the **solution update**, not on the residual, which sidesteps
-this. Testing either condition — the residual has fallen by the tolerance, *or* the relative Newton
-update `‖δu‖/max(‖u‖, 1)` is below it — restores idempotence and is closer to the reference. Use the
-**undamped** Newton direction in that test, not the damped step: a heavily damped step is small for
-reasons that have nothing to do with convergence, and testing it would report success in the middle
-of a difficult ramp. Guard it further by never accepting convergence on a step that failed to reduce
-the residual.
+COMSOL's own "relative tolerance" is on the **solution update**, not on the residual. A relative
+residual test `‖r‖ ≤ 1e-6 ‖r₀‖` hides under-converged fields: one norm over all fields is dominated
+by the largest, and on the seven gated walks it closed every rung but one, leaving example 03's flow
+8.2 × 10⁻⁶ and pressure 2.0 × 10⁻⁶ relatively unconverged with the ions at 2 × 10⁻⁸ and the global
+relative update at 9 × 10⁻⁹ (WP41 D4, REV-08). The relative residual test closes nothing. Testing the
+absolute residual floor `‖r‖ ≤ 1e-12`, or the **per-field** relative Newton update
+`max_f ‖δu_f‖ / max(‖u_f‖, 10⁻⁶ · max(‖u‖, 1)) ≤ rtol`, restores idempotence and tests every field
+to the tolerance **[tested]**. Use the **undamped** Newton direction in that test, not the damped step:
+a heavily damped step is small for reasons that have nothing to do with convergence, and testing it
+would report success in the middle of a difficult ramp. Guard it further by never accepting convergence
+on a step that failed to reduce the residual.
 
 The floor of 1 on `‖u‖` is not arbitrary: NUM-09 leaves every field O(1), so a state near zero is
-genuinely small rather than merely badly scaled.
+genuinely small rather than merely badly scaled; and the ratio `10⁻⁶` tests fields whose root is zero
+(e.g. potential at zero bias, velocity in an uncharged pore) against a fraction of the state norm.
 
 ### 5.1 Continuation ladder
 
