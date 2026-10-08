@@ -491,7 +491,6 @@ def test_ver37_a_superseded_payload_schema_is_refused_by_schema(neighbour: Neigh
     assert warm_start_payload(good) == neighbour.path
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP41 D8")
 def test_ver37_a_reworded_stabilisation_note_loads_and_is_recorded(neighbour: Neighbour) -> None:
     """Prose in the mode's provenance is recorded when it differs, not gated (REV-17).
 
@@ -518,3 +517,20 @@ def test_ver37_a_reworded_stabilisation_note_loads_and_is_recorded(neighbour: Ne
     assert {"stabilisation", "model.stabilisation", "model.stabilisation_parameters"} <= set(
         SPACE_KEYS
     )
+
+
+def test_ver37_every_registered_stabilisation_mode_records_mode_and_terms() -> None:
+    """Every registered mode's mode and terms in its provenance equal its name and terms.
+
+    D8 relies on this: ``model.stabilisation_provenance`` is permitted to differ
+    because every registered mode's mathematical identity is already fixed by
+    ``stabilisation``, ``model.stabilisation``, and ``model.stabilisation_parameters``
+    (all in SPACE_KEYS), with mode and terms following deterministically.
+    """
+    from nanopnp.physics.stabilisation import create, registered_stabilisations
+
+    for name in registered_stabilisations():
+        mode = create(name)
+        provenance = mode.provenance
+        assert provenance["mode"] == name
+        assert provenance["terms"] == ",".join(mode.terms)
