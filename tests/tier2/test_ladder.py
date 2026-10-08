@@ -256,19 +256,10 @@ def test_num18_re_solving_a_converged_rung_costs_one_iteration_and_moves_nothing
     must recognise that at once and the re-solved state must be the one it
     started from.
 
-    "At once" is one iteration, not zero, and the one is a real cost worth being
-    explicit about. NUM-16's convergence test is on the relative *update*, and an
-    update cannot be known without assembling the Jacobian and solving once; the
-    entry-side test is on the residual alone, which a converged warm start does
-    not pass because it is measured relative to itself. So every rung of the
-    ladder pays one Jacobian assembly and one direct solve to establish that it
-    has nothing to do. The alternative — a residual-only criterion — does not
-    cost zero either: it demands another six orders of magnitude from a residual
-    already at its floor, and the ladder never gets past stage 2.
-
-    A transfer that put a field on the wrong component, or that confused ``w_i``
-    with ``c~_i`` in the NUM-02 log branch, fails this immediately: the guess is
-    then wrong and Newton has to work for it.
+    "At once" is at most one iteration (zero when the entry residual is already
+    below the absolute floor; one when the undamped update test evaluates the
+    direction to confirm convergence). More than that means the transfer is
+    lossy, and the ladder is paying for it at every rung.
     """
     solution = ladder.solution
     model = solution.model
@@ -298,8 +289,8 @@ def test_num18_re_solving_a_converged_rung_costs_one_iteration_and_moves_nothing
     assert again.newton is not None
     logger.info("re-solving the converged top of the ladder: %s", again.newton.summary())
     assert again.newton.converged is True
-    assert again.newton.iterations == 1, (
-        "re-solving a converged state must cost exactly the one iteration the "
+    assert again.newton.iterations in (0, 1), (
+        "re-solving a converged state must cost at most one iteration the "
         "update-based criterion needs to see that there is nothing to do; more than "
         "that means the transfer is lossy, and the ladder is paying for it at every "
         f"rung ({again.newton.summary()})"

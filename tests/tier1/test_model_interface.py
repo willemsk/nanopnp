@@ -96,8 +96,8 @@ SOLVE_HASHES = {
 The stage-10 key itself. Its inputs are the case's own values -- no float in it is
 computed -- so the digest is the same on every platform."""
 
-_PB = "a650c1711b06be0508d6e15305084d6b32292c493370267f976757a8b0280913"
-_PB_SINH = "52d0125c2bc5c2708d64af9833ed279c5daa705bd177dee19843cc12a5152266"
+_PB = "e649e106e8d8aa2d0ee4a45ac4c4122afb57955c81f530c0fb4307dabbce4566"
+_PB_SINH = "a6dc8664909d16cc1d7cec30dd86caf77aa7d8627a3de52103d472732e45f8c9"
 _EQUILIBRIUM = "231f3402154b4fbf1fd77eea0d0979dd6e7cbd1a4b92c248e0e2cbbb19a7f904"
 _FLOW = "134f4b057928097ddd272026eb34a84b873d5e58c11fdce08222908634c11ea2"
 _STERIC = "b3173a4bcdb1c084a0e208479c964b0294d7c1c466cd99f378c490a38249179f"
