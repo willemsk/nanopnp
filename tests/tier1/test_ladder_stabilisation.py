@@ -17,7 +17,6 @@ import pytest
 STABILISATION_KEYS = ("stabilisation", "stabilisation_parameters", "stabilisation_provenance")
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP41 D9")
 def test_num13_every_registered_model_names_its_stabilisation_mode() -> None:
     """Each model's provenance carries a registered mode, its parameters and their sources."""
     from nanopnp.physics import models
@@ -37,7 +36,6 @@ def test_num13_every_registered_model_names_its_stabilisation_mode() -> None:
             ), name
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP41 D9")
 @pytest.mark.parametrize("key", STABILISATION_KEYS)
 def test_num13_a_ladder_result_refuses_a_model_that_records_no_mode(key: str) -> None:
     """A missing entry is refused naming the model and the key, never defaulted."""
@@ -60,7 +58,6 @@ def test_num13_a_ladder_result_refuses_a_model_that_records_no_mode(key: str) ->
     )
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP41 D9")
 @pytest.mark.parametrize("key", STABILISATION_KEYS[1:])
 def test_num13_a_ladder_result_refuses_a_mapping_recorded_as_something_else(key: str) -> None:
     """An entry that is not a mapping is refused, not read as empty."""

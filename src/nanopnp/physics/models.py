@@ -1892,6 +1892,9 @@ class ElectrostaticModel(_SingleFieldModel):
             "model": self.name,
             "fields": {POTENTIAL: {"element": "h1", "order": self.order, "domain": None}},
             "screening": self.screening,
+            "stabilisation": "none",
+            "stabilisation_parameters": {},
+            "stabilisation_provenance": dict(create_stabilisation("none").provenance),
             "deviations_from_validated_default": [],
         }
 
@@ -2064,6 +2067,9 @@ class PoissonModel(_SingleFieldModel):
             "fluid_permittivity": "eps_r,f^0, ion-free water (author ruling 13)",
             "solid_permittivities": dict(sorted(self.solid_permittivities.items())),
             "scales": self.scales.summary(),
+            "stabilisation": "none",
+            "stabilisation_parameters": {},
+            "stabilisation_provenance": dict(create_stabilisation("none").provenance),
             "deviations_from_validated_default": [],
         }
 
