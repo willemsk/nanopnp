@@ -507,6 +507,10 @@ With them:
 
 These last are moves, not new assertions. The §7.6 NOTE's levers bound their cost.
 
+> **Planned, 9 October 2026:** [wp42-verification-checks.md](wp42-verification-checks.md). By the
+> author's ruling VER-71 refuses every value a model never applies, not REV-42's two keys alone,
+> and REV-66 is resolved with it.
+
 ### WP43 — The small fixes (REV-14 to REV-16, REV-18, REV-19, and eleven low items)
 
 *Added, 6 October 2026* (§8.2.9 I1, I2). Local fixes, each with its own test, and none moving a
