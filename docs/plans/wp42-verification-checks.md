@@ -88,7 +88,7 @@ outcome table per model (`refused`/`live`/`inert` per leaf and value), the bypas
 
 ### Work items
 
-- [ ] 1. [Opus] — a rewritten comparison inverted passes every finite test. Read *Design* §1. `validation/modularity.py` (D1), the 38 rewrites and `NAN_EXEMPT` (D2). Done when `test_nan_gates.py` passes and the gate suites stay green.
+- [x] f9878c6 non-Opus 1. [Opus] — a rewritten comparison inverted passes every finite test. Read *Design* §1. `validation/modularity.py` (D1), the 38 rewrites and `NAN_EXEMPT` (D2). Done when `test_nan_gates.py` passes and the gate suites stay green.
 - [ ] 2. [Opus] — an identifier move and upgrade path are read by every case. `io/artefact.py`, `io/case.py` (`upgraded_from`, v2 → v0.5), `core/stages.py`, `io/defaults.py`; the D9 texts. No narrowing yet; v2 documents read unchanged. Done when the D9 tests of `test_case_schema_v05.py` pass and the suite is green.
 - [ ] 3. [Opus] — a declaration that over- or under-claims refuses a live leaf or passes an inert one. `physics/models.py` (`unread`, D3; switch sets, D5), `pipeline/checks.py` (`_check_unread`, D8's gating), `carry_upgrade` (D10). Update `test_model_interface.py`'s quick-start variants (`pnp-ns`, `pb`, `pb-linear` without corrections; `pnp` with the two switches false, without viscosity and density corrections) and re-record `SOLVE_HASHES` for those four, after showing in the commit body each edited variant's `fingerprint` bit-identical to the unedited one's with `_check_unread` lifted (VER-56 as amended). Repair v2 test documents that wrote an unread value. Done when the D3, D5, D8, D10 tests pass and VER-62 is unchanged at 10⁻⁸.
 - [ ] 4. [Opus] — a part or driver rule wrongly scoped refuses a live case. `materials/models.py`, `pipeline/checks.py` (D6). Done when the D6 tests pass.
@@ -203,3 +203,4 @@ case with `permittivity: {wall: false}`; one with `driver: ionic_strength`; one 
 
 | Checkpoint | Date | Author's ruling |
 |---|---|---|
+| P1 | 2026-10-09 | go P1 |
