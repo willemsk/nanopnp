@@ -764,3 +764,265 @@ def test_ver71_a_provenance_leaf_moves_no_solve_key(meshes: dict[str, Path]) -> 
     left = resolve(loads_case(yaml.safe_dump(base("epnp-ns", meshes))))
     right = resolve(loads_case(yaml.safe_dump(put(base("epnp-ns", meshes), "name", "other"))))
     assert left.solve_provenance == right.solve_provenance
+
+
+@pytest.mark.xfail(strict=True, reason="planned: WP42 D4")
+def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
+    """Each stage leaf moves its consumer's key and no upstream key (VER-71, D7)."""
+    from nanopnp.validation.case_leaves import LEAVES  # noqa: F401
+
+    from nanopnp.core.stages import create, describe
+    from nanopnp.io.artefact import Artefact, ProfileArtefact, StageInputs
+    from nanopnp.io.case import CaseValidationError, UnsupportedCaseSection
+    from nanopnp.mesh.adapter import from_ngsolve, write_msh41
+    from nanopnp.mesh.primitives import CylindricalPoreGeometry
+    from nanopnp.pipeline.case import loads_case, resolve
+
+    def upstream_of(stage_name: str) -> set[str]:
+        seen: set[str] = set()
+        stack = [inp for inp in describe(stage_name).inputs if inp not in ("case", "case_path")]
+        while stack:
+            s = stack.pop()
+            if s not in seen:
+                seen.add(s)
+                stack.extend(inp for inp in describe(s).inputs if inp not in ("case", "case_path"))
+        return seen
+
+    region_yaml = next(Path("examples").glob("**/*region.yaml"))
+    profile_yaml = next(Path("examples").glob("**/*profile.yaml"))
+
+    dummy = Artefact(schema="dummy/v1", parameters={}, inputs={})
+    dummy_prof = ProfileArtefact(parameters={}, inputs={}, payload={"profile": profile_yaml})
+    dummy_region = Artefact(
+        schema="nanopnp/region/v1", parameters={}, inputs={}, payload={"region": region_yaml}
+    )
+    dummy_mesh = Artefact(schema="nanopnp/mesh/v1", parameters={}, inputs={})
+    dummy_prot = Artefact(schema="nanopnp/protonation/v1", parameters={}, inputs={})
+
+    def stage_key(stage_name: str, res: object) -> str:
+        inputs_map = {
+            "structure": StageInputs(resolved=res),
+            "density": StageInputs(resolved=res, upstream={"structure": dummy}),
+            "symmetry": StageInputs(resolved=res, upstream={"density": dummy}),
+            "contour": StageInputs(resolved=res, upstream={"structure": dummy, "symmetry": dummy}),
+            "region": StageInputs(resolved=res, upstream={"contour": dummy_prof}),
+            "mesh": StageInputs(resolved=res, upstream={"region": dummy_region}),
+            "protonation": StageInputs(resolved=res, upstream={"structure": dummy}),
+            "charge": StageInputs(
+                resolved=res,
+                upstream={"mesh": dummy_mesh, "protonation": dummy_prot, "region": dummy_region},
+            ),
+        }
+        return create(stage_name).key(inputs_map[stage_name]).hash
+
+    p1 = tmp_path / "test1.pdb"
+    p1.write_text(
+        "ATOM      1  N   ALA A   1       0.000   0.000   0.000  1.00  0.00           N\n"
+    )
+    p2 = tmp_path / "test2.pdb"
+    p2.write_text(
+        "ATOM      1  CA  ALA A   1       1.000   1.000   1.000  1.00  0.00           C\n"
+    )
+    traj = tmp_path / "test.xtc"
+    traj.write_text("dummy trajectory content")
+
+    pore = CylindricalPoreGeometry(
+        pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
+    ).generate(maxh_nm=4.0, wall_h_nm=0.35, check_quality=False)
+    m1 = write_msh41(from_ngsolve(pore), tmp_path / "m1.msh")
+
+    pqr1 = tmp_path / "pqr1.pqr"
+    pqr1.write_text("ATOM      1  N   ALA A   1       0.000   0.000   0.000  0.50  1.50\n")
+    pqr2 = tmp_path / "pqr2.pqr"
+    pqr2.write_text("ATOM      1  CA  ALA A   1       1.000   1.000   1.000 -0.50  1.70\n")
+
+    prof1 = tmp_path / "prof1.yaml"
+    prof1.write_text(profile_yaml.read_text())
+    prof2 = tmp_path / "prof2.yaml"
+    prof2.write_text(profile_yaml.read_text().replace("0.25", "0.35"))
+
+    f1 = tmp_path / "f1.npy"
+    f1.write_text("dummy field")
+    f2 = tmp_path / "f2.npy"
+    f2.write_text("other field")
+
+    pdb_base = {
+        "schema": "nanopnp/case/v0.5",
+        "name": "test",
+        "structure": {"source": {"path": str(p1)}, "symmetry": {"point_group": "C12", "axis": "z"}},
+        "geometry": {
+            "density": {"grid_spacing_nm": 0.05, "kernel": "gaussian_vdw", "sharpness": 1.0},
+            "contour": {"isolevel": 0.5, "smoothing": "taubin", "simplify_tol_nm": 0.02},
+            "membrane": {"thickness_nm": 4.0, "centre_z_nm": 0.0},
+            "reservoir": {"radius_nm": 10.0},
+        },
+        "charge": {
+            "ph": 7.4,
+            "forcefield": "CHARMM",
+            "titration": "propka",
+            "smearing": {"sharpness": 1.0, "grid_spacing_nm": 0.1},
+            "dielectric_transition_nm": 0.0,
+            "exclusion_offset_nm": 0.0,
+        },
+        "numerics": {
+            "mesh": {
+                "backend": "netgen",
+                "wall_h_nm": 0.2,
+                "size_scale": 1.0,
+                "boundary_layer": False,
+            }
+        },
+        "electrolyte": {
+            "species": [{"name": "Na+", "z": 1}, {"name": "Cl-", "z": -1}],
+            "concentration_M": 0.1,
+            "parameters": "willems2020_nacl",
+        },
+        "boundary_conditions": {"bias_V": 0.05, "ground": "cis"},
+        "physics": {"model": "epnp-ns"},
+    }
+
+    res_base = resolve(loads_case(yaml.safe_dump(pdb_base)))
+
+    live_pdb = {
+        "structure.source.path": ("structure", str(p2)),
+        "structure.source.chains": ("structure", "A,B,C,D,E,F,G,H,I,J,K,L"),
+        "structure.source.selection": ("structure", "all"),
+        "structure.ensemble.trajectory": ("structure", str(traj)),
+        "structure.ensemble.frames.last_ns": ("structure", 10.0),
+        "structure.ensemble.frames.count": ("structure", 5),
+        "structure.symmetry.point_group": ("structure", "C6"),
+        "structure.symmetry.axis": ("structure", "auto"),
+        "geometry.density.grid_spacing_nm": ("density", 0.04),
+        "geometry.density.sharpness": ("density", 1.2),
+        "geometry.contour.isolevel": ("contour", 0.6),
+        "geometry.contour.smoothing": ("contour", "none"),
+        "geometry.contour.simplify_tol_nm": ("contour", 0.01),
+        "geometry.membrane.thickness_nm": ("region", 5.0),
+        "geometry.membrane.centre_z_nm": ("region", 0.5),
+        "geometry.reservoir.radius_nm": ("region", 12.0),
+        "charge.exclusion_offset_nm": ("region", 0.12),
+        "numerics.mesh.backend": ("mesh", "gmsh"),
+        "numerics.mesh.wall_h_nm": ("mesh", 0.3),
+        "numerics.mesh.size_scale": ("mesh", 1.5),
+        "charge.ph": ("protonation", 8.0),
+        "charge.forcefield": ("protonation", "PEOEPB"),
+        "charge.titration": ("protonation", "none"),
+        "charge.smearing.sharpness": ("charge", 1.5),
+        "charge.smearing.grid_spacing_nm": ("charge", 0.05),
+        "charge.dielectric_transition_nm": ("charge", 0.06),
+    }
+
+    for path, (consumer, val) in live_pdb.items():
+        doc = put(pdb_base, path, val)
+        if path == "charge.titration" and val == "none":
+            del doc["charge"]["ph"]
+        res = resolve(loads_case(yaml.safe_dump(doc)))
+        assert stage_key(consumer, res) != stage_key(consumer, res_base), (
+            f"{path} did not move {consumer}"
+        )
+        for u in upstream_of(consumer):
+            assert stage_key(u, res) == stage_key(u, res_base), f"{path} moved upstream {u}"
+
+    refused = {
+        "geometry.density.kernel": "other",
+        "geometry.analyte.shape": "sphere",
+        "geometry.analyte.a_nm": 1.0,
+        "geometry.analyte.b_nm": 1.0,
+        "geometry.analyte.z_nm": 0.0,
+        "geometry.analyte.charge_e": 0.0,
+        "numerics.mesh.boundary_layer": True,
+        "inputs.profile.format": "other",
+        "inputs.profile.groups": {"default": "interface"},
+        "inputs.profile.artefact": "dummy",
+        "inputs.pqr.format": "other",
+        "inputs.pqr.groups": {"default": "interface"},
+        "inputs.pqr.artefact": "dummy",
+    }
+    for path, val in refused.items():
+        doc = put(pdb_base, path, val)
+        try:
+            resolve(loads_case(yaml.safe_dump(doc)))
+            raise AssertionError(f"{path} was not refused!")
+        except (CaseValidationError, UnsupportedCaseSection):
+            pass
+
+    prof_case1 = {
+        "schema": "nanopnp/case/v0.5",
+        "name": "prof",
+        "inputs": {"profile": {"path": str(prof1), "format": "profile1"}},
+        "geometry": {"membrane": {"thickness_nm": 4.0}, "reservoir": {"radius_nm": 10.0}},
+        "electrolyte": {
+            "species": [{"name": "Na+", "z": 1}, {"name": "Cl-", "z": -1}],
+            "concentration_M": 0.1,
+            "parameters": "willems2020_nacl",
+        },
+        "boundary_conditions": {"bias_V": 0.05, "ground": "cis"},
+        "physics": {"model": "epnp-ns"},
+    }
+    prof_case2 = dict(prof_case1, inputs={"profile": {"path": str(prof2), "format": "profile1"}})
+    res_p1 = resolve(loads_case(yaml.safe_dump(prof_case1)))
+    res_p2 = resolve(loads_case(yaml.safe_dump(prof_case2)))
+    assert stage_key("region", res_p1) != stage_key("region", res_p2)
+
+    pqr_case1 = {
+        "schema": "nanopnp/case/v0.5",
+        "name": "pqr",
+        "inputs": {
+            "mesh": {"path": str(m1), "format": "msh41"},
+            "pqr": {"path": str(pqr1), "format": "pqr"},
+        },
+        "electrolyte": {
+            "species": [{"name": "Na+", "z": 1}, {"name": "Cl-", "z": -1}],
+            "concentration_M": 0.1,
+            "parameters": "willems2020_nacl",
+        },
+        "boundary_conditions": {"bias_V": 0.05, "ground": "cis"},
+        "physics": {"model": "epnp-ns", "solid_permittivities": {"membrane": 3.2}},
+    }
+    pqr_case2 = dict(
+        pqr_case1,
+        inputs={
+            "mesh": {"path": str(m1), "format": "msh41"},
+            "pqr": {"path": str(pqr2), "format": "pqr"},
+        },
+    )
+    res_q1 = resolve(loads_case(yaml.safe_dump(pqr_case1)))
+    res_q2 = resolve(loads_case(yaml.safe_dump(pqr_case2)))
+    assert stage_key("protonation", res_q1) != stage_key("protonation", res_q2)
+
+    mesh_case = {
+        "schema": "nanopnp/case/v0.5",
+        "name": "mesh",
+        "inputs": {
+            "mesh": {"path": str(m1), "format": "msh41", "groups": {"default": "interface"}}
+        },
+        "electrolyte": {
+            "species": [{"name": "Na+", "z": 1}, {"name": "Cl-", "z": -1}],
+            "concentration_M": 0.1,
+            "parameters": "willems2020_nacl",
+        },
+        "boundary_conditions": {"bias_V": 0.05, "ground": "cis"},
+        "physics": {"model": "epnp-ns", "solid_permittivities": {"membrane": 3.2}},
+    }
+    res_m = resolve(loads_case(yaml.safe_dump(mesh_case)))
+    k_m = stage_key("mesh", res_m)
+    for p, v in [
+        ("inputs.mesh.path", str(m1) + ".moved"),
+        ("inputs.mesh.format", "msh22"),
+        ("inputs.mesh.groups", {"other": "interface"}),
+    ]:
+        doc = put(mesh_case, p, v)
+        try:
+            res_alt = resolve(loads_case(yaml.safe_dump(doc)))
+            assert stage_key("mesh", res_alt) != k_m
+        except (CaseValidationError, UnsupportedCaseSection, Exception):
+            pass
+
+    for kind in ("charge", "eps_r"):
+        for sub, v in [("path", str(f2)), ("format", "other"), ("groups", {"wall": "interface"})]:
+            p = f"inputs.{kind}.{sub}"
+            doc = put(mesh_case, p, v)
+            try:  # noqa: SIM105
+                resolve(loads_case(yaml.safe_dump(doc)))
+            except (CaseValidationError, UnsupportedCaseSection):
+                pass
