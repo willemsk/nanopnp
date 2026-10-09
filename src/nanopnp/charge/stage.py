@@ -560,7 +560,7 @@ def check_water_facing(record: RegionRecord, segments: np.ndarray) -> None:
     midpoints = 0.5 * (segments[:, 0] + segments[:, 1])
     off = distance_to_segments(midpoints, edges)
     worst = int(np.argmax(off))
-    if off[worst] > 1e-9:
+    if not off[worst] <= 1e-9:
         raise ChargeFieldError(
             "the water-facing profile is not the region's protein-to-water boundary",
             f"a piece of W has its midpoint {float(off[worst]):.3e} nm off every protein edge "

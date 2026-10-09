@@ -670,7 +670,7 @@ def exclusion_shell(
     outer = Polygon(closed.exterior)
 
     lowest = float(outer.bounds[0])
-    if lowest < h_c_nm:
+    if not lowest >= h_c_nm:
         coordinates = np.asarray(outer.exterior.coords, dtype=np.float64)
         near = coordinates[coordinates[:, 0] < h_c_nm]
         z_low, z_high = float(near[:, 1].min()), float(near[:, 1].max())
@@ -699,7 +699,7 @@ def exclusion_shell(
             "over the whole offset loop",
         )
     spacing = min_vertex_spacing(ring)
-    if spacing < h_c_nm:  # pragma: no cover - enforce_spacing stops only at 3 vertices
+    if not spacing >= h_c_nm:  # pragma: no cover - enforce_spacing stops only at 3 vertices
         raise RegionGateError(
             "exclusion ring spacing", f"{spacing:.4g} nm", f">= h_c = {h_c_nm:g} nm", "on the ring"
         )
@@ -1310,7 +1310,7 @@ def check_junction(record: RegionRecord, shape: Shape) -> None:
     assembled = membrane_radii(shape, half)
     for (label, plane), radius in zip((("trans", -half), ("cis", half)), assembled, strict=True):
         expected = record.junction_nm[label]
-        if abs(radius - expected) > TOL_NM:
+        if not abs(radius - expected) <= TOL_NM:
             raise RegionGateError(
                 "membrane junction",
                 f"the membrane's innermost radius {radius:.9f} nm on the {label} plane, "

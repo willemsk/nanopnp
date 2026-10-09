@@ -555,7 +555,7 @@ def select_frames(
     window = list(range(available))
     if last_ns is not None:
         span = times_ns[-1] - times_ns[0]
-        if last_ns > span + interval_ns:
+        if not last_ns <= span + interval_ns:
             raise StructureInputError(
                 f"structure.ensemble.frames.last_ns is {last_ns:g} ns, but the file records "
                 f"{available} frames spanning {span:.6g} ns at an interval of {interval_ns:.6g} "

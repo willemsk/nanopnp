@@ -188,8 +188,8 @@ class DensityMap:
         nodes = np.rint(origin / h)
         half_width = int(-nodes[0])
         if (
-            float(np.max(np.abs(delta - h))) > SPACING_TOLERANCE_NM
-            or float(np.max(np.abs(origin - nodes * h))) > LATTICE_TOLERANCE_NM
+            not float(np.max(np.abs(delta - h))) <= SPACING_TOLERANCE_NM
+            or not float(np.max(np.abs(origin - nodes * h))) <= LATTICE_TOLERANCE_NM
             or nx != ny
             or nx != 2 * half_width + 1
             or int(-nodes[1]) != half_width
