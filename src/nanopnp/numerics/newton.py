@@ -30,6 +30,7 @@ flagged as such.
 from __future__ import annotations
 
 import logging
+import math
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 
@@ -71,13 +72,14 @@ class NewtonSettings:
         Residual floor, for the case where the initial residual is already at
         round-off.
     reference_norm
-        Floor on the solution norm in the relative-update test, so that a state
-        near zero does not make every update look large. 1 is the right value
-        because NUM-09 leaves every field O(1).
+        Floor on the global solution norm the per-field floor is scaled from,
+        so that a state near zero does not make every update look large. 1 is
+        the right value because NUM-09 leaves every field O(1).
     field_floor_ratio
         Floor ratio on per-field norms in the relative-update test, so that a
         field near or at zero converges against a fraction of the global norm
-        (1e-6 by default; NUM-16, WP41 D4).
+        (1e-6 by default; NUM-16, WP41 D4). Positive and finite: an infinite
+        ratio would make every update look zero.
     """
 
     initial_damping: float = 0.2
@@ -107,8 +109,11 @@ class NewtonSettings:
             )
         if self.max_iterations < 1:
             raise ValueError(f"max_iterations must be positive, got {self.max_iterations}")
-        if self.field_floor_ratio <= 0.0:
-            raise ValueError(f"field_floor_ratio must be positive, got {self.field_floor_ratio}")
+        # ``not 0 < x < inf`` rather than ``x <= 0``, so that NaN is refused too.
+        if not 0.0 < self.field_floor_ratio < math.inf:
+            raise ValueError(
+                f"field_floor_ratio must be positive and finite, got {self.field_floor_ratio}"
+            )
 
 
 DEFAULT_SETTINGS = NewtonSettings()
@@ -205,6 +210,22 @@ class NewtonDivergenceError(RuntimeError):
     """Newton reached its iteration cap without meeting the tolerance."""
 
 
+def _largest_update(ratios: Sequence[float]) -> float:
+    """Return the largest per-field relative update, a NaN ranking above every number.
+
+    NUM-16's update test reads this maximum (WP41 D4). A bare ``max`` keeps
+    whichever ratio it met first when it meets a NaN, so a NaN block after the
+    first field would be dropped and the test passed on the remaining fields;
+    here a NaN is returned, and ``NaN <= rtol`` is never convergence.
+
+    Raises
+    ------
+    ValueError
+        If ``ratios`` is empty: a product space has at least one field.
+    """
+    return max(ratios, key=lambda ratio: math.inf if math.isnan(ratio) else ratio)
+
+
 def damped_newton(
     residual_form: Expression,
     solution: GridFunction,
@@ -295,10 +316,12 @@ def damped_newton(
     projector = ngs.Projector(freedofs, True)
 
     step = increment if increment is not None else ngs.GridFunction(space)
-    direction = solution.vec.CreateVector()
+    # The direction lives in a grid function so its per-field blocks can be read
+    # off its components without copying it every iteration (NUM-16, WP41 D4).
+    direction_gf = ngs.GridFunction(space)
+    direction = direction_gf.vec
     residual = solution.vec.CreateVector()
     previous = solution.vec.CreateVector()
-    direction_gf = ngs.GridFunction(space)
 
     def residual_norm() -> float:
         """Return the free-DOF norm of the residual at the current iterate."""
@@ -329,10 +352,13 @@ def damped_newton(
         global_ref = max(float(ngs.Norm(solution.vec)), settings.reference_norm)
         field_floor = settings.field_floor_ratio * global_ref
         if solution.components:
-            direction_gf.vec.data = direction
-            relative_update = max(
-                float(ngs.Norm(d_comp.vec)) / max(float(ngs.Norm(s_comp.vec)), field_floor)
-                for d_comp, s_comp in zip(direction_gf.components, solution.components, strict=True)
+            relative_update = _largest_update(
+                [
+                    float(ngs.Norm(d_comp.vec)) / max(float(ngs.Norm(s_comp.vec)), field_floor)
+                    for d_comp, s_comp in zip(
+                        direction_gf.components, solution.components, strict=True
+                    )
+                ]
             )
         else:
             relative_update = float(ngs.Norm(direction)) / max(
@@ -416,9 +442,14 @@ def damped_newton(
         damping = min(1.0, damping * settings.growth_factor)
 
     if raise_on_failure:
+        # Names the two NUM-16 tests the solve applied and what each measured,
+        # not the relative residual, which closes nothing (QR-12, WP41 D4).
+        last_update = result.history[-1].update if result.history else math.nan
         raise NewtonDivergenceError(
             f"damped Newton did not converge in {settings.max_iterations} iterations: "
-            f"residual {result.residual:.3e}, initial {initial:.3e}, relative "
-            f"{result.relative_residual:.3e}, target {settings.relative_tolerance:.3e}"
+            f"largest per-field relative update {last_update:.3e} on the undamped direction "
+            f"against {settings.relative_tolerance:.3e}, residual {result.residual:.3e} "
+            f"against the absolute floor {settings.absolute_tolerance:.3e} "
+            f"(initial {initial:.3e})"
         )
     return result

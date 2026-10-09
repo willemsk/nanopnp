@@ -335,17 +335,22 @@ def gate_parameters(resolved: ResolvedCase, fields: ResolvedFields) -> dict[str,
 
 
 def read_fields(resolved: ResolvedCase) -> ResolvedFields:
-    """Read the fields a case supplies, **without** gating them.
+    """Read the fields a case supplies, **without** gating them on the mesh.
 
     What :meth:`FieldStage.key` needs: the artefact's key is each grid's digest
     and its header's declarations, none of which involves the mesh, and a cache
     key that could only be computed by running the stage would not be a cache key
-    (§5.3.2). Every gate is in :func:`load_fields`, which is what actually runs.
+    (§5.3.2). Every mesh gate is in :func:`load_fields`, which is what actually
+    runs. The frame check is here because it reads the headers and the case alone,
+    so it refuses before any key is computed (§5.3.1 NOTE on ``inputs.charge``,
+    ``inputs.eps_r``; WP41 D1).
 
     Raises
     ------
     nanopnp.charge.fields.FieldDocumentError
-        If a document is invalid or describes different data than it names.
+        If a document is invalid or describes different data than it names, or
+        declares a ``model_frame_centre_z_nm`` other than the
+        ``geometry.membrane.centre_z_nm`` of the mesh stage 5 generates.
     """
     charge = (
         None if resolved.charge is None else load_field(_field_path(resolved.charge, key="charge"))
@@ -355,7 +360,7 @@ def read_fields(resolved: ResolvedCase) -> ResolvedFields:
         if resolved.eps_r is None
         else load_solid_fraction(_field_path(resolved.eps_r, key="eps_r"))
     )
-    if resolved.generates_mesh and hasattr(resolved, "membrane") and resolved.membrane is not None:
+    if resolved.generates_mesh and resolved.membrane is not None:
         centre = resolved.membrane.centre_z_nm
         for key, field in (("charge", charge), ("eps_r", eps_r)):
             if field is not None and field.document.model_frame_centre_z_nm is not None:

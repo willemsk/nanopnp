@@ -121,15 +121,15 @@ class SolveHook(Protocol):
             Whether this rung's solve was given a Newton callback at all. NUM-18's
             electrostatic stages are not coupled models and take none, so they
             report no step by construction; a rung that *is* reporting and still
-            reports no step converged on entry, before its first step, which is
-            the NUM-16 warm-start case and not a missing record. A reader told
-            only the silence cannot tell the two apart.
+            reports no step converged on entry, its residual already at the
+            absolute floor before its first step, and is not a missing record. A
+            reader told only the silence cannot tell the two apart.
         tolerance
-            The relative tolerance this rung is solved to. Both halves of NUM-16's
-            disjunctive criterion are measured against it, so a reader holding the
-            steps and this number can say what the solver tested rather than
-            assuming a default — and can say it without importing the solver to
-            read one.
+            The relative tolerance this rung is solved to. NUM-16's per-field
+            update test is measured against it — the other half of the criterion
+            is the absolute residual floor — so a reader holding the steps and
+            this number can say what the solver tested rather than assuming a
+            default, and can say it without importing the solver to read one.
         """
 
     def step(

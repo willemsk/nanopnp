@@ -44,6 +44,28 @@ exact 0.2.
 """
 
 
+def _check_rule_order(rule_order: int, *, singular: bool, extra_order: int) -> None:
+    """Refuse an explicit rule below NUM-07's floor, or beside the bonus arguments (WP41 D2).
+
+    ``rule_order`` replaces the bonus logic, so it carries NUM-07's floor itself,
+    and it cannot be combined with the two arguments that logic reads.
+
+    Raises
+    ------
+    ValueError
+        Naming ``rule_order`` and its value, or the argument passed beside it.
+    """
+    if rule_order < SINGULAR_MIN_ORDER:
+        raise ValueError(
+            f"rule_order is {rule_order}; it must be at least NUM-07's minimum of "
+            f"{SINGULAR_MIN_ORDER}"
+        )
+    if singular:
+        raise ValueError("rule_order cannot be combined with singular=True")
+    if extra_order != 0:
+        raise ValueError(f"rule_order cannot be combined with extra_order={extra_order}")
+
+
 def _gradient_default_order(element_order: int) -> int:
     """Return the integration order NGSolve uses for a gradient-gradient term.
 
@@ -70,7 +92,8 @@ class Measures:
     short of their degree in ``r``. This is the seam WP34 measures that through
     (D7, D8). No case key, model option or CLI flag reaches it, and at 0 every
     form is assembled exactly as before; the decision is Phase 6's (section 8.2.6
-    F1). :meth:`integrate` and singular terms, already at NUM-07's floor, ignore it.
+    F1). :meth:`integrate` and singular terms, already at NUM-07's floor, ignore it,
+    and so does a term given an explicit ``rule_order``, which fixes its rule outright.
     """
 
     def __post_init__(self) -> None:
@@ -178,18 +201,14 @@ class Measures:
         if "bonus_intorder" in kwargs:
             raise ValueError("pass extra_order, not bonus_intorder, so the 1/r guarantee holds")
         if rule_order is not None:
-            if rule_order < SINGULAR_MIN_ORDER:
-                raise ValueError(
-                    f"rule_order is {rule_order}; it must be at least NUM-07's minimum of "
-                    f"{SINGULAR_MIN_ORDER}"
-                )
-            if singular:
-                raise ValueError("rule_order cannot be combined with singular=True")
-            if extra_order != 0:
-                raise ValueError(f"rule_order cannot be combined with extra_order={extra_order}")
+            _check_rule_order(rule_order, singular=singular, extra_order=extra_order)
+            # Every element type a volume term can meet, the 1D benchmarks' SEGM
+            # among them: a type missing here would fall back to NGSolve's own
+            # estimate while ``integrate`` honours ``order=`` on it, and the
+            # source and its gate would no longer be one rule.
             intrules = {
-                ngs.TRIG: ngs.IntegrationRule(ngs.TRIG, rule_order),
-                ngs.QUAD: ngs.IntegrationRule(ngs.QUAD, rule_order),
+                kind: ngs.IntegrationRule(kind, rule_order)
+                for kind in (ngs.SEGM, ngs.TRIG, ngs.QUAD)
             }
             return integrand * self.radial_weight * ngs.dx(intrules=intrules, **kwargs)
         bonus = self._form_bonus(singular=singular, extra=extra_order)
@@ -242,15 +261,7 @@ class Measures:
         import ngsolve as ngs
 
         if rule_order is not None:
-            if rule_order < SINGULAR_MIN_ORDER:
-                raise ValueError(
-                    f"rule_order is {rule_order}; it must be at least NUM-07's minimum of "
-                    f"{SINGULAR_MIN_ORDER}"
-                )
-            if singular:
-                raise ValueError("rule_order cannot be combined with singular=True")
-            if extra_order != 0:
-                raise ValueError(f"rule_order cannot be combined with extra_order={extra_order}")
+            _check_rule_order(rule_order, singular=singular, extra_order=extra_order)
             order = rule_order
         else:
             order = self.integration_order(singular=singular, extra=extra_order)

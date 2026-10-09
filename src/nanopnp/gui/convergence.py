@@ -17,8 +17,9 @@ silent rung still occupies a band wide enough to label.
 **A band is empty for two unrelated reasons and the model never guesses which.**
 A rung whose model takes no Newton callback reports no step by construction; a
 coupled rung reports none when the damped-Newton solve found the transferred
-state already below its target and returned before its first step — the NUM-16
-warm-start case, and what most of a warm ladder does. The hook says which
+state's residual already at the absolute floor and returned before its first
+step. A warm-started rung above that floor reports one step, the one whose
+undamped update shows it converged (NUM-16). The hook says which
 (:class:`~nanopnp.core.stages.SolveHook`), and :meth:`Band.note` says it back.
 
 **No convergence threshold is drawn.** NUM-16's criterion is per rung and

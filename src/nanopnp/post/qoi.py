@@ -809,8 +809,9 @@ def report_clamp_activations(solution: ModelSolution, measures: Measures) -> int
     (5.3 M for NaCl) and every property is capped at its value there by clamping
     the correction driver (PHY-13). That clamp is silent inside the symbolic
     solve — :meth:`~nanopnp.materials.electrolyte.Electrolyte.average_concentration`
-    clamps each ``c_i`` *before* the average, so the driver it returns can never
-    exceed the limit — yet a real high-salt run near a charged wall, where a
+    clamps each ``c_i`` *before* the driver is formed, and under the
+    ``ionic_strength`` driver the correction clamps the driver itself — yet a real
+    high-salt run near a charged wall, where a
     counter-ion is enriched past the cap, extrapolates the fits there. ``.knowledge/01``
     §3 names that silent extrapolation "a plausible source of confusion"; PHY-13
     requires it to be logged with its location and property instead.
@@ -835,8 +836,8 @@ def report_clamp_activations(solution: ModelSolution, measures: Measures) -> int
     Returns
     -------
     int
-        Total number of clamped samples, summed over species; 0 when the whole
-        solution stayed inside the fit range.
+        Total number of clamped samples, summed over the species and the
+        correction driver; 0 when the whole solution stayed inside the fit range.
     """
     model = _coupled(solution)
     sampler = FieldSampler.shared(

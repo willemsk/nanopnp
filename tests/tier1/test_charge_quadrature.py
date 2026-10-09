@@ -154,3 +154,24 @@ def test_qr03_a_deposited_charge_keeps_the_model_s_default_rule() -> None:
 
     assert ChargeField.quadrature_order == FIELD_QUADRATURE_ORDER
     assert DepositedCharge.quadrature_order is None
+
+
+def test_qr03_an_explicit_rule_holds_on_a_one_dimensional_mesh() -> None:
+    """``volume(rule_order=n)`` and ``integrate(rule_order=n)`` are one rule on segments too.
+
+    Without a SEGM entry the source falls back to NGSolve's estimate while the
+    gate honours the order: ``x**9`` at order 9 is exact (0.1) in the gate and
+    0.0943 in the form.
+    """
+    import ngsolve as ngs
+    from ngsolve.meshes import Make1DMesh
+
+    from nanopnp.numerics.measures import PLANAR
+
+    mesh = Make1DMesh(2)
+    test = ngs.H1(mesh, order=1).TestFunction()
+    integrand = ngs.x**9
+    form = ngs.LinearForm(PLANAR.volume(integrand * test, rule_order=9)).Assemble()
+    gate = PLANAR.integrate(integrand, mesh, rule_order=9)
+    assert sum(form.vec) == pytest.approx(gate, rel=1.0e-12)
+    assert gate == pytest.approx(0.1, rel=1.0e-12)
