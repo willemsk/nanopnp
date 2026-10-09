@@ -85,7 +85,6 @@ def exempted(value, tol):
 """
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP42 D1")
 def test_ver70_the_gate_classes_are_the_exit_tables_class_four() -> None:
     """The gates are read from the exit-code table, never listed a second time."""
     from nanopnp.validation.modularity import gate_classes
@@ -109,7 +108,6 @@ def test_ver70_the_gate_classes_are_the_exit_tables_class_four() -> None:
     assert "CaseValidationError" not in names  # class 3
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP42 D1")
 def test_ver70_a_nan_permissive_gate_is_found_at_its_line(tmp_path: Path) -> None:
     """Each NaN-permissive form is found, naming file, line and function; the safe forms pass.
 
@@ -146,7 +144,6 @@ def test_ver70_a_nan_permissive_gate_is_found_at_its_line(tmp_path: Path) -> Non
     assert found.stale == ("gates.py:gone: value > tol",)
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP42 D2")
 def test_ver70_no_gate_comparison_in_the_package_passes_a_nan() -> None:
     """The tree has no NaN-permissive gate, and the exemptions are D2's six, each with a reason."""
     from nanopnp.validation.modularity import NAN_EXEMPT, gate_classes, nan_permissive_gates
@@ -159,7 +156,6 @@ def test_ver70_no_gate_comparison_in_the_package_passes_a_nan() -> None:
     assert all(reason.strip() for reason in NAN_EXEMPT.values())
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP42 D2")
 @pytest.mark.parametrize(
     ("field", "criterion"),
     [("mean_ratio", "mean wall segment length"), ("max_ratio", "longest wall segment")],
@@ -182,7 +178,6 @@ def test_ver70_a_nan_wall_ratio_fails_the_wall_size_gate(field: str, criterion: 
         check_wall_size(WallStatistics(**values))  # type: ignore[arg-type]
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP42 D2")
 def test_ver70_a_nan_indicator_fails_the_indicator_gate() -> None:
     """``check_indicator`` passed an all-NaN ``psi`` before D2; it now aborts (QR-12)."""
     import ngsolve as ngs

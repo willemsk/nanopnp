@@ -180,14 +180,14 @@ def check_wall_size(statistics: WallStatistics) -> None:
         f"the longest being wall segment {statistics.longest} of {statistics.count}, midpoint "
         f"(r, z) = ({r_mid:.4f}, {z_mid:.4f}) nm"
     )
-    if statistics.mean_ratio > WALL_MEAN_BOUND:
+    if not statistics.mean_ratio <= WALL_MEAN_BOUND:
         raise WallSizeGateError(
             "mean wall segment length",
             f"{statistics.mean_ratio * target:.5f} nm, {statistics.mean_ratio:.3f} x the target",
             f"{WALL_MEAN_BOUND} x the {target:.5f} nm target",
             where,
         )
-    if statistics.max_ratio > WALL_MAX_BOUND:
+    if not statistics.max_ratio <= WALL_MAX_BOUND:
         raise WallSizeGateError(
             "longest wall segment",
             f"{statistics.max_ratio * target:.5f} nm, {statistics.max_ratio:.3f} x the target",

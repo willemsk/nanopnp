@@ -720,7 +720,7 @@ def measure(
         "r_nm": axis_r,
         "z_nm": float(points[nearest, 1]),
     }
-    if axis_r < h_c:
+    if not axis_r >= h_c:
         failures.append(
             ContourGateError(
                 "loop topology",
@@ -740,7 +740,7 @@ def measure(
         "r_nm": float(middle[0]),
         "z_nm": float(middle[1]),
     }
-    if lengths[edge] < h_c:
+    if not lengths[edge] >= h_c:
         failures.append(
             ContourGateError(
                 "minimum vertex spacing",
@@ -805,7 +805,7 @@ def measure(
         "r_nm": float(lumen[constriction]),
         "z_nm": float(planes[constriction]),
     }
-    if margin[low] < -h_c:
+    if not margin[low] >= -h_c:
         failures.append(
             ContourGateError(
                 "radius profile",
@@ -816,7 +816,7 @@ def measure(
                 location_nm=(float(lumen[low]), float(planes[low])),
             )
         )
-    if margin[high] > BAND_HIGH_NM:
+    if not margin[high] <= BAND_HIGH_NM:
         failures.append(
             ContourGateError(
                 "radius profile",

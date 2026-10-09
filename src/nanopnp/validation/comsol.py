@@ -1070,7 +1070,7 @@ def _read_patch(path: Path, patch: ProbePatch, field: str) -> np.ndarray:
     r_axis, z_axis = patch.axes_nm()
     for name, found, wanted in (("r", grid.r_nm, r_axis), ("z", grid.z_nm, z_axis)):
         worst = float(np.max(np.abs(found - wanted)))
-        if worst > AXIS_TOL_NM:
+        if not worst <= AXIS_TOL_NM:
             raise GoldenError(
                 f"{path}: the {name} axis differs from patch {patch.name!r}'s by up to "
                 f"{worst:.6g} nm, against a tolerance of {AXIS_TOL_NM:g} nm. The export was taken "

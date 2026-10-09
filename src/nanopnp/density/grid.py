@@ -195,7 +195,7 @@ class RadialGrid:
                 )
             steps = np.diff(axis)
             step = float(steps[0])
-            if step <= 0.0 or float(np.max(np.abs(steps - step))) > UNIFORM_TOL_NM:
+            if not step > 0.0 or not float(np.max(np.abs(steps - step))) <= UNIFORM_TOL_NM:
                 raise GridFormatError(
                     f"the {name} axis is not uniformly ascending: spacing runs from "
                     f"{float(np.min(steps)):.6g} to {float(np.max(steps)):.6g} nm. A voxel "

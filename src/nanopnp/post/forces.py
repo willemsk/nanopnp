@@ -239,12 +239,12 @@ def axial_extension(
     """
     import ngsolve as ngs
 
-    if outer_nm <= inner_nm:
+    if not outer_nm > inner_nm:
         raise ExtensionError(
             f"the transition shell must have positive width, got inner={inner_nm} nm and "
             f"outer={outer_nm} nm"
         )
-    if inner_nm < 0.0:
+    if not inner_nm >= 0.0:
         raise ExtensionError(f"inner_nm must not be negative, got {inner_nm} nm")
 
     if distance_nm is None:
@@ -347,7 +347,7 @@ def check_extension(
     def _mean_square(target: Expression, boundary: str) -> float:
         region = mesh.Boundaries(boundary)
         length = float(ngs.Integrate(ngs.CF(1.0), mesh, definedon=region))
-        if length <= 0.0:
+        if not length > 0.0:  # pragma: no cover - missing boundary in mesh
             known = ", ".join(sorted(set(mesh.GetBoundaries())))
             raise ExtensionError(f"no boundary matching {boundary!r} in this mesh; it has {known}")
         difference = extension - ngs.CF(target)
@@ -359,7 +359,7 @@ def check_extension(
     outer = _outer_boundaries(mesh, body, axis, fluid)
     on_body = _mean_square((0.0, 1.0), body)
     on_outer = _mean_square((0.0, 0.0), outer) if outer else 0.0
-    if on_body > tolerance or on_outer > tolerance:
+    if not on_body <= tolerance or not on_outer <= tolerance:
         raise ExtensionError(
             f"w must be e_z on {body!r} and zero on {outer!r}; the mean-square departures are "
             f"{on_body:.3e} and {on_outer:.3e} against a tolerance of {tolerance:.3e}. An "

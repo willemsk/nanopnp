@@ -405,7 +405,7 @@ def gate_axis(record: AxisRecord) -> AxisRecord:
     n = record.n
     nominal = 360.0 / n
     limit = SPACING_FRACTION * nominal
-    if record.spacing_error_deg > limit:
+    if not record.spacing_error_deg <= limit:
         errors = [abs(gap - nominal) for gap in record.spacings_deg]
         worst = errors.index(max(errors))
         raise SymmetryGateError(
@@ -415,13 +415,13 @@ def gate_axis(record: AxisRecord) -> AxisRecord:
             f"(a quarter of the spacing); the assembly is not C{n} about one axis"
         )
     angle_error = abs(record.angle_deg - nominal)
-    if angle_error > ANGLE_TOLERANCE_DEG:
+    if not angle_error <= ANGLE_TOLERANCE_DEG:
         raise SymmetryGateError(
             f"rotation-angle gate: superposing the assembly on its cyclic permutation is a turn "
             f"of {record.angle_deg:.3f} degrees, {angle_error:.3f} degrees from the {nominal:g} "
             f"of C{n} against a limit of {ANGLE_TOLERANCE_DEG:g}; the assembly is not C{n}"
         )
-    if record.tilt_deg > ORIENTATION_LIMIT_DEG:
+    if not record.tilt_deg <= ORIENTATION_LIMIT_DEG:
         raise SymmetryGateError(
             f"orientation gate: the detected axis is {record.tilt_deg:.2f} degrees from the "
             f"file's z against a limit of {ORIENTATION_LIMIT_DEG:g}; the axis is signed by the "
@@ -507,7 +507,7 @@ def check_z_axis(record: AxisRecord, z_extent_nm: tuple[float, float]) -> Displa
         exceeds :data:`DISPLACEMENT_BUDGET_NM`.
     """
     found = z_displacement(record.axis, record.centroid_nm, z_extent_nm)
-    if found.displacement_nm > DISPLACEMENT_BUDGET_NM:
+    if not found.displacement_nm <= DISPLACEMENT_BUDGET_NM:
         raise SymmetryGateError(
             f"axis: z displacement gate: the file's z axis is {found.displacement_nm:.4f} nm from "
             f"the detected C{record.n} axis over the C-alpha axial extent "

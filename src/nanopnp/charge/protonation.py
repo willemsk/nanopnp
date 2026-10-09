@@ -1005,7 +1005,7 @@ def _gate(frame: PQRFrame, index: int) -> float:
             "on the protonation keys)"
         )
     q_net = math.fsum(frame.charge_e.tolist())
-    if abs(q_net - round(q_net)) > Q_NET_TOLERANCE_E:
+    if not abs(q_net - round(q_net)) <= Q_NET_TOLERANCE_E:
         raise ProtonationError(
             f"frame {index}: Q_net = {q_net!r} e is {abs(q_net - round(q_net)):.3g} e from an "
             f"integer, more than {Q_NET_TOLERANCE_E} e (PHY-16 step 3); an atom carries a charge "

@@ -536,7 +536,7 @@ class ProbeGrid:
                 (patch.z_nm[0] - margin, patch.z_nm[1] + margin),
             )
             for axis, (index, (want_low, want_high)) in zip("rz", enumerate(wanted), strict=True):
-                if want_low < low[index] or want_high > high[index]:
+                if not want_low >= low[index] or not want_high <= high[index]:
                     raise ProbeGridError(
                         f"patch {patch.name!r} of probe grid {document.name!r} needs "
                         f"{axis} in [{want_low:.6g}, {want_high:.6g}] nm once grown by the "

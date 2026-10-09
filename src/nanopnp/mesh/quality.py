@@ -269,7 +269,7 @@ def check_quality(
     for name, values in (("minimum SICN", report.sicn), ("minimum gamma", report.gamma)):
         worst = int(np.argmin(values))
         value = float(values[worst])
-        if value <= floor:
+        if not value > floor:
             r, z = report.centroid(worst)
             raise MeshQualityError(
                 gate=name,

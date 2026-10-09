@@ -493,7 +493,7 @@ def _read_meshio(path: Path) -> MeshData:
     points = np.asarray(mesh.points, dtype=np.float64)
     if points.ndim != 2 or points.shape[1] < 2:
         raise MeshFormatError(f"{path}: expected point coordinates, got shape {points.shape}")
-    if points.shape[1] > 2 and bool(np.any(np.abs(points[:, 2]) > TOL_NM)):
+    if points.shape[1] > 2 and not bool(np.all(np.abs(points[:, 2]) <= TOL_NM)):
         raise MeshFormatError(
             f"{path}: this is a three-dimensional mesh; nanopnp solves the (r, z) half-plane "
             "and reads a mesh whose third coordinate is zero throughout (CON-04)"
@@ -592,7 +592,9 @@ def from_ngsolve(mesh: Mesh) -> MeshData:
 
     ngmesh = mesh.ngmesh
     points = np.array([point.p for point in ngmesh.Points()], dtype=np.float64)
-    if points.shape[1] > 2 and bool(np.any(np.abs(points[:, 2]) > TOL_NM)):
+    if points.shape[1] > 2 and not bool(
+        np.all(np.abs(points[:, 2]) <= TOL_NM)
+    ):  # pragma: no cover - 3D mesh in ngsolve adapter
         raise MeshFormatError(
             "this is a three-dimensional mesh; nanopnp solves the (r, z) half-plane (CON-04)"
         )

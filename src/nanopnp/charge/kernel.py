@@ -274,7 +274,7 @@ def check_spacing(atoms: SourceAtoms, spacing_nm: float) -> None:
             "a charged atom has no kernel width (PHY-16 step 4)",
             f"{atoms.label(narrowest)} has w = {width} nm; its radius must be positive",
         )
-    if spacing_nm > 0.5 * width:
+    if not spacing_nm <= 0.5 * width:
         raise ChargeFieldError(
             "the export lattice does not resolve the narrowest kernel "
             "(charge.smearing.grid_spacing_nm, PHY-16 NOTE on the deposition)",
