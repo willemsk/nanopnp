@@ -49,6 +49,7 @@ from nanopnp.io.case_paths import (
 )
 from nanopnp.io.resolved import contour_spacing_nm
 from nanopnp.materials.electrolyte import Electrolyte
+from nanopnp.materials.models import PropertyKind, applies_part
 from nanopnp.mesh.meshers import registered_meshers
 from nanopnp.numerics.linear import registered_solvers, rejection
 from nanopnp.physics.models import (
@@ -458,6 +459,8 @@ def require_runnable(document: CaseDocument) -> SuppliedArtefact | None:
     # more precise diagnostic than one about how to continue it.
     _check_physics_switches(document)
     _check_unread(document)
+    _check_correction_parts(document)
+    _check_driver(document)
     _check_strategy(document)
     if document.numerics.continuation == LADDER_STRATEGY:
         _check_ladder_can_honour(document.physics)
@@ -940,6 +943,63 @@ def _check_unread(document: CaseDocument) -> None:
         lines.append(f"  {path}: {val_str} (default {def_str}; read by {readers_str})")
     msg = "\n".join(lines) + _migration_suffix(document)
     raise CaseValidationError(msg)
+
+
+def _check_correction_parts(document: CaseDocument) -> None:
+    decl = declaration(document.physics.model)
+    violations: list[tuple[PropertyKind, str, str]] = []
+    props: tuple[PropertyKind, ...] = (
+        "diffusivity",
+        "mobility",
+        "viscosity",
+        "permittivity",
+        "density",
+    )
+    for prop in props:
+        spec = getattr(document.electrolyte.corrections, prop)
+        for part in ("concentration", "wall"):
+            path = f"electrolyte.corrections.{prop}.{part}"
+            if path in decl.unread:
+                continue
+            is_active = getattr(spec, part)
+            if is_active is False and not applies_part(spec.model, prop, part):
+                violations.append((prop, part, spec.model))
+    if not violations:
+        return
+    n = len(violations)
+    header = (
+        "electrolyte.corrections switches off 1 part no correction model applies; it would be "
+        "recorded in the manifest as a deviation and never applied (PHY-22), so leave it at "
+        "its default, true:"
+        if n == 1
+        else (
+            f"electrolyte.corrections switches off {n} parts no correction model applies; "
+            "each would be recorded in the manifest as a deviation and never applied (PHY-22), "
+            "so leave each at its default, true:"
+        )
+    )
+    lines = [header]
+    for prop, part, model in violations:
+        lines.append(
+            f"  electrolyte.corrections.{prop}.{part}: false ({prop} model '{model}' has no "
+            f"{part} fit)"
+        )
+    raise CaseValidationError("\n".join(lines))
+
+
+def _check_driver(document: CaseDocument) -> None:
+    decl = declaration(document.physics.model)
+    if "electrolyte.driver" in decl.unread:
+        return
+    if document.electrolyte.driver == "ionic_strength":
+        species = document.electrolyte.species
+        if len(species) == 2 and abs(species[0].z) == 1 and abs(species[1].z) == 1:
+            raise CaseValidationError(
+                "electrolyte.driver: ionic_strength drives the corrections with "
+                "I = 1/2 sum z_i^2 c_i, which equals the average concentration (c_1 + c_2)/2 "
+                "for two species of unit valence, so it would be recorded in the manifest as "
+                "a deviation and never change a number (PHY-13); leave it at its default, average"
+            )
 
 
 def carry_upgrade(document: CaseDocument, *, source: str = "<string>") -> CaseDocument:
