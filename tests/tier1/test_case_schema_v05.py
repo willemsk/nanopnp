@@ -53,7 +53,6 @@ MIGRATION = (
 WRITTEN = ", variable_density: false, inertia: false"
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP42 D9")
 def test_g6_the_schema_is_v05_and_names_the_identifiers_it_upgrades() -> None:
     """The identifier names the release that ships the move; v2 and v1 are its upgrades."""
     from nanopnp.io.artefact import CASE_SCHEMA, CASE_SCHEMA_V1, CASE_SCHEMA_V2
@@ -65,7 +64,6 @@ def test_g6_the_schema_is_v05_and_names_the_identifiers_it_upgrades() -> None:
     assert VALIDATED_DEFAULT_CASE.schema_id == "nanopnp/case/v0.5"
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP42 D9")
 def test_g6_a_v05_document_reads_as_itself() -> None:
     """A document declaring the current identifier is not an upgrade."""
     from nanopnp.pipeline.case import loads_case
@@ -75,7 +73,6 @@ def test_g6_a_v05_document_reads_as_itself() -> None:
     assert document.upgraded_from is None
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP42 D9")
 def test_g6_an_unknown_identifier_is_refused_naming_the_three_it_reads() -> None:
     """A future identifier fails naming the schema it claims, before any field error."""
     from nanopnp.io.case import CaseValidationError
@@ -178,7 +175,6 @@ def test_g6_a_v1_document_reads_through_both_upgrades() -> None:
     assert document.physics.variable_density is False
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP42 D10")
 def test_g6_the_upgrade_mark_survives_a_copy() -> None:
     """A swept or edited copy of an upgraded document is still an upgraded document."""
     from nanopnp.pipeline.case import loads_case
