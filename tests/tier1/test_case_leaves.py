@@ -271,13 +271,11 @@ def probes(model: str, meshes: dict[str, Path]) -> Iterator[tuple[str, object, d
 # -- the classification ----------------------------------------------------------
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP42 D4")
 def test_ver71_every_case_leaf_is_classified_once_in_both_directions() -> None:
     """Every leaf of the schema has one kind, and every entry names a leaf (REV-12)."""
-    from nanopnp.validation.case_leaves import KINDS, LEAVES
-
     from nanopnp.core.stages import registered_stages
     from nanopnp.io.case_paths import case_fields
+    from nanopnp.validation.case_leaves import KINDS, LEAVES
 
     walked = {reference.path for reference in case_fields()}
     assert set(LEAVES) == walked
@@ -321,12 +319,10 @@ def test_ver71_every_case_leaf_is_classified_once_in_both_directions() -> None:
     }
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP42 D4")
 def test_ver71_a_leaf_added_to_the_schema_and_classified_nowhere_fails() -> None:
     """The oracle of the phase plan: a new path the table does not hold is named."""
-    from nanopnp.validation.case_leaves import LEAVES, unclassified
-
     from nanopnp.io.case_paths import case_fields
+    from nanopnp.validation.case_leaves import LEAVES, unclassified
 
     walked = [reference.path for reference in case_fields()]
     assert unclassified(walked, LEAVES) == ((), ())
@@ -753,12 +749,10 @@ def test_ver71_a_fixed_leaf_is_refused_away_from_its_default(meshes: dict[str, P
         assert path.rsplit(".", 1)[-1] in str(raised.value), path
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP42 D4")
 def test_ver71_a_provenance_leaf_moves_no_solve_key(meshes: dict[str, Path]) -> None:
     """``name`` reaches the case key and nothing the solve is keyed on (§5.3.2)."""
-    from nanopnp.validation.case_leaves import LEAVES
-
     from nanopnp.pipeline.case import loads_case, resolve
+    from nanopnp.validation.case_leaves import LEAVES
 
     assert LEAVES["name"].kind == "provenance"
     left = resolve(loads_case(yaml.safe_dump(base("epnp-ns", meshes))))
@@ -766,17 +760,15 @@ def test_ver71_a_provenance_leaf_moves_no_solve_key(meshes: dict[str, Path]) -> 
     assert left.solve_provenance == right.solve_provenance
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP42 D4")
 def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
     """Each stage leaf moves its consumer's key and no upstream key (VER-71, D7)."""
-    from nanopnp.validation.case_leaves import LEAVES  # noqa: F401
-
     from nanopnp.core.stages import create, describe
     from nanopnp.io.artefact import Artefact, ProfileArtefact, StageInputs
     from nanopnp.io.case import CaseValidationError, UnsupportedCaseSection
     from nanopnp.mesh.adapter import from_ngsolve, write_msh41
     from nanopnp.mesh.primitives import CylindricalPoreGeometry
     from nanopnp.pipeline.case import loads_case, resolve
+    from nanopnp.validation.case_leaves import LEAVES  # noqa: F401
 
     def upstream_of(stage_name: str) -> set[str]:
         seen: set[str] = set()
