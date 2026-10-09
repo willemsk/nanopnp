@@ -335,7 +335,6 @@ def test_ver71_a_leaf_added_to_the_schema_and_classified_nowhere_fails() -> None
     assert unclassified(walked, stale) == ((), ("physics.gone",))
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP42 D3")
 @pytest.mark.parametrize("model", MODELS)
 def test_ver71_each_model_declares_the_leaves_it_does_not_read(model: str) -> None:
     """The declaration states the unread leaves, read without building the model (§5.4.3)."""
@@ -344,7 +343,6 @@ def test_ver71_each_model_declares_the_leaves_it_does_not_read(model: str) -> No
     assert declaration(model).unread == UNREAD[model]
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP42 D5")
 def test_ver71_the_switch_sets_honour_only_what_changes_the_operator() -> None:
     """REV-42 and its pnp-ns twins: a switch value that is an exact identity is not honoured."""
     from nanopnp.physics.models import declaration
@@ -365,8 +363,17 @@ def test_ver71_the_switch_sets_honour_only_what_changes_the_operator() -> None:
 # -- the operator probe ----------------------------------------------------------
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP42 D3, D5, D6")
-@pytest.mark.parametrize("model", MODELS)
+MODELS_D6 = (
+    pytest.param("epnp-ns", marks=pytest.mark.xfail(strict=True, reason="planned: WP42 D6")),
+    "pb",
+    "pb-linear",
+    pytest.param("pnp", marks=pytest.mark.xfail(strict=True, reason="planned: WP42 D6")),
+    "pnp-ns",
+    "poisson",
+)
+
+
+@pytest.mark.parametrize("model", MODELS_D6)
 def test_ver71_no_solve_leaf_is_accepted_and_inert(model: str, meshes: dict[str, Path]) -> None:
     """Each perturbation is refused or moves the operator; inert is allowed only unrefusable.
 
@@ -386,8 +393,7 @@ def test_ver71_no_solve_leaf_is_accepted_and_inert(model: str, meshes: dict[str,
     assert not inert, f"{model} accepts and ignores {inert}"
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP42 D3")
-@pytest.mark.parametrize("model", MODELS)
+@pytest.mark.parametrize("model", MODELS_D6)
 def test_ver71_the_unread_leaves_are_inert_and_the_rest_are_not(
     model: str, meshes: dict[str, Path], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -557,7 +563,6 @@ def _refused(document: dict[str, Any]) -> str:
     return str(raised.value)
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP42 D3")
 def test_ver71_unread_leaves_are_refused_naming_each_key_its_default_and_its_readers(
     meshes: dict[str, Path],
 ) -> None:
@@ -639,7 +644,6 @@ def test_ver71_the_ionic_strength_driver_of_a_one_one_salt_is_refused(
     )
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP42 D5")
 def test_ver71_pnp_refuses_the_flow_switches_it_cannot_apply(meshes: dict[str, Path]) -> None:
     """REV-42: ``pnp`` refuses ``variable_density`` and ``inertia`` true, as ``pb`` does."""
     document = base("pnp", meshes)
@@ -662,7 +666,6 @@ def test_ver71_pnp_refuses_the_flow_switches_it_cannot_apply(meshes: dict[str, P
     )
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP42 D8")
 def test_ver71_a_flowless_model_is_refused_on_its_flow_switch_first(
     meshes: dict[str, Path],
 ) -> None:

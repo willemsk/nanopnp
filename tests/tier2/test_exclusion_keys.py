@@ -49,7 +49,7 @@ KEYS = {
 KEYS_V2 = {
     **KEYS,
     "charge": "3810c50e598c543d147a8bd8a804a68d7875c30ec00dfe94d5575f4cc79792dc",
-    "solve": "ee0900fc50ce0796f42f2305c920e637eaab75b02e3e2b2a78f763eaefe273bc",
+    "solve": "b1370ee6183a4bdebd8697f9dc41846fd5bf8c89d51e246495b498033726806a",
 }
 """The same keys with stage 7 at ``nanopnp/fields/v2`` (WP32 D15); region and mesh unchanged."""
 
@@ -176,7 +176,17 @@ def test_ver59_with_both_keys_at_zero_every_key_and_the_record_are_unchanged(
     charge_v1 = content_hash(
         FIELDS_SCHEMA_V1, charge.parameters, {**charge.inputs, "charge_grid": grid_v1}
     )
-    solve_v1 = content_hash(solve.schema, solve.parameters, {**solve.inputs, "charge": charge_v1})
+    # At bbca737 (WP30), pnp accepted and recorded variable_density: true, inertia: true;
+    # WP42 carries them as false (D5, D10). Restoring the bbca737 values recovers the literal.
+    params_bbca = {
+        **solve.parameters,
+        "model_options": {
+            **solve.parameters["model_options"],
+            "variable_density": True,
+            "inertia": True,
+        },
+    }
+    solve_v1 = content_hash(solve.schema, params_bbca, {**solve.inputs, "charge": charge_v1})
     assert {**found, "charge": charge_v1, "solve": solve_v1} == KEYS
 
     record = Path(artefacts["region"].payload["region"])

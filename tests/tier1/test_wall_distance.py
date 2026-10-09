@@ -420,7 +420,7 @@ def _resolved(tmp_path: Path, wall_h_nm: float, *, corrections: bool) -> tuple[R
         GATED_CASE.format(
             path=path,
             model="willems2020_nacl" if corrections else "none",
-            wall="true" if corrections else "false",
+            wall="true",
             physics="epnp-ns" if corrections else "pnp-ns",
         )
     )

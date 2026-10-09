@@ -47,6 +47,7 @@ from nanopnp.mesh.primitives import DEFAULT_BOUNDARIES
 from nanopnp.numerics.newton import DEFAULT_SETTINGS, NewtonSettings
 from nanopnp.physics.models import build_case_model, declaration
 from nanopnp.pipeline.checks import (
+    carry_upgrade,
     check_document,
     check_operating_point,
     check_species,
@@ -91,12 +92,17 @@ def load_case(path: str | Path) -> CaseDocument:
         pair no solve can use; the message names every offending key by dotted
         path.
     """
-    return check_document(read_case(path), source=str(Path(path)))
+    source = str(Path(path))
+    doc = read_case(path)
+    doc = carry_upgrade(doc, source=source)
+    return check_document(doc, source=source)
 
 
 def loads_case(text: str, *, source: str = "<string>") -> CaseDocument:
     """Validate a case document held in memory; see :func:`load_case`."""
-    return check_document(read_case_text(text, source=source), source=source)
+    doc = read_case_text(text, source=source)
+    doc = carry_upgrade(doc, source=source)
+    return check_document(doc, source=source)
 
 
 def _choice(spec: CorrectionChoiceSpec) -> CorrectionChoice:

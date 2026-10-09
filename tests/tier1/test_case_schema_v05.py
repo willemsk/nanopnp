@@ -86,7 +86,6 @@ def test_g6_an_unknown_identifier_is_refused_naming_the_three_it_reads() -> None
     )
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP42 D10")
 def test_g6_a_v2_pnp_document_carries_the_switches_its_model_honours(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -117,7 +116,6 @@ def test_g6_a_v2_pnp_document_carries_the_switches_its_model_honours(
     assert options["inertia"] is False
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP42 D10")
 def test_g6_a_v2_document_that_wrote_an_unapplied_switch_is_refused_naming_the_migration() -> None:
     """A written ``variable_density: true`` under ``pnp`` was the author's belief; not carried."""
     from nanopnp.io.case import CaseValidationError
@@ -133,7 +131,6 @@ def test_g6_a_v2_document_that_wrote_an_unapplied_switch_is_refused_naming_the_m
     )
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP42 D10")
 def test_g6_a_v2_document_that_wrote_an_unread_leaf_is_refused_naming_the_migration() -> None:
     """A ``pnp-ns`` case that wrote a correction was solved classical under v2; v0.5 says so."""
     from nanopnp.io.case import CaseValidationError
@@ -149,7 +146,6 @@ def test_g6_a_v2_document_that_wrote_an_unread_leaf_is_refused_naming_the_migrat
     )
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP42 D10")
 def test_g6_a_v05_document_is_refused_without_the_migration_line() -> None:
     """The same refusal of a v0.5 document has no upgrade to point at."""
     from nanopnp.io.case import CaseValidationError
@@ -164,7 +160,6 @@ def test_g6_a_v05_document_is_refused_without_the_migration_line() -> None:
     )
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP42 D10")
 def test_g6_a_v1_document_reads_through_both_upgrades() -> None:
     """v1 is rewritten to v2, then carried to v0.5; it remembers the identifier it declared."""
     from nanopnp.pipeline.case import loads_case

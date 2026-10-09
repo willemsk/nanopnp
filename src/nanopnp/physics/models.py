@@ -426,6 +426,7 @@ class ModelDeclaration:
     quantities: tuple[str, ...] = ()
     transport: bool = False
     reports_newton: bool = False
+    unread: frozenset[str] = frozenset()
 
     def __post_init__(self) -> None:
         """Refuse a declaration that leaves a switch unstated or names an unknown coefficient.
@@ -2619,6 +2620,24 @@ _QUANTITIES: tuple[str, ...] = (
 )
 """The section 6.7 quantities a coupled model with a flow block provides."""
 
+CORRECTION_PROPERTIES_ALL = ("diffusivity", "mobility", "permittivity", "viscosity", "density")
+PARTS = ("model", "concentration", "wall")
+CORRECTION_LEAVES = frozenset(
+    {f"electrolyte.corrections.{p}.{k}" for p in CORRECTION_PROPERTIES_ALL for k in PARTS}
+    | {"electrolyte.corrections.steric.model", "electrolyte.driver"}
+)
+WALL_DISTANCE_LEAVES = frozenset(
+    {"numerics.wall_distance.sources", "numerics.wall_distance.max_distance_nm"}
+)
+VELOCITY_PRESSURE = frozenset({"numerics.elements.u", "numerics.elements.p"})
+ELECTROSTATIC = (
+    CORRECTION_LEAVES
+    | VELOCITY_PRESSURE
+    | WALL_DISTANCE_LEAVES
+    | frozenset({"numerics.stabilisation"})
+)
+LINEAR = frozenset({"numerics.nonlinear.max_iter", "numerics.nonlinear.rtol"})
+
 _COUPLED = ModelDeclaration(
     options=(*_COUPLED_OPTIONS, "flow"),
     switches=dict.fromkeys(SWITCHES, _BOTH),
@@ -2639,31 +2658,58 @@ _ELECTROSTATIC_SWITCHES: dict[str, tuple[bool, ...]] = {
 }
 
 register_model("epnp-ns", _build_epnp_ns, _COUPLED)
-register_model("pnp-ns", _build_pnp_ns, _COUPLED)
+register_model(
+    "pnp-ns",
+    _build_pnp_ns,
+    replace(
+        _COUPLED,
+        switches={
+            **_COUPLED.switches,
+            "variable_density": (True,),
+            "dielectric_gradient_forces": (False,),
+        },
+        unread=CORRECTION_LEAVES | WALL_DISTANCE_LEAVES,
+    ),
+)
 register_model(
     "pnp",
     _build_pnp,
-    # No flow, so no flow quantity; and the NUM-18 ladder carries the flow
-    # coupling from stage 6, so only the single rung solves ``pnp`` (section 6.5).
-    # ``variable_density`` and ``inertia`` keep both values: they are carried into
-    # the model and its provenance as the case gives them.
     replace(
         _COUPLED,
         options=_COUPLED_OPTIONS,
-        switches={**dict.fromkeys(SWITCHES, _BOTH), "flow": (False,)},
+        switches={
+            **dict.fromkeys(SWITCHES, _BOTH),
+            "flow": (False,),
+            "variable_density": (False,),
+            "inertia": (False,),
+        },
         strategies=("none",),
         quantities=("current", "transport_numbers", "rectification"),
+        unread=frozenset(
+            {f"electrolyte.corrections.{p}.{k}" for p in ("viscosity", "density") for k in PARTS}
+            | VELOCITY_PRESSURE
+        ),
     ),
 )
 register_model(
     "pb",
     _screened_builder("pb", "sinh"),
-    ModelDeclaration(options=("order",), switches=_ELECTROSTATIC_SWITCHES, solids=False),
+    ModelDeclaration(
+        options=("order",),
+        switches=_ELECTROSTATIC_SWITCHES,
+        solids=False,
+        unread=ELECTROSTATIC,
+    ),
 )
 register_model(
     "pb-linear",
     _screened_builder("pb-linear", "linear"),
-    ModelDeclaration(options=("order",), switches=_ELECTROSTATIC_SWITCHES, solids=False),
+    ModelDeclaration(
+        options=("order",),
+        switches=_ELECTROSTATIC_SWITCHES,
+        solids=False,
+        unread=ELECTROSTATIC | LINEAR,
+    ),
 )
 register_model(
     "poisson",
@@ -2673,5 +2719,6 @@ register_model(
         switches=_ELECTROSTATIC_SWITCHES,
         solids=True,
         coefficients=COEFFICIENTS,
+        unread=ELECTROSTATIC | LINEAR | frozenset({"electrolyte.concentration_M"}),
     ),
 )
