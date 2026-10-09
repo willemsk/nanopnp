@@ -86,10 +86,10 @@ neither may compare with a model name or name a model class."""
 
 SOLVE_HASHES = {
     "epnp-ns": "7434504618fd58078a25abfe6970248d459cbac8d58b2361d3ce8f023d64816f",
-    "pnp-ns": "ed85c659de724e0e6e3492a606b9f618076ce50d64a0ecaf25236ea2b1284fb6",
-    "pnp": "1026fed484cb761653d6b9e1195b9d4d8f05f3404a237446d4d1e0448d44887c",
-    "pb": "9529a45cdcdca7c750ac077079f48854250f519bf7bdd84bb5bb96d505d402d9",
-    "pb-linear": "c1e0439324e17f490ef29e3705a632924260c75dc84e8ebed0d30e50820381be",
+    "pnp-ns": "72a8974d89c3514d4074c6da8c5ac7bb4f676ca7b41e8b62e9eb2236a6014ff6",
+    "pnp": "56f1cad6d07638a863d63b7cd31e8a041c89637680a4a6df701f1f3291131aa6",
+    "pb": "cacf3344cae1bd81c9675b34c0b5908831f3e14bdd598194a7ebb1d651be6e28",
+    "pb-linear": "8e7475db3a51c40762881429a5bddfc80582a8558f928a8cce4356a7fef53fb4",
 }
 """``content_hash(SOLUTION_SCHEMA, solve_provenance)`` of the quick-start variants, on ``main``.
 
@@ -305,7 +305,9 @@ def _refusal(text: str) -> str:
 
 def test_ver56_an_unhonoured_switch_is_refused_naming_model_key_and_values() -> None:
     """``pnp`` honours ``flow: false`` only (PHY-21), and says who honours ``true``."""
-    message = _refusal(case_text(physics="{model: pnp, solid_permittivities: {membrane: 3.2}}"))
+    message = _refusal(
+        case_text(physics="{model: pnp, flow: true, solid_permittivities: {membrane: 3.2}}")
+    )
     assert "'pnp'" in message and "physics.flow" in message
     assert "physics.flow must be false" in message
     assert "epnp-ns, pnp-ns" in message
@@ -505,22 +507,41 @@ print(sorted(name for name in ("ngsolve", "netgen") if name in sys.modules))
 def _quickstart_variants() -> dict[str, str]:
     """Return the quick-start case as each of the five pre-existing models."""
     base = QUICKSTART.read_text(encoding="utf-8")
+    corrections_block = (
+        "  corrections:\n"
+        "    diffusivity:  {model: willems2020_nacl}\n"
+        "    mobility:     {model: willems2020_nacl}\n"
+        "    viscosity:    {model: willems2020_nacl}\n"
+        "    permittivity: {model: willems2020_nacl}\n"
+        "    density:      {model: willems2020_nacl}\n"
+        "    steric:       {model: borukhov}\n"
+    )
+    pnp_base = base.replace("    viscosity:    {model: willems2020_nacl}\n", "").replace(
+        "    density:      {model: willems2020_nacl}\n", ""
+    )
     electrostatic = (
-        base.replace(
+        base.replace(corrections_block, "")
+        .replace(
             "  solid_permittivities: {membrane: 3.2}\n",
-            "  flow: false\n  variable_density: false\n  inertia: false\n",
+            "  flow: false\n"
+            "  variable_density: false\n"
+            "  inertia: false\n"
+            "  dielectric_gradient_forces: false\n",
         )
         .replace("continuation: default_ladder", "continuation: none")
         .replace("outputs: [current, transport_numbers, eof_rate]", "outputs: []")
     )
     return {
         "epnp-ns": base,
-        "pnp-ns": base.replace("model: epnp-ns", "model: pnp-ns"),
-        # ``outputs`` is outside the solve key, so the word ``pnp`` cannot provide
-        # is replaced without moving the digest.
-        "pnp": base.replace("model: epnp-ns", "model: pnp\n  flow: false")
-        .replace("continuation: default_ladder", "continuation: none")
-        .replace("eof_rate]", "rectification]"),
+        "pnp-ns": base.replace(corrections_block, "").replace("model: epnp-ns", "model: pnp-ns"),
+        "pnp": (
+            pnp_base.replace(
+                "model: epnp-ns",
+                "model: pnp\n  flow: false\n  variable_density: false\n  inertia: false",
+            )
+            .replace("continuation: default_ladder", "continuation: none")
+            .replace("eof_rate]", "rectification]")
+        ),
         "pb": electrostatic.replace("model: epnp-ns", "model: pb"),
         "pb-linear": electrostatic.replace("model: epnp-ns", "model: pb-linear"),
     }
@@ -676,13 +697,10 @@ def test_ver56_pnp_ns_beside_corrections_it_overrides_runs_and_restores(
 ) -> None:
     """VER-56: whether ``d`` is read is asked of the built model, not of the case.
 
-    ``pnp-ns`` resolves every correction to ``none`` whatever the case gives, so
-    the quick-start case as ``pnp-ns`` -- its corrections on, the schema default
-    -- reads no distance field. Asked of the case's electrolyte, the solve then
-    paid for a field no term evaluated, and ``save`` refused the converged state
-    on the ladder and on the single rung alike. Now both run to stage 12, store
-    no distance field, restore, and equal the same case with every correction
-    written as ``none`` bit for bit.
+    ``pnp-ns`` reads no corrections (VER-71), so the quick-start case as
+    ``pnp-ns`` with its corrections on is refused naming each correction key;
+    and with them left at ``none``, runs to stage 12 on the ladder and on a
+    single rung, stores no distance field and restores.
     """
     import numpy as np
 
@@ -691,14 +709,21 @@ def test_ver56_pnp_ns_beside_corrections_it_overrides_runs_and_restores(
         .replace("model: epnp-ns", "model: pnp-ns")
         .replace("path: pore.msh", f"path: {pore_mesh}")
     )
+    with pytest.raises(CaseValidationError) as raised:
+        resolve(loads_case(quickstart))
+    message = str(raised.value)
+    assert "physics.model 'pnp-ns' does not read 6 keys this case sets" in message
+    for prop in ("diffusivity", "mobility", "viscosity", "permittivity", "density"):
+        assert f"electrolyte.corrections.{prop}.model: willems2020_nacl" in message
+    assert "electrolyte.corrections.steric.model: borukhov" in message
+
     classical = quickstart.replace("{model: willems2020_nacl}", "{model: none}").replace(
         "{model: borukhov}", "{model: none}"
     )
     assert classical.count("{model: none}") == 6
     texts = {
-        "ladder": quickstart,
-        "single": quickstart.replace("continuation: default_ladder", "continuation: none"),
-        "classical": classical,
+        "ladder": classical,
+        "single": classical.replace("continuation: default_ladder", "continuation: none"),
     }
     runs = {name: _run(text, tmp_path / name) for name, text in texts.items()}
     for name, result in runs.items():
@@ -706,7 +731,9 @@ def test_ver56_pnp_ns_beside_corrections_it_overrides_runs_and_restores(
         with np.load(state, allow_pickle=False) as archive:
             assert WALL_DISTANCE_ENTRY not in archive.files, name
         restore(state, resolved=resolve(loads_case(texts[name])))
-    assert runs["ladder"].artefacts["qoi"].summary == runs["classical"].artefacts["qoi"].summary
+    ladder_qoi = runs["ladder"].artefacts["qoi"].summary
+    single_qoi = runs["single"].artefacts["qoi"].summary
+    assert ladder_qoi["current_A"] == pytest.approx(single_qoi["current_A"], rel=1e-12)
 
 
 # -- the electrostatic models from case files ---------------------------------

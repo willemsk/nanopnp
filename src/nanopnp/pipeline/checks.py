@@ -11,8 +11,10 @@ command line and in the editor (QR-11).
 
 from __future__ import annotations
 
+import logging
 import math
 from collections.abc import Callable
+from typing import Any
 
 from pydantic import ValidationError
 
@@ -38,7 +40,13 @@ from nanopnp.io.case import (
     render_problems,
     stored_artefact_refused,
 )
-from nanopnp.io.case_paths import _literal_options, field_at
+from nanopnp.io.case_paths import (
+    _literal_options,
+    case_fields,
+    field_at,
+    schema_default,
+    value_at,
+)
 from nanopnp.io.resolved import contour_spacing_nm
 from nanopnp.materials.electrolyte import Electrolyte
 from nanopnp.mesh.meshers import registered_meshers
@@ -51,6 +59,19 @@ from nanopnp.physics.models import (
     registered_models,
     registered_stabilisations,
 )
+
+logger = logging.getLogger(__name__)
+
+__all__ = [
+    "carry_upgrade",
+    "check_document",
+    "check_operating_point",
+    "check_species",
+    "element_orders",
+    "options_at",
+    "registry_options",
+    "require_runnable",
+]
 
 
 def registry_options(path: str) -> tuple[str, ...] | None:
@@ -214,7 +235,11 @@ def element_orders(document: CaseDocument) -> tuple[int, int, int]:
     # order rather than a restatement of the first.
     velocity_order = _order(elements.u, "u")
     pressure_order = _order(elements.p, "p")
-    if document.physics.flow:
+    model_name = document.physics.model
+    model_unread = (
+        declaration(model_name).unread if model_name in registered_models() else frozenset()
+    )
+    if "numerics.elements.u" not in model_unread and document.physics.flow:
         problem = inf_sup_problem(
             velocity_order=velocity_order,
             pressure_order=pressure_order,
@@ -432,6 +457,7 @@ def require_runnable(document: CaseDocument) -> SuppliedArtefact | None:
     # NOTE): the switch check first, because a case the model cannot pose is a
     # more precise diagnostic than one about how to continue it.
     _check_physics_switches(document)
+    _check_unread(document)
     _check_strategy(document)
     if document.numerics.continuation == LADDER_STRATEGY:
         _check_ladder_can_honour(document.physics)
@@ -784,6 +810,16 @@ def _accepting(coefficient: str) -> str:
     return _admitting(lambda other: coefficient in declaration(other).coefficients)
 
 
+def _migration_suffix(document: CaseDocument) -> str:
+    if document.upgraded_from is None:
+        return ""
+    return (
+        f"\nThis document declares {document.upgraded_from!r} and is read as its "
+        "'nanopnp/case/v0.5' upgrade; CHANGELOG.md, 'Migrating a nanopnp/case/v2 "
+        "document', lists what v0.5 refuses that v2 accepted"
+    )
+
+
 def _check_physics_switches(document: CaseDocument) -> None:
     """Refuse a case whose physics the named model cannot honour (PHY-21, section 5.4.3).
 
@@ -813,7 +849,7 @@ def _check_physics_switches(document: CaseDocument) -> None:
                 f"physics.model {model!r} honours physics.{name}: {admitted} only (PHY-21), so "
                 f"physics.{name} must be {admitted}; {str(value).lower()} would be recorded in "
                 f"the manifest and never applied. Models honouring {str(value).lower()}: "
-                f"{_honouring(name, value)}"
+                f"{_honouring(name, value)}" + _migration_suffix(document)
             )
     transition = (document.charge or Charge()).dielectric_transition_nm
     if transition > 0.0 and "solid_fraction" not in declared.coefficients:
@@ -857,6 +893,87 @@ def _check_physics_switches(document: CaseDocument) -> None:
                 "stage 7 and recorded in the manifest while the solve ignored it (PHY-24). "
                 f"Models accepting it: {_accepting(coefficient)}"
             )
+
+
+def _check_unread(document: CaseDocument) -> None:
+    model = declaration(document.physics.model)
+    violations: list[tuple[str, Any, Any]] = []
+    for ref in case_fields():
+        path = ref.path
+        if path in model.unread:
+            has_default, default = schema_default(path)
+            if not has_default:
+                continue
+            val = value_at(document, path)
+            if val != default:
+                violations.append((path, val, default))
+    if not violations:
+        return
+    n = len(violations)
+    model_name = document.physics.model
+    if n == 1:
+        header = (
+            f"physics.model '{model_name}' does not read 1 key this case sets; it would be "
+            "recorded in the manifest and never applied (PHY-21, section 5.4.3), so leave it "
+            "at its default:"
+        )
+    else:
+        header = (
+            f"physics.model '{model_name}' does not read {n} keys this case sets; each would be "
+            "recorded in the manifest and never applied (PHY-21, section 5.4.3), so leave each "
+            "at its default:"
+        )
+    lines = [header]
+    for path, val, default in violations:
+        readers = [m for m in registered_models() if path not in declaration(m).unread]
+        readers_str = ", ".join(sorted(readers)) or "no registered model"
+        val_str = (
+            "true"
+            if val is True
+            else ("false" if val is False else ("none" if val is None else str(val)))
+        )
+        def_str = (
+            "true"
+            if default is True
+            else ("false" if default is False else ("none" if default is None else str(default)))
+        )
+        lines.append(f"  {path}: {val_str} (default {def_str}; read by {readers_str})")
+    msg = "\n".join(lines) + _migration_suffix(document)
+    raise CaseValidationError(msg)
+
+
+def carry_upgrade(document: CaseDocument, *, source: str = "<string>") -> CaseDocument:
+    """Carry forward omitted switch values for upgraded cases (REV-42, D10).
+
+    When an older case schema is upgraded, switches that were omitted in the source
+    document and have a single honoured value for the selected model are carried
+    forward to that honoured value, logging an informational migration notice.
+    """
+    if document.upgraded_from is None:
+        return document
+    if document.physics.model not in registered_models():
+        return document
+    model_name = document.physics.model
+    decl = declaration(model_name)
+    updates: dict[str, Any] = {}
+    for name in SWITCHES:
+        if name not in document.physics.model_fields_set:
+            current_val = getattr(document.physics, name)
+            honoured = decl.switches.get(name, ())
+            if current_val not in honoured and len(honoured) == 1:
+                carried_val = honoured[0]
+                updates[name] = carried_val
+                val_str = "true" if carried_val is True else "false"
+                logger.info(
+                    f"{source}: physics.{name} is not written; its {document.upgraded_from!r} "
+                    f"default true was never applied by physics.model {model_name!r}, so it is "
+                    f"read as {val_str}, the value the model honours (CHANGELOG.md, 'Migrating a "
+                    "nanopnp/case/v2 document')"
+                )
+    if updates:
+        new_physics = document.physics.model_copy(update=updates)
+        document = document.model_copy(update={"physics": new_physics})
+    return document
 
 
 def _check_strategy(document: CaseDocument) -> None:

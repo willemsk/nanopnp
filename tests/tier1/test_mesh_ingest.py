@@ -188,7 +188,11 @@ def test_ver27_a_selection_pattern_that_is_not_a_flat_alternation_is_refused(
 ) -> None:
     """A requirement derived from a mis-parsed pattern is a gate that cannot fail."""
     document = loads_case(
-        case_text(mesh_file, numerics="{continuation: none, wall_distance: {sources: 'w.*'}}")
+        case_text(
+            mesh_file,
+            physics="{model: epnp-ns, solid_permittivities: {membrane: 3.2}}",
+            numerics="{continuation: none, wall_distance: {sources: 'w.*'}}",
+        )
     )
     with pytest.raises(MeshVocabularyError, match="flat alternation"):
         required_names(resolve(document))
