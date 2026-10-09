@@ -26,8 +26,8 @@ from packaging.specifiers import SpecifierSet
 
 from nanopnp.core.hashing import content_hash
 from nanopnp.io.artefact import (
-    CASE_SCHEMA,
     CASE_SCHEMA_V1,
+    CASE_SCHEMA_V2,
     SOLUTION_SCHEMA,
     CaseArtefact,
     StageInputs,
@@ -177,8 +177,8 @@ def test_ver47_a_v1_file_and_its_v2_rewrite_are_one_case(relative: str) -> None:
     upgraded = load_case(DATA / "corpus" / relative)
     rewritten = loads_case(dumps_case(upgraded), source=f"<{relative} as v2>")
 
-    assert "schema: nanopnp/case/v2" in dumps_case(upgraded)
-    assert rewritten.schema_id == CASE_SCHEMA
+    assert f"schema: {upgraded.schema_id}" in dumps_case(upgraded)
+    assert rewritten.schema_id == upgraded.schema_id
     assert CaseArtefact(rewritten).hash == CaseArtefact(upgraded).hash
     assert resolve(rewritten).provenance == resolve(upgraded).provenance
 
@@ -279,7 +279,7 @@ def _refusal_cases() -> list[Any]:
         cursor[last] = {"path": "x"} if path.startswith("inputs.") else 1.0
         cases.append(
             pytest.param(
-                raw, CaseValidationError, (path, CASE_SCHEMA_V1, CASE_SCHEMA), id=f"v1-{path}"
+                raw, CaseValidationError, (path, CASE_SCHEMA_V1, CASE_SCHEMA_V2), id=f"v1-{path}"
             )
         )
 
@@ -315,7 +315,7 @@ def _refusal_cases() -> list[Any]:
             cursor = cursor.setdefault(component, {})
         cursor[last] = "b.pdb" if old.endswith("pdb") else 20.0
         cases.append(
-            pytest.param(raw, CaseValidationError, (old, new, CASE_SCHEMA), id=f"v2-{old}")
+            pytest.param(raw, CaseValidationError, (old, new, CASE_SCHEMA_V2), id=f"v2-{old}")
         )
 
     raw = _v1()
@@ -324,7 +324,7 @@ def _refusal_cases() -> list[Any]:
         pytest.param(
             raw,
             CaseValidationError,
-            ("nanopnp/case/v3", CASE_SCHEMA, CASE_SCHEMA_V1),
+            ("nanopnp/case/v3", CASE_SCHEMA_V2, CASE_SCHEMA_V1),
             id="undeclared-schema",
         )
     )

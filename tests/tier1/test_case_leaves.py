@@ -453,7 +453,6 @@ def probe_solver() -> Iterator[str]:
         del linear._REGISTRY[name]
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP42 D3, D7")
 @pytest.mark.parametrize("model", MODELS)
 def test_ver71_the_newton_settings_reach_every_model_that_reads_them(
     model: str, meshes: dict[str, Path], monkeypatch: pytest.MonkeyPatch
@@ -503,7 +502,6 @@ def test_ver71_the_newton_settings_reach_every_model_that_reads_them(
     assert settings.relative_tolerance == 1e-7  # type: ignore[attr-defined]
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP42 D7")
 @pytest.mark.parametrize("model", MODELS)
 def test_ver71_the_linear_solver_reaches_every_model(
     model: str, meshes: dict[str, Path], probe_solver: str
@@ -687,7 +685,6 @@ def test_ver71_a_flowless_model_is_refused_on_its_flow_switch_first(
     )
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP42 D4")
 def test_ver71_a_fixed_leaf_is_refused_away_from_its_default(meshes: dict[str, Path]) -> None:
     """Each ``fixed`` leaf's alternative is refused at resolution, naming the leaf."""
     from nanopnp.io.case import CaseValidationError, UnsupportedCaseSection

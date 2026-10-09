@@ -47,10 +47,10 @@ from pathlib import Path
 from typing import Any, Literal, TypeAlias, get_args
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, ValidationError, model_validator
 
 from nanopnp.core.paths import available_corrections
-from nanopnp.io.artefact import CASE_SCHEMA, CASE_SCHEMA_V1
+from nanopnp.io.artefact import CASE_SCHEMA, CASE_SCHEMA_V1, CASE_SCHEMA_V2
 
 SCHEMA: str = CASE_SCHEMA
 """Schema identifier every case file must declare.
@@ -696,8 +696,14 @@ class CaseDocument(_Strict):
     physics: PhysicsSpec = Field(default_factory=PhysicsSpec)
     numerics: NumericsSpec = Field(default_factory=NumericsSpec)
     outputs: list[str] = Field(default_factory=lambda: ["current"])
+    _upgraded_from: str | None = PrivateAttr(default=None)
 
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
+    @property
+    def upgraded_from(self) -> str | None:
+        """The schema identifier this document was upgraded from, or None."""
+        return self._upgraded_from
 
     @model_validator(mode="after")
     def _check_installed(self) -> CaseDocument:
@@ -880,10 +886,10 @@ def _v2_replacement(loc: Sequence[str | int]) -> str | None:
     """
     path = ".".join(str(part) for part in loc if not isinstance(part, int))
     if path in V2_RENAMED:
-        return f"{CASE_SCHEMA} renamed it to {V2_RENAMED[path]}"
+        return f"{CASE_SCHEMA_V2} renamed it to {V2_RENAMED[path]}"
     if path in V2_MOVED:
         return (
-            f"{CASE_SCHEMA} removed it; the value is set as {V2_MOVED[path]}, the one place a "
+            f"{CASE_SCHEMA_V2} removed it; the value is set as {V2_MOVED[path]}, the one place a "
             "solid's permittivity is set (PHY-20)"
         )
     return None
@@ -935,15 +941,25 @@ def _validate(raw: object, source: str) -> CaseDocument:
             f"{source}: a case file is a YAML mapping, found {type(raw).__name__}"
         )
     declared = raw.get("schema")
+    upgraded_from: str | None = None
     if declared == CASE_SCHEMA_V1:
         raw = upgrade_v1(raw, source=source)
+        declared = CASE_SCHEMA_V2
+        upgraded_from = CASE_SCHEMA_V1
+    if declared == CASE_SCHEMA_V2:
+        raw = dict(raw, schema=SCHEMA)
+        if upgraded_from is None:
+            upgraded_from = CASE_SCHEMA_V2
     elif declared != SCHEMA:
         raise CaseValidationError(
-            f"{source}: expected schema {SCHEMA!r}, or {CASE_SCHEMA_V1!r} (read as its upgrade), "
-            f"found {declared!r}"
+            f"{source}: expected schema {SCHEMA!r}, or {CASE_SCHEMA_V2!r} or {CASE_SCHEMA_V1!r} "
+            f"(each read as its upgrade), found {declared!r}"
         )
     try:
-        return CaseDocument.model_validate(dict(raw))
+        doc = CaseDocument.model_validate(dict(raw))
+        if upgraded_from is not None:
+            doc._upgraded_from = upgraded_from
+        return doc
     except ValidationError as error:
         raise CaseValidationError(render_problems(source, error), error) from error
 
@@ -986,7 +1002,7 @@ def upgrade_v1(raw: Mapping[str, FieldValue], *, source: str = "<string>") -> di
     if foreign:
         raise CaseValidationError(
             f"{source}: declares {CASE_SCHEMA_V1!r} but carries {', '.join(foreign)}, which "
-            f"only {CASE_SCHEMA!r} has; declare {CASE_SCHEMA!r}, since a document is valid "
+            f"only {CASE_SCHEMA_V2!r} has; declare {CASE_SCHEMA_V2!r}, since a document is valid "
             "against the schema it declares or not at all"
         )
     for old, new in V2_RENAMED.items():
@@ -1001,16 +1017,16 @@ def upgrade_v1(raw: Mapping[str, FieldValue], *, source: str = "<string>") -> di
         held = _raw_lookup(document, new)
         if held is not _ABSENT and held != value:
             problems.append(
-                f"{old} is {value!r} but {new} is {held!r}; {CASE_SCHEMA!r} sets a solid's "
+                f"{old} is {value!r} but {new} is {held!r}; {CASE_SCHEMA_V2!r} sets a solid's "
                 "permittivity in one place, and the two disagree"
             )
             continue
         _raw_put(document, new, value, source)
     if problems:
         raise CaseValidationError(
-            f"{source}: cannot upgrade to {CASE_SCHEMA!r}: " + "; ".join(problems)
+            f"{source}: cannot upgrade to {CASE_SCHEMA_V2!r}: " + "; ".join(problems)
         )
-    document["schema"] = CASE_SCHEMA
+    document["schema"] = CASE_SCHEMA_V2
     return document
 
 
@@ -1062,7 +1078,7 @@ def _raw_put(document: dict[str, FieldValue], path: str, value: FieldValue, sour
         if not isinstance(nested, dict):
             prefix = ".".join(head[: depth + 1])
             raise CaseValidationError(
-                f"{source}: cannot upgrade to {CASE_SCHEMA!r}: {path} is where the value goes, "
+                f"{source}: cannot upgrade to {CASE_SCHEMA_V2!r}: {path} is where the value goes, "
                 f"and {prefix} is a {type(nested).__name__}, not a block"
             )
         cursor = nested
