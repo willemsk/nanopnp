@@ -397,11 +397,12 @@ class Electrolyte:
         ops
             Operation namespace.
 
-        Note that the clamp applied here is the one that actually activates: the
-        driver returned can never exceed the validity limit, so a diagnostic run
-        over driver samples alone would report nothing. Use
-        ``report_clamp_activations`` on the *species* concentrations to satisfy
-        PHY-13's logging requirement.
+        Note that under the ``average`` driver the clamp applied here is the one
+        that activates: the mean of clamped ``c_i`` can never exceed the validity
+        limit. Under ``ionic_strength`` it can (``I = 6 M`` from 2 M divalent and
+        4 M monovalent), and the correction then clamps the driver itself. Use
+        ``report_clamp_activations``, which logs both, to satisfy PHY-13's
+        logging requirement.
 
         Raises
         ------
@@ -481,13 +482,15 @@ class Electrolyte:
         *,
         coordinates: Sequence[tuple[float, ...]] | None = None,
     ) -> int:
-        """Log every per-species clamp activation and return how many there were.
+        """Log every species and driver clamp activation and return how many there were.
 
         PHY-13 requires each activation to be logged with its location and
         property. ``average_concentration`` clamps each ``c_i`` *before* the
-        average is taken, so by construction the driver it returns never exceeds
-        the limit; the extrapolation has to be detected on the species
-        concentrations that went in, which is what this does.
+        driver is formed, so under the ``average`` driver the extrapolation has
+        to be detected on the species concentrations that went in. Under
+        ``ionic_strength`` the driver can exceed the limit from species inside
+        it, and the correction clamps it there, so the driver is recomputed from
+        the samples and logged too (WP41 D7).
 
         Parameters
         ----------
@@ -500,7 +503,8 @@ class Electrolyte:
         Returns
         -------
         int
-            Total number of samples clamped, summed over species.
+            Total number of samples clamped, summed over the species and the
+            correction driver.
 
         Raises
         ------

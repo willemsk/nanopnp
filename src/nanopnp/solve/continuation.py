@@ -26,8 +26,10 @@ Every rung re-solves a state that is already nearly converged. A Newton
 criterion measured on the residual *relative to the residual on entry* would
 demand a further six orders of magnitude from a residual already at its floor,
 so it would never be met and the ladder would stall at rung 2. NUM-16's
-relative-update test on the undamped direction is what makes re-solving a
-converged state cost zero iterations, and this module depends on it entirely.
+per-field relative-update test on the undamped direction is what makes
+re-solving a converged state cost at most one iteration -- the one Jacobian
+solve that shows there is nothing to do, skipped only when the entry residual is
+already at the absolute floor -- and this module depends on it entirely.
 
 Why a warm start needs help across a changed field set
 ------------------------------------------------------
@@ -687,6 +689,9 @@ def run_ladder(
             # record needs has been read out above; ``carried`` is the state.
             previous = None
 
+        # Read before the solve: a model that records no mode is refused before
+        # its rung is paid for, not after (NUM-13, WP41 D9).
+        stabilisation = str(_read_stabilisation_entry(rung.model, "stabilisation"))
         started = time.perf_counter()
         try:
             solution = rung.model.solve(
@@ -723,7 +728,7 @@ def run_ladder(
             seconds=seconds,
             transferred_fields=transferred_fields,
             cold_fields=cold_fields,
-            stabilisation=str(_read_stabilisation_entry(rung.model, "stabilisation")),
+            stabilisation=stabilisation,
             newton=solution.newton.summary() if solution.newton is not None else None,
             deviations=tuple(rung.model.provenance.get("deviations_from_validated_default", ())),
         )
@@ -854,6 +859,11 @@ def default_ladder(
         is offered for it; ``fixed_charge_domain`` belongs to the scalar.
         Mutually exclusive with ``fixed_charge_C_m3``: a run carrying both would
         be a superposition nobody asked for and neither number would describe it.
+    fixed_charge_rule_order
+        The explicit integration rule ``fixed_charge_field`` is assembled with on
+        every charged rung: the field's ``quadrature_order``, the rule its
+        conservation gate integrates at (PHY-19 NOTE, WP41 D2). ``None`` keeps
+        each model's default, which is right for a deposited charge.
     solid_fraction
         The supplied ``chi`` of §4.4's NOTE, passed to every rung that solves
         Poisson with a permittivity. Not ramped: it is a coefficient of the

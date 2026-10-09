@@ -90,3 +90,5 @@ is a rolling register, and its header stays `open`.
 | REV-68 | verification | low | fixed | [WP40](../plans/wp40-stale-refusals.md) | [The spec still promises a refusal that D8 removed](review-items.md#rev-68-the-spec-still-promises-a-refusal-that-d8-removed) |
 | REV-69 | verification | low | fixed | [WP40](../plans/wp40-stale-refusals.md) | [VER-67 defers its refusal texts to a plan](review-items.md#rev-69-ver-67-defers-its-refusal-texts-to-a-plan) |
 | REV-70 | interface | low | fixed | [WP40](../plans/wp40-stale-refusals.md) | [WP40 D5 and D8 go beyond MOD-14's letter](review-items.md#rev-70-wp40-d5-and-d8-go-beyond-mod-14s-letter) |
+| REV-71 | verification | medium | open | — | [Stage 10's cache key does not move when the solver's algorithm does](review-items.md#rev-71-stage-10s-cache-key-does-not-move-when-the-solvers-algorithm-does) |
+| REV-72 | coupling | low | open | — | [A supplied field's rule order travels beside its source as a second argument](review-items.md#rev-72-a-supplied-fields-rule-order-travels-beside-its-source-as-a-second-argument) |

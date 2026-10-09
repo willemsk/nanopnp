@@ -1224,6 +1224,11 @@ class CoupledModel:
         fixed_charge
             The dimensionless protein space charge ``rho~_pore``, if any. Its
             SI scale is :attr:`~nanopnp.core.scaling.Scales.charge_density_C_m3`.
+        fixed_charge_rule_order
+            The explicit integration rule ``fixed_charge`` is assembled with: a
+            supplied field's ``quadrature_order``, the rule its conservation gate
+            integrates at, so the gate measures the charge this form carries
+            (PHY-19 NOTE, WP41 D2). ``None`` keeps NGSolve's own estimate.
         solid_fraction
             The supplied ``chi`` of section 4.4's NOTE, if any; see
             :meth:`permittivity`. It enters the Poisson operator alone: the
@@ -1607,8 +1612,8 @@ class CoupledModel:
             boundary coefficient function, which has no meaning in the volume.
         velocity_values
             Essential data for ``u~``; zero (no-slip) by default.
-        wall_distance_nm, fixed_charge, solid_fraction, surface_charge,
-        surface_charge_boundary, sources
+        wall_distance_nm, fixed_charge, fixed_charge_rule_order, solid_fraction,
+        surface_charge, surface_charge_boundary, sources
             As :meth:`residual_form`.
         initial
             A previous solution to warm-start from. Its space is reused, so it
@@ -2117,6 +2122,11 @@ class PoissonModel(_SingleFieldModel):
         fixed_charge
             The dimensionless ``rho~_pore``, if any, on
             :attr:`~nanopnp.core.scaling.Scales.charge_density_C_m3`.
+        fixed_charge_rule_order
+            The explicit integration rule the fixed-charge source is assembled
+            with: a supplied field's ``quadrature_order``, the rule its
+            conservation gate integrates at (PHY-19 NOTE, WP41 D2). ``None``
+            keeps this model's default.
         solid_fraction
             The supplied ``chi``, if any.
         state
@@ -2138,15 +2148,14 @@ class PoissonModel(_SingleFieldModel):
             trial, test, measures, permittivity=permittivity, extra_order=RADIAL_WEIGHT_ORDER
         )
         if fixed_charge is not None:
-            extra = (
-                {} if fixed_charge_rule_order is not None else {"extra_order": RADIAL_WEIGHT_ORDER}
-            )
+            # An explicit rule replaces the bonus, so the r-weight order is added
+            # only where NGSolve's estimate is still the base (WP41 D2).
             residual -= charge_source(
                 fixed_charge,
                 test,
                 measures,
                 rule_order=fixed_charge_rule_order,
-                **extra,
+                extra_order=0 if fixed_charge_rule_order is not None else RADIAL_WEIGHT_ORDER,
             )
         return residual
 
@@ -2184,7 +2193,7 @@ class PoissonModel(_SingleFieldModel):
             ``boundaries.potential``.
         potential_values
             Essential data for ``phi~``, in units of ``V_T``.
-        fixed_charge, solid_fraction
+        fixed_charge, fixed_charge_rule_order, solid_fraction
             As :meth:`residual_form`.
         initial
             Accepted for a uniform ladder interface; a linear solve does not

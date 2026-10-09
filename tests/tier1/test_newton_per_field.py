@@ -121,7 +121,7 @@ def test_num16_a_warm_start_onto_its_own_state_closes_in_one_step() -> None:
 
 
 def test_num16_field_floor_ratio_validation() -> None:
-    """field_floor_ratio must be positive."""
+    """field_floor_ratio must be positive and finite."""
     import pytest
 
     from nanopnp.numerics.newton import NewtonSettings
@@ -130,3 +130,23 @@ def test_num16_field_floor_ratio_validation() -> None:
         NewtonSettings(field_floor_ratio=0.0)
     with pytest.raises(ValueError, match="field_floor_ratio must be positive"):
         NewtonSettings(field_floor_ratio=-1.0e-6)
+    # NaN passes a ``<= 0`` test, and an infinite floor makes every update zero.
+    with pytest.raises(ValueError, match="field_floor_ratio must be positive and finite"):
+        NewtonSettings(field_floor_ratio=float("nan"))
+    with pytest.raises(ValueError, match="field_floor_ratio must be positive and finite"):
+        NewtonSettings(field_floor_ratio=float("inf"))
+
+
+def test_num16_a_nan_field_update_is_never_dropped_from_the_maximum() -> None:
+    """A NaN ratio in any field, not only the first, is the update the test reads.
+
+    A bare ``max`` keeps its first element against a NaN, so a NaN block after
+    the first field would vanish and the update test pass on the others.
+    """
+    import math
+
+    from nanopnp.numerics.newton import _largest_update
+
+    assert _largest_update([1.0e-9, 3.0e-7]) == 3.0e-7
+    assert math.isnan(_largest_update([1.0e-9, float("nan")]))
+    assert math.isnan(_largest_update([float("nan"), 1.0e-9]))

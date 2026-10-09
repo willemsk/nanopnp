@@ -121,12 +121,14 @@ CONSERVATION_TOL = 1.0e-3
 QUADRATURE_REFINEMENT = 3
 """Quadrature orders the agreement check adds on top of the assembly order.
 
-Added to the bonus the assembly already carries, not passed as ``extra_order``
-on its own: :meth:`~nanopnp.numerics.measures.Measures.bonus_order` takes
-``max(extra, 3)`` on a singular form, so ``extra_order=3`` on the ``1/r`` field
-of PHY-16 step 6 evaluates at *exactly* the same order as ``extra_order=0`` and
-the two integrals agree to the last bit [tested]. A gate that passes because its
-two sides are the same computation is worse than no gate.
+Added to the explicit rule the source is assembled with
+(:data:`FIELD_QUADRATURE_ORDER`), so the refined leg is a genuinely different
+rule. Passing it as ``extra_order`` beside ``singular`` would not be:
+:meth:`~nanopnp.numerics.measures.Measures.bonus_order` takes ``max(extra, 3)`` on
+a singular form, so ``extra_order=3`` on the ``1/r`` field of PHY-16 step 6
+evaluates at *exactly* the same order as ``extra_order=0`` and the two integrals
+agree to the last bit [tested]. A gate that passes because its two sides are the
+same computation is worse than no gate.
 """
 
 QUADRATURE_TOL = 1.0e-4
@@ -666,13 +668,13 @@ class ChargeField:
         mesh
             The deployed mesh, in nm.
         measures
-            The quadrature policy. Its order is the one the solve assembles at,
-            which is what makes this the conservation of the charge the solver
-            actually carries.
+            The symmetry policy, for the ``r`` weight. The order is
+            :attr:`quadrature_order`, the explicit rule the solve assembles the
+            source with, which is what makes this the conservation of the charge
+            the solver actually carries (PHY-19 NOTE, WP41 D2).
         refined
             Evaluate :data:`QUADRATURE_REFINEMENT` orders above the assembly
-            order, for the agreement check. See that constant for why the
-            refinement is computed from the bonus rather than passed as it.
+            rule, for the agreement check.
         """
         rule_order = self.quadrature_order + (QUADRATURE_REFINEMENT if refined else 0)
         integral_nm = measures.integrate(

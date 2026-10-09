@@ -484,10 +484,10 @@ class SolveStage:
         unrelated reasons and a reader cannot tell them apart from the silence.
         A rung whose model takes no callback reports none by construction; a
         coupled rung reports none when :func:`~nanopnp.numerics.newton.damped_newton`
-        found the entry residual already below its target and returned before the
-        first step — which is not a missing record but the NUM-16 warm-start case
-        itself, and is what most of the ladder does once a neighbour has been
-        transferred onto it.
+        found the entry residual already at its absolute floor and returned before
+        the first step — which is not a missing record but a state that needed no
+        step. A warm-started rung above that floor reports the one step whose
+        undamped update shows it converged (NUM-16, WP41 D4).
         """
         settings = resolved.newton
         hook = self._solve_hook

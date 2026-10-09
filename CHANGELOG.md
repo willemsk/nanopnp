@@ -46,15 +46,17 @@ NUM-07, NUM-13, NUM-16, PHY-13, PHY-19, FR-25, FR-27, IF-05, QR-12, and VER-37.
   `example-03-charged`; 10⁻⁸ elsewhere) (QR-03, PHY-19).
 - **Breaking:** Newton convergence stops on per-field relative updates (`max_f ||δu_f|| / max(||u_f||, ρ max(||u||, 1)) ≤ rtol`)
   or absolute residual floor 10⁻¹²; the relative residual test `||R|| ≤ rtol ||R0||` no longer closes
-  rungs; the golden moves within D5's bounds (8.1 × 10⁻⁷ on `2wcd-charged`, 3.4 × 10⁻⁷ on
-  `example-03-charged`, 2.1 × 10⁻⁸ on `example-07`; 10⁻⁸ elsewhere) (NUM-16).
+  rungs; the golden moves within D5's bounds (1.6 × 10⁻⁶ on `2wcd-charged`, 6.8 × 10⁻⁷ on
+  `example-03-charged`, 5.2 × 10⁻⁸ on `example-07`; 10⁻⁸ elsewhere) (NUM-16).
 - **Breaking:** Electrostatic models (`poisson`, `pb`, `pb-linear`) record stabilisation `none`,
   `{}` and `create("none").provenance`. `LadderResult.stabilisation*` and per-rung records read
   without defaults, raising `ValueError` on missing or non-mapping entries (NUM-13, FR-25).
 - **Breaking:** `model.stabilisation_provenance` is moved from `SPACE_KEYS` to `OPERATOR_KEYS`
   in `solve/state.py`; differences are recorded in the solution manifest rather than refusing
   valid warm starts (VER-37).
-- Both golden stability re-pins applied to recorded meshes under D3 and D5 bounds.
+- Both golden stability re-pins applied to every recorded mesh under D3 and D5 bounds: the three
+  `linux-x86_64` levels, and the darwin-arm64 and win32-AMD64 cylinder meshes from CI's printed
+  records. Every walk's mesh-moved tolerance is unchanged.
 
 ## [0.5.0-alpha.6] - 2026-10-07
 

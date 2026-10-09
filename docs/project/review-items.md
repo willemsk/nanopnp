@@ -690,3 +690,32 @@ that a string pairing a requirement with a release matches §3's Release column 
 **Fixed.** The author ruled D5 and D8 stand, and that the Release-column check is built in this
 package: VER-67 gains `requirement_releases` and `release_pairing_mismatches`.
 
+### REV-71 — Stage 10's cache key does not move when the solver's algorithm does
+
+*Area:* verification. *Severity:* medium. *Found:* PR #89 (WP41), the `/wp-ship` review at `d704e84`.
+
+**Measured.** Stage 10's key is the resolved case's solve provenance, the mesh digest and the
+materials and field artefacts' hashes (`SolveStage.key`). WP41 changes NUM-16's stopping test and a
+supplied field's source rule, and both move converged numbers (D3, D5), but neither enters the
+key: the `newton` record lists no `field_floor_ratio` and no criterion, `ResolvedFields.parameters()`
+carries no rule order, and `SOLVE_HASHES` does not move. A store written before WP41 therefore
+serves its old solution as a hit after the upgrade, and the manifest cannot tell it from a WP41
+one (FR-25, §5.3.2). The property is not WP41's alone: any change that moves a number without
+moving a case key has it.
+
+**Open.** For the author: whether stage 10's key gains an algorithm revision that a number-moving
+change bumps (re-pinning `SOLVE_HASHES` and invalidating stored solves), or the library version
+recorded in the manifest is ruled sufficient.
+
+### REV-72 — A supplied field's rule order travels beside its source as a second argument
+
+*Area:* coupling. *Severity:* low. *Found:* PR #89 (WP41), the `/wp-ship` review at `d704e84`.
+
+**Measured.** WP41 D2 threads `fixed_charge_rule_order` beside `fixed_charge` through
+`single_rung`, `default_ladder`, `CoupledModel` and `PoissonModel`. PHY-19's one-rule NOTE then
+holds only where every caller passes both: a caller passing `fixed_charge=field.assemble(scales)`
+alone silently returns to NGSolve's order-3 estimate. `test_charge_quadrature.py` checks the call
+sites in `physics/models.py`, not their callers.
+
+**Open.** For the author: whether the charge object carries its own source term (one argument,
+the rule inside it), a change to the model interface outside WP41's scope.
