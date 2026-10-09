@@ -364,10 +364,10 @@ def test_ver71_the_switch_sets_honour_only_what_changes_the_operator() -> None:
 
 
 MODELS_D6 = (
-    pytest.param("epnp-ns", marks=pytest.mark.xfail(strict=True, reason="planned: WP42 D6")),
+    "epnp-ns",
     "pb",
     "pb-linear",
-    pytest.param("pnp", marks=pytest.mark.xfail(strict=True, reason="planned: WP42 D6")),
+    "pnp",
     "pnp-ns",
     "poisson",
 )
@@ -417,7 +417,9 @@ def test_ver71_the_unread_leaves_are_inert_and_the_rest_are_not(
     assert not wrong, f"{model}: {wrong}"
 
 
-def test_ver71_the_driver_is_live_for_any_but_two_unit_valence_species() -> None:
+def test_ver71_the_driver_is_live_for_any_but_two_unit_valence_species(
+    meshes: dict[str, Path], monkeypatch: pytest.MonkeyPatch
+) -> None:
     """``ionic_strength`` differs from ``average`` once a valence is not one (PHY-13).
 
     The evidence for D6, and true before WP42: the driver is not a leaf no model
@@ -428,6 +430,7 @@ def test_ver71_the_driver_is_live_for_any_but_two_unit_valence_species() -> None
     from dataclasses import replace
 
     from nanopnp.materials.electrolyte import Electrolyte
+    from nanopnp.pipeline.case import loads_case, resolve
 
     averaged = Electrolyte.from_parameter_file(WILLEMS, driver="average")
     ionic = Electrolyte.from_parameter_file(WILLEMS, driver="ionic_strength")
@@ -436,6 +439,50 @@ def test_ver71_the_driver_is_live_for_any_but_two_unit_valence_species() -> None
     divalent = (replace(ionic.ion("Na+"), valence=2), ionic.ion("Cl-"))
     assert replace(ionic, species=divalent).average_concentration(samples) == pytest.approx(2.4)
     assert replace(averaged, species=divalent).average_concentration(samples) == pytest.approx(1.2)
+
+    monkeypatch.setattr("nanopnp.pipeline.case.check_species", lambda *args: None)
+    divalent_case = put(base("epnp-ns", meshes), "electrolyte.driver", "ionic_strength")
+    divalent_case["electrolyte"]["species"][0]["z"] = 2
+    assert resolve(loads_case(yaml.safe_dump(divalent_case))).electrolyte.driver == "ionic_strength"
+
+
+def test_ver71_applied_parts_branches(monkeypatch: pytest.MonkeyPatch) -> None:
+    from typing import TypeVar
+
+    from pydantic import BaseModel
+
+    T = TypeVar("T", bound=BaseModel)
+
+    def replace(obj: T, **changes: object) -> T:
+        return obj.model_copy(update=changes)
+
+    from nanopnp.materials import models as materials_models
+    from nanopnp.materials.models import applied_parts, applies_part
+
+    assert applied_parts("none", "diffusivity") == frozenset()
+    assert not applies_part("none", "diffusivity", "wall")
+    assert applied_parts(WILLEMS, "diffusivity") == frozenset({"concentration", "wall"})
+    assert applied_parts(WILLEMS, "density") == frozenset({"concentration"})
+
+    doc = materials_models._document(WILLEMS)
+    doc_no_wall = replace(doc, ion_wall_function=None)
+    monkeypatch.setattr(materials_models, "_document", lambda name: doc_no_wall)
+    assert "wall" not in applied_parts(WILLEMS, "diffusivity")
+
+    doc_no_fc = replace(
+        doc,
+        solvent=replace(
+            doc.solvent,
+            density=replace(doc.solvent.density, fc=None),
+        ),
+        species={
+            k: replace(v, diffusivity=replace(v.diffusivity, fc=None))
+            for k, v in doc.species.items()
+        },
+    )
+    monkeypatch.setattr(materials_models, "_document", lambda name: doc_no_fc)
+    assert "concentration" not in applied_parts(WILLEMS, "density")
+    assert "concentration" not in applied_parts(WILLEMS, "diffusivity")
 
 
 @pytest.fixture
@@ -599,7 +646,6 @@ def test_ver71_unread_leaves_are_refused_naming_each_key_its_default_and_its_rea
     )
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP42 D6")
 def test_ver71_a_correction_part_no_model_applies_is_refused(meshes: dict[str, Path]) -> None:
     """``wall: false`` on a property whose correction has no wall fit changes nothing (PHY-22)."""
     document = put(
@@ -630,7 +676,6 @@ def test_ver71_a_correction_part_no_model_applies_is_refused(meshes: dict[str, P
     )
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP42 D6")
 @pytest.mark.parametrize("model", ["epnp-ns", "pnp"])
 def test_ver71_the_ionic_strength_driver_of_a_one_one_salt_is_refused(
     model: str, meshes: dict[str, Path]

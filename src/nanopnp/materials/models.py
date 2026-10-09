@@ -308,6 +308,40 @@ def validity_range(document: CorrectionDocument) -> tuple[float, float]:
     return document.concentration_validity_M
 
 
+def applied_parts(model_name: str, property_kind: PropertyKind) -> frozenset[str]:
+    """Return the parts ('concentration', 'wall') that model_name applies for property_kind."""
+    if model_name == "none":
+        return frozenset()
+    document = _document(model_name)
+    parts: set[str] = set()
+    if property_kind in SPECIES_PROPERTIES:
+        has_fc = any(
+            (ion.diffusivity.fc if property_kind == "diffusivity" else ion.mobility.fc) is not None
+            for ion in document.species.values()
+        )
+        if has_fc:
+            parts.add("concentration")
+        if document.ion_wall_function is not None:
+            parts.add("wall")
+    else:
+        solvent = {
+            "viscosity": document.solvent.viscosity,
+            "density": document.solvent.density,
+            "permittivity": document.solvent.permittivity,
+        }
+        node = solvent[property_kind]
+        if node.fc is not None:
+            parts.add("concentration")
+        if node.fw is not None:
+            parts.add("wall")
+    return frozenset(parts)
+
+
+def applies_part(model_name: str, property_kind: PropertyKind, part: str) -> bool:
+    """Return whether model_name applies the given part for property_kind."""
+    return part in applied_parts(model_name, property_kind)
+
+
 def _property_node(
     document: CorrectionDocument, kind: PropertyKind, species: str | None
 ) -> PropertyBlock:
