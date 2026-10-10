@@ -28,6 +28,7 @@ what they admit.
 | `quantities` | `resolve`, stage 11 | The `outputs:` words it provides; `fields` is admitted for every model |
 | `transport` | stage 11, the ladder, the GUI | Whether it is reached as a `TransportModel` |
 | `reports_newton` | stage 10 | Whether its `solve` takes a Newton `callback` |
+| `unread` | `resolve`, `require_runnable` | The case paths the model does not read; setting any of these to a non-default value is refused (PHY-21, §5.4.3) |
 
 **The built model** satisfies the `PhysicsModel` protocol: its `name` (the registered name), its
 `fields`, `species` (empty for one field), `boundary_conditions`, `scales` (the NUM-09 scale set),
@@ -36,6 +37,19 @@ what they admit.
 `TransportModel`, the members of the coupled models that QoI extraction, the NUM-18 ladder, the
 IF-07 export and the MMS harness read. Consumers reach it through `transport_model(solution)`,
 which consults the declaration and refuses a model that does not declare transport.
+
+## What each model does not read
+
+A model accepts only the case keys that affect its equations or provenance. Every other case leaf that has a default in the schema is declared in `ModelDeclaration.unread`; setting any of these to a non-default value is refused at case resolution (PHY-21, §5.4.3):
+
+| Model | Unread leaves |
+|---|---|
+| `epnp-ns` | None (reads every leaf) |
+| `pnp` | `electrolyte.corrections.viscosity.{model, concentration, wall}`, `electrolyte.corrections.density.{model, concentration, wall}`, `numerics.elements.u`, `numerics.elements.p` |
+| `pnp-ns` | All fifteen correction leaves, `steric.model`, `electrolyte.driver`, `numerics.wall_distance.sources`, `numerics.wall_distance.max_distance_nm` |
+| `pb` | `pnp-ns`'s unread leaves, `numerics.elements.u`, `numerics.elements.p`, `numerics.stabilisation` |
+| `pb-linear` | `pb`'s unread leaves, `numerics.nonlinear.max_iter`, `numerics.nonlinear.rtol` |
+| `poisson` | `pb-linear`'s unread leaves, `electrolyte.concentration_M` |
 
 ## The worked example: `poisson`
 
@@ -105,6 +119,7 @@ register_model(
         },
         solids=True,
         coefficients=("fixed_charge", "solid_fraction"),
+        unread=ELECTROSTATIC | LINEAR | frozenset({"electrolyte.concentration_M"}),
     ),
 )
 ```
