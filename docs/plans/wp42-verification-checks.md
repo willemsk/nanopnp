@@ -1,6 +1,6 @@
 # WP42 — The verification checks
 
-**Status: planned, not started.** Written 9 October 2026 at `c306256`, after WP41 was delivered as
+**Status: completed.** Delivered 10 October 2026 as `v0.5.0-alpha.8`. Written 9 October 2026 at `c306256`, after WP41 was delivered as
 `v0.5.0-alpha.7`. It inherits everything the [current brief](current.md) lists as not to be
 re-decided, and in particular: VER-62's golden at 10⁻⁸ (no number moves in this package); WP40's
 rule that a refusal names its requirement (VER-67); WP38's split (`pipeline/checks.py` refuses at
@@ -96,7 +96,7 @@ outcome table per model (`refused`/`live`/`inert` per leaf and value), the bypas
 - [x] ba3b484 non-Opus 6. [any] Retire `nanopnp/case/v1` and `v2` entirely: remove `upgrade_v1`, `CASE_SCHEMA_V1`, `CASE_SCHEMA_V2`, `upgraded_from`, `carry_upgrade`, and `_migration_suffix` from `src/`; delete `test_case_schema_v2.py` and `tests/tier1/data/case_v1/`; migrate Python interpreter range check to `test_case_schema_v05.py`; move all remaining `nanopnp/case/v2` literals in `examples/`, `docs/`, `tests/`, `src/` docstrings and `CLAUDE.md` to `nanopnp/case/v0.5` (writing `variable_density: false, inertia: false` where `pnp` requires them); update IF-03, stage-9 row, §5.3 format table, VER-43 and VER-47 texts (G6). Done when full gate and strict docs build pass.
 - [x] 0bbf432 non-Opus 7. [any] REV-13 (D11) and REV-23 (D12): the exact assertions given. Done when both tests pass.
 - [x] 0e5a6b7 non-Opus 8. [any] REV-29, REV-34, REV-44, REV-48 (D13). Done when the moved tests pass with unchanged assertions and `--durations` shows the slab solved once.
-- [ ] 9. [any] Records: REV-11, -12, -13, -23, -29, -34, -42, -44, -48, -66 `fixed`; a `REV-nn` row for *Out of scope*'s cross-leaf inertness; `CHANGELOG.md` `0.5.0-alpha.8` with the breaks and the migration section; `docs/project/physics-models.md` lists each model's unread leaves; this plan's status, the phase plan, the brief. Done when VER-63, VER-67, VER-72 and the strict docs build pass.
+- [x] bef6f7c non-Opus 9. [any] Records: REV-11, -12, -13, -23, -29, -34, -42, -44, -48, -66 `fixed`; a `REV-nn` row for *Out of scope*'s cross-leaf inertness; `CHANGELOG.md` `0.5.0-alpha.8` with the breaks and the migration section; `docs/project/physics-models.md` lists each model's unread leaves; this plan's status, the phase plan, the brief. Done when VER-63, VER-67, VER-72 and the strict docs build pass.
 
 ### Verification
 
