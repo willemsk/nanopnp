@@ -42,7 +42,7 @@ TOLERANCE = 4e-3
 """Twice the bilinear bound at ``h = delta/20`` (*Design* section 1)."""
 
 CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: chi
 inputs:
   profile: {{path: {path}}}

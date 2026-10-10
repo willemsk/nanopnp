@@ -34,11 +34,9 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only; io must not import at 
     from nanopnp.io.resolved import ResolvedCase
     from nanopnp.materials.electrolyte import Electrolyte
 
-CASE_SCHEMA = "nanopnp/case/v2"
-"""Stage 9: the resolved case document (IF-03)."""
+CASE_SCHEMA = "nanopnp/case/v0.5"
+"""Stage 9: the resolved case document (IF-03, G6)."""
 
-CASE_SCHEMA_V1 = "nanopnp/case/v1"
-"""The previous case schema, still read: a v1 document loads as its v2 upgrade (IF-03)."""
 
 STRUCTURE_SCHEMA = "nanopnp/structure/v1"
 """Stage 1: the aligned ensemble, with the Cₙ axis on z at r = 0 (FR-01 to FR-03)."""

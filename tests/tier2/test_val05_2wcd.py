@@ -28,7 +28,6 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
-import yaml
 
 from nanopnp.core.paths import profile_file
 from nanopnp.geometry.contour import PAYLOAD_NAME as CONTOUR_PAYLOAD
@@ -57,18 +56,11 @@ from nanopnp.validation.geometry import (
 pytestmark = pytest.mark.extended
 
 if TYPE_CHECKING:
-    from conftest import Prepared2WCD, Seed2WCD
+    from collections.abc import Callable
+
+    from conftest import D10Figures, Prepared2WCD, Seed2WCD
 
 logger = logging.getLogger(__name__)
-
-REFERENCE_TRIANGLES = 120_917
-"""The reference COMSOL mesh's element count (section 5.2.2)."""
-
-REFERENCE_MIN_QUALITY = 0.6378
-"""Its minimum element quality, by a measure the model report does not state (``.knowledge/09``)."""
-
-REFERENCE_MEAN_QUALITY = 0.9765
-"""Its mean element quality, by the same unstated measure."""
 
 FROZEN_SIZE_SCALE = 2.0
 """D9's ``size_scale`` at Tier 2, on both meshes, so they are like for like."""
@@ -80,7 +72,7 @@ structure:
 """
 
 GEOMETRY_CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: 2wcd-val05
 {structure}{geometry}electrolyte:
   species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
@@ -89,38 +81,6 @@ name: 2wcd-val05
 boundary_conditions: {{bias_V: 0.05, ground: cis}}
 physics: {{model: epnp-ns, solid_permittivities: {{protein: 20.0, membrane: 3.2}}}}
 """
-
-FROZEN_CASE = """\
-schema: nanopnp/case/v2
-name: {name}
-{source}electrolyte:
-  species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
-  concentration_M: 1.0
-  parameters: willems2020_nacl
-  corrections:
-    diffusivity:  {{model: none}}
-    mobility:     {{model: none}}
-    viscosity:    {{model: none}}
-    permittivity: {{model: none}}
-    density:      {{model: none}}
-    steric:       {{model: none}}
-boundary_conditions: {{bias_V: 0.05, ground: cis}}
-physics:
-  model: pnp
-  flow: false
-  solid_permittivities: {{protein: 20.0, membrane: 3.2}}
-numerics:
-  continuation: none
-  stabilisation: none
-  mesh: {{size_scale: {size_scale}}}
-outputs: [current]
-"""
-"""D9: uncharged, so G is geometric; 1 M, +50 mV, ground *cis*, every correction ``none``."""
-
-
-def as_yaml(record: object) -> str:
-    """Return a pydantic record as YAML, the form D13 logs it in."""
-    return yaml.safe_dump(record.model_dump(mode="json"), sort_keys=False)  # type: ignore[attr-defined]
 
 
 @dataclass(frozen=True)
@@ -226,7 +186,9 @@ def walked(
     )
 
 
-def test_val05_2wcd_against_the_reference_polygon(walked: Walked, reference: np.ndarray) -> None:
+def test_val05_2wcd_against_the_reference_polygon(
+    walked: Walked, reference: np.ndarray, as_yaml: Callable[[object], str]
+) -> None:
     """D5: |ε_G| <= 10 %, |Δr_c| <= 0.1 nm and rms <= 0.2 nm; every plane off the tips crossed.
 
     Predicted by the plan's prototype: ε_G = -8.08 %, Δr_c = -0.0205 nm, rms
@@ -305,7 +267,9 @@ def test_val05_2wcd_isolevel_sweep_is_strictly_increasing(
     logger.info("2WCD ε_G crosses zero at isolevel %s (a diagnostic, D8)", zero_crossing(points))
 
 
-def test_val05_2wcd_mesh_against_the_reference_figures(walked: Walked) -> None:
+def test_val05_2wcd_mesh_against_the_reference_figures(
+    walked: Walked, d10_figures: D10Figures
+) -> None:
     """D10, recorded: the default-size mesh beside the reference's 120,917, 0.6378 and 0.9765."""
     case = _write(
         walked.root / "mesh.case.yaml",
@@ -320,13 +284,13 @@ def test_val05_2wcd_mesh_against_the_reference_figures(walked: Walked) -> None:
         "mean SICN %.4f, min gamma %.4f, mean gamma %.4f (reference min %.4f, mean %.4f, by a "
         "measure the model report does not state); stage 6 %s",
         mesh["elements"],
-        REFERENCE_TRIANGLES,
+        d10_figures.triangles,
         quality["min_sicn"],  # type: ignore[index]
         quality["mean_sicn"],  # type: ignore[index]
         quality["min_gamma"],  # type: ignore[index]
         quality["mean_gamma"],  # type: ignore[index]
-        REFERENCE_MIN_QUALITY,
-        REFERENCE_MEAN_QUALITY,
+        d10_figures.min_quality,
+        d10_figures.mean_quality,
         _stage_time(result, "mesh"),
     )
     reduction = result.artefacts["symmetry"].summary
@@ -378,7 +342,7 @@ def test_val05_2wcd_mesh_on_both_backends(gmsh_module: ModuleType, walked: Walke
 
 
 @pytest.mark.slow
-def test_val05_2wcd_frozen_case_conductance(walked: Walked) -> None:
+def test_val05_2wcd_frozen_case_conductance(walked: Walked, val05_frozen_case: str) -> None:
     """D9, recorded: G on the generated mesh against the fixture's, beside ε_G.
 
     Uncharged at 1 M, so G is geometric and ``ε_G`` is its bulk-resistor proxy;
@@ -395,7 +359,7 @@ def test_val05_2wcd_frozen_case_conductance(walked: Walked) -> None:
     walk = run_case(
         _write(
             walked.root / "frozen-walk.case.yaml",
-            FROZEN_CASE.format(
+            val05_frozen_case.format(
                 name="2wcd-frozen-walk",
                 source=walked.structure + walked.geometry,
                 size_scale=FROZEN_SIZE_SCALE,
@@ -409,7 +373,7 @@ def test_val05_2wcd_frozen_case_conductance(walked: Walked) -> None:
     generated = run_case(
         _write(
             walked.root / "frozen-generated.case.yaml",
-            FROZEN_CASE.format(
+            val05_frozen_case.format(
                 name="2wcd-frozen",
                 source=f"inputs:\n  mesh: {{path: {mesh_file}, format: msh41}}\n",
                 size_scale=1.0,
@@ -422,7 +386,7 @@ def test_val05_2wcd_frozen_case_conductance(walked: Walked) -> None:
     fixture = run_case(
         _write(
             walked.root / "frozen-fixture.case.yaml",
-            FROZEN_CASE.format(
+            val05_frozen_case.format(
                 name="fixture-frozen",
                 source=f"inputs:\n  profile: {{path: {profile_file('clya_reference_profile')}}}\n",
                 size_scale=FROZEN_SIZE_SCALE,

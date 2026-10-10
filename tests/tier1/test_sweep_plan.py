@@ -49,7 +49,7 @@ REFERENCE_SWEEP = Path("docs/sweeps/phase1-reference.sweep.yaml")
 """The §8.3 reference sweep, checked in so the deferred twelve-core run is one command."""
 
 BASE = """
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: base
 inputs:
   mesh: {{path: {mesh}, format: vol, groups: {{default: interface}}}}

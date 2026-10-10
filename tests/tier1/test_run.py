@@ -54,7 +54,6 @@ from nanopnp.io.manifest import CASE_FILENAME, MANIFEST_FILENAME, MANIFEST_SCHEM
 from nanopnp.io.resolved import ResolvedCase
 from nanopnp.io.store import Store
 from nanopnp.mesh.ingest import IngestedMesh, MeshStage, exclusion_deviations
-from nanopnp.mesh.primitives import CylindricalPoreGeometry
 from nanopnp.pipeline import run as run_module
 from nanopnp.pipeline.case import loads_case, resolve
 from nanopnp.pipeline.run import (
@@ -67,55 +66,6 @@ from nanopnp.pipeline.run import (
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.mesh.adapter import MeshData
-
-PORE = CylindricalPoreGeometry(
-    pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
-)
-MAXH_NM = 4.0
-WALL_H_NM = 1.0
-"""The cheapest mesh that carries all four domains, as WP10's other modules use."""
-
-CASE = """
-schema: nanopnp/case/v2
-name: run-probe
-inputs:
-  mesh:
-    path: {mesh_path}
-    format: vol
-    groups: {{default: interface}}
-electrolyte:
-  species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
-  concentration_M: 0.1
-  temperature_K: 298.15
-  parameters: willems2020_nacl
-  corrections:
-    diffusivity:  {{model: none}}
-    mobility:     {{model: none}}
-    viscosity:    {{model: none}}
-    permittivity: {{model: none}}
-    density:      {{model: none}}
-boundary_conditions:
-  bias_V: 0.02
-  ground: cis
-physics:
-  model: epnp-ns
-  solid_permittivities: {{membrane: 3.2}}
-numerics:
-  continuation: default_ladder
-  stabilisation: none
-outputs: [current, transport_numbers, eof_rate]
-"""
-
-
-@pytest.fixture(scope="module")
-def case_file(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """Write the reference case and the mesh it names, once for the module."""
-    work = tmp_path_factory.mktemp("run")
-    mesh_path = work / "pore.vol"
-    PORE.generate(maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM).ngmesh.Save(str(mesh_path))
-    path = work / "case.yaml"
-    path.write_text(CASE.format(mesh_path=mesh_path), encoding="utf-8")
-    return path
 
 
 # -- the pipeline order --------------------------------------------------------
@@ -302,7 +252,7 @@ def _solid_fraction_field() -> SolidFractionField:
 
 
 def test_ver32_a_truncated_run_writes_its_directory_and_reports_monotone_progress(
-    case_file: Path, tmp_path: Path
+    cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
     """``upto`` stops the walk, and what it produced is on disk and consistent.
 
@@ -314,7 +264,7 @@ def test_ver32_a_truncated_run_writes_its_directory_and_reports_monotone_progres
     seen: list[tuple[float, str]] = []
     store = Store(tmp_path / "store")
     result = run_case(
-        case_file,
+        cylindrical_pore_case,
         store=store,
         upto="mesh",
         workspace=tmp_path / "work",
@@ -344,7 +294,7 @@ def test_ver32_a_truncated_run_writes_its_directory_and_reports_monotone_progres
 
 
 def test_qr08_a_truncated_walk_does_not_overwrite_the_record_of_the_full_run(
-    case_file: Path, tmp_path: Path
+    cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
     """``--upto`` and the shell's **Build geometry** write beside a full run, never over it.
 
@@ -353,12 +303,14 @@ def test_qr08_a_truncated_walk_does_not_overwrite_the_record_of_the_full_run(
     longer be reproduced from its directory (CODE_REVIEW_003 CR-2, QR-08).
     """
     store = Store(tmp_path / "store")
-    full = run_case(case_file, store=store, workspace=tmp_path / "work")
+    full = run_case(cylindrical_pore_case, store=store, workspace=tmp_path / "work")
     assert full.quantities, "a full run records its quantities"
     recorded = (full.directory / RUN_RECORD_FILENAME).read_bytes()
     manifest = (full.directory / MANIFEST_FILENAME).read_bytes()
 
-    truncated = run_case(case_file, store=store, upto="mesh", workspace=tmp_path / "work")
+    truncated = run_case(
+        cylindrical_pore_case, store=store, upto="mesh", workspace=tmp_path / "work"
+    )
     assert truncated.directory != full.directory
     assert (full.directory / RUN_RECORD_FILENAME).read_bytes() == recorded
     assert (full.directory / MANIFEST_FILENAME).read_bytes() == manifest
@@ -366,7 +318,7 @@ def test_qr08_a_truncated_walk_does_not_overwrite_the_record_of_the_full_run(
 
 
 def test_qr08_a_complete_walk_is_complete_when_its_case_drops_the_last_registered_stage(
-    case_file: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    cylindrical_pore_case: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """A walk is complete at the last stage *this case* walks, not the last registered.
 
@@ -393,7 +345,10 @@ def test_qr08_a_complete_walk_is_complete_when_its_case_drops_the_last_registere
         "nanopnp.external:ExternalStage",
     )
     result = run_case(
-        case_file, store=Store(tmp_path / "store"), workspace=tmp_path / "work", write=False
+        cylindrical_pore_case,
+        store=Store(tmp_path / "store"),
+        workspace=tmp_path / "work",
+        write=False,
     )
     assert result.stages[-1].name == "report"
     assert not result.directory.name.startswith("run-probe-upto-"), result.directory.name
@@ -401,7 +356,7 @@ def test_qr08_a_complete_walk_is_complete_when_its_case_drops_the_last_registere
 
 @pytest.mark.parametrize("linesep", ["\n", "\r\n"])
 def test_qr08_the_run_directory_case_hashes_to_the_recorded_case_input(
-    case_file: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, linesep: str
+    cylindrical_pore_case: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, linesep: str
 ) -> None:
     """The copy beside the manifest is what ``reproduce`` checks the recorded hash against.
 
@@ -411,7 +366,8 @@ def test_qr08_the_run_directory_case_hashes_to_the_recorded_case_input(
     """
     monkeypatch.setattr(os, "linesep", linesep)
     source = tmp_path / "case.yaml"
-    source.write_bytes(case_file.read_text(encoding="utf-8").replace("\n", linesep).encode("utf-8"))
+    text = cylindrical_pore_case.read_text(encoding="utf-8").replace("\n", linesep)
+    source.write_bytes(text.encode("utf-8"))
 
     result = run_case(source, store=Store(tmp_path / "store"), upto="mesh")
 
@@ -420,7 +376,7 @@ def test_qr08_the_run_directory_case_hashes_to_the_recorded_case_input(
 
 
 def test_ver32_a_run_writes_its_scratch_inside_the_store_it_was_given(
-    case_file: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    cylindrical_pore_case: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """No workspace named means one under *this* store, not the process default.
 
@@ -448,7 +404,7 @@ def test_ver32_a_run_writes_its_scratch_inside_the_store_it_was_given(
     monkeypatch.setattr(run_module, "_scratch", watched)
 
     store = Store(tmp_path / "store")
-    result = run_case(case_file, store=store, upto="mesh")
+    result = run_case(cylindrical_pore_case, store=store, upto="mesh")
 
     assert list(elsewhere.iterdir()) == [], "a run leaked files outside the store it was given"
     assert len(made) == 1, made
@@ -461,7 +417,7 @@ def test_ver32_a_run_writes_its_scratch_inside_the_store_it_was_given(
 
 
 def test_ver32_a_run_removes_its_scratch_once_the_store_holds_the_payloads(
-    case_file: Path, tmp_path: Path
+    cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
     """``Store.put`` copies every payload, so the workspace would hold each one twice.
 
@@ -470,17 +426,17 @@ def test_ver32_a_run_removes_its_scratch_once_the_store_holds_the_payloads(
     workspace the caller named is the caller's, and is left alone.
     """
     store = Store(tmp_path / "store")
-    result = run_case(case_file, store=store, upto="mesh")
+    result = run_case(cylindrical_pore_case, store=store, upto="mesh")
     assert list((store.root / WORKSPACE_DIRNAME).glob("run-*")) == []
     assert Path(str(result.artefacts["mesh"].payload["mesh"])).is_file()
 
     named = tmp_path / "work"
-    run_case(case_file, store=Store(tmp_path / "other"), upto="mesh", workspace=named)
+    run_case(cylindrical_pore_case, store=Store(tmp_path / "other"), upto="mesh", workspace=named)
     assert (named / "mesh" / "mesh.msh").is_file()
 
 
 def test_ver32_a_second_run_through_the_same_store_is_served_from_it(
-    case_file: Path, tmp_path: Path
+    cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
     """The store is a cache, and the record says which stages used it (QR-08).
 
@@ -489,8 +445,8 @@ def test_ver32_a_second_run_through_the_same_store_is_served_from_it(
     asserting that a dictionary lookup is deterministic.
     """
     store = Store(tmp_path / "store")
-    first = run_case(case_file, store=store, upto="mesh", workspace=tmp_path / "work")
-    second = run_case(case_file, store=store, upto="mesh", workspace=tmp_path / "work")
+    first = run_case(cylindrical_pore_case, store=store, upto="mesh", workspace=tmp_path / "work")
+    second = run_case(cylindrical_pore_case, store=store, upto="mesh", workspace=tmp_path / "work")
 
     assert all(record.cached for record in second.stages)
     assert [record.hash for record in second.stages] == [record.hash for record in first.stages]
@@ -498,7 +454,7 @@ def test_ver32_a_second_run_through_the_same_store_is_served_from_it(
 
 
 def test_ver32_only_refuses_an_upstream_the_store_does_not_hold(
-    case_file: Path, tmp_path: Path
+    cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
     """A missing substitution aborts naming it, rather than being recomputed.
 
@@ -509,7 +465,7 @@ def test_ver32_only_refuses_an_upstream_the_store_does_not_hold(
     """
     with pytest.raises(MissingUpstreamError) as raised:
         run_case(
-            case_file,
+            cylindrical_pore_case,
             store=Store(tmp_path / "store"),
             upto="solve",
             only=True,
@@ -521,20 +477,22 @@ def test_ver32_only_refuses_an_upstream_the_store_does_not_hold(
     assert str(tmp_path / "store") in message
 
 
-def test_ver32_upto_names_a_stage_this_case_does_not_walk(case_file: Path, tmp_path: Path) -> None:
+def test_ver32_upto_names_a_stage_this_case_does_not_walk(
+    cylindrical_pore_case: Path, tmp_path: Path
+) -> None:
     """Stage 7 is registered, and this case gives it nothing to read.
 
     Two different errors share one flag, and conflating them sends a reader to
     the wrong place: ``--upto charge`` on a case with no field is not a typo.
     """
     with pytest.raises(KeyError, match="nothing for it to read"):
-        run_case(case_file, store=Store(tmp_path / "store"), upto="charge", write=False)
+        run_case(cylindrical_pore_case, store=Store(tmp_path / "store"), upto="charge", write=False)
     with pytest.raises(KeyError, match="no stage 'sovle'"):
-        run_case(case_file, store=Store(tmp_path / "store"), upto="sovle", write=False)
+        run_case(cylindrical_pore_case, store=Store(tmp_path / "store"), upto="sovle", write=False)
 
 
 _MINIMAL = """
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: minimal
 inputs: {mesh: {path: pore.vol, format: vol}}
 electrolyte:
@@ -557,11 +515,11 @@ ATOM      4  O   GLU A  18      -1.657   2.404 -35.775 -1.5100 1.7000
 """A four-atom PQR whose charges sum to -1 e: enough for the walk to read and gate."""
 
 
-def _pqr_case(case_file: Path, tmp_path: Path) -> Path:
+def _pqr_case(cylindrical_pore_case: Path, tmp_path: Path) -> Path:
     """Write the module's case with ``inputs.pqr`` beside its mesh."""
     pqr = tmp_path / "supplied.pqr"
     pqr.write_text(_PQR_LINES, encoding="utf-8")
-    text = case_file.read_text(encoding="utf-8").replace(
+    text = cylindrical_pore_case.read_text(encoding="utf-8").replace(
         "inputs:\n", f"inputs:\n  pqr: {{path: {pqr}, format: pqr}}\n", 1
     )
     path = tmp_path / "pqr.case.yaml"
@@ -570,7 +528,7 @@ def _pqr_case(case_file: Path, tmp_path: Path) -> Path:
 
 
 def test_ver57_protonation_runs_before_the_deposit_it_feeds(
-    case_file: Path, tmp_path: Path
+    cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
     """WP28 D8, retiring WP27 D3: both halves of stage 7 run before the materials.
 
@@ -584,7 +542,8 @@ def test_ver57_protonation_runs_before_the_deposit_it_feeds(
         selected_stages,
     )
 
-    supplied = resolve(loads_case(_pqr_case(case_file, tmp_path).read_text(encoding="utf-8")))
+    pqr_text = _pqr_case(cylindrical_pore_case, tmp_path).read_text(encoding="utf-8")
+    supplied = resolve(loads_case(pqr_text))
     assert supplied.deposits_charge
     assert selected_stages(supplied, "solve") == (
         "case",
@@ -598,7 +557,7 @@ def test_ver57_protonation_runs_before_the_deposit_it_feeds(
     # protonation reads the case alone here, so the mesh is not walked.
     assert selected_stages(supplied, "protonation") == ("case", "protonation")
     assert selected_stages(supplied, "materials") == ("case", "materials")
-    bare = resolve(loads_case(case_file.read_text(encoding="utf-8")))
+    bare = resolve(loads_case(cylindrical_pore_case.read_text(encoding="utf-8")))
     assert "protonation" not in selected_stages(bare, None)
     assert "charge" not in selected_stages(bare, None)
     with pytest.raises(UnknownStageError, match="nothing for it to protonate"):
@@ -606,7 +565,7 @@ def test_ver57_protonation_runs_before_the_deposit_it_feeds(
 
 
 def test_ver57_a_walk_to_protonation_records_it_in_the_charge_group(
-    case_file: Path, tmp_path: Path
+    cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
     """``inputs.pqr`` walked to the stage: the Charge group carries ``Q_net`` and the file.
 
@@ -614,7 +573,7 @@ def test_ver57_a_walk_to_protonation_records_it_in_the_charge_group(
     different fact from a stage that ran (WP27 D16); so does stage 7, which a
     walk stopped short of it did not reach (WP28 D8).
     """
-    case = _pqr_case(case_file, tmp_path)
+    case = _pqr_case(cylindrical_pore_case, tmp_path)
     store = Store(tmp_path / "store")
     result = run_case(case, store=store, upto="protonation", write=False)
     group = result.manifest.charge
@@ -634,14 +593,14 @@ def test_ver57_a_walk_to_protonation_records_it_in_the_charge_group(
 
 
 def test_ver64_a_walk_past_stage_7_that_skips_it_says_so_in_the_charge_group(
-    case_file: Path, tmp_path: Path
+    cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
     """A walk to ``materials`` runs its input closure, which holds no stage 7 (WP38 D11).
 
     It ends past stage 7, so the Charge group must not record that it stopped
     before stage 7: it records that the walk's target does not read it.
     """
-    case = _pqr_case(case_file, tmp_path)
+    case = _pqr_case(cylindrical_pore_case, tmp_path)
     result = run_case(case, store=Store(tmp_path / "store"), upto="materials", write=False)
     assert [record.name for record in result.stages] == ["case", "materials"]
     group = result.manifest.charge

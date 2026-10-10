@@ -1,6 +1,8 @@
 # WP42 — The verification checks
 
-**Status: planned, not started.** Written 9 October 2026 at `c306256`, after WP41 was delivered as
+PR: [#91](https://github.com/willemsk/nanopnp/pull/91), branch feat/wp42-verification-checks
+
+**Status: completed.** Delivered 10 October 2026 as `v0.5.0-alpha.8`. Written 9 October 2026 at `c306256`, after WP41 was delivered as
 `v0.5.0-alpha.7`. It inherits everything the [current brief](current.md) lists as not to be
 re-decided, and in particular: VER-62's golden at 10⁻⁸ (no number moves in this package); WP40's
 rule that a refusal names its requirement (VER-67); WP38's split (`pipeline/checks.py` refuses at
@@ -88,15 +90,15 @@ outcome table per model (`refused`/`live`/`inert` per leaf and value), the bypas
 
 ### Work items
 
-- [ ] 1. [Opus] — a rewritten comparison inverted passes every finite test. Read *Design* §1. `validation/modularity.py` (D1), the 38 rewrites and `NAN_EXEMPT` (D2). Done when `test_nan_gates.py` passes and the gate suites stay green.
-- [ ] 2. [Opus] — an identifier move and upgrade path are read by every case. `io/artefact.py`, `io/case.py` (`upgraded_from`, v2 → v0.5), `core/stages.py`, `io/defaults.py`; the D9 texts. No narrowing yet; v2 documents read unchanged. Done when the D9 tests of `test_case_schema_v05.py` pass and the suite is green.
-- [ ] 3. [Opus] — a declaration that over- or under-claims refuses a live leaf or passes an inert one. `physics/models.py` (`unread`, D3; switch sets, D5), `pipeline/checks.py` (`_check_unread`, D8's gating), `carry_upgrade` (D10). Update `test_model_interface.py`'s quick-start variants (`pnp-ns`, `pb`, `pb-linear` without corrections; `pnp` with the two switches false, without viscosity and density corrections) and re-record `SOLVE_HASHES` for those four, after showing in the commit body each edited variant's `fingerprint` bit-identical to the unedited one's with `_check_unread` lifted (VER-56 as amended). Repair v2 test documents that wrote an unread value. Done when the D3, D5, D8, D10 tests pass and VER-62 is unchanged at 10⁻⁸.
-- [ ] 4. [Opus] — a part or driver rule wrongly scoped refuses a live case. `materials/models.py`, `pipeline/checks.py` (D6). Done when the D6 tests pass.
-- [ ] 5. [Opus] — a classification is a plausible wrong answer. `validation/case_leaves.py` (D4); first, in its own `test:` commit, `test_ver71_stage_leaves_move_their_consumers_key` per D7, shown at P5. Done when every `test_case_leaves.py` test passes. Record VER-61 edges if any.
-- [ ] 6. [any] Move every `nanopnp/case/v2` literal in `examples/`, `docs/`, `tests/`, `src/` docstrings and `CLAUDE.md` to `nanopnp/case/v0.5`, writing `variable_density: false, inertia: false` where `pnp` now requires them; keep v2 only in the upgrade tests and the v1 corpus. Update IF-03, the stage-9 row, §5.3's format table, VER-43 and VER-47 texts (G6). Done when the full gate and the docs build pass.
-- [ ] 7. [any] REV-13 (D11) and REV-23 (D12): the exact assertions given. Done when both tests pass.
-- [ ] 8. [any] REV-29, REV-34, REV-44, REV-48 (D13). Done when the moved tests pass with unchanged assertions and `--durations` shows the slab solved once.
-- [ ] 9. [any] Records: REV-11, -12, -13, -23, -29, -34, -42, -44, -48, -66 `fixed`; a `REV-nn` row for *Out of scope*'s cross-leaf inertness; `CHANGELOG.md` `0.5.0-alpha.8` with the breaks and the migration section; `docs/project/physics-models.md` lists each model's unread leaves; this plan's status, the phase plan, the brief. Done when VER-63, VER-67, VER-72 and the strict docs build pass.
+- [x] f9878c6 non-Opus 1. [Opus] — a rewritten comparison inverted passes every finite test. Read *Design* §1. `validation/modularity.py` (D1), the 38 rewrites and `NAN_EXEMPT` (D2). Done when `test_nan_gates.py` passes and the gate suites stay green.
+- [x] 9d73180 non-Opus 2. [Opus] — an identifier move and upgrade path are read by every case. `io/artefact.py`, `io/case.py` (`upgraded_from`, v2 → v0.5), `core/stages.py`, `io/defaults.py`; the D9 texts. No narrowing yet; v2 documents read unchanged. Done when the D9 tests of `test_case_schema_v05.py` pass and the suite is green.
+- [x] 075696e non-Opus 3. [Opus] — a declaration that over- or under-claims refuses a live leaf or passes an inert one. `physics/models.py` (`unread`, D3; switch sets, D5), `pipeline/checks.py` (`_check_unread`, D8's gating), `carry_upgrade` (D10). Update `test_model_interface.py`'s quick-start variants (`pnp-ns`, `pb`, `pb-linear` without corrections; `pnp` with the two switches false, without viscosity and density corrections) and re-record `SOLVE_HASHES` for those four, after showing in the commit body each edited variant's `fingerprint` bit-identical to the unedited one's with `_check_unread` lifted (VER-56 as amended). Repair v2 test documents that wrote an unread value. Done when the D3, D5, D8, D10 tests pass and VER-62 is unchanged at 10⁻⁸.
+- [x] fe08c4a non-Opus 4. [Opus] — a part or driver rule wrongly scoped refuses a live case. `materials/models.py`, `pipeline/checks.py` (D6). Done when the D6 tests pass.
+- [x] bb6583c non-Opus 5. [Opus] — a classification is a plausible wrong answer. `validation/case_leaves.py` (D4); first, in its own `test:` commit, `test_ver71_stage_leaves_move_their_consumers_key` per D7, shown at P5. Done when every `test_case_leaves.py` test passes. Record VER-61 edges if any.
+- [x] ba3b484 non-Opus 6. [any] Retire `nanopnp/case/v1` and `v2` entirely: remove `upgrade_v1`, `CASE_SCHEMA_V1`, `CASE_SCHEMA_V2`, `upgraded_from`, `carry_upgrade`, and `_migration_suffix` from `src/`; delete `test_case_schema_v2.py` and `tests/tier1/data/case_v1/`; migrate Python interpreter range check to `test_case_schema_v05.py`; move all remaining `nanopnp/case/v2` literals in `examples/`, `docs/`, `tests/`, `src/` docstrings and `CLAUDE.md` to `nanopnp/case/v0.5` (writing `variable_density: false, inertia: false` where `pnp` requires them); update IF-03, stage-9 row, §5.3 format table, VER-43 and VER-47 texts (G6). Done when full gate and strict docs build pass.
+- [x] 0bbf432 non-Opus 7. [any] REV-13 (D11) and REV-23 (D12): the exact assertions given. Done when both tests pass.
+- [x] 0e5a6b7 non-Opus 8. [any] REV-29, REV-34, REV-44, REV-48 (D13). Done when the moved tests pass with unchanged assertions and `--durations` shows the slab solved once.
+- [x] bef6f7c non-Opus 9. [any] Records: REV-11, -12, -13, -23, -29, -34, -42, -44, -48, -66 `fixed`; a `REV-nn` row for *Out of scope*'s cross-leaf inertness; `CHANGELOG.md` `0.5.0-alpha.8` with the breaks and the migration section; `docs/project/physics-models.md` lists each model's unread leaves; this plan's status, the phase plan, the brief. Done when VER-63, VER-67, VER-72 and the strict docs build pass.
 
 ### Verification
 
@@ -203,3 +205,21 @@ case with `permittivity: {wall: false}`; one with `driver: ionic_strength`; one 
 
 | Checkpoint | Date | Author's ruling |
 |---|---|---|
+| P1 | 2026-10-09 | go P1 |
+| R1 | 2026-10-09 | approved R1 |
+| P2 | 2026-10-09 | go P2 |
+| R2 | 2026-10-09 | approved R2 |
+| P3 | 2026-10-09 | go P3 |
+| R3 | 2026-10-09 | approved R3 |
+| P4 | 2026-10-09 | go P4 |
+| R4 | 2026-10-09 | approve R4, go P5 |
+| P5 | 2026-10-09 | approve R4, go P5 |
+| R5 | 2026-10-10 | approved R5 |
+| P6 | 2026-10-10 | go P6 |
+| R6 | 2026-10-10 | approved R6 and go P7 |
+| P7 | 2026-10-10 | approved R6 and go P7 |
+| R7 | 2026-10-10 | approved R7 and go P8 |
+| P8 | 2026-10-10 | approved R7 and go P8 |
+| R8 | 2026-10-10 | approved R8 and go P9 |
+| P9 | 2026-10-10 | approved R8 and go P9 |
+| R9 | 2026-10-10 | approved R9 |

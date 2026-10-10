@@ -65,58 +65,11 @@ from nanopnp.core.paths import (
     reference_file,
 )
 from nanopnp.io.manifest import MANIFEST_SCHEMA
-from nanopnp.mesh.primitives import CylindricalPoreGeometry
 from nanopnp.numerics.gates import GateViolationError
 from nanopnp.pipeline.run import (
     RUN_RECORD_FILENAME,
     RUN_SCHEMA,
 )
-
-PORE = CylindricalPoreGeometry(
-    pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
-)
-CASE = """
-schema: nanopnp/case/v2
-name: cli-probe
-inputs:
-  mesh:
-    path: {mesh_path}
-    format: vol
-    groups: {{default: interface}}
-electrolyte:
-  species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
-  concentration_M: 0.1
-  temperature_K: 298.15
-  parameters: willems2020_nacl
-  corrections:
-    diffusivity:  {{model: none}}
-    mobility:     {{model: none}}
-    viscosity:    {{model: none}}
-    permittivity: {{model: none}}
-    density:      {{model: none}}
-boundary_conditions:
-  bias_V: 0.02
-  ground: cis
-physics:
-  model: epnp-ns
-  solid_permittivities: {{membrane: 3.2}}
-numerics:
-  continuation: default_ladder
-  stabilisation: none
-outputs: [current, transport_numbers, eof_rate]
-"""
-
-
-@pytest.fixture(scope="module")
-def case_file(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """Write the reference case and the mesh it names, once for the module."""
-    work = tmp_path_factory.mktemp("cli")
-    mesh_path = work / "pore.vol"
-    PORE.generate(maxh_nm=4.0, wall_h_nm=1.0).ngmesh.Save(str(mesh_path))
-    path = work / "case.yaml"
-    path.write_text(CASE.format(mesh_path=mesh_path), encoding="utf-8")
-    return path
-
 
 # -- the environment report ----------------------------------------------------
 
@@ -425,7 +378,7 @@ def test_ver32_env_reports_the_store_and_the_reference_archive(
 
 
 def test_ver32_a_run_exits_zero_and_writes_where_run_dir_says(
-    case_file: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    cylindrical_pore_case: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     """``run`` walks the pipeline and puts the three files where asked (FR-27).
 
@@ -438,7 +391,7 @@ def test_ver32_a_run_exits_zero_and_writes_where_run_dir_says(
     code = main(
         [
             "run",
-            str(case_file),
+            str(cylindrical_pore_case),
             "--upto",
             "mesh",
             "--store",
@@ -461,7 +414,7 @@ def test_ver32_a_case_the_schema_refuses_exits_three(
 ) -> None:
     """Exit 3: the case file is wrong and a retry will fail identically (QR-06)."""
     path = tmp_path / "bad.yaml"
-    path.write_text("schema: nanopnp/case/v2\nname: bad\nnonsense: 1\n", encoding="utf-8")
+    path.write_text("schema: nanopnp/case/v0.5\nname: bad\nnonsense: 1\n", encoding="utf-8")
     assert main(["run", str(path), "--store", str(tmp_path / "store")]) == EXIT_CASE
     captured = capsys.readouterr()
     assert captured.out == ""
@@ -470,7 +423,7 @@ def test_ver32_a_case_the_schema_refuses_exits_three(
 
 
 def test_ver32_upto_naming_a_stage_the_run_does_not_walk_exits_three(
-    case_file: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    cylindrical_pore_case: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     """Exit 3, not 1: a typo in ``--upto`` is not a failure worth a retry (QR-06).
 
@@ -478,7 +431,9 @@ def test_ver32_upto_naming_a_stage_the_run_does_not_walk_exits_three(
     array re-dispatches; this one fails identically every time, and the fix is
     an edit to the command line.
     """
-    code = main(["run", str(case_file), "--upto", "sovle", "--store", str(tmp_path / "store")])
+    code = main(
+        ["run", str(cylindrical_pore_case), "--upto", "sovle", "--store", str(tmp_path / "store")]
+    )
     assert code == EXIT_CASE
     captured = capsys.readouterr()
     assert captured.out == ""
@@ -488,7 +443,7 @@ def test_ver32_upto_naming_a_stage_the_run_does_not_walk_exits_three(
 
 
 def test_ver32_only_with_an_empty_store_exits_four(
-    case_file: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    cylindrical_pore_case: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     """Exit 4: a gate stopped the run, naming what was missing (QR-12).
 
@@ -496,7 +451,9 @@ def test_ver32_only_with_an_empty_store_exits_four(
     proves the stage read the substituted file rather than recomputing past it,
     and that only holds if a miss aborts.
     """
-    code = main(["stage", "solve", str(case_file), "--only", "--store", str(tmp_path / "empty")])
+    code = main(
+        ["stage", "solve", str(cylindrical_pore_case), "--only", "--store", str(tmp_path / "empty")]
+    )
     assert code == EXIT_GATE
     captured = capsys.readouterr()
     assert captured.out == ""
@@ -540,14 +497,14 @@ def test_ver32_an_unclassified_failure_exits_one_and_says_to_ask_for_the_traceba
 
 
 def test_ver32_stdout_carries_the_result_and_stderr_carries_the_log(
-    case_file: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    cylindrical_pore_case: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     """A caller parsing stdout must not receive log lines (section 3.1, IF-02)."""
     log = tmp_path / "run.log"
     code = main(
         [
             "run",
-            str(case_file),
+            str(cylindrical_pore_case),
             "--upto",
             "case",
             "--store",
@@ -568,7 +525,7 @@ def test_ver32_stdout_carries_the_result_and_stderr_carries_the_log(
 
 
 def test_ver32_inspect_reads_a_run_directory_back(
-    case_file: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    cylindrical_pore_case: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     """``inspect`` reports what is on disk, from the directory or from the file."""
     where = tmp_path / "out"
@@ -576,7 +533,7 @@ def test_ver32_inspect_reads_a_run_directory_back(
         main(
             [
                 "run",
-                str(case_file),
+                str(cylindrical_pore_case),
                 "--upto",
                 "case",
                 "--store",
@@ -691,7 +648,7 @@ def test_val01_validate_help_does_not_choke_on_the_grid_header(
 
 
 def test_ver32_mesh_cylinder_writes_a_mesh_its_printed_groups_ingest(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    cylindrical_pore_case: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     """The file ingests through the VER-27 gate with the mapping printed, unchanged.
 
@@ -712,7 +669,8 @@ def test_ver32_mesh_cylinder_writes_a_mesh_its_printed_groups_ingest(
     groups = ", ".join(f"{key}: {value}" for key, value in printed["groups"].items())
     case = tmp_path / "case.yaml"
     case.write_text(
-        CASE.format(mesh_path=out)
+        cylindrical_pore_case.read_text(encoding="utf-8")
+        .replace(str(cylindrical_pore_case.parent / "pore.vol"), str(out))
         .replace("format: vol", "format: msh41")
         .replace("groups: {default: interface}", f"groups: {{{groups}}}"),
         encoding="utf-8",
@@ -804,7 +762,7 @@ def test_ver32_mesh_help_imports_no_netgen(shape: str) -> None:
 # -- stage --export (section 3.1 IF-02 export NOTE; IF-05 length-units NOTE) ----
 
 TUBE_CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: tube
 structure:
   source: {{path: {pdb}}}
@@ -818,7 +776,7 @@ physics: {{model: epnp-ns, solid_permittivities: {{membrane: 3.2}}}}
 """
 
 PROFILE_CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: coarse
 inputs:
   profile: {{path: {path}}}
@@ -1060,10 +1018,10 @@ def test_ver32_stage_export_help_imports_no_stage_module() -> None:
 
 
 def test_rev27_validate_case_accepts_a_runnable_case_and_lists_its_walk(
-    case_file: Path, capsys: pytest.CaptureFixture[str]
+    cylindrical_pore_case: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     """``nanopnp validate case`` checks a case as a run would, and solves nothing (WP38)."""
-    code = main(["validate", "case", str(case_file), "--json"])
+    code = main(["validate", "case", str(cylindrical_pore_case), "--json"])
     assert code == EXIT_OK
     reported = json.loads(capsys.readouterr().out)
     assert reported["valid"] is True
@@ -1080,7 +1038,7 @@ def test_rev27_validate_case_accepts_a_runnable_case_and_lists_its_walk(
     ],
 )
 def test_rev27_validate_case_refuses_in_the_words_run_uses(
-    case_file: Path,
+    cylindrical_pore_case: Path,
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
     old: str,
@@ -1088,7 +1046,7 @@ def test_rev27_validate_case_refuses_in_the_words_run_uses(
     named: str,
 ) -> None:
     """A registry or inf-sup refusal exits 3 with the sentence ``nanopnp run`` prints (IF-02)."""
-    text = case_file.read_text(encoding="utf-8")
+    text = cylindrical_pore_case.read_text(encoding="utf-8")
     assert old in text
     bad = tmp_path / "bad.case.yaml"
     bad.write_text(text.replace(old, new), encoding="utf-8")

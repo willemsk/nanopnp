@@ -45,44 +45,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
-import pytest
-
 from nanopnp.core.stages import SolveReporting, create, walk_order
 from nanopnp.io.store import Store
-from nanopnp.mesh.primitives import CylindricalPoreGeometry
 from nanopnp.numerics.newton import DEFAULT_SETTINGS
 from nanopnp.pipeline.case import resolve
 from nanopnp.pipeline.run import run_case
-
-PORE = CylindricalPoreGeometry(
-    pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
-)
-MAXH_NM = 4.0
-WALL_H_NM = 1.0
-
-CASE = """
-schema: nanopnp/case/v2
-name: hook-probe
-inputs:
-  mesh:
-    path: {mesh_path}
-    format: vol
-    groups: {{default: interface}}
-electrolyte:
-  species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
-  concentration_M: 0.1
-  parameters: willems2020_nacl
-  corrections:
-    diffusivity:  {{model: none}}
-    mobility:     {{model: none}}
-    viscosity:    {{model: none}}
-    permittivity: {{model: none}}
-    density:      {{model: none}}
-boundary_conditions: {{bias_V: 0.02, ground: cis}}
-physics: {{model: epnp-ns, solid_permittivities: {{membrane: 3.2}}}}
-numerics: {{continuation: default_ladder, stabilisation: none}}
-outputs: [current]
-"""
 
 
 @dataclass
@@ -129,17 +96,6 @@ class Recorder:
         return bands
 
 
-@pytest.fixture(scope="module")
-def case_file(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """Write the case and the mesh it names, once for the module."""
-    work = tmp_path_factory.mktemp("hook")
-    mesh_path = work / "pore.vol"
-    PORE.generate(maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM).ngmesh.Save(str(mesh_path))
-    path = work / "case.yaml"
-    path.write_text(CASE.format(mesh_path=mesh_path), encoding="utf-8")
-    return path
-
-
 def test_fr27_only_the_solve_stage_offers_the_reporting_capability() -> None:
     """``SolveReporting`` is satisfied by stage 10 and by none of the others.
 
@@ -153,7 +109,7 @@ def test_fr27_only_the_solve_stage_offers_the_reporting_capability() -> None:
 
 
 def test_ver44_the_hook_sees_every_rung_and_the_steps_inside_it(
-    case_file: Path, tmp_path: Path
+    cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
     """Every rung of the ladder is announced, and each step falls in its rung.
 
@@ -164,7 +120,7 @@ def test_ver44_the_hook_sees_every_rung_and_the_steps_inside_it(
     it will be silent, and that the numbers in a band are the solver's own.
     """
     hook = Recorder()
-    result = run_case(case_file, store=Store(tmp_path / "store"), on_solve=hook)
+    result = run_case(cylindrical_pore_case, store=Store(tmp_path / "store"), on_solve=hook)
 
     bands = hook.banded()
     assert bands, "the solve emitted no rung at all"
@@ -220,7 +176,7 @@ def test_ver44_the_hook_sees_every_rung_and_the_steps_inside_it(
 
 
 def test_ver44_watching_a_run_moves_no_hash_and_a_cached_solve_is_silent(
-    case_file: Path, tmp_path: Path
+    cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
     """The same case, watched and unwatched, is one artefact and one solve.
 
@@ -236,11 +192,11 @@ def test_ver44_watching_a_run_moves_no_hash_and_a_cached_solve_is_silent(
     two apart, and it can only do so if this is true.
     """
     store = Store(tmp_path / "store")
-    cold = run_case(case_file, store=store)
+    cold = run_case(cylindrical_pore_case, store=store)
     assert not next(record for record in cold.stages if record.name == "solve").cached
 
     hook = Recorder()
-    warm = run_case(case_file, store=store, on_solve=hook)
+    warm = run_case(cylindrical_pore_case, store=store, on_solve=hook)
 
     assert warm.artefacts["solve"].hash == cold.artefacts["solve"].hash
     assert next(record for record in warm.stages if record.name == "solve").cached
@@ -248,12 +204,12 @@ def test_ver44_watching_a_run_moves_no_hash_and_a_cached_solve_is_silent(
 
     # And the other order: the hook does not make the *first* run key differently
     # either. A fresh store, watched from cold, must reach the same hash.
-    fresh = run_case(case_file, store=Store(tmp_path / "second"), on_solve=Recorder())
+    fresh = run_case(cylindrical_pore_case, store=Store(tmp_path / "second"), on_solve=Recorder())
     assert fresh.artefacts["solve"].hash == cold.artefacts["solve"].hash
 
 
 def test_ver44_the_hook_is_not_reachable_from_the_stage_key(
-    case_file: Path, tmp_path: Path
+    cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
     """A stage bound to a hook produces the same key as the stage without one.
 
@@ -265,7 +221,7 @@ def test_ver44_the_hook_is_not_reachable_from_the_stage_key(
     from nanopnp.io.artefact import StageInputs
     from nanopnp.pipeline.case import load_case
 
-    document = load_case(case_file)
+    document = load_case(cylindrical_pore_case)
     inputs = StageInputs(resolved=resolve(document), upstream={}, options={})
     bare = create("solve", workspace=tmp_path / "bare")
     assert isinstance(bare, SolveReporting)

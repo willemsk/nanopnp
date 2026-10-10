@@ -103,7 +103,7 @@ CONCENTRATION_M = 0.1
 BIAS_V = 0.02
 
 CASE = """
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: state-probe
 inputs:
   mesh:

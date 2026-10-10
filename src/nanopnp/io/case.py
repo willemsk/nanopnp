@@ -1,4 +1,4 @@
-"""The ``nanopnp/case/v2`` case-file schema: its shape, its diagnostics, reading and writing.
+"""The ``nanopnp/case/v0.5`` case-file schema: its shape, its diagnostics, reading and writing.
 
 One declarative YAML document is the unit of reproducibility (IF-03,
 ``SPECIFICATION.md`` section 5.3.1); everything else is derived. This module owns
@@ -15,11 +15,6 @@ written to a future schema then fails naming the schema it claims, rather than
 with a wall of field errors against a shape it never declared. This copies
 :func:`nanopnp.materials.corrections.load_corrections` exactly, ordering
 included.
-
-**A ``nanopnp/case/v1`` document is read as its upgrade.** :func:`upgrade_v1`
-maps the v1 mapping onto v2 before validation (section 5.3.1 v2 NOTE), so
-there is one model to maintain rather than one per schema; the frozen v1 field
-tree it is held to lives in the tests (VER-47).
 
 **Every model forbids unknown keys, and the diagnostic names the key.** IF-03
 requires that; pydantic's own message does not carry it (the key is in ``loc``,
@@ -39,7 +34,6 @@ either is a statement about the *run*, which is what FR-26 means by
 
 from __future__ import annotations
 
-import copy
 import difflib
 import itertools
 from collections.abc import Mapping, Sequence
@@ -50,7 +44,7 @@ import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 from nanopnp.core.paths import available_corrections
-from nanopnp.io.artefact import CASE_SCHEMA, CASE_SCHEMA_V1
+from nanopnp.io.artefact import CASE_SCHEMA
 
 SCHEMA: str = CASE_SCHEMA
 """Schema identifier every case file must declare.
@@ -59,30 +53,6 @@ Defined in :mod:`nanopnp.io.artefact` beside the artefact that carries it, so
 that the string a case file declares and the string the store addresses it by
 cannot drift apart.
 """
-
-
-V2_ADDED: tuple[str, ...] = (
-    "inputs.profile",
-    "inputs.pqr",
-    "structure.source.selection",
-    "geometry.membrane.centre_z_nm",
-    "charge.exclusion_offset_nm",
-    "charge.dielectric_transition_nm",
-    "numerics.mesh.size_scale",
-)
-"""Paths ``nanopnp/case/v2`` added to v1; a v1 document carrying one is refused (section 5.3.1)."""
-
-
-V2_RENAMED: dict[str, str] = {"structure.source.pdb": "structure.source.path"}
-"""v1 path to the v2 path that replaced it. IF-04 reads mmCIF as well as PDB."""
-
-
-V2_MOVED: dict[str, str] = {
-    "charge.eps_protein": "physics.solid_permittivities.protein",
-    "geometry.membrane.eps_r": "physics.solid_permittivities.membrane",
-}
-"""v1 path to the v2 entry its value moves to. ``physics.solid_permittivities`` is
-the one place a solid's permittivity is set (PHY-20; author ruling)."""
 
 
 FieldType: TypeAlias = Any
@@ -678,7 +648,7 @@ class NumericsSpec(_Strict):
 
 
 class CaseDocument(_Strict):
-    """A validated case file (schema ``nanopnp/case/v2``).
+    """A validated case file (schema ``nanopnp/case/v0.5``).
 
     ``schema`` is carried under an alias so the reserved name does not shadow
     ``BaseModel``, exactly as :class:`nanopnp.materials.corrections.CorrectionDocument`
@@ -696,7 +666,6 @@ class CaseDocument(_Strict):
     physics: PhysicsSpec = Field(default_factory=PhysicsSpec)
     numerics: NumericsSpec = Field(default_factory=NumericsSpec)
     outputs: list[str] = Field(default_factory=lambda: ["current"])
-
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
     @model_validator(mode="after")
@@ -853,10 +822,6 @@ def render_problems(source: str, error: ValidationError) -> str:
         loc = problem["loc"]
         dotted = ".".join(str(part) for part in loc) if loc else "<document>"
         if problem["type"] == "extra_forbidden":
-            replaced = _v2_replacement(loc)
-            if replaced is not None:
-                lines.append(f"  {dotted}: unknown key; {replaced}")
-                continue
             accepted = _keys_of(_owner_of(loc))
             close = difflib.get_close_matches(str(loc[-1]), accepted, n=1)
             hint = (
@@ -870,25 +835,6 @@ def render_problems(source: str, error: ValidationError) -> str:
     return "\n".join(lines)
 
 
-def _v2_replacement(loc: Sequence[str | int]) -> str | None:
-    """Return what replaced a v1 key that a v2 document still uses, if it is one.
-
-    A v2 document writing ``charge.eps_protein`` would otherwise be told the
-    nearest field name of ``charge:``, which is no help: the key was moved to
-    another block, and a calibration parameter a reader believed was set would
-    be dropped with a spelling hint (section 5.3.1 v2 NOTE).
-    """
-    path = ".".join(str(part) for part in loc if not isinstance(part, int))
-    if path in V2_RENAMED:
-        return f"{CASE_SCHEMA} renamed it to {V2_RENAMED[path]}"
-    if path in V2_MOVED:
-        return (
-            f"{CASE_SCHEMA} removed it; the value is set as {V2_MOVED[path]}, the one place a "
-            "solid's permittivity is set (PHY-20)"
-        )
-    return None
-
-
 def read_case(path: str | Path) -> CaseDocument:
     """Read a case file and validate it against the schema.
 
@@ -899,8 +845,7 @@ def read_case(path: str | Path) -> CaseDocument:
 
     The ``schema:`` string is checked first, so a file written to a future schema
     fails naming the schema it claims rather than with a wall of field errors
-    against a shape it never declared. A ``nanopnp/case/v1`` file is read as its
-    v2 upgrade (:func:`upgrade_v1`).
+    against a shape it never declared.
 
     Parameters
     ----------
@@ -915,9 +860,8 @@ def read_case(path: str | Path) -> CaseDocument:
     Raises
     ------
     CaseValidationError
-        If the file is not a mapping, declares neither accepted schema, cannot
-        be upgraded, or fails validation; the message names every offending key
-        by dotted path.
+        If the file is not a mapping, declares an unexpected schema, or fails
+        validation; the message names every offending key by dotted path.
     """
     source = Path(path)
     return _validate(yaml.safe_load(source.read_text(encoding="utf-8")), str(source))
@@ -929,144 +873,18 @@ def read_case_text(text: str, *, source: str = "<string>") -> CaseDocument:
 
 
 def _validate(raw: object, source: str) -> CaseDocument:
-    """Dispatch on the declared schema, upgrade a v1 mapping, and validate."""
+    """Validate a parsed case document against the schema."""
     if not isinstance(raw, Mapping):
         raise CaseValidationError(
             f"{source}: a case file is a YAML mapping, found {type(raw).__name__}"
         )
     declared = raw.get("schema")
-    if declared == CASE_SCHEMA_V1:
-        raw = upgrade_v1(raw, source=source)
-    elif declared != SCHEMA:
-        raise CaseValidationError(
-            f"{source}: expected schema {SCHEMA!r}, or {CASE_SCHEMA_V1!r} (read as its upgrade), "
-            f"found {declared!r}"
-        )
+    if declared != SCHEMA:
+        raise CaseValidationError(f"{source}: expected schema {SCHEMA!r}, found {declared!r}")
     try:
         return CaseDocument.model_validate(dict(raw))
     except ValidationError as error:
         raise CaseValidationError(render_problems(source, error), error) from error
-
-
-def upgrade_v1(raw: Mapping[str, FieldValue], *, source: str = "<string>") -> dict[str, FieldValue]:
-    """Return a ``nanopnp/case/v1`` mapping rewritten as ``nanopnp/case/v2``.
-
-    A pure transform over the parsed YAML, run before validation, so that one
-    model serves both schemas (section 5.3.1 v2 NOTE). It moves only what was
-    written and adds no default: :data:`V2_RENAMED` keys are renamed, and a
-    written :data:`V2_MOVED` permittivity moves into
-    ``physics.solid_permittivities``. Validation of the result is the caller's.
-
-    Parameters
-    ----------
-    raw
-        The parsed v1 document. It is not modified.
-    source
-        Names the document in a diagnostic.
-
-    Returns
-    -------
-    dict
-        The v2 mapping, declaring ``nanopnp/case/v2``.
-
-    Raises
-    ------
-    CaseValidationError
-        If the v1 document carries a key v1 did not have (a document is valid
-        against the schema it declares or not at all), or if a moved permittivity
-        disagrees with one ``physics.solid_permittivities`` already holds, naming
-        both keys and both values.
-    """
-    document: dict[str, FieldValue] = copy.deepcopy(dict(raw))
-    foreign = [
-        path
-        for path in (*V2_ADDED, *V2_RENAMED.values())
-        if _raw_lookup(document, path) is not _ABSENT
-    ]
-    if foreign:
-        raise CaseValidationError(
-            f"{source}: declares {CASE_SCHEMA_V1!r} but carries {', '.join(foreign)}, which "
-            f"only {CASE_SCHEMA!r} has; declare {CASE_SCHEMA!r}, since a document is valid "
-            "against the schema it declares or not at all"
-        )
-    for old, new in V2_RENAMED.items():
-        value = _raw_pop(document, old)
-        if value is not _ABSENT:
-            _raw_put(document, new, value, source)
-    problems: list[str] = []
-    for old, new in V2_MOVED.items():
-        value = _raw_pop(document, old)
-        if value is _ABSENT:
-            continue
-        held = _raw_lookup(document, new)
-        if held is not _ABSENT and held != value:
-            problems.append(
-                f"{old} is {value!r} but {new} is {held!r}; {CASE_SCHEMA!r} sets a solid's "
-                "permittivity in one place, and the two disagree"
-            )
-            continue
-        _raw_put(document, new, value, source)
-    if problems:
-        raise CaseValidationError(
-            f"{source}: cannot upgrade to {CASE_SCHEMA!r}: " + "; ".join(problems)
-        )
-    document["schema"] = CASE_SCHEMA
-    return document
-
-
-class _Absent:
-    """The marker for a key a raw mapping does not carry, where ``None`` is a value."""
-
-
-_ABSENT = _Absent()
-
-
-def _raw_lookup(document: Mapping[str, FieldValue], path: str) -> FieldValue:
-    """Return the value at a dotted path of a raw mapping, or :data:`_ABSENT`."""
-    cursor: FieldValue = document
-    for component in path.split("."):
-        if not isinstance(cursor, Mapping) or component not in cursor:
-            return _ABSENT
-        cursor = cursor[component]
-    return cursor
-
-
-def _raw_pop(document: dict[str, FieldValue], path: str) -> FieldValue:
-    """Remove and return the value at a dotted path of a raw mapping, or :data:`_ABSENT`."""
-    *head, last = path.split(".")
-    parent = _raw_lookup(document, ".".join(head)) if head else document
-    if not isinstance(parent, dict) or last not in parent:
-        return _ABSENT
-    return parent.pop(last)
-
-
-def _raw_put(document: dict[str, FieldValue], path: str, value: FieldValue, source: str) -> None:
-    """Set a value at a dotted path of a raw mapping, creating absent blocks.
-
-    Only a block the document does not carry is created. One written as
-    ``null`` is present, and v1 refused it, so it is not turned into a block
-    that would make the upgrade accept a document v1 did not.
-
-    Raises
-    ------
-    CaseValidationError
-        If a block on the way is present and is not a mapping, so the value has
-        nowhere to go; dropping it would lose a written parameter.
-    """
-    *head, last = path.split(".")
-    cursor = document
-    for depth, component in enumerate(head):
-        if component not in cursor:
-            cursor[component] = {}
-        nested = cursor[component]
-        if not isinstance(nested, dict):
-            prefix = ".".join(head[: depth + 1])
-            raise CaseValidationError(
-                f"{source}: cannot upgrade to {CASE_SCHEMA!r}: {path} is where the value goes, "
-                f"and {prefix} is a {type(nested).__name__}, not a block"
-            )
-        cursor = nested
-    cursor[last] = value
 
 
 def dump_case(document: CaseDocument, path: str | Path) -> Path:

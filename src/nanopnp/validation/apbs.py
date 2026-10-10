@@ -334,7 +334,7 @@ def check_box(
     }
     for face, (charge, wall, sign) in reaches.items():
         inside = sign * (wall - charge)
-        if inside < margin_nm - 1e-9:
+        if not inside >= margin_nm - 1e-9:
             raise BoxError(
                 f"the APBS box's {face} face at {wall:.4f} nm lies {inside:.4f} nm from the "
                 f"charge at {charge:.4f} nm, under the {margin_nm} nm margin VAL-06 needs "

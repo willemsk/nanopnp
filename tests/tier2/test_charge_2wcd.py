@@ -52,7 +52,7 @@ GOLDEN_Q_NET_E = -60
 """WP27's golden net charge of the protonated dodecamer at pH 7.5 (``test_protonation_2wcd``)."""
 
 CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: 2wcd-charge
 structure:
   source: {{path: {pdb}}}

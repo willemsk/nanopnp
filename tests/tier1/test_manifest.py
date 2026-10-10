@@ -74,7 +74,7 @@ from nanopnp.pipeline.case import loads_case, resolve
 from nanopnp.pipeline.checks import registry_options
 
 MINIMAL = """
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: minimal
 inputs: {mesh: {path: pore.vol, format: vol}}
 electrolyte:
@@ -147,7 +147,7 @@ def test_ver24_every_switch_typed_field_of_the_schema_is_classified() -> None:
     switches = {reference.path for reference in case_fields() if _is_switch(reference)}
     unclassified = switches - classified
     assert not unclassified, (
-        f"{sorted(unclassified)} are switch-typed fields of nanopnp/case/v2 that are "
+        f"{sorted(unclassified)} are switch-typed fields of nanopnp/case/v0.5 that are "
         "neither compared against the validated default (SWITCH_PATHS) nor exempted "
         "with a reason (CONFIGURATION_PATHS)"
     )
@@ -165,7 +165,7 @@ def test_ver24_every_classified_path_still_names_a_field() -> None:
     """
     walked = {reference.path for reference in case_fields()}
     stale = (set(SWITCH_PATHS) | set(CONFIGURATION_PATHS)) - walked
-    assert not stale, f"{sorted(stale)} name no field of nanopnp/case/v2"
+    assert not stale, f"{sorted(stale)} name no field of nanopnp/case/v0.5"
 
 
 def test_ver24_every_switch_path_reads_off_the_validated_default() -> None:

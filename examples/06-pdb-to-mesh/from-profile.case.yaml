@@ -1,6 +1,6 @@
 # The stage-4 profile exported from the 2wcd run, supplied as an input. No
 # structure: stages 1 to 4 do not run, and stage 5 starts from this document.
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: 2wcd-profile
 inputs:
   profile: {path: contour.profile.yaml}

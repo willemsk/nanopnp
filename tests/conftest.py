@@ -46,6 +46,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
+import yaml
 from filelock import FileLock
 
 from nanopnp.pipeline.case import resolve
@@ -273,7 +274,7 @@ def prepared_2wcd(
 
 
 SEED_CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: 2wcd-seed
 structure:
   source: {{path: {pdb}}}
@@ -664,7 +665,7 @@ def write_charged_tube(
     pqr.write_text("\n".join(lines) + "\n", encoding="utf-8")
     case = directory / "case.yaml"
     case.write_text(
-        f"""schema: nanopnp/case/v2
+        f"""schema: nanopnp/case/v0.5
 name: charged-tube
 inputs:
   profile: {{path: {profile}}}
@@ -854,6 +855,161 @@ def seeded_protonated_2wcd(
         return root
 
     return seed_store
+
+
+# -- REV-29: Consolidated cylindrical pore case and mesh ----------------------
+
+CYLINDRICAL_PORE_CASE = """\
+schema: nanopnp/case/v0.5
+name: run-probe
+inputs:
+  mesh:
+    path: {mesh_path}
+    format: vol
+    groups: {{default: interface}}
+electrolyte:
+  species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
+  concentration_M: 0.1
+  temperature_K: 298.15
+  parameters: willems2020_nacl
+  corrections:
+    diffusivity:  {{model: none}}
+    mobility:     {{model: none}}
+    viscosity:    {{model: none}}
+    permittivity: {{model: none}}
+    density:      {{model: none}}
+boundary_conditions:
+  bias_V: 0.02
+  ground: cis
+physics:
+  model: epnp-ns
+  solid_permittivities: {{membrane: 3.2}}
+numerics:
+  continuation: default_ladder
+  stabilisation: none
+outputs: [current, transport_numbers, eof_rate]
+"""
+
+
+@pytest.fixture(scope="session")
+def cylindrical_pore_case(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """Write the cylindrical pore case and mesh once per session under FileLock."""
+    from nanopnp.mesh.primitives import CylindricalPoreGeometry
+
+    shared = shared_directory(tmp_path_factory)
+    pore_dir = shared / "cylindrical_pore"
+    lock = shared / "cylindrical_pore.lock"
+    mesh_path = pore_dir / "pore.vol"
+    case_path = pore_dir / "case.yaml"
+
+    with FileLock(str(lock)):
+        if not case_path.is_file():
+            pore_dir.mkdir(parents=True, exist_ok=True)
+            if not mesh_path.is_file():
+                staging_mesh = mesh_path.with_suffix(f".{os.getpid()}.vol")
+                pore = CylindricalPoreGeometry(
+                    pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
+                )
+                pore.generate(maxh_nm=4.0, wall_h_nm=1.0).ngmesh.Save(str(staging_mesh))
+                staging_mesh.replace(mesh_path)
+            staging_case = case_path.with_suffix(f".{os.getpid()}.yaml")
+            staging_case.write_text(
+                CYLINDRICAL_PORE_CASE.format(mesh_path=mesh_path), encoding="utf-8"
+            )
+            staging_case.replace(case_path)
+
+    return case_path
+
+
+# -- REV-34: VAL-05 reference constants, D10 figures, frozen case --------------
+
+VAL05_REFERENCE_TRIANGLES = 120_917
+"""The reference COMSOL mesh's element count (section 5.2.2)."""
+
+VAL05_REFERENCE_MIN_QUALITY = 0.6378
+"""Its minimum element quality, by a measure the model report does not state (.knowledge/09)."""
+
+VAL05_REFERENCE_MEAN_QUALITY = 0.9765
+"""Its mean element quality, by the same unstated measure."""
+
+VAL05_FROZEN_CASE = """\
+schema: nanopnp/case/v0.5
+name: {name}
+{source}electrolyte:
+  species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
+  concentration_M: 1.0
+  parameters: willems2020_nacl
+  corrections:
+    diffusivity:  {{model: none}}
+    mobility:     {{model: none}}
+    viscosity:    {{model: none}}
+    permittivity: {{model: none}}
+    density:      {{model: none}}
+    steric:       {{model: none}}
+boundary_conditions: {{bias_V: 0.05, ground: cis}}
+physics:
+  model: pnp
+  flow: false
+  variable_density: false
+  inertia: false
+  solid_permittivities: {{protein: 20.0, membrane: 3.2}}
+numerics:
+  continuation: none
+  stabilisation: none
+  mesh: {{size_scale: {size_scale}}}
+outputs: [current]
+"""
+
+
+@dataclass(frozen=True)
+class D10Figures:
+    """The reference COMSOL mesh figures (section 5.2.2)."""
+
+    triangles: int = VAL05_REFERENCE_TRIANGLES
+    min_quality: float = VAL05_REFERENCE_MIN_QUALITY
+    mean_quality: float = VAL05_REFERENCE_MEAN_QUALITY
+
+
+@pytest.fixture(scope="session")
+def reference_triangles() -> int:
+    """Return the reference COMSOL mesh's element count (section 5.2.2)."""
+    return VAL05_REFERENCE_TRIANGLES
+
+
+@pytest.fixture(scope="session")
+def d10_figures() -> D10Figures:
+    """Return the reference COMSOL mesh figures (section 5.2.2)."""
+    return D10Figures()
+
+
+@pytest.fixture(scope="session")
+def val05_frozen_case() -> str:
+    """Return the frozen case template for VAL-05."""
+    return VAL05_FROZEN_CASE
+
+
+@pytest.fixture(scope="session")
+def as_yaml() -> Callable[[object], str]:
+    """Return a pydantic record as YAML, the form D13 logs it in."""
+    return lambda record: yaml.safe_dump(record.model_dump(mode="json"), sort_keys=False)  # type: ignore[attr-defined]
+
+
+# -- REV-48: 2WCD exclusion constants -----------------------------------------
+
+
+@dataclass(frozen=True)
+class Exclusion2WCD:
+    """The ion-exclusion shell constants for 2WCD (WP30 D15)."""
+
+    offset_nm: float = 0.25
+    delta_nm: float = 0.15
+    h_c_nm: float = 0.05
+
+
+@pytest.fixture(scope="session")
+def exclusion_2wcd() -> Exclusion2WCD:
+    """Return the ion-exclusion shell constants for 2WCD."""
+    return Exclusion2WCD()
 
 
 # -- VER-62: the number-stability golden (WP35 D12-D16; section 8.2.7 G10) ----------

@@ -176,7 +176,7 @@ class SphereBody:
         AnalyteGeometryError
             If the radius is not positive.
         """
-        if self.radius_nm <= 0.0:
+        if not self.radius_nm > 0.0:
             raise AnalyteGeometryError(f"radius_nm must be positive, got {self.radius_nm} nm")
 
     @property
@@ -227,7 +227,7 @@ class SpheroidBody:
         """
         for name in ("semi_radial_nm", "semi_axial_nm"):
             value = float(getattr(self, name))
-            if value <= 0.0:
+            if not value > 0.0:
                 raise AnalyteGeometryError(f"{name} must be positive, got {value} nm")
 
     @property
@@ -298,7 +298,7 @@ class AnalyteInBoxGeometry:
             self.body.bounding_radius_nm,
             abs(self.body.z_nm) + self.body.bounding_half_length_nm,
         )
-        if reach >= self.outer_radius_nm - TOL_NM:
+        if not reach < self.outer_radius_nm - TOL_NM:
             raise AnalyteGeometryError(
                 f"the body reaches {reach:.4g} nm from the origin but the domain ends at "
                 f"{self.outer_radius_nm:.4g} nm; a body touching the outer boundary makes the "
@@ -368,14 +368,14 @@ class PoreWithAnalyte:
         AnalyteGeometryError
             If the body touches or crosses the pore wall or either mouth.
         """
-        if self.body.bounding_radius_nm >= self.pore.pore_radius_nm - TOL_NM:
+        if not self.body.bounding_radius_nm < self.pore.pore_radius_nm - TOL_NM:
             raise AnalyteGeometryError(
                 f"the body reaches r = {self.body.bounding_radius_nm:.4g} nm but the lumen ends "
                 f"at {self.pore.pore_radius_nm:.4g} nm; a body touching the wall leaves no fluid "
                 "to carry the flow and no surface to take a force over"
             )
         span = abs(self.body.z_nm) + self.body.bounding_half_length_nm
-        if span >= self.pore.half_thickness_nm - TOL_NM:
+        if not span < self.pore.half_thickness_nm - TOL_NM:
             raise AnalyteGeometryError(
                 f"the body spans to |z| = {span:.4g} nm but the lumen ends at "
                 f"{self.pore.half_thickness_nm:.4g} nm; a body crossing a pore mouth is not the "

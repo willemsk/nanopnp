@@ -63,43 +63,8 @@ needs_archive = pytest.mark.skipif(
 GEOMETRY = "geometry: {membrane: {centre_z_nm: 0.0}}\n"
 """G9: the MD frame's bilayer centre is z = 0, so the model frame is the stage-1 frame."""
 
-REFERENCE_TRIANGLES = 120_917
-"""The reference COMSOL mesh's element count (section 5.2.2)."""
-
 FROZEN_SIZE_SCALE = 1.0
 """D9's ``size_scale`` at Tier 3, on both meshes."""
-
-FROZEN_CASE = """\
-schema: nanopnp/case/v2
-name: {name}
-{source}electrolyte:
-  species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
-  concentration_M: 1.0
-  parameters: willems2020_nacl
-  corrections:
-    diffusivity:  {{model: none}}
-    mobility:     {{model: none}}
-    viscosity:    {{model: none}}
-    permittivity: {{model: none}}
-    density:      {{model: none}}
-    steric:       {{model: none}}
-boundary_conditions: {{bias_V: 0.05, ground: cis}}
-physics:
-  model: pnp
-  flow: false
-  solid_permittivities: {{protein: 20.0, membrane: 3.2}}
-numerics:
-  continuation: none
-  stabilisation: none
-  mesh: {{size_scale: {size_scale}}}
-outputs: [current]
-"""
-"""D9: uncharged, 1 M, +50 mV, ground *cis*, every correction ``none``, stabilisation ``none``."""
-
-
-def as_yaml(record: object) -> str:
-    """Return a pydantic record as YAML, the form D13 logs it in."""
-    return yaml.safe_dump(record.model_dump(mode="json"), sort_keys=False)  # type: ignore[attr-defined]
 
 
 @pytest.fixture(scope="module")
@@ -141,6 +106,7 @@ def test_val05_ensemble_against_the_reference_polygon(
     ensemble_store: Store,
     ensemble_case: Callable[..., Path],
     reference: np.ndarray,
+    as_yaml: Callable[[object], str],
 ) -> None:
     """D4, the Phase 2 gate: |ε_G| <= 5 %, |Δr_c| <= 0.1 nm and rms <= 0.1 nm.
 
@@ -209,6 +175,8 @@ def test_val05_ensemble_mesh_and_frozen_case_conductance(
     tmp_path: Path,
     ensemble_store: Store,
     ensemble_case: Callable[..., Path],
+    val05_frozen_case: str,
+    reference_triangles: int,
 ) -> None:
     """D9 and D10, recorded: the default-size mesh, and G on it against the fixture's.
 
@@ -219,12 +187,16 @@ def test_val05_ensemble_mesh_and_frozen_case_conductance(
     structure = yaml.safe_dump({"structure": source["structure"], "geometry": source["geometry"]})
     generated_case = tmp_path / "frozen-generated.case.yaml"
     generated_case.write_text(
-        FROZEN_CASE.format(name="clya-as-frozen", source=structure, size_scale=FROZEN_SIZE_SCALE),
+        val05_frozen_case.format(
+            name="clya-as-frozen",
+            source=structure,
+            size_scale=FROZEN_SIZE_SCALE,
+        ),
         encoding="utf-8",
     )
     fixture_case = tmp_path / "frozen-fixture.case.yaml"
     fixture_case.write_text(
-        FROZEN_CASE.format(
+        val05_frozen_case.format(
             name="fixture-frozen",
             source=f"inputs:\n  profile: {{path: {profile_file('clya_reference_profile')}}}\n",
             size_scale=FROZEN_SIZE_SCALE,
@@ -241,7 +213,7 @@ def test_val05_ensemble_mesh_and_frozen_case_conductance(
         "mean SICN %.4f, min gamma %.4f, mean gamma %.4f (reference min 0.6378, mean 0.9765, "
         "by a measure the model report does not state)",
         mesh["elements"],
-        REFERENCE_TRIANGLES,
+        reference_triangles,
         quality["min_sicn"],  # type: ignore[index]
         quality["mean_sicn"],  # type: ignore[index]
         quality["min_gamma"],  # type: ignore[index]

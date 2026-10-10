@@ -120,7 +120,7 @@ def test_missing_source_boundary_fails_loudly(cylinder) -> None:
 
 
 INGESTED_CASE = """
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: ingested-distance
 inputs:
   mesh: {{path: {path}, format: gmsh, groups: {{default: interface}}}}
@@ -391,7 +391,7 @@ def test_num34_the_coarse_mesh_is_refused_naming_everything_it_measured() -> Non
 
 
 GATED_CASE = """
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: gated
 inputs:
   mesh: {{path: {path}, format: vol, groups: {{default: interface}}}}
@@ -420,7 +420,7 @@ def _resolved(tmp_path: Path, wall_h_nm: float, *, corrections: bool) -> tuple[R
         GATED_CASE.format(
             path=path,
             model="willems2020_nacl" if corrections else "none",
-            wall="true" if corrections else "false",
+            wall="true",
             physics="epnp-ns" if corrections else "pnp-ns",
         )
     )

@@ -19,6 +19,55 @@ Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before t
 version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
 
+## [0.5.0-alpha.8] - 2026-10-10
+
+WP42: the verification checks (`SPECIFICATION.md` §5.3.1, §5.4.3; §8.2.7 G6; §8.2.9 I1, I2).
+Every comparison in a gate module outside `gui/` is verified against passing NaNs;
+every case leaf is classified and verified either to alter the assembled forms or stage keys,
+or to be declared unread or provenance-only; case schema moves to `nanopnp/case/v0.5`, retiring
+pre-release `v1` and `v2` identifiers; models declare and refuse non-default leaves they do not read;
+the `pnp` model honours only `flow: false`, `variable_density: false`, and `inertia: false`;
+inf-sup checks are gated on flow models; Example 06 stage-7 keys and per-ion Einstein ratios are pinned;
+and duplicated test fixtures and constants are consolidated. It resolves REV-11, REV-12, REV-13,
+REV-23, REV-29, REV-34, REV-42, REV-44, REV-48, and REV-66, discharging VER-70, VER-71, QR-12,
+FR-25, PHY-13, PHY-21, PHY-22, IF-03, VER-56, and VER-62 (at 10⁻⁸).
+
+### Added
+
+- **VER-70:** AST gate lint `nanopnp.validation.modularity.nan_permissive_gates` ensuring gate checks
+  do not pass NaNs, with 38 comparisons rewritten to negated forms and six recorded exemptions (QR-12).
+- **VER-71:** Case leaf taxonomy in `nanopnp.validation.case_leaves` classifying all 105 case leaves
+  across seven kinds (`solve`, `solver`, `stage`, `post`, `fixed`, `checked`, `provenance`).
+- `ModelDeclaration.unread` declaring unread leaves per model, with `pipeline.checks._check_unread`
+  refusing cases that set unread leaves to non-default values (PHY-21).
+- `materials.models.applies_part` and `pipeline.checks._check_correction_parts` refusing disabled
+  correction parts where no fit exists (PHY-22), and `_check_driver` refusing `ionic_strength` on 1:1 salts (PHY-13).
+- Consolidated root fixtures in `tests/conftest.py`: `cylindrical_pore_case`, `val05_frozen_case`,
+  `as_yaml`, `reference_triangles`, `d10_figures`, and `exclusion_2wcd`.
+
+### Changed
+
+- **Breaking:** Retired `nanopnp/case/v1` and `nanopnp/case/v2` schemas entirely. Cases declare
+  `schema: nanopnp/case/v0.5` (G6).
+- **Breaking:** Models refuse unread case leaves set away from schema defaults (PHY-21).
+- **Breaking:** The `pnp` model honours only `variable_density: false` and `inertia: false` (REV-42).
+- **Breaking:** The load-time inf-sup check runs only when `numerics.elements.u` is read by the model
+  and `physics.flow` is true (REV-66).
+- Stage-10 solve hashes re-recorded for `pnp-ns`, `pnp`, `pb`, and `pb-linear` under amended case
+  variants, with fingerprints proven bit-identical to the unedited cases when unread checks are lifted (VER-56).
+- Example 06 stage-7 keys pinned in `test_validation_identity.py` (REV-13).
+- Per-ion Einstein ratios (Na⁺, Cl⁻) pinned to within 1e-3 in `test_corrections.py` (REV-23).
+- The drawn slab is solved once per module in `tests/tier2/test_stern_layer.py` via `drawn_slab` fixture (REV-44).
+- The number-stability golden is unchanged at 10⁻⁸ (VER-62).
+
+### Migrating a case file to nanopnp/case/v0.5
+
+Cases written for pre-release schemas update their schema identifier to `nanopnp/case/v0.5`:
+
+- **Schema identifier:** Change `schema: nanopnp/case/v2` (or `v1`) to `schema: nanopnp/case/v0.5`.
+- **Model unread leaves:** Ensure keys not read by the selected `physics.model` remain at their schema defaults. For electrostatic models (`pb`, `pb-linear`, `poisson`), omit fluid and correction blocks; for `pnp`, omit viscosity and density correction blocks.
+- **PNP switches:** For `physics.model: pnp`, specify `variable_density: false` and `inertia: false` (or leave at default `flow: false`).
+
 ## [0.5.0-alpha.7] - 2026-10-08
 
 WP41: the accuracy fixes (`SPECIFICATION.md` §4.4, §5.3.1 NOTEs on `inputs:`, `inputs.charge`,

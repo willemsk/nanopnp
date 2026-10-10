@@ -64,7 +64,7 @@ def case_text(mesh_path: Path, *, bias_V: float = BIAS_V, mesh_format: str = "vo
     too large, and the ladder converged on it without complaint.
     """
     return f"""
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: cache-probe
 inputs:
   mesh:

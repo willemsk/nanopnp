@@ -153,7 +153,7 @@ sets the marker, so the file's location decides its tier.
 
 ## Provenance and reproducibility
 
-The case file (`schema: nanopnp/case/v2`) is the unit of reproducibility. Every artefact carries a
+The case file (`schema: nanopnp/case/v0.5`) is the unit of reproducibility. Every artefact carries a
 content hash over its payload and producing parameters, which is its cache key. Every result carries a
 manifest (input hashes, library versions, mesh hash, solver settings, stabilisation mode, correction
 file versions, **every switch set away from the validated default**; FR-25, §5.3.3). A result whose

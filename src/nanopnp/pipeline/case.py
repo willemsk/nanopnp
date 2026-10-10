@@ -69,8 +69,7 @@ def load_case(path: str | Path) -> CaseDocument:
     :func:`~nanopnp.pipeline.checks.check_document`. The ``schema:`` string is
     checked first, so a file written to a future schema fails naming the schema
     it claims rather than with a wall of field errors against a shape it never
-    declared. A ``nanopnp/case/v1`` file is read as its v2 upgrade
-    (:func:`~nanopnp.io.case.upgrade_v1`).
+    declared.
 
     Parameters
     ----------
@@ -85,13 +84,13 @@ def load_case(path: str | Path) -> CaseDocument:
     Raises
     ------
     CaseValidationError
-        If the file is not a mapping, declares neither accepted schema, cannot
-        be upgraded, fails validation, names a model, a stabilisation mode or a
-        linear solver this install does not register, or asks for an element
-        pair no solve can use; the message names every offending key by dotted
-        path.
+        If the file is not a mapping, declares an unexpected schema, fails
+        validation, names a model, a stabilisation mode or a linear solver
+        this install does not register, or asks for an element pair no solve can
+        use; the message names every offending key by dotted path.
     """
-    return check_document(read_case(path), source=str(Path(path)))
+    source = str(Path(path))
+    return check_document(read_case(path), source=source)
 
 
 def loads_case(text: str, *, source: str = "<string>") -> CaseDocument:
@@ -122,7 +121,7 @@ def _resolve_structure(document: CaseDocument) -> ResolvedStructure | None:
 
     Each is a refusal here rather than a narrowing of the schema: a narrowed value
     set would move the schema (the section 5.3.1 compatibility rule), and a
-    document valid against ``nanopnp/case/v2`` stays valid.
+    document valid against ``nanopnp/case/v0.5`` stays valid.
 
     Raises
     ------

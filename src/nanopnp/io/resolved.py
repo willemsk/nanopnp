@@ -37,7 +37,7 @@ SOLVE_IRRELEVANT_PROVENANCE = frozenset({"name", "outputs", "schema"})
 
 ``schema`` is here because a document and its upgrade describe one run: were it
 in the key, the next schema move would re-solve every stored case (section 5.3.2
-NOTE). It left the key at the move to ``nanopnp/case/v2``, which is the one move
+NOTE). It left the key at the move to ``nanopnp/case/v0.5``, which is the one move
 that re-keys a solve.
 
 Named by exclusion rather than by an allow-list: a key added to

@@ -81,7 +81,7 @@ def smoothstep(coordinate: Expression, *, lower_nm: float, upper_nm: float) -> E
     import ngsolve as ngs
 
     width = upper_nm - lower_nm
-    if width <= 0.0:
+    if not width > 0.0:
         raise IndicatorError(
             f"the transition band must have positive width, got lower={lower_nm} nm and "
             f"upper={upper_nm} nm; a zero-width band makes grad(psi) a delta that no "
@@ -244,7 +244,7 @@ def check_indicator(
     def _mean_square(target: float, boundary: str) -> float:
         region = mesh.Boundaries(boundary)
         length = _boundary_length(mesh, boundary)
-        if length <= 0.0:
+        if not length > 0.0:
             known = ", ".join(sorted(set(mesh.GetBoundaries())))
             raise IndicatorError(f"no boundary matching {boundary!r} in this mesh; it has {known}")
         deviation = float(ngs.Integrate((indicator - target) ** 2, mesh, definedon=region))
@@ -252,7 +252,7 @@ def check_indicator(
 
     on_cis = _mean_square(1.0, cis)
     on_trans = _mean_square(0.0, trans)
-    if on_cis > tolerance or on_trans > tolerance:
+    if not on_cis <= tolerance or not on_trans <= tolerance:
         raise IndicatorError(
             f"psi must be 1 on {cis!r} and 0 on {trans!r}; the mean-square departures are "
             f"{on_cis:.3e} and {on_trans:.3e} against a tolerance of {tolerance:.3e}. An "

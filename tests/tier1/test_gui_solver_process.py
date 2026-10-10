@@ -43,53 +43,11 @@ from nanopnp.gui.solver import (
     Started,
 )
 from nanopnp.io.manifest import CASE_FILENAME, MANIFEST_FILENAME
-from nanopnp.mesh.primitives import CylindricalPoreGeometry
 from nanopnp.pipeline.run import RUN_RECORD_FILENAME
-
-PORE = CylindricalPoreGeometry(
-    pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
-)
-MAXH_NM = 4.0
-WALL_H_NM = 1.0
-
-CASE = """
-schema: nanopnp/case/v2
-name: shell-run
-inputs:
-  mesh:
-    path: {mesh_path}
-    format: vol
-    groups: {{default: interface}}
-electrolyte:
-  species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
-  concentration_M: 0.1
-  parameters: willems2020_nacl
-  corrections:
-    diffusivity:  {{model: none}}
-    mobility:     {{model: none}}
-    viscosity:    {{model: none}}
-    permittivity: {{model: none}}
-    density:      {{model: none}}
-boundary_conditions: {{bias_V: 0.02, ground: cis}}
-physics: {{model: epnp-ns, solid_permittivities: {{membrane: 3.2}}}}
-numerics: {{continuation: default_ladder, stabilisation: none}}
-outputs: [current, transport_numbers, eof_rate]
-"""
 
 TIMEOUT_S = 300.0
 """Generous: the child pays a ``spawn`` re-import of the package and of NGSolve
 before it does any work, and a loaded CI runner is slow at both."""
-
-
-@pytest.fixture(scope="module")
-def case_file(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """Write the case and the mesh it names, once for the module."""
-    work = tmp_path_factory.mktemp("shell")
-    mesh_path = work / "pore.vol"
-    PORE.generate(maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM).ngmesh.Save(str(mesh_path))
-    path = work / "case.yaml"
-    path.write_text(CASE.format(mesh_path=mesh_path), encoding="utf-8")
-    return path
 
 
 def _settle(process: SolverProcess) -> tuple[RunEvent, ...]:
@@ -113,7 +71,9 @@ def _settle(process: SolverProcess) -> tuple[RunEvent, ...]:
     return tuple(found)
 
 
-def test_fr27_a_spawned_run_reports_progress_and_finishes(case_file: Path, tmp_path: Path) -> None:
+def test_fr27_a_spawned_run_reports_progress_and_finishes(
+    cylindrical_pore_case: Path, tmp_path: Path
+) -> None:
     """A real run posts its start, its stages, its progress and its directory.
 
     And everything it posted crossed a process boundary, which is the claim: an
@@ -121,7 +81,7 @@ def test_fr27_a_spawned_run_reports_progress_and_finishes(case_file: Path, tmp_p
     pickle here and nowhere else.
     """
     store = tmp_path / "store"
-    process = SolverProcess(RunRequest(case=str(case_file), store=str(store)))
+    process = SolverProcess(RunRequest(case=str(cylindrical_pore_case), store=str(store)))
     process.start()
     events = _settle(process)
 
@@ -200,7 +160,7 @@ def test_fr27_a_spawned_run_reports_progress_and_finishes(case_file: Path, tmp_p
 
 
 def test_fr27_a_child_killed_without_reporting_settles_the_run_as_failed(
-    case_file: Path, tmp_path: Path
+    cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
     """A child that dies by signal posts nothing, and the shell must still settle.
 
@@ -209,7 +169,7 @@ def test_fr27_a_child_killed_without_reporting_settles_the_run_as_failed(
     tabs then never re-enable (CODE_REVIEW_003 CR-1).
     """
     control = RunControl()
-    control.start(case_file, store=tmp_path / "store")
+    control.start(cylindrical_pore_case, store=tmp_path / "store")
     assert control.process is not None
     child = control.process._process  # the test kills the real child
     assert child is not None
@@ -229,7 +189,9 @@ def test_fr27_a_child_killed_without_reporting_settles_the_run_as_failed(
     assert str(control.process.exit_code) in model.diagnosis
 
 
-def test_fr27_cancelling_a_spawned_run_writes_no_artefact(case_file: Path, tmp_path: Path) -> None:
+def test_fr27_cancelling_a_spawned_run_writes_no_artefact(
+    cylindrical_pore_case: Path, tmp_path: Path
+) -> None:
     """A cancelled run says where it stopped, exits, and leaves the store empty.
 
     §5.3.2: a cancelled stage writes no artefact, so the store never holds a
@@ -239,7 +201,7 @@ def test_fr27_cancelling_a_spawned_run_writes_no_artefact(case_file: Path, tmp_p
     most obviously wrong.
     """
     store = tmp_path / "store"
-    process = SolverProcess(RunRequest(case=str(case_file), store=str(store)))
+    process = SolverProcess(RunRequest(case=str(cylindrical_pore_case), store=str(store)))
     process.start()
     process.cancel()
     events = _settle(process)
@@ -272,7 +234,7 @@ def test_fr27_a_case_the_schema_refuses_comes_back_as_the_case_exit_class(
     from nanopnp.core.errors import EXIT_CASE
 
     path = tmp_path / "broken.yaml"
-    path.write_text("schema: nanopnp/case/v2\nname: broken\n", encoding="utf-8")
+    path.write_text("schema: nanopnp/case/v0.5\nname: broken\n", encoding="utf-8")
     process = SolverProcess(RunRequest(case=str(path), store=str(tmp_path / "store")))
     process.start()
     events = _settle(process)
@@ -286,7 +248,7 @@ def test_fr27_a_case_the_schema_refuses_comes_back_as_the_case_exit_class(
 # -- WP24: building the geometry through the same child (VER-55) --------------
 
 PROFILE_CASE = """
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: shell-geometry
 inputs:
   profile: {{path: {profile}}}

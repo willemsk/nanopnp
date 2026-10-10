@@ -64,7 +64,7 @@ GEOMETRY = "geometry: {membrane: {centre_z_nm: 0.0}}\n"
 """G9: the MD frame's bilayer centre is z = 0, so the model frame is the stage-1 frame."""
 
 CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: {name}
 inputs:
   pqr: {{path: {bundle}, format: pqr}}

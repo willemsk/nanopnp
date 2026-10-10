@@ -38,18 +38,9 @@ from nanopnp.pipeline.run import run_case
 pytestmark = pytest.mark.extended
 
 if TYPE_CHECKING:
-    from conftest import Prepared2WCD, Seed2WCD
+    from conftest import Exclusion2WCD, Prepared2WCD, Seed2WCD
 
 logger = logging.getLogger(__name__)
-
-OFFSET_NM = 0.25
-"""``a``: ``a_Na/2`` of ``willems2020_nacl`` (WP30 D15)."""
-
-DELTA_NM = 0.15
-"""``delta``: the middle of PHY-20's 1-2 Angstrom (WP30 D15)."""
-
-H_C_NM = 0.05
-"""The contour's size target at the default density grid spacing."""
 
 STRUCTURE = """\
 structure:
@@ -58,7 +49,7 @@ structure:
 """
 
 MESH_CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: 2wcd-shell
 {structure}{geometry}electrolyte:
   species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
@@ -89,7 +80,7 @@ def registered(
 
 
 @pytest.fixture(scope="module")
-def meshed(registered):  # type: ignore[no-untyped-def]
+def meshed(registered, exclusion_2wcd: Exclusion2WCD):  # type: ignore[no-untyped-def]
     """Walk 2WCD with the shell to stage 6 at the default sizes."""
     root, store, structure, geometry = registered
     case = root / "shell.case.yaml"
@@ -97,7 +88,7 @@ def meshed(registered):  # type: ignore[no-untyped-def]
         MESH_CASE.format(
             structure=structure,
             geometry=geometry,
-            charge=f"charge: {{exclusion_offset_nm: {OFFSET_NM}}}\n",
+            charge=f"charge: {{exclusion_offset_nm: {exclusion_2wcd.offset_nm}}}\n",
         ),
         encoding="utf-8",
     )
@@ -105,7 +96,7 @@ def meshed(registered):  # type: ignore[no-untyped-def]
 
 
 def test_ver59_2wcd_with_a_shell_meshes_and_every_wall_node_clears_the_lower_bound(
-    meshed,
+    meshed, exclusion_2wcd: Exclusion2WCD
 ) -> None:  # type: ignore[no-untyped-def]
     """The lower band at every ``wall`` node; VER-10 and D9 pass; the closed share recorded."""
     from nanopnp.pipeline.case import load_case
@@ -119,9 +110,11 @@ def test_ver59_2wcd_with_a_shell_meshes_and_every_wall_node_clears_the_lower_bou
     wall = data.boundaries.index("wall")
     nodes = np.unique(data.edges[data.edge_group == wall])
     distance = distance_to_loop(data.vertices[nodes], record.points())
-    low = OFFSET_NM - max(H_C_NM**2 / OFFSET_NM, OFFSET_NM / 100.0)
+    low = exclusion_2wcd.offset_nm - max(
+        exclusion_2wcd.h_c_nm**2 / exclusion_2wcd.offset_nm, exclusion_2wcd.offset_nm / 100.0
+    )
     assert float(distance.min()) >= low, float(distance.min())
-    beyond = float(np.mean(distance > OFFSET_NM + 1e-6))
+    beyond = float(np.mean(distance > exclusion_2wcd.offset_nm + 1e-6))
 
     quality = mesh.summary["quality"]
     statistics = mesh.summary["sizing"]["wall_statistics"]
@@ -135,7 +128,7 @@ def test_ver59_2wcd_with_a_shell_meshes_and_every_wall_node_clears_the_lower_bou
         "(%.4g nm^2), loop edges from %.5f nm to vertices at %.5f nm, wall nodes [%.5f, %.5f] "
         "nm, %.4f of %d beyond a + 1e-6 nm; shell %.4f nm^2 against protein %.4f nm^2; %d "
         "triangles, min SICN %.4f, min gamma %.4f, wall mean %.3f and max %.3f x the target",
-        OFFSET_NM,
+        exclusion_2wcd.offset_nm,
         len(shell.loop),
         shell.removed_vertices,
         shell.holes.count,
@@ -160,7 +153,7 @@ def test_ver59_2wcd_with_a_shell_meshes_and_every_wall_node_clears_the_lower_bou
     )
 
 
-def test_ver59_2wcd_with_a_shell_meshes_at_3_m(registered) -> None:  # type: ignore[no-untyped-def]
+def test_ver59_2wcd_with_a_shell_meshes_at_3_m(registered, exclusion_2wcd: Exclusion2WCD) -> None:  # type: ignore[no-untyped-def]
     """At 3 M the ``auto`` wall target is 0.035 nm, where the ring's whole edges were refused.
 
     Netgen left each 0.0525 nm ring edge as one segment, and the wall-size gate
@@ -173,7 +166,7 @@ def test_ver59_2wcd_with_a_shell_meshes_at_3_m(registered) -> None:  # type: ign
         MESH_CASE.format(
             structure=structure,
             geometry=geometry,
-            charge=f"charge: {{exclusion_offset_nm: {OFFSET_NM}}}\n",
+            charge=f"charge: {{exclusion_offset_nm: {exclusion_2wcd.offset_nm}}}\n",
         ).replace("concentration_M: 0.15", "concentration_M: 3.0"),
         encoding="utf-8",
     )
@@ -199,7 +192,9 @@ def test_ver59_2wcd_with_a_shell_meshes_at_3_m(registered) -> None:  # type: ign
 
 
 @pytest.mark.slow
-def test_ver59_2wcd_chi_at_delta_h_c_costs_and_errors_are_recorded(meshed) -> None:  # type: ignore[no-untyped-def]
+def test_ver59_2wcd_chi_at_delta_h_c_costs_and_errors_are_recorded(
+    meshed, exclusion_2wcd: Exclusion2WCD
+) -> None:  # type: ignore[no-untyped-def]
     """Recorded: the derivation's time and peak allocation at ``delta = h_c``, and its worst error.
 
     The worst error is against the exact ``S(s/delta + 1/2)``, with ``s`` from
@@ -219,7 +214,7 @@ def test_ver59_2wcd_chi_at_delta_h_c_costs_and_errors_are_recorded(meshed) -> No
         "inner_cis_nm": record.membrane.inner_cis_nm,
     }
     points = record.points()
-    for delta in (H_C_NM, DELTA_NM):
+    for delta in (exclusion_2wcd.h_c_nm, exclusion_2wcd.delta_nm):
         tracemalloc.start()
         started = time.perf_counter()
         grid = derive_solid_fraction(points, transition_nm=delta, **membrane)

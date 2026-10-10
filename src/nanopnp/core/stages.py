@@ -576,7 +576,7 @@ def _register_builtins() -> None:
             title="Case assembly",
             inputs=("case_path",),
             outputs=("resolved case document",),
-            artefact_schema="nanopnp/case/v2",
+            artefact_schema="nanopnp/case/v0.5",
             takes_workspace=False,
             takes_store=False,
             key_is_artefact=True,

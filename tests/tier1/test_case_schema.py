@@ -30,7 +30,7 @@ from nanopnp.pipeline.case import (
 )
 
 REFERENCE_CASE = """
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: clya-wt-1M-100mV
 
 inputs:
@@ -103,7 +103,7 @@ REFORMATTED_CASE = """
 # reference uses block, `1` for `1.0`, quoted scalars, and a comment on every line
 # that carries a decision. None of it changes the run.
 name: clya-wt-1M-100mV
-schema: 'nanopnp/case/v2'
+schema: 'nanopnp/case/v0.5'
 
 outputs:
   - current
@@ -377,8 +377,18 @@ def test_phy24_an_electrostatic_model_has_no_transport_to_continue() -> None:
     the strategy's: the switch check runs before it, because a case the model
     cannot pose is the more precise diagnostic (WP26 D11).
     """
+    corrections_block = (
+        "  corrections:\n"
+        "    diffusivity:  {model: willems2020_nacl, wall: true, concentration: true}\n"
+        "    mobility:     {model: willems2020_nacl, wall: true, concentration: true}\n"
+        "    viscosity:    {model: willems2020_nacl, wall: true, concentration: true}\n"
+        "    permittivity: {model: willems2020_nacl}\n"
+        "    density:      {model: willems2020_nacl}\n"
+        "    steric:       {model: borukhov, a_ion_nm: 0.50, a_water_nm: 0.311}\n"
+    )
     text = (
         REFERENCE_CASE.replace("model: epnp-ns", "model: pb")
+        .replace(corrections_block, "")
         .replace("flow: true", "flow: false")
         .replace("variable_density: true", "variable_density: false")
         .replace("inertia: true", "inertia: false")
@@ -436,8 +446,15 @@ def test_fr25_pnp_on_the_ladder_is_refused_with_advice_it_can_take() -> None:
     is mandatory for 'pnp', so the generic "set them to match the ladder" advice
     is impossible by construction; the message has to name 'pnp-ns' instead.
     """
-    text = REFERENCE_CASE.replace("model: epnp-ns", "model: pnp").replace(
-        "flow: true", "flow: false"
+    text = (
+        REFERENCE_CASE.replace("model: epnp-ns", "model: pnp")
+        .replace(
+            "    viscosity:    {model: willems2020_nacl, wall: true, concentration: true}\n", ""
+        )
+        .replace("    density:      {model: willems2020_nacl}\n", "")
+        .replace("flow: true", "flow: false")
+        .replace("variable_density: true", "variable_density: false")
+        .replace("inertia: true", "inertia: false")
     )
     with pytest.raises(CaseValidationError, match="pnp-ns") as raised:
         resolve(loads_case(text))

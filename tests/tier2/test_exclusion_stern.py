@@ -77,7 +77,7 @@ SIMPSON_INTERVALS = 400
 """Simpson's rule on the plane over ``[0, R - a]``."""
 
 CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: stern-pipeline
 inputs:
   profile: {{path: {profile}}}
@@ -95,7 +95,12 @@ electrolyte:
     density:      {{model: none}}
     steric:       {{model: none}}
 boundary_conditions: {{bias_V: 0.0, ground: cis}}
-physics: {{model: pnp, flow: false, solid_permittivities: {{protein: 20.0, membrane: 3.2}}}}
+physics:
+  model: pnp
+  flow: false
+  variable_density: false
+  inertia: false
+  solid_permittivities: {{protein: 20.0, membrane: 3.2}}
 numerics: {{continuation: none}}
 charge: {{exclusion_offset_nm: {offset}}}
 outputs: [current]

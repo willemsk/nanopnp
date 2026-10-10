@@ -1672,3 +1672,232 @@ def render_measurements(root: Path | None = None) -> str:
         "",
     ]
     return "\n".join(out)
+
+
+# -- NaN-permissive gates (WP42 D1, D2; VER-70) -----------------------------------
+
+
+def gate_classes(errors_source: str) -> frozenset[str]:
+    """Return the set of class-4 gate exception class names from core/errors.py."""
+    tree = ast.parse(errors_source)
+    classes: set[str] = set()
+    for stmt in tree.body:
+        target: ast.AST | None = None
+        value: ast.AST | None = None
+        if isinstance(stmt, ast.Assign) and len(stmt.targets) == 1:
+            target = stmt.targets[0]
+            value = stmt.value
+        elif isinstance(stmt, ast.AnnAssign):
+            target = stmt.target
+            value = stmt.value
+        if (
+            isinstance(target, ast.Name)
+            and target.id == "EXIT_CODES"
+            and isinstance(value, ast.Dict)
+        ):
+            for k, v in zip(value.keys, value.values, strict=True):
+                if (
+                    isinstance(v, ast.Name)
+                    and v.id == "EXIT_GATE"
+                    and isinstance(k, ast.Constant)
+                    and isinstance(k.value, str)
+                ):
+                    classes.add(k.value.split(":")[-1])
+    return frozenset(classes)
+
+
+@dataclass(frozen=True)
+class NanGate:
+    """One NaN-permissive gate comparison in the package."""
+
+    path: str
+    line: int
+    function: str
+    test: str
+
+    def __str__(self) -> str:
+        """Format as src/nanopnp/<path>:<line>: <function>: if <test> (VER-70)."""
+        return f"src/nanopnp/{self.path}:{self.line}: {self.function}: if {self.test} (VER-70)"
+
+
+@dataclass(frozen=True)
+class NanGateFindings:
+    """The findings of nan_permissive_gates."""
+
+    violations: tuple[NanGate, ...]
+    stale: tuple[str, ...]
+
+
+NAN_EXEMPT: dict[str, str] = {
+    "structure/axis.py:measure_axis: n < 2": "integer order",
+    "mesh/adapter.py:_insert_physical_names: start < 0": "bytes.find index",
+    (
+        "mesh/adapter.py:_validate: index.size and (int(index.min()) < 0 or "
+        "int(index.max()) >= limit)"
+    ): "integer indices",
+    "structure/read.py:select: counts[chain] < COVERAGE_FRACTION * most": "residue counts",
+    "structure/read.py:select_frames: count > len(window)": "integer count",
+    (
+        "sweep/collect.py:_rectification: plus_V is None or minus_V is None or plus_V <= 0.0 or "
+        "(plus_V + minus_V != 0.0)"
+    ): "!= term raises for NaN",
+}
+
+
+def _is_int_expr(node: ast.AST) -> bool:
+    if isinstance(node, ast.Constant):
+        return isinstance(node.value, int) and not isinstance(node.value, bool)
+    if isinstance(node, ast.Call):
+        return isinstance(node.func, ast.Name) and node.func.id in ("len", "int")
+    if (
+        isinstance(node, ast.Subscript)
+        and isinstance(node.value, ast.Attribute)
+        and node.value.attr == "shape"
+    ):
+        return True
+    return isinstance(node, ast.Attribute) and node.attr in ("ndim", "size")
+
+
+def _is_int_compare(node: ast.Compare) -> bool:
+    return _is_int_expr(node.left) and all(_is_int_expr(c) for c in node.comparators)
+
+
+def _is_nan_guard(node: ast.AST) -> bool:
+    if (
+        isinstance(node, ast.UnaryOp)
+        and isinstance(node.op, ast.Not)
+        and isinstance(node.operand, ast.Call)
+        and isinstance(node.operand.func, ast.Attribute)
+        and node.operand.func.attr == "isfinite"
+    ):
+        return True
+    return bool(  # pragma: no cover - no gate currently uses isnan
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == "isnan"
+    )
+
+
+def _has_open_ordering(node: ast.AST) -> bool:
+    if (
+        isinstance(node, ast.BoolOp)
+        and isinstance(node.op, ast.Or)
+        and any(_is_nan_guard(v) for v in node.values)
+    ):
+        return False
+
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
+        return False
+
+    if isinstance(node, ast.Compare):
+        has_ordering = any(isinstance(op, (ast.Lt, ast.LtE, ast.Gt, ast.GtE)) for op in node.ops)
+        return has_ordering and not _is_int_compare(node)
+
+    return any(_has_open_ordering(child) for child in ast.iter_child_nodes(node))
+
+
+def _is_gate_name(node: ast.AST, gates: frozenset[str]) -> bool:
+    if isinstance(node, ast.Name):
+        return node.id in gates
+    if isinstance(node, ast.Attribute):
+        return node.attr in gates
+    return False
+
+
+def _is_gate_exc(node: ast.AST | None, gates: frozenset[str]) -> bool:
+    if node is None:
+        return False
+    if isinstance(node, ast.Call):
+        return _is_gate_name(node.func, gates)
+    return _is_gate_name(node, gates)
+
+
+def _raises_or_appends_gate(body: list[ast.stmt], gates: frozenset[str]) -> bool:
+    stack: list[ast.AST] = list(body)
+    while stack:
+        stmt = stack.pop()
+        if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            continue
+        if isinstance(stmt, ast.Raise):
+            if _is_gate_exc(stmt.exc, gates):
+                return True
+        elif (
+            isinstance(stmt, ast.Call)
+            and isinstance(stmt.func, ast.Attribute)
+            and stmt.func.attr in ("append", "add")
+            and any(_is_gate_exc(arg, gates) for arg in stmt.args)
+        ):
+            return True
+        for child in ast.iter_child_nodes(stmt):
+            stack.append(child)
+    return False
+
+
+def _find_if_nodes(func: ast.FunctionDef | ast.AsyncFunctionDef) -> list[ast.If]:
+    ifs: list[ast.If] = []
+    stack: list[ast.AST] = list(reversed(func.body))
+    while stack:
+        node = stack.pop()
+        if isinstance(node, ast.ClassDef):
+            continue
+        if isinstance(node, ast.If):
+            ifs.append(node)
+            stack.extend(reversed(node.body))
+            stack.extend(reversed(node.orelse))
+        else:
+            stack.extend(reversed(list(ast.iter_child_nodes(node))))
+    return ifs
+
+
+def nan_permissive_gates(
+    package: Path, *, gates: frozenset[str], exempt: Mapping[str, str]
+) -> NanGateFindings:
+    """Find all NaN-permissive gate comparisons in the package."""
+    violations: list[NanGate] = []
+    stale: list[str] = []
+
+    py_files = sorted(package.rglob("*.py"))
+    for py_file in py_files:
+        rel = py_file.relative_to(package)
+        if rel.parts[0] == "gui":
+            continue
+        rel_path = rel.as_posix()
+        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=rel_path)
+
+        file_exempt = {k for k in exempt if k.startswith(f"{rel_path}:")}
+        matched_for_file: set[str] = set()
+
+        for stmt in tree.body:
+            funcs: list[ast.FunctionDef | ast.AsyncFunctionDef] = []
+            if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                funcs.append(stmt)
+            elif isinstance(stmt, ast.ClassDef):
+                for child in stmt.body:
+                    if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                        funcs.append(child)
+
+            for func in funcs:
+                for if_node in _find_if_nodes(func):
+                    if _raises_or_appends_gate(if_node.body, gates) and _has_open_ordering(
+                        if_node.test
+                    ):
+                        test_str = ast.unparse(if_node.test)
+                        key = f"{rel_path}:{func.name}: {test_str}"
+                        if key in exempt:
+                            matched_for_file.add(key)
+                        else:
+                            violations.append(
+                                NanGate(
+                                    path=rel_path,
+                                    line=if_node.lineno,
+                                    function=func.name,
+                                    test=test_str,
+                                )
+                            )
+
+        stale.extend(file_exempt - matched_for_file)
+
+    return NanGateFindings(
+        violations=tuple(violations),
+        stale=tuple(sorted(stale)),
+    )

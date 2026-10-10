@@ -1,7 +1,7 @@
 """Dotted case-file paths: the schema's fields, reading, checking and substituting.
 
 A dotted path such as ``boundary_conditions.bias_V`` names one field of the
-``nanopnp/case/v2`` schema of :mod:`nanopnp.io.case`. A sweep axis, the generated
+``nanopnp/case/v0.5`` schema of :mod:`nanopnp.io.case`. A sweep axis, the generated
 editor of the desktop shell, the FR-25 deviation record and the generated
 case-file reference all index the case by such paths, so the walk over them is
 written once, here, against the schema alone (FR-24, IF-09).
@@ -241,7 +241,7 @@ one every non-empty document has.
 
 
 def case_fields() -> tuple[FieldReference, ...]:
-    """Return every editable field of ``nanopnp/case/v2``, in declaration order.
+    """Return every editable field of ``nanopnp/case/v0.5``, in declaration order.
 
     The enumeration a generated editor is built from (IF-09), and the one the
     FR-25 switch classification is checked against. It is deliberately not
@@ -269,7 +269,7 @@ def case_fields() -> tuple[FieldReference, ...]:
     Raises
     ------
     NotImplementedError
-        If the schema grows a mapping whose *values* are blocks. ``nanopnp/case/v2``
+        If the schema grows a mapping whose *values* are blocks. ``nanopnp/case/v0.5``
         has none, and there is no representative key to stand on the way
         :data:`SEQUENCE_INDEX` stands on an index — so the walk says so rather
         than omitting the block's fields, which would make them silently

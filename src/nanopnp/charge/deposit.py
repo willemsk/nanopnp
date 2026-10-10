@@ -514,7 +514,7 @@ def deposit(
         worst = int(np.flatnonzero(missing)[np.argmax(np.abs(masses[missing]))])
         ratio = float(abs(masses[worst]) / largest)
         uncovered = (ratio, (float(nodes[worst, 0]), float(nodes[worst, 1])))
-        if ratio > UNCOVERED_TOL:
+        if not ratio <= UNCOVERED_TOL:  # pragma: no cover - lattice charge outside element
             raise ChargeFieldError(
                 "lattice charge falls on no element of the mesh (PHY-16 NOTE on the deposition)",
                 f"{int(missing.sum())} lattice nodes carry charge outside every element, the "

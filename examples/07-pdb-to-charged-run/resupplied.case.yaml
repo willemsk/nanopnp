@@ -2,7 +2,7 @@
 # field through inputs.charge. Stage 7 samples a supplied field at quadrature
 # points, and on this mesh the lattice's structure is finer than an element, so
 # its quadrature-agreement gate refuses it. Within nanopnp, deposit from the PQR.
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: 2wcd-resupplied
 structure:
   source: {path: 2wcd-prepared.pdb}

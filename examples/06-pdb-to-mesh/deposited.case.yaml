@@ -1,6 +1,6 @@
 # The wwPDB entry as deposited: chains A-L of 2WCD in the crystal frame. Stage 1
 # refuses it, because its pore axis is more than 10 degrees from z.
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: 2wcd-deposited
 structure:
   source:

@@ -48,7 +48,7 @@ structure:
 """
 
 MESH_CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: 2wcd-mesh
 {structure}{geometry}electrolyte:
   species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
@@ -59,7 +59,7 @@ physics: {{model: epnp-ns, solid_permittivities: {{protein: 20.0, membrane: 3.2}
 """
 
 SOLVE_CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: 2wcd-solve
 {structure}{geometry}electrolyte:
   species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
@@ -76,6 +76,8 @@ boundary_conditions: {{bias_V: 0.05, ground: cis}}
 physics:
   model: pnp
   flow: false
+  variable_density: false
+  inertia: false
   solid_permittivities: {{protein: 20.0, membrane: 3.2}}
 numerics:
   continuation: none
