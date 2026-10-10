@@ -14,7 +14,6 @@ from __future__ import annotations
 import logging
 import math
 from collections.abc import Callable
-from typing import Any
 
 from pydantic import ValidationError
 
@@ -889,7 +888,7 @@ def _check_physics_switches(document: CaseDocument) -> None:
 
 def _check_unread(document: CaseDocument) -> None:
     model = declaration(document.physics.model)
-    violations: list[tuple[str, Any, Any]] = []
+    violations: list[tuple[str, object, object]] = []
     for ref in case_fields():
         path = ref.path
         if path in model.unread:
