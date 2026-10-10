@@ -25,15 +25,9 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from pathlib import Path
 
-    from conftest import NumberStability, Prepared2WCD, Seed2WCD
+    from conftest import Exclusion2WCD, NumberStability, Prepared2WCD, Seed2WCD
 
 logger = logging.getLogger(__name__)
-
-OFFSET_NM = 0.25
-"""``a``: ``a_Na/2`` of ``willems2020_nacl`` (WP30 D15)."""
-
-DELTA_NM = 0.15
-"""``delta``: the middle of PHY-20's 1-2 Angstrom (WP30 D15)."""
 
 STRUCTURE = """\
 structure:
@@ -84,12 +78,15 @@ def registered(
 
 
 def test_ver59_2wcd_with_the_shell_and_a_derived_chi_walks_to_the_report(  # type: ignore[no-untyped-def]
-    registered, number_stability: NumberStability
+    registered, number_stability: NumberStability, exclusion_2wcd: Exclusion2WCD
 ) -> None:
     """WP28's charged walk with both switches on: every gate, both switches and the material."""
     root, store, structure, geometry = registered
     case = root / "solve.case.yaml"
-    charge = f"charge: {{exclusion_offset_nm: {OFFSET_NM}, dielectric_transition_nm: {DELTA_NM}}}\n"
+    charge = (
+        f"charge: {{exclusion_offset_nm: {exclusion_2wcd.offset_nm}, "
+        f"dielectric_transition_nm: {exclusion_2wcd.delta_nm}}}\n"
+    )
     case.write_text(
         SOLVE_CASE.format(structure=structure, geometry=geometry, charge=charge),
         encoding="utf-8",
@@ -121,8 +118,8 @@ def test_ver59_2wcd_with_the_shell_and_a_derived_chi_walks_to_the_report(  # typ
     logger.info(
         "VER-59 2WCD charged walk with a = %g nm and delta = %g nm at size_scale 4 (%d "
         "elements): chi means %s; currents %s A; stage times %s s",
-        OFFSET_NM,
-        DELTA_NM,
+        exclusion_2wcd.offset_nm,
+        exclusion_2wcd.delta_nm,
         result.artefacts["mesh"].summary["elements"],
         {name: round(mean["mean"], 5) for name, mean in means.items()},
         result.quantities["currents_A"],

@@ -95,7 +95,17 @@ def _solve(*, exclusion_nm: float, maxh_nm: float, sigma_C_m2: float) -> tuple[M
     )
 
 
-def test_ver31_the_stern_layer_raises_the_wall_potential_by_the_closed_form() -> None:
+@pytest.fixture(scope="module")
+def drawn_slab() -> tuple[Mesh, GridFunction]:
+    """Return the solved drawn slab once for the module."""
+    lam = debye_length_nm(CONCENTRATION_M)
+    sigma = _surface_charge_C_m2(DIFFUSE_ZETA)
+    return _solve(exclusion_nm=STERN_THICKNESS_NM, maxh_nm=lam / 8.0, sigma_C_m2=sigma)
+
+
+def test_ver31_the_stern_layer_raises_the_wall_potential_by_the_closed_form(
+    drawn_slab: tuple[Mesh, GridFunction],
+) -> None:
     """``phi_0 = phi_d + sigma_s lambda_S / (eps_0 eps_r)``, to better than 1 %.
 
     Every term of the closed form is computed here from constants, not read back
@@ -108,7 +118,7 @@ def test_ver31_the_stern_layer_raises_the_wall_potential_by_the_closed_form() ->
     expected_V = DIFFUSE_ZETA * thermal_voltage() + offset_V
 
     lam = debye_length_nm(CONCENTRATION_M)
-    mesh, solution = _solve(exclusion_nm=STERN_THICKNESS_NM, maxh_nm=lam / 8.0, sigma_C_m2=sigma)
+    mesh, solution = drawn_slab
     wall_V = float(solution(mesh(0.0, 0.5 * lam))) * thermal_voltage()
     diffuse_V = float(solution(mesh(STERN_THICKNESS_NM, 0.5 * lam))) * thermal_voltage()
 
@@ -123,7 +133,9 @@ def test_ver31_the_stern_layer_raises_the_wall_potential_by_the_closed_form() ->
     assert wall_V / diffuse_V == pytest.approx(1.30606, rel=1e-4)
 
 
-def test_ver31_the_shell_potential_drop_is_linear_in_the_thickness() -> None:
+def test_ver31_the_shell_potential_drop_is_linear_in_the_thickness(
+    drawn_slab: tuple[Mesh, GridFunction],
+) -> None:
     """``Delta phi_S = sigma_s lambda_S/(eps_0 eps_r)``: no space charge, so no curvature.
 
     The statement that the shell is genuinely ion-free. If the ions were merely
@@ -132,8 +144,7 @@ def test_ver31_the_shell_potential_drop_is_linear_in_the_thickness() -> None:
     chord by more than the discretisation error.
     """
     lam = debye_length_nm(CONCENTRATION_M)
-    sigma = _surface_charge_C_m2(DIFFUSE_ZETA)
-    mesh, solution = _solve(exclusion_nm=STERN_THICKNESS_NM, maxh_nm=lam / 8.0, sigma_C_m2=sigma)
+    mesh, solution = drawn_slab
 
     height = 0.5 * lam
     wall = float(solution(mesh(0.0, height)))
@@ -159,7 +170,9 @@ def test_ver31_a_zero_thickness_shell_reproduces_gouy_chapman() -> None:
     assert wall == pytest.approx(DIFFUSE_ZETA, rel=1e-3)
 
 
-def test_ver31_a_shell_that_is_silently_fluid_fails_by_a_quarter() -> None:
+def test_ver31_a_shell_that_is_silently_fluid_fails_by_a_quarter(
+    drawn_slab: tuple[Mesh, GridFunction],
+) -> None:
     """The failure mode, measured: ignoring the shell loses 30 % of ``phi_0``.
 
     Not a hypothetical. ``exclusion`` is not in ``FLUID_MATERIALS`` and has no
@@ -168,7 +181,7 @@ def test_ver31_a_shell_that_is_silently_fluid_fails_by_a_quarter() -> None:
     """
     lam = debye_length_nm(CONCENTRATION_M)
     sigma = _surface_charge_C_m2(DIFFUSE_ZETA)
-    mesh, with_shell = _solve(exclusion_nm=STERN_THICKNESS_NM, maxh_nm=lam / 8.0, sigma_C_m2=sigma)
+    mesh, with_shell = drawn_slab
     stern_V = float(with_shell(mesh(0.0, 0.5 * lam))) * thermal_voltage()
 
     # The same geometry with the shell meshed but the ions left in it, which is
@@ -179,7 +192,9 @@ def test_ver31_a_shell_that_is_silently_fluid_fails_by_a_quarter() -> None:
     assert (stern_V - ignored_V) / stern_V == pytest.approx(0.2344, rel=2e-2)
 
 
-def test_ver59_the_slabs_shell_generated_by_stage_5_is_the_drawn_shell() -> None:
+def test_ver59_the_slabs_shell_generated_by_stage_5_is_the_drawn_shell(
+    drawn_slab: tuple[Mesh, GridFunction],
+) -> None:
     """VER-31's slab with its shell from :func:`~nanopnp.geometry.region.exclusion_shell` (WP30).
 
     The wall is the right face of a solid body; its offset by ``lambda_S``,
@@ -210,9 +225,7 @@ def test_ver59_the_slabs_shell_generated_by_stage_5_is_the_drawn_shell() -> None
     assert abs(width - STERN_THICKNESS_NM) <= 1e-12
 
     sigma = _surface_charge_C_m2(DIFFUSE_ZETA)
-    drawn_mesh, drawn_solution = _solve(
-        exclusion_nm=STERN_THICKNESS_NM, maxh_nm=lam / 8.0, sigma_C_m2=sigma
-    )
+    drawn_mesh, drawn_solution = drawn_slab
     mesh, solution = _solve(exclusion_nm=width, maxh_nm=lam / 8.0, sigma_C_m2=sigma)
     drawn_wall = float(drawn_solution(drawn_mesh(0.0, 0.5 * lam)))
     assert float(solution(mesh(0.0, 0.5 * lam))) == pytest.approx(drawn_wall, rel=1e-10)
