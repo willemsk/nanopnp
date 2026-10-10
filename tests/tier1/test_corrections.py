@@ -7,6 +7,8 @@ that re-derives the form would pass while the solver used a different one, which
 is the whole failure mode the shared `materials.forms` module exists to prevent.
 """
 
+from __future__ import annotations
+
 import logging
 from pathlib import Path
 

@@ -46,6 +46,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
+import yaml
 from filelock import FileLock
 
 from nanopnp.pipeline.case import resolve
@@ -990,8 +991,6 @@ def val05_frozen_case() -> str:
 @pytest.fixture(scope="session")
 def as_yaml() -> Callable[[object], str]:
     """Return a pydantic record as YAML, the form D13 logs it in."""
-    import yaml
-
     return lambda record: yaml.safe_dump(record.model_dump(mode="json"), sort_keys=False)  # type: ignore[attr-defined]
 
 

@@ -5,6 +5,8 @@ consumer stage or solve operator and why it is present. A leaf unread by the
 selected model is refused away from its default.
 """
 
+from __future__ import annotations
+
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 
