@@ -40,6 +40,7 @@ from nanopnp.validation.comsol import (
     DISCRETISATION_KEYS,
     MODEL_OPTION_DISCRETISATION_KEYS,
     case_identity,
+    charge_grid_key,
 )
 
 pytest.importorskip("MDAnalysis", reason="stage 1's key needs the structure extra")
@@ -155,16 +156,37 @@ def test_val03_case_identity_names_a_derived_chi(identity: Callable[..., str]) -
 def test_val03_identity_leaves_the_solve_provenance_alone(
     example_06: Callable[..., ResolvedCase],
 ) -> None:
-    """VAL-03, VER-23, D5: ``fields.charge`` still means "supplied", and no solve key moves.
+    """VAL-03, VER-23, D5, REV-13: ``fields.charge`` still means "supplied", and no solve key moves.
 
     The recipe is added to the identity's own record, never to the solve
     provenance every stage key is built from, so computing the identity leaves
-    that provenance as it was.
+    that provenance as it was. Example 06's stage-7 keys are pinned rather than
+    asserted against themselves (REV-13, D11).
     """
     resolved = example_06()
     before = content_hash(CASE_IDENTITY_SCHEMA, resolved.solve_provenance)
     assert resolved.deposits_charge
+
+    recorded = _recorded(resolved)
+    assert recorded["structure"].hash.startswith("bbf72688")
+    assert (
+        recorded["protonation"].hash
+        == "5fefd7b11d04851ddffda38cddbff769282a325cc597baec432507209e86f732"
+    )
+    grid = charge_grid_key(resolved, recorded["protonation"])
+    assert grid.hash == "969ad260dfde8107d883a6d96d1fc357d680acb18479b05c72688c5cc7c519ba"
+
     case_identity(resolved)
+
+    recorded_after = _recorded(resolved)
+    assert recorded_after["structure"].hash == recorded["structure"].hash
+    assert (
+        recorded_after["protonation"].hash
+        == "5fefd7b11d04851ddffda38cddbff769282a325cc597baec432507209e86f732"
+    )
+    grid_after = charge_grid_key(resolved, recorded_after["protonation"])
+    assert grid_after.hash == "969ad260dfde8107d883a6d96d1fc357d680acb18479b05c72688c5cc7c519ba"
+
     provenance = resolved.solve_provenance
     assert provenance["fields"] == {"charge": False, "eps_r": False}
     assert "deposited_charge" not in provenance
