@@ -220,3 +220,4 @@ case with `permittivity: {wall: false}`; one with `driver: ionic_strength`; one 
 | P8 | 2026-10-10 | approved R7 and go P8 |
 | R8 | 2026-10-10 | approved R8 and go P9 |
 | P9 | 2026-10-10 | approved R8 and go P9 |
+| R9 | 2026-10-10 | approved R9 |
