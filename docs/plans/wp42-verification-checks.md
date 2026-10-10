@@ -1,5 +1,7 @@
 # WP42 — The verification checks
 
+PR: [#91](https://github.com/willemsk/nanopnp/pull/91), branch feat/wp42-verification-checks
+
 **Status: completed.** Delivered 10 October 2026 as `v0.5.0-alpha.8`. Written 9 October 2026 at `c306256`, after WP41 was delivered as
 `v0.5.0-alpha.7`. It inherits everything the [current brief](current.md) lists as not to be
 re-decided, and in particular: VER-62's golden at 10⁻⁸ (no number moves in this package); WP40's
