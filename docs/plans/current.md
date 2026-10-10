@@ -1,6 +1,6 @@
 # Current work
 
-Updated 9 October 2026 (WP42 planned). Navigation only; `SPECIFICATION.md` governs;
+Updated 10 October 2026 (WP42 delivered, WP43 next). Navigation only; `SPECIFICATION.md` governs;
 nothing here is evidence an unmerged branch shipped.
 
 ## Position
@@ -8,15 +8,13 @@ nothing here is evidence an unmerged branch shipped.
 - Phases 1 to 3 are **closed** as `v0.2.0`, `v0.3.0` (criterion 3 waived, §8.2.4 D7) and `v0.4.0`
   (§8.2.5 E1, E5).
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
-  **in progress** (§8.2.7 G1–G11; §8.2.8 H1–H12; §8.2.9 I1–I5). WP35 to WP41 delivered, as
-  `v0.5.0-alpha.1` to `v0.5.0-alpha.7`, the last two [WP40](wp40-stale-refusals.md) and
-  [WP41](wp41-accuracy-fixes.md).
-- **Next: [WP42](wp42-verification-checks.md), the verification checks**, planned, not started
-  (REV-11 to REV-13, REV-23, REV-29, REV-34, REV-42, REV-44, REV-48, REV-66; I1, I2). It moves the
-  case schema to `nanopnp/case/v0.5`, and its implementing session stops before and after every
-  item for the author (its *Author checkpoints*).
-- Then WP43 (small fixes; I1, I2), WP44–WP46 (OKF bundle, backfill, protocol); then the author's
-  sessions and the second amendment, fixes from WP47.
+  **in progress** (§8.2.7 G1–G11; §8.2.8 H1–H12; §8.2.9 I1–I5). WP35 to WP42 delivered, as
+  `v0.5.0-alpha.1` to `v0.5.0-alpha.8`, the last two [WP41](wp41-accuracy-fixes.md) and
+  [WP42](wp42-verification-checks.md).
+- **Next: WP43, the small fixes**
+  (REV-14 to REV-16, REV-18, REV-19, and eleven low items; I1, I2).
+- Then WP44–WP46 (OKF bundle, backfill, protocol); then the author's sessions and the second
+  amendment, fixes from WP47.
 - Phase 5 (`v0.6.0`) is the GUI (F5), Phase 6 (`v0.7.0`) validation (F1); v1.0 is OPN-08.
 
 ## Not to be re-decided

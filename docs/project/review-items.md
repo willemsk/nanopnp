@@ -134,7 +134,7 @@ taken.
 **Measured.** A gate written `if value > tol: fail` passes a NaN. The instances found were fixed one
 by one, and nothing stops a new one: the review's proposed lint over gate modules was not written.
 
-**Resolves it.** WP42, the verification checks, as proposed VER-70 (§8.2.9 I1, I2).
+**Resolved.** WP42 D1, D2: VER-70 AST lint over gate modules; 38 comparisons rewritten to negated forms; six exempted with recorded reasons.
 
 ### REV-12 — No test shows every case leaf changes the forms or is provenance-only
 
@@ -145,7 +145,7 @@ taken.
 to show it either changes the assembled forms or is listed as provenance-only, so an inert key can
 enter the schema unnoticed.
 
-**Resolves it.** WP42, the verification checks, as proposed VER-71 (§8.2.9 I1, I2).
+**Resolved.** WP42 D3–D8: VER-71 classifies 105 case leaves across 7 kinds in `src/nanopnp/validation/case_leaves.py`; `ModelDeclaration.unread` declares and refuses unread leaves; residual probes verify active leaves.
 
 ### REV-13 — Example 06's key test cannot see a stage-7 key change
 
@@ -154,7 +154,7 @@ enter the schema unnoticed.
 **Measured.** The check that every key of example 06 is unchanged does not cover stage 7, so a
 change to the charge stage's key would pass it.
 
-**Resolves it.** WP42, the verification checks (§8.2.9 I1, I2).
+**Resolved.** WP42 D11: stage-7 keys of Example 06 pinned in `test_validation_identity.py` before and after `case_identity`.
 
 ### REV-14 — A radial grid's .npz does not round-trip its spacing exactly
 
@@ -251,7 +251,7 @@ array, against `CLAUDE.md`'s f-string rule, because one pass is what keeps the w
 **Measured.** `tests/tier1/test_corrections.py` asserts the monotonic rise of the ratio with ranges
 that fit both ions, not per-ion bounds.
 
-**Resolves it.** WP42, the verification checks (§8.2.9 I1, I2).
+**Resolved.** WP42 D12: per-ion Einstein ratios (Na⁺ and Cl⁻) pinned within 1e-3 in `test_corrections.py`.
 
 ### REV-24 — Sampler construction may still be duplicated
 
@@ -308,7 +308,7 @@ walk (open question 1 of the [WP38 plan](../plans/wp38-io-split.md)).
 
 **Measured.** Four Tier-1 modules each define the same cylindrical-pore fixture.
 
-**Resolves it.** WP42, the verification checks (§8.2.9 I1, I2).
+**Resolved.** WP42 D13: consolidated `cylindrical_pore_case` fixture in `tests/conftest.py` across Tier-1 test modules.
 
 ### REV-30 — The viewer's scene is written twice
 
@@ -350,7 +350,7 @@ GridDataFormats imports, which holds only at the extra's floor, 1.2, and above.
 **Measured.** `FROZEN_CASE`, `as_yaml` and the D10 figures are copied between the Tier-2 and Tier-3
 VAL-05 files.
 
-**Resolves it.** WP42, the verification checks (§8.2.9 I1, I2).
+**Resolved.** WP42 D13: `VAL05_FROZEN_CASE` template, `as_yaml`, `reference_triangles` and `d10_figures` fixtures in `tests/conftest.py`.
 
 ### REV-35 — _second_crossings loops in Python
 
@@ -419,7 +419,7 @@ no later owner.
 **Measured.** The `pnp` model accepts `variable_density` and `inertia` as given, though without flow
 they do nothing.
 
-**Resolves it.** WP42, the verification checks, beside the case-leaf check that would find it. Refusing the keys is a narrowing, so the schema takes `nanopnp/case/v0.5` (§8.2.9 I2; §8.2.7 G6).
+**Resolved.** WP42 D5: `pnp` model restricts `variable_density` and `inertia` switch sets to `(False,)`; schema moves to `nanopnp/case/v0.5`.
 
 ### REV-43 — chain_characters duplicates the export's mapping
 
@@ -435,7 +435,7 @@ they do nothing.
 
 **Measured.** `test_stern_layer.py`'s generated-slab clause re-solves the slab it already drew.
 
-**Resolves it.** WP42, the verification checks (§8.2.9 I1, I2).
+**Resolved.** WP42 D13: `drawn_slab` module-scoped fixture in `tests/tier2/test_stern_layer.py`.
 
 ### REV-45 — The derived χ field has no export
 
@@ -470,7 +470,7 @@ PR and the plan's Outcomes.
 **Measured.** `test_exclusion_2wcd_walk.py` copies constants from `test_exclusion_2wcd.py`, which
 can drift apart.
 
-**Resolves it.** WP42, the verification checks (§8.2.9 I1, I2).
+**Resolved.** WP42 D13: consolidated `exclusion_2wcd` fixture in `tests/conftest.py`.
 
 ### REV-49 — AXISYMMETRIC is replaced repeatedly
 
@@ -640,8 +640,7 @@ that solves no velocity or pressure. Before WP38 it was refused naming `pb honou
 false only (PHY-21)`, the real mistake, which now surfaces only once the element pair is changed.
 The document is refused either way; only the first diagnostic misleads (QR-12).
 
-**Open.** Gating the load-time inf-sup check on the model declaring a flow field would let
-`load_case` accept a document it refuses today, which changes D8's reading. The author rules.
+**Resolved.** WP42 D8: `check_document` gates the inf-sup check on `numerics.elements.u` not in the model's `unread` set and `physics.flow` true.
 
 ### REV-67 — Public registration functions for backend registries (MOD-11)
 
@@ -719,3 +718,11 @@ sites in `physics/models.py`, not their callers.
 
 **Open.** For the author: whether the charge object carries its own source term (one argument,
 the rule inside it), a change to the model interface outside WP41's scope.
+
+### REV-73 — Cross-leaf inertness is not checked
+
+*Area:* physics. *Severity:* low. *Found:* PR #85 (WP42).
+
+**Measured.** VER-71 probes single leaves from each model's base, but does not probe leaves rendered inert by another leaf's value (such as `variable_density` beside a `none` density correction, `dielectric_gradient_forces` beside no permittivity concentration fit, or wall distance with every wall part off).
+
+**Open.** Phase 5 (§8.2.9 I3).
