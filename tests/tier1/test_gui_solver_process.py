@@ -53,7 +53,7 @@ MAXH_NM = 4.0
 WALL_H_NM = 1.0
 
 CASE = """
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: shell-run
 inputs:
   mesh:
@@ -272,7 +272,7 @@ def test_fr27_a_case_the_schema_refuses_comes_back_as_the_case_exit_class(
     from nanopnp.core.errors import EXIT_CASE
 
     path = tmp_path / "broken.yaml"
-    path.write_text("schema: nanopnp/case/v2\nname: broken\n", encoding="utf-8")
+    path.write_text("schema: nanopnp/case/v0.5\nname: broken\n", encoding="utf-8")
     process = SolverProcess(RunRequest(case=str(path), store=str(tmp_path / "store")))
     process.start()
     events = _settle(process)
@@ -286,7 +286,7 @@ def test_fr27_a_case_the_schema_refuses_comes_back_as_the_case_exit_class(
 # -- WP24: building the geometry through the same child (VER-55) --------------
 
 PROFILE_CASE = """
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: shell-geometry
 inputs:
   profile: {{path: {profile}}}

@@ -64,7 +64,6 @@ from nanopnp.physics.models import (
 logger = logging.getLogger(__name__)
 
 __all__ = [
-    "carry_upgrade",
     "check_document",
     "check_operating_point",
     "check_species",
@@ -813,16 +812,6 @@ def _accepting(coefficient: str) -> str:
     return _admitting(lambda other: coefficient in declaration(other).coefficients)
 
 
-def _migration_suffix(document: CaseDocument) -> str:
-    if document.upgraded_from is None:
-        return ""
-    return (
-        f"\nThis document declares {document.upgraded_from!r} and is read as its "
-        "'nanopnp/case/v0.5' upgrade; CHANGELOG.md, 'Migrating a nanopnp/case/v2 "
-        "document', lists what v0.5 refuses that v2 accepted"
-    )
-
-
 def _check_physics_switches(document: CaseDocument) -> None:
     """Refuse a case whose physics the named model cannot honour (PHY-21, section 5.4.3).
 
@@ -852,7 +841,7 @@ def _check_physics_switches(document: CaseDocument) -> None:
                 f"physics.model {model!r} honours physics.{name}: {admitted} only (PHY-21), so "
                 f"physics.{name} must be {admitted}; {str(value).lower()} would be recorded in "
                 f"the manifest and never applied. Models honouring {str(value).lower()}: "
-                f"{_honouring(name, value)}" + _migration_suffix(document)
+                f"{_honouring(name, value)}"
             )
     transition = (document.charge or Charge()).dielectric_transition_nm
     if transition > 0.0 and "solid_fraction" not in declared.coefficients:
@@ -941,7 +930,7 @@ def _check_unread(document: CaseDocument) -> None:
             else ("false" if default is False else ("none" if default is None else str(default)))
         )
         lines.append(f"  {path}: {val_str} (default {def_str}; read by {readers_str})")
-    msg = "\n".join(lines) + _migration_suffix(document)
+    msg = "\n".join(lines)
     raise CaseValidationError(msg)
 
 
@@ -1000,40 +989,6 @@ def _check_driver(document: CaseDocument) -> None:
                 "for two species of unit valence, so it would be recorded in the manifest as "
                 "a deviation and never change a number (PHY-13); leave it at its default, average"
             )
-
-
-def carry_upgrade(document: CaseDocument, *, source: str = "<string>") -> CaseDocument:
-    """Carry forward omitted switch values for upgraded cases (REV-42, D10).
-
-    When an older case schema is upgraded, switches that were omitted in the source
-    document and have a single honoured value for the selected model are carried
-    forward to that honoured value, logging an informational migration notice.
-    """
-    if document.upgraded_from is None:
-        return document
-    if document.physics.model not in registered_models():
-        return document
-    model_name = document.physics.model
-    decl = declaration(model_name)
-    updates: dict[str, Any] = {}
-    for name in SWITCHES:
-        if name not in document.physics.model_fields_set:
-            current_val = getattr(document.physics, name)
-            honoured = decl.switches.get(name, ())
-            if current_val not in honoured and len(honoured) == 1:
-                carried_val = honoured[0]
-                updates[name] = carried_val
-                val_str = "true" if carried_val is True else "false"
-                logger.info(
-                    f"{source}: physics.{name} is not written; its {document.upgraded_from!r} "
-                    f"default true was never applied by physics.model {model_name!r}, so it is "
-                    f"read as {val_str}, the value the model honours (CHANGELOG.md, 'Migrating a "
-                    "nanopnp/case/v2 document')"
-                )
-    if updates:
-        new_physics = document.physics.model_copy(update=updates)
-        document = document.model_copy(update={"physics": new_physics})
-    return document
 
 
 def _check_strategy(document: CaseDocument) -> None:

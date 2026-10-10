@@ -29,7 +29,7 @@ ENSEMBLE_TOPOLOGY = reference_file("prod5_clya_as.pdb")
 ENSEMBLE_TRAJECTORY = reference_file("prod5_clya_as.dcd")
 
 ENSEMBLE_CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: {name}
 structure:
   source: {{path: {topology}, variant: ClyA-AS}}

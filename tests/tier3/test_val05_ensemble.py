@@ -70,7 +70,7 @@ FROZEN_SIZE_SCALE = 1.0
 """D9's ``size_scale`` at Tier 3, on both meshes."""
 
 FROZEN_CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: {name}
 {source}electrolyte:
   species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
@@ -87,6 +87,8 @@ boundary_conditions: {{bias_V: 0.05, ground: cis}}
 physics:
   model: pnp
   flow: false
+  variable_density: false
+  inertia: false
   solid_permittivities: {{protein: 20.0, membrane: 3.2}}
 numerics:
   continuation: none

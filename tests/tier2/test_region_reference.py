@@ -52,7 +52,7 @@ EDGE_COUNTS = {
 """VER-28's topology of the fixture's region: 195 edges, 193 vertices."""
 
 CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: fixture-{concentration}
 inputs:
   profile: {{path: {path}}}

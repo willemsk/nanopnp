@@ -58,7 +58,7 @@ structure:
 """
 
 MESH_CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: 2wcd-shell
 {structure}{geometry}electrolyte:
   species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]

@@ -49,7 +49,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: 2wcd-geometry
 structure:
   source: {{path: {pdb}}}

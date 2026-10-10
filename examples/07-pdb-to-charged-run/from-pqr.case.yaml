@@ -2,7 +2,7 @@
 # back through inputs.pqr. The PQR replaces the step the protonation keys
 # configure, so there is no charge block: PDB2PQR and PROPKA do not run. The
 # structure stays, because stages 1 to 6 still build the geometry from it.
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: 2wcd-from-pqr
 structure:
   source: {path: 2wcd-prepared.pdb}

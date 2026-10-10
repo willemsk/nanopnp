@@ -61,7 +61,7 @@ MAXH_NM = 4.0
 WALL_H_NM = 1.0
 
 CASE = """
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: hook-probe
 inputs:
   mesh:

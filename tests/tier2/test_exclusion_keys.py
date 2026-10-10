@@ -84,7 +84,7 @@ ATOMS: tuple[tuple[str, float, float, float, float, float], ...] = (
 )
 
 CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: wp30-golden
 inputs:
   profile: {{path: {profile}}}
@@ -102,7 +102,12 @@ electrolyte:
     density:      {{model: none}}
     steric:       {{model: none}}
 boundary_conditions: {{bias_V: 0.0, ground: cis}}
-physics: {{model: pnp, flow: false, solid_permittivities: {{protein: 20.0, membrane: 3.2}}}}
+physics:
+  model: pnp
+  flow: false
+  variable_density: false
+  inertia: false
+  solid_permittivities: {{protein: 20.0, membrane: 3.2}}
 numerics: {{continuation: none, mesh: {{size_scale: 5.0}}}}
 {charge}outputs: [current]
 """

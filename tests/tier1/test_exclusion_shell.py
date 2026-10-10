@@ -76,7 +76,7 @@ H_C_NM = 0.05
 """The contour's size target at the default density grid spacing."""
 
 CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: shell
 inputs:
   profile: {{path: {path}}}
@@ -286,7 +286,7 @@ def test_ver59_an_offset_at_most_twice_h_c_is_refused_naming_both_keys(
 def test_ver59_the_keys_beside_a_supplied_mesh_or_without_a_profile_are_refused() -> None:
     """A knob with no effect is refused naming both keys (D12)."""
     mesh_case = (
-        "schema: nanopnp/case/v2\nname: supplied\n"
+        "schema: nanopnp/case/v0.5\nname: supplied\n"
         "inputs:\n  mesh: {path: pore.msh, format: msh41}\n"
         "electrolyte:\n  species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]\n"
         "  concentration_M: 1.0\n"

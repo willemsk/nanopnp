@@ -174,7 +174,7 @@ def test_ver66_stubs_validate_and_appear_in_editor_options(
     """A stub mesher, solver and mode validate in a case and are offered by the editor."""
     fixture_path = profile_file("clya_reference_profile")
     case_text = f"""\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: stub-validation-case
 inputs:
   profile: {{path: {fixture_path}}}
@@ -221,7 +221,7 @@ def test_ver66_forwarding_solver_and_mode_agree_with_plain_run(
 
     def make_case(solver_name: str, mode_name: str) -> str:
         return f"""\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: ver66-comparison
 inputs:
   mesh: {{path: {quickstart_pore_msh}, format: msh41, groups: {{default: interface}}}}
@@ -230,7 +230,12 @@ electrolyte:
   concentration_M: 1.0
   parameters: willems2020_nacl
 boundary_conditions: {{bias_V: 0.1}}
-physics: {{model: pnp, flow: false, solid_permittivities: {{membrane: 3.2}}}}
+physics:
+  model: pnp
+  flow: false
+  variable_density: false
+  inertia: false
+  solid_permittivities: {{membrane: 3.2}}
 numerics:
   continuation: none
   linear: {{solver: {solver_name}}}
@@ -287,7 +292,7 @@ def test_ver66_forwarding_mesher_agrees_with_netgen_on_supplied_profile(
 
     def make_profile_case(backend_name: str) -> str:
         return f"""\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: ver66-profile
 inputs:
   profile: {{path: {fixture_path}}}
@@ -374,7 +379,7 @@ def test_ver66_unregistered_name_is_refused_consistently_cli_and_editor(
     """An unregistered name for each key is refused with identical text in CLI and editor."""
     fixture_path = profile_file("clya_reference_profile")
     base_case = f"""\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: unregistered-test
 inputs:
   profile: {{path: {fixture_path}}}
@@ -408,7 +413,7 @@ numerics:
     }
     values = {**defaults, path: unregistered_value}
     bad_case_text = f"""\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: unregistered-test
 inputs:
   profile: {{path: {fixture_path}}}
@@ -443,7 +448,7 @@ def test_ver66_an_unregistered_rejected_solver_is_refused_naming_num21(
     """``mumps``, unregistered, is refused with NUM-21's reason, not as merely unknown (D3, D7)."""
     fixture_path = profile_file("clya_reference_profile")
     case_text = f"""\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: rejected-solver
 inputs:
   profile: {{path: {fixture_path}}}

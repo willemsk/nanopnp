@@ -4,7 +4,7 @@
 # by stage 7 and gated there on charge conservation (PHY-19).
 #
 # Run from this directory, after `nanopnp mesh cylinder --out pore.msh`.
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: charged-epnpns
 
 inputs:

@@ -70,7 +70,7 @@ DODECAMER = "A,B,C,D,E,F,G,H,I,J,K,L"
 def _case(tmp_path: Path, structure: str, *, name: str = "structure") -> Path:
     """Write a case file carrying ``structure`` (YAML text) and return its path."""
     text = (
-        "schema: nanopnp/case/v2\n"
+        "schema: nanopnp/case/v0.5\n"
         f"name: {name}\n"
         f"structure:\n{structure}"
         "electrolyte:\n"

@@ -92,7 +92,7 @@ def case_text(
 ) -> str:
     """Return a case naming ``mesh_path`` with ``groups`` as its mapping."""
     return f"""
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: ingest-probe
 inputs:
   mesh: {{path: {mesh_path}, format: gmsh, groups: {groups}}}
@@ -160,7 +160,10 @@ def test_ver27_a_flow_free_model_does_not_require_a_no_slip_boundary(mesh_file: 
     """
     _, resolved = resolved_case(
         mesh_file,
-        physics="{model: pnp, flow: false, solid_permittivities: {membrane: 3.2}}",
+        physics=(
+            "{model: pnp, flow: false, variable_density: false, "
+            "inertia: false, solid_permittivities: {membrane: 3.2}}"
+        ),
     )
     purposes = [r.purpose for r in required_names(resolved).boundaries]
     assert not any("no-slip" in purpose for purpose in purposes)

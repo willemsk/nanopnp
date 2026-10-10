@@ -79,7 +79,7 @@ GEOMETRY = "geometry: {membrane: {centre_z_nm: 0.0}}\n"
 """G9: the MD frame's bilayer centre is z = 0, so the model frame is the stage-1 frame."""
 
 FROZEN_CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: {name}
 {source}electrolyte:
   species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
@@ -96,6 +96,8 @@ boundary_conditions: {{bias_V: 0.05, ground: cis}}
 physics:
   model: pnp
   flow: false
+  variable_density: false
+  inertia: false
   solid_permittivities: {{protein: 20.0, membrane: 3.2}}
 numerics:
   continuation: none
