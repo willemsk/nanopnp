@@ -43,7 +43,7 @@ def _case(tmp_path: Path, pdb: Path) -> Path:
     """Write the 2WCD case: C12, the default density block (h = 0.05 nm, sigma = 0.93)."""
     path = tmp_path / "2wcd.case.yaml"
     path.write_text(
-        "schema: nanopnp/case/v2\n"
+        "schema: nanopnp/case/v0.5\n"
         "name: 2wcd-density\n"
         "structure:\n"
         f"  source: {{path: {pdb}}}\n"

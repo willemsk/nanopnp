@@ -273,7 +273,7 @@ def prepared_2wcd(
 
 
 SEED_CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: 2wcd-seed
 structure:
   source: {{path: {pdb}}}
@@ -664,7 +664,7 @@ def write_charged_tube(
     pqr.write_text("\n".join(lines) + "\n", encoding="utf-8")
     case = directory / "case.yaml"
     case.write_text(
-        f"""schema: nanopnp/case/v2
+        f"""schema: nanopnp/case/v0.5
 name: charged-tube
 inputs:
   profile: {{path: {profile}}}

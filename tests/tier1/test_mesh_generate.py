@@ -34,7 +34,7 @@ from nanopnp.mesh.quality import QUALITY_FLOOR
 from nanopnp.pipeline.case import loads_case, resolve
 
 CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: coarse
 inputs:
   profile: {{path: {path}}}
@@ -250,7 +250,12 @@ electrolyte:
     permittivity: {{model: none}}
     density:      {{model: none}}
 boundary_conditions: {{bias_V: 0.05, ground: cis}}
-physics: {{model: pnp, flow: false, solid_permittivities: {{{solids}}}}}
+physics:
+  model: pnp
+  flow: false
+  variable_density: false
+  inertia: false
+  solid_permittivities: {{{solids}}}
 numerics: {{continuation: none, mesh: {{size_scale: 20.0}}}}
 outputs: [current, fields]
 """

@@ -268,7 +268,7 @@ def test_ver50_unresolved_region_and_artefact(synthetic_c12: Path, tmp_path: Pat
 
     case = tmp_path / "reduction.case.yaml"
     case.write_text(
-        "schema: nanopnp/case/v2\n"
+        "schema: nanopnp/case/v0.5\n"
         "name: reduction\n"
         "structure:\n"
         f"  source: {{path: {synthetic_c12}}}\n"

@@ -81,7 +81,7 @@ def case_text(mesh_path: Path, field_path: Path | None, *, order: str = "P2") ->
     """Return a case naming ``mesh_path``, and ``field_path`` if there is one, at ``order``."""
     charge = "" if field_path is None else f"\n  charge: {{path: {field_path}, format: field1}}"
     return f"""
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: field-probe
 inputs:
   mesh: {{path: {mesh_path}, format: gmsh}}{charge}
@@ -288,7 +288,7 @@ def _pqr_text() -> str:
 
 
 PRODUCER_CASE = """
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: producer-probe
 inputs:
   mesh: {{path: {mesh}, format: vol, groups: {{default: interface}}}}
@@ -305,7 +305,12 @@ electrolyte:
     density:      {{model: none}}
     steric:       {{model: none}}
 boundary_conditions: {{bias_V: 0.02, ground: cis}}
-physics: {{model: pnp, flow: false, solid_permittivities: {{membrane: 3.2}}}}
+physics:
+  model: pnp
+  flow: false
+  variable_density: false
+  inertia: false
+  solid_permittivities: {{membrane: 3.2}}
 numerics: {{continuation: none, elements: {{phi: {order}, c: {order}}}}}
 outputs: [current, fields]
 """

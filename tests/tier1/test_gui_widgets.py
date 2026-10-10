@@ -51,6 +51,8 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 # As the probe's selftest sets it: a runner has no GPU for Qt WebEngine's
 # Chromium child, which otherwise aborts before a document load begins.
 os.environ.setdefault("QTWEBENGINE_CHROMIUM_FLAGS", "--disable-gpu --no-sandbox")
+os.environ.pop("DISPLAY", None)
+os.environ.pop("WAYLAND_DISPLAY", None)
 
 try:
     from PySide6 import QtCore, QtGui, QtWidgets
@@ -70,7 +72,7 @@ except (ImportError, OSError) as error:  # pragma: no cover - platform dependent
     pytest.skip(f"PySide6 cannot be constructed here: {error}", allow_module_level=True)
 
 CASE = """
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: widget-probe
 inputs: {mesh: {path: pore.vol, format: vol}}
 electrolyte:
@@ -103,7 +105,7 @@ def editor(tmp_path: Path) -> CaseEditor:
 def test_if09_the_form_binds_every_schema_field(
     application: QtWidgets.QApplication, editor: CaseEditor
 ) -> None:
-    """Every field of ``nanopnp/case/v2`` has a widget, in declaration order.
+    """Every field of ``nanopnp/case/v0.5`` has a widget, in declaration order.
 
     A form that bound a subset would leave part of the schema uneditable with
     nothing to say so — which is the same failure
@@ -551,7 +553,7 @@ def test_ver44_the_shipped_renderer_reaches_a_document_with_no_network(
 # -- the Geometry tab (WP24) ---------------------------------------------------------
 
 PROFILE_CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: geometry-probe
 inputs:
   profile: {{path: {path}}}
@@ -698,7 +700,7 @@ def _mesh_shown(tab: GeometryWidget) -> bool:
 # -- WP31: the case editor's bounded numbers and the Charge tab -------------------
 
 STRUCTURE_CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: fragment
 structure:
   source: {{path: {path}}}

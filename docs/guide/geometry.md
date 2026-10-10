@@ -141,7 +141,7 @@ manifest records the mesh a solve actually read.
 A case can skip stages 1 to 4 and start from a profile document:
 
 ```yaml
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: from-profile
 inputs:
   profile: {path: contour.profile.yaml}

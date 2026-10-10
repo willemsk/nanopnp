@@ -457,7 +457,7 @@ def tube(tube_pdb: Path) -> Path:
 def _case(directory: Path, pdb: Path, *, geometry: str = "", name: str = "tube") -> Path:
     path = directory / f"{name}.case.yaml"
     path.write_text(
-        "schema: nanopnp/case/v2\n"
+        "schema: nanopnp/case/v0.5\n"
         f"name: {name}\n"
         "structure:\n"
         f"  source: {{path: {pdb}}}\n"

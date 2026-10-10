@@ -51,7 +51,7 @@ PROFILE_VERTICES = 185
 """The delivered reference polygon's vertex count (section 5.2.1)."""
 
 MESH_CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: backends-{backend}-{concentration}-{size_scale}
 inputs:
   profile: {{path: {profile}}}
@@ -65,7 +65,7 @@ numerics: {{mesh: {{backend: {backend}, size_scale: {size_scale}}}}}
 """
 
 FROZEN_CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: frozen-{backend}
 inputs:
   profile: {{path: {profile}}}
@@ -84,6 +84,8 @@ boundary_conditions: {{bias_V: 0.05, ground: cis}}
 physics:
   model: pnp
   flow: false
+  variable_density: false
+  inertia: false
   solid_permittivities: {{protein: 20.0, membrane: 3.2}}
 numerics:
   continuation: none

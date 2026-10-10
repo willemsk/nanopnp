@@ -52,7 +52,7 @@ def wall_size(document: CaseDocument) -> WallSize:
 
 
 CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: sizing
 inputs:
   profile: {{path: {path}}}
@@ -65,7 +65,7 @@ physics: {{model: pnp-ns, solid_permittivities: {{protein: 20.0, membrane: 3.2}}
 {extra}"""
 
 MESH_CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: supplied
 inputs:
   mesh: {{path: pore.msh, format: msh41}}

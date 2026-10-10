@@ -66,7 +66,7 @@ from nanopnp.pipeline.case import load_case
 from nanopnp.pipeline.checks import options_at
 
 CASE = """
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: shell-probe
 inputs: {mesh: {path: pore.vol, format: vol}}
 electrolyte:

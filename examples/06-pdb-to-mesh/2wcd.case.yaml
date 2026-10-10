@@ -1,6 +1,6 @@
 # The dodecamer prepared by prepare.py: axis near z, cis up, and the C-alpha
 # centroid of residues 8-292 at z = 5.655 nm, so the bilayer centre is z = 0.
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: 2wcd
 structure:
   source: {path: 2wcd-prepared.pdb}

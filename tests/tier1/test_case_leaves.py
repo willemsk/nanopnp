@@ -780,8 +780,15 @@ def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
                 stack.extend(inp for inp in describe(s).inputs if inp not in ("case", "case_path"))
         return seen
 
-    region_yaml = next(Path("examples").glob("**/*region.yaml"))
-    profile_yaml = next(Path("examples").glob("**/*profile.yaml"))
+    from nanopnp.geometry.profile import load_profile
+    from nanopnp.geometry.region import derive_region, write_region
+    from nanopnp.io.case import MembraneSpec, ReservoirSpec
+
+    profile_yaml = Path("data/geometry/clya_reference_profile.yaml")
+    region_yaml = tmp_path / "region.yaml"
+    write_region(
+        derive_region(load_profile(profile_yaml), MembraneSpec(), ReservoirSpec()), region_yaml
+    )
 
     dummy = Artefact(schema="dummy/v1", parameters={}, inputs={})
     dummy_prof = ProfileArtefact(parameters={}, inputs={}, payload={"profile": profile_yaml})
@@ -831,7 +838,8 @@ def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
     prof1 = tmp_path / "prof1.yaml"
     prof1.write_text(profile_yaml.read_text())
     prof2 = tmp_path / "prof2.yaml"
-    prof2.write_text(profile_yaml.read_text().replace("0.25", "0.35"))
+    prof2_obj = load_profile(profile_yaml).model_copy(update={"name": "other_profile"})
+    prof2.write_text(yaml.safe_dump(prof2_obj.model_dump(by_alias=True, mode="json")))
 
     f1 = tmp_path / "f1.npy"
     f1.write_text("dummy field")

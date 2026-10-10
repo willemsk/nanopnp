@@ -30,7 +30,7 @@ from nanopnp.pipeline.case import (
 )
 
 REFERENCE_CASE = """
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: clya-wt-1M-100mV
 
 inputs:
@@ -103,7 +103,7 @@ REFORMATTED_CASE = """
 # reference uses block, `1` for `1.0`, quoted scalars, and a comment on every line
 # that carries a decision. None of it changes the run.
 name: clya-wt-1M-100mV
-schema: 'nanopnp/case/v2'
+schema: 'nanopnp/case/v0.5'
 
 outputs:
   - current
@@ -213,11 +213,7 @@ def test_if03_an_unknown_key_with_no_near_match_lists_the_block_s_keys() -> None
 
 def test_if03_a_future_schema_fails_naming_the_schema_before_any_field_error() -> None:
     """A file written to a later schema must not fail against a shape it never claimed."""
-    text = (
-        REFERENCE_CASE.replace("nanopnp/case/v2", "nanopnp/case/v3")
-        .replace(SCHEMA, "nanopnp/case/v3")
-        .replace("bias_V: 0.100", "bias: 0.100")
-    )
+    text = REFERENCE_CASE.replace(SCHEMA, "nanopnp/case/v3").replace("bias_V: 0.100", "bias: 0.100")
     with pytest.raises(CaseValidationError) as raised:
         loads_case(text)
     message = str(raised.value)

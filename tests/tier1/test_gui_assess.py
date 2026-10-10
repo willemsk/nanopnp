@@ -45,7 +45,7 @@ from nanopnp.pipeline.run import run_case
 from nanopnp.symmetry.reduce import ReducedMap
 
 CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: {name}
 structure:
   source: {{path: {pdb}}}

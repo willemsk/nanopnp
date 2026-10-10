@@ -307,7 +307,7 @@ this one is sized to sit on either side of NUM-34's threshold.
 """
 
 CORRECTED_CASE = """
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: corrected-routes
 inputs:
   mesh: {{path: {path}, format: vol, groups: {{default: interface}}}}

@@ -282,7 +282,7 @@ def case_text(
     """Return a case over ``mesh`` with the given physics, strategy and outputs."""
     mapping = f", groups: {groups}" if groups else ""
     return f"""
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: {name}
 inputs:
   mesh: {{path: {mesh}, format: msh41{mapping}}}{inputs}
@@ -343,7 +343,10 @@ def test_ver56_an_unadmitted_strategy_is_refused_naming_the_admitted_values() ->
     """``pnp`` admits ``continuation: none`` only, as section 6.5 already forces."""
     message = _refusal(
         case_text(
-            physics="{model: pnp, flow: false, solid_permittivities: {membrane: 3.2}}",
+            physics=(
+                "{model: pnp, flow: false, variable_density: false, "
+                "inertia: false, solid_permittivities: {membrane: 3.2}}"
+            ),
             continuation="default_ladder",
         )
     )
@@ -357,7 +360,10 @@ def test_ver56_an_unadmitted_strategy_is_refused_naming_the_admitted_values() ->
         (ELECTROSTATIC_PHYSICS % "poisson", "[current]", "current", "no quantity of interest"),
         (ELECTROSTATIC_PHYSICS % "pb", "[transport_numbers, fields]", "transport_numbers", "no"),
         (
-            "{model: pnp, flow: false, solid_permittivities: {membrane: 3.2}}",
+            (
+                "{model: pnp, flow: false, variable_density: false, "
+                "inertia: false, solid_permittivities: {membrane: 3.2}}"
+            ),
             "[current, eof_rate]",
             "eof_rate",
             "current, transport_numbers, rectification",
@@ -663,7 +669,10 @@ def test_ver56_a_model_defined_as_one_class_runs_from_a_case_file_to_stage_twelv
     """
     import numpy as np
 
-    physics = "{model: %s, flow: false, solid_permittivities: {membrane: 3.2}}"
+    physics = (
+        "{model: %s, flow: false, variable_density: false, "
+        "inertia: false, solid_permittivities: {membrane: 3.2}}"
+    )
     texts = {
         name: case_text(
             pore_mesh,
@@ -931,7 +940,15 @@ def test_ver56_the_mesh_gate_refuses_a_solid_under_a_model_without_solids(
     ("physics", "concentration", "no_slip", "sources"),
     [
         ("{model: epnp-ns, solid_permittivities: {membrane: 3.2}}", True, True, True),
-        ("{model: pnp, flow: false, solid_permittivities: {membrane: 3.2}}", True, False, True),
+        (
+            (
+                "{model: pnp, flow: false, variable_density: false, "
+                "inertia: false, solid_permittivities: {membrane: 3.2}}"
+            ),
+            True,
+            False,
+            True,
+        ),
         (ELECTROSTATIC_PHYSICS % "poisson", False, False, False),
         (ELECTROSTATIC_PHYSICS % "pb", False, False, False),
     ],

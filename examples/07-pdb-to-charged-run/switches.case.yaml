@@ -2,7 +2,7 @@
 # thick around the protein, built at stage 5, and a permittivity that steps
 # from the protein's to water's over 0.15 nm, derived at stage 7. Both are off
 # by default, so the manifest lists each as a deviation from the validated model.
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: 2wcd-switches
 structure:
   source: {path: 2wcd-prepared.pdb}

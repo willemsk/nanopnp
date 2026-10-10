@@ -38,7 +38,7 @@ def test_ver48_clya_as_ensemble(tmp_path: Path) -> None:
     """All 98 frames pass the stage-1 gates; drift, RMSD and tilt are logged (VER-48)."""
     case = tmp_path / "clya-as.case.yaml"
     case.write_text(
-        "schema: nanopnp/case/v2\n"
+        "schema: nanopnp/case/v0.5\n"
         "name: clya-as-ensemble\n"
         "structure:\n"
         f"  source: {{path: {TOPOLOGY}, variant: ClyA-AS}}\n"

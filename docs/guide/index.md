@@ -8,7 +8,7 @@ an equation.
 | Page | What it covers |
 |---|---|
 | [Concepts](concepts.md) | Case, stages, artefacts, the store, the manifest |
-| [Case files](case-files.md) | The `nanopnp/case/v2` document, its sections and dotted paths |
+| [Case files](case-files.md) | The `nanopnp/case/v0.5` document, its sections and dotted paths |
 | [Meshes](meshes.md) | Supplying a mesh, the group vocabulary, the quality gate, the generators |
 | [Structures and trajectories](structures.md) | Stage 1: the structure file, chains, ensembles, the axis and its gates, preparation |
 | [From a structure to a mesh](geometry.md) | Stages 2 to 6, the membrane's registration, hand edits, and exports |

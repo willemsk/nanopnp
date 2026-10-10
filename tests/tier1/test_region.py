@@ -314,7 +314,7 @@ def test_ver52_the_record_round_trips_and_rebuilds(
 
 
 PROFILE_CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: profile-case
 inputs:
   profile: {{path: {path}}}

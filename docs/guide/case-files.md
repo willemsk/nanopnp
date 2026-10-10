@@ -1,13 +1,13 @@
 # Case files
 
-A case file is YAML with `schema: nanopnp/case/v2` and a `name`. Every field is listed, with its
+A case file is YAML with `schema: nanopnp/case/v0.5` and a `name`. Every field is listed, with its
 type, default, accepted values and validated default, in the generated [case-file
 reference](../_generated/reference/case-file.md). This page explains how the document fits together.
 
 ## A minimal case
 
 ```yaml
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: my-pore
 
 inputs:
@@ -57,33 +57,6 @@ code `3`.
 `nanopnp validate case case.yaml` makes every check a run makes before it meshes anything, the
 parameter file's included, and prints the stages the case walks. It reads no file the case supplies
 and solves nothing.
-
-## Reading a v1 case file
-
-A file declaring `schema: nanopnp/case/v1`, written before v0.3, is still read. It is upgraded to
-v2 as it is loaded, and it means exactly what it meant before: every key v2 added defaults to the
-validated configuration. Three keys are handled by the upgrade:
-
-| v1 key | v2 |
-|---|---|
-| `structure.source.pdb` | renamed to `structure.source.path`, since mmCIF is read too |
-| `charge.eps_protein` | moved to `physics.solid_permittivities.protein` |
-| `geometry.membrane.eps_r` | moved to `physics.solid_permittivities.membrane` |
-
-A permittivity is moved only if the file wrote it; no default is added. The upgrade refuses a v1
-file that also carries a key only v2 has, and a moved permittivity that disagrees with the value
-already in `physics.solid_permittivities`, naming both. A v2 file that uses one of the three old
-keys is refused, naming the key that replaced it.
-
-There is no separate upgrade command, because nothing needs one: a v1 file runs as it is. The
-run directory keeps the file exactly as it was read, and the manifest's case hash is the
-upgrade's. To write a v2 copy, change the `schema:` line and the three keys by hand, or load and
-dump it from Python with `nanopnp.dump_case(nanopnp.load_case("old.case.yaml"), "new.case.yaml")`,
-which drops the comments.
-
-The upgrade changes no number, but it does change the cache key of every stored solve once. The
-v1 key included the schema string, and v2 leaves it out, so a store populated before v0.3 re-solves
-each case the first time it is asked for.
 
 ## Dotted paths
 

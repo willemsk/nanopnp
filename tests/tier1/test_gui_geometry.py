@@ -134,7 +134,7 @@ def test_ver55_the_stage_list_is_a_projection_of_the_event_stream() -> None:
             Started(case="case.yaml", store=None),
             Stage(name="case", index=0, total=7),
             Produced(
-                name="case", schema="nanopnp/case/v2", hash="c" * 64, cached=True, store=store
+                name="case", schema="nanopnp/case/v0.5", hash="c" * 64, cached=True, store=store
             ),
             Stage(name="structure", index=1, total=7),
             Produced(
@@ -296,7 +296,7 @@ def test_ver55_the_null_edit_is_its_parent_recorded_as_a_hand_edit(tmp_path: Pat
 # -- the derived case, and the frame ----------------------------------------------------
 
 TUBE_CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: tube-edit
 structure:
   source: {{path: {pdb}}}

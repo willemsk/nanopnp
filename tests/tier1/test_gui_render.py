@@ -83,7 +83,7 @@ MAXH_NM = 4.0
 WALL_H_NM = 1.0
 
 CASE = """
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: viewer-probe
 inputs:
   mesh:
@@ -469,7 +469,7 @@ def test_ver44_the_drawn_region_counts_its_elements_not_its_materials(domain: st
 # -- the stage-6 mesh (WP24 D12) ----------------------------------------------
 
 PROFILE_CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: mesh-picture
 inputs:
   profile: {{path: {path}}}

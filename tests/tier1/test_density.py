@@ -75,7 +75,7 @@ def _kept(g: np.ndarray) -> np.ndarray:
 def _case(tmp_path: Path, pdb: Path, *, geometry: str = "", inputs: str = "") -> Path:
     """Write a case carrying ``structure:`` for ``pdb``, and return its path."""
     text = (
-        "schema: nanopnp/case/v2\n"
+        "schema: nanopnp/case/v0.5\n"
         "name: density\n"
         f"{inputs}"
         "structure:\n"

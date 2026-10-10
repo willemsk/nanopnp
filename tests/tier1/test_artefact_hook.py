@@ -34,7 +34,7 @@ from nanopnp.io.store import Store
 from nanopnp.pipeline.run import run_case
 
 CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: hooked
 inputs:
   profile: {{path: {path}}}

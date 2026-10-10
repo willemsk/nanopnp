@@ -76,7 +76,7 @@ PORE = CylindricalPoreGeometry(
     pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
 )
 CASE = """
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: cli-probe
 inputs:
   mesh:
@@ -461,7 +461,7 @@ def test_ver32_a_case_the_schema_refuses_exits_three(
 ) -> None:
     """Exit 3: the case file is wrong and a retry will fail identically (QR-06)."""
     path = tmp_path / "bad.yaml"
-    path.write_text("schema: nanopnp/case/v2\nname: bad\nnonsense: 1\n", encoding="utf-8")
+    path.write_text("schema: nanopnp/case/v0.5\nname: bad\nnonsense: 1\n", encoding="utf-8")
     assert main(["run", str(path), "--store", str(tmp_path / "store")]) == EXIT_CASE
     captured = capsys.readouterr()
     assert captured.out == ""
@@ -804,7 +804,7 @@ def test_ver32_mesh_help_imports_no_netgen(shape: str) -> None:
 # -- stage --export (section 3.1 IF-02 export NOTE; IF-05 length-units NOTE) ----
 
 TUBE_CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: tube
 structure:
   source: {{path: {pdb}}}
@@ -818,7 +818,7 @@ physics: {{model: epnp-ns, solid_permittivities: {{membrane: 3.2}}}}
 """
 
 PROFILE_CASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: coarse
 inputs:
   profile: {{path: {path}}}

@@ -4,7 +4,7 @@
 #
 # The mesh is four times coarser than the default sizes, for runtime only. The
 # transport number it gives is a property check, not a prediction.
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: 2wcd-charged
 structure:
   source: {path: 2wcd-prepared.pdb}

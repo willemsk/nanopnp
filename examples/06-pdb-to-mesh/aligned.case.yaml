@@ -1,6 +1,6 @@
 # Stage 1's own aligned structure, exported as a PDB. Its axis is z through the
 # origin, so stage 1 accepts it with axis: z instead of finding the axis again.
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: 2wcd-aligned
 structure:
   source: {path: aligned.pdb}

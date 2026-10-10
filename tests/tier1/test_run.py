@@ -76,7 +76,7 @@ WALL_H_NM = 1.0
 """The cheapest mesh that carries all four domains, as WP10's other modules use."""
 
 CASE = """
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: run-probe
 inputs:
   mesh:
@@ -534,7 +534,7 @@ def test_ver32_upto_names_a_stage_this_case_does_not_walk(case_file: Path, tmp_p
 
 
 _MINIMAL = """
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: minimal
 inputs: {mesh: {path: pore.vol, format: vol}}
 electrolyte:

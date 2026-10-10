@@ -32,7 +32,7 @@ from nanopnp.sweep.plan import plan_from_document, write_plan
 from nanopnp.sweep.run import MemberResult, run_plan
 
 BASE = """\
-schema: nanopnp/case/v2
+schema: nanopnp/case/v0.5
 name: generated-sweep
 inputs:
   profile: {{path: {path}}}
