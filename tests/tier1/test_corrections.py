@@ -102,7 +102,7 @@ def test_ver04_nernst_einstein_holds_at_infinite_dilution(epnpns: Electrolyte) -
 
 
 def test_ver05_einstein_ratio_drifts_with_concentration(epnpns: Electrolyte) -> None:
-    """D_i/mu_i rises to 1.2-1.7 x kT/e between 0.15 M and 3 M.
+    """D_i/mu_i rises to 1.2-1.7 x kT/e between 0.15 M and 3 M (REV-23, D12).
 
     D and mu are fitted to different data - self-diffusion and conductivity - so
     the Einstein relation is a property of the infinite-dilution limit only. A
@@ -110,16 +110,22 @@ def test_ver05_einstein_ratio_drifts_with_concentration(epnpns: Electrolyte) -> 
     (PHY-14); this is that assertion's replacement.
     """
     v_t = thermal_voltage()
-    for name in ("Na+", "Cl-"):
+    tables = {
+        "Na+": (1.208, 1.468, 1.665),
+        "Cl-": (1.132, 1.221, 1.279),
+    }
+    for name, expected in tables.items():
         ratios = [
             epnpns.diffusivity(name, c, FAR_FROM_WALL_NM)
             / epnpns.mobility(name, c, FAR_FROM_WALL_NM)
             / v_t
             for c in (0.15, 1.0, 3.0)
         ]
-        assert ratios == sorted(ratios), f"{name}: D/mu should rise with concentration"
-        assert 1.0 < ratios[0] < 1.3
-        assert 1.2 < ratios[-1] < 1.7
+        assert ratios == sorted(ratios), (
+            f"{name}: D/mu should rise monotonically with concentration"
+        )
+        for ratio, table_val in zip(ratios, expected, strict=True):
+            assert abs(ratio - table_val) <= 1e-3, f"{name}: {ratio} != {table_val}"
 
 
 def test_classical_pnp_ns_recovers_the_reference_values_exactly(
