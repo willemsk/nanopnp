@@ -1078,28 +1078,22 @@ def check_referenced_files(document: CaseDocument) -> None:
     FileNotFoundError
         If any referenced path does not exist.
     """
-    targets: list[tuple[str, Path | str | None]] = []
-    if document.inputs.mesh is not None:
-        targets.append(("inputs.mesh.path", document.inputs.mesh.path))
-    if document.inputs.pqr is not None:
-        targets.append(("inputs.pqr.path", document.inputs.pqr.path))
-    if document.inputs.profile is not None:
-        targets.append(("inputs.profile.path", document.inputs.profile.path))
-    if document.inputs.charge is not None:
-        targets.append(("inputs.charge.path", document.inputs.charge.path))
-    if document.inputs.eps_r is not None:
-        targets.append(("inputs.eps_r.path", document.inputs.eps_r.path))
-    if document.structure is not None and document.structure.source is not None:
-        targets.append(("structure.source.path", document.structure.source.path))
-    if (
-        document.structure is not None
-        and document.structure.ensemble is not None
-        and document.structure.ensemble.trajectory is not None
-    ):
-        targets.append(("structure.ensemble.trajectory", document.structure.ensemble.trajectory))
-
-    for leaf, raw_path in targets:
-        if raw_path is not None:
-            path = Path(raw_path)
+    for leaf in ("mesh", "pqr", "profile", "charge", "eps_r"):
+        supplied = getattr(document.inputs, leaf)
+        if supplied is not None and supplied.path is not None:
+            path = Path(supplied.path)
             if not path.is_file():
-                raise FileNotFoundError(f"{leaf} '{path}' does not exist")
+                raise FileNotFoundError(f"inputs.{leaf}.path '{path}' does not exist")
+
+    if document.structure is not None:
+        if document.structure.source is not None and document.structure.source.path is not None:
+            path = Path(document.structure.source.path)
+            if not path.is_file():
+                raise FileNotFoundError(f"structure.source.path '{path}' does not exist")
+        if (
+            document.structure.ensemble is not None
+            and document.structure.ensemble.trajectory is not None
+        ):
+            path = Path(document.structure.ensemble.trajectory)
+            if not path.is_file():
+                raise FileNotFoundError(f"structure.ensemble.trajectory '{path}' does not exist")

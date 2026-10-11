@@ -1107,6 +1107,117 @@ def test_cr2_validate_case_checks_referenced_files(
     assert out["valid"] is True
 
 
+def test_cr2_check_referenced_files_all_leaves(tmp_path: Path) -> None:
+    """CR-2: check_referenced_files checks existence of every referenced external file."""
+    from nanopnp.io.case import (
+        Ensemble,
+        Structure,
+        StructureSource,
+        SuppliedArtefact,
+        SymmetrySpec,
+    )
+    from nanopnp.pipeline.case import loads_case
+    from nanopnp.pipeline.checks import check_referenced_files
+
+    base_yaml = """
+schema: nanopnp/case/v0.5
+name: minimal
+electrolyte:
+  species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]
+  concentration_M: 0.1
+  temperature_K: 298.15
+  parameters: willems2020_nacl
+  corrections:
+    diffusivity: {model: none}
+    mobility: {model: none}
+    viscosity: {model: none}
+    permittivity: {model: none}
+    density: {model: none}
+boundary_conditions:
+  bias_V: 0.0
+  ground: cis
+physics:
+  model: epnp-ns
+numerics:
+  stabilisation: none
+"""
+    doc = loads_case(base_yaml)
+
+    # Base case with empty inputs / no structure (returns cleanly)
+    assert doc.structure is None
+    check_referenced_files(doc)
+
+    # Each input leaf (mesh, pqr, profile, charge, eps_r)
+    for leaf in ("mesh", "pqr", "profile", "charge", "eps_r"):
+        missing = tmp_path / f"missing_{leaf}.dat"
+        setattr(doc.inputs, leaf, SuppliedArtefact(path=missing))
+        with pytest.raises(FileNotFoundError, match=f"inputs\\.{leaf}\\.path"):
+            check_referenced_files(doc)
+
+        existing = tmp_path / f"existing_{leaf}.dat"
+        existing.touch()
+        setattr(doc.inputs, leaf, SuppliedArtefact(path=existing))
+        check_referenced_files(doc)
+
+        setattr(doc.inputs, leaf, None)
+
+    # Supplied artefact with artefact hash instead of path
+    doc.inputs.mesh = SuppliedArtefact(artefact="dummyhash")
+    check_referenced_files(doc)
+    doc.inputs.mesh = None
+
+    # structure.source.path
+    missing_source = tmp_path / "missing_source.pdb"
+    doc.structure = Structure(
+        source=StructureSource(path=missing_source),
+        symmetry=SymmetrySpec(point_group="C1"),
+    )
+    with pytest.raises(FileNotFoundError, match=r"structure\.source\.path"):
+        check_referenced_files(doc)
+
+    existing_source = tmp_path / "existing_source.pdb"
+    existing_source.touch()
+    doc.structure = Structure(
+        source=StructureSource(path=existing_source),
+        symmetry=SymmetrySpec(point_group="C1"),
+    )
+    check_referenced_files(doc)
+
+    # structure.ensemble.trajectory
+    missing_traj = tmp_path / "missing_traj.xtc"
+    doc.structure = Structure(
+        source=StructureSource(path=existing_source),
+        ensemble=Ensemble(trajectory=missing_traj),
+        symmetry=SymmetrySpec(point_group="C1"),
+    )
+    with pytest.raises(FileNotFoundError, match=r"structure\.ensemble\.trajectory"):
+        check_referenced_files(doc)
+
+    existing_traj = tmp_path / "existing_traj.xtc"
+    existing_traj.touch()
+    doc.structure = Structure(
+        source=StructureSource(path=existing_source),
+        ensemble=Ensemble(trajectory=existing_traj),
+        symmetry=SymmetrySpec(point_group="C1"),
+    )
+    check_referenced_files(doc)
+
+    # Defensive branches for source/ensemble None or paths None
+    doc.structure = Structure.model_construct(
+        source=StructureSource.model_construct(path=None),
+        ensemble=None,
+        symmetry=SymmetrySpec(point_group="C1"),
+    )
+    check_referenced_files(doc)
+
+    doc.structure = Structure.model_construct(
+        source=None,
+        ensemble=Ensemble.model_construct(trajectory=None),
+        symmetry=SymmetrySpec(point_group="C1"),
+    )
+    check_referenced_files(doc)
+
+
 def test_cr3_sweep_run_mutually_exclusive_and_workers_validation(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
