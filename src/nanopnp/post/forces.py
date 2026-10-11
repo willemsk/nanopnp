@@ -1013,7 +1013,7 @@ def _boundary_region(mesh: Mesh, boundary: str) -> tuple[Option, float]:
 
     region = mesh.Boundaries(boundary)
     arc = float(ngs.Integrate(ngs.CF(1.0), mesh, definedon=region))
-    if arc <= 0.0:
+    if not arc > 0.0:
         known = ", ".join(sorted(set(mesh.GetBoundaries())))
         raise ValueError(f"no boundary matching {boundary!r} in this mesh; it has {known}")
     return region, arc
@@ -1038,7 +1038,7 @@ def _check_fluid_side(
 
     departure = float(ngs.Integrate((piecewise - fluid) ** 2, mesh, definedon=region)) / arc
     reference = float(ngs.Integrate(fluid**2, mesh, definedon=region)) / arc
-    if departure > 1e-4 * max(reference, 1.0):
+    if not departure <= 1e-4 * max(reference, 1.0):
         raise ValueError(
             "the boundary lift is evaluating the analyte surface on the solid side: the "
             f"piecewise permittivity there departs from the fluid's by {departure:.3e} in mean "
@@ -1073,7 +1073,7 @@ def _oriented_normal(mesh: Mesh, region: Option, arc: float) -> Expression:
     radial = position - centroid
     sense = float(ngs.Integrate(ngs.InnerProduct(normal, radial), mesh, definedon=region)) / arc
     span = float(ngs.Integrate(ngs.sqrt(ngs.InnerProduct(radial, radial)), mesh, definedon=region))
-    if abs(sense) < 0.1 * span / arc:
+    if not abs(sense) >= 0.1 * span / arc:
         raise ValueError(
             f"cannot orient the normal on this surface: the mean of n.(x - c) is {sense:.3e} "
             f"against a mean radius of {span / arc:.3e}. The surface is not star-shaped about "

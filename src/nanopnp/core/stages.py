@@ -47,6 +47,7 @@ __all__ = [
     "Stage",
     "StageDescription",
     "StageEntry",
+    "StageHook",
     "StageIdentifier",
     "StageName",
     "StageNameLiteral",
@@ -388,6 +389,16 @@ class StageDescription:
     weight: float
     needs_section: str | None
     optional_inputs: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        """Store ``name`` as a plain ``str``, whatever identifier type it was given.
+
+        A :class:`StageName` member compares and hashes as its value, but its
+        ``repr`` is ``<StageName.CASE: 'case'>``: left in the registry, that
+        reached every ``stage {name!r}`` diagnostic (a cancellation, a missing
+        upstream artefact) and :meth:`summary`'s "plain data".
+        """
+        object.__setattr__(self, "name", str(self.name))
 
     def summary(self) -> dict[str, Any]:
         """Return this description as plain data, for the CLI and the GUI."""

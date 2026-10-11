@@ -489,7 +489,7 @@ def _positive_int(text: str) -> int:
     except ValueError:
         raise argparse.ArgumentTypeError(f"{text!r} is not a valid integer") from None
     if value < 1:
-        raise argparse.ArgumentTypeError(f"workers must be at least 1, found {value}")
+        raise argparse.ArgumentTypeError(f"must be at least 1, found {value}")
     return value
 
 
@@ -502,9 +502,6 @@ def _positive_nm(text: str) -> float:
     if not 0.0 < value < float("inf"):
         raise argparse.ArgumentTypeError(f"{text!r} is not a positive length in nm")
     return value
-
-
-_positive_nm.__name__ = "positive float (nm)"
 
 
 def _sweep(args: argparse.Namespace) -> int:

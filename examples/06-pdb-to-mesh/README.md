@@ -72,7 +72,7 @@ $ nanopnp inspect run-profile
    varies most around the axis, and where the part of that variation which is not 12-fold is
    largest. A structure that is not the symmetric assembly it claims to be shows up here.
 7. **`stage contour … --export contour.profile.yaml`** copies stage 4's profile out of the store,
-   byte for byte. It is a `nanopnp/profile/v1` document, with `source: pipeline` in its
+   byte for byte. It is a `nanopnp/profile/v0.5` document, with `source: pipeline` in its
    provenance.
 8. **`run from-profile.case.yaml`** supplies that document through `inputs.profile`. Stages 1
    to 4 do not run, and stage 5 starts from the file. The mesh is the same mesh, with the same

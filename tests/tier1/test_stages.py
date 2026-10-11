@@ -382,3 +382,13 @@ def test_ver25_create_and_describe_accept_stage_name_enum() -> None:
         describe("not_a_stage")
     with pytest.raises(KeyError):
         create("not_a_stage")
+
+
+def test_ver25_a_registered_name_is_a_plain_string_whatever_identifier_registered_it() -> None:
+    """A ``StageName`` member would put ``<StageName.CASE: 'case'>`` into every ``{name!r}``."""
+    for description in registered_stages():
+        assert type(description.name) is str
+        assert repr(description.name) == f"'{description.name}'"
+        assert type(description.summary()["name"]) is str
+    assert all(type(name) is str for name in walk_order())
+    assert repr(describe(StageName.REGION).name) == "'region'"

@@ -145,7 +145,7 @@ where.
 $ nanopnp stage charge case.yaml --store store --export charge.field.yaml
 ```
 
-This writes the lattice as a `nanopnp/field/v1` areal charge density, with its data in
+This writes the lattice as a `nanopnp/field/v0.5` areal charge density, with its data in
 `charge.field.npz` beside it, declaring `Q_net`. `.dx`, `.mrc` and `.ccp4` write it for other
 tools. The export is for those tools, and for a mesh fine enough to resolve it. Supplied back
 through `inputs.charge` on the mesh it came from, it is refused by the quadrature-agreement check,

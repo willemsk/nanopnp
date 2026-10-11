@@ -187,3 +187,45 @@ def test_ver47_pqr_input_sets_protonates() -> None:
     resolved = resolve(loads_case(yaml.safe_dump(raw)))
     assert resolved.pqr is not None
     assert resolved.protonates
+
+
+# -- refusals the retired v2 corpus held and no other test did (VER-47) -------------
+
+
+@pytest.mark.parametrize(
+    ("upstream", "downstream"), [("profile", "mesh"), ("pqr", "charge")], ids=lambda value: value
+)
+def test_ver47_an_input_and_one_downstream_of_it_are_not_both_supplied(
+    upstream: str, downstream: str
+) -> None:
+    """A stage whose output is supplied does not run, nor does anything upstream of it."""
+    from nanopnp.io.case import CaseValidationError
+    from nanopnp.pipeline.case import loads_case
+
+    raw = yaml.safe_load(PNP.format(schema="nanopnp/case/v0.5", switches=WRITTEN))
+    raw["inputs"][upstream] = {"path": f"supplied.{upstream}"}
+    raw["inputs"][downstream] = {"path": f"supplied.{downstream}"}
+    with pytest.raises(CaseValidationError) as raised:
+        loads_case(yaml.safe_dump(raw))
+    message = str(raised.value)
+    assert f"inputs.{upstream}" in message
+    assert f"inputs.{downstream}" in message
+    assert "both supplied" in message
+
+
+@pytest.mark.parametrize(
+    ("key", "value"),
+    [("size_scale", 0.5), ("wall_h_nm", 0.3), ("backend", "gmsh"), ("boundary_layer", True)],
+)
+def test_ver47_a_mesher_key_beside_a_supplied_mesh_is_refused(key: str, value: object) -> None:
+    """A supplied mesh is not meshed, so a key that configures the mesher would change nothing."""
+    from nanopnp.io.case import CaseValidationError
+    from nanopnp.pipeline.case import loads_case
+
+    raw = yaml.safe_load(PNP.format(schema="nanopnp/case/v0.5", switches=WRITTEN))
+    raw["numerics"]["mesh"] = {key: value}
+    with pytest.raises(CaseValidationError) as raised:
+        loads_case(yaml.safe_dump(raw))
+    message = str(raised.value)
+    assert f"numerics.mesh.{key}" in message
+    assert "inputs.mesh" in message

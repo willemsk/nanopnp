@@ -369,3 +369,26 @@ def test_num28_the_reaction_route_needs_the_residual_the_solve_assembled() -> No
     solution = ModelSolution(model=models.create("pnp-ns"), space=None, state=None)
     with pytest.raises(ValueError, match="no residual form"):
         reaction_force(solution)
+
+
+def test_qr12_the_boundary_checks_of_the_force_routes_refuse_what_a_nan_would_pass() -> None:
+    """A NaN arc length must not orient the normal or pass the fluid-side check (VER-70).
+
+    ``abs(nan) < x`` is False, so a NaN ``sense`` used to skip the refusal and then
+    take ``-normal`` from ``nan > 0``: a force of the wrong sign with no other symptom.
+    """
+    import ngsolve as ngs
+
+    from nanopnp.post.forces import _boundary_region, _check_fluid_side, _oriented_normal
+
+    mesh = CylindricalPoreGeometry(
+        pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
+    ).generate(maxh_nm=4.0, wall_h_nm=1.0)
+    with pytest.raises(ValueError, match="no boundary matching"):
+        _boundary_region(mesh, "no-such-boundary")
+    region, arc = _boundary_region(mesh, "wall")
+    assert arc > 0.0
+    with pytest.raises(ValueError, match="cannot orient the normal"):
+        _oriented_normal(mesh, region, float("nan"))
+    with pytest.raises(ValueError, match="solid side"):
+        _check_fluid_side(mesh, ngs.CF(1.0), ngs.CF(1.0), region, float("nan"))

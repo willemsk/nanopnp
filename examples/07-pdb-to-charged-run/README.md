@@ -48,7 +48,7 @@ $ nanopnp inspect run-switches
    from the store. Its charge column sums to the run's `Q_net`, a whole number of elementary
    charges.
 5. **`stage charge … --export charge.field.yaml`** writes the charge density stage 7 deposited
-   from, as a `nanopnp/field/v1` areal charge density with `charge.field.npz` beside it. The header
+   from, as a `nanopnp/field/v0.5` areal charge density with `charge.field.npz` beside it. The header
    declares `Q_net`.
 6. **`run from-pqr.case.yaml`** supplies the PQR back through `inputs.pqr`. PDB2PQR and PROPKA do
    not run: the protonation stage reads the file instead and records its hash. The atoms are the

@@ -89,7 +89,7 @@ atoms, frame by frame. The contour may cut into that sphere by no more than the 
 may stand no more than 1.5 nm outside it. A failure stops the run, naming the criterion, its value, the threshold and where on
 the loop it failed.
 
-What stage 4 produces is a pore profile: a `nanopnp/profile/v1` document with `provenance.source:
+What stage 4 produces is a pore profile: a `nanopnp/profile/v0.5` document with `provenance.source:
 pipeline`, in the stage-1 frame. It is the same kind of document as the reference fixture, and it
 can be exported and supplied to another case (see [Supplying a profile](#supplying-a-profile)).
 

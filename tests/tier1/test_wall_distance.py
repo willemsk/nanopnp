@@ -495,3 +495,11 @@ def test_num34_the_gate_reads_the_mollified_field_where_smoothing_is_on() -> Non
     on_smoothed = WallDistanceGate(sampler, smoothed).measure().minimum_nm
     assert on_plain != on_smoothed, "the two fields must differ, or this asserts nothing"
     assert WallDistanceGate(sampler, smoothed).measure().minimum_nm == on_smoothed
+
+
+def test_qr12_a_floor_that_underflows_or_is_nan_is_refused(cylinder) -> None:
+    """``floor <= 0`` is False for a NaN floor, so the guard is the negation (VER-70)."""
+    with pytest.raises(ValueError, match="underflows to zero"):
+        wall_distance(cylinder, "wall", diffusion_length_nm=1.0e-3, max_distance_nm=3.0)
+    with pytest.raises(ValueError, match="underflows to zero"):
+        wall_distance(cylinder, "wall", max_distance_nm=float("nan"))

@@ -1,5 +1,7 @@
 """Canonical solver and discretisation defaults for coupled numerics."""
 
+from __future__ import annotations
+
 from typing import Final
 
 # NUM-16 reference damped-Newton settings
