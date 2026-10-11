@@ -1,49 +1,53 @@
 # Current work
 
-Updated 10 October 2026 (WP42 delivered, WP43 next). Navigation only; `SPECIFICATION.md` governs;
+Updated 11 October 2026 (WP42 delivered; Phase 4 amended, WP43 next). Navigation only; `SPECIFICATION.md` governs;
 nothing here is evidence an unmerged branch shipped.
+
+## In brief
+
+The project is in Phase 4, which tidies the program before anyone else relies on it. Next comes a
+short package that makes the automatic checks fast: about a minute per commit instead of 3.5,
+and one full check per push instead of several. It also gives each kind of AI helper a fixed job
+and model, so that sessions cost less. **Your call:** whether the phase estimate grows by a week.
 
 ## Position
 
 - Phases 1 to 3 are **closed** as `v0.2.0`, `v0.3.0` (criterion 3 waived, §8.2.4 D7) and `v0.4.0`
   (§8.2.5 E1, E5).
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
-  **in progress** (§8.2.7 G1–G11; §8.2.8 H1–H12; §8.2.9 I1–I5). WP35 to WP42 delivered, as
+  **in progress** (§8.2.7 G1–G11; §8.2.8 H1–H12; §8.2.9 I1–I5; §8.2.10 J1–J9). WP35 to WP42 delivered, as
   `v0.5.0-alpha.1` to `v0.5.0-alpha.8`, the last two [WP41](wp41-accuracy-fixes.md) and
   [WP42](wp42-verification-checks.md).
-- **Next: WP43, the small fixes**
-  (REV-14 to REV-16, REV-18, REV-19, and eleven low items; I1, I2).
-- Then WP44–WP46 (OKF bundle, backfill, protocol); then the author's sessions and the second
-  amendment, fixes from WP47.
+- **Next: WP43, the development loop** (§8.2.10 J1–J9): `/wp-plan 43`. It covers the commit
+  hook, the push gate, CI, Python 3.14, the agent roster and the `## In brief` summaries.
+- Then WP44, the small fixes (I1, I2); WP45–WP47 (OKF bundle, backfill, protocol); then the
+  author's sessions and the second amendment, fixes from WP48.
 - Phase 5 (`v0.6.0`) is the GUI (F5), Phase 6 (`v0.7.0`) validation (F1); v1.0 is OPN-08.
 
 ## Not to be re-decided
 
 - **Versions:** one minor per phase; a retired name is never reused, except `v0.5.0` (E2, F2).
   The close takes `v0.5.0` alone; the session pushes the tags it can (G11). → §2.7 NOTE.
+- **The development loop:** affected tests on commit, one push gate, a single pull-request leg on
+  Python 3.14, budgets of 60 s, 5 min and 6 min, a defined agent roster, and `## In brief`. The
+  floor stays 3.11. → §8.2.10 J1–J9; OPN-09.
 - **Phase 4's shape:** accepted refactors before the protocol (G2); two OKF packages and a
   ratchet (G3, G8); checked findings logs (G4); protocol scripts gated, findings only from the
   author's sessions (G7); the VER-62 golden (G10). → §8.2.7.
-- **The `MOD-nn` rulings:** `MOD-09`, `MOD-18` to Phase 5 (H4, H10); `MOD-11` after the
-  sessions (H2); QR-13 restated (H3); an acyclic `top` relation, never forced (H6); three backend
-  registries (H7); kernel in `numerics/` (H11). → §8.2.8.
+- **The `MOD-nn` rulings** stand. → §8.2.8.
 - **Phase 3's charge pipeline** stands as delivered. → §8.2.4; VER-59, VER-60.
-- **No payload records wall-clock time** (VER-23). **A gated test gets cheaper
-  only by the §7.6 NOTE's four levers** (WP33).
-- **An edge moved edits `modularity-layering.yaml` in the same commit (VER-61); a VER-62 miss is
-  reverted, or ruled and re-pinned (G10); WP41 re-pins only within a bound argued first (I4).** → `docs/project/contributing.md`.
-- **`upward:` only shrinks, and is empty from WP39; `backend:` grows only by ruling** (VER-61, VER-65). A cut removes a
-  dependency, never defers it (WP37 D12).
-- **What a package leaves open is a `REV-nn` row** of `docs/project/review-findings.md` until it
-  is resolved (H12), written by `/wp-implement` and `/wp-ship`. A row placed in Phase 4 is
-  `fixed` by the close (§8.2.9 I3).
-- **A stage declares its walk facts in the registry and defines `key`.** The walk runs stages in
-  registration order (VER-64; WP36 D3–D5). A stage declares every upstream artefact it reads and is
-  handed only those; a walk runs its target's input closure (WP38 D11).
+- **No payload records wall-clock time** (VER-23). **A gated test gets cheaper only by §7.6's
+  four levers** (WP33).
+- **A moved edge edits `modularity-layering.yaml` in the same commit (VER-61). `upward:` stays
+  empty, and `backend:` grows only by ruling (VER-65). A VER-62 miss is reverted, or ruled and
+  re-pinned (G10, I4).** → `docs/project/contributing.md`.
+- **What a package leaves open is a `REV-nn` row** until it is resolved (H12). A row placed in
+  Phase 4 is `fixed` by the close (I3).
+- **A stage declares its walk facts and its reads in the registry, and defines `key`** (VER-64;
+  WP36 D3–D5, WP38 D11).
 - **Tier 3 compares the published I–V and in-pore averages**, gating v0.7 (VAL-16, VAL-17; F1).
 - **Layers read a model's declaration, never its name or class** (VER-56). → §5.4.3 NOTE.
-- **A refusal names its requirement, and the release that schedules it or that none does**;
-  VER-67 fails a string naming a release `CHANGELOG.md` records as tagged (WP40 D1–D4).
+- **A refusal names its requirement and the release that schedules it** (VER-67; WP40 D1–D4).
 - **Only `poisson` adds a quadrature order for the `r` weight**; Phase 6 decides (E4, F1).
   → NUM-07 NOTE.
 - **A golden's identity carries the stage-7 recipe** (E3; OPN-07, closed). → VAL-03.
@@ -51,11 +55,8 @@ nothing here is evidence an unmerged branch shipped.
 ## Inherited from Phases 1 and 2, still binding
 
 - **The VAL-05 ensemble test fails on the archive by design** (§8.2.4 D7).
-- **The schema and `nanopnp.PUBLIC` may change until v1.0** (§8.2.6 F4, superseding B3). A move
-  takes the release's identifier, `nanopnp/case/v0.5` first, fixed at the tag; an earlier one
-  reads as its upgrade (G6; §5.3.1 NOTE). Each break is decided in `test_public_api.py` and listed
-  in `CHANGELOG.md`.
-  `physics.solid_permittivities` alone sets ε_protein and ε_membrane.
+- **The schema and `nanopnp.PUBLIC` may change until v1.0** (F4). A move takes the release's
+  identifier, `nanopnp/case/v0.5` (G6; §5.3.1 NOTE); each break is listed in `CHANGELOG.md`.
 - **A callback is not an input** (VER-44). **A generated mesh is read only through
   `deployed_mesh`** (WP21). **Stage 1's frame is fixed**; tests use `prepared_2wcd`.
 - **Every phase documents what it ships**, and the commands in that documentation run verbatim
@@ -78,11 +79,8 @@ nothing here is evidence an unmerged branch shipped.
 | Phase 4 scope and packages | `phase-4-polish-and-user-testing.md`; §8.2.6 F3–F6, §8.2.7, §8.2.8 |
 | The OKF package's binding decisions | `okf-knowledge-bundle.md` (K1–K11); §8.2.7 G3, G8, G9 |
 | The findings being fixed | `docs/project/modularity.md`, `modularity-layering.yaml`; `review-items.md` and the two logs |
-| Stages, registries and the walk | `core/stages.py`; `pipeline/run.py`; `physics/models.py` and `docs/project/physics-models.md`; `materials/models.py` |
 | Case schema and supply chains | §5.3.1 NOTEs; `io/case.py`, `io/case_paths.py`, `io/resolved.py` (the base); `pipeline/case.py`, `pipeline/checks.py` (resolution and its checks) |
-| The backend registries | WP39 D1–D7; `physics/stabilisation.py` (the shape copied); §5.5, QR-14 |
-| The refusal texts and VER-67 | WP40 D1–D9, *Design* §1, Outcomes; `pipeline/checks.py`; `validation/modularity.py` `stale_release_literals` |
-| WP41's measurements and bounds | WP41 *Design* §1–§3; `numerics/newton.py`, `charge/fields.py`, `numerics/measures.py`; `tests/tier2/data/merge_number_stability.py` |
+| The loop's measurements | §8.2.10's preamble; the Phase 4 plan's *Context*; `.claude/hooks/gate.sh`; `.github/workflows/ci.yml` |
 
 The Outcomes of a delivered plan override its decisions table, so read the two together.
 
