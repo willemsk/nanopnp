@@ -249,6 +249,28 @@ def test_qr12_a_fixed_charge_domain_the_mesh_does_not_carry_is_refused(mesh: obj
     assert "electrolyte" in str(raised.value)
 
 
+@pytest.mark.parametrize("domain", [None, "electrolyte"])
+def test_num18_a_uniform_fixed_charge_rides_the_ramp_as_a_fixed_charge_with_no_rule(
+    mesh: object, domain: str | None
+) -> None:
+    """REV-72: the scalar charge is wrapped as a FixedCharge, its rule NGSolve's estimate."""
+    import ngsolve as ngs
+
+    from nanopnp.numerics.measures import FixedCharge
+
+    rungs = default_ladder(
+        mesh,
+        bias_V=0.05,
+        fixed_charge_C_m3=1.0e7,
+        fixed_charge_domain=domain,
+        solid_permittivities=MEMBRANE_PERMITTIVITY,
+    )
+    charged = [r.solve_kwargs["fixed_charge"] for r in rungs if "fixed_charge" in r.solve_kwargs]
+    assert charged
+    assert all(isinstance(charge, FixedCharge) and charge.rule_order is None for charge in charged)
+    assert float(ngs.Integrate(charged[-1].density, mesh)) > 0.0
+
+
 def test_num19_every_rung_carries_its_own_mesh(mesh: object) -> None:
     """The mesh is a rung's property, so adaptation *between* rungs needs no new API.
 

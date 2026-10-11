@@ -74,7 +74,7 @@ def test_qr03_the_gate_measures_the_charge_the_solve_assembles(quantity: str) ->
 
 
 def test_qr03_every_fixed_charge_source_carries_the_charge_s_rule() -> None:
-    """Each model's ``charge_source(fixed_charge, ...)`` passes ``rule_order``.
+    """Each model's ``charge_source(fixed_charge.density, ...)`` passes ``rule_order``.
 
     On the quadrature request, as VER-41 asserts the stabilisation's, because the
     number it moves is a few parts in 10^5 and no walk's tolerance would see a
@@ -88,8 +88,9 @@ def test_qr03_every_fixed_charge_source_carries_the_charge_s_rule() -> None:
         and isinstance(node.func, ast.Name)
         and node.func.id == "charge_source"
         and node.args
-        and isinstance(node.args[0], ast.Name)
-        and node.args[0].id == "fixed_charge"
+        and isinstance(node.args[0], ast.Attribute)
+        and isinstance(node.args[0].value, ast.Name)
+        and node.args[0].value.id == "fixed_charge"
     ]
     assert len(calls) >= 2, "the coupled models and poisson each assemble a fixed charge"
     for call in calls:
@@ -119,32 +120,67 @@ def test_qr03_an_explicit_rule_below_num07_s_floor_is_refused() -> None:
         AXISYMMETRIC.integrate(ngs.CoefficientFunction(1.0), mesh, rule_order=8, extra_order=1)
 
 
-def test_qr03_default_ladder_threads_fixed_charge_rule_order() -> None:
-    """default_ladder passes fixed_charge_rule_order to charged rungs."""
+def test_qr03_default_ladder_threads_the_charge_s_rule_onto_every_charged_rung() -> None:
+    """REV-72: the ladder ramps a FixedCharge and the rule rides with the density."""
     import ngsolve as ngs
 
+    from nanopnp.numerics.measures import FixedCharge
     from nanopnp.solve.continuation import default_ladder
 
     mesh = PORE.generate(maxh_nm=4.0)
-    rungs = default_ladder(
-        mesh,
-        fixed_charge_field=ngs.CF(1.0),
-        fixed_charge_rule_order=8,
-        charge_steps=1,
-    )
-    charged_rungs = [r for r in rungs if "fixed_charge_rule_order" in r.solve_kwargs]
-    assert len(charged_rungs) > 0
-    for r in charged_rungs:
-        assert r.solve_kwargs["fixed_charge_rule_order"] == 8
+    for rule in (8, None):
+        rungs = default_ladder(
+            mesh, fixed_charge_field=FixedCharge(ngs.CF(1.0), rule), charge_steps=1
+        )
+        charged = [r for r in rungs if "fixed_charge" in r.solve_kwargs]
+        assert charged
+        for rung in charged:
+            assert isinstance(rung.solve_kwargs["fixed_charge"], FixedCharge)
+            assert rung.solve_kwargs["fixed_charge"].rule_order == rule
+        assert not any("fixed_charge_rule_order" in r.solve_kwargs for r in rungs)
 
-    # Exercise fixed_charge_rule_order=None branch
-    rungs_none = default_ladder(
-        mesh,
-        fixed_charge_field=ngs.CF(1.0),
-        fixed_charge_rule_order=None,
-        charge_steps=1,
+
+def test_qr03_a_supplied_and_a_deposited_charge_each_name_their_rule() -> None:
+    """REV-72: `fixed_charge_C_m3` and `assemble` return the density with its rule."""
+    import ngsolve as ngs
+
+    from nanopnp.charge.deposit import DepositedCharge
+    from nanopnp.charge.fields import FIELD_QUADRATURE_ORDER, ChargeField, load_field
+    from nanopnp.materials.electrolyte import Electrolyte
+    from nanopnp.numerics.measures import FixedCharge
+    from nanopnp.physics import models
+
+    ring = load_field(RING)
+    supplied = ChargeField(document=ring.document, grid=ring.grid, source=ring.source)
+    assert supplied.fixed_charge_C_m3().rule_order == FIELD_QUADRATURE_ORDER
+    scales = models.create(
+        "poisson", electrolyte=Electrolyte.from_parameter_file("willems2020_nacl")
+    ).scales
+    assert supplied.assemble(scales).rule_order == FIELD_QUADRATURE_ORDER
+
+    mesh = PORE.generate(maxh_nm=4.0)
+    deposited = DepositedCharge(deposit=object(), field=ngs.CF(2.0))  # type: ignore[arg-type]
+    assert deposited.fixed_charge_C_m3() == FixedCharge(deposited.field, None)
+    scaled = deposited.assemble(scales)
+    assert scaled.rule_order is None
+    assert scaled.density(mesh(1.0, 1.0)) == pytest.approx(2.0 / scales.charge_density_C_m3)
+
+
+def test_qr03_a_bare_density_is_refused_by_the_model_that_takes_a_fixed_charge() -> None:
+    """REV-72: a density without its rule would assemble at NGSolve's estimate, unannounced."""
+    import ngsolve as ngs
+
+    from nanopnp.materials.electrolyte import Electrolyte
+    from nanopnp.numerics.measures import AXISYMMETRIC
+    from nanopnp.physics import models
+
+    mesh = PORE.generate(maxh_nm=4.0)
+    model = models.create(
+        "poisson", electrolyte=Electrolyte.from_parameter_file("willems2020_nacl")
     )
-    assert not any("fixed_charge_rule_order" in r.solve_kwargs for r in rungs_none)
+    space = ngs.H1(mesh, order=AXISYMMETRIC.element_order)
+    with pytest.raises(TypeError, match="FixedCharge"):
+        model.residual_form(space, AXISYMMETRIC, fixed_charge=ngs.CF(1.0))
 
 
 def test_qr03_a_deposited_charge_keeps_the_model_s_default_rule() -> None:

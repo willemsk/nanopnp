@@ -38,7 +38,7 @@ from nanopnp.core.constants import BOLTZMANN, ELEMENTARY_CHARGE, VACUUM_PERMITTI
 from nanopnp.density.grid import RadialGrid
 from nanopnp.materials.electrolyte import Electrolyte
 from nanopnp.mesh.adapter import from_ngsolve, to_ngsolve
-from nanopnp.numerics.measures import AXISYMMETRIC
+from nanopnp.numerics.measures import AXISYMMETRIC, FixedCharge
 from nanopnp.physics import models
 from nanopnp.validation.apbs import (
     TOLERANCE,
@@ -290,7 +290,7 @@ def ring() -> Ring:
         mesh,
         AXISYMMETRIC,
         potential_values=mesh.BoundaryCF({"cis": 0.0, "trans": 0.0}),  # type: ignore[attr-defined]
-        fixed_charge=gridfunction(found, mesh) / scales.charge_density_C_m3,
+        fixed_charge=FixedCharge(gridfunction(found, mesh) / scales.charge_density_C_m3, None),
     )
     grid = fit_grid(charge_extent(lattice), dime=APBS_DIME)
     r_max, z_min, z_max = raster_extent(grid)

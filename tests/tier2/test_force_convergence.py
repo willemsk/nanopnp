@@ -51,7 +51,7 @@ from nanopnp.geometry.analyte import (
     SpheroidBody,
 )
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
-from nanopnp.numerics.measures import AXISYMMETRIC
+from nanopnp.numerics.measures import AXISYMMETRIC, FixedCharge
 from nanopnp.physics import models
 from nanopnp.physics.distance import wall_distance
 from nanopnp.physics.models import CoupledBoundaries, CoupledModel
@@ -148,7 +148,7 @@ def study() -> tuple[Refinement, ...]:
             boundaries=boundaries,
             potential_values=-FIELD * ngs.y,
             velocity_values=ngs.CF((0.0, 0.0)),
-            fixed_charge=mesh.MaterialCF({ANALYTE_DOMAIN: density}, default=0.0),
+            fixed_charge=FixedCharge(mesh.MaterialCF({ANALYTE_DOMAIN: density}, default=0.0), None),
         )
         extension = axial_extension(mesh, inner_nm=SHELL_NM[0], outer_nm=SHELL_NM[1])
         refinements.append(

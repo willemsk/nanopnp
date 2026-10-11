@@ -38,7 +38,7 @@ import ngsolve as ngs
 import pytest
 
 from nanopnp.geometry.analyte import AnalyteInBoxGeometry, SphereBody
-from nanopnp.numerics.measures import AXISYMMETRIC
+from nanopnp.numerics.measures import AXISYMMETRIC, FixedCharge
 from nanopnp.physics import models
 from nanopnp.physics.models import CoupledBoundaries, CoupledModel
 from nanopnp.post.forces import FORCE_ROUTE_TOLERANCE_N, AnalyteForces, axial_extension, extract
@@ -109,7 +109,7 @@ def forces() -> tuple[CoupledModel, AnalyteForces]:
         ),
         potential_values=-FIELD * ngs.y,
         velocity_values=ngs.CF((0.0, 0.0)),
-        fixed_charge=mesh.MaterialCF({"analyte": density}, default=0.0),
+        fixed_charge=FixedCharge(mesh.MaterialCF({"analyte": density}, default=0.0), None),
     )
     extension = axial_extension(mesh, inner_nm=SHELL_NM[0], outer_nm=SHELL_NM[1])
     return model, extract(solution, AXISYMMETRIC, extension)

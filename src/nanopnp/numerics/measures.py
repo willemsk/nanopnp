@@ -280,3 +280,33 @@ AXISYMMETRIC = Measures(symmetry="axisymmetric", element_order=2)
 
 PLANAR = Measures(symmetry="planar", element_order=2)
 """Planar measure, for the 1D analytic benchmarks."""
+
+
+@dataclass(frozen=True)
+class FixedCharge:
+    """A fixed-charge density and the integration rule it is assembled with (PHY-19, REV-72).
+
+    The two travel as one object because a density assembled with NGSolve's own
+    order estimate and the same density assembled with the explicit rule its
+    conservation gate integrates at are different charges: 1.2e-2 of the charge
+    on a 0.5 nm field (``tests/tier1/test_charge_quadrature.py``). A model that
+    took them as two arguments let a caller pass the first and drop the second,
+    silently.
+
+    Parameters
+    ----------
+    density
+        The charge density; dimensionless where a model takes it (NUM-09), SI
+        where the ladder takes it before scaling.
+    rule_order
+        The explicit rule the source is assembled with, or ``None`` for NGSolve's
+        estimate. There is no default: leaving the rule out is a choice a call
+        site has to write.
+    """
+
+    density: Expression
+    rule_order: int | None
+
+    def scaled(self, factor: Numeric) -> FixedCharge:
+        """Return the density times ``factor``, with the same rule."""
+        return FixedCharge(density=factor * self.density, rule_order=self.rule_order)

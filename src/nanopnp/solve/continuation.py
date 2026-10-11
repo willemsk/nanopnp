@@ -78,7 +78,7 @@ from nanopnp.core.stages import Cancelled
 from nanopnp.core.typing import Expression, GridFunction, Mesh, Option
 from nanopnp.materials.electrolyte import CorrectionSwitches, Electrolyte
 from nanopnp.numerics.gates import FieldSampler, PecletDiagnostic, PecletMeasurement
-from nanopnp.numerics.measures import AXISYMMETRIC, Measures
+from nanopnp.numerics.measures import AXISYMMETRIC, FixedCharge, Measures
 from nanopnp.physics.coefficients import SATURATED_WALL_DISTANCE_NM
 from nanopnp.physics.models import (
     DEFAULT_BOUNDARIES,
@@ -794,8 +794,7 @@ def default_ladder(
     surface_charge_C_m2: float = 0.0,
     fixed_charge_C_m3: float = 0.0,
     fixed_charge_domain: str | None = None,
-    fixed_charge_field: Expression | None = None,
-    fixed_charge_rule_order: int | None = None,
+    fixed_charge_field: FixedCharge | None = None,
     solid_fraction: Expression | None = None,
     wall_potential_V: float = 0.0,
     wall_distance_nm: Expression = SATURATED_WALL_DISTANCE_NM,
@@ -849,21 +848,19 @@ def default_ladder(
         charge the electrolyte it is suspended in and drive a space charge the
         physical problem does not have.
     fixed_charge_field
-        A gridded fixed charge in **SI** C m^-3, as
-        :meth:`nanopnp.charge.fields.ChargeField.volume_density_C_m3` returns it.
-        Nondimensionalised by the same scale the scalar is and ramped by the same
-        stage-4 fractions, which is the whole point of putting it here: the ramp
-        is the machinery a gridded field needs, and the scalar was only ever
-        standing in for one. The reference model applies ``scd_pore`` across
-        *all* computational domains (`.knowledge/04` §3), so no domain restriction
-        is offered for it; ``fixed_charge_domain`` belongs to the scalar.
-        Mutually exclusive with ``fixed_charge_C_m3``: a run carrying both would
-        be a superposition nobody asked for and neither number would describe it.
-    fixed_charge_rule_order
-        The explicit integration rule ``fixed_charge_field`` is assembled with on
-        every charged rung: the field's ``quadrature_order``, the rule its
-        conservation gate integrates at (PHY-19 NOTE, WP41 D2). ``None`` keeps
-        each model's default, which is right for a deposited charge.
+        A gridded fixed charge in **SI** C m^-3 with the integration rule it is
+        assembled with, as
+        :meth:`nanopnp.charge.fields.ChargeField.fixed_charge_C_m3` returns it
+        (PHY-19 NOTE, WP41 D2, REV-72). Nondimensionalised by the same scale the
+        scalar is and ramped by the same stage-4 fractions, which is the whole
+        point of putting it here: the ramp is the machinery a gridded field
+        needs, and the scalar was only ever standing in for one. The rule
+        travels with it onto every charged rung. The reference model applies
+        ``scd_pore`` across *all* computational domains (`.knowledge/04` §3), so
+        no domain restriction is offered for it; ``fixed_charge_domain`` belongs
+        to the scalar. Mutually exclusive with ``fixed_charge_C_m3``: a run
+        carrying both would be a superposition nobody asked for and neither
+        number would describe it.
     solid_fraction
         The supplied ``chi`` of §4.4's NOTE, passed to every rung that solves
         Poisson with a permittivity. Not ramped: it is a coefficient of the
@@ -1103,15 +1100,14 @@ def default_ladder(
         """
         charges: dict[str, Option] = {}
         if fixed_charge_field is not None:
-            charges["fixed_charge"] = fraction * fixed_charge_field / charge_scale
-            if fixed_charge_rule_order is not None:
-                charges["fixed_charge_rule_order"] = fixed_charge_rule_order
+            charges["fixed_charge"] = fixed_charge_field.scaled(fraction / charge_scale)
         elif fixed_charge_C_m3 != 0.0:
             density = fraction * fixed_charge_C_m3 / charge_scale
-            charges["fixed_charge"] = (
+            charges["fixed_charge"] = FixedCharge(
                 ngs.CF(density)
                 if fixed_charge_domain is None
-                else mesh.MaterialCF({fixed_charge_domain: density}, default=0.0)
+                else mesh.MaterialCF({fixed_charge_domain: density}, default=0.0),
+                None,
             )
         if surface_charge_C_m2 != 0.0:
             charges["surface_charge"] = ngs.CF(fraction * surface_charge_C_m2 / surface_scale)

@@ -413,6 +413,49 @@ def test_ver71_no_solve_leaf_is_accepted_and_inert(model: str, meshes: dict[str,
     assert not inert, f"{model} accepts and ignores {inert}"
 
 
+@pytest.mark.parametrize(
+    ("partner", "leaf", "value", "named"),
+    [
+        (
+            ("electrolyte.corrections.density.model", "none"),
+            "physics.variable_density",
+            False,
+            "physics.variable_density: false",
+        ),
+        (
+            ("electrolyte.corrections.permittivity.concentration", False),
+            "physics.dielectric_gradient_forces",
+            True,
+            "physics.dielectric_gradient_forces: true",
+        ),
+        (
+            ("electrolyte.corrections.permittivity.model", "none"),
+            "physics.dielectric_gradient_forces",
+            True,
+            "physics.dielectric_gradient_forces: true",
+        ),
+    ],
+    ids=["variable density", "dielectric gradient, part off", "dielectric gradient, model none"],
+)
+def test_ver71_a_switch_beside_a_partner_that_leaves_it_nothing_to_switch_is_refused(
+    partner: tuple[str, object], leaf: str, value: object, named: str, meshes: dict[str, Path]
+) -> None:
+    """REV-73, PHY-22 NOTE: the pairs VER-71's single-leaf probe cannot see are refused.
+
+    Each leaf is live from the epnp-ns base and inert beside its partner; the
+    refusal names the leaf, and the same leaf beside a live partner is accepted.
+    """
+    from nanopnp.io.case import CaseValidationError
+
+    document = base("epnp-ns", meshes)
+    live = put(document, leaf, value)
+    assert outcome(live, fingerprint(document)) == "live"
+    document = put(document, *partner)
+    with pytest.raises(CaseValidationError, match="leaves it nothing to switch") as raised:
+        fingerprint(put(document, leaf, value))
+    assert named in str(raised.value)
+
+
 def test_ver71_every_wall_part_off_is_refused_so_the_wall_distance_has_nothing_to_go_inert(
     meshes: dict[str, Path],
 ) -> None:

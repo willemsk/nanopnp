@@ -51,6 +51,7 @@ from nanopnp.density.grid import (
     coefficient,
     read_grid,
 )
+from nanopnp.numerics.measures import FixedCharge
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from collections.abc import Callable, Mapping, Sequence
@@ -615,7 +616,11 @@ class ChargeField:
         projected = interpolant / (2.0 * ngs.pi * ngs.x * 1e-9)
         return ngs.IfPos(ngs.x - cutoff, projected, 0.0)
 
-    def assemble(self, scales: Scales) -> Expression:
+    def fixed_charge_C_m3(self) -> FixedCharge:
+        """Return the SI volume density with the rule it is assembled with (PHY-19, REV-72)."""
+        return FixedCharge(self.volume_density_C_m3(), self.quadrature_order)
+
+    def assemble(self, scales: Scales) -> FixedCharge:
         """Return the dimensionless ``rho~_pore`` the weak form takes (NUM-09).
 
         Parameters
@@ -624,7 +629,7 @@ class ChargeField:
             The model's scale set; :attr:`~nanopnp.core.scaling.Scales.charge_density_C_m3`
             is the one this divides by.
         """
-        return self.volume_density_C_m3() / scales.charge_density_C_m3
+        return self.fixed_charge_C_m3().scaled(1.0 / scales.charge_density_C_m3)
 
     def guard_deficit_C(self) -> float:
         """Return the charge the PHY-18 axis guard deletes, in coulombs.

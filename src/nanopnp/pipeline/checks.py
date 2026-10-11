@@ -457,6 +457,7 @@ def require_runnable(document: CaseDocument) -> SuppliedArtefact | None:
     _check_physics_switches(document)
     _check_unread(document)
     _check_correction_parts(document)
+    _check_switch_partners(document)
     _check_driver(document)
     _check_strategy(document)
     if document.numerics.continuation == LADDER_STRATEGY:
@@ -972,6 +973,56 @@ def _check_correction_parts(document: CaseDocument) -> None:
             f"{part} fit)"
         )
     raise CaseValidationError("\n".join(lines))
+
+
+def _check_switch_partners(document: CaseDocument) -> None:
+    """Refuse a switch whose partner leaf leaves it nothing to switch (PHY-22 NOTE, REV-73).
+
+    Both are live on their own and inert beside the partner, so VER-71's
+    single-leaf probe cannot see them: the FR-25 manifest would record a
+    deviation the solve never applies.
+    """
+    decl = declaration(document.physics.model)
+    corrections = document.electrolyte.corrections
+    physics = document.physics
+    lines: list[str] = []
+
+    density = corrections.density
+    density_path = "electrolyte.corrections.density"
+    if (
+        not physics.variable_density
+        and f"{density_path}.concentration" not in decl.unread
+        and not any(
+            getattr(density, part) and applies_part(density.model, "density", part)
+            for part in ("concentration", "wall")
+        )
+    ):
+        lines.append(
+            f"  physics.variable_density: false (density model '{density.model}' applies no "
+            "fit that varies the density, so the flow is already of constant density)"
+        )
+
+    permittivity = corrections.permittivity
+    permittivity_path = "electrolyte.corrections.permittivity.concentration"
+    if (
+        physics.dielectric_gradient_forces
+        and permittivity_path not in decl.unread
+        and not (
+            permittivity.concentration
+            and applies_part(permittivity.model, "permittivity", "concentration")
+        )
+    ):
+        lines.append(
+            "  physics.dielectric_gradient_forces: true (permittivity model "
+            f"'{permittivity.model}' applies no concentration fit, so d(eps)/d(c) is zero "
+            "and the force vanishes)"
+        )
+    if lines:
+        raise CaseValidationError(
+            "a switch is set beside a leaf that leaves it nothing to switch; it would be "
+            "recorded in the manifest as a deviation and never applied (PHY-22), so leave "
+            "each at its default or restore its partner:\n" + "\n".join(lines)
+        )
 
 
 def _check_driver(document: CaseDocument) -> None:

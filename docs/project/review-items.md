@@ -714,16 +714,7 @@ holds only where every caller passes both: a caller passing `fixed_charge=field.
 alone silently returns to NGSolve's order-3 estimate. `test_charge_quadrature.py` checks the call
 sites in `physics/models.py`, not their callers.
 
-**Open.** For the author: whether the charge object carries its own source term (one argument,
-the rule inside it), a change to the model interface outside WP41's scope.
-
-**Update (WP42).** The ruled fix, raising when `fixed_charge` is given without a rule order, does
-not hold as written. `None` is a deliberate value: a `DepositedCharge` has `quadrature_order = None`
-(`charge/deposit.py`), `solve/state.py` passes it through, and the tier-2 benchmarks pass analytic
-`CoefficientFunction` densities (`test_poisson_layers.py`, `test_force_routes.py`,
-`test_force_convergence.py`), for which NGSolve's estimate is right. A raise would refuse all of
-them. What is left is the larger option above, or a sentinel that makes "estimate" an explicit
-choice. Back with the author.
+**Fixed.** The author left the choice to the maintainers (WP42), and the charge object now carries its rule. `FixedCharge` (`numerics/measures.py`) is a density and a required `rule_order` (`None` being NGSolve's estimate, written out at the call site); `ChargeField` and `DepositedCharge` return it from `fixed_charge_C_m3()` and `assemble(scales)`, `default_ladder(fixed_charge_field=)` ramps it with `scaled()`, and the models' `fixed_charge_rule_order` argument is gone. A bare density is refused with a `TypeError` by both models that take one, since `Expression` is `Any` and the type checker cannot. The tier-2 benchmarks that pass an analytic or deposited density say `None` themselves. The first ruled fix (raise on a missing order) would have refused deposited charges and those benchmarks, whose estimate is deliberate.
 
 ### REV-73 — Cross-leaf inertness is not checked
 
@@ -731,15 +722,7 @@ choice. Back with the author.
 
 **Measured.** VER-71 probes single leaves from each model's base, but does not probe leaves rendered inert by another leaf's value (such as `variable_density` beside a `none` density correction, `dielectric_gradient_forces` beside no permittivity concentration fit, or wall distance with every wall part off).
 
-**Open.** For the author. The "Phase 5 (§8.2.9 I3)" cite is wrong: that row's title covers REV-23 to REV-65.
-
-**Update (WP42).** Probed from the epnp-ns base, one of the three pairs is already refused and
-now tested (`test_ver71_every_wall_part_off_is_refused_so_the_wall_distance_has_nothing_to_go_inert`:
-PHY-22 refuses the wall parts off before `numerics.wall_distance.*` can go inert). The other two are
-accepted and ignored: `physics.variable_density: false` beside `electrolyte.corrections.density.model: none`,
-and `physics.dielectric_gradient_forces: true` beside `electrolyte.corrections.permittivity.concentration: false`.
-Each needs a refusal in `pipeline/checks.py` and a specification edit (§5.4.3), so neither is built
-here. Back with the author.
+**Fixed.** The author ruled both are refused (WP42, "Refuse both in checks.py"). `_check_switch_partners` (`pipeline/checks.py`) refuses `physics.variable_density: false` where the density correction applies no fit that varies the density, and `physics.dielectric_gradient_forces: true` where the permittivity correction applies no concentration fit, naming the leaf and its partner; SPECIFICATION PHY-22's NOTE states both. The wall-distance pair was already refused by PHY-22 (every wall part off) and is tested with the other two in `test_case_leaves.py`. The "Phase 5 (§8.2.9 I3)" cite in the earlier text was wrong (that row covers REV-23 to REV-65).
 
 ### REV-74 — An untested raise in the force extension carries a coverage pragma
 

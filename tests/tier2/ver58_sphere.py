@@ -47,7 +47,7 @@ from nanopnp.charge.kernel import SourceAtoms, sum_kernel
 from nanopnp.core.constants import ELEMENTARY_CHARGE, VACUUM_PERMITTIVITY
 from nanopnp.materials.electrolyte import Electrolyte
 from nanopnp.mesh.adapter import MeshData, from_ngsolve, to_ngsolve
-from nanopnp.numerics.measures import AXISYMMETRIC
+from nanopnp.numerics.measures import AXISYMMETRIC, FixedCharge
 from nanopnp.physics import models
 
 if TYPE_CHECKING:
@@ -274,7 +274,7 @@ def solve_error(
         mesh,
         AXISYMMETRIC,
         potential_values=mesh.BoundaryCF({"cis": 0.0, "trans": 0.0}),
-        fixed_charge=gridfunction(found, mesh) / scales.charge_density_C_m3,
+        fixed_charge=FixedCharge(gridfunction(found, mesh) / scales.charge_density_C_m3, None),
     )
     computed = solution.state(reference.located).reshape(-1) * scales.potential_V
     error = math.sqrt(float(np.sum(reference.weight * (computed - reference.exact) ** 2)))
