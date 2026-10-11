@@ -309,7 +309,7 @@ def test_ver52_the_record_round_trips_and_rebuilds(
     other["schema"] = "nanopnp/region/v0"
     wrong = tmp_path / "wrong.yaml"
     wrong.write_text(yaml.safe_dump(other), encoding="utf-8")
-    with pytest.raises(ValueError, match=r"expected schema 'nanopnp/region/v1'"):
+    with pytest.raises(ValueError, match=r"expected schema 'nanopnp/region/v0.5'"):
         read_region(wrong)
 
 

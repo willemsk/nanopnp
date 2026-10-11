@@ -32,7 +32,7 @@ RING = "{centre_r_nm: 2.0, centre_z_nm: 4.0, width_nm: 0.3, charge_e: -12.0}"
 file can afford in seconds resolves it. The reference 0.085 nm is Tier 2."""
 
 FIELD_DOCUMENT = f"""
-schema: nanopnp/field/v1
+schema: nanopnp/field/v0.5
 name: ring
 quantity: areal_charge_density
 units: C/m^2

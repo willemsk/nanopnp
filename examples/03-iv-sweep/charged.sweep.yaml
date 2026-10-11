@@ -2,7 +2,7 @@
 # collector can compute a rectification ratio at each magnitude (FR-23, FR-24).
 # Rooted at +50 mV, the easiest point: every other member warm-starts from a
 # converged neighbour one grid step nearer the root (section 5.3.4).
-schema: nanopnp/sweep/v1
+schema: nanopnp/sweep/v0.5
 name: iv-charged
 base: charged.case.yaml
 axes:

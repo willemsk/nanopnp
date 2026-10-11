@@ -559,7 +559,7 @@ def test_ver34_the_solution_schema_is_v2(solved: Solved) -> None:
     and a payload silently reinterpreted under an unchanged version is a wrong
     number with a correct-looking provenance.
     """
-    assert SOLUTION_SCHEMA == "nanopnp/solution/v2"
+    assert SOLUTION_SCHEMA == "nanopnp/solution/v0.5"
 
 
 # -- the fields the state itself carries --------------------------------------

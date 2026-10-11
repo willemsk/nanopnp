@@ -16,7 +16,7 @@ frame passed through verbatim would pin every histidine (``.knowledge/07``
 section 3). The bytes are ours, not MDAnalysis's, because their digest keys the
 frame (D10).
 
-**Each frame is cached on its own** under ``nanopnp/protonation-frame/v1``, keyed
+**Each frame is cached on its own** under ``nanopnp/protonation-frame/v0.5``, keyed
 on the digest of that PDB and the protonation parameters, so a changed frame
 selection re-protonates only the frames it adds. The PQR PDB2PQR wrote is read
 back through :mod:`nanopnp.charge.pqr`, the reader ``inputs.pqr`` goes through,

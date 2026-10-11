@@ -2,7 +2,7 @@
 
 The consumer half of FR-14: the solver reads a field somebody else produced, in
 the shape §5.3.1's NOTE fixes — a pydantic-validated header document,
-``schema: nanopnp/field/v1``, naming the quantity, its units, the grid, the axis
+``schema: nanopnp/field/v0.5``, naming the quantity, its units, the grid, the axis
 cutoff of PHY-18, the declared ``Q_net`` where the producer knows one, and the
 data file. The header is what makes an OpenDX file usable at all: OpenDX has
 nowhere to record a ``Q_net`` or a unit, so a bare grid cannot say which of the
@@ -61,7 +61,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.core.scaling import Scales
     from nanopnp.numerics.measures import Measures
 
-FIELD_SCHEMA = "nanopnp/field/v1"
+FIELD_SCHEMA = "nanopnp/field/v0.5"
 """Schema identifier every supplied field document declares (§5.3.1)."""
 
 FIELD_FORMAT = "field1"
@@ -259,7 +259,7 @@ class FieldProvenance(_Strict):
 
 
 class FieldDocument(_Strict):
-    """A supplied field's header (``nanopnp/field/v1``, §5.3.1 NOTE).
+    """A supplied field's header (``nanopnp/field/v0.5``, §5.3.1 NOTE).
 
     Raises
     ------

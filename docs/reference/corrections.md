@@ -34,5 +34,5 @@ Its concentration fits are valid over a stated range and are capped at their end
 ## Another electrolyte
 
 Adding an electrolyte means adding a file, not changing the solver (QR-14). The schema of the file,
-`nanopnp/corrections/v1`, is the shipped file's own structure. No second electrolyte ships yet,
+`nanopnp/corrections/v0.5`, is the shipped file's own structure. No second electrolyte ships yet,
 because fitting one is a scientific task in its own right, not a documentation example.

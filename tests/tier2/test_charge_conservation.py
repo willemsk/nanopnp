@@ -129,7 +129,7 @@ def _rings_grid() -> RadialGrid:
 def _document(**overrides: object) -> FieldDocument:
     """Return the header for the ring field, declaring the closed-form ``Q_net``."""
     payload: dict[str, object] = {
-        "schema": "nanopnp/field/v1",
+        "schema": "nanopnp/field/v0.5",
         "name": "clya-rings",
         "quantity": "areal_charge_density",
         "units": "C/m^2",

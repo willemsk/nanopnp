@@ -74,7 +74,7 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
-GEOMETRY_SCHEMA = "nanopnp/deposit-geometry/v1"
+GEOMETRY_SCHEMA = "nanopnp/deposit-geometry/v0.5"
 """Domain separator of the element-geometry digest a deposit belongs to (D5)."""
 
 DEPOSIT_PAYLOAD = "deposit"

@@ -90,7 +90,7 @@ needs_archive = pytest.mark.skipif(
 def _document(path: Path, target: Path) -> Path:
     """Write the header the delivered table is read through, and return it."""
     target.write_text(
-        "schema: nanopnp/field/v1\n"
+        "schema: nanopnp/field/v0.5\n"
         "name: rhoq_pore\n"
         "quantity: areal_charge_density\n"
         "units: e/m^2\n"

@@ -48,7 +48,7 @@ from nanopnp.core.typing import Expression
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
 
-GRID_SCHEMA = "nanopnp/grid/v1"
+GRID_SCHEMA = "nanopnp/grid/v0.5"
 """Domain separator of :meth:`RadialGrid.digest`."""
 
 GridFormat: TypeAlias = Literal["npz", "dx", "mrc", "comsolgrid"]

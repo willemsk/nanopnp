@@ -30,7 +30,7 @@ ELSEWHERE = "darwin-arm64/ASIMDHP"
 
 def _record(mesh: str, current: float, where: str, walk: str = "walk") -> dict[str, object]:
     return {
-        "schema": "nanopnp/golden/stability/v2",
+        "schema": "nanopnp/golden/stability/v0.5",
         "walk": walk,
         "mesh_hash": mesh,
         "environment": where,

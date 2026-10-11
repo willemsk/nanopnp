@@ -439,7 +439,7 @@ def test_ver59_a_sweep_over_the_offset_severs_its_warm_starts(
     ):
         sweep = tmp_path / f"{key}.yaml"
         sweep.write_text(
-            "schema: nanopnp/sweep/v1\nname: probe\nbase: base.yaml\naxes:\n"
+            "schema: nanopnp/sweep/v0.5\nname: probe\nbase: base.yaml\naxes:\n"
             f"  - name: knob\n    path: charge.{key}\n    values: {values}\n",
             encoding="utf-8",
         )

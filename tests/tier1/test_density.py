@@ -511,7 +511,7 @@ def test_ver49_resolution_and_walk_rules(synthetic_c12: Path, tmp_path: Path) ->
     )
     sweep = tmp_path / "sweep.yaml"
     sweep.write_text(
-        "schema: nanopnp/sweep/v1\n"
+        "schema: nanopnp/sweep/v0.5\n"
         "name: density-sweep\n"
         f"base: {case}\n"
         "axes:\n"

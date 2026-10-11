@@ -14,7 +14,7 @@ Run every command from this directory; in a development checkout, put `uv run` i
 
 ## The fixed charge
 
-`ring.field.yaml` is a field header (`schema: nanopnp/field/v1`). It declares what the field is
+`ring.field.yaml` is a field header (`schema: nanopnp/field/v0.5`). It declares what the field is
 (an areal charge density in the `(r, z)` half-plane), its net charge `q_net_e`, and where its values
 come from. Here they come from a registered analytic form: a Gaussian ring, the reference model's own
 smearing kernel, sitting in the membrane just behind the pore wall. A real pore's charge map arrives

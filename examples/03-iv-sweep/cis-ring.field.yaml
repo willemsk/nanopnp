@@ -1,4 +1,4 @@
-schema: nanopnp/field/v1
+schema: nanopnp/field/v0.5
 name: cis-ring
 # The ring of example 02, moved to z = +1.5 nm: into the cis half of the 6 nm pore.
 quantity: areal_charge_density

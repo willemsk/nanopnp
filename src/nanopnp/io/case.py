@@ -765,7 +765,7 @@ PQR_FORMAT = "pqr"
 
 
 PROFILE_FORMAT = "profile1"
-"""``inputs.profile.format``: a ``nanopnp/profile/v1`` document (section 5.3.1 NOTE)."""
+"""``inputs.profile.format``: a ``nanopnp/profile/v0.5`` document (section 5.3.1 NOTE)."""
 
 
 def _model_of(annotation: object) -> type[BaseModel] | None:

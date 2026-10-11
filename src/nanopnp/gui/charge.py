@@ -10,7 +10,7 @@ of the seven matrix jobs.
 **Every number is read from a stage's own artefact** (WP31 D1). The walk's
 :class:`~nanopnp.core.stages.ArtefactHook` reports ``protonation`` and ``charge``
 as it reports every stage, and the views read ``Store(store).get(schema, hash)``:
-the lattice and the conservation record from stage 7's ``nanopnp/fields/v2``,
+the lattice and the conservation record from stage 7's ``nanopnp/fields/v0.5``,
 the table from the ``protonation`` artefact. The internal ``charge-grid`` and
 ``protonation-frame`` caches are never read, because WP28 D9 makes stage 7's
 artefact the one place a consumer reads the charge from.
@@ -18,7 +18,7 @@ artefact the one place a consumer reads the charge from.
 **The model frame, and the charge as stored** (D4, D5). The lattice, the atoms,
 the deposit and the planes are all in the model frame, and every caption says so.
 The map is the areal density ``sigma = 2 pi r rho`` the lattice holds, in the
-quantity and unit its ``nanopnp/field/v1`` vocabulary names: the charge per unit
+quantity and unit its ``nanopnp/field/v0.5`` vocabulary names: the charge per unit
 meridional area, so it shows where the charge lies; ``rho`` would overweight the
 axis by ``1/r``.
 
@@ -216,7 +216,7 @@ class ChargeMap:
     limit
         ``L``, the largest magnitude drawn, which the scale is symmetric about.
     quantity, units
-        The lattice's ``nanopnp/field/v1`` quantity and canonical unit.
+        The lattice's ``nanopnp/field/v0.5`` quantity and canonical unit.
     planes
         The recorded worst planes, ``(label, z_nm)``, in the model frame.
     """

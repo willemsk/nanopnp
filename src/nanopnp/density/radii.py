@@ -40,7 +40,7 @@ from nanopnp.core.paths import radii_file
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
 
-RADII_SCHEMA = "nanopnp/radii/v1"
+RADII_SCHEMA = "nanopnp/radii/v0.5"
 """Schema of a shipped radius-set file."""
 
 KERNEL_RADII: Mapping[str, str] = {"gaussian_vdw": "pdb2pqr_charmm"}
@@ -96,7 +96,7 @@ class RadiusRules(_Strict):
 class RadiusSet(_Strict):
     """A shipped radius table: its source, its lookup rules and the radii in Å."""
 
-    schema_: Literal["nanopnp/radii/v1"] = Field(alias="schema")
+    schema_: Literal["nanopnp/radii/v0.5"] = Field(alias="schema")
     name: str
     source: RadiusSource
     units: Literal["angstrom"]

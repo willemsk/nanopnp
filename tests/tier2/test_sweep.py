@@ -85,7 +85,7 @@ outputs: [current, rectification]
 """
 
 SWEEP = """
-schema: nanopnp/sweep/v1
+schema: nanopnp/sweep/v0.5
 name: warm-vs-cold
 base: base.yaml
 axes:

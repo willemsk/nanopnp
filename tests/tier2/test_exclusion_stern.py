@@ -149,7 +149,7 @@ def _write_band(directory: Path) -> Path:
     grid = read_grid(data, format="npz")
     header = directory / "band.yaml"
     header.write_text(
-        "schema: nanopnp/field/v1\nname: band\nquantity: volume_charge_density\n"
+        "schema: nanopnp/field/v0.5\nname: band\nquantity: volume_charge_density\n"
         "units: C/m^3\nprovenance: {source: analytic}\n"
         f"data: {{path: {data.name}, format: npz, sha256: {file_hash(data)}}}\n"
         f"grid: {{origin_nm: [{grid.origin_nm[0]!r}, {grid.origin_nm[1]!r}], "

@@ -795,10 +795,10 @@ def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
     dummy = Artefact(schema="dummy/v1", parameters={}, inputs={})
     dummy_prof = ProfileArtefact(parameters={}, inputs={}, payload={"profile": profile_yaml})
     dummy_region = Artefact(
-        schema="nanopnp/region/v1", parameters={}, inputs={}, payload={"region": region_yaml}
+        schema="nanopnp/region/v0.5", parameters={}, inputs={}, payload={"region": region_yaml}
     )
-    dummy_mesh = Artefact(schema="nanopnp/mesh/v1", parameters={}, inputs={})
-    dummy_prot = Artefact(schema="nanopnp/protonation/v1", parameters={}, inputs={})
+    dummy_mesh = Artefact(schema="nanopnp/mesh/v0.5", parameters={}, inputs={})
+    dummy_prot = Artefact(schema="nanopnp/protonation/v0.5", parameters={}, inputs={})
 
     def stage_key(stage_name: str, res: object) -> str:
         inputs_map = {
@@ -823,7 +823,7 @@ def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
             from nanopnp.core.hashing import content_hash
 
             return content_hash(
-                "nanopnp/mesh/supplied/v1",
+                "nanopnp/mesh/supplied/v0.5",
                 (base_hash, str(mesh_spec.path), str(mesh_spec.format), dict(mesh_spec.groups)),
             )
         return create(stage_name).key(inputs_map[stage_name]).hash
@@ -867,7 +867,7 @@ def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
     data_c = write_grid(grid, tmp_path / "charge.npz", format="npz")
     charge_yaml = tmp_path / "charge.yaml"
     charge_yaml.write_text(
-        "schema: nanopnp/field/v1\nname: test_c\nquantity: volume_charge_density\nunits: C/m^3\n"
+        "schema: nanopnp/field/v0.5\nname: test_c\nquantity: volume_charge_density\nunits: C/m^3\n"
         "provenance: {source: analytic}\n"
         f"data: {{path: {data_c.name}, format: npz, sha256: {file_hash(data_c)}}}\n"
         f"grid: {{origin_nm: [{grid.origin_nm[0]!r}, {grid.origin_nm[1]!r}], "
@@ -878,7 +878,7 @@ def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
     data_e = write_grid(grid, tmp_path / "eps_r.npz", format="npz")
     eps_yaml = tmp_path / "eps_r.yaml"
     eps_yaml.write_text(
-        'schema: nanopnp/field/v1\nname: test_e\nquantity: solid_fraction\nunits: "1"\n'
+        'schema: nanopnp/field/v0.5\nname: test_e\nquantity: solid_fraction\nunits: "1"\n'
         "provenance: {source: analytic}\n"
         f"data: {{path: {data_e.name}, format: npz, sha256: {file_hash(data_e)}}}\n"
         f"grid: {{origin_nm: [{grid.origin_nm[0]!r}, {grid.origin_nm[1]!r}], "

@@ -38,43 +38,43 @@ CASE_SCHEMA = "nanopnp/case/v0.5"
 """Stage 9: the resolved case document (IF-03, G6)."""
 
 
-STRUCTURE_SCHEMA = "nanopnp/structure/v1"
+STRUCTURE_SCHEMA = "nanopnp/structure/v0.5"
 """Stage 1: the aligned ensemble, with the Cₙ axis on z at r = 0 (FR-01 to FR-03)."""
 
-DENSITY_SCHEMA = "nanopnp/density/v1"
+DENSITY_SCHEMA = "nanopnp/density/v0.5"
 """Stage 2: the ensemble-mean union density on the canonical 3D grid (FR-04)."""
 
-REDUCED_SCHEMA = "nanopnp/reduced/v1"
+REDUCED_SCHEMA = "nanopnp/reduced/v0.5"
 """Stage 3: the (r, z) mean and the Cₙ and raw azimuthal variances (FR-05, FR-06)."""
 
-PROFILE_ARTEFACT_SCHEMA = "nanopnp/profile/v1"
-"""Stage 4: the conditioned, gated contour, a ``nanopnp/profile/v1`` document (FR-07, FR-08).
+PROFILE_ARTEFACT_SCHEMA = "nanopnp/profile/v0.5"
+"""Stage 4: the conditioned, gated contour, a ``nanopnp/profile/v0.5`` document (FR-07, FR-08).
 
 Canonical schema definition imported downward by domain packages
 (:data:`nanopnp.geometry.profile.PROFILE_SCHEMA`, WP42 D14).
 """
 
-REGION_SCHEMA = "nanopnp/region/v1"
+REGION_SCHEMA = "nanopnp/region/v0.5"
 """Stage 5: the declarative record of the tagged (r, z) region (FR-09, WP21 D5).
 
 Canonical schema definition imported downward by domain packages
 (:data:`nanopnp.geometry.region.REGION_SCHEMA`, WP42 D14).
 """
 
-MATERIALS_SCHEMA = "nanopnp/materials/v1"
+MATERIALS_SCHEMA = "nanopnp/materials/v0.5"
 """Stage 8: the resolved material coefficient set."""
 
-MESH_ARTEFACT_SCHEMA = "nanopnp/mesh/v1"
+MESH_ARTEFACT_SCHEMA = "nanopnp/mesh/v0.5"
 """Stage 6: a tagged, gated mesh in the boundary vocabulary (IF-06).
 
 Canonical schema definition imported downward by domain packages
 (:data:`nanopnp.mesh.adapter.MESH_SCHEMA`, WP42 D14).
 """
 
-PROTONATION_SCHEMA = "nanopnp/protonation/v1"
+PROTONATION_SCHEMA = "nanopnp/protonation/v0.5"
 """Stage 7, first half: the per-frame atom table with charges and radii (FR-12, WP27 D10)."""
 
-PROTONATION_FRAME_SCHEMA = "nanopnp/protonation-frame/v1"
+PROTONATION_FRAME_SCHEMA = "nanopnp/protonation-frame/v0.5"
 """One frame's PDB2PQR output, keyed on the digest of the PDB it was given (WP27 D10).
 
 Not the output of a registered stage: the ``protonation`` stage stores each frame
@@ -82,7 +82,7 @@ under this schema as it goes, so that a changed frame selection re-protonates
 only the frames it has not seen (section 5.3.2, the stage-7 artefact row).
 """
 
-CHARGE_GRID_SCHEMA = "nanopnp/charge-grid/v2"
+CHARGE_GRID_SCHEMA = "nanopnp/charge-grid/v0.5"
 """Stage 7's export lattice: the closed-form kernel summed over the protonation artefact (WP28 D7).
 
 ``v2`` because the summary contract changed: ``v1`` recorded the sum's wall-clock
@@ -96,7 +96,7 @@ mesh, so a mesh-convergence sweep re-deposits without re-summing (section 5.3.2,
 the stage-7 artefact row).
 """
 
-FIELDS_SCHEMA = "nanopnp/fields/v2"
+FIELDS_SCHEMA = "nanopnp/fields/v0.5"
 """Stage 7: the fixed-charge and dielectric fields, supplied or deposited, gated (§5.2).
 
 ``v2`` because the payload and summary contract changed: ``v1``'s ``deposit.npz``
@@ -105,7 +105,7 @@ and ``charge`` summary carried wall-clock ``seconds``, which ``v2``'s do not
 and manifest group moved with the clock; the new version makes it a miss.
 """
 
-SOLUTION_SCHEMA = "nanopnp/solution/v2"
+SOLUTION_SCHEMA = "nanopnp/solution/v0.5"
 """Stage 10: the converged field set and its iteration history.
 
 ``v2`` because the payload contract changed: ``v1`` wrote the backend's native
@@ -116,13 +116,13 @@ module docstring), so a ``v1`` entry left in a store would otherwise be a cache
 changed payload contract a changed schema version.
 """
 
-QOI_SCHEMA = "nanopnp/qoi/v1"
+QOI_SCHEMA = "nanopnp/qoi/v0.5"
 """Stage 11: the NUM-27 scalar quantities of one converged solution."""
 
-REPORT_SCHEMA = "nanopnp/report/v1"
+REPORT_SCHEMA = "nanopnp/report/v0.5"
 """Stage 12: the run record — the export selection and what was written."""
 
-SWEEP_SCHEMA = "nanopnp/sweep/v1"
+SWEEP_SCHEMA = "nanopnp/sweep/v0.5"
 """A sweep: its specification document, its plan, and the collected dataset.
 
 One string for the three, because they are one thing described at three moments
@@ -149,7 +149,7 @@ class Artefact:
     Parameters
     ----------
     schema
-        The artefact schema, e.g. ``nanopnp/solution/v1``.
+        The artefact schema, e.g. ``nanopnp/solution/v0.5``.
     parameters
         Everything about the stage's configuration that changes its output.
     inputs

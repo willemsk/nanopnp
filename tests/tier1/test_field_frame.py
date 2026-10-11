@@ -52,7 +52,7 @@ FORMS = {
 def _document(tmp_path: Path, key: str, declared: float | None) -> Path:
     """Write a field document for ``inputs.<key>``, declaring ``declared`` if given."""
     header: dict[str, object] = {
-        "schema": "nanopnp/field/v1",
+        "schema": "nanopnp/field/v0.5",
         "name": f"frame-probe-{key}",
         "provenance": {"source": "analytic"},
         **FORMS[key],

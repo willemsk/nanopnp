@@ -279,7 +279,7 @@ def _sweep(tmp_path: Path, values: list[float]) -> Path:
     base.write_text(case(), encoding="utf-8")
     sweep = tmp_path / "sweep.yaml"
     sweep.write_text(
-        "schema: nanopnp/sweep/v1\n"
+        "schema: nanopnp/sweep/v0.5\n"
         "name: salt\n"
         f"base: {base}\n"
         "axes:\n"
@@ -312,7 +312,7 @@ def test_ver53_upstream_geometry_axes_are_barriers(tmp_path: Path) -> None:
     base.write_text(case(extra="geometry: {membrane: {centre_z_nm: 0.0}}\n"), encoding="utf-8")
     sweep = tmp_path / "sweep.yaml"
     sweep.write_text(
-        "schema: nanopnp/sweep/v1\n"
+        "schema: nanopnp/sweep/v0.5\n"
         "name: shift\n"
         f"base: {base}\n"
         "axes:\n"

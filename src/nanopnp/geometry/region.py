@@ -379,7 +379,7 @@ class RegionRecord(_Strict):
 
 
 def write_region(record: RegionRecord, path: Path) -> Path:
-    """Write ``record`` as ``nanopnp/region/v1`` YAML that :func:`read_region` reads back.
+    """Write ``record`` as ``nanopnp/region/v0.5`` YAML that :func:`read_region` reads back.
 
     Floats are written as Python's shortest round-trip representation, so the
     vertices read back bit for bit and the rebuilt region is the one measured.
@@ -397,7 +397,7 @@ def write_region(record: RegionRecord, path: Path) -> Path:
 
 
 def read_region(path: Path) -> RegionRecord:
-    """Read a ``nanopnp/region/v1`` record.
+    """Read a ``nanopnp/region/v0.5`` record.
 
     Raises
     ------
@@ -1444,7 +1444,7 @@ def region_parameters(
 
 
 class RegionStage:
-    """Stage 5: a pore profile to the tagged, gated ``nanopnp/region/v1`` record."""
+    """Stage 5: a pore profile to the tagged, gated ``nanopnp/region/v0.5`` record."""
 
     name = "region"
 

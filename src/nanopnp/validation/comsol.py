@@ -1,4 +1,4 @@
-"""The ``nanopnp/golden/v1`` archive: a COMSOL export turned into evidence (VAL-03).
+"""The ``nanopnp/golden/v0.5`` archive: a COMSOL export turned into evidence (VAL-03).
 
 Section 7.4 requires the reference solutions to be "stored as compressed arrays
 with the generating model archived alongside", and this module is the single
@@ -99,7 +99,7 @@ __all__ = [
     "write_comsol_table",
 ]
 
-GOLDEN_SCHEMA = "nanopnp/golden/v1"
+GOLDEN_SCHEMA = "nanopnp/golden/v0.5"
 """Schema identifier every golden manifest declares, and the hash's separator."""
 
 MANIFEST_NAME = "manifest.yaml"
@@ -153,7 +153,7 @@ unit.
 CONCENTRATION_PREFIX = "c_"
 """Prefix of a per-species concentration field, as the model names it."""
 
-CASE_IDENTITY_SCHEMA = "nanopnp/golden/case/v1"
+CASE_IDENTITY_SCHEMA = "nanopnp/golden/case/v0.5"
 """Domain separator of :func:`case_identity`."""
 
 DISCRETISATION_KEYS: frozenset[str] = frozenset(

@@ -1000,7 +1000,7 @@ def contour_parameters(contour: ContourSpec, density: DensitySpec) -> dict[str, 
 
 
 class ContourStage:
-    """Stage 4: stage 3's (r, z) mean to a conditioned, gated ``nanopnp/profile/v1`` loop."""
+    """Stage 4: stage 3's (r, z) mean to a conditioned, gated ``nanopnp/profile/v0.5`` loop."""
 
     name = "contour"
 

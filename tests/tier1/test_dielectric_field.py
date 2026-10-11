@@ -95,7 +95,7 @@ def _slab_spec(**overrides: float) -> FormSpec:
 def _document(**overrides: object) -> FieldDocument:
     """Return a valid solid-fraction header over the sharp slab."""
     payload: dict[str, object] = {
-        "schema": "nanopnp/field/v1",
+        "schema": "nanopnp/field/v0.5",
         "name": "chi",
         "quantity": "solid_fraction",
         "units": "1",
@@ -131,7 +131,7 @@ def test_ver30_an_absolute_permittivity_field_is_refused_naming_the_reason(tmp_p
     """
     header = tmp_path / "eps.yaml"
     header.write_text(
-        "schema: nanopnp/field/v1\n"
+        "schema: nanopnp/field/v0.5\n"
         "name: eps\n"
         "quantity: relative_permittivity\n"
         "units: '1'\n"
@@ -161,7 +161,7 @@ def test_ver30_a_charge_field_supplied_as_the_dielectric_is_refused() -> None:
         SolidFractionField(
             document=FieldDocument.model_validate(
                 {
-                    "schema": "nanopnp/field/v1",
+                    "schema": "nanopnp/field/v0.5",
                     "name": "rho",
                     "quantity": "areal_charge_density",
                     "units": "C/m^2",
@@ -495,7 +495,7 @@ def test_ver30_a_dielectric_document_round_trips_through_a_file(tmp_path) -> Non
     header = tmp_path / "chi.yaml"
     spec = _slab_spec()
     header.write_text(
-        "schema: nanopnp/field/v1\n"
+        "schema: nanopnp/field/v0.5\n"
         "name: chi\n"
         "quantity: solid_fraction\n"
         "units: '1'\n"

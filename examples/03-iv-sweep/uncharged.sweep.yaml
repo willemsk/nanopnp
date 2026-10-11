@@ -1,5 +1,5 @@
 # The control: the uncharged, z-symmetric pore at one exactly-opposite bias pair.
-schema: nanopnp/sweep/v1
+schema: nanopnp/sweep/v0.5
 name: iv-uncharged
 base: uncharged.case.yaml
 axes:

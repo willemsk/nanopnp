@@ -57,7 +57,7 @@ CHAINS = 12
 def protonated(protonated_2wcd: Protonated2WCD) -> tuple[ProtonationTable, dict[str, Any]]:
     """Return the protonated dodecamer's table and summary."""
     artefact = Store(protonated_2wcd.store).get(
-        "nanopnp/protonation/v1", protonated_2wcd.protonation
+        "nanopnp/protonation/v0.5", protonated_2wcd.protonation
     )
     assert artefact is not None
     logger.info("protonated 2WCD in %.1f s", protonated_2wcd.seconds)
@@ -160,7 +160,7 @@ def test_ver57_the_export_resupplied_beside_the_structure_is_the_payload(
     """
     table, _ = protonated
     store = Store(protonated_2wcd.store)
-    produced = store.get("nanopnp/protonation/v1", protonated_2wcd.protonation)
+    produced = store.get("nanopnp/protonation/v0.5", protonated_2wcd.protonation)
     assert produced is not None
     exported = export_pqr(produced.payload["protonation"], tmp_path / "2wcd.pqr")
     text = protonated_2wcd.case.read_text(encoding="utf-8").replace(
@@ -168,7 +168,7 @@ def test_ver57_the_export_resupplied_beside_the_structure_is_the_payload(
         f"name: 2wcd-supplied\ninputs:\n  pqr: {{path: {exported}, format: pqr}}",
     )
     case = loads_case(text)
-    structure = store.get("nanopnp/structure/v1", protonated_2wcd.structure)
+    structure = store.get("nanopnp/structure/v0.5", protonated_2wcd.structure)
     assert structure is not None
     stage = ProtonationStage(workspace=tmp_path / "supplied")
     artefact = stage.run(StageInputs(resolved=resolve(case), upstream={"structure": structure}))
@@ -202,7 +202,7 @@ from nanopnp.io.store import Store
 from nanopnp.pipeline.case import load_case, resolve
 store, case, structure, workspace = sys.argv[1:5]
 document = load_case(Path(case))
-artefact = Store(store).get("nanopnp/structure/v1", structure)
+artefact = Store(store).get("nanopnp/structure/v0.5", structure)
 stage = create("protonation", workspace=Path(workspace))
 started = time.perf_counter()
 done = stage.run(StageInputs(resolved=resolve(document), upstream={"structure": artefact}))

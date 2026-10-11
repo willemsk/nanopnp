@@ -59,7 +59,7 @@ outputs: [current]
 """
 
 SWEEP = """
-schema: nanopnp/sweep/v1
+schema: nanopnp/sweep/v0.5
 name: probe
 base: base.yaml
 axes:

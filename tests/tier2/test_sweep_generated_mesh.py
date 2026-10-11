@@ -48,7 +48,7 @@ outputs: [current]
 """The coarse case of ``tests/tier1/test_mesh_generate.py``: a few seconds a solve."""
 
 SWEEP = """\
-schema: nanopnp/sweep/v1
+schema: nanopnp/sweep/v0.5
 name: generated
 base: base.yaml
 axes:

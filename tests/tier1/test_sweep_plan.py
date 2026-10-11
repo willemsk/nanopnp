@@ -87,7 +87,7 @@ def _sweep(base: Path, body: str) -> Path:
     """Write a sweep document beside ``base`` and return its path."""
     path = base.parent / "sweep.yaml"
     path.write_text(
-        f"schema: nanopnp/sweep/v1\nname: probe\nbase: {base.name}\naxes:\n{body}",
+        f"schema: nanopnp/sweep/v0.5\nname: probe\nbase: {base.name}\naxes:\n{body}",
         encoding="utf-8",
     )
     return path
@@ -640,8 +640,8 @@ def test_ver36_the_recorded_file_digests_round_trip_and_an_older_plan_is_refused
 def test_ver36_a_file_of_another_schema_is_refused(tmp_path: Path) -> None:
     """Read rather than rebuilt, so the schema is what says the file is a plan."""
     path = tmp_path / "plan.json"
-    path.write_text('{"schema": "nanopnp/run/v1"}', encoding="utf-8")
-    with pytest.raises(SweepPlanError, match="nanopnp/run/v1"):
+    path.write_text('{"schema": "nanopnp/run/v0.5"}', encoding="utf-8")
+    with pytest.raises(SweepPlanError, match=r"nanopnp/run/v0\.5"):
         read_plan(path)
 
 

@@ -1,4 +1,4 @@
-"""The ``nanopnp/probe/v1`` comparison surface: where Tier 3 samples both solutions.
+"""The ``nanopnp/probe/v0.5`` comparison surface: where Tier 3 samples both solutions.
 
 Section 7.4 compares fields "on a common probe grid", and the grid is **ours**.
 COMSOL interpolates onto the points this document names, so the comparison does
@@ -62,7 +62,7 @@ __all__ = [
     "loads_probe",
 ]
 
-PROBE_SCHEMA = "nanopnp/probe/v1"
+PROBE_SCHEMA = "nanopnp/probe/v0.5"
 """Schema identifier every probe document declares, and the hash's separator."""
 
 DEFAULT_MARGIN_NM = 0.05
@@ -198,7 +198,7 @@ class ProbePatch(_Strict):
 
 
 class ProbeDocument(_Strict):
-    """A validated probe grid (schema ``nanopnp/probe/v1``).
+    """A validated probe grid (schema ``nanopnp/probe/v0.5``).
 
     Parameters
     ----------

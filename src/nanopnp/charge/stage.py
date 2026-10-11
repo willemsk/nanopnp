@@ -1,6 +1,6 @@
 """Stage 7 of §5.2: the fixed-charge and dielectric fields (FR-13, FR-14, FR-27, IF-01).
 
-Two paths, one artefact (``nanopnp/fields/v2``).
+Two paths, one artefact (``nanopnp/fields/v0.5``).
 
 **The producer path** (WP28). A case that protonates -- ``structure:`` or
 ``inputs.pqr`` -- and whose model declares ``fixed_charge`` deposits its charge
@@ -9,9 +9,9 @@ artefact's atoms and frames on the export lattice (:mod:`nanopnp.charge.kernel`)
 the lattice is projected onto the deployed mesh as an element-wise polynomial of
 the potential's order (:mod:`nanopnp.charge.deposit`), and both are gated against
 the source atoms (:func:`~nanopnp.charge.fields.deposit_conservation`). The
-lattice is its own store entry, ``nanopnp/charge-grid/v2``, keyed without the
+lattice is its own store entry, ``nanopnp/charge-grid/v0.5``, keyed without the
 mesh, so a mesh-convergence sweep re-deposits without re-summing (D7). The
-stage's payload is the lattice as a ``nanopnp/field/v1`` document and its
+stage's payload is the lattice as a ``nanopnp/field/v0.5`` document and its
 ``.npz``, which read back through ``inputs.charge``, and the deposit (D7, D11).
 
 **The consumer path**. A supplied ``inputs.charge`` or ``inputs.eps_r`` is read
@@ -139,7 +139,7 @@ CHARGE_PAYLOAD = "charge"
 field, or the export lattice of a deposited one."""
 
 CHARGE_DOCUMENT_PAYLOAD = "charge_document"
-"""The payload key of a deposited charge's ``nanopnp/field/v1`` document (D7, D11)."""
+"""The payload key of a deposited charge's ``nanopnp/field/v0.5`` document (D7, D11)."""
 
 LATTICE_PAYLOAD = "lattice"
 """The charge-grid artefact's payload key: the export lattice as ``.npz``."""
@@ -800,7 +800,7 @@ def fixed_charge_density(
 
 
 def _field_document(lattice: KernelLattice, data: Path) -> FieldDocument:
-    """Return the ``nanopnp/field/v1`` document the export lattice is written under (D7, D11).
+    """Return the ``nanopnp/field/v0.5`` document the export lattice is written under (D7, D11).
 
     ``inputs.charge`` reads it back to the same grid digest: the values are in the
     canonical C m^-2, so no unit factor touches them. The axis cutoff is the
@@ -852,7 +852,7 @@ def write_field_document(lattice: KernelLattice, data: Path, path: Path) -> Path
 def export_charge(artefact: Artefact, path: Path) -> tuple[Path, ...]:
     """Write stage 7's charge to ``path`` in the format its suffix names (D11, IF-05).
 
-    ``.yaml`` writes the ``nanopnp/field/v1`` document and its ``.npz`` beside it,
+    ``.yaml`` writes the ``nanopnp/field/v0.5`` document and its ``.npz`` beside it,
     under the document's stem, which ``inputs.charge`` reads back to the same
     digest; ``.dx`` and ``.mrc`` (or ``.ccp4``) write the lattice through
     GridDataFormats. Returns every file written, the document last.
@@ -906,7 +906,7 @@ class StoredLattice:
     grid
         The lattice, in the canonical SI unit of its quantity, in the model frame.
     quantity
-        Its ``nanopnp/field/v1`` quantity: ``areal_charge_density`` for a deposited
+        Its ``nanopnp/field/v0.5`` quantity: ``areal_charge_density`` for a deposited
         charge, whatever the header declared for a supplied one.
     units
         That quantity's canonical unit, from :data:`~nanopnp.charge.fields.CANONICAL_UNITS`.
