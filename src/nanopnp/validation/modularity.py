@@ -701,6 +701,14 @@ def _assignment(node: ast.stmt) -> tuple[str, ast.expr] | None:
     return target.id, node.value
 
 
+def _extract_constant_or_attr(node: ast.AST | None) -> str | None:
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return node.value
+    if isinstance(node, ast.Attribute):
+        return node.attr.lower()
+    return None
+
+
 def _registered_stages(stages: Module) -> list[tuple[str, str]]:
     """Return ``(name, target)`` of every ``register(StageDescription(name=...), target)`` call."""
     found = []
@@ -712,8 +720,10 @@ def _registered_stages(stages: Module) -> list[tuple[str, str]]:
             continue
         if isinstance(description, ast.Call):
             for keyword in description.keywords:
-                if keyword.arg == "name" and isinstance(keyword.value, ast.Constant):
-                    found.append((str(keyword.value.value), target.value))
+                if keyword.arg == "name":
+                    name = _extract_constant_or_attr(keyword.value)
+                    if name is not None:
+                        found.append((name, target.value))
     return found
 
 
@@ -860,12 +870,15 @@ def _registered_inputs(stages: Module) -> list[tuple[str, str, frozenset[str]]]:
         if not isinstance(description, ast.Call):
             continue
         facts = {keyword.arg: keyword.value for keyword in description.keywords}
-        name, inputs = facts.get("name"), facts.get("inputs")
-        if isinstance(name, ast.Constant) and isinstance(inputs, ast.Tuple):
+        name_node, inputs = facts.get("name"), facts.get("inputs")
+        name = _extract_constant_or_attr(name_node)
+        if name is not None and isinstance(inputs, ast.Tuple):
             declared = frozenset(
-                str(item.value) for item in inputs.elts if isinstance(item, ast.Constant)
+                item
+                for raw_item in inputs.elts
+                if (item := _extract_constant_or_attr(raw_item)) is not None
             )
-            found.append((str(name.value), target.value, declared))
+            found.append((name, target.value, declared))
     return found
 
 

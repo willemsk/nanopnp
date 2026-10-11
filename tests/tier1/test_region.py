@@ -47,7 +47,7 @@ from nanopnp.geometry.region import (
     to_model_frame,
     write_region,
 )
-from nanopnp.io.artefact import StageInputs
+from nanopnp.io.artefact import CASE_SCHEMA, StageInputs
 from nanopnp.io.case import (
     CaseValidationError,
     MembraneSpec,
@@ -313,9 +313,9 @@ def test_ver52_the_record_round_trips_and_rebuilds(
         read_region(wrong)
 
 
-PROFILE_CASE = """\
-schema: nanopnp/case/v0.5
-name: profile-case
+PROFILE_CASE = (
+    f"schema: {CASE_SCHEMA}\n"
+    """name: profile-case
 inputs:
   profile: {{path: {path}}}
 electrolyte:
@@ -324,6 +324,7 @@ electrolyte:
 boundary_conditions: {{bias_V: 0.05, ground: cis}}
 physics: {{model: pnp-ns, solid_permittivities: {{protein: 20.0, membrane: 3.2}}}}
 {extra}"""
+)
 
 
 def profile_case(path: Path, extra: str = "") -> str:

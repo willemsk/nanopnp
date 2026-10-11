@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+from tests.conftest import CASE_SCHEMA, make_case_dict
+
 from nanopnp.cli import build_parser
 from nanopnp.io.case import (
+    CaseDocument,
     ElementsSpec,
     LinearSpec,
     MembraneSpec,
@@ -43,6 +46,7 @@ from nanopnp.numerics.defaults import (
     DEFAULT_WALL_DISTANCE_SOURCES,
 )
 from nanopnp.numerics.newton import NewtonSettings
+from nanopnp.pipeline.case import loads_case
 
 
 def test_mesh_defaults_parity() -> None:
@@ -93,3 +97,53 @@ def test_numerics_defaults_parity() -> None:
     assert numerics_defaults["wall_distance"]["sources"] == DEFAULT_WALL_DISTANCE_SOURCES
     assert numerics_defaults["wall_distance"]["max_distance_nm"] == DEFAULT_WALL_DISTANCE_MAX_NM
     assert numerics_defaults["linear"]["solver"] == DEFAULT_LINEAR_SOLVER
+
+
+def test_case_yaml_template_fixture(case_yaml_template: str) -> None:
+    """Verifies loads_case(case_yaml_template) parses and validates cleanly to CaseDocument."""
+    doc = loads_case(case_yaml_template)
+    assert isinstance(doc, CaseDocument)
+    assert doc.schema_id == CASE_SCHEMA
+    assert doc.name == "minimal"
+
+
+def test_make_case_dict_helper() -> None:
+    """Tests default dict generation and overrides (both top-level and dotted paths)."""
+    base = make_case_dict()
+    assert base["schema"] == CASE_SCHEMA
+    assert base["name"] == "minimal"
+    doc = CaseDocument.model_validate(base)
+    assert isinstance(doc, CaseDocument)
+    assert doc.schema_id == CASE_SCHEMA
+    assert doc.name == "minimal"
+
+    # Top-level override
+    overridden = make_case_dict(name="custom")
+    assert overridden["name"] == "custom"
+    assert CaseDocument.model_validate(overridden).name == "custom"
+
+    # Dotted override and deep-merging
+    dotted = make_case_dict(
+        name="custom_dotted",
+        **{"physics.model": "pnp-ns", "boundary_conditions.bias_V": 0.05},
+    )
+    assert dotted["name"] == "custom_dotted"
+    assert dotted["physics"]["model"] == "pnp-ns"
+    assert dotted["boundary_conditions"]["bias_V"] == 0.05
+    doc_dotted = CaseDocument.model_validate(dotted)
+    assert doc_dotted.name == "custom_dotted"
+    assert doc_dotted.boundary_conditions.bias_V == 0.05
+
+    # Nested mapping override deep-merging
+    nested = make_case_dict(physics={"solid_permittivities": {"membrane": 3.2}})
+    assert nested["physics"]["model"] == "pnp-ns"
+    assert nested["physics"]["solid_permittivities"] == {"membrane": 3.2}
+    doc_nested = CaseDocument.model_validate(nested)
+    assert doc_nested.physics.solid_permittivities == {"membrane": 3.2}
+
+
+def test_make_case_fixture(make_case) -> None:
+    """make_case fixture returns the make_case_dict helper."""
+    assert make_case is make_case_dict
+    doc = CaseDocument.model_validate(make_case(name="from_fixture"))
+    assert doc.name == "from_fixture"

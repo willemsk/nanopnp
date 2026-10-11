@@ -34,6 +34,7 @@ import pytest
 from MDAnalysis.coordinates.memory import MemoryReader
 
 from nanopnp.core.stages import create
+from nanopnp.io.artefact import CASE_SCHEMA
 from nanopnp.io.case import CaseValidationError
 from nanopnp.io.store import Store
 from nanopnp.pipeline.case import (
@@ -70,7 +71,7 @@ DODECAMER = "A,B,C,D,E,F,G,H,I,J,K,L"
 def _case(tmp_path: Path, structure: str, *, name: str = "structure") -> Path:
     """Write a case file carrying ``structure`` (YAML text) and return its path."""
     text = (
-        "schema: nanopnp/case/v0.5\n"
+        f"schema: {CASE_SCHEMA}\n"
         f"name: {name}\n"
         f"structure:\n{structure}"
         "electrolyte:\n"

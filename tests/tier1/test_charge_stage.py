@@ -22,7 +22,7 @@ import pytest
 
 from nanopnp.charge.stage import FieldStage
 from nanopnp.core.stages import CancelFlag, Cancelled, create, describe
-from nanopnp.io.artefact import StageInputs
+from nanopnp.io.artefact import CASE_SCHEMA, StageInputs
 from nanopnp.io.case import UnsupportedCaseSection
 from nanopnp.mesh.adapter import from_ngsolve, write_msh41
 from nanopnp.pipeline.case import loads_case, resolve
@@ -81,7 +81,7 @@ def case_text(mesh_path: Path, field_path: Path | None, *, order: str = "P2") ->
     """Return a case naming ``mesh_path``, and ``field_path`` if there is one, at ``order``."""
     charge = "" if field_path is None else f"\n  charge: {{path: {field_path}, format: field1}}"
     return f"""
-schema: nanopnp/case/v0.5
+schema: {CASE_SCHEMA}
 name: field-probe
 inputs:
   mesh: {{path: {mesh_path}, format: gmsh}}{charge}
@@ -287,9 +287,9 @@ def _pqr_text() -> str:
     return "\n".join(lines) + "\n"
 
 
-PRODUCER_CASE = """
-schema: nanopnp/case/v0.5
-name: producer-probe
+PRODUCER_CASE = (
+    f"schema: {CASE_SCHEMA}\n"
+    """name: producer-probe
 inputs:
   mesh: {{path: {mesh}, format: vol, groups: {{default: interface}}}}
   pqr: {{path: {pqr}, format: pqr}}
@@ -314,6 +314,7 @@ physics:
 numerics: {{continuation: none, elements: {{phi: {order}, c: {order}}}}}
 outputs: [current, fields]
 """
+)
 
 
 @pytest.fixture(scope="module")

@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from nanopnp.core.paths import profile_file
+from nanopnp.io.artefact import CASE_SCHEMA
 from nanopnp.io.case import (
     CaseValidationError,
     UnsupportedCaseSection,
@@ -51,9 +52,9 @@ def wall_size(document: CaseDocument) -> WallSize:
     return resolve_wall_size(document, permittivity_0=eps_r0(document))
 
 
-CASE = """\
-schema: nanopnp/case/v0.5
-name: sizing
+CASE = (
+    f"schema: {CASE_SCHEMA}\n"
+    """name: sizing
 inputs:
   profile: {{path: {path}}}
 electrolyte:
@@ -63,10 +64,11 @@ electrolyte:
 boundary_conditions: {{bias_V: 0.05, ground: cis}}
 physics: {{model: pnp-ns, solid_permittivities: {{protein: 20.0, membrane: 3.2}}}}
 {extra}"""
+)
 
-MESH_CASE = """\
-schema: nanopnp/case/v0.5
-name: supplied
+MESH_CASE = (
+    f"schema: {CASE_SCHEMA}\n"
+    """name: supplied
 inputs:
   mesh: {{path: pore.msh, format: msh41}}
 electrolyte:
@@ -77,6 +79,7 @@ physics: {{model: pnp-ns, solid_permittivities: {{membrane: 3.2}}}}
 numerics:
   mesh: {{{mesh}}}
 """
+)
 
 
 def case(
