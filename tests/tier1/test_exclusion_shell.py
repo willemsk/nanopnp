@@ -215,6 +215,18 @@ def test_ver59_an_offset_closing_the_constriction_is_refused_naming_its_z() -> N
     assert "a + h_c = 0.3000 nm" in message
 
 
+@pytest.mark.parametrize("vertex", [0, 1, 3])
+def test_ver59_a_non_finite_profile_coordinate_is_refused_naming_its_vertex(vertex: int) -> None:
+    """A NaN coordinate is a named gate failure (QR-12), not a GEOS or numpy error (REV-79)."""
+    points = np.array([(3.0, -5.0), (3.0, 0.0), (3.0, 5.0), (4.5, 5.0), (4.5, -5.0)])
+    points[vertex, 0] = np.nan
+    with pytest.raises(RegionGateError) as raised:
+        exclusion_shell(points, OFFSET_NM, H_C_NM, reservoir_radius_nm=30.0)
+    message = str(raised.value)
+    assert "exclusion shell input" in message
+    assert f"at vertex {vertex}" in message
+
+
 def test_ver59_an_outer_surface_inside_the_bound_is_refused_naming_where(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

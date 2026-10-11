@@ -339,6 +339,30 @@ def test_ver71_each_model_declares_the_leaves_it_does_not_read(model: str) -> No
     assert declaration(model).unread == UNREAD[model]
 
 
+@pytest.mark.parametrize("model", MODELS)
+def test_ver71_every_unread_path_is_a_schema_leaf(model: str) -> None:
+    """REV-76: a typo in `unread` would leave a refusal that never fires, with no error.
+
+    `_check_unread` only asks whether each walked leaf is in the set, so a path
+    that names no leaf matches nothing. A leaf with no schema default (poisson's
+    `electrolyte.concentration_M`, required by the schema) is a leaf all the same:
+    it has no value to compare, so it is classified and not refused.
+    """
+    from nanopnp.io.case_paths import case_fields
+    from nanopnp.physics.models import declaration
+
+    walked = {reference.path for reference in case_fields()}
+    unread = declaration(model).unread
+    assert unread <= walked, f"{model}: not schema leaves: {sorted(unread - walked)}"
+
+
+def test_ver71_the_shipped_models_are_the_ones_the_leaf_tests_cover() -> None:
+    """REV-76: a model registered without a row in `MODELS` would escape the checks above."""
+    from nanopnp.physics.models import registered_models
+
+    assert set(registered_models()) == set(MODELS)
+
+
 def test_ver71_the_switch_sets_honour_only_what_changes_the_operator() -> None:
     """REV-42 and its pnp-ns twins: a switch value that is an exact identity is not honoured."""
     from nanopnp.physics.models import declaration
@@ -387,6 +411,25 @@ def test_ver71_no_solve_leaf_is_accepted_and_inert(model: str, meshes: dict[str,
         ):
             inert.append(f"{path}: {value!r}")
     assert not inert, f"{model} accepts and ignores {inert}"
+
+
+def test_ver71_every_wall_part_off_is_refused_so_the_wall_distance_has_nothing_to_go_inert(
+    meshes: dict[str, Path],
+) -> None:
+    """REV-73: the one cross-leaf pair a refusal already covers (PHY-22).
+
+    With every correction's `wall` part off, `numerics.wall_distance.*` would have
+    no reader; the case is refused before the question arises. The other two
+    pairs the item names are open (variable density beside a density correction
+    of none, dielectric-gradient forces beside no permittivity concentration fit).
+    """
+    from nanopnp.io.case import CaseValidationError
+
+    document = base("epnp-ns", meshes)
+    for correction in CORRECTIONS:
+        document = put(document, f"electrolyte.corrections.{correction}.wall", False)
+    with pytest.raises(CaseValidationError, match="no correction model applies"):
+        fingerprint(document)
 
 
 @pytest.mark.parametrize("model", MODELS_D6)

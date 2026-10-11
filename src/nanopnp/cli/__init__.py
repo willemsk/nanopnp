@@ -100,7 +100,7 @@ def _common(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
         "--verbose",
         action="count",
         default=argparse.SUPPRESS,
-        dest="verbose",
+        dest="subcommand_verbose",
         help="log at INFO; twice for DEBUG. Log records go to stderr",
     )
     parser.add_argument(
@@ -1386,7 +1386,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         parser.print_help()
         return EXIT_OK
 
-    _configure_logging(args.verbose, args.log_file)
+    # The flag is accepted before and after the subcommand, on separate destinations: argparse
+    # copies a subparser's namespace over the parent's, so a shared one would let `-vv run -v`
+    # collapse to one level.
+    _configure_logging(args.verbose + getattr(args, "subcommand_verbose", 0), args.log_file)
     if args.command == "reproduce" and args.tolerance is None:
         from nanopnp.pipeline.reproduce import DEFAULT_TOLERANCE
 
@@ -1394,7 +1397,9 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     threads = getattr(args, "threads", None)
     if threads is not None:
-        for var in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):
+        from nanopnp.sweep.run import THREAD_VARIABLES
+
+        for var in THREAD_VARIABLES:
             os.environ[var] = str(threads)
 
     handler = args.handler
