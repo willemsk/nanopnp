@@ -49,7 +49,7 @@ from nanopnp.charge.stage import (
 from nanopnp.core import stages as stages_module
 from nanopnp.core.hashing import file_hash
 from nanopnp.core.stages import StageDescription, _catalogue, describe, register, walk_order
-from nanopnp.io.artefact import StageInputs
+from nanopnp.io.artefact import CASE_SCHEMA, StageInputs
 from nanopnp.io.manifest import CASE_FILENAME, MANIFEST_FILENAME, MANIFEST_SCHEMA
 from nanopnp.io.resolved import ResolvedCase
 from nanopnp.io.store import Store
@@ -491,16 +491,16 @@ def test_ver32_upto_names_a_stage_this_case_does_not_walk(
         run_case(cylindrical_pore_case, store=Store(tmp_path / "store"), upto="sovle", write=False)
 
 
-_MINIMAL = """
-schema: nanopnp/case/v0.5
+_MINIMAL = f"""
+schema: {CASE_SCHEMA}
 name: minimal
-inputs: {mesh: {path: pore.vol, format: vol}}
+inputs: {{mesh: {{path: pore.vol, format: vol}}}}
 electrolyte:
-  species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]
+  species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
   concentration_M: 1.0
   parameters: willems2020_nacl
-boundary_conditions: {bias_V: 0.1}
-physics: {model: pnp-ns}
+boundary_conditions: {{bias_V: 0.1}}
+physics: {{model: pnp-ns}}
 """
 
 

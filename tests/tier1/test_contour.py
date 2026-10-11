@@ -53,7 +53,7 @@ from nanopnp.geometry.profile import (
     signed_area,
     write_profile,
 )
-from nanopnp.io.artefact import Artefact, StageInputs
+from nanopnp.io.artefact import CASE_SCHEMA, Artefact, StageInputs
 from nanopnp.io.case import CaseValidationError
 from nanopnp.io.store import Store
 from nanopnp.pipeline.case import load_case, resolve
@@ -457,7 +457,7 @@ def tube(tube_pdb: Path) -> Path:
 def _case(directory: Path, pdb: Path, *, geometry: str = "", name: str = "tube") -> Path:
     path = directory / f"{name}.case.yaml"
     path.write_text(
-        "schema: nanopnp/case/v0.5\n"
+        f"schema: {CASE_SCHEMA}\n"
         f"name: {name}\n"
         "structure:\n"
         f"  source: {{path: {pdb}}}\n"

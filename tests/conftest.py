@@ -32,24 +32,32 @@ where it does: a backend whose every test can skip unseen is untested.
 
 from __future__ import annotations
 
+import copy
 import logging
 import math
 import os
 import pickle
 import shutil
+import sys
 import warnings
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pytest
 import yaml
 from filelock import FileLock
 
+from nanopnp.io.artefact import CASE_SCHEMA as CASE_SCHEMA
 from nanopnp.pipeline.case import resolve
+
+# Ensure tests.conftest resolves to this root conftest module (WP42 D17)
+sys.modules["tests.conftest"] = sys.modules[__name__]
+if "tests" in sys.modules:
+    sys.modules["tests"].conftest = sys.modules[__name__]
 
 if TYPE_CHECKING:
     import MDAnalysis as mda  # noqa: N813 - the alias the library documents
@@ -163,6 +171,84 @@ def apbs() -> None:
     require_apbs()
 
 
+# -- D17: Case fixtures and builder helpers (WP42) ----------------------------
+
+CASE_YAML_TEMPLATE: str = f"""\
+schema: {CASE_SCHEMA}
+name: minimal
+inputs: {{mesh: {{path: pore.vol, format: vol}}}}
+electrolyte:
+  species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
+  concentration_M: 1.0
+  parameters: willems2020_nacl
+boundary_conditions: {{bias_V: 0.1}}
+physics: {{model: pnp-ns}}
+"""
+
+
+@pytest.fixture
+def case_yaml_template() -> str:
+    """Return a valid minimal case YAML string declaring ``schema: {CASE_SCHEMA}``."""
+    return CASE_YAML_TEMPLATE
+
+
+def _deep_merge_dict(target: dict[str, Any], source: Mapping[str, Any]) -> dict[str, Any]:
+    for key, value in source.items():
+        if key in target and isinstance(target[key], dict) and isinstance(value, Mapping):
+            _deep_merge_dict(target[key], value)
+        else:
+            target[key] = copy.deepcopy(value) if isinstance(value, (dict, list)) else value
+    return target
+
+
+def _set_nested_override(
+    target: dict[str, Any],
+    path: str,
+    value: Any,  # noqa: ANN401
+) -> None:
+    parts = path.split(".")
+    curr = target
+    for part in parts[:-1]:
+        if part not in curr or not isinstance(curr[part], dict):
+            curr[part] = {}
+        curr = curr[part]
+    last = parts[-1]
+    if last in curr and isinstance(curr[last], dict) and isinstance(value, Mapping):
+        _deep_merge_dict(curr[last], value)
+    else:
+        curr[last] = copy.deepcopy(value) if isinstance(value, (dict, list)) else value
+
+
+def make_case_dict(**overrides: Any) -> dict[str, Any]:  # noqa: ANN401
+    """Return a valid case mapping with ``schema: CASE_SCHEMA``.
+
+    Supports top-level and dotted overrides (e.g.
+    ``make_case_dict(name="foo", **{"physics.model": "pnp-ns"})``), deep-merging
+    nested mappings.
+    """
+    base: dict[str, Any] = {
+        "schema": CASE_SCHEMA,
+        "name": "minimal",
+        "inputs": {"mesh": {"path": "pore.vol", "format": "vol"}},
+        "electrolyte": {
+            "species": [{"name": "Na+", "z": 1}, {"name": "Cl-", "z": -1}],
+            "concentration_M": 1.0,
+            "parameters": "willems2020_nacl",
+        },
+        "boundary_conditions": {"bias_V": 0.1},
+        "physics": {"model": "pnp-ns"},
+    }
+    for path, value in overrides.items():
+        _set_nested_override(base, path, value)
+    return base
+
+
+@pytest.fixture
+def make_case() -> Callable[..., dict[str, Any]]:
+    """Return the :func:`make_case_dict` helper for constructing case mappings."""
+    return make_case_dict
+
+
 PREPARED_TILT_DEG = 4.0
 """The tilt the prepared copy is left with, so the frame transform is not the identity."""
 
@@ -273,9 +359,9 @@ def prepared_2wcd(
     return Prepared2WCD(path=path, tilt_deg=PREPARED_TILT_DEG, rotation=rotation, shift_nm=shift)
 
 
-SEED_CASE = """\
-schema: nanopnp/case/v0.5
-name: 2wcd-seed
+SEED_CASE = (
+    f"schema: {CASE_SCHEMA}\n"
+    """name: 2wcd-seed
 structure:
   source: {{path: {pdb}}}
   symmetry: {{point_group: C12}}
@@ -286,6 +372,7 @@ electrolyte:
 boundary_conditions: {{bias_V: 0.05, ground: cis}}
 physics: {{model: epnp-ns, solid_permittivities: {{protein: 20.0, membrane: 3.2}}}}
 """
+)
 """The structure block and the default ``geometry.density`` every 2WCD file walks.
 
 Stages 1 to 3 key on these alone -- the source's digest, the point group and the
@@ -665,7 +752,7 @@ def write_charged_tube(
     pqr.write_text("\n".join(lines) + "\n", encoding="utf-8")
     case = directory / "case.yaml"
     case.write_text(
-        f"""schema: nanopnp/case/v0.5
+        f"""schema: {CASE_SCHEMA}
 name: charged-tube
 inputs:
   profile: {{path: {profile}}}
@@ -859,9 +946,9 @@ def seeded_protonated_2wcd(
 
 # -- REV-29: Consolidated cylindrical pore case and mesh ----------------------
 
-CYLINDRICAL_PORE_CASE = """\
-schema: nanopnp/case/v0.5
-name: run-probe
+CYLINDRICAL_PORE_CASE = (
+    f"schema: {CASE_SCHEMA}\n"
+    """name: run-probe
 inputs:
   mesh:
     path: {mesh_path}
@@ -889,6 +976,7 @@ numerics:
   stabilisation: none
 outputs: [current, transport_numbers, eof_rate]
 """
+)
 
 
 @pytest.fixture(scope="session")
@@ -932,9 +1020,9 @@ VAL05_REFERENCE_MIN_QUALITY = 0.6378
 VAL05_REFERENCE_MEAN_QUALITY = 0.9765
 """Its mean element quality, by the same unstated measure."""
 
-VAL05_FROZEN_CASE = """\
-schema: nanopnp/case/v0.5
-name: {name}
+VAL05_FROZEN_CASE = (
+    f"schema: {CASE_SCHEMA}\n"
+    """name: {name}
 {source}electrolyte:
   species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
   concentration_M: 1.0
@@ -959,6 +1047,7 @@ numerics:
   mesh: {{size_scale: {size_scale}}}
 outputs: [current]
 """
+)
 
 
 @dataclass(frozen=True)

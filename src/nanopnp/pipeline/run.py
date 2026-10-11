@@ -778,7 +778,7 @@ def _short_of_stage_7(walk: _Walk) -> str:
     """
     order = walk_order()
     if walk.records and "charge" in order:
-        target = walk.records[-1].name
+        target = str(walk.records[-1].name)
         if target in order and order.index(target) > order.index("charge"):
             return f"the walk to {target!r} does not read stage 7, so it did not run it"
     return "the walk stopped before stage 7"

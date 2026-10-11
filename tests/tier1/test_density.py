@@ -35,6 +35,7 @@ from nanopnp.density.union import (
     deposit,
     gate_density,
 )
+from nanopnp.io.artefact import CASE_SCHEMA
 from nanopnp.io.case import CaseValidationError
 from nanopnp.io.store import Store
 from nanopnp.pipeline.case import load_case, resolve
@@ -75,7 +76,7 @@ def _kept(g: np.ndarray) -> np.ndarray:
 def _case(tmp_path: Path, pdb: Path, *, geometry: str = "", inputs: str = "") -> Path:
     """Write a case carrying ``structure:`` for ``pdb``, and return its path."""
     text = (
-        "schema: nanopnp/case/v0.5\n"
+        f"schema: {CASE_SCHEMA}\n"
         "name: density\n"
         f"{inputs}"
         "structure:\n"

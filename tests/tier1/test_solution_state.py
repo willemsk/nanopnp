@@ -42,7 +42,7 @@ from typing import Any
 import pytest
 
 from nanopnp.charge.stage import ResolvedFields
-from nanopnp.io.artefact import SOLUTION_SCHEMA, Artefact, StageInputs
+from nanopnp.io.artefact import CASE_SCHEMA, SOLUTION_SCHEMA, Artefact, StageInputs
 from nanopnp.io.case import CaseDocument
 from nanopnp.io.resolved import ResolvedCase
 from nanopnp.mesh.ingest import ingest
@@ -102,9 +102,9 @@ ROUTE_TOLERANCE = 1e-3
 CONCENTRATION_M = 0.1
 BIAS_V = 0.02
 
-CASE = """
-schema: nanopnp/case/v0.5
-name: state-probe
+CASE = (
+    f"schema: {CASE_SCHEMA}\n"
+    """name: state-probe
 inputs:
   mesh:
     path: {mesh_path}
@@ -132,6 +132,7 @@ numerics:
   stabilisation: none
 outputs: [current]
 """
+)
 
 
 @dataclass

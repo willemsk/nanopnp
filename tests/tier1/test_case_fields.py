@@ -28,7 +28,7 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 from nanopnp.core.stages import create, describe
-from nanopnp.io.artefact import StageInputs
+from nanopnp.io.artefact import CASE_SCHEMA, StageInputs
 from nanopnp.io.case import (
     CaseDocument,
     CaseValidationError,
@@ -171,6 +171,7 @@ def test_if09_case_fields_enumerates_the_whole_schema() -> None:
     Both directions in one assertion: an extra path and a missing one are the
     same equality failure, and the diff names whichever it was.
     """
+    assert CASE_SCHEMA.startswith("nanopnp/case/")
     found = case_fields()
     assert tuple(reference.path for reference in found) == SCHEMA_PATHS
 
