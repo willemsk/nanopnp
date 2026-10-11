@@ -49,13 +49,14 @@ from typing import TYPE_CHECKING
 
 from nanopnp.core.hashing import content_hash
 from nanopnp.core.typing import Mesh
+from nanopnp.io.artefact import MESH_ARTEFACT_SCHEMA
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
 
 _LOGGER = logging.getLogger(__name__)
 
-MESH_SCHEMA = "nanopnp/mesh/v1"
+MESH_SCHEMA: str = MESH_ARTEFACT_SCHEMA
 """Stage 6: a tagged mesh, addressed by the content of its arrays and tag maps."""
 
 TOL_NM = 1e-9

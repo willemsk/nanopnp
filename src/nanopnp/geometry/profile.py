@@ -31,11 +31,12 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from nanopnp.core.hashing import content_hash
 from nanopnp.core.paths import profile_file
+from nanopnp.io.artefact import PROFILE_ARTEFACT_SCHEMA
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
 
-PROFILE_SCHEMA: str = "nanopnp/profile/v1"
+PROFILE_SCHEMA: str = PROFILE_ARTEFACT_SCHEMA
 """Schema identifier every profile fixture must declare."""
 
 REFERENCE_SOURCES: frozenset[str] = frozenset({"model-report", "author-supplied"})

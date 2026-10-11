@@ -50,16 +50,15 @@ REDUCED_SCHEMA = "nanopnp/reduced/v1"
 PROFILE_ARTEFACT_SCHEMA = "nanopnp/profile/v1"
 """Stage 4: the conditioned, gated contour, a ``nanopnp/profile/v1`` document (FR-07, FR-08).
 
-The same string as :data:`nanopnp.geometry.profile.PROFILE_SCHEMA`, repeated rather
-than imported for the reason :data:`MESH_ARTEFACT_SCHEMA` gives: the payload *is*
-a profile document, which ``inputs.profile`` reads back (WP20 D12).
+Canonical schema definition imported downward by domain packages
+(:data:`nanopnp.geometry.profile.PROFILE_SCHEMA`, WP42 D14).
 """
 
 REGION_SCHEMA = "nanopnp/region/v1"
 """Stage 5: the declarative record of the tagged (r, z) region (FR-09, WP21 D5).
 
-The same string as :data:`nanopnp.geometry.region.REGION_SCHEMA`, repeated for
-the reason :data:`MESH_ARTEFACT_SCHEMA` gives.
+Canonical schema definition imported downward by domain packages
+(:data:`nanopnp.geometry.region.REGION_SCHEMA`, WP42 D14).
 """
 
 MATERIALS_SCHEMA = "nanopnp/materials/v1"
@@ -68,10 +67,8 @@ MATERIALS_SCHEMA = "nanopnp/materials/v1"
 MESH_ARTEFACT_SCHEMA = "nanopnp/mesh/v1"
 """Stage 6: a tagged, gated mesh in the boundary vocabulary (IF-06).
 
-The same string as :data:`nanopnp.mesh.adapter.MESH_SCHEMA`, which is the domain
-separator of the mesh content hash, and deliberately repeated rather than
-imported: ``io`` imports nothing from ``mesh`` at run time (see the module
-docstring), and one schema naming one thing in two places is the intent.
+Canonical schema definition imported downward by domain packages
+(:data:`nanopnp.mesh.adapter.MESH_SCHEMA`, WP42 D14).
 """
 
 PROTONATION_SCHEMA = "nanopnp/protonation/v1"
