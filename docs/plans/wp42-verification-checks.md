@@ -278,8 +278,8 @@ case with `permittivity: {wall: false}`; one with `driver: ionic_strength`; one 
 | P10b | 2026-10-11 | Go 10b |
 | R10b | 2026-10-11 | Approved R10b, go P11 |
 | P11 | 2026-10-11 | Approved R10b, go P11 |
-| R11 | 2026-10-11 | pending |
-| P12 | 2026-10-11 | pending |
+| R11 | 2026-10-11 | Approve R11, go P12 |
+| P12 | 2026-10-11 | Approve R11, go P12 |
 | R12 | 2026-10-11 | pending |
 | P13 | 2026-10-11 | pending |
 | R13 | 2026-10-11 | pending |
