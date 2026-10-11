@@ -1290,6 +1290,37 @@ def test_cr6_format_quantity_value() -> None:
     assert _format_quantity_value(42) == "42"
 
 
+def test_cr4_reproduce_without_a_tolerance_takes_the_pipelines_default(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """IF-02: `reproduce` names how closely the comparison must agree, defaulting to one place."""
+    from nanopnp.pipeline.reproduce import DEFAULT_TOLERANCE
+
+    seen: list[float] = []
+
+    def handler(args: argparse.Namespace) -> int:
+        seen.append(args.tolerance)
+        return EXIT_OK
+
+    monkeypatch.setattr("nanopnp.cli._reproduce", handler)
+    assert main(["reproduce", "run-dir"]) == EXIT_OK
+    assert main(["reproduce", "run-dir", "--tolerance", "0.5"]) == EXIT_OK
+    assert seen == [DEFAULT_TOLERANCE, 0.5]
+
+
+def test_cr4_verbosity_given_before_and_after_the_subcommand_adds_up(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """CR-4 (REV-78): `-vv env -v` is three levels, not the subcommand's one."""
+    levels: list[int] = []
+    monkeypatch.setattr(
+        "nanopnp.cli._configure_logging", lambda verbose, log_file: levels.append(verbose)
+    )
+    for argv in (["env"], ["-v", "env"], ["env", "-v"], ["-vv", "env", "-v"]):
+        assert main(argv) == EXIT_OK
+    assert levels == [0, 1, 1, 3]
+
+
 def test_cr7_run_threads_flag_sets_environment(
     cylindrical_pore_case: Path,
     tmp_path: Path,

@@ -347,7 +347,7 @@ def check_extension(
     def _mean_square(target: Expression, boundary: str) -> float:
         region = mesh.Boundaries(boundary)
         length = float(ngs.Integrate(ngs.CF(1.0), mesh, definedon=region))
-        if not length > 0.0:  # pragma: no cover - missing boundary in mesh
+        if not length > 0.0:
             known = ", ".join(sorted(set(mesh.GetBoundaries())))
             raise ExtensionError(f"no boundary matching {boundary!r} in this mesh; it has {known}")
         difference = extension - ngs.CF(target)

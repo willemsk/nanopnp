@@ -631,7 +631,8 @@ def exclusion_shell(
     Raises
     ------
     RegionGateError
-        Naming the criterion, the value, the threshold and where: an offset
+        Naming the criterion, the value, the threshold and where: a non-finite
+        profile coordinate; an offset
         within ``h_c`` of the axis, which closes the constriction, with the z
         interval and the body's least radius over it; a vertex outside the
         reservoir; a ring that is invalid, not simple or more than one face; an
@@ -648,6 +649,14 @@ def exclusion_shell(
         raise _missing_shapely(error) from error
     import numpy as np
 
+    if not np.isfinite(points).all():
+        bad = np.argwhere(~np.isfinite(points))[0]
+        raise RegionGateError(
+            "exclusion shell input",
+            f"a non-finite coordinate, {float(points[bad[0], bad[1]])}, at vertex {int(bad[0])}",
+            "finite (r, z) for every vertex",
+            f"at vertex {int(bad[0])} of the model-frame profile",
+        )
     body = Polygon(points)
     radius = EXCLUSION_CLOSING * h_c_nm
     dilated = body.buffer(offset_nm, quad_segs=EXCLUSION_QUAD_SEGS)

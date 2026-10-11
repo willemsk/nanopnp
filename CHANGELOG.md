@@ -29,7 +29,8 @@ pre-release `v1` and `v2` identifiers; models declare and refuse non-default lea
 the `pnp` model honours only `flow: false`, `variable_density: false`, and `inertia: false`;
 inf-sup checks are gated on flow models; Example 06 stage-7 keys and per-ion Einstein ratios are pinned;
 and duplicated test fixtures and constants are consolidated. It resolves REV-11, REV-12, REV-13,
-REV-23, REV-29, REV-34, REV-42, REV-44, REV-48, and REV-66, discharging VER-70, VER-71, QR-12,
+REV-23, REV-29, REV-34, REV-42, REV-44, REV-48, REV-66, REV-71, REV-74, REV-75, REV-76, REV-77,
+REV-78, and REV-79, discharging VER-70, VER-71, QR-12,
 FR-25, PHY-13, PHY-21, PHY-22, IF-03, VER-56, and VER-62 (at 10⁻⁸).
 
 ### Added
@@ -53,6 +54,12 @@ FR-25, PHY-13, PHY-21, PHY-22, IF-03, VER-56, and VER-62 (at 10⁻⁸).
 - **Breaking:** The `pnp` model honours only `variable_density: false` and `inertia: false` (REV-42).
 - **Breaking:** The load-time inf-sup check runs only when `numerics.elements.u` is read by the model
   and `physics.flow` is true (REV-66).
+- **Breaking:** Stage 10's key carries `algorithm_revision` (`SOLVE_ALGORITHM_REVISION`, bumped by
+  any change that moves a converged number) and the Newton record's `field_floor_ratio`, and a supplied
+  charge field's artefact carries its `quadrature_order`; a solution stored by an earlier build misses
+  and is solved again (REV-71, §5.3.2). The `-v` flag given before and after a subcommand adds up (REV-78).
+- `exclusion_shell` refuses a non-finite profile coordinate with a `RegionGateError` naming the vertex
+  (REV-79, QR-12).
 - Stage-10 solve hashes re-recorded for `pnp-ns`, `pnp`, `pb`, and `pb-linear` under amended case
   variants, with fingerprints proven bit-identical to the unedited cases when unread checks are lifted (VER-56).
 - Example 06 stage-7 keys pinned in `test_validation_identity.py` (REV-13).

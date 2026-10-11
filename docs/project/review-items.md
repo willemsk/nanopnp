@@ -717,13 +717,29 @@ sites in `physics/models.py`, not their callers.
 **Open.** For the author: whether the charge object carries its own source term (one argument,
 the rule inside it), a change to the model interface outside WP41's scope.
 
+**Update (WP42).** The ruled fix, raising when `fixed_charge` is given without a rule order, does
+not hold as written. `None` is a deliberate value: a `DepositedCharge` has `quadrature_order = None`
+(`charge/deposit.py`), `solve/state.py` passes it through, and the tier-2 benchmarks pass analytic
+`CoefficientFunction` densities (`test_poisson_layers.py`, `test_force_routes.py`,
+`test_force_convergence.py`), for which NGSolve's estimate is right. A raise would refuse all of
+them. What is left is the larger option above, or a sentinel that makes "estimate" an explicit
+choice. Back with the author.
+
 ### REV-73 — Cross-leaf inertness is not checked
 
 *Area:* physics. *Severity:* low. *Found:* PR #85 (WP42).
 
 **Measured.** VER-71 probes single leaves from each model's base, but does not probe leaves rendered inert by another leaf's value (such as `variable_density` beside a `none` density correction, `dielectric_gradient_forces` beside no permittivity concentration fit, or wall distance with every wall part off).
 
-**Open.** Phase 5 (§8.2.9 I3).
+**Open.** For the author. The "Phase 5 (§8.2.9 I3)" cite is wrong: that row's title covers REV-23 to REV-65.
+
+**Update (WP42).** Probed from the epnp-ns base, one of the three pairs is already refused and
+now tested (`test_ver71_every_wall_part_off_is_refused_so_the_wall_distance_has_nothing_to_go_inert`:
+PHY-22 refuses the wall parts off before `numerics.wall_distance.*` can go inert). The other two are
+accepted and ignored: `physics.variable_density: false` beside `electrolyte.corrections.density.model: none`,
+and `physics.dielectric_gradient_forces: true` beside `electrolyte.corrections.permittivity.concentration: false`.
+Each needs a refusal in `pipeline/checks.py` and a specification edit (§5.4.3), so neither is built
+here. Back with the author.
 
 ### REV-74 — An untested raise in the force extension carries a coverage pragma
 
@@ -731,7 +747,7 @@ the rule inside it), a change to the model interface outside WP41's scope.
 
 **Measured.** forces.py `_mean_square` (line 350) refuses a missing boundary under `# pragma: no cover - missing boundary in mesh`; no test reaches it, so the gate that names the boundary is outside the 100 % diff-cover claim (VER-72 f).
 
-**Open.** For the author: a test that passes `extension_error` an unknown boundary name, then the pragma comes off.
+**Fixed.** The author ruled the test is written (WP42): `test_num28_check_extension_names_a_boundary_the_mesh_does_not_have` reaches the raise through `check_extension`, and the pragma is gone.
 
 ### REV-75 — The two defaults modules duplicate the specs' defaults
 
@@ -747,7 +763,7 @@ the rule inside it), a change to the model interface outside WP41's scope.
 
 **Measured.** Neither `_check_unread` nor `register_model` checks that each path in `unread` exists, or has a default; a typo in a model's set makes its refusal never fire, with no error. `_check_unread` also walks all 105 `case_fields` per call rather than the model's own set (VER-71).
 
-**Open.** For the author: validate at registration (D4, D7); a one-line check per path.
+**Fixed.** The author ruled the subset test (WP42): `test_ver71_every_unread_path_is_a_schema_leaf` holds every model's `unread` inside the walked leaves, and `test_ver71_the_shipped_models_are_the_ones_the_leaf_tests_cover` holds the registry to `MODELS`. No registration-time check, because `physics` may not import `io` (§5.4.1). A leaf with no schema default (poisson's `electrolyte.concentration_M`) is a leaf and is not refused, as VER-71 already allows. `_check_unread` still walks all 105 leaves per call.
 
 ### REV-77 — Pinning every artefact schema at v0.5 removes the cache-bust a payload change needs
 
@@ -763,7 +779,7 @@ the rule inside it), a change to the model interface outside WP41's scope.
 
 **Measured.** `cli/__init__.py` names the three variables that `sweep/run.py` defines as `THREAD_VARIABLES`, sets them permanently, works only before NumPy or NGSolve is imported, and `nanopnp -vv run c.yaml -v` collapses verbosity to 1.
 
-**Open.** For the author: import `THREAD_VARIABLES`; give the sub-parser's verbosity `default=SUPPRESS`.
+**Fixed.** The author ruled both fixes (WP42): the `--threads` branch imports `THREAD_VARIABLES` from `sweep/run.py` inside the branch (a top-level import would load the sweep on every invocation), and the subcommand's `-v` has its own destination, summed with the top-level count, so `-vv env -v` is three levels (`test_cr4_verbosity_given_before_and_after_the_subcommand_adds_up`). The item's remedy was already in place (the subparser defaulted to SUPPRESS); the collapse was the shared `dest`. The environment is still written for the life of the process, which is the CLI's own.
 
 ### REV-79 — The exclusion shell raises a bare ValueError for a NaN ring coordinate
 
@@ -771,4 +787,4 @@ the rule inside it), a change to the model interface outside WP41's scope.
 
 **Measured.** `geometry/region.py` rewrote its gate to `if not lowest >= h_c_nm`; with NaN `lowest`, `near` is empty and `near[:, 1].min()` raises `zero-size array to reduction operation minimum`, not a `RegionGateError` naming the gate, quantity and location (QR-12).
 
-**Open.** For the author: test for an empty `near` first and raise the named diagnostic.
+**Fixed.** Fixed by a finiteness check at the top of `exclusion_shell` (WP42) rather than a guard on the empty ring: the inner path is not reachable from a profile, because a NaN vertex is stopped earlier, by GEOS (`Points of LinearRing do not form a closed linestring`) or by the edge-distance gate. The check raises `RegionGateError` naming the vertex, for all of them (`test_ver59_a_non_finite_profile_coordinate_is_refused_naming_its_vertex`).

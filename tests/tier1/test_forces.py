@@ -85,6 +85,17 @@ class TestAxialExtension:
             check_extension(inverted, mesh)
         assert "inverted" in str(raised.value)
 
+    def test_num28_check_extension_names_a_boundary_the_mesh_does_not_have(
+        self, extension: object, mesh: object
+    ) -> None:
+        """A body pattern matching nothing is an error naming the mesh's boundaries (QR-12).
+
+        Were it measured, the empty region would integrate to zero and the check
+        would divide by it, or pass with nothing checked.
+        """
+        with pytest.raises(ExtensionError, match="no boundary matching 'no_such_body'"):
+            check_extension(extension, mesh, body="no_such_body")
+
     def test_num28_domain_form_is_invariant_to_the_pressure_datum(
         self, extension: object, mesh: object
     ) -> None:
