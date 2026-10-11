@@ -66,3 +66,16 @@ starts from the last converged state, and every rung is recorded. `-v` shows the
 is a fixed path, a case that switches the flow or its terms off is refused under it: use
 `numerics.continuation: none` for such an ablation (the NUM-18 NOTE). A sweep continues the same way
 across its points: each member starts from a converged neighbour.
+
+## Store and file resolution
+
+By default, the artefact store resides at `./nanopnp-store` relative to the current working directory, configurable via `--store` or the `NANOPNP_STORE` environment variable. Relative paths referenced within case files (such as `inputs.mesh.path` or structure paths) resolve relative to the current working directory from which `nanopnp` is invoked, rather than relative to the case file itself. Run `nanopnp env` to inspect the resolved store directory and data paths.
+
+## Multithreading and CPU concurrency
+
+NGSolve and underlying BLAS/LAPACK libraries use OpenMP and multithreading for linear algebra and finite-element assemblies. By default, NGSolve attempts to utilise all available CPU cores on the host, which can saturate shared compute nodes or container allocations.
+
+To restrict thread usage:
+- Pass `--threads <N>` to `nanopnp run` (e.g. `nanopnp run case.yaml --threads 4`). This sets `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS`, and `MKL_NUM_THREADS` before compute libraries initialize.
+- Alternatively, set the `OMP_NUM_THREADS` environment variable in your shell or submission script.
+- Parameter sweeps launched via `nanopnp sweep run` automatically pin worker thread counts to 1 to ensure linear scaling across independent processes.

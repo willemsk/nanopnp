@@ -14,6 +14,7 @@ from __future__ import annotations
 import logging
 import math
 from collections.abc import Callable
+from pathlib import Path
 
 from pydantic import ValidationError
 
@@ -65,6 +66,7 @@ logger = logging.getLogger(__name__)
 __all__ = [
     "check_document",
     "check_operating_point",
+    "check_referenced_files",
     "check_species",
     "element_orders",
     "options_at",
@@ -1061,3 +1063,43 @@ def check_operating_point(document: CaseDocument) -> None:
             f"numerics.wall_distance.max_distance_nm is {cap!r}; the PHY-02 saturation distance "
             "must be finite and positive, or the wall functions are evaluated at a capped d"
         )
+
+
+def check_referenced_files(document: CaseDocument) -> None:
+    """Verify that every external file referenced by a case document exists on disk.
+
+    Parameters
+    ----------
+    document
+        The validated case document.
+
+    Raises
+    ------
+    FileNotFoundError
+        If any referenced path does not exist.
+    """
+    targets: list[tuple[str, Path | str | None]] = []
+    if document.inputs.mesh is not None:
+        targets.append(("inputs.mesh.path", document.inputs.mesh.path))
+    if document.inputs.pqr is not None:
+        targets.append(("inputs.pqr.path", document.inputs.pqr.path))
+    if document.inputs.profile is not None:
+        targets.append(("inputs.profile.path", document.inputs.profile.path))
+    if document.inputs.charge is not None:
+        targets.append(("inputs.charge.path", document.inputs.charge.path))
+    if document.inputs.eps_r is not None:
+        targets.append(("inputs.eps_r.path", document.inputs.eps_r.path))
+    if document.structure is not None and document.structure.source is not None:
+        targets.append(("structure.source.path", document.structure.source.path))
+    if (
+        document.structure is not None
+        and document.structure.ensemble is not None
+        and document.structure.ensemble.trajectory is not None
+    ):
+        targets.append(("structure.ensemble.trajectory", document.structure.ensemble.trajectory))
+
+    for leaf, raw_path in targets:
+        if raw_path is not None:
+            path = Path(raw_path)
+            if not path.is_file():
+                raise FileNotFoundError(f"{leaf} '{path}' does not exist")
