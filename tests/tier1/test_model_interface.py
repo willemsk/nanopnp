@@ -86,11 +86,11 @@ every deviation is measured against (FR-25). Exempt from the literal rule only;
 neither may compare with a model name or name a model class."""
 
 SOLVE_HASHES = {
-    "epnp-ns": "7434504618fd58078a25abfe6970248d459cbac8d58b2361d3ce8f023d64816f",
-    "pnp-ns": "72a8974d89c3514d4074c6da8c5ac7bb4f676ca7b41e8b62e9eb2236a6014ff6",
-    "pnp": "56f1cad6d07638a863d63b7cd31e8a041c89637680a4a6df701f1f3291131aa6",
-    "pb": "cacf3344cae1bd81c9675b34c0b5908831f3e14bdd598194a7ebb1d651be6e28",
-    "pb-linear": "8e7475db3a51c40762881429a5bddfc80582a8558f928a8cce4356a7fef53fb4",
+    "epnp-ns": "b683d1e829079e5e74030d23ebb825bccb15882068db659cbfdb75e068ac980c",
+    "pnp-ns": "4bbc86663726392eb595c2435956be90ed60e9cd50bf59a3d0b957a24239fb2c",
+    "pnp": "eba9b516044f6c4e6e6bd52619b294eaf4c8a634d0acb354c63dfce66b68547d",
+    "pb": "a311c764e54df829f334dc2a869c70b0491189ff6ed02af5b640383bac58b6bb",
+    "pb-linear": "e5d5d4f11b3c421282b9869f8513f6855eb778fab2c0c865b16b6986ae0cf11b",
 }
 """``content_hash(SOLUTION_SCHEMA, solve_provenance)`` of the quick-start variants,
 re-recorded in WP42.
@@ -98,11 +98,11 @@ re-recorded in WP42.
 The stage-10 key itself. Its inputs are the case's own values -- no float in it is
 computed -- so the digest is the same on every platform."""
 
-_PB = "e649e106e8d8aa2d0ee4a45ac4c4122afb57955c81f530c0fb4307dabbce4566"
-_PB_SINH = "a6dc8664909d16cc1d7cec30dd86caf77aa7d8627a3de52103d472732e45f8c9"
-_EQUILIBRIUM = "231f3402154b4fbf1fd77eea0d0979dd6e7cbd1a4b92c248e0e2cbbb19a7f904"
-_FLOW = "134f4b057928097ddd272026eb34a84b873d5e58c11fdce08222908634c11ea2"
-_STERIC = "b3173a4bcdb1c084a0e208479c964b0294d7c1c466cd99f378c490a38249179f"
+_PB = "e3e283c19d22981885507c78f84d525e032b48b4da15203f26dc3c19ce713137"
+_PB_SINH = "9b707ed86894cf206ce882d1f6dc10077c6ee97e908fae648f0078112f5a53e5"
+_EQUILIBRIUM = "d99735b23fcb2acc60cec4dffff20ec44248868ef923d97a67286796f8f554d7"
+_FLOW = "83e3acf8ea0d12adf072e82b6776c0b83fbcd8b00b9f53f92b53886c368d72de"
+_STERIC = "341fc8f45a8f56c990cc03dc385973956a705b387a0a3e7ed67464028d464638"
 _BIAS = tuple((f"5-ramp-bias-+{mV}mV", _EQUILIBRIUM) for mV in (10, 20, 30, 40, 50))
 _SALT = ("9-salt-0.05946M", "9-salt-0.07071M", "9-salt-0.08409M", "9-salt-0.1M")
 RUNG_HASHES: dict[str, tuple[tuple[str, str], ...]] = {
@@ -112,7 +112,7 @@ RUNG_HASHES: dict[str, tuple[tuple[str, str], ...]] = {
         ("3-equilibrium-pnp", _EQUILIBRIUM),
         *_BIAS,
         ("6-flow", _FLOW),
-        ("7-corrections", "59ab8e92e3df72436498bb55960322e1ac53532ab90b14f98e82250f6aeee478"),
+        ("7-corrections", "f8e0bceb65d611b2997a5fe1d576cab039870b38e5f655f5110670719f8b1031"),
         ("8-steric", _STERIC),
         *((name, _STERIC) for name in _SALT),
     ),
@@ -916,7 +916,7 @@ def _field_document(path: Path) -> Path:
     q_net_e = 2.0 * math.pi * r0 * 1e-9 * RING_CHARGE_E
     path.write_text(
         f"""
-schema: nanopnp/field/v1
+schema: nanopnp/field/v0.5
 name: volume-ring
 quantity: volume_charge_density
 units: C/m^3

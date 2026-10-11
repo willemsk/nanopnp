@@ -8,13 +8,13 @@ table below is the whole of what is written:
 - ``density``: ``.npz``, the stored map; or OpenDX and CCP4/MRC, in ångströms
   (IF-05, §8.2.2 B10);
 - ``symmetry``: ``.npz``, the stored reduction;
-- ``contour``: ``.yaml``, the stored ``nanopnp/profile/v1`` document;
+- ``contour``: ``.yaml``, the stored ``nanopnp/profile/v0.5`` document;
 - ``mesh``: ``.msh``, the stored MSH 4.1 file (IF-06);
 - ``protonation``: ``.pqr``, the atom table in ångströms in stage 1's frame, one
   ``MODEL`` per frame where there is more than one, which reads back through
   ``inputs.pqr`` to the stored payload exactly (WP27 D16);
 - ``charge``: ``.yaml``, the deposited charge's export lattice as a
-  ``nanopnp/field/v1`` document with its ``.npz`` beside it, which reads back
+  ``nanopnp/field/v0.5`` document with its ``.npz`` beside it, which reads back
   through ``inputs.charge`` to the same digest; or OpenDX and CCP4/MRC, the
   lattice alone, in nm (IF-05, WP28 D11).
 

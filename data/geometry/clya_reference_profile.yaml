@@ -6,7 +6,7 @@
 # this file from the table and fails if the two have drifted.
 #
 # The closing edge from the last vertex back to the first is implied, not repeated.
-schema: nanopnp/profile/v1
+schema: nanopnp/profile/v0.5
 name: clya_reference_profile
 description: >-
   The ClyA-AS pore boundary in the (r, z) half-plane, as delivered: a simple closed loop of 185

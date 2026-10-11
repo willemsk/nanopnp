@@ -237,7 +237,7 @@ def _solid_fraction_field() -> SolidFractionField:
     )
     document = FieldDocument.model_validate(
         {
-            "schema": "nanopnp/field/v1",
+            "schema": "nanopnp/field/v0.5",
             "name": "chi",
             "quantity": "solid_fraction",
             "units": "1",
@@ -473,7 +473,7 @@ def test_ver32_only_refuses_an_upstream_the_store_does_not_hold(
         )
     message = str(raised.value)
     assert "'mesh'" in message
-    assert "nanopnp/mesh/v1" in message
+    assert "nanopnp/mesh/v0.5" in message
     assert str(tmp_path / "store") in message
 
 

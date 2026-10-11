@@ -78,7 +78,7 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
-RUN_SCHEMA = "nanopnp/run/v1"
+RUN_SCHEMA = "nanopnp/run/v0.5"
 """Schema of the run record written beside the manifest."""
 
 RUN_RECORD_FILENAME = "run.json"

@@ -667,7 +667,7 @@ def test_ver51_case_values_and_walk(tube: Path, tube_store: Store, tmp_path: Pat
         run_case(case, store=tube_store, upto="region", write=False)
     sweep = tmp_path / "sweep.yaml"
     sweep.write_text(
-        "schema: nanopnp/sweep/v1\n"
+        "schema: nanopnp/sweep/v0.5\n"
         "name: contour-sweep\n"
         f"base: {case}\n"
         "axes:\n"

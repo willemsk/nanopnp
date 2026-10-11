@@ -1218,7 +1218,7 @@ def build_parser() -> argparse.ArgumentParser:
     actions = sweep.add_subparsers(dest="action", required=True)
 
     planner = _common(actions.add_parser("plan", help="enumerate and check every point"))
-    planner.add_argument("document", type=Path, help="the sweep file (schema: nanopnp/sweep/v1)")
+    planner.add_argument("document", type=Path, help="the sweep file (schema: nanopnp/sweep/v0.5)")
     planner.add_argument("--store", type=Path, default=None, help="artefact store root")
     planner.add_argument(
         "--no-mesh-check",
@@ -1281,7 +1281,7 @@ def build_parser() -> argparse.ArgumentParser:
     # ``%%`` throughout the help strings below: argparse percent-formats help text,
     # and a bare ``%G`` makes ``--help`` raise rather than print.
     grid = _common(steps.add_parser("export-grid", help="print the %%Grid axes COMSOL is given"))
-    grid.add_argument("probe", type=Path, help="the nanopnp/probe/v1 document")
+    grid.add_argument("probe", type=Path, help="the nanopnp/probe/v0.5 document")
     grid.add_argument("--output", type=Path, default=None, help="write the axes to this file")
     grid.set_defaults(handler=_validate)
 

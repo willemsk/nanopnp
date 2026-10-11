@@ -216,7 +216,7 @@ def test_a_fixture_declaring_another_schema_names_the_file_and_the_schema(tmp_pa
     raw["schema"] = "nanopnp/profile/v99"
     path = tmp_path / "future.yaml"
     path.write_text(yaml.safe_dump(raw), encoding="utf-8")
-    with pytest.raises(ValueError, match="expected schema 'nanopnp/profile/v1'"):
+    with pytest.raises(ValueError, match=r"expected schema 'nanopnp/profile/v0\.5'"):
         load_profile(path)
 
 

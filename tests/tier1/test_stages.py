@@ -260,7 +260,7 @@ def test_ver25_a_stage_cannot_be_registered_twice() -> None:
         title="Solve",
         inputs=(),
         outputs=(),
-        artefact_schema="nanopnp/solution/v2",
+        artefact_schema="nanopnp/solution/v0.5",
         takes_workspace=False,
         takes_store=False,
         key_is_artefact=False,

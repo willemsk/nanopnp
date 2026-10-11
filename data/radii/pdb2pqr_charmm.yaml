@@ -13,7 +13,7 @@
 # The lookup rules (the histidine names, the atom aliases and the terminal patches) are data
 # too, below the notice; nanopnp.density.radii applies them in the order of WP19 D3.
 
-schema: nanopnp/radii/v1
+schema: nanopnp/radii/v0.5
 name: pdb2pqr_charmm
 source:
   file: pdb2pqr/dat/CHARMM.DAT

@@ -106,7 +106,7 @@ def _ring(charge_e: float = -12.0, **overrides: float) -> FormSpec:
 def _document(spec: FormSpec, **overrides: object) -> FieldDocument:
     """Return a valid field document over an analytic form."""
     payload: dict[str, object] = {
-        "schema": "nanopnp/field/v1",
+        "schema": "nanopnp/field/v0.5",
         "name": "ring",
         "quantity": "areal_charge_density",
         "units": "C/m^2",
@@ -294,7 +294,7 @@ def test_ver29_a_non_uniform_axis_is_refused_rather_than_resampled():
 def test_if03_an_unknown_key_in_a_field_document_is_rejected_naming_it(tmp_path):
     path = tmp_path / "field.yaml"
     path.write_text(
-        "schema: nanopnp/field/v1\n"
+        "schema: nanopnp/field/v0.5\n"
         "name: ring\n"
         "quantity: areal_charge_density\n"
         "units: C/m^2\n"
@@ -328,7 +328,7 @@ def test_ver29_declared_units_convert_onto_the_canonical_si_unit(tmp_path):
     grid = RadialGrid.from_axes(np.array([0.0, 1.0]), np.array([0.0, 1.0]), np.full((2, 2), 2.0))
     write_grid(grid, tmp_path / "ring.npz")
     (tmp_path / "field.yaml").write_text(
-        "schema: nanopnp/field/v1\n"
+        "schema: nanopnp/field/v0.5\n"
         "name: ring\n"
         "quantity: areal_charge_density\n"
         "units: e/m^2\n"
@@ -363,7 +363,7 @@ def test_ver29_a_declared_grid_descriptor_is_checked_against_the_data(tmp_path):
     grid = RadialGrid.from_axes(np.array([0.0, 1.0]), np.array([0.0, 1.0]), np.zeros((2, 2)))
     write_grid(grid, tmp_path / "ring.npz")
     (tmp_path / "field.yaml").write_text(
-        "schema: nanopnp/field/v1\n"
+        "schema: nanopnp/field/v0.5\n"
         "name: ring\n"
         "quantity: solid_fraction\n"
         "units: '1'\n"

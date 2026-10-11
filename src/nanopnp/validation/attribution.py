@@ -90,7 +90,7 @@ __all__ = [
     "write_report",
 ]
 
-ATTRIBUTION_SCHEMA = "nanopnp/attribution/v1"
+ATTRIBUTION_SCHEMA = "nanopnp/attribution/v0.5"
 """Schema identifier of the report, and the separator of its content hash."""
 
 IDENTITY_TOLERANCE = 1e-14

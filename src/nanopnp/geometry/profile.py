@@ -508,7 +508,7 @@ def load_profile(name_or_path: str | Path) -> PoreProfile:
 
 
 def write_profile(profile: PoreProfile, path: Path) -> Path:
-    """Write ``profile`` as a ``nanopnp/profile/v1`` YAML document that :func:`load_profile` reads.
+    """Write ``profile`` as a ``nanopnp/profile/v0.5`` document that :func:`load_profile` reads.
 
     Every float is written as Python's shortest round-trip representation, so
     the vertices read back bit for bit and the provenance block's measurements

@@ -139,7 +139,7 @@ def test_ver55_the_stage_list_is_a_projection_of_the_event_stream() -> None:
             Stage(name="structure", index=1, total=7),
             Produced(
                 name="structure",
-                schema="nanopnp/structure/v1",
+                schema="nanopnp/structure/v0.5",
                 hash="a" * 64,
                 cached=True,
                 store=store,
@@ -147,7 +147,7 @@ def test_ver55_the_stage_list_is_a_projection_of_the_event_stream() -> None:
             Stage(name="density", index=2, total=7),
             Produced(
                 name="density",
-                schema="nanopnp/density/v1",
+                schema="nanopnp/density/v0.5",
                 hash="b" * 64,
                 cached=False,
                 store=store,
@@ -251,7 +251,7 @@ def test_ver55_an_invalid_edit_cannot_be_saved(edit, message: str, tmp_path: Pat
 
     # The loader, reading the same vertices from a file, says the same sentence.
     document = {
-        "schema": "nanopnp/profile/v1",
+        "schema": "nanopnp/profile/v0.5",
         "name": "edited",
         "provenance": {
             "source": HAND_EDIT_SOURCE,

@@ -32,6 +32,7 @@ from pathlib import Path
 import pytest
 
 from nanopnp.core.hashing import content_hash
+from nanopnp.geometry.profile import load_profile
 from nanopnp.io.artefact import CHARGE_GRID_SCHEMA, StageInputs
 from nanopnp.io.store import Store
 from nanopnp.pipeline.case import load_case, resolve
@@ -53,17 +54,56 @@ KEYS_V2 = {
 }
 """The same keys with stage 7 at ``nanopnp/fields/v2`` (WP32 D15); region and mesh unchanged."""
 
-FIELDS_SCHEMA_V1 = "nanopnp/fields/v1"
-"""The stage-7 schema ``KEYS`` was recorded under."""
+KEYS_V05 = {
+    "region": "85d3b34627c4a56b38640ffa6222ec8e53838090cab296a4d596b02cac68b7e2",
+    "mesh": "89551d4667c54f0d0c648b4c0e7caed46c3aa4c3e3994b9180366a2252d45517",
+    "charge": "474b5b376e231d0f18d0e57e321c5fdb096f92f9a122f9c80b0e3f33e53e30a8",
+    "solve": "440707a22714ce28eb4d5e846fd302b5515999a5857663a6a7d07b40eec13935",
+}
+"""The keys under repo-wide v0.5 schemas."""
+
+PROFILE_SCHEMA_V1 = "nanopnp/profile/v1"
+"""The pore profile schema ``KEYS`` was recorded under."""
+
+REGION_SCHEMA_V1 = "nanopnp/region/v1"
+"""The stage-5 schema ``KEYS`` was recorded under."""
+
+MESH_ARTEFACT_SCHEMA_V1 = "nanopnp/mesh/v1"
+"""The stage-6 schema ``KEYS`` was recorded under."""
+
+PROTONATION_SCHEMA_V1 = "nanopnp/protonation/v1"
+"""The stage-7 protonation schema ``KEYS`` was recorded under."""
 
 CHARGE_GRID_SCHEMA_V1 = "nanopnp/charge-grid/v1"
 """The lattice's schema then; its key is one of stage 7's inputs."""
 
-RECORD_SHA256 = "03da655ef254808e3403034ac9dd188335edc2f9630edb6565d967528c8583d7"
-"""``region.yaml``'s digest on ``bbca737``, Linux x86_64, CPython 3.12."""
+FIELDS_SCHEMA_V1 = "nanopnp/fields/v1"
+"""The stage-7 schema ``KEYS`` was recorded under."""
 
-RECORD_SHA256_WITHOUT_AREAS = "b41037c3587b2c398b7eb95900b39b620c55156b9a09d17f76ed6d65ca718463"
+MATERIALS_SCHEMA_V1 = "nanopnp/materials/v1"
+"""The stage-8 schema ``KEYS`` was recorded under."""
+
+CORRECTIONS_SHA256_V1 = "50058ebfa4715c50ac668f40a812e1df56197e9ba972446cf990cb9fd87d48bf"
+"""The digest of willems2020_nacl.yaml under schema nanopnp/corrections/v1."""
+
+SOLUTION_SCHEMA_V2 = "nanopnp/solution/v2"
+"""The stage-10 schema ``KEYS`` was recorded under."""
+
+RECORD_SHA256 = "b88bd7712339d83d97a3e691a9c3da9b4fa76d8b1946e190d8af6bdea8341db0"
+"""``region.yaml``'s digest under schema nanopnp/region/v0.5, Linux x86_64, CPython 3.12."""
+
+RECORD_SHA256_WITHOUT_AREAS = "066f20c1ca309da9407fee16cb20c5611b1dd84715e7c820d4f031f6e42ed86e"
 """The same file's digest with its ``face_areas_nm2`` line removed."""
+
+RECORD_SHA256_V1 = "03da655ef254808e3403034ac9dd188335edc2f9630edb6565d967528c8583d7"
+"""``region.yaml``'s digest on ``bbca737``, Linux x86_64, CPython 3.12
+under schema nanopnp/region/v1.
+"""
+
+RECORD_SHA256_WITHOUT_AREAS_V1 = "b41037c3587b2c398b7eb95900b39b620c55156b9a09d17f76ed6d65ca718463"
+"""The same file's digest with its ``face_areas_nm2`` line removed
+under schema nanopnp/region/v1.
+"""
 
 FACE_AREAS_NM2 = {
     "electrolyte": 1336.3471929717593,
@@ -167,19 +207,38 @@ def test_ver59_with_both_keys_at_zero_every_key_and_the_record_are_unchanged(
     )
     found = {name: artefacts[name].hash for name in ("region", "mesh", "charge")}
     found["solve"] = solve.hash
-    assert found == KEYS_V2
+    assert found == KEYS_V05
 
     # Under the v1 strings, the bbca737 literals: the schemas are all that moved.
-    # Each digest is recomputed as ``Artefact.hash`` takes it, checked on v2 first.
+    # Each digest is recomputed as ``Artefact.hash`` takes it, checked on v0.5 first.
+    region = artefacts["region"]
+    mesh = artefacts["mesh"]
+    materials = artefacts["materials"]
     charge = artefacts["charge"]
     grid = store.get(CHARGE_GRID_SCHEMA, charge.inputs["charge_grid"])
     assert grid is not None
-    for artefact in (grid, charge, solve):
+    for artefact in (region, mesh, materials, grid, charge, solve):
         assert content_hash(artefact.schema, artefact.parameters, artefact.inputs) == artefact.hash
     assert solve.inputs["charge"] == charge.hash
-    grid_v1 = content_hash(CHARGE_GRID_SCHEMA_V1, grid.parameters, grid.inputs)
+
+    resolved = resolve(load_case(case))
+    assert resolved.profile is not None and resolved.profile.path is not None
+    prof = load_profile(resolved.profile.path)
+    dump_v1 = {**prof.model_dump(by_alias=True, mode="json"), "schema": PROFILE_SCHEMA_V1}
+    prof_v1 = content_hash(PROFILE_SCHEMA_V1, dump_v1)
+    region_v1 = content_hash(REGION_SCHEMA_V1, region.parameters, {"profile": prof_v1})
+    mesh_v1 = content_hash(MESH_ARTEFACT_SCHEMA_V1, mesh.parameters, {"region": region_v1})
+
+    prot = artefacts["protonation"]
+    prot_v1 = content_hash(PROTONATION_SCHEMA_V1, prot.parameters, prot.inputs)
+    grid_v1 = content_hash(CHARGE_GRID_SCHEMA_V1, grid.parameters, {"protonation": prot_v1})
     charge_v1 = content_hash(
-        FIELDS_SCHEMA_V1, charge.parameters, {**charge.inputs, "charge_grid": grid_v1}
+        FIELDS_SCHEMA_V1,
+        charge.parameters,
+        {**charge.inputs, "mesh": mesh_v1, "protonation": prot_v1, "charge_grid": grid_v1},
+    )
+    materials_v1 = content_hash(
+        MATERIALS_SCHEMA_V1, materials.parameters, {"corrections": CORRECTIONS_SHA256_V1}
     )
     # At bbca737 (WP30), pnp accepted and recorded variable_density: true, inertia: true;
     # WP42 carries them as false (D5, D10). Restoring the bbca737 values recovers the literal.
@@ -191,8 +250,18 @@ def test_ver59_with_both_keys_at_zero_every_key_and_the_record_are_unchanged(
             "inertia": True,
         },
     }
-    solve_v1 = content_hash(solve.schema, params_bbca, {**solve.inputs, "charge": charge_v1})
-    assert {**found, "charge": charge_v1, "solve": solve_v1} == KEYS
+    solve_v1 = content_hash(
+        SOLUTION_SCHEMA_V2,
+        params_bbca,
+        {"mesh": mesh_v1, "materials": materials_v1, "charge": charge_v1},
+    )
+    reconstructed = {
+        "region": region_v1,
+        "mesh": mesh_v1,
+        "charge": charge_v1,
+        "solve": solve_v1,
+    }
+    assert reconstructed == KEYS
 
     record = Path(artefacts["region"].payload["region"])
     text = record.read_text(encoding="utf-8")
@@ -202,3 +271,6 @@ def test_ver59_with_both_keys_at_zero_every_key_and_the_record_are_unchanged(
     assert areas == pytest.approx(FACE_AREAS_NM2, rel=1e-12)
     if _recording_platform():
         assert hashlib.sha256(record.read_bytes()).hexdigest() == RECORD_SHA256
+        text_v1 = text.replace("schema: nanopnp/region/v0.5", "schema: nanopnp/region/v1")
+        assert hashlib.sha256(_without_areas(text_v1)).hexdigest() == RECORD_SHA256_WITHOUT_AREAS_V1
+        assert hashlib.sha256(text_v1.encode("utf-8")).hexdigest() == RECORD_SHA256_V1

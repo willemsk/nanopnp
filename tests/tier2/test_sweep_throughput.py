@@ -85,7 +85,7 @@ outputs: [current]
 """
 
 SWEEP = """
-schema: nanopnp/sweep/v1
+schema: nanopnp/sweep/v0.5
 name: throughput
 base: base.yaml
 axes:

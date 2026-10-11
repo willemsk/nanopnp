@@ -88,7 +88,7 @@ __all__ = [
 PLAN_FILENAME = "plan.json"
 """Name of the plan file inside a sweep directory."""
 
-POINT_SCHEMA = "nanopnp/sweep/point/v1"
+POINT_SCHEMA = "nanopnp/sweep/point/v0.5"
 """Domain separator of a point's identity hash.
 
 Its own schema rather than the sweep's, because what is hashed is one point's

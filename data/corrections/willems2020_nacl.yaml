@@ -33,7 +33,7 @@
 #   The ESI writes the wall-function coefficient as "0.62e1", which is 6.2. That notation is the
 #   likely origin of both the "62" and the "0.62" misreadings in circulation.
 
-schema: nanopnp/corrections/v1
+schema: nanopnp/corrections/v0.5
 name: willems2020_nacl
 electrolyte: NaCl
 temperature_K: 298.15

@@ -465,7 +465,7 @@ def _ring_field() -> ChargeField:
     )
     document = FieldDocument.model_validate(
         {
-            "schema": "nanopnp/field/v1",
+            "schema": "nanopnp/field/v0.5",
             "name": "ring",
             "quantity": "areal_charge_density",
             "units": "C/m^2",
@@ -495,7 +495,7 @@ def _solid_fraction_field() -> SolidFractionField:
     )
     document = FieldDocument.model_validate(
         {
-            "schema": "nanopnp/field/v1",
+            "schema": "nanopnp/field/v0.5",
             "name": "chi",
             "quantity": "solid_fraction",
             "units": "1",

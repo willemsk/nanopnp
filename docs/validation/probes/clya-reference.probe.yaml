@@ -26,7 +26,7 @@
 #
 # Every patch has n_r != n_z, which is what turns a transposed %Data read into a shape
 # error instead of a plausible wrong field (ProbePatch's own refusal).
-schema: nanopnp/probe/v1
+schema: nanopnp/probe/v0.5
 name: clya-reference
 
 # The reference model's own maximum element size on the pore wall

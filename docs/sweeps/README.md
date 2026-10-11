@@ -1,6 +1,6 @@
 # Checked-in sweeps
 
-A sweep is specified by its own document (`schema: nanopnp/sweep/v1`, SPECIFICATION.md
+A sweep is specified by its own document (`schema: nanopnp/sweep/v0.5`, SPECIFICATION.md
 §5.3.4), naming a base case by path and the axes to vary. The ones here are checked in
 because they are *evidence*: a sweep reconstructed from prose measures a different grid,
 and nobody can tell.

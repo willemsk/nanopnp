@@ -722,7 +722,7 @@ def _load_descriptor(path: Path, data: Mapping[str, Any]) -> dict[str, Any]:
     if DESCRIPTOR_ENTRY not in data:
         raise StateMismatchError(
             f"{path} carries no {DESCRIPTOR_ENTRY!r} entry, so there is nothing to check it "
-            "against; it is not a nanopnp/solution/v2 payload"
+            "against; it is not a nanopnp/solution/v0.5 payload"
         )
     try:
         stored = json.loads(str(data[DESCRIPTOR_ENTRY]))
@@ -914,7 +914,7 @@ def load_initial(
     Parameters
     ----------
     path
-        The ``.npz`` payload of the neighbour's ``nanopnp/solution/v2``
+        The ``.npz`` payload of the neighbour's ``nanopnp/solution/v0.5``
         artefact, from :func:`warm_start_payload`.
     resolved
         The *target* case.
@@ -1027,7 +1027,7 @@ def restore(
     Parameters
     ----------
     path
-        The ``.npz`` payload of a ``nanopnp/solution/v2`` artefact.
+        The ``.npz`` payload of a ``nanopnp/solution/v0.5`` artefact.
     resolved
         The resolved case the state is being restored into (WP38 D4). Its mesh is ingested
         and gated exactly as a solve would ingest it, because the space the

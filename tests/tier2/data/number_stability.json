@@ -1,5 +1,5 @@
 {
-  "schema": "nanopnp/golden/stability/v2",
+  "schema": "nanopnp/golden/stability/v0.5",
   "same_mesh_tolerance": 1e-08,
   "safety_factor": 10.0,
   "ceiling": 0.001,

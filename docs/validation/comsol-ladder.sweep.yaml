@@ -16,7 +16,7 @@
 # golden's `case_hash` gate mean anything.
 #
 # The mesh is not checked in; see docs/sweeps/README.md for the command that writes it.
-schema: nanopnp/sweep/v1
+schema: nanopnp/sweep/v0.5
 name: comsol-ladder
 base: cases/clya-0.5M-plus50mV.case.yaml
 workers: 4

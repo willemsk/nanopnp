@@ -47,7 +47,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.io.case import CaseDocument
     from nanopnp.materials.electrolyte import Electrolyte
 
-MANIFEST_SCHEMA = "nanopnp/manifest/v1"
+MANIFEST_SCHEMA = "nanopnp/manifest/v0.5"
 """Schema string of the manifest document (IF-08)."""
 
 MANIFEST_FILENAME = "manifest.json"

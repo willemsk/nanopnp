@@ -1,4 +1,4 @@
-schema: nanopnp/field/v1
+schema: nanopnp/field/v0.5
 name: wall-ring
 # A ring of -6 e smeared by the reference model's own Gaussian kernel, centred in the
 # membrane 0.6 nm behind the pore wall at mid-length. Its planar integral is exactly

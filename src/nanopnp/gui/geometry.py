@@ -990,7 +990,7 @@ class ProfileEditor:
         return f"{self.parent_name}-{HAND_EDIT_SOURCE}"
 
     def document(self) -> PoreProfile:
-        """Return the edit as a validated ``nanopnp/profile/v1`` document (WP24 D5).
+        """Return the edit as a validated ``nanopnp/profile/v0.5`` document (WP24 D5).
 
         ``provenance.source`` is :data:`~nanopnp.geometry.profile.HAND_EDIT_SOURCE`,
         never a reference source; ``sha256`` is the parent's digest; every

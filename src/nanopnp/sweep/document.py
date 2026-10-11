@@ -1,4 +1,4 @@
-"""The ``nanopnp/sweep/v1`` specification document (FR-24, IF-03, §5.3.4).
+"""The ``nanopnp/sweep/v0.5`` specification document (FR-24, IF-03, §5.3.4).
 
 A sweep is specified by its **own** declarative document, naming a base case by
 path and the axes to vary. Nothing is added to the case schema, which WP7
@@ -132,7 +132,7 @@ class Axis(_Strict):
 
 
 class SweepDocument(_Strict):
-    """A validated sweep specification (schema ``nanopnp/sweep/v1``).
+    """A validated sweep specification (schema ``nanopnp/sweep/v0.5``).
 
     ``schema`` is carried under an alias so the reserved name does not shadow
     ``BaseModel``, exactly as :class:`nanopnp.io.case.CaseDocument` does.

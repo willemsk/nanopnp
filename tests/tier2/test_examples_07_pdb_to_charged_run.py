@@ -27,7 +27,7 @@ fails loudly on a specific error:
   alone (VER-23's reproducible payloads, WP32 D15);
 - (f) the switches are exactly the two deviations listed, the mesh carries an
   ``exclusion`` material, and the region and mesh keys move;
-- (g) the exported charge is a ``nanopnp/field/v1`` areal charge density declaring
+- (g) the exported charge is a ``nanopnp/field/v0.5`` areal charge density declaring
   the manifest's ``Q_net``;
 - (h) the re-supplied lattice is refused at the quadrature-agreement check.
 
@@ -287,10 +287,10 @@ def test_ver46_07_both_switches_are_deviations_and_mesh_an_exclusion_material(ra
 
 
 def test_ver46_07_the_exported_charge_is_an_areal_density_declaring_q_net(ran: Ran) -> None:
-    """(g) A ``nanopnp/field/v1`` areal charge density declaring the run's ``Q_net`` (IF-05)."""
+    """(g) A ``nanopnp/field/v0.5`` areal charge density declaring the run's ``Q_net`` (IF-05)."""
     example, _, _ = ran
     header = yaml.safe_load((example / "charge.field.yaml").read_text(encoding="utf-8"))
-    assert header["schema"] == "nanopnp/field/v1"
+    assert header["schema"] == "nanopnp/field/v0.5"
     assert header["quantity"] == "areal_charge_density"
     assert (example / header["data"]["path"]).is_file()
     q_net = _charge_record(example, "run")["q_net_e"]

@@ -302,8 +302,8 @@ from nanopnp.io.store import Store
 store, case, mesh, protonation, workspace = sys.argv[1:6]
 document = load_case(Path(case))
 upstream = {
-    "mesh": Store(store).get("nanopnp/mesh/v1", mesh),
-    "protonation": Store(store).get("nanopnp/protonation/v1", protonation),
+    "mesh": Store(store).get("nanopnp/mesh/v0.5", mesh),
+    "protonation": Store(store).get("nanopnp/protonation/v0.5", protonation),
 }
 parts = {}
 class Parts(logging.Handler):
@@ -365,7 +365,7 @@ from nanopnp.charge.kernel import source_atoms, sum_kernel
 from nanopnp.charge.protonation import ProtonationTable
 from nanopnp.io.store import Store
 store, protonation, frames = sys.argv[1], sys.argv[2], int(sys.argv[3])
-artefact = Store(store).get("nanopnp/protonation/v1", protonation)
+artefact = Store(store).get("nanopnp/protonation/v0.5", protonation)
 one = source_atoms(ProtonationTable.read(Path(artefact.payload["protonation"])), sharpness=0.5)
 atoms = replace(
     one,

@@ -139,7 +139,7 @@ def _table_document(target: Path) -> Path:
     """Write the header the delivered table is read through (``test_reference_charge_map``)."""
     return _write(
         target,
-        "schema: nanopnp/field/v1\n"
+        "schema: nanopnp/field/v0.5\n"
         "name: rhoq_pore\n"
         "quantity: areal_charge_density\n"
         "units: e/m^2\n"

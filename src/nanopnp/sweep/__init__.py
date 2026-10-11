@@ -5,7 +5,7 @@ keyed on thousands of upstream artefacts has no meaningful key and no meaningful
 progress fraction. So this package is a driver over :mod:`nanopnp.pipeline.run`,
 registered in no stage registry, in four modules:
 
-- :mod:`~nanopnp.sweep.document` — the ``nanopnp/sweep/v1`` specification: a base
+- :mod:`~nanopnp.sweep.document` — the ``nanopnp/sweep/v0.5`` specification: a base
   case and axes of dotted-path assignments.
 - :mod:`~nanopnp.sweep.plan` — the points, the warm-start forest, and everything
   checked before a solve.

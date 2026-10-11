@@ -112,7 +112,7 @@ except on `r = z`.
 ## 3. `manifest.yaml`
 
 ```yaml
-schema: nanopnp/golden/v1
+schema: nanopnp/golden/v0.5
 
 case: clya-0.5M-plus50mV
 # From: uv run nanopnp validate case-hash docs/validation/cases/clya-0.5M-plus50mV.case.yaml

@@ -55,7 +55,7 @@ from nanopnp.pipeline.case import loads_case, resolve
 
 REPOSITORY = Path(__file__).resolve().parents[2]
 
-NETGEN_KEY = "afcc08339531817e4e820f7169753617b946ecadb749b2704fddfc75fc1a836e"
+NETGEN_KEY = "7642b2377cb1f9d56125e5be692433635972687c94c2fa343738b7d9e962eabe"
 """Netgen's stage-6 key for the coarse parallelogram case, recorded before WP23 (D8).
 
 Computed on ``2bb1a34`` (the WP23 plan's commit, before any code changed) and on

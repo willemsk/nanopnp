@@ -28,7 +28,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from nanopnp.core.paths import correction_file
 from nanopnp.materials.forms import FORM_PARAMETERS, FORMS
 
-SCHEMA: str = "nanopnp/corrections/v1"
+SCHEMA: str = "nanopnp/corrections/v0.5"
 """Schema identifier every correction file must declare."""
 
 NON_COEFFICIENT_KEYS: frozenset[str] = frozenset({"r_squared"})
@@ -212,7 +212,7 @@ class TransportNumberBlock(BaseModel):
 
 
 class CorrectionDocument(_Strict):
-    """A validated ePNP-NS correction parameter file (schema ``nanopnp/corrections/v1``).
+    """A validated ePNP-NS correction parameter file (schema ``nanopnp/corrections/v0.5``).
 
     Every key the loader and the model classes read is a typed field; unknown
     top-level or block keys are rejected, and each fit block is checked against

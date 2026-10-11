@@ -676,7 +676,7 @@ def _check_profile(document: CaseDocument) -> None:
     if profile.format not in (None, PROFILE_FORMAT):
         raise CaseValidationError(
             f"inputs.profile.format is {profile.format!r}; a supplied profile is a "
-            f"nanopnp/profile/v1 document, format {PROFILE_FORMAT!r} (section 5.3.1 NOTE on "
+            f"nanopnp/profile/v0.5 document, format {PROFILE_FORMAT!r} (section 5.3.1 NOTE on "
             "inputs:)"
         )
     if document.structure is not None:

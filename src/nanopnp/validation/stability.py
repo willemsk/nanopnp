@@ -39,7 +39,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-SCHEMA = "nanopnp/golden/stability/v2"
+SCHEMA = "nanopnp/golden/stability/v0.5"
 
 SAME_MESH_TOLERANCE = 1e-8
 """Relative, on a mesh the golden holds (G10; WP35 Design section 2)."""
@@ -90,7 +90,7 @@ class StabilityGolden(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    schema_: Literal["nanopnp/golden/stability/v2"] = Field(alias="schema")
+    schema_: Literal["nanopnp/golden/stability/v0.5"] = Field(alias="schema")
     same_mesh_tolerance: float
     safety_factor: float
     ceiling: float

@@ -13,7 +13,7 @@ Run every command from this directory; in a development checkout, put `uv run` i
 
 ## The sweep documents
 
-A sweep is its own document (`schema: nanopnp/sweep/v1`). It names a base case and the axes to vary
+A sweep is its own document (`schema: nanopnp/sweep/v0.5`). It names a base case and the axes to vary
 by their dotted case-file paths; `charged.sweep.yaml` varies `boundary_conditions.bias_V` over four
 values. Every point is a complete case, validated before anything is solved. A misspelt path or an
 inadmissible value is refused at plan time, naming the point.

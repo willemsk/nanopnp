@@ -86,10 +86,10 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
-EXPORT_SCHEMA = "nanopnp/export/v1"
+EXPORT_SCHEMA = "nanopnp/export/v0.5"
 """Schema recorded in each file, so a reader can refuse a later one.
 
-Deliberately not ``nanopnp/fields/v2``: that identifier belongs to the stage-7
+Deliberately not ``nanopnp/fields/v0.5``: that identifier belongs to the stage-7
 charge artefact (:data:`nanopnp.io.artefact.FIELDS_SCHEMA`), and two payload
 contracts under one schema string is exactly the confusion a schema exists to
 prevent."""

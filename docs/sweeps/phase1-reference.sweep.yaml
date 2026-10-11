@@ -11,7 +11,7 @@
 # grid and nobody would know. Tier 1 checks the cheap half of this document's correctness
 # -- it parses, its base case resolves, and its plan enumerates 3,675 points in 42 waves --
 # which is everything about the deferred run that can be verified without spending the day.
-schema: nanopnp/sweep/v1
+schema: nanopnp/sweep/v0.5
 name: phase1-reference
 base: phase1-reference.case.yaml
 workers: 12
