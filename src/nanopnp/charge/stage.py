@@ -233,7 +233,7 @@ class ResolvedFields:
         for name, field in (("charge", self.charge), ("eps_r", self.eps_r)):
             if field is None or isinstance(field, DepositedCharge | DerivedSolidFraction):
                 continue
-            entries[name] = {
+            entry: dict[str, Canonicalisable] = {
                 "quantity": field.document.quantity,
                 "units": field.document.units,
                 "axis_cutoff_nm": field.document.axis_cutoff_nm,
@@ -241,6 +241,11 @@ class ResolvedFields:
                 "grid": field.grid.descriptor(),
                 "grid_digest": field.grid.digest(),
             }
+            if isinstance(field, ChargeField):
+                # The rule the solve assembles the source with (PHY-19): a change
+                # of it moves the converged charge (REV-71).
+                entry["quadrature_order"] = field.quadrature_order
+            entries[name] = entry
         return entries
 
     def summary(self) -> dict[str, Canonicalisable]:

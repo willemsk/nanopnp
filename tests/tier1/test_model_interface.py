@@ -86,14 +86,15 @@ every deviation is measured against (FR-25). Exempt from the literal rule only;
 neither may compare with a model name or name a model class."""
 
 SOLVE_HASHES = {
-    "epnp-ns": "b683d1e829079e5e74030d23ebb825bccb15882068db659cbfdb75e068ac980c",
-    "pnp-ns": "4bbc86663726392eb595c2435956be90ed60e9cd50bf59a3d0b957a24239fb2c",
-    "pnp": "eba9b516044f6c4e6e6bd52619b294eaf4c8a634d0acb354c63dfce66b68547d",
-    "pb": "a311c764e54df829f334dc2a869c70b0491189ff6ed02af5b640383bac58b6bb",
-    "pb-linear": "e5d5d4f11b3c421282b9869f8513f6855eb778fab2c0c865b16b6986ae0cf11b",
+    "epnp-ns": "06ca76fe4d784fee0b8807fe38463c48ef352cb56cd55f85cb8c588da458b49f",
+    "pnp-ns": "8ddd174fa485c4a12ea62298a97f1d0dcc0f1a3553f94638c45a52e289c636bf",
+    "pnp": "a64f5e0bfff5e8bab4e1a38eac38658a0c6fe06e911d94de032c0e2c7769a7c8",
+    "pb": "87fc20a545d188b213399952244ef2202d2e51eeba9e3debf051d20a9a5401dc",
+    "pb-linear": "45bbe8e49914417576c3d2fa45b06652f48e8bd0d3fff16e04722df81e417497",
 }
 """``content_hash(SOLUTION_SCHEMA, solve_provenance)`` of the quick-start variants,
-re-recorded in WP42.
+re-recorded in WP42, and again when the key gained
+``field_floor_ratio`` and ``algorithm_revision`` (REV-71).
 
 The stage-10 key itself. Its inputs are the case's own values -- no float in it is
 computed -- so the digest is the same on every platform."""
@@ -560,6 +561,27 @@ def test_ver56_the_stage_ten_key_of_each_model_is_the_one_main_recorded(model: s
     """WP26 D5: ``model_options`` is filtered by the declaration and did not move."""
     resolved = resolve(loads_case(_quickstart_variants()[model]))
     assert content_hash(SOLUTION_SCHEMA, resolved.solve_provenance) == SOLVE_HASHES[model]
+
+
+def test_ver56_the_stage_ten_key_moves_with_the_algorithm_revision(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """REV-71: a number-moving change bumps the revision, which re-keys every solve."""
+    resolved = resolve(loads_case(_quickstart_variants()["epnp-ns"]))
+    before = content_hash(SOLUTION_SCHEMA, resolved.solve_provenance)
+    monkeypatch.setattr("nanopnp.io.resolved.SOLVE_ALGORITHM_REVISION", 2)
+    assert content_hash(SOLUTION_SCHEMA, resolved.solve_provenance) != before
+    assert resolved.provenance["algorithm_revision"] == 2
+
+
+def test_ver56_the_stage_ten_key_moves_with_the_field_floor() -> None:
+    """REV-71: NUM-16's per-field floor decides when Newton stops, so it keys the solve."""
+    resolved = resolve(loads_case(_quickstart_variants()["epnp-ns"]))
+    looser = replace(resolved, newton=replace(resolved.newton, field_floor_ratio=1.0e-3))
+    assert looser.solve_provenance["newton"]["field_floor_ratio"] == 1.0e-3
+    assert content_hash(SOLUTION_SCHEMA, looser.solve_provenance) != content_hash(
+        SOLUTION_SCHEMA, resolved.solve_provenance
+    )
 
 
 @pytest.mark.parametrize("model", sorted(RUNG_HASHES))

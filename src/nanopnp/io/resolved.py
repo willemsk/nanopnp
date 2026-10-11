@@ -46,6 +46,18 @@ which costs a re-solve, while one forgotten from an allow-list would be dropped
 from the key and serve a stale solution for a changed case (section 5.3.2).
 """
 
+SOLVE_ALGORITHM_REVISION = 1
+"""The revision of the stage-10 algorithm, in every solve's key and manifest (REV-71, G6).
+
+Every artefact schema stays at ``nanopnp/*/v0.5`` (G6), so a change that moves a
+converged number without moving a case value cannot move the key by a schema
+bump. It bumps this integer instead, which re-keys every stored solve and says
+so in the manifest (FR-25). Bump it with any change to the Newton stopping
+test, a supplied field's source rule, a weak form or a stabilisation term that
+moves a converged value. Revision 1 is WP41's (NUM-16's per-field stopping test
+and the explicit source rule of PHY-19).
+"""
+
 
 @dataclass(frozen=True)
 class ResolvedStructure:
@@ -235,7 +247,9 @@ class ResolvedCase:
                 "relative_tolerance": self.newton.relative_tolerance,
                 "absolute_tolerance": self.newton.absolute_tolerance,
                 "reference_norm": self.newton.reference_norm,
+                "field_floor_ratio": self.newton.field_floor_ratio,
             },
+            "algorithm_revision": SOLVE_ALGORITHM_REVISION,
             "linear_solver": self.linear_solver,
             "stabilisation": self.stabilisation,
             "continuation": self.continuation,

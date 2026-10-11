@@ -41,6 +41,7 @@ import pytest
 
 from nanopnp.charge.dielectric import SolidFractionField
 from nanopnp.charge.fields import (
+    FIELD_QUADRATURE_ORDER,
     ChargeField,
     FieldDocument,
     FormSpec,
@@ -554,6 +555,14 @@ def test_ver24_the_charge_group_carries_the_conservation_report_it_was_gated_on(
     # is a different field, and a reader reconstructing the run needs to know
     # which one produced it.
     assert recorded["interpolation"] == "bilinear"
+
+
+def test_ver56_a_supplied_charge_field_is_keyed_by_the_rule_its_source_is_assembled_with() -> None:
+    """REV-71, PHY-19: the rule order is in the field artefact's parameters."""
+    fields = ResolvedFields(charge=_ring_field(), conservation=None, eps_r=None, material_means=())
+    keyed = fields.parameters()["charge"]
+    assert isinstance(keyed, dict)
+    assert keyed["quadrature_order"] == FIELD_QUADRATURE_ORDER
 
 
 def test_ver24_a_stage_contributed_deviation_reaches_the_manifest_and_the_count() -> None:
