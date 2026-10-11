@@ -156,6 +156,16 @@ def test_ver70_no_gate_comparison_in_the_package_passes_a_nan() -> None:
     assert all(reason.strip() for reason in NAN_EXEMPT.values())
 
 
+def test_ver70_stale_exemption_for_missing_file_is_reported() -> None:
+    """An exemption whose file does not exist on disk is reported in stale findings."""
+    from nanopnp.validation.modularity import gate_classes, nan_permissive_gates
+
+    gates = gate_classes((PACKAGE / "core" / "errors.py").read_text(encoding="utf-8"))
+    exempt = {"nonexistent/module.py:func: x > 0": "test reason"}
+    findings = nan_permissive_gates(PACKAGE, gates=gates, exempt=exempt)
+    assert "nonexistent/module.py:func: x > 0" in findings.stale
+
+
 @pytest.mark.parametrize(
     ("field", "criterion"),
     [("mean_ratio", "mean wall segment length"), ("max_ratio", "longest wall segment")],
