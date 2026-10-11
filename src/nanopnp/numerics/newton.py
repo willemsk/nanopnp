@@ -35,6 +35,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 
 from nanopnp.core.typing import Expression, GridFunction, Option
+from nanopnp.numerics.defaults import DEFAULT_NONLINEAR_MAX_ITER, DEFAULT_NONLINEAR_RTOL
 from nanopnp.numerics.gates import Gate, GateViolationError, check_all
 from nanopnp.numerics.linear import DEFAULT_SOLVER, check_solver, solve_correction
 
@@ -86,8 +87,8 @@ class NewtonSettings:
     minimum_damping: float = 1.0e-2
     recovery_damping: float = 0.2
     growth_factor: float = 2.0
-    max_iterations: int = 100
-    relative_tolerance: float = 1.0e-6
+    max_iterations: int = DEFAULT_NONLINEAR_MAX_ITER
+    relative_tolerance: float = DEFAULT_NONLINEAR_RTOL
     absolute_tolerance: float = 1.0e-12
     reference_norm: float = 1.0
     field_floor_ratio: float = 1.0e-6
