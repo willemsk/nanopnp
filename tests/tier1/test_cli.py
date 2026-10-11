@@ -36,6 +36,7 @@ import argparse
 import ast
 import importlib
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -64,6 +65,7 @@ from nanopnp.core.paths import (
     reference_data_root,
     reference_file,
 )
+from nanopnp.io.case import CaseValidationError
 from nanopnp.io.manifest import MANIFEST_SCHEMA
 from nanopnp.numerics.gates import GateViolationError
 from nanopnp.pipeline.run import (
@@ -492,8 +494,10 @@ def test_ver32_an_unclassified_failure_exits_one_and_says_to_ask_for_the_traceba
     assert "--traceback" in captured.err
     assert "Traceback" not in captured.err
 
-    with pytest.raises(ZeroDivisionError):
-        main(["run", str(tmp_path / "absent.yaml"), "--traceback"])
+    assert main(["run", str(tmp_path / "absent.yaml"), "--traceback"]) == EXIT_UNEXPECTED
+    captured = capsys.readouterr()
+    assert "Traceback" in captured.err
+    assert "ZeroDivisionError: a bug, not a refusal" in captured.err
 
 
 def test_ver32_stdout_carries_the_result_and_stderr_carries_the_log(
@@ -1058,3 +1062,164 @@ def test_rev27_validate_case_refuses_in_the_words_run_uses(
     ran = capsys.readouterr()
     assert named in checked.err
     assert checked.err.removeprefix("nanopnp validate: ") == ran.err.removeprefix("nanopnp run: ")
+
+
+# -- Code review 005 findings (CR-1 through CR-9) -------------------------------
+
+
+def test_cr1_case_validation_error_with_traceback_preserves_exit_case(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """CR-1: --traceback preserves the domain exit code (EXIT_CASE=3) instead of exiting 1."""
+
+    def fail_case(*_args: object, **_kwargs: object) -> None:
+        raise CaseValidationError("invalid model configuration")
+
+    monkeypatch.setattr("nanopnp.pipeline.run.run_case", fail_case)
+    code = main(["run", str(tmp_path / "case.yaml"), "--traceback"])
+    assert code == EXIT_CASE
+    captured = capsys.readouterr()
+    assert "Traceback" in captured.err
+    assert "CaseValidationError: invalid model configuration" in captured.err
+
+
+def test_cr2_validate_case_checks_referenced_files(
+    cylindrical_pore_case: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """CR-2: validate case checks referenced file existence by default; --schema-only skips it."""
+    text = cylindrical_pore_case.read_text(encoding="utf-8")
+    missing_mesh = tmp_path / "nonexistent.msh"
+    bad_case = tmp_path / "missing_mesh.case.yaml"
+    bad_case.write_text(
+        text.replace(str(cylindrical_pore_case.parent / "pore.vol"), str(missing_mesh)),
+        encoding="utf-8",
+    )
+
+    code = main(["validate", "case", str(bad_case)])
+    assert code == EXIT_CASE
+    err = capsys.readouterr().err
+    assert "inputs.mesh.path" in err
+    assert "does not exist" in err
+
+    code = main(["validate", "case", str(bad_case), "--schema-only", "--json"])
+    assert code == EXIT_OK
+    out = json.loads(capsys.readouterr().out)
+    assert out["valid"] is True
+
+
+def test_cr3_sweep_run_mutually_exclusive_and_workers_validation(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """CR-3: --index and --wave are mutually exclusive; --workers 0 is rejected."""
+    plan = tmp_path / "dummy.plan.json"
+    plan.write_text("{}", encoding="utf-8")
+
+    with pytest.raises(SystemExit) as exc1:
+        main(["sweep", "run", str(plan), "--index", "0", "--wave", "0"])
+    assert exc1.value.code == EXIT_USAGE
+    err1 = capsys.readouterr().err
+    assert "not allowed with argument" in err1
+
+    with pytest.raises(SystemExit) as exc2:
+        main(["sweep", "run", str(plan), "--workers", "0"])
+    assert exc2.value.code == EXIT_USAGE
+    err2 = capsys.readouterr().err
+    assert "workers must be at least 1, found 0" in err2
+
+    with pytest.raises(SystemExit) as exc3:
+        main(["sweep", "run", str(plan), "--workers", "notanint"])
+    assert exc3.value.code == EXIT_USAGE
+    err3 = capsys.readouterr().err
+    assert "is not a valid integer" in err3
+
+
+def test_cr4_global_flags_accepted_before_subcommand(capsys: pytest.CaptureFixture[str]) -> None:
+    """CR-4: Global flags (-v, --traceback, --json) are accepted before subcommands."""
+    assert main(["-v", "env"]) == EXIT_OK
+    capsys.readouterr()
+    assert main(["--traceback", "env"]) == EXIT_OK
+    capsys.readouterr()
+    assert main(["--json", "env"]) == EXIT_OK
+    out = json.loads(capsys.readouterr().out)
+    assert "version" in out
+
+
+def test_cr5_mesh_cylinder_invalid_number_clean_error(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """CR-5: Clean error when non-numeric or non-positive value is passed to mesh cylinder."""
+    out_msh = str(tmp_path / "test.msh")
+    with pytest.raises(SystemExit) as exc1:
+        main(["mesh", "cylinder", "--pore-radius-nm", "abc", "--out", out_msh])
+    assert exc1.value.code == EXIT_USAGE
+    err1 = capsys.readouterr().err
+    assert "_positive_nm" not in err1
+    assert "'abc' is not a valid number" in err1
+
+    with pytest.raises(SystemExit) as exc2:
+        main(["mesh", "cylinder", "--pore-radius-nm", "-1.5", "--out", out_msh])
+    assert exc2.value.code == EXIT_USAGE
+    err2 = capsys.readouterr().err
+    assert "_positive_nm" not in err2
+    assert "'-1.5' is not a positive length in nm" in err2
+
+
+def test_cr6_format_quantity_value() -> None:
+    """CR-6: _format_quantity_value normalises -0.0 and formats numbers cleanly."""
+    from nanopnp.cli import _format_quantity_value
+
+    assert _format_quantity_value(-0.0) == "0.0"
+    assert _format_quantity_value(0.0) == "0.0"
+    assert _format_quantity_value(2.400000000000001) == "2.4"
+    assert _format_quantity_value({"Na+": 0.0, "Cl-": -0.0}) == "{'Cl-': 0.0, 'Na+': 0.0}"
+    assert _format_quantity_value([-2.4, 2.400000000000001]) == "[-2.4, 2.4]"
+    assert _format_quantity_value("abc") == "abc"
+    assert _format_quantity_value(42) == "42"
+
+
+def test_cr7_run_threads_flag_sets_environment(
+    cylindrical_pore_case: Path,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """CR-7: --threads sets OpenMP/BLAS thread environment variables before running."""
+    captured_env: dict[str, str | None] = {}
+
+    def capture_run(*_args: object, **_kwargs: object) -> object:
+        captured_env["OMP_NUM_THREADS"] = os.environ.get("OMP_NUM_THREADS")
+        captured_env["OPENBLAS_NUM_THREADS"] = os.environ.get("OPENBLAS_NUM_THREADS")
+        captured_env["MKL_NUM_THREADS"] = os.environ.get("MKL_NUM_THREADS")
+        raise CaseValidationError("abort after checking env")
+
+    monkeypatch.setattr("nanopnp.pipeline.run.run_case", capture_run)
+    code = main(
+        ["run", str(cylindrical_pore_case), "--threads", "4", "--store", str(tmp_path / "store")]
+    )
+    assert code == EXIT_CASE
+    assert captured_env["OMP_NUM_THREADS"] == "4"
+    assert captured_env["OPENBLAS_NUM_THREADS"] == "4"
+    assert captured_env["MKL_NUM_THREADS"] == "4"
+
+    # --threads 0 rejected
+    with pytest.raises(SystemExit) as exc:
+        main(["run", str(cylindrical_pore_case), "--threads", "0"])
+    assert exc.value.code == EXIT_USAGE
+    assert "workers must be at least 1, found 0" in capsys.readouterr().err
+
+
+def test_cr8_cr9_env_store_resolution_and_flag_json(capsys: pytest.CaptureFixture[str]) -> None:
+    """CR-8 & CR-9: env store is resolved, bare nanopnp exits 0, --env supports --json."""
+    from nanopnp.cli import _environment
+
+    env = _environment()
+    assert Path(str(env["store"])).is_absolute()
+
+    assert main([]) == EXIT_OK
+    help_out = capsys.readouterr().out
+    assert "nanopnp" in help_out
+
+    assert main(["--env", "--json"]) == EXIT_OK
+    data = json.loads(capsys.readouterr().out)
+    assert Path(data["store"]).is_absolute()
+    assert data["store"] == env["store"]

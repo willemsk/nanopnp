@@ -32,6 +32,8 @@ import logging
 import os
 import platform
 import sys
+import traceback
+from collections.abc import Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
@@ -50,7 +52,7 @@ from nanopnp.core.public import __version__
 from nanopnp.io.artefact import CASE_SCHEMA
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
-    from collections.abc import Mapping, Sequence
+    from collections.abc import Sequence
 
     import numpy as np
 
@@ -80,21 +82,30 @@ def _common(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
     whatever the top level parsed — a silent one, since argparse reports no
     conflict.
     """
-    parser.add_argument("--json", action="store_true", help="write the result to stdout as JSON")
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        default=argparse.SUPPRESS,
+        help="write the result to stdout as JSON",
+    )
     parser.add_argument(
         "-v",
         "--verbose",
         action="count",
-        default=0,
+        default=argparse.SUPPRESS,
         dest="verbose",
         help="log at INFO; twice for DEBUG. Log records go to stderr",
     )
     parser.add_argument(
-        "--log-file", type=Path, default=None, help="also write log records to this file"
+        "--log-file",
+        type=Path,
+        default=argparse.SUPPRESS,
+        help="also write log records to this file",
     )
     parser.add_argument(
         "--traceback",
         action="store_true",
+        default=argparse.SUPPRESS,
         help="print the traceback of a failure; suppressed by default, because a gate abort's "
         "diagnostic is the message (QR-12)",
     )
@@ -134,7 +145,7 @@ def _environment() -> dict[str, Canonicalisable]:
         "data": str(DATA_DIR),
         "corrections": str(CORRECTIONS_DIR),
         "geometry": str(GEOMETRY_DIR),
-        "store": str(store_root()),
+        "store": str(Path(store_root()).resolve()),
         STORE_ROOT_VARIABLE: os.environ.get(STORE_ROOT_VARIABLE),
         "reference_data": str(reference) if reference is not None else None,
         REFERENCE_DATA_VARIABLE: os.environ.get(REFERENCE_DATA_VARIABLE),
@@ -155,6 +166,28 @@ def _env(args: argparse.Namespace) -> int:
     ]
     _emit(found, lines, as_json=bool(getattr(args, "json", False)))
     return EXIT_OK
+
+
+def _format_quantity_value(value: object) -> str:
+    """Format a scalar or structured quantity for human-readable console output.
+
+    Normalises negative zero (-0.0) to 0.0 and formats floats cleanly with up to
+    6 significant digits. Formats mappings and sequences recursively.
+    """
+    if isinstance(value, float):
+        if value == 0.0:
+            return "0.0"
+        formatted = f"{value:.6g}"
+        return formatted
+    if isinstance(value, (list, tuple)):
+        return "[" + ", ".join(_format_quantity_value(x) for x in value) + "]"
+    if isinstance(value, Mapping):
+        return (
+            "{"
+            + ", ".join(f"{k!r}: {_format_quantity_value(v)}" for k, v in sorted(value.items()))
+            + "}"
+        )
+    return str(value)
 
 
 def _run(args: argparse.Namespace) -> int:
@@ -182,7 +215,10 @@ def _run(args: argparse.Namespace) -> int:
         f"{entry.hash[:12]} {entry.seconds:8.3f} s"
         for entry in result.stages
     ]
-    lines += [f"{name:<20} {value}" for name, value in sorted(result.quantities.items())]
+    lines += [
+        f"{name:<20} {_format_quantity_value(value)}"
+        for name, value in sorted(result.quantities.items())
+    ]
     lines += [f"file     {path}" for path in result.files]
     _emit(payload, lines, as_json=args.json)
     return EXIT_OK
@@ -439,12 +475,29 @@ def _mesh(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def _positive_int(text: str) -> int:
+    """Parse an integer that must be at least 1."""
+    try:
+        value = int(text)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"{text!r} is not a valid integer") from None
+    if value < 1:
+        raise argparse.ArgumentTypeError(f"workers must be at least 1, found {value}")
+    return value
+
+
 def _positive_nm(text: str) -> float:
     """Parse a length in nm that must be positive and finite."""
-    value = float(text)
+    try:
+        value = float(text)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"{text!r} is not a valid number") from None
     if not 0.0 < value < float("inf"):
         raise argparse.ArgumentTypeError(f"{text!r} is not a positive length in nm")
     return value
+
+
+_positive_nm.__name__ = "positive float (nm)"
 
 
 def _sweep(args: argparse.Namespace) -> int:
@@ -647,9 +700,12 @@ def _validate_case(args: argparse.Namespace) -> int:
     solved or written, and no supplied file the case names is read.
     """
     from nanopnp.pipeline.case import load_case, resolve
+    from nanopnp.pipeline.checks import check_referenced_files
     from nanopnp.pipeline.run import selected_stages
 
     document = load_case(args.case)
+    if not getattr(args, "schema_only", False):
+        check_referenced_files(document)
     resolved = resolve(document)
     stages = selected_stages(resolved, None)
     payload: dict[str, Canonicalisable] = {
@@ -1039,6 +1095,27 @@ def build_parser() -> argparse.ArgumentParser:
         dest="env_flag",
         help="alias for 'nanopnp env': report the resolved environment and data locations",
     )
+    parser.add_argument(
+        "--json", action="store_true", default=False, help="write the result to stdout as JSON"
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="count",
+        default=0,
+        dest="verbose",
+        help="log at INFO; twice for DEBUG. Log records go to stderr",
+    )
+    parser.add_argument(
+        "--log-file", type=Path, default=None, help="also write log records to this file"
+    )
+    parser.add_argument(
+        "--traceback",
+        action="store_true",
+        default=False,
+        help="print the traceback of a failure; suppressed by default, because a gate abort's "
+        "diagnostic is the message (QR-12)",
+    )
     subparsers = parser.add_subparsers(dest="command")
 
     run = _common(subparsers.add_parser("run", help="run a case file through the pipeline"))
@@ -1046,6 +1123,12 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--store", type=Path, default=None, help="artefact store root")
     run.add_argument("--run-dir", type=Path, default=None, help="where the run directory goes")
     run.add_argument("--upto", default=None, help="stop after this stage")
+    run.add_argument(
+        "--threads",
+        type=_positive_int,
+        default=None,
+        help="worker thread count for OpenMP and linear algebra",
+    )
     run.set_defaults(handler=_run)
 
     stage = _common(subparsers.add_parser("stage", help="list the registry, or run one stage"))
@@ -1155,13 +1238,14 @@ def build_parser() -> argparse.ArgumentParser:
     runner = _common(actions.add_parser("run", help="dispatch a plan's members"))
     runner.add_argument("plan", type=Path, help="the plan file written by 'sweep plan'")
     runner.add_argument("--store", type=Path, default=None, help="artefact store root")
-    runner.add_argument(
+    target = runner.add_mutually_exclusive_group()
+    target.add_argument(
         "--index", type=int, default=None, help="run one member; exits with that member's own code"
     )
-    runner.add_argument("--wave", type=int, default=None, help="run one wave of the forest")
+    target.add_argument("--wave", type=int, default=None, help="run one wave of the forest")
     runner.add_argument(
         "--workers",
-        type=int,
+        type=_positive_int,
         default=None,
         help="independent worker processes; defaults to the sweep document's workers:, or 1",
     )
@@ -1186,6 +1270,12 @@ def build_parser() -> argparse.ArgumentParser:
         steps.add_parser("case", help="check a case file as a run would, without solving it")
     )
     checked.add_argument("case", type=Path, help="the case file")
+    checked.add_argument(
+        "--schema-only",
+        action="store_true",
+        help="validate case document schema and resolution semantics only without "
+        "checking disk files",
+    )
     checked.set_defaults(handler=_validate)
 
     # ``%%`` throughout the help strings below: argparse percent-formats help text,
@@ -1276,7 +1366,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.command is None:
         if getattr(args, "env_flag", False):
-            return _env(argparse.Namespace(json=False))
+            return _env(argparse.Namespace(json=getattr(args, "json", False)))
         parser.print_help()
         return EXIT_OK
 
@@ -1286,22 +1376,29 @@ def main(argv: Sequence[str] | None = None) -> int:
 
         args.tolerance = DEFAULT_TOLERANCE
 
+    threads = getattr(args, "threads", None)
+    if threads is not None:
+        for var in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):
+            os.environ[var] = str(threads)
+
     handler = args.handler
     try:
         code: int = handler(args)
     except SystemExit:
         raise
     except BaseException as error:
-        if args.traceback:
-            raise
         code = classify(error)
-        print(f"nanopnp {args.command}: {error}", file=sys.stderr)
-        if code == EXIT_UNEXPECTED:
-            print(
-                f"nanopnp {args.command}: unexpected {type(error).__name__}; "
-                "re-run with --traceback",
-                file=sys.stderr,
-            )
+        if args.traceback:
+            traceback.print_exc(file=sys.stderr)
+        else:
+            print(f"nanopnp {args.command}: {error}", file=sys.stderr)
+            if code == EXIT_UNEXPECTED:
+                print(
+                    f"nanopnp {args.command}: unexpected {type(error).__name__}; "
+                    "re-run with --traceback",
+                    file=sys.stderr,
+                )
+        return code
     return code
 
 
