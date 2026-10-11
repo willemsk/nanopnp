@@ -58,9 +58,9 @@ KEYS_V05 = {
     "region": "85d3b34627c4a56b38640ffa6222ec8e53838090cab296a4d596b02cac68b7e2",
     "mesh": "89551d4667c54f0d0c648b4c0e7caed46c3aa4c3e3994b9180366a2252d45517",
     "charge": "474b5b376e231d0f18d0e57e321c5fdb096f92f9a122f9c80b0e3f33e53e30a8",
-    "solve": "440707a22714ce28eb4d5e846fd302b5515999a5857663a6a7d07b40eec13935",
+    "solve": "80e2ee0ec96e63671bb02613fadacc5e565d51bf2a41aa729bfa8dc54f7797dc",
 }
-"""The keys under repo-wide v0.5 schemas."""
+"""The keys under repo-wide v0.5 schemas; the solve key gained its algorithm revision (REV-71)."""
 
 PROFILE_SCHEMA_V1 = "nanopnp/profile/v1"
 """The pore profile schema ``KEYS`` was recorded under."""
@@ -241,9 +241,11 @@ def test_ver59_with_both_keys_at_zero_every_key_and_the_record_are_unchanged(
         MATERIALS_SCHEMA_V1, materials.parameters, {"corrections": CORRECTIONS_SHA256_V1}
     )
     # At bbca737 (WP30), pnp accepted and recorded variable_density: true, inertia: true;
-    # WP42 carries them as false (D5, D10). Restoring the bbca737 values recovers the literal.
+    # WP42 carries them as false (D5, D10), and its key gained `algorithm_revision` and the
+    # newton record's `field_floor_ratio` (REV-71). Restoring the bbca737 record recovers it.
     params_bbca = {
-        **solve.parameters,
+        **{k: v for k, v in solve.parameters.items() if k != "algorithm_revision"},
+        "newton": {k: v for k, v in solve.parameters["newton"].items() if k != "field_floor_ratio"},
         "model_options": {
             **solve.parameters["model_options"],
             "variable_density": True,

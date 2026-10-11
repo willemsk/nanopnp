@@ -85,10 +85,10 @@ only the frames it has not seen (section 5.3.2, the stage-7 artefact row).
 CHARGE_GRID_SCHEMA = "nanopnp/charge-grid/v0.5"
 """Stage 7's export lattice: the closed-form kernel summed over the protonation artefact (WP28 D7).
 
-``v2`` because the summary contract changed: ``v1`` recorded the sum's wall-clock
-``seconds``, which ``v2`` does not (WP32 D15). The summary is served from the
-store unchanged on a hit, so a ``v1`` entry would carry the clock into every
-manifest that read it; a new version makes it a miss (section 5.3.2).
+WP32 D15 dropped the sum's wall-clock ``seconds`` from the summary, which is served
+from the store unchanged on a hit. Every schema is now pinned at ``v0.5`` (§8.2.9 G6),
+so the version no longer separates the two; a store written before D15 is stale
+(REV-77).
 
 Not the output of a registered stage: the ``charge`` stage stores it under its own
 key, which names the protonation artefact and the kernel's settings and not the
@@ -99,21 +99,20 @@ the stage-7 artefact row).
 FIELDS_SCHEMA = "nanopnp/fields/v0.5"
 """Stage 7: the fixed-charge and dielectric fields, supplied or deposited, gated (§5.2).
 
-``v2`` because the payload and summary contract changed: ``v1``'s ``deposit.npz``
-and ``charge`` summary carried wall-clock ``seconds``, which ``v2``'s do not
-(VER-23, WP32 D15). A ``v1`` entry would still load, but as a hit whose bytes
-and manifest group moved with the clock; the new version makes it a miss.
+WP32 D15 dropped the wall-clock ``seconds`` from ``deposit.npz`` and the ``charge``
+summary (VER-23). Every schema is pinned at ``v0.5`` (§8.2.9 G6), so a store written
+before it would still be a hit whose bytes and manifest group moved with the clock
+(REV-77).
 """
 
 SOLUTION_SCHEMA = "nanopnp/solution/v0.5"
 """Stage 10: the converged field set and its iteration history.
 
-``v2`` because the payload contract changed: ``v1`` wrote the backend's native
-``state.gfu``, ``v2`` writes the self-describing coefficient record of
-:mod:`nanopnp.solve.state`. The payload is outside the content hash (see the
-module docstring), so a ``v1`` entry left in a store would otherwise be a cache
-*hit* whose payload the loader cannot open — which is why section 5.3.2 makes a
-changed payload contract a changed schema version.
+The payload is the self-describing coefficient record of :mod:`nanopnp.solve.state`
+(it was the backend's native ``state.gfu``). The payload is outside the content hash
+(see the module docstring) and every schema is pinned at ``v0.5`` (§8.2.9 G6), so the
+schema cannot separate payload contracts; stage 10's key carries
+:data:`nanopnp.io.resolved.SOLVE_ALGORITHM_REVISION` for that (section 5.3.2, REV-71).
 """
 
 QOI_SCHEMA = "nanopnp/qoi/v0.5"
