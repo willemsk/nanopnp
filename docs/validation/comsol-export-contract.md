@@ -152,7 +152,7 @@ quantities:
 ```
 
 Take `case_hash` from the command, not from this page. The schema string is not part of the key
-(`SPECIFICATION.md` §5.3.2 NOTE), so a golden declaring a `nanopnp/case/v1` value, such as
+(`SPECIFICATION.md` §5.3.2 NOTE), so a golden declaring a `nanopnp/case/v0.5` value, such as
 `7e9ca188…`, is refused when it is compared, naming both hashes.
 
 A case that supplies a charge or `ε_r` field under `inputs:` hashes that field's contents into

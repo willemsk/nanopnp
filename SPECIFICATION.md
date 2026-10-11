@@ -1431,8 +1431,8 @@ numerics:
 outputs: [current, transport_numbers, rectification, eof_rate, analyte_force, fields]
 ```
 
-NOTE (`nanopnp/case/v2`, and reading a v1 document; §8.2.2 B3): the
-schema moved once, carrying every key Phases 2 and 3 are foreseen to need. Against v1 it **adds**
+NOTE (`nanopnp/case/v0.5`, and schema history; §8.2.2 B3, §8.2.7 G6): the
+schema moved from `nanopnp/case/v1` to carry every key Phases 2 and 3 needed. Against v1 it **adds**
 `inputs.profile`, `inputs.pqr`, `structure.source.selection`, `geometry.membrane.centre_z_nm`,
 `charge.exclusion_offset_nm`, `charge.dielectric_transition_nm` and `numerics.mesh.size_scale`;
 **renames** `structure.source.pdb` to `structure.source.path`, since IF-04 reads mmCIF as well; and
@@ -1440,24 +1440,13 @@ schema moved once, carrying every key Phases 2 and 3 are foreseen to need. Again
 `physics.solid_permittivities` already carries. A permittivity set in two places is a calibration
 parameter (PHY-20) with two sources of truth, and a default of 20 or 3.2 written in code would be a
 fitted parameter hard-coded in Python; the author ruled that the map is the one
-place they are set. The seven added keys default to the validated configuration, so a v1 document
-means under v2 exactly what it meant under v1. A document declaring `nanopnp/case/v1` SHALL be
-read as its upgrade: the schema string is replaced, `structure.source.pdb` is renamed, and a written
-`charge.eps_protein` or `geometry.membrane.eps_r` moves to `physics.solid_permittivities.protein` or
-`.membrane`. The upgrade SHALL refuse, naming both keys and both values, a moved value that
-disagrees with one the map already holds, and SHALL refuse a key v1 did not have, naming the key and
-the schema it belongs to: a document is valid against the schema it declares or not at all. A v2
-document that uses a removed or renamed key SHALL be refused with a diagnostic naming the v2 key
-that replaced it. The upgrade is not a deviation and does not reach the solve: the schema string is
-excluded from the provenance that keys a solve (§5.3.2), as `name:` and `outputs:` are, so a v1
-document and its v2 rewrite key one stage-10 artefact and one VER-34 restore digest. Those are not
-the keys v1 recorded for the same file, which carried the schema string: they moved once, at this
-move (§5.3.2 NOTE). The stage-9 key
-of a v1 document is the key of its upgrade, which differs from any key v1 recorded, and the
-manifest's embedded case text stays the file as it was read. The frozen v1 field tree and the map
-from it to v2 are held as test data, so VER-47 can hold the upgrade to them in both directions.
+place they are set. The added keys default to the validated configuration.
+In v0.5, every case document must declare schema `nanopnp/case/v0.5` exactly, and any
+other schema identifier is refused naming the expected schema and the declared identifier before
+any structural validation (§5.4.1). The earlier pre-release identifiers `nanopnp/case/v1` and
+`nanopnp/case/v2` are retired.
 
-NOTE (the v2 keys that change a number): `charge.exclusion_offset_nm`
+NOTE (the added keys that change a number): `charge.exclusion_offset_nm`
 and `charge.dielectric_transition_nm` are the fitted exclusion offset of FR-15 and the width of
 PHY-20's transition to `ε_w`. Both SHALL be non-negative, and both are switches whose validated
 default is `0`: the validated model has no exclusion shell and a sharp material permittivity (PHY-20
@@ -3595,7 +3584,7 @@ commit named in the last column.
 | G3 | **The OKF work is two packages, joined by a ratchet.** The first builds the bundle, rewrites the citations and adds the F6 Tier-1 check. That check carries a committed list of the claims not yet backed by a test, and the list may only shrink. The second package backfills the tests and empties the list, and from then on the check refuses any unbacked `[tested]` | Each PR can be reviewed on its own terms: one is a mechanical move, the other is tests whose oracles need physics review. The push gate never carries a half-finished ledger | None. F6 stands, and so does the input note `docs/plans/okf-knowledge-bundle.md`, whose open question 1 this settles |
 | G4 | **The findings are logged in the repository, and a test checks the logs.** Each log is a Markdown table under `docs/`, one row per finding, giving its id, area, severity, status and the ruling behind that status (a §8.2 row or a work-package plan). A Tier-1 check refuses a malformed row at any time. Once the log's header says `closed`, it also refuses a row whose status is not terminal | The gate's "each finding fixed or deferred by the author's ruling" is a test, and the close package flips both headers | §8.1 (Phase 4's gate), in this commit |
 | G5 | **The sequence**: the modularity exploration; the refactors it leads to; the OKF bundle and then its backfill; the user-testing protocol; the author's sessions; the fixes the sessions lead to; the documentation increment; the close. Everything after the exploration stays provisional until `/phase-plan amend 4` plans it, once after the report and once after the sessions | The OKF bundle follows the refactors, so the test node ids it writes are not renamed under it | None |
-| G6 | **The case schema moves as needed until v1.0, and its identifier keeps step with the package's releases.** The identifier a move takes names the release that ships it (`nanopnp/case/v0.5`, `v0.6`, `v0.7`), and the stable schema at v1.0 is `nanopnp/case/v1.0`. Between a release's work packages the schema may change under that release's identifier, and the identifier is fixed when the release is tagged. A document of any earlier identifier is read as its upgrade | The author said that the final schema is released with v1, and that until then the schema keeps step with the package's v0.x.y releases. F4's "whether a document of an earlier version still reads is decided with each move" becomes "it reads, upgraded, or is refused naming its migration". The manifest's package version identifies a revision inside a pre-release | The §5.3.1 NOTE on the compatibility rule, in this commit. IF-03, the stage-9 row of §5.2, §5.3's format table and the texts of VER-43 and VER-47, in the package that first moves the schema |
+| G6 | **The case schema moves as needed until v1.0, and its identifier keeps step with the package's releases.** The identifier a move takes names the release that ships it (`nanopnp/case/v0.5`, `v0.6`, `v0.7`), and the stable schema at v1.0 is `nanopnp/case/v1.0`. Between a release's work packages the schema may change under that release's identifier, and the identifier is fixed when the release is tagged. In pre-releases, earlier identifiers (`v1`, `v2`) are retired and every case must declare `nanopnp/case/v0.5` exactly | The author said that the final schema is released with v1, and that until then the schema keeps step with the package's v0.x.y releases. F4's "whether a document of an earlier version still reads is decided with each move" becomes "it reads or is refused naming its migration". The manifest's package version identifies a revision inside a pre-release | The §5.3.1 NOTE on the compatibility rule, in this commit. IF-03, the stage-9 row of §5.2, §5.3's format table and the texts of VER-43 and VER-47, in the package that first moves the schema |
 | G7 | **The user-testing protocol is executed by the push gate, and findings come only from the author's sessions.** Each script's commands and code run verbatim in the gate, as an example's do (VER-46). An agent may dry-run a script to debug it, and a dry run records no finding | The protocol cannot go stale between its package and the sessions. The findings are those of a tester who did not write the code (F3) | None |
 | G8 | **A `[verified]` claim whose arithmetic can be executed gets a Tier-1 test** and becomes `[tested: …]`. A claim that cannot be executed, such as the reading of a source or the conversion of a printed figure, stays `[verified]` with its source footnote required, under a `process:arithmetic` actor. G3's ratchet covers both kinds | This is consistent with K6. A test never restates a printed number against itself | None. It settles the input note's open question 2 |
 | G9 | **The input note's open questions 3 to 7** (each file's preamble, `00-index.md`, the `type` vocabulary, `log.md` and the documentation site) **are left to the first OKF package's `/wp-plan`**, which puts them to the author | They are package-level decisions, and none of them changes the sequence | None |
