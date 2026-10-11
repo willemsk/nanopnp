@@ -42,6 +42,7 @@ from typing import TYPE_CHECKING, ClassVar
 from nanopnp.charge.fields import ChargeFieldError
 from nanopnp.core.hashing import Canonicalisable, content_hash
 from nanopnp.core.stages import CancelToken, Progress, check_cancelled, report
+from nanopnp.numerics.measures import FixedCharge
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
@@ -697,6 +698,10 @@ class DepositedCharge:
         """Return the volume charge density, C m^-3: the ``L2(order=k)`` field itself."""
         return self.field
 
-    def assemble(self, scales: Scales) -> Expression:
+    def fixed_charge_C_m3(self) -> FixedCharge:
+        """Return the SI density; its rule is ``quadrature_order``, None being the estimate."""
+        return FixedCharge(self.field, self.quadrature_order)
+
+    def assemble(self, scales: Scales) -> FixedCharge:
         """Return the dimensionless ``rho~_pore`` the weak form takes (NUM-09)."""
-        return self.field / scales.charge_density_C_m3
+        return self.fixed_charge_C_m3().scaled(1.0 / scales.charge_density_C_m3)

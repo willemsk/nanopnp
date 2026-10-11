@@ -69,7 +69,7 @@ from nanopnp.numerics.gates import (
     PotentialIncrementGate,
 )
 from nanopnp.numerics.linear import DEFAULT_SOLVER, solve_correction
-from nanopnp.numerics.measures import Measures
+from nanopnp.numerics.measures import FixedCharge, Measures
 from nanopnp.numerics.newton import (
     DEFAULT_SETTINGS,
     NewtonResult,
@@ -229,6 +229,21 @@ def inf_sup_problem(*, velocity_order: int, pressure_order: int, stabilisation: 
         f"section 6.4.2, which the {permitting} stabilisation supplies and {stabilisation!r} "
         "does not"
     )
+
+
+def _check_fixed_charge(fixed_charge: object) -> None:
+    """Refuse a fixed charge that is not a :class:`~nanopnp.numerics.measures.FixedCharge`.
+
+    ``Expression`` is ``Any``, so the type checker cannot tell a bare density from
+    the object that carries its rule; a bare density would assemble at NGSolve's
+    estimate and move the charge by 1.2e-2 on a 0.5 nm field with no diagnostic
+    (PHY-19 NOTE, REV-72).
+    """
+    if not isinstance(fixed_charge, FixedCharge):
+        raise TypeError(
+            f"fixed_charge must be a FixedCharge (a density with the rule it is assembled "
+            f"with, rule_order=None for NGSolve's estimate), got {type(fixed_charge).__name__}"
+        )
 
 
 def _reject_unknown(kwargs: Mapping[str, Option], where: str) -> None:
@@ -1200,8 +1215,7 @@ class CoupledModel:
         measures: Measures,
         *,
         wall_distance_nm: Expression = SATURATED_WALL_DISTANCE_NM,
-        fixed_charge: Expression | None = None,
-        fixed_charge_rule_order: int | None = None,
+        fixed_charge: FixedCharge | None = None,
         solid_fraction: Expression | None = None,
         surface_charge: Expression | None = None,
         surface_charge_boundary: str = "wall",
@@ -1223,13 +1237,12 @@ class CoupledModel:
             :data:`~nanopnp.physics.coefficients.SATURATED_WALL_DISTANCE_NM`
             when no wall correction is active.
         fixed_charge
-            The dimensionless protein space charge ``rho~_pore``, if any. Its
-            SI scale is :attr:`~nanopnp.core.scaling.Scales.charge_density_C_m3`.
-        fixed_charge_rule_order
-            The explicit integration rule ``fixed_charge`` is assembled with: a
-            supplied field's ``quadrature_order``, the rule its conservation gate
-            integrates at, so the gate measures the charge this form carries
-            (PHY-19 NOTE, WP41 D2). ``None`` keeps NGSolve's own estimate.
+            The dimensionless protein space charge ``rho~_pore``, if any, with the
+            integration rule it is assembled with: a supplied field's
+            ``quadrature_order``, the rule its conservation gate integrates at, so
+            the gate measures the charge this form carries (PHY-19 NOTE, WP41 D2,
+            REV-72). Its SI scale is
+            :attr:`~nanopnp.core.scaling.Scales.charge_density_C_m3`.
         solid_fraction
             The supplied ``chi`` of section 4.4's NOTE, if any; see
             :meth:`permittivity`. It enters the Poisson operator alone: the
@@ -1329,8 +1342,9 @@ class CoupledModel:
             definedon=fluid,
         )
         if fixed_charge is not None:
+            _check_fixed_charge(fixed_charge)
             residual -= charge_source(
-                fixed_charge, potential_test, measures, rule_order=fixed_charge_rule_order
+                fixed_charge.density, potential_test, measures, rule_order=fixed_charge.rule_order
             )
         if surface_charge is not None:
             # The Poisson boundary term is +int_Gamma sigma_s v r ds on the
@@ -1576,8 +1590,7 @@ class CoupledModel:
         initial_concentrations: Mapping[str, float] | None = None,
         velocity_values: Expression | None = None,
         wall_distance_nm: Expression = SATURATED_WALL_DISTANCE_NM,
-        fixed_charge: Expression | None = None,
-        fixed_charge_rule_order: int | None = None,
+        fixed_charge: FixedCharge | None = None,
         solid_fraction: Expression | None = None,
         surface_charge: Expression | None = None,
         surface_charge_boundary: str = "wall",
@@ -1613,7 +1626,7 @@ class CoupledModel:
             boundary coefficient function, which has no meaning in the volume.
         velocity_values
             Essential data for ``u~``; zero (no-slip) by default.
-        wall_distance_nm, fixed_charge, fixed_charge_rule_order, solid_fraction,
+        wall_distance_nm, fixed_charge, solid_fraction,
         surface_charge, surface_charge_boundary, sources
             As :meth:`residual_form`.
         initial
@@ -1662,7 +1675,6 @@ class CoupledModel:
             measures,
             wall_distance_nm=wall_distance_nm,
             fixed_charge=fixed_charge,
-            fixed_charge_rule_order=fixed_charge_rule_order,
             solid_fraction=solid_fraction,
             surface_charge=surface_charge,
             surface_charge_boundary=surface_charge_boundary,
@@ -2110,8 +2122,7 @@ class PoissonModel(_SingleFieldModel):
         space: FESpace,
         measures: Measures,
         *,
-        fixed_charge: Expression | None = None,
-        fixed_charge_rule_order: int | None = None,
+        fixed_charge: FixedCharge | None = None,
         solid_fraction: Expression | None = None,
         state: GridFunction | None = None,
         **kwargs: Option,
@@ -2122,12 +2133,9 @@ class PoissonModel(_SingleFieldModel):
         ----------
         fixed_charge
             The dimensionless ``rho~_pore``, if any, on
-            :attr:`~nanopnp.core.scaling.Scales.charge_density_C_m3`.
-        fixed_charge_rule_order
-            The explicit integration rule the fixed-charge source is assembled
-            with: a supplied field's ``quadrature_order``, the rule its
-            conservation gate integrates at (PHY-19 NOTE, WP41 D2). ``None``
-            keeps this model's default.
+            :attr:`~nanopnp.core.scaling.Scales.charge_density_C_m3`, with the
+            integration rule it is assembled with (PHY-19 NOTE, WP41 D2, REV-72).
+            A rule of ``None`` keeps this model's default.
         solid_fraction
             The supplied ``chi``, if any.
         state
@@ -2149,14 +2157,15 @@ class PoissonModel(_SingleFieldModel):
             trial, test, measures, permittivity=permittivity, extra_order=RADIAL_WEIGHT_ORDER
         )
         if fixed_charge is not None:
+            _check_fixed_charge(fixed_charge)
             # An explicit rule replaces the bonus, so the r-weight order is added
             # only where NGSolve's estimate is still the base (WP41 D2).
             residual -= charge_source(
-                fixed_charge,
+                fixed_charge.density,
                 test,
                 measures,
-                rule_order=fixed_charge_rule_order,
-                extra_order=0 if fixed_charge_rule_order is not None else RADIAL_WEIGHT_ORDER,
+                rule_order=fixed_charge.rule_order,
+                extra_order=0 if fixed_charge.rule_order is not None else RADIAL_WEIGHT_ORDER,
             )
         return residual
 
@@ -2167,8 +2176,7 @@ class PoissonModel(_SingleFieldModel):
         *,
         boundaries: CoupledBoundaries = DEFAULT_BOUNDARIES,
         potential_values: Expression = 0.0,
-        fixed_charge: Expression | None = None,
-        fixed_charge_rule_order: int | None = None,
+        fixed_charge: FixedCharge | None = None,
         solid_fraction: Expression | None = None,
         initial: ModelSolution | None = None,
         settings: NewtonSettings = DEFAULT_SETTINGS,
@@ -2194,7 +2202,7 @@ class PoissonModel(_SingleFieldModel):
             ``boundaries.potential``.
         potential_values
             Essential data for ``phi~``, in units of ``V_T``.
-        fixed_charge, fixed_charge_rule_order, solid_fraction
+        fixed_charge, solid_fraction
             As :meth:`residual_form`.
         initial
             Accepted for a uniform ladder interface; a linear solve does not
@@ -2223,7 +2231,6 @@ class PoissonModel(_SingleFieldModel):
             space,
             measures,
             fixed_charge=fixed_charge,
-            fixed_charge_rule_order=fixed_charge_rule_order,
             solid_fraction=solid_fraction,
         )
         # Linear, so one undamped step from any state with the right essential

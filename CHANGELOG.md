@@ -30,7 +30,7 @@ the `pnp` model honours only `flow: false`, `variable_density: false`, and `iner
 inf-sup checks are gated on flow models; Example 06 stage-7 keys and per-ion Einstein ratios are pinned;
 and duplicated test fixtures and constants are consolidated. It resolves REV-11, REV-12, REV-13,
 REV-23, REV-29, REV-34, REV-42, REV-44, REV-48, REV-66, REV-71, REV-74, REV-75, REV-76, REV-77,
-REV-78, and REV-79, discharging VER-70, VER-71, QR-12,
+REV-72, REV-73, REV-78, and REV-79, discharging VER-70, VER-71, QR-12,
 FR-25, PHY-13, PHY-21, PHY-22, IF-03, VER-56, and VER-62 (at 10⁻⁸).
 
 ### Added
@@ -58,6 +58,12 @@ FR-25, PHY-13, PHY-21, PHY-22, IF-03, VER-56, and VER-62 (at 10⁻⁸).
   any change that moves a converged number) and the Newton record's `field_floor_ratio`, and a supplied
   charge field's artefact carries its `quadrature_order`; a solution stored by an earlier build misses
   and is solved again (REV-71, §5.3.2). The `-v` flag given before and after a subcommand adds up (REV-78).
+- **Breaking:** `physics.variable_density: false` beside a density correction that applies no varying
+  fit, and `physics.dielectric_gradient_forces: true` beside a permittivity correction with no
+  concentration fit, are refused: each was recorded as a deviation and never applied (REV-73, PHY-22).
+- **Breaking:** The models' `fixed_charge` is a `FixedCharge` (a density with the integration rule it
+  is assembled with) and `fixed_charge_rule_order` is gone from the models and from
+  `default_ladder`; a bare density is refused with a `TypeError` (REV-72, PHY-19).
 - `exclusion_shell` refuses a non-finite profile coordinate with a `RegionGateError` naming the vertex
   (REV-79, QR-12).
 - Stage-10 solve hashes re-recorded for `pnp-ns`, `pnp`, `pb`, and `pb-linear` under amended case

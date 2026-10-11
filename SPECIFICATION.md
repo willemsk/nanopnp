@@ -942,7 +942,11 @@ whose selected correction model applies no such fit SHALL be refused, naming eac
 model, because the FR-25 manifest would record a deviation the solve never applies. `none` applies
 neither fit, and `willems2020_nacl` has no wall fit for the permittivity or the density. For the
 same reason `electrolyte.driver: ionic_strength` SHALL be refused for an electrolyte of two species
-of unit valence, for which `I = ½ Σ z_i² c_i` equals `⟨c⟩` exactly (PHY-13; VER-71).
+of unit valence, for which `I = ½ Σ z_i² c_i` equals `⟨c⟩` exactly (PHY-13; VER-71). Two switches
+beside a partner leaf are refused on the same ground (REV-73): `variable_density: false` where the
+density correction applies no fit that varies the density (the flow is of constant density already),
+and `dielectric_gradient_forces: true` where the permittivity correction applies no concentration fit
+(`dε/dc = 0`, so the force vanishes).
 
 **PHY-23.** `dielectric_gradient_forces` SHALL enable both the momentum term
 `−½|∇φ|²∇(ε_0 ε_r)` and the Nernst–Planck term `−½|∇φ|² ∂ε/∂c_i` together, and SHALL NOT permit

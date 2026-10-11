@@ -33,7 +33,7 @@ import pytest
 
 from nanopnp.core.constants import VACUUM_PERMITTIVITY, thermal_voltage
 from nanopnp.materials.electrolyte import Electrolyte
-from nanopnp.numerics.measures import AXISYMMETRIC
+from nanopnp.numerics.measures import AXISYMMETRIC, FixedCharge
 from nanopnp.physics import models
 
 LENGTH_NM = 10.0
@@ -139,7 +139,7 @@ def test_ver56_poisson_reproduces_the_three_layer_capacitor_to_round_off() -> No
         mesh,
         AXISYMMETRIC,
         potential_values=mesh.BoundaryCF({"cis": 0.0, "trans": BIAS_V / thermal}),
-        fixed_charge=ngs.CF(RHO_C_M3 / scales.charge_density_C_m3),
+        fixed_charge=FixedCharge(ngs.CF(RHO_C_M3 / scales.charge_density_C_m3), None),
     )
 
     points = [
@@ -172,7 +172,7 @@ def test_ver56_the_capacitor_distinguishes_the_permittivity_it_was_given() -> No
         mesh,
         AXISYMMETRIC,
         potential_values=mesh.BoundaryCF({"cis": 0.0, "trans": BIAS_V / scales.potential_V}),
-        fixed_charge=ngs.CF(RHO_C_M3 / scales.charge_density_C_m3),
+        fixed_charge=FixedCharge(ngs.CF(RHO_C_M3 / scales.charge_density_C_m3), None),
     )
     middle = solution.state(mesh(1.0, 5.0)) * scales.potential_V
     assert abs(middle - potential_V(5.0)) > 0.1
