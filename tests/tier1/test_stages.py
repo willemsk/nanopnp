@@ -27,6 +27,8 @@ from nanopnp.core.stages import (
     Cancelled,
     MissingExtraError,
     StageDescription,
+    StageIdentifier,
+    StageName,
     _catalogue,
     check_cancelled,
     create,
@@ -34,6 +36,7 @@ from nanopnp.core.stages import (
     register,
     registered_stages,
     report,
+    walk_order,
 )
 from nanopnp.io.artefact import StageInputs
 from nanopnp.pipeline.case import loads_case, resolve
@@ -355,3 +358,27 @@ def test_ver25_a_stage_invoked_without_its_upstream_says_which_one() -> None:
     inputs = StageInputs(resolved=resolve(loads_case(MINIMAL)))
     with pytest.raises(KeyError, match="materials"):
         inputs.require("materials")
+
+
+def test_ver25_stage_name_enum_matches_registered_stages() -> None:
+    """Verify that StageName enum members match registered stages."""
+    registered = {d.name for d in registered_stages()}
+    enum_values = tuple(s.value for s in StageName)
+    assert set(enum_values) == registered
+    assert len(enum_values) == len(registered)
+    assert enum_values == walk_order()
+    for member in StageName:
+        assert isinstance(member, str)
+        assert isinstance(member, StageName)
+
+
+def test_ver25_create_and_describe_accept_stage_name_enum() -> None:
+    """describe() and create() accept StageName enum members."""
+    identifier: StageIdentifier = StageName.CASE
+    assert describe(identifier) == describe("case")
+    stage = create(StageName.MATERIALS)
+    assert stage.name == StageName.MATERIALS
+    with pytest.raises(KeyError):
+        describe("not_a_stage")
+    with pytest.raises(KeyError):
+        create("not_a_stage")

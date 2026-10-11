@@ -32,7 +32,69 @@ import importlib
 import math
 from collections.abc import Mapping
 from dataclasses import KW_ONLY, dataclass
-from typing import TYPE_CHECKING, Any, Protocol, TypeAlias, runtime_checkable
+from enum import StrEnum
+from typing import TYPE_CHECKING, Any, Literal, Protocol, TypeAlias, runtime_checkable
+
+__all__ = [
+    "ArtefactHook",
+    "CancelFlag",
+    "CancelToken",
+    "Cancelled",
+    "MissingExtraError",
+    "Progress",
+    "SolveHook",
+    "SolveReporting",
+    "Stage",
+    "StageDescription",
+    "StageEntry",
+    "StageIdentifier",
+    "StageName",
+    "StageNameLiteral",
+    "StageOption",
+    "check_cancelled",
+    "create",
+    "describe",
+    "register",
+    "registered_stages",
+    "report",
+    "walk_order",
+]
+
+
+class StageName(StrEnum):
+    """Canonical identifiers of all built-in pipeline stages (section 5.2)."""
+
+    CASE = "case"
+    STRUCTURE = "structure"
+    DENSITY = "density"
+    SYMMETRY = "symmetry"
+    CONTOUR = "contour"
+    REGION = "region"
+    MESH = "mesh"
+    PROTONATION = "protonation"
+    CHARGE = "charge"
+    MATERIALS = "materials"
+    SOLVE = "solve"
+    QOI = "qoi"
+    REPORT = "report"
+
+
+StageNameLiteral: TypeAlias = Literal[
+    "case",
+    "structure",
+    "density",
+    "symmetry",
+    "contour",
+    "region",
+    "mesh",
+    "protonation",
+    "charge",
+    "materials",
+    "solve",
+    "qoi",
+    "report",
+]
+StageIdentifier: TypeAlias = StageName | StageNameLiteral
 
 StageOption: TypeAlias = Any
 """A keyword argument passed through to a stage's constructor."""
@@ -500,7 +562,7 @@ def registered_stages() -> tuple[StageDescription, ...]:
     )
 
 
-def describe(name: str) -> StageDescription:
+def describe(name: StageIdentifier | str) -> StageDescription:
     """Return one stage's description without importing its module.
 
     Raises
@@ -509,14 +571,14 @@ def describe(name: str) -> StageDescription:
         If no stage is registered under that name; the message lists the ones
         that are.
     """
-    entry = _REGISTRY.get(name)
+    entry = _REGISTRY.get(str(name))
     if entry is None:
         known = ", ".join(sorted(_REGISTRY)) or "none"
         raise KeyError(f"no stage {name!r}; registered stages are {known}")
     return entry.description
 
 
-def create(name: str, **kwargs: StageOption) -> Stage:
+def create(name: StageIdentifier | str, **kwargs: StageOption) -> Stage:
     """Import a stage's module and construct it.
 
     The only function here that imports anything. Everything else — listing
@@ -540,7 +602,7 @@ def create(name: str, **kwargs: StageOption) -> Stage:
         the install command.
     """
     describe(name)  # raises the diagnostic naming the registered stages
-    entry = _REGISTRY[name]
+    entry = _REGISTRY[str(name)]
     module_name, _, attribute = entry.target.partition(":")
     try:
         module = importlib.import_module(module_name)
@@ -571,7 +633,7 @@ def _register_builtins() -> None:
     # first because every other stage consumes the case it resolves.
     register(
         StageDescription(
-            name="case",
+            name=StageName.CASE,
             number=9,
             title="Case assembly",
             inputs=("case_path",),
@@ -592,7 +654,7 @@ def _register_builtins() -> None:
     )
     register(
         StageDescription(
-            name="structure",
+            name=StageName.STRUCTURE,
             number=1,
             title="Structure ingestion and alignment",
             inputs=("case",),
@@ -610,7 +672,7 @@ def _register_builtins() -> None:
     )
     register(
         StageDescription(
-            name="density",
+            name=StageName.DENSITY,
             number=2,
             title="Density map",
             inputs=("case", "structure"),
@@ -629,7 +691,7 @@ def _register_builtins() -> None:
     )
     register(
         StageDescription(
-            name="symmetry",
+            name=StageName.SYMMETRY,
             number=3,
             title="Symmetry reduction to (r, z)",
             inputs=("case", "density"),
@@ -646,7 +708,7 @@ def _register_builtins() -> None:
     )
     register(
         StageDescription(
-            name="contour",
+            name=StageName.CONTOUR,
             number=4,
             title="Contour extraction and conditioning",
             inputs=("case", "structure", "symmetry"),
@@ -670,7 +732,7 @@ def _register_builtins() -> None:
     )
     register(
         StageDescription(
-            name="region",
+            name=StageName.REGION,
             number=5,
             title="CAD assembly",
             inputs=("case", "contour"),
@@ -691,7 +753,7 @@ def _register_builtins() -> None:
     )
     register(
         StageDescription(
-            name="mesh",
+            name=StageName.MESH,
             number=6,
             title="Mesh",
             inputs=("case", "region"),
@@ -711,7 +773,7 @@ def _register_builtins() -> None:
     )
     register(
         StageDescription(
-            name="protonation",
+            name=StageName.PROTONATION,
             number=7,
             title="Protonation",
             inputs=("case", "structure"),
@@ -741,7 +803,7 @@ def _register_builtins() -> None:
     )
     register(
         StageDescription(
-            name="charge",
+            name=StageName.CHARGE,
             number=7,
             title="Charge assembly",
             # ``region`` only for a derived chi (WP30 D5), as ``protonation`` only
@@ -771,7 +833,7 @@ def _register_builtins() -> None:
     )
     register(
         StageDescription(
-            name="materials",
+            name=StageName.MATERIALS,
             number=8,
             title="Materials",
             inputs=("case",),
@@ -788,7 +850,7 @@ def _register_builtins() -> None:
     )
     register(
         StageDescription(
-            name="solve",
+            name=StageName.SOLVE,
             number=10,
             title="Solve",
             inputs=("case", "charge", "materials", "mesh"),
@@ -807,7 +869,7 @@ def _register_builtins() -> None:
     )
     register(
         StageDescription(
-            name="qoi",
+            name=StageName.QOI,
             number=11,
             title="Quantities of interest",
             inputs=("case", "charge", "mesh", "solve"),
@@ -826,7 +888,7 @@ def _register_builtins() -> None:
     )
     register(
         StageDescription(
-            name="report",
+            name=StageName.REPORT,
             number=12,
             title="Report",
             inputs=("case", "charge", "mesh", "qoi", "solve"),
