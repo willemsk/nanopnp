@@ -50,6 +50,13 @@ from nanopnp.core.paths import (
 )
 from nanopnp.core.public import __version__
 from nanopnp.io.artefact import CASE_SCHEMA
+from nanopnp.mesh.defaults import (
+    DEFAULT_CYLINDER_MEMBRANE_THICKNESS_NM,
+    DEFAULT_CYLINDER_RESERVOIR_RADIUS_NM,
+    DEFAULT_CYLINDER_WALL_H_NM,
+    DEFAULT_MAXH_NM,
+    DEFAULT_PORE_RADIUS_NM,
+)
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from collections.abc import Sequence
@@ -1179,28 +1186,40 @@ def build_parser() -> argparse.ArgumentParser:
         shapes.add_parser("cylinder", help="an idealised cylindrical pore through a membrane")
     )
     cylinder.add_argument(
-        "--pore-radius-nm", type=_positive_nm, default=2.0, help="lumen radius (default 2)"
+        "--pore-radius-nm",
+        type=_positive_nm,
+        default=DEFAULT_PORE_RADIUS_NM,
+        help=f"lumen radius (default {DEFAULT_PORE_RADIUS_NM:g})",
     )
     cylinder.add_argument(
         "--membrane-thickness-nm",
         type=_positive_nm,
-        default=6.0,
-        help="membrane thickness, the lumen's length (default 6)",
+        default=DEFAULT_CYLINDER_MEMBRANE_THICKNESS_NM,
+        help=(
+            "membrane thickness, the lumen's length "
+            f"(default {DEFAULT_CYLINDER_MEMBRANE_THICKNESS_NM:g})"
+        ),
     )
     cylinder.add_argument(
         "--reservoir-radius-nm",
         type=_positive_nm,
-        default=10.0,
-        help="radius of each quarter-disc reservoir (default 10)",
+        default=DEFAULT_CYLINDER_RESERVOIR_RADIUS_NM,
+        help=(
+            "radius of each quarter-disc reservoir "
+            f"(default {DEFAULT_CYLINDER_RESERVOIR_RADIUS_NM:g})"
+        ),
     )
     cylinder.add_argument(
-        "--maxh-nm", type=_positive_nm, default=4.0, help="global maximum element size (default 4)"
+        "--maxh-nm",
+        type=_positive_nm,
+        default=DEFAULT_MAXH_NM,
+        help=f"global maximum element size (default {DEFAULT_MAXH_NM:g})",
     )
     cylinder.add_argument(
         "--wall-h-nm",
         type=_positive_nm,
-        default=0.35,
-        help="element size on the pore wall (default 0.35)",
+        default=DEFAULT_CYLINDER_WALL_H_NM,
+        help=f"element size on the pore wall (default {DEFAULT_CYLINDER_WALL_H_NM:g})",
     )
     cylinder.add_argument("--out", type=Path, required=True, help="the .msh file to write")
     cylinder.set_defaults(handler=_mesh, parser=cylinder)

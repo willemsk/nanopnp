@@ -1007,8 +1007,10 @@ def test_ver32_stage_export_help_imports_no_stage_module() -> None:
         "    main(['stage', '--help'])\n"
         "except SystemExit:\n"
         "    pass\n"
-        "loaded = sorted(m for m in sys.modules if m.startswith(('ngsolve', 'netgen', 'numpy', "
-        "'MDAnalysis', 'nanopnp.structure', 'nanopnp.density', 'nanopnp.mesh')))\n"
+        "loaded = sorted(m for m in sys.modules if (m.startswith(('ngsolve', 'netgen', 'numpy', "
+        "'MDAnalysis', 'nanopnp.structure', 'nanopnp.density')) "
+        "or (m.startswith('nanopnp.mesh') and "
+        "m not in ('nanopnp.mesh', 'nanopnp.mesh.defaults'))))\n"
         "sys.stderr.write(json.dumps(loaded))\n"
     )
     result = subprocess.run(

@@ -43,6 +43,7 @@ from typing import TYPE_CHECKING
 from nanopnp.core.typing import Mesh, Shape
 from nanopnp.geometry.tolerance import TOL_NM
 from nanopnp.mesh.adapter import from_ngsolve
+from nanopnp.mesh.defaults import DEFAULT_PORE_RADIUS_NM
 from nanopnp.mesh.quality import check_quality as _check_quality
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
@@ -312,7 +313,7 @@ class CylindricalPoreGeometry:
     ``"electrolyte"``.
     """
 
-    pore_radius_nm: float = 2.0
+    pore_radius_nm: float = DEFAULT_PORE_RADIUS_NM
     membrane_thickness_nm: float = 13.0
     reservoir_radius_nm: float = 50.0
 
