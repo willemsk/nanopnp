@@ -76,6 +76,6 @@ By default, the artefact store resides at `./nanopnp-store` relative to the curr
 NGSolve and underlying BLAS/LAPACK libraries use OpenMP and multithreading for linear algebra and finite-element assemblies. By default, NGSolve attempts to utilise all available CPU cores on the host, which can saturate shared compute nodes or container allocations.
 
 To restrict thread usage:
-- Pass `--threads <N>` to `nanopnp run` (e.g. `nanopnp run case.yaml --threads 4`). This sets `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS`, and `MKL_NUM_THREADS` before compute libraries initialize.
+- Pass `--threads <N>` to `nanopnp run` (e.g. `nanopnp run case.yaml --threads 4`). This sets `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS`, and `MKL_NUM_THREADS` before compute libraries initialise.
 - Alternatively, set the `OMP_NUM_THREADS` environment variable in your shell or submission script.
 - Parameter sweeps launched via `nanopnp sweep run` automatically pin worker thread counts to 1 to ensure linear scaling across independent processes.
