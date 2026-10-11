@@ -8,7 +8,7 @@ to a charge](charge.md).
 
 ## The field header
 
-A field is named by a header document, `schema: nanopnp/field/v1`, with `format: field1` in the
+A field is named by a header document, `schema: nanopnp/field/v0.5`, with `format: field1` in the
 case (the §5.3.1 `inputs.charge` NOTE). The header declares:
 
 - **`quantity`** and **`units`**: what the numbers are (below);

@@ -21,6 +21,7 @@ from netgen.geom2d import SplineGeometry
 
 from nanopnp.charge.deposit import (
     SOLID_SHARE_MIN,
+    UNCOVERED_TOL,
     Deposit,
     DepositedCharge,
     basis_exponents,
@@ -357,6 +358,17 @@ def test_qr12_charge_on_no_element_is_refused_naming_its_location() -> None:
     message = str(raised.value)
     assert "falls on no element" in message
     assert "(r, z) = (1.5, 0.3) nm" in message
+
+
+def test_qr12_charge_on_no_element_below_the_tolerance_is_deposited() -> None:
+    """Charge off the mesh under UNCOVERED_TOL of the largest node is deposited (D4)."""
+    small = _mesh(r_max=1.2, protein=False)
+    atoms = _atoms([0.3, 1.5], [0.0, 0.3], [0.1, 0.1], [1.0, 1.0e-14])
+    grid = sum_kernel(atoms, H).grid
+    found = deposit(grid, small, 2)
+    ratio, where = found.uncovered
+    assert where == pytest.approx((1.5, 0.3))
+    assert 0.0 < ratio <= UNCOVERED_TOL
 
 
 def test_qr12_deposit_on_a_permuted_mesh_is_refused_naming_both_digests(

@@ -2,12 +2,12 @@
 
 A sweep solves one base case at many points: a bias series, a salt series, an ablation over the
 model's corrections, or their product (FR-24). It is specified by its own document, `schema:
-nanopnp/sweep/v1` (§5.3.4).
+nanopnp/sweep/v0.5` (§5.3.4).
 
 ## The sweep document
 
 ```yaml
-schema: nanopnp/sweep/v1
+schema: nanopnp/sweep/v0.5
 name: iv
 base: pore.case.yaml
 workers: 4                     # optional; `sweep run --workers` overrides it

@@ -1877,33 +1877,36 @@ def nan_permissive_gates(
         rel_path = rel.as_posix()
         tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=rel_path)
 
-        for stmt in tree.body:
-            funcs: list[ast.FunctionDef | ast.AsyncFunctionDef] = []
-            if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                funcs.append(stmt)
-            elif isinstance(stmt, ast.ClassDef):
-                for child in stmt.body:
-                    if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                        funcs.append(child)
-
-            for func in funcs:
-                for if_node in _find_if_nodes(func):
-                    if _raises_or_appends_gate(if_node.body, gates) and _has_open_ordering(
-                        if_node.test
-                    ):
-                        test_str = ast.unparse(if_node.test)
-                        key = f"{rel_path}:{func.name}: {test_str}"
-                        if key in exempt:
-                            all_matched.add(key)
-                        else:
-                            violations.append(
-                                NanGate(
-                                    path=rel_path,
-                                    line=if_node.lineno,
-                                    function=func.name,
-                                    test=test_str,
-                                )
+        # Every function at any depth: a gate in a closure (``_mean_square`` inside
+        # ``check_indicator``), a nested class's method or a def under a module-level
+        # ``if``/``try`` is a gate like any other. ``_find_if_nodes`` stops at a nested
+        # def, so each ``if`` is judged once, under the function that owns it.
+        funcs = sorted(
+            (
+                node
+                for node in ast.walk(tree)
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+            ),
+            key=lambda node: node.lineno,
+        )
+        for func in funcs:
+            for if_node in _find_if_nodes(func):
+                if _raises_or_appends_gate(if_node.body, gates) and _has_open_ordering(
+                    if_node.test
+                ):
+                    test_str = ast.unparse(if_node.test)
+                    key = f"{rel_path}:{func.name}: {test_str}"
+                    if key in exempt:
+                        all_matched.add(key)
+                    else:
+                        violations.append(
+                            NanGate(
+                                path=rel_path,
+                                line=if_node.lineno,
+                                function=func.name,
+                                test=test_str,
                             )
+                        )
 
     stale = tuple(sorted(set(exempt.keys()) - all_matched))
     return NanGateFindings(

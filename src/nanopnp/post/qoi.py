@@ -860,13 +860,13 @@ def rectification(forward: QuantitiesOfInterest, reverse: QuantitiesOfInterest) 
         opposite in sign, where the ratio compares unrelated operating points
         rather than the two directions of one.
     """
-    if forward.bias_V <= 0.0:
+    if not forward.bias_V > 0.0:
         raise ValueError(
             f"'forward' must be the positive bias: RR is |I(+V)|/|I(-V)|, so a swapped pair "
             f"returns the reciprocal and inverts the rectification direction with no other "
             f"symptom. Got forward={forward.bias_V} V and reverse={reverse.bias_V} V"
         )
-    if forward.bias_V * reverse.bias_V >= 0.0:
+    if not forward.bias_V * reverse.bias_V < 0.0:
         raise ValueError(
             f"a rectification ratio compares opposite biases, got {forward.bias_V} V and "
             f"{reverse.bias_V} V"

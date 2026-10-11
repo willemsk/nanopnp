@@ -1,5 +1,7 @@
 """Canonical sizing and mesh defaults for domain geometries and CLI meshers."""
 
+from __future__ import annotations
+
 from typing import Final
 
 # Mesh cylinder defaults (CLI and idealised benchmark pore)
@@ -10,7 +12,9 @@ DEFAULT_MAXH_NM: Final[float] = 4.0
 DEFAULT_WALL_H_NM: Final[float] = 0.2
 DEFAULT_CYLINDER_WALL_H_NM: Final[float] = 0.35
 
-# Geometry analytical specs (stage 5: membrane and reservoir half-disc)
+# Geometry analytical specs (stage 5: membrane and reservoir half-disc). Source: the reference
+# geometry, a DPhPC bilayer 2.8 nm thick and half-disc reservoirs R = 250 nm
+# (SPECIFICATION.md section 4.1.1, .knowledge/01-physics-epnpns.md section 2.4).
 DEFAULT_MEMBRANE_THICKNESS_NM: Final[float] = 2.8
 DEFAULT_MEMBRANE_CENTRE_Z_NM: Final[float] = 0.0
 DEFAULT_RESERVOIR_RADIUS_NM: Final[float] = 250.0

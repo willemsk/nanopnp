@@ -726,3 +726,51 @@ the rule inside it), a change to the model interface outside WP41's scope.
 **Measured.** VER-71 probes single leaves from each model's base, but does not probe leaves rendered inert by another leaf's value (such as `variable_density` beside a `none` density correction, `dielectric_gradient_forces` beside no permittivity concentration fit, or wall distance with every wall part off).
 
 **Open.** Phase 5 (§8.2.9 I3).
+
+### REV-74 — An untested raise in the force extension carries a coverage pragma
+
+*Area:* verification. *Severity:* low. *Found:* PR #91 (WP42 review pass).
+
+**Measured.** forces.py `_mean_square` (line 350) refuses a missing boundary under `# pragma: no cover - missing boundary in mesh`; no test reaches it, so the gate that names the boundary is outside the 100 % diff-cover claim (VER-72 f).
+
+**Open.** For the author: a test that passes `extension_error` an unknown boundary name, then the pragma comes off.
+
+### REV-75 — The two defaults modules duplicate the specs' defaults
+
+*Area:* coupling. *Severity:* low. *Found:* PR #91 (WP42 review pass).
+
+**Measured.** `mesh/defaults.py` and `numerics/defaults.py` hold 18 constants, 16 read only by `test_defaults.py`: a third copy beside the pydantic specs and `io/defaults._VALIDATED_DEFAULTS`, kept in step by a parity test alone.
+
+**Open.** For the author: have the specs read these constants, or drop the unused ones (D16).
+
+### REV-76 — `ModelDeclaration.unread` paths are not validated against the schema
+
+*Area:* verification. *Severity:* medium. *Found:* PR #91 (WP42 review pass).
+
+**Measured.** Neither `_check_unread` nor `register_model` checks that each path in `unread` exists, or has a default; a typo in a model's set makes its refusal never fire, with no error. `_check_unread` also walks all 105 `case_fields` per call rather than the model's own set (VER-71).
+
+**Open.** For the author: validate at registration (D4, D7); a one-line check per path.
+
+### REV-77 — Pinning every artefact schema at v0.5 removes the cache-bust a payload change needs
+
+*Area:* process. *Severity:* medium. *Found:* PR #91 (WP42 review pass).
+
+**Measured.** §5.3.2 relied on the schema version to bust a cache when a payload contract changed. With every identifier at `v0.5` until v1.0, a later payload change is a cache hit on an old store the loader cannot open; the docstrings in `io/artefact.py` still explain `v2` that way (D9, D14b).
+
+**Open.** For the author: a rule for payload changes inside v0.5 (a payload-version leaf in the digest), and the docstrings brought into step.
+
+### REV-78 — The threads flag re-lists the thread variables and writes the environment for good
+
+*Area:* interface. *Severity:* low. *Found:* PR #91 (WP42 review pass).
+
+**Measured.** `cli/__init__.py` names the three variables that `sweep/run.py` defines as `THREAD_VARIABLES`, sets them permanently, works only before NumPy or NGSolve is imported, and `nanopnp -vv run c.yaml -v` collapses verbosity to 1.
+
+**Open.** For the author: import `THREAD_VARIABLES`; give the sub-parser's verbosity `default=SUPPRESS`.
+
+### REV-79 — The exclusion shell raises a bare ValueError for a NaN ring coordinate
+
+*Area:* numerics. *Severity:* low. *Found:* PR #91 (WP42 review pass).
+
+**Measured.** `geometry/region.py` rewrote its gate to `if not lowest >= h_c_nm`; with NaN `lowest`, `near` is empty and `near[:, 1].min()` raises `zero-size array to reduction operation minimum`, not a `RegionGateError` naming the gate, quantity and location (QR-12).
+
+**Open.** For the author: test for an empty `near` first and raise the named diagnostic.

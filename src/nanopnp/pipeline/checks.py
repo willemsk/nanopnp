@@ -11,7 +11,6 @@ command line and in the editor (QR-11).
 
 from __future__ import annotations
 
-import logging
 import math
 from collections.abc import Callable
 from pathlib import Path
@@ -60,8 +59,6 @@ from nanopnp.physics.models import (
     registered_models,
     registered_stabilisations,
 )
-
-logger = logging.getLogger(__name__)
 
 __all__ = [
     "check_document",
@@ -1078,7 +1075,8 @@ def check_referenced_files(document: CaseDocument) -> None:
     FileNotFoundError
         If any referenced path does not exist.
     """
-    for leaf in ("mesh", "pqr", "profile", "charge", "eps_r"):
+    # Every ``inputs:`` key, read from the schema: a key added later is checked too.
+    for leaf in type(document.inputs).model_fields:
         supplied = getattr(document.inputs, leaf)
         if supplied is not None and supplied.path is not None:
             path = Path(supplied.path)

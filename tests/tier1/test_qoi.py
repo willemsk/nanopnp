@@ -115,6 +115,20 @@ def test_num27_rectification_refuses_two_biases_of_the_same_sign() -> None:
         rectification(_point(0.05, 4.0e-9), _point(0.1, 8.0e-9))
 
 
+def test_num27_rectification_refuses_a_swapped_pair() -> None:
+    """``forward`` is the positive bias: a swapped pair would invert the reciprocal."""
+    with pytest.raises(ValueError, match="must be the positive bias"):
+        rectification(_point(-0.05, -2.0e-9), _point(0.05, 4.0e-9))
+
+
+def test_qr12_rectification_refuses_a_nan_bias_on_either_side() -> None:
+    """``nan <= 0`` is False, so each guard is the negation and a NaN bias fails it."""
+    with pytest.raises(ValueError, match="must be the positive bias"):
+        rectification(_point(float("nan"), 4.0e-9), _point(-0.05, -2.0e-9))
+    with pytest.raises(ValueError, match="opposite biases"):
+        rectification(_point(0.05, 4.0e-9), _point(float("nan"), -2.0e-9))
+
+
 def test_num26_agreeing_routes_pass_the_declared_tolerance() -> None:
     """Two routes within the declared tolerance report a difference and no error."""
     agreement = RouteAgreement(indicator_A=1.0e-9, reaction_A=1.0e-9 * (1.0 + 1e-9))

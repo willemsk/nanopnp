@@ -1237,7 +1237,7 @@ def test_cr3_sweep_run_mutually_exclusive_and_workers_validation(
         main(["sweep", "run", str(plan), "--workers", "0"])
     assert exc2.value.code == EXIT_USAGE
     err2 = capsys.readouterr().err
-    assert "workers must be at least 1, found 0" in err2
+    assert "must be at least 1, found 0" in err2
 
     with pytest.raises(SystemExit) as exc3:
         main(["sweep", "run", str(plan), "--workers", "notanint"])
@@ -1298,6 +1298,11 @@ def test_cr7_run_threads_flag_sets_environment(
 ) -> None:
     """CR-7: --threads sets OpenMP/BLAS thread environment variables before running."""
     captured_env: dict[str, str | None] = {}
+    # ``main`` writes these into ``os.environ`` itself; registering them with
+    # ``monkeypatch`` first is what puts them back at teardown, so a later test (and
+    # every child process it spawns) does not inherit four threads.
+    for variable in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):
+        monkeypatch.setenv(variable, "1")
 
     def capture_run(*_args: object, **_kwargs: object) -> object:
         captured_env["OMP_NUM_THREADS"] = os.environ.get("OMP_NUM_THREADS")
@@ -1318,7 +1323,7 @@ def test_cr7_run_threads_flag_sets_environment(
     with pytest.raises(SystemExit) as exc:
         main(["run", str(cylindrical_pore_case), "--threads", "0"])
     assert exc.value.code == EXIT_USAGE
-    assert "workers must be at least 1, found 0" in capsys.readouterr().err
+    assert "--threads: must be at least 1, found 0" in capsys.readouterr().err
 
 
 def test_cr8_cr9_env_store_resolution_and_flag_json(capsys: pytest.CaptureFixture[str]) -> None:

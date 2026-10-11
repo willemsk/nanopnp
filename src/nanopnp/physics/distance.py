@@ -131,7 +131,7 @@ def wall_distance(
     solve_linear(a, f, decayed, solver=solver)
 
     floor = math.exp(-max_distance_nm / scale)
-    if floor <= 0.0:
+    if not floor > 0.0:
         raise ValueError(
             f"diffusion_length_nm = {scale} nm is too small for max_distance_nm = "
             f"{max_distance_nm} nm: exp(-{max_distance_nm / scale:.0f}) underflows to zero, the "

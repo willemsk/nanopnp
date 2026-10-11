@@ -82,6 +82,21 @@ def other(value, tol):
 def exempted(value, tol):
     if value >= tol:
         raise GateViolationError("x")
+
+
+def closure(value, tol):
+    def inner(x):
+        if x > tol:
+            raise GateViolationError("x")
+
+    inner(value)
+
+
+class Holder:
+    class Inner:
+        def method(self, value, tol):
+            if value < tol:
+                raise GateViolationError("x")
 """
 
 
@@ -113,7 +128,8 @@ def test_ver70_a_nan_permissive_gate_is_found_at_its_line(tmp_path: Path) -> Non
 
     A comparison under ``not``, a test that also asks ``isfinite``, an
     integer-only comparison, a raise of a class that is not a gate, the desktop
-    shell and an exempt test are not found; a gate collected into a list is.
+    shell and an exempt test are not found; a gate collected into a list is, and so
+    is one in a closure or in the method of a nested class.
     """
     from nanopnp.validation.modularity import nan_permissive_gates
 
@@ -134,6 +150,8 @@ def test_ver70_a_nan_permissive_gate_is_found_at_its_line(tmp_path: Path) -> Non
         ("gates.py", "either", "a > tol or not b <= tol"),
         ("gates.py", "vector", "np.any(np.abs(x) > tol)"),
         ("gates.py", "collected", "value < tol"),
+        ("gates.py", "inner", "x > tol"),
+        ("gates.py", "method", "value < tol"),
     ]
     lines = SYNTHETIC.splitlines()
     for gate in found.violations:

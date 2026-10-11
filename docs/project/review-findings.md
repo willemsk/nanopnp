@@ -93,3 +93,9 @@ is a rolling register, and its header stays `open`.
 | REV-71 | verification | medium | open | — | [Stage 10's cache key does not move when the solver's algorithm does](review-items.md#rev-71-stage-10s-cache-key-does-not-move-when-the-solvers-algorithm-does) |
 | REV-72 | coupling | low | open | — | [A supplied field's rule order travels beside its source as a second argument](review-items.md#rev-72-a-supplied-fields-rule-order-travels-beside-its-source-as-a-second-argument) |
 | REV-73 | physics | low | open | — | [Cross-leaf inertness is not checked](review-items.md#rev-73-cross-leaf-inertness-is-not-checked) |
+| REV-74 | verification | low | open | — | [An untested raise in the force extension carries a coverage pragma](review-items.md#rev-74-an-untested-raise-in-the-force-extension-carries-a-coverage-pragma) |
+| REV-75 | coupling | low | open | — | [The two defaults modules duplicate the specs' defaults](review-items.md#rev-75-the-two-defaults-modules-duplicate-the-specs-defaults) |
+| REV-76 | verification | medium | open | — | [`ModelDeclaration.unread` paths are not validated against the schema](review-items.md#rev-76-modeldeclarationunread-paths-are-not-validated-against-the-schema) |
+| REV-77 | process | medium | open | — | [Pinning every artefact schema at v0.5 removes the cache-bust a payload change needs](review-items.md#rev-77-pinning-every-artefact-schema-at-v05-removes-the-cache-bust-a-payload-change-needs) |
+| REV-78 | interface | low | open | — | [The threads flag re-lists the thread variables and writes the environment for good](review-items.md#rev-78-the-threads-flag-re-lists-the-thread-variables-and-writes-the-environment-for-good) |
+| REV-79 | numerics | low | open | — | [The exclusion shell raises a bare ValueError for a NaN ring coordinate](review-items.md#rev-79-the-exclusion-shell-raises-a-bare-valueerror-for-a-nan-ring-coordinate) |
