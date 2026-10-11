@@ -2,7 +2,7 @@
 
 PR: [#91](https://github.com/willemsk/nanopnp/pull/91), branch feat/wp42-verification-checks
 
-**Status: completed.** Delivered 10 October 2026 as `v0.5.0-alpha.8`. Written 9 October 2026 at `c306256`, after WP41 was delivered as
+**Status: in progress (extension).** Items 1–9 delivered 10 October 2026 as `v0.5.0-alpha.8`. Extended 11 October 2026 with Items 10–13 (parameter and identifier centralisation). Written 9 October 2026 at `c306256`, after WP41 was delivered as
 `v0.5.0-alpha.7`. It inherits everything the [current brief](current.md) lists as not to be
 re-decided, and in particular: VER-62's golden at 10⁻⁸ (no number moves in this package); WP40's
 rule that a refusal names its requirement (VER-67); WP38's split (`pipeline/checks.py` refuses at
@@ -23,6 +23,14 @@ accepts and never applies is refused, declaration-driven (D3, D5, D6); (2) the v
 exactly and refuses what a document wrote (D10); (3) the implementing session stops **before and
 after every work item** (*Author checkpoints*); (4) one package.
 
+**Author rulings taken for the extension (11 October 2026):** (1) Broad parameter audit covering
+schemas, stage identifiers, and defaults; (2) Canonical schemas defined in `nanopnp.io.artefact` and
+imported downward by domain packages, with Tier-1 parity verification against `core.stages` (D14);
+(3) Stage identifiers encapsulated in `StageName` `StrEnum` in `nanopnp.core.stages` (D15);
+(4) Domain defaults modules `mesh.defaults` and `numerics.defaults` referenced by `io.case`,
+`io.defaults` and CLI (D16); (5) Shared `make_case_dict` and `case_yaml_template` fixtures in
+`tests/conftest.py` (D17); (6) Author checkpoints before and after every work item (P10–P13, R10–R13).
+
 ## Execution brief
 
 ### Scope
@@ -37,6 +45,10 @@ after every work item** (*Author checkpoints*); (4) one package.
 | REV-13 | Example 06's stage-7 keys are asserted against themselves | D11 |
 | REV-23 | One Einstein-ratio range for both ions | D12 |
 | REV-29, -34, -44, -48 | Copied fixtures, constants and a re-solved slab | D13 |
+| — | Schemas duplicated in domain modules and `core/stages.py` | Canonical in `io/artefact.py`, imported downward (D14) |
+| — | Stage identifiers passed as raw loose string literals | `StageName` (`StrEnum` + typed `Literal`) in `core/stages.py` (D15) |
+| — | Mesh and numerics defaults scattered across models and CLI | Domain modules `mesh/defaults.py`, `numerics/defaults.py` (D16) |
+| — | 80+ test files hardcode `schema: nanopnp/case/v0.5` | Shared `case_yaml_template`, `make_case_dict` in `tests/conftest.py` (D17) |
 
 **Breaks** (`CHANGELOG.md`, `0.5.0-alpha.8`, with a section *Migrating a nanopnp/case/v2
 document*): the case schema is `nanopnp/case/v0.5`; a case setting a value its model never applies
@@ -67,6 +79,10 @@ No `OPN-` is open here.
 | D11 | REV-13 | `test_validation_identity.py` pins example 06's stage-7 keys: protonation `5fefd7b11d04851ddffda38cddbff769282a325cc597baec432507209e86f732`, charge grid `969ad260dfde8107d883a6d96d1fc357d680acb18479b05c72688c5cc7c519ba` (structure `bbf72688…`), before and after `case_identity` | Measured at `c306256` |
 | D12 | REV-23 | Per ion, `|D/μ/V_T − table| ≤ 1e-3` at 0.15, 1, 3 M: Na⁺ 1.208, 1.468, 1.665; Cl⁻ 1.132, 1.221, 1.279; monotone | `.knowledge/01` §3.0 **[tested]**; table rounds to 3 d.p.; measured 1.20818, 1.4682, 1.66538 / 1.13184, 1.22129, 1.2794 |
 | D13 | Hygiene moves | REV-29: one `cylindrical_pore_case` fixture in `tests/conftest.py` for `test_cli`, `test_run`, `test_solve_hook`, `test_gui_solver_process`. REV-34: the VAL-05 frozen case, `as_yaml`, `REFERENCE_TRIANGLES` and the D10 figures as fixtures in `tests/conftest.py`; rendered case text byte-identical before and after (sha256 in the commit body). REV-44: the drawn slab solved once per module. REV-48: the 2WCD exclusion constants as one fixture. Fixtures, never `from conftest import` at run time | Moves, not new assertions (§7.6 NOTE levers) |
+| D14 | Canonical schemas & downward adoption | `nanopnp.io.artefact` defines all canonical schema constants (`CASE_SCHEMA`, `STRUCTURE_SCHEMA`, `DENSITY_SCHEMA`, `REDUCED_SCHEMA`, `PROFILE_ARTEFACT_SCHEMA`, `REGION_SCHEMA`, `MATERIALS_SCHEMA`, `MESH_ARTEFACT_SCHEMA`, `PROTONATION_SCHEMA`, `CHARGE_GRID_SCHEMA`, `FIELDS_SCHEMA`, `SOLUTION_SCHEMA`, `QOI_SCHEMA`, `REPORT_SCHEMA`, `SWEEP_SCHEMA`). Domain modules (`mesh/adapter.py:MESH_SCHEMA`, `geometry/region.py:REGION_SCHEMA`, `geometry/profile.py:PROFILE_SCHEMA`, etc.) import them downward from `io.artefact`. `core/stages.py` stage descriptions are validated against `io.artefact` in Tier 1 (`test_stages.py`) to prevent drift without creating upward edges | Rulings 1 & 2 (11 Oct 2026); preserves `upward: []` |
+| D15 | Stage identifiers | `nanopnp.core.stages` defines `StageName(StrEnum)` (`CASE = "case"`, `STRUCTURE = "structure"`, `DENSITY = "density"`, `SYMMETRY = "symmetry"`, `CONTOUR = "contour"`, `REGION = "region"`, `MESH = "mesh"`, `PROTONATION = "protonation"`, `MATERIALS = "materials"`, `CHARGE = "charge"`, `SOLVE = "solve"`, `QOI = "qoi"`, `REPORT = "report"`), `StageNameLiteral = Literal[...]`, and `StageIdentifier = StageName | StageNameLiteral`. `create()`, `describe()`, and `require()` accept `StageIdentifier`. Stage descriptions and consumers use `StageName` | Ruling 3 (11 Oct 2026); IDE autocompletion and static type checks |
+| D16 | Domain sizing and defaults | Group default parameters in domain modules: `mesh/defaults.py` (`DEFAULT_PORE_RADIUS_NM: Final = 2.0`, `DEFAULT_MEMBRANE_THICKNESS_NM: Final = 4.0`, `DEFAULT_RESERVOIR_RADIUS_NM: Final = 10.0`, `DEFAULT_MAXH_NM: Final = 4.0`, `DEFAULT_WALL_H_NM: Final = 0.2`, `DEFAULT_CYLINDER_WALL_H_NM: Final = 0.35`); `numerics/defaults.py` (`DEFAULT_NONLINEAR_RTOL: Final = 1e-4`, `DEFAULT_NONLINEAR_MAX_ITER: Final = 30`, `DEFAULT_ELEMENT_ORDER_U: Final = 2`, `DEFAULT_ELEMENT_ORDER_P: Final = 1`). `io/case.py` Pydantic models, `io/defaults.py` (`_VALIDATED_DEFAULTS`), and `cli/__init__.py` subparser defaults reference these constants directly | Ruling 4 (11 Oct 2026); single source of truth for physical/numerical defaults |
+| D17 | Test fixture centralisation | `tests/conftest.py` introduces `case_yaml_template()` fixture and `make_case_dict(**overrides)` helper, dynamically injecting active `CASE_SCHEMA`. Test files with inline schema YAML strings are migrated to reference `CASE_SCHEMA` or use the fixtures | Ruling 5 (11 Oct 2026); insulates test suite against future schema version bumps |
 
 ### Author checkpoints (binding)
 
@@ -99,6 +115,10 @@ outcome table per model (`refused`/`live`/`inert` per leaf and value), the bypas
 - [x] 0bbf432 non-Opus 7. [any] REV-13 (D11) and REV-23 (D12): the exact assertions given. Done when both tests pass.
 - [x] 0e5a6b7 non-Opus 8. [any] REV-29, REV-34, REV-44, REV-48 (D13). Done when the moved tests pass with unchanged assertions and `--durations` shows the slab solved once.
 - [x] bef6f7c non-Opus 9. [any] Records: REV-11, -12, -13, -23, -29, -34, -42, -44, -48, -66 `fixed`; a `REV-nn` row for *Out of scope*'s cross-leaf inertness; `CHANGELOG.md` `0.5.0-alpha.8` with the breaks and the migration section; `docs/project/physics-models.md` lists each model's unread leaves; this plan's status, the phase plan, the brief. Done when VER-63, VER-67, VER-72 and the strict docs build pass.
+- [ ] 10. [Opus] Canonical schema constants in `io/artefact.py` and downward adoption. Domain modules (`mesh/adapter.py`, `geometry/region.py`, `geometry/profile.py`, etc.) import schemas from `io/artefact` (D14). Tier-1 test asserts parity between `core/stages.py` descriptions and `io/artefact` constants without creating upward edges. Done when `test_stages.py` and `test_layering.py` pass.
+- [ ] 11. [Opus] StageName enum and stage identifier centralisation in `core/stages.py` (D15). Define `StageName(StrEnum)`, `StageNameLiteral`, `StageIdentifier` in `core/stages.py`; update stage registry definitions and `create()`/`describe()` signatures. Done when `test_stages.py` and `test_cli.py` pass.
+- [ ] 12. [Opus] Domain defaults modules `mesh/defaults.py` and `numerics/defaults.py` (D16). Wire constants into `io/case.py` Pydantic models, `io/defaults.py`, and `cli/__init__.py` arguments. Done when `test_manifest.py`, `test_case_schema.py`, and `test_cli.py` pass.
+- [ ] 13. [any] Test fixture centralisation in `tests/conftest.py` (`make_case_dict`, `case_yaml_template`) (D17). Migrate test files containing inline schema strings to reference `CASE_SCHEMA` or use the fixture. Done when full test suite passes with zero hardcoded schema regressions.
 
 ### Verification
 
@@ -111,6 +131,10 @@ outcome table per model (`refused`/`live`/`inert` per leaf and value), the bypas
 | `test_validation_identity.py`, `test_corrections.py` | 1 | VAL-03, VER-05 | D11 hashes; D12 per-ion values to 1e-3 |
 | VER-56 tests in `test_model_interface.py` | 1 | VER-56 | As amended; four keys re-recorded under item 3's proof |
 | The seven VER-62 walks | 2 | VER-62 | Unchanged at 10⁻⁸ after items 1, 3, 4 |
+| `tests/tier1/test_stages.py`, `test_layering.py` | 1 | VER-61, VER-25 | Schema parity between `core/stages.py` and `io/artefact.py` holds; `upward: []` unchanged (D14) |
+| `tests/tier1/test_stages.py`, `test_cli.py` | 1 | VER-25 | `StageName` members match registered stage strings; stage lookup accepts enum and strings (D15) |
+| `tests/tier1/test_manifest.py`, `test_case_schema.py` | 1 | FR-25 | Mesh and numerics defaults match Pydantic model defaults and `_VALIDATED_DEFAULTS` (D16) |
+| `tests/tier1/test_case_schema.py`, full suite | 1 | G6, VER-47 | Full test suite passes; case builder / template fixtures construct valid `CASE_SCHEMA` cases (D17) |
 
 Commands: `uv run pytest <file> -v`; `uv run pytest -m tier1`; `.claude/hooks/gate.sh run`; the docs
 command of `CLAUDE.md`. Probe runtime measured at 11 s for six models.
@@ -201,6 +225,30 @@ text, six keys); as `pnp` writing only `flow: false` (exit 3, D5's text); the sa
 case with `permittivity: {wall: false}`; one with `driver: ionic_strength`; one declaring
 `nanopnp/case/v0.6`. Each with stdout, stderr and exit code, and no traceback (VER-32).
 
+### 6. Parameter and identifier centralisation (Extension, D14–D17)
+
+- **Schema centralisation (D14):** All 15 canonical schema strings remain declared in `io/artefact.py`.
+  Domain modules (`mesh/adapter.py:MESH_SCHEMA`, `geometry/region.py:REGION_SCHEMA`,
+  `geometry/profile.py:PROFILE_SCHEMA`, etc.) import directly from `io/artefact.py`. Layering is
+  strictly downward: `mesh` and `geometry` already import `io` statically. `core/stages.py` remains
+  without an upward static import to `io/artefact.py`; parity between registered `artefact_schema`
+  attributes and `io/artefact.py` constants is tested in `tests/tier1/test_stages.py` (VER-25).
+- **Stage identifiers (D15):** `core/stages.py` defines `StageName(StrEnum)` covering all 13 stages
+  (`case`, `structure`, `density`, `symmetry`, `contour`, `region`, `mesh`, `protonation`, `materials`,
+  `charge`, `solve`, `qoi`, `report`), accompanied by `StageNameLiteral` and `StageIdentifier = StageName | StageNameLiteral`.
+  `create()`, `describe()`, and `require()` signatures accept `StageIdentifier`, providing IDE autocompletion
+  and type-safety while preserving string compatibility across pipelines.
+- **Domain sizing and defaults (D16):** Domain-specific constants are grouped at their natural layers:
+  `mesh/defaults.py` (`DEFAULT_PORE_RADIUS_NM: Final = 2.0`, `DEFAULT_MEMBRANE_THICKNESS_NM: Final = 4.0`,
+  `DEFAULT_RESERVOIR_RADIUS_NM: Final = 10.0`, `DEFAULT_MAXH_NM: Final = 4.0`, `DEFAULT_WALL_H_NM: Final = 0.2`,
+  `DEFAULT_CYLINDER_WALL_H_NM: Final = 0.35`); `numerics/defaults.py` (`DEFAULT_NONLINEAR_RTOL: Final = 1e-4`,
+  `DEFAULT_NONLINEAR_MAX_ITER: Final = 30`, `DEFAULT_ELEMENT_ORDER_U: Final = 2`, `DEFAULT_ELEMENT_ORDER_P: Final = 1`).
+  Pydantic models in `io/case.py`, `_VALIDATED_DEFAULTS` in `io/defaults.py`, and CLI arguments in `cli/__init__.py`
+  reference these canonical constants.
+- **Test fixtures (D17):** Shared `case_yaml_template()` fixture and `make_case_dict(**overrides)` builder in
+  `tests/conftest.py` inject `CASE_SCHEMA`. Tests are progressively migrated to use these helpers, preventing
+  widespread test churn on future schema increments.
+
 ## Checkpoint log
 
 | Checkpoint | Date | Author's ruling |
@@ -223,3 +271,11 @@ case with `permittivity: {wall: false}`; one with `driver: ionic_strength`; one 
 | R8 | 2026-10-10 | approved R8 and go P9 |
 | P9 | 2026-10-10 | approved R8 and go P9 |
 | R9 | 2026-10-10 | approved R9 |
+| P10 | 2026-10-11 | pending |
+| R10 | 2026-10-11 | pending |
+| P11 | 2026-10-11 | pending |
+| R11 | 2026-10-11 | pending |
+| P12 | 2026-10-11 | pending |
+| R12 | 2026-10-11 | pending |
+| P13 | 2026-10-11 | pending |
+| R13 | 2026-10-11 | pending |
