@@ -115,7 +115,7 @@ outcome table per model (`refused`/`live`/`inert` per leaf and value), the bypas
 - [x] 0bbf432 non-Opus 7. [any] REV-13 (D11) and REV-23 (D12): the exact assertions given. Done when both tests pass.
 - [x] 0e5a6b7 non-Opus 8. [any] REV-29, REV-34, REV-44, REV-48 (D13). Done when the moved tests pass with unchanged assertions and `--durations` shows the slab solved once.
 - [x] bef6f7c non-Opus 9. [any] Records: REV-11, -12, -13, -23, -29, -34, -42, -44, -48, -66 `fixed`; a `REV-nn` row for *Out of scope*'s cross-leaf inertness; `CHANGELOG.md` `0.5.0-alpha.8` with the breaks and the migration section; `docs/project/physics-models.md` lists each model's unread leaves; this plan's status, the phase plan, the brief. Done when VER-63, VER-67, VER-72 and the strict docs build pass.
-- [ ] 10. [Opus] Canonical schema constants in `io/artefact.py` and downward adoption. Domain modules (`mesh/adapter.py`, `geometry/region.py`, `geometry/profile.py`, etc.) import schemas from `io/artefact` (D14). Tier-1 test asserts parity between `core/stages.py` descriptions and `io/artefact` constants without creating upward edges. Done when `test_stages.py` and `test_layering.py` pass.
+- [x] 73fc2a6 non-Opus 10. [Opus] Canonical schema constants in `io/artefact.py` and downward adoption. Domain modules (`mesh/adapter.py`, `geometry/region.py`, `geometry/profile.py`, etc.) import schemas from `io/artefact` (D14). Tier-1 test asserts parity between `core/stages.py` descriptions and `io/artefact` constants without creating upward edges. Done when `test_stages.py` and `test_layering.py` pass.
 - [ ] 11. [Opus] StageName enum and stage identifier centralisation in `core/stages.py` (D15). Define `StageName(StrEnum)`, `StageNameLiteral`, `StageIdentifier` in `core/stages.py`; update stage registry definitions and `create()`/`describe()` signatures. Done when `test_stages.py` and `test_cli.py` pass.
 - [ ] 12. [Opus] Domain defaults modules `mesh/defaults.py` and `numerics/defaults.py` (D16). Wire constants into `io/case.py` Pydantic models, `io/defaults.py`, and `cli/__init__.py` arguments. Done when `test_manifest.py`, `test_case_schema.py`, and `test_cli.py` pass.
 - [ ] 13. [any] Test fixture centralisation in `tests/conftest.py` (`make_case_dict`, `case_yaml_template`) (D17). Migrate test files containing inline schema strings to reference `CASE_SCHEMA` or use the fixture. Done when full test suite passes with zero hardcoded schema regressions.
@@ -271,7 +271,7 @@ case with `permittivity: {wall: false}`; one with `driver: ionic_strength`; one 
 | R8 | 2026-10-10 | approved R8 and go P9 |
 | P9 | 2026-10-10 | approved R8 and go P9 |
 | R9 | 2026-10-10 | approved R9 |
-| P10 | 2026-10-11 | pending |
+| P10 | 2026-10-11 | go P10 |
 | R10 | 2026-10-11 | pending |
 | P11 | 2026-10-11 | pending |
 | R11 | 2026-10-11 | pending |
