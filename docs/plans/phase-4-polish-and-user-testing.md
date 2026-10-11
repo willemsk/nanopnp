@@ -2,7 +2,8 @@
 
 **Status: in progress.** Written 5 October 2026, after Phase 3 closed as `v0.4.0`. Amended the
 same day, after the author ruled every `MOD-nn` (§8.2.8). Amended again on 6 October 2026, after
-the author ruled the review register (§8.2.9).
+the author ruled the review register (§8.2.9), and on 11 October 2026, when the author inserted the
+development loop (§8.2.10).
 Delivered: WP35, the modularity exploration
 ([wp35-modularity-exploration.md](wp35-modularity-exploration.md)), tagged `v0.5.0-alpha.1`;
 WP36, the stage protocol and the walk ([wp36-stage-protocol-and-walk.md](wp36-stage-protocol-and-walk.md)),
@@ -12,19 +13,47 @@ tagged `v0.5.0-alpha.3`; WP38, the `io` split ([wp38-io-split.md](wp38-io-split.
 tagged `v0.5.0-alpha.4`; WP39, the backend registries ([wp39-backend-registries.md](wp39-backend-registries.md)),
 to be tagged `v0.5.0-alpha.5`; WP40, the stale refusals ([wp40-stale-refusals.md](wp40-stale-refusals.md)),
 to be tagged `v0.5.0-alpha.6`; WP41, the accuracy fixes ([wp41-accuracy-fixes.md](wp41-accuracy-fixes.md)),
-to be tagged `v0.5.0-alpha.7`.
-Planned: WP42, the verification checks; WP43, the small fixes; WP44, the OKF bundle; WP45,
-its backfill; WP46, the user-testing protocol (§8.2.9 I1). Provisional, and planned by the second
-`/phase-plan amend 4` once the author has run the sessions and ruled every `UT-nn`: the fixes, from
-WP47, then the documentation increment and the close, which take their numbers then.
+to be tagged `v0.5.0-alpha.7`; WP42, the verification checks
+([wp42-verification-checks.md](wp42-verification-checks.md)), to be tagged `v0.5.0-alpha.8`.
+Planned: WP43, the development loop (§8.2.10 J1); WP44, the small fixes; WP45, the OKF bundle;
+WP46, its backfill; WP47, the user-testing protocol (§8.2.9 I1, renumbered by §8.2.10 J1).
+Provisional, and planned by the second `/phase-plan amend 4` once the author has run the sessions
+and ruled every `UT-nn`: the fixes, from WP48, then the documentation increment and the close,
+which take their numbers then.
 Estimate: 4–6 weeks (§8.2.9 I5). Release: **v0.5** (`v0.5.0`).
+
+## In brief
+
+Phase 4 tidies the program before anyone other than its author relies on it. First, it measured
+how cleanly the code is divided into independent parts, and it rebuilt the parts the author chose
+to change; that work is done. Second, it fixes the problems found in code reviews; two of three
+packages are done. Third, it reorganises the project's reference notes so that every claim points
+to the test that proves it. Then the author tries the program as a user would, in scripted
+sessions, and the problems they find are fixed.
+
+On 11 October 2026 a package was added ahead of the remaining work, to speed up the daily loop.
+Today the check before every commit takes about 3.5 minutes, the full check before a push about
+9.5, and the online tests about 10.5. Sessions also repeat the full check for one-line fixes. The
+new package makes each commit run only the tests the change affects, and runs the full check once
+per push. It tests macOS and Windows after a merge rather than on every proposal. It also gives
+each kind of AI helper a fixed job and model, so sessions read less and cost less.
+
+**Cost.** About a week.
+
+**What could go wrong, and how it would be noticed.** A faster check could miss a test. A test
+plants a change and confirms that the right tests are picked, and the online run still checks
+everything on every push. A problem that shows only on macOS or Windows now appears after a merge,
+and is fixed in a follow-up.
+
+**Your call.** Whether the phase estimate grows by a week. Any speed target the new package misses
+comes back to you for a decision.
 
 This is the delivery plan for Phase 4 of `SPECIFICATION.md` §8.1. The specification is normative.
 Where this file and the specification disagree, the specification governs and this file is wrong.
 Requirement identifiers here are pointers into the specification, never restatements of it. The
 author's rulings behind this plan are §8.2.6 F3, F4 and F6, §8.2.7 G1 to G11, §8.2.8 H1 to H12 (on
-the modularity report and the review register), and §8.2.9 I1 to I5 (on planning the register's
-items). They are not re-argued here.
+the modularity report and the review register), §8.2.9 I1 to I5 (on planning the register's items), and §8.2.10 J1 to J9 (on the development loop).
+They are not re-argued here.
 
 ## Context
 
@@ -44,6 +73,9 @@ The gate (§8.1, as amended by §8.2.7) has five parts:
 - both logs pass the G4 check with their headers set to `closed`;
 - the number-stability golden holds (10⁻⁸ on a recorded mesh; G10, VER-62);
 - Tiers 1 and 2 pass.
+
+*Amended, 11 October 2026* (§8.2.10 J7): a sixth part, the development loop's budgets hold or each
+miss is ruled.
 
 No requirement in Appendix A is tagged v0.5, so the evidence is the report, the two logs, the golden
 and the suites.
@@ -106,6 +138,23 @@ before the OKF bundle (WP41 to WP43), three each into WP38 and WP39, and one int
 and REV-05 were already WP38's and WP39's. 15 are deferred to Phase 5 or 6, two are post-1.0, and two
 are declined (I1 to I3).
 
+The rulings on the development loop (§8.2.10), 11 October 2026, insert WP43 before the small fixes.
+Five things were measured that day, at `d630f85`, on a 4-core container:
+
+- **The commit hook's pytest stage took 199 s**, over 2,077 tests. Ruff, the lock check and a warm
+  mypy took about 3 s together (mypy took 37 s cold), and collection took 3.7 s.
+- **The push gate's pytest stage took 395 s, and 527 s with branch coverage**, over 2,135 tests. The
+  58 `extended` walks account for about half of it. The longest setups are session-scoped 2WCD seeds,
+  each paid by the worker that asks first, so under `--dist loadfile` one file carries it: example
+  07's setup took 314 s.
+- **CI's critical path took about 10.5 minutes.** `check` and five `test-matrix` legs each run the
+  full suite, pytest is 90–95 % of every job, and no job sets a timeout. There is no
+  `.test_durations` file and no test-impact tool.
+- **There is no `.claude/agents/`.** The model for each delegated task lives only in the prose of
+  `.claude/model-policy.md`. The five skills total about 9,300 words. `SPECIFICATION.md` is about
+  70,000 words.
+- **`import nanopnp` took 0.1 s.** Lazy imports would not shorten the gate (J6).
+
 Deliberately excluded:
 
 - any GUI work beyond following the API and the schema (QR-11; §8.1, GUI increment 4). Screens,
@@ -115,7 +164,8 @@ Deliberately excluded:
 - OPN-08 (stable v1.0), which stays the author's;
 - structure preparation, and OPN-04;
 - any new physics. A finding that asks for physics is deferred, with a ruling, to Phase 6 or to
-  post-1.0.
+  post-1.0;
+- Python 3.15 and its lazy imports, which wait on OPN-09 (§8.2.10 J6).
 
 ## Design decisions
 
@@ -141,6 +191,7 @@ contents and the guard's form, and the first OKF package decides open questions 
 | The review register's items | Those accepted for Phase 4 land in three packages by kind, WP41 to WP43, after WP40 and before the OKF bundle. The OKF bundle, the backfill and the protocol become WP44 to WP46 (§8.2.9 I1, I2) | Numbers settle before the ledger re-establishes them and before the testers see them |
 | The open `REV-nn` rows | Each one ruled: into a Phase 4 package, deferred to Phase 5 or 6, post-1.0, or declined (I3) | Every item of the register has an owner |
 | An accuracy fix and the golden | WP41's plan argues a bound for each VER-62 QoI before the change. A drift within that bound is re-pinned in the same commit as the amended clause; a drift beyond it stops the package (I4) | G10's ruling is given in advance for a fix whose purpose is to move a number, and only within a bound registered beforehand |
+| The development loop | WP43, before the small fixes. The commit hook runs the fast checks and the affected tests. The push gate runs once, in the background. CI runs ubuntu on Python 3.14 on a pull request, and macOS and Windows after a merge. Python 3.14 is the default. The agent roster is defined, and plans open with a plain-language summary. Every change is held to pre-registered budgets (§8.2.10 J1 to J9) | Every later package is built on it. The budgets keep it from drifting back |
 
 ## Conventions established by earlier phases
 
@@ -165,6 +216,7 @@ Inherited, and not re-decided by any package below.
   A new payload is declared in `PAYLOADS` and exercised by `--selftest`.
 - **A gated test gets cheaper only by the §7.6 NOTE's four levers** (WP33). The protocol's scripts
   and the golden attach to work the gate already does wherever they can.
+- **Every plan, and every package's pull request, opens with `## In brief`** (§8.2.10 J9).
 - **2WCD is prepared through `prepared_2wcd`** in tests. The VAL-05 ensemble test fails on the
   archive by design (D7).
 
@@ -511,7 +563,65 @@ These last are moves, not new assertions. The §7.6 NOTE's levers bound their co
 > `0.5.0-alpha.8`. By the author's ruling VER-71 refuses every value a model never applies, not REV-42's two keys alone,
 > and REV-66 is resolved with it.
 
-### WP43 — The small fixes (REV-14 to REV-16, REV-18, REV-19, and eleven low items)
+### WP43 — The development loop (§8.2.10 J1 to J9; VER-73, VER-74 proposed)
+
+*Added, 11 October 2026* (§8.2.10 J1). It makes the commit hook, the push gate and CI cheap
+enough that later packages are not paced by them, and it moves delegation onto defined agents. It
+covers:
+
+- **the commit hook** (J2): the fast checks, then a test-impact selection. Its tool (for example
+  pytest-testmon, or a map derived from coverage) is chosen by the plan from a measurement, and it
+  enters the lock. A change it cannot map falls back to the development selection;
+- **the push gate** (J3): it runs once per push, in the background, and reports only its failures. A
+  follow-up fix re-runs the affected tests, with changed-line coverage over them. The suite is made
+  cheaper by §7.6's four levers, and each changed test names the lever it uses:
+  - the 2WCD seeds and the meshes shared across workers through the store;
+  - workers balanced by recorded durations, in place of `--dist loadfile`'s long poles;
+  - cheaper coverage collection;
+- **CI** (J4):
+  - the pull-request leg and the post-merge platform legs;
+  - sharding by recorded durations;
+  - timeouts on every job, trimmed installs and a cached apt step;
+  - skipping the ubuntu leg on `main` when the merged tree equals the head that passed;
+  - the nightly runs on 3.11 to 3.13;
+  - the release matrix;
+  - the names of the required checks;
+- **Python 3.14** (J5): uv's pin, after VER-62 holds at round-off on 3.14;
+- **the roster and the skills** (J8): `.claude/agents/`, with the model policy amended for Haiku.
+  The skills and agent files are made leaner, path-scoped rules are introduced, and a usage script
+  reports a session's tokens, compactions, gate minutes and agent spawns;
+- **the plain summaries** (J9): `## In brief` in `/phase-plan`, `/wp-plan` and `/wp-implement`,
+  and in the pull-request body they write;
+- **the clauses J2 to J9 amend**: §7.6's table and NOTEs, with its new budget NOTE; `CLAUDE.md`'s
+  *Setup* and *Commands*; and `.knowledge/07`'s gate timings.
+
+Proposed **VER-73**, the loop's budgets: CI's duration report holds each selection within its
+recorded budget plus the argued margin. Its oracle is a budget recorded below the measured
+duration, which must fail. Proposed **VER-74**, the soundness of the test-impact selection:
+
+- a change planted in a `src/nanopnp` function selects every test that executes it;
+- a change to a file the tool cannot map selects the development selection.
+
+Both are Tier 1.
+
+Its budgets are measured on its own tree (J7):
+
+- the commit hook within 60 s on a one-module change;
+- the push gate within 5 minutes on 4 cores;
+- the pull-request critical path within 6 minutes.
+
+The token figure, at least 30 % fewer tokens read before code, is measured on WP44's
+`/wp-implement` against WP42's, and reported in WP44's Outcomes. Until WP43's new hook is committed,
+its own commits still run the old gate.
+
+Its `/wp-plan` decides the impact tool, the shard count, VER-73's margin, the roster's files and the
+order of the switch. Most items are `[any]`. Three are `[Opus]`: VER-62 on 3.14, any coarsening
+under the third lever, and the soundness argument of the selection. Tagged `v0.5.0-alpha.9`.
+
+### WP44 — The small fixes (REV-14 to REV-16, REV-18, REV-19, and eleven low items)
+
+> **Amended, 11 October 2026** (§8.2.10 J1). This was WP43, and is now **WP44**, after the
+> development loop. Its scope is unchanged.
 
 *Added, 6 October 2026* (§8.2.9 I1, I2). Local fixes, each with its own test, and none moving a
 number:
@@ -561,6 +671,9 @@ Its `/wp-plan` puts open questions 3 to 7 to the author (G9). `generate.py` has 
 > **Amended, 6 October 2026** (§8.2.9 I1). This is now **WP44**, after WP43. It is written against
 > the test node ids that WP36 to WP43 leave. VER-68 stays its proposed identifier.
 
+> **Amended, 11 October 2026** (§8.2.10 J1). This is now **WP45**, written against the test node
+> ids that WP36 to WP44 leave.
+
 ### OKF backfill — Provisional
 
 It waits on the bundle package. Every listed claim gets its test: a Tier-1 or Tier-2 test that
@@ -574,6 +687,8 @@ reason to loosen the test.
 
 > **Amended, 6 October 2026** (§8.2.9 I1). This is now **WP45**. A claim about Newton's
 > convergence test or the areal-charge quadrature is backed against WP41's tree, not the one before it.
+
+> **Amended, 11 October 2026** (§8.2.10 J1). This is now **WP46**.
 
 ### User-testing protocol — Provisional
 
@@ -597,6 +712,8 @@ protocol. **The sessions themselves are the author's**, and their findings are l
 
 > **Amended, 6 October 2026** (§8.2.9 I1). This is now **WP46**. VER-69 stays its proposed identifier.
 
+> **Amended, 11 October 2026** (§8.2.10 J1). This is now **WP47**.
+
 ### Fix packages — Provisional
 
 They wait on the sessions and on the author's ruling of each `UT-nn`. A second `/phase-plan amend 4`
@@ -609,6 +726,8 @@ shell following, and schema moves under `nanopnp/case/v0.5` (G6).
 > **Amended, 6 October 2026** (§8.2.9 I1, I3). They are numbered from **WP47**. They carry no review
 > item that §8.2.9 placed elsewhere. An item a later review adds goes to them only by a ruling
 > recorded in the register.
+
+> **Amended, 11 October 2026** (§8.2.10 J1). They are numbered from **WP48**.
 
 ### Documentation increment 4 — Provisional
 
@@ -668,6 +787,10 @@ Its last commit on `main` is tagged `v0.5.0` alone (G11).
 | Each `UT-nn` | Fix or defer | **Author**, through the second amendment |
 | Phase estimate | §8.1's "Set by the phase plan" | **Settled by the author, 5 October 2026**: 3–5 weeks (H9; §8.1, §8.3). **Re-settled, 6 October 2026**: 4–6 weeks (§8.2.9 I5) |
 | The review register's accepted items | At the second amendment, or before the OKF bundle | **Settled by the author, 6 October 2026** (§8.2.9 I1): WP41 to WP43, before WP44 |
+| The development loop | Insert a package before the small fixes, and its scope | **Settled by the author, 11 October 2026** (§8.2.10 J1 to J5, J7 to J9) |
+| Python 3.15 and lazy imports | Bump, add, or revisit | **Settled by the author, 11 October 2026** (J6): revisited under OPN-09 |
+| The impact tool, the shard count, VER-73's margin, the roster's files | — | **Open**, owned by WP43's `/wp-plan` |
+| The phase estimate after J1 | 4–6 weeks (I5), or a week more for WP43 | **Open, the author's.** The close states the figure it ends at |
 | Their grouping | By kind, two packages, or one per area | **Settled by the author, 6 October 2026** (I2): accuracy, verification, small fixes |
 | `REV-23` to `REV-65` | Phase 4, Phase 5, Phase 6, post-1.0 or declined, each | **Settled by the author, 6 October 2026** (I3) |
 | An accuracy fix that moves VER-62 | Stop (G10), pre-rule, or diagnose only | **Settled by the author, 6 October 2026** (I4): pre-ruled within a bound WP41's plan argues |
@@ -688,6 +811,9 @@ Its last commit on `main` is tagged `v0.5.0` alone (G11).
 | A ruling on every `UT-nn` | The fix packages and the close | As for `MOD-nn` |
 | A ruling on a WP41 drift beyond its argued bound | WP41, if it happens | The package stops at the fix and carries it, and VER-62 stays red until the ruling (I4) |
 | Open questions 3–7 of the OKF note | The OKF bundle package's plan | That plan carries them as open and blocks on them |
+| A ruling if VER-62 moves on Python 3.14 | WP43 | The interpreter stays 3.12 until it is ruled (J5, G10) |
+| A ruling on each of J7's budgets that WP43 misses | WP43's shipping | The miss is carried as a `REV-nn` row |
+| The required status checks renamed in the repository's branch protection, if it has any | WP43's merge | The pull request cannot merge, or merges with stale checks required |
 | The merge of every PR | Every package | — |
 | The tags, if the session cannot push them | After each merge (`v0.5.0-alpha.N`) and at the close (`v0.5.0`) | The session prints the `git tag -a` and `git push` commands (G11) |
 
@@ -711,12 +837,13 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP40 | 1 | VER-67 (proposed) |
 | WP41, accuracy | 1, 2 | Tests named for QR-03, NUM-16, PHY-13, VER-37; VER-62 re-pinned only under I4 |
 | WP42, verification | 1, 2 | VER-70, VER-71 (proposed) |
-| WP43, small fixes | 1, 2 | Tests named by item; no new identifier |
-| WP44, OKF bundle | 1 | VER-68 (proposed), the F6 check |
-| WP45, OKF backfill | 1, 2 | Tests named by claim; no new identifier |
-| WP46, protocol | 1 or 2 | VER-69 (proposed) |
+| WP43, development loop | 1 | VER-73, VER-74 (proposed); VER-62 on Python 3.14 |
+| WP44, small fixes | 1, 2 | Tests named by item; no new identifier |
+| WP45, OKF bundle | 1 | VER-68 (proposed), the F6 check |
+| WP46, OKF backfill | 1, 2 | Tests named by claim; no new identifier |
+| WP47, protocol | 1 or 2 | VER-69 (proposed) |
 | Every refactor | 1, 2 | VER-61, VER-62 and VER-63 kept green |
-| Fixes, from WP47 | 1, 2 | Claimed at the second amendment |
+| Fixes, from WP48 | 1, 2 | Claimed at the second amendment |
 | Documentation | 1, 2 | VER-45, VER-46 |
 | Close | 1, 2 | VER-63 against closed logs |
 
@@ -757,6 +884,21 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
     rolling (H12), so the close lists the rows whose ruling names WP38 to WP43 or the close.
     Prediction: all 39 (37 from I3 and I2, with REV-03 and REV-05). If one misses, it is deferred
     by an explicit ruling, never left `accepted` past the close.
+    *Amended, 11 October 2026* (§8.2.10 J1): the small fixes are now WP44, so the rows read are
+    those naming WP38 to WP44.
+11. *Added, 11 October 2026* (§8.2.10 J7). **The development loop's budgets hold**, on WP43's tree
+    and again on the close's, under VER-73. The commit hook stays within 60 s on a one-module
+    change, on 4 cores; the push gate within 5 minutes; and the pull-request critical path within
+    6 minutes. WP44 reports the token figure: at least 30 % fewer tokens read before code than
+    WP42 read. Predictions:
+    - the commit hook, 20 to 60 s;
+    - CI, 5 to 6 minutes;
+    - the push gate, 4 to 6 minutes. It is the likeliest miss, because the walks' setup dominates
+      it.
+
+    If one misses, the package reports the number and its cause, and the author rules whether to
+    re-argue it, by a spec amendment, or carry it. It is never met by loosening a tolerance or
+    weakening an oracle.
 
 ## End-of-phase report
 
@@ -782,3 +924,6 @@ Empty until the close package fills it. It reports:
   CLI changes, each with its migration. Sources: `test_public_api.py`, VER-47 and `CHANGELOG.md`.
 - **The suite:** test counts by tier and the push gate's serial and parallel durations, against the
   1,764 collected by default at `v0.4.0`. Source: the gate run on the close package's tree.
+- **The development loop:** the wall times of the commit hook, the push gate and CI's pull-request
+  critical path, against 11 October 2026's 199 s, 527 s and about 10.5 minutes, and the tokens read
+  before code against WP42's. Sources: VER-73's duration report and the usage script.
