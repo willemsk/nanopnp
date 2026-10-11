@@ -176,6 +176,33 @@ def test_ver25_the_pipeline_numbers_match_section_5_2() -> None:
     }
 
 
+def test_ver25_stage_descriptions_match_artefact_schemas() -> None:
+    """Every registered stage's artefact_schema matches the canonical constant in io.artefact."""
+    from nanopnp.io import artefact
+
+    stage_to_schema = {
+        "case": artefact.CASE_SCHEMA,
+        "structure": artefact.STRUCTURE_SCHEMA,
+        "density": artefact.DENSITY_SCHEMA,
+        "symmetry": artefact.REDUCED_SCHEMA,
+        "contour": artefact.PROFILE_ARTEFACT_SCHEMA,
+        "region": artefact.REGION_SCHEMA,
+        "mesh": artefact.MESH_ARTEFACT_SCHEMA,
+        "protonation": artefact.PROTONATION_SCHEMA,
+        "charge": artefact.FIELDS_SCHEMA,
+        "materials": artefact.MATERIALS_SCHEMA,
+        "solve": artefact.SOLUTION_SCHEMA,
+        "qoi": artefact.QOI_SCHEMA,
+        "report": artefact.REPORT_SCHEMA,
+    }
+    for stage_name, expected_schema in stage_to_schema.items():
+        desc = describe(stage_name)
+        assert desc.artefact_schema == expected_schema, (
+            f"Stage {stage_name!r} artefact_schema {desc.artefact_schema!r} "
+            f"differs from io.artefact constant {expected_schema!r}"
+        )
+
+
 def test_ver48_a_missing_extra_is_named_when_the_stage_is_created(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

@@ -74,7 +74,7 @@ from nanopnp.geometry.profile import (
     signed_area,
 )
 from nanopnp.geometry.tolerance import TOL_NM
-from nanopnp.io.artefact import RegionArtefact
+from nanopnp.io.artefact import REGION_SCHEMA, RegionArtefact
 from nanopnp.io.case import (
     MembraneSpec,
     ReservoirSpec,
@@ -89,9 +89,6 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.io.resolved import ResolvedCase
 
 logger = logging.getLogger(__name__)
-
-REGION_SCHEMA = "nanopnp/region/v1"
-"""Stage 5's record: the same string as :data:`nanopnp.io.artefact.REGION_SCHEMA`."""
 
 CHORD_DIVISIONS = 64
 """The chord search divides each lumen-adjacent interval into this many parts.
