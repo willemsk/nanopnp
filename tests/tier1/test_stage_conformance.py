@@ -409,6 +409,36 @@ STAGES = Path(stages.__file__)
 SOLVE = STAGES.parent.parent / "solve" / "stage.py"
 
 
+def test_ver64_a_registration_is_read_by_its_enum_member_and_one_it_cannot_read_is_skipped() -> (
+    None
+):
+    """The oracle: ``name=StageName.X`` is read as ``x``; a computed name or inputs are not judged.
+
+    The measurements read the registry from syntax alone (VER-25). A name or an
+    input that is neither a string literal nor an attribute of the enum is not
+    something syntax can resolve, so the registration is left out, not guessed.
+    """
+    sources = {
+        "__init__.py": "",
+        "core/__init__.py": "",
+        "core/stages.py": (
+            'register(StageDescription(name=StageName.ALPHA, inputs=("case", other())), '
+            '"nanopnp.x.s:XStage")\n'
+            'register(StageDescription(name=computed()), "nanopnp.x.s:XStage")\n'
+            'register(StageDescription(name="beta", inputs=computed()), "nanopnp.x.s:XStage")\n'
+        ),
+        "x/__init__.py": "",
+        "x/s.py": (
+            "class XStage:\n"
+            "    def describe(self) -> None: ...\n"
+            "    def key(self, inputs) -> None: ...\n"
+            "    def run(self, inputs, *, progress, cancel) -> None: ...\n"
+        ),
+    }
+    assert [stage.name for stage in stage_conformance(sources=sources)] == ["alpha", "beta"]
+    assert undeclared_reads(sources=sources) == ()
+
+
 def test_ver64_no_stage_reads_an_input_it_does_not_declare() -> None:
     """Every literal upstream read is of a declared input or the stage's own artefact (D11 d)."""
     assert [read.describe() for read in undeclared_reads()] == []
