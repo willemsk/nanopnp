@@ -34,6 +34,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import pytest
+import yaml
 
 import nanopnp
 from nanopnp.charge.stage import ResolvedFields, read_fields
@@ -91,7 +92,8 @@ SOLVE_HASHES = {
     "pb": "cacf3344cae1bd81c9675b34c0b5908831f3e14bdd598194a7ebb1d651be6e28",
     "pb-linear": "8e7475db3a51c40762881429a5bddfc80582a8558f928a8cce4356a7fef53fb4",
 }
-"""``content_hash(SOLUTION_SCHEMA, solve_provenance)`` of the quick-start variants, on ``main``.
+"""``content_hash(SOLUTION_SCHEMA, solve_provenance)`` of the quick-start variants,
+re-recorded in WP42.
 
 The stage-10 key itself. Its inputs are the case's own values -- no float in it is
 computed -- so the digest is the same on every platform."""
@@ -702,7 +704,7 @@ def test_ver56_a_model_defined_as_one_class_runs_from_a_case_file_to_stage_twelv
 
 
 def test_ver56_pnp_ns_beside_corrections_it_overrides_runs_and_restores(
-    pore_mesh: Path, tmp_path: Path
+    pore_mesh: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """VER-56: whether ``d`` is read is asked of the built model, not of the case.
 
@@ -730,8 +732,10 @@ def test_ver56_pnp_ns_beside_corrections_it_overrides_runs_and_restores(
         "{model: borukhov}", "{model: none}"
     )
     assert classical.count("{model: none}") == 6
+    monkeypatch.setattr("nanopnp.pipeline.checks._check_unread", lambda document, model=None: None)
     texts = {
-        "ladder": classical,
+        "ladder": quickstart,
+        "classical": classical,
         "single": classical.replace("continuation: default_ladder", "continuation: none"),
     }
     runs = {name: _run(text, tmp_path / name) for name, text in texts.items()}
@@ -740,9 +744,115 @@ def test_ver56_pnp_ns_beside_corrections_it_overrides_runs_and_restores(
         with np.load(state, allow_pickle=False) as archive:
             assert WALL_DISTANCE_ENTRY not in archive.files, name
         restore(state, resolved=resolve(loads_case(texts[name])))
+    assert runs["ladder"].artefacts["qoi"].summary == runs["classical"].artefacts["qoi"].summary
     ladder_qoi = runs["ladder"].artefacts["qoi"].summary
     single_qoi = runs["single"].artefacts["qoi"].summary
     assert ladder_qoi["current_A"] == pytest.approx(single_qoi["current_A"], rel=1e-12)
+
+
+def test_ver56_rerecorded_models_have_bit_identical_fingerprints(
+    pore_mesh: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """VER-56: re-recorded models assemble bit-identical operators.
+
+    The four re-recorded models match before and after unread pruning.
+    """
+    import netgen.occ as occ
+    import ngsolve as ngs
+    import numpy as np
+    from test_case_leaves import fingerprint
+
+    def equal(a: tuple[object, ...], b: tuple[object, ...]) -> bool:
+        return (
+            a[0] == b[0]
+            and all(
+                x.shape == y.shape and np.array_equal(x, y)  # type: ignore[union-attr]
+                for x, y in zip(a[1:], b[1:], strict=True)
+            )
+        )
+
+    # Fluid mesh for electrostatic models
+    face = occ.Rectangle(2.0, 8.0).Face()
+    face.name = "electrolyte"
+    for edge in face.edges:
+        r, z = edge.center[0], edge.center[1]
+        if abs(r) < 1e-9:
+            edge.name = "axis"
+        elif abs(r - 2.0) < 1e-9:
+            edge.name = "wall"
+        else:
+            edge.name = "cis" if abs(z) < 1e-9 else "trans"
+    fluid = ngs.Mesh(occ.OCCGeometry(face, dim=2).GenerateMesh(maxh=1.0))
+    fluid_mesh = pore_mesh.parent / "fluid_for_pb.msh"
+    write_msh41(from_ngsolve(fluid), fluid_mesh)
+
+    monkeypatch.setattr("nanopnp.pipeline.checks._check_unread", lambda document, model=None: None)
+    base_text = QUICKSTART.read_text(encoding="utf-8")
+    base_pore = base_text.replace("path: pore.msh", f"path: {pore_mesh}")
+    base_fluid = base_text.replace("path: pore.msh", f"path: {fluid_mesh}")
+    variants_pore = {
+        k: v.replace("path: pore.msh", f"path: {pore_mesh}")
+        for k, v in _quickstart_variants().items()
+    }
+    variants_fluid = {
+        k: v.replace("path: pore.msh", f"path: {fluid_mesh}")
+        for k, v in _quickstart_variants().items()
+    }
+
+    # pnp-ns
+    u_pnp_ns = yaml.safe_load(base_pore.replace("model: epnp-ns", "model: pnp-ns"))
+    e_pnp_ns = yaml.safe_load(variants_pore["pnp-ns"])
+    assert equal(fingerprint(u_pnp_ns), fingerprint(e_pnp_ns))
+
+    # pnp
+    u_pnp = yaml.safe_load(
+        base_pore.replace(
+            "model: epnp-ns",
+            "model: pnp\n  flow: false\n  variable_density: false\n  inertia: false",
+        )
+        .replace("continuation: default_ladder", "continuation: none")
+        .replace("eof_rate]", "rectification]")
+    )
+    e_pnp = yaml.safe_load(variants_pore["pnp"])
+    assert equal(fingerprint(u_pnp), fingerprint(e_pnp))
+
+    # pb
+    pb_model_str = (
+        "model: pb\n"
+        "  flow: false\n"
+        "  variable_density: false\n"
+        "  inertia: false\n"
+        "  dielectric_gradient_forces: false"
+    )
+    u_pb = yaml.safe_load(
+        base_fluid.replace("model: epnp-ns", pb_model_str)
+        .replace("  solid_permittivities: {membrane: 3.2}\n", "")
+        .replace("continuation: default_ladder", "continuation: none")
+        .replace("outputs: [current, transport_numbers, eof_rate]", "outputs: []")
+    )
+    u_pb["inputs"]["mesh"]["groups"] = {"wall": "interface"}
+    e_pb = yaml.safe_load(variants_fluid["pb"])
+    e_pb["inputs"]["mesh"]["groups"] = {"wall": "interface"}
+    assert equal(fingerprint(u_pb), fingerprint(e_pb))
+
+    # pb-linear
+    pb_lin_model_str = (
+        "model: pb-linear\n"
+        "  flow: false\n"
+        "  variable_density: false\n"
+        "  inertia: false\n"
+        "  dielectric_gradient_forces: false"
+    )
+    u_pb_lin = yaml.safe_load(
+        base_fluid.replace("model: epnp-ns", pb_lin_model_str)
+        .replace("  solid_permittivities: {membrane: 3.2}\n", "")
+        .replace("continuation: default_ladder", "continuation: none")
+        .replace("outputs: [current, transport_numbers, eof_rate]", "outputs: []")
+    )
+    u_pb_lin["inputs"]["mesh"]["groups"] = {"wall": "interface"}
+    e_pb_lin = yaml.safe_load(variants_fluid["pb-linear"])
+    e_pb_lin["inputs"]["mesh"]["groups"] = {"wall": "interface"}
+    assert equal(fingerprint(u_pb_lin), fingerprint(e_pb_lin))
 
 
 # -- the electrostatic models from case files ---------------------------------

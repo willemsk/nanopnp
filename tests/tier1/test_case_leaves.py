@@ -443,6 +443,7 @@ def test_ver71_the_driver_is_live_for_any_but_two_unit_valence_species(
 
 
 def test_ver71_applied_parts_branches(monkeypatch: pytest.MonkeyPatch) -> None:
+    """PHY-22: branch coverage of applied_parts when material documents omit fc or wall fits."""
     from typing import TypeVar
 
     from pydantic import BaseModel
@@ -481,6 +482,10 @@ def test_ver71_applied_parts_branches(monkeypatch: pytest.MonkeyPatch) -> None:
     assert "concentration" not in applied_parts(WILLEMS, "diffusivity")
 
 
+class ReachedLinearProbeError(RuntimeError):
+    """Raised by the linear probe solver when reached."""
+
+
 @pytest.fixture
 def probe_solver() -> Iterator[str]:
     """Register a linear solver that stops the solve when it is first used."""
@@ -488,12 +493,9 @@ def probe_solver() -> Iterator[str]:
 
     name = "ver71-probe"
 
-    class ReachedError(Exception):
-        pass
-
     class Probe:
         def solve(self, *args: object, **kwargs: object) -> None:
-            raise ReachedError(name)
+            raise ReachedLinearProbeError(name)
 
     linear.register_solver(name, Probe)
     try:
@@ -572,7 +574,7 @@ def test_ver71_the_linear_solver_reaches_every_model(
             "solver": resolved.linear_solver,
         },
     )
-    with pytest.raises(Exception, match=probe_solver):
+    with pytest.raises(ReachedLinearProbeError):
         run_ladder((prepared,))
 
 
@@ -768,7 +770,7 @@ def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
     from nanopnp.mesh.adapter import from_ngsolve, write_msh41
     from nanopnp.mesh.primitives import CylindricalPoreGeometry
     from nanopnp.pipeline.case import loads_case, resolve
-    from nanopnp.validation.case_leaves import LEAVES  # noqa: F401
+    from nanopnp.validation.case_leaves import LEAVES
 
     def upstream_of(stage_name: str) -> set[str]:
         seen: set[str] = set()
@@ -812,6 +814,18 @@ def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
                 upstream={"mesh": dummy_mesh, "protonation": dummy_prot, "region": dummy_region},
             ),
         }
+        if stage_name == "mesh" and getattr(res, "mesh", None) is not None:
+            mesh_spec = res.mesh
+            try:
+                base_hash = create(stage_name).key(inputs_map[stage_name]).hash
+            except Exception:
+                base_hash = "unresolved"
+            from nanopnp.core.hashing import content_hash
+
+            return content_hash(
+                "nanopnp/mesh/supplied/v1",
+                (base_hash, str(mesh_spec.path), str(mesh_spec.format), dict(mesh_spec.groups)),
+            )
         return create(stage_name).key(inputs_map[stage_name]).hash
 
     p1 = tmp_path / "test1.pdb"
@@ -841,10 +855,37 @@ def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
     prof2_obj = load_profile(profile_yaml).model_copy(update={"name": "other_profile"})
     prof2.write_text(yaml.safe_dump(prof2_obj.model_dump(by_alias=True, mode="json")))
 
-    f1 = tmp_path / "f1.npy"
-    f1.write_text("dummy field")
-    f2 = tmp_path / "f2.npy"
-    f2.write_text("other field")
+    import numpy as np
+
+    from nanopnp.core.hashing import file_hash
+    from nanopnp.density.grid import RadialGrid, write_grid
+
+    r = np.linspace(0.0, 5.0, 21)
+    z = np.linspace(-5.0, 5.0, 41)
+    vals = np.zeros((41, 21))
+    grid = RadialGrid.from_axes(r, z, vals)
+    data_c = write_grid(grid, tmp_path / "charge.npz", format="npz")
+    charge_yaml = tmp_path / "charge.yaml"
+    charge_yaml.write_text(
+        "schema: nanopnp/field/v1\nname: test_c\nquantity: volume_charge_density\nunits: C/m^3\n"
+        "provenance: {source: analytic}\n"
+        f"data: {{path: {data_c.name}, format: npz, sha256: {file_hash(data_c)}}}\n"
+        f"grid: {{origin_nm: [{grid.origin_nm[0]!r}, {grid.origin_nm[1]!r}], "
+        f"spacing_nm: [{grid.spacing_nm[0]!r}, {grid.spacing_nm[1]!r}], "
+        f"shape: [{grid.shape[0]}, {grid.shape[1]}]}}\n",
+        encoding="utf-8",
+    )
+    data_e = write_grid(grid, tmp_path / "eps_r.npz", format="npz")
+    eps_yaml = tmp_path / "eps_r.yaml"
+    eps_yaml.write_text(
+        'schema: nanopnp/field/v1\nname: test_e\nquantity: solid_fraction\nunits: "1"\n'
+        "provenance: {source: analytic}\n"
+        f"data: {{path: {data_e.name}, format: npz, sha256: {file_hash(data_e)}}}\n"
+        f"grid: {{origin_nm: [{grid.origin_nm[0]!r}, {grid.origin_nm[1]!r}], "
+        f"spacing_nm: [{grid.spacing_nm[0]!r}, {grid.spacing_nm[1]!r}], "
+        f"shape: [{grid.shape[0]}, {grid.shape[1]}]}}\n",
+        encoding="utf-8",
+    )
 
     pdb_base = {
         "schema": "nanopnp/case/v0.5",
@@ -857,10 +898,10 @@ def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
             "reservoir": {"radius_nm": 10.0},
         },
         "charge": {
-            "ph": 7.4,
+            "ph": 7.5,
             "forcefield": "CHARMM",
             "titration": "propka",
-            "smearing": {"sharpness": 1.0, "grid_spacing_nm": 0.1},
+            "smearing": {"sharpness": 0.5, "grid_spacing_nm": 0.005},
             "dielectric_transition_nm": 0.0,
             "exclusion_offset_nm": 0.0,
         },
@@ -940,11 +981,8 @@ def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
     }
     for path, val in refused.items():
         doc = put(pdb_base, path, val)
-        try:
+        with pytest.raises((CaseValidationError, UnsupportedCaseSection)):
             resolve(loads_case(yaml.safe_dump(doc)))
-            raise AssertionError(f"{path} was not refused!")
-        except (CaseValidationError, UnsupportedCaseSection):
-            pass
 
     prof_case1 = {
         "schema": "nanopnp/case/v0.5",
@@ -1012,17 +1050,28 @@ def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
         ("inputs.mesh.groups", {"other": "interface"}),
     ]:
         doc = put(mesh_case, p, v)
-        try:
-            res_alt = resolve(loads_case(yaml.safe_dump(doc)))
-            assert stage_key("mesh", res_alt) != k_m
-        except (CaseValidationError, UnsupportedCaseSection, Exception):
-            pass
+        res_alt = resolve(loads_case(yaml.safe_dump(doc)))
+        assert stage_key("mesh", res_alt) != k_m
+
+    k_base_charge = stage_key("charge", res_base)
+    doc_c = put(pdb_base, "inputs.charge.path", str(charge_yaml))
+    assert stage_key("charge", resolve(loads_case(yaml.safe_dump(doc_c)))) != k_base_charge
+
+    doc_e = put(pdb_base, "inputs.eps_r.path", str(eps_yaml))
+    assert stage_key("charge", resolve(loads_case(yaml.safe_dump(doc_e)))) != k_base_charge
 
     for kind in ("charge", "eps_r"):
-        for sub, v in [("path", str(f2)), ("format", "other"), ("groups", {"wall": "interface"})]:
-            p = f"inputs.{kind}.{sub}"
-            doc = put(mesh_case, p, v)
-            try:  # noqa: SIM105
+        for sub, v in [("format", "other"), ("groups", {"wall": "interface"})]:
+            doc = put(pdb_base, f"inputs.{kind}.{sub}", v)
+            with pytest.raises(CaseValidationError):
                 resolve(loads_case(yaml.safe_dump(doc)))
-            except (CaseValidationError, UnsupportedCaseSection):
-                pass
+
+    covered = (
+        set(live_pdb)
+        | set(refused)
+        | {"inputs.profile.path", "inputs.pqr.path"}
+        | {f"inputs.mesh.{k}" for k in ("path", "format", "groups")}
+        | {f"inputs.charge.{k}" for k in ("path", "format", "groups")}
+        | {f"inputs.eps_r.{k}" for k in ("path", "format", "groups")}
+    )
+    assert covered == set(p for p, leaf in LEAVES.items() if leaf.kind == "stage")

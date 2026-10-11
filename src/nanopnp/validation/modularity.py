@@ -1838,7 +1838,7 @@ def _find_if_nodes(func: ast.FunctionDef | ast.AsyncFunctionDef) -> list[ast.If]
     stack: list[ast.AST] = list(reversed(func.body))
     while stack:
         node = stack.pop()
-        if isinstance(node, ast.ClassDef):
+        if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
             continue
         if isinstance(node, ast.If):
             ifs.append(node)
@@ -1854,7 +1854,7 @@ def nan_permissive_gates(
 ) -> NanGateFindings:
     """Find all NaN-permissive gate comparisons in the package."""
     violations: list[NanGate] = []
-    stale: list[str] = []
+    all_matched: set[str] = set()
 
     py_files = sorted(package.rglob("*.py"))
     for py_file in py_files:
@@ -1863,9 +1863,6 @@ def nan_permissive_gates(
             continue
         rel_path = rel.as_posix()
         tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=rel_path)
-
-        file_exempt = {k for k in exempt if k.startswith(f"{rel_path}:")}
-        matched_for_file: set[str] = set()
 
         for stmt in tree.body:
             funcs: list[ast.FunctionDef | ast.AsyncFunctionDef] = []
@@ -1884,7 +1881,7 @@ def nan_permissive_gates(
                         test_str = ast.unparse(if_node.test)
                         key = f"{rel_path}:{func.name}: {test_str}"
                         if key in exempt:
-                            matched_for_file.add(key)
+                            all_matched.add(key)
                         else:
                             violations.append(
                                 NanGate(
@@ -1895,9 +1892,8 @@ def nan_permissive_gates(
                                 )
                             )
 
-        stale.extend(file_exempt - matched_for_file)
-
+    stale = tuple(sorted(set(exempt.keys()) - all_matched))
     return NanGateFindings(
         violations=tuple(violations),
-        stale=tuple(sorted(stale)),
+        stale=stale,
     )

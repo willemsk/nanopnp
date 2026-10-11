@@ -123,3 +123,67 @@ def test_ver47_the_declared_python_range_agrees() -> None:
         workflow["jobs"]["test-matrix"]
     )
     assert sorted(tested) == specified, f"CI tests {sorted(tested)}"
+
+
+@pytest.mark.parametrize(
+    ("path", "bad_val"),
+    [
+        ("charge.exclusion_offset_nm", -0.1),
+        ("charge.exclusion_offset_nm", float("inf")),
+        ("charge.exclusion_offset_nm", float("nan")),
+        ("charge.dielectric_transition_nm", -0.1),
+        ("charge.dielectric_transition_nm", float("inf")),
+        ("charge.dielectric_transition_nm", float("nan")),
+        ("numerics.mesh.size_scale", -0.1),
+        ("numerics.mesh.size_scale", 0.0),
+        ("numerics.mesh.size_scale", float("inf")),
+        ("numerics.mesh.size_scale", float("nan")),
+    ],
+)
+def test_ver47_value_range_refusals(path: str, bad_val: float) -> None:
+    """Out-of-range floats on exclusion offset, transition width and mesh size are refused."""
+    from nanopnp.io.case import CaseValidationError
+    from nanopnp.pipeline.case import loads_case
+
+    raw = yaml.safe_load(PNP.format(schema="nanopnp/case/v0.5", switches=WRITTEN))
+    parts = path.split(".")
+    cur = raw
+    for part in parts[:-1]:
+        cur = cur.setdefault(part, {})
+    cur[parts[-1]] = bad_val
+    with pytest.raises(CaseValidationError):
+        loads_case(yaml.safe_dump(raw))
+
+
+def test_ver47_deviations_offset_and_transition() -> None:
+    """A non-zero offset or transition width is recorded as a deviation; absent charge is empty."""
+    from nanopnp.io.defaults import deviations
+    from nanopnp.pipeline.case import load_case, loads_case
+
+    quickstart = ROOT / "examples" / "01-quickstart" / "quickstart.case.yaml"
+    assert deviations(load_case(quickstart)) == ()
+
+    raw = yaml.safe_load(quickstart.read_text(encoding="utf-8"))
+    raw["charge"] = {"exclusion_offset_nm": 0.3}
+    listed = {dev.path: dev for dev in deviations(loads_case(yaml.safe_dump(raw)))}
+    assert set(listed) == {"charge.exclusion_offset_nm"}
+    assert listed["charge.exclusion_offset_nm"].validated == 0.0
+    assert listed["charge.exclusion_offset_nm"].value == 0.3
+
+    raw["charge"] = {"dielectric_transition_nm": 0.2}
+    listed = {dev.path: dev for dev in deviations(loads_case(yaml.safe_dump(raw)))}
+    assert set(listed) == {"charge.dielectric_transition_nm"}
+
+    raw["charge"] = {}
+    assert deviations(loads_case(yaml.safe_dump(raw))) == ()
+
+
+def test_ver47_pqr_input_sets_protonates() -> None:
+    """inputs.pqr is read and sets resolved.protonates to True."""
+    from nanopnp.pipeline.case import loads_case, resolve
+
+    raw = yaml.safe_load(PNP.format(schema="nanopnp/case/v0.5", switches=WRITTEN))
+    raw["inputs"]["pqr"] = {"path": "supplied.pqr", "format": "pqr"}
+    resolved = resolve(loads_case(yaml.safe_dump(raw)))
+    assert resolved.pqr is not None
+    assert resolved.protonates
