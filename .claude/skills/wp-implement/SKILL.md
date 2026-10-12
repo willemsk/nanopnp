@@ -129,7 +129,9 @@ Before handing off, confirm every one of these yourself:
   releases*). The phase's close package also writes the release `vX.Y.Z` section and sets
   `CITATION.cff`'s `version` and `date-released`; it takes the release tag alone, with no
   `-alpha.N`, only where its phase's rulings say so, as §8.2.5 E5 did for Phase 3;
-- `git status` is clean, and the branch is pushed (`git push -u origin <branch>`).
+- `git status` is clean, and the branch is pushed (`git push -u origin <branch>`): start
+  `.claude/hooks/gate.sh run` with Bash `run_in_background`, and push when it passes. The push
+  guard refuses a tree it has not passed.
 
 Then open or reuse the branch's PR against `main`, without asking again. Follow only the PR lookup
 and title/body contract in `wp-ship` §3; do not invoke that skill. On a new PR, state under

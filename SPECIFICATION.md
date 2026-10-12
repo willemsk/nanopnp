@@ -3398,7 +3398,16 @@ outside `gui/` to be executed down each branch, by `diff-cover` against the merg
 or to carry `# pragma: no cover - <reason>`. Both set `NANOPNP_REQUIRE_GMSH=1`, so a Gmsh that
 cannot import fails instead of skipping, and the commit hook sets it only for a change to Gmsh's
 own code or tests. The commit hook runs no coverage. Coverage sees neither missing code nor an
-untaken arm of `a if c else b`; a planned test covers those (`/wp-plan`).
+untaken arm of `a if c else b`; a planned test covers those (`/wp-plan`). After a pass on one
+tree, `gate.sh run` on a later tree is a follow-up (§8.2.10 J3): it runs only the tests the
+test-impact selection (VER-74) finds the change since the passed tree to touch, `extended` walks
+included, measures coverage over them, and requires every line changed since that tree, by
+`diff-cover` against a commit of it. For those lines the subset's coverage equals the full run's:
+a test the change does not select executes at the later tree exactly what it executed at the
+passed one, so no line changed since then, and every selected test runs under coverage. A line
+changed between `main` and the passed tree keeps the passed run's verdict; CI's full `diff-cover`
+remains the authority and catches a follow-up that removes such a line's only coverage. A
+selector fallback, a moved merge base, or a map not of the passed tree runs the whole gate.
 
 NOTE (a golden asserted on more than one platform; WP35): a test that holds a computed number
 against a recorded one, on every leg, asks one of two questions, and its tolerance follows the
