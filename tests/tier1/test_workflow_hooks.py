@@ -550,3 +550,142 @@ def test_gate_run_without_a_merge_base_fails_before_the_selection(
     assert result.returncode == 1
     assert "git fetch origin main" in result.stderr
     assert not calls.exists() or "pytest" not in calls.read_text(encoding="utf-8")
+
+
+def _impact_repo(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, selector: str) -> Path:
+    """Return a branch repository with an impact map, and a fake ``uv`` running ``selector``.
+
+    ``selector`` is the shell body run for ``uv run python tests/impact.py select``;
+    every call is logged as in ``_recording_uv``.
+    """
+    repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/other.py")
+    (repo / "tests").mkdir(exist_ok=True)
+    (repo / "tests/impact.py").write_text("", encoding="utf-8")
+    common = Path(_git(repo, "rev-parse", "--path-format=absolute", "--git-common-dir"))
+    (common / "nanopnp-impact").mkdir()
+    (common / "nanopnp-impact/map.json").write_text("{}", encoding="utf-8")
+    (repo / "src/nanopnp/other.py").write_text("x = 2\n", encoding="utf-8")
+    _recording_uv(tmp_path, monkeypatch, f'case "$*" in *"impact.py select"*) {selector};; esac\n')
+    return repo
+
+
+def _log(repo: Path) -> list[str]:
+    path = Path(_git(repo, "rev-parse", "--absolute-git-dir")) / "nanopnp-gate.log"
+    return path.read_text(encoding="utf-8").splitlines()
+
+
+def test_gate_hook_runs_the_impact_selection_by_whole_file_and_stamps_impact(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The hook runs the files the selector names, never their walks, and stamps ``impact`` (D5)."""
+    if shutil.which("jq") is None:
+        pytest.skip("the gate hook reads its payload with jq")
+    selector = (
+        "printf '%s\\n' tests/tier1/test_a.py::test_x 'tests/tier1/test_a.py::test_y[1]' "
+        "tests/tier2/test_b.py::test_z; exit 0"
+    )
+    repo = _impact_repo(tmp_path, monkeypatch, selector)
+    output = _hook(repo, repo, "git commit -am x")
+    calls = (tmp_path / "uv-calls").read_text(encoding="utf-8").splitlines()
+    runs = [call for call in calls if "pytest" in call and "-rsfE" in call and "gui" not in call]
+    assert len(runs) == 1, calls
+    arguments = runs[0].split("|", 1)[1]
+    assert arguments.endswith("-- tests/tier1/test_a.py tests/tier2/test_b.py"), arguments
+    assert "not extended" in arguments
+    assert "--extended" not in arguments
+    assert "-n 0" in arguments  # three tests: no workers to start
+    assert "impact selection, 3 tests" in json.loads(output)["systemMessage"]
+    stamp = Path(_git(repo, "rev-parse", "--absolute-git-dir")) / "nanopnp-gate.pass"
+    assert stamp.read_text(encoding="utf-8").split()[-1] == "impact"
+    mode, selection, count = _log(repo)[-1].split()[1:4]
+    assert (mode, selection, count) == ("hook", "impact", "3")
+    assert _log(repo)[-1].endswith(" passed")
+
+
+def test_gate_hook_falls_back_to_the_development_selection_naming_the_reason(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A selector fallback runs the whole development selection, and the message says why."""
+    if shutil.which("jq") is None:
+        pytest.skip("the gate hook reads its payload with jq")
+    repo = _impact_repo(
+        tmp_path,
+        monkeypatch,
+        "echo 'FALLBACK: src/nanopnp/core/units.py: module-level change'; exit 3",
+    )
+    output = _hook(repo, repo, "git commit -am x")
+    calls = (tmp_path / "uv-calls").read_text(encoding="utf-8").splitlines()
+    runs = [
+        call
+        for call in calls
+        if "pytest" in call and "--ignore=tests/tier1/test_gui_widgets.py" in call
+    ]
+    assert len(runs) == 1, calls
+    assert "src/nanopnp/core/units.py: module-level change" in json.loads(output)["systemMessage"]
+    assert _log(repo)[-1].split()[2] == "development"
+
+
+def test_gate_hook_without_a_map_falls_back_and_never_calls_the_selector(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    if shutil.which("jq") is None:
+        pytest.skip("the gate hook reads its payload with jq")
+    repo = _impact_repo(tmp_path, monkeypatch, "exit 0")
+    common = Path(_git(repo, "rev-parse", "--path-format=absolute", "--git-common-dir"))
+    (common / "nanopnp-impact/map.json").unlink()
+    output = _hook(repo, repo, "git commit -am x")
+    calls = (tmp_path / "uv-calls").read_text(encoding="utf-8")
+    assert "impact.py select" not in calls
+    assert "no impact map" in json.loads(output)["systemMessage"]
+
+
+def test_gate_hook_pass_keeps_the_extended_stamp_line_last(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A commit-hook pass adds its line and leaves the push gate's ``extended`` line in place."""
+    if shutil.which("jq") is None:
+        pytest.skip("the gate hook reads its payload with jq")
+    repo = _impact_repo(tmp_path, monkeypatch, "exit 0")
+    stamp = Path(_git(repo, "rev-parse", "--absolute-git-dir")) / "nanopnp-gate.pass"
+    stamp.write_text(f"{'a' * 40} extended\n", encoding="utf-8")
+    _hook(repo, repo, "git commit -am x")
+    lines = stamp.read_text(encoding="utf-8").splitlines()
+    assert lines[-1] == f"{'a' * 40} extended"
+    assert len(lines) == 2 and lines[0].endswith(" impact")
+
+
+def test_gate_map_records_under_the_recorder_and_skips_a_usable_map(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """``gate.sh map`` runs the development selection with ``-p impact`` and installs the map.
+
+    A map whose tree the repository holds is kept: the selector reads every change
+    since that tree, so it never needs re-recording to stay sound.
+    """
+    assert _BASH is not None
+    if shutil.which("jq") is None:
+        pytest.skip("the gate reads the map with jq")
+    repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/code.py")
+    tree = _git(repo, "rev-parse", "HEAD^{tree}")
+    writer = (
+        'case "$*" in *--impact-record=*) path=${*##*--impact-record=}; path=${path%% *}; '
+        f'printf \'{{"tree": "{tree}", "tests": {{"t": {{}}}}}}\' > "$path";; esac\n'
+    )
+    calls = _recording_uv(tmp_path, monkeypatch, writer)
+    result = subprocess.run(
+        [_BASH, str(_GATE), "map"], cwd=repo, capture_output=True, text=True, timeout=60
+    )
+    assert result.returncode == 0, result.stderr
+    runs = [call for call in calls.read_text(encoding="utf-8").splitlines() if "pytest" in call]
+    assert len(runs) == 1 and "-p impact" in runs[0] and "--extended" not in runs[0], runs
+    common = Path(_git(repo, "rev-parse", "--path-format=absolute", "--git-common-dir"))
+    assert (
+        json.loads((common / "nanopnp-impact/map.json").read_text(encoding="utf-8"))["tree"] == tree
+    )
+    assert _log(repo)[-1].split()[1:4] == ["map", "development", "1"]
+    again = subprocess.run(
+        [_BASH, str(_GATE), "map"], cwd=repo, capture_output=True, text=True, timeout=60
+    )
+    assert again.returncode == 0
+    assert "nothing to record" in again.stdout
+    assert len([c for c in calls.read_text(encoding="utf-8").splitlines() if "pytest" in c]) == 1

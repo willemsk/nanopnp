@@ -8,14 +8,23 @@
 # first. `git commit --no-verify` (or `-n`) skips it, matching git's own
 # convention.
 #
-# Two ways in:
+# Three ways in:
 #   gate.sh          hook mode: reads the PreToolUse payload on stdin, and runs
-#                    pytest's development selection, without the `extended`
-#                    end-to-end walks
+#                    the tests a test-impact selection finds the change to touch
+#                    (tests/impact.py, VER-74), without the `extended` end-to-end
+#                    walks; with no usable map, or a change the map cannot
+#                    attribute, the whole development selection, naming why
 #   gate.sh run      runs the gate directly, prints each stage, exits non-zero
 #                    on failure; adds `--extended`, so it is the whole of what CI
 #                    gates on every push, with diff-cover on the changed lines.
 #                    What the skills call before they push
+#   gate.sh map      records the impact map the hook selects from, at
+#                    <git common dir>/nanopnp-impact/map.json, by running the
+#                    development selection under the recorder; stamps nothing.
+#                    The skills start it in the background as their first step
+#
+# Every run appends one line to <git dir>/nanopnp-gate.log: time, mode,
+# selection, test count, seconds, tree and result (WP43 D11).
 #
 # pytest passes -rsfE: skips listed, as CI's -rs lists them (a skip is missing
 # evidence), and failures kept. A bare -rs replaces pytest's default -rfE, so the
@@ -52,7 +61,9 @@
 set -uo pipefail
 
 mode=hook
-[[ ${1:-} == run ]] && mode=run
+case ${1:-} in
+    run | map) mode=$1 ;;
+esac
 target_dir=.
 
 if [[ $mode == hook ]]; then
@@ -152,16 +163,110 @@ export NPY_DISABLE_CPU_FEATURES="X86_V4 AVX512_ICL AVX512_SPR"
 state_hash() {
     local index
     index=$(mktemp) || return 1
-    cp "$(git rev-parse --git-path index)" "$index" 2>/dev/null
+    # -p keeps the mtime: git re-reads an entry as racy only when the file is no
+    # older than the index, and under core.checkStat=minimal compares only whole
+    # seconds and size, so a fresh mtime would hide a same-size edit.
+    cp -p "$(git rev-parse --git-path index)" "$index" 2>/dev/null
     GIT_INDEX_FILE=$index git add -A >/dev/null 2>&1 &&
         GIT_INDEX_FILE=$index git write-tree 2>/dev/null
     rm -f "$index"
 }
 
-stamp_file="$(git rev-parse --git-dir)/nanopnp-gate.pass"
+git_dir=$(git rev-parse --absolute-git-dir)
+stamp_file="$git_dir/nanopnp-gate.pass"
+log_file="$git_dir/nanopnp-gate.log"
+# The map is shared by every worktree: a tree recorded in one is a valid base in all.
+map_dir="$(git rev-parse --path-format=absolute --git-common-dir)/nanopnp-impact"
+map="$map_dir/map.json"
 state=$(state_hash) || state=""
+started=$SECONDS
 
-say() { [[ $mode == run ]] && printf '%s\n' "$*"; return 0; }
+say() { [[ $mode != hook ]] && printf '%s\n' "$*"; return 0; }
+
+# One line per run: ISO time, mode, selection, test count, seconds, tree, result.
+log_selection=""
+log_count=-
+log() {
+    printf '%s %s %s %s %s %s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$mode" \
+        "${log_selection:--}" "$log_count" "$((SECONDS - started))" "${state:--}" "$1" \
+        >>"$log_file" 2>/dev/null
+    return 0
+}
+
+# The stamp holds one line per selection, "<tree> <selection>", so a later
+# commit-hook pass never overwrites the `extended` line the push guard reads;
+# that line is kept last.
+stamped() {
+    [[ -f $stamp_file ]] && grep -qxF "$1" "$stamp_file"
+}
+stamp() {
+    local selection=$1 kept=() line
+    if [[ -f $stamp_file ]]; then
+        while IFS= read -r line || [[ -n $line ]]; do
+            [[ -n $line && ${line##* } != "$selection" ]] && kept+=("$line")
+        done <"$stamp_file"
+    fi
+    {
+        for line in ${kept[@]+"${kept[@]}"} "$state $selection"; do
+            if [[ ${line##* } != extended ]]; then printf '%s\n' "$line"; fi
+        done
+        for line in ${kept[@]+"${kept[@]}"} "$state $selection"; do
+            if [[ ${line##* } == extended ]]; then printf '%s\n' "$line"; fi
+        done
+    } >"$stamp_file.$$"
+    mv "$stamp_file.$$" "$stamp_file"
+}
+
+# The recorder needs sys.monitoring, Python 3.12 or later (WP43 D2).
+recorder_python() {
+    uv run python -c 'import sys; sys.exit(sys.version_info < (3, 12))' >/dev/null 2>&1
+}
+
+if [[ $mode == map ]]; then
+    # A map whose tree this repository holds is usable: the selector reads every
+    # change since that tree, so it never needs re-recording to stay sound.
+    if [[ -f $map ]]; then
+        recorded=$(jq -r '.tree // empty' "$map" 2>/dev/null) || recorded=""
+        if [[ -n $recorded ]] && git cat-file -e "$recorded^{tree}" 2>/dev/null; then
+            say "gate: an impact map of tree ${recorded:0:12} is in place; nothing to record."
+            exit 0
+        fi
+    fi
+    if ! recorder_python; then
+        printf '%s\n' "gate map: the recorder needs Python 3.12 or later (sys.monitoring)." >&2
+        exit 1
+    fi
+    mkdir -p "$map_dir"
+    lock="$map_dir/record.lock"
+    if ! mkdir "$lock" 2>/dev/null; then
+        holder=$(cat "$lock/pid" 2>/dev/null) || holder=""
+        if [[ -n $holder ]] && kill -0 "$holder" 2>/dev/null; then
+            say "gate: a map is already being recorded (PID $holder)."
+            exit 0
+        fi
+        rm -rf "$lock" && mkdir "$lock" || exit 1
+    fi
+    printf '%s\n' "$$" >"$lock/pid"
+    trap 'rm -rf "$lock" "$map.new"' EXIT
+    log_selection=development
+    say "gate: recording the impact map (development selection)."
+    PYTHONPATH="tests${PYTHONPATH:+:$PYTHONPATH}" uv run pytest -q -n auto --dist loadfile \
+        --ignore=tests/tier1/test_gui_widgets.py -p impact "--impact-record=$map.new" \
+        >"$map_dir/record.log" 2>&1
+    status=$?
+    # A failing test still records what it executed; only an interrupted or
+    # broken session leaves no map worth keeping.
+    if ((status <= 1)) && [[ -f $map.new ]]; then
+        log_count=$(jq '.tests | length' "$map.new" 2>/dev/null) || log_count=-
+        mv "$map.new" "$map"
+        log "recorded"
+        say "gate: impact map recorded ($log_count tests); pytest exited $status."
+        exit 0
+    fi
+    log "failed"
+    printf '%s\n' "gate map: pytest exited $status; no map recorded. See $map_dir/record.log." >&2
+    exit 1
+fi
 
 # Hook mode runs the development selection; `run` adds the `extended` tests, as
 # CI does on every push (SPECIFICATION.md section 7.6 NOTE). A full pass also
@@ -181,8 +286,15 @@ if [[ $mode == run ]]; then
     esac
     pytest_extra=(--extended --cov=src/nanopnp --cov-branch "--cov-report=xml:${coverage_xml}")
 fi
-passed=$(cat "$stamp_file" 2>/dev/null) || passed=""
-if [[ -n $state && ( $passed == "$state extended" || $passed == "$state $selection" ) ]]; then
+already=false
+if [[ -n $state ]]; then
+    if stamped "$state extended"; then
+        already=true
+    elif [[ $mode == hook ]] && { stamped "$state impact" || stamped "$state development"; }; then
+        already=true
+    fi
+fi
+if $already; then
     say "gate: this tree state already passed ($selection selection); nothing to re-run."
     exit 0
 fi
@@ -243,6 +355,7 @@ On Debian or Ubuntu: apt-get install -y --no-install-recommends libglu1-mesa lib
 
 fail() {
     local reason=$1
+    log "failed"
     if [[ $mode == run ]]; then
         printf '%s\n' "$reason" >&2
         exit 1
@@ -255,6 +368,46 @@ fail() {
         }
     }'
     exit 0
+}
+
+# The commit hook's selection (WP43 D5): the tests tests/impact.py finds the
+# change to touch since the map's tree, or, on any fallback, the development
+# selection, with the reason kept for the message. A change to Gmsh's own code
+# or tests runs the development selection, so Gmsh is required as before.
+impact_files=()
+fallback_reason=""
+choose_impact_selection() {
+    local out status line files=()
+    if $gmsh_required; then
+        fallback_reason="a change to Gmsh's code or tests"
+    elif [[ ! -f tests/impact.py ]]; then
+        fallback_reason="tests/impact.py is absent"
+    elif [[ ! -f $map ]]; then
+        fallback_reason="no impact map at $map (record one with .claude/hooks/gate.sh map)"
+    else
+        out=$(uv run python tests/impact.py select --map "$map" 2>&1)
+        status=$?
+        if ((status == 0)); then
+            selection=impact
+            log_count=0
+            while IFS= read -r line; do
+                [[ -z $line ]] && continue
+                log_count=$((log_count + 1))
+                line=${line%%::*}
+                # The GUI file runs serially below, never under xdist (ci.yml, run 113).
+                [[ $line == tests/tier1/test_gui_widgets.py ]] && continue
+                [[ " ${files[*]-} " == *" $line "* ]] || files+=("$line")
+            done <<<"$out"
+            impact_files=(${files[@]+"${files[@]}"})
+            return 0
+        elif ((status == 3)); then
+            fallback_reason=${out#FALLBACK: }
+        else
+            fallback_reason="the selector failed: $(printf '%s' "$out" | tail -1)"
+        fi
+    fi
+    selection=development
+    return 0
 }
 
 budget=${NANOPNP_GATE_BUDGET_S:-1500}
@@ -322,8 +475,26 @@ else
     [[ -n $coverage_xml ]] && rm -f "$coverage_xml"
     # The `+` form: bash before 4.4 (macOS's /bin/bash is 3.2) treats an empty
     # array as unset under `set -u`, and would end the hook ungated.
-    check "pytest ($selection)" uv run pytest -q -rsfE -n auto --dist loadfile \
-        --ignore=tests/tier1/test_gui_widgets.py ${pytest_extra[@]+"${pytest_extra[@]}"}
+    if [[ $mode == hook ]]; then
+        choose_impact_selection
+    fi
+    log_selection=$selection
+    if [[ $selection == impact ]]; then
+        if ((${#impact_files[@]} == 0)); then
+            say "gate: the change touches no test."
+        else
+            # Whole files, as the selection is made; the marker expression keeps a
+            # named file's `extended` walks out, as the development selection does.
+            workers=(-n auto --dist loadfile)
+            ((log_count < 20)) && workers=(-n 0)
+            check "pytest (impact: ${log_count} tests in ${#impact_files[@]} files)" \
+                uv run pytest -q -rsfE "${workers[@]}" \
+                -m "(tier1 or tier2) and not slow and not extended" -- "${impact_files[@]}"
+        fi
+    else
+        check "pytest ($selection)" uv run pytest -q -rsfE -n auto --dist loadfile \
+            --ignore=tests/tier1/test_gui_widgets.py ${pytest_extra[@]+"${pytest_extra[@]}"}
+    fi
     # Serially and alone, as in CI: it waits on a real QtWebEngine page by the
     # wall clock, which busy xdist workers can starve (ci.yml, run 113). Exit 5
     # ("no tests ran") is the module skipping itself where PySide6 cannot
@@ -342,6 +513,20 @@ fi
 
 # A hook's prose-only pass is stamped `development`, never `extended`: it was
 # judged against HEAD, and code committed since the upstream is still `run`'s.
-[[ -n $state ]] && printf '%s\n' "$state $selection" >"$stamp_file"
+[[ -n $state ]] && stamp "$selection"
+log_selection=$selection
+log "passed"
 say "gate: passed."
+if [[ $mode == hook ]]; then
+    # The commit goes ahead; the message says what ran, why the whole
+    # development selection ran if it did, and an overrun of the hook's 60 s
+    # budget past its 50 % margin (VER-73). It never fails on time.
+    elapsed=$((SECONDS - started))
+    notice="gate: passed, ${selection} selection"
+    [[ $log_count != - ]] && notice+=", ${log_count} tests"
+    notice+=", ${elapsed} s."
+    [[ -n $fallback_reason ]] && notice+=" Fell back to the development selection: ${fallback_reason}."
+    ((elapsed > 90)) && notice+=" Over budget: the commit hook's budget is 60 s, 90 s with its margin."
+    jq -n --arg message "$notice" '{systemMessage: $message}'
+fi
 exit 0

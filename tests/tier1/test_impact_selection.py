@@ -400,3 +400,28 @@ def test_ver74_a_map_recorded_under_xdist_selects_as_a_serial_one(
     _edit(copy, "src/toy/core.py", "return a + b", "return b + a")
     impact = _impact()
     assert impact.select(copy, parallel).tests == impact.select(copy, serial).tests
+
+
+def test_ver74_a_same_size_edit_in_the_index_second_is_seen(tmp_path: Path) -> None:
+    """An edit git cannot tell from the index by stat alone still reaches the selector's tree.
+
+    Under ``core.checkStat=minimal`` git compares whole-second mtimes and sizes. An
+    entry no older than the index file is re-read as racy, which holds only while
+    the throwaway index keeps the real index's mtime: copied with a fresh mtime,
+    this edit was silently left out of the working tree, and so out of the selection.
+    """
+    repo = tmp_path / "repo"
+    (repo / "src").mkdir(parents=True)
+    module = repo / "src/m.py"
+    module.write_text("A = 1\n", encoding="utf-8")
+    past = module.stat().st_mtime - 60  # old enough that the commit does not smudge its entry
+    os.utime(module, (past, past))
+    subprocess.run(["git", "init", "-q", str(repo)], check=True)
+    _git(repo, "config", "core.checkStat", "minimal")
+    _git(repo, "config", "core.trustctime", "false")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-qm", "m")
+    module.write_text("A = 2\n", encoding="utf-8")
+    os.utime(module, (past, past))
+    os.utime(repo / ".git/index", (past, past))
+    assert _impact().working_tree(repo) != _git(repo, "rev-parse", "HEAD^{tree}")

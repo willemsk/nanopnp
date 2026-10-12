@@ -46,6 +46,7 @@ import ast
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -120,7 +121,10 @@ def working_tree(repo: Path) -> str:
     with tempfile.TemporaryDirectory() as scratch:
         index = Path(scratch) / "index"
         if index_path.is_file():
-            index.write_bytes(index_path.read_bytes())
+            # With its mtime: git re-reads an entry as racy only when the file is no
+            # older than the index, and under core.checkStat=minimal it compares only
+            # whole seconds and size, so a fresh mtime hides a same-size edit.
+            shutil.copy2(index_path, index)
         env = {**_git_env(), "GIT_INDEX_FILE": str(index)}
         _git(
             repo,

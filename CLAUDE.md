@@ -29,7 +29,8 @@ Python 3.11–3.14, developed on 3.14.
 
 | Command | Purpose |
 |---|---|
-| `uv run pytest` | Tiers 1–2 without `extended` tests; the commit hook's selection |
+| `uv run pytest` | Tiers 1–2 without `extended` tests: the development selection, the commit hook's fallback |
+| `.claude/hooks/gate.sh map` | Records the impact map the commit hook selects from (VER-74); run it in the background |
 | `uv run pytest --extended` | All of tiers 1–2; the push gate, as CI runs it. Naming an `extended` test's file runs it without the flag |
 | `uv run pytest -n auto --dist loadfile` | Parallel; set `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS`, `MKL_NUM_THREADS` to 1. `tests/tier1/test_gui_widgets.py` runs separately and serially |
 | `uv run pytest -m tier1` / `-m tier3` / `-m slow` | Unit tests / reference comparison (nightly, not gated) / benchmarks (not gated) |
@@ -42,7 +43,9 @@ Python 3.11–3.14, developed on 3.14.
 Gate before committing: `uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv run pytest`.
 Gate before pushing: `.claude/hooks/gate.sh run` (the above with `--extended`, plus coverage of changed lines).
 `.claude/hooks/gate.sh` runs automatically before each `git commit` Claude Code makes; `--no-verify`
-skips it. A pass of the hook's development selection never stands in for `run`.
+skips it. After the lint, format and type stages it runs the test files `tests/impact.py` finds the
+change to touch since the map's tree, or the development selection when no map is usable or a
+change is one the map cannot attribute, naming why. A hook pass never stands in for `run`.
 
 - `run` requires, as CI does, full branch coverage of the lines changed in `src/nanopnp/` outside
   `gui/` (`diff-cover` against `main`). An exempt line says `# pragma: no cover - <reason>`.

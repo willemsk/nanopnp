@@ -11,6 +11,9 @@ into `/wp-ship`: independent review and CI stewardship remain a separate invocat
 
 ## Load the brief
 
+0. Start `.claude/hooks/gate.sh map` with Bash `run_in_background`. It records the impact map the
+   commit hook selects from, if none is usable, so the next commit runs only the tests its change
+   touches.
 1. Read `docs/plans/current.md` and the requested WP's Execution brief. Its current decisions are
    binding, subject to the specification. Read each work item's linked Design sections before
    implementing it; do not reload unrelated delivered packages. For legacy plans, read Decisions,
