@@ -46,30 +46,39 @@ NumPy's SIMD dispatch capped at `X86_V3` by `NPY_DISABLE_CPU_FEATURES` (VER-62's
 macOS only, because it waits on a real QtWebEngine page by the wall clock and busy workers starved it
 (run 113). On ubuntu it skips itself, because PySide6 does not import there.
 
-- **`changes`** — diffs the whole PR (`base...head`), or the push range on `main`, through
-  `.github/scripts/prose-only.sh`. When everything is prose, `check`, `test-matrix` and `bundle`
-  skip their steps and report success. A PR with any code in it always gets the full run, however
-  small its last push.
-- **`check`** — ubuntu, 3.12: `ruff check`, `ruff format --check`, `mypy src/`, then
-  `pytest --extended --cov --cov-branch`: the whole of tiers 1 and 2, the executed examples and the
-  2WCD walks included (§7.6 NOTE), then `diff-cover` at 100 % of the changed `src/nanopnp` lines
-  outside `gui/` (§7.6 NOTE, VER-72 f). Reproduce with `.claude/hooks/gate.sh run`, which judges
-  the whole branch against `main` as the PR's `changes` job does, not bare `uv run pytest`, which
-  leaves the `extended` tests out.
-- **`docs`** — VER-45's strict build: `docs/scripts/generate.py`, then `mkdocs build --strict`. It
-  has no `changes` dependency and runs on **every** push, prose-only ones included, because a broken
-  link or anchor is exactly what a prose edit introduces. Reproduce with `uv sync --all-extras
-  --group docs && uv run docs/scripts/generate.py && uv run mkdocs build --strict`.
-- **`test-matrix`** — `pytest --extended` on ubuntu × 3.11, 3.13 and 3.14, plus 3.12 on windows and
-  macOS. Ubuntu 3.12 is the `check` job (QR-09, CON-13).
+- **`changes`** — names the run's mode (`pr`, `main`, `full`, `nightly`) and diffs the whole PR
+  (`base...head`), or the push range on `main`, through `.github/scripts/prose-only.sh`. When
+  everything is prose, the test jobs skip their steps and report success. On a push to `main` it
+  reads the PR head's `ci/tested-tree` status: when the merged tree is the one the PR passed, ubuntu
+  runs only the `extended` walks.
+- **A pull request** (§7.6, §8.2.10 J4, J10) — ubuntu, 3.14 only. **`lint`** (`ruff check`, `ruff
+  format --check`, `mypy src/`); **`docs`**; **`tests (shard 1/2)`** and **`tests (shard 2/2)`**,
+  the development selection (no `extended` walks) under branch coverage, whole files packed by
+  `tests/durations.json` (`--shard i/2`, `tests/conftest.py`); **`coverage`**, which combines the
+  shards, runs `diff-cover` at 100 % of the changed `src/nanopnp` lines outside `gui/` (§7.6 NOTE,
+  VER-72 f), then VER-73's per-file ceiling and critical-path budget (`.github/budgets.yaml`,
+  `.github/scripts/ci_budget.py`); and **`CI result`**, the one required check, which fails unless
+  every one of those succeeded and posts `ci/tested-tree`. Reproduce a shard with `uv run pytest
+  --shard i/2`, the coverage stage with `.claude/hooks/gate.sh run`.
+- **`docs`** — VER-45's strict build: `docs/scripts/generate.py`, then `mkdocs build --strict`, on
+  **every** push, prose-only ones included, because a broken link or anchor is exactly what a prose
+  edit introduces. Reproduce with `uv sync --all-extras --group docs && uv run
+  docs/scripts/generate.py && uv run mkdocs build --strict`.
+- **`platforms`** — after a merge and nightly: `pytest --extended` on ubuntu, macOS and Windows,
+  3.14, and the GUI file serially on the last two. A walk-only or platform-only failure surfaces
+  here, on `main`, and is fixed forward in a new PR.
+- **`full-matrix`** — `full: true` (a dispatch, or `release.yml` before it builds a tag): the three
+  platforms × 3.11 to 3.14, `--extended` (QR-09, CON-13).
+- **`nightly`** — 3.11 to 3.13 on the three platforms, dependencies from wheels only, Tier 1;
+  `continue-on-error`, recorded, never gated.
 - **`bundle`** — **gated**. Windows PyInstaller build of `packaging/nanopnp-probe.spec`, then the
-  bundle's own `--selftest` (RSK-13, §8.2.1 A4). It also runs nightly, as the runner-image drift
-  probe.
-- **`tier3`** — nightly and on `workflow_dispatch` only (the nightly skips `check`, `docs` and
-  `test-matrix`), `continue-on-error`: recorded, never gated (§7.1, §7.6). Without `$NANOPNP_REFERENCE_DATA` every Tier 3 test skips visibly; a skip there is
-  missing evidence, not a defect.
+  bundle's own `--selftest` (RSK-13, §8.2.1 A4), after a merge, before a release and nightly, as the
+  runner-image drift probe.
+- **`tier3`** — nightly, on a dispatch and before a release, `continue-on-error`: recorded, never
+  gated (§7.1, §7.6). Without `$NANOPNP_REFERENCE_DATA` every Tier 3 test skips visibly; a skip
+  there is missing evidence, not a defect.
 
-The default `pytest` selection is tiers 1 and 2 without the `extended` tests, which CI adds. Tier 4
+The default `pytest` selection is tiers 1 and 2 without the `extended` tests, which CI adds after a merge. Tier 4
 gates releases; `-m slow` is measured, never gated. Nothing in the suite reaches the network or
 needs a COMSOL licence, so a failure in `ruff`, `mypy` or `pytest` is always a real one — a lint, a
 type error, or a tier 1–2 assertion, never an environment excuse.

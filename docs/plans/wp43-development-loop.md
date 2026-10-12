@@ -195,16 +195,48 @@ Dependencies: none open. WP44 is measured against this package's reading set (J1
   > example 07 421 s, the 2WCD pipeline 148 s, the shell walk 53 s, example 03 46 s, example 01
   > 25 s, example 02 21 s. CI's ubuntu matrix now carries 3.12 in place of 3.14, which the `check`
   > job runs, so VER-47's 3.11–3.14 still holds. `.knowledge/07` §8.
-- [ ] 5. [any] Suite order and coverage (D8): `tests/durations.json`, the longest-first order,
+- [x] 2e84650 5. [any] Suite order and coverage (D8): `tests/durations.json`, the longest-first order,
   `no_cover` on `extended`, and the `sysmon` measurement. Done when `gate.sh run` passes and the
   timings are recorded in `.knowledge/07` §12.
-- [ ] 6. [Opus] — §7.6 is normative text. CI (D10): `ci.yml`, `release.yml`, the shard option in
+
+  > **Outcome — `sysmon` is already in effect, and faster.** coverage 7.15 defaults to it on
+  > CPython 3.14 with branch coverage; on the development selection it took 292 s against
+  > `ctrace`'s 511 s, with byte-identical XML reports, so nothing is configured. The order's own
+  > gain could not be measured: another agent's runs held the load at 2 to 8 on the 4 cores, and
+  > the ordered and path-ordered `--extended` runs took 937 s and 830 s back to back. Item 10
+  > re-measures it. `.knowledge/07` §12.2.
+
+  > **Outcome — `gate.sh run` passes on items 5 to 7's tree (`2035cd4`) in 536 s**, the walks
+  > without coverage, 4 cores, load falling from about 5 to 1.8 over the run as the other agent
+  > finished; 527 s was the figure at `d630f85` with coverage on the walks (Design §3).
+- [x] 91f414f 6. [Opus] — §7.6 is normative text. CI (D10): `ci.yml`, `release.yml`, the shard option in
   `tests/conftest.py`, the status post, timeouts, apt cache and trims (Design §4, §8). Amend §7.6's table and its
   development-selection NOTE (J4, J10). Done when the PR's `CI result` is green, a dispatch with
   `full: true` is green, and the step summary shows the shard times.
-- [ ] 7. [any] VER-73 (D11): `.github/budgets.yaml`, `.github/scripts/ci_budget.py`, the CI step,
+
+  > **Outcome — built and checked locally; the CI evidence is pending a push.** `actionlint`
+  > 1.7.12 with `shellcheck` passes both workflows. The two shards partition the development
+  > selection (2,147 tests: 1,145 and 1,002, no test or file in both), 399.1 s and 399.2 s of
+  > recorded time. Four deviations, each found while building: **the nightly also runs the
+  > platforms' `--extended` legs**, because §8.2.10 J10 says the nightly runs the walks, which
+  > D10's nightly list omits; **the release matrix is its own job, `full-matrix`**, with the
+  > Python versions literal, because VER-47's test reads them from the workflow (it now reads that
+  > job, its assertion unchanged); **`UV_NO_BUILD` covers the dependency step only**, because uv
+  > refuses it for the project's own editable install; and **`coverage` needs `lint` and `docs`
+  > too**, so every job its critical-path check measures has ended. Jobs that sync fewer groups
+  > than the default run `uv run --no-sync`, or `uv run` would sync them back. A dispatch of
+  > `release.yml` re-releases an existing tag without the full matrix.
+- [x] 2035cd4 7. [any] VER-73 (D11): `.github/budgets.yaml`, `.github/scripts/ci_budget.py`, the CI step,
   the gate log, §7.6's budget NOTE and the Appendix A row. Done when `test_loop_budgets.py` passes
   unmarked and the PR run reports its critical path.
+
+  > **Outcome — the checks pass their planned tests; the critical path waits for a PR run.**
+  > `coverage` runs `ci_budget.py files` on the shards' junit reports and `ci_budget.py
+  > critical-path` on the run's jobs from the API, measuring itself as ending now and leaving out
+  > `CI result` and skipped jobs; both write a table to the step summary. A re-run attempt carries
+  > the first attempt's jobs with their old times, so its span is reported, not judged. Those two
+  > steps landed in item 6's commit, with the job. Locally the longest development file is 60.5 s
+  > without coverage (`.knowledge/07` §12.2), under the 135 s limit with room for coverage's cost.
 - [x] 9804c08 8. [any] The roster and the model policy (D13; Design §9, §10): the four agent files,
   `.claude/scripts/clause.py`, `.claude/hooks/agent-guard.sh` registered on `Agent` in
   `.claude/settings.json`, and the model policy. Done when `test_agent_roster.py`'s roster, clause
