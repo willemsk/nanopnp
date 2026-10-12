@@ -46,6 +46,9 @@ Gate before pushing: `.claude/hooks/gate.sh run` (the above with `--extended`, p
 skips it. After the lint, format and type stages it runs the test files `tests/impact.py` finds the
 change to touch since the map's tree, or the development selection when no map is usable or a
 change is one the map cannot attribute, naming why. A hook pass never stands in for `run`.
+Start `run` with Bash `run_in_background` and push when it passes: the hook refuses a `git push`
+of a tree `run` has not passed. After a pass, `run` on a later tree re-runs only the tests the
+change selects, with coverage of the lines changed since (§7.6 NOTE).
 
 - `run` requires, as CI does, full branch coverage of the lines changed in `src/nanopnp/` outside
   `gui/` (`diff-cover` against `main`). An exempt line says `# pragma: no cover - <reason>`.

@@ -39,8 +39,10 @@ only to locate it. For legacy plans, start with Decisions, Work items, Verificat
 Outcomes. Read normative sections and relevant derivations independently when assessing a claim;
 do not reload the entire phase history to write the PR. A brief is navigation, not a review oracle.
 
-Do not push a tree you have not gated. Run `.claude/hooks/gate.sh run`; on a tree that already
-passed (typically the commit `/wp-implement` ended on) it returns at once.
+Do not push a tree you have not gated. Start `.claude/hooks/gate.sh run` with Bash
+`run_in_background` and push when it passes; never poll it. On a tree that already passed
+(typically the commit `/wp-implement` ended on) it returns at once, and after a fix it re-runs only
+the tests the fix selects. The push guard refuses a push of any other tree.
 
 Also confirm: `git status` clean; every `VER-`/`VAL-` the plan claimed has a test named for it;
 `SPECIFICATION.md`, `.knowledge/` and the plan's Outcome annotations are committed; `CHANGELOG.md`
@@ -129,7 +131,8 @@ changes before accepting the report; evidence for an old revision does not certi
    tests that session wrote against the plan's verification rows, here on Opus. Fix or revert
    what disagrees; record each item confirmed, with its sha, under **Verification**
    (`.claude/model-policy.md`, *Who implements a plan*).
-4. If fixes changed the tree, re-run `.claude/hooks/gate.sh run`.
+4. If fixes changed the tree, start `.claude/hooks/gate.sh run` again with Bash
+   `run_in_background`, and push when it passes.
 5. Commit accepted changes — `fix: close the review gaps in <what>`, identifiers in the body — and
   push to the PR branch. No empty commit or cosmetic edit is needed for a clean review. The commits
   belong on the branch, not in a comment; the commit hook remains mandatory.

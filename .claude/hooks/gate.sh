@@ -14,10 +14,19 @@
 #                    (tests/impact.py, VER-74), without the `extended` end-to-end
 #                    walks; with no usable map, or a change the map cannot
 #                    attribute, the whole development selection, naming why
-#   gate.sh run      runs the gate directly, prints each stage, exits non-zero
-#                    on failure; adds `--extended`, so it is the whole of what CI
-#                    gates on every push, with diff-cover on the changed lines.
-#                    What the skills call before they push
+#                    It is also the push guard: a `git push` goes through only
+#                    when the stamp names the pushed tree with `extended`, the
+#                    pass of `gate.sh run`; it runs nothing (WP43 D7, J3)
+#   gate.sh run      runs the gate directly and exits non-zero on failure,
+#                    printing only the failure, or one line on a pass; adds
+#                    `--extended`, so it is the whole of what CI gates on every
+#                    push, with diff-cover on the changed lines, and records the
+#                    impact map as it goes. What the skills start in the
+#                    background before they push. One run at a time: a second
+#                    waits for the first (a PID file under the map's directory).
+#                    After a pass on tree P, a run on tree T is a follow-up: it
+#                    runs only the tests the change from P selects, under
+#                    coverage, and diff-cover against P (Design section 2)
 #   gate.sh map      records the impact map the hook selects from, at
 #                    <git common dir>/nanopnp-impact/map.json, by running the
 #                    development selection under the recorder; stamps nothing.
@@ -95,43 +104,178 @@ if [[ $mode == hook ]]; then
     git_opt='[[:space:]]+(-[Cc]|--git-dir|--work-tree|--namespace|--exec-path|--config-env)[[:space:]]+[^[:space:]]+|[[:space:]]+-[^[:space:]]+'
     seg="[^;&|"$'\n'"]"
     commit_re="(^|[;&|(]|[[:space:]])git(${git_opt})*[[:space:]]+commit(\$|[[:space:]]${seg}*)"
+    push_re="(^|[;&|(]|[[:space:]])git(${git_opt})*[[:space:]]+push(\$|[[:space:]]${seg}*)"
+
+    # Where a matched git command runs: sets `moved` (the last `cd` before it)
+    # and `target_dir` (its `-C` or `--work-tree`), from the matched text $1,
+    # the command's own arguments $2 and its verb $3.
+    #
+    # The tree a command acts on is the one `-C` or `--work-tree` names, not this
+    # hook's cwd. Read from the global options alone: the matched text less the
+    # command's own arguments, and less the verb itself, so a `-C` inside a
+    # quoted message is never taken for one. A repeated option leaves the last
+    # value, which is git's own reading for absolute paths.
+    #
+    # A `cd` earlier in the same command moves where it runs, as in
+    # `cd <dir> && git commit`: the last one before it is followed, and a
+    # relative `-C` then resolves against it, as git would.
+    locate() {
+        local matched=$1 own=$2 verb=$3 options prefix
+        local option_re='(^|[[:space:]])(-C|--work-tree)(=|[[:space:]]+)([^[:space:]]+)'
+        local cd_re='(^|[;&|(])[[:space:]]*cd[[:space:]]+([^[:space:];&|)]+)'
+        target_dir=.
+        options=${matched%"$own"}
+        options=${options%"$verb"}
+        while [[ $options =~ $option_re ]]; do
+            target_dir=${BASH_REMATCH[4]}
+            options=${options#*"${BASH_REMATCH[0]}"}
+        done
+        target_dir=${target_dir#[\"\']}
+        target_dir=${target_dir%[\"\']}
+        [[ $target_dir == "~" || $target_dir == "~/"* ]] && target_dir=$HOME${target_dir:1}
+        prefix=${command%%"$matched"*}
+        moved=""
+        while [[ $prefix =~ $cd_re ]]; do
+            moved=${BASH_REMATCH[2]}
+            prefix=${prefix#*"${BASH_REMATCH[0]}"}
+        done
+        moved=${moved#[\"\']}
+        moved=${moved%[\"\']}
+        [[ $moved == "~" || $moved == "~/"* ]] && moved=$HOME${moved:1}
+        return 0
+    }
+
+    deny() {
+        jq -n --arg reason "$1" '{
+            hookSpecificOutput: {
+                hookEventName: "PreToolUse",
+                permissionDecision: "deny",
+                permissionDecisionReason: $reason
+            }
+        }'
+        exit 0
+    }
+
+    # Whether a refspec's source $1 (destination $2) is a tag. A tag names a
+    # commit CI gated on `main`, and the release's own run gates it again.
+    is_tag() {
+        [[ $2 == refs/heads/* ]] && return 1
+        [[ $1 == refs/tags/* || $2 == refs/tags/* ]] && return 0
+        git show-ref --verify -q "refs/heads/$1" && return 1
+        git show-ref --verify -q "refs/tags/$1" && return 0
+        # A release tag not yet created here fails the push itself (CONTRIBUTING.md).
+        [[ $1 =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]]
+    }
+
+    # Judge one `git push` in the current directory, from its own arguments $1.
+    # Prints nothing when the push needs no stamp (not this repository,
+    # --no-verify, a dry run, tags or deletions alone), `gated` when every tree it
+    # sends is stamped `extended`, and the refusal otherwise.
+    push_verdict() {
+        local args token tokens=() positional=() expect=false all=false tags=false deleting=false
+        local root stamp_path refspec src dst rev tree what revs=()
+        root=$(git rev-parse --show-toplevel 2>/dev/null) || return 0
+        [[ -f $root/pyproject.toml && -d $root/src/nanopnp ]] || return 0
+        # Quotes are dropped, not the quoted text: a push carries no message, and a
+        # quoted refspec is still a refspec.
+        args=$(printf '%s' "$1" | tr -d "\"'")
+        set -f
+        tokens=($args)
+        set +f
+        for token in ${tokens[@]+"${tokens[@]}"}; do
+            if $expect; then
+                expect=false
+                continue
+            fi
+            case $token in
+                --no-verify | -n | --dry-run) return 0 ;;
+                --tags) tags=true ;;
+                --all | --mirror | --branches) all=true ;;
+                -d | --delete) deleting=true ;;
+                -o | --push-option | --repo | --receive-pack | --exec) expect=true ;;
+                -*) ;;
+                *) positional+=("$token") ;;
+            esac
+        done
+        if $all; then
+            printf '%s' "The push was not made: --all, --mirror and --branches send every branch, and the
+push gate passes one tree. Push the branch by name. --no-verify skips this."
+            return 0
+        fi
+        # The first positional argument is the remote; the rest are refspecs.
+        if ((${#positional[@]} <= 1)); then
+            # `git push --tags` with no refspec sends the tags alone.
+            $tags && return 0
+            revs=(HEAD)
+        else
+            for refspec in "${positional[@]:1}"; do
+                refspec=${refspec#+}
+                src=${refspec%%:*}
+                dst=""
+                [[ $refspec == *:* ]] && dst=${refspec#*:}
+                # A deletion sends no tree.
+                if $deleting || [[ -z $src ]]; then continue; fi
+                is_tag "$src" "$dst" && continue
+                # A source git cannot resolve fails the push itself; HEAD is judged.
+                if git rev-parse -q --verify "$src^{commit}" >/dev/null 2>&1; then
+                    revs+=("$src")
+                else
+                    revs+=(HEAD)
+                fi
+            done
+            ((${#revs[@]} == 0)) && return 0
+        fi
+        stamp_path="$(git rev-parse --absolute-git-dir)/nanopnp-gate.pass"
+        for rev in "${revs[@]}"; do
+            tree=$(git rev-parse -q --verify "$rev^{tree}" 2>/dev/null) || tree=""
+            if [[ -z $tree || ! -f $stamp_path ]] ||
+                ! awk -v t="$tree" '$1 == t && $2 == "extended" { f = 1 } END { exit !f }' "$stamp_path"; then
+                what="HEAD's tree"
+                [[ $rev != HEAD ]] && what="the tree of $rev"
+                printf '%s' "The push was not made: no passing push gate for ${what}${tree:+ (${tree:0:12})}. Run
+.claude/hooks/gate.sh run (in the background), then push. --no-verify skips this."
+                return 0
+            fi
+        done
+        printf '%s' gated
+    }
+
+    # The push guard (WP43 D7, J3). It runs no `uv` and no test: it reads the
+    # stamp `gate.sh run` writes on a pass. Each push in the command is judged
+    # in the directory it runs in.
+    rest=$command
+    pushes=0
+    while [[ $rest =~ $push_re ]]; do
+        matched=${BASH_REMATCH[0]}
+        args=${BASH_REMATCH[${#BASH_REMATCH[@]} - 1]}
+        rest=${rest#*"$matched"}
+        locate "$matched" "$args" push
+        verdict=$(
+            if [[ -n $moved ]]; then cd "$moved" 2>/dev/null || exit 0; fi
+            cd "$target_dir" 2>/dev/null || exit 0
+            push_verdict "$args"
+        )
+        case $verdict in
+            "") ;;
+            gated) pushes=$((pushes + 1)) ;;
+            *) deny "$verdict" ;;
+        esac
+    done
+    # A commit in the same command changes the tree the push then sends, which
+    # no stamp read now can name: the two go in separate commands.
+    if ((pushes > 0)) && [[ $command =~ $commit_re ]]; then
+        deny "The push was not made: the command also commits, so the tree it would push is not
+the one any gate passed. Commit, run .claude/hooks/gate.sh run (in the background), then
+push in a separate command. --no-verify on the push skips this."
+    fi
+
     [[ $command =~ $commit_re ]] || exit 0
     matched=${BASH_REMATCH[0]}
 
     # --no-verify / -n count only as options of that commit: quoted strings
     # are removed first, so `-m "document --no-verify"` is still gated.
     args=${BASH_REMATCH[${#BASH_REMATCH[@]} - 1]}
-
-    # The tree being committed is the one `-C` or `--work-tree` names, not this
-    # hook's cwd, so that is the tree gated. Read from the global options alone:
-    # the matched text less the commit's own arguments, and less the `commit`
-    # itself, so a `-C` inside a quoted message is never taken for one. A
-    # repeated option leaves the last value, which is git's own reading for
-    # absolute paths.
-    options=${matched%"$args"}
-    options=${options%commit}
-    option_re='(^|[[:space:]])(-C|--work-tree)(=|[[:space:]]+)([^[:space:]]+)'
-    while [[ $options =~ $option_re ]]; do
-        target_dir=${BASH_REMATCH[4]}
-        options=${options#*"${BASH_REMATCH[0]}"}
-    done
-    target_dir=${target_dir#[\"\']}
-    target_dir=${target_dir%[\"\']}
-    [[ $target_dir == "~" || $target_dir == "~/"* ]] && target_dir=$HOME${target_dir:1}
-
-    # A `cd` earlier in the same command moves where the commit runs, as in
-    # `cd <dir> && git commit`: the last one before the commit is followed, and
-    # a relative `-C` above then resolves against it, as git would.
-    prefix=${command%%"$matched"*}
-    cd_re='(^|[;&|(])[[:space:]]*cd[[:space:]]+([^[:space:];&|)]+)'
-    moved=""
-    while [[ $prefix =~ $cd_re ]]; do
-        moved=${BASH_REMATCH[2]}
-        prefix=${prefix#*"${BASH_REMATCH[0]}"}
-    done
-    moved=${moved#[\"\']}
-    moved=${moved%[\"\']}
-    [[ $moved == "~" || $moved == "~/"* ]] && moved=$HOME${moved:1}
+    locate "$matched" "$args" commit
     if [[ -n $moved ]]; then
         cd "$moved" 2>/dev/null || exit 0
     fi
@@ -178,40 +322,86 @@ log_file="$git_dir/nanopnp-gate.log"
 # The map is shared by every worktree: a tree recorded in one is a valid base in all.
 map_dir="$(git rev-parse --path-format=absolute --git-common-dir)/nanopnp-impact"
 map="$map_dir/map.json"
-state=$(state_hash) || state=""
 started=$SECONDS
 
 say() { [[ $mode != hook ]] && printf '%s\n' "$*"; return 0; }
 
+# One recording or push-gate run at a time, across every worktree: both write
+# "$map.new" and either takes the machine's cores. The lock is a directory,
+# created atomically, holding the owner's PID; a lock whose PID is gone is
+# stale and taken over. `run` waits for the holder, then re-reads the stamp,
+# so a second run of a tree the first passed does nothing; `map` leaves.
+lock="$map_dir/gate.lock"
+own_lock=false
+take_lock() {
+    local wait=$1 holder announced=false
+    mkdir -p "$map_dir" || return 1
+    until mkdir "$lock" 2>/dev/null; do
+        holder=$(cat "$lock/pid" 2>/dev/null) || holder=""
+        if [[ -n $holder ]] && kill -0 "$holder" 2>/dev/null; then
+            $wait || { say "gate: a gate run or map recording is in progress (PID $holder)."; return 1; }
+            if ! $announced; then
+                say "gate: waiting for the gate run in progress (PID $holder)."
+                announced=true
+            fi
+            sleep 5
+        elif [[ -z $holder ]] && [[ -z $(find "$lock" -maxdepth 0 -mmin +1 2>/dev/null) ]]; then
+            # Created this minute and its PID not yet written: its owner is starting.
+            sleep 1
+        else
+            rm -rf "$lock"
+        fi
+    done
+    printf '%s\n' "$$" >"$lock/pid"
+    own_lock=true
+}
+release() {
+    $own_lock && rm -rf "$lock"
+    rm -f "$map.new" "$map.follow"
+}
+if [[ $mode == run ]]; then
+    take_lock true || exit 1
+    trap release EXIT
+fi
+
+state=$(state_hash) || state=""
+
 # One line per run: ISO time, mode, selection, test count, seconds, tree, result.
+log_mode=$mode
 log_selection=""
 log_count=-
 log() {
-    printf '%s %s %s %s %s %s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$mode" \
+    printf '%s %s %s %s %s %s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$log_mode" \
         "${log_selection:--}" "$log_count" "$((SECONDS - started))" "${state:--}" "$1" \
         >>"$log_file" 2>/dev/null
     return 0
 }
 
-# The stamp holds one line per selection, "<tree> <selection>", so a later
-# commit-hook pass never overwrites the `extended` line the push guard reads;
-# that line is kept last.
+# The stamp holds one line per selection, "<tree> <selection>[ <commit>]", so a
+# later commit-hook pass never overwrites the `extended` line the push guard
+# reads; that line is kept last. The `extended` line carries a commit object of
+# its tree whose parent is the merge base it was judged against, which a
+# follow-up's diff-cover compares with (Design section 7).
 stamped() {
-    [[ -f $stamp_file ]] && grep -qxF "$1" "$stamp_file"
+    [[ -f $stamp_file ]] &&
+        awk -v t="$1" -v s="$2" '$1 == t && $2 == s { f = 1 } END { exit !f }' "$stamp_file"
 }
 stamp() {
-    local selection=$1 kept=() line
+    local selection=$1 new="$state $1${2:+ $2}" kept=() line tree kind
     if [[ -f $stamp_file ]]; then
         while IFS= read -r line || [[ -n $line ]]; do
-            [[ -n $line && ${line##* } != "$selection" ]] && kept+=("$line")
+            read -r tree kind _ <<<"$line"
+            [[ -n $line && ${kind:-} != "$selection" ]] && kept+=("$line")
         done <"$stamp_file"
     fi
     {
-        for line in ${kept[@]+"${kept[@]}"} "$state $selection"; do
-            if [[ ${line##* } != extended ]]; then printf '%s\n' "$line"; fi
+        for line in ${kept[@]+"${kept[@]}"} "$new"; do
+            read -r tree kind _ <<<"$line"
+            if [[ $kind != extended ]]; then printf '%s\n' "$line"; fi
         done
-        for line in ${kept[@]+"${kept[@]}"} "$state $selection"; do
-            if [[ ${line##* } == extended ]]; then printf '%s\n' "$line"; fi
+        for line in ${kept[@]+"${kept[@]}"} "$new"; do
+            read -r tree kind _ <<<"$line"
+            if [[ $kind == extended ]]; then printf '%s\n' "$line"; fi
         done
     } >"$stamp_file.$$"
     mv "$stamp_file.$$" "$stamp_file"
@@ -236,18 +426,9 @@ if [[ $mode == map ]]; then
         printf '%s\n' "gate map: the recorder needs Python 3.12 or later (sys.monitoring)." >&2
         exit 1
     fi
-    mkdir -p "$map_dir"
-    lock="$map_dir/record.lock"
-    if ! mkdir "$lock" 2>/dev/null; then
-        holder=$(cat "$lock/pid" 2>/dev/null) || holder=""
-        if [[ -n $holder ]] && kill -0 "$holder" 2>/dev/null; then
-            say "gate: a map is already being recorded (PID $holder)."
-            exit 0
-        fi
-        rm -rf "$lock" && mkdir "$lock" || exit 1
-    fi
-    printf '%s\n' "$$" >"$lock/pid"
-    trap 'rm -rf "$lock" "$map.new"' EXIT
+    # A run in progress records the map itself.
+    take_lock false || exit 0
+    trap release EXIT
     log_selection=development
     say "gate: recording the impact map (development selection)."
     PYTHONPATH="tests${PYTHONPATH:+:$PYTHONPATH}" uv run pytest -q -n auto --dist loadfile \
@@ -288,9 +469,9 @@ if [[ $mode == run ]]; then
 fi
 already=false
 if [[ -n $state ]]; then
-    if stamped "$state extended"; then
+    if stamped "$state" extended; then
         already=true
-    elif [[ $mode == hook ]] && { stamped "$state impact" || stamped "$state development"; }; then
+    elif [[ $mode == hook ]] && { stamped "$state" impact || stamped "$state" development; }; then
         already=true
     fi
 fi
@@ -428,7 +609,6 @@ check() {
     shift
     local remaining=$((deadline - SECONDS))
     local output status
-    say "gate: ${name}"
     if ((remaining <= 0)); then
         status=124
         output="(no budget left)"
@@ -469,6 +649,93 @@ Last 40 lines of \`$*\`:
 $(printf '%s' "$output" | tail -40)${remedy}"
 }
 
+# The follow-up (WP43 D7, J3; Design section 2). After a pass on tree P, stamped
+# "<P> extended <commit P>", a run on tree T runs only the tests the change from
+# P to T selects, `extended` walks included, under coverage, and diff-cover over
+# the lines changed since P alone. Sound because a test the change does not
+# select executes at T exactly what it executed at P (Design section 1), so it
+# executes no line changed since P, and every selected test runs under coverage:
+# for those lines the subset's coverage is the full run's. A line changed between
+# main and P keeps P's verdict. Anything this cannot vouch for runs the whole
+# gate: no `extended` stamp of another tree, its commit gone, another merge base
+# (main moved, so P's verdict on the earlier lines no longer applies), a map of
+# another tree, or any fallback of the selector.
+followup=false
+followup_from=""
+followup_files=()
+full_reason=""
+choose_followup() {
+    local line passed kind commit out status errors node changed files=() count=0
+    if [[ ! -f $stamp_file || ! -f tests/impact.py ]]; then
+        return 0
+    fi
+    line=$(awk '$2 == "extended" { l = $0 } END { print l }' "$stamp_file")
+    read -r passed kind commit _ <<<"$line"
+    if [[ -z ${passed:-} || -z ${commit:-} ]]; then
+        return 0
+    fi
+    if ! git cat-file -e "$commit^{commit}" 2>/dev/null ||
+        [[ $(git rev-parse "$commit^{tree}" 2>/dev/null) != "$passed" ]]; then
+        full_reason="the last pass's commit object is gone"
+        return 0
+    fi
+    if [[ $(git rev-parse -q --verify "$commit^1" 2>/dev/null) != "$base" ]]; then
+        full_reason="the merge base with main moved since the last pass"
+        return 0
+    fi
+    if [[ ! -f $map || $(jq -r '.tree // empty' "$map" 2>/dev/null) != "$passed" ]]; then
+        full_reason="the impact map is not of the passed tree ${passed:0:12}"
+        return 0
+    fi
+    if ! recorder_python; then
+        full_reason="the recorder needs Python 3.12 or later"
+        return 0
+    fi
+    # Stdout alone carries node ids or the FALLBACK line, as in the hook.
+    errors=$(mktemp) || errors=/dev/null
+    out=$(uv run python tests/impact.py select --map "$map" --extended 2>"$errors")
+    status=$?
+    if ((status != 0)); then
+        if ((status == 3)); then
+            full_reason=${out#FALLBACK: }
+        else
+            full_reason="the selector failed: $(tail -1 "$errors" 2>/dev/null)"
+        fi
+        [[ $errors != /dev/null ]] && rm -f "$errors"
+        return 0
+    fi
+    [[ $errors != /dev/null ]] && rm -f "$errors"
+    while IFS= read -r node; do
+        [[ -z $node ]] && continue
+        count=$((count + 1))
+        node=${node%%::*}
+        # The GUI file runs serially below, as in every run.
+        [[ $node == tests/tier1/test_gui_widgets.py ]] && continue
+        [[ " ${files[*]-} " == *" $node "* ]] || files+=("$node")
+    done <<<"$out"
+    # No test selected yet a source line changed: no report to judge it by.
+    # The paths are collected first: `grep -q` under pipefail, as above.
+    changed=$(git diff --name-only "$passed" "$state" -- 'src/nanopnp/*.py' 2>/dev/null)
+    if ((${#files[@]} == 0)) && [[ -n $changed ]] && grep -qv '^src/nanopnp/gui/' <<<"$changed"; then
+        full_reason="the change selects no test but changes src/nanopnp"
+        return 0
+    fi
+    followup=true
+    followup_from=$commit
+    followup_files=(${files[@]+"${files[@]}"})
+    log_count=$count
+    return 0
+}
+
+# The recorder rides along a full run, so a pass leaves the map of its tree
+# (Design section 7); where it cannot record, the run goes on without it.
+record=()
+if [[ $mode == run && -f tests/impact.py ]] && recorder_python; then
+    record=(-p impact)
+fi
+# `-p impact` imports the plugin from tests/, before any conftest is read.
+tests_path="tests${PYTHONPATH:+:$PYTHONPATH}"
+
 # The lock first: under UV_LOCKED a stale lock would otherwise surface as a
 # confusing failure of whichever `uv run` stage came first.
 $docs_only || check "uv lock --check" uv lock --check
@@ -485,6 +752,9 @@ else
     # array as unset under `set -u`, and would end the hook ungated.
     if [[ $mode == hook ]]; then
         choose_impact_selection
+    elif [[ $mode == run ]]; then
+        choose_followup
+        $followup && log_mode=follow-up
     fi
     log_selection=$selection
     if [[ $selection == impact ]]; then
@@ -499,9 +769,21 @@ else
                 uv run pytest -q -rsfE "${workers[@]}" \
                 -m "(tier1 or tier2) and not slow and not extended" -- "${impact_files[@]}"
         fi
+    elif $followup; then
+        # Whole files with their walks, under coverage and the recorder; the
+        # recorded part replaces those files' records in the map on a pass.
+        if ((${#followup_files[@]} > 0)); then
+            workers=(-n auto --dist loadfile)
+            ((log_count < 20)) && workers=(-n 0)
+            check "pytest (follow-up: ${log_count} tests in ${#followup_files[@]} files)" \
+                env "PYTHONPATH=$tests_path" uv run pytest -q -rsfE "${workers[@]}" "${pytest_extra[@]}" \
+                ${record[@]+"${record[@]}"} ${record[@]+"--impact-record=$map.follow"} \
+                -- "${followup_files[@]}"
+        fi
     else
-        check "pytest ($selection)" uv run pytest -q -rsfE -n auto --dist loadfile \
-            --ignore=tests/tier1/test_gui_widgets.py ${pytest_extra[@]+"${pytest_extra[@]}"}
+        check "pytest ($selection)" env "PYTHONPATH=$tests_path" uv run pytest -q -rsfE -n auto --dist loadfile \
+            --ignore=tests/tier1/test_gui_widgets.py ${pytest_extra[@]+"${pytest_extra[@]}"} \
+            ${record[@]+"${record[@]}"} ${record[@]+"--impact-record=$map.new"}
     fi
     # Serially and alone, as in CI: it waits on a real QtWebEngine page by the
     # wall clock, which busy xdist workers can starve (ci.yml, run 113). Exit 5
@@ -511,20 +793,73 @@ else
     check "pytest (GUI)"    bash -c 'uv run pytest -q -rsfE tests/tier1/test_gui_widgets.py; s=$?; ((s == 5)) && s=0; exit $s'
     # Full branch coverage of changed src/nanopnp lines, gui/ aside (its widgets
     # run only on the desktop legs), against the base the prose rule used; `run`
-    # has refused above when there is none.
-    if [[ -n $coverage_xml ]]; then
+    # has refused above when there is none. A follow-up compares with the passed
+    # tree's commit, two-dot: the change from that tree, not from a merge base.
+    if $followup; then
+        if ((${#followup_files[@]} > 0)); then
+            check "diff-cover (since ${followup_from:0:12})" uv run diff-cover "$coverage_xml" \
+                --compare-branch="$followup_from" --diff-range-notation=.. \
+                --branch-coverage --include-untracked --fail-under=100 --show-uncovered \
+                --include 'src/nanopnp/**/*.py' --exclude '*/src/nanopnp/gui/*'
+        fi
+    elif [[ -n $coverage_xml ]]; then
         check "diff-cover"  uv run diff-cover "$coverage_xml" --compare-branch="$base" \
             --branch-coverage --include-untracked --fail-under=100 --show-uncovered \
             --include 'src/nanopnp/**/*.py' --exclude '*/src/nanopnp/gui/*'
     fi
 fi
 
+pass_commit=""
+if [[ $mode == run && -n $state ]]; then
+    # A pass vouches for the tree it started on; an edit made while it ran, as a
+    # session may make while the gate runs in the background, is not vouched for.
+    if [[ $(state_hash) != "$state" ]]; then
+        log "changed"
+        printf '%s\n' "The gate passed, but the working tree changed while it ran, so nothing was stamped." \
+            "Run .claude/hooks/gate.sh run again on the tree you mean to push." >&2
+        exit 1
+    fi
+    # The map moves with the stamp: replaced by a full run's recording, or, after
+    # a follow-up, given the re-run files' records and the new tree. A map that
+    # cannot move keeps its old tree, and the next run is a full one.
+    if $followup; then
+        if [[ -f $map.follow ]]; then
+            uv run python tests/impact.py merge --map "$map" --part "$map.follow" --tree "$state" \
+                >/dev/null 2>&1 || printf '%s\n' "gate: the impact map could not be merged; the next run is a full one." >&2
+        elif ((${#followup_files[@]} == 0)); then
+            # Nothing selected: every record holds at the new tree as at the old.
+            jq --arg tree "$state" '.tree = $tree' "$map" >"$map.$$" 2>/dev/null &&
+                mv "$map.$$" "$map" || rm -f "$map.$$"
+        fi
+    elif [[ -f $map.new ]]; then
+        log_count=$(jq '.tests | length' "$map.new" 2>/dev/null) || log_count=-
+        mv "$map.new" "$map"
+    fi
+    # The commit object the next follow-up's diff-cover compares with; its parent
+    # is the merge base this pass was judged against.
+    pass_commit=$(GIT_AUTHOR_NAME=nanopnp-gate GIT_AUTHOR_EMAIL=gate@nanopnp.invalid \
+        GIT_COMMITTER_NAME=nanopnp-gate GIT_COMMITTER_EMAIL=gate@nanopnp.invalid \
+        git commit-tree "$state" -p "$base" -m "nanopnp gate pass" 2>/dev/null) || pass_commit=""
+fi
+
 # A hook's prose-only pass is stamped `development`, never `extended`: it was
 # judged against HEAD, and code committed since the upstream is still `run`'s.
-[[ -n $state ]] && stamp "$selection"
+[[ -n $state ]] && stamp "$selection" "$pass_commit"
 log_selection=$selection
 log "passed"
-say "gate: passed."
+if [[ $mode == run ]]; then
+    summary="gate: passed, $((SECONDS - started)) s"
+    if $docs_only; then
+        summary+=", prose only"
+    elif $followup; then
+        summary+=", follow-up from ${followup_from:0:12}: ${log_count} tests in ${#followup_files[@]} files"
+    else
+        summary+=", the whole gate"
+        [[ $log_count != - ]] && summary+=", ${log_count} tests recorded"
+        [[ -n $full_reason ]] && summary+=" (${full_reason})"
+    fi
+    say "${summary}."
+fi
 if [[ $mode == hook ]]; then
     # The commit goes ahead; the message says what ran, why the whole
     # development selection ran if it did, and an overrun of the hook's 60 s

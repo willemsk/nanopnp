@@ -20,7 +20,6 @@ import pytest
 
 _GATE = Path(__file__).resolve().parents[2] / ".claude/hooks/gate.sh"
 _BASH = shutil.which("bash")
-PLANNED = "planned: WP43 D7 (J3)"
 pytestmark = pytest.mark.skipif(
     os.name == "nt" or _BASH is None or shutil.which("git") is None or shutil.which("jq") is None,
     reason="Claude's shell hooks require a POSIX environment with bash, git and jq",
@@ -82,7 +81,6 @@ def _denied(output: str) -> str:
     return reason
 
 
-@pytest.mark.xfail(strict=True, reason=PLANNED)
 @pytest.mark.parametrize(
     "command",
     ["git push", "git push -u origin feature", "git status && git push origin feature"],
@@ -97,7 +95,6 @@ def test_a_push_of_the_tree_the_push_gate_passed_goes_through(repo: Path) -> Non
     assert _hook(repo, "git push -u origin feature") == ""
 
 
-@pytest.mark.xfail(strict=True, reason=PLANNED)
 def test_a_commit_hook_pass_does_not_stand_in_for_the_push_gate(repo: Path) -> None:
     tree = _git(repo, "rev-parse", "HEAD^{tree}")
     for selection in ("development", "impact"):
@@ -105,7 +102,6 @@ def test_a_commit_hook_pass_does_not_stand_in_for_the_push_gate(repo: Path) -> N
         assert "gate.sh run" in _denied(_hook(repo, "git push"))
 
 
-@pytest.mark.xfail(strict=True, reason=PLANNED)
 def test_a_stamp_of_another_tree_is_refused(repo: Path) -> None:
     _stamp(repo, _git(repo, "rev-parse", "HEAD^{tree}"), "extended")
     (repo / "src/nanopnp/__init__.py").write_text("x = 1\n", encoding="utf-8")
