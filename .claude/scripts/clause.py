@@ -12,6 +12,7 @@ Run it as ``uv run .claude/scripts/clause.py VER-62 §7.6``.
 from __future__ import annotations
 
 import argparse
+import io
 import re
 import sys
 from pathlib import Path
@@ -120,6 +121,11 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Print specification clauses by identifier.")
     parser.add_argument("identifiers", nargs="+", help="e.g. VER-62, FR-16, §7.6, J8")
     arguments = parser.parse_args(argv)
+    # Windows' console encoding (cp1252) cannot carry the specification's Greek and
+    # mathematical characters; escape what the stream cannot encode rather than fail.
+    # UTF-8 streams (Linux, macOS) still receive the text verbatim.
+    if isinstance(sys.stdout, io.TextIOWrapper):
+        sys.stdout.reconfigure(errors="backslashreplace")
     lines = SPECIFICATION.read_text(encoding="utf-8").splitlines()
     status = 0
     for identifier in arguments.identifiers:
