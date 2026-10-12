@@ -83,7 +83,7 @@ Dependencies: none open. WP44 is measured against this package's reading set (J1
 
 ### Work items
 
-- [ ] 1. [Opus] — under-selection passes silently. `tests/impact.py`: the recorder plugin, its merge
+- [x] 89e7bb2 1. [Opus] — under-selection passes silently. `tests/impact.py`: the recorder plugin, its merge
   and `select()` (D2–D4; build from Design §6). Measure the recorder's overhead on the development selection: ≤10 %, or
   the item stops for a re-plan. Done when every test in `tests/tier1/test_impact_selection.py`
   passes with its markers removed.
@@ -127,6 +127,22 @@ Dependencies: none open. WP44 is measured against this package's reading set (J1
   development-selection NOTE and `CLAUDE.md` *Commands*, and add VER-74 to Appendix A, from the
   Design §11 drafts. Read Design §1 first. Done when `test_workflow_hooks.py` and `test_impact_selection.py` pass, and a planted body
   change in `post/qoi.py` commits through the hook in ≤60 s.
+
+  > **Outcome — most past commits would have fallen back, and imports alone never forced it.**
+  > Of the last 15 non-merge commits touching `src/` that this clone holds a parent for (`a93f5e3`
+  > to `d630f85`), D4's rules applied to each parent-to-commit diff fall back on 12. The causes:
+  > another module-level change in 10, a changed data, case or fixture file in 5, an added module in
+  > 2, one function started at import, and an import change in 4. An import change was never the
+  > only cause. The rule that costs the hook most is therefore D4's module-level fallback as a
+  > whole, not imports; these commits are whole review rounds, larger than a typical commit.
+
+  > **Outcome — the throwaway index keeps the real index's mtime.** With `core.checkStat=minimal`
+  > (this container's global configuration), git compares whole-second mtimes and sizes, and it
+  > re-reads an entry as racy only when the file is no older than the index file. A copy with a fresh
+  > mtime hid a same-size edit made in the index's second: seen once, under load, as a planted
+  > decorator change that selected nothing. `tests/impact.py` copies with `shutil.copy2` and
+  > `gate.sh`'s stamp with `cp -p`; `test_ver74_a_same_size_edit_in_the_index_second_is_seen` fails
+  > on the old copy.
 - [ ] 3. [Opus] — the follow-up's coverage claim is a soundness argument. Make `gate.sh run`
   background-safe: a PID file, failures only, the follow-up rule (D7) and the gate log. Add the push
   guard. Update the `wp-implement`, `wp-ship` and `steward` skills to start the gate in the

@@ -1314,6 +1314,11 @@ learnt:
 - **27 functions run at import or collection** on this tree (the registries' `register`,
   `CaseDocument`'s validators, `core/paths.py`'s lookups). They are found because a module body on
   the stack, other than the interpreter's own entry point, marks the call as import time.
+- **A throwaway index must keep the real index's mtime.** Git re-reads an entry as racy only when
+  the file is no older than the index file, and under `core.checkStat=minimal` (this container's
+  global setting) it compares only whole-second mtimes and sizes. Copied with a fresh mtime, the
+  index hid a same-size edit made in its second, and `git add -A` wrote the old tree. Copy it with
+  `shutil.copy2` or `cp -p`.
 - **A body change to `post/qoi.py`'s `total_current` selects 1,038 tests in 54 files.** 21 files
   call into the module. The rest are the 144 tests that start a process (selected by any source
   change) and the source-convention tests that read every module as text.

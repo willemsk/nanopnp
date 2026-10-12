@@ -9,6 +9,7 @@
       "Bash(uv lock --check)",
       "Bash(uv run nanopnp --env)",
       "Bash(.claude/hooks/gate.sh run)",
+      "Bash(.claude/hooks/gate.sh map)",
       "Bash(git status:*)",
       "Bash(git diff:*)",
       "Bash(git log:*)",

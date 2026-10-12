@@ -31,6 +31,9 @@ anything else. Never infer the package's branch from `git branch --show-current`
 
 ## 1. Preflight
 
+First start `.claude/hooks/gate.sh map` with Bash `run_in_background`, so any fix this session
+commits is gated by its impact selection rather than the whole development selection.
+
 Read the requested WP's Execution brief and verification evidence, using `docs/plans/current.md`
 only to locate it. For legacy plans, start with Decisions, Work items, Verification and correcting
 Outcomes. Read normative sections and relevant derivations independently when assessing a claim;

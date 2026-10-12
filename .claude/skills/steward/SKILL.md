@@ -18,6 +18,8 @@ The `SessionStart` hook syncs automatically in web sessions.
 The gate is `.claude/hooks/gate.sh run` (the CLAUDE.md chain plus `uv lock --check` and `diff-cover`). The hook
 runs the same script before every commit and skips a working tree that has already passed, so run
 it once on the finished fix and let the commit reuse the pass. `--no-verify` exists and is not for you.
+On waking, first start `.claude/hooks/gate.sh map` with Bash `run_in_background`: the hook
+selects a commit's tests from that map, and falls back to the whole development selection without one.
 
 ## Bounded wakes
 
