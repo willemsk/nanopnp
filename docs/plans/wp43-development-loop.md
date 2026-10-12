@@ -209,7 +209,7 @@ Dependencies: none open. WP44 is measured against this package's reading set (J1
   `.claude/scripts/clause.py`, `.claude/hooks/agent-guard.sh` registered on `Agent` in
   `.claude/settings.json`, and the model policy. Done when `test_agent_roster.py`'s roster, clause
   and guard tests pass unmarked.
-- [ ] 9. [any] Leaner context and summaries (D14, D15): the rules files with D14's paths, the
+- [x] 7b916c0 9. [any] Leaner context and summaries (D14, D15): the rules files with D14's paths, the
   explicit reads in `phase-plan`, `wp-plan` and `wp-ship` §4, the trims to the targets by Design
   §14's map, `reading_set.py` and `usage.py` (Design §13), the In brief template (Design §12), and
   the Phase 4 plan's In brief trimmed to 250 words, and `wp-plan`'s brief target raised from 1,200 to 1,600 words (D14). Done when the In brief and reading-set tests
