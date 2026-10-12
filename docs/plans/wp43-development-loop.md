@@ -155,11 +155,32 @@ Dependencies: none open. WP44 is measured against this package's reading set (J1
   > The orchestrator's review added two fixes: the selector's stderr is never read as a node id
   > (`14d759e`), and a selected GUI file stays serial.
 
-- [ ] 3. [Opus] — the follow-up's coverage claim is a soundness argument. Make `gate.sh run`
+- [x] 5f5704b 3. [Opus] — the follow-up's coverage claim is a soundness argument. Make `gate.sh run`
   background-safe: a PID file, failures only, the follow-up rule (D7) and the gate log. Add the push
   guard. Update the `wp-implement`, `wp-ship` and `steward` skills to start the gate in the
   background and push on its pass. Amend §7.6's coverage NOTE. Read Design §2 and §7 first. Done when
   `test_push_guard.py` passes unmarked and a one-line follow-up runs only its selection.
+  > **Outcome — the follow-up runs only its selection, but a source change still costs 685 s of
+  > 966 s.** 4 cores, Python 3.14, BLAS threads 1, with another agent running its own suites in
+  > parallel on the same machine, so both timings are inflated. A full `gate.sh run` on `5f5704b`
+  > passed in 966 s and recorded 2,202 tests. A one-line docstring change in `rectification_ratio`
+  > (`post/qoi.py`; `6eb7f9a`) was committed, then `gate.sh run` followed up from that pass: 955 tests
+  > in 50 files, 685 s, diff-cover against the pass's commit. It passed, and the map and the stamp
+  > moved to the new tree. That is 43 % of the tests for 71 % of the time. The floor is REV-80's: any
+  > source change selects every process-starting file. With `--extended`, those files include six
+  > example walks, example 07's 477 s among them, so a follow-up after any source change costs about
+  > 8 minutes, whatever its size. A change to tests or prose alone does not pay it. A follow-up
+  > after a fix confined to tests, or after nothing at all, is the cheap case; for a source fix, the
+  > floor stays until the process starters are attributed per function (REV-80's remedy).
+  > Three decisions beyond Design §7, each erring safe:
+  > - The stamp's commit object has the merge base as its parent, and diff-cover runs two-dot
+  >   (`--diff-range-notation=..`). Three-dot against a parentless commit has no merge base. A moved
+  >   merge base, as after a rebase, runs the whole gate.
+  > - A pass whose tree changed while it ran stamps nothing and exits 1.
+  > - The push guard judges each refspec's source tree, not only `HEAD`'s. It refuses `--all`,
+  >   `--mirror` and `--branches`, and it refuses a push in the same command as a commit.
+  > The coverage NOTE carries the follow-up only. Its J10 half, that coverage leaves out the
+  > `extended` walks, describes item 5's `no_cover` and lands with it.
 - [x] 05af299 4. [Opus] — a moved golden is a plausible wrong number. Run VER-62 on 3.14 (D12); if anything
   moves, stop and report to the author. Then the macOS and Windows dispatch, `.python-version`, CI's
   pins, `CLAUDE.md` and `.knowledge/07`. Done when the five walks pass on 3.14 at 10⁻⁸ with
