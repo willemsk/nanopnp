@@ -33,14 +33,16 @@ where it does: a backend whose every test can skip unseen is untested.
 from __future__ import annotations
 
 import copy
+import json
 import logging
 import math
 import os
 import pickle
 import shutil
+import statistics
 import sys
 import warnings
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
@@ -75,6 +77,9 @@ REQUIRE_GMSH = "NANOPNP_REQUIRE_GMSH"
 EXTENDED = "--extended"
 """Selects the ``extended`` tests, which the development selection leaves out (section 7.6)."""
 
+DURATIONS = Path(__file__).with_name("durations.json")
+"""Each test file's recorded seconds, written by ``tests/impact.py durations`` (WP43 D8)."""
+
 
 def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(
@@ -85,40 +90,86 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     )
 
 
+def recorded_durations(path: Path = DURATIONS) -> dict[str, float]:
+    """Return each test file's recorded seconds, or nothing where none are recorded.
+
+    A missing file orders nothing; an unreadable one is refused rather than read
+    as an order nobody recorded.
+    """
+    if not path.is_file():
+        return {}
+    try:
+        files = json.loads(path.read_text(encoding="utf-8"))["files"]
+        return {str(name): float(seconds) for name, seconds in files.items()}
+    except (ValueError, KeyError, TypeError, AttributeError) as error:
+        raise pytest.UsageError(f"{path} is not a durations document: {error}") from error
+
+
+def file_order(files: Sequence[str], durations: Mapping[str, float]) -> list[str]:
+    """Return ``files`` longest first; a file with no recorded time takes the median.
+
+    Ties keep the path order, so every ``pytest-xdist`` worker computes the same
+    order.
+    """
+    median = statistics.median(durations.values()) if durations else 0.0
+    return sorted(set(files), key=lambda name: (-durations.get(name, median), name))
+
+
+def _file_of(item: pytest.Item) -> str:
+    return item.nodeid.split("::", 1)[0]
+
+
+@pytest.hookimpl(trylast=True)
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
-    """Leave out the ``extended`` tests unless asked for, or their file is named.
+    """Leave out the ``extended`` tests unless asked for, then order the files.
 
     An ``extended`` test is an end-to-end walk -- an executed example or the 2WCD
-    entry through the pipeline -- whose claims CI gates on every push with
-    ``--extended``. The development selection, which ``uv run pytest`` and the
-    commit hook run, leaves them out; a file or test named on the command line runs
-    whole, so ``uv run pytest tests/tier2/test_charge_2wcd.py`` needs no flag.
+    entry through the pipeline -- whose claims CI gates, and the push
+    gate before every push, with ``--extended``. The development selection, which
+    ``uv run pytest`` runs, leaves them out; a file or test named on the command
+    line runs whole, so ``uv run pytest tests/tier2/test_charge_2wcd.py`` needs no
+    flag. Where they run, they run without coverage (``no_cover``): changed-line
+    coverage is measured over the development selection (section 7.6 NOTE).
 
     A ``slow`` test is never in the development selection, which ``addopts``
     already bounds to ``not slow``: it is selected only by an explicit
     ``-m slow``, and that request is kept, so the recorded measurements of an
     ``extended`` file still run under CLAUDE.md's ``uv run pytest -m slow``.
+
+    The hook runs last, after ``-m`` and ``-k`` have deselected, so the order is
+    of what will run. Files run longest first by ``tests/durations.json`` (WP43
+    D8), so ``--dist loadfile`` starts the long poles first; a file's own tests
+    keep their order.
     """
-    if config.getoption(EXTENDED):
-        return
-    named = {
-        Path(argument.split("::")[0]).resolve()
-        for argument in config.args
-        if Path(argument.split("::")[0]).is_file()
-    }
-    kept, left_out = [], []
+    if not config.getoption(EXTENDED):
+        named = {
+            Path(argument.split("::")[0]).resolve()
+            for argument in config.args
+            if Path(argument.split("::")[0]).is_file()
+        }
+        kept, left_out = [], []
+        for item in items:
+            if (
+                item.get_closest_marker("extended")
+                and not item.get_closest_marker("slow")
+                and Path(item.path).resolve() not in named
+            ):
+                left_out.append(item)
+            else:
+                kept.append(item)
+        if left_out:
+            config.hook.pytest_deselected(items=left_out)
+            items[:] = kept
     for item in items:
-        if (
-            item.get_closest_marker("extended")
-            and not item.get_closest_marker("slow")
-            and Path(item.path).resolve() not in named
-        ):
-            left_out.append(item)
-        else:
-            kept.append(item)
-    if left_out:
-        config.hook.pytest_deselected(items=left_out)
-        items[:] = kept
+        if item.get_closest_marker("extended"):
+            item.add_marker(pytest.mark.no_cover)
+
+    durations = recorded_durations()
+    rank = {
+        name: position
+        for position, name in enumerate(file_order([_file_of(item) for item in items], durations))
+    }
+    items.sort(key=lambda item: rank[_file_of(item)])
 
 
 def import_gmsh() -> ModuleType:

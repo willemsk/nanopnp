@@ -1323,6 +1323,37 @@ learnt:
   call into the module. The rest are the 144 tests that start a process (selected by any source
   change) and the source-convention tests that read every module as text.
 
+### 12.2 Where the time goes on 3.14, and coverage's `sysmon` core **[tested]**
+
+Measured for WP43 D8 on 12 October 2026: CPython 3.14.6, coverage 7.15.4, pytest-cov 7.1.0, four
+cores shared with another agent's runs, `-n 4 --dist loadfile`, BLAS threads 1,
+`NPY_DISABLE_CPU_FEATURES` at the X86_V3 cap, the GUI file left out, tree `f2e48e9` plus the
+ordering conftest. Each figure carries the 1-minute load average at its start and end.
+
+- **`tests/durations.json`** comes from a `--durations=0` log of the development selection with
+  `--extended` (2,176 passed; 510 s wall, load 0.5 rising to 3.9): 1,849 s of test time in 141
+  files, of which the 16 wholly `extended` files are 1,070 s and the development selection 778 s.
+  Example 07 alone is 416 s, the 2WCD VAL-06 and charge walks 128 s and 125 s. No file mixes
+  `extended` and development tests, so a pull request's shards, packed from the same record, weigh
+  only what they run. The longest development file is 60.5 s (`test_exclusion_stern.py`); the
+  median file 2.0 s. Files whose every test is under pytest's 5 ms reporting floor are absent and
+  take the median.
+- **Longest-first order** puts example 07 on a worker at the start, so the push gate's floor is
+  that file plus whatever shares its worker, not that file started last. The order is a
+  scheduling change: the same 2,176 tests pass. Its wall-time gain was not measurable here: 937 s
+  ordered against 830 s in path order, back to back, with the load at 1.8 to 7.9 from the other
+  agent, larger than any effect of the order. Re-measure on a quiet machine (WP43 item 10).
+- **`COVERAGE_CORE=sysmon` against `ctrace`**, the development selection under
+  `--cov=src/nanopnp --cov-branch`, 2,118 passed: **292 s** (load 4.4 to 6.7) against **511 s**
+  (6.7 to 7.8). The two XML reports are byte-identical once the `timestamp` attribute is removed:
+  21,879 lines and 5,058 branches valid, 18,888 and 3,944 covered. **coverage 7.15 already
+  defaults to `sysmon` on CPython 3.14 and later** (`coverage/env.py`, `SYSMON_DEFAULT`), with
+  branch coverage, so the gate and CI use it without configuration; pinning `core` in
+  `pyproject.toml` would make every coverage run on 3.11 to 3.13 warn and fall back.
+- **pytest-cov's `no_cover` marker stops coverage for the call phase only**
+  (`pytest_runtest_call`): a fixture's setup is still measured. The root conftest puts it on every
+  `extended` item, so the walks no longer pay the tracer in their calls, where their time is.
+
 ## 13. Documentation tooling: MkDocs, Material and Zensical
 
 Read 23 September 2026 from the publishers' own announcements. **Not tested here**; the WP16

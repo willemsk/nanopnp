@@ -177,6 +177,13 @@ Dependencies: none open. WP44 is measured against this package's reading set (J1
 - [ ] 5. [any] Suite order and coverage (D8): `tests/durations.json`, the longest-first order,
   `no_cover` on `extended`, and the `sysmon` measurement. Done when `gate.sh run` passes and the
   timings are recorded in `.knowledge/07` §12.
+
+  > **Outcome — `sysmon` is already in effect, and faster.** coverage 7.15 defaults to it on
+  > CPython 3.14 with branch coverage; on the development selection it took 292 s against
+  > `ctrace`'s 511 s, with byte-identical XML reports, so nothing is configured. The order's own
+  > gain could not be measured: another agent's runs held the load at 2 to 8 on the 4 cores, and
+  > the ordered and path-ordered `--extended` runs took 937 s and 830 s back to back. Item 10
+  > re-measures it. `.knowledge/07` §12.2.
 - [ ] 6. [Opus] — §7.6 is normative text. CI (D10): `ci.yml`, `release.yml`, the shard option in
   `tests/conftest.py`, the status post, timeouts, apt cache and trims (Design §4, §8). Amend §7.6's table and its
   development-selection NOTE (J4, J10). Done when the PR's `CI result` is green, a dispatch with
