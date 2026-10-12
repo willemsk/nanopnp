@@ -41,6 +41,16 @@ decisions, because J1 ruled one package. The parts share one bootstrap order (D1
 budgets (D9), and the order cannot be split across two pull requests without re-running the old
 gate on the new suite.
 
+How the package answers the author's five requests of 11 October 2026:
+
+| Request | Answered by |
+|---|---|
+| 1. A commit gate that is fast, permanently | D2–D7: affected tests only on commit, one background push gate per push with a guard, cheap follow-ups. D11 makes it last: CI fails a budget overrun and any test file over its ceiling, and the gate logs every run |
+| 2. CI as effective and efficient as possible | D10, J4, J10: one sharded Linux leg per pull request, the platforms and walks after the merge, nightly older Pythons, a release matrix, timeouts, caching, one required check |
+| 3. Python 3.15 and lazy imports | Not adopted (J6; OPN-09 sets when to revisit). D12 moves the working version to 3.14 instead |
+| 4. Orchestration, accuracy, tokens, context | D13–D14, Design §9, §10 and §14: five defined agents with fixed models and tools, checked retrieval, path-scoped rules, every duplicated passage reduced to one source, a reading set at least 30 % smaller (J11), and a usage script |
+| 5. A plain summary in every plan | D15, Design §12: the In brief template in the three planning skills and the PR body, tested on every plan from WP43 |
+
 Requirements: **VER-74** (new, the selection's soundness), **VER-73** (new, the budgets), VER-46
 and VER-62 (their cadence moves; their assertions do not), VER-72 (d) (the planned markers), QR-09,
 CON-07, CON-10. Clauses amended in this package: §7.6's table and its three NOTEs, a budget NOTE,
@@ -56,7 +66,7 @@ Dependencies: none open. WP44 is measured against this package's reading set (J1
 |---|---|---|---|
 | D1 | Order | The plan's planned tests first; then the selection (items 1–2) before anything relies on it; Python 3.14 (item 4) before the timings that are budgeted on it; the context work last | J2: the fast hook is trusted only once VER-74 holds. Until item 2 lands, commits run the old hook |
 | D2 | The impact tool | **A recorder of our own**: `tests/impact.py`, a pytest plugin (`-p impact --impact-record=PATH --impact-source=src/nanopnp`). It notes each code object a test starts through `sys.monitoring` `PY_START`, on a free tool id, with each event disabled after its first hit and re-armed per test. A fixture scoped wider than a function is recorded once and credited to every test that requests it. Audit hooks note a test that starts a process (`subprocess.Popen`, `os.system`, `os.exec*`, `os.posix_spawn`) and every source file it opens as data. Python 3.12 or later; on 3.11 it refuses, naming the version | Measured: coverage's per-test contexts cost +83 % (dev selection 363 s against 199 s) and credit a module or session fixture to the first test alone, which under-selects. pytest-testmon traces through coverage too, is a new dependency, and has the same fixture gap. An import graph misses registry dispatch (`create()`). Design §1 |
-| D3 | The map | JSON at `$(git rev-parse --git-common-dir)/nanopnp-impact/map.json`, schema `nanopnp/impact/v1`. It records the tree it was recorded on (the `git add -A` tree, as the gate's stamp), the source root, and per test node id: the functions as `path::qualname` with a hash of each function's position-free AST, the source files read, whether it starts a process, and whether it is `extended`. Each xdist worker writes its own part, which the selector merges. It is written by every push-gate run and by `gate.sh map` | A worktree shares it. A fresh container has none and falls back. Keyed by qualname, so a line shift elsewhere in the file changes nothing |
+| D3 | The map | JSON at `$(git rev-parse --git-common-dir)/nanopnp-impact/map.json`, schema `nanopnp/impact/v1`. It records the tree it was recorded on (the `git add -A` tree, as the gate's stamp), the source root, and per test node id: the functions as `path::qualname` (identities only; what changed is read from the git objects, Design §6), the source files read, whether it starts a process, and whether it is `extended`. Each xdist worker writes its own part, which the selector merges. It is written by every push-gate run and by `gate.sh map` | A worktree shares it. A fresh container has none and falls back. Keyed by qualname, so a line shift elsewhere in the file changes nothing |
 | D4 | What a change selects | Cumulative from the map's tree to the working tree. A change inside a function body selects every test that started that function, or a function nested in it. A changed source file selects every test that read it as data. Any change under the source root selects every process-starting test. A changed `tests/**/test_*.py` selects itself. Markdown outside `src/` selects nothing. Selection is by whole file: every test in a file with any selected test. **Everything else falls back**, naming the path in its reason: a module-level, class-body, signature or decorator change, an added, deleted or renamed module, a non-Python file, any `conftest.py`, `pyproject.toml`, `uv.lock`, a hook or a workflow, or a map missing (`no impact map`), corrupt (`unreadable`) or from an unknown tree (`tree`) | The routes by which a test can depend on a change, each one planned in `test_impact_selection.py`. Whole files keep module fixtures sound. Design §1 |
 | D5 | The commit hook | Lock check, ruff, format, mypy. Then `impact.select`, without `extended` (J2): the selected node ids under `-n auto --dist loadfile`, or none. On a fallback, the development selection, and the hook's output names the reason. The pass is stamped `impact`. Gmsh and the GUI file are handled as now. `/wp-implement`, `/wp-ship` and the steward start `gate.sh map` in the background as their first step, so the second commit of a fresh container is already fast | 60 s target (J7). Measured on the current map: a typical one-module change selects about 30 to 50 s of wall time on 4 cores. Changes to `core/`, `physics/` and `numerics/` select most of the suite (Design §3) |
 | D6 | Soundness, stated | Design §1: if no function a test started, no source file it read, no module-level statement and no non-Python file changed, then the test executes as before. Residuals: non-determinism (a fixed seed or the clock), which is outside the claim, as it is for CI | `[Opus]`: a gap here passes silently. VER-74 enumerates the routes; CI's full run stays the authority (J3) |
@@ -64,7 +74,7 @@ Dependencies: none open. WP44 is measured against this package's reading set (J1
 | D8 | Suite speed | Three things, each with its lever, and nothing more. (a) **Ordering, longest file first** from a committed `tests/durations.json`. Files missing from it take the median. It is regenerated by `tests/impact.py durations` from a `--durations=0` log. This is §7.6's fourth lever by scheduling: no test changes. (b) **The `extended` tests carry `no_cover`** (J10: coverage is over the development selection). The walks no longer pay coverage's +33 %. (c) **`COVERAGE_CORE=sysmon`** on 3.14, if it is faster and its XML report is identical on the same tree; otherwise stay on ctrace. Not done: the 2WCD seeds are already shared across workers under a lock (`tests/conftest.py`, `seeded_2wcd`). Example 07 stays cold (§7.6), and its 285 s solve is not coarsened: `t+` is 0.543 against a gate of ½, under three times its headroom. Four BLAS threads leave it unchanged (measured: 285 s and 289 s) | The four levers (§7.6 NOTE, WP33). Design §3 |
 | D9 | Budget predictions | Commit hook about 50 s for a typical change, ≤60 s. Push gate 6.5 to 8 min: **a predicted miss of J7's 5 min**, set by example 07 (477 s alone, measured). PR critical path about 4 to 5 min, ≤6. Reading set ≤6,894 words (J11) | A miss is reported with its cause and ruled (J7). The In brief recommends re-setting the push gate to 8 min |
 | D10 | CI (J4, J10) | **Pull request**, ubuntu 3.14: `changes`; `lint` (lock, ruff, format, mypy); `docs`; `tests (shard i/2)`, the development selection under coverage, files assigned to shards by longest-first bin-packing from `tests/durations.json` (`--shard i/2`, the conftest); `coverage` (`coverage combine`, then diff-cover against the base, then the VER-73 check); and **`CI result`**, which needs them all and is the one required check. **Push to `main`**: macOS-3.14 and Windows-3.14 run Tiers 1–2 with `--extended`, plus the GUI file serially and the bundle. Ubuntu runs the `extended` walks, and the development selection too unless the merged tree equals the tree the PR's `CI result` passed, read from a `ci/tested-tree` commit status on the PR head. **Nightly**: Tier 3, and 3.11, 3.12 and 3.13 on ubuntu, macOS and Windows with `UV_NO_BUILD=1` running Tier 1, all `continue-on-error`. **Release**: `ci.yml` gains `workflow_call` with `full: true` (the three platforms × 3.11–3.14, `--extended`), which `release.yml` needs before it builds. Every job gets a `timeout-minutes` (lint and docs 10, shards 20, platforms 40, bundle 30, nightly 30, tier3 60). The apt step is cached (`awalsh128/cache-apt-pkgs-action`, pinned by tag as the other actions are). `docs` syncs `--no-default-groups --group docs`; `lint` drops the `apbs` group | Two shards: the dev selection is about 720 s of test time under coverage, so about 90 s a shard on 4 vCPU (public repository) plus about 100 s of long files. One required check stops shard or matrix renames from touching branch protection. A fork PR cannot post the status, so it is never skipped on that ground (safe). Design §4 |
-| D11 | VER-73 | `.github/budgets.yaml`: `commit_hook_s: 60`, `push_gate_s: 300`, `pull_request_critical_path_s: 360`, `margin: 0.5`. `.github/scripts/ci_budget.py` gives `critical_path_s(jobs)` (first start to last completion) and `check(jobs, budget_s, margin) -> (passed, message)`. Its message names the measured value, the budget and the margin as a percentage, says "over budget" when it passes inside the margin, and names an unfinished job. CI's `coverage` job reads the run's jobs through the API and fails past budget × 1.5. The local budgets are logged by `gate.sh` to `<git-dir>/nanopnp-gate.log`, as time, mode, selection size and tree, and reported by the usage script. VER-73 supersedes WP33 D15's targets; REV-47's close reports both | Margin from the measured spread: the same suite took 8m11s and 13m07s on one day (1.6×), so a 50 % excess is beyond the variance already seen. A tighter margin would fail on runner noise alone. Design §5 |
+| D11 | VER-73 | `.github/budgets.yaml`: `commit_hook_s: 60`, `push_gate_s: 300`, `pull_request_critical_path_s: 360`, `file_ceiling_s: 90`, `margin: 0.5`. The file ceiling makes the hook's budget last: no development-selection file may take over 90 s × 1.5 in CI's junit durations (`check_files(durations, ceiling_s, margin)`), because the hook's wall time is bounded below by its longest selected file. This is WP33 D15's ceiling, made a check. `.github/scripts/ci_budget.py` gives `critical_path_s(jobs)` (first start to last completion) and `check(jobs, budget_s, margin) -> (passed, message)`. Its message names the measured value, the budget and the margin as a percentage, says "over budget" when it passes inside the margin, and names an unfinished job. CI's `coverage` job reads the run's jobs through the API and fails past budget × 1.5. A hook run over 90 s prints an over-budget notice and never fails on it (Design §7). The local budgets are logged by `gate.sh` to `<git-dir>/nanopnp-gate.log`, as time, mode, selection size and tree, and reported by the usage script. VER-73 supersedes WP33 D15's targets; REV-47's close reports both | Margin from the measured spread: the same suite took 8m11s and 13m07s on one day (1.6×), so a 50 % excess is beyond the variance already seen. A tighter margin would fail on runner noise alone. Design §5 |
 | D12 | Python 3.14 (J5) | First, the five VER-62 walks on 3.14 under the X86_V3 cap, on Linux: the deployed mesh hashes must be the recorded ones and each number must hold at 10⁻⁸. Any move stops the package (G10). Then macOS and Windows on 3.14 through a `workflow_dispatch` of the branch. Then `.python-version` → 3.14, CI's pins, `CLAUDE.md` ("developed on 3.14") and `.knowledge/07`. `requires-python` is unchanged | `[Opus]`: a moved golden is a plausible wrong number. Wheels: every locked package has a cp314 wheel on all three platforms, except `watchdog` on macOS arm64 (docs group only; docs run on ubuntu) |
 | D13 | The roster (J8) | `.claude/agents/`: `gate-runner` (sonnet; Bash, Read), which runs a named gate stage or selection and returns failures only; `spec-reader` (sonnet; Read, Grep, Glob), which returns clauses by identifier, verbatim with line numbers; `surveyor` (haiku; Read, Grep, Glob, `effort: low`), which locates and counts, with paths, for the caller to check; `ci-log-classifier` (sonnet; Read, Grep, Glob), which classifies a fetched log against the steward's table; `physics-reviewer` (opus; Read, Grep, Glob, `effort: xhigh`). The model policy points at these files as its enforcement, and gives Haiku checked retrieval | The spec reader is Sonnet, not Haiku: a missed NOTE is silent. Unknown keys are ignored silently (docs), hence `test_agent_roster.py` |
 | D14 | Leaner context (J8, J11) | `.claude/rules/physics-numerics.md` (paths `src/nanopnp/{physics,numerics,solve,post,materials,charge}/**`, `tests/tier2/**`) takes *Physics ground rules* and *Numerics rules*, and `.claude/rules/python.md` (paths `src/**/*.py`, `tests/**/*.py`) takes *Coding conventions*. Each is moved verbatim, not rewritten, and `/wp-plan` reads both. Word targets: `CLAUDE.md` 1,300; `wp-implement` 1,000; `wp-plan` 1,100; `wp-ship` 1,200; `steward` 1,500; `phase-plan` 1,800; model policy 500; `current.md` 700; `.knowledge/00-index.md` 1,000. `.claude/scripts/reading_set.py <plan>` counts J11's set. `.claude/scripts/usage.py` reports a transcript's tokens, compactions, spawns and gate minutes, and fails naming an unknown format | J11 baseline, counted at `d630f85`: 2,074 + 1,558 + 902 + 1,566 + 850 + 2,899 (WP42's brief) = **9,849 words**. WP44 must be ≤6,894 |
@@ -74,18 +84,18 @@ Dependencies: none open. WP44 is measured against this package's reading set (J1
 ### Work items
 
 - [ ] 1. [Opus] — under-selection passes silently. `tests/impact.py`: the recorder plugin, its merge
-  and `select()` (D2–D4). Measure the recorder's overhead on the development selection: ≤10 %, or
+  and `select()` (D2–D4; build from Design §6). Measure the recorder's overhead on the development selection: ≤10 %, or
   the item stops for a re-plan. Done when every test in `tests/tier1/test_impact_selection.py`
   passes with its markers removed.
 - [ ] 2. [Opus] — a hook that skips a test is silent. `gate.sh`: the hook runs D5, adds `gate.sh
-  map`, and stamps `impact`. The skills' first step starts `gate.sh map`. Amend §7.6's
-  development-selection NOTE and `CLAUDE.md` *Commands*, and add VER-74 to Appendix A. Read Design §1
-  first. Done when `test_workflow_hooks.py` and `test_impact_selection.py` pass, and a planted body
+  map`, and stamps `impact` (Design §7). The skills' first step starts `gate.sh map`. Amend §7.6's
+  development-selection NOTE and `CLAUDE.md` *Commands*, and add VER-74 to Appendix A, from the
+  Design §11 drafts. Read Design §1 first. Done when `test_workflow_hooks.py` and `test_impact_selection.py` pass, and a planted body
   change in `post/qoi.py` commits through the hook in ≤60 s.
 - [ ] 3. [Opus] — the follow-up's coverage claim is a soundness argument. Make `gate.sh run`
   background-safe: a PID file, failures only, the follow-up rule (D7) and the gate log. Add the push
   guard. Update the `wp-implement`, `wp-ship` and `steward` skills to start the gate in the
-  background and push on its pass. Amend §7.6's coverage NOTE. Read Design §2 first. Done when
+  background and push on its pass. Amend §7.6's coverage NOTE. Read Design §2 and §7 first. Done when
   `test_push_guard.py` passes unmarked and a one-line follow-up runs only its selection.
 - [ ] 4. [Opus] — a moved golden is a plausible wrong number. Run VER-62 on 3.14 (D12); if anything
   moves, stop and report to the author. Then the macOS and Windows dispatch, `.python-version`, CI's
@@ -95,16 +105,17 @@ Dependencies: none open. WP44 is measured against this package's reading set (J1
   `no_cover` on `extended`, and the `sysmon` measurement. Done when `gate.sh run` passes and the
   timings are recorded in `.knowledge/07` §12.
 - [ ] 6. [Opus] — §7.6 is normative text. CI (D10): `ci.yml`, `release.yml`, the shard option in
-  `tests/conftest.py`, the status post, timeouts, apt cache and trims. Amend §7.6's table and its
+  `tests/conftest.py`, the status post, timeouts, apt cache and trims (Design §4, §8). Amend §7.6's table and its
   development-selection NOTE (J4, J10). Done when the PR's `CI result` is green, a dispatch with
   `full: true` is green, and the step summary shows the shard times.
 - [ ] 7. [any] VER-73 (D11): `.github/budgets.yaml`, `.github/scripts/ci_budget.py`, the CI step,
   the gate log, §7.6's budget NOTE and the Appendix A row. Done when `test_loop_budgets.py` passes
   unmarked and the PR run reports its critical path.
-- [ ] 8. [any] The roster and the model policy (D13). Done when `test_agent_roster.py`'s roster
+- [ ] 8. [any] The roster and the model policy (D13; Design §9, §10). Done when `test_agent_roster.py`'s roster
   tests pass unmarked.
-- [ ] 9. [any] Leaner context and summaries (D14, D15): the rules files, the trims to the targets,
-  `reading_set.py`, `usage.py` and the In brief templates. Done when the In brief tests pass
+- [ ] 9. [any] Leaner context and summaries (D14, D15): the rules files, the trims to the targets by
+  Design §14's map, `reading_set.py` and `usage.py` (Design §13), and the In brief template (Design
+  §12). Done when the In brief tests pass
   unmarked and `reading_set.py` reports each target met.
 - [ ] 10. [any] Close: measure the four budgets on this tree (the hook on three one-module changes:
   `post/qoi.py`, `io/case.py`, `physics/poisson.py`). Add a REV-nn row per miss, update
@@ -117,7 +128,7 @@ Dependencies: none open. WP44 is measured against this package's reading set (J1
 |---|---|---|---|---|
 | `tier1/test_impact_selection.py` | 1 | VER-74 | Each route of D4 selects its tests, by node id; each fallback names its path; the walks are excluded unless asked for; xdist and serial maps select alike | `uv run pytest tests/tier1/test_impact_selection.py` |
 | `tier1/test_push_guard.py` | 1 | J3 | No branch push without `HEAD^{tree} extended`; a hook pass never stands in; a tag-only push, `--no-verify` and other commands pass | as above, by file |
-| `tier1/test_loop_budgets.py` | 1 | VER-73 | The recorded budgets are J7's and the margin 0.5. A budget below the measured value beyond the margin fails, naming all three. An unfinished job fails | as above |
+| `tier1/test_loop_budgets.py` | 1 | VER-73 | The recorded budgets are J7's, the file ceiling 90 s and the margin 0.5. A budget below the measured value beyond the margin fails, naming all three. An unfinished job fails. A file over its ceiling beyond the margin fails, naming it | as above |
 | `tier1/test_agent_roster.py` | 1 | J8, J9 | Five agents with exact models and tools; no unknown key; the skills carry the In brief; every plan from WP43 opens with one of ≤250 words | as above |
 | `tier1/test_workflow_hooks.py` | 1 | J2, J3 | Existing; extended in items 2 and 3 for `map`, the `impact` stamp and the follow-up | as above |
 | The five VER-62 walks on 3.14 | 2 | VER-62 | Mesh hashes as recorded; numbers at 10⁻⁸ | `uv run --python 3.14 pytest --extended <the five files>` |
@@ -222,3 +233,295 @@ Same-day reruns of the same suite took 8m11s and 13m07s on ubuntu, and 9m58s and
 Windows: a spread of 1.55 to 1.60. A margin below 0.5 would fail on runner noise alone, while a
 50 % excess over budget is beyond any spread seen. CPU time was considered and rejected: the API
 reports wall time per job, and the budget J7 states is a wait.
+
+### 6. `tests/impact.py`, the implementer's sketch (D2–D4)
+
+The module is a pytest plugin and a command line. It imports nothing from `nanopnp`, so it records
+a toy repository as well as this one.
+
+```python
+# Plugin, loaded by -p impact (the root conftest does not load it by default).
+def pytest_addoption(parser): ...    # --impact-record=PATH, --impact-source=src/nanopnp
+def pytest_configure(config): ...    # only with --impact-record: refuse on < 3.12, naming the version;
+                                     # claim a free sys.monitoring tool id from (3, 4), else fail naming both;
+                                     # sys.addaudithook(_audit) once (audit hooks cannot be removed)
+# One collector per active scope; every active collector receives each event.
+#   pytest_runtest_protocol (hookwrapper)   -> collector for item.nodeid (setup, call and teardown)
+#   pytest_fixture_setup (hookwrapper)      -> collector for fixturedef.scope != "function",
+#                                              keyed f"{fixturedef.baseid}::{fixturedef.argname}"
+# A push calls sys.monitoring.restart_events() so events disabled under the previous
+# collector fire again; the PY_START callback adds the code object and returns DISABLE.
+# At a test's end, its record takes the union of every wider fixture it requested
+# (item._fixtureinfo.name2fixturedefs[name][-1] for name in item.fixturenames).
+
+def _identity(code) -> str | None:
+    # code.co_filename under the source root, else None.
+    # qualname cut at the first ".<locals>": a nested def, lambda or genexpr counts as its outer function.
+    # "<module>" and class-body code (no def) -> None: import-time code is D4's fallback.
+    return f"{relpath}::{outer_qualname}"
+
+def _audit(event, args):
+    # subprocess.Popen, os.system, os.exec, os.posix_spawn, os.spawn -> starts_process = True
+    # open: str or bytes paths only; under the source root -> files.add(relpath);
+    #       __pycache__/x.cpython-3XX.pyc counts as x.py (an import read in a test over-selects: safe)
+```
+
+The map file, written on `pytest_sessionfinish`: a worker (`config.workerinput` exists) writes
+`PATH.<workerid>.part`, and the controller merges the parts into `PATH`. A serial run writes `PATH`
+directly. The tree is computed as `gate.sh` computes its stamp: `git add -A` into a throwaway
+index, then `git write-tree`.
+
+```json
+{"schema": "nanopnp/impact/v1", "tree": "<40 hex>", "source": "src/nanopnp",
+ "tests": {"tests/tier1/test_x.py::test_y[a]": {
+     "functions": ["src/nanopnp/post/qoi.py::current"], "files": ["src/nanopnp/core/paths.py"],
+     "process": false, "extended": false}}}
+```
+
+The map holds identities only. The selector finds what changed from the git objects:
+
+```python
+@dataclass(frozen=True)
+class Selection:
+    fallback: str | None        # e.g. "src/nanopnp/core/constants.py: module-level change"
+    tests: tuple[str, ...]      # node ids, sorted; whole files (D4)
+
+def select(repo: Path, map_path: Path, *, include_extended: bool = False) -> Selection:
+    # 1. read the map: missing -> "no impact map at <path>"; bad JSON or schema -> "map unreadable: <why>";
+    #    `git cat-file -e <tree>` fails -> "map tree <id> is not in this repository"
+    # 2. T = the working tree's tree (as above); changed = git diff --name-status --no-renames P T
+    # 3. per path: *.md outside the source root -> ignore; tests/**/test_*.py modified -> select its node ids;
+    #    *.py under the source root, status M -> compare skeleton(P) with skeleton(T), else fall back
+    #    "<path>: module-level change"; changed bodies -> functions; anything else -> fall back "<path>: <status>"
+    # 4. tests = users of changed functions | readers of changed files | (process starters if any source changed)
+    #    | changed test files; widen to whole files; drop extended unless include_extended
+```
+
+`skeleton(source)` parses the module and replaces the body of every `FunctionDef` and
+`AsyncFunctionDef` with `pass`, keeping decorators, arguments, defaults and annotations. It returns
+`ast.dump(tree, include_attributes=False)`. Two skeletons that are equal except for added
+functions under fresh names still fall back: it is simpler, and only slower. `body(source,
+qualname)` is the dump of that function's body. A docstring edit therefore selects the function's
+tests.
+
+The command line, which `gate.sh` uses:
+- `uv run python tests/impact.py select --map M [--extended]` prints node ids, one per line.
+  - A fallback prints `FALLBACK: <reason>` and exits 3.
+  - An empty selection prints nothing and exits 0.
+- `uv run python tests/impact.py merge --map M --part P --tree T` replaces P's tests in M and sets
+  M's tree to T. It is used by the follow-up.
+- `uv run python tests/impact.py durations LOG` writes `tests/durations.json` from a `--durations=0`
+  log, summing setup, call and teardown per file. Its format is
+  `{"schema": "nanopnp/durations/v1", "files": {"tests/tier2/test_x.py": 51.4}}`, with seconds from
+  a 4-worker run. Regenerate it at each package's close if a file moved by more than 20 %.
+
+### 7. `gate.sh` after WP43 (D5, D7)
+
+```text
+hook mode, command matches git push (a regex like the commit regex):
+  --no-verify among its options          -> allow
+  every refspec a tag, or --tags only    -> allow
+  stamp has "<HEAD^{tree}> extended"     -> allow
+  else deny: "The push was not made: no passing push gate for HEAD's tree. Run
+             .claude/hooks/gate.sh run (in the background), then push. --no-verify skips this."
+  (it runs no uv command; test_push_guard.py's fake uv proves it)
+
+hook mode, git commit (as now, then):
+  prose only -> ruff alone (unchanged)
+  lock, ruff, format, mypy
+  out=$(uv run python tests/impact.py select --map "$map")   # exit 3 -> fallback
+    fallback -> development selection, as today, reason printed in the deny text if it fails
+    empty    -> no pytest
+    else     -> uv run pytest -q -rsfE -n auto --dist loadfile <ids>   (-n 0 if < 20 ids)
+  stamp "<state> impact"; log line
+
+run:
+  as now, plus -p impact --impact-record="$map.new"; extended items carry no_cover (conftest);
+  on pass: mv "$map.new" "$map"; commit=$(git commit-tree <state> -m gate) ; stamp "<state> extended <commit>"
+  follow-up: a stamp "<P> extended <commitP>" with P != state, the map's tree == P, and select --extended
+    without a fallback -> run only those ids with --extended --cov ... and -p impact --impact-record="$part";
+    diff-cover --compare-branch=<commitP>; on pass: impact.py merge; stamp "<state> extended <commit>"
+  any fallback -> the whole run, as today
+
+map:  pytest's development selection with -p impact --impact-record, no coverage; writes the map
+      and stamps nothing. Started in the background by the skills' first step.
+
+log:  <git-dir>/nanopnp-gate.log, one line per run:
+      ISO time, mode (hook|run|follow-up|map), selection (impact|development|extended), test count,
+      seconds, tree, result. A hook run over 90 s (60 s x 1.5) prints a one-line "over budget" notice; it never fails on it.
+```
+
+The stamp keeps one line per selection, so a later commit-hook pass cannot overwrite the `extended`
+line that the push guard reads.
+
+### 8. CI, the parts that are easy to get wrong (D10)
+
+```yaml
+# tests shard, pull request:
+- run: uv run pytest -rs -n auto --dist loadfile --ignore=tests/tier1/test_gui_widgets.py
+         --shard ${{ matrix.shard }}/2 --cov=src/nanopnp --cov-branch --cov-report=
+         --junitxml=junit-${{ matrix.shard }}.xml
+  env: {COVERAGE_FILE: .coverage.shard${{ matrix.shard }}}
+- uses: actions/upload-artifact@v7      # .coverage.shard*, junit-*.xml; include-hidden-files: true
+# coverage: download both; uv run coverage combine; uv run coverage xml; diff-cover as today;
+#           then uv run python .github/scripts/ci_budget.py --run ${{ github.run_id }} (GH_TOKEN)
+#           and the per-file check from the junit durations (D11).
+# CI result:
+  needs: [changes, lint, docs, tests, coverage]
+  if: always()
+  run: fail if any needs.*.result is failure or cancelled
+  # then, on pull_request from this repository only (continue-on-error for forks):
+  gh api repos/$REPO/statuses/$HEAD_SHA -f state=success -f context=ci/tested-tree
+        -f description="$(git rev-parse HEAD^{tree})"
+  permissions: {statuses: write}
+# push to main, in changes:
+  head=$(gh api repos/$REPO/commits/$SHA/pulls --jq '.[0].head.sha // empty')
+  tested=$(gh api repos/$REPO/commits/$head/statuses --jq '[.[]|select(.context=="ci/tested-tree")][0].description // empty')
+  dev_needed=$([[ -n $tested && $tested == $(git rev-parse HEAD^{tree}) ]] && echo false || echo true)
+```
+
+`--shard i/N` lives in `tests/conftest.py`, beside `--extended`. Files are sorted by
+`tests/durations.json`, longest first, with a missing file taking the median. Each goes to the
+least-loaded shard, and ties go to the lower index. A file's tests are never split across shards.
+The same ordering puts the items longest file first when no shard is given (D8 a).
+
+### 9. The agent files (D13), verbatim to start from
+
+Each file is the frontmatter plus a body of at most 150 words. The body states the job, what to
+return and what never to do.
+
+```markdown
+---
+name: gate-runner
+description: Runs a named gate stage or pytest selection for nanopnp and returns only the failures. Use for a long or noisy run whose log should stay out of the caller's context.
+model: sonnet
+tools: Bash, Read
+effort: low
+---
+Run exactly the command you are given, under `uv run`, with OMP/OPENBLAS/MKL_NUM_THREADS=1. Return:
+PASS with the summary line, or FAIL with each failing node id and the first assertion or error line
+under it, at most 40 lines in all. Never edit a file, re-run with other options, or diagnose.
+```
+
+```markdown
+---
+name: spec-reader
+description: Returns nanopnp SPECIFICATION.md clauses by identifier (FR-, VER-, §x.y, J3), verbatim, with line numbers.
+model: sonnet
+tools: Read, Grep, Glob
+---
+For each identifier, return the full row or section verbatim, with its line range, and every NOTE
+or ruling (§8.2) that names it, with line ranges. Quote; never paraphrase or summarise. Say "not
+found" rather than guess.
+```
+
+The `surveyor` (haiku, `effort: low`) finds files, symbols and counts, returning paths with line
+numbers, and never judges. The `ci-log-classifier` (sonnet) is given a log file path. It returns
+the failing step, the first error, and the steward's failure class, quoted from
+`.claude/skills/steward/SKILL.md` *Failure classes*. A Tier 2 failure it only labels "physics
+evidence: Opus". The `physics-reviewer` (opus, `effort: xhigh`) reviews a diff or a named function
+against the cited specification and `.knowledge/01`. It returns findings with file:line, sign and
+unit, and edits nothing.
+
+**Checked retrieval** is the model policy's new Haiku rule. The caller verifies anything it relies
+on by reading the returned line range itself, which is one `Read` with `offset` and `limit`.
+
+### 10. Who delegates what (D13, D14)
+
+| Skill step | Today | After |
+|---|---|---|
+| `wp-plan` survey | `Explore` (Sonnet) | `surveyor` for "where/how many"; `spec-reader` for clause text |
+| `wp-implement` start | reads `00-index`, spec sections | `gate.sh map` in the background; `spec-reader` for each cited identifier, never the whole section |
+| `wp-implement` / `wp-ship` gate | foreground `gate.sh run`, polled | Bash `run_in_background`; on failure, `gate-runner` re-runs the failing ids alone |
+| `wp-ship` §4 confirmation | the session (Opus) | unchanged; `physics-reviewer` only for a second opinion on a Tier 2 or physics finding |
+| `steward` CI failure | the session reads the log | `ci-log-classifier` on the fetched log; Tier 2 stays with the session on Opus |
+| `phase-plan` exploration | ad hoc | `surveyor`; measurements by `gate-runner` |
+
+### 11. Clause drafts (item owners copy these and adjust only to match the measured facts)
+
+- **§7.6 table (item 6)**:
+  - a pull request runs Tiers 1 and 2 without the `extended` walks, on ubuntu, Python 3.14;
+  - a push to `main` runs Tiers 1 and 2 in full on ubuntu, macOS and Windows, Python 3.14;
+  - nightly runs Tier 3, and Tier 1 on Python 3.11 to 3.13 on the three platforms, recorded and
+    not gated;
+  - before a tagged release, Tiers 1 to 4, Python 3.11 to 3.14, on the three platforms;
+  - every push, prose-only pushes included, runs VER-45's strict documentation build.
+- **The development-selection NOTE (item 2, then item 6)**:
+  - "CI runs these tests on every push, on every leg" becomes "on every push to `main`, nightly
+    and before a release, and the push gate before every push (§8.2.10 J10)";
+  - "the commit hook runs the development selection" becomes "the commit hook runs the tests a
+    test-impact selection finds the change to touch, falling back to the development selection
+    (VER-74)".
+- **The coverage NOTE (item 3)**:
+  - coverage is measured over the development selection, not the extended one, and the `extended`
+    tests run without it (J10);
+  - `gate.sh run`'s follow-up measures it over the selected tests, against the passed tree, by
+    Design §2's argument.
+- **The budget NOTE (item 7)**: the four budgets of J7, the 50 % margin of VER-73 with Design §5's
+  argument, and the 90 s ceiling per file.
+- **VER-73's row**:
+  - CI's coverage job fails a pull-request run whose critical path, from the first job's start to
+    the last needed job's completion, exceeds `pull_request_critical_path_s` by more than `margin`;
+  - it fails any development-selection file whose recorded duration exceeds `file_ceiling_s` by
+    more than `margin`;
+  - shown to fail on a recorded run set below its measurement (§8.2.10 J7).
+- **VER-74's row**:
+  - a change planted in a function's body selects every test that started it, directly, through
+    a fixture of any scope, or by reading its file;
+  - a change under the source root selects every test that starts a process;
+  - a module-level, signature or decorator change, a non-Python file, a configuration file and a
+    missing or foreign map each fall back, naming the path;
+  - shown on a recorded toy repository (§8.2.10 J2).
+
+### 12. The In brief template (D15), for the three skills and the PR body
+
+```markdown
+## In brief
+
+At most 250 words, no code or identifiers needed; written for a reader who does not code.
+
+**What changes.** What the reader will notice, and why it matters.
+**Cost.** Time, money or speed, in plain units.
+**What could go wrong.** Each risk, and how it would be noticed.
+**Your call.** Each decision the author owns, as a question, with *Recommendation:* and one reason.
+```
+
+The PR body that `wp-implement` writes opens with this. `wp-ship` keeps it current when the review
+changes anything an author would decide.
+
+### 13. The two scripts (D14)
+
+- **`.claude/scripts/reading_set.py <plan.md> [--at <rev>]`** prints each file of J11's set with its
+  word count (`str.split`), the brief's count (the text from `## Execution brief` to the next `## `
+  heading) and the total. With `--at`, it reads the files at that revision through `git show`.
+  `--at d630f85 docs/plans/wp42-verification-checks.md` must print 9,849.
+- **`.claude/scripts/usage.py <file>`** reads a Claude Code transcript (`*.jsonl`) or a JSON list of
+  session `result` events, saved by an agent from `list_events`. It prints:
+  - the tokens: input, cache read, cache creation and output, by model;
+  - the context size at the first `Edit` or `Write` under `src/` or `tests/`;
+  - the compactions, the sub-agent spawns by type, and the gate minutes, from `nanopnp-gate.log`
+    when given `--gate-log`.
+
+  An unknown record shape stops it, naming the line. The transcript format is internal to Claude
+  Code and may change, so the script reports and gates nothing.
+
+### 14. Where to cut, file by file (D14; surveyed 12 October 2026)
+
+Each figure is cut needed against the target. A **single source** keeps the text, and every other
+copy becomes a pointer of at most one line. Sections are named, not numbered by line, because items
+2 and 3 move text first.
+
+| File | Words → target | Cut first |
+|---|---|---|
+| `CLAUDE.md` | 1,549 counted (after the three rule sections move) → 1,300 | *Commands* and the gate lines are rewritten once, by items 2–3. The *Implementation workflow*'s sub-agent and non-Opus paragraphs become one-line pointers to the model policy. *Git*'s tag procedure points to `CONTRIBUTING.md`. *Durable learnings* points to `.knowledge/00-index.md` |
+| `wp-implement` | 1,558 → 1,000 | The non-Opus paragraph (source: the model policy). The failure-mode list, which wrongly says `CLAUDE.md` names it: cut to one clause. Henry/Smoluchowski (source: the steward). "Flake" (source: the steward). The PR contract (source: `wp-ship` §3). The tag steps (source: `CONTRIBUTING.md`). The rationale clause of the `main`-branch check |
+| `wp-plan` | 1,416 → 1,100 | "Everything in CLAUDE.md under Physics…" (*Rules the plan must respect*) becomes "read `.claude/rules/physics-numerics.md`". The web-search rule (source: `CLAUDE.md`). The Outcome-history paragraphs. The prose-only finishing detail (source: `CLAUDE.md` *Commands*) |
+| `wp-ship` | 1,696 → 1,200 | §4's completion-evidence prose and the `48f5f63`/WP9 story: keep "invoke directly, never in an `Agent`". §4's Opus-confirmation paragraph (source: the model policy). §5's polling and wake text: one line pointing to the steward's *Bounded wakes*. §1's re-gate: the push guard now enforces it |
+| `steward` | 2,128 → 1,500 | *What CI runs* is rewritten whole for D10, and it becomes CI's single description (`CLAUDE.md` keeps only commands). *Failure classes*: the VER-62 row cut to three sentences, and the run-113 story to a pointer. *Fixes stay in scope*: the constraints list points to `CLAUDE.md` *Do NOT* |
+| `phase-plan` | 2,551 → 1,800 | The phase anecdotes in Turn 1 and Turn 2 (Phase 1–3 histories, the renumbering story, WP33/34 examples) become a pointer to §8.2. The restated physics and web-search rules. The gate lines in *Finishing* and *Amending* |
+| Model policy | 850 → 500 | *The rule*'s rationale (QR-12, RSK-03) becomes one sentence. *Applying it*'s example becomes "name the agent". *Cost discipline* becomes one line. *Who implements a plan* stays whole, as the single source |
+| `current.md` | 889 → 700 | *Not to be re-decided*: one line per ruling with its pointer, no restatement. *Position*: no delivered-package list |
+| `00-index.md` | 1,566 → 1,000 | *Five things* and *Conventions* become pointers to `01`, `02`, `06` and the rule files (wall function, Einstein, `1/r`, `⟨c⟩`). *Author rulings*: drop the dated narration (rulings 2, 8, 11–14 tails) and the restated permittivity and ruling-7 tails |
+
+The current.md word target moves from 800 to 700 in one place, its *Handoff rules*; the skills
+point there rather than restating it. The command chain is stated once, in `CLAUDE.md` *Commands*.

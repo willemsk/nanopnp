@@ -49,12 +49,13 @@ JOBS = [
 
 
 @pytest.mark.xfail(strict=True, reason=PLANNED)
-def test_ver73_the_budgets_are_j7s_and_the_margin_the_plans() -> None:
+def test_ver73_the_budgets_are_j7s_and_the_ceiling_and_margin_the_plans() -> None:
     budgets = yaml.safe_load((REPOSITORY / ".github/budgets.yaml").read_text(encoding="utf-8"))
     assert budgets == {
         "commit_hook_s": 60,
         "push_gate_s": 300,
         "pull_request_critical_path_s": 360,
+        "file_ceiling_s": 90,
         "margin": 0.5,
     }
 
@@ -88,3 +89,15 @@ def test_ver73_an_unfinished_job_fails_rather_than_shortening_the_path() -> None
     passed, message = _checker().check(jobs, budget_s=360.0, margin=0.5)
     assert not passed
     assert "coverage" in message
+
+
+@pytest.mark.xfail(strict=True, reason=PLANNED)
+def test_ver73_a_file_over_its_ceiling_beyond_the_margin_fails_naming_it() -> None:
+    """The hook's wall time is bounded below by its longest file, so each file has a ceiling."""
+    durations = {"tests/tier1/test_fast.py": 3.0, "tests/tier2/test_long.py": 136.0}
+    passed, message = _checker().check_files(durations, ceiling_s=90.0, margin=0.5)
+    assert not passed
+    assert "tests/tier2/test_long.py" in message
+    assert "test_fast" not in message
+    passed, _ = _checker().check_files(durations, ceiling_s=100.0, margin=0.5)
+    assert passed
