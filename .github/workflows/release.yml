@@ -25,8 +25,36 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Before a tagged release, the full matrix (SPECIFICATION.md section 7.6;
+  # section 8.2.10 J4): CI's `full: true`, Tiers 1 and 2 with --extended on the
+  # three platforms and Python 3.11 to 3.14, and Tier 3 recorded. A tag push runs
+  # it on the tag. A dispatch re-releases a tag that exists already, such as one
+  # of the retroactive history whose code predates this workflow's options, so it
+  # builds without re-testing; the tag was gated when it was pushed.
+  #
+  # The permissions are the most any job of ci.yml asks for: a called workflow
+  # can only narrow its caller's token, and one asking for more fails to start.
+  tests:
+    name: full matrix
+    if: github.event_name == 'push'
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+      statuses: write
+    uses: ./.github/workflows/ci.yml
+    with:
+      full: true
+      ref: ${{ github.ref }}
+
   release:
     name: build and release ${{ inputs.tag || github.ref_name }}
+    needs: tests
+    # `tests` is skipped on a dispatch (above), and a skipped need would skip this
+    # job too; a failed or cancelled one stops it.
+    if: >-
+      always() && (needs.tests.result == 'success' ||
+      (github.event_name == 'workflow_dispatch' && needs.tests.result == 'skipped'))
     runs-on: ubuntu-latest
     permissions:
       contents: write

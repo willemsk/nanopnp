@@ -1,6 +1,19 @@
-# Tiers 1 and 2 on every push (SPECIFICATION.md section 7.6). Tier 3 is nightly,
-# recorded and not gated, and is the `tier3` job below. Tier 4 gates releases and
-# has no job yet: there are no experimental fixtures to run it against.
+# What CI runs, and when (SPECIFICATION.md section 7.6; section 8.2.10 J4, J10):
+#
+# - a pull request: one ubuntu leg on Python 3.14. `lint`, `docs`, the development
+#   selection as two shards under coverage, `coverage` (combine, diff-cover, the
+#   VER-73 budgets), and `CI result`, the one required check;
+# - a push to `main`: Tiers 1 and 2 with `--extended` on macOS and Windows, the
+#   `extended` walks on ubuntu (and the development selection there too, unless the
+#   merged tree is the one the pull request's `CI result` passed), and the bundle.
+#   A dispatch without `full` runs the same, and Tier 3;
+# - nightly: Tiers 1 and 2 with `--extended` on the three platforms, Python 3.14,
+#   and the bundle, as the probe of the runner images' drift; Tier 3, and Tier 1
+#   on Python 3.11 to 3.13 on the three platforms from wheels, recorded and not
+#   gated;
+# - `full: true` (a dispatch, or `release.yml` before it builds a tag): Tiers 1 and
+#   2 with `--extended` on the three platforms and Python 3.11 to 3.14, and Tier 3.
+#   Tier 4 has no job yet: there are no experimental fixtures to run it against.
 name: CI
 
 on:
@@ -8,13 +21,27 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+    inputs:
+      full:
+        description: "The release matrix: three platforms, Python 3.11-3.14, --extended"
+        type: boolean
+        default: false
+  workflow_call:
+    inputs:
+      full:
+        type: boolean
+        default: false
+      ref:
+        description: "The ref to test; the caller's commit when empty"
+        type: string
+        default: ""
   schedule:
     # 02:30 UTC, nightly. Section 7.1: Tier 3 runs "once Tier 2 passes", which the
     # push gate establishes; this is the recording run, not a second gate.
     - cron: "30 2 * * *"
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-ci-${{ github.ref }}-${{ inputs.ref || '' }}
   cancel-in-progress: true
 
 env:
@@ -41,10 +68,6 @@ env:
   # (src/nanopnp/validation/stability.py; .knowledge/06 section 8.1.5). Names a
   # platform does not dispatch are ignored, so the arm64 legs are unaffected.
   NPY_DISABLE_CPU_FEATURES: "X86_V4 AVX512_ICL AVX512_SPR"
-  # The push gate is the whole of Tiers 1 and 2, so both test jobs pass
-  # --extended: the executed examples and the 2WCD walks, which `uv run pytest`
-  # and the commit hook leave out for the development loop (SPECIFICATION.md
-  # section 7.6 NOTE). CI is where they are gated, on every push.
   # Every pytest call below passes -rs, so each skip is listed with its reason:
   # a skip is missing evidence, and an unnamed one cannot be audited (WP23 D11).
   # The optional Gmsh backend's tests FAIL rather than skip on every leg
@@ -56,40 +79,79 @@ env:
   # skip where the variable is 1, which is every leg but Windows; Windows has no
   # wheel and skips them by name (WP29 D12, the WP23 D11 rule).
   NANOPNP_REQUIRE_APBS: "1"
+  # The packages the gmsh wheel loads at import; it raises OSError without them
+  # (.knowledge/07-software-stack.md section 4; WP23 D11). Installed through a
+  # cache, so a warm runner skips apt.
+  GMSH_APT_PACKAGES: libglu1-mesa libxft2 libxinerama1 libxcursor1
 
 # Every checkout that installs the package fetches the whole history
 # (`fetch-depth: 0`): hatch-vcs derives the version from the nearest tag
 # (SPECIFICATION.md section 2.7, Versioning), and a depth-1 clone has none in
-# reach, so the manifest would record a meaningless version.
+# reach, so the manifest would record a meaningless version. Every checkout names
+# `inputs.ref`, which is empty except when `release.yml` calls this workflow.
 jobs:
-  # Whether this push touches anything but prose. A prose-only change (the rule
-  # is .github/scripts/prose-only.sh, which the commit gate uses too) runs no
-  # sync, lint, types, tests or build below. The jobs still run and report
-  # success; only their steps are skipped, because a matrix job skipped whole
-  # reports under an unexpanded name and leaves per-entry required checks
-  # waiting. A schedule, a manual dispatch, or a push with no usable base is
-  # always code.
+  # What this run is, and whether it touches anything but prose.
+  #
+  # `mode` is `pr`, `main` (a push to main, or a dispatch without `full`), `full`
+  # (`full: true`, dispatched or called) or `nightly`. Under `workflow_call` the
+  # event is the caller's, so `full` is read before the event.
+  #
+  # `code` is false for a prose-only change (the rule is
+  # .github/scripts/prose-only.sh, which the commit gate uses too): the jobs below
+  # still run and report success, and only their steps are skipped. A schedule, a
+  # dispatch, a call or a push with no usable base is always code.
+  #
+  # `dev` says whether the push to main runs the development selection on ubuntu
+  # beside the walks. It does not when the merged tree is the tree the pull
+  # request's `CI result` passed, which that job records as the `ci/tested-tree`
+  # status on the pull request's head. A fork's pull request cannot post it, so
+  # its merge always runs the selection, as does any lookup that fails.
   changes:
     name: changes
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+      statuses: read
     outputs:
       code: ${{ steps.diff.outputs.code }}
+      mode: ${{ steps.mode.outputs.mode }}
+      dev: ${{ steps.tested.outputs.dev }}
     steps:
       - uses: actions/checkout@v5
         with:
+          ref: ${{ inputs.ref }}
           fetch-depth: 0
+      - id: mode
+        shell: bash
+        env:
+          EVENT: ${{ github.event_name }}
+          FULL: ${{ inputs.full }}
+          REF: ${{ github.ref }}
+        run: |
+          if [[ $FULL == true ]]; then mode="full"
+          elif [[ $EVENT == pull_request ]]; then mode="pr"
+          elif [[ $EVENT == schedule ]]; then mode="nightly"
+          elif [[ $EVENT == workflow_dispatch || $REF == refs/heads/main ]]; then mode="main"
+          else
+            echo "::error::no CI mode for event $EVENT on $REF"
+            exit 1
+          fi
+          echo "mode=$mode" | tee -a "$GITHUB_OUTPUT"
       - id: diff
         shell: bash
         env:
+          MODE: ${{ steps.mode.outputs.mode }}
           EVENT: ${{ github.event_name }}
           PR_BASE: ${{ github.event.pull_request.base.sha }}
           PR_HEAD: ${{ github.event.pull_request.head.sha }}
           PUSH_BEFORE: ${{ github.event.before }}
           PUSH_AFTER: ${{ github.sha }}
         run: |
-          case $EVENT in
-            pull_request) range="$PR_BASE...$PR_HEAD" ;;
-            push) range="$PUSH_BEFORE..$PUSH_AFTER" ;;
+          case $MODE in
+            pr) range="$PR_BASE...$PR_HEAD" ;;
+            main) [[ $EVENT == push ]] && range="$PUSH_BEFORE..$PUSH_AFTER" || range="" ;;
             *) range="" ;;
           esac
           code=true
@@ -99,14 +161,97 @@ jobs:
             printf '%s\n' "$files" | .github/scripts/prose-only.sh && code=false
           fi
           echo "code=$code" | tee -a "$GITHUB_OUTPUT"
+      - id: tested
+        shell: bash
+        env:
+          MODE: ${{ steps.mode.outputs.mode }}
+          EVENT: ${{ github.event_name }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          dev=true
+          if [[ $MODE == main && $EVENT == push ]]; then
+            head=$(gh api "repos/$REPO/commits/$SHA/pulls" --jq '.[0].head.sha // empty' || true)
+            tested=""
+            if [[ -n $head ]]; then
+              tested=$(gh api "repos/$REPO/commits/$head/statuses" \
+                --jq '[.[] | select(.context == "ci/tested-tree")][0].description // empty' || true)
+            fi
+            merged=$(git rev-parse 'HEAD^{tree}')
+            echo "pull request head ${head:-none}; tested tree ${tested:-none}; merged tree $merged"
+            if [[ -n $tested && $tested == "$merged" ]]; then dev=false; fi
+          fi
+          echo "dev=$dev" | tee -a "$GITHUB_OUTPUT"
 
-  check:
-    name: lint, types, tier 1-2 (3.14)
+  # Lint and types. The `apbs` group is a test dependency only. A job that syncs
+  # less than the default groups runs `uv run --no-sync`, or `uv run` would sync
+  # them back.
+  lint:
+    name: lint
     needs: changes
-    # The nightly records Tier 3 and re-probes the bundle; re-testing an
-    # unchanged, locked main on every runner is not a second gate.
-    if: github.event_name != 'schedule'
+    if: needs.changes.outputs.mode != 'nightly'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CODE: ${{ needs.changes.outputs.code }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v7
+        if: env.CODE == 'true'
+        with:
+          enable-cache: true
+          python-version: "3.14"
+      - if: env.CODE == 'true'
+        run: uv sync --all-extras --no-group apbs
+      - if: env.CODE == 'true'
+        run: uv run --no-sync ruff check .
+      - if: env.CODE == 'true'
+        run: uv run --no-sync ruff format --check .
+      - if: env.CODE == 'true'
+        run: uv run --no-sync mypy src/
+
+  # VER-45's strict documentation build (section 7.6). Its steps run on EVERY
+  # push, prose-only ones included, and so read no `code`: a broken link is
+  # exactly what a prose-only edit introduces. The generated pages are rendered
+  # first, from the live schema, parser and exit enumeration.
+  docs:
+    name: documentation (strict build)
+    needs: changes
+    if: needs.changes.outputs.mode != 'nightly'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          python-version: "3.14"
+      - run: uv sync --no-default-groups --group docs
+      - run: uv run --no-sync docs/scripts/generate.py
+      - run: uv run --no-sync mkdocs build --strict
+
+  # A pull request's tests: the development selection (Tiers 1 and 2 without the
+  # `extended` walks; section 8.2.10 J10) under branch coverage, in two shards.
+  # `--shard i/2` (tests/conftest.py) packs whole files, longest first, onto the
+  # less-loaded shard by tests/durations.json, so the shards partition the
+  # selection and a file's module fixtures stay in one job.
+  tests:
+    name: tests (shard ${{ matrix.shard }}/2)
+    needs: changes
+    if: needs.changes.outputs.mode == 'pr'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
     env:
       CODE: ${{ needs.changes.outputs.code }}
     steps:
@@ -118,48 +263,53 @@ jobs:
         with:
           enable-cache: true
           python-version: "3.14"
-      # The gmsh wheel loads these at import and raises OSError without them
-      # (.knowledge/07-software-stack.md section 4; WP23 D11).
-      - if: env.CODE == 'true'
-        run: >-
-          sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends
-          libglu1-mesa libxft2 libxinerama1 libxcursor1
+      - uses: awalsh128/cache-apt-pkgs-action@v1.6.3
+        if: env.CODE == 'true'
+        with:
+          packages: ${{ env.GMSH_APT_PACKAGES }}
+          version: "1"
       - if: env.CODE == 'true'
         run: uv sync --all-extras
       - if: env.CODE == 'true'
-        run: uv run ruff check .
-      - if: env.CODE == 'true'
-        run: uv run ruff format --check .
-      - if: env.CODE == 'true'
-        run: uv run mypy src/
-      - if: env.CODE == 'true'
-        run: >-
-          uv run pytest -rs -n auto --dist loadfile --ignore=tests/tier1/test_gui_widgets.py
-          --extended --cov=src/nanopnp --cov-branch --cov-report=term-missing
-          --cov-report=xml:coverage.xml
-      # Full branch coverage of changed src/nanopnp lines, gui/ aside, as
-      # `gate.sh run` requires; the base is the PR's base or the push's parent.
-      - if: env.CODE == 'true'
         shell: bash
         env:
-          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          COVERAGE_FILE: .coverage.shard${{ matrix.shard }}
+          SHARD: ${{ matrix.shard }}
         run: |
-          base=$BASE
-          if [[ -z $base || $base == 0000000000000000000000000000000000000000 ]]; then
-            base=origin/main
-          fi
-          uv run diff-cover coverage.xml --compare-branch="$base" --branch-coverage \
-            --fail-under=100 --show-uncovered \
-            --include 'src/nanopnp/**/*.py' --exclude '*/src/nanopnp/gui/*'
+          start=$SECONDS
+          status=0
+          uv run pytest -rs -n auto --dist loadfile --ignore=tests/tier1/test_gui_widgets.py \
+            --shard "$SHARD/2" --cov=src/nanopnp --cov-branch --cov-report= \
+            --junitxml="junit-$SHARD.xml" || status=$?
+          echo "### tests (shard $SHARD/2): $((SECONDS - start)) s, pytest exit $status" \
+            >> "$GITHUB_STEP_SUMMARY"
+          exit $status
+      - uses: actions/upload-artifact@v7
+        if: env.CODE == 'true'
+        with:
+          name: coverage-shard-${{ matrix.shard }}
+          path: |
+            .coverage.shard${{ matrix.shard }}
+            junit-${{ matrix.shard }}.xml
+          include-hidden-files: true
+          if-no-files-found: error
 
-  # VER-45's strict documentation build (section 7.6). It runs on EVERY push,
-  # prose-only ones included, and so has no `changes` dependency: a broken link
-  # is exactly what a prose-only edit introduces. The generated pages are
-  # rendered first, from the live schema, parser and exit enumeration.
-  docs:
-    name: documentation (strict build)
-    if: github.event_name != 'schedule'
+  # The shards' coverage combined, then full branch coverage of the changed
+  # src/nanopnp lines outside gui/, as `gate.sh run` requires (section 7.6 NOTE,
+  # VER-72 f); then VER-73: each test file under its ceiling and the run's
+  # critical path under its budget, beyond the margin of .github/budgets.yaml.
+  # It needs `lint` and `docs` as well, so every job it measures has ended.
+  coverage:
+    name: coverage
+    needs: [changes, lint, docs, tests]
+    if: needs.changes.outputs.mode == 'pr'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    env:
+      CODE: ${{ needs.changes.outputs.code }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -168,46 +318,109 @@ jobs:
         with:
           enable-cache: true
           python-version: "3.14"
-      - run: uv sync --group docs
-      - run: uv run docs/scripts/generate.py
-      - run: uv run mkdocs build --strict
+      - if: env.CODE == 'true'
+        uses: actions/download-artifact@v7
+        with:
+          pattern: coverage-shard-*
+          merge-multiple: true
+      - if: env.CODE == 'true'
+        run: uv sync --no-default-groups --group dev
+      - if: env.CODE == 'true'
+        run: |
+          uv run --no-sync coverage combine .coverage.shard1 .coverage.shard2
+          uv run --no-sync coverage report --show-missing
+          uv run --no-sync coverage xml -o coverage.xml
+      - if: env.CODE == 'true'
+        shell: bash
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          uv run --no-sync diff-cover coverage.xml --compare-branch="$BASE" --branch-coverage \
+            --fail-under=100 --show-uncovered \
+            --include 'src/nanopnp/**/*.py' --exclude '*/src/nanopnp/gui/*'
+      - if: env.CODE == 'true'
+        run: uv run --no-sync python .github/scripts/ci_budget.py files junit-1.xml junit-2.xml
+      - if: env.CODE == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          uv run --no-sync python .github/scripts/ci_budget.py critical-path
+          --repo "${{ github.repository }}" --run "${{ github.run_id }}"
+          --attempt "${{ github.run_attempt }}" --running coverage --exclude "CI result"
 
-  test-matrix:
+  # The one required check of a pull request. It fails unless every job it needs
+  # succeeded: a skipped job fails it too, so a condition that skipped a leg can
+  # never pass for one that ran. On a pull request from this repository it then
+  # records the tree it passed as the `ci/tested-tree` status on the head, which a
+  # push to main reads to skip re-running the same tree (`changes`). A fork's
+  # token cannot post it; that step may fail, and the merge then runs everything.
+  ci-result:
+    name: CI result
+    needs: [changes, lint, docs, tests, coverage]
+    if: always() && github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      statuses: write
+    steps:
+      - shell: bash
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          echo "$RESULTS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
+          failed=$(echo "$RESULTS" | jq -r '[to_entries[] | select(.value.result != "success") | .key] | join(", ")')
+          if [[ -n $failed ]]; then
+            echo "::error::not every job succeeded: $failed"
+            exit 1
+          fi
+      - continue-on-error: true
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          TESTED: ${{ github.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          tree=$(gh api "repos/$REPO/git/commits/$TESTED" --jq .tree.sha)
+          gh api "repos/$REPO/statuses/$HEAD_SHA" -f state=success -f context=ci/tested-tree \
+            -f description="$tree"
+          echo "ci/tested-tree on $HEAD_SHA: $tree"
+
+  # After a merge, and nightly: Tiers 1 and 2 with --extended on the three
+  # platforms, Python 3.14 (CON-13; section 8.2.10 J4, J10). On a push to main the
+  # ubuntu leg runs the walks alone when `changes` found the merged tree to be the
+  # one the pull request's `CI result` passed.
+  platforms:
     name: tier 1-2 (${{ matrix.os }}, py${{ matrix.python-version }})
     needs: changes
-    if: github.event_name != 'schedule'
+    if: needs.changes.outputs.mode == 'main' || needs.changes.outputs.mode == 'nightly'
     runs-on: ${{ matrix.os }}
-    env:
-      CODE: ${{ needs.changes.outputs.code }}
-      NANOPNP_REQUIRE_APBS: ${{ matrix.os == 'windows-latest' && '0' || '1' }}
+    timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
-        # QR-09: binary wheels on Windows, macOS and Linux for 3.11-3.14.
-        # Ubuntu on 3.14 is the `check` job, which runs the same selection.
-        os: [ubuntu-latest]
-        python-version: ["3.11", "3.12", "3.13"]
-        include:
-          # CON-13: the desktop platforms, on the development pin.
-          - os: windows-latest
-            python-version: "3.14"
-          - os: macos-latest
-            python-version: "3.14"
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.14"]
+    env:
+      CODE: ${{ needs.changes.outputs.code }}
+      NANOPNP_REQUIRE_APBS: ${{ matrix.os == 'windows-latest' && '0' || '1' }}
+      WALKS_ONLY: ${{ matrix.os == 'ubuntu-latest' && needs.changes.outputs.dev == 'false' }}
     steps:
       - uses: actions/checkout@v5
         with:
+          ref: ${{ inputs.ref }}
           fetch-depth: 0
       - uses: astral-sh/setup-uv@v7
         if: env.CODE == 'true'
         with:
           enable-cache: true
           python-version: ${{ matrix.python-version }}
-      # The gmsh wheel loads these at import and raises OSError without them
-      # (.knowledge/07-software-stack.md section 4; WP23 D11).
-      - if: env.CODE == 'true' && runner.os == 'Linux'
-        run: >-
-          sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends
-          libglu1-mesa libxft2 libxinerama1 libxcursor1
+      - uses: awalsh128/cache-apt-pkgs-action@v1.6.3
+        if: env.CODE == 'true' && runner.os == 'Linux'
+        with:
+          packages: ${{ env.GMSH_APT_PACKAGES }}
+          version: "1"
       - if: env.CODE == 'true'
         run: uv sync --all-extras
       # CON-13 names Windows, macOS and Linux. Qt's platform plugin works
@@ -218,9 +431,15 @@ jobs:
       # coverage at the price of a portability promise per runner image
       # (.knowledge/07-software-stack.md section 5).
       - if: env.CODE == 'true'
-        run: >-
-          uv run pytest -rs -n auto --dist loadfile --ignore=tests/tier1/test_gui_widgets.py
-          --extended
+        shell: bash
+        run: |
+          walks=()
+          if [[ $WALKS_ONLY == true ]]; then
+            echo "The development selection passed on this tree in its pull request; the walks alone run."
+            walks=(-m "(tier1 or tier2) and extended and not slow")
+          fi
+          uv run pytest -rs -n auto --dist loadfile --ignore=tests/tier1/test_gui_widgets.py \
+            --extended "${walks[@]}"
         env:
           QT_QPA_PLATFORM: offscreen
       # A nonzero exit here, 5 ("no tests ran") included, is a real failure: on
@@ -230,24 +449,122 @@ jobs:
         env:
           QT_QPA_PLATFORM: offscreen
 
+  # Before a release (`full: true`): Tiers 1 and 2 with --extended on the three
+  # platforms and every supported Python (QR-09, CON-13; section 7.6). The steps
+  # are the `platforms` job's.
+  full-matrix:
+    name: full tier 1-2 (${{ matrix.os }}, py${{ matrix.python-version }})
+    needs: changes
+    if: needs.changes.outputs.mode == 'full'
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+    env:
+      CODE: ${{ needs.changes.outputs.code }}
+      NANOPNP_REQUIRE_APBS: ${{ matrix.os == 'windows-latest' && '0' || '1' }}
+      WALKS_ONLY: "false"
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v7
+        if: env.CODE == 'true'
+        with:
+          enable-cache: true
+          python-version: ${{ matrix.python-version }}
+      - uses: awalsh128/cache-apt-pkgs-action@v1.6.3
+        if: env.CODE == 'true' && runner.os == 'Linux'
+        with:
+          packages: ${{ env.GMSH_APT_PACKAGES }}
+          version: "1"
+      - if: env.CODE == 'true'
+        run: uv sync --all-extras
+      - if: env.CODE == 'true'
+        shell: bash
+        run: |
+          walks=()
+          if [[ $WALKS_ONLY == true ]]; then
+            echo "The development selection passed on this tree in its pull request; the walks alone run."
+            walks=(-m "(tier1 or tier2) and extended and not slow")
+          fi
+          uv run pytest -rs -n auto --dist loadfile --ignore=tests/tier1/test_gui_widgets.py \
+            --extended "${walks[@]}"
+        env:
+          QT_QPA_PLATFORM: offscreen
+      - if: env.CODE == 'true' && runner.os != 'Linux'
+        run: uv run pytest -rs tests/tier1/test_gui_widgets.py
+        env:
+          QT_QPA_PLATFORM: offscreen
+
+  # QR-09's evidence for Python 3.11 to 3.13 between releases: each installs its
+  # dependencies from wheels alone and runs Tier 1. RECORDED, NOT GATED (section
+  # 8.2.10 J4). UV_NO_BUILD is set on the dependency step only, so a missing wheel
+  # fails rather than compiles (CON-07): uv refuses it for the project itself,
+  # whose editable install is a pure-Python hatchling build.
+  nightly:
+    name: nightly tier 1 (${{ matrix.os }}, py${{ matrix.python-version }})
+    needs: changes
+    if: needs.changes.outputs.mode == 'nightly'
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.11", "3.12", "3.13"]
+    env:
+      NANOPNP_REQUIRE_APBS: ${{ matrix.os == 'windows-latest' && '0' || '1' }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          python-version: ${{ matrix.python-version }}
+      - uses: awalsh128/cache-apt-pkgs-action@v1.6.3
+        if: runner.os == 'Linux'
+        with:
+          packages: ${{ env.GMSH_APT_PACKAGES }}
+          version: "1"
+      - run: uv sync --all-extras --no-install-project
+        env:
+          UV_NO_BUILD: "1"
+      - run: uv sync --all-extras
+      - run: >-
+          uv run pytest -rs -n auto --dist loadfile --ignore=tests/tier1/test_gui_widgets.py
+          -m "tier1 and not slow"
+        env:
+          QT_QPA_PLATFORM: offscreen
+
   # RSK-13's continuous detector: desktop packaging defeated by a binary
   # dependency. GATED -- a failed build fails CI, because a probe nobody looks
   # at is amendment A2 again (section 8.2.1 A4). It is demoted to
   # `continue-on-error` only if PyInstaller proves flaky for reasons outside
   # this repository, and that demotion is recorded with the failure that caused
-  # it.
+  # it. It runs after a merge, before a release and nightly, as the probe of the
+  # runner image's drift.
   #
   # The uploaded artefact is what the author double-clicks; that observation,
   # and not this job's exit code, is what closes section 8.2 criterion 4.
   bundle:
     name: Windows bundle (RSK-13 probe, gated)
     needs: changes
+    if: needs.changes.outputs.mode != 'pr'
     runs-on: windows-latest
+    timeout-minutes: 30
     env:
       CODE: ${{ needs.changes.outputs.code }}
     steps:
       - uses: actions/checkout@v5
         with:
+          ref: ${{ inputs.ref }}
           fetch-depth: 0
       - uses: astral-sh/setup-uv@v7
         if: env.CODE == 'true'
@@ -287,9 +604,13 @@ jobs:
   # evidence and not a defect. A job that failed on an absent archive would make
   # the tier unrunnable off the machine that holds it.
   tier3:
-    name: COMSOL comparison (nightly, recorded not gated)
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    name: COMSOL comparison (recorded not gated)
+    needs: changes
+    if: >-
+      needs.changes.outputs.mode == 'nightly' || needs.changes.outputs.mode == 'full' ||
+      github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     continue-on-error: true
     env:
       # Unset here, and set on a runner that mounts the archive. The tests skip
@@ -298,16 +619,16 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
+          ref: ${{ inputs.ref }}
           fetch-depth: 0
       - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
           python-version: "3.14"
-      # The gmsh wheel loads these at import and raises OSError without them
-      # (.knowledge/07-software-stack.md section 4; WP23 D11).
-      - run: >-
-          sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends
-          libglu1-mesa libxft2 libxinerama1 libxcursor1
+      - uses: awalsh128/cache-apt-pkgs-action@v1.6.3
+        with:
+          packages: ${{ env.GMSH_APT_PACKAGES }}
+          version: "1"
       - run: uv sync --all-extras
       - run: uv run nanopnp --env
       - run: uv run pytest -m tier3 -v -rs --junitxml=tier3-report.xml

@@ -119,9 +119,8 @@ def test_ver47_the_declared_python_range_agrees() -> None:
     assert target == f"py{specified[0].replace('.', '')}"
 
     workflow = yaml.safe_load((ROOT / ".github" / "workflows" / "ci.yml").read_text("utf-8"))
-    tested = _python_versions(workflow["jobs"]["check"]) | _python_versions(
-        workflow["jobs"]["test-matrix"]
-    )
+    # Before a release, CI's full matrix runs every supported Python (section 7.6).
+    tested = _python_versions(workflow["jobs"]["full-matrix"])
     assert sorted(tested) == specified, f"CI tests {sorted(tested)}"
 
 
