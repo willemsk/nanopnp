@@ -190,7 +190,6 @@ PHYSICS_PATHS = {
 """Where the physics and numerics rules load (D14): every module whose code they govern."""
 
 
-@pytest.mark.xfail(strict=True, reason=PLANNED_CONTEXT)
 def test_the_physics_rules_load_wherever_the_rules_govern_the_code() -> None:
     meta = _frontmatter(RULES / "physics-numerics.md")
     assert set(meta) == {"paths"}, "paths is the only key Claude Code reads from a rule"
@@ -217,7 +216,6 @@ def _toy_plan(brief_words: int) -> str:
     )
 
 
-@pytest.mark.xfail(strict=True, reason=PLANNED_CONTEXT)
 def test_the_reading_set_counts_the_rule_files_a_package_loads(tmp_path: Path) -> None:
     """J11, amended: text moved into a rule the package loads is not a cut."""
     rules = tmp_path / ".claude/rules"
@@ -232,7 +230,6 @@ def test_the_reading_set_counts_the_rule_files_a_package_loads(tmp_path: Path) -
     assert [path.name for path in triggered] == ["physics-numerics.md"]
 
 
-@pytest.mark.xfail(strict=True, reason=PLANNED_CONTEXT)
 def test_the_reading_set_refuses_a_brief_over_1600_words(tmp_path: Path) -> None:
     plan = tmp_path / "wp99-toy.md"
     plan.write_text(_toy_plan(1601), encoding="utf-8")
@@ -247,7 +244,6 @@ def test_the_reading_set_refuses_a_brief_over_1600_words(tmp_path: Path) -> None
     assert "1,600" in result.stdout + result.stderr
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP43 D15 (J9)")
 @pytest.mark.parametrize("skill", ["phase-plan", "wp-plan", "wp-implement"])
 def test_the_planning_skills_require_an_in_brief_of_at_most_250_words(skill: str) -> None:
     text = (REPOSITORY / f".claude/skills/{skill}/SKILL.md").read_text(encoding="utf-8")
@@ -295,7 +291,6 @@ def test_current_md_opens_with_an_in_brief_of_at_most_250_words() -> None:
     _check_in_brief(REPOSITORY / "docs/plans/current.md")
 
 
-@pytest.mark.xfail(strict=True, reason="planned: WP43 D15 (J9)")
 def test_every_phase_plan_from_phase_4_opens_with_an_in_brief_of_at_most_250_words() -> None:
     plans = [
         path

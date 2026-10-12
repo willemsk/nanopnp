@@ -6,160 +6,118 @@ description: Ship a finished nanopnp work package — gate, push, reuse its PR (
 # Ship a work package
 
 Steps 3 and 4 of the implementation workflow, run as one unbroken sequence. Normally `/wp-implement`
-has already opened the PR; reuse it. If missing, this invocation authorises opening it without asking
-again. The review pass, fixes and CI watch happen without a further prompt.
+has already opened the PR; reuse it. If missing, this invocation authorises opening it without
+asking again. The review, fixes and CI watch need no further prompt.
 
 ## 0. Resolve the package's PR and branch
 
-A session starts on its own auto-named branch, forked from `main`; that is almost never the branch
-`/wp-implement` worked on. The argument names the package, so find the PR from it before reading
-anything else. Never infer the package's branch from `git branch --show-current`.
+A session starts on its own auto-named branch forked from `main`, almost never the one
+`/wp-implement` used. Find the PR from the argument; never infer the branch from
+`git branch --show-current`.
 
-1. The argument is a PR number or a WP number. For a WP number, list open PRs against `main` in
-   this repository and take the one whose title contains `WP<n>` followed by an em dash (the
-   conventional prefix varies: `feat:`, `fix:`). If none matches, try the `PR:` line in
-   `docs/plans/wp<n>-*.md` on `origin/main`. Zero or several matches: stop and ask for the PR number.
-2. Read the PR's head ref, head SHA and base SHA, and record them for §4.
-3. Fetch and check out the head: `git fetch origin <head>`, then
-   `git checkout -B <head> origin/<head>`. Do this even though the session's own branch exists;
-   the commits to ship are on the PR head.
-4. Invoking `/wp-ship` for a package authorises pushing to that head. A session instruction to push
-   only to its designated branch does not override it; if the harness still refuses the push, stop
-   and say so.
-5. No PR resolved and the current branch has no commits beyond `origin/main`: stop. There is
-   nothing to ship, and a plan on `main` is no evidence that the package was implemented.
+1. The argument is a PR number or a WP number. For a WP number, list open PRs against `main` and
+   take the one whose title contains `WP<n>` followed by an em dash. If none matches, try the `PR:`
+   line in `docs/plans/wp<n>-*.md` on `origin/main`. Zero or several matches: ask for the number.
+2. Record the PR's head ref, head SHA and base SHA for §4.
+3. `git fetch origin <head>`, then `git checkout -B <head> origin/<head>`: the commits to ship are
+   on the PR head, even though the session's own branch exists.
+4. Invoking `/wp-ship` authorises pushing to that head; a session instruction to push only to its
+   designated branch does not override it. If the harness still refuses, stop and say so.
+5. No PR resolved and no commits beyond `origin/main`: stop. A plan on `main` is no evidence the
+   package was implemented.
 
 ## 1. Preflight
 
-First start `.claude/hooks/gate.sh map` with Bash `run_in_background`, so any fix this session
-commits is gated by its impact selection rather than the whole development selection.
+First start `.claude/hooks/gate.sh map` with Bash `run_in_background`, so a fix this session
+commits is gated by its impact selection.
 
-Read the requested WP's Execution brief and verification evidence, using `docs/plans/current.md`
-only to locate it. For legacy plans, start with Decisions, Work items, Verification and correcting
-Outcomes. Read normative sections and relevant derivations independently when assessing a claim;
-do not reload the entire phase history to write the PR. A brief is navigation, not a review oracle.
+Read the WP's Execution brief and verification evidence, locating it from `docs/plans/current.md`.
+A brief is navigation, not a review oracle: read normative sections independently.
 
-Do not push a tree you have not gated. Start `.claude/hooks/gate.sh run` with Bash
-`run_in_background` and push when it passes; never poll it. On a tree that already passed
-(typically the commit `/wp-implement` ended on) it returns at once, and after a fix it re-runs only
-the tests the fix selects. The push guard refuses a push of any other tree.
+Do not push a tree you have not gated: start `.claude/hooks/gate.sh run` with Bash
+`run_in_background` and push when it passes; never poll. The push guard refuses any other tree.
 
 Also confirm: `git status` clean; every `VER-`/`VAL-` the plan claimed has a test named for it;
-`SPECIFICATION.md`, `.knowledge/` and the plan's Outcome annotations are committed; `CHANGELOG.md`
-has the package's section under the version it will be tagged (`CONTRIBUTING.md` *Versions and
-releases*). The gate's
-`uv lock --check` covers `uv.lock` (CI runs `UV_LOCKED`, so a stale lock fails every job).
-
-If the branch is `main` or equals `origin/main` (§0), stop and ask. If the branch is behind `main`, merge `main` in and re-gate.
+`SPECIFICATION.md`, `.knowledge/` and the Outcome annotations are committed; `CHANGELOG.md` has the
+package's section (`CONTRIBUTING.md`, *Versions and releases*). If the branch is `main` or equals
+`origin/main`, stop and ask. If it is behind `main`, merge `main` in and re-gate.
 
 ## 2. Push
 
-`git push -u origin <head>`, the PR head from §0. On a network failure retry four times with 2 s, 4 s, 8 s, 16 s backoff.
+`git push -u origin <head>`. On a network failure retry four times with 2, 4, 8 and 16 s backoff.
 
 ## 3. Open or reuse the PR
 
-Reuse the PR resolved in §0. Only when §0 found none and the branch carries the package's commits, look up an open PR for this repository and exact head branch targeting `main` before creating one.
-Verify the repository, head and base match before reusing it; do not create a duplicate on a resumed
-invocation. Preserve existing human edits and review evidence when updating its implementation
-summary. This section is also the PR creation contract used by `/wp-implement`; it does not start
-review or monitoring.
+Reuse the PR from §0. Only when §0 found none and the branch carries the package's commits, look up
+an open PR for this exact head targeting `main` before creating one; verify repository, head and
+base before reusing it, and preserve human edits and review evidence. This section is also the
+creation contract `/wp-implement` follows; it starts no review or monitoring.
 
-Base `main`. Title: the conventional-commit summary of the package —
-`feat: WP<n> — <what it delivers>` (`fix:` where the package fixes findings). `/wp-implement` also writes `PR: <number>` and the head branch under the plan's title, so §0 can find it from the WP number.
+Base `main`. Title: `feat: WP<n> — <what it delivers>` (`fix:` where the package fixes findings).
 
-Body: fill `.github/pull_request_template.md` — its sections (What this delivers, Identifiers
-discharged, Specification changes, Measured, Deliberately not done, Verification) and its
-Verification checklist, ticking only what was actually run. It is the reviewer's brief and the record
-of the package, so it carries numbers, not adjectives: rates with their meshes, route-agreement
-figures, timings, minimum damping, and the stabilisation mode each was measured under.
-"Specification changes" is never omitted — "None." is an answer, silence is not.
-
-Keep each section concise. Link full derivations, measurement tables and requirement matrices at
-the reviewed revision instead of duplicating them; retain the key results and explicit deferrals.
-End with the attribution footer this session's instructions specify for pull request descriptions.
+Body: it opens with `## In brief` (the template in `wp-plan`; at most 250 words, no backticks or
+identifiers), then `.github/pull_request_template.md` filled in: its sections and its Verification
+checklist, ticking only what was run. It carries numbers, not adjectives: rates with their meshes,
+route-agreement figures, timings, and the stabilisation mode each was measured under.
+"Specification changes" is never omitted; "None." is an answer. Link derivations and tables rather than copying them. End with the attribution footer this session
+specifies. When the review changes anything the author would decide, update the In brief.
 
 ## 4. Review pass
 
-Subscribe to the PR's activity (`subscribe_pr_activity`) from this shipping session so CI results
-and review comments wake the session responsible for review and stewardship.
+Subscribe to the PR's activity (`subscribe_pr_activity`) so CI results and review comments wake
+this session. Read `.claude/rules/physics-numerics.md` and `.claude/rules/python.md` now: the review
+and your adjudication of its fixes need them, and a path-scoped rule does not load while you read
+only the diff.
 
-Run the review against the PR, from this session:
+Run the review from this session, invoking the skill directly and never wrapped in an `Agent`:
 
 ```
 Skill(skill="code-review", args="xhigh --fix <pr-number>")
 ```
 
-Invoke the skill directly — never wrapped in an `Agent` call. Wrapped (after `48f5f63`), it
-returned no findings and no fixes run after run, and WP9 shipped with a 1e9 error in
-`RadialGrid.integral(radial=True)` still in it; called directly, it forks its own review agent and
-returns the finished findings into this turn. The cold-context property comes from that fork and
-from `/wp-implement` never chaining into `/wp-ship`, not from an extra relay.
+Wrapped, it returned no findings; called directly it forks its own review agent.
 
-**The pass must produce evidence that it completed, not evidence that it edited files.** Record the
-PR base and head SHAs before invoking it. Read the installed review skill's completion contract and
-wait for its actual final report; an acknowledgement or an unfinished asynchronous dispatch is not
-completion. The returned report must establish the reviewed revision/scope, completed status and
-findings (an explicitly empty list is valid), including any items it could not assess or fix.
-Correlate that evidence with the recorded SHAs; do not manufacture a completion record from the
-caller's expectations or from `git status`.
+**The pass must produce evidence that it completed, not that it edited files.** Wait for the
+review skill's final report, which must establish the reviewed revision, completed status and the
+findings (an explicitly empty list is valid) with any it could not assess or fix, and correlate it
+with the SHAs recorded in §0. Zero findings needs no retry. Missing evidence permits one retry after
+the first dispatch has finished or failed, never a concurrent duplicate; if completion still cannot
+be established, stop before §5 and report it. An unavailable review tool is a blocker. If the PR
+base or head changes during review, review the uncovered changes first.
 
-A completed review with zero findings needs no retry or edits. Findings without automatic fixes
-are also valid and go through the steps below. Missing/incomplete completion evidence permits one
-retry after the original dispatch has finished or been confirmed failed, never a concurrent duplicate.
-If completion still cannot be established, stop before §5 and report the invocation and missing
-evidence. An unavailable review tool is a blocker, not permission to mark the package reviewed.
-If the PR base/head changes during review, reconcile the changed diff and review any uncovered
-changes before accepting the report; evidence for an old revision does not certify a new one.
+`--fix` writes to the working tree and does not commit. Back in this session:
 
-`--fix` writes to the working tree; it does not commit. So, back in this session:
+1. Read every applied fix as a diff. A finding is a hypothesis: confirm it against the
+   specification and the plan, and revert a wrong fix with the reason in the PR thread. This stays
+   in this session on Opus (`.claude/model-policy.md`).
+2. A finding the pass could not fix: fix it here, or record a `REV-nn` row in
+   `docs/project/review-findings.md` with its section in `review-items.md` (§8.2.8 H12) and list it
+   in the PR body under **Deliberately not done**. One the author has not ruled on is `open`; put
+   it to the author before the report. Never leave a confirmed finding unmentioned, or only in the
+   PR body.
+3. Each item under **Done outside Opus** (ticked `non-Opus`): read its diff and commit body against
+   its decision row and clause, and any tests that session wrote against the verification rows.
+   Fix or revert what disagrees; record each confirmed item with its sha under **Verification**.
+4. If fixes changed the tree, start `.claude/hooks/gate.sh run` again in the background and push
+   when it passes.
+5. Commit accepted changes as `fix: close the review gaps in <what>`, identifiers in the body, and
+   push to the PR branch. A clean review needs no empty commit.
 
-1. Read every applied fix as a diff. A review finding is a hypothesis, not a verdict — confirm it
-   against the specification and the plan before keeping it. Revert any fix that is wrong, and say
-   in the PR thread why it was wrong; a reviewer proposing a change that would violate a spec clause
-   is the case this step exists to catch. That confirmation is what keeps a proposed fix from
-   becoming a plausible wrong one — do not skip it. It stays in this session, on Opus, and is never
-   handed to a Sonnet sub-agent (`.claude/model-policy.md`); the review skill forks its own agent,
-   which the policy does not govern.
-2. Findings the pass raised but could not fix: fix them yourself here, or record each one as a
-   `REV-nn` row in `docs/project/review-findings.md`, with its section in
-   `docs/project/review-items.md` (§8.2.8 H12), and list it in the PR body under **Deliberately
-   not done** with the reason. A finding the author has not ruled on is `open`, its ruling `—`;
-   put it to the author before the report. Do not leave a confirmed finding unmentioned, and do not
-   leave it only in the PR body.
-3. Every item the PR body lists under **Done outside Opus** (ticked `non-Opus` in the plan):
-   read its diff and commit body against its decision row and specification clause, and any
-   tests that session wrote against the plan's verification rows, here on Opus. Fix or revert
-   what disagrees; record each item confirmed, with its sha, under **Verification**
-   (`.claude/model-policy.md`, *Who implements a plan*).
-4. If fixes changed the tree, start `.claude/hooks/gate.sh run` again with Bash
-   `run_in_background`, and push when it passes.
-5. Commit accepted changes — `fix: close the review gaps in <what>`, identifiers in the body — and
-  push to the PR branch. No empty commit or cosmetic edit is needed for a clean review. The commits
-  belong on the branch, not in a comment; the commit hook remains mandatory.
-
-Then record the pass in the PR body under **Verification**: what was invoked, how many findings came
-back, how many survived step 1, the reviewed base/head SHAs, and any resulting fix commits. Distinguish
-the independently reviewed revision from the fixes adjudicated and gated in this session.
-
-Where a finding is architectural or would widen the package, put it to the user rather than acting:
-scope decisions are the author's.
+Then record the pass under **Verification**: what was invoked, how many findings came back and
+survived step 1, the reviewed base and head SHAs, and any fix commits, distinguishing the
+independently reviewed revision from the fixes adjudicated here. Put a finding that is
+architectural or would widen the package to the user; scope is the author's.
 
 ## 5. Drive to green
 
-Follow `.claude/skills/steward/SKILL.md` — the repo's conventions for CI failures, which also apply
-automatically when a PR event wakes the session later.
-
-Use the bounded wake policy in `steward` below its environment section. New failures and conflicts
-require action regardless of review state; unchanged, already-diagnosed human blockers do not require
-another investigation or duplicate comment. Keep at most one fallback check-in, stop it at green and
-mergeable or explicit handoff, and never poll with `sleep`. Missing subscription/scheduler tools must
-be reported as an automation limit; do not claim a watch was established when it was not.
+Follow `.claude/skills/steward/SKILL.md`, which also applies when a PR event wakes the session
+later: its *Bounded wakes* set the polling, fallback check-ins and what counts as a new failure.
+Never poll with `sleep`, and report a missing subscription or scheduler as an automation limit.
 
 ## 6. Report once
 
-When CI is green and the PR is mergeable, tell the user in one message: the PR link, the checks that
-passed, what the review pass changed, anything left for them to decide, and the tag to put on its
-last commit on `main` once merged (`git tag -a <version> -m "…"`, then `git push origin <version>`),
-since the merge and the tag are theirs. Cancel any outstanding
-fallback check-in (or make an already queued wake a no-op), then stop; the merge is theirs. A later
-event with a new head, failure, conflict or actionable review restarts attention under `steward`.
+When CI is green and the PR is mergeable, tell the user in one message: the PR link, the checks
+that passed, what the review changed, anything left for them to decide, and the tag for the last
+commit on `main` after the merge (`CONTRIBUTING.md`). The merge and the tag are theirs. Cancel any
+outstanding fallback check-in, then stop. A later event with a new head, failure, conflict or
+actionable review restarts attention under `steward`.
