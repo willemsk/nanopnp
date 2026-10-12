@@ -1282,6 +1282,31 @@ What was learnt on the way, each measured:
   `extended` item whose file is named on the command line. A `-m` in `addopts` would deselect it
   even then, and the user would have to restate the whole marker expression.
 
+### 12.1 Recording test impact with `sys.monitoring` costs about 1 % **[tested]**
+
+`tests/impact.py` (WP43) records, per test, the functions under `src/nanopnp` it starts, through
+`sys.monitoring` `PY_START` on a free tool id. Each event returns `DISABLE` after its first hit
+and is re-armed with `sys.monitoring.restart_events()` at each test, wide fixture and module body.
+On the development selection, four shared cores, `-n auto --dist loadfile`, Python 3.12.3, 2,129
+tests: 239.8 s without and 240.0 s with it, then 252.8 s and 256.2 s (+0.1 % and +1.4 %; load 2.5
+to 3.4). Coverage's per-test contexts cost +83 % on the same selection (WP43 plan, D2). What was
+learnt:
+
+- **`sys._getframe` raises an audit event of its own.** An audit hook that calls it before
+  checking the event name recurses until the interpreter gives up.
+- **A code object's `co_filename` can be `<frozen runpy>` or `<string>`.** `os.path.realpath`
+  resolves either against the working directory, so the pseudo-name reads as a repository file.
+- **The import system's reads are frames in `<frozen importlib._bootstrap_external>`.** Skipping
+  those leaves the reads a test makes as data, `linecache` included.
+- **Outside a test, an audited event counts only with repository code on the stack.** Otherwise
+  pytest reading test files and xdist starting its workers would make every change fall back.
+- **27 functions run at import or collection** on this tree (the registries' `register`,
+  `CaseDocument`'s validators, `core/paths.py`'s lookups). They are found because a module body on
+  the stack, other than the interpreter's own entry point, marks the call as import time.
+- **A body change to `post/qoi.py`'s `total_current` selects 1,038 tests in 54 files.** 21 files
+  call into the module. The rest are the 144 tests that start a process (selected by any source
+  change) and the source-convention tests that read every module as text.
+
 ## 13. Documentation tooling: MkDocs, Material and Zensical
 
 Read 23 September 2026 from the publishers' own announcements. **Not tested here**; the WP16
