@@ -77,7 +77,6 @@ def _tools(value: object) -> set[str]:
     return {str(part) for part in value}
 
 
-@pytest.mark.xfail(strict=True, reason=PLANNED)
 def test_the_roster_is_the_planned_four_with_their_models_tools_and_effort() -> None:
     found = {path.stem: _frontmatter(path) for path in sorted(AGENTS.glob("*.md"))}
     assert set(found) == set(ROSTER)
@@ -91,7 +90,6 @@ def test_the_roster_is_the_planned_four_with_their_models_tools_and_effort() -> 
         assert isinstance(meta["description"], str) and meta["description"].strip(), name
 
 
-@pytest.mark.xfail(strict=True, reason=PLANNED)
 def test_no_agent_file_carries_a_key_claude_code_would_ignore() -> None:
     paths = sorted(AGENTS.glob("*.md"))
     assert paths
@@ -110,7 +108,6 @@ def _clause(*identifiers: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-@pytest.mark.xfail(strict=True, reason=PLANNED)
 def test_clause_prints_an_identifiers_row_and_every_ruling_that_names_it() -> None:
     """D13: the script, not an agent, returns a clause verbatim with its rulings."""
     result = _clause("VER-62")
@@ -120,7 +117,6 @@ def test_clause_prints_an_identifiers_row_and_every_ruling_that_names_it() -> No
     assert "| G10 |" in result.stdout, result.stdout[:2000]
 
 
-@pytest.mark.xfail(strict=True, reason=PLANNED)
 def test_clause_refuses_an_identifier_with_no_definition() -> None:
     result = _clause("VER-9999")
     assert result.returncode != 0
@@ -149,7 +145,6 @@ def _denied(stdout: str) -> bool:
     os.name == "nt" or shutil.which("bash") is None or shutil.which("jq") is None,
     reason="the agent guard is a bash hook that reads its payload with jq",
 )
-@pytest.mark.xfail(strict=True, reason=PLANNED)
 def test_the_agent_guard_holds_each_spawn_to_the_roster_and_the_policy() -> None:
     """D13: a call's ``model`` overrides the file's, so the hook keeps the two equal."""
     refused = _guard({"subagent_type": "surveyor", "model": "opus", "prompt": "x"})
@@ -163,7 +158,6 @@ def test_the_agent_guard_holds_each_spawn_to_the_roster_and_the_policy() -> None
     assert not _denied(_guard({"command": "ls"}, tool_name="Bash"))
 
 
-@pytest.mark.xfail(strict=True, reason=PLANNED)
 def test_the_guard_is_registered_on_agent_calls() -> None:
     settings = json.loads((REPOSITORY / ".claude/settings.json").read_text(encoding="utf-8"))
     commands = [
