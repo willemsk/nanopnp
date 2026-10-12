@@ -694,8 +694,10 @@ def test_gate_map_records_under_the_recorder_and_skips_a_usable_map(
     repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/code.py")
     tree = _git(repo, "rev-parse", "HEAD^{tree}")
     writer = (
-        'case "$*" in *--impact-record=*) path=${*##*--impact-record=}; path=${path%% *}; '
-        f'printf \'{{"tree": "{tree}", "tests": {{"t": {{}}}}}}\' > "$path";; esac\n'
+        # One argument at a time: ${*##...} strips each argument under bash, which
+        # is macOS's /bin/sh, and the joined string only under dash.
+        "for a; do case $a in --impact-record=*) path=${a#--impact-record=}; "
+        f'printf \'{{"tree": "{tree}", "tests": {{"t": {{}}}}}}\' > "$path";; esac; done\n'
     )
     calls = _recording_uv(tmp_path, monkeypatch, writer)
     result = subprocess.run(
@@ -738,9 +740,9 @@ def _passed_repo(
         'case "$*" in\n'
         f'  *"impact.py select"*) {selector};;\n'
         '  *"impact.py merge"*) ;;\n'
-        "  *--impact-record=*) path=${*##*--impact-record=}; path=${path%% *}; "
+        "  *--impact-record=*) for a; do case $a in --impact-record=*) path=${a#--impact-record=}; "
         'printf \'{"tree": "%s", "extended": true, "tests": {"t": {}}}\' "$FAKE_MAP_TREE" '
-        '> "$path";;\n'
+        '> "$path";; esac; done;;\n'
         "esac\n"
     )
     calls = _recording_uv(tmp_path, monkeypatch, body)
