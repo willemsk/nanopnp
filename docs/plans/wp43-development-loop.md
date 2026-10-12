@@ -1,5 +1,7 @@
 # WP43 — The development loop
 
+PR: [#93](https://github.com/willemsk/nanopnp/pull/93), branch claude/eager-bardeen-v850ze
+
 **Status: implemented, in review.** Items 1–10 delivered 12 October 2026, to be tagged
 `v0.5.0-alpha.9`; the budgets are measured below item 10. Planned 12 October 2026. Inherits WP42's tree (`v0.5.0-alpha.8`),
 WP33's suite levers and seeds (`.knowledge/07` §12), and the gate of WP23 to WP32
@@ -254,7 +256,7 @@ Dependencies: none open. WP44 is measured against this package's reading set (J1
   > reading set is 10,728 words. The fixed files the next package reads come to 4,686 words
   > (against WP42's 9,849); with a brief at the cap, a package's set is at most 6,286, under J11's
   > 6,894.
-- [ ] 10. [any] Close: measure the four budgets on this tree (the hook on three one-module changes:
+- [x] affa613 10. [any] Close: measure the four budgets on this tree (the hook on three one-module changes:
   `post/qoi.py`, `io/case.py`, `physics/poisson.py`). Add a REV-nn row per miss, update
   `CHANGELOG.md` (`v0.5.0-alpha.9`) and the Phase 4 plan's WP43 entry, and leave the REV-47 note.
   Done when `gate.sh run` passes and the numbers are in the PR body.
