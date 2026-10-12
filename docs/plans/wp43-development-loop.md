@@ -1,6 +1,7 @@
 # WP43 — The development loop
 
-**Status: planned, not started.** 12 October 2026. Inherits WP42's tree (`v0.5.0-alpha.8`),
+**Status: implemented, in review.** Items 1–10 delivered 12 October 2026, to be tagged
+`v0.5.0-alpha.9`; the budgets are measured below item 10. Planned 12 October 2026. Inherits WP42's tree (`v0.5.0-alpha.8`),
 WP33's suite levers and seeds (`.knowledge/07` §12), and the gate of WP23 to WP32
 (`.claude/hooks/gate.sh`).
 
@@ -185,7 +186,9 @@ Dependencies: none open. WP44 is measured against this package's reading set (J1
   moves, stop and report to the author. Then the macOS and Windows dispatch, `.python-version`, CI's
   pins, `CLAUDE.md` and `.knowledge/07`. Done when the five walks pass on 3.14 at 10⁻⁸ with
   unchanged mesh hashes, and the dispatch is green. Ticked with the macOS and Windows dispatch pending: it
-  needs the branch pushed.
+  needed the branch pushed. It is green: `ci.yml` run 360, after `2f0ee90` fixed `clause.py`'s
+  cp1252 output on Windows; the 2WCD shell walk drifts 7.6 × 10⁻⁶ there, inside WP41's recorded
+  mesh-moved drifts of about 10⁻⁵.
 
   > **Outcome — VER-62 holds on 3.14 on Linux.** CPython 3.14.6, `linux-x86_64/X86_V3` (the
   > `NPY_DISABLE_CPU_FEATURES` cap of CI and the gate), the same locked versions as 3.12. The six
@@ -246,10 +249,44 @@ Dependencies: none open. WP44 is measured against this package's reading set (J1
   §14's map, `reading_set.py` and `usage.py` (Design §13), the In brief template (Design §12), and
   the Phase 4 plan's In brief trimmed to 250 words, and `wp-plan`'s brief target raised from 1,200 to 1,600 words (D14). Done when the In brief and reading-set tests
   pass unmarked and `reading_set.py` reports each target met.
+  > **Outcome — the 1,600-word cap binds from WP44.** This plan's own Execution brief, written
+  > before the cap and annotated since, is 6,042 words, so `reading_set.py` exits 1 on it and its
+  > reading set is 10,728 words. The fixed files the next package reads come to 4,686 words
+  > (against WP42's 9,849); with a brief at the cap, a package's set is at most 6,286, under J11's
+  > 6,894.
 - [ ] 10. [any] Close: measure the four budgets on this tree (the hook on three one-module changes:
   `post/qoi.py`, `io/case.py`, `physics/poisson.py`). Add a REV-nn row per miss, update
   `CHANGELOG.md` (`v0.5.0-alpha.9`) and the Phase 4 plan's WP43 entry, and leave the REV-47 note.
   Done when `gate.sh run` passes and the numbers are in the PR body.
+
+  > **Outcome — two of the four budgets are met, two are missed (D9).** Measured 12 October 2026 on
+  > 4 cores, Python 3.14.6, a quiet machine (load under 1 before each first run).
+  >
+  > | Budget | Budget, limit with margin | Measured | Verdict |
+  > |---|---|---|---|
+  > | Commit hook, one-module change | 60 s, 90 s | `post/qoi.py` 136 s (1,016 tests); `physics/poisson.py` 207 s (1,260 tests); `io/case.py` 234 s (fell back) | missed: REV-80, REV-81 |
+  > | Push gate | 300 s, 450 s | 555 s, 2,213 tests, tree `4d9c306` | missed: REV-82 |
+  > | Pull-request critical path | 360 s, 540 s | 225 s, run 362 (longest file `test_sweep.py` 74 s against 135 s; shards' test steps 172 s and 148 s) | met |
+  > | Reading set (J11) | 6,894 words | 4,686 fixed, at most 6,286 with a brief at the cap; WP43's own 10,728 (item 9's Outcome) | met from WP44 |
+  >
+  > Each hook figure plants `_ = None` in one function body on a map of the same tree. The
+  > hook's floor is D4's process-starting tests (REV-80); `io/case.py` falls back because a case is
+  > built while collecting (REV-81). The push gate sits on example 07's walk, 421 to 477 s alone.
+
+  > **Outcome — the longest-first order does nothing measurable (item 5's re-measurement).**
+  > `--dist loadfile` re-sorts files by their number of tests unless `--no-loadscope-reorder` is
+  > passed, so D8's order only breaks ties. `--extended`, no coverage, back to back: 534 s and
+  > 512 s with it, 477 s without it, 474 s with it and the re-sort off (`.knowledge/07` §12.2).
+  > Recorded as REV-83; the shards' packing is unaffected.
+
+  > **Outcome — the CI evidence of items 6 and 7.** The pull request's run 362 is green in 225 s,
+  > with every job D10 names and `CI result` posting `ci/tested-tree`. The `full: true` dispatch,
+  > run 361, failed five gate tests on each macOS leg: the planned tests' fake `uv` read its map
+  > path with a pattern that bash, macOS's `/bin/sh`, applies per argument and dash to the joined
+  > string, so there it wrote a file named `run` and no map. With the author's ruling the fake
+  > reads one argument at a time, setup only (`8932ae2`); every other leg of run 361, Windows and
+  > ubuntu at 3.11 to 3.14 included, passed. The VER-62 walks drift 7.5 × 10⁻⁶ at most on
+  > `darwin-arm64` (the 2WCD shell walk), as on Windows.
 
 ### Verification
 

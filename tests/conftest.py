@@ -178,10 +178,12 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
     ``extended`` file still run under CLAUDE.md's ``uv run pytest -m slow``.
 
     The hook runs last, after ``-m`` and ``-k`` have deselected, so the order and
-    the shards are of what will run. Files run longest first by
-    ``tests/durations.json`` (WP43 D8), so ``--dist loadfile`` starts the long
-    poles first; a file's own tests keep their order. ``--shard i/N`` keeps the
-    files packed into shard ``i`` and deselects the rest.
+    the shards are of what will run. Files are collected longest first by
+    ``tests/durations.json`` (WP43 D8); a file's own tests keep their order.
+    ``--dist loadfile`` re-sorts files by their number of tests unless
+    ``--no-loadscope-reorder`` is passed, so there the order only breaks ties
+    (``.knowledge/07`` section 12.2). ``--shard i/N`` keeps the files packed
+    into shard ``i`` and deselects the rest.
     """
     if not config.getoption(EXTENDED):
         named = {

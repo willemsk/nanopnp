@@ -1,16 +1,17 @@
 # Current work
 
-Updated 12 October 2026 (WP42 delivered; WP43 next). Navigation only; `SPECIFICATION.md` governs;
+Updated 12 October 2026 (WP43 implemented, in review; WP44 next). Navigation only; `SPECIFICATION.md` governs;
 an unmerged branch is not shipped.
 
 ## In brief
 
-The project is in Phase 4, which tidies the program before anyone else relies on it. Next comes a
-short package that speeds the automatic checks: about a minute per commit instead of 3.5, and one
-full check per push. It also gives each kind of AI helper a fixed job and model, and keeps plans
-readable without code. **Your call:** at its close, whether the pre-push
-check's 5-minute target becomes 8, since one example alone takes about 5. *Recommendation:* yes,
-because it no longer blocks work.
+The project is in Phase 4, which tidies the program before anyone else relies on it. The package
+that speeds the automatic checks is built and awaits review. A pull request's checks now take
+under four minutes. Two targets were missed and need your ruling: a commit's check takes two to
+four minutes, not one, and the full pre-push check about nine, not five. **Your call:** whether
+to re-set those targets to what was measured or fund the work that would meet them.
+*Recommendation:* re-set the pre-push target, since one example alone sets its floor, and fund
+the commit-time work in the next package, since it is paid on every commit.
 
 ## Position
 
@@ -18,10 +19,10 @@ because it no longer blocks work.
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
   **in progress** (§8.2.7 G1–G11; §8.2.8 H1–H12; §8.2.9 I1–I5; §8.2.10 J1–J12). WP35 to WP42 are
   delivered, as `v0.5.0-alpha.1` to `.8`.
-- **Next: WP43, the development loop** (§8.2.10 J1–J12), planned in
-  [wp43-development-loop.md](wp43-development-loop.md). Item 4 (VER-62 on 3.14)
-  may stop it (G10).
-- Then WP44, the small fixes; WP45–WP47 (OKF bundle, backfill, protocol); the author's sessions;
+- **WP43, the development loop** (§8.2.10 J1–J12), is implemented and in review:
+  [wp43-development-loop.md](wp43-development-loop.md), to be tagged `v0.5.0-alpha.9`. Its
+  budget misses are REV-80 to REV-83, for the author's ruling (J7).
+- **Next: WP44, the small fixes**; then WP45–WP47 (OKF bundle, backfill, protocol); the author's sessions;
   fixes from WP48. Phase 5 (`v0.6.0`) is the GUI, Phase 6 (`v0.7.0`) validation; v1.0 is OPN-08.
 
 ## Not to be re-decided

@@ -101,3 +101,5 @@ is a rolling register, and its header stays `open`.
 | REV-79 | numerics | low | fixed | [WP42](../plans/wp42-verification-checks.md) | [The exclusion shell raises a bare ValueError for a NaN ring coordinate](review-items.md#rev-79-the-exclusion-shell-raises-a-bare-valueerror-for-a-nan-ring-coordinate) |
 | REV-80 | performance | medium | open | — | [A source change selects every process-starting test file, so the commit hook misses its 60 s budget](review-items.md#rev-80-a-source-change-selects-every-process-starting-test-file-so-the-commit-hook-misses-its-60-s-budget) |
 | REV-81 | performance | low | open | — | [Most past commits would fall back to the development selection](review-items.md#rev-81-most-past-commits-would-fall-back-to-the-development-selection) |
+| REV-82 | performance | medium | open | — | [The push gate takes over 9 minutes against its 5-minute budget](review-items.md#rev-82-the-push-gate-takes-over-9-minutes-against-its-5-minute-budget) |
+| REV-83 | performance | low | open | — | [The longest-first test order is inert under xdist file scheduling](review-items.md#rev-83-the-longest-first-test-order-is-inert-under-xdist-file-scheduling) |

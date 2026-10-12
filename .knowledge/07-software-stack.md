@@ -1328,7 +1328,7 @@ learnt:
 Measured for WP43 D8 on 12 October 2026: CPython 3.14.6, coverage 7.15.4, pytest-cov 7.1.0, four
 cores shared with another agent's runs, `-n 4 --dist loadfile`, BLAS threads 1,
 `NPY_DISABLE_CPU_FEATURES` at the X86_V3 cap, the GUI file left out, tree `f2e48e9` plus the
-ordering conftest. Each figure carries the 1-minute load average at its start and end.
+ordering conftest (the order's re-measurement, below, on a quiet machine). Each figure carries the 1-minute load average at its start and end.
 
 - **`tests/durations.json`** comes from a `--durations=0` log of the development selection with
   `--extended` (2,176 passed; 510 s wall, load 0.5 rising to 3.9): 1,849 s of test time in 141
@@ -1338,11 +1338,18 @@ ordering conftest. Each figure carries the 1-minute load average at its start an
   only what they run. The longest development file is 60.5 s (`test_exclusion_stern.py`); the
   median file 2.0 s. Files whose every test is under pytest's 5 ms reporting floor are absent and
   take the median.
-- **Longest-first order** puts example 07 on a worker at the start, so the push gate's floor is
-  that file plus whatever shares its worker, not that file started last. The order is a
-  scheduling change: the same 2,176 tests pass. Its wall-time gain was not measurable here: 937 s
-  ordered against 830 s in path order, back to back, with the load at 1.8 to 7.9 from the other
-  agent, larger than any effect of the order. Re-measure on a quiet machine (WP43 item 10).
+- **Longest-first order is inert under xdist's defaults.** pytest-xdist 3.8's `loadfile` (a
+  `LoadScopeScheduling`) re-sorts the files by their number of tests, most first, unless
+  `--no-loadscope-reorder` is passed (`--loadscope-reorder` defaults to true), so the collection
+  order only breaks ties, and example 07, which holds few tests, still starts late. Re-measured on
+  a quiet machine (WP43 item 10, tree `4d9c306`, load under 1 at the first start; the same flags,
+  `--extended`, no coverage), back to back: **534 s and 512 s** in the default schedule with the
+  order, **477 s** without `tests/durations.json` (path order, then re-sorted), and **474 s** with
+  the order and `--no-loadscope-reorder`. The spread between the two like runs, 22 s, is as large
+  as any difference between schedules; every run sits on example 07's floor, 421 to 477 s alone, so
+  no order can gain more than the minute above it. The same 2,213 tests pass in each. The earlier
+  measurement under another agent's load (937 s ordered against 830 s in path order) is noise of
+  the same kind.
 - **`COVERAGE_CORE=sysmon` against `ctrace`**, the development selection under
   `--cov=src/nanopnp --cov-branch`, 2,118 passed: **292 s** (load 4.4 to 6.7) against **511 s**
   (6.7 to 7.8). The two XML reports are byte-identical once the `timestamp` attribute is removed:

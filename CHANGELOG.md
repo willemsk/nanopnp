@@ -19,6 +19,50 @@ Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before t
 version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
 
+## [0.5.0-alpha.9] - 2026-10-12
+
+WP43: the development loop (`SPECIFICATION.md` §7.6, §8.2.10 J1 to J12). A commit runs only the
+tests a recorded impact map finds its change to touch, the push gate runs once in the background
+and follows up on its selection, and a pull request runs one ubuntu leg in two shards, the
+platforms and the `extended` walks after a merge, nightly and before a release. Python 3.14 is the
+working version. It discharges VER-73 and VER-74 and §8.2.10 J2 to J5 and J7 to J11, and leaves
+REV-80 to REV-83 open for the author's ruling on the missed budgets.
+
+### Added
+
+- **VER-74:** `tests/impact.py`, a pytest plugin that records each test's executed functions,
+  read files, listed directories and started processes through `sys.monitoring` and audit hooks,
+  and a selector that falls back to the development selection, naming why, whenever a change is
+  one it cannot attribute. `gate.sh map` records the map; the commit hook selects from it.
+- **VER-73:** `.github/budgets.yaml` and `.github/scripts/ci_budget.py`: CI fails a pull-request run
+  whose critical path, or any development-selection file, exceeds its budget by more than 50 %;
+  the gate logs its own times to `<git-dir>/nanopnp-gate.log`.
+- The push guard: the commit hook refuses a branch push whose tree `gate.sh run` has not passed in
+  full (J3). After a pass, `gate.sh run` follows up with the selection of the change since the
+  passed tree, under coverage and `diff-cover` against it.
+- `--shard i/N` in `tests/conftest.py`, packing whole files by `tests/durations.json`.
+- The agent roster in `.claude/agents/` (gate-runner, surveyor, ci-log-classifier,
+  physics-reviewer), `.claude/scripts/clause.py`, and `.claude/hooks/agent-guard.sh` on every
+  `Agent` call (J8); `.claude/scripts/reading_set.py` and `usage.py` (J11).
+- `## In brief`, a plain-language summary of at most 250 words, in every plan from WP43 on, the
+  Phase 4 plan, `current.md` and the pull-request body (J9).
+
+### Changed
+
+- **Breaking (contributors):** a pull request runs lint, the documentation build and the
+  development selection in two shards on ubuntu, Python 3.14; `CI result` is the one required
+  check and posts `ci/tested-tree`. macOS, Windows and the `extended` walks run after a merge,
+  nightly and before a release; `full: true` runs the release matrix (§7.6, J4, J10).
+- The working Python is 3.14 (`.python-version`); VER-62 holds on it at round-off (J5).
+- The `extended` walks run without coverage; changed-line coverage is over the development
+  selection (§7.6 NOTE).
+- `CLAUDE.md`, the skills and the model policy are cut to their word targets, with the physics and
+  Python rules in path-scoped `.claude/rules/`; an Execution brief is capped at 1,600 words (J11).
+
+### Fixed
+
+- `clause.py` prints on a cp1252 console.
+
 ## [0.5.0-alpha.8] - 2026-10-10
 
 WP42: the verification checks (`SPECIFICATION.md` §5.3.1, §5.4.3; §8.2.7 G6; §8.2.9 I1, I2).

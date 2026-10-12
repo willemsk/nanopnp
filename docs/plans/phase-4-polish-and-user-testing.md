@@ -14,8 +14,10 @@ tagged `v0.5.0-alpha.4`; WP39, the backend registries ([wp39-backend-registries.
 to be tagged `v0.5.0-alpha.5`; WP40, the stale refusals ([wp40-stale-refusals.md](wp40-stale-refusals.md)),
 to be tagged `v0.5.0-alpha.6`; WP41, the accuracy fixes ([wp41-accuracy-fixes.md](wp41-accuracy-fixes.md)),
 to be tagged `v0.5.0-alpha.7`; WP42, the verification checks
-([wp42-verification-checks.md](wp42-verification-checks.md)), to be tagged `v0.5.0-alpha.8`.
-Planned: WP43, the development loop (§8.2.10 J1); WP44, the small fixes; WP45, the OKF bundle;
+([wp42-verification-checks.md](wp42-verification-checks.md)), to be tagged `v0.5.0-alpha.8`;
+WP43, the development loop ([wp43-development-loop.md](wp43-development-loop.md)), to be tagged
+`v0.5.0-alpha.9`.
+Planned: WP44, the small fixes; WP45, the OKF bundle;
 WP46, its backfill; WP47, the user-testing protocol (§8.2.9 I1, renumbered by §8.2.10 J1).
 Provisional, and planned by the second `/phase-plan amend 4` once the author has run the sessions
 and ruled every `UT-nn`: the fixes, from WP48, then the documentation increment and the close,
@@ -620,6 +622,14 @@ under the third lever, and the soundness argument of the selection. Tagged `v0.5
 > because example 07 alone takes 5 to 8 minutes. Changed-line coverage is measured over the
 > development selection. The token figure is the fixed reading set, 9,849 words for WP42. The push
 > gate's 5 minutes is a predicted miss (6.5 to 8 minutes), reported at the close.
+
+> **Completed, 12 October 2026:** [wp43-development-loop.md](wp43-development-loop.md), to be
+> tagged `v0.5.0-alpha.9`. A commit runs the tests a recorded impact map selects (VER-74), the push
+> gate runs once in the background and follows up on its selection, and a pull request runs one
+> ubuntu leg in two shards; Python 3.14 is the working version, VER-62 holding on it. Of J7's
+> budgets the pull request's critical path (225 s) and the reading set are met; the commit hook
+> (136 to 234 s) and the push gate (555 s) are missed, REV-80 to REV-82 for the author's ruling,
+> and the longest-first order is inert (REV-83).
 
 ### WP44 — The small fixes (REV-14 to REV-16, REV-18, REV-19, and eleven low items)
 
