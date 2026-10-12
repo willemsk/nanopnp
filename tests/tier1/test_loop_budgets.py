@@ -17,7 +17,6 @@ import pytest
 import yaml
 
 REPOSITORY = Path(__file__).resolve().parents[2]
-PLANNED = "planned: WP43 D11 (VER-73)"
 
 
 def _checker() -> ModuleType:
@@ -48,7 +47,6 @@ JOBS = [
 ]
 
 
-@pytest.mark.xfail(strict=True, reason=PLANNED)
 def test_ver73_the_budgets_are_j7s_and_the_ceiling_and_margin_the_plans() -> None:
     budgets = yaml.safe_load((REPOSITORY / ".github/budgets.yaml").read_text(encoding="utf-8"))
     assert budgets == {
@@ -60,12 +58,10 @@ def test_ver73_the_budgets_are_j7s_and_the_ceiling_and_margin_the_plans() -> Non
     }
 
 
-@pytest.mark.xfail(strict=True, reason=PLANNED)
 def test_ver73_the_critical_path_spans_the_first_start_to_the_last_completion() -> None:
     assert _checker().critical_path_s(JOBS) == pytest.approx(355.0)
 
 
-@pytest.mark.xfail(strict=True, reason=PLANNED)
 def test_ver73_a_budget_below_the_measured_duration_beyond_the_margin_fails() -> None:
     """355 s against 200 s with a 50 % margin (300 s) fails, naming all three figures."""
     passed, message = _checker().check(JOBS, budget_s=200.0, margin=0.5)
@@ -75,7 +71,6 @@ def test_ver73_a_budget_below_the_measured_duration_beyond_the_margin_fails() ->
     assert "50 %" in message
 
 
-@pytest.mark.xfail(strict=True, reason=PLANNED)
 def test_ver73_a_run_over_budget_but_within_the_margin_passes_and_says_so() -> None:
     """355 s against 300 s with a 50 % margin (450 s) passes, reporting the overrun."""
     passed, message = _checker().check(JOBS, budget_s=300.0, margin=0.5)
@@ -83,7 +78,6 @@ def test_ver73_a_run_over_budget_but_within_the_margin_passes_and_says_so() -> N
     assert "over budget" in message
 
 
-@pytest.mark.xfail(strict=True, reason=PLANNED)
 def test_ver73_an_unfinished_job_fails_rather_than_shortening_the_path() -> None:
     jobs = [*JOBS[:-1], _job("coverage", "05:10", None)]
     passed, message = _checker().check(jobs, budget_s=360.0, margin=0.5)
@@ -91,7 +85,6 @@ def test_ver73_an_unfinished_job_fails_rather_than_shortening_the_path() -> None
     assert "coverage" in message
 
 
-@pytest.mark.xfail(strict=True, reason=PLANNED)
 def test_ver73_a_file_over_its_ceiling_beyond_the_margin_fails_naming_it() -> None:
     """The hook's wall time is bounded below by its longest file, so each file has a ceiling."""
     durations = {"tests/tier1/test_fast.py": 3.0, "tests/tier2/test_long.py": 136.0}

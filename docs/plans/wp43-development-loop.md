@@ -184,7 +184,7 @@ Dependencies: none open. WP44 is measured against this package's reading set (J1
   > gain could not be measured: another agent's runs held the load at 2 to 8 on the 4 cores, and
   > the ordered and path-ordered `--extended` runs took 937 s and 830 s back to back. Item 10
   > re-measures it. `.knowledge/07` §12.2.
-- [ ] 6. [Opus] — §7.6 is normative text. CI (D10): `ci.yml`, `release.yml`, the shard option in
+- [x] 91f414f 6. [Opus] — §7.6 is normative text. CI (D10): `ci.yml`, `release.yml`, the shard option in
   `tests/conftest.py`, the status post, timeouts, apt cache and trims (Design §4, §8). Amend §7.6's table and its
   development-selection NOTE (J4, J10). Done when the PR's `CI result` is green, a dispatch with
   `full: true` is green, and the step summary shows the shard times.
@@ -204,6 +204,14 @@ Dependencies: none open. WP44 is measured against this package's reading set (J1
 - [ ] 7. [any] VER-73 (D11): `.github/budgets.yaml`, `.github/scripts/ci_budget.py`, the CI step,
   the gate log, §7.6's budget NOTE and the Appendix A row. Done when `test_loop_budgets.py` passes
   unmarked and the PR run reports its critical path.
+
+  > **Outcome — the checks pass their planned tests; the critical path waits for a PR run.**
+  > `coverage` runs `ci_budget.py files` on the shards' junit reports and `ci_budget.py
+  > critical-path` on the run's jobs from the API, measuring itself as ending now and leaving out
+  > `CI result` and skipped jobs; both write a table to the step summary. A re-run attempt carries
+  > the first attempt's jobs with their old times, so its span is reported, not judged. Those two
+  > steps landed in item 6's commit, with the job. Locally the longest development file is 60.5 s
+  > without coverage (`.knowledge/07` §12.2), under the 135 s limit with room for coverage's cost.
 - [x] 9804c08 8. [any] The roster and the model policy (D13; Design §9, §10): the four agent files,
   `.claude/scripts/clause.py`, `.claude/hooks/agent-guard.sh` registered on `Agent` in
   `.claude/settings.json`, and the model policy. Done when `test_agent_roster.py`'s roster, clause
