@@ -25,8 +25,6 @@ AGENTS = REPOSITORY / ".claude/agents"
 SCRIPTS = REPOSITORY / ".claude/scripts"
 RULES = REPOSITORY / ".claude/rules"
 GUARD = REPOSITORY / ".claude/hooks/agent-guard.sh"
-PLANNED = "planned: WP43 D13 (J8)"
-PLANNED_CONTEXT = "planned: WP43 D14 (J8, J11)"
 
 KNOWN_KEYS = {
     "name",

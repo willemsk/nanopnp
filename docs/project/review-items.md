@@ -790,6 +790,11 @@ the example walks, example 07 (477 s) among them, so a one-line docstring change
 followed up in 685 s (955 tests in 50 files) against 966 s for the full run (WP43 item 3, both under
 a parallel agent's load).
 
+At the close (WP43 item 10, tree `4d9c306`, quiet machine, map of the same tree), a one-line
+body change took 136 s in `post/qoi.py` (1,016 tests), 207 s in `physics/poisson.py` (1,260 tests)
+and 234 s in `io/case.py`, which fell back (REV-81). All three miss the budget beyond its 90 s
+margin.
+
 **Open.** Either route keeps the selection sound: trace the Python children (the recorder carried
 into the child through its environment), so a child is a set of functions rather than "anything";
 or move each process-starting test that does not need its file's module fixtures into a file of its
@@ -804,6 +809,43 @@ own. A third, re-setting the budget, is the author's (J7).
 data, case or fixture file in 5, an added module in 2, an import change in 4, and never an import
 change alone. These commits are whole review rounds, larger than a commit made while implementing.
 
+At WP43's close a body change in `io/case.py` fell back on two counts: the file is read outside a
+test, and `SuppliedArtefact._exactly_one_source` runs at import or outside a test (a case built
+while collecting). A change to the case schema, the most edited module, therefore always runs the
+development selection: 234 s on 4 cores.
+
 **Open.** A finer rule for module-level code (a changed constant selects its readers, as a changed
 function body does) would need its own soundness argument beside WP43 Design §1. Re-measure on the
 commits of WP44 before deciding whether it is worth one.
+
+### REV-82 — The push gate takes over 9 minutes against its 5-minute budget
+
+*Area:* performance. *Severity:* medium. *Found:* [WP43](../plans/wp43-development-loop.md) item 10.
+
+**Measured.** `gate.sh run` on tree `4d9c306` (2,213 tests, the development selection under branch
+coverage and the `extended` walks without it, 4 cores, a quiet machine) took 555 s against
+§8.2.10 J7's 300 s, beyond the 450 s its 50 % margin allows. WP43 D9 predicted the miss at 6.5 to
+8 minutes: example 07's walk alone takes 421 to 477 s and cannot be shortened by the four ways of
+§7.6's runtime NOTE without breaking its headroom rule. A follow-up after a pass is bounded below by
+the same walk whenever the change reaches a process-starting test (REV-80).
+
+**Open.** The author's ruling (J7): re-set the push gate's budget to the measured floor with its
+margin, or split example 07's walk so it runs in parallel parts. The gate logs the time and never
+fails on it, so nothing is blocked meanwhile.
+
+### REV-83 — The longest-first test order is inert under xdist file scheduling
+
+*Area:* performance. *Severity:* low. *Found:* [WP43](../plans/wp43-development-loop.md) item 10.
+
+**Measured.** WP43 D8 collects files longest first so that `--dist loadfile` would start example 07
+first. pytest-xdist re-sorts the files by their number of tests unless `--no-loadscope-reorder` is
+passed, so the order only breaks ties. On a quiet machine, `--extended` without coverage on 4
+cores took 534 s and 512 s with the order, 477 s without it and 474 s with the order and
+`--no-loadscope-reorder` (`.knowledge/07` §12.2): within the spread of like runs, and every run
+bounded by example 07's 421 to 477 s. The shards' bin-packing reads the same record and is
+unaffected.
+
+**Open.** Pass `--no-loadscope-reorder` wherever the suite runs in parallel, so the order does what
+D8 meant, or drop the order and keep the record for the shards alone. Neither moves the push gate
+off example 07's floor (REV-82).
+

@@ -3410,19 +3410,21 @@ failure (§7.1); it goes only on the walks that compose stages whose claims a fa
 exercises. A test is deleted, rather than marked, only when another test on every push gates the
 same claim on the same kind of input.
 
-NOTE (changed-line branch coverage and Gmsh; VER-72 f): CI's `check` job and `gate.sh run` measure
-branch coverage over the extended selection and require every changed line of `src/nanopnp`
-outside `gui/` to be executed down each branch, by `diff-cover` against the merge base with `main`,
-or to carry `# pragma: no cover - <reason>`. Both set `NANOPNP_REQUIRE_GMSH=1`, so a Gmsh that
+NOTE (changed-line branch coverage and Gmsh; VER-72 f): CI's `coverage` job, over the shards'
+combined data, and `gate.sh run` measure branch coverage over the development selection; the
+`extended` walks, where they run, run without it (WP43 D8). Both require every changed line of
+`src/nanopnp` outside `gui/` to be executed down each branch, by `diff-cover` against the merge
+base with `main`, or to carry `# pragma: no cover - <reason>`. Both set `NANOPNP_REQUIRE_GMSH=1`, so a Gmsh that
 cannot import fails instead of skipping, and the commit hook sets it only for a change to Gmsh's
 own code or tests. The commit hook runs no coverage. Coverage sees neither missing code nor an
 untaken arm of `a if c else b`; a planned test covers those (`/wp-plan`). After a pass on one
 tree, `gate.sh run` on a later tree is a follow-up (§8.2.10 J3): it runs only the tests the
 test-impact selection (VER-74) finds the change since the passed tree to touch, `extended` walks
-included, measures coverage over them, and requires every line changed since that tree, by
-`diff-cover` against a commit of it. For those lines the subset's coverage equals the full run's:
-a test the change does not select executes at the later tree exactly what it executed at the
-passed one, so no line changed since then, and every selected test runs under coverage. A line
+included, measures coverage over them as the full run does, and requires every line changed since
+that tree, by `diff-cover` against a commit of it. For those lines the subset's coverage equals the
+full run's: a test the change does not select executes at the later tree exactly what it executed
+at the passed one, so no line changed since then, and every selected test runs as the full run
+runs it, a development test under coverage and a walk without. A line
 changed between `main` and the passed tree keeps the passed run's verdict; CI's full `diff-cover`
 remains the authority and catches a follow-up that removes such a line's only coverage. A
 selector fallback, a moved merge base, or a map not of the passed tree runs the whole gate.
