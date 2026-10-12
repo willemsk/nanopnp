@@ -111,7 +111,7 @@ Dependencies: none open. WP44 is measured against this package's reading set (J1
 - [ ] 7. [any] VER-73 (D11): `.github/budgets.yaml`, `.github/scripts/ci_budget.py`, the CI step,
   the gate log, §7.6's budget NOTE and the Appendix A row. Done when `test_loop_budgets.py` passes
   unmarked and the PR run reports its critical path.
-- [ ] 8. [any] The roster and the model policy (D13; Design §9, §10): the four agent files,
+- [x] 9804c08 8. [any] The roster and the model policy (D13; Design §9, §10): the four agent files,
   `.claude/scripts/clause.py`, `.claude/hooks/agent-guard.sh` registered on `Agent` in
   `.claude/settings.json`, and the model policy. Done when `test_agent_roster.py`'s roster, clause
   and guard tests pass unmarked.
