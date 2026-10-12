@@ -3363,9 +3363,10 @@ model, and provides no stress-tensor force profile. Detail in
 
 | Trigger | Tiers run |
 |---|---|
-| Every push | 1 and 2 |
-| Nightly, once enabled | 3 |
-| Before a tagged release | 1, 2, 3 and 4 |
+| A pull request | 1 and 2 without the `extended` walks, on ubuntu, Python 3.14 |
+| A push to `main` | 1 and 2 in full on ubuntu, macOS and Windows, Python 3.14 |
+| Nightly | 1 and 2 in full on ubuntu, macOS and Windows, Python 3.14; 3, and 1 on Python 3.11 to 3.13 on the three platforms, recorded and not gated |
+| Before a tagged release | 1, 2, 3 and 4, Python 3.11 to 3.14, on the three platforms |
 | Every push, prose-only pushes included | The strict documentation build of VER-45 |
 
 Every run SHALL emit a provenance manifest recording input hashes, library versions, mesh hash,
@@ -3382,9 +3383,12 @@ input, so that no requirement this tier gates is left ungated.
 
 NOTE (the development selection; the WP33 follow-up): a Tier-1 or Tier-2
 test that walks the pipeline end to end carries the marker `extended`: an executed worked example
-of VER-46, or the vendored 2WCD entry taken through the stages. CI runs these tests on every push,
-on every leg, so the table above is unchanged and no requirement leaves the push gate. The
-development selection leaves them out unless `--extended` is passed or the test's file is named.
+of VER-46, or the vendored 2WCD entry taken through the stages. CI runs these tests on every push
+to `main`, nightly and before a release, and the push gate before every push (§8.2.10 J10), so no
+requirement leaves the gate. A pull request runs the development selection on one leg, in shards of
+whole files packed by recorded duration; a push to `main` runs it again on ubuntu only when the
+merged tree differs from the tree the pull request passed. The development selection leaves the
+walks out unless `--extended` is passed or the test's file is named.
 That selection is what `uv run pytest` runs. The commit hook runs the tests a test-impact selection
 finds the change to touch, falling back to the development selection (VER-74); the skills run the
 whole gate before they push. The marker never goes on an analytic benchmark, which is the test that localises a
