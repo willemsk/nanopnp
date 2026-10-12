@@ -24,7 +24,6 @@ from types import ModuleType
 import pytest
 
 TESTS = Path(__file__).resolve().parents[1]
-PLANNED = "planned: WP43 D2-D5 (VER-74)"
 pytestmark = [
     pytest.mark.skipif(
         sys.version_info < (3, 12), reason="the recorder uses sys.monitoring, Python 3.12 or later"
@@ -238,7 +237,10 @@ def toy(recorded: tuple[Path, Path], tmp_path: Path) -> tuple[Path, Path]:
     repo, recorded_map = recorded
     copy = tmp_path / "repo"
     shutil.copytree(repo, copy)
-    return copy, recorded_map
+    # Each test gets its own copy of the map: some cases damage the one they are given.
+    map_copy = tmp_path / recorded_map.name
+    shutil.copy(recorded_map, map_copy)
+    return copy, map_copy
 
 
 def _edit(repo: Path, name: str, old: str, new: str) -> None:
@@ -248,7 +250,6 @@ def _edit(repo: Path, name: str, old: str, new: str) -> None:
     path.write_text(text.replace(old, new), encoding="utf-8")
 
 
-@pytest.mark.xfail(strict=True, reason=PLANNED)
 def test_ver74_an_unchanged_tree_selects_nothing(toy: tuple[Path, Path]) -> None:
     repo, path = toy
     selection = _impact().select(repo, path)
@@ -256,7 +257,6 @@ def test_ver74_an_unchanged_tree_selects_nothing(toy: tuple[Path, Path]) -> None
     assert selection.tests == ()
 
 
-@pytest.mark.xfail(strict=True, reason=PLANNED)
 def test_ver74_a_body_change_selects_its_callers_children_and_readers(
     toy: tuple[Path, Path],
 ) -> None:
@@ -270,7 +270,6 @@ def test_ver74_a_body_change_selects_its_callers_children_and_readers(
     assert not set(MODULE) & set(selection.tests)
 
 
-@pytest.mark.xfail(strict=True, reason=PLANNED)
 def test_ver74_the_development_selection_never_holds_an_extended_test(
     toy: tuple[Path, Path],
 ) -> None:
@@ -282,7 +281,6 @@ def test_ver74_the_development_selection_never_holds_an_extended_test(
     assert WALK in impact.select(repo, path, include_extended=True).tests
 
 
-@pytest.mark.xfail(strict=True, reason=PLANNED)
 def test_ver74_a_function_only_a_module_fixture_calls_selects_the_whole_file(
     toy: tuple[Path, Path],
 ) -> None:
@@ -292,7 +290,6 @@ def test_ver74_a_function_only_a_module_fixture_calls_selects_the_whole_file(
     assert set(MODULE) <= set(_impact().select(repo, path).tests)
 
 
-@pytest.mark.xfail(strict=True, reason=PLANNED)
 def test_ver74_a_function_only_a_session_fixture_calls_selects_every_user(
     toy: tuple[Path, Path],
 ) -> None:
@@ -302,7 +299,6 @@ def test_ver74_a_function_only_a_session_fixture_calls_selects_every_user(
     assert set(SESSION) <= set(_impact().select(repo, path).tests)
 
 
-@pytest.mark.xfail(strict=True, reason=PLANNED)
 def test_ver74_a_changed_test_file_selects_itself_alone(toy: tuple[Path, Path]) -> None:
     repo, path = toy
     _edit(repo, "tests/test_other.py", '["a"]() == 1', '["a"]() >= 1')
@@ -311,7 +307,6 @@ def test_ver74_a_changed_test_file_selects_itself_alone(toy: tuple[Path, Path]) 
     assert selection.tests == (OTHER,)
 
 
-@pytest.mark.xfail(strict=True, reason=PLANNED)
 def test_ver74_a_prose_change_selects_nothing(toy: tuple[Path, Path]) -> None:
     repo, path = toy
     _edit(repo, "README.md", "# Toy", "# The toy")
@@ -320,7 +315,6 @@ def test_ver74_a_prose_change_selects_nothing(toy: tuple[Path, Path]) -> None:
     assert selection.tests == ()
 
 
-@pytest.mark.xfail(strict=True, reason=PLANNED)
 @pytest.mark.parametrize(
     ("name", "old", "new"),
     [
@@ -343,7 +337,6 @@ def test_ver74_a_change_outside_a_function_body_falls_back_naming_its_path(
     assert name in selection.fallback
 
 
-@pytest.mark.xfail(strict=True, reason=PLANNED)
 @pytest.mark.parametrize("change", ["added", "deleted", "renamed"])
 def test_ver74_an_added_deleted_or_renamed_module_falls_back(
     toy: tuple[Path, Path], change: str
@@ -364,7 +357,6 @@ def test_ver74_an_added_deleted_or_renamed_module_falls_back(
     assert named in selection.fallback
 
 
-@pytest.mark.xfail(strict=True, reason=PLANNED)
 def test_ver74_changes_accumulate_from_the_recorded_tree_across_commits(
     toy: tuple[Path, Path],
 ) -> None:
@@ -377,7 +369,6 @@ def test_ver74_changes_accumulate_from_the_recorded_tree_across_commits(
     assert set(MODULE) | {OTHER} <= tests
 
 
-@pytest.mark.xfail(strict=True, reason=PLANNED)
 @pytest.mark.parametrize("state", ["missing", "corrupt", "unknown-tree"])
 def test_ver74_a_missing_or_unusable_map_falls_back(toy: tuple[Path, Path], state: str) -> None:
     repo, path = toy
@@ -398,7 +389,6 @@ def test_ver74_a_missing_or_unusable_map_falls_back(toy: tuple[Path, Path], stat
     assert expected in selection.fallback
 
 
-@pytest.mark.xfail(strict=True, reason=PLANNED)
 def test_ver74_a_map_recorded_under_xdist_selects_as_a_serial_one(
     recorded: tuple[Path, Path], tmp_path: Path
 ) -> None:

@@ -87,6 +87,41 @@ Dependencies: none open. WP44 is measured against this package's reading set (J1
   and `select()` (D2–D4; build from Design §6). Measure the recorder's overhead on the development selection: ≤10 %, or
   the item stops for a re-plan. Done when every test in `tests/tier1/test_impact_selection.py`
   passes with its markers removed.
+
+  > **Outcome — the planned `toy` fixture shared the module's map.** It returned the
+  > module-scoped map path itself, and the `corrupt` and `unknown-tree` cases overwrite it, so
+  > every later case read a damaged map and no implementation could pass. Each test now gets its
+  > own copy. The author approved the fix on 12 October 2026; no assertion changed.
+
+  > **Outcome — the recorder costs about 1 %.** Development selection, `-n auto --dist loadfile`,
+  > BLAS threads pinned, 4 cores shared with other agents (load 2.5 to 3.4), tree `0dbf490`
+  > (`493b72f` plus the item's module), Python 3.12.3, 2,129 tests recorded:
+  >
+  > | Round | Without recorder | With recorder | Overhead |
+  > |---|---|---|---|
+  > | 1 | 239.8 s | 240.0 s | +0.1 % |
+  > | 2 | 252.8 s | 256.2 s | +1.4 % |
+  >
+  > The map is 6.8 MB. 144 tests start a process; 27 functions run at import or collection. A body
+  > change to `total_current` in `post/qoi.py` selects 1,038 tests in 54 files, in 0.46 s: 21
+  > files call into `qoi.py`, and the process starters and the source readers make up the rest.
+  > Not re-measured on 3.14: the merge of item 4 was not available to this session.
+
+  > **Outcome — the routes as built go beyond D4, each selecting more, never less** (accepted by
+  > the author in principle, 12 October 2026):
+  > - Markdown read as data selects its readers. Markdown that `prose-only.sh` does not call prose
+  >   (the specification, findings logs, example READMEs) also selects the process starters, whose
+  >   children may read it unseen.
+  > - A function started at import or collection, outside any test, is listed in the map, and a
+  >   change to it falls back: the registries' `register`, `CaseDocument`'s validators.
+  > - A changed test file also selects every test file that names it (`git grep -w`), as
+  >   `test_axis_weight_order.py` imports `test_mms`.
+  > - An added test file selects itself, by path, instead of falling back.
+  > - Directories a test lists are recorded, so an added or deleted Markdown or test file selects
+  >   the tests that globbed its directory.
+  > - Wide fixtures and test modules' bodies are recorded as scopes of their own and merged across
+  >   xdist workers, so a seed loaded from disk on one worker still credits the code that another
+  >   worker ran to compute it.
 - [ ] 2. [Opus] — a hook that skips a test is silent. `gate.sh`: the hook runs D5, adds `gate.sh
   map`, and stamps `impact` (Design §7). The skills' first step starts `gate.sh map`. Amend §7.6's
   development-selection NOTE and `CLAUDE.md` *Commands*, and add VER-74 to Appendix A, from the
