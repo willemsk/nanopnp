@@ -45,8 +45,8 @@ plants a change and confirms that the right tests are picked, and the online run
 everything on every push. A problem that shows only on macOS or Windows now appears after a merge,
 and is fixed in a follow-up.
 
-**Your call.** Whether the phase estimate grows by a week. Any speed target the new package misses
-comes back to you for a decision.
+**Your call.** Any speed target the new package misses comes back to you for a decision. The
+estimate stays at 4 to 6 weeks (your ruling, 12 October 2026).
 
 This is the delivery plan for Phase 4 of `SPECIFICATION.md` §8.1. The specification is normative.
 Where this file and the specification disagree, the specification governs and this file is wrong.
@@ -618,6 +618,12 @@ Its `/wp-plan` decides the impact tool, the shard count, VER-73's margin, the ro
 order of the switch. Most items are `[any]`. Three are `[Opus]`: VER-62 on 3.14, any coarsening
 under the third lever, and the soundness argument of the selection. Tagged `v0.5.0-alpha.9`.
 
+> **Amended, 12 October 2026** (§8.2.10 J10 to J12), at its `/wp-plan`: [wp43-development-loop.md](wp43-development-loop.md).
+> The `extended` walks leave the pull-request leg and run on `main`, nightly and before a release,
+> because example 07 alone takes 5 to 8 minutes. Changed-line coverage is measured over the
+> development selection. The token figure is the fixed reading set, 9,849 words for WP42. The push
+> gate's 5 minutes is a predicted miss (6.5 to 8 minutes), reported at the close.
+
 ### WP44 — The small fixes (REV-14 to REV-16, REV-18, REV-19, and eleven low items)
 
 > **Amended, 11 October 2026** (§8.2.10 J1). This was WP43, and is now **WP44**, after the
@@ -789,8 +795,9 @@ Its last commit on `main` is tagged `v0.5.0` alone (G11).
 | The review register's accepted items | At the second amendment, or before the OKF bundle | **Settled by the author, 6 October 2026** (§8.2.9 I1): WP41 to WP43, before WP44 |
 | The development loop | Insert a package before the small fixes, and its scope | **Settled by the author, 11 October 2026** (§8.2.10 J1 to J5, J7 to J9) |
 | Python 3.15 and lazy imports | Bump, add, or revisit | **Settled by the author, 11 October 2026** (J6): revisited under OPN-09 |
-| The impact tool, the shard count, VER-73's margin, the roster's files | — | **Open**, owned by WP43's `/wp-plan` |
-| The phase estimate after J1 | 4–6 weeks (I5), or a week more for WP43 | **Open, the author's.** The close states the figure it ends at |
+| The impact tool, the shard count, VER-73's margin, the roster's files | — | **Settled by WP43's plan, 12 October 2026** ([wp43-development-loop.md](wp43-development-loop.md) D2, D10, D11, D13), from measurement |
+| The phase estimate after J1 | 4–6 weeks (I5), or a week more for WP43 | **Settled by the author, 12 October 2026** (§8.2.10 J12): 4–6 weeks, WP43 absorbed |
+| The walks on a pull request; J7's token figure | — | **Settled by the author, 12 October 2026**, at WP43's `/wp-plan` (§8.2.10 J10, J11): the `extended` walks run after a merge; the figure is the fixed reading set |
 | Their grouping | By kind, two packages, or one per area | **Settled by the author, 6 October 2026** (I2): accuracy, verification, small fixes |
 | `REV-23` to `REV-65` | Phase 4, Phase 5, Phase 6, post-1.0 or declined, each | **Settled by the author, 6 October 2026** (I3) |
 | An accuracy fix that moves VER-62 | Stop (G10), pre-rule, or diagnose only | **Settled by the author, 6 October 2026** (I4): pre-ruled within a bound WP41's plan argues |
