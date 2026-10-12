@@ -785,6 +785,11 @@ start a Python child that imports the package; the rest start `git`, `bash` or `
 the whole-file widening of a few process-starting tests into slow files (`test_backend_registries.py`,
 `test_val06_ring.py`'s setup, `test_sweep_plan.py`, `test_examples_plan.py`).
 
+The same rule sets the push gate's follow-up floor: with `--extended`, the process starters include
+the example walks, example 07 (477 s) among them, so a one-line docstring change in `post/qoi.py`
+followed up in 685 s (955 tests in 50 files) against 966 s for the full run (WP43 item 3, both under
+a parallel agent's load).
+
 **Open.** Either route keeps the selection sound: trace the Python children (the recorder carried
 into the child through its environment), so a child is a set of functions rather than "anything";
 or move each process-starting test that does not need its file's module fixtures into a file of its
