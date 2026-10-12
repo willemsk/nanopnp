@@ -97,10 +97,10 @@ Dependencies: none open. WP44 is measured against this package's reading set (J1
   guard. Update the `wp-implement`, `wp-ship` and `steward` skills to start the gate in the
   background and push on its pass. Amend §7.6's coverage NOTE. Read Design §2 and §7 first. Done when
   `test_push_guard.py` passes unmarked and a one-line follow-up runs only its selection.
-- [ ] 4. [Opus] — a moved golden is a plausible wrong number. Run VER-62 on 3.14 (D12); if anything
+- [x] 05af299 4. [Opus] — a moved golden is a plausible wrong number. Run VER-62 on 3.14 (D12); if anything
   moves, stop and report to the author. Then the macOS and Windows dispatch, `.python-version`, CI's
   pins, `CLAUDE.md` and `.knowledge/07`. Done when the five walks pass on 3.14 at 10⁻⁸ with
-  unchanged mesh hashes, and the dispatch is green. The macOS and Windows dispatch is pending: it
+  unchanged mesh hashes, and the dispatch is green. Ticked with the macOS and Windows dispatch pending: it
   needs the branch pushed.
 
   > **Outcome — VER-62 holds on 3.14 on Linux.** CPython 3.14.6, `linux-x86_64/X86_V3` (the
