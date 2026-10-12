@@ -48,7 +48,7 @@ How the package answers the author's five requests of 11 October 2026:
 | 1. A commit gate that is fast, permanently | D2–D7: affected tests only on commit, one background push gate per push with a guard, cheap follow-ups. D11 makes it last: CI fails a budget overrun and any test file over its ceiling, and the gate logs every run |
 | 2. CI as effective and efficient as possible | D10, J4, J10: one sharded Linux leg per pull request, the platforms and walks after the merge, nightly older Pythons, a release matrix, timeouts, caching, one required check |
 | 3. Python 3.15 and lazy imports | Not adopted (J6; OPN-09 sets when to revisit). D12 moves the working version to 3.14 instead |
-| 4. Orchestration, accuracy, tokens, context | D13–D14, Design §9, §10 and §14: five defined agents with fixed models and tools, checked retrieval, path-scoped rules, every duplicated passage reduced to one source, a reading set at least 30 % smaller (J11), and a usage script |
+| 4. Orchestration, accuracy, tokens, context | D13–D14, Design §9, §10 and §14: four defined agents with fixed models and tools, enforced by a hook, a clause script in place of a reading agent, checked retrieval, path-scoped rules, every duplicated passage reduced to one source, a reading set at least 30 % smaller, counting the rule files a package loads (J11), and a usage script |
 | 5. A plain summary in every plan | D15, Design §12: the In brief template in the three planning skills and the PR body, tested on every plan from WP43 |
 
 Requirements: **VER-74** (new, the selection's soundness), **VER-73** (new, the budgets), VER-46
@@ -76,9 +76,9 @@ Dependencies: none open. WP44 is measured against this package's reading set (J1
 | D10 | CI (J4, J10) | **Pull request**, ubuntu 3.14: `changes`; `lint` (lock, ruff, format, mypy); `docs`; `tests (shard i/2)`, the development selection under coverage, files assigned to shards by longest-first bin-packing from `tests/durations.json` (`--shard i/2`, the conftest); `coverage` (`coverage combine`, then diff-cover against the base, then the VER-73 check); and **`CI result`**, which needs them all and is the one required check. **Push to `main`**: macOS-3.14 and Windows-3.14 run Tiers 1–2 with `--extended`, plus the GUI file serially and the bundle. Ubuntu runs the `extended` walks, and the development selection too unless the merged tree equals the tree the PR's `CI result` passed, read from a `ci/tested-tree` commit status on the PR head. **Nightly**: Tier 3, and 3.11, 3.12 and 3.13 on ubuntu, macOS and Windows with `UV_NO_BUILD=1` running Tier 1, all `continue-on-error`. **Release**: `ci.yml` gains `workflow_call` with `full: true` (the three platforms × 3.11–3.14, `--extended`), which `release.yml` needs before it builds. Every job gets a `timeout-minutes` (lint and docs 10, shards 20, platforms 40, bundle 30, nightly 30, tier3 60). The apt step is cached (`awalsh128/cache-apt-pkgs-action`, pinned by tag as the other actions are). `docs` syncs `--no-default-groups --group docs`; `lint` drops the `apbs` group | Two shards: the dev selection is about 720 s of test time under coverage, so about 90 s a shard on 4 vCPU (public repository) plus about 100 s of long files. One required check stops shard or matrix renames from touching branch protection. A fork PR cannot post the status, so it is never skipped on that ground (safe). Design §4 |
 | D11 | VER-73 | `.github/budgets.yaml`: `commit_hook_s: 60`, `push_gate_s: 300`, `pull_request_critical_path_s: 360`, `file_ceiling_s: 90`, `margin: 0.5`. The file ceiling makes the hook's budget last: no development-selection file may take over 90 s × 1.5 in CI's junit durations (`check_files(durations, ceiling_s, margin)`), because the hook's wall time is bounded below by its longest selected file. This is WP33 D15's ceiling, made a check. `.github/scripts/ci_budget.py` gives `critical_path_s(jobs)` (first start to last completion) and `check(jobs, budget_s, margin) -> (passed, message)`. Its message names the measured value, the budget and the margin as a percentage, says "over budget" when it passes inside the margin, and names an unfinished job. CI's `coverage` job reads the run's jobs through the API and fails past budget × 1.5. A hook run over 90 s prints an over-budget notice and never fails on it (Design §7). The local budgets are logged by `gate.sh` to `<git-dir>/nanopnp-gate.log`, as time, mode, selection size and tree, and reported by the usage script. VER-73 supersedes WP33 D15's targets; REV-47's close reports both | Margin from the measured spread: the same suite took 8m11s and 13m07s on one day (1.6×), so a 50 % excess is beyond the variance already seen. A tighter margin would fail on runner noise alone. Design §5 |
 | D12 | Python 3.14 (J5) | First, the five VER-62 walks on 3.14 under the X86_V3 cap, on Linux: the deployed mesh hashes must be the recorded ones and each number must hold at 10⁻⁸. Any move stops the package (G10). Then macOS and Windows on 3.14 through a `workflow_dispatch` of the branch. Then `.python-version` → 3.14, CI's pins, `CLAUDE.md` ("developed on 3.14") and `.knowledge/07`. `requires-python` is unchanged | `[Opus]`: a moved golden is a plausible wrong number. Wheels: every locked package has a cp314 wheel on all three platforms, except `watchdog` on macOS arm64 (docs group only; docs run on ubuntu) |
-| D13 | The roster (J8) | `.claude/agents/`: `gate-runner` (sonnet; Bash, Read), which runs a named gate stage or selection and returns failures only; `spec-reader` (sonnet; Read, Grep, Glob), which returns clauses by identifier, verbatim with line numbers; `surveyor` (haiku; Read, Grep, Glob, `effort: low`), which locates and counts, with paths, for the caller to check; `ci-log-classifier` (sonnet; Read, Grep, Glob), which classifies a fetched log against the steward's table; `physics-reviewer` (opus; Read, Grep, Glob, `effort: xhigh`). The model policy points at these files as its enforcement, and gives Haiku checked retrieval | The spec reader is Sonnet, not Haiku: a missed NOTE is silent. Unknown keys are ignored silently (docs), hence `test_agent_roster.py` |
-| D14 | Leaner context (J8, J11) | `.claude/rules/physics-numerics.md` (paths `src/nanopnp/{physics,numerics,solve,post,materials,charge}/**`, `tests/tier2/**`) takes *Physics ground rules* and *Numerics rules*, and `.claude/rules/python.md` (paths `src/**/*.py`, `tests/**/*.py`) takes *Coding conventions*. Each is moved verbatim, not rewritten, and `/wp-plan` reads both. Word targets: `CLAUDE.md` 1,300; `wp-implement` 1,000; `wp-plan` 1,100; `wp-ship` 1,200; `steward` 1,500; `phase-plan` 1,800; model policy 500; `current.md` 700; `.knowledge/00-index.md` 1,000. `.claude/scripts/reading_set.py <plan>` counts J11's set. `.claude/scripts/usage.py` reports a transcript's tokens, compactions, spawns and gate minutes, and fails naming an unknown format | J11 baseline, counted at `d630f85`: 2,074 + 1,558 + 902 + 1,566 + 850 + 2,899 (WP42's brief) = **9,849 words**. WP44 must be ≤6,894 |
-| D15 | `## In brief` (J9) | A template in `phase-plan`, `wp-plan` and `wp-implement`, and in the PR body `wp-implement` writes: at most 250 words; what changes and why, the cost, what could go wrong and how it would be noticed; then **Your call**, each item with a recommendation | `test_agent_roster.py` checks the skills, and every plan from WP43 on |
+| D13 | The roster (J8) | **Four agents** in `.claude/agents/`: `gate-runner` (sonnet; Bash, Read; `effort: low`), which runs a named gate stage or selection and returns failures only; `surveyor` (haiku; Read, Grep, Glob; `effort: low`), which locates and counts, with paths, for the caller to check; `ci-log-classifier` (sonnet; Read, Grep, Glob), which classifies a fetched log against the steward's table; `physics-reviewer` (opus; Read, Grep, Glob; `effort: high`). The first three set `omitClaudeMd: true`; the reviewer loads `CLAUDE.md`. **Clauses by identifier come from a script**, `.claude/scripts/clause.py <ID>…`, not an agent: it prints the identifier's row or section and every NOTE and §8.2 ruling that names it, verbatim with line ranges. **A PreToolUse hook enforces the roster**, `.claude/hooks/agent-guard.sh` on `Agent`: it refuses a roster agent called with a `model` other than its file's, and any other agent called without an explicit `model`, each naming the model policy. The model policy points at the agent files and the hook as its enforcement, and gives Haiku checked retrieval | Author, 12 October 2026 (§8.2.10 J8, amended). A script cannot miss a NOTE its search covers and costs no model; an agent copying text verbatim pays a cold start and output tokens, and the text lands in the caller anyway. `omitClaudeMd` (Claude Code 2.1.271+; 2.1.296 here) saves `CLAUDE.md`'s words on every retrieval spawn. `high`, not `xhigh`, for the reviewer: the added benefit does not repay the cost now (author). A call's `model` overrides the file's, and nothing else stops a `general-purpose` spawn on the session's model, hence the hook. Unknown keys are ignored silently (docs), hence `test_agent_roster.py` |
+| D14 | Leaner context (J8, J11) | `.claude/rules/physics-numerics.md` (paths `src/nanopnp/{physics,numerics,solve,post,materials,charge,mesh,validation}/**`, `data/corrections/**`, `tests/tier2/**`, `tests/tier3/**`) takes *Physics ground rules* and *Numerics rules*, and `.claude/rules/python.md` (paths `src/**/*.py`, `tests/**/*.py`, `.claude/scripts/**/*.py`, `.github/scripts/**/*.py`, `docs/scripts/**/*.py`) takes *Coding conventions*. Each is moved verbatim, not rewritten. A path-scoped rule loads only when a matching file is read or edited, so `/phase-plan`, `/wp-plan` and `/wp-ship` §4 read both explicitly. **J11's count includes the rule files a package triggers**: `reading_set.py` adds each rule file whose `paths` match a file the plan's Work items name, so moving text into a rule file does not count as a cut when the package's work loads it again. The Execution brief is capped at 1,200 words for J11: `/wp-plan`'s target becomes a limit, and `reading_set.py` fails a brief over it. The script also prints the set without the brief, so the fixed files' own cut is visible beside the total. Word targets: `CLAUDE.md` 1,300; `wp-implement` 1,000; `wp-plan` 1,100; `wp-ship` 1,200; `steward` 1,500; `phase-plan` 1,800; model policy 500; `current.md` 700; `.knowledge/00-index.md` 1,000. `.claude/scripts/reading_set.py <plan>` counts J11's set. `.claude/scripts/usage.py` reports a transcript's tokens by model and its sub-agent spawns by type, nothing more, and fails naming an unknown format | J11 baseline, counted at `d630f85`: 2,074 + 1,558 + 902 + 1,566 + 850 + 2,899 (WP42's brief) = **9,849 words**. WP44 must be ≤6,894. The baseline is unchanged by counting rule files: at `d630f85` their text was inside `CLAUDE.md` and counted there. Paths widened to every module whose code the physics and numerics rules govern (author, 12 October 2026). `usage.py` reads an internal format and gates nothing, so it stays small (author) |
+| D15 | `## In brief` (J9) | A template in `phase-plan`, `wp-plan` and `wp-implement`, and in the PR body `wp-implement` writes: at most 250 words; what changes and why, the cost, what could go wrong and how it would be noticed; then **Your call**, each item with a recommendation. **No code or identifiers**: the section holds no backtick and nothing shaped like a requirement identifier (`VER-62`, `§7.6`, `D13`). Item 9 trims the Phase 4 plan's In brief to the limit (385 words today, its last paragraph moved under the next heading) | `test_agent_roster.py` checks the skills, every work-package plan from WP43 on and every phase plan from Phase 4 on, `current.md` included; J9 asks for text readable without code or identifiers, and a test is what keeps it so (author, 12 October 2026) |
 | D16 | Records | VER-73 and VER-74 rows in Appendix A; §7.6's table, its development-selection and coverage NOTEs, and a budget NOTE; `CHANGELOG.md` under `v0.5.0-alpha.9`; a REV-nn row for each missed budget | H12, J7 |
 
 ### Work items
@@ -111,12 +111,15 @@ Dependencies: none open. WP44 is measured against this package's reading set (J1
 - [ ] 7. [any] VER-73 (D11): `.github/budgets.yaml`, `.github/scripts/ci_budget.py`, the CI step,
   the gate log, §7.6's budget NOTE and the Appendix A row. Done when `test_loop_budgets.py` passes
   unmarked and the PR run reports its critical path.
-- [ ] 8. [any] The roster and the model policy (D13; Design §9, §10). Done when `test_agent_roster.py`'s roster
-  tests pass unmarked.
-- [ ] 9. [any] Leaner context and summaries (D14, D15): the rules files, the trims to the targets by
-  Design §14's map, `reading_set.py` and `usage.py` (Design §13), and the In brief template (Design
-  §12). Done when the In brief tests pass
-  unmarked and `reading_set.py` reports each target met.
+- [ ] 8. [any] The roster and the model policy (D13; Design §9, §10): the four agent files,
+  `.claude/scripts/clause.py`, `.claude/hooks/agent-guard.sh` registered on `Agent` in
+  `.claude/settings.json`, and the model policy. Done when `test_agent_roster.py`'s roster, clause
+  and guard tests pass unmarked.
+- [ ] 9. [any] Leaner context and summaries (D14, D15): the rules files with D14's paths, the
+  explicit reads in `phase-plan`, `wp-plan` and `wp-ship` §4, the trims to the targets by Design
+  §14's map, `reading_set.py` and `usage.py` (Design §13), the In brief template (Design §12), and
+  the Phase 4 plan's In brief trimmed to 250 words. Done when the In brief and reading-set tests
+  pass unmarked and `reading_set.py` reports each target met.
 - [ ] 10. [any] Close: measure the four budgets on this tree (the hook on three one-module changes:
   `post/qoi.py`, `io/case.py`, `physics/poisson.py`). Add a REV-nn row per miss, update
   `CHANGELOG.md` (`v0.5.0-alpha.9`) and the Phase 4 plan's WP43 entry, and leave the REV-47 note.
@@ -129,7 +132,7 @@ Dependencies: none open. WP44 is measured against this package's reading set (J1
 | `tier1/test_impact_selection.py` | 1 | VER-74 | Each route of D4 selects its tests, by node id; each fallback names its path; the walks are excluded unless asked for; xdist and serial maps select alike | `uv run pytest tests/tier1/test_impact_selection.py` |
 | `tier1/test_push_guard.py` | 1 | J3 | No branch push without `HEAD^{tree} extended`; a hook pass never stands in; a tag-only push, `--no-verify` and other commands pass | as above, by file |
 | `tier1/test_loop_budgets.py` | 1 | VER-73 | The recorded budgets are J7's, the file ceiling 90 s and the margin 0.5. A budget below the measured value beyond the margin fails, naming all three. An unfinished job fails. A file over its ceiling beyond the margin fails, naming it | as above |
-| `tier1/test_agent_roster.py` | 1 | J8, J9 | Five agents with exact models and tools; no unknown key; the skills carry the In brief; every plan from WP43 opens with one of ≤250 words | as above |
+| `tier1/test_agent_roster.py` | 1 | J8, J9, J11 | Four agents with exact models, tools and effort; `omitClaudeMd` on the three retrieval agents and not on the reviewer; no unknown key; `clause.py VER-62` prints its Appendix A row and every §8.2 ruling naming it, and fails on an unknown identifier; the guard refuses a roster agent's other model and a non-roster agent without one, and passes the rest; the rule files carry D14's paths; `reading_set.py` counts a triggered rule file and fails a brief over 1,200 words; the skills carry the In brief; every plan from WP43 and Phase 4, and `current.md`, opens with one of ≤250 words, no backtick and no identifier | as above |
 | `tier1/test_workflow_hooks.py` | 1 | J2, J3 | Existing; extended in items 2 and 3 for `map`, the `impact` stamp and the follow-up | as above |
 | The five VER-62 walks on 3.14 | 2 | VER-62 | Mesh hashes as recorded; numbers at 10⁻⁸ | `uv run --python 3.14 pytest --extended <the five files>` |
 | The budgets | — | J7, VER-73 | Item 10's measurements against D9 | item 10 |
@@ -387,8 +390,8 @@ The same ordering puts the items longest file first when no shard is given (D8 a
 
 ### 9. The agent files (D13), verbatim to start from
 
-Each file is the frontmatter plus a body of at most 150 words. The body states the job, what to
-return and what never to do.
+Four files, each the frontmatter plus a body of at most 150 words. The body states the job, what
+to return and what never to do.
 
 ```markdown
 ---
@@ -397,31 +400,35 @@ description: Runs a named gate stage or pytest selection for nanopnp and returns
 model: sonnet
 tools: Bash, Read
 effort: low
+omitClaudeMd: true
 ---
 Run exactly the command you are given, under `uv run`, with OMP/OPENBLAS/MKL_NUM_THREADS=1. Return:
 PASS with the summary line, or FAIL with each failing node id and the first assertion or error line
 under it, at most 40 lines in all. Never edit a file, re-run with other options, or diagnose.
 ```
 
-```markdown
----
-name: spec-reader
-description: Returns nanopnp SPECIFICATION.md clauses by identifier (FR-, VER-, §x.y, J3), verbatim, with line numbers.
-model: sonnet
-tools: Read, Grep, Glob
----
-For each identifier, return the full row or section verbatim, with its line range, and every NOTE
-or ruling (§8.2) that names it, with line ranges. Quote; never paraphrase or summarise. Say "not
-found" rather than guess.
-```
+The `surveyor` (haiku, `effort: low`, `omitClaudeMd: true`) finds files, symbols and counts,
+returning paths with line numbers, and never judges. The `ci-log-classifier` (sonnet,
+`omitClaudeMd: true`) is given a log file path. It returns the failing step, the first error,
+quoted, and the steward's failure class, quoted from `.claude/skills/steward/SKILL.md` *Failure
+classes*; the caller confirms the class on the quoted lines before standing down on a failure. A
+Tier 2 failure it only labels "physics evidence: Opus". The `physics-reviewer` (opus,
+`effort: high`, loads `CLAUDE.md`) reviews a diff or a named function against the cited
+specification, `.claude/rules/physics-numerics.md` and `.knowledge/01`. It returns findings with
+file:line, sign and unit, and edits nothing.
 
-The `surveyor` (haiku, `effort: low`) finds files, symbols and counts, returning paths with line
-numbers, and never judges. The `ci-log-classifier` (sonnet) is given a log file path. It returns
-the failing step, the first error, and the steward's failure class, quoted from
-`.claude/skills/steward/SKILL.md` *Failure classes*. A Tier 2 failure it only labels "physics
-evidence: Opus". The `physics-reviewer` (opus, `effort: xhigh`) reviews a diff or a named function
-against the cited specification and `.knowledge/01`. It returns findings with file:line, sign and
-unit, and edits nothing.
+**`.claude/scripts/clause.py <ID>…`** replaces a specification-reading agent. For each identifier
+(`VER-62`, `FR-16`, `§7.6`, `J8`) it prints, with line ranges: the identifier's defining row or
+heading's section; every NOTE whose text names it; and every §8.2 ruling row that names it. It
+matches whole identifiers (`VER-6` never matches `VER-62`), exits non-zero on one with no
+definition, naming it, and is run with `uv run`. The skills call it wherever they read a cited
+clause.
+
+**`.claude/hooks/agent-guard.sh`**, a PreToolUse hook on `Agent`, reads the payload with `jq`, as
+`gate.sh` does. With `subagent_type` naming a file in `.claude/agents/`, it refuses a `model` other
+than that file's. With any other type, `fork` aside, it refuses a call without `model`. Each refusal
+is a `deny` naming the agent, the models and `.claude/model-policy.md`. It passes everything else,
+and a payload it cannot parse.
 
 **Checked retrieval** is the model policy's new Haiku rule. The caller verifies anything it relies
 on by reading the returned line range itself, which is one `Read` with `offset` and `limit`.
@@ -430,10 +437,10 @@ on by reading the returned line range itself, which is one `Read` with `offset` 
 
 | Skill step | Today | After |
 |---|---|---|
-| `wp-plan` survey | `Explore` (Sonnet) | `surveyor` for "where/how many"; `spec-reader` for clause text |
-| `wp-implement` start | reads `00-index`, spec sections | `gate.sh map` in the background; `spec-reader` for each cited identifier, never the whole section |
+| `wp-plan` survey | `Explore` (Sonnet) | `surveyor` for "where/how many"; `clause.py` for clause text |
+| `wp-implement` start | reads `00-index`, spec sections | `gate.sh map` in the background; `clause.py` for each cited identifier, never the whole section |
 | `wp-implement` / `wp-ship` gate | foreground `gate.sh run`, polled | Bash `run_in_background`; on failure, `gate-runner` re-runs the failing ids alone |
-| `wp-ship` §4 confirmation | the session (Opus) | unchanged; `physics-reviewer` only for a second opinion on a Tier 2 or physics finding |
+| `wp-ship` §4 confirmation | the session (Opus) | unchanged, after reading both rule files; `physics-reviewer` only for a second opinion on a Tier 2 or physics finding |
 | `steward` CI failure | the session reads the log | `ci-log-classifier` on the fetched log; Tier 2 stays with the session on Opus |
 | `phase-plan` exploration | ad hoc | `surveyor`; measurements by `gate-runner` |
 
@@ -493,16 +500,15 @@ changes anything an author would decide.
 
 - **`.claude/scripts/reading_set.py <plan.md> [--at <rev>]`** prints each file of J11's set with its
   word count (`str.split`), the brief's count (the text from `## Execution brief` to the next `## `
-  heading) and the total. With `--at`, it reads the files at that revision through `git show`.
-  `--at d630f85 docs/plans/wp42-verification-checks.md` must print 9,849.
+  heading), each rule file whose `paths` match a path the plan's *Work items* name in backticks,
+  and the total, then the total without the brief. It fails on a brief over 1,200 words. With
+  `--at`, it reads the files at that revision through `git show`.
+  `--at d630f85 docs/plans/wp42-verification-checks.md` must print 9,849 (no rule files existed).
 - **`.claude/scripts/usage.py <file>`** reads a Claude Code transcript (`*.jsonl`) or a JSON list of
-  session `result` events, saved by an agent from `list_events`. It prints:
-  - the tokens: input, cache read, cache creation and output, by model;
-  - the context size at the first `Edit` or `Write` under `src/` or `tests/`;
-  - the compactions, the sub-agent spawns by type, and the gate minutes, from `nanopnp-gate.log`
-    when given `--gate-log`.
-
-  An unknown record shape stops it, naming the line. The transcript format is internal to Claude
+  session `result` events, saved by an agent from `list_events`. It prints the tokens (input, cache
+  read, cache creation and output) by model, and the sub-agent spawns by type. Gate minutes are
+  `nanopnp-gate.log`'s (D11), not this script's. An unknown record shape stops it, naming the
+  line. The transcript format is internal to Claude
   Code and may change, so the script reports and gates nothing.
 
 ### 14. Where to cut, file by file (D14; surveyed 12 October 2026)
