@@ -3,7 +3,7 @@
 Open-source Python reimplementation of the **ePNP-NS** continuum framework for simulating
 biological nanopores (Willems et al., *Nanoscale* **12**, 16775–16795, 2020), replacing a COMSOL
 workflow. 2D-axisymmetric steady state; structure → mesh → solve → analyse as one pipeline.
-Python 3.11–3.14, developed on 3.12.
+Python 3.11–3.14, developed on 3.14.
 
 ## Before doing anything
 

@@ -43,7 +43,7 @@ jobs:
           fetch-depth: 0
       - uses: astral-sh/setup-uv@v7
         with:
-          python-version: "3.12"
+          python-version: "3.14"
       - run: uv build --out-dir dist
 
       # Classify the tag, and compare the version the build produced with it.

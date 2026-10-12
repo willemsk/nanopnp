@@ -101,7 +101,7 @@ jobs:
           echo "code=$code" | tee -a "$GITHUB_OUTPUT"
 
   check:
-    name: lint, types, tier 1-2 (3.12)
+    name: lint, types, tier 1-2 (3.14)
     needs: changes
     # The nightly records Tier 3 and re-probes the bundle; re-testing an
     # unchanged, locked main on every runner is not a second gate.
@@ -117,7 +117,7 @@ jobs:
         if: env.CODE == 'true'
         with:
           enable-cache: true
-          python-version: "3.12"
+          python-version: "3.14"
       # The gmsh wheel loads these at import and raises OSError without them
       # (.knowledge/07-software-stack.md section 4; WP23 D11).
       - if: env.CODE == 'true'
@@ -167,7 +167,7 @@ jobs:
       - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
-          python-version: "3.12"
+          python-version: "3.14"
       - run: uv sync --group docs
       - run: uv run docs/scripts/generate.py
       - run: uv run mkdocs build --strict
@@ -184,15 +184,15 @@ jobs:
       fail-fast: false
       matrix:
         # QR-09: binary wheels on Windows, macOS and Linux for 3.11-3.14.
-        # Ubuntu on 3.12 is the `check` job, which runs the same selection.
+        # Ubuntu on 3.14 is the `check` job, which runs the same selection.
         os: [ubuntu-latest]
-        python-version: ["3.11", "3.13", "3.14"]
+        python-version: ["3.11", "3.12", "3.13"]
         include:
           # CON-13: the desktop platforms, on the development pin.
           - os: windows-latest
-            python-version: "3.12"
+            python-version: "3.14"
           - os: macos-latest
-            python-version: "3.12"
+            python-version: "3.14"
     steps:
       - uses: actions/checkout@v5
         with:
@@ -253,7 +253,7 @@ jobs:
         if: env.CODE == 'true'
         with:
           enable-cache: true
-          python-version: "3.12"
+          python-version: "3.14"
       - if: env.CODE == 'true'
         run: uv sync --all-extras --group packaging
       - if: env.CODE == 'true'
@@ -302,7 +302,7 @@ jobs:
       - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
-          python-version: "3.12"
+          python-version: "3.14"
       # The gmsh wheel loads these at import and raises OSError without them
       # (.knowledge/07-software-stack.md section 4; WP23 D11).
       - run: >-

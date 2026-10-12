@@ -1143,7 +1143,7 @@ resolved lock contains **no sdist-only package** — every dependency, `ngsolve`
 **[tested]**. Nothing in the current dependency set contradicts CON-07.
 
 **The local gate cannot see a 3.10 floor break; only the CI matrix can [tested].** The gate of
-`CLAUDE.md` runs on the development interpreter — 3.12 — so a 3.11+ stdlib API compiles, typechecks
+`CLAUDE.md` runs on the development interpreter — 3.14 — so a 3.11+ stdlib API compiles, typechecks
 and passes every test locally while failing `tier 1-2 (ubuntu-latest, py3.10)` at *collection*.
 `datetime.UTC` is the worked example: it is 3.11+, `datetime.timezone.utc` is the equivalent
 available across the whole supported range, and the import error takes down every test module that
@@ -1156,6 +1156,17 @@ mypy aborts the whole check with `numpy/__init__.pyi:737: error: Type statement 
 Python 3.12 and greater  [syntax]` before reaching project code **[tested]**. So the guard is the
 3.10 matrix job, and reproducing a matrix-only failure means `uv run --python 3.10 --all-extras
 pytest`, which resolves and installs a separate 3.10 environment in about a minute.
+
+**The development interpreter is 3.14, and it computes VER-62's numbers as 3.12 does [tested].**
+`uv.lock` splits its resolution only at 3.12, so 3.12 and 3.14 install the same version of every
+package (NumPy 2.5.2, SciPy 1.18.0, NGSolve 6.2.2606), each from a wheel (cp314, abi3 or pure Python; none built from source). On CPython
+3.14.6, `linux-x86_64` with NumPy's dispatch capped at `X86_V3` (`NPY_DISABLE_CPU_FEATURES`, as CI
+and the gate set it), the six walk files of the number-stability golden pass under `--extended`:
+all seven walks deploy their recorded reference mesh, and the largest relative drift against the
+golden recorded on 3.12 is 6.9 × 10⁻¹⁴ (example 01's `eof_m3_s`; every other walk at or below
+2.7 × 10⁻¹⁵), 12 October 2026 (WP43, D12). Every locked package has a cp314 wheel on Linux, macOS
+and Windows except `watchdog` on macOS arm64, which only the `docs` group pulls and the
+documentation builds on ubuntu. PROPKA needs the 3.14 shim of §3 there as everywhere.
 
 ---
 
