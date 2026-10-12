@@ -47,8 +47,16 @@ docstrings is a Sonnet task; deciding one sign in one weak form is an Opus task.
 
 ## Haiku
 
-Only for bulk mechanical retrieval where the result is checked immediately — listing files,
-counting matches. Rarely worth the spawn.
+Only for bulk mechanical retrieval, as the `surveyor`: paths and counts. **Retrieval is checked:**
+the caller verifies anything it relies on by reading the returned line range itself, one `Read`
+with `offset` and `limit`. Clauses by identifier come from `.claude/scripts/clause.py`, not an agent.
+
+## Enforcement
+
+`.claude/agents/` fixes the model, tools and effort of `gate-runner` (Sonnet), `surveyor` (Haiku),
+`ci-log-classifier` (Sonnet) and `physics-reviewer` (Opus). A call's `model` overrides its file's,
+so `.claude/hooks/agent-guard.sh`, a PreToolUse hook on `Agent`, refuses a roster agent called with
+another model and any other agent called without an explicit `model`.
 
 ## Who implements a plan
 
