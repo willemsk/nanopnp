@@ -239,9 +239,9 @@ def test_the_reading_set_counts_the_rule_files_a_package_loads(tmp_path: Path) -
 
 
 @pytest.mark.xfail(strict=True, reason=PLANNED_CONTEXT)
-def test_the_reading_set_refuses_a_brief_over_1200_words(tmp_path: Path) -> None:
+def test_the_reading_set_refuses_a_brief_over_1600_words(tmp_path: Path) -> None:
     plan = tmp_path / "wp99-toy.md"
-    plan.write_text(_toy_plan(1201), encoding="utf-8")
+    plan.write_text(_toy_plan(1601), encoding="utf-8")
     result = subprocess.run(
         [sys.executable, str(SCRIPTS / "reading_set.py"), str(plan)],
         cwd=REPOSITORY,
@@ -250,7 +250,7 @@ def test_the_reading_set_refuses_a_brief_over_1200_words(tmp_path: Path) -> None
         timeout=60,
     )
     assert result.returncode != 0
-    assert "1,200" in result.stdout + result.stderr
+    assert "1,600" in result.stdout + result.stderr
 
 
 @pytest.mark.xfail(strict=True, reason="planned: WP43 D15 (J9)")
