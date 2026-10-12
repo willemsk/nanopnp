@@ -205,6 +205,10 @@ Dependencies: none open. WP44 is measured against this package's reading set (J1
   > gain could not be measured: another agent's runs held the load at 2 to 8 on the 4 cores, and
   > the ordered and path-ordered `--extended` runs took 937 s and 830 s back to back. Item 10
   > re-measures it. `.knowledge/07` §12.2.
+
+  > **Outcome — `gate.sh run` passes on items 5 to 7's tree (`2035cd4`) in 536 s**, the walks
+  > without coverage, 4 cores, load falling from about 5 to 1.8 over the run as the other agent
+  > finished; 527 s was the figure at `d630f85` with coverage on the walks (Design §3).
 - [x] 91f414f 6. [Opus] — §7.6 is normative text. CI (D10): `ci.yml`, `release.yml`, the shard option in
   `tests/conftest.py`, the status post, timeouts, apt cache and trims (Design §4, §8). Amend §7.6's table and its
   development-selection NOTE (J4, J10). Done when the PR's `CI result` is green, a dispatch with
@@ -222,7 +226,7 @@ Dependencies: none open. WP44 is measured against this package's reading set (J1
   > too**, so every job its critical-path check measures has ended. Jobs that sync fewer groups
   > than the default run `uv run --no-sync`, or `uv run` would sync them back. A dispatch of
   > `release.yml` re-releases an existing tag without the full matrix.
-- [ ] 7. [any] VER-73 (D11): `.github/budgets.yaml`, `.github/scripts/ci_budget.py`, the CI step,
+- [x] 2035cd4 7. [any] VER-73 (D11): `.github/budgets.yaml`, `.github/scripts/ci_budget.py`, the CI step,
   the gate log, §7.6's budget NOTE and the Appendix A row. Done when `test_loop_budgets.py` passes
   unmarked and the PR run reports its critical path.
 
