@@ -8,7 +8,8 @@ nothing here is evidence an unmerged branch shipped.
 The project is in Phase 4, which tidies the program before anyone else relies on it. Next comes a
 short package that makes the automatic checks fast: about a minute per commit instead of 3.5,
 and one full check per push instead of several. It also gives each kind of AI helper a fixed job
-and model, so that sessions cost less. **Your call:** whether the phase estimate grows by a week.
+and model, so that sessions cost less. **Your call:** at its close, whether the pre-push check's
+5-minute target becomes 8, since one example alone takes about 5.
 
 ## Position
 
@@ -18,8 +19,9 @@ and model, so that sessions cost less. **Your call:** whether the phase estimate
   **in progress** (§8.2.7 G1–G11; §8.2.8 H1–H12; §8.2.9 I1–I5; §8.2.10 J1–J9). WP35 to WP42 delivered, as
   `v0.5.0-alpha.1` to `v0.5.0-alpha.8`, the last two [WP41](wp41-accuracy-fixes.md) and
   [WP42](wp42-verification-checks.md).
-- **Next: WP43, the development loop** (§8.2.10 J1–J9): `/wp-plan 43`. It covers the commit
-  hook, the push gate, CI, Python 3.14, the agent roster and the `## In brief` summaries.
+- **Next: WP43, the development loop** (§8.2.10 J1–J12), planned in
+  [wp43-development-loop.md](wp43-development-loop.md): `/wp-implement`. Its items 1–2 (the
+  impact selection) land before anything relies on it; item 4 (VER-62 on 3.14) may stop it (G10).
 - Then WP44, the small fixes (I1, I2); WP45–WP47 (OKF bundle, backfill, protocol); then the
   author's sessions and the second amendment, fixes from WP48.
 - Phase 5 (`v0.6.0`) is the GUI (F5), Phase 6 (`v0.7.0`) validation (F1); v1.0 is OPN-08.
@@ -29,8 +31,8 @@ and model, so that sessions cost less. **Your call:** whether the phase estimate
 - **Versions:** one minor per phase; a retired name is never reused, except `v0.5.0` (E2, F2).
   The close takes `v0.5.0` alone; the session pushes the tags it can (G11). → §2.7 NOTE.
 - **The development loop:** affected tests on commit, one push gate, a single pull-request leg on
-  Python 3.14, budgets of 60 s, 5 min and 6 min, a defined agent roster, and `## In brief`. The
-  floor stays 3.11. → §8.2.10 J1–J9; OPN-09.
+  Python 3.14 without the walks, budgets of 60 s, 5 min and 6 min, a defined agent roster, and
+  `## In brief`. The floor stays 3.11; the estimate 4–6 weeks. → §8.2.10 J1–J12; OPN-09.
 - **Phase 4's shape:** accepted refactors before the protocol (G2); two OKF packages and a
   ratchet (G3, G8); checked findings logs (G4); protocol scripts gated, findings only from the
   author's sessions (G7); the VER-62 golden (G10). → §8.2.7.
@@ -80,7 +82,7 @@ and model, so that sessions cost less. **Your call:** whether the phase estimate
 | The OKF package's binding decisions | `okf-knowledge-bundle.md` (K1–K11); §8.2.7 G3, G8, G9 |
 | The findings being fixed | `docs/project/modularity.md`, `modularity-layering.yaml`; `review-items.md` and the two logs |
 | Case schema and supply chains | §5.3.1 NOTEs; `io/case.py`, `io/case_paths.py`, `io/resolved.py` (the base); `pipeline/case.py`, `pipeline/checks.py` (resolution and its checks) |
-| The loop's measurements | §8.2.10's preamble; the Phase 4 plan's *Context*; `.claude/hooks/gate.sh`; `.github/workflows/ci.yml` |
+| The loop's measurements | WP43 plan, Design §3 |
 
 The Outcomes of a delivered plan override its decisions table, so read the two together.
 

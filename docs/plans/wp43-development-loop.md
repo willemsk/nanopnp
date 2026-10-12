@@ -1,0 +1,224 @@
+# WP43 — The development loop
+
+**Status: planned, not started.** 12 October 2026. Inherits WP42's tree (`v0.5.0-alpha.8`),
+WP33's suite levers and seeds (`.knowledge/07` §12), and the gate of WP23 to WP32
+(`.claude/hooks/gate.sh`).
+
+Part of [Phase 4](phase-4-polish-and-user-testing.md), under §8.2.10 J1 to J12. `SPECIFICATION.md`
+governs; identifiers here are pointers into it, and where this plan and the specification disagree,
+the plan is wrong.
+
+## In brief
+
+**What changes.** Today every commit waits about 3.5 minutes for tests, every push about 9.5, and
+each pull request about 10 to 19 minutes in CI. After this package a commit runs only the tests
+its change can affect, about a minute. The full check runs once before a push, in the background.
+A pull request runs one fast Linux check, about 4 to 5 minutes. The long end-to-end walks and the
+other platforms run after the merge, nightly and before a release. Python 3.14 becomes the working
+version. Each kind of AI helper gets a fixed job and model, and the instructions every session
+reads shrink by a third.
+
+**Cost.** About a week of work, absorbed in the phase's 4 to 6 weeks.
+
+**What could go wrong.**
+- The commit check could miss a test a change affects. A test plants changes and proves every
+  route is caught, and CI still runs everything.
+- A walk-only or platform-only break now appears after the merge and is fixed forward.
+- Python 3.14 could move a recorded number. That stops the package for your ruling.
+
+**Your call.**
+- The full pre-push check will likely take 6.5 to 8 minutes, not 5: one example's solve alone takes
+  about 5 minutes and cannot be shortened within the rules. *Recommendation:* re-set that budget to
+  8 minutes at the close, since it no longer blocks work.
+- After the merge, make the single check "CI result" the one required check in branch protection.
+  *Recommendation:* yes.
+
+## Execution brief
+
+Scope is §8.2.10 J2 to J5 and J7 to J11, as the Phase 4 plan's WP43 entry lists it, with J10's
+move of the walks off the pull request. The brief runs over its 1,200 words and holds sixteen
+decisions, because J1 ruled one package. The parts share one bootstrap order (D1) and one set of
+budgets (D9), and the order cannot be split across two pull requests without re-running the old
+gate on the new suite.
+
+Requirements: **VER-74** (new, the selection's soundness), **VER-73** (new, the budgets), VER-46
+and VER-62 (their cadence moves; their assertions do not), VER-72 (d) (the planned markers), QR-09,
+CON-07, CON-10. Clauses amended in this package: §7.6's table and its three NOTEs, a budget NOTE,
+Appendix A rows for VER-73 and VER-74, `CLAUDE.md` *Setup*, *Commands* and the gate lines,
+`.claude/model-policy.md`, the five skills and `.knowledge/07` §12. J10 to J12 were written into
+§8.2.10 in this plan's commit.
+
+Dependencies: none open. WP44 is measured against this package's reading set (J11).
+
+### Decisions
+
+| # | Decision | Choice | Why / source |
+|---|---|---|---|
+| D1 | Order | The plan's planned tests first; then the selection (items 1–2) before anything relies on it; Python 3.14 (item 4) before the timings that are budgeted on it; the context work last | J2: the fast hook is trusted only once VER-74 holds. Until item 2 lands, commits run the old hook |
+| D2 | The impact tool | **A recorder of our own**: `tests/impact.py`, a pytest plugin (`-p impact --impact-record=PATH --impact-source=src/nanopnp`). It notes each code object a test starts through `sys.monitoring` `PY_START`, on a free tool id, with each event disabled after its first hit and re-armed per test. A fixture scoped wider than a function is recorded once and credited to every test that requests it. Audit hooks note a test that starts a process (`subprocess.Popen`, `os.system`, `os.exec*`, `os.posix_spawn`) and every source file it opens as data. Python 3.12 or later; on 3.11 it refuses, naming the version | Measured: coverage's per-test contexts cost +83 % (dev selection 363 s against 199 s) and credit a module or session fixture to the first test alone, which under-selects. pytest-testmon traces through coverage too, is a new dependency, and has the same fixture gap. An import graph misses registry dispatch (`create()`). Design §1 |
+| D3 | The map | JSON at `$(git rev-parse --git-common-dir)/nanopnp-impact/map.json`, schema `nanopnp/impact/v1`. It records the tree it was recorded on (the `git add -A` tree, as the gate's stamp), the source root, and per test node id: the functions as `path::qualname` with a hash of each function's position-free AST, the source files read, whether it starts a process, and whether it is `extended`. Each xdist worker writes its own part, which the selector merges. It is written by every push-gate run and by `gate.sh map` | A worktree shares it. A fresh container has none and falls back. Keyed by qualname, so a line shift elsewhere in the file changes nothing |
+| D4 | What a change selects | Cumulative from the map's tree to the working tree. A change inside a function body selects every test that started that function, or a function nested in it. A changed source file selects every test that read it as data. Any change under the source root selects every process-starting test. A changed `tests/**/test_*.py` selects itself. Markdown outside `src/` selects nothing. Selection is by whole file: every test in a file with any selected test. **Everything else falls back**, naming the path in its reason: a module-level, class-body, signature or decorator change, an added, deleted or renamed module, a non-Python file, any `conftest.py`, `pyproject.toml`, `uv.lock`, a hook or a workflow, or a map missing (`no impact map`), corrupt (`unreadable`) or from an unknown tree (`tree`) | The routes by which a test can depend on a change, each one planned in `test_impact_selection.py`. Whole files keep module fixtures sound. Design §1 |
+| D5 | The commit hook | Lock check, ruff, format, mypy. Then `impact.select`, without `extended` (J2): the selected node ids under `-n auto --dist loadfile`, or none. On a fallback, the development selection, and the hook's output names the reason. The pass is stamped `impact`. Gmsh and the GUI file are handled as now. `/wp-implement`, `/wp-ship` and the steward start `gate.sh map` in the background as their first step, so the second commit of a fresh container is already fast | 60 s target (J7). Measured on the current map: a typical one-module change selects about 30 to 50 s of wall time on 4 cores. Changes to `core/`, `physics/` and `numerics/` select most of the suite (Design §3) |
+| D6 | Soundness, stated | Design §1: if no function a test started, no source file it read, no module-level statement and no non-Python file changed, then the test executes as before. Residuals: non-determinism (a fixed seed or the clock), which is outside the claim, as it is for CI | `[Opus]`: a gap here passes silently. VER-74 enumerates the routes; CI's full run stays the authority (J3) |
+| D7 | The push gate | `gate.sh run` started with Bash `run_in_background`, so the session is woken when it ends and never polls. It reports only failures. **A push guard** in `gate.sh`'s hook mode refuses `git push` unless the stamp names `HEAD^{tree}` with `extended`. It runs nothing. A tag-only push and `--no-verify` pass. **The follow-up** (J3): after a pass on tree P, `run` on tree T selects with `include_extended=True` from P's map. It runs that selection under coverage and runs diff-cover on the lines changed since P, comparing against a commit object made from P (`git commit-tree`). The map and stamp then move to T. A fallback runs the whole gate | A push never goes out ungated, and a one-line fix no longer re-runs 2,000 tests. The follow-up's soundness is Design §2. The residual is a change that removes the only coverage of a line changed *before* P; CI's full diff-cover catches it |
+| D8 | Suite speed | Three things, each with its lever, and nothing more. (a) **Ordering, longest file first** from a committed `tests/durations.json`. Files missing from it take the median. It is regenerated by `tests/impact.py durations` from a `--durations=0` log. This is §7.6's fourth lever by scheduling: no test changes. (b) **The `extended` tests carry `no_cover`** (J10: coverage is over the development selection). The walks no longer pay coverage's +33 %. (c) **`COVERAGE_CORE=sysmon`** on 3.14, if it is faster and its XML report is identical on the same tree; otherwise stay on ctrace. Not done: the 2WCD seeds are already shared across workers under a lock (`tests/conftest.py`, `seeded_2wcd`). Example 07 stays cold (§7.6), and its 285 s solve is not coarsened: `t+` is 0.543 against a gate of ½, under three times its headroom. Four BLAS threads leave it unchanged (measured: 285 s and 289 s) | The four levers (§7.6 NOTE, WP33). Design §3 |
+| D9 | Budget predictions | Commit hook about 50 s for a typical change, ≤60 s. Push gate 6.5 to 8 min: **a predicted miss of J7's 5 min**, set by example 07 (477 s alone, measured). PR critical path about 4 to 5 min, ≤6. Reading set ≤6,894 words (J11) | A miss is reported with its cause and ruled (J7). The In brief recommends re-setting the push gate to 8 min |
+| D10 | CI (J4, J10) | **Pull request**, ubuntu 3.14: `changes`; `lint` (lock, ruff, format, mypy); `docs`; `tests (shard i/2)`, the development selection under coverage, files assigned to shards by longest-first bin-packing from `tests/durations.json` (`--shard i/2`, the conftest); `coverage` (`coverage combine`, then diff-cover against the base, then the VER-73 check); and **`CI result`**, which needs them all and is the one required check. **Push to `main`**: macOS-3.14 and Windows-3.14 run Tiers 1–2 with `--extended`, plus the GUI file serially and the bundle. Ubuntu runs the `extended` walks, and the development selection too unless the merged tree equals the tree the PR's `CI result` passed, read from a `ci/tested-tree` commit status on the PR head. **Nightly**: Tier 3, and 3.11, 3.12 and 3.13 on ubuntu, macOS and Windows with `UV_NO_BUILD=1` running Tier 1, all `continue-on-error`. **Release**: `ci.yml` gains `workflow_call` with `full: true` (the three platforms × 3.11–3.14, `--extended`), which `release.yml` needs before it builds. Every job gets a `timeout-minutes` (lint and docs 10, shards 20, platforms 40, bundle 30, nightly 30, tier3 60). The apt step is cached (`awalsh128/cache-apt-pkgs-action`, pinned by tag as the other actions are). `docs` syncs `--no-default-groups --group docs`; `lint` drops the `apbs` group | Two shards: the dev selection is about 720 s of test time under coverage, so about 90 s a shard on 4 vCPU (public repository) plus about 100 s of long files. One required check stops shard or matrix renames from touching branch protection. A fork PR cannot post the status, so it is never skipped on that ground (safe). Design §4 |
+| D11 | VER-73 | `.github/budgets.yaml`: `commit_hook_s: 60`, `push_gate_s: 300`, `pull_request_critical_path_s: 360`, `margin: 0.5`. `.github/scripts/ci_budget.py` gives `critical_path_s(jobs)` (first start to last completion) and `check(jobs, budget_s, margin) -> (passed, message)`. Its message names the measured value, the budget and the margin as a percentage, says "over budget" when it passes inside the margin, and names an unfinished job. CI's `coverage` job reads the run's jobs through the API and fails past budget × 1.5. The local budgets are logged by `gate.sh` to `<git-dir>/nanopnp-gate.log`, as time, mode, selection size and tree, and reported by the usage script. VER-73 supersedes WP33 D15's targets; REV-47's close reports both | Margin from the measured spread: the same suite took 8m11s and 13m07s on one day (1.6×), so a 50 % excess is beyond the variance already seen. A tighter margin would fail on runner noise alone. Design §5 |
+| D12 | Python 3.14 (J5) | First, the five VER-62 walks on 3.14 under the X86_V3 cap, on Linux: the deployed mesh hashes must be the recorded ones and each number must hold at 10⁻⁸. Any move stops the package (G10). Then macOS and Windows on 3.14 through a `workflow_dispatch` of the branch. Then `.python-version` → 3.14, CI's pins, `CLAUDE.md` ("developed on 3.14") and `.knowledge/07`. `requires-python` is unchanged | `[Opus]`: a moved golden is a plausible wrong number. Wheels: every locked package has a cp314 wheel on all three platforms, except `watchdog` on macOS arm64 (docs group only; docs run on ubuntu) |
+| D13 | The roster (J8) | `.claude/agents/`: `gate-runner` (sonnet; Bash, Read), which runs a named gate stage or selection and returns failures only; `spec-reader` (sonnet; Read, Grep, Glob), which returns clauses by identifier, verbatim with line numbers; `surveyor` (haiku; Read, Grep, Glob, `effort: low`), which locates and counts, with paths, for the caller to check; `ci-log-classifier` (sonnet; Read, Grep, Glob), which classifies a fetched log against the steward's table; `physics-reviewer` (opus; Read, Grep, Glob, `effort: xhigh`). The model policy points at these files as its enforcement, and gives Haiku checked retrieval | The spec reader is Sonnet, not Haiku: a missed NOTE is silent. Unknown keys are ignored silently (docs), hence `test_agent_roster.py` |
+| D14 | Leaner context (J8, J11) | `.claude/rules/physics-numerics.md` (paths `src/nanopnp/{physics,numerics,solve,post,materials,charge}/**`, `tests/tier2/**`) takes *Physics ground rules* and *Numerics rules*, and `.claude/rules/python.md` (paths `src/**/*.py`, `tests/**/*.py`) takes *Coding conventions*. Each is moved verbatim, not rewritten, and `/wp-plan` reads both. Word targets: `CLAUDE.md` 1,300; `wp-implement` 1,000; `wp-plan` 1,100; `wp-ship` 1,200; `steward` 1,500; `phase-plan` 1,800; model policy 500; `current.md` 700; `.knowledge/00-index.md` 1,000. `.claude/scripts/reading_set.py <plan>` counts J11's set. `.claude/scripts/usage.py` reports a transcript's tokens, compactions, spawns and gate minutes, and fails naming an unknown format | J11 baseline, counted at `d630f85`: 2,074 + 1,558 + 902 + 1,566 + 850 + 2,899 (WP42's brief) = **9,849 words**. WP44 must be ≤6,894 |
+| D15 | `## In brief` (J9) | A template in `phase-plan`, `wp-plan` and `wp-implement`, and in the PR body `wp-implement` writes: at most 250 words; what changes and why, the cost, what could go wrong and how it would be noticed; then **Your call**, each item with a recommendation | `test_agent_roster.py` checks the skills, and every plan from WP43 on |
+| D16 | Records | VER-73 and VER-74 rows in Appendix A; §7.6's table, its development-selection and coverage NOTEs, and a budget NOTE; `CHANGELOG.md` under `v0.5.0-alpha.9`; a REV-nn row for each missed budget | H12, J7 |
+
+### Work items
+
+- [ ] 1. [Opus] — under-selection passes silently. `tests/impact.py`: the recorder plugin, its merge
+  and `select()` (D2–D4). Measure the recorder's overhead on the development selection: ≤10 %, or
+  the item stops for a re-plan. Done when every test in `tests/tier1/test_impact_selection.py`
+  passes with its markers removed.
+- [ ] 2. [Opus] — a hook that skips a test is silent. `gate.sh`: the hook runs D5, adds `gate.sh
+  map`, and stamps `impact`. The skills' first step starts `gate.sh map`. Amend §7.6's
+  development-selection NOTE and `CLAUDE.md` *Commands*, and add VER-74 to Appendix A. Read Design §1
+  first. Done when `test_workflow_hooks.py` and `test_impact_selection.py` pass, and a planted body
+  change in `post/qoi.py` commits through the hook in ≤60 s.
+- [ ] 3. [Opus] — the follow-up's coverage claim is a soundness argument. Make `gate.sh run`
+  background-safe: a PID file, failures only, the follow-up rule (D7) and the gate log. Add the push
+  guard. Update the `wp-implement`, `wp-ship` and `steward` skills to start the gate in the
+  background and push on its pass. Amend §7.6's coverage NOTE. Read Design §2 first. Done when
+  `test_push_guard.py` passes unmarked and a one-line follow-up runs only its selection.
+- [ ] 4. [Opus] — a moved golden is a plausible wrong number. Run VER-62 on 3.14 (D12); if anything
+  moves, stop and report to the author. Then the macOS and Windows dispatch, `.python-version`, CI's
+  pins, `CLAUDE.md` and `.knowledge/07`. Done when the five walks pass on 3.14 at 10⁻⁸ with
+  unchanged mesh hashes, and the dispatch is green.
+- [ ] 5. [any] Suite order and coverage (D8): `tests/durations.json`, the longest-first order,
+  `no_cover` on `extended`, and the `sysmon` measurement. Done when `gate.sh run` passes and the
+  timings are recorded in `.knowledge/07` §12.
+- [ ] 6. [Opus] — §7.6 is normative text. CI (D10): `ci.yml`, `release.yml`, the shard option in
+  `tests/conftest.py`, the status post, timeouts, apt cache and trims. Amend §7.6's table and its
+  development-selection NOTE (J4, J10). Done when the PR's `CI result` is green, a dispatch with
+  `full: true` is green, and the step summary shows the shard times.
+- [ ] 7. [any] VER-73 (D11): `.github/budgets.yaml`, `.github/scripts/ci_budget.py`, the CI step,
+  the gate log, §7.6's budget NOTE and the Appendix A row. Done when `test_loop_budgets.py` passes
+  unmarked and the PR run reports its critical path.
+- [ ] 8. [any] The roster and the model policy (D13). Done when `test_agent_roster.py`'s roster
+  tests pass unmarked.
+- [ ] 9. [any] Leaner context and summaries (D14, D15): the rules files, the trims to the targets,
+  `reading_set.py`, `usage.py` and the In brief templates. Done when the In brief tests pass
+  unmarked and `reading_set.py` reports each target met.
+- [ ] 10. [any] Close: measure the four budgets on this tree (the hook on three one-module changes:
+  `post/qoi.py`, `io/case.py`, `physics/poisson.py`). Add a REV-nn row per miss, update
+  `CHANGELOG.md` (`v0.5.0-alpha.9`) and the Phase 4 plan's WP43 entry, and leave the REV-47 note.
+  Done when `gate.sh run` passes and the numbers are in the PR body.
+
+### Verification
+
+| Test | Tier | Identifiers | Oracle | Command |
+|---|---|---|---|---|
+| `tier1/test_impact_selection.py` | 1 | VER-74 | Each route of D4 selects its tests, by node id; each fallback names its path; the walks are excluded unless asked for; xdist and serial maps select alike | `uv run pytest tests/tier1/test_impact_selection.py` |
+| `tier1/test_push_guard.py` | 1 | J3 | No branch push without `HEAD^{tree} extended`; a hook pass never stands in; a tag-only push, `--no-verify` and other commands pass | as above, by file |
+| `tier1/test_loop_budgets.py` | 1 | VER-73 | The recorded budgets are J7's and the margin 0.5. A budget below the measured value beyond the margin fails, naming all three. An unfinished job fails | as above |
+| `tier1/test_agent_roster.py` | 1 | J8, J9 | Five agents with exact models and tools; no unknown key; the skills carry the In brief; every plan from WP43 opens with one of ≤250 words | as above |
+| `tier1/test_workflow_hooks.py` | 1 | J2, J3 | Existing; extended in items 2 and 3 for `map`, the `impact` stamp and the follow-up | as above |
+| The five VER-62 walks on 3.14 | 2 | VER-62 | Mesh hashes as recorded; numbers at 10⁻⁸ | `uv run --python 3.14 pytest --extended <the five files>` |
+| The budgets | — | J7, VER-73 | Item 10's measurements against D9 | item 10 |
+
+Each planned test is `xfail(strict=True, reason="planned: WP43 …")` and turns green by removing the
+marker. A test that already passes today, such as a tag push passing the guard, is unmarked: it
+guards what must not change.
+
+### Out of scope
+
+- PEP 810 and Python 3.15 (OPN-09, J6).
+- The user-level Stop hook (`~/.claude/stop-hook-git-check.sh`), which is not the repository's. The
+  skills push as soon as the background gate passes.
+- Pinning actions by SHA. They stay pinned by tag, as now. This is a later chore if the author wants
+  it.
+- Coarsening example 07, or caching seeds across runs: the first breaks §7.6's headroom rule, and
+  the second gives a test a store its code did not write.
+- A map seeded from CI: artefact downloads need a token in the container.
+
+### Open questions
+
+None blocking. At the merge, the author makes `CI result` the required check, if branch protection
+has any.
+
+## Design
+
+### 1. Why the selection is sound (D2, D4, D6)
+
+A test's outcome is a function of the code it executes, the files it reads and its environment.
+Take the map recorded on tree P and the working tree T.
+
+1. **Import-time code.** A module's top-level statements run at import, outside any test, and run
+   alike at T only if they are unchanged. These are module-level code, class bodies, signatures with
+   their defaults, and decorators, which can register a function under a name others look up. A
+   change to any of them falls back.
+2. **Functions.** Take a test t that started functions F at P, and suppose no function in F changed
+   body. Each executes statement for statement as at P, so t's control flow reaches only functions
+   in F, and so on inductively. The first point of divergence would have to be a changed statement
+   in a function t executed, which contradicts the assumption.
+3. **Fixtures.** Code a wider-scoped fixture runs executes in the setup of whichever test asks first.
+   The recorder credits it to every test that requests the fixture, so a change to it selects all
+   of them, not just the first (`test_ver74_a_function_only_a_session_fixture_calls_selects_every_user`).
+   Selecting whole files keeps module fixtures and their readers together.
+4. **Outside the trace.** A child process is not traced, so a test that starts one is selected by
+   any source change. A source file read as text, as by VER-72's checks, is a file dependency. Any
+   other non-Python file falls back, because C code can read it unseen.
+5. **Cumulative.** Selecting from P, not from HEAD, keeps step 2's premise true across commits made
+   after the map. A test's executed set can change only through a changed function, which is itself
+   selected.
+6. **Residuals.** Non-determinism is outside the claim, as it is for CI. A Python older than 3.12
+   cannot record, so it falls back.
+
+VER-74 plants one change per route. CI's full run on every pull request remains the authority (J3).
+
+### 2. The follow-up's coverage (D7)
+
+After a pass on P, diff-cover against main covered every changed line. A follow-up T needs, for each
+line changed since P, the coverage the full run would give.
+
+- **Lines executed by an unselected test.** By §1, such a test executes at T exactly what it did at
+  P. It started no changed function, so it executes no line changed since P.
+- **Every other such line.** It can be executed only by a selected test, and the follow-up runs every
+  selected test under coverage.
+- **So for lines changed since P,** the subset's coverage equals the full run's.
+
+A line changed between main and P keeps P's verdict. The exception is a follow-up that removes that
+line's only coverage, and CI's full diff-cover catches that. Coverage is a union, so a subset never
+covers more than the full run: a subset pass can never hide a line the full run fails.
+
+### 3. Measurements and predictions (4 cores, `d630f85`, 11–12 October 2026)
+
+| Quantity | Measured | After WP43 (predicted) |
+|---|---|---|
+| Hook, pytest stage | 199 s (development selection) | Median one-module change about 30–50 s; `core/`, `physics/`, `numerics/` 2–3 min |
+| Dev selection with per-test coverage contexts | 363 s (+83 %) | Not used (D2) |
+| Process-starting test files | 34 files, about 130 s of plain test time | About 35 s of the hook's wall when any source changes |
+| Example 07, alone | run block 477 s: PROPKA 107 s, solve 285 s; 487 s and 289 s with 4 BLAS threads | Unchanged (cold, §7.6) |
+| Push gate | 527 s with coverage | 6.5–8 min: walks without coverage, longest first; example 07 is the floor |
+| PR critical path | ≈10.5 min, 13–19 min a full run | 4–5 min |
+
+The selection estimates come from the coverage map of the first row's run: function-level selection
+over 122 modules, with the process-starting files added.
+
+### 4. CI after WP43
+
+```text
+pull_request:  changes ─┬─ lint ───────────────┐
+                        ├─ docs ───────────────┤
+                        ├─ tests (shard 1/2) ─┐ ├─ CI result  (the required check;
+                        └─ tests (shard 2/2) ─┴─ coverage ─┘    posts ci/tested-tree)
+push to main:  changes ─┬─ ubuntu-3.14: extended walks [+ dev selection unless tree tested]
+                        ├─ macos-3.14, windows-3.14: --extended, GUI file serial
+                        └─ bundle (Windows)
+nightly:       tier3; 3.11/3.12/3.13 × ubuntu/macos/windows, UV_NO_BUILD=1, Tier 1 (recorded)
+release (tag): ci.yml workflow_call full=true → build → release
+```
+
+### 5. VER-73's margin
+
+Same-day reruns of the same suite took 8m11s and 13m07s on ubuntu, and 9m58s and 15m26s on
+Windows: a spread of 1.55 to 1.60. A margin below 0.5 would fail on runner noise alone, while a
+50 % excess over budget is beyond any spread seen. CPU time was considered and rejected: the API
+reports wall time per job, and the budget J7 states is a wait.
