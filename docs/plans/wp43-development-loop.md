@@ -122,7 +122,7 @@ Dependencies: none open. WP44 is measured against this package's reading set (J1
   > - Wide fixtures and test modules' bodies are recorded as scopes of their own and merged across
   >   xdist workers, so a seed loaded from disk on one worker still credits the code that another
   >   worker ran to compute it.
-- [ ] 2. [Opus] — a hook that skips a test is silent. `gate.sh`: the hook runs D5, adds `gate.sh
+- [x] f04766a 2. [Opus] — a hook that skips a test is silent. `gate.sh`: the hook runs D5, adds `gate.sh
   map`, and stamps `impact` (Design §7). The skills' first step starts `gate.sh map`. Amend §7.6's
   development-selection NOTE and `CLAUDE.md` *Commands*, and add VER-74 to Appendix A, from the
   Design §11 drafts. Read Design §1 first. Done when `test_workflow_hooks.py` and `test_impact_selection.py` pass, and a planted body
@@ -143,6 +143,18 @@ Dependencies: none open. WP44 is measured against this package's reading set (J1
   > decorator change that selected nothing. `tests/impact.py` copies with `shutil.copy2` and
   > `gate.sh`'s stamp with `cp -p`; `test_ver74_a_same_size_edit_in_the_index_second_is_seen` fails
   > on the old copy.
+  > **Outcome — the hook misses 60 s on a `post/qoi.py` change: 115 s and 155 s
+  > ([REV-80](../project/review-items.md#rev-80-a-source-change-selects-every-process-starting-test-file-so-the-commit-hook-misses-its-60-s-budget)).**
+  > 4 cores, Python 3.14.6, map recorded on the parent (2,136 tests, 249 s under the recorder), BLAS
+  > threads 1. A planted body change in `rectification_ratio` selected 866 tests in 40 files and
+  > committed in 115 s; one in `total_current`, 1,012 tests, in 155 s. The process-starting files
+  > (151 tests in 30 files) take 64.7 s alone: D4's "any source change selects every process
+  > starter", widened to whole files, is the floor, not the change's own callers (8 tests for
+  > `rectification_ratio`). D9's prediction of 30 to 50 s did not count that floor. The fallback rate
+  > of past commits is [REV-81](../project/review-items.md#rev-81-most-past-commits-would-fall-back-to-the-development-selection).
+  > The orchestrator's review added two fixes: the selector's stderr is never read as a node id
+  > (`14d759e`), and a selected GUI file stays serial.
+
 - [ ] 3. [Opus] — the follow-up's coverage claim is a soundness argument. Make `gate.sh run`
   background-safe: a PID file, failures only, the follow-up rule (D7) and the gate log. Add the push
   guard. Update the `wp-implement`, `wp-ship` and `steward` skills to start the gate in the

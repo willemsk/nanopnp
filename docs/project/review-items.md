@@ -771,3 +771,34 @@ sites in `physics/models.py`, not their callers.
 **Measured.** `geometry/region.py` rewrote its gate to `if not lowest >= h_c_nm`; with NaN `lowest`, `near` is empty and `near[:, 1].min()` raises `zero-size array to reduction operation minimum`, not a `RegionGateError` naming the gate, quantity and location (QR-12).
 
 **Fixed.** Fixed by a finiteness check at the top of `exclusion_shell` (WP42) rather than a guard on the empty ring: the inner path is not reachable from a profile, because a NaN vertex is stopped earlier, by GEOS (`Points of LinearRing do not form a closed linestring`) or by the edge-distance gate. The check raises `RegionGateError` naming the vertex, for all of them (`test_ver59_a_non_finite_profile_coordinate_is_refused_naming_its_vertex`).
+
+### REV-80 — A source change selects every process-starting test file, so the commit hook misses its 60 s budget
+
+*Area:* performance. *Severity:* medium. *Found:* [WP43](../plans/wp43-development-loop.md) item 2.
+
+**Measured.** On 4 cores, Python 3.14.6, with a map recorded on the commit's parent, a planted body
+change through the hook took 115 s in `rectification_ratio` (866 tests in 40 files; 8 tests call it)
+and 155 s in `total_current` (1,012 tests), against §8.2.10 J7's 60 s and WP43 D5's predicted 30 to
+50 s. D4 selects every test that starts a process on any change under the source root, and selection
+is by whole file: 151 tests in 30 files, which alone take 64.7 s of wall time. 25 of the 30 files
+start a Python child that imports the package; the rest start `git`, `bash` or `apbs`. The cost is
+the whole-file widening of a few process-starting tests into slow files (`test_backend_registries.py`,
+`test_val06_ring.py`'s setup, `test_sweep_plan.py`, `test_examples_plan.py`).
+
+**Open.** Either route keeps the selection sound: trace the Python children (the recorder carried
+into the child through its environment), so a child is a set of functions rather than "anything";
+or move each process-starting test that does not need its file's module fixtures into a file of its
+own. A third, re-setting the budget, is the author's (J7).
+
+### REV-81 — Most past commits would fall back to the development selection
+
+*Area:* performance. *Severity:* low. *Found:* [WP43](../plans/wp43-development-loop.md) item 2.
+
+**Measured.** Of the 15 latest non-merge commits touching `src/` whose parent this clone holds
+(`a93f5e3` to `d630f85`), D4's rules fall back on 12: another module-level change in 10, a changed
+data, case or fixture file in 5, an added module in 2, an import change in 4, and never an import
+change alone. These commits are whole review rounds, larger than a commit made while implementing.
+
+**Open.** A finer rule for module-level code (a changed constant selects its readers, as a changed
+function body does) would need its own soundness argument beside WP43 Design §1. Re-measure on the
+commits of WP44 before deciding whether it is worth one.
