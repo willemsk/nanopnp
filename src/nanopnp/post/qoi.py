@@ -474,7 +474,7 @@ def transport_number(currents: Mapping[str, float], cations: Iterable[str]) -> f
 
 
 def rectification_ratio(current_plus_A: float, current_minus_A: float) -> float:
-    """Return ``RR = |I(+V)| / |I(-V)|`` (NUM-27).
+    """Return ``RR = |I(+V)| / |I(-V)|``, the rectification ratio (NUM-27).
 
     Raises
     ------
