@@ -385,8 +385,16 @@ choose_impact_selection() {
     elif [[ ! -f $map ]]; then
         fallback_reason="no impact map at $map (record one with .claude/hooks/gate.sh map)"
     else
-        out=$(uv run python tests/impact.py select --map "$map" 2>&1)
+        # Stdout alone carries node ids or the FALLBACK line; uv's own warnings go
+        # to stderr and must never be read as a path.
+        local errors last_error=""
+        errors=$(mktemp) || errors=/dev/null
+        out=$(uv run python tests/impact.py select --map "$map" 2>"$errors")
         status=$?
+        if [[ $errors != /dev/null ]]; then
+            last_error=$(tail -1 "$errors")
+            rm -f "$errors"
+        fi
         if ((status == 0)); then
             selection=impact
             log_count=0
@@ -403,7 +411,7 @@ choose_impact_selection() {
         elif ((status == 3)); then
             fallback_reason=${out#FALLBACK: }
         else
-            fallback_reason="the selector failed: $(printf '%s' "$out" | tail -1)"
+            fallback_reason="the selector failed: ${last_error:-exit $status}"
         fi
     fi
     selection=development

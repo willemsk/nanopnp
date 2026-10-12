@@ -602,6 +602,26 @@ def test_gate_hook_runs_the_impact_selection_by_whole_file_and_stamps_impact(
     assert _log(repo)[-1].endswith(" passed")
 
 
+def test_gate_hook_reads_node_ids_from_stdout_alone_and_keeps_the_gui_file_serial(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A warning ``uv`` writes to stderr is never a path; the GUI file stays out of xdist (D5)."""
+    if shutil.which("jq") is None:
+        pytest.skip("the gate hook reads its payload with jq")
+    selector = (
+        "echo 'warning: UV_NATIVE_TLS is deprecated' >&2; "
+        "printf '%s\\n' tests/tier1/test_a.py::test_x "
+        "tests/tier1/test_gui_widgets.py::test_w; exit 0"
+    )
+    repo = _impact_repo(tmp_path, monkeypatch, selector)
+    output = _hook(repo, repo, "git commit -am x")
+    calls = (tmp_path / "uv-calls").read_text(encoding="utf-8").splitlines()
+    runs = [call for call in calls if "pytest" in call and "not extended" in call]
+    assert len(runs) == 1, calls
+    assert runs[0].split("|", 1)[1].endswith("-- tests/tier1/test_a.py"), runs[0]
+    assert "warning" not in json.loads(output)["systemMessage"]
+
+
 def test_gate_hook_falls_back_to_the_development_selection_naming_the_reason(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
