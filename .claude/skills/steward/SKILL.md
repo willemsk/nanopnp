@@ -5,48 +5,36 @@ description: Repo conventions for driving a nanopnp pull request to green — ho
 
 # Stewarding a nanopnp PR
 
-Conventions, not permissions. Everything the session's own PR rules state as a *never* stays a
-never; this file says how failures are diagnosed **in this repository** and which of them are
+Conventions, not permissions. This file says how failures are diagnosed **here** and which are
 evidence rather than chores.
 
 ## The environment
 
-`uv` owns it. `uv sync --all-extras --frozen` to prepare, `uv run <anything>` to execute. No `pip`,
-no activated venv, no bare `python` or `pytest` — a fix validated outside `uv run` is not validated.
-The `SessionStart` hook syncs automatically in web sessions.
+`uv` owns it (`CLAUDE.md`, *Setup*). On waking, first start `.claude/hooks/gate.sh map` with Bash
+`run_in_background`: the commit hook selects a commit's tests from that map.
 
-The gate is `.claude/hooks/gate.sh run` (the CLAUDE.md chain plus `uv lock --check` and `diff-cover`). Start it
-with Bash `run_in_background` on the committed fix and push when it passes; the hook refuses a
-push of a tree it has not passed, and after a pass a fix re-runs only the tests it selects. `--no-verify` exists and is not for you.
-On waking, first start `.claude/hooks/gate.sh map` with Bash `run_in_background`: the hook
-selects a commit's tests from that map, and falls back to the whole development selection without one.
+The gate is `.claude/hooks/gate.sh run`. Start it with Bash `run_in_background` on the committed
+fix and push when it passes: the hook refuses a push of a tree it has not passed, and after a pass
+a fix re-runs only the tests it selects. `--no-verify` exists and is not for you.
 
 ## Bounded wakes
 
-Read live PR state before loading plans or logs. Keep one compact checkpoint in the PR's
-Verification section: base/head SHAs, check-run IDs and states/conclusions, mergeability, last
-handled review/comment IDs, last action or blocker, consecutive unchanged fallback count, and
-scheduled check-in ID if any. Update it on meaningful transitions or fallback checks, not on every
-duplicate event. An event caused only by your checkpoint edit is not new work.
+Read live PR state before plans or logs. Keep one compact checkpoint in the PR's Verification
+section: base and head SHAs, check-run states, mergeability, last handled review and comment IDs,
+last action or blocker, the unchanged-fallback count and the check-in ID. Update it on meaningful
+transitions only; an event caused by your own checkpoint edit is not new work.
 
-- A new failure or conflict needs a fix or an explicit diagnostic and handoff. Reuse the diagnosis
-  of an unchanged, already-recorded blocker; do not reopen logs or repeat the same comment. Never
-  silently abandon a new red check. Physics/scope blockers follow the rules below.
-- While CI is pending, schedule at most one fallback check-in. Start one hour out; consecutive
-  unchanged fallbacks back off to 2, 4, 8, 12 and 24 hours. After six unchanged fallback checks,
-  cancel further fallbacks and tell the user the remaining state and how to resume the watch.
-  Reset the counter only for a new base/head, check-run/state, conflict or actionable review,
-  not for duplicate webhooks, timestamps or your own checkpoint comments.
-- Stop fallbacks when green and mergeable, merged/closed, or handed off for a human decision.
-  Cancel the timer where supported; otherwise an already queued wake checks the checkpoint and
-  does no work unless live state has meaningfully changed. New events can restart attention.
-- If nothing changed, do not reload the specification/history or rerun a review/gate. Advance
-  only the fallback counter/timer when a fallback fired; duplicate events must not add timers.
-- If subscription or scheduling is unavailable, say so and hand off the current status. Do not
-  emulate a watcher with a polling shell loop or claim that a nonexistent timer will wake you.
+- A new failure or conflict needs a fix or an explicit diagnostic and handoff; never abandon a
+  new red check silently. Reuse the diagnosis of an unchanged, recorded blocker.
+- While CI is pending, schedule at most one fallback check-in, starting one hour out and backing off
+  to 2, 4, 8, 12 and 24 hours while nothing changes. After six unchanged fallbacks, cancel them
+  and tell the user the state and how to resume. Reset the counter only for a new base or head,
+  check-run state, conflict or actionable review.
+- Stop fallbacks when green and mergeable, merged, closed or handed off; cancel the timer, or make
+  a queued wake a no-op. If nothing changed, reload and rerun nothing.
+- If subscription or scheduling is unavailable, say so and hand off; never poll in a loop.
 
-When a failure needs source context, start with the requested WP's Execution brief and cited
-sections. Historical phase summaries and unrelated knowledge files are not routine wake context.
+Source context for a failure starts with the WP's Execution brief.
 
 ## What CI runs
 
@@ -94,68 +82,47 @@ failure with a real fix.
 Reproduce the failing job's exact command locally before changing anything. For a matrix-only
 failure, reproduce under that interpreter (`uv run --python 3.11 pytest …`).
 
+
 ## Failure classes
 
 | Symptom | What it is | What to do |
 |---|---|---|
-| `ruff format --check` | Formatting drift | `uv run ruff format .` |
-| `ruff check` | A real lint | Fix the code. A `noqa` needs a reason on the same line and is a last resort |
-| `docs` (`mkdocs build --strict`) | A broken link, anchor or nav entry, or a generated page the schema change moved | Fix the reference or the page. Never drop `--strict` or exclude the page |
-| `mypy src/` | Strict-mode gap | Annotate properly. NGSolve ships no type information: extend the protocol aliases in `core/typing.py` rather than reaching for `Any` or a bare `type: ignore` |
+| `ruff` | Formatting drift or a real lint | `uv run ruff format .`; fix the code. A `noqa` needs a same-line reason |
+| `docs` | A broken link, anchor or nav entry, or a moved generated page | Fix it. Never drop `--strict` or exclude the page |
+| `mypy src/` | Strict-mode gap | Annotate; extend `core/typing.py`'s aliases rather than `Any` or a bare `type: ignore` |
 | Lockfile out of date | `pyproject.toml` moved without `uv lock` | `uv lock`, commit it |
-| `bundle` build or `--selftest` | A binary dependency defeating desktop packaging — RSK-13's detector doing its job | Root-cause it on the spec or the dependency. Never add `continue-on-error`: demotion is recorded with the failure that caused it (ci.yml comment, §8.2.1 A4), and that is the author's call |
-| One Python version only | A compatibility gap (3.11 syntax floors, 3.13/3.14 stdlib moves) | Fix compatibly across 3.11–3.14. **Never** narrow `requires-python` or drop a matrix entry — QR-09 is a requirement |
-| Windows or macOS only | Path handling, line endings, thread counts, float repr | `pathlib` everywhere, never `os.path`; pin thread counts in the test, not in the library |
-| A tier 1 property test | A real regression in a unit | Root-cause it. These are seconds long and localise precisely |
-| `diff-cover` below 100 % | A changed `src/nanopnp` line, or one arm of its branch, that no gated test executes | Write the test that executes it and asserts what it does. `# pragma: no cover - <reason>` only for a line no test on this leg can reach (a platform arm, an absent extra), never to get green; a pragma is a claim the review reads (VER-72 f) |
-| `NANOPNP_REQUIRE_GMSH=1 and gmsh does not import` | The runner lacks the X and GL libraries the gmsh wheel loads | Install them (`libglu1-mesa libxft2 libxinerama1 libxcursor1`, `.knowledge/07` §4). Never unset the variable or turn the failure into a skip |
-| Fails under `-n`, passes serially | The test depends on order, or on state another module leaves (a global, a patched module attribute, the process store, a cwd) | Name the shared state and isolate it. Never drop `-n`, never pin a test to one worker to get green without naming the mechanism, and never call it a flake |
-| A tier 2 analytic benchmark | **Evidence.** See below | Read the next section before touching it |
-| VER-62 number stability | Which message it prints decides. *On a recorded mesh*: a change moved a number, G10 evidence like any Tier 2 miss. *Reference environment, mesh moved*: the change moved the mesh. *Unseen mesh, no or exceeded mesh-moved tolerance* on a non-reference leg: a platform deployed a mesh the golden has not seen | The first two: investigate, then revert or rule and re-pin (§8.2.7 G10). The third: check the printed record's drift is a mesh wobble, not a moved number, then fold it in with `tests/tier2/data/merge_number_stability.py --entry`. That is a reviewed act that widens the walk's tolerance, so say it in the PR. Never fold a record from the reference environment to get green, and never edit `moved_tolerance` by hand: the Tier-1 check derives it |
-| Timeout or OOM in a job | A benchmark outgrew the gate budget | Reduce the *mesh*, never the assertion; if the test genuinely cannot gate, that is a scope decision — ask |
+| `bundle` | A binary dependency defeating packaging (RSK-13) | Root-cause it. Never add `continue-on-error` (§8.2.1 A4) |
+| One Python version only | A compatibility gap | Fix across 3.11–3.14; **never** narrow `requires-python` (QR-09) |
+| Windows or macOS only | Paths, line endings, thread counts, float repr | `pathlib` everywhere; pin thread counts in the test |
+| A tier 1 test | A real regression | Root-cause it |
+| `diff-cover` below 100 % | A changed line, or one branch arm, no gated test executes | Write the test that executes and asserts it. `# pragma: no cover - <reason>` only for a line no test on this leg can reach, never to get green (VER-72 f) |
+| `gmsh does not import` | The runner lacks the X and GL libraries | Install them (`.knowledge/07` §4); never unset the variable |
+| Fails under `-n`, passes serially | Order dependence or leaked state (a global, a patched attribute, a cwd) | Name the state and isolate it. Never drop `-n`, pin a worker or call it a flake |
+| A tier 2 analytic benchmark | **Evidence** | Read the next section first |
+| VER-62 number stability | The message decides: a recorded mesh or a moved mesh on the reference environment is G10 evidence; an unseen mesh on another leg is a platform deploying a mesh the golden has not seen | Investigate, then revert or rule and re-pin (§8.2.7 G10). For an unseen mesh, fold it in with `tests/tier2/data/merge_number_stability.py --entry` and say so in the PR; never fold a reference-environment record or edit `moved_tolerance` by hand |
+| Timeout or OOM | A benchmark outgrew the budget | Reduce the *mesh*, never the assertion; else ask |
 
 ## Tier 2 failures are physics evidence
 
-An analytic benchmark exists to localise an error to a single term. When one fails, the finding is
-"the model disagrees with a closed-form solution", and that is worth more than a green PR.
+An analytic benchmark localises an error to a single term; a failure is worth more than a green
+PR. Never make one pass by weakening it: never slacken a tolerance, `xfail`, skip or delete it,
+coarsen the assertion, swap the reference quantity, or re-run until it passes. A tolerance is specified (§7.3); changing one is a
+specification amendment arguing why the *reference* was the wrong quantity (§7.3's Henry versus
+Smoluchowski amendment is the precedent).
 
-Never make one pass by weakening it. Specifically: never slacken a tolerance, never `xfail`, `skip`
-or delete it, never coarsen the assertion, never swap the reference quantity for an easier one, and
-never quietly re-run until it passes. A tolerance in this project is specified (§7.3) — changing one
-is a specification amendment with an argument attached, and the amendment has to say why the
-*reference* was the wrong quantity, not why the number was inconvenient. §7.3's Henry versus
-Smoluchowski amendment is the only worked precedent and it took a derivation.
-
-"Flake" is not available as a diagnosis here. The benchmarks are deterministic: same mesh, same
-solver, same answer. Claiming a flake means naming the mechanism — a thread count, an ordering, a
-seed — and fixing that mechanism.
-
-If the failure means the physics or the discretisation is wrong, stop and report it to the user with
-the failing quantity, its location, and what you think it implies. That is the outcome the whole
-verification strategy is built to produce; do not paper over it to get a green tick.
-
-Delegate by `.claude/model-policy.md`: a sub-agent may read a long CI log and report the failing
-line on Sonnet, but diagnosing a Tier 2 failure stays with this session, on Opus.
+"Flake" is not a diagnosis: the benchmarks are deterministic. Name the mechanism (a thread count,
+an ordering, a seed) and fix it. If the physics or discretisation is wrong, stop and report the
+failing quantity, its location and what it implies. Diagnosis stays on Opus; a sub-agent may only
+read a long log (`.claude/model-policy.md`).
 
 ## Fixes stay in scope
 
-Fix what the failure needs and no more. A fix that changes what the software does needs the matching
-`SPECIFICATION.md` edit in the same commit. A fix that would widen the work package, add a
-dependency, or trade off a `CON-`/`QR-` constraint goes to the user first.
-
-The standing constraints a hurried fix tends to break: corrections are data in
-`data/corrections/*.yaml`, never coefficients in Python; deviations from the validated model go
-behind a flag, default off, and into the FR-25 manifest; `ngsolve`, `netgen` and `numpy` are
-imported inside the function that uses them, as is an optional extra's package in a module that
-must work without it, and nothing else is deferred; no `gmsh` on the default path (CON-10); PySide6 never PyQt (CON-09); nothing on the end-user path that needs a compiler
-(CON-07); no `import *`, no `print()`, no `os.path`.
+Fix what the failure needs. A behaviour change needs its `SPECIFICATION.md` edit in the same
+commit; one that widens the package, adds a dependency or trades off a `CON-`/`QR-` constraint
+goes to the user first. The standing constraints are `CLAUDE.md`'s *Do NOT* and the rule files.
 
 ## Commits and reporting
 
-Conventional prefix, requirement identifier in the body, gate green before each commit. Review
-findings land as commits on the PR branch — `fix: close the review gaps in <what>` — not as replies
-describing what could be done.
-
-Report once per resolved round, not once per fix, and refresh the PR's status checklist so the
-thread shows live state. A comment that only says "fixed" is noise; one that names the failing
-check, the cause and the change is the record.
+Conventional prefix, identifier in the body, gate green before each commit; review findings land
+as `fix: close the review gaps in <what>`. Report once per resolved round, naming the failing
+check, the cause and the change.

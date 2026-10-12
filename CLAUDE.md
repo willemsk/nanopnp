@@ -1,29 +1,29 @@
 # Project: nanopnp
 
-Open-source Python reimplementation of the **ePNP-NS** continuum framework for simulating
-biological nanopores (Willems et al., *Nanoscale* **12**, 16775–16795, 2020), replacing a COMSOL
-workflow. 2D-axisymmetric steady state; structure → mesh → solve → analyse as one pipeline.
-Python 3.11–3.14, developed on 3.14.
+Open-source Python reimplementation of the **ePNP-NS** framework for biological nanopores
+(Willems et al., *Nanoscale* **12**, 16775–16795, 2020), replacing a COMSOL workflow.
+2D-axisymmetric steady state; structure → mesh → solve → analyse. Python 3.11–3.14, developed on 3.14.
 
 ## Before doing anything
 
-- **Read `.knowledge/00-index.md`**: the verified knowledge base (physics, numerics, biology, tooling).
+- **Read `.knowledge/00-index.md`**: the verified knowledge base.
 - **`SPECIFICATION.md` is normative** (`FR-`, `QR-`, `CON-`, `PHY-`, `NUM-`, `VER-`, `VAL-`). Cite the
   identifier when you implement or test one. Changing specified behaviour means changing the
   specification in the same commit.
 - **Never web-search the model equations, correction functions or parameters.** Popular summaries are
-  wrong. `.knowledge/01-physics-epnpns.md` is normative and documents five errata; where sources
-  disagree, the COMSOL model report governs (§1.6). Web search is fine for library versions/APIs
-  (prefer Context7) and post-knowledge-base literature.
+  wrong. `.knowledge/01-physics-epnpns.md` is normative; where sources disagree, the COMSOL model
+  report governs (§1.6). Web search is fine for library versions/APIs (prefer Context7) and
+  post-knowledge-base literature.
+- **Rules by path:** `.claude/rules/physics-numerics.md` and `.claude/rules/python.md` load when you
+  read or edit a file they cover; a session writing only Markdown plans reads them explicitly.
 
 ## Setup
 
 `uv` owns the environment: no `pip`, no manual `activate`, no bare `python`/`pytest`.
 
-- `uv sync --all-extras` — create or refresh `.venv` from `uv.lock`
-- `uv add <pkg>` / `uv add --group dev <pkg>` — add a dependency
-- `uv run <anything>` — the only way code is executed
-- After hand-editing `pyproject.toml`, run `uv lock`; CI runs with `UV_LOCKED` and fails on a stale lock.
+- `uv sync --all-extras` creates or refreshes `.venv` from `uv.lock`; `uv add [--group dev] <pkg>`
+  adds a dependency; `uv run <anything>` is the only way code is executed.
+- After hand-editing `pyproject.toml`, run `uv lock`; CI fails on a stale lock.
 
 ## Commands
 
@@ -31,130 +31,64 @@ Python 3.11–3.14, developed on 3.14.
 |---|---|
 | `uv run pytest` | Tiers 1–2 without `extended` tests: the development selection, the commit hook's fallback |
 | `.claude/hooks/gate.sh map` | Records the impact map the commit hook selects from (VER-74); run it in the background |
-| `uv run pytest --extended` | All of tiers 1–2; the push gate, as CI runs it. Naming an `extended` test's file runs it without the flag |
-| `uv run pytest -n auto --dist loadfile` | Parallel; set `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS`, `MKL_NUM_THREADS` to 1. `tests/tier1/test_gui_widgets.py` runs separately and serially |
-| `uv run pytest -m tier1` / `-m tier3` / `-m slow` | Unit tests / reference comparison (nightly, not gated) / benchmarks (not gated) |
-| `uv run pytest <file>::<test> -v` | One test |
-| `uv run ruff check . && uv run ruff format .` | Lint and format |
-| `uv run mypy src/` | Type check (strict) |
+| `uv run pytest --extended` | All of tiers 1–2, as CI runs it. Naming an `extended` test's file runs it without the flag |
+| `uv run pytest -n auto --dist loadfile` | Parallel; set `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS`, `MKL_NUM_THREADS` to 1. `tests/tier1/test_gui_widgets.py` runs serially, apart |
+| `uv run pytest -m tier1` / `-m tier3` / `-m slow` | Unit tests / reference comparison / benchmarks (the last two not gated) |
+| `uv run ruff check . && uv run ruff format .`; `uv run mypy src/` | Lint and format; strict types |
 | `uv run nanopnp --env` | Resolved environment and data locations |
 | `uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run mkdocs build --strict` | Documentation build, as CI's `docs` job (VER-45) |
 
 Gate before committing: `uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv run pytest`.
-Gate before pushing: `.claude/hooks/gate.sh run` (the above with `--extended`, plus coverage of changed lines).
-`.claude/hooks/gate.sh` runs automatically before each `git commit` Claude Code makes; `--no-verify`
-skips it. After the lint, format and type stages it runs the test files `tests/impact.py` finds the
-change to touch since the map's tree, or the development selection when no map is usable or a
-change is one the map cannot attribute, naming why. A hook pass never stands in for `run`.
-Start `run` with Bash `run_in_background` and push when it passes: the hook refuses a `git push`
-of a tree `run` has not passed. After a pass, `run` on a later tree re-runs only the tests the
-change selects, with coverage of the lines changed since (§7.6 NOTE).
+Gate before pushing: `.claude/hooks/gate.sh run` (the above with `--extended`, plus coverage of changed
+lines). `gate.sh` runs before each `git commit` Claude Code makes (`--no-verify` skips it): after
+lint, format and types it runs the tests `tests/impact.py` selects, or the development selection
+when no map is usable, naming why. A hook pass never stands in for `run`.
+Start `run` with Bash `run_in_background` and push when it passes; the hook refuses a push of
+a tree it has not passed.
 
-- `run` requires, as CI does, full branch coverage of the lines changed in `src/nanopnp/` outside
-  `gui/` (`diff-cover` against `main`). An exempt line says `# pragma: no cover - <reason>`.
-- Coverage sees neither missing code nor the untaken arm of `a if c else b`; planned tests cover those.
-- `run` sets `NANOPNP_REQUIRE_GMSH=1` (and `NANOPNP_REQUIRE_APBS=1` where the APBS wheel exists), so
-  a backend that cannot import fails rather than skips.
-- When only prose changed, the hook runs ruff alone. `.github/scripts/prose-only.sh` decides what is
-  prose; `SPECIFICATION.md`, `docs/` and example READMEs are not. CI's strict documentation build
-  runs on every push, prose included.
+- `run` requires full branch coverage of the lines changed in `src/nanopnp/` outside `gui/`
+  (`diff-cover` against `main`). An exempt line says `# pragma: no cover - <reason>`. Coverage misses
+  missing code and the untaken arm of `a if c else b`; planned tests cover those.
+- `run` sets `NANOPNP_REQUIRE_GMSH=1` (and `NANOPNP_REQUIRE_APBS=1` where the wheel exists): a
+  backend that cannot import fails, not skips.
+- When only prose changed, the hook runs ruff alone (`.github/scripts/prose-only.sh`;
+  `SPECIFICATION.md`, `docs/` and example READMEs are not prose); CI's documentation build still runs.
 
 ## Project structure
 
 `src/nanopnp/` has one subpackage per module of SPECIFICATION.md §5.1:
 
-- `core/` — units, constants, validation, provenance, caching, logging
-- `structure/` — PDB/mmCIF and trajectory IO, alignment, symmetry-axis detection
-- `density/` — Gaussian smearing to grid, ensemble averaging, grid IO
-- `symmetry/` — Cₙ averaging, azimuthal reduction to (r, z), variance diagnostics
-- `geometry/` — contour extraction, polyline conditioning, CAD assembly, analyte bodies
-- `mesh/` — mesher adapters (netgen, gmsh), size fields, boundary layers, quality gates
-- `numerics/` — linear-solver adapters, damped Newton, state and increment gates, the axisymmetric measure
-- `charge/` — PDB2PQR driver, partial charges, smearing, axisymmetric projection, dielectric
-- `materials/` — electrolyte models and the pluggable correction registry
-- `physics/` — weak forms: Poisson, Nernst–Planck, Navier–Stokes; the wall-distance field
-- `solve/` — continuation ladder, warm start, the solve stage
-- `post/` — QoI extraction: current, transport number, EOF, rectification, forces
-- `sweep/` — parameter sweeps, job-array dispatch, result collection
-- `io/` — case-file schema, artefact and resolved-case types, result store, provenance manifests;
-  the base layer, importing only `core` at run time
-- `pipeline/` — case resolution against the registries, the walk, reproduction; the assembler
-- `cli/`, `gui/` — thin shells over the stage objects; they hold no physics
-- `validation/` — benchmarks, MMS, COMSOL comparison harness, regression fixtures
+- `core/` units, constants, provenance, caching; `structure/` PDB/mmCIF and trajectory IO;
+  `density/` smearing, ensemble averaging; `symmetry/` Cₙ averaging and reduction to (r, z)
+- `geometry/` contours, CAD assembly, analyte bodies; `mesh/` mesher adapters (netgen, gmsh), size
+  fields, quality gates; `numerics/` linear solvers, damped Newton, gates, the axisymmetric measure
+- `charge/` PDB2PQR, partial charges, projection, dielectric; `materials/` electrolytes and the
+  correction registry; `physics/` weak forms and the wall-distance field; `solve/` continuation
+  ladder, warm start; `post/` QoI (current, transport number, EOF, forces); `sweep/` sweeps
+- `io/` case schema, artefact and resolved-case types, result store, manifests; the base layer,
+  importing only `core` at run time; `pipeline/` case resolution, the walk, the assembler; `cli/`,
+  `gui/` thin shells that hold no physics; `validation/` benchmarks, MMS, COMSOL comparison
 
-Outside it: `data/corrections/*.yaml` (fitted parameters, shipped in the
-wheel), `.knowledge/`, `tests/tier{1,2,3,4}/`, `docs/`, `docs/plans/` (delivery plan for the current
-phase; planning, not requirements — `SPECIFICATION.md` wins).
+Outside it: `data/corrections/*.yaml` (fitted parameters, shipped in the wheel), `.knowledge/`,
+`tests/tier{1,2,3,4}/`, `docs/`, `docs/plans/` (planning, not requirements; `SPECIFICATION.md` wins).
 
 A stage takes typed inputs and emits a typed, serialisable artefact carrying a content hash. Every
 stage must stay independently invocable, cancellable and introspectable (FR-27).
 
-## Physics ground rules
-
-- **Corrections are data, not code.** Parameters live in `data/corrections/*.yaml`; a new electrolyte
-  never touches solver code.
-- **Classical PNP-NS is a configuration, not a branch.** Each correction is independently switchable;
-  disabling one selects the `none` model, not a code branch.
-- **Deviations from the validated model go behind a flag, default off**, and must be verified against
-  COMSOL before becoming default (e.g. dielectric-gradient body force, mollified distance field, an
-  added mobility correction).
-- **`⟨c⟩` is `(1/n)Σcᵢ`, not the ionic strength**; they coincide only for a symmetric 1:1 salt. `d` is the distance to the nearest **pore**
-  boundary; the membrane is excluded.
-- **Einstein holds only at infinite dilution.** `D_i/μ_i` drifts to 1.2–1.7 × kT/e between 0.15 M
-  and 3 M. Never assert `D_i/μ_i = kT/e` at finite concentration
-  (VER-05, PHY-14). Poisson–Boltzmann is not "PNP at zero bias" (PHY-24).
-- **Ion wall function: `1 − exp(−6.2(d̄ + 0.01))`** — plus, 6.2 nm⁻¹. The viscosity wall function takes
-  a minus. Steric `β_i` enters the flux bracket with `+`, and the bracket is negated; a flipped sign
-  diverges.
-
-## Numerics rules
-
-- **Assert, don't hope.** Charge conservation, packing fraction < 1, concentration positivity at every
-  Newton iterate, mesh quality (min SICN/gamma > 0.3). A gate failure aborts with a diagnostic naming
-  the gate, quantity and location (QR-12). Never return a plausible wrong answer.
-- **Integration order ≥ 3 on every form carrying `1/r`** (VER-07); order 2 samples `r = 0` and gives NaN.
-- **Never compute ionic current from a cross-section integral of the CG flux.** Use the indicator form
-  or the variational reaction flux, and cross-check both (FR-23, QR-04; `.knowledge/06` §7).
-- **Newton convergence needs the relative update on the undamped direction as well as the residual**;
-  residual alone breaks warm starts. Never call a step that raised the residual convergence.
-- **Reach hard cases by continuation, not a cold solve** (FR-17); warm-start sweeps from a converged
-  neighbour.
-- **Record the stabilisation mode with every number.** COMSOL ran streamline and crosswind
-  stabilisation on; results are not comparable until matched (§6.4, §7.4).
-
-## Coding conventions
-
-- `from __future__ import annotations` in every module; type hints on every signature; `mypy --strict` clean.
-- NumPy-style docstrings on public functions.
-- SI internally; units in the name at the boundary (`radius_nm`, `bias_V`). No bare floats in interfaces.
-- British spelling in prose and identifiers (`normalise`, `analyse`).
-- `pathlib.Path`, never `os.path`. f-strings, never `%`/`.format()` (exceptions: one `%` over a whole
-  numeric array as in `validation/apbs.py`'s `write_dx`; lazy `logging` arguments).
-- Pydantic models at every serialisation boundary; never raw dicts across a stage boundary.
-- `logging`, never `print()`, outside the CLI's own output. No `import *`.
-- Cite the source (`.knowledge/` file or specification section) of every physical constant and fit
-  coefficient in a comment.
-- **Imports at the top of the module.** Exceptions, imported inside the function that uses them:
-  `ngsolve`, `netgen`, `numpy`, `scipy`, `meshio`, `h5py` (import cost; stage modules are imported
-  just to introspect), and an optional extra's package in a module that must work without it (a
-  missing extra is refused naming it). A module reached only through `create()`, such as
-  `structure/read.py`, imports its extra at the top. Defer nothing else; VER-72 (a) checks it.
-
 ## Testing
 
-Tests live in `tests/tier{1,2,3,4}/` (tiers per SPECIFICATION.md §7.1); the directory's `conftest.py`
-sets the marker, so the file's location decides its tier.
+Tests live in `tests/tier{1,2,3,4}/` (§7.1); the directory's `conftest.py`
+sets the marker, so location decides the tier.
 
 | Tier | Content | Runtime | When |
 |---|---|---|---|
 | 1 | Unit and property tests (VER-01 … VER-11) | seconds | every push |
 | 2 | Analytic benchmarks (VER-12 … VER-22) | minutes | every push |
-| 3 | Cross-implementation comparison: the published results (VAL-16, VAL-17), VAL-05, VAL-06, COMSOL fields where exported (VAL-01 … VAL-04) | hours | nightly, recorded not gated |
+| 3 | Cross-implementation comparison (VAL-01 … VAL-06, VAL-16, VAL-17) | hours | nightly, recorded not gated |
 | 4 | Experimental reproduction (VAL-07 … VAL-14) | hours | before a tagged release |
 
 - Name tests for the requirement they discharge: `test_ver03_ion_wall_function_check_values`.
-- Fix Tier 2 before chasing a Tier 3 discrepancy; an analytic test localises an error, a whole-model
-  comparison does not.
+- Fix Tier 2 before chasing a Tier 3 discrepancy.
 - No network and no COMSOL licence in tests; Tier 3 reads archived reference data.
 
 ## Provenance and reproducibility
@@ -162,55 +96,46 @@ sets the marker, so the file's location decides its tier.
 The case file (`schema: nanopnp/case/v0.5`) is the unit of reproducibility. Every artefact carries a
 content hash over its payload and producing parameters, which is its cache key. Every result carries a
 manifest (input hashes, library versions, mesh hash, solver settings, stabilisation mode, correction
-file versions, **every switch set away from the validated default**; FR-25, §5.3.3). A result whose
-manifest cannot reconstruct the run is not a result.
+file versions, **every switch set away from the validated default**; FR-25, §5.3.3); one that cannot
+reconstruct the run is not a result.
 
 ## Implementation workflow
 
 One work package per PR, green on tiers 1–2 before the next. To plan or resume, start at
-`docs/plans/current.md`, then the WP's Execution brief and its cited sections. Keep the brief bounded;
-a brief never overrides a normative requirement.
+`docs/plans/current.md`, then the WP's Execution brief and its cited sections; a brief never
+overrides a normative requirement.
 
 | Step | Command | What it does |
 |---|---|---|
-| 0 | `/phase-plan <n\|amend>` | Puts the phase's decisions to the author; writes rulings into §8.2 and the plan into `docs/plans/` |
-| 1 | `/wp-plan <n>` | Writes and commits the WP implementation plan |
-| 2 | `/wp-implement` | Executes the plan, keeps specification/knowledge/plan in step, gates, pushes, opens or reuses the PR, stops |
-| 3–4 | `/wp-ship` | Gates, pushes, runs `/code-review xhigh --fix`, drives CI to green |
+| 0 | `/phase-plan <n\|amend>` | Puts the phase's decisions to the author; writes rulings into §8.2 and the plan |
+| 1 | `/wp-plan <n>` | Writes and commits the WP plan |
+| 2 | `/wp-implement` | Executes the plan, gates, pushes, opens or reuses the PR, stops |
+| 3–4 | `/wp-ship` | Gates, pushes, reviews (`/code-review xhigh --fix`), drives CI to green |
 
-Step 2 does not chain into 3: the user starts `/wp-ship` in a fresh session, so the review comes from
-a session that did not make the physics decisions (`wp-ship` §4). `.claude/skills/steward/SKILL.md`
-governs a PR in flight and is read when a PR event wakes a session.
+Step 2 does not chain into 3: `/wp-ship` starts in a fresh session (`wp-ship` §4). The steward skill
+governs a PR in flight.
 
-**Sub-agent models:** work whose error would be a plausible wrong number runs on Opus; work whose error
-is loud (lint, types, search, mechanical edits) runs on Sonnet. State the choice when delegating
-(`.claude/model-policy.md`).
+**Models:** `.claude/model-policy.md` governs sub-agents and who may implement an `[Opus]` item.
 
-**Plans mark each work item `[Opus]` or `[any]`.** A non-Opus session may do an `[Opus]` item only at
-extra effort and on the record: its planned tests run and fail first (if it has none, the session
-writes them first in their own commit), the commit body states the decision with its signs, units
-and route, the tick reads `non-Opus`, and the PR lists it under **Done outside Opus** for the Opus
-review in `/wp-ship` (`.claude/model-policy.md`, *Who implements a plan*).
+**Code review reports** go to `docs/code_reviews/CODE_REVIEW_NNN.md`, one above the highest present;
+pass `out=`.
 
-**Code review reports** from `/codebase-review` go to `docs/code_reviews/CODE_REVIEW_NNN.md`, numbered
-one above the highest present, never reused; pass `out=` so no root `CODE_REVIEW.md` remains.
-
-**Open items** (a confirmed finding not fixed, a deferral, a question for the author) are `REV-nn` rows
-in `docs/project/review-findings.md` with a section in `docs/project/review-items.md`, until the commit
-that resolves one sets it `fixed` (§8.2.8 H12). A PR body may summarise them, never be their only record.
+**Open items** (a finding not fixed, a deferral, a question for the author) are `REV-nn` rows in
+`docs/project/review-findings.md` with a section in `review-items.md`, until the commit that
+resolves one sets it `fixed` (§8.2.8 H12). A PR body is never their only record.
 
 ## Git
 
-- Conventional commits (`feat:`, `fix:`, `test:`, `docs:`, `chore:`); name the requirement identifier
-  discharged in the body (`VER-03`, `FR-16`).
-- Versions are git tags, never a number in `pyproject.toml` or the package (§2.7). A WP's PR writes its
-  `CHANGELOG.md` section under `vX.Y.Z-alpha.N`; after merge, tag its last commit on `main`
-  (`CONTRIBUTING.md`, *Versions and releases*).
+- Conventional commits (`feat:`, `fix:`, `test:`, `docs:`, `chore:`), the identifier
+  discharged in the body (`VER-03`).
+- Versions are git tags, never a number in `pyproject.toml` or the package (§2.7); the procedure is
+  `CONTRIBUTING.md`, *Versions and releases*.
 
 ## Durable learnings
 
-Write a durable fact into the relevant `.knowledge/` file, with its source, marked **[tested]**
-(verified by running code) or **[verified]** (verified by arithmetic). Keep status, task lists and scope opinions out of `.knowledge/`; they belong in the specification.
+Write a durable fact into the relevant `.knowledge/` file, with its source, marked **[tested]** or
+**[verified]** (`.knowledge/00-index.md`, *Conventions*). Status and scope opinions belong in the
+specification.
 
 ## Do NOT
 

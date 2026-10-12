@@ -25,28 +25,27 @@ Estimate: 4–6 weeks (§8.2.9 I5). Release: **v0.5** (`v0.5.0`).
 ## In brief
 
 Phase 4 tidies the program before anyone other than its author relies on it. First, it measured
-how cleanly the code is divided into independent parts, and it rebuilt the parts the author chose
-to change; that work is done. Second, it fixes the problems found in code reviews; two of three
-packages are done. Third, it reorganises the project's reference notes so that every claim points
-to the test that proves it. Then the author tries the program as a user would, in scripted
-sessions, and the problems they find are fixed.
+how cleanly the code is divided and rebuilt the parts the author chose to change; that is done.
+Second, it fixes the problems found in code reviews; two of three packages are done. Third, it
+reorganises the reference notes so that every claim points to its test. Then the author tries the
+program as a user would, in scripted sessions, and the problems found are fixed.
 
-On 11 October 2026 a package was added ahead of the remaining work, to speed up the daily loop.
-Today the check before every commit takes about 3.5 minutes, the full check before a push about
-9.5, and the online tests about 10.5. Sessions also repeat the full check for one-line fixes. The
-new package makes each commit run only the tests the change affects, and runs the full check once
-per push. It tests macOS and Windows after a merge rather than on every proposal. It also gives
-each kind of AI helper a fixed job and model, so sessions read less and cost less.
+On 11 October 2026 a package was added to speed up the daily loop. Today the check before every
+commit takes about 3.5 minutes, the full check before a push about 9.5, and the online tests about
+10.5. The new package makes each commit run only the tests its change affects, runs the full check
+once per push, and tests macOS and Windows after a merge. It also gives each kind of AI helper a
+fixed job and model, so sessions read less and cost less.
 
 **Cost.** About a week.
 
-**What could go wrong, and how it would be noticed.** A faster check could miss a test. A test
-plants a change and confirms that the right tests are picked, and the online run still checks
-everything on every push. A problem that shows only on macOS or Windows now appears after a merge,
-and is fixed in a follow-up.
+**What could go wrong.** A faster check could miss a test. A test plants changes and confirms the
+right tests are picked, and the online run still checks everything. A problem only macOS or Windows
+shows now appears after a merge.
 
-**Your call.** Any speed target the new package misses comes back to you for a decision. The
-estimate stays at 4 to 6 weeks (your ruling, 12 October 2026).
+**Your call.** Any speed target the new package misses comes back to you. *Recommendation:* rule on
+each miss at the package's close. The estimate stays at 4 to 6 weeks (your ruling, 12 October 2026).
+
+## Context
 
 This is the delivery plan for Phase 4 of `SPECIFICATION.md` §8.1. The specification is normative.
 Where this file and the specification disagree, the specification governs and this file is wrong.
@@ -54,8 +53,6 @@ Requirement identifiers here are pointers into the specification, never restatem
 author's rulings behind this plan are §8.2.6 F3, F4 and F6, §8.2.7 G1 to G11, §8.2.8 H1 to H12 (on
 the modularity report and the review register), §8.2.9 I1 to I5 (on planning the register's items), and §8.2.10 J1 to J9 (on the development loop).
 They are not re-argued here.
-
-## Context
 
 Phases 0 to 3 built the pipeline, from a structure to a charged current. Phase 4 asks two questions
 before the GUI phase builds on that pipeline and the validation phase measures it. The first is

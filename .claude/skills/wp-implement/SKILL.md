@@ -5,148 +5,98 @@ description: Implement a planned nanopnp work package, keep the specification, k
 
 # Implement a work package
 
-Step 2 of the implementation workflow. The plan under `docs/plans/` is the brief; this skill
-executes it, records what the execution taught, and opens the PR after validation. It does not chain
-into `/wp-ship`: independent review and CI stewardship remain a separate invocation (see **Finishing**).
+Step 2 of the implementation workflow: execute the plan under `docs/plans/`, record what the
+execution taught, and open the PR. It does not chain into `/wp-ship`.
 
 ## Load the brief
 
-0. Start `.claude/hooks/gate.sh map` with Bash `run_in_background`. It records the impact map the
-   commit hook selects from, if none is usable, so the next commit runs only the tests its change
-   touches.
-1. Read `docs/plans/current.md` and the requested WP's Execution brief. Its current decisions are
-   binding, subject to the specification. Read each work item's linked Design sections before
-   implementing it; do not reload unrelated delivered packages. For legacy plans, read Decisions,
-   Work items, Verification and their correcting Outcomes first, then the relevant Design sections.
-   Correct a wrong decision in the brief and, if needed, the specification, stating the corrected rule
-   in the present tense (see **Keeping the record straight** below).
-2. `.knowledge/00-index.md`, then the relevant sections of the files the package touches.
-3. The `SPECIFICATION.md` sections and Appendix A rows the plan cites.
-4. `uv sync --all-extras --frozen` if `.venv` is not already current (the `SessionStart` hook does
-   this in web sessions).
-5. Check the branch. If it is `main`, switch to the development branch this session was given; if
-   none was given, stop and ask before writing anything — `wp-ship` §1 refuses to ship from `main`,
-   and by the time it says so the whole package has already been committed there.
+0. Start `.claude/hooks/gate.sh map` with Bash `run_in_background`, so the commit hook selects only
+   the tests a change touches.
+1. Read `docs/plans/current.md` and the requested WP's Execution brief. Its decisions are binding,
+   subject to the specification. Read each work item's linked Design sections before implementing
+   it, not delivered packages. Correct a wrong decision in the brief (and the specification).
+2. `.knowledge/00-index.md`, then the sections of the files the package touches.
+3. The `SPECIFICATION.md` sections and Appendix A rows the plan cites; `.claude/scripts/clause.py
+   <ID>` prints one with its NOTEs and rulings.
+4. `uv sync --all-extras --frozen` if `.venv` is not current.
+5. Check the branch. On `main`, switch to the development branch this session was given; if none
+   was given, stop and ask before writing anything.
 
-Then build a task list from the plan's work items, in order, starting at the first unticked one.
-Physics and numerics
-decisions stay with the orchestrator on Opus; delegate surveys, mechanical edits and long test runs
-per `.claude/model-policy.md`, saying which model you chose and why.
-
-**If this session is not Opus**, or is unsure, it may still do an `[Opus]` item, but only by the
-extra-effort steps of `.claude/model-policy.md`, *Who implements a plan*: the planned tests run and
-fail first (written first, in their own `test:` commit, if the item has none), the commit body
-states the decision with its signs, units, tolerances and route, the tick reads
-`[x] <short sha> non-Opus`, and the PR body lists the item under **Done outside Opus**. Unmarked
-items count as `[Opus]`.
+Build a task list from the work items, starting at the first unticked one. Physics and numerics
+decisions stay on Opus; delegate per `.claude/model-policy.md`, which also governs a non-Opus
+session doing an `[Opus]` item (unmarked items count as `[Opus]`).
 
 ## How the work lands
 
 **One commit per work item**, done when the tests its done-criterion names pass. Conventional
-prefix, requirement identifier in the body (`VER-19`, `NUM-28`). Tick each item `[x] <short sha>`
-in that commit or the next, so a later session resumes from the first unticked item. The gate hook runs the whole gate before
-each commit and refuses it with the failing output, so a commit is proof the tree was green. It
-gates the working tree and remembers a pass, so a tree gated once can be split into several commits
-without paying for the gate again.
+prefix, requirement identifier in the body. Tick each item `[x] <short sha>` in that commit or the
+next, so a later session resumes from the first unticked one. The gate hook refuses a failing commit and remembers a pass, so a
+gated tree can be split into several commits.
 
-**Planned tests** (`xfail(strict=True, reason="planned: WP<n> …")`) are turned green by
-implementing the item and deleting the marker. Never edit a planned test's assertions or setup; if
-one is wrong, stop and report it, because the plan is in error.
+**Planned tests** (`xfail(strict=True, reason="planned: WP<n> …")`) turn green by implementing the
+item and deleting the marker. Never edit a planned test's assertions or setup; if one is wrong,
+stop and report it, because the plan is in error.
 
-A unit is done when its test exists and passes, not when the code compiles. Name every test for the
-requirement it discharges — `test_ver19_stokes_drag_against_six_pi_eta_a_u` — and place it in the
-tier directory that decides its marker. An analytic test that localises the error to a single term
-beats a whole-model comparison that localises nothing; write the localising one first.
-
-Watch for the failure modes `CLAUDE.md` names, because each of them passes a test suite:
-
-- a tolerance met for the wrong reason — a benchmark whose far field makes it measure nothing;
-- two routes that agree because they share a mistake, rather than because the answer is right;
-- a quantity that is a function of a discretisation choice (a band, a mesh, a `w`) rather than of
-  the physics;
-- a "flake" that is a real dependence on threading, ordering or seed.
-
-When one of these is even possible, assert against a third route or an oracle rather than reasoning
-that it is fine.
+Name each test for the requirement it discharges, in the tier directory that decides its marker.
+Write the analytic test that localises an error to one term first. Where a tolerance could be met
+for the wrong reason, or two routes could share a mistake, assert against a third route.
 
 ## Keeping the record straight
 
-Implementation that changes what the finished software does changes `SPECIFICATION.md` **in the same
-commit** — the identifier, the NOTE, the amended tolerance, with the derivation. A tolerance is
-never slackened to accommodate a number: either the number is wrong, or the specified reference was
-the wrong quantity and the amendment says so in those terms (§7.3's Henry/Smoluchowski amendment is
-the worked example).
+A change to what the finished software does changes `SPECIFICATION.md` **in the same commit**: the
+identifier, the NOTE, the amended tolerance, with the derivation. A tolerance is never slackened to
+fit a number (the steward's *Tier 2 failures* section says why).
 
-State every rule in the specification, the knowledge base, the docs and the code in the present
-tense. Do not stamp text with `added`/`amended` dates or narrate renames and supersessions: history
-lives in git, `CHANGELOG.md`, the delivered plans and §8.2. A WP plan's own Outcomes may keep
-history, because a plan is a record.
-
-Four records move together as the work lands:
+State every rule in the present tense; history lives in the log, `CHANGELOG.md`, plans and §8.2.
 
 | Record | Gets |
 |---|---|
-| `SPECIFICATION.md` | Amendments, NOTEs, argued tolerances — normative changes only |
-| `.knowledge/<file>.md` | Durable findings, marked **[tested]** (verified by running code) or **[verified]** (verified by arithmetic), with the source. No status, no task lists, no scope opinions |
-| `docs/plans/wp<n>-*.md` | Current Execution brief and concise `> **Outcome — <what changed>.**` annotations linking the evidence; measured numbers the plan requested, unless already recorded at a linked authoritative location |
-| `docs/project/review-findings.md` | A `REV-nn` row, with its section in `docs/project/review-items.md`, for every item the package leaves open: a work item deferred, a known limitation, a question for the author (§8.2.8 H12). A row it resolves is set `fixed`, its ruling linking the plan |
+| `SPECIFICATION.md` | Amendments, NOTEs, argued tolerances: normative changes only |
+| `.knowledge/<file>.md` | Durable findings marked **[tested]** or **[verified]**, with the source (see `.knowledge/00-index.md`) |
+| `docs/plans/wp<n>-*.md` | The current Execution brief and concise `> **Outcome — <what changed>.**` annotations linking the evidence; measured numbers the plan requested |
+| `docs/project/review-findings.md` | A `REV-nn` row, with its section in `review-items.md`, for every item left open: a deferral, a known limitation, a question for the author (§8.2.8 H12). A row the package resolves is set `fixed` |
 
-The phase plan's `### WP<n>` section gains a short delivered summary (target 150 words): scope,
-identifiers, live inherited constraints and links to evidence. Do not repeat derivations or measurement
-tables from the specification, knowledge base or WP plan. Leave existing delivered summaries as they are.
-Update `docs/plans/current.md` in place with the current position, next package and live dependency
-links (target 800 words). It is navigation, not another source of requirements.
-
-Both plans' **Status** lines move with that summary. Startup points to `docs/plans/current.md`
-without loading historical statuses; keep that brief consistent with both plans:
-
-- the WP plan's own — `**Status: planned, not started**` → `**Status: delivered, <date>.**`, keeping
-  the sentence that follows it;
-- the phase plan's roll-up — the `WP<n>` moves from the planned list to the delivered one.
+The phase plan's `### WP<n>` section gains a delivered summary (target 150 words): scope,
+identifiers, live inherited constraints, links to evidence. Update `docs/plans/current.md` in place
+(its word target is in its *Handoff Rules*). Both plans' **Status** lines move with the summary:
+the WP plan's becomes `**Status: delivered, <date>.**` and the phase plan's roll-up moves the
+`WP<n>` to the delivered list.
 
 ## Measurements are deliverables
 
-Timings, convergence rates, minimum damping factors, route-agreement figures, memory at the
-reference mesh size: run them, record the number with the mesh and the configuration it came from,
-and put it where the plan asked. A rate quoted without the meshes it was measured on is not
-evidence. Record the stabilisation mode with every number.
+Timings, convergence rates, minimum damping, route-agreement figures, memory at the reference mesh
+size: run them, record the number with the mesh, configuration and stabilisation mode it came from,
+and put it where the plan asked.
 
 ## Finishing
 
-Before handing off, confirm every one of these yourself:
+Confirm yourself:
 
-- every work item in the plan is done and ticked, or explicitly deferred with a reason written into
-  the plan and a `REV-nn` row in `docs/project/review-findings.md`; nothing left open lives only in
-  the PR body (§8.2.8 H12). Every `[Opus]` item was done in an Opus session, or is ticked
-  `non-Opus` and listed under **Done outside Opus** in the PR body;
-- no `planned: WP<n>` marker of this package remains;
-- every `VER-`/`VAL-` identifier the plan claimed has a test named for it, and it passes;
-- `.claude/hooks/gate.sh run` is green on the current tree;
-- the specification, the knowledge base and the plan's Outcome annotations are all committed;
-- both **Status** lines and `docs/plans/current.md` are updated;
-- `CHANGELOG.md` has the package's section under the version it will be tagged,
-  `vX.Y.Z-alpha.N`, where N counts the phase's packages (`CONTRIBUTING.md` *Versions and
-  releases*). The phase's close package also writes the release `vX.Y.Z` section and sets
-  `CITATION.cff`'s `version` and `date-released`; it takes the release tag alone, with no
-  `-alpha.N`, only where its phase's rulings say so, as §8.2.5 E5 did for Phase 3;
-- `git status` is clean, and the branch is pushed (`git push -u origin <branch>`): start
-  `.claude/hooks/gate.sh run` with Bash `run_in_background`, and push when it passes. The push
-  guard refuses a tree it has not passed.
+- every work item is done and ticked, or deferred with a reason in the plan and a `REV-nn` row;
+  every `[Opus]` item was done on Opus, or is ticked `non-Opus` and listed under **Done outside
+  Opus** in the PR body;
+- no `planned: WP<n>` marker of this package remains, and every `VER-`/`VAL-` the plan claimed has
+  a passing test named for it;
+- the specification, knowledge base and Outcome annotations are committed, both **Status** lines
+  and `current.md` are updated, and `CHANGELOG.md` has the package's section under
+  `vX.Y.Z-alpha.N` (`CONTRIBUTING.md`, *Versions and releases*, also covers the close package);
+- `git status` is clean. Start `.claude/hooks/gate.sh run` with Bash `run_in_background` and push
+  (`git push -u origin <branch>`) when it passes; the push guard refuses a tree it has not passed.
 
-Then open or reuse the branch's PR against `main`, without asking again. Follow only the PR lookup
-and title/body contract in `wp-ship` §3; do not invoke that skill. On a new PR, state under
-**Verification** that independent review is pending `/wp-ship`, alongside the local gate result.
-When resuming an existing PR, preserve its review evidence and human edits; do not reset its state
-or create a duplicate. If PR creation is blocked by authentication or unavailable tooling, report
-the blocker and pushed branch rather than claiming a PR exists.
+Then open or reuse the branch's PR against `main` without asking again, by the lookup and
+title/body contract of `wp-ship` §3 (do not invoke that skill). A new PR states under
+**Verification** that review is pending `/wp-ship`. If creation is blocked, report the blocker and
+the pushed branch.
 
-Once the PR exists, write `PR: [#<n>](<url>), branch <head>` on the line under the title of
-`docs/plans/wp<n>-*.md`, commit it (`docs: record WP<n>'s PR`) and push. `/wp-ship` starts on a
-session branch of its own, forked from `main`, and finds the package's PR and head from this line
-and from the PR title's `WP<n>` (`wp-ship` §0).
+The PR body opens with `## In brief`, for a reader who does not code: at most 250 words, no
+backticks or identifiers. **What changes** and why; **Cost**; **What could go wrong**, each risk
+and how it would be noticed; **Your call**, each decision the author owns with *Recommendation:*
+and one reason.
 
-Stop and report the PR link, identifiers discharged, the tag its last commit on `main` takes after
-the merge, and readiness for `/wp-ship`. Do not start the
-review pass, subscribe to PR activity, or schedule CI monitoring from this session. It carries the
-physics reasoning behind the implementation; `wp-ship`'s independent review (§4) should run from a
-fresh session so it can challenge those decisions. The user starts `/wp-ship` when ready.
+Once the PR exists, write `PR: [#<n>](<url>), branch <head>` under the title of
+`docs/plans/wp<n>-*.md`, commit it (`docs: record WP<n>'s PR`) and push; `/wp-ship` finds the
+package from this line (`wp-ship` §0).
+
+Stop and report the PR link, the identifiers discharged, the tag the last commit takes after the
+merge, and readiness for `/wp-ship`. Do not start the review or CI monitoring: the review should
+come from a fresh session that did not make these decisions.

@@ -1,67 +1,40 @@
 # Sub-agent model policy
 
-Which model a delegated task runs on. Referenced from `CLAUDE.md`; it applies to *every* `Agent`
-call in this repository, and to whoever implements a plan (*Who implements a plan*). The skills cite it where they delegate, so there is no list of them here to
-keep in step.
+Which model a delegated task runs on, for *every* `Agent` call here and for whoever implements a
+plan (*Who implements a plan*).
 
 ## The rule
 
-**The failure mode decides the model, not the size of the task.**
+**The failure mode decides the model, not the size of the task.** A mistake that yields a
+**plausible wrong answer** (a number that looks right, a flipped sign, a tolerance that passes for
+the wrong reason) runs on **Opus** (QR-12, RSK-03). A **loud** failure (an import error, a lint diagnostic, a
+failing assertion) runs on **Sonnet**: the gate catches it.
 
-- If getting it wrong produces a **plausible wrong answer** — a number that looks right, a sign that
-  flips a trapping landscape, a tolerance that passes for the wrong reason — it runs on **Opus**.
-  This project's whole verification strategy exists because plausible wrong answers are the
-  characteristic failure of this model (QR-12, RSK-03, RSK-04). A cheaper model that is right 90 %
-  of the time is not 90 % as useful here; it is a source of results nobody can trust.
-- If the failure mode is **loud** — an import error, a lint diagnostic, a type error, a test that
-  fails at the assertion — it runs on **Sonnet**. The gate catches it, the cost of a wrong attempt
-  is one retry, and there is no way for a mistake to survive into a recorded number.
+- **Opus:** weak forms, scalings and QoI routes (§4, §6); `SPECIFICATION.md`; plans; diagnosing a
+  Tier 2 failure or a disagreement between routes; any change to `physics/`, `solve/`, `post/`,
+  `materials/forms.py` or the correction YAML; confirming or reverting every `wp-ship` §4 finding;
+  judging a `.knowledge/` finding `[tested]` or `[verified]`.
+- **Sonnet:** `Explore` searches; mechanical refactors with the target spelled out; behaviour-free
+  docstrings and annotations; test scaffolding from stated assertions; running the gate;
+  `uv.lock`, CI YAML and packaging; reading a long log.
+- **Haiku:** bulk mechanical retrieval only, as the `surveyor`: paths and counts. **Retrieval is
+  checked:** the caller reads the returned line range itself before relying on it. Clauses by
+  identifier come from `.claude/scripts/clause.py`, not an agent.
 
-Length, file count and token budget do not enter into it. Rewriting three hundred lines of
-docstrings is a Sonnet task; deciding one sign in one weak form is an Opus task.
-
-## Opus
-
-- Deriving or amending a weak form, a scaling, a QoI extraction route, or any of §4 / §6 of the
-  specification.
-- Writing or amending `SPECIFICATION.md`, including every NOTE and every argued tolerance.
-- Authoring a work-package or phase plan (`docs/plans/`) — the decisions table is the deliverable.
-- Diagnosing a failing Tier 2 benchmark, a convergence-rate loss, a Newton divergence, or a
-  disagreement between two extraction routes.
-- Any change to `physics/`, `solve/`, `post/`, `materials/forms.py`, or the correction YAML.
-- Reviewing a diff for physics correctness directly, and confirming or reverting every finding the
-  `wp-ship` §4 review pass raises — that confirmation, not the pass itself, is what keeps a proposed
-  fix from becoming a plausible wrong one.
-- Judging whether a `.knowledge/` finding is `[tested]`, `[verified]` or neither.
-
-## Sonnet
-
-- `Explore` searches: where is X defined, which files reference Y, does this seam already exist.
-- Mechanical refactors with the target spelled out: renames, import moves, `Path` for `os.path`,
-  deferred-import compliance, British-spelling sweeps.
-- Docstrings, type annotations, and `mypy --strict` fixes that do not change behaviour.
-- Test scaffolding from a plan that already states the tolerances, the tier and the assertions.
-- Running the gate, the tiers or a benchmark and summarising the output.
-- `uv.lock` refreshes, CI YAML edits, packaging and devcontainer chores.
-- Reading a long log and reporting the failing line.
-
-## Haiku
-
-Only for bulk mechanical retrieval, as the `surveyor`: paths and counts. **Retrieval is checked:**
-the caller verifies anything it relies on by reading the returned line range itself, one `Read`
-with `offset` and `limit`. Clauses by identifier come from `.claude/scripts/clause.py`, not an agent.
+When a task straddles the boundary, take Opus.
 
 ## Enforcement
 
 `.claude/agents/` fixes the model, tools and effort of `gate-runner` (Sonnet), `surveyor` (Haiku),
 `ci-log-classifier` (Sonnet) and `physics-reviewer` (Opus). A call's `model` overrides its file's,
 so `.claude/hooks/agent-guard.sh`, a PreToolUse hook on `Agent`, refuses a roster agent called with
-another model and any other agent called without an explicit `model`.
+another model and any other agent called without an explicit `model`. Name the agent when delegating;
+the user may override.
 
 ## Who implements a plan
 
-The policy binds whoever implements a plan, on any model or harness, not only `Agent` calls: the
-gate cannot tell a plausible wrong answer from a right one.
+The policy binds whoever implements a plan, on any model: the gate cannot tell a plausible wrong
+answer from a right one.
 
 - `/wp-plan` marks each work item `[Opus]` or `[any]`.
 - Any session may do an `[any]` item. A session that is not Opus may also do an `[Opus]` item, at
@@ -78,25 +51,5 @@ gate cannot tell a plausible wrong answer from a right one.
   session wrote them) against its decision row before the package counts as reviewed.
 - A session unsure of its model is not Opus.
 
-## Applying it
-
-Pass the model explicitly and say why in one clause, so the choice is visible and the user can
-redirect it:
-
-```
-Agent(subagent_type="Explore", model="sonnet",
-      description="Find the wall-distance seams", prompt="…")
-```
-
-> Delegating the contour-extraction survey to Sonnet — read-only search, loud failure mode.
-
-The user may override at any time ("do that one on Opus"), and an override stands for the rest of
-the session unless they say otherwise. When a task straddles the boundary — a mechanical edit
-*inside* `physics/`, say — take Opus: the asymmetry of the two errors is not close.
-
-## Cost discipline
-
-A sub-agent starts cold and re-derives context this session already has. Delegate when the work is
-genuinely separable (a survey, an independent implementation, a long test run), not to parallelise
-thinking. Two or three at once is a lot; the orchestrator stays on Opus and keeps every physics
-decision itself.
+Delegate only separable work, not to parallelise thinking. The orchestrator keeps every physics
+decision.
