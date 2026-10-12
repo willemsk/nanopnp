@@ -97,10 +97,20 @@ Dependencies: none open. WP44 is measured against this package's reading set (J1
   guard. Update the `wp-implement`, `wp-ship` and `steward` skills to start the gate in the
   background and push on its pass. Amend §7.6's coverage NOTE. Read Design §2 and §7 first. Done when
   `test_push_guard.py` passes unmarked and a one-line follow-up runs only its selection.
-- [ ] 4. [Opus] — a moved golden is a plausible wrong number. Run VER-62 on 3.14 (D12); if anything
+- [x] 05af299 4. [Opus] — a moved golden is a plausible wrong number. Run VER-62 on 3.14 (D12); if anything
   moves, stop and report to the author. Then the macOS and Windows dispatch, `.python-version`, CI's
   pins, `CLAUDE.md` and `.knowledge/07`. Done when the five walks pass on 3.14 at 10⁻⁸ with
-  unchanged mesh hashes, and the dispatch is green.
+  unchanged mesh hashes, and the dispatch is green. Ticked with the macOS and Windows dispatch pending: it
+  needs the branch pushed.
+
+  > **Outcome — VER-62 holds on 3.14 on Linux.** CPython 3.14.6, `linux-x86_64/X86_V3` (the
+  > `NPY_DISABLE_CPU_FEATURES` cap of CI and the gate), the same locked versions as 3.12. The six
+  > walk files under `--extended`, `-n 2 --dist loadfile`: 26 passed, none skipped, 423 s wall. All
+  > seven walks deploy their recorded reference mesh (same-mesh mode); largest relative drift
+  > 6.9 × 10⁻¹⁴ (example 01, `eof_m3_s`), every other walk ≤ 2.7 × 10⁻¹⁵. Per file (setup + calls):
+  > example 07 421 s, the 2WCD pipeline 148 s, the shell walk 53 s, example 03 46 s, example 01
+  > 25 s, example 02 21 s. CI's ubuntu matrix now carries 3.12 in place of 3.14, which the `check`
+  > job runs, so VER-47's 3.11–3.14 still holds. `.knowledge/07` §8.
 - [ ] 5. [any] Suite order and coverage (D8): `tests/durations.json`, the longest-first order,
   `no_cover` on `extended`, and the `sysmon` measurement. Done when `gate.sh run` passes and the
   timings are recorded in `.knowledge/07` §12.
