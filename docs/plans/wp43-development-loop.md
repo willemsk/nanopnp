@@ -87,6 +87,11 @@ Dependencies: none open. WP44 is measured against this package's reading set (J1
   and `select()` (D2–D4; build from Design §6). Measure the recorder's overhead on the development selection: ≤10 %, or
   the item stops for a re-plan. Done when every test in `tests/tier1/test_impact_selection.py`
   passes with its markers removed.
+
+  > **Outcome — the planned `toy` fixture shared the module's map.** It returned the
+  > module-scoped map path itself, and the `corrupt` and `unknown-tree` cases overwrite it, so
+  > every later case read a damaged map and no implementation could pass. Each test now gets its
+  > own copy. The author approved the fix on 12 October 2026; no assertion changed.
 - [ ] 2. [Opus] — a hook that skips a test is silent. `gate.sh`: the hook runs D5, adds `gate.sh
   map`, and stamps `impact` (Design §7). The skills' first step starts `gate.sh map`. Amend §7.6's
   development-selection NOTE and `CLAUDE.md` *Commands*, and add VER-74 to Appendix A, from the

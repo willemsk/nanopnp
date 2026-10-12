@@ -238,7 +238,10 @@ def toy(recorded: tuple[Path, Path], tmp_path: Path) -> tuple[Path, Path]:
     repo, recorded_map = recorded
     copy = tmp_path / "repo"
     shutil.copytree(repo, copy)
-    return copy, recorded_map
+    # Each test gets its own copy of the map: some cases damage the one they are given.
+    map_copy = tmp_path / recorded_map.name
+    shutil.copy(recorded_map, map_copy)
+    return copy, map_copy
 
 
 def _edit(repo: Path, name: str, old: str, new: str) -> None:
