@@ -1,15 +1,4 @@
-"""Stage 8 of section 5.2: the resolved material coefficient set (IF-01, FR-27).
-
-The work is :func:`nanopnp.pipeline.case.resolve`'s already — the electrolyte, its
-species and every correction switch come out of the case. What this stage adds is
-the artefact: a content hash over the electrolyte's provenance *and* over the
-digest of the ``data/corrections/*.yaml`` it resolved through, so that editing a
-parameter file is a cache miss rather than a silent change of physics (FR-16,
-section 5.3.2).
-
-Nothing here imports NGSolve. The coefficient set is symbolic only once a mesh
-exists, and stage 10 is where that happens.
-"""
+"""Stage 8 of section 5.2: the resolved material coefficient set (IF-01, FR-27)."""
 
 from __future__ import annotations
 
@@ -32,12 +21,9 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
 
 class MaterialsStage:
-    """Stage 8: electrolyte specification to a resolved, hashed coefficient set."""
-
     name = "materials"
 
     def describe(self) -> StageDescription:
-        """Return the registry's description of this stage (FR-27)."""
         return describe(self.name)
 
     def run(
@@ -47,29 +33,6 @@ class MaterialsStage:
         progress: Progress | None = None,
         cancel: CancelToken | None = None,
     ) -> MaterialsArtefact:
-        """Resolve the electrolyte and emit the stage-8 artefact.
-
-        Parameters
-        ----------
-        inputs
-            Carries the case; this stage consumes no upstream artefact.
-        progress
-            Called with a fraction in [0, 1] and a message.
-        cancel
-            Checked on entry. Resolution reads one YAML file and evaluates no
-            fit, so there is nothing longer-running to interrupt.
-
-        Returns
-        -------
-        MaterialsArtefact
-            Hashed over the electrolyte's provenance, the reference
-            concentration, and the digest of every correction file it reads.
-
-        Raises
-        ------
-        Cancelled
-            If ``cancel`` is already set.
-        """
         check_cancelled(cancel, "materials")
         report(progress, 0.0, "resolving the electrolyte")
         artefact = self.key(inputs)
@@ -77,23 +40,12 @@ class MaterialsStage:
         return artefact
 
     def key(self, inputs: StageInputs) -> MaterialsArtefact:
-        """Return the stage-8 artefact, which is its own key (FR-27, section 5.3.2).
-
-        The whole of :meth:`run`'s result, summary included: resolution reads one
-        YAML file and evaluates no fit, so there is nothing cheaper to key than
-        the answer, and the walk stores this key as the artefact
-        (``key_is_artefact``). :meth:`run` calls this, so the two cannot drift
-        apart.
-        """
         resolved = inputs.resolved
         electrolyte = resolved.electrolyte
         parameter_file = electrolyte.parameter_file
-        # The correction file's content hash is its version (FR-25): the
-        # documents carry no version field, and a hash cannot be forgotten.
+        # the documents carry no version field, so the content hash is the version
         digest = file_hash(correction_file(parameter_file)) if parameter_file else ""
-        # A correction model may name a file other than the reference one, and
-        # its fit coefficients are read from there (FR-16): that file is an
-        # input as much as the reference file is.
+        # a model may name a file other than the reference one; it is an input too
         named = {model.name for model in electrolyte.corrections.values()}
         read = named.intersection(available_corrections()) - {parameter_file}
         others = {name: file_hash(correction_file(name)) for name in sorted(read)}
