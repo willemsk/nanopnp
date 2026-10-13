@@ -849,7 +849,7 @@ Its last commit on `main` is tagged `v0.5.0` alone (G11).
 | The phase estimate after J1 | 4–6 weeks (I5), or a week more for WP43 | **Settled by the author, 12 October 2026** (§8.2.10 J12): 4–6 weeks, WP43 absorbed |
 | The walks on a pull request; J7's token figure | — | **Settled by the author, 12 October 2026**, at WP43's `/wp-plan` (§8.2.10 J10, J11): the `extended` walks run after a merge; the figure is the fixed reading set |
 | The remediation of WP43 | Two packages first; commit hook = Tier 1; push gate without coverage; the prose rule; agents retired; models; plan caps; no dollar gate | **Settled by the author, 13 October 2026** (§8.2.11 L1 to L8) |
-| The push guard (refuse `git push` until the gate passed) | Keep, or drop with the rest of WP43's machinery | **Author, open.** Default: keep, in simplified form; WP44's plan reports its size |
+| The push guard (refuse `git push` until the gate passed) | Keep, or drop with the rest of WP43's machinery | **Settled by the author, 13 October 2026**: keep, simplified; WP44's plan reports its size |
 | The phase estimate after L1 | 4–6 weeks stands, or more | **Author, open.** Default: stands |
 | Their grouping | By kind, two packages, or one per area | **Settled by the author, 6 October 2026** (I2): accuracy, verification, small fixes |
 | `REV-23` to `REV-65` | Phase 4, Phase 5, Phase 6, post-1.0 or declined, each | **Settled by the author, 6 October 2026** (I3) |
@@ -875,7 +875,6 @@ Its last commit on `main` is tagged `v0.5.0` alone (G11).
 | A ruling on each of J7's budgets that WP43 misses | WP43's shipping | The miss is carried as a `REV-nn` row |
 | The required status checks renamed in the repository's branch protection, if it has any | WP43's merge | The pull request cannot merge, or merges with stale checks required |
 | The tag `v0.5.0-alpha.9` and CI result as the required check | Now | WP44's pull request waits on the old checks |
-| The push-guard ruling | WP44's plan | The guard is kept |
 | A read of WP45's pull request, and of any module the author picks | WP45's merge | The pull request waits |
 | The merge of every PR | Every package | — |
 | The tags, if the session cannot push them | After each merge (`v0.5.0-alpha.N`) and at the close (`v0.5.0`) | The session prints the `git tag -a` and `git push` commands (G11) |
