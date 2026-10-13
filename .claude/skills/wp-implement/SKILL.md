@@ -86,8 +86,9 @@ and how it would be noticed; **Your call**, each decision the author owns with *
 and one reason.
 
 Once the PR exists, write `PR: [#<n>](<url>), branch <head>` under the title of
-`docs/plans/wp<n>-*.md`, commit it (`docs: record WP<n>'s PR`) and push; `/wp-ship` finds the
-package from this line (`wp-ship` §0).
+`docs/plans/wp<n>-*.md`, commit it (`docs: record WP<n>'s PR`), start `.claude/hooks/gate.sh run`
+again in the background (the commit is a new tree, and the push guard names the tree) and push when it
+passes; `/wp-ship` finds the package from this line (`wp-ship` §0).
 
 Stop and report the PR link, the identifiers discharged, the tag the last commit takes after the
 merge, and readiness for `/wp-ship`. Do not start the review or CI monitoring: the review should

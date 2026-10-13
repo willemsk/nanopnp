@@ -178,6 +178,13 @@ def _hook(started_in: Path, session_dir: Path, command: str) -> str:
     return result.stdout
 
 
+def _run(repo: Path) -> subprocess.CompletedProcess[str]:
+    assert _BASH is not None
+    return subprocess.run(
+        [_BASH, str(_GATE), "run"], cwd=repo, capture_output=True, text=True, timeout=60
+    )
+
+
 @pytest.mark.parametrize(
     ("session", "command"),
     [
@@ -226,11 +233,8 @@ def test_gate_run_does_not_take_a_development_pass_for_its_own(
     push (section 7.6 NOTE): a tree that passed only the development selection is
     gated again, here reaching the fake ``uv`` that refuses.
     """
-    assert _BASH is not None
     main, _ = worktree_pair
-    result = subprocess.run(
-        [_BASH, str(_GATE), "run"], cwd=main, capture_output=True, text=True, timeout=60
-    )
+    result = _run(main)
     assert result.returncode != 0
     assert "already passed" not in result.stdout
 
@@ -245,7 +249,6 @@ def test_gate_run_on_a_clean_tree_runs_the_extended_tests_on_unpushed_code(
     claimed the extended pass; ``run`` judges what the push would send, here a
     code commit on a branch never pushed (section 7.6 NOTE).
     """
-    assert _BASH is not None
     for name in ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE"):
         monkeypatch.delenv(name, raising=False)
     repo = tmp_path / "repo"
@@ -270,9 +273,7 @@ def test_gate_run_on_a_clean_tree_runs_the_extended_tests_on_unpushed_code(
     uv.chmod(0o755)
     monkeypatch.setenv("PATH", f"{binaries}{os.pathsep}{os.environ['PATH']}")
 
-    result = subprocess.run(
-        [_BASH, str(_GATE), "run"], cwd=repo, capture_output=True, text=True, timeout=60
-    )
+    result = _run(repo)
     assert result.returncode == 0, result.stderr
     ran = calls.read_text(encoding="utf-8").splitlines()
     assert any("pytest" in call and "--extended" in call for call in ran), ran
@@ -292,7 +293,6 @@ def test_gate_run_on_an_already_pushed_branch_still_runs_the_extended_tests(
     extended selection; CI's pull_request check compares base...head and runs
     pytest (section 7.6 NOTE, PR 74 review).
     """
-    assert _BASH is not None
     for name in ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE"):
         monkeypatch.delenv(name, raising=False)
     origin = tmp_path / "origin.git"
@@ -323,9 +323,7 @@ def test_gate_run_on_an_already_pushed_branch_still_runs_the_extended_tests(
     uv.chmod(0o755)
     monkeypatch.setenv("PATH", f"{binaries}{os.pathsep}{os.environ['PATH']}")
 
-    result = subprocess.run(
-        [_BASH, str(_GATE), "run"], cwd=repo, capture_output=True, text=True, timeout=60
-    )
+    result = _run(repo)
     assert result.returncode == 0, result.stderr
     ran = calls.read_text(encoding="utf-8").splitlines()
     assert any("pytest" in call and "--extended" in call for call in ran), ran
@@ -414,7 +412,6 @@ def test_ver72_gate_run_passes_extended_without_coverage_and_requires_gmsh(
     L3: the push gate is CI's lint job and pull-request legs without the changed-line
     coverage, which ``diff-cover`` judges after the push.
     """
-    assert _BASH is not None
     repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/code.py")
     calls = _recording_uv(tmp_path, monkeypatch)
     result = _run(repo)
@@ -523,7 +520,6 @@ def test_gate_run_requires_apbs_only_where_its_wheel_installs(
     ``apbs`` group); elsewhere uv installs no binary, and requiring one would fail
     VAL-06 on every run of the gate.
     """
-    assert _BASH is not None
     monkeypatch.delenv("NANOPNP_REQUIRE_APBS", raising=False)
     repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/code.py")
     seen = tmp_path / "apbs-seen"
@@ -534,9 +530,7 @@ def test_gate_run_requires_apbs_only_where_its_wheel_installs(
         encoding="utf-8",
     )
     uname.chmod(0o755)
-    result = subprocess.run(
-        [_BASH, str(_GATE), "run"], cwd=repo, capture_output=True, text=True, timeout=60
-    )
+    result = _run(repo)
     assert result.returncode == 0, result.stderr
     assert set(seen.read_text(encoding="utf-8").split()) == {required}
 
@@ -576,16 +570,13 @@ def test_gate_names_the_system_libraries_when_gmsh_cannot_import(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """A Gmsh that cannot import fails ``run`` with the ``apt-get`` line that fixes it."""
-    assert _BASH is not None
     repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/code.py")
     failing = (
         'case "$*" in *--extended*) echo "Failed: NANOPNP_REQUIRE_GMSH=1 and gmsh does not '
         'import: OSError: libGLU.so.1"; exit 1;; esac\n'
     )
     _recording_uv(tmp_path, monkeypatch, failing)
-    result = subprocess.run(
-        [_BASH, str(_GATE), "run"], cwd=repo, capture_output=True, text=True, timeout=60
-    )
+    result = _run(repo)
     assert result.returncode != 0
     assert "libGLU.so.1" in result.stderr
     assert "apt-get install -y --no-install-recommends libglu1-mesa" in result.stderr
@@ -616,7 +607,6 @@ def test_gate_run_without_a_merge_base_runs_the_whole_gate(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """With no merge base the prose rule cannot clear the branch, so every step runs (L3)."""
-    assert _BASH is not None
     repo = _branch_repo(tmp_path, monkeypatch, "docs/x/notes.md")
     _git(repo, "branch", "-m", "main", "trunk")
     calls = _recording_uv(tmp_path, monkeypatch)
@@ -627,13 +617,6 @@ def test_gate_run_without_a_merge_base_runs_the_whole_gate(
 def _log(repo: Path) -> list[str]:
     path = Path(_git(repo, "rev-parse", "--absolute-git-dir")) / "nanopnp-gate.log"
     return path.read_text(encoding="utf-8").splitlines()
-
-
-def _run(repo: Path) -> subprocess.CompletedProcess[str]:
-    assert _BASH is not None
-    return subprocess.run(
-        [_BASH, str(_GATE), "run"], cwd=repo, capture_output=True, text=True, timeout=60
-    )
 
 
 def test_gate_run_stamps_extended_only_on_a_pass(
@@ -715,6 +698,29 @@ def test_gate_run_reports_a_pass_in_one_line(
     assert result.returncode == 0, result.stderr
     assert result.stdout.strip().count("\n") == 0
     assert result.stdout.startswith("gate: passed")
+
+
+def test_gate_run_failure_names_the_push_gate_and_offers_no_commit_escape(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/code.py")
+    _recording_uv(tmp_path, monkeypatch, 'case "$*" in *mypy*) echo bad types; exit 1;; esac\n')
+    result = _run(repo)
+    assert result.returncode == 1
+    assert "bad types" in result.stderr
+    assert "gate.sh run again" in result.stderr
+    assert "commit" not in result.stderr
+    assert "--no-verify" not in result.stderr
+
+
+@pytest.mark.parametrize("argument", ["map", "runn"])
+def test_gate_refuses_an_argument_it_does_not_know(argument: str) -> None:
+    assert _BASH is not None
+    result = subprocess.run(
+        [_BASH, str(_GATE), argument], input="", capture_output=True, text=True, timeout=10
+    )
+    assert result.returncode == 2
+    assert argument in result.stderr
 
 
 def test_gate_hook_refuses_a_push_in_the_command_that_commits(

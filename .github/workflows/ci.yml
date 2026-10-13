@@ -291,14 +291,15 @@ jobs:
           if-no-files-found: error
 
   # The shards' coverage combined, then full branch coverage of the changed
-  # src/nanopnp lines outside gui/, as `gate.sh run` requires (section 7.6 NOTE,
-  # VER-72 f).
+  # src/nanopnp lines outside gui/; CI alone checks it (section 7.6 NOTE, VER-72 f).
   coverage:
     name: coverage
     needs: [changes, lint, docs, tests]
     if: needs.changes.outputs.mode == 'pr'
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
     env:
       CODE: ${{ needs.changes.outputs.code }}
     steps:

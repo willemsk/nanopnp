@@ -33,7 +33,14 @@
 set -uo pipefail
 
 mode=hook
-[[ ${1:-} == run ]] && mode=run
+case ${1:-} in
+    "") ;;
+    run) mode=run ;;
+    *)
+        printf '%s\n' "gate.sh takes no argument (hook mode, payload on stdin) or \`run\`, not \`$1\`." >&2
+        exit 2
+        ;;
+esac
 target_dir=.
 
 if [[ $mode == hook ]]; then
@@ -418,6 +425,9 @@ fi
 
 if [[ $mode == run ]]; then
     lead="The gate"
+    requirement="The push gate requires lint, format, types and the whole suite to pass before a push."
+    again="Fix this, then run .claude/hooks/gate.sh run again."
+    bypass=""
     # CI requires the apbs binary where the apbs-binary wheel exists (VAL-06; pyproject.toml's
     # `apbs` group: Linux x86_64 and macOS); so does `run`. Elsewhere VAL-06 skips.
     case "$(uname -s)/$(uname -m)" in
@@ -425,6 +435,9 @@ if [[ $mode == run ]]; then
     esac
 else
     lead="The commit was not made: the gate"
+    requirement="CLAUDE.md requires lint, format, types and tests to pass before committing."
+    again="Fix this, then commit again."
+    bypass=" To commit anyway, add --no-verify."
 fi
 
 # Gmsh's tests fail rather than skip where it cannot import: always in `run`, as in CI; in the
@@ -493,7 +506,7 @@ check() {
 
 A gate that cannot finish is not a pass. Find what made \`$*\` slow (pytest
 --durations=10), or raise NANOPNP_GATE_BUDGET_S together with the hook timeout
-in .claude/settings.json. To commit anyway, add --no-verify.
+in .claude/settings.json.${bypass}
 
 Last 40 lines:
 
@@ -507,8 +520,7 @@ ${gmsh_remedy}"
     fi
     fail "${lead} failed at \`${name}\`.
 
-CLAUDE.md requires lint, format, types and tests to pass before committing. Fix this, then
-commit again. To commit anyway, add --no-verify.
+${requirement} ${again}${bypass}
 
 Last 40 lines of \`$*\`:
 

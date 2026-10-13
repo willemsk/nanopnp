@@ -50,8 +50,9 @@ time, so the development selection leaves them out. The push gate runs them befo
 and CI after a merge, nightly and before a release (`SPECIFICATION.md` §7.6 NOTE). Naming one's
 file, `uv run pytest tests/tier2/test_charge_2wcd.py`, runs it without the flag.
 
-Before a push, the lines your branch changes in `src/nanopnp/` (not `gui/`) need full branch
-coverage, checked by `diff-cover`; an exempt line says `# pragma: no cover - <reason>`. Gmsh's tests
+The lines your branch changes in `src/nanopnp/` (not `gui/`) need full branch coverage, which CI's
+`coverage` job checks with `diff-cover` (the push gate measures none); an exempt line says
+`# pragma: no cover - <reason>`. Gmsh's tests
 fail rather than skip; on Debian or Ubuntu it needs `apt-get install libglu1-mesa libxft2
 libxinerama1 libxcursor1`.
 

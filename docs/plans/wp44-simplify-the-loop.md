@@ -71,4 +71,4 @@ Each item carries the clause edits for what it deletes or changes. One commit ea
 
 The tree strip and VER-75 (WP45); any product test's assertion; CI's post-merge and nightly jobs; a cost figure.
 
-> **Outcome — measured 13 October 2026, 4 cores, Python 3.14.6.** Commit hook 187 to 220 s (1,966 Tier 1 tests; predicted 90 s: Tier 1 is longer than the 332 CPU-seconds assumed). Push gate 509 s (predicted 8 to 9 minutes). Pull-request critical path: first CI run. `gate.sh` 561 lines against 300; 273 are the kept push guard. REV-80 and REV-81 fixed.
+> **Outcome — measured 13 October 2026, 4 cores, Python 3.14.6.** Commit hook 187 to 220 s (1,966 Tier 1 tests; predicted 90 s: Tier 1 is longer than the 332 CPU-seconds assumed). Push gate 509 s (predicted 8 to 9 minutes). Pull-request critical path 194 s on its first CI run (predicted under 6 minutes). `gate.sh` 561 lines against 300; 273 are the kept push guard. REV-80 and REV-81 fixed.
