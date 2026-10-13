@@ -47,7 +47,7 @@ a single term (§7.1).
 | Title + status | `# WP<n> — <name>`, then **Status: planned, not started**, the date, and what it inherits |
 | Normativity note | One paragraph: the phase plan it belongs to, that `SPECIFICATION.md` governs, that identifiers are pointers |
 | `## In brief` | Before the Execution brief; the template below |
-| `## Execution brief` | Current scope, dependencies, requirement pointers and the subsections below. The plan holds **at most 1,500 words before its Outcome** (`tests/tier1/test_plan_shape.py` fails a longer one); link evidence rather than retelling earlier packages |
+| `## Execution brief` | Current scope, dependencies, requirement pointers and the subsections below. The plan holds **at most 1,500 words outside its Outcome annotations** (`tests/tier1/test_plan_shape.py` fails a longer one); link evidence rather than retelling earlier packages |
 | `### Decisions` | A table `Decision \| Choice \| Why/source`, **at most six rows**. **This is the deliverable.** Resolve every choice that affects correctness now |
 | `### Work items` | A checklist in dependency order, one commit per item: `- [ ] 3. <files and deliverable> (D4); done when <tests> pass`. Name the files in backticks. After a group of items, a line *Compaction checkpoint: after item N; resume from this plan and `git log`.* |
 | `### Verification` | Test file, tier, identifiers, oracle, tolerance source and command. Every claimed `VER-`/`VAL-` appears here |

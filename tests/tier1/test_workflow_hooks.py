@@ -404,14 +404,9 @@ def _uv_calls(calls: Path) -> list[str]:
     return [line.split("|", 1)[1] for line in calls.read_text(encoding="utf-8").splitlines()]
 
 
-def test_ver72_gate_run_passes_extended_without_coverage_and_requires_gmsh(
+def test_gate_run_passes_extended_without_coverage_and_requires_gmsh(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """``gate.sh run`` runs the whole suite once with ``--extended``, no coverage, Gmsh required.
-
-    L3: the push gate is CI's lint job and pull-request legs without the changed-line
-    coverage, which ``diff-cover`` judges after the push.
-    """
     repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/code.py")
     calls = _recording_uv(tmp_path, monkeypatch)
     result = _run(repo)
@@ -427,7 +422,6 @@ def test_ver72_gate_run_passes_extended_without_coverage_and_requires_gmsh(
 def test_gate_commit_runs_the_five_steps_in_order_and_stops_at_the_first_failure(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A commit runs lock, ruff, format, mypy and Tier 1; a failure names its step (L2)."""
     if shutil.which("jq") is None:
         pytest.skip("the gate hook reads its payload with jq")
     repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/other.py")
@@ -462,7 +456,6 @@ def test_gate_commit_runs_the_five_steps_in_order_and_stops_at_the_first_failure
 def test_gate_commit_keeps_the_gui_file_out_of_the_parallel_call(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """The GUI file runs serially and apart, as in CI (L2)."""
     if shutil.which("jq") is None:
         pytest.skip("the gate hook reads its payload with jq")
     repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/other.py")
@@ -477,7 +470,6 @@ def test_gate_commit_keeps_the_gui_file_out_of_the_parallel_call(
 def test_gate_commit_of_a_prose_only_change_runs_ruff_alone(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Prose changes skip the lock check, mypy and pytest (L2)."""
     if shutil.which("jq") is None:
         pytest.skip("the gate hook reads its payload with jq")
     repo = _branch_repo(tmp_path, monkeypatch, "docs/x/notes.md")
@@ -490,7 +482,6 @@ def test_gate_commit_of_a_prose_only_change_runs_ruff_alone(
 def test_gate_commit_of_an_unchanged_tree_is_not_rerun(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A tree the hook passed is not gated again, so a split into commits pays once (L2)."""
     if shutil.which("jq") is None:
         pytest.skip("the gate hook reads its payload with jq")
     repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/other.py")
@@ -500,6 +491,22 @@ def test_gate_commit_of_an_unchanged_tree_is_not_rerun(
     first = len(_uv_calls(calls))
     assert _hook(repo, repo, "git commit -am x") == ""
     assert len(_uv_calls(calls)) == first
+
+
+def test_gate_commit_pass_keeps_the_push_gates_extended_line(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    if shutil.which("jq") is None:
+        pytest.skip("the gate hook reads its payload with jq")
+    repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/other.py")
+    stamp = Path(_git(repo, "rev-parse", "--absolute-git-dir")) / "nanopnp-gate.pass"
+    stamp.write_text(f"{'a' * 40} extended\n{'b' * 40} development\n", encoding="utf-8")
+    (repo / "src/nanopnp/other.py").write_text("x = 2\n", encoding="utf-8")
+    _recording_uv(tmp_path, monkeypatch)
+    assert "gate: passed" in _hook(repo, repo, "git commit -am x")
+    lines = stamp.read_text(encoding="utf-8").splitlines()
+    assert lines[0] == f"{'a' * 40} extended"
+    assert len(lines) == 2 and lines[1].endswith(" development") and "b" * 40 not in lines[1]
 
 
 @pytest.mark.parametrize(
@@ -606,7 +613,6 @@ def test_gate_hook_requires_gmsh_for_a_tracked_change_beside_an_untracked_file(
 def test_gate_run_without_a_merge_base_runs_the_whole_gate(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """With no merge base the prose rule cannot clear the branch, so every step runs (L3)."""
     repo = _branch_repo(tmp_path, monkeypatch, "docs/x/notes.md")
     _git(repo, "branch", "-m", "main", "trunk")
     calls = _recording_uv(tmp_path, monkeypatch)
@@ -622,7 +628,6 @@ def _log(repo: Path) -> list[str]:
 def test_gate_run_stamps_extended_only_on_a_pass(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A failing step leaves no stamp; a pass names the tree with ``extended`` (L3)."""
     repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/code.py")
     stamp = Path(_git(repo, "rev-parse", "--absolute-git-dir")) / "nanopnp-gate.pass"
     _recording_uv(tmp_path, monkeypatch, 'case "$*" in *--extended*) exit 1;; esac\n')

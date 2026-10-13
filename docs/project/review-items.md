@@ -893,7 +893,7 @@ run there. A later change to one job's steps is easily missed in the other.
 
 `tests/tier1/test_plan_shape.py` counts every word of the plan file against VER-72 (g)'s 1,500-word cap, including the PR line, the commit-sha ticks and the Outcome that `/wp-implement` appends at delivery. WP44's own plan fell from 1,476 to 1,346 words only by deleting its verification table and open questions.
 
-**Fixed.** The author's ruling, taken on the recommendation: the cap counts the planning part only. `plan_problems` stops at the first `> **Outcome` line, so a delivery note cannot fail Tier 1 (`test_ver72_g_the_outcome_appended_at_delivery_is_not_counted`). VER-72 (g), §8.2.11 L7 and the `wp-plan` skill say "before its Outcome".
+**Fixed.** The author's ruling, taken on the recommendation: the cap counts the planning part only. `plan_problems` leaves out every `> **Outcome` block, an indented per-item annotation included (the blocks `test_plan_records.py` reads), and counts everything else, so a delivery note cannot fail Tier 1 and an early Outcome hides no later item (`test_ver72_g_the_outcome_appended_at_delivery_is_not_counted`, `test_ver72_g_every_outcome_annotation_is_left_out_and_nothing_else`). VER-72 (g) and the `wp-plan` skill say "outside its Outcome annotations"; §8.2.11 L7 says "before its Outcome".
 
 ### REV-88 — No check remains that the public API carries its docstrings
 

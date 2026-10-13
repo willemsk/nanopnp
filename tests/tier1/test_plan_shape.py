@@ -1,8 +1,4 @@
-"""VER-72 (g) — plans stay small, and the agent files, clause script and rules are in order.
-
-§8.2.11 L6 to L8. A work-package plan from WP44 on holds at most 1,500 words before its Outcome,
-at most six ``Decisions`` rows, no ``## Design`` heading and an In brief of at most 250 words.
-"""
+"""Plans stay small, and the agent files, the clause script and the rules are in order."""
 
 from __future__ import annotations
 
@@ -13,6 +9,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from test_plan_records import _outcome_lines
 
 REPOSITORY = Path(__file__).resolve().parents[2]
 AGENTS = REPOSITORY / ".claude/agents"
@@ -79,8 +76,11 @@ def _brief_problems(text: str) -> list[str]:
     problems = []
     if len(body.split()) > MAX_BRIEF_WORDS:
         problems.append(f"In brief of {len(body.split())} words, over {MAX_BRIEF_WORDS}")
+    paragraphs = [part for part in re.split(r"\n[ \t]*\n", body) if part.strip()]
     if "Your call" not in body:
         problems.append("In brief without a Your call")
+    elif "Your call" not in paragraphs[-1]:
+        problems.append("In brief does not end in its Your call")
     found = IDENTIFIER.findall(body)
     if found:
         problems.append(f"In brief names {sorted(set(found))}")
@@ -89,12 +89,17 @@ def _brief_problems(text: str) -> list[str]:
 
 def plan_problems(text: str) -> list[str]:
     problems = _brief_problems(text)
-    planned = re.split(r"^> \*\*Outcome", text, maxsplit=1, flags=re.M)[0]
-    if len(planned.split()) > MAX_PLAN_WORDS:
-        problems.append(f"{len(planned.split())} words before the Outcome, over {MAX_PLAN_WORDS}")
+    outcomes = {number for number, _ in _outcome_lines(text)}
+    planned = sum(
+        len(line.split())
+        for number, line in enumerate(text.splitlines(), start=1)
+        if number not in outcomes
+    )
+    if planned > MAX_PLAN_WORDS:
+        problems.append(f"{planned} words outside the Outcomes, over {MAX_PLAN_WORDS}")
     if re.search(r"^#{2,3} Design\b", text, re.M):
         problems.append("a Design heading")
-    section = re.search(r"^### Decisions\n(.*?)(?=^#{1,3} )", text, re.S | re.M)
+    section = re.search(r"^### Decisions\n(.*?)(?=^#{1,3} |\Z)", text, re.S | re.M)
     if section:
         rows = [line for line in section.group(1).splitlines() if line.startswith("|")]
         decisions = len(rows) - 2
@@ -123,15 +128,26 @@ def test_ver72_g_the_outcome_appended_at_delivery_is_not_counted() -> None:
     assert any("over 1500" in problem for problem in plan_problems(_toy_plan(words=1501)))
 
 
+def test_ver72_g_every_outcome_annotation_is_left_out_and_nothing_else() -> None:
+    item = "- [ ] 1. Change it.\n"
+    indented = f"- [x] 1. Change it.\n\n  > **Outcome — measured.** {'note ' * 400}\n"
+    assert plan_problems(_toy_plan(words=1400).replace(item, indented)) == []
+    early = "- [x] 1. Change it.\n\n> **Outcome — measured.** Done.\n"
+    hidden = plan_problems(_toy_plan(words=1501).replace(item, early))
+    assert any("over 1500" in problem for problem in hidden), hidden
+
+
 @pytest.mark.parametrize(
     ("plan", "message"),
     [
         (_toy_plan(words=1501), "over 1500"),
         (_toy_plan(decisions=7), "7 decisions"),
+        (_toy_plan(decisions=7).split("### Work items")[0], "7 decisions"),
         (_toy_plan(design=True), "Design heading"),
         (_toy_plan(brief=251), "In brief of"),
+        (_toy_plan().replace("None.\n\n", "None.\n\nAn afterthought.\n\n"), "does not end in"),
     ],
-    ids=["words", "decisions", "design", "brief"],
+    ids=["words", "decisions", "decisions-last", "design", "brief", "brief-end"],
 )
 def test_ver72_g_a_plan_over_a_cap_is_found(plan: str, message: str) -> None:
     assert any(message in problem for problem in plan_problems(plan)), plan_problems(plan)

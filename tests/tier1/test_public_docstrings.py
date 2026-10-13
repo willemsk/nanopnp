@@ -27,13 +27,18 @@ def missing_docstrings(source: Path, public: dict[str, str]) -> list[str]:
             problems.append(f"{path.relative_to(source).as_posix()}: no module docstring")
     for name, module in sorted(public.items()):
         path = _module_path(source, module)
-        for node in _tree(path).body:
-            if (
-                isinstance(node, ast.FunctionDef | ast.ClassDef)
-                and node.name == name
-                and not ast.get_docstring(node)
-            ):
-                problems.append(f"{path.relative_to(source).as_posix()}:{node.lineno}: {name}")
+        place = path.relative_to(source).as_posix()
+        defined = [
+            node
+            for node in _tree(path).body
+            if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef)
+            and node.name == name
+        ]
+        if not defined:
+            problems.append(f"{place}: {name} is not a function or class defined there")
+        problems += [
+            f"{place}:{node.lineno}: {name}" for node in defined if not ast.get_docstring(node)
+        ]
     return problems
 
 
@@ -50,5 +55,11 @@ def test_ver72_h_a_bare_module_and_a_bare_public_name_are_named(tmp_path: Path) 
         '"""Api."""\n\n\ndef documented():\n    """Yes."""\n\n\ndef undocumented():\n    pass\n',
         encoding="utf-8",
     )
-    problems = missing_docstrings(tmp_path, {"documented": "pkg.api", "undocumented": "pkg.api"})
-    assert sorted(problems) == ["pkg/api.py:8: undocumented", "pkg/bare.py: no module docstring"]
+    problems = missing_docstrings(
+        tmp_path, {"documented": "pkg.api", "undocumented": "pkg.api", "absent": "pkg.api"}
+    )
+    assert sorted(problems) == [
+        "pkg/api.py: absent is not a function or class defined there",
+        "pkg/api.py:8: undocumented",
+        "pkg/bare.py: no module docstring",
+    ]
