@@ -126,7 +126,7 @@ electrolyte should never require touching solver code.
 ## Style
 
 `from __future__ import annotations` at the top of every module; type hints on every signature
-(`mypy --strict` runs over `src/`); NumPy-style docstrings; SI internally with units in the name at
+(`mypy --strict` runs over `src/`); a docstring on the public API and a one-line docstring on every module, nothing on tests or private code, and a comment only where the code cannot say why; SI internally with units in the name at
 the boundary (`radius_nm`, `bias_V`); British spelling in prose and identifiers, matching the
 specification; `pathlib`, f-strings, `logging`; pydantic models at every serialisation boundary. Cite
 the source of every physical constant and fit coefficient in a comment.

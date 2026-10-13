@@ -887,7 +887,7 @@ class CoupledModel:
         return tuple(ion.name for ion in self.electrolyte.species)
 
     @property
-    def fields(self) -> tuple[Field, ...]:  # noqa: D102 - documented on the protocol
+    def fields(self) -> tuple[Field, ...]:
         declared = [Field(POTENTIAL, "h1", self.order, None)]
         declared += [
             Field(concentration_field_name(name), "h1", self.order, self.fluid)
@@ -901,7 +901,7 @@ class CoupledModel:
         return tuple(declared)
 
     @property
-    def boundary_conditions(self) -> Mapping[str, Mapping[str, str]]:  # noqa: D102
+    def boundary_conditions(self) -> Mapping[str, Mapping[str, str]]:
         vocabulary: dict[str, Mapping[str, str]] = {
             POTENTIAL: {
                 "cis": "phi = 0",
@@ -953,7 +953,7 @@ class CoupledModel:
         return mesh_unit_scales(self.electrolyte, self.concentration_M)
 
     @property
-    def provenance(self) -> Mapping[str, Any]:  # noqa: D102
+    def provenance(self) -> Mapping[str, Any]:
         return {
             "model": self.name,
             "fields": {
@@ -1883,7 +1883,7 @@ class ElectrostaticModel(_SingleFieldModel):
     screening_length_nm: float | None = None
 
     @property
-    def boundary_conditions(self) -> Mapping[str, Mapping[str, str]]:  # noqa: D102
+    def boundary_conditions(self) -> Mapping[str, Mapping[str, str]]:
         return {
             POTENTIAL: {
                 "cis": "phi = 0",
@@ -1905,7 +1905,7 @@ class ElectrostaticModel(_SingleFieldModel):
         return self.scales.debye_length_nm
 
     @property
-    def provenance(self) -> Mapping[str, Any]:  # noqa: D102
+    def provenance(self) -> Mapping[str, Any]:
         return {
             "model": self.name,
             "fields": {POTENTIAL: {"element": "h1", "order": self.order, "domain": None}},
@@ -2065,7 +2065,7 @@ class PoissonModel(_SingleFieldModel):
     solid_permittivities: Mapping[str, float] = field(default_factory=dict)
 
     @property
-    def boundary_conditions(self) -> Mapping[str, Mapping[str, str]]:  # noqa: D102
+    def boundary_conditions(self) -> Mapping[str, Mapping[str, str]]:
         return {
             POTENTIAL: {
                 "cis": "phi = 0",
@@ -2077,7 +2077,7 @@ class PoissonModel(_SingleFieldModel):
         }
 
     @property
-    def provenance(self) -> Mapping[str, Any]:  # noqa: D102
+    def provenance(self) -> Mapping[str, Any]:
         return {
             "model": self.name,
             "fields": {POTENTIAL: {"element": "h1", "order": self.order, "domain": None}},

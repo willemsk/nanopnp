@@ -153,6 +153,14 @@ select = ["E", "F", "I", "N", "UP", "B", "SIM", "NPY", "RUF", "D", "ANN"]
 ignore = [
     "D203",   # incompatible with D211
     "D213",   # incompatible with D212
+    "D101",   # a docstring only on the public API and on modules (CLAUDE.md, python.md)
+    "D102",
+    "D103",
+    "D104",
+    "D105",
+    "D106",
+    "D107",
+    "D417",   # parameters are documented only where the name and type do not say
     "N803",   # physics notation: D0, P1, V_T are the published symbol names
     "N806",
     "N815",   # unit suffixes on attributes are required: validity_M, temperature_K

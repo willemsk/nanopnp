@@ -10,7 +10,11 @@ paths:
 ## Coding conventions
 
 - `from __future__ import annotations` in every module; type hints on every signature; `mypy --strict` clean.
-- NumPy-style docstrings on public functions.
+- **In-code prose (§8.2.11 L4).** A docstring only on the public API (`nanopnp.PUBLIC`, the command-line
+  commands, the GUI entry points): a summary line, with parameters only where the name and type do not say.
+  A one-line docstring on every module. No docstring on a test or on private code. A comment only where the
+  code cannot say why it is so, and for the source of a physical constant. Identifiers live in test names and
+  commit messages, not in prose.
 - SI internally; units in the name at the boundary (`radius_nm`, `bias_V`). No bare floats in interfaces.
 - British spelling in prose and identifiers (`normalise`, `analyse`).
 - `pathlib.Path`, never `os.path`. f-strings, never `%`/`.format()` (exceptions: one `%` over a whole

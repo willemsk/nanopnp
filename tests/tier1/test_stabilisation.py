@@ -537,7 +537,7 @@ class RecordingMeasures(Measures):
 
     calls: list[tuple[bool, int]] = field(default_factory=list, compare=False)
 
-    def volume(  # noqa: D102 - documented on the base class
+    def volume(
         self,
         integrand: object,
         *,

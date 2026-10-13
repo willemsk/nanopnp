@@ -294,7 +294,7 @@ class CancelFlag:
         """Ask the running stage to stop at its next check."""
         self._cancelled = True
 
-    def cancelled(self) -> bool:  # noqa: D102 - documented on the protocol
+    def cancelled(self) -> bool:
         return self._cancelled
 
 

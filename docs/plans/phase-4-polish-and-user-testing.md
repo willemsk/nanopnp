@@ -665,8 +665,8 @@ under 6 minutes. A miss is reported with its cause and the author rules (L8). It
 
 ### WP45 — The prose strip (§8.2.11 L4, L5; VER-75 proposed)
 
-*Added, 13 October 2026.* Tag `v0.5.0-alpha.11`. Rule change first (`python.md`, `pyproject.toml`'s
-docstring rules, `CONTRIBUTING.md`), then the tree, one commit per subpackage, by per-module agent
+*Added, 13 October 2026.* Tag `v0.5.0-alpha.11`. The rule itself (`python.md`, `pyproject.toml`'s docstring
+rules, `CONTRIBUTING.md`) is WP44's. The tree, one commit per subpackage, by per-module agent
 passes (Haiku for `tests/`, Sonnet for `src/`, Opus only on a failure), each followed by the
 syntax-tree check with docstrings removed; a subpackage whose check differs is reverted and
 redone. Checkpoints: after each subpackage. The reference pages are rebuilt strict. Proposed

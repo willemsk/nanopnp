@@ -130,6 +130,13 @@ resolves one sets it `fixed` (§8.2.8 H12). A PR body is never their only record
 - Versions are git tags, never a number in `pyproject.toml` or the package (§2.7); the procedure is
   `CONTRIBUTING.md`, *Versions and releases*.
 
+## Prose in code
+
+A docstring only on the public API (`nanopnp.PUBLIC`, the CLI commands, the GUI entry points) and a
+one-line docstring on every module; none on a test or private code. A comment only where the code cannot
+say why it is so, and for the source of a physical constant. Identifiers live in test names and commit
+messages (`.claude/rules/python.md`; §8.2.11 L4).
+
 ## Durable learnings
 
 Write a durable fact into the relevant `.knowledge/` file, with its source, marked **[tested]** or

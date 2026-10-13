@@ -180,11 +180,11 @@ class SphereBody:
             raise AnalyteGeometryError(f"radius_nm must be positive, got {self.radius_nm} nm")
 
     @property
-    def bounding_radius_nm(self) -> float:  # noqa: D102 - documented on the protocol
+    def bounding_radius_nm(self) -> float:
         return self.radius_nm
 
     @property
-    def bounding_half_length_nm(self) -> float:  # noqa: D102
+    def bounding_half_length_nm(self) -> float:
         return self.radius_nm
 
     @property
@@ -196,7 +196,7 @@ class SphereBody:
         """Return ``rho_part = q/V`` in C/m^3; see :func:`_charge_density_C_m3`."""
         return _charge_density_C_m3(self.volume_nm3, charge_e)
 
-    def face(self, *, maxh_nm: float | None = None) -> Shape:  # noqa: D102
+    def face(self, *, maxh_nm: float | None = None) -> Shape:
         import netgen.occ as occ
 
         disc = occ.WorkPlane().Circle(0.0, self.z_nm, self.radius_nm).Face()
@@ -231,11 +231,11 @@ class SpheroidBody:
                 raise AnalyteGeometryError(f"{name} must be positive, got {value} nm")
 
     @property
-    def bounding_radius_nm(self) -> float:  # noqa: D102 - documented on the protocol
+    def bounding_radius_nm(self) -> float:
         return self.semi_radial_nm
 
     @property
-    def bounding_half_length_nm(self) -> float:  # noqa: D102
+    def bounding_half_length_nm(self) -> float:
         return self.semi_axial_nm
 
     @property
@@ -247,7 +247,7 @@ class SpheroidBody:
         """Return ``rho_part = q/V`` in C/m^3; see :func:`_charge_density_C_m3`."""
         return _charge_density_C_m3(self.volume_nm3, charge_e)
 
-    def face(self, *, maxh_nm: float | None = None) -> Shape:  # noqa: D102
+    def face(self, *, maxh_nm: float | None = None) -> Shape:
         import netgen.occ as occ
 
         plane = occ.WorkPlane().MoveTo(0.0, self.z_nm)
