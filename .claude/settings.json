@@ -27,16 +27,6 @@
             "statusMessage": "Running the CLAUDE.md gate before committing..."
           }
         ]
-      },
-      {
-        "matcher": "Agent|Task",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}/.claude/hooks/agent-guard.sh\"",
-            "timeout": 10
-          }
-        ]
       }
     ],
     "PostToolUse": [

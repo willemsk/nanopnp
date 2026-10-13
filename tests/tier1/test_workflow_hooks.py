@@ -345,16 +345,15 @@ _PROSE_ONLY = Path(__file__).resolve().parents[2] / ".github/scripts/prose-only.
         ("docs/project/modularity.md", False),
         ("docs/project/review-items.md", False),
         ("docs/project/contributing.md", True),
-        (".claude/agents/surveyor.md", False),
+        (".claude/agents/physics-reviewer.md", False),
         (".claude/skills/wp-ship/SKILL.md", False),
         (".claude/rules/python.md", False),
         ("docs/plans/wp43-development-loop.md", False),
         ("docs/plans/notes/sketch.md", False),
-        (".claude/model-policy.md", True),
     ],
 )
 def test_prose_only_reads_a_findings_log_as_not_prose(path: str, prose: bool) -> None:
-    """A findings log, and the pages VER-63 and test_agent_roster.py read, must run the tests.
+    """A findings log, and the pages VER-63 and test_plan_shape.py read, must run the tests.
 
     WP35 D19; H12; REV-84.
     """
