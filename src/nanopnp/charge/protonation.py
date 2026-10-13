@@ -1,43 +1,4 @@
-"""Stage 7, first half: protonation, partial charges and radii per frame (FR-12, WP27).
-
-The ``protonation`` stage takes stage 1's aligned ensemble and runs PDB2PQR, with
-PROPKA, on every frame of it (section 8.2.4 D4), or reads a supplied
-``inputs.pqr``; either way it emits a per-frame atom table in stage 1's frame,
-with each atom's charge and radius, ``Q_net`` per frame and the protonation
-state of every titratable residue. PHY-16 step 3 and its NOTE are the contract;
-the decisions are the WP27 plan's.
-
-**What PDB2PQR is given is ours** (D5). Each frame is written by
-:func:`frame_pdb` in PDB fixed columns, to 0.001 Å, with its hydrogens dropped,
-every protonation-variant residue name written as its titratable parent, and
-each chain key as one character. PDB2PQR 3.7.1 treats ``HSD`` and ``HSE`` as
-fixed residues and refuses ``HSE`` with its hydrogens present, so a CHARMM-named
-frame passed through verbatim would pin every histidine (``.knowledge/07``
-section 3). The bytes are ours, not MDAnalysis's, because their digest keys the
-frame (D10).
-
-**Each frame is cached on its own** under ``nanopnp/protonation-frame/v0.5``, keyed
-on the digest of that PDB and the protonation parameters, so a changed frame
-selection re-protonates only the frames it adds. The PQR PDB2PQR wrote is read
-back through :mod:`nanopnp.charge.pqr`, the reader ``inputs.pqr`` goes through,
-so the two routes produce the same object (D6).
-
-**A state PDB2PQR could not apply is recorded, never parsed from its log** (D8,
-the PHY-16 step-3 NOTE). Each residue's applied charge is compared with the sum
-of PROPKA's group states at the pH; where the two differ the state is
-*unapplied*. CHARMM cannot hold ``CYS⁻``, ``LYS⁰``, ``TYR⁻``, ``ARG⁰`` or a
-neutral terminus, and PDB2PQR never applies a terminal pKa at all.
-
-**Gates abort, naming the frame** (D9, QR-12): an atom PDB2PQR could not
-parameterise, a charged atom without a positive radius (PHY-16 step 4's width
-``w_i = 0.5 R_i`` would vanish), and a ``Q_net`` that is not an integer to 10⁻⁶ e.
-A supplied PQR that does not match its ensemble is a case refusal instead
-(:class:`~nanopnp.charge.pqr.PQRError`).
-
-``pdb2pqr`` is imported only inside the functions that drive it (D4), so
-``inputs.pqr`` runs without the ``structure`` extra and listing the registry
-imports neither PDB2PQR nor PROPKA (VER-25).
-"""
+"""Stage 7, first half: protonation, partial charges and radii per frame (FR-12, WP27)."""
 
 from __future__ import annotations
 
@@ -178,25 +139,10 @@ _EXTRA = "structure"
 """The extra that carries PDB2PQR and PROPKA (``pyproject.toml``)."""
 
 
-class ProtonationError(RuntimeError):
-    """A protonation gate failed, naming the frame and the residue or atom (D9, QR-12).
-
-    Classified with the gates (IF-02 class 4): the case is well formed and the
-    structure it names, or the PQR it supplies, gives an atom table the charge
-    kernel cannot use.
-    """
-
-
-# -- the settings -----------------------------------------------------------
+class ProtonationError(RuntimeError): ...
 
 
 def pdb2pqr_arguments(settings: ResolvedProtonation) -> tuple[str, ...]:
-    """Return the flags PDB2PQR is run with, without the two paths (PHY-16 step 3, D6).
-
-    ``titration: none`` passes neither ``--with-ph`` nor
-    ``--titration-state-method``, so every residue keeps the force field's
-    standard state and the pH reaches nothing.
-    """
     flags = [f"--ff={settings.forcefield}", f"--ffout={settings.forcefield}"]
     if settings.titration != "none":
         flags += [f"--with-ph={settings.ph!r}", f"--titration-state-method={settings.titration}"]
@@ -204,7 +150,6 @@ def pdb2pqr_arguments(settings: ResolvedProtonation) -> tuple[str, ...]:
 
 
 def protonation_parameters(settings: ResolvedProtonation) -> dict[str, Canonicalisable]:
-    """Return the produced artefact's key parameters, which also key each frame (D10)."""
     return {
         "source": "pdb2pqr",
         "ph": settings.ph,
@@ -218,7 +163,6 @@ def protonation_parameters(settings: ResolvedProtonation) -> dict[str, Canonical
 
 
 def supplied_parameters() -> dict[str, Canonicalisable]:
-    """Return a supplied artefact's key parameters: the constants that move a number or verdict."""
     return {
         "source": "inputs.pqr",
         "normalisation": dict(sorted(PARENT_RESIDUE.items())),
@@ -228,7 +172,6 @@ def supplied_parameters() -> dict[str, Canonicalisable]:
 
 
 def _gate_parameters() -> dict[str, Canonicalisable]:
-    """Return the tolerances the gates are evaluated at, which key the verdict."""
     return {
         "registration_tolerance_A": REGISTRATION_TOLERANCE_A,
         "q_net_tolerance_e": Q_NET_TOLERANCE_E,
@@ -237,7 +180,6 @@ def _gate_parameters() -> dict[str, Canonicalisable]:
 
 
 def _versions() -> dict[str, Canonicalisable]:
-    """Return the PDB2PQR and PROPKA versions, recorded beside the key (section 5.3.2)."""
     found: dict[str, Canonicalisable] = {}
     for distribution in ("pdb2pqr", "propka"):
         try:
@@ -247,55 +189,12 @@ def _versions() -> dict[str, Canonicalisable]:
     return found
 
 
-# -- the payload ------------------------------------------------------------
-
-
 def _residue_label(name: str, resid: int, icode: str, chain: str) -> str:
-    """Return a residue as diagnostics name it."""
     return f"{name} {resid}{icode} of chain {chain!r}"
 
 
 @dataclass(frozen=True)
 class ProtonationTable:
-    """The protonation artefact's payload: the atoms of every frame and their residues' states.
-
-    Frames differ in their hydrogens, so the atom arrays are the frames'
-    concatenated, and frame ``f`` is ``frame_offsets[f]:frame_offsets[f + 1]``
-    (D11). The residues are the same in every frame (section 5.3.1 NOTE on
-    ``inputs:``) and are tabulated once.
-
-    Parameters
-    ----------
-    frame_offsets
-        ``(frames + 1,)`` int64.
-    positions_nm
-        ``(atoms, 3)`` float64, in nm in stage 1's frame, on the 0.001 Å lattice.
-    charge_e, radius_nm
-        float64, one entry per atom.
-    name, resname, chain, icode, resid
-        The atom table; ``chain`` holds stage 1's chain keys.
-    residue_chain, residue_resid, residue_icode, residue_name
-        One entry per residue, in order of first appearance.
-    residue_charge_e
-        ``(frames, residues)`` float64: each residue's applied charge.
-    tautomer
-        ``(frames, residues)`` strings: ``HSD``, ``HSE`` or ``HSP`` for a
-        histidine, by its ``HD1`` and ``HE2``; empty otherwise.
-    expected_charge_e
-        ``(frames, residues)`` float64: the sum of PROPKA's group states at the pH,
-        NaN where no group of *Design* §2 was computed.
-    unapplied
-        ``(frames, residues)`` bool: the applied and expected charges differ.
-    group_residue, group_type, group_label, group_pka
-        PROPKA's groups: the residue each belongs to, its type, its label, and
-        its pKa per frame, ``(frames, groups)`` float64 with NaN where a frame
-        lacks it. The label tells apart the two ``COO`` groups of a C-terminal
-        ``ASP`` or ``GLU`` (``ASP  21 A`` and ``C-   21 A``).
-    header
-        Settings, source, versions and the chain map (``chains``: each stage-1
-        chain key and the character a PQR writes it as), as plain data.
-    """
-
     frame_offsets: np.ndarray
     positions_nm: np.ndarray
     charge_e: np.ndarray
@@ -346,15 +245,12 @@ class ProtonationTable:
 
     @property
     def frames(self) -> int:
-        """Number of frames."""
         return len(self.frame_offsets) - 1
 
     def frame_slice(self, frame: int) -> slice:
-        """Return the atom range of one frame."""
         return slice(int(self.frame_offsets[frame]), int(self.frame_offsets[frame + 1]))
 
     def q_net_e(self) -> np.ndarray:
-        """Return ``Q_net = Σ q_i`` per frame, in e."""
         import numpy as np
 
         return np.array(
@@ -365,14 +261,12 @@ class ProtonationTable:
         )
 
     def digest(self) -> str:
-        """Return a content hash over every array and the header (VER-23)."""
         return content_hash(
             f"{PROTONATION_SCHEMA}/payload",
             {**{key: getattr(self, key) for key in self.ARRAYS}, "header": dict(self.header)},
         )
 
     def write(self, path: Path) -> Path:
-        """Write the table to ``path`` as ``.npz``, header included; return the path."""
         import numpy as np
 
         arrays: dict[str, Any] = {key: np.asarray(getattr(self, key)) for key in self.ARRAYS}
@@ -384,13 +278,6 @@ class ProtonationTable:
 
     @classmethod
     def read(cls, path: Path) -> ProtonationTable:
-        """Read a table written by :meth:`write`.
-
-        Raises
-        ------
-        PQRError
-            If an array is missing.
-        """
         import numpy as np
 
         with np.load(path, allow_pickle=False) as data:
@@ -404,14 +291,6 @@ class ProtonationTable:
         return cls(header=header, **arrays)
 
     def pqr_frames(self) -> tuple[PQRFrame, ...]:
-        """Return the frames in ångströms, each value the one that reads back to this table.
-
-        Raises
-        ------
-        ValueError
-            If a coordinate is not on the 0.001 Å lattice, which no table this
-            module wrote can hold.
-        """
         positions_A = _angstrom(self.positions_nm, COORDINATE_DECIMALS, lattice=True)
         radius_A = _angstrom(self.radius_nm, 4, lattice=False)
         frames = []
@@ -433,14 +312,6 @@ class ProtonationTable:
 
 
 def _angstrom(values_nm: np.ndarray, decimals: int, *, lattice: bool) -> np.ndarray:
-    """Return values in Å that convert back to ``values_nm`` exactly under ``x 0.1``.
-
-    The payload holds ``A x 0.1`` for each value ``A`` read from a PQR, and an
-    export must print an ``A`` that reads back to the same bits (the section 3.1
-    IF-02 export NOTE). Rounding ``values_nm x 10`` to the printed decimals
-    recovers it whenever it was printed to those decimals; otherwise the
-    neighbouring doubles are searched, which always holds the original.
-    """
     import numpy as np
 
     values = np.asarray(values_nm, dtype=np.float64)
@@ -466,7 +337,6 @@ def _angstrom(values_nm: np.ndarray, decimals: int, *, lattice: bool) -> np.ndar
 
 
 def _neighbours(up: np.ndarray, down: np.ndarray, steps: int = 4) -> Iterator[np.ndarray]:
-    """Yield the doubles within ``steps`` ulps of a start, nearest first."""
     import numpy as np
 
     for _ in range(steps):
@@ -476,26 +346,12 @@ def _neighbours(up: np.ndarray, down: np.ndarray, steps: int = 4) -> Iterator[np
         yield down
 
 
-# -- PDB2PQR as a driver ----------------------------------------------------
-
-
 def frame_pdb(
     ensemble: AlignedEnsemble,
     frame: int,
     heavy: np.ndarray,
     chains: Mapping[str, str],
 ) -> bytes:
-    """Return the PDB PDB2PQR is given for one frame (D5, the PHY-16 step-3 NOTE).
-
-    PDB fixed columns, coordinates in Å to 0.001, the heavy atoms alone, each
-    protonation-variant residue name written as its parent, and each chain key
-    as its single character.
-
-    Raises
-    ------
-    ProtonationError
-        For a residue name or number, or a coordinate, the PDB columns cannot hold.
-    """
     lines: list[str] = []
     positions = ensemble.positions_nm[frame] * 10.0
     for serial, index in enumerate(heavy.tolist(), start=1):
@@ -526,12 +382,6 @@ def frame_pdb(
 
 @contextlib.contextmanager
 def _quiet_libraries() -> Iterator[Counter[str]]:
-    """Raise PDB2PQR's and PROPKA's loggers to WARNING and collect what they warn (D7).
-
-    PROPKA logs its full report at INFO, about 400 kB for the dodecamer. The
-    warnings are collected rather than dropped, and the caller re-logs each
-    distinct one once and records its count: surfaced, never swallowed.
-    """
     collected: Counter[str] = Counter()
 
     class _Collect(logging.Handler):
@@ -561,7 +411,6 @@ def _quiet_libraries() -> Iterator[Counter[str]]:
 
 
 def _require_pdb2pqr() -> None:
-    """Refuse a produced run without PDB2PQR, naming the extra, before the first frame (D4)."""
     try:
         import pdb2pqr.main  # noqa: F401 - imported to prove it is there
         import propka  # noqa: F401
@@ -576,31 +425,12 @@ def _require_pdb2pqr() -> None:
 
 
 def _instance_annotations(self: object, name: str) -> Any:  # noqa: ANN401 - mirrors __getattr__
-    """Answer ``self.__annotations__`` from the class, and refuse every other missing name."""
     if name == "__annotations__":
         return type(self).__annotations__
     raise AttributeError(f"{type(self).__name__!r} object has no attribute {name!r}")
 
 
 def restore_propka_annotations() -> bool:
-    """Let PROPKA 3.5.1 read its parameter file on Python 3.14; return whether it had to.
-
-    ``propka.parameters.Parameters.parse_line`` dispatches on
-    ``self.__annotations__``. From Python 3.14 (PEP 649 and 749) annotations are
-    evaluated lazily and are an attribute of the class only, so on an instance
-    the lookup raises ``AttributeError`` and every PROPKA run fails before its
-    first residue. QR-09 holds the package to 3.11-3.14, and no PROPKA release
-    fixes it (3.5.1 is the latest), so the instance is given a
-    fallback that answers that one name from its class and nothing else.
-
-    Detected, not version-checked: where an instance already has
-    ``__annotations__``, as on 3.11-3.13 and on any PROPKA that stops reading
-    it, nothing is installed. The dispatch compares the annotation objects by
-    identity, and the class's evaluated annotations are those objects, so the
-    run is unchanged: on the fragment ``GLU 18``-``LEU 26`` at pH 2, 3.14 with
-    this fallback and 3.12 without it give byte-identical PQRs and equal pKas
-    (``.knowledge/07`` section 3).
-    """
     from propka.parameters import Parameters
 
     if hasattr(Parameters(), "__annotations__"):
@@ -610,25 +440,6 @@ def restore_propka_annotations() -> bool:
 
 
 def run_pdb2pqr(pdb: Path, pqr: Path, settings: ResolvedProtonation) -> dict[str, Canonicalisable]:
-    """Run PDB2PQR in-process on one PDB file and return what it reported (D6, D7).
-
-    Parameters
-    ----------
-    pdb
-        The input file. It must exist: PDB2PQR fetches a path that is not a file
-        from rcsb.org (``.knowledge/07`` section 3), so it is resolved and checked.
-    pqr
-        Where PDB2PQR writes the PQR.
-    settings
-        The case's protonation settings.
-
-    Returns
-    -------
-    dict
-        ``pka``: PROPKA's groups, as plain rows; ``missing``: the atoms PDB2PQR
-        could not parameterise; ``warnings``: each distinct warning the libraries
-        logged, with its count.
-    """
     from pdb2pqr.main import run_pdb2pqr as pdb2pqr_main
 
     restore_propka_annotations()
@@ -647,7 +458,6 @@ def run_pdb2pqr(pdb: Path, pqr: Path, settings: ResolvedProtonation) -> dict[str
 
 
 def _pka_row(row: Mapping[str, Any]) -> dict[str, Canonicalisable]:
-    """Return one PROPKA group as plain data, with the insertion code stripped."""
     pka = row.get("pKa")
     return {
         "chain": str(row.get("chain_id", "")).strip(),
@@ -661,7 +471,6 @@ def _pka_row(row: Mapping[str, Any]) -> dict[str, Canonicalisable]:
 
 
 def _describe_atom(atom: object) -> str:
-    """Return an atom PDB2PQR could not parameterise as a diagnostic names it."""
     residue = getattr(atom, "residue", None)
     return (
         f"{getattr(atom, 'name', '?')} of {getattr(residue, 'name', '?')} "
@@ -669,24 +478,15 @@ def _describe_atom(atom: object) -> str:
     )
 
 
-# -- residues, states and registration ----------------------------------------
-
-
 ResidueKey = tuple[str, int, str]
 """A residue's identity: chain key, number and insertion code."""
 
 
 def _residue_keys(frame: PQRFrame) -> list[ResidueKey]:
-    """Return each atom's residue key."""
     return list(zip(frame.chain.tolist(), frame.resid.tolist(), frame.icode.tolist(), strict=True))
 
 
 def _rechain(frame: PQRFrame, keys: Mapping[str, str]) -> PQRFrame:
-    """Return ``frame`` with each single-character chain replaced by its stage-1 key.
-
-    A character the map does not hold is kept, so the residue check that follows
-    names the residue it cannot place rather than this function guessing.
-    """
     import numpy as np
 
     chain = np.array([keys.get(value, value) for value in frame.chain.tolist()], dtype=str)
@@ -694,7 +494,6 @@ def _rechain(frame: PQRFrame, keys: Mapping[str, str]) -> PQRFrame:
 
 
 def _tautomer(atoms: set[str]) -> str:
-    """Return a histidine's CHARMM name from the ring hydrogens it carries (D8)."""
     delta, epsilon = "HD1" in atoms, "HE2" in atoms
     if delta and epsilon:
         return "HSP"
@@ -706,11 +505,6 @@ def _tautomer(atoms: set[str]) -> str:
 
 
 def _group_state(group_type: str, pka: float, ph: float) -> float | None:
-    """Return the charge PROPKA's pKa prefers for one group at ``ph`` (*Design* §2).
-
-    The comparisons ``Biomolecule.apply_pka_values`` makes; ``None`` for a group
-    type outside the eight, which is recorded and not compared.
-    """
     if group_type in ACID_GROUPS:
         return -1.0 if ph >= pka else 0.0
     if group_type in BASE_GROUPS:
@@ -720,8 +514,6 @@ def _group_state(group_type: str, pka: float, ph: float) -> float | None:
 
 @dataclass(frozen=True)
 class _Reference:
-    """Stage 1's residues and heavy atoms, which a PQR frame is checked and registered against."""
-
     residues: dict[ResidueKey, str]
     """Every residue but water, in order: its key and its parent name."""
     heavy: np.ndarray
@@ -739,12 +531,10 @@ class _Reference:
 
     @property
     def flippable_residues(self) -> set[ResidueKey]:
-        """The residues holding :data:`FLIPPABLE` atoms."""
         return {key for key, _ in self.flippable_elements}
 
 
 def _reference(ensemble: AlignedEnsemble) -> _Reference:
-    """Tabulate the ensemble's residues and heavy atoms, leaving out ``--drop-water``'s waters."""
     import numpy as np
 
     residues: dict[ResidueKey, str] = {}
@@ -793,19 +583,10 @@ def _reference(ensemble: AlignedEnsemble) -> _Reference:
 
 
 def _element(name: str) -> str:
-    """Return a heavy atom's element as its name's first letter (``1SG`` is S).
-
-    Used only on the residues of :data:`FLIPPABLE`, whose atoms are C, N and O
-    and whose names begin with their element.
-    """
     return name.lstrip("0123456789")[:1].upper()
 
 
 def _residue_mismatch(frame: PQRFrame, reference: _Reference) -> str | None:
-    """Return why a frame does not hold the ensemble's residues, or ``None`` if it does.
-
-    Compared by key and parent name, both ways; waters are on neither side.
-    """
     found = {
         (chain, resid, icode): parent_residue(name)
         for chain, resid, icode, name in frame.residues()
@@ -829,7 +610,6 @@ def _residue_mismatch(frame: PQRFrame, reference: _Reference) -> str | None:
 
 
 def _kabsch(moving: np.ndarray, fixed: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    """Return ``(R, t)`` minimising ``Σ |R p + t - q|²`` over the paired rows."""
     import numpy as np
 
     centre_moving, centre_fixed = moving.mean(axis=0), fixed.mean(axis=0)
@@ -842,8 +622,6 @@ def _kabsch(moving: np.ndarray, fixed: np.ndarray) -> tuple[np.ndarray, np.ndarr
 
 @dataclass(frozen=True)
 class _Registration:
-    """What registering one frame found."""
-
     positions_A: np.ndarray
     moved: bool
     worst_A: float
@@ -859,20 +637,6 @@ class _Registration:
 def _register(
     frame: PQRFrame, target_A: np.ndarray, reference: _Reference, *, may_move: bool
 ) -> _Registration:
-    """Register one PQR frame to its stage-1 frame (section 5.3.1 NOTE on ``inputs:``).
-
-    Every heavy atom of the ensemble but the :data:`FLIPPABLE` ones must lie
-    within 0.01 Å of a distinct heavy atom of the same residue of the PQR: where
-    the PQR stands, or, if it does not and ``may_move``, after superposing the
-    PQR's C-alpha atoms on the ensemble's, residue for residue. A frame that
-    already meets the criterion is not moved. Matching is by position, never by
-    name: PDB2PQR renames atoms (``ILE CD1`` to ``CD``, the C-terminal ``O`` to
-    ``OT1``), and the atoms its hydrogen-bond optimisation flips land 0.13-0.40 Å
-    from any they were given, which is why they are left out and their worst
-    distance recorded. The shortest heavy-atom bond is 1.23 Å, so at most one
-    heavy atom lies within the tolerance of any point, and the nearest neighbour
-    over the whole frame is the only candidate (*Design* §3).
-    """
     import numpy as np
     from scipy.spatial import cKDTree
 
@@ -883,14 +647,12 @@ def _register(
     added = len(candidates) - len(fixed) - len(reference.flippable)
 
     def flipped(positions: np.ndarray) -> tuple[float, int]:
-        """Return the worst flippable atom's distance to a PQR heavy atom, and how many moved."""
         if not len(reference.flippable) or not len(candidates):
             return 0.0, 0
         distance, _ = cKDTree(positions[candidates]).query(target_A[reference.flippable], k=1)
         return float(distance.max()), int((distance > REGISTRATION_TOLERANCE_A).sum())
 
     def check(positions: np.ndarray) -> tuple[float, str | None]:
-        """Return the worst residual over the matched atoms, and the first failure."""
         if not len(candidates):
             return float("inf"), "it holds no heavy atom"
         distance, nearest = cKDTree(positions[candidates]).query(fixed, k=1)
@@ -973,19 +735,7 @@ def _register(
     return _Registration(positions, True, worst, *flipped(positions), added, failure)
 
 
-# -- gates and assembly -------------------------------------------------------
-
-
 def _gate(frame: PQRFrame, index: int) -> float:
-    """Apply D9's atom and ``Q_net`` gates to one frame; return its ``Q_net`` in e.
-
-    Raises
-    ------
-    ProtonationError
-        For a charged atom whose radius is not positive, which PHY-16 step 4's
-        width ``w_i = 0.5 R_i`` cannot smear, or a ``Q_net`` further than 10⁻⁶ e
-        from an integer, naming the frame and the atom.
-    """
     import numpy as np
 
     bad = np.flatnonzero((frame.charge_e != 0.0) & ~(frame.radius_A > 0.0))
@@ -1017,12 +767,6 @@ def _gate(frame: PQRFrame, index: int) -> float:
 def _chain_differences(
     residues: Sequence[tuple[str, int, str, str]], charges: np.ndarray
 ) -> list[dict[str, Canonicalisable]]:
-    """Return each residue whose charge differs between chains of identical sequence (D8).
-
-    The states of a homo-oligomer's chains are not symmetrised (the PHY-16
-    step-3 NOTE), so a difference is recorded per residue with the frames it
-    occurs in and the chains' charges in the first of them.
-    """
     sequences: dict[str, list[tuple[int, str, str]]] = {}
     positions: dict[str, dict[tuple[int, str], int]] = {}
     for index, (chain, resid, icode, name) in enumerate(residues):
@@ -1064,7 +808,6 @@ def _unapplied(
     expected: np.ndarray,
     unapplied: np.ndarray,
 ) -> list[dict[str, Canonicalisable]]:
-    """Return each residue with an unapplied state, with the frames and the charges (D8)."""
     import numpy as np
 
     found: list[dict[str, Canonicalisable]] = []
@@ -1086,11 +829,6 @@ def _unapplied(
 
 
 def _table_radius(radius_set: RadiusSet, resname: str, name: str) -> float:
-    """Return the table's radius for an atom, by its residue's name and then its parent's.
-
-    A patched residue's backbone is the parent's: ``ASPP`` lists only the atoms
-    the patch changes.
-    """
     try:
         return radius_set.radius_A(resname, name)
     except KeyError:
@@ -1105,14 +843,6 @@ def _radii(
     tautomers: Sequence[Sequence[str]],
     residues: Sequence[tuple[str, int, str, str]],
 ) -> dict[str, Canonicalisable]:
-    """Compare every atom's radius with the stage-2 CHARMM table (D14).
-
-    The table is transcribed from the same ``CHARMM.DAT`` PDB2PQR reads, so a
-    disagreement is a defect to find, not to average: it is recorded, counted
-    and its worst instance named. A histidine is looked up by its tautomer and a
-    terminal atom through the table's patches. Atoms the table does not resolve
-    are counted separately.
-    """
     radius_set = RadiusSet.load(RADIUS_SET)
     index_of = {key[:3]: i for i, key in enumerate(residues)}
     counts: Counter[tuple[str, str, float]] = Counter()
@@ -1175,14 +905,6 @@ def _assemble(
     header: Mapping[str, Canonicalisable],
     compare_radii: bool = True,
 ) -> tuple[ProtonationTable, dict[str, Canonicalisable]]:
-    """Tabulate gated frames and their residue states; return the table and its record.
-
-    ``frames`` carry stage 1's chain keys and Å coordinates already registered;
-    they are put on the 0.001 Å lattice here, so every table this stage writes
-    exports and reads back exactly. ``compare_radii`` is false for a frame
-    another force field than CHARMM produced, whose radii the stage-2 CHARMM
-    table does not describe (D14).
-    """
     import numpy as np
 
     residues = frames[0].residues()
@@ -1281,16 +1003,6 @@ def _assemble(
 
 
 def export_pqr(payload: Path, path: Path) -> Path:
-    """Write a stored protonation table as a PQR file, one ``MODEL`` per frame (IF-02 export NOTE).
-
-    In ångströms and stage 1's frame. Read back through ``inputs.pqr`` beside the
-    same ``structure:``, it gives this table exactly: the coordinates lie on the
-    printed lattice, every charge and radius is printed so that it reads back to
-    the same double, and each chain key goes to the character the header's chain
-    map gives it, which is the map the registration reads it back by. A table
-    with no map, read from a PQR without ``structure:``, takes
-    :func:`~nanopnp.charge.pqr.chain_characters` of its own chains.
-    """
     table = ProtonationTable.read(payload)
     recorded = table.header.get("chains")
     chains = (
@@ -1301,11 +1013,7 @@ def export_pqr(payload: Path, path: Path) -> Path:
     return write_pqr(path, table.pqr_frames(), chains=chains)
 
 
-# -- the stage ----------------------------------------------------------------
-
-
 def _resolved(inputs: StageInputs) -> ResolvedCase:
-    """Return the resolved case, refusing one the stage has nothing to read from (D3)."""
     resolved = inputs.resolved
     if not resolved.protonates:
         raise UnsupportedCaseSection(
@@ -1320,37 +1028,20 @@ def _resolved(inputs: StageInputs) -> ResolvedCase:
 
 
 class ProtonationStage:
-    """Stage 7, first half: the aligned ensemble, or ``inputs.pqr``, to a per-frame atom table."""
-
     name = "protonation"
 
     def __init__(self, *, workspace: Path | None = None, store: Store | None = None) -> None:
-        """Build the stage.
-
-        Parameters
-        ----------
-        workspace
-            Directory the frames' files and the payload are written to before the
-            store copies them in. Defaults to a fresh directory under the store
-            root.
-        store
-            Where each produced frame is cached under its own key (D10). Without
-            one, every frame is protonated.
-        """
         self._workspace = Path(workspace) if workspace is not None else None
         self._store = store
 
     def describe(self) -> StageDescription:
-        """Return the registry's description of this stage (FR-27)."""
         return describe(self.name)
 
     def key(self, inputs: StageInputs) -> ProtonationArtefact:
-        """Return the artefact key (D10, the section 5.3.2 stage-7 row)."""
         return self._key(inputs, _resolved(inputs))
 
     @staticmethod
     def _key(inputs: StageInputs, resolved: ResolvedCase) -> ProtonationArtefact:
-        """Return the artefact key of an already resolved case."""
         if resolved.pqr is not None:
             assert resolved.pqr.path is not None
             keyed = {"pqr": file_hash(resolved.pqr.path)}
@@ -1369,19 +1060,6 @@ class ProtonationStage:
         progress: Progress | None = None,
         cancel: CancelToken | None = None,
     ) -> ProtonationArtefact:
-        """Protonate every frame, or read and register ``inputs.pqr``, and emit the artefact.
-
-        Raises
-        ------
-        nanopnp.core.stages.MissingExtraError
-            Before the first frame, for a ``structure:`` case without PDB2PQR.
-        nanopnp.charge.pqr.PQRError
-            For a supplied PQR that is malformed or does not match its ensemble.
-        ProtonationError
-            For a D9 gate, naming the frame.
-        Cancelled
-            If ``cancel`` turns true between frames. No artefact is written.
-        """
         resolved = _resolved(inputs)
         key = self._key(inputs, resolved)
         ensemble = None
@@ -1463,7 +1141,6 @@ class ProtonationStage:
         )
 
     def _directory(self) -> Path:
-        """Return the directory this run writes into, made fresh under the store root if unnamed."""
         if self._workspace is not None:
             self._workspace.mkdir(parents=True, exist_ok=True)
             return Path(tempfile.mkdtemp(prefix="protonation-", dir=self._workspace))
@@ -1480,7 +1157,6 @@ class ProtonationStage:
         progress: Progress | None,
         cancel: CancelToken | None,
     ) -> tuple[list[PQRFrame], list[list[dict[str, Canonicalisable]]], dict[str, Canonicalisable]]:
-        """Protonate each frame through PDB2PQR, or read it from the frame cache (D5-D7, D10)."""
         import numpy as np
 
         _require_pdb2pqr()
@@ -1518,7 +1194,7 @@ class ProtonationStage:
                 except (RuntimeError, ValueError) as error:
                     # PDB2PQR raises a bare RuntimeError, with no message, for
                     # what it gives up on (main_driver, 3.7.1): name the frame
-                    # and its cause (QR-12).
+                    # and its cause.
                     cause = error.__cause__ or error
                     raise ProtonationError(
                         f"frame {index}: PDB2PQR gave up on the frame it was given: "
@@ -1579,7 +1255,6 @@ class ProtonationStage:
     def _protonate(
         self, key: Artefact, pdb: bytes, settings: ResolvedProtonation, directory: Path
     ) -> Artefact:
-        """Run PDB2PQR on one frame's PDB and store the frame under its own key (D10)."""
         directory.mkdir(parents=True, exist_ok=True)
         source = directory / "frame.pdb"
         source.write_bytes(pdb)
@@ -1598,7 +1273,6 @@ class ProtonationStage:
 
 
 def _mapping(value: Canonicalisable) -> Mapping[str, int]:
-    """Return a summary entry as a mapping of counts, or an empty one."""
     if isinstance(value, Mapping):
         return {str(key): int(str(count)) for key, count in value.items()}
     return {}
@@ -1611,14 +1285,6 @@ def _supplied(
     progress: Progress | None,
     cancel: CancelToken | None,
 ) -> tuple[list[PQRFrame], dict[str, Canonicalisable]]:
-    """Read ``inputs.pqr`` and register each frame to its stage-1 frame (D12, *Design* §3).
-
-    Raises
-    ------
-    PQRError
-        For a frame count that differs from the ensemble's, a residue the two do
-        not share, or a frame whose heavy atoms do not register, naming the frame.
-    """
     import numpy as np
 
     report(progress, 0.0, f"reading {path.name}")
@@ -1667,12 +1333,6 @@ def _supplied(
 
 
 def _frame_versions(produced_by: Sequence[Canonicalisable]) -> Canonicalisable:
-    """Return the versions that produced the frames, recorded beside the key (section 5.3.2).
-
-    The frame cache is keyed without them, so a frame an earlier PDB2PQR or
-    PROPKA wrote is reused: one mapping where every frame shares it, otherwise
-    each frame's, in frame order.
-    """
     distinct = {json.dumps(found, sort_keys=True) for found in produced_by}
     return produced_by[0] if len(distinct) == 1 else list(produced_by)
 
@@ -1680,7 +1340,6 @@ def _frame_versions(produced_by: Sequence[Canonicalisable]) -> Canonicalisable:
 def _registration_record(
     registrations: Sequence[_Registration], reference: _Reference, *, moved: list[int]
 ) -> dict[str, Canonicalisable]:
-    """Return the registration record both routes write: each figure's worst over the frames."""
     return {
         "moved_frames": moved,
         "worst_residual_A": max([0.0, *(found.worst_A for found in registrations)]),

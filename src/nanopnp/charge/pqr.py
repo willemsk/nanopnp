@@ -1,39 +1,4 @@
-"""The PQR file: one reader and one writer for both of stage 7's protonation routes (WP27).
-
-A PQR is a PDB whose occupancy and B-factor columns carry each atom's partial
-charge in e and its radius in Å. Stage 7's ``protonation`` half reads one in two
-places, and reads it here both times (WP27 D6): the file PDB2PQR writes for each
-frame it protonates, and a file supplied through ``inputs.pqr`` (section 5.3.1
-NOTE on ``inputs:``). The produced and the supplied artefact are then the same
-object, read by the same code.
-
-**The layout is PDB2PQR's, read two ways.** PDB2PQR writes PDB fixed columns
-through the coordinates and then the charge and the radius, so a coordinate at or
-below -100 Å runs into its neighbour (``-37.705-115.041``) and a whitespace
-split cannot read the line (``.knowledge/07`` section 3). Other tools write
-whitespace-separated fields that the columns do not hold. Each ATOM and HETATM
-line is therefore read by the columns, and as whitespace-separated fields; a line
-only one reading accepts is taken from that one, and a line both accept with
-different values is refused naming its line number, because one of the two
-readings is a plausible wrong number and nothing here can say which (QR-12).
-
-**A residue is its chain, number and insertion code**, and its name is the one its
-atoms carry other than the patch names ``TER`` and ``DISU``: ``--ffout=CHARMM``
-writes the terminal-patch atoms under the residue name ``TER`` (``N TER A 8``) and
-a disulfide-bonded cysteine's ``CB`` and ``SG`` as ``1CB`` and ``1SG`` under
-``DISU`` (``1CBDISU A 285``), and a residue patched to a
-protonation variant with its backbone under the parent and its side chain under
-the variant (``ASP`` and ``ASPP``), whose name is then the variant. The protonation-variant
-names of the PHY-16 step-3 NOTE are read as their parent wherever two residue
-names are *compared*, and kept as written in the atom table.
-
-**Frames are ``MODEL`` records.** A file without them is one frame. Every frame
-SHALL hold the same residues (section 5.3.1 NOTE on ``inputs:``); the atoms may
-differ, because the hydrogens a frame carries depend on its protonation states.
-
-Nothing here imports NumPy at module scope (CLAUDE.md), and nothing imports
-PDB2PQR at all: reading a supplied PQR needs no extra.
-"""
+"""The PQR file: one reader and one writer for both of stage 7's protonation routes (WP27)."""
 
 from __future__ import annotations
 
@@ -108,46 +73,18 @@ MIN_COORDINATE_A = -999.999
 """The smallest: one character goes to the sign."""
 
 
-class PQRError(ValueError):
-    """A PQR file this release cannot read, or one that does not match its ensemble.
-
-    Raised naming the line, the frame or the residue (QR-12). A case refusal, not
-    a gate (IF-02 class 3, WP27 D9): the case names a file that is malformed or
-    belongs to another structure, and a retry fails identically until the file
-    is replaced.
-    """
+class PQRError(ValueError): ...
 
 
 def parent_residue(name: str) -> str:
-    """Return the titratable parent of a protonation-variant residue name, or the name itself."""
     return PARENT_RESIDUE.get(name, name)
 
 
 def is_hydrogen(atom: str) -> bool:
-    """Return whether an atom name names a hydrogen.
-
-    A PQR has no element column, so the name decides: the first letter after any
-    leading digits (``1HB``, ``HT1``, ``HD1``). Every atom PDB2PQR writes for a
-    protein follows that convention, and so does every name in ``CHARMM.DAT``.
-    """
     return atom.lstrip("0123456789").startswith("H")
 
 
 def chain_characters(chains: Iterable[str]) -> dict[str, str]:
-    """Return the single PDB chain character each chain key is written as.
-
-    The keys themselves where every one is a single character; otherwise each
-    chain, in order of appearance, gets the next of
-    :data:`~nanopnp.structure.ensemble.CHAIN_CHARACTERS`, the rule the stage-1
-    export follows. Both the PDB a frame is protonated from and an exported PQR
-    use it, so a registration against the ensemble can map either back.
-
-    Raises
-    ------
-    PQRError
-        If the keys are longer than one character and there are more chains
-        than single characters to give them.
-    """
     ordered = list(dict.fromkeys(chains))
     if all(len(chain) == 1 for chain in ordered):
         return {chain: chain for chain in ordered}
@@ -161,22 +98,6 @@ def chain_characters(chains: Iterable[str]) -> dict[str, str]:
 
 @dataclass(frozen=True)
 class PQRFrame:
-    """One frame of a PQR file: its atom table, coordinates, charges and radii.
-
-    Parameters
-    ----------
-    name, resname, chain, icode
-        String arrays, one entry per atom. ``resname`` is the residue's name as
-        resolved by the module docstring's rule, never ``TER``; ``chain`` and
-        ``icode`` are empty where the file leaves them blank.
-    resid
-        Integer array, one entry per atom.
-    positions_A
-        ``(atoms, 3)`` float64, in Å, as printed.
-    charge_e, radius_A
-        float64, one entry per atom, as printed.
-    """
-
     name: np.ndarray
     resname: np.ndarray
     chain: np.ndarray
@@ -188,11 +109,9 @@ class PQRFrame:
 
     @property
     def atoms(self) -> int:
-        """Number of atoms."""
         return len(self.name)
 
     def residues(self) -> list[tuple[str, int, str, str]]:
-        """Return ``(chain, resid, icode, name)`` per residue, in order of first appearance."""
         seen: dict[tuple[str, int, str], str] = {}
         for chain, resid, icode, resname in zip(
             self.chain.tolist(),
@@ -207,8 +126,6 @@ class PQRFrame:
 
 @dataclass(frozen=True)
 class _Atom:
-    """One ATOM or HETATM line, read."""
-
     name: str
     resname: str
     chain: str
@@ -220,7 +137,6 @@ class _Atom:
 
 
 def _columns(line: str) -> _Atom | None:
-    """Read a line by the PDB columns through the coordinates, then two numbers; ``None`` if not."""
     if len(line) < 54:
         return None
     try:
@@ -247,11 +163,6 @@ def _columns(line: str) -> _Atom | None:
 
 
 def _fields(line: str) -> _Atom | None:
-    """Read a line as whitespace-separated fields; ``None`` if they do not read.
-
-    ``record serial name resname [chain] resSeq[icode] x y z charge radius``, the
-    layout ``pdb2pqr.io.read_pqr`` assumes.
-    """
     tokens = line.split()
     if tokens and tokens[0].startswith("HETATM") and tokens[0] != "HETATM":
         # A six-character record runs into a five-digit serial (``HETATM12345``),
@@ -288,7 +199,6 @@ def _fields(line: str) -> _Atom | None:
 
 
 def _read_line(line: str, number: int, source: str) -> _Atom:
-    """Read one atom line both ways and return the reading, refusing a disagreement."""
     by_columns, by_fields = _columns(line), _fields(line)
     if by_columns is None and by_fields is None:
         raise PQRError(
@@ -314,7 +224,6 @@ def _read_line(line: str, number: int, source: str) -> _Atom:
 
 
 def _describe(atom: _Atom) -> str:
-    """Return a reading as the diagnostic names it."""
     x, y, z = atom.xyz
     return (
         f"{atom.name} {atom.resname} {atom.chain or '-'} {atom.resid}{atom.icode} "
@@ -323,13 +232,6 @@ def _describe(atom: _Atom) -> str:
 
 
 def _residue_name(names: set[str]) -> str | None:
-    """Return a residue's name from the non-``TER`` names its atoms carry, or ``None``.
-
-    One name, or a parent and one of its variants: PDB2PQR writes a residue it
-    patched to a protonation variant with its backbone under the parent and its
-    side chain under the variant (``ASP`` and ``ASPP`` in one ``ASP 21`` at pH 2,
-    PDB2PQR 3.7.1), and the variant is the state.
-    """
     parents = {parent_residue(name) for name in names}
     if len(parents) != 1:
         return None
@@ -340,7 +242,6 @@ def _residue_name(names: set[str]) -> str | None:
 
 
 def _frame(atoms: Sequence[_Atom], index: int, source: str) -> PQRFrame:
-    """Assemble one frame, resolving each residue's name from its non-patch atoms."""
     import numpy as np
 
     names: dict[tuple[str, int, str], set[str]] = {}
@@ -378,22 +279,6 @@ def _frame(atoms: Sequence[_Atom], index: int, source: str) -> PQRFrame:
 
 
 def parse_pqr(text: str, *, source: str = "<string>") -> tuple[PQRFrame, ...]:
-    """Read the frames of a PQR document.
-
-    Parameters
-    ----------
-    text
-        The file's contents.
-    source
-        Named in every diagnostic.
-
-    Raises
-    ------
-    PQRError
-        For a line the two readings disagree on or neither reads, an atom outside
-        a ``MODEL`` in a file that has them, an unterminated or empty ``MODEL``, a
-        residue with two names, or frames that do not hold the same residues.
-    """
     frames: list[list[_Atom]] = []
     current: list[_Atom] | None = None
     loose: list[_Atom] = []
@@ -443,17 +328,10 @@ def parse_pqr(text: str, *, source: str = "<string>") -> tuple[PQRFrame, ...]:
 
 
 def read_pqr(path: Path) -> tuple[PQRFrame, ...]:
-    """Read the frames of a PQR file; see :func:`parse_pqr`."""
     return parse_pqr(path.read_text(encoding="utf-8"), source=str(path))
 
 
 def check_same_residues(frames: Sequence[PQRFrame], *, source: str) -> None:
-    """Refuse frames that do not hold the same residues, naming the first frame that differs.
-
-    Residues are compared by chain, number, insertion code and parent name, in
-    order, so a histidine PDB2PQR 2.1.1 wrote as ``HSE`` in one frame and ``HSD``
-    in the next is one residue.
-    """
     if not frames:
         return
     reference = [
@@ -483,42 +361,16 @@ def check_same_residues(frames: Sequence[PQRFrame], *, source: str) -> None:
 
 
 def _residue(residue: tuple[str, int, str, str]) -> str:
-    """Return a residue key as a diagnostic names it."""
     chain, resid, icode, name = residue
     return f"{name} {resid}{icode} of chain {chain or '-'!r}"
 
 
 def _number(value: float) -> str:
-    """Return a charge or radius as PDB2PQR prints it, or exactly where four decimals would not be.
-
-    The export reads back to the payload exactly (the section 3.1 IF-02 export
-    NOTE), so a value that four decimals would round is written in full.
-    """
     printed = f"{value:.4f}"
     return printed if float(printed) == value else repr(float(value))
 
 
 def format_pqr(frames: Sequence[PQRFrame], *, chains: Mapping[str, str] | None = None) -> str:
-    """Return frames as a PQR document, one ``MODEL`` per frame where there is more than one.
-
-    Coordinates are written to 0.001 Å in the PDB columns and the charge and the
-    radius after them, as PDB2PQR writes them. A coordinate already on that
-    lattice therefore reads back exactly, and so does every charge and radius.
-
-    Parameters
-    ----------
-    frames
-        The frames to write.
-    chains
-        The single character each chain key is written as; :func:`chain_characters`
-        of the first frame's chains when omitted.
-
-    Raises
-    ------
-    PQRError
-        For a coordinate the columns cannot hold, a residue name longer than
-        four characters or a residue number longer than four digits.
-    """
     if not frames:
         raise PQRError("a PQR file holds at least one frame")
     letters = chains if chains is not None else chain_characters(frames[0].chain.tolist())
@@ -557,6 +409,5 @@ def format_pqr(frames: Sequence[PQRFrame], *, chains: Mapping[str, str] | None =
 def write_pqr(
     path: Path, frames: Sequence[PQRFrame], *, chains: Mapping[str, str] | None = None
 ) -> Path:
-    """Write frames to ``path`` as :func:`format_pqr` formats them; return the path."""
     path.write_text(format_pqr(frames, chains=chains), encoding="utf-8")
     return path
