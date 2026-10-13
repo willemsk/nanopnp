@@ -1,6 +1,6 @@
 # Current work
 
-Updated 13 October 2026 (WP43 merged; WP44 planned). Navigation only; `SPECIFICATION.md` governs;
+Updated 13 October 2026 (WP44 implemented; review pending). Navigation only; `SPECIFICATION.md` governs;
 an unmerged branch is not shipped.
 
 ## In brief
@@ -8,8 +8,8 @@ an unmerged branch is not shipped.
 The project is in Phase 4, which tidies the program before anyone else relies on it. The package
 meant to speed up the automatic checks was merged, but it did not deliver: commits still wait two
 to four minutes, and the session that built it cost about four times a normal one. You have ruled
-a simpler course. Two packages come next. The first swaps the clever machinery for plain rules:
-a commit runs the style checks and every quick test, the full check runs once before a push, plans
+a simpler course. Two packages were ruled. The first, now built and awaiting review, swapped the clever machinery for
+plain rules: a commit runs the style checks and every quick test, the full check runs once before a push, plans
 stay under a page and a half, and cheaper AI models do routine work. The second removes most
 comments and explanations from the code and proves by machine that nothing else changed.
 **Your call:** should the rule that blocks a push until the full check passed stay?
@@ -24,7 +24,8 @@ comments and explanations from the code and proves by machine that nothing else 
 - **WP43, the development loop**, is merged ([wp43-development-loop.md](wp43-development-loop.md)); tag
   `v0.5.0-alpha.9` is the author's step. It missed its speed budgets (REV-80, REV-81) and is
   simplified by §8.2.11.
-- **Next: WP44, simplify the loop** ([plan](wp44-simplify-the-loop.md), planned), then **WP45, the prose strip** (§8.2.11 L1 to L8); then WP46
+- **WP44, simplify the loop** ([plan](wp44-simplify-the-loop.md)), is implemented and awaits review and
+  merge; tag `v0.5.0-alpha.10`. **Next: WP45, the prose strip** (§8.2.11 L4, L5); then WP46
   the small fixes, WP47–WP49 (OKF bundle, backfill, protocol); the author's sessions; fixes from
   WP50. Phase 5 (`v0.6.0`) is the GUI, Phase 6 (`v0.7.0`) validation; v1.0 is OPN-08.
 
@@ -64,7 +65,7 @@ comments and explanations from the code and proves by machine that nothing else 
 
 | Need | Read |
 |---|---|
-| The planned package | `wp44-simplify-the-loop.md` |
+| The loop as shipped | `wp44-simplify-the-loop.md` |
 | Phase 4 scope and packages | `phase-4-polish-and-user-testing.md`; §8.2.6 F3–F6, §8.2.7, §8.2.8 |
 | The OKF decisions | `okf-knowledge-bundle.md` (K1–K11); §8.2.7 G3, G8, G9 |
 
