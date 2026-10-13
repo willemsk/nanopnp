@@ -1,15 +1,4 @@
-"""The result panel: the scalars, and the deviations they were produced under.
-
-The two are shown together on purpose. FR-25 records "every switch set away from
-the validated default" because a number obtained with a correction disabled is
-not the validated model's number, and a panel showing the conductance without
-the deviations would be presenting one as the other (§5.3.3).
-
-Everything here is read out of the run directory by
-:func:`~nanopnp.gui.run_model.run_outcome` — the manifest, the case and the run
-record are the run's own record, and a panel reading anything else would show
-something the QR-08 reproduction check could not reconstruct.
-"""
+"""The result panel: the scalars, and the deviations they were produced under."""
 
 from __future__ import annotations
 
@@ -21,8 +10,6 @@ __all__ = ["ResultWidget"]
 
 
 class ResultWidget(QtWidgets.QWidget):
-    """What a finished run produced, and under what configuration."""
-
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
         self._directory = QtWidgets.QLabel("no run yet")
@@ -41,7 +28,6 @@ class ResultWidget(QtWidgets.QWidget):
         layout.addWidget(self._deviations, 1)
 
     def show_outcome(self, outcome: RunOutcome | None) -> None:
-        """Show one run's result, or clear the panel when there is none."""
         if outcome is None:
             self._directory.setText("no run yet")
             self._quantities.setRowCount(0)
@@ -55,7 +41,6 @@ class ResultWidget(QtWidgets.QWidget):
         self._deviations.setPlainText(_render_deviations(outcome))
 
     def quantity_names(self) -> tuple[str, ...]:
-        """Return the quantities the panel is showing, for a test."""
         return tuple(
             item.text()
             for row in range(self._quantities.rowCount())
@@ -65,14 +50,6 @@ class ResultWidget(QtWidgets.QWidget):
 
 
 def _render_deviations(outcome: RunOutcome) -> str:
-    """Render the manifest's Deviations group as the lines a reader wants.
-
-    Its shape is the manifest's, not this panel's: a ``switches`` list of
-    ``{path, value, validated_default}`` and a ``contributed`` list of
-    ``{source, description}`` — departures no switch selects (a smoothed
-    dielectric field, an ion-exclusion material on a supplied mesh), which the
-    diff cannot see and the stage that read them reported.
-    """
     deviations = outcome.deviations
     switches = deviations.get("switches") or []
     sources = deviations.get("contributed") or []

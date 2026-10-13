@@ -1,29 +1,4 @@
-"""The Geometry tab: stages 1 to 6 as they land, and a hand edit of the contour (WP24).
-
-A projection of :mod:`nanopnp.gui.geometry`, :mod:`nanopnp.gui.assess` and the
-render child's mesh request, and nothing more. What a stage produced, where a
-pixel sits, what an edit writes and whether a loop meets the §5.2.1 criteria are
-all answered on the far side of the Qt boundary, where
-``tests/tier1/test_gui_geometry.py`` reaches them without a display.
-
-**Four children, none of them this widget.** The build is the same spawned
-walk the Run tab starts, stopped at stage 6 (``upto="mesh"``, WP24 D3); the
-payloads it reports are read by a worker thread, because a stage-2 map is a
-hundred megabytes of compressed ``float32`` (D11); the criteria and the B9
-seed are measured in the assess child against the stored stages (D8, D10); and
-the mesh is drawn by the render child into the run's ``viewer/`` (D12). The tab
-polls all four on one timer.
-
-**Every view names its frame.** Stages 1 to 4 and the editor are in the stage-1
-frame, the profile document's; stages 5 and 6 are in the model frame, after
-``z ← z - centre_z_nm``. The caption under every picture says which (D4): an
-edit written back in the wrong one is shifted twice on the next run.
-
-**Drawn by hand** with ``QPainter`` over :class:`~nanopnp.gui.geometry.ViewTransform`,
-as the convergence plot is (D13). An image is a ``QImage`` over the RGBA bytes
-the view-model built, drawn unsmoothed into the rectangle its pixel centres
-define, so a pixel is seen where its node is.
-"""
+"""The Geometry tab: stages 1 to 6 as they land, and a hand edit of the contour (WP24)."""
 
 from __future__ import annotations
 
@@ -85,22 +60,12 @@ logger = logging.getLogger(__name__)
 __all__ = ["GeometryCanvas", "GeometryWidget"]
 
 POLL_INTERVAL_MS = 100
-"""How often the build, the view loads and the two helper children are polled."""
 
 Point = tuple[float, float]
 
 
 class GeometryCanvas(QtWidgets.QWidget):
-    """One picture of a stage: an image, outlines, and the editor's loop over them.
-
-    The canvas decides nothing. The image's bytes and extent, the loop, the slab
-    and the transform all come from :mod:`nanopnp.gui.geometry`; the canvas maps
-    a drag through :meth:`ViewTransform.to_data` and hands the result to
-    :meth:`ProfileEditor.move`, one undoable step per drag.
-    """
-
     edited = QtCore.Signal()
-    """Emitted after a drag, an insertion or a deletion changed the editor's loop."""
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
@@ -121,10 +86,7 @@ class GeometryCanvas(QtWidgets.QWidget):
         self._drag_transform: ViewTransform | None = None
         self._preview: Point | None = None
 
-    # -- what is shown -----------------------------------------------------------
-
     def clear(self, title: str = "", *, frame: str = STAGE_1_FRAME) -> None:
-        """Show nothing but a caption."""
         self._image = None
         self._qimage = None
         self._loop = ()
@@ -135,10 +97,8 @@ class GeometryCanvas(QtWidgets.QWidget):
         self._frame = frame
         self._editor = None
         self._selected = None
-        # A pane re-shown mid-drag (the stage list refreshing during a build, a
-        # measurement landing) abandons the drag. The frozen transform goes with
-        # it: left set, :meth:`transform` would return it for every picture shown
-        # afterwards, whatever its extent.
+        # A pane re-shown mid-drag abandons the drag, and the frozen transform with it:
+        # left set, transform() would return it for every picture shown afterwards.
         self._drag = None
         self._drag_transform = None
         self._preview = None
@@ -151,7 +111,6 @@ class GeometryCanvas(QtWidgets.QWidget):
         loop: tuple[Point, ...] = (),
         slab: tuple[float, float] | None = None,
     ) -> None:
-        """Show an image, the loop drawn over it and the membrane slab, in the image's frame."""
         self.clear(image.title, frame=image.frame)
         self._image = image
         # ``copy`` detaches the image from the bytes object, which Python may
@@ -169,7 +128,6 @@ class GeometryCanvas(QtWidgets.QWidget):
         self.update()
 
     def show_outline(self, view: OutlineView) -> None:
-        """Show stage 5's region: the model-frame profile, the slab and the membrane chord."""
         self.clear(f"stage 5: region, reservoir radius {view.reservoir_nm:g} nm", frame=view.frame)
         self._x_label = "r (nm)"
         self._loop = view.loop
@@ -178,7 +136,6 @@ class GeometryCanvas(QtWidgets.QWidget):
         self.update()
 
     def attach(self, editor: ProfileEditor | None, *, selected: int | None = None) -> None:
-        """Draw ``editor``'s loop with handles and let the mouse edit it, or stop."""
         self._editor = editor
         in_loop = editor is not None and selected is not None and selected < len(editor.vertices)
         self._selected = selected if in_loop else None
@@ -191,14 +148,10 @@ class GeometryCanvas(QtWidgets.QWidget):
         self.update()
 
     def mark(self, location_nm: Point | None) -> None:
-        """Mark the ``(r, z)`` a refusal names, or remove the mark."""
         self._marker = location_nm
         self.update()
 
-    # -- the transform ---------------------------------------------------------------
-
     def _vertices(self) -> list[Point]:
-        """Return the loop being drawn: the editor's, with a drag in progress applied."""
         if self._editor is None:
             return list(self._loop)
         shown = list(self._editor.vertices)
@@ -207,12 +160,6 @@ class GeometryCanvas(QtWidgets.QWidget):
         return shown
 
     def transform(self) -> ViewTransform:
-        """Return the transform the canvas draws with at its current size.
-
-        Fitted to the image's outer edges, the loop, the membrane chord and the
-        mark, whichever are shown. While a vertex is dragged it is the transform
-        the drag began under, so the picture does not rescale under the pointer.
-        """
         if self._drag_transform is not None:
             return self._drag_transform
         xs: list[float] = []
@@ -239,18 +186,14 @@ class GeometryCanvas(QtWidgets.QWidget):
             height=float(self.height()),
         )
 
-    # -- painting --------------------------------------------------------------------
-
     def paintEvent(self, event: QtGui.QPaintEvent) -> None:
-        """Draw the image, the slab, the outlines, the editor's handles and the captions."""
         del event
         painter = QtGui.QPainter(self)
         painter.fillRect(self.rect(), QtGui.QColor("white"))
         transform = self.transform()
         if self._image is not None and self._qimage is not None:
             left, top, width, height = transform.rectangle(*self._image.extent_nm)
-            # Unsmoothed: a pixel is drawn as the value at its node, not blended
-            # into its neighbours' (Design §2).
+            # Unsmoothed: a pixel is the value at its node, not blended into its neighbours'.
             painter.drawImage(QtCore.QRectF(left, top, width, height), self._qimage)
         painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing, True)
         if self._slab is not None:
@@ -295,7 +238,6 @@ class GeometryCanvas(QtWidgets.QWidget):
 
     @property
     def caption(self) -> str:
-        """The axis caption, naming the frame (WP24 D4)."""
         x_low, x_high = self.transform().x_range
         z_low, z_high = self.transform().z_range
         return (
@@ -303,10 +245,7 @@ class GeometryCanvas(QtWidgets.QWidget):
             f"{z_high:.3g} up; {self._frame}"
         )
 
-    # -- editing ---------------------------------------------------------------------
-
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
-        """Pick the vertex under the pointer, if the canvas is editing."""
         if self._editor is None or event.button() != QtCore.Qt.MouseButton.LeftButton:
             super().mousePressEvent(event)
             return
@@ -321,7 +260,6 @@ class GeometryCanvas(QtWidgets.QWidget):
         self.update()
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
-        """Follow the pointer with the dragged vertex, without editing yet."""
         if self._drag is None or self._drag_transform is None:
             super().mouseMoveEvent(event)
             return
@@ -330,13 +268,6 @@ class GeometryCanvas(QtWidgets.QWidget):
         self.update()
 
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
-        """Commit the drag as one move: one undoable step, however far it went.
-
-        A press and release with no motion between them is a click, which
-        selects the vertex and moves nothing: the pointer is anywhere within the
-        pick tolerance of the vertex, and snapping the vertex to it would edit
-        the loop by up to that tolerance whenever a vertex is picked to delete.
-        """
         if self._drag is None or self._drag_transform is None or self._editor is None:
             super().mouseReleaseEvent(event)
             return
@@ -353,7 +284,6 @@ class GeometryCanvas(QtWidgets.QWidget):
         self.update()
 
     def mouseDoubleClickEvent(self, event: QtGui.QMouseEvent) -> None:
-        """Insert a vertex at the midpoint of the edge under the pointer."""
         if self._editor is None:
             super().mouseDoubleClickEvent(event)
             return
@@ -368,14 +298,12 @@ class GeometryCanvas(QtWidgets.QWidget):
             self.update()
 
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
-        """Delete the selected vertex on Delete or Backspace."""
         if event.key() in (QtCore.Qt.Key.Key_Delete, QtCore.Qt.Key.Key_Backspace):
             self.delete_selected()
             return
         super().keyPressEvent(event)
 
     def delete_selected(self) -> str | None:
-        """Delete the selected vertex; return the refusal if the loop is at three."""
         if self._editor is None or self._selected is None:
             return None
         try:
@@ -389,32 +317,17 @@ class GeometryCanvas(QtWidgets.QWidget):
 
     @property
     def selected(self) -> int | None:
-        """The vertex last picked, if any."""
         return self._selected
 
     @property
     def editor(self) -> ProfileEditor | None:
-        """The editor the canvas is driving, if any."""
         return self._editor
 
 
 class GeometryWidget(QtWidgets.QWidget):
-    """The Geometry tab: a stage list, one pane per stage, and the contour editor.
-
-    Parameters
-    ----------
-    editor
-        The case open for editing; the tab reads its document and stages the
-        structure path into it.
-    store
-        The artefact store's root, or ``None`` for the process default.
-    """
-
     buildRequested = QtCore.Signal()
-    """Emitted when the user asks to build. The window commits and saves the case first."""
 
     structureLoaded = QtCore.Signal(str)
-    """Emitted with the path staged at ``structure.source.path``, for the Case tab to show."""
 
     def __init__(
         self,
@@ -519,10 +432,7 @@ class GeometryWidget(QtWidgets.QWidget):
         self._timer.start()
         self._show_buttons()
 
-    # -- building --------------------------------------------------------------------
-
     def _pick_structure(self) -> None:
-        """Ask for a structure file and stage its absolute path (WP24 D7)."""
         chosen, _ = QtWidgets.QFileDialog.getOpenFileName(
             self,
             "Load a structure",
@@ -533,7 +443,6 @@ class GeometryWidget(QtWidgets.QWidget):
             self.load_structure(chosen)
 
     def load_structure(self, path: str | Path) -> Path | None:
-        """Stage ``structure.source.path`` as ``path``, or show why it was refused."""
         try:
             staged = load_structure(self._case_editor, path)
         except (UnknownCasePathError, CaseValidationError) as error:
@@ -544,35 +453,9 @@ class GeometryWidget(QtWidgets.QWidget):
         return staged
 
     def _ask_build(self) -> None:
-        """Relay the button press; the window saves the case before :meth:`build`."""
         self.buildRequested.emit()
 
     def build(self, case_path: str | Path, *, upto: str = BUILD_UPTO) -> bool:
-        """Walk the saved case through stage 6 in the spawned child (WP24 D3).
-
-        The Charge tab's **Build charge** is this walk taken on through
-        ``upto="charge"``: one child and one cancel token, and this tab still
-        shows stages 1 to 6 as they land (WP31 D2).
-
-        Nothing about the previous build is dropped until this one has started:
-        a case the window committed with staged edits :func:`can_build` never
-        saw may not resolve, and a previous child still exiting refuses a new
-        one; either is shown and the previous build's panes are kept.
-
-        Parameters
-        ----------
-        case_path
-            The case file as saved, which is what the child reads and what a
-            hand edit's derived case is written beside.
-        upto
-            The last stage to walk: stage 6 by default, ``"charge"`` for the
-            Charge tab's build.
-
-        Returns
-        -------
-        bool
-            Whether the build started.
-        """
         document = self._case_editor.document
         try:
             planned = planned_stages(document)
@@ -606,11 +489,9 @@ class GeometryWidget(QtWidgets.QWidget):
         return True
 
     def _stop(self) -> None:
-        """Cancel the build; a cancelled walk writes no artefact (§5.3.2)."""
         self._control.cancel()
 
     def _stop_children(self) -> None:
-        """Stop the assess and render children, whose answers no longer apply."""
         for process in (self._assess, self._render):
             if process is not None:
                 process.terminate()
@@ -618,16 +499,12 @@ class GeometryWidget(QtWidgets.QWidget):
         self._render = None
 
     def shutdown(self) -> None:
-        """Stop everything this tab started: the build, the children and the view loads."""
         self._timer.stop()
         self._control.cancel()
         self._stop_children()
         self._executor.shutdown(wait=False, cancel_futures=True)
 
-    # -- polling ---------------------------------------------------------------------
-
     def refresh(self) -> RunModel:
-        """Poll the build, the view loads and the two children, and show where they are."""
         model = self._control.poll()
         produced = {event.name: event for event in model.produced}
         document = self._document
@@ -655,7 +532,6 @@ class GeometryWidget(QtWidgets.QWidget):
         return model
 
     def _landed(self, name: str, future: Future[StageView]) -> None:
-        """Keep a loaded view, and start the editor from stage 4's profile."""
         try:
             view = future.result()
         except Exception as error:  # the pane shows it; the tab stays usable
@@ -668,7 +544,6 @@ class GeometryWidget(QtWidgets.QWidget):
             self._show_row(self._list.currentRow())
 
     def _built(self, model: RunModel, produced: dict[str, Produced]) -> None:
-        """Say how the build settled; draw the mesh if it reached stage 6."""
         if model.state == "finished" and "mesh" in produced and model.directory is not None:
             self._render = RenderProcess(MeshRequest(run=str(model.directory)))
             self._render.start()
@@ -676,7 +551,6 @@ class GeometryWidget(QtWidgets.QWidget):
         self._status.setText(last)
 
     def _drain_assess(self) -> None:
-        """Apply what the assess child posted."""
         if self._assess is None:
             return
         # Liveness first, then the queue: a child that posts and exits between a
@@ -725,7 +599,6 @@ class GeometryWidget(QtWidgets.QWidget):
             self._show_row(self._list.currentRow())
 
     def _drain_render(self) -> None:
-        """Load the mesh picture the render child wrote, or keep its refusal."""
         if self._render is None:
             return
         # Liveness before the queue, as :meth:`_drain_assess` does and for the same reason.
@@ -733,7 +606,7 @@ class GeometryWidget(QtWidgets.QWidget):
         for event in self._render.drain():
             if isinstance(event, RenderedMesh):
                 self._mesh = event
-                # A file URL, never ``setHtml``: the scene is megabytes (WP15 D8).
+                # A file URL, never setHtml: the scene is megabytes.
                 self._web.load(QtCore.QUrl.fromLocalFile(event.document))
             elif isinstance(event, RenderFailed):
                 self._mesh_problem = f"{event.error}: {event.message}"
@@ -749,7 +622,6 @@ class GeometryWidget(QtWidgets.QWidget):
                 self._show_row(self._list.currentRow())
 
     def _mesh_loaded(self, ok: bool) -> None:
-        """Ask the document whether it drew, as the Fields panel does."""
         if not ok:
             self._mesh_problem = "the mesh document did not load"
             if self._selected_name() == "mesh":
@@ -758,7 +630,6 @@ class GeometryWidget(QtWidgets.QWidget):
         self._web.page().runJavaScript(readiness_script(), self._mesh_answered)
 
     def _mesh_answered(self, answer: object) -> None:
-        """Keep the document's own account of a picture that did not draw."""
         try:
             state = json.loads(answer) if isinstance(answer, str) else {}
         except json.JSONDecodeError:
@@ -771,10 +642,7 @@ class GeometryWidget(QtWidgets.QWidget):
         if self._selected_name() == "mesh":
             self._show_row(self._list.currentRow())
 
-    # -- the stage list --------------------------------------------------------------
-
     def _show_rows(self) -> None:
-        """Bring the list up to date with the rows, keeping the selection."""
         texts = [_row_text(row) for row in self._rows]
         current = [self._list.item(index).text() for index in range(self._list.count())]
         if texts == current:
@@ -788,12 +656,10 @@ class GeometryWidget(QtWidgets.QWidget):
             self._list.setCurrentRow(selected)
 
     def _selected_name(self) -> str | None:
-        """Return the stage whose pane is showing."""
         index = self._list.currentRow()
         return self._rows[index].name if 0 <= index < len(self._rows) else None
 
     def _select(self, name: str) -> None:
-        """Show one stage's pane."""
         for index, row in enumerate(self._rows):
             if row.name == name:
                 self._list.setCurrentRow(index)
@@ -801,7 +667,6 @@ class GeometryWidget(QtWidgets.QWidget):
                 return
 
     def _show_row(self, index: int) -> None:
-        """Show the pane of the stage at ``index``."""
         if not 0 <= index < len(self._rows):
             return
         row = self._rows[index]
@@ -842,19 +707,14 @@ class GeometryWidget(QtWidgets.QWidget):
         self._details.setPlainText("\n".join(lines))
 
     def _requantity(self, index: int) -> None:
-        """Show another of a view's images: the mean or one of the variances."""
         view = self._views.get(self._selected_name() or "")
         if isinstance(view, ImageView) and index >= 0:
             self._show_image(view, self._quantity.itemText(index))
 
     def _show_image(self, view: ImageView, quantity: str) -> None:
-        """Show one of a view's images, with its loop and slab."""
         self._canvas.show_image(view.images[quantity], loop=view.loop, slab=view.slab)
 
-    # -- the editor ------------------------------------------------------------------
-
     def _backdrop(self) -> ImageView | None:
-        """Return the stage-3 mean the editor is drawn over: stage 4's view, or stage 3's."""
         for name in ("contour", "symmetry"):
             view = self._views.get(name)
             if isinstance(view, ImageView) and "mean" in view.images:
@@ -862,7 +722,6 @@ class GeometryWidget(QtWidgets.QWidget):
         return None
 
     def _show_editor(self) -> None:
-        """Show the editor's loop over the stage-3 mean, in the stage-1 frame."""
         selected = self._canvas.selected if self._canvas.editor is self._editor else None
         backdrop = self._backdrop()
         if backdrop is not None:
@@ -874,14 +733,12 @@ class GeometryWidget(QtWidgets.QWidget):
         self._canvas.mark(first.location_nm if first is not None else None)
 
     def edit(self, editor: ProfileEditor) -> None:
-        """Edit ``editor``'s loop on the contour pane."""
         self._editor = editor
         self._assessment = None
         self._select("contour")
         self._show_buttons()
 
     def _editor_lines(self) -> list[str]:
-        """Return what the editor has to say: the loader's refusal, and the last measurement."""
         if self._editor is None:
             return []
         lines = [f"editing {self._editor.name}: {len(self._editor.vertices)} vertices"]
@@ -895,44 +752,37 @@ class GeometryWidget(QtWidgets.QWidget):
         return lines
 
     def _after_edit(self) -> None:
-        """Drop the last measurement, which the edit invalidated, and show the loader's verdict."""
         self._assessment = None
         self._canvas.mark(None)
         self._show_row(self._list.currentRow())
         self._show_buttons()
 
     def _delete_vertex(self) -> None:
-        """Delete the selected vertex, or say why not."""
         refusal = self._canvas.delete_selected()
         if refusal is not None:
             self._status.setText(refusal)
 
     def _step_back(self) -> None:
-        """Undo the last edit."""
         if self._editor is not None and self._editor.undo():
             self._after_edit()
 
     def _step_forward(self) -> None:
-        """Redo the last undone edit."""
         if self._editor is not None and self._editor.redo():
             self._after_edit()
 
     def measure(self) -> None:
-        """Measure the §5.2.1 criteria on the edit, against the stored stages (WP24 D8)."""
         if self._editor is None or self._case_path is None or self._assess is not None:
             return
         self._start_assess(vertices=tuple(self._editor.vertices))
         self._status.setText("measuring the section 5.2.1 criteria against the stored stages")
 
     def seed(self) -> None:
-        """Recompute the refused contour from the stored stage-3 map (§8.2.2 B9, WP24 D10)."""
         if self._case_path is None or self._assess is not None:
             return
         self._start_assess(vertices=None)
         self._status.setText("recomputing the refused contour from the stored stage-3 map")
 
     def _start_assess(self, *, vertices: tuple[Point, ...] | None) -> None:
-        """Spawn the assess child for this case."""
         assert self._case_path is not None
         self._assess = AssessProcess(
             AssessRequest(
@@ -945,7 +795,6 @@ class GeometryWidget(QtWidgets.QWidget):
         self._show_buttons()
 
     def _save_edit(self) -> None:
-        """Write the edit and a derived case beside the original (WP24 D5, D6)."""
         if self._editor is None or self._case_path is None or self._document is None:
             return
         try:
@@ -958,10 +807,7 @@ class GeometryWidget(QtWidgets.QWidget):
             "the derived case to build the edit"
         )
 
-    # -- showing ---------------------------------------------------------------------
-
     def _mesh_lines(self) -> list[str]:
-        """Return the stage-6 gate figures shown beside the picture (WP24 D12)."""
         if self._mesh is None:
             return [self._mesh_problem] if self._mesh_problem else []
         quality = self._mesh.quality
@@ -980,7 +826,6 @@ class GeometryWidget(QtWidgets.QWidget):
         return lines
 
     def _show_buttons(self) -> None:
-        """Offer exactly what applies now."""
         in_flight = not self._settled
         rows = {row.name: row for row in self._rows}
         contour = rows.get("contour")
@@ -1001,57 +846,41 @@ class GeometryWidget(QtWidgets.QWidget):
         self._save.setEnabled(self._editor is not None and self._case_path is not None)
 
     def _can_build(self) -> bool:
-        """:func:`can_build` of the editor's document, resolved once per document.
-
-        The buttons are re-offered on every poll, and resolving a case on the Qt
-        thread ten times a second would pay for the same answer each time; a
-        commit replaces the document, so its identity is the cache key.
-        """
         document = self._case_editor.document
         if self._buildable is None or self._buildable[0] is not document:
             self._buildable = (document, can_build(document))
         return self._buildable[1]
 
-    # -- for tests -------------------------------------------------------------------
-
     @property
     def canvas(self) -> GeometryCanvas:
-        """The picture pane."""
         return self._canvas
 
     @property
     def control(self) -> RunControl:
-        """The build's view-model."""
         return self._control
 
     @property
     def rows(self) -> tuple[StageRow, ...]:
-        """The stage list as last shown."""
         return self._rows
 
     def status(self) -> str:
-        """Return the message the tab is showing."""
         return str(self._status.text())
 
     def details(self) -> str:
-        """Return the text beside the picture."""
         return str(self._details.toPlainText())
 
 
 def _row_text(row: StageRow) -> str:
-    """One line of the stage list: number, title, status and the hash's head."""
     status = "from the store" if row.status == "cached" else row.status
     head = f" {row.hash[:12]}" if row.hash else ""
     return f"{row.number}. {row.title} — {status}{head}"
 
 
 def _number(value: object) -> str:
-    """Format a gate figure to four significant figures."""
     return f"{value:.4g}" if isinstance(value, float) else str(value)
 
 
 def _point(value: object) -> str:
-    """Format an ``(r, z)`` pair to four significant figures."""
     if isinstance(value, (tuple, list)) and len(value) == 2:
         return f"({_number(float(value[0]))}, {_number(float(value[1]))})"
     return str(value)

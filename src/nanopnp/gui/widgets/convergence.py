@@ -1,27 +1,4 @@
-"""The live convergence panel: two hand-stroked polylines, banded by rung.
-
-Hand-stroked with :class:`QtGui.QPainter` rather than drawn by a charting
-library, and the reason is the bundle. ADR-004 packages the shell one-dir with
-PyInstaller and CON-07 forbids anything on the user path that needs a compiler or
-a source build; a plotting dependency is a second payload for PyInstaller to find
-and a second licence in ``LICENSES-BUNDLE.md``, bought for four polylines and a
-set of decade ticks. The shapes it would draw are the shapes below.
-
-Nothing here decides anything. The log mapping, the banding, the decimation, the
-axis range and the tick selection all live in
-:mod:`nanopnp.gui.convergence`, which imports no Qt and is therefore asserted on
-the push gate, where ``PySide6.QtWidgets`` does not import at all
-(`.knowledge/07-software-stack.md` §5). This widget maps that model's
-coordinates onto pixels and strokes them.
-
-**No threshold line is drawn**, because NUM-16's criterion is per rung and
-disjunctive — the absolute residual floor, *or* the per-field relative
-update on the undamped direction — and one horizontal rule would claim a
-criterion the solver does not use. What the panel says instead is
-:meth:`~nanopnp.gui.convergence.Band.note`, one line per band under the plot:
-how many steps the rung took, which test the recorded numbers show closed it,
-how far the damping fell, and how many steps NUM-16 forced.
-"""
+"""The live convergence panel: two hand-stroked polylines, banded by rung."""
 
 from __future__ import annotations
 
@@ -32,28 +9,21 @@ from nanopnp.gui.convergence import RESIDUAL, UPDATE, ConvergenceModel, Series
 __all__ = ["ConvergenceWidget"]
 
 MARGIN = QtCore.QMargins(64, 16, 16, 40)
-"""Room for the decade labels on the left and the rung labels underneath."""
 
+# Chosen to differ in lightness as well as hue, so the curves stay distinct in greyscale.
 _COLOURS: dict[Series, QtGui.QColor] = {
     RESIDUAL: QtGui.QColor(31, 78, 140),
     UPDATE: QtGui.QColor(176, 84, 20),
 }
-"""One colour per series. Chosen to differ in lightness as well as in hue, so
-the two curves stay distinguishable in a greyscale screenshot of a bug report."""
 
 
 class ConvergencePlot(QtWidgets.QWidget):
-    """The plotting surface itself: axes, bands and two polylines."""
-
     def __init__(self, model: ConvergenceModel, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
         self._model = model
-        # The two axis ranges, read once per paint. Both are whole-model scans —
-        # ``y_range`` walks every step of every band — and mapping a point is
-        # the innermost thing this widget does, so reading them per point makes
-        # a repaint quadratic in the number of Newton steps. Set in
-        # :meth:`paintEvent` before anything is mapped; the defaults are what a
-        # map outside a paint would divide by.
+        # Axis ranges read once per paint: they are whole-model scans, and reading them per point
+        # makes a repaint quadratic in the Newton steps. Set in paintEvent before anything is
+        # mapped.
         self._x = (0.0, 1.0)
         self._y = (-1.0, 1.0)
         self.setMinimumHeight(260)
@@ -62,37 +32,16 @@ class ConvergencePlot(QtWidgets.QWidget):
         )
 
     def _silent(self) -> QtGui.QColor:
-        """Return the fill of a band that reported no Newton step.
-
-        From the palette, like every other colour this widget draws with: a
-        fixed near-white would be a bright slab over the two electrostatic rungs
-        of every ladder on a dark theme, whose ``base()`` background this is
-        meant to sit quietly against. Shaded rather than left blank, because an
-        unshaded gap reads as missing data and the band's note says which of the
-        two reasons applies.
-        """
         return QtGui.QColor(self.palette().window().color())
 
     def set_model(self, model: ConvergenceModel) -> None:
-        """Point the plot at another model and redraw."""
         self._model = model
         self.update()
 
     def _frame(self) -> QtCore.QRect:
-        """Return the rectangle the curves are drawn inside."""
         return self.rect().marginsRemoved(MARGIN)
 
     def _map(self, frame: QtCore.QRect, x: float, y: float) -> QtCore.QPointF:
-        """Map one model coordinate onto a pixel inside ``frame``.
-
-        ``y`` is already a base-10 logarithm when it comes from
-        :meth:`~nanopnp.gui.convergence.ConvergenceModel.points`; this only
-        flips it, because a smaller residual is a better one and screens count
-        downwards.
-
-        Reads the ranges :meth:`paintEvent` took, never the model's: see
-        ``__init__``.
-        """
         x_low, x_high = self._x
         y_low, y_high = self._y
         across = (x - x_low) / (x_high - x_low) if x_high > x_low else 0.0
@@ -102,7 +51,6 @@ class ConvergencePlot(QtWidgets.QWidget):
         )
 
     def paintEvent(self, event: QtGui.QPaintEvent) -> None:
-        """Draw the axes, the bands and the two series."""
         del event
         painter = QtGui.QPainter(self)
         painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing, True)
@@ -120,7 +68,6 @@ class ConvergencePlot(QtWidgets.QWidget):
         painter.end()
 
     def _paint_axes(self, painter: QtGui.QPainter, frame: QtCore.QRect) -> None:
-        """Draw the decade ticks and their labels, and the frame."""
         pen = QtGui.QPen(self.palette().mid().color())
         painter.setPen(pen)
         painter.drawRect(frame)
@@ -138,12 +85,10 @@ class ConvergencePlot(QtWidgets.QWidget):
             )
 
     def _paint_bands(self, painter: QtGui.QPainter, frame: QtCore.QRect) -> None:
-        """Shade and label one region per continuation rung."""
         metrics = painter.fontMetrics()
         silent = self._silent()
-        # The offsets accumulated as the bands are walked. Asking the model for
-        # each band's extent would be a linear scan per band for a total the
-        # loop already has in hand.
+        # Offsets accumulated as the bands are walked: asking the model per band would be a linear
+        # scan each.
         start = self._x[0]
         for band in self._model.bands:
             end = start + band.width
@@ -167,12 +112,6 @@ class ConvergencePlot(QtWidgets.QWidget):
             )
 
     def _paint_series(self, painter: QtGui.QPainter, frame: QtCore.QRect, series: Series) -> None:
-        """Stroke one series, one polyline per band.
-
-        One polyline *per band* and never one across the ladder: a segment
-        joining the last step of one rung to the first of the next would draw a
-        line between two different operators.
-        """
         painter.setPen(QtGui.QPen(_COLOURS[series], 2))
         for band in self._model.bands:
             points = [self._map(frame, x, y) for x, y in self._model.points(band, series)]
@@ -183,8 +122,6 @@ class ConvergencePlot(QtWidgets.QWidget):
 
 
 class ConvergenceWidget(QtWidgets.QWidget):
-    """The convergence panel: a summary line, the plot, and the bands' notes."""
-
     def __init__(self, model: ConvergenceModel, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
         self._model = model
@@ -208,21 +145,11 @@ class ConvergenceWidget(QtWidgets.QWidget):
         self.refresh()
 
     def set_model(self, model: ConvergenceModel) -> None:
-        """Point the panel at another run's model."""
         self._model = model
         self._plot.set_model(model)
         self.refresh()
 
     def refresh(self) -> ConvergenceModel:
-        """Redraw from the model and return it, so a test needs no timer.
-
-        The notes are written only when they have changed. ``setPlainText``
-        replaces the document, which sends the scroll position back to the top
-        and drops any selection — and the window drives this four times a second
-        for as long as it is open, so an unconditional write would make a twelve
-        rung ladder's notes unreadable and uncopyable in a pane that scrolls.
-        The run panel's log appends for the same reason.
-        """
         summary = self._model.summary
         if summary != self._summary.text():
             self._summary.setText(summary)
@@ -233,7 +160,6 @@ class ConvergenceWidget(QtWidgets.QWidget):
         return self._model
 
     def notes_text(self) -> str:
-        """Return the per-band notes the panel is showing."""
         return "\n".join(
             f"{band.index + 1}. {band.name} (stage {band.stage}): {band.note()}"
             for band in self._model.bands
@@ -241,5 +167,4 @@ class ConvergenceWidget(QtWidgets.QWidget):
 
     @property
     def model(self) -> ConvergenceModel:
-        """The view-model this panel draws."""
         return self._model

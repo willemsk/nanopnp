@@ -1,40 +1,4 @@
-"""The geometry tab's view-model: stages 1-6 as they land, their pictures, and the contour editor.
-
-§8.1's second GUI increment, and Phase 2 criterion 4: load a structure, build
-stages 1 to 6 from the shell, inspect each stage's artefact as it lands, and
-override the contour by hand. Everything the tab decides lives here, and nothing
-here imports PySide6, NGSolve, Netgen or NumPy at module scope — the discipline of
-:mod:`nanopnp.gui.run_model` and :mod:`nanopnp.gui.convergence`, for the same
-reason: ``PySide6.QtWidgets`` does not import on the Linux push gate
-(`.knowledge/07-software-stack.md` §5), so a rule implemented in a widget would be
-asserted on two of the seven matrix jobs.
-
-**What landed is read from the store by its hash, never from a caption.** The
-walk's :class:`~nanopnp.core.stages.ArtefactHook` crosses the process boundary as
-:class:`~nanopnp.gui.solver.Produced`, and :class:`StageList` and
-:func:`load_view` are pure functions of those events and of the store they name
-(WP24 D1).
-
-**Two frames, and every picture names its own** (WP24 D4, Design §1). Stages 1
-to 4 are in the stage-1 frame, in which the profile document is written; stage 5
-shifts ``z ← z - centre_z_nm``, so the region and the mesh are in the model frame.
-The editor draws and writes the stage-1 frame, with the membrane slab drawn at
-``centre_z_nm ± thickness_nm/2``. An editor that wrote the region record's
-vertices back would shift them twice on the next run, invisibly at ClyA's
-``centre_z_nm = 0``.
-
-**A pixel sits on its node** (WP24 D11, Design §2). A reduced map's column j is
-the bin centred on ``r = j·h``, and a density's node j sits at its own
-coordinate, so an image of n columns spans ``[x₀ - h/2, x_{n-1} + h/2]``.
-Drawing it on ``[0, n·h]`` would move every wall outward by h/2, which is the
-``pqr2grid`` erratum of `.knowledge/04` §1.2 reintroduced by a display.
-
-**A hand edit is a supplied profile, and enters a run only through
-``inputs.profile``** (WP24 D5, D6; the §5.3.1 NOTE on ``geometry.contour``). The
-editor enforces what the loader enforces, by calling the loader's own validator,
-and measures the §5.2.1 criteria only on request, in a spawned child
-(:mod:`nanopnp.gui.assess`), recording them without enforcing them (D8).
-"""
+"""The geometry tab's view-model: stages 1-6 as they land, their pictures, the contour editor."""
 
 from __future__ import annotations
 
@@ -126,43 +90,18 @@ GEOMETRY_STAGES: tuple[str, ...] = (
     "region",
     "mesh",
 )
-"""Stages 1 to 6: the ones the geometry tab lists, in the order a walk runs them.
-
-The structure stages come from the registry, each declaring the case section it
-needs; ``region`` and ``mesh`` are this tab's own choice of view.
-"""
 
 BUILD_UPTO = "mesh"
-"""Where **Build geometry** stops: the command line's ``run --upto mesh`` (WP24 D3)."""
 
 STAGE_1_FRAME = "stage-1 frame"
-"""Caption of a view in the frame stage 1 aligns to and the profile document is in."""
 
 MODEL_FRAME = "model frame"
-"""Caption of a view after stage 5's ``z ← z - centre_z_nm``."""
 
 StageStatus: TypeAlias = Literal["waiting", "running", "stored", "cached", "failed", "cancelled"]
-"""Where one stage of a build is. ``stored`` did the work, ``cached`` found it in the
-store; both have an artefact to show."""
-
-
-# -- the stage list -------------------------------------------------------------
 
 
 @dataclass(frozen=True)
 class StageRow:
-    """One stage of the list: what it is, where it got to, and what it left.
-
-    Parameters
-    ----------
-    name, number, title
-        The stage as the registry describes it, read without importing it (FR-27).
-    status
-        Where the build got to with it.
-    produced
-        The event naming its artefact, once it has one.
-    """
-
     name: str
     number: int
     title: str
@@ -171,34 +110,15 @@ class StageRow:
 
     @property
     def hash(self) -> str:
-        """The artefact's hash, or ``""`` before there is one."""
         return self.produced.hash if self.produced is not None else ""
 
 
 def planned_stages(document: CaseDocument) -> tuple[str, ...]:
-    """Return the geometry stages this case walks, in order.
-
-    Stages 1 to 4 need ``structure:``; stage 5 needs a generated mesh. The
-    rule :func:`nanopnp.pipeline.run.run_case` applies, taken from the driver's own
-    :func:`~nanopnp.pipeline.run.selected_stages` so the list cannot drift from the walk.
-
-    Raises
-    ------
-    nanopnp.io.case.CaseValidationError
-        If the case does not resolve.
-    """
     walked = selected_stages(resolve(document), None)
     return tuple(name for name in walked if name in GEOMETRY_STAGES)
 
 
 def can_build(document: CaseDocument) -> bool:
-    """Whether **Build geometry** is offered for this case (WP24 D3).
-
-    Only a case whose stages 5 and 6 build its mesh has geometry to build; a case
-    supplying ``inputs.mesh`` reads a file at stage 6 and runs nothing before it.
-    A case that does not resolve is not offered either: the child would refuse it
-    with the diagnostic the Case tab already shows.
-    """
     try:
         return resolve(document).generates_mesh
     except (ValueError, NotImplementedError):
@@ -207,25 +127,9 @@ def can_build(document: CaseDocument) -> bool:
 
 @dataclass(frozen=True)
 class StageList:
-    """The geometry stages of one case, and a projection of a run onto them.
-
-    Parameters
-    ----------
-    planned
-        :func:`planned_stages` of the case being built.
-    """
-
     planned: tuple[str, ...]
 
     def rows(self, model: RunModel) -> tuple[StageRow, ...]:
-        """Return one row per planned stage, as the run's own event stream places it.
-
-        A pure function of the model, so a test writes the stream by hand. A
-        stage with a :class:`~nanopnp.gui.solver.Produced` is ``stored`` or
-        ``cached``; the stage the walk last entered without producing anything is
-        ``running`` while the run is, and ``failed`` or ``cancelled`` once it has
-        stopped; every other stage is ``waiting``.
-        """
         produced = {event.name: event for event in model.produced}
         entered = model.walked[-1] if model.walked else None
         rows: list[StageRow] = []
@@ -253,26 +157,6 @@ class StageList:
 
 
 def load_structure(editor: CaseEditor, path: str | Path) -> Path:
-    """Stage ``structure.source.path`` as the absolute path of a picked file (WP24 D7).
-
-    Absolute, because case paths resolve against the process's working
-    directory and a double-clicked shell has none that means anything. Inputs are
-    hashed by content (§5.3.2), so the spelling moves no key.
-
-    Returns
-    -------
-    Path
-        The path staged.
-
-    Raises
-    ------
-    UnknownCasePathError
-        If the case declares no ``structure:`` section. There is then no point
-        group to align the structure to, and the shell does not invent one: the
-        section is written in the case file (``docs/guide/case-files.md``).
-    nanopnp.io.case.CaseValidationError
-        If the value is refused, with the editor's own diagnostic.
-    """
     absolute = Path(path).expanduser().resolve()
     try:
         value_at(editor.document, "structure.source")
@@ -287,14 +171,12 @@ def load_structure(editor: CaseEditor, path: str | Path) -> Path:
 
 
 def membrane_slab(document: CaseDocument) -> tuple[float, float]:
-    """Return the bilayer's z extent in the stage-1 frame: ``centre ± thickness/2`` (WP24 D4)."""
     membrane = document.geometry.membrane if document.geometry is not None else MembraneSpec()
     half = 0.5 * membrane.thickness_nm
     return membrane.centre_z_nm - half, membrane.centre_z_nm + half
 
 
-# -- images -----------------------------------------------------------------------
-
+# Nine anchors of viridis (van der Walt and Smith, CC0), interpolated to 256 entries.
 _VIRIDIS: tuple[tuple[int, int, int], ...] = (
     (68, 1, 84),
     (71, 44, 122),
@@ -306,36 +188,25 @@ _VIRIDIS: tuple[tuple[int, int, int], ...] = (
     (170, 220, 50),
     (253, 231, 37),
 )
-"""Nine anchors of viridis (van der Walt and Smith, CC0), interpolated to 256 entries.
-
-Perceptually uniform and monotone in lightness, so a density of 0.25 reads as a
-quarter of the way up in greyscale too; the isolevel is not a colour boundary."""
 
 
+# Moreland 2009 cool-to-warm, 255 entries: an odd count, so zero on a scale [-L, L] lands on the
+# neutral anchor.
 _DIVERGING: tuple[tuple[int, int, int], ...] = (
     (59, 76, 192),
     (221, 221, 221),
     (180, 4, 38),
 )
-"""Moreland's cool-to-warm diverging map (Moreland 2009, *Diverging Color Maps for
-Scientific Visualization*): blue, a neutral grey, red, interpolated to 255 entries.
-
-An odd count, so that the middle entry *is* the neutral anchor and a value of zero
-on a scale ``[-L, L]`` lands on it exactly; negative is blue and positive red
-(WP31 D8)."""
 
 Palette: TypeAlias = Literal["viridis", "diverging"]
-"""Which lookup table an image is coloured with: sequential, or diverging about zero."""
 
 _PALETTES: dict[str, tuple[tuple[tuple[int, int, int], ...], int]] = {
     "viridis": (_VIRIDIS, 256),
     "diverging": (_DIVERGING, 255),
 }
-"""Each palette's anchors and its entry count."""
 
 
 def lookup_table(palette: Palette = "viridis") -> np.ndarray:
-    """Return a palette's N x 4 RGBA lookup table, interpolated from its anchors."""
     import numpy as np
 
     colours, size = _PALETTES[palette]
@@ -351,27 +222,6 @@ def lookup_table(palette: Palette = "viridis") -> np.ndarray:
 
 @dataclass(frozen=True)
 class ImageModel:
-    """A field on a uniform ``[z, x]`` grid, as an image and as the frame it sits in.
-
-    Parameters
-    ----------
-    values
-        ``[z, x]`` samples, ``float64``. ``NaN`` is drawn transparent.
-    x_nm, z_nm
-        The node (or bin-centre) coordinates of the columns and rows, uniform.
-    scale
-        ``(low, high)``: the values mapped to the ends of the lookup table.
-    title
-        What the image shows, as its caption says it.
-    x_label
-        The horizontal axis: ``r`` for a reduced map, ``x`` for a section.
-    frame
-        :data:`STAGE_1_FRAME` or :data:`MODEL_FRAME`.
-    palette
-        The lookup table: ``viridis`` for a density, ``diverging`` for a signed
-        charge on a scale symmetric about zero (WP31 D8).
-    """
-
     values: np.ndarray
     x_nm: np.ndarray
     z_nm: np.ndarray
@@ -383,17 +233,14 @@ class ImageModel:
 
     @property
     def width(self) -> int:
-        """Columns."""
         return int(self.values.shape[1])
 
     @property
     def height(self) -> int:
-        """Rows."""
         return int(self.values.shape[0])
 
     @property
     def spacing_nm(self) -> tuple[float, float]:
-        """``(Δx, Δz)`` between node centres."""
         return (
             float(self.x_nm[1] - self.x_nm[0]) if self.width > 1 else 1.0,
             float(self.z_nm[1] - self.z_nm[0]) if self.height > 1 else 1.0,
@@ -401,11 +248,6 @@ class ImageModel:
 
     @property
     def extent_nm(self) -> tuple[float, float, float, float]:
-        """``(x_low, x_high, z_low, z_high)`` of the image's outer edges.
-
-        Half a spacing beyond the first and last nodes, because a pixel is
-        centred on its node (Design §2).
-        """
         dx, dz = self.spacing_nm
         return (
             float(self.x_nm[0]) - 0.5 * dx,
@@ -415,28 +257,19 @@ class ImageModel:
         )
 
     def pixel_centre(self, column: int, row: int) -> tuple[float, float]:
-        """Return the ``(x, z)`` a display pixel is centred on; row 0 is the top, at maximum z."""
         return float(self.x_nm[column]), float(self.z_nm[self.height - 1 - row])
 
     def pixel_of(self, x_nm: float, z_nm: float) -> tuple[int, int]:
-        """Return the display ``(column, row)`` whose pixel contains ``(x, z)``."""
         dx, dz = self.spacing_nm
         column = math.floor((x_nm - float(self.x_nm[0])) / dx + 0.5)
         index = math.floor((z_nm - float(self.z_nm[0])) / dz + 0.5)
         return column, self.height - 1 - index
 
     def display(self) -> np.ndarray:
-        """Return the values in display order: row 0 at maximum z, x increasing to the right."""
         flipped: np.ndarray = self.values[::-1, :]
         return flipped
 
     def rgba(self) -> bytes:
-        """Return the image as tightly packed RGBA8888 rows, top row first.
-
-        The widget wraps these bytes in a ``QImage`` and draws it into the
-        rectangle :class:`ViewTransform` maps :attr:`extent_nm` to; it decides
-        nothing about colour or orientation.
-        """
         import numpy as np
 
         shown = self.display()
@@ -447,7 +280,6 @@ class ImageModel:
         return bytes(np.ascontiguousarray(pixels, dtype=np.uint8).tobytes())
 
     def colour_index(self, values: np.ndarray | float) -> np.ndarray:
-        """Return the lookup-table entry each value is coloured with, clipped to the scale."""
         import numpy as np
 
         low, high = self.scale
@@ -462,11 +294,6 @@ class ImageModel:
 def reduced_image(
     r_nm: np.ndarray, z_nm: np.ndarray, values: np.ndarray, *, quantity: str
 ) -> ImageModel:
-    """Return one field of a stage-3 reduction as an image (WP24 D11).
-
-    The mean shares the fixed [0, 1] scale of the density (VER-49's bounds); a
-    variance is shown on its own scale, ``[0, max]``, and its title says so.
-    """
     import numpy as np
 
     data = np.asarray(values, dtype=np.float64)
@@ -491,20 +318,6 @@ def reduced_image(
 def density_section(
     values: np.ndarray, x_nm: np.ndarray, z_nm: np.ndarray, *, y_index: int
 ) -> ImageModel:
-    """Return the axial section ``y = 0`` of a stage-2 map, over ``x ∈ [-R, R]`` (WP24 D11).
-
-    Over the whole diameter rather than ``r ≥ 0``, so that the Cₙ asymmetry the
-    reduction averages away is visible before it is averaged.
-
-    Parameters
-    ----------
-    values
-        The map, ``[z, y, x]``.
-    x_nm, z_nm
-        Its node coordinates.
-    y_index
-        The node at ``y = 0``: the grid's half-width.
-    """
     import numpy as np
 
     return ImageModel(
@@ -518,27 +331,8 @@ def density_section(
     )
 
 
-# -- the transform ---------------------------------------------------------------
-
-
 @dataclass(frozen=True)
 class ViewTransform:
-    """A data rectangle in nm mapped into a widget rectangle in pixels, at one scale.
-
-    Equal nm per pixel on both axes: a pore drawn with a stretched aspect would
-    make a constriction look wider or narrower than it is. z increases upwards,
-    because screens count downwards.
-
-    Parameters
-    ----------
-    x_range, z_range
-        The data to fit, in nm.
-    width, height
-        The widget's drawable area, in pixels.
-    margin
-        Pixels left free on every side.
-    """
-
     x_range: tuple[float, float]
     z_range: tuple[float, float]
     width: float
@@ -547,7 +341,6 @@ class ViewTransform:
 
     @property
     def scale(self) -> float:
-        """Pixels per nm."""
         span_x = max(self.x_range[1] - self.x_range[0], 1e-12)
         span_z = max(self.z_range[1] - self.z_range[0], 1e-12)
         room_x = max(self.width - 2.0 * self.margin, 1.0)
@@ -556,7 +349,6 @@ class ViewTransform:
 
     @property
     def _origin(self) -> tuple[float, float]:
-        """The pixel of ``(x_low, z_low)``, centring the data in the widget."""
         s = self.scale
         used_x = (self.x_range[1] - self.x_range[0]) * s
         used_z = (self.z_range[1] - self.z_range[0]) * s
@@ -565,13 +357,11 @@ class ViewTransform:
         return left, bottom
 
     def to_screen(self, x_nm: float, z_nm: float) -> tuple[float, float]:
-        """Return the pixel of a point in nm."""
         left, bottom = self._origin
         s = self.scale
         return left + (x_nm - self.x_range[0]) * s, bottom - (z_nm - self.z_range[0]) * s
 
     def to_data(self, x_px: float, y_px: float) -> tuple[float, float]:
-        """Return the point in nm under a pixel."""
         left, bottom = self._origin
         s = self.scale
         return self.x_range[0] + (x_px - left) / s, self.z_range[0] + (bottom - y_px) / s
@@ -579,7 +369,6 @@ class ViewTransform:
     def rectangle(
         self, x_low: float, x_high: float, z_low: float, z_high: float
     ) -> tuple[float, float, float, float]:
-        """Return ``(left, top, width, height)`` in pixels of a data rectangle."""
         left, top = self.to_screen(x_low, z_high)
         right, bottom = self.to_screen(x_high, z_low)
         return left, top, right - left, bottom - top
@@ -593,7 +382,6 @@ def nearest_vertex(
     *,
     tolerance_px: float = 8.0,
 ) -> int | None:
-    """Return the vertex drawn nearest a pixel, if it is within ``tolerance_px`` of it."""
     best: int | None = None
     best_distance = tolerance_px
     for index, (r, z) in enumerate(vertices):
@@ -612,7 +400,6 @@ def nearest_edge(
     *,
     tolerance_px: float = 8.0,
 ) -> int | None:
-    """Return the edge drawn nearest a pixel, edge i joining vertex i to i + 1, closing included."""
     best: int | None = None
     best_distance = tolerance_px
     count = len(vertices)
@@ -632,13 +419,8 @@ def nearest_edge(
     return best
 
 
-# -- the views ---------------------------------------------------------------------
-
-
 @dataclass(frozen=True)
 class SummaryView:
-    """A stage shown as the entries of its artefact's summary."""
-
     name: str
     lines: tuple[str, ...]
     frame: str = STAGE_1_FRAME
@@ -646,20 +428,6 @@ class SummaryView:
 
 @dataclass(frozen=True)
 class ImageView:
-    """A stage shown as one or more images, and the contour over them if there is one.
-
-    Parameters
-    ----------
-    images
-        By quantity, in the order the selector offers them.
-    loop
-        The stage-4 profile's vertices, in the stage-1 frame, or ``()``.
-    slab
-        The membrane's z extent in the stage-1 frame, or ``None``.
-    profile
-        The stage-4 profile document, for the editor to start from.
-    """
-
     name: str
     images: Mapping[str, ImageModel]
     lines: tuple[str, ...] = ()
@@ -669,26 +437,11 @@ class ImageView:
 
     @property
     def frame(self) -> str:
-        """Every image of one view is in one frame."""
         return next(iter(self.images.values())).frame
 
 
 @dataclass(frozen=True)
 class OutlineView:
-    """Stage 5's region, drawn as outlines in the model frame.
-
-    Parameters
-    ----------
-    loop
-        The model-frame profile.
-    chord
-        The membrane's inner edge, ``((r, -t/2), (r, +t/2))``.
-    slab
-        ``(-t/2, +t/2)``.
-    reservoir_nm
-        The reservoir radius, for the caption.
-    """
-
     name: str
     loop: tuple[tuple[float, float], ...]
     chord: tuple[tuple[float, float], tuple[float, float]]
@@ -699,11 +452,9 @@ class OutlineView:
 
 
 StageView: TypeAlias = SummaryView | ImageView | OutlineView
-"""What one stage's pane shows."""
 
 
 def _format(value: object) -> str:
-    """Render one summary entry for a pane: numbers to four significant figures."""
     if isinstance(value, float):
         return f"{value:.4g}"
     if isinstance(value, dict):
@@ -715,12 +466,10 @@ def _format(value: object) -> str:
 
 
 def _lines(summary: Mapping[str, object], keys: Sequence[str]) -> tuple[str, ...]:
-    """Return ``key: value`` lines for the entries of a summary that it carries."""
     return tuple(f"{key}: {_format(summary[key])}" for key in keys if key in summary)
 
 
 def stored_artefact(event: Produced) -> Artefact:
-    """Return the stored artefact an event names, or say it is gone."""
     found = Store(event.store).get(event.schema, event.hash)
     if found is None:
         raise FileNotFoundError(
@@ -730,32 +479,10 @@ def stored_artefact(event: Produced) -> Artefact:
     return found
 
 
+# Called off the Qt thread: a stage-2 map is about 100 MB of compressed float32.
 def load_view(
     event: Produced, produced: Mapping[str, Produced], document: CaseDocument
 ) -> StageView:
-    """Read one stage's artefact from the store into what its pane shows.
-
-    Called off the Qt thread (WP24 D11): a stage-2 map is a hundred megabytes of
-    compressed ``float32``. Each payload is read through the module that wrote
-    it, so the pane shows what the next stage read.
-
-    Parameters
-    ----------
-    event
-        The stage's :class:`~nanopnp.gui.solver.Produced`.
-    produced
-        Every artefact the build has reported, by stage: the contour is drawn
-        over stage 3's mean.
-    document
-        The case being built, for the membrane slab.
-
-    Raises
-    ------
-    FileNotFoundError
-        If the artefact has been removed from the store since it was reported.
-    ValueError
-        If the stage is not one of stages 1 to 6.
-    """
     artefact = stored_artefact(event)
     summary = dict(artefact.summary)
     if event.name == "structure":
@@ -836,19 +563,10 @@ def load_view(
     raise ValueError(f"stage {event.name!r} is not one of the geometry stages {GEOMETRY_STAGES}")
 
 
-# -- the contour editor ------------------------------------------------------------
-
 Vertex: TypeAlias = tuple[float, float]
-"""``(r, z)`` in nm, in the stage-1 frame."""
 
 
 def _loader_text(error: ValidationError) -> str:
-    """Return the validator's own sentence from a pydantic error.
-
-    The loader raises the same :class:`~pydantic.ValidationError` for the same
-    document, so the editor reports the loader's words and a user reading one
-    has read the other (WP24 D8).
-    """
     first = error.errors()[0]
     message = str(first.get("msg", error))
     prefix = "Value error, "
@@ -857,21 +575,6 @@ def _loader_text(error: ValidationError) -> str:
 
 @dataclass
 class ProfileEditor:
-    """A hand edit of a pore profile: the operations, their undo, and the document they make.
-
-    Parameters
-    ----------
-    vertices
-        The loop being edited, in the stage-1 frame.
-    parent_digest
-        ``provenance.sha256`` the edit records: the canonical
-        :func:`~nanopnp.geometry.profile.profile_digest` of the profile it was
-        edited from, or under §8.2.2 B9 the stage-3 payload digest stage 4
-        would have recorded (WP24 D5).
-    parent_name
-        The parent's name, recorded as ``provenance.citation``.
-    """
-
     vertices: list[Vertex]
     parent_digest: str
     parent_name: str
@@ -880,7 +583,6 @@ class ProfileEditor:
 
     @classmethod
     def from_profile(cls, profile: PoreProfile) -> ProfileEditor:
-        """Start from a profile document: stage 4's, or a supplied one."""
         return cls(
             vertices=[(float(r), float(z)) for r, z in profile.vertices],
             parent_digest=profile_digest(profile),
@@ -889,44 +591,22 @@ class ProfileEditor:
 
     @classmethod
     def from_seed(cls, vertices: Sequence[Vertex], *, digest: str, name: str) -> ProfileEditor:
-        """Start from a loop stage 4's gate refused (§8.2.2 B9, WP24 D10).
-
-        Parameters
-        ----------
-        vertices
-            :func:`~nanopnp.geometry.contour.condition`'s loop on the stored map.
-        digest
-            That map's payload digest, which stage 4 would have recorded.
-        name
-            The name stage 4 would have given its profile.
-        """
         return cls(
             vertices=[(float(r), float(z)) for r, z in vertices],
             parent_digest=digest,
             parent_name=name,
         )
 
-    # -- operations -------------------------------------------------------------
-
     def _push(self) -> None:
-        """Remember the loop before an edit, and forget what was undone."""
         self._undo.append(list(self.vertices))
         self._redo.clear()
 
     def move(self, index: int, r_nm: float, z_nm: float) -> None:
-        """Move vertex ``index`` to ``(r, z)``: one undoable step, however it was dragged."""
         self._check_index(index)
         self._push()
         self.vertices[index] = (float(r_nm), float(z_nm))
 
     def insert(self, edge: int) -> int:
-        """Insert a vertex at the midpoint of edge ``edge`` (vertex ``edge`` to ``edge + 1``).
-
-        Returns
-        -------
-        int
-            The new vertex's index.
-        """
         self._check_index(edge)
         a = self.vertices[edge]
         b = self.vertices[(edge + 1) % len(self.vertices)]
@@ -935,13 +615,6 @@ class ProfileEditor:
         return edge + 1
 
     def delete(self, index: int) -> None:
-        """Delete vertex ``index``. A loop keeps at least three.
-
-        Raises
-        ------
-        ValueError
-            If the loop would be left with fewer than three vertices.
-        """
         self._check_index(index)
         if len(self.vertices) <= 3:
             raise ValueError(
@@ -952,7 +625,6 @@ class ProfileEditor:
         del self.vertices[index]
 
     def undo(self) -> bool:
-        """Return to the loop before the last edit; ``False`` if there is none."""
         if not self._undo:
             return False
         self._redo.append(list(self.vertices))
@@ -960,7 +632,6 @@ class ProfileEditor:
         return True
 
     def redo(self) -> bool:
-        """Re-apply the last edit undone; ``False`` if there is none."""
         if not self._redo:
             return False
         self._undo.append(list(self.vertices))
@@ -968,41 +639,22 @@ class ProfileEditor:
         return True
 
     def _check_index(self, index: int) -> None:
-        """Refuse an index outside the loop, naming it."""
         if not 0 <= index < len(self.vertices):
             raise IndexError(f"vertex {index} is not in a loop of {len(self.vertices)}")
 
     @property
     def can_undo(self) -> bool:
-        """Whether there is an edit to undo."""
         return bool(self._undo)
 
     @property
     def can_redo(self) -> bool:
-        """Whether there is an undone edit to re-apply."""
         return bool(self._redo)
-
-    # -- the document ------------------------------------------------------------
 
     @property
     def name(self) -> str:
-        """The edited profile's name: its parent's, marked as a hand edit."""
         return f"{self.parent_name}-{HAND_EDIT_SOURCE}"
 
     def document(self) -> PoreProfile:
-        """Return the edit as a validated ``nanopnp/profile/v0.5`` document (WP24 D5).
-
-        ``provenance.source`` is :data:`~nanopnp.geometry.profile.HAND_EDIT_SOURCE`,
-        never a reference source; ``sha256`` is the parent's digest; every
-        measurement is re-derived from the edited vertices, which the loader
-        re-checks, so a stale block cannot be written.
-
-        Raises
-        ------
-        ValueError
-            With the loader's own sentence, naming the vertex, if the loop is not
-            a valid simple closed polygon in the half-plane.
-        """
         import numpy as np
 
         points = np.asarray(self.vertices, dtype=np.float64).reshape(-1, 2)
@@ -1031,7 +683,6 @@ class ProfileEditor:
 
     @property
     def problem(self) -> str | None:
-        """The loader's refusal of the loop as it stands, or ``None`` if it would load."""
         try:
             self.document()
         except ValueError as error:
@@ -1039,47 +690,15 @@ class ProfileEditor:
         return None
 
     def _target(self, directory: str | Path) -> tuple[PoreProfile, Path]:
-        """Return the document and the path it is written to, named by its own digest."""
         profile = self.document()
         root = Path(directory).expanduser().resolve()
         return profile, root / f"{HAND_EDIT_SOURCE}-{profile_digest(profile)[:16]}.yaml"
 
     def save(self, directory: str | Path) -> Path:
-        """Write the edit as a profile document named by its own digest, and return its path.
-
-        Absolute (WP24 D7), so a derived case naming it runs from any working
-        directory.
-
-        Raises
-        ------
-        ValueError
-            If the loop would not load; nothing is written.
-        """
         profile, path = self._target(directory)
         return write_profile(profile, path)
 
     def save_case(self, case: CaseDocument, case_path: str | Path) -> tuple[Path, Path]:
-        """Write the edit and a derived case beside the original, which is never modified (WP24 D6).
-
-        Parameters
-        ----------
-        case
-            The case the edit was made in.
-        case_path
-            Where it was read from. The profile and the derived case are written
-            beside it; the derived case is ``<stem>.<profile file stem>.yaml``.
-
-        Returns
-        -------
-        tuple of Path
-            The profile, and the derived case.
-
-        Raises
-        ------
-        ValueError
-            If the loop would not load, or the derived case is refused. Both are
-            decided before either file is written.
-        """
         source = Path(case_path).expanduser().resolve()
         profile, path = self._target(source.parent)
         derived = with_profile(case, path)

@@ -1,32 +1,4 @@
-"""The case form, built from the schema at run time (IF-09).
-
-One row per field :func:`~nanopnp.io.case_paths.case_fields` yields, in declaration
-order, grouped by the block it lives in. The widget chosen for a row comes from
-:attr:`~nanopnp.gui.case_model.FieldState.kind` and its contents from
-:attr:`~nanopnp.gui.case_model.FieldState.options`; no option list, no default
-and no unit is written here.
-
-**A free line holds YAML, because a case file does.** ``1e-3``, ``auto``,
-``{membrane: 3.2}`` and an empty line meaning "nothing" are all values a reader
-already writes in the case file, so the line edits parse with the same loader
-rather than with a second syntax. What the parse produces is then validated at
-the field by the schema's declared type, which is the diagnostic the command
-line gives for the same mistake.
-
-**A field the document does not carry is shown and disabled**, not hidden. A
-Phase-1 case has no ``structure:`` block, and
-:func:`~nanopnp.io.case_paths.substitute` refuses to write into one that is absent —
-"give the base case that section first". Hiding the field would make that
-refusal look like a missing feature. **Add section** is offered for exactly the
-sections :meth:`~nanopnp.gui.case_model.CaseEditor.addable` names, whose empty
-form resolves as their absence, and enables their fields (WP31 D13).
-
-**A bounded number is a spin box over the schema's own range** (WP31 D12): a
-``QSpinBox`` stepping by one for an integer field, a ``QDoubleSpinBox`` for a
-float (WP32 D12). It stages a value only when the user changes it. A spin box rounds what it
-shows to its decimals, so staging on display would rewrite a loaded ``7.125``
-as ``7.13`` without anyone having touched it.
-"""
+"""The case form, built from the schema at run time (IF-09)."""
 
 from __future__ import annotations
 
@@ -45,15 +17,13 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 __all__ = ["CaseEditorWidget"]
 
 SPIN_DECIMALS = 3
-"""Digits a bounded number's spin box shows: enough for a pH to the thousandth."""
 
+# What a QSpinBox holds, a C int: a bounded integer that does not fit is a numeric entry, since
+# narrowing the schema's range would misstate it.
 SPIN_INT_RANGE = (-(2**31), 2**31 - 1)
-"""What a ``QSpinBox`` holds, a C ``int``. A bounded integer whose range does not fit is
-a numeric entry instead: narrowing the schema's range would misstate it (WP31 D12)."""
 
 
 def _display(value: FieldValue | Absent) -> str:
-    """Render a case value as the text a reader would have typed for it."""
     if isinstance(value, Absent) or value is None:
         return ""
     if isinstance(value, str):
@@ -66,11 +36,6 @@ def _display(value: FieldValue | Absent) -> str:
 
 
 def _parse(text: str) -> FieldValue:
-    """Parse a line of a form the way a case file would be parsed.
-
-    An empty line is ``None`` rather than ``""``: a reader clearing an optional
-    field means "nothing here", and the schema says whether that is admissible.
-    """
     stripped = text.strip()
     if not stripped:
         return None
@@ -83,10 +48,7 @@ def _parse(text: str) -> FieldValue:
 
 
 class CaseEditorWidget(QtWidgets.QWidget):
-    """A form over one :class:`~nanopnp.gui.case_model.CaseEditor`."""
-
     changed = QtCore.Signal()
-    """Emitted when a field is edited, whether or not the value was accepted."""
 
     def __init__(self, editor: CaseEditor, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
@@ -130,10 +92,7 @@ class CaseEditorWidget(QtWidgets.QWidget):
         layout.addWidget(area)
         layout.addWidget(self._status)
 
-    # -- construction -------------------------------------------------------
-
     def _build(self, state: FieldState) -> QtWidgets.QWidget:
-        """Return the widget one field is edited through, showing the field's value."""
         widget: QtWidgets.QWidget
         if state.kind == "flag":
             box = QtWidgets.QCheckBox()
@@ -186,9 +145,8 @@ class CaseEditorWidget(QtWidgets.QWidget):
         else:
             line = QtWidgets.QLineEdit()
             if state.options:
-                # Enumerated values beside a free one (``wall_h_nm``): offered as
-                # a completion rather than as the only choice, which is what
-                # makes the number still settable.
+                # Enumerated values beside a free one (wall_h_nm): offered as a completion, not the
+                # only choice, so the number stays settable.
                 line.setCompleter(QtWidgets.QCompleter(list(state.options), line))
             line.editingFinished.connect(self._setter(state.path, lambda: _parse(line.text())))
             widget = line
@@ -196,12 +154,6 @@ class CaseEditorWidget(QtWidgets.QWidget):
         return widget
 
     def _present(self, widget: QtWidgets.QWidget, state: FieldState) -> None:
-        """Show a field's value in its widget and enable it, staging nothing.
-
-        Signals are blocked while the value is set: showing a value is not an
-        edit, and a staged copy of what the file already says would mark an
-        untouched case dirty and rewrite it on the next run.
-        """
         absent = isinstance(state.value, Absent)
         widget.blockSignals(True)
         try:
@@ -241,8 +193,6 @@ class CaseEditorWidget(QtWidgets.QWidget):
         )
 
     def _setter(self, path: str, read: Callable[[], FieldValue]) -> Callable[..., None]:
-        """Return a slot staging what ``read`` returns at ``path``."""
-
         def stage(*_: object) -> None:
             try:
                 self._editor.stage(path, read())
@@ -257,42 +207,22 @@ class CaseEditorWidget(QtWidgets.QWidget):
         return stage
 
     def _mark(self, path: str, *, bad: bool) -> None:
-        """Colour one row's label according to whether its value was accepted."""
         self._labels[path].setStyleSheet("color: red" if bad else "")
-
-    # -- the editor ---------------------------------------------------------
 
     @property
     def editor(self) -> CaseEditor:
-        """The view-model this form edits."""
         return self._editor
 
     def bound_paths(self) -> tuple[str, ...]:
-        """Return every path the form binds, in the order it shows them.
-
-        Equal to :func:`~nanopnp.io.case_paths.case_fields`, which
-        ``tests/tier1/test_gui_widgets.py`` asserts: a form that bound a subset
-        would leave part of the schema uneditable with nothing to say so.
-        """
         return tuple(self._rows)
 
     def widget_at(self, path: str) -> QtWidgets.QWidget:
-        """Return the widget bound to one path."""
         return self._rows[path]
 
     def addable(self) -> tuple[str, ...]:
-        """Return the sections the form currently offers to add."""
         return tuple(name for name, button in self._adders.items() if button.isEnabled())
 
     def add_section(self, name: str) -> bool:
-        """Write the empty section ``name`` and enable its fields (WP31 D13).
-
-        Returns
-        -------
-        bool
-            Whether the section was added; a refusal is shown as the editor
-            words it.
-        """
         try:
             self._editor.add_section(name)
         except ValueError as error:
@@ -313,13 +243,6 @@ class CaseEditorWidget(QtWidgets.QWidget):
         return True
 
     def commit(self) -> bool:
-        """Commit the staged edits, showing the whole-document diagnostic on failure.
-
-        Returns
-        -------
-        bool
-            Whether the document now carries the edits.
-        """
         try:
             self._editor.commit()
         except CaseValidationError:
@@ -329,5 +252,4 @@ class CaseEditorWidget(QtWidgets.QWidget):
         return True
 
     def status(self) -> str:
-        """Return the message the form is currently showing."""
         return str(self._status.text())
