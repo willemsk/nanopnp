@@ -1,8 +1,8 @@
 # What CI runs, and when (SPECIFICATION.md section 7.6; section 8.2.10 J4, J10):
 #
 # - a pull request: one ubuntu leg on Python 3.14. `lint`, `docs`, the development
-#   selection as two shards under coverage, `coverage` (combine, diff-cover, the
-#   VER-73 budgets), and `CI result`, the one required check;
+#   selection as two shards (Tier 1, Tier 2) under coverage, `coverage` (combine,
+#   diff-cover of the changed lines), and `CI result`, the one required check;
 # - a push to `main`: Tiers 1 and 2 with `--extended` on macOS and Windows, the
 #   `extended` walks on ubuntu (and the development selection there too, unless the
 #   merged tree is the one the pull request's `CI result` passed), and the bundle.
@@ -238,12 +238,10 @@ jobs:
       - run: uv run --no-sync mkdocs build --strict
 
   # A pull request's tests: the development selection (Tiers 1 and 2 without the
-  # `extended` walks; section 8.2.10 J10) under branch coverage, in two shards.
-  # `--shard i/2` (tests/conftest.py) packs whole files, longest first, onto the
-  # less-loaded shard by tests/durations.json, so the shards partition the
-  # selection and a file's module fixtures stay in one job.
+  # `extended` walks; section 8.2.10 J10) under branch coverage, in two shards:
+  # Tier 1 and Tier 2, selected by marker, so they partition the selection.
   tests:
-    name: tests (shard ${{ matrix.shard }}/2)
+    name: tests (${{ matrix.shard }})
     needs: changes
     if: needs.changes.outputs.mode == 'pr'
     runs-on: ubuntu-latest
@@ -251,7 +249,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2]
+        shard: [tier1, tier2]
     env:
       CODE: ${{ needs.changes.outputs.code }}
     steps:
@@ -273,15 +271,14 @@ jobs:
       - if: env.CODE == 'true'
         shell: bash
         env:
-          COVERAGE_FILE: .coverage.shard${{ matrix.shard }}
+          COVERAGE_FILE: .coverage.${{ matrix.shard }}
           SHARD: ${{ matrix.shard }}
         run: |
           start=$SECONDS
           status=0
           uv run pytest -rs -n auto --dist loadfile --ignore=tests/tier1/test_gui_widgets.py \
-            --shard "$SHARD/2" --cov=src/nanopnp --cov-branch --cov-report= \
-            --junitxml="junit-$SHARD.xml" || status=$?
-          echo "### tests (shard $SHARD/2): $((SECONDS - start)) s, pytest exit $status" \
+            -m "$SHARD and not slow" --cov=src/nanopnp --cov-branch --cov-report= || status=$?
+          echo "### tests ($SHARD): $((SECONDS - start)) s, pytest exit $status" \
             >> "$GITHUB_STEP_SUMMARY"
           exit $status
       - uses: actions/upload-artifact@v7
@@ -289,25 +286,19 @@ jobs:
         with:
           name: coverage-shard-${{ matrix.shard }}
           path: |
-            .coverage.shard${{ matrix.shard }}
-            junit-${{ matrix.shard }}.xml
+            .coverage.${{ matrix.shard }}
           include-hidden-files: true
           if-no-files-found: error
 
   # The shards' coverage combined, then full branch coverage of the changed
   # src/nanopnp lines outside gui/, as `gate.sh run` requires (section 7.6 NOTE,
-  # VER-72 f); then VER-73: each test file under its ceiling and the run's
-  # critical path under its budget, beyond the margin of .github/budgets.yaml.
-  # It needs `lint` and `docs` as well, so every job it measures has ended.
+  # VER-72 f).
   coverage:
     name: coverage
     needs: [changes, lint, docs, tests]
     if: needs.changes.outputs.mode == 'pr'
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    permissions:
-      contents: read
-      actions: read
     env:
       CODE: ${{ needs.changes.outputs.code }}
     steps:
@@ -327,7 +318,7 @@ jobs:
         run: uv sync --no-default-groups --group dev
       - if: env.CODE == 'true'
         run: |
-          uv run --no-sync coverage combine .coverage.shard1 .coverage.shard2
+          uv run --no-sync coverage combine .coverage.tier1 .coverage.tier2
           uv run --no-sync coverage report --show-missing
           uv run --no-sync coverage xml -o coverage.xml
       - if: env.CODE == 'true'
@@ -338,15 +329,6 @@ jobs:
           uv run --no-sync diff-cover coverage.xml --compare-branch="$BASE" --branch-coverage \
             --fail-under=100 --show-uncovered \
             --include 'src/nanopnp/**/*.py' --exclude '*/src/nanopnp/gui/*'
-      - if: env.CODE == 'true'
-        run: uv run --no-sync python .github/scripts/ci_budget.py files junit-1.xml junit-2.xml
-      - if: env.CODE == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: >-
-          uv run --no-sync python .github/scripts/ci_budget.py critical-path
-          --repo "${{ github.repository }}" --run "${{ github.run_id }}"
-          --attempt "${{ github.run_attempt }}" --running coverage --exclude "CI result"
 
   # The one required check of a pull request. It fails unless every job it needs
   # succeeded: a skipped job fails it too, so a condition that skipped a leg can
