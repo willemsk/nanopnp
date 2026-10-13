@@ -176,7 +176,7 @@ class _Recorder:
     """Collects the records; one per process, installed while ``--impact-record`` is set."""
 
     def __init__(self, root: Path, source: str) -> None:
-        self.root = os.path.realpath(root)
+        self.root = str(root.resolve())
         self.prefix = self.root + os.sep
         self.source = source.strip("/").replace(os.sep, "/")
         self.source_prefix = self.source + "/"
@@ -200,7 +200,7 @@ class _Recorder:
             return cached
         rel: str | None = None
         # "<frozen runpy>", "<string>": code with no file, never a path relative to the cwd.
-        full = "" if path.startswith("<") else os.path.realpath(path)
+        full = "" if path.startswith("<") else str(Path(path).resolve())
         if full.startswith(self.prefix):
             rel = full[len(self.prefix) :].replace(os.sep, "/")
             if rel.split("/", 1)[0] in _SKIPPED_ROOTS or "/site-packages/" in rel:
@@ -217,7 +217,7 @@ class _Recorder:
         """
         rel = self.relpath(code.co_filename)
         if rel is None or not rel.startswith(self.source_prefix):
-            if (os.path.basename(code.co_filename), code.co_qualname) in _PROCESS_STARTERS:
+            if (Path(code.co_filename).name, code.co_qualname) in _PROCESS_STARTERS:
                 return "process"
             return None
         if not code.co_flags & _CO_OPTIMIZED:
@@ -303,7 +303,7 @@ class _Recorder:
                 return
             if path.endswith(".pyc"):
                 path = _source_of_bytecode(path)
-            rel = self.relpath(os.path.join(os.getcwd(), path))
+            rel = self.relpath(str(Path.cwd() / path))
             if rel is not None:
                 for record in self.credited(caller):
                     record.files.add(rel)
@@ -313,7 +313,7 @@ class _Recorder:
                 directory = os.fsdecode(directory)
             if not isinstance(directory, str):
                 return
-            rel = self.relpath(os.path.join(os.getcwd(), directory))
+            rel = self.relpath(str(Path.cwd() / directory))
             if rel is not None:
                 for record in self.credited(caller):
                     record.dirs.add("" if rel == "." else rel)
@@ -365,7 +365,7 @@ class _Recorder:
         source = self.prefix + self.source.replace("/", os.sep) + os.sep
         for module in list(sys.modules.values()):
             origin = getattr(module, "__file__", None)
-            if isinstance(origin, str) and os.path.realpath(origin).startswith(source):
+            if isinstance(origin, str) and str(Path(origin).resolve()).startswith(source):
                 rel = self.relpath(origin)
                 if rel is not None:
                     self.preloaded.add(rel)
@@ -397,9 +397,9 @@ class _Recorder:
 
 def _source_of_bytecode(path: str) -> str:
     """Map ``pkg/__pycache__/mod.cpython-312.pyc`` to ``pkg/mod.py``."""
-    head, name = os.path.split(path)
-    if os.path.basename(head) == "__pycache__":
-        return os.path.join(os.path.dirname(head), name.split(".", 1)[0] + ".py")
+    pyc = Path(path)
+    if pyc.parent.name == "__pycache__":
+        return str(pyc.parent.parent / (pyc.name.split(".", 1)[0] + ".py"))
     return path[:-1]
 
 

@@ -1,5 +1,5 @@
 # The development loop's budgets (SPECIFICATION.md section 7.6 budget NOTE; VER-73).
-# J7 of section 8.2.10 pre-registered the first three; WP43 D11 set the file ceiling
+# J7 of section 8.2.10 pre-registered the first three (the push gate re-set to 600 s, REV-82); WP43 D11 set the file ceiling
 # and the margin. Seconds of wall time.
 #
 # - commit_hook_s: the commit hook, a typical one-module change on 4 cores (J7).
@@ -15,7 +15,7 @@
 #   suite spread by 1.55 to 1.60 on hosted runners (WP43 Design section 5), so a
 #   tighter margin would fail on runner noise alone.
 commit_hook_s: 60
-push_gate_s: 300
+push_gate_s: 600
 pull_request_critical_path_s: 360
 file_ceiling_s: 90
 margin: 0.5

@@ -52,7 +52,8 @@ a tree it has not passed.
 - `run` sets `NANOPNP_REQUIRE_GMSH=1` (and `NANOPNP_REQUIRE_APBS=1` where the wheel exists): a
   backend that cannot import fails, not skips.
 - When only prose changed, the hook runs ruff alone (`.github/scripts/prose-only.sh`;
-  `SPECIFICATION.md`, `docs/` and example READMEs are not prose); CI's documentation build still runs.
+  `SPECIFICATION.md`, `docs/`, example READMEs and `.claude/{agents,skills,rules}/` are not prose,
+  and `docs/plans/` neither: a change to only those runs the tests that read them); CI's documentation build still runs.
 
 ## Project structure
 

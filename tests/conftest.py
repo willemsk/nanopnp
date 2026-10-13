@@ -162,7 +162,7 @@ def _file_of(item: pytest.Item) -> str:
 
 @pytest.hookimpl(trylast=True)
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
-    """Leave out the ``extended`` tests unless asked for, then order and shard by file.
+    """Leave out the ``extended`` tests unless asked for, then shard by file.
 
     An ``extended`` test is an end-to-end walk -- an executed example or the 2WCD
     entry through the pipeline -- whose claims CI gates after a merge, and the push
@@ -177,13 +177,12 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
     ``-m slow``, and that request is kept, so the recorded measurements of an
     ``extended`` file still run under CLAUDE.md's ``uv run pytest -m slow``.
 
-    The hook runs last, after ``-m`` and ``-k`` have deselected, so the order and
-    the shards are of what will run. Files are collected longest first by
-    ``tests/durations.json`` (WP43 D8); a file's own tests keep their order.
-    ``--dist loadfile`` re-sorts files by their number of tests unless
-    ``--no-loadscope-reorder`` is passed, so there the order only breaks ties
-    (``.knowledge/07`` section 12.2). ``--shard i/N`` keeps the files packed
-    into shard ``i`` and deselects the rest.
+    The hook runs last, after ``-m`` and ``-k`` have deselected, so the shards are
+    of what will run. The collection order is pytest's own (``--ff``, ``--nf`` and
+    fixture grouping stand): ``--dist loadfile`` re-sorts files by their number of
+    tests, so a longest-first order bought nothing (``.knowledge/07`` section 12.2,
+    REV-83). ``--shard i/N`` keeps the files packed into shard ``i`` by
+    ``tests/durations.json`` (WP43 D8) and deselects the rest.
     """
     if not config.getoption(EXTENDED):
         named = {
@@ -208,18 +207,13 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
         if item.get_closest_marker("extended"):
             item.add_marker(pytest.mark.no_cover)
 
-    durations = recorded_durations()
-    rank = {
-        name: position
-        for position, name in enumerate(file_order([_file_of(item) for item in items], durations))
-    }
-    items.sort(key=lambda item: rank[_file_of(item)])
-
     shard = config.getoption(SHARD)
     if shard is None:
         return
     index, count = parse_shard(shard)
-    chosen = set(shard_files(list(rank), durations, count)[index - 1])
+    durations = recorded_durations()
+    files = file_order([_file_of(item) for item in items], durations)
+    chosen = set(shard_files(files, durations, count)[index - 1])
     kept = [item for item in items if _file_of(item) in chosen]
     left_out = [item for item in items if _file_of(item) not in chosen]
     if left_out:

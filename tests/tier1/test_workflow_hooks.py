@@ -349,10 +349,19 @@ _PROSE_ONLY = Path(__file__).resolve().parents[2] / ".github/scripts/prose-only.
         ("docs/project/modularity.md", False),
         ("docs/project/review-items.md", False),
         ("docs/project/contributing.md", True),
+        (".claude/agents/surveyor.md", False),
+        (".claude/skills/wp-ship/SKILL.md", False),
+        (".claude/rules/python.md", False),
+        ("docs/plans/wp43-development-loop.md", False),
+        ("docs/plans/notes/sketch.md", False),
+        (".claude/model-policy.md", True),
     ],
 )
 def test_prose_only_reads_a_findings_log_as_not_prose(path: str, prose: bool) -> None:
-    """A findings log, and the pages VER-63 reads with it, must run the tests (WP35 D19; H12)."""
+    """A findings log, and the pages VER-63 and test_agent_roster.py read, must run the tests.
+
+    WP35 D19; H12; REV-84.
+    """
     assert _BASH is not None
     result = subprocess.run(
         [_BASH, str(_PROSE_ONLY)], input=f"{path}\n", capture_output=True, text=True, timeout=10
