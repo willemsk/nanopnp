@@ -1,31 +1,4 @@
-"""Monolithic damped Newton for the coupled system (NUM-16, NUM-17).
-
-The five fields are solved together, with no segregation groups, because the
-coupling that makes the problem hard is exactly the coupling a segregated scheme
-throws away: the potential sees the ion charge, the ions see the potential and
-the flow, and the flow sees the electrical body force. The reference model
-solved this fully coupled, and so does this.
-
-Damping is the mechanism that makes a cold start survivable, and its policy is
-the delicate part. Two rules from NUM-16 shape it:
-
-* the damping factor is bounded below (1e-2 by default), and
-* **if the minimally damped step still fails to reduce the residual, that step
-  is accepted rather than the solve aborted.**
-
-The second rule looks like giving up, and it is not. A Newton step that raises
-the residual is usually a step across a fold in a strongly nonlinear region; the
-next linearisation is taken at the new point, and the sequence recovers. Aborting
-there instead throws away a run that was going to converge. What must *not* be
-tolerated is a step into an unphysical state, and that is what the NUM-17 gates
-are for: they abort, and this loop makes no attempt to talk them out of it.
-
-The reference settings of NUM-16 (initial damping 0.2, minimum 1e-2, recovery
-0.2, 100 iterations, relative tolerance 1e-6) are the defaults. What the
-reference does *not* record is how the damping recovers after a successful step,
-so :attr:`NewtonSettings.growth_factor` is this project's own choice and is
-flagged as such.
-"""
+"""Monolithic damped Newton for the coupled system (NUM-16, NUM-17)."""
 
 from __future__ import annotations
 
@@ -44,48 +17,10 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class NewtonSettings:
-    """Damped-Newton parameters; the defaults are the NUM-16 reference settings.
-
-    Parameters
-    ----------
-    initial_damping
-        Damping factor of the first step. 0.2 in the reference.
-    minimum_damping
-        Lower bound. At this value a step that fails to reduce the residual is
-        accepted anyway (NUM-16).
-    recovery_damping
-        Factor by which the damping is cut when a trial step is rejected.
-    growth_factor
-        Factor by which the damping is restored after an accepted step, capped
-        at 1. **Not a reference setting** — the reference records no recovery
-        rule — so it is named separately rather than folded into
-        ``recovery_damping``.
-    max_iterations
-        Iteration cap. 100 in the reference.
-    relative_tolerance
-        Convergence tolerance, 1e-6 in the reference. Evaluated as a per-field
-        relative-update test on the undamped Newton direction (NUM-16, WP41 D4):
-        ``max_f ||du_f|| / max(||u_f||, field_floor_ratio * max(||u||, reference_norm))``
-        at or below ``relative_tolerance``. The relative residual test closes
-        nothing; only the absolute residual floor ``||R|| <= absolute_tolerance``
-        operates beside it.
-    absolute_tolerance
-        Residual floor, for the case where the initial residual is already at
-        round-off.
-    reference_norm
-        Floor on the global solution norm the per-field floor is scaled from,
-        so that a state near zero does not make every update look large. 1 is
-        the right value because NUM-09 leaves every field O(1).
-    field_floor_ratio
-        Floor ratio on per-field norms in the relative-update test, so that a
-        field near or at zero converges against a fraction of the global norm
-        (1e-6 by default; NUM-16, WP41 D4). Positive and finite: an infinite
-        ratio would make every update look zero.
-    """
-
     initial_damping: float = 0.2
     minimum_damping: float = 1.0e-2
     recovery_damping: float = 0.2
+    # Not recorded by the reference model: this project's own choice.
     growth_factor: float = 2.0
     max_iterations: int = DEFAULT_NONLINEAR_MAX_ITER
     relative_tolerance: float = DEFAULT_NONLINEAR_RTOL
@@ -94,7 +29,6 @@ class NewtonSettings:
     field_floor_ratio: float = 1.0e-6
 
     def __post_init__(self) -> None:
-        """Reject settings that cannot describe a damping schedule."""
         if not 0.0 < self.minimum_damping <= self.initial_damping <= 1.0:
             raise ValueError(
                 "damping factors must satisfy 0 < minimum <= initial <= 1, got "
@@ -118,35 +52,10 @@ class NewtonSettings:
 
 
 DEFAULT_SETTINGS = NewtonSettings()
-"""The NUM-16 reference settings."""
 
 
 @dataclass(frozen=True)
 class NewtonStep:
-    """One accepted Newton step, for the convergence record.
-
-    Parameters
-    ----------
-    iteration
-        1-based index.
-    residual
-        Residual norm *after* the step.
-    update
-        ``max_f ‖δu_f‖ / max(‖u_f‖, field_floor_ratio · max(‖u‖, reference_norm))``
-        on the **undamped** direction, at the iterate the step started from (NUM-16,
-        WP41 D4). The maximum relative update across all fields, and what moves
-        on a warm start. Recorded rather than recomputed because it is already
-        in scope where this step is built, and a second computation would be a
-        second chance to take the norm of the damped step instead.
-    damping
-        Damping factor the step was taken with.
-    trials
-        How many trial step lengths were tried before acceptance.
-    forced
-        Whether the step was accepted at minimum damping without reducing the
-        residual, per NUM-16.
-    """
-
     iteration: int
     residual: float
     update: float
@@ -157,8 +66,6 @@ class NewtonStep:
 
 @dataclass
 class NewtonResult:
-    """Outcome of a damped-Newton solve, for the provenance manifest (FR-25)."""
-
     converged: bool
     iterations: int
     initial_residual: float
@@ -167,35 +74,19 @@ class NewtonResult:
 
     @property
     def relative_residual(self) -> float:
-        """Final residual as a fraction of the initial one."""
         if self.initial_residual == 0.0:
             return 0.0
         return self.residual / self.initial_residual
 
     @property
     def minimum_damping_used(self) -> float:
-        """Smallest damping factor any accepted step was taken with.
-
-        The diagnostic the phase report asks for: which continuation rungs
-        needed damping below 0.1.
-        """
         return min((step.damping for step in self.history), default=1.0)
 
     @property
     def forced_steps(self) -> int:
-        """How many steps were accepted at minimum damping without reduction."""
         return sum(1 for step in self.history if step.forced)
 
     def summary(self) -> dict[str, Option]:
-        """Return a record of the solve, for logs and the manifest.
-
-        :attr:`history` is deliberately not in it, and adding it would not be a
-        richer manifest: this record reaches the stage-10 artefact's summary,
-        which is inside the §5.3.2 content hash, so a per-iteration series here
-        would make every solve its own cache entry and move the hash of every
-        run in the store. The history is what the live convergence plot of
-        VER-44 reads, in the process that produced it.
-        """
         return {
             "converged": self.converged,
             "iterations": self.iterations,
@@ -207,23 +98,10 @@ class NewtonResult:
         }
 
 
-class NewtonDivergenceError(RuntimeError):
-    """Newton reached its iteration cap without meeting the tolerance."""
+class NewtonDivergenceError(RuntimeError): ...
 
 
 def _largest_update(ratios: Sequence[float]) -> float:
-    """Return the largest per-field relative update, a NaN ranking above every number.
-
-    NUM-16's update test reads this maximum (WP41 D4). A bare ``max`` keeps
-    whichever ratio it met first when it meets a NaN, so a NaN block after the
-    first field would be dropped and the test passed on the remaining fields;
-    here a NaN is returned, and ``NaN <= rtol`` is never convergence.
-
-    Raises
-    ------
-    ValueError
-        If ``ratios`` is empty: a product space has at least one field.
-    """
     return max(ratios, key=lambda ratio: math.inf if math.isnan(ratio) else ratio)
 
 
@@ -240,69 +118,6 @@ def damped_newton(
     callback: Callable[[NewtonStep], None] | None = None,
     raise_on_failure: bool = True,
 ) -> NewtonResult:
-    """Solve ``residual_form(u) = 0`` by damped Newton, gated at every step.
-
-    Parameters
-    ----------
-    residual_form
-        An unassembled ``BilinearForm`` holding the residual, written in the
-        **trial function**. A residual written in the grid function assembles a
-        Jacobian that is identically zero, silently; see
-        ``physics/pb.py::nonlinear_pb_residual``.
-    solution
-        Grid function holding the initial guess on entry, including any
-        inhomogeneous Dirichlet data, and the solution on exit. It is updated in
-        place at every accepted step, so any coefficient function built from it
-        — including those the gates hold — sees the current iterate.
-    settings
-        Damping and tolerance policy.
-    solver
-        Direct linear solver for the Jacobian.
-    state_gates
-        NUM-17 gates checked on the entry state and on each accepted iterate:
-        concentration positivity and packing fraction. A violation propagates as
-        :class:`~nanopnp.numerics.gates.GateViolationError`, restores the last
-        admissible iterate and stops the solve. Checking on entry matters
-        because a warm start whose entry residual is already at the floor
-        returns without taking a step, and an unphysical state would otherwise
-        pass through unexamined (NUM-18).
-    increment
-        Grid function that the *damped* increment is written into before each
-        acceptance test, so that ``increment_gates`` can inspect it. One is
-        allocated if omitted, which is only valid when ``increment_gates`` is
-        empty: a gate built over a grid function this loop does not write would
-        assert nothing.
-    increment_gates
-        NUM-17 gates checked on the damped increment, namely the potential
-        increment cap. These are treated as a step-length condition first: a
-        violation reduces the damping and retries, and only aborts if the
-        minimally damped step still violates the cap. That reading reconciles
-        NUM-16 (accept the minimally damped step) with NUM-17 (a violation
-        aborts): damping exists precisely to shorten an over-long step, and a
-        cap that survives maximal damping is a genuine failure of the state.
-    freedofs
-        Degrees of freedom to solve for; ``solution.space.FreeDofs()`` by
-        default.
-    callback
-        Called with each accepted step, for continuation logging.
-    raise_on_failure
-        Raise :class:`NewtonDivergenceError` when the iteration cap is reached
-        without convergence. Set ``False`` to inspect the result instead.
-
-    Returns
-    -------
-    NewtonResult
-        The convergence record.
-
-    Raises
-    ------
-    ValueError
-        If ``increment_gates`` is given without the ``increment`` they inspect.
-    NewtonDivergenceError
-        If the iteration cap is reached and ``raise_on_failure``.
-    nanopnp.numerics.gates.GateViolationError
-        If any NUM-17 assertion fails.
-    """
     import ngsolve as ngs
 
     check_solver(solver)
@@ -317,15 +132,13 @@ def damped_newton(
     projector = ngs.Projector(freedofs, True)
 
     step = increment if increment is not None else ngs.GridFunction(space)
-    # The direction lives in a grid function so its per-field blocks can be read
-    # off its components without copying it every iteration (NUM-16, WP41 D4).
+    # A grid function, so per-field blocks are read off its components without a copy.
     direction_gf = ngs.GridFunction(space)
     direction = direction_gf.vec
     residual = solution.vec.CreateVector()
     previous = solution.vec.CreateVector()
 
     def residual_norm() -> float:
-        """Return the free-DOF norm of the residual at the current iterate."""
         residual_form.Apply(solution.vec, residual)
         projector.Project(residual)
         return float(ngs.Norm(residual))
@@ -404,9 +217,7 @@ def damped_newton(
         try:
             check_all(state_gates)
         except GateViolationError:
-            # Same contract as the increment gates: an abort leaves the caller
-            # holding the last admissible iterate, not the rejected one, so a
-            # continuation driver that catches this can still warm-start.
+            # An abort leaves the last admissible iterate, so a caller can warm-start.
             solution.vec.data = previous
             raise
 
@@ -432,8 +243,7 @@ def damped_newton(
         if callback is not None:
             callback(record)
 
-        # The update test is damping-independent because it uses the full Newton
-        # direction, not the damped step; a forced step is never convergence.
+        # The update test uses the full Newton direction, not the damped step.
         if current <= settings.absolute_tolerance or (
             not forced and relative_update <= settings.relative_tolerance
         ):
@@ -443,8 +253,7 @@ def damped_newton(
         damping = min(1.0, damping * settings.growth_factor)
 
     if raise_on_failure:
-        # Names the two NUM-16 tests the solve applied and what each measured,
-        # not the relative residual, which closes nothing (QR-12, WP41 D4).
+        # Name both NUM-16 tests and what each measured, not the relative residual.
         last_update = result.history[-1].update if result.history else math.nan
         raise NewtonDivergenceError(
             f"damped Newton did not converge in {settings.max_iterations} iterations: "
