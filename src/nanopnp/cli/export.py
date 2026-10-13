@@ -1,37 +1,4 @@
-"""``nanopnp stage <name> <case> --export PATH``: a stored artefact in its interchange format.
-
-The §3.1 IF-02 export NOTE. The suffix of ``PATH`` chooses the format, and the
-table below is the whole of what is written:
-
-- ``structure``: ``.pdb``, the aligned ensemble's first frame, with a ``.dcd`` of
-  every frame beside it (IF-04), both in ångströms by their formats;
-- ``density``: ``.npz``, the stored map; or OpenDX and CCP4/MRC, in ångströms
-  (IF-05, §8.2.2 B10);
-- ``symmetry``: ``.npz``, the stored reduction;
-- ``contour``: ``.yaml``, the stored ``nanopnp/profile/v0.5`` document;
-- ``mesh``: ``.msh``, the stored MSH 4.1 file (IF-06);
-- ``protonation``: ``.pqr``, the atom table in ångströms in stage 1's frame, one
-  ``MODEL`` per frame where there is more than one, which reads back through
-  ``inputs.pqr`` to the stored payload exactly (WP27 D16);
-- ``charge``: ``.yaml``, the deposited charge's export lattice as a
-  ``nanopnp/field/v0.5`` document with its ``.npz`` beside it, which reads back
-  through ``inputs.charge`` to the same digest; or OpenDX and CCP4/MRC, the
-  lattice alone, in nm (IF-05, WP28 D11).
-
-**A native payload is copied byte for byte**, so that the file a user holds has the
-hash the store records, and a profile exported here and supplied through
-``inputs.profile`` is the document stage 4 wrote.
-
-**The path is an output location and nothing else**, so the configuration NOTE of
-§3.1 is not breached and no artefact key depends on it. A stage or a suffix this
-does not write is refused before anything runs (:func:`refusal`), and a file is
-written beside its destination and renamed into place, so a failure leaves none
-(WP16 D7's rule, as ``nanopnp mesh`` applies it). A structure's PDB and DCD are
-replaced as a pair: a failure leaves the files that were there before.
-
-Nothing here imports a stage module at module scope: the table is read by
-``--help`` and by the refusal, both of which must stay as cheap as ``--list``.
-"""
+"""``nanopnp stage <name> <case> --export PATH``: a stored artefact in its interchange format."""
 
 from __future__ import annotations
 
@@ -56,8 +23,8 @@ EXPORTS: Mapping[str, tuple[str, ...]] = {
     "protonation": (".pqr",),
     "charge": (".yaml", ".dx", ".mrc", ".ccp4"),
 }
-"""The suffixes each stage exports to, in the order the refusal names them."""
 
+# Held as data so that the refusal and --help import no stage module.
 _PAYLOAD: Mapping[str, str] = {
     "structure": "ensemble",
     "density": "density",
@@ -67,16 +34,9 @@ _PAYLOAD: Mapping[str, str] = {
     "protonation": "protonation",
     "charge": "charge",
 }
-"""Each exporting stage's payload key (the stages' ``PAYLOAD_NAME``), held as data here
-so that the refusal and ``--help`` import no stage module."""
 
 
 def refusal(stage: str, path: Path) -> str | None:
-    """Return why ``--export path`` cannot be written for ``stage``, or ``None`` if it can.
-
-    Checked before the walk: the message is a usage error, and the stage
-    behind it may take a minute to run.
-    """
     accepted = EXPORTS.get(stage)
     if accepted is None:
         return (
@@ -95,12 +55,6 @@ def refusal(stage: str, path: Path) -> str | None:
 
 
 def export_artefact(stage: str, artefact: Artefact, path: Path) -> tuple[Path, ...]:
-    """Write ``artefact``'s payload to ``path`` in the format its suffix names.
-
-    ``path`` has passed :func:`refusal`. Returns every file written: two for a
-    structure, the PDB and then its DCD; two for a charge document, the ``.npz``
-    and then the document; and one otherwise.
-    """
     if stage == "charge":
         from nanopnp.charge.stage import export_charge
 
@@ -122,16 +76,10 @@ def export_artefact(stage: str, artefact: Artefact, path: Path) -> tuple[Path, .
 
 
 def _partial(path: Path) -> Path:
-    """Return a staging name beside ``path``, keeping its suffix, which names the format.
-
-    The process id keeps two exports aimed at one destination from sharing a
-    staging file.
-    """
     return path.with_name(f".{path.stem}.{os.getpid()}.partial{path.suffix}")
 
 
 def _staged(path: Path, write: Callable[[Path], Path]) -> Path:
-    """Write through ``write`` to a staging file beside ``path``, then rename it into place."""
     partial = _partial(path)
     try:
         write(partial)
@@ -142,12 +90,6 @@ def _staged(path: Path, write: Callable[[Path], Path]) -> Path:
 
 
 def _export_structure(source: Path, path: Path) -> tuple[Path, Path]:
-    """Write the ensemble as ``path`` (PDB, first frame) and its DCD, as one pair.
-
-    Both are written into a staging directory beside ``path``. They are then
-    renamed into place by :func:`_replace_pair`, which leaves either the new pair
-    or whatever was there before, never a PDB beside another export's DCD.
-    """
     from nanopnp.structure.ensemble import AlignedEnsemble
 
     ensemble = AlignedEnsemble.read(source)
@@ -162,15 +104,7 @@ def _export_structure(source: Path, path: Path) -> tuple[Path, Path]:
 
 
 def _replace_pair(moves: tuple[tuple[Path, Path], ...], previous: Path) -> None:
-    """Rename each ``(new, destination)`` into place, all or none.
-
-    Whatever sits at a destination is first moved into ``previous``, the last
-    destination first, so the PDB leaves before its DCD and no stale PDB can end
-    up beside a new DCD. A failure part-way removes the new files already placed
-    and moves the previous ones back, the first destination first, so a PDB is
-    only restored once its DCD is. The previous files are discarded with the
-    staging directory on success.
-    """
+    # Old files move aside last-first and back first-first: no stale PDB beside a new DCD.
     previous.mkdir()
     set_aside: list[tuple[Path, Path]] = []
     placed: list[Path] = []

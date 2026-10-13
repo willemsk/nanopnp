@@ -1,27 +1,4 @@
-"""Command-line entry points (IF-02).
-
-The CLI drives the same stage objects as the Python API and the desktop shell
-(SPECIFICATION.md section 5.1); it holds no logic of its own. Every subcommand
-here is a few lines of argument marshalling in front of one call into
-:mod:`nanopnp.pipeline.run`, :mod:`nanopnp.pipeline.reproduce` or the stage registry, which
-is what makes the three shells demonstrably the same program.
-
-**No flag changes what is solved** (section 3.1 NOTE, IF-02). Flags choose where
-output is written, which stages run and how much is logged; every quantity that
-changes a number lives in the case file, because a flag duplicating a case-file
-setting would make the FR-25 manifest describe one of two disagreeing sources of
-truth.
-
-**Standard output carries only the command's own result.** Log records and
-diagnostics go to standard error, so that a sweep parsing stdout — or a reader
-of ``--json`` — receives the answer and nothing else. That is the other half of
-the rule forbidding :func:`print` outside this module.
-
-**Nothing here imports a stage module.** ``nanopnp stage --list`` answers from
-:func:`nanopnp.core.stages.registered_stages`, and the modules that would pull in
-NGSolve are imported inside the subcommand that needs them, keeping
-``import nanopnp.cli`` at the ~70 ms the deferred-import rule protects.
-"""
+"""Command-line entry points (IF-02)."""
 
 from __future__ import annotations
 
@@ -78,17 +55,9 @@ __all__ = ["main"]
 logger = logging.getLogger(__name__)
 
 _LEVELS = (logging.WARNING, logging.INFO, logging.DEBUG)
-"""Log level by ``-v`` count: none, ``-v``, ``-vv``."""
 
 
 def _common(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
-    """Add the flags every subcommand shares.
-
-    They are added to each subparser rather than to the top-level parser because
-    an option declared in both positions has the subparser's default overwrite
-    whatever the top level parsed — a silent one, since argparse reports no
-    conflict.
-    """
     parser.add_argument(
         "--json",
         action="store_true",
@@ -120,7 +89,6 @@ def _common(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
 
 
 def _configure_logging(verbose: int, log_file: Path | None) -> None:
-    """Send log records to stderr, and to ``log_file`` if one was asked for."""
     level = _LEVELS[min(verbose, len(_LEVELS) - 1)]
     handlers: list[logging.Handler] = [logging.StreamHandler(sys.stderr)]
     if log_file is not None:
@@ -134,7 +102,6 @@ def _configure_logging(verbose: int, log_file: Path | None) -> None:
 
 
 def _emit(payload: dict[str, Canonicalisable], lines: Sequence[str], *, as_json: bool) -> None:
-    """Write the command's result to stdout, as JSON or as text."""
     if as_json:
         print(json.dumps(payload, indent=2, sort_keys=True, default=str))
         return
@@ -143,7 +110,6 @@ def _emit(payload: dict[str, Canonicalisable], lines: Sequence[str], *, as_json:
 
 
 def _environment() -> dict[str, Canonicalisable]:
-    """Return the resolved environment and data locations."""
     reference = reference_data_root()
     return {
         "version": __version__,
@@ -160,7 +126,6 @@ def _environment() -> dict[str, Canonicalisable]:
 
 
 def _env(args: argparse.Namespace) -> int:
-    """``nanopnp env`` — report the resolved environment and data locations."""
     found = _environment()
     lines = [
         f"nanopnp   {found['version']}",
@@ -176,11 +141,6 @@ def _env(args: argparse.Namespace) -> int:
 
 
 def _format_quantity_value(value: object) -> str:
-    """Format a scalar or structured quantity for human-readable console output.
-
-    Normalises negative zero (-0.0) to 0.0 and formats floats cleanly with up to
-    6 significant digits. Formats mappings and sequences recursively.
-    """
     if isinstance(value, float):
         if value == 0.0:
             return "0.0"
@@ -198,7 +158,6 @@ def _format_quantity_value(value: object) -> str:
 
 
 def _run(args: argparse.Namespace) -> int:
-    """``nanopnp run`` — walk the pipeline for one case file (FR-27, IF-01)."""
     from nanopnp.io.store import Store
     from nanopnp.pipeline.run import run_case
 
@@ -209,9 +168,7 @@ def _run(args: argparse.Namespace) -> int:
         write=False,
     )
     if args.run_dir is not None:
-        # The driver derives the run directory from the store and the case hash;
-        # `--run-dir` moves where the three files land and nothing else, so it is
-        # applied after the walk rather than fed into it. No number depends on it.
+        # --run-dir moves the output files only, so it is applied after the walk, not fed into it.
         result = dataclasses.replace(result, directory=Path(args.run_dir))
     record = result.write()
 
@@ -232,15 +189,12 @@ def _run(args: argparse.Namespace) -> int:
 
 
 def _stage(args: argparse.Namespace) -> int:
-    """``nanopnp stage`` — list the registry, or run one stage of a case."""
     from nanopnp.core.stages import registered_stages
 
     if args.list:
         if args.export is not None:
             args.parser.error("--list writes no artefact; --export needs a stage and a case file")
-        # Answered from the registry alone: no stage module, no NGSolve, no
-        # netgen (VER-25, VER-32). The import above is `nanopnp.core.stages`,
-        # which holds descriptions and constructor paths as data.
+        # Answered from the registry alone: no stage module, NGSolve or netgen is imported.
         descriptions = registered_stages()
         payload: dict[str, Canonicalisable] = {
             "stages": [description.summary() for description in descriptions]
@@ -254,12 +208,10 @@ def _stage(args: argparse.Namespace) -> int:
         return EXIT_OK
 
     if args.name is None or args.case is None:
-        # A usage error, so it exits 2 through argparse rather than being
-        # classified: nothing was run and nothing is in doubt.
+        # A usage error (exit 2): nothing was run.
         args.parser.error("give a stage name and a case file, or --list")
     if args.export is not None:
-        # Refused before the walk, which may take a minute: a wrong stage or
-        # suffix is a usage error, and nothing has been run to leave a file.
+        # Refused before the walk, which may take a minute.
         why = refusal(args.name, args.export)
         if why is not None:
             args.parser.error(why)
@@ -291,8 +243,7 @@ def _stage(args: argparse.Namespace) -> int:
         *(f"payload  {name} {path}" for name, path in sorted(artefact.payload.items())),
     ]
     if args.export is not None:
-        # After the walk, from what the store holds: the export is an output
-        # location and reaches no key (the section 3.1 IF-02 export NOTE).
+        # After the walk, from the store: the export path reaches no artefact key.
         written = export_artefact(args.name, artefact, args.export)
         found["export"] = [str(path) for path in written]
         lines += [f"export   {path}" for path in written]
@@ -301,13 +252,6 @@ def _stage(args: argparse.Namespace) -> int:
 
 
 def _inspect(args: argparse.Namespace) -> int:
-    """``nanopnp inspect`` — read an artefact or a run directory back (FR-27).
-
-    Takes what is on disk: a run directory, a stored artefact's directory, or
-    either of their JSON records. Everything it prints was written by the run,
-    so an artefact edited by hand reads back as edited — section 5.3.2 requires
-    that be recorded rather than refused.
-    """
     from nanopnp.core.hashing import decode_floats
     from nanopnp.io.manifest import MANIFEST_FILENAME
     from nanopnp.io.manifest import read as read_manifest
@@ -324,19 +268,13 @@ def _inspect(args: argparse.Namespace) -> int:
                 f"{args.target} holds no {MANIFEST_FILENAME}, meta.json or {RUN_RECORD_FILENAME}; "
                 "give a run directory, a stored artefact directory, or one of those files"
             )
-    # Both files are written through ``canonical``, which encodes every float as
-    # ``{"__f__": <hex>}`` so that the digest is exact. That is the right thing
-    # to hash and the wrong thing to read: undone here, so that the one command
-    # whose job is to read a run back reports ``bias_V 0.02`` rather than the
-    # wrapper -- and so that ``--json`` hands a sweep numbers it can compare.
+    # Undo canonical's {"__f__": hex} float wrapper so the printed and --json values are
+    # plain numbers.
     if target.name == MANIFEST_FILENAME:
         raw: Canonicalisable = dict(read_manifest(target))
     else:
         raw = json.loads(target.read_text(encoding="utf-8"))
-    # ``cast`` and not a check: both files hold a JSON object at the top level
-    # by construction, and one that does not is a file this command did not
-    # write -- which the ``sorted(document.items())`` below reports as the
-    # AttributeError it is, under exit 1, with ``--traceback`` to hand.
+    # cast, not a check: both files are JSON objects by construction.
     document = cast("dict[str, Canonicalisable]", decode_floats(raw))
 
     lines = [f"{target}"]
@@ -348,7 +286,6 @@ def _inspect(args: argparse.Namespace) -> int:
 
 
 def _reproduce(args: argparse.Namespace) -> int:
-    """``nanopnp reproduce`` — re-run an archived run and compare it (QR-08)."""
     from nanopnp.io.store import Store
     from nanopnp.pipeline.reproduce import reproduce
 
@@ -380,27 +317,12 @@ def _reproduce(args: argparse.Namespace) -> int:
 
 
 def _mesh(args: argparse.Namespace) -> int:
-    """``nanopnp mesh`` — write a gated MSH 4.1 mesh for a case to read (IF-02).
-
-    A generator, not a run: section 3.1's generators NOTE. The geometric flags of
-    ``mesh cylinder`` shape the *file*, and the run that later reads it records
-    it by content hash through ``inputs.mesh`` exactly as it would an external
-    mesh, so no flag here changes what a run solves.
-
-    The file is gated by the route a run ingests it by — written beside its
-    destination, read back, mapped through the groups printed, then checked on
-    element quality and radii (VER-10, VER-27) — and moved into place only once
-    that passes. So the hash printed is the one the run's manifest records, and a
-    mesh the gate refuses leaves no file for a case to pick up by mistake.
-    """
     from nanopnp.mesh.adapter import from_ngsolve, read, write_msh41
     from nanopnp.mesh.ingest import apply_groups
     from nanopnp.mesh.quality import check_quality, check_radii
 
-    # A destination that cannot be written is a usage error, refused before the
-    # mesher runs (the reference geometry takes seconds): left to the write, a
-    # missing directory would exit 3 as though a case were refused, naming the
-    # staging file, and a directory would exit 1 as an unexpected failure.
+    # Refused before the mesher runs: left to the write, a bad destination would exit 3 or 1
+    # instead of 2.
     out = Path(args.out)
     if not out.name or out.is_dir():
         args.parser.error(f"--out {out} is a directory; name the .msh file to write")
@@ -420,8 +342,7 @@ def _mesh(args: argparse.Namespace) -> int:
             membrane_thickness_nm=args.membrane_thickness_nm,
             reservoir_radius_nm=args.reservoir_radius_nm,
         )
-        # Ungated here and gated below, on the file as written: one gate, on
-        # the object a run will actually read.
+        # Ungated here; gated once below, on the file as written.
         generated = geometry.generate(
             maxh_nm=args.maxh_nm, wall_h_nm=args.wall_h_nm, check_quality=False
         )
@@ -431,15 +352,11 @@ def _mesh(args: argparse.Namespace) -> int:
         generated = ReferenceGeometry.from_fixture().generate(check_quality=False)
     data = from_ngsolve(generated)
 
-    # OCC leaves the seams nothing names at NGSolve's ``default``: the two pore
-    # mouths of the cylinder, which separate fluid from fluid. They map to
-    # ``interface``, which nothing selects on. The reference geometry names its
-    # own seams and needs no mapping. Anything else outside the vocabulary is
-    # refused by ``apply_groups`` below, naming the group.
+    # OCC leaves the two pore-mouth fluid-fluid seams at default; map them to interface.
+    # Other unknown groups are refused by apply_groups.
     groups = {"default": "interface"} if "default" in data.boundaries else {}
 
-    # The process id keeps two generators aimed at one destination from sharing
-    # a staging file, which would let one gate, hash and print the other's mesh.
+    # The process id keeps two generators aimed at one destination from sharing a staging file.
     partial = out.with_name(f".{out.stem}.{os.getpid()}.partial{out.suffix}")
     where = f"the generated mesh {out.name!r}"
     try:
@@ -483,7 +400,6 @@ def _mesh(args: argparse.Namespace) -> int:
 
 
 def _positive_int(text: str) -> int:
-    """Parse an integer that must be at least 1."""
     try:
         value = int(text)
     except ValueError:
@@ -494,7 +410,6 @@ def _positive_int(text: str) -> int:
 
 
 def _positive_nm(text: str) -> float:
-    """Parse a length in nm that must be positive and finite."""
     try:
         value = float(text)
     except ValueError:
@@ -505,15 +420,6 @@ def _positive_nm(text: str) -> float:
 
 
 def _sweep(args: argparse.Namespace) -> int:
-    """``nanopnp sweep`` — plan, dispatch or collect a parameter sweep (FR-24, IF-02).
-
-    Three sub-subcommands over one plan file, and no flag among them changes a
-    case-file field: the axes are in the sweep document, which is where a
-    physics quantity belongs (the §3.1 configuration NOTE applied one level up).
-    ``--index``, ``--wave`` and ``--workers`` choose *which* members run and on
-    how many processes, which changes how long the sweep takes and no number it
-    produces.
-    """
     from nanopnp.io.store import Store
     from nanopnp.sweep.plan import plan_from_document, read_plan, write_plan
 
@@ -523,11 +429,8 @@ def _sweep(args: argparse.Namespace) -> int:
         if args.directory is None:
             directory = store.sweep_directory(plan.name, plan.hash)
         else:
-            # Where the plan and its member records go, and nothing else: the
-            # members still solve into the store. A named directory is not keyed
-            # by the plan hash, so one holding a *different* plan is refused
-            # rather than overwritten -- its member records would otherwise be
-            # collected against points they were never solved for.
+            # Where the plan and member records go; a directory holding a different
+            # plan is refused, not overwritten.
             directory = Path(args.directory)
             _refuse_another_plan(directory, plan.hash)
         path = write_plan(plan, directory)
@@ -544,10 +447,8 @@ def _sweep(args: argparse.Namespace) -> int:
             f"hash     {plan.hash}",
             f"points   {len(plan.points)} in {len(plan.waves())} wave(s)",
         ]
-        # The contiguous index range of each wave, which is the whole of the
-        # scheduler integration this project does: a job array is two lines of
-        # the user's own shell over these, and a scheduler library on the
-        # end-user path is what CON-07 forbids.
+        # Contiguous index range per wave: a job array is two shell lines over these
+        # (CON-07 forbids a scheduler library).
         lines += [
             f"wave {wave:>3}  --index {first}..{last - 1}  ({last - first} point(s))"
             for wave, (first, last) in enumerate(plan.waves())
@@ -564,7 +465,6 @@ def _sweep(args: argparse.Namespace) -> int:
 
 
 def _refuse_another_plan(directory: Path, digest: str) -> None:
-    """Refuse a ``--directory`` that already holds a plan with another hash (FR-24)."""
     from nanopnp.sweep.plan import PLAN_FILENAME, SweepPlanError, read_plan
 
     existing = directory / PLAN_FILENAME
@@ -577,7 +477,6 @@ def _refuse_another_plan(directory: Path, digest: str) -> None:
 
 
 def _sweep_run(args: argparse.Namespace, plan: SweepPlan, directory: Path, *, store: Store) -> int:
-    """Dispatch one member, one wave, or the whole plan (FR-24, QR-06)."""
     from nanopnp.sweep.plan import SweepPlanError
     from nanopnp.sweep.run import run_plan, run_point
 
@@ -588,17 +487,13 @@ def _sweep_run(args: argparse.Namespace, plan: SweepPlan, directory: Path, *, st
             [f"point {member.index} {member.point_id} {member.status}"],
             as_json=args.json,
         )
-        # The member's *own* exit code. The IF-02 exit NOTE exists so a job
-        # array can branch per member, and per-member codes are what that means.
+        # The member's own exit code, so a job array can branch per member.
         return member.exit_class
 
     indices: range | None = None
     if args.wave is not None:
         waves = plan.waves()
-        # Named rather than left to ``IndexError``, exactly as ``--index`` is:
-        # a job array submitted over the wrong range is a configuration mistake,
-        # and a negative index would otherwise select a wave from the end
-        # silently (QR-12).
+        # Named rather than IndexError; a negative index would silently select from the end.
         if not 0 <= args.wave < len(waves):
             raise SweepPlanError(
                 f"this plan has {len(waves)} waves, 0 to {len(waves) - 1}; "
@@ -606,8 +501,7 @@ def _sweep_run(args: argparse.Namespace, plan: SweepPlan, directory: Path, *, st
             )
         first, last = waves[args.wave]
         indices = range(first, last)
-    # ``--workers`` overrides the sweep document's own default, which the plan
-    # carries; neither reaches a case-file field, so neither reaches a manifest.
+    # --workers overrides the plan's default and reaches no manifest.
     workers = args.workers if args.workers is not None else (plan.workers or 1)
     members = run_plan(
         plan,
@@ -617,9 +511,7 @@ def _sweep_run(args: argparse.Namespace, plan: SweepPlan, directory: Path, *, st
         indices=indices,
         fail_fast=args.fail_fast,
     )
-    # The files a job array leaves behind are what `sweep collect` reads too, so
-    # a wave-at-a-time dispatch and a local run build the same table by the same
-    # route; see :func:`_sweep_dataset`.
+    # Same files and route as a local run: see _sweep_dataset.
     artefact = _sweep_dataset(args, plan, directory)
     counts: dict[str, int] = {}
     for member in members:
@@ -627,18 +519,14 @@ def _sweep_run(args: argparse.Namespace, plan: SweepPlan, directory: Path, *, st
     lines = [f"dataset  {directory / 'dataset.json'}"]
     lines += [f"{status:<16} {count}" for status, count in sorted(counts.items())]
     _emit(dict(artefact.summary), lines, as_json=args.json)
-    # Zero when every member reached a terminal state and the dataset was
-    # written. Non-convergence at the corners of a hard envelope is an expected
-    # *result*, and turning it into a nonzero exit would make a sweep that
-    # worked indistinguishable from one that was broken; ``--fail-fast`` is for
-    # the caller who wants the other behaviour, and it stops at the first one.
+    # Zero when every member reached a terminal state: non-convergence at a hard envelope's
+    # corners is a result, not a failure (--fail-fast opts out).
     if args.fail_fast and any(member.status != "ok" for member in members):
         return next(member.exit_class for member in members if member.status != "ok")
     return EXIT_OK
 
 
 def _sweep_collect(args: argparse.Namespace, plan: SweepPlan, directory: Path) -> int:
-    """Build the dataset from whatever member records are on disk."""
     artefact = _sweep_dataset(args, plan, directory)
     counts = artefact.summary.get("counts", {})
     lines = [f"dataset  {directory / 'dataset.json'}"]
@@ -650,12 +538,6 @@ def _sweep_collect(args: argparse.Namespace, plan: SweepPlan, directory: Path) -
 
 
 def _sweep_dataset(args: argparse.Namespace, plan: SweepPlan, directory: Path) -> SweepArtefact:
-    """Collect and, if asked, export. Shared by ``run`` and ``collect``.
-
-    Always from the member files on disk: ``--wave`` runs a subset, and a dataset
-    built from the records this process happens to hold would overwrite the
-    accumulated table with one whose other rows all read ``not_dispatched``.
-    """
     from nanopnp.sweep.collect import collect, write_csv
 
     artefact = collect(plan, directory)
@@ -665,22 +547,6 @@ def _sweep_dataset(args: argparse.Namespace, plan: SweepPlan, directory: Path) -
 
 
 def _validate(args: argparse.Namespace) -> int:
-    """``nanopnp validate`` — a case's checks, and the Tier-3 harness (VAL-01 … VAL-04, §7.4).
-
-    ``case`` runs every check a case file can fail without meshing or solving
-    (REV-27, WP38 D8). The other six act over one probe grid, and none of them
-    changes what is solved:
-    ``export-grid`` and ``case-hash`` emit what the author pastes into COMSOL and
-    declares in a manifest; ``ingest-golden`` turns delivered tables into the
-    archive; ``export-golden`` writes one of *our* runs in the same format, which
-    is how the harness is exercisable before the exports land; ``compare`` and
-    ``report`` read finished runs and produce the numbers.
-
-    ``compare`` and ``report`` never solve. The ladder's twenty members are
-    dispatched by ``nanopnp sweep run``, and a comparison that re-solved would
-    compare a second solution while the manifest described the first
-    (:mod:`nanopnp.validation.runs`).
-    """
     actions = {
         "case": _validate_case,
         "export-grid": _validate_export_grid,
@@ -694,15 +560,6 @@ def _validate(args: argparse.Namespace) -> int:
 
 
 def _validate_case(args: argparse.Namespace) -> int:
-    """Check a case file as a run would, and print what it resolves to.
-
-    :func:`~nanopnp.pipeline.case.load_case` and
-    :func:`~nanopnp.pipeline.case.resolve`: the schema, the installed registries,
-    the element orders and the inf-sup pair, the release's refusals and the
-    parameter file. A refusal is raised with the text ``nanopnp run`` gives the
-    same file, and exits 3 as every case error does (IF-02). Nothing is meshed,
-    solved or written, and no supplied file the case names is read.
-    """
     from nanopnp.pipeline.case import load_case, resolve
     from nanopnp.pipeline.checks import check_referenced_files
     from nanopnp.pipeline.run import selected_stages
@@ -730,7 +587,6 @@ def _validate_case(args: argparse.Namespace) -> int:
 
 
 def _validate_export_grid(args: argparse.Namespace) -> int:
-    """Print a probe grid's hash and the ``%Grid`` axis lines COMSOL is given."""
     from nanopnp.validation.probe import load_probe
 
     document = load_probe(args.probe)
@@ -759,7 +615,6 @@ def _validate_export_grid(args: argparse.Namespace) -> int:
 
 
 def _validate_case_hash(args: argparse.Namespace) -> int:
-    """Print the ``case_hash`` a golden for this case must declare."""
     from nanopnp.pipeline.case import load_case, resolve
     from nanopnp.validation.comsol import case_identity
 
@@ -771,7 +626,6 @@ def _validate_case_hash(args: argparse.Namespace) -> int:
 
 
 def _validate_ingest_golden(args: argparse.Namespace) -> int:
-    """Turn a directory of exported ``%Grid`` tables into the archived golden."""
     from nanopnp.validation.comsol import ingest_golden, load_golden
 
     archive = ingest_golden(args.directory, probe=args.probe, destination=args.destination)
@@ -796,12 +650,6 @@ def _validate_ingest_golden(args: argparse.Namespace) -> int:
 
 
 def _validate_export_golden(args: argparse.Namespace) -> int:
-    """Write one of our own finished runs as a golden: the self-golden path.
-
-    The report it later feeds carries ``golden_source: self`` and every consumer
-    prints it, because a ladder run against one tests the machinery and nothing
-    else.
-    """
     from nanopnp.validation.comsol import (
         GOLDEN_SCHEMA,
         GoldenManifest,
@@ -850,7 +698,6 @@ def _validate_export_golden(args: argparse.Namespace) -> int:
 
 
 def _validate_compare(args: argparse.Namespace) -> int:
-    """Compare one finished run against one golden, field by field and QoI by QoI."""
     from nanopnp.validation.compare import (
         compare_fields,
         compare_quantities,
@@ -893,7 +740,6 @@ def _validate_compare(args: argparse.Namespace) -> int:
 
 
 def _validate_report(args: argparse.Namespace) -> int:
-    """Run the four-rung attribution ladder over a finished ladder sweep."""
     from nanopnp.sweep.collect import read_members
     from nanopnp.sweep.plan import read_plan
     from nanopnp.validation.attribution import (
@@ -917,8 +763,8 @@ def _validate_report(args: argparse.Namespace) -> int:
 
     by_rung: dict[int, RungOutcome] = {}
     fields_sampled: list[str] = []
-    # Every rung is the golden's case on one mesh, so any rung's grid carries the
-    # masks the rungs' norms were taken over, and Delta_ref is taken over them too.
+    # Every rung is the golden's case on one mesh, so any rung's grid carries the masks the
+    # norms were taken over.
     rung_grid: ProbeGrid | None = None
     for member in read_members(directory):
         plan.point(member.index)  # refuses a member this plan does not enumerate
@@ -966,13 +812,6 @@ def _validate_report(args: argparse.Namespace) -> int:
 
 
 def _rung_of(assignments: Mapping[str, Canonicalisable]) -> int | None:
-    """Return which ladder rung a sweep member is, or ``None`` if it is none of them.
-
-    Matched on the assignments the member actually carries rather than on a grid
-    coordinate: the rung's position in the sweep document's axis list is not a
-    fact about the ladder, and reading it off ``coordinates[0]`` labels a member
-    by whichever axis happens to be written first.
-    """
     from nanopnp.validation.attribution import LADDER
 
     for rung in LADDER:
@@ -984,11 +823,6 @@ def _rung_of(assignments: Mapping[str, Canonicalisable]) -> int | None:
 def _reference_errors(
     args: argparse.Namespace, document: ProbeDocument, golden: Golden, grid: ProbeGrid
 ) -> dict[str, float] | None:
-    """Return VAL-04's ``Delta_ref``, or ``None`` where no refinement pair was given.
-
-    ``grid`` is a rung's mesh-bound grid, so that ``Delta_ref`` is taken over the
-    points the rungs' errors were (:func:`~nanopnp.validation.attribution.reference_error`).
-    """
     from nanopnp.validation.attribution import reference_error
     from nanopnp.validation.comsol import load_golden
 
@@ -1000,43 +834,30 @@ def _reference_errors(
 
 
 def _store(args: argparse.Namespace) -> Store:
-    """Return the artefact store a validate subcommand was pointed at."""
     from nanopnp.io.store import Store
 
     return Store(args.store)
 
 
 def _resolved(case: CaseDocument) -> ResolvedCase:
-    """Return a case document resolved, for the identity hash."""
     from nanopnp.pipeline.case import resolve
 
     return resolve(case)
 
 
 def _identity(run: ReopenedRun) -> str:
-    """Return a finished run's Tier-3 identity hash, read from what the run recorded (VAL-03)."""
     from nanopnp.validation.comsol import case_identity
 
     return case_identity(_resolved(run.case), recorded=run.upstream)
 
 
 def _unit(field: str) -> str:
-    """Return the SI unit a self-golden declares for one field."""
     from nanopnp.validation.comsol import field_unit
 
     return field_unit(field)
 
 
 def _self_quantities(recorded: Mapping[str, Canonicalisable]) -> dict[str, Canonicalisable]:
-    """Return the ``quantities`` block of a self-golden manifest, from a run record.
-
-    ``bias_V`` and ``current_A`` are the two the manifest requires, and a run that
-    recorded neither is refused rather than defaulted to zero: a golden declaring
-    0 A is not a golden with a missing current, it is a golden whose current
-    comparison :func:`~nanopnp.validation.compare.compare_quantities` then skips
-    for having a reference of exactly zero — a comparison quietly covering one
-    quantity fewer, which is the thing the unavailable list exists to prevent.
-    """
     from nanopnp.validation.runs import RunError
 
     wanted = ("bias_V", "current_A", "currents_A", "transport_number", "conductance_S", "eof_m3_s")
@@ -1054,13 +875,11 @@ def _self_quantities(recorded: Mapping[str, Canonicalisable]) -> dict[str, Canon
 def _stabilisation_currents(
     recorded: Mapping[str, Canonicalisable],
 ) -> Mapping[str, float] | None:
-    """Return the section 6.7 per-species stabilisation contribution a run recorded."""
     value = recorded.get("stabilisation_currents_A")
     return dict(value) if isinstance(value, dict) else None
 
 
 def _probe_grid(document: ProbeDocument, resolved: ReopenedRun) -> ProbeGrid:
-    """Return the probe grid bound to a reopened run's own mesh."""
     from nanopnp.validation.compare import probe_domains
     from nanopnp.validation.probe import ProbeGrid
 
@@ -1070,7 +889,6 @@ def _probe_grid(document: ProbeDocument, resolved: ReopenedRun) -> ProbeGrid:
 
 
 def _sample(resolved: ReopenedRun, grid: ProbeGrid) -> dict[str, np.ndarray]:
-    """Return a reopened run's fields on a probe grid, in SI."""
     from nanopnp.validation.compare import sample_on_probe
 
     return sample_on_probe(resolved.solution, grid, scales=resolved.scales)
@@ -1079,7 +897,6 @@ def _sample(resolved: ReopenedRun, grid: ProbeGrid) -> dict[str, np.ndarray]:
 def _sampled_run(
     args: argparse.Namespace,
 ) -> tuple[ProbeDocument, dict[str, np.ndarray], ReopenedRun]:
-    """Return the probe document, the sampled fields and the reopened run."""
     from nanopnp.validation.probe import load_probe
     from nanopnp.validation.runs import reopen
 
@@ -1176,9 +993,7 @@ def build_parser() -> argparse.ArgumentParser:
     mesh = subparsers.add_parser("mesh", help="write a gated MSH 4.1 mesh for a case to read")
     shapes = mesh.add_subparsers(dest="shape", required=True)
 
-    # The defaults are the 392-element idealised pore of the Tier-2 throughput
-    # benchmark: the coarsest mesh the NUM-34 wall-distance gate admits with the
-    # wall corrections on, so a first run finishes in seconds.
+    # Defaults: the coarsest mesh the NUM-34 gate admits with wall corrections on (392 elements).
     cylinder = _common(
         shapes.add_parser("cylinder", help="an idealised cylindrical pore through a membrane")
     )
@@ -1294,8 +1109,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     checked.set_defaults(handler=_validate)
 
-    # ``%%`` throughout the help strings below: argparse percent-formats help text,
-    # and a bare ``%G`` makes ``--help`` raise rather than print.
+    # %% throughout the help strings: argparse percent-formats help text, and a bare %G raises.
     grid = _common(steps.add_parser("export-grid", help="print the %%Grid axes COMSOL is given"))
     grid.add_argument("probe", type=Path, help="the nanopnp/probe/v0.5 document")
     grid.add_argument("--output", type=Path, default=None, help="write the axes to this file")
@@ -1325,9 +1139,8 @@ def build_parser() -> argparse.ArgumentParser:
     self_golden.add_argument(
         "--refinement", default="published", choices=("published", "refined_1"), help="VAL-04 level"
     )
-    # Required, not defaulted: the manifest refuses a blank ``export_date``, so a
-    # default of "" turns an omitted flag into an unclassified pydantic failure
-    # and exit 1. argparse's own exit 2 is what a missing argument means (IF-02).
+    # Required, not defaulted: a blank export_date is refused by the manifest and would exit
+    # 1; argparse's exit 2 is right.
     self_golden.add_argument(
         "--export-date", required=True, help="date recorded in the manifest, e.g. 2026-09-18"
     )
@@ -1361,22 +1174,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """Run the ``nanopnp`` command-line interface.
-
-    Parameters
-    ----------
-    argv
-        Argument vector, defaulting to ``sys.argv[1:]``.
-
-    Returns
-    -------
-    int
-        The process exit status of section 3.1's NOTE (IF-02): ``0`` success,
-        ``1`` unexpected, ``2`` usage, ``3`` the case, ``4`` a gate, ``5``
-        non-convergence, ``130`` cancellation. :func:`nanopnp.core.errors.classify`
-        maps the exception to the code; a traceback is printed only under
-        ``--traceback``, because a gate abort's diagnostic *is* the message.
-    """
+    """Run the ``nanopnp`` command-line interface and return its process exit status."""
     parser = build_parser()
     args = parser.parse_args(argv)
 
@@ -1386,9 +1184,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         parser.print_help()
         return EXIT_OK
 
-    # The flag is accepted before and after the subcommand, on separate destinations: argparse
-    # copies a subparser's namespace over the parent's, so a shared one would let `-vv run -v`
-    # collapse to one level.
+    # Separate destinations before and after the subcommand: a shared one would collapse
+    # `-vv run -v` to one level.
     _configure_logging(args.verbose + getattr(args, "subcommand_verbose", 0), args.log_file)
     if args.command == "reproduce" and args.tolerance is None:
         from nanopnp.pipeline.reproduce import DEFAULT_TOLERANCE

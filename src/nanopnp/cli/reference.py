@@ -1,16 +1,4 @@
-"""Renderers for the generated reference pages of the user documentation (VER-45).
-
-Each function here turns a live object of the package into Markdown: the case-file
-schema walk (:func:`nanopnp.io.case_paths.case_fields`), the argument parser
-(:func:`nanopnp.cli.build_parser`), the exit-code enumeration
-(:mod:`nanopnp.core.errors`) and the public surface (:data:`nanopnp.PUBLIC`). Nothing
-generated is committed: ``docs/scripts/generate.py`` calls these at build time, so a
-field, a flag or an exit class added later appears in the documentation without an
-edit to it, and a reference page cannot drift from the code it describes.
-
-They are pure — no file is written and no solver imported — so that Tier 1 can
-assert, in both directions, that each page covers exactly what it documents.
-"""
+"""Renderers for the generated reference pages of the user documentation."""
 
 from __future__ import annotations
 
@@ -46,8 +34,6 @@ __all__ = [
 ]
 
 USAGE_WIDTH = 88
-"""Column width usage lines are wrapped to; fixed so the output does not depend on
-the terminal that ran the build."""
 
 API_SECTIONS: dict[str, str] = {
     "nanopnp.pipeline.run": "Running a case",
@@ -59,14 +45,9 @@ API_SECTIONS: dict[str, str] = {
     "nanopnp.sweep.run": "Sweeps",
     "nanopnp.core.stages": "Stages, progress and cancellation",
 }
-"""The heading each defining module's names are documented under."""
-
-
-# -- the case file -------------------------------------------------------------
 
 
 def _type_name(annotation: object) -> str:
-    """Return a reader's name for a declared field type."""
     names: dict[object, str] = {
         str: "string",
         float: "number",
@@ -92,7 +73,6 @@ def _type_name(annotation: object) -> str:
 
 
 def _flow(value: FieldValue) -> str:
-    """Return a value as it would be written in a case file, on one line."""
     if value is None:
         return "unset"
     if isinstance(value, Path):
@@ -102,19 +82,10 @@ def _flow(value: FieldValue) -> str:
 
 
 def _cell(text: str) -> str:
-    """Escape a table cell."""
     return text.replace("|", "\\|").replace("\n", " ")
 
 
 def render_case_reference() -> str:
-    """Return the case-file reference: every editable field of the current case schema.
-
-    One row per path of :func:`~nanopnp.io.case_paths.case_fields`, grouped by section,
-    with the declared type, the schema's default, the values accepted where a
-    type or a live registry restricts them (:func:`~nanopnp.pipeline.checks.options_at`),
-    and, for a switch, the validated default the FR-25 manifest measures
-    deviations against (:data:`~nanopnp.io.defaults.VALIDATED_DEFAULT_CASE`).
-    """
     lines = [
         "# Case-file reference",
         "",
@@ -193,13 +164,9 @@ def render_case_reference() -> str:
     return "\n".join(lines)
 
 
-# -- the command line ----------------------------------------------------------
-
-
 def _parsers(
     parser: argparse.ArgumentParser,
 ) -> list[tuple[argparse.ArgumentParser, str]]:
-    """Return ``parser`` and every parser under it, depth first, with its help line."""
     found: list[tuple[argparse.ArgumentParser, str]] = [(parser, parser.description or "")]
     for action in parser._actions:
         if isinstance(action, argparse._SubParsersAction):
@@ -212,14 +179,12 @@ def _parsers(
 
 
 def _usage(parser: argparse.ArgumentParser) -> str:
-    """Return a parser's usage line at a fixed width."""
     formatter = argparse.HelpFormatter(prog=parser.prog, width=USAGE_WIDTH)
     formatter.add_usage(parser.usage, parser._actions, parser._mutually_exclusive_groups)
     return formatter.format_help().strip()
 
 
 def _expanded(parser: argparse.ArgumentParser, action: argparse.Action) -> str:
-    """Return an action's help text with argparse's ``%`` substitutions applied."""
     if not action.help:
         return ""
     formatter = argparse.HelpFormatter(prog=parser.prog, width=USAGE_WIDTH)
@@ -227,12 +192,10 @@ def _expanded(parser: argparse.ArgumentParser, action: argparse.Action) -> str:
 
 
 def command_parsers() -> list[tuple[str, argparse.ArgumentParser, str]]:
-    """Return ``(command, parser, help)`` for ``nanopnp`` and every subcommand under it."""
     return [(parser.prog, parser, text) for parser, text in _parsers(build_parser())]
 
 
 def render_cli_reference() -> str:
-    """Return the command-line reference: every command, its usage and its options."""
     lines = [
         "# Command-line reference",
         "",
@@ -275,7 +238,6 @@ def render_cli_reference() -> str:
 
 
 def render_exit_codes() -> str:
-    """Return the exit-code reference: the classes, and which exception maps to which."""
     lines = [
         "# Exit codes",
         "",
@@ -311,11 +273,7 @@ def render_exit_codes() -> str:
     return "\n".join(lines)
 
 
-# -- the Python API ------------------------------------------------------------
-
-
 def render_api_reference() -> str:
-    """Return the API reference over the IF-01 public surface, as mkdocstrings directives."""
     lines = [
         "# Python API",
         "",
