@@ -1,37 +1,4 @@
-"""Supplied fixed-charge and solid-fraction fields, and the conservation gate.
-
-The consumer half of FR-14: the solver reads a field somebody else produced, in
-the shape §5.3.1's NOTE fixes — a pydantic-validated header document,
-``schema: nanopnp/field/v0.5``, naming the quantity, its units, the grid, the axis
-cutoff of PHY-18, the declared ``Q_net`` where the producer knows one, and the
-data file. The header is what makes an OpenDX file usable at all: OpenDX has
-nowhere to record a ``Q_net`` or a unit, so a bare grid cannot say which of the
-three quantities it is, and the difference between them is a factor of ``2*pi*r``
-(§4.4 NOTE).
-
-The document lives here rather than in ``density/`` because §5.1 gives
-``density/`` the grid IO and this is a description of a *physical field* — which
-is also why :mod:`nanopnp.charge.dielectric` imports it rather than defining a
-second header for the solid fraction. One header shape for every quantity keeps
-the gates in one place.
-
-**The conservation check is two checks.** Under the axisymmetric volume element
-the Jacobian and PHY-16 step 6's ``1/(2*pi*r)`` cancel identically, so the
-global check is blind to how ``r`` enters (§4.4 NOTE). It is therefore reported
-and gated as a producer leg — the planar integral of the source grid against the
-declared ``Q_net`` — and a consumer leg — the integral over the deployed mesh
-against that planar integral. A single number against ``Q_net`` attributes
-nothing, which is exactly why the reference's own 1.25 % gap is uninterpretable
-(OPN-06).
-
-Four more things are measured because each can consume the QR-03 budget on its
-own, and none of them is visible in the total: the quadrature agreement between
-the ``Measures`` order and three orders above it, which is what says whether the
-deployed mesh resolves the field at all; the boundary-ring maximum, which bounds
-what the interpolant's zero padding threw away; the axis-guard deficit, which is
-the charge PHY-18 deletes; and the ramped per-``z``-plane cumulative, which
-localises a failure the total can hide.
-"""
+"""Supplied fixed-charge and solid-fraction fields, and the conservation gate."""
 
 from __future__ import annotations
 
@@ -180,24 +147,10 @@ size ``h``, 6e-4 on ClyA's 0.1 nm protein elements, where the ramp's kinks leave
 """
 
 
-class FieldDocumentError(ValueError):
-    """A field document is not one, or does not describe the data it names."""
+class FieldDocumentError(ValueError): ...
 
 
 class ChargeFieldError(ValueError):
-    """A supplied field failed one of the gates of PHY-19, QR-03 or §5.3.1.
-
-    Parameters
-    ----------
-    gate
-        Which gate failed, named as the manifest and the log name it.
-    quantity
-        The offending value, rendered.
-    location
-        Where it is, in ``(r, z)`` nm, when the gate has a location; ``None``
-        for a global one.
-    """
-
     def __init__(self, gate: str, quantity: str, location: str | None = None) -> None:
         where = f" at {location}" if location is not None else ""
         super().__init__(f"{gate}: {quantity}{where}")
@@ -206,44 +159,23 @@ class ChargeFieldError(ValueError):
         self.location = location
 
 
-# -- the header document ------------------------------------------------------
-
-
 class _Strict(BaseModel):
-    """Base for every block: unknown keys are rejected, and named in the error."""
-
     model_config = ConfigDict(extra="forbid")
 
 
 class GridSpec(_Strict):
-    """The grid descriptor the header declares, checked against the data.
-
-    Optional, and checked rather than used: a descriptor that disagrees with the
-    file is a header describing a different grid, which is the failure a
-    provenance record must not have.
-    """
-
     origin_nm: tuple[float, float]
     spacing_nm: tuple[float, float]
     shape: tuple[int, int]
 
 
 class DataSpec(_Strict):
-    """The data file a header refers to, and how to read it."""
-
     path: Path
     format: str | None = None
     sha256: str | None = None
 
 
 class FormSpec(_Strict):
-    """A named analytic form standing in for a data file (FR-16 generalised).
-
-    A field is data, named, with provenance. A free-text expression evaluated at
-    solve time would be arbitrary code whose provenance is a string; a registered
-    form with typed parameters is neither.
-    """
-
     name: str
     parameters: dict[str, float] = Field(default_factory=dict)
     origin_nm: tuple[float, float]
@@ -252,23 +184,12 @@ class FormSpec(_Strict):
 
 
 class FieldProvenance(_Strict):
-    """Where a field came from (FR-25)."""
-
     source: str
     citation: str | None = None
     notes: str | None = None
 
 
 class FieldDocument(_Strict):
-    """A supplied field's header (``nanopnp/field/v0.5``, §5.3.1 NOTE).
-
-    Raises
-    ------
-    ValueError
-        At construction, if the units do not belong to the quantity, or if the
-        document names neither or both of ``data:`` and ``form:``.
-    """
-
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
     schema_id: str = Field(alias="schema")
@@ -286,7 +207,6 @@ class FieldDocument(_Strict):
 
     @model_validator(mode="after")
     def _check(self) -> FieldDocument:
-        """Check the schema, the units and the single source of the values."""
         problems: list[str] = []
         if self.schema_id != FIELD_SCHEMA:
             problems.append(f"schema is {self.schema_id!r} and must be {FIELD_SCHEMA!r}")
@@ -322,16 +242,13 @@ class FieldDocument(_Strict):
 
     @property
     def q_net_C(self) -> float | None:
-        """The declared net charge in coulombs, or ``None`` if none was declared."""
         return None if self.q_net_e is None else self.q_net_e * ELEMENTARY_CHARGE
 
     @property
     def unit_factor(self) -> float:
-        """The factor from the declared units onto the canonical SI unit."""
         return QUANTITIES[self.quantity][self.units]
 
     def summary(self) -> dict[str, object]:
-        """Return what the FR-25 manifest records about this header."""
         return {
             "name": self.name,
             "quantity": self.quantity,
@@ -349,16 +266,6 @@ class FieldDocument(_Strict):
 
 
 def load_document(path: str | Path) -> FieldDocument:
-    """Read and validate a field header document.
-
-    Raises
-    ------
-    FileNotFoundError
-        If the file is not there.
-    FieldDocumentError
-        If it is not valid YAML, or fails validation. The message names every
-        offending key, as IF-03 requires of every schema in §5.3.
-    """
     source = Path(path)
     if not source.is_file():
         raise FileNotFoundError(f"no field document at {str(source)!r}")
@@ -381,24 +288,6 @@ def load_document(path: str | Path) -> FieldDocument:
 
 
 def load_grid(document: FieldDocument, *, base: Path) -> RadialGrid:
-    """Return the grid a document describes, with its values converted to SI.
-
-    Parameters
-    ----------
-    document
-        The validated header.
-    base
-        Directory a relative ``data.path`` is resolved against — the document's
-        own directory, so that a field travels as a pair of files.
-
-    Raises
-    ------
-    FieldDocumentError
-        If the declared grid descriptor disagrees with the data file, or if the
-        data file's recorded digest does not match its contents.
-    GridFormatError
-        If the data cannot be read in the format it names.
-    """
     import numpy as np
 
     if document.form is not None:
@@ -446,8 +335,6 @@ def load_grid(document: FieldDocument, *, base: Path) -> RadialGrid:
     return grid
 
 
-# -- the analytic form registry -----------------------------------------------
-
 FormBuilder: TypeAlias = "Callable[[np.ndarray, np.ndarray, Mapping[str, float]], np.ndarray]"
 """A named form: the two axes in nm and its parameters, to SI values ``[i_z, i_r]``."""
 
@@ -455,36 +342,16 @@ _FORMS: dict[str, FormBuilder] = {}
 
 
 def register_form(name: str, builder: FormBuilder) -> None:
-    """Register an analytic field form under ``name``.
-
-    Raises
-    ------
-    ValueError
-        If the name is already registered, which would silently change the
-        meaning of existing field documents.
-    """
     if name in _FORMS:
         raise ValueError(f"field form {name!r} is already registered")
     _FORMS[name] = builder
 
 
 def registered_forms() -> tuple[str, ...]:
-    """Return every registered form name, sorted."""
     return tuple(sorted(_FORMS))
 
 
 def create_form(spec: FormSpec) -> RadialGrid:
-    """Return the grid a :class:`FormSpec` describes, in canonical SI units.
-
-    Raises
-    ------
-    FieldDocumentError
-        If the form is not registered, or if a parameter it needs is unset. Both
-        messages name what is missing. A parameter the form does not read is not
-        refused — the builders take a mapping, not a signature — but a misspelt
-        one shows up as the *needed* one being absent, which is the same report
-        from the other end.
-    """
     import numpy as np
 
     builder = _FORMS.get(spec.name)
@@ -507,7 +374,6 @@ def create_form(spec: FormSpec) -> RadialGrid:
 
 
 def _uniform(r_nm: np.ndarray, z_nm: np.ndarray, parameters: Mapping[str, float]) -> np.ndarray:
-    """Return a constant field: ``value`` everywhere on the box."""
     import numpy as np
 
     return np.full((z_nm.size, r_nm.size), float(parameters["value"]), dtype=np.float64)
@@ -516,14 +382,6 @@ def _uniform(r_nm: np.ndarray, z_nm: np.ndarray, parameters: Mapping[str, float]
 def _gaussian_ring(
     r_nm: np.ndarray, z_nm: np.ndarray, parameters: Mapping[str, float]
 ) -> np.ndarray:
-    """Return the reference model's own smearing kernel, as one ring of charge.
-
-    ``charge_e / (pi w^2) * exp(-((r - r0)^2 + (z - z0)^2) / w^2)`` in C m^-2,
-    with ``w`` in metres, so its planar integral over the whole plane is exactly
-    ``charge_e`` elementary charges (`.knowledge/04` §3). That exactness is the
-    point: it gives the Tier-2 conservation benchmark a ``Q_net`` known in closed
-    form rather than one measured by the code under test.
-    """
     import numpy as np
 
     r0 = float(parameters["centre_r_nm"])
@@ -536,11 +394,6 @@ def _gaussian_ring(
 
 
 def _slab(r_nm: np.ndarray, z_nm: np.ndarray, parameters: Mapping[str, float]) -> np.ndarray:
-    """Return ``value`` inside an ``(r, z)`` box and zero outside it.
-
-    The sharp solid fraction of §4.4's NOTE, which must reproduce PHY-20's
-    piecewise assignment exactly, lives here.
-    """
     import numpy as np
 
     inside_r = (r_nm[None, :] >= parameters["r_min_nm"]) & (r_nm[None, :] <= parameters["r_max_nm"])
@@ -553,38 +406,14 @@ register_form("gaussian_ring", _gaussian_ring)
 register_form("slab", _slab)
 
 
-# -- the assembled field ------------------------------------------------------
-
-
 @dataclass(frozen=True)
 class ChargeField:
-    """A supplied fixed-charge field, ready to be assembled onto a mesh.
-
-    Parameters
-    ----------
-    document
-        The validated header.
-    grid
-        Its grid, values in the canonical SI unit of the quantity.
-    source
-        The header document's path, for provenance.
-    """
-
     document: FieldDocument
     grid: RadialGrid
     source: Path
     quadrature_order: ClassVar[int] = FIELD_QUADRATURE_ORDER
 
     def __post_init__(self) -> None:
-        """Refuse a quantity that is not a charge.
-
-        Raises
-        ------
-        FieldDocumentError
-            If the document carries a solid fraction. That is the dielectric's
-            field (:mod:`nanopnp.charge.dielectric`), and assembling it as a
-            charge would put a dimensionless number where C m^-3 belongs.
-        """
         if self.document.quantity not in CHARGE_QUANTITIES:
             raise FieldDocumentError(
                 f"inputs.charge names quantity {self.document.quantity!r}; a fixed-charge field is "
@@ -594,18 +423,9 @@ class ChargeField:
 
     @property
     def is_areal(self) -> bool:
-        """Whether the ``1/(2*pi*r)`` projection and the axis guard apply (PHY-18)."""
         return self.document.quantity == "areal_charge_density"
 
     def volume_density_C_m3(self) -> Expression:
-        """Return the SI volume charge density as a coefficient function.
-
-        PHY-16 step 6, verbatim: ``if(r < 0.01[nm], 0, rhoq_pore(r, z)/(2 pi r))``
-        for an areal density, and the interpolant itself for a volume density —
-        which is why the quantity is declared rather than inferred. Applying the
-        projection twice, or not at all, is invisible in the conservation check
-        (§4.4 NOTE).
-        """
         import ngsolve as ngs
 
         interpolant = coefficient(self.grid)
@@ -617,29 +437,12 @@ class ChargeField:
         return ngs.IfPos(ngs.x - cutoff, projected, 0.0)
 
     def fixed_charge_C_m3(self) -> FixedCharge:
-        """Return the SI volume density with the rule it is assembled with (PHY-19, REV-72)."""
         return FixedCharge(self.volume_density_C_m3(), self.quadrature_order)
 
     def assemble(self, scales: Scales) -> FixedCharge:
-        """Return the dimensionless ``rho~_pore`` the weak form takes (NUM-09).
-
-        Parameters
-        ----------
-        scales
-            The model's scale set; :attr:`~nanopnp.core.scaling.Scales.charge_density_C_m3`
-            is the one this divides by.
-        """
         return self.fixed_charge_C_m3().scaled(1.0 / scales.charge_density_C_m3)
 
     def guard_deficit_C(self) -> float:
-        """Return the charge the PHY-18 axis guard deletes, in coulombs.
-
-        Computed on the grid samples inside the guard radius rather than assumed
-        negligible: the innermost ClyA atoms sit at ``r >~ 1.6 nm`` and the strip
-        sees ``exp(-354)`` of peak, but a different structure — or an analyte on
-        the axis — makes it real, and a deficit nobody measured is a deficit
-        nobody can rule out.
-        """
         if not self.is_areal:
             return 0.0
         return self.grid.integral(
@@ -647,40 +450,11 @@ class ChargeField:
         )
 
     def planar_integral_C(self) -> float:
-        """Return ``Q_grid``: the source grid's own charge, in coulombs.
-
-        The planar integral for an areal density, because the ``2*pi*r`` cancels
-        (§4.4 NOTE); the radially weighted one for a volume density, which gets
-        no such cancellation and whose check therefore *does* exercise the
-        Jacobian.
-        """
         if self.is_areal:
             return self.grid.planar_integral()
         return self.grid.integral(radial=True)
 
     def mesh_integral_C(self, mesh: Mesh, measures: Measures, *, refined: bool = False) -> float:
-        """Return ``Q_mesh``: the assembled density integrated over the mesh.
-
-        The ``2*pi`` is restored here, once and in this layer.
-        :meth:`~nanopnp.numerics.measures.Measures.integrate` applies the ``r``
-        weight of the axisymmetric forms and not the ``2*pi``, which cancels from
-        both sides of every weak form and does not cancel from a charge; the
-        Phase-0 rule names ``io/``, ``sweep/`` and ``gui/`` as the layers that
-        must not re-apply it, and those consume a QoI rather than produce one.
-
-        Parameters
-        ----------
-        mesh
-            The deployed mesh, in nm.
-        measures
-            The symmetry policy, for the ``r`` weight. The order is
-            :attr:`quadrature_order`, the explicit rule the solve assembles the
-            source with, which is what makes this the conservation of the charge
-            the solver actually carries (PHY-19 NOTE, WP41 D2).
-        refined
-            Evaluate :data:`QUADRATURE_REFINEMENT` orders above the assembly
-            rule, for the agreement check.
-        """
         rule_order = self.quadrature_order + (QUADRATURE_REFINEMENT if refined else 0)
         integral_nm = measures.integrate(
             self.volume_density_C_m3(),
@@ -700,7 +474,6 @@ class ChargeField:
         *,
         ramp_nm: float = DEFAULT_RAMP_NM,
     ) -> tuple[float, ...]:
-        """Return the mesh-side cumulative below each plane, ramped (§4.4 NOTE)."""
         import ngsolve as ngs
 
         density = self.volume_density_C_m3()
@@ -724,21 +497,10 @@ class ChargeField:
     def grid_cumulative_C(
         self, planes_nm: Sequence[float], *, ramp_nm: float = DEFAULT_RAMP_NM
     ) -> tuple[float, ...]:
-        """Return the grid-side cumulative below each plane, ramped identically."""
         return self.grid.cumulative(planes_nm, ramp_nm=ramp_nm, radial=not self.is_areal)
 
 
 def load_field(path: str | Path) -> ChargeField:
-    """Read a field document and its grid, and return the charge field.
-
-    Raises
-    ------
-    FieldDocumentError
-        If the document is invalid, disagrees with its data, or names a quantity
-        that is not a charge.
-    GridFormatError
-        If the data file cannot be read.
-    """
     source = Path(path)
     document = load_document(source)
     return ChargeField(
@@ -746,19 +508,7 @@ def load_field(path: str | Path) -> ChargeField:
     )
 
 
-# -- the conservation report ---------------------------------------------------
-
-
 def _relative(deviation: float, reference: float) -> float:
-    """Return ``deviation / reference``, and infinity where the reference is zero.
-
-    Every leg of the report is a *relative* error, and a field whose reference
-    charge is zero has none: ``0.0`` would report a conserved charge and a bare
-    ``ZeroDivisionError`` would abort with a traceback rather than a gate name.
-    Infinity is neither — it fails every tolerance, and
-    :func:`check_conservation` refuses the case ahead of them all with a
-    diagnostic that says why (QR-12).
-    """
     if reference == 0.0:
         return 0.0 if deviation == 0.0 else float("inf")
     return deviation / reference
@@ -766,26 +516,6 @@ def _relative(deviation: float, reference: float) -> float:
 
 @dataclass(frozen=True)
 class ConservationReport:
-    """What PHY-19's assertion measured, decomposed (§4.4 NOTE, QR-03).
-
-    Parameters
-    ----------
-    q_net_C, q_grid_C, q_mesh_C
-        The producer's declared charge, the source grid's own planar integral,
-        and the integral over the deployed mesh. ``q_net_C`` is ``None`` when the
-        producer declared none, and the producer leg is then not run.
-    q_mesh_refined_C
-        The same mesh integral :data:`QUADRATURE_REFINEMENT` orders higher.
-    guard_deficit_C
-        The charge the PHY-18 axis guard deletes.
-    ring, interior_maximum
-        The grid's boundary-ring maximum and its interior maximum, in the
-        quantity's own units.
-    planes_nm, grid_cumulative_C, mesh_cumulative_C, ramp_nm
-        The per-plane check: the planes, both sides, and the ramp width both
-        were evaluated with.
-    """
-
     q_net_C: float | None
     q_grid_C: float
     q_mesh_C: float
@@ -800,43 +530,28 @@ class ConservationReport:
 
     @property
     def reference_C(self) -> float:
-        """The magnitude every absolute tolerance is taken against.
-
-        ``|Q_net|`` when the producer declared one, and ``|Q_grid|`` otherwise:
-        skipping the whole assertion because its reference is absent is how a
-        conservation failure reaches a published number (§4.4 NOTE).
-        """
         return abs(self.q_net_C if self.q_net_C is not None else self.q_grid_C)
 
     @property
     def producer_error(self) -> float | None:
-        """``(Q_grid - Q_net) / |Q_net|``, or ``None`` if none was declared."""
         if self.q_net_C is None:
             return None
         return _relative(self.q_grid_C - self.q_net_C, abs(self.q_net_C))
 
     @property
     def consumer_error(self) -> float:
-        """``(Q_mesh - Q_grid) / |Q_grid|``: interpolation, quadrature, footprint."""
         return _relative(self.q_mesh_C - self.q_grid_C, abs(self.q_grid_C))
 
     @property
     def quadrature_error(self) -> float:
-        """``|Q_mesh(order) - Q_mesh(order + 3)| / reference``."""
         return _relative(abs(self.q_mesh_C - self.q_mesh_refined_C), self.reference_C)
 
     @property
     def ring_ratio(self) -> float:
-        """The boundary ring against the grid's interior maximum."""
         return self.ring.value / self.interior_maximum if self.interior_maximum else 0.0
 
     @property
     def worst_plane(self) -> tuple[float, float]:
-        """The plane with the largest cumulative disagreement, and that error.
-
-        A NaN error ranks above every number: ``max`` over tuples does not order
-        NaN, so it would otherwise report whichever finite plane it met first.
-        """
         if not self.planes_nm:
             return (float("nan"), 0.0)
         errors = [
@@ -849,7 +564,6 @@ class ConservationReport:
         return (plane, error)
 
     def summary(self) -> dict[str, object]:
-        """Return the manifest's record of this check (FR-25, §5.3.3)."""
         plane, plane_error = self.worst_plane
         return {
             "q_net_e": None if self.q_net_C is None else self.q_net_C / ELEMENTARY_CHARGE,
@@ -881,11 +595,6 @@ class ConservationReport:
 
 
 def default_planes(field: ChargeField, count: int = DEFAULT_PLANE_COUNT) -> tuple[float, ...]:
-    """Return a ladder of ``z`` planes spanning the grid, ends excluded.
-
-    The ends carry no information — the cumulative is 0 below the first and
-    ``Q_grid`` above the last, both of which the global check already tests.
-    """
     (_, _), (z_min, z_max) = field.grid.extent_nm
     step = (z_max - z_min) / (count + 1)
     return tuple(z_min + step * (index + 1) for index in range(count))
@@ -899,12 +608,6 @@ def conservation(
     planes_nm: Sequence[float] | None = None,
     ramp_nm: float = DEFAULT_RAMP_NM,
 ) -> ConservationReport:
-    """Measure PHY-19's assertion on the deployed mesh, without gating it.
-
-    Separate from :func:`check_conservation` so that a caller can record the
-    numbers for a field that fails — which is what a diagnostic run needs, and
-    what makes the failure attributable.
-    """
     planes = tuple(planes_nm) if planes_nm is not None else default_planes(field)
     return ConservationReport(
         q_net_C=field.document.q_net_C,
@@ -923,32 +626,6 @@ def conservation(
 
 @dataclass(frozen=True)
 class DepositConservation:
-    """PHY-19's assertion for a deposited charge: two legs, and every plane against the atoms.
-
-    The producer path of the §4.4 NOTE (WP28 D6). The producer leg compares the
-    lattice's trapezoid integral with ``Q_net``, the frames' mean of ``sum q_i``;
-    the consumer leg the deployed field, integrated at the solve's order, with the
-    lattice. Both are exact by construction, so they guard the construction. The
-    per-plane check is the discriminating one, and its reference is **the source
-    atoms** in closed form, under ``1/2 erfc((z - p)/s)``: the lattice and the
-    deployed field are each gated against them.
-
-    Parameters
-    ----------
-    q_net_C, q_grid_C, q_mesh_C, q_mesh_refined_C
-        ``Q_net``; the lattice's planar integral; the deployed field's integral at
-        the solve's order and :data:`QUADRATURE_REFINEMENT` orders above it.
-    guard_deficit_C
-        The charge PHY-18's axis guard would delete if the exported lattice were
-        re-read through ``inputs.charge``: recorded, not gated.
-    ring, interior_maximum
-        The lattice's boundary ring and its interior maximum, in C m^-2.
-    planes_nm, smoothing_nm
-        The planes and the ``s`` of their weight.
-    source_cumulative_C, grid_cumulative_C, mesh_cumulative_C
-        Each plane's charge under the weight: the atoms, the lattice, the mesh.
-    """
-
     q_net_C: float
     q_grid_C: float
     q_mesh_C: float
@@ -964,34 +641,25 @@ class DepositConservation:
 
     @property
     def reference_C(self) -> float:
-        """``|Q_net|``: every relative error here is taken against it."""
         return abs(self.q_net_C)
 
     @property
     def producer_error(self) -> float:
-        """``(Q_grid - Q_net) / |Q_net|``: the kernel and its renormalisation."""
         return _relative(self.q_grid_C - self.q_net_C, abs(self.q_net_C))
 
     @property
     def consumer_error(self) -> float:
-        """``(Q_mesh - Q_grid) / |Q_grid|``: the projection and the mesh's coverage."""
         return _relative(self.q_mesh_C - self.q_grid_C, abs(self.q_grid_C))
 
     @property
     def quadrature_error(self) -> float:
-        """``|Q_mesh(order) - Q_mesh(order + 3)| / |Q_net|``."""
         return _relative(abs(self.q_mesh_C - self.q_mesh_refined_C), self.reference_C)
 
     @property
     def ring_ratio(self) -> float:
-        """The lattice's boundary ring against its interior maximum."""
         return self.ring.value / self.interior_maximum if self.interior_maximum else 0.0
 
     def worst_plane(self, side: str) -> tuple[float, float]:
-        """Return the plane where ``side`` (``grid`` or ``mesh``) is furthest from the atoms.
-
-        A NaN ranks above every number, as in :attr:`ConservationReport.worst_plane`.
-        """
         values = self.grid_cumulative_C if side == "grid" else self.mesh_cumulative_C
         if not self.planes_nm:
             return (float("nan"), 0.0)
@@ -1005,7 +673,6 @@ class DepositConservation:
         return (plane, error)
 
     def summary(self) -> dict[str, object]:
-        """Return the manifest's record of this check (FR-25, §5.3.3)."""
         grid_plane, grid_error = self.worst_plane("grid")
         mesh_plane, mesh_error = self.worst_plane("mesh")
         return {
@@ -1046,23 +713,6 @@ def deposit_conservation(
     planes_nm: Sequence[float] | None = None,
     smoothing_nm: float | None = None,
 ) -> DepositConservation:
-    """Measure PHY-19's assertion for a deposited charge, without gating it (D6).
-
-    Parameters
-    ----------
-    atoms
-        The source atoms, in the model frame: ``Q_net`` and the per-plane
-        reference.
-    grid
-        The export lattice, areal density in C m^-2.
-    density_C_m3
-        The deployed field, as the solve will assemble it.
-    mesh, measures
-        The deployed mesh and the solve's quadrature policy.
-    planes_nm, smoothing_nm
-        The planes, by default :data:`~nanopnp.charge.kernel.PLANE_COUNT` across
-        the atoms' z-extent, and ``s``, by default :data:`PLANE_SMOOTHING_NM`.
-    """
     import ngsolve as ngs
     import numpy as np
     from scipy.special import erfc
@@ -1114,18 +764,6 @@ def deposit_conservation(
 
 
 def check_deposit_conservation(report: DepositConservation) -> DepositConservation:
-    """Gate a deposit's conservation report, aborting on the first failure (D6, QR-12).
-
-    The order of :func:`check_conservation`: truncation and quadrature first,
-    because each explains a conservation failure; then the producer leg, the
-    consumer leg, and every plane, the lattice before the mesh, so that a failure
-    names the side of the interface it belongs to. Every comparison fails on NaN.
-
-    Raises
-    ------
-    ChargeFieldError
-        Naming the gate, the quantity and, where there is one, its location.
-    """
     if not report.reference_C > NEUTRAL_Q_NET_E * ELEMENTARY_CHARGE:
         raise ChargeFieldError(
             "the protonation artefact carries no net charge",
@@ -1178,28 +816,6 @@ def check_deposit_conservation(report: DepositConservation) -> DepositConservati
 
 
 def check_conservation(report: ConservationReport) -> ConservationReport:
-    """Gate a conservation report, aborting on the first failure (QR-12).
-
-    The order is deliberate: the truncation and quadrature gates come first
-    because each explains a conservation failure, and reporting "charge is not
-    conserved" when the real fact is "this grid was cut short" or "this mesh
-    cannot resolve this field" names the wrong culprit.
-
-    Every comparison is written so that a NaN fails it: ``nan > tol`` is False,
-    and a grid carrying one NaN sample makes every leg NaN, so the gates written
-    the other way round passed it whole.
-
-    Returns
-    -------
-    ConservationReport
-        ``report`` itself, so a caller can gate and record in one expression.
-
-    Raises
-    ------
-    ChargeFieldError
-        Naming the gate, the offending quantity and, where there is one, its
-        location.
-    """
     if report.reference_C == 0.0:
         raise ChargeFieldError(
             "the supplied field carries no reference charge",

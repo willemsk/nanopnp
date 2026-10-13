@@ -1,34 +1,4 @@
-"""PHY-16 step 6: the lattice deposited on the deployed mesh by ``r``-weighted L2 projection (WP28).
-
-On each triangle ``K`` the deposit is the polynomial ``rho_h|K`` of degree ``k`` --
-the potential's element order -- solving
-
-``int_K rho_h v r dr dz = sum_{n in K} m_n v(x_n)``  for every ``v`` in ``P_k(K)``,
-
-where ``m_n = tau_n h^2 a_n / (2 pi)`` is the lattice's trapezoid mass at node
-``n`` and ``a_n = 2 pi r rho`` its areal density. Since ``rho r = a/(2 pi)``,
-nothing singular is sampled (*Design* §2). Every test function of the
-potential's space restricts to ``P_k(K)``, so the assembled source equals the
-lattice integral of the kernel against every test function: the projection adds
-no error of its own wherever the assembly integrates degree ``2k + 1`` (D13).
-
-**The basis** is the scaled monomials ``((r - r_K)/d_K)^a ((z - z_K)/d_K)^b``,
-``a + b <= k``, about each centroid and scaled by the diameter, so every Gram
-matrix is well conditioned. Each Gram is integrated by a collapsed Gauss rule
-exact to degree ``2k + 1``. The generated meshes are affine (nothing calls
-``Curve``), so the barycentric node location and the NGSolve geometry agree.
-
-**Each lattice node is counted in exactly one element**: the lowest-indexed one
-containing it, so a node on a shared edge is not counted twice. Charge on no
-element at all is refused, naming its ``(r, z)`` (D4, QR-12).
-
-**The payload** is the coefficients ``(elements, basis)`` in C m^-3, the order,
-and a digest of the element geometry they belong to. :func:`gridfunction` sets
-an NGSolve ``L2(order=k)`` field from them on a mesh whose element geometry
-hashes to the same digest, and refuses any other, naming both digests (D5).
-
-NumPy and NGSolve are imported inside the functions that use them (CLAUDE.md).
-"""
+"""PHY-16 step 6: the lattice deposited on the deployed mesh by ``r``-weighted L2 projection."""
 
 from __future__ import annotations
 
@@ -106,26 +76,11 @@ NM_TO_M = 1e-9
 """Metres per nanometre."""
 
 
-# -- the reference element ------------------------------------------------------
-
-
 def basis_exponents(order: int) -> tuple[tuple[int, int], ...]:
-    """Return the scaled-monomial exponents ``(a, b)``, ``a + b <= order``, by total degree."""
     return tuple((degree - b, b) for degree in range(order + 1) for b in range(degree + 1))
 
 
 def triangle_rule(degree: int) -> tuple[np.ndarray, np.ndarray]:
-    """Return a triangle quadrature exact for every polynomial of total degree ``degree``.
-
-    A collapsed (Duffy) product of Gauss-Legendre rules: ``n = ceil((degree + 2)/2)``
-    points a side, the collapse adding one degree in the outer direction.
-
-    Returns
-    -------
-    tuple of numpy.ndarray
-        Barycentric coordinates ``(points, 3)`` and weights summing to 1, so a
-        triangle's integral is its area times the weighted sum.
-    """
     import numpy as np
 
     count = max(1, math.ceil((degree + 2) / 2))
@@ -141,7 +96,6 @@ def triangle_rule(degree: int) -> tuple[np.ndarray, np.ndarray]:
 
 
 def element_geometry(data: MeshData) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Return each triangle's centroid ``(m, 2)``, diameter ``(m,)`` and area ``(m,)``, in nm."""
     import numpy as np
 
     corners = data.vertices[data.triangles]
@@ -156,11 +110,6 @@ def element_geometry(data: MeshData) -> tuple[np.ndarray, np.ndarray, np.ndarray
 
 
 def geometry_digest(data: MeshData) -> str:
-    """Return the digest of the element geometry: every triangle's corners, in element order (D5).
-
-    A mesh with the same triangles in another order, or one vertex moved, is
-    another digest, and a deposit made on one is refused on the other.
-    """
     import numpy as np
 
     return content_hash(
@@ -169,12 +118,6 @@ def geometry_digest(data: MeshData) -> str:
 
 
 def mesh_geometry_digest(mesh: Mesh) -> str:
-    """Return :func:`geometry_digest` of an NGSolve mesh, read from its own arrays.
-
-    Read from the mesh NGSolve will assemble on, not from the :class:`MeshData`
-    it was built from, so the assertion that the two number their elements
-    alike is made against NGSolve's own element order (D5).
-    """
     import numpy as np
 
     ngmesh = mesh.ngmesh
@@ -183,27 +126,7 @@ def mesh_geometry_digest(mesh: Mesh) -> str:
     return content_hash(GEOMETRY_SCHEMA, {"corners": np.ascontiguousarray(vertices[nodes])})
 
 
-# -- point location ---------------------------------------------------------------
-
-
 def locate(data: MeshData, points_nm: np.ndarray, *, cell_nm: float) -> np.ndarray:
-    """Return the lowest-indexed triangle containing each point, or -1 (*Design* §2).
-
-    The points are bucketed onto a uniform grid of ``cell_nm``; each triangle is
-    rasterised over the buckets its bounding box touches, and its candidates are
-    tested barycentrically, with :data:`BARYCENTRIC_TOL` of slack so that a point
-    on an edge is inside both elements and the lower index takes it.
-
-    Parameters
-    ----------
-    data
-        The mesh, in nm.
-    points_nm
-        ``(n, 2)`` ``(r, z)``.
-    cell_nm
-        The bucket size: the lattice spacing for lattice nodes, for which every
-        bucket holds exactly one node.
-    """
     import numpy as np
 
     points = np.asarray(points_nm, dtype=np.float64).reshape(-1, 2)
@@ -277,16 +200,7 @@ def locate(data: MeshData, points_nm: np.ndarray, *, cell_nm: float) -> np.ndarr
     return np.where(owner == np.iinfo(np.int64).max, -1, owner)
 
 
-# -- the projection ------------------------------------------------------------------
-
-
 def lattice_masses(grid: RadialGrid) -> tuple[np.ndarray, np.ndarray]:
-    """Return the lattice's nonzero nodes ``(n, 2)`` in nm and their masses ``m_n``.
-
-    ``m_n = tau_n h_r h_z a_n / (2 pi)`` with the lengths in nm and ``a_n`` in
-    C m^-2, scaled by 1e9 so that ``sum_n m_n v(x_n)`` is ``int rho v r dr dz`` with
-    ``rho`` in C m^-3 and ``r dr dz`` in nm^3 -- the units the mesh integral takes.
-    """
     import numpy as np
 
     weights = np.outer(grid.trapezium_weights("z"), grid.trapezium_weights("r"))
@@ -296,10 +210,10 @@ def lattice_masses(grid: RadialGrid) -> tuple[np.ndarray, np.ndarray]:
     return nodes, masses[i_z, i_r]
 
 
+# Monomials about each centroid, scaled by the diameter, keep every Gram matrix well conditioned.
 def _scaled(
     points: np.ndarray, centroid: np.ndarray, diameter: np.ndarray, order: int
 ) -> np.ndarray:
-    """Return the scaled monomials at ``points`` (``(..., 2)``) about each element's centroid."""
     import numpy as np
 
     xi = (points[..., 0] - centroid[..., 0]) / diameter
@@ -316,7 +230,6 @@ def _gram(
     *,
     weighted: bool,
 ) -> np.ndarray:
-    """Return every element's Gram matrix ``int_K phi_a phi_b r``, exact to degree ``2k + 1``."""
     import numpy as np
 
     barycentric, weights = triangle_rule(2 * order + 1)
@@ -336,35 +249,6 @@ def _gram(
 
 @dataclass(frozen=True)
 class Deposit:
-    """The deposited fixed charge: per-element polynomial coefficients on one mesh (D3, D5).
-
-    Parameters
-    ----------
-    coefficients
-        ``(elements, basis)`` in C m^-3, against :func:`basis_exponents` of
-        ``order`` about each element's centroid and scaled by its diameter.
-    order
-        ``k``, the potential's element order.
-    geometry_digest
-        :func:`geometry_digest` of the mesh the coefficients belong to.
-    centroids_nm, diameters_nm
-        The basis's centre and scale per element, in nm.
-    element_charge_C
-        Each element's charge, ``2 pi int_K rho_h r``: its lattice charge exactly.
-    uncovered
-        The largest lattice mass on no element, relative to the largest mass, and
-        its ``(r, z)`` in nm; zero and ``None`` when every node is covered.
-    nodes
-        Lattice nodes carrying mass, and how many of them no element holds.
-    weighted
-        Whether the Gram carried the ``r`` weight; ``False`` only for the broken
-        construction VER-01's consumer leg must fail (*Design* §5).
-
-    No wall-clock time is held: the same projection writes the same bytes, so
-    its recorded digest is reproducible (VER-23, WP32 D15). The time goes to the
-    log.
-    """
-
     coefficients: np.ndarray
     order: int
     geometry_digest: str
@@ -376,7 +260,6 @@ class Deposit:
     weighted: bool = True
 
     def write(self, path: Path) -> Path:
-        """Write the deposit as ``.npz``; return the path."""
         import numpy as np
 
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -399,10 +282,6 @@ class Deposit:
 
     @classmethod
     def read(cls, path: Path) -> Deposit:
-        """Read a deposit written by :meth:`write`.
-
-        A deposit stored before WP32 also carries ``seconds``; it is not read.
-        """
         import numpy as np
 
         with np.load(path, allow_pickle=False) as data:
@@ -424,11 +303,9 @@ class Deposit:
             )
 
     def charge_C(self) -> float:
-        """Return the deposit's total charge, ``sum_K Q_K``, in coulombs."""
         return math.fsum(self.element_charge_C.tolist())
 
     def evaluate(self, points_nm: np.ndarray, elements: np.ndarray) -> np.ndarray:
-        """Return ``rho_h`` in C m^-3 at ``points_nm`` ``(n, 2)``, each in its given element."""
         import numpy as np
 
         phi = _scaled(
@@ -440,7 +317,6 @@ class Deposit:
         return np.asarray(np.sum(phi * self.coefficients[elements], axis=-1))
 
     def material_charges_e(self, data: MeshData) -> dict[str, float]:
-        """Return the deposited charge per material, in e: where the charge was put (D4)."""
         import numpy as np
 
         from nanopnp.core.constants import ELEMENTARY_CHARGE
@@ -456,7 +332,6 @@ class Deposit:
         }
 
     def summary(self) -> dict[str, Canonicalisable]:
-        """Return what the stage-7 artefact records about the deposit (FR-25)."""
         ratio, where = self.uncovered
         return {
             "order": self.order,
@@ -479,34 +354,13 @@ def deposit(
     cancel: CancelToken | None = None,
     progress: Progress | None = None,
 ) -> Deposit:
-    """Project the lattice onto discontinuous ``P_order`` on ``data`` (PHY-16 step 6, D3).
-
-    Parameters
-    ----------
-    grid
-        The export lattice: areal density in C m^-2.
-    data
-        The deployed mesh.
-    order
-        ``k``: the potential's element order.
-    weighted
-        Carry the ``r`` weight in the Gram; ``False`` only for a broken
-        construction under test.
-    cancel, progress
-        Checked and reported before the projection (D12).
-
-    Raises
-    ------
-    ChargeFieldError
-        Where lattice mass falls on no element, more than :data:`UNCOVERED_TOL`
-        of the largest mass, naming its ``(r, z)`` (D4).
-    """
     import numpy as np
 
     started = time.perf_counter()
     check_cancelled(cancel, "locating the lattice in the mesh")
     report(progress, 0.0, "locating the lattice nodes in the mesh")
     nodes, masses = lattice_masses(grid)
+    # A node is counted in its lowest-indexed element only, so a shared-edge node is not doubled.
     owner = locate(data, nodes, cell_nm=min(grid.spacing_nm))
     missing = owner < 0
     largest = float(np.max(np.abs(masses))) if masses.size else 0.0
@@ -555,26 +409,12 @@ def deposit(
     )
 
 
-# -- the frame check ---------------------------------------------------------------
-
-
 @dataclass(frozen=True)
 class SolidShare:
-    """Where the atom centres sit: ``sum |q_i|`` per material, and the solids' share (D4).
-
-    Parameters
-    ----------
-    share
-        The share of ``sum |q_i|`` centred in a solid material.
-    by_material
-        ``sum |q_i|`` per material, in e, with ``outside`` for atoms on no element.
-    """
-
     share: float
     by_material: dict[str, float]
 
     def summary(self) -> dict[str, Canonicalisable]:
-        """Return the record of the check."""
         return {
             "solid_share": self.share,
             "minimum": SOLID_SHARE_MIN,
@@ -585,15 +425,6 @@ class SolidShare:
 def check_solid_share(
     atoms: SourceAtoms, data: MeshData, solids: tuple[str, ...], *, cell_nm: float
 ) -> SolidShare:
-    """Refuse a structure whose charge is not centred in the mesh's solids (D4, QR-12).
-
-    Raises
-    ------
-    ChargeFieldError
-        If less than :data:`SOLID_SHARE_MIN` of ``sum |q_i|`` has its atom centres
-        in a solid material, naming the share and the frame shift the atoms were
-        placed with.
-    """
     import numpy as np
 
     points = np.stack([atoms.r_nm, atoms.z_nm], axis=1)
@@ -620,18 +451,7 @@ def check_solid_share(
     return SolidShare(share=share, by_material=by_material)
 
 
-# -- the transfer -----------------------------------------------------------------
-
-
 def gridfunction(deposit: Deposit, mesh: Mesh) -> Expression:
-    """Return the deposit as an NGSolve ``L2(order=k)`` field on ``mesh``, in C m^-3 (D5).
-
-    Raises
-    ------
-    ChargeFieldError
-        If the mesh's element geometry, read from NGSolve, does not hash to the
-        deposit's digest: another mesh, or this one with its elements permuted.
-    """
     import ngsolve as ngs
 
     found = mesh_geometry_digest(mesh)
@@ -675,14 +495,6 @@ def gridfunction(deposit: Deposit, mesh: Mesh) -> Expression:
 
 @dataclass(frozen=True)
 class DepositedCharge:
-    """A deposited fixed charge bound to the mesh it will be assembled on (D5).
-
-    Behind the interface the solve, the restore and the export read of a
-    supplied :class:`~nanopnp.charge.fields.ChargeField`: a volume density and
-    its nondimensional form. It is never an areal density, so no axis guard or
-    ``1/(2 pi r)`` applies (PHY-18).
-    """
-
     deposit: Deposit
     field: Expression
 
@@ -691,17 +503,13 @@ class DepositedCharge:
 
     @classmethod
     def bind(cls, deposit: Deposit, mesh: Mesh) -> DepositedCharge:
-        """Return the deposit set on ``mesh``; :func:`gridfunction` says what is refused."""
         return cls(deposit=deposit, field=gridfunction(deposit, mesh))
 
     def volume_density_C_m3(self) -> Expression:
-        """Return the volume charge density, C m^-3: the ``L2(order=k)`` field itself."""
         return self.field
 
     def fixed_charge_C_m3(self) -> FixedCharge:
-        """Return the SI density; its rule is ``quadrature_order``, None being the estimate."""
         return FixedCharge(self.field, self.quadrature_order)
 
     def assemble(self, scales: Scales) -> FixedCharge:
-        """Return the dimensionless ``rho~_pore`` the weak form takes (NUM-09)."""
         return self.fixed_charge_C_m3().scaled(1.0 / scales.charge_density_C_m3)
