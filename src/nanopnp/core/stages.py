@@ -1,30 +1,4 @@
-"""The stage protocol, and the registry that introspects stages without importing them.
-
-FR-27 requires every pipeline stage of section 5.2 to be independently
-invocable, cancellable and introspectable, and section 5.3.2 makes each one a
-pure function of its inputs by keying its artefact on their hashes. Three
-consequences are all this module holds.
-
-**Introspection must not import the stage.** ``nanopnp stage --list`` and the
-desktop shell's stage browser exist to say what a stage takes and produces; if
-answering that imported ``nanopnp.solve.stage`` it would import NGSolve, which
-costs about 370 ms in every CLI, GUI and sweep-worker process. So the registry
-holds each stage's :class:`StageDescription` *beside* a ``"module:attribute"``
-target string, and :func:`create` is the only function that resolves it.
-
-**Cancellation is cooperative.** A :class:`CancelToken` is checked between rungs
-and inside the damped-Newton callback, and :class:`Cancelled` unwinds the solve.
-Interrupting a UMFPACK factorisation would need a subprocess and a signal; the
-desktop shell has one above this layer (ADR-004).
-
-**Progress is a fraction, not a log line.** ``progress(fraction, message)`` is
-monotone in [0, 1] and ends at 1, so a caller can drive a bar without parsing
-anything. What a caller has to *act* on travels beside it as data:
-:class:`StageHook` carries the stage transition, :class:`ArtefactHook` the
-artefact each stage left in the store, and :class:`SolveHook` the continuation
-rung and the Newton step. All three exist because the alternative is a caller
-parsing a caption, which makes a display format into an interface.
-"""
+"""The stage protocol, and the registry that introspects stages without importing them."""
 
 from __future__ import annotations
 
@@ -63,8 +37,6 @@ __all__ = [
 
 
 class StageName(StrEnum):
-    """Canonical identifiers of all built-in pipeline stages (section 5.2)."""
-
     CASE = "case"
     STRUCTURE = "structure"
     DENSITY = "density"
@@ -98,23 +70,14 @@ StageNameLiteral: TypeAlias = Literal[
 StageIdentifier: TypeAlias = StageName | StageNameLiteral
 
 StageOption: TypeAlias = Any
-"""A keyword argument passed through to a stage's constructor."""
 
 if TYPE_CHECKING:  # pragma: no cover - imported for annotations only
-    # ``io`` depends on ``core`` and never the other way round at run time. The
-    # protocol below still has to name the artefact it returns, and
-    # ``from __future__ import annotations`` keeps that name a string, so the
-    # dependency stays where it belongs: in the type checker.
+    # ``io`` depends on ``core``, never the reverse at run time
     from nanopnp.io.artefact import Artefact, StageInputs
 
 
 class Cancelled(RuntimeError):  # noqa: N818 - see the docstring: this is not a failure
-    """A stage was cancelled through its :class:`CancelToken` and did not finish.
-
-    Distinct from an error: nothing is wrong, the caller asked to stop. A
-    cancelled stage writes no artefact, so the store never holds a partial
-    result (section 5.3.2).
-    """
+    """A stage was cancelled through its cancel token and did not finish."""
 
 
 class Progress(Protocol):
@@ -125,75 +88,19 @@ class Progress(Protocol):
 
 
 class StageHook(Protocol):
-    """Called before each stage of a pipeline walk, with the stage's position.
-
-    The structural counterpart of the ``"stage <name>"`` line
-    :func:`~nanopnp.pipeline.run.run_document` reports through :class:`Progress`. Both
-    exist because they answer different questions and only one of them can be
-    answered honestly by a string: a progress bar wants a fraction and a caption,
-    and a caller that has to *act* on the stage — the desktop shell's run panel,
-    which shows which stage is running and how many are left — wants the name
-    and the position as data.
-
-    Recovering them by parsing the caption would make a display format into an
-    interface: the first person to widen it would move the panel without
-    touching it. The solve stage's ``on_rung`` callback is the same idea one
-    level down.
-    """
+    """Called before each stage of a pipeline walk, with the stage's position."""
 
     def __call__(self, name: str, index: int, total: int) -> None:
         """Report that stage ``index`` of ``total`` (0-based) is about to run."""
 
 
 class SolveHook(Protocol):
-    """Called by the solve with each continuation rung and each Newton step.
-
-    :class:`StageHook` one level down, and for the same reason it exists: the
-    residual reaches a :class:`Progress` caller only inside a ``:.3e`` string,
-    and a convergence plot's whole subject is six or more orders of that number.
-    Recovering it from the caption would make a display format into an
-    interface.
-
-    Two methods rather than two hooks, so that threading it through the pipeline
-    is one object; and :meth:`rung` always precedes the steps it scopes, which is
-    what lets a reader band a series by rung rather than by a running iteration
-    count. A rung may report no step at all, and :meth:`rung` says in advance
-    whether one is even possible, because the two reasons for the silence are
-    different facts and neither is visible from the silence itself.
-
-    Plain scalars only. This module is on the command line's import path, and
-    naming :class:`~nanopnp.numerics.newton.NewtonStep` here would import NGSolve
-    for a type the CLI never constructs.
-    """
+    """Called by the solve with each continuation rung and each Newton step."""
 
     def rung(
         self, name: str, stage: int, index: int, total: int, reporting: bool, tolerance: float
     ) -> None:
-        """Report that rung ``index`` of ``total`` (0-based) is about to be solved.
-
-        Parameters
-        ----------
-        name
-            The rung's name, as the ladder and the run record give it.
-        stage
-            The NUM-18 stage number this rung belongs to; a ramp expands into
-            several rungs sharing one.
-        index, total
-            The rung's position in the ladder, 0-based.
-        reporting
-            Whether this rung's solve was given a Newton callback at all. NUM-18's
-            electrostatic stages are not coupled models and take none, so they
-            report no step by construction; a rung that *is* reporting and still
-            reports no step converged on entry, its residual already at the
-            absolute floor before its first step, and is not a missing record. A
-            reader told only the silence cannot tell the two apart.
-        tolerance
-            The relative tolerance this rung is solved to. NUM-16's per-field
-            update test is measured against it — the other half of the criterion
-            is the absolute residual floor — so a reader holding the steps and
-            this number can say what the solver tested rather than assuming a
-            default, and can say it without importing the solver to read one.
-        """
+        """Report that rung ``index`` of ``total`` (0-based) is about to be solved."""
 
     def step(
         self,
@@ -204,71 +111,19 @@ class SolveHook(Protocol):
         trials: int,
         forced: bool,
     ) -> None:
-        """Report one accepted Newton step of the rung most recently announced.
-
-        The fields of :class:`~nanopnp.numerics.newton.NewtonStep`, as numbers:
-        ``residual`` after the step, ``update`` the relative update on the
-        *undamped* direction, and ``forced`` whether NUM-16 accepted the step at
-        minimum damping without reducing the residual.
-        """
+        """Report one accepted Newton step of the rung most recently announced."""
 
 
 class ArtefactHook(Protocol):
-    """Called after each stage of a pipeline walk, once its artefact is in the store.
-
-    :class:`StageHook` fires *before* a stage and can say nothing about what it
-    produced; this fires *after*, with the artefact's identity. The desktop
-    shell's geometry views read each stage's payload as it lands, and the only
-    other way to learn which store entry a stage produced would be to parse the
-    ``"stage <name>"`` caption and re-key the stage — a display format made into
-    an interface, and a second walk over the graph (VER-43, VER-55).
-
-    It fires for a stage served from the store as much as for one that ran,
-    with ``cached`` saying which. Unlike a cached solve, which has no Newton
-    history to report, a cached stage still has an artefact to show.
-
-    The hook is **not an input**, for the reason :class:`SolveReporting` gives:
-    every key is taken before it is called and none is passed to it, so a
-    watched walk and an unwatched one land on one set of store entries
-    (section 5.3.2).
-
-    Plain scalars only, so that it crosses a process boundary as data; a
-    reader holding ``(schema, hash)`` and the store's root reads the payload
-    through :meth:`nanopnp.io.store.Store.get`.
-    """
+    """Called after each stage of a pipeline walk, once its artefact is in the store."""
 
     def __call__(self, name: str, schema: str, hash: str, cached: bool) -> None:
-        """Report that stage ``name`` produced artefact ``(schema, hash)``.
-
-        Parameters
-        ----------
-        name
-            The stage's registry name.
-        schema, hash
-            The artefact's schema identifier and content hash: its identity,
-            and its location in the store.
-        cached
-            Whether the store already held it, so the stage did no work.
-        """
+        """Report that stage ``name`` produced artefact ``(schema, hash)``."""
 
 
 @runtime_checkable
 class SolveReporting(Protocol):
-    """A stage that can be asked to report its Newton progress (:class:`SolveHook`).
-
-    A capability rather than a parameter on :class:`Stage`. ``progress`` and
-    ``cancel`` are on the stage protocol because they are universal; a Newton
-    hook is meaningful to exactly one of the twelve stages, and putting it on
-    the protocol would add a keyword to eleven signatures that can only ever
-    ignore it.
-
-    The hook is **not an input**. A caller rebinds the stage *after* its artefact
-    key has been taken, so a run watched from the desktop shell lands on the same
-    store entry as the same run from the command line (section 5.3.2).
-    """
-
-    def with_solve_hook(self, hook: SolveHook) -> Stage:
-        """Return a copy of this stage that reports through ``hook``."""
+    def with_solve_hook(self, hook: SolveHook) -> Stage: ...
 
 
 @runtime_checkable
@@ -276,16 +131,11 @@ class CancelToken(Protocol):
     """Asked by a running stage whether the caller has asked it to stop."""
 
     def cancelled(self) -> bool:
-        """Return whether the stage should raise :class:`Cancelled`."""
+        """Return whether the stage should raise ``Cancelled``."""
 
 
 class CancelFlag:
-    """A :class:`CancelToken` a caller sets from another thread.
-
-    The whole implementation: the desktop shell (ADR-004) and the sweep runner
-    need something to pass, and a test needs something that turns true at a
-    chosen point.
-    """
+    """A cancel token a caller sets from another thread."""
 
     def __init__(self) -> None:
         self._cancelled = False
@@ -299,83 +149,17 @@ class CancelFlag:
 
 
 def check_cancelled(cancel: CancelToken | None, where: str) -> None:
-    """Raise :class:`Cancelled` if ``cancel`` has been set.
-
-    Parameters
-    ----------
-    cancel
-        The token, or ``None`` when the caller passed none.
-    where
-        What was about to run, named in the exception so a cancelled run says
-        how far it got.
-
-    Raises
-    ------
-    Cancelled
-        If the token reports cancellation.
-    """
     if cancel is not None and cancel.cancelled():
         raise Cancelled(f"cancelled before {where}")
 
 
 def report(progress: Progress | None, fraction: float, message: str) -> None:
-    """Call ``progress`` if there is one, clamping the fraction into [0, 1]."""
     if progress is not None:
         progress(min(1.0, max(0.0, fraction)), message)
 
 
 @dataclass(frozen=True)
 class StageDescription:
-    """What a stage takes, produces and is called, without importing it.
-
-    Parameters
-    ----------
-    name
-        Registry key, e.g. ``"solve"``.
-    number
-        Stage number in the section 5.2 pipeline table.
-    title
-        The stage's name in that table.
-    inputs
-        Names of the inputs it consumes, as they appear in
-        :class:`~nanopnp.io.artefact.StageInputs`.
-    outputs
-        What the artefact carries, for a caller deciding whether to run it.
-    artefact_schema
-        Schema identifier of the artefact it emits.
-    takes_workspace
-        Whether its constructor takes ``workspace``, the directory it writes
-        into. Declared rather than discovered by catching :class:`TypeError`
-        from :func:`create`: a genuine ``TypeError`` raised inside a constructor
-        would be indistinguishable from an unwanted keyword, and the walk would
-        rebuild the stage with no workspace and write into the store root.
-    takes_store
-        Whether its constructor takes ``store``, the run's store, to cache parts
-        of its work in it.
-    key_is_artefact
-        Whether :meth:`Stage.key` returns the stage's artefact entire, summary
-        included: the stage writes no payload, and computing its key *is*
-        running it. The walk stores such a key as the artefact, and under
-        ``only`` resolves it rather than demanding it from the store, because
-        there is no payload for a hand substitution (FR-27) to substitute.
-    weight
-        The stage's share of a walk's progress fraction; finite and positive.
-    needs_section
-        The top-level case section the stage reads, named as its
-        :class:`~nanopnp.io.case.CaseDocument` field, or ``None``. A walk drops
-        the stage when the case leaves that section out.
-    optional_inputs
-        The members of ``inputs`` the stage runs without, because a case may
-        drop the stage producing them and the stage then reads the case instead:
-        ``region`` without ``contour`` on an ``inputs.profile`` case, for one.
-        Every other input is required, and a walk drops the stage when its case
-        drops one, refusing it as the walk's target (WP36 D13).
-
-    The last six are keyword-only and required, so a description missing one
-    is a :class:`TypeError` where it is written rather than a default the walk
-    acts on.
-    """
-
     name: str
     number: int
     title: str
@@ -391,17 +175,9 @@ class StageDescription:
     optional_inputs: tuple[str, ...]
 
     def __post_init__(self) -> None:
-        """Store ``name`` as a plain ``str``, whatever identifier type it was given.
-
-        A :class:`StageName` member compares and hashes as its value, but its
-        ``repr`` is ``<StageName.CASE: 'case'>``: left in the registry, that
-        reached every ``stage {name!r}`` diagnostic (a cancellation, a missing
-        upstream artefact) and :meth:`summary`'s "plain data".
-        """
         object.__setattr__(self, "name", str(self.name))
 
     def summary(self) -> dict[str, Any]:
-        """Return this description as plain data, for the CLI and the GUI."""
         return {
             "name": self.name,
             "number": self.number,
@@ -419,7 +195,7 @@ class StageDescription:
 
 
 class Stage(Protocol):
-    """One pipeline stage of section 5.2: typed inputs to a hashed artefact (FR-27)."""
+    """One pipeline stage: typed inputs to a hashed artefact."""
 
     name: str
 
@@ -427,14 +203,7 @@ class Stage(Protocol):
         """Return the registry's description of this stage."""
 
     def key(self, inputs: StageInputs) -> Artefact:
-        """Return the artefact :meth:`run` will produce, without its payload.
-
-        Taken before the stage runs, which is what makes the store a cache
-        (section 5.3.2), so it must be cheap: it hashes the parameters and the
-        upstream hashes and does the stage's work only where that work is
-        computing the key. For a stage whose description declares
-        ``key_is_artefact`` it is the artefact entire, summary included.
-        """
+        """Return the artefact ``run`` will produce, without its payload."""
 
     def run(
         self,
@@ -443,73 +212,23 @@ class Stage(Protocol):
         progress: Progress | None = None,
         cancel: CancelToken | None = None,
     ) -> Artefact:
-        """Run the stage and return its artefact.
-
-        Raises
-        ------
-        Cancelled
-            If ``cancel`` turns true before the stage finishes.
-        """
+        """Run the stage and return its artefact."""
 
 
 @dataclass(frozen=True)
 class StageEntry:
-    """One registry row: a description, and where the implementation lives."""
-
     description: StageDescription
     target: str
-    """``"module:attribute"``, imported by :func:`create` and by nothing else."""
     extra: str | None = None
-    """The optional-dependency extra the implementation needs, or ``None``.
-
-    On the entry and not on :class:`StageDescription`, so the description a
-    caller introspects (VER-25) is unchanged by where a stage's dependencies
-    come from.
-    """
 
 
-class MissingExtraError(ImportError):
-    """A registered stage's implementation needs an extra that is not installed.
-
-    Raised by :func:`create` naming the extra, the module that failed and the
-    install command, rather than letting a bare ``ModuleNotFoundError`` for
-    ``gemmi`` surface from three imports down. The case is not wrong and no gate
-    fired; the installation is, so IF-02 classifies it with the case refusals: a
-    retry fails identically until the extra is installed.
-    """
+class MissingExtraError(ImportError): ...
 
 
 _REGISTRY: dict[str, StageEntry] = {}
 
 
 def register(description: StageDescription, target: str, *, extra: str | None = None) -> None:
-    """Register a stage under its name.
-
-    Parameters
-    ----------
-    description
-        Everything introspection needs, held here so that answering a question
-        about a stage never imports it.
-    target
-        ``"module:attribute"`` naming the class implementing the stage.
-    extra
-        The ``pyproject.toml`` optional-dependency extra the implementation
-        imports, named by :func:`create` when it is missing.
-
-    Raises
-    ------
-    ValueError
-        If the name is already registered, or if ``target`` is not of the form
-        ``module:attribute``. A silently replaced stage would make two runs with
-        the same manifest execute different code. Also if an input is neither
-        ``case_path`` nor a stage registered before this one, because
-        registration order is the walk's order (:func:`walk_order`) and a stage
-        walked before its input would find nothing to read; or if ``weight`` is
-        not finite and positive, because the walk divides by the total weight
-        and a negative share would make its progress non-monotone; or if an
-        optional input is not one of its inputs. A refused stage leaves the
-        registry as it was.
-    """
     if description.name in _REGISTRY:
         raise ValueError(
             f"stage {description.name!r} is already registered as "
@@ -540,30 +259,11 @@ def register(description: StageDescription, target: str, *, extra: str | None = 
 
 
 def walk_order() -> tuple[str, ...]:
-    """Return every registered stage's name in the order a walk runs them.
-
-    Registration order, read when called, so a stage registered after import is
-    walked as much as a built-in one. It differs from :func:`registered_stages`,
-    which sorts by section 5.2's numbers: stage 9 resolves the case that stages 1
-    to 8 consume, so it is registered, and walked, first. ``protonation``
-    follows ``mesh`` so that a walk truncated at the mesh, as the desktop shell's
-    geometry build is, never protonates (WP27 D2); its inputs do not force that,
-    which is why the walk is this order rather than a dependency sort.
-    :func:`register` refuses a stage whose inputs are not registered before it,
-    so the order is a dependency order by construction.
-    """
     return tuple(_REGISTRY)
 
 
 def registered_stages() -> tuple[StageDescription, ...]:
-    """Return every registered stage's description, by pipeline number and then registration.
-
-    Two stages may share a number: stage 7 is ``protonation`` and then ``charge``,
-    so that stages 8 to 12 keep the numbers this specification, the CLI's output
-    and every recorded manifest cite them by (section 5.2 design note, WP27 D1).
-    Registration order, not the name, orders them, because it is their order in
-    the pipeline.
-    """
+    """Return every registered stage's description, by pipeline number and then registration."""
     order = {name: index for index, name in enumerate(_REGISTRY)}
     return tuple(
         sorted(
@@ -574,14 +274,6 @@ def registered_stages() -> tuple[StageDescription, ...]:
 
 
 def describe(name: StageIdentifier | str) -> StageDescription:
-    """Return one stage's description without importing its module.
-
-    Raises
-    ------
-    KeyError
-        If no stage is registered under that name; the message lists the ones
-        that are.
-    """
     entry = _REGISTRY.get(str(name))
     if entry is None:
         known = ", ".join(sorted(_REGISTRY)) or "none"
@@ -590,29 +282,7 @@ def describe(name: StageIdentifier | str) -> StageDescription:
 
 
 def create(name: StageIdentifier | str, **kwargs: StageOption) -> Stage:
-    """Import a stage's module and construct it.
-
-    The only function here that imports anything. Everything else — listing
-    stages, describing one, deciding whether to run it — is answered from the
-    registry, which is what keeps ``import nanopnp.cli`` free of NGSolve.
-
-    Parameters
-    ----------
-    name
-        Registered stage name.
-    **kwargs
-        Passed to the stage's constructor.
-
-    Raises
-    ------
-    KeyError
-        If no stage is registered under that name.
-    MissingExtraError
-        If the stage declares an extra and importing its module fails on a
-        module outside this package, naming the extra, the missing module and
-        the install command.
-    """
-    describe(name)  # raises the diagnostic naming the registered stages
+    describe(name)
     entry = _REGISTRY[str(name)]
     module_name, _, attribute = entry.target.partition(":")
     try:
@@ -633,15 +303,7 @@ def create(name: StageIdentifier | str, **kwargs: StageOption) -> Stage:
 
 
 def _register_builtins() -> None:
-    """Register the stages this release implements.
-
-    The descriptions live here rather than beside each stage class precisely
-    because they must be readable without importing it; each stage's
-    ``describe()`` returns its registry entry, and a Tier-1 test asserts the two
-    cannot drift apart.
-    """
-    # Registration order is the walk's order (walk_order), and stage 9 comes
-    # first because every other stage consumes the case it resolves.
+    # Registration order is the walk's order; stage 9 comes first, every stage consumes its case.
     register(
         StageDescription(
             name=StageName.CASE,
@@ -653,10 +315,8 @@ def _register_builtins() -> None:
             takes_workspace=False,
             takes_store=False,
             key_is_artefact=True,
-            # Each weight is the stage's share of a walk's progress fraction. The
-            # solve is the run; the rest is reading files, hashing them and
-            # integrating over a converged state, and equal weights would hold a
-            # progress bar near its end for the whole of the ladder.
+            # Weights are shares of a walk's progress; the solve is the run, and equal weights
+            # would hold a progress bar near its end for the whole ladder.
             weight=0.01,
             needs_section=None,
             optional_inputs=(),
@@ -692,8 +352,7 @@ def _register_builtins() -> None:
             takes_workspace=True,
             takes_store=False,
             key_is_artefact=False,
-            # Stage 2 deposits every frame's atoms, the longest thing a walk through
-            # stage 3 does: seconds for a crystal structure, minutes for an ensemble.
+            # Stage 2 deposits every frame's atoms: seconds for a crystal, minutes for an ensemble.
             weight=0.2,
             needs_section="structure",
             optional_inputs=(),
@@ -732,8 +391,6 @@ def _register_builtins() -> None:
             takes_workspace=True,
             takes_store=False,
             key_is_artefact=False,
-            # The probe profile is frames x atoms x planes distances: seconds on an
-            # ensemble.
             weight=0.03,
             needs_section="structure",
             optional_inputs=(),
@@ -757,7 +414,6 @@ def _register_builtins() -> None:
             key_is_artefact=False,
             weight=0.01,
             needs_section=None,
-            # An inputs.profile case drops stages 1 to 4 and region reads the profile.
             optional_inputs=("contour",),
         ),
         "nanopnp.geometry.region:RegionStage",
@@ -773,11 +429,9 @@ def _register_builtins() -> None:
             takes_workspace=True,
             takes_store=False,
             key_is_artefact=False,
-            # Generating a mesh is seconds (6-8 s on the reference profile); reading
-            # one is less. Either is small beside the ladder.
+            # Generating a mesh takes 6-8 s on the reference profile.
             weight=0.05,
             needs_section=None,
-            # An inputs.mesh case drops region and the stage reads the mesh.
             optional_inputs=("region",),
         ),
         "nanopnp.mesh.ingest:MeshStage",
@@ -795,21 +449,16 @@ def _register_builtins() -> None:
             ),
             artefact_schema="nanopnp/protonation/v0.5",
             takes_workspace=True,
-            # Each frame is stored under its own key, so a changed frame selection
-            # re-protonates only the frames it adds (WP27 D10).
+            # Each frame is stored under its own key, so a changed frame selection re-protonates
+            # only the added frames.
             takes_store=True,
             key_is_artefact=False,
-            # About a minute per frame of a ClyA dodecamer, PROPKA included (WP27):
-            # when it runs it is most of the walk. It runs in every charged walk
-            # (WP28 D8), usually served from the store, and otherwise only as a
-            # walk's target.
+            # About a minute per frame of a ClyA dodecamer, PROPKA included.
             weight=1.0,
             needs_section=None,
-            # An inputs.pqr case protonates without a structure: section.
             optional_inputs=("structure",),
         ),
-        # No extra (WP27 D4): inputs.pqr runs without PDB2PQR, which the stage
-        # imports only when it protonates, naming the extra if it is missing.
+        # No extra: inputs.pqr runs without PDB2PQR, imported only when the stage protonates.
         "nanopnp.charge.protonation:ProtonationStage",
     )
     register(
@@ -817,8 +466,6 @@ def _register_builtins() -> None:
             name=StageName.CHARGE,
             number=7,
             title="Charge assembly",
-            # ``region`` only for a derived chi (WP30 D5), as ``protonation`` only
-            # for a deposited charge.
             inputs=("case", "mesh", "protonation", "region"),
             outputs=(
                 "fixed-charge field, deposited on the mesh or supplied",
@@ -828,16 +475,12 @@ def _register_builtins() -> None:
             ),
             artefact_schema="nanopnp/fields/v0.5",
             takes_workspace=True,
-            # The export lattice is stored under a key without the mesh, so a
-            # mesh-convergence sweep re-deposits without re-summing (WP28 D7).
+            # The export lattice is keyed without the mesh, so a mesh-convergence sweep
+            # re-deposits without re-summing.
             takes_store=True,
             key_is_artefact=False,
-            # A deposit is seconds per frame of a ClyA dodecamer for the kernel's
-            # sum, and seconds more for the projection and its gates; reading a
-            # field is less.
             weight=0.2,
             needs_section=None,
-            # protonation only for a deposited charge, region only for a derived chi.
             optional_inputs=("protonation", "region"),
         ),
         "nanopnp.charge.stage:FieldStage",
@@ -872,8 +515,6 @@ def _register_builtins() -> None:
             key_is_artefact=False,
             weight=0.75,
             needs_section=None,
-            # Stage 7's artefact, where the case deposits or supplies a field; a case
-            # with neither drops stage 7, and the solve runs without a fixed charge.
             optional_inputs=("charge",),
         ),
         "nanopnp.solve.stage:SolveStage",
@@ -891,8 +532,6 @@ def _register_builtins() -> None:
             key_is_artefact=False,
             weight=0.08,
             needs_section=None,
-            # The route-agreement extraction restores the state onto the mesh and the
-            # stage-7 field the solve read (WP38 D11).
             optional_inputs=("charge",),
         ),
         "nanopnp.post.stage:QoIStage",
@@ -910,7 +549,6 @@ def _register_builtins() -> None:
             key_is_artefact=False,
             weight=0.04,
             needs_section=None,
-            # The field export restores the state as stage 11 does (WP38 D11).
             optional_inputs=("charge",),
         ),
         "nanopnp.post.stage:ReportStage",
@@ -921,5 +559,4 @@ _register_builtins()
 
 
 def _catalogue() -> Mapping[str, StageEntry]:
-    """Return the registry itself, for tests that need the target strings."""
     return _REGISTRY

@@ -1,36 +1,4 @@
-"""Nondimensionalisation of the coupled system (NUM-09, NUM-10).
-
-The five fields of ePNP-NS span twenty-odd orders of magnitude in SI: a
-potential of 1e-1 V, a concentration of 1e3 mol/m^3, a velocity of 1e-3 m/s, a
-pressure of 1e2 Pa and a diffusivity of 1e-9 m^2/s. Assembled together into one
-Jacobian, that spread is the whole difficulty of the linear solve — not the
-sparsity pattern, not the size. Scaling is therefore not a tidiness measure
-here; it is what makes the direct factorisation give a trustworthy answer.
-
-NUM-09 fixes the scales: length by the pore radius ``a``, potential by the
-thermal voltage ``V_T = RT/F``, concentration by the bulk value ``c_0``,
-diffusivity by ``D_0``, and then
-
-    u_0 = eps V_T^2 / (eta a)        p_0 = eps V_T^2 / a^2
-
-which are the velocity and pressure at which the electrical body force balances
-viscosity. Two dimensionless groups fall out and both are physics, not
-bookkeeping:
-
-    lambda~ = lambda_D / a           the screening ratio, 0.088 to 0.679
-    Pe      = eps V_T^2 / (eta D_0)  0.386 at 298.15 K and eta = 0.890 mPa s
-
-``Pe < 1`` is the statement that ion transport through the pore is not
-convection-dominated; it is why the Nernst-Planck equation is solvable without
-stabilisation on a mesh that resolves the double layer (NUM-11), and it is worth
-recomputing rather than trusting, because the frequently quoted ``Pe = 0.34``
-belongs to ``eta = 1.00 mPa s``, that is to 20 degC and not 25 degC. Mixing the
-two temperatures across material properties is a silent per-cent-level error.
-
-Lengths are in **nm** in the mesh and in every interface here, matching
-``mesh.primitives``; the conversion to metres happens inside this module and
-nowhere else.
-"""
+"""Nondimensionalisation of the coupled system."""
 
 from __future__ import annotations
 
@@ -47,26 +15,14 @@ from nanopnp.core.constants import (
 )
 
 NM_PER_M: Final = 1e9
-"""Nanometres per metre; lengths cross this boundary here and nowhere else."""
 
 MOL_PER_M3_PER_MOL_PER_L: Final = 1e3
-"""mol/m^3 per mol/L."""
 
 REFERENCE_DIFFUSIVITY_M2_S: Final = 1.334e-9
-"""``D_0``, in m^2/s (NUM-09). The infinite-dilution mean for NaCl."""
 
 REFERENCE_VISCOSITY_PA_S: Final = 0.890e-3
-"""Water viscosity at 298.15 K, in Pa s (NUM-09 note on the Peclet number)."""
 
 REFERENCE_PERMITTIVITY: Final = 78.15
-"""``eps_r,f0``, the infinite-dilution relative permittivity of the electrolyte.
-
-Gavish 2016, via SPECIFICATION.md section 8.2 and
-``.knowledge/01-physics-epnpns.md`` section 4; it is the ``P0`` of the
-``permittivity`` correction in ``data/corrections/willems2020_nacl.yaml``. This
-is the single definition in the package: ``physics.pb.ELECTROLYTE_PERMITTIVITY``
-is an alias of it, so the two cannot drift apart.
-"""
 
 
 def debye_length_nm(
@@ -76,35 +32,6 @@ def debye_length_nm(
     temperature_K: float = REFERENCE_TEMPERATURE_K,
     valence: int = 1,
 ) -> float:
-    """Return the Debye length in nm for a symmetric ``z:z`` electrolyte.
-
-    ``lambda_D^2 = eps R T / (2 F^2 z^2 c_0)``. Reference values it must
-    reproduce (NUM-09): 1.357 nm at 0.05 M, 0.304 nm at 1 M, 0.175 nm at 3 M.
-
-    This is the one implementation of the formula; :attr:`Scales.debye_length_nm`
-    and ``physics.pb.debye_length_nm`` both route through it.
-
-    Parameters
-    ----------
-    concentration_M
-        Bulk concentration in mol/L.
-    relative_permittivity
-        Electrolyte relative permittivity.
-    temperature_K
-        Absolute temperature.
-    valence
-        Ion valence magnitude.
-
-    Returns
-    -------
-    float
-        Debye length, in nm.
-
-    Raises
-    ------
-    ValueError
-        If the concentration is not positive.
-    """
     if not concentration_M > 0.0:  # NaN fails too
         raise ValueError(f"concentration must be positive, got {concentration_M} M")
     permittivity = VACUUM_PERMITTIVITY * relative_permittivity
@@ -120,28 +47,6 @@ def debye_length_nm(
 
 @dataclass(frozen=True)
 class Scales:
-    """The NUM-09 scale set, derived from a geometry and an electrolyte.
-
-    Attributes are the *defining* inputs; every scale is a property computed
-    from them, so no two members can disagree.
-
-    Parameters
-    ----------
-    length_nm
-        Reference length ``a``, the pore radius. Around 2 nm for ClyA.
-    concentration_M
-        Bulk concentration ``c_0``, in mol/L.
-    temperature_K
-        Absolute temperature. Every material property must be quoted at this
-        same temperature; see the module docstring.
-    diffusivity_m2_s
-        Reference diffusivity ``D_0``.
-    viscosity_Pa_s
-        Reference dynamic viscosity ``eta``.
-    relative_permittivity
-        Reference relative permittivity of the electrolyte.
-    """
-
     length_nm: float
     concentration_M: float
     temperature_K: float = REFERENCE_TEMPERATURE_K
@@ -150,7 +55,6 @@ class Scales:
     relative_permittivity: float = REFERENCE_PERMITTIVITY
 
     def __post_init__(self) -> None:
-        """Reject a scale set that would divide by zero downstream."""
         for name in (
             "length_nm",
             "concentration_M",
@@ -163,109 +67,56 @@ class Scales:
             if not value > 0.0:  # NaN fails too
                 raise ValueError(f"scale {name} must be positive, got {value}")
 
-    # -- primitive scales ------------------------------------------------
-
     @property
     def length_m(self) -> float:
-        """Reference length ``a``, in m."""
         return self.length_nm / NM_PER_M
 
     @property
     def permittivity(self) -> float:
-        """Absolute permittivity ``eps = eps_r eps_0``, in F/m."""
         return self.relative_permittivity * VACUUM_PERMITTIVITY
 
     @property
     def potential_V(self) -> float:
-        """Potential scale ``V_T = RT/F``, in V. 25.693 mV at 298.15 K."""
         return thermal_voltage(self.temperature_K)
 
     @property
     def concentration_mol_m3(self) -> float:
-        """Concentration scale ``c_0``, in mol/m^3."""
         return self.concentration_M * MOL_PER_M3_PER_MOL_PER_L
 
     @property
     def velocity_m_s(self) -> float:
-        """Velocity scale ``u_0 = eps V_T^2 / (eta a)``, in m/s."""
         return self.permittivity * self.potential_V**2 / (self.viscosity_Pa_s * self.length_m)
 
     @property
     def pressure_Pa(self) -> float:
-        """Pressure scale ``p_0 = eps V_T^2 / a^2``, in Pa."""
         return self.permittivity * self.potential_V**2 / self.length_m**2
 
     @property
     def force_N(self) -> float:
-        """Force scale ``p_0 a^2 = eps V_T^2``, in N. 4.568e-13 N, that is 0.4568 pN.
-
-        A pressure through a pore-sized area, with the two powers of ``a``
-        cancelling exactly: **the force scale does not depend on the reference
-        length.** That is worth stating rather than rediscovering, because it
-        means the NUM-29 tolerance of 0.1 pN is the same 0.219 dimensionless
-        whatever pore the case is posed on.
-
-        NUM-28 integrals arrive here as ``int f r dr dz``, short of the ``2 pi``
-        that :class:`~nanopnp.numerics.measures.Measures` cancelled from the weak
-        form; :mod:`nanopnp.post.forces` restores it, once (NUM-27 NOTE).
-        """
         return self.permittivity * self.potential_V**2
 
     @property
     def flux_mol_m2_s(self) -> float:
-        """Ion-flux scale ``D_0 c_0 / a``, in mol/(m^2 s)."""
         return self.diffusivity_m2_s * self.concentration_mol_m3 / self.length_m
 
     @property
     def current_A(self) -> float:
-        """Current scale ``F D_0 c_0 a``, in A.
-
-        The flux scale times an area ``a^2`` times Faraday's constant: the
-        current a diffusive flux at the reference gradient carries through a
-        pore-sized aperture.
-        """
         return FARADAY * self.diffusivity_m2_s * self.concentration_mol_m3 * self.length_m
 
     @property
     def volumetric_flow_m3_s(self) -> float:
-        """Volumetric-flow scale ``u_0 a^2``, in m^3/s.
-
-        The scale of the electro-osmotic flow rate ``Q_EOF`` of NUM-27: the
-        velocity scale through a pore-sized aperture.
-        """
         return self.velocity_m_s * self.length_m**2
 
     @property
     def charge_density_C_m3(self) -> float:
-        """Space-charge scale ``eps V_T / a^2``, in C/m^3.
-
-        The scale of the fixed protein charge ``rho_pore``, fixed by requiring
-        that the source balance the Poisson operator ``div(eps grad phi)`` once
-        both are written in the nondimensional variables.
-        """
         return self.permittivity * self.potential_V / self.length_m**2
 
     @property
     def surface_charge_C_m2(self) -> float:
-        """Surface-charge scale ``eps V_T / a``, in C/m^2.
-
-        The scale of ``sigma_s``, one power of the length larger than
-        :attr:`charge_density_C_m3` because the surface term is one integration
-        shallower. Rung 4 of the NUM-18 ladder ramps ``sigma_s`` and
-        ``rho_pore`` together, and this is what puts an SI value on that ramp.
-        """
         return self.permittivity * self.potential_V / self.length_m
-
-    # -- dimensionless groups --------------------------------------------
 
     @property
     def debye_length_nm(self) -> float:
-        """``lambda_D`` for a symmetric monovalent electrolyte, in nm.
-
-        ``lambda_D^2 = eps RT / (2 F^2 c_0)``. 1.357 nm at 0.05 M, 0.304 nm at
-        1 M, 0.175 nm at 3 M (NUM-09). Delegates to :func:`debye_length_nm` so
-        the formula exists once.
-        """
         return debye_length_nm(
             self.concentration_M,
             relative_permittivity=self.relative_permittivity,
@@ -274,58 +125,21 @@ class Scales:
 
     @property
     def debye_ratio(self) -> float:
-        """``lambda~ = lambda_D / a``. 0.088 to 0.679 over 0.05-3 M at a = 2 nm."""
         return self.debye_length_nm / self.length_nm
 
     @property
     def peclet(self) -> float:
-        """``Pe = eps V_T^2 / (eta D_0)``, the electroviscous Peclet number.
-
-        0.386 at 298.15 K with ``eta = 0.890 mPa s``. Equivalently
-        ``u_0 a / D_0``: the ratio of the electro-osmotic to the diffusive
-        transport rate.
-        """
         return (
             self.permittivity * self.potential_V**2 / (self.viscosity_Pa_s * self.diffusivity_m2_s)
         )
 
-    # -- conversions ------------------------------------------------------
-
     def nondimensionalise(self, quantity: str, value: float) -> float:
-        """Return ``value``, given in the SI unit of ``quantity``, divided by its scale.
-
-        Parameters
-        ----------
-        quantity
-            One of ``length``, ``potential``, ``concentration``, ``velocity``,
-            ``pressure``, ``force``, ``diffusivity``, ``flux``, ``current``,
-            ``volumetric_flow``, ``charge_density``, ``surface_charge``.
-        value
-            The quantity in SI units (m, V, mol/m^3, m/s, Pa, N, m^2/s,
-            mol/(m^2 s), A, m^3/s, C/m^3, C/m^2).
-
-        Returns
-        -------
-        float
-            The dimensionless value.
-
-        Raises
-        ------
-        KeyError
-            If ``quantity`` is not a scaled field.
-        """
         return value / self._scale(quantity)
 
     def redimensionalise(self, quantity: str, value: float) -> float:
-        """Return a dimensionless ``value`` multiplied by its SI scale.
-
-        The inverse of :meth:`nondimensionalise`; this is the boundary at which
-        ``post/`` hands numbers back in SI.
-        """
         return value * self._scale(quantity)
 
     def _scale(self, quantity: str) -> float:
-        """Return the SI scale of a named quantity."""
         scales = {
             "length": self.length_m,
             "potential": self.potential_V,
@@ -347,21 +161,9 @@ class Scales:
         return scales[quantity]
 
     def bias_to_dimensionless(self, bias_V: float) -> float:
-        """Return an applied bias in volts as a multiple of ``V_T``.
-
-        +/-200 mV, the envelope of FR-17, is +/-7.784 at 298.15 K.
-        """
         return bias_V / self.potential_V
 
     def summary(self) -> dict[str, float]:
-        """Return every defining input, scale and group, for the manifest (FR-25).
-
-        Every *defining* attribute appears, not only the derived scales: a
-        manifest that omits one cannot reconstruct the run (FR-25). The
-        viscosity in particular is the field the module docstring warns about,
-        0.890 mPa s at 25 degC against 1.00 mPa s at 20 degC being a per-cent
-        difference in ``u_0``, ``p_0`` and ``Pe`` that is invisible afterwards.
-        """
         return {
             "length_nm": self.length_nm,
             "concentration_M": self.concentration_M,

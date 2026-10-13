@@ -1176,7 +1176,8 @@ documentation builds on ubuntu. PROPKA needs the 3.14 shim of §3 there as every
 that imports it and exits takes **0.082 s**. `import ngsolve` alone is ~370 ms, and the physics and
 mesh modules at module scope would take the package's own share from 56 ms to 424 ms. A sweep
 dispatching a job array pays that per process, which is what the deferred-import rule of
-`CLAUDE.md` buys.
+`CLAUDE.md` buys. `import numpy` alone is ~67 ms, which is why `core/hashing.py` detects arrays by
+duck-typing rather than importing NumPy **[tested]**.
 
 Two mechanisms keep it there, and both are load-bearing rather than tidy:
 
@@ -1210,6 +1211,10 @@ inverse and belongs to any reader of these files.
 
 It is deliberately not a full inverse of `canonical`: an array encodes as dtype, shape and a
 *digest* of its bytes (`"__a__"`), which nothing can undo, and is left as it stands.
+
+The 12-hex-character display prefix (`core.hashing.SHORT_LENGTH`) is 48 bits; over the 3,675-solve
+datum at about six artefacts each (n ≈ 2.2 × 10⁴) the collision probability is n²/2N ≈ 8.6 × 10⁻⁷, adequate
+for a label. The store keys on the full digest, never on the prefix **[verified]** (`core/hashing.py`).
 
 ## 11. A stage's workspace falls back to the process store root, not the run's store **[tested]**
 
@@ -1425,3 +1430,11 @@ input hashes, not the payload. An entry written before the change keeps its key,
 served with its old timings. Stage 7 therefore moved to `nanopnp/fields/v2` and
 `nanopnp/charge-grid/v2`, which makes every old entry a miss (§5.3.2 stage-7 row, amended for WP32).
 Source: the WP32 `/wp-ship` review.
+
+## 16. NGSolve's bundled stubs cannot type-check, so the aliases in `core/typing.py` are `Any` **[tested]**
+
+NGSolve 6.2.2606 ships pybind11-stubgen output (24 `.pyi` files) but no `py.typed` marker, so mypy
+skips them (PEP 561) and every NGSolve name resolves to `Any`. Supplying the marker only exposes that
+`ngsolve/__init__.pyi` does not parse (it ends in `ngslib =` and `ngsolve =` with empty right-hand
+sides). Netgen ships no stubs. The aliases of `core/typing.py` therefore stay `Any` and name what a
+value is, until upstream ships stubs that parse behind a marker (source: `core/typing.py`).

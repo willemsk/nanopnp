@@ -1,30 +1,4 @@
-"""The exception → exit-code table, and the classifier over it (IF-02, QR-12).
-
-Section 3.1 NOTE (IF-02) makes the CLI's exit status a contract: FR-24's job
-array branches on it, and QR-06 requires a member that *failed* to be
-distinguishable from one that was *refused*. ``3`` says the case file is wrong
-and a retry will fail identically; ``4`` says a numerical gate stopped the run
-where it stood; ``5`` says the continuation ladder ran out of rungs, which a
-different starting point might survive.
-
-**The mapping is an enumeration, not a base-class test.** Every class here is
-named, and every public exception class under ``src/nanopnp`` is either in
-:data:`EXIT_CODES` or in :data:`EXCLUDED` with a written reason —
-:mod:`tests.tier1.test_cli` asserts that in both directions. A base-class test
-would classify a gate added later by whichever ``RuntimeError`` it happened to
-subclass; here it fails the enumeration instead of silently becoming ``1``.
-
-**No exception module is imported to build the table.** The keys are
-``f"{module}:{qualname}"`` strings and :func:`classify` walks the raised
-object's ``__mro__``, so classifying an error costs no import at all and
-``import nanopnp.cli`` stays at the ~70 ms the deferred-import rule protects
-(CLAUDE.md). Naming a base class covers its subclasses for free.
-
-**Here in ``core/``, below every consumer** (``MOD-05``). The CLI, the sweep
-runner, the example walker and the desktop shell all classify by this one table,
-and it has no second home (WP37 D9, D10; REV-02). The table's keys name modules
-of every layer as strings, which couples nothing at import time.
-"""
+"""The exception to exit-code table, and the classifier over it."""
 
 from __future__ import annotations
 
@@ -45,25 +19,18 @@ __all__ = [
 ]
 
 EXIT_OK: Final = 0
-"""The command did what it was asked."""
 
 EXIT_UNEXPECTED: Final = 1
-"""An unclassified failure — the only class whose traceback is worth keeping."""
 
 EXIT_USAGE: Final = 2
-"""The command line was wrong. argparse's own code; the CLI does not raise it."""
 
 EXIT_CASE: Final = 3
-"""The case file was refused. Nothing numerical went wrong and a retry will not help."""
 
 EXIT_GATE: Final = 4
-"""A gate of the QR-12 family aborted the run, naming the quantity and its location."""
 
 EXIT_CONVERGENCE: Final = 5
-"""Newton or the continuation ladder failed to converge (FR-17, NUM-16)."""
 
 EXIT_CANCELLED: Final = 130
-"""The run was cancelled — a token, or SIGINT. 128 + SIGINT, as a shell reports it."""
 
 EXIT_MEANINGS: Final[dict[int, str]] = {
     EXIT_OK: "success",
@@ -76,56 +43,24 @@ EXIT_MEANINGS: Final[dict[int, str]] = {
     EXIT_CONVERGENCE: "Newton or the continuation ladder did not converge (FR-17, NUM-16)",
     EXIT_CANCELLED: "cancelled, by a token or by SIGINT",
 }
-"""Every exit class of the section 3.1 NOTE (IF-02), with what it tells a caller.
-
-The generated command-line reference prints this table (VER-45), so the classes a
-job array branches on are documented from the constants it compares against.
-"""
 
 EXIT_CODES: Final[dict[str, int]] = {
     # -- 3, the case ---------------------------------------------------------
-    # IF-03: a case rejected by validation or by schema. The fix is an edit to
-    # the case file, so a job array must not retry the member.
     "nanopnp.io.case:CaseValidationError": EXIT_CASE,
     "nanopnp.charge.pqr:PQRError": EXIT_CASE,
     "nanopnp.io.case:UnsupportedCaseSection": EXIT_CASE,
     "pydantic_core._pydantic_core:ValidationError": EXIT_CASE,
-    # `outputs:` asked for a quantity this run cannot produce -- `rectification`
-    # at one operating point, `analyte_force` with no analyte. A ValueError
-    # rather than a gate error: no result is in doubt, and like every other 3
-    # the fix is an edit to the case file rather than a retry.
+    # no result is in doubt; the fix is an edit to the case file
     "nanopnp.post.stage:SelectionError": EXIT_CASE,
-    # `--upto` named a stage this run does not walk -- a typo, or stage 7 on a
-    # case that supplies no field. 3 rather than 1 for the same reason as every
-    # other 3: nothing numerical went wrong, and a job array retrying on
-    # "unexpected" would fail identically. 3 rather than 2 because the second of
-    # the two conditions is not a wrong command line at all -- `--upto charge`
-    # names a registered stage, and it is the *case* that gives it nothing to
-    # read -- and because 2 stays argparse's own code, raised where argparse
-    # raises it and nowhere else.
+    # 3 not 2: argparse owns 2, and the case may be what gives the named stage nothing to read
     "nanopnp.pipeline.run:UnknownStageError": EXIT_CASE,
-    # An optional-dependency extra a registered stage needs is not installed:
-    # nothing numerical went wrong, and a retry fails identically until it is.
+    # the installation is wrong, not the case; a retry fails until the extra is installed
     "nanopnp.core.stages:MissingExtraError": EXIT_CASE,
-    # A dotted path that names no field of the case schema -- a misspelt sweep
-    # axis, or a switch path this build and the schema disagree about. 3 for the
-    # same reason as every other 3: the fix is an edit to the document that
-    # named it, and a job array retrying the member fails identically (FR-24).
     "nanopnp.io.case_paths:UnknownCasePathError": EXIT_CASE,
-    # A sweep that cannot be planned as written -- an axis naming a path the case
-    # schema does not have, a value of the wrong type, a point the schema refuses,
-    # or `rectification` asked for with no opposite-bias pair to produce it from.
-    # 3, because a plan is refused by an edit to the sweep document or to the base
-    # case; retrying the plan fails identically (FR-24).
     "nanopnp.sweep.plan:SweepPlanError": EXIT_CASE,
-    # A file the case file or the command line named is not there. Classified
-    # rather than left to fall through to 1 because "unexpected" is what a job
-    # array retries, and this is the other kind: the path is wrong, and it will
-    # be just as wrong on the retry.
+    # the path is as wrong on a retry, and a job array retries "unexpected"
     "builtins:FileNotFoundError": EXIT_CASE,
     # -- 4, the gates --------------------------------------------------------
-    # QR-12: every one of these aborts naming the gate, the offending quantity
-    # and its location, rather than returning a plausible wrong answer.
     "nanopnp.numerics.gates:GateViolationError": EXIT_GATE,
     "nanopnp.post.qoi:RouteDisagreementError": EXIT_GATE,
     "nanopnp.post.forces:ForceDisagreementError": EXIT_GATE,
@@ -137,106 +72,48 @@ EXIT_CODES: Final[dict[str, int]] = {
     "nanopnp.mesh.adapter:MeshDataError": EXIT_GATE,
     "nanopnp.geometry.analyte:AnalyteGeometryError": EXIT_GATE,
     "nanopnp.density.grid:GridFormatError": EXIT_GATE,
-    # Stage 1 (WP18 D12): a refused file, element, alternate location, chain set
-    # or frame window; a refused spacing, rotation angle, orientation or axis: z
-    # displacement; an unreadable ensemble payload. Each names what it refused.
     "nanopnp.structure.read:StructureInputError": EXIT_GATE,
     "nanopnp.structure.axis:SymmetryGateError": EXIT_GATE,
     "nanopnp.structure.ensemble:EnsembleFormatError": EXIT_GATE,
-    # Stages 2 and 3 (WP19 D12): an atom the ruled radius set does not resolve,
-    # or a coordinate that is not finite; a map that is not finite or leaves
-    # [0, 1], naming the voxel.
     "nanopnp.density.radii:DensityInputError": EXIT_GATE,
     "nanopnp.density.union:DensityGateError": EXIT_GATE,
-    # Stage 4 (WP20 D14): a contour open at the grid's edge or closed on the axis,
-    # a detached island, or a loop failing a section 5.2.1 criterion, naming the
-    # criterion, the value, the threshold and the (r, z).
     "nanopnp.geometry.contour:ContourGateError": EXIT_GATE,
-    # Stages 5 and 6 (WP21 D4, D9): a bilayer plane that misses the profile, an
-    # inner edge too close to it, a domain in more than one face, a vertex outside
-    # the reservoir or a junction off r2; a wall coarser than its size field.
     "nanopnp.geometry.region:RegionGateError": EXIT_GATE,
     "nanopnp.mesh.generate:WallSizeGateError": EXIT_GATE,
-    # The optional Gmsh backend (WP23) failed on a region stage 5 passed, quoting
-    # Gmsh's own log. 4 rather than 1: the mesh is a function of the recipe (one
-    # thread, no configuration file read), so a retry fails identically, and what
-    # it names is the region and the mesher's complaint, not a traceback.
+    # 4 not 1: the mesh is a function of the recipe, so a retry fails identically
     "nanopnp.mesh.gmsh_backend:GmshMeshingError": EXIT_GATE,
     "nanopnp.charge.fields:FieldDocumentError": EXIT_GATE,
     "nanopnp.charge.fields:ChargeFieldError": EXIT_GATE,
-    # WP27 D9: a protonation gate -- an atom PDB2PQR could not parameterise, a
-    # charged atom without a positive radius, a non-integral Q_net -- names the
-    # frame; a malformed or mismatched inputs.pqr is the case's, and exits 3.
+    # a malformed or mismatched inputs.pqr is the case's, and exits 3
     "nanopnp.charge.protonation:ProtonationError": EXIT_GATE,
     "nanopnp.solve.state:StateMismatchError": EXIT_GATE,
-    # A neighbour's converged state that does not describe a space this run
-    # could load into. A subclass of the above and classified the same way; it
-    # is listed because the enumeration walks the source rather than the class
-    # hierarchy, which is the point of the enumeration. Note that a sweep never
-    # lets one reach the CLI: FR-24 makes the warm start an optimisation, so a
-    # refused neighbour falls back to the full ladder and records the reason.
+    # listed because the enumeration walks the source, not the class hierarchy
     "nanopnp.solve.state:WarmStartError": EXIT_GATE,
     "nanopnp.io.store:StoreError": EXIT_GATE,
     "nanopnp.pipeline.run:MissingUpstreamError": EXIT_GATE,
-    # A dataset that cannot be built from the members that ran -- an unreadable
-    # member record, or a pair whose recorded biases are not the opposite ones it
-    # was paired on. A gate in the QR-12 sense: rather than report a table it
-    # cannot build honestly, the collector stops and names what is wrong. Not a 3,
-    # because the members have already run and the fix is to re-run the missing
-    # ones rather than to edit a document.
+    # 4 not 3: the members already ran, and the fix is to re-run the missing ones
     "nanopnp.sweep.collect:SweepCollectionError": EXIT_GATE,
-    # The reproduction refusals are gates in exactly the QR-12 sense: rather
-    # than report a comparison it cannot make honestly, the check stops and
-    # names what is wrong (an input that moved, a solve served from the store).
     "nanopnp.pipeline.reproduce:InputMovedError": EXIT_GATE,
     "nanopnp.pipeline.reproduce:ReproductionError": EXIT_GATE,
-    # The Tier-3 refusals, and gates in exactly the same sense: rather than
-    # report a comparison it cannot defend, the harness stops and names the
-    # patch, the field or the point. A probe grid whose mask disagrees with the
-    # golden's NaN set, a golden whose case or probe hash is not this run's, and
-    # four ladder rungs that were not compared against one object all produce
-    # finite, plausible, wrong numbers if allowed through (VAL-01, VAL-03).
-    # Note that the *document* failures of all three -- a malformed probe file or
-    # golden manifest -- raise CaseValidationError above and exit 3, because
-    # those are fixed by an edit.
     "nanopnp.validation.probe:ProbeGridError": EXIT_GATE,
     "nanopnp.validation.comsol:GoldenError": EXIT_GATE,
     "nanopnp.validation.attribution:LadderError": EXIT_GATE,
-    # VAL-05's refusals (WP22): a generated polygon that leaves a comparison
-    # plane uncrossed outside the tip band, and a leg outside its tolerance.
-    # Each names the quantity and the z it sits at, as a gate does (QR-12).
     "nanopnp.validation.geometry:GeometryComparisonError": EXIT_GATE,
     "nanopnp.validation.geometry:MissingPlaneError": EXIT_GATE,
     "nanopnp.validation.geometry:GeometryToleranceError": EXIT_GATE,
-    # VAL-06's refusals (WP29): a box that would cut the charge (named by its
-    # face), an APBS run that is absent, refused, failed or past its time limit
-    # (named, with the end of its log), and a budget, visibility or agreement
-    # outside its tolerance (named by the norm and both numbers). Each stops
-    # the comparison rather than report one it cannot defend (QR-12).
     "nanopnp.validation.apbs:BoxError": EXIT_GATE,
     "nanopnp.validation.apbs:ApbsError": EXIT_GATE,
     "nanopnp.validation.apbs:Val06Error": EXIT_GATE,
-    # A run directory that cannot be reopened for comparison. 3 and not 4: the
-    # fix is to point at another directory or another store, or to re-run the
-    # member, which is the same class as a file the case file named and that is
-    # not there.
+    # 3 not 4: the fix is another directory or a re-run, as for a file the case named
     "nanopnp.validation.runs:RunError": EXIT_CASE,
     # -- 5, convergence ------------------------------------------------------
-    # Distinguished from 4 because a different starting point may survive it:
-    # this is the member a sweep may usefully re-dispatch from a neighbour.
+    # distinguished from 4 because a different starting point may survive it
     "nanopnp.numerics.newton:NewtonDivergenceError": EXIT_CONVERGENCE,
     "nanopnp.solve.continuation:TransferError": EXIT_CONVERGENCE,
     # -- 130, cancellation ---------------------------------------------------
     "nanopnp.core.stages:Cancelled": EXIT_CANCELLED,
     "builtins:KeyboardInterrupt": EXIT_CANCELLED,
 }
-"""Every classified exception, keyed on ``f"{module}:{qualname}"``.
-
-A base class covers its subclasses: :func:`classify` walks the raised object's
-method resolution order, so a subclass added under a classified base needs no
-entry. It still needs one *here* to leave the enumeration test, which walks the
-source rather than the class hierarchy — that is the point of the enumeration.
-"""
 
 EXCLUDED: Final[dict[str, str]] = {
     "nanopnp.core.hashing:CanonicalisationError": (
@@ -274,37 +151,9 @@ EXCLUDED: Final[dict[str, str]] = {
         "MissingExtraError is already classified, as EXIT_CASE"
     ),
 }
-"""Public exception classes deliberately left unclassified, with the reason.
-
-Membership here is a *decision*, recorded where the decision is enforced. The
-Tier-1 enumeration accepts a class in this mapping or in :data:`EXIT_CODES` and
-refuses one in neither, so a class added later fails a test rather than becoming
-a silent ``1``.
-"""
 
 
 def classify(error: BaseException) -> int:
-    """Return the exit code an exception should produce (IF-02).
-
-    Parameters
-    ----------
-    error
-        The exception that reached the CLI.
-
-    Returns
-    -------
-    int
-        The code :data:`EXIT_CODES` gives the first class in the exception's
-        method resolution order that carries one, or :data:`EXIT_UNEXPECTED`.
-
-    Notes
-    -----
-    The walk is over ``type(error).__mro__`` and the keys are strings, so no
-    exception's defining module is imported to classify it. A class listed in
-    :data:`EXCLUDED` classifies as ``1`` here, by design: the exclusion says
-    "unexpected is the right answer", and the enumeration test says it was
-    decided rather than overlooked.
-    """
     for klass in type(error).__mro__:
         code = EXIT_CODES.get(f"{klass.__module__}:{klass.__qualname__}")
         if code is not None:
