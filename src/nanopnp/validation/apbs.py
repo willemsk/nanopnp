@@ -1,35 +1,4 @@
-"""VAL-06: our Poisson solve against APBS's, on maps of the same problem (WP29).
-
-``SPECIFICATION.md`` section 7.4's NOTE on VAL-06 states the construction, and the
-WP29 plan's *Design* section 1 to 6 argues it. APBS is handed the problem as maps on
-one cubic grid, so that the two solves differ only in how they discretise it:
-
-- **The charge** (:func:`charge_map`) is stage 7's export lattice moved onto the
-  grid nodes by hat weights. They are linear in ``z``, and around each ring they
-  spread ``M >= 16 * 2 pi r / h`` equal-angle samples bilinearly in ``(x, y)``. Each
-  step is a partition of unity, so the map carries the lattice's charge to
-  round-off and keeps its first moments. The weights are the 7-point operator's
-  own test functions, so APBS receives the charge through its test space as the
-  deposit gives it to ours (*Design* section 2). Point sampling would alias, as the
-  consumer path does (VAL-15).
-- **The dielectric** (:func:`dielectric_maps`) is the permittivity the solve
-  assembled, rastered on the deployed mesh (:func:`raster_from_mesh`). Each of
-  APBS's three maps is staggered by ``h/2`` along its own axis, and each edge
-  takes the harmonic mean of eight samples along it, which makes the flux across
-  an interface normal to the edge exact (*Design* section 3).
-- **The box faces** (:func:`face_map`) take our own solution through ``bcfl map``.
-  Our grounded arc and the membrane's natural edge cannot be posed in APBS, so the
-  two interiors are compared (*Design* section 1).
-
-:func:`run_apbs` writes the deck and the maps, runs the ``apbs`` binary of the
-test-only ``apbs`` dependency group and reads the potential back. :func:`probe_set`
-and :func:`norms` give the probes and metric, and :func:`gated_leg` puts the steps
-together with the refinement budget that has to hold first.
-
-Lengths are in nm here and in angstroms only in the files APBS reads. The
-potential is in ``kT/e`` at the deck's temperature, which is the solver's
-``phi~ = phi / V_T``, so the two are compared without conversion.
-"""
+"""VAL-06: our Poisson solve against APBS's, on maps of the same problem (WP29)."""
 
 from __future__ import annotations
 
@@ -106,90 +75,48 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 APBS_GROUP = "apbs"
-"""The ``pyproject.toml`` dependency group carrying ``apbs-binary`` (WP29 D11)."""
 
 REQUIRE_APBS = "NANOPNP_REQUIRE_APBS"
-"""Set to ``1`` where APBS must run, so its tests fail rather than skip (WP29 D12)."""
 
 NM_TO_ANGSTROM = 10.0
-"""Angstroms per nanometre: APBS's decks and maps are in angstroms."""
 
 SPACING_NM = 0.1
-"""The gated leg's fine grid spacing (WP29 D3)."""
 
 DIME = 193
-"""Nodes per side of the fine grid: ``6 * 2^5 + 1``, so ``nlev`` 4 (WP29 D3)."""
 
 NLEV = 4
-"""APBS's multigrid levels; ``dime`` must be ``c * 2^(nlev + 1) + 1``."""
 
 CHARGE_MARGIN_NM = 1.0
-"""How far inside every face all of the lattice's charge must lie (WP29 D3)."""
 
 RASTER_NM = 0.01
-"""The ``(r, z)`` raster's cell size (WP29 D5; *Design* section 3)."""
 
 EDGE_SAMPLES = 8
-"""Sub-samples along each grid edge whose harmonic mean is the edge's permittivity."""
 
 RING_OVERSAMPLING = 16
-"""Azimuthal samples per grid spacing of circumference (WP29 D4)."""
 
 MINIMUM_ANGLES = 64
-"""The fewest azimuthal samples of a ring, so a ring on or near the axis is still spread."""
 
 PROBE_STRIDE = 2
-"""Probes are the nodes of the nested ``2h`` grid, which are also fine-grid nodes (D6)."""
 
 SOLID_DISTANCE_NM = 0.3
-"""How far a probe must lie from every solid (WP29 D6)."""
 
 FACE_MARGIN_NM = 0.4
-"""How far a probe must lie inside every face (WP29 D6)."""
 
 TIMEOUT_S = 1800.0
-"""The wall-clock limit of one APBS run, after which it is killed and named (WP29 D13).
-
-About forty times the 44 s that the 193^3 run took on four cores (``.knowledge/07``
-section 3), so only a hung run reaches it.
-"""
 
 VISIBILITY = 10.0
-"""The charge must move the probes by at least this many ``tau_rms`` (WP29 D8)."""
 
 
-class ApbsError(RuntimeError):
-    """APBS is absent, refused the deck, failed, or ran past its time limit.
-
-    The message names the run and quotes the end of APBS's log, which is where it
-    says why.
-    """
+class ApbsError(RuntimeError): ...
 
 
-class BoxError(ValueError):
-    """The APBS box does not hold the charge with the margin the construction needs.
-
-    Names the face and the coordinate, so the remedy (a larger ``dime``, or a
-    different centre) is evident rather than the run being silently cut (D3).
-    """
+class BoxError(ValueError): ...
 
 
-class Val06Error(AssertionError):
-    """VAL-06 failed: its refinement budget, its charge visibility or its agreement.
-
-    The message names which of the three, the norm and both numbers (QR-12). The
-    budget is checked before the agreement: an agreement inside an unmeasured
-    error is luck (WP29 D8).
-    """
+class Val06Error(AssertionError): ...
 
 
 def apbs_available() -> str | None:
-    """Return why APBS cannot run here, or ``None`` if it can.
-
-    The ``apbs-binary`` wheel exists for Linux x86_64 and macOS only (WP29 D11), so
-    any other platform (Windows, or Linux on ARM) reports the absent wheel, and a
-    covered platform without the group reports the missing group.
-    """
     try:
         import apbs_binary
     except ImportError:
@@ -210,65 +137,33 @@ def apbs_available() -> str | None:
     return None
 
 
-# -- the grid ------------------------------------------------------------------
-
-
 @dataclass(frozen=True)
 class CubicGrid:
-    """APBS's grid: ``dime`` nodes per side at ``spacing_nm``, from ``origin_nm``.
-
-    Parameters
-    ----------
-    origin_nm
-        ``(x, y, z)`` of node ``[0, 0, 0]``, in the model frame.
-    spacing_nm
-        ``h``, the same along every axis.
-    dime
-        Nodes per side.
-    """
-
     origin_nm: tuple[float, float, float]
     spacing_nm: float
     dime: int
 
     def axis(self, index: int) -> np.ndarray:
-        """Return the node coordinates along axis ``index`` (0, 1, 2 for x, y, z), in nm."""
         import numpy as np
 
         return self.origin_nm[index] + self.spacing_nm * np.arange(self.dime, dtype=np.float64)
 
     @property
     def upper_nm(self) -> tuple[float, float, float]:
-        """Return the coordinates of the last node, in nm."""
         span = self.spacing_nm * (self.dime - 1)
         return (self.origin_nm[0] + span, self.origin_nm[1] + span, self.origin_nm[2] + span)
 
     @property
     def centre_nm(self) -> tuple[float, float, float]:
-        """Return the box centre, APBS's ``gcent``, in nm."""
         half = 0.5 * self.spacing_nm * (self.dime - 1)
         return (self.origin_nm[0] + half, self.origin_nm[1] + half, self.origin_nm[2] + half)
 
     def coarsened(self) -> CubicGrid:
-        """Return the nested grid of every second node, at ``2h`` from the same origin.
-
-        Raises
-        ------
-        ValueError
-            If ``dime`` is even, so that the last node would not be shared.
-        """
         if self.dime % 2 == 0:
             raise ValueError(f"a grid of dime {self.dime} has no nested 2h grid; dime must be odd")
         return CubicGrid(self.origin_nm, 2.0 * self.spacing_nm, (self.dime + 1) // 2)
 
     def nlev(self) -> int:
-        """Return the largest ``nlev <= 4`` that APBS accepts for this ``dime``.
-
-        Raises
-        ------
-        ValueError
-            If no ``nlev`` from 1 to 4 fits ``dime = c * 2^(nlev + 1) + 1``.
-        """
         for level in range(NLEV, 0, -1):
             if (self.dime - 1) % 2 ** (level + 1) == 0:
                 return level
@@ -278,7 +173,6 @@ class CubicGrid:
         )
 
     def summary(self) -> dict[str, object]:
-        """Return the grid as plain data, for a report."""
         return {
             "origin_nm": list(self.origin_nm),
             "spacing_nm": self.spacing_nm,
@@ -288,15 +182,12 @@ class CubicGrid:
 
 @dataclass(frozen=True)
 class ChargeExtent:
-    """Where a lattice's charge lies: ``r <= r_max_nm`` and ``z_min_nm <= z <= z_max_nm``."""
-
     r_max_nm: float
     z_min_nm: float
     z_max_nm: float
 
 
 def charge_extent(lattice: RadialGrid) -> ChargeExtent:
-    """Return the extent of the lattice's nonzero nodes."""
     import numpy as np
 
     i_z, i_r = np.nonzero(lattice.values)
@@ -312,17 +203,6 @@ def charge_extent(lattice: RadialGrid) -> ChargeExtent:
 def check_box(
     grid: CubicGrid, extent: ChargeExtent, *, margin_nm: float = CHARGE_MARGIN_NM
 ) -> None:
-    """Refuse a box that does not hold the charge ``margin_nm`` inside every face (D3).
-
-    The charge is a body of revolution about ``z``, so in ``x`` and ``y`` it spans
-    ``+-r_max``.
-
-    Raises
-    ------
-    BoxError
-        Naming the first face too close to the charge, the charge's coordinate and
-        the face's.
-    """
     lower, upper = grid.origin_nm, grid.upper_nm
     reaches = {
         "x-": (-extent.r_max_nm, lower[0], -1.0),
@@ -350,25 +230,6 @@ def fit_grid(
     interface_z_nm: float | None = None,
     margin_nm: float = CHARGE_MARGIN_NM,
 ) -> CubicGrid:
-    """Return the cubic grid of D3 for a charge of this extent, checked by :func:`check_box`.
-
-    ``x`` and ``y`` are centred on the axis, which is then a node line. ``z`` is
-    centred on the charge, to the nearest node position that puts
-    ``interface_z_nm`` (a membrane face) midway between two fine planes, so that no
-    edge parallel to the slab lies on it (*Design* section 2).
-
-    Parameters
-    ----------
-    extent
-        The lattice's charge extent, from :func:`charge_extent`.
-    spacing_nm, dime
-        The fine grid; ``dime`` odd, so the axis is a node line.
-    interface_z_nm
-        A plane to stagger the ``z`` nodes off, or ``None`` to centre the charge
-        exactly.
-    margin_nm
-        Passed to :func:`check_box`.
-    """
     if dime % 2 == 0:
         raise ValueError(f"dime {dime} is even, so the axis would not be a node line")
     half = 0.5 * spacing_nm * (dime - 1)
@@ -384,16 +245,7 @@ def fit_grid(
     return grid
 
 
-# -- the charge map --------------------------------------------------------------
-
-
 def lattice_charges(lattice: RadialGrid) -> np.ndarray:
-    """Return each lattice node's charge ``Q_n = tau_n a_n / e``, ``[i_z, i_r]``, in e.
-
-    ``a_n`` is the areal density ``2 pi r rho`` in C m^-2 and ``tau_n`` the
-    trapezium weights in nm^2, which carry the spacings: the mass the deposit
-    projects (WP28 *Design* section 2), whose sum is the lattice's planar integral.
-    """
     import numpy as np
 
     weights = np.outer(lattice.trapezium_weights("z"), lattice.trapezium_weights("r"))
@@ -401,11 +253,6 @@ def lattice_charges(lattice: RadialGrid) -> np.ndarray:
 
 
 def _hat_matrix(coordinates: np.ndarray, nodes: np.ndarray) -> csr_matrix:
-    """Return the sparse matrix moving each coordinate onto two neighbouring nodes, linearly.
-
-    A weight that would land on a node outside ``nodes`` is dropped: none does for a
-    coordinate inside the grid, and for a focused grid that is the clipping wanted.
-    """
     import numpy as np
     from scipy.sparse import csr_matrix
 
@@ -429,14 +276,6 @@ def _ring_matrix(
     oversampling: int = RING_OVERSAMPLING,
     minimum_angles: int = MINIMUM_ANGLES,
 ) -> csc_matrix:
-    """Return the sparse ``(dime^2, rings)`` matrix spreading a unit ring onto the ``(x, y)`` nodes.
-
-    Ring ``j`` is sampled at ``M_j = max(minimum, ceil(oversampling 2 pi r_j / h))``
-    angles ``(m + 1/2) 2 pi / M_j``, each carrying ``1/M_j``, spread bilinearly to
-    its four ``(x, y)`` neighbours. The angles are symmetric under ``theta -> -theta``
-    and ``theta -> theta + pi`` when ``M_j`` is even, which it is made, so the
-    ring's ``(x, y)`` dipole vanishes (D4).
-    """
     import numpy as np
     from scipy.sparse import csc_matrix
 
@@ -480,25 +319,6 @@ def charge_map(
     chunk: int = 128,
     clip: bool = False,
 ) -> np.ndarray:
-    """Return APBS's charge map of the lattice, ``[ix, iy, iz]`` in e per cubic angstrom (D4).
-
-    Each lattice node's charge (:func:`lattice_charges`) is split between its two
-    neighbouring ``z`` planes linearly, then spread around its ring by
-    :func:`_ring_matrix`; the node sums are divided by ``h^3`` in cubic angstroms,
-    the unit ``READ charge`` takes (``.knowledge/07`` section 3). Rings are taken
-    ``chunk`` at a time, so memory stays at the map and one chunk's samples.
-
-    ``clip`` is for a focused grid that does not hold the whole charge: the weights
-    landing outside it are dropped. Each interior node still receives
-    ``int rho phi_j`` over its own support, which lies inside, and the charge
-    outside reaches the interior only through the face data.
-
-    Raises
-    ------
-    BoxError
-        Without ``clip``, if the lattice's charge does not fit the box
-        (:func:`check_box` with no margin): a node outside the grid would be cut.
-    """
     import numpy as np
 
     if not clip:
@@ -521,30 +341,8 @@ def charge_map(
     return nodes.reshape(grid.dime, grid.dime, grid.dime) / volume
 
 
-# -- the dielectric -------------------------------------------------------------
-
-
 @dataclass(frozen=True)
 class MaterialRaster:
-    """The deployed mesh's permittivity and materials on a cell-centred ``(r, z)`` raster.
-
-    Parameters
-    ----------
-    spacing_nm
-        The cell size; cell ``[i_z, i_r]`` covers ``r`` from ``i_r h`` and ``z`` from
-        ``z0 + i_z h``.
-    z0_nm
-        The lower ``z`` edge of the first row.
-    permittivity
-        ``[i_z, i_r]``, the relative permittivity at each cell centre.
-    material
-        ``[i_z, i_r]``, the index into ``materials`` at each cell centre.
-    materials
-        The mesh's material names.
-    fluid, solids
-        Which materials are the fluid and which are solid.
-    """
-
     spacing_nm: float
     z0_nm: float
     permittivity: np.ndarray
@@ -557,13 +355,6 @@ class MaterialRaster:
     _distance: list[np.ndarray] = field(default_factory=list, init=False, repr=False, compare=False)
 
     def r_index(self, r_nm: np.ndarray) -> np.ndarray:
-        """Return the column of the cells holding radii ``r_nm``.
-
-        Raises
-        ------
-        ValueError
-            If a radius lies outside the raster.
-        """
         import numpy as np
 
         index = np.floor(np.asarray(r_nm) / self.spacing_nm).astype(np.int64)
@@ -576,13 +367,6 @@ class MaterialRaster:
         return index
 
     def z_index(self, z_nm: np.ndarray) -> np.ndarray:
-        """Return the row of the cells holding heights ``z_nm``.
-
-        Raises
-        ------
-        ValueError
-            If a height lies outside the raster.
-        """
         import numpy as np
 
         index = np.floor((np.asarray(z_nm) - self.z0_nm) / self.spacing_nm).astype(np.int64)
@@ -595,18 +379,12 @@ class MaterialRaster:
         return index
 
     def mask(self, names: frozenset[str]) -> np.ndarray:
-        """Return ``[i_z, i_r]``, true where the cell's material is in ``names``."""
         import numpy as np
 
         selected = np.array([name in names for name in self.materials], dtype=bool)
         return np.asarray(selected[self.material])
 
     def solid_distance_nm(self) -> np.ndarray:
-        """Return ``[i_z, i_r]``, each cell centre's distance to the nearest solid cell centre.
-
-        The ``(r, z)`` distance is the 3D distance to a body of revolution, whose
-        nearest point lies in the same meridional half-plane. Computed once.
-        """
         if not self._distance:
             from scipy.ndimage import distance_transform_edt
 
@@ -623,11 +401,6 @@ class MaterialRaster:
 
 
 def raster_extent(grid: CubicGrid) -> tuple[float, float, float]:
-    """Return the ``r_max``, ``z_min`` and ``z_max`` a raster must cover for ``grid``'s maps.
-
-    Every edge sample of a staggered map lies within one spacing of the box; the
-    margin is two fine spacings, so the same raster serves the nested ``2h`` grid.
-    """
     reach = 2.0 * grid.spacing_nm
     x = max(abs(grid.origin_nm[0]), abs(grid.upper_nm[0])) + reach
     y = max(abs(grid.origin_nm[1]), abs(grid.upper_nm[1])) + reach
@@ -645,32 +418,6 @@ def raster_from_mesh(
     z_max_nm: float,
     spacing_nm: float = RASTER_NM,
 ) -> MaterialRaster:
-    """Sample the assembled permittivity and the materials on a cell-centred raster (D5).
-
-    Parameters
-    ----------
-    mesh
-        The deployed mesh the solve used: its materials, not stage 5's contour,
-        are the FE solve's geometry, so both solvers see the same polygonal
-        interface (*Design* section 3).
-    permittivity
-        The *relative* permittivity ``eps_r`` the solve assembled, as
-        :meth:`~nanopnp.physics.models.PoissonModel.permittivity` returns it times
-        its scale.
-    fluid
-        The model's fluid material pattern, a regular expression.
-    solids
-        The solid materials, those in ``physics.solid_permittivities``.
-    r_max_nm, z_min_nm, z_max_nm
-        What the raster must cover, from :func:`raster_extent`.
-    spacing_nm
-        The cell size.
-
-    Raises
-    ------
-    ValueError
-        If a cell centre lies outside the mesh, where NGSolve evaluates zero.
-    """
     import numpy as np
 
     columns = math.ceil(r_max_nm / spacing_nm)
@@ -704,16 +451,6 @@ def raster_from_mesh(
 def dielectric_maps(
     raster: MaterialRaster, grid: CubicGrid, *, samples: int = EDGE_SAMPLES
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Return APBS's staggered ``x``, ``y`` and ``z`` permittivity maps, ``[ix, iy, iz]`` (D5).
-
-    Node ``(i, j, k)`` of the ``a``-map lies at the grid node plus ``h/2`` along
-    ``a``, as APBS reads it (``.knowledge/07`` section 3). Its value is the
-    harmonic mean ``samples / sum_s 1/eps(x + u_s e_a)`` over the edge from node
-    ``(i, j, k)`` to its neighbour along ``a``, ``u_s = (s + 1/2) h / samples``,
-    read from the raster's nearest cell. The harmonic mean makes the flux across an
-    interface normal to the edge exact; on the dielectric sphere it halves point
-    sampling's error (*Design* section 3).
-    """
     import numpy as np
 
     h = grid.spacing_nm
@@ -743,11 +480,7 @@ def dielectric_maps(
     return maps[0], maps[1], maps[2]
 
 
-# -- the face data ---------------------------------------------------------------
-
-
 def _face_nodes(grid: CubicGrid) -> np.ndarray:
-    """Return the ``(n, 3)`` indices of the nodes on the box's six faces."""
     import numpy as np
 
     last = grid.dime - 1
@@ -757,12 +490,6 @@ def _face_nodes(grid: CubicGrid) -> np.ndarray:
 
 
 def unique_meridional(points_nm: np.ndarray, *, decimals: int = 9) -> tuple[np.ndarray, np.ndarray]:
-    """Return the distinct ``(r, z)`` of ``(n, 3)`` points, and the map back to each point.
-
-    A box's nodes repeat each ``(r, z)`` many times by symmetry; sampling an
-    axisymmetric field once per distinct pair is what keeps the probe and face
-    evaluations cheap.
-    """
     import numpy as np
 
     meridional = np.stack(
@@ -773,17 +500,9 @@ def unique_meridional(points_nm: np.ndarray, *, decimals: int = 9) -> tuple[np.n
 
 
 Sampler = Callable[["np.ndarray", "np.ndarray"], "np.ndarray"]
-"""A potential in ``kT/e`` at arrays of ``r`` and ``z`` in nm: ours, or a closed form."""
 
 
 def potential_sampler(solution: ModelSolution, *, order: int) -> Sampler:
-    """Return our solution's potential as a :data:`Sampler`, read through ``sample_at`` (D6).
-
-    The one way a VAL-06 test reads our side: through a whole-domain carrier of
-    ``order`` (:func:`~nanopnp.post.export.sample_at`), which is right on an interface
-    node where evaluating a restricted space directly is not. The carriers are
-    built once and reused by every call.
-    """
     import numpy as np
 
     mesh = solution.space.mesh
@@ -798,12 +517,6 @@ def potential_sampler(solution: ModelSolution, *, order: int) -> Sampler:
 
 
 def face_map(grid: CubicGrid, potential: Sampler) -> np.ndarray:
-    """Return a potential map, ``[ix, iy, iz]`` in ``kT/e``, carrying ``potential`` on the faces.
-
-    ``bcfl map`` reads only the face values (``.knowledge/07`` section 3), so the
-    interior is left at zero rather than sampled (D2). An axisymmetric potential is
-    evaluated once per distinct ``(r, z)``.
-    """
     import numpy as np
 
     def at_points(points: np.ndarray) -> np.ndarray:
@@ -815,10 +528,6 @@ def face_map(grid: CubicGrid, potential: Sampler) -> np.ndarray:
 
 
 def face_map_3d(grid: CubicGrid, potential: Callable[[np.ndarray], np.ndarray]) -> np.ndarray:
-    """Return a potential map carrying ``potential``, a function of ``(n, 3)`` points, on the faces.
-
-    For focusing from a coarser APBS solution, which is not axisymmetric.
-    """
     import numpy as np
 
     index = _face_nodes(grid)
@@ -829,11 +538,6 @@ def face_map_3d(grid: CubicGrid, potential: Callable[[np.ndarray], np.ndarray]) 
 
 
 def trilinear(values: np.ndarray, grid: CubicGrid) -> Callable[[np.ndarray], np.ndarray]:
-    """Return ``values[ix, iy, iz]`` on ``grid`` as a trilinear function of ``(n, 3)`` points in nm.
-
-    APBS's own interpolation of a map between nodes. A point outside the grid is
-    refused rather than extrapolated.
-    """
     import numpy as np
     from scipy.ndimage import map_coordinates
 
@@ -846,16 +550,7 @@ def trilinear(values: np.ndarray, grid: CubicGrid) -> Callable[[np.ndarray], np.
     return sample
 
 
-# -- files -------------------------------------------------------------------------
-
-
 def write_dx(path: Path, values: np.ndarray, origin_nm: Sequence[float], spacing_nm: float) -> Path:
-    """Write ``values[ix, iy, iz]`` as an OpenDX scalar map in angstroms, as APBS reads it.
-
-    Three values per line at ``%.10e``, ``z`` fastest. Formatted in one ``%`` over
-    the whole array: GridDataFormats' writer formats each of the ~7 M values of a
-    193^3 map in a Python loop (D13).
-    """
     import numpy as np
 
     counts = " ".join(str(n) for n in values.shape)
@@ -887,17 +582,6 @@ def write_dx(path: Path, values: np.ndarray, origin_nm: Sequence[float], spacing
 
 
 def read_dx(path: Path) -> tuple[np.ndarray, tuple[float, float, float], float]:
-    """Return an OpenDX map's values ``[ix, iy, iz]``, origin in nm and spacing in nm.
-
-    Read through GridDataFormats (D13), whose reader takes APBS's output as is.
-
-    Raises
-    ------
-    ApbsError
-        If GridDataFormats, which is behind the ``structure`` extra, is not installed.
-    ValueError
-        If the map's spacing is not the same along the three axes.
-    """
     import numpy as np
 
     try:
@@ -923,10 +607,6 @@ def read_dx(path: Path) -> tuple[np.ndarray, tuple[float, float, float], float]:
 def write_pqr(
     path: Path, positions_nm: np.ndarray, charges_e: np.ndarray, radii_nm: np.ndarray
 ) -> Path:
-    """Write atoms as a whitespace-delimited PQR in angstroms, as APBS reads it.
-
-    APBS splits a PQR line on whitespace, so no column alignment is needed.
-    """
     import numpy as np
 
     xyz = np.asarray(positions_nm, dtype=np.float64).reshape(-1, 3) * NM_TO_ANGSTROM
@@ -940,13 +620,8 @@ def write_pqr(
     return path
 
 
-# -- running APBS --------------------------------------------------------------------
-
-
 @dataclass(frozen=True)
 class SmolSurface:
-    """APBS's own charge and surface from a PQR: the recorded leg's inputs (D9)."""
-
     pqr: Path
     pdie: float
     srad_nm: float = 0.14
@@ -956,31 +631,6 @@ class SmolSurface:
 
 @dataclass(frozen=True)
 class ApbsProblem:
-    """One APBS solve: the grid, the maps and the deck settings.
-
-    Parameters
-    ----------
-    grid
-        The grid the maps are on and the solve uses.
-    temperature_K
-        The deck's ``temp``, the case's temperature.
-    sdie
-        The solvent permittivity named in the deck. With dielectric maps it is
-        read only for bookkeeping; with a surface it is the solvent's value.
-    charge
-        The charge map in e per cubic angstrom, or ``None`` to take the charge
-        from ``surface``'s PQR with ``chgm spl4``.
-    dielectric
-        The three staggered maps, or ``None`` to build them from ``surface``.
-    faces
-        The potential map whose faces ``bcfl map`` reads, or ``None`` for ``bcfl
-        zero``.
-    surface
-        The PQR and surface settings of the recorded leg, or ``None``.
-    write_dielectric
-        Also write APBS's own dielectric maps (pass 1 of the recorded leg).
-    """
-
     grid: CubicGrid
     temperature_K: float
     sdie: float
@@ -993,24 +643,17 @@ class ApbsProblem:
 
 @dataclass(frozen=True)
 class ApbsSolution:
-    """APBS's potential and what the run cost."""
-
     potential: np.ndarray
-    """``[ix, iy, iz]`` in ``kT/e``, on the problem's grid."""
     seconds: float
     memory_GB: float | None
-    """APBS's own high-water allocation, from its log."""
     log: Path
     dielectric: tuple[np.ndarray, np.ndarray, np.ndarray] | None = None
-    """APBS's own staggered maps, when the problem asked for them."""
 
 
 DUMMY_POSITION_NM = 1000.0
-"""Where the deck's placeholder atom sits: far outside any box (APBS refuses no ``mol``)."""
 
 
 def _deck(problem: ApbsProblem, molecule: str) -> str:
-    """Return ``problem``'s input deck, naming its maps as :func:`run_apbs` writes them."""
     grid = problem.grid
     read = [f"    mol pqr {molecule}"]
     keywords = []
@@ -1075,22 +718,14 @@ def _deck(problem: ApbsProblem, molecule: str) -> str:
 
 
 HIGH_WATER = re.compile(r"Final memory usage:.*?([0-9.]+) MB high water")
-"""APBS's own report of its peak allocation, the last line of a finished run's log.
-
-Read from the log rather than from the child's ``ru_maxrss``: on Linux that is a
-high-water mark kept across ``execve``, so it includes the pages of the Python
-process that forked it, 1.4 GB under pytest against APBS's own 0.24 GB at 97^3.
-"""
 
 
 def _high_water_GB(log: Path) -> float | None:
-    """Return APBS's high-water memory from its log, in GB, or ``None`` if it reports none."""
     found = HIGH_WATER.findall(log.read_text(encoding="utf-8", errors="replace"))
     return float(found[-1]) / 1000.0 if found else None
 
 
 def _wait(process: subprocess.Popen[str], *, timeout_s: float, name: str, log: Path) -> int:
-    """Wait for ``process`` and return its exit code, killing it at the time limit."""
     try:
         return process.wait(timeout=timeout_s)
     except subprocess.TimeoutExpired:
@@ -1102,14 +737,6 @@ def _wait(process: subprocess.Popen[str], *, timeout_s: float, name: str, log: P
 
 
 def write_inputs(problem: ApbsProblem, directory: Path) -> Path:
-    """Write ``problem``'s maps, molecule and deck into ``directory``; return the deck.
-
-    The charge and potential maps take the grid's origin, and each dielectric map
-    the origin plus ``h/2`` along its own axis, where APBS samples it
-    (``.knowledge/07`` section 3). Without a surface the molecule is a one-atom,
-    zero-charge placeholder far outside the box, because APBS refuses a deck with
-    no ``mol`` even when every input is a map.
-    """
     import numpy as np
 
     directory.mkdir(parents=True, exist_ok=True)
@@ -1144,19 +771,6 @@ def run_apbs(
     timeout_s: float = TIMEOUT_S,
     keep_maps: bool = False,
 ) -> ApbsSolution:
-    """Write ``problem``'s maps and deck into ``workspace/name``, run APBS and read the potential.
-
-    The maps are deleted once read, about 0.6 GB of text at 193^3, unless
-    ``keep_maps``; the deck and APBS's log stay beside where they were.
-
-    Raises
-    ------
-    ApbsError
-        If APBS is not available, exits nonzero, writes no potential, or runs past
-        ``timeout_s``. The message names the run and quotes the end of its log.
-    ValueError
-        If the potential APBS wrote is not on the problem's grid.
-    """
     import numpy as np
 
     missing = apbs_available()
@@ -1221,25 +835,8 @@ def run_apbs(
     )
 
 
-# -- probes and the metric -------------------------------------------------------------
-
-
 @dataclass(frozen=True)
 class ProbeSet:
-    """The probes of D6: nodes of the nested ``2h`` grid in the fluid, away from solids and faces.
-
-    Parameters
-    ----------
-    fine
-        ``(n, 3)`` indices into the fine grid.
-    coarse
-        ``(n, 3)`` indices into the nested ``2h`` grid: ``fine / 2``.
-    points_nm
-        ``(n, 3)`` coordinates.
-    axis
-        ``(n,)``, true for the probes on ``r = 0``.
-    """
-
     fine: np.ndarray
     coarse: np.ndarray
     points_nm: np.ndarray
@@ -1247,11 +844,9 @@ class ProbeSet:
 
     @property
     def count(self) -> int:
-        """Return the number of probes."""
         return int(self.fine.shape[0])
 
     def sample(self, potential: Sampler) -> np.ndarray:
-        """Return ``potential`` at every probe, evaluated once per distinct ``(r, z)``."""
         import numpy as np
 
         meridional, inverse = unique_meridional(self.points_nm)
@@ -1259,7 +854,6 @@ class ProbeSet:
         return np.asarray(values.reshape(-1)[inverse])
 
     def subset(self, keep: np.ndarray) -> ProbeSet:
-        """Return the probes where ``keep`` is true."""
         return ProbeSet(
             fine=self.fine[keep],
             coarse=self.coarse[keep],
@@ -1268,7 +862,6 @@ class ProbeSet:
         )
 
     def at(self, values: np.ndarray, *, coarse: bool = False) -> np.ndarray:
-        """Return a map ``[ix, iy, iz]`` at the probes, on the fine grid or the nested one."""
         import numpy as np
 
         index = self.coarse if coarse else self.fine
@@ -1283,20 +876,6 @@ def probe_set(
     solid_distance_nm: float = SOLID_DISTANCE_NM,
     face_margin_nm: float = FACE_MARGIN_NM,
 ) -> ProbeSet:
-    """Return D6's probes on ``grid``: every ``stride``-th node in a fluid material.
-
-    A probe lies at least ``solid_distance_nm`` from every solid, by an ``(r, z)``
-    distance transform of the raster, and at least ``face_margin_nm`` inside every
-    face. The probes on ``r = 0`` are a named subset.
-
-    ``stride`` is even, so that every probe is also a node of the nested ``2h``
-    grid (:meth:`CubicGrid.coarsened`) that ``ProbeSet.coarse`` indexes.
-
-    Raises
-    ------
-    ValueError
-        If ``stride`` is not a positive even number, or if no node qualifies.
-    """
     import numpy as np
 
     if stride <= 0 or stride % 2:
@@ -1327,33 +906,21 @@ def probe_set(
 
 
 class Norms(BaseModel):
-    """D6's three relative norms of a difference against a reference potential."""
-
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     max: float
-    """``max |difference| / max |reference|`` over the probes."""
     rms: float
-    """``rms difference / rms reference`` over the probes."""
     axis: float
-    """``max`` over the probes on ``r = 0``."""
 
     def __add__(self, other: Norms) -> Norms:
-        """Return the sum, norm by norm: the budget adds the two solvers' estimates."""
         return Norms(
             max=self.max + other.max, rms=self.rms + other.rms, axis=self.axis + other.axis
         )
 
     def scaled(self, factor: float) -> Norms:
-        """Return every norm times ``factor``."""
         return Norms(max=self.max * factor, rms=self.rms * factor, axis=self.axis * factor)
 
     def exceeding(self, limit: Norms) -> list[str]:
-        """Return the names of the norms above ``limit``'s, in the order max, rms, axis.
-
-        A norm that is not a number exceeds every limit: NaN compares false, and a
-        gate that read ``NaN > limit`` as a pass would report one it cannot defend.
-        """
         return [
             name
             for name in ("max", "rms", "axis")
@@ -1362,22 +929,9 @@ class Norms(BaseModel):
 
 
 TOLERANCE = Norms(max=0.03, rms=0.01, axis=0.015)
-"""VAL-06's tolerance: 3 % max, 1 % rms and 1.5 % on the axis.
-
-``SPECIFICATION.md`` section 7.4, the VAL-06 row and its NOTE; ruled by the author on
-the WP29 plan's *Design* section 4.
-"""
 
 
 def norms(difference: np.ndarray, reference: np.ndarray, axis: np.ndarray) -> Norms:
-    """Return D6's norms of ``difference`` relative to ``reference`` at the same probes.
-
-    Raises
-    ------
-    ValueError
-        If no probe lies on the axis, if either array is not finite, or if the
-        reference is zero over the probes or the axis, so no norm relative to it exists.
-    """
     import numpy as np
 
     if not (np.all(np.isfinite(difference)) and np.all(np.isfinite(reference))):
@@ -1396,16 +950,7 @@ def norms(difference: np.ndarray, reference: np.ndarray, axis: np.ndarray) -> No
     )
 
 
-# -- the gated leg ------------------------------------------------------------------------
-
-
 class Val06Report(BaseModel):
-    """One VAL-06 comparison, written as JSON beside the run (D13).
-
-    The budget and the visibility are measured before the agreement, and
-    :func:`check_report` reads them in that order.
-    """
-
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     leg: Literal["gated", "recorded"]
@@ -1416,35 +961,19 @@ class Val06Report(BaseModel):
     probes: int
     axis_probes: int
     potential_scale: dict[str, float]
-    """``max |phi|`` and ``rms phi`` of ours over the probes, in ``kT/e``."""
     apbs_refinement: Norms
-    """``e^_A``: APBS at ``h`` against ``2h``, relative to ours (D8)."""
     ours_refinement: Norms | None
-    """``e^_F``: ours at the higher order against the lower, relative to ours (D8)."""
     budget: Norms | None
-    """``e^_A + e^_F``, which must lie within half of :data:`TOLERANCE`."""
     charge_visibility: float
-    """``rms(phi_A(2h) - phi_A(2h, no charge)) / rms phi``, which must reach 10 ``tau_rms``."""
     agreement: Norms
-    """APBS at ``h`` against ours."""
     tolerance: Norms
     seconds: dict[str, float]
     memory_GB: dict[str, float | None]
-    """APBS's own high-water allocation per run, from its log, in GB; a caller may add its own."""
     mesh: dict[str, object] = {}
-    """The deployed mesh's element count, hash and the solve's orders, when known."""
     stabilisation: str = "none"
-    """The solve's stabilisation mode: ``poisson`` assembles none."""
 
 
 def check_report(report: Val06Report, *, tolerance: Norms = TOLERANCE) -> None:
-    """Raise if VAL-06 fails: the budget first, then the visibility, then the agreement.
-
-    Raises
-    ------
-    Val06Error
-        Naming the failing check, the norm and both numbers.
-    """
     half = tolerance.scaled(0.5)
     if report.budget is None:
         raise Val06Error("VAL-06 needs the refinement budget, and this report carries none")
@@ -1479,28 +1008,6 @@ def check_report(report: Val06Report, *, tolerance: Norms = TOLERANCE) -> None:
 
 @dataclass(frozen=True)
 class GatedInputs:
-    """What the gated leg needs from our side.
-
-    Parameters
-    ----------
-    lattice
-        Stage 7's export lattice, the areal density in the model frame.
-    raster
-        The permittivity and materials of the solve, from :func:`raster_from_mesh`
-        over :func:`raster_extent` of the fine grid.
-    ours
-        Our solution in ``kT/e``, which also supplies the face data.
-    refined
-        Our solution at the higher order, for ``e^_F``; ``None`` to leave the
-        budget unmeasured, which :func:`check_report` refuses.
-    temperature_K
-        The case's temperature.
-    sdie
-        The fluid's relative permittivity, ``eps_r,f^0``.
-    structure
-        A name for the report.
-    """
-
     lattice: RadialGrid
     raster: MaterialRaster
     ours: Sampler
@@ -1512,7 +1019,6 @@ class GatedInputs:
 
 
 def gated_problem(inputs: GatedInputs, grid: CubicGrid) -> ApbsProblem:
-    """Return the gated leg's APBS problem on ``grid``: the charge, dielectric and face maps."""
     return ApbsProblem(
         grid=grid,
         temperature_K=inputs.temperature_K,
@@ -1525,21 +1031,6 @@ def gated_problem(inputs: GatedInputs, grid: CubicGrid) -> ApbsProblem:
 
 @dataclass(frozen=True)
 class GatedResult:
-    """What :func:`gated_leg` measured.
-
-    Parameters
-    ----------
-    report
-        The record; :func:`check_report` is the gate.
-    probes
-        The probes.
-    sampled
-        The potentials at the probes, in ``kT/e``: ``ours``, ``refined``, ``apbs``,
-        ``apbs_coarse`` and ``apbs_uncharged``.
-    potential
-        APBS's potential on the fine grid, ``[ix, iy, iz]``, for a focused check.
-    """
-
     report: Val06Report
     probes: ProbeSet
     sampled: dict[str, np.ndarray]
@@ -1553,22 +1044,6 @@ def gated_leg(
     *,
     timeout_s: float = TIMEOUT_S,
 ) -> GatedResult:
-    """Run VAL-06's gated leg on ``grid`` and its nested ``2h`` grid (D2 to D8).
-
-    Three APBS solves: ``h``, ``2h``, and ``2h`` with the charge zeroed. Then the
-    probes, the budget ``e^_A + e^_F``, the charge visibility and the agreement,
-    each relative to our solution at the probes.
-
-    The box and the probes are checked before any APBS run, so a grid that holds the
-    charge less than D3's margin inside a face, or a raster with no probe in it, is
-    refused before the solves rather than after them.
-
-    Raises
-    ------
-    BoxError
-        If ``grid`` does not hold the lattice's charge ``CHARGE_MARGIN_NM`` inside
-        every face (D3), whether or not :func:`fit_grid` made it.
-    """
     import numpy as np
 
     check_box(grid, charge_extent(inputs.lattice))
@@ -1643,10 +1118,7 @@ def gated_leg(
     )
 
 
-# -- the recorded leg ---------------------------------------------------------------------
-
 RING_ANGLES = 24
-"""Azimuthal samples per probe ring on the recorded leg (WP29 D9)."""
 
 
 def impose_materials(
@@ -1657,18 +1129,6 @@ def impose_materials(
     permittivities: Mapping[str, float],
     threshold: float,
 ) -> tuple[tuple[np.ndarray, np.ndarray, np.ndarray], int]:
-    """Return APBS's own dielectric maps with our solids imposed where APBS sees solvent (D9).
-
-    An edge takes ``permittivities[m]`` where our mesh's material at its midpoint is
-    ``m`` and APBS's value exceeds ``threshold``, ``(pdie + sdie)/2``: APBS's surface
-    knows the protein but not the membrane, and without it the recorded leg would
-    measure the slab rather than the azimuthal averaging.
-
-    Returns
-    -------
-    tuple
-        The three maps, and how many edges were changed.
-    """
     import numpy as np
 
     names = list(raster.materials)
@@ -1696,11 +1156,6 @@ def impose_materials(
 def ring_statistics(
     potential: np.ndarray, grid: CubicGrid, points_nm: np.ndarray, *, angles: int = RING_ANGLES
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Return APBS's azimuthal mean and spread (max - min) on each point's ring, trilinearly.
-
-    Each distinct ``(r, z)`` is sampled at ``angles`` equal angles; the result is
-    mapped back to every point.
-    """
     import numpy as np
 
     meridional, inverse = unique_meridional(points_nm)
@@ -1721,8 +1176,6 @@ def ring_statistics(
 
 
 class RecordedReport(BaseModel):
-    """VAL-06's recorded leg: APBS's own model of the PQR against ours (D9). Not gated."""
-
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     leg: Literal["recorded"] = "recorded"
@@ -1733,33 +1186,15 @@ class RecordedReport(BaseModel):
     axis_probes: int
     angles: int
     imposed_edges: int
-    """Edges of APBS's maps set to a solid of ours that its surface called solvent."""
     agreement: Norms
-    """APBS's azimuthal mean on each probe's ring against ours."""
     nodes: Norms
-    """APBS at the probe nodes themselves against ours, before the azimuthal mean."""
     spread: dict[str, float]
-    """``max`` and ``rms`` of the ring spread, relative to ours' max and rms: the 3D structure."""
     seconds: dict[str, float]
     memory_GB: dict[str, float | None]
 
 
 @dataclass(frozen=True)
 class RecordedInputs:
-    """What the recorded leg needs.
-
-    Parameters
-    ----------
-    pqr
-        One frame's atoms in the model frame, as :func:`write_pqr` writes them.
-    raster, ours, temperature_K, sdie, structure
-        As for :class:`GatedInputs`.
-    pdie
-        The protein's permittivity, APBS's ``pdie``.
-    imposed
-        Solids APBS's surface does not know, and their permittivity: the membrane.
-    """
-
     pqr: Path
     raster: MaterialRaster
     ours: Sampler
@@ -1778,23 +1213,6 @@ def recorded_leg(
     *,
     timeout_s: float = TIMEOUT_S,
 ) -> tuple[RecordedReport, dict[str, np.ndarray]]:
-    """Run VAL-06's recorded leg on ``grid``: two APBS passes, compared per ring (D9).
-
-    Pass 1 takes APBS's ``chgm spl4`` charge and ``srfm smol`` surface from the
-    PQR and writes its dielectric maps; our membrane is imposed on them
-    (:func:`impose_materials`); pass 2 solves on the result with our solution on
-    the faces. Each probe's ring is sampled at :data:`RING_ANGLES` angles: the mean
-    is compared with ours, and the spread is what the azimuthal averaging of CON-04
-    removes. Only the probes whose whole ring lies in the box are compared; a
-    probe towards a corner of the box has a ring that leaves it.
-
-    Returns
-    -------
-    tuple
-        The report, and the arrays over the compared probes: ``ours``, ``mean``,
-        ``spread``, ``nodes`` and ``axis``, the mask of those on ``r = 0``, so that a
-        caller combining frames needs no second copy of the subset's rule.
-    """
     import numpy as np
 
     reach = min(-grid.origin_nm[0], grid.upper_nm[0], -grid.origin_nm[1], grid.upper_nm[1])

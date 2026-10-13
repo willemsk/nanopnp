@@ -1,25 +1,4 @@
-"""Read and check the findings logs under ``docs/`` (VER-63; section 8.2.7 G4).
-
-A findings log is a Markdown file named ``*findings.md``: YAML front matter
-declaring its prefix, its status and its areas, then one table with a row per
-finding. Phase 4 keeps two, the modularity report's ``MOD-nn`` and the user
-testing's ``UT-nn``, and its close is asserted by this check on logs whose header
-says ``closed`` (WP35 D17, Design section 3)::
-
-    ---
-    findings:
-      prefix: MOD
-      status: open        # open | closed
-      areas: [stages, coupling, extension, surface]
-    ---
-
-    | ID | Area | Severity | Status | Ruling | Finding |
-
-A row's ruling is ``—`` while it is ``open``; a section 8.2 row, written
-``§8.2.N Xk``, for ``accepted``, ``deferred``, ``post-1.0`` and ``declined``; and a
-link to a plan under ``docs/plans/`` for ``fixed``. Its finding cell links to the
-finding's section of the report, and the anchor must name a heading there.
-"""
+"""Read and check the findings logs under ``docs/`` (VER-63; section 8.2.7 G4)."""
 
 from __future__ import annotations
 
@@ -34,62 +13,44 @@ from pathlib import Path
 import yaml
 
 REPOSITORY = Path(__file__).resolve().parents[3]
-"""The repository root, holding ``SPECIFICATION.md`` and ``docs/``."""
 
 COLUMNS: tuple[str, ...] = ("ID", "Area", "Severity", "Status", "Ruling", "Finding")
-"""The log table's header, in order (D17)."""
 
 SEVERITIES: tuple[str, ...] = ("high", "medium", "low")
-"""High: a SHALL the code does not meet. Medium: a property held only by convention, or
-an extension needing an edit outside its home. Low: size or tidiness (WP35 D9)."""
 
 STATUSES: tuple[str, ...] = ("open", "accepted", "fixed", "deferred", "post-1.0", "declined")
-"""Every status a row may take (Design section 3)."""
 
 TERMINAL: frozenset[str] = frozenset({"fixed", "deferred", "post-1.0", "declined"})
-"""The statuses a ``closed`` log admits (G4)."""
 
 RULED_BY_SPEC: frozenset[str] = frozenset({"accepted", "deferred", "post-1.0", "declined"})
-"""The statuses whose ruling is a section 8.2 row."""
 
 UNRULED = "—"
-"""The ruling cell of an ``open`` row."""
 
 LOG_SUFFIX = "findings.md"
-"""The ending that makes a Markdown file under ``docs/`` a findings log."""
 
 SPEC_ROW = re.compile(r"^§8\.2\.(\d+) ([A-Z]\d+)$")
-"""A ruling naming a section 8.2 row: ``§8.2.7 G4``."""
 
 LINK = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
-"""An inline Markdown link, capturing its target."""
 
 FRONT_MATTER = re.compile(r"\A---\n(.*?)\n---\n", re.DOTALL)
-"""A page's YAML front matter."""
 
 
 @dataclass(frozen=True)
 class Row:
-    """One finding of a log, its cells as written."""
-
     line: int
     cells: tuple[str, ...]
 
     def cell(self, column: str) -> str:
-        """Return the cell under ``column``, or an empty string on a short row."""
         index = COLUMNS.index(column)
         return self.cells[index] if index < len(self.cells) else ""
 
     @property
     def id(self) -> str:
-        """The finding's identifier."""
         return self.cell("ID")
 
 
 @dataclass(frozen=True)
 class FindingsLog:
-    """A parsed findings log."""
-
     path: Path
     prefix: str
     status: str
@@ -97,17 +58,10 @@ class FindingsLog:
     rows: tuple[Row, ...]
 
 
-class LogFormatError(ValueError):
-    """A findings log cannot be parsed: no front matter, no table, or a wrong header."""
+class LogFormatError(ValueError): ...
 
 
 def front_matter(text: str) -> dict[str, object] | None:
-    """Return a page's YAML front matter as a mapping, or ``None`` if it has none.
-
-    Front matter that is not valid YAML, or not a mapping, counts as none, so that
-    :func:`logs` scanning every page under ``docs/`` cannot be stopped by one, and
-    :func:`check_log` refuses a log carrying it by name rather than by a traceback.
-    """
     match = FRONT_MATTER.match(text)
     if match is None:
         return None
@@ -123,15 +77,6 @@ def _cells(line: str) -> tuple[str, ...]:
 
 
 def parse_log(path: Path) -> FindingsLog:
-    """Parse one log's front matter and the first table after it.
-
-    Raises
-    ------
-    LogFormatError
-        If the front matter does not declare ``findings`` with exactly ``prefix``,
-        ``status`` and a non-empty ``areas``, or if no table with the
-        :data:`COLUMNS` header follows it.
-    """
     text = path.read_text(encoding="utf-8")
     match = FRONT_MATTER.match(text)
     header = front_matter(text)
@@ -166,7 +111,6 @@ def parse_log(path: Path) -> FindingsLog:
 
 @lru_cache(maxsize=4)
 def _spec_rows(specification: Path) -> frozenset[tuple[str, str]]:
-    """Return ``(N, first cell)`` of every table row under each ``#### 8.2.N`` heading."""
     rows: set[tuple[str, str]] = set()
     section: str | None = None
     for line in specification.read_text(encoding="utf-8").splitlines():
@@ -180,7 +124,6 @@ def _spec_rows(specification: Path) -> frozenset[tuple[str, str]]:
 
 
 def slugify(heading: str) -> str:
-    """Return a heading's anchor as Python-Markdown's ``toc`` extension writes it."""
     text = unicodedata.normalize("NFKD", heading).encode("ascii", "ignore").decode("ascii")
     text = re.sub(r"[^\w\s-]", "", text).strip().lower()
     return re.sub(r"[-\s]+", "-", text)
@@ -251,15 +194,6 @@ def _row_errors(log: FindingsLog, row: Row, repository: Path) -> Iterator[str]:
 
 
 def check_log(path: Path, repository: Path = REPOSITORY) -> tuple[str, ...]:
-    """Return every error of one log, each naming the file, the line and the row; empty if none.
-
-    Refused: a header without the front matter or the reverse (D17), a log status
-    other than ``open`` or ``closed``, a wrong column count, a malformed or repeated
-    id, an area, severity or status outside the vocabulary, a ruling that does not
-    resolve or is of the wrong kind for the status, an ``open`` row with a ruling,
-    a non-terminal row under a ``closed`` log, and a finding cell that does not link
-    to an existing heading of the report (Design section 3).
-    """
     named = path.name.endswith(LOG_SUFFIX)
     declared = front_matter(path.read_text(encoding="utf-8"))
     has_header = declared is not None and "findings" in declared
@@ -290,7 +224,6 @@ def check_log(path: Path, repository: Path = REPOSITORY) -> tuple[str, ...]:
 
 
 def logs(repository: Path = REPOSITORY) -> tuple[Path, ...]:
-    """Return every Markdown file under ``docs/`` that is a log by name or by front matter."""
     found = []
     for path in sorted((repository / "docs").rglob("*.md")):
         if "_generated" in path.parts:
@@ -306,15 +239,12 @@ def logs(repository: Path = REPOSITORY) -> tuple[Path, ...]:
 
 @dataclass(frozen=True)
 class Counts:
-    """A log's rows counted by area, severity and status, for the end-of-phase report."""
-
     area: dict[str, int]
     severity: dict[str, int]
     status: dict[str, int]
 
 
 def counts(log: FindingsLog) -> Counts:
-    """Count a log's rows by area, by severity and by status."""
     return Counts(
         dict(Counter(row.cell("Area") for row in log.rows)),
         dict(Counter(row.cell("Severity") for row in log.rows)),

@@ -94,6 +94,8 @@ from `nanopnp` stage 2 (L = 6.75 nm). The script's 0.25 contour lies 0.13–0.24
 reduction's at the lumen, and 0.21–0.40 nm inside at the outer surface. The same bins, placed at
 their centres `(j + ½)w`, agree with the exact reduction to ≤ 0.01 nm. So the error lies entirely
 in the index-to-radius map, not in the binning **[tested]** (WP20 plan, Design §1, 26 Sep 2026).
+At L = 15 nm a feature at 1.65 nm reads 1.5744 nm and one at 5.66 nm reads 5.4615 nm **[verified]**
+(`validation/geometry.py`, `pqr2grid_radius`).
 
 **Answered by the author, 28 September 2026: it was.** The delivered 185-vertex polygon was made
 with `pqr2grid`'s radial binning at **L = 15 nm** (h = 0.05 nm), so `w/h = 31/30.05 = 1.03161` and

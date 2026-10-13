@@ -1,29 +1,4 @@
-"""The number-stability golden: one walk's numbers against the meshes they were recorded on.
-
-VER-62 (section 8.2.7 G10) asks two different questions of a gated walk, and the
-golden answers each with its own tolerance (WP35 D13, as amended):
-
-* **Did a change move a number?** Asked on a mesh the golden already holds, by
-  content hash, at :data:`SAME_MESH_TOLERANCE` relative. One mesh and one build
-  repeat bit for bit (``.knowledge/06`` section 8.1.5), so anything above
-  round-off is a change.
-* **Is the answer still right on a mesh the golden has not seen?** Netgen's mesh
-  moves with the platform and with NumPy's SIMD dispatch upstream of it
-  (``.knowledge/07`` section 5; ``.knowledge/06`` section 8.1.5). The walk is then
-  held against its reference mesh at its *mesh-moved* tolerance, which is derived,
-  never chosen: :data:`SAFETY_FACTOR` times the largest relative spread between
-  the meshes recorded for that walk, at least the same-mesh tolerance, and refused
-  above :data:`CEILING`. A walk with one recorded mesh has no measured spread and so
-  no mesh-moved tolerance: an unseen mesh fails, printing the entry to commit.
-
-The mesh hash classifies a run; it is not itself the assertion. The exception is
-the *reference environment*, the one CI and the gate pin (Linux x86-64 with NumPy
-dispatch capped at ``X86_V3``): there a mesh the golden does not hold fails, so a
-change that moves the mesh is caught at round-off on at least one leg.
-
-The golden is a JSON file of :class:`StabilityGolden`; values are stored as
-``float.hex`` so they round-trip exactly.
-"""
+"""The number-stability golden: one walk's numbers against the meshes they were recorded on."""
 
 from __future__ import annotations
 
@@ -42,52 +17,33 @@ from pydantic import BaseModel, ConfigDict, Field
 SCHEMA = "nanopnp/golden/stability/v0.5"
 
 SAME_MESH_TOLERANCE = 1e-8
-"""Relative, on a mesh the golden holds (G10; WP35 Design section 2)."""
 
 SAFETY_FACTOR = 10.0
-"""A walk's mesh-moved tolerance over the largest spread measured between its meshes."""
 
 CEILING = 1e-3
-"""No mesh-moved tolerance may exceed this, relative.
-
-A tenth of the +-1 % conductance floor below which no geometry comparison of
-this model resolves anything (``.knowledge/04``), so a tolerance at the ceiling
-still sits an order inside any number the project reports."""
 
 REFERENCE_ENVIRONMENT = "linux-x86_64/X86_V3"
-"""The environment where an unseen mesh always fails: CI's and the gate's pin."""
 
 
 class MeshEntry(BaseModel):
-    """One deployed mesh of a walk, and the walk's values on it."""
-
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     values: dict[str, str]
-    """Each scalar as ``float.hex``."""
     seen_on: list[str] = Field(default_factory=list)
-    """The environments, as :func:`environment` names them, that deployed this mesh."""
 
     def floats(self) -> dict[str, float]:
-        """Return the values as floats."""
         return {name: float.fromhex(value) for name, value in self.values.items()}
 
 
 class WalkGolden(BaseModel):
-    """Every mesh recorded for one walk, and the tolerance their spread argues."""
-
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     reference_mesh: str
-    """The mesh an unseen one is compared with: the reference environment's."""
     moved_tolerance: float | None
-    """Derived by :func:`moved_tolerance`; ``None`` while only one mesh is recorded."""
     meshes: dict[str, MeshEntry]
 
 
 class StabilityGolden(BaseModel):
-    """The whole golden file."""
-
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     schema_: Literal["nanopnp/golden/stability/v0.5"] = Field(alias="schema")
@@ -99,12 +55,10 @@ class StabilityGolden(BaseModel):
 
     @classmethod
     def read(cls, path: Path) -> StabilityGolden:
-        """Read and validate a golden file."""
         return cls.model_validate(json.loads(path.read_text(encoding="utf-8")))
 
     @classmethod
     def empty(cls) -> StabilityGolden:
-        """Return a golden with no walk, at this module's constants."""
         return cls.model_validate(
             {
                 "schema": SCHEMA,
@@ -117,7 +71,6 @@ class StabilityGolden(BaseModel):
         )
 
     def write(self, path: Path) -> None:
-        """Write the golden, walks and meshes sorted, so a diff shows only what moved."""
         document = self.model_dump(by_alias=True)
         document["walks"] = {
             walk: {**entry, "meshes": dict(sorted(entry["meshes"].items()))}
@@ -127,11 +80,6 @@ class StabilityGolden(BaseModel):
 
 
 def environment() -> str:
-    """Return ``<sys.platform>-<machine>/<highest NumPy SIMD target enabled>``.
-
-    The target is the last of NumPy's dispatch list this process runs, after
-    ``NPY_DISABLE_CPU_FEATURES``; the baseline's last entry when none is enabled.
-    """
     # NumPy publishes these only on its private extension module; numpy.show_runtime
     # reads them from there too. Imported here, not at module scope (CLAUDE.md).
     umath = importlib.import_module("numpy._core._multiarray_umath")
@@ -142,12 +90,10 @@ def environment() -> str:
 
 
 def relative_drift(value: float, reference: float) -> float:
-    """Return ``|value - reference| / |reference|``; a golden never holds zero."""
     return abs(value - reference) / abs(reference)
 
 
 def spread(walk: WalkGolden) -> float:
-    """Return the largest relative drift of any recorded mesh from the reference mesh."""
     reference = walk.meshes[walk.reference_mesh].floats()
     return max(
         (
@@ -160,12 +106,6 @@ def spread(walk: WalkGolden) -> float:
 
 
 def moved_tolerance(walk: WalkGolden, golden: StabilityGolden) -> float | None:
-    """Return the mesh-moved tolerance the walk's recorded meshes argue, or ``None``.
-
-    ``None`` with a single mesh. Otherwise ``safety_factor`` times :func:`spread`,
-    at least ``same_mesh_tolerance``. A value above ``ceiling`` is returned as it
-    is: :func:`fold` refuses it, and the Tier-1 check fails on it.
-    """
     if len(walk.meshes) < 2:
         return None
     return max(golden.safety_factor * spread(walk), golden.same_mesh_tolerance)
@@ -173,18 +113,14 @@ def moved_tolerance(walk: WalkGolden, golden: StabilityGolden) -> float | None:
 
 @dataclass(frozen=True)
 class Verdict:
-    """One walk's comparison with the golden: which question was asked, and its answer."""
-
     walk: str
     mode: Literal["same-mesh", "mesh-moved", "missing"]
     tolerance: float | None
     drifts: dict[str, float]
     failure: str | None
-    """``None`` when the walk holds; otherwise the message to fail with."""
 
 
 def entry_for(walk: str, mesh_hash: str, values: Mapping[str, float], where: str) -> str:
-    """Return the record :func:`fold` reads, as JSON, for a failing walk to print."""
     record = {
         "schema": SCHEMA,
         "walk": walk,
@@ -202,12 +138,6 @@ def compare(
     values: Mapping[str, float],
     where: str,
 ) -> Verdict:
-    """Compare one walk's ``values`` on ``mesh_hash``, computed in ``where``, with the golden.
-
-    On a recorded mesh, every value within ``same_mesh_tolerance`` of that mesh's.
-    On an unseen mesh outside the reference environment, every value within the
-    walk's ``moved_tolerance`` of the reference mesh's. Anything else fails.
-    """
     printed = entry_for(walk, mesh_hash, values, where)
     record = golden.walks.get(walk)
     if record is None:
@@ -281,21 +211,12 @@ def compare(
     return Verdict(walk, mode, tolerance, drifts, failure)
 
 
-class FoldError(ValueError):
-    """A record :func:`fold` refuses: it would overwrite, or push a tolerance past the ceiling."""
+class FoldError(ValueError): ...
 
 
 def fold(
     golden: StabilityGolden, record: Mapping[str, object], *, replace: bool = False
 ) -> StabilityGolden:
-    """Return ``golden`` with one recorded walk folded in, its tolerance re-derived.
-
-    A new mesh is added. A known mesh gains the environment in ``seen_on`` and keeps
-    its values, which the record must match within ``same_mesh_tolerance``, unless
-    ``replace`` (a G10 re-pin) overwrites them. A walk's first mesh, and
-    any mesh recorded in the reference environment, becomes its reference mesh. A fold that
-    derives a mesh-moved tolerance above the ceiling is refused.
-    """
     if record.get("schema") != SCHEMA:
         raise FoldError(f"record schema {record.get('schema')!r}, not {SCHEMA!r}")
     walk = str(record["walk"])

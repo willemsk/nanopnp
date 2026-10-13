@@ -1,40 +1,4 @@
-"""VAL-01 and VAL-02: what a solution and a golden differ by, and where.
-
-Three numbers per field, and the second of them is the point of the module.
-
-``rel_L2_r`` is the *r*-weighted axisymmetric relative L2 error — the norm the
-weak forms of section 6.2 are posed in, and therefore the VAL-01 quantity:
-
-    ||v||_r^2 = sum_{p in P_f}  w_p r_p v_p^2 ,     w_p = dr dz of p's patch
-
-with the ``2 pi`` cancelling in every ratio reported. It is also **blind on the
-axis**: the weight ``r_p`` is 0.005 nm on the near-axis line and about 3 nm at
-the pore wall, so a defect confined to the first column of probe points
-contributes of order 1e-3 of what the same defect contributes at the wall. The
-axis is exactly where the ``1/r`` forms of section 6.2 and the NUM-06 natural
-condition are fragile — section 7.1's own warning about integration order lives
-there — so a comparison reporting only ``rel_L2_r`` would be least sensitive
-precisely where this implementation is most likely to be wrong.
-
-``rel_l2`` is therefore reported beside it, weighting every probe point alike,
-and ``max_abs_rel`` with its ``(r, z)`` beside both, so a reader has a location
-and not only a magnitude (QR-12).
-
-**Pressure is compared gauge-free.** ``p`` enters the momentum equation only
-through ``grad p``, so any solution is a solution with a constant added unless a
-Dirichlet condition pins it, and COMSOL's pin is not ours and is not in the model
-report. Comparing raw ``p`` would make a gauge offset ``c`` contribute
-``|c| ||1||_r / ||g||_r``, of order 1 on a reservoir-scale grid — a 100 %
-discrepancy that looks like a flow defect and is not one. Both fields have their
-*r*-weighted mean removed first and the removed constants are reported.
-
-**The mask agreement is a gate, not a filter.** NGSolve returns ``0`` outside a
-space's ``definedon`` region and COMSOL writes ``NaN`` outside its solved domain;
-those are two independent statements about the same geometry, so comparing them
-tests the geometry. Intersecting them instead would silently absorb a real
-difference between our reference geometry and the one the export was made from,
-which is the one thing this comparison is in a position to notice.
-"""
+"""VAL-01 and VAL-02: what a solution and a golden differ by, and where."""
 
 from __future__ import annotations
 
@@ -70,15 +34,8 @@ __all__ = [
 ]
 
 PRESSURE_FIELD = "pressure"
-"""The one field compared gauge-free; see the module docstring."""
 
 VELOCITY_COMPONENTS: tuple[str, str] = ("velocity_r", "velocity_z")
-"""The golden's names for the two components of the half-plane velocity.
-
-Split because COMSOL exports ``u`` and ``w`` as two scalar expressions and a
-``%Grid`` table holds one scalar, so the transport format decides the vocabulary
-here rather than our own vector field doing so.
-"""
 
 COMPARED_QUANTITIES: tuple[str, ...] = (
     "current_A",
@@ -86,42 +43,10 @@ COMPARED_QUANTITIES: tuple[str, ...] = (
     "transport_number",
     "eof_m3_s",
 )
-"""The NUM-27 scalars VAL-02 compares, in the order the report prints them.
-
-``RR`` is absent deliberately: it is a two-point ratio (section 5.3.1 NOTE) and
-belongs to the matched opposite-bias *pair*, not to either case on its own, so
-the attribution report forms it from two comparisons rather than this function
-inventing one from a single golden.
-"""
 
 
 @dataclass(frozen=True)
 class FieldComparison:
-    """What one field of one solution differs from one golden by.
-
-    Parameters
-    ----------
-    field
-        The field's name, in the golden's vocabulary.
-    points
-        Number of probe points the norms were taken over, after the mask.
-    rel_L2_r, rel_l2
-        The two relative norms of the module docstring.
-    max_abs_rel
-        ``max |s - g| / max |g|`` over the retained points. Normalised by the
-        field's own scale rather than pointwise by ``|g_p|``: a pointwise ratio
-        diverges wherever the field crosses zero, which the potential does by
-        construction under a grounded cis electrode, and would report a
-        meaningless infinity at a point where nothing is wrong.
-    max_at_nm
-        ``(r, z)`` of that maximum. QR-12's "naming the quantity and its
-        location", and the difference between a number and a diagnosis.
-    gauge_removed
-        ``(ours, golden)`` *r*-weighted means removed before the norms, for
-        :data:`PRESSURE_FIELD`, and ``None`` for every other field. A large gauge
-        difference is not a defect but it is worth seeing.
-    """
-
     field: str
     points: int
     rel_L2_r: float
@@ -131,7 +56,6 @@ class FieldComparison:
     gauge_removed: tuple[float, float] | None = None
 
     def summary(self) -> dict[str, object]:
-        """Return this comparison as the report records it (FR-25)."""
         record: dict[str, object] = {
             "field": self.field,
             "points": self.points,
@@ -151,27 +75,12 @@ class FieldComparison:
 
 @dataclass(frozen=True)
 class QoIComparison:
-    """One scalar quantity of interest, ours against the golden's (VAL-02).
-
-    Parameters
-    ----------
-    name
-        The quantity, as :data:`COMPARED_QUANTITIES` names it.
-    ours, golden
-        The two values, both in section 6.7's sign convention and in SI.
-    relative
-        ``(ours - golden) / |golden|``, **signed**: the direction of a
-        discrepancy is half of what attributes it, and a magnitude alone cannot
-        say whether a stabilised mode raised the current or lowered it.
-    """
-
     name: str
     ours: float
     golden: float
     relative: float
 
     def summary(self) -> dict[str, object]:
-        """Return this comparison as the report records it."""
         return {
             "quantity": self.name,
             "ours": self.ours,
@@ -181,14 +90,6 @@ class QoIComparison:
 
 
 def probe_domains(solution: ModelSolution) -> dict[str, str | None]:
-    """Return each comparable field's ``definedon`` materials, from the model itself.
-
-    Taken from :attr:`nanopnp.physics.models.Field.domain` rather than restated
-    in the probe document, so that a probe grid cannot disagree with the physics
-    about where a field exists. The velocity contributes both of its components
-    under one domain, which is what makes the golden's two scalar tables and our
-    one vector field the same statement.
-    """
     domains: dict[str, str | None] = {}
     for field in solution.model.fields:
         if field.element == "number":
@@ -205,35 +106,6 @@ def probe_domains(solution: ModelSolution) -> dict[str, str | None]:
 def sample_on_probe(
     solution: ModelSolution, grid: ProbeGrid, *, scales: Scales
 ) -> dict[str, np.ndarray]:
-    """Return every comparable field of ``solution`` at ``grid``'s points, in SI.
-
-    Parameters
-    ----------
-    solution
-        The converged state, in the NUM-09 nondimensional variables.
-    grid
-        The probe grid, already bound to this solution's mesh.
-    scales
-        The NUM-09 scale set the state was solved in, as
-        :func:`~nanopnp.post.export.export_fields` takes it. Passed rather than
-        read off the model, because :class:`~nanopnp.physics.models.PhysicsModel`
-        is a protocol and a scale set is a property of the *case*.
-
-    Returns
-    -------
-    dict of str to ndarray
-        Field name to a ``(n,)`` array in the probe document's flattening order,
-        ``NaN`` wherever the field's mask drops the point. ``NaN`` rather than
-        zero on purpose: zero is what NGSolve returns outside a ``definedon``
-        region, and a masked-out point that came back as a number would enter a
-        norm as a fabricated agreement (section 3 of the WP13 plan).
-
-    Notes
-    -----
-    Every value is multiplied by its NUM-09 scale on the way out, so the arrays
-    are in the units :func:`~nanopnp.validation.comsol.field_unit` declares and
-    the comparison never carries a scale of its own.
-    """
     import numpy as np
 
     mesh = solution.space.mesh
@@ -272,32 +144,6 @@ def sample_on_probe(
 def compare_fields(
     ours: Mapping[str, np.ndarray], golden: Golden, grid: ProbeGrid
 ) -> tuple[FieldComparison, ...]:
-    """Compare every field the golden carries, in the golden's own field order.
-
-    Parameters
-    ----------
-    ours
-        As :func:`sample_on_probe` returned it.
-    golden
-        The archived reference solution.
-    grid
-        The probe grid both are expressed on.
-
-    Returns
-    -------
-    tuple of FieldComparison
-        One per field present in both, sorted by name. Fields the golden does
-        not carry are not silently skipped: :meth:`~Golden.unavailable` names
-        them and the attribution report prints them.
-
-    Raises
-    ------
-    ProbeGridError
-        If the two masks disagree anywhere outside the margin band of
-        :meth:`~nanopnp.validation.probe.ProbeGrid.band`, naming the worst
-        point's ``(r, z)`` and its distance from the nearest retained point of
-        the other mask.
-    """
     import numpy as np
 
     comparisons: list[FieldComparison] = []
@@ -318,28 +164,6 @@ def compare_fields(
 def compare_quantities(
     ours: Mapping[str, object], golden: GoldenQuantities
 ) -> tuple[QoIComparison, ...]:
-    """Compare the NUM-27 scalars of one case (VAL-02).
-
-    Parameters
-    ----------
-    ours
-        What the run **recorded** — :meth:`QuantitiesOfInterest.summary`, or the
-        ``quantities`` block of its ``run.json``. A mapping rather than the
-        object, because FR-25 archived what the run reported and a comparison
-        that re-extracted the numbers would be comparing the golden against
-        something the manifest does not describe.
-    golden
-        The reference's, already converted to section 6.7's sign convention by
-        :func:`~nanopnp.validation.comsol.load_golden`.
-
-    Returns
-    -------
-    tuple of QoIComparison
-        One per quantity of :data:`COMPARED_QUANTITIES` that *both* sides carry.
-        A quantity either side lacks is omitted here and reported as unavailable
-        by the attribution report, so a comparison over three quantities cannot
-        read as one over four.
-    """
     compared: list[QoIComparison] = []
     for name in COMPARED_QUANTITIES:
         mine, theirs = ours.get(name), getattr(golden, name, None)
@@ -371,12 +195,6 @@ def compare_quantities(
 
 
 def check_mask_agreement(field: str, ours: np.ndarray, theirs: np.ndarray, grid: ProbeGrid) -> None:
-    """Abort where two statements about where a field exists disagree.
-
-    Public for VAL-04, which asks it of a coarse and a fine golden: two
-    refinements of one model that disagree about the domain are not two
-    refinements of one model.
-    """
     import numpy as np
 
     disagreeing = np.flatnonzero(ours != theirs)
@@ -400,13 +218,6 @@ def check_mask_agreement(field: str, ours: np.ndarray, theirs: np.ndarray, grid:
 def _furthest(
     points: np.ndarray, disagreeing: np.ndarray, ours: np.ndarray, theirs: np.ndarray
 ) -> tuple[int, float]:
-    """Return the disagreeing point furthest from the other mask, and that distance.
-
-    Furthest rather than first: a one-element fringe along a boundary is a
-    different diagnosis from a block of points in the wrong place, and the
-    distance is what tells them apart. Brute force over the probe points, which
-    costs a few thousand squared only on the path that is about to abort.
-    """
     import numpy as np
 
     best_index, best_distance = int(disagreeing[0]), 0.0
@@ -430,24 +241,6 @@ def field_error(
     grid: ProbeGrid,
     keep: np.ndarray,
 ) -> FieldComparison:
-    """Return the three norms of one field over the points ``keep`` retains.
-
-    Public because VAL-04's ``Delta_ref`` is the same three norms taken between
-    two *goldens* rather than between a solution and one, and a second
-    implementation of the gauge-free pressure path would be a second chance to
-    get it wrong.
-
-    Parameters
-    ----------
-    field
-        The field's name; :data:`PRESSURE_FIELD` selects the gauge-free path.
-    ours, theirs
-        Full-length arrays in the probe document's flattening order.
-    grid
-        The probe grid, for the weights and the coordinates.
-    keep
-        Boolean mask of the points to take the norms over.
-    """
     import numpy as np
 
     if not bool(np.any(keep)):
@@ -483,12 +276,6 @@ def field_error(
 
 
 def _check_finite(field: str, ours: np.ndarray, keep: np.ndarray, grid: ProbeGrid) -> None:
-    """Abort on a non-finite value at a point the mask retains.
-
-    A ``NaN`` outside the mask is this module's own marker and expected; one
-    *inside* it came from the solve, and filtering it out would take the norm
-    over the points where the solution is fine and report agreement (QR-12).
-    """
     import numpy as np
 
     bad = np.flatnonzero(keep & ~np.isfinite(ours))
@@ -504,12 +291,6 @@ def _check_finite(field: str, ours: np.ndarray, keep: np.ndarray, grid: ProbeGri
 
 
 def _relative(difference: np.ndarray, reference: np.ndarray, weights: np.ndarray | None) -> float:
-    """Return ``||difference|| / ||reference||`` in the given weighted L2 norm.
-
-    A reference of exactly zero returns ``0.0`` when the difference is zero too
-    and ``inf`` otherwise, rather than ``nan``: "identical" and "the reference is
-    nowhere and we are somewhere" are different facts, and ``nan`` is neither.
-    """
     import numpy as np
 
     if weights is None:
@@ -524,7 +305,6 @@ def _relative(difference: np.ndarray, reference: np.ndarray, weights: np.ndarray
 
 
 def unavailable_quantities(ours: Mapping[str, object], golden: GoldenQuantities) -> tuple[str, ...]:
-    """Return the :data:`COMPARED_QUANTITIES` either side did not supply."""
     return tuple(
         name
         for name in COMPARED_QUANTITIES

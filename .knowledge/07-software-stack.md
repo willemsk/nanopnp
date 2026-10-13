@@ -475,6 +475,10 @@ the deck's `temp`.
   | 193³ | 44 s | 1.9 GB |
 
   This is about 250 B per node.
+  The maps APBS reads are about 0.6 GB of text at 193³, which `run_apbs` deletes once read **[verified]**.
+- **Case identity cost** (`validation/comsol.py`): hashing the 84 MB reference charge table takes about 1.6 s;
+  hashing the 9.2 MB deposited 2WCD structure files takes 12 ms, plus 0.7 s on the first import of stage 1 and
+  MDAnalysis **[tested]**.
 - **Self-refinement on 2WCD.** The problem is `poisson` on the protonated, prepared 2WCD at the
   default mesh (44,987 elements), with both electrodes grounded. The box is 19.2 nm, with the faces
   from our own `P2` solution. The probes are 555,535 fluid nodes of the 0.2 nm grid, at least 0.3 nm

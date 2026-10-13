@@ -1,47 +1,4 @@
-"""The ``nanopnp/golden/v0.5`` archive: a COMSOL export turned into evidence (VAL-03).
-
-Section 7.4 requires the reference solutions to be "stored as compressed arrays
-with the generating model archived alongside", and this module is the single
-place where a delivered export becomes one. Two formats, deliberately:
-``%Grid``/``%Data`` text tables are the **transport** format, which is what the
-author's COMSOL already produces and what
-:func:`~nanopnp.density.grid.read_grid` already reads — verified against the
-delivered 77 MB ``prod5_clya_charge`` table to 4.7e-12 (VAL-15) — and ``.npz``
-plus a typed manifest is the **archival** one. The conversion is where the unit,
-sign and hash declarations are checked, once, rather than on every nightly run.
-
-**Five refusals, and each of them is a wrong answer we would otherwise print.**
-
-``case_hash`` and ``probe_hash``. A golden compared against a different case, or
-against a probe grid edited since the export, is the most expensive kind of wrong
-answer: everything runs, every number looks plausible, and nothing else detects
-it. Both are asked twice — at ingest, against the delivered tables, and again on
-every comparison (:meth:`Golden.check_case`, :meth:`Golden.check_probe`), because
-nothing stops a later run being pointed at another probe document or another
-case.
-
-``golden_hash``. The digest written with the archive is checked when it is read
-back, not only recorded: a ``.npz`` replaced under a manifest that still names
-the generating model would carry that model's provenance onto other numbers.
-
-The unit. The expected set is ``V`` [V], ``cpos``/``cneg`` [mol/m^3], ``u``/``w``
-[m/s] and ``p`` [Pa] (``.knowledge/09-comsol-reference-settings.md`` sections C.2
-and C.10). A ``mol/L`` export is a factor 1000; scaled silently it reads as a
-99.9 % discrepancy, which presents as a physics failure and is a units failure.
-It is refused rather than converted, because a golden whose unit we had to guess
-at is not a golden.
-
-The sign. ``.knowledge/09`` section F records that the **evaluation boundary is
-NOT IN REPORT**, so it can only come from the author, and section 6.7's NOTE
-fixes our convention: positive current flows trans to cis, referenced to the
-grounded cis electrode. A ``trans``-referenced golden is flipped on load and the
-flip is *printed in the report*, because a silent sign convention is how a
-rectification ratio comes out reciprocal.
-
-The archive is never vendored: it lives under ``$NANOPNP_REFERENCE_DATA`` and a
-Tier-3 test whose golden is absent skips (section 7.1 NOTE). Five cases by six
-fields by five patches by two refinements is not a repository file.
-"""
+"""The ``nanopnp/golden/v0.5`` archive: a COMSOL export turned into evidence (VAL-03)."""
 
 from __future__ import annotations
 
@@ -100,35 +57,18 @@ __all__ = [
 ]
 
 GOLDEN_SCHEMA = "nanopnp/golden/v0.5"
-"""Schema identifier every golden manifest declares, and the hash's separator."""
 
 MANIFEST_NAME = "manifest.yaml"
-"""The author's declaration, read by :func:`ingest_golden` from the export directory."""
 
 ARCHIVE_NAME = "golden.npz"
-"""The archived arrays, written by :func:`ingest_golden` beside the tables."""
 
 ARCHIVE_MANIFEST_NAME = "golden.manifest.json"
-"""The validated manifest, canonical JSON, written beside :data:`ARCHIVE_NAME`."""
 
 Refinement = Literal["published", "refined_1"]
-"""VAL-04's two levels: the published mesh, and one uniform refinement of it.
-
-Mixing them into one ``Delta_ref`` inverts its meaning, so the level is declared
-rather than inferred from a directory name.
-"""
 
 GoldenSource = Literal["comsol", "self"]
-"""Where a golden came from.
-
-``self`` is one of *our* solutions written in the archive format, which is how
-the harness is exercisable before the exports land. Every consumer prints it:
-an attribution ladder run against a self-golden tests the machinery and nothing
-else, and a report that did not say so would read as a validation result.
-"""
 
 SignReference = Literal["cis", "trans"]
-"""Which electrode the exported current is referenced to (section 6.7 NOTE)."""
 
 POTENTIAL_UNIT = "V"
 CONCENTRATION_UNIT = "mol/m^3"
@@ -142,133 +82,34 @@ PROBE_FIELDS: tuple[str, ...] = (
     "velocity_z",
     "pressure",
 )
-"""The field kinds a golden may carry.
-
-``concentration`` stands for the per-species fields, whose names are
-``c_<species>`` and are known only once the case names its species; the other
-four are literal field names. :func:`field_unit` maps either spelling onto its
-unit.
-"""
 
 CONCENTRATION_PREFIX = "c_"
-"""Prefix of a per-species concentration field, as the model names it."""
 
 CASE_IDENTITY_SCHEMA = "nanopnp/golden/case/v0.5"
-"""Domain separator of :func:`case_identity`."""
 
 DISCRETISATION_KEYS: frozenset[str] = frozenset(
     {"stabilisation", "continuation", "newton", "linear_solver"}
 )
-"""Keys of the solve provenance a golden's ``case_hash`` deliberately leaves out.
-
-A golden answers a **physical case** — a salt, a bias, an electrolyte model, a
-set of corrections — and the four rungs of the attribution ladder answer that
-same case at four discretisations. Keying ``case_hash`` on the discretisation
-would give the ladder four case hashes and one golden, and the gate that exists
-to catch a golden compared against the wrong case would instead refuse three
-rungs of the right one.
-
-The mesh is absent for the same reason, one level up:
-:attr:`~nanopnp.io.resolved.ResolvedCase.solve_provenance` does not carry it, and
-which mesh either implementation used is precisely what section 7.4 is measuring
-(VAL-04, RSK-09) rather than something to gate on. ``name`` and ``outputs`` are
-already outside the solve provenance, so a sweep member and the frozen case file
-it reproduces hash the same.
-
-``model_options`` is **not** here, and must not be: it carries ``flow``,
-``variable_density``, ``inertia``, ``dielectric_gradient_forces`` and
-``solid_permittivities`` beside the element orders, and those are the physics.
-Dropping the whole mapping would let a run with the flow switched off, or with
-the dielectric-gradient body force switched on, declare the identity of the
-validated case and be compared against its golden — exactly the wrong answer this
-hash exists to refuse. Only the discretisation entries *within* it are removed;
-see :data:`MODEL_OPTION_DISCRETISATION_KEYS`.
-"""
 
 MODEL_OPTION_DISCRETISATION_KEYS: frozenset[str] = frozenset(
     {"order", "velocity_order", "pressure_order", "stabilisation"}
 )
-"""Entries of ``model_options`` that :func:`case_identity` leaves out.
-
-The four the attribution ladder moves — ``numerics.elements.{phi,c}`` reach
-``order``, ``numerics.elements.{u,p}`` reach ``velocity_order`` and
-``pressure_order``, and ``numerics.stabilisation`` is restated here beside the
-top-level key. Everything else in the mapping is a physics switch and stays in
-the hash.
-"""
 
 KERNEL_DISCRETISATION_KEYS: frozenset[str] = frozenset({"grid_spacing_nm"})
-"""Entries of the charge-grid key's parameters that :func:`case_identity` leaves out.
-
-A deposited charge enters the identity by its stage-7 recipe (section 8.2.5 E3,
-WP34 D1): the structure, the protonation and the kernel's parameters. Only the
-export lattice's spacing is removed, because it converges like any other mesh
-(D2), and the element order the deposit is assembled at never reaches these
-parameters. Everything else is taken whole rather than picked by name, so a
-parameter added to the kernel later reaches the identity by default.
-"""
 
 PROTONATION_VERDICT_KEYS: frozenset[str] = frozenset({"gates"})
-"""Entries of the protonation key's parameters that :func:`case_identity` leaves out.
-
-The gate tolerances (``registration_tolerance_A``, ``q_net_tolerance_e``,
-``minimum_calpha``) decide whether a protonation is *accepted*, never which
-charges it assigns, so tightening one must not turn every golden of a depositing
-case into the golden of another case. The rest of the key's parameters (the
-source, pH, force field, titration, PDB2PQR's arguments, the residue-name
-normalisation and the coordinate rounding) each move a charge or a position,
-and stay. The identity takes the stage keys' *parameters* and never their
-hashes, so an artefact schema string bumped by a refactor does not move it
-either.
-"""
 
 AXIS_TOL_NM = 1e-6
-"""Agreement required between an exported table's axes and the patch's own, in nm.
-
-Loose against the 0.005 nm finest spacing and tight against any real mistake: a
-hand-entered extent, a patch confused with its neighbour, or an export made
-before the probe document was last edited all miss by orders more than this.
-The ``probe_hash`` catches the last of those directly; this catches the export
-that was made from the right document and pasted into the wrong dialogue.
-"""
 
 
-class GoldenError(ValueError):
-    """A golden cannot be ingested, or cannot be trusted once read.
-
-    A ``ValueError`` and IF-02's case class: every message names the file, the
-    field and what was missing or wrong, and the fix is a corrected export or a
-    corrected manifest, never a retry (QR-12).
-    """
+class GoldenError(ValueError): ...
 
 
 class _Strict(BaseModel):
-    """Base for every block: unknown keys are rejected, and named in the error."""
-
     model_config = ConfigDict(extra="forbid")
 
 
 def field_unit(field: str) -> str:
-    """Return the SI unit a golden must declare for one probe field.
-
-    Parameters
-    ----------
-    field
-        ``"potential"``, ``"pressure"``, ``"velocity_r"``, ``"velocity_z"`` or a
-        per-species ``"c_<species>"``.
-
-    Returns
-    -------
-    str
-        The one unit this build accepts for that field.
-
-    Raises
-    ------
-    GoldenError
-        If the name is not one the comparison knows. A manifest that declares a
-        field nothing samples would export a table nobody reads, which is a
-        silent hole in a comparison rather than an extra.
-    """
     if field == "potential":
         return POTENTIAL_UNIT
     if field == "pressure":
@@ -284,83 +125,6 @@ def field_unit(field: str) -> str:
 
 
 def case_identity(resolved: ResolvedCase, *, recorded: Mapping[str, Artefact] | None = None) -> str:
-    """Return the ``case_hash`` a golden for this case must declare.
-
-    Parameters
-    ----------
-    resolved
-        The resolved frozen case, or any run of it at any discretisation.
-    recorded
-        A finished run's own ``structure`` and ``protonation`` artefacts, as
-        :attr:`~nanopnp.validation.runs.ReopenedRun.upstream` holds them. With
-        them, a depositing or deriving case's recipe is read from what the run
-        recorded, so the identity describes the structure the run solved, from
-        any working directory, even if the file has since moved or changed.
-        Without them, the recipe is built through the stages' own key functions
-        from the files the case names, which is how ``nanopnp validate
-        case-hash`` gives a golden's author the hash before any run exists.
-
-    Returns
-    -------
-    str
-        Content hash over
-        :attr:`~nanopnp.io.resolved.ResolvedCase.solve_provenance` with
-        :data:`DISCRETISATION_KEYS` removed, and with
-        :data:`MODEL_OPTION_DISCRETISATION_KEYS` removed from within
-        ``model_options`` — see those constants for why each one is left out, and
-        for why the rest of ``model_options`` is kept — and with each supplied
-        field's contents in place of the bare fact that it was supplied.
-
-    Raises
-    ------
-    nanopnp.charge.fields.FieldDocumentError
-        If a supplied field's document is invalid, as stage 7 would refuse it.
-    nanopnp.core.stages.MissingExtraError
-        For a ``structure:`` case built without the ``structure`` extra, which
-        stage 1 would refuse in the same words.
-    nanopnp.structure.read.StructureInputError
-        Without ``recorded``, if a depositing or deriving case's structure file
-        is not on disk at the path the case names, as stage 1's key would refuse it.
-    FileNotFoundError
-        Without ``recorded``, if a depositing case's ``inputs.pqr`` is not on disk.
-    KeyError
-        If ``recorded`` lacks an artefact the case's recipe needs.
-
-    Notes
-    -----
-    The solve provenance records only *whether* a charge or ``eps_r`` field was
-    supplied, because the solve's key takes their contents from the stage-7
-    artefact. The identity has no stage-7 artefact to lean on, and a fixed charge
-    is physics: two cases differing only in their charge table (another
-    protonation state, another structure) are two cases, and a golden of one must
-    not be accepted for the other. Each supplied field is therefore replaced by
-    the stage-7 key's own record of it — the header's physical declarations and
-    the grid's digest — so that the same table written in another format is the
-    same case, and a table whose values moved is another. That reads the table,
-    about 1.6 s for the 84 MB reference charge.
-
-    A charge that stage 7 *deposits*, from ``structure:`` or ``inputs.pqr``, is
-    represented by its recipe instead (section 8.2.5 E3, closing OPN-07): a key
-    ``deposited_charge`` holding the stage-1 key's parameters (the structure
-    block, each file by its digest), the protonation key's parameters without
-    :data:`PROTONATION_VERDICT_KEYS` and its input digests (the PQR's, when one
-    is supplied), and the kernel's parameters without
-    :data:`KERNEL_DISCRETISATION_KEYS`. A ``chi`` that stage 7 *derives* adds a
-    key ``derived_eps_r`` holding its derivation parameters and the stage-1
-    key's parameters; the density and contour recipe stays out, as the mesh
-    does (WP34 D3). A non-zero ``charge.exclusion_offset_nm`` adds a key
-    ``exclusion_shell`` holding the offset: the shell is a physics switch away
-    from the validated model, not a refinement of its geometry, and its
-    construction constants scale with the contour's size target, so they stay
-    out with it. The recipe is built through the stages' own key functions, or
-    read from ``recorded``, so no stage runs and no lattice is read. The cost
-    without ``recorded`` is hashing the structure files: 12 ms on the 9.2 MB
-    deposited 2WCD, an upper bound for example 06's prepared chains A-L, plus
-    0.7 s on the first call to import stage 1's module and MDAnalysis (WP34 D6).
-    ``fields.charge`` keeps meaning "supplied", so no solve key moves (D5), and
-    a case that neither supplies, deposits nor derives a field, and builds no
-    shell, keeps the identity it had (D4).
-    """
     record: dict[str, object] = {
         key: value
         for key, value in resolved.solve_provenance.items()
@@ -386,11 +150,6 @@ def case_identity(resolved: ResolvedCase, *, recorded: Mapping[str, Artefact] | 
 def _stage7_recipe(
     resolved: ResolvedCase, recorded: Mapping[str, Artefact] | None
 ) -> dict[str, Canonicalisable]:
-    """Return the identity's record of what stage 7 makes rather than reads (E3, WP34 D1, D3).
-
-    Empty for a case that neither deposits a charge nor derives ``chi``, so its
-    identity is byte-identical to the one it had before (D4).
-    """
     if not (resolved.deposits_charge or resolved.derives_eps_r):
         return {}
     structure = (
@@ -409,7 +168,7 @@ def _stage7_recipe(
                 for key, value in sorted(protonation.parameters.items())
                 if key not in PROTONATION_VERDICT_KEYS
             },
-            # The PQR's digest; the structure's key hash is described above, by its parameters.
+            # The PQR's digest; the structure is represented by its key's parameters.
             "inputs": {
                 key: value
                 for key, value in sorted(protonation.inputs.items())
@@ -435,11 +194,6 @@ def _upstream(
     name: str,
     upstream: Mapping[str, Artefact],
 ) -> Artefact:
-    """Return the ``name`` artefact the recipe is read from: the run's own, or its key.
-
-    Keyed on the inputs the walk would hand the stage, :func:`~nanopnp.pipeline.run.offered`,
-    so that the key cannot differ from the one a run made (WP38 D11).
-    """
     if recorded is None:
         return create(name).key(StageInputs(resolved=resolved, upstream=offered(name, upstream)))
     found = recorded.get(name)
@@ -452,54 +206,15 @@ def _upstream(
 
 
 def table_name(field: str, patch: str) -> str:
-    """Return the export contract's file name for one field on one patch.
-
-    A COMSOL Grid evaluation takes one tensor-product grid, and the probe grid is
-    a union of patches, so there is one table per patch per field — and
-    :func:`~nanopnp.density.grid.read_grid` reads exactly one table per file. The
-    naming is mechanical so that neither the author nor the ingest has to keep a
-    list.
-    """
     return f"{field}__{patch}.txt"
 
 
 class FieldDeclaration(_Strict):
-    """What the author declares about one exported field.
-
-    Parameters
-    ----------
-    expression
-        The COMSOL expression evaluated, verbatim — ``V``, ``cpos``, ``u``, ``p``.
-        Recorded because it is the only statement of *what* was exported that
-        survives the loss of licence access (VAL-03).
-    unit
-        The unit the export was written in. Checked against
-        :func:`field_unit` and refused, never converted.
-    """
-
     expression: str
     unit: str
 
 
 class GoldenQuantities(_Strict):
-    """The scalar QoIs the reference reported for this case (VAL-02, NUM-27).
-
-    Parameters
-    ----------
-    bias_V
-        The applied bias this golden was solved at.
-    current_A
-        Total ionic current, in the reference's own sign convention;
-        :func:`load_golden` converts it to section 6.7's.
-    currents_A
-        Per species, keyed as the case names them. Needed for the transport
-        number; ``None`` where the export did not carry them.
-    transport_number, conductance_S, eof_m3_s
-        The remaining NUM-27 quantities, or ``None`` where not exported. ``None``
-        is reported as *unavailable* rather than skipped, so a comparison that
-        covered three quantities cannot read as one that covered four.
-    """
-
     bias_V: float
     current_A: float
     currents_A: dict[str, float] | None = None
@@ -508,7 +223,6 @@ class GoldenQuantities(_Strict):
     eof_m3_s: float | None = None
 
     def summary(self) -> dict[str, object]:
-        """Return these quantities as the manifest and the report record them."""
         return {
             "bias_V": self.bias_V,
             "current_A": self.current_A,
@@ -520,13 +234,6 @@ class GoldenQuantities(_Strict):
 
 
 class GoldenManifest(_Strict):
-    """The declaration without which an export is not evidence (section 7.4).
-
-    Every field below is required, and the module docstring says what each
-    absence would cost. ``extra="forbid"``, so a manifest that misspells one is
-    refused naming the key rather than silently defaulting it.
-    """
-
     schema_id: str = Field(alias="schema")
     case: str
     case_hash: str
@@ -546,13 +253,6 @@ class GoldenManifest(_Strict):
 
     @model_validator(mode="after")
     def _declared_and_not_blank(self) -> GoldenManifest:
-        """Reject a blank provenance string, an unknown field or a wrong unit.
-
-        Blank is checked because ``str`` accepts ``""`` and an empty
-        ``model_file`` is exactly as useless as an absent one: section 7.4 wants
-        the generating model *named*, and a manifest that names nothing cannot
-        reconstruct the run (FR-25).
-        """
         why = {
             "case_hash": "the WP7 content hash of the frozen case this golden answers; without "
             "it a golden compared against a different case is undetectable",
@@ -605,7 +305,6 @@ class GoldenManifest(_Strict):
         return self
 
     def summary(self) -> dict[str, object]:
-        """Return the manifest's record, for the golden's hash and the report."""
         return {
             "schema": self.schema_id,
             "case": self.case,
@@ -628,15 +327,6 @@ class GoldenManifest(_Strict):
 
 
 def loads_manifest(text: str, *, source: str = "<string>") -> GoldenManifest:
-    """Validate a golden manifest from YAML text.
-
-    Raises
-    ------
-    CaseValidationError
-        If the schema string is wrong or the document does not validate, as for
-        every other IF-03 configuration document. The schema is checked first so
-        a manifest written to a future schema fails naming the schema it claims.
-    """
     try:
         parsed = yaml.safe_load(text)
     except yaml.YAMLError as error:
@@ -659,26 +349,6 @@ def loads_manifest(text: str, *, source: str = "<string>") -> GoldenManifest:
 
 @dataclass(frozen=True)
 class Golden:
-    """One archived reference solution, on the probe grid, in our own conventions.
-
-    Parameters
-    ----------
-    manifest
-        The validated declaration, as archived.
-    values
-        Field name to a ``(n,)`` array in the probe document's flattening order.
-        ``NaN`` where the reference had no value, which is the statement the mask
-        agreement of :mod:`nanopnp.validation.compare` is checked against.
-    quantities
-        The QoIs, converted to section 6.7's sign convention.
-    current_sign_flipped
-        Whether that conversion negated anything. Carried, not discarded: a
-        silent sign convention is how a rectification ratio comes out reciprocal,
-        so every report prints this.
-    hash
-        Content hash over the manifest and every array.
-    """
-
     manifest: GoldenManifest
     values: Mapping[str, np.ndarray]
     quantities: GoldenQuantities
@@ -687,18 +357,9 @@ class Golden:
 
     @property
     def source(self) -> GoldenSource:
-        """Where this golden came from; ``"self"`` means it tests the machinery."""
         return self.manifest.source
 
     def defined(self, field: str) -> np.ndarray:
-        """Return the boolean mask of probe points this golden carries a value at.
-
-        Raises
-        ------
-        GoldenError
-            If the field is not archived here; the message lists the ones that
-            are, because "absent" and "everywhere NaN" are different facts.
-        """
         import numpy as np
 
         array = self.values.get(field)
@@ -711,23 +372,9 @@ class Golden:
         return ~np.isnan(array)
 
     def unavailable(self, expected: Sequence[str]) -> tuple[str, ...]:
-        """Return the expected fields this golden does not carry, sorted.
-
-        Reported rather than skipped: the open question of whether the reference
-        model exports ``p`` at all is answered at export time, and a comparison
-        that quietly covered four fields instead of five would answer it wrongly.
-        """
         return tuple(sorted(set(expected) - set(self.values)))
 
     def check_case(self, case_hash: str) -> None:
-        """Refuse a golden that answers a different case.
-
-        Raises
-        ------
-        GoldenError
-            Naming both hashes. Nothing else detects this: every field is the
-            right shape, every norm is finite, and the answer is wrong.
-        """
         if self.manifest.case_hash != case_hash:
             raise GoldenError(
                 f"golden for case {self.manifest.case!r} declares case_hash "
@@ -736,20 +383,6 @@ class Golden:
             )
 
     def check_probe(self, document: ProbeDocument) -> None:
-        """Refuse a golden exported onto a different set of sample points.
-
-        The counterpart of :meth:`check_case`, and asked at *comparison* time
-        rather than only at ingest: :func:`ingest_golden` checks the hash of the
-        document the tables were read against, and nothing else stops a later
-        ``compare`` or ``report`` being pointed at another probe file. Every value
-        would then be attributed to a coordinate it was not taken at, while every
-        array kept its shape.
-
-        Raises
-        ------
-        GoldenError
-            Naming both hashes and both grid names.
-        """
         if self.manifest.probe_hash != document.hash:
             raise GoldenError(
                 f"golden for case {self.manifest.case!r} was exported onto probe grid "
@@ -759,7 +392,6 @@ class Golden:
             )
 
     def summary(self) -> dict[str, object]:
-        """Return this golden's record for the attribution report (FR-25)."""
         return {
             "hash": self.hash,
             "golden_source": self.source,
@@ -771,32 +403,6 @@ class Golden:
 
 
 def write_comsol_table(grid: RadialGrid, path: str | Path) -> Path:
-    """Write one ``%Grid``/``%Data`` table, the transport format's only writer.
-
-    :func:`~nanopnp.density.grid.write_grid` refuses this format deliberately — a
-    round-tripped copy of the reference model's own input would be
-    indistinguishable from it — and that reasoning does not reach here, because
-    everything this writes is a *self*-golden, which carries ``source: self``
-    through the manifest, the archive and every report that consumes one.
-
-    Parameters
-    ----------
-    grid
-        The samples, in nm coordinates and SI values.
-    path
-        Destination; parent directories are created.
-
-    Returns
-    -------
-    Path
-        The file written.
-
-    Notes
-    -----
-    ``%.17g`` throughout: ``float64`` round-trips exactly through 17 significant
-    decimal digits, which is what makes the Tier-2 self-golden round trip assert
-    ``0`` rather than a tolerance.
-    """
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
     lines = [COMSOL_GRID_HEADER]
@@ -816,35 +422,6 @@ def ingest_golden(
     probe: ProbeDocument | str | Path,
     destination: str | Path | None = None,
 ) -> Path:
-    """Turn a directory of exported tables into the archived ``.npz`` and manifest.
-
-    Parameters
-    ----------
-    directory
-        Holds :data:`MANIFEST_NAME` and one table per field per patch, named by
-        :func:`table_name`.
-    probe
-        The probe document, or a path to it. Its hash is checked against the
-        manifest's ``probe_hash``.
-    destination
-        Where to write :data:`ARCHIVE_NAME` and :data:`ARCHIVE_MANIFEST_NAME`;
-        ``directory`` by default, so the archive sits beside the raw tables and
-        the ``.mph`` as section 7.4 requires.
-
-    Returns
-    -------
-    Path
-        The ``.npz`` written.
-
-    Raises
-    ------
-    GoldenError
-        If the manifest's ``probe_hash`` is not this probe document's, if a
-        declared table is absent, or if a table's axes are not the patch's. Each
-        message names the field, the patch and the file.
-    CaseValidationError
-        If the manifest does not validate; see :func:`loads_manifest`.
-    """
     import numpy as np
 
     source = Path(directory)
@@ -876,46 +453,6 @@ def export_golden(
     *,
     tables: ProbeDocument | None = None,
 ) -> Path:
-    """Write a golden from arrays we already hold: the self-golden path.
-
-    The harness has to be exercisable before the COMSOL exports land — "which
-    tests the machinery and nothing else, and the report says so" — so one of our
-    own converged solutions, sampled on the probe grid, is written in exactly the
-    archive format a delivered export ends up in. The manifest carries
-    ``source: self`` and every consumer prints it.
-
-    Parameters
-    ----------
-    values
-        Field name to a ``(n,)`` array in the probe document's flattening order.
-    manifest
-        The declaration, already validated. Its ``source`` must be ``"self"``.
-    destination
-        Directory to write into.
-    tables
-        When given, the ``%Grid`` transport tables are written beside the
-        archive, one per field per patch. That is what lets the Tier-2 round trip
-        exercise the *reader* rather than only the container.
-
-    Returns
-    -------
-    Path
-        The ``.npz`` written.
-
-    Raises
-    ------
-    GoldenError
-        If ``manifest.source`` is not ``"self"``. A COMSOL golden is produced by
-        :func:`ingest_golden` from delivered tables and never assembled here:
-        one path that writes a ``source: comsol`` archive from arrays in memory
-        is one path by which a self-golden could be relabelled as evidence.
-
-        Also if ``tables`` is not the document the manifest's ``probe_hash``
-        names, or if an array is not that document's length. :func:`ingest_golden`
-        gates both on the delivered side and this path must not be the looser of
-        the two: an archive declaring a probe grid it was not sampled on is the
-        same undetectable wrong answer whichever writer produced it.
-    """
     import numpy as np
 
     if manifest.source != "self":
@@ -951,27 +488,6 @@ def export_golden(
 
 
 def load_golden(path: str | Path) -> Golden:
-    """Read an archived golden and convert its currents to section 6.7's sign.
-
-    Parameters
-    ----------
-    path
-        The ``.npz``, or the directory holding it.
-
-    Returns
-    -------
-    Golden
-        With :attr:`~Golden.current_sign_flipped` set where the archive declared
-        ``trans`` and the currents were negated.
-
-    Raises
-    ------
-    GoldenError
-        If the archive or its manifest is absent, if the manifest and the arrays
-        disagree about which fields are present, or if the pair does not hash to
-        the ``golden_hash`` :func:`ingest_golden` recorded — each of which means
-        one of the two files was replaced on its own.
-    """
     import numpy as np
 
     archive, manifest_path = _archive_paths(Path(path))
@@ -1010,20 +526,6 @@ def load_golden(path: str | Path) -> Golden:
 
 
 def _referenced_to_cis(quantities: GoldenQuantities) -> GoldenQuantities:
-    """Return ``quantities`` negated onto section 6.7's convention.
-
-    Section 6.7's NOTE references the current to the grounded *cis* electrode:
-    with ``psi = 1`` on cis, the indicator integral is the flux out through the
-    cis cap, positive current flows trans to cis, and an uncharged ohmic pore has
-    ``G > 0`` at either sign of the bias. A ``trans``-referenced export carries
-    the opposite outward normal and negates every one of those, so the current,
-    the per-species currents, the conductance and the electro-osmotic flow rate
-    all flip — they are the same ``psi`` integral with the same normal.
-
-    The transport number does not: ``t+ = I+/(I+ + I-)`` is a ratio of two
-    quantities that flip together, so it is invariant, and negating it would be
-    the bug this function exists to prevent.
-    """
     return GoldenQuantities(
         bias_V=quantities.bias_V,
         current_A=-quantities.current_A,
@@ -1039,7 +541,6 @@ def _referenced_to_cis(quantities: GoldenQuantities) -> GoldenQuantities:
 
 
 def _check_probe(manifest: GoldenManifest, document: ProbeDocument, source: Path) -> None:
-    """Refuse a manifest whose ``probe_hash`` is not this probe document's."""
     if manifest.probe_hash != document.hash:
         raise GoldenError(
             f"{source} declares probe_hash {manifest.probe_hash} for probe {manifest.probe!r}, "
@@ -1050,7 +551,6 @@ def _check_probe(manifest: GoldenManifest, document: ProbeDocument, source: Path
 
 
 def _read_patch(path: Path, patch: ProbePatch, field: str) -> np.ndarray:
-    """Return one patch's values, flattened, checked against the patch's axes."""
     import numpy as np
 
     if not path.is_file():
@@ -1081,7 +581,6 @@ def _read_patch(path: Path, patch: ProbePatch, field: str) -> np.ndarray:
 
 
 def _golden_hash(manifest: GoldenManifest, values: Mapping[str, np.ndarray]) -> str:
-    """Return the content hash over the manifest and every archived array."""
     return content_hash(
         GOLDEN_SCHEMA,
         {"manifest": manifest.summary(), "values": {name: values[name] for name in sorted(values)}},
@@ -1091,7 +590,6 @@ def _golden_hash(manifest: GoldenManifest, values: Mapping[str, np.ndarray]) -> 
 def _write_archive(
     manifest: GoldenManifest, values: Mapping[str, np.ndarray], destination: Path
 ) -> Path:
-    """Write the ``.npz`` and the canonical manifest, and return the ``.npz``."""
     import numpy as np
 
     destination.mkdir(parents=True, exist_ok=True)
@@ -1104,7 +602,6 @@ def _write_archive(
 
 
 def _archive_paths(path: Path) -> tuple[Path, Path]:
-    """Return the ``(archive, manifest)`` pair a golden is read from."""
     archive = path / ARCHIVE_NAME if path.is_dir() else path
     manifest = archive.parent / ARCHIVE_MANIFEST_NAME
     for name, wanted in (("archive", archive), ("manifest", manifest)):
@@ -1118,12 +615,6 @@ def _archive_paths(path: Path) -> tuple[Path, Path]:
 
 
 def _read_archive_manifest(path: Path) -> tuple[GoldenManifest, str | None]:
-    """Return the manifest written beside an archive, and the hash it recorded.
-
-    The hash comes back rather than being discarded, because a recorded digest
-    nothing ever compares against is a checksum that cannot fail;
-    :func:`load_golden` is where it is checked, and refuses ``None``.
-    """
     decoded = decode_floats(json.loads(path.read_text(encoding="utf-8")))
     if not isinstance(decoded, dict):
         raise GoldenError(f"{path} does not hold a golden manifest object")
