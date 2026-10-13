@@ -12,9 +12,11 @@ a simpler course. Two packages were ruled. The first, now built and awaiting rev
 plain rules: a commit runs the style checks and every quick test, the full check runs once before a push, plans
 stay under a page and a half, and cheaper AI models do routine work. The second removes most
 comments and explanations from the code and proves by machine that nothing else changed.
-You ruled that the rule blocking a push until the full check passed stays.
-**Your call:** two agent helpers stay (physics review and log reading) and two go.
-*Recommendation:* keep that, since only those two were ever used for more than lookups.
+You ruled that the rule blocking a push until the full check passed stays, that two agent helpers
+stay (the log reader on the cheapest model), and that the prose strip tries a fresh helper per step,
+whose cost you then compare with this package's.
+**Your call:** should saving run fewer tests? *Recommendation:* no for now, since it never misses a
+unit test.
 
 ## Position
 
@@ -35,7 +37,7 @@ You ruled that the rule blocking a push until the full check passed stays.
 - **Versions:** one minor per phase; the close takes `v0.5.0` alone (E2, F2, G11). → §2.7 NOTE.
 - **The development loop** (§8.2.11): lint, types and Tier 1 on commit; one push gate without coverage; one
   pull-request leg on Python 3.14; Haiku, then Sonnet, then Opus; plans of at most 1,500 words with
-  compaction checkpoints; prose only on the public API; `## In brief`. Floor 3.11. → §8.2.10 J4–J6,
+  compaction checkpoints; two agents, and WP45's fresh worker per item as a trial (L9); prose only on the public API; `## In brief`. Floor 3.11. → §8.2.10 J4–J6,
   J9; OPN-09.
 - **Phase 4's shape:** refactors before the protocol (G2); two OKF packages and a ratchet (G3, G8);
   checked findings logs (G4); protocol findings only from the author's sessions (G7); the VER-62

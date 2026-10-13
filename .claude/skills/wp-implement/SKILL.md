@@ -24,6 +24,13 @@ for an easy mechanical item, Sonnet by default, Opus only after Sonnet has faile
 compaction checkpoint of the plan, compact the context; the next item resumes from the plan and
 `git log`.
 
+**Fresh worker per item** (§8.2.11 L9; a trial, WP45 only unless the author adopts it): when the
+plan says so, hand each item to a new sub-agent (Agent tool, the model above) with the item's text,
+its done-criterion, the clauses it cites and this skill's *How the work lands*. It edits, runs the
+item's checks, commits and ticks, and replies with the commit and the checks it ran, nothing more.
+Re-run the item's check yourself before the next item; on a failure, revert and hand the item to
+a fresh worker once, then the next model. Do not read the worker's files into this session.
+
 ## How the work lands
 
 **One commit per work item**, done when the tests its done-criterion names pass. Conventional

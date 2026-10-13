@@ -676,7 +676,8 @@ under 6 minutes. A miss is reported with its cause and the author rules (L8). It
 *Added, 13 October 2026.* Tag `v0.5.0-alpha.11`. The rule itself (`python.md`, `pyproject.toml`'s docstring
 rules, `CONTRIBUTING.md`) is WP44's. The tree, one commit per subpackage, by per-module agent
 passes (Haiku for `tests/`, Sonnet for `src/`, Opus only on a failure), each followed by the
-syntax-tree check with docstrings removed; a subpackage whose check differs is reverted and
+syntax-tree check with docstrings removed; each subpackage goes to a fresh worker sub-agent while the main
+session keeps only the plan and the log (§8.2.11 L9, a trial whose session cost is compared with WP44's); a subpackage whose check differs is reverted and
 redone. Checkpoints: after each subpackage. The reference pages are rebuilt strict. Proposed
 **VER-75**: the docstring and comment share of `src/` stays at or below its measured value plus
 1 point; the oracle is a docstring added to a private function. Prediction: `src/` at most 10 %,
@@ -859,6 +860,7 @@ Its last commit on `main` is tagged `v0.5.0` alone (G11).
 | The phase estimate after J1 | 4–6 weeks (I5), or a week more for WP43 | **Settled by the author, 12 October 2026** (§8.2.10 J12): 4–6 weeks, WP43 absorbed |
 | The walks on a pull request; J7's token figure | — | **Settled by the author, 12 October 2026**, at WP43's `/wp-plan` (§8.2.10 J10, J11): the `extended` walks run after a merge; the figure is the fixed reading set |
 | The remediation of WP43 | Two packages first; commit hook = Tier 1; push gate without coverage; the prose rule; agents retired; models; plan caps; no dollar gate | **Settled by the author, 13 October 2026** (§8.2.11 L1 to L8) |
+| The agents after WP44 | Keep the physics reviewer and the log classifier, or more | **Settled by the author, 13 October 2026** (§8.2.11 L9): those two, the classifier on Haiku; WP45 trials a fresh worker per item |
 | The push guard (refuse `git push` until the gate passed) | Keep, or drop with the rest of WP43's machinery | **Settled by the author, 13 October 2026**: keep, simplified; WP44's plan reports its size |
 | The phase estimate after L1 | 4–6 weeks stands, or more | **Author, open.** Default: stands |
 | Their grouping | By kind, two packages, or one per area | **Settled by the author, 6 October 2026** (I2): accuracy, verification, small fixes |
