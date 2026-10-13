@@ -638,6 +638,8 @@ under the third lever, and the soundness argument of the selection. Tagged `v0.5
 
 ### WP44 — Simplify the loop (§8.2.11 L2, L3, L6, L7, L8)
 
+> **Planned, 13 October 2026:** [wp44-simplify-the-loop.md](wp44-simplify-the-loop.md).
+
 *Added, 13 October 2026.* The simplest gate that still checks for regressions and expected
 behaviour, and plans a session can afford. Tag `v0.5.0-alpha.10`. It does:
 
