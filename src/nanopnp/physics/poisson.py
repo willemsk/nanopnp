@@ -1,14 +1,4 @@
-"""The axisymmetric Poisson operator (PHY-03, NUM-04).
-
-Poisson is solved over the *whole* domain - electrolyte, protein and membrane -
-while Nernst-Planck and Navier-Stokes are solved on the electrolyte only. The
-weak form is
-
-    int eps grad(phi) . grad(v) r dr dz
-        = int (rho_pore + rho_ion) v r dr dz + int_Gamma sigma_s v r ds
-
-with the ``r`` weight supplied by ``Measures`` rather than by the call site.
-"""
+"""The axisymmetric Poisson operator (PHY-03, NUM-04)."""
 
 from __future__ import annotations
 
@@ -24,22 +14,6 @@ def poisson_operator(
     permittivity: Numeric = 1.0,
     extra_order: int = 0,
 ) -> IntegralTerm:
-    """Return ``int eps grad(phi) . grad(v) r``, the Poisson stiffness term.
-
-    Parameters
-    ----------
-    trial, test
-        Trial and test functions, or a grid function and a test function for a
-        residual form.
-    measures
-        Symmetry and quadrature policy.
-    permittivity
-        ``eps = eps_0 eps_r``, piecewise over the domains, in units consistent
-        with the source term.
-    extra_order
-        Quadrature orders added to NGSolve's estimate, which does not count the
-        ``r`` weight (``.knowledge/06-numerics-fem.md`` section 2.2).
-    """
     import ngsolve as ngs
 
     return measures.volume(permittivity * ngs.grad(trial) * ngs.grad(test), extra_order=extra_order)
@@ -53,7 +27,6 @@ def charge_source(
     rule_order: int | None = None,
     **kwargs: Expression,
 ) -> IntegralTerm:
-    """Return ``int rho v r``, the volumetric charge source term."""
     return measures.volume(charge_density * test, rule_order=rule_order, **kwargs)
 
 
@@ -63,5 +36,4 @@ def surface_charge_source(
     measures: Measures,
     **kwargs: Expression,
 ) -> IntegralTerm:
-    """Return ``int_Gamma sigma_s v r ds``, a prescribed surface charge."""
     return measures.surface(surface_density * test, **kwargs)

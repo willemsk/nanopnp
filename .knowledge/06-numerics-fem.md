@@ -1517,6 +1517,17 @@ cycle is collected with the mesh. **[tested]**
   = 0.0543` against the clamped 0.0601).
 - The Poisson diagonal block scales as `1/lambda~^2`, 130 at 3 M and a 2 nm pore (NUM-10).
 
+### 8.5.1 Small facts recorded from the `physics/` prose strip **[verified]**
+
+- NGSolve's `SumOfIntegrals` has no unary minus: a surface-charge term is built with its sign in the
+  integrand, because a form built and then negated is a `TypeError`
+  (`physics/pb.py`, `solve_pb_recorded`).
+- The grad-div coefficient `tau_c = Re rho~ ||u~|| h_K / 2` is about 9e-6 at `Re` = 6e-4, `h~` = 0.03 and
+  `||u~||` of order 1: the term is numerically inert here and is assembled anyway
+  (`physics/stabilisation.py`).
+- `phi~` at P2 has an element-wise constant Hessian, which is why the PHY-23 chain rule needs no
+  further NGSolve construct (`physics/nernst_planck.py`, `excess_potential_gradient`).
+
 ---
 
 ## 9. Unverified / to measure
