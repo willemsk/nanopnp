@@ -1,13 +1,4 @@
-"""Loading a case, and resolving it to the objects a run is made of.
-
-:func:`load_case` is :func:`nanopnp.io.case.read_case` followed by
-:func:`nanopnp.pipeline.checks.check_document`, so a document read here has been
-checked against the installed registries as well as against the schema.
-:func:`resolve` turns a document into a :class:`~nanopnp.io.resolved.ResolvedCase`:
-it builds the electrolyte, the Newton settings and the model, which is why it sits
-above ``materials``, ``numerics`` and ``physics`` rather than in the base beside the
-types it returns (WP38 D3).
-"""
+"""Loading a case and resolving it to the objects a run is made of."""
 
 from __future__ import annotations
 
@@ -54,41 +45,15 @@ from nanopnp.pipeline.checks import (
     require_runnable,
 )
 
+# FR-04: 0.25-0.5 A
 GRID_SPACING_RANGE_NM: tuple[float, float] = (0.025, 0.05)
-"""FR-04's density grid spacing, 0.25-0.5 Å (section 5.3.1 NOTE on ``geometry.density``)."""
 
 
 _POINT_GROUP = re.compile(r"C([1-9][0-9]*)")
-"""``symmetry.point_group``: a cyclic group ``C<n>``, n >= 1 (section 5.3.1 NOTE)."""
 
 
 def load_case(path: str | Path) -> CaseDocument:
-    """Read and validate a case file, against the schema and the installed registries.
-
-    :func:`~nanopnp.io.case.read_case` followed by
-    :func:`~nanopnp.pipeline.checks.check_document`. The ``schema:`` string is
-    checked first, so a file written to a future schema fails naming the schema
-    it claims rather than with a wall of field errors against a shape it never
-    declared.
-
-    Parameters
-    ----------
-    path
-        The YAML case file.
-
-    Returns
-    -------
-    CaseDocument
-        The validated document.
-
-    Raises
-    ------
-    CaseValidationError
-        If the file is not a mapping, declares an unexpected schema, fails
-        validation, names a model, a stabilisation mode or a linear solver
-        this install does not register, or asks for an element pair no solve can
-        use; the message names every offending key by dotted path.
-    """
+    """Read and validate a case file against the schema and the installed registries."""
     source = str(Path(path))
     return check_document(read_case(path), source=source)
 
@@ -99,12 +64,10 @@ def loads_case(text: str, *, source: str = "<string>") -> CaseDocument:
 
 
 def _choice(spec: CorrectionChoiceSpec) -> CorrectionChoice:
-    """Return the materials-layer choice one ``corrections`` entry names (WP38 D6)."""
     return CorrectionChoice(model=spec.model, concentration=spec.concentration, wall=spec.wall)
 
 
 def _switches(document: CaseDocument) -> CorrectionSwitches:
-    """Return the PHY-22 switch set the document's ``corrections`` block names."""
     corrections = document.electrolyte.corrections
     return CorrectionSwitches(
         diffusivity=_choice(corrections.diffusivity),
@@ -117,19 +80,6 @@ def _switches(document: CaseDocument) -> CorrectionSwitches:
 
 
 def _resolve_structure(document: CaseDocument) -> ResolvedStructure | None:
-    """Make the ``structure:`` refusals that need no file (section 5.3.1 NOTE, WP18 D4).
-
-    Each is a refusal here rather than a narrowing of the schema: a narrowed value
-    set would move the schema (the section 5.3.1 compatibility rule), and a
-    document valid against ``nanopnp/case/v0.5`` stays valid.
-
-    Raises
-    ------
-    CaseValidationError
-        Naming the key: a point group that is not ``C<n>``, ``axis: auto`` on
-        ``C1``, a chain list that is empty, repeats an identifier or does not
-        number ``n``, and a non-positive ``last_ns`` or ``count``.
-    """
     spec = document.structure
     if spec is None:
         return None
@@ -178,23 +128,6 @@ def _resolve_structure(document: CaseDocument) -> ResolvedStructure | None:
 
 
 def _resolve_density(document: CaseDocument) -> DensitySpec | None:
-    """Make the ``geometry.density`` refusals (section 5.3.1 NOTE, WP19 D2).
-
-    Value checks, not a narrowing of the schema, for the reason
-    :func:`_resolve_structure` gives.
-
-    Returns
-    -------
-    DensitySpec or None
-        The block, or its defaults where the case has no ``geometry:``; ``None``
-        on a case without ``structure:``, which runs no stage that reads it.
-
-    Raises
-    ------
-    CaseValidationError
-        Naming the key and its value: a grid spacing outside FR-04's
-        0.025-0.05 nm, or a sharpness that is not positive.
-    """
     if document.structure is None:
         return None
     spec = document.geometry.density if document.geometry is not None else DensitySpec()
@@ -215,24 +148,6 @@ def _resolve_density(document: CaseDocument) -> DensitySpec | None:
 
 
 def _resolve_contour(document: CaseDocument, density: DensitySpec | None) -> ContourSpec | None:
-    """Make the ``geometry.contour`` refusals (section 5.3.1 NOTE, WP20 D3).
-
-    Value checks, not a narrowing of the schema, for the reason
-    :func:`_resolve_structure` gives.
-
-    Returns
-    -------
-    ContourSpec or None
-        The block, or its defaults where the case has no ``geometry:``; ``None``
-        on a case without ``structure:``.
-
-    Raises
-    ------
-    CaseValidationError
-        Naming the key and its value: an isolevel that is not finite or not in
-        (0, 1), or a tolerance that is not finite or not in (0, h), which also
-        names h.
-    """
     if document.structure is None or density is None:
         return None
     spec = document.geometry.contour if document.geometry is not None else ContourSpec()
@@ -253,7 +168,6 @@ def _resolve_contour(document: CaseDocument, density: DensitySpec | None) -> Con
 
 
 def _resolve_protonation(document: CaseDocument) -> ResolvedProtonation:
-    """Return the ``protonation`` stage's settings, at their defaults without ``charge:``."""
     charge = document.charge if document.charge is not None else Charge()
     return ResolvedProtonation(
         ph=charge.ph, forcefield=charge.forcefield, titration=charge.titration
@@ -263,16 +177,6 @@ def _resolve_protonation(document: CaseDocument) -> ResolvedProtonation:
 def _model_options(
     document: CaseDocument, *, order: int, velocity_order: int, pressure_order: int
 ) -> dict[str, Any]:
-    """Return the keyword arguments the named model's builder takes (PHY-21, WP26 D5).
-
-    The case offers one candidate set and the model's declaration selects from it
-    (section 5.4.3 NOTE): ``pnp`` fixes ``flow=False`` in its builder and does not
-    declare it, and ``pb`` declares ``order`` alone. The candidate order is the one
-    the keys have always been written in, so every model's resolved options, and
-    with them its stage-10 key, are what they were before the declaration existed.
-    :func:`~nanopnp.pipeline.checks.check_document`'s switch check has already
-    refused any case where the omission would hide a switch the user set.
-    """
     physics = document.physics
     candidates: dict[str, Any] = {
         "solid_permittivities": dict(physics.solid_permittivities),
@@ -290,30 +194,7 @@ def _model_options(
 
 
 def resolve(document: CaseDocument) -> ResolvedCase:
-    """Turn a validated case document into the objects the solver takes.
-
-    Parameters
-    ----------
-    document
-        A validated case document.
-
-    Returns
-    -------
-    ResolvedCase
-        The electrolyte, the model options, the Newton settings and the mesh the
-        run is made of.
-
-    Raises
-    ------
-    UnsupportedCaseSection
-        If the case asks for something this release does not run; the message
-        names the section, its requirement, and the release that schedules it or
-        that no release does.
-    CaseValidationError
-        If the document is internally inconsistent — a species the parameter file
-        does not carry, a steric diameter or a temperature disagreeing with it, an element label
-        that is not one.
-    """
+    """Turn a validated case document into the objects the solver takes."""
     check_document(document)
     mesh = require_runnable(document)
     structure = _resolve_structure(document)
@@ -336,11 +217,8 @@ def resolve(document: CaseDocument) -> ResolvedCase:
     options = _model_options(
         document, order=order, velocity_order=velocity_order, pressure_order=pressure_order
     )
-    # Built once, through the one builder every consumer uses: a builder's own
-    # refusal -- ``pb`` beside a salt that is not symmetric monovalent -- is a
-    # case error, and is reported now rather than when stage 10 builds the model
-    # again (WP26 D10). What a stage below ``physics`` reads of it is kept as
-    # data on the resolved case (WP38 D5).
+    # Built here so a builder's own refusal (``pb`` beside an asymmetric salt) is a case
+    # error reported now, not when stage 10 builds the model again.
     try:
         model = build_case_model(
             physics.model, electrolyte, document.electrolyte.concentration_M, options
@@ -395,17 +273,9 @@ def resolve(document: CaseDocument) -> ResolvedCase:
 
 
 class CaseStage:
-    """Stage 9 of section 5.2: the resolved case document.
-
-    Resolving is the work, and the walk has done it before any stage runs: every
-    stage is handed the one resolved case (WP38 D4). What this stage adds is the
-    record of it, the stage-9 artefact, keyed on the document and its provenance.
-    """
-
     name = "case"
 
     def describe(self) -> StageDescription:
-        """Return the registry's description of this stage (FR-27)."""
         return describe(self.name)
 
     def run(
@@ -415,14 +285,6 @@ class CaseStage:
         progress: Progress | None = None,
         cancel: CancelToken | None = None,
     ) -> CaseArtefact:
-        """Resolve the case and emit the stage-9 artefact.
-
-        Raises
-        ------
-        Cancelled
-            If ``cancel`` is already set; resolution is too short to interrupt
-            usefully, so the token is checked once on entry.
-        """
         check_cancelled(cancel, "case")
         report(progress, 0.0, f"resolving case {inputs.resolved.name!r}")
         artefact = self.key(inputs)
@@ -430,12 +292,5 @@ class CaseStage:
         return artefact
 
     def key(self, inputs: StageInputs) -> CaseArtefact:
-        """Return the stage-9 artefact, which is its own key (FR-27, section 5.3.2).
-
-        The whole of :meth:`run`'s result, summary included: resolving writes no
-        file, so there is nothing cheaper to key than the answer, and the walk
-        stores this key as the artefact (``key_is_artefact``). :meth:`run` calls
-        this, so the two cannot drift apart.
-        """
         resolved = inputs.resolved
         return CaseArtefact(resolved.document, summary=resolved.provenance)

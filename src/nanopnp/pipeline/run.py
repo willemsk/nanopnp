@@ -1,28 +1,4 @@
-"""The pipeline driver: one case file to one run directory (FR-27, QR-08, IF-01).
-
-Section 5.2 numbers twelve stages and section 5.3.2 makes each one a pure
-function of its inputs. Nothing walked them. This module is that walk, and it is
-deliberately the only one: the CLI, the desktop shell (ADR-004) and the sweep
-runner (FR-24) each drive a run, and three walks over the same graph are three
-chances for one of them to key a stage differently from the others.
-
-**It lives in ``pipeline/``, the assembler, and not in ``io/`` or ``core/``.**
-The driver resolves the case through :func:`nanopnp.pipeline.case.resolve`,
-which consults the model, stabilisation and solver registries, and it needs
-:mod:`nanopnp.io.store`, :mod:`nanopnp.io.manifest` and the lazy
-:func:`nanopnp.core.stages.create`; in ``io``, the base every stage reads, it
-would make the base depend on the registries above it (section 5.1, WP38 D1).
-
-**Every stage goes through the store, and its key is computed before it runs.**
-That is what makes :meth:`~nanopnp.io.store.Store.get_or_compute` a cache rather
-than a memo of work already done, and it is what lets a reproduction assert that
-it *missed* — one served from the store asserts that a dictionary lookup is
-deterministic and nothing else (QR-08).
-
-**Nothing here imports NGSolve.** The stages are constructed through
-:func:`nanopnp.core.stages.create`, which imports a stage's module only when the
-run reaches it, so a walk that stops at stage 9 has still not paid the ~370 ms.
-"""
+"""The pipeline driver: one case file to one run directory (FR-27, QR-08, IF-01)."""
 
 from __future__ import annotations
 
@@ -79,96 +55,28 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 RUN_SCHEMA = "nanopnp/run/v0.5"
-"""Schema of the run record written beside the manifest."""
 
 RUN_RECORD_FILENAME = "run.json"
-"""Name the run record is written under inside a run directory.
-
-Beside ``manifest.json`` and ``case.yaml`` rather than inside either. The
-manifest is the FR-25 provenance record and says how the run was *configured*;
-this says which artefacts it produced and where they are. Separating them is
-what lets a reader with a run directory and no store tell a run that was served
-from a cache from one that solved.
-"""
 
 WORKSPACE_DIRNAME = "tmp"
-"""Directory under the store root that a run's scratch workspaces are made in.
-
-The same name the file-writing stages use for their own fallback, because it is
-the same directory — the difference is only *which* store root it hangs from.
-"""
 
 
 def _scratch(store: Store) -> Path:
-    """Return a fresh workspace directory under ``store`` for one run.
-
-    Each stage falls back to ``store_root()`` when it is constructed without a
-    workspace, and ``store_root()`` is the process default — ``$NANOPNP_STORE``
-    or ``./nanopnp-store`` — rather than the store this run was handed. A sweep
-    worker or a test that named its own store would then have the run's scratch
-    meshes and field exports appear somewhere it never asked about, while the
-    artefacts referencing them lived in the store it did. Naming the workspace
-    here keeps a run's files inside its own store.
-
-    Fresh per run rather than a fixed ``tmp/mesh``: two runs into one store hold
-    different meshes, and a deterministic name would have the second overwrite
-    a file the first's artefact still points at (section 5.3.2). Removed by
-    :func:`run_document` when the walk ends, succeeded or not, because
-    :meth:`~nanopnp.io.store.Store.put` has copied what the run keeps.
-
-    Called from :meth:`_Walk.construct` on the first stage that writes a file
-    rather than before the walk, so that a run served entirely from the store
-    leaves no empty directory behind — under FR-24 that is one per member of a
-    re-collected sweep, in the directory the cache exists to avoid touching.
-    """
     root = store.root / WORKSPACE_DIRNAME
     root.mkdir(parents=True, exist_ok=True)
     return Path(tempfile.mkdtemp(prefix="run-", dir=root))
 
 
-class MissingUpstreamError(RuntimeError):
-    """An upstream artefact is not in the store and ``only`` forbade computing it."""
+class MissingUpstreamError(RuntimeError): ...
 
 
 class UnknownStageError(KeyError):
-    """``upto`` named a stage this run does not walk.
-
-    A :class:`KeyError` still, so that a caller written against the mapping-like
-    reading of ``upto`` keeps working, but a *named* one: IF-02 classifies it as
-    ``3``, the case, because nothing numerical has gone wrong and the retry a
-    job array would make on ``1`` fails identically (section 3.1 NOTE, QR-06).
-    """
-
     def __str__(self) -> str:
-        """Return the message as written, without :class:`KeyError`'s quoting.
-
-        ``KeyError`` reprs its argument, which is right for a missing key and
-        wrong for a sentence: the CLI prints ``str(error)`` as the QR-12
-        diagnostic, and a diagnostic wrapped in quotes reads as a key nobody
-        looked up.
-        """
         return str(self.args[0]) if self.args else ""
 
 
 @dataclass(frozen=True)
 class StageRecord:
-    """What one stage of a run produced, and whether it had to do the work.
-
-    Parameters
-    ----------
-    name, number, schema
-        The stage as the registry describes it (FR-27).
-    hash
-        Content hash of the artefact it produced: the artefact's identity, and
-        its location in the store.
-    cached
-        Whether the store already held it. A run whose every stage is cached did
-        no physics, and QR-08's reproduction check is precisely the assertion
-        that this is ``False`` for the solve.
-    seconds
-        Wall time, including the store lookup that decided not to run it.
-    """
-
     name: str
     number: int
     schema: str
@@ -177,7 +85,6 @@ class StageRecord:
     seconds: float
 
     def summary(self) -> dict[str, Canonicalisable]:
-        """Return this record as plain data, for the run record and the CLI."""
         return {
             "stage": self.name,
             "number": self.number,
@@ -190,22 +97,7 @@ class StageRecord:
 
 @dataclass(frozen=True)
 class RunResult:
-    """One completed run: its artefacts, its manifest and where they were written.
-
-    Parameters
-    ----------
-    directory
-        The run directory holding ``manifest.json``, ``case.yaml`` and
-        :data:`RUN_RECORD_FILENAME`.
-    manifest
-        The FR-25 provenance record.
-    artefacts
-        Every stage's artefact, by stage name, as the store holds it.
-    stages
-        The per-stage record, in the order the stages ran.
-    store
-        The store the run went through, carrying its hit and miss counts.
-    """
+    """One completed run: its artefacts, its manifest and where they were written."""
 
     directory: Path
     manifest: Manifest
@@ -215,11 +107,7 @@ class RunResult:
 
     @property
     def quantities(self) -> Mapping[str, Canonicalisable]:
-        """The stage-11 summary: every scalar this run extracted.
-
-        Empty when the run stopped before stage 11 — a run that produced no
-        number, which is not a run whose numbers were all zero.
-        """
+        """The stage-11 summary: every scalar this run extracted; empty before stage 11."""
         qoi = self.artefacts.get("qoi")
         return dict(qoi.summary) if qoi is not None else {}
 
@@ -249,15 +137,7 @@ class RunResult:
         }
 
     def write(self) -> Path:
-        """Write the manifest, the case and the run record into the run directory.
-
-        Returns
-        -------
-        Path
-            The path of the run record. The manifest and the case are written
-            beside it by :meth:`nanopnp.io.manifest.Manifest.write`, from the
-            same string the manifest embeds, so the three files cannot disagree.
-        """
+        """Write the manifest, the case and the run record; return the run record's path."""
         self.manifest.write(self.directory)
         path = self.directory / RUN_RECORD_FILENAME
         atomic_write_bytes(path, canonical(self.record()) + b"\n")
@@ -266,14 +146,6 @@ class RunResult:
 
 @dataclass
 class _Walk:
-    """Mutable state of one walk over the pipeline.
-
-    A dataclass rather than a pile of locals because the same four things — the
-    document, the store, the artefacts produced so far and the deviations the
-    stages contributed — are handed to every step, and threading them through as
-    arguments would make the loop its own argument list.
-    """
-
     document: CaseDocument
     resolved: ResolvedCase
     store: Store
@@ -285,18 +157,8 @@ class _Walk:
     records: list[StageRecord] = field(default_factory=list)
     contributed: list[ContributedDeviation] = field(default_factory=list)
     scratch: Path | None = None
-    """The workspace :func:`_scratch` made, once a stage has needed one."""
 
     def inputs(self, name: str, *, own: bool = False) -> StageInputs:
-        """Return the inputs one stage is handed: the resolved case and its declared inputs.
-
-        Only the artefacts the stage's description declares are offered (REV-63,
-        WP38 D11), so a stage reading an input it does not declare finds nothing
-        in every walk, rather than finding it in a complete walk and missing it
-        in a truncated one -- where ``solve`` would converge the uncharged
-        problem under another key and nothing would fail. ``own`` adds the
-        stage's own artefact under its own name, for the deviations pass.
-        """
         return StageInputs(
             resolved=self.resolved,
             upstream=offered(name, self.artefacts, own=own),
@@ -304,21 +166,6 @@ class _Walk:
         )
 
     def construct(self, name: str) -> Stage:
-        """Return the stage object, giving the ones that write files a directory.
-
-        The workspace is the one the caller named, or one made under this run's
-        store the first time a file-writing stage asks for it — never the
-        process-default :func:`~nanopnp.core.paths.store_root` the stages
-        themselves fall back to (section 5.3.2, the workspace-locality NOTE).
-
-        ``arguments`` carries anything else a caller needs to construct a stage
-        with — today only the FR-24 warm start, which is an *artefact* and so
-        cannot ride on :attr:`~nanopnp.io.artefact.StageInputs.options`, whose
-        values are canonicalisable by contract because they reach a digest. A
-        constructor argument reaches none, which is exactly right for a warm
-        start: it changes where Newton starts and not what it converges to, and
-        §5.3.2 requires it be recorded in provenance and kept out of the key.
-        """
         extra = dict(self.arguments.get(name, {}))
         description = describe(name)
         if description.takes_store:
@@ -338,60 +185,17 @@ class _Walk:
 def offered(
     name: str, artefacts: Mapping[str, Artefact], *, own: bool = False
 ) -> dict[str, Artefact]:
-    """Return the artefacts a stage is handed: those its description declares, as produced.
-
-    ``own`` adds the stage's own artefact, which the deviations pass reads
-    (:meth:`~nanopnp.core.stages.Stage.deviations`). A declared input the walk
-    did not produce is absent, as an optional input the case drops is.
-    """
     declared = set(describe(name).inputs) | ({name} if own else set())
     return {key: artefact for key, artefact in artefacts.items() if key in declared}
 
 
 def selected_stages(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]:
-    """Return the stages this case runs: every one, or the inputs of ``upto`` and ``upto``.
-
-    A walk to ``upto`` runs ``upto`` and its declared inputs, transitively, in
-    walk order (REV-63, WP38 D11): ``--upto protonation`` runs ``case``,
-    ``structure`` and ``protonation``, and not the geometry stages between them.
-
-    ``protonation`` and ``charge`` run when the case protonates and its model
-    declares ``fixed_charge`` (WP28 D8): both halves of stage 7, and the charge is
-    deposited. ``charge`` otherwise runs only when the case supplies
-    ``inputs.charge`` or ``inputs.eps_r``, or derives ``chi`` from a non-zero
-    ``charge.dielectric_transition_nm`` (WP30 D5): stage 7 refuses a case with neither as
-    describing no work, and a run with no field to gate has not skipped a gate.
-    ``protonation`` otherwise runs only as a walk's named target. A stage whose
-    description names a ``needs_section`` is dropped when the case leaves that
-    section out, for the same reason: ``structure``, ``density``, ``symmetry`` and
-    ``contour`` without ``structure:``, which covers a case supplying
-    ``inputs.profile``; and
-    ``region`` is dropped when the case supplies ``inputs.mesh``, which stage 6
-    then reads instead of generating (section 5.3.1 NOTE on ``inputs:``). A
-    stage is dropped too when the case drops one of its inputs that its
-    description does not declare optional (WP36 D13); every built-in stage
-    declares optional each input a case can drop, so the rule reaches only a
-    stage registered from outside the package.
-
-    Public so that the desktop shell lists the stages a build will walk from
-    this rule rather than from a restatement of it (WP24).
-
-    Raises
-    ------
-    UnknownStageError
-        If ``upto`` is not a stage this run walks; the message lists the ones it
-        does, and says separately when the stage is registered but this case
-        gives it nothing to do.
-    ValueError
-        If a registered stage's ``needs_section`` names no top-level case section.
-    """
     supplied = resolved.charge is not None or resolved.eps_r is not None or resolved.derives_eps_r
     deposits = resolved.deposits_charge
     dropped = set() if supplied or deposits else {"charge"}
     if not deposits and (upto != "protonation" or not resolved.protonates):
-        # A protonation no deposition reads feeds nothing, and a stage nothing
-        # reads is not run: it runs only as a walk's named target, and costs about
-        # a minute per frame (WP27 D3, WP28 D8).
+        # Protonation feeds nothing unless a deposition reads it, and costs about a
+        # minute per frame, so it runs only as a walk's named target.
         dropped.add("protonation")
     order = walk_order()
     sections = type(resolved.document).model_fields
@@ -470,23 +274,6 @@ def selected_stages(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]
 
 
 def _contributed(stage: Stage, inputs: StageInputs) -> tuple[ContributedDeviation, ...]:
-    """Return the departures from the validated model a stage contributes (FR-25).
-
-    Optional on the stage protocol, because most stages find none: a stage that
-    reads no external file and takes no option has nothing to contribute that the
-    case-file diff of :mod:`nanopnp.io.defaults` does not already see (FR-25,
-    section 5.3.3).
-
-    Called by :func:`run_document` **after** the stage's artefact has been
-    recorded, with ``inputs`` rebuilt so that artefact appears under the stage's
-    own name. That ordering is the protocol, and it is what lets
-    :meth:`nanopnp.mesh.ingest.MeshStage.deviations` read the ``materials`` its
-    artefact already carries instead of ingesting and quality-gating the mesh
-    again, and :meth:`nanopnp.charge.stage.FieldStage.deviations` read the
-    ``fields`` parameter instead of re-reading a field table of tens of
-    megabytes. A stage whose deviations depend only on its options, as
-    :meth:`nanopnp.post.stage.QoIStage.deviations` does, is unaffected by it.
-    """
     contribute = getattr(stage, "deviations", None)
     if contribute is None:
         return ()
@@ -495,12 +282,6 @@ def _contributed(stage: Stage, inputs: StageInputs) -> tuple[ContributedDeviatio
 
 
 def _slice(progress: Progress | None, low: float, high: float, name: str) -> Progress | None:
-    """Return a callback mapping one stage's [0, 1] into ``[low, high]`` of the run.
-
-    Monotone by construction, so the contract
-    :class:`nanopnp.core.stages.Progress` states holds for the walk as well as
-    for each stage.
-    """
     if progress is None:
         return None
 
@@ -522,24 +303,6 @@ def _resolve_stage(
     cancel: CancelToken | None,
     on_solve: SolveHook | None = None,
 ) -> Artefact:
-    """Return one stage's artefact, from the store or by running it.
-
-    Parameters
-    ----------
-    substitute
-        Whether this stage is an *upstream* one under ``only``: it must then come
-        from the store, and a miss aborts naming it rather than computing it.
-        That is what makes a hand-substituted artefact testable (FR-27) — it
-        proves the stage read the substituted file rather than recomputing past
-        it.
-    on_solve
-        Where a :class:`~nanopnp.core.stages.SolveReporting` stage reports its
-        continuation rungs and Newton steps. Only such a stage is rebound, and
-        only *here*: ``key`` was taken from the unbound stage by the caller, so
-        a watched run and an unwatched one key one artefact and land on one
-        store entry (section 5.3.2). A stage that does not satisfy the protocol
-        is left alone rather than given a keyword it would have to ignore.
-    """
     if on_solve is not None and isinstance(stage, SolveReporting):
         stage = stage.with_solve_hook(on_solve)
     if describe(name).key_is_artefact:
@@ -568,16 +331,6 @@ def _resolve_stage(
 
 
 def input_files(resolved: ResolvedCase, case_path: Path | None) -> dict[str, Path]:
-    """Return the run's input files by role, for the manifest's Inputs group.
-
-    Shared with the sweep plan, which binds itself to the same files (CODE_REVIEW_003 CR-5).
-
-    Only files that exist as paths. ``resolve`` refuses ``artefact:`` on every
-    ``inputs:`` key (WP40 D5), so a resolved case names each supplied input by path;
-    the ``path is not None`` test narrows the type for a resolved case built by hand,
-    and hashing a store hash under a made-up path would put one input in the manifest
-    twice.
-    """
     files: dict[str, Path] = {}
     if case_path is not None:
         files["case"] = case_path
@@ -601,12 +354,6 @@ def input_files(resolved: ResolvedCase, case_path: Path | None) -> dict[str, Pat
 def _mapping(
     summary: Mapping[str, Canonicalisable] | None, key: str
 ) -> Mapping[str, Canonicalisable] | None:
-    """Return a mapping-valued entry of a stage summary, or ``None`` if it is absent.
-
-    Checked for shape rather than assumed: the summary reaches here through the
-    artefact, which FR-27 permits to have been edited by hand, and a manifest
-    group built from a string would fail far from the edit that caused it.
-    """
     if summary is None:
         return None
     found = summary.get(key)
@@ -623,7 +370,6 @@ STRUCTURE_RECORD_KEYS: tuple[str, ...] = (
     "drift_deg",
     "payload_digest",
 )
-"""The stage-1 summary entries the manifest's Geometry group records (FR-25, WP18 D14)."""
 
 DENSITY_RECORD_KEYS: tuple[str, ...] = (
     "grid",
@@ -634,7 +380,6 @@ DENSITY_RECORD_KEYS: tuple[str, ...] = (
     "hydrogens",
     "payload_digest",
 )
-"""The stage-2 summary entries the Geometry group records as ``density`` (WP19 D13)."""
 
 REDUCTION_RECORD_KEYS: tuple[str, ...] = (
     "n",
@@ -643,7 +388,6 @@ REDUCTION_RECORD_KEYS: tuple[str, ...] = (
     "maximum",
     "payload_digest",
 )
-"""The stage-3 summary entries the Geometry group records as ``reduction`` (WP19 D13)."""
 
 CONTOUR_RECORD_KEYS: tuple[str, ...] = (
     "isolevel",
@@ -657,7 +401,6 @@ CONTOUR_RECORD_KEYS: tuple[str, ...] = (
     "band",
     "constriction",
 )
-"""The stage-4 summary entries the Geometry group records as ``contour`` (WP20 D15)."""
 
 
 PROTONATION_RECORD_KEYS: tuple[str, ...] = (
@@ -678,34 +421,15 @@ PROTONATION_RECORD_KEYS: tuple[str, ...] = (
     "pqr_sha256",
     "payload_digest",
 )
-"""The protonation summary entries the manifest's Charge group records (WP27 D16).
-
-``Q_net`` per frame beside the structure's ``variant``, which is its provenance
-(OPN-04), and the force field, pH and titration that produced it.
-"""
 
 
 def _record(artefact: Artefact | None, keys: tuple[str, ...]) -> dict[str, Canonicalisable] | None:
-    """Return a Geometry-group record: the named entries of one stage's summary.
-
-    Taken from the artefact and never recomputed, so the manifest cannot report an
-    axis, a gate or a variance the stage did not measure.
-    """
     if artefact is None:
         return None
     return {key: artefact.summary[key] for key in keys if key in artefact.summary}
 
 
 def _manifest(walk: _Walk, *, case_text: str, case_path: Path | None) -> Manifest:
-    """Assemble the FR-25 manifest from the artefacts the walk produced.
-
-    Every group comes from the artefact that produced it rather than from a
-    second computation: the geometry group is the stage-6 summary, the charge
-    group the stage-7 summary, the solver group the stage-10 summary, the PHY-13
-    clamp count the stage-11 summary. A group whose stage did not run is recorded
-    as :func:`~nanopnp.io.manifest.not_run`, which is a different fact from a
-    group that ran and found nothing.
-    """
     case = walk.artefacts.get("case")
     structure = walk.artefacts.get("structure")
     density = walk.artefacts.get("density")
@@ -770,12 +494,6 @@ def _manifest(walk: _Walk, *, case_text: str, case_path: Path | None) -> Manifes
 
 
 def _short_of_stage_7(walk: _Walk) -> str:
-    """Return why a walk that a complete one would take through stage 7 did not run it.
-
-    A walk to a stage runs that stage's input closure (WP38 D11), so it can end
-    past stage 7 without running it -- ``--upto materials`` does -- and it then did
-    not stop before stage 7: its target does not read it.
-    """
     order = walk_order()
     if walk.records and "charge" in order:
         target = str(walk.records[-1].name)
@@ -785,7 +503,6 @@ def _short_of_stage_7(walk: _Walk) -> str:
 
 
 def _protonation_reason(walk: _Walk) -> str:
-    """Return why the ``protonation`` stage did not run in this walk (WP27 D3, WP28 D8)."""
     resolved = walk.resolved
     if not resolved.protonates:
         return (
@@ -802,7 +519,6 @@ def _protonation_reason(walk: _Walk) -> str:
 
 
 def _charge_reason(walk: _Walk) -> str:
-    """Return why stage 7 did not run in this walk (WP28 D8)."""
     resolved = walk.resolved
     if (
         resolved.deposits_charge
@@ -844,73 +560,39 @@ def run_document(
 
     Parameters
     ----------
-    document
-        The validated case.
     case_text
-        The case file verbatim, embedded in the manifest beside its hash so the
-        two cannot disagree (section 5.3.3).
+        The case file verbatim, embedded in the manifest.
     case_path
-        Where it was read from, recorded as an input file. ``None`` for a case
-        assembled in memory, recorded then as having no source file rather than
-        as having one that does not exist.
-    store
-        The artefact store; a default-rooted :class:`~nanopnp.io.store.Store` if
-        omitted. Its hit and miss counts are carried onto the result, which is
-        what lets QR-08's check assert that a reproduction re-entered Newton.
+        Where the case was read from; ``None`` for a case assembled in memory.
     upto
-        Stop after this stage. ``None`` walks the whole pipeline.
+        Stop after this stage; ``None`` walks the whole pipeline.
     only
-        Refuse to compute any upstream stage that writes a payload, taking it
-        from the store instead and aborting naming it if it is not there.
+        Take every upstream payload-writing stage from the store, aborting naming it if absent.
     options
-        Per-stage options, by stage name, passed through on
-        :attr:`~nanopnp.io.artefact.StageInputs.options`.
+        Per-stage options, by stage name.
     arguments
-        Per-stage constructor arguments, by stage name; see
-        :meth:`_Walk.construct`. Nothing here enters an artefact key.
+        Per-stage constructor arguments, by stage name; none enters an artefact key.
     workspace
-        Directory the file-writing stages use, one subdirectory each. When this
-        is ``None`` the run takes a fresh one under ``store``, so that a caller
-        who named a store gets every file the run wrote inside it — the stages'
-        own fallback is to :func:`~nanopnp.core.paths.store_root`, which is the
-        *process* default and not the store the run was handed.
+        Directory for the file-writing stages; a fresh one under ``store`` when ``None``.
     write
-        Whether to write the run directory. ``False`` returns the result with the
-        directory named and nothing in it, for a caller assembling several runs.
+        Whether to write the run directory.
     progress
-        Called with a fraction in [0, 1] and a message, monotone, ending at 1.
-        Each stage's own fraction is mapped into its share of the total.
+        Called with a monotone fraction in [0, 1] and a message.
     cancel
         Checked before every stage and threaded into each of them.
     on_stage
-        Called before each stage with its name and its position in the walk. The
-        same transition ``progress`` reports as text, given as data, so a caller
-        that has to act on it does not parse a caption (:class:`~nanopnp.core.stages.StageHook`).
+        Called before each stage with its name and its position in the walk.
     on_solve
-        Called with each continuation rung and each accepted Newton step of the
-        solve, as numbers (:class:`~nanopnp.core.stages.SolveHook`). Delivered by
-        capability and not by keyword: only a stage satisfying
-        :class:`~nanopnp.core.stages.SolveReporting` is rebound, and it is
-        rebound after its artefact key has been taken, so watching a run cannot
-        move a hash (section 5.3.2).
+        Called with each continuation rung and accepted Newton step of the solve.
     on_artefact
-        Called after each stage with the artefact it produced — its schema, its
-        hash and whether the store already held it — once that artefact is in
-        the store (:class:`~nanopnp.core.stages.ArtefactHook`). Every key is
-        taken before it is called and none is handed to it, so it cannot move a
-        hash either.
-
-    Returns
-    -------
-    RunResult
-        Every artefact, the manifest, and the run directory.
+        Called after each stage with its artefact's schema, hash and whether the store held it.
 
     Raises
     ------
     MissingUpstreamError
         If ``only`` is set and an upstream artefact is not in the store.
     nanopnp.core.stages.Cancelled
-        If ``cancel`` turns true. No run directory is written.
+        If ``cancel`` turns true; no run directory is written.
     """
     target = store if store is not None else Store()
     walk = _Walk(
@@ -947,37 +629,6 @@ def run_document(
 def stored_upstream(
     document: CaseDocument, *, store: Store, feeding: str = "solve"
 ) -> dict[str, Artefact]:
-    """Return the artefacts a walk hands ``feeding``, every payload from the store.
-
-    How a sweep member finds its parent's converged state (FR-24). The parent's
-    solve key is its solve provenance and the hashes of the mesh, fields and
-    materials artefacts its own walk handed the solve, and those are exactly
-    what this returns: each stage is keyed as :func:`run_document` keys it, and a
-    stage that writes a payload is taken from the store rather than computed.
-    A key built from the bare case cannot stand in for this: a case that
-    generates its mesh has no mesh until stage 6 has run, and its key is the
-    stage-6 recipe, not a file (WP21 D10).
-
-    Key-only: no stage runs, no directory is made, and the store's hit and miss
-    counts are left alone, because they belong to the run that reads them.
-
-    Parameters
-    ----------
-    document
-        The validated case whose upstream artefacts are wanted.
-    store
-        Where the payload-writing stages' artefacts are looked up.
-    feeding
-        The stage whose inputs are wanted. Every stage in its input closure is
-        keyed, ``feeding`` itself excepted: for ``"solve"`` that is the mesh, the
-        stage-7 field where the case has one, and the materials (WP38 D11).
-
-    Raises
-    ------
-    MissingUpstreamError
-        If a payload-writing stage's artefact is not in the store, which for a
-        sweep parent means it has not run yet.
-    """
     artefacts: dict[str, Artefact] = {}
     resolved = resolve(document)
     for name in selected_stages(resolved, feeding)[:-1]:
@@ -1008,7 +659,6 @@ def _walk(
     on_solve: SolveHook | None,
     on_artefact: ArtefactHook | None,
 ) -> RunResult:
-    """Run the stages of :func:`run_document`, which owns the scratch they write into."""
     document = walk.document
     stages = selected_stages(walk.resolved, upto)
     weights = [describe(name).weight for name in stages]
@@ -1070,7 +720,7 @@ def _walk(
     # A truncated walk is another record of the same case; it must not replace the
     # run record a complete walk wrote, because QR-08 reproduces from that one.
     # Complete when it walks every stage this case walks. Reaching the last one is
-    # not enough: a walk runs its target's input closure (WP38 D11), so a target
+    # not enough: a walk runs its target's input closure, so a target
     # walked last that reads only some of the stages before it is still truncated.
     complete = stages == selected_stages(walk.resolved, None)
     label = document.name if complete else f"{document.name}-upto-{stages[-1]}"
@@ -1103,22 +753,7 @@ def run_case(
     on_solve: SolveHook | None = None,
     on_artefact: ArtefactHook | None = None,
 ) -> RunResult:
-    """Load a case file and run it.
-
-    The entry point the CLI and the reproduction check both use, so that "read
-    the file, keep its text, walk the pipeline" happens once rather than in each
-    caller — a second copy is a second chance for the manifest's embedded case to
-    stop being the bytes that were read.
-
-    Parameters
-    ----------
-    path
-        The case file.
-    store, upto, only, options, arguments, workspace, write, progress, cancel
-        As :func:`run_document` documents them.
-    on_stage, on_solve, on_artefact
-        As :func:`run_document` documents them.
-    """
+    """Load a case file and run it; the keywords are those of :func:`run_document`."""
     source = Path(path)
     text = source.read_text(encoding="utf-8")
     return run_document(
