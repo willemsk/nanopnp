@@ -1,23 +1,4 @@
-"""Content-addressed stage artefacts (``SPECIFICATION.md`` section 5.3.2).
-
-Every stage output carries a hash over a canonical serialisation of the
-parameters that produced it and of the artefacts it consumed. That hash is the
-cache key, and because the input hashes are inside the digest, "a
-hand-substituted artefact registers as a changed input" is true by construction
-rather than by a check somebody must remember to run.
-
-Two digests would be one too many, so there is one: :attr:`Artefact.hash` is
-taken over the schema, the parameters and the input hashes, and **not** over the
-payload files. That is what makes it computable before the stage runs, which is
-what :meth:`nanopnp.io.store.Store.get_or_compute` needs in order to be a cache
-at all. The payload is covered instead by recording each file's digest beside
-the artefact and recomputing it on load: a mismatch is a hand substitution, which
-FR-27 permits and section 5.3.2 requires be recorded rather than aborted.
-
-Artefacts are frozen dataclasses, not pydantic models. They carry
-``GridFunction``s and arrays and are not themselves a serialisation boundary;
-their ``meta.json`` is, and pydantic stays there.
-"""
+"""Content-addressed stage artefacts (SPECIFICATION.md section 5.3.2)."""
 
 from __future__ import annotations
 
@@ -35,138 +16,45 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only; io must not import at 
     from nanopnp.materials.electrolyte import Electrolyte
 
 CASE_SCHEMA = "nanopnp/case/v0.5"
-"""Stage 9: the resolved case document (IF-03, G6)."""
 
 
 STRUCTURE_SCHEMA = "nanopnp/structure/v0.5"
-"""Stage 1: the aligned ensemble, with the Cₙ axis on z at r = 0 (FR-01 to FR-03)."""
 
 DENSITY_SCHEMA = "nanopnp/density/v0.5"
-"""Stage 2: the ensemble-mean union density on the canonical 3D grid (FR-04)."""
 
 REDUCED_SCHEMA = "nanopnp/reduced/v0.5"
-"""Stage 3: the (r, z) mean and the Cₙ and raw azimuthal variances (FR-05, FR-06)."""
 
 PROFILE_ARTEFACT_SCHEMA = "nanopnp/profile/v0.5"
-"""Stage 4: the conditioned, gated contour, a ``nanopnp/profile/v0.5`` document (FR-07, FR-08).
-
-Canonical schema definition imported downward by domain packages
-(:data:`nanopnp.geometry.profile.PROFILE_SCHEMA`, WP42 D14).
-"""
 
 REGION_SCHEMA = "nanopnp/region/v0.5"
-"""Stage 5: the declarative record of the tagged (r, z) region (FR-09, WP21 D5).
-
-Canonical schema definition imported downward by domain packages
-(:data:`nanopnp.geometry.region.REGION_SCHEMA`, WP42 D14).
-"""
 
 MATERIALS_SCHEMA = "nanopnp/materials/v0.5"
-"""Stage 8: the resolved material coefficient set."""
 
 MESH_ARTEFACT_SCHEMA = "nanopnp/mesh/v0.5"
-"""Stage 6: a tagged, gated mesh in the boundary vocabulary (IF-06).
-
-Canonical schema definition imported downward by domain packages
-(:data:`nanopnp.mesh.adapter.MESH_SCHEMA`, WP42 D14).
-"""
 
 PROTONATION_SCHEMA = "nanopnp/protonation/v0.5"
-"""Stage 7, first half: the per-frame atom table with charges and radii (FR-12, WP27 D10)."""
 
 PROTONATION_FRAME_SCHEMA = "nanopnp/protonation-frame/v0.5"
-"""One frame's PDB2PQR output, keyed on the digest of the PDB it was given (WP27 D10).
-
-Not the output of a registered stage: the ``protonation`` stage stores each frame
-under this schema as it goes, so that a changed frame selection re-protonates
-only the frames it has not seen (section 5.3.2, the stage-7 artefact row).
-"""
 
 CHARGE_GRID_SCHEMA = "nanopnp/charge-grid/v0.5"
-"""Stage 7's export lattice: the closed-form kernel summed over the protonation artefact (WP28 D7).
-
-WP32 D15 dropped the sum's wall-clock ``seconds`` from the summary, which is served
-from the store unchanged on a hit. Every schema is now pinned at ``v0.5`` (§8.2.9 G6),
-so the version no longer separates the two; a store written before D15 is stale
-(REV-77).
-
-Not the output of a registered stage: the ``charge`` stage stores it under its own
-key, which names the protonation artefact and the kernel's settings and not the
-mesh, so a mesh-convergence sweep re-deposits without re-summing (section 5.3.2,
-the stage-7 artefact row).
-"""
 
 FIELDS_SCHEMA = "nanopnp/fields/v0.5"
-"""Stage 7: the fixed-charge and dielectric fields, supplied or deposited, gated (§5.2).
-
-WP32 D15 dropped the wall-clock ``seconds`` from ``deposit.npz`` and the ``charge``
-summary (VER-23). Every schema is pinned at ``v0.5`` (§8.2.9 G6), so a store written
-before it would still be a hit whose bytes and manifest group moved with the clock
-(REV-77).
-"""
 
 SOLUTION_SCHEMA = "nanopnp/solution/v0.5"
-"""Stage 10: the converged field set and its iteration history.
-
-The payload is the self-describing coefficient record of :mod:`nanopnp.solve.state`
-(it was the backend's native ``state.gfu``). The payload is outside the content hash
-(see the module docstring) and every schema is pinned at ``v0.5`` (§8.2.9 G6), so the
-schema cannot separate payload contracts; stage 10's key carries
-:data:`nanopnp.io.resolved.SOLVE_ALGORITHM_REVISION` for that (section 5.3.2, REV-71).
-"""
 
 QOI_SCHEMA = "nanopnp/qoi/v0.5"
-"""Stage 11: the NUM-27 scalar quantities of one converged solution."""
 
 REPORT_SCHEMA = "nanopnp/report/v0.5"
-"""Stage 12: the run record — the export selection and what was written."""
 
 SWEEP_SCHEMA = "nanopnp/sweep/v0.5"
-"""A sweep: its specification document, its plan, and the collected dataset.
-
-One string for the three, because they are one thing described at three moments
-— what was asked for, what it enumerates, and what came back — and a sweep is
-not a pipeline stage (§5.3.4). A stage keyed on three thousand upstream
-artefacts has no meaningful key and no meaningful progress fraction, so the
-dataset is an artefact without being the output of a registered stage.
-"""
 
 
 def timestamp() -> str:
-    """Return the current UTC time, ISO 8601, to the second.
-
-    Recorded beside the hash and never inside it: a timestamp in the digest would
-    make every run a cache miss, which is the point of the cache inverted.
-    """
     return datetime.now(UTC).replace(microsecond=0).isoformat()
 
 
 @dataclass(frozen=True)
 class Artefact:
-    """One stage output, addressed by the hash of what produced it.
-
-    Parameters
-    ----------
-    schema
-        The artefact schema, e.g. ``nanopnp/solution/v0.5``.
-    parameters
-        Everything about the stage's configuration that changes its output.
-    inputs
-        Upstream artefact hashes and input-file digests, by name. Files are
-        hashed by content and never by path, so a moved file is the same input
-        and a case is reproducible on another machine.
-    payload
-        Heavy data on disk, by name. Outside the digest; see the module
-        docstring.
-    summary
-        Numbers a reader wants without opening the payload — iteration counts,
-        wall time, QoIs. Outside the digest, because it describes the output
-        rather than determining it.
-    created_at, recorded_hash, recorded_payload
-        Store bookkeeping, filled in on load and ``None``/empty on a fresh
-        artefact.
-    """
-
     schema: str
     parameters: Mapping[str, Canonicalisable]
     inputs: Mapping[str, str] = field(default_factory=dict)
@@ -178,51 +66,26 @@ class Artefact:
 
     @property
     def hash(self) -> str:
-        """The content hash: schema, parameters and input hashes (section 5.3.2)."""
         return content_hash(self.schema, self.parameters, self.inputs)
 
     @property
     def short_hash(self) -> str:
-        """The display and directory-fan-out prefix of :attr:`hash`."""
         return short(self.hash)
 
     @property
     def slug(self) -> str:
-        """The schema as one path component."""
         return self.schema.replace("/", "-")
 
     def payload_hashes(self) -> dict[str, str]:
-        """Return the digest of every payload file, recomputed from disk.
-
-        Never read from ``meta.json``: the recorded value is what this is checked
-        *against*, and trusting it would make hand substitution undetectable.
-
-        Raises
-        ------
-        FileNotFoundError
-            If a payload file named by the artefact is not on disk.
-        """
         return {name: file_hash(path) for name, path in sorted(self.payload.items())}
 
     @property
     def hand_substituted(self) -> bool:
-        """Whether this artefact's stored bytes disagree with what was recorded.
-
-        FR-27 permits an artefact to be edited by hand, so this is a fact to be
-        recorded in the manifest, not an error. A corrupted file reads the same
-        way, which is the honest outcome: the manifest says the bytes are not the
-        ones the run produced, and cannot say why.
-        """
         if self.recorded_hash is not None and self.recorded_hash != self.hash:
             return True
         return bool(self.recorded_payload) and self.recorded_payload != self.payload_hashes()
 
     def meta(self) -> dict[str, Canonicalisable]:
-        """Return the ``meta.json`` record of this artefact.
-
-        ``created_at`` is beside the hash and outside it; the payload files are
-        recorded with their digests so that a later load can detect an edit.
-        """
         return {
             "schema": self.schema,
             "hash": self.hash,
@@ -238,14 +101,6 @@ class Artefact:
 
 
 class CaseArtefact(Artefact):
-    """Stage 9: a validated case document, hashed over its validated dump.
-
-    Hashing the dump rather than the file text is what makes FR-26 true rather
-    than something FR-26 must be defended against: comments, key order, quoting
-    and ``1`` against ``1.0`` all vanish in validation, and every difference that
-    survives changes the run.
-    """
-
     def __init__(
         self,
         document: CaseDocument,
@@ -260,18 +115,6 @@ class CaseArtefact(Artefact):
 
 
 class StructureArtefact(Artefact):
-    """Stage 1: the aligned ensemble, keyed on the ``structure:`` block and its files' bytes.
-
-    The parameters are the resolved ``structure:`` block with each file replaced
-    by its content digest (WP18 D11) and the ``variant`` label left out, so a moved
-    file is the same input, an edited one is a different key and a relabelled one
-    is the same. The key never depends on the payload: the
-    aligned coordinates come out of an SVD whose last bits LAPACK may vary across
-    platforms, and a key over them would make the cache machine-dependent
-    (section 5.3.2). The payload's own digest is recorded beside it and re-checked
-    on load, which is VER-23's hand-edit rule.
-    """
-
     def __init__(
         self,
         *,
@@ -288,14 +131,6 @@ class StructureArtefact(Artefact):
 
 
 class DensityArtefact(Artefact):
-    """Stage 2: the density map, keyed on ``geometry.density``, the radius set and stage 1.
-
-    The parameters are the ``geometry.density`` block, the radius set's name and
-    file digest, and the two constants that move a number, ε and the logarithm's
-    floor (WP19 D11). Stage 1's hash is the one input. The payload's digest is
-    recorded beside it and re-checked on load (VER-23).
-    """
-
     def __init__(
         self,
         *,
@@ -314,13 +149,6 @@ class DensityArtefact(Artefact):
 
 
 class ReducedArtefact(Artefact):
-    """Stage 3: the (r, z) reduction, keyed on n, the bin width, its two methods and stage 2.
-
-    The parameters are the point group's n, the bin width, and the names of the
-    detrending and harmonic-truncation rules, each of which moves a variance
-    (WP19 D11). Stage 2's hash is the one input.
-    """
-
     def __init__(
         self,
         *,
@@ -339,15 +167,6 @@ class ReducedArtefact(Artefact):
 
 
 class ProfileArtefact(Artefact):
-    """Stage 4: the conditioned contour, keyed on ``geometry.contour``, h, its constants and 1, 3.
-
-    The parameters are the ``geometry.contour`` block, the grid spacing h that
-    sets the morphology, the resampling and the gate's ``h_c``, every code
-    constant that moves a vertex or a verdict, and the radius set the probe
-    profile reads (WP20 D13). Stages 1 and 3's hashes are the inputs: stage 3's
-    mean is contoured, and stage 1's ensemble gives the probe profile.
-    """
-
     def __init__(
         self,
         *,
@@ -366,19 +185,6 @@ class ProfileArtefact(Artefact):
 
 
 class MaterialsArtefact(Artefact):
-    """Stage 8: the resolved material coefficient set.
-
-    Hashed over the electrolyte's provenance and the digest of every correction
-    file it resolved through, so that editing ``data/corrections/*.yaml`` is a
-    cache miss. FR-25 asks for the "version of each parameter data file" and
-    :class:`~nanopnp.materials.corrections.CorrectionDocument` carries no version
-    field; the content hash is the version.
-
-    The reference file is the ``corrections`` input. A correction model naming
-    another file adds a ``corrections:<name>`` input, so a case reading one file
-    keeps the key it always had.
-    """
-
     def __init__(
         self,
         electrolyte: Electrolyte,
@@ -404,16 +210,6 @@ class MaterialsArtefact(Artefact):
 
 
 class RegionArtefact(Artefact):
-    """Stage 5: the tagged region, keyed on the membrane, reservoir, constants and profile.
-
-    The parameters are ``geometry.membrane``, ``geometry.reservoir`` and every
-    code constant that moves a vertex of the region or a verdict of its gate
-    (WP21 D5). The one input is the profile: stage 4's key, or the canonical
-    digest of a supplied profile's validated payload, so a hand edit of a
-    supplied profile is a new key (FR-27). The payload is the record, whose
-    digest is recorded beside it and re-checked on load.
-    """
-
     def __init__(
         self,
         *,
@@ -432,40 +228,6 @@ class RegionArtefact(Artefact):
 
 
 class MeshArtefact(Artefact):
-    """Stage 6: a mesh that has passed the section 5.2.2 gates, in the vocabulary.
-
-    A **supplied** mesh is keyed on its **contents** — canonical vertices,
-    connectivity and tag maps, as :meth:`nanopnp.mesh.adapter.MeshData.content_hash`
-    takes them — and not on the bytes of the file it came from. A mesh rewritten
-    by another tool with a different header, or with its entity blocks in another
-    order, is then one store entry rather than two, while a mesh whose ``wall``
-    group gained an edge is a different one. The source file's own digest is
-    recorded in the summary, where provenance belongs and where it changes no key.
-
-    A **generated** mesh is keyed on its **recipe**: the stage-5 key as its input,
-    and the resolved size fields as the ``sizing`` parameter (WP21 D10). A content
-    key would have to mesh before the store could be asked whether it holds the
-    mesh, which is seconds per sweep member, and netgen is deterministic within a
-    process and platform but not across them (``.knowledge/07`` section 4). The
-    content hash is recorded in the summary and the manifest, and the QR-08
-    reproduction check compares it (WP21 D13).
-
-    The applied vocabulary mapping is a *parameter*, not a summary field: the
-    same file read under two different ``inputs.mesh.groups`` maps is two
-    different meshes as far as every downstream selection is concerned, and
-    keying them alike would serve one solve's boundary conditions from the
-    other's cache entry.
-
-    Parameters
-    ----------
-    content_hash
-        A supplied mesh's canonical content hash; its input.
-    region
-        A generated mesh's stage-5 key; its input. Exactly one of the two.
-    sizing
-        A generated mesh's resolved size fields; ``None`` for a supplied one.
-    """
-
     def __init__(
         self,
         *,
@@ -500,17 +262,6 @@ class MeshArtefact(Artefact):
 
 
 class ProtonationArtefact(Artefact):
-    """Stage 7, first half: the protonation artefact (FR-12, WP27 D10).
-
-    Produced, it is keyed on the protonation parameters -- pH, force field,
-    titration method, the PDB2PQR argument list and the residue-name
-    normalisation table -- with stage 1's hash as its input. Supplied through
-    ``inputs.pqr``, it is keyed on the file's contents and, beside
-    ``structure:``, on stage 1's hash. The PDB2PQR and PROPKA versions are
-    recorded in the summary, beside the key and outside it (section 5.3.2), and
-    so is the payload's digest, re-checked on load (VER-23).
-    """
-
     def __init__(
         self,
         *,
@@ -529,14 +280,6 @@ class ProtonationArtefact(Artefact):
 
 
 class ChargeGridArtefact(Artefact):
-    """Stage 7's export lattice, keyed on the protonation artefact and the kernel (WP28 D7).
-
-    The parameters are the kernel's identifier, ``charge.smearing``'s sharpness and
-    spacing, the patch half-width and the frame shift; the one input is the
-    protonation artefact's hash. The mesh is not an input: the lattice does not
-    depend on it, and a mesh-convergence sweep then reuses one lattice.
-    """
-
     def __init__(
         self,
         *,
@@ -555,28 +298,6 @@ class ChargeGridArtefact(Artefact):
 
 
 class FieldsArtefact(Artefact):
-    """Stage 7: the external fields, keyed on their contents and on the mesh.
-
-    Keyed on each field's grid **digest** and on the header's physical
-    declarations — quantity, units, axis cutoff, declared ``Q_net`` — and not on
-    the bytes of the file they arrived in, exactly as :class:`MeshArtefact` is
-    keyed on the mesh's contents. The same table written as ``.npz`` and as
-    OpenDX is then one store entry, while a table whose values moved is a
-    different one; the source file's own digest is recorded in the summary, where
-    provenance belongs and where it changes no key.
-
-    The mesh enters as an *input* hash rather than as a parameter, because
-    PHY-19's gate is evaluated on the deployed mesh (§5.2, stage 7): the same
-    field on a different mesh is a different conservation result, and keying them
-    alike would serve one mesh's gate from the other's cache entry. ``gates``
-    keys the rest of what the gates were evaluated at, for the same reason:
-    :func:`nanopnp.charge.stage.gate_parameters` says what that is.
-
-    A deposited charge adds two inputs, the protonation artefact and the export
-    lattice it was summed into (WP28 D7); a supplied one adds none, so its key is
-    the one it always had.
-    """
-
     def __init__(
         self,
         *,
@@ -600,12 +321,6 @@ class FieldsArtefact(Artefact):
 
 
 class SolutionArtefact(Artefact):
-    """Stage 10: the converged field set and the record of reaching it.
-
-    The mesh enters as an input hash rather than as a parameter, so a mesh
-    supplied by hand (FR-27) changes the key exactly as a regenerated one would.
-    """
-
     def __init__(
         self,
         parameters: Mapping[str, Canonicalisable],
@@ -624,21 +339,6 @@ class SolutionArtefact(Artefact):
 
 
 class QoIArtefact(Artefact):
-    """Stage 11: the NUM-27 scalars extracted from one converged solution.
-
-    The case and the solution enter as input hashes and everything that changes
-    a number enters as a parameter: which quantities were asked for, the axial
-    band ``grad(psi)`` is supported on, the NUM-28 extension shell when a force
-    was asked for, and whether the NUM-26 route check ran.
-    The band is a parameter and not a summary field because two extractions that
-    differ only in it are two different numbers, and NUM-24's whole claim is that
-    they are not — a claim VER-11 tests and this key must not assume.
-
-    No library version appears here. The environment is recorded in the manifest
-    beside the artefact; putting it in the key would make the cache
-    machine-dependent and every machine a miss.
-    """
-
     def __init__(
         self,
         *,
@@ -652,15 +352,11 @@ class QoIArtefact(Artefact):
         summary: Mapping[str, Canonicalisable] | None = None,
     ) -> None:
         parameters: dict[str, Canonicalisable] = {"outputs": list(outputs)}
-        # Absent for a model without transport, which builds no indicator (WP26
-        # D15); present, in the position it has always had, for every other.
+        # Absent for a model without transport (no indicator); every other model's key is unchanged.
         if indicator_band_nm is not None:
             parameters["indicator_band_nm"] = list(indicator_band_nm)
         parameters["check_routes"] = check_routes
-        # Absent rather than null when no force was asked for, matching the
-        # convention the other artefacts use for an input a run did not have:
-        # "no force was extracted" and "one was, over no shell" are different
-        # runs, and a null would read as the second.
+        # Absent rather than null: "no force extracted" and "one, over no shell" are different runs.
         if extension_shell_nm is not None:
             parameters["extension_shell_nm"] = list(extension_shell_nm)
         super().__init__(
@@ -673,14 +369,6 @@ class QoIArtefact(Artefact):
 
 
 class ReportArtefact(Artefact):
-    """Stage 12: what the run wrote, and what it wrote it from.
-
-    The only parameter is the export selection, because that is the only thing
-    about this stage that changes what lands on disk. Its three inputs are the
-    hashes of everything the report describes, so a report is never served from
-    the cache for a different case, a different solve or a different extraction.
-    """
-
     def __init__(
         self,
         *,
@@ -701,21 +389,6 @@ class ReportArtefact(Artefact):
 
 
 class SweepArtefact(Artefact):
-    """The collected dataset over the members of one sweep (FR-24, §5.3.4).
-
-    Keyed on the plan rather than on the members: the plan fixes the base case,
-    the axes, the point identities and their order, so two datasets with the
-    same key describe the same set of operating points. The *results* are the
-    summary, outside the digest, because they are what the artefact describes
-    rather than what determines it — and because a sweep whose members are still
-    running has a key before it has rows.
-
-    A member's row carries its status and, where it failed, the §3.1 exit class.
-    Its quantities are **absent** rather than defaulted on any non-``ok`` row:
-    QR-06 requires that a failed member be distinguishable from a refused one
-    and from one that was never dispatched, and a zero current is none of those.
-    """
-
     def __init__(
         self,
         *,
@@ -737,29 +410,11 @@ class SweepArtefact(Artefact):
 
 @dataclass(frozen=True)
 class StageInputs:
-    """What a stage is handed: the resolved case, its upstream artefacts, and options.
-
-    One type for every stage is what keeps a stage independently invocable
-    (FR-27): the CLI, the GUI and the sweep runner all build this and none of
-    them needs to know which stage takes what. The case arrives *resolved*: the
-    walk resolves it once, and a stage run alone is handed
-    ``StageInputs(resolved=resolve(document))``. No stage resolves a case
-    itself, so none imports the registries resolution consults (WP38 D4).
-    """
-
     resolved: ResolvedCase
     upstream: Mapping[str, Artefact] = field(default_factory=dict)
     options: Mapping[str, Canonicalisable] = field(default_factory=dict)
 
     def require(self, name: str) -> Artefact:
-        """Return an upstream artefact by name.
-
-        Raises
-        ------
-        KeyError
-            If the stage was invoked without it; the message names what is
-            present, because "run this stage alone" is exactly when this happens.
-        """
         try:
             return self.upstream[name]
         except KeyError:

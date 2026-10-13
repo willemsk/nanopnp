@@ -1,21 +1,4 @@
-"""The content-addressed artefact store (``SPECIFICATION.md`` section 5.3.2).
-
-A stage whose input hashes and parameters are unchanged is not recomputed. That
-sentence is the whole design: the cache key is
-:attr:`nanopnp.io.artefact.Artefact.hash`, which is computable *before* the stage
-runs, so :meth:`Store.get_or_compute` can decide without doing the work.
-
-Layout::
-
-    <root>/artefacts/<schema-slug>/<hash[:2]>/<hash>/meta.json
-                                                    /<payload files>
-    <root>/runs/<case-name>-<hash[:12]>/manifest.json
-
-Writes go to a temporary file in the destination directory and are then moved
-into place, which is atomic on POSIX and Windows alike. The store is
-content-addressed, so a race writes identical bytes; a job array (WP11) hits this
-on its first run.
-"""
+"""The content-addressed artefact store (SPECIFICATION.md section 5.3.2)."""
 
 from __future__ import annotations
 
@@ -36,14 +19,11 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 logger = logging.getLogger(__name__)
 
 META = "meta.json"
-"""Name of the record every stored artefact carries."""
 
 FANOUT = 2
-"""Leading hex characters of the hash used as a directory level."""
 
 
-class StoreError(RuntimeError):
-    """A stored artefact could not be read, or a write could not be completed."""
+class StoreError(RuntimeError): ...
 
 
 class Store:
@@ -52,9 +32,7 @@ class Store:
     Parameters
     ----------
     root
-        Store root; defaults to :func:`nanopnp.core.paths.store_root`. Created on
-        first write and never on construction, so that merely constructing a
-        store — which ``nanopnp --env`` does — leaves no directories behind.
+        Store root; defaults to :func:`nanopnp.core.paths.store_root`. Created on first write.
     """
 
     def __init__(self, root: str | Path | None = None) -> None:
@@ -79,14 +57,7 @@ class Store:
         return self._root / "runs" / f"{name}-{short(digest)}"
 
     def sweep_directory(self, name: str, digest: str) -> Path:
-        """Return the directory one sweep's plan, member records and dataset live in.
-
-        Beside ``runs/`` rather than inside it: a sweep is a set of runs and each
-        of its members already has a run directory of its own, so nesting them
-        would make a member's manifest reachable by two paths. The digest is the
-        plan's, so re-planning the same document lands on the same directory and
-        a plan with one value inserted lands on another (§5.3.4).
-        """
+        """Return the directory one sweep's plan, member records and dataset live in."""
         from nanopnp.core.hashing import short
 
         return self._root / "sweeps" / f"{name}-{short(digest)}"
@@ -97,10 +68,6 @@ class Store:
 
     def put(self, artefact: Artefact) -> Artefact:
         """Write an artefact to the store and return it as stored.
-
-        The returned artefact's payload paths point into the store, and it
-        carries the recorded hash and payload digests, so a caller that keeps it
-        can detect a later hand substitution without re-reading ``meta.json``.
 
         Raises
         ------
@@ -151,13 +118,6 @@ class Store:
     def get(self, schema: str, digest: str) -> Artefact | None:
         """Return a stored artefact, or ``None`` if it is not in the store.
 
-        The payload digests recorded in ``meta.json`` are carried onto the
-        artefact but never trusted: :attr:`~nanopnp.io.artefact.Artefact.hand_substituted`
-        recomputes them from the files on disk. A recorded hash that disagrees
-        with the parameters is carried the same way rather than raising, because
-        FR-27 permits an artefact to be edited by hand and section 5.3.2 requires
-        that be *recorded*, not aborted.
-
         Raises
         ------
         StoreError
@@ -203,19 +163,14 @@ class Store:
         Parameters
         ----------
         key
-            An artefact carrying the schema, parameters and input hashes of the
-            work about to be done, and no payload. It is the cache key, so it
-            must be constructible without doing the work — which is exactly the
-            property that keeps a stage a pure function of its inputs (FR-27).
+            The schema, parameters and input hashes of the work, and no payload.
         compute
             Called on a miss; must return an artefact with the same key.
 
         Raises
         ------
         StoreError
-            If ``compute`` returns an artefact whose hash is not ``key``'s. That
-            means the stage's declared parameters do not determine its output,
-            which would make every later cache hit a wrong answer.
+            If ``compute`` returns an artefact whose hash is not ``key``'s.
         """
         found = self.get(key.schema, key.hash)
         if found is not None:
@@ -234,7 +189,6 @@ class Store:
 
 
 def _payload_entries(meta: Mapping[str, Canonicalisable]) -> dict[str, dict[str, str]]:
-    """Return the payload block of a record, checked for shape."""
     payload = meta.get("payload", {})
     if not isinstance(payload, dict):
         raise StoreError("a stored record's payload block is a JSON object")
@@ -242,13 +196,8 @@ def _payload_entries(meta: Mapping[str, Canonicalisable]) -> dict[str, dict[str,
 
 
 def atomic_write_bytes(target: Path, data: bytes) -> None:
-    """Write bytes to ``target`` through a temporary file in the same directory.
-
-    ``Path.replace`` is ``os.replace``, atomic on POSIX and Windows, so a reader
-    sees the old file or the new one and never a torn one. The temporary carries
-    the process id and a random token, because the workers of a job array on a
-    shared filesystem run on different hosts, where process ids repeat.
-    """
+    # The temporary name carries the pid and a token: job-array workers on a shared filesystem
+    # run on different hosts, where pids repeat.
     temporary = target.with_name(f".{target.name}.{os.getpid()}.{secrets.token_hex(4)}.tmp")
     try:
         temporary.write_bytes(data)

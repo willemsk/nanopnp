@@ -1,36 +1,4 @@
-"""The ``nanopnp/case/v0.5`` case-file schema: its shape, its diagnostics, reading and writing.
-
-One declarative YAML document is the unit of reproducibility (IF-03,
-``SPECIFICATION.md`` section 5.3.1); everything else is derived. This module owns
-its shape and its diagnostics. It is the base of the case: it imports ``core``
-and ``io`` alone at run time, so every stage can read the schema's types without
-reaching the registries above it. The checks that ask an installed registry, and
-the step that turns a document into the objects the solver takes, are
-:mod:`nanopnp.pipeline.checks` and :mod:`nanopnp.pipeline.case`.
-
-Three things it deliberately does, each with a failure it exists to prevent.
-
-**The ``schema:`` string is checked before structural validation.** A file
-written to a future schema then fails naming the schema it claims, rather than
-with a wall of field errors against a shape it never declared. This copies
-:func:`nanopnp.materials.corrections.load_corrections` exactly, ordering
-included.
-
-**Every model forbids unknown keys, and the diagnostic names the key.** IF-03
-requires that; pydantic's own message does not carry it (the key is in ``loc``,
-not in ``msg``), so :class:`CaseValidationError` renders one line per error as
-``<dotted.path>: <what>`` and offers a suggestion from the owning model's fields.
-A typo in ``corrections`` would otherwise disable a correction silently, which is
-the failure PHY-21's differential testing exists to catch.
-
-**The round trip is asserted on the content hash, never on the text** (FR-26,
-VER-09). A case written by hand omits defaults, orders keys freely and carries
-comments, none of which survive a round trip and none of which change the run.
-:func:`nanopnp.pipeline.case.resolve` produces the objects, and
-:attr:`nanopnp.io.resolved.ResolvedCase.provenance` the record; equality of
-either is a statement about the *run*, which is what FR-26 means by
-"semantically identical".
-"""
+"""The ``nanopnp/case/v0.5`` case-file schema: its shape, its diagnostics, reading and writing."""
 
 from __future__ import annotations
 
@@ -47,26 +15,12 @@ from nanopnp.core.paths import available_corrections
 from nanopnp.io.artefact import CASE_SCHEMA
 
 SCHEMA: str = CASE_SCHEMA
-"""Schema identifier every case file must declare.
-
-Defined in :mod:`nanopnp.io.artefact` beside the artefact that carries it, so
-that the string a case file declares and the string the store addresses it by
-cannot drift apart.
-"""
 
 
 FieldType: TypeAlias = Any
-"""The type the case schema declares at one dotted path.
-
-A ``type``, a ``Literal[...]``, a union or a parameterised container -- whatever
-pydantic put on the field. The alias names what the value *is* where the checker
-can only say ``Any`` (the house convention of :mod:`nanopnp.core.typing`)."""
 
 
 FieldValue: TypeAlias = Any
-"""A value one case-file field can hold: a bool, a number, a string, a path, or
-a block of them. Constrained by the schema per field; a walk over dotted paths
-sees the union."""
 
 
 CORRECTION_PROPERTIES: tuple[str, ...] = (
@@ -76,18 +30,9 @@ CORRECTION_PROPERTIES: tuple[str, ...] = (
     "permittivity",
     "density",
 )
-"""The five properties carrying a concentration-and-wall correction (PHY-22).
-
-Named once because two things index the case by them: :meth:`CaseDocument._check_installed`,
-which refuses a model that is not installed, and
-:func:`nanopnp.pipeline.checks.registry_options`, which
-tells an editor what to offer. A list that offered a sixth property the check
-never validated would be an editor offering a correction the solver ignores.
-"""
 
 
 STERIC_MODELS: frozenset[str] = frozenset({"none", "borukhov"})
-"""Steric models: the Borukhov size-modified flux, or off (PHY-22)."""
 
 
 OUTPUTS: frozenset[str] = frozenset(
@@ -100,54 +45,23 @@ OUTPUTS: frozenset[str] = frozenset(
         "fields",
     }
 )
-"""Selectable outputs, per the section 5.3.1 example."""
 
 
 class CaseValidationError(ValueError):
-    """A case document failed validation; the message names every offending key.
-
-    Wraps pydantic's :class:`~pydantic.ValidationError` rather than replacing it:
-    the underlying error is kept on :attr:`errors` so a caller can inspect it,
-    and the rendering is what IF-03 requires — the dotted path to the key, what
-    is wrong with it, and, for an unknown key, the nearest field name of the
-    block that rejected it.
-    """
-
     def __init__(self, message: str, errors: ValidationError | None = None) -> None:
         super().__init__(message)
         self.errors = errors
 
 
 class UnsupportedCaseSection(NotImplementedError):  # noqa: N818 - a release gap, not a failure
-    """The case asks for something this release does not run.
-
-    Raised by :func:`nanopnp.pipeline.case.resolve` naming the section and its requirement,
-    and the release that schedules it or that no release does, so that a case run
-    against a release that cannot run it says so rather than failing somewhere inside the solver.
-    """
+    ...
 
 
 class _Strict(BaseModel):
-    """Base for every block: unknown keys are rejected, and named in the error."""
-
     model_config = ConfigDict(extra="forbid")
 
 
 class SuppliedArtefact(_Strict):
-    """One upstream stage output supplied from outside the pipeline.
-
-    FR-27 grants that any artefact may be substituted by hand; this is that
-    substitution applied at stage granularity. A stage whose output is supplied
-    does not run, and neither does anything upstream of it — which is how the
-    solver core runs a real case before the meshing and charge pipelines exist
-    (section 8.1).
-
-    Exactly one of ``path`` and ``artefact`` is given: a file on disk, or the
-    hash of an artefact already in the store. Only the file is read: ``artefact:``
-    on any ``inputs:`` key is refused when the case is resolved (WP40 D5;
-    :func:`stored_artefact_refused`).
-    """
-
     path: Path | None = None
     artefact: str | None = None
     format: str | None = None
@@ -155,7 +69,6 @@ class SuppliedArtefact(_Strict):
 
     @model_validator(mode="after")
     def _exactly_one_source(self) -> SuppliedArtefact:
-        """Reject a supplied artefact that names neither or both of its sources."""
         if (self.path is None) == (self.artefact is None):
             raise ValueError(
                 "a supplied artefact names exactly one of path: (a file on disk) and artefact: "
@@ -168,23 +81,9 @@ SUPPLIED_FIELDS: dict[str, str] = {
     "charge": "a fixed-charge field",
     "eps_r": "a dielectric field",
 }
-"""The supplied fields, with what each names, as the refusals of ``inputs.<key>`` word them."""
 
 
 def stored_artefact_refused(key: str) -> UnsupportedCaseSection:
-    """Return the refusal of ``inputs.<key>: artefact:``, a supplied output named by hash.
-
-    FR-27's substitution reads a supplied mesh or field by path only. The mesh's store
-    form is REV-62, which section 8.2.9 I3 defers to v0.6; no release of
-    SPECIFICATION.md schedules a field's. ``pipeline.checks.require_runnable`` raises
-    it at resolution, and the stage guards raise the same text for a stage invoked
-    directly (IF-02; WP40 D4, D5).
-
-    Parameters
-    ----------
-    key
-        ``mesh``, ``charge`` or ``eps_r``.
-    """
     if key == "mesh":
         return UnsupportedCaseSection(
             "inputs.mesh: artefact: names a mesh by its store hash. FR-27's substitution reads "
@@ -199,8 +98,6 @@ def stored_artefact_refused(key: str) -> UnsupportedCaseSection:
 
 
 class Inputs(_Strict):
-    """Supplied upstream artefacts, by the stage whose output each replaces."""
-
     mesh: SuppliedArtefact | None = None
     charge: SuppliedArtefact | None = None
     eps_r: SuppliedArtefact | None = None
@@ -209,14 +106,6 @@ class Inputs(_Strict):
 
 
 class StructureSource(_Strict):
-    """The structure file and which of it to use.
-
-    ``selection`` is an MDAnalysis selection string. The bilayer is absent from
-    the density map (section 5.2, stages 3 and 5), and an ensemble archive may
-    carry lipids and waters, so what counts as the pore is said here rather than
-    assumed.
-    """
-
     path: Path = Field(
         description=(
             "A PDB or mmCIF file, optionally gzipped (.pdb, .ent, .cif, .mmcif). MDAnalysis reads "
@@ -246,8 +135,6 @@ class StructureSource(_Strict):
 
 
 class Frames(_Strict):
-    """Which trajectory frames enter the ensemble average."""
-
     last_ns: float | None = Field(
         default=None,
         description=(
@@ -265,8 +152,6 @@ class Frames(_Strict):
 
 
 class Ensemble(_Strict):
-    """The trajectory and its frame selection."""
-
     trajectory: Path | None = Field(
         default=None,
         description=(
@@ -279,8 +164,6 @@ class Ensemble(_Strict):
 
 
 class SymmetrySpec(_Strict):
-    """The expected point group and how the axis is found."""
-
     point_group: str = Field(description="C<n> with n >= 1, e.g. C12 for ClyA (FR-03)")
     axis: Literal["auto", "z"] = Field(
         default="auto",
@@ -294,32 +177,18 @@ class SymmetrySpec(_Strict):
 
 
 class Structure(_Strict):
-    """Stage 1: structure ingestion and alignment (v0.3).
-
-    The normative contract is the section 5.3.1 NOTE on ``structure:``.
-    """
-
     source: StructureSource
     ensemble: Ensemble = Field(default_factory=Ensemble)
     symmetry: SymmetrySpec
 
 
 class DensitySpec(_Strict):
-    """Stage 2: Gaussian smearing to a grid."""
-
     grid_spacing_nm: float = 0.05
     kernel: Literal["gaussian_vdw"] = "gaussian_vdw"
     sharpness: float = 0.93
 
 
 class ContourSpec(_Strict):
-    """Stage 4: contour extraction and conditioning.
-
-    The normative contract is the section 5.3.1 NOTE on ``geometry.contour``. No
-    other contour parameter and no gate threshold is a case key: they are the
-    constants of section 5.2.1, and they key the stage-4 artefact (WP17 D3).
-    """
-
     isolevel: float = Field(
         default=0.25,
         description=(
@@ -347,26 +216,15 @@ class ContourSpec(_Strict):
 
 
 class MembraneSpec(_Strict):
-    """The bilayer, defined analytically rather than from the density map.
-
-    ``centre_z_nm`` is the bilayer's centre along the axis, in the structure's
-    frame. Its permittivity is ``physics.solid_permittivities.membrane``, the one
-    place it is set (PHY-20).
-    """
-
     thickness_nm: float = 2.8
     centre_z_nm: float = 0.0
 
 
 class ReservoirSpec(_Strict):
-    """The reservoir half-disc."""
-
     radius_nm: float = 250.0
 
 
 class AnalyteSpec(_Strict):
-    """An axisymmetric analyte body in the pore (PHY-11, WP6)."""
-
     shape: Literal["sphere", "prolate_spheroid", "oblate_spheroid"]
     a_nm: float
     b_nm: float | None = None
@@ -375,8 +233,6 @@ class AnalyteSpec(_Strict):
 
 
 class Geometry(_Strict):
-    """Stages 2-5: density, contour, membrane, reservoir and analyte."""
-
     density: DensitySpec = Field(default_factory=DensitySpec)
     contour: ContourSpec = Field(default_factory=ContourSpec)
     membrane: MembraneSpec = Field(default_factory=MembraneSpec)
@@ -385,29 +241,12 @@ class Geometry(_Strict):
 
 
 class SmearingSpec(_Strict):
-    """Stage 7: the kernel width and the export lattice of the deposition (PHY-16 steps 4-6).
-
-    ``sharpness`` is the ``0.5`` of ``w_i = 0.5 R_i``, a switch; ``grid_spacing_nm``
-    the export lattice's spacing, a discretisation choice; ``axis_cutoff_nm`` is
-    refused away from its default on every path, naming PHY-18 (section 5.3.1 NOTE
-    on ``charge.smearing``).
-    """
-
     sharpness: float = 0.5
     grid_spacing_nm: float = 0.005
     axis_cutoff_nm: float = 0.01
 
 
 class Charge(_Strict):
-    """Stage 7: charge assembly (v0.4).
-
-    ``exclusion_offset_nm`` is FR-15's fitted exclusion offset and
-    ``dielectric_transition_nm`` the width of PHY-20's transition to ``eps_w``.
-    Both are switches whose validated default is ``0``: the validated model has no
-    exclusion shell and a sharp material permittivity (section 5.3.1 NOTE). The
-    protein's permittivity is ``physics.solid_permittivities.protein`` (PHY-20).
-    """
-
     ph: float = Field(
         default=7.5,
         ge=0.0,
@@ -460,42 +299,23 @@ class Charge(_Strict):
 
 
 class SpeciesSpec(_Strict):
-    """One solved ionic species, by the name the parameter file gives it."""
-
     name: str
     z: int
 
 
 class CorrectionChoiceSpec(_Strict):
-    """One property's correction: a registered model, and its two parts (PHY-22).
-
-    ``model: none`` disables the correction by selecting the registered ``none``
-    model, never by taking a code branch. The concentration and wall parts switch
-    independently, which is what makes an ablation study a configuration sweep.
-    """
-
     model: str = "none"
     concentration: bool = True
     wall: bool = True
 
 
 class StericSpec(_Strict):
-    """The size-modified flux ``beta_i`` and the diameters it is built on (PHY-22).
-
-    ``a_ion_nm`` and ``a_water_nm`` are optional, and when given are **checked
-    against the parameter file** rather than used: the diameters belong to the
-    fitted parameter set, and a case file that could override them silently
-    would be a second source of truth for a physical constant (FR-16).
-    """
-
     model: Literal["none", "borukhov"] = "none"
     a_ion_nm: float | None = None
     a_water_nm: float | None = None
 
 
 class CorrectionsSpec(_Strict):
-    """The nine independently switchable corrections of PHY-22."""
-
     diffusivity: CorrectionChoiceSpec = Field(default_factory=CorrectionChoiceSpec)
     mobility: CorrectionChoiceSpec = Field(default_factory=CorrectionChoiceSpec)
     viscosity: CorrectionChoiceSpec = Field(default_factory=CorrectionChoiceSpec)
@@ -505,15 +325,6 @@ class CorrectionsSpec(_Strict):
 
 
 class ElectrolyteSpec(_Strict):
-    """Stage 8: the electrolyte, its reference parameter file and its corrections.
-
-    ``parameters`` names the file the *reference* properties come from —
-    ``D_i^0``, ``eta^0``, ``rho^0``, ``eps_r,f^0`` and the steric diameters —
-    and is separate from the per-property correction models because a classical
-    PNP-NS run turns every correction off and still needs those reference values
-    (PHY-21).
-    """
-
     species: list[SpeciesSpec]
     concentration_M: float
     temperature_K: float = 298.15
@@ -523,39 +334,17 @@ class ElectrolyteSpec(_Strict):
 
 
 class WallSpec(_Strict):
-    """The conditions applied on the pore and membrane walls.
-
-    The values name the condition **applied**, not its absence: under the
-    ``r``-weighted forms of section 6.2 the natural condition is the free one, so
-    a value reading as "none applied" would silently remove no-slip while
-    appearing to be the validated default.
-    """
-
     ion_flux: Literal["no_flux", "prescribed"] = "no_flux"
     slip: Literal["no_slip", "navier", "free"] = "no_slip"
 
 
 class BoundaryConditions(_Strict):
-    """The applied bias, the grounded electrode and the wall conditions."""
-
     bias_V: float
     ground: Literal["cis", "trans"] = "cis"
     walls: WallSpec = Field(default_factory=WallSpec)
 
 
 class PhysicsSpec(_Strict):
-    """The named physics model of PHY-21 and the switches it carries.
-
-    ``solid_permittivities`` is the one member that is not a switch: it is the
-    relative permittivity of each non-fluid domain of the mesh, keyed by the
-    material name the boundary vocabulary gives it (section 5.3.1). Poisson is
-    solved over the solids too, so a domain with no entry silently takes the
-    electrolyte's ``eps_r`` — about 24 times too large in a bilayer — which is
-    why :func:`nanopnp.mesh.ingest.check_solid_permittivities` aborts on one.
-    PHY-20 gives 3.2 for the membrane and 20 for the protein and the analyte;
-    they are not defaulted here because the mesh decides which solids exist.
-    """
-
     model: str = "epnp-ns"
     flow: bool = True
     variable_density: bool = True
@@ -565,16 +354,6 @@ class PhysicsSpec(_Strict):
 
 
 class ElementsSpec(_Strict):
-    """Element orders per field; the Taylor-Hood pair of NUM-03.
-
-    ``u`` is independent of ``phi`` and ``c``. The reference model of section 6.4
-    runs ``phi`` and ``c`` at P2 with ``u`` and ``p`` at P1, which is neither the
-    Taylor-Hood pair nor one order throughout, and is legal only because the flow
-    stabilisation supplies the missing inf-sup stability —
-    :func:`nanopnp.pipeline.checks.check_document` refuses
-    an equal-order pair in a mode that does not.
-    """
-
     phi: str = "P2"
     c: str = "P2"
     u: str = "P2"
@@ -582,14 +361,6 @@ class ElementsSpec(_Strict):
 
 
 class MeshSpec(_Strict):
-    """Stage 6: the mesher and its size field (v0.3).
-
-    ``size_scale`` multiplies every element-size target of section 5.2.2 and
-    NUM-30, the resolved ``wall_h_nm`` included, so that a mesh-convergence study
-    (RSK-09, section 6.8) is a sweep over this field (FR-24) rather than a code
-    edit. A discretisation choice recorded with the mesh, not a deviation.
-    """
-
     backend: str = Field(
         default="netgen",
         description="The mesher backend, checked against the mesher registry (section 5.5).",
@@ -600,8 +371,6 @@ class MeshSpec(_Strict):
 
 
 class NonlinearSpec(_Strict):
-    """The damped-Newton policy; the defaults are the NUM-16 reference settings."""
-
     strategy: Literal["newton", "hybrid"] = "newton"
     damping: Literal["residual", "backtracking"] = "residual"
     max_iter: int = 100
@@ -609,8 +378,6 @@ class NonlinearSpec(_Strict):
 
 
 class LinearSpec(_Strict):
-    """The direct linear solver of section 6.6."""
-
     solver: str = Field(
         default="umfpack",
         description="Direct linear solver, checked against the solver registry (section 5.5).",
@@ -618,21 +385,11 @@ class LinearSpec(_Strict):
 
 
 class WallDistanceSpec(_Strict):
-    """The PHY-02 distance field: which boundaries it measures from, and its cap.
-
-    ``sources`` is a boundary-name regular expression. The validated default is
-    the pore wall alone: PHY-02 excludes the membrane from the source set
-    deliberately, so widening this is a deviation from the validated model and is
-    recorded as one.
-    """
-
     sources: str = "wall"
     max_distance_nm: float = 3.0
 
 
 class NumericsSpec(_Strict):
-    """Discretisation, meshing, continuation, stabilisation and the solvers."""
-
     elements: ElementsSpec = Field(default_factory=ElementsSpec)
     mesh: MeshSpec = Field(default_factory=MeshSpec)
     nonlinear: NonlinearSpec = Field(default_factory=NonlinearSpec)
@@ -648,12 +405,7 @@ class NumericsSpec(_Strict):
 
 
 class CaseDocument(_Strict):
-    """A validated case file (schema ``nanopnp/case/v0.5``).
-
-    ``schema`` is carried under an alias so the reserved name does not shadow
-    ``BaseModel``, exactly as :class:`nanopnp.materials.corrections.CorrectionDocument`
-    does.
-    """
+    """A validated case file (schema ``nanopnp/case/v0.5``)."""
 
     schema_id: str = Field(alias="schema")
     name: str
@@ -670,21 +422,6 @@ class CaseDocument(_Strict):
 
     @model_validator(mode="after")
     def _check_installed(self) -> CaseDocument:
-        """Check every correction file and output the document names.
-
-        The four names an installed *registry* governs -- ``physics.model``,
-        ``numerics.mesh.backend``, ``numerics.stabilisation`` and
-        ``numerics.linear.solver`` -- are checked
-        by :func:`nanopnp.pipeline.checks.check_document`, above the registries,
-        so that this schema imports nothing above ``core`` (WP38 D7).
-
-        Raises
-        ------
-        ValueError
-            Naming the value and the installed alternatives. Doing this at
-            validation rather than at solve time is what stops a misspelt
-            correction model from disabling a correction silently.
-        """
         problems: list[str] = []
         installed = available_corrections()
         for name in CORRECTION_PROPERTIES:
@@ -711,20 +448,6 @@ class CaseDocument(_Strict):
 
     @model_validator(mode="after")
     def _check_supplied(self) -> CaseDocument:
-        """Refuse a supplied artefact beside one it makes unread, and an idle knob.
-
-        Section 5.3.1: a stage whose output is supplied does not run, and neither
-        does anything upstream of it, so an upstream artefact supplied beside a
-        downstream one would be hashed into the FR-25 manifest as an input to a
-        run that never read it. Every ``numerics.mesh`` key configures the
-        mesher, and beside a supplied mesh there is no mesher (section 5.3.1 NOTE
-        on ``numerics.mesh``, WP21 D14).
-
-        Raises
-        ------
-        ValueError
-            Naming both artefacts, or each mesh key and the supplied mesh.
-        """
         problems: list[str] = []
         for chain in SUPPLY_CHAINS:
             given = [name for name in chain if getattr(self.inputs, name) is not None]
@@ -752,28 +475,15 @@ class CaseDocument(_Strict):
 
 
 SUPPLY_CHAINS: tuple[tuple[str, ...], ...] = (("profile", "mesh"), ("pqr", "charge"))
-"""The ``inputs:`` keys on each chain of section 5.3.1, upstream first.
-
-The chains are structure -> density -> profile -> mesh and structure -> PQR ->
-charge field; these are the members ``inputs:`` can carry. ``eps_r`` comes from
-the density on a branch of its own (FR-15) and is on neither.
-"""
 
 
 PQR_FORMAT = "pqr"
-"""``inputs.pqr.format``: a PQR of one frame or one ``MODEL`` per frame (section 5.3.1 NOTE)."""
 
 
 PROFILE_FORMAT = "profile1"
-"""``inputs.profile.format``: a ``nanopnp/profile/v0.5`` document (section 5.3.1 NOTE)."""
 
 
 def _model_of(annotation: object) -> type[BaseModel] | None:
-    """Return the model class an annotation carries, if it carries exactly one.
-
-    Walks ``X | None`` and ``list[X]`` alike, so that the owner of a key inside
-    ``electrolyte.species[0]`` is found as readily as one inside ``numerics``.
-    """
     if isinstance(annotation, type) and issubclass(annotation, BaseModel):
         return annotation
     for argument in get_args(annotation):
@@ -784,7 +494,6 @@ def _model_of(annotation: object) -> type[BaseModel] | None:
 
 
 def _owner_of(loc: Sequence[str | int]) -> type[BaseModel]:
-    """Return the model whose fields the last element of ``loc`` was checked against."""
     owner: type[BaseModel] = CaseDocument
     for key in loc[:-1]:
         if isinstance(key, int):
@@ -800,22 +509,10 @@ def _owner_of(loc: Sequence[str | int]) -> type[BaseModel]:
 
 
 def _keys_of(model: type[BaseModel]) -> list[str]:
-    """Return the names a block accepts, under the aliases a case file writes."""
     return sorted(field.alias or name for name, field in model.model_fields.items())
 
 
 def render_problems(source: str, error: ValidationError) -> str:
-    """Render a pydantic error as one ``<dotted.path>: <what>`` line per problem.
-
-    Public because the sweep document of §5.3.4 is an IF-03 configuration file
-    too, and its diagnostics must be the ones a case file gets rather than
-    pydantic's own — a second rendering would be a second thing to keep right.
-
-    IF-03 requires the offending key be named. pydantic reports ``extra_forbidden``
-    with the key in ``loc`` and a message that does not carry it, so the key is
-    read out of ``loc`` and, for an unknown one, the nearest accepted name of the
-    block that rejected it is offered.
-    """
     problems = error.errors()
     lines = [f"{source}: {len(problems)} problem(s) in the case document"]
     for problem in problems:
@@ -836,44 +533,15 @@ def render_problems(source: str, error: ValidationError) -> str:
 
 
 def read_case(path: str | Path) -> CaseDocument:
-    """Read a case file and validate it against the schema.
-
-    The structural read: the registry checks are
-    :func:`nanopnp.pipeline.case.load_case`'s, which is this followed by
-    :func:`nanopnp.pipeline.checks.check_document` and is what every caller
-    outside the base uses (WP38 D7).
-
-    The ``schema:`` string is checked first, so a file written to a future schema
-    fails naming the schema it claims rather than with a wall of field errors
-    against a shape it never declared.
-
-    Parameters
-    ----------
-    path
-        The YAML case file.
-
-    Returns
-    -------
-    CaseDocument
-        The validated document.
-
-    Raises
-    ------
-    CaseValidationError
-        If the file is not a mapping, declares an unexpected schema, or fails
-        validation; the message names every offending key by dotted path.
-    """
     source = Path(path)
     return _validate(yaml.safe_load(source.read_text(encoding="utf-8")), str(source))
 
 
 def read_case_text(text: str, *, source: str = "<string>") -> CaseDocument:
-    """Validate a case document held in memory against the schema; see :func:`read_case`."""
     return _validate(yaml.safe_load(text), source)
 
 
 def _validate(raw: object, source: str) -> CaseDocument:
-    """Validate a parsed case document against the schema."""
     if not isinstance(raw, Mapping):
         raise CaseValidationError(
             f"{source}: a case file is a YAML mapping, found {type(raw).__name__}"
@@ -888,18 +556,7 @@ def _validate(raw: object, source: str) -> CaseDocument:
 
 
 def dump_case(document: CaseDocument, path: str | Path) -> Path:
-    """Write a validated case document back to YAML.
-
-    The text is not the round-trip invariant — comments, key order and ``1``
-    against ``1.0`` are all lost here, and none of them changes the run. FR-26 and
-    VER-09 are asserted on the content hash of the validated document and on
-    :attr:`ResolvedCase.provenance` instead (section 5.3.1 NOTE).
-
-    Returns
-    -------
-    Path
-        The file written.
-    """
+    """Write a validated case document back to YAML and return the path written."""
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(dumps_case(document), encoding="utf-8")
@@ -907,17 +564,5 @@ def dump_case(document: CaseDocument, path: str | Path) -> Path:
 
 
 def dumps_case(document: CaseDocument) -> str:
-    """Return a validated case document as the YAML text a case file holds.
-
-    The half of :func:`dump_case` that does not touch the filesystem, because a
-    case assembled in memory still has to reach the FR-25 manifest as text: the
-    manifest embeds the case beside its hash and writes it back out as the run
-    directory's ``case.yaml``, which is what QR-08's reproduction re-runs from
-    (§5.3.3). A sweep member is exactly such a case (§5.3.4).
-
-    Returns
-    -------
-    str
-        YAML under the aliases a case file writes, in declaration order.
-    """
+    """Return a validated case document as YAML text, under the aliases a case file writes."""
     return str(yaml.safe_dump(document.model_dump(by_alias=True, mode="json"), sort_keys=False))
