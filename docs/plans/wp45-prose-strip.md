@@ -54,8 +54,8 @@ in their docstring.
 Every strip item: done when `same_tree.py HEAD~1` passes on its commit and the commit hook passed.
 
 - [x] 1. `.claude/scripts/same_tree.py` (D1) and `tests/tier1/test_same_tree.py`; done when the test passes and fails on each case of *Verification*.
-- [ ] 2. `src/nanopnp/core/` with `src/nanopnp/__init__.py`.
-- [ ] 3. `src/nanopnp/io/`.
+- [x] 2. `src/nanopnp/core/` with `src/nanopnp/__init__.py`.
+- [x] 3. `src/nanopnp/io/`.
 - [ ] 4. `src/nanopnp/numerics/`.
 - [ ] 5. `src/nanopnp/materials/`.
 - [ ] 6. `src/nanopnp/physics/`.
