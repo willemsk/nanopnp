@@ -1,32 +1,4 @@
-"""QR-08 made executable: a run directory back to the same numbers.
-
-Section 3.3 promises that a result's manifest is sufficient to reconstruct the
-run that produced it. A test can assert that; a *user* holding an archived run
-directory and no test harness cannot, and a promise only a test can exercise is
-not one. This module is the check, and :mod:`nanopnp.cli` is a shell over it.
-
-**The cache must be defeated or the check asserts nothing.**
-:meth:`~nanopnp.io.store.Store.get_or_compute` would serve the stored solution
-artefact and the "reproduction" would be the assertion that a dictionary lookup
-is deterministic. So the reproduction runs into a store that does not hold the
-run, and :func:`reproduce` refuses — loudly, naming the store — if the solve was
-served rather than re-entered (section 5.3.2 NOTE, QR-08).
-
-**Input drift is fatal; library drift is reported.** A mesh whose contents moved
-under a run makes the reproduction a different calculation, and nothing about
-the numbers that come out of it would say so. A NumPy patch release is not that:
-it is recorded, and if it moved a number the quantity diff is what catches it —
-which is the assertion that matters. ``strict_environment`` turns the report
-into a refusal for a caller who wants the stronger promise.
-
-**A generated mesh is an input too.** Stage 6 keys a generated mesh on its
-recipe, not on its vertices, and netgen is deterministic on one platform but not
-across platforms (``.knowledge/07`` section 4). So the reproduction compares the
-regenerated mesh's content hash with the one the manifest recorded, and a
-difference is fatal in the same terms as a moved input file: without the check,
-a cross-platform mesher difference would surface as a quantity drift with no
-named cause (WP21 D13).
-"""
+"""QR-08 made executable: re-run an archived run directory and compare its numbers."""
 
 from __future__ import annotations
 
@@ -65,49 +37,24 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
+# The schema default of numerics.nonlinear.rtol (NUM-16), the reproduction QR-08 asks for.
 DEFAULT_TOLERANCE = 1e-6
-"""Relative agreement every scalar must reach.
-
-The case schema's own ``numerics.nonlinear.rtol`` (section 5.3.1, NUM-16) and
-not a number chosen for this check: reproduction to solver tolerance is exactly
-what QR-08 asks for. In process, on a deterministic direct solve, the expected
-difference is 0.
-"""
 
 
-class InputMovedError(RuntimeError):
-    """An input file's contents differ from what the manifest recorded."""
+class InputMovedError(RuntimeError): ...
 
 
-class ReproductionError(RuntimeError):
-    """The run could not be reproduced, or the check could not be made honestly."""
+class ReproductionError(RuntimeError): ...
 
 
 @dataclass(frozen=True)
 class Drift:
-    """One scalar that did not come back, and by how much.
-
-    Parameters
-    ----------
-    path
-        Dotted path into the run record's quantities, e.g.
-        ``currents_A.Na+``, so that a reader is pointed at the number rather
-        than at the block containing it.
-    recorded, reproduced
-        The archived value and the one this run produced.
-    relative
-        ``|reproduced - recorded| / |recorded|``, or the absolute difference
-        where the recorded value is zero. ``None`` where the values are not
-        numbers, which is an inequality rather than a drift.
-    """
-
     path: str
     recorded: Canonicalisable
     reproduced: Canonicalisable
     relative: float | None
 
     def summary(self) -> dict[str, Canonicalisable]:
-        """Return this drift as plain data, for the CLI's ``--json``."""
         return {
             "quantity": self.path,
             "recorded": self.recorded,
@@ -118,43 +65,16 @@ class Drift:
 
 @dataclass(frozen=True)
 class EnvironmentDrift:
-    """One library, interpreter or platform key whose value moved."""
-
     key: str
     recorded: Canonicalisable
     current: Canonicalisable
 
     def summary(self) -> dict[str, Canonicalisable]:
-        """Return this difference as plain data."""
         return {"key": self.key, "recorded": self.recorded, "current": self.current}
 
 
 @dataclass(frozen=True)
 class Reproduction:
-    """What a reproduction attempt found.
-
-    Parameters
-    ----------
-    directory
-        The run directory that was reproduced.
-    manifest_hash
-        The archived manifest's hash, so a report names the run it is about.
-    run
-        The result of re-running the pipeline.
-    quantities
-        The recorded quantities, as the archived run record holds them.
-    worst
-        The largest relative difference over every scalar compared, or ``None``
-        when the run recorded no number to compare.
-    drifts
-        Every scalar outside ``tolerance``, or unequal where it is not a number.
-    environment
-        Library, interpreter and platform differences. Reported, not fatal,
-        unless ``strict_environment``.
-    tolerance
-        The relative agreement that was required.
-    """
-
     directory: Path
     manifest_hash: str
     run: RunResult
@@ -166,11 +86,9 @@ class Reproduction:
 
     @property
     def reproduced(self) -> bool:
-        """Whether every scalar came back within tolerance."""
         return not self.drifts
 
     def summary(self) -> dict[str, Canonicalisable]:
-        """Return the whole finding as plain data, for the CLI's ``--json``."""
         return {
             "directory": str(self.directory),
             "manifest": self.manifest_hash,
@@ -185,12 +103,6 @@ class Reproduction:
 
 
 def _flatten(value: Canonicalisable, prefix: str = "") -> dict[str, Canonicalisable]:
-    """Return a nested quantity record flattened to dotted paths.
-
-    ``currents_A`` is a mapping of ion to current and ``route_agreement`` a
-    mapping of route to figure; comparing them whole would report "the block
-    differs" and leave a reader to find the ion.
-    """
     if isinstance(value, dict):
         flat: dict[str, Canonicalisable] = {}
         for key, item in value.items():
@@ -200,12 +112,6 @@ def _flatten(value: Canonicalisable, prefix: str = "") -> dict[str, Canonicalisa
 
 
 def _relative(recorded: float, reproduced: float) -> float:
-    """Return the relative difference, falling back to the absolute one at zero.
-
-    Never NaN, because ``nan > tolerance`` is False and would count as
-    reproduced: a number that became NaN or infinite, or stopped being one, is
-    infinitely far off, and two NaNs, or two equal infinities, reproduce.
-    """
     if recorded == reproduced or (math.isnan(recorded) and math.isnan(reproduced)):
         return 0.0
     if not (math.isfinite(recorded) and math.isfinite(reproduced)):
@@ -220,19 +126,6 @@ def compare(
     *,
     tolerance: float = DEFAULT_TOLERANCE,
 ) -> tuple[tuple[Drift, ...], float | None]:
-    """Compare two quantity records and return the drifts and the worst figure.
-
-    Every scalar is compared relatively; anything that is not a number — the
-    ``2 pi`` convention, the route-check flag, the indicator band — must be
-    *equal*, because a convention that changed makes the numbers beside it
-    incomparable rather than merely different.
-
-    Raises
-    ------
-    ReproductionError
-        If the reproduction produced no value for a quantity the run recorded.
-        A missing number is not a matching one.
-    """
     left, right = _flatten(dict(recorded)), _flatten(dict(reproduced))
     missing = sorted(set(left) - set(right))
     if missing:
@@ -261,15 +154,6 @@ def compare(
 
 
 def check_inputs(manifest: Mapping[str, Canonicalisable], *, where: Path) -> None:
-    """Re-hash every input file the manifest recorded, aborting on any that moved.
-
-    Raises
-    ------
-    InputMovedError
-        If a recorded input is absent or its contents differ. Both are fatal:
-        a reproduction against a different mesh is a different calculation, and
-        nothing about the numbers it produces would say so.
-    """
     inputs = manifest.get("inputs")
     files = inputs.get("files", {}) if isinstance(inputs, dict) else {}
     if not isinstance(files, dict):
@@ -303,15 +187,6 @@ def check_inputs(manifest: Mapping[str, Canonicalisable], *, where: Path) -> Non
 
 
 def check_mesh(manifest: Mapping[str, Canonicalisable], result: RunResult, *, where: Path) -> None:
-    """Abort if the reproduced mesh is not the one the manifest recorded (WP21 D13).
-
-    Raises
-    ------
-    InputMovedError
-        Naming the mesh and both content hashes. Only a generated mesh can
-        reach this: a supplied one whose file moved is refused earlier by
-        :func:`check_inputs`, before any work is done.
-    """
     group = manifest.get("geometry_and_mesh")
     recorded = group.get("content_hash") if isinstance(group, dict) else None
     artefact = result.artefacts.get("mesh")
@@ -331,7 +206,6 @@ def check_mesh(manifest: Mapping[str, Canonicalisable], result: RunResult, *, wh
 def check_environment(
     manifest: Mapping[str, Canonicalisable],
 ) -> tuple[EnvironmentDrift, ...]:
-    """Return every environment key whose value differs from this machine's."""
     recorded = manifest.get("environment")
     if not isinstance(recorded, dict):
         return ()
@@ -354,15 +228,6 @@ def check_environment(
 
 
 def _recorded_quantities(directory: Path) -> Mapping[str, Canonicalisable]:
-    """Return the quantities the archived run record holds.
-
-    Raises
-    ------
-    ReproductionError
-        If there is no run record, or it carries no quantity. The manifest says
-        how the run was configured; the run record is what it *produced*, and
-        there is nothing to reproduce without it.
-    """
     path = directory / RUN_RECORD_FILENAME
     if not path.is_file():
         raise ReproductionError(
@@ -393,42 +258,6 @@ def reproduce(
     progress: Progress | None = None,
     cancel: CancelToken | None = None,
 ) -> Reproduction:
-    """Re-run an archived run and compare every scalar it reported (QR-08).
-
-    Parameters
-    ----------
-    directory
-        A run directory: ``manifest.json``, ``case.yaml`` and ``run.json``.
-    store
-        Where the reproduction's artefacts go. It must not already hold this
-        run's solution — see the module docstring. ``None`` runs into a
-        temporary directory that is removed afterwards, which is the honest
-        default: the artefacts of a reproduction are not a result, the
-        comparison is.
-    tolerance
-        Relative agreement every scalar must reach; :data:`DEFAULT_TOLERANCE`.
-    strict_environment
-        Whether a library, interpreter or platform difference is fatal.
-    progress, cancel
-        Threaded into the run.
-
-    Returns
-    -------
-    Reproduction
-        The comparison, whether or not it succeeded. The caller decides what a
-        drift means; the CLI exits non-zero on one.
-
-    Raises
-    ------
-    InputMovedError
-        If a recorded input file is absent or its contents moved, or if the
-        reproduced mesh's content hash differs from the recorded one.
-    ReproductionError
-        If the run directory is incomplete, if its ``case.yaml`` disagrees with
-        the text the manifest embeds, if the solve was served from the store
-        rather than re-entered, or if the reproduction produced no value for a
-        recorded quantity.
-    """
     where = Path(directory)
     manifest_path = where / MANIFEST_FILENAME
     if not manifest_path.is_file():

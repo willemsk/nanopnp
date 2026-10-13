@@ -1,13 +1,4 @@
-"""The case checks that need more than the schema: the registries and the release.
-
-:class:`nanopnp.io.case.CaseDocument` validates a document's shape and the facts
-it states about itself. What it cannot know is what this install provides -- the
-registered physics models and stabilisation modes, the available linear solvers
--- or what this release runs. Those checks are here, above every registry they
-ask, and :func:`check_document` is the one entry point the loader, the resolver
-and the desktop shell's editor share, so that each refusal reads the same on the
-command line and in the editor (QR-11).
-"""
+"""The case checks that need the installed registries or this release, beyond the schema."""
 
 from __future__ import annotations
 
@@ -73,28 +64,6 @@ __all__ = [
 
 
 def registry_options(path: str) -> tuple[str, ...] | None:
-    """Return the values an installed registry admits at a dotted path.
-
-    The same registries :func:`check_document` and
-    :meth:`~nanopnp.io.case.CaseDocument._check_installed` ask, indexed by the
-    path their diagnostics name, so that a generated editor offers exactly the
-    values a document would be accepted with. It lives here rather than in
-    ``gui/`` for that reason: a second list of stabilisation modes would be a
-    GUI offering a mode the solver does not apply, which is a manifest
-    describing a run that never happened (§5.3.3).
-
-    Parameters
-    ----------
-    path
-        A dotted case-file path.
-
-    Returns
-    -------
-    tuple of str or None
-        The admissible values, or ``None`` where no registry governs the path —
-        which is not the same as "anything": the schema's declared type still
-        does, through :func:`options_at`.
-    """
     if path == "physics.model":
         return registered_models()
     if path == "numerics.mesh.backend":
@@ -118,47 +87,9 @@ def registry_options(path: str) -> tuple[str, ...] | None:
 _CORRECTION_MODEL_PATHS: frozenset[str] = frozenset(
     f"electrolyte.corrections.{name}.model" for name in CORRECTION_PROPERTIES
 )
-"""The five correction-model paths, built from :data:`CORRECTION_PROPERTIES`."""
 
 
 def check_document(document: CaseDocument, *, source: str | None = None) -> CaseDocument:
-    """Check a schema-valid document against the registries and its element orders.
-
-    The checks :class:`~nanopnp.io.case.CaseDocument` cannot make without
-    importing above ``core`` (WP38 D7, D8):
-
-    - ``physics.model``, ``numerics.mesh.backend``, ``numerics.stabilisation``
-      and ``numerics.linear.solver`` against the installed registries, reported
-      in the IF-03 rendering a schema refusal takes, so the text a user reads
-      is the one :meth:`CaseDocument.model_validate` gave when the schema asked
-      the registries itself;
-    - the element-order checks of :func:`element_orders`: the labels, ``phi``
-      and ``c`` at one order, and the inf-sup pair (NUM-03).
-
-    :func:`nanopnp.pipeline.case.load_case` runs this after reading,
-    :func:`nanopnp.pipeline.case.resolve` before resolving, so a document built
-    in memory is checked too, and the desktop shell's editor runs it after each
-    edit, so that every refusal reads the same in the editor as on the command
-    line (QR-11).
-
-    Parameters
-    ----------
-    document
-        A document the schema has validated.
-    source
-        Names the document in a diagnostic: the file it was read from, or a
-        description of how it was built. ``<case name>`` when omitted.
-
-    Returns
-    -------
-    CaseDocument
-        ``document``, unchanged.
-
-    Raises
-    ------
-    CaseValidationError
-        Naming the key, the value and what is admitted.
-    """
     problems: list[str] = []
     if document.physics.model not in registered_models():
         problems.append(
@@ -208,17 +139,6 @@ def check_document(document: CaseDocument, *, source: str | None = None) -> Case
 
 
 def element_orders(document: CaseDocument) -> tuple[int, int, int]:
-    """Return the field, velocity and pressure orders, refusing a pair no solve can use.
-
-    Raises
-    ------
-    CaseValidationError
-        For a label that is not ``P<n>``; for ``phi`` and ``c`` at different
-        orders, which the NUM-02 log branch and the PHY-05 steric term both
-        assume equal; and, where ``physics.flow`` is on, for a velocity-pressure
-        pair that is not inf-sup stable in the case's stabilisation mode
-        (NUM-03), naming the mode that would admit it.
-    """
     elements = document.numerics.elements
     order = _order(elements.phi, "phi")
     concentration_order = _order(elements.c, "c")
@@ -252,31 +172,6 @@ def element_orders(document: CaseDocument) -> tuple[int, int, int]:
 
 
 def options_at(path: str) -> tuple[str, ...] | None:
-    """Return every value a case document would be accepted with at a path.
-
-    The **intersection** of what the schema's declared type accepts and what the
-    installed registries admit, because :class:`CaseDocument` requires both: a
-    ``Literal`` member no registry has is refused by :func:`check_document`, and a
-    registered name outside the ``Literal`` is refused by the type. Offering
-    either alone would offer a value that cannot be saved.
-
-    Parameters
-    ----------
-    path
-        A dotted case-file path.
-
-    Returns
-    -------
-    tuple of str or None
-        The admissible values in the schema's own order where it declares them,
-        or ``None`` for a field whose values are not enumerable — a number, a
-        free string, a path.
-
-    Raises
-    ------
-    UnknownCasePathError
-        If the path is not one the schema declares.
-    """
     reference = field_at(path)
     literal = _literal_options(reference.annotation)
     registered = registry_options(path)
@@ -289,23 +184,18 @@ def options_at(path: str) -> tuple[str, ...] | None:
 
 
 _ORDERS: dict[str, int] = {"P1": 1, "P2": 2, "P3": 3}
-"""Element labels of section 5.3.1 against their polynomial order."""
 
 
 PROFILE_KEYS: tuple[str, ...] = ("exclusion_offset_nm", "dielectric_transition_nm")
-"""The ``charge:`` keys built from the stage-4 profile (WP30 D12)."""
 
 
 SMEARING_KEYS: tuple[str, ...] = ("sharpness", "grid_spacing_nm")
-"""The ``charge.smearing`` keys stage 7's deposition reads (PHY-16 steps 4-6, WP28 D10)."""
 
 
 PROTONATION_KEYS: tuple[str, ...] = ("ph", "forcefield", "titration")
-"""The ``charge:`` keys the ``protonation`` stage reads (PHY-16 step 3, WP27 D13)."""
 
 
 def _order(label: str, field: str) -> int:
-    """Return the polynomial order a ``P<n>`` element label names."""
     try:
         return _ORDERS[label]
     except KeyError:
@@ -316,15 +206,6 @@ def _order(label: str, field: str) -> int:
 
 
 def check_species(document: CaseDocument, electrolyte: Electrolyte) -> None:
-    """Check the case's species, steric diameters and temperature against the parameter file.
-
-    The diameters are *checked*, never applied: they are fitted parameters of the
-    correction file (FR-16), and a case file that could override them silently
-    would be a second source of truth for a physical constant. So is the
-    temperature: every reference property, every scale and ``V_T`` come from the
-    file, and the fits are temperature-specific, so a case at another temperature
-    would be solved at the file's while its manifest recorded the case's.
-    """
     problems: list[str] = []
     temperature_K = document.electrolyte.temperature_K
     if temperature_K != electrolyte.temperature_K:
@@ -367,21 +248,12 @@ def check_species(document: CaseDocument, electrolyte: Electrolyte) -> None:
 
 
 def require_runnable(document: CaseDocument) -> SuppliedArtefact | None:
-    """Reject every section this release does not run, and return the supplied mesh.
-
-    Returns
-    -------
-    SuppliedArtefact or None
-        ``inputs.mesh``. A case carrying ``structure:`` or supplying
-        ``inputs.profile`` may omit it, and stages 5 and 6 build the mesh. Any
-        other case without one describes no run at all.
-    """
     _check_charge(document)
     for supplied in ("mesh", "charge", "eps_r"):
         given: SuppliedArtefact | None = getattr(document.inputs, supplied)
         if given is not None and given.path is None:
             # Stage 6 and stage 7 read a supplied output by path only; refused here so
-            # that ``nanopnp validate case`` sees what ``run`` would (WP40 D5).
+            # that ``nanopnp validate case`` sees what ``run`` would.
             raise stored_artefact_refused(supplied)
     for supplied, what in SUPPLIED_FIELDS.items():
         field: SuppliedArtefact | None = getattr(document.inputs, supplied)
@@ -467,20 +339,6 @@ def require_runnable(document: CaseDocument) -> SuppliedArtefact | None:
 
 
 def _check_charge(document: CaseDocument) -> None:
-    """Make the ``charge:`` and ``inputs.pqr`` refusals (section 5.3.1 NOTEs, WP27 D13).
-
-    Raises
-    ------
-    CaseValidationError
-        Naming the keys: the refusals of :func:`_check_profile_keys`;
-        ``artefact:``, ``groups`` or a format other than ``pqr`` on
-        ``inputs.pqr``; the ``charge.smearing`` refusals of
-        :func:`_check_smearing`; ``charge.ph`` away from its default beside
-        ``titration: none``; and a protonation key away from its default where
-        the ``protonation`` stage does not run, which is beside ``inputs.pqr``,
-        beside ``inputs.charge``, and in a case with neither ``structure:`` nor
-        ``inputs.pqr``.
-    """
     pqr = document.inputs.pqr
     if pqr is not None:
         if pqr.path is None:
@@ -537,20 +395,6 @@ def _check_charge(document: CaseDocument) -> None:
 
 
 def _check_profile_keys(document: CaseDocument, charge: Charge) -> None:
-    """Make the refusals of the two keys built from the stage-4 profile (WP30 D11, D12).
-
-    Raises
-    ------
-    CaseValidationError
-        Naming both keys: either set away from ``0`` beside ``inputs.mesh``, or in
-        a case with neither ``structure:`` nor ``inputs.profile``, where there is
-        no profile to build it from (a knob with no effect); a non-zero
-        ``dielectric_transition_nm`` beside ``inputs.eps_r``, which supplies the
-        same quantity; ``0 < dielectric_transition_nm < h_c`` and
-        ``0 < exclusion_offset_nm <= 2 h_c``, with ``h_c`` the density grid
-        spacing (section 4.4 NOTE on the derived solid fraction; section 5.2.1
-        NOTE on the ion-exclusion shell).
-    """
     changed = [f"charge.{key}" for key in PROFILE_KEYS if getattr(charge, key) != 0.0]
     if not changed:
         return
@@ -593,17 +437,6 @@ def _check_profile_keys(document: CaseDocument, charge: Charge) -> None:
 
 
 def _check_smearing(document: CaseDocument, smearing: SmearingSpec, defaults: SmearingSpec) -> None:
-    """Make the ``charge.smearing`` refusals (section 5.3.1 NOTE on ``charge.smearing``, WP28 D10).
-
-    Raises
-    ------
-    CaseValidationError
-        Naming the key: ``axis_cutoff_nm`` away from its default, on every path
-        (PHY-18); a ``sharpness`` or ``grid_spacing_nm`` that is not finite and
-        positive; and either set away from its default beside ``inputs.charge``,
-        or in a case with neither ``structure:`` nor ``inputs.pqr``, where the
-        deposition they configure does not run, naming both keys.
-    """
     if smearing.axis_cutoff_nm != defaults.axis_cutoff_nm:
         raise CaseValidationError(
             f"charge.smearing.axis_cutoff_nm is {smearing.axis_cutoff_nm}; it is refused away "
@@ -646,16 +479,6 @@ def _check_smearing(document: CaseDocument, smearing: SmearingSpec, defaults: Sm
 
 
 def _check_profile(document: CaseDocument) -> None:
-    """Make the ``inputs.profile`` refusals (section 5.3.1 NOTE on ``inputs:``, WP21 D14).
-
-    Raises
-    ------
-    CaseValidationError
-        Naming the key: ``artefact:``, ``groups`` or a format other than
-        ``profile1`` on ``inputs.profile``; ``structure:`` beside it; and
-        ``geometry.density`` or ``geometry.contour`` set away from their defaults
-        beside it, which stages 2 to 4 would read and which do not run.
-    """
     profile = document.inputs.profile
     if profile is None:
         return
@@ -697,19 +520,6 @@ def _check_profile(document: CaseDocument) -> None:
 
 
 def _check_generation(document: CaseDocument) -> None:
-    """Make the refusals of a case whose mesh stages 5 and 6 build (WP21 D14).
-
-    Raises
-    ------
-    UnsupportedCaseSection
-        Naming the key and its value: ``boundary_layer: true`` (FR-11,
-        post-1.0) and ``geometry.analyte`` (FR-21, v0.7). ``backend: gmsh`` is
-        not refused here: it resolves on any install, and stage 6 refuses it
-        naming the extra when ``gmsh`` does not import (WP23 D9).
-    CaseValidationError
-        Naming the key and its value: a membrane thickness, a reservoir radius
-        or an explicit ``wall_h_nm`` that is not finite and positive.
-    """
     mesh = document.numerics.mesh
     if mesh.boundary_layer:
         raise UnsupportedCaseSection(
@@ -745,42 +555,17 @@ def _check_generation(document: CaseDocument) -> None:
         )
 
 
+# default_ladder reads none of these from the case: flow is on from the stage-6 rung and
+# the other three sit at the CoupledModel defaults, so a case setting one would be ignored.
 _LADDER_PHYSICS: dict[str, bool] = {
     "flow": True,
     "variable_density": True,
     "inertia": True,
     "dielectric_gradient_forces": False,
 }
-"""The physics configuration the NUM-18 ladder arrives at, whatever the case says.
-
-``nanopnp.solve.continuation.default_ladder`` builds its rungs itself and reads
-none of these four from the case: its ``_coupled`` helper passes ``flow``
-explicitly -- off for the early electrostatic and equilibrium-PNP rungs, on from
-the stage-6 rung upwards, which is the ladder's own path rather than a switch --
-and leaves ``variable_density``, ``inertia`` and ``dielectric_gradient_forces``
-at the :class:`~nanopnp.physics.models.CoupledModel` defaults recorded above.
-Only ``numerics.continuation: none`` threads the case's four through to the
-model builder (:func:`nanopnp.pipeline.case._model_options`). The values here are
-therefore what the *top* rung carries, which is the rung the result and its
-manifest come from."""
 
 
 def _check_ladder_can_honour(physics: PhysicsSpec) -> None:
-    """Refuse a physics switch the NUM-18 ladder cannot honour.
-
-    NUM-18 fixes the path: flow is enabled at stage 6 and the corrections at
-    stage 7, so "flow off" is not a rung of the ladder but a different run, and
-    the opt-in dielectric-gradient forces of PHY-23 are not on the ladder at
-    all. ``default_ladder`` accordingly reads none of the four from the case, so
-    a case that set one of them and still selected the ladder would converge
-    with the FR-25 manifest recording a deviation the solve never carried --
-    exactly the silent drop :func:`_check_physics_switches` exists to prevent,
-    one rung later and for a different reason.
-
-    A model whose own switches cannot match the ladder -- ``pnp``, which honours
-    ``flow: false`` only -- never reaches this check: it does not admit the ladder
-    as a strategy, and :func:`_check_strategy` has already said so.
-    """
     mismatched = [
         name for name, fixed in _LADDER_PHYSICS.items() if getattr(physics, name) != fixed
     ]
@@ -796,38 +581,19 @@ def _check_ladder_can_honour(physics: PhysicsSpec) -> None:
 
 
 def _admitting(predicate: Callable[[str], bool]) -> str:
-    """Return the registered models a predicate on their declaration admits, as prose."""
     names = [name for name in registered_models() if predicate(name)]
     return ", ".join(names) or "no registered model"
 
 
 def _honouring(switch: str, value: bool) -> str:
-    """Return the registered models honouring one switch value, as prose."""
     return _admitting(lambda other: value in declaration(other).switches[switch])
 
 
 def _accepting(coefficient: str) -> str:
-    """Return the registered models accepting one supplied coefficient, as prose."""
     return _admitting(lambda other: coefficient in declaration(other).coefficients)
 
 
 def _check_physics_switches(document: CaseDocument) -> None:
-    """Refuse a case whose physics the named model cannot honour (PHY-21, section 5.4.3).
-
-    Read from the model's declaration, never from its name. A switch the solver
-    silently drops is worse than one it refuses: the FR-25 manifest would record
-    ``flow: true`` beside a solution that has no velocity field in it, and a
-    reader would have no way to tell. The same holds for ``physics.
-    solid_permittivities`` beside a model that carries no solids, and for the two
-    supplied fields of stage 7 beside a model that does not accept them -- the
-    same failure arriving as an input: stage 7 would gate the field, the manifest
-    would record it, and the solve would never read it.
-
-    Raises
-    ------
-    CaseValidationError
-        Naming the model, the key and the values or models that are admitted.
-    """
     physics = document.physics
     model = physics.model
     declared = declaration(model)
@@ -976,12 +742,6 @@ def _check_correction_parts(document: CaseDocument) -> None:
 
 
 def _check_switch_partners(document: CaseDocument) -> None:
-    """Refuse a switch whose partner leaf leaves it nothing to switch (PHY-22 NOTE, REV-73).
-
-    Both are live on their own and inert beside the partner, so VER-71's
-    single-leaf probe cannot see them: the FR-25 manifest would record a
-    deviation the solve never applies.
-    """
     decl = declaration(document.physics.model)
     corrections = document.electrolyte.corrections
     physics = document.physics
@@ -1041,14 +801,6 @@ def _check_driver(document: CaseDocument) -> None:
 
 
 def _check_strategy(document: CaseDocument) -> None:
-    """Refuse a ``numerics.continuation`` the named model does not admit (section 6.5).
-
-    Raises
-    ------
-    CaseValidationError
-        Naming the model, the value, the values it admits and the models that
-        admit the value asked for.
-    """
     model = document.physics.model
     value = document.numerics.continuation
     admitted = declaration(model).strategies
@@ -1064,15 +816,6 @@ def _check_strategy(document: CaseDocument) -> None:
 
 
 def _check_outputs(document: CaseDocument) -> None:
-    """Refuse an ``outputs:`` quantity the named model does not declare (section 5.3.1 NOTE).
-
-    ``fields`` is the IF-07 export and not a quantity, and every model admits it.
-
-    Raises
-    ------
-    CaseValidationError
-        Naming the model, the words and the quantities it declares.
-    """
     model = document.physics.model
     declared = declaration(model).quantities
     undeclared = [word for word in document.outputs if word != "fields" and word not in declared]
@@ -1091,12 +834,6 @@ def _check_outputs(document: CaseDocument) -> None:
 
 
 def check_operating_point(document: CaseDocument) -> None:
-    """Refuse a concentration, bias or distance cap no solve could use.
-
-    Written so that NaN fails every test: ``nan <= 0`` is False, and a sweep
-    plan resolves every point precisely so that an inadmissible one fails at
-    plan time rather than after a ladder of non-converging Newton.
-    """
     concentration = document.electrolyte.concentration_M
     if not (math.isfinite(concentration) and concentration > 0.0):
         raise CaseValidationError(
@@ -1114,18 +851,6 @@ def check_operating_point(document: CaseDocument) -> None:
 
 
 def check_referenced_files(document: CaseDocument) -> None:
-    """Verify that every external file referenced by a case document exists on disk.
-
-    Parameters
-    ----------
-    document
-        The validated case document.
-
-    Raises
-    ------
-    FileNotFoundError
-        If any referenced path does not exist.
-    """
     # Every ``inputs:`` key, read from the schema: a key added later is checked too.
     for leaf in type(document.inputs).model_fields:
         supplied = getattr(document.inputs, leaf)
