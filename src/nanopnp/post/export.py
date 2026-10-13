@@ -1,53 +1,4 @@
-"""IF-07 field export: XDMF with HDF5 heavy data at the P2 node set.
-
-A solved state is written where NUM-01 puts it. For a P2 space on triangles
-``ndof = nv + nedge``, and a P2 polynomial on a straight-sided triangle is
-determined by its values at the three vertices and the three edge midpoints, so
-writing ``Triangle_6`` cells over exactly that node set records the solution
-without introducing an interpolation error. The same six nodes record ``p``
-exactly too: a P1 function's midpoint value is the mean of its endpoints, so the
-P2 container costs nothing but the space. Midside nodes are identified by the
-*unordered pair of vertices* they lie between, never by a backend's local edge
-numbering — a permutation of the three would give a picture that looks right and
-is wrong.
-
-Two files are written, not one. ``phi`` is posed over all of Omega and ``c_i``,
-``u`` and ``p`` over the fluid alone, and padding the fluid fields with zeros
-over the membrane would produce a file in which a zero concentration *inside a
-wall* is indistinguishable from a converged depletion (IF-07). Coordinates are
-in nm, matching the archival mesh of IF-06; values are SI with the unit in the
-attribute name. The ``2 pi`` of the axisymmetric measure is **not** applied:
-these values are pointwise, and section 6.7 restores that factor exactly once, in
-the quantity-of-interest extraction.
-
-Two things this module does are not what a first reading of IF-07 suggests, and
-both were measured rather than reasoned.
-
-**A fluid-restricted field is sampled through a whole-domain carrier.** Point
-evaluation asks the mesh which element contains a point, and for a node on the
-electrolyte/membrane interface the answer may be the membrane element, where a
-space built with ``definedon=fluid`` has no degrees of freedom and returns zero.
-On the coarse four-material pore that is 16 of the 208 fluid nodes and a maximum
-error of 13.0 against a linear test function. Interpolating into a whole-domain
-space of the same order first and evaluating *that* is exact to 5.5e-14, because
-the value at a P2 node depends only on the entities carrying it — the vertex, or
-the edge and its two endpoints — and each of those is a fluid entity whose
-coefficient the restricted-region interpolation set correctly.
-
-**The scale set is recorded as HDF5 root attributes, not as an XDMF
-``Information`` element.** meshio 5.3.5 reads ``Information`` only in its own
-``field_data`` encoding — children carrying ``key`` and ``dim`` attributes with
-integer text — and raises ``ParseError`` on anything else, so an ``Information``
-element carrying a float scale set makes the exported file unreadable by the
-commonest Python XDMF reader. IF-07 requires the scale set "in the file"; the
-heavy-data file is where a reader of the values already is.
-
-Discontinuous quantities are written **cell-centred**. ``material_id`` and
-``eps_r`` jump across a material interface, so a node value there is one side
-chosen arbitrarily and a viewer would draw a fictitious ramp across every
-boundary element. Cell-centring draws the jump where it is and makes a threshold
-by material exact.
-"""
+"""IF-07 field export: XDMF with HDF5 heavy data at the P2 node set."""
 
 from __future__ import annotations
 
@@ -87,56 +38,22 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 EXPORT_SCHEMA = "nanopnp/export/v0.5"
-"""Schema recorded in each file, so a reader can refuse a later one.
-
-Deliberately not ``nanopnp/fields/v0.5``: that identifier belongs to the stage-7
-charge artefact (:data:`nanopnp.io.artefact.FIELDS_SCHEMA`), and two payload
-contracts under one schema string is exactly the confusion a schema exists to
-prevent."""
 
 OMEGA_STEM = "fields_omega"
-"""Stem of the whole-domain file pair."""
 
 OMEGA_W_STEM = "fields_omega_w"
-"""Stem of the fluid-only file pair."""
 
 FIXED_CHARGE_ATTRIBUTE = "rho_fixed_C_m3"
-"""IF-07's name for the fixed volume charge density a run carried, in C m^-3.
-
-Written only for a run that carried a charge; the desktop shell's deployed-charge
-picture is titled with it, so the picture and the export name one quantity once.
-"""
 
 MATERIAL_ID = "material_id"
-"""Cell attribute naming each element's material by its index in ``GetMaterials()``."""
 
 WALL_DISTANCE = "wall_distance_nm"
-"""Node attribute carrying the PHY-02 distance field, already in nm."""
 
 _MIDSIDES: tuple[tuple[int, int], ...] = ((0, 1), (1, 2), (2, 0))
-"""Vertex pairs whose midpoints are Triangle_6 nodes 3, 4 and 5, in that order."""
 
 
 @dataclass(frozen=True)
 class P2Nodes:
-    """The P2 node set of a mesh, or of a selection of its materials.
-
-    Parameters
-    ----------
-    points_nm
-        ``(n, 2)`` node coordinates in nm, vertices before edge midpoints.
-    cells
-        ``(m, 6)`` Triangle_6 connectivity: three vertices then the midpoints of
-        edges ``(0, 1)``, ``(1, 2)`` and ``(2, 0)``, indexing ``points_nm``.
-    elements
-        NGSolve element numbers, in the order the rows of ``cells`` take, so a
-        cell-centred attribute can be evaluated element by element.
-    materials
-        The distinct material names the retained elements carry, in the mesh's
-        own material order. Recorded in the file so a reader knows which part of
-        Omega it is holding without re-deriving it from ``material_id``.
-    """
-
     points_nm: np.ndarray
     cells: np.ndarray
     elements: tuple[int, ...]
@@ -145,24 +62,11 @@ class P2Nodes:
 
 @dataclass(frozen=True)
 class FieldExport:
-    """What one call to :func:`export_fields` wrote.
-
-    Parameters
-    ----------
-    omega
-        The whole-domain ``.xdmf`` and ``.h5`` pair.
-    omega_w
-        The fluid-only pair, or ``None`` if the model solves no fluid field.
-    attributes
-        Attribute names written, per file stem, for the FR-25 manifest.
-    """
-
     omega: tuple[Path, Path]
     omega_w: tuple[Path, Path] | None
     attributes: dict[str, tuple[str, ...]]
 
     def paths(self) -> tuple[Path, ...]:
-        """Return every file written, in a stable order."""
         written = list(self.omega)
         if self.omega_w is not None:
             written.extend(self.omega_w)
@@ -170,12 +74,6 @@ class FieldExport:
 
 
 def attribute_name(field: str) -> str:
-    """Return the SI attribute name of one model field.
-
-    The unit goes in the name because a file is a boundary and the house rule
-    puts units at boundaries. Concentrations keep the species in the field name
-    they already carry, so ``c_Na+`` becomes ``c_Na+_mol_m3``.
-    """
     if field == POTENTIAL:
         return "phi_V"
     if field == VELOCITY:
@@ -186,12 +84,6 @@ def attribute_name(field: str) -> str:
 
 
 def field_scale(field: str, scales: Scales) -> float:
-    """Return the NUM-09 scale that takes one field from nondimensional to SI.
-
-    Public for the same reason as :func:`sample_at`: the Tier-3 probe comparison
-    reports SI, the golden declares SI units, and one statement of which scale
-    belongs to which field is one fewer place for a factor to go missing.
-    """
     if field == POTENTIAL:
         return scales.potential_V
     if field == VELOCITY:
@@ -202,24 +94,6 @@ def field_scale(field: str, scales: Scales) -> float:
 
 
 def p2_nodes(mesh: Mesh, *, materials: str | None = None) -> P2Nodes:
-    """Return the P2 node set and Triangle_6 cells of ``mesh``.
-
-    Parameters
-    ----------
-    mesh
-        The deployed mesh.
-    materials
-        Material-name regular expression to restrict the cells to, or ``None``
-        for every material. Nodes not carried by a retained element are dropped
-        and the remainder renumbered compactly, so the fluid file holds no node
-        that is only a membrane node.
-
-    Notes
-    -----
-    Midside nodes are found through a map from the *unordered* pair of endpoint
-    vertices to the edge number, so the result assumes nothing about how the
-    backend orders an element's edges locally.
-    """
     import ngsolve as ngs
     import numpy as np
 
@@ -271,44 +145,11 @@ def sample_at(
     materials: str | None = None,
     carriers: dict[tuple[int, int], FESpace] | None = None,
 ) -> np.ndarray:
-    """Return ``expression`` at ``points_nm``, through a whole-domain carrier.
-
-    Public because the Tier-3 probe comparison samples the same fields at points
-    of its own (:mod:`nanopnp.validation.compare`) and the carrier below is the
-    whole reason a sample on an interface node is right; a second implementation
-    of it would be a second chance to get it wrong.
-
-    The carrier is the point of the function. Evaluating a space built with
-    ``definedon`` directly returns zero wherever the mesh's point search lands in
-    an element outside the region, which on an interface node it may; see the
-    module docstring for the measurement. Interpolating into a whole-domain space
-    of the same order restricted to the same region, and evaluating that, is
-    exact at every node of the region.
-
-    Parameters
-    ----------
-    mesh
-        The deployed mesh.
-    expression
-        The field, in whatever units it is to be written.
-    points_nm
-        ``(n, 2)`` evaluation points.
-    order
-        Polynomial order of the carrier, matching the field's own.
-    dimension
-        1 for a scalar, 2 for the ``(r, z)`` velocity.
-    materials
-        Region the field is defined on, or ``None`` for all of Omega.
-    carriers
-        Spaces already built, by ``(order, dimension)``, added to as they are
-        needed. An export samples six or more fields over two node sets and they
-        share two spaces between them; building one per call would enumerate the
-        mesh's degrees of freedom once per *field*, on the one stage a sweep
-        writes thousands of times (FR-24). Omitted, each call builds its own.
-    """
     import ngsolve as ngs
     import numpy as np
 
+    # A space with ``definedon`` returns zero at an interface node whose point search lands outside
+    # the region; a whole-domain carrier is exact (.knowledge/07-software-stack.md, IF-07 export).
     if carriers is None:
         carriers = {}
     space = carriers.get((order, dimension))
@@ -325,12 +166,6 @@ def sample_at(
 
 
 def _sample_cells(mesh: Mesh, expression: Expression, nodes: P2Nodes) -> np.ndarray:
-    """Return ``expression`` at the barycentre of each retained element.
-
-    A barycentre lies strictly inside its element, so the point search is
-    unambiguous even for a coefficient that jumps across the element's faces —
-    which is the reason a discontinuous quantity is written cell-centred at all.
-    """
     import numpy as np
 
     corners = nodes.points_nm[nodes.cells[:, :3]]
@@ -339,7 +174,6 @@ def _sample_cells(mesh: Mesh, expression: Expression, nodes: P2Nodes) -> np.ndar
 
 
 def _material_ids(mesh: Mesh, nodes: P2Nodes) -> np.ndarray:
-    """Return each retained element's material index into ``mesh.GetMaterials()``."""
     import ngsolve as ngs
     import numpy as np
 
@@ -348,16 +182,9 @@ def _material_ids(mesh: Mesh, nodes: P2Nodes) -> np.ndarray:
 
 
 def _as_vector(values: np.ndarray) -> np.ndarray:
-    """Return an ``(n, 2)`` half-plane velocity as the ``(n, 3)`` XDMF expects.
-
-    The third component is the azimuthal velocity ``u_theta``, identically zero
-    under the axisymmetric ansatz of PHY-01, so writing it invents nothing. It is
-    written because XDMF's ``Vector`` attribute means three components: a
-    two-component one reads back as a vector no glyph filter will accept, which
-    would make the flow field the one thing in the file nobody can look at.
-    """
     import numpy as np
 
+    # u_theta is zero by the axisymmetric ansatz; an XDMF Vector needs three components.
     return np.column_stack([values, np.zeros(values.shape[0], dtype=values.dtype)])
 
 
@@ -369,12 +196,6 @@ def _write_pair(
     cell_data: dict[str, np.ndarray],
     metadata: dict[str, object],
 ) -> tuple[Path, Path]:
-    """Write one XDMF/HDF5 pair and return both paths.
-
-    meshio compresses HDF5 heavy data with gzip by default, which is the setting
-    IF-07 asks for; it is passed explicitly rather than inherited, so a change of
-    that default cannot silently multiply a sweep's storage by five.
-    """
     import h5py
     import meshio
 
@@ -384,8 +205,10 @@ def _write_pair(
         point_data=point_data,
         cell_data={name: [values] for name, values in cell_data.items()},
     )
+    # Compression is explicit so a change of meshio's default cannot multiply a sweep's storage.
     meshio.xdmf.write(path, grid, data_format="HDF", compression="gzip")
     heavy = path.with_suffix(".h5")
+    # HDF5 root attributes: meshio cannot read a float set from an XDMF Information element.
     with h5py.File(heavy, "a") as handle:
         for key, value in metadata.items():
             handle.attrs[key] = value
@@ -401,38 +224,6 @@ def export_fields(
     fixed_charge_C_m3: Expression | None = None,
     relative_permittivity: Expression | None = None,
 ) -> FieldExport:
-    """Write the solved fields as XDMF with HDF5 heavy data (IF-07).
-
-    Parameters
-    ----------
-    solution
-        The converged state. Its fields are read from the model's own field
-        declarations, so a model that solves no flow simply writes no ``u_m_s``.
-    directory
-        Where the two file pairs go. Created if it does not exist.
-    scales
-        The NUM-09 scale set the state was solved in. Every value is written in
-        SI, and the set itself is recorded in each file so the nondimensional
-        reading stays recoverable without a second solve.
-    fluid
-        Material-name regular expression of Omega_w.
-    fixed_charge_C_m3
-        The supplied ``rho_fixed`` in C/m^3, if the case supplies one. Continuous
-        by construction — it is a smeared field — so it is written node-centred.
-    relative_permittivity
-        ``eps_r`` as the form used it, if the caller can build it. Written
-        cell-centred: it jumps by a factor of about 24 across the membrane.
-
-    Returns
-    -------
-    FieldExport
-        The paths written and the attribute names in each, for the manifest.
-
-    Notes
-    -----
-    The ``2 pi`` of the axisymmetric measure is not applied here; see the module
-    docstring.
-    """
     directory.mkdir(parents=True, exist_ok=True)
     mesh = solution.space.mesh
     model = solution.model
@@ -440,8 +231,7 @@ def export_fields(
     omega = p2_nodes(mesh)
     omega_w = p2_nodes(mesh, materials=fluid)
 
-    # One set of carrier spaces for the whole export: two orders and two
-    # dimensions at most, where a space per sampled field would be a dozen.
+    # One set of carrier spaces for the whole export.
     carriers: dict[tuple[int, int], FESpace] = {}
     whole: dict[str, np.ndarray] = {}
     restricted: dict[str, np.ndarray] = {}

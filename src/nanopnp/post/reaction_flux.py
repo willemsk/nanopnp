@@ -1,21 +1,4 @@
-"""The variational reaction flux (NUM-25).
-
-The assembled residual, evaluated against a test function that is 1 on a
-Dirichlet boundary and 0 elsewhere, *is* the flux through that boundary. For the
-weak form ``R(u; v) = 0`` satisfied on the free degrees of freedom, the residual
-that survives on the constrained ones equals the boundary term integrated
-against ``v`` — so no post-processing of a gradient is involved and none of the
-accuracy of one is lost.
-
-This matters far beyond convenience. Continuous-Galerkin fluxes are not
-pointwise conservative, so a current obtained by integrating the flux over an
-interior cross-section varies between cross-sections by amounts that can exceed
-the rectification signal at low bias (NUM-23). The reaction flux and the
-domain-indicator form of NUM-24 are the two routes this project is allowed to
-use, and their agreement is a CI gate (VER-11, QR-04).
-
-Hughes, Engel, Mazzei & Larson, *J. Comput. Phys.* **163**, 467 (2000).
-"""
+"""The variational reaction flux (NUM-25)."""
 
 from __future__ import annotations
 
@@ -29,30 +12,6 @@ def boundary_indicator(
     component: int | None = None,
     value: Expression = 1.0,
 ) -> GridFunction:
-    """Return the finite-element function equal to ``value`` on ``boundary``, 0 elsewhere.
-
-    It must be built by interpolation, never by setting the boundary degrees of
-    freedom to 1: NGSolve's higher-order basis is **hierarchical**, so its shape
-    functions do not form a partition of unity. Summing the P2 basis functions
-    along a boundary edge integrates to 11/12 of its length, not to its length,
-    and a reaction flux normalised on that assumption is wrong by 8.3 % at every
-    refinement level - a mesh-independent error that looks convincingly like a
-    modelling difference rather than a bug.
-
-    On a product space, ``component`` selects the field whose flux is wanted and
-    leaves every other block at zero, so that the inner product picks out one
-    equation's residual rather than the sum over all of them. It is also the
-    only way to interpolate at all there: a compound space has no boundary
-    evaluator of its own, and ``Set`` on it raises.
-
-    ``value`` is 1 for a scalar field, which is the NUM-25 current. A **vector**
-    field needs a vector: ``ngsolve.CF(1.0)`` cannot fill a ``VectorH1`` block,
-    and the axial reaction force of NUM-28 pairs the momentum residual with
-    ``e_z``, that is with ``(0, 1)`` in the ``(r, z)`` half-plane. Written as a
-    coefficient function so that a direction varying along the boundary — which
-    a torque or a radial force would need — is expressible without a second
-    entry point.
-    """
     import ngsolve as ngs
 
     indicator = ngs.GridFunction(space, name=f"psi_{boundary}")
@@ -74,51 +33,6 @@ def boundary_reaction_flux(
     value: Expression = 1.0,
     load_form: AssembledForm | None = None,
 ) -> float:
-    """Return the reaction flux of a converged solution through one boundary.
-
-    Parameters
-    ----------
-    residual_form
-        A ``BilinearForm`` holding the operator of the solved problem, written
-        in the trial function.
-    solution
-        The converged solution.
-    boundary
-        Boundary-name regular expression to integrate over. Its degrees of
-        freedom must be the constrained ones of the solve, which is checked.
-    component
-        Index of the field to take the flux of, on a product space. The check
-        and the indicator are then made on that component's own space, so a
-        coupled solve whose *other* fields are free on the boundary — the
-        blocked anion of VER-16 is exactly that — still yields the flux of the
-        field that is constrained there.
-    value
-        The value the test function takes on the boundary; see
-        :func:`boundary_indicator`. 1 for a scalar flux, ``(0, 1)`` for the
-        axial component of a vector field's reaction — which is the NUM-28
-        hydrodynamic force on a no-slip body.
-    load_form
-        The assembled ``LinearForm`` of the problem, if it has one. The residual
-        is ``a(u, v) - f(v)``; omitting ``f`` where the problem has a source
-        biases the flux by ``int f psi`` over the boundary-adjacent elements.
-        Pass ``None`` only for a form written with a zero right-hand side, as
-        the nonlinear Poisson-Boltzmann residual is.
-
-    Returns
-    -------
-    float
-        ``int_boundary (sigma.n) . value ds`` in the units of the form, with
-        ``n`` the outward normal and ``sigma.n`` the equation's own boundary
-        traction — ``grad u . n`` for a scalar diffusion operator.
-
-    Raises
-    ------
-    ValueError
-        If ``boundary`` matches nothing in the mesh, or if any of its degrees of
-        freedom are free. The identity holds only where the solve constrained
-        them; on a free boundary the residual is not the boundary flux and this
-        would otherwise return a plausible wrong number (NUM-25, QR-12).
-    """
     import ngsolve as ngs
 
     space = solution.space
