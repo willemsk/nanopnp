@@ -8,11 +8,13 @@ import tomllib
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+import pytest
+
 REPOSITORY = Path(__file__).resolve().parents[2]
 
 
-def _collected(marker: str) -> set[str]:
-    result = subprocess.run(
+def _collect(marker: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
         [
             sys.executable,
             "-m",
@@ -31,23 +33,18 @@ def _collected(marker: str) -> set[str]:
         timeout=300,
         check=False,
     )
-    return {line for line in result.stdout.splitlines() if "::" in line}
 
 
 def test_l3_the_marker_shards_partition_the_selection_with_no_overlap() -> None:
-    with ThreadPoolExecutor(max_workers=3) as pool:
-        selections = [
-            pool.submit(_collected, marker)
-            for marker in (
-                "tier1 and not slow",
-                "tier2 and not slow",
-                "(tier1 or tier2) and not slow",
-            )
-        ]
-    first, second, both = (selection.result() for selection in selections)
-    assert first and second
-    assert not first & second
-    assert first | second == both
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        selected = pool.submit(_collect, "(tier1 or tier2) and not slow")
+        both = pool.submit(_collect, "tier1 and tier2")
+    selection, overlap = selected.result(), both.result()
+    assert selection.returncode == 0, selection.stdout[-2000:] + selection.stderr[-2000:]
+    assert any("tests/tier1/" in line for line in selection.stdout.splitlines())
+    assert any("tests/tier2/" in line for line in selection.stdout.splitlines())
+    assert overlap.returncode == pytest.ExitCode.NO_TESTS_COLLECTED, overlap.stdout[-2000:]
+    assert "::" not in overlap.stdout
 
 
 def test_l3_the_ci_workflow_runs_the_two_tiers_as_its_shards() -> None:
