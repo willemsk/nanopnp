@@ -1501,6 +1501,22 @@ set, cached **on the mesh object**: `ngsolve.comp.Mesh` is unhashable, so a `Wea
 raises `TypeError`, but it takes attributes and weak references, and the mesh ↔ sampler reference
 cycle is collected with the mesh. **[tested]**
 
+**Gate constants** (`numerics/gates.py`, `numerics/linear.py`). **[tested]**
+
+- `INTERIOR_OFFSET = 1e-4`: sample points are pulled towards their element's centroid by this
+  fraction, because a vertex or midpoint on the fluid/solid interface can resolve into the solid
+  element, where a fluid-only concentration evaluates to 0, not positive. On the analytic pore at
+  `maxh` 6 nm and 2 nm, 1e-6 still resolves into the solid and 1e-5 is the first fraction that does
+  not; 1e-4 keeps an order of margin and moves a P2 sample by 1e-4 of the field's variation across
+  the element.
+- `PACKING_WARNING = 0.8` is not a specified threshold; it leaves a log trace before `Phi = 1`.
+- `MINIMUM_WALL_DISTANCE_NM = -1e-3` (NUM-34): zero would gate the rounding mode, since
+  `GridFunction.Set` leaves an interior residual of a few 1e-4 nm of platform-dependent sign;
+  `-P2 = -1e-2` nm is the ion wall function's root, so a gate there admits `D = 0` and restates a
+  fitted coefficient. At `d = -1e-3` the PHY-02 clamp absorbs 5.8e-3 (unclamped `1 - exp(-0.0558)
+  = 0.0543` against the clamped 0.0601).
+- The Poisson diagonal block scales as `1/lambda~^2`, 130 at 3 M and a 2 nm pore (NUM-10).
+
 ---
 
 ## 9. Unverified / to measure
