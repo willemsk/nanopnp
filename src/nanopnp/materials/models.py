@@ -1,18 +1,4 @@
-"""The correction-model registry (FR-16, ADR-005, section 5.4.2).
-
-A correction model is named by string in the case file and resolved here. Its
-coefficients live in a versioned data file under ``data/corrections``; adding an
-electrolyte is therefore a data file, never a code change.
-
-Disabling a correction selects the registered ``none`` model rather than taking
-a code branch (PHY-22). That is what makes classical PNP-NS a *configuration* of
-ePNP-NS (PHY-21) and what makes correction-by-correction ablation a sweep rather
-than a rebuild.
-
-Every model returns the **dimensionless** factor ``f_c(c_bar) * f_w(d_bar)``.
-The reference value ``X0`` that it multiplies belongs to the electrolyte, not to
-the correction, so that ``none`` reproduces ``X = X0`` exactly.
-"""
+"""The correction-model registry (FR-16, ADR-005, section 5.4.2)."""
 
 from __future__ import annotations
 
@@ -30,64 +16,27 @@ from nanopnp.materials.corrections import (
 from nanopnp.materials.forms import NUMPY_OPS, MathOps, Numeric, get_form
 
 PropertyKind: TypeAlias = Literal["diffusivity", "mobility", "viscosity", "density", "permittivity"]
-"""The five corrected properties of PHY-11."""
 
 SPECIES_PROPERTIES: frozenset[str] = frozenset({"diffusivity", "mobility"})
-"""Properties whose coefficients are per ion; the rest belong to the solvent."""
 
 
 class CorrectionModel(Protocol):
-    """One property's correction, as section 5.4.2 requires it.
-
-    Implementations are immutable and carry their own provenance, so that a
-    result can record which parameter file and which model version produced it
-    (FR-25).
-    """
+    @property
+    def name(self) -> str: ...
 
     @property
-    def name(self) -> str:
-        """Registered name of the model."""
-        ...
+    def parameters(self) -> Mapping[str, float]: ...
 
     @property
-    def parameters(self) -> Mapping[str, float]:
-        """Fit coefficients in force, flattened for reporting."""
-        ...
-
-    @property
-    def provenance(self) -> Mapping[str, str]:
-        """Where the coefficients came from."""
-        ...
+    def provenance(self) -> Mapping[str, str]: ...
 
     def evaluate(
         self, c_avg_M: Numeric, wall_distance_nm: Numeric, ops: MathOps = NUMPY_OPS
-    ) -> Numeric:
-        """Return the dimensionless correction factor.
-
-        Parameters
-        ----------
-        c_avg_M
-            Correction driver ``<c>`` in mol/L, the unit the fits are stated in.
-            The suffix is part of the name because this is *not* the solver's
-            SI unit: passing mol/m^3 here would silently clamp to the 5.3 M cap.
-        wall_distance_nm
-            Distance to the nearest pore boundary in nm (PHY-02), likewise the
-            unit the fits are stated in rather than the SI one.
-        ops
-            Operation namespace: NumPy for diagnostics and tests, NGSolve for
-            assembly.
-        """
-        ...
+    ) -> Numeric: ...
 
 
 @dataclass(frozen=True)
 class NoCorrection:
-    """The ``none`` model: the property keeps its reference value everywhere.
-
-    Selecting this for every property, together with ``beta_i = 0``, recovers
-    classical PNP-NS exactly (PHY-21).
-    """
-
     property_kind: PropertyKind
     species: str | None = None
 
@@ -112,12 +61,6 @@ class NoCorrection:
 
 @dataclass(frozen=True)
 class FittedCorrection:
-    """A correction read from a versioned parameter file.
-
-    The concentration and wall parts are independently switchable, matching the
-    case-file vocabulary ``{model: ..., wall: true, concentration: true}``.
-    """
-
     name: str
     property_kind: PropertyKind
     species: str | None
@@ -142,9 +85,7 @@ class FittedCorrection:
 
     @property
     def provenance(self) -> Mapping[str, str]:
-        # FR-25 requires every switch set away from the validated default to be
-        # recorded. Reporting the form a file *offers* rather than the one in
-        # force would make an ablated run indistinguishable from the full one.
+        # the form in force, not the one the file offers, or an ablated run looks full
         record = {
             "model": self.name,
             "property": self.property_kind,
@@ -164,7 +105,6 @@ class FittedCorrection:
 
     @staticmethod
     def _active_form(form: str | None, enabled: bool) -> str:
-        """Return the form actually evaluated, or ``"off"`` if it is switched out."""
         return form if enabled and form is not None else "off"
 
     def evaluate(
@@ -172,68 +112,34 @@ class FittedCorrection:
     ) -> Numeric:
         factor: Numeric = 1.0
         if self.use_concentration and self.concentration_form is not None:
-            # PHY-13: the fits hold to 5.3 M and every property is capped at its
-            # value there. Clamping the driver is how that cap is applied, and it
-            # also keeps the half-integer powers away from negative arguments.
+            # clamping the driver applies the cap and keeps sqrt away from negatives
             lower, upper = self.validity_M
             clamped = ops.clip(c_avg_M, lower, upper)
             factor = get_form(self.concentration_form)(self.concentration_params, clamped, ops)
         if self.use_wall and self.wall_form is not None:
-            # PHY-02: the wall fits are stated for d >= 0, and the ion form
-            # ``1 - exp(-P1 (d + P2))`` has its root at ``d = -P2`` rather than
-            # decaying to zero -- so a negative sample does not attenuate D_i
-            # and mu_i, it reverses their sign. A distance is non-negative by
-            # definition, so a negative sample is a discretisation artefact
-            # whose nearest admissible value is zero. Clamped here, on the
-            # driver, so that a new electrolyte's wall fit inherits it by
-            # shipping a YAML file; the *factor* is deliberately not clamped,
-            # because a factor floored at zero is a degenerate operator rather
-            # than an attenuated one. NUM-34, not this floor, decides whether
-            # a field that needed it is admissible at all.
+            # a negative distance sample reverses D_i's sign (SPECIFICATION PHY-02); the
+            # driver is floored, not the factor, which would be a degenerate operator
             floored = ops.clip(wall_distance_nm, 0.0, None)
             factor = factor * get_form(self.wall_form)(self.wall_params, floored, ops)
         return factor
 
 
 ModelBuilder: TypeAlias = Callable[[PropertyKind, str | None, bool, bool], CorrectionModel]
-"""Builds one property's model: ``(property, species, concentration, wall)``."""
 
 _REGISTRY: dict[str, ModelBuilder] = {}
 
 
 def register(name: str, builder: ModelBuilder) -> None:
-    """Register a correction model under ``name``.
-
-    Raises
-    ------
-    ValueError
-        If the name is already registered, which would silently change the
-        meaning of existing case files.
-    """
     if name in _REGISTRY:
         raise ValueError(f"correction model {name!r} is already registered")
     _REGISTRY[name] = builder
 
 
 def registered_models() -> tuple[str, ...]:
-    """Return every selectable model name, sorted.
-
-    That is the explicitly registered builders plus every parameter file
-    installed under ``data/corrections``: a new electrolyte becomes selectable
-    by shipping its YAML, with no edit to this module (FR-16, ADR-005).
-    """
     return tuple(sorted(set(_REGISTRY) | set(available_corrections())))
 
 
 def _resolve(name: str) -> ModelBuilder:
-    """Return the builder for ``name``, registering a file-backed one on demand.
-
-    Raises
-    ------
-    KeyError
-        If neither a builder nor a parameter file of that name exists; the
-        message lists the names that are selectable.
-    """
     builder = _REGISTRY.get(name)
     if builder is not None:
         return builder
@@ -253,27 +159,6 @@ def create(
     concentration: bool = True,
     wall: bool = True,
 ) -> CorrectionModel:
-    """Build the model registered as ``name`` for one property.
-
-    Parameters
-    ----------
-    name
-        Registered model name, ``"none"`` to disable the correction.
-    property_kind
-        Which property the model is being built for.
-    species
-        Ion name for ``diffusivity`` and ``mobility``; ``None`` otherwise.
-    concentration, wall
-        Whether the respective part of the correction is active.
-
-    Raises
-    ------
-    KeyError
-        If no such model is registered; the message lists the known names.
-    ValueError
-        If ``species`` is given for a solvent property or omitted for an ionic
-        one.
-    """
     if (species is not None) != (property_kind in SPECIES_PROPERTIES):
         expected = "an ion name" if property_kind in SPECIES_PROPERTIES else "no species"
         raise ValueError(f"property {property_kind!r} takes {expected}, got species={species!r}")
@@ -288,28 +173,14 @@ def _build_none(
 
 
 def _document(model_name: str) -> CorrectionDocument:
-    """Return the validated parameter file as it is on disk now.
-
-    Not cached by name: ``load_corrections`` already caches the parse by file
-    text, and a name-keyed cache would serve the fit coefficients a long-lived
-    process read first after an edit the stage-8 key has already seen, storing
-    old fits beside new reference values under the new key.
-    """
     return load_corrections(model_name)
 
 
 def validity_range(document: CorrectionDocument) -> tuple[float, float]:
-    """Return a parameter file's concentration validity range, in mol/L.
-
-    The range is a required field of the schema and a property of the fits in
-    *that* file: silently borrowing NaCl's 0-5.3 M would extrapolate another
-    electrolyte past its own limit with no gate failure (PHY-13, QR-12).
-    """
     return document.concentration_validity_M
 
 
 def applied_parts(model_name: str, property_kind: PropertyKind) -> frozenset[str]:
-    """Return the parts ('concentration', 'wall') that model_name applies for property_kind."""
     if model_name == "none":
         return frozenset()
     document = _document(model_name)
@@ -338,20 +209,12 @@ def applied_parts(model_name: str, property_kind: PropertyKind) -> frozenset[str
 
 
 def applies_part(model_name: str, property_kind: PropertyKind, part: str) -> bool:
-    """Return whether model_name applies the given part for property_kind."""
     return part in applied_parts(model_name, property_kind)
 
 
 def _property_node(
     document: CorrectionDocument, kind: PropertyKind, species: str | None
 ) -> PropertyBlock:
-    """Return the parameter block for one property.
-
-    Raises
-    ------
-    KeyError
-        If the file carries no coefficients for that species.
-    """
     if kind not in SPECIES_PROPERTIES:
         solvent: dict[str, PropertyBlock] = {
             "viscosity": document.solvent.viscosity,
@@ -368,7 +231,6 @@ def _property_node(
 
 
 def _file_backed_builder(model_name: str) -> ModelBuilder:
-    """Return a builder reading its coefficients from a packaged parameter file."""
 
     def build(
         property_kind: PropertyKind, species: str | None, concentration: bool, wall: bool
@@ -376,8 +238,7 @@ def _file_backed_builder(model_name: str) -> ModelBuilder:
         document = _document(model_name)
         node = _property_node(document, property_kind, species)
         fc = node.fc
-        # Diffusivity and mobility share one ion wall function (PHY-11); the
-        # solvent properties carry their own, or none at all.
+        # diffusivity and mobility share one ion wall function (PHY-11)
         if property_kind in SPECIES_PROPERTIES:
             fw: FitBlock | None = document.ion_wall_function
         else:

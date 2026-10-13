@@ -57,7 +57,7 @@ Every strip item: done when `same_tree.py HEAD~1` passes on its commit and the c
 - [x] 2. `src/nanopnp/core/` with `src/nanopnp/__init__.py`.
 - [x] 3. `src/nanopnp/io/`.
 - [x] 4. `src/nanopnp/numerics/`.
-- [ ] 5. `src/nanopnp/materials/`.
+- [x] 5. `src/nanopnp/materials/`.
 - [ ] 6. `src/nanopnp/physics/`.
 - [ ] 7. `src/nanopnp/solve/`.
 - [ ] 8. `src/nanopnp/post/`.

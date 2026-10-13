@@ -312,6 +312,10 @@ as the **25 % contour**. Do not confuse the two sharpness factors (0.93 for the 
   against the second is a *different operator* from the one that was solved. Any post-processing that
   rebuilds the flux — the ψ-indicator current does — or any warm start that re-solves a converged
   state must read `d` back off the solution. **[tested]**
+- **The Langevin function switches to its `x/3` limit at `x = 3e-4`.** `coth(x) - 1/x` has relative
+  error about `3 eps / x^2` and the series `x/3` has `x^2/15`; they cross near `3e-4`, both accurate to
+  about 7e-9. A cutoff of 1e-8 is inside the cancellation region: `L(1.1e-8)` evaluates to exactly zero
+  instead of 3.667e-9. **[tested]** (source: `materials/forms.py`, `_LANGEVIN_SERIES_CUTOFF`)
 
 ---
 
