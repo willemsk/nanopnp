@@ -1,0 +1,59 @@
+name: Tiers 1 and 2 with --extended
+description: >-
+  The steps of the `platforms` and `full-matrix` jobs of ci.yml (section 7.6;
+  section 8.2.10 J4, J10): install uv, the system libraries and the extras, then
+  run Tiers 1 and 2 with --extended, and the GUI widget file serially where
+  PySide6 imports. The checkout and the job's environment stay in the job.
+inputs:
+  python-version:
+    description: The interpreter to run on.
+    required: true
+  code:
+    description: "'true' when the change is not prose-only; otherwise every step is skipped."
+    required: true
+  walks-only:
+    description: "'true' to run the extended walks alone (the development selection passed in the pull request)."
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - uses: astral-sh/setup-uv@v7
+      if: inputs.code == 'true'
+      with:
+        enable-cache: true
+        python-version: ${{ inputs.python-version }}
+    - uses: awalsh128/cache-apt-pkgs-action@v1.6.3
+      if: inputs.code == 'true' && runner.os == 'Linux'
+      with:
+        packages: ${{ env.GMSH_APT_PACKAGES }}
+        version: "1"
+    - if: inputs.code == 'true'
+      shell: bash
+      run: uv sync --all-extras
+    # CON-13 names Windows, macOS and Linux. Qt's platform plugin works unaided on
+    # the first two, so `offscreen` is all the widget tests of
+    # tests/tier1/test_gui_widgets.py need there; on ubuntu-latest PySide6 does not
+    # import at all (no libEGL) and those tests skip themselves. Installing system
+    # packages to change that would buy Linux widget coverage at the price of a
+    # portability promise per runner image (.knowledge/07-software-stack.md
+    # section 5).
+    - if: inputs.code == 'true'
+      shell: bash
+      run: |
+        walks=()
+        if [[ $WALKS_ONLY == true ]]; then
+          echo "The development selection passed on this tree in its pull request; the walks alone run."
+          walks=(-m "(tier1 or tier2) and extended and not slow")
+        fi
+        uv run pytest -rs -n auto --dist loadfile --ignore=tests/tier1/test_gui_widgets.py \
+          --extended "${walks[@]}"
+      env:
+        QT_QPA_PLATFORM: offscreen
+        WALKS_ONLY: ${{ inputs.walks-only }}
+    # A nonzero exit here, 5 ("no tests ran") included, is a real failure: on
+    # these two runners the module must import and run.
+    - if: inputs.code == 'true' && runner.os != 'Linux'
+      shell: bash
+      run: uv run pytest -rs tests/tier1/test_gui_widgets.py
+      env:
+        QT_QPA_PLATFORM: offscreen

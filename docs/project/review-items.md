@@ -829,9 +829,7 @@ coverage and the `extended` walks without it, 4 cores, a quiet machine) took 555
 §7.6's runtime NOTE without breaking its headroom rule. A follow-up after a pass is bounded below by
 the same walk whenever the change reaches a process-starting test (REV-80).
 
-**Open.** The author's ruling (J7): re-set the push gate's budget to the measured floor with its
-margin, or split example 07's walk so it runs in parallel parts. The gate logs the time and never
-fails on it, so nothing is blocked meanwhile.
+**Fixed.** The author's ruling (J7), taken on the recommendation: `push_gate_s` is 600 s, the measured floor with room for example 07's walk (§8.2.10 J7 amended; VER-73; `.github/budgets.yaml`). The gate still logs the time and never fails on it. Splitting the walk stays open as a way to a lower figure.
 
 ### REV-83 — The longest-first test order is inert under xdist file scheduling
 
@@ -845,9 +843,7 @@ cores took 534 s and 512 s with the order, 477 s without it and 474 s with the o
 bounded by example 07's 421 to 477 s. The shards' bin-packing reads the same record and is
 unaffected.
 
-**Open.** Pass `--no-loadscope-reorder` wherever the suite runs in parallel, so the order does what
-D8 meant, or drop the order and keep the record for the shards alone. Neither moves the push gate
-off example 07's floor (REV-82).
+**Fixed.** The sort is dropped from `tests/conftest.py`: collection keeps pytest's own order (`--ff`, `--nf` and fixture grouping stand), and `tests/durations.json` serves the shards' packing alone (`.knowledge/07` §12.2).
 
 **Also found in review.** The same sort in `tests/conftest.py` runs `trylast` over every item, so it
 overrides the order that `pytest --ff` and `--nf` produce and undoes pytest's own fixture-grouping
@@ -864,10 +860,7 @@ tests of WP43 read `.claude/agents/*.md`, `.claude/skills/*/SKILL.md`, `.claude/
 CI's `changes` job skips the test steps and reports green, and the commit gate runs ruff alone, so
 a roster or In brief test never runs on it.
 
-**Open.** Listing these paths as code would make every `/wp-plan` commit, which edits
-`docs/plans/`, pay the full gate, where the skills document it as ruff-alone. Either run only the
-tests that read them (the impact selection already selects a file's readers), or accept the gap and
-leave the nightly run to catch it. The author's ruling.
+**Fixed.** The author's ruling, taken on the recommendation: `.claude/agents/`, `.claude/skills/`, `.claude/rules/` and `docs/plans/` are not prose in `.github/scripts/prose-only.sh`, so a change to only those runs the tests that read them, by the impact selection in the commit hook and by the shards in CI (`test_prose_only_reads_a_findings_log_as_not_prose`). A `/wp-plan` commit now pays that selection, or the development selection when no map is usable.
 
 ### REV-85 — tests/impact.py uses os.path against the coding conventions
 
@@ -877,8 +870,7 @@ leave the nightly run to catch it. The author's ruling.
 `tests/impact.py` uses `os.path.realpath`, `join`, `split` and `basename` at about ten sites, some
 of them in the recorder's per-event callbacks, where a `Path` object per call would cost.
 
-**Open.** Replace them outside the hot path, and measure the callbacks before changing those.
-The recorder's overhead is 1 to 2 % today (WP43 item 1).
+**Fixed.** `Path` replaces every `os.path` call in `tests/impact.py`. The per-event callbacks already look a path up in the `relpaths` and `identities` caches, so a `Path` is built on a miss only.
 
 ### REV-86 — ci.yml repeats the steps of the platforms job in the full-matrix job
 
@@ -888,5 +880,4 @@ The `platforms` and `full-matrix` jobs share about 45 lines of near-identical st
 `full-matrix` sets `WALKS_ONLY: "false"` and keeps the `walks=(...)` branch that can therefore never
 run there. A later change to one job's steps is easily missed in the other.
 
-**Open.** Share the steps (a composite action or a reusable workflow) in a package that touches
-`ci.yml` for another reason; nothing is wrong today.
+**Fixed.** The shared steps are the composite action `.github/actions/tier12`, which `platforms` and `full-matrix` both use; the dead `WALKS_ONLY` branch no longer exists in the full matrix (its `walks-only` input defaults to false).

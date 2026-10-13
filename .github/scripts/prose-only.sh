@@ -14,6 +14,11 @@
 #   SPECIFICATION.md, docs/project/modularity.md, docs/project/review-items.md
 #               the pages VER-63 reads beside a log: a ruling names a section 8.2
 #               row, and a finding links to a report heading (section 8.2.8 H12).
+#   .claude/agents/ .claude/skills/ .claude/rules/ docs/plans/
+#               the roster, skill, rule and plan pages whose frontmatter, tools,
+#               paths and `## In brief` caps tests/tier1/test_agent_roster.py
+#               reads (REV-84). A change to only these runs the tests that read them
+#               (tests/impact.py selects a file's readers), not the whole suite.
 # docs/ is NOT prose as a directory: docs/sweeps/ and docs/validation/ hold the
 # YAML that tests/tier1 reads (the section 8.3 reference sweep, the frozen
 # cases, the probe grid). Only its Markdown is.
@@ -26,6 +31,7 @@ while IFS= read -r path; do
     case $path in
         packaging/* | src/* | data/* | examples/*) exit 1 ;;
         *findings.md) exit 1 ;;
+        .claude/agents/* | .claude/skills/* | .claude/rules/* | docs/plans/*) exit 1 ;;
         SPECIFICATION.md | docs/project/modularity.md | docs/project/review-items.md) exit 1 ;;
         *.md) ;;
         *) exit 1 ;;

@@ -51,7 +51,7 @@ def test_ver73_the_budgets_are_j7s_and_the_ceiling_and_margin_the_plans() -> Non
     budgets = yaml.safe_load((REPOSITORY / ".github/budgets.yaml").read_text(encoding="utf-8"))
     assert budgets == {
         "commit_hook_s": 60,
-        "push_gate_s": 300,
+        "push_gate_s": 600,
         "pull_request_critical_path_s": 360,
         "file_ceiling_s": 90,
         "margin": 0.5,

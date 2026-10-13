@@ -105,9 +105,9 @@ Link the planned package and its live dependencies; its word target is in its *H
 
 1. A needed spec amendment goes in the same commit, and the plan says so.
 2. Commit on the working branch (on `main`, switch to the branch this session was given, or stop
-   and ask): `docs: WP<n> implementation plan`, identifiers in the body. A prose-only change runs
-   ruff alone (`CLAUDE.md`, *Commands*); a plan that also commits planned tests or code pays the
-   whole gate, and each planned test must report `xfailed`, not `error`. Then
+   and ask): `docs: WP<n> implementation plan`, identifiers in the body. A plan-only change runs
+   ruff and the tests that read plans (`CLAUDE.md`, *Commands*); a plan that also commits planned
+   tests or code pays the whole gate, and each planned test must report `xfailed`, not `error`. Then
    `git push -u origin <branch>`: another session on another machine may work from it.
 3. Report the path, the close calls, any spec amendment, the `[Opus]` items and planned tests, and
    the open questions. Then stop; implementation is `/wp-implement`, a separate turn.

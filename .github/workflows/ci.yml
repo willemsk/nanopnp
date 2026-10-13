@@ -403,55 +403,21 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: ["3.14"]
     env:
-      CODE: ${{ needs.changes.outputs.code }}
       NANOPNP_REQUIRE_APBS: ${{ matrix.os == 'windows-latest' && '0' || '1' }}
-      WALKS_ONLY: ${{ matrix.os == 'ubuntu-latest' && needs.changes.outputs.dev == 'false' }}
     steps:
       - uses: actions/checkout@v5
         with:
           ref: ${{ inputs.ref }}
           fetch-depth: 0
-      - uses: astral-sh/setup-uv@v7
-        if: env.CODE == 'true'
+      - uses: ./.github/actions/tier12
         with:
-          enable-cache: true
           python-version: ${{ matrix.python-version }}
-      - uses: awalsh128/cache-apt-pkgs-action@v1.6.3
-        if: env.CODE == 'true' && runner.os == 'Linux'
-        with:
-          packages: ${{ env.GMSH_APT_PACKAGES }}
-          version: "1"
-      - if: env.CODE == 'true'
-        run: uv sync --all-extras
-      # CON-13 names Windows, macOS and Linux. Qt's platform plugin works
-      # unaided on the first two, so `offscreen` is all the widget tests of
-      # tests/tier1/test_gui_widgets.py need there; on ubuntu-latest PySide6
-      # does not import at all (no libEGL) and those tests skip themselves.
-      # Installing system packages to change that would buy Linux widget
-      # coverage at the price of a portability promise per runner image
-      # (.knowledge/07-software-stack.md section 5).
-      - if: env.CODE == 'true'
-        shell: bash
-        run: |
-          walks=()
-          if [[ $WALKS_ONLY == true ]]; then
-            echo "The development selection passed on this tree in its pull request; the walks alone run."
-            walks=(-m "(tier1 or tier2) and extended and not slow")
-          fi
-          uv run pytest -rs -n auto --dist loadfile --ignore=tests/tier1/test_gui_widgets.py \
-            --extended "${walks[@]}"
-        env:
-          QT_QPA_PLATFORM: offscreen
-      # A nonzero exit here, 5 ("no tests ran") included, is a real failure: on
-      # these two runners the module must import and run.
-      - if: env.CODE == 'true' && runner.os != 'Linux'
-        run: uv run pytest -rs tests/tier1/test_gui_widgets.py
-        env:
-          QT_QPA_PLATFORM: offscreen
+          code: ${{ needs.changes.outputs.code }}
+          walks-only: ${{ matrix.os == 'ubuntu-latest' && needs.changes.outputs.dev == 'false' }}
 
   # Before a release (`full: true`): Tiers 1 and 2 with --extended on the three
   # platforms and every supported Python (QR-09, CON-13; section 7.6). The steps
-  # are the `platforms` job's.
+  # are the `platforms` job's: the composite action .github/actions/tier12.
   full-matrix:
     name: full tier 1-2 (${{ matrix.os }}, py${{ matrix.python-version }})
     needs: changes
@@ -464,42 +430,16 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: ["3.11", "3.12", "3.13", "3.14"]
     env:
-      CODE: ${{ needs.changes.outputs.code }}
       NANOPNP_REQUIRE_APBS: ${{ matrix.os == 'windows-latest' && '0' || '1' }}
-      WALKS_ONLY: "false"
     steps:
       - uses: actions/checkout@v5
         with:
           ref: ${{ inputs.ref }}
           fetch-depth: 0
-      - uses: astral-sh/setup-uv@v7
-        if: env.CODE == 'true'
+      - uses: ./.github/actions/tier12
         with:
-          enable-cache: true
           python-version: ${{ matrix.python-version }}
-      - uses: awalsh128/cache-apt-pkgs-action@v1.6.3
-        if: env.CODE == 'true' && runner.os == 'Linux'
-        with:
-          packages: ${{ env.GMSH_APT_PACKAGES }}
-          version: "1"
-      - if: env.CODE == 'true'
-        run: uv sync --all-extras
-      - if: env.CODE == 'true'
-        shell: bash
-        run: |
-          walks=()
-          if [[ $WALKS_ONLY == true ]]; then
-            echo "The development selection passed on this tree in its pull request; the walks alone run."
-            walks=(-m "(tier1 or tier2) and extended and not slow")
-          fi
-          uv run pytest -rs -n auto --dist loadfile --ignore=tests/tier1/test_gui_widgets.py \
-            --extended "${walks[@]}"
-        env:
-          QT_QPA_PLATFORM: offscreen
-      - if: env.CODE == 'true' && runner.os != 'Linux'
-        run: uv run pytest -rs tests/tier1/test_gui_widgets.py
-        env:
-          QT_QPA_PLATFORM: offscreen
+          code: ${{ needs.changes.outputs.code }}
 
   # QR-09's evidence for Python 3.11 to 3.13 between releases: each installs its
   # dependencies from wheels alone and runs Tier 1. RECORDED, NOT GATED (section
