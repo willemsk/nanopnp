@@ -1,22 +1,21 @@
 # Current work
 
-Updated 13 October 2026 (WP44 implemented; review pending). Navigation only; `SPECIFICATION.md` governs;
+Updated 13 October 2026 (WP44 merged; WP45 planned). Navigation only; `SPECIFICATION.md` governs;
 an unmerged branch is not shipped.
 
 ## In brief
 
 The project is in Phase 4, which tidies the program before anyone else relies on it. The package
-meant to speed up the automatic checks was merged, but it did not deliver: commits still wait two
-to four minutes, and the session that built it cost about four times a normal one. You have ruled
-a simpler course. Two packages were ruled. The first, now built and awaiting review, swapped the clever machinery for
-plain rules: a commit runs the style checks and every quick test, the full check runs once before a push, plans
-stay under a page and a half, and cheaper AI models do routine work. The second removes most
-comments and explanations from the code and proves by machine that nothing else changed.
-You ruled that the rule blocking a push until the full check passed stays, that two agent helpers
-stay (the log reader on the cheapest model), and that the prose strip tries a fresh helper per step,
-whose cost you then compare with this package's. Saving keeps running every quick test, as you ruled.
-**Your call:** does the phase still fit its four to six weeks after the two inserted packages?
-*Recommendation:* yes, since both are small and remove work from later packages.
+that simplified the automatic checks is merged: saving runs the style checks and every quick test,
+and sharing runs everything once beforehand. The next package, now planned, removes most of the
+explanation written inside the code, which is a third of the source and a fifth of the tests,
+keeping it on the parts other people call and moving any fact recorded nowhere else into the
+knowledge base. A machine check proves for every file that no instruction changed, and a new test
+stops the explanation growing back. Each step goes to a fresh helper, as you ruled, so you can
+compare this package's cost with the last one's and decide whether later packages work this way.
+**Your call:** about four hundred tests name their requirement only in their explanation; keep
+that name as a one-line note now and rename the tests later? *Recommendation:* yes, since renaming
+changes code, which this package proves it never does.
 
 ## Position
 
@@ -24,13 +23,12 @@ whose cost you then compare with this package's. Saving keeps running every quic
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
   **in progress** (§8.2.7 G1–G11; §8.2.8 H1–H12; §8.2.9 I1–I5; §8.2.10 J1–J12). WP35 to WP42 are
   delivered, as `v0.5.0-alpha.1` to `.8`.
-- **WP43, the development loop**, is merged ([wp43-development-loop.md](wp43-development-loop.md)); tag
-  `v0.5.0-alpha.9` is the author's step. It missed its speed budgets (REV-80, REV-81) and is
-  simplified by §8.2.11.
-- **WP44, simplify the loop** ([plan](wp44-simplify-the-loop.md)), is implemented and awaits review and
-  merge; tag `v0.5.0-alpha.10`. **Next: WP45, the prose strip** (§8.2.11 L4, L5); then WP46
-  the small fixes, WP47–WP49 (OKF bundle, backfill, protocol); the author's sessions; fixes from
-  WP50. Phase 5 (`v0.6.0`) is the GUI, Phase 6 (`v0.7.0`) validation; v1.0 is OPN-08.
+- **WP43 and WP44** ([plans](wp44-simplify-the-loop.md)) are merged; tags `v0.5.0-alpha.9` and `.10` are
+  the author's step.
+- **WP45, the prose strip** ([plan](wp45-prose-strip.md)), is **planned** (§8.2.11 L4, L5, L9; VER-75
+  added to Appendix A). Next: `/wp-implement`; then WP46 the small fixes, WP47–WP49 (OKF bundle,
+  backfill, protocol); the author's sessions; fixes from WP50. Phase 5 (`v0.6.0`) is the GUI,
+  Phase 6 (`v0.7.0`) validation; v1.0 is OPN-08.
 
 ## Not to be re-decided
 
@@ -69,6 +67,7 @@ whose cost you then compare with this package's. Saving keeps running every quic
 | Need | Read |
 |---|---|
 | The loop as shipped | `wp44-simplify-the-loop.md` |
+| The strip's rules and items | `wp45-prose-strip.md`; §8.2.11 L4, L5, L9; VER-75 |
 | Phase 4 scope and packages | `phase-4-polish-and-user-testing.md`; §8.2.6 F3–F6, §8.2.7, §8.2.8 |
 | The OKF decisions | `okf-knowledge-bundle.md` (K1–K11); §8.2.7 G3, G8, G9 |
 

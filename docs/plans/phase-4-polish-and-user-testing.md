@@ -671,7 +671,11 @@ REV-80 and REV-81 close by removal. Its numbers are reported against these predi
 enforced: commit hook about 90 s on 4 cores; push gate 8 to 9 minutes; pull-request critical path
 under 6 minutes. A miss is reported with its cause and the author rules (L8). Items are `[any]`.
 
-### WP45 — The prose strip (§8.2.11 L4, L5; VER-75 proposed)
+### WP45 — The prose strip (§8.2.11 L4, L5; VER-75)
+
+> **Planned, 13 October 2026** ([plan](wp45-prose-strip.md)). VER-75 is in Appendix A: docstrings only where
+> the rule allows them, and a share ceiling for `src/` and `tests/`. A syntax-tree check script proves
+> each commit; 27 strip items, each to a fresh worker.
 
 *Added, 13 October 2026.* Tag `v0.5.0-alpha.11`. The rule itself (`python.md`, `pyproject.toml`'s docstring
 rules, `CONTRIBUTING.md`) is WP44's. The tree, one commit per subpackage, by per-module agent
@@ -914,7 +918,7 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP42, verification | 1, 2 | VER-70, VER-71 (proposed) |
 | WP43, development loop | 1 | VER-73, VER-74 (proposed); VER-62 on Python 3.14; both withdrawn by WP44 |
 | WP44, simplify the loop | 1 | Plan-shape test; VER-73 and VER-74 withdrawn; VER-62 unchanged |
-| WP45, prose strip | 1, 2 | VER-75 (proposed); syntax-tree equality; VER-45 |
+| WP45, prose strip | 1, 2 | VER-75; syntax-tree equality; VER-45 |
 | WP46, small fixes | 1, 2 | Tests named by item; no new identifier |
 | WP47, OKF bundle | 1 | VER-68 (proposed), the F6 check |
 | WP48, OKF backfill | 1, 2 | Tests named by claim; no new identifier |
