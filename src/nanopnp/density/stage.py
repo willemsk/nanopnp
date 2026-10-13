@@ -1,16 +1,4 @@
-"""Stage 2 of section 5.2: the density map (FR-04, IF-05).
-
-The stage reads stage 1's aligned ensemble, gives every atom its CHARMM radius
-(WP19 D3), and deposits the ensemble mean of the per-frame union densities on the
-canonical grid (D4-D6). Its contract is the section 5.3.1 NOTE on
-``geometry.density``; the decisions are the WP19 plan's.
-
-**The key is ``geometry.density``, the radius set and stage 1's hash** (D11): the
-block, the set's name and the digest of its shipped file, and ε and the
-logarithm's floor, which are constants of the code that move a number. Nothing
-about the result enters it. The payload's digest is recorded in the summary and
-re-checked on load (VER-23).
-"""
+"""Stage 2 of section 5.2: the density map (FR-04, IF-05)."""
 
 from __future__ import annotations
 
@@ -52,11 +40,9 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 logger = logging.getLogger(__name__)
 
 WORKSPACE_DIRNAME = "tmp"
-"""Directory under the store root the payload is written to when no workspace is given."""
 
 
 def _density(inputs: StageInputs) -> DensitySpec:
-    """Return the case's resolved ``geometry.density``, or refuse a case without ``structure:``."""
     resolved = inputs.resolved
     if resolved.density is None:
         raise UnsupportedCaseSection(
@@ -67,7 +53,6 @@ def _density(inputs: StageInputs) -> DensitySpec:
 
 
 def density_parameters(spec: DensitySpec) -> dict[str, Canonicalisable]:
-    """Return the stage-2 key's parameters (WP19 D11)."""
     name = KERNEL_RADII[spec.kernel]
     return {
         "density": spec.model_dump(mode="json"),
@@ -78,27 +63,15 @@ def density_parameters(spec: DensitySpec) -> dict[str, Canonicalisable]:
 
 
 class DensityStage:
-    """Stage 2: an aligned ensemble to its ensemble-mean union density on a canonical grid."""
-
     name = "density"
 
     def __init__(self, *, workspace: Path | None = None) -> None:
-        """Build the stage.
-
-        Parameters
-        ----------
-        workspace
-            Directory the ``.npz`` payload is written to before the store copies it
-            in. Defaults to a fresh directory under the store root.
-        """
         self._workspace = Path(workspace) if workspace is not None else None
 
     def describe(self) -> StageDescription:
-        """Return the registry's description of this stage (FR-27)."""
         return describe(self.name)
 
     def key(self, inputs: StageInputs) -> DensityArtefact:
-        """Return the artefact key from the block, the radius set and stage 1's hash."""
         return DensityArtefact(
             parameters=density_parameters(_density(inputs)),
             inputs={"structure": inputs.require("structure").hash},
@@ -111,18 +84,6 @@ class DensityStage:
         progress: Progress | None = None,
         cancel: CancelToken | None = None,
     ) -> DensityArtefact:
-        """Deposit the density and emit the stage-2 artefact.
-
-        Raises
-        ------
-        nanopnp.density.radii.DensityInputError
-            For an atom the radius set does not resolve, or a non-finite
-            coordinate.
-        nanopnp.density.union.DensityGateError
-            If the map is not finite or leaves [0, 1].
-        Cancelled
-            If ``cancel`` turns true. No artefact is written.
-        """
         import numpy as np
 
         spec = _density(inputs)

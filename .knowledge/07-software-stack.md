@@ -92,6 +92,9 @@ predict, all found while building the `(r, z)` grid IO:
   grid as a 3D grid whose third axis is a **singleton**: gridData round-trips `(4, 3, 1)` through
   both DX and MRC with `origin` and `delta` intact. Refuse a genuinely 2D array yourself, naming the
   shape, so the user gets a diagnostic instead of a format-string traceback.
+- **The reference grid's axes are uniform to round-off.** Its COMSOL table is written in metres to
+  ten significant figures, and its axes vary by 1e-15 nm about the 0.005 nm spacing, which is why
+  `nanopnp.density.grid` refuses a non-uniform axis at 1e-9 nm. **[tested]**
 - **The reader is guessed from the extension, and `.map` has none.** `Grid("x.map")` raises
   `ValueError: File format MAP not available, choose one of dict_keys(['CCP4', 'MRC', 'DX', …])`,
   although the writer, told `file_format="MRC"`, wrote that file without complaint. Pass the
@@ -250,6 +253,11 @@ with scratch prototypes while planning WP19. They are not the implementation, an
   315 × 271 × 271 grid in the aligned frame) deposits in **17.0 s**, and stage 3 reduces it in
   **6.9 s**. A fresh interpreter running stages 1–3 peaks at **0.47 GB** RSS. The prototype above
   took 31.2 s for the deposition alone.
+- **Fine spacing needs the slab-clipped stencil.** Evaluating a whole stencil in every z-slab it
+  reaches did 6.8x the work at h = 0.025 nm, where a slab is a few planes of a stencil tens of
+  planes deep. Evaluating only the offsets that land in the slab (one contiguous run, because the
+  stencil's z offsets ascend) leaves the map bit-identical. **[tested]** (`nanopnp.density.union`,
+  `_accumulate`.)
 - **The truncation error sits inside its bound.** On 200 random atoms against an untruncated
   evaluation, the largest voxel error was 7.8e-6. At every voxel it stayed below the sum of
   `g/(1 − g)` over the dropped terms, which peaked at 1.15e-5.
