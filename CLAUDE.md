@@ -114,7 +114,10 @@ overrides a normative requirement.
 Step 2 does not chain into 3: `/wp-ship` starts in a fresh session (`wp-ship` §4). The steward skill
 governs a PR in flight.
 
-**Models:** `.claude/model-policy.md` governs sub-agents and who may implement an `[Opus]` item.
+**Models:** implementation runs on Haiku for an easy mechanical item and on Sonnet by default, and
+moves to Opus only after Sonnet has failed on the item. Sub-agents kept: `physics-reviewer`,
+`ci-log-classifier` and the `.claude/scripts/clause.py` script. Plans hold at most 1,500 words and six
+decisions, with compaction checkpoints (VER-72 g).
 
 **Code review reports** go to `docs/code_reviews/CODE_REVIEW_NNN.md`, one above the highest present;
 pass `out=`.
