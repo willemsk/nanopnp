@@ -52,7 +52,7 @@ Read in this order, keeping a list of every item that needs a decision:
 
 ### 3. Survey the codebase
 
-Delegate a survey (`.claude/model-policy.md`) of what the phase builds on: what exists, what is
+Delegate a survey (Haiku or Sonnet, `CLAUDE.md` *Models*; read the lines it returns) of what the phase builds on: what exists, what is
 refused today naming a later phase, which seams take what the phase needs. From it write the
 **"true of the codebase today"** list yourself: five or so facts, each naming its file and function.
 
@@ -127,7 +127,7 @@ change, and §8.1's row if the deliverable, gate or estimate moved.
 | `## Verification` | Gate commands; a `Package \| Tier \| Identifiers` table; **The phase is complete when:** the numbered criteria with test, tolerance, prediction and ruled fallback |
 | `## End-of-phase report` | Only the list of numbers it must report, each with the test that logs it; the close fills it |
 
-Target 3,000 words, excluding the report.
+Target 1,500 words, excluding the report.
 
 ### The In brief
 
@@ -142,7 +142,7 @@ At most 250 words, no backticks or identifiers; for a reader who does not code.
 **Your call.** Each decision the author owns, as a question, with *Recommendation:* and one reason.
 ```
 
-`tests/tier1/test_agent_roster.py` checks every phase plan from Phase 4 on.
+`tests/tier1/test_plan_shape.py` checks every phase plan from Phase 4 on.
 
 **`docs/plans/current.md`**: replace the position with Phase n planned and `/wp-plan <n>` next,
 replace the "not to be re-decided" entries the rulings supersede, and keep its In brief and word

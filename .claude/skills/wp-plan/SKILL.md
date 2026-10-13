@@ -28,8 +28,8 @@ amendment, decided now and written in the same commit**, never a quiet divergenc
    stale, repair it from the phase and WP headings. A package not in its phase plan, or listed
    **Provisional**, goes through `/phase-plan amend` first.
 4. Survey the code the package builds on: what exists, what is an empty package reserving a slot,
-   which seams take the argument you need. Delegate the survey per `.claude/model-policy.md`; keep
-   every physics and numerics decision on Opus.
+   which seams take the argument you need. Delegate a survey to Haiku or Sonnet (`CLAUDE.md`, *Models*) and read the lines it
+   returns before relying on them; keep every physics and numerics decision yourself.
 5. Do not search the web for the model equations or their parameters (`CLAUDE.md`).
 
 ## Scope of one work package
@@ -47,17 +47,17 @@ a single term (§7.1).
 | Title + status | `# WP<n> — <name>`, then **Status: planned, not started**, the date, and what it inherits |
 | Normativity note | One paragraph: the phase plan it belongs to, that `SPECIFICATION.md` governs, that identifiers are pointers |
 | `## In brief` | Before the Execution brief; the template below |
-| `## Execution brief` | Current scope, dependencies, requirement pointers and the subsections below. **At most 1,600 words** (`reading_set.py` fails a longer one); link evidence rather than retelling earlier packages |
-| `### Decisions` | A table `Decision \| Choice \| Why/source`. **This is the deliverable.** Resolve every choice that affects correctness now |
-| `### Work items` | A checklist in dependency order, one commit per item: `- [ ] 3. [Opus] — <reason>. <files and deliverable> (D4); done when <tests> pass`. Name the files in backticks (`reading_set.py` counts the rule files they trigger). Include the Design section to read first |
-| `### Verification` | Test file, tier, identifiers, oracle, tolerance source and command. Every claimed `VER-`/`VAL-` and every planned test appears here |
+| `## Execution brief` | Current scope, dependencies, requirement pointers and the subsections below. The whole plan holds **at most 1,500 words** (`tests/tier1/test_plan_shape.py` fails a longer one); link evidence rather than retelling earlier packages |
+| `### Decisions` | A table `Decision \| Choice \| Why/source`, **at most six rows**. **This is the deliverable.** Resolve every choice that affects correctness now |
+| `### Work items` | A checklist in dependency order, one commit per item: `- [ ] 3. <files and deliverable> (D4); done when <tests> pass`. Name the files in backticks. After a group of items, a line *Compaction checkpoint: after item N; resume from this plan and `git log`.* |
+| `### Verification` | Test file, tier, identifiers, oracle, tolerance source and command. Every claimed `VER-`/`VAL-` appears here |
 | `### Out of scope` | Deferrals and their owner |
 | `### Open questions` | Author rulings needed before implementation; ask blocking ones before committing |
-| `## Design` | Only new load-bearing derivations, in full arithmetic with signs and units; link existing sections. Outside the brief's word budget |
 
-The brief is an index and execution contract. If 1,600 words cannot hold the correctness-critical
-decisions, split the package or say why not in its first paragraph; never omit a required check to
-meet a count.
+The plan is an index and execution contract, with no per-item design and no `## Design` heading. A
+derivation that is new and load-bearing goes into the specification, which the plan links. If 1,500 words
+and six decisions cannot hold the correctness-critical choices, split the package; never omit a
+required check to meet a count.
 
 ### The In brief
 
@@ -72,30 +72,14 @@ At most 250 words, no backticks or identifiers; for a reader who does not code.
 **Your call.** Each decision the author owns, as a question, with *Recommendation:* and one reason.
 ```
 
-`tests/tier1/test_agent_roster.py` checks every plan from WP43 on.
+`tests/tier1/test_plan_shape.py` checks every plan from WP44 on.
 
 ### Work items
 
-- Mark each `[Opus]` or `[any]` in the item (`.claude/model-policy.md`, *Who implements a plan*).
-  `[Opus]`: a mistake would pass the gate as a plausible wrong answer (physics, numerics, a
-  refusal or its text, a cleanup or error path, a classification, a key); give the reason in one
-  clause. `[any]`: anything whose failure is loud. Unsure means `[Opus]`.
-- Leave the boxes unticked; `/wp-implement` ticks them.
-
-### Planned tests
-
-An implementer's tests check what was built, not what was decided. So for every `[Opus]` decision whose failure would be a
-silent pass, this commit writes the tests with exact assertions (the refusal and remedy text, the
-state after the failure), each a strict expected failure until implemented:
-
-```python
-@pytest.mark.xfail(strict=True, reason="planned: WP<n> D<k>")
-```
-
-A planned test imports new code inside its body, so its file collects before the code exists.
-VER-72 fails a `planned:` marker that is not strict, names no existing plan or outlives its
-package. Where a decision says *never*, *always* or *every*, its verification row enumerates each
-point of failure with one assertion each: an oracle looser than its decision is a defect.
+Leave the boxes unticked; `/wp-implement` ticks them. The plan commits no tests: the implementer writes
+each with its item from the *Verification* rows. Where a decision says *never*, *always* or *every*, its
+verification row enumerates each point of failure with one assertion each: an oracle looser than its
+decision is a defect.
 
 ### `docs/plans/current.md`
 
@@ -106,8 +90,6 @@ Link the planned package and its live dependencies; its word target is in its *H
 1. A needed spec amendment goes in the same commit, and the plan says so.
 2. Commit on the working branch (on `main`, switch to the branch this session was given, or stop
    and ask): `docs: WP<n> implementation plan`, identifiers in the body. A plan-only change runs
-   ruff and the tests that read plans (`CLAUDE.md`, *Commands*); a plan that also commits planned
-   tests or code pays the whole gate, and each planned test must report `xfailed`, not `error`. Then
-   `git push -u origin <branch>`: another session on another machine may work from it.
-3. Report the path, the close calls, any spec amendment, the `[Opus]` items and planned tests, and
+   ruff and the tests (`CLAUDE.md`, *Commands*). Then `git push -u origin <branch>`: another session on another machine may work from it.
+3. Report the path, the close calls, any spec amendment and
    the open questions. Then stop; implementation is `/wp-implement`, a separate turn.

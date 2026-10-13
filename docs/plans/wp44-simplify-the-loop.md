@@ -54,7 +54,7 @@ Each item carries the clause edits for what it deletes or changes. One commit ea
 *Compaction checkpoint: after item 2; resume from this plan and `git log`.*
 
 - [x] 40a2bac 3. Delete the agent framework of D5; move the clause, rule-loading and In brief checks to `tests/tier1/test_plan_shape.py` with D6's caps; edit the hook entry in `.claude/settings.json`, §8.2.10 J8 and J11 (pointers to L6 and L8) and VER-72 (g). Also edit `.github/scripts/prose-only.sh` where it names the roster test. Done when `test_plan_shape.py` passes and fails on a toy plan of 1,501 words, one of seven decisions, one with a Design heading and one with an In brief of 251 words.
-- [ ] 4. Write L4's rule into `.claude/rules/python.md`, `pyproject.toml` (D101 to D107 and D417 off, D100 kept) and `CONTRIBUTING.md`; change WP45's phase-plan text to the strip alone. Done when `uv run ruff check .` passes.
+- [x] f2c0761 4. Write L4's rule into `.claude/rules/python.md`, `pyproject.toml` (D101 to D107 and D417 off, D100 kept) and `CONTRIBUTING.md`; change WP45's phase-plan text to the strip alone. Done when `uv run ruff check .` passes.
 
 *Compaction checkpoint: after item 4.*
 

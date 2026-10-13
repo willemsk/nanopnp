@@ -28,9 +28,6 @@ A session starts on its own auto-named branch forked from `main`, almost never t
 
 ## 1. Preflight
 
-First start `.claude/hooks/gate.sh map` with Bash `run_in_background`, so a fix this session
-commits is gated by its impact selection.
-
 Read the WP's Execution brief and verification evidence, locating it from `docs/plans/current.md`.
 A brief is navigation, not a review oracle: read normative sections independently.
 
@@ -89,18 +86,15 @@ base or head changes during review, review the uncovered changes first.
 
 1. Read every applied fix as a diff. A finding is a hypothesis: confirm it against the
    specification and the plan, and revert a wrong fix with the reason in the PR thread. This stays
-   in this session on Opus (`.claude/model-policy.md`).
+   in this session.
 2. A finding the pass could not fix: fix it here, or record a `REV-nn` row in
    `docs/project/review-findings.md` with its section in `review-items.md` (§8.2.8 H12) and list it
    in the PR body under **Deliberately not done**. One the author has not ruled on is `open`; put
    it to the author before the report. Never leave a confirmed finding unmentioned, or only in the
    PR body.
-3. Each item under **Done outside Opus** (ticked `non-Opus`): read its diff and commit body against
-   its decision row and clause, and any tests that session wrote against the verification rows.
-   Fix or revert what disagrees; record each confirmed item with its sha under **Verification**.
-4. If fixes changed the tree, start `.claude/hooks/gate.sh run` again in the background and push
+3. If fixes changed the tree, start `.claude/hooks/gate.sh run` again in the background and push
    when it passes.
-5. Commit accepted changes as `fix: close the review gaps in <what>`, identifiers in the body, and
+4. Commit accepted changes as `fix: close the review gaps in <what>`, identifiers in the body, and
    push to the PR branch. A clean review needs no empty commit.
 
 Then record the pass under **Verification**: what was invoked, how many findings came back and

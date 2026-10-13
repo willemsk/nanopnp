@@ -10,11 +10,8 @@ execution taught, and open the PR. It does not chain into `/wp-ship`.
 
 ## Load the brief
 
-0. Start `.claude/hooks/gate.sh map` with Bash `run_in_background`, so the commit hook selects only
-   the tests a change touches.
 1. Read `docs/plans/current.md` and the requested WP's Execution brief. Its decisions are binding,
-   subject to the specification. Read each work item's linked Design sections before implementing
-   it, not delivered packages. Correct a wrong decision in the brief (and the specification).
+   subject to the specification. Correct a wrong decision in the brief (and the specification).
 2. `.knowledge/00-index.md`, then the sections of the files the package touches.
 3. The `SPECIFICATION.md` sections and Appendix A rows the plan cites; `.claude/scripts/clause.py
    <ID>` prints one with its NOTEs and rulings.
@@ -22,9 +19,10 @@ execution taught, and open the PR. It does not chain into `/wp-ship`.
 5. Check the branch. On `main`, switch to the development branch this session was given; if none
    was given, stop and ask before writing anything.
 
-Build a task list from the work items, starting at the first unticked one. Physics and numerics
-decisions stay on Opus; delegate per `.claude/model-policy.md`, which also governs a non-Opus
-session doing an `[Opus]` item (unmarked items count as `[Opus]`).
+Build a task list from the work items, starting at the first unticked one. Models (`CLAUDE.md`): Haiku
+for an easy mechanical item, Sonnet by default, Opus only after Sonnet has failed on the item. At a
+compaction checkpoint of the plan, compact the context; the next item resumes from the plan and
+`git log`.
 
 ## How the work lands
 
@@ -33,10 +31,7 @@ prefix, requirement identifier in the body. Tick each item `[x] <short sha>` in 
 next, so a later session resumes from the first unticked one. The gate hook refuses a failing commit and remembers a pass, so a
 gated tree can be split into several commits.
 
-**Planned tests** (`xfail(strict=True, reason="planned: WP<n> …")`) turn green by implementing the
-item and deleting the marker. Never edit a planned test's assertions or setup; if one is wrong,
-stop and report it, because the plan is in error.
-
+Write each item's tests with the item, from the plan's *Verification* rows; the plan commits none.
 Name each test for the requirement it discharges, in the tier directory that decides its marker.
 Write the analytic test that localises an error to one term first. Where a tolerance could be met
 for the wrong reason, or two routes could share a mistake, assert against a third route.
@@ -73,10 +68,7 @@ and put it where the plan asked.
 Confirm yourself:
 
 - every work item is done and ticked, or deferred with a reason in the plan and a `REV-nn` row;
-  every `[Opus]` item was done on Opus, or is ticked `non-Opus` and listed under **Done outside
-  Opus** in the PR body;
-- no `planned: WP<n>` marker of this package remains, and every `VER-`/`VAL-` the plan claimed has
-  a passing test named for it;
+- every `VER-`/`VAL-` the plan claimed has a passing test named for it;
 - the specification, knowledge base and Outcome annotations are committed, both **Status** lines
   and `current.md` are updated, and `CHANGELOG.md` has the package's section under
   `vX.Y.Z-alpha.N` (`CONTRIBUTING.md`, *Versions and releases*, also covers the close package);

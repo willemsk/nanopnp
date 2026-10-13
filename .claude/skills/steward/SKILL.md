@@ -10,12 +10,11 @@ evidence rather than chores.
 
 ## The environment
 
-`uv` owns it (`CLAUDE.md`, *Setup*). On waking, first start `.claude/hooks/gate.sh map` with Bash
-`run_in_background`: the commit hook selects a commit's tests from that map.
+`uv` owns it (`CLAUDE.md`, *Setup*).
 
 The gate is `.claude/hooks/gate.sh run`. Start it with Bash `run_in_background` on the committed
-fix and push when it passes: the hook refuses a push of a tree it has not passed, and after a pass
-a fix re-runs only the tests it selects. `--no-verify` exists and is not for you.
+fix and push when it passes: the hook refuses a push of a tree it has not passed, and every fix is
+gated in full. `--no-verify` exists and is not for you.
 
 ## Bounded wakes
 
@@ -52,14 +51,14 @@ macOS only, because it waits on a real QtWebEngine page by the wall clock and bu
   reads the PR head's `ci/tested-tree` status: when the merged tree is the one the PR passed, ubuntu
   runs only the `extended` walks.
 - **A pull request** (§7.6, §8.2.10 J4, J10) — ubuntu, 3.14 only. **`lint`** (`ruff check`, `ruff
-  format --check`, `mypy src/`); **`docs`**; **`tests (shard 1/2)`** and **`tests (shard 2/2)`**,
-  the development selection (no `extended` walks) under branch coverage, whole files packed by
-  `tests/durations.json` (`--shard i/2`, `tests/conftest.py`); **`coverage`**, which combines the
-  shards, runs `diff-cover` at 100 % of the changed `src/nanopnp` lines outside `gui/` (§7.6 NOTE,
-  VER-72 f), then VER-73's per-file ceiling and critical-path budget (`.github/budgets.yaml`,
-  `.github/scripts/ci_budget.py`); and **`CI result`**, the one required check, which fails unless
+  format --check`, `mypy src/`); **`docs`**; **`tests (tier1)`** and **`tests (tier2)`**,
+  the development selection (no `extended` walks) under branch coverage, split by marker
+  (`-m "tier1 and not slow"`, `-m "tier2 and not slow"`); **`coverage`**, which combines the
+  shards and runs `diff-cover` at 100 % of the changed `src/nanopnp` lines outside `gui/` (§7.6 NOTE,
+  VER-72 f); and **`CI result`**, the one required check, which fails unless
   every one of those succeeded and posts `ci/tested-tree`. Reproduce a shard with `uv run pytest
-  --shard i/2`, the coverage stage with `.claude/hooks/gate.sh run`.
+  -m "tier1 and not slow"` (or `tier2`); the gate does not measure coverage, so reproduce a
+  `diff-cover` miss with `--cov=src/nanopnp --cov-branch` and `diff-cover`.
 - **`docs`** — VER-45's strict build: `docs/scripts/generate.py`, then `mkdocs build --strict`, on
   **every** push, prose-only ones included, because a broken link or anchor is exactly what a prose
   edit introduces. Reproduce with `uv sync --all-extras --group docs && uv run
@@ -121,8 +120,8 @@ Smoluchowski amendment is the precedent).
 
 "Flake" is not a diagnosis: the benchmarks are deterministic. Name the mechanism (a thread count,
 an ordering, a seed) and fix it. If the physics or discretisation is wrong, stop and report the
-failing quantity, its location and what it implies. Diagnosis stays on Opus; a sub-agent may only
-read a long log (`.claude/model-policy.md`).
+failing quantity, its location and what it implies. Diagnosis stays in the main session; a sub-agent
+may only read a long log (`ci-log-classifier`).
 
 ## Fixes stay in scope
 
