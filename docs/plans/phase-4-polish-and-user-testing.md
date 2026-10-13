@@ -862,6 +862,7 @@ Its last commit on `main` is tagged `v0.5.0` alone (G11).
 | The remediation of WP43 | Two packages first; commit hook = Tier 1; push gate without coverage; the prose rule; agents retired; models; plan caps; no dollar gate | **Settled by the author, 13 October 2026** (§8.2.11 L1 to L8) |
 | The agents after WP44 | Keep the physics reviewer and the log classifier, or more | **Settled by the author, 13 October 2026** (§8.2.11 L9): those two, the classifier on Haiku; WP45 trials a fresh worker per item |
 | The push guard (refuse `git push` until the gate passed) | Keep, or drop with the rest of WP43's machinery | **Settled by the author, 13 October 2026**: keep, simplified; WP44's plan reports its size |
+| Running fewer tests on commit, after WP44's measured 187–220 s | Keep all of Tier 1, or select | **Settled by the author, 13 October 2026**: keep all of Tier 1 (L2 stands); the time is reported, not enforced (L8) |
 | The phase estimate after L1 | 4–6 weeks stands, or more | **Author, open.** Default: stands |
 | Their grouping | By kind, two packages, or one per area | **Settled by the author, 6 October 2026** (I2): accuracy, verification, small fixes |
 | `REV-23` to `REV-65` | Phase 4, Phase 5, Phase 6, post-1.0 or declined, each | **Settled by the author, 6 October 2026** (I3) |

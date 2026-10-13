@@ -14,9 +14,9 @@ stay under a page and a half, and cheaper AI models do routine work. The second 
 comments and explanations from the code and proves by machine that nothing else changed.
 You ruled that the rule blocking a push until the full check passed stays, that two agent helpers
 stay (the log reader on the cheapest model), and that the prose strip tries a fresh helper per step,
-whose cost you then compare with this package's.
-**Your call:** should saving run fewer tests? *Recommendation:* no for now, since it never misses a
-unit test.
+whose cost you then compare with this package's. Saving keeps running every quick test, as you ruled.
+**Your call:** does the phase still fit its four to six weeks after the two inserted packages?
+*Recommendation:* yes, since both are small and remove work from later packages.
 
 ## Position
 
