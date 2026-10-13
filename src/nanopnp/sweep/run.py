@@ -1,32 +1,4 @@
-"""Dispatch: one member alone, one wave, or a whole plan across independent workers.
-
-FR-24 asks for the points to be dispatched as *independent jobs* and each solve
-to be warm-started from a converged neighbour. Both are true here, and what makes
-them compatible is that **the warm start is an optimisation the store may or may
-not be able to supply**. A member resolves its parent's stage-10 artefact from
-the shared store; if it is there the target rung is solved from it, and if it is
-not — the parent has not run yet, or ran on another machine, or failed — the
-member climbs the full NUM-18 ladder and records that it did, with the reason. A
-member is therefore runnable alone, in any order, on a machine that has seen
-nothing else, which is what "independent" has to mean.
-
-**Independent workers are independent.** QR-06's scaling claim is about
-independent workers, and N processes sharing one BLAS thread pool are not
-independent — the measurement would report the pool. So the pool is started with
-``multiprocessing.get_context("spawn")`` and each worker's initialiser pins
-``OMP_NUM_THREADS``, ``OPENBLAS_NUM_THREADS`` and ``MKL_NUM_THREADS`` to one
-*before* the first deferred import. ``spawn`` rather than ``fork`` because a
-forked worker inherits a parent that has already imported NumPy, which reads
-those variables at import time and would have read them too late; the house rule
-deferring ``numpy`` and ``ngsolve`` to the function that uses them is what makes
-the initialiser early enough. ``spawn`` is also the only start method Windows
-has.
-
-**The sweep never changes directory.** ``inputs.mesh.path`` and the field
-documents resolve against the process working directory, so a ``chdir`` into a
-member's run directory would silently change which mesh a member reads, with no
-diagnostic. Workers inherit the parent's.
-"""
+"""Dispatch of one sweep member, one wave, or a whole plan across independent workers."""
 
 from __future__ import annotations
 
@@ -61,31 +33,15 @@ __all__ = [
 ]
 
 MEMBERS_DIRNAME = "members"
-"""Directory under a sweep directory holding one JSON record per member.
-
-One file per member and not one shared file: a job array writes them from
-independent processes on independent machines, and the collector reads whatever
-is there. Appending to one file would need a lock the store deliberately does
-not have (§5.3.2).
-"""
 
 THREAD_VARIABLES: tuple[str, ...] = (
     "OMP_NUM_THREADS",
     "OPENBLAS_NUM_THREADS",
     "MKL_NUM_THREADS",
 )
-"""Thread-count variables pinned to 1 in every worker (QR-06, the §8.3 NOTE)."""
 
 
 def pin_threads() -> dict[str, str]:
-    """Pin the linear-algebra thread counts to one and return what was set.
-
-    Called as the worker-process initialiser, *before* the first deferred import
-    of NumPy or NGSolve: those libraries read these variables when they are
-    imported, and setting them afterwards has no effect at all — the pool is
-    already sized. It is a no-op in a process that has already imported them,
-    which is why it is the initialiser and not something the member calls.
-    """
     for variable in THREAD_VARIABLES:
         os.environ[variable] = "1"
     return {variable: os.environ[variable] for variable in THREAD_VARIABLES}
@@ -93,29 +49,6 @@ def pin_threads() -> dict[str, str]:
 
 @dataclass(frozen=True)
 class MemberResult:
-    """What one member did, as its dataset row and as its own file on disk.
-
-    Parameters
-    ----------
-    index, point_id, assignments, wave
-        The point, from the plan.
-    status
-        ``"ok"``, ``"failed"`` or ``"cancelled"``.
-    exit_class
-        The §3.1 exit code the failure classifies as, or ``0``. Recorded rather
-        than reduced away: non-convergence at the corners of a hard envelope is
-        an expected *result*, and the IF-02 NOTE exists so a job array can branch
-        on it per member.
-    error
-        The diagnostic, verbatim, or ``None``. A gate abort's message *is* the
-        diagnostic (QR-12), so it is carried into the dataset rather than
-        summarised.
-    quantities
-        The stage-11 scalars, or ``None`` on any non-``ok`` row. ``None`` and not
-        an empty mapping: a failed member's current must not read as a number,
-        and QR-06's whole demand is that a failed member be distinguishable.
-    """
-
     index: int
     point_id: str
     assignments: Mapping[str, Canonicalisable]
@@ -129,20 +62,12 @@ class MemberResult:
     solution: str | None = None
     seconds: float = 0.0
     iterations: int | None = None
-    """Newton iterations the solve took, over every rung it ran.
-
-    In the row beside the seconds because it is the load-independent half of
-    what a member cost: wall time on a shared machine is a statement about the
-    machine, and a warm start's saving shows in both but is only *measurable* in
-    this one. ``None`` for a member that did not reach the solve.
-    """
     cached: bool = False
     warm_start: Mapping[str, Canonicalisable] | None = None
     wall_distance: Mapping[str, Canonicalisable] | None = None
     route_agreement: float | None = None
 
     def row(self) -> dict[str, Canonicalisable]:
-        """Return this member's dataset row."""
         return {
             "index": self.index,
             "id": self.point_id,
@@ -164,12 +89,6 @@ class MemberResult:
         }
 
     def write(self, directory: Path) -> Path:
-        """Write this member's record into a sweep's ``members/`` directory.
-
-        Atomically: collection reads the directory while other members of the
-        job array are still writing into it, and ``read_members`` treats a torn
-        record as fatal.
-        """
         directory.mkdir(parents=True, exist_ok=True)
         path = directory / f"{self.index:06d}.json"
         atomic_write_bytes(path, canonical(self.row()) + b"\n")
@@ -179,18 +98,6 @@ class MemberResult:
 def _parent_artefact(
     plan: SweepPlan, point: Point, store: Store, *, base: CaseDocument
 ) -> tuple[Artefact | None, str]:
-    """Return the parent's stage-10 artefact if the store holds it, and why not if not.
-
-    The key is *computed*, never looked up by name: it is the hash of the
-    parent's own resolved solve provenance and its input artefacts, which this
-    process can build from the plan alone. That is what makes a member
-    independent — it needs the store, and it does not need the parent's process
-    to have told it anything.
-
-    ``base`` is the case the caller has already read and gated, so that a member
-    parses and hashes the base case once rather than once for itself and once
-    for its parent (QR-06).
-    """
     if point.parent is None:
         return None, "this point is the root of its tree and has no neighbour to start from"
     from nanopnp.solve.stage import SolveStage
@@ -227,29 +134,6 @@ def run_point(
     store: Store,
     directory: Path,
 ) -> MemberResult:
-    """Run one member and return its record, capturing whatever it raised.
-
-    Never raises for a member's own failure. A sweep is the first thing in this
-    project that runs unattended, and a member that fails for a reason nobody
-    records is indistinguishable from one that was never dispatched (QR-06); so
-    the exception is classified through the same :func:`~nanopnp.core.errors.classify`
-    the CLI uses, its message is kept verbatim, and the row says so. The caller
-    decides what a failure means: ``--index`` exits with the member's own class,
-    a local sweep records it and carries on.
-
-    Parameters
-    ----------
-    plan
-        The plan, read from disk.
-    index
-        Which point to run.
-    store
-        The shared artefact store. Shared is what makes the warm start reachable
-        at all, and what makes a resumed sweep a cache hit rather than a re-solve.
-    directory
-        The sweep directory; the member's record is written under
-        :data:`MEMBERS_DIRNAME` inside it.
-    """
     from nanopnp.core.stages import Cancelled
 
     point = plan.point(index)
@@ -322,26 +206,14 @@ def run_point(
 
 
 def _mapping(value: Canonicalisable) -> dict[str, Canonicalisable] | None:
-    """Return a mapping-valued summary entry, or ``None`` when it is absent."""
     return dict(value) if isinstance(value, Mapping) else None
 
 
 def _count(value: Canonicalisable) -> int | None:
-    """Return an integer-valued summary entry, or ``None`` when it is absent."""
     return int(value) if isinstance(value, int) and not isinstance(value, bool) else None
 
 
 def _route_agreement(qoi: Artefact | None) -> float | None:
-    """Return the NUM-26 relative route difference, or ``None`` if it was not checked.
-
-    Carried into every dataset row deliberately: with the wall corrections on,
-    route disagreement is a statement about the *resolution* of the mesh at the
-    wall as much as about the extraction, and a sweep is where an under-resolved
-    corner of the envelope should be visible in the collected table rather than
-    only in the log of the one member that noticed (`.knowledge/06` §7.1.1,
-    NUM-26). The stage-11 summary carries the pair of currents beside the
-    difference; it is the difference that is the diagnostic.
-    """
     if qoi is None:
         return None
     routes = qoi.summary.get("route_agreement")
@@ -359,13 +231,6 @@ def _failed(
     *,
     cancelled: bool = False,
 ) -> MemberResult:
-    """Return and write the record of a member that did not finish.
-
-    Written here rather than by the caller so that the two ``except`` arms
-    cannot come to disagree about what a failed member leaves behind: a member
-    that failed and left no file is indistinguishable from one that was never
-    dispatched, which is the distinction QR-06 asks for.
-    """
     logger.warning("point %d (%s) %s: %s", point.index, point.point_id, type(error).__name__, error)
     member = MemberResult(
         index=point.index,
@@ -383,12 +248,6 @@ def _failed(
 
 
 def _worker(arguments: tuple[str, int, str | None, str]) -> dict[str, Canonicalisable]:
-    """Run one member in a worker process and return its row.
-
-    Takes and returns plain data because it crosses a process boundary: the plan
-    is re-read from its file rather than pickled, which is also what makes the
-    worker identical to a job-array member invoked from a shell.
-    """
     plan_path, index, root, directory = arguments
     plan = read_plan(Path(plan_path))
     return run_point(plan, index, store=Store(root), directory=Path(directory)).row()
@@ -405,32 +264,8 @@ def run_plan(
 ) -> tuple[MemberResult, ...]:
     """Run a plan wave by wave and return every member's record.
 
-    Wave by wave because a wave is exactly the set of points that are mutually
-    independent: every point of wave ``w`` has its parent in wave ``w - 1``, so
-    running the waves in order is what makes the warm start available and running
-    a wave in parallel is what makes it fast. On the §8.3 reference grid the
-    waves are 87 points wide on average, so the dependency structure is not what
-    limits QR-06 — the last few waves are the serial tail, and they are short.
-
-    Parameters
-    ----------
-    plan
-        The plan.
-    directory
-        The sweep directory; member records go under :data:`MEMBERS_DIRNAME`.
-    store
-        The shared artefact store every member runs into.
-    workers
-        Number of independent worker processes. ``1`` runs in this process,
-        which is not the pool with one worker: a single-worker measurement must
-        not pay the ``spawn`` cost the pool does, or ``efficiency(1)`` would be
-        a statement about process startup.
-    indices
-        Which points to run, defaulting to all of them. Used by ``--wave``.
-    fail_fast
-        Stop at the first member that does not reach ``ok``. Off by default,
-        because non-convergence at the corners of a hard envelope is an expected
-        result and aborting on it would throw away the members that worked.
+    ``workers=1`` runs in this process; ``indices`` restricts the points run; ``fail_fast`` stops at
+    the first member that does not reach ``ok``.
     """
     selected = sorted(set(range(len(plan.points)) if indices is None else indices))
     waves: dict[int, list[int]] = {}
@@ -465,14 +300,6 @@ def run_plan(
 def _pool(
     plan: SweepPlan, directory: Path, *, workers: int
 ) -> Iterator[Callable[[Sequence[int], Store], list[MemberResult]]]:
-    """Yield a function that runs one wave, on a pool held open for the whole plan.
-
-    ``workers <= 1`` runs in this process and starts no pool at all. That is not
-    the pool with one worker, and the difference is the point: a single-worker
-    measurement must not pay the ``spawn`` cost, or ``efficiency(1)`` would be a
-    statement about process startup rather than the baseline the curve is
-    divided by.
-    """
     if workers <= 1:
 
         def sequential(batch: Sequence[int], store: Store) -> list[MemberResult]:
@@ -500,11 +327,6 @@ def _pool(
 
 
 def member_from_row(row: Mapping[str, Canonicalisable]) -> MemberResult:
-    """Rebuild a member's record from a row -- a worker's return value, or a file.
-
-    Public because the collector reads the same rows back off disk, and a second
-    reader would be a second place for the row's shape to be written down.
-    """
     return MemberResult(
         index=int(row["index"]),
         point_id=str(row["id"]),

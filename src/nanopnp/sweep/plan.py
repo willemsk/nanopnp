@@ -1,36 +1,4 @@
-"""The sweep plan: the points, the warm-start forest, and everything checked before a solve.
-
-FR-24 is one sentence with four verbs — sweep any case-file field, dispatch the
-points as independent jobs, warm-start each solve from a converged neighbour,
-collect the results into one dataset — and the second and third contradict each
-other on their face. Independent jobs have no predecessors; a warm start is a
-predecessor. This module is where they are reconciled, and the shape of the
-answer is a **forest**.
-
-**The forest.** For a grid of axis lengths ``n_1 … n_k`` with origins ``o_j``,
-the parent of the point at ``(i_1 … i_k)`` is that point with the **last** index
-differing from its origin moved one step towards it. Every point therefore has
-exactly one parent, every edge is one grid step — 50 mV in bias, one
-multiplicative step in concentration, both steps the envelope walk has already
-demonstrated — and the depth of a point is ``Σ_j |i_j - o_j|``. Points at one
-depth are mutually independent, so the depth *is* the wave, and the plan orders
-its points by it, which makes each wave a contiguous range of indices a job
-array can be submitted over (§5.3.4).
-
-**Everything is checked here.** Every point is substituted, validated and
-``resolve()``d when the plan is built, before a single solve, because
-:func:`~nanopnp.pipeline.case.resolve` is pure Python — no NGSolve, no mesh — and it is
-where the NUM-18 refusals live. A 3,675-point plan whose two-thousandth point is
-inadmissible must fail in seconds rather than at hour twenty-two. The NUM-34
-wall-distance gate runs here too, once per *distinct mesh* where any point
-activates a wall correction: one linear solve on a command run once, against
-3,675 identical aborts at wave 0.
-
-**Identity is not the index.** A point's ``point_id`` is the content hash of its
-assignment mapping; its index is its position in the plan. Inserting one
-concentration renumbers every index after it, and a dataset keyed on the index
-would silently relabel last week's results.
-"""
+"""The sweep plan: the points, the warm-start forest, and every check made before a solve."""
 
 from __future__ import annotations
 
@@ -86,29 +54,12 @@ __all__ = [
 ]
 
 PLAN_FILENAME = "plan.json"
-"""Name of the plan file inside a sweep directory."""
 
 POINT_SCHEMA = "nanopnp/sweep/point/v0.5"
-"""Domain separator of a point's identity hash.
-
-Its own schema rather than the sweep's, because what is hashed is one point's
-assignment mapping and nothing else: the same operating point reached from two
-different sweep documents is the same point, and keying the dataset on it is
-what lets a second sweep over an overlapping grid recognise the members it
-already has.
-"""
 
 ID_LENGTH = 12
-"""Hex characters of the point identity carried in a member's name and dataset row.
-
-Twelve, matching :func:`nanopnp.core.hashing.short`: long enough that a
-collision over the thousands of points of §8.3 is not a thing that happens, and
-short enough to read in a run directory's name. A collision is refused rather
-than trusted not to occur -- see :func:`_identify`.
-"""
 
 RECTIFICATION = "rectification"
-"""The one output a sweep strips from its members and produces in collection."""
 
 WARM_START_BARRIERS: tuple[str, ...] = (
     # A cross-mesh transfer is a point evaluation outside the source domain,
@@ -121,12 +72,12 @@ WARM_START_BARRIERS: tuple[str, ...] = (
     "numerics.mesh",
     # The same barrier further upstream still, since stages 5 and 6 generate the
     # mesh from them: the structure and its contour, the membrane and the
-    # reservoir, and a supplied profile each move it (WP21 D15).
+    # reservoir, and a supplied profile each move it.
     "structure",
     "geometry",
     "inputs.profile",
     # Under ``charge:`` but a geometry key all the same: a non-zero offset makes
-    # stage 5 build the ion-exclusion shell, which moves the mesh (WP30 D7).
+    # stage 5 build the ion-exclusion shell, which moves the mesh.
     # ``dielectric_transition_nm`` moves only a coefficient, and does not sever.
     "charge.exclusion_offset_nm",
     # The element spaces. A coefficient vector is a function only relative to a
@@ -144,63 +95,13 @@ WARM_START_BARRIERS: tuple[str, ...] = (
     # It moves which degrees of freedom are constrained without moving any count.
     "boundary_conditions.ground",
 )
-"""Case-file paths across which a warm start is refused, so an axis over one severs.
-
-Each entry names a path or the prefix of one, and mirrors
-:data:`nanopnp.solve.state.SPACE_KEYS` in the case file's own vocabulary. An axis
-writing one of these is a **barrier**: its values are separate warm-start
-components, each rooted and climbed cold, rather than a chain the run would build
-and :func:`~nanopnp.solve.state.load_initial` would then refuse member by member.
-
-Planned rather than discovered, because the WP13 attribution ladder is a sweep of
-exactly this shape — four rungs over ``numerics.stabilisation`` and
-``numerics.elements`` — and twenty solves that each attempt a warm start, fail
-its gate and fall back is twenty diagnostics for a fact the document already
-states. The refusal at run time stays where it is: this is the cheaper of two
-gates, not a replacement for the one that cannot be wrong.
-"""
 
 
-class SweepPlanError(ValueError):
-    """A sweep cannot be planned as written.
-
-    A ``ValueError`` and IF-02 exit 3, the case class: a plan is refused by an
-    edit to the sweep document or to the base case, never by a retry. Every
-    message names what was wrong and where, as QR-12 requires -- the axis, the
-    point, the path, or the mesh.
-    """
+class SweepPlanError(ValueError): ...
 
 
 @dataclass(frozen=True)
 class Point:
-    """One member of a sweep: what it varies, where it sits, and who it starts from.
-
-    Parameters
-    ----------
-    index
-        Position in the plan, and the integer a job array dispatches on. Points
-        are ordered by wave, so a wave is a contiguous range of these.
-    point_id
-        The first :data:`ID_LENGTH` hex characters of the content hash of
-        :attr:`assignments`. This is the identity: it keys the dataset, it names
-        the member, and it does not move when a value is inserted on another
-        axis.
-    coordinates
-        The point's index along each axis, in declaration order.
-    assignments
-        Dotted case-file paths to the values this member sets.
-    parent
-        Index of the point one grid step nearer the origins, or ``None`` for the
-        root of a tree.
-    wave
-        The point's depth, ``Σ_j |i_j - o_j|``. Every point of one wave is
-        independent of every other.
-    name
-        The member's case ``name:``, ``f"{base}-{point_id}"``. It reaches the
-        manifest and the run directory and nothing that keys a solve, which is
-        what makes rewriting it free.
-    """
-
     index: int
     point_id: str
     coordinates: tuple[int, ...]
@@ -210,7 +111,6 @@ class Point:
     name: str
 
     def summary(self) -> dict[str, Canonicalisable]:
-        """Return this point as the plan file records it."""
         return {
             "index": self.index,
             "id": self.point_id,
@@ -224,45 +124,6 @@ class Point:
 
 @dataclass(frozen=True)
 class SweepPlan:
-    """Every point of a sweep, ordered by wave, with the checks already made.
-
-    Parameters
-    ----------
-    name
-        The sweep's name, from its document.
-    base_path
-        Path of the base case, as the plan will read it back.
-    base_hash
-        Content hash of the validated base case document. In the plan's digest,
-        so that a plan built against an edited base case is a different plan.
-    document
-        The sweep document's own record of what was asked for.
-    points
-        Every point, ordered by wave and, within a wave, by the Cartesian
-        product in axis declaration order.
-    rectification
-        Whether the base case asked for it, and the matched opposite-bias pairs
-        the collector will produce it from.
-    warnings
-        Plan-time warnings: an axis over ``inputs.mesh`` defeats the warm start
-        and is warned about rather than refused, VAL-04's mesh-convergence study
-        being a sweep of exactly that shape.
-    wall_distance
-        The NUM-34 measurement of each distinct mesh a point activates a wall
-        correction on, by the mesh's content hash.
-    files
-        Content hash of every input file a point names (a mesh, a profile, a field, a
-        structure or a trajectory), by the path as the case writes it. In the plan's
-        digest, and re-checked against the disk when a member is built, so that a file
-        edited or swapped between planning and dispatch is refused rather than solved
-        under the plan's point identities (CODE_REVIEW_003 CR-5).
-    workers
-        The document's default worker count for a local dispatch, carried on the
-        plan so that ``sweep run`` — which reads the plan and never the sweep
-        document — can honour it. Deliberately outside :attr:`hash`: it changes
-        how long a sweep takes and no number it produces.
-    """
-
     name: str
     base_path: Path
     base_hash: str
@@ -277,14 +138,6 @@ class SweepPlan:
 
     @cached_property
     def hash(self) -> str:
-        """The plan's content hash: what it enumerates, not what it produced.
-
-        Over the name, the sweep document's record and every point — not over
-        the worker count, the warnings or the NUM-34 measurements, none of which
-        change which operating points the plan names. Cached because a
-        3,675-point plan is hashed several times per command and the digest is
-        taken over the whole point list each time.
-        """
         return content_hash(
             SWEEP_SCHEMA,
             {
@@ -296,12 +149,6 @@ class SweepPlan:
         )
 
     def waves(self) -> tuple[tuple[int, int], ...]:
-        """Return each wave as a half-open ``(first, last + 1)`` index range.
-
-        Contiguous by construction: the points are ordered by wave, so a
-        scheduler submits one dependent array per range and needs to know
-        nothing else about the forest.
-        """
         ranges: list[tuple[int, int]] = []
         for point in self.points:
             if point.wave == len(ranges):
@@ -312,16 +159,6 @@ class SweepPlan:
         return tuple(ranges)
 
     def point(self, index: int) -> Point:
-        """Return one point by index.
-
-        Raises
-        ------
-        SweepPlanError
-            If the index is not one this plan enumerates. Named rather than an
-            ``IndexError``: a job array submitted over the wrong range is a
-            configuration mistake, and the message says how many points there
-            are.
-        """
         if not 0 <= index < len(self.points):
             raise SweepPlanError(
                 f"this plan enumerates {len(self.points)} points, 0 to {len(self.points) - 1}; "
@@ -330,21 +167,6 @@ class SweepPlan:
         return self.points[index]
 
     def base_case(self) -> CaseDocument:
-        """Return the base case from disk, gated against the hash the plan was built on.
-
-        Raises
-        ------
-        SweepPlanError
-            If the base case is not where the plan left it, or if its content
-            hash has moved. A job array dispatches over a plan file and rebuilds
-            each member from the base case on disk; a base case edited between
-            planning and dispatch — or a plan file copied to a machine where that
-            path means something else — would have every member solve a case the
-            plan never enumerated and report it under the plan's own point
-            identities. That is the one way this design can produce a whole
-            dataset of plausible wrong answers, so it is checked rather than
-            assumed (QR-12).
-        """
         try:
             base = load_case(self.base_path)
         except FileNotFoundError as error:
@@ -366,18 +188,6 @@ class SweepPlan:
         return base
 
     def _check_files(self) -> None:
-        """Refuse a member build when an input file is not the one the plan hashed.
-
-        The base case's hash covers the path strings a case names and not the bytes behind
-        them, and a path resolves against the working directory of whoever dispatches. A job
-        array submitted from another directory or machine, or a mesh edited after planning,
-        would otherwise have every member solve a file the plan never saw (QR-12).
-
-        Raises
-        ------
-        SweepPlanError
-            Naming the path and both digests.
-        """
         for path, planned in self.files.items():
             try:
                 found = _digest_of_file(Path(path))
@@ -398,34 +208,10 @@ class SweepPlan:
                 )
 
     def case(self, index: int, *, base: CaseDocument | None = None) -> CaseDocument:
-        """Return the validated case document of one member.
-
-        Rebuilt from the base case and the point's assignments rather than
-        stored: the plan file would otherwise carry thousands of whole case
-        documents, and a case rebuilt by the same :func:`substitute` the plan
-        validated with cannot be a different one.
-
-        Parameters
-        ----------
-        index
-            Which point to build.
-        base
-            A base case already read and gated by :meth:`base_case`. Passed by a
-            caller that builds two members in a row — a dispatch builds its own
-            and its parent's — so that one YAML parse, one validation and one
-            content hash serve both rather than one each (QR-06).
-
-        Raises
-        ------
-        SweepPlanError
-            As :meth:`base_case` documents it, and if ``index`` is not a point
-            of this plan.
-        """
         point = self.point(index)
         return _member(self.base_case() if base is None else base, point)
 
     def document_record(self) -> dict[str, Canonicalisable]:
-        """Return the plan as it is written to disk."""
         return {
             "schema": SWEEP_SCHEMA,
             "name": self.name,
@@ -445,26 +231,15 @@ class SweepPlan:
 
 @lru_cache(maxsize=256)
 def _digest_at(resolved: str, size: int, mtime_ns: int) -> str:
-    """Hash a file once per (location, size, modification time).
-
-    A dispatch builds every member through :meth:`SweepPlan.base_case`, and a trajectory
-    can be gigabytes: the stat is what is repeated, and an edit changes it.
-    """
     return file_hash(resolved)
 
 
 def _digest_of_file(path: Path) -> str:
-    """Return the content hash of ``path``, read from the working directory as a member would."""
     status = path.stat()
     return _digest_at(str(path.resolve()), status.st_size, status.st_mtime_ns)
 
 
 def _planned_files(resolved: Sequence[ResolvedCase]) -> dict[str, str]:
-    """Hash every input file the points name, once per distinct path.
-
-    Only files that exist now: an absent one is a dry run (``check_meshes=False``) or a
-    case that fails loudly when it reads it, and there is nothing to bind it to.
-    """
     files: dict[str, str] = {}
     for member in resolved:
         for path in input_files(member, None).values():
@@ -474,13 +249,6 @@ def _planned_files(resolved: Sequence[ResolvedCase]) -> dict[str, str]:
 
 
 def _member(base: CaseDocument, point: Point) -> CaseDocument:
-    """Return the case document one point runs.
-
-    The point's assignments, the rewritten ``name:``, and ``rectification``
-    stripped from ``outputs:`` — the last because it is a two-point quantity the
-    collector produces from a matched pair, and a member asking for it at one
-    operating point is refused by the §5.3.1 NOTE.
-    """
     assignments = dict(point.assignments)
     assignments["name"] = point.name
     outputs = [word for word in base.outputs if word != RECTIFICATION]
@@ -490,20 +258,12 @@ def _member(base: CaseDocument, point: Point) -> CaseDocument:
 
 
 def _shown(assignments: Mapping[str, FieldValue]) -> str:
-    """Return an assignment mapping as one readable line, for a diagnostic."""
     return json.dumps(dict(assignments), sort_keys=True, default=str)
 
 
 def _identify(
     assignments: Mapping[str, FieldValue], seen: dict[str, Mapping[str, FieldValue]]
 ) -> str:
-    """Return a point's identity, refusing a collision rather than trusting one away.
-
-    Two distinct assignment mappings sharing an identity would key one dataset
-    row, and the sweep would report one of them twice. Equal mappings sharing one
-    is a *duplicate point*, which means an axis declares the same value twice,
-    and is refused with the axis's own vocabulary rather than a hash.
-    """
     digest = short(content_hash(POINT_SCHEMA, dict(assignments)), ID_LENGTH)
     previous = seen.get(digest)
     if previous is not None:
@@ -521,12 +281,6 @@ def _identify(
 
 
 def _barriers(document: SweepDocument) -> tuple[bool, ...]:
-    """Return, per axis, whether it writes a path a warm start cannot cross.
-
-    An axis is a barrier if any path it writes is one of
-    :data:`WARM_START_BARRIERS` or lies beneath one — ``numerics.elements.u`` is
-    beneath ``numerics.elements``, and both sever.
-    """
     return tuple(
         any(
             path == barrier or path.startswith(f"{barrier}.")
@@ -543,12 +297,6 @@ WALL_SIZE_PATHS: tuple[str, ...] = (
     "electrolyte.parameters",
     "electrolyte.species",
 )
-"""Paths that move ``wall_h_nm: auto``'s resolved size, and with it a generated mesh.
-
-Not unconditional barriers: below 1.474 M the resolved wall size is the 0.05 nm
-ceiling at every concentration, so an ordinary salt sweep keeps its warm starts
-(section 5.3.1 NOTE on ``numerics.mesh``, WP21 D15).
-"""
 
 
 def _wall_size_barriers(
@@ -557,21 +305,6 @@ def _wall_size_barriers(
     grid: Sequence[tuple[int, ...]],
     barriers: Sequence[bool],
 ) -> tuple[bool, ...]:
-    """Return, per axis, whether it moves a generated mesh's resolved wall size (WP21 D15).
-
-    An axis writing one of :data:`WALL_SIZE_PATHS` is a barrier when two points of
-    the grid that differ only along it resolve to different wall sizes. Only a
-    member that generates its mesh with ``wall_h_nm: auto`` has one; a point that
-    does not substitute cleanly is left to :func:`_resolve_every_point`, which
-    refuses it with its own diagnostic.
-
-    Raises
-    ------
-    SweepPlanError
-        Naming the point, if a member that generates its mesh has a wall size
-        that cannot be resolved: a concentration that is not positive, or a
-        parameter file that is not there.
-    """
     candidates = [
         index
         for index, axis in enumerate(document.axes)
@@ -623,19 +356,6 @@ def _wall_size_barriers(
 def _parent_of(
     coordinates: Sequence[int], origins: Sequence[int], barriers: Sequence[bool] = ()
 ) -> tuple[int, ...] | None:
-    """Return the grid coordinates of a point's parent, or ``None`` for a root.
-
-    The **last** index differing from its origin, moved one step towards it. The
-    last rather than the first so that the axes declared earlier are walked
-    outermost, which is what makes a wave of the deepest axis contiguous in the
-    Cartesian product and keeps the trees shallow in the axes a sweep varies
-    most finely.
-
-    A **barrier** axis is skipped entirely, so each of its values roots its own
-    component (:data:`WARM_START_BARRIERS`). The forest then has one tree per
-    combination of barrier coordinates, which is what "each rung climbs the
-    ladder cold" means as a plan rather than as a hope.
-    """
     for axis in range(len(coordinates) - 1, -1, -1):
         if axis < len(barriers) and barriers[axis]:
             continue
@@ -650,13 +370,6 @@ def _parent_of(
 def _depth(
     coordinates: Sequence[int], origins: Sequence[int], barriers: Sequence[bool] = ()
 ) -> int:
-    """Return a point's depth in the forest: its distance from its component's root.
-
-    Barrier axes do not count: they carry no warm-start edge, so their distance
-    from the origin is not a number of solves anything has to wait for. Counting
-    them would put every rung-3 member three waves late behind a parent it does
-    not have.
-    """
     flags = tuple(barriers) + (False,) * (len(coordinates) - len(barriers))
     return sum(
         abs(index - origin)
@@ -666,15 +379,6 @@ def _depth(
 
 
 def _check_axes(document: SweepDocument) -> None:
-    """Check every path and every value against the case schema, before any point exists.
-
-    Two loud failures rather than one: :func:`~nanopnp.io.case_paths.field_at` names a
-    component that does not exist and the prefix that does, and
-    :meth:`~nanopnp.io.case_paths.FieldReference.validate` names a value the declared
-    type would not accept. Re-validating each substituted document would catch
-    both, but only per point and only after the plan had committed to thousands
-    of them.
-    """
     for axis in document.axes:
         for position, assignment in enumerate(axis.points()):
             for path, value in assignment.items():
@@ -685,15 +389,6 @@ def _check_axes(document: SweepDocument) -> None:
 
 
 def _warnings(document: SweepDocument, barriers: Sequence[bool]) -> tuple[str, ...]:
-    """Return the plan-time warnings, naming the axis each one is about.
-
-    One today: an axis over ``inputs.mesh``. It is warned about and not refused.
-    :func:`~nanopnp.solve.continuation.transfer` refuses a cross-mesh
-    interpolation deliberately — a point evaluation outside the source domain
-    returns a plausible number rather than raising — so the forest degenerates
-    to one-point trees and every member is cold. That is correct, only slower,
-    and VAL-04's mesh-convergence study is a sweep of exactly that shape.
-    """
     found: list[str] = []
     for axis, barrier in zip(document.axes, barriers, strict=True):
         if not barrier:
@@ -716,15 +411,6 @@ def _warnings(document: SweepDocument, barriers: Sequence[bool]) -> tuple[str, .
 
 
 def _pairs(points: Sequence[Point]) -> tuple[tuple[int, int], ...]:
-    """Return the ``(forward, reverse)`` index pairs the rectification comes from.
-
-    Two points pair when their assignment mappings are equal except at
-    ``boundary_conditions.bias_V``, and those two biases are **exactly**
-    opposite. Exactly, not approximately:
-    :func:`~nanopnp.post.qoi.rectification` already refuses two biases of the
-    same sign, and a tolerance on the pairing would let an asymmetric bias axis
-    report the ratio between 100 mV and -95 mV as a rectification (§5.3.1 NOTE).
-    """
     bias = "boundary_conditions.bias_V"
     by_rest: dict[str, dict[float, int]] = {}
     for point in points:
@@ -747,35 +433,6 @@ def build_plan(
     source: Path | None = None,
     check_meshes: bool = True,
 ) -> SweepPlan:
-    """Enumerate, check and order every point of a sweep (FR-24, §5.3.4).
-
-    Parameters
-    ----------
-    document
-        The validated sweep specification.
-    source
-        Where it was read from, used to resolve the base case's relative path.
-    check_meshes
-        Whether to run the NUM-34 gate once per distinct mesh where a point
-        activates a wall correction. On by default; ``False`` is for a caller
-        that has no NGSolve available and wants the combinatorics alone.
-
-    Returns
-    -------
-    SweepPlan
-        Points in wave order, every one of them substituted, validated and
-        resolved.
-
-    Raises
-    ------
-    SweepPlanError
-        If an axis names a path the case schema does not have, if a value is not
-        one the declared type accepts, if a point produces an inadmissible case,
-        if two points are identical, or if ``rectification`` was asked for and
-        the axes produce no exactly-opposite bias pair.
-    nanopnp.numerics.gates.GateViolationError
-        If a mesh a point would solve on violates NUM-34.
-    """
     _check_axes(document)
     base_path = document.base_path(source)
     try:
@@ -864,14 +521,6 @@ def build_plan(
 
 
 def _resolve_every_point(base: CaseDocument, plan: SweepPlan) -> tuple[ResolvedCase, ...]:
-    """Substitute, validate and resolve every point, and return the resolved cases.
-
-    ``resolve`` is pure Python — no NGSolve, no mesh — and it is where the
-    NUM-18 refusals live: a case setting ``physics.flow: false`` and still
-    selecting ``default_ladder`` is refused there. Running it over the whole
-    plan costs seconds and is what stops a two-thousandth inadmissible point
-    from surfacing at hour twenty-two (§5.3.4).
-    """
     cases: list[ResolvedCase] = []
     for point in plan.points:
         try:
@@ -886,23 +535,6 @@ def _resolve_every_point(base: CaseDocument, plan: SweepPlan) -> tuple[ResolvedC
 
 
 def _gate_meshes(plan: SweepPlan, members: Sequence[ResolvedCase]) -> SweepPlan:
-    """Run the NUM-34 gate once per distinct mesh a wall correction is active on.
-
-    Once per *mesh*, not once per point: the distance field is a function of the
-    mesh and the wall-distance settings alone, and 3,675 members of one sweep
-    share one of them. At plan time it costs one linear solve and the NGSolve
-    import on a command run once, and it buys the difference between a sweep
-    refused in seconds and 3,675 identical aborts at wave 0.
-
-    Raises
-    ------
-    nanopnp.numerics.gates.GateViolationError
-        Propagated unchanged from the gate, naming the mesh, the measured
-        minimum, its location and the fraction of samples below zero (QR-12).
-        Not wrapped in a :class:`SweepPlanError`: it is the same abort a member
-        would produce, and IF-02 gives it the gate class rather than the case
-        one.
-    """
     from nanopnp.mesh.ingest import IngestedMesh, ingest
     from nanopnp.numerics.measures import AXISYMMETRIC
     from nanopnp.solve.state import check_wall_distance, reads_distance, wall_distance_field
@@ -929,7 +561,7 @@ def _gate_meshes(plan: SweepPlan, members: Sequence[ResolvedCase]) -> SweepPlan:
             # gates NUM-34 on the mesh it generated, as every solve does.
             continue
         order = int(resolved.model_options.get("order", AXISYMMETRIC.element_order))
-        assert supplied.path is not None  # resolve refuses artefact: on inputs.mesh (WP40 D5)
+        assert supplied.path is not None  # resolve refuses artefact: on inputs.mesh
         source = (
             str(supplied.path),
             supplied.format,
@@ -964,12 +596,6 @@ def _gate_meshes(plan: SweepPlan, members: Sequence[ResolvedCase]) -> SweepPlan:
 
 
 def write_plan(plan: SweepPlan, directory: Path) -> Path:
-    """Write the plan into a sweep directory and return its path.
-
-    Through :func:`~nanopnp.core.hashing.canonical`, exactly as ``manifest.json``
-    and ``run.json`` are written, so that the file a reader sees and the bytes
-    that were hashed cannot disagree and every float round-trips exactly.
-    """
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / PLAN_FILENAME
     atomic_write_bytes(path, canonical(plan.document_record()) + b"\n")
@@ -977,17 +603,6 @@ def write_plan(plan: SweepPlan, directory: Path) -> Path:
 
 
 def read_plan(path: Path) -> SweepPlan:
-    """Read a plan back from disk.
-
-    Read rather than rebuilt: a job-array member must run from the plan the
-    dispatch was submitted over, and rebuilding it from the sweep document would
-    silently re-plan against whatever the base case says *now*.
-
-    Raises
-    ------
-    SweepPlanError
-        If the file is not a plan of this schema.
-    """
     parsed = decode_floats(json.loads(Path(path).read_text(encoding="utf-8")))
     if not isinstance(parsed, dict) or parsed.get("schema") != SWEEP_SCHEMA:
         found = parsed.get("schema") if isinstance(parsed, dict) else type(parsed).__name__
@@ -1045,11 +660,6 @@ def read_plan(path: Path) -> SweepPlan:
 
 
 def plan_from_document(path: Path, *, check_meshes: bool = True) -> SweepPlan:
-    """Load a sweep document and build its plan.
-
-    The two steps the CLI's ``sweep plan`` takes, together, so that "read the
-    file, resolve its base case, enumerate the points" happens once rather than
-    in each caller.
-    """
+    """Load a sweep document and build its plan."""
     source = Path(path)
     return build_plan(load_sweep(source), source=source, check_meshes=check_meshes)

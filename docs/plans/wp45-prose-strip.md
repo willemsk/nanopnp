@@ -71,7 +71,7 @@ Every strip item: done when `same_tree.py HEAD~1` passes on its commit and the c
 - [x] 13. `src/nanopnp/symmetry/`.
 - [x] 14. `src/nanopnp/charge/`.
 - [x] 15. `src/nanopnp/pipeline/`.
-- [ ] 16. `src/nanopnp/sweep/`.
+- [x] 16. `src/nanopnp/sweep/`.
 - [ ] 17. `src/nanopnp/cli/`.
 - [ ] 18. `src/nanopnp/validation/`.
 - [ ] 19. `src/nanopnp/gui/`.
