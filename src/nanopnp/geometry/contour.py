@@ -1,42 +1,4 @@
-"""Stage 4 of section 5.2: contour extraction, conditioning and its gate (FR-07, FR-08).
-
-The pipeline is section 5.2.1's, and its constants are the WP20 plan's D4-D10.
-Each step is a pure function over arrays, so a test can drive one alone:
-
-1. :func:`extract_loops`: sub-pixel marching squares on stage 3's mean at the
-   isolevel, diagonal neighbours above the level joined (``"high"``). A point
-   ``(row, col)`` is placed by the grid's own axes, so bin j sits at its centre
-   ``r_j = j·h``: the author's script placed it at the bin's left edge on a bin of
-   the wrong width, which is its erratum (``.knowledge/04`` §1.2). A contour left
-   open at the grid's edge is refused.
-2. :func:`assemble_region`: the closed loops become the region above the level.
-   ``positive_orientation="high"`` makes a loop around high values clockwise in
-   ``(r, z)`` and a loop around a void counter-clockwise, so winding tells an
-   outer boundary from a hole [tested]. Loops are taken largest first, so a loop
-   is always met after the loop enclosing it.
-3. :func:`close_and_open`: a closing, then an opening, by a disc of radius
-   δ = 2h. Every gap and fin narrower than 4h goes. The margin is the §5.2.1
-   NOTE's: simplification moves each wall by up to its tolerance, so the gate's
-   feature size 2h holds only if δ > h + ``simplify_tol_nm``. Remaining holes are
-   filled and recorded; exactly one component is admitted.
-4. :func:`resample` at uniform arc length h/2, then :func:`taubin`: N = 10
-   passes of λ = 0.5, μ = -0.53 with the umbrella operator. On a closed loop the
-   operator is circulant, and mode ``k = 1 - cos θ`` is scaled by
-   ``(1 - λk)(1 - μk)`` per pass: the pass band is wavelengths above 13.08
-   samples, 0.33 nm, and the grid-scale staircase (k = 1) keeps 0.069 of its
-   amplitude (WP20 plan, Design §3).
-5. :func:`simplify`: Douglas-Peucker at ``simplify_tol_nm``, topology preserved.
-6. :func:`enforce_spacing`: while an edge is shorter than ``h_c``, drop the
-   endpoint whose removal moves the area least, the lower index on a tie.
-7. :func:`canonical`: clockwise from the lowest-z vertex, the smallest r on a tie.
-
-:func:`gate` then measures the loop and never moves it; it is :func:`measure`, which
-refuses nothing, and a raise at the first failure (WP24 D9). **Its size target
-``h_c`` is the density grid spacing h**, not the stage-6 wall size, which would
-make the geometry depend on the electrolyte (§5.2.1 NOTE on the contour's size
-target). Every threshold here is a constant that keys the stage-4 artefact
-(D13), and none is a case key (WP17 D3).
-"""
+"""Stage 4: contour extraction, conditioning and its gate (FR-07, FR-08)."""
 
 from __future__ import annotations
 
@@ -98,35 +60,22 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 logger = logging.getLogger(__name__)
 
 CONNECTIVITY = "high"
-"""``find_contours``'s ``fully_connected``: diagonal neighbours above the level are joined.
-
-The closing of step 3 would join them anyway; choosing it here keeps marching
-squares and the morphology in agreement (D4).
-"""
 
 CLOSING_SPACINGS = 2.0
-"""δ, the closing and opening disc's radius, in grid spacings (D5)."""
 
 QUAD_SEGS = 8
-"""Segments per quarter circle of the buffer's round joins (D5)."""
 
 RESAMPLE_SPACINGS = 0.5
-"""The resampling arc length, in grid spacings: h/2 (D6)."""
 
 TAUBIN_LAMBDA = 0.5
-"""Taubin's shrinking factor λ (Taubin, SIGGRAPH 1995; WP20 plan, Design §3)."""
 
 TAUBIN_MU = -0.53
-"""Taubin's inflating factor μ; ``1/λ + 1/μ = 0.1132`` is the pass-band edge in k."""
 
 TAUBIN_PASSES = 10
-"""N, the number of λ|μ pass pairs (D6)."""
 
 BAND_HIGH_NM = 1.5
-"""The radius band's upper bound, ``r_c - R_p ≤ 1.5 nm``: a gross-error check (D11)."""
 
 FEATURE_FACTOR = 2.0
-"""The feature-size criterion is ``> FEATURE_FACTOR · h_c`` (§5.2.1)."""
 
 KEY_CONSTANTS: Mapping[str, Canonicalisable] = {
     "connectivity": CONNECTIVITY,
@@ -141,36 +90,9 @@ KEY_CONSTANTS: Mapping[str, Canonicalisable] = {
     "feature": {"factor": FEATURE_FACTOR, "local_edges": LOCAL_EDGES},
     "band": {"low": "-h", "high_nm": BAND_HIGH_NM},
 }
-"""Every code constant that moves a vertex or a verdict, as the stage-4 key records it (D13).
-
-The closing radius and the resampling length are written from the constants the
-pipeline reads, as ``"2h"`` and ``"h/2"``, so editing either moves the key.
-"""
 
 
 class ContourGateError(ValueError):
-    """Stage 4's contour failed a section 5.2.1 criterion (FR-08, QR-12).
-
-    Names the criterion, what was measured, the threshold and where, and is
-    classified with the gates: the case is well formed, and the structure it names
-    does not yield a contour the mesher can be trusted with.
-
-    Parameters
-    ----------
-    criterion
-        The §5.2.1 gate row, e.g. ``"minimum vertex spacing"``.
-    measured
-        The measured value, with units.
-    threshold
-        What it was held to, with units.
-    where
-        The location: an ``(r, z)``, a z range, or a list of components.
-    location_nm
-        The same ``(r, z)`` as numbers, where there is one point to name, so a
-        caller marking it on a picture reads it rather than parsing ``where``
-        (WP24 D10). ``None`` for a z range or a list of components.
-    """
-
     def __init__(
         self,
         criterion: str,
@@ -192,15 +114,10 @@ class ContourGateError(ValueError):
 
 
 def _at(r_nm: float, z_nm: float) -> str:
-    """Format a location for a gate message."""
     return f"at (r, z) = ({r_nm:.4f}, {z_nm:.4f}) nm"
 
 
-# -- 1. extraction ---------------------------------------------------------------
-
-
 def _runs(mask: np.ndarray) -> list[tuple[int, int]]:
-    """Return the ``[first, last]`` index pairs of each run of true entries."""
     runs: list[tuple[int, int]] = []
     start: int | None = None
     for index, flag in enumerate(mask.tolist()):
@@ -217,31 +134,6 @@ def _runs(mask: np.ndarray) -> list[tuple[int, int]]:
 def extract_loops(
     mean: np.ndarray, r_nm: np.ndarray, z_nm: np.ndarray, isolevel: float
 ) -> list[np.ndarray]:
-    """Return the closed isolevel contours of a ``[z, r]`` map, in ``(r, z)`` nm (step 1).
-
-    Parameters
-    ----------
-    mean
-        Stage 3's mean, indexed ``[z, r]``.
-    r_nm, z_nm
-        Its uniform axes; a point ``(row, col)`` maps to
-        ``(r_nm[0] + col·Δr, z_nm[0] + row·Δz)``.
-    isolevel
-        The level, in (0, 1).
-
-    Returns
-    -------
-    list of numpy.ndarray
-        Each loop ``(n, 2)``, the closing vertex not repeated, in the orientation
-        ``positive_orientation="high"`` gives it.
-
-    Raises
-    ------
-    ContourGateError
-        If a contour is open. At the axis, naming the z ranges where the axis bin
-        lies at or above the level, which is where the lumen is closed; at another
-        edge, naming the edge.
-    """
     import numpy as np
 
     values = np.asarray(mean, dtype=np.float64)
@@ -285,17 +177,7 @@ def extract_loops(
     return loops
 
 
-# -- 2. the region ---------------------------------------------------------------
-
-
 def assemble_region(loops: Sequence[np.ndarray]) -> BaseGeometry:
-    """Return the region above the isolevel that the loops bound (step 2).
-
-    A clockwise loop in ``(r, z)`` bounds high values and is added; a
-    counter-clockwise one bounds a void and is removed. Largest first, so every
-    loop is met after the loop that encloses it: a body, then its void, then an
-    island inside the void.
-    """
     ordered = sorted(loops, key=lambda loop: abs(signed_area(loop)), reverse=True)
     region: BaseGeometry = Polygon()
     for loop in ordered:
@@ -306,11 +188,7 @@ def assemble_region(loops: Sequence[np.ndarray]) -> BaseGeometry:
     return region
 
 
-# -- 3. the morphology -----------------------------------------------------------
-
-
 def _components(region: BaseGeometry) -> list[Polygon]:
-    """Return the region's polygons, largest first."""
     if isinstance(region, Polygon):
         parts = [] if region.is_empty else [region]
     elif isinstance(region, MultiPolygon):
@@ -323,20 +201,6 @@ def _components(region: BaseGeometry) -> list[Polygon]:
 def close_and_open(
     region: BaseGeometry, delta_nm: float
 ) -> tuple[Polygon, dict[str, Canonicalisable]]:
-    """Close, then open, the region by a disc of radius ``delta_nm``, and fill its holes (step 3).
-
-    Returns
-    -------
-    tuple
-        The single component, holes filled, and the record: the count, area and
-        centroids of the holes filled.
-
-    Raises
-    ------
-    ContourGateError
-        If the region is empty, or more than one component remains, naming each
-        other component's centroid and area.
-    """
     options = {"quad_segs": QUAD_SEGS, "join_style": "round"}
     closed = region.buffer(delta_nm, **options).buffer(-delta_nm, **options)
     opened = closed.buffer(-delta_nm, **options).buffer(delta_nm, **options)
@@ -374,23 +238,12 @@ def close_and_open(
 
 
 def exterior(polygon: Polygon) -> np.ndarray:
-    """Return a polygon's exterior ring as ``(n, 2)``, the closing vertex not repeated."""
     import numpy as np
 
     return np.asarray(polygon.exterior.coords, dtype=np.float64)[:-1]
 
 
-# -- 4. resampling and smoothing -------------------------------------------------
-
-
 def resample(loop: np.ndarray, spacing_nm: float) -> np.ndarray:
-    """Return the closed loop resampled at a uniform arc length near ``spacing_nm`` (step 4).
-
-    ``n = round(L / spacing_nm)`` points at arc length ``L/n`` apart, from the
-    loop's first vertex, so the operator of :func:`taubin` acts on a scale in
-    nanometres rather than in marching-squares vertices, which lie 1e-4 to 0.07 nm
-    apart (Design §3).
-    """
     import numpy as np
 
     closed = np.vstack((loop, loop[:1]))
@@ -411,12 +264,6 @@ def taubin(
     mu: float = TAUBIN_MU,
     passes: int = TAUBIN_PASSES,
 ) -> np.ndarray:
-    """Return the closed loop after ``passes`` Taubin λ|μ passes of the umbrella operator.
-
-    ``Δx_i = ½(x_{i-1} + x_{i+1}) - x_i``, applied with λ and then with μ. With
-    ``mu = 0`` this is a Laplacian smoothing of the same number of passes, which
-    shrinks a convex loop; λ|μ does not (step 4).
-    """
     import numpy as np
 
     points = np.asarray(loop, dtype=np.float64).copy()
@@ -429,11 +276,7 @@ def taubin(
     return points
 
 
-# -- 5-7. simplification, spacing, canonical form -------------------------------
-
-
 def simplify(loop: np.ndarray, tolerance_nm: float) -> np.ndarray:
-    """Return the loop after Douglas-Peucker at ``tolerance_nm``, topology preserved (step 5)."""
     simplified = Polygon(loop).simplify(tolerance_nm, preserve_topology=True)
     if not isinstance(simplified, Polygon) or simplified.is_empty:
         raise ContourGateError(
@@ -446,7 +289,6 @@ def simplify(loop: np.ndarray, tolerance_nm: float) -> np.ndarray:
 
 
 def _removal_cost(points: np.ndarray, vertex: int) -> float:
-    """Return the area a vertex's removal changes: its triangle with its two neighbours."""
     count = len(points)
     previous, following = points[(vertex - 1) % count], points[(vertex + 1) % count]
     a, b = previous - points[vertex], following - points[vertex]
@@ -454,16 +296,6 @@ def _removal_cost(points: np.ndarray, vertex: int) -> float:
 
 
 def enforce_spacing(loop: np.ndarray, minimum_nm: float) -> tuple[np.ndarray, int]:
-    """Drop vertices until no edge is shorter than ``minimum_nm`` (step 6, D8).
-
-    The shortest edge first, its first occurrence on a tie; of its two endpoints,
-    the one whose removal changes the area least, the lower index on a tie.
-
-    Returns
-    -------
-    tuple
-        The loop, and how many vertices were removed.
-    """
     import numpy as np
 
     points = np.asarray(loop, dtype=np.float64)
@@ -482,7 +314,6 @@ def enforce_spacing(loop: np.ndarray, minimum_nm: float) -> tuple[np.ndarray, in
 
 
 def canonical(loop: np.ndarray) -> np.ndarray:
-    """Return the loop clockwise, starting at its lowest-z vertex, the smallest r on a tie (D9)."""
     import numpy as np
 
     points = np.asarray(loop, dtype=np.float64)
@@ -492,15 +323,7 @@ def canonical(loop: np.ndarray) -> np.ndarray:
     return np.roll(points, -start, axis=0)
 
 
-# -- the radius profile ------------------------------------------------------------
-
-
 def mid_planes(loops: Sequence[np.ndarray], z_nm: np.ndarray) -> np.ndarray:
-    """Return the mid-planes between consecutive z nodes that cross any of the loops.
-
-    Marching-squares vertices lie on the z lattice, so the band is sampled
-    between them rather than on them (Design §5).
-    """
     import numpy as np
 
     z = np.asarray(z_nm, dtype=np.float64)
@@ -512,11 +335,6 @@ def mid_planes(loops: Sequence[np.ndarray], z_nm: np.ndarray) -> np.ndarray:
 
 
 def innermost_crossings(loops: Sequence[np.ndarray], planes: np.ndarray) -> np.ndarray:
-    """Return the smallest radius at which any loop crosses each plane; ``nan`` where none does.
-
-    The interval test is half-open in z, as :func:`nanopnp.geometry.profile.plane_crossings`
-    takes it, so a vertex on the plane is counted once.
-    """
     import numpy as np
 
     heights = np.asarray(planes, dtype=np.float64)
@@ -534,24 +352,8 @@ def innermost_crossings(loops: Sequence[np.ndarray], planes: np.ndarray) -> np.n
     return result
 
 
-# -- the pipeline ----------------------------------------------------------------
-
-
 @dataclass(frozen=True)
 class ConditionedContour:
-    """The conditioned loop, and what conditioning did to it.
-
-    Parameters
-    ----------
-    loop
-        ``(n, 2)`` in ``(r, z)`` nm, canonical (D9).
-    raw_loops
-        The closed loops of step 1, before anything moved them.
-    record
-        Area and vertex count after each step, the holes filled, and the vertices
-        the spacing step removed.
-    """
-
     loop: np.ndarray
     raw_loops: tuple[np.ndarray, ...]
     record: dict[str, Canonicalisable]
@@ -567,22 +369,6 @@ def condition(
     smoothing: str,
     simplify_tol_nm: float,
 ) -> ConditionedContour:
-    """Run steps 1 to 7 on a stage-3 mean.
-
-    Parameters
-    ----------
-    mean, r_nm, z_nm
-        As :func:`extract_loops` takes them.
-    spacing_nm
-        h, the density grid spacing: δ = 2h, the resampling h/2, and ``h_c = h``.
-    isolevel, smoothing, simplify_tol_nm
-        ``geometry.contour``. ``smoothing: none`` skips the resampling and Taubin.
-
-    Raises
-    ------
-    ContourGateError
-        From extraction, the morphology or simplification, naming the criterion.
-    """
     import numpy as np
 
     loops = extract_loops(mean, r_nm, z_nm, isolevel)
@@ -628,34 +414,16 @@ def condition(
     )
 
 
-# -- the gate --------------------------------------------------------------------
-
-
 _LOCATION = re.compile(r"\[(-?[0-9.eE+-]+) (-?[0-9.eE+-]+)\]")
 
 
 @dataclass(frozen=True)
 class ContourMeasurement:
-    """Every section 5.2.1 criterion measured on one loop, and which of them it fails.
-
-    Parameters
-    ----------
-    record
-        What :func:`gate` returns when the loop passes: each criterion's measured
-        value, threshold and location, and the radius profile. On a loop that
-        fails, every criterion that could still be measured is here too, so a
-        caller can show all of them rather than only the first refusal.
-    failures
-        One :class:`ContourGateError` per failed criterion, in the order
-        :func:`gate` checks them; the first is the one it raises.
-    """
-
     record: dict[str, Canonicalisable]
     failures: tuple[ContourGateError, ...]
 
     @property
     def passed(self) -> bool:
-        """Whether the loop meets every criterion."""
         return not self.failures
 
 
@@ -666,27 +434,6 @@ def measure(
     planes_nm: np.ndarray,
     probe_nm: np.ndarray,
 ) -> ContourMeasurement:
-    """Measure the loop against every section 5.2.1 criterion, refusing nothing (WP24 D9).
-
-    The one implementation of the criteria: :func:`gate` is this and a raise at
-    the first failure, so the stage-4 gate and the desktop shell's display of a
-    hand edit (WP24 D8) cannot disagree about a value or a threshold.
-
-    Parameters
-    ----------
-    loop
-        The loop, ``(n, 2)`` in ``(r, z)`` nm.
-    spacing_nm
-        ``h_c``, the density grid spacing.
-    planes_nm, probe_nm
-        The mid-planes and the probe radius ``R_p`` on each (D11).
-
-    Returns
-    -------
-    ContourMeasurement
-        The record and the failures. A loop of fewer than three vertices has
-        nothing else to measure, and records only ``h_c_nm``.
-    """
     import numpy as np
 
     points = np.asarray(loop, dtype=np.float64)
@@ -837,31 +584,6 @@ def gate(
     planes_nm: np.ndarray,
     probe_nm: np.ndarray,
 ) -> dict[str, Canonicalisable]:
-    """Measure the loop against every section 5.2.1 criterion; never move it (D10).
-
-    :func:`measure`, and a raise at the first criterion it finds failed.
-
-    Parameters
-    ----------
-    loop
-        The conditioned loop, ``(n, 2)`` in ``(r, z)`` nm.
-    spacing_nm
-        ``h_c``, the density grid spacing.
-    planes_nm, probe_nm
-        The mid-planes and the probe radius ``R_p`` on each (D11).
-
-    Returns
-    -------
-    dict
-        Each criterion's measured value, threshold and location, and the radius
-        profile: ``z_nm``, ``probe_nm`` and ``lumen_nm`` on every plane.
-
-    Raises
-    ------
-    ContourGateError
-        At the first criterion that fails, naming it, the value, the threshold and
-        the (r, z).
-    """
     measured = measure(loop, spacing_nm=spacing_nm, planes_nm=planes_nm, probe_nm=probe_nm)
     if measured.failures:
         raise measured.failures[0]
@@ -871,12 +593,6 @@ def gate(
 def condition_map(
     reduced: ReducedMap, contour: ContourSpec, density: DensitySpec
 ) -> ConditionedContour:
-    """Condition a stage-3 map's mean as stage 4 does, with the case's own parameters.
-
-    The one call of :func:`condition` stage 4 makes, so the desktop shell's seed
-    after a refusal (§8.2.2 B9, WP24 D10) recomputes exactly the loop the gate
-    refused.
-    """
     return condition(
         reduced.mean,
         reduced.r_nm,
@@ -897,32 +613,6 @@ def gate_inputs(
     progress: Progress | None = None,
     cancel: CancelToken | None = None,
 ) -> tuple[np.ndarray, np.ndarray, ResolvedRadii]:
-    """Return what :func:`gate` holds a loop against: the mid-planes and ``R_p`` on each (D11).
-
-    The one route to the gate's inputs, so stage 4 and the desktop shell's
-    measurement of a hand edit (WP24 D8) cannot disagree about a plane or a
-    probe radius any more than :func:`measure` lets them disagree about a
-    threshold.
-
-    Parameters
-    ----------
-    loop
-        The loop, ``(n, 2)`` in ``(r, z)`` nm.
-    z_nm
-        The stage-3 map's z nodes; the planes are the mid-planes between them
-        that cross the loop.
-    ensemble
-        The stage-1 aligned ensemble.
-    density
-        ``geometry.density``, whose kernel names the radius set.
-    progress, cancel
-        Passed to :func:`~nanopnp.geometry.probe.probe_radius_profile`.
-
-    Returns
-    -------
-    tuple
-        The planes, the probe radius on each, and the resolved radius set.
-    """
     radii = resolve_radii(
         KERNEL_RADII[density.kernel],
         resname=ensemble.resname,
@@ -941,11 +631,6 @@ def gate_inputs(
 def lumen_change(
     raw_loops: Sequence[np.ndarray], loop: np.ndarray, planes_nm: np.ndarray
 ) -> dict[str, Canonicalisable]:
-    """Return how far conditioning moved the lumen radius from the raw contour's (D5).
-
-    The maximum and rms of ``|Δr_c|`` over the planes where both cross, and the
-    change at the conditioned loop's constriction.
-    """
     import numpy as np
 
     raw = innermost_crossings(raw_loops, planes_nm)
@@ -964,21 +649,14 @@ def lumen_change(
     }
 
 
-# -- the stage -------------------------------------------------------------------
-
-
 PAYLOAD_NAME = "profile"
-"""The artefact's payload key; the file is ``profile.yaml``."""
 
 CITATION = "nanopnp stage 4, SPECIFICATION.md section 5.2.1"
-"""``provenance.citation`` of every profile stage 4 writes (D12)."""
 
 WORKSPACE_DIRNAME = "tmp"
-"""Directory under the store root the payload is written to when no workspace is given."""
 
 
 def _specs(inputs: StageInputs) -> tuple[ContourSpec, DensitySpec]:
-    """Return ``geometry.contour`` and ``geometry.density``, or refuse a case without them."""
     resolved = inputs.resolved
     if resolved.contour is None or resolved.density is None:
         raise UnsupportedCaseSection(
@@ -989,7 +667,6 @@ def _specs(inputs: StageInputs) -> tuple[ContourSpec, DensitySpec]:
 
 
 def contour_parameters(contour: ContourSpec, density: DensitySpec) -> dict[str, Canonicalisable]:
-    """Return the stage-4 key's parameters (D13): the block, h, the constants and the radius set."""
     name = KERNEL_RADII[density.kernel]
     return {
         "contour": contour.model_dump(mode="json"),
@@ -1000,33 +677,20 @@ def contour_parameters(contour: ContourSpec, density: DensitySpec) -> dict[str, 
 
 
 class ContourStage:
-    """Stage 4: stage 3's (r, z) mean to a conditioned, gated ``nanopnp/profile/v0.5`` loop."""
-
     name = "contour"
 
     def __init__(self, *, workspace: Path | None = None) -> None:
-        """Build the stage.
-
-        Parameters
-        ----------
-        workspace
-            Directory ``profile.yaml`` is written to before the store copies it
-            in. Defaults to a fresh directory under the store root.
-        """
         self._workspace = Path(workspace) if workspace is not None else None
 
     def describe(self) -> StageDescription:
-        """Return the registry's description of this stage (FR-27)."""
         return describe(self.name)
 
     def key(self, inputs: StageInputs) -> ProfileArtefact:
-        """Return the artefact key from the block, h, the constants and stages 1 and 3."""
         return self._key(inputs, *_specs(inputs))
 
     def _key(
         self, inputs: StageInputs, contour: ContourSpec, density: DensitySpec
     ) -> ProfileArtefact:
-        """Return the artefact key from specs already resolved, so a run resolves the case once."""
         return ProfileArtefact(
             parameters=contour_parameters(contour, density),
             inputs={
@@ -1042,16 +706,6 @@ class ContourStage:
         progress: Progress | None = None,
         cancel: CancelToken | None = None,
     ) -> ProfileArtefact:
-        """Extract, condition and gate the contour, and emit the stage-4 artefact.
-
-        Raises
-        ------
-        ContourGateError
-            At the first §5.2.1 criterion the contour fails. No artefact is
-            written.
-        Cancelled
-            If ``cancel`` turns true. No artefact is written.
-        """
         contour, density = _specs(inputs)
         key = self._key(inputs, contour, density)
         structure = inputs.require("structure")

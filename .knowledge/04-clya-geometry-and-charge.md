@@ -143,6 +143,15 @@ margin of +0.173 to +0.869 nm and the constriction at 1.610 nm. The largest marg
 sits at z = −1.925 nm, the lowest mid-plane that crosses the loop. The ensemble's z is the MD
 frame, whose bilayer centre is z = 0 (G9) (WP20 plan, Design §6).
 
+Taubin's umbrella operator on a closed loop is circulant: mode `k = 1 - cos θ` is scaled by
+`(1 - λk)(1 - μk)` per pass, with λ = 0.5, μ = -0.53, N = 10. The pass band is wavelengths above 13.08
+samples (0.33 nm at h/2 spacing), and the grid-scale staircase (k = 1) keeps 0.069 of its amplitude
+[verified]. Source: `geometry/contour.py` (`taubin`), WP20 plan Design §3.
+
+The probe-radius profile costs frames x atoms x planes distances, 7.8e8 for the 50-frame ClyA-AS
+ensemble, a few seconds, batched per frame and bounded by `CHUNK_ELEMENTS` (32 MB of float64) [tested].
+Source: `geometry/probe.py`, WP20 plan Design §5.
+
 ### 1.4 2WCD against the reference polygon, and the isolevel lever [tested]
 
 > **Registration.** 2WCD sits at `Z_MD` = 5.6553 nm over residues 8–292 (§1.5); the bullets below
