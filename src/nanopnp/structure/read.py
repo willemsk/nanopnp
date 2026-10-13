@@ -1,33 +1,4 @@
-"""Reading a structure and its ensemble into one MDAnalysis universe (IF-04, FR-01, FR-03).
-
-Stage 1's inputs, read and checked before any geometry is computed. Three
-readers meet in one object: MDAnalysis reads PDB and every trajectory format,
-and gemmi reads mmCIF, which MDAnalysis 2.10 does not
-(``.knowledge/07-software-stack.md`` §2). The gemmi result is poured into an
-MDAnalysis ``Universe`` built from its topology attributes, with the coordinates
-in a ``MemoryReader``, so nothing downstream knows which reader ran (WP18 D2).
-
-**Every refusal names what it refused** (QR-12). The §5.3.1 NOTE on
-``structure:`` is the contract:
-
-- an element must be in the file, never guessed — a guessed element is how a
-  C-alpha becomes calcium, and a plausible wrong radius in stage 2;
-- an alternate location is refused, because choosing between them is structure
-  preparation, which the pipeline does not do;
-- the chains must number ``n``, a listed chain must be present, each must carry
-  at least half the C-alpha of the most complete one, and they must agree in
-  residue name wherever they share a residue number (FR-03);
-- a ``last_ns`` beyond the recorded span, and a ``count`` beyond the window, are
-  refused, because a file written without a timestep reads as 1 ps or 0 ps per
-  frame and would otherwise yield the whole trajectory in silence.
-
-Coordinates are converted from Å to nm exactly once, here.
-
-MDAnalysis and gemmi are imported at the top: this module is reached only
-through :func:`nanopnp.core.stages.create`, which names the ``structure`` extra
-when they are missing, so ``nanopnp stage --list`` never imports either
-(WP18 D13).
-"""
+"""Reading a structure and its ensemble into one MDAnalysis universe (IF-04, FR-03)."""
 
 from __future__ import annotations
 
@@ -52,10 +23,8 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 logger = logging.getLogger(__name__)
 
 ANGSTROM_NM = 0.1
-"""Nanometres per ångström: the one unit conversion stage 1 makes."""
 
 PS_NS = 1e-3
-"""Nanoseconds per picosecond; MDAnalysis reports times in ps."""
 
 STRUCTURE_SUFFIXES: dict[str, Literal["pdb", "mmcif"]] = {
     ".pdb": "pdb",
@@ -63,7 +32,6 @@ STRUCTURE_SUFFIXES: dict[str, Literal["pdb", "mmcif"]] = {
     ".cif": "mmcif",
     ".mmcif": "mmcif",
 }
-"""Structure file extensions, each optionally followed by ``.gz`` (IF-04)."""
 
 TRAJECTORY_FORMATS: dict[str, str] = {
     ".dcd": "DCD",
@@ -72,33 +40,16 @@ TRAJECTORY_FORMATS: dict[str, str] = {
     ".nc": "NCDF",
     ".ncdf": "NCDF",
 }
-"""Trajectory extensions against the MDAnalysis format that reads them (IF-04)."""
 
 HISTIDINES: frozenset[str] = frozenset({"HSD", "HSE", "HSP", "HID", "HIE", "HIP"})
-"""Histidine protonation variants, read as ``HIS`` when chains are compared (§5.3.1 NOTE)."""
 
 COVERAGE_FRACTION = 0.5
-"""Each chain carries at least this fraction of the most complete chain's C-alpha (§5.3.1 NOTE)."""
 
 
-class StructureInputError(ValueError):
-    """A structure, trajectory or frame selection was refused (FR-03, QR-12).
-
-    Covers the files, the elements, alternate locations, the chains, their
-    coverage and residue names, and the frame window. The message names the atom,
-    chain, file or quantity refused.
-    """
+class StructureInputError(ValueError): ...
 
 
 def structure_format(path: Path) -> Literal["pdb", "mmcif"]:
-    """Return which reader a structure file takes, from its extension.
-
-    Raises
-    ------
-    StructureInputError
-        If the extension is not one of :data:`STRUCTURE_SUFFIXES`, optionally
-        gzipped.
-    """
     suffixes = [suffix.lower() for suffix in path.suffixes]
     if suffixes and suffixes[-1] == ".gz":
         suffixes = suffixes[:-1]
@@ -113,13 +64,6 @@ def structure_format(path: Path) -> Literal["pdb", "mmcif"]:
 
 
 def trajectory_format(path: Path) -> str:
-    """Return the MDAnalysis format a trajectory file is read as, from its extension.
-
-    Raises
-    ------
-    StructureInputError
-        If the extension is not one of :data:`TRAJECTORY_FORMATS`.
-    """
     found = TRAJECTORY_FORMATS.get(path.suffix.lower())
     if found is None:
         raise StructureInputError(
@@ -130,38 +74,18 @@ def trajectory_format(path: Path) -> str:
 
 
 def _require_file(path: Path, key: str) -> None:
-    """Refuse a path that is not a file, naming the case key."""
     if not path.is_file():
         raise StructureInputError(f"{key} {str(path)!r} does not exist or is not a file")
 
 
 def load_universe(source: Path, trajectory: Path | None = None) -> mda.Universe:
-    """Read a structure, and optionally a trajectory, into one universe (IF-04).
-
-    Parameters
-    ----------
-    source
-        PDB or mmCIF, optionally gzipped. Without a trajectory its models are the
-        ensemble.
-    trajectory
-        DCD, XTC, TRR or NetCDF, whose frames replace the models.
-
-    Raises
-    ------
-    StructureInputError
-        If a file is missing, has an extension outside the accepted set, or an
-        mmCIF file has no ``_atom_site.type_symbol`` column; or if the trajectory
-        does not hold the structure's atoms.
-    """
     _require_file(source, "structure.source.path")
     kind = structure_format(source)
     if trajectory is not None:
         _require_file(trajectory, "structure.ensemble.trajectory")
         chosen = trajectory_format(trajectory)
     with warnings.catch_warnings():
-        # MDAnalysis warns for every record it fills with a default (a missing
-        # occupancy, an unset segment). Each is re-checked below where it
-        # matters; the rest is noise on a structure it read correctly.
+        # Defaulted-record warnings are noise; the ones that matter are re-checked in select.
         warnings.simplefilter("ignore")
         if kind == "mmcif":
             universe = _universe_from_mmcif(source)
@@ -171,8 +95,7 @@ def load_universe(source: Path, trajectory: Path | None = None) -> mda.Universe:
             try:
                 universe.load_new(str(trajectory), format=chosen)
             except ValueError as error:
-                # MDAnalysis refuses a trajectory whose atom count is not the
-                # topology's with a plain ValueError; name both files (QR-12).
+                # MDAnalysis raises a bare ValueError on an atom-count mismatch; name both files.
                 raise StructureInputError(
                     f"structure.ensemble.trajectory {trajectory.name!r} cannot be read against "
                     f"structure.source.path {source.name!r}, which holds {len(universe.atoms)} "
@@ -182,13 +105,6 @@ def load_universe(source: Path, trajectory: Path | None = None) -> mda.Universe:
 
 
 def _universe_from_mmcif(path: Path) -> mda.Universe:
-    """Build an MDAnalysis universe from an mmCIF file read by gemmi (WP18 D2).
-
-    Chains are gemmi's ``auth_asym_id``, residue numbers its ``auth_seq_id`` and
-    insertion code, elements the ``type_symbol`` column, alternate locations the
-    ``label_alt_id``. Every model becomes a frame, and every model must hold the
-    same atoms in the same order.
-    """
     import numpy as np
 
     block = gemmi.cif.read(str(path)).sole_block()
@@ -232,8 +148,7 @@ def _universe_from_mmcif(path: Path) -> mda.Universe:
                 f"{path.name!r}: model {index + 1} holds {len(atoms)} atoms and model 1 holds "
                 f"{len(first)}; the models of an ensemble must hold the same atoms"
             )
-        # Equal counts are not the same atoms: a model listing its chains in
-        # another order would put one chain's coordinates on another's topology.
+        # Equal counts are not the same atoms: another chain order would mis-assign coordinates.
         found = first_identity if index == 0 else identity(atoms)
         if found != first_identity:
             mismatch = next(
@@ -270,19 +185,6 @@ def _universe_from_mmcif(path: Path) -> mda.Universe:
 
 @dataclass(frozen=True)
 class AtomTable:
-    """The selected atoms, in file order (WP18 D10).
-
-    Parameters
-    ----------
-    element, name, resname, chain
-        String arrays; ``chain`` is the chain key of :attr:`Selection.chain_key`.
-    resid
-        Integer residue numbers.
-    icode
-        Insertion codes, blank where the file has none. Residues 27 and 27A
-        share a number and are told apart only by this.
-    """
-
     element: np.ndarray
     name: np.ndarray
     resname: np.ndarray
@@ -291,33 +193,11 @@ class AtomTable:
     chain: np.ndarray
 
     def __len__(self) -> int:
-        """Return the number of atoms."""
         return len(self.name)
 
 
 @dataclass(frozen=True)
 class Selection:
-    """The atoms stage 1 carries, and the C-alpha sets it fits on.
-
-    Parameters
-    ----------
-    group
-        The selected MDAnalysis atom group; its positions follow the trajectory.
-    atoms
-        The atom table of ``group``.
-    chain_key
-        Which identifier named the chains: ``chainID``, ``segid``, or
-        ``chainID, segid where blank``.
-    chains
-        The chain keys in file order.
-    fit_index
-        Indices into ``group`` of every C-alpha of the selection: the FR-01
-        superposition set.
-    common_index
-        ``(n, m)`` indices into ``group`` of the C-alpha each chain carries at
-        the ``m`` residues every chain shares, in residue order: the FR-02 set.
-    """
-
     group: mda.AtomGroup
     atoms: AtomTable
     chain_key: str
@@ -327,7 +207,6 @@ class Selection:
 
 
 def _chain_keys(group: mda.AtomGroup) -> tuple[list[str], str]:
-    """Return each atom's chain key, and which identifier supplied it."""
     chain_ids = [str(value).strip() for value in group.chainIDs]
     segids = [str(value).strip() for value in group.segids]
     blank = [not value for value in chain_ids]
@@ -343,27 +222,6 @@ def _chain_keys(group: mda.AtomGroup) -> tuple[list[str], str]:
 
 
 def select(universe: mda.Universe, *, selection: str, chains: str, n: int) -> Selection:
-    """Select the pore's atoms and check the oligomeric state (FR-03, QR-12).
-
-    Parameters
-    ----------
-    universe
-        As :func:`load_universe` returned it.
-    selection
-        ``structure.source.selection``, an MDAnalysis selection string.
-    chains
-        ``structure.source.chains``: ``all`` or a comma-separated list.
-    n
-        The order of the expected point group.
-
-    Raises
-    ------
-    StructureInputError
-        Naming the first atom with no element or with an alternate location; the
-        chain count against ``n``; a listed chain that is absent; a chain whose
-        C-alpha coverage is under half the most complete chain's; a residue-name
-        disagreement between chains; or too few shared C-alpha to fit.
-    """
     import numpy as np
 
     try:
@@ -388,8 +246,7 @@ def select(universe: mda.Universe, *, selection: str, chains: str, n: int) -> Se
         group = group[mask]
         keys = [key for key, kept in zip(keys, mask, strict=True) if kept]
         present = tuple(chain for chain in present if chain in listed)
-    # The element and alternate-location refusals apply to the atoms stage 1
-    # keeps: a chain source.chains leaves out is not selected (section 5.3.1 NOTE).
+    # Element and altloc refusals apply only to the chains kept (§5.3.1 NOTE).
     if not hasattr(group, "elements"):
         raise StructureInputError(
             f"no atom of structure.source.selection {selection!r} carries an element in the file; "
@@ -491,7 +348,6 @@ def select(universe: mda.Universe, *, selection: str, chains: str, n: int) -> Se
 
 
 def _describe(atom: Any) -> str:  # noqa: ANN401 - an MDAnalysis Atom, which is untyped
-    """Name one atom as a diagnostic should: index, name, residue and chain."""
     chain = str(getattr(atom, "chainID", "")).strip() or str(getattr(atom, "segid", "")).strip()
     return (
         f"{int(atom.index) + 1} ({atom.name} {atom.resname} {int(atom.resid)}"
@@ -501,28 +357,12 @@ def _describe(atom: Any) -> str:  # noqa: ANN401 - an MDAnalysis Atom, which is 
 
 @dataclass(frozen=True)
 class FrameWindow:
-    """The frames of the ensemble, as selected and as their file records them (§5.3.1 NOTE).
-
-    Parameters
-    ----------
-    indices
-        Frame indices into the trajectory (or the source file's models).
-    times_ns
-        Their times as read, in nanoseconds; not corrected, because a wrong
-        timestep cannot be detected inside its span.
-    interval_ns
-        The reader's frame interval.
-    available
-        How many frames the file holds.
-    """
-
     indices: tuple[int, ...]
     times_ns: tuple[float, ...]
     interval_ns: float
     available: int
 
     def summary(self) -> dict[str, Any]:
-        """Return the window as plain data."""
         return {
             "indices": list(self.indices),
             "times_ns": list(self.times_ns),
@@ -538,19 +378,6 @@ def select_frames(
     last_ns: float | None = None,
     count: int | None = None,
 ) -> FrameWindow:
-    """Choose the ensemble's frames by ``last_ns`` and ``count`` (§5.3.1 NOTE, WP18 D5).
-
-    ``last_ns`` keeps the frames within that many nanoseconds of the last one, by
-    the recorded times. ``count`` then keeps ``count`` frames at the uniform
-    stride ``⌊N/count⌋``, ending on the last frame of the window of ``N``.
-
-    Raises
-    ------
-    StructureInputError
-        If ``last_ns`` exceeds the recorded span by more than one frame interval,
-        naming the span and the interval; or if ``count`` exceeds the window,
-        naming both.
-    """
     available = len(times_ns)
     window = list(range(available))
     if last_ns is not None:
@@ -563,9 +390,8 @@ def select_frames(
                 "window would be the whole trajectory in silence (section 5.3.1 NOTE)"
             )
         start = times_ns[-1] - last_ns
-        # A slack for the round-off of times accumulated as frame * dt, where dt may be a
-        # float32 (a DCD stores its timestep so): a thousandth of an interval never admits
-        # a neighbouring frame, and covers the drift of ~1.6e4 frames of float32 error.
+        # Slack for float32 dt accumulated as frame * dt (a DCD stores it so); a thousandth of
+        # an interval never admits a neighbouring frame and covers ~1.6e4 frames of drift.
         slack = 1e-9 * max(1.0, abs(times_ns[-1])) + 1e-3 * interval_ns
         window = [index for index in window if times_ns[index] >= start - slack]
     if count is not None:
@@ -586,12 +412,9 @@ def select_frames(
 
 
 def frame_times(universe: mda.Universe) -> tuple[tuple[float, ...], float]:
-    """Return every frame's recorded time and the reader's interval, in nanoseconds."""
     trajectory = universe.trajectory
     with warnings.catch_warnings():
-        # "Reader has no dt information, set to 1.0 ps": the 1 ps is what the
-        # file records, and the last_ns gate below exists because of it. The
-        # warning says nothing the recorded interval does not.
+        # The "no dt information" warning repeats what the recorded interval already says.
         warnings.simplefilter("ignore")
         times = tuple(float(step.time) * PS_NS for step in trajectory)
         interval = float(trajectory.dt) * PS_NS
@@ -599,20 +422,17 @@ def frame_times(universe: mda.Universe) -> tuple[tuple[float, ...], float]:
 
 
 def positions_nm(group: mda.AtomGroup, indices: Sequence[int]) -> np.ndarray:
-    """Return ``(frames, atoms, 3)`` positions of ``group`` at ``indices``, in nm, float64."""
     import numpy as np
 
     trajectory = group.universe.trajectory
-    # Filled in place: a list of frames and its stacked copy held the ensemble
-    # twice, which at 10^5 atoms and 10^3 frames is 2.4 GB of float64 each.
+    # Filled in place: a list of frames plus its stack held the ensemble twice.
     positions = np.empty((len(indices), len(group), 3), dtype=np.float64)
     with warnings.catch_warnings():
-        # Re-reading a PDB frame repeats the reader's notices (a placeholder
-        # CRYST1 cell, a filled-in occupancy); none bears on the coordinates.
+        # Re-reading a PDB frame repeats reader notices that do not bear on the coordinates.
         warnings.simplefilter("ignore")
         for frame, index in enumerate(indices):
             trajectory[index]
-            # Widened to float64 first and scaled second, as a float64 product.
+            # Widened to float64 before scaling.
             positions[frame] = group.positions
             positions[frame] *= ANGSTROM_NM
     return positions
