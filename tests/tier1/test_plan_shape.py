@@ -185,7 +185,7 @@ def test_ver72_g_the_planning_skills_require_an_in_brief_of_at_most_250_words(sk
 
 
 ROSTER = {
-    "ci-log-classifier": ("sonnet", None, True),
+    "ci-log-classifier": ("haiku", None, True),
     "physics-reviewer": ("opus", "high", False),
 }
 

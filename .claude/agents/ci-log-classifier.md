@@ -1,7 +1,7 @@
 ---
 name: ci-log-classifier
 description: Classifies a fetched CI log against the steward's failure classes. Given a log file path, returns the failing step, the first error quoted, and the class quoted from the steward skill.
-model: sonnet
+model: haiku
 tools: Read, Grep, Glob
 omitClaudeMd: true
 ---
