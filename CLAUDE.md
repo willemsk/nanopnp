@@ -29,8 +29,7 @@ Open-source Python reimplementation of the **ePNP-NS** framework for biological 
 
 | Command | Purpose |
 |---|---|
-| `uv run pytest` | Tiers 1–2 without `extended` tests: the development selection, the commit hook's fallback |
-| `.claude/hooks/gate.sh map` | Records the impact map the commit hook selects from (VER-74); run it in the background |
+| `uv run pytest` | Tiers 1–2 without `extended` tests: the development selection |
 | `uv run pytest --extended` | All of tiers 1–2, as CI runs it. Naming an `extended` test's file runs it without the flag |
 | `uv run pytest -n auto --dist loadfile` | Parallel; set `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS`, `MKL_NUM_THREADS` to 1. `tests/tier1/test_gui_widgets.py` runs serially, apart |
 | `uv run pytest -m tier1` / `-m tier3` / `-m slow` | Unit tests / reference comparison / benchmarks (the last two not gated) |
@@ -38,22 +37,21 @@ Open-source Python reimplementation of the **ePNP-NS** framework for biological 
 | `uv run nanopnp --env` | Resolved environment and data locations |
 | `uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run mkdocs build --strict` | Documentation build, as CI's `docs` job (VER-45) |
 
-Gate before committing: `uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv run pytest`.
-Gate before pushing: `.claude/hooks/gate.sh run` (the above with `--extended`, plus coverage of changed
-lines). `gate.sh` runs before each `git commit` Claude Code makes (`--no-verify` skips it): after
-lint, format and types it runs the tests `tests/impact.py` selects, or the development selection
-when no map is usable, naming why. A hook pass never stands in for `run`.
+Gate before committing: `uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv run pytest -m tier1`.
+Gate before pushing: `.claude/hooks/gate.sh run` (the above with `pytest --extended` over the whole suite, no
+coverage). `gate.sh` runs before each `git commit` Claude Code makes (`--no-verify` skips it): the lock check,
+lint, format, types and every Tier 1 test without the `extended` marker. A hook pass never stands in for `run`.
 Start `run` with Bash `run_in_background` and push when it passes; the hook refuses a push of
 a tree it has not passed.
 
-- `run` requires full branch coverage of the lines changed in `src/nanopnp/` outside `gui/`
-  (`diff-cover` against `main`). An exempt line says `# pragma: no cover - <reason>`. Coverage misses
-  missing code and the untaken arm of `a if c else b`; planned tests cover those.
+- Changed-line branch coverage (`src/nanopnp/` outside `gui/`, `diff-cover` against `main`) is checked by CI alone.
+  An exempt line says `# pragma: no cover - <reason>`. Coverage misses missing code and the untaken arm of
+  `a if c else b`; write the tests with the item.
 - `run` sets `NANOPNP_REQUIRE_GMSH=1` (and `NANOPNP_REQUIRE_APBS=1` where the wheel exists): a
   backend that cannot import fails, not skips.
 - When only prose changed, the hook runs ruff alone (`.github/scripts/prose-only.sh`;
   `SPECIFICATION.md`, `docs/`, example READMEs and `.claude/{agents,skills,rules}/` are not prose,
-  and `docs/plans/` neither: a change to only those runs the tests that read them); CI's documentation build still runs.
+  and `docs/plans/` neither: a change to only those runs the tests); CI's documentation build still runs.
 
 ## Project structure
 

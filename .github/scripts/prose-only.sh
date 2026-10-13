@@ -17,8 +17,7 @@
 #   .claude/agents/ .claude/skills/ .claude/rules/ docs/plans/
 #               the roster, skill, rule and plan pages whose frontmatter, tools,
 #               paths and `## In brief` caps tests/tier1/test_agent_roster.py
-#               reads (REV-84). A change to only these runs the tests that read them
-#               (tests/impact.py selects a file's readers), not the whole suite.
+#               reads (REV-84). A change to only these runs the tests that read them.
 # docs/ is NOT prose as a directory: docs/sweeps/ and docs/validation/ hold the
 # YAML that tests/tier1 reads (the section 8.3 reference sweep, the frozen
 # cases, the probe grid). Only its Markdown is.

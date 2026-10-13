@@ -277,12 +277,8 @@ def test_gate_run_on_a_clean_tree_runs_the_extended_tests_on_unpushed_code(
     ran = calls.read_text(encoding="utf-8").splitlines()
     assert any("pytest" in call and "--extended" in call for call in ran), ran
     stamp = Path(_git(repo, "rev-parse", "--absolute-git-dir")) / "nanopnp-gate.pass"
-    tree, selection, commit = stamp.read_text(encoding="utf-8").splitlines()[-1].split()
-    # The pass names its tree and a commit object of it whose parent is the merge
-    # base it was judged against, which a follow-up compares with (WP43 D7).
+    tree, selection = stamp.read_text(encoding="utf-8").splitlines()[-1].split()
     assert (tree, selection) == (_git(repo, "rev-parse", "HEAD^{tree}"), "extended")
-    assert _git(repo, "rev-parse", f"{commit}^{{tree}}") == tree
-    assert _git(repo, "rev-parse", f"{commit}^1") == _git(repo, "merge-base", "HEAD", "main")
 
 
 def test_gate_run_on_an_already_pushed_branch_still_runs_the_extended_tests(
@@ -407,41 +403,107 @@ def _recording_uv(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, body: str = "
     return calls
 
 
-def test_gate_run_requires_gmsh_and_checks_the_branch_coverage_of_changed_lines(
+def _uv_calls(calls: Path) -> list[str]:
+    return [line.split("|", 1)[1] for line in calls.read_text(encoding="utf-8").splitlines()]
+
+
+def test_ver72_gate_run_passes_extended_without_coverage_and_requires_gmsh(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """``gate.sh run`` gates as CI's lint job: branch coverage, skips listed, Gmsh required.
+    """``gate.sh run`` runs the whole suite once with ``--extended``, no coverage, Gmsh required.
 
-    pytest writes a branch-coverage XML report, and diff-cover judges it against
-    the merge base with ``main``, the base the prose rule uses, at 100 % of the
-    changed lines of ``src/nanopnp`` outside ``gui/`` (VER-72; the workflow rulings).
+    L3: the push gate is CI's lint job and pull-request legs without the changed-line
+    coverage, which ``diff-cover`` judges after the push.
     """
     assert _BASH is not None
     repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/code.py")
     calls = _recording_uv(tmp_path, monkeypatch)
-    result = subprocess.run(
-        [_BASH, str(_GATE), "run"], cwd=repo, capture_output=True, text=True, timeout=60
-    )
+    result = _run(repo)
     assert result.returncode == 0, result.stderr
     ran = calls.read_text(encoding="utf-8").splitlines()
     tests = [call for call in ran if "pytest" in call and "--extended" in call]
     assert len(tests) == 1, ran
     assert tests[0].startswith("1|")
-    arguments = tests[0].split("|", 1)[1].split()
-    for flag in ("-rsfE", "--cov=src/nanopnp", "--cov-branch"):
-        assert flag in arguments, (flag, tests[0])
-    assert any(argument.startswith("--cov-report=xml:") for argument in arguments), tests[0]
-    covered = [call for call in ran if "diff-cover" in call]
-    assert len(covered) == 1, ran
-    base = _git(repo, "merge-base", "HEAD", "main")
-    for flag in (
-        f"--compare-branch={base}",
-        "--branch-coverage",
-        "--fail-under=100",
-        "src/nanopnp/**/*.py",
-        "*/src/nanopnp/gui/*",
-    ):
-        assert flag in covered[0], (flag, covered[0])
+    assert "-rsfE" in tests[0].split()
+    assert not any("--cov" in call or "diff-cover" in call for call in ran), ran
+
+
+def test_gate_commit_runs_the_five_steps_in_order_and_stops_at_the_first_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A commit runs lock, ruff, format, mypy and Tier 1; a failure names its step (L2)."""
+    if shutil.which("jq") is None:
+        pytest.skip("the gate hook reads its payload with jq")
+    repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/other.py")
+    (repo / "src/nanopnp/other.py").write_text("x = 2\n", encoding="utf-8")
+    calls = _recording_uv(tmp_path, monkeypatch)
+    assert _hook(repo, repo, "git commit -am x").count("gate: passed") == 1
+    ran = _uv_calls(calls)
+    assert [call.split()[0:3] for call in ran[:4]] == [
+        ["lock", "--check"],
+        ["run", "ruff", "check"],
+        ["run", "ruff", "format"],
+        ["run", "mypy", "src/"],
+    ]
+    assert ran[4].startswith("run pytest") and "tier1 and not slow" in ran[4]
+    assert "--extended" not in ran[4]
+    assert "test_gui_widgets.py" in ran[5] and "-n" not in ran[5].split()
+
+    calls.unlink()
+    (repo / "src/nanopnp/other.py").write_text("x = 3\n", encoding="utf-8")
+    (tmp_path / "bin/uv").write_text(
+        f'#!/bin/sh\necho "x|$*" >> "{calls}"\n'
+        'case "$*" in *mypy*) echo bad types; exit 1;; esac\n',
+        encoding="utf-8",
+    )
+    decision = json.loads(_hook(repo, repo, "git commit -am y"))["hookSpecificOutput"]
+    assert decision["permissionDecision"] == "deny"
+    assert "mypy" in decision["permissionDecisionReason"]
+    assert "bad types" in decision["permissionDecisionReason"]
+    assert not any("pytest" in call for call in _uv_calls(calls))
+
+
+def test_gate_commit_keeps_the_gui_file_out_of_the_parallel_call(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The GUI file runs serially and apart, as in CI (L2)."""
+    if shutil.which("jq") is None:
+        pytest.skip("the gate hook reads its payload with jq")
+    repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/other.py")
+    (repo / "src/nanopnp/other.py").write_text("x = 2\n", encoding="utf-8")
+    calls = _recording_uv(tmp_path, monkeypatch)
+    _hook(repo, repo, "git commit -am x")
+    parallel = [call for call in _uv_calls(calls) if "--dist" in call]
+    assert len(parallel) == 1
+    assert "--ignore=tests/tier1/test_gui_widgets.py" in parallel[0]
+
+
+def test_gate_commit_of_a_prose_only_change_runs_ruff_alone(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Prose changes skip the lock check, mypy and pytest (L2)."""
+    if shutil.which("jq") is None:
+        pytest.skip("the gate hook reads its payload with jq")
+    repo = _branch_repo(tmp_path, monkeypatch, "docs/x/notes.md")
+    (repo / "docs/x/notes.md").write_text("more\n", encoding="utf-8")
+    calls = _recording_uv(tmp_path, monkeypatch)
+    _hook(repo, repo, "git commit -am x")
+    assert [call.split()[1] for call in _uv_calls(calls)] == ["ruff", "ruff"]
+
+
+def test_gate_commit_of_an_unchanged_tree_is_not_rerun(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A tree the hook passed is not gated again, so a split into commits pays once (L2)."""
+    if shutil.which("jq") is None:
+        pytest.skip("the gate hook reads its payload with jq")
+    repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/other.py")
+    (repo / "src/nanopnp/other.py").write_text("x = 2\n", encoding="utf-8")
+    calls = _recording_uv(tmp_path, monkeypatch)
+    _hook(repo, repo, "git commit -am x")
+    first = len(_uv_calls(calls))
+    assert _hook(repo, repo, "git commit -am x") == ""
+    assert len(_uv_calls(calls)) == first
 
 
 @pytest.mark.parametrize(
@@ -551,291 +613,21 @@ def test_gate_hook_requires_gmsh_for_a_tracked_change_beside_an_untracked_file(
     assert {call.split("|", 1)[0] for call in tests} == {"1"}
 
 
-def test_gate_run_without_a_merge_base_fails_before_the_selection(
+def test_gate_run_without_a_merge_base_runs_the_whole_gate(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """``gate.sh run`` names the fetch that supplies the merge base, and runs nothing first."""
+    """With no merge base the prose rule cannot clear the branch, so every step runs (L3)."""
     assert _BASH is not None
-    repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/code.py")
+    repo = _branch_repo(tmp_path, monkeypatch, "docs/x/notes.md")
     _git(repo, "branch", "-m", "main", "trunk")
     calls = _recording_uv(tmp_path, monkeypatch)
-    result = subprocess.run(
-        [_BASH, str(_GATE), "run"], cwd=repo, capture_output=True, text=True, timeout=60
-    )
-    assert result.returncode == 1
-    assert "git fetch origin main" in result.stderr
-    assert not calls.exists() or "pytest" not in calls.read_text(encoding="utf-8")
-
-
-def _impact_repo(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, selector: str, pytest_status: int = 0
-) -> Path:
-    """Return a branch repository with an impact map, and a fake ``uv`` running ``selector``.
-
-    ``selector`` is the shell body run for ``uv run python tests/impact.py select``, and
-    ``pytest_status`` the exit status of the selection's own pytest call; every call is
-    logged as in ``_recording_uv``.
-    """
-    repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/other.py")
-    (repo / "tests").mkdir(exist_ok=True)
-    (repo / "tests/impact.py").write_text("", encoding="utf-8")
-    common = Path(_git(repo, "rev-parse", "--path-format=absolute", "--git-common-dir"))
-    (common / "nanopnp-impact").mkdir()
-    (common / "nanopnp-impact/map.json").write_text("{}", encoding="utf-8")
-    (repo / "src/nanopnp/other.py").write_text("x = 2\n", encoding="utf-8")
-    body = (
-        f'case "$*" in *"impact.py select"*) {selector};; '
-        f'*"not extended"*) exit {pytest_status};; esac\n'
-    )
-    _recording_uv(tmp_path, monkeypatch, body)
-    return repo
+    assert _run(repo).returncode == 0
+    assert any("--extended" in call for call in _uv_calls(calls))
 
 
 def _log(repo: Path) -> list[str]:
     path = Path(_git(repo, "rev-parse", "--absolute-git-dir")) / "nanopnp-gate.log"
     return path.read_text(encoding="utf-8").splitlines()
-
-
-def test_gate_hook_runs_the_impact_selection_by_whole_file_and_stamps_impact(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """The hook runs the files the selector names, never their walks, and stamps ``impact`` (D5)."""
-    if shutil.which("jq") is None:
-        pytest.skip("the gate hook reads its payload with jq")
-    selector = (
-        "printf '%s\\n' tests/tier1/test_a.py::test_x 'tests/tier1/test_a.py::test_y[1]' "
-        "tests/tier2/test_b.py::test_z; exit 0"
-    )
-    repo = _impact_repo(tmp_path, monkeypatch, selector)
-    output = _hook(repo, repo, "git commit -am x")
-    calls = (tmp_path / "uv-calls").read_text(encoding="utf-8").splitlines()
-    runs = [call for call in calls if "pytest" in call and "-rsfE" in call and "gui" not in call]
-    assert len(runs) == 1, calls
-    arguments = runs[0].split("|", 1)[1]
-    assert arguments.endswith("-- tests/tier1/test_a.py tests/tier2/test_b.py"), arguments
-    assert "not extended" in arguments
-    assert "--extended" not in arguments
-    assert "-n 0" in arguments  # three tests: no workers to start
-    assert "impact selection, 3 tests" in json.loads(output)["systemMessage"]
-    stamp = Path(_git(repo, "rev-parse", "--absolute-git-dir")) / "nanopnp-gate.pass"
-    assert stamp.read_text(encoding="utf-8").split()[-1] == "impact"
-    mode, selection, count = _log(repo)[-1].split()[1:4]
-    assert (mode, selection, count) == ("hook", "impact", "3")
-    assert _log(repo)[-1].endswith(" passed")
-
-
-@pytest.mark.parametrize(("status", "passes"), [(5, True), (1, False)])
-def test_gate_hook_takes_exit_5_of_the_impact_selection_for_no_failure(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, status: int, passes: bool
-) -> None:
-    """A new Tier 3 file is named by path and the marker expression deselects all of it (D5).
-
-    pytest exits 5 then ("no tests ran"); the selection held nothing to run, which is
-    no failure, whereas any other nonzero status still denies the commit.
-    """
-    if shutil.which("jq") is None:
-        pytest.skip("the gate hook reads its payload with jq")
-    selector = "printf '%s\\n' tests/tier3/test_new.py; exit 0"
-    repo = _impact_repo(tmp_path, monkeypatch, selector, pytest_status=status)
-    output = json.loads(_hook(repo, repo, "git commit -am x"))
-    if passes:
-        assert "impact selection, 1 tests" in output["systemMessage"]
-    else:
-        assert output["hookSpecificOutput"]["permissionDecision"] == "deny"
-
-
-def test_gate_hook_reads_node_ids_from_stdout_alone_and_keeps_the_gui_file_serial(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """A warning ``uv`` writes to stderr is never a path; the GUI file stays out of xdist (D5)."""
-    if shutil.which("jq") is None:
-        pytest.skip("the gate hook reads its payload with jq")
-    selector = (
-        "echo 'warning: UV_NATIVE_TLS is deprecated' >&2; "
-        "printf '%s\\n' tests/tier1/test_a.py::test_x "
-        "tests/tier1/test_gui_widgets.py::test_w; exit 0"
-    )
-    repo = _impact_repo(tmp_path, monkeypatch, selector)
-    output = _hook(repo, repo, "git commit -am x")
-    calls = (tmp_path / "uv-calls").read_text(encoding="utf-8").splitlines()
-    runs = [call for call in calls if "pytest" in call and "not extended" in call]
-    assert len(runs) == 1, calls
-    assert runs[0].split("|", 1)[1].endswith("-- tests/tier1/test_a.py"), runs[0]
-    assert "warning" not in json.loads(output)["systemMessage"]
-
-
-def test_gate_hook_falls_back_to_the_development_selection_naming_the_reason(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """A selector fallback runs the whole development selection, and the message says why."""
-    if shutil.which("jq") is None:
-        pytest.skip("the gate hook reads its payload with jq")
-    repo = _impact_repo(
-        tmp_path,
-        monkeypatch,
-        "echo 'FALLBACK: src/nanopnp/core/units.py: module-level change'; exit 3",
-    )
-    output = _hook(repo, repo, "git commit -am x")
-    calls = (tmp_path / "uv-calls").read_text(encoding="utf-8").splitlines()
-    runs = [
-        call
-        for call in calls
-        if "pytest" in call and "--ignore=tests/tier1/test_gui_widgets.py" in call
-    ]
-    assert len(runs) == 1, calls
-    assert "src/nanopnp/core/units.py: module-level change" in json.loads(output)["systemMessage"]
-    assert _log(repo)[-1].split()[2] == "development"
-
-
-@pytest.mark.parametrize(
-    ("recorded", "named"),
-    [
-        ("commit_hook_s: 1\nmargin: 0.0\n", "budget is 1 s, 1 s with its margin"),
-        ("commit_hook_s: 1000\nmargin: 0.5\n", None),
-    ],
-    ids=["over", "within"],
-)
-def test_gate_hook_judges_its_time_by_the_budgets_the_repository_records(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, recorded: str, named: str | None
-) -> None:
-    """The hook names an overrun of ``commit_hook_s`` past ``margin``, never failing (VER-73)."""
-    if shutil.which("jq") is None:
-        pytest.skip("the gate hook reads its payload with jq")
-    repo = _impact_repo(tmp_path, monkeypatch, "sleep 2; exit 0")
-    (repo / ".github/budgets.yaml").write_text(recorded, encoding="utf-8")
-    message = json.loads(_hook(repo, repo, "git commit -am x"))["systemMessage"]
-    if named is None:
-        assert "Over budget" not in message
-    else:
-        assert f"Over budget: the commit hook's {named}" in message
-
-
-def test_gate_hook_without_a_map_falls_back_and_never_calls_the_selector(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    if shutil.which("jq") is None:
-        pytest.skip("the gate hook reads its payload with jq")
-    repo = _impact_repo(tmp_path, monkeypatch, "exit 0")
-    common = Path(_git(repo, "rev-parse", "--path-format=absolute", "--git-common-dir"))
-    (common / "nanopnp-impact/map.json").unlink()
-    output = _hook(repo, repo, "git commit -am x")
-    calls = (tmp_path / "uv-calls").read_text(encoding="utf-8")
-    assert "impact.py select" not in calls
-    assert "no impact map" in json.loads(output)["systemMessage"]
-
-
-def test_gate_hook_pass_keeps_the_extended_stamp_line_last(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """A commit-hook pass adds its line and leaves the push gate's ``extended`` line in place."""
-    if shutil.which("jq") is None:
-        pytest.skip("the gate hook reads its payload with jq")
-    repo = _impact_repo(tmp_path, monkeypatch, "exit 0")
-    stamp = Path(_git(repo, "rev-parse", "--absolute-git-dir")) / "nanopnp-gate.pass"
-    stamp.write_text(f"{'a' * 40} extended\n", encoding="utf-8")
-    _hook(repo, repo, "git commit -am x")
-    lines = stamp.read_text(encoding="utf-8").splitlines()
-    assert lines[-1] == f"{'a' * 40} extended"
-    assert len(lines) == 2 and lines[0].endswith(" impact")
-
-
-def test_gate_map_records_under_the_recorder_and_skips_a_usable_map(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """``gate.sh map`` runs the development selection with ``-p impact`` and installs the map.
-
-    A map whose tree the repository holds is kept: the selector reads every change
-    since that tree, so it never needs re-recording to stay sound.
-    """
-    assert _BASH is not None
-    if shutil.which("jq") is None:
-        pytest.skip("the gate reads the map with jq")
-    repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/code.py")
-    tree = _git(repo, "rev-parse", "HEAD^{tree}")
-    writer = (
-        # One argument at a time: ${*##...} strips each argument under bash, which
-        # is macOS's /bin/sh, and the joined string only under dash.
-        "for a; do case $a in --impact-record=*) path=${a#--impact-record=}; "
-        f'printf \'{{"tree": "{tree}", "tests": {{"t": {{}}}}}}\' > "$path";; esac; done\n'
-    )
-    calls = _recording_uv(tmp_path, monkeypatch, writer)
-    result = subprocess.run(
-        [_BASH, str(_GATE), "map"], cwd=repo, capture_output=True, text=True, timeout=60
-    )
-    assert result.returncode == 0, result.stderr
-    runs = [call for call in calls.read_text(encoding="utf-8").splitlines() if "pytest" in call]
-    assert len(runs) == 1 and "-p impact" in runs[0] and "--extended" not in runs[0], runs
-    common = Path(_git(repo, "rev-parse", "--path-format=absolute", "--git-common-dir"))
-    assert (
-        json.loads((common / "nanopnp-impact/map.json").read_text(encoding="utf-8"))["tree"] == tree
-    )
-    assert _log(repo)[-1].split()[1:4] == ["map", "development", "1"]
-    again = subprocess.run(
-        [_BASH, str(_GATE), "map"], cwd=repo, capture_output=True, text=True, timeout=60
-    )
-    assert again.returncode == 0
-    assert "nothing to record" in again.stdout
-    assert len([c for c in calls.read_text(encoding="utf-8").splitlines() if "pytest" in c]) == 1
-
-
-def test_gate_map_installs_no_map_from_a_run_with_a_failing_test(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """A failing test records only what it ran before it failed, so its map would under-select."""
-    assert _BASH is not None
-    if shutil.which("jq") is None:
-        pytest.skip("the gate reads the map with jq")
-    repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/code.py")
-    tree = _git(repo, "rev-parse", "HEAD^{tree}")
-    body = (
-        'case "$*" in *pytest*) for a; do case $a in --impact-record=*) '
-        f'printf \'{{"tree": "{tree}", "tests": {{"t": {{}}}}}}\' > "${{a#--impact-record=}}";; '
-        "esac; done; exit 1;; esac\n"
-    )
-    _recording_uv(tmp_path, monkeypatch, body)
-    result = subprocess.run(
-        [_BASH, str(_GATE), "map"], cwd=repo, capture_output=True, text=True, timeout=60
-    )
-    assert result.returncode == 1
-    assert "no map recorded" in result.stderr
-    common = Path(_git(repo, "rev-parse", "--path-format=absolute", "--git-common-dir"))
-    assert not (common / "nanopnp-impact/map.json").exists()
-    assert _log(repo)[-1].endswith(" failed")
-
-
-def _passed_repo(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, selector: str
-) -> tuple[Path, str, Path]:
-    """Return a branch repository after a full ``gate.sh run`` pass, its stamp's commit and calls.
-
-    The fake ``uv`` writes an ``extended`` map of the passed tree wherever the
-    recorder is asked to record, runs ``selector`` for ``impact.py select``, and
-    logs every call as ``_recording_uv`` does.
-    """
-    if shutil.which("jq") is None:
-        pytest.skip("the gate reads the map with jq")
-    repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/code.py")
-    (repo / "tests").mkdir(exist_ok=True)
-    (repo / "tests/impact.py").write_text("", encoding="utf-8")
-    _git(repo, "add", "-A")
-    _git(repo, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "impact")
-    monkeypatch.setenv("FAKE_MAP_TREE", _git(repo, "rev-parse", "HEAD^{tree}"))
-    body = (
-        'case "$*" in\n'
-        f'  *"impact.py select"*) {selector};;\n'
-        '  *"impact.py merge"*) ;;\n'
-        "  *--impact-record=*) for a; do case $a in --impact-record=*) path=${a#--impact-record=}; "
-        'printf \'{"tree": "%s", "extended": true, "tests": {"t": {}}}\' "$FAKE_MAP_TREE" '
-        '> "$path";; esac; done;;\n'
-        "esac\n"
-    )
-    calls = _recording_uv(tmp_path, monkeypatch, body)
-    first = _run(repo)
-    assert first.returncode == 0, first.stderr
-    stamp = Path(_git(repo, "rev-parse", "--absolute-git-dir")) / "nanopnp-gate.pass"
-    commit = stamp.read_text(encoding="utf-8").splitlines()[-1].split()[2]
-    calls.write_text("", encoding="utf-8")
-    return repo, commit, calls
 
 
 def _run(repo: Path) -> subprocess.CompletedProcess[str]:
@@ -845,92 +637,21 @@ def _run(repo: Path) -> subprocess.CompletedProcess[str]:
     )
 
 
-def test_gate_run_full_pass_installs_the_extended_map_of_its_tree(
+def test_gate_run_stamps_extended_only_on_a_pass(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A full pass records under ``-p impact`` and moves the map with the stamp (Design §7)."""
-    repo, _, _ = _passed_repo(tmp_path, monkeypatch, "exit 0")
-    common = Path(_git(repo, "rev-parse", "--path-format=absolute", "--git-common-dir"))
-    recorded = json.loads((common / "nanopnp-impact/map.json").read_text(encoding="utf-8"))
-    assert recorded["tree"] == _git(repo, "rev-parse", "HEAD^{tree}")
-    assert not (common / "nanopnp-impact/map.json.new").exists()
-    assert not (common / "nanopnp-impact/gate.lock").exists()
-    assert _log(repo)[-1].split()[1:4] == ["run", "extended", "1"]
-
-
-def test_gate_run_follow_up_runs_only_its_selection_against_the_passed_tree(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """After a pass on P, a run on T runs only the selection, with its walks, under coverage.
-
-    diff-cover compares with P's commit, two-dot, so it judges the lines changed
-    since P alone; the map takes the re-run files' records and the stamp moves to
-    T (WP43 D7, J3; Design section 2).
-    """
-    selector = "printf '%s\\n' tests/tier1/test_a.py::test_x tests/tier2/test_b.py::test_z; exit 0"
-    repo, passed, calls = _passed_repo(tmp_path, monkeypatch, selector)
-    (repo / "src/nanopnp/code.py").write_text("x = 2\n", encoding="utf-8")
-    result = _run(repo)
-    assert result.returncode == 0, result.stderr
-    assert "follow-up" in result.stdout and "2 tests in 2 files" in result.stdout
-    ran = [call.split("|", 1)[1] for call in calls.read_text(encoding="utf-8").splitlines()]
-    assert any("impact.py select" in call and "--extended" in call for call in ran), ran
-    tests = [call for call in ran if call.startswith("run pytest") and "gui" not in call]
-    assert len(tests) == 1, ran
-    for flag in ("--extended", "--cov=src/nanopnp", "--cov-branch", "-p impact", ".follow"):
-        assert flag in tests[0], (flag, tests[0])
-    assert tests[0].endswith("-- tests/tier1/test_a.py tests/tier2/test_b.py"), tests[0]
-    assert "--ignore" not in tests[0]
-    covered = [call for call in ran if "diff-cover" in call]
-    assert len(covered) == 1, ran
-    assert f"--compare-branch={passed}" in covered[0]
-    assert "--diff-range-notation=.." in covered[0]
-    merged = [call for call in ran if "impact.py merge" in call]
-    assert len(merged) == 1, ran
+    """A failing step leaves no stamp; a pass names the tree with ``extended`` (L3)."""
+    repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/code.py")
     stamp = Path(_git(repo, "rev-parse", "--absolute-git-dir")) / "nanopnp-gate.pass"
-    tree, selection, commit = stamp.read_text(encoding="utf-8").splitlines()[-1].split()
-    assert selection == "extended" and commit != passed
-    assert f"--tree {tree}" in merged[0]
-    assert _git(repo, "rev-parse", f"{commit}^{{tree}}") == tree
-    assert _log(repo)[-1].split()[1:4] == ["follow-up", "extended", "2"]
-
-
-def test_gate_run_falls_back_to_the_whole_gate_naming_the_selector_reason(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """A selector fallback runs the whole gate against the merge base, saying why (D7)."""
-    repo, _, calls = _passed_repo(
-        tmp_path, monkeypatch, "echo 'FALLBACK: src/nanopnp/code.py: module-level change'; exit 3"
-    )
-    (repo / "src/nanopnp/code.py").write_text("x = 2\n", encoding="utf-8")
-    result = _run(repo)
-    assert result.returncode == 0, result.stderr
-    assert "module-level change" in result.stdout
-    ran = [call.split("|", 1)[1] for call in calls.read_text(encoding="utf-8").splitlines()]
-    tests = [call for call in ran if call.startswith("run pytest") and "--extended" in call]
-    assert len(tests) == 1 and "--ignore=tests/tier1/test_gui_widgets.py" in tests[0], ran
-    assert ".new" in tests[0]
-    covered = [call for call in ran if "diff-cover" in call]
-    base = _git(repo, "merge-base", "HEAD", "main")
-    assert len(covered) == 1 and f"--compare-branch={base}" in covered[0], ran
-    assert "--diff-range-notation" not in covered[0]
-    assert _log(repo)[-1].split()[1] == "run"
-
-
-def test_gate_run_does_not_follow_up_from_a_map_of_another_tree(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """A map not of the passed tree cannot vouch for the unselected tests: the whole gate runs."""
-    repo, _, calls = _passed_repo(tmp_path, monkeypatch, "exit 0")
-    common = Path(_git(repo, "rev-parse", "--path-format=absolute", "--git-common-dir"))
-    (common / "nanopnp-impact/map.json").write_text(
-        json.dumps({"tree": "b" * 40, "extended": True, "tests": {}}), encoding="utf-8"
-    )
-    (repo / "src/nanopnp/code.py").write_text("x = 2\n", encoding="utf-8")
-    result = _run(repo)
-    assert result.returncode == 0, result.stderr
-    assert "not of the passed tree" in result.stdout
-    assert "impact.py select" not in calls.read_text(encoding="utf-8")
+    _recording_uv(tmp_path, monkeypatch, 'case "$*" in *--extended*) exit 1;; esac\n')
+    assert _run(repo).returncode == 1
+    assert not stamp.exists()
+    (tmp_path / "bin/uv").write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+    assert _run(repo).returncode == 0
+    assert stamp.read_text(encoding="utf-8").split() == [
+        _git(repo, "rev-parse", "HEAD^{tree}"),
+        "extended",
+    ]
 
 
 def test_gate_run_stamps_nothing_when_the_tree_changes_while_it_runs(
@@ -955,8 +676,8 @@ def test_gate_run_waits_for_a_run_in_progress_and_takes_over_a_stale_lock(
     repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/code.py")
     _recording_uv(tmp_path, monkeypatch)
     common = Path(_git(repo, "rev-parse", "--path-format=absolute", "--git-common-dir"))
-    lock = common / "nanopnp-impact/gate.lock"
-    lock.mkdir(parents=True)
+    lock = common / "nanopnp-gate.lock"
+    lock.mkdir()
     holder = subprocess.Popen(["sleep", "60"])
     (lock / "pid").write_text(f"{holder.pid}\n", encoding="utf-8")
     assert _BASH is not None
