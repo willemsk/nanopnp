@@ -68,6 +68,7 @@ def _structure(inputs: StageInputs) -> ResolvedStructure:
 
 
 def structure_parameters(structure: ResolvedStructure) -> dict[str, Canonicalisable]:
+    """Return the stage-1 key's parameters: the block, each file replaced by its digest."""
     parameters: dict[str, Canonicalisable] = structure.spec.model_dump(mode="json")
     # ``variant`` is a label: keeping it in the key would re-align and re-key stages 2 to 6,
     # and in the header a cache hit would return a stale label.
@@ -98,6 +99,8 @@ def _digest(parameters: Mapping[str, Canonicalisable], section: str, key: str) -
 
 @dataclass(frozen=True)
 class Alignment:
+    """What :func:`align` produced: the ensemble, and the record its header is made from."""
+
     ensemble: AlignedEnsemble
     record: AxisRecord | None
 
@@ -117,6 +120,15 @@ def align(
     progress: Progress | None = None,
     cancel: CancelToken | None = None,
 ) -> Alignment:
+    """Read, select, superpose, find the axis and transform to the model frame.
+
+    Raises
+    ------
+    nanopnp.structure.read.StructureInputError
+        For a refused file, element, alternate location, chain set or frame window.
+    nanopnp.structure.axis.SymmetryGateError
+        For a refused spacing, rotation angle, orientation or ``axis: z`` displacement.
+    """
     import numpy as np
 
     spec = structure.spec
@@ -277,15 +289,19 @@ def _gates(
 
 
 class StructureStage:
+    """Stage 1: a structure and its ensemble to an aligned, content-addressed ensemble."""
+
     name = "structure"
 
     def __init__(self, *, workspace: Path | None = None) -> None:
         self._workspace = Path(workspace) if workspace is not None else None
 
     def describe(self) -> StageDescription:
+        """Return the registry's description of this stage."""
         return describe(self.name)
 
     def key(self, inputs: StageInputs) -> StructureArtefact:
+        """Return the artefact key, from the block and its files' digests, without reading them."""
         return StructureArtefact(parameters=structure_parameters(_structure(inputs)))
 
     def run(
@@ -295,6 +311,13 @@ class StructureStage:
         progress: Progress | None = None,
         cancel: CancelToken | None = None,
     ) -> StructureArtefact:
+        """Align the ensemble and emit the stage-1 artefact.
+
+        Raises
+        ------
+        Cancelled
+            If ``cancel`` turns true.
+        """
         structure = _structure(inputs)
         parameters = structure_parameters(structure)
         alignment = align(structure, parameters=parameters, progress=progress, cancel=cancel)

@@ -27,6 +27,7 @@ def _singular(kwargs: Mapping[str, Option]) -> dict[str, Option]:
 
 
 def strain_rate(velocity: Expression) -> Expression:
+    """Return the in-plane rate-of-strain tensor ``eps(u) = sym grad(u)``."""
     import ngsolve as ngs
 
     gradient = ngs.grad(velocity)
@@ -34,6 +35,7 @@ def strain_rate(velocity: Expression) -> Expression:
 
 
 def axisymmetric_divergence(velocity: Expression, measures: Measures) -> Expression:
+    """Return ``div^(u) = d_r u_r + u_r/r + d_z u_z``, or the planar divergence."""
     import ngsolve as ngs
 
     planar = ngs.Trace(ngs.grad(velocity))
@@ -50,6 +52,7 @@ def viscous_operator(
     viscosity: Numeric = 1.0,
     **kwargs: Option,
 ) -> IntegralTerm:
+    """Return the viscous term ``int [2 eta eps(u):eps(v) + 2 eta u_r v_r / r^2] r``."""
     import ngsolve as ngs
 
     deviatoric = measures.volume(
@@ -69,6 +72,7 @@ def pressure_term(
     measures: Measures,
     **kwargs: Option,
 ) -> IntegralTerm:
+    """Return ``-int p div^(v) r``, the pressure contribution to momentum."""
     return measures.volume(-pressure * axisymmetric_divergence(test, measures), **_singular(kwargs))
 
 
@@ -80,6 +84,7 @@ def continuity_term(
     mass_density: Numeric | None = None,
     **kwargs: Option,
 ) -> IntegralTerm:
+    """Return the continuity residual ``-int q rho~ div^(u~) r``."""
     divergence = axisymmetric_divergence(velocity, measures)
     if mass_density is not None:
         divergence = mass_density * divergence
@@ -95,6 +100,7 @@ def inertia_term(
     mass_density: Numeric = 1.0,
     **kwargs: Option,
 ) -> IntegralTerm:
+    """Return the convective momentum term ``Re int rho~ (u~.grad) u~ . v r``."""
     import ngsolve as ngs
 
     convective = ngs.grad(velocity) * velocity
@@ -110,6 +116,7 @@ def electrical_body_force(
     screening: float,
     **kwargs: Option,
 ) -> IntegralTerm:
+    """Return the electrical body force term ``+S int (sum_i z_i c~_i) grad(phi~) . v r``."""
     import ngsolve as ngs
 
     return measures.volume(
@@ -121,6 +128,7 @@ def permittivity_gradient(
     coefficients: NondimensionalCoefficients,
     variables: ConcentrationVariables,
 ) -> Expression:
+    """Return ``grad(eps~_r)`` by the chain rule over the concentrations."""
     if variables.logarithmic:
         raise NotImplementedError(
             "the dielectric-gradient body force is not implemented for the NUM-02 log branch: "
@@ -140,6 +148,7 @@ def dielectric_gradient_force(
     measures: Measures,
     **kwargs: Option,
 ) -> IntegralTerm:
+    """Return the dielectric-gradient term ``+1/2 int |grad phi~|^2 grad(eps~_r) . v r``."""
     import ngsolve as ngs
 
     field = ngs.grad(potential)

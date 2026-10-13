@@ -20,6 +20,13 @@ def probe_radius_profile(
     progress: Progress | None = None,
     cancel: CancelToken | None = None,
 ) -> np.ndarray:
+    """Return the frame-mean probe radius at each height, in nm.
+
+    Raises
+    ------
+    ValueError
+        If the radii do not match the atoms, or there is no frame or no atom.
+    """
     import numpy as np
 
     positions = np.asarray(positions_nm)

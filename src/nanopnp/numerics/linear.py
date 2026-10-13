@@ -29,6 +29,8 @@ _REJECTED = {
 
 
 class LinearSolver(Protocol):
+    """Direct linear solver on the free degrees of freedom."""
+
     name: str
 
     def solve(
@@ -38,11 +40,14 @@ class LinearSolver(Protocol):
         correction: Expression,
         freedofs: Option,
     ) -> None:
+        """Solve ``matrix @ correction = rhs`` on the free degrees of freedom, in place."""
         ...
         ...
 
 
 class UmfpackSolver:
+    """UMFPACK sparse direct solver."""
+
     name: str = "umfpack"
 
     def solve(
@@ -52,10 +57,13 @@ class UmfpackSolver:
         correction: Expression,
         freedofs: Option,
     ) -> None:
+        """Solve a linear system in place with NGSolve's UMFPACK wrapper."""
         correction.data = matrix.Inverse(freedofs, inverse=self.name) * rhs
 
 
 class SuperluSolver:
+    """Scipy SuperLU sparse direct solver."""
+
     name: str = "superlu"
 
     def solve(
@@ -65,6 +73,7 @@ class SuperluSolver:
         correction: Expression,
         freedofs: Option,
     ) -> None:
+        """Solve a linear system in place with SciPy's SuperLU wrapper."""
         correction.FV().NumPy()[:] = solve_superlu(matrix, rhs, freedofs)
 
 
@@ -74,6 +83,7 @@ _REGISTRY: dict[str, SolverBuilder] = {}
 
 
 def register_solver(name: str, builder: SolverBuilder) -> None:
+    """Register a linear solver under ``name``; ValueError if rejected or taken."""
     if name == "sparsecholesky":
         raise ValueError(
             f"linear solver 'sparsecholesky' cannot be registered: {_REJECTED['sparsecholesky']}"
@@ -84,10 +94,12 @@ def register_solver(name: str, builder: SolverBuilder) -> None:
 
 
 def registered_solvers() -> tuple[str, ...]:
+    """Return every selectable solver name, sorted."""
     return tuple(sorted(_REGISTRY))
 
 
 def create_solver(name: str) -> LinearSolver:
+    """Build the linear solver registered as ``name``; KeyError if none is."""
     try:
         builder = _REGISTRY[name]
     except KeyError:
@@ -101,10 +113,12 @@ register_solver("superlu", SuperluSolver)
 
 
 def rejection(name: str) -> str | None:
+    """Return the reason for refusing an unregistered ``name``, or None."""
     return None if name in _REGISTRY else _REJECTED.get(name)
 
 
 def check_solver(name: str) -> str:
+    """Return ``name`` if usable on this build; otherwise ValueError saying why."""
     if name in _REGISTRY:
         return name
     reason = rejection(name)
@@ -121,6 +135,7 @@ def solve_linear(
     *,
     solver: str = DEFAULT_SOLVER,
 ) -> None:
+    """Solve one assembled linear variational problem in place, keeping its Dirichlet data."""
     space = solution.space
     residual = linear.vec.CreateVector()
     residual.data = linear.vec - bilinear.mat * solution.vec
@@ -137,11 +152,13 @@ def solve_correction(
     *,
     solver: str = DEFAULT_SOLVER,
 ) -> None:
+    """Solve ``matrix @ correction = rhs`` on the free degrees of freedom, in place."""
     check_solver(solver)
     create_solver(solver).solve(matrix, rhs, correction, freedofs)
 
 
 def to_scipy(matrix: Expression) -> csr_matrix:
+    """Return an assembled NGSolve sparse matrix as a scipy CSR matrix."""
     import numpy as np
     from scipy import sparse
 
@@ -155,6 +172,13 @@ def to_scipy(matrix: Expression) -> csr_matrix:
 def solve_superlu(
     matrix: Expression, rhs: Expression, freedofs: Option, *, equilibrate: bool = True
 ) -> np.ndarray:
+    """Solve one linear system on the free degrees of freedom with scipy's SuperLU.
+
+    Parameters
+    ----------
+    equilibrate
+        Divide each row by its largest magnitude before factorising.
+    """
     import numpy as np
     from scipy import sparse
     from scipy.sparse.linalg import splu
@@ -183,6 +207,7 @@ def solve_superlu(
 
 
 def diagonal_block_norms(matrix: Expression, space: FESpace) -> dict[str, float]:
+    """Return the largest absolute row sum of each diagonal Jacobian block, by field."""
     system = to_scipy(matrix)
     ranges = _component_ranges(space)
     norms: dict[str, float] = {}
@@ -194,6 +219,7 @@ def diagonal_block_norms(matrix: Expression, space: FESpace) -> dict[str, float]
 
 
 def field_row_scaling(matrix: Expression, space: FESpace) -> dict[str, float]:
+    """Return the reciprocal diagonal-block norms as row scaling factors."""
     return {
         name: (1.0 / norm if norm > 0.0 else 1.0)
         for name, norm in diagonal_block_norms(matrix, space).items()
@@ -203,6 +229,7 @@ def field_row_scaling(matrix: Expression, space: FESpace) -> dict[str, float]:
 def report_block_scaling(
     matrix: Expression, space: FESpace, *, threshold: float = BLOCK_SCALING_WARNING
 ) -> dict[str, float]:
+    """Log the diagonal-block norms, warn above a spread of ``threshold``, and return them."""
     norms = diagonal_block_norms(matrix, space)
     nonzero = [value for value in norms.values() if value > 0.0]
     if not nonzero:
@@ -234,4 +261,5 @@ def _component_ranges(space: FESpace) -> dict[str, tuple[int, int]]:
 
 
 def mesh_size_report(mesh: Mesh) -> str:
+    """Return a one-line description of a mesh, for logs and diagnostics."""
     return f"{mesh.ne} elements, {mesh.nv} vertices, materials {mesh.GetMaterials()}"

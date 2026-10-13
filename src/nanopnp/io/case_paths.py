@@ -33,17 +33,28 @@ def _literal_options(annotation: FieldType) -> tuple[str, ...] | None:
 
 
 class UnknownCasePathError(KeyError):
+    """A dotted path that names no case-schema field; a KeyError, as for a mapping."""
+
     def __str__(self) -> str:
         return str(self.args[0]) if self.args else ""
 
 
 @dataclass(frozen=True)
 class FieldReference:
+    """One field of the case schema, found by its dotted path.
+
+    Parameters
+    ----------
+    container
+        ``model``, ``mapping`` or ``sequence``: how the field is reached from its block.
+    """
+
     path: str
     annotation: FieldType
     container: Literal["model", "mapping", "sequence"] = "model"
 
     def validate(self, value: FieldValue) -> FieldValue:
+        """Return ``value`` as the declared type accepts it; CaseValidationError if refused."""
         try:
             return _adapter(self.annotation).validate_python(value)
         except ValidationError as error:
@@ -85,6 +96,7 @@ def _entry_annotation(
 
 
 def field_at(path: str) -> FieldReference:
+    """Return the schema's declaration of the field a dotted path names."""
     components = [part for part in path.split(".") if part]
     if not components:
         raise UnknownCasePathError("a case-file path cannot be empty")
@@ -137,6 +149,13 @@ SEQUENCE_INDEX = "0"
 
 
 def case_fields() -> tuple[FieldReference, ...]:
+    """Return every editable field of the case schema, in declaration order.
+
+    Raises
+    ------
+    NotImplementedError
+        If the schema grows a mapping whose values are blocks.
+    """
     return tuple(_walk_fields(CaseDocument, ""))
 
 
@@ -170,6 +189,7 @@ def _walk_fields(owner: type[BaseModel], prefix: str) -> list[FieldReference]:
 
 
 def schema_default(path: str) -> tuple[bool, FieldValue]:
+    """Return ``(True, default)`` for a defaulted field, ``(False, None)`` if required."""
     field_at(path)  # the named diagnostic for a path that is wrong
     owner: type[BaseModel] | None = CaseDocument
     info: FieldInfo | None = None
@@ -218,11 +238,13 @@ def _declaration(path: str) -> FieldInfo | None:
 
 
 def field_description(path: str) -> str | None:
+    """Return the description a field of the schema declares, or ``None``."""
     field = _declaration(path)
     return None if field is None else field.description
 
 
 def field_bounds(path: str) -> tuple[float | None, float | None]:
+    """Return the inclusive bounds ``(ge, le)`` a field declares; None where undeclared."""
     field_at(path)
     field = _declaration(path)
     if field is None:
@@ -233,6 +255,7 @@ def field_bounds(path: str) -> tuple[float | None, float | None]:
 
 
 def value_at(document: CaseDocument, path: str) -> FieldValue:
+    """Return the value a dotted path names in a case document."""
     field_at(path)
     value: FieldValue = document
     walked: list[str] = []
@@ -278,6 +301,13 @@ def _sequence_entry(
 
 
 def substitute(document: CaseDocument, assignments: Mapping[str, FieldValue]) -> CaseDocument:
+    """Return a fresh, re-validated copy of ``document`` with each dotted path set to its value.
+
+    Parameters
+    ----------
+    assignments
+        Dotted case-file path to value; an empty mapping returns an equal document.
+    """
     payload = document.model_dump(by_alias=True, mode="json")
     for path, value in assignments.items():
         reference = field_at(path)
@@ -295,6 +325,13 @@ def substitute(document: CaseDocument, assignments: Mapping[str, FieldValue]) ->
 
 
 def with_profile(document: CaseDocument, path: str | Path) -> CaseDocument:
+    """Return ``document`` rewritten to take its pore profile from ``path``, then re-validated.
+
+    Parameters
+    ----------
+    path
+        The profile document, written verbatim; an absolute path is advisable.
+    """
     payload = document.model_dump(by_alias=True, mode="json")
     payload.pop("structure", None)
     geometry = payload.get("geometry")
@@ -315,6 +352,7 @@ NEUTRAL_SECTIONS: frozenset[str] = frozenset({"charge"})
 
 
 def with_section(document: CaseDocument, name: str) -> CaseDocument:
+    """Return ``document`` with the empty neutral section ``name`` added."""
     if name not in NEUTRAL_SECTIONS:
         raise ValueError(
             f"section {name!r} cannot be added from a default: only "

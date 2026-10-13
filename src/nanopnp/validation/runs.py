@@ -25,11 +25,14 @@ __all__ = ["ReopenedRun", "RunError", "reopen"]
 SOLVE_STAGE = "solve"
 
 
-class RunError(ValueError): ...
+class RunError(ValueError):
+    """A run directory cannot be reopened for comparison."""
 
 
 @dataclass(frozen=True)
 class ReopenedRun:
+    """One finished run, ready to be sampled on a probe grid."""
+
     directory: Path
     case: CaseDocument
     solution: ModelSolution
@@ -39,6 +42,20 @@ class ReopenedRun:
 
 
 def reopen(directory: str | Path, *, store: Store | None = None) -> ReopenedRun:
+    """Return a finished run's solution and recorded quantities.
+
+    Parameters
+    ----------
+    directory
+        A run directory holding ``run.json``, ``manifest.json`` and ``case.yaml``.
+    store
+        Artefact store overriding the one the run record names.
+
+    Raises
+    ------
+    RunError
+        Not a run directory, the run stopped before the solve, or the store lacks its artefact.
+    """
     from nanopnp.io.store import Store
     from nanopnp.physics.coefficients import mesh_unit_scales
     from nanopnp.pipeline.case import load_case, resolve

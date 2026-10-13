@@ -17,12 +17,21 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
 @dataclass(frozen=True)
 class CoupledBoundaries:
+    """The boundary-name vocabulary a coupled solve is posed on."""
+
     potential: str = "cis|trans"
     concentration: str | Mapping[str, str] = "cis|trans"
     velocity: str = "wall|membrane"
     velocity_axis: str = "axis"
 
     def concentration_boundary(self, species: str) -> str:
+        """Return the boundaries carrying essential data for one species.
+
+        Raises
+        ------
+        KeyError
+            If a per-species mapping omits the species.
+        """
         if isinstance(self.concentration, str):
             return self.concentration
         try:
@@ -75,6 +84,11 @@ def _gated(mesh: Mesh, *, check: bool, where: str) -> Mesh:
 
 @dataclass(frozen=True)
 class SlabGeometry:
+    """A planar slab of electrolyte against a charged wall at ``x = 0``.
+
+    With ``exclusion_nm`` set, the first ``exclusion_nm`` of the slab is an ion-exclusion shell.
+    """
+
     width_nm: float
     height_nm: float = 1.0
     exclusion_nm: float = 0.0
@@ -106,6 +120,7 @@ class SlabGeometry:
     def generate(
         self, *, maxh_nm: float, wall_h_nm: float | None = None, check_quality: bool = True
     ) -> Mesh:
+        """Return a meshed slab, graded towards the wall if ``wall_h_nm`` is given."""
         import netgen.occ as occ
         import ngsolve as ngs
 
@@ -129,12 +144,15 @@ class SlabGeometry:
 
 @dataclass(frozen=True)
 class CylinderGeometry:
+    """An axisymmetric cylinder of electrolyte, ``0 <= r <= radius_nm``."""
+
     radius_nm: float
     length_nm: float
 
     def generate(
         self, *, maxh_nm: float, wall_h_nm: float | None = None, check_quality: bool = True
     ) -> Mesh:
+        """Return a meshed cylinder cross-section, graded towards the wall."""
         import netgen.occ as occ
         import ngsolve as ngs
 
@@ -156,15 +174,22 @@ class CylinderGeometry:
 
 @dataclass(frozen=True)
 class CylindricalPoreGeometry:
+    """A cylindrical pore through a membrane, with a reservoir on each side.
+
+    The lumen is the domain ``electrolyte`` and the reservoirs are ``cis`` and ``trans``.
+    """
+
     pore_radius_nm: float = DEFAULT_PORE_RADIUS_NM
     membrane_thickness_nm: float = 13.0
     reservoir_radius_nm: float = 50.0
 
     @property
     def half_thickness_nm(self) -> float:
+        """Half the membrane thickness, in nm."""
         return 0.5 * self.membrane_thickness_nm
 
     def faces(self) -> tuple[Shape, Shape, Shape, Shape]:
+        """Return the four named faces (lumen, membrane, cis, trans), unglued."""
         import netgen.occ as occ
 
         half = self.half_thickness_nm
@@ -194,6 +219,7 @@ class CylindricalPoreGeometry:
         return lumen, membrane, reservoirs[0], reservoirs[1]
 
     def name_edges(self, shape: Shape, *, wall_h_nm: float | None = None) -> None:
+        """Name every unnamed edge of ``shape`` by its centre of mass, in place."""
         half = self.half_thickness_nm
         radius = self.reservoir_radius_nm
         for edge in shape.edges:
@@ -219,6 +245,7 @@ class CylindricalPoreGeometry:
                 edge.name = "trans"
 
     def shape(self, *, wall_h_nm: float | None = None) -> Shape:
+        """Return the glued, fully named shape, unmeshed."""
         import netgen.occ as occ
 
         glued = occ.Glue(list(self.faces()))
@@ -228,6 +255,13 @@ class CylindricalPoreGeometry:
     def generate(
         self, *, maxh_nm: float, wall_h_nm: float | None = None, check_quality: bool = True
     ) -> Mesh:
+        """Return the meshed geometry with named domains and boundaries.
+
+        Parameters
+        ----------
+        maxh_nm, wall_h_nm
+            Global and pore-wall element sizes, in nm.
+        """
         import netgen.occ as occ
         import ngsolve as ngs
 

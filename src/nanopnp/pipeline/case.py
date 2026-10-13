@@ -273,9 +273,12 @@ def resolve(document: CaseDocument) -> ResolvedCase:
 
 
 class CaseStage:
+    """Stage 9 of the walk: the resolved case document, recorded as an artefact."""
+
     name = "case"
 
     def describe(self) -> StageDescription:
+        """Return the registry's description of this stage."""
         return describe(self.name)
 
     def run(
@@ -285,6 +288,7 @@ class CaseStage:
         progress: Progress | None = None,
         cancel: CancelToken | None = None,
     ) -> CaseArtefact:
+        """Resolve the case and emit the stage-9 artefact."""
         check_cancelled(cancel, "case")
         report(progress, 0.0, f"resolving case {inputs.resolved.name!r}")
         artefact = self.key(inputs)
@@ -292,5 +296,6 @@ class CaseStage:
         return artefact
 
     def key(self, inputs: StageInputs) -> CaseArtefact:
+        """Return the stage-9 artefact, which is its own key."""
         resolved = inputs.resolved
         return CaseArtefact(resolved.document, summary=resolved.provenance)

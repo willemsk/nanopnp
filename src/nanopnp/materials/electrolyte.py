@@ -21,6 +21,8 @@ MOLAR_PER_SI = 1e-3
 
 @dataclass(frozen=True)
 class CorrectionChoice:
+    """One property's entry in the case file's ``corrections`` block."""
+
     model: str = "none"
     concentration: bool = True
     wall: bool = True
@@ -28,6 +30,7 @@ class CorrectionChoice:
     def build(
         self, kind: models.PropertyKind, species: str | None = None
     ) -> models.CorrectionModel:
+        """Resolve this choice to a correction model."""
         return models.create(
             self.model,
             kind,
@@ -39,6 +42,8 @@ class CorrectionChoice:
 
 @dataclass(frozen=True)
 class CorrectionSwitches:
+    """Which correction applies to each property; all off until a model is named."""
+
     diffusivity: CorrectionChoice = CorrectionChoice()
     mobility: CorrectionChoice = CorrectionChoice()
     viscosity: CorrectionChoice = CorrectionChoice()
@@ -48,6 +53,7 @@ class CorrectionSwitches:
 
     @classmethod
     def for_model(cls, model: str) -> CorrectionSwitches:
+        """Return every correction enabled against one named model."""
         choice = CorrectionChoice(model=model)
         return cls(
             diffusivity=choice,
@@ -60,9 +66,11 @@ class CorrectionSwitches:
 
     @classmethod
     def classical(cls) -> CorrectionSwitches:
+        """Return the classical configuration: every correction off."""
         return cls()
 
     def without(self, *properties: str) -> CorrectionSwitches:
+        """Return a copy with the named properties disabled; ValueError for an unknown name."""
         known = {"diffusivity", "mobility", "viscosity", "permittivity", "density", "steric"}
         unknown = sorted(set(properties) - known)
         if unknown:
@@ -85,6 +93,8 @@ class CorrectionSwitches:
 
 @dataclass(frozen=True)
 class IonSpecies:
+    """One solved ionic species and its infinite-dilution properties."""
+
     name: str
     valence: int
     diffusivity_0: float
@@ -93,6 +103,7 @@ class IonSpecies:
 
     @property
     def mobility_0(self) -> float:
+        """``mu_i^0 = D_i^0 / V_T`` in m^2/(V s): derived, never fitted."""
         return self.diffusivity_0 / thermal_voltage(self.temperature_K)
 
 
@@ -112,6 +123,8 @@ def _resolve_corrections(
 
 @dataclass(frozen=True)
 class Electrolyte:
+    """A binary or multi-species electrolyte with its corrections resolved."""
+
     species: tuple[IonSpecies, ...]
     switches: CorrectionSwitches
     temperature_K: float
@@ -174,6 +187,7 @@ class Electrolyte:
             )
 
     def with_switches(self, switches: CorrectionSwitches) -> Electrolyte:
+        """Return the same electrolyte with a different correction configuration."""
         return replace(
             self, switches=switches, corrections=_resolve_corrections(switches, self.species)
         )
@@ -187,6 +201,7 @@ class Electrolyte:
         species: Sequence[str] | None = None,
         driver: str = "average",
     ) -> Electrolyte:
+        """Build an electrolyte from a registered correction parameter file."""
         if driver not in {"average", "ionic_strength"}:
             raise ValueError(f"unknown correction driver {driver!r}; use average or ionic_strength")
         document = load_corrections(model)
@@ -224,10 +239,12 @@ class Electrolyte:
     def correction(
         self, kind: models.PropertyKind, species: str | None = None
     ) -> models.CorrectionModel:
+        """Return the correction model in force for one property."""
         key = kind if species is None else f"{kind}:{species}"
         return self.corrections[key]
 
     def ion(self, name: str) -> IonSpecies:
+        """Return the named species; KeyError if the electrolyte does not solve for that ion."""
         for candidate in self.species:
             if candidate.name == name:
                 return candidate
@@ -237,6 +254,7 @@ class Electrolyte:
     def average_concentration(
         self, concentrations: Sequence[Numeric], ops: MathOps = NUMPY_OPS
     ) -> Numeric:
+        """Return the correction driver ``<c>`` in mol/L: the mean clamped ion concentration."""
         if len(concentrations) != len(self.species):
             raise ValueError(
                 f"expected {len(self.species)} concentrations, got {len(concentrations)}"
@@ -258,6 +276,7 @@ class Electrolyte:
         wall_distance_nm: Numeric,
         ops: MathOps = NUMPY_OPS,
     ) -> Numeric:
+        """Return ``D_i(<c>, d)`` in m^2/s."""
         ion = self.ion(species)
         factor = self.correction("diffusivity", species).evaluate(c_avg_M, wall_distance_nm, ops)
         return ion.diffusivity_0 * factor
@@ -269,6 +288,7 @@ class Electrolyte:
         wall_distance_nm: Numeric,
         ops: MathOps = NUMPY_OPS,
     ) -> Numeric:
+        """Return ``mu_i(<c>, d)`` in m^2/(V s): ``D_i^0 / V_T`` times the mobility correction."""
         ion = self.ion(species)
         factor = self.correction("mobility", species).evaluate(c_avg_M, wall_distance_nm, ops)
         return ion.mobility_0 * factor
@@ -276,6 +296,7 @@ class Electrolyte:
     def viscosity(
         self, c_avg_M: Numeric, wall_distance_nm: Numeric, ops: MathOps = NUMPY_OPS
     ) -> Numeric:
+        """Return ``eta(<c>, d)`` in Pa s."""
         return self.viscosity_0 * self.correction("viscosity").evaluate(
             c_avg_M, wall_distance_nm, ops
         )
@@ -283,6 +304,7 @@ class Electrolyte:
     def mass_density(
         self, c_avg_M: Numeric, wall_distance_nm: Numeric = 0.0, ops: MathOps = NUMPY_OPS
     ) -> Numeric:
+        """Return ``rho(<c>)`` in kg/m^3; there is no wall correction on density."""
         return self.mass_density_0 * self.correction("density").evaluate(
             c_avg_M, wall_distance_nm, ops
         )
@@ -290,6 +312,7 @@ class Electrolyte:
     def relative_permittivity(
         self, c_avg_M: Numeric, wall_distance_nm: Numeric = 0.0, ops: MathOps = NUMPY_OPS
     ) -> Numeric:
+        """Return the electrolyte ``eps_r,f(<c>)``; there is no wall correction."""
         factor = self.correction("permittivity").evaluate(c_avg_M, wall_distance_nm, ops)
         return self.permittivity_0 * factor
 
@@ -299,6 +322,13 @@ class Electrolyte:
         *,
         coordinates: Sequence[tuple[float, ...]] | None = None,
     ) -> int:
+        """Log every species and driver clamp activation and return the total count.
+
+        Parameters
+        ----------
+        coordinates
+            Optional sample locations, shared by every species.
+        """
         if len(concentrations) != len(self.species):
             raise ValueError(
                 f"expected {len(self.species)} concentrations, got {len(concentrations)}"
@@ -327,6 +357,7 @@ class Electrolyte:
 
     @property
     def provenance(self) -> Mapping[str, Any]:
+        """Return what a result manifest must record about the materials."""
         return {
             "parameter_file": self.parameter_file,
             "temperature_K": self.temperature_K,
@@ -347,6 +378,15 @@ def log_clamp_activations(
     limit: float,
     coordinates: Sequence[tuple[float, ...]] | None = None,
 ) -> int:
+    """Log where the concentration fits were extrapolated past their validity range.
+
+    Parameters
+    ----------
+    values_M
+        Sampled driver concentrations, in mol/L.
+    limit
+        Upper end of the fit validity range, in mol/L.
+    """
     import numpy as np
 
     array = np.asarray(values_M, dtype=float)

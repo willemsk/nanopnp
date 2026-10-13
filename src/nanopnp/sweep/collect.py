@@ -35,10 +35,12 @@ CSV_NOTE = (
 )
 
 
-class SweepCollectionError(RuntimeError): ...
+class SweepCollectionError(RuntimeError):
+    """A dataset cannot be built from the members that ran."""
 
 
 def read_members(directory: Path) -> tuple[MemberResult, ...]:
+    """Read every member record under a sweep directory, in index order."""
     members = directory / MEMBERS_DIRNAME
     found: list[MemberResult] = []
     for path in sorted(members.glob("*.json")):
@@ -136,6 +138,13 @@ def collect(
     *,
     members: Sequence[MemberResult] | None = None,
 ) -> SweepArtefact:
+    """Assemble the dataset over one sweep's members and write it.
+
+    Parameters
+    ----------
+    plan
+        The plan the members were dispatched from; it supplies the point order.
+    """
     found = tuple(members) if members is not None else read_members(directory)
     by_index = {member.index: member for member in found}
     unknown = sorted(set(by_index) - {point.index for point in plan.points})
@@ -228,6 +237,7 @@ CSV_COLUMNS: tuple[str, ...] = (
 
 
 def write_csv(artefact: SweepArtefact, directory: Path) -> Path:
+    """Write the flat CSV export beside the dataset and return its path."""
     rows = artefact.summary.get("rows", [])
     assignments = sorted({path for row in rows for path in dict(row["assignments"])})
     # Scalars only. A flat table has one cell per quantity, and a quantity that

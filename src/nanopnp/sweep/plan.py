@@ -97,11 +97,22 @@ WARM_START_BARRIERS: tuple[str, ...] = (
 )
 
 
-class SweepPlanError(ValueError): ...
+class SweepPlanError(ValueError):
+    """A sweep cannot be planned as written; the message names what was wrong and where."""
 
 
 @dataclass(frozen=True)
 class Point:
+    """One member of a sweep: what it varies, where it sits, and who it starts from.
+
+    Parameters
+    ----------
+    point_id
+        The leading hex characters of the content hash of the assignments: the identity.
+    wave
+        The point's depth in the warm-start forest.
+    """
+
     index: int
     point_id: str
     coordinates: tuple[int, ...]
@@ -111,6 +122,7 @@ class Point:
     name: str
 
     def summary(self) -> dict[str, Canonicalisable]:
+        """Return this point as the plan file records it."""
         return {
             "index": self.index,
             "id": self.point_id,
@@ -124,6 +136,16 @@ class Point:
 
 @dataclass(frozen=True)
 class SweepPlan:
+    """Every point of a sweep, ordered by wave, with the checks already made.
+
+    Parameters
+    ----------
+    base_hash
+        Content hash of the validated base case document.
+    workers
+        The default worker count for a local dispatch; outside the plan hash.
+    """
+
     name: str
     base_path: Path
     base_hash: str
@@ -138,6 +160,7 @@ class SweepPlan:
 
     @cached_property
     def hash(self) -> str:
+        """Return the plan's content hash: what it enumerates, not what it produced."""
         return content_hash(
             SWEEP_SCHEMA,
             {
@@ -149,6 +172,7 @@ class SweepPlan:
         )
 
     def waves(self) -> tuple[tuple[int, int], ...]:
+        """Return each wave as a half-open (first, last + 1) index range."""
         ranges: list[tuple[int, int]] = []
         for point in self.points:
             if point.wave == len(ranges):
@@ -159,6 +183,7 @@ class SweepPlan:
         return tuple(ranges)
 
     def point(self, index: int) -> Point:
+        """Return one point by index; refuse an index this plan does not enumerate."""
         if not 0 <= index < len(self.points):
             raise SweepPlanError(
                 f"this plan enumerates {len(self.points)} points, 0 to {len(self.points) - 1}; "
@@ -167,6 +192,7 @@ class SweepPlan:
         return self.points[index]
 
     def base_case(self) -> CaseDocument:
+        """Return the base case from disk, refusing one whose hash has moved."""
         try:
             base = load_case(self.base_path)
         except FileNotFoundError as error:
@@ -208,10 +234,18 @@ class SweepPlan:
                 )
 
     def case(self, index: int, *, base: CaseDocument | None = None) -> CaseDocument:
+        """Return the validated case document of one member, rebuilt from the base case.
+
+        Parameters
+        ----------
+        base
+            A base case already read and gated, to share one parse across members.
+        """
         point = self.point(index)
         return _member(self.base_case() if base is None else base, point)
 
     def document_record(self) -> dict[str, Canonicalisable]:
+        """Return the plan as it is written to disk."""
         return {
             "schema": SWEEP_SCHEMA,
             "name": self.name,
@@ -433,6 +467,13 @@ def build_plan(
     source: Path | None = None,
     check_meshes: bool = True,
 ) -> SweepPlan:
+    """Enumerate, check and order every point of a sweep.
+
+    Parameters
+    ----------
+    check_meshes
+        Whether to run the mesh gate once per distinct mesh with a wall correction.
+    """
     _check_axes(document)
     base_path = document.base_path(source)
     try:
@@ -596,6 +637,7 @@ def _gate_meshes(plan: SweepPlan, members: Sequence[ResolvedCase]) -> SweepPlan:
 
 
 def write_plan(plan: SweepPlan, directory: Path) -> Path:
+    """Write the plan into a sweep directory and return its path."""
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / PLAN_FILENAME
     atomic_write_bytes(path, canonical(plan.document_record()) + b"\n")
@@ -603,6 +645,7 @@ def write_plan(plan: SweepPlan, directory: Path) -> Path:
 
 
 def read_plan(path: Path) -> SweepPlan:
+    """Read a plan back from disk, rather than rebuilding it from the sweep document."""
     parsed = decode_floats(json.loads(Path(path).read_text(encoding="utf-8")))
     if not isinstance(parsed, dict) or parsed.get("schema") != SWEEP_SCHEMA:
         found = parsed.get("schema") if isinstance(parsed, dict) else type(parsed).__name__

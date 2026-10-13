@@ -26,12 +26,14 @@ STRUCTURES_DIR: Path = DATA_DIR / "structures"
 
 
 def available_corrections() -> tuple[str, ...]:
+    """Return the names of every installed correction parameter file, sorted."""
     if not CORRECTIONS_DIR.is_dir():
         return ()
     return tuple(sorted(path.stem for path in CORRECTIONS_DIR.glob("*.yaml")))
 
 
 def correction_file(name: str) -> Path:
+    """Return the path of an installed correction ``<name>.yaml``; FileNotFoundError if absent."""
     path = CORRECTIONS_DIR / f"{name}.yaml"
     if not path.is_file():
         raise FileNotFoundError(f"no correction file {name!r} in {CORRECTIONS_DIR}")
@@ -39,6 +41,7 @@ def correction_file(name: str) -> Path:
 
 
 def profile_file(name: str) -> Path:
+    """Return the path of a named pore-profile fixture; FileNotFoundError if not installed."""
     path = GEOMETRY_DIR / f"{name}.yaml"
     if not path.is_file():
         raise FileNotFoundError(f"no geometry profile {name!r} in {GEOMETRY_DIR}")
@@ -46,6 +49,7 @@ def profile_file(name: str) -> Path:
 
 
 def radii_file(name: str) -> Path:
+    """Return the path of a named radius set; FileNotFoundError if not installed."""
     path = RADII_DIR / f"{name}.yaml"
     if not path.is_file():
         raise FileNotFoundError(f"no radius set {name!r} in {RADII_DIR}")
@@ -53,6 +57,7 @@ def radii_file(name: str) -> Path:
 
 
 def structure_file(name: str) -> Path:
+    """Return the path of a named structure fixture; FileNotFoundError if not installed."""
     path = STRUCTURES_DIR / f"{name}.pdb"
     if not path.is_file():
         raise FileNotFoundError(f"no structure fixture {name!r} in {STRUCTURES_DIR}")
@@ -65,6 +70,7 @@ DEFAULT_STORE_DIRNAME = "nanopnp-store"
 
 
 def store_root() -> Path:
+    """Return the artefact store root: ``$NANOPNP_STORE``, else ``./nanopnp-store``."""
     configured = os.environ.get(STORE_ROOT_VARIABLE)
     if configured:
         return Path(configured).expanduser().resolve()
@@ -75,6 +81,7 @@ REFERENCE_DATA_VARIABLE = "NANOPNP_REFERENCE_DATA"
 
 
 def reference_data_root() -> Path | None:
+    """Return the reference-data directory named by ``$NANOPNP_REFERENCE_DATA``, or None."""
     configured = os.environ.get(REFERENCE_DATA_VARIABLE)
     if not configured:
         return None
@@ -83,6 +90,7 @@ def reference_data_root() -> Path | None:
 
 
 def reference_file(name: str) -> Path | None:
+    """Return an archived reference file by name, or None if the archive is absent."""
     root = reference_data_root()
     if root is None:
         return None

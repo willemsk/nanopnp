@@ -36,7 +36,8 @@ DEFAULT_MARGIN_NM = 0.05
 COMSOL_LENGTH_SCALE_M = 1e-9
 
 
-class ProbeGridError(ValueError): ...
+class ProbeGridError(ValueError):
+    """A probe grid cannot be built, or cannot be compared against."""
 
 
 class _Strict(BaseModel):
@@ -44,6 +45,16 @@ class _Strict(BaseModel):
 
 
 class ProbePatch(_Strict):
+    """One tensor-product block of sample points, in nm.
+
+    Parameters
+    ----------
+    r_nm, z_nm
+        ``(min, max)`` of the sampled box, inclusive at both ends.
+    n_r, n_z
+        Sample counts along each axis; they must differ.
+    """
+
     name: str
     r_nm: tuple[float, float]
     z_nm: tuple[float, float]
@@ -76,6 +87,7 @@ class ProbePatch(_Strict):
 
     @property
     def spacing_nm(self) -> tuple[float, float]:
+        """``(dr, dz)`` of this patch's uniform spacing."""
         return (
             (self.r_nm[1] - self.r_nm[0]) / (self.n_r - 1),
             (self.z_nm[1] - self.z_nm[0]) / (self.n_z - 1),
@@ -83,14 +95,17 @@ class ProbePatch(_Strict):
 
     @property
     def weight_nm2(self) -> float:
+        """Return the midpoint-rule weight ``dr dz`` of each point, in nm^2."""
         dr, dz = self.spacing_nm
         return dr * dz
 
     @property
     def count(self) -> int:
+        """Number of points this patch contributes."""
         return self.n_r * self.n_z
 
     def axes_nm(self) -> tuple[np.ndarray, np.ndarray]:
+        """Return ``(r_axis, z_axis)`` in nm, ascending and uniformly spaced."""
         import numpy as np
 
         return (
@@ -99,6 +114,7 @@ class ProbePatch(_Strict):
         )
 
     def points_nm(self) -> np.ndarray:
+        """Return this patch's points as ``(count, 2)`` in ``[i_z, i_r]`` order."""
         import numpy as np
 
         r_axis, z_axis = self.axes_nm()
@@ -106,6 +122,7 @@ class ProbePatch(_Strict):
         return np.column_stack((r_grid.ravel(), z_grid.ravel()))
 
     def summary(self) -> dict[str, object]:
+        """Return this patch as a record for the document's hash and the manifest."""
         return {
             "name": self.name,
             "r_nm": list(self.r_nm),
@@ -116,6 +133,8 @@ class ProbePatch(_Strict):
 
 
 class ProbeDocument(_Strict):
+    """A validated probe grid (schema ``nanopnp/probe/v0.5``)."""
+
     schema_id: str = Field(alias="schema")
     name: str
     margin_nm: float = DEFAULT_MARGIN_NM
@@ -163,6 +182,13 @@ class ProbeDocument(_Strict):
             )
 
     def patch(self, name: str) -> ProbePatch:
+        """Return the patch named ``name``.
+
+        Raises
+        ------
+        ProbeGridError
+            If no patch carries that name.
+        """
         for patch in self.patches:
             if patch.name == name:
                 return patch
@@ -171,14 +197,17 @@ class ProbeDocument(_Strict):
 
     @property
     def count(self) -> int:
+        """Total number of probe points across every patch."""
         return sum(patch.count for patch in self.patches)
 
     def points_nm(self) -> np.ndarray:
+        """Return every probe point as ``(count, 2)``, patch by patch in order."""
         import numpy as np
 
         return np.vstack([patch.points_nm() for patch in self.patches])
 
     def weights_nm2(self) -> np.ndarray:
+        """Return each point's midpoint-rule weight ``dr dz``, in nm^2."""
         import numpy as np
 
         return np.concatenate(
@@ -186,12 +215,14 @@ class ProbeDocument(_Strict):
         )
 
     def patch_of_point(self) -> tuple[str, ...]:
+        """Return the owning patch's name for each point, in flattening order."""
         names: list[str] = []
         for patch in self.patches:
             names.extend([patch.name] * patch.count)
         return tuple(names)
 
     def summary(self) -> dict[str, object]:
+        """Return the document's record, for the hash and the manifest."""
         return {
             "name": self.name,
             "margin_nm": self.margin_nm,
@@ -200,9 +231,11 @@ class ProbeDocument(_Strict):
 
     @property
     def hash(self) -> str:
+        """Content hash of this probe grid; the ``probe_hash`` of every golden."""
         return content_hash(PROBE_SCHEMA, self.summary())
 
     def write_comsol_axes(self) -> str:
+        """Return the ``%Grid`` axis lines for COMSOL, one block per patch, in metres."""
         lines = [
             f"# Probe grid {self.name!r} ({PROBE_SCHEMA}), hash {self.hash}",
             "# Axes in metres, as a %Grid header carries them. One COMSOL Grid",
@@ -218,6 +251,13 @@ class ProbeDocument(_Strict):
 
 
 def loads_probe(text: str, *, source: str = "<string>") -> ProbeDocument:
+    """Validate a probe document from YAML text.
+
+    Raises
+    ------
+    CaseValidationError
+        If the schema string or the document is invalid.
+    """
     try:
         parsed = yaml.safe_load(text)
     except yaml.YAMLError as error:
@@ -239,12 +279,15 @@ def loads_probe(text: str, *, source: str = "<string>") -> ProbeDocument:
 
 
 def load_probe(path: str | Path) -> ProbeDocument:
+    """Read and validate a probe document file."""
     source = Path(path)
     return loads_probe(source.read_text(encoding="utf-8"), source=str(source))
 
 
 @dataclass(frozen=True)
 class ProbeGrid:
+    """A probe document bound to a mesh: its points, and the mask each field keeps."""
+
     document: ProbeDocument
     points_nm: np.ndarray
     weights_nm2: np.ndarray
@@ -253,6 +296,7 @@ class ProbeGrid:
     dropped: Mapping[str, int]
 
     def band(self, field: str) -> np.ndarray:
+        """Return the margin band of ``field``: kept by the bare test, dropped by the margin."""
         import numpy as np
 
         band: np.ndarray = np.asarray(self.bare[field], dtype=bool) & ~np.asarray(
@@ -264,6 +308,18 @@ class ProbeGrid:
     def on_mesh(
         cls, document: ProbeDocument, mesh: Mesh, domains: Mapping[str, str | None]
     ) -> ProbeGrid:
+        """Return ``document``'s points with one mask per field of ``domains``.
+
+        Parameters
+        ----------
+        domains
+            Field name to its material regular expression, or ``None`` for the whole of Omega.
+
+        Raises
+        ------
+        ProbeGridError
+            If a patch leaves the mesh once grown by the margin, or a pattern matches no material.
+        """
         import numpy as np
 
         points = document.points_nm()

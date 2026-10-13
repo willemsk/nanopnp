@@ -10,8 +10,8 @@ paths:
 ## Coding conventions
 
 - `from __future__ import annotations` in every module; type hints on every signature; `mypy --strict` clean.
-- **In-code prose (§8.2.11 L4).** A docstring only on the public API (`nanopnp.PUBLIC`, the command-line
-  commands, the GUI entry points): a summary line, with parameters only where the name and type do not say.
+- **In-code prose (§8.2.11 L4).** A docstring on every public function, class and method of `src/` (no
+  leading underscore): a summary line, with NumPy-style parameters only where the name and type do not say, and no derivation or history.
   A one-line docstring on every module. No docstring on a test or on private code. A comment only where the
   code cannot say why it is so, and for the source of a physical constant. Identifiers live in test names and
   commit messages, not in prose.

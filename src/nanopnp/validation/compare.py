@@ -47,6 +47,18 @@ COMPARED_QUANTITIES: tuple[str, ...] = (
 
 @dataclass(frozen=True)
 class FieldComparison:
+    """What one field of one solution differs from one golden by.
+
+    Parameters
+    ----------
+    max_abs_rel
+        ``max |s - g| / max |g|`` over the retained points, normalised by the field's scale.
+    max_at_nm
+        ``(r, z)`` of that maximum.
+    gauge_removed
+        ``(ours, golden)`` mean removed before the norms for the pressure, else ``None``.
+    """
+
     field: str
     points: int
     rel_L2_r: float
@@ -56,6 +68,7 @@ class FieldComparison:
     gauge_removed: tuple[float, float] | None = None
 
     def summary(self) -> dict[str, object]:
+        """Return this comparison as the report records it."""
         record: dict[str, object] = {
             "field": self.field,
             "points": self.points,
@@ -75,12 +88,21 @@ class FieldComparison:
 
 @dataclass(frozen=True)
 class QoIComparison:
+    """One scalar quantity of interest, ours against the golden's.
+
+    Parameters
+    ----------
+    relative
+        ``(ours - golden) / |golden|``, signed.
+    """
+
     name: str
     ours: float
     golden: float
     relative: float
 
     def summary(self) -> dict[str, object]:
+        """Return this comparison as the report records it."""
         return {
             "quantity": self.name,
             "ours": self.ours,
@@ -90,6 +112,7 @@ class QoIComparison:
 
 
 def probe_domains(solution: ModelSolution) -> dict[str, str | None]:
+    """Return each comparable field's ``definedon`` materials, from the model itself."""
     domains: dict[str, str | None] = {}
     for field in solution.model.fields:
         if field.element == "number":
@@ -106,6 +129,18 @@ def probe_domains(solution: ModelSolution) -> dict[str, str | None]:
 def sample_on_probe(
     solution: ModelSolution, grid: ProbeGrid, *, scales: Scales
 ) -> dict[str, np.ndarray]:
+    """Return every comparable field of ``solution`` at ``grid``'s points, in SI.
+
+    Parameters
+    ----------
+    scales
+        The NUM-09 scale set the state was solved in.
+
+    Returns
+    -------
+    dict of str to ndarray
+        Field name to a ``(n,)`` array, ``NaN`` wherever the field's mask drops the point.
+    """
     import numpy as np
 
     mesh = solution.space.mesh
@@ -144,6 +179,13 @@ def sample_on_probe(
 def compare_fields(
     ours: Mapping[str, np.ndarray], golden: Golden, grid: ProbeGrid
 ) -> tuple[FieldComparison, ...]:
+    """Compare every field the golden carries, in the golden's own field order.
+
+    Raises
+    ------
+    ProbeGridError
+        If the two masks disagree outside the margin band, naming the worst point.
+    """
     import numpy as np
 
     comparisons: list[FieldComparison] = []
@@ -164,6 +206,15 @@ def compare_fields(
 def compare_quantities(
     ours: Mapping[str, object], golden: GoldenQuantities
 ) -> tuple[QoIComparison, ...]:
+    """Compare the NUM-27 scalars of one case.
+
+    Parameters
+    ----------
+    ours
+        The quantities the run recorded, as a mapping.
+    golden
+        The reference's, already in section 6.7's sign convention.
+    """
     compared: list[QoIComparison] = []
     for name in COMPARED_QUANTITIES:
         mine, theirs = ours.get(name), getattr(golden, name, None)
@@ -195,6 +246,7 @@ def compare_quantities(
 
 
 def check_mask_agreement(field: str, ours: np.ndarray, theirs: np.ndarray, grid: ProbeGrid) -> None:
+    """Abort where two statements about where a field exists disagree."""
     import numpy as np
 
     disagreeing = np.flatnonzero(ours != theirs)
@@ -241,6 +293,13 @@ def field_error(
     grid: ProbeGrid,
     keep: np.ndarray,
 ) -> FieldComparison:
+    """Return the three norms of one field over the points ``keep`` retains.
+
+    Parameters
+    ----------
+    field
+        The field's name; the pressure selects the gauge-free path.
+    """
     import numpy as np
 
     if not bool(np.any(keep)):
@@ -305,6 +364,7 @@ def _relative(difference: np.ndarray, reference: np.ndarray, weights: np.ndarray
 
 
 def unavailable_quantities(ours: Mapping[str, object], golden: GoldenQuantities) -> tuple[str, ...]:
+    """Return the ``COMPARED_QUANTITIES`` either side did not supply."""
     return tuple(
         name
         for name in COMPARED_QUANTITIES

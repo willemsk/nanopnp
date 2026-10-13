@@ -21,6 +21,8 @@ it is a CLI flag that taints the manifest, not a line in the case.
 
 
 class MeshQualityError(ValueError):
+    """A mesh fails a geometric gate, naming the gate, the quantity and where."""
+
     def __init__(self, gate: str, quantity: str, location: str, detail: str = "") -> None:
         self.gate = gate
         self.quantity = quantity
@@ -32,6 +34,8 @@ class MeshQualityError(ValueError):
 
 @dataclass(frozen=True)
 class QualityReport:
+    """Per-element quality of one mesh, and the extrema a manifest records."""
+
     element_count: int
     sicn: np.ndarray
     gamma: np.ndarray
@@ -40,36 +44,44 @@ class QualityReport:
 
     @property
     def min_sicn(self) -> float:
+        """Smallest SICN over the mesh."""
         return float(self.sicn.min())
 
     @property
     def mean_sicn(self) -> float:
+        """Mean SICN over the mesh."""
         return float(self.sicn.mean())
 
     @property
     def min_gamma(self) -> float:
+        """Smallest gamma over the mesh."""
         return float(self.gamma.min())
 
     @property
     def mean_gamma(self) -> float:
+        """Mean gamma over the mesh."""
         return float(self.gamma.mean())
 
     @property
     def worst_sicn_element(self) -> int:
+        """Index of the element with the smallest SICN."""
         import numpy as np
 
         return int(np.argmin(self.sicn))
 
     @property
     def worst_gamma_element(self) -> int:
+        """Index of the element with the smallest gamma."""
         import numpy as np
 
         return int(np.argmin(self.gamma))
 
     def centroid(self, element: int) -> tuple[float, float]:
+        """Return the ``(r, z)`` centroid of one element, in nm."""
         return float(self.centroids[element, 0]), float(self.centroids[element, 1])
 
     def summary(self) -> dict[str, object]:
+        """Return the figures the provenance manifest carries."""
         return {
             "elements": self.element_count,
             "min_sicn": self.min_sicn,
@@ -82,6 +94,10 @@ class QualityReport:
 
 
 def element_quality(data: MeshData) -> QualityReport:
+    """Return the SICN and gamma of every triangle of ``data``.
+
+    A degenerate element scores 0 on both measures rather than dividing by zero.
+    """
     import numpy as np
 
     points = data.vertices[data.triangles]  # (m, 3, 2)
@@ -118,12 +134,20 @@ def element_quality(data: MeshData) -> QualityReport:
 
 
 def inverted_elements(data: MeshData) -> tuple[int, ...]:
+    """Return the indices of elements whose Jacobian determinant is not positive."""
     return element_quality(data).inverted
 
 
 def check_quality(
     data: MeshData, *, floor: float = QUALITY_FLOOR, where: str = "this mesh"
 ) -> QualityReport:
+    """Gate ``data`` on both quality measures and return the report.
+
+    Raises
+    ------
+    MeshQualityError
+        If any element is inverted, or either measure falls to or below ``floor``.
+    """
     import numpy as np
 
     report = element_quality(data)
@@ -154,6 +178,13 @@ def check_quality(
 
 
 def check_radii(data: MeshData, *, where: str = "this mesh") -> None:
+    """Reject a mesh with a vertex at negative radius.
+
+    Raises
+    ------
+    MeshQualityError
+        If any vertex has ``r < 0``.
+    """
     import numpy as np
 
     radii = data.vertices[:, 0]

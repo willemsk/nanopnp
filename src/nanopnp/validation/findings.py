@@ -37,20 +37,26 @@ FRONT_MATTER = re.compile(r"\A---\n(.*?)\n---\n", re.DOTALL)
 
 @dataclass(frozen=True)
 class Row:
+    """One finding of a log, its cells as written."""
+
     line: int
     cells: tuple[str, ...]
 
     def cell(self, column: str) -> str:
+        """Return the cell under ``column``, or an empty string on a short row."""
         index = COLUMNS.index(column)
         return self.cells[index] if index < len(self.cells) else ""
 
     @property
     def id(self) -> str:
+        """Return the finding's identifier."""
         return self.cell("ID")
 
 
 @dataclass(frozen=True)
 class FindingsLog:
+    """A parsed findings log."""
+
     path: Path
     prefix: str
     status: str
@@ -58,10 +64,12 @@ class FindingsLog:
     rows: tuple[Row, ...]
 
 
-class LogFormatError(ValueError): ...
+class LogFormatError(ValueError):
+    """Raised when a findings log cannot be parsed."""
 
 
 def front_matter(text: str) -> dict[str, object] | None:
+    """Return a page's YAML front matter as a mapping, or ``None`` if it has none."""
     match = FRONT_MATTER.match(text)
     if match is None:
         return None
@@ -77,6 +85,14 @@ def _cells(line: str) -> tuple[str, ...]:
 
 
 def parse_log(path: Path) -> FindingsLog:
+    """Parse one log's front matter and the first table after it.
+
+    Raises
+    ------
+    LogFormatError
+        If the front matter is not a findings declaration, or no table with the expected
+        header follows it.
+    """
     text = path.read_text(encoding="utf-8")
     match = FRONT_MATTER.match(text)
     header = front_matter(text)
@@ -124,6 +140,7 @@ def _spec_rows(specification: Path) -> frozenset[tuple[str, str]]:
 
 
 def slugify(heading: str) -> str:
+    """Return a heading's anchor as Python-Markdown's ``toc`` extension writes it."""
     text = unicodedata.normalize("NFKD", heading).encode("ascii", "ignore").decode("ascii")
     text = re.sub(r"[^\w\s-]", "", text).strip().lower()
     return re.sub(r"[-\s]+", "-", text)
@@ -194,6 +211,10 @@ def _row_errors(log: FindingsLog, row: Row, repository: Path) -> Iterator[str]:
 
 
 def check_log(path: Path, repository: Path = REPOSITORY) -> tuple[str, ...]:
+    """Return every error of one log, each naming the file, the line and the row.
+
+    Empty if the log is well formed.
+    """
     named = path.name.endswith(LOG_SUFFIX)
     declared = front_matter(path.read_text(encoding="utf-8"))
     has_header = declared is not None and "findings" in declared
@@ -224,6 +245,7 @@ def check_log(path: Path, repository: Path = REPOSITORY) -> tuple[str, ...]:
 
 
 def logs(repository: Path = REPOSITORY) -> tuple[Path, ...]:
+    """Return every Markdown file under ``docs/`` that is a log by name or by front matter."""
     found = []
     for path in sorted((repository / "docs").rglob("*.md")):
         if "_generated" in path.parts:
@@ -239,12 +261,15 @@ def logs(repository: Path = REPOSITORY) -> tuple[Path, ...]:
 
 @dataclass(frozen=True)
 class Counts:
+    """A log's rows counted by area, severity and status, for the end-of-phase report."""
+
     area: dict[str, int]
     severity: dict[str, int]
     status: dict[str, int]
 
 
 def counts(log: FindingsLog) -> Counts:
+    """Count a log's rows by area, by severity and by status."""
     return Counts(
         dict(Counter(row.cell("Area") for row in log.rows)),
         dict(Counter(row.cell("Severity") for row in log.rows)),

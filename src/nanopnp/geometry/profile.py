@@ -32,6 +32,8 @@ class _Strict(BaseModel):
 
 
 class ProfileProvenance(_Strict):
+    """Where a profile came from, and what was measured on it."""
+
     source: str
     citation: str
     sha256: str
@@ -42,6 +44,14 @@ class ProfileProvenance(_Strict):
 
 
 class PoreProfile(_Strict):
+    """A closed pore-boundary polygon in the ``(r, z)`` half-plane, in nm.
+
+    Raises
+    ------
+    ValueError
+        At construction, if the loop is not a valid simple closed polygon.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     schema_id: str = Field(alias="schema")
@@ -104,9 +114,17 @@ class PoreProfile(_Strict):
 
     @property
     def is_reference(self) -> bool:
+        """Whether this profile is the reference geometry."""
         return self.provenance.source in REFERENCE_SOURCES
 
     def require_reference(self, purpose: str) -> None:
+        """Raise unless this profile is the reference geometry.
+
+        Raises
+        ------
+        ValueError
+            If :attr:`is_reference` is false.
+        """
         if not self.is_reference:
             allowed = ", ".join(sorted(REFERENCE_SOURCES))
             raise ValueError(
@@ -115,30 +133,39 @@ class PoreProfile(_Strict):
             )
 
     def as_array(self) -> np.ndarray:
+        """Return the vertices as an ``(n, 2)`` float64 array of ``(r, z)`` in nm."""
         import numpy as np
 
         return np.asarray(self.vertices, dtype=np.float64).reshape(-1, 2)
 
     @property
     def extent_r_nm(self) -> tuple[float, float]:
+        """``(min, max)`` radius over the loop, in nm."""
         radii = self.as_array()[:, 0]
         return float(radii.min()), float(radii.max())
 
     @property
     def extent_z_nm(self) -> tuple[float, float]:
+        """``(min, max)`` axial coordinate over the loop, in nm."""
         axial = self.as_array()[:, 1]
         return float(axial.min()), float(axial.max())
 
     @property
     def is_clockwise(self) -> bool:
+        """Whether the loop runs clockwise in ``(r, z)``."""
         return signed_area(self.as_array()) < 0.0
 
 
 def profile_digest(profile: PoreProfile) -> str:
+    """Return the canonical digest of a validated profile's payload.
+
+    Over the validated document rather than the file's bytes, so reformatting is the same input.
+    """
     return content_hash(PROFILE_SCHEMA, profile.model_dump(by_alias=True, mode="json"))
 
 
 def signed_area(points: np.ndarray) -> float:
+    """Return the shoelace signed area of a closed loop, in nm^2; negative if clockwise."""
     import numpy as np
 
     following = np.roll(points, -1, axis=0)
@@ -146,6 +173,7 @@ def signed_area(points: np.ndarray) -> float:
 
 
 def min_vertex_spacing(points: np.ndarray) -> float:
+    """Return the shortest edge of the closed loop, in nm."""
     import numpy as np
 
     return float(np.min(np.linalg.norm(np.roll(points, -1, axis=0) - points, axis=1)))
@@ -155,10 +183,12 @@ LOCAL_EDGES: int = 2
 
 
 def min_feature_size(points: np.ndarray, *, local_edges: int = LOCAL_EDGES) -> float:
+    """Return the smallest distance from a vertex to a non-local edge, in nm."""
     return float(feature_sizes(points, local_edges=local_edges).min())
 
 
 def feature_sizes(points: np.ndarray, *, local_edges: int = LOCAL_EDGES) -> np.ndarray:
+    """Return each vertex's distance to its nearest non-local edge, in nm."""
     import numpy as np
 
     count = len(points)
@@ -183,6 +213,7 @@ def feature_sizes(points: np.ndarray, *, local_edges: int = LOCAL_EDGES) -> np.n
 
 
 def plane_crossings(profile: PoreProfile | np.ndarray, z_nm: float) -> tuple[float, ...]:
+    """Return the radii, sorted ascending, at which a closed polygon crosses ``z = z_nm``."""
     import numpy as np
 
     points = profile.as_array() if isinstance(profile, PoreProfile) else profile
@@ -265,6 +296,13 @@ def _on_segment(start: np.ndarray, end: np.ndarray, point: np.ndarray) -> bool:
 
 
 def load_profile(name_or_path: str | Path) -> PoreProfile:
+    """Load and validate a pore-profile fixture by name or by path.
+
+    Raises
+    ------
+    ValueError
+        If the fixture's schema is not understood, or it fails the polygon gate.
+    """
     path = (
         Path(name_or_path)
         if isinstance(name_or_path, Path) or Path(name_or_path).suffix in {".yaml", ".yml"}
@@ -279,6 +317,7 @@ def load_profile(name_or_path: str | Path) -> PoreProfile:
 
 
 def write_profile(profile: PoreProfile, path: Path) -> Path:
+    """Write ``profile`` as a ``nanopnp/profile/v0.5`` document that :func:`load_profile` reads."""
     document = profile.model_dump(by_alias=True, mode="json", exclude_none=True)
     document["vertices"] = [[float(r), float(z)] for r, z in profile.vertices]
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -290,6 +329,13 @@ def write_profile(profile: PoreProfile, path: Path) -> Path:
 def profile_from_csv(
     path: Path, *, name: str, source: str, citation: str, description: str | None = None
 ) -> PoreProfile:
+    """Derive a profile fixture from a delivered ``r,z`` table.
+
+    Raises
+    ------
+    ValueError
+        If a line is not a pair of numbers, or the loop fails the polygon gate.
+    """
     import numpy as np
 
     raw = path.read_bytes()

@@ -28,11 +28,14 @@ SLAB_CELLS = 4_000_000
 BATCH_TERMS = 1_000_000
 
 
-class DensityGateError(RuntimeError): ...
+class DensityGateError(RuntimeError):
+    """The density map is not finite or leaves [0, 1]."""
 
 
 @dataclass(frozen=True)
 class DensityGrid:
+    """The canonical stage-2 grid: nodes at integer multiples of the spacing."""
+
     spacing_nm: float
     half_width: int
     z_first: int
@@ -40,18 +43,22 @@ class DensityGrid:
 
     @property
     def n(self) -> int:
+        """Nodes along x and along y, ``2I + 1``."""
         return 2 * self.half_width + 1
 
     @property
     def shape(self) -> tuple[int, int, int]:
+        """``(nz, ny, nx)``: the map's array shape, indexed ``[z, y, x]``."""
         return (self.nz, self.n, self.n)
 
     @property
     def origin_nm(self) -> tuple[float, float, float]:
+        """``(x, y, z)`` of node ``[0, 0, 0]``, in nm."""
         h = self.spacing_nm
         return (-self.half_width * h, -self.half_width * h, self.z_first * h)
 
     def axis_nm(self, axis: str) -> np.ndarray:
+        """Return the node coordinates along ``"x"``, ``"y"`` or ``"z"``, in nm."""
         import numpy as np
 
         h = self.spacing_nm
@@ -62,6 +69,7 @@ class DensityGrid:
         raise ValueError(f"axis {axis!r} is not one of 'x', 'y', 'z'")
 
     def summary(self) -> dict[str, Canonicalisable]:
+        """Return the grid as plain data, for the header and the manifest."""
         return {
             "spacing_nm": self.spacing_nm,
             "half_width": self.half_width,
@@ -72,6 +80,7 @@ class DensityGrid:
 
     @classmethod
     def from_summary(cls, summary: dict[str, Canonicalisable]) -> DensityGrid:
+        """Rebuild a grid from :meth:`summary`."""
         shape = summary["shape_zyx"]
         assert isinstance(shape, list)
         return cls(
@@ -83,10 +92,12 @@ class DensityGrid:
 
 
 def cutoff_nm(width_nm: np.ndarray) -> np.ndarray:
+    """Return the radius, in nm, inside which each atom's term is kept."""
     return width_nm * CUTOFF_FACTOR
 
 
 def check_positions(positions_nm: np.ndarray) -> None:
+    """Refuse an ensemble holding a coordinate that is not finite."""
     import numpy as np
 
     bad = ~np.isfinite(positions_nm).all(axis=2)
@@ -101,6 +112,7 @@ def check_positions(positions_nm: np.ndarray) -> None:
 def canonical_grid(
     positions_nm: np.ndarray, widths_nm: np.ndarray, spacing_nm: float
 ) -> DensityGrid:
+    """Return the grid that holds every kept term of every frame, with a node to spare."""
     import numpy as np
 
     h = float(spacing_nm)
@@ -214,6 +226,13 @@ def deposit(
     progress: Progress | None = None,
     cancel: CancelToken | None = None,
 ) -> np.ndarray:
+    """Return the ensemble-mean union density on ``grid``, float32, indexed ``[z, y, x]``.
+
+    Raises
+    ------
+    DensityGateError
+        If the map is not finite or leaves [0, 1] by more than float32 round-off.
+    """
     import numpy as np
 
     frames = int(positions_nm.shape[0])
@@ -276,6 +295,7 @@ def deposit(
 
 
 def gate_density(values: np.ndarray, grid: DensityGrid, *, first: int = 0) -> None:
+    """Refuse a map that is not finite or leaves [0, 1] beyond float32 round-off."""
     import numpy as np
 
     bad = ~np.isfinite(values) | (values < -GATE_TOLERANCE) | (values > 1.0 + GATE_TOLERANCE)

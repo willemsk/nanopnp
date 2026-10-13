@@ -29,11 +29,14 @@ ORIENTATION_RULE = (
 )
 
 
-class EnsembleFormatError(ValueError): ...
+class EnsembleFormatError(ValueError):
+    """A stage-1 payload file is not an aligned ensemble this release reads."""
 
 
 @dataclass(frozen=True)
 class AlignedEnsemble:
+    """The aligned ensemble: model-frame coordinates, the atoms, and the header."""
+
     positions_nm: np.ndarray
     element: np.ndarray
     name: np.ndarray
@@ -45,13 +48,16 @@ class AlignedEnsemble:
 
     @property
     def frames(self) -> int:
+        """Number of frames."""
         return int(self.positions_nm.shape[0])
 
     @property
     def atoms(self) -> int:
+        """Number of atoms."""
         return int(self.positions_nm.shape[1])
 
     def digest(self) -> str:
+        """Return a content hash over the payload's arrays and header."""
         return content_hash(
             f"{STRUCTURE_SCHEMA}/payload",
             {
@@ -62,6 +68,7 @@ class AlignedEnsemble:
         )
 
     def write(self, path: Path) -> Path:
+        """Write the ensemble to ``path`` as ``.npz``, header included; return the path."""
         import numpy as np
 
         arrays: dict[str, Any] = {
@@ -76,6 +83,13 @@ class AlignedEnsemble:
 
     @classmethod
     def read(cls, path: Path) -> AlignedEnsemble:
+        """Read an ensemble written by :meth:`write`.
+
+        Raises
+        ------
+        EnsembleFormatError
+            If an array is missing, or the atom table and the coordinates disagree in length.
+        """
         import numpy as np
 
         with np.load(path, allow_pickle=False) as data:
@@ -102,6 +116,13 @@ class AlignedEnsemble:
         return cls(positions_nm=positions, header=header, **fields)
 
     def export(self, directory: Path, *, stem: str = "ensemble") -> tuple[Path, Path]:
+        """Write the ensemble as a PDB topology and a DCD trajectory, in ångströms.
+
+        Raises
+        ------
+        ValueError
+            If the chain keys are longer than one character and there are too many chains for them.
+        """
         import MDAnalysis as mda  # noqa: N813 - the alias the library documents
         import numpy as np
         from MDAnalysis.coordinates.memory import MemoryReader

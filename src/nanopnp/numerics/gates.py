@@ -28,6 +28,8 @@ PACKING_WARNING = 0.8
 
 
 class GateViolationError(RuntimeError):
+    """A numerical gate failed (NUM-17); the solve must stop."""
+
     def __init__(
         self,
         gate: str,
@@ -59,6 +61,8 @@ _SAMPLER_CACHE = "_nanopnp_field_samplers"
 
 @dataclass
 class FieldSampler:
+    """Evaluate coefficient functions at a mesh's P2 nodal set, restricted to ``materials``."""
+
     mesh: Mesh
     coordinates: tuple[str, str] = ("r", "z")
     materials: str | None = None
@@ -73,6 +77,7 @@ class FieldSampler:
         coordinates: tuple[str, str] = ("r", "z"),
         materials: str | None = None,
     ) -> FieldSampler:
+        """Return the one sampler of this mesh and material set, cached on the mesh."""
         cache: dict[tuple[tuple[str, str], str | None], FieldSampler] | None = getattr(
             mesh, _SAMPLER_CACHE, None
         )
@@ -87,12 +92,14 @@ class FieldSampler:
 
     @property
     def points(self) -> np.ndarray:
+        """Return the sample points as an ``(n, 2)`` array, computed once."""
         if self._points is None:
             self._points = self._build_points()
         return self._points
 
     @property
     def located(self) -> Expression:
+        """Return the sample points located in the mesh, computed once."""
         if self._located is None:
             points = self.points
             self._located = self.mesh(points[:, 0], points[:, 1])
@@ -135,6 +142,7 @@ class FieldSampler:
         return np.unique(rounded, axis=0)
 
     def evaluate(self, expression: Expression) -> np.ndarray:
+        """Return ``expression`` at every sample point; ValueError if not scalar."""
         import numpy as np
 
         values = np.asarray(expression(self.located)).reshape(len(self.points), -1)
@@ -146,6 +154,7 @@ class FieldSampler:
         return values[:, 0]
 
     def minimum(self, expression: Expression) -> tuple[float, tuple[float, float]]:
+        """Return the smallest sampled value of ``expression`` and where it occurred."""
         import numpy as np
 
         values = self.evaluate(expression)
@@ -153,6 +162,7 @@ class FieldSampler:
         return float(values[index]), (float(self.points[index, 0]), float(self.points[index, 1]))
 
     def maximum(self, expression: Expression) -> tuple[float, tuple[float, float]]:
+        """Return the largest sampled value of ``expression`` and where it occurred."""
         import numpy as np
 
         values = self.evaluate(expression)
@@ -160,6 +170,7 @@ class FieldSampler:
         return float(values[index]), (float(self.points[index, 0]), float(self.points[index, 1]))
 
     def maximum_magnitude(self, expression: Expression) -> tuple[float, tuple[float, float]]:
+        """Return the largest sampled ``|expression|`` and where it occurred."""
         import numpy as np
 
         values = np.abs(self.evaluate(expression))
@@ -168,20 +179,26 @@ class FieldSampler:
 
 
 class Gate(Protocol):
+    """One assertion checked at every Newton iterate."""
+
     name: str
 
     def check(self) -> None:
+        """Raise :class:`GateViolationError` if the current state violates the gate."""
         ...
         ...
 
 
 @dataclass
 class PositivityGate:
+    """``min_i c_i > 0``: a negative concentration makes ``ln c`` undefined."""
+
     sampler: FieldSampler
     concentrations: Mapping[str, Expression]
     name: str = "concentration positivity"
 
     def check(self) -> None:
+        """Raise if any species is non-positive anywhere in the sample set."""
         for species, concentration in self.concentrations.items():
             value, location = self.sampler.minimum(concentration)
             if not value > 0.0:
@@ -192,6 +209,14 @@ class PositivityGate:
 
 @dataclass
 class PackingFractionGate:
+    """``Phi = sum_j N_A a_j^3 c_j < 1``, with concentrations in mol/m^3 and diameters in nm.
+
+    Parameters
+    ----------
+    diameters_nm
+        Steric cubic diameter per species; defaults to the ion diameter for every species.
+    """
+
     sampler: FieldSampler
     concentrations: Mapping[str, Expression]
     diameters_nm: Mapping[str, float] | None = None
@@ -206,12 +231,14 @@ class PackingFractionGate:
             )
 
     def diameter_nm(self, species: str) -> float:
+        """Return the steric cubic diameter of a species, in nm."""
         if self.diameters_nm is None:
             return ION_DIAMETER_NM
         return self.diameters_nm.get(species, ION_DIAMETER_NM)
 
     @property
     def packing_fraction(self) -> Expression:
+        """Return ``Phi`` as a coefficient function."""
         terms = [
             excluded_volume_m3_per_mol(self.diameter_nm(species)) * concentration
             for species, concentration in self.concentrations.items()
@@ -222,6 +249,7 @@ class PackingFractionGate:
         return total
 
     def check(self) -> None:
+        """Raise if ``Phi`` reaches the limit anywhere in the sample set."""
         value, location = self.sampler.maximum(self.packing_fraction)
         # ``not <`` so that NaN fails: the sampler's argmax lands on a NaN.
         if not value < self.limit:
@@ -242,12 +270,15 @@ class PackingFractionGate:
 
 @dataclass
 class PotentialIncrementGate:
+    """``||delta phi||_inf <= V_T`` on the damped increment (cap 1 nondimensional)."""
+
     sampler: FieldSampler
     increment: Expression
     limit: float = 1.0
     name: str = "potential increment cap"
 
     def check(self) -> None:
+        """Raise if the damped increment exceeds the cap anywhere."""
         value, location = self.sampler.maximum_magnitude(self.increment)
         if not value <= self.limit:  # NaN fails
             raise GateViolationError(
@@ -264,12 +295,15 @@ MINIMUM_WALL_DISTANCE_NM = -1.0e-3
 
 @dataclass(frozen=True)
 class WallDistanceMeasurement:
+    """What the wall-distance gate measured, whether or not it passed."""
+
     minimum_nm: float
     location: tuple[float, float]
     negative_fraction: float
     samples: int
 
     def summary(self) -> dict[str, float | int | list[float]]:
+        """Return this measurement as plain data, for the manifest and the dataset."""
         return {
             "minimum_nm": self.minimum_nm,
             "location_nm": [self.location[0], self.location[1]],
@@ -280,12 +314,15 @@ class WallDistanceMeasurement:
 
 @dataclass
 class WallDistanceGate:
+    """``min d >= -1e-3 nm`` over the fluid, wherever a wall correction is active."""
+
     sampler: FieldSampler
     distance: Expression
     minimum_nm: float = MINIMUM_WALL_DISTANCE_NM
     name: str = "wall-distance admissibility"
 
     def measure(self) -> WallDistanceMeasurement:
+        """Return the sampled minimum, where it occurred, and the negative fraction."""
         import numpy as np
 
         values = self.sampler.evaluate(self.distance)
@@ -298,9 +335,11 @@ class WallDistanceGate:
         )
 
     def check(self) -> None:
+        """Raise if the field samples below the threshold anywhere in the fluid."""
         self.checked()
 
     def checked(self) -> WallDistanceMeasurement:
+        """Sample the field once, raise if it fails, and return what was measured."""
         found = self.measure()
         if not found.minimum_nm >= self.minimum_nm:  # NaN fails
             raise GateViolationError(
@@ -333,6 +372,8 @@ PECLET_WARNING = 1.0
 
 @dataclass(frozen=True)
 class PecletMeasurement:
+    """What the cell-Peclet diagnostic measured; ``Pe_K`` assumes no Einstein relation."""
+
     maximum: float
     species: str
     location: tuple[float, float]
@@ -343,9 +384,11 @@ class PecletMeasurement:
 
     @property
     def exceeding_fraction(self) -> float:
+        """Return the fraction of samples at or above the threshold."""
         return 0.0 if self.samples == 0 else self.exceeding / self.samples
 
     def summary(self) -> dict[str, float | int | str | list[float] | dict[str, float]]:
+        """Return this measurement as plain data, for the manifest and the dataset."""
         return {
             "maximum": self.maximum,
             "species": self.species,
@@ -360,12 +403,15 @@ class PecletMeasurement:
 
 @dataclass
 class PecletDiagnostic:
+    """``Pe_K`` on a converged state: a warning, never a gate."""
+
     sampler: FieldSampler
     peclet: Mapping[str, Expression]
     threshold: float = PECLET_WARNING
     name: str = "cell Peclet"
 
     def measure(self) -> PecletMeasurement:
+        """Return the largest sampled ``Pe_K``, where, and how many samples exceed it."""
         import numpy as np
 
         if not self.peclet:
@@ -403,6 +449,7 @@ class PecletDiagnostic:
         )
 
     def report(self) -> PecletMeasurement:
+        """Measure, log at the level the number deserves, and return the measurement."""
         found = self.measure()
         if found.maximum >= self.threshold:
             logger.warning(
@@ -436,13 +483,16 @@ class PecletDiagnostic:
 
 
 def excluded_volume_m3_per_mol(diameter_nm: float) -> float:
+    """Return ``N_A a^3`` in m^3/mol, the volume one mole of a species occupies."""
     return AVOGADRO * (diameter_nm / NM_PER_M) ** 3
 
 
 def maximum_packing_M(diameter_nm: float = ION_DIAMETER_NM) -> float:
+    """Return the concentration in mol/L at which one species alone reaches ``Phi = 1``."""
     return 1.0 / (excluded_volume_m3_per_mol(diameter_nm) * MOL_PER_M3_PER_MOL_PER_L)
 
 
 def check_all(gates: Sequence[Gate]) -> None:
+    """Run every gate in order; the first violation aborts."""
     for gate in gates:
         gate.check()

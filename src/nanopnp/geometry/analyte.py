@@ -31,25 +31,34 @@ ANALYTE_BOUNDARY = "analyte"
 NM3_PER_M3 = 1e27
 
 
-class AnalyteGeometryError(ValueError): ...
+class AnalyteGeometryError(ValueError):
+    """The body and the domain it is to be embedded in are incompatible."""
 
 
 class AnalyteBody(Protocol):
-    @property
-    def z_nm(self) -> float: ...
+    """One rigid body of revolution on the symmetry axis."""
 
     @property
-    def bounding_radius_nm(self) -> float: ...
+    def z_nm(self) -> float:
+        """Axial position of the body's centre, in nm."""
 
     @property
-    def bounding_half_length_nm(self) -> float: ...
+    def bounding_radius_nm(self) -> float:
+        """Largest radius the profile reaches, in nm."""
 
     @property
-    def volume_nm3(self) -> float: ...
+    def bounding_half_length_nm(self) -> float:
+        """Largest departure from ``z_nm`` the profile reaches, in nm."""
 
-    def charge_density_C_m3(self, charge_e: float) -> float: ...
+    @property
+    def volume_nm3(self) -> float:
+        """Volume of the revolved body, in nm^3."""
 
-    def face(self, *, maxh_nm: float | None = None) -> Shape: ...
+    def charge_density_C_m3(self, charge_e: float) -> float:
+        """Return the body's charge density ``q/V`` in C/m^3."""
+
+    def face(self, *, maxh_nm: float | None = None) -> Shape:
+        """Return the profile as a named OCC face, its surface edges named."""
 
 
 def _named_profile(profile: Shape, body: AnalyteBody, maxh_nm: float | None) -> Shape:
@@ -76,6 +85,8 @@ def _charge_density_C_m3(volume_nm3: float, charge_e: float) -> float:
 
 @dataclass(frozen=True)
 class SphereBody:
+    """A sphere of radius ``radius_nm`` centred on the axis at ``z_nm``."""
+
     radius_nm: float
     z_nm: float = 0.0
 
@@ -93,9 +104,11 @@ class SphereBody:
 
     @property
     def volume_nm3(self) -> float:
+        """``4/3 pi a^3``."""
         return 4.0 / 3.0 * math.pi * self.radius_nm**3
 
     def charge_density_C_m3(self, charge_e: float) -> float:
+        """Return the body's charge density ``q/V`` in C/m^3."""
         return _charge_density_C_m3(self.volume_nm3, charge_e)
 
     def face(self, *, maxh_nm: float | None = None) -> Shape:
@@ -107,6 +120,8 @@ class SphereBody:
 
 @dataclass(frozen=True)
 class SpheroidBody:
+    """A spheroid with semi-axes ``semi_radial_nm`` and ``semi_axial_nm``."""
+
     semi_radial_nm: float
     semi_axial_nm: float
     z_nm: float = 0.0
@@ -127,9 +142,11 @@ class SpheroidBody:
 
     @property
     def volume_nm3(self) -> float:
+        """``4/3 pi b^2 c`` with ``b`` the radial and ``c`` the axial semi-axis."""
         return 4.0 / 3.0 * math.pi * self.semi_radial_nm**2 * self.semi_axial_nm
 
     def charge_density_C_m3(self, charge_e: float) -> float:
+        """Return the body's charge density ``q/V`` in C/m^3."""
         return _charge_density_C_m3(self.volume_nm3, charge_e)
 
     def face(self, *, maxh_nm: float | None = None) -> Shape:
@@ -148,6 +165,12 @@ class SpheroidBody:
 
 @dataclass(frozen=True)
 class AnalyteInBoxGeometry:
+    """A body of revolution alone in a half-disc of electrolyte.
+
+    The medium is truncated at ``outer_radius_nm``, far from the body. The boundaries are
+    ``axis``, ``analyte`` and ``outer``; the fluid is ``electrolyte``.
+    """
+
     body: AnalyteBody
     outer_radius_nm: float = 10.0
 
@@ -164,6 +187,7 @@ class AnalyteInBoxGeometry:
             )
 
     def shape(self, *, wall_h_nm: float | None = None) -> Shape:
+        """Return the glued, fully named shape, unmeshed."""
         import netgen.occ as occ
 
         radius = self.outer_radius_nm
@@ -180,6 +204,7 @@ class AnalyteInBoxGeometry:
         return glued
 
     def generate(self, *, maxh_nm: float, wall_h_nm: float | None = None) -> Mesh:
+        """Return the meshed geometry with named domains and boundaries."""
         import netgen.occ as occ
         import ngsolve as ngs
 
@@ -189,6 +214,11 @@ class AnalyteInBoxGeometry:
 
 @dataclass(frozen=True)
 class PoreWithAnalyte:
+    """A body of revolution held in the lumen of the analytic cylindrical pore.
+
+    The pore's boundary vocabulary survives, and ``analyte`` is added.
+    """
+
     pore: CylindricalPoreGeometry
     body: AnalyteBody
     analyte_h_nm: float | None = None
@@ -209,6 +239,7 @@ class PoreWithAnalyte:
             )
 
     def shape(self, *, wall_h_nm: float | None = None) -> Shape:
+        """Return the glued, fully named shape, unmeshed."""
         import netgen.occ as occ
 
         lumen, membrane, cis, trans = self.pore.faces()
@@ -220,6 +251,7 @@ class PoreWithAnalyte:
         return glued
 
     def generate(self, *, maxh_nm: float, wall_h_nm: float | None = None) -> Mesh:
+        """Return the meshed geometry with named domains and boundaries."""
         import netgen.occ as occ
         import ngsolve as ngs
 

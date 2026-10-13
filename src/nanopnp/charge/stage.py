@@ -127,6 +127,13 @@ DEPOSIT_PROVENANCE = "nanopnp stage 7: PHY-16 steps 4-6, deposited (WP28)"
 
 
 def smoothed_dielectric_deviations(*, smoothed: bool) -> tuple[ContributedDeviation, ...]:
+    """Return the deviation a supplied smoothed dielectric field contributes, if any.
+
+    Parameters
+    ----------
+    smoothed
+        Whether a dielectric field replaces the per-domain constants.
+    """
     if not smoothed:
         return ()
     return (
@@ -144,12 +151,23 @@ def smoothed_dielectric_deviations(*, smoothed: bool) -> tuple[ContributedDeviat
 
 @dataclass(frozen=True)
 class ResolvedFields:
+    """The supplied fields, gated, and what the gates measured.
+
+    Parameters
+    ----------
+    charge
+        The fixed-charge field, or None if the case has none.
+    eps_r
+        The solid-fraction field, or None if the case has none.
+    """
+
     charge: ChargeField | DepositedCharge | None
     conservation: ConservationReport | None
     eps_r: SolidFractionField | DerivedSolidFraction | None
     material_means: tuple[MaterialMean, ...]
 
     def parameters(self) -> dict[str, Canonicalisable]:
+        """Return what keys the artefact: each field's contents and declarations, not its bytes."""
         entries: dict[str, Canonicalisable] = {}
         for name, field in (("charge", self.charge), ("eps_r", self.eps_r)):
             if field is None or isinstance(field, DepositedCharge | DerivedSolidFraction):
@@ -170,6 +188,7 @@ class ResolvedFields:
         return entries
 
     def summary(self) -> dict[str, Canonicalisable]:
+        """Return the manifest's Charge group for this run."""
         record: dict[str, Canonicalisable] = {}
         if isinstance(self.charge, DepositedCharge):
             record["charge"] = {"source": "deposited", **self.charge.deposit.summary()}
@@ -199,6 +218,7 @@ class ResolvedFields:
         return record
 
     def deviations(self) -> tuple[ContributedDeviation, ...]:
+        """Return the deviations from the validated model these fields carry."""
         return smoothed_dielectric_deviations(smoothed=isinstance(self.eps_r, SolidFractionField))
 
 
@@ -217,6 +237,7 @@ def _element_order(resolved: ResolvedCase) -> int:
 
 
 def gate_parameters(resolved: ResolvedCase, fields: ResolvedFields) -> dict[str, Canonicalisable]:
+    """Return what the gates are evaluated at, for the stage-7 key."""
     gates: dict[str, Canonicalisable] = {"element_order": _element_order(resolved)}
     if fields.eps_r is not None or resolved.derives_eps_r:
         gates["solids"] = sorted(resolved.document.physics.solid_permittivities)
@@ -224,6 +245,7 @@ def gate_parameters(resolved: ResolvedCase, fields: ResolvedFields) -> dict[str,
 
 
 def read_fields(resolved: ResolvedCase) -> ResolvedFields:
+    """Read the fields a case supplies, without gating them on the mesh."""
     charge = (
         None if resolved.charge is None else load_field(_field_path(resolved.charge, key="charge"))
     )
@@ -259,6 +281,13 @@ def gate_fields(
     cancel: CancelToken | None = None,
     progress: Progress | None = None,
 ) -> ResolvedFields:
+    """Assemble and gate fields that read_fields already read.
+
+    Parameters
+    ----------
+    mesh
+        The deployed mesh; the conservation check is evaluated here and nowhere else.
+    """
     charge = supplied.charge
     report_: ConservationReport | None = None
     # A deposited charge was gated by the stage that deposited it, against its
@@ -302,6 +331,7 @@ def load_fields(
     cancel: CancelToken | None = None,
     progress: Progress | None = None,
 ) -> ResolvedFields:
+    """Read, assemble and gate the fields a case supplies."""
     report(progress, 0.0, "reading the supplied fields")
     return gate_fields(
         resolved,
@@ -314,10 +344,12 @@ def load_fields(
 
 
 def held_solids(resolved: ResolvedCase) -> tuple[str, ...]:
+    """Return the solids a derived chi holds at 1: every one but protein."""
     return tuple(sorted(set(resolved.document.physics.solid_permittivities) - {"protein"}))
 
 
 def derived_parameters(resolved: ResolvedCase) -> dict[str, Canonicalisable]:
+    """Return the stage-7 fields entry of a derived chi."""
     return {
         "source": DERIVED_SOURCE,
         "transition_nm": resolved.dielectric_transition_nm,
@@ -338,6 +370,7 @@ def _missing_derived(resolved: ResolvedCase) -> KeyError:
 def derived_solid_fraction(
     resolved: ResolvedCase, artefact: Artefact | None, mesh: Mesh
 ) -> DerivedSolidFraction:
+    """Return the derived chi of a case, read from stage 7 and bound to mesh."""
     if artefact is None or EPS_R_PAYLOAD not in artefact.payload:
         raise _missing_derived(resolved)
     return DerivedSolidFraction(
@@ -349,6 +382,7 @@ def derived_solid_fraction(
 
 
 def check_water_facing(record: RegionRecord, segments: np.ndarray) -> None:
+    """Abort unless the water-facing pieces are the region's protein-to-water boundary."""
     import numpy as np
 
     edges = np.asarray(protein_water_edges(build_region(record)), dtype=np.float64)
@@ -383,6 +417,7 @@ def derive_fields(
     cancel: CancelToken | None = None,
     progress: Progress | None = None,
 ) -> tuple[DerivedSolidFraction, tuple[MaterialMean, ...]]:
+    """Derive chi from stage 5's record, bind it to mesh and gate it."""
     started = time.perf_counter()
     check_cancelled(cancel, "deriving the solid fraction")
     report(progress, 0.0, "deriving the solid fraction from the profile")
@@ -421,12 +456,14 @@ def derive_fields(
 
 
 def frame_shift_nm(resolved: ResolvedCase) -> float:
+    """Return the shift into the model frame, in nm."""
     if resolved.generates_mesh and resolved.membrane is not None:
         return float(resolved.membrane.centre_z_nm)
     return 0.0
 
 
 def charge_grid_key(resolved: ResolvedCase, protonation: Artefact) -> ChargeGridArtefact:
+    """Return the export lattice's key: the protonation artefact and the kernel's settings."""
     return ChargeGridArtefact(
         parameters=kernel_parameters(
             sharpness=resolved.smearing.sharpness,
@@ -438,10 +475,12 @@ def charge_grid_key(resolved: ResolvedCase, protonation: Artefact) -> ChargeGrid
 
 
 def produced_parameters(resolved: ResolvedCase) -> dict[str, Canonicalisable]:
+    """Return the stage-7 fields entry of a deposited charge."""
     return {"source": "deposited", "order": _element_order(resolved), "kernel": KERNEL_ID}
 
 
 def produced_gates(resolved: ResolvedCase) -> dict[str, Canonicalisable]:
+    """Return what a deposited charge's gates are evaluated at, for the stage-7 key."""
     return {
         "planes": PLANE_COUNT,
         "plane_smoothing_nm": PLANE_SMOOTHING_NM,
@@ -463,6 +502,7 @@ def _missing_stage(resolved: ResolvedCase) -> KeyError:
 def deposited_charge(
     resolved: ResolvedCase, artefact: Artefact | None, mesh: Mesh
 ) -> DepositedCharge:
+    """Return the deposited charge of a producer case, bound to mesh."""
     if artefact is None or DEPOSIT_PAYLOAD not in artefact.payload:
         raise _missing_stage(resolved)
     return DepositedCharge.bind(Deposit.read(Path(artefact.payload[DEPOSIT_PAYLOAD])), mesh)
@@ -477,6 +517,7 @@ def case_fields(
     measures: Measures = AXISYMMETRIC,
     cancel: CancelToken | None = None,
 ) -> ResolvedFields:
+    """Return the fields a solve, a restore or an export assembles, on mesh."""
     fields = (
         ResolvedFields(charge=None, conservation=None, eps_r=None, material_means=())
         if supplied is None
@@ -513,6 +554,7 @@ def _recorded_means(artefact: Artefact | None) -> tuple[MaterialMean, ...]:
 
 
 def require_charge_artefact(resolved: ResolvedCase, artefact: Artefact | None) -> None:
+    """Refuse a producer or deriving case handed no stage-7 artefact."""
     if resolved.deposits_charge and artefact is None:
         raise _missing_stage(resolved)
     if resolved.derives_eps_r and artefact is None:
@@ -525,6 +567,7 @@ def fixed_charge_density(
     charge_artefact: Artefact | None,
     mesh: Mesh,
 ) -> Expression | None:
+    """Return the volume charge density a run carried, on mesh, or None."""
     if resolved.deposits_charge:
         return deposited_charge(resolved, charge_artefact, mesh).volume_density_C_m3()
     if supplied is None or supplied.charge is None:
@@ -568,11 +611,13 @@ def _document_text(document: FieldDocument) -> str:
 
 
 def write_field_document(lattice: KernelLattice, data: Path, path: Path) -> Path:
+    """Write the export lattice's field document to path, naming data beside it."""
     path.write_text(_document_text(_field_document(lattice, data)), encoding="utf-8")
     return path
 
 
 def export_charge(artefact: Artefact, path: Path) -> tuple[Path, ...]:
+    """Write stage 7's charge to path in the format its suffix names; return the files."""
     if CHARGE_PAYLOAD not in artefact.payload:
         raise KeyError(
             "stage 7's artefact carries no charge lattice: the run supplied inputs.eps_r or "
@@ -609,11 +654,14 @@ def export_charge(artefact: Artefact, path: Path) -> tuple[Path, ...]:
 
 @dataclass(frozen=True)
 class StoredLattice:
+    """The charge lattice stage 7's artefact carries, as it is stored."""
+
     grid: RadialGrid
     quantity: str
     units: str
 
     def weights_m(self) -> tuple[np.ndarray, np.ndarray]:
+        """Return the trapezoid weights along z and r, in metres."""
         import numpy as np
 
         weights_z = self.grid.trapezium_weights("z") * 1e-9
@@ -624,6 +672,7 @@ class StoredLattice:
 
 
 def stored_lattice(artefact: Artefact) -> StoredLattice | None:
+    """Return the charge lattice a stage-7 artefact carries, or None."""
     if CHARGE_PAYLOAD not in artefact.payload:
         return None
     grid = read_grid(Path(artefact.payload[CHARGE_PAYLOAD]), format="npz")
@@ -650,6 +699,8 @@ def _derived_entries(
 
 
 class FieldStage:
+    """Stage 7: a deposited or supplied charge, and a supplied or derived dielectric, gated."""
+
     name = "charge"
 
     def __init__(self, *, workspace: Path | None = None, store: Store | None = None) -> None:
@@ -657,9 +708,11 @@ class FieldStage:
         self._store = store
 
     def describe(self) -> StageDescription:
+        """Return the registry's description of this stage."""
         return describe(self.name)
 
     def deviations(self, inputs: StageInputs) -> tuple[ContributedDeviation, ...]:
+        """Return the departures the supplied fields contribute."""
         fields = inputs.require(self.name).parameters["fields"]
         assert isinstance(fields, dict)  # FieldsArtefact writes it as one
         # A derived chi is the switch charge.dielectric_transition_nm, which the
@@ -669,6 +722,7 @@ class FieldStage:
         return smoothed_dielectric_deviations(smoothed=supplied)
 
     def key(self, inputs: StageInputs) -> FieldsArtefact:
+        """Return the artefact key, without depositing or gating anything."""
         resolved, ingested, mesh_artefact = self._prepare(inputs, ingest_mesh=False)
         del ingested
         supplied = read_fields(resolved)
@@ -685,6 +739,7 @@ class FieldStage:
         progress: Progress | None = None,
         cancel: CancelToken | None = None,
     ) -> FieldsArtefact:
+        """Deposit or read the fields, gate them, archive them, and emit the artefact."""
         check_cancelled(cancel, "reading the fields")
         resolved, ingested, mesh_artefact = self._prepare(inputs, ingest_mesh=True)
         assert ingested is not None  # ``ingest_mesh=True`` admits no other case
@@ -733,6 +788,7 @@ class FieldStage:
         payload: dict[str, Path] | None = None,
         region: Artefact | None = None,
     ) -> FieldsArtefact:
+        """Return the artefact for already-loaded supplied fields, with or without payload."""
         derived, upstream = _derived_entries(resolved, region)
         return FieldsArtefact(
             fields={**fields.parameters(), **derived},

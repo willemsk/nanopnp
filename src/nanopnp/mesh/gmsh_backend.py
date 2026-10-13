@@ -41,13 +41,16 @@ _MODEL_IDS = itertools.count()
 """Numbers the models this module adds, so a session already open never sees a clash."""
 
 
-class GmshMeshingError(RuntimeError): ...
+class GmshMeshingError(RuntimeError):
+    """Gmsh refused the region or failed to mesh it; its own log is quoted."""
 
 
-class GmshInitialisationError(RuntimeError): ...
+class GmshInitialisationError(RuntimeError):
+    """Gmsh failed to initialise."""
 
 
 def version() -> str:
+    """Return the installed Gmsh's version, which the manifest records beside the key."""
     return str(gmsh.__version__)
 
 
@@ -215,6 +218,7 @@ def size_targets(
     membrane_thickness_nm: float,
     axis_extent_nm: tuple[float, float],
 ) -> tuple[list[float | None], dict[str, float]]:
+    """Return each edge's own size and each sized domain's size."""
     own = []
     for edge in graph.edges:
         z_mid = 0.5 * (graph.vertices[edge.start][1] + graph.vertices[edge.end][1])
@@ -235,6 +239,7 @@ def size_targets(
 def short_curve_sources(
     graph: RegionGraph, own: list[float | None], domains: Mapping[str, float], global_nm: float
 ) -> dict[float, list[int]]:
+    """Return the vertices the short-curve restriction applies to, by the length it is set to."""
     target = [global_nm if size is None else min(size, global_nm) for size in own]
     for name, loop in graph.faces.items():
         size = domains.get(name)
@@ -352,6 +357,18 @@ def mesh_region(
     membrane_thickness_nm: float,
     axis_extent_nm: tuple[float, float],
 ) -> MeshData:
+    """Mesh stage 5's region with Gmsh under the section 5.2.2 table.
+
+    Parameters
+    ----------
+    wall_h_nm
+        The resolved wall size in nm; ``None`` leaves the wall to the other fields.
+
+    Raises
+    ------
+    GmshMeshingError
+        If Gmsh raised, quoting the error and the last of its log.
+    """
     own, domains = size_targets(
         graph,
         wall_h_nm,

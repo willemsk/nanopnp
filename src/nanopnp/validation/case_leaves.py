@@ -18,6 +18,8 @@ KINDS: tuple[str, ...] = (
 
 @dataclass(frozen=True)
 class Leaf:
+    """Classification record for a leaf in the case schema."""
+
     kind: str
     consumer: str
     reason: str
@@ -26,6 +28,7 @@ class Leaf:
 def unclassified(
     paths: Iterable[str], leaves: Mapping[str, Leaf]
 ) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """Return the schema paths with no classification, and the classifications with no path."""
     path_set = set(paths)
     leaf_set = set(leaves)
     missing = tuple(sorted(path_set - leaf_set))

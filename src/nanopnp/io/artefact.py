@@ -50,11 +50,22 @@ SWEEP_SCHEMA = "nanopnp/sweep/v0.5"
 
 
 def timestamp() -> str:
+    """Return the current UTC time, ISO 8601 to the second; never part of the hash."""
     return datetime.now(UTC).replace(microsecond=0).isoformat()
 
 
 @dataclass(frozen=True)
 class Artefact:
+    """One stage output, addressed by the hash of what produced it.
+
+    Parameters
+    ----------
+    inputs
+        Upstream artefact hashes and input-file digests, by name; files by content, not path.
+    payload
+        Heavy data on disk, by name; outside the digest.
+    """
+
     schema: str
     parameters: Mapping[str, Canonicalisable]
     inputs: Mapping[str, str] = field(default_factory=dict)
@@ -66,26 +77,32 @@ class Artefact:
 
     @property
     def hash(self) -> str:
+        """The content hash: schema, parameters and input hashes."""
         return content_hash(self.schema, self.parameters, self.inputs)
 
     @property
     def short_hash(self) -> str:
+        """The display and directory-fan-out prefix of :attr:`hash`."""
         return short(self.hash)
 
     @property
     def slug(self) -> str:
+        """The schema as one path component."""
         return self.schema.replace("/", "-")
 
     def payload_hashes(self) -> dict[str, str]:
+        """Return the digest of every payload file, recomputed from disk."""
         return {name: file_hash(path) for name, path in sorted(self.payload.items())}
 
     @property
     def hand_substituted(self) -> bool:
+        """Whether the stored bytes disagree with the record; a hand edit or corruption."""
         if self.recorded_hash is not None and self.recorded_hash != self.hash:
             return True
         return bool(self.recorded_payload) and self.recorded_payload != self.payload_hashes()
 
     def meta(self) -> dict[str, Canonicalisable]:
+        """Return the ``meta.json`` record of this artefact."""
         return {
             "schema": self.schema,
             "hash": self.hash,
@@ -101,6 +118,8 @@ class Artefact:
 
 
 class CaseArtefact(Artefact):
+    """Stage 9: a validated case document, hashed over its validated dump."""
+
     def __init__(
         self,
         document: CaseDocument,
@@ -115,6 +134,8 @@ class CaseArtefact(Artefact):
 
 
 class StructureArtefact(Artefact):
+    """Stage 1: the aligned ensemble, keyed on the structure block and its files' bytes."""
+
     def __init__(
         self,
         *,
@@ -131,6 +152,8 @@ class StructureArtefact(Artefact):
 
 
 class DensityArtefact(Artefact):
+    """Stage 2: the density map, keyed on the density geometry, the radius set and stage 1."""
+
     def __init__(
         self,
         *,
@@ -149,6 +172,8 @@ class DensityArtefact(Artefact):
 
 
 class ReducedArtefact(Artefact):
+    """Stage 3: the (r, z) reduction, keyed on n, the bin width, its two methods and stage 2."""
+
     def __init__(
         self,
         *,
@@ -167,6 +192,8 @@ class ReducedArtefact(Artefact):
 
 
 class ProfileArtefact(Artefact):
+    """Stage 4: the conditioned contour, keyed on the contour block and the grid spacing."""
+
     def __init__(
         self,
         *,
@@ -185,6 +212,8 @@ class ProfileArtefact(Artefact):
 
 
 class MaterialsArtefact(Artefact):
+    """Stage 8: the resolved material coefficient set, keyed on its electrolyte and corrections."""
+
     def __init__(
         self,
         electrolyte: Electrolyte,
@@ -210,6 +239,8 @@ class MaterialsArtefact(Artefact):
 
 
 class RegionArtefact(Artefact):
+    """Stage 5: the tagged region, keyed on the membrane, reservoir, constants and profile."""
+
     def __init__(
         self,
         *,
@@ -228,6 +259,18 @@ class RegionArtefact(Artefact):
 
 
 class MeshArtefact(Artefact):
+    """Stage 6: a mesh that has passed the mesh gates, in the vocabulary.
+
+    Parameters
+    ----------
+    content_hash
+        A supplied mesh's canonical content hash; exactly one of this and ``region`` is given.
+    region
+        A generated mesh's stage-5 key.
+    sizing
+        A generated mesh's resolved size fields; None for a supplied one.
+    """
+
     def __init__(
         self,
         *,
@@ -262,6 +305,8 @@ class MeshArtefact(Artefact):
 
 
 class ProtonationArtefact(Artefact):
+    """Stage 7, first half: the protonation artefact, keyed on its parameters or file."""
+
     def __init__(
         self,
         *,
@@ -280,6 +325,8 @@ class ProtonationArtefact(Artefact):
 
 
 class ChargeGridArtefact(Artefact):
+    """Stage 7's export lattice, keyed on the protonation artefact and the kernel."""
+
     def __init__(
         self,
         *,
@@ -298,6 +345,8 @@ class ChargeGridArtefact(Artefact):
 
 
 class FieldsArtefact(Artefact):
+    """Stage 7: the external fields, keyed on their grid digests and the mesh."""
+
     def __init__(
         self,
         *,
@@ -321,6 +370,8 @@ class FieldsArtefact(Artefact):
 
 
 class SolutionArtefact(Artefact):
+    """Stage 10: the converged field set and the record of reaching it."""
+
     def __init__(
         self,
         parameters: Mapping[str, Canonicalisable],
@@ -339,6 +390,8 @@ class SolutionArtefact(Artefact):
 
 
 class QoIArtefact(Artefact):
+    """Stage 11: the scalars extracted from one converged solution."""
+
     def __init__(
         self,
         *,
@@ -369,6 +422,8 @@ class QoIArtefact(Artefact):
 
 
 class ReportArtefact(Artefact):
+    """Stage 12: what the run wrote, and the hashes of what it was written from."""
+
     def __init__(
         self,
         *,
@@ -389,6 +444,8 @@ class ReportArtefact(Artefact):
 
 
 class SweepArtefact(Artefact):
+    """The collected dataset over the members of one sweep; keyed on the plan, not the members."""
+
     def __init__(
         self,
         *,
@@ -410,11 +467,14 @@ class SweepArtefact(Artefact):
 
 @dataclass(frozen=True)
 class StageInputs:
+    """What a stage is handed: the resolved case, its upstream artefacts and its options."""
+
     resolved: ResolvedCase
     upstream: Mapping[str, Artefact] = field(default_factory=dict)
     options: Mapping[str, Canonicalisable] = field(default_factory=dict)
 
     def require(self, name: str) -> Artefact:
+        """Return an upstream artefact by name; KeyError if it was not supplied."""
         try:
             return self.upstream[name]
         except KeyError:

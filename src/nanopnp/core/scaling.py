@@ -32,6 +32,7 @@ def debye_length_nm(
     temperature_K: float = REFERENCE_TEMPERATURE_K,
     valence: int = 1,
 ) -> float:
+    """Return the Debye length in nm of a symmetric z:z electrolyte; ValueError for c <= 0."""
     if not concentration_M > 0.0:  # NaN fails too
         raise ValueError(f"concentration must be positive, got {concentration_M} M")
     permittivity = VACUUM_PERMITTIVITY * relative_permittivity
@@ -47,6 +48,8 @@ def debye_length_nm(
 
 @dataclass(frozen=True)
 class Scales:
+    """The scale set of a geometry and an electrolyte; each scale is a computed property."""
+
     length_nm: float
     concentration_M: float
     temperature_K: float = REFERENCE_TEMPERATURE_K
@@ -69,54 +72,67 @@ class Scales:
 
     @property
     def length_m(self) -> float:
+        """Reference length ``a``, in m."""
         return self.length_nm / NM_PER_M
 
     @property
     def permittivity(self) -> float:
+        """Absolute permittivity ``eps = eps_r eps_0``, in F/m."""
         return self.relative_permittivity * VACUUM_PERMITTIVITY
 
     @property
     def potential_V(self) -> float:
+        """Potential scale ``V_T = RT/F``, in V."""
         return thermal_voltage(self.temperature_K)
 
     @property
     def concentration_mol_m3(self) -> float:
+        """Concentration scale ``c_0``, in mol/m^3."""
         return self.concentration_M * MOL_PER_M3_PER_MOL_PER_L
 
     @property
     def velocity_m_s(self) -> float:
+        """Velocity scale ``u_0 = eps V_T^2 / (eta a)``, in m/s."""
         return self.permittivity * self.potential_V**2 / (self.viscosity_Pa_s * self.length_m)
 
     @property
     def pressure_Pa(self) -> float:
+        """Pressure scale ``p_0 = eps V_T^2 / a^2``, in Pa."""
         return self.permittivity * self.potential_V**2 / self.length_m**2
 
     @property
     def force_N(self) -> float:
+        """Force scale ``p_0 a^2 = eps V_T^2``, in N; independent of the reference length."""
         return self.permittivity * self.potential_V**2
 
     @property
     def flux_mol_m2_s(self) -> float:
+        """Ion-flux scale ``D_0 c_0 / a``, in mol/(m^2 s)."""
         return self.diffusivity_m2_s * self.concentration_mol_m3 / self.length_m
 
     @property
     def current_A(self) -> float:
+        """Current scale ``F D_0 c_0 a``, in A."""
         return FARADAY * self.diffusivity_m2_s * self.concentration_mol_m3 * self.length_m
 
     @property
     def volumetric_flow_m3_s(self) -> float:
+        """Volumetric-flow scale ``u_0 a^2``, in m^3/s."""
         return self.velocity_m_s * self.length_m**2
 
     @property
     def charge_density_C_m3(self) -> float:
+        """Space-charge scale ``eps V_T / a^2``, in C/m^3."""
         return self.permittivity * self.potential_V / self.length_m**2
 
     @property
     def surface_charge_C_m2(self) -> float:
+        """Surface-charge scale ``eps V_T / a``, in C/m^2."""
         return self.permittivity * self.potential_V / self.length_m
 
     @property
     def debye_length_nm(self) -> float:
+        """Debye length of a symmetric monovalent electrolyte, in nm."""
         return debye_length_nm(
             self.concentration_M,
             relative_permittivity=self.relative_permittivity,
@@ -125,18 +141,28 @@ class Scales:
 
     @property
     def debye_ratio(self) -> float:
+        """Ratio of the Debye length to the reference length, dimensionless."""
         return self.debye_length_nm / self.length_nm
 
     @property
     def peclet(self) -> float:
+        """Electroviscous Peclet number Pe = eps V_T^2 / (eta D_0)."""
         return (
             self.permittivity * self.potential_V**2 / (self.viscosity_Pa_s * self.diffusivity_m2_s)
         )
 
     def nondimensionalise(self, quantity: str, value: float) -> float:
+        """Return ``value``, in SI units of ``quantity``, divided by that quantity's scale.
+
+        Parameters
+        ----------
+        quantity
+            A scaled field name, e.g. ``length`` or ``potential``; KeyError if unknown.
+        """
         return value / self._scale(quantity)
 
     def redimensionalise(self, quantity: str, value: float) -> float:
+        """Return a dimensionless value times its SI scale; inverts nondimensionalise."""
         return value * self._scale(quantity)
 
     def _scale(self, quantity: str) -> float:
@@ -161,9 +187,11 @@ class Scales:
         return scales[quantity]
 
     def bias_to_dimensionless(self, bias_V: float) -> float:
+        """Return an applied bias in volts as a multiple of ``V_T``."""
         return bias_V / self.potential_V
 
     def summary(self) -> dict[str, float]:
+        """Return every defining input, scale and group, for the manifest."""
         return {
             "length_nm": self.length_nm,
             "concentration_M": self.concentration_M,

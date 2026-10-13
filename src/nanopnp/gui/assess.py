@@ -51,6 +51,8 @@ Record: TypeAlias = Any
 
 @dataclass(frozen=True)
 class Refusal:
+    """One criterion a loop fails, as data, with the location it names."""
+
     criterion: str
     measured: str
     threshold: str
@@ -61,16 +63,27 @@ class Refusal:
 
 @dataclass(frozen=True)
 class Assessment:
+    """Every criterion measured on a loop, and the ones it fails.
+
+    Parameters
+    ----------
+    failures
+        In the gate's order; the first is the refusal stage 4 would make.
+    """
+
     record: Record
     failures: tuple[Refusal, ...]
 
     @property
     def passed(self) -> bool:
+        """Whether the loop meets every criterion."""
         return not self.failures
 
 
 @dataclass(frozen=True)
 class Seed:
+    """A loop to edit after stage 4's gate refused it."""
+
     vertices: tuple[tuple[float, float], ...]
     digest: str
     name: str
@@ -79,6 +92,8 @@ class Seed:
 
 @dataclass(frozen=True)
 class AssessRequest:
+    """What the child is asked to do: measure a loop, or seed one."""
+
     case: str
     store: str | None = None
     vertices: tuple[tuple[float, float], ...] | None = None
@@ -86,16 +101,22 @@ class AssessRequest:
 
 @dataclass(frozen=True)
 class Assessed:
+    """A loop was measured."""
+
     assessment: Assessment
 
 
 @dataclass(frozen=True)
 class Seeded:
+    """A loop was recomputed from the stored map."""
+
     seed: Seed
 
 
 @dataclass(frozen=True)
 class AssessFailed:
+    """Nothing was measured; the refusing code's wording says why."""
+
     error: str
     message: str
 
@@ -162,6 +183,7 @@ def _assessment(measured: ContourMeasurement) -> Assessment:
 
 
 def measure_loop(loop: np.ndarray, context: _Context) -> Assessment:
+    """Measure a loop as stage 4's gate would, against the case's stored stages 1 and 3."""
     import numpy as np
 
     contour = _contour()
@@ -180,6 +202,13 @@ def measure_loop(loop: np.ndarray, context: _Context) -> Assessment:
 
 
 def assess(request: AssessRequest) -> Assessment:
+    """Measure the request's loop against the acceptance criteria.
+
+    Raises
+    ------
+    ValueError
+        If the request carries no loop.
+    """
     import numpy as np
 
     if request.vertices is None:
@@ -188,6 +217,13 @@ def assess(request: AssessRequest) -> Assessment:
 
 
 def seed(request: AssessRequest) -> Seed:
+    """Recompute stage 4's loop from the stored map, for an edit after a refusal.
+
+    Raises
+    ------
+    nanopnp.geometry.contour.ContourGateError
+        If the conditioning itself refuses; the gate's own words propagate.
+    """
     contour = _contour()
     context = _context(request)
     resolved = resolve(context.document)
@@ -218,6 +254,8 @@ def _worker(request: AssessRequest, events: Queue[AssessEvent]) -> None:
 
 @dataclass
 class AssessProcess:
+    """One background measurement: start it, drain its events, stop it if superseded."""
+
     request: AssessRequest
     _process: BaseProcess | None = field(default=None, repr=False)
     _events: Queue[AssessEvent] | None = field(default=None, repr=False)
@@ -226,6 +264,13 @@ class AssessProcess:
     answered: bool = field(default=False, repr=False)
 
     def start(self) -> None:
+        """Spawn the child.
+
+        Raises
+        ------
+        RuntimeError
+            If this process has already been started.
+        """
         if self._process is not None:
             raise RuntimeError(
                 "this AssessProcess has already been started; construct another one rather than "
@@ -242,6 +287,7 @@ class AssessProcess:
         self._process.start()
 
     def drain(self) -> tuple[AssessEvent, ...]:
+        """Return every event posted since the last call, oldest first."""
         if self._events is None:
             return ()
         found: list[AssessEvent] = []
@@ -254,9 +300,11 @@ class AssessProcess:
 
     @property
     def running(self) -> bool:
+        """Whether the child is alive."""
         return self._process is not None and self._process.is_alive()
 
     def terminate(self, timeout: float = 1.0) -> None:
+        """Stop a superseded measurement and wait for it to exit."""
         if self._process is None:
             return
         if self._process.is_alive():
@@ -267,5 +315,6 @@ class AssessProcess:
             self._process.join(timeout)
 
     def join(self, timeout: float | None = None) -> None:
+        """Wait for the child to exit."""
         if self._process is not None:
             self._process.join(timeout)

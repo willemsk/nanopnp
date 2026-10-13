@@ -23,17 +23,12 @@ META = "meta.json"
 FANOUT = 2
 
 
-class StoreError(RuntimeError): ...
+class StoreError(RuntimeError):
+    """A stored artefact could not be read, or a write could not be completed."""
 
 
 class Store:
-    """A directory of content-addressed artefacts.
-
-    Parameters
-    ----------
-    root
-        Store root; defaults to :func:`nanopnp.core.paths.store_root`. Created on first write.
-    """
+    """A directory of content-addressed artefacts; the root is created on first write."""
 
     def __init__(self, root: str | Path | None = None) -> None:
         self._root = Path(root).expanduser().resolve() if root is not None else store_root()
@@ -67,13 +62,7 @@ class Store:
         return (self.location(artefact.schema, artefact.hash) / META).is_file()
 
     def put(self, artefact: Artefact) -> Artefact:
-        """Write an artefact to the store and return it as stored.
-
-        Raises
-        ------
-        StoreError
-            If a payload file named by the artefact is missing.
-        """
+        """Write an artefact to the store and return it; StoreError if a payload is missing."""
         directory = self.location(artefact.schema, artefact.hash)
         directory.mkdir(parents=True, exist_ok=True)
 
@@ -116,13 +105,7 @@ class Store:
         )
 
     def get(self, schema: str, digest: str) -> Artefact | None:
-        """Return a stored artefact, or ``None`` if it is not in the store.
-
-        Raises
-        ------
-        StoreError
-            If ``meta.json`` exists but is not readable as a record.
-        """
+        """Return a stored artefact, or None if absent; StoreError if its record is unreadable."""
         directory = self.location(schema, digest)
         meta_path = directory / META
         if not meta_path.is_file():
@@ -158,20 +141,7 @@ class Store:
         return artefact
 
     def get_or_compute(self, key: Artefact, compute: Callable[[], Artefact]) -> Artefact:
-        """Return the stored artefact for ``key``, computing it on a miss.
-
-        Parameters
-        ----------
-        key
-            The schema, parameters and input hashes of the work, and no payload.
-        compute
-            Called on a miss; must return an artefact with the same key.
-
-        Raises
-        ------
-        StoreError
-            If ``compute`` returns an artefact whose hash is not ``key``'s.
-        """
+        """Return the stored artefact for ``key``, computing it on a miss."""
         found = self.get(key.schema, key.hash)
         if found is not None:
             self.hits += 1
@@ -198,6 +168,7 @@ def _payload_entries(meta: Mapping[str, Canonicalisable]) -> dict[str, dict[str,
 def atomic_write_bytes(target: Path, data: bytes) -> None:
     # The temporary name carries the pid and a token: job-array workers on a shared filesystem
     # run on different hosts, where pids repeat.
+    """Write bytes to ``target`` atomically, through a same-directory temporary file."""
     temporary = target.with_name(f".{target.name}.{os.getpid()}.{secrets.token_hex(4)}.tmp")
     try:
         temporary.write_bytes(data)

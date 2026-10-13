@@ -141,19 +141,30 @@ OPERATOR_KEYS: tuple[str, ...] = (
 )
 
 
-class StateMismatchError(RuntimeError): ...
+class StateMismatchError(RuntimeError):
+    """A stored state does not describe the run it is restored into; raised rather than adapted."""
 
 
-class WarmStartError(StateMismatchError): ...
+class WarmStartError(StateMismatchError):
+    """A stored state cannot warm-start this run; a StateMismatchError."""
 
 
 @dataclass(frozen=True)
 class WarmStart:
+    """A neighbour's converged state, loaded onto this run's space.
+
+    Parameters
+    ----------
+    differing
+        Every operator key whose stored value differs from this run's, with both values.
+    """
+
     solution: ModelSolution
     source: str
     differing: tuple[str, ...] = ()
 
     def summary(self) -> dict[str, Canonicalisable]:
+        """Return the manifest's warm-start record."""
         return {
             "status": "warm",
             "source": self.source,
@@ -162,14 +173,17 @@ class WarmStart:
 
 
 def cold_start(reason: str) -> dict[str, Canonicalisable]:
+    """Return the warm-start record of a member that climbed the ladder cold, with the reason."""
     return {"status": "cold", "source": None, "reason": reason, "differing_operator_keys": []}
 
 
 def reads_distance(resolved: ResolvedCase) -> bool:
+    """Return whether this case's solve reads the distance field."""
     return model_reads_wall(case_model(resolved))
 
 
 def wall_distance_field(resolved: ResolvedCase, mesh: Mesh, *, order: int) -> Expression:
+    """Return the distance field this case solves against."""
     if not reads_distance(resolved):
         return SATURATED_WALL_DISTANCE_NM
     return wall_distance(
@@ -187,6 +201,13 @@ def check_wall_distance(
     *,
     coordinates: tuple[str, str] = ("r", "z"),
 ) -> WallDistanceMeasurement | None:
+    """Gate the discrete distance field this run will read; None if it reads none.
+
+    Raises
+    ------
+    GateViolationError
+        If the field samples below the minimum wall distance anywhere in the fluid.
+    """
     if not reads_distance(resolved):
         return None
     sampler = FieldSampler.shared(mesh, coordinates=coordinates, materials=ELECTROLYTE_DOMAINS)
@@ -200,6 +221,7 @@ def single_rung(
     distance: Expression,
     fields: ResolvedFields,
 ) -> Rung:
+    """Return the one cold rung a case with ``continuation: none`` solves, at its target."""
     model = case_model(resolved)
     declared = declaration(resolved.model)
     driven = next(iter(ELECTRODES - {resolved.ground}))
@@ -236,6 +258,7 @@ def ladder(
     distance: Expression,
     fields: ResolvedFields,
 ) -> tuple[Rung, ...]:
+    """Return the rungs this case solves, ladder or single."""
     if resolved.continuation == "none":
         return (single_rung(resolved, mesh, measures, distance, fields),)
     # Neither deposited nor supplied charge leaves the stage-4 ramp empty (FR-27).
@@ -265,6 +288,7 @@ def ladder(
 
 
 def residual_keywords(rung: Rung) -> dict[str, Expression]:
+    """Return the rung keywords that are coefficients of its residual form."""
     return {
         name: value for name, value in rung.solve_kwargs.items() if name not in SOLVE_ONLY_KEYWORDS
     }
@@ -360,6 +384,18 @@ def save(
     mesh_content_hash: str,
     boundaries: CoupledBoundaries = DEFAULT_BOUNDARIES,
 ) -> Path:
+    """Write a converged state and its descriptor to ``path``, creating the parent directory.
+
+    Parameters
+    ----------
+    mesh_content_hash
+        The mesh's content hash; the mesh's path is not recorded.
+
+    Raises
+    ------
+    StateMismatchError
+        If the corrections read the distance but the solution carries no distance field.
+    """
     import numpy as np
 
     model = solution.model
@@ -475,6 +511,7 @@ def _load_state(
 
 
 def descriptor_leaves(record: Mapping[str, Any], prefix: str = "") -> tuple[str, ...]:
+    """Return every leaf of a descriptor as a dotted path; a list is a leaf."""
     found: list[str] = []
     for key, value in record.items():
         path = f"{prefix}{key}"
@@ -486,6 +523,7 @@ def descriptor_leaves(record: Mapping[str, Any], prefix: str = "") -> tuple[str,
 
 
 def covering_key(leaf: str, keys: Sequence[str]) -> str | None:
+    """Return the entry of ``keys`` covering a descriptor leaf (longest match), or None."""
     matches = [key for key in keys if leaf == key or leaf.startswith(f"{key}.")]
     return max(matches, key=len) if matches else None
 
@@ -500,6 +538,7 @@ def _leaf_at(record: Mapping[str, Any], path: str) -> Canonicalisable:
 
 
 def warm_start_payload(artefact: Artefact) -> Path:
+    """Return the state file of a neighbour's solve artefact; WarmStartError otherwise."""
     if artefact.schema != SOLUTION_SCHEMA:
         raise WarmStartError(
             f"a warm start needs a {SOLUTION_SCHEMA} artefact; {artefact.short_hash} is "
@@ -526,6 +565,18 @@ def load_initial(
     mesh_content_hash: str,
     source: str = "",
 ) -> WarmStart:
+    """Load a neighbour's converged state as this run's starting point.
+
+    Parameters
+    ----------
+    source
+        The neighbour's artefact hash, for provenance only.
+
+    Raises
+    ------
+    WarmStartError
+        If the payload does not describe a space this run could load into.
+    """
     import numpy as np
 
     with np.load(path, allow_pickle=False) as archive:
@@ -585,6 +636,18 @@ def restore(
     fields: ResolvedFields | None = None,
     charge_artefact: Artefact | None = None,
 ) -> ModelSolution:
+    """Return the converged solution stored at ``path``, on this case's operator.
+
+    Parameters
+    ----------
+    mesh_artefact
+        The run's mesh artefact, needed when the case generates its mesh.
+
+    Raises
+    ------
+    StateMismatchError
+        If the payload does not describe this case, mesh, discretisation or model.
+    """
     import ngsolve as ngs
     import numpy as np
 

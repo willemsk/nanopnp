@@ -107,16 +107,20 @@ TIMEOUT_S = 1800.0
 VISIBILITY = 10.0
 
 
-class ApbsError(RuntimeError): ...
+class ApbsError(RuntimeError):
+    """Raised when APBS is absent, rejects the deck, fails, or overruns its time limit."""
 
 
-class BoxError(ValueError): ...
+class BoxError(ValueError):
+    """Raised when the APBS box does not hold the charge with the margin the construction needs."""
 
 
-class Val06Error(AssertionError): ...
+class Val06Error(AssertionError):
+    """Raised when VAL-06 fails its refinement budget, charge visibility or agreement check."""
 
 
 def apbs_available() -> str | None:
+    """Return why APBS cannot run here, or ``None`` if it can."""
     try:
         import apbs_binary
     except ImportError:
@@ -139,31 +143,44 @@ def apbs_available() -> str | None:
 
 @dataclass(frozen=True)
 class CubicGrid:
+    """APBS's cubic grid: ``dime`` nodes per side at ``spacing_nm``, from ``origin_nm``."""
+
     origin_nm: tuple[float, float, float]
     spacing_nm: float
     dime: int
 
     def axis(self, index: int) -> np.ndarray:
+        """Return the node coordinates along axis ``index`` (0, 1, 2 for x, y, z), in nm."""
         import numpy as np
 
         return self.origin_nm[index] + self.spacing_nm * np.arange(self.dime, dtype=np.float64)
 
     @property
     def upper_nm(self) -> tuple[float, float, float]:
+        """Return the coordinates of the last node, in nm."""
         span = self.spacing_nm * (self.dime - 1)
         return (self.origin_nm[0] + span, self.origin_nm[1] + span, self.origin_nm[2] + span)
 
     @property
     def centre_nm(self) -> tuple[float, float, float]:
+        """Return the box centre, in nm."""
         half = 0.5 * self.spacing_nm * (self.dime - 1)
         return (self.origin_nm[0] + half, self.origin_nm[1] + half, self.origin_nm[2] + half)
 
     def coarsened(self) -> CubicGrid:
+        """Return the nested grid of every second node, at ``2h`` from the same origin.
+
+        Raises
+        ------
+        ValueError
+            If ``dime`` is even.
+        """
         if self.dime % 2 == 0:
             raise ValueError(f"a grid of dime {self.dime} has no nested 2h grid; dime must be odd")
         return CubicGrid(self.origin_nm, 2.0 * self.spacing_nm, (self.dime + 1) // 2)
 
     def nlev(self) -> int:
+        """Return the largest ``nlev <= 4`` that APBS accepts for ``dime``."""
         for level in range(NLEV, 0, -1):
             if (self.dime - 1) % 2 ** (level + 1) == 0:
                 return level
@@ -173,6 +190,7 @@ class CubicGrid:
         )
 
     def summary(self) -> dict[str, object]:
+        """Return the grid as plain data, for a report."""
         return {
             "origin_nm": list(self.origin_nm),
             "spacing_nm": self.spacing_nm,
@@ -182,12 +200,15 @@ class CubicGrid:
 
 @dataclass(frozen=True)
 class ChargeExtent:
+    """A lattice's charge extent: ``r <= r_max_nm`` and ``z_min_nm <= z <= z_max_nm``."""
+
     r_max_nm: float
     z_min_nm: float
     z_max_nm: float
 
 
 def charge_extent(lattice: RadialGrid) -> ChargeExtent:
+    """Return the extent of the lattice's nonzero nodes."""
     import numpy as np
 
     i_z, i_r = np.nonzero(lattice.values)
@@ -203,6 +224,13 @@ def charge_extent(lattice: RadialGrid) -> ChargeExtent:
 def check_box(
     grid: CubicGrid, extent: ChargeExtent, *, margin_nm: float = CHARGE_MARGIN_NM
 ) -> None:
+    """Refuse a box that does not hold the charge ``margin_nm`` inside every face.
+
+    Raises
+    ------
+    BoxError
+        Naming the first face too close to the charge.
+    """
     lower, upper = grid.origin_nm, grid.upper_nm
     reaches = {
         "x-": (-extent.r_max_nm, lower[0], -1.0),
@@ -230,6 +258,13 @@ def fit_grid(
     interface_z_nm: float | None = None,
     margin_nm: float = CHARGE_MARGIN_NM,
 ) -> CubicGrid:
+    """Return the cubic grid for a charge of this extent, checked by ``check_box``.
+
+    Parameters
+    ----------
+    interface_z_nm
+        A plane to stagger the ``z`` nodes off, or ``None`` to centre the charge exactly.
+    """
     if dime % 2 == 0:
         raise ValueError(f"dime {dime} is even, so the axis would not be a node line")
     half = 0.5 * spacing_nm * (dime - 1)
@@ -246,6 +281,7 @@ def fit_grid(
 
 
 def lattice_charges(lattice: RadialGrid) -> np.ndarray:
+    """Return each lattice node's charge ``Q_n = tau_n a_n / e`` in e, indexed ``[i_z, i_r]``."""
     import numpy as np
 
     weights = np.outer(lattice.trapezium_weights("z"), lattice.trapezium_weights("r"))
@@ -319,6 +355,18 @@ def charge_map(
     chunk: int = 128,
     clip: bool = False,
 ) -> np.ndarray:
+    """Return APBS's charge map ``[ix, iy, iz]`` in e per cubic angstrom.
+
+    Parameters
+    ----------
+    clip
+        Drop the charge outside the grid, for a focused grid that does not hold all of it.
+
+    Raises
+    ------
+    BoxError
+        Without ``clip``, if the charge does not fit the box.
+    """
     import numpy as np
 
     if not clip:
@@ -343,6 +391,8 @@ def charge_map(
 
 @dataclass(frozen=True)
 class MaterialRaster:
+    """Permittivity and materials of the deployed mesh, on a cell-centred ``(r, z)`` raster."""
+
     spacing_nm: float
     z0_nm: float
     permittivity: np.ndarray
@@ -355,6 +405,7 @@ class MaterialRaster:
     _distance: list[np.ndarray] = field(default_factory=list, init=False, repr=False, compare=False)
 
     def r_index(self, r_nm: np.ndarray) -> np.ndarray:
+        """Return the column of the cells holding radii ``r_nm``."""
         import numpy as np
 
         index = np.floor(np.asarray(r_nm) / self.spacing_nm).astype(np.int64)
@@ -367,6 +418,7 @@ class MaterialRaster:
         return index
 
     def z_index(self, z_nm: np.ndarray) -> np.ndarray:
+        """Return the row of the cells holding heights ``z_nm``."""
         import numpy as np
 
         index = np.floor((np.asarray(z_nm) - self.z0_nm) / self.spacing_nm).astype(np.int64)
@@ -379,12 +431,14 @@ class MaterialRaster:
         return index
 
     def mask(self, names: frozenset[str]) -> np.ndarray:
+        """Return ``[i_z, i_r]`` booleans, true where the cell's material is in ``names``."""
         import numpy as np
 
         selected = np.array([name in names for name in self.materials], dtype=bool)
         return np.asarray(selected[self.material])
 
     def solid_distance_nm(self) -> np.ndarray:
+        """Return ``[i_z, i_r]`` distances from each cell centre to the nearest solid centre."""
         if not self._distance:
             from scipy.ndimage import distance_transform_edt
 
@@ -401,6 +455,7 @@ class MaterialRaster:
 
 
 def raster_extent(grid: CubicGrid) -> tuple[float, float, float]:
+    """Return the ``r_max``, ``z_min`` and ``z_max`` a raster must cover for ``grid``'s maps."""
     reach = 2.0 * grid.spacing_nm
     x = max(abs(grid.origin_nm[0]), abs(grid.upper_nm[0])) + reach
     y = max(abs(grid.origin_nm[1]), abs(grid.upper_nm[1])) + reach
@@ -418,6 +473,20 @@ def raster_from_mesh(
     z_max_nm: float,
     spacing_nm: float = RASTER_NM,
 ) -> MaterialRaster:
+    """Sample the mesh's permittivity and materials on a cell-centred raster.
+
+    Parameters
+    ----------
+    permittivity
+        The relative permittivity ``eps_r`` the solve assembled.
+    fluid
+        Regular expression naming the fluid material.
+
+    Raises
+    ------
+    ValueError
+        If a cell centre lies outside the mesh.
+    """
     import numpy as np
 
     columns = math.ceil(r_max_nm / spacing_nm)
@@ -451,6 +520,7 @@ def raster_from_mesh(
 def dielectric_maps(
     raster: MaterialRaster, grid: CubicGrid, *, samples: int = EDGE_SAMPLES
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Return APBS's staggered ``x``, ``y`` and ``z`` permittivity maps ``[ix, iy, iz]``."""
     import numpy as np
 
     h = grid.spacing_nm
@@ -490,6 +560,7 @@ def _face_nodes(grid: CubicGrid) -> np.ndarray:
 
 
 def unique_meridional(points_nm: np.ndarray, *, decimals: int = 9) -> tuple[np.ndarray, np.ndarray]:
+    """Return the distinct ``(r, z)`` of ``(n, 3)`` points, and the map back to each point."""
     import numpy as np
 
     meridional = np.stack(
@@ -503,6 +574,7 @@ Sampler = Callable[["np.ndarray", "np.ndarray"], "np.ndarray"]
 
 
 def potential_sampler(solution: ModelSolution, *, order: int) -> Sampler:
+    """Return our solution's potential as a sampler, read through ``sample_at``."""
     import numpy as np
 
     mesh = solution.space.mesh
@@ -517,6 +589,7 @@ def potential_sampler(solution: ModelSolution, *, order: int) -> Sampler:
 
 
 def face_map(grid: CubicGrid, potential: Sampler) -> np.ndarray:
+    """Return a potential map ``[ix, iy, iz]`` in kT/e carrying ``potential`` on the faces only."""
     import numpy as np
 
     def at_points(points: np.ndarray) -> np.ndarray:
@@ -528,6 +601,7 @@ def face_map(grid: CubicGrid, potential: Sampler) -> np.ndarray:
 
 
 def face_map_3d(grid: CubicGrid, potential: Callable[[np.ndarray], np.ndarray]) -> np.ndarray:
+    """Return a face potential map from ``potential``, a function of ``(n, 3)`` points."""
     import numpy as np
 
     index = _face_nodes(grid)
@@ -538,6 +612,13 @@ def face_map_3d(grid: CubicGrid, potential: Callable[[np.ndarray], np.ndarray]) 
 
 
 def trilinear(values: np.ndarray, grid: CubicGrid) -> Callable[[np.ndarray], np.ndarray]:
+    """Return ``values[ix, iy, iz]`` on ``grid`` trilinearly interpolated at points in nm.
+
+    Raises
+    ------
+    ValueError
+        If a point lies outside the grid.
+    """
     import numpy as np
     from scipy.ndimage import map_coordinates
 
@@ -551,6 +632,7 @@ def trilinear(values: np.ndarray, grid: CubicGrid) -> Callable[[np.ndarray], np.
 
 
 def write_dx(path: Path, values: np.ndarray, origin_nm: Sequence[float], spacing_nm: float) -> Path:
+    """Write ``values[ix, iy, iz]`` as an OpenDX scalar map in angstroms."""
     import numpy as np
 
     counts = " ".join(str(n) for n in values.shape)
@@ -582,6 +664,13 @@ def write_dx(path: Path, values: np.ndarray, origin_nm: Sequence[float], spacing
 
 
 def read_dx(path: Path) -> tuple[np.ndarray, tuple[float, float, float], float]:
+    """Return an OpenDX map's values ``[ix, iy, iz]``, origin in nm and spacing in nm.
+
+    Raises
+    ------
+    ApbsError
+        If GridDataFormats is not installed.
+    """
     import numpy as np
 
     try:
@@ -607,6 +696,7 @@ def read_dx(path: Path) -> tuple[np.ndarray, tuple[float, float, float], float]:
 def write_pqr(
     path: Path, positions_nm: np.ndarray, charges_e: np.ndarray, radii_nm: np.ndarray
 ) -> Path:
+    """Write atoms as a whitespace-delimited PQR in angstroms."""
     import numpy as np
 
     xyz = np.asarray(positions_nm, dtype=np.float64).reshape(-1, 3) * NM_TO_ANGSTROM
@@ -622,6 +712,8 @@ def write_pqr(
 
 @dataclass(frozen=True)
 class SmolSurface:
+    """APBS's charge and surface from a PQR, the recorded leg's inputs."""
+
     pqr: Path
     pdie: float
     srad_nm: float = 0.14
@@ -631,6 +723,18 @@ class SmolSurface:
 
 @dataclass(frozen=True)
 class ApbsProblem:
+    """One APBS solve: the grid, the maps and the deck settings.
+
+    Parameters
+    ----------
+    charge
+        The charge map in e per cubic angstrom, or ``None`` to take it from ``surface``.
+    dielectric
+        The three staggered maps, or ``None`` to build them from ``surface``.
+    faces
+        The potential map whose faces ``bcfl map`` reads, or ``None`` for zero faces.
+    """
+
     grid: CubicGrid
     temperature_K: float
     sdie: float
@@ -643,6 +747,8 @@ class ApbsProblem:
 
 @dataclass(frozen=True)
 class ApbsSolution:
+    """APBS's potential and the cost of the run."""
+
     potential: np.ndarray
     seconds: float
     memory_GB: float | None
@@ -737,6 +843,7 @@ def _wait(process: subprocess.Popen[str], *, timeout_s: float, name: str, log: P
 
 
 def write_inputs(problem: ApbsProblem, directory: Path) -> Path:
+    """Write ``problem``'s maps, molecule and deck into ``directory``; return the deck."""
     import numpy as np
 
     directory.mkdir(parents=True, exist_ok=True)
@@ -771,6 +878,13 @@ def run_apbs(
     timeout_s: float = TIMEOUT_S,
     keep_maps: bool = False,
 ) -> ApbsSolution:
+    """Run APBS on ``problem`` in ``workspace/name`` and read back its potential.
+
+    Raises
+    ------
+    ApbsError
+        If APBS is not available, fails, or runs past ``timeout_s``.
+    """
     import numpy as np
 
     missing = apbs_available()
@@ -837,6 +951,8 @@ def run_apbs(
 
 @dataclass(frozen=True)
 class ProbeSet:
+    """The probes: fluid nodes of the nested ``2h`` grid, away from solids and faces."""
+
     fine: np.ndarray
     coarse: np.ndarray
     points_nm: np.ndarray
@@ -844,9 +960,11 @@ class ProbeSet:
 
     @property
     def count(self) -> int:
+        """Return the number of probes."""
         return int(self.fine.shape[0])
 
     def sample(self, potential: Sampler) -> np.ndarray:
+        """Return ``potential`` at every probe, evaluated once per distinct ``(r, z)``."""
         import numpy as np
 
         meridional, inverse = unique_meridional(self.points_nm)
@@ -854,6 +972,7 @@ class ProbeSet:
         return np.asarray(values.reshape(-1)[inverse])
 
     def subset(self, keep: np.ndarray) -> ProbeSet:
+        """Return the probes where ``keep`` is true."""
         return ProbeSet(
             fine=self.fine[keep],
             coarse=self.coarse[keep],
@@ -862,6 +981,7 @@ class ProbeSet:
         )
 
     def at(self, values: np.ndarray, *, coarse: bool = False) -> np.ndarray:
+        """Return a map ``[ix, iy, iz]`` of ``values`` at the probes, on either grid."""
         import numpy as np
 
         index = self.coarse if coarse else self.fine
@@ -876,6 +996,13 @@ def probe_set(
     solid_distance_nm: float = SOLID_DISTANCE_NM,
     face_margin_nm: float = FACE_MARGIN_NM,
 ) -> ProbeSet:
+    """Return the probes on ``grid``: every ``stride``-th fluid node clear of solids and faces.
+
+    Parameters
+    ----------
+    stride
+        Even, so every probe is also a node of the nested ``2h`` grid.
+    """
     import numpy as np
 
     if stride <= 0 or stride % 2:
@@ -906,6 +1033,8 @@ def probe_set(
 
 
 class Norms(BaseModel):
+    """The three relative norms of a difference against a reference potential."""
+
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     max: float
@@ -918,9 +1047,11 @@ class Norms(BaseModel):
         )
 
     def scaled(self, factor: float) -> Norms:
+        """Return every norm times ``factor``."""
         return Norms(max=self.max * factor, rms=self.rms * factor, axis=self.axis * factor)
 
     def exceeding(self, limit: Norms) -> list[str]:
+        """Return the names of the norms above ``limit``; a NaN norm exceeds every limit."""
         return [
             name
             for name in ("max", "rms", "axis")
@@ -932,6 +1063,13 @@ TOLERANCE = Norms(max=0.03, rms=0.01, axis=0.015)
 
 
 def norms(difference: np.ndarray, reference: np.ndarray, axis: np.ndarray) -> Norms:
+    """Return the max, rms and axis norms of ``difference`` relative to ``reference``.
+
+    Raises
+    ------
+    ValueError
+        If no probe lies on the axis, an array is not finite, or the reference is zero.
+    """
     import numpy as np
 
     if not (np.all(np.isfinite(difference)) and np.all(np.isfinite(reference))):
@@ -951,6 +1089,8 @@ def norms(difference: np.ndarray, reference: np.ndarray, axis: np.ndarray) -> No
 
 
 class Val06Report(BaseModel):
+    """One VAL-06 comparison, written as JSON beside the run."""
+
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     leg: Literal["gated", "recorded"]
@@ -974,6 +1114,7 @@ class Val06Report(BaseModel):
 
 
 def check_report(report: Val06Report, *, tolerance: Norms = TOLERANCE) -> None:
+    """Raise ``Val06Error`` if VAL-06 fails: budget first, then visibility, then agreement."""
     half = tolerance.scaled(0.5)
     if report.budget is None:
         raise Val06Error("VAL-06 needs the refinement budget, and this report carries none")
@@ -1008,6 +1149,14 @@ def check_report(report: Val06Report, *, tolerance: Norms = TOLERANCE) -> None:
 
 @dataclass(frozen=True)
 class GatedInputs:
+    """What the gated leg needs from our side.
+
+    Parameters
+    ----------
+    refined
+        Our solution at the higher order; ``None`` leaves the budget unmeasured.
+    """
+
     lattice: RadialGrid
     raster: MaterialRaster
     ours: Sampler
@@ -1019,6 +1168,7 @@ class GatedInputs:
 
 
 def gated_problem(inputs: GatedInputs, grid: CubicGrid) -> ApbsProblem:
+    """Return the gated leg's APBS problem on ``grid``: the charge, dielectric and face maps."""
     return ApbsProblem(
         grid=grid,
         temperature_K=inputs.temperature_K,
@@ -1031,6 +1181,8 @@ def gated_problem(inputs: GatedInputs, grid: CubicGrid) -> ApbsProblem:
 
 @dataclass(frozen=True)
 class GatedResult:
+    """What ``gated_leg`` measured: the report, the probes and the potentials sampled there."""
+
     report: Val06Report
     probes: ProbeSet
     sampled: dict[str, np.ndarray]
@@ -1044,6 +1196,13 @@ def gated_leg(
     *,
     timeout_s: float = TIMEOUT_S,
 ) -> GatedResult:
+    """Run VAL-06's gated leg on ``grid`` and its nested ``2h`` grid, and check the three gates.
+
+    Raises
+    ------
+    BoxError
+        If ``grid`` does not hold the lattice's charge inside every face.
+    """
     import numpy as np
 
     check_box(grid, charge_extent(inputs.lattice))
@@ -1129,6 +1288,7 @@ def impose_materials(
     permittivities: Mapping[str, float],
     threshold: float,
 ) -> tuple[tuple[np.ndarray, np.ndarray, np.ndarray], int]:
+    """Return APBS's dielectric maps with our solids imposed where APBS sees solvent."""
     import numpy as np
 
     names = list(raster.materials)
@@ -1156,6 +1316,7 @@ def impose_materials(
 def ring_statistics(
     potential: np.ndarray, grid: CubicGrid, points_nm: np.ndarray, *, angles: int = RING_ANGLES
 ) -> tuple[np.ndarray, np.ndarray]:
+    """Return APBS's azimuthal mean and spread (max - min) on each point's ring."""
     import numpy as np
 
     meridional, inverse = unique_meridional(points_nm)
@@ -1176,6 +1337,8 @@ def ring_statistics(
 
 
 class RecordedReport(BaseModel):
+    """VAL-06's recorded leg: APBS's own model of the PQR against ours. Not gated."""
+
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     leg: Literal["recorded"] = "recorded"
@@ -1195,6 +1358,8 @@ class RecordedReport(BaseModel):
 
 @dataclass(frozen=True)
 class RecordedInputs:
+    """What the recorded leg needs: as ``GatedInputs``, plus the protein and the imposed solids."""
+
     pqr: Path
     raster: MaterialRaster
     ours: Sampler
@@ -1213,6 +1378,7 @@ def recorded_leg(
     *,
     timeout_s: float = TIMEOUT_S,
 ) -> tuple[RecordedReport, dict[str, np.ndarray]]:
+    """Run VAL-06's recorded leg on ``grid``: two APBS passes, ring means against ours."""
     import numpy as np
 
     reach = min(-grid.origin_nm[0], grid.upper_nm[0], -grid.origin_nm[1], grid.upper_nm[1])

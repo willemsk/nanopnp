@@ -52,6 +52,8 @@ WALL_MAXH_NM = WALL_CEILING_NM
 
 @dataclass(frozen=True)
 class JunctionReport:
+    """Where the membrane meets the pore, measured from the polygon and from the assembly."""
+
     expected_trans_nm: float
     expected_cis_nm: float
     assembled_trans_nm: float
@@ -61,6 +63,7 @@ class JunctionReport:
 
     @property
     def offsets_nm(self) -> tuple[float, float]:
+        """Signed ``assembled - expected`` on the trans and cis planes, in nm."""
         return (
             self.assembled_trans_nm - self.expected_trans_nm,
             self.assembled_cis_nm - self.expected_cis_nm,
@@ -68,9 +71,11 @@ class JunctionReport:
 
     @property
     def worst_offset_nm(self) -> float:
+        """The larger of the two offsets in magnitude, in nm."""
         return max(abs(offset) for offset in self.offsets_nm)
 
     def summary(self) -> dict[str, object]:
+        """Return the report as plain data, for a provenance manifest."""
         return {
             "expected_trans_nm": self.expected_trans_nm,
             "expected_cis_nm": self.expected_cis_nm,
@@ -84,6 +89,14 @@ class JunctionReport:
 
 @dataclass(frozen=True)
 class ReferenceGeometry:
+    """The ClyA reference region in the ``(r, z)`` half-plane, in nm.
+
+    Parameters
+    ----------
+    profile
+        The pore polygon. :meth:`from_fixture` loads the shipped one.
+    """
+
     profile: PoreProfile
     reservoir_radius_nm: float = RESERVOIR_RADIUS_NM
     membrane_thickness_nm: float = MEMBRANE_THICKNESS_NM
@@ -92,13 +105,16 @@ class ReferenceGeometry:
 
     @classmethod
     def from_fixture(cls, name: str = REFERENCE_PROFILE) -> ReferenceGeometry:
+        """Return the geometry built on a shipped profile fixture."""
         return cls(profile=load_profile(name))
 
     @property
     def half_thickness_nm(self) -> float:
+        """Half the bilayer thickness, in nm."""
         return 0.5 * self.membrane_thickness_nm
 
     def record(self) -> RegionRecord:
+        """Return this geometry as a stage-5 record, with the drawn inner corners."""
         half = self.half_thickness_nm
         return RegionRecord(
             profile=[(float(r), float(z)) for r, z in self.profile.vertices],
@@ -117,13 +133,16 @@ class ReferenceGeometry:
         )
 
     def faces(self) -> tuple[Shape, ...]:
+        """Return the three named faces (electrolyte, membrane, pore), unglued."""
         return assemble_faces(self.record())
 
     def name_edges(self, shape: Shape, *, wall_h_nm: float | None = WALL_MAXH_NM) -> None:
+        """Name every edge of ``shape`` into the project vocabulary and size it, in place."""
         name_region(shape, reservoir_radius_nm=self.reservoir_radius_nm)
         apply_sizes(shape, wall_h_nm=wall_h_nm, axis_extent_nm=self.profile.extent_z_nm)
 
     def shape(self, *, wall_h_nm: float | None = WALL_MAXH_NM) -> Shape:
+        """Return the glued, fully named and sized region, unmeshed."""
         glued = build_region(self.record())
         apply_sizes(glued, wall_h_nm=wall_h_nm, axis_extent_nm=self.profile.extent_z_nm)
         return glued
@@ -135,6 +154,7 @@ class ReferenceGeometry:
         wall_h_nm: float | None = WALL_MAXH_NM,
         check_quality: bool = True,
     ) -> Mesh:
+        """Return the meshed reference region, with named domains and boundaries."""
         from nanopnp.mesh.meshers import mesh_shape
 
         mesh = mesh_shape(self.shape(wall_h_nm=wall_h_nm), replace(SIZES, global_nm=maxh_nm))
@@ -143,6 +163,13 @@ class ReferenceGeometry:
         return mesh
 
     def junction_report(self, *, wall_h_nm: float | None = WALL_MAXH_NM) -> JunctionReport:
+        """Measure the membrane-to-pore junction on the assembled region.
+
+        Raises
+        ------
+        nanopnp.geometry.region.RegionGateError
+            If either bilayer plane carries no ``membrane`` edge.
+        """
         glued = self.shape(wall_h_nm=wall_h_nm)
         materials = sorted({face.name for face in glued.faces if face.name is not None})
         boundaries = sorted({edge.name for edge in glued.edges if edge.name is not None})
@@ -159,4 +186,5 @@ class ReferenceGeometry:
 
 
 def check_quality_report(mesh: Mesh, *, where: str = "the reference geometry") -> QualityReport:
+    """Gate a meshed reference region and return its quality report."""
     return check_quality(from_ngsolve(mesh), where=where)

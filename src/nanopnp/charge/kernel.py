@@ -71,6 +71,14 @@ NM_TO_M = 1e-9
 
 @dataclass(frozen=True)
 class SourceAtoms:
+    """Every charged atom of every frame, in the model frame, as the kernel sums it.
+
+    Parameters
+    ----------
+    weight_e
+        Charge per row, q_i / n_frames, in e.
+    """
+
     r_nm: np.ndarray
     z_nm: np.ndarray
     width_nm: np.ndarray
@@ -83,15 +91,19 @@ class SourceAtoms:
 
     @property
     def count(self) -> int:
+        """Return the number of charged atoms over every frame."""
         return int(self.r_nm.size)
 
     def q_net_e(self) -> float:
+        """Return the net charge, the mean over frames of the summed charge, in e."""
         return math.fsum(self.weight_e.tolist())
 
     def absolute_charge_e(self) -> float:
+        """Return the mean over frames of the summed absolute charge, in e."""
         return math.fsum(abs(value) for value in self.weight_e.tolist())
 
     def label(self, row: int) -> str:
+        """Return one row as a diagnostic names it: frame, residue, chain and atom."""
         frame = int(self.frame[row])
         if self.table is None:
             return f"atom {int(self.atom[row])} of frame {frame}"
@@ -104,9 +116,11 @@ class SourceAtoms:
         )
 
     def z_extent_nm(self) -> tuple[float, float]:
+        """Return the smallest and largest atom-centre z, in nm."""
         return float(self.z_nm.min()), float(self.z_nm.max())
 
     def planes_nm(self, count: int = PLANE_COUNT) -> tuple[float, ...]:
+        """Return count planes spanning the atoms' z-extent, ends excluded, in nm."""
         low, high = self.z_extent_nm()
         step = (high - low) / (count + 1)
         return tuple(low + step * (index + 1) for index in range(count))
@@ -114,6 +128,7 @@ class SourceAtoms:
     def cumulative_e(
         self, planes_nm: tuple[float, ...], *, smoothing_nm: float = PLANE_SMOOTHING_NM
     ) -> tuple[float, ...]:
+        """Return each plane's charge under a smoothed step, in closed form, in e."""
         import numpy as np
         from scipy.special import erfc
 
@@ -127,6 +142,7 @@ class SourceAtoms:
 def source_atoms(
     table: ProtonationTable, *, sharpness: float, shift_z_nm: float = 0.0
 ) -> SourceAtoms:
+    """Return the protonation table's charged atoms in the model frame."""
     import numpy as np
 
     charged = np.flatnonzero(table.charge_e != 0.0)
@@ -146,6 +162,7 @@ def source_atoms(
 
 
 def check_charged(atoms: SourceAtoms) -> None:
+    """Refuse a protonation artefact with no charged atom."""
     if atoms.count == 0:
         raise ChargeFieldError(
             "the protonation artefact carries no charged atom (PHY-16 step 4)",
@@ -154,6 +171,7 @@ def check_charged(atoms: SourceAtoms) -> None:
 
 
 def check_spacing(atoms: SourceAtoms, spacing_nm: float) -> None:
+    """Refuse a lattice spacing above half the smallest kernel width."""
     import numpy as np
 
     if not 0.0 < spacing_nm < math.inf:
@@ -182,6 +200,7 @@ def check_spacing(atoms: SourceAtoms, spacing_nm: float) -> None:
 def lattice_axes(
     atoms: SourceAtoms, spacing_nm: float, *, half_widths: float = PATCH_HALF_WIDTHS
 ) -> tuple[int, int, int]:
+    """Return the lattice as (n_r, k0, n_z), in nm."""
     import numpy as np
 
     reach = half_widths * float(np.max(atoms.width_nm))
@@ -259,6 +278,7 @@ def _factors(
 def volume_density(
     r_nm: np.ndarray, z_nm: np.ndarray, r_i: float, z_i: float, width_nm: float
 ) -> np.ndarray:
+    """Return the closed form of one unit atom's charge density, in nm^-3."""
     import numpy as np
     from scipy.special import i0e
 
@@ -275,6 +295,7 @@ def volume_density(
 def areal_density(
     r_nm: np.ndarray, z_nm: np.ndarray, r_i: float, z_i: float, width_nm: float
 ) -> np.ndarray:
+    """Return 2 pi r times volume_density, in nm^-2: what the lattice samples."""
     import numpy as np
 
     radius = np.asarray(r_nm, dtype=np.float64)
@@ -289,6 +310,7 @@ def atom_lattice_sum(
     *,
     half_widths: float = PATCH_HALF_WIDTHS,
 ) -> float:
+    """Return one unit atom's trapezoid sum on the lattice, before renormalisation."""
     import numpy as np
 
     atoms = SourceAtoms(
@@ -310,6 +332,14 @@ def atom_lattice_sum(
 
 @dataclass(frozen=True)
 class KernelLattice:
+    """The summed kernel on the export lattice, and what the sum measured.
+
+    Parameters
+    ----------
+    raw_deviation
+        The largest deviation of an atom's unrenormalised lattice sum from 1, and its atom.
+    """
+
     grid: RadialGrid
     atoms: SourceAtoms
     spacing_nm: float
@@ -318,6 +348,7 @@ class KernelLattice:
     raw_deviation: tuple[float, int]
 
     def summary(self) -> dict[str, Canonicalisable]:
+        """Return the charge-grid artefact's record of the sum."""
         deviation, row = self.raw_deviation
         return {
             "kernel": KERNEL_ID,
@@ -339,6 +370,7 @@ class KernelLattice:
 def kernel_parameters(
     *, sharpness: float, spacing_nm: float, shift_z_nm: float
 ) -> dict[str, Canonicalisable]:
+    """Return the charge-grid key's parameters: everything that moves a lattice value."""
     return {
         "kernel": KERNEL_ID,
         "sharpness": sharpness,
@@ -357,6 +389,13 @@ def sum_kernel(
     cancel: CancelToken | None = None,
     progress: Progress | None = None,
 ) -> KernelLattice:
+    """Sum the closed-form kernel of every atom on the export lattice.
+
+    Parameters
+    ----------
+    renormalise
+        Scale each atom's sum to its charge; False only for a broken construction under test.
+    """
     import numpy as np
 
     started = time.perf_counter()

@@ -31,6 +31,8 @@ SOLVE_ALGORITHM_REVISION = 1
 
 @dataclass(frozen=True)
 class ResolvedStructure:
+    """The ``structure:`` block, with the refusals resolution can make before a file is read."""
+
     spec: Structure
     n: int
     chains: tuple[str, ...] | None
@@ -38,6 +40,8 @@ class ResolvedStructure:
 
 @dataclass(frozen=True)
 class ResolvedProtonation:
+    """What the protonation stage is configured with; defaults if there is no charge block."""
+
     ph: float = 7.5
     forcefield: str = "CHARMM"
     titration: str = "propka"
@@ -45,6 +49,8 @@ class ResolvedProtonation:
 
 @dataclass(frozen=True)
 class ResolvedCase:
+    """A case document turned into the objects a run is made of."""
+
     document: CaseDocument
     electrolyte: Electrolyte
     concentration_M: float
@@ -79,30 +85,37 @@ class ResolvedCase:
 
     @property
     def contour_spacing_nm(self) -> float:
+        """``h_c``: the density grid spacing, the contour's size target."""
         return contour_spacing_nm(self.document)
 
     @property
     def derives_eps_r(self) -> bool:
+        """Whether stage 7 derives ``chi`` from the stage-4 profile."""
         return self.dielectric_transition_nm > 0.0
 
     @property
     def protonates(self) -> bool:
+        """Whether the protonation stage has a structure or PQR input and no charge input."""
         return (self.structure is not None or self.pqr is not None) and self.charge is None
 
     @property
     def deposits_charge(self) -> bool:
+        """Whether stage 7 deposits a charge from the protonation artefact."""
         return self.protonates and "fixed_charge" in self.declaration.coefficients
 
     @property
     def name(self) -> str:
+        """The case name, which names the run directory in the store."""
         return self.document.name
 
     @property
     def generates_mesh(self) -> bool:
+        """Whether stages 5 and 6 build this case's mesh: it supplies no ``inputs.mesh``."""
         return self.mesh is None
 
     @property
     def solve_provenance(self) -> dict[str, Any]:
+        """Return the part of ``provenance`` that can change a converged field."""
         return {
             key: value
             for key, value in self.provenance.items()
@@ -111,6 +124,7 @@ class ResolvedCase:
 
     @property
     def provenance(self) -> dict[str, Any]:
+        """Return what the manifest must record about the resolved case."""
         return {
             "name": self.document.name,
             "schema": self.document.schema_id,
@@ -151,12 +165,14 @@ class ResolvedCase:
 
 
 def parse_chains(chains: str) -> tuple[str, ...] | None:
+    """Return the chain identifiers ``source.chains`` lists, or None for ``all``."""
     if chains.strip() == "all":
         return None
     return tuple(part.strip() for part in chains.split(","))
 
 
 def contour_spacing_nm(document: CaseDocument) -> float:
+    """Return ``h_c``, the density grid spacing the contour is placed on."""
     density = (
         document.geometry.density
         if document.geometry is not None and document.structure is not None

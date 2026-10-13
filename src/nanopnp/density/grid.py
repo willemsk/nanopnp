@@ -34,21 +34,27 @@ NM2_TO_M2 = 1e-18
 UNIFORM_TOL_NM = 1e-9
 
 
-class GridFormatError(ValueError): ...
+class GridFormatError(ValueError):
+    """A grid file cannot be read or written in the format it names."""
 
 
 @dataclass(frozen=True)
 class RingMaximum:
+    """The largest absolute value on a grid's boundary ring, and where it is."""
+
     value: float
     r_nm: float
     z_nm: float
 
     def summary(self) -> dict[str, float]:
+        """Return this maximum as plain data, for the manifest."""
         return {"value": self.value, "r_nm": self.r_nm, "z_nm": self.z_nm}
 
 
 @dataclass(frozen=True)
 class RadialGrid:
+    """A uniform ``(r, z)`` grid of samples, in nm coordinates and SI values."""
+
     origin_nm: tuple[float, float]
     spacing_nm: tuple[float, float]
     values: np.ndarray
@@ -60,6 +66,13 @@ class RadialGrid:
 
     @classmethod
     def from_axes(cls, r_nm: np.ndarray, z_nm: np.ndarray, values: np.ndarray) -> RadialGrid:
+        """Return the grid two axes and a value array describe.
+
+        Raises
+        ------
+        GridFormatError
+            If an axis is too short or not uniform, or the value array does not match the axes.
+        """
         import numpy as np
 
         axes = {"r": np.asarray(r_nm, dtype=np.float64), "z": np.asarray(z_nm, dtype=np.float64)}
@@ -97,10 +110,12 @@ class RadialGrid:
 
     @property
     def shape(self) -> tuple[int, int]:
+        """``(n_r, n_z)``: the sample counts, in coordinate order."""
         return (int(self.values.shape[1]), int(self.values.shape[0]))
 
     @property
     def r_nm(self) -> np.ndarray:
+        """The radial axis, in nm."""
         import numpy as np
 
         start, step = self.origin_nm[0], self.spacing_nm[0]
@@ -108,6 +123,7 @@ class RadialGrid:
 
     @property
     def z_nm(self) -> np.ndarray:
+        """The axial axis, in nm."""
         import numpy as np
 
         start, step = self.origin_nm[1], self.spacing_nm[1]
@@ -115,12 +131,14 @@ class RadialGrid:
 
     @property
     def extent_nm(self) -> tuple[tuple[float, float], tuple[float, float]]:
+        """``((r_min, r_max), (z_min, z_max))`` of the sampled box, in nm."""
         n_r, n_z = self.shape
         r0, z0 = self.origin_nm
         dr, dz = self.spacing_nm
         return ((r0, r0 + dr * (n_r - 1)), (z0, z0 + dz * (n_z - 1)))
 
     def descriptor(self) -> dict[str, object]:
+        """Return the grid descriptor the manifest and the artefact record."""
         (r_min, r_max), (z_min, z_max) = self.extent_nm
         return {
             "origin_nm": list(self.origin_nm),
@@ -130,9 +148,11 @@ class RadialGrid:
         }
 
     def digest(self) -> str:
+        """Return the content hash of this grid: its descriptor and its values."""
         return content_hash(GRID_SCHEMA, {**self.descriptor(), "values": self.values})
 
     def trapezium_weights(self, axis: Literal["r", "z"]) -> np.ndarray:
+        """Return the trapezium weights along one axis, in nm."""
         import numpy as np
 
         count, step = (
@@ -146,6 +166,7 @@ class RadialGrid:
         return weights
 
     def truncated_weights(self, axis: Literal["r", "z"], upper: float) -> np.ndarray:
+        """Return trapezium weights for the integral up to ``upper``, in nm."""
         import numpy as np
 
         coordinates = self.r_nm if axis == "r" else self.z_nm
@@ -170,6 +191,13 @@ class RadialGrid:
         z_weight: np.ndarray | None = None,
         weights: Mapping[str, np.ndarray] | None = None,
     ) -> float:
+        """Return the trapezium integral of the values over the grid, in SI.
+
+        Parameters
+        ----------
+        radial
+            Apply the axisymmetric volume element ``2*pi*r``.
+        """
         import numpy as np
 
         supplied = dict(weights or {})
@@ -186,11 +214,13 @@ class RadialGrid:
         return float(weights_z @ self.values @ weights_r) * NM2_TO_M2
 
     def planar_integral(self) -> float:
+        """Return ``∫ v dr dz`` in SI, without the ``2*pi*r`` Jacobian."""
         return self.integral()
 
     def cumulative(
         self, planes_nm: Sequence[float], *, ramp_nm: float, radial: bool = False
     ) -> tuple[float, ...]:
+        """Return the charge below each ``z`` plane, under a ramped indicator."""
         import numpy as np
 
         z = self.z_nm
@@ -203,11 +233,13 @@ class RadialGrid:
         )
 
     def interior_maximum(self) -> float:
+        """Return ``max|v|`` over the whole grid."""
         import numpy as np
 
         return float(np.max(np.abs(self.values)))
 
     def boundary_ring_maximum(self) -> RingMaximum:
+        """Return the largest ``|v|`` on the grid's boundary ring, and where."""
         import numpy as np
 
         ring = np.zeros_like(self.values, dtype=bool)
@@ -225,6 +257,7 @@ class RadialGrid:
         )
 
     def padded(self) -> RadialGrid:
+        """Return this grid with a ring of zeros and the box one spacing larger."""
         import numpy as np
 
         dr, dz = self.spacing_nm
@@ -237,6 +270,7 @@ class RadialGrid:
 
 
 def coefficient(grid: RadialGrid, *, pad: bool = True) -> Expression:
+    """Return the bilinear interpolant of ``grid`` as an NGSolve coefficient."""
     import ngsolve as ngs
 
     source = grid.padded() if pad else grid
@@ -250,6 +284,13 @@ def coefficient(grid: RadialGrid, *, pad: bool = True) -> Expression:
 
 
 def detect_format(path: Path, declared: str | None = None) -> GridFormat:
+    """Return the format a grid file is in, declared or read from its suffix.
+
+    Raises
+    ------
+    GridFormatError
+        If the format is unknown, or none is declared and the suffix names none.
+    """
     known = ", ".join(sorted({*_SUFFIXES.values()}))
     if declared is not None:
         if declared not in set(_SUFFIXES.values()):
@@ -267,6 +308,13 @@ def detect_format(path: Path, declared: str | None = None) -> GridFormat:
 
 
 def read_grid(path: str | Path, *, format: str | None = None) -> RadialGrid:
+    """Read a grid from disk.
+
+    Raises
+    ------
+    GridFormatError
+        If the format is unknown, or the file is not a grid this release can read.
+    """
     source = Path(path)
     if not source.is_file():
         raise FileNotFoundError(f"no grid file at {str(source)!r}")
@@ -279,6 +327,13 @@ def read_grid(path: str | Path, *, format: str | None = None) -> RadialGrid:
 
 
 def write_grid(grid: RadialGrid, path: str | Path, *, format: str | None = None) -> Path:
+    """Write a grid to disk and return the path written.
+
+    Raises
+    ------
+    GridFormatError
+        If the format is unknown, is read-only, or needs a dependency that is not installed.
+    """
     target = Path(path)
     # Before the directory is made, so a refused format writes nothing.
     chosen = detect_format(target, format)
@@ -352,6 +407,7 @@ _GRIDDATA_EXPORTERS: dict[GridFormat, str] = {"dx": "DX", "mrc": "MRC"}
 
 
 def writable_formats() -> frozenset[GridFormat]:
+    """Return the formats :func:`write_grid` can write in this environment."""
     formats: set[GridFormat] = {NATIVE_FORMAT}
     try:
         _grid_data_module()

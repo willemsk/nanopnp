@@ -44,6 +44,14 @@ RecordValue: TypeAlias = Any
 
 @dataclass(frozen=True)
 class RunOutcome:
+    """What a finished run left in its run directory.
+
+    Parameters
+    ----------
+    quantities
+        The stage-11 scalars; empty for a run that stopped before stage 11.
+    """
+
     directory: Path
     quantities: Mapping[str, RecordValue]
     deviations: Mapping[str, RecordValue]
@@ -52,6 +60,7 @@ class RunOutcome:
 
 
 def run_outcome(directory: str | Path) -> RunOutcome:
+    """Read a run directory back; raise FileNotFoundError if its record or manifest is absent."""
     root = Path(directory)
     record_path = root / RUN_RECORD_FILENAME
     manifest_path = root / MANIFEST_FILENAME
@@ -79,6 +88,8 @@ def run_outcome(directory: str | Path) -> RunOutcome:
 
 @dataclass
 class RunModel:
+    """The run panel's state; every transition happens in :meth:`consume`."""
+
     state: RunState = "idle"
     fraction: float = 0.0
     stage: Stage | None = None
@@ -91,6 +102,7 @@ class RunModel:
     walked: tuple[str, ...] = ()
 
     def consume(self, events: Iterable[RunEvent]) -> None:
+        """Apply every event, in order."""
         for event in events:
             self._apply(event)
 
@@ -177,9 +189,11 @@ class RunModel:
 
     @property
     def settled(self) -> bool:
+        """Whether the run reached one of its three terminal states."""
         return self.state in ("finished", "failed", "cancelled")
 
     def outcome(self) -> RunOutcome | None:
+        """Read the run directory back, or return ``None`` unless the run finished."""
         if self.state != "finished" or self.directory is None:
             return None
         return run_outcome(self.directory)
@@ -187,12 +201,25 @@ class RunModel:
 
 @dataclass
 class RunControl:
+    """A :class:`RunModel` and the solver process feeding it: start, poll and cancel."""
+
     model: RunModel = field(default_factory=RunModel)
     process: SolverProcess | None = None
 
     def start(
         self, case: str | Path, *, store: str | Path | None = None, upto: str | None = None
     ) -> None:
+        """Spawn a run of a case file; raise RuntimeError if a run is already in flight.
+
+        Parameters
+        ----------
+        case
+            The case file; the shell saves it before running.
+        store
+            The artefact store's root, or ``None`` for the process default.
+        upto
+            The last stage to walk, or ``None`` for the whole pipeline.
+        """
         if self.process is not None and self.process.running:
             raise RuntimeError("a run is already in flight; cancel it before starting another")
         self.model = RunModel()
@@ -202,6 +229,7 @@ class RunControl:
         self.process.start()
 
     def poll(self) -> RunModel:
+        """Drain the child's events into the model and return it."""
         if self.process is not None:
             # Liveness before the queue, so that a child which posts its last event and
             # exits between the two reads is not mistaken for a silent one.
@@ -224,5 +252,6 @@ class RunControl:
         return self.model
 
     def cancel(self) -> None:
+        """Ask the running solve to stop at its next cancellation check."""
         if self.process is not None:
             self.process.cancel()

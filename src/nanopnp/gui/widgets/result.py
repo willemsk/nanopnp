@@ -10,6 +10,8 @@ __all__ = ["ResultWidget"]
 
 
 class ResultWidget(QtWidgets.QWidget):
+    """What a finished run produced, and under what configuration."""
+
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
         self._directory = QtWidgets.QLabel("no run yet")
@@ -28,6 +30,7 @@ class ResultWidget(QtWidgets.QWidget):
         layout.addWidget(self._deviations, 1)
 
     def show_outcome(self, outcome: RunOutcome | None) -> None:
+        """Show one run's result, or clear the panel when there is none."""
         if outcome is None:
             self._directory.setText("no run yet")
             self._quantities.setRowCount(0)
@@ -41,6 +44,7 @@ class ResultWidget(QtWidgets.QWidget):
         self._deviations.setPlainText(_render_deviations(outcome))
 
     def quantity_names(self) -> tuple[str, ...]:
+        """Return the quantities the panel is showing."""
         return tuple(
             item.text()
             for row in range(self._quantities.rowCount())

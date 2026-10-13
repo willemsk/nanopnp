@@ -48,6 +48,8 @@ def _parse(text: str) -> FieldValue:
 
 
 class CaseEditorWidget(QtWidgets.QWidget):
+    """A form over one case editor view-model."""
+
     changed = QtCore.Signal()
 
     def __init__(self, editor: CaseEditor, parent: QtWidgets.QWidget | None = None) -> None:
@@ -211,18 +213,23 @@ class CaseEditorWidget(QtWidgets.QWidget):
 
     @property
     def editor(self) -> CaseEditor:
+        """The view-model this form edits."""
         return self._editor
 
     def bound_paths(self) -> tuple[str, ...]:
+        """Return every path the form binds, in the order it shows them."""
         return tuple(self._rows)
 
     def widget_at(self, path: str) -> QtWidgets.QWidget:
+        """Return the widget bound to one path."""
         return self._rows[path]
 
     def addable(self) -> tuple[str, ...]:
+        """Return the sections the form currently offers to add."""
         return tuple(name for name, button in self._adders.items() if button.isEnabled())
 
     def add_section(self, name: str) -> bool:
+        """Write the empty section ``name`` and enable its fields; return whether it was added."""
         try:
             self._editor.add_section(name)
         except ValueError as error:
@@ -243,6 +250,7 @@ class CaseEditorWidget(QtWidgets.QWidget):
         return True
 
     def commit(self) -> bool:
+        """Commit the staged edits; return whether the document now carries them."""
         try:
             self._editor.commit()
         except CaseValidationError:
@@ -252,4 +260,5 @@ class CaseEditorWidget(QtWidgets.QWidget):
         return True
 
     def status(self) -> str:
+        """Return the message the form is currently showing."""
         return str(self._status.text())

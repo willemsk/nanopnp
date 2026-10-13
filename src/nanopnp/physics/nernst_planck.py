@@ -21,6 +21,8 @@ __all__ = [
 
 @dataclass(frozen=True)
 class ConcentrationVariables:
+    """The concentrations and their gradients, in either formulation of NUM-02."""
+
     values: Mapping[str, Expression]
     gradients: Mapping[str, Expression]
     variables: Mapping[str, Expression]
@@ -28,6 +30,7 @@ class ConcentrationVariables:
 
     @classmethod
     def primitive(cls, fields: Mapping[str, Expression]) -> ConcentrationVariables:
+        """Return primitive variables: the unknown is the concentration."""
         import ngsolve as ngs
 
         return cls(
@@ -39,6 +42,7 @@ class ConcentrationVariables:
 
     @classmethod
     def logarithmic_branch(cls, fields: Mapping[str, Expression]) -> ConcentrationVariables:
+        """Return log variables ``c~_i = exp(w_i)``, which keep positivity exact by construction."""
         import ngsolve as ngs
 
         values = {name: ngs.exp(field) for name, field in fields.items()}
@@ -53,6 +57,7 @@ class ConcentrationVariables:
 def packing_fraction(
     values: Mapping[str, Expression], packing_coefficients: Mapping[str, float]
 ) -> Expression:
+    """Return ``Phi = sum_j nu_j c~_j``, the dimensionless packing fraction."""
     terms = [packing_coefficients[name] * values[name] for name in values]
     total = terms[0]
     for term in terms[1:]:
@@ -66,6 +71,17 @@ def steric_flux(
     packing_coefficients: Mapping[str, float],
     volume_ratio: float,
 ) -> Expression:
+    """Return the steric flux ``beta~_i`` (a sign error diverges).
+
+    Parameters
+    ----------
+    variables
+        Concentrations and their gradients.
+    packing_coefficients
+        ``nu_j = N_A a_j^3 c_0`` by species name.
+    volume_ratio
+        ``a_i^3 / a_0^3`` for the species this flux belongs to.
+    """
     names = list(variables.values)
     gradient_sum = packing_coefficients[names[0]] * variables.gradients[names[0]]
     for name in names[1:]:
@@ -81,6 +97,13 @@ def excess_potential_gradient(
     variables: ConcentrationVariables,
     potential: Expression,
 ) -> Expression:
+    """Return ``grad(mu~_ex,i)``, the dielectric-decrement term (a deviation).
+
+    Raises
+    ------
+    NotImplementedError
+        In the log branch.
+    """
     import ngsolve as ngs
 
     if variables.logarithmic:
@@ -115,6 +138,17 @@ def species_flux(
     steric: bool = True,
     dielectric_gradient: bool = False,
 ) -> Expression:
+    """Return the dimensionless total flux ``J~_i`` of one species.
+
+    Parameters
+    ----------
+    velocity
+        The dimensionless velocity, or None for a model with no flow.
+    steric
+        Whether ``beta~_i`` is included; False gives the classical PNP flux.
+    dielectric_gradient
+        Whether the dielectric-decrement term is included.
+    """
     ion = coefficients.electrolyte.ion(species)
     concentration = variables.values[species]
     diffusivity = coefficients.diffusivity(species)
@@ -146,6 +180,7 @@ def nernst_planck_residual(
     measures: Measures,
     **kwargs: Option,
 ) -> IntegralTerm:
+    """Return the weak Nernst-Planck residual ``int J~_i . grad(w) r``."""
     import ngsolve as ngs
 
     return measures.volume(flux * ngs.grad(test), **kwargs)

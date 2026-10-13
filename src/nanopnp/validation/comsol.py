@@ -102,7 +102,8 @@ PROTONATION_VERDICT_KEYS: frozenset[str] = frozenset({"gates"})
 AXIS_TOL_NM = 1e-6
 
 
-class GoldenError(ValueError): ...
+class GoldenError(ValueError):
+    """Raised when a golden cannot be ingested, or cannot be trusted once read."""
 
 
 class _Strict(BaseModel):
@@ -110,6 +111,13 @@ class _Strict(BaseModel):
 
 
 def field_unit(field: str) -> str:
+    """Return the SI unit a golden must declare for one probe field.
+
+    Raises
+    ------
+    GoldenError
+        If the field name is not one the comparison knows.
+    """
     if field == "potential":
         return POTENTIAL_UNIT
     if field == "pressure":
@@ -125,6 +133,20 @@ def field_unit(field: str) -> str:
 
 
 def case_identity(resolved: ResolvedCase, *, recorded: Mapping[str, Artefact] | None = None) -> str:
+    """Return the ``case_hash`` a golden for this case must declare.
+
+    Parameters
+    ----------
+    resolved
+        The resolved frozen case, at any discretisation.
+    recorded
+        A finished run's own ``structure`` and ``protonation`` artefacts, if available.
+
+    Raises
+    ------
+    FileNotFoundError
+        Without ``recorded``, if a case's ``inputs.pqr`` is not on disk.
+    """
     record: dict[str, object] = {
         key: value
         for key, value in resolved.solve_provenance.items()
@@ -206,15 +228,36 @@ def _upstream(
 
 
 def table_name(field: str, patch: str) -> str:
+    """Return the export contract's file name for one field on one patch."""
     return f"{field}__{patch}.txt"
 
 
 class FieldDeclaration(_Strict):
+    """What the author declares about one exported field.
+
+    Parameters
+    ----------
+    expression
+        The COMSOL expression evaluated, verbatim.
+    unit
+        The unit the export was written in; refused if wrong, never converted.
+    """
+
     expression: str
     unit: str
 
 
 class GoldenQuantities(_Strict):
+    """The scalar QoIs the reference reported for this case.
+
+    Parameters
+    ----------
+    current_A
+        Total ionic current, in the reference's own sign convention.
+    transport_number, conductance_S, eof_m3_s
+        The remaining quantities, or ``None`` where not exported.
+    """
+
     bias_V: float
     current_A: float
     currents_A: dict[str, float] | None = None
@@ -223,6 +266,7 @@ class GoldenQuantities(_Strict):
     eof_m3_s: float | None = None
 
     def summary(self) -> dict[str, object]:
+        """Return these quantities as the manifest and the report record them."""
         return {
             "bias_V": self.bias_V,
             "current_A": self.current_A,
@@ -234,6 +278,8 @@ class GoldenQuantities(_Strict):
 
 
 class GoldenManifest(_Strict):
+    """The declaration without which an export is not evidence."""
+
     schema_id: str = Field(alias="schema")
     case: str
     case_hash: str
@@ -305,6 +351,7 @@ class GoldenManifest(_Strict):
         return self
 
     def summary(self) -> dict[str, object]:
+        """Return the manifest's record, for the golden's hash and the report."""
         return {
             "schema": self.schema_id,
             "case": self.case,
@@ -327,6 +374,13 @@ class GoldenManifest(_Strict):
 
 
 def loads_manifest(text: str, *, source: str = "<string>") -> GoldenManifest:
+    """Validate a golden manifest from YAML text.
+
+    Raises
+    ------
+    CaseValidationError
+        If the schema string is wrong or the document does not validate.
+    """
     try:
         parsed = yaml.safe_load(text)
     except yaml.YAMLError as error:
@@ -349,6 +403,16 @@ def loads_manifest(text: str, *, source: str = "<string>") -> GoldenManifest:
 
 @dataclass(frozen=True)
 class Golden:
+    """One archived reference solution, on the probe grid, in our own conventions.
+
+    Parameters
+    ----------
+    values
+        Field name to a ``(n,)`` array, ``NaN`` where the reference had no value.
+    current_sign_flipped
+        Whether the current's sign convention conversion negated anything.
+    """
+
     manifest: GoldenManifest
     values: Mapping[str, np.ndarray]
     quantities: GoldenQuantities
@@ -357,9 +421,17 @@ class Golden:
 
     @property
     def source(self) -> GoldenSource:
+        """Return where this golden came from; ``"self"`` means it tests the machinery."""
         return self.manifest.source
 
     def defined(self, field: str) -> np.ndarray:
+        """Return the boolean mask of probe points this golden carries a value at.
+
+        Raises
+        ------
+        GoldenError
+            If the field is not archived here.
+        """
         import numpy as np
 
         array = self.values.get(field)
@@ -372,9 +444,17 @@ class Golden:
         return ~np.isnan(array)
 
     def unavailable(self, expected: Sequence[str]) -> tuple[str, ...]:
+        """Return the expected fields this golden does not carry, sorted."""
         return tuple(sorted(set(expected) - set(self.values)))
 
     def check_case(self, case_hash: str) -> None:
+        """Refuse a golden that answers a different case.
+
+        Raises
+        ------
+        GoldenError
+            Naming both hashes.
+        """
         if self.manifest.case_hash != case_hash:
             raise GoldenError(
                 f"golden for case {self.manifest.case!r} declares case_hash "
@@ -383,6 +463,13 @@ class Golden:
             )
 
     def check_probe(self, document: ProbeDocument) -> None:
+        """Refuse a golden exported onto a different set of sample points.
+
+        Raises
+        ------
+        GoldenError
+            Naming both hashes and both grid names.
+        """
         if self.manifest.probe_hash != document.hash:
             raise GoldenError(
                 f"golden for case {self.manifest.case!r} was exported onto probe grid "
@@ -392,6 +479,7 @@ class Golden:
             )
 
     def summary(self) -> dict[str, object]:
+        """Return this golden's record for the attribution report."""
         return {
             "hash": self.hash,
             "golden_source": self.source,
@@ -403,6 +491,15 @@ class Golden:
 
 
 def write_comsol_table(grid: RadialGrid, path: str | Path) -> Path:
+    """Write one ``%Grid``/``%Data`` table, with ``%.17g`` values that round-trip exactly.
+
+    Parameters
+    ----------
+    grid
+        The samples, in nm coordinates and SI values.
+    path
+        Destination; parent directories are created.
+    """
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
     lines = [COMSOL_GRID_HEADER]
@@ -422,6 +519,23 @@ def ingest_golden(
     probe: ProbeDocument | str | Path,
     destination: str | Path | None = None,
 ) -> Path:
+    """Turn a directory of exported tables into the archived ``.npz`` and manifest.
+
+    Parameters
+    ----------
+    probe
+        The probe document, or a path to it; its hash is checked against the manifest.
+    destination
+        Where to write the archive; ``directory`` by default.
+
+    Raises
+    ------
+    GoldenError
+        If the probe hash is not this document's, a declared table is absent, or a table's
+        axes are not the patch's.
+    CaseValidationError
+        If the manifest does not validate.
+    """
     import numpy as np
 
     source = Path(directory)
@@ -453,6 +567,21 @@ def export_golden(
     *,
     tables: ProbeDocument | None = None,
 ) -> Path:
+    """Write a golden from arrays we already hold: the self-golden path.
+
+    Parameters
+    ----------
+    values
+        Field name to a ``(n,)`` array in the probe document's flattening order.
+    tables
+        If given, the ``%Grid`` transport tables are written beside the archive.
+
+    Raises
+    ------
+    GoldenError
+        If ``manifest.source`` is not ``"self"``, or if the arrays do not match the probe
+        document named by the manifest.
+    """
     import numpy as np
 
     if manifest.source != "self":
@@ -488,6 +617,19 @@ def export_golden(
 
 
 def load_golden(path: str | Path) -> Golden:
+    """Read an archived golden and convert its currents to section 6.7's sign.
+
+    Parameters
+    ----------
+    path
+        The ``.npz``, or the directory holding it.
+
+    Raises
+    ------
+    GoldenError
+        If the archive or its manifest is absent, the two disagree, or the pair does not
+        hash to the recorded ``golden_hash``.
+    """
     import numpy as np
 
     archive, manifest_path = _archive_paths(Path(path))

@@ -77,10 +77,12 @@ NM_TO_M = 1e-9
 
 
 def basis_exponents(order: int) -> tuple[tuple[int, int], ...]:
+    """Return the exponents (a, b), a + b <= order, of the scaled monomials, by degree."""
     return tuple((degree - b, b) for degree in range(order + 1) for b in range(degree + 1))
 
 
 def triangle_rule(degree: int) -> tuple[np.ndarray, np.ndarray]:
+    """Return a collapsed-Gauss triangle rule exact to total degree `degree`."""
     import numpy as np
 
     count = max(1, math.ceil((degree + 2) / 2))
@@ -96,6 +98,7 @@ def triangle_rule(degree: int) -> tuple[np.ndarray, np.ndarray]:
 
 
 def element_geometry(data: MeshData) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Return each triangle's centroid (m, 2), diameter (m,) and area (m,), in nm."""
     import numpy as np
 
     corners = data.vertices[data.triangles]
@@ -110,6 +113,7 @@ def element_geometry(data: MeshData) -> tuple[np.ndarray, np.ndarray, np.ndarray
 
 
 def geometry_digest(data: MeshData) -> str:
+    """Return a digest of every triangle's corners in element order."""
     import numpy as np
 
     return content_hash(
@@ -118,6 +122,7 @@ def geometry_digest(data: MeshData) -> str:
 
 
 def mesh_geometry_digest(mesh: Mesh) -> str:
+    """Return geometry_digest of an NGSolve mesh, in NGSolve's own element order."""
     import numpy as np
 
     ngmesh = mesh.ngmesh
@@ -127,6 +132,13 @@ def mesh_geometry_digest(mesh: Mesh) -> str:
 
 
 def locate(data: MeshData, points_nm: np.ndarray, *, cell_nm: float) -> np.ndarray:
+    """Return the lowest-indexed triangle containing each point, or -1.
+
+    Parameters
+    ----------
+    cell_nm
+        Bucket size in nm.
+    """
     import numpy as np
 
     points = np.asarray(points_nm, dtype=np.float64).reshape(-1, 2)
@@ -201,6 +213,7 @@ def locate(data: MeshData, points_nm: np.ndarray, *, cell_nm: float) -> np.ndarr
 
 
 def lattice_masses(grid: RadialGrid) -> tuple[np.ndarray, np.ndarray]:
+    """Return the nonzero lattice nodes (n, 2), in nm, and their masses."""
     import numpy as np
 
     weights = np.outer(grid.trapezium_weights("z"), grid.trapezium_weights("r"))
@@ -249,6 +262,16 @@ def _gram(
 
 @dataclass(frozen=True)
 class Deposit:
+    """The deposited fixed charge: per-element polynomial coefficients on one mesh.
+
+    Parameters
+    ----------
+    coefficients
+        (elements, basis) in C m^-3.
+    centroids_nm, diameters_nm
+        The basis centre and scale per element, in nm.
+    """
+
     coefficients: np.ndarray
     order: int
     geometry_digest: str
@@ -260,6 +283,7 @@ class Deposit:
     weighted: bool = True
 
     def write(self, path: Path) -> Path:
+        """Write the deposit as .npz and return the path."""
         import numpy as np
 
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -282,6 +306,7 @@ class Deposit:
 
     @classmethod
     def read(cls, path: Path) -> Deposit:
+        """Read a deposit written by write."""
         import numpy as np
 
         with np.load(path, allow_pickle=False) as data:
@@ -303,9 +328,11 @@ class Deposit:
             )
 
     def charge_C(self) -> float:
+        """Return the deposit's total charge, in coulombs."""
         return math.fsum(self.element_charge_C.tolist())
 
     def evaluate(self, points_nm: np.ndarray, elements: np.ndarray) -> np.ndarray:
+        """Return the deposited density in C m^-3 at points_nm, each in its given element."""
         import numpy as np
 
         phi = _scaled(
@@ -317,6 +344,7 @@ class Deposit:
         return np.asarray(np.sum(phi * self.coefficients[elements], axis=-1))
 
     def material_charges_e(self, data: MeshData) -> dict[str, float]:
+        """Return the deposited charge per material, in e."""
         import numpy as np
 
         from nanopnp.core.constants import ELEMENTARY_CHARGE
@@ -332,6 +360,7 @@ class Deposit:
         }
 
     def summary(self) -> dict[str, Canonicalisable]:
+        """Return what the stage artefact records about the deposit."""
         ratio, where = self.uncovered
         return {
             "order": self.order,
@@ -354,6 +383,13 @@ def deposit(
     cancel: CancelToken | None = None,
     progress: Progress | None = None,
 ) -> Deposit:
+    """Project the lattice onto discontinuous P_order on data; refuse mass off the mesh.
+
+    Parameters
+    ----------
+    grid
+        The export lattice: areal density in C m^-2.
+    """
     import numpy as np
 
     started = time.perf_counter()
@@ -411,10 +447,13 @@ def deposit(
 
 @dataclass(frozen=True)
 class SolidShare:
+    """The share of sum |q_i| whose atom centres lie in a solid, with the split per material."""
+
     share: float
     by_material: dict[str, float]
 
     def summary(self) -> dict[str, Canonicalisable]:
+        """Return the record of the check."""
         return {
             "solid_share": self.share,
             "minimum": SOLID_SHARE_MIN,
@@ -425,6 +464,7 @@ class SolidShare:
 def check_solid_share(
     atoms: SourceAtoms, data: MeshData, solids: tuple[str, ...], *, cell_nm: float
 ) -> SolidShare:
+    """Refuse a charge not centred in the mesh's solids; return the share."""
     import numpy as np
 
     points = np.stack([atoms.r_nm, atoms.z_nm], axis=1)
@@ -452,6 +492,7 @@ def check_solid_share(
 
 
 def gridfunction(deposit: Deposit, mesh: Mesh) -> Expression:
+    """Return the deposit as an NGSolve L2(order=k) field on mesh, in C m^-3."""
     import ngsolve as ngs
 
     found = mesh_geometry_digest(mesh)
@@ -495,6 +536,8 @@ def gridfunction(deposit: Deposit, mesh: Mesh) -> Expression:
 
 @dataclass(frozen=True)
 class DepositedCharge:
+    """A deposited fixed charge bound to its mesh, as a volume density in C m^-3."""
+
     deposit: Deposit
     field: Expression
 
@@ -503,13 +546,17 @@ class DepositedCharge:
 
     @classmethod
     def bind(cls, deposit: Deposit, mesh: Mesh) -> DepositedCharge:
+        """Return the deposit set on mesh."""
         return cls(deposit=deposit, field=gridfunction(deposit, mesh))
 
     def volume_density_C_m3(self) -> Expression:
+        """Return the volume charge density, in C m^-3."""
         return self.field
 
     def fixed_charge_C_m3(self) -> FixedCharge:
+        """Return the SI density, integrated with quadrature_order."""
         return FixedCharge(self.field, self.quadrature_order)
 
     def assemble(self, scales: Scales) -> FixedCharge:
+        """Return the dimensionless rho~_pore the weak form takes."""
         return self.fixed_charge_C_m3().scaled(1.0 / scales.charge_density_C_m3)

@@ -39,11 +39,14 @@ UP = "../"
 GENERATED = ("__pycache__",)
 
 
-class ExampleCommandError(RuntimeError): ...
+class ExampleCommandError(RuntimeError):
+    """Raised when a documented command failed, or could not be run as written."""
 
 
 @dataclass(frozen=True)
 class CommandResult:
+    """One documented command, as run."""
+
     argv: tuple[str, ...]
     returncode: int
     stdout: str
@@ -51,6 +54,13 @@ class CommandResult:
 
 
 def tagged_commands(readme: Path, tag: str) -> list[list[str]]:
+    """Return the commands of every ``tag`` block in ``readme``, in order.
+
+    Raises
+    ------
+    ExampleCommandError
+        If a command names a program other than ``PROGRAMS``.
+    """
     commands: list[list[str]] = []
     for block in TAGGED_BLOCK.finditer(readme.read_text(encoding="utf-8")):
         if block.group("tag") != tag:
@@ -82,6 +92,13 @@ def _program(name: str) -> str:
 
 
 def copy_example(example: Path, root: Path, *, repository: Path) -> Path:
+    """Copy an example directory into ``root``, laid out as in the repository.
+
+    Returns
+    -------
+    Path
+        The copied example directory, to run the commands in.
+    """
     generated = _generated_patterns(example.parent / ".gitignore")
     destination = root / "examples" / example.name
     shutil.copytree(example, destination, ignore=shutil.ignore_patterns(*generated))
@@ -129,6 +146,13 @@ def _generated_patterns(gitignore: Path) -> tuple[str, ...]:
 
 
 def run_tagged(directory: Path, tag: str, *, timeout_s: float = 1800.0) -> list[CommandResult]:
+    """Run every ``tag`` command of ``directory/README.md`` in ``directory``.
+
+    Raises
+    ------
+    ExampleCommandError
+        On the first command that exits with an unexpected status, or if ``tag`` is unknown.
+    """
     expected = EXPECTED_EXIT.get(tag)
     if expected is None:
         raise ExampleCommandError(

@@ -56,6 +56,8 @@ section 5.2.2 NOTE on the Gmsh backend's size field.
 
 @dataclass(frozen=True)
 class SizeTable:
+    """The element sizes of section 5.2.2 other than the wall's, in nm."""
+
     global_nm: float = 10.0
     protein_nm: float = 0.1
     electrolyte_nm: float = 2.8
@@ -63,6 +65,7 @@ class SizeTable:
     axis_in_pore_nm: float = 0.075
 
     def scaled(self, scale: float) -> SizeTable:
+        """Return this table with every size multiplied by ``scale``."""
         return replace(
             self,
             global_nm=self.global_nm * scale,
@@ -73,6 +76,7 @@ class SizeTable:
         )
 
     def summary(self) -> dict[str, Canonicalisable]:
+        """Return the table as plain data, for the stage-6 key and the manifest."""
         return {
             "global_nm": self.global_nm,
             "protein_nm": self.protein_nm,
@@ -88,6 +92,8 @@ SIZES = SizeTable()
 
 @dataclass(frozen=True)
 class WallSize:
+    """The resolved wall target in nm, and its provenance."""
+
     wall_h_nm: float
     source: str
     debye_length_nm: float
@@ -95,13 +101,16 @@ class WallSize:
 
     @property
     def debye_target_nm(self) -> float:
+        """Return ``lambda_D / 5``, the target wall size, in nm."""
         return self.debye_length_nm / DEBYE_FRACTION
 
     @property
     def coarser_than_num30(self) -> bool:
+        """Whether the wall size exceeds ``lambda_D / 5``; logged and recorded, not refused."""
         return self.wall_h_nm > self.debye_target_nm
 
     def summary(self) -> dict[str, Canonicalisable]:
+        """Return the record the stage-6 key and the manifest carry."""
         return {
             "wall_h_nm": self.wall_h_nm,
             "source": self.source,
@@ -111,11 +120,13 @@ class WallSize:
 
 
 def ionic_strength_M(document: CaseDocument) -> float:
+    """Return the bulk ionic strength ``I = 1/2 sum z_i^2 c``, in mol/L."""
     concentration = document.electrolyte.concentration_M
     return 0.5 * sum(species.z**2 * concentration for species in document.electrolyte.species)
 
 
 def case_debye_length_nm(document: CaseDocument, *, permittivity_0: float) -> float:
+    """Return the case's Debye length ``lambda_D`` at ``eps_r,f0``, in nm."""
     return debye_length_nm(
         ionic_strength_M(document),
         relative_permittivity=permittivity_0,
@@ -124,6 +135,7 @@ def case_debye_length_nm(document: CaseDocument, *, permittivity_0: float) -> fl
 
 
 def resolve_wall_size(document: CaseDocument, *, permittivity_0: float) -> WallSize:
+    """Return the wall target in nm: ``auto`` or the explicit value, times ``size_scale``."""
     mesh = document.numerics.mesh
     debye = case_debye_length_nm(document, permittivity_0=permittivity_0)
     if mesh.wall_h_nm == "auto":
@@ -141,6 +153,7 @@ def resolve_wall_size(document: CaseDocument, *, permittivity_0: float) -> WallS
 
 
 def corrected_debye_ratio(resolved: ResolvedCase, wall: WallSize) -> float:
+    """Return the wall size over ``lambda_D / 5`` at the corrected ``eps_r,f(c)``."""
     concentration = resolved.concentration_M
     permittivity = float(resolved.electrolyte.relative_permittivity(concentration))
     corrected = debye_length_nm(
@@ -166,6 +179,7 @@ def edge_size(
     axis_extent_nm: tuple[float, float],
     sizes: SizeTable,
 ) -> float | None:
+    """Return the size of a named boundary edge in nm, or ``None`` for none."""
     if name == "wall":
         return wall_h_nm
     if name in ARC_NAMES:
@@ -213,15 +227,18 @@ EXCLUSION_WALL_RULE = f"ceil(L/({EXCLUSION_WALL_DIVISION:g} wall_h)) equal segme
 
 
 def wall_divisions(length_nm: float, wall_h_nm: float) -> int:
+    """Return how many equal segments a shell's ``wall`` edge is cut into."""
     return max(1, math.ceil(length_nm / (EXCLUSION_WALL_DIVISION * wall_h_nm)))
 
 
 def divided_wall_size(length_nm: float, wall_h_nm: float) -> float:
+    """Return the ``maxh`` that cuts a shell's ``wall`` edge into :func:`wall_divisions`."""
     count = wall_divisions(length_nm, wall_h_nm)
     return wall_h_nm if count == 1 else length_nm / count
 
 
 def domain_size(name: str, sizes: SizeTable, *, wall_h_nm: float | None = None) -> float | None:
+    """Return the size of a named domain in nm, or ``None`` for the global size."""
     if name == "protein":
         return sizes.protein_nm
     if name == "exclusion":
@@ -239,6 +256,13 @@ def apply_sizes(
     sizes: SizeTable = SIZES,
     divide_wall: bool = False,
 ) -> None:
+    """Set the size fields on a named region, in place, for netgen.
+
+    Parameters
+    ----------
+    divide_wall
+        Whether ``wall`` edges are cut into equal segments; set for ion-exclusion shells.
+    """
     for edge in shape.edges:
         z_mid = 0.5 * (float(edge.start[1]) + float(edge.end[1]))
         name = str(edge.name)

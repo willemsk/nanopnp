@@ -12,6 +12,15 @@ def boundary_indicator(
     component: int | None = None,
     value: Expression = 1.0,
 ) -> GridFunction:
+    """Return the function equal to ``value`` on ``boundary`` and 0 elsewhere.
+
+    Parameters
+    ----------
+    component
+        On a product space, the field whose flux is wanted; other blocks are zero.
+    value
+        1 for a scalar field; a vector such as ``(0, 1)`` for the axial component.
+    """
     import ngsolve as ngs
 
     indicator = ngs.GridFunction(space, name=f"psi_{boundary}")
@@ -33,6 +42,18 @@ def boundary_reaction_flux(
     value: Expression = 1.0,
     load_form: AssembledForm | None = None,
 ) -> float:
+    """Return the reaction flux through ``boundary``.
+
+    Parameters
+    ----------
+    boundary
+        Boundary-name regular expression; its degrees of freedom must be constrained.
+
+    Raises
+    ------
+    ValueError
+        If ``boundary`` matches nothing, or any of its degrees of freedom are free.
+    """
     import ngsolve as ngs
 
     space = solution.space

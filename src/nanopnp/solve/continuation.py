@@ -56,11 +56,20 @@ ELECTRODES: frozenset[str] = frozenset({"cis", "trans"})
 LADDER_START_CONCENTRATION_M = 0.05
 
 
-class TransferError(RuntimeError): ...
+class TransferError(RuntimeError):
+    """A solution cannot be carried onto the next rung's space; raised rather than guessed at."""
 
 
 @dataclass(frozen=True)
 class Rung:
+    """One rung of the ladder: a model, a mesh, and the arguments to solve it with.
+
+    Parameters
+    ----------
+    stage
+        Which stage the rung belongs to.
+    """
+
     name: str
     stage: int
     model: PhysicsModel
@@ -90,6 +99,8 @@ def _read_stabilisation_entry(model: object, key: str, *, expect_mapping: bool =
 
 @dataclass(frozen=True)
 class RungResult:
+    """What one rung cost and how it converged, for the manifest."""
+
     name: str
     stage: int
     model: str
@@ -102,13 +113,16 @@ class RungResult:
 
     @property
     def iterations(self) -> int:
+        """Newton iterations this rung took; 0 for a linear model."""
         return 0 if self.newton is None else int(self.newton["iterations"])
 
     @property
     def minimum_damping_used(self) -> float:
+        """Smallest damping any accepted step of this rung was taken with."""
         return 1.0 if self.newton is None else float(self.newton["minimum_damping_used"])
 
     def summary(self) -> dict[str, Option]:
+        """Return the record of this rung."""
         return {
             "rung": self.name,
             "stage": self.stage,
@@ -124,6 +138,8 @@ class RungResult:
 
 @dataclass(frozen=True)
 class LadderResult:
+    """The converged state at the top of the ladder, and the record of getting there."""
+
     solution: ModelSolution
     rungs: tuple[RungResult, ...]
     mesh: Mapping[str, Option]
@@ -131,22 +147,27 @@ class LadderResult:
 
     @property
     def seconds(self) -> float:
+        """Total wall time of the ladder."""
         return math.fsum(rung.seconds for rung in self.rungs)
 
     @property
     def iterations(self) -> int:
+        """Total Newton iterations over every rung."""
         return sum(rung.iterations for rung in self.rungs)
 
     @property
     def minimum_damping_used(self) -> float:
+        """Smallest damping any rung needed."""
         return min((rung.minimum_damping_used for rung in self.rungs), default=1.0)
 
     @property
     def stabilisation(self) -> str:
+        """The stabilisation mode the top rung's number was produced on."""
         return str(_read_stabilisation_entry(self.solution.model, "stabilisation"))
 
     @property
     def stabilisation_parameters(self) -> Mapping[str, Option]:
+        """The tuning constants of the mode the top rung was solved in."""
         found = _read_stabilisation_entry(
             self.solution.model, "stabilisation_parameters", expect_mapping=True
         )
@@ -155,6 +176,7 @@ class LadderResult:
 
     @property
     def stabilisation_provenance(self) -> Mapping[str, Option]:
+        """Where the mode's constants came from, as the mode itself reports them."""
         found = _read_stabilisation_entry(
             self.solution.model, "stabilisation_provenance", expect_mapping=True
         )
@@ -163,9 +185,11 @@ class LadderResult:
 
     @property
     def max_cell_peclet(self) -> float | None:
+        """The largest cell Peclet number on the converged top rung, or ``None`` if unmeasured."""
         return None if self.peclet is None else self.peclet.maximum
 
     def summary(self) -> dict[str, Option]:
+        """Return the whole ladder's record for the provenance manifest."""
         return {
             "rungs": [rung.summary() for rung in self.rungs],
             "stages": sorted({rung.stage for rung in self.rungs}),
@@ -182,6 +206,7 @@ class LadderResult:
 
 
 def reads_wall(electrolyte: Electrolyte) -> bool:
+    """Return whether any resolved correction of ``electrolyte`` reads the distance field."""
     return any(
         bool(getattr(correction, "use_wall", False))
         for correction in electrolyte.corrections.values()
@@ -189,6 +214,7 @@ def reads_wall(electrolyte: Electrolyte) -> bool:
 
 
 def model_reads_wall(model: PhysicsModel) -> bool:
+    """Return whether this built model evaluates the distance field."""
     if not declaration(model.name).wall_distance:
         return False
     if not solves_transport(model):
@@ -197,6 +223,7 @@ def model_reads_wall(model: PhysicsModel) -> bool:
 
 
 def mesh_report(mesh: Mesh) -> dict[str, Option]:
+    """Return the mesh's size, for the record."""
     return {
         "elements": mesh.ne,
         "vertices": mesh.nv,
@@ -212,6 +239,13 @@ def bias_schedule(
     fine_step_V: float = FINE_BIAS_STEP_V,
     coarse_step_V: float = COARSE_BIAS_STEP_V,
 ) -> tuple[float, ...]:
+    """Return the bias ramp in volts, ending exactly on the target.
+
+    Parameters
+    ----------
+    fine_step_V, coarse_step_V
+        Step magnitudes below and above the onset; ValueError unless both are positive.
+    """
     if fine_step_V <= 0.0 or coarse_step_V <= 0.0:
         raise ValueError(
             f"the bias steps must be positive, got {fine_step_V} V and {coarse_step_V} V"
@@ -231,6 +265,7 @@ def bias_schedule(
 
 
 def ramp_schedule(steps: int) -> tuple[float, ...]:
+    """Return ``(1/n, 2/n, ..., 1)``, the fractions of a linear ramp."""
     if steps < 1:
         raise ValueError(f"a ramp needs at least one step, got {steps}")
     return tuple((index + 1) / steps for index in range(steps))
@@ -264,6 +299,18 @@ def transfer(
     *,
     initial_concentrations: Mapping[str, float] | None = None,
 ) -> ModelSolution:
+    """Carry a converged solution onto another model's space, interpolating shared fields by name.
+
+    Parameters
+    ----------
+    initial_concentrations
+        Cold-start values for concentrations the previous model did not solve.
+
+    Raises
+    ------
+    TransferError
+        If the meshes differ.
+    """
     import ngsolve as ngs
 
     if previous.space.mesh is not mesh:
@@ -327,6 +374,18 @@ def run_ladder(
     initial: ModelSolution | None = None,
     on_rung: Callable[[int, Rung], None] | None = None,
 ) -> LadderResult:
+    """Solve every rung in order, each warm-started from the one before.
+
+    Parameters
+    ----------
+    on_rung
+        Called with the 0-based index and the rung; an exception from it cancels the ladder.
+
+    Raises
+    ------
+    ValueError
+        If the ladder is empty.
+    """
     if not rungs:
         raise ValueError("a continuation ladder needs at least one rung")
 
@@ -456,6 +515,19 @@ def default_ladder(
     velocity_order: int | None = None,
     pressure_order: int = 1,
 ) -> tuple[Rung, ...]:
+    """Build the stages of the ladder for one target operating point.
+
+    Parameters
+    ----------
+    bias_V
+        Target applied bias, of either sign.
+    ground
+        Which electrode is held at zero, ``"cis"`` or ``"trans"``.
+    fixed_charge_domain
+        Material the fixed charge is confined to; None spreads it over the whole domain.
+    solid_fraction
+        Passed to every rung that solves Poisson; not ramped.
+    """
     import ngsolve as ngs
 
     # The models the ladder can end at, shared with ``register_model``.

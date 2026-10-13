@@ -24,7 +24,8 @@ ANGSTROM_TO_NM = 0.1
 WILDCARD = "*"
 
 
-class DensityInputError(ValueError): ...
+class DensityInputError(ValueError):
+    """An atom the radius set does not resolve, or an ensemble that cannot be deposited."""
 
 
 class _Strict(BaseModel):
@@ -32,6 +33,8 @@ class _Strict(BaseModel):
 
 
 class RadiusSource(_Strict):
+    """Where a radius table came from, byte for byte."""
+
     file: str
     package: str
     version: str
@@ -41,6 +44,8 @@ class RadiusSource(_Strict):
 
 
 class RadiusRules(_Strict):
+    """How a structure file's names map onto the radius table."""
+
     residue_aliases: dict[str, str] = Field(default_factory=dict)
     ambiguous: dict[str, list[str]] = Field(default_factory=dict)
     atom_aliases: dict[str, dict[str, str]] = Field(default_factory=dict)
@@ -48,6 +53,8 @@ class RadiusRules(_Strict):
 
 
 class RadiusSet(_Strict):
+    """A shipped radius table: its source, its lookup rules and the radii in Å."""
+
     schema_: Literal["nanopnp/radii/v0.5"] = Field(alias="schema")
     name: str
     source: RadiusSource
@@ -58,10 +65,24 @@ class RadiusSet(_Strict):
 
     @classmethod
     def load(cls, name: str) -> RadiusSet:
+        """Read and validate the named set from ``data/radii``.
+
+        Raises
+        ------
+        FileNotFoundError
+            If no set of that name is installed.
+        """
         text = radii_file(name).read_text(encoding="utf-8")
         return cls.model_validate(yaml.safe_load(text))
 
     def radius_A(self, resname: str, atom: str) -> float:
+        """Return one atom's radius in Å by the lookup rules.
+
+        Raises
+        ------
+        KeyError
+            When the rules resolve no radius, or an ambiguous residue name gives several.
+        """
         rules = self.rules
         residue = rules.residue_aliases.get(resname, resname)
         names = [atom]
@@ -109,12 +130,15 @@ class RadiusSet(_Strict):
 
 @dataclass(frozen=True)
 class ResolvedRadii:
+    """Every atom's radius, and which set it came from."""
+
     radii_nm: np.ndarray
     name: str
     sha256: str
 
 
 def radius_set_digest(name: str) -> str:
+    """Return the sha256 of the named radius-set file."""
     return file_hash(radii_file(name))
 
 
@@ -127,6 +151,13 @@ def resolve_radii(
     resid: np.ndarray,
     icode: np.ndarray,
 ) -> ResolvedRadii:
+    """Resolve every atom of an atom table against the named radius set.
+
+    Raises
+    ------
+    DensityInputError
+        For the first atom the set does not resolve, naming it.
+    """
     import numpy as np
 
     radius_set = RadiusSet.load(name)

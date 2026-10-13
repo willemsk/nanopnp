@@ -154,6 +154,7 @@ EXCLUDED: Final[dict[str, str]] = {
 
 
 def classify(error: BaseException) -> int:
+    """Return the exit code for an exception: its class's code, or the unexpected-error code."""
     for klass in type(error).__mro__:
         code = EXIT_CODES.get(f"{klass.__module__}:{klass.__qualname__}")
         if code is not None:

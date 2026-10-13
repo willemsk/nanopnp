@@ -13,6 +13,15 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 def blend(
     chi: Expression, solid_permittivity: Expression, fluid_permittivity: Expression
 ) -> Expression:
+    """Return the dielectric blend ``chi * eps_p + (1 - chi) * eps_r,f(<c>)``.
+
+    Parameters
+    ----------
+    chi
+        The solid fraction, in [0, 1].
+    solid_permittivity
+        The piecewise solid branch; each solid blends towards its own ``eps_p``.
+    """
     return chi * solid_permittivity + (1.0 - chi) * fluid_permittivity
 
 
@@ -20,6 +29,13 @@ _NEAREST_SOLID_CACHE = "_nanopnp_nearest_solid_permittivity"
 
 
 def nearest_solid_permittivity(mesh: Mesh, permittivities: Mapping[str, float]) -> Expression:
+    """Return the ``eps_p`` the blend goes towards: each solid's own, elsewhere the nearest solid's.
+
+    Raises
+    ------
+    ValueError
+        If no mesh material is in ``permittivities``, or the mesh holds a non-triangle cell.
+    """
     key = tuple(sorted(permittivities.items()))
     cache: dict[tuple[tuple[str, float], ...], Expression] | None = getattr(
         mesh, _NEAREST_SOLID_CACHE, None

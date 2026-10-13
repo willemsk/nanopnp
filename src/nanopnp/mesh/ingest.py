@@ -122,26 +122,33 @@ _METACHARACTERS: frozenset[str] = frozenset(".*+?[](){}^$\\")
 """Characters a flat name alternation cannot contain; see :func:`_options`."""
 
 
-class MeshVocabularyError(ValueError): ...
+class MeshVocabularyError(ValueError):
+    """A supplied mesh's groups and the names this run selects on do not line up."""
 
 
 @dataclass(frozen=True)
 class Requirement:
+    """One name selection the run makes, and the names that would satisfy it."""
+
     purpose: str
     pattern: str
     options: tuple[str, ...]
 
     def satisfied_by(self, names: frozenset[str]) -> bool:
+        """Return whether any of :attr:`options` is among ``names``."""
         return bool(set(self.options) & names)
 
 
 @dataclass(frozen=True)
 class RequiredNames:
+    """Every name selection the run makes, split by namespace."""
+
     materials: tuple[Requirement, ...]
     boundaries: tuple[Requirement, ...]
 
     @property
     def names(self) -> frozenset[str]:
+        """Every name any requirement mentions, in either namespace."""
         return frozenset(
             option
             for requirement in (*self.materials, *self.boundaries)
@@ -151,6 +158,7 @@ class RequiredNames:
     def unsatisfied(
         self, materials: frozenset[str], boundaries: frozenset[str]
     ) -> tuple[Requirement, ...]:
+        """Return the requirements that neither name table supplies."""
         return tuple(
             [
                 requirement
@@ -188,6 +196,7 @@ brings -- is described generically."""
 
 
 def required_names(resolved: ResolvedCase) -> RequiredNames:
+    """Return every name selection ``resolved`` makes on its mesh."""
     materials = (
         Requirement(
             purpose="the fluid domains Nernst-Planck and the flow are solved on (PHY-03)",
@@ -270,6 +279,18 @@ def _mapped(
 
 
 def apply_groups(data: MeshData, groups: dict[str, str]) -> tuple[MeshData, dict[str, str]]:
+    """Map a mesh's own group names onto the project vocabulary.
+
+    Parameters
+    ----------
+    groups
+        ``{group name in the file: vocabulary name}``; many-to-one is allowed.
+
+    Raises
+    ------
+    MeshVocabularyError
+        If the mapping looks reversed, names an absent group, or leaves one unclaimed.
+    """
     if _looks_reversed(groups):
         raise MeshVocabularyError(
             "inputs.mesh.groups reads file group -> vocabulary name, and this mapping looks "
@@ -317,6 +338,13 @@ def apply_groups(data: MeshData, groups: dict[str, str]) -> tuple[MeshData, dict
 
 
 def check_names(data: MeshData, required: RequiredNames, *, where: str) -> None:
+    """Abort unless ``data`` supplies every selection ``required`` makes.
+
+    Raises
+    ------
+    MeshVocabularyError
+        Naming each unsatisfied requirement and the names the mesh does carry.
+    """
     unsatisfied = required.unsatisfied(frozenset(data.materials), frozenset(data.boundaries))
     if not unsatisfied:
         return
@@ -339,6 +367,20 @@ def check_solid_permittivities(
     model: str | None = None,
     solids: bool = True,
 ) -> None:
+    """Abort unless every solid domain of ``data`` has a permittivity.
+
+    Members of ``PERMITTIVITY_EXEMPT`` take the fluid's ``eps_r`` deliberately.
+
+    Parameters
+    ----------
+    solids
+        Whether the model carries solid materials. If not, any solid domain aborts.
+
+    Raises
+    ------
+    MeshVocabularyError
+        Naming every solid material with no entry, or the model and its solid domains.
+    """
     if not solids:
         present = sorted(name for name in data.materials if name not in FLUID_MATERIALS)
         if present:
@@ -368,6 +410,7 @@ def check_solid_permittivities(
 
 
 def exclusion_deviations(materials: Iterable[str]) -> tuple[ContributedDeviation, ...]:
+    """Return the deviation an ``exclusion`` material contributes, if any."""
     if not set(materials) & PERMITTIVITY_EXEMPT:
         return ()
     return (
@@ -386,6 +429,8 @@ def exclusion_deviations(materials: Iterable[str]) -> tuple[ContributedDeviation
 
 @dataclass(frozen=True)
 class IngestedMesh:
+    """A supplied mesh that has passed every gate, with what the gates measured."""
+
     data: MeshData
     quality: QualityReport
     source: Path
@@ -394,18 +439,25 @@ class IngestedMesh:
 
     @property
     def content_hash(self) -> str:
+        """The mesh's identity: its vertices, connectivity and tags."""
         return self.data.content_hash
 
     @cached_property
     def mesh(self) -> Mesh:
+        """The NGSolve mesh, built once on first use."""
         from nanopnp.mesh.adapter import to_ngsolve
 
         return to_ngsolve(self.data)
 
     def deviations(self) -> tuple[ContributedDeviation, ...]:
+        """Return the departures from the validated model this mesh carries.
+
+        An ``exclusion`` material adds an ion-exclusion shell that ePNP-NS does not have.
+        """
         return exclusion_deviations(self.data.materials)
 
     def summary(self) -> dict[str, object]:
+        """Return what the manifest's geometry-and-mesh group records."""
         return {
             "source": self.source.name,
             "source_sha256": self.source_hash,
@@ -426,6 +478,15 @@ def _source_path(supplied: SuppliedArtefact) -> Path:
 
 
 def ingest(supplied: SuppliedArtefact, resolved: ResolvedCase) -> IngestedMesh:
+    """Read, map and gate the mesh a case supplies.
+
+    Raises
+    ------
+    MeshVocabularyError
+        On any naming failure.
+    MeshQualityError
+        On a sliver, an inverted element or a negative radius.
+    """
     path = _source_path(supplied)
     where = f"the mesh {path.name!r}"
     data = read(path, format=detect_format(path, supplied.format))
@@ -467,6 +528,13 @@ MESH_PAYLOAD = "mesh"
 
 
 def deployed_mesh(resolved: ResolvedCase, generated: Artefact | None) -> IngestedMesh:
+    """Return the mesh a run solves on: the supplied mesh, else the stage-6 payload.
+
+    Raises
+    ------
+    KeyError
+        If the case generates its mesh and no stage-6 artefact is given.
+    """
     if resolved.mesh is not None:
         return ingest(resolved.mesh, resolved)
     if generated is None or MESH_PAYLOAD not in generated.payload:
@@ -479,20 +547,25 @@ def deployed_mesh(resolved: ResolvedCase, generated: Artefact | None) -> Ingeste
 
 
 class MeshStage:
+    """Stage 6: a supplied mesh file, or stage 5's region, to a tagged, gated mesh."""
+
     name = "mesh"
 
     def __init__(self, *, workspace: Path | None = None) -> None:
         self._workspace = Path(workspace) if workspace is not None else None
 
     def describe(self) -> StageDescription:
+        """Return the registry's description of this stage."""
         return describe(self.name)
 
     def deviations(self, inputs: StageInputs) -> tuple[ContributedDeviation, ...]:
+        """Return the departures a supplied mesh contributes, from its artefact's materials."""
         materials = inputs.require(self.name).parameters["materials"]
         assert isinstance(materials, list)  # MeshArtefact writes it as one
         return exclusion_deviations(str(name) for name in materials)
 
     def key(self, inputs: StageInputs) -> MeshArtefact:
+        """Return the artefact key this mesh will produce, without writing it."""
         resolved = inputs.resolved
         if resolved.generates_mesh:
             return self._recipe(inputs, resolved)
@@ -535,6 +608,13 @@ class MeshStage:
         progress: Progress | None = None,
         cancel: CancelToken | None = None,
     ) -> MeshArtefact:
+        """Ingest the mesh, write the archival copy and emit the stage-6 artefact.
+
+        Raises
+        ------
+        Cancelled
+            If ``cancel`` turns true; no artefact is written.
+        """
         resolved = inputs.resolved
         if resolved.generates_mesh:
             return self._generate(inputs, resolved, progress=progress, cancel=cancel)
@@ -590,6 +670,7 @@ class MeshStage:
     def artefact(
         self, ingested: IngestedMesh, *, payload: dict[str, Path] | None = None
     ) -> MeshArtefact:
+        """Return the artefact for an already-gated mesh, with or without its payload."""
         return MeshArtefact(
             content_hash=ingested.content_hash,
             materials=ingested.data.materials,

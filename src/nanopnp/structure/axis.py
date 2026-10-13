@@ -24,22 +24,27 @@ DISPLACEMENT_BUDGET_NM = 0.01
 _Z = (0.0, 0.0, 1.0)
 
 
-class SymmetryGateError(ValueError): ...
+class SymmetryGateError(ValueError):
+    """A stage-1 symmetry gate refused the structure."""
 
 
 @dataclass(frozen=True)
 class RigidFit:
+    """A least-squares rigid superposition: ``rotation @ x + translation``."""
+
     rotation: np.ndarray
     translation: np.ndarray
     rmsd_nm: float
 
     def apply(self, points: np.ndarray) -> np.ndarray:
+        """Return ``points`` (``(..., 3)``) moved by this transform."""
         import numpy as np
 
         return np.asarray(points @ self.rotation.T + self.translation, dtype=np.float64)
 
 
 def kabsch(mobile: np.ndarray, reference: np.ndarray) -> RigidFit:
+    """Return the rigid transform that best superposes ``mobile`` on ``reference``."""
     import numpy as np
 
     mobile = np.asarray(mobile, dtype=np.float64)
@@ -62,6 +67,7 @@ def kabsch(mobile: np.ndarray, reference: np.ndarray) -> RigidFit:
 
 
 def rotation_axis(rotation: np.ndarray) -> tuple[np.ndarray, float]:
+    """Return a rotation's axis (eigenvalue 1) and its signed angle, in radians."""
     import numpy as np
 
     _, _, vt = np.linalg.svd(rotation - np.eye(3))
@@ -90,6 +96,7 @@ def _perpendicular_basis(axis: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
 
 
 def azimuths(centroids: np.ndarray, axis: np.ndarray, point: np.ndarray) -> np.ndarray:
+    """Return each centroid's azimuth about the line through ``point`` along ``axis``, in rad."""
     import numpy as np
 
     first, second = _perpendicular_basis(axis)
@@ -98,6 +105,7 @@ def azimuths(centroids: np.ndarray, axis: np.ndarray, point: np.ndarray) -> np.n
 
 
 def initial_axis(chains: np.ndarray) -> np.ndarray:
+    """Return the ordering axis, signed to the file's +z."""
     import numpy as np
 
     total = np.zeros((3, 3))
@@ -111,6 +119,7 @@ def initial_axis(chains: np.ndarray) -> np.ndarray:
 
 
 def chain_order(chains: np.ndarray, axis: np.ndarray) -> tuple[int, ...]:
+    """Return the chain indices counter-clockwise about ``axis``, starting at chain 0."""
     import numpy as np
 
     centroid = chains.reshape(-1, 3).mean(axis=0)
@@ -121,6 +130,8 @@ def chain_order(chains: np.ndarray, axis: np.ndarray) -> tuple[int, ...]:
 
 @dataclass(frozen=True)
 class CyclicFit:
+    """The rotation superposing an ordered assembly on its cyclic permutation."""
+
     axis: np.ndarray
     centroid_nm: np.ndarray
     angle_rad: float
@@ -128,6 +139,7 @@ class CyclicFit:
 
 
 def cyclic_fit(chains: np.ndarray, order: Sequence[int]) -> CyclicFit:
+    """Superpose the assembly on itself with the chain at position k mapped to k + 1."""
     import numpy as np
 
     ordered = chains[list(order)]
@@ -142,6 +154,8 @@ def cyclic_fit(chains: np.ndarray, order: Sequence[int]) -> CyclicFit:
 
 @dataclass(frozen=True)
 class AxisRecord:
+    """The Cₙ axis in the file's frame, with every gate measurement."""
+
     n: int
     axis: np.ndarray
     centroid_nm: np.ndarray
@@ -154,10 +168,12 @@ class AxisRecord:
 
     @property
     def spacing_error_deg(self) -> float:
+        """Worst departure of an azimuthal gap from ``360/n``, in degrees."""
         nominal = 360.0 / self.n
         return max(abs(gap - nominal) for gap in self.spacings_deg)
 
     def summary(self) -> dict[str, Canonicalisable]:
+        """Return the record as plain data, for the artefact header."""
         return {
             "n": self.n,
             "axis": [float(value) for value in self.axis],
@@ -173,10 +189,12 @@ class AxisRecord:
 
 
 def tilt_deg(axis: np.ndarray) -> float:
+    """Return the angle between a unit ``axis`` and the file's z, in degrees."""
     return math.degrees(math.acos(max(-1.0, min(1.0, float(axis[2])))))
 
 
 def measure_axis(chains: np.ndarray, n: int) -> AxisRecord:
+    """Find the Cₙ axis of an assembly, without gating it."""
     import numpy as np
 
     chains = np.asarray(chains, dtype=np.float64)
@@ -209,6 +227,13 @@ def measure_axis(chains: np.ndarray, n: int) -> AxisRecord:
 
 
 def gate_axis(record: AxisRecord) -> AxisRecord:
+    """Apply the spacing, angle and orientation gates to a measured axis.
+
+    Raises
+    ------
+    SymmetryGateError
+        When the spacing, the cyclic angle or the axis orientation is out of tolerance.
+    """
     n = record.n
     nominal = 360.0 / n
     limit = SPACING_FRACTION * nominal
@@ -239,16 +264,26 @@ def gate_axis(record: AxisRecord) -> AxisRecord:
 
 
 def detect_axis(chains: np.ndarray, n: int) -> AxisRecord:
+    """Find the Cₙ axis of an assembly and gate it.
+
+    Raises
+    ------
+    SymmetryGateError
+        On C1, which has no permutation to superpose, and on any gate failure.
+    """
     return gate_axis(measure_axis(chains, n))
 
 
 @dataclass(frozen=True)
 class Displacement:
+    """How far the file's z axis strays from the detected axis over the C-alpha extent."""
+
     tilt_deg: float
     offset_nm: float
     displacement_nm: float
 
     def summary(self) -> dict[str, Canonicalisable]:
+        """Return the measurement as plain data."""
         return {
             "tilt_deg": self.tilt_deg,
             "offset_nm": self.offset_nm,
@@ -260,6 +295,7 @@ class Displacement:
 def z_displacement(
     axis: np.ndarray, point_nm: np.ndarray, z_extent_nm: tuple[float, float]
 ) -> Displacement:
+    """Measure the file's z axis against the detected axis."""
     import numpy as np
 
     worst = 0.0
@@ -275,6 +311,13 @@ def z_displacement(
 
 
 def check_z_axis(record: AxisRecord, z_extent_nm: tuple[float, float]) -> Displacement:
+    """Admit ``symmetry.axis: z`` only inside the displacement budget.
+
+    Raises
+    ------
+    SymmetryGateError
+        When the displacement exceeds the budget.
+    """
     found = z_displacement(record.axis, record.centroid_nm, z_extent_nm)
     if not found.displacement_nm <= DISPLACEMENT_BUDGET_NM:
         raise SymmetryGateError(
@@ -288,6 +331,7 @@ def check_z_axis(record: AxisRecord, z_extent_nm: tuple[float, float]) -> Displa
 
 
 def minimal_rotation(axis: np.ndarray) -> np.ndarray:
+    """Return the smallest rotation taking the unit ``axis`` to the file's z."""
     import numpy as np
 
     z = np.array(_Z)
@@ -304,6 +348,7 @@ def minimal_rotation(axis: np.ndarray) -> np.ndarray:
 
 
 def frame_rotation(record: AxisRecord, first_centroid_nm: np.ndarray) -> np.ndarray:
+    """Return ``Q``: the axis onto z, then a turn putting chain 0 on +x."""
     import numpy as np
 
     align = minimal_rotation(record.axis)

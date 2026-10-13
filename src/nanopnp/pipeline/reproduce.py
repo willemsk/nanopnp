@@ -41,20 +41,25 @@ logger = logging.getLogger(__name__)
 DEFAULT_TOLERANCE = 1e-6
 
 
-class InputMovedError(RuntimeError): ...
+class InputMovedError(RuntimeError):
+    """An input file's contents differ from what the manifest recorded."""
 
 
-class ReproductionError(RuntimeError): ...
+class ReproductionError(RuntimeError):
+    """The run could not be reproduced, or the check could not be made honestly."""
 
 
 @dataclass(frozen=True)
 class Drift:
+    """One scalar that did not come back, and by how much."""
+
     path: str
     recorded: Canonicalisable
     reproduced: Canonicalisable
     relative: float | None
 
     def summary(self) -> dict[str, Canonicalisable]:
+        """Return this drift as plain data."""
         return {
             "quantity": self.path,
             "recorded": self.recorded,
@@ -65,16 +70,29 @@ class Drift:
 
 @dataclass(frozen=True)
 class EnvironmentDrift:
+    """One library, interpreter or platform key whose value moved."""
+
     key: str
     recorded: Canonicalisable
     current: Canonicalisable
 
     def summary(self) -> dict[str, Canonicalisable]:
+        """Return this difference as plain data."""
         return {"key": self.key, "recorded": self.recorded, "current": self.current}
 
 
 @dataclass(frozen=True)
 class Reproduction:
+    """What a reproduction attempt found.
+
+    Parameters
+    ----------
+    worst
+        The largest relative difference over every scalar compared, or None.
+    drifts
+        The scalars outside the tolerance, or unequal where they are not numbers.
+    """
+
     directory: Path
     manifest_hash: str
     run: RunResult
@@ -86,9 +104,11 @@ class Reproduction:
 
     @property
     def reproduced(self) -> bool:
+        """Return whether every scalar came back within tolerance."""
         return not self.drifts
 
     def summary(self) -> dict[str, Canonicalisable]:
+        """Return the whole finding as plain data."""
         return {
             "directory": str(self.directory),
             "manifest": self.manifest_hash,
@@ -126,6 +146,7 @@ def compare(
     *,
     tolerance: float = DEFAULT_TOLERANCE,
 ) -> tuple[tuple[Drift, ...], float | None]:
+    """Compare two quantity records; return the drifts and the worst relative difference."""
     left, right = _flatten(dict(recorded)), _flatten(dict(reproduced))
     missing = sorted(set(left) - set(right))
     if missing:
@@ -154,6 +175,7 @@ def compare(
 
 
 def check_inputs(manifest: Mapping[str, Canonicalisable], *, where: Path) -> None:
+    """Re-hash every input file the manifest recorded, aborting on any that moved."""
     inputs = manifest.get("inputs")
     files = inputs.get("files", {}) if isinstance(inputs, dict) else {}
     if not isinstance(files, dict):
@@ -187,6 +209,7 @@ def check_inputs(manifest: Mapping[str, Canonicalisable], *, where: Path) -> Non
 
 
 def check_mesh(manifest: Mapping[str, Canonicalisable], result: RunResult, *, where: Path) -> None:
+    """Abort if the reproduced mesh is not the one the manifest recorded."""
     group = manifest.get("geometry_and_mesh")
     recorded = group.get("content_hash") if isinstance(group, dict) else None
     artefact = result.artefacts.get("mesh")
@@ -206,6 +229,7 @@ def check_mesh(manifest: Mapping[str, Canonicalisable], result: RunResult, *, wh
 def check_environment(
     manifest: Mapping[str, Canonicalisable],
 ) -> tuple[EnvironmentDrift, ...]:
+    """Return every environment key whose value differs from this machine's."""
     recorded = manifest.get("environment")
     if not isinstance(recorded, dict):
         return ()
@@ -258,6 +282,17 @@ def reproduce(
     progress: Progress | None = None,
     cancel: CancelToken | None = None,
 ) -> Reproduction:
+    """Re-run an archived run and compare every scalar it reported.
+
+    Parameters
+    ----------
+    directory
+        A run directory holding manifest.json, case.yaml and run.json.
+    store
+        Where the artefacts go; None runs into a temporary directory.
+    tolerance
+        Relative agreement every scalar must reach.
+    """
     where = Path(directory)
     manifest_path = where / MANIFEST_FILENAME
     if not manifest_path.is_file():

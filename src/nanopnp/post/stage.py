@@ -64,7 +64,8 @@ EXTENSION_OUTER = 3.0
 WORKSPACE_DIRNAME = "tmp"
 
 
-class SelectionError(ValueError): ...
+class SelectionError(ValueError):
+    """A word in ``outputs:`` that this run cannot produce; a ValueError."""
 
 
 def membrane_band(
@@ -73,6 +74,13 @@ def membrane_band(
     fraction: float = BAND_FRACTION,
     material: str = MEMBRANE_MATERIAL,
 ) -> tuple[float, float]:
+    """Return the transition band ``(lower_nm, upper_nm)`` of the membrane, in nm.
+
+    Raises
+    ------
+    SelectionError
+        If ``fraction`` is not in (0, 1], or the mesh carries no such material.
+    """
     import numpy as np
 
     if not 0.0 < fraction <= 1.0:
@@ -95,6 +103,7 @@ def membrane_band(
 
 
 def extension_shell(data: MeshData, *, material: str = ANALYTE_DOMAIN) -> tuple[float, float]:
+    """Return the extension shell in nm, scaled to the body; SelectionError if absent."""
     import numpy as np
 
     if material not in data.materials:
@@ -186,12 +195,16 @@ def _selected(
 
 
 class QoIStage:
+    """Stage 11: a converged solution to the scalar quantities of interest."""
+
     name = "qoi"
 
     def describe(self) -> StageDescription:
+        """Return the registry's description of this stage."""
         return describe(self.name)
 
     def key(self, inputs: StageInputs) -> QoIArtefact:
+        """Return the artefact key this extraction will produce, without running it."""
         prepared = self._prepare(inputs, solving=False)
         return QoIArtefact(
             case_hash=prepared.case_hash,
@@ -233,6 +246,15 @@ class QoIStage:
         progress: Progress | None = None,
         cancel: CancelToken | None = None,
     ) -> QoIArtefact:
+        """Extract every selected quantity and emit the stage-11 artefact.
+
+        Raises
+        ------
+        SelectionError
+            If ``outputs:`` asks for something this run cannot produce.
+        Cancelled
+            If ``cancel`` turns true; no artefact is written.
+        """
         check_cancelled(cancel, "the extraction")
         report(progress, 0.0, "resolving the case")
         prepared = self._prepare(inputs, solving=True)
@@ -335,6 +357,7 @@ class QoIStage:
         return record
 
     def deviations(self, inputs: StageInputs) -> tuple[ContributedDeviation, ...]:
+        """Return the departures this stage's options introduce."""
         if bool(inputs.options.get("check_routes", True)):
             return ()
         return (
@@ -350,15 +373,19 @@ class QoIStage:
 
 
 class ReportStage:
+    """Stage 12: what the run wrote, and the hashes of what it was written from."""
+
     name = "report"
 
     def __init__(self, *, workspace: Path | None = None) -> None:
         self._workspace = Path(workspace) if workspace is not None else None
 
     def describe(self) -> StageDescription:
+        """Return the registry's description of this stage."""
         return describe(self.name)
 
     def key(self, inputs: StageInputs) -> ReportArtefact:
+        """Return the artefact key this report will produce, without writing it."""
         case_hash, qoi, solution = self._hashes(inputs, solving=False)
         return ReportArtefact(
             case_hash=case_hash,
@@ -384,6 +411,13 @@ class ReportStage:
         progress: Progress | None = None,
         cancel: CancelToken | None = None,
     ) -> ReportArtefact:
+        """Write whatever ``outputs:`` selected and emit the stage-12 artefact.
+
+        Raises
+        ------
+        Cancelled
+            If ``cancel`` turns true; no artefact and no file are written.
+        """
         check_cancelled(cancel, "the report")
         report(progress, 0.0, "collecting the run's artefacts")
         exports = self._exports(inputs)
