@@ -63,12 +63,12 @@ class Recorder:
 
     events: list[tuple[str, tuple[object, ...]]] = field(default_factory=list)
 
-    def rung(  # noqa: D102
+    def rung(
         self, name: str, stage: int, index: int, total: int, reporting: bool, tolerance: float
     ) -> None:
         self.events.append(("rung", (name, stage, index, total, reporting, tolerance)))
 
-    def step(  # noqa: D102
+    def step(
         self,
         iteration: int,
         residual: float,

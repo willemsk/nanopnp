@@ -738,15 +738,15 @@ class NoStabilisation:
     """
 
     @property
-    def name(self) -> str:  # noqa: D102 - documented on the protocol
+    def name(self) -> str:
         return "none"
 
     @property
-    def parameters(self) -> Mapping[str, float]:  # noqa: D102
+    def parameters(self) -> Mapping[str, float]:
         return {}
 
     @property
-    def provenance(self) -> Mapping[str, str]:  # noqa: D102
+    def provenance(self) -> Mapping[str, str]:
         return {
             "mode": "none",
             "terms": "",
@@ -754,14 +754,14 @@ class NoStabilisation:
         }
 
     @property
-    def terms(self) -> tuple[str, ...]:  # noqa: D102
+    def terms(self) -> tuple[str, ...]:
         return ()
 
     @property
-    def permits_equal_order(self) -> bool:  # noqa: D102
+    def permits_equal_order(self) -> bool:
         return False
 
-    def transport_contributions(  # noqa: D102
+    def transport_contributions(
         self,
         *,
         trial: TransportState,
@@ -772,7 +772,7 @@ class NoStabilisation:
         del trial, lagged, test, source
         return ()
 
-    def transport_term(  # noqa: D102
+    def transport_term(
         self,
         measures: Measures,
         *,
@@ -785,7 +785,7 @@ class NoStabilisation:
         del measures, trial, lagged, test, source, kwargs
         return None
 
-    def flow_term(  # noqa: D102
+    def flow_term(
         self,
         measures: Measures,
         *,
@@ -798,7 +798,7 @@ class NoStabilisation:
         del measures, trial, lagged, velocity_test, pressure_test, kwargs
         return None
 
-    def indicator_term(  # noqa: D102
+    def indicator_term(
         self,
         measures: Measures,
         mesh: Mesh,
@@ -840,11 +840,11 @@ class StreamlineStabilisation:
     streamline_cutoff: float = STREAMLINE_CUTOFF
 
     @property
-    def name(self) -> str:  # noqa: D102
+    def name(self) -> str:
         return "supg"
 
     @property
-    def permits_equal_order(self) -> bool:  # noqa: D102
+    def permits_equal_order(self) -> bool:
         # Read off the flow term rather than declared per class: the pair is legal
         # exactly when the PSPG content of the GLS term is assembled, so a mode
         # that claimed otherwise would be claiming something about an operator it
@@ -852,7 +852,7 @@ class StreamlineStabilisation:
         return self.flow
 
     @property
-    def parameters(self) -> Mapping[str, float]:  # noqa: D102
+    def parameters(self) -> Mapping[str, float]:
         values = {"streamline_cutoff": float(self.streamline_cutoff)}
         if self.crosswind:
             values["crosswind_coefficient"] = float(self.crosswind_coefficient)
@@ -873,7 +873,7 @@ class StreamlineStabilisation:
         return tuple(assembled)
 
     @property
-    def provenance(self) -> Mapping[str, str]:  # noqa: D102
+    def provenance(self) -> Mapping[str, str]:
         return {
             "mode": self.name,
             "terms": ",".join(self.terms),
@@ -949,7 +949,7 @@ class StreamlineStabilisation:
             )
         return tuple(contributions)
 
-    def transport_term(  # noqa: D102
+    def transport_term(
         self,
         measures: Measures,
         *,
@@ -964,7 +964,7 @@ class StreamlineStabilisation:
         )
         return _assemble(measures, contributions, **kwargs)
 
-    def flow_term(  # noqa: D102
+    def flow_term(
         self,
         measures: Measures,
         *,
@@ -1015,7 +1015,7 @@ class StreamlineStabilisation:
             **kwargs,
         )
 
-    def indicator_term(  # noqa: D102
+    def indicator_term(
         self,
         measures: Measures,
         mesh: Mesh,
@@ -1061,7 +1061,7 @@ class ReferenceStabilisation(StreamlineStabilisation):
     flow: bool = True
 
     @property
-    def name(self) -> str:  # noqa: D102
+    def name(self) -> str:
         return "reference"
 
 

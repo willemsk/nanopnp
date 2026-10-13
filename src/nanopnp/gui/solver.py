@@ -381,7 +381,7 @@ class EventCancel:
         """Ask the running stage to stop at its next check."""
         self._event.set()
 
-    def cancelled(self) -> bool:  # noqa: D102 - documented on the protocol
+    def cancelled(self) -> bool:
         return self._event.is_set()
 
 

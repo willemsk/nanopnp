@@ -92,18 +92,18 @@ class NoCorrection:
     species: str | None = None
 
     @property
-    def name(self) -> str:  # noqa: D102 - documented on the protocol
+    def name(self) -> str:
         return "none"
 
     @property
-    def parameters(self) -> Mapping[str, float]:  # noqa: D102
+    def parameters(self) -> Mapping[str, float]:
         return {}
 
     @property
-    def provenance(self) -> Mapping[str, str]:  # noqa: D102
+    def provenance(self) -> Mapping[str, str]:
         return {"model": "none", "note": "correction disabled; factor is identically 1"}
 
-    def evaluate(  # noqa: D102
+    def evaluate(
         self, c_avg_M: Numeric, wall_distance_nm: Numeric, ops: MathOps = NUMPY_OPS
     ) -> Numeric:
         del c_avg_M, wall_distance_nm, ops
@@ -132,7 +132,7 @@ class FittedCorrection:
     _extra_provenance: Mapping[str, str] = field(default_factory=dict)
 
     @property
-    def parameters(self) -> Mapping[str, float]:  # noqa: D102
+    def parameters(self) -> Mapping[str, float]:
         flat: dict[str, float] = {}
         if self.use_concentration:
             flat.update({f"fc.{k}": v for k, v in self.concentration_params.items()})
@@ -141,7 +141,7 @@ class FittedCorrection:
         return flat
 
     @property
-    def provenance(self) -> Mapping[str, str]:  # noqa: D102
+    def provenance(self) -> Mapping[str, str]:
         # FR-25 requires every switch set away from the validated default to be
         # recorded. Reporting the form a file *offers* rather than the one in
         # force would make an ablated run indistinguishable from the full one.
@@ -167,7 +167,7 @@ class FittedCorrection:
         """Return the form actually evaluated, or ``"off"`` if it is switched out."""
         return form if enabled and form is not None else "off"
 
-    def evaluate(  # noqa: D102
+    def evaluate(
         self, c_avg_M: Numeric, wall_distance_nm: Numeric, ops: MathOps = NUMPY_OPS
     ) -> Numeric:
         factor: Numeric = 1.0

@@ -101,34 +101,32 @@ class MathOps(Protocol):
 class NumpyOps:
     """Numeric evaluation with NumPy, for scalars, arrays and tests."""
 
-    def sqrt(self, x: Numeric) -> Numeric:  # noqa: D102 - documented on MathOps
+    def sqrt(self, x: Numeric) -> Numeric:
         import numpy as np
 
         return np.sqrt(x)
 
-    def exp(self, x: Numeric) -> Numeric:  # noqa: D102
+    def exp(self, x: Numeric) -> Numeric:
         import numpy as np
 
         return np.exp(x)
 
-    def sinh(self, x: Numeric) -> Numeric:  # noqa: D102
+    def sinh(self, x: Numeric) -> Numeric:
         import numpy as np
 
         return np.sinh(x)
 
-    def cosh(self, x: Numeric) -> Numeric:  # noqa: D102
+    def cosh(self, x: Numeric) -> Numeric:
         import numpy as np
 
         return np.cosh(x)
 
-    def where_positive(  # noqa: D102
-        self, condition: Numeric, if_true: Numeric, if_false: Numeric
-    ) -> Numeric:
+    def where_positive(self, condition: Numeric, if_true: Numeric, if_false: Numeric) -> Numeric:
         import numpy as np
 
         return np.where(np.asarray(condition) > 0.0, if_true, if_false)
 
-    def clip(self, x: Numeric, lower: float, upper: float | None) -> Numeric:  # noqa: D102
+    def clip(self, x: Numeric, lower: float, upper: float | None) -> Numeric:
         import numpy as np
 
         return np.clip(x, lower, upper)
@@ -142,34 +140,32 @@ class NGSolveOps:
     ``1/tanh``.
     """
 
-    def sqrt(self, x: Numeric) -> Numeric:  # noqa: D102
+    def sqrt(self, x: Numeric) -> Numeric:
         import ngsolve as ngs
 
         return ngs.sqrt(x)
 
-    def exp(self, x: Numeric) -> Numeric:  # noqa: D102
+    def exp(self, x: Numeric) -> Numeric:
         import ngsolve as ngs
 
         return ngs.exp(x)
 
-    def sinh(self, x: Numeric) -> Numeric:  # noqa: D102
+    def sinh(self, x: Numeric) -> Numeric:
         import ngsolve as ngs
 
         return ngs.sinh(x)
 
-    def cosh(self, x: Numeric) -> Numeric:  # noqa: D102
+    def cosh(self, x: Numeric) -> Numeric:
         import ngsolve as ngs
 
         return ngs.cosh(x)
 
-    def where_positive(  # noqa: D102
-        self, condition: Numeric, if_true: Numeric, if_false: Numeric
-    ) -> Numeric:
+    def where_positive(self, condition: Numeric, if_true: Numeric, if_false: Numeric) -> Numeric:
         import ngsolve as ngs
 
         return ngs.IfPos(condition, if_true, if_false)
 
-    def clip(self, x: Numeric, lower: float, upper: float | None) -> Numeric:  # noqa: D102
+    def clip(self, x: Numeric, lower: float, upper: float | None) -> Numeric:
         import ngsolve as ngs
 
         if upper is None:
