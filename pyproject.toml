@@ -205,7 +205,8 @@ markers = [
     "tier3: COMSOL cross-implementation comparison, hours, nightly (section 7.4)",
     "tier4: experimental reproduction, hours, before a tagged release (section 7.5)",
     "slow: takes more than a minute regardless of tier",
-    "extended: an end-to-end walk, gated in CI on every push and left out of the development selection unless --extended (section 7.6)",
+    "extended: an end-to-end walk, gated in CI after a merge and by the push gate, and left out of the development selection unless --extended (section 7.6)",
+    "no_cover: stop coverage for the test's call phase; pytest-cov defines it, and it is listed here because tests/conftest.py puts it on every extended test and --strict-markers refuses it where pytest-cov is off (-p no:cov)",
 ]
 
 [tool.coverage.run]

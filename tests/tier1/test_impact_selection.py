@@ -13,6 +13,7 @@ path that forced it.
 from __future__ import annotations
 
 import importlib
+import json
 import os
 import shutil
 import subprocess
@@ -161,6 +162,36 @@ TOY: dict[str, str] = {
         """,
 }
 
+MEMO: dict[str, str] = {
+    "pyproject.toml": TOY["pyproject.toml"],
+    "src/toy/__init__.py": "",
+    "src/toy/memo.py": """
+        from functools import lru_cache
+
+
+        def helper(x):
+            return x * 2
+
+
+        @lru_cache(maxsize=None)
+        def answer(x):
+            return helper(x) + 1
+        """,
+    "tests/test_first.py": """
+        def test_first():
+            from toy.memo import answer
+
+            assert answer(2) == 5
+        """,
+    "tests/test_second.py": """
+        def test_second():
+            from toy.memo import answer
+
+            assert answer(2) == 5
+        """,
+}
+"""Two tests share one answer of a cached function: only the first one starts it."""
+
 ADD = "tests/test_add.py::test_add"
 PROCESS = "tests/test_process.py::test_cli_in_a_child_process"
 READS = "tests/test_reads_source.py::test_core_defines_add"
@@ -228,6 +259,20 @@ def recorded(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, Path]:
     subprocess.run(["git", "init", "-q", str(repo)], check=True)
     _git(repo, "add", "-A")
     _git(repo, "commit", "-qm", "toy")
+    return repo, _record(repo)
+
+
+@pytest.fixture(scope="module")
+def memoised(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, Path]:
+    """Return a committed repository whose tests share a cached function, and its map."""
+    repo = tmp_path_factory.mktemp("memo") / "repo"
+    for name, text in MEMO.items():
+        path = repo / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(textwrap.dedent(text).lstrip(), encoding="utf-8")
+    subprocess.run(["git", "init", "-q", str(repo)], check=True)
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-qm", "memo")
     return repo, _record(repo)
 
 
@@ -305,6 +350,60 @@ def test_ver74_a_changed_test_file_selects_itself_alone(toy: tuple[Path, Path]) 
     selection = _impact().select(repo, path)
     assert selection.fallback is None
     assert selection.tests == (OTHER,)
+
+
+@pytest.mark.parametrize("change", ["deleted", "renamed", "gone-before-the-map-moved"])
+def test_ver74_a_test_file_that_is_gone_selects_no_path_pytest_cannot_open(
+    toy: tuple[Path, Path], change: str
+) -> None:
+    """A vanished test file selects nothing: pytest fails on a path that no longer exists.
+
+    The last case is a map that has moved on to a tree without the file, as a follow-up's
+    merge leaves it, while the file's old records name functions that change later.
+    """
+    impact = _impact()
+    repo, path = toy
+    vanished = repo / "tests/test_other.py"
+    if change == "renamed":
+        vanished.rename(repo / "tests/test_renamed.py")
+    else:
+        vanished.unlink()
+    if change == "gone-before-the-map-moved":
+        data = json.loads(path.read_text(encoding="utf-8"))
+        data["tree"] = impact.working_tree(repo)
+        path.write_text(json.dumps(data), encoding="utf-8")
+        _edit(repo, "src/toy/deco.py", "return 1", "return 1 + 0")
+    selection = impact.select(repo, path)
+    assert selection.fallback is None
+    named = {node.split("::", 1)[0] for node in selection.tests}
+    assert all((repo / name).is_file() for name in named), named
+    assert ("tests/test_renamed.py" in named) == (change == "renamed")
+
+
+@pytest.mark.parametrize(
+    ("old", "new"),
+    [("return x * 2", "return x + x"), ("return helper(x) + 1", "return 1 + helper(x)")],
+    ids=["callee", "cached"],
+)
+def test_ver74_a_function_a_cache_answers_selects_every_test_it_serves(
+    memoised: tuple[Path, Path], tmp_path: Path, old: str, new: str
+) -> None:
+    """A cache hit starts no function, so each test would otherwise record what it ran alone.
+
+    The first test to ask computes the answer and is credited with the cached function and
+    its callees; the second is served from the cache. The recorder empties the caches of
+    the source before each test, so both depend on them in the map, as they do cold.
+    """
+    repo, recorded_map = memoised
+    copy = tmp_path / "repo"
+    shutil.copytree(repo, copy)
+    _edit(copy, "src/toy/memo.py", old, new)
+    selection = _impact().select(copy, recorded_map)
+    assert selection.fallback is None
+    assert set(selection.tests) == {
+        "tests/test_first.py::test_first",
+        "tests/test_second.py::test_second",
+    }
 
 
 def test_ver74_a_prose_change_selects_nothing(toy: tuple[Path, Path]) -> None:

@@ -1311,6 +1311,12 @@ learnt:
   those leaves the reads a test makes as data, `linecache` included.
 - **Outside a test, an audited event counts only with repository code on the stack.** Otherwise
   pytest reading test files and xdist starting its workers would make every change fall back.
+- **A warm `functools` cache hides a dependency from every test but the first.** A cache answers
+  without starting the function or reading its files again, so only the test that filled it was
+  credited. `validation/modularity.py` caches its parse of every module: without clearing, 22 tests
+  of nine source-reading files were credited with reading `post/qoi.py`; with the source's caches
+  emptied before each test, 43 were. The recording of those nine files took 88.3 s against 77.1 s
+  (+14 %), serial, 13 October 2026 **[tested]**.
 - **27 functions run at import or collection** on this tree (the registries' `register`,
   `CaseDocument`'s validators, `core/paths.py`'s lookups). They are found because a module body on
   the stack, other than the interpreter's own entry point, marks the call as import time.

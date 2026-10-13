@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# The roster guard of WP43 D13 (SPECIFICATION.md §8.2.10 J8): a PreToolUse hook on `Agent`.
+# The roster guard of WP43 D13 (SPECIFICATION.md §8.2.10 J8): a PreToolUse hook on `Agent`
+# (older Claude Code versions name the same tool `Task`, and so does this hook).
 #
 # A call's `model` overrides the agent file's, and a spawn without one inherits the
 # session's. This hook keeps the two honest:
@@ -13,7 +14,7 @@ set -uo pipefail
 
 payload=$(cat)
 tool=$(printf '%s' "$payload" | jq -r '.tool_name // ""' 2>/dev/null) || exit 0
-[[ $tool == Agent ]] || exit 0
+[[ $tool == Agent || $tool == Task ]] || exit 0
 type=$(printf '%s' "$payload" | jq -r '.tool_input.subagent_type // ""' 2>/dev/null) || exit 0
 model=$(printf '%s' "$payload" | jq -r '.tool_input.model // ""' 2>/dev/null) || exit 0
 session_dir=$(printf '%s' "$payload" | jq -r '.cwd // ""' 2>/dev/null) || session_dir=""

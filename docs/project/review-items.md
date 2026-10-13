@@ -849,3 +849,44 @@ unaffected.
 D8 meant, or drop the order and keep the record for the shards alone. Neither moves the push gate
 off example 07's floor (REV-82).
 
+**Also found in review.** The same sort in `tests/conftest.py` runs `trylast` over every item, so it
+overrides the order that `pytest --ff` and `--nf` produce and undoes pytest's own fixture-grouping
+reorder, for no measured gain. Dropping the order settles both.
+
+### REV-84 — A Markdown file that a WP43 test reads is classed as prose, so its test does not run on a change to it
+
+*Area:* verification. *Severity:* medium. *Found:* WP43 review (`/code-review xhigh`).
+
+`.github/scripts/prose-only.sh` calls every Markdown file prose except the paths it lists. The
+tests of WP43 read `.claude/agents/*.md`, `.claude/skills/*/SKILL.md`, `.claude/rules/*.md` and
+`docs/plans/*.md` (`test_agent_roster.py`: an agent's model and tools, a rule's `paths`, an
+`## In brief` over 250 words). A pull request that changes only one of them is classed prose-only:
+CI's `changes` job skips the test steps and reports green, and the commit gate runs ruff alone, so
+a roster or In brief test never runs on it.
+
+**Open.** Listing these paths as code would make every `/wp-plan` commit, which edits
+`docs/plans/`, pay the full gate, where the skills document it as ruff-alone. Either run only the
+tests that read them (the impact selection already selects a file's readers), or accept the gap and
+leave the nightly run to catch it. The author's ruling.
+
+### REV-85 — tests/impact.py uses os.path against the coding conventions
+
+*Area:* process. *Severity:* low. *Found:* WP43 review (`/code-review xhigh`).
+
+`.claude/rules/python.md` says `pathlib.Path`, never `os.path`, and covers `tests/**/*.py`.
+`tests/impact.py` uses `os.path.realpath`, `join`, `split` and `basename` at about ten sites, some
+of them in the recorder's per-event callbacks, where a `Path` object per call would cost.
+
+**Open.** Replace them outside the hot path, and measure the callbacks before changing those.
+The recorder's overhead is 1 to 2 % today (WP43 item 1).
+
+### REV-86 — ci.yml repeats the steps of the platforms job in the full-matrix job
+
+*Area:* process. *Severity:* low. *Found:* WP43 review (`/code-review xhigh`).
+
+The `platforms` and `full-matrix` jobs share about 45 lines of near-identical steps, and
+`full-matrix` sets `WALKS_ONLY: "false"` and keeps the `walks=(...)` branch that can therefore never
+run there. A later change to one job's steps is easily missed in the other.
+
+**Open.** Share the steps (a composite action or a reusable workflow) in a package that touches
+`ci.yml` for another reason; nothing is wrong today.

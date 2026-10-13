@@ -103,3 +103,6 @@ is a rolling register, and its header stays `open`.
 | REV-81 | performance | low | open | — | [Most past commits would fall back to the development selection](review-items.md#rev-81-most-past-commits-would-fall-back-to-the-development-selection) |
 | REV-82 | performance | medium | open | — | [The push gate takes over 9 minutes against its 5-minute budget](review-items.md#rev-82-the-push-gate-takes-over-9-minutes-against-its-5-minute-budget) |
 | REV-83 | performance | low | open | — | [The longest-first test order is inert under xdist file scheduling](review-items.md#rev-83-the-longest-first-test-order-is-inert-under-xdist-file-scheduling) |
+| REV-84 | verification | medium | open | — | [A Markdown file that a WP43 test reads is classed as prose, so its test does not run on a change to it](review-items.md#rev-84-a-markdown-file-that-a-wp43-test-reads-is-classed-as-prose-so-its-test-does-not-run-on-a-change-to-it) |
+| REV-85 | process | low | open | — | [tests/impact.py uses os.path against the coding conventions](review-items.md#rev-85-testsimpactpy-uses-ospath-against-the-coding-conventions) |
+| REV-86 | process | low | open | — | [ci.yml repeats the steps of the platforms job in the full-matrix job](review-items.md#rev-86-ciyml-repeats-the-steps-of-the-platforms-job-in-the-full-matrix-job) |

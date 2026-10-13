@@ -30,7 +30,7 @@ and no bare `python`.
 ```bash
 uv sync --all-extras     # create or refresh .venv from uv.lock
 uv run pytest            # tiers 1 and 2, without the end-to-end walks — the development selection
-uv run pytest --extended # the whole of tiers 1 and 2, as CI gates it on every push
+uv run pytest --extended # the whole of tiers 1 and 2, as the push gate and CI after a merge run it
 ```
 
 A VS Code Dev Container and a GitHub Codespace configuration are in [`.devcontainer/`](.devcontainer)
@@ -46,18 +46,21 @@ uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv ru
 
 and before a push, with `uv run pytest --extended`. The tests marked `extended` walk the pipeline
 end to end: the executed worked examples and the vendored 2WCD entry. They take most of the suite's
-time, so the development selection leaves them out, and CI runs them on every push
-(`SPECIFICATION.md` §7.6 NOTE). Naming one's file, `uv run pytest tests/tier2/test_charge_2wcd.py`,
-runs it without the flag.
+time, so the development selection leaves them out. The push gate runs them before every push,
+and CI after a merge, nightly and before a release (`SPECIFICATION.md` §7.6 NOTE). Naming one's
+file, `uv run pytest tests/tier2/test_charge_2wcd.py`, runs it without the flag.
 
 Before a push, the lines your branch changes in `src/nanopnp/` (not `gui/`) need full branch
 coverage, checked by `diff-cover`; an exempt line says `# pragma: no cover - <reason>`. Gmsh's tests
 fail rather than skip; on Debian or Ubuntu it needs `apt-get install libglu1-mesa libxft2
 libxinerama1 libxcursor1`.
 
-CI runs the same four stages on Python 3.12, plus the test suite on 3.11–3.14 on Linux and on 3.12
-on Windows and macOS, and the strict documentation build on every push, prose-only ones included. `uv.lock` is committed and CI resolves nothing: if you edit `pyproject.toml`,
-run `uv lock` in the same commit.
+A pull request runs lint and types, the development selection in two shards and the strict
+documentation build, on ubuntu with Python 3.14; `CI result` is the one required check, and the
+documentation build runs on every push, prose-only ones included. After a merge, macOS and
+Windows run Tiers 1 and 2 with `--extended`, and nightly and before a release Python 3.11 to 3.13
+run too (`SPECIFICATION.md` §7.6). `uv.lock` is committed and CI resolves nothing: if you edit
+`pyproject.toml`, run `uv lock` in the same commit.
 
 ## The documentation
 

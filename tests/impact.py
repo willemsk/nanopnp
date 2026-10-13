@@ -23,6 +23,8 @@ Recording, in more detail:
   point is on the stack runs at import: in a test module's body it is credited
   to every test of that file (``module:<path>``), in any other module's body, or
   with no test running at all, it is ``outside``, and a change to it falls back.
+- The ``functools`` caches of the source's modules are emptied before each test: a cache
+  answers without starting a function, so only the test that filled it would be credited.
 - A fixture scoped wider than a function is recorded under
   ``fixture:<baseid>::<name>``, setup and teardown, and credited to every test
   that requests it, on whichever ``pytest-xdist`` worker it ran.
@@ -43,6 +45,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import functools
 import json
 import os
 import re
@@ -86,6 +89,7 @@ _SKIPPED_ROOTS = frozenset({".git", ".venv", ".tox", ".mypy_cache", ".ruff_cache
 _CO_OPTIMIZED = 0x0001
 _STATUS = {"A": "added", "D": "deleted", "M": "modified", "T": "type changed", "U": "unmerged"}
 _GIT_ENV_DROPPED = ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_PREFIX")
+_LRU_WRAPPER = type(functools.lru_cache(maxsize=None)(lambda: None))
 
 
 # --------------------------------------------------------------------------- git
@@ -219,6 +223,28 @@ class _Recorder:
         if not code.co_flags & _CO_OPTIMIZED:
             return None
         return f"{rel}::{code.co_qualname.split('.<locals>', 1)[0]}"
+
+    def clear_caches(self) -> None:
+        """Empty every ``functools`` cache of the source's modules, before a test.
+
+        A cache answers without starting the function, so only the first test to call it
+        would be credited with the function, with what it read and with what it called:
+        a change to any of them would select that test alone, though every test the
+        cache served depends on them. Emptied before each test, each test starts what it
+        needs. Caches the source builds at run time, and per-instance ones, stay unseen.
+        """
+        for module in list(sys.modules.values()):
+            origin = getattr(module, "__file__", None)
+            if not isinstance(origin, str):
+                continue
+            rel = self.relpath(origin)
+            if rel is None or not rel.startswith(self.source_prefix):
+                continue
+            for value in list(vars(module).values()):
+                _clear_cache(value)
+                if isinstance(value, type) and value.__module__ == module.__name__:
+                    for attribute in list(vars(value).values()):
+                        _clear_cache(attribute)
 
     # -- scopes
 
@@ -377,6 +403,14 @@ def _source_of_bytecode(path: str) -> str:
     return path[:-1]
 
 
+def _clear_cache(value: object) -> None:
+    """Empty ``value`` if it is an ``lru_cache`` wrapper, bare or under a static or class method."""
+    if isinstance(value, staticmethod | classmethod):
+        value = value.__func__
+    if isinstance(value, _LRU_WRAPPER):
+        value.cache_clear()
+
+
 def _is_test_file(rel: str) -> bool:
     name = rel.rsplit("/", 1)[-1]
     return rel.startswith("tests/") and name.startswith("test_") and name.endswith(".py")
@@ -457,6 +491,7 @@ class _Plugin:
         self, item: pytest.Item, nextitem: pytest.Item | None
     ) -> Generator[None, object, object]:
         record = _Record()
+        self.recorder.clear_caches()
         self.recorder.push(record)
         try:
             return (yield)
@@ -755,10 +790,18 @@ def select(repo: Path, map_path: Path, *, include_extended: bool = False) -> Sel
             or hit.intersection(entry.get("fixtures", ()))
         ):
             chosen.add(test_file)
+    # A test file that is gone (deleted, or renamed) has no tests left to run, and naming
+    # its path would make pytest fail with "file or directory not found". The map can still
+    # hold its records: a follow-up's merge replaces only the files it re-ran. Its importers run.
+    present = set(
+        _git(repo, "ls-tree", "-r", "--name-only", "-z", current, "--", "tests").split("\0")
+    )
     selected = {
         node
         for node, entry in tests.items()
-        if node.split("::", 1)[0] in chosen and (include_extended or not entry.get("extended"))
+        if node.split("::", 1)[0] in chosen
+        and node.split("::", 1)[0] in present
+        and (include_extended or not entry.get("extended"))
     }
     recorded_files = {node.split("::", 1)[0] for node in tests}
     # A test file added since the map was recorded has no node ids yet: its path stands for them.
