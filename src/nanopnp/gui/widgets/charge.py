@@ -1,24 +1,4 @@
-"""The Charge tab: stage 7 as it lands, its pictures and its records (WP31).
-
-A projection of :mod:`nanopnp.gui.charge` and the render child's charge request,
-and nothing more. What a stage produced, what a pixel holds, what a leg's margin
-is and which residue is flagged are all answered on the far side of the Qt
-boundary, where ``tests/tier1/test_gui_charge.py`` reaches them without a display.
-
-**One build, shared with the Geometry tab** (D2). **Build charge** is the
-Geometry tab's walk taken on to ``upto="charge"``: the same spawned child and
-the same cancel token, so the Geometry tab still shows stages 1 to 6 as they
-land and this tab shows stage 7's two halves. The payloads are read on a worker
-thread, because the reference lattice is about fifteen million nodes (WP24 D11).
-
-**Four panes** (D3). *Protonation*: a frame selector and one row per PROPKA
-group, read from the stored table (D11). *Charge map*: the export lattice as
-stored, on a diverging scale centred on zero, with the recorded worst planes
-marked (D5, D6, D8, D9). *Deployed field*: the coefficient the solve assembles,
-drawn by the render child (D7). *Conservation*: each leg against the tolerance
-its own record carries (D10). Every picture is in the model frame and says so
-(D4).
-"""
+"""The Charge tab: stage 7 as it lands, its pictures and its records (WP31)."""
 
 from __future__ import annotations
 
@@ -63,41 +43,29 @@ logger = logging.getLogger(__name__)
 __all__ = ["ChargeCanvas", "ChargeWidget"]
 
 POLL_INTERVAL_MS = 100
-"""How often the build, the view loads and the render child are polled."""
 
 PANES = ("Protonation", "Charge map", "Deployed field", "Conservation")
-"""The tab's panes, in order (D3)."""
 
 
 class ChargeCanvas(GeometryCanvas):
-    """The charge map: the lattice's picture, with the recorded worst planes across it (D9).
-
-    A :class:`GeometryCanvas` showing one image and no editor, plus a dashed
-    horizontal line at each plane's ``z``, labelled as the record names it.
-    """
-
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
         self._planes: tuple[tuple[str, float], ...] = ()
 
     def show_charge(self, picture: ChargeMap) -> None:
-        """Show the map and mark its planes."""
         self.show_image(picture.image)
         self._planes = picture.planes
         self.update()
 
     def clear(self, title: str = "", *, frame: str = MODEL_FRAME) -> None:
-        """Show nothing but a caption, and no planes."""
         self._planes = ()
         super().clear(title, frame=frame)
 
     @property
     def planes(self) -> tuple[tuple[str, float], ...]:
-        """The planes marked, ``(label, z_nm)``."""
         return self._planes
 
     def paintEvent(self, event: QtGui.QPaintEvent) -> None:
-        """Draw the picture, then each plane as a dashed line across it."""
         super().paintEvent(event)
         if not self._planes:
             return
@@ -114,21 +82,7 @@ class ChargeCanvas(GeometryCanvas):
 
 
 class ChargeWidget(QtWidgets.QWidget):
-    """The Charge tab: a stage list and four panes over stage 7's artefacts.
-
-    Parameters
-    ----------
-    editor
-        The case open for editing; whether a build is offered is read from it.
-    control
-        The build's view-model. The window passes the Geometry tab's, so the
-        two tabs share one walk (D2); a test may pass a fresh one. The tab
-        starts no walk of its own: the window starts it through the Geometry
-        tab and calls :meth:`follow` (WP32 D13).
-    """
-
     buildRequested = QtCore.Signal()
-    """Emitted when the user asks to build. The window commits and saves the case first."""
 
     def __init__(
         self,
@@ -163,7 +117,6 @@ class ChargeWidget(QtWidgets.QWidget):
         self._list.setMinimumWidth(240)
         self._panes = QtWidgets.QTabWidget()
 
-        # Protonation (D11).
         self._frame = QtWidgets.QComboBox()
         self._table = QtWidgets.QTableWidget(0, 7)
         self._table.setHorizontalHeaderLabels(
@@ -173,12 +126,10 @@ class ChargeWidget(QtWidgets.QWidget):
         self._protonation_notes = _notes()
         protonation = _pane(self._frame, self._table, self._protonation_notes)
 
-        # Charge map (D5, D6, D8, D9).
         self._canvas = ChargeCanvas()
         self._map_notes = _notes()
         charge_map = _pane(self._canvas, self._map_notes)
 
-        # Deployed field (D7).
         self._quantity = QtWidgets.QComboBox()
         self._web = QWebEngineView()
         self._web_message = QtWidgets.QLabel("no deployed field yet")
@@ -190,7 +141,6 @@ class ChargeWidget(QtWidgets.QWidget):
         self._field_notes = _notes()
         deployed = _pane(self._quantity, self._pictures, self._field_notes)
 
-        # Conservation (D10).
         self._legs = QtWidgets.QTableWidget(0, 5)
         self._legs.setHorizontalHeaderLabels(["leg", "value", "tolerance", "ratio", "where / why"])
         self._legs.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
@@ -231,17 +181,7 @@ class ChargeWidget(QtWidgets.QWidget):
         self._show_panes()
         self._show_buttons()
 
-    # -- building --------------------------------------------------------------------
-
     def follow(self, case_path: str | Path) -> bool:
-        """Show the walk the control has just started as this tab's build (D2).
-
-        Returns
-        -------
-        bool
-            Whether the case walks stage 7; if not, the tab says why and
-            follows nothing.
-        """
         document = self._case_editor.document
         try:
             planned = charge_stages(document)
@@ -258,22 +198,14 @@ class ChargeWidget(QtWidgets.QWidget):
         return True
 
     def _control_cancel(self) -> None:
-        """Cancel the build; a cancelled walk writes no artefact (§5.3.2)."""
         self._control.cancel()
 
     def _stop_render(self) -> None:
-        """Stop the render child, whose answer no longer applies."""
         if self._render is not None:
             self._render.terminate()
         self._render = None
 
     def _forget(self) -> None:
-        """Drop everything shown of the walk this tab followed: views, loads, errors, picture.
-
-        One reset for both ways a walk stops being this tab's (a new **Build
-        charge**, or a later build on the shared control), so neither can leave
-        the previous run's deployed field or diagnostics under the next one.
-        """
         self._stop_render()
         for future in self._loading.values():
             future.cancel()
@@ -286,21 +218,12 @@ class ChargeWidget(QtWidgets.QWidget):
         self._draw_problem = ""
 
     def shutdown(self) -> None:
-        """Stop everything this tab started: the walk, the render child and the view loads.
-
-        The control is cancelled whether or not the window shares it with the
-        Geometry tab: this is called as the window closes, when that tab
-        cancels the same walk too.
-        """
         self._timer.stop()
         self._control.cancel()
         self._stop_render()
         self._executor.shutdown(wait=False, cancel_futures=True)
 
-    # -- polling ---------------------------------------------------------------------
-
     def refresh(self) -> RunModel | None:
-        """Poll the build, the view loads and the render child, and show where they are."""
         model = self._control.poll()
         if self._model is None:
             self._show_buttons()
@@ -337,11 +260,6 @@ class ChargeWidget(QtWidgets.QWidget):
         return model
 
     def _landed(self, name: str, future: Future[ProtonationView | ChargeView]) -> None:
-        """Keep a loaded view and show it in the panes it fills.
-
-        Only those panes: re-showing the protonation pane when stage 7's view
-        lands would reset the frame the user has selected to frame 0.
-        """
         try:
             view = future.result()
         except Exception as error:  # the pane shows it; the tab stays usable
@@ -359,7 +277,6 @@ class ChargeWidget(QtWidgets.QWidget):
             self._show_conservation()
 
     def _maybe_draw(self, model: RunModel) -> None:
-        """Ask for the deployed field once the walk has finished and stage 7 is read."""
         if (
             self._render is not None
             or self._drawn is not None
@@ -373,7 +290,6 @@ class ChargeWidget(QtWidgets.QWidget):
         self._draw(self._charge.quantities[0])
 
     def _draw(self, quantity: ChargeQuantity) -> None:
-        """Start the render child on one deployed quantity."""
         directory = self._model.directory if self._model is not None else None
         if directory is None:
             return
@@ -386,14 +302,12 @@ class ChargeWidget(QtWidgets.QWidget):
         self._web_message.setText(f"drawing the deployed {quantity}…")
 
     def _requantity(self, index: int) -> None:
-        """Draw the other deployed quantity."""
         text = self._quantity.itemText(index)
         for quantity in get_args(ChargeQuantity):
             if quantity == text:
                 self._draw(quantity)
 
     def _drain_render(self) -> None:
-        """Load the picture the render child wrote, or keep its refusal."""
         if self._render is None:
             return
         # Liveness before the queue, as the Geometry tab drains its children.
@@ -402,7 +316,7 @@ class ChargeWidget(QtWidgets.QWidget):
         for event in events:
             if isinstance(event, RenderedCharge):
                 self._drawn = event
-                # A file URL, never ``setHtml``: the scene is megabytes (WP15 D8).
+                # A file URL, never setHtml: the scene is megabytes.
                 self._web.load(QtCore.QUrl.fromLocalFile(event.document))
                 self._pictures.setCurrentWidget(self._web)
             elif isinstance(event, RenderFailed):
@@ -421,7 +335,6 @@ class ChargeWidget(QtWidgets.QWidget):
             self._show_field()
 
     def _field_loaded(self, ok: bool) -> None:
-        """Ask the document whether it drew, as the Fields panel does."""
         if self._drawn is None:
             # A document of a walk this tab no longer follows: its answer applies to nothing.
             return
@@ -432,7 +345,6 @@ class ChargeWidget(QtWidgets.QWidget):
         self._web.page().runJavaScript(readiness_script(), self._field_answered)
 
     def _field_answered(self, answer: object) -> None:
-        """Keep the document's own account of a picture that did not draw."""
         if self._drawn is None:
             return
         try:
@@ -448,10 +360,7 @@ class ChargeWidget(QtWidgets.QWidget):
             )
         self._show_field()
 
-    # -- showing ---------------------------------------------------------------------
-
     def _show_rows(self) -> None:
-        """Bring the stage list up to date with the rows."""
         texts = [_row_text(row) for row in self._rows]
         current = [self._list.item(index).text() for index in range(self._list.count())]
         if texts != current:
@@ -459,14 +368,12 @@ class ChargeWidget(QtWidgets.QWidget):
             self._list.addItems(texts)
 
     def _show_panes(self) -> None:
-        """Show every pane from the views loaded so far."""
         self._show_protonation()
         self._show_map()
         self._show_field()
         self._show_conservation()
 
     def _show_protonation(self) -> None:
-        """Fill the protonation pane, or say why it is empty (D3, D11)."""
         index = PANES.index("Protonation")
         walks = CHARGE_STAGES[0] in self._stages.planned or self._model is None
         self._panes.setTabEnabled(index, walks)
@@ -495,7 +402,6 @@ class ChargeWidget(QtWidgets.QWidget):
         self._show_frame(0)
 
     def _show_frame(self, index: int) -> None:
-        """Show one frame's rows (D11)."""
         view = self._protonation
         if view is None or not 0 <= index < view.frames:
             return
@@ -525,7 +431,6 @@ class ChargeWidget(QtWidgets.QWidget):
         self._protonation_notes.setPlainText("\n".join(lines))
 
     def _show_map(self) -> None:
-        """Fill the charge-map pane (D5, D6, D8, D9)."""
         view = self._charge
         if view is None or view.charge is None:
             reason = self._errors.get(BUILD_UPTO, "")
@@ -558,7 +463,6 @@ class ChargeWidget(QtWidgets.QWidget):
         )
 
     def _show_field(self) -> None:
-        """Fill the deployed-field pane (D7, D8)."""
         view = self._charge
         offered = view.quantities if view is not None else ()
         current = tuple(self._quantity.itemText(index) for index in range(self._quantity.count()))
@@ -594,7 +498,6 @@ class ChargeWidget(QtWidgets.QWidget):
         self._field_notes.setPlainText("\n".join(lines))
 
     def _show_conservation(self) -> None:
-        """Fill the conservation pane (D10)."""
         view = self._charge.conservation if self._charge is not None else None
         if view is None:
             self._legs.setRowCount(0)
@@ -620,7 +523,6 @@ class ChargeWidget(QtWidgets.QWidget):
         )
 
     def _show_buttons(self) -> None:
-        """Offer exactly what applies now (D2)."""
         model = self._control.model
         in_flight = self._control.process is not None and not model.settled
         offered, reason = self._offered()
@@ -629,65 +531,51 @@ class ChargeWidget(QtWidgets.QWidget):
         self._reason.setText("" if offered else reason)
 
     def _offered(self) -> tuple[bool, str]:
-        """:func:`build_offer` of the editor's document, resolved once per document."""
         document = self._case_editor.document
         if self._offer is None or self._offer[0] is not document:
             offer = build_offer(document)
             self._offer = (document, offer.offered, offer.reason)
         return self._offer[1], self._offer[2]
 
-    # -- for tests -------------------------------------------------------------------
-
     @property
     def control(self) -> RunControl:
-        """The build's view-model."""
         return self._control
 
     @property
     def rows(self) -> tuple[StageRow, ...]:
-        """The stage list as last shown."""
         return self._rows
 
     @property
     def canvas(self) -> ChargeCanvas:
-        """The charge map."""
         return self._canvas
 
     @property
     def panes(self) -> QtWidgets.QTabWidget:
-        """The four panes."""
         return self._panes
 
     @property
     def protonation_table(self) -> QtWidgets.QTableWidget:
-        """The protonation pane's table."""
         return self._table
 
     @property
     def conservation_table(self) -> QtWidgets.QTableWidget:
-        """The conservation pane's legs."""
         return self._legs
 
     @property
     def drawn(self) -> RenderedCharge | None:
-        """The deployed field last drawn."""
         return self._drawn
 
     @property
     def build_button(self) -> QtWidgets.QPushButton:
-        """**Build charge**."""
         return self._build
 
     def reason(self) -> str:
-        """Return why **Build charge** is not offered, or ``""``."""
         return str(self._reason.text())
 
     def status(self) -> str:
-        """Return the message the tab is showing."""
         return str(self._status.text())
 
     def notes(self, pane: str) -> str:
-        """Return the text under one pane, by its title."""
         widget = {
             "Protonation": self._protonation_notes,
             "Charge map": self._map_notes,
@@ -698,7 +586,6 @@ class ChargeWidget(QtWidgets.QWidget):
 
 
 def _notes() -> QtWidgets.QPlainTextEdit:
-    """Return a read-only text area for a pane's figures."""
     notes = QtWidgets.QPlainTextEdit()
     notes.setReadOnly(True)
     notes.setMaximumHeight(200)
@@ -706,10 +593,6 @@ def _notes() -> QtWidgets.QPlainTextEdit:
 
 
 def _pane(*widgets: QtWidgets.QWidget) -> QtWidgets.QWidget:
-    """Return a pane stacking ``widgets`` top to bottom, the last but one stretching.
-
-    The last is always the pane's notes; the one above it is the picture or table.
-    """
     pane = QtWidgets.QWidget()
     layout = QtWidgets.QVBoxLayout(pane)
     stretching = len(widgets) - 2
@@ -719,7 +602,6 @@ def _pane(*widgets: QtWidgets.QWidget) -> QtWidgets.QWidget:
 
 
 def _row_text(row: StageRow) -> str:
-    """One line of the stage list: title, status and the hash's head."""
     status = "from the store" if row.status == "cached" else row.status
     head = f" {row.hash[:12]}" if row.hash else ""
     return f"{row.number}. {row.title} — {status}{head}"

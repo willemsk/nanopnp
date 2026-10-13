@@ -1,46 +1,4 @@
-"""The packaging probe: the binary payloads of RSK-13, in one process.
-
-RSK-13 is "desktop packaging defeated by a binary dependency", and §8.2
-criterion 4 asks for "a trivial PySide6 and NGSolve ``webgui`` application" that
-"builds into a working double-clickable bundle on Windows". Amendment A4 says how
-that is discharged: a gated ``windows-latest`` job builds this module into a
-one-dir PyInstaller bundle on every push and launches it headlessly, and the
-author's double-click closes the criterion.
-
-**The probe is a detector, not a demonstration.** It carries every payload the
-real shell will — Qt's widgets *and* Qt WebEngine, the compiled NGSolve and
-Netgen extensions, and the ``ngsolve.webgui`` scene generator — because a probe
-omitting WebEngine would retire RSK-13 without exercising the dependency most
-likely to defeat packaging (ADR-004's packaging NOTE, §8.2.1 A4) — and the
-geometry pipeline's compiled readers, contour extraction, polygon checks and the
-optional Gmsh backend, and PDB2PQR and PROPKA, each exercised once. :data:`PAYLOADS`
-names that set, and ``tests/tier1/test_gui_probe.py`` reads this module's own
-import statements to assert the two cannot drift apart.
-
-**Every payload import is deferred.** ``PySide6.QtWidgets`` does not import at all on a
-machine without the GL libraries (`.knowledge/07-software-stack.md` §5), and
-``ngsolve`` costs ~370 ms; so no payload is imported at module scope, only the
-standard library and ``nanopnp.core``, and the
-Tier-1 test that reads :data:`PAYLOADS` runs on the push gate where neither can
-be imported.
-
-**It is a program entry point, so it prints.** ``nanopnp.cli`` states the rule — diagnostics to
-standard error, the command's own result to standard output, and no :func:`print` outside a shell's
-own output. ``nanopnp-probe`` is such a shell: the ``--selftest`` report *is* its result, and it is
-what the continuous-integration job's log shows.
-
-**What ``--selftest`` establishes, and what it does not.** It establishes that
-every payload imported, that a ``QApplication``, a ``QMainWindow`` and a
-``QWebEngineView`` constructed, that a real ``ngsolve.webgui`` scene was
-generated and loaded into the view as a file, that the **renderer shipped with
-the package** reached the page with no network (WP15 OQ-1), and that the CON-11
-licence notice travelled with the bundle. A renderer missing from the bundle
-fails the selftest: it is a payload the viewer cannot draw without, and a bundle
-that drops it is RSK-13's failure exactly. It does not establish that the scene
-*rendered* — a headless runner has no GPU for WebGL — so whether the scene
-initialised is reported and not gated. Rendering is a human observation, which is
-why criterion 4 still ends at the author's double-click.
-"""
+"""The packaging probe: the binary payloads of RSK-13, in one process."""
 
 from __future__ import annotations
 
@@ -95,61 +53,13 @@ PAYLOADS: tuple[str, ...] = (
     "pdb2pqr",
     "propka",
 )
-"""The binary payloads the bundle must carry, named by §8.2.1 amendment A4.
-
-Five are the geometry pipeline's compiled readers and meshers (WP24 D16, D17):
-stage 1's two structure readers, stage 4's contour extraction and polygon
-checks, and the optional Gmsh backend (§8.2.2 B8). Each is **exercised** by
-:func:`exercise_payloads`, not only imported: RSK-13's failure is an extension
-that imports and then cannot load the library it wraps.
-
-The last two are stage 7's protonation (WP31 D14). They are pure Python, so what
-can defeat the bundle is not a shared library but a data tree found through
-``Path(__file__).parent``: PDB2PQR's force-field files and PROPKA's parameter
-file. The exercise protonates a shipped fragment at two pH values, which only
-works if both trees travelled.
-
-Not a list this module keeps beside its code: ``tests/tier1/test_gui_probe.py``
-parses the import statements below and asserts the set they name is exactly this
-one, so a payload dropped from the probe fails Tier 1 rather than quietly
-narrowing what the bundle proves.
-"""
 
 LICENCE_NOTICE_FILENAME = "LICENSES-BUNDLE.md"
-"""The CON-11 notice, collected into the bundle beside the executable."""
 
 SELFTEST_TIMEOUT_MS = 60_000
-"""How long ``--selftest`` waits for the web view's document load.
-
-Generous because a cold Qt WebEngine start on a CI runner is slow, and the wait
-is not what the test is about: every payload has already been imported and
-constructed by the time it begins.
-"""
 
 
 def licence_notice() -> Path:
-    """Return the path of the bundle's licence notice.
-
-    Searched where PyInstaller puts a collected data file first, then beside the
-    installed package, then in the repository, so that the probe reads the same
-    notice whether it was launched from the bundle, from a wheel or from a
-    checkout. ``nanopnp-probe`` is a declared console script, so the wheel
-    location is not optional: without it the entry point would raise for every
-    installation that is not a source tree.
-
-    Returns
-    -------
-    Path
-        The notice.
-
-    Raises
-    ------
-    FileNotFoundError
-        If it is in neither place, naming both. A bundle without it would be
-        distributed in breach of CON-11, which is a packaging defect the probe
-        is the right thing to detect — so ``--selftest`` fails on it rather than
-        showing a window with an empty licence pane.
-    """
     candidates = [
         # PyInstaller's extraction root, set on the frozen executable only.
         Path(getattr(sys, "_MEIPASS", sys.prefix)) / LICENCE_NOTICE_FILENAME,
@@ -169,8 +79,6 @@ def licence_notice() -> Path:
 
 
 class PayloadError(RuntimeError):
-    """A payload imported but did not work, or did not import; the message names it."""
-
     def __init__(self, payload: str, cause: BaseException) -> None:
         self.payload = payload
         super().__init__(f"payload {payload!r} failed: {type(cause).__name__}: {cause}")
@@ -186,32 +94,20 @@ _THREE_ATOMS = (
     )
     + "END\n"
 )
-"""A three-atom PDB: the smallest structure both stage-1 readers accept."""
 
 
+# GLU 18 to LEU 26 of 2WCD chain A, as deposited; a shipped file, because PDB2PQR fetches a path
+# that is not a file from rcsb.org.
 FRAGMENT = "2wcd-a-18-26"
-"""The structure the protonation exercise reads, through :func:`~nanopnp.core.paths.structure_file`.
 
-``GLU 18`` to ``LEU 26`` of 2WCD chain A, heavy atoms as deposited, written by
-the stage's own :func:`~nanopnp.charge.protonation.frame_pdb`. A shipped file,
-because PDB2PQR fetches a path that is not a file from rcsb.org.
-"""
-
+# Q_net per pH (.knowledge/07 section 3): three acids and both termini, neutral at pH 2 and three
+# carboxylates charged at pH 8; only PROPKA moves them, so equal charges mean nothing titrated.
 FRAGMENT_Q_NET_E: dict[float, float] = {2.0: 0.0, 8.0: -3.0}
-"""``Q_net`` of :data:`FRAGMENT` at each pH, in e (`.knowledge/07` section 3, WP27).
-
-Three acids and both termini: everything is neutral at pH 2, and the three
-carboxylates are charged at pH 8 (PDB2PQR never applies a terminal pKa). Two
-values rather than one, because only PROPKA moves them: without a titration
-method the two pH values give equal charges.
-"""
 
 Q_NET_INTEGER_E = 1e-6
-"""How far each ``Q_net`` may be from its integer, the stage's own gate (WP27 D9)."""
 
 
 def _exercise_mdanalysis(structure: Path) -> str:
-    """Read the three-atom structure with MDAnalysis."""
     import MDAnalysis
 
     atoms = MDAnalysis.Universe(str(structure)).atoms.n_atoms
@@ -221,7 +117,6 @@ def _exercise_mdanalysis(structure: Path) -> str:
 
 
 def _exercise_gemmi(structure: Path) -> str:
-    """Read the three-atom structure with gemmi."""
     import gemmi
 
     atoms = gemmi.read_structure(str(structure))[0].count_atom_sites()
@@ -231,7 +126,6 @@ def _exercise_gemmi(structure: Path) -> str:
 
 
 def _exercise_skimage() -> str:
-    """Extract the contours of a 3 x 3 cross with scikit-image."""
     import skimage.measure
     import skimage.morphology
 
@@ -249,7 +143,6 @@ def _exercise_skimage() -> str:
 
 
 def _exercise_shapely() -> str:
-    """Check a triangle with Shapely, which calls into GEOS."""
     import shapely
     import shapely.geometry
 
@@ -259,7 +152,6 @@ def _exercise_shapely() -> str:
 
 
 def _exercise_gmsh() -> str:
-    """Mesh the unit square with Gmsh, and finalise it whatever happens."""
     import gmsh
 
     gmsh.initialize(interruptible=False)
@@ -280,13 +172,6 @@ def _exercise_gmsh() -> str:
 
 
 def _passes_through(error: BaseException, module_file: str | None) -> bool:
-    """Return whether ``error`` was raised through the package that holds ``module_file``.
-
-    PDB2PQR calls PROPKA and PROPKA never calls back, so a traceback that enters
-    PROPKA's directory was raised inside PROPKA, or below it in the standard
-    library on its behalf. That is how a missing ``propka.cfg``, which surfaces
-    as an exception out of PDB2PQR's run, is still named PROPKA.
-    """
     if module_file is None:
         return False
     package = Path(module_file).resolve().parent
@@ -297,29 +182,12 @@ def _passes_through(error: BaseException, module_file: str | None) -> bool:
 
 
 def _exercise_protonation(scratch: Path) -> str:
-    """Protonate :data:`FRAGMENT` at each pH of :data:`FRAGMENT_Q_NET_E`, as stage 7 does.
-
-    Through :func:`~nanopnp.charge.protonation.run_pdb2pqr`, the stage's own
-    driver, so the arguments, the logging and the Python 3.14 PROPKA fallback are
-    the ones a run uses. Settings are ``Charge()``'s defaults with only ``ph``
-    set: the probe writes no force field or titration method of its own (D14).
-
-    Raises
-    ------
-    PayloadError
-        Naming PROPKA when it does not import, when the failure was raised inside
-        PROPKA's own code, as a missing ``propka.cfg`` is, or when the two pH
-        values give equal charges:
-        PDB2PQR ran, and nothing titrated. Any other failure is raised as it
-        came, and the caller names PDB2PQR.
-    """
     import pdb2pqr
 
     try:
         import propka
     except ImportError as error:
-        # Named by the import system rather than by a literal here (D16): a
-        # missing PROPKA is PROPKA's failure, not PDB2PQR's.
+        # Named by the import system: a missing PROPKA is PROPKA's failure, not PDB2PQR's.
         raise PayloadError(error.name or pdb2pqr.__name__, error) from error
 
     from nanopnp.charge.pqr import read_pqr
@@ -368,30 +236,6 @@ def _exercise_protonation(scratch: Path) -> str:
 
 
 def exercise_payloads(only: Collection[str] | None = None) -> dict[str, str]:
-    """Exercise each geometry and protonation payload once, and report what each did.
-
-    WP24 D17 for the geometry payloads, WP31 D14 for PDB2PQR and PROPKA.
-
-    Parameters
-    ----------
-    only
-        The exercises to run, by the payload each is keyed on; all of them by
-        default. PDB2PQR's exercise covers PROPKA too. A test selects one where
-        another payload's library is absent from the machine (Gmsh needs
-        ``libGLU``).
-
-    Returns
-    -------
-    dict of str to str
-        Payload to a one-line account of what it did.
-
-    Raises
-    ------
-    PayloadError
-        Naming the first payload that failed to import or to work. An extension
-        that imports and then cannot load its library is RSK-13's failure, so
-        importing alone would prove nothing.
-    """
     report: dict[str, str] = {}
     with tempfile.TemporaryDirectory(prefix="nanopnp-probe-") as scratch:
         structure = Path(scratch) / "three-atoms.pdb"
@@ -417,13 +261,6 @@ def exercise_payloads(only: Collection[str] | None = None) -> dict[str, str]:
 
 
 def payload_versions() -> dict[str, str]:
-    """Return the resolved version of every payload, importing each of them.
-
-    Returns
-    -------
-    dict of str to str
-        Library name to version string, in the order a reader wants them.
-    """
     import netgen
     import ngsolve
     from PySide6 import QtCore
@@ -439,23 +276,12 @@ def payload_versions() -> dict[str, str]:
 
 
 def _pyside_version() -> str:
-    """Return the PySide6 version string."""
     import PySide6
 
     return str(PySide6.__version__)
 
 
 def scene_document() -> Path:
-    """Write the host document for a trivial scene and return its path.
-
-    A unit-square mesh, coarse enough to be instant: the scene is here to make
-    ``ngsolve.webgui`` and the compiled meshers part of what the bundle has to
-    carry, not to show anything about a nanopore. The document is the viewer's
-    own (:func:`nanopnp.gui.render.host_document`), loading the shipped renderer,
-    and it is written to a file because a ``setHtml`` page has no ``file:``
-    origin to load that renderer from — the same reason the viewer loads a file
-    (WP15 D9).
-    """
     import ngsolve
     from netgen.occ import unit_square
     from ngsolve.webgui import Draw
@@ -477,21 +303,6 @@ def scene_document() -> Path:
 
 
 def build_window() -> QMainWindow:
-    """Return the probe's window: the scene, the versions and the licence notice.
-
-    Returns
-    -------
-    QMainWindow
-        Not shown; the caller decides. ``loadFinished`` on the web view is the
-        signal ``--selftest`` waits for, reached through
-        ``window.findChild(QWebEngineView)``.
-
-    Raises
-    ------
-    FileNotFoundError
-        If the licence notice did not travel with the bundle; see
-        :func:`licence_notice`.
-    """
     from PySide6 import QtCore, QtWidgets
     from PySide6.QtWebEngineWidgets import QWebEngineView
 
@@ -520,23 +331,6 @@ def build_window() -> QMainWindow:
 
 
 def _selftest(application: QApplication, window: QMainWindow) -> int:
-    """Construct the window offscreen, wait for its document load, and report.
-
-    Returns
-    -------
-    int
-        ``0`` once the window has been built and, if the document loaded, its
-        renderer was there; ``1`` if the document loaded **without** the
-        renderer. Every payload imported and every object constructed before this
-        is reached, and those are what RSK-13 is about; the renderer is a payload
-        too, now that it ships with the package, and the readiness probe is the
-        only thing that can see it (``loadFinished`` is reached without it). A
-        document load that does not complete, and a scene that does not
-        initialise, are reported on standard error rather than failed, because Qt
-        WebEngine's rasteriser on a headless runner is not this project's
-        dependency; §8.2.1 A4's criterion is closed by the author's double-click
-        either way.
-    """
     from PySide6 import QtCore
     from PySide6.QtWebEngineWidgets import QWebEngineView
 
@@ -598,20 +392,6 @@ def _selftest(application: QApplication, window: QMainWindow) -> int:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """Run the probe.
-
-    Parameters
-    ----------
-    argv
-        Command-line arguments, defaulting to ``sys.argv[1:]``.
-
-    Returns
-    -------
-    int
-        ``0`` on success. A missing payload raises out of here, and the frozen
-        executable's traceback is the diagnostic — which is exactly what RSK-13
-        wants the CI job to print.
-    """
     parser = argparse.ArgumentParser(
         prog="nanopnp-probe",
         description=(
@@ -629,9 +409,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     arguments = parser.parse_args(argv)
 
     if arguments.selftest:
-        # The geometry and protonation payloads first, each exercised once: a
-        # bundle that cannot read a structure, mesh a square or protonate a
-        # fragment fails naming the payload, before Qt.
+        # The geometry and protonation payloads first: a bundle that cannot use one fails naming it,
+        # before Qt.
         try:
             exercised = exercise_payloads()
         except PayloadError as error:
@@ -642,8 +421,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         # Set before QApplication, and only for the selftest: a user who
         # double-clicks the bundle wants the platform's own plugin.
         os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-        # Qt WebEngine on a headless runner has no GPU to talk to; without this
-        # its Chromium child aborts before the document load begins.
+        # Qt WebEngine on a headless runner has no GPU; without this its Chromium child aborts
+        # before the load.
         os.environ.setdefault("QTWEBENGINE_CHROMIUM_FLAGS", "--disable-gpu --no-sandbox")
 
     from PySide6 import QtWidgets
