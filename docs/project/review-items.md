@@ -164,7 +164,7 @@ change to the charge stage's key would pass it.
 spacing off in its last bits. `charge/stage.py` works around it by depositing the grid as re-read;
 the root fix belongs in `density/grid.py`.
 
-**Resolves it.** WP44, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
+**Resolves it.** WP46, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
 
 ### REV-15 — Example 05 quotes #SBATCH directives as shell words
 
@@ -175,7 +175,7 @@ through `shlex.quote` into `#SBATCH` lines. sbatch does not read a directive as 
 value that needs quoting does not reach it as written; the review of PR #34 confirmed the finding
 and left it unfixed.
 
-**Resolves it.** WP44, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
+**Resolves it.** WP46, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
 
 ### REV-16 — A salt sweep regenerates an identical mesh at each concentration
 
@@ -185,7 +185,7 @@ and left it unfixed.
 longer changes, each concentration of a sweep re-meshes an identical mesh. Warm starts are
 unaffected.
 
-**Resolves it.** WP44, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
+**Resolves it.** WP46, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
 
 ### REV-17 — A warm start is gated on free prose in the stabilisation provenance
 
@@ -205,7 +205,7 @@ start. It fails closed.
 **Measured.** Job-array members generate and `put` the same stage 1–6 keys at the same time. Whether
 that is safe depends on how atomic `Store.put` is, which has not been measured.
 
-**Resolves it.** WP44, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
+**Resolves it.** WP46, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
 
 ### REV-19 — A zero-frame trajectory raises a bare IndexError
 
@@ -215,7 +215,7 @@ that is safe depends on how atomic `Store.put` is, which has not been measured.
 than a refusal naming the file (QR-12). Two Cα with the same `(resid, icode)` in one chain also
 overwrite each other in `per_chain`.
 
-**Resolves it.** WP44, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
+**Resolves it.** WP46, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
 
 ### REV-20 — The desktop shell has no multiprocessing.freeze_support
 
@@ -260,7 +260,7 @@ that fit both ions, not per-ion bounds.
 **Measured.** The per-point sampler rebuild was fixed by `FieldSampler.shared`; whether the
 SI-expression building is still duplicated was not checked.
 
-**Resolves it.** WP44, the small fixes, which measures the duplication first and removes it if it is there (§8.2.9 I2; renumbered by §8.2.10 J1).
+**Resolves it.** WP46, the small fixes, which measures the duplication first and removes it if it is there (§8.2.9 I2; renumbered by §8.2.10 J1).
 
 ### REV-25 — A post stage run without a solve writes scratch to the default store
 
@@ -269,7 +269,7 @@ SI-expression building is still duplicated was not checked.
 **Measured.** A library caller invoking `QoIStage` or `ReportStage` with no upstream `solve` sends
 its scratch to the process-default store root.
 
-**Resolves it.** WP44, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
+**Resolves it.** WP46, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
 
 ### REV-26 — stabilisation_parameters returns an empty mapping off the coupled model
 
@@ -401,7 +401,7 @@ repository holds a logger.
 **Measured.** A density map written before the ångström convention of §8.2.2 B10 is read without
 refusal, ten times off.
 
-**Resolves it.** WP44, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
+**Resolves it.** WP46, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
 
 ### REV-41 — No prepare command, upto on reproduce, or region export
 
@@ -427,7 +427,7 @@ they do nothing.
 
 **Measured.** `chain_characters` repeats the mapping inside `AlignedEnsemble.export`.
 
-**Resolves it.** WP44, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
+**Resolves it.** WP46, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
 
 ### REV-44 — The Stern-layer test re-solves the drawn slab
 
@@ -478,7 +478,7 @@ can drift apart.
 
 **Measured.** The same `replace(AXISYMMETRIC, …)` is repeated at several call sites.
 
-**Resolves it.** WP44, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
+**Resolves it.** WP46, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
 
 ### REV-50 — _inner_wall_nm re-implements innermost_crossings
 
@@ -486,7 +486,7 @@ can drift apart.
 
 **Measured.** `_inner_wall_nm` repeats the logic of `innermost_crossings`.
 
-**Resolves it.** WP44, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
+**Resolves it.** WP46, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
 
 ### REV-51 — A redundant reopen and resolve in WP34's walk
 
@@ -494,7 +494,7 @@ can drift apart.
 
 **Measured.** A case is reopened and resolved where the resolved case is already at hand.
 
-**Resolves it.** WP44, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
+**Resolves it.** WP46, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
 
 ### REV-52 — deviations and SolveReporting are off the stage protocol
 
@@ -530,7 +530,7 @@ name and both modules (VER-45).
 
 **Measured.** Some stages fall back to `mkdtemp` for scratch rather than the store's workspace.
 
-**Resolves it.** WP44, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
+**Resolves it.** WP46, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
 
 ### REV-56 — The geometry editor's simplicity check runs on the Qt thread
 
@@ -548,7 +548,7 @@ at 600 vertices. *Seed from refusal* and a rebuild drop unsaved edits without co
 **Measured.** `structure/read.py`'s `frame_times` decodes every frame only to read its time, and no
 PBC or RMSD gate catches a chain split across the periodic box.
 
-**Resolves it.** WP44, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
+**Resolves it.** WP46, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
 
 ### REV-58 — The azimuthal reduction projects cells it then drops
 
@@ -567,7 +567,7 @@ bins with `K_j ≥ k` are kept, up to about 2× work. Correct.
 comparison, raises `MissingPlaneError` rather than saying the comparisons do not match. In-repo
 callers pass strict comparisons.
 
-**Resolves it.** WP44, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
+**Resolves it.** WP46, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
 
 ### REV-60 — UMFPACK repeats its symbolic analysis every Newton step
 
@@ -816,7 +816,7 @@ development selection: 234 s on 4 cores.
 
 **Open.** A finer rule for module-level code (a changed constant selects its readers, as a changed
 function body does) would need its own soundness argument beside WP43 Design §1. Re-measure on the
-commits of WP44 before deciding whether it is worth one.
+commits of WP46 before deciding whether it is worth one.
 
 ### REV-82 — The push gate takes over 9 minutes against its 5-minute budget
 
