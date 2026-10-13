@@ -15,7 +15,8 @@ first three from the syntax tree, through
   ``# pragma: no cover - <reason>``: the push gate requires every changed line
   of ``src/nanopnp`` to be covered, and an exclusion is a claim a reviewer reads.
 
-Checks (d) and (e) are the plans' records, in ``test_plan_records.py``.
+Check (e) is the plans' records, in ``test_plan_records.py``; (g) is ``test_plan_shape.py`` and (h)
+``test_public_docstrings.py``.
 
 Each check is shown to fire on a source substituted into the package, naming the
 file, the line and the name, so none can pass by accepting everything.

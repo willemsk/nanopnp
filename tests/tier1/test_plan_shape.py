@@ -1,7 +1,7 @@
 """VER-72 (g) — plans stay small, and the agent files, clause script and rules are in order.
 
-§8.2.11 L6 to L8. A work-package plan from WP44 on holds at most 1,500 words, at most six
-``Decisions`` rows, no ``## Design`` heading and an In brief of at most 250 words.
+§8.2.11 L6 to L8. A work-package plan from WP44 on holds at most 1,500 words before its Outcome,
+at most six ``Decisions`` rows, no ``## Design`` heading and an In brief of at most 250 words.
 """
 
 from __future__ import annotations
@@ -89,8 +89,9 @@ def _brief_problems(text: str) -> list[str]:
 
 def plan_problems(text: str) -> list[str]:
     problems = _brief_problems(text)
-    if len(text.split()) > MAX_PLAN_WORDS:
-        problems.append(f"{len(text.split())} words, over {MAX_PLAN_WORDS}")
+    planned = re.split(r"^> \*\*Outcome", text, maxsplit=1, flags=re.M)[0]
+    if len(planned.split()) > MAX_PLAN_WORDS:
+        problems.append(f"{len(planned.split())} words before the Outcome, over {MAX_PLAN_WORDS}")
     if re.search(r"^#{2,3} Design\b", text, re.M):
         problems.append("a Design heading")
     section = re.search(r"^### Decisions\n(.*?)(?=^#{1,3} )", text, re.S | re.M)
@@ -114,6 +115,12 @@ def _toy_plan(words: int = 0, decisions: int = 6, design: bool = False, brief: i
 
 def test_ver72_g_a_plan_within_the_caps_passes() -> None:
     assert plan_problems(_toy_plan(words=1000)) == []
+
+
+def test_ver72_g_the_outcome_appended_at_delivery_is_not_counted() -> None:
+    delivered = _toy_plan(words=1400) + "\n> **Outcome — measured.** " + "note " * 400
+    assert plan_problems(delivered) == []
+    assert any("over 1500" in problem for problem in plan_problems(_toy_plan(words=1501)))
 
 
 @pytest.mark.parametrize(
