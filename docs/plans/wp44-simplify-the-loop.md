@@ -1,5 +1,7 @@
 # WP44 — Simplify the loop
 
+PR: [#96](https://github.com/willemsk/nanopnp/pull/96), branch claude/friendly-maxwell-o1alsq
+
 **Status: delivered, 13 October 2026.** Inherits WP43's merged loop and the rulings of §8.2.11 L2, L3, L6, L7, L8. Tag `v0.5.0-alpha.10`.
 
 The Phase 4 plan owns the phase. `SPECIFICATION.md` governs; identifiers are pointers. This plan
