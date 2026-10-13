@@ -64,7 +64,7 @@ Every strip item: done when `same_tree.py HEAD~1` passes on its commit and the c
 
 *Compaction checkpoint: after item 8; resume from this plan and `git log`.*
 
-- [ ] 9. `src/nanopnp/mesh/`.
+- [x] 9. `src/nanopnp/mesh/`.
 - [ ] 10. `src/nanopnp/geometry/`.
 - [ ] 11. `src/nanopnp/structure/`.
 - [ ] 12. `src/nanopnp/density/`.

@@ -1,52 +1,4 @@
-"""Stage 6 of section 5.2: reading a supplied mesh, tagging it, gating it (IF-06, QR-12).
-
-Phase 1 solves on a mesh it did not build (section 8.1): ``inputs.mesh`` names a
-file, and everything the weak forms need from it arrives as *names*. That is the
-whole reason this module exists. Boundary conditions select by regular
-expression, and under the ``r``-weighted forms of section 6.2 the natural
-condition is the **free** one (NUM-06), so a mesh whose pore wall is called
-``Wall``, or ``pore_surface``, or nothing at all assembles cleanly, converges,
-and reports a current that is wrong by whatever leaks through a no-flux boundary
-that was never imposed. There is no residual for it and no solver diagnostic. The
-gate below is the only place that failure can be caught.
-
-**One route in.** Every format :mod:`nanopnp.mesh.adapter` reads lands in one
-:class:`~nanopnp.mesh.adapter.MeshData` and every mesh goes through the same
-mapping and the same gate, netgen's own ``.vol`` included. A second route that
-skipped the gate would be the hole the gate exists to close.
-
-**The vocabulary is fixed and carries no aliases** (section 5.3.1). Two names for
-one region means two regular expressions, and the day they diverge the fluid
-loses a domain silently — which is the trap
-:data:`~nanopnp.mesh.primitives.ELECTROLYTE_DOMAINS` was written to document.
-``pore`` is deliberately not a name: it reads as both the lumen fluid and the
-dielectric body, and a mesh that uses it disambiguates through the mapping.
-
-**What is required is derived from the resolved case, never listed here.** A
-constant list is wrong in both directions: it would demand ``cis``/``trans`` of a
-cylinder that has neither, and it would say nothing when a case widens
-``numerics.wall_distance.sources`` to a name no group supplies. Deriving it makes
-the abort message exactly true — *this run will select on this name, and no group
-supplies it*.
-
-The gate, in order (section 5.2.2, QR-12):
-
-1. the file exists and its format is readable;
-2. it reads into a :class:`~nanopnp.mesh.adapter.MeshData`;
-3. every file group is claimed, and every name the run selects on is supplied;
-4. every solid material has a permittivity (PHY-03);
-5. ``SICN`` and ``gamma`` per element, and the sign of the Jacobian (VER-10);
-6. ``min(r) >= 0`` over the vertices (CON-04);
-
-and only then is the NGSolve mesh built. Steps 3 to 6 are the abort surface and
-each names its own gate.
-
-**A generated mesh takes the same route** (WP21 D10, D12). Stage 6's generator
-(:mod:`nanopnp.mesh.generate`) writes the mesh it builds as MSH 4.1 and reads it
-back through :func:`ingest`, and every consumer of the mesh, stages 7, 10 and 11,
-reaches it through :func:`deployed_mesh`, which ingests the supplied file or the
-stage-6 payload and never regenerates one.
-"""
+"""Stage 6 of section 5.2: reading a supplied mesh, tagging it, gating it (IF-06, QR-12)."""
 
 from __future__ import annotations
 
@@ -170,58 +122,26 @@ _METACHARACTERS: frozenset[str] = frozenset(".*+?[](){}^$\\")
 """Characters a flat name alternation cannot contain; see :func:`_options`."""
 
 
-class MeshVocabularyError(ValueError):
-    """A supplied mesh's groups and the names this run selects on do not line up.
-
-    Carried as its own type rather than as a :class:`ValueError` so that a caller
-    driving a sweep can tell "this mesh cannot serve this case" from "this file
-    is not a mesh".
-    """
+class MeshVocabularyError(ValueError): ...
 
 
 @dataclass(frozen=True)
 class Requirement:
-    """One name selection this run will make, and the names that would satisfy it.
-
-    Parameters
-    ----------
-    purpose
-        What the selection is for, quoted in the diagnostic.
-    pattern
-        The regular expression as the run will use it.
-    options
-        The alternatives ``pattern`` names. The requirement is **disjunctive**:
-        one supplied name satisfies it. ``velocity = "wall|membrane"`` asks for
-        no-slip on the pore wall and on the bilayer, and a geometry with no
-        bilayer is not thereby wrong; a geometry with *neither* has no no-slip
-        surface at all, which is.
-    """
-
     purpose: str
     pattern: str
     options: tuple[str, ...]
 
     def satisfied_by(self, names: frozenset[str]) -> bool:
-        """Return whether any of :attr:`options` is among ``names``."""
         return bool(set(self.options) & names)
 
 
 @dataclass(frozen=True)
 class RequiredNames:
-    """Every selection this run makes, split by namespace.
-
-    Returned rather than a bare ``frozenset[str]`` because the two halves of the
-    gate need different things from it: the check needs to know which
-    alternatives count as one requirement, and the diagnostic needs to say what
-    each unsatisfied one was *for*.
-    """
-
     materials: tuple[Requirement, ...]
     boundaries: tuple[Requirement, ...]
 
     @property
     def names(self) -> frozenset[str]:
-        """Every name mentioned by any requirement, in either namespace."""
         return frozenset(
             option
             for requirement in (*self.materials, *self.boundaries)
@@ -231,7 +151,6 @@ class RequiredNames:
     def unsatisfied(
         self, materials: frozenset[str], boundaries: frozenset[str]
     ) -> tuple[Requirement, ...]:
-        """Return the requirements neither name table supplies."""
         return tuple(
             [
                 requirement
@@ -247,14 +166,6 @@ class RequiredNames:
 
 
 def _options(pattern: str) -> tuple[str, ...]:
-    """Return the alternatives of a flat ``a|b|c`` selection pattern.
-
-    The selection patterns of this codebase are alternations of literal names and
-    nothing else, which is what makes the gate expressible; a pattern carrying
-    any other regular-expression metacharacter is refused rather than guessed at,
-    because a requirement derived from a mis-parsed pattern is a gate that passes
-    for the wrong reason.
-    """
     parts = tuple(part.strip() for part in pattern.split("|"))
     if not parts or any(not part or set(part) & _METACHARACTERS for part in parts):
         raise MeshVocabularyError(
@@ -277,23 +188,6 @@ brings -- is described generically."""
 
 
 def required_names(resolved: ResolvedCase) -> RequiredNames:
-    """Return every name selection ``resolved`` will make on its mesh.
-
-    Derived from the resolved case and from the boundary vocabulary the physics
-    models are posed on (PHY-09), never from a constant list here — see the module
-    docstring.
-
-    Parameters
-    ----------
-    resolved
-        The case as :func:`nanopnp.pipeline.case.resolve` returned it.
-
-    Returns
-    -------
-    RequiredNames
-        The fluid material set, the essential boundaries of the model this case
-        names, the two electrodes individually, and the PHY-02 distance sources.
-    """
     materials = (
         Requirement(
             purpose="the fluid domains Nernst-Planck and the flow are solved on (PHY-03)",
@@ -302,11 +196,8 @@ def required_names(resolved: ResolvedCase) -> RequiredNames:
         ),
     )
 
-    # The model's own essential sets, read off the built model rather than off
-    # its name (section 5.4.3 NOTE): the potential for every shipped model, each
-    # species' concentration, and no-slip and the axis where a flow block exists.
-    # The potential is listed first, as it always has been, but it is asked for
-    # only where the model reports it: the protocol does not promise it.
+    # Read off the built model, not its name (section 5.4.3 NOTE); the potential only where
+    # the model reports it.
     essential = dict(resolved.essential_boundaries)
     potential = essential.pop(POTENTIAL, None)
     boundaries: list[Requirement] = []
@@ -318,11 +209,7 @@ def required_names(resolved: ResolvedCase) -> RequiredNames:
                 options=_options(potential),
             )
         )
-    # The bias is applied between two *named* electrodes -- ``BoundaryCF({ground:
-    # 0, driven: V})`` in ``solve/stage.py`` and in the continuation ladder -- so
-    # each of them is required on its own, and not merely as an alternative of
-    # the pattern above. ``ResolvedCase.ground`` is ``Literal["cis", "trans"]``,
-    # so this difference is always a single name and never a choice.
+    # The bias is applied between two named electrodes, so each is required on its own.
     driven = next(iter({"cis", "trans"} - {resolved.ground}))
     for name, role in ((resolved.ground, "grounded"), (driven, "driven")):
         boundaries.append(
@@ -341,10 +228,7 @@ def required_names(resolved: ResolvedCase) -> RequiredNames:
             )
         )
 
-    # Required whether or not this electrolyte's corrections read ``d``, for a
-    # model that reads the distance field at all: the sources are a case field,
-    # and a mesh that cannot supply them is not a mesh this case can run on. An
-    # ablation with every wall correction off would otherwise pass a gate the
+    # Required even with every wall correction off, so an ablation passes no gate the
     # validated configuration fails.
     if resolved.declaration.wall_distance:
         boundaries.append(
@@ -358,13 +242,6 @@ def required_names(resolved: ResolvedCase) -> RequiredNames:
 
 
 def _looks_reversed(groups: dict[str, str]) -> bool:
-    """Return whether ``groups`` was written vocabulary-first.
-
-    The one ergonomic cost of keying the mapping on the *file's* names is that a
-    reader writing it from the solver's side gets a diagnostic pointing at the
-    wrong thing — every group unclaimed, and no hint why. Two lines buy the right
-    one.
-    """
     if not groups:
         return False
     return all(key in VOCABULARY for key in groups) and not any(
@@ -375,13 +252,6 @@ def _looks_reversed(groups: dict[str, str]) -> bool:
 def _mapped(
     table: tuple[str, ...], groups: dict[str, str], vocabulary: frozenset[str], label: str
 ) -> tuple[dict[str, str], list[str], list[str]]:
-    """Return the mapping applied to one name table, and what went wrong.
-
-    A group whose own name is already a vocabulary name is claimed by that fact
-    and needs no entry: the failure this gate exists to catch is a name the solver
-    does *not* speak slipping through unnoticed, and a name it does speak is not
-    one of those. Everything else must be named in ``groups``.
-    """
     applied: dict[str, str] = {}
     unclaimed: list[str] = []
     wrong_namespace: list[str] = []
@@ -400,35 +270,6 @@ def _mapped(
 
 
 def apply_groups(data: MeshData, groups: dict[str, str]) -> tuple[MeshData, dict[str, str]]:
-    """Map a mesh's own group names onto the vocabulary (section 5.3.1, IF-06).
-
-    Parameters
-    ----------
-    data
-        The mesh as the file carries it.
-    groups
-        ``inputs.mesh.groups``: ``{group name in the file: vocabulary name}``.
-        Many-to-one is expected — a CAD export routinely splits one physical wall
-        into several curves — and is merged by
-        :meth:`~nanopnp.mesh.adapter.MeshData.renamed`. The mapping is flat while
-        the mesh has two namespaces, so a key naming both a domain and a boundary
-        group maps both; the target is checked against the namespace it lands in.
-
-    Returns
-    -------
-    MeshData
-        The mesh with both name tables in the vocabulary.
-    dict
-        The mapping actually applied, ``{file name: vocabulary name}``, including
-        the identities. Recorded in the FR-25 manifest, because "which of the
-        file's groups became the pore wall" is not recoverable from the result.
-
-    Raises
-    ------
-    MeshVocabularyError
-        If the mapping looks reversed, names a group the file does not carry,
-        maps a name into the wrong namespace, or leaves a group unclaimed.
-    """
     if _looks_reversed(groups):
         raise MeshVocabularyError(
             "inputs.mesh.groups reads file group -> vocabulary name, and this mapping looks "
@@ -476,23 +317,6 @@ def apply_groups(data: MeshData, groups: dict[str, str]) -> tuple[MeshData, dict
 
 
 def check_names(data: MeshData, required: RequiredNames, *, where: str) -> None:
-    """Abort unless every selection ``required`` makes is supplied by ``data``.
-
-    Parameters
-    ----------
-    data
-        The mesh **after** :func:`apply_groups`, so its names are vocabulary names.
-    required
-        As :func:`required_names` returned it.
-    where
-        Named in the diagnostic; the mesh file, ordinarily.
-
-    Raises
-    ------
-    MeshVocabularyError
-        Naming every unsatisfied requirement, what it was for, and the names the
-        mesh does carry (QR-12).
-    """
     unsatisfied = required.unsatisfied(frozenset(data.materials), frozenset(data.boundaries))
     if not unsatisfied:
         return
@@ -515,44 +339,6 @@ def check_solid_permittivities(
     model: str | None = None,
     solids: bool = True,
 ) -> None:
-    """Abort unless every solid domain of ``data`` has a permittivity (PHY-03, QR-12).
-
-    For a model that carries no solids (``solids`` false) any solid domain at
-    all aborts, the exclusion shell included, naming the model: its screening
-    term is posed on all of Omega, so a solid would screen as if it held ions,
-    and asking for a ``physics.solid_permittivities`` entry the case would then
-    refuse is no advice (section 5.3.1 NOTE on a solid without a permittivity).
-
-    Poisson is solved over the whole domain, so a solid with no entry falls back
-    to the electrolyte's ``eps_r`` — about 24 times too large in a protein or a
-    bilayer, and a plausible wrong answer with no solver diagnostic. The
-    exception is :data:`PERMITTIVITY_EXEMPT`, whose members take the fluid's
-    ``eps_r`` deliberately.
-
-    On an **ingested** mesh this aborts, where
-    :meth:`nanopnp.physics.models.CoupledModel` only warns: the benchmark
-    geometries' material names are written by this codebase and covered by tests,
-    and an ingested mesh's are not. The asymmetry is section 5.3.1's.
-
-    Parameters
-    ----------
-    data
-        The mesh after :func:`apply_groups`.
-    solid_permittivities
-        ``physics.solid_permittivities`` from the case.
-    where
-        Named in the diagnostic.
-    model
-        ``physics.model``, named in the diagnostic of a model without solids.
-    solids
-        Whether that model carries solid materials, from its declaration.
-
-    Raises
-    ------
-    MeshVocabularyError
-        Naming every solid material with no entry, and the reference values; or,
-        for a model without solids, naming the model and every solid domain.
-    """
     if not solids:
         present = sorted(name for name in data.materials if name not in FLUID_MATERIALS)
         if present:
@@ -582,26 +368,6 @@ def check_solid_permittivities(
 
 
 def exclusion_deviations(materials: Iterable[str]) -> tuple[ContributedDeviation, ...]:
-    """Return the FR-25 deviation an ``exclusion`` material contributes, if any.
-
-    Module-level, and taking the material names rather than a mesh, because two
-    callers need the same sentence from different things in hand:
-    :meth:`IngestedMesh.deviations` has the ingested mesh, and
-    :meth:`MeshStage.deviations` has only the stage-6 artefact — whose
-    ``materials`` parameter is exactly this list, so the driver need not ingest
-    and gate the mesh a second time to learn what it already recorded.
-
-    Parameters
-    ----------
-    materials
-        The mesh's material names, in the project vocabulary.
-
-    Returns
-    -------
-    tuple of ContributedDeviation
-        Empty unless a member of
-        :data:`~nanopnp.mesh.primitives.PERMITTIVITY_EXEMPT` is present.
-    """
     if not set(materials) & PERMITTIVITY_EXEMPT:
         return ()
     return (
@@ -620,29 +386,6 @@ def exclusion_deviations(materials: Iterable[str]) -> tuple[ContributedDeviation
 
 @dataclass(frozen=True)
 class IngestedMesh:
-    """A supplied mesh that has passed every gate, and what the gates measured.
-
-    Returned instead of the bare NGSolve mesh because the artefact and the FR-25
-    manifest both need what the gates already computed — the content hash, the
-    quality statistics, the mapping actually applied — and recomputing them would
-    mean reading the file twice and could give two different answers.
-
-    Parameters
-    ----------
-    data
-        The mapped, gated mesh.
-    quality
-        The VER-10 report over it.
-    source
-        The file it came from.
-    source_hash
-        That file's sha256, recorded for provenance and deliberately *outside*
-        the artefact key: a mesh rewritten with a different header is the same
-        mesh (section 5.3.2).
-    applied
-        ``{file group name: vocabulary name}``, identities included.
-    """
-
     data: MeshData
     quality: QualityReport
     source: Path
@@ -651,30 +394,18 @@ class IngestedMesh:
 
     @property
     def content_hash(self) -> str:
-        """The mesh's identity: its canonical vertices, connectivity and tags."""
         return self.data.content_hash
 
     @cached_property
     def mesh(self) -> Mesh:
-        """The NGSolve mesh, built once on first use."""
         from nanopnp.mesh.adapter import to_ngsolve
 
         return to_ngsolve(self.data)
 
     def deviations(self) -> tuple[ContributedDeviation, ...]:
-        """Return the departures from the validated model this mesh carries.
-
-        One, and no case-file switch selects it: a mesh presenting the
-        ``exclusion`` material puts an ion-exclusion shell into a model that has
-        none. ePNP-NS carries no explicit Stern layer, so its presence is a
-        deviation and is recorded as one (§5.3.1 NOTE, FR-25) — reported from
-        here rather than from stage 7 because a run may carry such a mesh and
-        supply no field at all.
-        """
         return exclusion_deviations(self.data.materials)
 
     def summary(self) -> dict[str, object]:
-        """Return what the manifest's geometry-and-mesh group records (FR-25)."""
         return {
             "source": self.source.name,
             "source_sha256": self.source_hash,
@@ -686,17 +417,6 @@ class IngestedMesh:
 
 
 def _source_path(supplied: SuppliedArtefact) -> Path:
-    """Return the mesh file the case names, checked.
-
-    Raises
-    ------
-    UnsupportedCaseSection
-        If the mesh is named by store hash rather than by path: reading it from
-        the store is REV-62, deferred to v0.6 (``resolve`` refuses it earlier with
-        the same text; this is the guard for a stage invoked directly).
-    FileNotFoundError
-        If the file is not there.
-    """
     if supplied.path is None:
         raise stored_artefact_refused("mesh")
     if not supplied.path.is_file():
@@ -706,30 +426,6 @@ def _source_path(supplied: SuppliedArtefact) -> Path:
 
 
 def ingest(supplied: SuppliedArtefact, resolved: ResolvedCase) -> IngestedMesh:
-    """Read, map and gate the mesh a case supplies (IF-06, QR-12, VER-10, VER-27).
-
-    The six steps of the module docstring, in order. Nothing downstream of this
-    function checks a name again.
-
-    Parameters
-    ----------
-    supplied
-        ``inputs.mesh``: the path, the optional declared format, and the mapping.
-    resolved
-        The resolved case, which is what says which names this run selects on.
-
-    Returns
-    -------
-    IngestedMesh
-        The gated mesh, its quality report and the mapping applied.
-
-    Raises
-    ------
-    MeshVocabularyError
-        On any naming failure (steps 3 and 4).
-    nanopnp.mesh.quality.MeshQualityError
-        On a sliver, an inverted element or a negative radius (steps 5 and 6).
-    """
     path = _source_path(supplied)
     where = f"the mesh {path.name!r}"
     data = read(path, format=detect_format(path, supplied.format))
@@ -771,27 +467,6 @@ MESH_PAYLOAD = "mesh"
 
 
 def deployed_mesh(resolved: ResolvedCase, generated: Artefact | None) -> IngestedMesh:
-    """Return the mesh a run solves on, ingested and gated (WP21 D12).
-
-    The one route every consumer of the mesh takes. A supplied ``inputs.mesh`` is
-    ingested; otherwise the stage-6 artefact's payload is, which is the file the
-    generator wrote. A consumer never regenerates a mesh: a second generation is
-    a second chance to disagree with the one stage 6 gated and keyed.
-
-    Parameters
-    ----------
-    resolved
-        The resolved case.
-    generated
-        The stage-6 artefact, when the caller holds one. Only read when the case
-        supplies no mesh.
-
-    Raises
-    ------
-    KeyError
-        If the case generates its mesh and no stage-6 artefact was handed down,
-        naming the stage to run first.
-    """
     if resolved.mesh is not None:
         return ingest(resolved.mesh, resolved)
     if generated is None or MESH_PAYLOAD not in generated.payload:
@@ -804,58 +479,20 @@ def deployed_mesh(resolved: ResolvedCase, generated: Artefact | None) -> Ingeste
 
 
 class MeshStage:
-    """Stage 6: a supplied mesh file, or stage 5's region, to a tagged, gated mesh.
-
-    A **supplied** mesh's identity is its **contents** — canonical vertices,
-    connectivity and tag maps — and not the file's bytes, so a mesh rewritten by
-    another tool with a different header is one store entry rather than two, and a
-    mesh whose ``wall`` group gained an edge is a different one. The cost is that
-    :meth:`key` has to read and gate the mesh: seconds, against a solve of
-    minutes, and the alternative files one mesh under two keys.
-
-    A **generated** mesh's identity is its **recipe**: stage 5's key and the
-    resolved size fields (WP21 D10). Its key is known without meshing, and its
-    content hash is recorded in the summary.
-    """
-
     name = "mesh"
 
     def __init__(self, *, workspace: Path | None = None) -> None:
-        """Build the stage.
-
-        Parameters
-        ----------
-        workspace
-            Directory the archival MSH 4.1 copy is written to before the store
-            copies it in. Defaults to a fresh directory under the store root.
-        """
         self._workspace = Path(workspace) if workspace is not None else None
 
     def describe(self) -> StageDescription:
-        """Return the registry's description of this stage (FR-27)."""
         return describe(self.name)
 
     def deviations(self, inputs: StageInputs) -> tuple[ContributedDeviation, ...]:
-        """Return the departures the supplied mesh contributes (FR-25).
-
-        Called by the driver *after* this stage's artefact is in hand and with
-        that artefact under ``inputs.upstream["mesh"]``, so the answer comes from
-        the ``materials`` parameter the artefact already records rather than from
-        a second read and quality gate of the mesh file. The same sentence
-        :meth:`IngestedMesh.deviations` returns, from the same helper.
-        """
         materials = inputs.require(self.name).parameters["materials"]
         assert isinstance(materials, list)  # MeshArtefact writes it as one
         return exclusion_deviations(str(name) for name in materials)
 
     def key(self, inputs: StageInputs) -> MeshArtefact:
-        """Return the artefact key this mesh will produce, without writing it.
-
-        Returns
-        -------
-        MeshArtefact
-            The same schema and parameters :meth:`run` returns, with no payload.
-        """
         resolved = inputs.resolved
         if resolved.generates_mesh:
             return self._recipe(inputs, resolved)
@@ -869,11 +506,6 @@ class MeshStage:
         payload: dict[str, Path] | None = None,
         summary: dict[str, object] | None = None,
     ) -> MeshArtefact:
-        """Return a generated mesh's artefact, keyed on the region and the sizes (D10).
-
-        :func:`~nanopnp.mesh.generate.sizing_parameters` is imported here for the
-        reason :meth:`_generate` gives.
-        """
         from nanopnp.mesh.generate import sizing_parameters
 
         region = inputs.require("region")
@@ -903,30 +535,6 @@ class MeshStage:
         progress: Progress | None = None,
         cancel: CancelToken | None = None,
     ) -> MeshArtefact:
-        """Ingest the mesh, write the archival copy and emit the stage-6 artefact.
-
-        Parameters
-        ----------
-        inputs
-            Carries the case, and on a case that generates its mesh the stage-5
-            ``region`` artefact.
-        progress
-            Called with a fraction in [0, 1], monotone, ending at 1.
-        cancel
-            Checked on entry and before the archival write.
-
-        Returns
-        -------
-        MeshArtefact
-            Keyed on a supplied mesh's contents or a generated mesh's recipe,
-            carrying the MSH 4.1 file as its payload and the quality statistics
-            as its summary.
-
-        Raises
-        ------
-        Cancelled
-            If ``cancel`` turns true. No artefact is written.
-        """
         resolved = inputs.resolved
         if resolved.generates_mesh:
             return self._generate(inputs, resolved, progress=progress, cancel=cancel)
@@ -948,11 +556,6 @@ class MeshStage:
         progress: Progress | None,
         cancel: CancelToken | None,
     ) -> MeshArtefact:
-        """Mesh stage 5's region, gate it, and emit the recipe-keyed artefact (D9-D11).
-
-        The generator is imported here rather than at the top: it reads its mesh
-        back through :func:`ingest`, so it imports this module.
-        """
         from nanopnp.mesh.generate import generate
 
         check_cancelled(cancel, "meshing the region")
@@ -980,7 +583,6 @@ class MeshStage:
         )
 
     def _ingest(self, inputs: StageInputs) -> IngestedMesh:
-        """Resolve the case and run the gate; shared by :meth:`key` and :meth:`run`."""
         resolved = inputs.resolved
         assert resolved.mesh is not None  # only reached for a supplied mesh
         return ingest(resolved.mesh, resolved)
@@ -988,21 +590,6 @@ class MeshStage:
     def artefact(
         self, ingested: IngestedMesh, *, payload: dict[str, Path] | None = None
     ) -> MeshArtefact:
-        """Return the artefact for an already-gated mesh, with or without its payload.
-
-        Public because stage 10 has the :class:`IngestedMesh` in hand and needs
-        its key: routing that through :meth:`key` would read and gate the same
-        file a second time, and two ingestions of one file are two chances to
-        disagree.
-
-        Parameters
-        ----------
-        ingested
-            The mesh as :func:`ingest` returned it.
-        payload
-            The archival copy, when there is one. Outside the digest either way
-            (section 5.3.2), so the key is the same with and without it.
-        """
         return MeshArtefact(
             content_hash=ingested.content_hash,
             materials=ingested.data.materials,
@@ -1013,17 +600,10 @@ class MeshStage:
         )
 
     def _write(self, ingested: IngestedMesh) -> dict[str, Path]:
-        """Write the archival MSH 4.1 copy and return the payload map (IF-06).
-
-        Written from the *mapped* mesh, so the archived file speaks the
-        vocabulary and needs no mapping to be read back — which is what makes it
-        an archive rather than a second copy of the input.
-        """
         directory = self._directory("mesh-")
         return {MESH_PAYLOAD: write_msh41(ingested.data, directory / "mesh.msh")}
 
     def _directory(self, prefix: str) -> Path:
-        """Return the workspace, or a fresh directory under the store root."""
         directory = self._workspace
         if directory is None:
             root = store_root() / WORKSPACE_DIRNAME

@@ -1,44 +1,4 @@
-"""One in-memory mesh, and every way in and out of it (IF-06, section 5.1).
-
-A mesh reaches the solver from three places — netgen's own ``.vol``, an MSH 4.1
-file written by somebody else's mesher, and the in-process geometries of
-:mod:`nanopnp.mesh.primitives` — and exactly one of those three is checked by
-anything today. :class:`MeshData` is the seam that makes one route out of the
-three: every reader lands here, every gate runs here, and nothing downstream of
-this module knows which mesher produced the arrays.
-
-**MSH 4.1 is the archival format** (IF-06), written and read through ``meshio``.
-netgen's ``read_gmsh.ReadGmsh`` is an MSH **2.2** parser — handed a 4.1 file it
-dies in ``int()`` on the entity-block header [tested] — so the reader that
-writes the archival format cannot be the one netgen ships, and the ingestion
-path never imports it (CON-10 keeps ``gmsh`` off the default path for the same
-reason, by a different argument).
-
-meshio's 4.1 writer needs entity bookkeeping that a tagged FE mesh does not
-carry, and gets it wrong quietly in two distinguishable ways [both tested,
-meshio 5.3.5]:
-
-*One cell block is one entity.* ``_write_elements`` takes the **first**
-``gmsh:geometrical`` tag of a block and writes the whole block under it, so four
-boundary groups packed into a single ``line`` block come back with all four
-physical tags equal to the first — three no-flux walls silently becoming one.
-:func:`write_msh41` therefore emits one cell block per (group, element type).
-
-*An entity that owns no node is never written.* ``_write_entities`` builds
-``$Entities`` from ``np.unique(point_data["gmsh:dim_tags"])`` alone, so an entity
-a cell block references but no node claims is omitted, and reading the file back
-raises ``KeyError`` — after the write reported success. :func:`_node_entities`
-therefore assigns each node its lowest-dimensional entity and then repairs any
-group left with none.
-
-**The content hash is taken over a canonical form, not over the arrays as
-supplied.** meshio's 4.1 reader returns nodes grouped by entity and cell blocks
-in entity order, so a write/read round trip permutes both [tested]; hashing the
-arrays in file order would make a mesh differ from itself. :meth:`MeshData.canonical`
-sorts the vertices by ``(r, z)``, renumbers the connectivity into that order,
-and sorts the elements by group name, which is invariant under everything a
-round trip does and changes the moment an edge moves group.
-"""
+"""One in-memory mesh, and every way in and out of it (IF-06, section 5.1)."""
 
 from __future__ import annotations
 
@@ -87,32 +47,13 @@ _SUFFIXES: dict[str, str] = {".msh": "gmsh", ".vol": "netgen", ".vol.gz": "netge
 """Filename suffixes recognised when ``inputs.mesh.format`` is absent."""
 
 
-class MeshFormatError(ValueError):
-    """A mesh file cannot be read: unknown format, or unreadable contents."""
+class MeshFormatError(ValueError): ...
 
 
-class MeshDataError(ValueError):
-    """A :class:`MeshData` is not a well-formed tagged mesh."""
+class MeshDataError(ValueError): ...
 
 
 def detect_format(path: Path, declared: str | None = None) -> str:
-    """Return the reader route for ``path``, ``"gmsh"`` or ``"netgen"``.
-
-    Parameters
-    ----------
-    path
-        The mesh file. Only its name is inspected.
-    declared
-        ``inputs.mesh.format`` when the case gives one; it wins over the
-        suffix, so a file named without one is still readable.
-
-    Raises
-    ------
-    MeshFormatError
-        If the declared format is not one of :data:`FORMATS`, or no format was
-        declared and the suffix is not one of :data:`_SUFFIXES`. The message
-        lists what is accepted, because the fix is one word in the case file.
-    """
     if declared is not None:
         route = FORMATS.get(declared.strip().lower())
         if route is None:
@@ -134,33 +75,6 @@ def detect_format(path: Path, declared: str | None = None) -> str:
 
 @dataclass(frozen=True)
 class MeshData:
-    """A tagged two-dimensional mesh in the ``(r, z)`` half-plane, in nm.
-
-    Parameters
-    ----------
-    vertices
-        ``(n, 2)`` float64 array of ``(r, z)`` coordinates in nm.
-    triangles
-        ``(m, 3)`` int64 array of vertex indices, counter-clockwise for a
-        positively oriented element (:mod:`nanopnp.mesh.quality` gates the sign).
-    triangle_material
-        ``(m,)`` int64 array of indices into :attr:`materials`.
-    materials
-        Domain names, in file order. The index is positional.
-    edges
-        ``(k, 2)`` int64 array of vertex indices: the boundary segments.
-    edge_group
-        ``(k,)`` int64 array of indices into :attr:`boundaries`.
-    boundaries
-        Boundary group names, in file order.
-
-    Notes
-    -----
-    Names are whatever the file said. Mapping them onto the vocabulary the weak
-    forms select on is :mod:`nanopnp.mesh.ingest`'s job and happens exactly once,
-    so that a name in a :class:`MeshData` is never half-translated.
-    """
-
     vertices: np.ndarray
     triangles: np.ndarray
     triangle_material: np.ndarray
@@ -170,13 +84,6 @@ class MeshData:
     boundaries: tuple[str, ...]
 
     def __post_init__(self) -> None:
-        """Normalise the array dtypes and reject a malformed mesh.
-
-        The dtypes are normalised rather than merely checked because they reach
-        the content hash: :func:`nanopnp.core.hashing.canonical` digests an array
-        as dtype, shape and bytes, so the same mesh read as ``int32`` and as
-        ``int64`` would otherwise be two meshes.
-        """
         import numpy as np
 
         object.__setattr__(self, "vertices", np.ascontiguousarray(self.vertices, dtype=np.float64))
@@ -194,23 +101,6 @@ class MeshData:
         self._validate()
 
     def _snap_to_axis(self) -> None:
-        """Set ``r`` to exactly zero wherever it is within :data:`TOL_NM` of it.
-
-        Netgen's OCC kernel puts axis vertices at ``r = -1.5e-15`` nm and at
-        ``+7e-16`` nm rather than at zero [tested], which is round-off in the
-        rotation the revolve applies and not a mesh that crosses the axis. Two
-        things need it snapped. The CON-04 gate in
-        :func:`nanopnp.mesh.quality.check_radii` asks for ``r >= 0`` exactly, and
-        must go on asking exactly, because the failure it is there to catch — a
-        mesh mirrored about the axis — is a *sign* error, and a gate with a
-        tolerance wide enough to pass round-off is a gate that has to justify its
-        width. And the content hash digests the coordinate bytes, so two runs of
-        the same mesher that differ only in that round-off would otherwise be two
-        meshes and two cache entries (section 5.3.2).
-
-        Snapped in the constructor rather than in the reader so that it holds for
-        every route into a :class:`MeshData`, the meshers' own included.
-        """
         import numpy as np
 
         radii = self.vertices[:, 0]
@@ -221,7 +111,6 @@ class MeshData:
             object.__setattr__(self, "vertices", vertices)
 
     def _validate(self) -> None:
-        """Raise :class:`MeshDataError` unless every array and table lines up."""
         import numpy as np
 
         if self.vertices.ndim != 2 or self.vertices.shape[1] != 2:
@@ -269,35 +158,19 @@ class MeshData:
 
     @property
     def element_count(self) -> int:
-        """Number of triangles."""
         return int(self.triangles.shape[0])
 
     @property
     def vertex_count(self) -> int:
-        """Number of vertices."""
         return int(self.vertices.shape[0])
 
     def material_of(self, name: str) -> np.ndarray:
-        """Return the boolean mask of triangles carrying the material ``name``.
-
-        Raises
-        ------
-        KeyError
-            If the mesh has no such material; the message lists the ones it has.
-        """
         if name not in self.materials:
             raise KeyError(f"no material {name!r}; the mesh carries {list(self.materials)}")
         mask: np.ndarray = self.triangle_material == self.materials.index(name)
         return mask
 
     def edges_of(self, name: str) -> np.ndarray:
-        """Return the ``(k, 2)`` edges of the boundary group ``name``.
-
-        Raises
-        ------
-        KeyError
-            If the mesh has no such boundary group.
-        """
         if name not in self.boundaries:
             raise KeyError(f"no boundary group {name!r}; the mesh carries {list(self.boundaries)}")
         rows: np.ndarray = self.edges[self.edge_group == self.boundaries.index(name)]
@@ -306,18 +179,6 @@ class MeshData:
     def renamed(
         self, *, materials: dict[str, str] | None = None, boundaries: dict[str, str] | None = None
     ) -> MeshData:
-        """Return this mesh with its name tables mapped through ``materials``/``boundaries``.
-
-        Many-to-one is the expected case — a CAD export splits one physical wall
-        into several curves — so groups that map onto the same name are merged
-        into one index and the element tags follow.
-
-        Parameters
-        ----------
-        materials, boundaries
-            ``{name in this mesh: new name}``. A name absent from the mapping is
-            kept as it is.
-        """
         import numpy as np
 
         def remap(
@@ -343,25 +204,6 @@ class MeshData:
         )
 
     def canonical(self) -> MeshData:
-        """Return this mesh in the form its content hash is taken over.
-
-        Vertices sorted by ``(r, z)`` and the connectivity renumbered into that
-        order; each triangle rotated to start at its lowest vertex, which keeps
-        its orientation and so keeps an inverted element inverted; each edge's
-        endpoints sorted, a boundary segment having no direction; elements sorted
-        by group name and then by connectivity; and both name tables sorted.
-
-        Invariant under everything an MSH round trip does to a mesh — which
-        permutes the nodes into entity order and the cell blocks with them — and
-        not invariant under anything that changes the mesh, including one edge
-        moving from one boundary group to another.
-
-        Raises
-        ------
-        MeshDataError
-            If two vertices share a location, which leaves the sorted order
-            ambiguous and means the mesh is degenerate anyway.
-        """
         import numpy as np
 
         order = np.lexsort((self.vertices[:, 1], self.vertices[:, 0]))
@@ -405,13 +247,6 @@ class MeshData:
 
     @property
     def content_hash(self) -> str:
-        """The sha256 of this mesh's canonical form, as 64 hex characters.
-
-        Over the geometry and the tagging, never over the file's bytes: a mesh
-        meshio rewrote with a different header is the same mesh and hits the
-        store, and a mesh whose ``wall`` group gained one edge is a different one
-        and misses (section 5.3.2).
-        """
         form = self.canonical()
         return content_hash(
             MESH_SCHEMA,
@@ -427,14 +262,6 @@ class MeshData:
         )
 
     def summary(self) -> dict[str, object]:
-        """Return the counts and name tables a manifest records (FR-25).
-
-        The triangle count is called ``elements`` rather than ``triangles`` so
-        that this group and :meth:`nanopnp.mesh.quality.QualityReport.summary`
-        and :func:`nanopnp.solve.continuation.mesh_report` all name it the same
-        thing; a manifest whose two mesh counts have different keys is one a
-        reader has to be told about.
-        """
         return {
             "vertices": self.vertex_count,
             "elements": self.element_count,
@@ -446,29 +273,6 @@ class MeshData:
 
 
 def read(path: Path, *, format: str | None = None) -> MeshData:
-    """Read a tagged mesh from disk.
-
-    Parameters
-    ----------
-    path
-        The mesh file.
-    format
-        ``inputs.mesh.format`` when the case gives one; otherwise the format is
-        taken from the suffix. Shadows the builtin because the case field is
-        called ``format`` and a second spelling here would be one more thing to
-        remember.
-
-    Returns
-    -------
-    MeshData
-        The mesh with the names the file gave it, untranslated.
-
-    Raises
-    ------
-    MeshFormatError
-        If the format is unknown, the file is not a two-dimensional ``(r, z)``
-        mesh, or the reader refuses it.
-    """
     route = detect_format(path, format)
     if not path.is_file():
         raise MeshFormatError(f"no mesh file at {path}")
@@ -478,15 +282,11 @@ def read(path: Path, *, format: str | None = None) -> MeshData:
 
 
 def _read_meshio(path: Path) -> MeshData:
-    """Read an MSH file through meshio, one group per distinct physical tag."""
     import meshio
     import numpy as np
 
     try:
-        # The format is named, not left to the suffix: meshio maps ``.msh`` to
-        # ANSYS *and* gmsh, tries ANSYS first, and prints that reader's refusal
-        # -- an empty line -- to standard output, which the CLI reserves for its
-        # result (IF-02 NOTE) [tested].
+        # meshio tries ANSYS first for ``.msh`` and prints an empty line to stdout (IF-02).
         mesh = meshio.read(str(path), file_format="gmsh")
     except Exception as error:  # meshio raises a dozen unrelated types
         raise MeshFormatError(f"meshio could not read {path}: {error}") from error
@@ -506,13 +306,10 @@ def _read_meshio(path: Path) -> MeshData:
     blocks: dict[str, dict[int, list[np.ndarray]]] = {"triangle": {}, "line": {}}
     for position, block in enumerate(mesh.cells):
         if block.type == "vertex":
-            # Physical points: nothing is posed on them, and gmsh writes them freely.
             _LOGGER.debug("ignoring %d %s cells in %s", len(block.data), block.type, path.name)
             continue
         if block.type not in blocks:
-            # ``from_ngsolve`` refuses the same meshes. A dropped row of quads would
-            # leave a hole whose edge takes the natural, free condition, while the
-            # wall's line elements hang on vertices no triangle uses.
+            # A dropped row of quads would leave a hole whose edge takes the free condition.
             raise MeshFormatError(
                 f"{path}: carries {len(block.data)} {block.type!r} cells; nanopnp solves on "
                 "straight-sided triangles bounded by line segments (section 5.2.2), and dropping "
@@ -566,7 +363,6 @@ def _read_meshio(path: Path) -> MeshData:
 
 
 def _read_netgen(path: Path) -> MeshData:
-    """Read a netgen ``.vol`` (or ``.vol.gz``) through NGSolve."""
     import ngsolve as ngs
 
     try:
@@ -577,18 +373,6 @@ def _read_netgen(path: Path) -> MeshData:
 
 
 def from_ngsolve(mesh: Mesh) -> MeshData:
-    """Return the arrays and tag maps of an ``ngsolve.Mesh``.
-
-    Reads the underlying ``netgen`` mesh rather than the NGSolve wrapper, because
-    that is where the name tables live. ``el.vertices[i].nr`` is **1-based**
-    there, as are ``Element2D.index`` into ``GetMaterial`` and ``Element1D.index``
-    into ``GetBCName(index - 1)`` [tested]; :func:`to_ngsolve` runs the same two
-    conventions in the opposite direction.
-
-    Several geometric edges commonly carry the same boundary name — an OCC face
-    with four ``cis`` edges gives four descriptors — and they merge here into one
-    group, which is what the forms already see: NGSolve selects on the name.
-    """
     import numpy as np
 
     ngmesh = mesh.ngmesh
@@ -635,17 +419,6 @@ def from_ngsolve(mesh: Mesh) -> MeshData:
 
 
 def to_ngsolve(data: MeshData) -> Mesh:
-    """Build an ``ngsolve.Mesh`` from ``data``, names and all.
-
-    One ``FaceDescriptor`` per material carries the domain names; one per
-    boundary group carries the boundary names, through ``SetBCName``, which is
-    **0-based** where ``Element1D(index=...)`` is **1-based**. Getting that pair
-    wrong shifts every boundary name by one — a mesh where ``wall`` is the axis,
-    and nothing raises.
-
-    The route exists because an ingested mesh has no OCC geometry to regenerate
-    itself from: the arrays are all there is.
-    """
     import ngsolve as ngs
     from netgen.meshing import Element1D, Element2D, FaceDescriptor, MeshPoint, Pnt
     from netgen.meshing import Mesh as NetgenMesh
@@ -669,35 +442,6 @@ def to_ngsolve(data: MeshData) -> Mesh:
 
 
 def write_msh41(data: MeshData, path: Path, *, binary: bool = False) -> Path:
-    """Write ``data`` as MSH 4.1, the archival mesh format (IF-06), and return the path.
-
-    Parameters
-    ----------
-    data
-        The tagged mesh.
-    path
-        Destination; its parent must exist.
-    binary
-        Whether to write the binary encoding. ASCII round-trips float64 exactly
-        [tested], so this buys size and nothing else.
-
-    Notes
-    -----
-    One cell block per group and one entity per block, because meshio writes a
-    whole block under the *first* geometrical tag it carries; every entity owns
-    at least one node, because meshio builds ``$Entities`` from the node tags
-    alone and omits an entity no node claims — which makes the file unreadable
-    by the reader that wrote it, after a write that reported success.
-
-    ``$PhysicalNames`` is written here rather than by meshio. meshio keys
-    ``field_data`` by name, and gmsh keys physical names by ``(dimension, tag)``:
-    a mesh whose ``cis`` reservoir is a domain *and* whose ``cis`` electrode is a
-    boundary — which is what :mod:`nanopnp.mesh.primitives` builds and what the
-    section 5.3.1 vocabulary asks for — loses one of the two in that dict, and
-    the name comes back as ``group-3`` [tested]. Only MSH 4.1 is written: netgen's
-    own reader is a 2.2 parser and its 2-D path is unsound besides (see
-    :func:`_read_meshio`), so a 2.2 file would exist for no reader that wants it.
-    """
     import meshio
     import numpy as np
 
@@ -734,7 +478,6 @@ def write_msh41(data: MeshData, path: Path, *, binary: bool = False) -> Path:
 
 
 def _physical_names_block(named: list[tuple[int, int, str]]) -> bytes:
-    """Return the ``$PhysicalNames`` section naming every ``(dimension, tag)``."""
     lines = [b"$PhysicalNames", str(len(named)).encode("ascii")]
     lines += [f'{dim} {tag} "{name}"'.encode() for dim, tag, name in named]
     lines.append(b"$EndPhysicalNames")
@@ -742,18 +485,6 @@ def _physical_names_block(named: list[tuple[int, int, str]]) -> bytes:
 
 
 def _insert_physical_names(path: Path, named: list[tuple[int, int, str]]) -> None:
-    """Put our own ``$PhysicalNames`` section into a file meshio has just written.
-
-    The section is ASCII in both the ASCII and the binary encodings and sits
-    between ``$EndMeshFormat`` and ``$Entities``, so this is a byte splice and
-    not a re-serialisation.
-
-    Raises
-    ------
-    MeshFormatError
-        If the file has no ``$EndMeshFormat``, which would mean meshio wrote
-        something that is not an MSH file.
-    """
     raw = path.read_bytes()
     marker = b"$EndMeshFormat\n"
     start = raw.find(marker)
@@ -764,17 +495,6 @@ def _insert_physical_names(path: Path, named: list[tuple[int, int, str]]) -> Non
 
 
 def read_physical_names(path: Path) -> dict[tuple[int, int], str]:
-    """Return ``{(dimension, tag): name}`` from a file's ``$PhysicalNames`` section.
-
-    Read here rather than taken from ``meshio.Mesh.field_data``, which is keyed by
-    name and so cannot carry the same name in two dimensions — and the section
-    5.3.1 vocabulary uses ``cis``, ``trans``, ``membrane`` and ``analyte`` as both
-    a domain name and a boundary name.
-
-    An empty mapping is a valid answer: a mesh may carry physical tags and no
-    names at all, and :func:`_read_meshio` then calls its groups ``group-<tag>``,
-    which the ingestion gate quotes back as unclaimed.
-    """
     names: dict[tuple[int, int], str] = {}
     with path.open("rb") as handle:
         for raw in handle:
@@ -796,25 +516,6 @@ def read_physical_names(path: Path) -> dict[tuple[int, int], str]:
 
 
 def _node_entities(count: int, entities: list[tuple[int, int, np.ndarray]]) -> np.ndarray:
-    """Return the ``(dim, tag)`` entity of every node, covering every entity.
-
-    meshio builds ``$Entities`` from these tags alone, so an entity no node
-    claims is dropped from the file and reading it back raises ``KeyError`` —
-    after a write that reported success [tested]. Every entity must therefore be
-    given a node of its own, and on a mesh whose every boundary node is shared
-    between two groups (a closed loop of named edges: the common case, not a
-    contrived one) a greedy assignment cannot always find one. Choosing the
-    representatives is a bipartite matching, so it is done as one, by augmenting
-    paths; the nodes left over then take their lowest-dimensional entity, which
-    is gmsh's own convention.
-
-    Raises
-    ------
-    MeshDataError
-        If no system of distinct representatives exists, which means some set of
-        groups touches fewer nodes than it has groups, or if a vertex belongs to
-        no element at all.
-    """
     import numpy as np
 
     candidates: dict[int, list[tuple[int, int]]] = {}
@@ -828,7 +529,6 @@ def _node_entities(count: int, entities: list[tuple[int, int, np.ndarray]]) -> n
     representative: dict[int, tuple[int, int]] = {}
 
     def augment(entity: tuple[int, int], seen: set[int]) -> bool:
-        """Claim a node for ``entity``, displacing a claim that can move."""
         for node in members[entity]:
             if node in seen:
                 continue

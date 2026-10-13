@@ -606,6 +606,16 @@ an unrelated reason (GPLv2+), and the two constraints agree.
   claims is omitted, and reading the file back raises `KeyError` — after the write reported success.
   Cure: assign each node its lowest-dimensional entity, then repair any group left with none.
 
+**Netgen's mesh tables mix 1-based and 0-based indices [tested].** Through `ngsolve.Mesh.ngmesh`,
+`el.vertices[i].nr`, `Element2D.index` (into `GetMaterial`) and `Element1D.index` (into
+`GetBCName(index - 1)`) are 1-based, and `FaceDescriptor.SetBCName` is 0-based. Mixing the two shifts every
+boundary name by one (`wall` becomes the axis) and nothing raises. Names survive an OCC boolean and a
+glue, so naming an embedded body's edges before the chain of position-based names leaves them alone.
+When every boundary node is shared by two groups (a closed loop of named edges), a greedy choice of one
+node per entity can fail; choose the representatives by bipartite matching with augmenting paths, then
+give each leftover node its lowest-dimensional entity, as gmsh does. Source: `mesh/adapter.py`
+(`from_ngsolve`, `to_ngsolve`, `_node_entities`), `mesh/primitives.py` (`name_edges`).
+
 **`meshio.Mesh.field_data` is keyed by name, so it cannot carry the same name in two dimensions
 [tested].** The §5.3.1 vocabulary uses `cis`, `trans`, `membrane` and `analyte` as both a domain name
 and a boundary name, which is exactly the collision. Read `$PhysicalNames` off the file and key it

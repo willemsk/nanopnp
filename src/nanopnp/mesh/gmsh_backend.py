@@ -1,43 +1,4 @@
-"""The optional Gmsh backend of ADR-002: stage 5's region meshed with the ``gmsh`` API (WP23).
-
-Reached only through stage 6's dispatch on ``numerics.mesh.backend: gmsh``
-(the ``gmsh`` entry of :mod:`nanopnp.mesh.meshers`), so ``gmsh`` is imported at
-the top: the default path never imports this module (CON-10), and a missing
-extra, or a library that fails to initialise, is refused there, naming it. The
-``gmsh`` API is called directly, never through pygmsh (CON-12, section 5.2.2).
-
-**The region is stage 5's, not Gmsh's own** (WP23 D1, D2). The glued, named
-netgen shape is read into a :class:`~nanopnp.geometry.region.RegionGraph` and
-built in Gmsh's built-in ``geo`` kernel from the shape's own coordinates: a
-point per vertex, a line or a circle arc per edge, one counter-clockwise curve
-loop and plane surface per domain, and one physical group per name. Faces share
-curves, so the mesh is conformal by construction, and every region vertex is a
-mesh node.
-
-**The size field states what netgen does implicitly** (the section 5.2.2 NOTE on
-the Gmsh backend's size field; WP23 D3, D4). Every source is a ``Distance`` and
-``Threshold`` pair giving ``h(d) = h_s + g d``, with ``g`` netgen's
-:data:`~nanopnp.mesh.sizing.GRADING`, capped at the global size:
-
-- each sized boundary of the table, at its size;
-- the boundary of each sized domain at the domain's size, the domain held to it
-  inside by a ``Constant`` field; the membrane is one of these, at its own
-  thickness, unscaled, because that is a feature of the geometry and not an
-  entry of the table;
-- each vertex whose shortest incident curve is shorter than the smallest target
-  of its incident curves, at that curve's length.
-
-The background field is their ``Min``. Without the domain boundaries, the
-reference fixture's minimum gamma is 0.3143 against VER-10's 0.3; without the
-short curves and the graded membrane it fails at ``size_scale`` 2 and 4 (WP23
-plan, Design section 2).
-
-**Process hygiene** (WP23 D6). A session this module opens reads no
-configuration file and installs no SIGINT handler, and it is finalised on the
-way out. In a session already open, the mesh is built in a model of its own,
-every option set here is restored, and the model is removed. Gmsh's messages go
-to :mod:`logging` at DEBUG, and never to standard output, which IF-02 reserves.
-"""
+"""The optional Gmsh backend of ADR-002: stage 5's region meshed with the ``gmsh`` API (WP23)."""
 
 from __future__ import annotations
 
@@ -80,25 +41,17 @@ _MODEL_IDS = itertools.count()
 """Numbers the models this module adds, so a session already open never sees a clash."""
 
 
-class GmshMeshingError(RuntimeError):
-    """Gmsh refused the region or failed to mesh it; its own log is quoted (QR-12)."""
+class GmshMeshingError(RuntimeError): ...
 
 
-class GmshInitialisationError(RuntimeError):
-    """Gmsh failed to initialise (REV-37)."""
+class GmshInitialisationError(RuntimeError): ...
 
 
 def version() -> str:
-    """Return the installed Gmsh's version, which the manifest records beside the key (D8)."""
     return str(gmsh.__version__)
 
 
 def _options(sizes: SizeTable) -> dict[str, float]:
-    """Return every option the mesh depends on, set explicitly (WP23 D5, D6).
-
-    Explicit even where the value is Gmsh's default, so that a session opened
-    elsewhere with other values meshes the same region to the same mesh.
-    """
     return {
         "General.Terminal": 0,
         "General.Verbosity": 5,
@@ -114,9 +67,7 @@ def _options(sizes: SizeTable) -> dict[str, float]:
         "Mesh.MeshSizeFromPoints": 0,
         "Mesh.MeshSizeFromCurvature": 0,
         "Mesh.MeshSizeExtendFromBoundary": 0,
-        # Gmsh's defaults, pinned so a session opened elsewhere cannot move the
-        # mesh under an unchanged key: points per curve and per circle, the
-        # perturbation of the Delaunay kernel, and the geometry's tolerance.
+        # Pinned so a session opened elsewhere cannot move the mesh under an unchanged key.
         "Mesh.MeshSizeFromParametricPoints": 0,
         "Mesh.MinimumCurvePoints": 3,
         "Mesh.MinimumCirclePoints": 7,
@@ -129,17 +80,6 @@ def _options(sizes: SizeTable) -> dict[str, float]:
 
 @contextmanager
 def _session(options: Mapping[str, float]) -> Iterator[None]:
-    """Open a session, or borrow the one open, in a model of this call's own.
-
-    On exit Gmsh's log is forwarded to :mod:`logging`, the model is removed,
-    every option is restored, the previous model is made current again, and a
-    session this call opened is finalised (WP39 D11). Each undo step is recorded
-    only once the change it reverses has been made, and they run in reverse
-    order, so a setup step that fails undoes exactly what came before it: a
-    borrowed session's own model is never removed in place of one this call
-    never added, and a session this call opened is finalised however far the
-    setup got.
-    """
     opened = not gmsh.isInitialized()
     if opened:
         try:
@@ -152,14 +92,12 @@ def _session(options: Mapping[str, float]) -> Iterator[None]:
     try:
         if opened:
             undo.append(lambda: gmsh.finalize())
-        # Silence the terminal before anything else can print.
         saved = {"General.Terminal": gmsh.option.getNumber("General.Terminal")}
         if not opened:
             undo.append(lambda: _restore_options(saved))
         gmsh.option.setNumber("General.Terminal", 0)
         if opened:
-            # Only a session opened here starts and stops the logger. A borrowed
-            # session's logger is the caller's, and so are its messages (REV-36).
+            # A borrowed session's logger is the caller's.
             gmsh.logger.start()
             undo.append(lambda: _forward(messages))
             undo.append(lambda: gmsh.logger.stop())
@@ -182,24 +120,16 @@ def _session(options: Mapping[str, float]) -> Iterator[None]:
 
 
 def _restore_options(saved: Mapping[str, float]) -> None:
-    """Set each option of a borrowed session back to the value it had."""
     for name, value in saved.items():
         gmsh.option.setNumber(name, value)
 
 
 def _forward(messages: list[str]) -> None:
-    """Forward Gmsh's log to :mod:`logging` at DEBUG, never to standard output (IF-02)."""
     for message in messages:
         logger.debug("gmsh: %s", message)
 
 
 def _undo(steps: Iterable[Callable[[], None]], propagating: BaseException | None) -> None:
-    """Run every undo step, whichever fail (REV-38).
-
-    A failure beside an error already propagating is logged at WARNING and
-    added to that error as a note, never raised over it. Without one, the first
-    failure is raised once every step has run, carrying any later ones as notes.
-    """
     first: BaseException | None = None
     for step in steps:
         try:
@@ -217,7 +147,6 @@ def _undo(steps: Iterable[Callable[[], None]], propagating: BaseException | None
 
 
 def _build(graph: RegionGraph) -> tuple[list[int], list[int], dict[str, int]]:
-    """Build the graph in the ``geo`` kernel; return the point, curve and surface tags."""
     geo = gmsh.model.geo
     points = [geo.addPoint(r, z, 0.0) for r, z in graph.vertices]
     centre = geo.addPoint(0.0, 0.0, 0.0)
@@ -243,7 +172,6 @@ def _build(graph: RegionGraph) -> tuple[list[int], list[int], dict[str, int]]:
 
 
 def _graded_curves(curves: list[int], lengths: list[float], size: float, global_nm: float) -> int:
-    """Add a source on ``curves`` at ``size``, graded at ``g`` to the global size."""
     field = gmsh.model.mesh.field
     distance = field.add("Distance")
     field.setNumbers(distance, "CurvesList", curves)
@@ -252,7 +180,6 @@ def _graded_curves(curves: list[int], lengths: list[float], size: float, global_
 
 
 def _graded_points(points: list[int], size: float, global_nm: float) -> int:
-    """Add a source on ``points`` at ``size``, graded at ``g`` to the global size."""
     field = gmsh.model.mesh.field
     distance = field.add("Distance")
     field.setNumbers(distance, "PointsList", points)
@@ -260,7 +187,6 @@ def _graded_points(points: list[int], size: float, global_nm: float) -> int:
 
 
 def _threshold(distance: int, size: float, global_nm: float) -> int:
-    """Return ``h(d) = size + g d``, capped at the global size."""
     field = gmsh.model.mesh.field
     threshold = int(field.add("Threshold"))
     field.setNumber(threshold, "InField", distance)
@@ -272,7 +198,6 @@ def _threshold(distance: int, size: float, global_nm: float) -> int:
 
 
 def _constant(surface: int, size: float, global_nm: float) -> int:
-    """Hold ``surface`` to ``size`` inside, its boundary included."""
     field = gmsh.model.mesh.field
     constant = int(field.add("Constant"))
     field.setNumbers(constant, "SurfacesList", [surface])
@@ -290,13 +215,6 @@ def size_targets(
     membrane_thickness_nm: float,
     axis_extent_nm: tuple[float, float],
 ) -> tuple[list[float | None], dict[str, float]]:
-    """Return each edge's own size and each sized domain's size (WP23 D3, D4 ii).
-
-    The edges through :func:`~nanopnp.mesh.sizing.edge_size`, the classification
-    netgen's sizes use. The domains through
-    :func:`~nanopnp.mesh.sizing.domain_size`, and the membrane at its thickness,
-    not multiplied by ``size_scale``.
-    """
     own = []
     for edge in graph.edges:
         z_mid = 0.5 * (graph.vertices[edge.start][1] + graph.vertices[edge.end][1])
@@ -317,15 +235,6 @@ def size_targets(
 def short_curve_sources(
     graph: RegionGraph, own: list[float | None], domains: Mapping[str, float], global_nm: float
 ) -> dict[float, list[int]]:
-    """Return the vertices D4 (i) restricts, grouped by the length they are restricted to.
-
-    A curve's target is the smallest of its own size, the sizes of the domains
-    it bounds and the global size. A vertex whose shortest incident curve is
-    shorter than the smallest target of its incident curves is a source at that
-    curve's length, which is what netgen's restriction by edge length does
-    without being asked (the section 5.2.2 NOTE on the Gmsh backend's size
-    field).
-    """
     target = [global_nm if size is None else min(size, global_nm) for size in own]
     for name, loop in graph.faces.items():
         size = domains.get(name)
@@ -357,7 +266,6 @@ def _size_field(
     domains: Mapping[str, float],
     global_nm: float,
 ) -> int:
-    """Add every D3-D4 source and return the ``Min`` field over them."""
     components: list[int] = []
     by_size: dict[float, list[int]] = {}
     for index, size in enumerate(own):
@@ -389,11 +297,6 @@ def _size_field(
 
 
 def _to_mesh_data() -> MeshData:
-    """Return the current model's mesh as a :class:`MeshData`, named by physical group (D7).
-
-    Only the nodes an element uses are kept, in Gmsh's node order; the arc
-    centre is a model point and no element's node.
-    """
     import numpy as np
 
     tags, coordinates, _ = gmsh.model.mesh.getNodes()
@@ -449,33 +352,6 @@ def mesh_region(
     membrane_thickness_nm: float,
     axis_extent_nm: tuple[float, float],
 ) -> MeshData:
-    """Mesh stage 5's region with Gmsh under the section 5.2.2 table (WP23 D2-D7).
-
-    Parameters
-    ----------
-    graph
-        The region, as :func:`~nanopnp.geometry.region.region_graph` read it.
-    wall_h_nm
-        The resolved wall size; ``None`` leaves the wall to the other fields.
-    sizes
-        The table, ``size_scale`` applied.
-    membrane_thickness_nm
-        The membrane's size (D4 ii), unscaled.
-    axis_extent_nm
-        The pore's axial extent, over which the axis-in-pore size applies.
-
-    Returns
-    -------
-    MeshData
-        Named by the region's physical groups: the materials are its domains and
-        the boundaries its edge names, each sorted. Not yet gated: stage 6 writes
-        it and reads it back through the gates as netgen's mesh is (D7).
-
-    Raises
-    ------
-    GmshMeshingError
-        If Gmsh raised, quoting the error and the last of its log.
-    """
     own, domains = size_targets(
         graph,
         wall_h_nm,

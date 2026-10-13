@@ -1,39 +1,4 @@
-"""Analytic benchmark and spike geometries in the (r, z) half-plane.
-
-Phase 0 works on shapes that have closed-form solutions or a published target:
-a planar slab for Gouy-Chapman, a cylinder for Debye-Hueckel, and the analytic
-cylindrical pore through a membrane for the coupled solve and the Maxwell-Hall
-access conductance. The geometry pipeline that builds a pore from a density
-contour is Phase 2 (FR-07 to FR-09) and does not belong here.
-
-Lengths are in **nanometres** throughout. The corrections are fitted in nm
-(``d_bar = d/(1 nm)``) and the Debye length at the salt concentrations of
-interest is a fraction of a nanometre, so a nm-scaled mesh keeps both the
-geometry and the coefficient fields at O(1) and avoids the conditioning penalty
-of metre-scaled coordinates.
-
-Boundary names are stable across the geometries, because the weak forms and the
-benchmarks select on them:
-
-``axis``
-    ``r = 0``. Carries no essential condition except ``u_r = 0`` (NUM-06).
-``wall``
-    The pore boundary. The only source of the wall-distance field (PHY-02).
-``membrane``
-    The bilayer surfaces. Deliberately *not* a distance source.
-``cis``, ``trans``
-    The outer reservoir boundaries, where the bias is applied.
-
-``CylindricalPoreGeometry`` additionally carries ``membrane_outer`` (the outer
-rim of the bilayer annulus) and leaves the two pore-mouth interfaces at
-NGSolve's ``default``.
-
-**Domain** names are a separate namespace from boundary names, and the pore
-geometry reuses ``cis`` and ``trans`` in both. Its fluid is therefore *three*
-domains - ``electrolyte`` for the lumen and ``cis``/``trans`` for the reservoirs
-- so ``Materials("electrolyte")`` selects the lumen alone. Select the fluid with
-``ELECTROLYTE_DOMAINS``.
-"""
+"""Analytic benchmark and spike geometries in the (r, z) half-plane."""
 
 from __future__ import annotations
 
@@ -49,47 +14,15 @@ from nanopnp.mesh.quality import check_quality as _check_quality
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from collections.abc import Mapping
 
-# -- the vocabulary a coupled solve is posed on -----------------------------------
-
 
 @dataclass(frozen=True)
 class CoupledBoundaries:
-    """The boundary-name vocabulary a coupled solve is posed on (PHY-09).
-
-    Parameters
-    ----------
-    potential
-        Boundaries carrying an essential condition on ``phi``.
-    concentration
-        Boundaries carrying ``c_i = c_bulk``, either shared by every species or
-        given per species. A benchmark needs the per-species form — the 1D
-        limiting-current problem of VER-16 blocks the anion at the electrode
-        while the cation is consumed there — and the reference case does not.
-    velocity
-        Boundaries carrying no-slip ``u = 0``.
-    velocity_axis
-        The axis, carrying ``u_r = 0`` and nothing else. It is a separate entry
-        because it constrains one component only: ``u_z``, ``phi`` and ``c_i``
-        are natural there and imposing them is a modelling error (NUM-06).
-    """
-
     potential: str = "cis|trans"
     concentration: str | Mapping[str, str] = "cis|trans"
     velocity: str = "wall|membrane"
     velocity_axis: str = "axis"
 
     def concentration_boundary(self, species: str) -> str:
-        """Return the boundaries carrying essential data for one species.
-
-        Raises
-        ------
-        KeyError
-            If a per-species mapping omits the species. There is deliberately no
-            fallback: a missing entry would leave that species with no essential
-            condition anywhere, and a pure-Neumann Nernst-Planck equation has a
-            constant null mode that a direct solver factorises without complaint
-            (see ``.knowledge/06-numerics-fem.md`` section 8.1).
-        """
         if isinstance(self.concentration, str):
             return self.concentration
         try:
@@ -135,38 +68,6 @@ leave a solve with no ions and no flow outside the lumen.
 
 
 def _gated(mesh: Mesh, *, check: bool, where: str) -> Mesh:
-    """Return ``mesh``, gated on element quality unless ``check`` is false (VER-10).
-
-    The gate runs on every mesh this module builds, not only on imported ones.
-    The margin measured on the reference shapes is wide - minimum SICN 0.647
-    against the 0.3 floor of section 5.2.2 [tested] - so an unconditional gate
-    costs a fraction of a second and catches the degenerate mesh a badly chosen
-    ``wall_h_nm`` would otherwise hand to the solver.
-
-    Parameters
-    ----------
-    mesh
-        The freshly generated NGSolve mesh.
-    check
-        False to skip the gate. Reserved for a mesh whose element shapes are a
-        deliberate choice rather than a defect - a test building a bad mesh on
-        purpose, or a one-dimensional benchmark whose anisotropy lies in the
-        direction the solution is constant in (VER-16). It is keyword-only at
-        every call site so that skipping the gate is visible where it happens.
-    where
-        What to call the mesh in a diagnostic (QR-12).
-
-    Returns
-    -------
-    Mesh
-        ``mesh`` itself, unchanged.
-
-    Raises
-    ------
-    nanopnp.mesh.quality.MeshQualityError
-        If any element is inverted or either quality measure is at or below the
-        floor, naming the gate, the value and the element's centroid.
-    """
     if check:
         _check_quality(from_ngsolve(mesh), where=where)
     return mesh
@@ -174,34 +75,11 @@ def _gated(mesh: Mesh, *, check: bool, where: str) -> Mesh:
 
 @dataclass(frozen=True)
 class SlabGeometry:
-    """A planar slab of electrolyte against a charged wall.
-
-    The wall is at ``x = 0`` and the bulk at ``x = width_nm``; the ``y`` extent
-    is an artefact of solving a one-dimensional problem on a two-dimensional
-    mesh, and its boundaries carry natural conditions.
-
-    With ``exclusion_nm`` set, the first ``lambda_S`` of the slab is the
-    ``exclusion`` material of §5.3.1's NOTE rather than electrolyte: ions and
-    flow are excluded from it and Poisson is solved across it at the fluid's
-    ``eps_r``, which is the Gouy-Chapman-**Stern** geometry of VER-31. The wall
-    stays at ``x = 0``, so the surface charge is on the same plane in both
-    configurations and ``exclusion_nm = 0`` reproduces the plain slab exactly.
-    """
-
     width_nm: float
     height_nm: float = 1.0
     exclusion_nm: float = 0.0
 
     def __post_init__(self) -> None:
-        """Refuse a shell that is not inside the slab.
-
-        Raises
-        ------
-        ValueError
-            If the layer is negative or reaches the bulk boundary, which would
-            leave no electrolyte for the diffuse layer this geometry exists to
-            resolve.
-        """
         if not 0.0 <= self.exclusion_nm < self.width_nm:
             raise ValueError(
                 f"exclusion_nm={self.exclusion_nm} must lie in [0, width_nm) and the slab is "
@@ -210,7 +88,6 @@ class SlabGeometry:
             )
 
     def _name_edges(self, shape: Shape, *, wall_h_nm: float | None) -> None:
-        """Name every edge of ``shape`` by its centre of mass, in place."""
         for edge in shape.edges:
             centre = edge.center
             if abs(centre[0]) < TOL_NM:
@@ -220,10 +97,8 @@ class SlabGeometry:
             elif abs(centre[0] - self.width_nm) < TOL_NM:
                 edge.name = "bulk"
             elif abs(centre[0] - self.exclusion_nm) < TOL_NM:
-                # The shell's outer face: an interior seam between two domains
-                # this run solves different equations on, and nothing selects on
-                # it. Calling it ``wall`` would put it in the PHY-02 distance
-                # source set and impose no-slip in the middle of the slab.
+                # An interior seam: ``wall`` would add it to the PHY-02 distance sources and
+                # impose no-slip mid-slab.
                 edge.name = "interface"
             else:
                 edge.name = "lateral"
@@ -231,11 +106,6 @@ class SlabGeometry:
     def generate(
         self, *, maxh_nm: float, wall_h_nm: float | None = None, check_quality: bool = True
     ) -> Mesh:
-        """Return a meshed slab, graded towards the wall if ``wall_h_nm`` is given.
-
-        ``check_quality`` gates the result through :func:`_gated`; see there for
-        why it defaults to on.
-        """
         import netgen.occ as occ
         import ngsolve as ngs
 
@@ -259,24 +129,12 @@ class SlabGeometry:
 
 @dataclass(frozen=True)
 class CylinderGeometry:
-    """An axisymmetric cylinder of electrolyte, ``0 <= r <= radius_nm``.
-
-    The axis edge is named so that a test can confirm nothing essential is
-    imposed there; the ends carry natural conditions, which is consistent with
-    the z-independent Debye-Hueckel solution.
-    """
-
     radius_nm: float
     length_nm: float
 
     def generate(
         self, *, maxh_nm: float, wall_h_nm: float | None = None, check_quality: bool = True
     ) -> Mesh:
-        """Return a meshed cylinder cross-section, graded towards the wall.
-
-        ``check_quality`` gates the result through :func:`_gated`; see there for
-        why it defaults to on.
-        """
         import netgen.occ as occ
         import ngsolve as ngs
 
@@ -298,38 +156,15 @@ class CylinderGeometry:
 
 @dataclass(frozen=True)
 class CylindricalPoreGeometry:
-    """A cylindrical pore through a membrane, with a reservoir on each side.
-
-    The idealised stand-in for ClyA used through Phase 0: a straight lumen of
-    radius ``pore_radius_nm`` and length ``membrane_thickness_nm``, a solid
-    membrane annulus around it, and a quarter-disc reservoir either side. It
-    carries the features the solver must handle - an axis, a wall the distance
-    field measures from, a membrane that it must *not* measure from, and the
-    reservoir-to-pore transition where the access resistance lives - without any
-    of the contour machinery of Phase 2.
-
-    The lumen is the domain ``electrolyte`` and the reservoirs are ``cis`` and
-    ``trans``, so the fluid is selected with ``ELECTROLYTE_DOMAINS`` and not with
-    ``"electrolyte"``.
-    """
-
     pore_radius_nm: float = DEFAULT_PORE_RADIUS_NM
     membrane_thickness_nm: float = 13.0
     reservoir_radius_nm: float = 50.0
 
     @property
     def half_thickness_nm(self) -> float:
-        """Half the membrane thickness; the lumen spans ``+/- half_thickness_nm``."""
         return 0.5 * self.membrane_thickness_nm
 
     def faces(self) -> tuple[Shape, Shape, Shape, Shape]:
-        """Return the four named faces — lumen, membrane, cis, trans — unglued.
-
-        Public so that a geometry embedding something *in* the lumen can cut the
-        body out of that face before the glue, rather than copying this
-        construction. :class:`nanopnp.geometry.analyte.PoreWithAnalyte` is the
-        only such caller in Phase 0; the lumen is returned first for it.
-        """
         import netgen.occ as occ
 
         half = self.half_thickness_nm
@@ -359,20 +194,6 @@ class CylindricalPoreGeometry:
         return lumen, membrane, reservoirs[0], reservoirs[1]
 
     def name_edges(self, shape: Shape, *, wall_h_nm: float | None = None) -> None:
-        """Name every **unnamed** edge of ``shape`` by its centre of mass, in place.
-
-        An edge that already carries a name is left alone. The chain below is
-        unconditional and matches on position, so an edge belonging to something
-        this geometry does not know about — the surface of an embedded analyte —
-        would otherwise be swept into ``cis`` or dropped to NGSolve's
-        ``default``. Names survive an OCC boolean and a glue [tested], so
-        pre-naming the intruder and skipping it here is enough to keep the two
-        vocabularies apart.
-
-        The one edge deliberately left to this chain is the body's own segment
-        on ``r = 0``: it is part of the axis, and calling it anything else would
-        take it out of the ``axis`` region that NUM-06 imposes ``u_r = 0`` on.
-        """
         half = self.half_thickness_nm
         radius = self.reservoir_radius_nm
         for edge in shape.edges:
@@ -398,7 +219,6 @@ class CylindricalPoreGeometry:
                 edge.name = "trans"
 
     def shape(self, *, wall_h_nm: float | None = None) -> Shape:
-        """Return the glued, fully named shape, unmeshed."""
         import netgen.occ as occ
 
         glued = occ.Glue(list(self.faces()))
@@ -408,19 +228,6 @@ class CylindricalPoreGeometry:
     def generate(
         self, *, maxh_nm: float, wall_h_nm: float | None = None, check_quality: bool = True
     ) -> Mesh:
-        """Return the meshed geometry with named domains and boundaries.
-
-        Parameters
-        ----------
-        maxh_nm
-            Global maximum element size, in nm.
-        wall_h_nm
-            Element size on the pore wall, in nm; NUM-30 asks for about
-            ``lambda_D / 5`` there.
-        check_quality
-            Gate the result through :func:`_gated`; see there for why it
-            defaults to on.
-        """
         import netgen.occ as occ
         import ngsolve as ngs
 

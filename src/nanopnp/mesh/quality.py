@@ -1,46 +1,4 @@
-"""Element quality gates: SICN, gamma, and the sign of the Jacobian (VER-10, QR-12).
-
-Section 5.2.2 asks for a minimum element quality above 0.3 on every mesh the
-solver runs on, and VER-10 makes it a gate rather than a report: a mesh that
-fails aborts the run naming the gate, the offending quantity and where it is
-(QR-12). Nothing here is advisory.
-
-**Two measures, both gated.** For a straight-sided triangle ``p0, p1, p2`` let
-``A = [p1 - p0, p2 - p0]`` be the Jacobian of the affine map from the unit
-triangle, ``E = [[1, 1/2], [0, sqrt(3)/2]]`` the same for the unit equilateral,
-and ``J = A E^-1``. Then
-
-.. code-block:: text
-
-    SICN  = sign(det J) . 2 / (|J|_F |J^-1|_F) = 2 det J / |J|_F^2
-    gamma = 2 r_in / R_circ = 8 A^2 / (s . a . b . c),   s = (a + b + c) / 2
-
-both 1 on the equilateral element and both scale-invariant. The closed form on
-the right of the SICN line is exact for 2x2: the adjugate has the same Frobenius
-norm as the matrix, so ``|J|_F |J^-1|_F = |J|_F^2 / |det J|`` and the absolute
-values cancel against the sign.
-
-They are **not** interchangeable, which is why "min SICN/gamma > 0.3" is read
-here as a conjunction. On the isoceles family with unit base, ``SICN = 0.3`` at
-height 0.132966, where ``gamma = 0.129841``; ``gamma = 0.3`` at height 0.215508,
-where ``SICN = 0.468673`` [verified]. Reading the gate off either measure alone
-admits meshes the other rejects, by a factor of 0.215508/0.132966 = 1.6208 in
-element height.
-
-**gamma cannot see an inverted element**: an equilateral triangle wound
-clockwise scores ``gamma = +1`` and ``SICN = -1``. In an axisymmetric ``(r, z)``
-mesh that matters more than in a planar one — a negative-Jacobian element
-contributes negative area under the ``r`` weight and nothing else complains — so
-``SICN <= 0`` is reported under its own name, ``inverted element``, and not as a
-quality figure that happens to be low.
-
-The formulas agree with ``gmsh.model.mesh.getElementQualities(..., "minSICN")``
-and ``"gamma"`` to every digit gmsh prints [tested], so the 0.3 threshold is
-calibrated against the implementation that set it — without putting gmsh on the
-default path (CON-10). gmsh returns ``+1`` for the clockwise triangle: a 2-D
-element in a discrete entity has no intrinsic orientation there, so the sign is
-ours and only the magnitude is comparable.
-"""
+"""Element quality gates: SICN, gamma, and the sign of the Jacobian (VER-10, QR-12)."""
 
 from __future__ import annotations
 
@@ -63,24 +21,6 @@ it is a CLI flag that taints the manifest, not a line in the case.
 
 
 class MeshQualityError(ValueError):
-    """A mesh fails a geometric gate, naming the gate, the quantity and where.
-
-    Parameters
-    ----------
-    gate
-        The gate that failed, e.g. ``"minimum SICN"``.
-    quantity
-        The offending value, formatted.
-    location
-        Where it is: the element index and its ``(r, z)`` centroid.
-    detail
-        What to do about it, when there is something useful to say.
-
-    Attributes are kept beside the message so that a caller — the GUI's error
-    panel, a sweep's failure record — can render the three parts separately
-    (QR-12).
-    """
-
     def __init__(self, gate: str, quantity: str, location: str, detail: str = "") -> None:
         self.gate = gate
         self.quantity = quantity
@@ -92,21 +32,6 @@ class MeshQualityError(ValueError):
 
 @dataclass(frozen=True)
 class QualityReport:
-    """Per-element quality of one mesh, and the extrema a manifest records.
-
-    Parameters
-    ----------
-    element_count
-        Number of triangles measured.
-    sicn, gamma
-        Per-element arrays, in element order.
-    inverted
-        Indices of elements with ``SICN <= 0``, in ascending order.
-    centroids
-        ``(m, 2)`` array of element centroids in nm, so that a failure can say
-        *where* rather than only *which*.
-    """
-
     element_count: int
     sicn: np.ndarray
     gamma: np.ndarray
@@ -115,44 +40,36 @@ class QualityReport:
 
     @property
     def min_sicn(self) -> float:
-        """Smallest SICN over the mesh."""
         return float(self.sicn.min())
 
     @property
     def mean_sicn(self) -> float:
-        """Mean SICN over the mesh."""
         return float(self.sicn.mean())
 
     @property
     def min_gamma(self) -> float:
-        """Smallest gamma over the mesh."""
         return float(self.gamma.min())
 
     @property
     def mean_gamma(self) -> float:
-        """Mean gamma over the mesh."""
         return float(self.gamma.mean())
 
     @property
     def worst_sicn_element(self) -> int:
-        """Index of the element with the smallest SICN."""
         import numpy as np
 
         return int(np.argmin(self.sicn))
 
     @property
     def worst_gamma_element(self) -> int:
-        """Index of the element with the smallest gamma."""
         import numpy as np
 
         return int(np.argmin(self.gamma))
 
     def centroid(self, element: int) -> tuple[float, float]:
-        """Return the ``(r, z)`` centroid of one element, in nm."""
         return float(self.centroids[element, 0]), float(self.centroids[element, 1])
 
     def summary(self) -> dict[str, object]:
-        """Return the figures the provenance manifest carries (FR-25, section 5.2.2)."""
         return {
             "elements": self.element_count,
             "min_sicn": self.min_sicn,
@@ -165,24 +82,6 @@ class QualityReport:
 
 
 def element_quality(data: MeshData) -> QualityReport:
-    """Return the SICN and gamma of every triangle of ``data``.
-
-    Parameters
-    ----------
-    data
-        The tagged mesh. Only its vertices and triangles are read.
-
-    Returns
-    -------
-    QualityReport
-        Per-element arrays in element order, with the centroids beside them.
-
-    Notes
-    -----
-    A degenerate element — zero area, or two coincident vertices — scores 0 on
-    both measures rather than dividing by zero, and fails the gate on the same
-    line as a merely bad one.
-    """
     import numpy as np
 
     points = data.vertices[data.triangles]  # (m, 3, 2)
@@ -219,39 +118,12 @@ def element_quality(data: MeshData) -> QualityReport:
 
 
 def inverted_elements(data: MeshData) -> tuple[int, ...]:
-    """Return the indices of elements whose Jacobian determinant is not positive."""
     return element_quality(data).inverted
 
 
 def check_quality(
     data: MeshData, *, floor: float = QUALITY_FLOOR, where: str = "this mesh"
 ) -> QualityReport:
-    """Gate ``data`` on both quality measures and return the report (VER-10).
-
-    Parameters
-    ----------
-    data
-        The tagged mesh.
-    floor
-        The gate. Defaults to :data:`QUALITY_FLOOR` and is a parameter only so
-        that a test can drive the failure path with a mesh it built on purpose.
-    where
-        What to call the mesh in a diagnostic — a filename, or the geometry that
-        produced it.
-
-    Returns
-    -------
-    QualityReport
-        The report, when every element passes.
-
-    Raises
-    ------
-    MeshQualityError
-        If any element is inverted, or if either measure falls to or below
-        ``floor``. Inversion is checked first and reported under its own name:
-        gamma is blind to it, so a mesh could otherwise be turned away for a low
-        number when the real fault is an element wound the wrong way.
-    """
     import numpy as np
 
     report = element_quality(data)
@@ -282,18 +154,6 @@ def check_quality(
 
 
 def check_radii(data: MeshData, *, where: str = "this mesh") -> None:
-    """Reject a mesh with a vertex at negative radius.
-
-    An ``(r, z)`` mesh crossing ``r = 0`` integrates to negative volume under the
-    ``r`` weight of the axisymmetric forms, and the ``1/r`` terms of the
-    Nernst-Planck and Navier-Stokes forms are worse: they change sign rather than
-    growing, so the solve converges to something with no diagnostic attached.
-
-    Raises
-    ------
-    MeshQualityError
-        If any vertex has ``r < 0``, naming the vertex and its coordinates.
-    """
     import numpy as np
 
     radii = data.vertices[:, 0]
