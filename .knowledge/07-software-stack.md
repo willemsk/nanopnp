@@ -717,6 +717,20 @@ Outcomes):
   libxcursor1`, Gmsh 4.15 imports and meshes on Python 3.11 to 3.14 (WP23 PR, run 36574260470,
   29 September 2026).
 - **Session cleanup and borrowed sessions [tested].** `gmsh_backend._session` records each undo step (`gmsh.model.remove()`, restoring options, `gmsh.finalize()`) only once the change it reverses has been made, and runs every recorded step in reverse order, so a session it opened is finalised even when an intermediate step or the setup itself fails, and a borrowed session's own model is never removed in place of one that was never added. When an exception is active during cleanup, secondary failures are logged at WARNING and attached to the exception via `add_note()`, preventing the original error from being masked (REV-38). A borrowed session (`gmsh.isInitialized()` true on entry) leaves the caller's logger untouched (no `start` or `stop`), preserving caller messages (REV-36). If `gmsh.initialize()` fails, a `GmshInitialisationError` is raised, translated to `MissingExtraError` naming `gmsh` (REV-37).
+- **The IF-07 export samples a fluid-restricted field through a whole-domain carrier [tested].**
+  Point evaluation of a space built with `definedon=fluid` returns zero at an interface node whose
+  point search lands in a membrane element. On the coarse four-material pore that is 16 of the 208
+  fluid nodes, with a maximum error of 13.0 against a linear test function. Interpolating into a
+  whole-domain space of the same order first and evaluating that is exact to 5.5e-14, because a P2
+  node's value depends only on the entities carrying it, each a fluid entity (`post/export.py`
+  `sample_at`).
+- **meshio 5.3.5 reads an XDMF `Information` element only in its own `field_data` encoding
+  [tested].** Children carry `key` and `dim` attributes with integer text; anything else raises
+  `ParseError`. The IF-07 scale set is therefore written as HDF5 root attributes (`post/export.py`).
+- **Discontinuous export fields are cell-centred [verified].** `material_id` and `eps_r` jump across
+  a material interface, so a node value there is one side chosen arbitrarily and a viewer draws a
+  ramp across every boundary element; a barycentre lies strictly inside its element, so the point
+  search is unambiguous.
 
 ---
 

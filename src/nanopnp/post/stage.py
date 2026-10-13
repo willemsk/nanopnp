@@ -1,35 +1,4 @@
-"""Stages 11 and 12 of section 5.2: the quantities of interest, and the report.
-
-The registry stopped at stage 10, so ``nanopnp run`` had nowhere to put the two
-things a run exists to produce — the NUM-27 scalars and whatever lands on disk.
-Registering them here is what lets the driver be a walk over the stage graph
-rather than a script that computes physics inside the CLI (section 5.1).
-
-**Stage 11 restores rather than re-solves.** Its input is the stage-10 artefact,
-whose payload is the self-describing coefficient record of
-:mod:`nanopnp.solve.state`; :func:`~nanopnp.solve.state.restore` rebuilds the
-state *and the residual* on the same operator the solve used, which is what lets
-the NUM-25 route run at all on a solution served from a cache hit. Extraction is
-then the same :func:`nanopnp.post.qoi.extract` a live solution goes through, so a
-cached run and a fresh one cannot report different numbers by different routes.
-
-**The band is derived from the mesh, not from a geometry object.**
-:func:`~nanopnp.post.indicator.lumen_band` takes a
-:class:`~nanopnp.mesh.primitives.CylindricalPoreGeometry`, and an ingested mesh
-(FR-27) has no such object. :func:`membrane_band` reads the ``membrane``
-material's own extent in ``z`` off the :class:`~nanopnp.mesh.adapter.MeshData`
-and takes the middle ``fraction`` of it, which on a ``CylindricalPoreGeometry``
-is *identically* ``lumen_band(geometry, fraction)`` — the identity is asserted,
-because the band has to be the existing convention read off a different object
-and not a second convention that happens to be close.
-
-**What a word in ``outputs:`` cannot buy, it is refused rather than dropped**
-(section 5.3.1 NOTE). ``rectification`` needs two operating points and a single
-run has one; ``analyte_force`` needs an ``analyte`` material and a mesh either
-carries one or does not. Both abort naming what is missing (QR-12), because a
-run that quietly returns five of the six quantities asked for is a run whose
-output list means nothing.
-"""
+"""Stages 11 and 12 of section 5.2: the quantities of interest, and the report."""
 
 from __future__ import annotations
 
@@ -85,41 +54,17 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 MEMBRANE_MATERIAL = "membrane"
-"""Material whose axial extent the NUM-24 band is taken from."""
 
 BAND_FRACTION = 0.8
-"""Fraction of the membrane's z-extent ``grad(psi)`` is supported on.
-
-The same default as :func:`nanopnp.post.indicator.lumen_band`, and the same
-number for the same reason: it puts the transition wholly inside the lumen and
-away from both mouths. VER-11 is what says the answer does not depend on it.
-"""
 
 EXTENSION_INNER = 1.2
-"""Inner radius of the NUM-28 extension shell, in units of the body's semi-axis."""
 
 EXTENSION_OUTER = 3.0
-"""Outer radius of the same shell.
-
-``(1.2, 3.0)`` is the shell WP6's Tier-2 electrophoretic-mobility benchmark was
-measured on, expressed there as multiples of the sphere's radius. It is a
-default and not a requirement: VER-19's convergence study is what establishes
-that the force does not depend on it, and ``options["extension_shell_nm"]``
-overrides it with absolute distances.
-"""
 
 WORKSPACE_DIRNAME = "tmp"
-"""Directory under the store root an export is written to before it is stored."""
 
 
-class SelectionError(ValueError):
-    """A word in ``outputs:`` cannot be met by the run it was asked of.
-
-    A :class:`ValueError` rather than a gate error: nothing numerical has gone
-    wrong and no result is in doubt. The case asked for a quantity this run
-    cannot produce, and section 5.3.1 requires that to be said rather than
-    silently dropped.
-    """
+class SelectionError(ValueError): ...
 
 
 def membrane_band(
@@ -128,33 +73,6 @@ def membrane_band(
     fraction: float = BAND_FRACTION,
     material: str = MEMBRANE_MATERIAL,
 ) -> tuple[float, float]:
-    """Return the NUM-24 transition band, read off the mesh's own membrane.
-
-    Parameters
-    ----------
-    data
-        The tagged mesh, in nm.
-    fraction
-        Fraction of the membrane's axial extent the band occupies.
-    material
-        Material name the extent is taken from.
-
-    Returns
-    -------
-    tuple of float
-        ``(lower_nm, upper_nm)``, the middle ``fraction`` of the material's
-        ``z``-extent.
-
-    Raises
-    ------
-    SelectionError
-        If ``fraction`` is not in ``(0, 1]``, or if the mesh carries no such
-        material — naming it and listing the materials the mesh does carry
-        (QR-12). It deliberately does not fall back to the whole domain: a band
-        spanning the reservoirs puts ``grad(psi)`` on the caps, and
-        :func:`~nanopnp.post.indicator.check_indicator` would then fail with a
-        message about ``psi`` rather than about the band.
-    """
     import numpy as np
 
     if not 0.0 < fraction <= 1.0:
@@ -177,18 +95,6 @@ def membrane_band(
 
 
 def extension_shell(data: MeshData, *, material: str = ANALYTE_DOMAIN) -> tuple[float, float]:
-    """Return the NUM-28 extension shell in nm, scaled to the body in the mesh.
-
-    The body's semi-axis is the larger of its radial and axial half-extents, and
-    the shell is :data:`EXTENSION_INNER` to :data:`EXTENSION_OUTER` multiples of
-    it, measured as distances from the body's surface.
-
-    Raises
-    ------
-    SelectionError
-        If the mesh carries no such material, naming it and the materials it
-        does carry (section 5.3.1 NOTE, QR-12).
-    """
     import numpy as np
 
     if material not in data.materials:
@@ -208,7 +114,6 @@ def extension_shell(data: MeshData, *, material: str = ANALYTE_DOMAIN) -> tuple[
 
 
 def _band(data: MeshData, options: Mapping[str, Canonicalisable]) -> tuple[float, float]:
-    """Return the band this run uses: the option if given, else the mesh's."""
     supplied = options.get("indicator_band_nm")
     if supplied is None:
         return membrane_band(data)
@@ -222,7 +127,6 @@ def _band(data: MeshData, options: Mapping[str, Canonicalisable]) -> tuple[float
 
 
 def _shell(data: MeshData, options: Mapping[str, Canonicalisable]) -> tuple[float, float]:
-    """Return the extension shell this run uses: the option if given, else the mesh's."""
     supplied = options.get("extension_shell_nm")
     if supplied is None:
         return extension_shell(data)
@@ -231,24 +135,6 @@ def _shell(data: MeshData, options: Mapping[str, Canonicalisable]) -> tuple[floa
 
 
 def _solution(inputs: StageInputs, *, solving: bool) -> Artefact:
-    """Return the stage-10 artefact this stage describes, solving only if it must.
-
-    Both post-processing stages are independently invocable (FR-27), so both have
-    to cope with a caller that handed them a case and no ``solve`` artefact. What
-    they need of it differs: a ``key`` needs its *hash*, which
-    :meth:`~nanopnp.solve.stage.SolveStage.key` answers without entering Newton,
-    while ``run`` needs the converged state under its payload. Asking for the
-    state in both would converge the ladder twice for one extraction — once to
-    answer the probe whose contract is that it does not do the work, and once to
-    do it.
-
-    Parameters
-    ----------
-    inputs
-        What the driver, the CLI or a caller handed the stage.
-    solving
-        ``True`` when the payload is needed, ``False`` when the hash will do.
-    """
     solution = inputs.upstream.get("solve")
     if solution is not None:
         return solution
@@ -257,13 +143,6 @@ def _solution(inputs: StageInputs, *, solving: bool) -> Artefact:
 
 
 def _check_selection(outputs: tuple[str, ...]) -> None:
-    """Refuse every word in ``outputs`` this run cannot meet (section 5.3.1 NOTE).
-
-    Raises
-    ------
-    SelectionError
-        Naming the word and why a single run cannot produce it.
-    """
     if "rectification" in outputs:
         raise SelectionError(
             "outputs asks for rectification, which is the two-point ratio I(+V)/I(-V); this run "
@@ -274,8 +153,6 @@ def _check_selection(outputs: tuple[str, ...]) -> None:
 
 @dataclass(frozen=True)
 class _Prepared:
-    """Everything :meth:`QoIStage.key` and :meth:`QoIStage.run` must agree on."""
-
     resolved: ResolvedCase
     data: MeshData
     case_hash: str
@@ -289,19 +166,6 @@ class _Prepared:
 def _selected(
     quantities: qoi_post.QuantitiesOfInterest, outputs: tuple[str, ...]
 ) -> dict[str, Canonicalisable]:
-    """Return the summary fields the case asked for, and no others.
-
-    The extraction is one calculation — NUM-27 requires it, so that a transport
-    number and a current reported together cannot come from two of them — but
-    what is *reported* is what ``outputs:`` selects. The bias, the route record,
-    the ``2 pi`` convention, the PHY-13 clamp count and the stabilisation's own
-    contribution are always present: they are not quantities, they are what makes
-    the quantities readable. The clamp count in particular is provenance the
-    manifest's Materials group takes from here, and a run that reported no current
-    would otherwise record that no solution was sampled for it; the stabilisation
-    contribution reaches the manifest's Stabilisation group the same way, and is
-    what section 7.4 subtracts from a number the reference produced differently.
-    """
     record = quantities.summary()
     always = {
         "bias_V",
@@ -322,24 +186,12 @@ def _selected(
 
 
 class QoIStage:
-    """Stage 11: a converged solution to the NUM-27 scalars (FR-23, QR-04)."""
-
     name = "qoi"
 
     def describe(self) -> StageDescription:
-        """Return the registry's description of this stage (FR-27)."""
         return describe(self.name)
 
     def key(self, inputs: StageInputs) -> QoIArtefact:
-        """Return the artefact key this extraction will produce, without running it.
-
-        Everything that changes a number is in the parameters: which quantities
-        were asked for, the band ``grad(psi)`` is supported on, the extension
-        shell when a force is asked for, and whether the NUM-26 route check ran.
-        The band is a parameter and not a summary field because two extractions
-        differing only in it are two numbers — which is precisely what NUM-24
-        claims they are not, and what VER-11 tests rather than assumes.
-        """
         prepared = self._prepare(inputs, solving=False)
         return QoIArtefact(
             case_hash=prepared.case_hash,
@@ -351,33 +203,13 @@ class QoIStage:
         )
 
     def _prepare(self, inputs: StageInputs, *, solving: bool) -> _Prepared:
-        """Resolve the case, ingest the mesh and settle every parameter.
-
-        Shared by :meth:`key` and :meth:`run`, so that the key the store is asked
-        about and the key the extraction produces cannot be built two ways.
-
-        Parameters
-        ----------
-        inputs
-            What the driver, the CLI or a caller handed the stage.
-        solving
-            Whether the converged *state* is needed, or only the solve
-            artefact's hash. ``key`` needs the hash and :meth:`run` needs the
-            payload, and the difference is a whole continuation ladder: a stage
-            invoked with no upstream ``solve`` (FR-27) would otherwise converge
-            it once to answer the probe and once to do the work, and the probe's
-            contract is that it does not do the work.
-        """
         resolved = inputs.resolved
         ingested = deployed_mesh(resolved, inputs.upstream.get("mesh"))
         outputs = tuple(resolved.outputs)
         _check_selection(outputs)
         check_routes = bool(inputs.options.get("check_routes", True))
         shell = _shell(ingested.data, inputs.options) if "analyte_force" in outputs else None
-        # A model without transport has no current and no indicator to take it
-        # with, so no band: the mesh of a solid-free electrostatic case carries no
-        # membrane to read one off (WP26 D15). ``resolve`` has already refused any
-        # quantity such a model does not declare.
+        # A model without transport has no current to take, and its mesh may carry no membrane.
         transport = declaration(resolved.model).transport
         band = _band(ingested.data, inputs.options) if transport else None
         solution = _solution(inputs, solving=solving)
@@ -401,36 +233,13 @@ class QoIStage:
         progress: Progress | None = None,
         cancel: CancelToken | None = None,
     ) -> QoIArtefact:
-        """Extract every selected quantity and emit the stage-11 artefact.
-
-        Parameters
-        ----------
-        inputs
-            The case, the stage-10 ``solve`` artefact and optionally the stage-9
-            ``case`` artefact. Without the solve artefact the stage runs the
-            solve itself, which is what keeps it independently invocable (FR-27)
-            and keys the same cache entry either way.
-        progress
-            Called with a fraction in [0, 1] and a message, monotone, ending at 1.
-        cancel
-            Checked on entry, after the restore and before each extraction.
-
-        Raises
-        ------
-        SelectionError
-            If ``outputs:`` asks for something this run cannot produce.
-        Cancelled
-            If ``cancel`` turns true. No artefact is written.
-        """
         check_cancelled(cancel, "the extraction")
         report(progress, 0.0, "resolving the case")
         prepared = self._prepare(inputs, solving=True)
         bias_V = qoi_post.cis_referenced_bias(prepared.resolved.bias_V, prepared.resolved.ground)
         band = prepared.band
         if band is None:
-            # No transport, so nothing to extract: the record is the operating
-            # point and an empty selection, and no indicator is built (WP26 D15).
-            # The state is not restored either -- nothing here would read it.
+            # No transport: nothing to extract, no indicator, and nothing to restore.
             report(progress, 1.0, "the model declares no quantity of interest")
             return QoIArtefact(
                 case_hash=prepared.case_hash,
@@ -473,8 +282,7 @@ class QoIStage:
             solution,
             measures,
             indicator,
-            # NUM-27's G = I/V > 0 is stated with cis grounded; with trans grounded
-            # the bias sits on cis, and the +z current responds to its negative.
+            # With trans grounded the bias sits on cis, and the +z current responds to its negative.
             bias_V=bias_V,
             check_routes=prepared.check_routes,
         )
@@ -510,7 +318,6 @@ class QoIStage:
         shell: tuple[float, float],
         check_routes: bool,
     ) -> dict[str, Canonicalisable]:
-        """Return the NUM-28 force record, over the mesh-scaled extension shell."""
         inner, outer = shell
         extension = force_post.axial_extension(
             solution.space.mesh,
@@ -528,12 +335,6 @@ class QoIStage:
         return record
 
     def deviations(self, inputs: StageInputs) -> tuple[ContributedDeviation, ...]:
-        """Return the departures this stage's *options* introduce (FR-25).
-
-        Switching the NUM-26 route check off is a departure no case-file key
-        selects, so the diff of :mod:`nanopnp.io.defaults` cannot see it and this
-        stage has to say so. A check silently switched off is exactly RSK-03.
-        """
         if bool(inputs.options.get("check_routes", True)):
             return ()
         return (
@@ -549,40 +350,15 @@ class QoIStage:
 
 
 class ReportStage:
-    """Stage 12: what the run wrote, and what it wrote it from (IF-07, FR-25).
-
-    The only thing about this stage that changes what lands on disk is the export
-    selection, so that is its only parameter. Its three inputs are the hashes of
-    everything the report describes, which is what stops a report being served
-    from the cache for a different case, a different solve or a different
-    extraction.
-
-    Figures are FR-28, v0.7. What this stage writes today is the IF-07 field export, and
-    it writes it only when ``outputs:`` asks for ``fields``: the export is of
-    order ten megabytes per solve, and an envelope sweep (FR-24) of thousands of
-    points would otherwise write tens of gigabytes nobody requested.
-    """
-
     name = "report"
 
     def __init__(self, *, workspace: Path | None = None) -> None:
-        """Build the stage.
-
-        Parameters
-        ----------
-        workspace
-            Directory the export is written to before the store copies it in.
-            Defaults to a fresh directory under the store root, so that a report
-            written without a store still leaves its fields somewhere findable.
-        """
         self._workspace = Path(workspace) if workspace is not None else None
 
     def describe(self) -> StageDescription:
-        """Return the registry's description of this stage (FR-27)."""
         return describe(self.name)
 
     def key(self, inputs: StageInputs) -> ReportArtefact:
-        """Return the artefact key this report will produce, without writing it."""
         case_hash, qoi, solution = self._hashes(inputs, solving=False)
         return ReportArtefact(
             case_hash=case_hash,
@@ -592,16 +368,9 @@ class ReportStage:
         )
 
     def _exports(self, inputs: StageInputs) -> tuple[str, ...]:
-        """Return the export selection: ``("fields",)`` or nothing."""
         return ("fields",) if "fields" in inputs.resolved.outputs else ()
 
     def _hashes(self, inputs: StageInputs, *, solving: bool) -> tuple[str, Artefact, Artefact]:
-        """Return the case hash and the two upstream artefacts this report describes.
-
-        ``solving`` is :func:`_solution`'s: the key needs the solve artefact's
-        hash and the export needs its payload, and only the second is worth a
-        continuation ladder.
-        """
         qoi = inputs.require("qoi")
         solution = _solution(inputs, solving=solving)
         case = inputs.upstream.get("case")
@@ -615,28 +384,9 @@ class ReportStage:
         progress: Progress | None = None,
         cancel: CancelToken | None = None,
     ) -> ReportArtefact:
-        """Write whatever ``outputs:`` selected and emit the stage-12 artefact.
-
-        Parameters
-        ----------
-        inputs
-            The case, the stage-11 ``qoi`` artefact, and the stage-10 ``solve``
-            artefact whose payload the export is read from.
-        progress
-            Called with a fraction in [0, 1] and a message, monotone, ending at 1.
-        cancel
-            Checked on entry and before the export is written.
-
-        Raises
-        ------
-        Cancelled
-            If ``cancel`` turns true. No artefact and no file are written.
-        """
         check_cancelled(cancel, "the report")
         report(progress, 0.0, "collecting the run's artefacts")
         exports = self._exports(inputs)
-        # Only an export needs the converged state; a report that writes nothing
-        # needs the solve artefact's hash and no ladder to get it.
         case_hash, qoi, solution = self._hashes(inputs, solving=bool(exports))
 
         payload: dict[str, Path] = {}
@@ -659,16 +409,6 @@ class ReportStage:
     def _export(
         self, inputs: StageInputs, solution: Artefact
     ) -> tuple[dict[str, Path], dict[str, Canonicalisable]]:
-        """Write the IF-07 pair(s) and return the payload map and the record.
-
-        The permittivity and the fixed charge are supplied here rather than left
-        to :mod:`nanopnp.post.export` to find, because only the run knows them: the
-        first is the model's own ``eps_r`` evaluated through the correction chain
-        against the *stored* distance field, and the second is whatever stage 7
-        assembled, if anything. A field the run did not have is simply absent
-        from the file rather than written as a zero, which would claim it was
-        computed and found to vanish.
-        """
         state_path = solution.payload.get(STATE_KEY)
         if state_path is None:
             carried = ", ".join(sorted(solution.payload)) or "nothing"
@@ -678,7 +418,6 @@ class ReportStage:
                 "The IF-07 export is of the converged fields and there is nothing to export from"
             )
         resolved = inputs.resolved
-        # Read once, for the restore to gate and for the fixed charge to export.
         supplied = (
             read_fields(resolved)
             if resolved.charge is not None or resolved.eps_r is not None
@@ -691,8 +430,7 @@ class ReportStage:
             fields=supplied,
             charge_artefact=inputs.upstream.get("charge"),
         )
-        # Any model: every one reports its NUM-09 scale set and the permittivity
-        # its solve used, or none, through the section 5.4.3 interface (WP26 D15).
+        # Any model reports its scale set and the permittivity its solve used, or none.
         model = restored.model
         directory = self._directory(resolved.name)
         export = export_fields(
@@ -700,8 +438,7 @@ class ReportStage:
             directory,
             scales=model.scales,
             relative_permittivity=model.relative_permittivity(restored),
-            # Through stage 7's one loader: the deposit for a producer case,
-            # the supplied interpolant otherwise, and nothing for neither (D9).
+            # Through stage 7's one loader: deposit, else supplied interpolant.
             fixed_charge_C_m3=fixed_charge_density(
                 resolved, supplied, inputs.upstream.get("charge"), restored.space.mesh
             ),
@@ -714,7 +451,6 @@ class ReportStage:
         return payload, record
 
     def _directory(self, name: str) -> Path:
-        """Return the directory the export is written into, creating it."""
         directory = self._workspace
         if directory is None:
             root = store_root() / WORKSPACE_DIRNAME
