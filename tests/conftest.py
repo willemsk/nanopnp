@@ -33,16 +33,14 @@ where it does: a backend whose every test can skip unseen is untested.
 from __future__ import annotations
 
 import copy
-import json
 import logging
 import math
 import os
 import pickle
 import shutil
-import statistics
 import sys
 import warnings
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
@@ -77,12 +75,6 @@ REQUIRE_GMSH = "NANOPNP_REQUIRE_GMSH"
 EXTENDED = "--extended"
 """Selects the ``extended`` tests, which the development selection leaves out (section 7.6)."""
 
-SHARD = "--shard"
-"""Runs shard ``i`` of ``N``: whole files, packed by recorded duration (WP43 D10)."""
-
-DURATIONS = Path(__file__).with_name("durations.json")
-"""Each test file's recorded seconds, written by ``tests/impact.py durations`` (WP43 D8)."""
-
 
 def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(
@@ -91,78 +83,11 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         help="also run the tests marked extended: the executed examples and the 2WCD "
         "walks, which CI gates after a merge (SPECIFICATION.md section 7.6)",
     )
-    parser.addoption(
-        SHARD,
-        default=None,
-        metavar="i/N",
-        help="run only shard i of N: whole test files, longest first, each to the "
-        "least-loaded shard by tests/durations.json (SPECIFICATION.md section 7.6)",
-    )
-
-
-def recorded_durations(path: Path = DURATIONS) -> dict[str, float]:
-    """Return each test file's recorded seconds, or nothing where none are recorded.
-
-    A missing file orders nothing; an unreadable one is refused, because a shard
-    split from a wrong reading would still partition the suite but say nothing true
-    about its balance.
-    """
-    if not path.is_file():
-        return {}
-    try:
-        files = json.loads(path.read_text(encoding="utf-8"))["files"]
-        return {str(name): float(seconds) for name, seconds in files.items()}
-    except (ValueError, KeyError, TypeError, AttributeError) as error:
-        raise pytest.UsageError(f"{path} is not a durations document: {error}") from error
-
-
-def file_order(files: Sequence[str], durations: Mapping[str, float]) -> list[str]:
-    """Return ``files`` longest first; a file with no recorded time takes the median.
-
-    Ties keep the path order, so every ``pytest-xdist`` worker and every shard
-    computes the same order.
-    """
-    median = statistics.median(durations.values()) if durations else 0.0
-    return sorted(set(files), key=lambda name: (-durations.get(name, median), name))
-
-
-def shard_files(
-    files: Sequence[str], durations: Mapping[str, float], count: int
-) -> list[list[str]]:
-    """Pack whole files into ``count`` shards: longest first, each to the least-loaded shard.
-
-    A tie in load goes to the lower index. Every file lands in exactly one shard,
-    so the shards partition the selection whatever the durations say.
-    """
-    median = statistics.median(durations.values()) if durations else 0.0
-    shards: list[list[str]] = [[] for _ in range(count)]
-    loads = [0.0] * count
-    for name in file_order(files, durations):
-        index = min(range(count), key=lambda i: (loads[i], i))
-        shards[index].append(name)
-        loads[index] += durations.get(name, median)
-    return shards
-
-
-def parse_shard(value: str) -> tuple[int, int]:
-    """Return ``(i, N)`` from ``"i/N"``, refusing anything but ``1 <= i <= N``."""
-    index_text, _, count_text = value.partition("/")
-    try:
-        index, count = int(index_text), int(count_text)
-    except ValueError:
-        index, count = 0, 0
-    if not 1 <= index <= count:
-        raise pytest.UsageError(f"{SHARD} takes i/N with 1 <= i <= N, not {value!r}")
-    return index, count
-
-
-def _file_of(item: pytest.Item) -> str:
-    return item.nodeid.split("::", 1)[0]
 
 
 @pytest.hookimpl(trylast=True)
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
-    """Leave out the ``extended`` tests unless asked for, then shard by file.
+    """Leave out the ``extended`` tests unless asked for.
 
     An ``extended`` test is an end-to-end walk -- an executed example or the 2WCD
     entry through the pipeline -- whose claims CI gates after a merge, and the push
@@ -176,13 +101,6 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
     already bounds to ``not slow``: it is selected only by an explicit
     ``-m slow``, and that request is kept, so the recorded measurements of an
     ``extended`` file still run under CLAUDE.md's ``uv run pytest -m slow``.
-
-    The hook runs last, after ``-m`` and ``-k`` have deselected, so the shards are
-    of what will run. The collection order is pytest's own (``--ff``, ``--nf`` and
-    fixture grouping stand): ``--dist loadfile`` re-sorts files by their number of
-    tests, so a longest-first order bought nothing (``.knowledge/07`` section 12.2,
-    REV-83). ``--shard i/N`` keeps the files packed into shard ``i`` by
-    ``tests/durations.json`` (WP43 D8) and deselects the rest.
     """
     if not config.getoption(EXTENDED):
         named = {
@@ -206,19 +124,6 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
     for item in items:
         if item.get_closest_marker("extended"):
             item.add_marker(pytest.mark.no_cover)
-
-    shard = config.getoption(SHARD)
-    if shard is None:
-        return
-    index, count = parse_shard(shard)
-    durations = recorded_durations()
-    files = file_order([_file_of(item) for item in items], durations)
-    chosen = set(shard_files(files, durations, count)[index - 1])
-    kept = [item for item in items if _file_of(item) in chosen]
-    left_out = [item for item in items if _file_of(item) not in chosen]
-    if left_out:
-        config.hook.pytest_deselected(items=left_out)
-        items[:] = kept
 
 
 def import_gmsh() -> ModuleType:
