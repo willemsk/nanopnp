@@ -1533,6 +1533,15 @@ cycle is collected with the mesh. **[tested]**
 - `phi~` at P2 has an element-wise constant Hessian, which is why the PHY-23 chain rule needs no
   further NGSolve construct (`physics/nernst_planck.py`, `excess_potential_gradient`).
 
+### 8.5.2 Small facts recorded from the `validation/` prose strip **[verified]**
+
+- On the VER-11 benchmark pore, `Delta_transport` and `stabilisation_currents_A` agree to 1.55e-3 of the
+  current: both measure the same physics, but the report prints them under distinct names
+  (`validation/attribution.py`).
+- `validation/mms.py` imports `sympy` at module scope (about 150 ms) because nothing on the CLI, GUI or
+  sweep-dispatch path imports `nanopnp.validation`: `import nanopnp.cli` stays at 34 ms and
+  `import nanopnp.physics.models` at 28 ms with the module present. Revisit if stage introspection reaches it.
+
 ---
 
 ## 9. Unverified / to measure

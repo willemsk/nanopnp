@@ -1,55 +1,4 @@
-"""The attribution ladder: which part of a discrepancy could be a defect (VAL-01, VAL-04).
-
-Section 7.4 says the acceptance targets apply "only once the matching stabilised
-mode of section 6.4 exists and the meshes have been convergence-matched", and
-that until both hold "differences are recorded and attributed rather than gated
-on". This module is the attribution.
-
-Let ``E_k`` be a configuration's relative distance from the golden on the probe
-grid (:mod:`nanopnp.validation.compare`). Four configurations:
-
-===  ========================  ===================  =====================================
- k   ``numerics.stabilisation``  ``u`` / ``p``      What it is
-===  ========================  ===================  =====================================
- 0   ``none``                  P2 / P1              our production default (NUM-11)
- 1   ``supg``                  P2 / P1              transport stabilisation only
- 2   ``reference``             P2 / P1              transport **and** flow GLS
- 3   ``reference``             P1 / P1              the reference's own discretisation
-===  ========================  ===================  =====================================
-
-and the reported deltas
-
-    Delta_total     = E_0        our shipped default's distance from the reference
-    Delta_transport = E_1 - E_0  the transport stabilisation, measured at second order
-    Delta_flow      = E_2 - E_1  the flow GLS term added on a Taylor-Hood pair
-    Delta_pair      = E_3 - E_2  the element pair, P2/P1 to P1/P1
-    Delta_resid     = E_3        the like-for-like residual, the only possible defect
-
-**Why four rungs and not three.** The phase plan specified ``none`` ->
-``reference`` -> ``reference``+P1/P1, calling the first delta ``Delta_stab``.
-WP12 then measured, on the VER-11 benchmark pore, an MMS L2 convergence rate of
-**0.984** for ``reference`` on a Taylor-Hood pair against **2.012** for ``supg``
-on the same meshes and the same manufactured solution. A full order, lost in the
-flow operator: the GLS term's pressure-test content is what makes P1/P1 legal,
-and on a pair that is already inf-sup stable it is a first-order perturbation of
-a second-order discretisation. Without the ``supg`` rung the middle delta is the
-sum of two different things and attributes neither.
-
-**What each delta may be called.** ``Delta_resid`` is the like-for-like number
-and the one section 7.4's targets apply to. ``Delta_transport`` is the transport
-stabilisation's contribution *to the distance from the golden*; it is **not**
-``stabilisation_currents_A``, which section 6.7 extracts from a single run as the
-stabilisation form evaluated against the indicator. WP12 measured those two
-agreeing to 1.55e-3 of the current on its benchmark, which is evidence that both
-measure the same physics, not licence to print one as the other. The report
-carries both, under distinct names.
-
-**What the identity does and does not catch.** ``Delta_total + Delta_transport +
-Delta_flow + Delta_pair = Delta_resid`` telescopes for *any* four numbers, so it
-cannot detect a rung run against a stale golden — see :meth:`Attribution.residual`
-and :func:`attribute`, which gates the provenance separately and is what actually
-does that job.
-"""
+"""The attribution ladder: which part of a discrepancy could be a defect (VAL-01, VAL-04)."""
 
 from __future__ import annotations
 
@@ -91,67 +40,17 @@ __all__ = [
 ]
 
 ATTRIBUTION_SCHEMA = "nanopnp/attribution/v0.5"
-"""Schema identifier of the report, and the separator of its content hash."""
 
 IDENTITY_TOLERANCE = 1e-14
-"""Tolerance on the telescoped sum, relative to ``max(1, |E_k|)``.
-
-The identity is exact in real arithmetic, so what is left is the round-off of
-four additions: about 1e-16 of the largest ``E_k``. Asserting at 1e-14 of that
-leaves two orders of headroom and still fails on any real slip in forming the
-deltas. Not absolute: an ``E_k`` is a relative error, which exceeds 10 wherever
-the golden is small, and an absolute 1e-14 then fails on correct input.
-"""
 
 Verdict = Literal["reference-limited", "attributed", "reference-unbounded"]
-"""What a comparison's residual can honestly be called.
-
-``reference-limited`` — ``Delta_resid < Delta_ref``, so our residual is below the
-reference's own discretisation error and the comparison has reached the limit of
-what the reference can say. Section 7.4's NOTE requires exactly this word: "a
-comparison whose residual falls below that bound SHALL be reported as
-*reference-limited* rather than as agreement".
-
-``attributed`` — ``Delta_resid >= Delta_ref``: the residual is larger than the
-reference's own error, so it is ours to explain.
-
-``reference-unbounded`` — VAL-04's refinement pair was not supplied for this
-case, so RSK-09 is unbounded here and neither word above is available.
-"""
 
 
-class LadderError(ValueError):
-    """The ladder's rungs cannot be attributed against each other.
-
-    A ``ValueError`` and IF-02's case class. Every message names the rung and
-    the thing that differed, because the failure it guards against — four rungs
-    compared against different goldens, or on different masks — produces five
-    finite deltas and one plausible wrong conclusion (QR-12).
-    """
+class LadderError(ValueError): ...
 
 
 @dataclass(frozen=True)
 class Rung:
-    """One configuration of the ladder, as dotted case-file assignments.
-
-    Parameters
-    ----------
-    index
-        Position in :data:`LADDER`; the ``rung`` axis of the sweep document
-        enumerates these in order.
-    name
-        Short name, used in the sweep document, the report and every diagnostic.
-    stabilisation
-        ``numerics.stabilisation``.
-    velocity_element, pressure_element
-        ``numerics.elements.u`` and ``.p``. ``phi`` and ``c`` stay at P2
-        throughout, which is the reference's own choice
-        (``.knowledge/09-comsol-reference-settings.md`` section C.2).
-    what
-        One line on what this rung measures, printed in the report so a reader
-        need not reconstruct the ladder from the assignments.
-    """
-
     index: int
     name: str
     stabilisation: str
@@ -160,7 +59,6 @@ class Rung:
     what: str
 
     def assignments(self) -> dict[str, FieldValue]:
-        """Return this rung as the sweep document's assignment mapping."""
         return {
             "numerics.stabilisation": self.stabilisation,
             "numerics.elements.u": self.velocity_element,
@@ -168,7 +66,6 @@ class Rung:
         }
 
     def summary(self) -> dict[str, Canonicalisable]:
-        """Return this rung's record for the report."""
         return {
             "index": self.index,
             "name": self.name,
@@ -212,35 +109,12 @@ LADDER: tuple[Rung, ...] = (
         what="the reference's own discretisation (.knowledge/09 C.2, E rows 1, 2, 4)",
     ),
 )
-"""The four rungs, in the order a reader should read them.
-
-``supg.permits_equal_order`` is ``False``, so rung 1 is P2/P1 by construction and
-not by choice; :func:`nanopnp.pipeline.case.resolve` refuses it at equal order.
-"""
 
 DELTA_LABELS: tuple[str, ...] = ("total", "transport", "flow", "pair")
-"""The four reported deltas, in the order they telescope."""
 
 
 @dataclass(frozen=True)
 class RungOutcome:
-    """One rung, compared against one golden.
-
-    Parameters
-    ----------
-    rung
-        Which rung this is.
-    golden_hash, probe_hash, case_hash
-        The provenance the ladder gates on: four rungs that do not share all
-        three were not compared against the same object, and their deltas are
-        differences between distances to different things.
-    fields, quantities
-        The comparisons, as :mod:`nanopnp.validation.compare` produced them.
-    stabilisation_currents_A
-        Section 6.7's per-species stabilisation contribution, from *this run
-        alone*. Carried beside ``Delta_transport`` and never as it.
-    """
-
     rung: Rung
     golden_hash: str
     probe_hash: str
@@ -250,25 +124,15 @@ class RungOutcome:
     stabilisation_currents_A: Mapping[str, float] | None = None
 
     def field_errors(self) -> dict[str, float]:
-        """Return ``rel_L2_r`` per field: the VAL-01 quantity, and ``E_k``'s source."""
         return {entry.field: entry.rel_L2_r for entry in self.fields}
 
     def quantity_errors(self) -> dict[str, float]:
-        """Return ``|relative|`` per quantity: the VAL-02 quantity.
-
-        The magnitude, where :class:`~nanopnp.validation.compare.QoIComparison`
-        keeps the sign. ``E_k`` is a *distance*, so the ladder telescopes
-        magnitudes; the signed value stays on the comparison, where a reader
-        looking for the direction of a discrepancy will find it.
-        """
         return {entry.name: abs(entry.relative) for entry in self.quantities}
 
     def point_counts(self) -> dict[str, int]:
-        """Return the number of retained probe points per field."""
         return {entry.field: entry.points for entry in self.fields}
 
     def summary(self) -> dict[str, Canonicalisable]:
-        """Return this rung's record for the report (FR-25)."""
         return {
             "rung": self.rung.summary(),
             "golden_hash": self.golden_hash,
@@ -286,21 +150,6 @@ class RungOutcome:
 
 @dataclass(frozen=True)
 class Attribution:
-    """The five deltas for one field or one quantity.
-
-    Parameters
-    ----------
-    key
-        The field or quantity name.
-    kind
-        ``"field"`` or ``"quantity"``.
-    errors
-        ``(E_0, E_1, E_2, E_3)``, one per rung of :data:`LADDER`.
-    reference_error
-        VAL-04's ``Delta_ref`` for this key, or ``None`` where the refinement
-        pair was not supplied.
-    """
-
     key: str
     kind: Literal["field", "quantity"]
     errors: tuple[float, float, float, float]
@@ -308,48 +157,33 @@ class Attribution:
 
     @property
     def total(self) -> float:
-        """``Delta_total = E_0``: what our shipped default does."""
         return self.errors[0]
 
     @property
     def transport(self) -> float:
-        """``Delta_transport = E_1 - E_0``: the transport stabilisation."""
         return self.errors[1] - self.errors[0]
 
     @property
     def flow(self) -> float:
-        """``Delta_flow = E_2 - E_1``: the flow GLS term on a Taylor-Hood pair."""
         return self.errors[2] - self.errors[1]
 
     @property
     def pair(self) -> float:
-        """``Delta_pair = E_3 - E_2``: P2/P1 to P1/P1."""
         return self.errors[3] - self.errors[2]
 
     @property
     def residual(self) -> float:
-        """``Delta_resid = E_3``: the like-for-like number, and the only possible defect."""
         return self.errors[3]
 
     def identity_residual(self) -> float:
-        """Return the telescoped sum minus ``Delta_resid``.
-
-        Zero to round-off by construction. Asserted anyway, at
-        :data:`IDENTITY_TOLERANCE`, because it costs nothing and fails on a slip
-        in forming the deltas — but it is *not* what catches a rung compared
-        against a stale golden, which telescopes just as cleanly. That is
-        :func:`attribute`'s provenance gate.
-        """
         return self.total + self.transport + self.flow + self.pair - self.residual
 
     def verdict(self) -> Verdict:
-        """Return what this residual can honestly be called; see :data:`Verdict`."""
         if self.reference_error is None:
             return "reference-unbounded"
         return "reference-limited" if self.residual < self.reference_error else "attributed"
 
     def summary(self) -> dict[str, Canonicalisable]:
-        """Return the five deltas and the verdict, for the report."""
         return {
             "key": self.key,
             "kind": self.kind,
@@ -367,28 +201,6 @@ class Attribution:
 
 @dataclass(frozen=True)
 class AttributionReport:
-    """One case's ladder: four rungs, five deltas per key, and a verdict.
-
-    Parameters
-    ----------
-    case
-        The frozen case's name.
-    golden_source
-        ``"comsol"`` or ``"self"``. Printed by every consumer: a ladder run
-        against a self-golden tests the machinery and nothing else.
-    golden_hash, probe_hash, case_hash, refinement
-        The provenance every rung shared.
-    rungs
-        The four outcomes, in :data:`LADDER` order.
-    attributions
-        One per field and per quantity, sorted by kind then key.
-    unavailable_fields, unavailable_quantities
-        What the golden did not carry. Reported rather than skipped: the open
-        question of whether the reference model exports ``p`` at all is answered
-        at export time, and a report that quietly covered four fields instead of
-        five would answer it wrongly.
-    """
-
     case: str
     golden_source: str
     golden_hash: str
@@ -401,14 +213,6 @@ class AttributionReport:
     unavailable_quantities: tuple[str, ...] = ()
 
     def attribution(self, key: str) -> Attribution:
-        """Return one key's attribution.
-
-        Raises
-        ------
-        LadderError
-            If no attribution carries that key; the message lists the ones that
-            do.
-        """
         for entry in self.attributions:
             if entry.key == key:
                 return entry
@@ -416,23 +220,6 @@ class AttributionReport:
         raise LadderError(f"this report attributes {listed}, not {key!r}")
 
     def check_identity(self, tolerance: float = IDENTITY_TOLERANCE) -> None:
-        """Abort where a telescoped sum does not return its own ``Delta_resid``.
-
-        Raises
-        ------
-        LadderError
-            Naming the key and the residual. See
-            :meth:`Attribution.identity_residual` for what this does and does
-            not establish.
-
-        Notes
-        -----
-        A non-finite residual fails too, and explicitly: an ``E_k`` of ``inf`` —
-        which :mod:`nanopnp.validation.compare` returns where the golden is zero
-        everywhere and we are not — telescopes to ``nan``, and ``abs(nan) >
-        tolerance`` is ``False``. Left to the magnitude test alone the one rung
-        that says nothing would be the one rung that passes.
-        """
         for entry in self.attributions:
             residual = entry.identity_residual()
             # Relative to the largest E_k: an E_k is a relative error and is not
@@ -450,11 +237,9 @@ class AttributionReport:
 
     @property
     def hash(self) -> str:
-        """Content hash over the report's record."""
         return content_hash(ATTRIBUTION_SCHEMA, self.summary())
 
     def summary(self) -> dict[str, Canonicalisable]:
-        """Return the whole report, for the JSON artefact and the manifest (FR-25)."""
         return {
             "schema": ATTRIBUTION_SCHEMA,
             "case": self.case,
@@ -470,7 +255,6 @@ class AttributionReport:
         }
 
     def markdown(self) -> str:
-        """Return the report a person reads, deltas first and provenance last."""
         lines = [
             f"# Tier-3 attribution — {self.case}",
             "",
@@ -547,46 +331,6 @@ class AttributionReport:
 
 
 def reference_error(coarse: Golden, fine: Golden, grid: ProbeGrid) -> dict[str, float]:
-    """Return VAL-04's ``Delta_ref`` per field: the reference's own discretisation error.
-
-    ``Delta_ref = ||g_fine - g_coarse|| / ||g_fine||`` in the same *r*-weighted
-    norm every other number here is taken in, and over the same probe points,
-    so the comparison against ``Delta_resid`` is between two of one quantity.
-
-    The points are the fine golden's defined set less the margin band that
-    ``grid`` drops next to every fluid/solid interface. The rungs' ``E_k`` are
-    taken without that band, and a COMSOL export carries values in it, where the
-    two refinements disagree most: a ``Delta_ref`` that kept the band would
-    exceed the ``Delta_resid`` it bounds for a reason that is not the
-    reference's, and the verdict would read *reference-limited* too readily.
-
-    Parameters
-    ----------
-    coarse, fine
-        The same case on the published mesh and on one uniform refinement of it.
-    grid
-        The probe grid the rungs were compared on, bound to their mesh
-        (:meth:`~nanopnp.validation.probe.ProbeGrid.on_mesh`): its masks are
-        what drops the margin band. Two goldens alone carry no mesh to take a
-        band from.
-
-    Returns
-    -------
-    dict of str to float
-        Per field carried by both goldens and compared on ``grid``, plus one
-        entry per scalar quantity both report, keyed as
-        :data:`~nanopnp.validation.compare.COMPARED_QUANTITIES` names it. A
-        field ``grid`` does not compare has no ``E_k`` for a ``Delta_ref`` to
-        bound, and the report already names it unavailable.
-
-    Raises
-    ------
-    LadderError
-        If the two goldens are not two refinements of one case on one probe
-        grid, or if they carry the same refinement label. Mixing the levels
-        inverts ``Delta_ref``'s meaning, which is the one thing it cannot
-        survive.
-    """
     import numpy as np
 
     if coarse.manifest.case_hash != fine.manifest.case_hash:
@@ -638,45 +382,6 @@ def attribute(
     reference_errors: Mapping[str, float] | None = None,
     sampled_fields: Sequence[str] | None = None,
 ) -> AttributionReport:
-    """Build the report from four rung outcomes, gating their provenance first.
-
-    Parameters
-    ----------
-    outcomes
-        One per rung of :data:`LADDER`, in that order.
-    case
-        The frozen case's name.
-    golden
-        The golden every rung was compared against; its manifest supplies the
-        report's provenance and its ``source`` the warning every consumer prints.
-    reference_errors
-        VAL-04's ``Delta_ref`` per key, from :func:`reference_error`, or ``None``
-        where the refinement pair was not supplied for this case. Absent, every
-        verdict is ``reference-unbounded`` — RSK-09 is simply not bounded here,
-        and saying so is the honest report.
-    sampled_fields
-        Every field *we* sampled on the probe grid, from
-        :func:`~nanopnp.validation.compare.sample_on_probe`. It is what
-        ``unavailable_fields`` is the complement of, and it cannot be recovered
-        from ``outcomes``: a rung's comparisons are already the intersection of
-        our fields with the golden's, so asking the golden which of *those* it
-        lacks always answers "none" and a report built that way would say a
-        golden carrying no ``pressure`` covered it.
-
-    Returns
-    -------
-    AttributionReport
-        With :meth:`~AttributionReport.check_identity` already run.
-
-    Raises
-    ------
-    LadderError
-        If the rungs are not :data:`LADDER`, if they do not share a golden, a
-        probe grid and a case, or if two of them retained different numbers of
-        probe points for one field. That last one is the gate the arithmetic
-        identity cannot be: two rungs masked differently are two distances to
-        two different objects, and their difference is not a delta.
-    """
     if len(outcomes) != len(LADDER):
         raise LadderError(
             f"the ladder has {len(LADDER)} rungs and {len(outcomes)} outcome(s) were given. "
@@ -730,14 +435,6 @@ def attribute(
 
 
 def _check_shared_provenance(outcomes: Sequence[RungOutcome]) -> None:
-    """Abort unless every rung was compared against the same object.
-
-    This is the gate the plan attributed to the telescoping identity. The
-    identity cannot do it: ``E_0 + (E_1 - E_0) + (E_2 - E_1) + (E_3 - E_2) =
-    E_3`` holds for any four numbers, so a rung compared against a re-exported
-    golden telescopes exactly as cleanly as one compared against the right one.
-    Comparing the hashes is what catches it.
-    """
     first = outcomes[0]
     for name in ("golden_hash", "probe_hash", "case_hash"):
         expected = getattr(first, name)
@@ -753,7 +450,6 @@ def _check_shared_provenance(outcomes: Sequence[RungOutcome]) -> None:
 
 
 def _check_shared_masks(outcomes: Sequence[RungOutcome]) -> None:
-    """Abort unless every rung took its norms over the same probe points."""
     first = outcomes[0].point_counts()
     for outcome in outcomes[1:]:
         counts = outcome.point_counts()
@@ -769,12 +465,6 @@ def _check_shared_masks(outcomes: Sequence[RungOutcome]) -> None:
 
 
 def write_report(report: AttributionReport, directory: str | Path) -> tuple[Path, Path]:
-    """Write the report as JSON and as markdown, and return both paths.
-
-    JSON through :func:`~nanopnp.core.hashing.canonical`, as every other artefact
-    record is written, so the file the nightly job uploads and the bytes the
-    report hashes are one thing.
-    """
     target = Path(directory)
     target.mkdir(parents=True, exist_ok=True)
     document = target / f"{report.case}.attribution.json"
@@ -785,12 +475,6 @@ def write_report(report: AttributionReport, directory: str | Path) -> tuple[Path
 
 
 def read_report(path: str | Path) -> dict[str, Canonicalisable]:
-    """Return a written report's record, floats restored.
-
-    The report is a record rather than an object with behaviour, so it comes
-    back as the mapping it was written as: every consumer of a Tier-3 run reads
-    the deltas and the verdict, and none of them re-runs the ladder.
-    """
     decoded = decode_floats(json.loads(Path(path).read_text(encoding="utf-8")))
     if not isinstance(decoded, dict):
         raise LadderError(f"{path} does not hold an attribution report object")

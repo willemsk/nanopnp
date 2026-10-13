@@ -1,23 +1,4 @@
-"""The deposited fixed charge against the reference's own table (WP28, VAL-15 at Tier 3).
-
-The reference built ``rhoq_pore`` as a 2D Gaussian in ``(r, z)`` about each atom's
-``(r_i, z_i)``, normalised in the plane, summed over the atoms and averaged over the
-frames, in ``e/m^2`` (``.knowledge/04`` §3, gap G4, G5). PHY-17 forbids that
-construction in the pipeline, which sums PHY-16 step 5's azimuthal mean of a 3D
-Gaussian instead. To say how much of a difference between our export and the
-delivered table is that choice, Tier 3 rebuilds the reference's construction from
-the same PQRs (:func:`reference_construction`) and splits the difference through
-it (:func:`compare_areal`):
-
-    ours - table = (ours - G4 rebuilt) + (G4 rebuilt - table)
-
-The first term is the construction and the frame, the second what our
-reconstruction of the reference misses: the frames, the radii, the archive's
-own rounding. Both grids are areal densities, ``∫ a dr dz = Q``, in C m^-2.
-
-Nothing here is a gate. The records are logged and written into the WP28
-plan's Outcomes (section 7.1: Tier 3 is recorded, not gated).
-"""
+"""The deposited fixed charge against the reference's own table (WP28, VAL-15 at Tier 3)."""
 
 from __future__ import annotations
 
@@ -42,62 +23,35 @@ if TYPE_CHECKING:
     import numpy as np
 
 NM_TO_M = 1e-9
-"""Metres per nanometre."""
 
 ALIGNMENT_TOL = 1e-6
-"""How far, in spacings, two grids' nodes may lie apart and still be the same nodes."""
 
 
 class _Strict(BaseModel):
-    """Base for the records here: frozen, and unknown keys are rejected."""
-
     model_config = ConfigDict(extra="forbid", frozen=True)
 
 
 class PlaneDifference(_Strict):
-    """One plane's cumulative charge under ``1/2 erfc((z - p)/s)``, on both grids, in e."""
-
     z_nm: float
     ours_e: float
     theirs_e: float
     relative: float
-    """``(ours - theirs) / |Q_theirs|``."""
 
 
 class AreaComparison(_Strict):
-    """Two areal densities on the same nodes: totals, field differences and planes."""
-
     q_ours_e: float
     q_theirs_e: float
     q_relative: float
-    """``(Q_ours - Q_theirs) / |Q_theirs|``."""
     rms_difference_C_m2: float
-    """Over the union of the two boxes, zero outside each grid."""
     max_difference_C_m2: float
     max_difference_at_nm: tuple[float, float]
-    """``(r, z)`` of the largest ``|ours - theirs|``."""
     max_theirs_C_m2: float
-    """The largest ``|theirs|``, the scale the two differences are read against."""
     smoothing_nm: float
     planes: list[PlaneDifference]
     worst_plane_relative: float
 
 
 def reference_construction(atoms: SourceAtoms, like: RadialGrid) -> RadialGrid:
-    """Return the reference's construction of the areal density on ``like``'s nodes (G4).
-
-    ``a(r, z) = Σ_i (q_i e / n_frames) / (π w_i²) exp(-((r - r_i)² + (z - z_i)²)/w_i²)``,
-    in C m^-2, each Gaussian cut to a square of half-width ``6 w_i``, as the
-    pipeline cuts its own. Not renormalised: the reference was not, and the part
-    of an atom's Gaussian at ``r < 0`` is lost from it, as from the table.
-
-    Parameters
-    ----------
-    atoms
-        The source atoms, in the frame ``like`` is in.
-    like
-        The grid whose nodes to sample: the delivered table's, to compare with it.
-    """
     import numpy as np
 
     h_r, h_z = like.spacing_nm
@@ -143,7 +97,6 @@ def reference_construction(atoms: SourceAtoms, like: RadialGrid) -> RadialGrid:
 
 
 def _embed(grid: RadialGrid, h: float, r0: int, k0: int, shape: tuple[int, int]) -> np.ndarray:
-    """Return the values of ``grid`` in a zero array of ``shape`` whose node 0 is ``(r0, k0) h``."""
     import numpy as np
 
     out = np.zeros(shape, dtype=np.float64)
@@ -161,19 +114,6 @@ def compare_areal(
     *,
     smoothing_nm: float,
 ) -> AreaComparison:
-    """Compare two areal densities in C m^-2 on the nodes they share, zero outside each.
-
-    The two grids must have one spacing and nodes on one lattice; a grid whose
-    nodes fall between the other's is refused rather than interpolated, which
-    would add an error of its own to the difference being measured.
-
-    Parameters
-    ----------
-    planes_nm
-        The planes of the per-plane comparison, each under ``1/2 erfc((z - p)/s)``.
-    smoothing_nm
-        ``s``.
-    """
     import numpy as np
     from scipy.special import erfc
 

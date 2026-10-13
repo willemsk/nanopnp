@@ -1,9 +1,4 @@
-"""Classification of every case schema leaf by what reads it (WP42 D4, REV-12, VER-71).
-
-Every leaf of the case schema is classified into exactly one kind, naming its
-consumer stage or solve operator and why it is present. A leaf unread by the
-selected model is refused away from its default.
-"""
+"""Classification of every case schema leaf by what reads it (WP42 D4, REV-12, VER-71)."""
 
 from __future__ import annotations
 
@@ -23,18 +18,6 @@ KINDS: tuple[str, ...] = (
 
 @dataclass(frozen=True)
 class Leaf:
-    """Classification record for a leaf in the case schema.
-
-    Parameters
-    ----------
-    kind : str
-        Classification kind from :data:`KINDS`.
-    consumer : str
-        Name of the stage or solver consuming this leaf, or empty string.
-    reason : str
-        Human-readable explanation of what reads or pins this leaf.
-    """
-
     kind: str
     consumer: str
     reason: str
@@ -43,22 +26,6 @@ class Leaf:
 def unclassified(
     paths: Iterable[str], leaves: Mapping[str, Leaf]
 ) -> tuple[tuple[str, ...], tuple[str, ...]]:
-    """Partition schema paths into missing and stale classifications.
-
-    Parameters
-    ----------
-    paths : Iterable[str]
-        Schema leaf paths to verify.
-    leaves : Mapping[str, Leaf]
-        Current leaf classification mapping.
-
-    Returns
-    -------
-    tuple[tuple[str, ...], tuple[str, ...]]
-        A pair ``(missing, stale)`` of sorted tuples, where ``missing`` contains
-        paths present in `paths` but absent from `leaves`, and ``stale`` contains
-        keys in `leaves` absent from `paths`.
-    """
     path_set = set(paths)
     leaf_set = set(leaves)
     missing = tuple(sorted(path_set - leaf_set))
@@ -67,13 +34,11 @@ def unclassified(
 
 
 LEAVES: dict[str, Leaf] = {
-    # provenance (3)
     "schema": Leaf("provenance", "", "schema format identifier of the case file"),
     "name": Leaf("provenance", "", "human-readable run name recorded in manifest and provenance"),
     "structure.source.variant": Leaf(
         "provenance", "", "structure variant label recorded in provenance and ignored by keys"
     ),
-    # solve (33)
     "physics.model": Leaf("solve", "solve", "selects the governing PDE system and its operators"),
     "boundary_conditions.bias_V": Leaf(
         "solve", "solve", "sets the electrostatic potential on the cis boundary"
@@ -169,7 +134,6 @@ LEAVES: dict[str, Leaf] = {
     "electrolyte.corrections.steric.model": Leaf(
         "solve", "solve", "steric correction model modifying ion chemical potentials"
     ),
-    # solver (4)
     "numerics.nonlinear.max_iter": Leaf(
         "solver", "solve", "maximum iterations for damped Newton solver"
     ),
@@ -180,18 +144,15 @@ LEAVES: dict[str, Leaf] = {
     "numerics.continuation": Leaf(
         "solver", "solve", "parameter continuation strategy across bias voltage rungs"
     ),
-    # checked (2)
     "electrolyte.corrections.steric.a_ion_nm": Leaf(
         "checked", "", "effective ion diameter verified against steric model assumptions"
     ),
     "electrolyte.corrections.steric.a_water_nm": Leaf(
         "checked", "", "effective water diameter verified against steric model assumptions"
     ),
-    # post (1)
     "outputs": Leaf(
         "post", "qoi", "requested scalar quantities of interest computed in post-processing"
     ),
-    # fixed (12)
     "numerics.nonlinear.strategy": Leaf("fixed", "", "fixed to damped Newton in this release"),
     "numerics.nonlinear.damping": Leaf(
         "fixed", "", "fixed to geometric damping ladder in this release"
@@ -222,8 +183,6 @@ LEAVES: dict[str, Leaf] = {
     "inputs.eps_r.artefact": Leaf(
         "fixed", "", "supplied dielectric field by store hash not scheduled"
     ),
-    # stage (50)
-    # structure (8)
     "structure.source.path": Leaf(
         "stage", "structure", "atomic coordinate file ingested and aligned by stage 1"
     ),
@@ -248,7 +207,6 @@ LEAVES: dict[str, Leaf] = {
     "structure.symmetry.axis": Leaf(
         "stage", "structure", "symmetry axis mode applied during alignment in stage 1"
     ),
-    # density (3)
     "geometry.density.grid_spacing_nm": Leaf(
         "stage", "density", "grid spacing for atomic density deposition in stage 2"
     ),
@@ -258,7 +216,6 @@ LEAVES: dict[str, Leaf] = {
     "geometry.density.sharpness": Leaf(
         "stage", "density", "sharpness factor scaling atomic van der Waals radii in stage 2"
     ),
-    # contour (3)
     "geometry.contour.isolevel": Leaf(
         "stage", "contour", "density isosurface level defining the pore surface in stage 4"
     ),
@@ -268,7 +225,6 @@ LEAVES: dict[str, Leaf] = {
     "geometry.contour.simplify_tol_nm": Leaf(
         "stage", "contour", "simplification tolerance for contour vertices in stage 4"
     ),
-    # region (13)
     "geometry.membrane.thickness_nm": Leaf(
         "stage", "region", "bilayer membrane slab thickness in stage 5 CAD assembly"
     ),
@@ -308,7 +264,6 @@ LEAVES: dict[str, Leaf] = {
     "inputs.profile.artefact": Leaf(
         "stage", "region", "supplied profile by store hash refused in stage 5"
     ),
-    # mesh (7)
     "numerics.mesh.backend": Leaf("stage", "mesh", "meshing engine backend invoked in stage 6"),
     "numerics.mesh.wall_h_nm": Leaf(
         "stage", "mesh", "target mesh element size along pore walls in stage 6"
@@ -328,7 +283,6 @@ LEAVES: dict[str, Leaf] = {
     "inputs.mesh.groups": Leaf(
         "stage", "mesh", "boundary tag mapping from mesh vocabulary in stage 6"
     ),
-    # protonation (7)
     "charge.ph": Leaf(
         "stage", "protonation", "solvent pH value driving PROPKA residue titration in stage 7"
     ),
@@ -350,7 +304,6 @@ LEAVES: dict[str, Leaf] = {
     "inputs.pqr.artefact": Leaf(
         "stage", "protonation", "supplied PQR by store hash refused by stage 7"
     ),
-    # charge (9)
     "charge.smearing.sharpness": Leaf(
         "stage", "charge", "atomic charge smearing kernel sharpness in stage 7"
     ),
