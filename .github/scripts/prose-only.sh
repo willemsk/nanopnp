@@ -15,8 +15,8 @@
 #               the pages VER-63 reads beside a log: a ruling names a section 8.2
 #               row, and a finding links to a report heading (section 8.2.8 H12).
 #   .claude/agents/ .claude/skills/ .claude/rules/ docs/plans/
-#               the roster, skill, rule and plan pages whose frontmatter, tools,
-#               paths and `## In brief` caps tests/tier1/test_agent_roster.py
+#               the agent, skill, rule and plan pages whose frontmatter, tools,
+#               paths and plan caps tests/tier1/test_plan_shape.py
 #               reads (REV-84). A change to only these runs the tests that read them.
 # docs/ is NOT prose as a directory: docs/sweeps/ and docs/validation/ hold the
 # YAML that tests/tier1 reads (the section 8.3 reference sweep, the frozen
