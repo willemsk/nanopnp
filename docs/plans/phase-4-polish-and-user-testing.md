@@ -76,8 +76,8 @@ The gate (§8.1, as amended by §8.2.7) has five parts:
 - the number-stability golden holds (10⁻⁸ on a recorded mesh; G10, VER-62);
 - Tiers 1 and 2 pass.
 
-*Amended, 11 October 2026* (§8.2.10 J7): a sixth part, the development loop's budgets hold or each
-miss is ruled.
+*Amended, 11 October 2026* (§8.2.10 J7), *replaced, 13 October 2026* (§8.2.11 L2 to L8): a sixth part,
+the development loop is simple and the prose small, with the loop's timings reported and a miss ruled.
 
 No requirement in Appendix A is tagged v0.5, so the evidence is the report, the two logs, the golden
 and the suites.
@@ -640,13 +640,13 @@ under the third lever, and the soundness argument of the selection. Tagged `v0.5
 ### WP44 — Simplify the loop (§8.2.11 L2, L3, L6, L7, L8)
 
 > **Delivered, 13 October 2026** ([plan](wp44-simplify-the-loop.md)). The commit hook runs the lock
-> check, ruff, format, mypy and all of Tier 1 (215 to 220 s on 4 cores, against 90 s predicted); the push
+> check, ruff, format, mypy and all of Tier 1 (187 to 220 s on 4 cores, against 90 s predicted); the push
 > gate runs the suite with `--extended`, once, without coverage (509 s), and the push guard stays;
 > pull-request shards are Tier 1 and Tier 2. The impact map, budget enforcer, duration record, agent
 > guard, roster test, `model-policy.md` and two agents are deleted; VER-73 and VER-74 are withdrawn;
 > VER-72 (g) caps plans at 1,500 words and six decisions. L4's rule is written down (D101 to D107,
 > D417 off); the tree is WP45's. Live: `gate.sh` is 561 lines, not 300 (the push guard's recognition is
-> 273); a pull request's critical path is measured on its first CI run. REV-80 and REV-81 are fixed.
+> 273); a pull request's critical path was 194 s on its first CI run. REV-80 and REV-81 are fixed.
 
 *Added, 13 October 2026.* The simplest gate that still checks for regressions and expected
 behaviour, and plans a session can afford. Tag `v0.5.0-alpha.10`. It does:
@@ -994,5 +994,5 @@ Empty until the close package fills it. It reports:
 - **The suite:** test counts by tier and the push gate's serial and parallel durations, against the
   1,764 collected by default at `v0.4.0`. Source: the gate run on the close package's tree.
 - **The development loop:** the wall times of the commit hook, the push gate and CI's pull-request
-  critical path, against 11 October 2026's 199 s, 527 s and about 10.5 minutes, and the tokens read
-  before code against WP42's. Sources: VER-73's duration report and the usage script.
+  critical path, against 11 October 2026's 199 s, 527 s and about 10.5 minutes. Sources: the gate log
+  (`<git dir>/nanopnp-gate.log`) and CI's job timings.

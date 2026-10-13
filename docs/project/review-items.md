@@ -886,3 +886,33 @@ The `platforms` and `full-matrix` jobs share about 45 lines of near-identical st
 run there. A later change to one job's steps is easily missed in the other.
 
 **Fixed.** The shared steps are the composite action `.github/actions/tier12`, which `platforms` and `full-matrix` both use; the dead `WALKS_ONLY` branch no longer exists in the full matrix (its `walks-only` input defaults to false).
+
+### REV-87 — The plan word cap counts the Outcome that /wp-implement appends
+
+*Area:* process. *Severity:* low. *Found:* WP44 review (`/code-review xhigh`).
+
+`tests/tier1/test_plan_shape.py` counts every word of the plan file against VER-72 (g)'s 1,500-word cap, including the PR line, the commit-sha ticks and the Outcome that `/wp-implement` appends at delivery. WP44's own plan fell from 1,476 to 1,346 words only by deleting its verification table and open questions.
+
+*Question for the author:* count only the planning sections (up to the work items), or keep the whole file and write plans nearer 1,200 words?
+
+### REV-88 — No check remains that the public API carries its docstrings
+
+*Area:* verification. *Severity:* medium. *Found:* WP44 review (`/code-review xhigh`).
+
+D101 to D107 are off (§8.2.11 L4), so no automated check says a symbol of `nanopnp.PUBLIC` or a new package `__init__.py` has its docstring, which the rule requires. With them on, D101, D103 and D104 report nothing today and only D102 reports (51 protocol methods).
+
+*Question for the author:* a Tier 1 test that every `nanopnp.PUBLIC` name and every module carries a docstring, or accept the rule as convention. WP45 needs the ruff rules off either way.
+
+### REV-89 — The shard partition test ignores collection errors and recollects the tree on every commit
+
+*Area:* verification. *Severity:* low. *Found:* WP44 review (`/code-review xhigh`).
+
+`tests/tier1/test_pull_request_shards.py` collects the whole `tests/` tree three times in subprocesses on every commit-hook run (about 8 s wall) and ignores each return code, so a collection error shrinks the compared sets and the test still passes; `tier1 | tier2 == (tier1 or tier2)` is close to a tautology of marker algebra.
+
+Not changed in the review: one collection with a checked return code would also have to hold on the Python 3.11 to 3.13 nightly legs. Open for the author.
+
+### REV-90 — VER-72 (d) and the planned-xfail logic guard a marker the workflow no longer writes
+
+*Area:* documentation. *Severity:* low. *Found:* WP44 review (`/code-review xhigh`).
+
+VER-72 (d) and the planned-xfail handling in `tests/tier1/test_plan_records.py` still guard `planned: WP<n>` markers, while §8.2.11 L7 and the rewritten skills retire planned tests. Removing a VER clause is a specification ruling.

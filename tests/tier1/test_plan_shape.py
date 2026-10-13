@@ -88,7 +88,6 @@ def _brief_problems(text: str) -> list[str]:
 
 
 def plan_problems(text: str) -> list[str]:
-    """Return the caps of §8.2.11 L7 that a work-package plan breaks."""
     problems = _brief_problems(text)
     if len(text.split()) > MAX_PLAN_WORDS:
         problems.append(f"{len(text.split())} words, over {MAX_PLAN_WORDS}")
@@ -162,12 +161,23 @@ def test_ver72_g_the_planning_skills_require_an_in_brief_of_at_most_250_words(sk
     assert "Your call" in text
 
 
-def test_the_agent_files_carry_only_keys_claude_code_reads() -> None:
+ROSTER = {
+    "ci-log-classifier": ("sonnet", None, True),
+    "physics-reviewer": ("opus", "high", False),
+}
+
+
+def test_the_agent_files_carry_only_keys_claude_code_reads_and_pin_their_models() -> None:
     paths = sorted(AGENTS.glob("*.md"))
-    assert {path.stem for path in paths} == {"ci-log-classifier", "physics-reviewer"}
+    assert {path.stem for path in paths} == set(ROSTER)
     for path in paths:
         meta = _frontmatter(path)
+        model, effort, omits_claude_md = ROSTER[path.stem]
         assert not set(meta) - KNOWN_KEYS, path.name
+        assert meta["name"] == path.stem, path.name
+        assert meta["model"] == model, path.name
+        assert meta.get("effort") == effort, path.name
+        assert meta.get("omitClaudeMd", False) is omits_claude_md, path.name
         assert isinstance(meta["description"], str) and meta["description"].strip(), path.name
         assert _tools(meta["tools"]) == {"Read", "Grep", "Glob"}, path.name
 
