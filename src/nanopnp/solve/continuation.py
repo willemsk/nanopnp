@@ -1,69 +1,4 @@
-"""The continuation ladder of NUM-18, and the warm start it rests on.
-
-A cold monolithic Newton solve of ePNP-NS at 3 M against a strongly charged wall
-does not converge. It does not converge *correctly*: the NUM-17 positivity gate
-aborts it on the first over-long step, which is the right behaviour and no help
-at all. The way to the hard operating point is to arrive at it from a converged
-neighbour, and the ladder is the sequence of neighbours (FR-17):
-
-1. Linear Poisson-Boltzmann.
-2. Nonlinear Poisson-Boltzmann.
-3. Equilibrium PNP at ``V_bias = 0``, ``u = 0``.
-4. Ramp ``sigma_s`` and ``rho_pore`` from 0 to target.
-5. Ramp ``V_bias`` from 0 to +/-200 mV, in steps of about 10 mV near onset.
-6. Enable the Stokes / Navier-Stokes coupling.
-7. Enable the ``<c>``- and ``d``-dependent ``D``, ``mu``, ``eps``, ``rho`` corrections.
-8. Enable the steric flux ``beta_i``.
-9. Sweep the salt concentration from 0.05 M to 3 M.
-
-Stages 4, 5 and 9 are ramps and expand into several rungs each; the rest are one
-apiece. Enabling the corrections last is what isolates their contribution to any
-convergence failure, and it is why this order rather than another.
-
-Why a warm start terminates
----------------------------
-Every rung re-solves a state that is already nearly converged. A Newton
-criterion measured on the residual *relative to the residual on entry* would
-demand a further six orders of magnitude from a residual already at its floor,
-so it would never be met and the ladder would stall at rung 2. NUM-16's
-per-field relative-update test on the undamped direction is what makes
-re-solving a converged state cost at most one iteration -- the one Jacobian
-solve that shows there is nothing to do, skipped only when the entry residual is
-already at the absolute floor -- and this module depends on it entirely.
-
-Why a warm start needs help across a changed field set
-------------------------------------------------------
-:meth:`CoupledModel.solve` warm-starts by reusing ``initial.space``, which is
-correct and sufficient whenever the field set does not change. Three transitions
-change it: stage 2 to 3 adds the concentrations, stage 5 to 6 adds the velocity
-and the pressure, and any change of element order would too. :func:`transfer`
-is the missing piece: it builds the target model's space, cold-starts it so the
-new fields begin somewhere admissible, and interpolates every field the two
-models share, by name. The result is a :class:`ModelSolution` *on the target
-space*, so ``model.solve(initial=transferred)`` needs no special case.
-
-This is also where a silent error would live. An interpolation that landed the
-potential on the wrong component, or that confused the NUM-02 log variable with
-the concentration itself, would produce a converged, plausible, wrong answer. The
-property that catches it is idempotence: re-solving a converged rung from its own
-transferred output must cost zero Newton iterations. It is asserted in
-``tests/tier2/test_ladder.py``.
-
-Why the concentration sweep of stage 9 warm-starts at all
----------------------------------------------------------
-Changing ``concentration_M`` changes the whole NUM-09 scale set, hence ``S``,
-``Pe`` and every nondimensional coefficient — but not the field set, so the
-transfer is a vector copy. The previous solution stays a good initial guess
-because the nondimensionalisation leaves every field O(1) in the *new* scaling
-too: ``c~_i = 1`` is bulk by the definition of ``c_0``, and ``phi~`` is measured
-in ``V_T``, which does not move with the salt. That is the payoff of solving in
-scaled variables rather than in SI.
-
-NUM-19 (the mesh is adapted between rungs, never within one) is satisfied
-structurally: a :class:`Rung` carries its own mesh and nothing here changes it
-during a solve. This phase runs one fixed mesh for the whole ladder, sized for
-the tightest double layer in the envelope, so there is no adaptation to confine.
-"""
+"""The NUM-18 continuation ladder and the warm start between its rungs."""
 
 from __future__ import annotations
 
@@ -111,61 +46,21 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 BIAS_ONSET_V = 0.05
-"""Below this magnitude the bias ramp takes fine steps (NUM-18 stage 5)."""
 
 FINE_BIAS_STEP_V = 0.01
-"""The "about 10 mV near onset" of NUM-18 stage 5."""
 
 COARSE_BIAS_STEP_V = 0.025
-"""Step above the onset, where the response is closer to linear."""
 
 ELECTRODES: frozenset[str] = frozenset({"cis", "trans"})
-"""The two reservoir boundaries, one of which is grounded (IF-03)."""
 
 LADDER_START_CONCENTRATION_M = 0.05
-"""Bottom of the NUM-18 stage 9 sweep, and the easiest rung of the envelope.
-
-The double layer is widest and the packing fraction smallest at low salt, so a
-ladder built here and swept upwards meets the hard configuration last and warm.
-"""
 
 
-class TransferError(RuntimeError):
-    """A solution cannot be carried onto the next rung's space.
-
-    Raised rather than worked around: a transfer that quietly did something else
-    would hand Newton an initial guess for a different problem, and the run that
-    followed would converge to a plausible wrong answer (QR-12).
-    """
+class TransferError(RuntimeError): ...
 
 
 @dataclass(frozen=True)
 class Rung:
-    """One rung of the ladder: a model, a mesh, and the arguments to solve it with.
-
-    Parameters
-    ----------
-    name
-        Human-readable rung name, used in logs and in the run record.
-    stage
-        Which of the nine NUM-18 stages this rung belongs to. A ramp expands into
-        several rungs sharing a stage, so the stage is what makes the ladder's
-        conformance to NUM-18 checkable.
-    model
-        The physics model of this rung.
-    mesh
-        The mesh to solve it on. Carried per rung so that NUM-19's
-        between-rungs-only adaptation drops in without changing this signature.
-    boundaries
-        The boundary vocabulary the space is built on.
-    measures
-        Symmetry and quadrature policy. Its element order must match the model's.
-    solve_kwargs
-        Everything else the model's ``solve`` takes: ``potential_values``,
-        ``fixed_charge``, ``surface_charge``, ``wall_distance_nm``,
-        ``debye_length_nm`` and so on.
-    """
-
     name: str
     stage: int
     model: PhysicsModel
@@ -176,7 +71,6 @@ class Rung:
 
 
 def _read_stabilisation_entry(model: object, key: str, *, expect_mapping: bool = False) -> object:
-    """Read a stabilisation entry, refusing missing or non-mapping values."""
     name = getattr(model, "name", "unknown")
     provenance = getattr(model, "provenance", {})
     if key not in provenance:
@@ -196,8 +90,6 @@ def _read_stabilisation_entry(model: object, key: str, *, expect_mapping: bool =
 
 @dataclass(frozen=True)
 class RungResult:
-    """What one rung cost and how it converged, for the FR-25 manifest."""
-
     name: str
     stage: int
     model: str
@@ -207,26 +99,16 @@ class RungResult:
     stabilisation: str
     newton: Mapping[str, Option] | None
     deviations: tuple[str, ...] = ()
-    """Every switch of this rung's model set away from the validated default.
-
-    FR-25 asks for these by name, and the registered model name does not carry
-    them: ``dielectric_gradient_forces`` or ``variable_density=off`` on one rung
-    would otherwise appear nowhere in the ladder's record, and the run would not
-    be reconstructible from it.
-    """
 
     @property
     def iterations(self) -> int:
-        """Newton iterations this rung took; 0 for a linear model."""
         return 0 if self.newton is None else int(self.newton["iterations"])
 
     @property
     def minimum_damping_used(self) -> float:
-        """Smallest damping any accepted step of this rung was taken with."""
         return 1.0 if self.newton is None else float(self.newton["minimum_damping_used"])
 
     def summary(self) -> dict[str, Option]:
-        """Return the record of this rung."""
         return {
             "rung": self.name,
             "stage": self.stage,
@@ -242,57 +124,29 @@ class RungResult:
 
 @dataclass(frozen=True)
 class LadderResult:
-    """The converged state at the top of the ladder, and the record of getting there."""
-
     solution: ModelSolution
     rungs: tuple[RungResult, ...]
     mesh: Mapping[str, Option]
     peclet: PecletMeasurement | None = None
-    """What the NUM-12 diagnostic measured on the converged top rung.
-
-    ``None`` when the top rung solves no ionic transport -- an electrostatic
-    ladder has no advective velocity to measure -- which is not the same fact as
-    a measured maximum of zero, and the manifest keeps the two apart (FR-25).
-    """
 
     @property
     def seconds(self) -> float:
-        """Total wall time of the ladder."""
         return math.fsum(rung.seconds for rung in self.rungs)
 
     @property
     def iterations(self) -> int:
-        """Total Newton iterations over every rung."""
         return sum(rung.iterations for rung in self.rungs)
 
     @property
     def minimum_damping_used(self) -> float:
-        """Smallest damping any rung needed.
-
-        The end-of-phase report asks which rungs needed damping below 0.1; this
-        is the number it is asking for, and :meth:`summary` carries the per-rung
-        breakdown that says *which*.
-        """
         return min((rung.minimum_damping_used for rung in self.rungs), default=1.0)
 
     @property
     def stabilisation(self) -> str:
-        """The stabilisation mode the top rung's number was produced on (NUM-13, §5.3.3).
-
-        Read from the converged model rather than assumed, so the manifest cannot
-        disagree with the discretisation. Every model names its mode, ``none`` where
-        it assembles no transport term (NUM-13, D9).
-        """
         return str(_read_stabilisation_entry(self.solution.model, "stabilisation"))
 
     @property
     def stabilisation_parameters(self) -> Mapping[str, Option]:
-        """The tuning constants of the mode the top rung was solved in (FR-25).
-
-        The mode *name* is not the operator: ``reference`` at ``C_cw = 1`` and at
-        ``C_cw = 0.35`` are different discretisations, and a manifest recording
-        only the name could not tell two such runs apart.
-        """
         found = _read_stabilisation_entry(
             self.solution.model, "stabilisation_parameters", expect_mapping=True
         )
@@ -301,7 +155,6 @@ class LadderResult:
 
     @property
     def stabilisation_provenance(self) -> Mapping[str, Option]:
-        """Where the mode's constants came from, as the mode itself reports them."""
         found = _read_stabilisation_entry(
             self.solution.model, "stabilisation_provenance", expect_mapping=True
         )
@@ -310,22 +163,9 @@ class LadderResult:
 
     @property
     def max_cell_peclet(self) -> float | None:
-        """The largest ``Pe_K`` on the converged top rung, or ``None`` if unmeasured.
-
-        Recorded beside the stabilisation mode because the two are read together:
-        NUM-11 puts production in ``none``, and whether that was safe is exactly
-        the question this number answers (NUM-12, section 5.3.3).
-        """
         return None if self.peclet is None else self.peclet.maximum
 
     def summary(self) -> dict[str, Option]:
-        """Return the whole ladder's record, for the provenance manifest (FR-25).
-
-        A result whose manifest cannot reconstruct the run is not a result, and a
-        continuation run is not reconstructible from its final state alone: the
-        path taken to it, and the stabilisation mode it was solved under, are part
-        of how it was obtained.
-        """
         return {
             "rungs": [rung.summary() for rung in self.rungs],
             "stages": sorted({rung.stage for rung in self.rungs}),
@@ -342,12 +182,6 @@ class LadderResult:
 
 
 def reads_wall(electrolyte: Electrolyte) -> bool:
-    """Return whether any resolved correction of ``electrolyte`` evaluates ``d``.
-
-    Asked of the corrections rather than of the model name: a run whose wall
-    factors are all off must not pay for a screened-Poisson solve, and must not
-    record a distance field nothing read.
-    """
     return any(
         bool(getattr(correction, "use_wall", False))
         for correction in electrolyte.corrections.values()
@@ -355,16 +189,6 @@ def reads_wall(electrolyte: Electrolyte) -> bool:
 
 
 def model_reads_wall(model: PhysicsModel) -> bool:
-    """Return whether this *built* model evaluates the PHY-02 distance field.
-
-    The one rule the single rung, the ladder's rungs, ``save`` and ``restore``
-    share. The declaration says whether the model reads ``d`` at all (section
-    5.4.3 NOTE); a transport model then reads it only where one of its own
-    resolved corrections does. Asked of the model, never of the case's
-    electrolyte: ``pnp-ns`` resolves every correction to ``none`` whatever the
-    case gave, so a case-level answer computed, gated and stored a field no
-    term evaluated, and a ladder that never passed one then failed in ``save``.
-    """
     if not declaration(model.name).wall_distance:
         return False
     if not solves_transport(model):
@@ -373,12 +197,6 @@ def model_reads_wall(model: PhysicsModel) -> bool:
 
 
 def mesh_report(mesh: Mesh) -> dict[str, Option]:
-    """Return the mesh's size, for the record NUM-19 and FR-25 need.
-
-    A continuation run's numbers mean nothing without the mesh they were obtained
-    on, and "the mesh" is not reconstructible from the geometry alone once a size
-    field has been applied.
-    """
     return {
         "elements": mesh.ne,
         "vertices": mesh.nv,
@@ -394,32 +212,6 @@ def bias_schedule(
     fine_step_V: float = FINE_BIAS_STEP_V,
     coarse_step_V: float = COARSE_BIAS_STEP_V,
 ) -> tuple[float, ...]:
-    """Return the bias ramp of NUM-18 stage 5, in volts, ending exactly on the target.
-
-    About 10 mV per step up to ``onset_V`` and 25 mV above it. The onset is where
-    the double layer starts to be driven appreciably out of equilibrium, and it
-    is the part of the ramp a coarse step overshoots.
-
-    Parameters
-    ----------
-    target_V
-        The bias to reach, of either sign.
-    onset_V
-        Magnitude below which the fine step is used.
-    fine_step_V, coarse_step_V
-        Step magnitudes below and above the onset.
-
-    Returns
-    -------
-    tuple[float, ...]
-        Increasing in magnitude, of the target's sign, ending on the target.
-        Empty at zero target, which needs no ramp.
-
-    Raises
-    ------
-    ValueError
-        If either step is not positive, which would not terminate.
-    """
     if fine_step_V <= 0.0 or coarse_step_V <= 0.0:
         raise ValueError(
             f"the bias steps must be positive, got {fine_step_V} V and {coarse_step_V} V"
@@ -439,53 +231,25 @@ def bias_schedule(
 
 
 def ramp_schedule(steps: int) -> tuple[float, ...]:
-    """Return ``(1/n, 2/n, ..., 1)``, the fractions of a linear ramp.
-
-    Used for NUM-18 stage 4, where the fixed and surface charges are raised
-    together from zero to their target, and for the concentration sweep of stage
-    9, where it interpolates geometrically instead (see :func:`default_ladder`).
-
-    Raises
-    ------
-    ValueError
-        If ``steps`` is not positive.
-    """
     if steps < 1:
         raise ValueError(f"a ramp needs at least one step, got {steps}")
     return tuple((index + 1) / steps for index in range(steps))
 
 
 def _fields_of(model: PhysicsModel) -> dict[str, tuple[str, int]]:
-    """Return the model's field names against their element family and order."""
     return {declared.name: (declared.element, declared.order) for declared in model.fields}
 
 
 def _shared_fields(source: PhysicsModel, target: PhysicsModel) -> tuple[str, ...]:
-    """Return the fields two models hold in common *at the same discretisation*.
-
-    The one place the warm-start rule is written. A field carried in a different
-    element family or at a different order cannot be copied and is cold-started
-    instead, so :func:`run_ladder` asks here rather than restating the test: a
-    record that counted it as transferred would claim a warm start that did not
-    happen (FR-25).
-    """
     before = _fields_of(source)
     return tuple(name for name, kind in _fields_of(target).items() if before.get(name) == kind)
 
 
 def _log_branch(model: PhysicsModel) -> bool:
-    """Whether the model solves for ``w_i = log(c~_i)`` rather than ``c~_i`` (NUM-02)."""
     return solves_transport(model) and transport_model(model).log_variables
 
 
 def _component(state: GridFunction, model: PhysicsModel, name: str) -> GridFunction:
-    """Return one field of a state by name, single-field spaces included.
-
-    A product space exposes ``components``; a one-field space does not, and
-    indexing it raises. Both appear in the ladder — stages 1 and 2 solve for
-    ``phi`` alone — so the distinction is handled here rather than at four call
-    sites.
-    """
     names = list(_fields_of(model))
     if len(names) == 1:
         return state
@@ -500,56 +264,6 @@ def transfer(
     *,
     initial_concentrations: Mapping[str, float] | None = None,
 ) -> ModelSolution:
-    """Carry a converged solution onto another model's space.
-
-    Fields the two models share are interpolated by name; fields only the target
-    has are left at their cold-start values, which is where
-    :meth:`CoupledModel.cold_state` matters — a concentration left at zero would
-    fail the NUM-17 positivity gate before Newton took a step.
-
-    When the two models declare the same fields *and* solve in the same NUM-02
-    variable, the state is copied verbatim rather than interpolated. That is not
-    only faster: an interpolation of a function already in the space is the
-    identity only up to round-off, and stages 4, 5, 7, 8 and 9 all transfer
-    within one space, so an accumulating round-off would be paid a dozen times
-    over.
-
-    Concentrations go through :meth:`ModelSolution.concentration`, so the NUM-02
-    log branch is unwrapped on the way out and reapplied on the way in. Reading
-    the raw component instead would carry ``w_i`` across as though it were
-    ``c~_i`` — a state that is still admissible, still converges, and is wrong.
-    The verbatim copy above is a raw read by construction, which is why it is
-    taken only between two models on the same side of that branch: they declare
-    identical fields and have identical ``ndof`` either way, so nothing about the
-    shape of the two spaces would have caught the confusion.
-
-    Parameters
-    ----------
-    previous
-        The converged solution to start from.
-    model
-        The model whose space to land on.
-    mesh
-        The mesh. It must be the one ``previous`` was solved on.
-    boundaries
-        The boundary vocabulary of the target space.
-    initial_concentrations
-        Cold-start values for concentrations the previous model did not solve.
-
-    Returns
-    -------
-    ModelSolution
-        The transferred state, on the target model's space, with no convergence
-        record: nothing has been solved.
-
-    Raises
-    ------
-    TransferError
-        If the meshes differ. Interpolating across meshes is a point evaluation
-        outside the source domain wherever the two do not overlap, which returns
-        a plausible number rather than raising; the cross-mesh path is deferred
-        rather than approximated.
-    """
     import ngsolve as ngs
 
     if previous.space.mesh is not mesh:
@@ -573,34 +287,27 @@ def transfer(
         )
 
     space = model.space(mesh, boundaries)
-    # The NUM-02 branch is part of what a field *means* and none of what it looks
-    # like: a log-variable model and a primitive one declare the same names at
-    # the same order and have the same ``ndof``, so a shape test alone would send
-    # them down the verbatim copy below and carry ``w_i`` across as ``c~_i`` --
-    # the exact confusion the concentration accessor exists to prevent.
+    # A log-variable and a primitive model share names, order and ndof, so a shape
+    # test alone would copy w_i across as c~_i (NUM-02).
     same_branch = _log_branch(previous.model) == _log_branch(model)
-    # ``list(...items())``, not a set or a bare key comparison: a verbatim vector
-    # copy needs the blocks of the product space in the same order as well.
+    # Ordered items: a verbatim copy needs the product-space blocks in the same order.
     same_shape = list(target.items()) == list(source.items())
     if same_branch and same_shape and space.ndof == previous.space.ndof:
-        # The cold start is not built at all here: every value it interpolated
-        # would be overwritten by the copy, and each one is a mass-matrix solve
-        # over the whole fluid. Most rungs of the default ladder take this path.
+        # No cold start: the copy would overwrite it, and each interpolation is a mass-matrix solve.
         state = ngs.GridFunction(space, name=f"{model.name}_state")
         state.vec.data = previous.state.vec
         logger.debug("transfer to %r: copied %d fields verbatim", model.name, len(shared))
         return ModelSolution(model=model, space=state.space, state=state)
 
-    # A model with no species refuses ion data; the ladder hands a rung's own
-    # value only to the rungs that carry it.
+    # A model with no species refuses ion data.
     state = model.cold_state(mesh, boundaries, initial_concentrations=initial_concentrations)
 
     species = set(model.species)
     for name in shared:
         matched = [ion for ion in species if concentration_field_name(ion) == name]
         if matched:
-            # The concentration, not the solved variable: in the NUM-02 log
-            # branch those differ by an exponential.
+            # The concentration, not the solved variable (they differ by an exponential
+            # in the log branch).
             value: Expression = previous.concentration(matched[0])
             if _log_branch(model):
                 value = ngs.log(value)
@@ -620,41 +327,6 @@ def run_ladder(
     initial: ModelSolution | None = None,
     on_rung: Callable[[int, Rung], None] | None = None,
 ) -> LadderResult:
-    """Solve every rung in order, each warm-started from the one before (NUM-18).
-
-    Parameters
-    ----------
-    rungs
-        The ladder, from the easiest configuration to the target one.
-    initial
-        A converged solution to warm-start the *first* rung from, transferred
-        onto its space like any other. This is what makes a ladder resumable, and
-        it is how a sweep walks the FR-17 envelope: the ladder is climbed once to
-        one corner and every other operating point is one rung away from a
-        converged neighbour, rather than another climb from cold.
-    on_rung
-        Called with the 0-based index and the rung about to be solved. This is
-        the ladder's only point between rungs, and FR-27 needs one: the first
-        two rungs are electrostatic models
-        whose ``solve`` takes no Newton callback, so a stage driving progress or
-        cancellation through the callback alone would report nothing and refuse
-        to stop until stage 3. An exception raised here propagates, which is how
-        :class:`~nanopnp.core.stages.Cancelled` unwinds the ladder.
-
-    Returns
-    -------
-    LadderResult
-        The converged state at the top and the per-rung record.
-
-    Raises
-    ------
-    ValueError
-        If the ladder is empty.
-    nanopnp.numerics.gates.GateViolationError
-        If any NUM-17 assertion fails on any rung. It is allowed to propagate
-        with the rung named: a ladder that swallowed a gate and carried on would
-        be doing exactly what the gate exists to prevent (QR-12).
-    """
     if not rungs:
         raise ValueError("a continuation ladder needs at least one rung")
 
@@ -668,9 +340,8 @@ def run_ladder(
         cold_fields = declared
         carried: ModelSolution | None = None
         if previous is not None:
-            # ``initial_concentrations`` is what a cold-started concentration
-            # field is filled with, so the rung's own value has to reach the
-            # transfer; ``solve`` ignores it once a warm start is supplied.
+            # Cold-started concentrations take the rung's own value; ``solve`` ignores
+            # it on a warm start.
             carried = transfer(
                 previous,
                 rung.model,
@@ -680,17 +351,11 @@ def run_ladder(
             )
             transferred_fields = _shared_fields(previous.model, rung.model)
             cold_fields = tuple(name for name in declared if name not in transferred_fields)
-            # Released before the next solve rather than after it. A
-            # ``ModelSolution`` carries the assembled residual form, so holding
-            # the previous rung's would keep a whole system matrix alive
-            # alongside the factorisation of the next one — and a single
-            # factorisation of the five-field system is already 6.2 GB at the
-            # reference mesh size (SPECIFICATION.md section 6.6). Everything the
-            # record needs has been read out above; ``carried`` is the state.
+            # Released before the next solve: the residual form keeps a system matrix alive, and one
+            # factorisation of the five-field system is 6.2 GB at the reference mesh (section 6.6).
             previous = None
 
-        # Read before the solve: a model that records no mode is refused before
-        # its rung is paid for, not after (NUM-13, WP41 D9).
+        # Read before the solve so a model recording no mode is refused before its rung is paid for.
         stabilisation = str(_read_stabilisation_entry(rung.model, "stabilisation"))
         started = time.perf_counter()
         try:
@@ -702,16 +367,11 @@ def run_ladder(
                 **dict(rung.solve_kwargs),
             )
         except Cancelled:
-            # Not a failure: the caller asked to stop (FR-27). Logging it beside
-            # the gate violations would make a cancelled run look like a diverged
-            # one in exactly the record an operator reads first.
+            # A cancel is not a failure; it stays out of the failure log.
             logger.info("continuation cancelled on rung %r (stage %d)", rung.name, rung.stage)
             raise
         except Exception:
-            # Re-raised unchanged, traceback intact: a gate violation names the
-            # field and the location (QR-12) and is the diagnostic; the rung is
-            # the context and belongs in the log beside it, not wrapped around
-            # an exception whose type the ladder would have to reconstruct.
+            # Re-raised unchanged: the gate's diagnostic names field and location.
             logger.error(
                 "continuation failed on rung %r (stage %d, model %r)",
                 rung.name,
@@ -754,22 +414,6 @@ def run_ladder(
 
 
 def _report_peclet(solution: ModelSolution, measures: Measures) -> PecletMeasurement | None:
-    """Run the NUM-12 diagnostic on the converged top rung, or return ``None``.
-
-    Here rather than in the stage, because NUM-12's second NOTE puts the
-    evaluation on the assembled mesh's *converged state* and this is where the
-    ladder has one. Every path to a converged solution -- the CLI, the sweep
-    runner, a test -- goes through :func:`run_ladder`, so the diagnostic cannot be
-    skipped by a caller that forgot it.
-
-    A warning and never a gate: a lower rung of the ladder is deliberately coarse,
-    and an under-resolved double layer is not an inadmissible state. The NUM-17
-    positivity gate is what fails if it has become one.
-
-    ``measures`` is the top rung's, so the location the warning names carries that
-    rung's own coordinate names; a planar case would otherwise be reported in
-    ``(r, z)``.
-    """
     if not solves_transport(solution.model):
         return None
     model = transport_model(solution)
@@ -812,133 +456,9 @@ def default_ladder(
     velocity_order: int | None = None,
     pressure_order: int = 1,
 ) -> tuple[Rung, ...]:
-    """Build the nine stages of NUM-18 for one target operating point.
-
-    Stages 4, 5 and 9 expand into several rungs each; every rung carries the
-    ``stage`` it belongs to, so conformance to NUM-18's order is a property of
-    the returned sequence rather than of its length.
-
-    Parameters
-    ----------
-    mesh
-        The mesh every rung is solved on. One fixed mesh for the whole ladder is
-        this phase's policy, which satisfies NUM-19 trivially; a future adaptive
-        scheme changes only what is put in each :class:`Rung`.
-    concentration_M
-        Target bulk concentration.
-    bias_V
-        Target applied bias, of either sign, applied to whichever of the two
-        electrodes is not ``ground``.
-    ground
-        Which electrode is held at zero, ``"cis"`` or ``"trans"`` (the case
-        file's ``boundary_conditions.ground``). The two choices differ by a
-        constant in ``phi`` and so by the sign convention of every reported
-        current, which is why the field is honoured here rather than recorded
-        and ignored.
-    electrolyte, corrections
-        The electrolyte, or the correction parameter file to build one from.
-    surface_charge_C_m2, fixed_charge_C_m3
-        Targets of the stage-4 ramp, in SI. Converted to the nondimensional
-        variables through the NUM-09 scale set of the model that carries them.
-    fixed_charge_domain
-        Material the fixed charge is confined to. ``None``, the default, spreads
-        it over the whole domain, which is what a uniformly charged medium means.
-        An *analyte* charge is not that: ``rho_part = q/V`` lives in the body and
-        nowhere else, so a body charge passed without this argument would also
-        charge the electrolyte it is suspended in and drive a space charge the
-        physical problem does not have.
-    fixed_charge_field
-        A gridded fixed charge in **SI** C m^-3 with the integration rule it is
-        assembled with, as
-        :meth:`nanopnp.charge.fields.ChargeField.fixed_charge_C_m3` returns it
-        (PHY-19 NOTE, WP41 D2, REV-72). Nondimensionalised by the same scale the
-        scalar is and ramped by the same stage-4 fractions, which is the whole
-        point of putting it here: the ramp is the machinery a gridded field
-        needs, and the scalar was only ever standing in for one. The rule
-        travels with it onto every charged rung. The reference model applies
-        ``scd_pore`` across *all* computational domains (`.knowledge/04` §3), so
-        no domain restriction is offered for it; ``fixed_charge_domain`` belongs
-        to the scalar. Mutually exclusive with ``fixed_charge_C_m3``: a run
-        carrying both would be a superposition nobody asked for and neither
-        number would describe it.
-    solid_fraction
-        The supplied ``chi`` of §4.4's NOTE, passed to every rung that solves
-        Poisson with a permittivity. Not ramped: it is a coefficient of the
-        operator, not a source, and a partially applied dielectric is not a
-        physical state on the way to the target.
-    wall_potential_V
-        Zeta potential imposed on the pore wall during the two Poisson-Boltzmann
-        stages, in volts. Zero by default, and then those two stages are
-        trivially ``phi = 0``: NUM-18 puts the charge ramp at stage 4, *after*
-        them, so with no zeta there is nothing yet for PB to screen. Supplying
-        one turns stages 1 and 2 into the Poisson-Boltzmann initialiser NUM-20
-        names as the cure for the high-surface-charge failure mode.
-    wall_distance_nm
-        The PHY-02 distance field, used from stage 7 onwards where the wall
-        corrections come on.
-    solid_permittivities
-        Relative permittivity per solid material. Omitting it leaves the membrane
-        at the electrolyte's permittivity, which is about 24 times too large and
-        changes the field the current is driven by.
-    boundaries, measures
-        The boundary vocabulary and the quadrature policy of every rung.
-    start_concentration_M
-        Concentration the first eight stages are built at, swept to
-        ``concentration_M`` in stage 9. ``None`` builds the whole ladder at the
-        target and omits stage 9.
-    charge_steps, concentration_steps
-        Number of sub-rungs in the stage-4 and stage-9 ramps.
-    surface_charge_boundary
-        Boundary the surface charge sits on.
-    switches
-        The correction set stages 7 to 9 turn on. Defaults to the parameter
-        file's own full set, which is ``epnp-ns``. A case that switches one
-        correction off (PHY-22) must pass its own set here: resolving them from
-        the file name instead would put the correction back on at stage 7, and
-        the manifest would then record a deviation the run never took.
-    target
-        The registered model the top rung solves, ``physics.model`` of the case
-        this ladder serves: ``epnp-ns`` or ``pnp-ns``, the two models whose
-        declaration admits the ladder and which it can reach. When given it
-        decides ``corrections_active``. This function is the one place outside
-        ``physics/`` that names models, because NUM-18 defines the ladder as a
-        path through named models (section 5.4.3 NOTE).
-    corrections_active
-        Whether the ladder ends at ``epnp-ns`` or at classical ``pnp-ns``.
-        ``False`` **omits stages 7 and 8** rather than running them as no-ops —
-        there is nothing to enable — and sweeps stage 9 classically. It is what
-        makes the PHY-21 ablation a sweep over configurations rather than a
-        rebuild: the same ladder, the same mesh, the same operating point, and
-        the difference attributable to the corrections alone (section 7.4).
-    stabilisation
-        The mode of section 6.4 every coupled rung is built in. ``none`` is the
-        production setting NUM-11 requires; ``reference`` is the mode section 7.4's
-        like-for-like comparison against the published currents needs. Applied to
-        every rung rather than to the top one, so that no rung is warm-started
-        from a state a different operator produced.
-    velocity_order, pressure_order
-        The velocity and pressure element orders of NUM-03. ``velocity_order``
-        defaults to ``measures.element_order`` and the pair to Taylor-Hood; the
-        equal-order pair is refused unless ``stabilisation`` supplies the flow
-        stabilisation that makes it inf-sup stable, and it is refused here, while
-        the ladder is being built, rather than on the first flow rung.
-
-    Returns
-    -------
-    tuple[Rung, ...]
-        The ladder, ready for :func:`run_ladder`.
-
-    Raises
-    ------
-    ValueError
-        If ``fixed_charge_domain`` names no material of ``mesh``, if ``ground``
-        names neither electrode, or if ``target`` names a model the ladder does
-        not end at.
-    """
     import ngsolve as ngs
 
-    # The models the ladder can end at: with the corrections on, and without.
-    # Shared with ``register_model``, which refuses the ladder to any other.
+    # The models the ladder can end at, shared with ``register_model``.
     targets = LADDER_TARGETS
     if target is not None:
         if target not in targets:
@@ -948,11 +468,8 @@ def default_ladder(
         raise ValueError(f"ground={ground!r} must be one of {', '.join(sorted(ELECTRODES))}")
     driven = next(iter(ELECTRODES - {ground}))
 
-    # ``MaterialCF`` matches its keys against the material names and silently
-    # leaves anything unmatched at the default. A misspelt or absent domain
-    # would therefore make the fixed charge zero everywhere and converge the
-    # whole ladder on the uncharged problem - a plausible wrong answer with no
-    # diagnostic, which QR-12 forbids.
+    # ``MaterialCF`` leaves unmatched keys at the default, so a misspelt domain would silently
+    # charge nothing (QR-12).
     if fixed_charge_domain is not None and mesh.Materials(fixed_charge_domain).Mask().NumSet() == 0:
         raise ValueError(
             f"fixed_charge_domain={fixed_charge_domain!r} matches no material of the mesh; "
@@ -972,18 +489,9 @@ def default_ladder(
     def _coupled(
         name: str, switches: CorrectionSwitches, *, flow: bool, salt: float
     ) -> PhysicsModel:
-        """Return one coupled configuration of the ladder, built through the registry.
-
-        Every rung is the same class with different switches, which is what
-        makes "enable the corrections last" a change of configuration rather
-        than a change of code path (PHY-21). ``flow`` is passed only to a model
-        that declares it: ``pnp`` fixes it in its builder.
-        """
         return create(
             name,
-            # ``with_switches`` rebuilds the resolved corrections; ``replace``
-            # would change only the record and leave every stage of the ladder
-            # evaluating whatever ``base`` was built with.
+            # ``replace`` would change only the record, not what each stage evaluates.
             electrolyte=base.with_switches(switches),
             concentration_M=salt,
             **({"flow": flow} if "flow" in declaration(name).options else {}),
@@ -991,21 +499,13 @@ def default_ladder(
             velocity_order=velocity_order,
             pressure_order=pressure_order,
             solid_permittivities=solids,
-            # Every rung, not only the top one. The ladder is a sequence of
-            # warm starts, and a mode that switched on at the last rung would
-            # ask that rung to converge from a state produced by a different
-            # operator -- which is also what the VER-37 descriptor gate refuses
-            # to do across two separately climbed ladders (NUM-13, NUM-18).
+            # Every rung: a mode switched on at the top would warm-start from a different operator.
             stabilisation=stabilisation,
         )
 
     classical = CorrectionSwitches.classical()
-    # The fit the corrected stages evaluate follows the *electrolyte* when one is
-    # supplied, not the ``corrections`` default. The two arguments are
-    # alternatives, so a caller handing in an electrolyte built from another
-    # parameter file leaves ``corrections`` at its default — and resolving the
-    # switches against that name would evaluate one fit's correction functions
-    # over the other's reference properties, silently.
+    # The fit follows the supplied electrolyte, not the ``corrections`` default, or one fit's
+    # functions would be evaluated over the other's reference properties.
     correction_model = base.parameter_file or corrections
     corrected = switches if switches is not None else CorrectionSwitches.for_model(correction_model)
     without_steric = corrected.without("steric")
@@ -1014,21 +514,12 @@ def default_ladder(
     thermal_V = reference.scales.potential_V
 
     def _potential(bias: float) -> Expression:
-        """Return the essential potential data for one applied bias, in ``V_T``."""
         return mesh.BoundaryCF({ground: 0.0, driven: bias / thermal_V})
 
     zero_bias = _potential(0.0)
     rungs: list[Rung] = []
 
     def _dielectric() -> dict[str, Option]:
-        """Return the supplied solid fraction, for every rung that solves Poisson.
-
-        Every *coupled* rung, that is: it is a coefficient of the operator rather
-        than a source, so it is not ramped and it is not withheld from the
-        equilibrium rung. The two Poisson-Boltzmann rungs declare no
-        coefficient and carry no material permittivity at all, so they do not
-        take it and must not be handed it.
-        """
         return {} if solid_fraction is None else {"solid_fraction": solid_fraction}
 
     # -- stages 1 and 2: Poisson-Boltzmann --------------------------------
@@ -1049,9 +540,8 @@ def default_ladder(
             Rung(
                 name=f"{stage}-{name}",
                 stage=stage,
-                # The rung's own ``lambda_D``, stated to the builder as well as to
-                # the solve: an initialiser is not the case-file model, and must
-                # not be refused a salt that model is exact for only.
+                # Stated to the builder too: an initialiser must not be refused a
+                # salt the case model is exact for only.
                 model=create(
                     name,
                     electrolyte=base,
@@ -1083,21 +573,12 @@ def default_ladder(
     )
 
     # -- stage 4: ramp the fixed and surface charges together --------------
-    # Taken from the reference model and reused by every later rung, including
-    # the stage-9 sweep at other concentrations. That is correct rather than
-    # convenient: eps V_T / a^2 and eps V_T / a carry no c_0, so unlike the
-    # current and flux scales these two do not move with the salt.
+    # Reused by every later rung: eps V_T / a^2 and eps V_T / a carry no c_0, so they do not
+    # move with the salt.
     charge_scale = reference.scales.charge_density_C_m3
     surface_scale = reference.scales.surface_charge_C_m2
 
     def _charges(fraction: float = 1.0) -> dict[str, Option]:
-        """Return the charges of one rung: the stage-4 ramp, or its converged end.
-
-        A charge left at zero is omitted rather than passed as ``CF(0.0)``: the
-        form would then assemble an integral that is identically zero on every
-        rung from stage 4 onwards, and the surface term would name a boundary
-        the geometry need not even carry.
-        """
         charges: dict[str, Option] = {}
         if fixed_charge_field is not None:
             charges["fixed_charge"] = fixed_charge_field.scaled(fraction / charge_scale)
@@ -1163,15 +644,6 @@ def default_ladder(
     target_name = targets[0] if corrections_active else targets[1]
 
     def _wall(model: PhysicsModel) -> dict[str, Option]:
-        """Return the distance-field keyword, where the rung's corrections read it.
-
-        Asked of the rung's own *resolved* corrections rather than of its
-        position on the ladder or of ``corrections_active``: a classical rung has
-        no wall factor able to evaluate ``d``, and recording a distance field it
-        never read would make the PHY-21 ablation and its reference disagree on
-        the manifest over something neither of them computed. Deriving it here
-        means a reordered ladder, or another classical rung, cannot get it wrong.
-        """
         return {"wall_distance_nm": wall_distance_nm} if model_reads_wall(model) else {}
 
     for stage, label, name, switches in physics_stages:
@@ -1195,9 +667,8 @@ def default_ladder(
 
     # -- stage 9: sweep the salt ------------------------------------------
     if start_concentration_M is not None and not math.isclose(build_M, concentration_M):
-        # Geometric rather than linear: the Debye length goes as c^(-1/2), so it
-        # is the ratio between rungs that measures how far the double layer has
-        # moved, not the difference.
+        # Geometric: the Debye length goes as c^(-1/2), so the ratio measures how far the
+        # double layer moved.
         ratio = concentration_M / build_M
         for fraction in ramp_schedule(concentration_steps):
             salt = build_M * ratio**fraction
