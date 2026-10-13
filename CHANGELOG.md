@@ -19,6 +19,16 @@ Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before t
 version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
 
+## [0.5.0-alpha.10] - 2026-10-13
+
+WP44: the loop simplified (`SPECIFICATION.md` §8.2.11 L2, L3, L4 in rule, L6, L7, L8). A commit runs the
+lock check, ruff, the format check, mypy and all of Tier 1; the push gate runs the whole suite with
+`--extended` once, without coverage, and the push guard stays; a pull request's two shards are Tier 1 and
+Tier 2. The impact recorder, selector and map, the budget enforcer, the duration record, the agent guard
+and roster, `model-policy.md` and two agents are deleted. A plan holds at most 1,500 words and six
+decisions (VER-72 g); the docstring and comment rule is written down and D101 to D107 and D417 are off.
+VER-73 and VER-74 are withdrawn. REV-80 and REV-81 are fixed by removal.
+
 ## [0.5.0-alpha.9] - 2026-10-12
 
 WP43: the development loop (`SPECIFICATION.md` §7.6, §8.2.10 J1 to J12). A commit runs only the

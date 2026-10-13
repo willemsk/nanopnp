@@ -16,8 +16,9 @@ to be tagged `v0.5.0-alpha.6`; WP41, the accuracy fixes ([wp41-accuracy-fixes.md
 to be tagged `v0.5.0-alpha.7`; WP42, the verification checks
 ([wp42-verification-checks.md](wp42-verification-checks.md)), to be tagged `v0.5.0-alpha.8`;
 WP43, the development loop ([wp43-development-loop.md](wp43-development-loop.md)), to be tagged
-`v0.5.0-alpha.9`.
-Planned: WP44, simplify the loop, and WP45, the prose strip (§8.2.11 L1); then WP46, the small fixes; WP47, the OKF bundle;
+`v0.5.0-alpha.9`; WP44, simplify the loop ([wp44-simplify-the-loop.md](wp44-simplify-the-loop.md)), to be
+tagged `v0.5.0-alpha.10`.
+Planned: WP45, the prose strip (§8.2.11 L1); then WP46, the small fixes; WP47, the OKF bundle;
 WP48, its backfill; WP49, the user-testing protocol (§8.2.9 I1, renumbered by §8.2.10 J1).
 Provisional, and planned by the second `/phase-plan amend 4` once the author has run the sessions
 and ruled every `UT-nn`: the fixes, from WP50, then the documentation increment and the close,
@@ -638,7 +639,14 @@ under the third lever, and the soundness argument of the selection. Tagged `v0.5
 
 ### WP44 — Simplify the loop (§8.2.11 L2, L3, L6, L7, L8)
 
-> **Planned, 13 October 2026:** [wp44-simplify-the-loop.md](wp44-simplify-the-loop.md).
+> **Delivered, 13 October 2026** ([plan](wp44-simplify-the-loop.md)). The commit hook runs the lock
+> check, ruff, format, mypy and all of Tier 1 (215 to 220 s on 4 cores, against 90 s predicted); the push
+> gate runs the suite with `--extended`, once, without coverage (509 s), and the push guard stays;
+> pull-request shards are Tier 1 and Tier 2. The impact map, budget enforcer, duration record, agent
+> guard, roster test, `model-policy.md` and two agents are deleted; VER-73 and VER-74 are withdrawn;
+> VER-72 (g) caps plans at 1,500 words and six decisions. L4's rule is written down (D101 to D107,
+> D417 off); the tree is WP45's. Live: `gate.sh` is 561 lines, not 300 (the push guard's recognition is
+> 273); a pull request's critical path is measured on its first CI run. REV-80 and REV-81 are fixed.
 
 *Added, 13 October 2026.* The simplest gate that still checks for regressions and expected
 behaviour, and plans a session can afford. Tag `v0.5.0-alpha.10`. It does:

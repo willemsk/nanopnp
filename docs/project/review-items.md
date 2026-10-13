@@ -800,6 +800,9 @@ into the child through its environment), so a child is a set of functions rather
 or move each process-starting test that does not need its file's module fixtures into a file of its
 own. A third, re-setting the budget, is the author's (J7).
 
+**Fixed.** By removal ([WP44](../plans/wp44-simplify-the-loop.md), §8.2.11 L2): the commit hook runs all of Tier 1, so no
+process-starting test is selected or widened and no commit falls back. The recorder, selector and map are deleted.
+
 ### REV-81 — Most past commits would fall back to the development selection
 
 *Area:* performance. *Severity:* low. *Found:* [WP43](../plans/wp43-development-loop.md) item 2.
@@ -817,6 +820,8 @@ development selection: 234 s on 4 cores.
 **Open.** A finer rule for module-level code (a changed constant selects its readers, as a changed
 function body does) would need its own soundness argument beside WP43 Design §1. Re-measure on the
 commits of WP46 before deciding whether it is worth one.
+
+**Fixed.** By removal ([WP44](../plans/wp44-simplify-the-loop.md), §8.2.11 L2): no selection exists to fall back from.
 
 ### REV-82 — The push gate takes over 9 minutes against its 5-minute budget
 

@@ -1,6 +1,6 @@
 # WP44 — Simplify the loop
 
-**Status: planned, not started.** 13 October 2026. Inherits WP43's merged loop and the rulings of §8.2.11 L2, L3, L6, L7, L8. Tag `v0.5.0-alpha.10`.
+**Status: delivered, 13 October 2026.** Inherits WP43's merged loop and the rulings of §8.2.11 L2, L3, L6, L7, L8. Tag `v0.5.0-alpha.10`.
 
 The Phase 4 plan owns the phase. `SPECIFICATION.md` governs; identifiers are pointers. This plan
 follows L7: under 1,500 words, six decisions, no per-item design, no planned tests.
@@ -58,25 +58,15 @@ Each item carries the clause edits for what it deletes or changes. One commit ea
 
 *Compaction checkpoint: after item 4.*
 
-- [ ] 5. Rewrite the five skills under `.claude/skills/` and `CLAUDE.md` (*Commands*, *Implementation workflow*, the model line) to match D1 to D6. Done when `uv run pytest tests/tier1/test_plan_shape.py` passes.
-- [ ] 6. Close. Run `.claude/hooks/gate.sh run` in the background; time one commit hook, the push gate and the pull-request critical path, and the line count of `gate.sh`; record them under Outcomes against the predictions (hook about 90 s, push gate 8 to 9 minutes, pull request under 6) and the phase plan's 300 lines. Mark REV-80 and REV-81 `fixed` by removal, update `current.md` and the Phase 4 plan, add a `CHANGELOG.md` line. Done when `git grep -n -E "impact\.py|ci_budget|budgets\.yaml|durations\.json|model-policy|agent-guard|reading_set|usage\.py|surveyor|gate-runner|gate\.sh map|\[Opus\]"` matches only `docs/plans/`, `docs/project/`, `docs/code_reviews/`, `CHANGELOG.md` and the withdrawn or superseded rows of `SPECIFICATION.md`.
+- [x] 8c8c7f5 5. Rewrite the five skills under `.claude/skills/` and `CLAUDE.md` (*Commands*, *Implementation workflow*, the model line) to match D1 to D6. Done when `uv run pytest tests/tier1/test_plan_shape.py` passes.
+- [x] 6. Close. Run `.claude/hooks/gate.sh run` in the background; time one commit hook, the push gate and the pull-request critical path, and the line count of `gate.sh`; record them under Outcomes against the predictions (hook about 90 s, push gate 8 to 9 minutes, pull request under 6) and the phase plan's 300 lines. Mark REV-80 and REV-81 `fixed` by removal, update `current.md` and the Phase 4 plan, add a `CHANGELOG.md` line. Done when `git grep -n -E "impact\.py|ci_budget|budgets\.yaml|durations\.json|model-policy|agent-guard|reading_set|usage\.py|surveyor|gate-runner|gate\.sh map|\[Opus\]"` matches only `docs/plans/`, `docs/project/`, `docs/code_reviews/`, `CHANGELOG.md` and the withdrawn or superseded rows of `SPECIFICATION.md`.
 
 ### Verification
 
-| Test | Tier | Identifier | Oracle |
-|---|---|---|---|
-| `tests/tier1/test_workflow_hooks.py` | 1 | L2 | Toy repository, fake `uv`: a commit runs the five steps in order and stops at the first failure, naming it; the GUI test is not in the xdist call; a prose-only change runs ruff alone; an unchanged tree is not re-run; a worktree, `cd` or `-C` target is the tree gated |
-| same | 1 | L3 | `run` passes `--extended` and no `--cov`; sets the Gmsh and APBS requirements; takes the lock, so a second run waits; stamps `extended` only on a pass; stamps nothing if the tree changed during the run |
-| `tests/tier1/test_push_guard.py` | 1 | L3 | Refused: no stamp, a stamp without `extended`, another tree's stamp. Passed: a stamped tree, tags only, `--no-verify`. Recognised: plain, compound (`git status && git push`), `bash -c`, subshell, `-C` and `cd` targets, explicit refspec, `--all`, commit and push in one command. Not a push: the words in a commit message, a heredoc or a PR body |
-| `tests/tier1/test_shard_packing.py` | 1 | L3 | `-m tier1` and `-m tier2` together select the whole development selection with no overlap; the `no_cover` marker is registered without `pytest-cov` |
-| `tests/tier1/test_plan_shape.py` | 1 | VER-72 (g) | The four toy failures of item 3; every plan from WP44 on passes; `current.md` and phase plans keep the In brief check |
-| Whole suite | 1–2 | — | `gate.sh run`; VER-62 unchanged |
+`test_workflow_hooks.py` and `test_push_guard.py` (L2, L3: the five steps in order and the first failure named, the GUI file apart, prose runs ruff alone, an unchanged tree is not re-run, `run` passes `--extended` and no `--cov`, stamps only a pass and only an unchanged tree, takes the lock; every push-recognition case); `test_pull_request_shards.py` (the markers partition the selection); `test_plan_shape.py` (VER-72 g, with the four toy failures); the whole suite by `gate.sh run`; VER-62 unchanged.
 
 ### Out of scope
 
-The tree strip and VER-75 (WP45); any change to a product test's assertion; CI's post-merge and
-nightly jobs (J4 stands); a cost figure (L8).
+The tree strip and VER-75 (WP45); any product test's assertion; CI's post-merge and nightly jobs; a cost figure.
 
-### Open questions
-
-None blocking. The agent helpers kept are the author's call above.
+> **Outcome — measured 13 October 2026, 4 cores, Python 3.14.6.** Commit hook 187 to 220 s (1,966 Tier 1 tests; predicted 90 s: Tier 1 is longer than the 332 CPU-seconds assumed). Push gate 509 s (predicted 8 to 9 minutes). Pull-request critical path: first CI run. `gate.sh` 561 lines against 300; 273 are the kept push guard. REV-80 and REV-81 fixed.
