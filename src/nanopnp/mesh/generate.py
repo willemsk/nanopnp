@@ -1,34 +1,4 @@
-"""Stage 6's generator: the stage-5 region meshed under the section 5.2.2 size fields (FR-10).
-
-``numerics.mesh.backend`` picks the mesher: netgen by default, or the optional
-Gmsh backend of ADR-002 (:mod:`nanopnp.mesh.gmsh_backend`, WP23). Both mesh the
-one region stage 5 assembled, under one size table, and both meshes take the
-route below.
-
-A generated mesh goes through the gates an ingested one does, by the route an
-ingested one takes: it is written as MSH 4.1 and read back through
-:func:`nanopnp.mesh.ingest.ingest`, which applies VER-27's naming gate, the
-solid-permittivity gate of the section 5.3.1 NOTE (WP21 D11) and VER-10's
-quality gate. One route in means a generated mesh cannot skip a gate a supplied
-one would fail.
-
-It then passes one gate an ingested mesh does not, because only here is there a
-target to hold it to: the **wall-size gate** (section 5.3.1 NOTE on
-``numerics.mesh``, WP21 D9). A mesher treats a size as a target, not a bound:
-on the reference profile and on 2WCD's stage-4 profile netgen's ``wall``
-segments' mean length is 1.045-1.078 times the target and the longest 1.25-1.62
-times (WP21 plan, Design section 3), and Gmsh's mean runs under it and its longest
-within 1.06 times (WP23 plan, Outcomes). The bounds 1.15 and 2.0 sit above every measured
-value. What they catch is a size field that did not reach the wall: the protein's
-0.1 nm field and the polygon's own edges then govern, and the mean doubles.
-
-Either mesher is deterministic within one platform [tested], and netgen is not
-across platforms (``.knowledge/07`` section 4), which is why the stage-6
-artefact of a generated mesh is keyed on its recipe and records its content hash
-beside the key (WP21 D10, D13). The recipe names the backend and that backend's
-own settings; the mesher's version is the environment's, recorded beside it
-(WP23 D8).
-"""
+"""Stage 6's generator: the stage-5 region meshed under the section 5.2.2 size fields (FR-10)."""
 
 from __future__ import annotations
 
@@ -82,20 +52,6 @@ MESH_FILENAME = "mesh.msh"
 
 
 class WallSizeGateError(ValueError):
-    """A generated mesh's ``wall`` is coarser than its size field asked for (QR-12).
-
-    Parameters
-    ----------
-    criterion
-        ``"mean wall segment length"`` or ``"longest wall segment"``.
-    measured
-        The measured value, as a length and a ratio to the target.
-    threshold
-        The bound, likewise.
-    where
-        The segment and its midpoint.
-    """
-
     def __init__(self, criterion: str, measured: str, threshold: str, where: str) -> None:
         self.criterion = criterion
         self.measured = measured
@@ -109,22 +65,6 @@ class WallSizeGateError(ValueError):
 
 @dataclass(frozen=True)
 class WallStatistics:
-    """The ``wall`` segment lengths of a mesh, against the target (D9).
-
-    Parameters
-    ----------
-    target_nm
-        The resolved wall size.
-    count
-        How many ``wall`` segments the mesh carries.
-    mean_ratio, p95_ratio, max_ratio
-        Mean, 95th percentile and maximum segment length over the target.
-    longest
-        The longest segment's index among the ``wall`` segments.
-    longest_midpoint_nm
-        Its midpoint ``(r, z)``.
-    """
-
     target_nm: float
     count: int
     mean_ratio: float
@@ -134,7 +74,6 @@ class WallStatistics:
     longest_midpoint_nm: tuple[float, float]
 
     def summary(self) -> dict[str, Canonicalisable]:
-        """Return the statistics the manifest's ``sizing`` block records (D16)."""
         return {
             "target_nm": self.target_nm,
             "segments": self.count,
@@ -146,7 +85,6 @@ class WallStatistics:
 
 
 def wall_statistics(data: MeshData, target_nm: float) -> WallStatistics:
-    """Measure the ``wall`` segments of ``data`` against ``target_nm``."""
     import numpy as np
 
     segments = data.edges_of("wall")
@@ -166,14 +104,6 @@ def wall_statistics(data: MeshData, target_nm: float) -> WallStatistics:
 
 
 def check_wall_size(statistics: WallStatistics) -> None:
-    """Abort unless the ``wall`` segments meet the D9 bounds.
-
-    Raises
-    ------
-    WallSizeGateError
-        Naming the statistic, its value and bound, and the longest segment with
-        its midpoint.
-    """
     target = statistics.target_nm
     r_mid, z_mid = statistics.longest_midpoint_nm
     where = (
@@ -199,28 +129,6 @@ def check_wall_size(statistics: WallStatistics) -> None:
 def sizing_parameters(
     document_wall: WallSize, sizes: SizeTable, backend: str = "netgen", *, exclusion: bool = False
 ) -> dict[str, Canonicalisable]:
-    """Return the stage-6 recipe's ``sizing`` parameter (WP21 D10, WP23 D8).
-
-    The backend, the resolved wall size with its source and lambda_D,
-    ``size_scale``, the scaled table, the grading, the wall-size gate's
-    constants, and the backend's own settings: everything that moves a vertex of
-    a generated mesh or a verdict of its gate. Netgen's is byte-identical to the
-    one WP21 keyed, so no stored key moves; Gmsh's names its algorithm, its
-    smoothing and its size-field rules, and has no ``optsteps2d``. The mesher's
-    version is not here: it is the environment's, recorded beside the key.
-
-    A region with an ion-exclusion shell adds what the ``exclusion`` domain is
-    sized at, on either backend, and on netgen how its ``wall`` edges are
-    divided (:data:`~nanopnp.mesh.sizing.EXCLUSION_WALL_DIVISION`); a
-    shell-free recipe is unchanged (WP30 D9).
-
-    Raises
-    ------
-    ValueError
-        If the mesher's own settings name a common entry. Merged over it, they
-        would key two different meshes alike, and the store would hand one back
-        for the other (WP39 Design section 2).
-    """
     settings = create_mesher(backend).settings(exclusion=exclusion)
     clash = sorted(set(settings) & COMMON_RECIPE_KEYS)
     if clash:
@@ -244,46 +152,11 @@ def sizing_parameters(
 def mesh_region(
     record: RegionRecord, wall_h_nm: float | None, sizes: SizeTable, backend: str
 ) -> tuple[MeshData, str]:
-    """Mesh stage 5's region with the named backend; return the mesh and the mesher's version.
-
-    Netgen meshes the rebuilt shape under :func:`~nanopnp.mesh.sizing.apply_sizes`.
-    Gmsh meshes the same shape, read into a
-    :class:`~nanopnp.geometry.region.RegionGraph`, under the size field of the
-    section 5.2.2 NOTE on the Gmsh backend (WP23 D2-D4). Neither mesh is gated
-    here: :func:`generate` gates both by one route.
-
-    Raises
-    ------
-    nanopnp.core.stages.MissingExtraError
-        On ``gmsh`` without its extra.
-    """
     return create_mesher(backend).mesh(record, wall_h_nm, sizes)
 
 
 @dataclass(frozen=True)
 class GeneratedMesh:
-    """A generated mesh that passed every gate, and the record of how it was sized.
-
-    Parameters
-    ----------
-    ingested
-        The mesh as :func:`~nanopnp.mesh.ingest.ingest` read it back.
-    wall
-        The resolved wall size.
-    sizes
-        The table applied, ``size_scale`` included.
-    statistics
-        The wall-size gate's measurements.
-    corrected_ratio
-        The wall size over ``lambda_D / 5`` at ``eps_r,f(c)`` (D16).
-    backend
-        ``numerics.mesh.backend``.
-    backend_version
-        The mesher's version, recorded beside the key and never in it (WP23 D8).
-    exclusion
-        Whether the region carries an ion-exclusion shell, which keys its size (WP30 D9).
-    """
-
     ingested: IngestedMesh
     wall: WallSize
     sizes: SizeTable
@@ -294,7 +167,6 @@ class GeneratedMesh:
     exclusion: bool = False
 
     def sizing(self) -> dict[str, Canonicalisable]:
-        """Return the manifest's ``sizing`` block (D16), the mesher's version beside it."""
         return {
             **sizing_parameters(self.wall, self.sizes, self.backend, exclusion=self.exclusion),
             "backend_version": self.backend_version,
@@ -305,7 +177,6 @@ class GeneratedMesh:
         }
 
     def summary(self) -> dict[str, Canonicalisable]:
-        """Return what the manifest's geometry-and-mesh group records (FR-25)."""
         summary: dict[str, Canonicalisable] = {
             "generated": True,
             "source": self.ingested.source.name,
@@ -320,33 +191,6 @@ class GeneratedMesh:
 
 
 def generate(record: RegionRecord, resolved: ResolvedCase, directory: Path) -> GeneratedMesh:
-    """Mesh the region, write it, read it back through the gate and check its wall (FR-10).
-
-    Parameters
-    ----------
-    record
-        Stage 5's region.
-    resolved
-        The case, which sets the sizes and says which names the run selects on.
-    directory
-        Where ``mesh.msh`` is written.
-
-    Returns
-    -------
-    GeneratedMesh
-        The gated mesh and its sizing record.
-
-    Raises
-    ------
-    nanopnp.mesh.ingest.MeshVocabularyError
-        On a naming failure, or a solid with no permittivity (D11).
-    nanopnp.mesh.quality.MeshQualityError
-        On a sliver, an inverted element or a negative radius (VER-10).
-    WallSizeGateError
-        On a wall coarser than its size field asked for (D9).
-    nanopnp.core.stages.MissingExtraError
-        On ``backend: gmsh`` without the ``gmsh`` extra (WP23 D9).
-    """
     wall = resolve_wall_size(resolved.document, permittivity_0=resolved.electrolyte.permittivity_0)
     sizes = SIZES.scaled(wall.size_scale)
     backend = resolved.document.numerics.mesh.backend

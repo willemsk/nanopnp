@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import Final
 
-# Mesh cylinder defaults (CLI and idealised benchmark pore). The case schema's own defaults
-# (membrane 2.8 nm, reservoir 250 nm: SPECIFICATION.md section 4.1.1) live in io/case.py.
 DEFAULT_PORE_RADIUS_NM: Final[float] = 2.0
 DEFAULT_CYLINDER_MEMBRANE_THICKNESS_NM: Final[float] = 6.0
 DEFAULT_CYLINDER_RESERVOIR_RADIUS_NM: Final[float] = 10.0

@@ -947,6 +947,11 @@ fraction of the time to build one. The measured margin on the geometries this pr
 wide (minimum SICN 0.647 against a 0.3 floor), so gating only *imported* meshes would leave the ones
 we build ourselves unwatched for no saving.
 
+**`mesh/quality.py`'s SICN and gamma agree with `gmsh.model.mesh.getElementQualities(..., "minSICN")`
+and `"gamma"` to every digit gmsh prints [tested]**, which calibrates the 0.3 threshold against the
+implementation that set it. gmsh returns `+1` for a clockwise triangle (a 2-D element in a discrete
+entity has no intrinsic orientation there), so only the magnitude is comparable; the sign is ours.
+
 **The gate's first run found a degenerate mesh, and the answer was not to weaken it.** VER-16's
 Gouy-Chapman slab is 2000 nm × 0.5 nm meshed at 50 nm: a chain of 100:1 triangles at minimum SICN
 0.019. That anisotropy is not a defect — the transverse extent is an artefact of solving a
