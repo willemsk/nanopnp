@@ -17,7 +17,7 @@
 #   .claude/agents/ .claude/skills/ .claude/rules/ docs/plans/
 #               the agent, skill, rule and plan pages whose frontmatter, tools,
 #               paths and plan caps tests/tier1/test_plan_shape.py
-#               reads (REV-84). A change to only these runs the tests that read them.
+#               reads (REV-84). A change to only these runs the tests in full.
 # docs/ is NOT prose as a directory: docs/sweeps/ and docs/validation/ hold the
 # YAML that tests/tier1 reads (the section 8.3 reference sweep, the frozen
 # cases, the probe grid). Only its Markdown is.

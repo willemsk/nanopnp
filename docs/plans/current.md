@@ -12,8 +12,9 @@ a simpler course. Two packages were ruled. The first, now built and awaiting rev
 plain rules: a commit runs the style checks and every quick test, the full check runs once before a push, plans
 stay under a page and a half, and cheaper AI models do routine work. The second removes most
 comments and explanations from the code and proves by machine that nothing else changed.
-**Your call:** should the rule that blocks a push until the full check passed stay?
-*Recommendation:* yes, it is small and makes the check hard to skip.
+You ruled that the rule blocking a push until the full check passed stays.
+**Your call:** two agent helpers stay (physics review and log reading) and two go.
+*Recommendation:* keep that, since only those two were ever used for more than lookups.
 
 ## Position
 

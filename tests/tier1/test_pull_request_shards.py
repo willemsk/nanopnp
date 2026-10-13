@@ -54,7 +54,7 @@ def test_l3_the_ci_workflow_runs_the_two_tiers_as_its_shards() -> None:
     assert "--shard" not in workflow
 
 
-def test_ver72_the_no_cover_marker_the_conftest_applies_is_registered_without_pytest_cov() -> None:
+def test_the_no_cover_marker_the_conftest_applies_is_registered_without_pytest_cov() -> None:
     config = tomllib.loads((REPOSITORY / "pyproject.toml").read_text(encoding="utf-8"))
     markers = config["tool"]["pytest"]["ini_options"]["markers"]
     assert any(line.startswith("no_cover:") for line in markers)
