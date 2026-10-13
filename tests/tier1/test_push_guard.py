@@ -116,3 +116,41 @@ def test_a_stamp_of_another_tree_is_refused(repo: Path) -> None:
 )
 def test_the_escape_a_tag_push_and_other_commands_pass_unstamped(repo: Path, command: str) -> None:
     assert _hook(repo, command) == ""
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        'git commit --no-verify -m "docs: the guard refuses git push without a stamp"',
+        "echo 'run git push once the gate has passed'",
+        'gh pr create --title t --body "Gate first, then git push -u origin x"',
+        "git commit --no-verify -F - <<'EOF'\nfix: x\n\nthe guard doesn't pass git push\nEOF",
+        "git commit --no-verify -m \"$(cat <<'EOF'\nfix: it's time to git push\nEOF\n)\"",
+        "git commit --no-verify -m $'it\\'s a git push mention'",
+    ],
+    ids=["message", "echo", "pull-request-body", "heredoc", "command-substitution", "ansi-c"],
+)
+def test_a_command_that_only_names_a_push_is_not_a_push(repo: Path, command: str) -> None:
+    """A commit message or a pull request body that says ``git push`` is text, not a push.
+
+    ``--no-verify`` on the commit never reaches the guard, and ``gh`` has no such flag, so
+    refusing these would leave no way to write the words.
+    """
+    assert _hook(repo, command) == ""
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "bash -c 'git push origin feature'",
+        'sh -lc "git push -u origin feature"',
+        "(git push)",
+        'echo "git push" && git push origin feature',
+        "cat <<EOF\nit's here\nEOF\ngit push",
+    ],
+    ids=["bash-c", "sh-lc", "subshell", "after-a-mention", "after-a-heredoc"],
+)
+def test_a_push_in_a_shell_string_or_beside_a_mention_is_still_refused(
+    repo: Path, command: str
+) -> None:
+    assert ".claude/hooks/gate.sh run" in _denied(_hook(repo, command))

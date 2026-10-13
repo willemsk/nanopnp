@@ -154,6 +154,9 @@ def test_the_agent_guard_holds_each_spawn_to_the_roster_and_the_policy() -> None
     assert not _denied(_guard({"subagent_type": "Explore", "model": "sonnet", "prompt": "x"}))
     assert not _denied(_guard({"subagent_type": "fork", "prompt": "x"}))
     assert not _denied(_guard({"command": "ls"}, tool_name="Bash"))
+    # Older Claude Code versions call the same tool "Task".
+    older = _guard({"subagent_type": "surveyor", "model": "opus", "prompt": "x"}, tool_name="Task")
+    assert _denied(older)
 
 
 def test_the_guard_is_registered_on_agent_calls() -> None:

@@ -16,11 +16,13 @@
 #                    attribute, the whole development selection, naming why
 #                    It is also the push guard: a `git push` goes through only
 #                    when the stamp names the pushed tree with `extended`, the
-#                    pass of `gate.sh run`; it runs nothing (WP43 D7, J3)
+#                    pass of `gate.sh run`; it runs nothing (WP43 D7, J3). Text that only
+#                    names a push, in a commit message or a pull request body, is no push
 #   gate.sh run      runs the gate directly and exits non-zero on failure,
 #                    printing only the failure, or one line on a pass; adds
-#                    `--extended`, so it is the whole of what CI gates on every
-#                    push, with diff-cover on the changed lines, and records the
+#                    `--extended`, so it is the whole of what CI gates, a pull
+#                    request and a merge together, with diff-cover on the changed
+#                    lines, and records the
 #                    impact map as it goes. What the skills start in the
 #                    background before they push. One run at a time: a second
 #                    waits for the first (a PID file under the map's directory).
@@ -104,7 +106,9 @@ if [[ $mode == hook ]]; then
     git_opt='[[:space:]]+(-[Cc]|--git-dir|--work-tree|--namespace|--exec-path|--config-env)[[:space:]]+[^[:space:]]+|[[:space:]]+-[^[:space:]]+'
     seg="[^;&|"$'\n'"]"
     commit_re="(^|[;&|(]|[[:space:]])git(${git_opt})*[[:space:]]+commit(\$|[[:space:]]${seg}*)"
-    push_re="(^|[;&|(]|[[:space:]])git(${git_opt})*[[:space:]]+push(\$|[[:space:]]${seg}*)"
+    # A push also follows a quote, a brace or a backtick (`bash -c 'git push'`) and may end at a
+    # closing one (`(git push)`); what is only quoted is filtered out below.
+    push_re="(^|[;&|(\`'\"{]|[[:space:]])git(${git_opt})*[[:space:]]+push(\$|[[:space:])'\"\`]${seg}*)"
 
     # Where a matched git command runs: sets `moved` (the last `cd` before it)
     # and `target_dir` (its `-C` or `--work-tree`), from the matched text $1,
@@ -240,11 +244,71 @@ push gate passes one tree. Push the branch by name. --no-verify skips this."
         printf '%s' gated
     }
 
+    # The command without what is only quoted: every character inside quotes, and every
+    # line of a heredoc body, becomes "_". A `git push` that a commit message, an `echo` or
+    # a pull request body merely names is a mention, and the guard must not answer it with
+    # "no passing push gate" (--no-verify on a commit does not reach it, and `gh` has none).
+    # Text after `eval` or a shell's `-c` is code and is kept; `$'...'` takes a backslash
+    # to escape the next character, as the shell does. It is only a filter: the
+    # pushes judged below are read from the command itself, quoted arguments included.
+    read -r -d '' mask_awk <<'AWK' || true
+function blank(text) { gsub(/./, "_", text); return text }
+{
+    line = $0
+    if (here != "") {
+        probe = line
+        if (strip) sub(/^\t+/, "", probe)
+        if (probe == here) { here = ""; out[NR] = line } else out[NR] = blank(line)
+        next
+    }
+    result = ""
+    size = length(line)
+    for (i = 1; i <= size; i++) {
+        c = substr(line, i, 1)
+        if (quote == "'") {
+            if (ansi && c == "\\" && i < size) {
+                result = result (keep ? c substr(line, i + 1, 1) : "__"); i++
+            } else if (c == "'") { quote = ""; result = result c }
+            else result = result (keep ? c : "_")
+        } else if (quote == "\"") {
+            if (c == "\\" && i < size) {
+                result = result (keep ? c substr(line, i + 1, 1) : "__"); i++
+            } else if (c == "\"") { quote = ""; result = result c }
+            else result = result (keep ? c : "_")
+        } else if (c == "\\" && i < size) {
+            result = result c substr(line, i + 1, 1); i++
+        } else if (c == "'" || c == "\"") {
+            before = substr(line, 1, i - 1)
+            keep = (before ~ /[ \t]-[A-Za-z]*c[ \t]+$/ || before ~ /(^|[ \t;&|(])eval[ \t]+$/)
+            ansi = (c == "'" && before ~ /\$$/)
+            quote = c; result = result c
+        } else if (substr(line, i, 3) == "<<<") { result = result "<<<"; i += 2 }
+        else if (substr(line, i, 2) == "<<") {
+            tail = substr(line, i + 2)
+            if (match(tail, /^-?[ \t]*\\?['"]?[A-Za-z_][A-Za-z0-9_]*/)) {
+                word = substr(tail, RSTART, RLENGTH)
+                strip = (substr(word, 1, 1) == "-")
+                sub(/^-?[ \t]*\\?['"]?/, "", word)
+                here = word
+            }
+            result = result "<<"; i += 1
+        } else result = result c
+    }
+    out[NR] = result
+}
+END { for (n = 1; n <= NR; n++) printf "%s%s", out[n], (n < NR ? "\n" : "") }
+AWK
+    scan=$command
+    if [[ $command == *push* ]] && command -v awk >/dev/null 2>&1; then
+        scan=$(printf '%s' "$command" | awk "$mask_awk") || scan=$command
+    fi
+
     # The push guard (WP43 D7, J3). It runs no `uv` and no test: it reads the
     # stamp `gate.sh run` writes on a pass. Each push in the command is judged
     # in the directory it runs in.
     rest=$command
     pushes=0
+    [[ $scan =~ $push_re ]] || rest=""
     while [[ $rest =~ $push_re ]]; do
         matched=${BASH_REMATCH[0]}
         args=${BASH_REMATCH[${#BASH_REMATCH[@]} - 1]}
@@ -263,7 +327,7 @@ push gate passes one tree. Push the branch by name. --no-verify skips this."
     done
     # A commit in the same command changes the tree the push then sends, which
     # no stamp read now can name: the two go in separate commands.
-    if ((pushes > 0)) && [[ $command =~ $commit_re ]]; then
+    if ((pushes > 0)) && [[ $scan =~ $commit_re ]]; then
         deny "The push was not made: the command also commits, so the tree it would push is not
 the one any gate passed. Commit, run .claude/hooks/gate.sh run (in the background), then
 push in a separate command. --no-verify on the push skips this."
@@ -325,6 +389,9 @@ map="$map_dir/map.json"
 started=$SECONDS
 
 say() { [[ $mode != hook ]] && printf '%s\n' "$*"; return 0; }
+
+# One figure of .github/budgets.yaml, a `key: number` line; nothing where the file or key is absent.
+budget_of() { sed -n "s/^$1:[[:space:]]*\([0-9.]*\).*/\1/p" .github/budgets.yaml 2>/dev/null | head -n 1; }
 
 # One recording or push-gate run at a time, across every worktree: both write
 # "$map.new" and either takes the machine's cores. The lock is a directory,
@@ -435,9 +502,10 @@ if [[ $mode == map ]]; then
         --ignore=tests/tier1/test_gui_widgets.py -p impact "--impact-record=$map.new" \
         >"$map_dir/record.log" 2>&1
     status=$?
-    # A failing test still records what it executed; only an interrupted or
-    # broken session leaves no map worth keeping.
-    if ((status <= 1)) && [[ -f $map.new ]]; then
+    # Only a green session leaves a map worth keeping: a failing test records what it
+    # executed up to its failure, so a change to code it would reach after that point
+    # would never select it. Without a map the hook runs the development selection.
+    if ((status == 0)) && [[ -f $map.new ]]; then
         log_count=$(jq '.tests | length' "$map.new" 2>/dev/null) || log_count=-
         mv "$map.new" "$map"
         log "recorded"
@@ -598,6 +666,12 @@ choose_impact_selection() {
     selection=development
     return 0
 }
+
+# pytest exits 5 when the marker expression deselects every test of the files named: a new
+# Tier 3 or Tier 4 file, or one of `slow` or `extended` tests alone, which the selector lists
+# by path because it has no node ids yet. That selection holds nothing to run, which is no
+# failure; every other nonzero status stays one. Run as `bash -c "$exit_5_is_a_pass" _ <command>`.
+exit_5_is_a_pass='"$@"; s=$?; ((s == 5)) && s=0; exit $s'
 
 budget=${NANOPNP_GATE_BUDGET_S:-1500}
 deadline=$((SECONDS + budget))
@@ -766,7 +840,7 @@ else
             workers=(-n auto --dist loadfile)
             ((log_count < 20)) && workers=(-n 0)
             check "pytest (impact: ${log_count} tests in ${#impact_files[@]} files)" \
-                uv run pytest -q -rsfE "${workers[@]}" \
+                bash -c "$exit_5_is_a_pass" _ uv run pytest -q -rsfE "${workers[@]}" \
                 -m "(tier1 or tier2) and not slow and not extended" -- "${impact_files[@]}"
         fi
     elif $followup; then
@@ -776,6 +850,7 @@ else
             workers=(-n auto --dist loadfile)
             ((log_count < 20)) && workers=(-n 0)
             check "pytest (follow-up: ${log_count} tests in ${#followup_files[@]} files)" \
+                bash -c "$exit_5_is_a_pass" _ \
                 env "PYTHONPATH=$tests_path" uv run pytest -q -rsfE "${workers[@]}" "${pytest_extra[@]}" \
                 ${record[@]+"${record[@]}"} ${record[@]+"--impact-record=$map.follow"} \
                 -- "${followup_files[@]}"
@@ -869,7 +944,14 @@ if [[ $mode == hook ]]; then
     [[ $log_count != - ]] && notice+=", ${log_count} tests"
     notice+=", ${elapsed} s."
     [[ -n $fallback_reason ]] && notice+=" Fell back to the development selection: ${fallback_reason}."
-    ((elapsed > 90)) && notice+=" Over budget: the commit hook's budget is 60 s, 90 s with its margin."
+    # The budget and margin are .github/budgets.yaml's (VER-73); 60 s and 50 % where it has none.
+    hook_budget=$(budget_of commit_hook_s)
+    hook_budget=${hook_budget:-60}
+    hook_limit=$(awk -v b="$hook_budget" -v m="$(budget_of margin)" \
+        'BEGIN { if (m == "") m = 0.5; printf "%d", b * (1 + m) }' 2>/dev/null)
+    hook_limit=${hook_limit:-$((hook_budget * 3 / 2))}
+    ((elapsed > hook_limit)) &&
+        notice+=" Over budget: the commit hook's budget is ${hook_budget} s, ${hook_limit} s with its margin."
     jq -n --arg message "$notice" '{systemMessage: $message}'
 fi
 exit 0

@@ -10,6 +10,7 @@ takes the median, so a new file is neither first nor forgotten.
 
 from __future__ import annotations
 
+import tomllib
 from pathlib import Path
 
 import pytest
@@ -73,3 +74,14 @@ def test_ver73_j4_an_unreadable_durations_file_is_refused(tmp_path: Path) -> Non
     with pytest.raises(pytest.UsageError, match="durations"):
         recorded_durations(broken)
     assert recorded_durations(tmp_path / "absent.json") == {}
+
+
+def test_ver73_the_no_cover_marker_the_conftest_applies_is_registered_without_pytest_cov() -> None:
+    """``--strict-markers`` refuses a marker nobody registered, and only pytest-cov defines this.
+
+    With pytest-cov off (``-p no:cov``) every ``--extended`` run would otherwise end in an
+    internal error as the conftest marks the walks.
+    """
+    config = tomllib.loads((REPOSITORY / "pyproject.toml").read_text(encoding="utf-8"))
+    markers = config["tool"]["pytest"]["ini_options"]["markers"]
+    assert any(line.startswith("no_cover:") for line in markers)

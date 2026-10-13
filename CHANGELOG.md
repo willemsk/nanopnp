@@ -62,6 +62,14 @@ REV-80 to REV-83 open for the author's ruling on the missed budgets.
 ### Fixed
 
 - `clause.py` prints on a cp1252 console.
+- The push guard answers a `git push` only where one runs: a commit message, an `echo` or a pull
+  request body that names it is text, and `bash -c 'git push'` is a push (VER-74, J3).
+- The selection names no test file that is gone, and the hook takes pytest's exit 5 for a new
+  file whose tests the marker expression deselects; `gate.sh map` installs a map only from a green
+  run, and the recorder empties the source's `functools` caches before each test, so a test a warm
+  cache served still depends on what it answered (VER-74).
+- `--strict-markers` knows `no_cover` without pytest-cov; the agent guard also reads `Task`; the
+  development container runs the working Python.
 
 ## [0.5.0-alpha.8] - 2026-10-10
 
