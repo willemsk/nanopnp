@@ -41,7 +41,9 @@ Gate before committing: `uv run ruff check . && uv run ruff format --check . && 
 Gate before pushing: `.claude/hooks/gate.sh run` (the above with `pytest --extended` over the whole suite, no
 coverage). `gate.sh` runs before each `git commit` Claude Code makes (`--no-verify` skips it): the lock check,
 lint, format, types and every Tier 1 test without the `extended` marker. A hook pass never stands in for `run`.
-Start `run` with Bash `run_in_background` and push when it passes; the hook refuses a push of
+Start `run` with Bash `run_in_background`, wait for it in the same turn (a foreground `until` loop on
+its output; re-run the wait if the 10-minute limit ends it), push when it passes, and only then end the
+turn: a turn ended on an unpushed commit trips the environment's stop hook. The hook refuses a push of
 a tree it has not passed.
 
 - Changed-line branch coverage (`src/nanopnp/` outside `gui/`, `diff-cover` against `main`) is checked by CI alone.
