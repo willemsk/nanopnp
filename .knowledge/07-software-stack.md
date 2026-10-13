@@ -1293,41 +1293,24 @@ What was learnt on the way, each measured:
   `extended` item whose file is named on the command line. A `-m` in `addopts` would deselect it
   even then, and the user would have to restate the whole marker expression.
 
-### 12.1 Recording test impact with `sys.monitoring` costs about 1 % **[tested]**
+### 12.1 Test-impact selection was built, measured and removed **[tested]**
 
-`tests/impact.py` (WP43) records, per test, the functions under `src/nanopnp` it starts, through
-`sys.monitoring` `PY_START` on a free tool id. Each event returns `DISABLE` after its first hit
-and is re-armed with `sys.monitoring.restart_events()` at each test, wide fixture and module body.
-On the development selection, four shared cores, `-n auto --dist loadfile`, Python 3.12.3, 2,129
-tests: 239.8 s without and 240.0 s with it, then 252.8 s and 256.2 s (+0.1 % and +1.4 %; load 2.5
-to 3.4). Coverage's per-test contexts cost +83 % on the same selection (WP43 plan, D2). What was
-learnt:
+WP43 built a recorder (`sys.monitoring` `PY_START`, `DISABLE` after the first hit, re-armed per
+test) and a selector for the commit hook; WP44 deleted both (§8.2.11 L2). Recording cost about 1 %
+(four shared cores, `-n auto --dist loadfile`, Python 3.12.3, 2,129 tests: 239.8 s without and
+240.0 s with it; coverage's per-test contexts cost +83 %). Selection did not pay: most past commits
+fell back to the whole development selection, and the recorder, selector and map were about 1,400
+lines of code and test. What stays true:
 
-- **`sys._getframe` raises an audit event of its own.** An audit hook that calls it before
-  checking the event name recurses until the interpreter gives up.
-- **A code object's `co_filename` can be `<frozen runpy>` or `<string>`.** `os.path.realpath`
-  resolves either against the working directory, so the pseudo-name reads as a repository file.
-- **The import system's reads are frames in `<frozen importlib._bootstrap_external>`.** Skipping
-  those leaves the reads a test makes as data, `linecache` included.
-- **Outside a test, an audited event counts only with repository code on the stack.** Otherwise
-  pytest reading test files and xdist starting its workers would make every change fall back.
-- **A warm `functools` cache hides a dependency from every test but the first.** A cache answers
-  without starting the function or reading its files again, so only the test that filled it was
-  credited. `validation/modularity.py` caches its parse of every module: without clearing, 22 tests
-  of nine source-reading files were credited with reading `post/qoi.py`; with the source's caches
-  emptied before each test, 43 were. The recording of those nine files took 88.3 s against 77.1 s
-  (+14 %), serial, 13 October 2026 **[tested]**.
-- **27 functions run at import or collection** on this tree (the registries' `register`,
-  `CaseDocument`'s validators, `core/paths.py`'s lookups). They are found because a module body on
-  the stack, other than the interpreter's own entry point, marks the call as import time.
+- **A warm `functools` cache hides a dependency from every test but the first**, so a recording of
+  what a test touched must empty the caches first (`validation/modularity.py` caches its parse of
+  every module).
 - **A throwaway index must keep the real index's mtime.** Git re-reads an entry as racy only when
-  the file is no older than the index file, and under `core.checkStat=minimal` (this container's
-  global setting) it compares only whole-second mtimes and sizes. Copied with a fresh mtime, the
-  index hid a same-size edit made in its second, and `git add -A` wrote the old tree. Copy it with
-  `shutil.copy2` or `cp -p`.
-- **A body change to `post/qoi.py`'s `total_current` selects 1,038 tests in 54 files.** 21 files
-  call into the module. The rest are the 144 tests that start a process (selected by any source
-  change) and the source-convention tests that read every module as text.
+  the file is no older than the index file, and under `core.checkStat=minimal` it compares only
+  whole-second mtimes and sizes. Copied with a fresh mtime, the index hid a same-size edit made in
+  its second, and `git add -A` wrote the old tree. Copy it with `cp -p`; `gate.sh` does.
+- **`sys._getframe` raises an audit event of its own**, and a `co_filename` can be `<frozen runpy>`
+  or `<string>`, which `realpath` resolves against the working directory.
 
 ### 12.2 Where the time goes on 3.14, and coverage's `sysmon` core **[tested]**
 
@@ -1336,21 +1319,19 @@ cores shared with another agent's runs, `-n 4 --dist loadfile`, BLAS threads 1,
 `NPY_DISABLE_CPU_FEATURES` at the X86_V3 cap, the GUI file left out, tree `f2e48e9` plus the
 ordering conftest (the order's re-measurement, below, on a quiet machine). Each figure carries the 1-minute load average at its start and end.
 
-- **`tests/durations.json`** comes from a `--durations=0` log of the development selection with
-  `--extended` (2,176 passed; 510 s wall, load 0.5 rising to 3.9): 1,849 s of test time in 141
-  files, of which the 16 wholly `extended` files are 1,070 s and the development selection 778 s.
-  Example 07 alone is 416 s, the 2WCD VAL-06 and charge walks 128 s and 125 s. No file mixes
-  `extended` and development tests, so a pull request's shards, packed from the same record, weigh
-  only what they run. The longest development file is 60.5 s (`test_exclusion_stern.py`); the
-  median file 2.0 s. Files whose every test is under pytest's 5 ms reporting floor are absent and
-  take the median.
+- **Per-file time**, from a `--durations=0` log of the development selection with `--extended`
+  (2,176 passed; 510 s wall, load 0.5 rising to 3.9): 1,849 s of test time in 141 files, of which
+  the 16 wholly `extended` files are 1,070 s and the development selection 778 s. Example 07 alone
+  is 416 s, the 2WCD VAL-06 and charge walks 128 s and 125 s. No file mixes `extended` and
+  development tests. The longest development file is 60.5 s (`test_exclusion_stern.py`); the median
+  file 2.0 s.
 - **Longest-first order is inert under xdist's defaults.** pytest-xdist 3.8's `loadfile` (a
   `LoadScopeScheduling`) re-sorts the files by their number of tests, most first, unless
   `--no-loadscope-reorder` is passed (`--loadscope-reorder` defaults to true), so the collection
   order only breaks ties, and example 07, which holds few tests, still starts late. Re-measured on
   a quiet machine (WP43 item 10, tree `4d9c306`, load under 1 at the first start; the same flags,
   `--extended`, no coverage), back to back: **534 s and 512 s** in the default schedule with the
-  order, **477 s** without `tests/durations.json` (path order, then re-sorted), and **474 s** with
+  order, **477 s** without a duration record (path order, then re-sorted), and **474 s** with
   the order and `--no-loadscope-reorder`. The spread between the two like runs, 22 s, is as large
   as any difference between schedules; every run sits on example 07's floor, 421 to 477 s alone, so
   no order can gain more than the minute above it. The same 2,213 tests pass in each. The earlier

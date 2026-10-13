@@ -97,7 +97,7 @@ def test_a_push_of_the_tree_the_push_gate_passed_goes_through(repo: Path) -> Non
 
 def test_a_commit_hook_pass_does_not_stand_in_for_the_push_gate(repo: Path) -> None:
     tree = _git(repo, "rev-parse", "HEAD^{tree}")
-    for selection in ("development", "impact"):
+    for selection in ("development",):
         _stamp(repo, tree, selection)
         assert "gate.sh run" in _denied(_hook(repo, "git push"))
 
