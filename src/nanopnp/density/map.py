@@ -32,6 +32,8 @@ LATTICE_TOLERANCE_NM = 1e-5
 
 @dataclass(frozen=True)
 class DensityMap:
+    """A 3D density map on the canonical stage-2 grid."""
+
     values: np.ndarray
     grid: DensityGrid
     header: Mapping[str, Canonicalisable]
@@ -47,12 +49,14 @@ class DensityMap:
             )
 
     def digest(self) -> str:
+        """Return a content hash over the values, the grid and the header."""
         return content_hash(
             f"{DENSITY_SCHEMA}/payload",
             {"values": self.values, "grid": self.grid.summary(), "header": dict(self.header)},
         )
 
     def write(self, path: Path) -> Path:
+        """Write the map to ``path`` as compressed ``.npz``; return the path."""
         import numpy as np
 
         arrays: dict[str, Any] = {
@@ -67,6 +71,13 @@ class DensityMap:
 
     @classmethod
     def read(cls, path: Path) -> DensityMap:
+        """Read a map from ``.npz``, OpenDX or CCP4/MRC, by suffix.
+
+        Raises
+        ------
+        GridFormatError
+            If the file is not a density map on a canonical grid, or its format is unreadable.
+        """
         suffix = path.suffix.lower()
         if suffix == ".npz":
             return cls._read_npz(path)
@@ -134,6 +145,13 @@ class DensityMap:
         return cls(values=values, grid=grid, header={"file": path.name})
 
     def export(self, path: Path) -> Path:
+        """Write the map as OpenDX (``.dx``) or CCP4 (``.ccp4``, ``.mrc``, ``.map``).
+
+        Raises
+        ------
+        GridFormatError
+            If the suffix names no format, or GridDataFormats is not installed.
+        """
         suffix = path.suffix.lower()
         if suffix == ".npz":
             return self.write(path)

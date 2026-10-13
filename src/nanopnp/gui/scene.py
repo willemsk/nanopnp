@@ -21,6 +21,14 @@ SceneState: TypeAlias = Literal["idle", "rendering", "loading", "drawn", "blank"
 
 @dataclass
 class SceneModel:
+    """The viewer panel's state: driven by render events and by the readiness probe.
+
+    Parameters
+    ----------
+    renderer
+        The URL the host document loads its renderer from.
+    """
+
     state: SceneState = "idle"
     fields: tuple[str, ...] = ()
     field: str = ""
@@ -31,6 +39,7 @@ class SceneModel:
     renderer: str = renderer_source()
 
     def reset(self) -> None:
+        """Return to the state of a viewer that has been shown no run."""
         self.state = "idle"
         self.fields = ()
         self.field = ""
@@ -40,6 +49,13 @@ class SceneModel:
         self.diagnosis = ""
 
     def request(self, run: str | Path, *, field: str = "") -> RenderRequest:
+        """Return the request for one field of one run, and enter ``rendering``.
+
+        Parameters
+        ----------
+        field
+            An attribute name, or ``""`` for the model's first field; not validated here.
+        """
         self.state = "rendering"
         self.diagnosis = ""
         self.document = None
@@ -47,6 +63,7 @@ class SceneModel:
         return RenderRequest(run=str(run), field=field, renderer=self.renderer)
 
     def consume(self, events: Iterable[RenderEvent]) -> None:
+        """Apply every render event, in order."""
         for event in events:
             self._apply(event)
 
@@ -71,6 +88,7 @@ class SceneModel:
             )
 
     def loaded(self, ok: bool) -> None:
+        """Record ``loadFinished``; a success moves nothing until :meth:`probed` reports."""
         if self.state not in ("loading", "blank", "drawn"):
             return
         if not ok:
@@ -81,6 +99,13 @@ class SceneModel:
             )
 
     def probed(self, answer: str | None) -> None:
+        """Apply the readiness probe's answer.
+
+        Parameters
+        ----------
+        answer
+            The JSON the probe returned, or ``None`` when the evaluation produced nothing.
+        """
         if self.state not in ("loading", "blank", "drawn"):
             return
         report = self._report(answer)
@@ -129,6 +154,7 @@ class SceneModel:
 
     @property
     def summary(self) -> str:
+        """Return the line the panel shows above the view."""
         if self.state == "idle":
             return "no run has been shown yet"
         if self.state == "rendering":

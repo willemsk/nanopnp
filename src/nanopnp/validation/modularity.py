@@ -78,6 +78,8 @@ STAGE_KEY = "(inputs)"
 
 @dataclass(frozen=True)
 class Module:
+    """One parsed source file of the package."""
+
     name: str
     path: str
     tree: ast.Module
@@ -86,6 +88,7 @@ class Module:
 
 
 def node_of(module: str) -> str:
+    """Return the relation node of a dotted module name."""
     parts = module.split(".")
     return parts[1] if len(parts) > 1 else ROOT_NODE
 
@@ -115,6 +118,13 @@ def _parse(root: Path, sources: tuple[tuple[str, str], ...]) -> tuple[Module, ..
 def parse_package(
     root: Path | None = None, sources: Mapping[str, str] | None = None
 ) -> tuple[Module, ...]:
+    """Parse every module of the package under ``root``.
+
+    Parameters
+    ----------
+    sources
+        ``{relative path: text}`` substituted for, or added to, the files on disk.
+    """
     base = (root or PACKAGE).resolve()
     return _parse(base, tuple(sorted((sources or {}).items())))
 
@@ -143,6 +153,8 @@ def _module_strings(module: Module) -> tuple[tuple[str, int], ...]:
 
 @dataclass(frozen=True, order=True)
 class ImportEdge:
+    """One import of one ``nanopnp`` module by another."""
+
     source: str
     target: str
     kind: str
@@ -151,6 +163,7 @@ class ImportEdge:
 
     @property
     def nodes(self) -> tuple[str, str]:
+        """Return the subpackage edge this import makes."""
         return node_of(self.source), node_of(self.target)
 
 
@@ -214,6 +227,7 @@ def _existing(name: str, known: Collection[str]) -> str:
 def import_edges(
     root: Path | None = None, sources: Mapping[str, str] | None = None
 ) -> tuple[ImportEdge, ...]:
+    """Return every import of a ``nanopnp`` module by another, with its kind."""
     modules = parse_package(root, sources)
     known = frozenset(module.name for module in modules)
     edges: set[ImportEdge] = set()
@@ -233,6 +247,7 @@ def import_edges(
 def subpackage_relation(
     edges: Iterable[ImportEdge], kinds: Collection[str]
 ) -> dict[tuple[str, str], tuple[ImportEdge, ...]]:
+    """Return each subpackage edge of the given kinds, with the imports that make it."""
     relation: dict[tuple[str, str], list[ImportEdge]] = defaultdict(list)
     for edge in edges:
         source, target = edge.nodes
@@ -248,6 +263,7 @@ def _place(edge: ImportEdge) -> tuple[str, int]:
 def measured_relations(
     edges: Iterable[ImportEdge],
 ) -> dict[str, dict[tuple[str, str], tuple[ImportEdge, ...]]]:
+    """Return the static and the string relation, by name."""
     collected = tuple(edges)
     return {name: subpackage_relation(collected, kinds) for name, kinds in RELATIONS.items()}
 
@@ -255,6 +271,10 @@ def measured_relations(
 def module_graph(
     edges: Iterable[ImportEdge], kinds: Collection[str], *, packages: bool = False
 ) -> dict[str, set[str]]:
+    """Return the module-to-module graph of the given kinds.
+
+    With ``packages``, an import also reaches every package whose ``__init__`` runs on the way.
+    """
     graph: dict[str, set[str]] = defaultdict(set)
     for edge in edges:
         if edge.kind not in kinds:
@@ -270,6 +290,7 @@ def module_graph(
 
 
 def node_graph(relation: Iterable[tuple[str, str]]) -> dict[str, set[str]]:
+    """Return a relation's pairs as an adjacency mapping."""
     graph: dict[str, set[str]] = defaultdict(set)
     for source, target in relation:
         graph[source].add(target)
@@ -277,6 +298,7 @@ def node_graph(relation: Iterable[tuple[str, str]]) -> dict[str, set[str]]:
 
 
 def components(graph: Mapping[str, Collection[str]]) -> tuple[tuple[str, ...], ...]:
+    """Return the strongly connected components with more than one member."""
     vertices = sorted({*graph, *(target for targets in graph.values() for target in targets)})
     index: dict[str, int] = {}
     lowlink: dict[str, int] = {}
@@ -328,6 +350,7 @@ def components(graph: Mapping[str, Collection[str]]) -> tuple[tuple[str, ...], .
 def component_edges(
     component: Collection[str], relation: Mapping[tuple[str, str], Collection[ImportEdge]]
 ) -> tuple[tuple[str, str, int], ...]:
+    """Return a component's internal edges and their import statements, lightest first."""
     members = set(component)
     weighted = [
         (source, target, len({(edge.path, edge.line) for edge in found}))
@@ -339,6 +362,8 @@ def component_edges(
 
 @dataclass(frozen=True, order=True)
 class AcceptedEdge:
+    """One row of ``modularity-layering.yaml``."""
+
     source: str
     target: str
     relation: str
@@ -354,6 +379,13 @@ def _rows(path: Path, key: str) -> list[object]:
 
 
 def accepted_relation(path: Path = LAYERING) -> tuple[AcceptedEdge, ...]:
+    """Return the accepted subpackage relation.
+
+    Raises
+    ------
+    ValueError
+        If a row lacks a key, names an unknown relation, or repeats an edge.
+    """
     accepted: list[AcceptedEdge] = []
     seen: set[tuple[str, str, str]] = set()
     for number, row in enumerate(_rows(path, "edges"), start=1):
@@ -375,14 +407,18 @@ def accepted_relation(path: Path = LAYERING) -> tuple[AcceptedEdge, ...]:
 
 @dataclass(frozen=True)
 class Comparison:
+    """The difference between the measured and the accepted relation."""
+
     added: tuple[tuple[str, tuple[str, str], ImportEdge], ...]
     removed: tuple[tuple[str, tuple[str, str]], ...]
 
     @property
     def equal(self) -> bool:
+        """Return whether the two relations agree in both directions."""
         return not self.added and not self.removed
 
     def describe(self, path: Path = LAYERING) -> str:
+        """Return a diagnostic naming each differing edge, its import and the file to edit."""
         lines = []
         for relation, (source, target), edge in self.added:
             # The ratchet's lists only shrink, so
@@ -410,6 +446,7 @@ def compare(
     measured: Mapping[str, Mapping[tuple[str, str], Collection[ImportEdge]]],
     accepted: Iterable[AcceptedEdge],
 ) -> Comparison:
+    """Compare the measured relations with the accepted rows, in both directions."""
     rows = {(edge.relation, (edge.source, edge.target)) for edge in accepted}
     added = []
     for relation, pairs in measured.items():
@@ -434,6 +471,13 @@ def upward_edges(
     *,
     kinds: Collection[str] = ("top",),
 ) -> dict[tuple[str, str], tuple[ImportEdge, ...]]:
+    """Return the subpackage edges of ``kinds`` that point up ``order``, with their imports.
+
+    Raises
+    ------
+    ValueError
+        If an edge has a node ``order`` does not place.
+    """
     rank = {node: position for position, node in enumerate(order)}
     relation = subpackage_relation(edges, kinds=kinds)
     unplaced = sorted({node for pair in relation for node in pair} - set(rank))
@@ -446,6 +490,13 @@ def upward_edges(
 
 
 def accepted_upward(path: Path = LAYERING, ratchet: str = UPWARD) -> tuple[AcceptedEdge, ...]:
+    """Return one recorded ratchet list, ``upward:`` by default.
+
+    Raises
+    ------
+    ValueError
+        If ``ratchet`` is unknown, or a row lacks a key or repeats an edge.
+    """
     if ratchet not in RATCHETS:
         raise ValueError(f"{ratchet!r} is not a ratchet; expected one of {', '.join(RATCHETS)}")
     label = ratchet.replace("_", " ")
@@ -465,6 +516,8 @@ def accepted_upward(path: Path = LAYERING, ratchet: str = UPWARD) -> tuple[Accep
 
 @dataclass(frozen=True)
 class StageConformance:
+    """How one registered stage's class meets the stage protocol."""
+
     name: str
     target: str
     has_describe: bool
@@ -473,14 +526,17 @@ class StageConformance:
 
     @property
     def has_key(self) -> bool:
+        """Return whether the class defines ``key``, whatever its parameters."""
         return self.key_signature is not None
 
     @property
     def has_run(self) -> bool:
+        """Return whether the class defines ``run``, whatever its parameters."""
         return self.run_signature is not None
 
     @property
     def conforms(self) -> bool:
+        """Return whether ``describe``, ``key`` and ``run`` exist with the protocol's parameters."""
         return (
             self.has_describe
             and self.key_signature == STAGE_KEY
@@ -490,6 +546,8 @@ class StageConformance:
 
 @dataclass(frozen=True)
 class StageSet:
+    """A collection of stage names written into the walk rather than read from a stage."""
+
     path: str
     name: str
     line: int
@@ -599,6 +657,7 @@ def _signature(function: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
 def stage_conformance(
     root: Path | None = None, sources: Mapping[str, str] | None = None
 ) -> tuple[StageConformance, ...]:
+    """Return each registered stage's protocol members and the signatures of ``key`` and ``run``."""
     modules = _module_map(parse_package(root, sources))
     found = []
     for name, target in _registered_stages(modules["core/stages.py"]):
@@ -620,12 +679,15 @@ def stage_conformance(
 
 @dataclass(frozen=True)
 class UndeclaredRead:
+    """A stage reading an upstream artefact by a literal name its description does not declare."""
+
     stage: str
     name: str
     path: str
     line: int
 
     def describe(self) -> str:
+        """Return the diagnostic: the stage, the name, and where it is read."""
         return (
             f"stage {self.stage!r} reads the {self.name!r} artefact at {self.path}:{self.line} "
             f"and does not declare it among its inputs; the walk hands a stage only what it "
@@ -637,6 +699,7 @@ class UndeclaredRead:
 def undeclared_reads(
     root: Path | None = None, sources: Mapping[str, str] | None = None
 ) -> tuple[UndeclaredRead, ...]:
+    """Return each literal upstream read a registered stage makes without declaring it."""
     modules = _module_map(parse_package(root, sources))
     stages = modules["core/stages.py"]
     found: list[UndeclaredRead] = []
@@ -736,6 +799,7 @@ def stage_sets(
     sources: Mapping[str, str] | None = None,
     module: str = "pipeline/run.py",
 ) -> tuple[StageSet, ...]:
+    """Return the module-level collections of two or more stage names in ``module``."""
     modules = _module_map(parse_package(root, sources))
     names = {name for name, _ in _registered_stages(modules["core/stages.py"])}
     names.add("case")
@@ -762,6 +826,7 @@ def function_literals(
     sources: Mapping[str, str] | None = None,
     module: str = "pipeline/run.py",
 ) -> tuple[tuple[str, int], ...]:
+    """Return ``(literal, line)`` of each string in ``names`` that ``function`` writes."""
     modules = _module_map(parse_package(root, sources))
     for node in modules[module].tree.body:
         if isinstance(node, ast.FunctionDef) and node.name == function:
@@ -773,6 +838,8 @@ def function_literals(
 
 @dataclass(frozen=True)
 class ExtensionPoint:
+    """A registry or a closed branch, with the modules outside its home that spell a member."""
+
     name: str
     kind: str
     home: str
@@ -781,6 +848,7 @@ class ExtensionPoint:
 
     @property
     def spelling_modules(self) -> int:
+        """Return the number of modules outside the home that spell a member."""
         return len(self.spelled)
 
 
@@ -855,6 +923,7 @@ def _members(module: Module, how: str, data: Path) -> tuple[str, ...]:
 def extension_points(
     root: Path | None = None, sources: Mapping[str, str] | None = None
 ) -> tuple[ExtensionPoint, ...]:
+    """Return each registry and branch, its members, and who else spells them."""
     modules = parse_package(root, sources)
     by_name = _module_map(modules)
     data = (root or PACKAGE).resolve().parents[1] / "data"
@@ -883,6 +952,8 @@ def extension_points(
 
 @dataclass(frozen=True, order=True)
 class BackendImport:
+    """One reference to ``ngsolve`` or ``netgen`` from a module of the package."""
+
     node: str
     path: str
     line: int
@@ -892,11 +963,14 @@ class BackendImport:
 
 @dataclass(frozen=True)
 class BackendUse:
+    """Who imports the finite-element backend, and whether the declared interface exists."""
+
     imports: tuple[BackendImport, ...]
     interface: tuple[str, ...]
 
     @property
     def modules(self) -> dict[str, tuple[str, ...]]:
+        """Return, per subpackage, the modules referring to the backend, sorted."""
         found: dict[str, set[str]] = defaultdict(set)
         for reference in self.imports:
             found[reference.node].add(reference.path)
@@ -904,12 +978,14 @@ class BackendUse:
 
     @property
     def module_count(self) -> int:
+        """Return the number of modules referring to the backend."""
         return sum(len(found) for found in self.modules.values())
 
 
 def backend_imports(
     root: Path | None = None, sources: Mapping[str, str] | None = None
 ) -> BackendUse:
+    """Return every reference to NGSolve or Netgen, with its path, line and kind."""
     modules = parse_package(root, sources)
     found: set[BackendImport] = set()
     defined: set[str] = set()
@@ -940,6 +1016,13 @@ def backend_imports(
 
 
 def accepted_backend(path: Path = LAYERING) -> tuple[str, ...]:
+    """Return the recorded subpackages that reach the backend.
+
+    Raises
+    ------
+    ValueError
+        If an entry is not a subpackage name or repeats one.
+    """
     recorded: list[str] = []
     for number, row in enumerate(_rows(path, "backend"), start=1):
         if not isinstance(row, str):
@@ -952,14 +1035,18 @@ def accepted_backend(path: Path = LAYERING) -> tuple[str, ...]:
 
 @dataclass(frozen=True)
 class BackendComparison:
+    """The difference between the subpackages reaching the backend and the record."""
+
     gained: tuple[BackendImport, ...]
     lost: tuple[str, ...]
 
     @property
     def equal(self) -> bool:
+        """Return whether the live set and the record agree in both directions."""
         return not self.gained and not self.lost
 
     def describe(self, path: Path = LAYERING) -> str:
+        """Return a diagnostic naming each gain's module and line, and each loss's subpackage."""
         lines = [
             f"{reference.node} now reaches the finite-element backend: {reference.path}:"
             f"{reference.line} names {reference.target} ({reference.kind}). Section 5.4.1 keeps "
@@ -976,6 +1063,7 @@ class BackendComparison:
 
 
 def compare_backend(use: BackendUse, recorded: Iterable[str]) -> BackendComparison:
+    """Compare the subpackages reaching the backend with the record, in both directions."""
     expected = set(recorded)
     first: dict[str, BackendImport] = {}
     for reference in use.imports:
@@ -989,6 +1077,8 @@ def compare_backend(use: BackendUse, recorded: Iterable[str]) -> BackendComparis
 
 @dataclass(frozen=True)
 class Surface:
+    """``PUBLIC``, its hand-kept ``TYPE_CHECKING`` mirror, and names a user reaches outside it."""
+
     public: tuple[str, ...]
     mirror: tuple[str, ...]
     outside: tuple[str, ...]
@@ -997,10 +1087,12 @@ class Surface:
 
     @property
     def mirror_differs(self) -> tuple[str, ...]:
+        """Return the names in exactly one of ``PUBLIC`` and its mirror."""
         return tuple(sorted(set(self.public) ^ set(self.mirror)))
 
     @property
     def module_differs(self) -> tuple[tuple[str, str, str], ...]:
+        """Return ``(name, PUBLIC module, mirror module)`` for each name the two place apart."""
         imported = dict(self.mirror_modules)
         return tuple(
             (name, module, imported[name])
@@ -1010,6 +1102,7 @@ class Surface:
 
 
 def surface(root: Path | None = None, sources: Mapping[str, str] | None = None) -> Surface:
+    """Return the public surface as ``core/public.py`` and the facade write it."""
     modules = _module_map(parse_package(root, sources))
     init = modules[ROOT_NODE]
     home = modules.get("core/public.py")
@@ -1047,11 +1140,14 @@ def surface(root: Path | None = None, sources: Mapping[str, str] | None = None) 
 
 @dataclass(frozen=True)
 class Sizes:
+    """Lines per module and the longest functions."""
+
     modules: tuple[tuple[str, int], ...]
     functions: tuple[tuple[str, str, int], ...]
 
 
 def sizes(root: Path | None = None, sources: Mapping[str, str] | None = None) -> Sizes:
+    """Return every module's line count and every function's, longest first."""
     modules = parse_package(root, sources)
     functions: list[tuple[str, str, int]] = []
     for module in modules:
@@ -1077,6 +1173,7 @@ def sizes(root: Path | None = None, sources: Mapping[str, str] | None = None) ->
 def version_literals(
     root: Path | None = None, sources: Mapping[str, str] | None = None
 ) -> tuple[tuple[str, int, str], ...]:
+    """Return ``(path, line, text)`` of each non-docstring string naming a release."""
     found = []
     for module in parse_package(root, sources):
         for text, line in _module_strings(module):
@@ -1086,6 +1183,18 @@ def version_literals(
 
 
 def tagged_releases(changelog_text: str) -> tuple[str, ...]:
+    """Return the releases ``CHANGELOG.md`` records as tagged, oldest first.
+
+    Parameters
+    ----------
+    changelog_text
+        The text of ``CHANGELOG.md``.
+
+    Raises
+    ------
+    ValueError
+        If the text names no release, or a release is missing from the sequence.
+    """
     found = sorted({(int(major), int(minor)) for major, minor in MILESTONE.findall(changelog_text)})
     if not found:
         raise ValueError("the changelog names no release: no '## [X.Y.0]' heading")
@@ -1113,6 +1222,13 @@ def tagged_releases(changelog_text: str) -> tuple[str, ...]:
 def stale_release_literals(
     tagged: Collection[str], root: Path | None = None, sources: Mapping[str, str] | None = None
 ) -> tuple[tuple[str, int, str, str], ...]:
+    """Return each non-docstring string naming a release already tagged.
+
+    Parameters
+    ----------
+    tagged
+        The tagged releases, as ``tagged_releases`` returns them.
+    """
     released = set(tagged)
     found = {
         (module.path, line, release, text)
@@ -1125,6 +1241,13 @@ def stale_release_literals(
 
 
 def requirement_releases(specification_text: str) -> dict[str, str]:
+    """Return each functional requirement's Release column from section 3.2.
+
+    Parameters
+    ----------
+    specification_text
+        The text of ``SPECIFICATION.md``.
+    """
     return dict(REQUIREMENT_ROW.findall(specification_text))
 
 
@@ -1133,6 +1256,13 @@ def release_pairing_mismatches(
     root: Path | None = None,
     sources: Mapping[str, str] | None = None,
 ) -> tuple[tuple[str, int, str, str, str, str], ...]:
+    """Return each string pairing a requirement with a release its row does not give.
+
+    Parameters
+    ----------
+    requirements
+        The Release column, as ``requirement_releases`` returns it.
+    """
     found = set()
     for module in parse_package(root, sources):
         for text, line in _module_strings(module):
@@ -1163,6 +1293,7 @@ def _matrix(relation: Mapping[tuple[str, str], Collection[ImportEdge]], nodes: l
 
 
 def render_measurements(root: Path | None = None) -> str:
+    """Return the live measurements as a Markdown page."""
     edges = import_edges(root)
     relations = measured_relations(edges)
     nodes = sorted({node_of(m.name) for m in parse_package(root)})
@@ -1307,6 +1438,7 @@ def render_measurements(root: Path | None = None) -> str:
 
 
 def gate_classes(errors_source: str) -> frozenset[str]:
+    """Return the set of class-4 gate exception class names from ``core/errors.py``."""
     tree = ast.parse(errors_source)
     classes: set[str] = set()
     for stmt in tree.body:
@@ -1336,6 +1468,8 @@ def gate_classes(errors_source: str) -> frozenset[str]:
 
 @dataclass(frozen=True)
 class NanGate:
+    """One NaN-permissive gate comparison in the package."""
+
     path: str
     line: int
     function: str
@@ -1347,6 +1481,8 @@ class NanGate:
 
 @dataclass(frozen=True)
 class NanGateFindings:
+    """The findings of ``nan_permissive_gates``."""
+
     violations: tuple[NanGate, ...]
     stale: tuple[str, ...]
 
@@ -1475,6 +1611,7 @@ def _find_if_nodes(func: ast.FunctionDef | ast.AsyncFunctionDef) -> list[ast.If]
 def nan_permissive_gates(
     package: Path, *, gates: frozenset[str], exempt: Mapping[str, str]
 ) -> NanGateFindings:
+    """Find all NaN-permissive gate comparisons in the package."""
     violations: list[NanGate] = []
     all_matched: set[str] = set()
 

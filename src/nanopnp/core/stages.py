@@ -37,6 +37,8 @@ __all__ = [
 
 
 class StageName(StrEnum):
+    """Canonical identifiers of all built-in pipeline stages."""
+
     CASE = "case"
     STRUCTURE = "structure"
     DENSITY = "density"
@@ -123,7 +125,10 @@ class ArtefactHook(Protocol):
 
 @runtime_checkable
 class SolveReporting(Protocol):
-    def with_solve_hook(self, hook: SolveHook) -> Stage: ...
+    """A stage that accepts a progress hook, which is not part of its artefact key."""
+
+    def with_solve_hook(self, hook: SolveHook) -> Stage:
+        """Return a copy of this stage that reports through ``hook``."""
 
 
 @runtime_checkable
@@ -149,17 +154,29 @@ class CancelFlag:
 
 
 def check_cancelled(cancel: CancelToken | None, where: str) -> None:
+    """Raise Cancelled if ``cancel`` has been set; ``where`` names the step about to run."""
     if cancel is not None and cancel.cancelled():
         raise Cancelled(f"cancelled before {where}")
 
 
 def report(progress: Progress | None, fraction: float, message: str) -> None:
+    """Call ``progress`` if there is one, clamping the fraction into [0, 1]."""
     if progress is not None:
         progress(min(1.0, max(0.0, fraction)), message)
 
 
 @dataclass(frozen=True)
 class StageDescription:
+    """What a stage takes, produces and is called, without importing it.
+
+    Parameters
+    ----------
+    needs_section
+        The case section the stage reads, or None.
+    weight
+        The stage's share of a walk's progress; finite and positive.
+    """
+
     name: str
     number: int
     title: str
@@ -178,6 +195,7 @@ class StageDescription:
         object.__setattr__(self, "name", str(self.name))
 
     def summary(self) -> dict[str, Any]:
+        """Return this description as plain data, for the CLI and the GUI."""
         return {
             "name": self.name,
             "number": self.number,
@@ -217,18 +235,22 @@ class Stage(Protocol):
 
 @dataclass(frozen=True)
 class StageEntry:
+    """One registry row: a description, and where the implementation lives."""
+
     description: StageDescription
     target: str
     extra: str | None = None
 
 
-class MissingExtraError(ImportError): ...
+class MissingExtraError(ImportError):
+    """Raised when a registered stage needs an optional extra that is not installed."""
 
 
 _REGISTRY: dict[str, StageEntry] = {}
 
 
 def register(description: StageDescription, target: str, *, extra: str | None = None) -> None:
+    """Register a stage under its name; ValueError for a duplicate or malformed entry."""
     if description.name in _REGISTRY:
         raise ValueError(
             f"stage {description.name!r} is already registered as "
@@ -259,6 +281,7 @@ def register(description: StageDescription, target: str, *, extra: str | None = 
 
 
 def walk_order() -> tuple[str, ...]:
+    """Return every registered stage name in registration order, which is a dependency order."""
     return tuple(_REGISTRY)
 
 
@@ -274,6 +297,7 @@ def registered_stages() -> tuple[StageDescription, ...]:
 
 
 def describe(name: StageIdentifier | str) -> StageDescription:
+    """Return one stage's description without importing its module; KeyError if unregistered."""
     entry = _REGISTRY.get(str(name))
     if entry is None:
         known = ", ".join(sorted(_REGISTRY)) or "none"
@@ -282,6 +306,7 @@ def describe(name: StageIdentifier | str) -> StageDescription:
 
 
 def create(name: StageIdentifier | str, **kwargs: StageOption) -> Stage:
+    """Import a stage's module and construct it with ``kwargs``; KeyError if unregistered."""
     describe(name)
     entry = _REGISTRY[str(name)]
     module_name, _, attribute = entry.target.partition(":")

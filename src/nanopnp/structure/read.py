@@ -46,10 +46,18 @@ HISTIDINES: frozenset[str] = frozenset({"HSD", "HSE", "HSP", "HID", "HIE", "HIP"
 COVERAGE_FRACTION = 0.5
 
 
-class StructureInputError(ValueError): ...
+class StructureInputError(ValueError):
+    """A structure, trajectory or frame selection was refused."""
 
 
 def structure_format(path: Path) -> Literal["pdb", "mmcif"]:
+    """Return which reader a structure file takes, from its extension.
+
+    Raises
+    ------
+    StructureInputError
+        If the extension is not a structure format, optionally gzipped.
+    """
     suffixes = [suffix.lower() for suffix in path.suffixes]
     if suffixes and suffixes[-1] == ".gz":
         suffixes = suffixes[:-1]
@@ -64,6 +72,7 @@ def structure_format(path: Path) -> Literal["pdb", "mmcif"]:
 
 
 def trajectory_format(path: Path) -> str:
+    """Return the MDAnalysis format a trajectory file is read as, from its extension."""
     found = TRAJECTORY_FORMATS.get(path.suffix.lower())
     if found is None:
         raise StructureInputError(
@@ -79,6 +88,13 @@ def _require_file(path: Path, key: str) -> None:
 
 
 def load_universe(source: Path, trajectory: Path | None = None) -> mda.Universe:
+    """Read a structure, and optionally a trajectory, into one universe.
+
+    Raises
+    ------
+    StructureInputError
+        If a file is missing or unsupported, or the trajectory does not hold the structure's atoms.
+    """
     _require_file(source, "structure.source.path")
     kind = structure_format(source)
     if trajectory is not None:
@@ -185,6 +201,8 @@ def _universe_from_mmcif(path: Path) -> mda.Universe:
 
 @dataclass(frozen=True)
 class AtomTable:
+    """The selected atoms, in file order."""
+
     element: np.ndarray
     name: np.ndarray
     resname: np.ndarray
@@ -198,6 +216,8 @@ class AtomTable:
 
 @dataclass(frozen=True)
 class Selection:
+    """The atoms stage 1 carries, and the C-alpha sets it fits on."""
+
     group: mda.AtomGroup
     atoms: AtomTable
     chain_key: str
@@ -222,6 +242,13 @@ def _chain_keys(group: mda.AtomGroup) -> tuple[list[str], str]:
 
 
 def select(universe: mda.Universe, *, selection: str, chains: str, n: int) -> Selection:
+    """Select the pore's atoms and check the oligomeric state.
+
+    Raises
+    ------
+    StructureInputError
+        On a refused atom, chain count, chain coverage or residue-name disagreement.
+    """
     import numpy as np
 
     try:
@@ -357,12 +384,15 @@ def _describe(atom: Any) -> str:  # noqa: ANN401 - an MDAnalysis Atom, which is 
 
 @dataclass(frozen=True)
 class FrameWindow:
+    """The frames of the ensemble, as selected and as their file records them."""
+
     indices: tuple[int, ...]
     times_ns: tuple[float, ...]
     interval_ns: float
     available: int
 
     def summary(self) -> dict[str, Any]:
+        """Return the window as plain data."""
         return {
             "indices": list(self.indices),
             "times_ns": list(self.times_ns),
@@ -378,6 +408,13 @@ def select_frames(
     last_ns: float | None = None,
     count: int | None = None,
 ) -> FrameWindow:
+    """Choose the ensemble's frames by ``last_ns`` and ``count``.
+
+    Raises
+    ------
+    StructureInputError
+        If ``last_ns`` exceeds the recorded span, or ``count`` exceeds the window.
+    """
     available = len(times_ns)
     window = list(range(available))
     if last_ns is not None:
@@ -412,6 +449,7 @@ def select_frames(
 
 
 def frame_times(universe: mda.Universe) -> tuple[tuple[float, ...], float]:
+    """Return every frame's recorded time and the reader's interval, in nanoseconds."""
     trajectory = universe.trajectory
     with warnings.catch_warnings():
         # The "no dt information" warning repeats what the recorded interval already says.
@@ -422,6 +460,7 @@ def frame_times(universe: mda.Universe) -> tuple[tuple[float, ...], float]:
 
 
 def positions_nm(group: mda.AtomGroup, indices: Sequence[int]) -> np.ndarray:
+    """Return ``(frames, atoms, 3)`` positions of ``group`` at ``indices``, in nm."""
     import numpy as np
 
     trajectory = group.universe.trajectory

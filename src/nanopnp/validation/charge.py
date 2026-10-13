@@ -32,6 +32,8 @@ class _Strict(BaseModel):
 
 
 class PlaneDifference(_Strict):
+    """One plane's cumulative charge under ``1/2 erfc((z - p)/s)``, on both grids, in e."""
+
     z_nm: float
     ours_e: float
     theirs_e: float
@@ -39,6 +41,8 @@ class PlaneDifference(_Strict):
 
 
 class AreaComparison(_Strict):
+    """Two areal densities on the same nodes: totals, field differences and planes."""
+
     q_ours_e: float
     q_theirs_e: float
     q_relative: float
@@ -52,6 +56,13 @@ class AreaComparison(_Strict):
 
 
 def reference_construction(atoms: SourceAtoms, like: RadialGrid) -> RadialGrid:
+    """Return the reference's areal density, in C m^-2, on ``like``'s nodes.
+
+    Parameters
+    ----------
+    like
+        The grid whose nodes to sample, the delivered table's own.
+    """
     import numpy as np
 
     h_r, h_z = like.spacing_nm
@@ -114,6 +125,20 @@ def compare_areal(
     *,
     smoothing_nm: float,
 ) -> AreaComparison:
+    """Compare two areal densities in C m^-2 on the nodes they share, zero outside each.
+
+    Parameters
+    ----------
+    planes_nm
+        The planes of the per-plane comparison.
+    smoothing_nm
+        The smoothing width ``s`` of each plane's erfc profile.
+
+    Raises
+    ------
+    ValueError
+        If the two grids do not share one spacing and one lattice.
+    """
     import numpy as np
     from scipy.special import erfc
 

@@ -147,10 +147,13 @@ size ``h``, 6e-4 on ClyA's 0.1 nm protein elements, where the ramp's kinks leave
 """
 
 
-class FieldDocumentError(ValueError): ...
+class FieldDocumentError(ValueError):
+    """A field document is not one, or does not describe the data it names."""
 
 
 class ChargeFieldError(ValueError):
+    """A supplied field failed one of the charge gates."""
+
     def __init__(self, gate: str, quantity: str, location: str | None = None) -> None:
         where = f" at {location}" if location is not None else ""
         super().__init__(f"{gate}: {quantity}{where}")
@@ -164,18 +167,24 @@ class _Strict(BaseModel):
 
 
 class GridSpec(_Strict):
+    """The grid descriptor the header declares, checked against the data."""
+
     origin_nm: tuple[float, float]
     spacing_nm: tuple[float, float]
     shape: tuple[int, int]
 
 
 class DataSpec(_Strict):
+    """The data file a header refers to, and how to read it."""
+
     path: Path
     format: str | None = None
     sha256: str | None = None
 
 
 class FormSpec(_Strict):
+    """A named analytic form standing in for a data file, with typed parameters."""
+
     name: str
     parameters: dict[str, float] = Field(default_factory=dict)
     origin_nm: tuple[float, float]
@@ -184,12 +193,16 @@ class FormSpec(_Strict):
 
 
 class FieldProvenance(_Strict):
+    """Where a field came from, for the manifest."""
+
     source: str
     citation: str | None = None
     notes: str | None = None
 
 
 class FieldDocument(_Strict):
+    """A supplied field's header document."""
+
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
     schema_id: str = Field(alias="schema")
@@ -242,13 +255,16 @@ class FieldDocument(_Strict):
 
     @property
     def q_net_C(self) -> float | None:
+        """Return the declared net charge in coulombs, or None if none was declared."""
         return None if self.q_net_e is None else self.q_net_e * ELEMENTARY_CHARGE
 
     @property
     def unit_factor(self) -> float:
+        """Return the factor from the declared units onto the SI unit."""
         return QUANTITIES[self.quantity][self.units]
 
     def summary(self) -> dict[str, object]:
+        """Return what the manifest records about this header."""
         return {
             "name": self.name,
             "quantity": self.quantity,
@@ -266,6 +282,7 @@ class FieldDocument(_Strict):
 
 
 def load_document(path: str | Path) -> FieldDocument:
+    """Read and validate a field header document; refuse invalid YAML or fields."""
     source = Path(path)
     if not source.is_file():
         raise FileNotFoundError(f"no field document at {str(source)!r}")
@@ -288,6 +305,13 @@ def load_document(path: str | Path) -> FieldDocument:
 
 
 def load_grid(document: FieldDocument, *, base: Path) -> RadialGrid:
+    """Return the grid a document describes, with its values converted to SI.
+
+    Parameters
+    ----------
+    base
+        Directory a relative data.path is resolved against.
+    """
     import numpy as np
 
     if document.form is not None:
@@ -342,16 +366,19 @@ _FORMS: dict[str, FormBuilder] = {}
 
 
 def register_form(name: str, builder: FormBuilder) -> None:
+    """Register an analytic field form under name; refuse a name already taken."""
     if name in _FORMS:
         raise ValueError(f"field form {name!r} is already registered")
     _FORMS[name] = builder
 
 
 def registered_forms() -> tuple[str, ...]:
+    """Return every registered form name, sorted."""
     return tuple(sorted(_FORMS))
 
 
 def create_form(spec: FormSpec) -> RadialGrid:
+    """Return the grid a FormSpec describes, in canonical SI units."""
     import numpy as np
 
     builder = _FORMS.get(spec.name)
@@ -408,6 +435,8 @@ register_form("slab", _slab)
 
 @dataclass(frozen=True)
 class ChargeField:
+    """A supplied fixed-charge field, ready to be assembled onto a mesh."""
+
     document: FieldDocument
     grid: RadialGrid
     source: Path
@@ -423,9 +452,11 @@ class ChargeField:
 
     @property
     def is_areal(self) -> bool:
+        """Return whether the 1/(2 pi r) projection and the axis guard apply."""
         return self.document.quantity == "areal_charge_density"
 
     def volume_density_C_m3(self) -> Expression:
+        """Return the SI volume charge density in C m^-3 as a coefficient function."""
         import ngsolve as ngs
 
         interpolant = coefficient(self.grid)
@@ -437,12 +468,15 @@ class ChargeField:
         return ngs.IfPos(ngs.x - cutoff, projected, 0.0)
 
     def fixed_charge_C_m3(self) -> FixedCharge:
+        """Return the SI volume density with the rule it is assembled with."""
         return FixedCharge(self.volume_density_C_m3(), self.quadrature_order)
 
     def assemble(self, scales: Scales) -> FixedCharge:
+        """Return the dimensionless rho~_pore the weak form takes, scaled by scales."""
         return self.fixed_charge_C_m3().scaled(1.0 / scales.charge_density_C_m3)
 
     def guard_deficit_C(self) -> float:
+        """Return the charge the axis guard deletes, in coulombs, measured on the grid."""
         if not self.is_areal:
             return 0.0
         return self.grid.integral(
@@ -450,11 +484,19 @@ class ChargeField:
         )
 
     def planar_integral_C(self) -> float:
+        """Return the source grid's own charge, Q_grid, in coulombs."""
         if self.is_areal:
             return self.grid.planar_integral()
         return self.grid.integral(radial=True)
 
     def mesh_integral_C(self, mesh: Mesh, measures: Measures, *, refined: bool = False) -> float:
+        """Return the assembled density integrated over the mesh, Q_mesh, in coulombs.
+
+        Parameters
+        ----------
+        refined
+            Also evaluate the refinement orders above the assembly rule.
+        """
         rule_order = self.quadrature_order + (QUADRATURE_REFINEMENT if refined else 0)
         integral_nm = measures.integrate(
             self.volume_density_C_m3(),
@@ -474,6 +516,7 @@ class ChargeField:
         *,
         ramp_nm: float = DEFAULT_RAMP_NM,
     ) -> tuple[float, ...]:
+        """Return the mesh-side cumulative charge below each plane, ramped."""
         import ngsolve as ngs
 
         density = self.volume_density_C_m3()
@@ -497,10 +540,12 @@ class ChargeField:
     def grid_cumulative_C(
         self, planes_nm: Sequence[float], *, ramp_nm: float = DEFAULT_RAMP_NM
     ) -> tuple[float, ...]:
+        """Return the grid-side cumulative charge below each plane, ramped alike."""
         return self.grid.cumulative(planes_nm, ramp_nm=ramp_nm, radial=not self.is_areal)
 
 
 def load_field(path: str | Path) -> ChargeField:
+    """Read a field document and its grid, and return the charge field."""
     source = Path(path)
     document = load_document(source)
     return ChargeField(
@@ -516,6 +561,14 @@ def _relative(deviation: float, reference: float) -> float:
 
 @dataclass(frozen=True)
 class ConservationReport:
+    """The PHY-19 conservation check, decomposed.
+
+    Parameters
+    ----------
+    q_net_C
+        Declared net charge in C, or None when none was declared.
+    """
+
     q_net_C: float | None
     q_grid_C: float
     q_mesh_C: float
@@ -530,28 +583,34 @@ class ConservationReport:
 
     @property
     def reference_C(self) -> float:
+        """Return the magnitude every absolute tolerance is taken against."""
         return abs(self.q_net_C if self.q_net_C is not None else self.q_grid_C)
 
     @property
     def producer_error(self) -> float | None:
+        """Return (Q_grid - Q_net) / |Q_net|, or None if none was declared."""
         if self.q_net_C is None:
             return None
         return _relative(self.q_grid_C - self.q_net_C, abs(self.q_net_C))
 
     @property
     def consumer_error(self) -> float:
+        """Return (Q_mesh - Q_grid) / |Q_grid|."""
         return _relative(self.q_mesh_C - self.q_grid_C, abs(self.q_grid_C))
 
     @property
     def quadrature_error(self) -> float:
+        """Return |Q_mesh(order) - Q_mesh(order + 3)| / reference."""
         return _relative(abs(self.q_mesh_C - self.q_mesh_refined_C), self.reference_C)
 
     @property
     def ring_ratio(self) -> float:
+        """Return the boundary ring against the grid's interior maximum."""
         return self.ring.value / self.interior_maximum if self.interior_maximum else 0.0
 
     @property
     def worst_plane(self) -> tuple[float, float]:
+        """Return the plane with the largest cumulative error, and that error; NaN ranks highest."""
         if not self.planes_nm:
             return (float("nan"), 0.0)
         errors = [
@@ -564,6 +623,7 @@ class ConservationReport:
         return (plane, error)
 
     def summary(self) -> dict[str, object]:
+        """Return the manifest's record of this check."""
         plane, plane_error = self.worst_plane
         return {
             "q_net_e": None if self.q_net_C is None else self.q_net_C / ELEMENTARY_CHARGE,
@@ -595,6 +655,7 @@ class ConservationReport:
 
 
 def default_planes(field: ChargeField, count: int = DEFAULT_PLANE_COUNT) -> tuple[float, ...]:
+    """Return a ladder of z planes spanning the grid, ends excluded."""
     (_, _), (z_min, z_max) = field.grid.extent_nm
     step = (z_max - z_min) / (count + 1)
     return tuple(z_min + step * (index + 1) for index in range(count))
@@ -608,6 +669,7 @@ def conservation(
     planes_nm: Sequence[float] | None = None,
     ramp_nm: float = DEFAULT_RAMP_NM,
 ) -> ConservationReport:
+    """Measure the conservation check on the deployed mesh, without gating it."""
     planes = tuple(planes_nm) if planes_nm is not None else default_planes(field)
     return ConservationReport(
         q_net_C=field.document.q_net_C,
@@ -626,6 +688,16 @@ def conservation(
 
 @dataclass(frozen=True)
 class DepositConservation:
+    """The conservation check for a deposited charge, against the source atoms.
+
+    Parameters
+    ----------
+    q_net_C
+        Declared net charge, in C.
+    planes_nm, smoothing_nm
+        The planes and the smoothing width of their weight, in nm.
+    """
+
     q_net_C: float
     q_grid_C: float
     q_mesh_C: float
@@ -641,25 +713,31 @@ class DepositConservation:
 
     @property
     def reference_C(self) -> float:
+        """Return |Q_net|, the magnitude every relative error is taken against."""
         return abs(self.q_net_C)
 
     @property
     def producer_error(self) -> float:
+        """Return (Q_grid - Q_net) / |Q_net|."""
         return _relative(self.q_grid_C - self.q_net_C, abs(self.q_net_C))
 
     @property
     def consumer_error(self) -> float:
+        """Return (Q_mesh - Q_grid) / |Q_grid|."""
         return _relative(self.q_mesh_C - self.q_grid_C, abs(self.q_grid_C))
 
     @property
     def quadrature_error(self) -> float:
+        """Return |Q_mesh(order) - Q_mesh(order + 3)| / |Q_net|."""
         return _relative(abs(self.q_mesh_C - self.q_mesh_refined_C), self.reference_C)
 
     @property
     def ring_ratio(self) -> float:
+        """Return the lattice's boundary ring against its interior maximum."""
         return self.ring.value / self.interior_maximum if self.interior_maximum else 0.0
 
     def worst_plane(self, side: str) -> tuple[float, float]:
+        """Return the plane where side is furthest from the atoms, and that error."""
         values = self.grid_cumulative_C if side == "grid" else self.mesh_cumulative_C
         if not self.planes_nm:
             return (float("nan"), 0.0)
@@ -673,6 +751,7 @@ class DepositConservation:
         return (plane, error)
 
     def summary(self) -> dict[str, object]:
+        """Return the manifest's record of this check."""
         grid_plane, grid_error = self.worst_plane("grid")
         mesh_plane, mesh_error = self.worst_plane("mesh")
         return {
@@ -713,6 +792,7 @@ def deposit_conservation(
     planes_nm: Sequence[float] | None = None,
     smoothing_nm: float | None = None,
 ) -> DepositConservation:
+    """Measure the conservation check for a deposited charge, without gating it."""
     import ngsolve as ngs
     import numpy as np
     from scipy.special import erfc
@@ -764,6 +844,7 @@ def deposit_conservation(
 
 
 def check_deposit_conservation(report: DepositConservation) -> DepositConservation:
+    """Gate a deposit's conservation report, aborting on the first failure."""
     if not report.reference_C > NEUTRAL_Q_NET_E * ELEMENTARY_CHARGE:
         raise ChargeFieldError(
             "the protonation artefact carries no net charge",
@@ -816,6 +897,7 @@ def check_deposit_conservation(report: DepositConservation) -> DepositConservati
 
 
 def check_conservation(report: ConservationReport) -> ConservationReport:
+    """Gate a conservation report, aborting on the first failure; return the report."""
     if report.reference_C == 0.0:
         raise ChargeFieldError(
             "the supplied field carries no reference charge",

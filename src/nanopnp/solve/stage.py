@@ -80,6 +80,8 @@ def _wall_distance_summary(measured: WallDistanceMeasurement | None) -> dict[str
 
 
 class SolveStage:
+    """Stage 10: a case and a mesh to a converged state and its record."""
+
     name = "solve"
 
     def __init__(
@@ -96,6 +98,7 @@ class SolveStage:
         self._solve_hook = solve_hook
 
     def with_solve_hook(self, hook: SolveHook) -> SolveStage:
+        """Return a copy of this stage reporting its progress through ``hook``."""
         return SolveStage(
             workspace=self._workspace,
             warm_start=self._warm_start,
@@ -104,9 +107,11 @@ class SolveStage:
         )
 
     def describe(self) -> StageDescription:
+        """Return the registry's description of this stage."""
         return describe(self.name)
 
     def key(self, inputs: StageInputs) -> SolutionArtefact:
+        """Return the artefact key this case will produce, without solving it."""
         resolved, ingested, mesh, materials, fields, supplied = self._prepare(inputs, load=False)
         del ingested, supplied
         return SolutionArtefact(
@@ -145,6 +150,7 @@ class SolveStage:
         progress: Progress | None = None,
         cancel: CancelToken | None = None,
     ) -> SolutionArtefact:
+        """Solve the case and emit the stage-10 artefact."""
         check_cancelled(cancel, "the solve")
         report(progress, 0.0, "reading and gating the mesh")
         resolved, ingested, mesh_artefact, materials, fields_artefact, supplied = self._prepare(

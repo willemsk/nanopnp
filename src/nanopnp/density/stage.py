@@ -53,6 +53,7 @@ def _density(inputs: StageInputs) -> DensitySpec:
 
 
 def density_parameters(spec: DensitySpec) -> dict[str, Canonicalisable]:
+    """Return the stage-2 key's parameters."""
     name = KERNEL_RADII[spec.kernel]
     return {
         "density": spec.model_dump(mode="json"),
@@ -63,15 +64,19 @@ def density_parameters(spec: DensitySpec) -> dict[str, Canonicalisable]:
 
 
 class DensityStage:
+    """Stage 2: an aligned ensemble to its ensemble-mean union density on a canonical grid."""
+
     name = "density"
 
     def __init__(self, *, workspace: Path | None = None) -> None:
         self._workspace = Path(workspace) if workspace is not None else None
 
     def describe(self) -> StageDescription:
+        """Return the registry's description of this stage."""
         return describe(self.name)
 
     def key(self, inputs: StageInputs) -> DensityArtefact:
+        """Return the artefact key from the block, the radius set and stage 1's hash."""
         return DensityArtefact(
             parameters=density_parameters(_density(inputs)),
             inputs={"structure": inputs.require("structure").hash},
@@ -84,6 +89,13 @@ class DensityStage:
         progress: Progress | None = None,
         cancel: CancelToken | None = None,
     ) -> DensityArtefact:
+        """Deposit the density and emit the stage-2 artefact.
+
+        Raises
+        ------
+        Cancelled
+            If ``cancel`` turns true.
+        """
         import numpy as np
 
         spec = _density(inputs)

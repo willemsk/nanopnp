@@ -19,10 +19,12 @@ SHORT_LENGTH = 12
 _CHUNK = 1 << 20
 
 
-class CanonicalisationError(ValueError): ...
+class CanonicalisationError(ValueError):
+    """A value has no canonical serialisation, so it cannot enter a hash."""
 
 
 def canonical(obj: Canonicalisable) -> bytes:
+    """Return the canonical UTF-8 JSON of ``obj``; CanonicalisationError on an unsupported leaf."""
     return json.dumps(
         _encode(obj, "$"), sort_keys=True, separators=(",", ":"), ensure_ascii=True
     ).encode("utf-8")
@@ -91,6 +93,7 @@ def _encode_array(array: Canonicalisable, path: str) -> JSONValue:
 
 
 def decode_floats(value: JSONValue) -> JSONValue:
+    """Return a canonical document with floats restored; arrays stay as digests."""
     if isinstance(value, dict):
         if len(value) == 1:
             encoded = value.get("__f__")
@@ -107,6 +110,13 @@ def content_hash(
     parameters: Mapping[str, Canonicalisable],
     inputs: Mapping[str, str] | None = None,
 ) -> str:
+    """Return the sha256 content hash of one artefact, as 64 lower-case hex characters.
+
+    Parameters
+    ----------
+    inputs
+        Upstream artefact and input-file hashes, keyed by name.
+    """
     digest = hashlib.sha256()
     digest.update(HASH_PREFIX)
     digest.update(b"\0")
@@ -119,6 +129,7 @@ def content_hash(
 
 
 def file_hash(path: str | Path) -> str:
+    """Return the sha256 of a file's bytes, as 64 hex characters."""
     digest = hashlib.sha256()
     with Path(path).open("rb") as handle:
         while chunk := handle.read(_CHUNK):
@@ -127,4 +138,5 @@ def file_hash(path: str | Path) -> str:
 
 
 def short(digest: str, length: int = SHORT_LENGTH) -> str:
+    """Return the display prefix of a hash; see :data:`SHORT_LENGTH`."""
     return digest[:length]

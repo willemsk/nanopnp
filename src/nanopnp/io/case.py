@@ -48,13 +48,15 @@ OUTPUTS: frozenset[str] = frozenset(
 
 
 class CaseValidationError(ValueError):
+    """A case document failed validation; the message names every offending key by dotted path."""
+
     def __init__(self, message: str, errors: ValidationError | None = None) -> None:
         super().__init__(message)
         self.errors = errors
 
 
 class UnsupportedCaseSection(NotImplementedError):  # noqa: N818 - a release gap, not a failure
-    ...
+    """The case asks for a section this release does not run; the message names its release."""
 
 
 class _Strict(BaseModel):
@@ -62,6 +64,8 @@ class _Strict(BaseModel):
 
 
 class SuppliedArtefact(_Strict):
+    """One upstream stage output supplied from outside the pipeline, by path or hash."""
+
     path: Path | None = None
     artefact: str | None = None
     format: str | None = None
@@ -84,6 +88,7 @@ SUPPLIED_FIELDS: dict[str, str] = {
 
 
 def stored_artefact_refused(key: str) -> UnsupportedCaseSection:
+    """Return the refusal of a hash-named output under ``inputs.<key>``: mesh, charge or eps_r."""
     if key == "mesh":
         return UnsupportedCaseSection(
             "inputs.mesh: artefact: names a mesh by its store hash. FR-27's substitution reads "
@@ -98,6 +103,8 @@ def stored_artefact_refused(key: str) -> UnsupportedCaseSection:
 
 
 class Inputs(_Strict):
+    """Supplied upstream artefacts, by the stage whose output each replaces."""
+
     mesh: SuppliedArtefact | None = None
     charge: SuppliedArtefact | None = None
     eps_r: SuppliedArtefact | None = None
@@ -106,6 +113,8 @@ class Inputs(_Strict):
 
 
 class StructureSource(_Strict):
+    """The structure file and the MDAnalysis selection naming the pore."""
+
     path: Path = Field(
         description=(
             "A PDB or mmCIF file, optionally gzipped (.pdb, .ent, .cif, .mmcif). MDAnalysis reads "
@@ -135,6 +144,8 @@ class StructureSource(_Strict):
 
 
 class Frames(_Strict):
+    """Which trajectory frames enter the ensemble average."""
+
     last_ns: float | None = Field(
         default=None,
         description=(
@@ -152,6 +163,8 @@ class Frames(_Strict):
 
 
 class Ensemble(_Strict):
+    """The trajectory and its frame selection."""
+
     trajectory: Path | None = Field(
         default=None,
         description=(
@@ -164,6 +177,8 @@ class Ensemble(_Strict):
 
 
 class SymmetrySpec(_Strict):
+    """The expected point group and how the axis is found."""
+
     point_group: str = Field(description="C<n> with n >= 1, e.g. C12 for ClyA (FR-03)")
     axis: Literal["auto", "z"] = Field(
         default="auto",
@@ -177,18 +192,24 @@ class SymmetrySpec(_Strict):
 
 
 class Structure(_Strict):
+    """Stage 1: structure ingestion and alignment."""
+
     source: StructureSource
     ensemble: Ensemble = Field(default_factory=Ensemble)
     symmetry: SymmetrySpec
 
 
 class DensitySpec(_Strict):
+    """Stage 2: Gaussian smearing to a grid."""
+
     grid_spacing_nm: float = 0.05
     kernel: Literal["gaussian_vdw"] = "gaussian_vdw"
     sharpness: float = 0.93
 
 
 class ContourSpec(_Strict):
+    """Stage 4: contour extraction and conditioning."""
+
     isolevel: float = Field(
         default=0.25,
         description=(
@@ -216,15 +237,21 @@ class ContourSpec(_Strict):
 
 
 class MembraneSpec(_Strict):
+    """The bilayer, defined analytically; ``centre_z_nm`` is in the structure's frame."""
+
     thickness_nm: float = 2.8
     centre_z_nm: float = 0.0
 
 
 class ReservoirSpec(_Strict):
+    """The reservoir half-disc."""
+
     radius_nm: float = 250.0
 
 
 class AnalyteSpec(_Strict):
+    """An axisymmetric analyte body in the pore."""
+
     shape: Literal["sphere", "prolate_spheroid", "oblate_spheroid"]
     a_nm: float
     b_nm: float | None = None
@@ -233,6 +260,8 @@ class AnalyteSpec(_Strict):
 
 
 class Geometry(_Strict):
+    """Stages 2-5: density, contour, membrane, reservoir and analyte."""
+
     density: DensitySpec = Field(default_factory=DensitySpec)
     contour: ContourSpec = Field(default_factory=ContourSpec)
     membrane: MembraneSpec = Field(default_factory=MembraneSpec)
@@ -241,12 +270,16 @@ class Geometry(_Strict):
 
 
 class SmearingSpec(_Strict):
+    """Stage 7: the kernel width and export lattice."""
+
     sharpness: float = 0.5
     grid_spacing_nm: float = 0.005
     axis_cutoff_nm: float = 0.01
 
 
 class Charge(_Strict):
+    """Stage 7: charge assembly; the offsets are switches whose validated default is 0."""
+
     ph: float = Field(
         default=7.5,
         ge=0.0,
@@ -299,23 +332,31 @@ class Charge(_Strict):
 
 
 class SpeciesSpec(_Strict):
+    """One solved ionic species, by the name the parameter file gives it."""
+
     name: str
     z: int
 
 
 class CorrectionChoiceSpec(_Strict):
+    """One property's correction: a registered model and its concentration and wall parts."""
+
     model: str = "none"
     concentration: bool = True
     wall: bool = True
 
 
 class StericSpec(_Strict):
+    """The size-modified flux and the diameters it is built on."""
+
     model: Literal["none", "borukhov"] = "none"
     a_ion_nm: float | None = None
     a_water_nm: float | None = None
 
 
 class CorrectionsSpec(_Strict):
+    """The nine independently switchable corrections."""
+
     diffusivity: CorrectionChoiceSpec = Field(default_factory=CorrectionChoiceSpec)
     mobility: CorrectionChoiceSpec = Field(default_factory=CorrectionChoiceSpec)
     viscosity: CorrectionChoiceSpec = Field(default_factory=CorrectionChoiceSpec)
@@ -325,6 +366,8 @@ class CorrectionsSpec(_Strict):
 
 
 class ElectrolyteSpec(_Strict):
+    """Stage 8: the electrolyte, its reference parameter file and its corrections."""
+
     species: list[SpeciesSpec]
     concentration_M: float
     temperature_K: float = 298.15
@@ -334,17 +377,23 @@ class ElectrolyteSpec(_Strict):
 
 
 class WallSpec(_Strict):
+    """The conditions applied on the pore and membrane walls."""
+
     ion_flux: Literal["no_flux", "prescribed"] = "no_flux"
     slip: Literal["no_slip", "navier", "free"] = "no_slip"
 
 
 class BoundaryConditions(_Strict):
+    """The applied bias, the grounded electrode and the wall conditions."""
+
     bias_V: float
     ground: Literal["cis", "trans"] = "cis"
     walls: WallSpec = Field(default_factory=WallSpec)
 
 
 class PhysicsSpec(_Strict):
+    """The named physics model and its switches."""
+
     model: str = "epnp-ns"
     flow: bool = True
     variable_density: bool = True
@@ -354,6 +403,8 @@ class PhysicsSpec(_Strict):
 
 
 class ElementsSpec(_Strict):
+    """Element orders per field; an equal-order pair needs a stabilising flow mode."""
+
     phi: str = "P2"
     c: str = "P2"
     u: str = "P2"
@@ -361,6 +412,8 @@ class ElementsSpec(_Strict):
 
 
 class MeshSpec(_Strict):
+    """Stage 6: the mesher and its size field."""
+
     backend: str = Field(
         default="netgen",
         description="The mesher backend, checked against the mesher registry (section 5.5).",
@@ -371,6 +424,8 @@ class MeshSpec(_Strict):
 
 
 class NonlinearSpec(_Strict):
+    """The damped-Newton policy; the defaults are the reference settings."""
+
     strategy: Literal["newton", "hybrid"] = "newton"
     damping: Literal["residual", "backtracking"] = "residual"
     max_iter: int = 100
@@ -378,6 +433,8 @@ class NonlinearSpec(_Strict):
 
 
 class LinearSpec(_Strict):
+    """The direct linear solver."""
+
     solver: str = Field(
         default="umfpack",
         description="Direct linear solver, checked against the solver registry (section 5.5).",
@@ -385,11 +442,15 @@ class LinearSpec(_Strict):
 
 
 class WallDistanceSpec(_Strict):
+    """The wall-distance field: its source boundaries, as a regular expression, and its cap."""
+
     sources: str = "wall"
     max_distance_nm: float = 3.0
 
 
 class NumericsSpec(_Strict):
+    """Discretisation, meshing, continuation, stabilisation and the solvers."""
+
     elements: ElementsSpec = Field(default_factory=ElementsSpec)
     mesh: MeshSpec = Field(default_factory=MeshSpec)
     nonlinear: NonlinearSpec = Field(default_factory=NonlinearSpec)
@@ -513,6 +574,7 @@ def _keys_of(model: type[BaseModel]) -> list[str]:
 
 
 def render_problems(source: str, error: ValidationError) -> str:
+    """Render a pydantic error as one ``<dotted.path>: <what>`` line per problem."""
     problems = error.errors()
     lines = [f"{source}: {len(problems)} problem(s) in the case document"]
     for problem in problems:
@@ -533,11 +595,19 @@ def render_problems(source: str, error: ValidationError) -> str:
 
 
 def read_case(path: str | Path) -> CaseDocument:
+    """Read a case file, check its schema string first, and return the validated document.
+
+    Raises
+    ------
+    CaseValidationError
+        If the file is not a mapping, names another schema, or fails validation.
+    """
     source = Path(path)
     return _validate(yaml.safe_load(source.read_text(encoding="utf-8")), str(source))
 
 
 def read_case_text(text: str, *, source: str = "<string>") -> CaseDocument:
+    """Validate a case document held in memory against the schema; see :func:`read_case`."""
     return _validate(yaml.safe_load(text), source)
 
 

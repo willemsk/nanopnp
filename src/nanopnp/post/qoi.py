@@ -51,7 +51,8 @@ TWO_PI = 2.0 * math.pi
 ROUTE_AGREEMENT_TOLERANCE = 1.0e-3
 
 
-class RouteDisagreementError(RuntimeError): ...
+class RouteDisagreementError(RuntimeError):
+    """The two current routes disagree beyond tolerance, so no current is reported."""
 
 
 def _coupled(solution: ModelSolution) -> TransportModel:
@@ -88,6 +89,18 @@ def indicator_currents(
     wall_distance_nm: Expression | None = None,
     stabilisation: Mapping[str, float] | None = None,
 ) -> dict[str, float]:
+    """Return the per-species current in amperes by the indicator form.
+
+    Parameters
+    ----------
+    stabilisation
+        The per-species stabilisation contribution; defaults to measuring it here.
+
+    Raises
+    ------
+    ValueError
+        If the indicator is not on this solution's mesh and element order.
+    """
     import ngsolve as ngs
 
     model = _coupled(solution)
@@ -136,6 +149,7 @@ def stabilisation_currents(
     *,
     wall_distance_nm: Expression | None = None,
 ) -> dict[str, float]:
+    """Return each species' stabilisation contribution to the current, in amperes."""
     model = _coupled(solution)
     _check_indicator_matches(solution, model, indicator)
     mesh = solution.space.mesh
@@ -163,6 +177,7 @@ def stabilisation_currents(
 
 
 def indicator_eof(solution: ModelSolution, measures: Measures, indicator: GridFunction) -> float:
+    """Return the electro-osmotic flow rate in m^3/s by the indicator form."""
     import ngsolve as ngs
 
     model = _coupled(solution)
@@ -188,6 +203,18 @@ def reaction_flux_currents(
     *,
     load_form: AssembledForm | None = None,
 ) -> dict[str, float]:
+    """Return the per-species current in amperes by the reaction flux.
+
+    Parameters
+    ----------
+    boundary
+        The electrode the current is referenced to; cis by this module's sign convention.
+
+    Raises
+    ------
+    ValueError
+        If the solution carries no residual form.
+    """
     model = _coupled(solution)
     if solution.residual is None:
         raise ValueError(
@@ -213,10 +240,18 @@ def reaction_flux_currents(
 
 
 def total_current(currents: Mapping[str, float]) -> float:
+    """Return the total ionic current, the sum of the per-species currents."""
     return math.fsum(currents.values())
 
 
 def transport_number(currents: Mapping[str, float], cations: Iterable[str]) -> float:
+    """Return the transport number ``t+ = I+ / (I+ + I-)``.
+
+    Raises
+    ------
+    ValueError
+        If the total current vanishes or ``cations`` names an unknown species.
+    """
     unknown = sorted(set(cations) - set(currents))
     if unknown:
         raise ValueError(
@@ -230,12 +265,14 @@ def transport_number(currents: Mapping[str, float], cations: Iterable[str]) -> f
 
 
 def rectification_ratio(current_plus_A: float, current_minus_A: float) -> float:
+    """Return the rectification ratio ``RR = |I(+V)| / |I(-V)|``."""
     if current_minus_A == 0.0:
         raise ValueError("the rectification ratio is undefined at zero reverse current")
     return abs(current_plus_A) / abs(current_minus_A)
 
 
 def cis_referenced_bias(bias_V: float, ground: str) -> float:
+    """Return a case's bias as the current convention reads it, ``phi_trans - phi_cis``."""
     if ground == "cis":
         return bias_V
     if ground == "trans":
@@ -244,6 +281,7 @@ def cis_referenced_bias(bias_V: float, ground: str) -> float:
 
 
 def conductance(current_A: float, bias_V: float) -> float:
+    """Return the chord conductance ``G = I / V_bias`` in siemens; ValueError at zero bias."""
     if bias_V == 0.0:
         raise ValueError("the conductance is undefined at zero bias")
     return current_A / bias_V
@@ -251,11 +289,14 @@ def conductance(current_A: float, bias_V: float) -> float:
 
 @dataclass(frozen=True)
 class RouteAgreement:
+    """How far apart the indicator and reaction-flux currents are on one solution."""
+
     indicator_A: float
     reaction_A: float
 
     @property
     def relative_difference(self) -> float:
+        """Return ``|I_psi - I_reaction|`` over the larger magnitude, or 0 if both vanish."""
         if not (math.isfinite(self.indicator_A) and math.isfinite(self.reaction_A)):
             return math.inf
         scale = max(abs(self.indicator_A), abs(self.reaction_A))
@@ -264,6 +305,7 @@ class RouteAgreement:
         return abs(self.indicator_A - self.reaction_A) / scale
 
     def check(self, tolerance: float = ROUTE_AGREEMENT_TOLERANCE) -> None:
+        """Assert that the two current routes agree; RouteDisagreementError otherwise."""
         difference = self.relative_difference
         # ``not <=`` so that NaN fails the gate.
         if not difference <= tolerance:
@@ -285,6 +327,7 @@ class RouteAgreement:
         logger.debug("current routes agree to %.3e", difference)
 
     def summary(self) -> dict[str, float]:
+        """Return the pair and their difference, for the manifest."""
         return {
             "indicator_A": self.indicator_A,
             "reaction_A": self.reaction_A,
@@ -314,6 +357,8 @@ def _check_species_routes(
 
 @dataclass(frozen=True)
 class QuantitiesOfInterest:
+    """The quantities of one converged solution, in SI units."""
+
     bias_V: float
     currents_A: Mapping[str, float]
     current_A: float
@@ -326,6 +371,7 @@ class QuantitiesOfInterest:
     clamp_activations: int | None = None
 
     def summary(self) -> dict[str, Option]:
+        """Return every quantity, for logs and the provenance manifest."""
         record: dict[str, Option] = {
             "bias_V": self.bias_V,
             "currents_A": dict(self.currents_A),
@@ -360,6 +406,20 @@ def extract(
     tolerance: float = ROUTE_AGREEMENT_TOLERANCE,
     check_routes: bool = True,
 ) -> QuantitiesOfInterest:
+    """Return every quantity of one converged solution, in SI units.
+
+    Parameters
+    ----------
+    bias_V
+        Bias phi_trans - phi_cis, in volts; at zero bias the conductance and t+ are None.
+    check_routes
+        Whether to check the second route; False skips it, a recorded deviation.
+
+    Raises
+    ------
+    RouteDisagreementError
+        If the routes disagree beyond tolerance.
+    """
     model = _coupled(solution)
     # Measured once: it enters the currents and is also reported, as section 7.4 subtracts it.
     stabilisation = stabilisation_currents(
@@ -407,6 +467,13 @@ def extract(
 
 
 def report_clamp_activations(solution: ModelSolution, measures: Measures) -> int:
+    """Log every clamp activation over a converged solution and return the count.
+
+    Parameters
+    ----------
+    solution
+        A converged solution of a coupled model.
+    """
     model = _coupled(solution)
     sampler = FieldSampler.shared(
         solution.space.mesh, coordinates=measures.coordinate_names, materials=model.fluid
@@ -419,6 +486,7 @@ def report_clamp_activations(solution: ModelSolution, measures: Measures) -> int
 
 
 def rectification(forward: QuantitiesOfInterest, reverse: QuantitiesOfInterest) -> float:
+    """Return the rectification ratio of a matched pair of opposite biases."""
     if not forward.bias_V > 0.0:
         raise ValueError(
             f"'forward' must be the positive bias: RR is |I(+V)|/|I(-V)|, so a swapped pair "
@@ -434,4 +502,5 @@ def rectification(forward: QuantitiesOfInterest, reverse: QuantitiesOfInterest) 
 
 
 def summarise(quantities: Sequence[QuantitiesOfInterest]) -> list[dict[str, Option]]:
+    """Return the summaries of several operating points, for a sweep's manifest."""
     return [point.summary() for point in quantities]

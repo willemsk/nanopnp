@@ -102,6 +102,8 @@ StageStatus: TypeAlias = Literal["waiting", "running", "stored", "cached", "fail
 
 @dataclass(frozen=True)
 class StageRow:
+    """One stage of the list: what it is, where it got to, and what it left."""
+
     name: str
     number: int
     title: str
@@ -110,15 +112,24 @@ class StageRow:
 
     @property
     def hash(self) -> str:
+        """The artefact's hash, or ``""`` before there is one."""
         return self.produced.hash if self.produced is not None else ""
 
 
 def planned_stages(document: CaseDocument) -> tuple[str, ...]:
+    """Return the geometry stages this case walks, in order.
+
+    Raises
+    ------
+    nanopnp.io.case.CaseValidationError
+        If the case does not resolve.
+    """
     walked = selected_stages(resolve(document), None)
     return tuple(name for name in walked if name in GEOMETRY_STAGES)
 
 
 def can_build(document: CaseDocument) -> bool:
+    """Whether **Build geometry** is offered: only a case whose stages 5 and 6 build its mesh."""
     try:
         return resolve(document).generates_mesh
     except (ValueError, NotImplementedError):
@@ -127,9 +138,16 @@ def can_build(document: CaseDocument) -> bool:
 
 @dataclass(frozen=True)
 class StageList:
+    """The geometry stages of one case, and a projection of a run onto them."""
+
     planned: tuple[str, ...]
 
     def rows(self, model: RunModel) -> tuple[StageRow, ...]:
+        """Return one row per planned stage, placed by the run's event stream.
+
+        A stage with a ``Produced`` is ``stored`` or ``cached``; the last one entered without
+        one is ``running``, ``failed`` or ``cancelled``; the rest are ``waiting``.
+        """
         produced = {event.name: event for event in model.produced}
         entered = model.walked[-1] if model.walked else None
         rows: list[StageRow] = []
@@ -157,6 +175,15 @@ class StageList:
 
 
 def load_structure(editor: CaseEditor, path: str | Path) -> Path:
+    """Stage ``structure.source.path`` as the absolute path of a picked file.
+
+    Raises
+    ------
+    UnknownCasePathError
+        If the case declares no ``structure:`` section.
+    nanopnp.io.case.CaseValidationError
+        If the value is refused.
+    """
     absolute = Path(path).expanduser().resolve()
     try:
         value_at(editor.document, "structure.source")
@@ -171,6 +198,7 @@ def load_structure(editor: CaseEditor, path: str | Path) -> Path:
 
 
 def membrane_slab(document: CaseDocument) -> tuple[float, float]:
+    """Return the bilayer's z extent in the stage-1 frame: ``centre ± thickness/2``."""
     membrane = document.geometry.membrane if document.geometry is not None else MembraneSpec()
     half = 0.5 * membrane.thickness_nm
     return membrane.centre_z_nm - half, membrane.centre_z_nm + half
@@ -207,6 +235,7 @@ _PALETTES: dict[str, tuple[tuple[tuple[int, int, int], ...], int]] = {
 
 
 def lookup_table(palette: Palette = "viridis") -> np.ndarray:
+    """Return a palette's N x 4 RGBA lookup table, interpolated from its anchors."""
     import numpy as np
 
     colours, size = _PALETTES[palette]
@@ -222,6 +251,8 @@ def lookup_table(palette: Palette = "viridis") -> np.ndarray:
 
 @dataclass(frozen=True)
 class ImageModel:
+    """A field on a uniform ``[z, x]`` grid; ``NaN`` is drawn transparent."""
+
     values: np.ndarray
     x_nm: np.ndarray
     z_nm: np.ndarray
@@ -233,14 +264,17 @@ class ImageModel:
 
     @property
     def width(self) -> int:
+        """Columns."""
         return int(self.values.shape[1])
 
     @property
     def height(self) -> int:
+        """Rows."""
         return int(self.values.shape[0])
 
     @property
     def spacing_nm(self) -> tuple[float, float]:
+        """``(Δx, Δz)`` between node centres."""
         return (
             float(self.x_nm[1] - self.x_nm[0]) if self.width > 1 else 1.0,
             float(self.z_nm[1] - self.z_nm[0]) if self.height > 1 else 1.0,
@@ -248,6 +282,7 @@ class ImageModel:
 
     @property
     def extent_nm(self) -> tuple[float, float, float, float]:
+        """``(x_low, x_high, z_low, z_high)`` of the outer pixel edges."""
         dx, dz = self.spacing_nm
         return (
             float(self.x_nm[0]) - 0.5 * dx,
@@ -257,19 +292,23 @@ class ImageModel:
         )
 
     def pixel_centre(self, column: int, row: int) -> tuple[float, float]:
+        """Return the ``(x, z)`` a display pixel is centred on; row 0 is the top, at maximum z."""
         return float(self.x_nm[column]), float(self.z_nm[self.height - 1 - row])
 
     def pixel_of(self, x_nm: float, z_nm: float) -> tuple[int, int]:
+        """Return the display ``(column, row)`` whose pixel contains ``(x, z)``."""
         dx, dz = self.spacing_nm
         column = math.floor((x_nm - float(self.x_nm[0])) / dx + 0.5)
         index = math.floor((z_nm - float(self.z_nm[0])) / dz + 0.5)
         return column, self.height - 1 - index
 
     def display(self) -> np.ndarray:
+        """Return the values in display order: row 0 at maximum z, x increasing to the right."""
         flipped: np.ndarray = self.values[::-1, :]
         return flipped
 
     def rgba(self) -> bytes:
+        """Return the image as tightly packed RGBA8888 rows, top row first."""
         import numpy as np
 
         shown = self.display()
@@ -280,6 +319,7 @@ class ImageModel:
         return bytes(np.ascontiguousarray(pixels, dtype=np.uint8).tobytes())
 
     def colour_index(self, values: np.ndarray | float) -> np.ndarray:
+        """Return the lookup-table entry each value is coloured with, clipped to the scale."""
         import numpy as np
 
         low, high = self.scale
@@ -294,6 +334,7 @@ class ImageModel:
 def reduced_image(
     r_nm: np.ndarray, z_nm: np.ndarray, values: np.ndarray, *, quantity: str
 ) -> ImageModel:
+    """Return a stage-3 reduced field as an image; means use [0, 1], variances ``[0, max]``."""
     import numpy as np
 
     data = np.asarray(values, dtype=np.float64)
@@ -318,6 +359,7 @@ def reduced_image(
 def density_section(
     values: np.ndarray, x_nm: np.ndarray, z_nm: np.ndarray, *, y_index: int
 ) -> ImageModel:
+    """Return the axial section ``y = 0`` of a stage-2 map, over ``x ∈ [-R, R]``."""
     import numpy as np
 
     return ImageModel(
@@ -333,6 +375,8 @@ def density_section(
 
 @dataclass(frozen=True)
 class ViewTransform:
+    """A data rectangle in nm mapped into a widget rectangle in pixels, at one scale, z upwards."""
+
     x_range: tuple[float, float]
     z_range: tuple[float, float]
     width: float
@@ -341,6 +385,7 @@ class ViewTransform:
 
     @property
     def scale(self) -> float:
+        """Pixels per nm."""
         span_x = max(self.x_range[1] - self.x_range[0], 1e-12)
         span_z = max(self.z_range[1] - self.z_range[0], 1e-12)
         room_x = max(self.width - 2.0 * self.margin, 1.0)
@@ -357,11 +402,13 @@ class ViewTransform:
         return left, bottom
 
     def to_screen(self, x_nm: float, z_nm: float) -> tuple[float, float]:
+        """Return the pixel of a point in nm."""
         left, bottom = self._origin
         s = self.scale
         return left + (x_nm - self.x_range[0]) * s, bottom - (z_nm - self.z_range[0]) * s
 
     def to_data(self, x_px: float, y_px: float) -> tuple[float, float]:
+        """Return the point in nm under a pixel."""
         left, bottom = self._origin
         s = self.scale
         return self.x_range[0] + (x_px - left) / s, self.z_range[0] + (bottom - y_px) / s
@@ -369,6 +416,7 @@ class ViewTransform:
     def rectangle(
         self, x_low: float, x_high: float, z_low: float, z_high: float
     ) -> tuple[float, float, float, float]:
+        """Return ``(left, top, width, height)`` in pixels of a data rectangle."""
         left, top = self.to_screen(x_low, z_high)
         right, bottom = self.to_screen(x_high, z_low)
         return left, top, right - left, bottom - top
@@ -382,6 +430,7 @@ def nearest_vertex(
     *,
     tolerance_px: float = 8.0,
 ) -> int | None:
+    """Return the vertex nearest a pixel, if within ``tolerance_px`` of it."""
     best: int | None = None
     best_distance = tolerance_px
     for index, (r, z) in enumerate(vertices):
@@ -400,6 +449,7 @@ def nearest_edge(
     *,
     tolerance_px: float = 8.0,
 ) -> int | None:
+    """Return the edge nearest a pixel; edge ``i`` joins vertices ``i`` and ``i + 1``."""
     best: int | None = None
     best_distance = tolerance_px
     count = len(vertices)
@@ -421,6 +471,8 @@ def nearest_edge(
 
 @dataclass(frozen=True)
 class SummaryView:
+    """A stage shown as the entries of its artefact's summary."""
+
     name: str
     lines: tuple[str, ...]
     frame: str = STAGE_1_FRAME
@@ -428,6 +480,8 @@ class SummaryView:
 
 @dataclass(frozen=True)
 class ImageView:
+    """A stage shown as one or more images, and the contour over them if any."""
+
     name: str
     images: Mapping[str, ImageModel]
     lines: tuple[str, ...] = ()
@@ -437,11 +491,14 @@ class ImageView:
 
     @property
     def frame(self) -> str:
+        """Every image of one view is in one frame."""
         return next(iter(self.images.values())).frame
 
 
 @dataclass(frozen=True)
 class OutlineView:
+    """Stage 5's region, drawn as outlines in the model frame."""
+
     name: str
     loop: tuple[tuple[float, float], ...]
     chord: tuple[tuple[float, float], tuple[float, float]]
@@ -470,6 +527,7 @@ def _lines(summary: Mapping[str, object], keys: Sequence[str]) -> tuple[str, ...
 
 
 def stored_artefact(event: Produced) -> Artefact:
+    """Return the stored artefact an event names; say so if it is gone."""
     found = Store(event.store).get(event.schema, event.hash)
     if found is None:
         raise FileNotFoundError(
@@ -483,6 +541,20 @@ def stored_artefact(event: Produced) -> Artefact:
 def load_view(
     event: Produced, produced: Mapping[str, Produced], document: CaseDocument
 ) -> StageView:
+    """Read one stage's artefact from the store into what its pane shows; call off the Qt thread.
+
+    Parameters
+    ----------
+    produced
+        Every artefact the build has reported, by stage: the contour is drawn over stage 3's mean.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the artefact has been removed from the store.
+    ValueError
+        If the stage is not one of stages 1 to 6.
+    """
     artefact = stored_artefact(event)
     summary = dict(artefact.summary)
     if event.name == "structure":
@@ -575,6 +647,14 @@ def _loader_text(error: ValidationError) -> str:
 
 @dataclass
 class ProfileEditor:
+    """A hand edit of a pore profile: the operations, their undo, and the document they make.
+
+    Parameters
+    ----------
+    parent_digest
+        ``provenance.sha256`` the edit records: the digest of the profile it was edited from.
+    """
+
     vertices: list[Vertex]
     parent_digest: str
     parent_name: str
@@ -583,6 +663,7 @@ class ProfileEditor:
 
     @classmethod
     def from_profile(cls, profile: PoreProfile) -> ProfileEditor:
+        """Start from a profile document: stage 4's, or a supplied one."""
         return cls(
             vertices=[(float(r), float(z)) for r, z in profile.vertices],
             parent_digest=profile_digest(profile),
@@ -591,6 +672,7 @@ class ProfileEditor:
 
     @classmethod
     def from_seed(cls, vertices: Sequence[Vertex], *, digest: str, name: str) -> ProfileEditor:
+        """Start from a loop stage 4's gate refused."""
         return cls(
             vertices=[(float(r), float(z)) for r, z in vertices],
             parent_digest=digest,
@@ -602,11 +684,13 @@ class ProfileEditor:
         self._redo.clear()
 
     def move(self, index: int, r_nm: float, z_nm: float) -> None:
+        """Move vertex ``index`` to ``(r, z)``: one undoable step, however it was dragged."""
         self._check_index(index)
         self._push()
         self.vertices[index] = (float(r_nm), float(z_nm))
 
     def insert(self, edge: int) -> int:
+        """Insert a vertex at the midpoint of edge ``edge``; return its index."""
         self._check_index(edge)
         a = self.vertices[edge]
         b = self.vertices[(edge + 1) % len(self.vertices)]
@@ -615,6 +699,13 @@ class ProfileEditor:
         return edge + 1
 
     def delete(self, index: int) -> None:
+        """Delete vertex ``index``. A loop keeps at least three.
+
+        Raises
+        ------
+        ValueError
+            If the loop would be left with fewer than three vertices.
+        """
         self._check_index(index)
         if len(self.vertices) <= 3:
             raise ValueError(
@@ -625,6 +716,7 @@ class ProfileEditor:
         del self.vertices[index]
 
     def undo(self) -> bool:
+        """Return to the loop before the last edit; ``False`` if there is none."""
         if not self._undo:
             return False
         self._redo.append(list(self.vertices))
@@ -632,6 +724,7 @@ class ProfileEditor:
         return True
 
     def redo(self) -> bool:
+        """Re-apply the last edit undone; ``False`` if there is none."""
         if not self._redo:
             return False
         self._undo.append(list(self.vertices))
@@ -644,17 +737,27 @@ class ProfileEditor:
 
     @property
     def can_undo(self) -> bool:
+        """Whether there is an edit to undo."""
         return bool(self._undo)
 
     @property
     def can_redo(self) -> bool:
+        """Whether there is an undone edit to re-apply."""
         return bool(self._redo)
 
     @property
     def name(self) -> str:
+        """The edited profile's name: its parent's, marked as a hand edit."""
         return f"{self.parent_name}-{HAND_EDIT_SOURCE}"
 
     def document(self) -> PoreProfile:
+        """Return the edit as a validated ``nanopnp/profile/v0.5`` document.
+
+        Raises
+        ------
+        ValueError
+            The loader's sentence, naming the vertex, if the loop is not a simple closed polygon.
+        """
         import numpy as np
 
         points = np.asarray(self.vertices, dtype=np.float64).reshape(-1, 2)
@@ -683,6 +786,7 @@ class ProfileEditor:
 
     @property
     def problem(self) -> str | None:
+        """The loader's refusal of the loop as it stands, or ``None`` if it would load."""
         try:
             self.document()
         except ValueError as error:
@@ -695,10 +799,26 @@ class ProfileEditor:
         return profile, root / f"{HAND_EDIT_SOURCE}-{profile_digest(profile)[:16]}.yaml"
 
     def save(self, directory: str | Path) -> Path:
+        """Write the edit as a profile document named by its digest, and return its absolute path.
+
+        Raises
+        ------
+        ValueError
+            If the loop would not load; nothing is written.
+        """
         profile, path = self._target(directory)
         return write_profile(profile, path)
 
     def save_case(self, case: CaseDocument, case_path: str | Path) -> tuple[Path, Path]:
+        """Write the edit and a derived case beside the original, and return both paths.
+
+        The original is never modified.
+
+        Raises
+        ------
+        ValueError
+            If the loop or the derived case would not load; nothing is written.
+        """
         source = Path(case_path).expanduser().resolve()
         profile, path = self._target(source.parent)
         derived = with_profile(case, path)

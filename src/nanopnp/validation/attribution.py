@@ -46,11 +46,20 @@ IDENTITY_TOLERANCE = 1e-14
 Verdict = Literal["reference-limited", "attributed", "reference-unbounded"]
 
 
-class LadderError(ValueError): ...
+class LadderError(ValueError):
+    """Raised when the ladder's rungs cannot be attributed against each other."""
 
 
 @dataclass(frozen=True)
 class Rung:
+    """One configuration of the ladder, as dotted case-file assignments.
+
+    Parameters
+    ----------
+    what
+        One line on what this rung measures, printed in the report.
+    """
+
     index: int
     name: str
     stabilisation: str
@@ -59,6 +68,7 @@ class Rung:
     what: str
 
     def assignments(self) -> dict[str, FieldValue]:
+        """Return this rung as the sweep document's assignment mapping."""
         return {
             "numerics.stabilisation": self.stabilisation,
             "numerics.elements.u": self.velocity_element,
@@ -66,6 +76,7 @@ class Rung:
         }
 
     def summary(self) -> dict[str, Canonicalisable]:
+        """Return this rung's record for the report."""
         return {
             "index": self.index,
             "name": self.name,
@@ -115,6 +126,16 @@ DELTA_LABELS: tuple[str, ...] = ("total", "transport", "flow", "pair")
 
 @dataclass(frozen=True)
 class RungOutcome:
+    """One rung, compared against one golden.
+
+    Parameters
+    ----------
+    golden_hash, probe_hash, case_hash
+        Provenance the ladder gates on; rungs that differ in any are not comparable.
+    stabilisation_currents_A
+        Per-species stabilisation contribution from this run alone, beside the deltas.
+    """
+
     rung: Rung
     golden_hash: str
     probe_hash: str
@@ -124,15 +145,19 @@ class RungOutcome:
     stabilisation_currents_A: Mapping[str, float] | None = None
 
     def field_errors(self) -> dict[str, float]:
+        """Return ``rel_L2_r`` per field."""
         return {entry.field: entry.rel_L2_r for entry in self.fields}
 
     def quantity_errors(self) -> dict[str, float]:
+        """Return the magnitude of the relative error per quantity."""
         return {entry.name: abs(entry.relative) for entry in self.quantities}
 
     def point_counts(self) -> dict[str, int]:
+        """Return the number of retained probe points per field."""
         return {entry.field: entry.points for entry in self.fields}
 
     def summary(self) -> dict[str, Canonicalisable]:
+        """Return this rung's record for the report."""
         return {
             "rung": self.rung.summary(),
             "golden_hash": self.golden_hash,
@@ -150,6 +175,16 @@ class RungOutcome:
 
 @dataclass(frozen=True)
 class Attribution:
+    """The five deltas for one field or one quantity.
+
+    Parameters
+    ----------
+    errors
+        ``(E_0, E_1, E_2, E_3)``, one per rung of ``LADDER``.
+    reference_error
+        VAL-04's ``Delta_ref`` for this key, or ``None`` if no refinement pair was given.
+    """
+
     key: str
     kind: Literal["field", "quantity"]
     errors: tuple[float, float, float, float]
@@ -157,33 +192,41 @@ class Attribution:
 
     @property
     def total(self) -> float:
+        """Return ``Delta_total = E_0``: what the shipped default does."""
         return self.errors[0]
 
     @property
     def transport(self) -> float:
+        """Return ``Delta_transport = E_1 - E_0``: the transport stabilisation."""
         return self.errors[1] - self.errors[0]
 
     @property
     def flow(self) -> float:
+        """Return ``Delta_flow = E_2 - E_1``: the flow GLS term on a Taylor-Hood pair."""
         return self.errors[2] - self.errors[1]
 
     @property
     def pair(self) -> float:
+        """Return ``Delta_pair = E_3 - E_2``: P2/P1 to P1/P1."""
         return self.errors[3] - self.errors[2]
 
     @property
     def residual(self) -> float:
+        """Return ``Delta_resid = E_3``: the like-for-like number, the only possible defect."""
         return self.errors[3]
 
     def identity_residual(self) -> float:
+        """Return the telescoped sum minus ``Delta_resid``, zero to round-off by construction."""
         return self.total + self.transport + self.flow + self.pair - self.residual
 
     def verdict(self) -> Verdict:
+        """Return what this residual can honestly be called; see ``Verdict``."""
         if self.reference_error is None:
             return "reference-unbounded"
         return "reference-limited" if self.residual < self.reference_error else "attributed"
 
     def summary(self) -> dict[str, Canonicalisable]:
+        """Return the five deltas and the verdict, for the report."""
         return {
             "key": self.key,
             "kind": self.kind,
@@ -201,6 +244,16 @@ class Attribution:
 
 @dataclass(frozen=True)
 class AttributionReport:
+    """One case's ladder: four rungs, five deltas per key, and a verdict.
+
+    Parameters
+    ----------
+    golden_source
+        ``"comsol"`` or ``"self"``; a self-golden tests the machinery only.
+    unavailable_fields, unavailable_quantities
+        What the golden did not carry, reported rather than skipped.
+    """
+
     case: str
     golden_source: str
     golden_hash: str
@@ -213,6 +266,13 @@ class AttributionReport:
     unavailable_quantities: tuple[str, ...] = ()
 
     def attribution(self, key: str) -> Attribution:
+        """Return one key's attribution.
+
+        Raises
+        ------
+        LadderError
+            If no attribution carries that key.
+        """
         for entry in self.attributions:
             if entry.key == key:
                 return entry
@@ -220,6 +280,13 @@ class AttributionReport:
         raise LadderError(f"this report attributes {listed}, not {key!r}")
 
     def check_identity(self, tolerance: float = IDENTITY_TOLERANCE) -> None:
+        """Abort where a telescoped sum does not return its own ``Delta_resid``.
+
+        Raises
+        ------
+        LadderError
+            Naming the key and the residual. A non-finite residual fails too.
+        """
         for entry in self.attributions:
             residual = entry.identity_residual()
             # Relative to the largest E_k: an E_k is a relative error and is not
@@ -237,9 +304,11 @@ class AttributionReport:
 
     @property
     def hash(self) -> str:
+        """Return the content hash over the report's record."""
         return content_hash(ATTRIBUTION_SCHEMA, self.summary())
 
     def summary(self) -> dict[str, Canonicalisable]:
+        """Return the whole report, for the JSON artefact and the manifest."""
         return {
             "schema": ATTRIBUTION_SCHEMA,
             "case": self.case,
@@ -255,6 +324,7 @@ class AttributionReport:
         }
 
     def markdown(self) -> str:
+        """Return the report a person reads, deltas first and provenance last."""
         lines = [
             f"# Tier-3 attribution — {self.case}",
             "",
@@ -331,6 +401,18 @@ class AttributionReport:
 
 
 def reference_error(coarse: Golden, fine: Golden, grid: ProbeGrid) -> dict[str, float]:
+    """Return VAL-04's ``Delta_ref`` per field: the reference's own discretisation error.
+
+    Parameters
+    ----------
+    grid
+        The probe grid the rungs were compared on; its margin band is dropped.
+
+    Raises
+    ------
+    LadderError
+        If the goldens are not two distinct refinements of one case on one probe grid.
+    """
     import numpy as np
 
     if coarse.manifest.case_hash != fine.manifest.case_hash:
@@ -382,6 +464,21 @@ def attribute(
     reference_errors: Mapping[str, float] | None = None,
     sampled_fields: Sequence[str] | None = None,
 ) -> AttributionReport:
+    """Build the report from four rung outcomes, gating their provenance first.
+
+    Parameters
+    ----------
+    reference_errors
+        VAL-04's ``Delta_ref`` per key, or ``None`` if no refinement pair was supplied.
+    sampled_fields
+        Every field we sampled on the probe grid; needed to name the unavailable ones.
+
+    Raises
+    ------
+    LadderError
+        If the rungs do not share a golden, a probe grid and a case, or retained different
+        numbers of probe points for one field.
+    """
     if len(outcomes) != len(LADDER):
         raise LadderError(
             f"the ladder has {len(LADDER)} rungs and {len(outcomes)} outcome(s) were given. "
@@ -465,6 +562,7 @@ def _check_shared_masks(outcomes: Sequence[RungOutcome]) -> None:
 
 
 def write_report(report: AttributionReport, directory: str | Path) -> tuple[Path, Path]:
+    """Write the report as JSON and as markdown, and return both paths."""
     target = Path(directory)
     target.mkdir(parents=True, exist_ok=True)
     document = target / f"{report.case}.attribution.json"
@@ -475,6 +573,7 @@ def write_report(report: AttributionReport, directory: str | Path) -> tuple[Path
 
 
 def read_report(path: str | Path) -> dict[str, Canonicalisable]:
+    """Return a written report's record, floats restored."""
     decoded = decode_floats(json.loads(Path(path).read_text(encoding="utf-8")))
     if not isinstance(decoded, dict):
         raise LadderError(f"{path} does not hold an attribution report object")

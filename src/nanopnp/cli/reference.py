@@ -86,6 +86,7 @@ def _cell(text: str) -> str:
 
 
 def render_case_reference() -> str:
+    """Return the case-file reference: every editable field of the case schema."""
     lines = [
         "# Case-file reference",
         "",
@@ -192,10 +193,12 @@ def _expanded(parser: argparse.ArgumentParser, action: argparse.Action) -> str:
 
 
 def command_parsers() -> list[tuple[str, argparse.ArgumentParser, str]]:
+    """Return (command, parser, help) for nanopnp and every subcommand."""
     return [(parser.prog, parser, text) for parser, text in _parsers(build_parser())]
 
 
 def render_cli_reference() -> str:
+    """Return the command-line reference: every command, usage and option."""
     lines = [
         "# Command-line reference",
         "",
@@ -238,6 +241,7 @@ def render_cli_reference() -> str:
 
 
 def render_exit_codes() -> str:
+    """Return the exit-code reference: the classes and their exceptions."""
     lines = [
         "# Exit codes",
         "",
@@ -274,6 +278,7 @@ def render_exit_codes() -> str:
 
 
 def render_api_reference() -> str:
+    """Return the API reference over the public surface, as mkdocstrings directives."""
     lines = [
         "# Python API",
         "",

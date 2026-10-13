@@ -51,6 +51,8 @@ _PROBE_CONCENTRATIONS = (0.5, 2.0)
 
 @dataclass(frozen=True)
 class ConstantCoefficients:
+    """The dimensionless material constants of a corrections-off model."""
+
     diffusivity: Mapping[str, float]
     mobility: Mapping[str, float]
     valence: Mapping[str, int]
@@ -65,6 +67,13 @@ class ConstantCoefficients:
 
 
 def constant_coefficients(model: TransportModel) -> ConstantCoefficients:
+    """Return the model's material constants, having checked that they are constant.
+
+    Raises
+    ------
+    ValueError
+        If any coefficient varies with concentration, which means a correction is active.
+    """
     probes = [_numeric_coefficients(model, value) for value in _PROBE_CONCENTRATIONS]
     reference, other = probes
     for name in model.species:
@@ -111,6 +120,18 @@ def _require_equal(first: float, second: float, what: str, model: TransportModel
 
 @dataclass(frozen=True)
 class ManufacturedSolution:
+    """Exact fields and the source terms that make them a solution.
+
+    Parameters
+    ----------
+    potential
+        ``phi~(r, z)`` as a sympy expression in ``RADIAL`` and ``AXIAL``.
+    velocity
+        ``(u~_r, u~_z)``, or ``None`` for a model with no flow.
+    pressure
+        ``p~(r, z)``, or ``None`` for a model with no flow.
+    """
+
     model: TransportModel
     potential: sp.Expr
     concentrations: Mapping[str, sp.Expr]
@@ -130,6 +151,7 @@ class ManufacturedSolution:
 
     @classmethod
     def polynomial(cls, model: TransportModel) -> ManufacturedSolution:
+        """Return a default manufactured set: even powers of ``r``, trigonometric in ``z``."""
         r, z = RADIAL, AXIAL
         potential = 0.30 * (1 + 0.50 * r**2 - 0.08 * r**4) * sp.cos(0.7 * z)
         concentrations: dict[str, sp.Expr] = {}
@@ -155,9 +177,11 @@ class ManufacturedSolution:
 
     @cached_property
     def constants(self) -> ConstantCoefficients:
+        """Return the model's dimensionless material constants, cached."""
         return constant_coefficients(self.model)
 
     def expressions(self) -> Mapping[str, Symbolic]:
+        """Return the exact fields by model field name, as sympy expressions."""
         exact: dict[str, Symbolic] = {POTENTIAL: self.potential}
         for name, value in self.concentrations.items():
             exact[concentration_field_name(name)] = value
@@ -167,15 +191,18 @@ class ManufacturedSolution:
         return exact
 
     def coefficient_functions(self) -> Mapping[str, Expression]:
+        """Return the exact fields as NGSolve coefficient functions."""
         return {name: to_coefficient_function(value) for name, value in self.expressions().items()}
 
     def ionic_charge_density(self) -> sp.Expr:
+        """Return ``sum_i z_i c~_i``, the dimensionless mobile charge."""
         constants = self.constants
         return sum(
             constants.valence[name] * self.concentrations[name] for name in self.model.species
         )
 
     def sources(self, measures: Measures) -> Mapping[str, Symbolic]:
+        """Return the source term of each equation, as sympy expressions, keyed by field name."""
         axisymmetric = measures.is_axisymmetric
         sources: dict[str, Symbolic] = {POTENTIAL: self._potential_source(axisymmetric)}
         for name in self.model.species:
@@ -190,6 +217,7 @@ class ManufacturedSolution:
         return sources
 
     def source_functions(self, measures: Measures) -> Mapping[str, Expression]:
+        """Return the source terms as NGSolve coefficient functions."""
         return {
             name: to_coefficient_function(value) for name, value in self.sources(measures).items()
         }
@@ -328,6 +356,10 @@ def _assert_regular_on_axis(expression: Symbolic, name: str) -> None:
 
 
 def to_coefficient_function(expression: Symbolic) -> Expression:
+    """Return a sympy expression as an NGSolve coefficient function in ``(x, y)``.
+
+    A tuple is returned as a vector coefficient function.
+    """
     import ngsolve as ngs
 
     if isinstance(expression, tuple):
@@ -357,6 +389,7 @@ def weighted_l2_error(
     what: str = "field",
     **kwargs: Option,
 ) -> float:
+    """Return the relative ``r``-weighted L2 error of one field."""
     import ngsolve as ngs
 
     difference = computed - exact
@@ -380,6 +413,13 @@ def weighted_l2_error(
 
 
 def convergence_rates(errors: Sequence[float], sizes: Sequence[float]) -> list[float]:
+    """Return the observed convergence rate between successive refinements.
+
+    Raises
+    ------
+    ValueError
+        If fewer than two levels are given, or if an error has reached zero.
+    """
     if len(errors) != len(sizes) or len(errors) < 2:
         raise ValueError(
             f"need at least two matched levels, got {len(errors)} errors and {len(sizes)} sizes"

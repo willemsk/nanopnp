@@ -92,6 +92,14 @@ _ARC_RTOL = 1e-9
 
 
 class RegionGateError(ValueError):
+    """Stage 5's region failed a junction criterion.
+
+    Parameters
+    ----------
+    criterion
+        The criterion that failed, e.g. ``"chord clearance"``.
+    """
+
     def __init__(self, criterion: str, measured: str, threshold: str, where: str) -> None:
         self.criterion = criterion
         self.measured = measured
@@ -112,6 +120,8 @@ class _Strict(BaseModel):
 
 
 class MembraneRecord(_Strict):
+    """The bilayer as assembled: its slab, its frame shift and its inner edge."""
+
     thickness_nm: float
     centre_z_nm: float
     inner_trans_nm: float
@@ -120,16 +130,21 @@ class MembraneRecord(_Strict):
 
     @property
     def half_thickness_nm(self) -> float:
+        """Half the bilayer thickness, in nm."""
         return 0.5 * self.thickness_nm
 
 
 class FilledHoles(_Strict):
+    """The pockets of fluid the offset enclosed, which no ion can reach, filled and recorded."""
+
     count: int
     area_nm2: float
     centroids_nm: list[tuple[float, float]] = Field(default_factory=list)
 
 
 class ExclusionRecord(_Strict):
+    """The ion-exclusion shell's outer loop and what its construction measured."""
+
     offset_nm: float
     h_c_nm: float
     constants: dict[str, Canonicalisable]
@@ -139,11 +154,13 @@ class ExclusionRecord(_Strict):
     distance_nm: tuple[float, float]
 
     def points(self) -> np.ndarray:
+        """Return the loop as an ``(n, 2)`` float64 array."""
         import numpy as np
 
         return np.asarray(self.loop, dtype=np.float64).reshape(-1, 2)
 
     def summary(self) -> dict[str, Canonicalisable]:
+        """Return the shell's entry in the manifest's Geometry group."""
         return {
             "offset_nm": self.offset_nm,
             "h_c_nm": self.h_c_nm,
@@ -155,6 +172,18 @@ class ExclusionRecord(_Strict):
 
 
 class RegionRecord(_Strict):
+    """Stage 5's artefact: everything :func:`build_region` needs, and what it measured.
+
+    Parameters
+    ----------
+    profile
+        The pore polygon's vertices in the model frame, in nm.
+    axis_split_nm
+        The profile's model-frame z extent, in nm.
+    exclusion
+        The ion-exclusion shell, or ``None`` without one.
+    """
+
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
     schema_id: str = Field(alias="schema", default=REGION_SCHEMA)
@@ -168,11 +197,13 @@ class RegionRecord(_Strict):
     exclusion: ExclusionRecord | None = None
 
     def points(self) -> np.ndarray:
+        """Return the model-frame profile as an ``(n, 2)`` float64 array."""
         import numpy as np
 
         return np.asarray(self.profile, dtype=np.float64).reshape(-1, 2)
 
     def summary(self) -> dict[str, Canonicalisable]:
+        """Return what the manifest's Geometry group records as ``region``."""
         summary: dict[str, Canonicalisable] = {
             "frame_shift_nm": self.membrane.centre_z_nm,
             "thickness_nm": self.membrane.thickness_nm,
@@ -194,6 +225,7 @@ class RegionRecord(_Strict):
 
 
 def write_region(record: RegionRecord, path: Path) -> Path:
+    """Write ``record`` as ``nanopnp/region/v0.5`` YAML that :func:`read_region` reads back."""
     document = record.model_dump(by_alias=True, mode="json")
     document["profile"] = [[float(r), float(z)] for r, z in record.profile]
     if record.exclusion is None:
@@ -207,6 +239,13 @@ def write_region(record: RegionRecord, path: Path) -> Path:
 
 
 def read_region(path: Path) -> RegionRecord:
+    """Read a ``nanopnp/region/v0.5`` record.
+
+    Raises
+    ------
+    ValueError
+        If the document declares another schema.
+    """
     raw = yaml.safe_load(path.read_text(encoding="utf-8"))
     schema = raw.get("schema") if isinstance(raw, dict) else None
     if schema != REGION_SCHEMA:
@@ -215,12 +254,14 @@ def read_region(path: Path) -> RegionRecord:
 
 
 def to_model_frame(points: np.ndarray, centre_z_nm: float) -> np.ndarray:
+    """Return ``points`` moved into the model frame, ``z <- z - centre_z_nm``."""
     shifted = points.copy()
     shifted[:, 1] = shifted[:, 1] - centre_z_nm
     return shifted
 
 
 def lumen_interval(points: np.ndarray, z_nm: float, *, centre_z_nm: float) -> tuple[float, float]:
+    """Return the lumen-adjacent body interval ``[r1, r2]`` on the plane ``z = z_nm``."""
     crossings = plane_crossings(points, z_nm)
     if len(crossings) < 2:
         lower, upper = float(points[:, 1].min()), float(points[:, 1].max())
@@ -271,6 +312,7 @@ def _orientation(p: np.ndarray, q: np.ndarray, r: np.ndarray) -> np.ndarray:
 
 
 def chord_clearances(starts: np.ndarray, ends: np.ndarray, points: np.ndarray) -> np.ndarray:
+    """Return each chord's least distance to the closed polygon ``points``, in nm."""
     import numpy as np
 
     a0, a1 = starts[:, None, :], ends[:, None, :]
@@ -297,6 +339,7 @@ def best_chord(
     cis: tuple[float, float],
     half_thickness_nm: float,
 ) -> tuple[float, float, float]:
+    """Return the widest-margin inner edge as ``(r_trans, r_cis, clearance)``, in nm."""
     import numpy as np
 
     fractions = np.arange(1, CHORD_DIVISIONS) / CHORD_DIVISIONS
@@ -326,6 +369,7 @@ def _check_inside_reservoir(points: np.ndarray, radius_nm: float) -> None:
 
 
 def distance_to_segments(points: np.ndarray, segments: np.ndarray) -> np.ndarray:
+    """Return each point's least distance to the ``(k, 2, 2)`` segments, in nm."""
     distance: np.ndarray = _point_segment_distance(
         points[:, None, :], segments[None, :, 0, :], segments[None, :, 1, :]
     ).min(axis=1)
@@ -333,6 +377,7 @@ def distance_to_segments(points: np.ndarray, segments: np.ndarray) -> np.ndarray
 
 
 def distance_to_loop(points: np.ndarray, loop: np.ndarray) -> np.ndarray:
+    """Return each point's least distance to the closed polygon ``loop``, in nm."""
     import numpy as np
 
     return distance_to_segments(points, np.stack([loop, np.roll(loop, -1, axis=0)], axis=1))
@@ -352,6 +397,15 @@ def _missing_shapely(error: ImportError) -> MissingExtraError:
 def exclusion_shell(
     points: np.ndarray, offset_nm: float, h_c_nm: float, *, reservoir_radius_nm: float
 ) -> ExclusionRecord:
+    """Return the ion-exclusion shell's outer loop, built and gated.
+
+    Raises
+    ------
+    RegionGateError
+        If the shell is invalid, closes the constriction, or leaves the reservoir.
+    MissingExtraError
+        Without Shapely, naming the ``structure`` extra.
+    """
     try:
         from shapely import box
         from shapely.geometry import LinearRing, MultiPolygon, Polygon
@@ -498,6 +552,13 @@ def _membrane_face(membrane: MembraneRecord, radius_nm: float) -> Shape:
 
 
 def assemble_faces(record: RegionRecord) -> tuple[Shape, ...]:
+    """Return the named faces (electrolyte, membrane, pore and any shell), unglued.
+
+    Raises
+    ------
+    RegionGateError
+        If any domain assembled as other than one face.
+    """
     pore = _pore_face(record.points())
     disc = _reservoir_face(record.reservoir_radius_nm, record.axis_split_nm)
     quad = _membrane_face(record.membrane, record.reservoir_radius_nm)
@@ -551,6 +612,13 @@ def _curve_midpoint(edge: Shape) -> tuple[float, float]:
 
 
 def name_region(shape: Shape, *, reservoir_radius_nm: float) -> None:
+    """Name every edge of the glued region into the project vocabulary, in place.
+
+    Raises
+    ------
+    RegionGateError
+        If an edge bounds none of the combinations the vocabulary names.
+    """
     edges_of = {
         str(face.name): set(face.edges)
         for face in shape.faces
@@ -617,6 +685,7 @@ def name_region(shape: Shape, *, reservoir_radius_nm: float) -> None:
 def protein_water_edges(
     shape: Shape,
 ) -> list[tuple[tuple[float, float], tuple[float, float]]]:
+    """Return the protein's edges against the electrolyte or a shell, as endpoint pairs."""
     edges_of: dict[str, set[Shape]] = {}
     for face in shape.faces:
         edges_of.setdefault(str(face.name), set()).update(face.edges)
@@ -625,6 +694,7 @@ def protein_water_edges(
 
 
 def build_region(record: RegionRecord) -> Shape:
+    """Rebuild the glued, named region from the record alone."""
     import netgen.occ as occ
 
     glued = occ.Glue(list(assemble_faces(record)))
@@ -633,6 +703,7 @@ def build_region(record: RegionRecord) -> Shape:
 
 
 def measure(shape: Shape) -> tuple[dict[str, float], dict[str, int]]:
+    """Return each domain's area and each boundary name's count of unique edges."""
     areas = {str(face.name): float(face.mass) for face in shape.faces}
     counts = Counter(str(edge.name) for edge in set(shape.edges))
     return dict(sorted(areas.items())), dict(sorted(counts.items()))
@@ -643,6 +714,8 @@ GRAPH_AREA_RTOL = 1e-9
 
 @dataclass(frozen=True)
 class GraphEdge:
+    """One edge of a :class:`RegionGraph`: its name, its end vertices and its kind."""
+
     name: str
     start: int
     end: int
@@ -651,16 +724,20 @@ class GraphEdge:
 
 @dataclass(frozen=True)
 class RegionGraph:
+    """The glued, named region as vertices, edges and faces."""
+
     vertices: tuple[tuple[float, float], ...]
     edges: tuple[GraphEdge, ...]
     faces: Mapping[str, tuple[int, ...]]
     reservoir_radius_nm: float
 
     def walk(self, signed: int) -> tuple[int, int]:
+        """Return the start and end vertex of a signed edge index as a loop walks it."""
         edge = self.edges[~signed if signed < 0 else signed]
         return (edge.end, edge.start) if signed < 0 else (edge.start, edge.end)
 
     def length(self, index: int) -> float:
+        """Return edge ``index``'s length along its curve, in nm."""
         edge = self.edges[index]
         (r0, z0), (r1, z1) = self.vertices[edge.start], self.vertices[edge.end]
         if edge.kind == "segment":
@@ -668,6 +745,7 @@ class RegionGraph:
         return self.reservoir_radius_nm * abs(_arc_angle((r0, z0), (r1, z1)))
 
     def area(self, face: str) -> float:
+        """Return a face's area in closed form, in nm^2; positive for a counter-clockwise loop."""
         total = 0.0
         for signed in self.faces[face]:
             start, end = self.walk(signed)
@@ -679,6 +757,7 @@ class RegionGraph:
         return total
 
     def edge_counts(self) -> dict[str, int]:
+        """Return each boundary name's count of edges, as :func:`measure` counts them."""
         return dict(sorted(Counter(edge.name for edge in self.edges).items()))
 
 
@@ -742,6 +821,13 @@ def _chain(graph_edges: list[GraphEdge], ids: list[int], name: str) -> list[int]
 
 
 def region_graph(shape: Shape, record: RegionRecord) -> RegionGraph:
+    """Read the glued, named region into a :class:`RegionGraph`.
+
+    Raises
+    ------
+    RegionGateError
+        If the graph's edge counts or face areas are not the record's.
+    """
     radius = record.reservoir_radius_nm
     vertex_index: dict[Shape, int] = {}
     vertices: list[tuple[float, float]] = []
@@ -814,6 +900,7 @@ def _membrane_surface(shape: Shape) -> list[Shape]:
 
 
 def membrane_radii(shape: Shape, half_thickness_nm: float) -> tuple[float, float]:
+    """Return the innermost radius the membrane's fluid-side surface reaches on each plane."""
     surface = _membrane_surface(shape)
     found: list[float] = []
     for plane, label in ((-half_thickness_nm, "trans"), (half_thickness_nm, "cis")):
@@ -835,6 +922,7 @@ def membrane_radii(shape: Shape, half_thickness_nm: float) -> tuple[float, float
 
 
 def check_junction(record: RegionRecord, shape: Shape) -> None:
+    """Abort unless the membrane meets the body at ``r2`` on both planes."""
     half = record.membrane.half_thickness_nm
     assembled = membrane_radii(shape, half)
     for (label, plane), radius in zip((("trans", -half), ("cis", half)), assembled, strict=True):
@@ -857,6 +945,13 @@ def derive_region(
     exclusion_offset_nm: float = 0.0,
     h_c_nm: float | None = None,
 ) -> RegionRecord:
+    """Assemble ``profile`` into the tagged region and return its record.
+
+    Raises
+    ------
+    RegionGateError
+        At the first junction criterion the region fails.
+    """
     half = 0.5 * membrane.thickness_nm
     radius = reservoir.radius_nm
     points = to_model_frame(profile.as_array(), membrane.centre_z_nm)
@@ -917,6 +1012,7 @@ def region_parameters(
     exclusion_offset_nm: float = 0.0,
     h_c_nm: float | None = None,
 ) -> dict[str, Canonicalisable]:
+    """Return the stage-5 key's parameters: the membrane, the reservoir and the constants."""
     parameters: dict[str, Canonicalisable] = {
         "membrane": membrane.model_dump(mode="json"),
         "reservoir": reservoir.model_dump(mode="json"),
@@ -932,15 +1028,19 @@ def region_parameters(
 
 
 class RegionStage:
+    """Stage 5: a pore profile to the tagged, gated region record."""
+
     name = "region"
 
     def __init__(self, *, workspace: Path | None = None) -> None:
         self._workspace = Path(workspace) if workspace is not None else None
 
     def describe(self) -> StageDescription:
+        """Return the registry's description of this stage."""
         return describe(self.name)
 
     def key(self, inputs: StageInputs) -> RegionArtefact:
+        """Return the key: the membrane, the reservoir, the constants and the profile."""
         resolved = inputs.resolved
         identity, _ = _profile_input(inputs, resolved)
         return self._key(resolved, identity)
@@ -964,6 +1064,13 @@ class RegionStage:
         progress: Progress | None = None,
         cancel: CancelToken | None = None,
     ) -> RegionArtefact:
+        """Assemble and gate the region, and emit the stage-5 artefact.
+
+        Raises
+        ------
+        RegionGateError
+            At the first junction criterion the region fails.
+        """
         check_cancelled(cancel, "reading the profile")
         report(progress, 0.0, "reading the profile")
         resolved = inputs.resolved

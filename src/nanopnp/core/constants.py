@@ -20,4 +20,5 @@ REFERENCE_TEMPERATURE_K: Final = 298.15
 
 
 def thermal_voltage(temperature_K: float = REFERENCE_TEMPERATURE_K) -> float:
+    """Return the thermal voltage k_B T / e, in volts."""
     return BOLTZMANN * temperature_K / ELEMENTARY_CHARGE

@@ -22,6 +22,8 @@ POLL_INTERVAL_MS = 200
 
 
 class ViewerWidget(QtWidgets.QWidget):
+    """The viewer panel: a field selector, a web view and a diagnostic pane."""
+
     def __init__(
         self, model: SceneModel | None = None, parent: QtWidgets.QWidget | None = None
     ) -> None:
@@ -62,6 +64,7 @@ class ViewerWidget(QtWidgets.QWidget):
         # Drop the render in flight first: a child left attached would load the previous run's
         # document into the cleared panel, and two renders of one run sweep each other's scene-*
         # pair out of viewer/.
+        """Render one field of a finished run, or clear the panel when given no run."""
         self._stop_render()
         if directory is None:
             self._run = None
@@ -86,6 +89,7 @@ class ViewerWidget(QtWidgets.QWidget):
         self.show_run(self._run, field=self._fields.itemText(index))
 
     def refresh(self) -> SceneModel:
+        """Drain the render child into :meth:`apply` and return the model."""
         if self._process is None:
             return self._model
         model = self.apply(self._process.drain())
@@ -94,6 +98,7 @@ class ViewerWidget(QtWidgets.QWidget):
         return model
 
     def apply(self, events: Iterable[RenderEvent]) -> SceneModel:
+        """Apply render events and load the document one produced, if any; return the model."""
         before = self._model.state
         self._model.consume(events)
         if self._model.state != before:
@@ -115,6 +120,7 @@ class ViewerWidget(QtWidgets.QWidget):
         self.probed(answer if isinstance(answer, str) else None)
 
     def probed(self, answer: str | None) -> None:
+        """Apply the readiness probe's answer and show what it said."""
         self._model.probed(answer)
         self._show_model()
 
@@ -138,14 +144,18 @@ class ViewerWidget(QtWidgets.QWidget):
 
     @property
     def model(self) -> SceneModel:
+        """The view-model this panel drives."""
         return self._model
 
     @property
     def showing_diagnostic(self) -> bool:
+        """Whether the panel has replaced the view with a diagnostic."""
         return self._stack.currentWidget() is self._diagnostic
 
     def diagnostic_text(self) -> str:
+        """Return the diagnostic the panel is showing."""
         return str(self._diagnostic.toPlainText())
 
     def offered_fields(self) -> tuple[str, ...]:
+        """Return the field names the selector offers."""
         return tuple(self._fields.itemText(index) for index in range(self._fields.count()))

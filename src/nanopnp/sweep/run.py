@@ -42,6 +42,7 @@ THREAD_VARIABLES: tuple[str, ...] = (
 
 
 def pin_threads() -> dict[str, str]:
+    """Pin the linear-algebra thread counts to one; return what was set."""
     for variable in THREAD_VARIABLES:
         os.environ[variable] = "1"
     return {variable: os.environ[variable] for variable in THREAD_VARIABLES}
@@ -49,6 +50,16 @@ def pin_threads() -> dict[str, str]:
 
 @dataclass(frozen=True)
 class MemberResult:
+    """What one member did, as its dataset row and as its own file on disk.
+
+    Parameters
+    ----------
+    status
+        ok, failed or cancelled.
+    error
+        The diagnostic, verbatim, or None.
+    """
+
     index: int
     point_id: str
     assignments: Mapping[str, Canonicalisable]
@@ -68,6 +79,7 @@ class MemberResult:
     route_agreement: float | None = None
 
     def row(self) -> dict[str, Canonicalisable]:
+        """Return this member's dataset row."""
         return {
             "index": self.index,
             "id": self.point_id,
@@ -89,6 +101,7 @@ class MemberResult:
         }
 
     def write(self, directory: Path) -> Path:
+        """Write this member's record into the sweep's members/ directory, atomically."""
         directory.mkdir(parents=True, exist_ok=True)
         path = directory / f"{self.index:06d}.json"
         atomic_write_bytes(path, canonical(self.row()) + b"\n")
@@ -134,6 +147,13 @@ def run_point(
     store: Store,
     directory: Path,
 ) -> MemberResult:
+    """Run one member and return its record, capturing whatever it raised.
+
+    Parameters
+    ----------
+    index
+        Which point to run.
+    """
     from nanopnp.core.stages import Cancelled
 
     point = plan.point(index)
@@ -327,6 +347,7 @@ def _pool(
 
 
 def member_from_row(row: Mapping[str, Canonicalisable]) -> MemberResult:
+    """Rebuild a member's record from a row, such as a worker's return value or a file."""
     return MemberResult(
         index=int(row["index"]),
         point_id=str(row["id"]),

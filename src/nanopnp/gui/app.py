@@ -39,6 +39,16 @@ PLOT_INTERVAL_MS = 250
 
 
 class MainWindow(QtWidgets.QMainWindow):
+    """The shell's window: the case, its geometry and charge, the run and what it produced.
+
+    Parameters
+    ----------
+    editor
+        The case open for editing.
+    store
+        The artefact store's root, or ``None`` for the process default.
+    """
+
     def __init__(self, editor: CaseEditor, *, store: Path | None = None) -> None:
         super().__init__()
         self._store = store
@@ -78,6 +88,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._refresh.start()
 
     def start_run(self) -> None:
+        """Commit, save and run the case file; a refused commit stops here with its diagnostic."""
         path = self._saved_case()
         if path is None:
             return
@@ -104,6 +115,7 @@ class MainWindow(QtWidgets.QMainWindow):
             return None
 
     def build_geometry(self) -> None:
+        """Commit, save and build the case through stage 6 on the Geometry tab."""
         path = self._saved_case()
         if path is None:
             return
@@ -113,6 +125,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.statusBar().showMessage("the geometry was not built; see the Geometry tab")
 
     def build_charge(self) -> None:
+        """Commit, save and build the case through stage 7, on the Geometry tab's walk."""
         path = self._saved_case()
         if path is None:
             return
@@ -133,6 +146,7 @@ class MainWindow(QtWidgets.QMainWindow):
             field.setText(path)
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
+        """Stop the Geometry and Charge tabs' builds and children with the window."""
         self._charge.shutdown()
         self._geometry.shutdown()
         super().closeEvent(event)

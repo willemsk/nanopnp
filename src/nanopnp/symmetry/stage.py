@@ -32,6 +32,7 @@ WORKSPACE_DIRNAME = "tmp"
 
 
 def reduction_parameters(inputs: StageInputs) -> dict[str, Canonicalisable]:
+    """Return the stage-3 key's parameters, or refuse a case without ``structure:``."""
     resolved = inputs.resolved
     if resolved.structure is None or resolved.density is None:
         raise UnsupportedCaseSection(
@@ -47,15 +48,19 @@ def reduction_parameters(inputs: StageInputs) -> dict[str, Canonicalisable]:
 
 
 class SymmetryStage:
+    """Stage 3: a density map to its (r, z) mean and azimuthal variances."""
+
     name = "symmetry"
 
     def __init__(self, *, workspace: Path | None = None) -> None:
         self._workspace = Path(workspace) if workspace is not None else None
 
     def describe(self) -> StageDescription:
+        """Return the registry's description of this stage."""
         return describe(self.name)
 
     def key(self, inputs: StageInputs) -> ReducedArtefact:
+        """Return the artefact key from n, the bin width, the methods and stage 2's hash."""
         return ReducedArtefact(
             parameters=reduction_parameters(inputs),
             inputs={"density": inputs.require("density").hash},
@@ -68,6 +73,13 @@ class SymmetryStage:
         progress: Progress | None = None,
         cancel: CancelToken | None = None,
     ) -> ReducedArtefact:
+        """Reduce the map and emit the stage-3 artefact.
+
+        Raises
+        ------
+        Cancelled
+            If ``cancel`` turns true.
+        """
         parameters = reduction_parameters(inputs)
         density = inputs.require("density")
         check_cancelled(cancel, "reading the density map")

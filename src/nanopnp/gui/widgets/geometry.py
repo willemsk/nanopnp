@@ -65,6 +65,8 @@ Point = tuple[float, float]
 
 
 class GeometryCanvas(QtWidgets.QWidget):
+    """One picture of a stage: an image, outlines, and the editor's loop over them."""
+
     edited = QtCore.Signal()
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
@@ -87,6 +89,7 @@ class GeometryCanvas(QtWidgets.QWidget):
         self._preview: Point | None = None
 
     def clear(self, title: str = "", *, frame: str = STAGE_1_FRAME) -> None:
+        """Show nothing but a caption."""
         self._image = None
         self._qimage = None
         self._loop = ()
@@ -111,6 +114,7 @@ class GeometryCanvas(QtWidgets.QWidget):
         loop: tuple[Point, ...] = (),
         slab: tuple[float, float] | None = None,
     ) -> None:
+        """Show an image, the loop drawn over it and the membrane slab, in the image's frame."""
         self.clear(image.title, frame=image.frame)
         self._image = image
         # ``copy`` detaches the image from the bytes object, which Python may
@@ -128,6 +132,7 @@ class GeometryCanvas(QtWidgets.QWidget):
         self.update()
 
     def show_outline(self, view: OutlineView) -> None:
+        """Show stage 5's region: the model-frame profile, the slab and the membrane chord."""
         self.clear(f"stage 5: region, reservoir radius {view.reservoir_nm:g} nm", frame=view.frame)
         self._x_label = "r (nm)"
         self._loop = view.loop
@@ -136,6 +141,7 @@ class GeometryCanvas(QtWidgets.QWidget):
         self.update()
 
     def attach(self, editor: ProfileEditor | None, *, selected: int | None = None) -> None:
+        """Draw ``editor``'s loop with handles and let the mouse edit it, or stop."""
         self._editor = editor
         in_loop = editor is not None and selected is not None and selected < len(editor.vertices)
         self._selected = selected if in_loop else None
@@ -148,6 +154,7 @@ class GeometryCanvas(QtWidgets.QWidget):
         self.update()
 
     def mark(self, location_nm: Point | None) -> None:
+        """Mark the ``(r, z)`` a refusal names, or remove the mark."""
         self._marker = location_nm
         self.update()
 
@@ -160,6 +167,7 @@ class GeometryCanvas(QtWidgets.QWidget):
         return shown
 
     def transform(self) -> ViewTransform:
+        """Return the transform the canvas draws with at its current size."""
         if self._drag_transform is not None:
             return self._drag_transform
         xs: list[float] = []
@@ -187,6 +195,7 @@ class GeometryCanvas(QtWidgets.QWidget):
         )
 
     def paintEvent(self, event: QtGui.QPaintEvent) -> None:
+        """Draw the image, the slab, the outlines, the editor's handles and the captions."""
         del event
         painter = QtGui.QPainter(self)
         painter.fillRect(self.rect(), QtGui.QColor("white"))
@@ -238,6 +247,7 @@ class GeometryCanvas(QtWidgets.QWidget):
 
     @property
     def caption(self) -> str:
+        """The axis caption, naming the frame."""
         x_low, x_high = self.transform().x_range
         z_low, z_high = self.transform().z_range
         return (
@@ -246,6 +256,7 @@ class GeometryCanvas(QtWidgets.QWidget):
         )
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
+        """Pick the vertex under the pointer, if the canvas is editing."""
         if self._editor is None or event.button() != QtCore.Qt.MouseButton.LeftButton:
             super().mousePressEvent(event)
             return
@@ -260,6 +271,7 @@ class GeometryCanvas(QtWidgets.QWidget):
         self.update()
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
+        """Follow the pointer with the dragged vertex, without editing yet."""
         if self._drag is None or self._drag_transform is None:
             super().mouseMoveEvent(event)
             return
@@ -268,6 +280,7 @@ class GeometryCanvas(QtWidgets.QWidget):
         self.update()
 
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
+        """Commit the drag as one undoable move; a press with no motion is a click."""
         if self._drag is None or self._drag_transform is None or self._editor is None:
             super().mouseReleaseEvent(event)
             return
@@ -284,6 +297,7 @@ class GeometryCanvas(QtWidgets.QWidget):
         self.update()
 
     def mouseDoubleClickEvent(self, event: QtGui.QMouseEvent) -> None:
+        """Insert a vertex at the midpoint of the edge under the pointer."""
         if self._editor is None:
             super().mouseDoubleClickEvent(event)
             return
@@ -298,12 +312,14 @@ class GeometryCanvas(QtWidgets.QWidget):
             self.update()
 
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
+        """Delete the selected vertex on Delete or Backspace."""
         if event.key() in (QtCore.Qt.Key.Key_Delete, QtCore.Qt.Key.Key_Backspace):
             self.delete_selected()
             return
         super().keyPressEvent(event)
 
     def delete_selected(self) -> str | None:
+        """Delete the selected vertex; return the refusal if the loop is at three."""
         if self._editor is None or self._selected is None:
             return None
         try:
@@ -317,14 +333,24 @@ class GeometryCanvas(QtWidgets.QWidget):
 
     @property
     def selected(self) -> int | None:
+        """The vertex last picked, if any."""
         return self._selected
 
     @property
     def editor(self) -> ProfileEditor | None:
+        """The editor the canvas is driving, if any."""
         return self._editor
 
 
 class GeometryWidget(QtWidgets.QWidget):
+    """The Geometry tab: a stage list, one pane per stage, and the contour editor.
+
+    Parameters
+    ----------
+    store
+        The artefact store's root, or ``None`` for the process default.
+    """
+
     buildRequested = QtCore.Signal()
 
     structureLoaded = QtCore.Signal(str)
@@ -443,6 +469,7 @@ class GeometryWidget(QtWidgets.QWidget):
             self.load_structure(chosen)
 
     def load_structure(self, path: str | Path) -> Path | None:
+        """Stage the case's structure path, or show why it was refused."""
         try:
             staged = load_structure(self._case_editor, path)
         except (UnknownCasePathError, CaseValidationError) as error:
@@ -456,6 +483,20 @@ class GeometryWidget(QtWidgets.QWidget):
         self.buildRequested.emit()
 
     def build(self, case_path: str | Path, *, upto: str = BUILD_UPTO) -> bool:
+        """Walk the saved case through stage 6, or to ``upto``, in a spawned child.
+
+        Parameters
+        ----------
+        case_path
+            The case file as saved.
+        upto
+            The last stage to walk: stage 6 by default, ``"charge"`` for the Charge tab.
+
+        Returns
+        -------
+        bool
+            Whether the build started.
+        """
         document = self._case_editor.document
         try:
             planned = planned_stages(document)
@@ -499,12 +540,14 @@ class GeometryWidget(QtWidgets.QWidget):
         self._render = None
 
     def shutdown(self) -> None:
+        """Stop everything this tab started: the build, the children and the view loads."""
         self._timer.stop()
         self._control.cancel()
         self._stop_children()
         self._executor.shutdown(wait=False, cancel_futures=True)
 
     def refresh(self) -> RunModel:
+        """Poll the build, the view loads and the two children, and show where they are."""
         model = self._control.poll()
         produced = {event.name: event for event in model.produced}
         document = self._document
@@ -733,6 +776,7 @@ class GeometryWidget(QtWidgets.QWidget):
         self._canvas.mark(first.location_nm if first is not None else None)
 
     def edit(self, editor: ProfileEditor) -> None:
+        """Edit ``editor``'s loop on the contour pane."""
         self._editor = editor
         self._assessment = None
         self._select("contour")
@@ -771,12 +815,14 @@ class GeometryWidget(QtWidgets.QWidget):
             self._after_edit()
 
     def measure(self) -> None:
+        """Measure the §5.2.1 criteria on the edit, against the stored stages."""
         if self._editor is None or self._case_path is None or self._assess is not None:
             return
         self._start_assess(vertices=tuple(self._editor.vertices))
         self._status.setText("measuring the section 5.2.1 criteria against the stored stages")
 
     def seed(self) -> None:
+        """Recompute the refused contour from the stored stage-3 map."""
         if self._case_path is None or self._assess is not None:
             return
         self._start_assess(vertices=None)
@@ -853,20 +899,25 @@ class GeometryWidget(QtWidgets.QWidget):
 
     @property
     def canvas(self) -> GeometryCanvas:
+        """The picture pane."""
         return self._canvas
 
     @property
     def control(self) -> RunControl:
+        """The build's view-model."""
         return self._control
 
     @property
     def rows(self) -> tuple[StageRow, ...]:
+        """The stage list as last shown."""
         return self._rows
 
     def status(self) -> str:
+        """Return the message the tab is showing."""
         return str(self._status.text())
 
     def details(self) -> str:
+        """Return the text beside the picture."""
         return str(self._details.toPlainText())
 
 

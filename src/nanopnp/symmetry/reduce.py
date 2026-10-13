@@ -33,6 +33,8 @@ QUANTITIES: tuple[str, ...] = ("mean", "cn_variance", "raw_variance")
 
 @dataclass(frozen=True)
 class ReducedMap:
+    """The (r, z) reduction of one density map."""
+
     r_nm: np.ndarray
     z_nm: np.ndarray
     mean: np.ndarray
@@ -42,6 +44,7 @@ class ReducedMap:
     header: Mapping[str, Canonicalisable]
 
     def digest(self) -> str:
+        """Return a content hash over the arrays and the header."""
         return content_hash(
             f"{REDUCED_SCHEMA}/payload",
             {
@@ -54,12 +57,14 @@ class ReducedMap:
         )
 
     def grids(self) -> dict[str, RadialGrid]:
+        """Return the mean and both variances as radial grids."""
         return {
             name: RadialGrid.from_axes(self.r_nm, self.z_nm, getattr(self, name))
             for name in QUANTITIES
         }
 
     def write(self, path: Path) -> Path:
+        """Write the reduction to ``path`` as compressed ``.npz``; return the path."""
         import numpy as np
 
         arrays: dict[str, Any] = {
@@ -76,6 +81,13 @@ class ReducedMap:
 
     @classmethod
     def read(cls, path: Path) -> ReducedMap:
+        """Read a reduction written by :meth:`write`.
+
+        Raises
+        ------
+        GridFormatError
+            If an array is missing or does not fit the two axes.
+        """
         import numpy as np
 
         keys = ("r_nm", "z_nm", *QUANTITIES, "harmonics", "header")
@@ -98,12 +110,14 @@ class ReducedMap:
 
 
 def harmonic_counts(bins: int, n: int) -> np.ndarray:
+    """Return ``K_j = ⌊π j/n⌋``: the Cₙ harmonics each bin ``j`` resolves."""
     import numpy as np
 
     return np.floor(np.pi * np.arange(bins) / n).astype(np.int64)
 
 
 def unresolved_radius_nm(n: int, spacing_nm: float) -> float:
+    """Return ``n h/π``, in nm, below which no Cₙ harmonic is resolved."""
     return n * spacing_nm / math.pi
 
 
@@ -140,6 +154,13 @@ def reduce_map(
     progress: Progress | None = None,
     cancel: CancelToken | None = None,
 ) -> ReducedMap:
+    """Reduce a stage-2 map to (r, z): mean, Cₙ variance and raw variance.
+
+    Raises
+    ------
+    nanopnp.core.stages.Cancelled
+        If ``cancel`` turns true between slabs.
+    """
     import numpy as np
 
     grid = density.grid

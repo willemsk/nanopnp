@@ -117,10 +117,12 @@ _DOCUMENT = Template("""<!DOCTYPE html>
 
 
 def renderer_source() -> str:
+    """Return the address the host document loads the renderer from."""
     return RENDERER_SOURCE
 
 
 def readiness_script() -> str:
+    """Return the JavaScript that reports whether the scene is ready, as a JSON object."""
     return (
         f"JSON.stringify(window.{READY_FLAG} || "
         "{ready: false, renderer_loaded: false, "
@@ -129,6 +131,17 @@ def readiness_script() -> str:
 
 
 def host_document(scene: str, *, renderer: str, title: str) -> str:
+    """Return the HTML document that draws one scene.
+
+    Parameters
+    ----------
+    scene
+        The scene, already serialised as JSON.
+    renderer
+        The URL the document loads the renderer from.
+    title
+        The document title.
+    """
     return _DOCUMENT.substitute(
         title=title,
         renderer=renderer,
@@ -142,6 +155,14 @@ def host_document(scene: str, *, renderer: str, title: str) -> str:
 
 @dataclass(frozen=True)
 class RenderRequest:
+    """What the child is asked for: a finished run and one of its fields.
+
+    Parameters
+    ----------
+    field
+        The attribute name, or ``""`` for the model's first field.
+    """
+
     run: str
     field: str = ""
     renderer: str = RENDERER_SOURCE
@@ -149,6 +170,8 @@ class RenderRequest:
 
 @dataclass(frozen=True)
 class Rendered:
+    """A scene was written; the paths and the field vocabulary of the solution."""
+
     document: str
     scene: str
     field: str
@@ -158,18 +181,32 @@ class Rendered:
 
 @dataclass(frozen=True)
 class RenderFailed:
+    """Nothing was drawn; the message is the diagnostic."""
+
     error: str
     message: str
 
 
 @dataclass(frozen=True)
 class MeshRequest:
+    """What the child is asked for by the geometry tab: a run's stage-6 mesh."""
+
     run: str
     renderer: str = RENDERER_SOURCE
 
 
 @dataclass(frozen=True)
 class RenderedMesh:
+    """The mesh was drawn by material; its paths and the figures its gates measured.
+
+    Parameters
+    ----------
+    quality
+        VER-10's figures and the ``(r, z)`` centroid of each least value.
+    wall
+        Stage 6's wall-size gate statistics; empty for a supplied mesh.
+    """
+
     document: str
     scene: str
     elements: int
@@ -180,6 +217,8 @@ class RenderedMesh:
 
 @dataclass(frozen=True)
 class ChargeRequest:
+    """What the charge tab asks for: a run's deployed charge or ``chi``."""
+
     run: str
     quantity: ChargeQuantity = "charge"
     renderer: str = RENDERER_SOURCE
@@ -187,6 +226,16 @@ class ChargeRequest:
 
 @dataclass(frozen=True)
 class RenderedCharge:
+    """The deployed coefficient was drawn; the paths and the scale it was drawn on.
+
+    Parameters
+    ----------
+    colour_range
+        The fixed ``(min, max)`` of the colour map.
+    limit
+        The largest magnitude the scene samples, printed beside the picture.
+    """
+
     document: str
     scene: str
     quantity: ChargeQuantity
@@ -302,6 +351,11 @@ def _replace(path: Path, text: str) -> None:
 
 
 def render(request: RenderRequest) -> Rendered:
+    """Restore a finished run and write one field's scene into its ``viewer/``.
+
+    Raises FileNotFoundError if the run records no converged state, and KeyError if the field is
+    not one this solution carries.
+    """
     from nanopnp.io.manifest import CASE_FILENAME
     from nanopnp.pipeline.case import load_case, resolve
     from nanopnp.post.export import (
@@ -369,6 +423,7 @@ def render(request: RenderRequest) -> Rendered:
 
 
 def render_mesh(request: MeshRequest) -> RenderedMesh:
+    """Draw a run's stage-6 mesh by material into its ``viewer/``, with its gate figures."""
     from nanopnp.io.manifest import CASE_FILENAME
     from nanopnp.mesh.ingest import deployed_mesh
     from nanopnp.pipeline.case import load_case, resolve
@@ -417,6 +472,8 @@ def render_mesh(request: MeshRequest) -> RenderedMesh:
 
 @dataclass(frozen=True)
 class DeployedCoefficient:
+    """A run's deployed charge or ``chi``, as the solve assembles it."""
+
     mesh: Mesh
     coefficient: Expression
     measures: Measures
@@ -425,6 +482,11 @@ class DeployedCoefficient:
 
 
 def deployed_coefficient(run: Path, quantity: ChargeQuantity) -> DeployedCoefficient:
+    """Return the coefficient a run's solve reads for ``quantity``, on its deployed mesh.
+
+    Raises FileNotFoundError if a needed stage artefact has left the store, and KeyError if the
+    run carries no such coefficient.
+    """
     from nanopnp.charge.dielectric import SOLID_FRACTION
     from nanopnp.charge.fields import CANONICAL_UNITS
     from nanopnp.charge.stage import case_fields, read_fields
@@ -485,6 +547,7 @@ def deployed_coefficient(run: Path, quantity: ChargeQuantity) -> DeployedCoeffic
 
 
 def render_charge(request: ChargeRequest) -> RenderedCharge:
+    """Draw a run's deployed charge or ``chi`` into its ``viewer/``."""
     run = Path(request.run)
     deployed = deployed_coefficient(run, request.quantity)
 
@@ -545,6 +608,8 @@ def _worker(request: AnyRequest, events: Queue[RenderEvent]) -> None:
 
 @dataclass
 class RenderProcess:
+    """One background render: start it, then drain what it posted."""
+
     request: AnyRequest
     _process: BaseProcess | None = field(default=None, repr=False)
     _events: Queue[RenderEvent] | None = field(default=None, repr=False)
@@ -553,6 +618,7 @@ class RenderProcess:
     answered: bool = field(default=False, repr=False)
 
     def start(self) -> None:
+        """Spawn the child and begin the render; raise RuntimeError if already started."""
         if self._process is not None:
             raise RuntimeError(
                 "this RenderProcess has already been started; construct another one rather than "
@@ -569,6 +635,7 @@ class RenderProcess:
         self._process.start()
 
     def drain(self) -> tuple[RenderEvent, ...]:
+        """Return every event posted since the last call, oldest first."""
         if self._events is None:
             return ()
         found: list[RenderEvent] = []
@@ -581,9 +648,14 @@ class RenderProcess:
 
     @property
     def running(self) -> bool:
+        """Whether the child is alive."""
         return self._process is not None and self._process.is_alive()
 
     def terminate(self, timeout: float = 1.0) -> None:
+        """Stop the child and wait for it to go, killing it after ``timeout`` seconds.
+
+        A superseded render must stop before a new one sweeps the shared ``viewer/`` directory.
+        """
         if self._process is None:
             return
         if self._process.is_alive():
@@ -594,5 +666,6 @@ class RenderProcess:
             self._process.join(timeout)
 
     def join(self, timeout: float | None = None) -> None:
+        """Wait for the child to exit."""
         if self._process is not None:
             self._process.join(timeout)

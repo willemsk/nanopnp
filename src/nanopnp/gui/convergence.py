@@ -32,6 +32,8 @@ MAX_POINTS_PER_BAND = 256
 
 @dataclass(frozen=True)
 class Step:
+    """One accepted Newton step, as it crossed the process boundary."""
+
     iteration: int
     residual: float
     update: float
@@ -40,11 +42,14 @@ class Step:
     forced: bool
 
     def value(self, series: Series) -> float:
+        """Return the sample this step contributes to one series."""
         return self.residual if series == RESIDUAL else self.update
 
 
 @dataclass
 class Band:
+    """One rung of the continuation ladder, and the steps reported inside it."""
+
     name: str
     stage: int
     index: int
@@ -55,17 +60,27 @@ class Band:
 
     @property
     def width(self) -> float:
+        """The band's extent on the x-axis, in steps; ``1`` for an empty band."""
         return float(max(len(self.steps), 1))
 
     @property
     def minimum_damping(self) -> float:
+        """The smallest damping factor any accepted step of this rung was taken with."""
         return min((step.damping for step in self.steps), default=1.0)
 
     @property
     def forced_steps(self) -> int:
+        """Number of steps accepted at minimum damping without reduction."""
         return sum(1 for step in self.steps if step.forced)
 
     def closed_on(self) -> str:
+        """Return which convergence test can be proved to have ended this rung.
+
+        Returns
+        -------
+        str
+            ``"residual"``, ``"update"``, or ``""``: a band that did not close or reported no step.
+        """
         if not self.closed or not self.steps:
             return ""
         last = self.steps[-1]
@@ -74,6 +89,7 @@ class Band:
         return "update"
 
     def note(self) -> str:
+        """Return the sentence the panel prints under this band."""
         if not self.reporting:
             return "no Newton steps: this rung's model takes no Newton callback"
         if not self.steps:
@@ -110,11 +126,14 @@ def _decimate(steps: list[Step], limit: int) -> list[Step]:
 
 @dataclass
 class ConvergenceModel:
+    """The live plot's state, driven by the rung and step events and nothing else."""
+
     state: ConvergenceState = "idle"
     bands: list[Band] = field(default_factory=list)
     omitted_samples: int = 0
 
     def reset(self) -> None:
+        """Return to the state of a run that has not reported anything."""
         self.state = "idle"
         self.bands = []
         self.omitted_samples = 0
@@ -122,6 +141,7 @@ class ConvergenceModel:
     def rung(
         self, name: str, stage: int, index: int, total: int, reporting: bool, tolerance: float
     ) -> None:
+        """Open a band for a rung the solve has announced; ``total`` is accepted and ignored."""
         del total
         if self.bands:
             # The ladder moved past the previous rung, so that rung converged.
@@ -146,6 +166,13 @@ class ConvergenceModel:
         trials: int,
         forced: bool,
     ) -> None:
+        """Record one accepted Newton step in the band most recently opened.
+
+        Raises
+        ------
+        ValueError
+            If no rung has been announced.
+        """
         if not self.bands:
             raise ValueError(
                 f"Newton step {iteration} arrived before any rung was announced; the solve hook "
@@ -164,6 +191,13 @@ class ConvergenceModel:
         )
 
     def settle(self, *, finished: bool) -> None:
+        """Close the plot when the run reaches a terminal state.
+
+        Parameters
+        ----------
+        finished
+            Whether the run finished, rather than failed or was cancelled.
+        """
         if not finished:
             self.state = "stopped"
             return
@@ -173,6 +207,7 @@ class ConvergenceModel:
 
     @property
     def summary(self) -> str:
+        """Return the line the panel shows above the plot."""
         if self.state == "idle":
             return "no solve has been watched yet"
         if self.state == "served":
@@ -194,9 +229,17 @@ class ConvergenceModel:
 
     @property
     def x_range(self) -> tuple[float, float]:
+        """The horizontal extent of the whole ladder, in band widths."""
         return 0.0, sum(band.width for band in self.bands) or 1.0
 
     def extent(self, band: Band) -> tuple[float, float]:
+        """Return one band's ``(start, end)`` on the x-axis, found by identity.
+
+        Raises
+        ------
+        ValueError
+            If ``band`` is not one of this model's.
+        """
         start = 0.0
         for earlier in self.bands:
             if earlier is band:
@@ -205,6 +248,7 @@ class ConvergenceModel:
         raise ValueError(f"band {band.name!r} is not one this model opened")
 
     def points(self, band: Band, series: Series) -> tuple[tuple[float, float], ...]:
+        """Return one band's ``(x, log₁₀ y)`` polyline for one series, skipping non-positives."""
         start, _ = self.extent(band)
         drawn: list[tuple[float, float]] = []
         for step in _decimate(band.steps, MAX_POINTS_PER_BAND):
@@ -216,6 +260,7 @@ class ConvergenceModel:
 
     @property
     def y_range(self) -> tuple[float, float]:
+        """Whole decades enclosing every drawn sample; ``(-1, 1)`` when nothing is drawn."""
         values = [
             math.log10(value)
             for band in self.bands
@@ -229,6 +274,7 @@ class ConvergenceModel:
         return (low, high) if high > low else (low - 1.0, high + 1.0)
 
     def ticks(self, *, limit: int = 8) -> tuple[float, ...]:
+        """Return the decade ticks of :attr:`y_range`, thinned to at most ``limit``."""
         low, high = self.y_range
         decades = [float(value) for value in range(int(low), int(high) + 1)]
         if len(decades) <= limit:
@@ -240,6 +286,7 @@ class ConvergenceModel:
         return tuple(thinned)
 
     def count_omitted(self) -> int:
+        """Count and record the non-positive samples the axis cannot place."""
         self.omitted_samples = sum(
             1
             for band in self.bands

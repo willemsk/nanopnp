@@ -29,6 +29,16 @@ class _Strict(BaseModel):
 
 
 class Axis(_Strict):
+    """One axis of the sweep grid: an ordered list of assignments.
+
+    Parameters
+    ----------
+    name
+        Used in diagnostics and the plan file.
+    origin
+        Index of the point the warm-start forest is rooted at.
+    """
+
     name: str
     assignments: list[dict[str, FieldValue]] | None = None
     path: str | None = None
@@ -59,6 +69,7 @@ class Axis(_Strict):
         return self
 
     def points(self) -> tuple[Assignment, ...]:
+        """Return this axis's assignments, expanding the single-path form."""
         if self.assignments is not None:
             return tuple(dict(entry) for entry in self.assignments)
         if self.path is None or self.values is None:  # pragma: no cover - the validator refuses it
@@ -66,6 +77,7 @@ class Axis(_Strict):
         return tuple({self.path: value} for value in self.values)
 
     def paths(self) -> tuple[str, ...]:
+        """Return every case-file path this axis writes, in first-seen order."""
         seen: dict[str, None] = {}
         for assignment in self.points():
             for path in assignment:
@@ -74,6 +86,8 @@ class Axis(_Strict):
 
 
 class SweepDocument(_Strict):
+    """A validated sweep specification."""
+
     schema_id: str = Field(alias="schema")
     name: str
     base: Path
@@ -94,17 +108,21 @@ class SweepDocument(_Strict):
         return self
 
     def base_path(self, source: Path | None) -> Path:
+        """Return the base case's path, resolved against the sweep document's directory."""
         if self.base.is_absolute() or source is None:
             return self.base
         return (source.parent / self.base).resolve()
 
     def shape(self) -> tuple[int, ...]:
+        """Return the length of each axis, in declaration order."""
         return tuple(len(axis.points()) for axis in self.axes)
 
     def origins(self) -> tuple[int, ...]:
+        """Return each axis's declared origin index, in declaration order."""
         return tuple(axis.origin for axis in self.axes)
 
     def summary(self) -> dict[str, object]:
+        """Return the record the plan file carries of what was asked for."""
         return {
             "schema": self.schema_id,
             "name": self.name,
@@ -122,6 +140,13 @@ class SweepDocument(_Strict):
 
 
 def loads_sweep(text: str, *, source: str = "<string>") -> SweepDocument:
+    """Validate a sweep document from YAML text.
+
+    Parameters
+    ----------
+    source
+        Name used in diagnostics.
+    """
     try:
         parsed = yaml.safe_load(text)
     except yaml.YAMLError as error:
@@ -147,11 +172,13 @@ def _check_schema(parsed: Mapping[str, object], source: str) -> None:
 
 
 def load_sweep(path: str | Path) -> SweepDocument:
+    """Read and validate a sweep document from path."""
     source = Path(path)
     return loads_sweep(source.read_text(encoding="utf-8"), source=str(source))
 
 
 def merged(assignments: Sequence[Assignment], axes: Sequence[Axis]) -> dict[str, FieldValue]:
+    """Return one point's assignments, merged across the axes; refuse a path two axes write."""
     merged_assignment: dict[str, FieldValue] = {}
     owner: dict[str, str] = {}
     for axis, assignment in zip(axes, assignments, strict=True):

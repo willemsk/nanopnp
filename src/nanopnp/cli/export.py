@@ -37,6 +37,7 @@ _PAYLOAD: Mapping[str, str] = {
 
 
 def refusal(stage: str, path: Path) -> str | None:
+    """Return why --export path cannot be written for stage, or None if it can."""
     accepted = EXPORTS.get(stage)
     if accepted is None:
         return (
@@ -55,6 +56,7 @@ def refusal(stage: str, path: Path) -> str | None:
 
 
 def export_artefact(stage: str, artefact: Artefact, path: Path) -> tuple[Path, ...]:
+    """Write artefact's payload to path in the format its suffix names."""
     if stage == "charge":
         from nanopnp.charge.stage import export_charge
 

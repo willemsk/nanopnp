@@ -18,6 +18,8 @@ _COLOURS: dict[Series, QtGui.QColor] = {
 
 
 class ConvergencePlot(QtWidgets.QWidget):
+    """The plotting surface itself: axes, bands and two polylines."""
+
     def __init__(self, model: ConvergenceModel, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
         self._model = model
@@ -35,6 +37,7 @@ class ConvergencePlot(QtWidgets.QWidget):
         return QtGui.QColor(self.palette().window().color())
 
     def set_model(self, model: ConvergenceModel) -> None:
+        """Point the plot at another model and redraw."""
         self._model = model
         self.update()
 
@@ -51,6 +54,7 @@ class ConvergencePlot(QtWidgets.QWidget):
         )
 
     def paintEvent(self, event: QtGui.QPaintEvent) -> None:
+        """Draw the axes, the bands and the two series."""
         del event
         painter = QtGui.QPainter(self)
         painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing, True)
@@ -122,6 +126,8 @@ class ConvergencePlot(QtWidgets.QWidget):
 
 
 class ConvergenceWidget(QtWidgets.QWidget):
+    """The convergence panel: a summary line, the plot, and the bands' notes."""
+
     def __init__(self, model: ConvergenceModel, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
         self._model = model
@@ -145,11 +151,13 @@ class ConvergenceWidget(QtWidgets.QWidget):
         self.refresh()
 
     def set_model(self, model: ConvergenceModel) -> None:
+        """Point the panel at another run's model."""
         self._model = model
         self._plot.set_model(model)
         self.refresh()
 
     def refresh(self) -> ConvergenceModel:
+        """Redraw from the model and return it; notes are written only when they change."""
         summary = self._model.summary
         if summary != self._summary.text():
             self._summary.setText(summary)
@@ -160,6 +168,7 @@ class ConvergenceWidget(QtWidgets.QWidget):
         return self._model
 
     def notes_text(self) -> str:
+        """Return the per-band notes the panel is showing."""
         return "\n".join(
             f"{band.index + 1}. {band.name} (stage {band.stage}): {band.note()}"
             for band in self._model.bands
@@ -167,4 +176,5 @@ class ConvergenceWidget(QtWidgets.QWidget):
 
     @property
     def model(self) -> ConvergenceModel:
+        """The view-model this panel draws."""
         return self._model

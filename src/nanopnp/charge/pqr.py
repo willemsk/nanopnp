@@ -73,18 +73,22 @@ MIN_COORDINATE_A = -999.999
 """The smallest: one character goes to the sign."""
 
 
-class PQRError(ValueError): ...
+class PQRError(ValueError):
+    """A PQR file this release cannot read, or one that does not match its ensemble."""
 
 
 def parent_residue(name: str) -> str:
+    """Return the titratable parent of a protonation-variant residue name."""
     return PARENT_RESIDUE.get(name, name)
 
 
 def is_hydrogen(atom: str) -> bool:
+    """Return whether an atom name names a hydrogen."""
     return atom.lstrip("0123456789").startswith("H")
 
 
 def chain_characters(chains: Iterable[str]) -> dict[str, str]:
+    """Return the single PDB chain character each chain key is written as."""
     ordered = list(dict.fromkeys(chains))
     if all(len(chain) == 1 for chain in ordered):
         return {chain: chain for chain in ordered}
@@ -98,6 +102,8 @@ def chain_characters(chains: Iterable[str]) -> dict[str, str]:
 
 @dataclass(frozen=True)
 class PQRFrame:
+    """One frame of a PQR file: its atom table, coordinates, charges and radii."""
+
     name: np.ndarray
     resname: np.ndarray
     chain: np.ndarray
@@ -109,9 +115,11 @@ class PQRFrame:
 
     @property
     def atoms(self) -> int:
+        """Return the number of atoms."""
         return len(self.name)
 
     def residues(self) -> list[tuple[str, int, str, str]]:
+        """Return (chain, resid, icode, name) per residue, in order of first appearance."""
         seen: dict[tuple[str, int, str], str] = {}
         for chain, resid, icode, resname in zip(
             self.chain.tolist(),
@@ -279,6 +287,13 @@ def _frame(atoms: Sequence[_Atom], index: int, source: str) -> PQRFrame:
 
 
 def parse_pqr(text: str, *, source: str = "<string>") -> tuple[PQRFrame, ...]:
+    """Read the frames of a PQR document; refuse malformed or inconsistent frames.
+
+    Parameters
+    ----------
+    source
+        Named in every diagnostic.
+    """
     frames: list[list[_Atom]] = []
     current: list[_Atom] | None = None
     loose: list[_Atom] = []
@@ -328,10 +343,12 @@ def parse_pqr(text: str, *, source: str = "<string>") -> tuple[PQRFrame, ...]:
 
 
 def read_pqr(path: Path) -> tuple[PQRFrame, ...]:
+    """Read the frames of a PQR file; see parse_pqr."""
     return parse_pqr(path.read_text(encoding="utf-8"), source=str(path))
 
 
 def check_same_residues(frames: Sequence[PQRFrame], *, source: str) -> None:
+    """Refuse frames that do not hold the same residues, naming the first that differs."""
     if not frames:
         return
     reference = [
@@ -371,6 +388,13 @@ def _number(value: float) -> str:
 
 
 def format_pqr(frames: Sequence[PQRFrame], *, chains: Mapping[str, str] | None = None) -> str:
+    """Return frames as a PQR document, one MODEL per frame where there is more than one.
+
+    Parameters
+    ----------
+    chains
+        The character each chain key is written as; by default from the first frame.
+    """
     if not frames:
         raise PQRError("a PQR file holds at least one frame")
     letters = chains if chains is not None else chain_characters(frames[0].chain.tolist())
@@ -409,5 +433,6 @@ def format_pqr(frames: Sequence[PQRFrame], *, chains: Mapping[str, str] | None =
 def write_pqr(
     path: Path, frames: Sequence[PQRFrame], *, chains: Mapping[str, str] | None = None
 ) -> Path:
+    """Write frames to path as format_pqr formats them; return the path."""
     path.write_text(format_pqr(frames, chains=chains), encoding="utf-8")
     return path

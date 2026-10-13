@@ -48,24 +48,30 @@ PANES = ("Protonation", "Charge map", "Deployed field", "Conservation")
 
 
 class ChargeCanvas(GeometryCanvas):
+    """The charge map: the lattice's picture, with the recorded worst planes across it."""
+
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
         self._planes: tuple[tuple[str, float], ...] = ()
 
     def show_charge(self, picture: ChargeMap) -> None:
+        """Show the map and mark its planes."""
         self.show_image(picture.image)
         self._planes = picture.planes
         self.update()
 
     def clear(self, title: str = "", *, frame: str = MODEL_FRAME) -> None:
+        """Show nothing but a caption, and no planes."""
         self._planes = ()
         super().clear(title, frame=frame)
 
     @property
     def planes(self) -> tuple[tuple[str, float], ...]:
+        """The planes marked, as ``(label, z_nm)``."""
         return self._planes
 
     def paintEvent(self, event: QtGui.QPaintEvent) -> None:
+        """Draw the picture, then each plane as a dashed line across it."""
         super().paintEvent(event)
         if not self._planes:
             return
@@ -82,6 +88,14 @@ class ChargeCanvas(GeometryCanvas):
 
 
 class ChargeWidget(QtWidgets.QWidget):
+    """The Charge tab: a stage list and four panes over stage 7's artefacts.
+
+    Parameters
+    ----------
+    control
+        The build's view-model, shared with the Geometry tab when the window passes it.
+    """
+
     buildRequested = QtCore.Signal()
 
     def __init__(
@@ -182,6 +196,10 @@ class ChargeWidget(QtWidgets.QWidget):
         self._show_buttons()
 
     def follow(self, case_path: str | Path) -> bool:
+        """Show the walk the control has just started as this tab's build.
+
+        Return whether the case walks stage 7; if not, the tab says why.
+        """
         document = self._case_editor.document
         try:
             planned = charge_stages(document)
@@ -218,12 +236,14 @@ class ChargeWidget(QtWidgets.QWidget):
         self._draw_problem = ""
 
     def shutdown(self) -> None:
+        """Stop everything this tab started: the walk, the render child and the view loads."""
         self._timer.stop()
         self._control.cancel()
         self._stop_render()
         self._executor.shutdown(wait=False, cancel_futures=True)
 
     def refresh(self) -> RunModel | None:
+        """Poll the build, the view loads and the render child, and show where they are."""
         model = self._control.poll()
         if self._model is None:
             self._show_buttons()
@@ -539,43 +559,54 @@ class ChargeWidget(QtWidgets.QWidget):
 
     @property
     def control(self) -> RunControl:
+        """The build's view-model."""
         return self._control
 
     @property
     def rows(self) -> tuple[StageRow, ...]:
+        """The stage list as last shown."""
         return self._rows
 
     @property
     def canvas(self) -> ChargeCanvas:
+        """The charge map."""
         return self._canvas
 
     @property
     def panes(self) -> QtWidgets.QTabWidget:
+        """The four panes."""
         return self._panes
 
     @property
     def protonation_table(self) -> QtWidgets.QTableWidget:
+        """The protonation pane's table."""
         return self._table
 
     @property
     def conservation_table(self) -> QtWidgets.QTableWidget:
+        """The conservation pane's legs."""
         return self._legs
 
     @property
     def drawn(self) -> RenderedCharge | None:
+        """The deployed field last drawn."""
         return self._drawn
 
     @property
     def build_button(self) -> QtWidgets.QPushButton:
+        """The **Build charge** button."""
         return self._build
 
     def reason(self) -> str:
+        """Return why **Build charge** is not offered, or ``""``."""
         return str(self._reason.text())
 
     def status(self) -> str:
+        """Return the message the tab is showing."""
         return str(self._status.text())
 
     def notes(self, pane: str) -> str:
+        """Return the text under one pane, by its title."""
         widget = {
             "Protonation": self._protonation_notes,
             "Charge map": self._map_notes,

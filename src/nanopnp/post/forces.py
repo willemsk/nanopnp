@@ -57,10 +57,12 @@ logger = logging.getLogger(__name__)
 FORCE_ROUTE_TOLERANCE_N = 1.0e-13
 
 
-class ExtensionError(ValueError): ...
+class ExtensionError(ValueError):
+    """``w`` is not the smooth extension of ``e_z`` the force needs."""
 
 
-class ForceDisagreementError(RuntimeError): ...
+class ForceDisagreementError(RuntimeError):
+    """Two force routes disagree beyond tolerance, so no force is reported."""
 
 
 def axial_extension(
@@ -75,6 +77,19 @@ def axial_extension(
     distance_nm: GridFunction | None = None,
     check: bool = True,
 ) -> GridFunction:
+    """Return ``w``: ``e_z`` within ``inner_nm`` of the body, 0 beyond ``outer_nm``.
+
+    Parameters
+    ----------
+    inner_nm, outer_nm
+        Transition shell ends, in nm from the body; ``inner_nm`` exceeds the element size.
+    body
+        Boundary-name regular expression of the analyte surface.
+    axis
+        Boundary name of the symmetry axis, excluded from the zero check.
+    check
+        Whether to verify the result with ``check_extension``.
+    """
     import ngsolve as ngs
 
     if not outer_nm > inner_nm:
@@ -135,6 +150,13 @@ def check_extension(
     fluid: str = ELECTROLYTE_DOMAINS,
     tolerance: float = 1e-12,
 ) -> None:
+    """Assert that ``w`` is ``e_z`` on the body and zero on other boundaries.
+
+    Raises
+    ------
+    ExtensionError
+        If either condition fails.
+    """
     import ngsolve as ngs
 
     def _mean_square(target: Expression, boundary: str) -> float:
@@ -164,6 +186,13 @@ def check_extension(
 
 
 def maxwell_stress(potential_gradient: Expression, permittivity: Numeric) -> Expression:
+    """Return the in-plane Maxwell stress ``eps (E x E - 1/2 |E|^2 I)``.
+
+    Parameters
+    ----------
+    permittivity
+        ``eps~_r`` in the fluid; the solid's own permittivity never enters.
+    """
     import ngsolve as ngs
 
     field = potential_gradient
@@ -175,6 +204,7 @@ def maxwell_stress(potential_gradient: Expression, permittivity: Numeric) -> Exp
 def hydrodynamic_stress(
     velocity_gradient: Expression, pressure: Expression, viscosity: Numeric
 ) -> Expression:
+    """Return the in-plane hydrodynamic stress ``-p I + 2 eta sym grad(u)``."""
     import ngsolve as ngs
 
     strain = 0.5 * (velocity_gradient + velocity_gradient.trans)
@@ -191,6 +221,7 @@ def electrostatic_domain_force(
     force_N: float,
     fluid: str = ELECTROLYTE_DOMAINS,
 ) -> float:
+    """Return the electrostatic force on the body from the domain integral, in newtons."""
     import ngsolve as ngs
 
     stress = maxwell_stress(potential_gradient, permittivity)
@@ -213,6 +244,18 @@ def electrostatic_surface_force(
     boundary: str = ANALYTE_BOUNDARY,
     piecewise_permittivity: Numeric | None = None,
 ) -> float:
+    """Return the electrostatic force on the body from its surface traction, in newtons.
+
+    Parameters
+    ----------
+    piecewise_permittivity
+        Permittivity over Omega, if it jumps across the surface; enables a fluid-side check.
+
+    Raises
+    ------
+    ValueError
+        If the boundary matches nothing or the normal's orientation is undetermined.
+    """
     import ngsolve as ngs
 
     region, arc = _boundary_region(mesh, boundary)
@@ -230,14 +273,18 @@ def electrostatic_surface_force(
 
 @dataclass(frozen=True)
 class ForceComponents:
+    """The axial force on the body, split into its two origins, in newtons."""
+
     em_N: float
     hd_N: float
 
     @property
     def total_N(self) -> float:
+        """The net axial force, the electrostatic and hydrodynamic parts summed."""
         return self.em_N + self.hd_N
 
     def summary(self) -> dict[str, float]:
+        """Return the three numbers, for logs and the manifest."""
         return {
             "electromagnetic_N": self.em_N,
             "hydrodynamic_N": self.hd_N,
@@ -247,21 +294,26 @@ class ForceComponents:
 
 @dataclass(frozen=True)
 class ForceAgreement:
+    """How far apart the force routes are on one solution."""
+
     domain: ForceComponents
     surface: ForceComponents
     reaction_hd_N: float | None = None
 
     @property
     def total_difference_N(self) -> float:
+        """``|F_tot(A) - F_tot(B)|``, the domain route against the surface route."""
         return abs(self.domain.total_N - self.surface.total_N)
 
     @property
     def hydrodynamic_difference_N(self) -> float:
+        """``|F^hd(A) - F^hd(C)|``, the split against its oracle; 0 without the third route."""
         if self.reaction_hd_N is None:
             return 0.0
         return abs(self.domain.hd_N - self.reaction_hd_N)
 
     def check(self, tolerance_N: float = FORCE_ROUTE_TOLERANCE_N) -> None:
+        """Assert the routes agree within tolerance; ForceDisagreementError otherwise."""
         total = self.total_difference_N
         hydrodynamic = self.hydrodynamic_difference_N
         if total <= tolerance_N and hydrodynamic <= tolerance_N:
@@ -288,6 +340,7 @@ class ForceAgreement:
         )
 
     def summary(self) -> dict[str, Option]:
+        """Return every route and both differences, for the manifest."""
         return {
             "domain": self.domain.summary(),
             "surface": self.surface.summary(),
@@ -299,15 +352,19 @@ class ForceAgreement:
 
 @dataclass(frozen=True)
 class AnalyteForces:
+    """The force on one body, in SI units, with its route record."""
+
     forces: ForceComponents
     dielectric_gradient_N: float
     agreement: ForceAgreement | None
 
     @property
     def total_N(self) -> float:
+        """The net axial force, in newtons."""
         return self.forces.total_N
 
     def summary(self) -> dict[str, Option]:
+        """Return every quantity, for logs and the provenance manifest."""
         record: dict[str, Option] = {
             **self.forces.summary(),
             # The PHY-23 term the validated model omits, already inside ``electromagnetic_N``.
@@ -411,6 +468,7 @@ def domain_force(
     *,
     wall_distance_nm: Expression | None = None,
 ) -> ForceComponents:
+    """Return the force on the body from the domain route, in newtons."""
     return _domain_force(_integrands(solution, wall_distance_nm), measures, extension)[0]
 
 
@@ -478,6 +536,7 @@ def dielectric_gradient_residual(
     *,
     wall_distance_nm: Expression | None = None,
 ) -> float:
+    """Return the dielectric-gradient term the model omits, in newtons; zero if enabled."""
     return _dielectric_gradient_residual(
         _integrands(solution, wall_distance_nm), measures, extension
     )
@@ -504,6 +563,7 @@ def surface_force(
     boundary: str = ANALYTE_BOUNDARY,
     wall_distance_nm: Expression | None = None,
 ) -> ForceComponents:
+    """Return the traction integral over the body's surface, in newtons."""
     return _surface_force(_integrands(solution, wall_distance_nm), measures, boundary)
 
 
@@ -597,6 +657,18 @@ def reaction_force(
     boundary: str = ANALYTE_BOUNDARY,
     load_form: AssembledForm | None = None,
 ) -> float:
+    """Return the hydrodynamic force from the assembled residual, the reference route.
+
+    Parameters
+    ----------
+    boundary
+        The body's surface; its velocity degrees of freedom must be constrained.
+
+    Raises
+    ------
+    ValueError
+        If the solution carries no residual form.
+    """
     model = _coupled(solution)
     if solution.residual is None:
         raise ValueError(
@@ -629,6 +701,20 @@ def extract(
     check_routes: bool = True,
 ) -> AnalyteForces:
     # One rebuild of the coefficients for all three routes.
+    """Return the force on the body, with every route checked.
+
+    Parameters
+    ----------
+    boundary
+        The body's surface.
+    check_routes
+        Whether to check the other two routes; False skips them, a recorded deviation.
+
+    Raises
+    ------
+    ForceDisagreementError
+        If the routes disagree beyond tolerance.
+    """
     terms = _integrands(solution, wall_distance_nm)
     forces, korteweg_work = _domain_force(terms, measures, extension)
     residual = _dielectric_gradient_residual(terms, measures, extension, work=korteweg_work)

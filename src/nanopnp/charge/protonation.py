@@ -139,10 +139,12 @@ _EXTRA = "structure"
 """The extra that carries PDB2PQR and PROPKA (``pyproject.toml``)."""
 
 
-class ProtonationError(RuntimeError): ...
+class ProtonationError(RuntimeError):
+    """A protonation gate failed, naming the frame and the residue or atom."""
 
 
 def pdb2pqr_arguments(settings: ResolvedProtonation) -> tuple[str, ...]:
+    """Return the flags PDB2PQR is run with, without the two paths."""
     flags = [f"--ff={settings.forcefield}", f"--ffout={settings.forcefield}"]
     if settings.titration != "none":
         flags += [f"--with-ph={settings.ph!r}", f"--titration-state-method={settings.titration}"]
@@ -150,6 +152,7 @@ def pdb2pqr_arguments(settings: ResolvedProtonation) -> tuple[str, ...]:
 
 
 def protonation_parameters(settings: ResolvedProtonation) -> dict[str, Canonicalisable]:
+    """Return the produced artefact's key parameters, which also key each frame."""
     return {
         "source": "pdb2pqr",
         "ph": settings.ph,
@@ -163,6 +166,7 @@ def protonation_parameters(settings: ResolvedProtonation) -> dict[str, Canonical
 
 
 def supplied_parameters() -> dict[str, Canonicalisable]:
+    """Return a supplied artefact's key parameters."""
     return {
         "source": "inputs.pqr",
         "normalisation": dict(sorted(PARENT_RESIDUE.items())),
@@ -195,6 +199,18 @@ def _residue_label(name: str, resid: int, icode: str, chain: str) -> str:
 
 @dataclass(frozen=True)
 class ProtonationTable:
+    """The protonation artefact's payload: the atoms of every frame and their states.
+
+    Parameters
+    ----------
+    frame_offsets
+        Frame f spans frame_offsets[f]:frame_offsets[f + 1].
+    positions_nm
+        (atoms, 3) float64, in nm in stage 1's frame.
+    expected_charge_e
+        (frames, residues) float64; NaN where the expectation was not computed.
+    """
+
     frame_offsets: np.ndarray
     positions_nm: np.ndarray
     charge_e: np.ndarray
@@ -245,12 +261,15 @@ class ProtonationTable:
 
     @property
     def frames(self) -> int:
+        """Return the number of frames."""
         return len(self.frame_offsets) - 1
 
     def frame_slice(self, frame: int) -> slice:
+        """Return the atom range of one frame."""
         return slice(int(self.frame_offsets[frame]), int(self.frame_offsets[frame + 1]))
 
     def q_net_e(self) -> np.ndarray:
+        """Return the net charge per frame, in e."""
         import numpy as np
 
         return np.array(
@@ -261,12 +280,14 @@ class ProtonationTable:
         )
 
     def digest(self) -> str:
+        """Return a content hash over every array and the header."""
         return content_hash(
             f"{PROTONATION_SCHEMA}/payload",
             {**{key: getattr(self, key) for key in self.ARRAYS}, "header": dict(self.header)},
         )
 
     def write(self, path: Path) -> Path:
+        """Write the table to path as .npz, header included; return the path."""
         import numpy as np
 
         arrays: dict[str, Any] = {key: np.asarray(getattr(self, key)) for key in self.ARRAYS}
@@ -278,6 +299,7 @@ class ProtonationTable:
 
     @classmethod
     def read(cls, path: Path) -> ProtonationTable:
+        """Read a table written by write, refusing one with a missing array."""
         import numpy as np
 
         with np.load(path, allow_pickle=False) as data:
@@ -291,6 +313,7 @@ class ProtonationTable:
         return cls(header=header, **arrays)
 
     def pqr_frames(self) -> tuple[PQRFrame, ...]:
+        """Return the frames in angstrom, each value the one that reads back to this table."""
         positions_A = _angstrom(self.positions_nm, COORDINATE_DECIMALS, lattice=True)
         radius_A = _angstrom(self.radius_nm, 4, lattice=False)
         frames = []
@@ -352,6 +375,7 @@ def frame_pdb(
     heavy: np.ndarray,
     chains: Mapping[str, str],
 ) -> bytes:
+    """Return the PDB that PDB2PQR is given for one frame, heavy atoms only."""
     lines: list[str] = []
     positions = ensemble.positions_nm[frame] * 10.0
     for serial, index in enumerate(heavy.tolist(), start=1):
@@ -431,6 +455,7 @@ def _instance_annotations(self: object, name: str) -> Any:  # noqa: ANN401 - mir
 
 
 def restore_propka_annotations() -> bool:
+    """Let PROPKA read its parameter file on Python 3.14; return whether it had to."""
     from propka.parameters import Parameters
 
     if hasattr(Parameters(), "__annotations__"):
@@ -440,6 +465,13 @@ def restore_propka_annotations() -> bool:
 
 
 def run_pdb2pqr(pdb: Path, pqr: Path, settings: ResolvedProtonation) -> dict[str, Canonicalisable]:
+    """Run PDB2PQR in-process on one PDB file and return what it reported.
+
+    Parameters
+    ----------
+    pdb
+        The input file; it must exist, or PDB2PQR would fetch it from the network.
+    """
     from pdb2pqr.main import run_pdb2pqr as pdb2pqr_main
 
     restore_propka_annotations()
@@ -1003,6 +1035,7 @@ def _assemble(
 
 
 def export_pqr(payload: Path, path: Path) -> Path:
+    """Write a stored protonation table as a PQR file, one MODEL per frame, in angstrom."""
     table = ProtonationTable.read(payload)
     recorded = table.header.get("chains")
     chains = (
@@ -1028,6 +1061,8 @@ def _resolved(inputs: StageInputs) -> ResolvedCase:
 
 
 class ProtonationStage:
+    """Stage 7, first half: the aligned ensemble, or inputs.pqr, to an atom table."""
+
     name = "protonation"
 
     def __init__(self, *, workspace: Path | None = None, store: Store | None = None) -> None:
@@ -1035,9 +1070,11 @@ class ProtonationStage:
         self._store = store
 
     def describe(self) -> StageDescription:
+        """Return the registry's description of this stage."""
         return describe(self.name)
 
     def key(self, inputs: StageInputs) -> ProtonationArtefact:
+        """Return the artefact key of this stage."""
         return self._key(inputs, _resolved(inputs))
 
     @staticmethod
@@ -1060,6 +1097,7 @@ class ProtonationStage:
         progress: Progress | None = None,
         cancel: CancelToken | None = None,
     ) -> ProtonationArtefact:
+        """Protonate every frame, or register inputs.pqr, and emit the artefact."""
         resolved = _resolved(inputs)
         key = self._key(inputs, resolved)
         ensemble = None

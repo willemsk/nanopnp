@@ -21,46 +21,60 @@ SPECIES_PROPERTIES: frozenset[str] = frozenset({"diffusivity", "mobility"})
 
 
 class CorrectionModel(Protocol):
-    @property
-    def name(self) -> str: ...
+    """One property's correction; immutable, carrying its provenance."""
 
     @property
-    def parameters(self) -> Mapping[str, float]: ...
+    def name(self) -> str:
+        """Registered name of the model."""
 
     @property
-    def provenance(self) -> Mapping[str, str]: ...
+    def parameters(self) -> Mapping[str, float]:
+        """Fit coefficients in force, flattened for reporting."""
+
+    @property
+    def provenance(self) -> Mapping[str, str]:
+        """Where the coefficients came from."""
 
     def evaluate(
         self, c_avg_M: Numeric, wall_distance_nm: Numeric, ops: MathOps = NUMPY_OPS
-    ) -> Numeric: ...
+    ) -> Numeric:
+        """Return the dimensionless correction factor from the driver and the wall distance."""
 
 
 @dataclass(frozen=True)
 class NoCorrection:
+    """The ``none`` model: the property keeps its reference value."""
+
     property_kind: PropertyKind
     species: str | None = None
 
     @property
     def name(self) -> str:
+        """Registered name of the model."""
         return "none"
 
     @property
     def parameters(self) -> Mapping[str, float]:
+        """Fit coefficients in force; none."""
         return {}
 
     @property
     def provenance(self) -> Mapping[str, str]:
+        """Where the coefficients came from; nowhere, as there are none."""
         return {"model": "none", "note": "correction disabled; factor is identically 1"}
 
     def evaluate(
         self, c_avg_M: Numeric, wall_distance_nm: Numeric, ops: MathOps = NUMPY_OPS
     ) -> Numeric:
+        """Return the factor 1 everywhere."""
         del c_avg_M, wall_distance_nm, ops
         return 1.0
 
 
 @dataclass(frozen=True)
 class FittedCorrection:
+    """A correction read from a versioned parameter file."""
+
     name: str
     property_kind: PropertyKind
     species: str | None
@@ -76,6 +90,7 @@ class FittedCorrection:
 
     @property
     def parameters(self) -> Mapping[str, float]:
+        """Fit coefficients in force, flattened for reporting."""
         flat: dict[str, float] = {}
         if self.use_concentration:
             flat.update({f"fc.{k}": v for k, v in self.concentration_params.items()})
@@ -86,6 +101,7 @@ class FittedCorrection:
     @property
     def provenance(self) -> Mapping[str, str]:
         # the form in force, not the one the file offers, or an ablated run looks full
+        """Where the coefficients came from: the parameter file and its content hash."""
         record = {
             "model": self.name,
             "property": self.property_kind,
@@ -110,6 +126,7 @@ class FittedCorrection:
     def evaluate(
         self, c_avg_M: Numeric, wall_distance_nm: Numeric, ops: MathOps = NUMPY_OPS
     ) -> Numeric:
+        """Return the dimensionless correction factor from the fits."""
         factor: Numeric = 1.0
         if self.use_concentration and self.concentration_form is not None:
             # clamping the driver applies the cap and keeps sqrt away from negatives
@@ -130,12 +147,14 @@ _REGISTRY: dict[str, ModelBuilder] = {}
 
 
 def register(name: str, builder: ModelBuilder) -> None:
+    """Register a correction model under ``name``; ValueError if the name is already registered."""
     if name in _REGISTRY:
         raise ValueError(f"correction model {name!r} is already registered")
     _REGISTRY[name] = builder
 
 
 def registered_models() -> tuple[str, ...]:
+    """Return every selectable model name, sorted."""
     return tuple(sorted(set(_REGISTRY) | set(available_corrections())))
 
 
@@ -159,6 +178,15 @@ def create(
     concentration: bool = True,
     wall: bool = True,
 ) -> CorrectionModel:
+    """Build the model registered as ``name`` for one property.
+
+    Parameters
+    ----------
+    name
+        Registered model name; ``none`` disables the correction.
+    species
+        Ion name for ``diffusivity`` and ``mobility``; None otherwise.
+    """
     if (species is not None) != (property_kind in SPECIES_PROPERTIES):
         expected = "an ion name" if property_kind in SPECIES_PROPERTIES else "no species"
         raise ValueError(f"property {property_kind!r} takes {expected}, got species={species!r}")
@@ -177,10 +205,12 @@ def _document(model_name: str) -> CorrectionDocument:
 
 
 def validity_range(document: CorrectionDocument) -> tuple[float, float]:
+    """Return a parameter file's concentration validity range, in mol/L, read from that file."""
     return document.concentration_validity_M
 
 
 def applied_parts(model_name: str, property_kind: PropertyKind) -> frozenset[str]:
+    """Return the parts ('concentration', 'wall') that a model applies to a property."""
     if model_name == "none":
         return frozenset()
     document = _document(model_name)
@@ -209,6 +239,7 @@ def applied_parts(model_name: str, property_kind: PropertyKind) -> frozenset[str
 
 
 def applies_part(model_name: str, property_kind: PropertyKind, part: str) -> bool:
+    """Return whether ``model_name`` applies the given part for ``property_kind``."""
     return part in applied_parts(model_name, property_kind)
 
 

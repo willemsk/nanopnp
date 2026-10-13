@@ -24,12 +24,15 @@ class _Strict(BaseModel):
 
 
 class FitBlock(BaseModel):
+    """One ``f_c`` or ``f_w`` fit block: a form and the coefficients it reads."""
+
     model_config = ConfigDict(extra="allow")
 
     form: str
 
     @property
     def coefficients(self) -> dict[str, float]:
+        """Return the numeric fit coefficients, dropping metadata keys and booleans."""
         extra = self.model_extra or {}
         return {
             key: float(value)
@@ -63,6 +66,8 @@ class FitBlock(BaseModel):
 
 
 class PropertyBlock(_Strict):
+    """A corrected property: its concentration fit, wall fit and cap."""
+
     fc: FitBlock | None = None
     fw: FitBlock | None = None
     cap_above_validity: float | None = None
@@ -80,26 +85,38 @@ class _IonPropertyBlock(PropertyBlock):
 
 
 class DiffusivityBlock(_IonPropertyBlock):
+    """One species' diffusivity: ``D0`` at infinite dilution and its fit."""
+
     D0: float
 
 
 class MobilityBlock(_IonPropertyBlock):
+    """One species' mobility: the tabulated ``mu0`` and fit; ``mu0`` is a regression target only."""
+
     mu0: float
 
 
 class ViscosityBlock(PropertyBlock):
+    """The solvent viscosity: ``eta0`` and its concentration and wall fits."""
+
     eta0: float
 
 
 class DensityBlock(PropertyBlock):
+    """The solvent mass density: ``rho0`` and its concentration fit."""
+
     rho0: float
 
 
 class PermittivityBlock(PropertyBlock):
+    """The solvent relative permittivity: ``eps_r0`` and its concentration fit."""
+
     eps_r0: float
 
 
 class SpeciesBlock(_Strict):
+    """One ionic species: valence, its two transport properties and steric size."""
+
     z: int
     diffusivity: DiffusivityBlock
     mobility: MobilityBlock
@@ -107,6 +124,8 @@ class SpeciesBlock(_Strict):
 
 
 class SolventBlock(_Strict):
+    """The solvent: its steric size and the three solvent-property blocks."""
+
     water_steric_diameter_nm: float
     viscosity: ViscosityBlock
     density: DensityBlock
@@ -114,11 +133,15 @@ class SolventBlock(_Strict):
 
 
 class DielectricsBlock(_Strict):
+    """The fixed relative permittivities of the solid domains."""
+
     protein: float
     membrane: float
 
 
 class TransportNumberBlock(BaseModel):
+    """The auxiliary transport-number fit, validated but not required at solve time."""
+
     model_config = ConfigDict(extra="allow")
 
     t0: float
@@ -126,6 +149,8 @@ class TransportNumberBlock(BaseModel):
 
 
 class CorrectionDocument(_Strict):
+    """A validated correction parameter file; unknown keys are rejected."""
+
     schema_id: str = Field(alias="schema")
     name: str
     electrolyte: str
@@ -158,6 +183,13 @@ def _fresh(node: object) -> object:
 
 
 def load_corrections(name_or_path: str | Path) -> CorrectionDocument:
+    """Load and validate a correction parameter file, by registered name or by path.
+
+    Raises
+    ------
+    ValueError
+        If the schema is not understood or validation fails.
+    """
     path = (
         Path(name_or_path)
         if Path(name_or_path).suffix == ".yaml"

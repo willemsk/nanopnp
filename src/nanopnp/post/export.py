@@ -54,6 +54,14 @@ _MIDSIDES: tuple[tuple[int, int], ...] = ((0, 1), (1, 2), (2, 0))
 
 @dataclass(frozen=True)
 class P2Nodes:
+    """The P2 node set of a mesh, or of a selection of its materials.
+
+    Parameters
+    ----------
+    points_nm
+        ``(n, 2)`` node coordinates in nm, vertices before edge midpoints.
+    """
+
     points_nm: np.ndarray
     cells: np.ndarray
     elements: tuple[int, ...]
@@ -62,11 +70,14 @@ class P2Nodes:
 
 @dataclass(frozen=True)
 class FieldExport:
+    """What one ``export_fields`` call wrote: the whole-domain and fluid-only pairs."""
+
     omega: tuple[Path, Path]
     omega_w: tuple[Path, Path] | None
     attributes: dict[str, tuple[str, ...]]
 
     def paths(self) -> tuple[Path, ...]:
+        """Return every file written, in a stable order."""
         written = list(self.omega)
         if self.omega_w is not None:
             written.extend(self.omega_w)
@@ -74,6 +85,7 @@ class FieldExport:
 
 
 def attribute_name(field: str) -> str:
+    """Return the SI attribute name of a model field, unit included."""
     if field == POTENTIAL:
         return "phi_V"
     if field == VELOCITY:
@@ -84,6 +96,7 @@ def attribute_name(field: str) -> str:
 
 
 def field_scale(field: str, scales: Scales) -> float:
+    """Return the scale that takes one field from nondimensional to SI."""
     if field == POTENTIAL:
         return scales.potential_V
     if field == VELOCITY:
@@ -94,6 +107,7 @@ def field_scale(field: str, scales: Scales) -> float:
 
 
 def p2_nodes(mesh: Mesh, *, materials: str | None = None) -> P2Nodes:
+    """Return the P2 node set and Triangle_6 cells of ``mesh``."""
     import ngsolve as ngs
     import numpy as np
 
@@ -145,6 +159,15 @@ def sample_at(
     materials: str | None = None,
     carriers: dict[tuple[int, int], FESpace] | None = None,
 ) -> np.ndarray:
+    """Return ``expression`` at ``points_nm``, through a whole-domain carrier.
+
+    Parameters
+    ----------
+    dimension
+        1 for a scalar, 2 for the ``(r, z)`` velocity.
+    materials
+        Region the field is defined on; None for all of Omega.
+    """
     import ngsolve as ngs
     import numpy as np
 
@@ -224,6 +247,15 @@ def export_fields(
     fixed_charge_C_m3: Expression | None = None,
     relative_permittivity: Expression | None = None,
 ) -> FieldExport:
+    """Write the solved fields as XDMF with HDF5 data in SI; return what was written.
+
+    Parameters
+    ----------
+    fixed_charge_C_m3
+        The supplied fixed charge in C/m^3, if any; written node-centred.
+    relative_permittivity
+        ``eps_r`` as the form used it, if buildable; written cell-centred.
+    """
     directory.mkdir(parents=True, exist_ok=True)
     mesh = solution.space.mesh
     model = solution.model

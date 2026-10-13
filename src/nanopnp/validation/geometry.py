@@ -47,13 +47,17 @@ PQR2GRID_SPACING_NM = 0.05
 ISOLEVELS = (0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.50)
 
 
-class GeometryComparisonError(ValueError): ...
+class GeometryComparisonError(ValueError):
+    """Raised when a VAL-05 comparison cannot be made, or fails its leg's tolerance."""
 
 
-class MissingPlaneError(GeometryComparisonError): ...
+class MissingPlaneError(GeometryComparisonError):
+    """Raised when the generated polygon does not cross a comparison plane outside the tip band."""
 
 
 class GeometryToleranceError(GeometryComparisonError):
+    """Raised when a gated quantity exceeds its leg's tolerance, naming the leg, value and z."""
+
     def __init__(self, leg: str, quantity: str, value: str, threshold: str, location: str) -> None:
         self.leg = leg
         self.quantity = quantity
@@ -68,16 +72,22 @@ class _Strict(BaseModel):
 
 
 class LocatedLength(_Strict):
+    """A length and the plane it sits on."""
+
     value_nm: float
     z_nm: float
 
 
 class LocatedFraction(_Strict):
+    """A dimensionless fraction and the plane it sits on."""
+
     value: float
     z_nm: float
 
 
 class Tolerance(_Strict):
+    """One leg's gated bounds."""
+
     conductance_deviation: float
     constriction_nm: float
     rms_nm: float
@@ -90,6 +100,11 @@ TOLERANCES: Mapping[str, Tolerance] = {
 
 
 class ProfileComparison(_Strict):
+    """One polygon against the reference on the comparison planes, in nm.
+
+    Deviations are ``ours - reference``, so a negative value is a narrower lumen.
+    """
+
     planes: int
     compared_planes: int
     uncrossed_planes_nm: list[float]
@@ -116,6 +131,13 @@ class ProfileComparison(_Strict):
     tips_reference_nm: tuple[float, float]
 
     def check(self, leg: Leg) -> None:
+        """Refuse a comparison outside ``leg``'s tolerance, naming the first quantity that is.
+
+        Raises
+        ------
+        GeometryToleranceError
+            Naming the leg, the quantity, its value, the threshold and where it sits.
+        """
         bounds = TOLERANCES[leg]
         if not abs(self.conductance_deviation) <= bounds.conductance_deviation:
             term = self.conductance_largest_term
@@ -157,6 +179,7 @@ def _points(polygon: PoreProfile | np.ndarray) -> np.ndarray:
 def comparison_planes(
     reference: PoreProfile | np.ndarray, spacing_nm: float = PLANE_SPACING_NM
 ) -> np.ndarray:
+    """Return the comparison mid-planes over the reference's z extent."""
     import numpy as np
 
     points = _points(reference)
@@ -222,6 +245,21 @@ def compare_profiles(
     constriction_window_nm: tuple[float, float] = CONSTRICTION_WINDOW_NM,
     strict: bool = True,
 ) -> ProfileComparison:
+    """Compare a model-frame polygon with the reference on the comparison planes.
+
+    Parameters
+    ----------
+    strict
+        The gating rule. ``False`` admits an uncrossed plane anywhere and is never gated.
+
+    Raises
+    ------
+    MissingPlaneError
+        If ``strict`` and ``ours`` leaves a plane outside the tip band uncrossed, or if the
+        reference itself leaves one uncrossed.
+    GeometryComparisonError
+        If ``ours`` crosses no plane inside the constriction window.
+    """
     import numpy as np
 
     from nanopnp.geometry.contour import innermost_crossings
@@ -303,6 +341,13 @@ def calpha_centroid_z_nm(
     residues: tuple[int, int] = REGISTRATION_RESIDUES,
     chains: Sequence[str] = REGISTRATION_CHAINS,
 ) -> float:
+    """Return the z of the C-alpha centroid over ``residues``, averaged over frames.
+
+    Raises
+    ------
+    GeometryComparisonError
+        If no atom is selected, or a chain in ``chains`` carries none.
+    """
     import numpy as np
 
     positions = np.asarray(positions_nm)
@@ -339,6 +384,7 @@ def register_by_centroid(
     residues: tuple[int, int] = REGISTRATION_RESIDUES,
     chains: Sequence[str] = REGISTRATION_CHAINS,
 ) -> float:
+    """Return ``centre_z_nm`` placing a structure's C-alpha centroid at the MD structure's."""
     centroid = calpha_centroid_z_nm(
         positions_nm, name=name, resid=resid, chain=chain, residues=residues, chains=chains
     )
@@ -353,6 +399,13 @@ def rms_optimal_offset(
     half_width_nm: float = 0.4,
     step_nm: float = 0.005,
 ) -> float:
+    """Return the ``centre_z_nm`` minimising the rms lumen deviation, a diagnostic only.
+
+    Raises
+    ------
+    MissingPlaneError
+        If the reference does not cross its own comparison planes.
+    """
     import numpy as np
 
     from nanopnp.geometry.contour import innermost_crossings
@@ -381,6 +434,7 @@ def pqr2grid_radius(
     half_extent_nm: float = PQR2GRID_HALF_EXTENT_NM,
     spacing_nm: float = PQR2GRID_SPACING_NM,
 ) -> float:
+    """Return where ``pqr2grid``'s radial binning writes a feature at true radius ``r_nm``."""
     return float(_pqr2grid_map(r_nm, half_extent_nm, spacing_nm))
 
 
@@ -396,12 +450,15 @@ def pqr2grid_polygon(
     half_extent_nm: float = PQR2GRID_HALF_EXTENT_NM,
     spacing_nm: float = PQR2GRID_SPACING_NM,
 ) -> np.ndarray:
+    """Return ``points`` with every radius mapped through ``pqr2grid_radius``; z is kept."""
     mapped = _points(points).copy()
     mapped[:, 0] = _pqr2grid_map(mapped[:, 0], half_extent_nm, spacing_nm)
     return mapped
 
 
 class Attribution(_Strict):
+    """The offset split into the binning erratum and the hand edit, in nm."""
+
     binned: ProfileComparison
     erratum_lumen_mean_nm: float
     erratum_outer_mean_nm: float
@@ -414,6 +471,18 @@ def attribute_to_construction(
     reference: PoreProfile | np.ndarray,
     comparison: ProfileComparison | None = None,
 ) -> Attribution:
+    """Attribute the offset between ``ours`` and the reference to its construction.
+
+    Parameters
+    ----------
+    comparison
+        ``compare_profiles`` of the two, if already in hand.
+
+    Raises
+    ------
+    GeometryComparisonError
+        If ``comparison`` was not made on the planes this binned comparison uses.
+    """
     direct = comparison if comparison is not None else compare_profiles(ours, reference)
     binned = compare_profiles(pqr2grid_polygon(ours), reference)
     supplied = (direct.planes, direct.plane_spacing_nm, direct.uncrossed_planes_nm)
@@ -434,6 +503,8 @@ def attribute_to_construction(
 
 
 class IsolevelPoint(_Strict):
+    """One isolevel of the sweep: its comparison, or the refusal that stopped it."""
+
     isolevel: float
     vertices: int | None = None
     comparison: ProfileComparison | None = None
@@ -458,6 +529,17 @@ def sweep_isolevels(
     workspace: Path,
     isolevels: Sequence[float] = ISOLEVELS,
 ) -> list[IsolevelPoint]:
+    """Re-run stage 4 at each isolevel on ``store``'s cached map, and compare each.
+
+    Parameters
+    ----------
+    case
+        A case with a ``structure:`` section and its ``geometry.membrane.centre_z_nm``.
+    store
+        The store holding, or to hold, stages 1 to 3.
+    isolevels
+        The levels, ``ISOLEVELS`` by default.
+    """
     from nanopnp.geometry.contour import PAYLOAD_NAME, ContourGateError
 
     centre_z_nm = (load_case(case).geometry or Geometry()).membrane.centre_z_nm
@@ -489,6 +571,10 @@ def sweep_isolevels(
 
 
 def zero_crossing(points: Sequence[IsolevelPoint]) -> float | None:
+    """Return the isolevel at which ``ε_G`` crosses zero, linearly between passing levels.
+
+    ``None`` if ``ε_G`` does not change sign over the levels that passed.
+    """
     passing = [
         (point.isolevel, point.comparison.conductance_deviation)
         for point in points

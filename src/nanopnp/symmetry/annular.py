@@ -35,6 +35,7 @@ def _quadrant(x: np.ndarray, y: np.ndarray, radius: np.ndarray) -> np.ndarray:
 def disc_overlap(
     x0: np.ndarray, x1: np.ndarray, y0: np.ndarray, y1: np.ndarray, radius: np.ndarray
 ) -> np.ndarray:
+    """Return the area of each rectangle ``[x0, x1] x [y0, y1]`` inside the disc of ``radius``."""
     overlap: np.ndarray = (
         _quadrant(x1, y1, radius)
         - _quadrant(x0, y1, radius)
@@ -46,6 +47,8 @@ def disc_overlap(
 
 @dataclass(frozen=True)
 class AnnularWeights:
+    """The bin matrix of one grid slice, reused for every z."""
+
     matrix: csr_matrix
     areas_nm2: np.ndarray
     spacing_nm: float
@@ -53,15 +56,18 @@ class AnnularWeights:
 
     @property
     def bins(self) -> int:
+        """Number of bins, ``I + 1``."""
         return self.half_width + 1
 
     @property
     def r_nm(self) -> np.ndarray:
+        """The bin centres ``r_j = j·h``, in nm."""
         import numpy as np
 
         return np.arange(self.bins, dtype=np.float64) * self.spacing_nm
 
     def cell_coordinates(self) -> tuple[np.ndarray, np.ndarray]:
+        """Return each cell centre's radius (nm) and azimuth (rad), flattened ``[y, x]``."""
         import numpy as np
 
         nodes = np.arange(-self.half_width, self.half_width + 1, dtype=np.float64)
@@ -71,6 +77,7 @@ class AnnularWeights:
 
 
 def annular_weights(half_width: int, spacing_nm: float) -> AnnularWeights:
+    """Return the exact overlap weights of a ``(2I + 1)²`` slice with bins ``0 … I``."""
     import numpy as np
     from scipy.sparse import coo_matrix
 

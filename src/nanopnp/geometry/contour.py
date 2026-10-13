@@ -93,6 +93,14 @@ KEY_CONSTANTS: Mapping[str, Canonicalisable] = {
 
 
 class ContourGateError(ValueError):
+    """Stage 4's contour failed a geometric criterion.
+
+    Parameters
+    ----------
+    location_nm
+        The ``(r, z)`` of the failure in nm, where there is one point to name; else ``None``.
+    """
+
     def __init__(
         self,
         criterion: str,
@@ -134,6 +142,13 @@ def _runs(mask: np.ndarray) -> list[tuple[int, int]]:
 def extract_loops(
     mean: np.ndarray, r_nm: np.ndarray, z_nm: np.ndarray, isolevel: float
 ) -> list[np.ndarray]:
+    """Return the closed isolevel contours of a ``[z, r]`` map, in ``(r, z)`` nm.
+
+    Raises
+    ------
+    ContourGateError
+        If a contour is open.
+    """
     import numpy as np
 
     values = np.asarray(mean, dtype=np.float64)
@@ -178,6 +193,7 @@ def extract_loops(
 
 
 def assemble_region(loops: Sequence[np.ndarray]) -> BaseGeometry:
+    """Return the region above the isolevel that the loops bound."""
     ordered = sorted(loops, key=lambda loop: abs(signed_area(loop)), reverse=True)
     region: BaseGeometry = Polygon()
     for loop in ordered:
@@ -201,6 +217,13 @@ def _components(region: BaseGeometry) -> list[Polygon]:
 def close_and_open(
     region: BaseGeometry, delta_nm: float
 ) -> tuple[Polygon, dict[str, Canonicalisable]]:
+    """Close, then open, the region by a disc of radius ``delta_nm``, and fill its holes.
+
+    Raises
+    ------
+    ContourGateError
+        If the region is empty, or more than one component remains.
+    """
     options = {"quad_segs": QUAD_SEGS, "join_style": "round"}
     closed = region.buffer(delta_nm, **options).buffer(-delta_nm, **options)
     opened = closed.buffer(-delta_nm, **options).buffer(delta_nm, **options)
@@ -238,12 +261,14 @@ def close_and_open(
 
 
 def exterior(polygon: Polygon) -> np.ndarray:
+    """Return a polygon's exterior ring as ``(n, 2)``, the closing vertex not repeated."""
     import numpy as np
 
     return np.asarray(polygon.exterior.coords, dtype=np.float64)[:-1]
 
 
 def resample(loop: np.ndarray, spacing_nm: float) -> np.ndarray:
+    """Return the closed loop resampled at a uniform arc length near ``spacing_nm``."""
     import numpy as np
 
     closed = np.vstack((loop, loop[:1]))
@@ -264,6 +289,7 @@ def taubin(
     mu: float = TAUBIN_MU,
     passes: int = TAUBIN_PASSES,
 ) -> np.ndarray:
+    """Return the closed loop after ``passes`` Taubin lambda|mu passes of the umbrella operator."""
     import numpy as np
 
     points = np.asarray(loop, dtype=np.float64).copy()
@@ -277,6 +303,7 @@ def taubin(
 
 
 def simplify(loop: np.ndarray, tolerance_nm: float) -> np.ndarray:
+    """Return the loop after Douglas-Peucker at ``tolerance_nm``, topology preserved."""
     simplified = Polygon(loop).simplify(tolerance_nm, preserve_topology=True)
     if not isinstance(simplified, Polygon) or simplified.is_empty:
         raise ContourGateError(
@@ -296,6 +323,7 @@ def _removal_cost(points: np.ndarray, vertex: int) -> float:
 
 
 def enforce_spacing(loop: np.ndarray, minimum_nm: float) -> tuple[np.ndarray, int]:
+    """Drop vertices until no edge is shorter than ``minimum_nm``."""
     import numpy as np
 
     points = np.asarray(loop, dtype=np.float64)
@@ -314,6 +342,7 @@ def enforce_spacing(loop: np.ndarray, minimum_nm: float) -> tuple[np.ndarray, in
 
 
 def canonical(loop: np.ndarray) -> np.ndarray:
+    """Return the loop clockwise, starting at its lowest-z vertex, the smallest r on a tie."""
     import numpy as np
 
     points = np.asarray(loop, dtype=np.float64)
@@ -324,6 +353,7 @@ def canonical(loop: np.ndarray) -> np.ndarray:
 
 
 def mid_planes(loops: Sequence[np.ndarray], z_nm: np.ndarray) -> np.ndarray:
+    """Return the mid-planes between consecutive z nodes that cross any of the loops."""
     import numpy as np
 
     z = np.asarray(z_nm, dtype=np.float64)
@@ -335,6 +365,7 @@ def mid_planes(loops: Sequence[np.ndarray], z_nm: np.ndarray) -> np.ndarray:
 
 
 def innermost_crossings(loops: Sequence[np.ndarray], planes: np.ndarray) -> np.ndarray:
+    """Return the smallest radius at which any loop crosses each plane; ``nan`` where none does."""
     import numpy as np
 
     heights = np.asarray(planes, dtype=np.float64)
@@ -354,6 +385,8 @@ def innermost_crossings(loops: Sequence[np.ndarray], planes: np.ndarray) -> np.n
 
 @dataclass(frozen=True)
 class ConditionedContour:
+    """The conditioned loop, and what conditioning did to it."""
+
     loop: np.ndarray
     raw_loops: tuple[np.ndarray, ...]
     record: dict[str, Canonicalisable]
@@ -369,6 +402,13 @@ def condition(
     smoothing: str,
     simplify_tol_nm: float,
 ) -> ConditionedContour:
+    """Run the conditioning steps on a stage-3 mean.
+
+    Raises
+    ------
+    ContourGateError
+        From extraction, the morphology or simplification.
+    """
     import numpy as np
 
     loops = extract_loops(mean, r_nm, z_nm, isolevel)
@@ -419,11 +459,14 @@ _LOCATION = re.compile(r"\[(-?[0-9.eE+-]+) (-?[0-9.eE+-]+)\]")
 
 @dataclass(frozen=True)
 class ContourMeasurement:
+    """Every geometric criterion measured on one loop, and which of them it fails."""
+
     record: dict[str, Canonicalisable]
     failures: tuple[ContourGateError, ...]
 
     @property
     def passed(self) -> bool:
+        """Whether the loop meets every criterion."""
         return not self.failures
 
 
@@ -434,6 +477,7 @@ def measure(
     planes_nm: np.ndarray,
     probe_nm: np.ndarray,
 ) -> ContourMeasurement:
+    """Measure the loop against every criterion, refusing nothing."""
     import numpy as np
 
     points = np.asarray(loop, dtype=np.float64)
@@ -584,6 +628,13 @@ def gate(
     planes_nm: np.ndarray,
     probe_nm: np.ndarray,
 ) -> dict[str, Canonicalisable]:
+    """Measure the loop against every criterion and raise at the first that fails.
+
+    Raises
+    ------
+    ContourGateError
+        At the first criterion that fails.
+    """
     measured = measure(loop, spacing_nm=spacing_nm, planes_nm=planes_nm, probe_nm=probe_nm)
     if measured.failures:
         raise measured.failures[0]
@@ -593,6 +644,7 @@ def gate(
 def condition_map(
     reduced: ReducedMap, contour: ContourSpec, density: DensitySpec
 ) -> ConditionedContour:
+    """Condition a stage-3 map's mean as stage 4 does, with the case's own parameters."""
     return condition(
         reduced.mean,
         reduced.r_nm,
@@ -613,6 +665,7 @@ def gate_inputs(
     progress: Progress | None = None,
     cancel: CancelToken | None = None,
 ) -> tuple[np.ndarray, np.ndarray, ResolvedRadii]:
+    """Return the mid-planes and the probe radius on each, that :func:`gate` checks against."""
     radii = resolve_radii(
         KERNEL_RADII[density.kernel],
         resname=ensemble.resname,
@@ -631,6 +684,7 @@ def gate_inputs(
 def lumen_change(
     raw_loops: Sequence[np.ndarray], loop: np.ndarray, planes_nm: np.ndarray
 ) -> dict[str, Canonicalisable]:
+    """Return how far conditioning moved the lumen radius from the raw contour's."""
     import numpy as np
 
     raw = innermost_crossings(raw_loops, planes_nm)
@@ -667,6 +721,7 @@ def _specs(inputs: StageInputs) -> tuple[ContourSpec, DensitySpec]:
 
 
 def contour_parameters(contour: ContourSpec, density: DensitySpec) -> dict[str, Canonicalisable]:
+    """Return the stage-4 key's parameters: the block, h, the constants and the radius set."""
     name = KERNEL_RADII[density.kernel]
     return {
         "contour": contour.model_dump(mode="json"),
@@ -677,15 +732,19 @@ def contour_parameters(contour: ContourSpec, density: DensitySpec) -> dict[str, 
 
 
 class ContourStage:
+    """Stage 4: stage 3's (r, z) mean to a conditioned, gated profile loop."""
+
     name = "contour"
 
     def __init__(self, *, workspace: Path | None = None) -> None:
         self._workspace = Path(workspace) if workspace is not None else None
 
     def describe(self) -> StageDescription:
+        """Return the registry's description of this stage."""
         return describe(self.name)
 
     def key(self, inputs: StageInputs) -> ProfileArtefact:
+        """Return the artefact key from the block, h, the constants and stages 1 and 3."""
         return self._key(inputs, *_specs(inputs))
 
     def _key(
@@ -706,6 +765,13 @@ class ContourStage:
         progress: Progress | None = None,
         cancel: CancelToken | None = None,
     ) -> ProfileArtefact:
+        """Extract, condition and gate the contour, and emit the stage-4 artefact.
+
+        Raises
+        ------
+        ContourGateError
+            At the first criterion the contour fails.
+        """
         contour, density = _specs(inputs)
         key = self._key(inputs, contour, density)
         structure = inputs.require("structure")

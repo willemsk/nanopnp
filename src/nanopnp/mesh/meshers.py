@@ -32,19 +32,24 @@ GMSH_EXTRA = "gmsh"
 
 
 class Mesher(Protocol):
+    """A mesher backend for stage 6."""
+
     name: str
 
-    def settings(self, *, exclusion: bool = False) -> dict[str, Canonicalisable]: ...
+    def settings(self, *, exclusion: bool = False) -> dict[str, Canonicalisable]:
+        """Return the backend's own entries of the stage-6 recipe."""
 
     def mesh(
         self,
         record: RegionRecord,
         wall_h_nm: float | None,
         sizes: SizeTable,
-    ) -> tuple[MeshData, str]: ...
+    ) -> tuple[MeshData, str]:
+        """Mesh stage 5's region; return the mesh and the mesher's version."""
 
 
 def mesh_shape(shape: Shape, sizes: SizeTable) -> Mesh:
+    """Mesh a named, sized region with netgen at the table's global size."""
     import netgen.occ as occ
     import ngsolve as ngs
 
@@ -55,9 +60,12 @@ def mesh_shape(shape: Shape, sizes: SizeTable) -> Mesh:
 
 
 class NetgenMesher:
+    """The default in-process OpenCASCADE mesher."""
+
     name: str = "netgen"
 
     def settings(self, *, exclusion: bool = False) -> dict[str, Canonicalisable]:
+        """Return the stage-6 sizing settings specific to Netgen."""
         settings: dict[str, Canonicalisable] = {"optsteps2d": OPTIMISATION_STEPS}
         if exclusion:
             settings["exclusion_wall"] = EXCLUSION_WALL_RULE
@@ -69,6 +77,7 @@ class NetgenMesher:
         wall_h_nm: float | None,
         sizes: SizeTable,
     ) -> tuple[MeshData, str]:
+        """Mesh a stage-5 region using Netgen; return the mesh and the Netgen version."""
         from netgen import config
 
         shape = build_region(record)
@@ -117,9 +126,12 @@ def _gmsh_backend() -> ModuleType:
 
 
 class GmshMesher:
+    """The optional Gmsh backend."""
+
     name: str = "gmsh"
 
     def settings(self, *, exclusion: bool = False) -> dict[str, Canonicalisable]:
+        """Return the stage-6 sizing settings specific to Gmsh."""
         return {
             "gmsh": {
                 "algorithm": GMSH_ALGORITHM,
@@ -134,6 +146,7 @@ class GmshMesher:
         wall_h_nm: float | None,
         sizes: SizeTable,
     ) -> tuple[MeshData, str]:
+        """Mesh a stage-5 region using Gmsh; return the mesh and the Gmsh version."""
         module = _gmsh_backend()
         graph = region_graph(build_region(record), record)
         try:
@@ -156,16 +169,19 @@ _REGISTRY: dict[str, MesherBuilder] = {}
 
 
 def register_mesher(name: str, builder: MesherBuilder) -> None:
+    """Register a mesher backend under ``name``; refuses a name already registered."""
     if name in _REGISTRY:
         raise ValueError(f"mesher {name!r} is already registered")
     _REGISTRY[name] = builder
 
 
 def registered_meshers() -> tuple[str, ...]:
+    """Return every selectable mesher name, sorted."""
     return tuple(sorted(_REGISTRY))
 
 
 def create_mesher(name: str) -> Mesher:
+    """Build the mesher registered as ``name``."""
     try:
         builder = _REGISTRY[name]
     except KeyError:

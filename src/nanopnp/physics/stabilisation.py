@@ -83,6 +83,7 @@ WIND_THRESHOLD = 1.0e-12
 
 
 def element_size() -> Expression:
+    """Return ``h_K = sqrt(2|K|)``, the element size the stabilisation parameters are built on."""
     import ngsolve as ngs
 
     return ngs.specialcf.mesh_size
@@ -90,6 +91,8 @@ def element_size() -> Expression:
 
 @dataclass(frozen=True)
 class StabilisationIntegrand:
+    """One stabilisation contribution and its quadrature."""
+
     integrand: Expression
     extra_order: int = 0
     singular: bool = False
@@ -97,6 +100,8 @@ class StabilisationIntegrand:
 
 @dataclass(frozen=True)
 class TransportState:
+    """Everything a transport stabilisation term needs about one species."""
+
     species: str
     coefficients: NondimensionalCoefficients
     variables: ConcentrationVariables
@@ -106,15 +111,19 @@ class TransportState:
 
     @property
     def diffusivity(self) -> Expression:
+        """Return ``D~_i``."""
         return self.coefficients.diffusivity(self.species)
 
     @property
     def concentration_gradient(self) -> Expression:
+        """Return ``grad(c~_i)``, in whichever branch is in force."""
         return self.variables.gradients[self.species]
 
 
 @dataclass(frozen=True)
 class FlowState:
+    """Everything the flow stabilisation needs about the momentum block."""
+
     coefficients: NondimensionalCoefficients
     velocity: Expression
     pressure: Expression
@@ -143,6 +152,7 @@ def _positive_part(scalar: Expression) -> Expression:
 
 
 def advective_velocity(state: TransportState) -> Expression:
+    """Return ``b~_i``, the non-diffusive part of the flux bracket."""
     import ngsolve as ngs
 
     coefficients = state.coefficients
@@ -160,6 +170,13 @@ def advective_velocity(state: TransportState) -> Expression:
 
 
 def cell_peclet(state: TransportState, *, size: Expression | None = None) -> Expression:
+    """Return the cell Peclet number ``Pe_K = ||b~_i|| h_K / (2 D~_i)``.
+
+    Parameters
+    ----------
+    state
+        The state to evaluate at; the converged one, for a diagnostic.
+    """
     return (
         _magnitude(advective_velocity(state))
         * (element_size() if size is None else size)
@@ -168,6 +185,7 @@ def cell_peclet(state: TransportState, *, size: Expression | None = None) -> Exp
 
 
 def approximate_residual(state: TransportState, *, source: Expression | None = None) -> Expression:
+    """Return the approximate transport residual ``R~_i = b~_i . grad(c~_i) - s~_i``."""
     residual = advective_velocity(state) * state.concentration_gradient
     if source is not None:
         residual = residual - source
@@ -180,6 +198,7 @@ def streamline_parameter(
     size: Expression | None = None,
     cutoff: float = STREAMLINE_CUTOFF,
 ) -> Expression:
+    """Return the streamline parameter ``tau_i = (h_K / 2||b~_i||) psi(Pe_K)``."""
     import ngsolve as ngs
 
     h = element_size() if size is None else size
@@ -194,6 +213,7 @@ def streamline_parameter(
 
 
 def crosswind_projector(state: TransportState) -> Expression:
+    """Return the streamline-crosswind projector ``P_b = I - b^ (x) b^``."""
     import ngsolve as ngs
 
     direction = advective_velocity(state)
@@ -208,6 +228,7 @@ def crosswind_viscosity(
     size: Expression | None = None,
     coefficient: float = CROSSWIND_COEFFICIENT,
 ) -> Expression:
+    """Return the crosswind viscosity ``nu_K``, zero below the wind threshold ``1/C_cw``."""
     import ngsolve as ngs
 
     h = element_size() if size is None else size
@@ -220,6 +241,7 @@ def crosswind_viscosity(
 
 
 def momentum_residual(state: FlowState) -> Expression:
+    """Return the approximate momentum residual ``R~_m``."""
     import ngsolve as ngs
 
     residual = ngs.grad(state.pressure)
@@ -235,6 +257,7 @@ def momentum_residual(state: FlowState) -> Expression:
 
 
 def momentum_parameter(state: FlowState, *, size: Expression | None = None) -> Expression:
+    """Return the momentum stabilisation parameter ``tau_m``, bounded at zero velocity."""
     import ngsolve as ngs
 
     h = element_size() if size is None else size
@@ -250,6 +273,7 @@ def momentum_parameter(state: FlowState, *, size: Expression | None = None) -> E
 
 
 def grad_div_parameter(state: FlowState, *, size: Expression | None = None) -> Expression:
+    """Return the grad-div parameter ``tau_c = Re rho~ ||u~|| h_K / 2``."""
     h = element_size() if size is None else size
     return (
         GRAD_DIV_COEFFICIENT
@@ -261,20 +285,27 @@ def grad_div_parameter(state: FlowState, *, size: Expression | None = None) -> E
 
 
 class StabilisationModel(Protocol):
-    @property
-    def name(self) -> str: ...
+    """One residual stabilisation mode; immutable, carrying its provenance and tuning constants."""
 
     @property
-    def parameters(self) -> Mapping[str, float]: ...
+    def name(self) -> str:
+        """Registered name of the mode."""
 
     @property
-    def provenance(self) -> Mapping[str, str]: ...
+    def parameters(self) -> Mapping[str, float]:
+        """The tuning constants in force, flattened for reporting."""
 
     @property
-    def terms(self) -> tuple[str, ...]: ...
+    def provenance(self) -> Mapping[str, str]:
+        """Where the mode and its constants came from."""
 
     @property
-    def permits_equal_order(self) -> bool: ...
+    def terms(self) -> tuple[str, ...]:
+        """The terms this mode assembles, in assembly order; empty for ``none``."""
+
+    @property
+    def permits_equal_order(self) -> bool:
+        """Whether this mode supplies the flow stabilisation an equal-order pair requires."""
 
     def transport_term(
         self,
@@ -285,7 +316,8 @@ class StabilisationModel(Protocol):
         test: Expression,
         source: Expression | None = None,
         **kwargs: Option,
-    ) -> IntegralTerm | None: ...
+    ) -> IntegralTerm | None:
+        """Return this mode's contribution to one species' residual, or ``None``."""
 
     def flow_term(
         self,
@@ -296,7 +328,8 @@ class StabilisationModel(Protocol):
         velocity_test: Expression,
         pressure_test: Expression,
         **kwargs: Option,
-    ) -> IntegralTerm | None: ...
+    ) -> IntegralTerm | None:
+        """Return this mode's contribution to the flow residual, or ``None``."""
 
     def transport_contributions(
         self,
@@ -305,7 +338,8 @@ class StabilisationModel(Protocol):
         lagged: TransportState,
         test: Expression,
         source: Expression | None = None,
-    ) -> tuple[StabilisationIntegrand, ...]: ...
+    ) -> tuple[StabilisationIntegrand, ...]:
+        """Return one species' transport contributions as unweighted integrands."""
 
     def indicator_term(
         self,
@@ -316,11 +350,14 @@ class StabilisationModel(Protocol):
         indicator: Expression,
         source: Expression | None = None,
         **kwargs: Option,
-    ) -> float: ...
+    ) -> float:
+        """Return this mode's contribution to the indicator of the current."""
 
 
 @dataclass(frozen=True)
 class NoStabilisation:
+    """The ``none`` mode: unstabilised Galerkin; it assembles nothing."""
+
     @property
     def name(self) -> str:
         return "none"
@@ -398,6 +435,14 @@ class NoStabilisation:
 
 @dataclass(frozen=True)
 class StreamlineStabilisation:
+    """``supg``: the transport streamline term alone.
+
+    Parameters
+    ----------
+    crosswind_coefficient
+        The crosswind coefficient ``C_cw``.
+    """
+
     crosswind: bool = False
     flow: bool = False
     crosswind_coefficient: float = CROSSWIND_COEFFICIENT
@@ -428,6 +473,7 @@ class StreamlineStabilisation:
 
     @property
     def terms(self) -> tuple[str, ...]:
+        """Return the names of the terms this mode assembles, in assembly order."""
         assembled = ["streamline"]
         if self.crosswind:
             assembled.append("crosswind")
@@ -472,6 +518,7 @@ class StreamlineStabilisation:
         test: Expression,
         source: Expression | None = None,
     ) -> tuple[StabilisationIntegrand, ...]:
+        """Return the transport contributions as unweighted integrands."""
         import ngsolve as ngs
 
         size = element_size()
@@ -587,6 +634,8 @@ class StreamlineStabilisation:
 
 @dataclass(frozen=True)
 class ReferenceStabilisation(StreamlineStabilisation):
+    """``reference``: the full stabilisation table; the only mode permitting equal orders."""
+
     crosswind: bool = True
     flow: bool = True
 
@@ -623,16 +672,19 @@ _REGISTRY: dict[str, ModelBuilder] = {}
 
 
 def register(name: str, builder: ModelBuilder) -> None:
+    """Register a stabilisation mode under ``name``; ValueError if taken."""
     if name in _REGISTRY:
         raise ValueError(f"stabilisation mode {name!r} is already registered")
     _REGISTRY[name] = builder
 
 
 def registered_stabilisations() -> tuple[str, ...]:
+    """Return every selectable mode name, sorted."""
     return tuple(sorted(_REGISTRY))
 
 
 def create(name: str) -> StabilisationModel:
+    """Build the stabilisation mode registered as ``name``; KeyError if none is."""
     try:
         builder = _REGISTRY[name]
     except KeyError:

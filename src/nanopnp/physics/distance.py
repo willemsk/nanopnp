@@ -24,6 +24,15 @@ def wall_distance(
     smoothing_length_nm: float | None = None,
     solver: str = DEFAULT_SOLVER,
 ) -> GridFunction:
+    """Return the mollified distance to ``sources`` as a finite-element field.
+
+    Parameters
+    ----------
+    sources
+        Boundary-name regular expression naming the distance sources; the pore wall only.
+    diffusion_length_nm
+        ``sqrt(t)`` of the screened-Poisson solve, in nm; smaller is more accurate.
+    """
     import ngsolve as ngs
 
     if mesh.Boundaries(sources).Mask().NumSet() == 0:
@@ -74,6 +83,13 @@ def mollify(
     sources: str | None = None,
     solver: str = DEFAULT_SOLVER,
 ) -> GridFunction:
+    """Return ``field`` smoothed by one screened-Poisson pass.
+
+    Parameters
+    ----------
+    smoothing_length_nm
+        ``delta`` of the pass, in nm.
+    """
     import ngsolve as ngs
 
     space = field.space
@@ -100,6 +116,7 @@ def mollify(
 
 
 def gradient_jump(field: GridFunction) -> float:
+    """Return the mean facet jump of ``grad(field)``, normalised; zero if smooth."""
     import ngsolve as ngs
 
     mesh = field.space.mesh

@@ -52,6 +52,8 @@ MESH_FILENAME = "mesh.msh"
 
 
 class WallSizeGateError(ValueError):
+    """A generated mesh's ``wall`` is coarser than its size field asked for."""
+
     def __init__(self, criterion: str, measured: str, threshold: str, where: str) -> None:
         self.criterion = criterion
         self.measured = measured
@@ -65,6 +67,8 @@ class WallSizeGateError(ValueError):
 
 @dataclass(frozen=True)
 class WallStatistics:
+    """The ``wall`` segment lengths of a mesh, against the target."""
+
     target_nm: float
     count: int
     mean_ratio: float
@@ -74,6 +78,7 @@ class WallStatistics:
     longest_midpoint_nm: tuple[float, float]
 
     def summary(self) -> dict[str, Canonicalisable]:
+        """Return the statistics the manifest's ``sizing`` block records."""
         return {
             "target_nm": self.target_nm,
             "segments": self.count,
@@ -85,6 +90,7 @@ class WallStatistics:
 
 
 def wall_statistics(data: MeshData, target_nm: float) -> WallStatistics:
+    """Measure the ``wall`` segments of ``data`` against ``target_nm``."""
     import numpy as np
 
     segments = data.edges_of("wall")
@@ -104,6 +110,7 @@ def wall_statistics(data: MeshData, target_nm: float) -> WallStatistics:
 
 
 def check_wall_size(statistics: WallStatistics) -> None:
+    """Abort unless the ``wall`` segments meet the size bounds."""
     target = statistics.target_nm
     r_mid, z_mid = statistics.longest_midpoint_nm
     where = (
@@ -129,6 +136,7 @@ def check_wall_size(statistics: WallStatistics) -> None:
 def sizing_parameters(
     document_wall: WallSize, sizes: SizeTable, backend: str = "netgen", *, exclusion: bool = False
 ) -> dict[str, Canonicalisable]:
+    """Return the stage-6 recipe's ``sizing`` parameter: everything that moves a generated mesh."""
     settings = create_mesher(backend).settings(exclusion=exclusion)
     clash = sorted(set(settings) & COMMON_RECIPE_KEYS)
     if clash:
@@ -152,11 +160,22 @@ def sizing_parameters(
 def mesh_region(
     record: RegionRecord, wall_h_nm: float | None, sizes: SizeTable, backend: str
 ) -> tuple[MeshData, str]:
+    """Mesh stage 5's region with the named backend; return the mesh and the version."""
     return create_mesher(backend).mesh(record, wall_h_nm, sizes)
 
 
 @dataclass(frozen=True)
 class GeneratedMesh:
+    """A generated mesh that passed every gate, and the record of how it was sized.
+
+    Parameters
+    ----------
+    wall
+        The resolved wall size, in nm.
+    exclusion
+        Whether the region carries an ion-exclusion shell, which keys its size.
+    """
+
     ingested: IngestedMesh
     wall: WallSize
     sizes: SizeTable
@@ -167,6 +186,7 @@ class GeneratedMesh:
     exclusion: bool = False
 
     def sizing(self) -> dict[str, Canonicalisable]:
+        """Return the manifest's ``sizing`` block, the mesher's version beside it."""
         return {
             **sizing_parameters(self.wall, self.sizes, self.backend, exclusion=self.exclusion),
             "backend_version": self.backend_version,
@@ -177,6 +197,7 @@ class GeneratedMesh:
         }
 
     def summary(self) -> dict[str, Canonicalisable]:
+        """Return what the manifest's geometry-and-mesh group records."""
         summary: dict[str, Canonicalisable] = {
             "generated": True,
             "source": self.ingested.source.name,
@@ -191,6 +212,13 @@ class GeneratedMesh:
 
 
 def generate(record: RegionRecord, resolved: ResolvedCase, directory: Path) -> GeneratedMesh:
+    """Mesh the region, write it, read it back through the gate and check its wall.
+
+    Raises
+    ------
+    MeshVocabularyError, MeshQualityError, WallSizeGateError
+        On the naming, quality and wall-size gates.
+    """
     wall = resolve_wall_size(resolved.document, permittivity_0=resolved.electrolyte.permittivity_0)
     sizes = SIZES.scaled(wall.size_scale)
     backend = resolved.document.numerics.mesh.backend

@@ -165,6 +165,8 @@ VALIDATED_DEFAULT_CASE: CaseDocument = CaseDocument.model_validate(_VALIDATED_DE
 
 @dataclass(frozen=True)
 class Deviation:
+    """One switch set away from the validated default."""
+
     path: str
     validated: SwitchValue
     value: SwitchValue
@@ -173,11 +175,14 @@ class Deviation:
         return f"{self.path}: {self.value!r}, validated default {self.validated!r}"
 
     def summary(self) -> dict[str, Any]:
+        """Return the manifest's record of this deviation."""
         return {"path": self.path, "value": self.value, "validated_default": self.validated}
 
 
 @dataclass(frozen=True)
 class ContributedDeviation:
+    """A deviation from the validated model that no case-file switch selects."""
+
     source: str
     description: str
 
@@ -185,13 +190,16 @@ class ContributedDeviation:
         return f"{self.source}: {self.description}"
 
     def summary(self) -> dict[str, Any]:
+        """Return the manifest's record of this deviation."""
         return {"source": self.source, "description": self.description}
 
 
-class UnknownSwitchPathError(KeyError): ...
+class UnknownSwitchPathError(KeyError):
+    """A dotted path does not name a field of the case document."""
 
 
 def value_at(document: CaseDocument, path: str) -> SwitchValue:
+    """Return the value a dotted path names in a case document."""
     try:
         return case_value_at(document, path)
     except UnknownCasePathError as error:
@@ -199,6 +207,7 @@ def value_at(document: CaseDocument, path: str) -> SwitchValue:
 
 
 def deviations(document: CaseDocument) -> tuple[Deviation, ...]:
+    """Return every switch this case sets away from the validated default, sorted by path."""
     found: list[Deviation] = []
     for path in SWITCH_PATHS:
         default = value_at(VALIDATED_DEFAULT_CASE, path)

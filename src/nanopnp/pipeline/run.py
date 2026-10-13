@@ -67,16 +67,27 @@ def _scratch(store: Store) -> Path:
     return Path(tempfile.mkdtemp(prefix="run-", dir=root))
 
 
-class MissingUpstreamError(RuntimeError): ...
+class MissingUpstreamError(RuntimeError):
+    """An upstream artefact is not in the store and only forbade computing it."""
 
 
 class UnknownStageError(KeyError):
+    """The upto argument named a stage this run does not walk."""
+
     def __str__(self) -> str:
         return str(self.args[0]) if self.args else ""
 
 
 @dataclass(frozen=True)
 class StageRecord:
+    """What one stage of a run produced, and whether it had to do the work.
+
+    Parameters
+    ----------
+    cached
+        Whether the store already held the artefact; a run with every stage cached did no physics.
+    """
+
     name: str
     number: int
     schema: str
@@ -85,6 +96,7 @@ class StageRecord:
     seconds: float
 
     def summary(self) -> dict[str, Canonicalisable]:
+        """Return this record as plain data, for the run record and the CLI."""
         return {
             "stage": self.name,
             "number": self.number,
@@ -185,11 +197,19 @@ class _Walk:
 def offered(
     name: str, artefacts: Mapping[str, Artefact], *, own: bool = False
 ) -> dict[str, Artefact]:
+    """Return the artefacts a stage is handed: those its description declares."""
     declared = set(describe(name).inputs) | ({name} if own else set())
     return {key: artefact for key, artefact in artefacts.items() if key in declared}
 
 
 def selected_stages(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]:
+    """Return the stages this case runs: every one, or the inputs of upto and upto.
+
+    Parameters
+    ----------
+    upto
+        The stage to walk to, or None for every stage.
+    """
     supplied = resolved.charge is not None or resolved.eps_r is not None or resolved.derives_eps_r
     deposits = resolved.deposits_charge
     dropped = set() if supplied or deposits else {"charge"}
@@ -331,6 +351,7 @@ def _resolve_stage(
 
 
 def input_files(resolved: ResolvedCase, case_path: Path | None) -> dict[str, Path]:
+    """Return the run's input files by role, keeping only files that exist as paths."""
     files: dict[str, Path] = {}
     if case_path is not None:
         files["case"] = case_path
@@ -629,6 +650,13 @@ def run_document(
 def stored_upstream(
     document: CaseDocument, *, store: Store, feeding: str = "solve"
 ) -> dict[str, Artefact]:
+    """Return the artefacts a walk hands feeding, read from the store without running a stage.
+
+    Parameters
+    ----------
+    store
+        Where the payload-writing stages' artefacts are looked up.
+    """
     artefacts: dict[str, Artefact] = {}
     resolved = resolve(document)
     for name in selected_stages(resolved, feeding)[:-1]:

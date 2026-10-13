@@ -57,11 +57,14 @@ MAX_PIXELS = 1024
 
 @dataclass(frozen=True)
 class BuildOffer:
+    """Whether **Build charge** is offered, and if not, why."""
+
     offered: bool
     reason: str = ""
 
 
 def build_offer(document: CaseDocument) -> BuildOffer:
+    """Return whether a walk through ``charge`` has anything to build, with the reason if not."""
     try:
         resolved = resolve(document)
     except (ValueError, NotImplementedError) as error:
@@ -75,11 +78,21 @@ def build_offer(document: CaseDocument) -> BuildOffer:
 
 
 def charge_stages(document: CaseDocument) -> StageList:
+    """Return the halves of stage 7 a walk through ``charge`` runs, as a stage list.
+
+    Raises
+    ------
+    nanopnp.io.case.CaseValidationError
+        If the case does not resolve.
+    nanopnp.pipeline.run.UnknownStageError
+        If the case walks no stage 7.
+    """
     walked = selected_stages(resolve(document), BUILD_UPTO)
     return StageList(planned=tuple(name for name in walked if name in CHARGE_STAGES))
 
 
 def block_size(shape: tuple[int, int], limit: int = MAX_PIXELS) -> int:
+    """Return the smallest ``k`` that leaves at most ``limit`` blocks along either axis."""
     return max(1, math.ceil(max(shape) / limit))
 
 
@@ -116,6 +129,16 @@ def _plain_means(values: np.ndarray, block: int) -> np.ndarray:
 
 @dataclass(frozen=True)
 class ChargeMap:
+    """The export lattice as a picture, and the charge the picture carries.
+
+    Parameters
+    ----------
+    areas
+        ``A_p`` per pixel, in m^2 (m^3 for a volume density).
+    integral_C
+        ``sum_p mean_p A_p``, in coulombs.
+    """
+
     image: ImageModel
     block: int
     areas: np.ndarray
@@ -127,9 +150,11 @@ class ChargeMap:
 
     @property
     def integral_e(self) -> float:
+        """The picture's charge in e."""
         return self.integral_C / ELEMENTARY_CHARGE
 
     def plane_row(self, z_nm: float) -> int:
+        """Return the display row whose pixel contains ``z``, where a plane's marker is drawn."""
         return self.image.pixel_of(float(self.image.x_nm[0]), z_nm)[1]
 
 
@@ -139,6 +164,15 @@ def charge_image(
     block: int | None = None,
     planes: tuple[tuple[str, float], ...] = (),
 ) -> ChargeMap:
+    """Return the lattice as a picture that carries its charge.
+
+    Parameters
+    ----------
+    block
+        ``k``; by default :func:`block_size` of the lattice.
+    planes
+        Markers to draw, ``(label, z_nm)``.
+    """
     import numpy as np
 
     grid = lattice.grid
@@ -189,6 +223,8 @@ def charge_image(
 
 @dataclass(frozen=True)
 class Leg:
+    """One leg of the conservation report, as the record holds it."""
+
     name: str
     value: float | None
     tolerance: float | None
@@ -197,10 +233,12 @@ class Leg:
 
     @property
     def run(self) -> bool:
+        """Whether the record holds a value for this leg."""
         return self.value is not None
 
     @property
     def ratio(self) -> float | None:
+        """``|value| / tolerance``: the share of the budget used, or ``None``."""
         if self.value is None or self.tolerance is None or self.tolerance == 0.0:
             return None
         return abs(self.value) / self.tolerance
@@ -232,6 +270,8 @@ def _leg(name: str, entry: object, *, location: str = "") -> Leg:
 
 @dataclass(frozen=True)
 class ConservationView:
+    """Stage 7's conservation record: its legs against their budgets, and its figures."""
+
     source: Literal["deposited", "supplied"]
     legs: tuple[Leg, ...]
     figures: Mapping[str, object]
@@ -239,6 +279,13 @@ class ConservationView:
 
     @classmethod
     def from_record(cls, record: Mapping[str, object]) -> ConservationView:
+        """Read the view from ``summary["charge"]``, in either of its two forms.
+
+        Raises
+        ------
+        KeyError
+            If the record carries no conservation report.
+        """
         report = record.get("conservation")
         if not isinstance(report, dict):
             raise KeyError("stage 7's charge record carries no conservation report")
@@ -278,6 +325,8 @@ class ConservationView:
 
 @dataclass(frozen=True)
 class ChargeView:
+    """What stage 7's artefact shows: the map, the report and the dielectric."""
+
     charge: ChargeMap | None
     conservation: ConservationView | None
     dielectric: tuple[str, ...]
@@ -309,6 +358,15 @@ def _dielectric(summary: Mapping[str, object]) -> tuple[str, ...]:
 
 # Called off the Qt thread: the reference lattice is about 15 million nodes.
 def load_charge(event: Produced, *, block: int | None = None) -> ChargeView:
+    """Read stage 7's artefact from the store into what the tab shows; call off the Qt thread.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the artefact has left the store.
+    ValueError
+        If the event is not stage 7's.
+    """
     if event.name != BUILD_UPTO:
         raise ValueError(f"stage {event.name!r} is not stage 7 ({BUILD_UPTO!r})")
     artefact = stored_artefact(event)
@@ -338,6 +396,8 @@ def load_charge(event: Produced, *, block: int | None = None) -> ChargeView:
 
 @dataclass(frozen=True)
 class ResidueRow:
+    """One titratable group, or on a supplied PQR one residue, in one frame."""
+
     chain: str
     residue: str
     group: str
@@ -349,6 +409,8 @@ class ResidueRow:
 
 @dataclass(frozen=True)
 class ProtonationFrame:
+    """One frame of the table: its ``Q_net`` and its rows."""
+
     index: int
     q_net_e: float
     rows: tuple[ResidueRow, ...]
@@ -363,11 +425,20 @@ def _float_or_none(value: float) -> float | None:
 
 @dataclass(frozen=True)
 class ProtonationView:
+    """The protonation artefact: its frames, their charges, and the recorded diagnostics."""
+
     table: ProtonationTable
     summary: Mapping[str, object]
 
     @classmethod
     def build(cls, table: ProtonationTable, summary: Mapping[str, object]) -> ProtonationView:
+        """Return the view, after checking the table's unapplied states against the record.
+
+        Raises
+        ------
+        ValueError
+            If the residues the table flags as unapplied are not the ones the record lists.
+        """
         view = cls(table=table, summary=summary)
         # Summed here, on the loader's thread, and kept: the pane reads it on
         # every frame it shows, and the 2WCD table is 50 frames of ~30,000 atoms.
@@ -387,18 +458,22 @@ class ProtonationView:
 
     @property
     def frames(self) -> int:
+        """Number of frames."""
         return self.table.frames
 
     @cached_property
     def q_net_e(self) -> tuple[float, ...]:
+        """``Q_net`` per frame, summed once from the table's atoms."""
         return tuple(float(value) for value in self.table.q_net_e())
 
     @property
     def titrated(self) -> bool:
+        """Whether PROPKA ran: the table carries its groups."""
         return len(self.table.group_type) > 0
 
     @property
     def pka_status(self) -> str:
+        """``computed``, or why no pKa is shown, from the record's source."""
         if self.titrated:
             return "computed"
         source = self.summary.get("source")
@@ -414,6 +489,7 @@ class ProtonationView:
         )
 
     def unapplied_residues(self) -> set[tuple[str, str]]:
+        """Return the residues the table flags as unapplied in any frame."""
         return {
             self._residue(column)
             for column in range(self.table.unapplied.shape[1])
@@ -421,6 +497,13 @@ class ProtonationView:
         }
 
     def frame(self, index: int) -> ProtonationFrame:
+        """Return one frame's rows: one per PROPKA group, or one per residue without them.
+
+        Raises
+        ------
+        IndexError
+            If the frame is not in the table.
+        """
         if not 0 <= index < self.frames:
             raise IndexError(f"frame {index} is not in a table of {self.frames} frames")
         table = self.table
@@ -455,11 +538,13 @@ class ProtonationView:
 
     @property
     def chain_differences(self) -> tuple[Mapping[str, object], ...]:
+        """The residues whose charge differs between identical chains, as recorded."""
         found = self.summary.get("chain_differences") or []
         return tuple(entry for entry in found if isinstance(entry, dict))  # type: ignore[attr-defined]
 
     @property
     def warnings(self) -> tuple[RecordedWarning, ...]:
+        """PDB2PQR's and PROPKA's warnings with their counts, as recorded."""
         found = self.summary.get("warnings")
         if not isinstance(found, dict):
             return ()
@@ -467,6 +552,7 @@ class ProtonationView:
 
     @property
     def settings(self) -> tuple[str, ...]:
+        """The record's source, settings and ``variant`` beside ``Q_net``, as lines."""
         return tuple(
             f"{key}: {self.summary.get(key)}"
             for key in ("source", "forcefield", "ph", "titration", "variant")
@@ -474,6 +560,15 @@ class ProtonationView:
 
 
 def load_protonation(event: Produced) -> ProtonationView:
+    """Read the protonation artefact from the store; call off the Qt thread.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the artefact has left the store.
+    ValueError
+        If the event is not the protonation stage's, or its table and record disagree.
+    """
     if event.name != CHARGE_STAGES[0]:
         raise ValueError(f"stage {event.name!r} is not {CHARGE_STAGES[0]!r}")
     artefact = stored_artefact(event)

@@ -64,6 +64,7 @@ __all__ = [
 
 
 def registry_options(path: str) -> tuple[str, ...] | None:
+    """Return the values an installed registry admits at a dotted path, or None."""
     if path == "physics.model":
         return registered_models()
     if path == "numerics.mesh.backend":
@@ -90,6 +91,7 @@ _CORRECTION_MODEL_PATHS: frozenset[str] = frozenset(
 
 
 def check_document(document: CaseDocument, *, source: str | None = None) -> CaseDocument:
+    """Check a schema-valid document against the registries and element orders."""
     problems: list[str] = []
     if document.physics.model not in registered_models():
         problems.append(
@@ -139,6 +141,7 @@ def check_document(document: CaseDocument, *, source: str | None = None) -> Case
 
 
 def element_orders(document: CaseDocument) -> tuple[int, int, int]:
+    """Return the field, velocity and pressure orders, refusing a pair no solve can use."""
     elements = document.numerics.elements
     order = _order(elements.phi, "phi")
     concentration_order = _order(elements.c, "c")
@@ -172,6 +175,7 @@ def element_orders(document: CaseDocument) -> tuple[int, int, int]:
 
 
 def options_at(path: str) -> tuple[str, ...] | None:
+    """Return the values a case document is accepted with at path, or None if not enumerable."""
     reference = field_at(path)
     literal = _literal_options(reference.annotation)
     registered = registry_options(path)
@@ -206,6 +210,7 @@ def _order(label: str, field: str) -> int:
 
 
 def check_species(document: CaseDocument, electrolyte: Electrolyte) -> None:
+    """Check species, steric diameters and temperature against the parameter file."""
     problems: list[str] = []
     temperature_K = document.electrolyte.temperature_K
     if temperature_K != electrolyte.temperature_K:
@@ -248,6 +253,7 @@ def check_species(document: CaseDocument, electrolyte: Electrolyte) -> None:
 
 
 def require_runnable(document: CaseDocument) -> SuppliedArtefact | None:
+    """Reject every section this release does not run; return the supplied mesh, if any."""
     _check_charge(document)
     for supplied in ("mesh", "charge", "eps_r"):
         given: SuppliedArtefact | None = getattr(document.inputs, supplied)
@@ -834,6 +840,7 @@ def _check_outputs(document: CaseDocument) -> None:
 
 
 def check_operating_point(document: CaseDocument) -> None:
+    """Refuse a concentration, bias or distance cap no solve could use; NaN is refused."""
     concentration = document.electrolyte.concentration_M
     if not (math.isfinite(concentration) and concentration > 0.0):
         raise CaseValidationError(
@@ -852,6 +859,7 @@ def check_operating_point(document: CaseDocument) -> None:
 
 def check_referenced_files(document: CaseDocument) -> None:
     # Every ``inputs:`` key, read from the schema: a key added later is checked too.
+    """Verify that every external file a case document references exists on disk."""
     for leaf in type(document.inputs).model_fields:
         supplied = getattr(document.inputs, leaf)
         if supplied is not None and supplied.path is not None:

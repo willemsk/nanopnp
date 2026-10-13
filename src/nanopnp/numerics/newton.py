@@ -17,6 +17,16 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class NewtonSettings:
+    """Damped-Newton parameters; the defaults are the reference settings.
+
+    Parameters
+    ----------
+    minimum_damping
+        Lower bound; a step at this value is accepted even if it does not reduce the residual.
+    field_floor_ratio
+        Floor ratio on per-field norms in the relative-update test; positive and finite.
+    """
+
     initial_damping: float = 0.2
     minimum_damping: float = 1.0e-2
     recovery_damping: float = 0.2
@@ -56,6 +66,16 @@ DEFAULT_SETTINGS = NewtonSettings()
 
 @dataclass(frozen=True)
 class NewtonStep:
+    """One accepted Newton step, for the convergence record.
+
+    Parameters
+    ----------
+    update
+        Maximum relative update across fields, on the undamped direction.
+    forced
+        Accepted at minimum damping without reducing the residual.
+    """
+
     iteration: int
     residual: float
     update: float
@@ -66,6 +86,8 @@ class NewtonStep:
 
 @dataclass
 class NewtonResult:
+    """Outcome of a damped-Newton solve, for the provenance manifest."""
+
     converged: bool
     iterations: int
     initial_residual: float
@@ -74,19 +96,23 @@ class NewtonResult:
 
     @property
     def relative_residual(self) -> float:
+        """Final residual as a fraction of the initial one."""
         if self.initial_residual == 0.0:
             return 0.0
         return self.residual / self.initial_residual
 
     @property
     def minimum_damping_used(self) -> float:
+        """Smallest damping factor any accepted step was taken with."""
         return min((step.damping for step in self.history), default=1.0)
 
     @property
     def forced_steps(self) -> int:
+        """How many steps were accepted at minimum damping without reduction."""
         return sum(1 for step in self.history if step.forced)
 
     def summary(self) -> dict[str, Option]:
+        """Return a record of the solve for logs and the manifest, without the history."""
         return {
             "converged": self.converged,
             "iterations": self.iterations,
@@ -98,7 +124,8 @@ class NewtonResult:
         }
 
 
-class NewtonDivergenceError(RuntimeError): ...
+class NewtonDivergenceError(RuntimeError):
+    """Newton reached its iteration cap without meeting the tolerance."""
 
 
 def _largest_update(ratios: Sequence[float]) -> float:
@@ -118,6 +145,24 @@ def damped_newton(
     callback: Callable[[NewtonStep], None] | None = None,
     raise_on_failure: bool = True,
 ) -> NewtonResult:
+    """Solve ``residual_form(u) = 0`` by damped Newton, gated at every accepted step.
+
+    Parameters
+    ----------
+    state_gates
+        Checked on the entry state and each iterate; a violation stops the solve.
+    increment
+        Grid function the damped increment is written into; allocated if omitted.
+    increment_gates
+        Checked on the damped increment; a violation reduces the damping and retries.
+    raise_on_failure
+        Raise NewtonDivergenceError at the iteration cap.
+
+    Raises
+    ------
+    ValueError
+        If ``increment_gates`` is given without ``increment``.
+    """
     import ngsolve as ngs
 
     check_solver(solver)
@@ -139,6 +184,7 @@ def damped_newton(
     previous = solution.vec.CreateVector()
 
     def residual_norm() -> float:
+        """Return the free-DOF norm of the residual at the current iterate."""
         residual_form.Apply(solution.vec, residual)
         projector.Project(residual)
         return float(ngs.Norm(residual))

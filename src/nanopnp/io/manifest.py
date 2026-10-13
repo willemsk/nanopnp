@@ -69,6 +69,7 @@ DISTRIBUTIONS: tuple[str, ...] = (
 
 
 def not_run(reason: str) -> dict[str, Canonicalisable]:
+    """Return the record of a field group that no stage in this run contributed."""
     return {"status": "not run", "reason": reason}
 
 
@@ -80,6 +81,7 @@ def _version(distribution: str) -> str | None:
 
 
 def environment() -> dict[str, Canonicalisable]:
+    """Return the Environment group: distribution, interpreter and platform versions."""
     return {
         "packages": {name: _version(name) for name in DISTRIBUTIONS},
         "python": {
@@ -100,6 +102,7 @@ def input_group(
     files: Mapping[str, Path] | None = None,
     upstream: Mapping[str, Artefact] | None = None,
 ) -> dict[str, Canonicalisable]:
+    """Return the Inputs group: the content hash of every input, and each file's path."""
     return {
         "case": case_hash,
         "files": {
@@ -122,6 +125,13 @@ def materials_group(
     *,
     clamp_activations: int | None = None,
 ) -> dict[str, Canonicalisable]:
+    """Return the Materials group: correction models, file hashes and clamp counts.
+
+    Parameters
+    ----------
+    clamp_activations
+        Samples outside the fits' validity range; None if no solution was sampled.
+    """
     provenance = dict(electrolyte.provenance)
     name = str(provenance.get("parameter_file", "") or "")
     # Every file the models read, as MaterialsStage keys them; a correction model may name another.
@@ -150,6 +160,13 @@ def solver_group(
     ladder: Mapping[str, Canonicalisable] | None = None,
     warm_start: Mapping[str, Canonicalisable] | None = None,
 ) -> dict[str, Canonicalisable]:
+    """Return the Solver group: model, element orders, continuation and settings, as run.
+
+    Parameters
+    ----------
+    warm_start
+        Where Newton started; None if no solve ran.
+    """
     numerics = document.numerics
     return {
         "warm_start": (
@@ -177,6 +194,15 @@ def stabilisation_group(
     currents_A: Mapping[str, Canonicalisable] | None = None,
     peclet: Mapping[str, Canonicalisable] | None = None,
 ) -> dict[str, Canonicalisable]:
+    """Return the Stabilisation group: the requested and the read-back mode.
+
+    Parameters
+    ----------
+    currents_A
+        Stabilisation's contribution to the current; None when no solution was extracted, not zero.
+    peclet
+        Cell Peclet number on the top rung; None when unmeasured.
+    """
     requested = document.numerics.stabilisation
     return {
         "requested": requested,
@@ -206,11 +232,14 @@ def deviations_group(
     *,
     contributed: tuple[ContributedDeviation, ...] = (),
 ) -> dict[str, Canonicalisable]:
+    """Return the Deviations group: every departure from the validated default."""
     return _deviations_payload(deviations(document), contributed)
 
 
 @dataclass(frozen=True)
 class Manifest:
+    """The eight-group provenance record of one run."""
+
     case_text: str
     case_hash: str
     inputs: Mapping[str, Canonicalisable]
@@ -225,6 +254,7 @@ class Manifest:
     created_at: str = field(default_factory=timestamp)
 
     def groups(self) -> dict[str, Canonicalisable]:
+        """Return the eight field groups, keyed as :data:`GROUPS` names them."""
         return {
             "inputs": dict(self.inputs),
             "environment": dict(self.environment),
@@ -238,12 +268,14 @@ class Manifest:
 
     @property
     def hash(self) -> str:
+        """Content hash over the case and the eight groups, excluding the timestamp."""
         return content_hash(
             MANIFEST_SCHEMA,
             {"case": self.case_hash, "groups": self.groups()},
         )
 
     def document(self) -> dict[str, Canonicalisable]:
+        """Return the manifest as it is serialised."""
         return {
             "schema": MANIFEST_SCHEMA,
             "created_at": self.created_at,
@@ -253,6 +285,7 @@ class Manifest:
         }
 
     def write(self, directory: Path) -> Path:
+        """Write the manifest and case file into a run directory; return the manifest path."""
         directory.mkdir(parents=True, exist_ok=True)
         # Atomic: job-array members sharing a case write one run directory.
         # Platform line endings, as text mode wrote them: the case hash is of the source file,
@@ -293,6 +326,13 @@ def build(
     wall_distance: Mapping[str, Canonicalisable] | None = None,
     contributed_deviations: tuple[ContributedDeviation, ...] = (),
 ) -> Manifest:
+    """Assemble a manifest from the run's outputs; absent stage outputs are recorded as not run.
+
+    Parameters
+    ----------
+    charge
+        The resolved fields' summary; None when the run carried no field.
+    """
     return Manifest(
         case_text=case_text,
         case_hash=case_hash,
@@ -368,5 +408,6 @@ def _geometry_group(
 
 
 def read(path: Path) -> dict[str, Canonicalisable]:
+    """Return a written manifest, parsed."""
     parsed: dict[str, Canonicalisable] = json.loads(path.read_text(encoding="utf-8"))
     return parsed

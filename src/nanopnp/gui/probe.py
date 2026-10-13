@@ -60,6 +60,7 @@ SELFTEST_TIMEOUT_MS = 60_000
 
 
 def licence_notice() -> Path:
+    """Return the path of the licence notice; raise FileNotFoundError if no place has it."""
     candidates = [
         # PyInstaller's extraction root, set on the frozen executable only.
         Path(getattr(sys, "_MEIPASS", sys.prefix)) / LICENCE_NOTICE_FILENAME,
@@ -79,6 +80,8 @@ def licence_notice() -> Path:
 
 
 class PayloadError(RuntimeError):
+    """A payload imported but did not work, or did not import; the message names it."""
+
     def __init__(self, payload: str, cause: BaseException) -> None:
         self.payload = payload
         super().__init__(f"payload {payload!r} failed: {type(cause).__name__}: {cause}")
@@ -236,6 +239,13 @@ def _exercise_protonation(scratch: Path) -> str:
 
 
 def exercise_payloads(only: Collection[str] | None = None) -> dict[str, str]:
+    """Exercise each geometry and protonation payload once; return one line per payload.
+
+    Parameters
+    ----------
+    only
+        Payload names to exercise; all of them by default.
+    """
     report: dict[str, str] = {}
     with tempfile.TemporaryDirectory(prefix="nanopnp-probe-") as scratch:
         structure = Path(scratch) / "three-atoms.pdb"
@@ -261,6 +271,7 @@ def exercise_payloads(only: Collection[str] | None = None) -> dict[str, str]:
 
 
 def payload_versions() -> dict[str, str]:
+    """Return the resolved version of every payload, keyed by library name."""
     import netgen
     import ngsolve
     from PySide6 import QtCore
@@ -282,6 +293,7 @@ def _pyside_version() -> str:
 
 
 def scene_document() -> Path:
+    """Write the host document for a unit-square scene and return its path."""
     import ngsolve
     from netgen.occ import unit_square
     from ngsolve.webgui import Draw
@@ -303,6 +315,7 @@ def scene_document() -> Path:
 
 
 def build_window() -> QMainWindow:
+    """Return the probe's window, not shown, with the scene, versions and licence notice."""
     from PySide6 import QtCore, QtWidgets
     from PySide6.QtWebEngineWidgets import QWebEngineView
 
@@ -392,6 +405,13 @@ def _selftest(application: QApplication, window: QMainWindow) -> int:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    """Run the probe and return 0 on success; a missing payload raises out of here.
+
+    Parameters
+    ----------
+    argv
+        Command-line arguments; ``sys.argv[1:]`` when None.
+    """
     parser = argparse.ArgumentParser(
         prog="nanopnp-probe",
         description=(

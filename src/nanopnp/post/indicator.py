@@ -18,10 +18,12 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-class IndicatorError(ValueError): ...
+class IndicatorError(ValueError):
+    """The indicator does not separate the two reservoirs."""
 
 
 def smoothstep(coordinate: Expression, *, lower_nm: float, upper_nm: float) -> Expression:
+    """Return the cubic Hermite step of ``coordinate`` from ``lower_nm`` to ``upper_nm``."""
     import ngsolve as ngs
 
     width = upper_nm - lower_nm
@@ -37,6 +39,13 @@ def smoothstep(coordinate: Expression, *, lower_nm: float, upper_nm: float) -> E
 
 
 def lumen_band(geometry: CylindricalPoreGeometry, *, fraction: float = 0.8) -> tuple[float, float]:
+    """Return the transition band across the middle of the pore lumen, in nm.
+
+    Parameters
+    ----------
+    fraction
+        Fraction of the membrane thickness the band occupies; IndicatorError unless in (0, 1].
+    """
     if not 0.0 < fraction <= 1.0:
         raise IndicatorError(f"fraction must lie in (0, 1], got {fraction}")
     half = geometry.half_thickness_nm * fraction
@@ -54,6 +63,15 @@ def axial_indicator(
     trans: str = "trans",
     check: bool = True,
 ) -> GridFunction:
+    """Return the indicator psi, 0 below ``lower_nm`` and 1 above ``upper_nm``.
+
+    Parameters
+    ----------
+    fluid
+        Material-name regular expression the indicator lives on; None puts it over the whole mesh.
+    check
+        Whether to verify the result with ``check_indicator``.
+    """
     import ngsolve as ngs
 
     space = (
@@ -83,6 +101,13 @@ def check_indicator(
     trans: str = "trans",
     tolerance: float = 1e-12,
 ) -> None:
+    """Assert that psi is 1 on the cis boundary and 0 on the trans boundary.
+
+    Raises
+    ------
+    IndicatorError
+        If either cap departs from its value by more than ``tolerance``.
+    """
     import ngsolve as ngs
 
     def _mean_square(target: float, boundary: str) -> float:

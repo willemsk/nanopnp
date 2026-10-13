@@ -47,13 +47,22 @@ _SUFFIXES: dict[str, str] = {".msh": "gmsh", ".vol": "netgen", ".vol.gz": "netge
 """Filename suffixes recognised when ``inputs.mesh.format`` is absent."""
 
 
-class MeshFormatError(ValueError): ...
+class MeshFormatError(ValueError):
+    """A mesh file cannot be read: unknown format, or unreadable contents."""
 
 
-class MeshDataError(ValueError): ...
+class MeshDataError(ValueError):
+    """A :class:`MeshData` is not a well-formed tagged mesh."""
 
 
 def detect_format(path: Path, declared: str | None = None) -> str:
+    """Return the reader route, ``"gmsh"`` or ``"netgen"``, for ``path``.
+
+    Raises
+    ------
+    MeshFormatError
+        If the declared format is unknown, or none is declared and the suffix is unrecognised.
+    """
     if declared is not None:
         route = FORMATS.get(declared.strip().lower())
         if route is None:
@@ -75,6 +84,14 @@ def detect_format(path: Path, declared: str | None = None) -> str:
 
 @dataclass(frozen=True)
 class MeshData:
+    """A tagged two-dimensional mesh in the ``(r, z)`` half-plane, in nm.
+
+    Parameters
+    ----------
+    triangles
+        ``(m, 3)`` vertex indices, counter-clockwise for a positively oriented element.
+    """
+
     vertices: np.ndarray
     triangles: np.ndarray
     triangle_material: np.ndarray
@@ -158,19 +175,23 @@ class MeshData:
 
     @property
     def element_count(self) -> int:
+        """Number of triangles."""
         return int(self.triangles.shape[0])
 
     @property
     def vertex_count(self) -> int:
+        """Number of vertices."""
         return int(self.vertices.shape[0])
 
     def material_of(self, name: str) -> np.ndarray:
+        """Return the boolean mask of triangles carrying the material ``name``."""
         if name not in self.materials:
             raise KeyError(f"no material {name!r}; the mesh carries {list(self.materials)}")
         mask: np.ndarray = self.triangle_material == self.materials.index(name)
         return mask
 
     def edges_of(self, name: str) -> np.ndarray:
+        """Return the ``(k, 2)`` edges of the boundary group ``name``."""
         if name not in self.boundaries:
             raise KeyError(f"no boundary group {name!r}; the mesh carries {list(self.boundaries)}")
         rows: np.ndarray = self.edges[self.edge_group == self.boundaries.index(name)]
@@ -179,6 +200,7 @@ class MeshData:
     def renamed(
         self, *, materials: dict[str, str] | None = None, boundaries: dict[str, str] | None = None
     ) -> MeshData:
+        """Return this mesh with its name tables mapped; groups mapped onto one name merge."""
         import numpy as np
 
         def remap(
@@ -204,6 +226,13 @@ class MeshData:
         )
 
     def canonical(self) -> MeshData:
+        """Return this mesh in the form its content hash is taken over.
+
+        Raises
+        ------
+        MeshDataError
+            If two vertices share a location.
+        """
         import numpy as np
 
         order = np.lexsort((self.vertices[:, 1], self.vertices[:, 0]))
@@ -247,6 +276,7 @@ class MeshData:
 
     @property
     def content_hash(self) -> str:
+        """The sha256 of this mesh's canonical form, as 64 hex characters."""
         form = self.canonical()
         return content_hash(
             MESH_SCHEMA,
@@ -262,6 +292,7 @@ class MeshData:
         )
 
     def summary(self) -> dict[str, object]:
+        """Return the counts and name tables a manifest records."""
         return {
             "vertices": self.vertex_count,
             "elements": self.element_count,
@@ -273,6 +304,13 @@ class MeshData:
 
 
 def read(path: Path, *, format: str | None = None) -> MeshData:
+    """Read a tagged mesh from disk.
+
+    Raises
+    ------
+    MeshFormatError
+        If the format is unknown or the reader refuses the file.
+    """
     route = detect_format(path, format)
     if not path.is_file():
         raise MeshFormatError(f"no mesh file at {path}")
@@ -373,6 +411,7 @@ def _read_netgen(path: Path) -> MeshData:
 
 
 def from_ngsolve(mesh: Mesh) -> MeshData:
+    """Return the arrays and tag maps of an ``ngsolve.Mesh``."""
     import numpy as np
 
     ngmesh = mesh.ngmesh
@@ -419,6 +458,7 @@ def from_ngsolve(mesh: Mesh) -> MeshData:
 
 
 def to_ngsolve(data: MeshData) -> Mesh:
+    """Build an ``ngsolve.Mesh`` from ``data``, names and all."""
     import ngsolve as ngs
     from netgen.meshing import Element1D, Element2D, FaceDescriptor, MeshPoint, Pnt
     from netgen.meshing import Mesh as NetgenMesh
@@ -442,6 +482,13 @@ def to_ngsolve(data: MeshData) -> Mesh:
 
 
 def write_msh41(data: MeshData, path: Path, *, binary: bool = False) -> Path:
+    """Write ``data`` as MSH 4.1 at ``path`` and return the path.
+
+    Parameters
+    ----------
+    binary
+        Whether to write the binary encoding; ASCII round-trips float64 exactly.
+    """
     import meshio
     import numpy as np
 
@@ -495,6 +542,7 @@ def _insert_physical_names(path: Path, named: list[tuple[int, int, str]]) -> Non
 
 
 def read_physical_names(path: Path) -> dict[tuple[int, int], str]:
+    """Return ``{(dimension, tag): name}`` from a file's ``$PhysicalNames`` section."""
     names: dict[tuple[int, int], str] = {}
     with path.open("rb") as handle:
         for raw in handle:

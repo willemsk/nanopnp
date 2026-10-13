@@ -12,6 +12,8 @@ POLL_INTERVAL_MS = 100
 
 
 class RunControlWidget(QtWidgets.QWidget):
+    """The run panel: two buttons, a bar and a log."""
+
     startRequested = QtCore.Signal()
 
     settled = QtCore.Signal()
@@ -56,12 +58,14 @@ class RunControlWidget(QtWidgets.QWidget):
         self._control.cancel()
 
     def began(self) -> None:
+        """Tell the panel a run has just been started, before the child has posted anything."""
         self._settled = False
         self._log.clear()
         self._shown = 0
         self.refresh()
 
     def refresh(self) -> RunModel:
+        """Drain the child's events, show the model and return it."""
         model = self._control.poll()
         self._bar.setValue(round(model.fraction * 1000))
         stage = model.stage
@@ -91,15 +95,19 @@ class RunControlWidget(QtWidgets.QWidget):
 
     @property
     def control(self) -> RunControl:
+        """The view-model this panel drives."""
         return self._control
 
     def log_text(self) -> str:
+        """Return the log the panel is showing."""
         return str(self._log.toPlainText())
 
     @property
     def can_start(self) -> bool:
+        """Whether the panel is currently offering to start a run."""
         return bool(self._start.isEnabled())
 
     @property
     def can_cancel(self) -> bool:
+        """Whether the panel is currently offering to cancel one."""
         return bool(self._cancel.isEnabled())

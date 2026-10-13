@@ -129,6 +129,7 @@ LADDER_TARGETS: tuple[str, ...] = ("epnp-ns", "pnp-ns")
 
 
 def equal_order_stabilisations() -> tuple[str, ...]:
+    """Return the registered modes that permit an equal-order velocity-pressure pair."""
     return tuple(
         name
         for name in registered_stabilisations()
@@ -137,6 +138,13 @@ def equal_order_stabilisations() -> tuple[str, ...]:
 
 
 def inf_sup_problem(*, velocity_order: int, pressure_order: int, stabilisation: str) -> str | None:
+    """Return why a velocity-pressure order pair is inadmissible, or None.
+
+    Parameters
+    ----------
+    stabilisation
+        Registered mode name; an unregistered name returns None.
+    """
     if pressure_order < velocity_order:
         return None
     if (
@@ -168,6 +176,14 @@ def _reject_unknown(kwargs: Mapping[str, Option], where: str) -> None:
 
 @dataclass(frozen=True)
 class Field:
+    """One solved field of a model.
+
+    Parameters
+    ----------
+    domain
+        Material-name regular expression the field lives on; None for the whole domain.
+    """
+
     name: str
     element: ElementKind
     order: int
@@ -176,6 +192,16 @@ class Field:
 
 @dataclass
 class ModelSolution:
+    """A converged state and the record of how it was reached.
+
+    Parameters
+    ----------
+    newton
+        The convergence record, or None for a linear model.
+    solid_fraction
+        The solid fraction assembled with, or None for the sharp split.
+    """
+
     model: PhysicsModel
     space: FESpace
     state: GridFunction
@@ -185,6 +211,7 @@ class ModelSolution:
     solid_fraction: Expression | None = None
 
     def component(self, name: str) -> Expression:
+        """Return one field of the solution by name; KeyError if the model does not solve for it."""
         names = [f.name for f in self.model.fields]
         if name not in names:
             raise KeyError(
@@ -196,17 +223,21 @@ class ModelSolution:
 
     @property
     def potential(self) -> Expression:
+        """Return the dimensionless potential ``phi~``."""
         return self.component(POTENTIAL)
 
     @property
     def velocity(self) -> Expression:
+        """Return the dimensionless velocity ``u~``."""
         return self.component(VELOCITY)
 
     @property
     def pressure(self) -> Expression:
+        """Return the dimensionless pressure ``p~``."""
         return self.component(PRESSURE)
 
     def concentration(self, species: str) -> Expression:
+        """Return the dimensionless concentration ``c~_i`` of one species, whichever branch ran."""
         import ngsolve as ngs
 
         field = self.component(concentration_field_name(species))
@@ -216,6 +247,7 @@ class ModelSolution:
 
 
 def concentration_field_name(species: str) -> str:
+    """Return the field name holding one species' concentration."""
     return f"c_{species}"
 
 
@@ -420,6 +452,15 @@ def relative_permittivity_field(
     solid_fraction: Expression | None = None,
 ) -> Expression:
     # eps_r,f^0 over the scale the fluid permittivity is divided by: 1 exactly.
+    """Return the relative permittivity ``eps~_r`` over all of Omega.
+
+    Parameters
+    ----------
+    solid_permittivities
+        Per solid; a material that is neither fluid nor listed is reported and takes ion-free water.
+    solid_fraction
+        The supplied solid fraction, if any; it replaces the sharp split by a blend.
+    """
     ion_free = permittivity_0 / scale_permittivity
     fluid_mask = mesh.Materials(fluid).Mask()
     off_fluid = {
@@ -454,6 +495,20 @@ def relative_permittivity_field(
 
 @dataclass(frozen=True)
 class CoupledModel:
+    """Poisson with Nernst-Planck, and optionally flow: the ``epnp-ns`` family.
+
+    Parameters
+    ----------
+    flow
+        Whether the Navier-Stokes block is solved; False gives ``pnp``.
+    dielectric_gradient_forces
+        Assembled together and never alone; a deviation from the validated model, default off.
+    velocity_order
+        Element order of ``u``; None means ``order``.
+    pressure_order
+        Element order of ``p``; equal order is selectable only with a stabilisation that permits it.
+    """
+
     electrolyte: Electrolyte
     concentration_M: float = 1.0
     name: str = "epnp-ns"
@@ -496,18 +551,22 @@ class CoupledModel:
 
     @property
     def resolved_velocity_order(self) -> int:
+        """Return the element order of ``u``: :attr:`velocity_order`, else :attr:`order`."""
         return self.order if self.velocity_order is None else self.velocity_order
 
     @property
     def stabilisation_model(self) -> StabilisationModel:
+        """Return the resolved stabilisation mode, read from the registry on each access."""
         return create_stabilisation(self.stabilisation)
 
     @property
     def steric(self) -> bool:
+        """Whether ``beta_i`` is active; owned by the electrolyte's switches."""
         return self.electrolyte.switches.steric
 
     @property
     def species(self) -> tuple[str, ...]:
+        """Names of the solved ionic species."""
         return tuple(ion.name for ion in self.electrolyte.species)
 
     @property
@@ -556,6 +615,7 @@ class CoupledModel:
     def essential_boundaries(
         self, boundaries: CoupledBoundaries = DEFAULT_BOUNDARIES
     ) -> dict[str, str]:
+        """Return the pattern of every essential condition :meth:`space` imposes."""
         essential = {POTENTIAL: boundaries.potential}
         for name in self.species:
             essential[concentration_field_name(name)] = boundaries.concentration_boundary(name)
@@ -566,6 +626,7 @@ class CoupledModel:
 
     @property
     def scales(self) -> Scales:
+        """The scale set of this case, on the mesh's nanometre unit."""
         return mesh_unit_scales(self.electrolyte, self.concentration_M)
 
     @property
@@ -617,6 +678,7 @@ class CoupledModel:
         return deviations
 
     def space(self, mesh: Mesh, boundaries: CoupledBoundaries = DEFAULT_BOUNDARIES) -> FESpace:
+        """Return the product space of the declared fields, with ``u_r = 0`` on the axis."""
         import ngsolve as ngs
 
         fluid = mesh.Materials(self.fluid)
@@ -654,6 +716,7 @@ class CoupledModel:
     def coefficients(
         self, variables: ConcentrationVariables, wall_distance_nm: Expression
     ) -> NondimensionalCoefficients:
+        """Return the nondimensional material coefficients for a state."""
         return NondimensionalCoefficients(
             electrolyte=self.electrolyte,
             scales=self.scales,
@@ -664,6 +727,7 @@ class CoupledModel:
     def concentration_variables(
         self, functions: Mapping[str, Expression]
     ) -> ConcentrationVariables:
+        """Return the concentration variables for the current branch."""
         fields = {name: functions[concentration_field_name(name)] for name in self.species}
         if self.log_variables:
             return ConcentrationVariables.logarithmic_branch(fields)
@@ -672,12 +736,20 @@ class CoupledModel:
     def cell_peclet(
         self, state: GridFunction, wall_distance_nm: Expression
     ) -> dict[str, Expression]:
+        """Return ``Pe_K`` per species at ``state``, the cell-Peclet diagnostic.
+
+        Parameters
+        ----------
+        state
+            A grid function on this model's product space, normally the converged one.
+        """
         states = self.transport_states(self._split(list(state.components)), wall_distance_nm)
         return {name: species_cell_peclet(species) for name, species in states.items()}
 
     def transport_states(
         self, functions: Mapping[str, Expression], wall_distance_nm: Expression
     ) -> dict[str, TransportState]:
+        """Return one transport state per species, from the solved fields."""
         variables = self.concentration_variables(functions)
         coefficients = self.coefficients(variables, wall_distance_nm)
         return {
@@ -692,6 +764,13 @@ class CoupledModel:
         *,
         solid_fraction: Expression | None = None,
     ) -> Expression:
+        """Return ``eps~_r`` over all of Omega, corrected in the fluid.
+
+        Parameters
+        ----------
+        solid_fraction
+            The supplied solid fraction, if any; it replaces the sharp split by a blend.
+        """
         return relative_permittivity_field(
             mesh,
             model_name=self.name,
@@ -704,6 +783,7 @@ class CoupledModel:
         )
 
     def relative_permittivity(self, solution: ModelSolution) -> Expression:
+        """Return ``eps~_r`` as the solve used it, at the converged state."""
         values = {field.name: solution.component(field.name) for field in self.fields}
         coefficients = self.coefficients(
             self.concentration_variables(values), solution.wall_distance_nm
@@ -726,6 +806,15 @@ class CoupledModel:
         state: GridFunction | None = None,
         **kwargs: Option,
     ) -> IntegralTerm:
+        """Return the coupled weak residual, written in the trial functions.
+
+        Parameters
+        ----------
+        measures
+            Symmetry and quadrature policy; its element order must match the model's.
+        fixed_charge
+            The dimensionless protein space charge, if any.
+        """
         _reject_unknown(kwargs, f"{self.name!r}.residual_form")
         if measures.element_order != self.order:
             raise ValueError(
@@ -965,6 +1054,13 @@ class CoupledModel:
         *,
         increment: GridFunction | None = None,
     ) -> tuple[Sequence[Gate], Sequence[Gate]]:
+        """Return the state and increment gates for a solve.
+
+        Parameters
+        ----------
+        increment
+            The Newton direction; the increment gates are returned only if it is given.
+        """
         fields = self._split(list(state.components))
         fluid_sampler = FieldSampler.shared(
             mesh, coordinates=measures.coordinate_names, materials=self.fluid
@@ -1004,6 +1100,17 @@ class CoupledModel:
         callback: Callable[[NewtonStep], None] | None = None,
         **kwargs: Option,
     ) -> ModelSolution:
+        """Solve the coupled system by damped Newton, gated at every iterate.
+
+        Parameters
+        ----------
+        potential_values
+            Essential data for phi~, in units of V_T.
+        concentration_values
+            Essential data for each c~_i, dimensionless; bulk, that is 1, by default.
+        velocity_values
+            Essential data for u~; zero (no-slip) by default.
+        """
         import ngsolve as ngs
 
         _reject_unknown(kwargs, f"{self.name!r}.solve")
@@ -1060,6 +1167,7 @@ class CoupledModel:
         *,
         initial_concentrations: Mapping[str, float] | None = None,
     ) -> GridFunction:
+        """Return a fresh state on this model's space: bulk ions, zero potential and flow."""
         import ngsolve as ngs
 
         state = ngs.GridFunction(self.space(mesh, boundaries), name=f"{self.name}_state")
@@ -1144,6 +1252,16 @@ class _SingleFieldModel:
 
 @dataclass(frozen=True)
 class ElectrostaticModel(_SingleFieldModel):
+    """``pb`` and ``pb-linear``: one screened field, no transport.
+
+    Parameters
+    ----------
+    screening
+        ``linear`` for Debye-Hueckel, ``sinh`` for nonlinear Poisson-Boltzmann.
+    screening_length_nm
+        A Debye length stated by the caller, in nm, in place of the case's.
+    """
+
     name: str
     screening: Literal["linear", "sinh"]
     electrolyte: Electrolyte
@@ -1165,6 +1283,7 @@ class ElectrostaticModel(_SingleFieldModel):
 
     @property
     def debye_length_nm(self) -> float:
+        """``lambda_D`` in nm: :attr:`screening_length_nm` if stated, else the case's."""
         if self.screening_length_nm is not None:
             return self.screening_length_nm
         return self.scales.debye_length_nm
@@ -1182,6 +1301,7 @@ class ElectrostaticModel(_SingleFieldModel):
         }
 
     def relative_permittivity(self, solution: ModelSolution) -> Expression | None:
+        """Return ``None``: the screened models carry no material permittivity."""
         return None
 
     def residual_form(
@@ -1193,6 +1313,13 @@ class ElectrostaticModel(_SingleFieldModel):
         state: GridFunction | None = None,
         **kwargs: Option,
     ) -> IntegralTerm:
+        """Return the weak residual in the trial function; TypeError for an unknown keyword.
+
+        Parameters
+        ----------
+        debye_length_nm
+            Overrides the case's Debye length.
+        """
         _reject_unknown(kwargs, f"{self.name!r}.residual_form")
         trial, test = space.TnT()
         screening_nm = self.debye_length_nm if debye_length_nm is None else debye_length_nm
@@ -1213,6 +1340,7 @@ class ElectrostaticModel(_SingleFieldModel):
         solver: str = DEFAULT_SOLVER,
         **kwargs: Option,
     ) -> ModelSolution:
+        """Solve the screened model by the Poisson-Boltzmann solver."""
         import ngsolve as ngs
 
         _reject_unknown(kwargs, f"{self.name!r}.solve")
@@ -1245,6 +1373,16 @@ RADIAL_WEIGHT_ORDER = 1
 
 @dataclass(frozen=True)
 class PoissonModel(_SingleFieldModel):
+    """``poisson``: electrostatics over all of Omega, with no mobile ions.
+
+    Parameters
+    ----------
+    fluid
+        Material pattern of the fluid, where the relative permittivity is 1.
+    solid_permittivities
+        Relative permittivity per solid material.
+    """
+
     electrolyte: Electrolyte
     concentration_M: float = 1.0
     name: str = "poisson"
@@ -1280,6 +1418,7 @@ class PoissonModel(_SingleFieldModel):
         }
 
     def permittivity(self, mesh: Mesh, *, solid_fraction: Expression | None = None) -> Expression:
+        """Return ``eps~_r`` over all of Omega: 1 in the fluid, each solid its own ratio."""
         scale = self.scales.relative_permittivity
         return relative_permittivity_field(
             mesh,
@@ -1293,6 +1432,7 @@ class PoissonModel(_SingleFieldModel):
         )
 
     def relative_permittivity(self, solution: ModelSolution) -> Expression:
+        """Return ``eps~_r`` with the solid fraction the solve used."""
         return self.permittivity(solution.space.mesh, solid_fraction=solution.solid_fraction)
 
     def _check_order(self, measures: Measures) -> None:
@@ -1312,6 +1452,7 @@ class PoissonModel(_SingleFieldModel):
         state: GridFunction | None = None,
         **kwargs: Option,
     ) -> IntegralTerm:
+        """Return the Poisson residual ``int eps~ grad(phi~).grad(v) r - int rho~_pore v r``."""
         _reject_unknown(kwargs, f"{self.name!r}.residual_form")
         self._check_order(measures)
         trial, test = space.TnT()
@@ -1346,6 +1487,7 @@ class PoissonModel(_SingleFieldModel):
         solver: str = DEFAULT_SOLVER,
         **kwargs: Option,
     ) -> ModelSolution:
+        """Solve the linear problem once with the direct solver, as one Newton step."""
         import ngsolve as ngs
 
         _reject_unknown(kwargs, f"{self.name!r}.solve")
@@ -1423,10 +1565,12 @@ def _registration(name: str) -> _Registration:
 
 
 def declaration(name: str) -> ModelDeclaration:
+    """Return what the model registered as ``name`` admits; KeyError if unregistered."""
     return _registration(name).declaration
 
 
 def create(name: str, **kwargs: Option) -> PhysicsModel:
+    """Build the physics model registered as ``name``; ValueError on a name mismatch."""
     model = _registration(name).builder(**kwargs)
     if model.name != name:
         raise ValueError(
@@ -1440,22 +1584,26 @@ def create(name: str, **kwargs: Option) -> PhysicsModel:
 def build_case_model(
     model: str, electrolyte: Electrolyte, concentration_M: float, options: Mapping[str, Option]
 ) -> PhysicsModel:
+    """Build the named model at a case's operating point, importing no backend."""
     return create(model, electrolyte=electrolyte, concentration_M=concentration_M, **options)
 
 
 def case_model(resolved: ResolvedCase) -> PhysicsModel:
+    """Build a resolved case's model at its operating point."""
     return build_case_model(
         resolved.model, resolved.electrolyte, resolved.concentration_M, resolved.model_options
     )
 
 
 def solves_transport(model: PhysicsModel) -> bool:
+    """Return whether ``model`` solves ionic transport, by its declaration."""
     if model.name in _REGISTRY:
         return _REGISTRY[model.name].declaration.transport
     return isinstance(model, CoupledModel)
 
 
 def transport_model(subject: PhysicsModel | ModelSolution) -> TransportModel:
+    """Return the model, or the solution's model, as a transport model; TypeError otherwise."""
     model = subject.model if isinstance(subject, ModelSolution) else subject
     if not solves_transport(model):
         raise TypeError(

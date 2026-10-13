@@ -21,9 +21,12 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
 
 class MaterialsStage:
+    """Stage 8: electrolyte specification to a resolved, hashed coefficient set."""
+
     name = "materials"
 
     def describe(self) -> StageDescription:
+        """Return the registry's description of this stage."""
         return describe(self.name)
 
     def run(
@@ -33,6 +36,7 @@ class MaterialsStage:
         progress: Progress | None = None,
         cancel: CancelToken | None = None,
     ) -> MaterialsArtefact:
+        """Resolve the electrolyte and emit the stage-8 artefact; Cancelled if already cancelled."""
         check_cancelled(cancel, "materials")
         report(progress, 0.0, "resolving the electrolyte")
         artefact = self.key(inputs)
@@ -40,6 +44,7 @@ class MaterialsStage:
         return artefact
 
     def key(self, inputs: StageInputs) -> MaterialsArtefact:
+        """Return the stage-8 artefact, which is its own key."""
         resolved = inputs.resolved
         electrolyte = resolved.electrolyte
         parameter_file = electrolyte.parameter_file

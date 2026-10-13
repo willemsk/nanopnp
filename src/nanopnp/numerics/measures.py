@@ -33,6 +33,8 @@ def _gradient_default_order(element_order: int) -> int:
 
 @dataclass(frozen=True)
 class Measures:
+    """Volume and surface measures for one symmetry and one element order."""
+
     symmetry: Symmetry = "axisymmetric"
     element_order: int = 2
     weight_extra_order: int = 0
@@ -46,14 +48,17 @@ class Measures:
 
     @property
     def is_axisymmetric(self) -> bool:
+        """Whether integrals carry the ``r`` weight."""
         return self.symmetry == "axisymmetric"
 
     @property
     def coordinate_names(self) -> tuple[str, str]:
+        """Names of the two mesh coordinates, for diagnostics naming a location."""
         return ("r", "z") if self.is_axisymmetric else ("x", "y")
 
     @property
     def radial_weight(self) -> Numeric:
+        """The ``r`` weight itself: the radial coordinate, or 1 in planar geometry."""
         if not self.is_axisymmetric:
             return 1.0
         import ngsolve as ngs
@@ -67,6 +72,7 @@ class Measures:
         return bonus
 
     def bonus_order(self, *, singular: bool = False, extra: int = 0) -> int:
+        """Return the quadrature bonus for one term; ``singular`` marks a ``1/r`` factor."""
         bonus = extra
         if singular:
             # The bonus alone must reach the minimum: NGSolve's own estimate is unknowable
@@ -75,6 +81,7 @@ class Measures:
         return bonus
 
     def integration_order(self, *, singular: bool = False, extra: int = 0) -> int:
+        """Return the order integrate evaluates at, never coarser than ngsolve.Integrate."""
         base = max(_gradient_default_order(self.element_order), NGSOLVE_INTEGRATE_ORDER)
         return base + self.bonus_order(singular=singular, extra=extra)
 
@@ -87,6 +94,13 @@ class Measures:
         rule_order: int | None = None,
         **kwargs: Option,
     ) -> IntegralTerm:
+        """Return the weighted volume integral term of ``integrand``, with the ``r`` weight.
+
+        Raises
+        ------
+        ValueError
+            For a direct ``bonus_intorder``, or an invalid ``rule_order``.
+        """
         import ngsolve as ngs
 
         if "bonus_intorder" in kwargs:
@@ -110,6 +124,7 @@ class Measures:
         extra_order: int = 0,
         **kwargs: Option,
     ) -> IntegralTerm:
+        """Return the weighted surface integral term; the axis conditions are natural."""
         import ngsolve as ngs
 
         if "bonus_intorder" in kwargs:
@@ -128,6 +143,7 @@ class Measures:
         what: str = "integral",
         **kwargs: Option,
     ) -> float:
+        """Evaluate a weighted integral; ValueError on a non-finite result."""
         import ngsolve as ngs
 
         if rule_order is not None:
@@ -152,8 +168,17 @@ PLANAR = Measures(symmetry="planar", element_order=2)
 
 @dataclass(frozen=True)
 class FixedCharge:
+    """A fixed-charge density and the integration rule it is assembled with.
+
+    Parameters
+    ----------
+    density
+        Dimensionless where a model takes it, SI before scaling.
+    """
+
     density: Expression
     rule_order: int | None
 
     def scaled(self, factor: Numeric) -> FixedCharge:
+        """Return the density times ``factor``, with the same rule."""
         return FixedCharge(density=factor * self.density, rule_order=self.rule_order)

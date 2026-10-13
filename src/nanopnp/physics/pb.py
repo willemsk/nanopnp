@@ -45,6 +45,13 @@ def dimensionless_surface_charge(
     temperature_K: float = REFERENCE_TEMPERATURE_K,
     length_nm: float = 1.0,
 ) -> float:
+    """Return the Neumann datum a surface charge imposes on phi~, by Gauss's law.
+
+    Parameters
+    ----------
+    relative_permittivity
+        The electrolyte's eps_r, the same one the Debye length was built from.
+    """
     return (
         surface_charge_C_m2
         * length_nm
@@ -61,6 +68,7 @@ def linear_pb_operator(
     debye_length_nm: float,
     ions: Option | None = None,
 ) -> IntegralTerm:
+    """Return the Debye-Hueckel operator ``int (grad phi~ . grad v + phi~ v / lambda^2) r``."""
     screening = 1.0 / debye_length_nm**2
     return poisson_operator(trial, test, measures) + measures.volume(
         screening * trial * test, **_ion_region(ions)
@@ -79,6 +87,7 @@ def nonlinear_pb_residual(
     debye_length_nm: float,
     ions: Option | None = None,
 ) -> IntegralTerm:
+    """Return the nonlinear Poisson-Boltzmann residual, in the trial function."""
     import ngsolve as ngs
 
     screening = 1.0 / debye_length_nm**2
@@ -103,6 +112,21 @@ def solve_pb(
     settings: NewtonSettings = DEFAULT_SETTINGS,
     initial: GridFunction | None = None,
 ) -> GridFunction:
+    """Solve Poisson-Boltzmann and return the nondimensional potential.
+
+    Parameters
+    ----------
+    debye_length_nm
+        Debye length in mesh units.
+    dirichlet
+        Boundary-name regular expression of the essential condition; the axis must not appear.
+    boundary_values
+        Values on those boundaries, in units of V_T.
+    ions
+        Material-name regular expression of the mobile charge; None puts it everywhere.
+    nonlinear
+        Solve the full sinh form, or the Debye-Hueckel linearisation.
+    """
     return solve_pb_recorded(
         mesh,
         measures,
@@ -136,6 +160,7 @@ def solve_pb_recorded(
     settings: NewtonSettings = DEFAULT_SETTINGS,
     initial: GridFunction | None = None,
 ) -> tuple[GridFunction, NewtonResult | None]:
+    """Solve Poisson-Boltzmann, returning the potential and its convergence record."""
     import ngsolve as ngs
 
     if measures.element_order != order:

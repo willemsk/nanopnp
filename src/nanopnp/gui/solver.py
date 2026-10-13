@@ -42,6 +42,14 @@ __all__ = [
 
 @dataclass(frozen=True)
 class RunRequest:
+    """Everything the solver child needs, as strings it re-resolves for itself.
+
+    Parameters
+    ----------
+    upto
+        The last stage to walk, or ``None`` for the whole pipeline.
+    """
+
     case: str
     store: str | None = None
     upto: str | None = None
@@ -49,12 +57,16 @@ class RunRequest:
 
 @dataclass(frozen=True)
 class Started:
+    """The child is up and about to read the case."""
+
     case: str
     store: str | None
 
 
 @dataclass(frozen=True)
 class Stage:
+    """A pipeline stage is about to run."""
+
     name: str
     index: int
     total: int
@@ -62,6 +74,8 @@ class Stage:
 
 @dataclass(frozen=True)
 class Produced:
+    """A stage's artefact is in the store, named by its schema and hash."""
+
     name: str
     schema: str
     hash: str
@@ -71,6 +85,14 @@ class Produced:
 
 @dataclass(frozen=True)
 class Rung:
+    """A continuation rung is about to be solved.
+
+    Parameters
+    ----------
+    reporting
+        Whether the rung's solve reports Newton steps; a silent rung is not a failed one.
+    """
+
     name: str
     stage: int
     index: int
@@ -81,6 +103,8 @@ class Rung:
 
 @dataclass(frozen=True)
 class Iteration:
+    """One accepted Newton step of the rung most recently announced."""
+
     iteration: int
     residual: float
     update: float
@@ -91,18 +115,30 @@ class Iteration:
 
 @dataclass(frozen=True)
 class Progress:
+    """A completion fraction in [0, 1] and its caption, ending at 1."""
+
     fraction: float
     message: str
 
 
 @dataclass(frozen=True)
 class Finished:
+    """The run completed and wrote its run directory."""
+
     directory: str
     exit_code: int = EXIT_OK
 
 
 @dataclass(frozen=True)
 class Failed:
+    """The run raised, with the exit class the command line would return.
+
+    Parameters
+    ----------
+    exit_code
+        The §3.1 class of the exception: 3 the case, 4 a gate, 5 convergence, 1 unclassified.
+    """
+
     exit_code: int
     error: str
     message: str
@@ -110,6 +146,8 @@ class Failed:
 
 @dataclass(frozen=True)
 class Cancelled:
+    """The run stopped because the token was set, naming where it stopped."""
+
     where: str
     exit_code: int = EXIT_CANCELLED
 
@@ -121,6 +159,8 @@ RunEvent: TypeAlias = (
 
 @dataclass(frozen=True)
 class QueueProgress:
+    """A progress callback that posts onto a queue."""
+
     queue: Queue[RunEvent]
 
     def __call__(self, fraction: float, message: str) -> None:
@@ -129,6 +169,8 @@ class QueueProgress:
 
 @dataclass(frozen=True)
 class QueueStage:
+    """A stage callback that posts onto a queue."""
+
     queue: Queue[RunEvent]
 
     def __call__(self, name: str, index: int, total: int) -> None:
@@ -137,6 +179,8 @@ class QueueStage:
 
 @dataclass(frozen=True)
 class QueueArtefact:
+    """An artefact callback that posts onto a queue."""
+
     queue: Queue[RunEvent]
     store: str
 
@@ -154,11 +198,14 @@ class QueueArtefact:
 
 @dataclass(frozen=True)
 class QueueSolve:
+    """A solve callback that posts onto a queue, with numbers kept as numbers."""
+
     queue: Queue[RunEvent]
 
     def rung(
         self, name: str, stage: int, index: int, total: int, reporting: bool, tolerance: float
     ) -> None:
+        """Post one continuation rung."""
         self.queue.put(
             Rung(
                 name=str(name),
@@ -179,6 +226,7 @@ class QueueSolve:
         trials: int,
         forced: bool,
     ) -> None:
+        """Post one accepted Newton step."""
         self.queue.put(
             Iteration(
                 iteration=int(iteration),
@@ -192,10 +240,13 @@ class QueueSolve:
 
 
 class EventCancel:
+    """A cancel token over a :class:`multiprocessing.Event`, for crossing processes."""
+
     def __init__(self, event: EventType) -> None:
         self._event = event
 
     def cancel(self) -> None:
+        """Ask the running stage to stop at its next check."""
         self._event.set()
 
     def cancelled(self) -> bool:
@@ -203,6 +254,7 @@ class EventCancel:
 
 
 def failure_event(error: BaseException) -> Failed:
+    """Return the :class:`Failed` event that one exception produces."""
     return Failed(
         exit_code=classify(error),
         error=type(error).__qualname__,
@@ -242,12 +294,21 @@ def _worker(request: RunRequest, events: Queue[RunEvent], cancel: EventType) -> 
 
 @dataclass
 class SolverProcess:
+    """One background solve: start it, cancel it, drain what it has said.
+
+    Parameters
+    ----------
+    request
+        The case and the store, as plain strings.
+    """
+
     request: RunRequest
     _process: BaseProcess | None = field(default=None, repr=False)
     _events: Queue[RunEvent] | None = field(default=None, repr=False)
     _cancel: EventType | None = field(default=None, repr=False)
 
     def start(self) -> None:
+        """Spawn the child and begin the run; raise RuntimeError if already started."""
         if self._process is not None:
             raise RuntimeError(
                 "this SolverProcess has already been started; construct another one rather "
@@ -266,10 +327,12 @@ class SolverProcess:
         logger.info("solving %s in process %s", self.request.case, self._process.pid)
 
     def cancel(self) -> None:
+        """Ask the child to stop at its next cancellation check; nothing is written."""
         if self._cancel is not None:
             self._cancel.set()
 
     def drain(self) -> tuple[RunEvent, ...]:
+        """Return every event posted since the last call, oldest first."""
         if self._events is None:
             return ()
         found: list[RunEvent] = []
@@ -281,12 +344,15 @@ class SolverProcess:
 
     @property
     def running(self) -> bool:
+        """Whether the child is alive."""
         return self._process is not None and self._process.is_alive()
 
     @property
     def exit_code(self) -> int | None:
+        """The child's process exit status, or ``None`` while it is running."""
         return None if self._process is None else self._process.exitcode
 
     def join(self, timeout: float | None = None) -> None:
+        """Wait for the child to exit."""
         if self._process is not None:
             self._process.join(timeout)

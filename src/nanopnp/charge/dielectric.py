@@ -96,6 +96,8 @@ DERIVED_CONSTANTS: dict[str, object] = {
 
 @dataclass(frozen=True)
 class MaterialMean:
+    """The mean of chi over one material, and the branch it must take."""
+
     material: str
     mean: float
     branch: str
@@ -103,6 +105,7 @@ class MaterialMean:
 
     @property
     def within(self) -> bool:
+        """Return whether the mean lies on the side of the threshold its branch requires."""
         if self.branch == "solid":
             return self.mean >= SOLID_MEAN_FLOOR
         if self.material == EXCLUSION_MATERIAL:
@@ -111,6 +114,7 @@ class MaterialMean:
 
     @property
     def needs(self) -> str:
+        """Return the threshold this material's mean is held to, as prose."""
         if self.branch == "solid":
             return f">= {SOLID_MEAN_FLOOR:g}"
         if self.material == EXCLUSION_MATERIAL:
@@ -118,11 +122,14 @@ class MaterialMean:
         return f"<= {FLUID_MEAN_CEILING:g}"
 
     def summary(self) -> dict[str, object]:
+        """Return this mean as plain data, for the manifest."""
         return {"material": self.material, "mean": self.mean, "branch": self.branch}
 
 
 @dataclass(frozen=True)
 class SolidFractionField:
+    """A supplied solid fraction, ready to blend onto a mesh."""
+
     document: FieldDocument
     grid: RadialGrid
     source: Path
@@ -136,19 +143,29 @@ class SolidFractionField:
             )
 
     def chi(self) -> Expression:
+        """Return the solid fraction as a coefficient function; zero outside the grid."""
         return coefficient(self.grid)
 
     def check_range(self) -> None:
+        """Abort unless every grid sample of chi lies in [0, 1]."""
         check_range(self.grid, what="the supplied solid fraction")
 
     def material_means(
         self, mesh: Mesh, measures: Measures, *, solids: Iterable[str]
     ) -> tuple[MaterialMean, ...]:
+        """Return the mean of chi over every material of mesh, volume-weighted.
+
+        Parameters
+        ----------
+        solids
+            The materials blended to eps_p; every other material takes the fluid branch.
+        """
         return material_means(self.chi(), mesh, measures, solids=solids)
 
     def check_materials(
         self, mesh: Mesh, measures: Measures, *, solids: Iterable[str]
     ) -> tuple[MaterialMean, ...]:
+        """Abort unless every material's mean chi matches its branch."""
         return check_registration(
             self.material_means(mesh, measures, solids=solids),
             what="the supplied solid fraction",
@@ -156,6 +173,7 @@ class SolidFractionField:
 
 
 def check_range(grid: RadialGrid, *, what: str) -> None:
+    """Abort unless every sample of grid lies in [0, 1]."""
     import numpy as np
 
     values = grid.values
@@ -180,6 +198,7 @@ def check_range(grid: RadialGrid, *, what: str) -> None:
 def material_means(
     chi: Expression, mesh: Mesh, measures: Measures, *, solids: Iterable[str]
 ) -> tuple[MaterialMean, ...]:
+    """Return the r-weighted mean of chi over every material of mesh."""
     import ngsolve as ngs
 
     solid_set = set(solids)
@@ -205,6 +224,7 @@ def material_means(
 
 
 def check_registration(means: tuple[MaterialMean, ...], *, what: str) -> tuple[MaterialMean, ...]:
+    """Abort unless every material's mean chi matches its branch."""
     failed = [mean for mean in means if not mean.within]
     if not failed:
         return means
@@ -221,6 +241,7 @@ def check_registration(means: tuple[MaterialMean, ...], *, what: str) -> tuple[M
 
 
 def load_solid_fraction(path: str | Path) -> SolidFractionField:
+    """Read a field document and its grid, and return the dielectric field."""
     source = Path(path)
     document = load_document(source)
     return SolidFractionField(
@@ -229,6 +250,7 @@ def load_solid_fraction(path: str | Path) -> SolidFractionField:
 
 
 def summary(field: SolidFractionField, means: Sequence[MaterialMean]) -> dict[str, object]:
+    """Return the manifest record of a supplied dielectric field."""
     return {
         **field.document.summary(),
         "grid": field.grid.descriptor(),
@@ -239,6 +261,7 @@ def summary(field: SolidFractionField, means: Sequence[MaterialMean]) -> dict[st
 
 
 def smooth_step(x: np.ndarray) -> np.ndarray:
+    """Return S(x) = 3x^2 - 2x^3 on [0, 1]: 0 below, 1 above, C1."""
     import numpy as np
 
     clipped = np.clip(x, 0.0, 1.0)
@@ -269,6 +292,13 @@ def water_facing(
     inner_trans_nm: float,
     inner_cis_nm: float,
 ) -> tuple[np.ndarray, np.ndarray]:
+    """Split the profile into water-facing and membrane-facing (k, 2, 2) segments.
+
+    Parameters
+    ----------
+    half_thickness_nm, inner_trans_nm, inner_cis_nm
+        The membrane half-thickness and its inner radii on either face, in nm.
+    """
     import numpy as np
 
     loop = np.asarray(points, dtype=np.float64)
@@ -357,6 +387,13 @@ def derive_solid_fraction(
     inner_cis_nm: float,
     transition_nm: float,
 ) -> RadialGrid:
+    """Return chi, sampled on its lattice, from the stage-4 profile.
+
+    Parameters
+    ----------
+    transition_nm
+        The transition width delta, in nm.
+    """
     import numpy as np
 
     loop = np.asarray(points, dtype=np.float64)
@@ -406,12 +443,15 @@ def derive_solid_fraction(
 
 @dataclass(frozen=True)
 class DerivedSolidFraction:
+    """A chi derived from the stage-4 profile, bound to a mesh."""
+
     grid: RadialGrid
     transition_nm: float
     held: tuple[str, ...]
     mesh: Mesh
 
     def chi(self) -> Expression:
+        """Return chi on the mesh: the lattice's, and 1 on every held solid."""
         present = [name for name in self.held if name in set(self.mesh.GetMaterials())]
         lattice = coefficient(self.grid)
         if not present:
@@ -420,16 +460,19 @@ class DerivedSolidFraction:
         return indicator + (1.0 - indicator) * lattice
 
     def check_range(self) -> None:
+        """Abort unless every lattice sample lies in [0, 1]."""
         check_range(self.grid, what="the derived solid fraction")
 
     def material_means(
         self, mesh: Mesh, measures: Measures, *, solids: Iterable[str]
     ) -> tuple[MaterialMean, ...]:
+        """Return the mean of chi over every material of mesh."""
         return material_means(self.chi(), mesh, measures, solids=solids)
 
     def check_materials(
         self, mesh: Mesh, measures: Measures, *, solids: Iterable[str]
     ) -> tuple[MaterialMean, ...]:
+        """Abort unless every material's mean chi matches its branch."""
         return check_registration(
             self.material_means(mesh, measures, solids=solids),
             what="the derived solid fraction",
@@ -439,6 +482,7 @@ class DerivedSolidFraction:
 def derived_summary(
     field: DerivedSolidFraction, means: Sequence[MaterialMean]
 ) -> dict[str, object]:
+    """Return the manifest record of a derived chi."""
     return {
         "source": DERIVED_SOURCE,
         "transition_nm": field.transition_nm,

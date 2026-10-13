@@ -8,6 +8,13 @@ __all__ = ["set_boundary_values"]
 
 
 def set_boundary_values(component: GridFunction, values: Expression, region: Option) -> None:
+    """Write ``values`` onto ``region``, leaving the rest of the field untouched.
+
+    Parameters
+    ----------
+    component
+        The field to write into, in place; on a product space, one component.
+    """
     import ngsolve as ngs
 
     space = component.space

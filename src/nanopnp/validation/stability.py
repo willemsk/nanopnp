@@ -26,16 +26,21 @@ REFERENCE_ENVIRONMENT = "linux-x86_64/X86_V3"
 
 
 class MeshEntry(BaseModel):
+    """One deployed mesh of a walk, and the walk's values on it."""
+
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     values: dict[str, str]
     seen_on: list[str] = Field(default_factory=list)
 
     def floats(self) -> dict[str, float]:
+        """Return the values as floats."""
         return {name: float.fromhex(value) for name, value in self.values.items()}
 
 
 class WalkGolden(BaseModel):
+    """Every mesh recorded for one walk, and the tolerance their spread argues."""
+
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     reference_mesh: str
@@ -44,6 +49,8 @@ class WalkGolden(BaseModel):
 
 
 class StabilityGolden(BaseModel):
+    """The whole golden file."""
+
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     schema_: Literal["nanopnp/golden/stability/v0.5"] = Field(alias="schema")
@@ -55,10 +62,12 @@ class StabilityGolden(BaseModel):
 
     @classmethod
     def read(cls, path: Path) -> StabilityGolden:
+        """Read and validate a golden file."""
         return cls.model_validate(json.loads(path.read_text(encoding="utf-8")))
 
     @classmethod
     def empty(cls) -> StabilityGolden:
+        """Return a golden with no walk, at this module's constants."""
         return cls.model_validate(
             {
                 "schema": SCHEMA,
@@ -71,6 +80,7 @@ class StabilityGolden(BaseModel):
         )
 
     def write(self, path: Path) -> None:
+        """Write the golden with walks and meshes sorted, so a diff shows only what moved."""
         document = self.model_dump(by_alias=True)
         document["walks"] = {
             walk: {**entry, "meshes": dict(sorted(entry["meshes"].items()))}
@@ -82,6 +92,7 @@ class StabilityGolden(BaseModel):
 def environment() -> str:
     # NumPy publishes these only on its private extension module; numpy.show_runtime
     # reads them from there too. Imported here, not at module scope (CLAUDE.md).
+    """Return ``<sys.platform>-<machine>/<highest NumPy SIMD target enabled>``."""
     umath = importlib.import_module("numpy._core._multiarray_umath")
     features: dict[str, bool] = umath.__cpu_features__
     enabled = [target for target in umath.__cpu_dispatch__ if features.get(target)]
@@ -90,10 +101,12 @@ def environment() -> str:
 
 
 def relative_drift(value: float, reference: float) -> float:
+    """Return ``|value - reference| / |reference|``; a golden never holds zero."""
     return abs(value - reference) / abs(reference)
 
 
 def spread(walk: WalkGolden) -> float:
+    """Return the largest relative drift of any recorded mesh from the reference mesh."""
     reference = walk.meshes[walk.reference_mesh].floats()
     return max(
         (
@@ -106,6 +119,7 @@ def spread(walk: WalkGolden) -> float:
 
 
 def moved_tolerance(walk: WalkGolden, golden: StabilityGolden) -> float | None:
+    """Return the mesh-moved tolerance a walk's recorded meshes argue, or ``None`` with one mesh."""
     if len(walk.meshes) < 2:
         return None
     return max(golden.safety_factor * spread(walk), golden.same_mesh_tolerance)
@@ -113,6 +127,8 @@ def moved_tolerance(walk: WalkGolden, golden: StabilityGolden) -> float | None:
 
 @dataclass(frozen=True)
 class Verdict:
+    """One walk's comparison with the golden: which question was asked, and its answer."""
+
     walk: str
     mode: Literal["same-mesh", "mesh-moved", "missing"]
     tolerance: float | None
@@ -121,6 +137,7 @@ class Verdict:
 
 
 def entry_for(walk: str, mesh_hash: str, values: Mapping[str, float], where: str) -> str:
+    """Return the record :func:`fold` reads, as JSON, for a failing walk to print."""
     record = {
         "schema": SCHEMA,
         "walk": walk,
@@ -138,6 +155,7 @@ def compare(
     values: Mapping[str, float],
     where: str,
 ) -> Verdict:
+    """Compare one walk's ``values`` on ``mesh_hash`` with the golden, within its tolerance."""
     printed = entry_for(walk, mesh_hash, values, where)
     record = golden.walks.get(walk)
     if record is None:
@@ -211,12 +229,20 @@ def compare(
     return Verdict(walk, mode, tolerance, drifts, failure)
 
 
-class FoldError(ValueError): ...
+class FoldError(ValueError):
+    """A record :func:`fold` refuses: it would overwrite, or push a tolerance past the ceiling."""
 
 
 def fold(
     golden: StabilityGolden, record: Mapping[str, object], *, replace: bool = False
 ) -> StabilityGolden:
+    """Return ``golden`` with one recorded walk folded in, its tolerance re-derived.
+
+    Raises
+    ------
+    FoldError
+        If a known mesh's values differ without ``replace``, or the tolerance exceeds the ceiling.
+    """
     if record.get("schema") != SCHEMA:
         raise FoldError(f"record schema {record.get('schema')!r}, not {SCHEMA!r}")
     walk = str(record["walk"])
