@@ -1,15 +1,4 @@
-"""Stage 3 of section 5.2: symmetry reduction to (r, z) (FR-05, FR-06, CON-04).
-
-The stage reads stage 2's map and reduces it over exact cell-annulus overlaps to
-the azimuthal mean, the Cₙ-averaged variance and the raw variance, all on the
-``RadialGrid`` axes stage 4 reads (WP19 D7-D10). Its contract is the section 5.3.1
-NOTE on ``geometry.density``.
-
-**The key is n, the bin width, the two method names and stage 2's hash** (D11). The
-detrending rule and the harmonic truncation are named in it because each moves a
-variance. The payload's digest is recorded in the summary and re-checked on load
-(VER-23).
-"""
+"""Stage 3 of section 5.2: symmetry reduction to (r, z)."""
 
 from __future__ import annotations
 
@@ -40,11 +29,9 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 logger = logging.getLogger(__name__)
 
 WORKSPACE_DIRNAME = "tmp"
-"""Directory under the store root the payload is written to when no workspace is given."""
 
 
 def reduction_parameters(inputs: StageInputs) -> dict[str, Canonicalisable]:
-    """Return the stage-3 key's parameters (WP19 D11), or refuse a case without ``structure:``."""
     resolved = inputs.resolved
     if resolved.structure is None or resolved.density is None:
         raise UnsupportedCaseSection(
@@ -60,27 +47,15 @@ def reduction_parameters(inputs: StageInputs) -> dict[str, Canonicalisable]:
 
 
 class SymmetryStage:
-    """Stage 3: a density map to its (r, z) mean and azimuthal variances."""
-
     name = "symmetry"
 
     def __init__(self, *, workspace: Path | None = None) -> None:
-        """Build the stage.
-
-        Parameters
-        ----------
-        workspace
-            Directory the ``.npz`` payload is written to before the store copies it
-            in. Defaults to a fresh directory under the store root.
-        """
         self._workspace = Path(workspace) if workspace is not None else None
 
     def describe(self) -> StageDescription:
-        """Return the registry's description of this stage (FR-27)."""
         return describe(self.name)
 
     def key(self, inputs: StageInputs) -> ReducedArtefact:
-        """Return the artefact key from n, the bin width, the methods and stage 2's hash."""
         return ReducedArtefact(
             parameters=reduction_parameters(inputs),
             inputs={"density": inputs.require("density").hash},
@@ -93,13 +68,6 @@ class SymmetryStage:
         progress: Progress | None = None,
         cancel: CancelToken | None = None,
     ) -> ReducedArtefact:
-        """Reduce the map and emit the stage-3 artefact.
-
-        Raises
-        ------
-        Cancelled
-            If ``cancel`` turns true. No artefact is written.
-        """
         parameters = reduction_parameters(inputs)
         density = inputs.require("density")
         check_cancelled(cancel, "reading the density map")
