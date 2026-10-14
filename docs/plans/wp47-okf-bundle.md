@@ -58,7 +58,7 @@ Opus only after Sonnet fails.
 
 *Compaction checkpoint: after item 5; resume from this plan and `git log`.*
 
-- [ ] 6. `.knowledge/` (D2, D3): real headers, markers, footnotes, `verified` sets, `pending.yaml`, the ceiling, the counts in an Outcome; done when the ledger rows pass.
+- [x] 94b46dc 6. `.knowledge/` (D2, D3): real headers, markers, footnotes, `verified` sets, `pending.yaml`, the ceiling, the counts in an Outcome; done when the ledger rows pass.
 
 > **Outcome — item 6.** 72 claims name a test; 311 are `[tested: pending]` and 47 `[verified]` claims carry no source footnote, so the ceiling is 358 in 55 concepts; 9 `[verified]` claims cite a source by footnote. A `[verified]` claim in a test-evidence concept became a tested or pending claim; elsewhere each stays `[verified]` until WP48 classifies it.
 

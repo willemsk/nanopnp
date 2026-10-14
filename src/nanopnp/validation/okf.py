@@ -259,6 +259,22 @@ def _check_log(log: Path, base: Path) -> list[Finding]:
             findings.append(Finding(name, number, "an entry stands outside any date"))
     if dates != sorted(dates, reverse=True):
         findings.append(Finding(name, 1, "log dates must run newest first"))
+    findings += _empty_dates(lines, name)
+    return findings
+
+
+def _empty_dates(lines: list[str], name: str) -> list[Finding]:
+    findings: list[Finding] = []
+    for number, line in enumerate(lines, start=1):
+        if not LOG_DATE.match(line):
+            continue
+        group = []
+        for following in lines[number:]:
+            if following.startswith("## "):
+                break
+            group.append(following)
+        if not any(entry.startswith("* ") for entry in group):
+            findings.append(Finding(name, number, "a log date holds no entry"))
     return findings
 
 

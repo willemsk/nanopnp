@@ -112,6 +112,8 @@ def test_ver68_log_out_of_form_is_refused(repository: Path) -> None:
     assert any("newest first" in f for f in _check(repository))
     log.write_text("# Log\n\n## yesterday\n* x\n", "utf-8")
     assert any("log.md:3: a log heading must be an ISO date" in f for f in _check(repository))
+    log.write_text("# Log\n\n## 2026-10-14\n\n## 2026-10-12\n* x\n", "utf-8")
+    assert any("log.md:3: a log date holds no entry" in f for f in _check(repository))
     log.unlink()
     assert any("log.md is missing" in f for f in _check(repository))
 
@@ -284,4 +286,22 @@ def test_ver68_repository_citations_all_resolve() -> None:
     own = okf.REPOSITORY / "tests/tier1/test_okf_bundle.py"
     files = [file for file in okf.tracked_files(okf.REPOSITORY) if file != own]
     found = okf.check_citations(okf.REPOSITORY / ".knowledge", files, okf.REPOSITORY)
+    assert not found, "\n".join(str(finding) for finding in found)
+
+
+CEILING = 358
+
+
+def test_ver68_the_bundle_conforms() -> None:
+    if not (okf.REPOSITORY / ".git").exists():
+        pytest.skip("a git checkout is needed to list the tracked files")
+    own = okf.REPOSITORY / "tests/tier1/test_okf_bundle.py"
+    files = [file for file in okf.tracked_files(okf.REPOSITORY) if file != own]
+    found = okf.check_bundle(
+        okf.REPOSITORY / ".knowledge",
+        okf.REPOSITORY / "tests",
+        okf.REPOSITORY / "uv.lock",
+        CEILING,
+        files,
+    )
     assert not found, "\n".join(str(finding) for finding in found)
