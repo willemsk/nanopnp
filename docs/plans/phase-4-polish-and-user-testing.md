@@ -726,6 +726,13 @@ number:
 The plan may give the purely mechanical items to Sonnet. REV-16's key and REV-57's gate stay on
 Opus. No new identifier.
 
+> **Planned, 14 October 2026** ([plan](wp46-small-fixes.md)). The author ruled three choices: a
+> stage given no workspace refuses to write scratch (a break, in `CHANGELOG.md`); only DCD frame
+> times are read without decoding; a map written in nm is refused by the stage-2 spacing range,
+> with no unit marker. The behaviour is written into the §5.3.1 NOTEs on `numerics.mesh` and
+> `structure:`, the IF-05 and workspace-locality NOTEs, and VER-26, VER-29, VER-48, VER-49, VER-53
+> and VER-54, in the plan's commit.
+
 ### OKF bundle and checks — Provisional
 
 It waits on the refactors (G5). F6 and the input note's K1 to K11 bind this package. It covers:
