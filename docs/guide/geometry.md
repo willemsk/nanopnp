@@ -20,8 +20,9 @@ stages, [§5.2.1](../_generated/model/specification.md#521-contour-conditioning-
 contour's conditioning and gate, [§5.2.2](../_generated/model/specification.md#522-meshing) the
 mesh sizes, and the NOTEs of
 [§5.3.1](../_generated/model/specification.md#531-case-file) the case keys. Measurements on ClyA
-are in the knowledge base, [ClyA geometry and
-charge](../_generated/model/knowledge/04-clya-geometry-and-charge.md) §1.3 and §1.4.
+are in the knowledge base, ClyA geometry and
+charge, [§1.3](../_generated/model/knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#13-stage-4-on-real-and-synthetic-inputs-measured)
+and [§1.4](../_generated/model/knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#14-2wcd-against-the-reference-polygon-and-the-isolevel-lever).
 
 ## The case keys
 
