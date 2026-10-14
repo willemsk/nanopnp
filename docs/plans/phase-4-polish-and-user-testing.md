@@ -20,7 +20,7 @@ WP43, the development loop ([wp43-development-loop.md](wp43-development-loop.md)
 tagged `v0.5.0-alpha.10`; WP45, the prose strip ([wp45-prose-strip.md](wp45-prose-strip.md)), to be tagged
 `v0.5.0-alpha.11`; WP46, the small fixes ([wp46-small-fixes.md](wp46-small-fixes.md)), to be tagged
 `v0.5.0-alpha.12`.
-Planned: WP47, the OKF bundle;
+Planned: WP47, the OKF bundle ([plan](wp47-okf-bundle.md));
 WP48, its backfill; WP49, the user-testing protocol (§8.2.9 I1, renumbered by §8.2.10 J1).
 Provisional, and planned by the second `/phase-plan amend 4` once the author has run the sessions
 and ruled every `UT-nn`: the fixes, from WP50, then the documentation increment and the close,
@@ -766,6 +766,9 @@ Its `/wp-plan` puts open questions 3 to 7 to the author (G9). `generate.py` has 
 
 > **Amended, 11 October 2026** (§8.2.10 J1). This is now **WP47**, written against the test node
 > ids that WP36 to WP46 leave.
+
+> **Planned, 14 October 2026** ([plan](wp47-okf-bundle.md)). The author ruled the note's questions 3 to 7
+> (§8.2.7 G12); VER-68 is in Appendix A.
 
 ### OKF backfill — Provisional
 
