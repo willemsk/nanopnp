@@ -1,12 +1,4 @@
-"""Nernst-Planck flux assembly: the PHY-05 sign discipline and the NUM-02 branches.
-
-The steric flux is where this model is most likely to be wrong quietly. A
-flipped sign drives ions *into* crowded regions rather than out of them, pushes
-the packing fraction towards its singularity and diverges — after producing
-several plausible iterates. A collapsed sum over species, or a dropped
-``a_i^3/a_0^3`` prefactor, does not diverge at all: it just returns the wrong
-current. Both are asserted here against arithmetic done in the test.
-"""
+"""Nernst-Planck flux assembly: the PHY-05 sign discipline and the NUM-02 branches."""
 
 import math
 
@@ -35,14 +27,12 @@ SAMPLE = (0.5, 0.25)
 
 @pytest.fixture(scope="module")
 def mesh() -> ngs.Mesh:
-    """Return a small planar slab; these tests interpolate onto it, they do not solve."""
     return SlabGeometry(width_nm=1.0, height_nm=1.0).generate(maxh_nm=0.25)
 
 
 def _build(
     mesh: ngs.Mesh, expressions: dict[str, ngs.CoefficientFunction]
 ) -> tuple[ConcentrationVariables, NondimensionalCoefficients]:
-    """Return concentration variables and coefficients for a prescribed state."""
     space = ngs.H1(mesh, order=2)
     fields = {}
     for name, expression in expressions.items():
@@ -63,12 +53,6 @@ def _build(
 def _linear_state(
     mesh: ngs.Mesh,
 ) -> tuple[ConcentrationVariables, NondimensionalCoefficients]:
-    """Return a state whose two species vary along *different* axes.
-
-    ``c_Na`` varies only in r and ``c_Cl`` only in z, so any coupling between
-    them in the steric flux shows up as a component that would otherwise be
-    identically zero.
-    """
     return _build(
         mesh,
         {"Na+": 1.0 + 0.5 * ngs.x, "Cl-": 1.0 + 0.2 * ngs.y},
@@ -76,7 +60,6 @@ def _linear_state(
 
 
 def test_phy05_steric_volume_ratio_is_not_a_normalisation(mesh: ngs.Mesh) -> None:
-    """``a_i^3/a_0^3`` is 4.16 for the reference NaCl parameters, not 1."""
     _, coefficients = _linear_state(mesh)
     for species in ("Na+", "Cl-"):
         ratio = coefficients.steric_volume_ratio(species)
@@ -85,7 +68,6 @@ def test_phy05_steric_volume_ratio_is_not_a_normalisation(mesh: ngs.Mesh) -> Non
 
 
 def test_phy05_steric_flux_retains_the_sum_over_all_species(mesh: ngs.Mesh) -> None:
-    """``beta_Na`` responds to ``grad c_Cl``; the sum is not a self-interaction."""
     variables, coefficients = _linear_state(mesh)
     packing = coefficients.packing_coefficients
     nu = packing["Na+"]
@@ -112,13 +94,6 @@ def test_phy05_steric_flux_retains_the_sum_over_all_species(mesh: ngs.Mesh) -> N
 
 
 def test_phy05_steric_flux_drives_ions_out_of_crowded_regions(mesh: ngs.Mesh) -> None:
-    """The negated bracket makes the steric term *add* to the down-gradient flux.
-
-    Both species rise with r here, so the steric drive is radially outward and
-    the flux it produces is inward-negative, that is down the gradient. A
-    flipped sign — the failure PHY-05 warns about — would subtract from the
-    diffusive flux instead and, at a high enough packing fraction, reverse it.
-    """
     variables, coefficients = _build(mesh, {"Na+": 1.0 + 0.5 * ngs.x, "Cl-": 1.0 + 0.4 * ngs.x})
     potential = ngs.GridFunction(ngs.H1(mesh, order=2))
     potential.Set(ngs.CF(0.0))
@@ -148,7 +123,6 @@ def test_phy05_steric_flux_drives_ions_out_of_crowded_regions(mesh: ngs.Mesh) ->
 
 
 def test_phy06_packing_fraction_agrees_with_the_num17_gate(mesh: ngs.Mesh) -> None:
-    """The ``Phi`` of the flux and the ``Phi`` of the gate are the same quantity."""
     variables, coefficients = _linear_state(mesh)
     from_flux = packing_fraction(variables.values, coefficients.packing_coefficients)
 
@@ -162,7 +136,6 @@ def test_phy06_packing_fraction_agrees_with_the_num17_gate(mesh: ngs.Mesh) -> No
 
 
 def test_phy04_flux_vanishes_on_a_uniform_state(mesh: ngs.Mesh) -> None:
-    """No gradients, no field, no flow: every term of ``J_i`` is zero."""
     variables, coefficients = _build(mesh, {"Na+": ngs.CF(1.0), "Cl-": ngs.CF(1.0)})
     potential = ngs.GridFunction(ngs.H1(mesh, order=2))
     potential.Set(ngs.CF(0.7))
@@ -173,14 +146,6 @@ def test_phy04_flux_vanishes_on_a_uniform_state(mesh: ngs.Mesh) -> None:
 
 
 def test_num02_log_branch_uses_the_chain_rule() -> None:
-    """``grad(c~_i)`` in the log branch is ``exp(w_i) grad(w_i)``.
-
-    ``exp(w)`` is not a finite-element function, so its gradient cannot be asked
-    of NGSolve and has to be supplied; getting the chain rule wrong there would
-    scale every diffusive and steric term by ``c~_i`` with nothing to catch it.
-    The comparison is against a central difference of ``exp(w)`` on the mesh,
-    which knows nothing about the implementation.
-    """
     mesh = SlabGeometry(width_nm=1.0, height_nm=1.0).generate(maxh_nm=0.25)
     space = ngs.H1(mesh, order=2)
     field = ngs.GridFunction(space, name="w")
@@ -200,14 +165,6 @@ def test_num02_log_branch_uses_the_chain_rule() -> None:
 
 
 def test_num02_branches_agree_where_both_are_exact() -> None:
-    """On a uniform state the two formulations give the identical flux.
-
-    A varying state cannot compare them to round-off — one branch represents
-    ``c~_i`` exactly and the other represents ``log c~_i`` exactly, and the
-    difference between the two interpolants is the mesh's, not the model's. A
-    uniform concentration is exact in both, so what is left is the plumbing:
-    the valence, the mobility and the migration term, which must match exactly.
-    """
     mesh = SlabGeometry(width_nm=1.0, height_nm=1.0).generate(maxh_nm=0.25)
     space = ngs.H1(mesh, order=2)
     potential = ngs.GridFunction(space)
@@ -243,7 +200,6 @@ def test_num02_branches_agree_where_both_are_exact() -> None:
 
 
 def test_num02_log_branch_is_positive_by_construction(mesh: ngs.Mesh) -> None:
-    """``exp(w)`` cannot be negative, which is the whole point of the branch."""
     space = ngs.H1(mesh, order=2)
     field = ngs.GridFunction(space)
     field.Set(-8.0 + 4.0 * ngs.x)
@@ -257,14 +213,6 @@ def test_num02_log_branch_is_positive_by_construction(mesh: ngs.Mesh) -> None:
 def test_phy23_the_permittivity_sensitivity_is_zero_when_the_correction_is_off(
     mesh: ngs.Mesh, model: str
 ) -> None:
-    """An ablation of the permittivity correction under PHY-23 is an ordinary case.
-
-    ``none`` returns the float 1.0, and so does a fitted model with its
-    concentration part off, since permittivity has no wall form; ``.Diff`` on it
-    raised ``AttributeError`` inside the residual assembly, naming neither the
-    switch nor the correction. The sensitivity is identically zero there, and
-    the excess-potential gradient built from it assembles to zero.
-    """
     variables, _ = _linear_state(mesh)
     choice = CorrectionChoice(model=model, concentration=False)
     electrolyte = Electrolyte.from_parameter_file(switches=CorrectionSwitches(permittivity=choice))

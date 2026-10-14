@@ -1,12 +1,4 @@
-"""VER-57, IF-03: the PQR reader and writer both protonation routes share (WP27).
-
-The reader's contract is the section 5.3.1 NOTE on ``inputs:``: PDB fixed
-columns through the coordinates and then two whitespace-separated numbers, a
-whitespace-separated fallback, a refusal naming the line where the two readings
-disagree, residue names other than PDB2PQR's ``TER``, ``MODEL`` frames, and the
-same residues in every frame. The lines below are PDB2PQR 3.7.1's own layout
-(``.knowledge/07`` section 3); none is invented beyond what that section records.
-"""
+"""VER-57, IF-03: the PQR reader and writer both protonation routes share."""
 
 from __future__ import annotations
 
@@ -39,12 +31,9 @@ ATOM      7 HG21 THR A  19      -4.630   0.167 -32.388  0.0900 1.3200
 TER
 END
 """
-"""Lines as PDB2PQR 3.7.1 writes them under ``--ffout=CHARMM``: the N-terminal patch atoms
-of ``GLU 18`` carry the residue name ``TER`` (measured on 2WCD chain A)."""
 
 
 def test_ver57_pdb2pqr_lines_read_by_their_columns_with_ter_named_by_the_residue() -> None:
-    """Every atom of ``GLU 18`` reads as ``GLU``; the charges and radii are the printed ones."""
     (frame,) = parse_pqr(PDB2PQR_LINES)
     assert frame.atoms == 7
     assert frame.resname.tolist() == ["GLU"] * 5 + ["THR"] * 2
@@ -58,12 +47,6 @@ def test_ver57_pdb2pqr_lines_read_by_their_columns_with_ter_named_by_the_residue
 
 
 def test_ver57_a_four_character_residue_name_is_read_where_pdb2pqr_writes_it() -> None:
-    """``ASPP`` starts in column 17, one left of a three-character name (PDB2PQR 3.7.1).
-
-    Found by the reader's own cross-check on the fragment at pH 2: read at
-    columns 18-21 it was ``SPP``, the whitespace fields said ``ASPP``, and the
-    line was refused rather than read either way.
-    """
     text = "ATOM     47  CB ASPP A  21      -1.692   2.597 -39.147 -0.2100 2.1750\n"
     (frame,) = parse_pqr(text)
     assert frame.resname.tolist() == ["ASPP"]
@@ -71,18 +54,12 @@ def test_ver57_a_four_character_residue_name_is_read_where_pdb2pqr_writes_it() -
 
 
 def test_ver57_a_fused_atom_and_residue_name_is_read_by_the_columns() -> None:
-    """``OD2ASPP``: PDB2PQR writes a four-character atom field against ``ASPP``.
-
-    Split on whitespace the line has no chain and an eight-character name, which
-    no atom has, so only the columns read it and nothing is refused.
-    """
     text = "ATOM     49  OD2ASPP A  21      -1.320   1.812 -41.361 -0.6100 1.7700\n"
     (frame,) = parse_pqr(text)
     assert (frame.name[0], frame.resname[0], frame.chain[0]) == ("OD2", "ASPP", "A")
 
 
 def test_ver57_fused_coordinates_are_read_by_the_columns() -> None:
-    """``-37.705-115.041`` is two coordinates; a whitespace split cannot read the line."""
     text = "ATOM      1  CA  LYS A   8      10.000 -37.705-115.041  0.2100 2.2750\n"
     (frame,) = parse_pqr(text)
     np.testing.assert_array_equal(frame.positions_A[0], [10.0, -37.705, -115.041])
@@ -90,7 +67,6 @@ def test_ver57_fused_coordinates_are_read_by_the_columns() -> None:
 
 
 def test_ver57_a_whitespace_separated_pqr_is_read_by_its_fields() -> None:
-    """Fields the PDB columns do not hold, with an insertion code fused to the number."""
     text = (
         "ATOM 1 N ALA B 27A 1.5 2.25 -3.125 -0.47 1.85\n"
         "ATOM 2 CA ALA B 27A 2.5 2.25 -3.125 0.07 2.275\n"
@@ -103,13 +79,6 @@ def test_ver57_a_whitespace_separated_pqr_is_read_by_its_fields() -> None:
 
 
 def test_ver57_a_line_the_two_readings_disagree_on_is_refused_naming_it() -> None:
-    """Columns and fields both read line 2, to different numbers: neither is trusted.
-
-    A blank chain, integral coordinates and a third number after the radius: the
-    columns read ``1 2 3`` and a charge of 0.1, while eleven whitespace fields read
-    a chain ``8``, a residue 1 and a radius of 7. Each is a plausible atom, so the
-    line is refused rather than read the way that happens to be tried first.
-    """
     good = "ATOM      1  N   GLU A  18      -2.661   5.770 -35.426 -0.3000 1.8500\n"
     ambiguous = "ATOM      2  CA  GLU     8           1       2       3 0.1 1.5 7\n"
     assert parse_pqr(good)
@@ -118,26 +87,22 @@ def test_ver57_a_line_the_two_readings_disagree_on_is_refused_naming_it() -> Non
 
 
 def test_ver57_a_line_neither_reading_accepts_is_refused_naming_it() -> None:
-    """An atom record with no radius is not an atom with a charge and a radius."""
     text = PDB2PQR_LINES.replace(" 0.2100 2.2750", " 0.2100")
     with pytest.raises(PQRError, match=r"line 3"):
         parse_pqr(text)
 
 
 def test_ver57_a_residue_with_two_names_is_refused() -> None:
-    """A residue is its chain, number and insertion code, and has one name."""
     text = PDB2PQR_LINES.replace("C   GLU A  18", "C   ASP A  18")
     with pytest.raises(PQRError, match=r"residue 18 of chain 'A' carries the names ASP, GLU"):
         parse_pqr(text)
 
 
 def _model(index: int, body: str) -> str:
-    """Wrap atom lines in a ``MODEL`` record."""
     return f"MODEL     {index:>4}\n{body}ENDMDL\n"
 
 
 def test_ver57_model_records_are_frames_and_their_atoms_may_differ() -> None:
-    """Two frames, the second without a hydrogen: frames differ in their hydrogens."""
     atoms = PDB2PQR_LINES.split("\n", 1)[1].replace("TER\nEND\n", "")
     second = "\n".join(line for line in atoms.splitlines() if "HT1" not in line) + "\n"
     frames = parse_pqr(_model(1, atoms) + _model(2, second))
@@ -145,7 +110,6 @@ def test_ver57_model_records_are_frames_and_their_atoms_may_differ() -> None:
 
 
 def test_ver57_frames_holding_different_residues_are_refused_naming_the_frame() -> None:
-    """Frame 1 renumbers ``THR 19``: the frames do not hold the same residues."""
     atoms = PDB2PQR_LINES.split("\n", 1)[1].replace("TER\nEND\n", "")
     other = atoms.replace("THR A  19", "THR A  20")
     with pytest.raises(PQRError, match=r"frame 1 does not hold the residues of frame 0"):
@@ -153,7 +117,6 @@ def test_ver57_frames_holding_different_residues_are_refused_naming_the_frame() 
 
 
 def test_ver57_a_patched_residue_is_named_by_its_variant() -> None:
-    """``ASP 21`` at pH 2: backbone ``ASP``, side chain ``ASPP``; the residue is ``ASPP``."""
     text = (
         "ATOM      1  CA  ASP A  21      -1.000   2.000  -3.000  0.0700 2.2750\n"
         "ATOM      2  CB ASPP A  21      -1.692   2.597 -39.147 -0.2100 2.1750\n"
@@ -165,12 +128,6 @@ def test_ver57_a_patched_residue_is_named_by_its_variant() -> None:
 
 
 def test_ver57_a_disulfide_patched_cysteine_is_named_by_its_residue() -> None:
-    """``--ffout=CHARMM`` writes a bonded cysteine's ``CB`` and ``SG`` under ``DISU``.
-
-    The lines are PDB2PQR 3.7.1's for ``CYS 285`` of 2WCD chain A bonded to a
-    mirrored copy (measured): ``DISU``, like ``TER``, is a patch
-    name and does not name the residue, which is ``CYS``.
-    """
     text = (
         "ATOM     32  CA  CYS A 285       4.676 -38.694-123.153  0.0700 2.2750\n"
         "ATOM     35  1CBDISU A 285       5.179 -37.766-124.261 -0.1000 2.1750\n"
@@ -183,18 +140,12 @@ def test_ver57_a_disulfide_patched_cysteine_is_named_by_its_residue() -> None:
 
 
 def test_ver57_a_hetatm_record_run_into_its_serial_reads() -> None:
-    """``HETATM12345``: the record and a five-digit serial with nothing between them.
-
-    Split on whitespace as one token it shifts the atom name into the residue
-    name, and the two readings disagreed on a line PDB2PQR wrote.
-    """
     text = "HETATM12345  CA  GLU A  18      -1.598   4.789 -35.571  0.3000 2.2750\n"
     (frame,) = parse_pqr(text)
     assert (frame.name[0], frame.resname[0], frame.chain[0]) == ("CA", "GLU", "A")
 
 
 def test_ver57_a_histidine_renamed_between_frames_is_one_residue() -> None:
-    """PDB2PQR 2.1.1 wrote ``HSE`` or ``HSD`` per frame: the variants read as one parent."""
     line = "ATOM      1  CA  {} A 292      10.000  10.000  10.000  0.0700 2.2750\n"
     frames = parse_pqr(_model(1, line.format("HSE")) + _model(2, line.format("HSD")))
     assert [frame.resname[0] for frame in frames] == ["HSE", "HSD"]
@@ -211,20 +162,17 @@ def test_ver57_a_histidine_renamed_between_frames_is_one_residue() -> None:
     ],
 )
 def test_ver57_malformed_model_records_are_refused(text: str, match: str) -> None:
-    """Every frame boundary is checked; a file with no atoms is not a PQR."""
     with pytest.raises(PQRError, match=match):
         parse_pqr(text)
 
 
 def test_ver57_an_atom_outside_any_model_is_refused_where_models_exist() -> None:
-    """A file with MODEL records holds every atom inside one."""
     atom = PDB2PQR_LINES.splitlines()[1] + "\n"
     with pytest.raises(PQRError, match="outside any MODEL"):
         parse_pqr(_model(1, atom) + atom)
 
 
 def _frame(charges: list[float], radii: list[float], shift: float = 0.0) -> PQRFrame:
-    """Return a three-atom frame with awkward values."""
     return PQRFrame(
         name=np.array(["N", "CA", "HG21"]),
         resname=np.array(["LYS", "LYS", "THR"]),
@@ -237,12 +185,8 @@ def _frame(charges: list[float], radii: list[float], shift: float = 0.0) -> PQRF
     )
 
 
+# IF-02
 def test_ver57_writer_then_reader_is_exact(tmp_path: Path) -> None:
-    """Every value written reads back to the same double, one MODEL per frame.
-
-    A charge four decimals would round is written in full rather than rounded,
-    so the export of the IF-02 NOTE reads back to its payload exactly.
-    """
     frames = (
         _frame([-0.3, 0.123456789, 1e-5], [1.85, 2.275, 0.2245]),
         _frame([0.33, -0.0, 0.1 + 0.2], [1.1, 0.0, 1.0 / 3.0], shift=0.5),
@@ -260,7 +204,6 @@ def test_ver57_writer_then_reader_is_exact(tmp_path: Path) -> None:
 
 
 def test_ver57_the_writer_refuses_what_the_columns_cannot_hold() -> None:
-    """A coordinate below -999.999 Å has no column to go in."""
     frame = _frame([0.0, 0.0, 0.0], [1.0, 1.0, 1.0])
     frame.positions_A[0, 0] = -1000.0
     with pytest.raises(PQRError, match="outside what the PDB coordinate columns hold"):
@@ -268,15 +211,14 @@ def test_ver57_the_writer_refuses_what_the_columns_cannot_hold() -> None:
 
 
 def test_ver57_chain_characters_keep_single_characters_and_map_longer_keys() -> None:
-    """The stage-1 export's rule: keys as they are, or each chain the next character."""
     assert chain_characters(["A", "B", "A"]) == {"A": "A", "B": "B"}
     assert chain_characters(["PROA", "PROB"]) == {"PROA": "A", "PROB": "B"}
     with pytest.raises(PQRError, match="do not fit"):
         chain_characters([f"P{index}" for index in range(63)])
 
 
+# PHY-16
 def test_ver57_the_variant_names_and_hydrogens_are_recognised() -> None:
-    """The PHY-16 step-3 NOTE's table, and hydrogens by name since a PQR has no element."""
     assert [parent_residue(name) for name in ("HSE", "ASPP", "LSN", "ARN", "ALA")] == [
         "HIS",
         "ASP",

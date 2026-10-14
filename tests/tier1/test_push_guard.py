@@ -1,12 +1,4 @@
-"""The push guard: no branch push without a passing push gate on its tree (§8.2.11 L3).
-
-``gate.sh`` in hook mode also reads a ``git push``. It runs nothing: it reads the
-stamp ``gate.sh run`` writes after a pass and refuses the push unless the stamp
-names the tree of ``HEAD`` with the ``extended`` selection. A tree that only the
-commit hook passed is refused, so the full gate runs once per push and never
-silently not at all. A push of tags alone names commits CI already gated on
-``main``, and ``--no-verify`` is git's own escape, so both pass.
-"""
+"""The push guard: no branch push without a passing push gate on its tree (§8.2.11 L3)."""
 
 from __future__ import annotations
 
@@ -37,7 +29,6 @@ def _git(repo: Path, *args: str) -> str:
 
 @pytest.fixture
 def repo(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    """Return a committed nanopnp-shaped repository; a ``uv`` on ``PATH`` fails if run."""
     for name in ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE"):
         monkeypatch.delenv(name, raising=False)
     root = tmp_path / "repo"
@@ -129,11 +120,6 @@ def test_the_escape_a_tag_push_and_other_commands_pass_unstamped(repo: Path, com
     ids=["message", "echo", "pull-request-body", "heredoc", "command-substitution", "ansi-c"],
 )
 def test_a_command_that_only_names_a_push_is_not_a_push(repo: Path, command: str) -> None:
-    """A commit message or a pull request body that says ``git push`` is text, not a push.
-
-    ``--no-verify`` on the commit never reaches the guard, and ``gh`` has no such flag, so
-    refusing these would leave no way to write the words.
-    """
     assert _hook(repo, command) == ""
 
 

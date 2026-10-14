@@ -1,12 +1,4 @@
-"""VER-50: stage 3, the reduction to (r, z) — weights, mean, variances and the artefact.
-
-Every oracle here is independent of the implementation's own route. The annulus
-areas are ``2 pi j h^2``. The off-axis Gaussian has Bessel closed forms for its
-mean and both variances (WP19 Design §2). Axisymmetric inputs must read no
-variance, and the same computation without detrending must read one, so the
-test discriminates. A ``cos(m theta)`` modulation must land in the Cn variance
-exactly when n divides m (Design §2, §3).
-"""
+"""VER-50: stage 3, the reduction to (r, z): weights, mean, variances and the artefact."""
 
 from __future__ import annotations
 
@@ -39,18 +31,15 @@ logger = logging.getLogger(__name__)
 H = 0.05
 
 Assembly: TypeAlias = Callable[[float], tuple[np.ndarray, list[str], list[str]]]
-"""The conftest's ``c12_assembly``: a turn in radians to positions, names and chains."""
 
 
 def _map(grid: DensityGrid, function: object) -> DensityMap:
-    """Return a map of ``function(r, theta, z)`` sampled at the grid's nodes."""
     z, y, x = np.meshgrid(grid.axis_nm("z"), grid.axis_nm("y"), grid.axis_nm("x"), indexing="ij")
     values = function(np.hypot(x, y), np.arctan2(y, x), z)  # type: ignore[operator]
     return DensityMap(values=values, grid=grid, header={})
 
 
 def _grid(reach_nm: float, planes: int = 7) -> DensityGrid:
-    """Return a grid whose outermost occupied radius is ``reach_nm``, with the spare node."""
     return DensityGrid(
         spacing_nm=H,
         half_width=math.ceil(reach_nm / H) + 2,
@@ -62,12 +51,8 @@ def _grid(reach_nm: float, planes: int = 7) -> DensityGrid:
 # -- the weights ----------------------------------------------------------------
 
 
+# FR-05
 def test_ver50_annular_weights_are_exact() -> None:
-    """The weights sum to the annulus areas, each interior cell's to h^2, and binning conserves.
-
-    Annulus areas to 1e-11 (the plan measured 4e-13), and a map's integral to
-    1e-12, slice by slice (FR-05).
-    """
     weights = annular_weights(120, H)
     j = np.arange(weights.bins)
     exact = 2.0 * np.pi * j * H**2
@@ -94,18 +79,11 @@ def test_ver50_annular_weights_are_exact() -> None:
 # -- the closed forms -------------------------------------------------------------
 
 
+# FR-05, FR-06
 @pytest.mark.parametrize("width", [0.15, 0.2])
 @pytest.mark.parametrize("offset", [1.0, 1.7, 2.0, 5.0])
 @pytest.mark.parametrize("n", [7, 12])
 def test_ver50_off_axis_gaussian_closed_forms(width: float, offset: float, n: int) -> None:
-    """One Gaussian at ``(r_i, 0, 0)`` against its Bessel closed forms (FR-05, FR-06).
-
-    With ``E I_m(beta)`` the m-th azimuthal coefficient: the mean is ``E I_0``,
-    the Cn variance ``2 E^2 sum_k I_kn^2`` and the raw variance
-    ``E^2 I_0(2 beta) - (E I_0)^2`` (Design §2). Mean within 1e-3, Cn variance
-    within 3e-5 and within 2 % at its peak, raw variance within 1e-3; the plan
-    measured 3.5e-4, 1.2e-5, 0.8 % and 3.2e-4.
-    """
     grid = _grid(offset + 5 * width)
     density = _map(
         grid,
@@ -136,16 +114,10 @@ def test_ver50_off_axis_gaussian_closed_forms(width: float, offset: float, n: in
     assert errors["raw"] <= 1e-3
 
 
+# CON-04, FR-06
 @pytest.mark.parametrize("width", [0.15, 0.2])
 @pytest.mark.parametrize("n", [7, 12])
 def test_ver50_axisymmetric_input_has_no_variance(width: float, n: int) -> None:
-    """An on-axis Gaussian and rings at 0.4 and 2 nm read no variance; undetrended, they do.
-
-    Cn variance within 1e-6 and raw within 5e-5 (plan: 2.3e-7 and 1.9e-5). The
-    same reduction without the even-cubic detrend reads a Cn variance above
-    1e-4 on the 2 nm ring (plan: 1.9e-4), so this test fails if detrending is
-    what it does not do (CON-04, FR-06, Design §3).
-    """
     shapes = {
         "on-axis": lambda r, theta, z: np.exp(-(r**2 + z**2) / width**2),
         "ring 0.4": lambda r, theta, z: np.exp(-((r - 0.4) ** 2 + z**2) / width**2),
@@ -168,14 +140,6 @@ def test_ver50_axisymmetric_input_has_no_variance(width: float, n: int) -> None:
 @pytest.mark.parametrize("n", [7, 12])
 @pytest.mark.parametrize("multiple", ["n", "2n", 5, 6, 3])
 def test_ver50_cos_modulation(n: int, multiple: str | int) -> None:
-    """``0.4 e(r) + 0.2 e(r) cos(m theta)`` puts ``b^2/2`` in the Cn variance iff n divides m.
-
-    With ``e = exp(-(r - 3)^2/0.64)`` and ``b = 0.2 e``, at r >= 1 nm and relative
-    to the peak of ``b^2/2``: when n | m, both variances are within 5e-3 of it
-    (plan: 1.5e-3); otherwise the Cn variance is within 1e-3 of zero (7.1e-5) and
-    the raw variance within 5e-3 of ``b^2/2`` (1.2e-3). The mean is within 1e-3
-    of ``0.4 e`` relative to its peak (2.5e-4).
-    """
     m = {"n": n, "2n": 2 * n}.get(str(multiple), multiple)
     assert isinstance(m, int)
 
@@ -210,7 +174,6 @@ def test_ver50_cos_modulation(n: int, multiple: str | int) -> None:
 
 
 def _synthetic_reduction(assembly: Assembly, turn_rad: float) -> ReducedMap:
-    """Deposit the conftest's synthetic C12, turned by ``turn_rad``, and reduce it by C12."""
     positions, names, _ = assembly(turn_rad)
     radii = RadiusSet.load("pdb2pqr_charmm")
     widths = 0.93 * 0.1 * np.array([radii.radius_A("ALA", name) for name in names])
@@ -219,19 +182,8 @@ def _synthetic_reduction(assembly: Assembly, turn_rad: float) -> ReducedMap:
     return reduce_map(DensityMap(values=deposit(frames, widths, grid), grid=grid, header={}), 12)
 
 
+# FR-05
 def test_ver50_cn_invariance(c12_assembly: Assembly) -> None:
-    """The reduction of a deposited C12 does not depend on how the assembly is turned (FR-05).
-
-    A 90 degree turn maps the grid onto itself, so the reduction agrees to
-    round-off, 1e-12. A 30 degree turn maps the assembly onto itself, chain k
-    onto chain k + 1, so it agrees to the float32 rounding of the map. A 15 degree
-    turn is neither a symmetry of the grid nor of the assembly, so it is the one
-    that tests the reduction rather than a relabelling. There the grid samples a
-    different set of azimuths, and the reduction moves by that sampling alone:
-    the mean within the off-axis test's 1e-3, and each variance within 1 % of
-    its peak, inside that test's 2 % (measured: 5.5e-4, and 0.26 % of a peak of
-    0.175 for both variances).
-    """
     base = _synthetic_reduction(c12_assembly, 0.0)
     assert base.cn_variance.max() > 1e-2  # the assembly is far from axisymmetric
     for degrees, mean_tolerance, variance_fraction in (
@@ -252,12 +204,8 @@ def test_ver50_cn_invariance(c12_assembly: Assembly) -> None:
 # -- the artefact ----------------------------------------------------------------
 
 
+# FR-27, VER-23
 def test_ver50_unresolved_region_and_artefact(synthetic_c12: Path, tmp_path: Path) -> None:
-    """No harmonic below ``n h / pi``, named in the header; the artefact round-trips and exports.
-
-    The ``.npz`` round-trips exactly, each field exports as a ``RadialGrid``, and
-    a hand edit of the stored payload is recorded as one (FR-27, VER-23).
-    """
     counts = harmonic_counts(40, 12)
     radius = unresolved_radius_nm(12, H)
     assert radius == pytest.approx(12 * H / math.pi)

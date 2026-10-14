@@ -41,10 +41,8 @@ KNOWN_KEYS = {
     "omitClaudeMd",
     "experimental",
 }
-"""The keys code.claude.com/docs/en/sub-agents documented on 12 October 2026."""
 
 IDENTIFIER = re.compile(r"`|§|\b[A-Z]{2,4}-\d+\b|\b[A-Z]{1,2}\d+\b")
-"""What an In brief keeps out: code, section signs and identifiers."""
 
 
 def _frontmatter(path: Path) -> dict[str, object]:
@@ -246,7 +244,6 @@ PHYSICS_PATHS = {
     "tests/tier2/**",
     "tests/tier3/**",
 }
-"""Where the physics and numerics rules load: every module whose code they govern."""
 
 
 def test_the_physics_rules_load_wherever_the_rules_govern_the_code() -> None:

@@ -1,34 +1,4 @@
-"""VER-32 — the pipeline driver: one case file to one run directory (FR-27, IF-01).
-
-Three claims, each of which fails quietly rather than loudly.
-
-**The pipeline is a dependency order, not the section 5.2 numbering.** Stage 9
-resolves the case and stages 6, 7 and 8 all consume it, so
-:func:`~nanopnp.core.stages.walk_order` cannot be sorted by stage number.
-:func:`~nanopnp.core.stages.register` refuses a stage whose inputs are not
-registered before it; this checks the order that results, so a stage that
-reached the registry some other way would fail here rather than with a
-``KeyError`` from deep inside a stage. The facts the walk reads off each
-stage's description are checked against the stages by VER-64
-(``test_stage_conformance.py``).
-
-**A stage's FR-25 deviations are read off its own artefact.** The driver calls
-``deviations(inputs)`` after the artefact is recorded, so
-:meth:`~nanopnp.mesh.ingest.MeshStage.deviations` answers from the ``materials``
-parameter rather than by ingesting and quality-gating the mesh a second time.
-That is only sound while the artefact's parameters carry what the ingested
-object carries, so both routes are run and compared.
-
-**``only`` must refuse, not recompute.** A hand-substituted artefact (FR-27) is
-testable only if the driver aborts on a store miss; one that quietly recomputed
-the upstream stage would read past the substituted file and report a number from
-the wrong input.
-
-No solve happens here. The end-to-end walk through stage 12, and QR-08's
-reproduction into a fresh store, are Tier 2's (VER-35): a driver defect that
-only a converged solve reveals is not a driver defect. Stabilisation is ``none``
-(NUM-11).
-"""
+"""VER-32: the pipeline driver: one case file to one run directory (FR-27, IF-01)."""
 
 from __future__ import annotations
 
@@ -72,13 +42,6 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
 
 def test_ver32_the_pipeline_is_registered_and_in_dependency_order() -> None:
-    """Every stage the driver walks exists, and its inputs are already produced.
-
-    Both halves matter. A name that is not registered fails loudly on the first
-    run; an order in which a stage precedes something it consumes fails inside
-    :meth:`~nanopnp.io.artefact.StageInputs.require`, naming an artefact rather
-    than the ordering that made it absent.
-    """
     produced = {"case_path"}
     for name in walk_order():
         description = describe(name)  # raises if it is not registered
@@ -89,15 +52,13 @@ def test_ver32_the_pipeline_is_registered_and_in_dependency_order() -> None:
 
 
 def _catalogue_descriptions() -> tuple[object, ...]:
-    """Return every registered stage description, for the coverage assertion above."""
     return tuple(entry.description for entry in _catalogue().values())
 
 
-# -- the FR-25 deviations a stage reads off its own artefact -------------------
+# -- the deviations a stage reads off its own artefact -------------------
 
 
 def _two_triangles(materials: tuple[str, ...]) -> MeshData:
-    """Return the smallest mesh carrying ``materials``: one triangle pair each."""
     import numpy as np
 
     from nanopnp.mesh.adapter import MeshData
@@ -124,7 +85,6 @@ def _two_triangles(materials: tuple[str, ...]) -> MeshData:
 
 
 def _ingested(materials: tuple[str, ...]) -> IngestedMesh:
-    """Return an :class:`IngestedMesh` over that mesh, gates already granted."""
     from nanopnp.mesh.quality import element_quality
 
     data = _two_triangles(materials)
@@ -145,15 +105,6 @@ def _ingested(materials: tuple[str, ...]) -> IngestedMesh:
 def test_ver32_the_mesh_stage_reads_the_exclusion_deviation_off_its_artefact(
     materials: tuple[str, ...],
 ) -> None:
-    """The artefact route and the ingested route return the same sentence (FR-25).
-
-    The driver calls ``deviations(inputs)`` with the stage's own artefact in
-    hand precisely so that the ion-exclusion shell is reported without a second
-    read and quality gate of the mesh file. That shortcut is sound only while
-    the artefact's ``materials`` parameter carries what the ingested mesh
-    carries, which is what is asserted here — in both directions, so that a
-    route which returned ``()`` unconditionally would fail on the shell case.
-    """
     ingested = _ingested(materials)
     artefact = MeshStage().artefact(ingested)
     inputs = StageInputs(resolved=resolve(loads_case(_MINIMAL)), upstream={"mesh": artefact})
@@ -163,14 +114,8 @@ def test_ver32_the_mesh_stage_reads_the_exclusion_deviation_off_its_artefact(
     assert ingested.deviations() == exclusion_deviations(materials)
 
 
+# PHY-20
 def test_ver32_the_field_stage_reads_the_dielectric_deviation_off_its_artefact() -> None:
-    """Same claim for stage 7, where the alternative is re-reading the table.
-
-    A supplied ``inputs.eps_r`` is a departure from PHY-20's per-domain
-    constants that no case-file switch selects, so the manifest gets it only if
-    the stage says so. Re-reading the field document to find that out costs tens
-    of megabytes per run; the artefact already names it.
-    """
     fields = ResolvedFields(
         charge=None, conservation=None, eps_r=_solid_fraction_field(), material_means=()
     )
@@ -184,12 +129,6 @@ def test_ver32_the_field_stage_reads_the_dielectric_deviation_off_its_artefact()
 
 
 def test_ver29_the_field_key_carries_the_solid_set_only_with_a_dielectric_field() -> None:
-    """The per-material means of ``chi`` are classified by the solid names, so they key stage 7.
-
-    By name and not by value: a permittivity classifies nothing. Without a
-    dielectric field no gate reads the set, and keying on it would re-run stage 7
-    for a change it cannot see.
-    """
     dielectric = ResolvedFields(
         charge=None, conservation=None, eps_r=_solid_fraction_field(), material_means=()
     )
@@ -222,12 +161,6 @@ def test_ver29_the_field_key_carries_the_solid_set_only_with_a_dielectric_field(
 
 
 def _solid_fraction_field() -> SolidFractionField:
-    """Return the smallest valid dielectric field: uniform ``chi`` on a 2x2 grid.
-
-    Borrowed verbatim from :mod:`tests.tier1.test_manifest`, so that the
-    deviation under test is the one the stage actually produces rather than one
-    this module wrote out by hand.
-    """
     spec = FormSpec(
         name="uniform",
         parameters={"value": 1.0},
@@ -254,13 +187,6 @@ def _solid_fraction_field() -> SolidFractionField:
 def test_ver32_a_truncated_run_writes_its_directory_and_reports_monotone_progress(
     cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
-    """``upto`` stops the walk, and what it produced is on disk and consistent.
-
-    Truncated at stage 6 so that this costs a mesh ingestion rather than a
-    solve: the claim is about the driver's bookkeeping — the stage records, the
-    progress contract, the three files of a run directory — and none of it is
-    about the physics.
-    """
     seen: list[tuple[float, str]] = []
     store = Store(tmp_path / "store")
     result = run_case(
@@ -296,12 +222,6 @@ def test_ver32_a_truncated_run_writes_its_directory_and_reports_monotone_progres
 def test_qr08_a_truncated_walk_does_not_overwrite_the_record_of_the_full_run(
     cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
-    """``--upto`` and the shell's **Build geometry** write beside a full run, never over it.
-
-    The run directory is named by the case; a truncated walk of the same case used to land
-    in the same directory and replace ``run.json`` and the manifest, so a full run could no
-    longer be reproduced from its directory (CODE_REVIEW_003 CR-2, QR-08).
-    """
     store = Store(tmp_path / "store")
     full = run_case(cylindrical_pore_case, store=store, workspace=tmp_path / "work")
     assert full.quantities, "a full run records its quantities"
@@ -320,12 +240,6 @@ def test_qr08_a_truncated_walk_does_not_overwrite_the_record_of_the_full_run(
 def test_qr08_a_complete_walk_is_complete_when_its_case_drops_the_last_registered_stage(
     cylindrical_pore_case: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A walk is complete at the last stage *this case* walks, not the last registered.
-
-    A stage registered after ``report`` that needs ``structure:`` is dropped from this
-    case, which has none. The walk still ends where the case's walk ends, so its record is
-    the case's own run record rather than a truncated one written beside it (QR-08).
-    """
     monkeypatch.setattr(stages_module, "_REGISTRY", dict(stages_module._REGISTRY))
     register(
         StageDescription(
@@ -358,12 +272,6 @@ def test_qr08_a_complete_walk_is_complete_when_its_case_drops_the_last_registere
 def test_qr08_the_run_directory_case_hashes_to_the_recorded_case_input(
     cylindrical_pore_case: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, linesep: str
 ) -> None:
-    """The copy beside the manifest is what ``reproduce`` checks the recorded hash against.
-
-    The recorded hash is of the source file, written here as a text-mode write
-    writes it on each platform; the CRLF case stands in for Windows, where an LF
-    copy made every archived run refuse to reproduce as a moved input.
-    """
     monkeypatch.setattr(os, "linesep", linesep)
     source = tmp_path / "case.yaml"
     text = cylindrical_pore_case.read_text(encoding="utf-8").replace("\n", linesep)
@@ -378,15 +286,6 @@ def test_qr08_the_run_directory_case_hashes_to_the_recorded_case_input(
 def test_ver32_a_run_writes_its_scratch_inside_the_store_it_was_given(
     cylindrical_pore_case: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """No workspace named means one under *this* store, not the process default.
-
-    Each file-writing stage falls back to ``store_root()`` when it is built
-    without a workspace, and that is ``$NANOPNP_STORE`` or the working
-    directory — so a sweep worker or a test that named its own store would find
-    the run's scratch mesh somewhere it never asked about while the artefact
-    pointing at it lived in the store it did. Asserted by running from a
-    directory that would catch the fallback: nothing may appear there.
-    """
     elsewhere = tmp_path / "cwd"
     elsewhere.mkdir()
     monkeypatch.chdir(elsewhere)
@@ -419,12 +318,6 @@ def test_ver32_a_run_writes_its_scratch_inside_the_store_it_was_given(
 def test_ver32_a_run_removes_its_scratch_once_the_store_holds_the_payloads(
     cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
-    """``Store.put`` copies every payload, so the workspace would hold each one twice.
-
-    Across an envelope sweep that is one duplicate mesh, field export and
-    solution per member on the store's own filesystem, never reclaimed. A
-    workspace the caller named is the caller's, and is left alone.
-    """
     store = Store(tmp_path / "store")
     result = run_case(cylindrical_pore_case, store=store, upto="mesh")
     assert list((store.root / WORKSPACE_DIRNAME).glob("run-*")) == []
@@ -438,12 +331,6 @@ def test_ver32_a_run_removes_its_scratch_once_the_store_holds_the_payloads(
 def test_ver32_a_second_run_through_the_same_store_is_served_from_it(
     cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
-    """The store is a cache, and the record says which stages used it (QR-08).
-
-    ``cached`` is what QR-08's reproduction check reads: a run whose every stage
-    was served did no physics, and a reproduction that could not tell would be
-    asserting that a dictionary lookup is deterministic.
-    """
     store = Store(tmp_path / "store")
     first = run_case(cylindrical_pore_case, store=store, upto="mesh", workspace=tmp_path / "work")
     second = run_case(cylindrical_pore_case, store=store, upto="mesh", workspace=tmp_path / "work")
@@ -456,13 +343,6 @@ def test_ver32_a_second_run_through_the_same_store_is_served_from_it(
 def test_ver32_only_refuses_an_upstream_the_store_does_not_hold(
     cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
-    """A missing substitution aborts naming it, rather than being recomputed.
-
-    ``only`` exists so that a hand-substituted artefact (FR-27) can be shown to
-    have been *read*. A driver that recomputed the upstream stage on a miss
-    would read past the substituted file and report a number from the wrong
-    input, which is the failure this refusal makes impossible.
-    """
     with pytest.raises(MissingUpstreamError) as raised:
         run_case(
             cylindrical_pore_case,
@@ -480,11 +360,6 @@ def test_ver32_only_refuses_an_upstream_the_store_does_not_hold(
 def test_ver32_upto_names_a_stage_this_case_does_not_walk(
     cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
-    """Stage 7 is registered, and this case gives it nothing to read.
-
-    Two different errors share one flag, and conflating them sends a reader to
-    the wrong place: ``--upto charge`` on a case with no field is not a typo.
-    """
     with pytest.raises(KeyError, match="nothing for it to read"):
         run_case(cylindrical_pore_case, store=Store(tmp_path / "store"), upto="charge", write=False)
     with pytest.raises(KeyError, match="no stage 'sovle'"):
@@ -504,7 +379,7 @@ physics: {{model: pnp-ns}}
 """
 
 
-# -- the protonation stage in the walk (WP27 D2, D3, D16) -----------------------
+# -- the protonation stage in the walk -----------------------
 
 _PQR_LINES = """\
 ATOM      1  N   GLU A  18      -2.661   5.770 -35.426 -0.3000 1.8500
@@ -512,11 +387,9 @@ ATOM      2  CA  GLU A  18      -1.598   4.789 -35.571  0.3000 2.2750
 ATOM      3  C   GLU A  18      -2.071   3.395 -35.184  0.5100 2.0000
 ATOM      4  O   GLU A  18      -1.657   2.404 -35.775 -1.5100 1.7000
 """
-"""A four-atom PQR whose charges sum to -1 e: enough for the walk to read and gate."""
 
 
 def _pqr_case(cylindrical_pore_case: Path, tmp_path: Path) -> Path:
-    """Write the module's case with ``inputs.pqr`` beside its mesh."""
     pqr = tmp_path / "supplied.pqr"
     pqr.write_text(_PQR_LINES, encoding="utf-8")
     text = cylindrical_pore_case.read_text(encoding="utf-8").replace(
@@ -530,13 +403,6 @@ def _pqr_case(cylindrical_pore_case: Path, tmp_path: Path) -> Path:
 def test_ver57_protonation_runs_before_the_deposit_it_feeds(
     cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
-    """WP28 D8, retiring WP27 D3: both halves of stage 7 run before the materials.
-
-    A case that protonates, under a model declaring ``fixed_charge``, deposits.
-    The stage still sits after ``mesh`` and before ``charge`` (WP27 D2); a walk
-    may still end there; and a case with nothing to protonate still refuses it
-    naming why.
-    """
     from nanopnp.pipeline.run import (
         UnknownStageError,
         selected_stages,
@@ -553,8 +419,7 @@ def test_ver57_protonation_runs_before_the_deposit_it_feeds(
         "materials",
         "solve",
     )
-    # A walk to a stage runs that stage's input closure (WP38 D11): the
-    # protonation reads the case alone here, so the mesh is not walked.
+    # A walk to a stage runs that stage's input closure; protonation reads the case alone.
     assert selected_stages(supplied, "protonation") == ("case", "protonation")
     assert selected_stages(supplied, "materials") == ("case", "materials")
     bare = resolve(loads_case(cylindrical_pore_case.read_text(encoding="utf-8")))
@@ -567,12 +432,6 @@ def test_ver57_protonation_runs_before_the_deposit_it_feeds(
 def test_ver57_a_walk_to_protonation_records_it_in_the_charge_group(
     cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
-    """``inputs.pqr`` walked to the stage: the Charge group carries ``Q_net`` and the file.
-
-    A walk to ``mesh`` records the stage not run with the reason, which is a
-    different fact from a stage that ran (WP27 D16); so does stage 7, which a
-    walk stopped short of it did not reach (WP28 D8).
-    """
     case = _pqr_case(cylindrical_pore_case, tmp_path)
     store = Store(tmp_path / "store")
     result = run_case(case, store=store, upto="protonation", write=False)
@@ -595,11 +454,6 @@ def test_ver57_a_walk_to_protonation_records_it_in_the_charge_group(
 def test_ver64_a_walk_past_stage_7_that_skips_it_says_so_in_the_charge_group(
     cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
-    """A walk to ``materials`` runs its input closure, which holds no stage 7 (WP38 D11).
-
-    It ends past stage 7, so the Charge group must not record that it stopped
-    before stage 7: it records that the walk's target does not read it.
-    """
     case = _pqr_case(cylindrical_pore_case, tmp_path)
     result = run_case(case, store=Store(tmp_path / "store"), upto="materials", write=False)
     assert [record.name for record in result.stages] == ["case", "materials"]

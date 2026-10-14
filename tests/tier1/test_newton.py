@@ -1,17 +1,4 @@
-"""Damped Newton: the NUM-16 damping policy and its interaction with the NUM-17 gates.
-
-The two rules worth testing here are the ones that are easy to get subtly wrong
-and impossible to notice afterwards. First, that a step which fails to reduce
-the residual at minimum damping is **accepted rather than aborted** — the rule
-that keeps a run alive across a fold in the residual. Second, that a gate
-violation on the increment is treated as a step-length problem first, so the
-damping loop gets a chance to fix it, and only aborts when the minimally damped
-step still violates the cap.
-
-The nonlinear problem used throughout is scalar Poisson-Boltzmann on a planar
-slab, whose ``sinh`` is nonlinear enough to need damping from a cold start and
-whose answer is known in closed form.
-"""
+"""Damped Newton: the NUM-16 damping policy and its interaction with the NUM-17 gates."""
 
 from __future__ import annotations
 
@@ -32,25 +19,19 @@ from nanopnp.numerics.newton import (
 from nanopnp.physics.pb import debye_length_nm, nonlinear_pb_residual
 
 CONCENTRATION_M = 0.1
-"""Bulk concentration of the test problem, in mol/L."""
 
 WALL_POTENTIAL = 4.0
-"""Wall potential in thermal voltages: sinh(4) = 27, so the problem is genuinely nonlinear."""
 
 
 class _AlwaysFails:
-    """A gate that rejects every state, standing in for a positivity failure."""
-
     name = "test gate"
 
     def check(self) -> None:
-        """Reject the state unconditionally."""
         raise GateViolationError(self.name, "c_test", -1.0, (0.5, 0.5), ("x", "y"))
 
 
 @pytest.fixture
 def problem() -> tuple[ngs.Mesh, ngs.FESpace, float]:
-    """Return a slab mesh, a P2 space with the wall constrained, and the Debye length."""
     screening_nm = debye_length_nm(CONCENTRATION_M)
     mesh = SlabGeometry(width_nm=8.0 * screening_nm).generate(maxh_nm=screening_nm / 3.0)
     space = ngs.H1(mesh, order=2, dirichlet="wall")
@@ -58,7 +39,6 @@ def problem() -> tuple[ngs.Mesh, ngs.FESpace, float]:
 
 
 def _residual_form(space: ngs.FESpace, screening_nm: float) -> ngs.BilinearForm:
-    """Return the nonlinear PB residual, written in the trial function."""
     trial, test = space.TnT()
     form = ngs.BilinearForm(space)
     form += nonlinear_pb_residual(trial, test, PLANAR, debye_length_nm=screening_nm)
@@ -66,14 +46,12 @@ def _residual_form(space: ngs.FESpace, screening_nm: float) -> ngs.BilinearForm:
 
 
 def _initial_state(space: ngs.FESpace, mesh: ngs.Mesh) -> ngs.GridFunction:
-    """Return a cold start carrying only the inhomogeneous Dirichlet data."""
     state = ngs.GridFunction(space)
     state.Set(ngs.CF(WALL_POTENTIAL), definedon=mesh.Boundaries("wall"))
     return state
 
 
 def test_num16_reference_settings_are_the_defaults() -> None:
-    """The defaults are the reference values of the NUM-16 table."""
     assert DEFAULT_SETTINGS.initial_damping == 0.2
     assert DEFAULT_SETTINGS.minimum_damping == 1.0e-2
     assert DEFAULT_SETTINGS.recovery_damping == 0.2
@@ -92,7 +70,6 @@ def test_num16_reference_settings_are_the_defaults() -> None:
     ],
 )
 def test_num16_incoherent_settings_are_rejected(field: str, value: float) -> None:
-    """A damping schedule that cannot work is refused at construction, not at step 40."""
     with pytest.raises(ValueError, match=field.split("_")[0]):
         NewtonSettings(**{field: value})  # type: ignore[arg-type]
 
@@ -100,7 +77,6 @@ def test_num16_incoherent_settings_are_rejected(field: str, value: float) -> Non
 def test_num16_converges_on_nonlinear_poisson_boltzmann(
     problem: tuple[ngs.Mesh, ngs.FESpace, float],
 ) -> None:
-    """A cold start at a strongly nonlinear wall potential converges and holds its data."""
     mesh, space, screening_nm = problem
     state = _initial_state(space, mesh)
 
@@ -114,7 +90,6 @@ def test_num16_converges_on_nonlinear_poisson_boltzmann(
 def test_num16_damping_starts_at_the_initial_factor_and_recovers(
     problem: tuple[ngs.Mesh, ngs.FESpace, float],
 ) -> None:
-    """Damping opens at 0.2 and reaches 1 once the iterates enter the quadratic regime."""
     mesh, space, screening_nm = problem
     state = _initial_state(space, mesh)
 
@@ -128,13 +103,6 @@ def test_num16_damping_starts_at_the_initial_factor_and_recovers(
 def test_num16_residual_history_is_monotone_and_ends_quadratic(
     problem: tuple[ngs.Mesh, ngs.FESpace, float],
 ) -> None:
-    """Once undamped, the residual squares each step; that is the check on the Jacobian.
-
-    A Jacobian that is merely approximate still converges, but linearly. Seeing
-    the last reduction beat the square of the previous one is the evidence that
-    the linearisation is exact, and therefore that the residual form was written
-    in the trial function rather than in the grid function.
-    """
     mesh, space, screening_nm = problem
     state = _initial_state(space, mesh)
 
@@ -148,12 +116,6 @@ def test_num16_residual_history_is_monotone_and_ends_quadratic(
 def test_num17_increment_cap_is_a_step_length_condition_first(
     problem: tuple[ngs.Mesh, ngs.FESpace, float],
 ) -> None:
-    """An over-long step is damped down rather than aborted, and the solve still converges.
-
-    A cap so tight that the first undamped step must violate it: if the gate
-    aborted on sight the solve would fail, and if it were ignored the cap would
-    be decorative. Neither happens — the damping loop shortens the step.
-    """
     mesh, space, screening_nm = problem
     state = _initial_state(space, mesh)
     increment = ngs.GridFunction(space)
@@ -174,7 +136,6 @@ def test_num17_increment_cap_is_a_step_length_condition_first(
 def test_num17_increment_cap_aborts_when_even_the_minimal_step_violates_it(
     problem: tuple[ngs.Mesh, ngs.FESpace, float],
 ) -> None:
-    """A cap the minimally damped step cannot meet is a genuine failure and aborts."""
     mesh, space, screening_nm = problem
     state = _initial_state(space, mesh)
     increment = ngs.GridFunction(space)
@@ -192,7 +153,6 @@ def test_num17_increment_cap_aborts_when_even_the_minimal_step_violates_it(
 def test_num17_a_rejected_step_leaves_the_state_untouched(
     problem: tuple[ngs.Mesh, ngs.FESpace, float],
 ) -> None:
-    """When a gate aborts, the solution holds the last admissible iterate, not the bad one."""
     mesh, space, screening_nm = problem
     state = _initial_state(space, mesh)
     increment = ngs.GridFunction(space)
@@ -214,7 +174,6 @@ def test_num17_a_rejected_step_leaves_the_state_untouched(
 def test_num16_state_gate_violation_stops_the_solve(
     problem: tuple[ngs.Mesh, ngs.FESpace, float],
 ) -> None:
-    """A state gate aborts unconditionally; damping is not an answer to an unphysical state."""
     mesh, space, screening_nm = problem
     state = _initial_state(space, mesh)
 
@@ -222,13 +181,8 @@ def test_num16_state_gate_violation_stops_the_solve(
         damped_newton(_residual_form(space, screening_nm), state, state_gates=[_AlwaysFails()])
 
 
+# NUM-18
 def test_num17_state_gates_run_on_the_entry_state() -> None:
-    """NUM-17 holds of the state the caller handed in, not only of the steps taken.
-
-    A warm start whose entry residual is already at the floor returns without
-    taking a step (NUM-18 does exactly that at every rung), so a gate checked
-    only after an accepted step would never look at it.
-    """
     mesh = SlabGeometry(width_nm=1.0).generate(maxh_nm=1.0)
     space = ngs.H1(mesh, order=1)
     trial, test = space.TnT()
@@ -246,27 +200,18 @@ def test_num17_state_gates_run_on_the_entry_state() -> None:
 def test_num17_a_state_gate_abort_restores_the_last_admissible_iterate(
     problem: tuple[ngs.Mesh, ngs.FESpace, float],
 ) -> None:
-    """A state gate aborts on the same contract as an increment gate: the state rolls back.
-
-    A continuation driver catches the violation to retry the rung with a smaller
-    ramp; it can only do that if the grid function still holds an admissible
-    warm start rather than the iterate that failed the gate.
-    """
     mesh, space, screening_nm = problem
     state = _initial_state(space, mesh)
     before = state.vec.CreateVector()
     before.data = state.vec
 
     class FailsAfterTheFirstStep:
-        """Passes on the entry state and rejects every iterate after it."""
-
         name = "test gate"
 
         def __init__(self) -> None:
             self.calls = 0
 
         def check(self) -> None:
-            """Reject every state but the first one seen."""
             self.calls += 1
             if self.calls > 1:
                 raise GateViolationError(self.name, "c_test", -1.0, (0.5, 0.5), ("x", "y"))
@@ -282,7 +227,6 @@ def test_num17_a_state_gate_abort_restores_the_last_admissible_iterate(
 def test_num17_increment_gates_without_an_increment_are_refused(
     problem: tuple[ngs.Mesh, ngs.FESpace, float],
 ) -> None:
-    """A gate over a grid function the loop never writes would assert nothing."""
     mesh, space, screening_nm = problem
     state = _initial_state(space, mesh)
     orphan = ngs.GridFunction(space)
@@ -299,7 +243,6 @@ def test_num17_increment_gates_without_an_increment_are_refused(
 def test_num16_iteration_cap_raises_with_the_residual_in_the_message(
     problem: tuple[ngs.Mesh, ngs.FESpace, float],
 ) -> None:
-    """Hitting the cap is a diagnosable failure, not a silent return of a partial solve."""
     mesh, space, screening_nm = problem
     state = _initial_state(space, mesh)
     settings = NewtonSettings(max_iterations=2)
@@ -311,7 +254,6 @@ def test_num16_iteration_cap_raises_with_the_residual_in_the_message(
 def test_num16_iteration_cap_can_be_inspected_instead_of_raised(
     problem: tuple[ngs.Mesh, ngs.FESpace, float],
 ) -> None:
-    """The continuation ladder needs to see a failed rung, not catch an exception."""
     mesh, space, screening_nm = problem
     state = _initial_state(space, mesh)
 
@@ -327,16 +269,10 @@ def test_num16_iteration_cap_can_be_inspected_instead_of_raised(
     assert result.residual < result.initial_residual
 
 
+# NUM-18
 def test_num16_a_warm_start_onto_its_own_solution_is_idempotent(
     problem: tuple[ngs.Mesh, ngs.FESpace, float],
 ) -> None:
-    """Re-solving a converged state converges immediately and does not move it.
-
-    This is the property the continuation ladder depends on (NUM-18): every rung
-    warm-starts from the previous one, and a rung whose state already solves it
-    must cost one step, not the six orders of residual reduction a criterion
-    measured against the entry residual would demand.
-    """
     mesh, space, screening_nm = problem
     state = _initial_state(space, mesh)
     form = _residual_form(space, screening_nm)
@@ -357,14 +293,6 @@ def test_num16_a_warm_start_onto_its_own_solution_is_idempotent(
 def test_num16_minimally_damped_step_is_accepted_not_aborted(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """NUM-16's central rule: a step that raises the residual at minimum damping is taken.
-
-    Contrived on purpose, and the classic counterexample to undamped Newton:
-    ``arctan(u) = 0`` started at ``u = 10``, where the tangent line crosses the
-    axis at ``u = -139`` and the residual rises. Pinning the minimum damping at
-    0.5 leaves the loop no admissible step that reduces the residual, so it must
-    fall through to acceptance. Aborting here instead is what NUM-16 forbids.
-    """
     mesh = SlabGeometry(width_nm=1.0).generate(maxh_nm=1.0)
     space = ngs.H1(mesh, order=1)
     trial, test = space.TnT()
@@ -386,13 +314,6 @@ def test_num16_minimally_damped_step_is_accepted_not_aborted(
 
 
 def test_num16_a_nan_trial_residual_at_minimum_damping_is_a_forced_step() -> None:
-    """``nan >= current`` is False, so a NaN step used to count as an unforced one.
-
-    ``sqrt(u) = 0.1`` started at ``u = 4`` steps to ``u = -3.6``, where the
-    residual is NaN, and the damping is pinned so the step must be taken. Taken
-    as unforced, it left ``current`` NaN and every later step unforced too, and
-    convergence could then be declared on the relative update alone.
-    """
     mesh = SlabGeometry(width_nm=1.0).generate(maxh_nm=1.0)
     space = ngs.H1(mesh, order=1)
     trial, test = space.TnT()
@@ -415,7 +336,6 @@ def test_num16_a_nan_trial_residual_at_minimum_damping_is_a_forced_step() -> Non
 def test_newton_result_summary_records_the_damping_for_the_manifest(
     problem: tuple[ngs.Mesh, ngs.FESpace, float],
 ) -> None:
-    """The phase report asks which rungs needed damping below 0.1; the record carries it."""
     mesh, space, screening_nm = problem
     state = _initial_state(space, mesh)
 
@@ -430,24 +350,6 @@ def test_newton_result_summary_records_the_damping_for_the_manifest(
 def test_ver44_every_step_records_the_undamped_relative_update(
     problem: tuple[ngs.Mesh, ngs.FESpace, float],
 ) -> None:
-    """``NewtonStep.update`` is ``‖δu‖ / max(‖u‖, reference_norm)`` on the full direction.
-
-    The oracle is not ``relative_update`` read back: it is the *accepted states*.
-    The loop takes ``x_k = x_{k-1} - lambda P du``, so the full direction is
-    recoverable from the difference of two iterates and the damping factor the
-    step was taken with, and nothing in that reconstruction passes through the
-    quantity under test.
-
-    Both halves of the claim are asserted, because each fails silently. Recording
-    the *damped* step instead would leave the ratio at exactly ``λ``, which on
-    the opening steps of this problem is 0.2 — a plot still six orders deep and
-    still wrong, and the number the solver tests against
-    :attr:`~nanopnp.numerics.newton.NewtonSettings.relative_tolerance` is the
-    undamped one (NUM-16 NOTE). Taking the denominator at the *new* iterate
-    rather than the one the step started from would be a relative error of one
-    step's size, which is invisible at convergence and largest exactly where the
-    plot is read.
-    """
     mesh, space, screening_nm = problem
     state = _initial_state(space, mesh)
     reference = DEFAULT_SETTINGS.reference_norm
@@ -483,15 +385,6 @@ def test_ver44_every_step_records_the_undamped_relative_update(
 def test_ver44_the_newton_summary_gains_no_per_iteration_key(
     problem: tuple[ngs.Mesh, ngs.FESpace, float],
 ) -> None:
-    """The manifest record is the same set of keys the history is not in.
-
-    :meth:`~nanopnp.numerics.newton.NewtonResult.summary` reaches the stage-10
-    artefact's summary, which is inside the §5.3.2 content hash. A per-iteration
-    series there would make every solve its own cache entry and move the hash of
-    every run already in a store — so the live plot reads
-    :attr:`~nanopnp.numerics.newton.NewtonResult.history` in the process that
-    produced it, and this asserts the boundary in the direction it could move.
-    """
     mesh, space, screening_nm = problem
     state = _initial_state(space, mesh)
 

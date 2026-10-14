@@ -88,7 +88,7 @@ Every strip item: done when `same_tree.py HEAD~1` passes on its commit and the c
 - [x] 20. `tests/tier1/test_[a-c]*.py`.
 - [x] 21. `tests/tier1/test_[d-g]*.py`.
 - [x] 22. `tests/tier1/test_[h-m]*.py`.
-- [ ] 23. `tests/tier1/test_[n-r]*.py`.
+- [x] 23. `tests/tier1/test_[n-r]*.py`.
 - [ ] 24. `tests/tier1/test_[s-z]*.py` and `tests/tier1/conftest.py`.
 - [ ] 25. `tests/tier2/test_[a-l]*.py`.
 - [ ] 26. `tests/tier2/` remainder, with `tests/tier2/data/`.
