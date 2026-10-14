@@ -97,6 +97,7 @@ edges:
   - {from: physics, to: mesh, relation: static, finding: null}
   - {from: physics, to: numerics, relation: static, finding: null}
   - {from: pipeline, to: charge, relation: static, finding: null}
+  - {from: pipeline, to: density, relation: static, finding: null}
   - {from: pipeline, to: core, relation: static, finding: null}
   - {from: pipeline, to: io, relation: static, finding: null}
   - {from: pipeline, to: materials, relation: static, finding: null}
