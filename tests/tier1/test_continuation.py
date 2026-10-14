@@ -1,12 +1,4 @@
-"""The NUM-18 ladder's schedules and its structure, without solving anything.
-
-The ladder's *behaviour* — that every rung converges, and that a converged rung
-re-solved from its own output costs zero iterations — is Tier 2 and lives in
-``tests/tier2/test_ladder.py``. What is checked here is everything that can be
-got wrong before a single Newton step is taken: a ramp that overshoots its
-target, a stage order that puts the corrections on before the bias, and a
-transfer asked to cross a mesh.
-"""
+"""The NUM-18 ladder's schedules and its structure, without solving anything."""
 
 from dataclasses import replace
 from itertools import pairwise
@@ -39,15 +31,10 @@ what is under test here and nothing is solved, so any insulating value serves.""
 
 @pytest.fixture(scope="module")
 def mesh() -> object:
-    """Return a coarse mesh; every test here builds a ladder without running it."""
     return PORE.generate(maxh_nm=3.0)
 
 
-# -- the bias ramp of stage 5 ------------------------------------------------
-
-
 def test_num18_bias_ramp_steps_finely_near_onset_and_ends_on_the_target() -> None:
-    """Steps of about 10 mV near onset, then coarser, landing exactly on target."""
     schedule = bias_schedule(0.2)
     assert schedule[-1] == pytest.approx(0.2)
     assert schedule[0] == pytest.approx(FINE_BIAS_STEP_V)
@@ -58,7 +45,6 @@ def test_num18_bias_ramp_steps_finely_near_onset_and_ends_on_the_target() -> Non
 
 
 def test_num18_bias_ramp_is_monotone_in_magnitude_and_keeps_the_sign() -> None:
-    """The envelope runs to +/-200 mV, so both signs must ramp the same way."""
     for target in (0.2, -0.2):
         schedule = bias_schedule(target)
         assert schedule[-1] == pytest.approx(target)
@@ -68,43 +54,28 @@ def test_num18_bias_ramp_is_monotone_in_magnitude_and_keeps_the_sign() -> None:
 
 
 def test_num18_bias_ramp_never_overshoots_a_target_between_two_steps() -> None:
-    """A target that is not a whole number of steps still ends exactly on itself."""
     schedule = bias_schedule(0.037)
     assert schedule[-1] == pytest.approx(0.037)
     assert max(abs(value) for value in schedule) == pytest.approx(0.037)
 
 
 def test_num18_a_zero_bias_needs_no_ramp() -> None:
-    """Stage 5 is empty at zero target rather than a single no-op rung."""
     assert bias_schedule(0.0) == ()
 
 
 def test_num18_a_non_positive_bias_step_is_refused() -> None:
-    """A zero step would not terminate, and a negative one would run backwards."""
     with pytest.raises(ValueError, match="must be positive"):
         bias_schedule(0.2, fine_step_V=0.0)
 
 
 def test_num18_ramp_schedule_ends_at_one() -> None:
-    """Stage 4 raises the charges to their full target, not to a fraction of it."""
     assert ramp_schedule(4) == pytest.approx((0.25, 0.5, 0.75, 1.0))
     assert ramp_schedule(1) == (1.0,)
     with pytest.raises(ValueError, match="at least one step"):
         ramp_schedule(0)
 
 
-# -- the structure of the default ladder -------------------------------------
-
-
 def test_num18_default_ladder_runs_the_nine_stages_in_order(mesh: object) -> None:
-    """Every stage appears, and no rung of a later stage precedes an earlier one.
-
-    The order is the requirement, not the count: stages 4, 5 and 9 are ramps and
-    expand into several rungs apiece. Enabling the corrections last is what
-    isolates their contribution to a convergence failure, so a ladder that put
-    stage 7 before stage 5 would still converge and would no longer be doing
-    what NUM-18 asks.
-    """
     rungs = default_ladder(
         mesh,
         concentration_M=1.0,
@@ -118,7 +89,6 @@ def test_num18_default_ladder_runs_the_nine_stages_in_order(mesh: object) -> Non
 
 
 def test_num18_the_corrections_come_on_last_and_one_block_at_a_time(mesh: object) -> None:
-    """Stage 6 is classical with flow, 7 adds the corrections, 8 adds the steric term."""
     rungs = default_ladder(mesh, bias_V=0.05, solid_permittivities=MEMBRANE_PERMITTIVITY)
     by_stage = {rung.stage: rung for rung in rungs if rung.stage in (3, 6, 7, 8)}
 
@@ -138,14 +108,6 @@ def test_num18_the_corrections_come_on_last_and_one_block_at_a_time(mesh: object
 
 
 def test_phy21_the_ablation_ladder_omits_the_correction_stages(mesh: object) -> None:
-    """A classical ladder has no stages 7 and 8, because there is nothing to enable.
-
-    PHY-21 makes ``pnp-ns`` a configuration of ``epnp-ns`` rather than a second
-    code path, so the ablation is the same ladder to the same operating point on
-    the same mesh with the switches off — and the difference is attributable to
-    the corrections alone. Running stages 7 and 8 as no-ops would be the wrong
-    shape: it would claim to have enabled something.
-    """
     rungs = default_ladder(
         mesh,
         concentration_M=1.0,
@@ -166,7 +128,6 @@ def test_phy21_the_ablation_ladder_omits_the_correction_stages(mesh: object) -> 
 
 
 def test_num18_stage_nine_sweeps_the_salt_to_the_target(mesh: object) -> None:
-    """The ladder is built at the easy end and swept to the requested concentration."""
     rungs = default_ladder(
         mesh, concentration_M=3.0, bias_V=0.05, solid_permittivities=MEMBRANE_PERMITTIVITY
     )
@@ -180,7 +141,6 @@ def test_num18_stage_nine_sweeps_the_salt_to_the_target(mesh: object) -> None:
 
 
 def test_num18_no_sweep_is_built_when_the_ladder_starts_at_the_target(mesh: object) -> None:
-    """Stage 9 is omitted rather than emitted as a rung that changes nothing."""
     rungs = default_ladder(
         mesh,
         concentration_M=1.0,
@@ -193,7 +153,6 @@ def test_num18_no_sweep_is_built_when_the_ladder_starts_at_the_target(mesh: obje
 
 
 def test_num18_stage_four_is_omitted_when_there_is_no_charge_to_ramp(mesh: object) -> None:
-    """An uncharged pore has nothing to raise from zero, so it gets no rungs for it."""
     rungs = default_ladder(mesh, bias_V=0.05, solid_permittivities=MEMBRANE_PERMITTIVITY)
     assert not [rung for rung in rungs if rung.stage == 4]
 
@@ -201,12 +160,6 @@ def test_num18_stage_four_is_omitted_when_there_is_no_charge_to_ramp(mesh: objec
 def test_num18_the_charge_ramp_reaches_the_target_and_is_held_afterwards(
     mesh: object,
 ) -> None:
-    """Stage 4 raises ``sigma_s`` to its target, and every later rung carries it.
-
-    A ramp that reached the target and then dropped it would leave the top of the
-    ladder solving an uncharged pore, converging beautifully, and answering a
-    different question.
-    """
     import ngsolve as ngs
 
     target = -0.05
@@ -230,13 +183,6 @@ def test_num18_the_charge_ramp_reaches_the_target_and_is_held_afterwards(
 
 
 def test_qr12_a_fixed_charge_domain_the_mesh_does_not_carry_is_refused(mesh: object) -> None:
-    """A misspelt domain is the silent failure ``MaterialCF`` invites.
-
-    Its keys are matched against the material names and anything unmatched is
-    left at the default, so a typo would put zero charge everywhere and converge
-    the whole ladder on the uncharged problem, reporting a plausible current for
-    a pore that never carried the charge (QR-12).
-    """
     with pytest.raises(ValueError) as raised:
         default_ladder(
             mesh,
@@ -253,7 +199,6 @@ def test_qr12_a_fixed_charge_domain_the_mesh_does_not_carry_is_refused(mesh: obj
 def test_num18_a_uniform_fixed_charge_rides_the_ramp_as_a_fixed_charge_with_no_rule(
     mesh: object, domain: str | None
 ) -> None:
-    """REV-72: the scalar charge is wrapped as a FixedCharge, its rule NGSolve's estimate."""
     import ngsolve as ngs
 
     from nanopnp.numerics.measures import FixedCharge
@@ -272,28 +217,18 @@ def test_num18_a_uniform_fixed_charge_rides_the_ramp_as_a_fixed_charge_with_no_r
 
 
 def test_num19_every_rung_carries_its_own_mesh(mesh: object) -> None:
-    """The mesh is a rung's property, so adaptation *between* rungs needs no new API.
-
-    This phase runs one fixed mesh throughout, which satisfies NUM-19 trivially:
-    there is nothing to confine to a rung boundary because nothing adapts.
-    """
     rungs = default_ladder(mesh, bias_V=0.05, solid_permittivities=MEMBRANE_PERMITTIVITY)
     assert all(rung.mesh is mesh for rung in rungs)
 
 
 def test_fr25_the_mesh_report_names_what_the_run_was_solved_on(mesh: object) -> None:
-    """A continuation result without its mesh cannot be reconstructed (FR-25)."""
     report = mesh_report(mesh)
     assert report["elements"] > 0
     assert "electrolyte" in report["materials"]
     assert {"axis", "cis", "trans", "wall"} <= set(report["boundaries"])
 
 
-# -- transfer ----------------------------------------------------------------
-
-
 def test_num18_transfer_refuses_to_cross_a_mesh(mesh: object) -> None:
-    """Interpolating onto another mesh evaluates outside the source domain silently."""
     model = models.create("pnp", classical=True)
     other = PORE.generate(maxh_nm=4.0)
     previous = models.ModelSolution(
@@ -304,7 +239,6 @@ def test_num18_transfer_refuses_to_cross_a_mesh(mesh: object) -> None:
 
 
 def test_num18_transfer_refuses_two_models_with_nothing_in_common(mesh: object) -> None:
-    """There is no warm start between disjoint field sets, and pretending there is is worse."""
     source = models.create("pnp", classical=True)
     target = replace(source, order=3)
     previous = models.ModelSolution(
@@ -315,13 +249,12 @@ def test_num18_transfer_refuses_two_models_with_nothing_in_common(mesh: object) 
 
 
 def test_an_empty_ladder_is_refused() -> None:
-    """Running nothing and returning a result would be the wrong kind of success."""
     with pytest.raises(ValueError, match="at least one rung"):
         run_ladder([])
 
 
+# NUM-07
 def test_the_ladder_measures_match_the_model_order(mesh: object) -> None:
-    """NUM-07's quadrature bonus is computed from the element order; a mismatch raises."""
     rungs = default_ladder(
         mesh, bias_V=0.05, measures=AXISYMMETRIC, solid_permittivities=MEMBRANE_PERMITTIVITY
     )

@@ -1,10 +1,4 @@
-"""VER-66, QR-14, IF-03, QR-11 — the backend registries (WP39).
-
-Verifies that mesher, linear solver and stabilisation choices operate as uniform
-registries that can be extended by external backends without touching solver or
-pipeline code, and that unregistered names are refused consistently across
-the document validator, the desktop editor and the CLI.
-"""
+"""VER-66, QR-14, IF-03, QR-11 — the backend registries (WP39)."""
 
 from __future__ import annotations
 
@@ -46,12 +40,7 @@ if TYPE_CHECKING:
     from nanopnp.mesh.adapter import MeshData
 
 
-# -- Stub backend implementations ----------------------------------------------
-
-
 class _StubMesher:
-    """A mesher delegating to Netgen while recording invocations."""
-
     def __init__(self, target: str = "netgen") -> None:
         self._inner = create_mesher(target)
         self.calls: list[str] = []
@@ -72,8 +61,6 @@ class _StubMesher:
 
 
 class _StubSolver:
-    """A linear solver delegating to UMFPACK while recording invocations."""
-
     def __init__(self, target: str = "umfpack") -> None:
         self._inner = create_solver(target)
         self.calls: list[str] = []
@@ -88,8 +75,6 @@ class _StubSolver:
 
 
 class _StubStabilisation:
-    """A stabilisation mode delegating to 'none' while recording invocations."""
-
     def __init__(self, target: str = "none") -> None:
         self._inner = create_stabilisation(target)
         self.calls: list[str] = []
@@ -133,7 +118,6 @@ class _StubStabilisation:
 
 @pytest.fixture
 def registered_stubs() -> Iterator[tuple[_StubMesher, _StubSolver, _StubStabilisation]]:
-    """Register stub mesher, solver and stabilisation mode for one test."""
     mesher = _StubMesher("netgen")
     solver = _StubSolver("umfpack")
     stabilisation = _StubStabilisation("none")
@@ -154,7 +138,6 @@ def registered_stubs() -> Iterator[tuple[_StubMesher, _StubSolver, _StubStabilis
 
 @pytest.fixture(scope="module")
 def quickstart_pore_msh(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """Generate the quick-start pore mesh using NGSolve."""
     from nanopnp.mesh.adapter import from_ngsolve, write_msh41
     from nanopnp.mesh.primitives import CylindricalPoreGeometry
 
@@ -164,14 +147,10 @@ def quickstart_pore_msh(tmp_path_factory: pytest.TempPathFactory) -> Path:
     return write_msh41(from_ngsolve(generated), tmp_path_factory.mktemp("pore") / "pore.msh")
 
 
-# -- Verification tests --------------------------------------------------------
-
-
 def test_ver66_stubs_validate_and_appear_in_editor_options(
     registered_stubs: tuple[_StubMesher, _StubSolver, _StubStabilisation],
     tmp_path: Path,
 ) -> None:
-    """A stub mesher, solver and mode validate in a case and are offered by the editor."""
     fixture_path = profile_file("clya_reference_profile")
     case_text = f"""\
 schema: nanopnp/case/v0.5
@@ -197,11 +176,9 @@ numerics:
     checked = check_document(document)
     assert checked is document
 
-    # CLI validate case command
     code = main(["validate", "case", str(case_file)])
     assert code == EXIT_OK
 
-    # Desktop editor options
     editor = CaseEditor.open(case_file)
     assert "stub-mesher" in (editor.state("numerics.mesh.backend").options or ())
     assert "stub-solver" in (editor.state("numerics.linear.solver").options or ())
@@ -214,7 +191,6 @@ def test_ver66_forwarding_solver_and_mode_agree_with_plain_run(
     quickstart_pore_msh: Path,
     tmp_path: Path,
 ) -> None:
-    """On the quickstart pore, stub solver and mode match plain run bitwise and log calls."""
     import numpy as np
 
     _, stub_solver, stub_mode = registered_stubs
@@ -263,12 +239,10 @@ numerics:
         workspace=stub_dir / "work",
     )
 
-    # Both stubs recorded invocations
     assert len(stub_solver.calls) > 0, "stub solver was not invoked"
     assert "solve" in stub_solver.calls
     assert len(stub_mode.calls) > 0, "stub stabilisation mode was not invoked"
 
-    # Bitwise array equality of solved state fields
     with (
         np.load(plain_res.artefacts["solve"].payload["state"], allow_pickle=False) as a_plain,
         np.load(stub_res.artefacts["solve"].payload["state"], allow_pickle=False) as a_stub,
@@ -280,11 +254,11 @@ numerics:
             assert np.array_equal(plain_fields[key], stub_fields[key]), f"field {key} differed"
 
 
+# VER-52
 def test_ver66_forwarding_mesher_agrees_with_netgen_on_supplied_profile(
     registered_stubs: tuple[_StubMesher, _StubSolver, _StubStabilisation],
     tmp_path: Path,
 ) -> None:
-    """The VER-52 fixture walked to mesh with stub mesher reproduces Netgen exactly."""
     import numpy as np
 
     stub_mesher, _, _ = registered_stubs
@@ -327,15 +301,12 @@ numerics:
         workspace=stub_dir / "work",
     )
 
-    # Invocations recorded
     assert "mesh" in stub_mesher.calls
     assert "settings" in stub_mesher.calls
 
-    # Recipe names the stub
     assert stub_res.artefacts["mesh"].parameters["sizing"]["backend"] == "stub-mesher"
     assert netgen_res.artefacts["mesh"].parameters["sizing"]["backend"] == "netgen"
 
-    # Mesh geometry bitwise identical
     netgen_data = read_mesh(netgen_res.artefacts["mesh"].payload["mesh"], format="msh41")
     stub_data = read_mesh(stub_res.artefacts["mesh"].payload["mesh"], format="msh41")
 
@@ -376,7 +347,6 @@ def test_ver66_unregistered_name_is_refused_consistently_cli_and_editor(
     capsys: pytest.CaptureFixture[str],
     tmp_path: Path,
 ) -> None:
-    """An unregistered name for each key is refused with identical text in CLI and editor."""
     fixture_path = profile_file("clya_reference_profile")
     base_case = f"""\
 schema: nanopnp/case/v0.5
@@ -397,7 +367,6 @@ numerics:
     base_file = tmp_path / "base_case.yaml"
     base_file.write_text(base_case, encoding="utf-8")
 
-    # Desktop editor check
     editor = CaseEditor.open(base_file)
     editor.stage(path, unregistered_value)
     with pytest.raises(CaseValidationError):
@@ -405,7 +374,6 @@ numerics:
     editor_problems = editor.problems()
     assert expected_fragment in editor_problems
 
-    # Document validation through loads_case
     defaults = {
         "numerics.mesh.backend": "netgen",
         "numerics.linear.solver": "umfpack",
@@ -435,7 +403,6 @@ numerics:
         loads_case(bad_case_text)
     assert expected_fragment in str(exc_info.value)
 
-    # Command line validation via main
     code = main(["validate", "case", str(bad_file)])
     assert code == EXIT_CASE
     captured = capsys.readouterr()
@@ -445,7 +412,6 @@ numerics:
 def test_ver66_an_unregistered_rejected_solver_is_refused_naming_num21(
     capsys: pytest.CaptureFixture[str], tmp_path: Path
 ) -> None:
-    """``mumps``, unregistered, is refused with NUM-21's reason, not as merely unknown (D3, D7)."""
     fixture_path = profile_file("clya_reference_profile")
     case_text = f"""\
 schema: nanopnp/case/v0.5
@@ -475,7 +441,6 @@ numerics:
 
 
 def test_ver66_a_mesher_naming_a_common_recipe_entry_is_refused() -> None:
-    """A mesher's settings cannot overwrite the recipe entries every backend shares (D2)."""
 
     class Clashing:
         name = "clashing"
@@ -493,7 +458,6 @@ def test_ver66_a_mesher_naming_a_common_recipe_entry_is_refused() -> None:
 
 
 def test_ver66_registered_meshers_in_fresh_process_imports_no_backend() -> None:
-    """In a fresh process, registered_meshers() holds 'gmsh' without importing backend modules."""
     code = (
         "import sys, json\n"
         "from nanopnp.mesh.meshers import registered_meshers\n"

@@ -1,11 +1,4 @@
-"""QR-03 (WP41 D2) — the conservation gate measures the charge the solve assembles.
-
-Before WP41 the gate integrated a supplied field at order 8 and the coupled Poisson
-source assembled it at NGSolve's estimate, order 3. On a 0.5 nm alternating field
-the deployed mesh resolves, the gate passed at 2e-5 while the solve carried a charge
-1.2e-2 off (WP41 *Design* §1). A supplied field now carries one explicit rule, and
-the source term and every leg of its gate are evaluated by it.
-"""
+"""QR-03 (WP41 D2) — the conservation gate measures the charge the solve assembles."""
 
 from __future__ import annotations
 
@@ -27,11 +20,6 @@ PORE = CylindricalPoreGeometry(
 
 @pytest.mark.parametrize("quantity", ["areal_charge_density", "volume_charge_density"])
 def test_qr03_the_gate_measures_the_charge_the_solve_assembles(quantity: str) -> None:
-    """The source term, applied to ``v = 1``, is the gate's ``Q_mesh`` to round-off.
-
-    Both quantities: a volume density is an interpolant too, and its gate stood at
-    order 5 against the same order-3 source.
-    """
     import ngsolve as ngs
 
     from nanopnp.charge.fields import FIELD_QUADRATURE_ORDER, ChargeField, load_field
@@ -73,13 +61,8 @@ def test_qr03_the_gate_measures_the_charge_the_solve_assembles(quantity: str) ->
     )
 
 
+# VER-41
 def test_qr03_every_fixed_charge_source_carries_the_charge_s_rule() -> None:
-    """Each model's ``charge_source(fixed_charge.density, ...)`` passes ``rule_order``.
-
-    On the quadrature request, as VER-41 asserts the stabilisation's, because the
-    number it moves is a few parts in 10^5 and no walk's tolerance would see a
-    model that dropped the keyword.
-    """
     tree = ast.parse(MODELS.read_text(encoding="utf-8"))
     calls = [
         node
@@ -99,7 +82,6 @@ def test_qr03_every_fixed_charge_source_carries_the_charge_s_rule() -> None:
 
 
 def test_qr03_an_explicit_rule_below_num07_s_floor_is_refused() -> None:
-    """``rule_order`` replaces the bonus logic, so it carries NUM-07's floor itself."""
     import ngsolve as ngs
 
     from nanopnp.numerics.measures import AXISYMMETRIC
@@ -121,7 +103,6 @@ def test_qr03_an_explicit_rule_below_num07_s_floor_is_refused() -> None:
 
 
 def test_qr03_default_ladder_threads_the_charge_s_rule_onto_every_charged_rung() -> None:
-    """REV-72: the ladder ramps a FixedCharge and the rule rides with the density."""
     import ngsolve as ngs
 
     from nanopnp.numerics.measures import FixedCharge
@@ -141,7 +122,6 @@ def test_qr03_default_ladder_threads_the_charge_s_rule_onto_every_charged_rung()
 
 
 def test_qr03_a_supplied_and_a_deposited_charge_each_name_their_rule() -> None:
-    """REV-72: `fixed_charge_C_m3` and `assemble` return the density with its rule."""
     import ngsolve as ngs
 
     from nanopnp.charge.deposit import DepositedCharge
@@ -167,7 +147,6 @@ def test_qr03_a_supplied_and_a_deposited_charge_each_name_their_rule() -> None:
 
 
 def test_qr03_a_bare_density_is_refused_by_the_model_that_takes_a_fixed_charge() -> None:
-    """REV-72: a density without its rule would assemble at NGSolve's estimate, unannounced."""
     import ngsolve as ngs
 
     from nanopnp.materials.electrolyte import Electrolyte
@@ -184,7 +163,6 @@ def test_qr03_a_bare_density_is_refused_by_the_model_that_takes_a_fixed_charge()
 
 
 def test_qr03_a_deposited_charge_keeps_the_model_s_default_rule() -> None:
-    """A deposit's total is exact at the default order; its rule is Phase 6's (D13, E4)."""
     from nanopnp.charge.deposit import DepositedCharge
     from nanopnp.charge.fields import FIELD_QUADRATURE_ORDER, ChargeField
 
@@ -193,12 +171,6 @@ def test_qr03_a_deposited_charge_keeps_the_model_s_default_rule() -> None:
 
 
 def test_qr03_an_explicit_rule_holds_on_a_one_dimensional_mesh() -> None:
-    """``volume(rule_order=n)`` and ``integrate(rule_order=n)`` are one rule on segments too.
-
-    Without a SEGM entry the source falls back to NGSolve's estimate while the
-    gate honours the order: ``x**9`` at order 9 is exact (0.1) in the gate and
-    0.0943 in the form.
-    """
     import ngsolve as ngs
     from ngsolve.meshes import Make1DMesh
 

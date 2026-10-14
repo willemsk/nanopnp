@@ -1,20 +1,4 @@
-"""VER-51: stage 4, contour extraction, conditioning and its gate (FR-07, FR-08).
-
-Every oracle is independent of the route it checks:
-
-- a square pyramid is linear along every grid edge, so marching squares must
-  place its level set exactly, and a Gaussian's circle bounds the interpolation
-  error in closed form (WP20 plan, Design §6);
-- a regular n-gon is an eigenvector of the umbrella operator, so Taubin and
-  Laplacian smoothing scale its area by closed forms that differ by 5 % (Design §3);
-- the morphology is checked on shapes whose gaps and fins sit either side of 4h;
-- the probe profile of a ring of atoms is a distance to a circle.
-
-The walk and the artefact run on a small C12 tube: 12 chains of 27 alanines on
-three rings and nine layers, 0.3 nm apart. Its inner wall is flat, every atom of
-the inner ring touching the probe sphere, which is the worst case for the radius
-band's lower bound (Design §5).
-"""
+"""VER-51: stage 4, contour extraction, conditioning and its gate (FR-07, FR-08)."""
 
 from __future__ import annotations
 
@@ -65,27 +49,13 @@ from nanopnp.pipeline.run import (
 H = 0.05
 
 
-# -- extraction ------------------------------------------------------------------
-
-
 def _axes(
     r_nodes: int = 121, z_nodes: int = 241, z_first_nm: float = -2.0
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Return non-square grid axes with a non-zero z origin, so a transposition shows."""
     return np.arange(r_nodes) * H, z_first_nm + np.arange(z_nodes) * H
 
 
 def test_ver51_pyramid_contour_is_exact() -> None:
-    """A square pyramid's level set is found to round-off, at the square the axes place it.
-
-    ``f = 1 - max(|r - 3|, |z - 5|)/a``, centred on the node (3, 5) nm, with
-    ``a(1 - l) = (k + 1/2) h``. Its kinks lie on nodes, so f is linear along every
-    grid edge and marching squares interpolates it exactly. The level set is the
-    square of half-side ``(k + 1/2) h``, whose corners sit at cell centres; each
-    corner cell cuts off a triangle of legs h/2, so the loop's area is the square's
-    less ``h^2/2``. A transposed axis, a half-bin shift or the author's ``w/h``
-    scale each misplaces a vertex by at least h/2.
-    """
     r_nm, z_nm = _axes()
     level, k = 0.25, 10
     half = (k + 0.5) * H
@@ -103,11 +73,6 @@ def test_ver51_pyramid_contour_is_exact() -> None:
 
 
 def test_ver51_gaussian_section_subpixel() -> None:
-    """A Gaussian's 0.25 level is a circle of radius ``s sqrt(ln 4)``, found to 1e-3 nm.
-
-    On a grid line through the centre, linear interpolation of f misplaces the
-    crossing by at most ``h^2 |f''| / (8 |f'|)``, 4.7e-4 nm here (Design §6).
-    """
     r_nm, z_nm = _axes()
     s = 1.0
     r, z = np.meshgrid(r_nm, z_nm)
@@ -118,11 +83,7 @@ def test_ver51_gaussian_section_subpixel() -> None:
     assert np.max(np.abs(distance)) <= 1e-3
 
 
-# -- smoothing -------------------------------------------------------------------
-
-
 def _ngon(n: int, radius: float, centre: tuple[float, float] = (3.0, 5.0)) -> np.ndarray:
-    """Return a regular n-gon, clockwise."""
     angles = -2.0 * np.pi * np.arange(n) / n
     return np.column_stack(
         (centre[0] + radius * np.cos(angles), centre[1] + radius * np.sin(angles))
@@ -130,14 +91,6 @@ def _ngon(n: int, radius: float, centre: tuple[float, float] = (3.0, 5.0)) -> np
 
 
 def test_ver51_taubin_keeps_area_laplace_shrinks() -> None:
-    """Taubin scales a regular 64-gon's area by ``f(k1)^2N``; the Laplacian by ``(1 - lam k1)^2N``.
-
-    The n-gon is an eigenvector of the circulant umbrella operator with
-    ``k1 = 1 - cos(2 pi/64)``; one pass multiplies it by
-    ``f = (1 - lam k1)(1 - mu k1)`` about its centroid, which the constant mode
-    keeps. The Laplacian is the same N = 10 passes with mu = 0. Both closed forms
-    hold to 1e-12, and the two differ by 5 %, so the test discriminates.
-    """
     polygon = _ngon(64, 1.0)
     area = abs(signed_area(polygon))
     k1 = 1.0 - math.cos(2.0 * math.pi / 64)
@@ -155,7 +108,6 @@ def test_ver51_taubin_keeps_area_laplace_shrinks() -> None:
 
 
 def test_ver51_resample_is_uniform() -> None:
-    """Resampling places points at one arc length, within 1 % of the target, on the loop."""
     loop = np.array([[2.0, 0.0], [2.0, 2.0], [3.0, 2.0], [3.0, 0.0]])
     points = resample(loop, H / 2)
     assert len(points) == round(6.0 / (H / 2))
@@ -164,21 +116,11 @@ def test_ver51_resample_is_uniform() -> None:
     assert spacing[0] == pytest.approx(H / 2, rel=0.01)
 
 
-# -- the morphology ---------------------------------------------------------------
-
-
 CORNER = (1.0 - math.pi / 4.0) * (2 * H) ** 2
 """A 90-degree corner's area change under a closing or opening of radius 2h."""
 
 
 def test_ver51_closing_fills_subresolution_slot() -> None:
-    """Closing and opening by 2h fill a 0.1 nm slot, remove a 0.1 nm fin and keep a 0.3 nm slot.
-
-    The body is 1 x 2 nm. The area after is the body less the wide slot, to the
-    corner-rounding bound: each of its eight 90-degree corners moves by at most
-    ``delta^2 (1 - pi/4)``, and the fin's two roots likewise. After the rest of the
-    conditioning the feature size exceeds 2h.
-    """
     body = box(2.0, 0.0, 3.0, 2.0)
     narrow = box(2.5, 0.5, 3.0, 0.6)
     wide = box(2.5, 1.2, 3.0, 1.5)
@@ -200,11 +142,6 @@ def test_ver51_closing_fills_subresolution_slot() -> None:
 
 
 def test_ver51_topology() -> None:
-    """A void is filled and recorded; an island is refused naming it; a closed lumen names its z.
-
-    The void is 0.5 x 0.5 nm; its four corners are concave for the region, so the
-    closing fills ``delta^2 (1 - pi/4)`` at each before the hole is recorded.
-    """
     body = box(2.0, 0.0, 3.0, 2.0)
     void = box(2.25, 0.75, 2.75, 1.25)
     filled, record = close_and_open(body.difference(void), contour.CLOSING_SPACINGS * H)
@@ -241,18 +178,13 @@ def test_ver51_topology() -> None:
 
 
 def _hollow() -> np.ndarray:
-    """Return a 15 x 15 map holding a square annulus: one outer loop and one hole."""
     field = np.zeros((15, 15))
     field[3:12, 3:12] = 1.0
     field[6:9, 6:9] = 0.0
     return field
 
 
-# -- the gate --------------------------------------------------------------------
-
-
 def _rectangle(spacing: float = 0.1) -> np.ndarray:
-    """Return the loop of r in [2, 3], z in [0, 2], vertices ``spacing`` apart, canonical."""
     bottom = [(2.0 + i * spacing, 0.0) for i in range(round(1.0 / spacing))]
     right = [(3.0, i * spacing) for i in range(round(2.0 / spacing))]
     top = [(3.0 - i * spacing, 2.0) for i in range(round(1.0 / spacing))]
@@ -261,7 +193,6 @@ def _rectangle(spacing: float = 0.1) -> np.ndarray:
 
 
 def _planes() -> np.ndarray:
-    """Return the mid-planes of a 0.05 nm z lattice over the rectangle."""
     return (np.arange(40) + 0.5) * H
 
 
@@ -271,7 +202,6 @@ def _gate(loop: np.ndarray, probe_nm: float = 1.9) -> dict[str, object]:
 
 
 def test_ver51_gate_criteria_fire() -> None:
-    """Each §5.2.1 criterion fires on a loop built to fail it, naming value, threshold, (r, z)."""
     record = _gate(_rectangle())
     assert record["vertex_spacing"]["value_nm"] == pytest.approx(0.1)  # type: ignore[index]
     assert record["band"]["low"]["value_nm"] == pytest.approx(0.1)  # type: ignore[index]
@@ -336,7 +266,6 @@ def test_ver51_gate_criteria_fire() -> None:
 
 
 def _failing_loops() -> dict[str, tuple[np.ndarray, float]]:
-    """Return one loop, and its probe radius, built to fail each §5.2.1 criterion."""
     short = _rectangle()
     before = int(np.flatnonzero(np.isclose(short[:, 0], 2.3) & (short[:, 1] == 0.0))[0])
     short = np.insert(short, before, [2.33, 0.0], axis=0)
@@ -352,19 +281,11 @@ def _failing_loops() -> dict[str, tuple[np.ndarray, float]]:
         "band high": (_rectangle(), 0.0),
         "bowtie": (np.array([[2.0, 0.0], [3.0, 1.0], [3.0, 0.0], [2.0, 1.0]]), 1.9),
         "two vertices": (np.array([[2.0, 0.0], [3.0, 1.0]]), 1.9),
-        # Two criteria at once: the spacing and the band, so the order is visible.
         "spacing and band": (short, 2.1),
     }
 
 
 def test_ver55_measure_is_the_gate_without_the_raise() -> None:
-    """``measure`` equals ``gate``'s record where it passes, and names its refusal where not (D9).
-
-    One implementation of the criteria: the shell's display of a hand edit and
-    the stage-4 gate cannot disagree about a value, a threshold or a location.
-    Where several criteria fail, ``measure`` lists all of them in ``gate``'s order,
-    and the first is the refusal ``gate`` raises.
-    """
     planes = _planes()
 
     def both(loop: np.ndarray, probe: float) -> tuple[object, object]:
@@ -398,7 +319,6 @@ def test_ver55_measure_is_the_gate_without_the_raise() -> None:
         "minimum vertex spacing",
         "radius profile",
     ]
-    # Every criterion that could be measured is recorded beside the refusal.
     assert set(measured.record) >= {  # type: ignore[attr-defined]
         "axis_clearance",
         "vertex_spacing",
@@ -410,7 +330,6 @@ def test_ver55_measure_is_the_gate_without_the_raise() -> None:
 
 
 def test_ver51_spacing_and_canonical_form() -> None:
-    """The spacing step drops the endpoint that moves the area least; the loop starts lowest-z."""
     loop = np.array([[2.0, 0.0], [2.0, 1.0], [2.02, 1.0], [3.0, 1.0], [3.0, 0.0]])
     spaced, removed = enforce_spacing(loop, H)
     assert removed == 1
@@ -423,11 +342,7 @@ def test_ver51_spacing_and_canonical_form() -> None:
     assert ordered[0].tolist() == [2.0, 0.0]
 
 
-# -- the probe profile -----------------------------------------------------------
-
-
 def test_ver51_probe_ring_closed_form() -> None:
-    """A ring of 12 atoms gives ``sqrt(rho0^2 + (z - z0)^2) - R_a``; two frames give the mean."""
     rho0, z0, radius, shift = 2.4, 1.0, 0.17, 0.3
     angles = 2.0 * np.pi * np.arange(12) / 12
     ring = np.column_stack((rho0 * np.cos(angles), rho0 * np.sin(angles), np.full(12, z0)))
@@ -445,12 +360,8 @@ def test_ver51_probe_ring_closed_form() -> None:
         probe_radius_profile(frames, radii[:11], z)
 
 
-# -- the stage, on a synthetic tube ----------------------------------------------
-
-
 @pytest.fixture(scope="module")
 def tube(tube_pdb: Path) -> Path:
-    """Return the tube's PDB (the root conftest writes it)."""
     return tube_pdb
 
 
@@ -476,7 +387,6 @@ def _case(directory: Path, pdb: Path, *, geometry: str = "", name: str = "tube")
 
 @pytest.fixture(scope="module")
 def tube_store(tmp_path_factory: pytest.TempPathFactory) -> Store:
-    """One store for the module: stages 1 to 3 run once."""
     return Store(tmp_path_factory.mktemp("tube-store"))
 
 
@@ -496,7 +406,6 @@ print(create("contour").key(inputs).hash)
 
 
 def _key_artefact(case_path: Path) -> Artefact:
-    """Return the stage-4 key artefact for a case, computed from keys alone."""
     case = load_case(case_path)
     structure = create("structure").key(StageInputs(resolved=resolve(case)))  # type: ignore[attr-defined]
     density = create("density").key(  # type: ignore[attr-defined]
@@ -513,19 +422,13 @@ def _key_artefact(case_path: Path) -> Artefact:
 
 
 def _key(case_path: Path) -> str:
-    """Return the stage-4 key's hash for a case."""
     return _key_artefact(case_path).hash
 
 
+# FR-27, VER-23
 def test_ver51_artefact_and_key(
     tube: Path, tube_store: Store, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """The payload is a profile document; the key is stable across processes and moves with D13.
-
-    The payload loads through ``load_profile`` as a pipeline profile whose sha256
-    is stage 3's payload digest, and ``write_profile`` round-trips it bit for bit.
-    A hand edit of the stored file is recorded as one (FR-27, VER-23).
-    """
     case = _case(tmp_path, tube)
     result = run_case(case, store=tube_store, upto="contour", write=False)
     artefact = result.artefacts["contour"]
@@ -560,7 +463,6 @@ def test_ver51_artefact_and_key(
     for name, value in contour.KEY_CONSTANTS.items():
         assert parameters[name] == value
     assert parameters["radius_set"]["name"] == "pdb2pqr_charmm"  # type: ignore[index]
-    # The entries are the constants the pipeline reads, not literals beside them.
     closing, taubin_key = parameters["closing"], parameters["taubin"]
     assert closing["radius"] == f"{contour.CLOSING_SPACINGS:g}h" == "2h"  # type: ignore[index]
     assert closing["quad_segs"] == contour.QUAD_SEGS  # type: ignore[index]
@@ -602,23 +504,12 @@ def test_ver51_artefact_and_key(
 def test_ver51_case_value_refusals(
     tube: Path, tmp_path: Path, contour_block: str, message: str
 ) -> None:
-    """An isolevel outside (0, 1) or a tolerance outside (0, h) is refused naming it (D3)."""
     case = _case(tmp_path, tube, geometry=f"geometry: {{contour: {contour_block}}}\n")
     with pytest.raises(CaseValidationError, match=message):
         resolve(load_case(case))
 
 
 def test_ver51_case_values_and_walk(tube: Path, tube_store: Store, tmp_path: Path) -> None:
-    """A ``structure:`` case walks to stage 4, and on to stage 5, which gates the junction.
-
-    The walk selects every stage, the sweep plans (WP20 D1), and stage 5
-    refuses a bilayer at the default ``centre_z_nm = 0`` that misses the tube,
-    naming the key (WP21 D4).
-
-    The tolerance is checked against the case's own grid spacing, so 0.035 nm is
-    refused at h = 0.03 nm and admitted at the default h. The manifest's Geometry
-    group records the contour (D15).
-    """
     from nanopnp.geometry.region import RegionGateError
     from nanopnp.sweep.plan import plan_from_document
 
@@ -684,7 +575,6 @@ def test_ver51_case_values_and_walk(tube: Path, tube_store: Store, tmp_path: Pat
 
 
 def test_ver51_gate_failure_aborts_the_walk(tube: Path, tube_store: Store, tmp_path: Path) -> None:
-    """An isolevel with no closed contour aborts stage 4 naming the criterion; nothing is stored."""
     case = _case(tmp_path, tube, geometry="geometry: {contour: {isolevel: 0.999}}\n", name="high")
     with pytest.raises(ContourGateError, match=r"loop topology: the map has no closed contour"):
         run_case(case, store=tube_store, upto="contour", write=False)

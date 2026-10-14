@@ -1,17 +1,4 @@
-"""VER-29: reading a supplied ``(r, z)`` field, and gating the charge it carries.
-
-The unit half. What is checked here is everything that can be wrong before a
-solve exists: the container's axis order, the formats, the header document, the
-interpolant's support, and each gate of PHY-19 firing on a field built to fail
-it. The whole-model half — the same machinery on the deployed ClyA reference
-mesh — is ``tests/tier2/test_charge_conservation.py``.
-
-Two of these tests exist because the obvious version of them passes on broken
-code. A grid sampled where ``r = z`` agrees exactly with its own transpose, so
-the interpolation test samples off the diagonal; and a quadrature-agreement check
-written as ``extra_order=3`` evaluates a singular form at *exactly* the order it
-already used, so the two sides agree to the last bit and the gate can only pass.
-"""
+"""VER-29: reading a supplied ``(r, z)`` field, and gating the charge it carries."""
 
 from __future__ import annotations
 
@@ -50,7 +37,6 @@ from nanopnp.numerics.measures import AXISYMMETRIC
 
 
 def _has_griddata() -> bool:
-    """Return whether GridDataFormats is installed (the ``structure`` extra)."""
     try:
         import gridData  # noqa: F401
     except ImportError:
@@ -65,7 +51,6 @@ needs_griddata = pytest.mark.skipif(
 
 @pytest.fixture(scope="module")
 def mesh():
-    """Return a plain rectangle covering ``r in [0, 6]``, ``z in [0, 10]``, in nm."""
     import netgen.occ as occ
     import ngsolve as ngs
 
@@ -86,7 +71,6 @@ reference mesh, in Tier 2.
 
 
 def _ring(charge_e: float = -12.0, **overrides: float) -> FormSpec:
-    """Return one Gaussian ring of known total charge, on a 0.01 nm grid."""
     parameters = {
         "centre_r_nm": 2.0,
         "centre_z_nm": 4.0,
@@ -104,7 +88,6 @@ def _ring(charge_e: float = -12.0, **overrides: float) -> FormSpec:
 
 
 def _document(spec: FormSpec, **overrides: object) -> FieldDocument:
-    """Return a valid field document over an analytic form."""
     payload: dict[str, object] = {
         "schema": "nanopnp/field/v0.5",
         "name": "ring",
@@ -118,12 +101,8 @@ def _document(spec: FormSpec, **overrides: object) -> FieldDocument:
 
 
 def _field(spec: FormSpec, **overrides: object) -> ChargeField:
-    """Return the charge field an analytic form describes."""
     document = _document(spec, **overrides)
     return ChargeField(document=document, grid=create_form(spec), source=__file__)  # type: ignore[arg-type]
-
-
-# -- the container and its formats --------------------------------------------
 
 
 def test_ver29_a_grid_round_trips_through_the_native_format(tmp_path):
@@ -143,13 +122,6 @@ def test_ver29_a_grid_round_trips_through_the_native_format(tmp_path):
 
 
 def test_ver29_the_writable_formats_exclude_the_read_only_reference_table():
-    """:func:`writable_formats` is the answer to "what can this install write?".
-
-    The native format needs no dependency and is always in it; ``comsolgrid`` is
-    the reference model's own table and is read-only by policy, so it never is.
-    The interchange formats depend on what GridDataFormats resolved to here,
-    which is the subject of the round-trip test below.
-    """
     formats = writable_formats()
 
     assert "npz" in formats
@@ -159,28 +131,15 @@ def test_ver29_the_writable_formats_exclude_the_read_only_reference_table():
 
 @needs_griddata
 def test_ver29_with_griddataformats_both_interchange_formats_are_writable():
-    """GridDataFormats' floor, 1.2, carries the MRC writer, so installed means both.
-
-    Under the 3.10 floor the resolver could take 1.0.2, which reads CCP4 and
-    cannot write it; the 3.11 floor retired that gap (section 8.2.2 B4), and
-    with it the refusal branch no supported interpreter can reach.
-    """
     assert writable_formats() == {"npz", "dx", "mrc"}
 
 
+# IF-05
 @needs_griddata
 @pytest.mark.parametrize(
     ("name", "writer", "tolerance"), [("field.dx", "dx", 0.0), ("field.ccp4", "mrc", 1e-6)]
 )
 def test_ver29_a_grid_round_trips_through_opendx_and_ccp4(tmp_path, name, writer, tolerance):
-    """IF-05's interchange formats, with the singleton third axis.
-
-    CCP4 is written through gridData's ``MRC`` writer — its registry has no
-    ``CCP4`` entry at all — and that stores ``float32``, so the round trip is not
-    bit-exact and the digest moves. Asserted rather than hidden: the native
-    format is the working one. Unconditional on every supported interpreter
-    since the 3.11 floor (section 8.2.2 B4).
-    """
     grid = RadialGrid.from_axes(
         np.array([1.0, 1.5, 2.0, 2.5]),
         np.array([0.0, 0.25, 0.5]),
@@ -198,7 +157,6 @@ def test_ver29_a_grid_round_trips_through_opendx_and_ccp4(tmp_path, name, writer
 
 @needs_griddata
 def test_ver29_a_genuinely_two_dimensional_array_is_refused_naming_its_shape(tmp_path):
-    """GridData fails on a 2D array from inside its own writer; we say so first."""
     import gridData
 
     path = tmp_path / "flat.dx"
@@ -211,12 +169,6 @@ def test_ver29_a_genuinely_two_dimensional_array_is_refused_naming_its_shape(tmp
 
 
 def test_ver29_the_value_array_is_checked_against_the_axes_it_belongs_to():
-    """A transposed array is refused, naming both shapes.
-
-    The check is the shape, and it is the only one available: a transposed grid
-    raises nothing on its own and agrees with the intended one everywhere ``r``
-    equals ``z``.
-    """
     r_nm, z_nm = np.array([0.0, 1.0, 2.0]), np.array([0.0, 1.0])
     values = np.array([[0.0, 10.0, 20.0], [1.0, 11.0, 21.0]])
 
@@ -226,7 +178,6 @@ def test_ver29_the_value_array_is_checked_against_the_axes_it_belongs_to():
 
 
 def test_ver29_the_interpolant_reproduces_a_field_that_is_not_symmetric(mesh):
-    """``10 r + z`` off the diagonal, which is where a transposed grid differs."""
     r_nm, z_nm = np.linspace(0.0, 4.0, 5), np.linspace(0.0, 3.0, 4)
     values = 10.0 * r_nm[None, :] + z_nm[:, None]
     interpolant = coefficient(RadialGrid.from_axes(r_nm, z_nm, values))
@@ -236,12 +187,6 @@ def test_ver29_the_interpolant_reproduces_a_field_that_is_not_symmetric(mesh):
 
 
 def test_ver29_the_interpolant_is_zero_outside_the_grid_box(mesh):
-    """The padding of :func:`coefficient`, against the clamped continuation.
-
-    ``VoxelCoefficient`` continues by its box's edge value, which over a 250 nm
-    reservoir would turn a residual edge value into a charge sheet a thousand
-    times the grid's own footprint (section 5.3.1 NOTE).
-    """
     r_nm, z_nm = np.linspace(0.0, 2.0, 5), np.linspace(0.0, 2.0, 5)
     grid = RadialGrid.from_axes(r_nm, z_nm, np.full((5, 5), 7.0))
 
@@ -254,7 +199,6 @@ def test_ver29_the_interpolant_is_zero_outside_the_grid_box(mesh):
 
 
 def test_ver29_the_comsol_grid_table_reads_as_delivered(tmp_path):
-    """The reference model's own ``%Grid``/``%Data`` table, in metres, row per z."""
     path = tmp_path / "table.txt"
     path.write_text(
         "%Grid\n0 5e-10 1e-9\n-1e-9 0 1e-9\n%Data\n1 2 3\n4 5 6\n7 8 9\n",
@@ -288,9 +232,6 @@ def test_ver29_a_non_uniform_axis_is_refused_rather_than_resampled():
         RadialGrid.from_axes(np.array([0.0, 1.0, 3.0]), np.array([0.0, 1.0]), np.zeros((2, 3)))
 
 
-# -- the header document ------------------------------------------------------
-
-
 def test_if03_an_unknown_key_in_a_field_document_is_rejected_naming_it(tmp_path):
     path = tmp_path / "field.yaml"
     path.write_text(
@@ -308,7 +249,6 @@ def test_if03_an_unknown_key_in_a_field_document_is_rejected_naming_it(tmp_path)
 
 
 def test_ver30_an_absolute_permittivity_field_is_refused_naming_the_blend():
-    """§4.4's NOTE by name, not "not one of the three quantities"."""
     with pytest.raises(ValueError, match=r"eps_r,f\^c|concentration dependence"):
         _document(_ring(), quantity="relative_permittivity", units="1")
 
@@ -319,12 +259,6 @@ def test_ver29_units_are_checked_against_the_quantity_they_belong_to():
 
 
 def test_ver29_declared_units_convert_onto_the_canonical_si_unit(tmp_path):
-    """``e/m^2`` against ``C/m^2``: the erratum G5 made a validation matter.
-
-    The reference table stores the charge sum *without* ``e`` and its COMSOL
-    assembly multiplies by ``e_const``; a table read as C m^-2 would be wrong by
-    1.6e-19 with nothing to say so.
-    """
     grid = RadialGrid.from_axes(np.array([0.0, 1.0]), np.array([0.0, 1.0]), np.full((2, 2), 2.0))
     write_grid(grid, tmp_path / "ring.npz")
     (tmp_path / "field.yaml").write_text(
@@ -344,12 +278,6 @@ def test_ver29_declared_units_convert_onto_the_canonical_si_unit(tmp_path):
 @pytest.mark.parametrize("key", ["q_net_e", "axis_cutoff_nm"])
 @pytest.mark.parametrize("value", [math.nan, math.inf])
 def test_ver29_a_header_value_that_is_not_finite_is_refused(key, value):
-    """``yaml.safe_dump`` of a NumPy NaN writes ``.nan``, and NaN passes every ``> tol`` gate.
-
-    A NaN ``q_net_e`` made the reference charge NaN, which skipped the zero
-    reference refusal and turned three of the five conservation legs into NaN
-    errors that no gate caught, in the charge stage and again in the solve.
-    """
     with pytest.raises(ValueError, match=key):
         _document(_ring(), **{key: value})
 
@@ -389,16 +317,8 @@ def test_fr16_the_analytic_forms_are_a_named_registry():
         create_form(_ring().model_copy(update={"parameters": {"centre_r_nm": 1.0}}))
 
 
-# -- conservation and its gates ----------------------------------------------
-
-
+# QR-03
 def test_ver29_conservation_against_an_analytic_net_charge(mesh):
-    """QR-03 on both legs, with ``Q_net`` known in closed form.
-
-    A Gaussian ring integrates to its own charge over the whole plane, so the
-    producer leg here measures the trapezium rule against exact arithmetic and
-    nothing else — which is what makes the consumer leg attributable.
-    """
     field = _field(_ring(), q_net_e=-12.0)
     report = check_conservation(conservation(field, mesh, AXISYMMETRIC, planes_nm=[2.0, 4.0, 6.0]))
 
@@ -409,47 +329,24 @@ def test_ver29_conservation_against_an_analytic_net_charge(mesh):
     assert report.summary()["interpolation"] == "bilinear"
 
 
+# PHY-18
 def test_ver29_the_axis_guard_deficit_is_reported_rather_than_assumed(mesh):
-    """PHY-18 deletes charge inside ``r < 0.01 nm``; the report says how much.
-
-    Put on the axis on purpose. The reference structure's innermost atoms sit at
-    ``r >~ 1.6 nm`` and the strip sees ``exp(-354)`` of peak, so a field that
-    never touches the axis cannot tell a computed deficit from a hard-coded zero.
-    """
-    # A guard radius the mesh can resolve, so that the third route below means
-    # something: at the reference's own 0.01 nm the guard is a fifteenth of an
-    # element and no mesh integral can see its edge.
     field = _field(
         _ring(charge_e=-1.0, centre_r_nm=0.0, centre_z_nm=4.0),
         q_net_e=-0.5,
         axis_cutoff_nm=RING_WIDTH_NM,
     )
 
-    # Both numbers are closed forms. The half-plane holds half a ring centred on
-    # the axis, and the strip inside the guard holds ``q erf(a/w) / 2``.
-    # The two tolerances differ by two decades, and that is the design's own
-    # argument made visible: the whole-grid integral is a trapezium rule over a
-    # range the field decays to zero at, so it has no Euler-Maclaurin boundary
-    # terms and is exact beyond all orders; the guard's is a *partial* integral,
-    # cut where the field is still steep, so it carries the usual O(h^2) term.
     deficit = field.guard_deficit_C() / ELEMENTARY_CHARGE
     assert field.planar_integral_C() / ELEMENTARY_CHARGE == pytest.approx(-0.5, rel=1e-6)
     assert deficit == pytest.approx(-0.5 * math.erf(1.0), rel=2e-4)
 
-    # And the third route: the mesh integral is the grid's less exactly what the
-    # guard deleted, which is what says the reported deficit is the charge the
-    # solver actually discarded rather than a number computed beside it.
-    # Against the reference charge, as QR-03 poses every tolerance here, and not
-    # against the residual: what is left after the guard is a seventh of the
-    # grid's charge, and a discontinuity the mesh cannot resolve — the guard's own
-    # step, an element-scale jump — costs a fixed fraction of the *total*.
     report = conservation(field, mesh, AXISYMMETRIC, planes_nm=[4.0])
     residual = report.q_grid_C - report.guard_deficit_C
     assert abs(report.q_mesh_C - residual) < 5e-3 * abs(report.q_grid_C)
 
 
 def test_ver29_the_projection_and_the_guard_apply_to_an_areal_density_only(mesh):
-    """The declared quantity, not an inference: the two differ by ``2 pi r``."""
     spec = _ring()
     areal = _field(spec)
     volume = _field(spec, quantity="volume_charge_density", units="C/m^3")
@@ -465,7 +362,6 @@ def test_ver29_the_projection_and_the_guard_apply_to_an_areal_density_only(mesh)
 
 
 def test_ver29_the_truncation_gate_names_the_ring_value_and_its_location(mesh):
-    """A grid cut short before its field decayed, which the padding would hide."""
     spec = (
         _ring()
         .model_copy(
@@ -493,12 +389,6 @@ def test_ver29_the_truncation_gate_names_the_ring_value_and_its_location(mesh):
 
 
 def test_ver29_charge_on_the_axis_column_is_not_a_truncation():
-    """The ``r = 0`` column is the axis, and no mesh point lies beyond it.
-
-    The gate read it as a cut edge, so a supplied field with its origin on the
-    axis and charge there aborted as "the supplied grid is truncated", blaming
-    the grid for nothing the padding discards. Off the axis it is a cut edge.
-    """
     r_nm, z_nm = np.linspace(0.0, 1.0, 11), np.linspace(0.0, 2.0, 21)
     values = np.zeros((z_nm.size, r_nm.size))
     values[10, 0] = 1.0
@@ -512,7 +402,6 @@ def test_ver29_charge_on_the_axis_column_is_not_a_truncation():
 
 
 def test_ver29_a_field_with_no_declared_charge_still_gates_the_consumer_leg(mesh):
-    """The producer leg records that it could not run; the consumer leg gates."""
     field = _field(_ring())
     report = check_conservation(conservation(field, mesh, AXISYMMETRIC, planes_nm=[4.0]))
 
@@ -526,7 +415,6 @@ def test_ver29_a_field_with_no_declared_charge_still_gates_the_consumer_leg(mesh
 
 
 def _report(**overrides: object) -> ConservationReport:
-    """Return a conservation report that passes every gate, to spoil one leg at a time."""
     q_C = -12.0 * ELEMENTARY_CHARGE
     fields: dict[str, object] = {
         "q_net_C": q_C,
@@ -545,6 +433,7 @@ def _report(**overrides: object) -> ConservationReport:
     return ConservationReport(**fields)  # type: ignore[arg-type]
 
 
+# PHY-19
 @pytest.mark.parametrize(
     ("overrides", "gate"),
     [
@@ -562,8 +451,7 @@ def _report(**overrides: object) -> ConservationReport:
     ],
 )
 def test_qr12_a_nan_leg_fails_the_conservation_gate(overrides, gate):
-    """``nan > tol`` is False, so a NaN in any leg used to pass PHY-19's check."""
-    check_conservation(_report())  # the unspoiled report passes, so the gate is not vacuous
+    check_conservation(_report())
     with pytest.raises(ChargeFieldError) as raised:
         check_conservation(_report(**overrides))
     assert raised.value.gate.startswith(gate)
@@ -571,7 +459,6 @@ def test_qr12_a_nan_leg_fails_the_conservation_gate(overrides, gate):
 
 
 def test_qr12_a_nan_plane_is_the_worst_plane_wherever_it_sits():
-    """``max`` does not order NaN; the plane it sits on is named, not a finite one."""
     q_C = -12.0 * ELEMENTARY_CHARGE
     report = _report(mesh_cumulative_C=(1e-3 * q_C, math.nan, q_C))
     plane, error = report.worst_plane
@@ -579,14 +466,8 @@ def test_qr12_a_nan_plane_is_the_worst_plane_wherever_it_sits():
     assert math.isnan(error)
 
 
+# PHY-16
 def test_ver29_the_quadrature_check_compares_two_genuinely_different_orders():
-    """The gate would otherwise pass by evaluating one computation twice.
-
-    ``Measures.bonus_order`` takes ``max(extra, SINGULAR_MIN_ORDER)`` on a
-    singular form, so ``extra_order=3`` on the ``1/r`` field of PHY-16 step 6 is
-    the order it already used. The refinement is therefore measured from the
-    bonus, and this is what says so.
-    """
     base = AXISYMMETRIC.integration_order(singular=True)
     naive = AXISYMMETRIC.integration_order(singular=True, extra=QUADRATURE_REFINEMENT)
     refined = AXISYMMETRIC.integration_order(

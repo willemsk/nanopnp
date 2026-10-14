@@ -1,18 +1,4 @@
-"""VER-71 (WP42 D3 to D8) — no case leaf is accepted and then ignored.
-
-A key the solve never reads, written into a case, is recorded in the FR-25
-manifest as though it applied (REV-12, REV-42). Every leaf of the case schema is
-therefore classified by what reads it (:data:`nanopnp.validation.case_leaves.LEAVES`),
-and a leaf the selected model does not read is refused away from its default,
-from the model's declaration rather than its name (PHY-21, §5.4.3, VER-56).
-
-The oracle for a leaf read by the solve is the operator itself: the top rung's
-residual applied at a fixed state, with its essential potential data and its rung
-sequence. The state is non-electroneutral and differs per species and per
-component, because an electroneutral state hides every concentration
-dependence of classical PNP-NS (WP42 *Design* §3): a probe that cannot see a
-dependence would call a live leaf inert.
-"""
+"""VER-71 (WP42 D3 to D8) — no case leaf is accepted and then ignored."""
 
 from __future__ import annotations
 
@@ -85,12 +71,8 @@ SOLVE_PROBES: tuple[tuple[str, tuple[Any, ...]], ...] = (
 """WP42 D7: each solve leaf and the values it is perturbed to; a base value is skipped."""
 
 
-# -- the probe -------------------------------------------------------------------
-
-
 @pytest.fixture(scope="module")
 def meshes(tmp_path_factory: pytest.TempPathFactory) -> dict[str, Path]:
-    """Write the quick-start pore and a solid-free cylinder with ``cis`` and ``trans`` ends."""
     import netgen.occ as occ
     import ngsolve as ngs
 
@@ -119,7 +101,6 @@ def meshes(tmp_path_factory: pytest.TempPathFactory) -> dict[str, Path]:
 
 
 def base(model: str, meshes: dict[str, Path]) -> dict[str, Any]:
-    """Return ``model``'s base case: every leaf it does not read at its default (D7)."""
     electrostatic = model in ("pb", "pb-linear", "poisson")
     document: dict[str, Any] = {
         "schema": "nanopnp/case/v0.5",
@@ -161,7 +142,6 @@ def base(model: str, meshes: dict[str, Path]) -> dict[str, Any]:
 
 
 def put(document: dict[str, Any], path: str, value: object) -> dict[str, Any]:
-    """Return a copy of ``document`` with ``value`` written at the dotted ``path``."""
     edited = copy.deepcopy(document)
     node = edited
     *parents, leaf = path.split(".")
@@ -172,7 +152,6 @@ def put(document: dict[str, Any], path: str, value: object) -> dict[str, Any]:
 
 
 def get(document: dict[str, Any], path: str) -> object:
-    """Return the value written at ``path``, or the schema's default where none is written."""
     from nanopnp.io.case_paths import schema_default
 
     node: object = document
@@ -184,11 +163,6 @@ def get(document: dict[str, Any], path: str) -> object:
 
 
 def fingerprint(document: dict[str, Any]) -> tuple[object, ...]:
-    """Return the operator a case solves: rungs, residual at a fixed state, essential data.
-
-    Built through the solve stage's own path (``ladder``, ``residual_keywords``),
-    never by re-deriving a rung, so the probe sees what stage 10 assembles.
-    """
     from dataclasses import replace
 
     import ngsolve as ngs
@@ -240,7 +214,6 @@ def fingerprint(document: dict[str, Any]) -> tuple[object, ...]:
 
 
 def outcome(document: dict[str, Any], reference: tuple[object, ...]) -> str:
-    """Return ``refused``, ``live`` or ``inert`` for a perturbed document."""
     import numpy as np
 
     from nanopnp.io.case import CaseValidationError, UnsupportedCaseSection
@@ -260,7 +233,6 @@ def outcome(document: dict[str, Any], reference: tuple[object, ...]) -> str:
 
 
 def probes(model: str, meshes: dict[str, Path]) -> Iterator[tuple[str, object, dict[str, Any]]]:
-    """Yield each solve leaf, its perturbed value and the perturbed document; skip a base value."""
     document = base(model, meshes)
     for path, values in SOLVE_PROBES:
         for value in values:
@@ -268,11 +240,7 @@ def probes(model: str, meshes: dict[str, Path]) -> Iterator[tuple[str, object, d
                 yield path, value, put(document, path, value)
 
 
-# -- the classification ----------------------------------------------------------
-
-
 def test_ver71_every_case_leaf_is_classified_once_in_both_directions() -> None:
-    """Every leaf of the schema has one kind, and every entry names a leaf (REV-12)."""
     from nanopnp.core.stages import registered_stages
     from nanopnp.io.case_paths import case_fields
     from nanopnp.validation.case_leaves import KINDS, LEAVES
@@ -320,7 +288,6 @@ def test_ver71_every_case_leaf_is_classified_once_in_both_directions() -> None:
 
 
 def test_ver71_a_leaf_added_to_the_schema_and_classified_nowhere_fails() -> None:
-    """The oracle of the phase plan: a new path the table does not hold is named."""
     from nanopnp.io.case_paths import case_fields
     from nanopnp.validation.case_leaves import LEAVES, unclassified
 
@@ -333,7 +300,6 @@ def test_ver71_a_leaf_added_to_the_schema_and_classified_nowhere_fails() -> None
 
 @pytest.mark.parametrize("model", MODELS)
 def test_ver71_each_model_declares_the_leaves_it_does_not_read(model: str) -> None:
-    """The declaration states the unread leaves, read without building the model (§5.4.3)."""
     from nanopnp.physics.models import declaration
 
     assert declaration(model).unread == UNREAD[model]
@@ -341,13 +307,6 @@ def test_ver71_each_model_declares_the_leaves_it_does_not_read(model: str) -> No
 
 @pytest.mark.parametrize("model", MODELS)
 def test_ver71_every_unread_path_is_a_schema_leaf(model: str) -> None:
-    """REV-76: a typo in `unread` would leave a refusal that never fires, with no error.
-
-    `_check_unread` only asks whether each walked leaf is in the set, so a path
-    that names no leaf matches nothing. A leaf with no schema default (poisson's
-    `electrolyte.concentration_M`, required by the schema) is a leaf all the same:
-    it has no value to compare, so it is classified and not refused.
-    """
     from nanopnp.io.case_paths import case_fields
     from nanopnp.physics.models import declaration
 
@@ -357,14 +316,12 @@ def test_ver71_every_unread_path_is_a_schema_leaf(model: str) -> None:
 
 
 def test_ver71_the_shipped_models_are_the_ones_the_leaf_tests_cover() -> None:
-    """REV-76: a model registered without a row in `MODELS` would escape the checks above."""
     from nanopnp.physics.models import registered_models
 
     assert set(registered_models()) == set(MODELS)
 
 
 def test_ver71_the_switch_sets_honour_only_what_changes_the_operator() -> None:
-    """REV-42 and its pnp-ns twins: a switch value that is an exact identity is not honoured."""
     from nanopnp.physics.models import declaration
 
     pnp = declaration("pnp").switches
@@ -380,9 +337,6 @@ def test_ver71_the_switch_sets_honour_only_what_changes_the_operator() -> None:
     assert all(set(values) == {False, True} for values in declaration("epnp-ns").switches.values())
 
 
-# -- the operator probe ----------------------------------------------------------
-
-
 MODELS_D6 = (
     "epnp-ns",
     "pb",
@@ -395,12 +349,6 @@ MODELS_D6 = (
 
 @pytest.mark.parametrize("model", MODELS_D6)
 def test_ver71_no_solve_leaf_is_accepted_and_inert(model: str, meshes: dict[str, Path]) -> None:
-    """Each perturbation is refused or moves the operator; inert is allowed only unrefusable.
-
-    The one allowance is a leaf the schema requires, so it has no default to be
-    refused away from, and that the model declares unread: ``poisson``'s
-    ``electrolyte.concentration_M``.
-    """
     from nanopnp.io.case_paths import schema_default
 
     reference = fingerprint(base(model, meshes))
@@ -413,6 +361,7 @@ def test_ver71_no_solve_leaf_is_accepted_and_inert(model: str, meshes: dict[str,
     assert not inert, f"{model} accepts and ignores {inert}"
 
 
+# PHY-22
 @pytest.mark.parametrize(
     ("partner", "leaf", "value", "named"),
     [
@@ -440,11 +389,6 @@ def test_ver71_no_solve_leaf_is_accepted_and_inert(model: str, meshes: dict[str,
 def test_ver71_a_switch_beside_a_partner_that_leaves_it_nothing_to_switch_is_refused(
     partner: tuple[str, object], leaf: str, value: object, named: str, meshes: dict[str, Path]
 ) -> None:
-    """REV-73, PHY-22 NOTE: the pairs VER-71's single-leaf probe cannot see are refused.
-
-    Each leaf is live from the epnp-ns base and inert beside its partner; the
-    refusal names the leaf, and the same leaf beside a live partner is accepted.
-    """
     from nanopnp.io.case import CaseValidationError
 
     document = base("epnp-ns", meshes)
@@ -456,16 +400,10 @@ def test_ver71_a_switch_beside_a_partner_that_leaves_it_nothing_to_switch_is_ref
     assert named in str(raised.value)
 
 
+# PHY-22
 def test_ver71_every_wall_part_off_is_refused_so_the_wall_distance_has_nothing_to_go_inert(
     meshes: dict[str, Path],
 ) -> None:
-    """REV-73: the one cross-leaf pair a refusal already covers (PHY-22).
-
-    With every correction's `wall` part off, `numerics.wall_distance.*` would have
-    no reader; the case is refused before the question arises. The other two
-    pairs the item names are open (variable density beside a density correction
-    of none, dielectric-gradient forces beside no permittivity concentration fit).
-    """
     from nanopnp.io.case import CaseValidationError
 
     document = base("epnp-ns", meshes)
@@ -479,12 +417,6 @@ def test_ver71_every_wall_part_off_is_refused_so_the_wall_distance_has_nothing_t
 def test_ver71_the_unread_leaves_are_inert_and_the_rest_are_not(
     model: str, meshes: dict[str, Path], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """With D3's refusal lifted, a declared-unread leaf leaves the operator bit-identical.
-
-    The other direction: a solve leaf the model does not declare unread is live or
-    refused by another check, so the declaration neither hides a live leaf nor
-    misses an inert one.
-    """
     from nanopnp.pipeline import checks
 
     monkeypatch.setattr(checks, "_check_unread", lambda document: None)
@@ -499,16 +431,10 @@ def test_ver71_the_unread_leaves_are_inert_and_the_rest_are_not(
     assert not wrong, f"{model}: {wrong}"
 
 
+# PHY-13
 def test_ver71_the_driver_is_live_for_any_but_two_unit_valence_species(
     meshes: dict[str, Path], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """``ionic_strength`` differs from ``average`` once a valence is not one (PHY-13).
-
-    The evidence for D6, and true before WP42: the driver is not a leaf no model
-    reads, so it is refused from the electrolyte, for the one salt where
-    ``I = 1/2 (c_1 + c_2) = <c>`` exactly. No shipped parameter file is
-    multivalent, so the cation is made divalent in place, as WP41's PHY-13 test does.
-    """
     from dataclasses import replace
 
     from nanopnp.materials.electrolyte import Electrolyte
@@ -528,8 +454,8 @@ def test_ver71_the_driver_is_live_for_any_but_two_unit_valence_species(
     assert resolve(loads_case(yaml.safe_dump(divalent_case))).electrolyte.driver == "ionic_strength"
 
 
+# PHY-22
 def test_ver71_applied_parts_branches(monkeypatch: pytest.MonkeyPatch) -> None:
-    """PHY-22: branch coverage of applied_parts when material documents omit fc or wall fits."""
     from typing import TypeVar
 
     from pydantic import BaseModel
@@ -568,13 +494,11 @@ def test_ver71_applied_parts_branches(monkeypatch: pytest.MonkeyPatch) -> None:
     assert "concentration" not in applied_parts(WILLEMS, "diffusivity")
 
 
-class ReachedLinearProbeError(RuntimeError):
-    """Raised by the linear probe solver when reached."""
+class ReachedLinearProbeError(RuntimeError): ...
 
 
 @pytest.fixture
 def probe_solver() -> Iterator[str]:
-    """Register a linear solver that stops the solve when it is first used."""
     from nanopnp.numerics import linear
 
     name = "ver71-probe"
@@ -594,11 +518,6 @@ def probe_solver() -> Iterator[str]:
 def test_ver71_the_newton_settings_reach_every_model_that_reads_them(
     model: str, meshes: dict[str, Path], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """``max_iter`` and ``rtol`` reach ``damped_newton``, or the model declares them unread.
-
-    ``poisson`` and ``pb-linear`` take ``settings`` and never use it (their solve
-    is one linear system), so D3 declares both leaves unread there.
-    """
     from dataclasses import replace
 
     from nanopnp.physics import models as models_module
@@ -630,7 +549,7 @@ def test_ver71_the_newton_settings_reach_every_model_that_reads_them(
         },
     )
     if UNREAD[model] >= LINEAR:
-        run_ladder((prepared,))  # completes: no Newton iteration is reached
+        run_ladder((prepared,))
         return
     with pytest.raises(ReachedError) as reached:
         run_ladder((prepared,))
@@ -643,7 +562,6 @@ def test_ver71_the_newton_settings_reach_every_model_that_reads_them(
 def test_ver71_the_linear_solver_reaches_every_model(
     model: str, meshes: dict[str, Path], probe_solver: str
 ) -> None:
-    """``numerics.linear.solver`` is read by every model: the probe solver is reached."""
     from dataclasses import replace
 
     from nanopnp.pipeline.case import loads_case, resolve
@@ -665,7 +583,6 @@ def test_ver71_the_linear_solver_reaches_every_model(
 
 
 def _top_rung(resolved: ResolvedCase) -> Rung:
-    """Return the rung a resolved case's solve ends on, built as stage 10 builds it."""
     from dataclasses import replace
 
     from nanopnp.charge.stage import case_fields
@@ -681,11 +598,7 @@ def _top_rung(resolved: ResolvedCase) -> Rung:
     return ladder(resolved, mesh, measures, distance, fields)[-1]
 
 
-# -- the refusals, verbatim ------------------------------------------------------
-
-
 def _refused(document: dict[str, Any]) -> str:
-    """Return the text a document is refused with at resolution."""
     from nanopnp.io.case import CaseValidationError
     from nanopnp.pipeline.case import loads_case, resolve
 
@@ -697,7 +610,6 @@ def _refused(document: dict[str, Any]) -> str:
 def test_ver71_unread_leaves_are_refused_naming_each_key_its_default_and_its_readers(
     meshes: dict[str, Path],
 ) -> None:
-    """One message names every unread key the case sets, in schema order (WP42 Design §4)."""
     document = put(
         put(base("pnp-ns", meshes), "electrolyte.corrections.diffusivity.model", WILLEMS),
         "electrolyte.corrections.steric.model",
@@ -731,7 +643,6 @@ def test_ver71_unread_leaves_are_refused_naming_each_key_its_default_and_its_rea
 
 
 def test_ver71_a_correction_part_no_model_applies_is_refused(meshes: dict[str, Path]) -> None:
-    """``wall: false`` on a property whose correction has no wall fit changes nothing (PHY-22)."""
     document = put(
         put(base("epnp-ns", meshes), "electrolyte.corrections.permittivity.wall", False),
         "electrolyte.corrections.density.wall",
@@ -764,7 +675,6 @@ def test_ver71_a_correction_part_no_model_applies_is_refused(meshes: dict[str, P
 def test_ver71_the_ionic_strength_driver_of_a_one_one_salt_is_refused(
     model: str, meshes: dict[str, Path]
 ) -> None:
-    """For Na+ and Cl- the two drivers are one number, so the deviation is never applied."""
     assert _refused(put(base(model, meshes), "electrolyte.driver", "ionic_strength")) == (
         "electrolyte.driver: ionic_strength drives the corrections with I = 1/2 sum z_i^2 c_i, "
         "which equals the average concentration (c_1 + c_2)/2 for two species of unit "
@@ -774,7 +684,6 @@ def test_ver71_the_ionic_strength_driver_of_a_one_one_salt_is_refused(
 
 
 def test_ver71_pnp_refuses_the_flow_switches_it_cannot_apply(meshes: dict[str, Path]) -> None:
-    """REV-42: ``pnp`` refuses ``variable_density`` and ``inertia`` true, as ``pb`` does."""
     document = base("pnp", meshes)
     del document["physics"]["variable_density"]
     assert _refused(document) == (
@@ -798,12 +707,6 @@ def test_ver71_pnp_refuses_the_flow_switches_it_cannot_apply(meshes: dict[str, P
 def test_ver71_a_flowless_model_is_refused_on_its_flow_switch_first(
     meshes: dict[str, Path],
 ) -> None:
-    """REV-66: ``pb`` with ``flow`` left true and ``u: P1`` loads, and resolution names the switch.
-
-    The load-time inf-sup check runs only for a model that reads
-    ``numerics.elements.u``, so it no longer speaks first about a velocity
-    ``pb`` never solves.
-    """
     from nanopnp.pipeline.case import loads_case
 
     document = base("pb", meshes)
@@ -818,7 +721,6 @@ def test_ver71_a_flowless_model_is_refused_on_its_flow_switch_first(
 
 
 def test_ver71_a_fixed_leaf_is_refused_away_from_its_default(meshes: dict[str, Path]) -> None:
-    """Each ``fixed`` leaf's alternative is refused at resolution, naming the leaf."""
     from nanopnp.io.case import CaseValidationError, UnsupportedCaseSection
     from nanopnp.pipeline.case import loads_case, resolve
 
@@ -838,7 +740,6 @@ def test_ver71_a_fixed_leaf_is_refused_away_from_its_default(meshes: dict[str, P
 
 
 def test_ver71_a_provenance_leaf_moves_no_solve_key(meshes: dict[str, Path]) -> None:
-    """``name`` reaches the case key and nothing the solve is keyed on (§5.3.2)."""
     from nanopnp.pipeline.case import loads_case, resolve
     from nanopnp.validation.case_leaves import LEAVES
 
@@ -849,7 +750,6 @@ def test_ver71_a_provenance_leaf_moves_no_solve_key(meshes: dict[str, Path]) -> 
 
 
 def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
-    """Each stage leaf moves its consumer's key and no upstream key (VER-71, D7)."""
     from nanopnp.core.stages import create, describe
     from nanopnp.io.artefact import Artefact, ProfileArtefact, StageInputs
     from nanopnp.io.case import CaseValidationError, UnsupportedCaseSection

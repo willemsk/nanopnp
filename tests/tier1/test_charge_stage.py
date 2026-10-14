@@ -1,17 +1,4 @@
-"""VER-25 and VER-29: stage 7 as a stage — invocable, cancellable, keyed.
-
-The gates themselves are ``tests/tier1/test_charge_fields.py`` (the unit half)
-and ``tests/tier2/test_charge_conservation.py`` (the deployed mesh). What is
-under test here is the wrapper FR-27 asks for: that stage 7 can be run on its
-own from a case file, that cancelling it leaves nothing behind, and that its
-artefact key is the field's *contents* rather than the path it was read from.
-
-The last one is the reason this file writes the same header twice under two
-names. A key taken over the file path would make a moved input a different run,
-and a sweep that copies its inputs into a scratch directory would then miss every
-cache hit it should have had -- while every test that reads a field once, from
-one place, would pass.
-"""
+"""VER-25 and VER-29: stage 7 as a stage — invocable, cancellable, keyed."""
 
 from __future__ import annotations
 
@@ -49,12 +36,6 @@ form:
 
 @pytest.fixture(scope="module")
 def mesh_file(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """Write a named rectangle covering ``r in [0, 6]``, ``z in [0, 10]``, in nm.
-
-    Named in the vocabulary directly rather than through a mapping: what the
-    mapping does is VER-27's subject, and giving this mesh exporter-style names
-    would test it a second time in the file that is about something else.
-    """
     import netgen.occ as occ
     import ngsolve as ngs
 
@@ -71,14 +52,12 @@ def mesh_file(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
 @pytest.fixture(scope="module")
 def field_document(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """Write the field header the case names."""
     path = tmp_path_factory.mktemp("field") / "ring.yaml"
     path.write_text(FIELD_DOCUMENT, encoding="utf-8")
     return path
 
 
 def case_text(mesh_path: Path, field_path: Path | None, *, order: str = "P2") -> str:
-    """Return a case naming ``mesh_path``, and ``field_path`` if there is one, at ``order``."""
     charge = "" if field_path is None else f"\n  charge: {{path: {field_path}, format: field1}}"
     return f"""
 schema: {CASE_SCHEMA}
@@ -96,15 +75,10 @@ numerics: {{continuation: none, elements: {{phi: {order}, c: {order}}}}}
 
 
 def _inputs(mesh_path: Path, field_path: Path | None, *, order: str = "P2") -> StageInputs:
-    """Return the stage inputs for a case naming these two files."""
     return StageInputs(resolved=resolve(loads_case(case_text(mesh_path, field_path, order=order))))
 
 
-# -- introspection -------------------------------------------------------------
-
-
 def test_ver25_the_field_stage_is_stage_seven_and_describes_itself() -> None:
-    """The registry's row and the stage's own ``describe()`` are the same row."""
     stage = create("charge")
     assert isinstance(stage, FieldStage)
     assert stage.describe() == describe("charge")
@@ -112,25 +86,16 @@ def test_ver25_the_field_stage_is_stage_seven_and_describes_itself() -> None:
 
 
 def test_ver25_a_case_supplying_no_field_is_refused_naming_the_stage(mesh_file: Path) -> None:
-    """No field is no work, and stage 7 says so rather than emitting an empty artefact.
-
-    An empty artefact would hash, cache and flow downstream exactly as a real one
-    does, and the solve would run with zero fixed charge everywhere while every
-    record said stage 7 had succeeded.
-    """
     with pytest.raises(
         UnsupportedCaseSection, match=re.escape("neither inputs.charge nor inputs.eps_r")
     ):
         FieldStage().run(_inputs(mesh_file, None))
 
 
-# -- progress, cancellation and the artefact ----------------------------------
-
-
+# FR-27
 def test_ver25_the_field_stage_reports_progress_ending_at_one(
     mesh_file: Path, field_document: Path, tmp_path: Path
 ) -> None:
-    """Stage 7 runs alone, monotonically, and finishes at 1.0 (FR-27)."""
     seen: list[float] = []
     stage = FieldStage(workspace=tmp_path / "work")
     artefact = stage.run(
@@ -150,7 +115,6 @@ def test_ver25_the_field_stage_reports_progress_ending_at_one(
 def test_ver25_a_cancelled_field_stage_writes_nothing(
     mesh_file: Path, field_document: Path, tmp_path: Path
 ) -> None:
-    """Cancellation raises before the archive exists, not after (section 5.3.2)."""
     flag = CancelFlag()
     flag.cancel()
     with pytest.raises(Cancelled):
@@ -161,12 +125,6 @@ def test_ver25_a_cancelled_field_stage_writes_nothing(
 def test_ver29_the_artefact_carries_the_conservation_it_was_gated_on(
     mesh_file: Path, field_document: Path, tmp_path: Path
 ) -> None:
-    """The gated numbers reach the artefact summary rather than being recomputed.
-
-    Recomputing them for the manifest would mean integrating over the mesh a
-    second time, and two integrations are two chances to report a number the
-    gate never saw.
-    """
     stage = FieldStage(workspace=tmp_path / "work")
     artefact = stage.run(_inputs(mesh_file, field_document))
     recorded = artefact.summary["charge"]["conservation"]
@@ -181,13 +139,6 @@ def test_ver29_the_artefact_carries_the_conservation_it_was_gated_on(
 def test_ver25_the_artefact_key_is_the_field_contents_and_not_its_path(
     mesh_file: Path, field_document: Path, tmp_path: Path
 ) -> None:
-    """The same field read from a second path keys the same artefact.
-
-    ``key()`` also has to agree with ``run()``: they read the same grids by two
-    code paths, one of which skips the mesh integrals, and a cache keyed on the
-    cheap one that disagreed with the expensive one would return the wrong
-    artefact for every hit.
-    """
     stage = FieldStage(workspace=tmp_path / "work")
     inputs = _inputs(mesh_file, field_document)
     assert stage.key(inputs).hash == stage.run(inputs).hash
@@ -200,13 +151,6 @@ def test_ver25_the_artefact_key_is_the_field_contents_and_not_its_path(
 def test_ver29_the_artefact_key_moves_with_the_order_its_gates_integrate_at(
     mesh_file: Path, field_document: Path, tmp_path: Path
 ) -> None:
-    """One field on one mesh at two element orders is two stage-7 artefacts.
-
-    The summary records the conservation integrals, and they are taken at the
-    solve's quadrature. Keyed on the field and the mesh alone, the second order
-    would be served the first order's artefact, and its manifest would record a
-    conservation measured at a quadrature it never used.
-    """
     stage = FieldStage(workspace=tmp_path / "work")
     second = stage.run(_inputs(mesh_file, field_document))
     third = stage.key(_inputs(mesh_file, field_document, order="P3"))
@@ -217,14 +161,6 @@ def test_ver29_the_artefact_key_moves_with_the_order_its_gates_integrate_at(
 def test_val03_case_identity_carries_the_supplied_field_contents(
     mesh_file: Path, field_document: Path, tmp_path: Path
 ) -> None:
-    """Two cases differing only in their charge table are two golden identities.
-
-    The solve provenance records only that a charge field was supplied, so the
-    identity takes the field's contents from the stage-7 key: a golden of one
-    protonation state must not be accepted for another. The same table read from
-    another path is the same case, and a case supplying no field keeps the
-    identity it had, which is what every published ``case_hash`` rests on.
-    """
     from nanopnp.core.hashing import content_hash
     from nanopnp.pipeline.case import resolve
     from nanopnp.validation.comsol import (
@@ -249,8 +185,6 @@ def test_val03_case_identity_carries_the_supplied_field_contents(
     assert identity(halved) != identity(field_document)
     assert identity(moved) == identity(field_document)
 
-    # With no field, the record is the solve provenance less the discretisation,
-    # exactly as before the field contents joined it.
     provenance = resolve(loads_case(case_text(mesh_file, None))).solve_provenance
     record = {key: value for key, value in provenance.items() if key not in DISCRETISATION_KEYS}
     record["model_options"] = {
@@ -260,8 +194,6 @@ def test_val03_case_identity_carries_the_supplied_field_contents(
     }
     assert identity(None) == content_hash(CASE_IDENTITY_SCHEMA, record)
 
-
-# -- the producer path (WP28) ----------------------------------------------------
 
 PRODUCER_ATOMS_A: tuple[tuple[str, float, float, float, float, float], ...] = (
     # name, x, y, z (Å), charge (e), radius (Å): six atoms inside the membrane of
@@ -277,7 +209,6 @@ PRODUCER_ATOMS_A: tuple[tuple[str, float, float, float, float, float], ...] = (
 
 
 def _pqr_text() -> str:
-    """Return the producer PQR in PDB2PQR's fixed columns."""
     lines = []
     for serial, (name, x, y, z, charge, radius) in enumerate(PRODUCER_ATOMS_A, start=1):
         lines.append(
@@ -319,7 +250,6 @@ outputs: [current, fields]
 
 @pytest.fixture(scope="module")
 def producer_files(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, Path]:
-    """Write the cheapest four-domain pore mesh and the producer PQR, once."""
     from nanopnp.mesh.primitives import CylindricalPoreGeometry
 
     work = tmp_path_factory.mktemp("producer")
@@ -328,9 +258,6 @@ def producer_files(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, Path
         pore_radius_nm=2.0,
         membrane_thickness_nm=6.0,
         reservoir_radius_nm=10.0,
-        # 0.5 nm elements: at 1 nm the deployed field's per-plane error under the
-        # 0.5 nm weight is 3.2e-3, which the gate refuses as it should; it falls to
-        # 2.3e-4 here (`.knowledge/04` section 3.3).
     ).generate(maxh_nm=0.5, wall_h_nm=0.5).ngmesh.Save(str(mesh))
     pqr = work / "atoms.pqr"
     pqr.write_text(_pqr_text(), encoding="utf-8")
@@ -338,7 +265,6 @@ def producer_files(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, Path
 
 
 def _producer_case(files: tuple[Path, Path], directory: Path, *, order: str = "P2") -> Path:
-    """Write the producer case at ``order`` and return its path."""
     mesh, pqr = files
     path = directory / f"producer-{order}.case.yaml"
     path.write_text(PRODUCER_CASE.format(mesh=mesh, pqr=pqr, order=order), encoding="utf-8")
@@ -347,7 +273,6 @@ def _producer_case(files: tuple[Path, Path], directory: Path, *, order: str = "P
 
 @pytest.fixture(scope="module")
 def produced(producer_files: tuple[Path, Path], tmp_path_factory: pytest.TempPathFactory):
-    """Walk the producer case through stage 7 once, into a store kept for the module."""
     from nanopnp.io.store import Store
     from nanopnp.pipeline.run import run_case
 
@@ -358,7 +283,6 @@ def produced(producer_files: tuple[Path, Path], tmp_path_factory: pytest.TempPat
 
 
 def test_ver01_the_producer_stage_deposits_keys_and_records_its_report(produced) -> None:
-    """A ``pqr`` case walks both halves of stage 7; the artefact names both inputs (D7, D8)."""
     from nanopnp.core.constants import ELEMENTARY_CHARGE
     from nanopnp.io.artefact import CHARGE_GRID_SCHEMA
 
@@ -391,11 +315,9 @@ def test_ver01_the_producer_stage_deposits_keys_and_records_its_report(produced)
     assert plane["mesh_worst_relative_error"] < 1e-3
     assert record["solid_share"]["solid_share"] == 1.0  # type: ignore[index]
     assert record["material_charge_e"]["membrane"] == pytest.approx(-1.0)  # type: ignore[index]
-    # The manifest's Charge group is the stage's record, protonation beside it.
     group = result.manifest.charge
     assert group["charge"]["conservation"] == conservation  # type: ignore[index]
     assert group["protonation"]["source"] == "inputs.pqr"  # type: ignore[index]
-    # And the key taken before the run is the artefact the run produced.
     stage = FieldStage()
     upstream = {name: result.artefacts[name] for name in ("mesh", "protonation")}
     from nanopnp.pipeline.case import load_case
@@ -410,7 +332,6 @@ def test_ver01_the_producer_stage_deposits_keys_and_records_its_report(produced)
 def test_ver01_a_new_element_order_redeposits_without_resumming(
     produced, producer_files: tuple[Path, Path], tmp_path: Path
 ) -> None:
-    """The lattice is keyed without the mesh's discretisation: P3 re-deposits it from the store."""
     from nanopnp.pipeline.run import run_case
 
     _, store, first = produced
@@ -423,10 +344,10 @@ def test_ver01_a_new_element_order_redeposits_without_resumming(
     assert stage7.summary["charge"]["order"] == 3  # type: ignore[index]
 
 
+# IF-05
 def test_ver29_the_export_reads_back_through_inputs_charge_to_the_same_digest(
     produced, tmp_path: Path
 ) -> None:
-    """``stage charge --export X.yaml`` writes the document and its ``.npz`` (D11, IF-05)."""
     from nanopnp.charge.fields import load_field
     from nanopnp.charge.stage import export_charge
     from nanopnp.density.grid import read_grid, writable_formats
@@ -449,7 +370,6 @@ def test_ver29_the_export_reads_back_through_inputs_charge_to_the_same_digest(
 def test_ver29_a_producer_case_handed_no_stage_7_artefact_is_refused_naming_it(
     produced,
 ) -> None:
-    """D9: the solve keys and reads a deposited charge only from stage 7's artefact."""
     from nanopnp.pipeline.case import load_case
     from nanopnp.solve.stage import SolveStage
 
@@ -460,8 +380,6 @@ def test_ver29_a_producer_case_handed_no_stage_7_artefact_is_refused_naming_it(
 
 
 class _CancelOnCall:
-    """A token that turns true on its ``at``-th question, counting from 1."""
-
     def __init__(self, at: int) -> None:
         self.at = at
         self.asked = 0
@@ -488,7 +406,6 @@ class _CancelOnCall:
 def test_ver25_the_producer_stage_cancels_between_frames_and_before_each_gate(
     produced, tmp_path: Path, at: int, where: str
 ) -> None:
-    """D12: between frames, before the projection and before each gate; nothing written."""
     from nanopnp.pipeline.case import load_case
 
     case, _, result = produced
@@ -505,7 +422,6 @@ def test_ver25_the_producer_stage_cancels_between_frames_and_before_each_gate(
 def test_ver29_a_charged_walk_solves_and_exports_the_deposited_charge(
     producer_files: tuple[Path, Path], tmp_path: Path
 ) -> None:
-    """D9 end to end: the solve, the restore and the ``rho_fixed`` export read the deposit."""
     from nanopnp.io.store import Store
     from nanopnp.pipeline.run import run_case
 
