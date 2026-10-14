@@ -1,20 +1,4 @@
-"""VER-59 on a real structure: 2WCD with an ion-exclusion shell, and with a derived ``chi``.
-
-The prepared 2WCD, registered as VAL-05 registers it (WP22 D6), with stages 1 to
-3 and the protonation from the session's seeded store. With ``a`` = 0.25 nm
-(WP30 D15) it meshes at the default sizes: every ``wall`` node lies at least
-``a - max(h_c^2/a, a/100)`` from the body, and the share of nodes beyond
-``a + 1e-6`` nm, which the closing and the filled pockets leave, is recorded
-rather than bounded (section 5.2.1 NOTE on the ion-exclusion shell). With
-``delta`` = 0.15 nm added, WP28's charged walk at ``size_scale`` 4 runs to stage
-12 with every gate passing, and its manifest names both switches and the mesh's
-``exclusion`` material: that walk is ``test_exclusion_2wcd_walk.py``, a file of its own
-so the shell meshes here do not wait on PROPKA (WP33 D7).
-
-Under ``-m slow``: the derivation of ``chi`` at ``delta = h_c``, its time and the
-peak of its allocations, and the largest error of the lattice against the exact
-step anywhere in the band, the vertices included (*Design* section 1).
-"""
+"""VER-59 (with VAL-05, VER-10): 2WCD with an ion-exclusion shell, and a derived chi."""
 
 from __future__ import annotations
 
@@ -66,13 +50,6 @@ def registered(
     seeded_2wcd: Seed2WCD,
     tmp_path_factory: pytest.TempPathFactory,
 ):  # type: ignore[no-untyped-def]
-    """Return the store, the structure block and the membrane block registering 2WCD.
-
-    Stages 1 to 4 and the registration are the session's seed (WP33 D2). The
-    shell gives stage 5 a key of its own, so stages 5 and 6 run here. The
-    protonation is not needed by the shell meshes, so this module does not wait
-    on PROPKA: the charged walk is ``test_exclusion_2wcd_walk.py`` (WP33 D7).
-    """
     root = tmp_path_factory.mktemp("2wcd-shell")
     store = Store(seeded_2wcd(root / "store"))
     structure = STRUCTURE.format(pdb=prepared_2wcd.path)
@@ -81,7 +58,6 @@ def registered(
 
 @pytest.fixture(scope="module")
 def meshed(registered, exclusion_2wcd: Exclusion2WCD):  # type: ignore[no-untyped-def]
-    """Walk 2WCD with the shell to stage 6 at the default sizes."""
     root, store, structure, geometry = registered
     case = root / "shell.case.yaml"
     case.write_text(
@@ -95,10 +71,10 @@ def meshed(registered, exclusion_2wcd: Exclusion2WCD):  # type: ignore[no-untype
     return case, run_case(case, store=store, upto="mesh", write=False)
 
 
+# VER-10
 def test_ver59_2wcd_with_a_shell_meshes_and_every_wall_node_clears_the_lower_bound(
     meshed, exclusion_2wcd: Exclusion2WCD
 ) -> None:  # type: ignore[no-untyped-def]
-    """The lower band at every ``wall`` node; VER-10 and D9 pass; the closed share recorded."""
     from nanopnp.pipeline.case import load_case
 
     case, result = meshed
@@ -153,13 +129,8 @@ def test_ver59_2wcd_with_a_shell_meshes_and_every_wall_node_clears_the_lower_bou
     )
 
 
+# VER-10
 def test_ver59_2wcd_with_a_shell_meshes_at_3_m(registered, exclusion_2wcd: Exclusion2WCD) -> None:  # type: ignore[no-untyped-def]
-    """At 3 M the ``auto`` wall target is 0.035 nm, where the ring's whole edges were refused.
-
-    Netgen left each 0.0525 nm ring edge as one segment, and the wall-size gate
-    refused the mean of 1.457 (``.knowledge/06`` section 8.1.4). Cut into
-    ``ceil(L / 1.1 h)`` segments, the mesh passes VER-10 and the gate.
-    """
     root, store, structure, geometry = registered
     case = root / "shell-3m.case.yaml"
     case.write_text(
@@ -195,13 +166,6 @@ def test_ver59_2wcd_with_a_shell_meshes_at_3_m(registered, exclusion_2wcd: Exclu
 def test_ver59_2wcd_chi_at_delta_h_c_costs_and_errors_are_recorded(
     meshed, exclusion_2wcd: Exclusion2WCD
 ) -> None:  # type: ignore[no-untyped-def]
-    """Recorded: the derivation's time and peak allocation at ``delta = h_c``, and its worst error.
-
-    The worst error is against the exact ``S(s/delta + 1/2)``, with ``s`` from
-    the distance to ``W`` and the scanline's sign, at 20 000 points drawn
-    uniformly in the band ``|s| < delta``, vertices and the medial axis included,
-    where the edge-midpoint bound of *Design* section 1 does not hold.
-    """
     from scipy.interpolate import RegularGridInterpolator
 
     from nanopnp.charge.dielectric import _inside

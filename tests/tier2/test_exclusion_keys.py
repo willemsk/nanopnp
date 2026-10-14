@@ -1,26 +1,4 @@
-"""VER-59's first clause: with both WP30 keys at 0, nothing a run is keyed on moves (WP30 D16).
-
-The case is VER-53's coarse synthetic region, the parallelogram body of
-``tests/conftest.py`` in a 30 nm reservoir, made a producer case by an
-``inputs.pqr`` of six atoms inside the body, so that stage 7 runs and has a key.
-It is walked through stage 8 and stage 10 is keyed without solving.
-
-The literals below were recorded on ``bbca737``, the WP30 plan's commit, before
-any of WP30's code existed. Every key is a hash of parameters and upstream keys,
-never of a computed field, so it is the same on every platform, given the
-same input bytes: the PQR, keyed on its bytes, is therefore written with LF. The region
-record's bytes are not quite: its face areas are OCC's own integrals, which may
-differ in their last bits between platforms. The record is therefore compared
-byte for byte with its ``face_areas_nm2`` line taken out, and the areas to 1e-12.
-On the platform the literals were recorded on, the whole file is compared too.
-
-WP32 moved stage 7's schema to ``nanopnp/fields/v2`` (D15, the author's decision)
-and its lattice's to ``nanopnp/charge-grid/v2``, which moves the stage-7 key and,
-through it, the stage-10 key. Both are compared at v2, and also recomputed under
-the ``v1`` strings, where they must equal the ``bbca737`` literals: the schema
-strings are then shown to be the only thing that moved, so the clause still
-compares against what WP30 found.
-"""
+"""VER-59 (with VER-53): with both WP30 keys at zero, no run key moves."""
 
 from __future__ import annotations
 
@@ -45,14 +23,12 @@ KEYS = {
     "charge": "79a2f7e5ff8a8743784e8f448711789a72dcbfeaed447c764730dabac9d42f7d",
     "solve": "6e3f8992206e2820221b04c4e2acd12405d4af11fa32b4932ca30c14e8c0b210",
 }
-"""The stage-5, stage-6, stage-7 and stage-10 keys on ``bbca737`` (D16), stage 7 at ``v1``."""
 
 KEYS_V2 = {
     **KEYS,
     "charge": "3810c50e598c543d147a8bd8a804a68d7875c30ec00dfe94d5575f4cc79792dc",
     "solve": "b1370ee6183a4bdebd8697f9dc41846fd5bf8c89d51e246495b498033726806a",
 }
-"""The same keys with stage 7 at ``nanopnp/fields/v2`` (WP32 D15); region and mesh unchanged."""
 
 KEYS_V05 = {
     "region": "85d3b34627c4a56b38640ffa6222ec8e53838090cab296a4d596b02cac68b7e2",
@@ -60,57 +36,38 @@ KEYS_V05 = {
     "charge": "474b5b376e231d0f18d0e57e321c5fdb096f92f9a122f9c80b0e3f33e53e30a8",
     "solve": "80e2ee0ec96e63671bb02613fadacc5e565d51bf2a41aa729bfa8dc54f7797dc",
 }
-"""The keys under repo-wide v0.5 schemas; the solve key gained its algorithm revision (REV-71)."""
 
 PROFILE_SCHEMA_V1 = "nanopnp/profile/v1"
-"""The pore profile schema ``KEYS`` was recorded under."""
 
 REGION_SCHEMA_V1 = "nanopnp/region/v1"
-"""The stage-5 schema ``KEYS`` was recorded under."""
 
 MESH_ARTEFACT_SCHEMA_V1 = "nanopnp/mesh/v1"
-"""The stage-6 schema ``KEYS`` was recorded under."""
 
 PROTONATION_SCHEMA_V1 = "nanopnp/protonation/v1"
-"""The stage-7 protonation schema ``KEYS`` was recorded under."""
 
 CHARGE_GRID_SCHEMA_V1 = "nanopnp/charge-grid/v1"
-"""The lattice's schema then; its key is one of stage 7's inputs."""
 
 FIELDS_SCHEMA_V1 = "nanopnp/fields/v1"
-"""The stage-7 schema ``KEYS`` was recorded under."""
 
 MATERIALS_SCHEMA_V1 = "nanopnp/materials/v1"
-"""The stage-8 schema ``KEYS`` was recorded under."""
 
 CORRECTIONS_SHA256_V1 = "50058ebfa4715c50ac668f40a812e1df56197e9ba972446cf990cb9fd87d48bf"
-"""The digest of willems2020_nacl.yaml under schema nanopnp/corrections/v1."""
 
 SOLUTION_SCHEMA_V2 = "nanopnp/solution/v2"
-"""The stage-10 schema ``KEYS`` was recorded under."""
 
 RECORD_SHA256 = "b88bd7712339d83d97a3e691a9c3da9b4fa76d8b1946e190d8af6bdea8341db0"
-"""``region.yaml``'s digest under schema nanopnp/region/v0.5, Linux x86_64, CPython 3.12."""
 
 RECORD_SHA256_WITHOUT_AREAS = "066f20c1ca309da9407fee16cb20c5611b1dd84715e7c820d4f031f6e42ed86e"
-"""The same file's digest with its ``face_areas_nm2`` line removed."""
 
 RECORD_SHA256_V1 = "03da655ef254808e3403034ac9dd188335edc2f9630edb6565d967528c8583d7"
-"""``region.yaml``'s digest on ``bbca737``, Linux x86_64, CPython 3.12
-under schema nanopnp/region/v1.
-"""
 
 RECORD_SHA256_WITHOUT_AREAS_V1 = "b41037c3587b2c398b7eb95900b39b620c55156b9a09d17f76ed6d65ca718463"
-"""The same file's digest with its ``face_areas_nm2`` line removed
-under schema nanopnp/region/v1.
-"""
 
 FACE_AREAS_NM2 = {
     "electrolyte": 1336.3471929717593,
     "membrane": 71.36950114364842,
     "protein": 6.0,
 }
-"""The record's face areas on ``bbca737``."""
 
 ATOMS: tuple[tuple[str, float, float, float, float, float], ...] = (
     # name, x, y, z (Å), charge (e), radius (Å): inside the parallelogram, whose
@@ -154,12 +111,6 @@ numerics: {{continuation: none, mesh: {{size_scale: 5.0}}}}
 
 
 def write_golden_case(directory: Path, profile: Path, *, charge: str = "") -> Path:
-    """Write the D16 case and its PQR into ``directory`` and return the case.
-
-    ``profile`` is the session's parallelogram profile (``tests/conftest.py``).
-    ``charge`` is an optional ``charge:`` block, ending in a newline, for the
-    callers that set the WP30 keys explicitly.
-    """
     directory.mkdir(parents=True, exist_ok=True)
     lines = [
         f"ATOM  {serial:5d} {name:<4} GLU A  18    {x:8.3f}{y:8.3f}{z:8.3f} {q:7.4f} {r:6.4f}"
@@ -175,13 +126,11 @@ def write_golden_case(directory: Path, profile: Path, *, charge: str = "") -> Pa
 
 
 def _without_areas(text: str) -> bytes:
-    """Return the record's text with its ``face_areas_nm2`` line removed."""
     kept = [line for line in text.splitlines(keepends=True) if "face_areas_nm2" not in line]
     return "".join(kept).encode("utf-8")
 
 
 def _recording_platform() -> bool:
-    """Whether this is the platform the whole-file digest was recorded on."""
     return sys.platform == "linux" and platform.machine() == "x86_64"
 
 
@@ -193,7 +142,6 @@ def _recording_platform() -> bool:
 def test_ver59_with_both_keys_at_zero_every_key_and_the_record_are_unchanged(
     tmp_path: Path, parallelogram_profile: Path, charge: str
 ) -> None:
-    """The region, mesh, fields and solve keys, and the record's bytes, equal ``bbca737``'s."""
     case = write_golden_case(tmp_path / "case", parallelogram_profile, charge=charge)
     store = Store(tmp_path / "store")
     # The solve's inputs without the solve: a walk runs its target's inputs alone

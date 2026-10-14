@@ -1,23 +1,4 @@
-"""VER-01, VER-02 and VER-29 on a real structure: 2WCD's protonated charge deposited on its mesh.
-
-The root conftest's ``protonated_2wcd`` carries the PROPKA protonation of the
-prepared dodecamer; ``seeded_protonated_2wcd`` copies it into this module's store,
-so the walk pays stages 4 to 6 and stage 7's deposit, not PDB2PQR. The case is
-registered as VAL-05 registers 2WCD (WP22 D6), and walks to stage 7 at the default
-sizes with ``epnp-ns``, whose declaration carries ``fixed_charge`` (WP28 D8).
-
-Gated, as stage 7 gates them: both legs of the conservation report and every
-plane of the per-plane check at 1e-3, the boundary ring at 1e-4, and the solid
-share at 0.5 (D4). ``Q_net`` is WP27's golden -60 e. Recorded: the solid share,
-each material's charge, the worst plane of each side and the stage's seconds;
-peak memory in a fresh process under ``-m slow``. The export is read back
-through ``inputs.charge`` to the same grid digest (D11).
-
-VER-60 reads the same artefacts as the desktop shell's Charge tab reads them
-(WP31): the map carries the record's lattice charge, the conservation pane is the
-record, and the protonation pane shows -60 e, no chain difference and the
-recorded unapplied states. No second deposit is made.
-"""
+"""VER-01, VER-02, VER-29 and VER-60 (with VAL-05): 2WCD's deposited charge and its panes."""
 
 from __future__ import annotations
 
@@ -49,7 +30,6 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 GOLDEN_Q_NET_E = -60
-"""WP27's golden net charge of the protonated dodecamer at pH 7.5 (``test_protonation_2wcd``)."""
 
 CASE = """\
 schema: nanopnp/case/v0.5
@@ -68,8 +48,6 @@ physics: {{model: epnp-ns, solid_permittivities: {{protein: 20.0, membrane: 3.2}
 
 @dataclass(frozen=True)
 class Deposited:
-    """2WCD walked to stage 7 on its own store."""
-
     root: Path
     store: Store
     case: Path
@@ -77,7 +55,6 @@ class Deposited:
 
     @property
     def record(self) -> dict[str, Any]:
-        """Return stage 7's charge record."""
         charge: dict[str, Any] = self.result.artefacts["charge"].summary["charge"]  # type: ignore[assignment]
         return charge
 
@@ -89,11 +66,6 @@ def deposited(
     seeded_protonated_2wcd: Callable[[Path], Path],
     tmp_path_factory: pytest.TempPathFactory,
 ) -> Deposited:
-    """Walk 2WCD, registered by its C-alpha centroid (WP22 D6), to stage 7 at default sizes.
-
-    Stages 1 to 6 and the protonation are the session's seeds (WP33 D2), the
-    registration included; stage 7 runs here.
-    """
     root = tmp_path_factory.mktemp("2wcd-charge")
     store = Store(seeded_protonated_2wcd(root / "store"))
     centre = seeded_2wcd.centre_z_nm
@@ -123,7 +95,6 @@ def deposited(
 def test_ver01_2wcd_deposit_conserves_its_charge_on_its_generated_mesh(
     deposited: Deposited,
 ) -> None:
-    """Both legs at 1e-3, ``Q_net`` -60 e, the ring at 1e-4 and half the charge in the solids."""
     record = deposited.record
     conservation = record["conservation"]
     mesh = deposited.result.artefacts["mesh"].summary
@@ -162,7 +133,6 @@ def test_ver01_2wcd_deposit_conserves_its_charge_on_its_generated_mesh(
 
 
 def test_ver02_2wcd_every_plane_agrees_with_the_source_atoms(deposited: Deposited) -> None:
-    """The per-plane check at its 12 planes: lattice and mesh against the atoms, at 1e-3."""
     plane = deposited.record["conservation"]["per_plane"]
     assert plane["count"] == 12
     assert plane["grid_worst_relative_error"] <= 1e-3
@@ -182,7 +152,6 @@ def test_ver02_2wcd_every_plane_agrees_with_the_source_atoms(deposited: Deposite
 def test_ver29_the_2wcd_export_reads_back_through_inputs_charge_to_the_same_digest(
     deposited: Deposited, tmp_path: Path
 ) -> None:
-    """D11: ``stage charge --export X.yaml``, then the document read as ``inputs.charge``."""
     from nanopnp.charge.fields import load_field
     from nanopnp.charge.stage import export_charge
     from nanopnp.density.grid import read_grid
@@ -197,7 +166,6 @@ def test_ver29_the_2wcd_export_reads_back_through_inputs_charge_to_the_same_dige
 
 
 def _event(deposited: Deposited, name: str) -> Produced:
-    """Return the walk's artefact for ``name`` as the build reports it to the shell."""
     artefact = deposited.result.artefacts[name]
     return Produced(
         name=name,
@@ -209,13 +177,6 @@ def _event(deposited: Deposited, name: str) -> Produced:
 
 
 def test_ver60_the_2wcd_charge_tab_shows_its_record(deposited: Deposited) -> None:
-    """The map integrates to the record's lattice charge, and the report is the record (D6, D10).
-
-    The map's block means, weighted by their areas, sum to ``q_grid`` to
-    round-off: the picture is the deposit, reduced, never a field rebuilt for
-    display. The deposit conserves ``Q_net`` to round-off too (its producer leg
-    is about 1e-14, gated at 1e-3), so the picture carries -60 e to 1e-12.
-    """
     view = load_charge(_event(deposited, "charge"))
     record = deposited.record
     conservation = record["conservation"]
@@ -258,14 +219,6 @@ def test_ver60_the_2wcd_charge_tab_shows_its_record(deposited: Deposited) -> Non
 
 
 def test_ver60_the_2wcd_protonation_pane_shows_the_recorded_states(deposited: Deposited) -> None:
-    """-60 e, no chain difference, and the unapplied rows: ``CYS 285`` everywhere, ``LYS 8``'s N+.
-
-    Under CHARMM a ``CYS⁻`` cannot be held, so ``CYS 285`` (pKa 6.25) is
-    unapplied in every chain. PDB2PQR never applies a terminal pKa, so a chain
-    whose ``LYS 8`` N-terminus PROPKA places below pH 7.5 is unapplied there
-    (`.knowledge/07` section 3). The pane reads both from the table and checks
-    them against the record (D11).
-    """
     event = _event(deposited, "protonation")
     view = load_protonation(event)
     summary = deposited.result.artefacts["protonation"].summary
@@ -320,13 +273,11 @@ scale = 1e9 if sys.platform == "darwin" else 1e6
 peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / scale
 print(json.dumps({"seconds": seconds, "peak_GB": peak, "parts": parts}))
 """
-"""Stage 7 cold in a fresh process, with no store: the lattice summed, and a peak RSS its own."""
 
 
 @pytest.mark.slow
 @pytest.mark.skipif(sys.platform == "win32", reason="resource is POSIX only")
 def test_ver01_cost_of_the_2wcd_deposit(deposited: Deposited, tmp_path: Path) -> None:
-    """Wall clock and peak memory of stage 7 on 2WCD at the default sizes, cold; recorded."""
     artefacts = deposited.result.artefacts
     result = subprocess.run(
         [
@@ -352,7 +303,6 @@ def test_ver01_cost_of_the_2wcd_deposit(deposited: Deposited, tmp_path: Path) ->
         measured["peak_GB"],
     )
     assert measured["seconds"] > 0.0
-    # The parts come from stage 7's log record, never its artefact (WP32 D15).
     assert set(measured["parts"]) == {"sum", "deposit", "gates"}, measured["parts"]
 
 
@@ -386,13 +336,11 @@ peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / scale
 q = lattice.grid.planar_integral() / 1.602176634e-19
 print(json.dumps({"seconds": seconds, "peak_GB": peak, "q_e": q}))
 """
-"""The sum over ``frames`` copies of the 2WCD frame, each carrying ``q_i/frames``: its cost."""
 
 
 @pytest.mark.slow
 @pytest.mark.skipif(sys.platform == "win32", reason="resource is POSIX only")
 def test_ver01_cost_of_summing_fifty_2wcd_frames(deposited: Deposited) -> None:
-    """The sum is linear in frames (*Design* §6): 50 frames' wall clock and peak RSS, recorded."""
     frames = 50
     result = subprocess.run(
         [

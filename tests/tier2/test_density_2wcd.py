@@ -1,12 +1,4 @@
-"""VER-49 and VER-50 on a real structure: the vendored 2WCD through stages 1 to 3.
-
-The root conftest's ``prepared_2wcd`` is chains A-L of the deposited entry, rigidly
-moved into a frame stage 1 admits (WP19 D14). Every heavy atom must resolve against
-the CHARMM set, the map must stay in [0, 1], stage 3 must conserve it, and the
-reduced mean must show an open lumen on the axis. The budget test records the
-wall-clock and memory of stages 2 and 3 for the plan's Design §5 prediction; it is
-measured, never gated.
-"""
+"""VER-49 and VER-50 on the vendored 2WCD through stages 1 to 3."""
 
 from __future__ import annotations
 
@@ -40,7 +32,6 @@ logger = logging.getLogger(__name__)
 
 
 def _case(tmp_path: Path, pdb: Path) -> Path:
-    """Write the 2WCD case: C12, the default density block (h = 0.05 nm, sigma = 0.93)."""
     path = tmp_path / "2wcd.case.yaml"
     path.write_text(
         "schema: nanopnp/case/v0.5\n"
@@ -62,17 +53,6 @@ def _case(tmp_path: Path, pdb: Path) -> Path:
 def test_ver49_ver50_2wcd_to_stage_three(
     prepared_2wcd: Prepared2WCD, seeded_2wcd: Callable[[Path], Path], tmp_path: Path
 ) -> None:
-    """2WCD runs to stage 3: every atom resolves, the map is bounded and conserved, the lumen open.
-
-    The stage-2 and stage-3 artefacts are the session's seed (``seeded_2wcd``): the
-    same content-addressed bytes this walk would write, computed once by the same
-    code. The cold walk's time and memory are :func:`test_ver49_2wcd_budget`'s.
-
-    Conservation to 1e-9 relative, slice by slice: ``sum_j mu_j A_j`` against
-    ``sum_p rho_p h^2``. The Cn variance cannot exceed the raw variance by more
-    than sampling, 1e-4. The axis bin's mean is below the 0.25 isolevel over the
-    central 80 % of the C-alpha extent, so stage 4 will find a pore there.
-    """
     result = run_case(
         _case(tmp_path, prepared_2wcd.path),
         store=Store(seeded_2wcd(tmp_path / "store")),
@@ -142,12 +122,6 @@ print(json.dumps({
 @pytest.mark.slow
 @pytest.mark.skipif(sys.platform == "win32", reason="ru_maxrss is POSIX")
 def test_ver49_2wcd_budget(prepared_2wcd: Prepared2WCD, tmp_path: Path) -> None:
-    """Record the wall-clock and peak memory of stages 2 and 3 on 2WCD at 0.05 nm.
-
-    In a fresh interpreter, so the peak is the run's own and not this session's.
-    Recorded, never gated; the plan predicted at most 60 s and under 1.5 GB
-    (Design §5). ``ru_maxrss`` is in kB on Linux.
-    """
     completed = subprocess.run(
         [
             sys.executable,

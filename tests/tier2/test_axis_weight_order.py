@@ -1,28 +1,4 @@
-"""NUM-07: what one extra quadrature order for the ``r`` weight moves in the coupled models.
-
-The NUM-07 NOTE on the ``r`` weight records that NGSolve does not count the
-coordinate when it estimates an integrand's order, so every non-singular
-axisymmetric term is integrated one order short of its degree in ``r``.
-``poisson`` adds the order; the coupled models do not, and whether they should is
-decided in Phase 6 with VAL-16 and VAL-17 (section 8.2.5 E4, section 8.2.6 F1).
-WP34 measures it (D7, D8) through
-:attr:`~nanopnp.numerics.measures.Measures.weight_extra_order`, a seam no case
-key reaches, and records the numbers in the NOTE and ``.knowledge/06`` section 2.2.
-
-Two legs, both ``slow``, logged and never gated:
-
-(a) VER-18's coupled manufactured solution on its three levels at 0 and +1. The
-    exact solution localises the effect to the quadrature: if +1 lowers the error
-    at fixed ``h`` but not the rate, it is a consistency constant.
-(b) Example 05's frozen case, 0.5 M at +50 mV on the reference mesh, solved at 0
-    and +1: the current, the conductance, the transport number and the in-pore
-    averages of VAL-17's list that a biased solve carries. Each variant solves in
-    its own store, because the seam is not in any key and a shared store would
-    hand the second solve the first one's state.
-
-The only assertions are that at 0 each leg reproduces what its own gated test
-asserts: VER-18's rates, and example 05's route agreement.
-"""
+"""NUM-07 (with VER-18, VAL-16, VAL-17): one extra quadrature order for the r weight."""
 
 from __future__ import annotations
 
@@ -68,14 +44,10 @@ REPOSITORY = Path(__file__).resolve().parents[2]
 CASE_NAME = "clya-0.5M-plus50mV.case.yaml"
 
 ORDERS = (0, 1)
-"""The two values of ``weight_extra_order`` compared: the shipped default and +1."""
 
 PORE_Z_NM = (-1.85, 12.25)
-"""The pore's axial extent, the definition of "the pore" for every pore average
-(``.knowledge/04`` section 2; ``.knowledge/09`` C, ``is_inside_pore``)."""
 
 SURFACE_LAYER_NM = 0.5
-"""``is_inside_pore_surface`` is ``wdf.wd <= 0.5 nm`` (``.knowledge/09`` C)."""
 
 STAGE_MODULES = (
     "nanopnp.solve.stage",
@@ -84,23 +56,10 @@ STAGE_MODULES = (
     "nanopnp.post.stage",
     "nanopnp.charge.stage",
 )
-"""Every module that binds the shared ``AXISYMMETRIC``.
-
-Rebinding the name in each is how the in-process run takes the seam without a
-case key, model option or flag reaching it (D7). It reaches only a lookup made
-at run time, such as each stage's ``replace(AXISYMMETRIC, ...)``: a default
-argument was bound at import, so ``nanopnp.solve.continuation``, whose binding
-is only the defaults of ``Rung.measures`` and ``default_ladder``, is unaffected,
-and the stages hand the ladder their measures explicitly. The fixture refuses a
-module that no longer binds the shared instance.
-"""
 
 
-# -- (a) the manufactured solution ------------------------------------------------
-
-
+# VER-18
 def _mms_errors(measures: Measures) -> dict[str, list[float]]:
-    """Return VER-18's L2 errors on its three levels, assembled with ``measures``."""
     model = _model()
     manufactured = ManufacturedSolution.polynomial(model)
     exact = manufactured.coefficient_functions()
@@ -118,8 +77,6 @@ def _mms_errors(measures: Measures) -> dict[str, list[float]]:
             sources=sources,
         )
         for name, reference in exact.items():
-            # The error norm itself is an integral, at NUM-07's floor, and is
-            # measured identically for both variants.
             errors[name].append(
                 weighted_l2_error(
                     solution.component(name), reference, mesh, AXISYMMETRIC, what=name
@@ -128,8 +85,8 @@ def _mms_errors(measures: Measures) -> dict[str, list[float]]:
     return errors
 
 
+# VER-18
 def test_num07_weight_order_on_the_coupled_manufactured_solution() -> None:
-    """D8 (a): L2 errors and rates at 0 and +1; at 0, VER-18's rates are reproduced."""
     errors = {extra: _mms_errors(Measures(weight_extra_order=extra)) for extra in ORDERS}
     for name in errors[0]:
         rates = {extra: convergence_rates(errors[extra][name], MESH_SIZES_NM) for extra in ORDERS}
@@ -149,12 +106,8 @@ def test_num07_weight_order_on_the_coupled_manufactured_solution() -> None:
     assert min(convergence_rates(errors[0][PRESSURE], MESH_SIZES_NM)) > 1.8
 
 
-# -- (b) example 05 --------------------------------------------------------------
-
-
 @pytest.fixture
 def weight_order(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    """Rebind every stage module's ``AXISYMMETRIC`` to carry ``weight_extra_order = 1``."""
     raised = replace(AXISYMMETRIC, weight_extra_order=1)
     for name in STAGE_MODULES:
         module = importlib.import_module(name)
@@ -164,7 +117,6 @@ def weight_order(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
 
 
 def _inner_wall_nm() -> tuple[np.ndarray, np.ndarray]:
-    """Return the lumen's radius ``r_p(z)``: the smallest crossing of the pore profile at each z."""
     profile = np.asarray(load_profile("clya_reference_profile").vertices, dtype=float)
     edges = np.stack([profile, np.roll(profile, -1, axis=0)], axis=1)
     z_samples = np.linspace(PORE_Z_NM[0], PORE_Z_NM[1], 2_841)
@@ -180,12 +132,6 @@ def _inner_wall_nm() -> tuple[np.ndarray, np.ndarray]:
 
 
 def _pore_indicator(mesh: ngs.Mesh) -> ngs.GridFunction:
-    """Return the element-wise indicator of the lumen between ``PORE_Z_NM``.
-
-    An element of the electrolyte counts when its centroid lies inside the
-    lumen. It is a discretisation of the region, the same one for both variants
-    on the one mesh, so it moves neither side of the comparison.
-    """
     z_wall, r_wall = _inner_wall_nm()
     space = ngs.L2(mesh, order=0)
     indicator = ngs.GridFunction(space)
@@ -202,8 +148,8 @@ def _pore_indicator(mesh: ngs.Mesh) -> ngs.GridFunction:
     return indicator
 
 
+# VAL-17
 def _in_pore(directory: Path, store: Store) -> dict[str, float]:
-    """Return the in-pore averages of one finished run (VAL-17's list, at bias)."""
     run = reopen(directory, store=store)
     solution = run.solution
     scales = run.scales
@@ -233,7 +179,6 @@ def _in_pore(directory: Path, store: Store) -> dict[str, float]:
 
 
 def _numbers(quantities: Mapping[str, object], prefix: str = "") -> dict[str, float]:
-    """Flatten a run's quantities to their finite scalar leaves."""
     flat: dict[str, float] = {}
     for key, value in quantities.items():
         name = f"{prefix}{key}"
@@ -249,12 +194,6 @@ def _numbers(quantities: Mapping[str, object], prefix: str = "") -> dict[str, fl
 
 
 def _solve_example_05(root: Path, mesh: Path) -> tuple[dict[str, float], dict[str, float], Path]:
-    """Run example 05 in its own copy and store.
-
-    Returns its quantities, its in-pore averages and the copy's directory. The
-    case names its mesh relative to the working directory, as the README runs
-    it, so the run is made from the copy.
-    """
     example = copy_example(
         REPOSITORY / "examples" / "05-clya-reference", root, repository=REPOSITORY
     )
@@ -266,7 +205,6 @@ def _solve_example_05(root: Path, mesh: Path) -> tuple[dict[str, float], dict[st
 
 
 def _restored(example: Path, extra: int) -> ModelSolution:
-    """Restore the run in ``example`` with its residual assembled at ``weight_extra_order``."""
     run = next(path.parent for path in (example / "store").rglob("run.json"))
     held = solve_state.AXISYMMETRIC
     solve_state.AXISYMMETRIC = replace(AXISYMMETRIC, weight_extra_order=extra)
@@ -278,12 +216,6 @@ def _restored(example: Path, extra: int) -> ModelSolution:
 
 
 def _cross_residuals(examples: Mapping[int, Path]) -> dict[tuple[int, int], float]:
-    """Return ``|R_form(state)|`` over the free dofs, for each variant's form on each state.
-
-    The third route the comparison needs: integrated quantities that barely move
-    are what a seam that never reached the solve would also give. Each state must
-    be a root of its own form and not of the other's.
-    """
     states = {k: _restored(examples[k], 0).state.vec.FV().NumPy().copy() for k in ORDERS}
     norms: dict[tuple[int, int], float] = {}
     for form_extra in ORDERS:
@@ -309,11 +241,7 @@ def _cross_residuals(examples: Mapping[int, Path]) -> dict[tuple[int, int], floa
 
 
 def test_num07_weight_order_on_example_05(tmp_path: Path, request: pytest.FixtureRequest) -> None:
-    """D8 (b): example 05's quantities and in-pore averages at 0 and +1, logged."""
-    # The README's own mesh command, once; both variants solve on its bytes.
     mesh = tmp_path / "clya-reference.msh"
-    # The CLI configures logging with force=True, which is right for a command and
-    # removes pytest's capture handler here; put it back, or this test logs nothing.
     root_logger = logging.getLogger()
     handlers, level = list(root_logger.handlers), root_logger.level
     try:
@@ -362,7 +290,6 @@ def test_num07_weight_order_on_example_05(tmp_path: Path, request: pytest.Fixtur
                 relative,
             )
     assert base_q["route_agreement.relative_difference"] < ROUTE_AGREEMENT_TOLERANCE
-    # The seam reached the solve: each state is a root of its own form, not the other's.
     for extra in ORDERS:
         other = 1 - extra
         assert norms[(extra, extra)] < 1e-3 * norms[(extra, other)], norms

@@ -1,24 +1,4 @@
-"""VER-29 on the deployed ClyA reference mesh: PHY-19's assertion, decomposed.
-
-The Tier-1 half of VER-29 checks the container, the formats and each gate firing
-on a field built to fail it. This is the half that cannot be done on a toy mesh:
-whether the *reference* mesh — 0.05 nm at the pore wall, 0.1 nm in the lumen,
-2.8 nm in the reservoir, 44 000 elements — carries a field smeared at the
-reference's own ``sigma R_i ~ 0.085 nm`` to within QR-03's 10^-3.
-
-The field is a sum of Gaussian rings centred on the delivered pore contour,
-because the reference's smearing kernel integrates to *exactly* its charge over
-the plane (`.knowledge/04` §3): ``Q_net = e Sum_i q_i`` is known in closed form
-rather than measured by the code under test. Every ring sits on the wall, where
-the elements are 0.05 nm — that is the mesh the reference actually deployed, and
-placing the same charge 0.5 nm into the coarser lumen is enough to fail the
-quadrature gate (measured: 1.3e-4 against the 1e-4 it allows).
-
-Two things here are gates on the *gates*. The coarsened mesh must fail the
-quadrature-agreement gate while its conservation legs still pass, or the
-agreement gate is decoration; and the per-plane check must be materially better
-with the 0.2 nm ramp than with a near-step indicator, or the ramp is.
-"""
+"""VER-29 (with PHY-16, PHY-18, PHY-19, QR-03): the reference-mesh charge, decomposed."""
 
 from __future__ import annotations
 
@@ -41,20 +21,12 @@ from nanopnp.core.constants import ELEMENTARY_CHARGE
 from nanopnp.density.grid import RadialGrid
 from nanopnp.numerics.measures import AXISYMMETRIC
 
+# PHY-16
 SMEARING_WIDTH_NM = 0.085
-"""``sigma R_i`` at the reference's own smearing: ``0.5 x 0.17 nm`` (PHY-16 step 3)."""
 
 GRID_ORIGIN_NM = (0.0, -2.5)
 GRID_SPACING_NM = (0.01, 0.01)
 GRID_SHAPE = (601, 1551)
-"""``r`` in [0, 6], ``z`` in [-2.5, 13] nm, at twice the reference's 0.005 nm step.
-
-Twice the step and not the step itself because the trapezium rule on a function
-decaying to zero at both ends has no Euler-Maclaurin boundary terms at all: its
-error is beyond every order in ``h``, so ``Q_grid`` is exact either way and the
-grid costs a quarter of the memory. Confirmed below — ``Q_grid`` reproduces the
-closed-form ``Q_net`` to the last bit.
-"""
 
 RINGS = (
     (1.85, -0.85, -12.0),
@@ -64,41 +36,14 @@ RINGS = (
     (3.02, 8.48, -12.0),
     (3.08, 10.28, -12.0),
 )
-"""``(r0, z0, q_e)`` per ring: six vertices of the delivered ClyA contour.
-
-The total is -72 e, which is ClyA's own charge at pH 7.5 and the number the
-reference's own table integrates to exactly (`.knowledge/04` §7 G5). It is a
-coincidence of construction here, not a physical claim: what the test needs is
-a ``Q_net`` known in closed form, and this makes the numbers legible beside the
-reference's.
-"""
 
 Q_NET_E = sum(charge for _, _, charge in RINGS)
 
+# QR-03
 COARSE_DIVISIONS = (27, 70)
-"""``(nx, ny)`` of the deliberately under-resolving mesh, built structured.
-
-Structured rather than by netgen's unstructured mesher because the quantity this
-fixture exists to exceed is a *quadrature* error, and an unstructured mesh is not
-reproducible across platforms: one ``maxh`` of 0.2 nm measured 2.3e-4 on Linux,
-7.8e-5 on Windows and 2.2e-5 on macOS — straddling the 1e-4 gate three ways from
-the mesher's own arbitrariness rather than from anything about the field.
-``MakeStructured2DMesh`` places every vertex arithmetically, so the number below
-is the same number everywhere.
-
-The divisions are chosen by measurement rather than by argument: at (27, 70) —
-0.222 x 0.221 nm elements — the conservation legs read 1.9e-4 at worst, five
-times inside QR-03, while the order/order+3 agreement reads 3.7e-4, nearly four
-times what it allows. The quadrature error is *not* monotone in ``h``: on this
-same family 0.261 nm reads 7.4e-5 and 0.240 nm reads 5.0e-6, both *below* the
-gate that 0.222 nm exceeds, one coarser and one finer. That is what aliasing of
-a 0.085 nm Gaussian by a Gauss rule looks like, and is exactly why the gate is a
-measured agreement rather than an element-size rule.
-"""
 
 
 def _grid_extent_nm() -> tuple[tuple[float, float], tuple[float, float]]:
-    """Return ``((r_min, r_max), (z_min, z_max))`` of the shared grid box, in nm."""
     return tuple(  # type: ignore[return-value]
         (origin, origin + spacing * (count - 1))
         for origin, spacing, count in zip(GRID_ORIGIN_NM, GRID_SPACING_NM, GRID_SHAPE, strict=True)
@@ -106,7 +51,6 @@ def _grid_extent_nm() -> tuple[tuple[float, float], tuple[float, float]]:
 
 
 def _rings_grid() -> RadialGrid:
-    """Return the summed ring field, in C m^-2, on the shared grid."""
     values = np.zeros((GRID_SHAPE[1], GRID_SHAPE[0]), dtype=np.float64)
     for centre_r, centre_z, charge_e in RINGS:
         values += create_form(
@@ -127,7 +71,6 @@ def _rings_grid() -> RadialGrid:
 
 
 def _document(**overrides: object) -> FieldDocument:
-    """Return the header for the ring field, declaring the closed-form ``Q_net``."""
     payload: dict[str, object] = {
         "schema": "nanopnp/field/v0.5",
         "name": "clya-rings",
@@ -152,7 +95,6 @@ def _document(**overrides: object) -> FieldDocument:
 
 @pytest.fixture(scope="module")
 def field() -> ChargeField:
-    """Return the ring field: six Gaussians summing to a charge known exactly."""
     return ChargeField(
         document=_document(),
         grid=_rings_grid(),
@@ -162,19 +104,16 @@ def field() -> ChargeField:
 
 @pytest.fixture(scope="module")
 def mesh(clya_reference_mesh):  # type: ignore[no-untyped-def]
-    """Return the WP8 ClyA reference mesh, at the §5.2.2 size fields (generated once, WP33 D10)."""
     return clya_reference_mesh()
 
 
 @pytest.fixture(scope="module")
 def report(field: ChargeField, mesh):
-    """Return the conservation report on the reference mesh, ungated."""
     return conservation(field, mesh, AXISYMMETRIC)
 
 
 @pytest.fixture(scope="module")
 def coarse_mesh():
-    """Return a structured rectangle covering the whole grid box."""
     from ngsolve.meshes import MakeStructured2DMesh
 
     (r_min, r_max), (z_min, z_max) = _grid_extent_nm()
@@ -187,49 +126,26 @@ def coarse_mesh():
     )
 
 
-# -- the two legs -------------------------------------------------------------
-
-
 def test_ver29_the_producer_leg_reproduces_the_closed_form_charge(report) -> None:
-    """``Q_grid`` against ``Q_net = e Sum_i q_i``, which no code here computed.
-
-    The leg the reference's own 1.25 % discrepancy could not be attributed to.
-    The trapezium rule has no boundary terms on a field decaying to zero at both
-    ends, so this is not a tolerance so much as a check that the smearing kernel
-    normalises the way `.knowledge/04` §3 says it does.
-    """
     assert report.producer_error is not None
     assert abs(report.producer_error) < CONSERVATION_TOL
     assert report.q_grid_C / ELEMENTARY_CHARGE == pytest.approx(Q_NET_E, rel=1e-12)
 
 
+# QR-03
 def test_ver29_the_consumer_leg_conserves_on_the_reference_mesh(report) -> None:
-    """``Q_mesh`` against ``Q_grid`` (QR-03): interpolation, quadrature, footprint.
-
-    The whole point of the decomposition. A single number against ``Q_net``
-    attributes nothing; this one says the deployed mesh carried what it was
-    handed.
-    """
     assert abs(report.consumer_error) < CONSERVATION_TOL
-    # And the deployed mesh is not trivially reproducing the grid: the two are
-    # different computations, so the agreement is evidence rather than identity.
     assert report.q_mesh_C != report.q_grid_C
 
 
 def test_ver29_every_gate_passes_on_the_reference_mesh(report) -> None:
-    """The reference configuration clears truncation, quadrature and both legs."""
     assert check_conservation(report) is report
     assert report.ring_ratio < RING_TOL
     assert report.quadrature_error < QUADRATURE_TOL
 
 
+# PHY-19
 def test_ver29_every_ramped_plane_agrees_with_the_source_grid(report) -> None:
-    """PHY-19's per-plane check, at every plane rather than only the worst.
-
-    A globally satisfied check can hide compensating local errors, so the assert
-    is on the whole ladder: the worst plane alone would be the same statement the
-    gate makes, and would not notice a systematic drift down the pore.
-    """
     reference = report.reference_C
     errors = [
         abs(mesh_value - grid_value) / reference
@@ -241,31 +157,15 @@ def test_ver29_every_ramped_plane_agrees_with_the_source_grid(report) -> None:
     assert max(errors) < CONSERVATION_TOL
 
 
+# PHY-18
 def test_ver29_the_axis_guard_deletes_nothing_on_this_structure(report) -> None:
-    """PHY-18's ``r < 0.01 nm`` guard, computed rather than assumed.
-
-    The innermost ClyA atoms sit at ``r >~ 1.6 nm``, so the guard strip sees
-    ``exp(-(1.6/0.085)^2)`` of peak and the deficit is numerically zero. Reported
-    all the same, because a different structure — or an analyte on the axis —
-    makes it real, and a deficit nobody measured is a deficit nobody notices.
-    """
     assert abs(report.guard_deficit_C / ELEMENTARY_CHARGE) < 1e-9 * abs(Q_NET_E)
 
 
-# -- the gates on the gates ---------------------------------------------------
-
-
+# QR-03
 def test_ver29_a_coarsened_mesh_fails_the_quadrature_gate_not_the_conservation_one(
     field: ChargeField, coarse_mesh
 ) -> None:
-    """The under-resolving mesh is named as such, and not as a conservation failure.
-
-    This is what the agreement gate is for. At 0.22 nm the conservation legs are
-    still comfortably inside QR-03 — a run without the gate would report a
-    conserved charge and a wrong field — while the order/order+3 agreement says
-    plainly that the number cannot be defended. Getting these the wrong way round
-    would name the field's producer for the mesh's failure.
-    """
     coarse = conservation(field, coarse_mesh, AXISYMMETRIC)
     assert abs(coarse.consumer_error) < CONSERVATION_TOL
     assert coarse.producer_error is not None
@@ -278,17 +178,8 @@ def test_ver29_a_coarsened_mesh_fails_the_quadrature_gate_not_the_conservation_o
     assert raised.value.gate == "the deployed mesh under-resolves the supplied field"
 
 
+# QR-03
 def test_ver29_the_per_plane_ramp_is_not_cosmetic(field: ChargeField, mesh) -> None:
-    """A near-step indicator on the same planes exceeds the budget the ramp meets.
-
-    The planes are put through the ring centres, which is the worst case and the
-    one a plane ladder will eventually land on. With a 0.002 nm ramp — a step for
-    every practical purpose against a 0.05 nm element — the check reads 1.9e-3 of
-    ``Q_net``, nearly twice QR-03's budget, purely from quadrature across the
-    elements the plane straddles. The 0.2 nm ramp reads 7e-6. Both sides evaluate
-    the same Lipschitz functional, so nothing is being smoothed away: what the
-    ramp removes is the discontinuity, not the disagreement.
-    """
     planes = tuple(centre_z for _, centre_z, _ in RINGS)
     ramped = conservation(field, mesh, AXISYMMETRIC, planes_nm=planes, ramp_nm=0.2)
     stepped = conservation(field, mesh, AXISYMMETRIC, planes_nm=planes, ramp_nm=0.002)

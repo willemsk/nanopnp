@@ -1,15 +1,4 @@
-"""The NUM-17 state gates, driven by a coupled solve rather than a constructed state.
-
-``PositivityGate`` and ``PackingFractionGate`` landed with WP3, but until the
-coupled model existed nothing solved for a concentration: ``pb`` slaves its ion
-densities to the potential by construction, so the gates had only ever been
-checked against states written by hand. These two tests drive a real solve into
-each violation and assert that it **aborts** rather than returning a plausible
-number, which is the whole of QR-12.
-
-Both configurations are chosen to fail deterministically rather than to be
-representative. The pore they describe is not one anybody would run.
-"""
+"""NUM-17 and QR-12: the state gates abort a coupled solve that is driven into each violation."""
 
 from dataclasses import replace
 
@@ -26,21 +15,8 @@ from nanopnp.physics import models
 AXISYMMETRIC = Measures(symmetry="axisymmetric", element_order=2)
 
 
+# PHY-05
 def test_num17_packing_gate_aborts_a_coupled_solve_at_high_salt() -> None:
-    """Classical PNP-NS at 5 M crowds the counterion past ``Phi = 1`` and stops.
-
-    One species alone reaches ``Phi = 1`` at 13.3 M (PHY-05), and a wall held at
-    -4 thermal voltages against grounded reservoir ends multiplies the
-    counterion by ``exp(4)``, which from a 5 M bulk is far past it. Classical
-    PNP-NS has nothing to stop it: without ``beta_i`` the ions are point
-    particles and the Boltzmann factor is unbounded. The gate is what turns that
-    into an abort naming the crowding rather than a divergence naming nothing.
-
-    Reaching this state at all needs the wall *and* the reservoir ends to carry
-    essential data: with the potential fixed on the wall alone, a uniform
-    ``phi~`` at the wall value and a uniform ``c~_i = 1`` satisfy every equation
-    exactly, and the solve returns that trivial state instead.
-    """
     model = models.create("pnp-ns", concentration_M=5.0, fluid="electrolyte")
     screening_nm = debye_length_nm(5.0)
     mesh = CylinderGeometry(radius_nm=2.0, length_nm=4.0).generate(
@@ -70,15 +46,8 @@ def test_num17_packing_gate_aborts_a_coupled_solve_at_high_salt() -> None:
     assert maximum_packing_M() == pytest.approx(13.3, abs=0.1)
 
 
+# NUM-02, VER-16
 def test_num17_positivity_gate_aborts_an_under_resolved_pnp_solve() -> None:
-    """A blocked anion at 8 thermal voltages undershoots, and the solve stops.
-
-    Beyond a few ``V_T`` the blocked anion falls by ``exp(-V~)`` across the
-    double layer. The primitive formulation of NUM-02 gives no positivity
-    guarantee, and a P2 Galerkin approximation of that decay undershoots into
-    negative concentration; the gate is what turns a quietly wrong current into
-    an abort. The log branch of NUM-02 is the cure, and VER-16 uses it.
-    """
     base = Electrolyte.from_parameter_file()
     electrolyte = replace(
         base,
@@ -138,13 +107,6 @@ def test_num17_positivity_gate_aborts_an_under_resolved_pnp_solve() -> None:
 
 
 def test_num17_gates_sample_the_fluid_only() -> None:
-    """A concentration gate must not sample a solid, where the field reads zero.
-
-    ``c_i`` lives on the fluid, and a finite-element function evaluated outside
-    its ``definedon`` region comes back as zero — which is not positive. Without
-    the material restriction the positivity gate would abort on every mesh that
-    has a membrane in it, before Newton took a step.
-    """
     model = models.create("epnp-ns", concentration_M=0.1)
     mesh = CylindricalPoreGeometry(reservoir_radius_nm=20.0).generate(maxh_nm=6.0)
     space = model.space(mesh)
@@ -158,8 +120,6 @@ def test_num17_gates_sample_the_fluid_only() -> None:
 
     sampled = state_gates[0].sampler.points
     assert len(sampled) > 0
-    # Every sample point must lie inside the fluid: the lumen, or either
-    # reservoir. Nothing may fall in the membrane annulus.
     pore = CylindricalPoreGeometry()
     half, lumen = pore.half_thickness_nm, pore.pore_radius_nm
     inside_membrane = [(r, z) for r, z in sampled if abs(z) < half - 1e-9 and r > lumen + 1e-9]

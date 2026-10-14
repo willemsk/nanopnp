@@ -1,29 +1,4 @@
-"""VER-46 — example 06, from a PDB entry to a mesh, executed verbatim (FR-01 to FR-10, IF-05).
-
-The README's two blocks run from a copy of ``examples/06-pdb-to-mesh``. The
-``refused`` block must exit 4, the gate class: the deposited 2WCD is refused by
-stage 1's orientation gate. The ``run`` block prepares the entry with a script
-that imports nothing from nanopnp, walks stages 1 to 6, exports what the stages
-stored, and meshes the exported profile again as a supplied input (WP25 D3, D8).
-
-Each oracle fails loudly on a frame, unit or substitution error rather than
-comparing a number to itself:
-
-- (a) the refusal names the orientation gate with an angle above its limit;
-- (b) the walk records exactly the case and stages 1 to 6, and the structure file;
-- (c) the aligned export passes stage 1 under ``symmetry.axis: z``;
-- (d) ``density.mrc``, read in ångströms as a viewer reads it, boxes every heavy
-  atom of ``aligned.pdb``, and reads at least the single-frame bound at each atom's
-  nearest node (the WP25 plan, Design §2). A map in nm puts every atom outside a
-  box a tenth its size, and one with its axes transposed puts the nearest node of
-  most atoms in the lumen or the solvent;
-- (e) the exported profile is the stored document, byte for byte, and loads as a
-  pipeline profile;
-- (f) the profile run moves the region and mesh keys, keeps the mesh content hash,
-  and records no stage 1 to 4 artefact.
-
-Nothing is solved, so no stabilisation mode applies. Durations are logged.
-"""
+"""VER-46 (with FR-01 to FR-10, IF-05): example 06, from a PDB entry to a mesh."""
 
 from __future__ import annotations
 
@@ -50,21 +25,17 @@ logger = logging.getLogger(__name__)
 REPOSITORY = Path(__file__).resolve().parents[2]
 
 PDB_ROUNDING_NM = 5e-5
-"""Half the PDB coordinate column's 0.001 Å: how far a written atom may lie from the true one."""
 
 STAGES = {"case", "structure", "density", "symmetry", "contour", "region", "mesh"}
-"""The artefacts a walk to stage 6 records: the case and stages 1 to 6."""
 
 
 def _read(path: Path) -> dict[str, object]:
-    """Return a record written through ``canonical``, its floats decoded."""
     decoded = decode_floats(json.loads(path.read_text(encoding="utf-8")))
     assert isinstance(decoded, dict)
     return decoded
 
 
 def _command(results: list[CommandResult], *words: str) -> CommandResult:
-    """Return the one result whose argv begins with ``words``."""
     (found,) = [result for result in results if result.argv[: len(words)] == words]
     return found
 
@@ -73,7 +44,6 @@ def _command(results: list[CommandResult], *words: str) -> CommandResult:
 def ran(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> tuple[Path, list[CommandResult], list[CommandResult]]:
-    """Copy the example; run the ``refused`` block, then the ``run`` block."""
     example = copy_example(
         REPOSITORY / "examples" / "06-pdb-to-mesh",
         tmp_path_factory.mktemp("examples"),
@@ -91,10 +61,10 @@ def ran(
     return example, refused, walked
 
 
+# FR-02, QR-12
 def test_ver46_06_the_deposited_entry_is_refused_by_the_orientation_gate(
     ran: tuple[Path, list[CommandResult], list[CommandResult]],
 ) -> None:
-    """(a) Exit 4, naming the gate, an angle above the limit, and the limit (QR-12, FR-02)."""
     _, refused, _ = ran
     (result,) = refused
     assert result.returncode == 4
@@ -111,10 +81,10 @@ def test_ver46_06_the_deposited_entry_is_refused_by_the_orientation_gate(
     assert "Traceback" not in result.stderr
 
 
+# FR-27
 def test_ver46_06_the_prepared_entry_walks_stages_1_to_6(
     ran: tuple[Path, list[CommandResult], list[CommandResult]],
 ) -> None:
-    """(b) Every command exits 0; the manifest keys exactly the case and stages 1 to 6 (FR-27)."""
     example, _, walked = ran
     assert [result.argv[:2] for result in walked] == [
         ("python", "prepare.py"),
@@ -134,10 +104,10 @@ def test_ver46_06_the_prepared_entry_walks_stages_1_to_6(
     assert not any(inputs["artefacts"][name]["hand_substituted"] for name in STAGES)
 
 
+# FR-02
 def test_ver46_06_the_aligned_export_passes_stage_1_under_axis_z(
     ran: tuple[Path, list[CommandResult], list[CommandResult]],
 ) -> None:
-    """(c) The PDB stage 1 exported is in its own frame: the file's z is the pore axis (FR-02)."""
     example, _, walked = ran
     assert load_case(example / "aligned.case.yaml").structure.symmetry.axis == "z"  # type: ignore[union-attr]
     result = _command(walked, "nanopnp", "stage", "structure", "aligned.case.yaml")
@@ -150,14 +120,6 @@ def test_ver46_06_the_aligned_export_passes_stage_1_under_axis_z(
 def test_ver46_06_the_exported_map_overlays_the_aligned_structure(
     ran: tuple[Path, list[CommandResult], list[CommandResult]],
 ) -> None:
-    """(d) Read in Å, the map boxes every heavy atom and reads at least the bound at its node.
-
-    One frame, so the map at a grid node a distance ``d`` from an atom is at least
-    that atom's ``exp(-d²/(sigma R)²)``. The node nearest the written atom lies within
-    ``√3h/2`` of it, and the written atom within ``√3`` times the PDB's rounding of
-    the true one. ``R`` is the smallest shipped radius of any heavy atom in the
-    structure, so the bound holds for every atom (the WP25 plan, Design §2; IF-05, §8.2.2 B10).
-    """
     import MDAnalysis as mda  # noqa: N813 - the alias the library documents
     from gridData import Grid
 
@@ -208,10 +170,10 @@ def test_ver46_06_the_exported_map_overlays_the_aligned_structure(
     assert float(at_atoms.min()) >= bound
 
 
+# FR-09
 def test_ver46_06_the_exported_profile_is_the_stored_document(
     ran: tuple[Path, list[CommandResult], list[CommandResult]],
 ) -> None:
-    """(e) Byte for byte the store's ``profile/v1`` document, and a pipeline profile (FR-09)."""
     example, _, walked = ran
     result = _command(walked, "nanopnp", "stage", "contour")
     (stored,) = [
@@ -227,7 +189,6 @@ def test_ver46_06_the_exported_profile_is_the_stored_document(
 def test_ver46_06_the_profile_meshes_to_the_same_mesh_under_another_key(
     ran: tuple[Path, list[CommandResult], list[CommandResult]],
 ) -> None:
-    """(f) A supplied profile skips stages 1 to 4; the mesh is the same, its key is not."""
     example, _, walked = ran
     structure = _read(example / "run" / "manifest.json")
     profile = _read(example / "run-profile" / "manifest.json")

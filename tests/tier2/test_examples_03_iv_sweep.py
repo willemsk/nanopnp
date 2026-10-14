@@ -1,16 +1,4 @@
-"""VER-46 — example 03, a bias sweep over a charged pore and its uncharged control.
-
-The oracle is a symmetry, not a number. Reversing the bias maps a z-symmetric,
-uncharged pore onto its own mirror image — the governing equations see only
-potential differences, so the reversed problem is the mirrored one shifted by a
-constant — and its current therefore reverses exactly: ``RR = 1``. The discrete
-departure is bounded by the mesh's own asymmetry and the Newton residual, and it
-is held to the NUM-26 route tolerance, as ``test_current_routes`` holds the same
-property of the same pore family. The charged pore's rows must all be present and
-every member must exit 0 (FR-24, IF-02). The collector's rectification is read
-from ``dataset.json``, the dataset artefact, rather than recomputed here.
-Stabilisation is ``none`` (NUM-11).
-"""
+"""VER-46 (with FR-23, FR-24, NUM-11, NUM-26, VER-62): example 03, a bias sweep."""
 
 from __future__ import annotations
 
@@ -34,7 +22,6 @@ REPOSITORY = Path(__file__).resolve().parents[2]
 
 
 def _dataset(directory: Path) -> dict[str, object]:
-    """Return a sweep's ``dataset.json``, its floats decoded."""
     decoded = decode_floats(json.loads((directory / "dataset.json").read_text(encoding="utf-8")))
     assert isinstance(decoded, dict)
     return decoded
@@ -42,7 +29,6 @@ def _dataset(directory: Path) -> dict[str, object]:
 
 @pytest.fixture(scope="module")
 def ran(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, list[CommandResult]]:
-    """Copy the example and run its ``run`` block; every command must exit 0."""
     example = copy_example(
         REPOSITORY / "examples" / "03-iv-sweep",
         tmp_path_factory.mktemp("examples"),
@@ -51,10 +37,10 @@ def ran(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, list[CommandRes
     return example, run_tagged(example, "run")
 
 
+# FR-23
 def test_ver46_an_uncharged_symmetric_pore_rectifies_to_unity(
     ran: tuple[Path, list[CommandResult]],
 ) -> None:
-    """``|RR - 1|`` of the control is below the route tolerance (FR-23, RSK-03)."""
     example, _ = ran
     pairs = _dataset(example / "iv-uncharged")["rectification"]
     assert isinstance(pairs, list) and len(pairs) == 1
@@ -66,7 +52,6 @@ def test_ver46_an_uncharged_symmetric_pore_rectifies_to_unity(
 def test_ver46_every_member_exits_zero_and_every_row_has_a_current(
     ran: tuple[Path, list[CommandResult]], sweep: str, points: int
 ) -> None:
-    """The CSV export is complete: every point a row, every row ``ok`` with a current."""
     example, _ = ran
     with (example / sweep / "dataset.csv").open(encoding="utf-8") as stream:
         rows = list(csv.DictReader(line for line in stream if not line.startswith("#")))
@@ -78,7 +63,6 @@ def test_ver46_every_member_exits_zero_and_every_row_has_a_current(
 def test_ver46_the_charged_pore_has_a_ratio_at_each_bias_magnitude(
     ran: tuple[Path, list[CommandResult]],
 ) -> None:
-    """Both exactly-opposite pairs produced a ratio, and ``plot_iv.py`` tabulated all rows."""
     example, _ = ran
     pairs = _dataset(example / "iv-charged")["rectification"]
     assert isinstance(pairs, list)
@@ -90,11 +74,6 @@ def test_ver46_the_charged_pore_has_a_ratio_at_each_bias_magnitude(
 def test_ver62_charged_sweep_holds_the_number_stability_golden(
     ran: tuple[Path, list[CommandResult]], number_stability: NumberStability
 ) -> None:
-    """VER-62: every member of the charged sweep holds the golden of v0.4.0's tree (G10).
-
-    One entry for the sweep, each value named by its member's index, so the sweep
-    runner's warm starts are part of what the golden pins.
-    """
     example, _ = ran
     rows = _dataset(example / "iv-charged")["rows"]
     assert isinstance(rows, list) and len(rows) == 4

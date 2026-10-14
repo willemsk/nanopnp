@@ -1,22 +1,4 @@
-"""VER-55 on a real structure: the Geometry tab's build, measurement and hand edit on 2WCD.
-
-The Tier 1 files hold each part of WP24 to an oracle on a synthetic tube; this
-one runs the same parts on the prepared 2WCD, through the root conftest's
-``prepared_2wcd``, registered as VAL-05 registers it (the C-alpha centroid of
-residues 8-292 at ``Z_MD``, WP22 D6). Four things:
-
-- the spawned build, ``upto="mesh"``, reports ``Produced`` for stages 1 to 6 in
-  walk order, each naming an entry the store holds, and then ``Finished``;
-- :func:`~nanopnp.gui.assess.assess` on stage 4's own loop reproduces the
-  ``gate`` record of its summary exactly (D9);
-- the null edit, written through ``with_profile``, gives stage 5 the same
-  model-frame profile to the bit and stage 6 the same mesh content under a new
-  key (Design §3);
-- moving the constriction vertex 0.1 nm outward changes both, and the manifest
-  records the profile by content and no stage 1-4 artefact (D4-D6).
-
-The runtime of each is logged: ``--log-cli-level=INFO``.
-"""
+"""VER-55 (with VAL-05, VER-53): the Geometry tab's build, measure and edit on 2WCD."""
 
 from __future__ import annotations
 
@@ -48,6 +30,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+# VER-53, VER-55
 CASE = """\
 schema: nanopnp/case/v0.5
 name: 2wcd-geometry
@@ -62,12 +45,8 @@ boundary_conditions: {{bias_V: 0.05, ground: cis}}
 physics: {{model: epnp-ns, solid_permittivities: {{protein: 20.0, membrane: 3.2}}}}
 numerics: {{mesh: {{size_scale: 4.0}}}}
 """
-"""At ``size_scale`` 4 (WP33 D5): VER-55's claims are about the shell's plumbing and the
-stage-4 gate, and none depends on element size. The default-size 2WCD mesh is gated by
-``test_pipeline_2wcd.py`` (VER-53)."""
 
 TIMEOUT_S = 900.0
-"""A cold walk of 2WCD through stage 6 takes tens of seconds; the wait is not the test."""
 
 GEOMETRY_STAGES = ("case", "structure", "density", "symmetry", "contour", "region", "mesh")
 
@@ -76,12 +55,6 @@ GEOMETRY_STAGES = ("case", "structure", "density", "symmetry", "contour", "regio
 def registered(
     prepared_2wcd: Prepared2WCD, tmp_path_factory: pytest.TempPathFactory
 ) -> tuple[Path, Path]:
-    """Return a 2WCD case registered by the C-alpha centroid, and an empty store root.
-
-    Stage 1 runs once in a scratch store to read the registration off the
-    aligned structure, so the store the spawned build writes into starts empty
-    and its walk is a cold one.
-    """
     root = tmp_path_factory.mktemp("2wcd-geometry")
     probe = root / "probe.case.yaml"
     probe.write_text(CASE.format(pdb=prepared_2wcd.path, geometry=""), encoding="utf-8")
@@ -97,7 +70,6 @@ def registered(
 
 
 def _settle(process: SolverProcess) -> tuple[RunEvent, ...]:
-    """Drain the build until it posts a terminal event, or time out."""
     found: list[RunEvent] = []
     deadline = time.monotonic() + TIMEOUT_S
     while time.monotonic() < deadline:
@@ -118,10 +90,8 @@ def _settle(process: SolverProcess) -> tuple[RunEvent, ...]:
 def test_ver55_2wcd_builds_measures_and_meshes_a_null_edit_to_the_same_content(
     registered: tuple[Path, Path],
 ) -> None:
-    """The four VER-55 claims on 2WCD, in the order the tab would make them."""
     case, store_root = registered
 
-    # 1. The spawned build: every geometry stage reported, in walk order, stored.
     started = time.perf_counter()
     process = SolverProcess(RunRequest(case=str(case), store=str(store_root), upto="mesh"))
     process.start()
@@ -135,14 +105,12 @@ def test_ver55_2wcd_builds_measures_and_meshes_a_null_edit_to_the_same_content(
         assert store.get(event.schema, event.hash) is not None, event.name
         assert not event.cached, event.name
 
-    # The in-process walk reads what the child stored: every stage from the store.
     result = run_case(case, store=store, upto="mesh", write=False)
     assert all(record.cached for record in result.stages)
     assert [result.artefacts[name].hash for name in GEOMETRY_STAGES[1:]] == [
         event.hash for event in produced[1:]
     ]
 
-    # 2. measure on stage 4's own loop is its gate record, exactly.
     contour = result.artefacts["contour"]
     profile = load_profile(contour.payload["profile"])
     started = time.perf_counter()
@@ -153,7 +121,6 @@ def test_ver55_2wcd_builds_measures_and_meshes_a_null_edit_to_the_same_content(
     assert measured.passed
     assert measured.record == contour.summary["gate"]
 
-    # 3. The null edit: stage 5's model-frame profile to the bit, the mesh content equal.
     original = load_case(case)
     editor = ProfileEditor.from_profile(profile)
     started = time.perf_counter()
@@ -170,7 +137,6 @@ def test_ver55_2wcd_builds_measures_and_meshes_a_null_edit_to_the_same_content(
         == result.artefacts["mesh"].summary["content_hash"]
     )
 
-    # 4. The constriction vertex 0.1 nm outward: both hashes move.
     loop = np.asarray(profile.vertices)
     constriction = contour.summary["constriction"]
     target = (constriction["r_nm"], constriction["z_nm"])  # type: ignore[index]
