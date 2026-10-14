@@ -185,7 +185,7 @@ and left it unfixed.
 longer changes, each concentration of a sweep re-meshes an identical mesh. Warm starts are
 unaffected.
 
-**Resolves it.** WP46, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
+**Resolved.** WP46 D2: `WallSize.key()` leaves λ_D out of the stage-6 key, so a salt sweep below the 0.05 nm ceiling shares one mesh; the manifest's `sizing` block keeps λ_D. Netgen's key golden is re-recorded.
 
 ### REV-17 — A warm start is gated on free prose in the stabilisation provenance
 

@@ -41,14 +41,11 @@ from nanopnp.pipeline.case import loads_case, resolve
 
 REPOSITORY = Path(__file__).resolve().parents[2]
 
-NETGEN_KEY = "7642b2377cb1f9d56125e5be692433635972687c94c2fa343738b7d9e962eabe"
-"""Netgen's stage-6 key for the coarse parallelogram case, recorded before WP23 (D8).
+NETGEN_KEY = "81ee84c0025203065608908f26aecb0032343bedc9dbfb65dd598f565fe9cfd4"
+"""Netgen's stage-6 key for the coarse parallelogram case, re-recorded by WP46 D2.
 
-Computed on ``2bb1a34`` (the WP23 plan's commit, before any code changed) and on
-this package's code alike: a netgen recipe is byte-identical, so no stored key
-moved. The key is a hash of the region key and the sizing, whose only computed
-float is lambda_D, from arithmetic and a square root, so it is the same on every
-platform.
+The key hashes the region key and the sizing, whose wall record is ``WallSize.key()``: the
+wall size, its source and the scale, with no Debye length. It is the same on every platform.
 """
 
 ARC_DOMAINS = {"cis": "electrolyte", "trans": "electrolyte", "membrane_outer": "membrane"}

@@ -35,7 +35,7 @@ is a rolling register, and its header stays `open`.
 | REV-13 | verification | medium | fixed | [WP42](../plans/wp42-verification-checks.md) | [Example 06's key test cannot see a stage-7 key change](review-items.md#rev-13-example-06s-key-test-cannot-see-a-stage-7-key-change) |
 | REV-14 | numerics | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [A radial grid's .npz does not round-trip its spacing exactly](review-items.md#rev-14-a-radial-grids-npz-does-not-round-trip-its-spacing-exactly) |
 | REV-15 | interface | low | accepted | §8.2.9 I2 | [Example 05 quotes #SBATCH directives as shell words](review-items.md#rev-15-example-05-quotes-sbatch-directives-as-shell-words) |
-| REV-16 | performance | low | accepted | §8.2.9 I2 | [A salt sweep regenerates an identical mesh at each concentration](review-items.md#rev-16-a-salt-sweep-regenerates-an-identical-mesh-at-each-concentration) |
+| REV-16 | performance | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [A salt sweep regenerates an identical mesh at each concentration](review-items.md#rev-16-a-salt-sweep-regenerates-an-identical-mesh-at-each-concentration) |
 | REV-17 | numerics | low | fixed | [WP41](../plans/wp41-accuracy-fixes.md) | [A warm start is gated on free prose in the stabilisation provenance](review-items.md#rev-17-a-warm-start-is-gated-on-free-prose-in-the-stabilisation-provenance) |
 | REV-18 | interface | low | accepted | §8.2.9 I2 | [Concurrent sweep members may write the same store key](review-items.md#rev-18-concurrent-sweep-members-may-write-the-same-store-key) |
 | REV-19 | interface | low | accepted | §8.2.9 I2 | [A zero-frame trajectory raises a bare IndexError](review-items.md#rev-19-a-zero-frame-trajectory-raises-a-bare-indexerror) |

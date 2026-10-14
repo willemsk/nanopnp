@@ -146,7 +146,7 @@ def sizing_parameters(
         )
     recipe: dict[str, Canonicalisable] = {
         "backend": backend,
-        "wall": document_wall.summary(),
+        "wall": document_wall.key(),
         "table": sizes.summary(),
         "grading": GRADING,
         **settings,
@@ -189,6 +189,7 @@ class GeneratedMesh:
         """Return the manifest's ``sizing`` block, the mesher's version beside it."""
         return {
             **sizing_parameters(self.wall, self.sizes, self.backend, exclusion=self.exclusion),
+            "wall": self.wall.summary(),
             "backend_version": self.backend_version,
             "debye_target_nm": self.wall.debye_target_nm,
             "num30_ratio": self.wall.wall_h_nm / self.wall.debye_target_nm,
