@@ -718,6 +718,16 @@ def test_ver48_a_chain_wrapped_across_the_box_in_one_frame_is_refused(
 
 
 # QR-12
+def test_ver48_a_selection_without_consecutive_residues_has_nothing_to_check(
+    two_chains: tuple[Path, np.ndarray],
+) -> None:
+    topology, _ = two_chains
+    chosen = select(load_universe(topology), selection="protein", chains="all", n=2)
+    lone = dataclasses.replace(chosen, fit_index=chosen.fit_index[:1])
+    check_chains_whole(lone, positions_nm(chosen.group, [0]), [0])
+
+
+# QR-12
 def test_ver48_the_deposited_2wcd_has_no_pair_near_the_wrap_bound() -> None:
     universe = load_universe(PDB)
     chosen = select(universe, selection="protein", chains=DODECAMER, n=12)

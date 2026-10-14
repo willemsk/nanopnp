@@ -397,6 +397,14 @@ def test_ver26_two_processes_race(tmp_path: Path) -> None:
     assert outputs == [f"{winner} {stored.created_at}"] * 2
 
 
+def test_ver26_a_put_whose_entry_cannot_be_read_back_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(Store, "get", lambda self, schema, digest: None)
+    with pytest.raises(StoreError, match="is not in the store after its put"):
+        _put_with_payload(Store(tmp_path / "store"), tmp_path / "src", b"x")
+
+
 def test_ver26_a_put_that_cannot_publish_is_refused(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
