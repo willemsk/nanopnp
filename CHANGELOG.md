@@ -21,12 +21,12 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [0.5.0-alpha.11] - 2026-10-14
 
-WP45: the prose strip (`SPECIFICATION.md` §8.2.11 L4 amended, L5, L9; VER-75). Docstrings and
+WP45: the prose strip (`SPECIFICATION.md` §8.2.11 L4 amended, L5, L9, L10; VER-75). Docstrings and
 comments fall from 33.0 % to 10.6 % of the lines of `src/nanopnp` and from 18.8 % to 2.1 % of `tests/`,
 with no instruction changed (`.claude/scripts/same_tree.py` proves every commit). L4 now asks a condensed
 docstring on every public function, class and method, NumPy-style parameters where name and type do not
-say, none on a test or private code. Derivations found nowhere else moved to `.knowledge/`. It discharges
-VER-75; REV-91 to REV-97 are open.
+say, none on a test or private code; ruff's D101 to D103 and D106 now hold in `src/nanopnp`. Derivations found nowhere else moved to `.knowledge/`. It discharges
+VER-75; REV-93 to REV-97 are fixed, REV-91 is deferred and REV-92 declined.
 
 ## [0.5.0-alpha.10] - 2026-10-13
 

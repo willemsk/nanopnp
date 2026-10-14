@@ -925,15 +925,15 @@ VER-72 (d) and the planned-xfail handling in `tests/tier1/test_plan_records.py` 
 
 The strip removed test docstrings. Where a test's requirement identifier lived only there, a one-line comment above the test keeps it; the test name still does not carry it (CLAUDE.md asks tests named for their requirement).
 
-**Open.** The author's call. *Recommendation:* rename those tests in a later package, since a rename is code and WP45 proves it changed none.
+**Deferred** (§8.2.11 L10): renamed in a later package.
 
 ### REV-92 — src prose share is 10.6 %, above the 10 % prediction
 
 *Area:* documentation. *Severity:* low. *Found:* WP45.
 
-The prediction (at most 10 %) assumed docstrings on `PUBLIC` names only. L4 now keeps a condensed docstring on every public method, so `src/nanopnp` closes at 10.6 % (by subpackage in the plan's Outcome). VER-75 (b) holds the ceiling at 12.40 %, set after review counted attribute docstrings (11.4 %).
+The prediction (at most 10 %) assumed docstrings on `PUBLIC` names only. L4 now keeps a condensed docstring on every public method, so `src/nanopnp` closes at 10.6 % (by subpackage in the plan's Outcome). VER-75 (b) holds the ceiling at 12.48 %, set after review counted attribute docstrings (11.48 %).
 
-**Open.** The author rules whether to condense further or accept. *Recommendation:* accept; the next 0.6 point is NumPy-style parameter lists the author asked to keep.
+**Declined** (§8.2.11 L10): the author accepts the share; no further condensing.
 
 ### REV-93 — VER-75 (a) says leading underscore; dunder methods count as public
 
@@ -941,7 +941,7 @@ The prediction (at most 10 %) assumed docstrings on `PUBLIC` names only. L4 now 
 
 `test_prose_share.py` treats `__call__` and other dunder methods of a public class as public, so the hook Protocols keep their one-line docstrings. VER-75 (a) and L4 say "leading underscore".
 
-**Open.** *Recommendation:* amend the wording to "a single leading underscore".
+**Fixed** in WP45 (§8.2.11 L10): L4, VER-75 (a), `python.md` and `CLAUDE.md` say a dunder method counts as public.
 
 ### REV-94 — 47 public functions and methods carry no docstring, and nothing checks them
 
@@ -949,7 +949,7 @@ The prediction (at most 10 %) assumed docstrings on `PUBLIC` names only. L4 now 
 
 L4 as amended asks for a condensed docstring on every public function, class and method, but ruff's D101–D107 stay off (L4's consequence column) and VER-72 (h) checks only the `nanopnp.PUBLIC` names. Ruff D101, D102, D103 and D106 find 47 public names without one, among them `CancelFlag.cancelled`, the `NumpyOps` and `NGSolveOps` methods and 17 methods of `physics/stabilisation.py`. They were missing on `main` before WP45 too (51 there); the strip removed none.
 
-**Open.** *Recommendation:* in WP46, write the 47 docstrings, turn on D102 and D103 in `pyproject.toml` and amend L4's consequence column in the same commit.
+**Fixed** in WP45 (§8.2.11 L10): the 47 docstrings are written, and D101 to D103 and D106 hold in `src/nanopnp`.
 
 ### REV-95 — VER-75 (a) states a check on derivations and history that no test makes
 
@@ -957,7 +957,7 @@ L4 as amended asks for a condensed docstring on every public function, class and
 
 VER-75 opens "Read from the source", and (a) includes "no docstring holds a derivation or a history". `test_prose_share.py` cannot check that, so the identifier claims more than its test discharges.
 
-**Open.** *Recommendation:* move the clause out of VER-75 into L4 alone, where review enforces it.
+**Fixed** in WP45 (§8.2.11 L10): the clause left VER-75; L4 keeps it, for review.
 
 ### REV-96 — About 157 prose lines in src and tests still carry identifiers or plan history
 
@@ -965,7 +965,7 @@ VER-75 opens "Read from the source", and (a) includes "no docstring holds a deri
 
 About 93 docstrings and 64 comments in `src/nanopnp` cite `FR-` or `NUM-` identifiers or plan history such as "WP23 D3", and 156 test-module docstrings start with an identifier. L4 and `CLAUDE.md` keep identifiers to test names and commit messages, but `python.md` asks for the source of every constant, which is often a specification identifier.
 
-**Open.** The author draws the line. *Recommendation:* keep a specification identifier where it is a constant's source; drop plan history (`WPnn Dn`); move test-module identifiers into the test names with REV-91's renaming.
+**Fixed** in WP45 (§8.2.11 L10): plan history left the prose of `src/` and the test comments; test-module identifiers go with REV-91.
 
 ### REV-97 — A directive comment is defined twice, differently
 
@@ -973,5 +973,5 @@ About 93 docstrings and 64 comments in `src/nanopnp` cite `FR-` or `NUM-` identi
 
 `.claude/scripts/same_tree.py` treats a shebang and a coding line as directives and matches its prefixes anywhere in a comment; `test_prose_share.py` and VER-75 (b) list six prefixes at the comment's start. A shebang therefore counts as code for L5 and as prose for VER-75 (b).
 
-**Open.** *Recommendation:* add the shebang and coding line to VER-75 (b)'s list and share one definition between the two checks.
+**Fixed** in WP45 (§8.2.11 L10): `test_prose_share.py` uses `same_tree.is_directive`, and VER-75 (b) names the shebang and coding line.
 

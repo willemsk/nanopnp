@@ -23,6 +23,11 @@ from pathlib import Path
 _DIRECTIVE = re.compile(r"#\s*(type:|noqa|pragma|fmt:|mypy:|ruff:)|^#!|coding[:=]")
 
 
+def is_directive(comment: str) -> bool:
+    """Return whether a comment token is a directive: a tool marker, a shebang or a coding line."""
+    return _DIRECTIVE.search(comment) is not None
+
+
 class _Strip(ast.NodeTransformer):
     def _body(self, nodes: list[ast.stmt]) -> list[ast.stmt]:
         kept: list[ast.stmt] = []
@@ -56,7 +61,7 @@ def directives(source: str) -> Counter[str]:
     """Return the multiset of directive comments of ``source``."""
     found: Counter[str] = Counter()
     for token in tokenize.generate_tokens(io.StringIO(source).readline):
-        if token.type == tokenize.COMMENT and _DIRECTIVE.search(token.string):
+        if token.type == tokenize.COMMENT and is_directive(token.string):
             found[token.string.strip()] += 1
     return found
 

@@ -128,9 +128,9 @@ None blocking. The *Your call* above has a default, D3.
 > sweep 11.8, solve 11.4, materials 11.2, structure 10.7, mesh 10.2, core 10.0, geometry 9.9,
 > symmetry 9.8, io 9.1, pipeline 8.4, charge 7.7, cli 3.1. The overshoot is the condensed docstring
 > kept on every public method after the author's correction at item 19 (REV-92). Ceilings in the
-> test: 12.40 % and 3.35 %, since review counts attribute docstrings too (11.4 % and 2.3 %).
+> test: 12.48 % and 3.48 %: after review, counting attribute docstrings and the restored sources, 11.48 % and 2.48 %.
 > Workers: 33 fresh sub-agents (18 first-pass, 7 recovery, 8 for `tests/`),
 > one redo (19a, redone as 19g), no Opus escalation; `same_tree.py` refused no commit; the strict
 > documentation build passes. Lessons: reading D2 literally (`PUBLIC` only) removed docstrings the author
 > wanted condensed, and a condense brief needs numbers (at most 40 % of the original, no paragraph after
-> the summary), not "shorten". Facts moved to `.knowledge/` 01, 04 to 08. Open: REV-91 to REV-97.
+> the summary), not "shorten". Facts moved to `.knowledge/` 01, 04 to 08. Rulings after review (§8.2.11 L10): REV-93 to REV-97 fixed, REV-91 deferred, REV-92 declined.

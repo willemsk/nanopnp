@@ -137,7 +137,7 @@ resolves one sets it `fixed` (§8.2.8 H12). A PR body is never their only record
 
 ## Prose in code
 
-A docstring on every public function, class and method of `src/` (no leading underscore): a summary
+A docstring on every public function, class and method of `src/` (no leading underscore; a dunder method is public): a summary
 line and NumPy-style parameters only where name and type do not say, without derivations or history. A one-line docstring on every
 module; none on a test or private code. A comment only where the code cannot
 say why it is so, and for the source of a physical constant. Identifiers live in test names and commit
