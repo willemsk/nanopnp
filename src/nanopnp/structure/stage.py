@@ -39,6 +39,7 @@ from nanopnp.structure.axis import (
 from nanopnp.structure.ensemble import ORIENTATION_RULE, PAYLOAD_NAME, AlignedEnsemble
 from nanopnp.structure.read import (
     StructureInputError,
+    check_chains_whole,
     frame_times,
     load_universe,
     positions_nm,
@@ -153,6 +154,7 @@ def align(
     check_cancelled(cancel, "reading the frames")
     report(progress, 0.2, f"reading {len(window.indices)} frames")
     positions = positions_nm(chosen.group, window.indices)
+    check_chains_whole(chosen, positions, window.indices)
 
     report(progress, 0.5, "superposing the frames on the earliest")
     fit_index = chosen.fit_index
