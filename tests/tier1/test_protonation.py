@@ -1,16 +1,4 @@
-"""VER-57, FR-12, QR-12: the protonation stage on fragments of 2WCD chain A (WP27).
-
-Each fragment is a few residues cut from the vendored 2WCD and handed to the
-stage as a stage-1 ensemble, so PDB2PQR and PROPKA run in about 0.1 s a frame.
-The oracles are independent of the code under test: the charges are checked
-against ``CHARMM.DAT`` parsed here from the installed package, ``Q_net`` against a
-hand count of the standard states, and the states PROPKA changes against
-``.knowledge/07`` section 3's measurements on the same fragment.
-
-The gates are driven with a stand-in for :func:`run_pdb2pqr` that writes a chosen
-PQR, so each D9 gate is shown to fire, naming its frame, on exactly the defect
-it guards.
-"""
+"""VER-57, FR-12, QR-12: the protonation stage on fragments of 2WCD chain A."""
 
 from __future__ import annotations
 
@@ -57,10 +45,8 @@ pytest.importorskip("pdb2pqr", reason="the structure extra carries PDB2PQR")
 Fragment = Callable[..., AlignedEnsemble]
 
 FRAGMENT = (18, 26)
-"""``GLU 18`` to ``LEU 26`` of chain A: three acids and both termini (``.knowledge/07`` §3)."""
 
 HISTIDINE = (285, 292)
-"""``CYS 285`` to ``HIS 292``, the C-terminal histidine of chain A."""
 
 CASE = """\
 schema: nanopnp/case/v0.5
@@ -82,7 +68,6 @@ def _case(
     structure: bool = True,
     mesh: bool = False,
 ) -> CaseDocument:
-    """Return a case naming a fragment's structure, and optionally a supplied PQR."""
     inputs = ""
     if pqr is not None or mesh:
         inputs = "inputs:\n"
@@ -107,11 +92,6 @@ def _case(
 
 
 def _inputs(tmp_path: Path, ensemble: AlignedEnsemble, case: CaseDocument) -> StageInputs:
-    """Return stage inputs carrying ``ensemble`` as stage 1's artefact.
-
-    The structure artefact is keyed on the ensemble's digest, so two ensembles
-    are two inputs, as two stage-1 runs would be.
-    """
     path = ensemble.write(tmp_path / f"ensemble-{ensemble.digest()[:12]}.npz")
     structure = StructureArtefact(
         parameters={"ensemble": ensemble.digest()}, payload={"ensemble": path}
@@ -126,18 +106,12 @@ def _run(
     charge: str = "",
     store: Store | None = None,
 ) -> tuple[ProtonationTable, dict[str, Any]]:
-    """Protonate ``ensemble`` through the stage API; return the table and the summary."""
     stage = ProtonationStage(workspace=tmp_path / "workspace", store=store)
     artefact = stage.run(_inputs(tmp_path, ensemble, _case(tmp_path, charge=charge)))
     return ProtonationTable.read(artefact.payload["protonation"]), dict(artefact.summary)
 
 
 def _charmm() -> dict[str, dict[str, float]]:
-    """Return ``CHARMM.DAT``'s charges by residue and atom, parsed here from the installed file.
-
-    Independent of PDB2PQR's own parser: whitespace columns, residue, atom,
-    charge, radius, type; ``#`` starts a comment.
-    """
     text = (resources.files("pdb2pqr") / "dat" / "CHARMM.DAT").read_text(encoding="utf-8")
     table: dict[str, dict[str, float]] = {}
     for line in text.splitlines():
@@ -148,7 +122,6 @@ def _charmm() -> dict[str, dict[str, float]]:
 
 
 def _residues(table: ProtonationTable) -> dict[str, float]:
-    """Return frame 0's charge by residue label, ``GLU 18``, variants as their parent."""
     return {
         f"{parent_residue(name)} {resid}": float(charge)
         for name, resid, charge in zip(
@@ -167,12 +140,6 @@ def _residues(table: ProtonationTable) -> dict[str, float]:
 def test_ver57_charges_are_charmm_dat_and_q_net_the_hand_count(
     tmp_path: Path, fragment_2wcd: Fragment, charge: str
 ) -> None:
-    """Every atom's charge is ``CHARMM.DAT``'s to 10⁻⁶ e; ``Q_net`` is -3 e by hand.
-
-    Standard states, which PROPKA at pH 8 also gives: ``GLU 18`` with the
-    N-terminal patch is 0, ``ASP 21`` and ``ASP 25`` are -1 each, and ``LEU 26``
-    with the C-terminal patch is -1. A ``TER`` atom is looked up in the patches.
-    """
     table, summary = _run(tmp_path, fragment_2wcd(*FRAGMENT), charge=charge)
     charmm = _charmm()
     (frame,) = table.pqr_frames()
@@ -204,13 +171,11 @@ def test_ver57_charges_are_charmm_dat_and_q_net_the_hand_count(
 
 
 def _frame_pqrs(tmp_path: Path) -> list[str]:
-    """Return the frame PQRs PDB2PQR wrote under the workspace, relative to it."""
     root = tmp_path / "workspace"
     return sorted(str(path.relative_to(root)) for path in root.rglob("frame.pqr"))
 
 
 def _written_names(tmp_path: Path) -> list[str]:
-    """Return the residue names PDB2PQR wrote in the first frame PQR, ``TER`` included."""
     path = tmp_path / "workspace" / _frame_pqrs(tmp_path)[0]
     return [
         line[17:21].strip()
@@ -222,12 +187,6 @@ def _written_names(tmp_path: Path) -> list[str]:
 def test_ver57_without_titration_the_ph_reaches_nothing(
     tmp_path: Path, fragment_2wcd: Fragment
 ) -> None:
-    """``titration: none`` at pH 3 and pH 9 passes the same flags and gives the same charges.
-
-    The case refuses a pH beside ``none`` (the section 5.3.1 NOTE), so the two
-    are driven through the driver directly: neither ``--with-ph`` nor
-    ``--titration-state-method`` reaches PDB2PQR.
-    """
     from nanopnp.charge.pqr import chain_characters
     from nanopnp.charge.protonation import run_pdb2pqr
 
@@ -249,12 +208,6 @@ def test_ver57_without_titration_the_ph_reaches_nothing(
 def test_ver57_propka_across_a_pka_changes_exactly_the_acids(
     tmp_path: Path, fragment_2wcd: Fragment
 ) -> None:
-    """At pH 2 ``GLU 18``, ``ASP 21`` and ``ASP 25`` are neutral; at pH 8 they are charged.
-
-    ``.knowledge/07`` section 3: the fragment is +0 e at pH 2 and -3 e at pH 8.
-    No other residue's charge moves, and the C terminus, which CHARMM cannot
-    hold neutral, stays -1 and is recorded as unapplied at pH 2.
-    """
     acid, _ = _run(tmp_path / "acid", fragment_2wcd(*FRAGMENT), charge="ph: 2.0")
     basic, _ = _run(tmp_path / "basic", fragment_2wcd(*FRAGMENT), charge="ph: 8.0")
     low, high = _residues(acid), _residues(basic)
@@ -266,13 +219,8 @@ def test_ver57_propka_across_a_pka_changes_exactly_the_acids(
     assert bool(acid.unapplied[0, column]) == (acid.expected_charge_e[0, column] == 0.0)
 
 
+# PHY-16
 def test_ver57_the_n_terminus_at_ph_9_is_unapplied(tmp_path: Path, fragment_2wcd: Fragment) -> None:
-    """PROPKA puts ``GLU 18``'s N+ near 7.8; at pH 9 it prefers neutral, and PDB2PQR keeps +1.
-
-    Terminal pKas are never applied (the PHY-16 step-3 NOTE), so the residue's
-    applied charge 0 differs from the expected -1, which is derived from the
-    groups and not from any log line.
-    """
     table, summary = _run(tmp_path, fragment_2wcd(*FRAGMENT), charge="ph: 9.0")
     column = table.residue_resid.tolist().index(18)
     assert bool(table.unapplied[0, column])
@@ -297,11 +245,6 @@ def test_ver57_the_n_terminus_at_ph_9_is_unapplied(tmp_path: Path, fragment_2wcd
 def test_ver57_a_c_terminal_acid_keeps_both_carboxyl_groups(
     tmp_path: Path, fragment_2wcd: Fragment
 ) -> None:
-    """``ASP 21`` ending the fragment carries two ``COO`` groups, its own and the terminus's.
-
-    PROPKA types both ``COO`` and labels them ``ASP  21 A`` and ``C-   21 A``; the
-    group table keeps each pKa, and the residue's expected charge sums both.
-    """
     table, _ = _run(tmp_path, fragment_2wcd(18, 21), charge="ph: 8.0")
     column = table.residue_resid.tolist().index(21)
     owned = [
@@ -321,8 +264,6 @@ def test_ver57_a_c_terminal_acid_keeps_both_carboxyl_groups(
 def test_ver57_pdb2pqr_giving_up_names_the_frame(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, fragment_2wcd: Fragment
 ) -> None:
-    """PDB2PQR's own failure is a bare ``RuntimeError``; the stage names the frame and cause."""
-
     def gives_up(pdb: Path, pqr: Path, settings: ResolvedProtonation) -> dict[str, Any]:
         del pdb, pqr, settings
         try:
@@ -336,11 +277,6 @@ def test_ver57_pdb2pqr_giving_up_names_the_frame(
 
 
 def _with_hydrogens(tmp_path: Path, ensemble: AlignedEnsemble) -> AlignedEnsemble:
-    """Return ``ensemble`` protonated, hydrogens and patch names as PDB2PQR wrote them.
-
-    A stand-in for a CHARMM-named MD frame: every hydrogen present, the
-    C-terminal oxygens ``OT1`` and ``OT2``, and the histidine renamed ``HSE``.
-    """
     table, _ = _run(tmp_path / "hydrogens", ensemble)
     (frame,) = table.pqr_frames()
     resname = np.where(frame.resname == "HIS", "HSE", frame.resname)
@@ -359,12 +295,6 @@ def _with_hydrogens(tmp_path: Path, ensemble: AlignedEnsemble) -> AlignedEnsembl
 def test_ver57_a_hse_named_histidine_is_titrated_as_his(
     tmp_path: Path, fragment_2wcd: Fragment
 ) -> None:
-    """``HSE 292``, with or without its hydrogens, protonates as ``HIS 292`` does (D5).
-
-    PDB2PQR pins ``HSE`` and refuses it with hydrogens present; the stage drops
-    the hydrogens and writes the parent, so PROPKA decides. Without hydrogens the
-    PDB PDB2PQR is given is byte for byte the ``HIS``-named one.
-    """
     from nanopnp.charge.pqr import chain_characters
 
     plain = fragment_2wcd(*HISTIDINE)
@@ -392,12 +322,6 @@ def _stand_in(
     edit: Callable[[list[str]], list[str]],
     **record: list[str],
 ) -> None:
-    """Replace PDB2PQR by a writer of the frame's own heavy atoms, edited by ``edit``.
-
-    Every atom gets charge 0 and radius 1.5 Å, so an unedited frame passes every
-    gate with ``Q_net`` 0, and ``edit`` introduces exactly one defect.
-    """
-
     def fake(pdb: Path, pqr: Path, settings: ResolvedProtonation) -> dict[str, Any]:
         del settings
         lines = [
@@ -412,7 +336,6 @@ def _stand_in(
 
 
 def _two_frames(fragment_2wcd: Fragment) -> AlignedEnsemble:
-    """Return the fragment over two frames, the second moved non-rigidly by 0.05 nm in one atom."""
     ensemble = fragment_2wcd(*FRAGMENT, frames=2)
     positions = ensemble.positions_nm.copy()
     positions[1, 5] += np.float32(0.05)
@@ -454,7 +377,6 @@ def test_ver57_each_gate_names_its_frame(
     record: dict[str, Any],
     match: str,
 ) -> None:
-    """Each D9 gate refuses, naming the frame, on the defect it guards (QR-12)."""
     _stand_in(monkeypatch, edit, **record)
     with pytest.raises(ProtonationError, match=match) as raised:
         _run(tmp_path, _two_frames(fragment_2wcd))
@@ -464,7 +386,6 @@ def test_ver57_each_gate_names_its_frame(
 def test_ver57_an_unedited_stand_in_passes_every_gate(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, fragment_2wcd: Fragment
 ) -> None:
-    """The control for the gate tests: the stand-in's own frames pass, with ``Q_net`` 0."""
     _stand_in(monkeypatch, lambda lines: lines)
     table, summary = _run(tmp_path, _two_frames(fragment_2wcd))
     assert table.q_net_e() == pytest.approx([0.0, 0.0], abs=1e-9)
@@ -475,7 +396,6 @@ def test_ver57_an_unedited_stand_in_passes_every_gate(
 
 
 def _produced(tmp_path: Path, ensemble: AlignedEnsemble) -> tuple[Path, ProtonationTable]:
-    """Protonate ``ensemble`` and export it; return the export and the table."""
     stage = ProtonationStage(workspace=tmp_path / "produced")
     artefact = stage.run(_inputs(tmp_path, ensemble, _case(tmp_path)))
     payload = artefact.payload["protonation"]
@@ -485,7 +405,6 @@ def _produced(tmp_path: Path, ensemble: AlignedEnsemble) -> tuple[Path, Protonat
 def _supply(
     tmp_path: Path, ensemble: AlignedEnsemble, pqr: Path
 ) -> tuple[ProtonationTable, dict[str, Any]]:
-    """Read ``pqr`` through ``inputs.pqr`` beside ``structure:``."""
     stage = ProtonationStage(workspace=tmp_path / "supplied")
     artefact = stage.run(_inputs(tmp_path, ensemble, _case(tmp_path, pqr=pqr)))
     return ProtonationTable.read(artefact.payload["protonation"]), dict(artefact.summary)
@@ -508,17 +427,12 @@ ATOM_TABLE = (
     "residue_charge_e",
     "tautomer",
 )
-"""The arrays a PQR carries; the PROPKA expectations it does not."""
 
 
+# IF-02
 def test_ver57_the_export_resupplied_is_bitwise_the_payload(
     tmp_path: Path, fragment_2wcd: Fragment
 ) -> None:
-    """Export, then ``inputs.pqr`` beside the same structure: the atom table, bit for bit.
-
-    The section 3.1 IF-02 export NOTE. The frames already register where they
-    stand, so none is moved.
-    """
     ensemble = _two_frames(fragment_2wcd)
     exported, produced = _produced(tmp_path, ensemble)
     assert exported.read_text(encoding="utf-8").count("MODEL") == 2
@@ -534,12 +448,6 @@ def test_ver57_the_export_resupplied_is_bitwise_the_payload(
 def test_ver57_a_moved_pqr_registers_to_its_ensemble(
     tmp_path: Path, fragment_2wcd: Fragment
 ) -> None:
-    """A PQR written in another frame lands in stage 1's, to 0.01 Å.
-
-    The reference's PQRs are in the MD frame; a rigid motion of 20 degrees and
-    3 nm stands in for it. Every frame is moved, every heavy atom lands within the
-    tolerance, and the charges are untouched.
-    """
     ensemble = _two_frames(fragment_2wcd)
     exported, produced = _produced(tmp_path, ensemble)
     angle = np.radians(20.0)
@@ -562,11 +470,6 @@ def test_ver57_a_moved_pqr_registers_to_its_ensemble(
 def test_ver57_a_pqr_missing_a_flippable_atom_is_refused(
     tmp_path: Path, fragment_2wcd: Fragment
 ) -> None:
-    """``NE2`` of ``HIS 292`` deleted: the flippable atoms are not compared, but are counted.
-
-    A flip moves an atom and never removes it, so a residue holding fewer heavy
-    atoms than the ensemble's is refused naming it (section 5.3.1 NOTE on ``inputs:``).
-    """
     ensemble = fragment_2wcd(*HISTIDINE)
     exported, _ = _produced(tmp_path, ensemble)
     (frame,) = read_pqr(exported)
@@ -590,7 +493,6 @@ def test_ver57_a_pqr_missing_a_flippable_atom_is_refused(
 def test_ver57_a_pqr_with_another_frame_count_is_refused(
     tmp_path: Path, fragment_2wcd: Fragment
 ) -> None:
-    """One frame supplied beside an ensemble of two."""
     exported, _ = _produced(tmp_path, fragment_2wcd(*FRAGMENT))
     with pytest.raises(PQRError, match="holds 1 frames and the ensemble 2"):
         _supply(tmp_path, _two_frames(fragment_2wcd), exported)
@@ -599,7 +501,6 @@ def test_ver57_a_pqr_with_another_frame_count_is_refused(
 def test_ver57_a_pqr_missing_a_residue_is_refused_naming_the_frame(
     tmp_path: Path, fragment_2wcd: Fragment
 ) -> None:
-    """``GLY 22`` deleted from the second frame: frame 1 lacks a residue of the ensemble."""
     ensemble = _two_frames(fragment_2wcd)
     exported, _ = _produced(tmp_path, ensemble)
     first, second = read_pqr(exported)
@@ -615,11 +516,6 @@ def test_ver57_a_pqr_missing_a_residue_is_refused_naming_the_frame(
 def test_ver57_a_pqr_of_another_frame_is_refused_naming_it(
     tmp_path: Path, fragment_2wcd: Fragment
 ) -> None:
-    """The frames supplied in the wrong order: frame 0's atoms are frame 1's, which moved.
-
-    A non-rigid move of one atom by 0.5 Å survives the C-alpha superposition, so
-    the frame is refused rather than registered.
-    """
     ensemble = fragment_2wcd(*FRAGMENT, frames=2)
     positions = ensemble.positions_nm.copy()
     positions[1, 5] += np.float32(0.05)
@@ -634,7 +530,6 @@ def test_ver57_a_pqr_of_another_frame_is_refused_naming_it(
 def test_ver57_a_pqr_without_structure_is_read_as_it_stands(
     tmp_path: Path, fragment_2wcd: Fragment
 ) -> None:
-    """Without ``structure:`` the coordinates are taken to be in stage 1's frame already."""
     exported, produced = _produced(tmp_path, fragment_2wcd(*FRAGMENT))
     case = _case(tmp_path, pqr=exported, structure=False, mesh=True)
     stage = ProtonationStage(workspace=tmp_path / "alone")
@@ -650,7 +545,6 @@ def test_ver57_a_pqr_without_structure_is_read_as_it_stands(
 def test_ver57_one_changed_frame_of_two_reprotonates_one(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, fragment_2wcd: Fragment
 ) -> None:
-    """Each frame is keyed on its own PDB: frame 1 moved, a second run calls PDB2PQR once (D10)."""
     from nanopnp.charge import protonation
 
     calls: list[Path] = []
@@ -674,14 +568,10 @@ def test_ver57_one_changed_frame_of_two_reprotonates_one(
     assert second["cached_frames"] == 1
 
 
+# FR-25
 def test_ver57_a_cached_frame_records_the_versions_that_wrote_it(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, fragment_2wcd: Fragment
 ) -> None:
-    """The versions are beside the frame's key, not in it (section 5.3.2).
-
-    A frame an earlier PDB2PQR or PROPKA wrote is reused, and the artefact names
-    the versions that wrote it rather than the ones installed now (FR-25).
-    """
     from nanopnp.charge import protonation
 
     calls: list[Path] = []
@@ -708,7 +598,6 @@ def test_ver57_a_cached_frame_records_the_versions_that_wrote_it(
 def test_ver57_cancellation_is_checked_between_frames(
     tmp_path: Path, fragment_2wcd: Fragment
 ) -> None:
-    """A set token stops the stage before its first frame, and no artefact is written (D15)."""
     flag = CancelFlag()
     flag.cancel()
     stage = ProtonationStage(workspace=tmp_path / "workspace")
@@ -721,7 +610,6 @@ def test_ver57_cancellation_is_checked_between_frames(
 def test_ver57_without_pdb2pqr_a_structure_is_refused_and_a_pqr_runs(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, fragment_2wcd: Fragment
 ) -> None:
-    """D4: the extra is named before the first frame; ``inputs.pqr`` needs none."""
     exported, _ = _produced(tmp_path, fragment_2wcd(*FRAGMENT))
     for module in [name for name in sys.modules if name.split(".")[0] in ("pdb2pqr", "propka")]:
         monkeypatch.delitem(sys.modules, module)
@@ -738,7 +626,6 @@ def test_ver57_without_pdb2pqr_a_structure_is_refused_and_a_pqr_runs(
 
 
 def test_ver57_the_force_fields_are_a_subset_of_pdb2pqrs() -> None:
-    """``charge.forcefield``'s option set is one PDB2PQR's ``--ff`` accepts (D13)."""
     from typing import get_args
 
     from pdb2pqr.main import build_main_parser
@@ -773,9 +660,8 @@ def test_ver57_the_force_fields_are_a_subset_of_pdb2pqrs() -> None:
             CaseValidationError,
             ("charge.ph", "nothing to protonate"),
         ),
-        # charge.smearing is read by WP28's deposition: set beside a structure: it
-        # resolves, and beside a supplied mesh with nothing to protonate it is
-        # refused naming both keys (section 5.3.1 NOTE on charge.smearing).
+        # charge.smearing resolves beside a structure; beside a supplied mesh with nothing
+        # to protonate it is refused, naming both keys.
         (
             "smearing: {sharpness: 0.4}",
             {"structure": False, "mesh": True},
@@ -791,7 +677,6 @@ def test_ver57_each_protonation_refusal_names_its_keys(
     error: type[Exception],
     fragments: tuple[str, ...],
 ) -> None:
-    """The section 5.3.1 NOTE on the protonation keys, refusal by refusal."""
     pqr = tmp_path / "supplied.pqr" if kwargs.pop("pqr", False) else None
     with pytest.raises(error) as raised:
         resolve(_case(tmp_path, charge=charge, pqr=pqr, **kwargs))
@@ -808,7 +693,6 @@ def test_ver57_each_protonation_refusal_names_its_keys(
     ],
 )
 def test_ver57_a_supplied_pqr_is_named_by_path_and_format(supplied: str, match: str) -> None:
-    """``inputs.pqr`` is a file, ``format: pqr``, with no vocabulary mapping."""
     text = CASE.format(
         name="pqr",
         inputs=f"inputs:\n  pqr: {supplied}\n  mesh: {{path: pore.msh, format: msh41}}\n",
@@ -820,20 +704,13 @@ def test_ver57_a_supplied_pqr_is_named_by_path_and_format(supplied: str, match: 
 
 
 def test_ver57_a_case_with_nothing_to_protonate_is_refused_by_the_stage(tmp_path: Path) -> None:
-    """Neither ``structure:`` nor ``inputs.pqr``: the stage names what is missing."""
     case = _case(tmp_path, structure=False, mesh=True)
     with pytest.raises(UnsupportedCaseSection, match="no structure: section and supplies no"):
         ProtonationStage().key(StageInputs(resolved=resolve(case)))
 
 
+# QR-09
 def test_ver57_propka_reads_its_parameters_on_every_supported_python() -> None:
-    """QR-09: PROPKA 3.5.1's parameter dispatch works on 3.11-3.14 once the driver has run.
-
-    On 3.14 an instance has no ``__annotations__`` and PROPKA's ``parse_line``
-    fails on its first line; the driver installs a fallback for that one name.
-    Elsewhere it installs nothing, and on every interpreter the fallback answers
-    no other missing attribute.
-    """
     from propka.parameters import Parameters
 
     from nanopnp.charge.protonation import restore_propka_annotations

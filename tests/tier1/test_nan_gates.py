@@ -1,12 +1,4 @@
-"""VER-70 (WP42 D1, D2) — no gate comparison passes a NaN.
-
-Every ordering comparison with a NaN is false, so a gate written
-``if value > tol: raise`` is skipped by a NaN and the run carries the NaN on: the
-plausible wrong answer QR-12 forbids (REV-11). The house form is the negation,
-``if not value <= tol: raise``, which a NaN fails. The check reads the source and
-imports no checked module; the gate classes are the class-4 entries of the
-exit-code table in ``core/errors.py``.
-"""
+"""VER-70: no gate comparison passes a NaN."""
 
 from __future__ import annotations
 
@@ -27,7 +19,6 @@ EXEMPT = {
     "sweep/collect.py:_rectification: plus_V is None or minus_V is None or plus_V <= 0.0 or "
     "(plus_V + minus_V != 0.0)",
 }
-"""WP42 D2's six exempt tests: integer operands, or a ``!=`` term a NaN satisfies."""
 
 SYNTHETIC = """\
 import math
@@ -101,7 +92,6 @@ class Holder:
 
 
 def test_ver70_the_gate_classes_are_the_exit_tables_class_four() -> None:
-    """The gates are read from the exit-code table, never listed a second time."""
     from nanopnp.validation.modularity import gate_classes
 
     names = gate_classes((PACKAGE / "core" / "errors.py").read_text(encoding="utf-8"))
@@ -124,13 +114,6 @@ def test_ver70_the_gate_classes_are_the_exit_tables_class_four() -> None:
 
 
 def test_ver70_a_nan_permissive_gate_is_found_at_its_line(tmp_path: Path) -> None:
-    """Each NaN-permissive form is found, naming file, line and function; the safe forms pass.
-
-    A comparison under ``not``, a test that also asks ``isfinite``, an
-    integer-only comparison, a raise of a class that is not a gate, the desktop
-    shell and an exempt test are not found; a gate collected into a list is, and so
-    is one in a closure or in the method of a nested class.
-    """
     from nanopnp.validation.modularity import nan_permissive_gates
 
     package = tmp_path / "pkg"
@@ -163,7 +146,6 @@ def test_ver70_a_nan_permissive_gate_is_found_at_its_line(tmp_path: Path) -> Non
 
 
 def test_ver70_no_gate_comparison_in_the_package_passes_a_nan() -> None:
-    """The tree has no NaN-permissive gate, and the exemptions are D2's six, each with a reason."""
     from nanopnp.validation.modularity import NAN_EXEMPT, gate_classes, nan_permissive_gates
 
     gates = gate_classes((PACKAGE / "core" / "errors.py").read_text(encoding="utf-8"))
@@ -175,7 +157,6 @@ def test_ver70_no_gate_comparison_in_the_package_passes_a_nan() -> None:
 
 
 def test_ver70_stale_exemption_for_missing_file_is_reported() -> None:
-    """An exemption whose file does not exist on disk is reported in stale findings."""
     from nanopnp.validation.modularity import gate_classes, nan_permissive_gates
 
     gates = gate_classes((PACKAGE / "core" / "errors.py").read_text(encoding="utf-8"))
@@ -189,7 +170,6 @@ def test_ver70_stale_exemption_for_missing_file_is_reported() -> None:
     [("mean_ratio", "mean wall segment length"), ("max_ratio", "longest wall segment")],
 )
 def test_ver70_a_nan_wall_ratio_fails_the_wall_size_gate(field: str, criterion: str) -> None:
-    """``check_wall_size`` passed a NaN ratio before D2; it now aborts naming the criterion."""
     from nanopnp.mesh.generate import WallSizeGateError, WallStatistics, check_wall_size
 
     values: dict[str, object] = {
@@ -206,8 +186,8 @@ def test_ver70_a_nan_wall_ratio_fails_the_wall_size_gate(field: str, criterion: 
         check_wall_size(WallStatistics(**values))  # type: ignore[arg-type]
 
 
+# QR-12
 def test_ver70_a_nan_indicator_fails_the_indicator_gate() -> None:
-    """``check_indicator`` passed an all-NaN ``psi`` before D2; it now aborts (QR-12)."""
     import ngsolve as ngs
 
     from nanopnp.mesh.primitives import CylindricalPoreGeometry

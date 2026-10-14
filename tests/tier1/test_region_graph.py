@@ -1,12 +1,4 @@
-"""VER-54: the region graph the Gmsh backend meshes is stage 5's region, exactly (WP23 D2, QR-12).
-
-The graph is read from the glued, named netgen shape and needs no ``gmsh``, so
-this file runs on every leg. Its oracles are the record's own measurements, made
-by OCC when stage 5 assembled the region: the edge-name counts, and each face's
-area, against which the graph's closed-form area (Green's theorem over segments
-and arcs about the origin) is checked. A graph that dropped, split or bent an
-edge fails one of them.
-"""
+"""VER-54: the region graph the Gmsh backend meshes is stage 5's region, exactly."""
 
 from __future__ import annotations
 
@@ -38,11 +30,9 @@ from nanopnp.geometry.region import (
 from nanopnp.io.case import MembraneSpec, ReservoirSpec
 
 PARALLELOGRAM = [(2.0, -3.0), (3.0, -3.0), (6.0, 3.0), (5.0, 3.0)]
-"""The slanted body of ``test_mesh_generate.py``, counter-clockwise."""
 
 
 def _profile(points: list[tuple[float, float]]) -> PoreProfile:
-    """Return a validated profile over ``points``."""
     array = np.asarray(points, dtype=np.float64)
     return PoreProfile.model_validate(
         {
@@ -64,19 +54,16 @@ def _profile(points: list[tuple[float, float]]) -> PoreProfile:
 
 @pytest.fixture(scope="module")
 def fixture_region() -> RegionRecord:
-    """Return the shipped ClyA profile assembled at the default membrane and reservoir."""
     return derive_region(load_profile("clya_reference_profile"), MembraneSpec(), ReservoirSpec())
 
 
 @pytest.fixture(scope="module", params=["counter-clockwise", "clockwise"])
 def parallelogram_region(request: pytest.FixtureRequest) -> RegionRecord:
-    """Return the parallelogram in a 30 nm reservoir, its profile in either orientation."""
     points = PARALLELOGRAM if request.param == "counter-clockwise" else PARALLELOGRAM[::-1]
     return derive_region(_profile(points), MembraneSpec(), ReservoirSpec(radius_nm=30.0))
 
 
 def _check_graph(record: RegionRecord, graph: RegionGraph) -> None:
-    """Assert the D2 contract on a graph: counts, closed CCW loops, arcs on the circle."""
     assert graph.edge_counts() == dict(sorted(record.edge_counts.items()))
     assert set(graph.faces) == set(record.face_areas_nm2)
     for name, loop in graph.faces.items():
@@ -105,7 +92,6 @@ def _check_graph(record: RegionRecord, graph: RegionGraph) -> None:
 
 
 def test_ver54_the_fixture_s_graph_is_its_region(fixture_region: RegionRecord) -> None:
-    """D2 on the reference fixture: 193 vertices, 195 edges, every profile vertex kept."""
     shape = build_region(fixture_region)
     graph = region_graph(shape, fixture_region)
     _check_graph(fixture_region, graph)
@@ -117,7 +103,6 @@ def test_ver54_the_fixture_s_graph_is_its_region(fixture_region: RegionRecord) -
 
 
 def test_ver54_a_parallelogram_s_graph_is_its_region(parallelogram_region: RegionRecord) -> None:
-    """D2 on either orientation of the profile: the loops come out counter-clockwise."""
     graph = region_graph(build_region(parallelogram_region), parallelogram_region)
     _check_graph(parallelogram_region, graph)
     assert set(map(tuple, parallelogram_region.points().tolist())) <= set(graph.vertices)
@@ -126,7 +111,6 @@ def test_ver54_a_parallelogram_s_graph_is_its_region(parallelogram_region: Regio
 def test_ver54_an_arc_off_the_reservoir_circle_is_refused_naming_its_midpoint(
     fixture_region: RegionRecord,
 ) -> None:
-    """QR-12: an edge neither straight nor the reservoir's arc is named, with its midpoint."""
     shape = build_region(fixture_region)
     elsewhere = fixture_region.model_copy(update={"reservoir_radius_nm": 251.0})
     with pytest.raises(RegionGateError) as caught:
@@ -148,7 +132,6 @@ def test_ver54_an_arc_off_the_reservoir_circle_is_refused_naming_its_midpoint(
 def test_ver54_a_graph_that_is_not_the_record_s_region_is_refused(
     fixture_region: RegionRecord, update: dict[str, object], fragment: str
 ) -> None:
-    """QR-12: the graph's counts and areas are checked against what stage 5 measured."""
     shape = build_region(fixture_region)
     with pytest.raises(RegionGateError, match=fragment):
         region_graph(shape, fixture_region.model_copy(update=update))
@@ -166,8 +149,8 @@ print("gmsh" in sys.modules)
 """
 
 
+# CON-10
 def test_ver54_the_graph_needs_no_gmsh() -> None:
-    """CON-10: reading the graph imports netgen and NumPy only."""
     completed = subprocess.run(
         [sys.executable, "-c", GRAPH_IN_A_FRESH_PROCESS], capture_output=True, text=True, check=True
     )

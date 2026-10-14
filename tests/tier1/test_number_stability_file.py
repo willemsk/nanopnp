@@ -1,13 +1,4 @@
-"""VER-62: the number-stability golden file is well formed and every walk in it is asserted.
-
-The golden itself is asserted inside the seven gated walks (``tests/tier2``), which
-run only under ``--extended``. This file checks, at Tier 1, what would let one of
-those assertions pass while checking nothing: a walk in the golden that no test
-asserts, a walk asserted twice, a value of zero (whose relative drift is
-undefined), meshes of one walk holding different quantities, or a mesh-moved
-tolerance that is not the one its recorded meshes argue, or exceeds the ceiling
-(WP35 D13, as amended).
-"""
+"""VER-62: the number-stability golden file is well formed and every walk in it is asserted."""
 
 from __future__ import annotations
 
@@ -31,7 +22,6 @@ def _golden() -> StabilityGolden:
 
 
 def _asserted_walks() -> Counter[str]:
-    """Count each ``number_stability("<walk>", ...)`` call in ``tests/tier2``."""
     found: Counter[str] = Counter()
     for path in sorted((TESTS / "tier2").glob("test_*.py")):
         for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
@@ -49,7 +39,6 @@ def _asserted_walks() -> Counter[str]:
 
 
 def test_ver62_golden_holds_the_module_constants() -> None:
-    """The file's tolerances are the module's, so neither can move without the other."""
     golden = _golden()
     assert golden.same_mesh_tolerance == stability.SAME_MESH_TOLERANCE == 1e-8
     assert golden.safety_factor == stability.SAFETY_FACTOR
@@ -71,7 +60,6 @@ def test_ver62_every_mesh_is_well_formed() -> None:
 
 
 def test_ver62_every_walk_has_a_reference_mesh_from_the_reference_environment() -> None:
-    """An unseen mesh is held against the mesh CI's pinned leg deploys."""
     golden = _golden()
     for walk, record in golden.walks.items():
         seen = record.meshes[record.reference_mesh].seen_on
@@ -103,7 +91,6 @@ def test_ver62_every_mesh_of_a_walk_holds_the_same_quantities() -> None:
 
 
 def test_ver62_mesh_moved_tolerance_is_derived_and_under_the_ceiling() -> None:
-    """Nobody chooses a mesh-moved tolerance: it is the safety factor on the measured spread."""
     golden = _golden()
     for walk, record in golden.walks.items():
         assert record.moved_tolerance == stability.moved_tolerance(record, golden), walk

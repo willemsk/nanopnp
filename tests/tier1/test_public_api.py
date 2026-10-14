@@ -1,14 +1,4 @@
-"""VER-45 — the public surface of ``nanopnp`` (IF-01, the section 3.1 public-surface NOTE).
-
-The stable API is the set of names in ``nanopnp.__all__``, and the user documentation's
-API reference is generated from the same table, so this file pins three things: the
-set is what the documentation says it is, in both directions; every name is the
-object at its documented module path rather than a copy or a wrapper; and the
-top-level import stays solver-free, because the command line, the desktop shell and
-the sweep runner all import the package purely to introspect it. The ``TYPE_CHECKING``
-mirror the type checker reads is a second, hand-kept copy of the table, so it is
-checked against it in both directions (``MOD-12``).
-"""
+"""VER-45: the public surface of nanopnp (IF-01, the section 3.1 public-surface NOTE)."""
 
 from __future__ import annotations
 
@@ -47,31 +37,19 @@ EXPECTED = {
     "Cancelled",
     "StageHook",
     "SolveHook",
-    # WP24 D1: ``run_case`` and ``run_document`` take ``on_artefact``, so the
-    # protocol a caller implements for it is public beside the other two hooks.
+    # The protocol a caller implements for ``on_artefact`` is public beside the other hooks.
     "ArtefactHook",
-    # WP26 D16: a model is added as one class against the section 5.4.3 interface
-    # and registered with its declaration (FR-20), so the interface is public.
+    # A model is one class against the model interface, so the interface is public.
     "PhysicsModel",
     "TransportModel",
     "ModelDeclaration",
     "register_model",
     "registered_models",
-    # WP34 D9: ``with_section``, parked by WP31, is deliberately not here. It is an
-    # editor affordance that changes no resolved case (WP31 D13), so adding it later
-    # costs nothing, and Phase 4's API pass reviews it with the rest of the public
-    # surface (section 8.2.6 F3, F4).
+    # ``with_section`` is deliberately absent: it changes no resolved case.
 }
-"""Written out, not derived: adding to the stable API is a decision, and this is where
-it is seen being made."""
 
 
 def test_ver45_all_is_the_documented_public_surface() -> None:
-    """``__all__`` is the documented set, and the API reference documents exactly it.
-
-    Read back from the rendered page's mkdocstrings directives, both directions,
-    with each directive's module path the one the name is resolved from.
-    """
     assert nanopnp.PUBLIC is nanopnp.core.public.PUBLIC
     assert nanopnp.__version__ is nanopnp.core.public.__version__
     assert set(nanopnp.__all__) == EXPECTED
@@ -85,38 +63,24 @@ def test_ver45_all_is_the_documented_public_surface() -> None:
 
 @pytest.mark.parametrize("name", sorted(EXPECTED - {"__version__"}))
 def test_ver45_each_public_name_is_its_modules_object(name: str) -> None:
-    """``nanopnp.<name>`` is the very object at its documented module path."""
     module = importlib.import_module(nanopnp.PUBLIC[name])
     assert getattr(nanopnp, name) is getattr(module, name)
     assert name in dir(nanopnp)
 
 
 def test_ver45_an_unknown_name_raises_attribute_error() -> None:
-    """The lazy lookup answers a misspelling the way a module does."""
     with pytest.raises(AttributeError, match="run_cases"):
         _ = nanopnp.run_cases  # type: ignore[attr-defined]
 
 
+# MOD-12
 def test_ver45_the_type_checking_mirror_is_public() -> None:
-    """``PUBLIC`` and its ``TYPE_CHECKING`` re-exports name the same set (``MOD-12``).
-
-    The mirror is what mypy and the linter read, since neither can follow the
-    lazy lookup. A name added to one and not the other type-checks a name that
-    does not resolve, or resolves a name that does not type-check. Read from the
-    syntax tree, and checked against the runtime table so the two readings agree.
-    """
     shown = surface()
     assert shown.mirror_differs == ()
     assert set(shown.public) == set(nanopnp.PUBLIC)
 
 
 def test_ver45_each_mirrored_name_comes_from_the_module_public_names() -> None:
-    """The mirror imports each name from the module ``PUBLIC`` resolves it from (REV-54).
-
-    WP38 moved ``resolve``, ``load_case`` and ``loads_case`` to the assembler, and
-    a mirror left importing them from ``nanopnp.io.case`` would type-check a name
-    against a definition that is not the one a user gets.
-    """
     shown = surface()
     assert shown.module_differs == ()
     assert dict(shown.public_modules) == nanopnp.PUBLIC
@@ -125,7 +89,6 @@ def test_ver45_each_mirrored_name_comes_from_the_module_public_names() -> None:
 
 
 def test_ver45_a_name_mirrored_from_another_module_is_named() -> None:
-    """The oracle: ``resolve`` mirrored from the module it lived in before WP38."""
     sources = {
         "__init__.py": (
             "from typing import TYPE_CHECKING\n"
@@ -140,7 +103,6 @@ def test_ver45_a_name_mirrored_from_another_module_is_named() -> None:
 
 
 def test_ver45_a_name_dropped_from_the_mirror_is_named() -> None:
-    """The oracle: a package written by hand, one name short in its mirror."""
     sources = {
         "__init__.py": (
             "from typing import TYPE_CHECKING\n"
@@ -155,11 +117,6 @@ def test_ver45_a_name_dropped_from_the_mirror_is_named() -> None:
 
 
 def test_ver45_import_nanopnp_imports_no_solver_and_no_numpy() -> None:
-    """A fresh ``import nanopnp`` leaves NGSolve, Netgen and NumPy unimported.
-
-    Asserted on ``sys.modules`` in a spawned interpreter, because this process
-    has long since imported all three.
-    """
     code = (
         "import sys, json\n"
         "import nanopnp\n"

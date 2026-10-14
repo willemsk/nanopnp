@@ -1,30 +1,13 @@
-"""NUM-16 (WP41 D4) — Newton's convergence test holds every field to the tolerance.
-
-One norm over all fields is dominated by the largest. On example 03's sweep a rung
-closed by the residual test, ``‖R‖ ≤ rtol ‖R₀‖``, with the velocity 8.2e-6 and the
-pressure 2.0e-6 relatively unconverged while the ions were at 2e-8 and the global
-relative update at 9e-9 (WP41 *Design* §2). The constructed problem here has the
-same shape: a large linear block that converges in one undamped step, and a small
-nonlinear block that the one norm cannot see.
-"""
+"""NUM-16: Newton's convergence test holds every field to the tolerance."""
 
 from __future__ import annotations
 
 LARGE = 1.0e3
-"""Block A's root: it dominates every norm taken over both blocks."""
 
 SMALL = 0.1
-"""Block B's root, ``v² = SMALL²``: four decades below block A in norm."""
 
 
 def test_num16_every_field_is_relatively_converged_when_the_solve_closes() -> None:
-    """Both blocks end within the relative tolerance of their own roots.
-
-    Today the residual test closes the solve once block A has converged, because
-    block B's residual is a small share of the entry residual; block B is then
-    left far from its root in its own terms. The per-field update test keeps
-    iterating until block B's own relative update is below the tolerance.
-    """
     import ngsolve as ngs
     import numpy as np
     from netgen.geom2d import unit_square
@@ -49,18 +32,10 @@ def test_num16_every_field_is_relatively_converged_when_the_solve_closes() -> No
     assert np.max(np.abs(small - SMALL)) / SMALL <= rtol
     last = result.history[-1]
     assert not last.forced
-    # The recorded update is the largest per-field ratio, the number the test read.
     assert last.update <= rtol
 
 
 def test_num16_a_field_whose_root_is_zero_converges_against_the_floor() -> None:
-    """A field whose root is zero converges against the per-field floor.
-
-    A field that is identically zero (such as velocity in an uncharged pore or
-    potential at zero bias) has norm zero. The per-field floor
-    rho * max(‖u‖, reference_norm) prevents division by zero and tests that
-    field's update against the floor rather than an empty norm.
-    """
     import ngsolve as ngs
     import numpy as np
     from netgen.geom2d import unit_square
@@ -89,13 +64,8 @@ def test_num16_a_field_whose_root_is_zero_converges_against_the_floor() -> None:
     assert last.update <= rtol
 
 
+# NUM-18
 def test_num16_a_warm_start_onto_its_own_state_closes_in_one_step() -> None:
-    """A warm start onto an already converged state closes in one step.
-
-    When the transferred state is already converged and above the absolute
-    residual floor, damped Newton evaluates the undamped direction, finds the
-    relative update within tolerance, and closes at step 1 (NUM-16, NUM-18).
-    """
     import ngsolve as ngs
     from netgen.geom2d import unit_square
 
@@ -121,7 +91,6 @@ def test_num16_a_warm_start_onto_its_own_state_closes_in_one_step() -> None:
 
 
 def test_num16_field_floor_ratio_validation() -> None:
-    """field_floor_ratio must be positive and finite."""
     import pytest
 
     from nanopnp.numerics.newton import NewtonSettings
@@ -138,11 +107,6 @@ def test_num16_field_floor_ratio_validation() -> None:
 
 
 def test_num16_a_nan_field_update_is_never_dropped_from_the_maximum() -> None:
-    """A NaN ratio in any field, not only the first, is the update the test reads.
-
-    A bare ``max`` keeps its first element against a NaN, so a NaN block after
-    the first field would vanish and the update test pass on the others.
-    """
     import math
 
     from nanopnp.numerics.newton import _largest_update

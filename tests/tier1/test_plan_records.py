@@ -1,10 +1,4 @@
-"""VER-72 (e): the plans' Outcomes agree with the code.
-
-Every ``name()`` quoted in an Outcome of a plan from :data:`FIRST_CHECKED` on is a function,
-class or module-level assignment of ``src/nanopnp``. Only the call form is checked, because a
-dotted name in a plan is as often a case path or a field as code; a dotted call whose first part
-is not a ``nanopnp`` name, such as ``gmsh.initialize()``, is third-party.
-"""
+"""VER-72 (e): the plans' Outcomes agree with the code."""
 
 from __future__ import annotations
 
@@ -20,22 +14,14 @@ PLANS = REPOSITORY / "docs" / "plans"
 TESTS = REPOSITORY / "tests"
 
 FIRST_CHECKED = 40
-"""The first work package whose Outcomes are checked; the plans before it are left as written."""
 
 CALL = re.compile(r"`([A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*)\(\)`")
-"""A quoted ``name()`` or ``dotted.name()``."""
 
 
-# -- names in Outcomes (VER-72 e) ---------------------------------------------------
+# -- names in Outcomes ---------------------------------------------------
 
 
 def defined_names(modules: tuple[Module, ...]) -> tuple[frozenset[str], frozenset[str]]:
-    """Return the names ``src/nanopnp`` defines and the names its modules go by.
-
-    A name is a function or class anywhere, methods included, or a module-level
-    assignment. A module goes by each dotted suffix of its name: ``gmsh_backend``,
-    ``mesh.gmsh_backend``, ``nanopnp.mesh.gmsh_backend``.
-    """
     names: set[str] = set()
     known: set[str] = set()
     for module in modules:
@@ -57,7 +43,6 @@ def defined_names(modules: tuple[Module, ...]) -> tuple[frozenset[str], frozense
 
 
 def _outcome_lines(text: str) -> Iterator[tuple[int, str]]:
-    """Yield ``(line, text)`` of each line of an Outcome blockquote, an indented one included."""
     inside = False
     for number, line in enumerate(text.splitlines(), start=1):
         quoted = line.lstrip()
@@ -72,7 +57,6 @@ def _outcome_lines(text: str) -> Iterator[tuple[int, str]]:
 def unresolved_outcome_names(
     text: str, names: frozenset[str], modules: frozenset[str]
 ) -> list[tuple[int, str]]:
-    """Return ``(line, quoted)`` of each ``name()`` in an Outcome block that the code lacks."""
     missing = []
     for number, line in _outcome_lines(text):
         for quoted in CALL.findall(line):
@@ -117,7 +101,6 @@ Prose outside an Outcome may say `registered_widgets()`.
 
   > **Outcome — measured.** `registered_panels()` was not needed.
 """
-"""Missing ``registered_modes()`` and ``registered_panels()``, beside names not checked."""
 
 
 def test_ver72_an_outcome_naming_a_missing_function_is_named() -> None:
