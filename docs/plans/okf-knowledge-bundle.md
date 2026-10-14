@@ -45,7 +45,7 @@ runtime attestation, so Attested Computations are not adopted. What OKF exposes 
 |---|---|---|---|
 | K1 | Depth | **Full OKF bundle** | Ledger without OKF; OKF frontmatter on the ten files (file-level trust would overstate or understate a mixed file); not adopting |
 | K2 | Concept granularity | **One concept per `##` section**, in one directory per file; `###` subsections stay headings inside it | One per `###` (about 190 files) |
-| K3 | Citations | **Rewritten to bundle paths** (`.knowledge/06-numerics-fem/02-axisymmetric-weak-forms.md#22-quadrature`), resolved by a Tier-1 check | `.knowledge/0N §x` kept as a stable address |
+| K3 | Citations | **Rewritten to bundle paths** (`.knowledge/06-numerics-fem/02-axisymmetric-weak-forms.md#22-quadrature-verified-experimentally`), resolved by a Tier-1 check | `.knowledge/0N §x` kept as a stable address |
 | K4 | History | **Rewritten too**: delivered plans, code-review reports and released `CHANGELOG.md` sections | Kept, through a legacy-address key |
 | K5 | Ledger, test names | `[tested: tests/…::test_…]` inline, checked to name a collected test | — |
 | K6 | Ledger, backfill | **All 193**. A claim no existing test re-establishes **gets a test** | `[measured: <commit>]` for the rest; downgrading |
@@ -85,7 +85,7 @@ left to the bundle package's `/wp-plan` (G9). The text below is the questions as
    concept, because an OKF `index.md` holds only a listing.
 4. **`00-index.md`.** It could become the root `index.md` (listing plus `okf_version`), with the
    five traps, the conventions, the provenance and the author rulings as concepts. `CLAUDE.md`'s
-   "read `.knowledge/00-index.md` first" moves with it.
+   "read the knowledge index first" moves with it.
 5. **`type` vocabulary**, for example `Physics`, `Erratum`, `Author Ruling`, `Numerics`,
    `Library Behaviour`, `Benchmark`, `Reference Settings`, `Background`. It is closed and checked,
    or open as OKF allows.

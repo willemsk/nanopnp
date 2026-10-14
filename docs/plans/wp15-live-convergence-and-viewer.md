@@ -52,7 +52,7 @@ the measurements the decisions rest on are in §Design, outside the budget.
 | The plumbing to extend | `src/nanopnp/core/stages.py` (`Progress`, `CancelToken`, `StageHook`, `Stage`); `io/run.py` (`run_case`, `run_document`, `_resolve_stage`); `solve/stage.py` (`_instrumented`); `solve/newton.py` (`NewtonStep`, `damped_newton`); `solve/continuation.py` (`Rung`, `run_ladder`) |
 | How a finished run becomes a live `GridFunction` again | `src/nanopnp/solve/state.py` module docstring and `restore()` |
 | The field vocabulary and the §6.3 scaling the viewer must reuse | `src/nanopnp/io/fields.py` (`attribute_name`, the scale table) |
-| Licence and packaging constraints | `SPECIFICATION.md` CON-07, CON-09, CON-11, CON-13, ADR-004; `.knowledge/07-software-stack.md` §5 and §6; `packaging/LICENSES-BUNDLE.md` |
+| Licence and packaging constraints | `SPECIFICATION.md` CON-07, CON-09, CON-11, CON-13, ADR-004; `.knowledge/07-software-stack/05-gui-and-packaging.md` and §6; `packaging/LICENSES-BUNDLE.md` |
 
 ### Decisions
 
@@ -81,7 +81,7 @@ the measurements the decisions rest on are in §Design, outside the budget.
 > not a missing record, and annotating it "not a Newton solve" would state something about the
 > solve that is not true. So `rung` carries `reporting` and `Band.note()` has two empty-band
 > branches. The rest of D3 stands: the axis is the ladder, one polyline per band, never across one.
-> Recorded in `.knowledge/06-numerics-fem.md` §5.1 **[tested]**; VER-44 amended in the same commit.
+> Recorded in `.knowledge/06-numerics-fem/05-nonlinear-solution.md#51-continuation-ladder` **[tested]**; VER-44 amended in the same commit.
 | D4 | A solve served from the store | Emits no rungs and no steps. The panel says *that*, by name, rather than showing an empty plot | `walk.store.get_or_compute`; assert, don't hope. An empty plot would read as instant convergence |
 | D5 | `NewtonStep` gains `update` | Yes — the relative update norm on the **undamped** direction, already computed at `newton.py:308` and already half the NUM-16 criterion. A residual-only plot shows six orders of a number that is not the test the solver converged on | NUM-16 NOTE; `CLAUDE.md` *Numerics rules*. `NewtonResult.summary()` does not serialise `history`, so no manifest key, run-record field or artefact hash moves — asserted in both directions |
 | D6 | What the plot may claim | **No convergence threshold line.** The criterion is per rung and is *either* the residual test *or* the update test; one drawn line would claim a criterion the solver does not use. Each band is annotated with which test closed it, and NUM-16 forced steps are marked | NUM-16 |
@@ -118,7 +118,7 @@ the measurements the decisions rest on are in §Design, outside the budget.
 > depletion — the same trap `io/fields.py` documents for the export, avoided the same way. All five
 > fields of the family draw from one code path, the two-component velocity included. The `VOCABULARY`
 > guard is extended with `phi_V`, `u_m_s`, `p_Pa` and `mol_m3`.
-| D12 | Whether the picture drew | `loadFinished` is a statement about the document. After it, the widget runs one `runJavaScript` readiness probe; if the renderer global is absent or the scene did not initialise, the panel is replaced by a diagnostic naming the renderer source it tried | QR-12; `.knowledge/07` §5 records `loadFinished(True)` with `webgui is not defined` |
+| D12 | Whether the picture drew | `loadFinished` is a statement about the document. After it, the widget runs one `runJavaScript` readiness probe; if the renderer global is absent or the scene did not initialise, the panel is replaced by a diagnostic naming the renderer source it tried | QR-12; `.knowledge/07-software-stack/05-gui-and-packaging.md` records `loadFinished(True)` with `webgui is not defined` |
 | D13 | Where the renderer JavaScript comes from | **Open, OQ-1.** Recommended: ship `webgui@0.2.39/dist/webgui.js` as package data, so a bundle draws offline. Until that ruling, the CDN URL `netgen.webgui` already hard-codes, with D12's probe and the limitation recorded. The source is one constant behind one function either way | npm `webgui@0.2.39` is **LGPL-2.1-or-later**, 1,206,946 B unpacked (§Design 2). Vendoring redistributes it, which is a CON-09 change and the author's call |
 | D14 | Not `netgen.webgui.GenerateHTML` | We build the host document ourselves from `WebGLScene.GetData()`. `GenerateHTML(data, filename, template)` takes a `template`, assigns it, and then substitutes into `_html_template` regardless — the argument is dead | `netgen/webgui.py:830–837`, read (§Design 2) |
 | D15 | Scope of the picture | Steady state, the meshed (r, z) half-plane exactly as computed, one field at a time. No mirroring, no deformation warp, no streamlines | N3, N4; §6.3. Mirroring is a picture of something the solve never discretised |
@@ -142,12 +142,12 @@ In dependency order. Read the Design section named before touching the item.
 | 11 | The `QWebEngineView` viewer widget, its field selector and the D12 readiness probe | `gui/widgets/viewer.py` | QR-11, D9, D12 | 2 |
 | 12 | Two further tabs on `MainWindow` | `gui/app.py` | QR-11 | — |
 | 13 | VER-44 in §7.2 and the Appendix A rows for IF-09 and QR-11 | `SPECIFICATION.md` | IF-09, QR-11 | — |
-| 14 | The §Design measurements into `.knowledge/07-software-stack.md` §5 | `.knowledge/` | — | 1, 2 |
+| 14 | The §Design measurements into `.knowledge/07-software-stack/05-gui-and-packaging.md` | `.knowledge/` | — | 1, 2 |
 | 15 | *Conditional on OQ-1*: the renderer asset, its wheel inclusion, its `LICENSES-BUNDLE.md` line, the CON-09 amendment, and its entry in the probe's `PAYLOADS` | `pyproject.toml`, `packaging/`, `SPECIFICATION.md`, `gui/probe.py` | CON-09, CON-11, RSK-13 | 2 |
 
 > **Outcome — items 13 and 14 were delivered with the plan; item 15 is deferred, twice over.**
 > §7.2's VER-44 and the Appendix A rows for IF-09 and QR-11 landed in the plan commit (`f4fecdb`),
-> as did §Design 1's and §Design 2's measurements in `.knowledge/07` §5; the implementation commit
+> as did §Design 1's and §Design 2's measurements in `.knowledge/07-software-stack/05-gui-and-packaging.md`; the implementation commit
 > **amends** VER-44 for what D3 and D6 turned out to be, and adds two further findings to the
 > knowledge base. Item 15 is not done: OQ-1 has had no ruling, and it could not be implemented in
 > this session even under a "yes", because `cdn.jsdelivr.net` answers the development container's
@@ -196,7 +196,7 @@ the solver-process test already builds rather than a second one.
 > `test_gui_probe.py`, `test_solve_hook.py` — is 44 cases in **6.96 s** on an unloaded container, of
 > which the two real spawned runs and the render fixture's solve are about 5 s. WP14 measured its
 > own four files at 4.0 s, so the package's additions cost about 3 s, inside the plan's ~8 s budget. `test_gui_widgets.py`
-> skips on the push gate; under the `.knowledge/07` §5 GL shim all 13 of its cases pass, in 0.6 s
+> skips on the push gate; under the `.knowledge/07-software-stack/05-gui-and-packaging.md` GL shim all 13 of its cases pass, in 0.6 s
 > warm and 6.6 s on a cold Qt WebEngine start — including the `QPainter` repaint into a `QPixmap`
 > and the `QWebEngineView` construction. Scene sizes on the 124-triangle test
 > mesh: 43.1 kB for a whole-domain field at order 2, 30.5 kB for a fluid-restricted one, 63 kB for
@@ -332,7 +332,7 @@ Two facts about `netgen.webgui`, both read from the installed source, 21 Septemb
 **The host document fetches its renderer from a CDN.** `_html_template` (`netgen/webgui.py:792–824`)
 carries `<script src="https://cdn.jsdelivr.net/npm/webgui@0.2.39/dist/webgui.js">`. WP14 already
 recorded the consequence: the page reaches `loadFinished(True)` and the console says
-`webgui is not defined` (`.knowledge/07` §5). That is why D12 exists whichever way OQ-1 goes — a
+`webgui is not defined` (`.knowledge/07-software-stack/05-gui-and-packaging.md`). That is why D12 exists whichever way OQ-1 goes — a
 blank panel that reports success is exactly the failure QR-12 is written against.
 
 **`GenerateHTML`'s `template` argument is dead.**

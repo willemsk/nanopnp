@@ -67,8 +67,8 @@ is open here, and no identifier is new.
 
 ### Work items
 
-- [x] 656232a non-Opus 1. [Opus] — a quadrature rule threaded through the solve; a wrong seam moves numbers inside every tolerance. Read *Design* §1, §3, §6 first. `numerics/measures.py` (`rule_order`), `charge/fields.py`, `charge/deposit.py`, `solve/state.py`, `solve/continuation.py`, `physics/models.py`; the PHY-19 and NUM-07 NOTE text of *Design* §6; `.knowledge/06` §8.1 **[tested]**; the re-pin of D3, D6 (D2, D3). Done when `test_charge_quadrature.py` passes, `test_charge_fields.py` and `test_dielectric_field.py` (VER-30) stay green, and the three walks move within D3 and the other four not at all.
-- [x] 0328546 non-Opus 2. [Opus] — a convergence criterion; a mistake ends rungs early inside every tolerance. Read *Design* §2, §3, §6 first. `numerics/newton.py`; NUM-16's NOTE; `.knowledge/06` §5 **[tested]**; the NUM-16 prose of `gui/convergence.py` and `gui/widgets/convergence.py` (QR-11); the re-pin; the gate's duration before and after, in the commit body (D4, D5, D6). Done when `test_newton_per_field.py` and the zero-field test pass and the walks move within D5.
+- [x] 656232a non-Opus 1. [Opus] — a quadrature rule threaded through the solve; a wrong seam moves numbers inside every tolerance. Read *Design* §1, §3, §6 first. `numerics/measures.py` (`rule_order`), `charge/fields.py`, `charge/deposit.py`, `solve/state.py`, `solve/continuation.py`, `physics/models.py`; the PHY-19 and NUM-07 NOTE text of *Design* §6; `.knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md` **[tested]**; the re-pin of D3, D6 (D2, D3). Done when `test_charge_quadrature.py` passes, `test_charge_fields.py` and `test_dielectric_field.py` (VER-30) stay green, and the three walks move within D3 and the other four not at all.
+- [x] 0328546 non-Opus 2. [Opus] — a convergence criterion; a mistake ends rungs early inside every tolerance. Read *Design* §2, §3, §6 first. `numerics/newton.py`; NUM-16's NOTE; `.knowledge/06-numerics-fem/05-nonlinear-solution.md` **[tested]**; the NUM-16 prose of `gui/convergence.py` and `gui/widgets/convergence.py` (QR-11); the re-pin; the gate's duration before and after, in the commit body (D4, D5, D6). Done when `test_newton_per_field.py` and the zero-field test pass and the walks move within D5.
 - [x] 3a15a72 non-Opus 3. [Opus] — a frame check and its refusal text. `charge/fields.py`, `charge/stage.py` (`read_fields`, `_field_document`) (D1). Done when `test_field_frame.py` passes.
 - [x] b9d4a78 non-Opus 4. [Opus] — a missing log is silent. `materials/electrolyte.py` (D7). Done when `test_phy13_a_clamp_of_the_ionic_strength_driver_is_logged` passes.
 - [x] 5f021fe non-Opus 5. [Opus] — a key's classification. `solve/state.py` (D8). Done when `test_warm_start_descriptor.py` passes with the mode-settings test.
@@ -126,7 +126,7 @@ bonus, so the gate integrates an areal field at order 8 and a volume field at 5.
 | Example 03 ring (`z` 1.5) | +3.7e-5 | +7.4e-6 | −1.9e-6 | −4.8e-6 |
 | Alternating, λ = 0.5 nm | +1.2e-2 | −6.4e-4 | +2.0e-5 | −2.9e-5 |
 | Alternating, λ = 0.2 nm | −8.8e-1 | +1.1e-1 | −2.0e-2 | +3.5e-3 |
-| Alternating, λ = 0.07, 0.035 nm | aliased at every order, as `.knowledge/06` §8.1.1 | | | |
+| Alternating, λ = 0.07, 0.035 nm | aliased at every order, as `.knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md#811-mesh-integral-error-on-a-sub-element-scale-field-converges-in-neither-h-nor-order` | | | |
 
 The alternating field is the ring's Gaussian times `0.3 + cos(2π r/λ)`, on a 0.005 nm grid, scaled
 to −6 e. **The quadrature's own error** is its order/order+3 agreement, the measure

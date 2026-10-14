@@ -325,7 +325,7 @@ Five things settled by the work.
   not be monotone and asserting that it is would have been asserting something untrue. A–C fell
   4.62 × 10⁻⁴ → 1.30 × 10⁻⁴ → 3.40 × 10⁻⁵ pN, which is monotone and is asserted.
 - **`T_H`'s sign convention has to be pinned in one place and never mixed.** `post/forces` returns
-  `−p I + 2η sym ∇u`, the convention the momentum equation is assembled in; `.knowledge/05` §4
+  `−p I + 2η sym ∇u`, the convention the momentum equation is assembled in; `.knowledge/05-analyte-and-forces/05-force-computation-the-analytic-model.md`
   prints the negative of that. Both are defensible and the difference is invisible in a zero test,
   so the docstring states which one the code holds and the reaction route is what would catch a
   slip. `T_M` has no such ambiguity — `E` appears twice.

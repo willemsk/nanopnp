@@ -53,7 +53,7 @@ Opus only after Sonnet fails.
 - [x] a0cf1a4 1. `src/nanopnp/validation/okf.py`, `tests/tier1/test_okf_bundle.py`, `.github/scripts/prose-only.sh`, `tests/tier1/test_workflow_hooks.py` (D5, D6): the check on constructed bundles, and the prose rule with a case each; done when those rows pass.
 - [x] a79e05d 2. `.knowledge/` (D1): move the ten files into the bundle, bodies unchanged, a placeholder header and explicit ids; done when the word-for-word comparison is clean.
 - [x] ce22f90 3. `.knowledge/` (D4): rewrite the citations between concepts; done when the checker, run by hand through `uv run`, resolves each and the unplaced list is empty by ruling.
-- [ ] 4. every tracked file outside `.knowledge/`, `docs/plans/`, `docs/code_reviews/` and `CHANGELOG.md` (D4): the same; done by the same hand run.
+- [x] c02e775 4. every tracked file outside `.knowledge/`, `docs/plans/`, `docs/code_reviews/` and `CHANGELOG.md` (D4): the same; done by the same hand run.
 - [ ] 5. `docs/plans/`, `docs/code_reviews/`, released `CHANGELOG.md` sections (D4, K4); adds `test_ver68_repository_citations_all_resolve`; done when it and `test_plan_shape.py` pass.
 
 *Compaction checkpoint: after item 5; resume from this plan and `git log`.*
@@ -80,7 +80,7 @@ Tier 1; command `uv run pytest tests/tier1/test_okf_bundle.py tests/tier1/test_w
 | `…footnote_without_source_is_refused` | VER-68 (6) | Unknown label fails |
 | `…pending_count_must_equal_the_committed_list`, `…ceiling` | VER-68, G3 | One more or fewer fails; above the ceiling fails |
 | `…repository_citations_all_resolve`, `…the_bundle_conforms` | VER-68 | The real tree: no finding |
-| `test_prose_only_` cases for `.knowledge/x.md`, a `CHANGELOG.md` and `README.md` containing a citation, one without | — | Not prose, not prose, prose |
+| `test_prose_only_` cases for `.knowledge/<file>.md`, a `CHANGELOG.md` and `README.md` containing a citation, one without | — | Not prose, not prose, prose |
 | VER-45 | docs | `--strict` passes; no code path changes, VER-62 untouched |
 
 ### Out of scope

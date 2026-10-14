@@ -19,7 +19,7 @@ Phases 0 and 1 answered whether the physics is right and whether someone other t
 run it. Phase 2 answers a third question: **can the geometry the physics runs on be produced from a
 structure, reproducibly, without the manual vertex editing the source work records?** The Methods
 section of the source says the ClyA outline was obtained by "manual removal of overlapping and
-superfluous vertices" (`.knowledge/04-clya-geometry-and-charge.md` §1, gap G3). This phase replaces
+superfluous vertices" (`.knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md`, gap G3). This phase replaces
 that step with the gated pipeline of §5.2 stages 1–6 and §5.2.1–§5.2.2. The gate is **VAL-05**: the
 auto-generated geometry reproduces the hand-conditioned reference polygon.
 
@@ -67,7 +67,7 @@ its decisions table.
 | Model frame | z = 0 at the membrane centre. The structure maps to the model frame by the FR-02 axis plus `geometry.membrane.centre_z_nm`, a v2 key in the structure's own frame, measured along the axis. Its default, 0, is the OPM convention for membrane-protein coordinate files | Closes gap G9 generically. ClyA's own value is the author's to give (open decision G9) |
 | Membrane inner edge | Derived, not configured, and gated to lie strictly inside the body. The reference fixture keeps its (2.0, 3.5) corners. **Superseded in part by the [WP21 plan](wp21-cad-assembly-and-meshing.md), D3, 26 September 2026:** the chord is the widest-margin one between the lumen-adjacent body intervals on `z = ±t/2`, not the chord between their mid-points. That chord crosses the cleft under the cap on the reference fixture and on 2WCD, and splits the electrolyte in two (WP21 Design §1) | §5.2.1 NOTE: the assembled membrane is the quadrilateral minus the body, so any edge strictly inside the body yields the same region. A configurable edge would be a knob with no effect when right and a gap or overlap when wrong |
 | Structure preparation | Out of scope. The pipeline consumes a prepared structure and records `structure.source.variant` and the chain set (OPN-04) | FR-01 says ingest, not prepare. PDBFixer brings OpenMM onto the end-user path for a step the author performed by hand in the source work |
-| Nothing is tuned to the target | The isolevel (0.25) and the density sharpness (0.93) stay case values cited to `.knowledge/04` §1. The isolevel sensitivity is recorded, never fitted to VAL-05 | Gap G2: the 25 % level is unjustified in the source, and radius enters conductance as r². Fitting it to the polygon would make VAL-05 pass by construction |
+| Nothing is tuned to the target | The isolevel (0.25) and the density sharpness (0.93) stay case values cited to `.knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md`. The isolevel sensitivity is recorded, never fitted to VAL-05 | Gap G2: the 25 % level is unjustified in the source, and radius enters conductance as r². Fitting it to the polygon would make VAL-05 pass by construction |
 | Radius-profile check | In-project probe-radius profile on the aligned structure: the largest sphere centred on the known axis that clears every atom's van der Waals radius. `mdahole2` is an optional cross-check that skips when absent | B5. The axis is known from FR-02, so HOLE's axis search is not needed |
 | Optional dependencies | MDAnalysis, scikit-image, Shapely and gridData are imported at the top of the stage implementation modules. Those modules are reached only through the lazy registry, and a missing `structure` extra is a named diagnostic when the stage is created. NumPy, NGSolve and Netgen stay deferred as today | The `CLAUDE.md` import rule. VER-25 introspection stays free of the pipeline's imports |
 | Cₙ averaging method | Decided in WP19 with its derivation: rotate the atoms and deposit n copies, or rotate the voxel map by interpolation. The WP19 plan must show which one leaves the FR-06 variance statistic meaning what CON-04 says it means | A 30° trilinear rotation smooths the map, and the smoothing moves the reported variance |
@@ -89,7 +89,7 @@ Inherited, and not re-decided by any package below. Read each where it points.
   through a `CancelToken`.
 - **An ingested or generated mesh passes the VER-27 vocabulary gate and the VER-10 quality gate**,
   both SICN and gamma, with the worst element and its location reported (QR-12).
-- **netgen.occ traps, all measured** (`.knowledge/07-software-stack.md` §4): a clockwise wire makes
+- **netgen.occ traps, all measured** (`.knowledge/07-software-stack/04-geometry-meshing-and-io.md`): a clockwise wire makes
   a negative face; `Glue` is conformal and `Compound` is not; an arc's `center` lies off the curve;
   a closed circle's seam survives a clip; netgen meshes are not bit-reproducible across platforms,
   so assert a band on element counts.
@@ -134,7 +134,7 @@ VER-45 walks cover the new paths in both directions.
 MDAnalysis readers for PDB, mmCIF, DCD, XTC, TRR and NetCDF (IF-04), frame selection by
 `last_ns` and `count`, and superposition of every frame on a reference frame's Cα set (FR-01). The
 Cₙ axis comes from chain-permutation superposition, as the eigenvector of eigenvalue 1, and is
-placed on z at r = 0 (FR-02; `.knowledge/07` §2 says why principal axes fail). The oligomeric state
+placed on z at r = 0 (FR-02; `.knowledge/07-software-stack/02-structure-trajectory-and-density.md` says why principal axes fail). The oligomeric state
 is checked and a missing chain aborts (FR-03, QR-12). 2WCD is vendored as test data (B2). Stage 1
 is registered and `run_case` runs it. Adds **VER-48**: a synthetic Cₙ assembly about a known,
 tilted and offset axis recovers that axis to a stated angle, and a principal-axes estimate is shown
@@ -160,12 +160,12 @@ missing; each trajectory format reads; a rigidly moved frame superposes to zero 
 > - `structure:` beside `inputs.mesh` is refused.
 > - The deposited 2WCD is in its crystal frame, 22.9° from z, and stage 1 refuses it. **WP22's
 >   Tier-2 VAL-05 leg needs it in an admitted frame**, as the stage-one test prepares it (the WP18
->   D16 Outcome; `.knowledge/04` §1.1).
+>   D16 Outcome; `.knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#11-the-authors-md-archive-measured`).
 
 ### WP19 — Density map and symmetry reduction (stages 2 and 3)
 
 The probabilistic-union density `ρ = 1 − Π(1 − exp(−d²/(σR_i)²))`, accumulated additively as
-`Σ log(1 − g_i)` over local stencils (FR-04; `.knowledge/04` §1). Maps are averaged over frames in
+`Σ log(1 − g_i)` over local stencils (FR-04; `.knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md`). Maps are averaged over frames in
 3D, then over the n rotated copies, and only then azimuthally, by area-weighted binning over exact
 annular volumes with the innermost bins interpolated (FR-05). Residual azimuthal variance is a
 first-class output (FR-06, CON-04, RSK-07). Maps are written to OpenDX and CCP4 (IF-05, write
@@ -209,7 +209,7 @@ Planned only after the author's contour script has been read (B6, RSK-06). What 
 the §5.2.1 pipeline remains the fallback: sub-pixel marching squares at the isolevel, the longest
 closed contour, Taubin smoothing, Douglas–Peucker simplification, and minimum vertex spacing. The
 FR-08 gate covers validity, simplicity, spacing, local feature size (measured two edges either
-side, `.knowledge/04` §4), loop topology, and the radius profile against the probe-radius profile
+side, `.knowledge/04-clya-geometry-and-charge/04-mesh.md`), loop topology, and the radius profile against the probe-radius profile
 (B5). The output is `nanopnp/profile/v1` and is hand-substitutable through `inputs.profile`.
 Discharges FR-07 and FR-08, and closes OPN-02. Adds **VER-51**: the contour of an analytic field
 at a known isolevel is recovered; Taubin preserves enclosed area where plain Laplacian smoothing
@@ -224,7 +224,7 @@ closed form.
 > and the radius band `[−h, +1.5 nm]` against the frame-mean probe radius. The stage emits
 > `nanopnp/profile/v1` with `source: pipeline`. VER-51 discharges FR-08 and adds to FR-07, FR-27
 > and QR-12. OPN-02 is closed and RSK-06 retired. 2WCD and the ClyA-AS ensemble both pass the gate
-> (`.knowledge/04` §1.3). Constraints inherited by later packages:
+> (`.knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#13-stage-4-on-real-and-synthetic-inputs-measured`). Constraints inherited by later packages:
 >
 > - A walk or sweep past stage 4 is refused naming stage 5, and WP21 lifts that through
 >   `refuse_walk`.
@@ -263,8 +263,8 @@ imports no gmsh.
 > - **WP22 registers 2WCD axially**; the Tier-2 walk's trans tip + 1.85 nm is a test choice.
 >
 > Measurements: [WP21 Outcomes](wp21-cad-assembly-and-meshing.md#verification),
-> [`.knowledge/04`](../../.knowledge/04-clya-geometry-and-charge.md) §2.1,
-> [`.knowledge/06`](../../.knowledge/06-numerics-fem.md) §8.
+> [`.knowledge/04-clya-geometry-and-charge/02-model-geometry-and-conventions.md#21-the-bilayer-on-a-structure-derived-profile-measured`](../../.knowledge/04-clya-geometry-and-charge/02-model-geometry-and-conventions.md#21-the-bilayer-on-a-structure-derived-profile-measured),
+> [`.knowledge/06-numerics-fem/08-mesh-resolution-and-adaptivity.md`](../../.knowledge/06-numerics-fem/08-mesh-resolution-and-adaptivity.md).
 
 ### WP22 — VAL-05: the pipeline against the reference geometry
 
@@ -273,7 +273,7 @@ ensemble leg reads `NANOPNP_REFERENCE_DATA`, runs at Tier 3, and skips visibly w
 Both compare the radius profile and the constriction radius against the 185-vertex polygon over
 `z ∈ [−1.85, 12.25]` nm. The axial registration uses the author's G9 value if given; otherwise it
 is fitted as one reported degree of freedom. The WP22 plan states each leg's tolerance, argued from
-`G ∝ r²` and the ±1 % conductance floor of `.knowledge/04` G3. Recorded, not gated: isolevel
+`G ∝ r²` and the ±1 % conductance floor of `.knowledge/04-clya-geometry-and-charge/index.md` G3. Recorded, not gated: isolevel
 sensitivity (G2), the FR-06 variance along z, element count and quality against the reference mesh
 (§5.2.2), and the conductance of one frozen case on the generated mesh against the reference mesh.
 
@@ -296,7 +296,7 @@ sensitivity (G2), the FR-06 variance along z, element count and quality against 
 > - WP23 re-runs D10 on its backend; the end-of-phase report reads D13's records.
 >
 > Measurements: [WP22 Outcomes](wp22-val05-reference-geometry.md#outcomes),
-> [`.knowledge/04`](../../.knowledge/04-clya-geometry-and-charge.md) §1.4.
+> [`.knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#14-2wcd-against-the-reference-polygon-and-the-isolevel-lever`](../../.knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#14-2wcd-against-the-reference-polygon-and-the-isolevel-lever).
 
 > **Verdict, 30 September 2026.** The ensemble leg ran on the author's archive. It passes Δr_c
 > (−0.039 nm) and the rms (0.089 nm), and misses ε_G at −5.56 % against 5 %. Criterion 3 is
@@ -333,7 +333,7 @@ passes the same VER-10 and VER-27 gates with the same vocabulary; the default pa
 > - Gmsh's tests fail rather than skip on every CI leg. The ubuntu jobs install the X and GL
 >   libraries the wheel loads at import (D11 Outcome).
 >
-> Measurements: [WP23 Outcomes](wp23-gmsh-backend.md#outcomes), `.knowledge/07` §4.
+> Measurements: [WP23 Outcomes](wp23-gmsh-backend.md#outcomes), `.knowledge/07-software-stack/04-geometry-meshing-and-io.md`.
 
 ### WP24 — GUI increment 2: the geometry pipeline surfaced
 
@@ -367,7 +367,7 @@ Adds **VER-55**, extending VER-43 and VER-44 to the new views, with the view-mod
 > - A new compiled payload is declared in `PAYLOADS` and exercised by `--selftest`, not only
 >   imported.
 >
-> Measurements: [WP24 Outcomes](wp24-gui-geometry-pipeline.md#outcomes), `.knowledge/07` §5.
+> Measurements: [WP24 Outcomes](wp24-gui-geometry-pipeline.md#outcomes), `.knowledge/07-software-stack/05-gui-and-packaging.md`.
 
 ### WP25 — Documentation increment 2
 
@@ -405,18 +405,18 @@ Cₙ rotation. The generated references pick up the v2 fields without a docs edi
 > - An exported profile edited as text must have its measurements re-derived, or the loader
 >   refuses it.
 >
-> Measurements: [WP25 Outcomes](wp25-geometry-docs-and-example.md#outcomes), `.knowledge/07` §2.
+> Measurements: [WP25 Outcomes](wp25-geometry-docs-and-example.md#outcomes), `.knowledge/07-software-stack/02-structure-trajectory-and-density.md`.
 
 ## Open decisions
 
 | # | Decision | Owner and status |
 |---|---|---|
-| G9 | The axial offset from the MD frame to the model frame for ClyA, which sets ClyA's `geometry.membrane.centre_z_nm` (`.knowledge/04` §8) | **Settled by the author, 25 September 2026: 0 in the MD frame**, which was centred on the middle of the bilayer. WP22 uses it for the ensemble leg and must register the vendored 2WCD to the MD frame. Superseded: **Author, open.** The archive has no lipids, so the bilayer cannot fix it. The MD frame's extent suggests ≈ 0 (`.knowledge/04` §1.1). Fallback: WP22 fits the offset as one degree of freedom and reports it |
-| Ensemble delivery | Format, frame count, and whether lipids and waters are included in the archived ClyA-AS ensemble; the file names it carries under `NANOPNP_REFERENCE_DATA` | **Answered, 25 September 2026.** `prod5_clya_as.{pdb,dcd}`: 98 frames, protein with hydrogens, no lipids or waters. The DCD's frames are the archived PQRs 02–99 at 100 ps, in time order, so the paper's final-5-ns ensemble is DCD frames 48–97 (`.knowledge/04` §1.1) |
+| G9 | The axial offset from the MD frame to the model frame for ClyA, which sets ClyA's `geometry.membrane.centre_z_nm` (`.knowledge/04-clya-geometry-and-charge/08-gaps-and-ambiguities-questions-for-the.md`) | **Settled by the author, 25 September 2026: 0 in the MD frame**, which was centred on the middle of the bilayer. WP22 uses it for the ensemble leg and must register the vendored 2WCD to the MD frame. Superseded: **Author, open.** The archive has no lipids, so the bilayer cannot fix it. The MD frame's extent suggests ≈ 0 (`.knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#11-the-authors-md-archive-measured`). Fallback: WP22 fits the offset as one degree of freedom and reports it |
+| Ensemble delivery | Format, frame count, and whether lipids and waters are included in the archived ClyA-AS ensemble; the file names it carries under `NANOPNP_REFERENCE_DATA` | **Answered, 25 September 2026.** `prod5_clya_as.{pdb,dcd}`: 98 frames, protein with hydrogens, no lipids or waters. The DCD's frames are the archived PQRs 02–99 at 100 ps, in time order, so the paper's final-5-ns ensemble is DCD frames 48–97 (`.knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#11-the-authors-md-archive-measured`) |
 | VAL-05 tolerances | Radius-profile and constriction-radius tolerances per leg | **Settled by the author, 28 September 2026**, in the [WP22 plan](wp22-val05-reference-geometry.md), D3–D5 and Design §2, and the `SPECIFICATION.md` §7.4 NOTE on VAL-05: \|ε_G\| ≤ 5 %, \|Δr_c\| ≤ 0.1 nm and rms ≤ 0.1 nm on the ensemble; 10 %, 0.1 nm and 0.2 nm on 2WCD. The isolevel lever (G2) sets them, not G3's ±1 %, which the reference's own construction puts out of reach |
 | Schema v2 contents | The exact v2 key list, including Phase 3's, and whether v1 artefact keys survive the upgrade | **Settled** in the [WP17 plan](wp17-case-schema-v2.md), D1–D6, and in the `SPECIFICATION.md` §5.3.1 v2 NOTE: the solve keys survive and the stage-9 key moves |
 | Cₙ averaging method | Rotate atoms or interpolate the voxel map | **Settled** in the [WP19 plan](wp19-density-and-reduction.md), D7 and Design §2: neither. The average is taken in the angular harmonic basis, where it keeps the multiples of n. That is exact, and costs one deposition per frame. §5.2 and the §5.3.1 NOTE on `geometry.density` are amended |
-| Contour script | Which parts of the author's script port | **Settled** in the [WP20 plan](wp20-contour-extraction.md), D2 and Design §1: the script is `pqr2grid`'s `create_polygon_contour` (2019). Marching squares and topology-preserving Douglas–Peucker port. Its index-to-radius map is an erratum and does not (`.knowledge/04` §1.2). OPN-02 closed, RSK-06 retired |
+| Contour script | Which parts of the author's script port | **Settled** in the [WP20 plan](wp20-contour-extraction.md), D2 and Design §1: the script is `pqr2grid`'s `create_polygon_contour` (2019). Marching squares and topology-preserving Douglas–Peucker port. Its index-to-radius map is an erratum and does not (`.knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#12-the-authors-contour-script-read`). OPN-02 closed, RSK-06 retired |
 
 ## Verification
 
@@ -481,7 +481,7 @@ tolerance stands and the Tier-3 test keeps asserting it. v0.3.0 is released on t
 2WCD leg is gated on every push and passes.
 
 **VAL-05, both legs** ([WP22 Outcomes](wp22-val05-reference-geometry.md#outcomes);
-`.knowledge/04` §1.4 and §1.5). The reference constriction is 1.650 nm at z = −1.225 nm.
+`.knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#14-2wcd-against-the-reference-polygon-and-the-isolevel-lever` and §1.5). The reference constriction is 1.650 nm at z = −1.225 nm.
 
 | Quantity | Ensemble, DCD frames 48–97 (Tier 3) | 2WCD, chains A–L (Tier 2) |
 |---|---|---|
@@ -541,7 +541,7 @@ against −8.49 %. Access resistance dilutes the bulk-resistor proxy by about a 
 **Wall-clock time and memory.** The 2WCD pipeline takes 17.0 s for stage 2 and 6.9 s for stage 3, at
 a 0.47 GB peak (WP19 Outcomes). The ensemble's timings depend on the machine:
 - In the development container, stage 2 takes 980.6 s (19.6 s a frame) and stage 3 9.9 s, at a
-  0.56 GB peak (`.knowledge/07` §2).
+  0.56 GB peak (`.knowledge/07-software-stack/02-structure-trajectory-and-density.md`).
 - On the author's machine, stage 2 takes 596.6 s (11.9 s a frame) and stage 3 13.7 s. Peak memory
   was not recorded there.
 

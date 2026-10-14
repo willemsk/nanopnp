@@ -39,7 +39,7 @@ VAL-05, VAL-06, NUM-12, NUM-14 and NUM-17. No requirement's assertion changes. *
 | Need | Read |
 |---|---|
 | The rule | §7.1; §7.6 and the NOTE this commit adds; `CLAUDE.md` *Testing* |
-| The shared fixtures | `tests/conftest.py` `prepared_2wcd`, `seeded_2wcd`, `protonated_2wcd`, `seeded_protonated_2wcd`; `.knowledge/07` §12 on the seed and on cold-by-design tests |
+| The shared fixtures | `tests/conftest.py` `prepared_2wcd`, `seeded_2wcd`, `protonated_2wcd`, `seeded_protonated_2wcd`; `.knowledge/07-software-stack/12-the-suites-blas-threads-buy-nothing.md` on the seed and on cold-by-design tests |
 | The baseline | [Design §1](#1-the-baseline); the serial command under *Verification* |
 | Each file's constraints | The docstrings and constant comments the decisions cite. Each records a measured reason for its setting, and that reason binds |
 
@@ -49,7 +49,7 @@ VAL-05, VAL-06, NUM-12, NUM-14 and NUM-17. No requirement's assertion changes. *
 |---|---|---|---|
 | D1 | The rule | A gated test may get cheaper in four ways only. (a) It **shares identical work**: the same inputs computed once. (b) It **drops work nothing asserts**, where the result only reaches a log. (c) It **coarsens a discretisation** where every gate it carries is measured to pass at the coarser setting with at least 3× headroom. (d) It **is split** across files, so the scheduler can run its parts at once. Never allowed: loosening a tolerance, weakening an oracle, warming a test that asserts a cold computation, or leaving a gated identifier without a per-push test. A test moves to `slow` only if another per-push test gates the same claim on the same kind of input. Written as a §7.6 NOTE in this commit | The author's "without losing their core function", made checkable. (c)'s 3× is the headroom the suite already asks of a gate that must be able to fail (WP29 D8's "half the tolerance" is 2×; 3× allows for platform spread) |
 | D2 | The 2WCD seed | Two changes. **First, protonation stops waiting for stages 2–3.** `protonated_2wcd` depends on a stage-1 seed instead of `seeded_2wcd`, so PROPKA (about 64 s) runs while another worker computes the density and the reduction (about 32 s). **Second, the seed runs on to stage 4 and the 0.15 M default-size mesh**: the contour, the C-alpha registration, the region and the mesh, once. The modules whose cases resolve to those keys copy them, and assert them `cached` as they now assert stages 1–3. That removes the stage-4 walk and registration from seven modules, and a default-size mesh from each module whose key matches | Lever (a). The locks currently serialise the first ~96 s of every 2WCD file behind one worker. Protonation reads only stage 1 (`charge/protonation.py`). The registration is computed identically in `val05`, `pipeline`, `exclusion`, `charge`, `val06`, `gui_geometry` and `contour_2wcd`. Which mesh keys match is the implementer's to assert, not to assume |
-| D3 | Cold by design | `test_examples_06`, `test_examples_07` (WP32), `test_gui_geometry_2wcd`'s spawned build, and VER-49's budget **stay cold**. They take no seed | Each asserts a cold walk (`.knowledge/07` §12; VER-46 runs a README verbatim; VER-55 asserts `not event.cached`) |
+| D3 | Cold by design | `test_examples_06`, `test_examples_07` (WP32), `test_gui_geometry_2wcd`'s spawned build, and VER-49's budget **stay cold**. They take no seed | Each asserts a cold walk (`.knowledge/07-software-stack/12-the-suites-blas-threads-buy-nothing.md`; VER-46 runs a README verbatim; VER-55 asserts `not event.cached`) |
 | D4 | `test_charge_potential.py` (137 s, no fixtures) | **Share the mesh and the lattice.** The mesh for each `(r_i, near)` is built once and serves both deposit orders. The lattice for each `r_i` is summed once, because it depends on neither `near` nor the order. Then **split** the two `r_i` parametrisations into two files, so neither is a 100 s floor. Levels, `H`, `ARC_NM` and the rate gates are unchanged. The 0.2 nm level stays: VER-58 asserts a rate under two halvings | Levers (a) and (d). Today each of 12 solves rebuilds its mesh and re-sums a lattice at `H` = 0.0025 nm (`_solve_error`). The `H` and `ARC_NM` comments record why both are fine, and neither moves |
 | D5 | `test_gui_geometry_2wcd.py` (61 s) | The build, both edits and the re-run go to `numerics.mesh.size_scale` 4. Stages 1–3 stay cold | Lever (c). VER-55's claims (cold build, `assess` equal to the gate record, null edit keeps the content hash, moved vertex moves it) are about the shell's plumbing and the stage-4 gate, and none depends on element size. The three default-size meshes are about 25 s. The default-size 2WCD mesh stays gated by `test_pipeline_2wcd` (VER-53) |
 | D6 | `test_exclusion_stern.py` (59 s) | **Measure the three gates at `size_scale` 2. Adopt it only if each clears D1's 3×.** The comment at :228 records 3.6 × 10⁻³ at `size_scale` 2 against a 10⁻² gate (2.8×), which already fails the bar on one gate. So this is expected to stay at the default sizes, and the Outcome says which | Lever (c), honestly bounded. A gate at 2.8× headroom is not one to coarsen |
@@ -170,11 +170,11 @@ VAL-05, VAL-06, NUM-12, NUM-14 and NUM-17. No requirement's assertion changes. *
 1. **Baseline** on WP32's merge commit: the serial command below, keeping `durations.xml`
    ([Design §1](#1-the-baseline)).
 2. **`tests/conftest.py`** (D2, D10): the stage-1 seed, protonation on it, the seed extended to the
-   mesh, and the reference-mesh session fixture. Read `.knowledge/07` §12 first.
+   mesh, and the reference-mesh session fixture. Read `.knowledge/07-software-stack/12-the-suites-blas-threads-buy-nothing.md` first.
 3. **The files** (D4–D9, D11), in the order of D's numbering. Each change is followed by that file's
    serial time, before and after, in the Outcomes.
 4. **The conditionals** (D6, D12, D13): profile, then take or leave, with the evidence.
-5. **Re-measure** (D15). Then record the result in `.knowledge/07` §12 (measured facts about the
+5. **Re-measure** (D15). Then record the result in `.knowledge/07-software-stack/12-the-suites-blas-threads-buy-nothing.md` (measured facts about the
    suite), the phase plan's WP33 entry, `current.md`, and `CHANGELOG.md` under `0.4.0-alpha.8`.
 
 ### Verification

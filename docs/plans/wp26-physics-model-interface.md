@@ -74,7 +74,7 @@ permittivity; §6.5 NOTE; `physics/models.py`.
 > step on its own residual form rather than a separate `LinearForm`, so operator and source share
 > one quadrature. Measured error 1.1e-13 of `max |φ̃|` = 12.67 on 130 triangles. The coupled models
 > keep the default, which is why D17 holds; whether they should gain the order is open (NUM-07 NOTE
-> on the `r` weight, `.knowledge/06` §2.2).
+> on the `r` weight, `.knowledge/06-numerics-fem/02-axisymmetric-weak-forms.md#22-quadrature-verified-experimentally`).
 
 > **Outcome — D11: the switch check runs before the strategy check.** A case the model cannot pose
 > is the more precise diagnostic, and `pnp` with `flow: true` must say so under either

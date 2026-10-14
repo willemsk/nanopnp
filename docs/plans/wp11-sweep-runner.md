@@ -138,7 +138,7 @@ than only in a log nobody reads.
 > the PHY-13 concentration driver is bounded at both ends by the validity range of its fit, and the
 > PHY-02 distance driver has no upper bound of its own — the field's saturation distance supplies
 > one — and needs only the floor.
-| Gate threshold | `min d̄ ≥ −1 × 10⁻³ nm` over the fluid sample set, on the field the corrections actually read — after mollification where it is on | Not zero, because `Set` projects and the sign of the interior residual is platform-dependent; `.knowledge/06` §8.1 already records a strict `> 0` gate that was green on Linux and red on the other two. Not `10⁻²` nm, which is the ion wall function's own root: a gate there admits a diffusivity of exactly zero as its last passing state, and it would put a fit coefficient in Python. One order inside the root, three orders clear of the measured undershoot in either direction |
+| Gate threshold | `min d̄ ≥ −1 × 10⁻³ nm` over the fluid sample set, on the field the corrections actually read — after mollification where it is on | Not zero, because `Set` projects and the sign of the interior residual is platform-dependent; `.knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md` already records a strict `> 0` gate that was green on Linux and red on the other two. Not `10⁻²` nm, which is the ion wall function's own root: a gate there admits a diffusivity of exactly zero as its last passing state, and it would put a fit coefficient in Python. One order inside the root, three orders clear of the measured undershoot in either direction |
 | When the gate runs | In `solve/stage.py` once per solve, after the field is built and before the first rung, and only when an active correction reads `d̄`; and once per distinct mesh at `sweep plan` time whenever any point of the plan activates a wall correction | Per member it is one evaluation on a sampler the NUM-17 gates build anyway. At plan time it costs one linear solve and the NGSolve import on a command run once, and it is the difference between a 3,675-member sweep refused in seconds and 3,675 identical aborts at wave 0 — the same argument this plan already makes for resolving every point at plan time. A classical run reads no distance field, and gating its mesh would be a gate on nothing |
 
 > **Outcome — the plan-time check memoises the mesh *ingest*, not just the gate.** Keying the
@@ -146,7 +146,7 @@ than only in a log nobody reads.
 > content hash is only available after the read: a 3,675-point plan sharing one mesh ingested it
 > 3,675 times. The memo is now on what the case *says* about the mesh — path, format and vocabulary
 > mapping — which two cases naming the same file agree on by construction.
-| Existing tests are audited, not exempted | Every Tier-1 and Tier-2 test that builds a real distance field with a wall correction active has its `min d̄` measured and recorded in this commit; one that fails the gate is re-meshed, or switches `wall: false` where the coarse mesh is the point of the test | `tests/tier2/test_envelope.py` is Phase 1's headline convergence evidence and runs every correction at `wall_h` 0.09 nm — finer than the 0.125 nm that came back clean in `.knowledge/06` §7.1.1, so it is expected to pass. Expected is not measured, and if it fails the finding is about the envelope's numbers rather than about the gate. Disabling a correction selects the `none` model rather than taking a branch, so the fallback costs no code |
+| Existing tests are audited, not exempted | Every Tier-1 and Tier-2 test that builds a real distance field with a wall correction active has its `min d̄` measured and recorded in this commit; one that fails the gate is re-meshed, or switches `wall: false` where the coarse mesh is the point of the test | `tests/tier2/test_envelope.py` is Phase 1's headline convergence evidence and runs every correction at `wall_h` 0.09 nm — finer than the 0.125 nm that came back clean in `.knowledge/06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md#711-measured-with-the-wall-corrections-on-route-agreement-is-a-mesh-statement`, so it is expected to pass. Expected is not measured, and if it fails the finding is about the envelope's numbers rather than about the gate. Disabling a correction selects the `none` model rather than taking a branch, so the fallback costs no code |
 
 > **Outcome — one test was re-meshed; the envelope passed as predicted.** `test_envelope.py` at
 > `maxh` 6.0 / `wall_h` 0.09 nm measures `min d̄ = +2.47 × 10⁻⁶` nm and passed unchanged, as did
@@ -156,7 +156,7 @@ than only in a log nobody reads.
 > element count and 4.0/0.35 gives 392 elements against 2.0/0.35's 419 — "the cheapest mesh that
 > carries all four domains" and "the mesh that resolves the wall functions" are now the same mesh.
 > `test_current_routes.py` and `test_clamp_logging.py` are classical and were not gated, as
-> predicted. The full `min d̄` table for every mesh tried is in `.knowledge/06` §7.1.1.
+> predicted. The full `min d̄` table for every mesh tried is in `.knowledge/06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md#711-measured-with-the-wall-corrections-on-route-agreement-is-a-mesh-statement`.
 | Where the 3,675-point sweep is actually run | **Not here.** The `slow` test measures *scaling* on this four-core machine; the §8.3 reference sweep ships as a checked-in document under `docs/sweeps/` and the author runs it on twelve cores at the end of Phase 1 | The author's ruling of 8 September 2026. A day-scale run inside a package's own gate is not a gate, and the scaling curve is the half of QR-06 a four-core machine can honestly measure. What WP11 owes the deferred run is that it be one command against a document in the repository, not a reconstruction from a plan file |
 | A sweep axis over `inputs.mesh` | **Warns** at plan time, naming the axis that defeated the warm start; it does not refuse | The author's ruling of 8 September 2026. The forest degenerates to one-point trees and every member is cold — correct, only slower — and VAL-04's mesh-convergence study is a sweep of exactly that shape |
 
@@ -172,7 +172,7 @@ than only in a log nobody reads.
 > zero keeps the §8.3 grid intact and the checked-in document runnable; making the check
 > *inapplicable* rather than failing means deciding what "no current" is, which is a scale the
 > extraction does not carry and which NUM-26, a Phase-1 headline gate, would have to gain.
-> Recorded in `.knowledge/06` §8.5 for whoever owns it next; deliberately not taken here.
+> Recorded in `.knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md#85-measured-num-26s-relative-route-check-is-inapplicable-at-exactly-zero-bias` for whoever owns it next; deliberately not taken here.
 
 ## Design
 
@@ -326,7 +326,7 @@ can be verified without spending the day.
 
 ### The wall-distance undershoot: the clamp, the gate, and why neither alone
 
-The author's ruling of 8 September 2026 gives this package the defect `.knowledge/06` §7.1.1
+The author's ruling of 8 September 2026 gives this package the defect `.knowledge/06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md#711-measured-with-the-wall-corrections-on-route-agreement-is-a-mesh-statement`
 records. It is worked out here in full.
 
 **What is measured.** On a toy pore (`a` = 2 nm, `L` = 6 nm), 0.1 M NaCl, +20 mV, `willems2020_nacl`
@@ -370,7 +370,7 @@ bounded on both sides.
 
 - It cannot be **zero**. `GridFunction.Set` projects element-wise, and although `mesh/distance.py`
   zeroes the constrained dofs outright so the wall is exact, the interior residual is a few times
-  `10⁻⁴` nm with a **platform-dependent sign**: `.knowledge/06` §8.1 records a strict `> 0` gate
+  `10⁻⁴` nm with a **platform-dependent sign**: `.knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md` records a strict `> 0` gate
   that was green on Linux and red on macOS and Windows. A gate at zero is a gate on the rounding
   mode.
 - It cannot be `10⁻²` **nm**. That is `−P2`, the ion function's own root, so a gate there admits a
@@ -514,7 +514,7 @@ Written in the same commit as this plan.
 | `src/nanopnp/cli/errors.py` (changed) | `SweepPlanError` → 3, `SweepCollectionError` → 4 | IF-02 |
 | `docs/sweeps/phase1-reference.sweep.yaml` (new), with its base case | The §8.3 reference sweep — 5 physics cases × 35 biases × 21 concentrations — checked in, so the deferred twelve-core run is one command against a commit rather than a reconstruction | QR-06, §8.3 |
 | `SPECIFICATION.md` | Amendments A–I above | — |
-| `.knowledge/06-numerics-fem.md` | The measured warm-start saving and the measured scaling curve, marked **[tested]**; §7.1.1's "recorded here rather than fixed under WP10" closed out with the clamp, the gate and the measured `min d̄` of every correction-on test | — |
+| `.knowledge/06-numerics-fem/index.md` | The measured warm-start saving and the measured scaling curve, marked **[tested]**; §7.1.1's "recorded here rather than fixed under WP10" closed out with the clamp, the gate and the measured `min d̄` of every correction-on test | — |
 
 ## Verification
 
@@ -523,7 +523,7 @@ Written in the same commit as this plan.
 | `tests/tier1/test_sweep_plan.py` (new) | 1 | FR-24, IF-03, QR-12, VER-36 | A product of three axes enumerates the right points in the right order; an assignment-valued axis moves several paths together; a `point_id` is stable across processes and unchanged by inserting a value on another axis, while the index is not; every point has exactly one parent one grid step nearer the origin, wave equals depth, and every point of a wave is pairwise independent; a `±` axis roots at its declared origin and walks outward both ways; a misspelt path is refused naming the component and the prefix that exists; a value of the wrong declared type is refused at plan time; a point that `resolve()` refuses (`physics.flow: false` with `default_ladder`) fails the plan naming the point and the case-file reason; `rectification` with no opposite-bias pair is refused naming the axis; the checked-in `docs/sweeps/phase1-reference.sweep.yaml` parses, its base case resolves, and its plan enumerates 3,675 points in 42 waves — everything about the deferred twelve-core run that can be verified without spending the day |
 | `tests/tier1/test_warm_start_descriptor.py` (new) | 1 | VER-37, §5.3.2 | Every leaf of a descriptor taken from a real solve appears in exactly one of `SPACE_KEYS` and `OPERATOR_KEYS`, and every entry of both lists appears in the descriptor — both directions; `load_initial` accepts a payload differing only in `solve_hash`, `scales` and `materials` and records each; it aborts naming the key and both values on a differing mesh hash, `ndof`, field record, `boundaries`, `log_variables` or `stabilisation`; a `nanopnp/solution/v1` payload is refused by schema; the returned solution carries no residual and does not read the stored distance vector |
 | `tests/tier1/test_sweep_cli.py` (new) | 1 | IF-02, FR-27, VER-38 | `sweep plan`, `sweep run` and `sweep collect` parse and dispatch; no flag changes a case-file field; `sweep run --index` exits with the member's own class for each of the case, gate, convergence and cancellation classes; `--workers` exits 0 with a failed member and nonzero with `--fail-fast`; `SweepPlanError` and `SweepCollectionError` are in the exit enumeration (inherited from the existing both-directions test); the worker initialiser sets the three thread variables before any deferred import, asserted in a spawned subprocess on `sys.modules` and `os.environ`; the dataset round-trips write → read to identical values; the CSV's first column is `status` and a failed row's QoI cells are empty |
-| `tests/tier1/test_wall_distance.py` (extended) | 1 | NUM-34, VER-40, PHY-02 | The clamp returns `f^w_D(0) = 0.0601` for every `d̄ ≤ 0` and is continuous across zero, on the float and the CoefficientFunction path alike, and the viscosity form is clamped by the same statement; the `WallDistanceGate` refuses the 124-element mesh of `.knowledge/06` §7.1.1 naming the gate, the measured minimum, its `(r, z)` and the below-zero fraction, and passes on the 2,618-element one; the un-mollified and mollified fields are both gated when NUM-31's smoothing is on, and it is the mollified one the gate reads; a classical case builds no distance field and is not gated; the gate's own threshold is read from one named constant, not repeated |
+| `tests/tier1/test_wall_distance.py` (extended) | 1 | NUM-34, VER-40, PHY-02 | The clamp returns `f^w_D(0) = 0.0601` for every `d̄ ≤ 0` and is continuous across zero, on the float and the CoefficientFunction path alike, and the viscosity form is clamped by the same statement; the `WallDistanceGate` refuses the 124-element mesh of `.knowledge/06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md#711-measured-with-the-wall-corrections-on-route-agreement-is-a-mesh-statement` naming the gate, the measured minimum, its `(r, z)` and the below-zero fraction, and passes on the 2,618-element one; the un-mollified and mollified fields are both gated when NUM-31's smoothing is on, and it is the mollified one the gate reads; a classical case builds no distance field and is not gated; the gate's own threshold is read from one named constant, not repeated |
 | `tests/tier2/test_sweep.py` (new) | 2 | FR-24, VER-37, VER-38 | On a 2 × 2 grid (two concentrations × ±50 mV) on the WP10 reference pore: every point warm-started from its parent reproduces the same point run cold to better than the `1 × 10⁻⁶` nonlinear relative tolerance, with the **measured** worst difference reported; the warm run costs strictly fewer Newton iterations in total; a member whose parent artefact is deleted from the store falls back to the full ladder, converges, and records `cold` with the reason; the collected dataset carries one row per point with its NUM-26 route agreement, and the `rectification` of the ± pair equals `post.qoi.rectification` of the two rows exactly; a member run with `--index` alone into an empty store produces the same scalars as the same member inside the sweep |
 
 > **Outcome — measured. Worst warm-against-cold difference `3.367 × 10⁻⁹`** (on `conductance_S`),

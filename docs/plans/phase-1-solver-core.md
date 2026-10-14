@@ -129,7 +129,7 @@ test that matters is the negative one — a mesh whose `wall` group is misspelt 
 ### The Tier-3 attribution ladder
 
 §7.4 forbids gating until the stabilised mode exists and the meshes are convergence-matched, and
-`.knowledge/09` §F lists what can never be matched: COMSOL's stabilisation operators are not
+`.knowledge/09-comsol-reference-settings/07-differences-that-cannot-be-removed.md` lists what can never be matched: COMSOL's stabilisation operators are not
 exported, "approximate residual" is internal, the element sets differ, and the reference's own
 discretisation error is unquantified (RSK-09). So the deliverable is a decomposition:
 
@@ -155,7 +155,7 @@ destroys Jacobian symmetry). Two properties are asserted rather than assumed:
   crosswind term is not a Galerkin-consistent perturbation in the same sense, and asserting an
   unmeasured order would be asserting something untrue.
 - **Vanishing difference.** The stabilised and unstabilised currents on the same case must approach
-  each other under refinement, at a measured rate. This is the quantitative form of `.knowledge/09`
+  each other under refinement, at a measured rate. This is the quantitative form of `.knowledge/09-comsol-reference-settings/index.md`
   §F's "irreducible systematic bounded only by mesh refinement", and it is what licenses the
   attribution ladder above.
 
@@ -508,7 +508,7 @@ distance field undershoots to −0.99 nm at the re-entrant pore-mouth corner, an
 `1 − exp(−6.2(d + 0.01))` returns a **negative** diffusivity and mobility factor there. It does not
 move the numbers above, the corner being one quadrature neighbourhood, but it is a wrong sign in a
 correction and belongs to whichever package owns the distance field's boundary behaviour
-(`.knowledge/06-numerics-fem.md` §7.1.1).
+(`.knowledge/06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md#711-measured-with-the-wall-corrections-on-route-agreement-is-a-mesh-statement`).
 
 ### WP11 — Sweep runner — **delivered**
 
@@ -555,7 +555,7 @@ Beyond the plan: the WP10 defect below is **closed**, and closing it took two ch
 amendment H) — the ion form's root is at `d̄ = −P₂`, so a negative sample reversed the sign of `D_i`
 and `μ_i` rather than attenuating them — and `WallDistanceGate` refuses a field sampling below
 `−1 × 10⁻³` nm anywhere a wall correction is active (NUM-34, amendment I). The measurement that
-justifies needing *both* is in `.knowledge/06` §7.1.1: with the clamp alone, a `wall_h` 0.5 nm mesh
+justifies needing *both* is in `.knowledge/06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md#711-measured-with-the-wall-corrections-on-route-agreement-is-a-mesh-statement`: with the clamp alone, a `wall_h` 0.5 nm mesh
 whose distance field reaches −1.2 nm **passes NUM-26 forty times inside tolerance** and returns a
 current 13 % low, where unclamped it disagreed between the routes by 9.6 × 10⁻⁵ and at 1.0 nm by
 40 %. The clamp turns loudly wrong into quietly wrong; the gate turns it into refused.
@@ -586,7 +586,7 @@ aborts.** The current is zero, both routes return round-off — `I_ψ = 2.288 ×
 one operating point whose answer is known exactly. The reference sweep's bias axis is rooted at
 +5 mV rather than 0 V to keep its 3,675 points runnable; making the check *inapplicable* rather
 than failing means deciding what "no current" is, which is a scale the extraction does not carry.
-Recorded in `.knowledge/06` §8.5, deliberately not fixed here.
+Recorded in `.knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md#85-measured-num-26s-relative-route-check-is-inapplicable-at-exactly-zero-bias`, deliberately not fixed here.
 
 ### WP12 — Reference-matching stabilised mode — **delivered**
 
@@ -655,7 +655,7 @@ survives multiplication by that zero. `b̃_i` is exactly zero at every rung belo
 the ordinary path. The guard is `MAGNITUDE_FLOOR = 1 × 10⁻⁶⁰` inside every root, gated on the
 **assembled Jacobian entries** because a residual-norm check reports zero and not `NaN`; `Assemble`
 is clean and only `AssembleLinearization` carries it, which is why the zero-wind residual test passed
-in all three modes and caught none of it. Recorded as trap 19 in `.knowledge/06` §8.1. **The two GLS
+in all three modes and caught none of it. Recorded as trap 19 in `.knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md`. **The two GLS
 rows do not share an orientation**: the velocity row takes a `+` and the pressure-test piece a `−`,
 giving `[[A, B], [Bᵀ, −C]]`; one signed term for both stabilises one row and destabilises the other.
 **`solve/state.py` gained three `SPACE_KEYS` entries, not zero** — the mode *name* alone would let a
@@ -747,8 +747,8 @@ claiming the telescoping identity catches a rung run against a stale golden is *
 telescopes for any four numbers, and the gate that does that job is the hash and point-count
 comparison in `attribute()`. Evidence:
 [`wp13-tier3-comsol-comparison.md`](wp13-tier3-comsol-comparison.md) Outcomes;
-`.knowledge/08-validation-benchmarks.md` for the measured ladder and the two-norm contrast;
-`.knowledge/06-numerics-fem.md` §8.4.1 for the forest severing.
+`.knowledge/08-validation-benchmarks/index.md` for the measured ladder and the two-norm contrast;
+`.knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md#841-a-sweep-axis-over-a-space-key-severs-the-forest-and-the-gate-that-fires-is-fields` for the forest severing.
 
 ### WP14 — The packaging probe and the desktop shell — **delivered**
 
@@ -780,7 +780,7 @@ jobs. The `RunEvent` union in `gui/solver.py` is the channel a `NewtonStep` vari
 `Stage`; WP15 adds the variant and must not parse the residual out of a progress message. And
 `MainWindow` is a `QTabWidget` laid out to take the plot and the viewer as further tabs. Evidence:
 [`wp14-gui-shell-packaging-probe.md`](wp14-gui-shell-packaging-probe.md) Outcomes;
-`.knowledge/07-software-stack.md` §5.
+`.knowledge/07-software-stack/05-gui-and-packaging.md`.
 
 ### WP15 — Live convergence and the field viewer — **delivered**
 
@@ -813,7 +813,7 @@ proxy with 403. **§8.2 criterion 4 and RSK-13 remain open** on the author's dou
 by this package. And the viewer opens the run just finished; opening an arbitrary stored run is a
 file chooser away and belongs to Phase 4's result browser. Evidence:
 [`wp15-live-convergence-and-viewer.md`](wp15-live-convergence-and-viewer.md) Outcomes;
-`.knowledge/06-numerics-fem.md` §5.1 and `.knowledge/07-software-stack.md` §5.
+`.knowledge/06-numerics-fem/05-nonlinear-solution.md#51-continuation-ladder` and `.knowledge/07-software-stack/05-gui-and-packaging.md`.
 
 ### WP16 — User documentation and worked examples — **delivered**
 
@@ -829,7 +829,7 @@ Found on the way, and fixed: every checked-in reference case mapped a `default` 
 mesh does not carry, and meshio leaked a blank line into the CLI's stdout. Inherited: the Read the
 Docs project is the author's to create; the Tier-2 examples cost 129 s serial against a 120 s
 target. Evidence: [`wp16-user-docs-and-examples.md`](wp16-user-docs-and-examples.md) Outcomes;
-`.knowledge/07-software-stack.md` §4, §13.
+`.knowledge/07-software-stack/04-geometry-meshing-and-io.md`, §13.
 
 ## Open decisions
 
@@ -929,14 +929,14 @@ requires it before WP17.
 (708 elements, 0.5 M, +50 mV, −0.05 C/m²; four full-ladder solves in 75 s). The `none`-rung
 distance splits as expected. `Δ_transport` carries 88 % of the potential's `Δ_total` (4.01 × 10⁻²),
 and `Δ_flow` carries 90 % of the radial velocity's (8.53 × 10⁻¹). `Δ_resid` is zero by
-construction, and the telescoping identity holds to round-off (`.knowledge/08-validation-benchmarks.md`
+construction, and the telescoping identity holds to round-off (`.knowledge/08-validation-benchmarks/index.md`
 §Tier 3; `wp13-tier3-comsol-comparison.md` Outcomes). These numbers describe the ladder. They say
 nothing about the reference implementation, so no fraction of `Δ_resid` has been bounded by VAL-04:
 its `Δ_ref` needs the published mesh and one uniform refinement from COMSOL. One Tier-3 number
 *does* concern the reference. VAL-15 measured the delivered `rhoq_pore` table on our 44,316-element
 reference mesh. Its producer leg is exact, to 4.68 × 10⁻¹². Its consumer leg is off by
 **9.87 × 10⁻³**, missing QR-03's 10⁻³ by a factor of ten, with the quadrature-agreement gate at
-9.27 × 10⁻³. Aliasing of a sub-element field is the cause (OPN-06, `.knowledge/04` §3.2). The same
+9.27 × 10⁻³. Aliasing of a sub-element field is the cause (OPN-06, `.knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md#32-the-references-125-is-the-consumers-and-it-is-aliasing`). The same
 gate meets QR-03 with a factor of 73 to spare on a field smeared at the reference's own width
 (WP9).
 
@@ -966,14 +966,14 @@ boundary layers, the mesh is **44,316 triangles** in 6.5 s. Minimum SICN is **0.
 0.9870), minimum gamma 0.6157 (mean 0.9852), with no inverted element. COMSOL reached 0.6378 and
 0.9765 with 120,917 triangles. Ours needed **about a third of the elements**, not more, to land in
 the same quality band. Element counts are a property of the netgen build, not of the geometry
-(`.knowledge/07` §4), so the count is asserted as a band.
+(`.knowledge/07-software-stack/04-geometry-meshing-and-io.md`), so the count is asserted as a band.
 
 **Tolerances argued rather than met.** There are three, and none of them is a slackened Tier-1 or
 Tier-2 gate.
 - **NUM-26 at exactly zero bias.** Both current routes return round-off (`I_ψ = 2.288 × 10⁻²⁷` A
   against `I_reaction = 4.606 × 10⁻²⁵` A, relative difference 0.995), so the relative check is
   inapplicable there. The reference sweep's bias axis is rooted at +5 mV. Deciding what "no current"
-  means is left open (`.knowledge/06` §8.5).
+  means is left open (`.knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md#85-measured-num-26s-relative-route-check-is-inapplicable-at-exactly-zero-bias`).
 - **VER-42's full `reference` mode rate.** At 0.984 it is recorded, never gated, for the reason
   above.
 - **VAL-15's consumer leg.** Ten times outside QR-03, attributed and not accommodated.

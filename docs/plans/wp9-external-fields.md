@@ -61,7 +61,7 @@ half of the pipeline it belongs to. WP9 builds the instrument that would have sa
 | Field document | `inputs.charge.path` and `inputs.eps_r.path` name a **pydantic-validated YAML header**, `schema: nanopnp/field/v1`, carrying quantity, units, grid descriptor, axis cutoff, declared `Q_net`, provenance and the *data* file it refers to; `format: field1` | The WP8 `PoreProfile` pattern, and the only way a `.dx` file can carry metadata at all — OpenDX has nowhere to put a `Q_net` or a unit. One header shape for every data format keeps the gates in one place, and `extra="forbid"` names an unknown key (IF-03) |
 | Quantity vocabulary | `areal_charge_density` (the reference's `rhoq_pore`, C m⁻²), `volume_charge_density` (C m⁻³) and `solid_fraction` (dimensionless). The `1/(2πr)` division and the axis guard apply to `areal_charge_density` **only** | Applying the projection factor twice, or not at all, is the single worst silent error available here and it is invisible in the global conservation check (§Design). A declared quantity makes it a validation failure rather than a factor of `2πr` |
 | Absolute `ε_r` fields | **Refused**, with a diagnostic pointing at PHY-11/PHY-12. `inputs.eps_r` supplies a *solid fraction* `χ ∈ [0, 1]` and the solver blends `ε_r = χ ε_p + (1 − χ) ε_r,f(⟨c⟩)` | An absolute `ε_r` field is static; `ε_r,f` depends on the solved `⟨c⟩`. Accepting one would silently disable the permittivity correction while reporting ePNP-NS. §4.4's "the transition **to ε_w**" is a blend by construction |
-| Native format | `.npz`, float64, on the default path. OpenDX and CCP4 read *and* written through GridDataFormats **behind the `structure` extra** | CON-10's argument, applied to a second optional dependency: GridDataFormats needs Python ≥ 3.11 and the project floor is 3.10 (`.knowledge/07` §versions), so a field must be readable without it. IF-05's formats are the interchange, not the working format |
+| Native format | `.npz`, float64, on the default path. OpenDX and CCP4 read *and* written through GridDataFormats **behind the `structure` extra** | CON-10's argument, applied to a second optional dependency: GridDataFormats needs Python ≥ 3.11 and the project floor is 3.10 (`.knowledge/07-software-stack/index.md` §versions), so a field must be readable without it. IF-05's formats are the interchange, not the working format |
 | 2D grids in 3D formats | A `(r, z)` grid is written as a 3D grid whose **third axis is a singleton**; the reader requires `shape[2] == 1` and refuses anything else naming the shape | Measured: gridData 1.2.0 round-trips `(4, 3, 1)` through both DX and MRC with origin and delta intact, and a genuinely 2D array fails inside the DX writer with `TypeError: not enough arguments for format string` (§Findings). Refusing it ourselves is the difference between a diagnostic and a stack trace |
 | "CCP4" | Written through gridData's `MRC` writer, to a `.ccp4` or `.mrc` name | Measured: `file_format="ccp4"` raises `ValueError: File format CCP4 not available`; the registry offers `DX, PKL, PICKLE, PYTHON, VDB, MRC`, and MRC *is* the CCP4-2000 map format. It stores float32, so a CCP4 round trip is not bit-exact and changes the artefact hash — recorded, not hidden |
 | Interpolation | `ngsolve.VoxelCoefficient(start, end, values, linear=True)` — bilinear, evaluated at quadrature points in C++ | Matches the reference's own "2D linear interpolation function" exactly. `linear=False` (nearest) is not offered: it is not what the reference did and it would make the conservation budget a function of the mesh |
@@ -71,8 +71,8 @@ half of the pipeline it belongs to. WP9 builds the instrument that would have sa
 | Per-plane check | The cumulative charge below each of a ladder of `z` planes, evaluated with a **linear ramp of width δ = 0.2 nm** applied identically to the mesh-side and grid-side integrals | A step indicator is integrated by quadrature inside the elements it straddles, at ≈ 0.2 % of `Q_net` on the reference mesh (§Design) — five times the budget it is meant to police. A ramp makes both sides one Lipschitz functional evaluated two ways, and the tolerance stays at 10⁻³ |
 | Quadrature adequacy | `Q_mesh` evaluated at the `Measures` order and again at `extra_order=3`; a difference above `10⁻⁴ \|Q_net\|` aborts, naming the mesh as under-resolving the field | The conservation check is, on the deployed mesh, a quadrature-resolution check (§Design). Without this the gate reports a number it cannot defend, and NUM-07's floor is about `1/r`, not about a Gaussian of width 0.085 nm on 0.05 nm elements |
 | The `2π` | Restored **in `charge/fields.py`**, once, for `Q_mesh` | `Measures.integrate` applies the `r` weight and not the `2π`; the Phase-0 rule names `io/`, `sweep/` and `gui/` as the layers that must not re-apply it, and those consume a QoI rather than produce one. A doubled or missing `2π` fails the analytic test by a factor of 6.283, which is not a tolerance question |
-| Ion exclusion | A **named material**, `exclusion`, that is a *solid* for both Nernst–Planck and the flow and takes the **fluid's** `ε_r` for Poisson. `physics.solid_permittivities` does **not** require an entry for it | Making it solid for the flow puts the no-slip surface at the outer Helmholtz plane, which is the conventional shear plane (`.knowledge/02` §EDL) rather than an approximation — and it means `CoupledModel.fluid` is untouched and `permittivity()`'s `default=fluid_permittivity` already does the right thing. The region becomes a configuration of existing machinery, as `analyte` is, not a third domain partition |
-| Exclusion is a deviation | Recorded as one whenever the ingested mesh carries the material, through a new **stage-contributed** deviation channel | `.knowledge/02` records that ePNP-NS has **no explicit Stern layer**, so its presence is a departure from the validated model (FR-25, §5.3.3). It is set by the mesh, not by a case-file switch, so `deviations_group`'s diff cannot see it and must be told |
+| Ion exclusion | A **named material**, `exclusion`, that is a *solid* for both Nernst–Planck and the flow and takes the **fluid's** `ε_r` for Poisson. `physics.solid_permittivities` does **not** require an entry for it | Making it solid for the flow puts the no-slip surface at the outer Helmholtz plane, which is the conventional shear plane (`.knowledge/02-electrokinetics-background/index.md`DL) rather than an approximation — and it means `CoupledModel.fluid` is untouched and `permittivity()`'s `default=fluid_permittivity` already does the right thing. The region becomes a configuration of existing machinery, as `analyte` is, not a third domain partition |
+| Exclusion is a deviation | Recorded as one whenever the ingested mesh carries the material, through a new **stage-contributed** deviation channel | `.knowledge/02-electrokinetics-background/index.md` records that ePNP-NS has **no explicit Stern layer**, so its presence is a departure from the validated model (FR-25, §5.3.3). It is set by the mesh, not by a case-file switch, so `deviations_group`'s diff cannot see it and must be told |
 | Smoothed dielectric is a deviation | Same channel, whenever `inputs.eps_r` is supplied | PHY-20 gives the validated model sharp per-domain constants. No new case-file switch is added: a switch that could disagree with the presence of the input would be a second source of truth |
 | Analytic fields | A **registry of named forms** (`uniform`, `gaussian_ring`, `slab`), each with typed parameters, following `materials/models.py`'s `register` / `registered_models` / `create` | FR-16's rule generalised: a field is data, named, with provenance. A free-text expression string evaluated at solve time is arbitrary code whose provenance is a string, and `materials/forms.py` already shows what the alternative looks like |
 | Grid IO lives in `density/` | `density/grid.py` holds `RadialGrid` and its readers; `charge/fields.py` and `materials/fields.py` consume it | §5.1 assigns "grid IO" to `density/` and nothing else. Putting it in `charge/` would make the dielectric field import the charge module for a container. This fills one file of a Phase-2 slot; it does not start the density pipeline |
@@ -153,7 +153,7 @@ The consumer's budget is then spent on four things, in decreasing order of size.
   axis — makes it real.
 
 > **Outcome — the ordering was right and the size was not.** Measured on the delivered table
-> (`.knowledge/04` §3.1, §3.2): the producer leg is `4.7 × 10⁻¹²` (`Q_grid = −71.999999999663 e`
+> (`.knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md#31-the-delivered-table-measured`, §3.2): the producer leg is `4.7 × 10⁻¹²` (`Q_grid = −71.999999999663 e`
 > against a declared `−72 e`), the ring ratio `8.5 × 10⁻²⁴`, the guard deficit `1.4 × 10⁻⁶⁸ e` —
 > the last three exactly as predicted, with decades to spare. FE quadrature did not "plausibly
 > consume the whole budget": on the WP8 reference mesh it consumed **ten times** it, at
@@ -433,7 +433,7 @@ New verification items for §7.2:
 > The mesh is now `MakeStructured2DMesh` at `(27, 70)` — 0.222 × 0.221 nm — where every vertex is
 > placed arithmetically and the number is the same everywhere: legs 1.9e-4 at worst (five times
 > inside QR-03), agreement 3.7e-4 (nearly four times over its gate). Recorded as
-> `.knowledge/06` §8.1.2.
+> `.knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md#812-an-unstructured-netgen-mesh-is-not-a-portable-measurement`.
 >
 > **VER-29's CCP4 round trip was a measurement of the resolver.** GridDataFormats 1.2 requires
 > Python ≥ 3.11, so on 3.10 the resolver takes 1.0.2, whose exporter registry has no `MRC` entry: it
@@ -443,7 +443,7 @@ New verification items for §7.2:
 > release that gained the writer), `writable_formats()` exposes the capability for FR-27, and the
 > test asserts the refusal on the branch where the writer is absent rather than skipping — so 3.10
 > and 3.11+ each assert something. IF-05 gained the NOTE saying its write side is conditional and
-> why QR-09's 3.10 floor is the larger promise. Recorded as `.knowledge/07`.
+> why QR-09's 3.10 floor is the larger promise. Recorded as `.knowledge/07-software-stack/index.md`.
 
 Gate before the package is done, as every package:
 
@@ -474,7 +474,7 @@ uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv ru
 
 > **Outcome — all three answered, 6 September 2026, by the author delivering the table.** It arrived
 > during implementation as `prod5_clya_charge`, COMSOL's `%Grid`/`%Data` export of the published
-> model's own `rhoq_pore`. The measurements are in `.knowledge/04` §3.1 and §3.2 and are not
+> model's own `rhoq_pore`. The measurements are in `.knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md#31-the-delivered-table-measured` and §3.2 and are not
 > repeated here; the answers are below, in place.
 
 1. **Is there a real `rhoq_pore` grid from the COMSOL model that could ship as a fixture?**
@@ -498,7 +498,7 @@ uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv ru
 
 3. **Units of the delivered table.** **`e/m²` — there is no `e` inside the file.** The integral
    being the integer −72 rather than `−72 × 1.6 × 10⁻¹⁹` settles it: the stored sum is in units of
-   `e`, and the COMSOL assembly's `e_const` supplies the coulombs exactly once. `.knowledge/04`
+   `e`, and the COMSOL assembly's `e_const` supplies the coulombs exactly once. `.knowledge/04-clya-geometry-and-charge/index.md`
    §3's transcription of eq. `eq:scdpore` with an `e` inside the sum is the published expression and
    not the file; implementing it literally and then applying `e_const` double-counts. **G5 and G10
    both close on this table** (§8 of that file).

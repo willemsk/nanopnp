@@ -33,7 +33,7 @@ keep that, since only those two were ever used for more than lookups.
 ## Execution brief
 
 Scope: L2, L3, L4's rule edit, L6, L7, L8. The tree strip and VER-75 are WP45. Depends on WP43 as
-merged. Clauses: §7.6, Appendix A (VER-72 to VER-74), §8.2.10 J2 to J11, §8.2.11, `.knowledge/07` §12, REV-80 to REV-83.
+merged. Clauses: §7.6, Appendix A (VER-72 to VER-74), §8.2.10 J2 to J11, §8.2.11, `.knowledge/07-software-stack/12-the-suites-blas-threads-buy-nothing.md`, REV-80 to REV-83.
 
 ### Decisions
 
@@ -50,7 +50,7 @@ merged. Clauses: §7.6, Appendix A (VER-72 to VER-74), §8.2.10 J2 to J11, §8.2
 
 Each item carries the clause edits for what it deletes or changes. One commit each; tick on completion.
 
-- [x] 0af3891 1. Rewrite `.claude/hooks/gate.sh` to D1 to D3. Delete `tests/impact.py`, `tests/tier1/test_impact_selection.py`, the map mode and the `gate.sh map` allowance in `.claude/settings.json`; cut `tests/tier1/test_workflow_hooks.py` and `tests/tier1/test_push_guard.py` to the cases of Verification. Edit §7.6's development-selection and coverage NOTEs, the VER-74 row and Appendix A's summary, `.knowledge/07` §12, `CLAUDE.md` (map row, coverage lines) and `.github/scripts/prose-only.sh`'s comments. Done when `uv run pytest tests/tier1` passes.
+- [x] 0af3891 1. Rewrite `.claude/hooks/gate.sh` to D1 to D3. Delete `tests/impact.py`, `tests/tier1/test_impact_selection.py`, the map mode and the `gate.sh map` allowance in `.claude/settings.json`; cut `tests/tier1/test_workflow_hooks.py` and `tests/tier1/test_push_guard.py` to the cases of Verification. Edit §7.6's development-selection and coverage NOTEs, the VER-74 row and Appendix A's summary, `.knowledge/07-software-stack/12-the-suites-blas-threads-buy-nothing.md`, `CLAUDE.md` (map row, coverage lines) and `.github/scripts/prose-only.sh`'s comments. Done when `uv run pytest tests/tier1` passes.
 - [x] 10bba12 2. Delete `.github/budgets.yaml`, `.github/scripts/ci_budget.py`, `tests/durations.json` and `tests/tier1/test_loop_budgets.py`; remove `--shard` and the packing from `tests/conftest.py`; rewrite `tests/tier1/test_shard_packing.py` as a test of the kept `no_cover` marker, renamed off VER-73; in `.github/workflows/ci.yml` run the tiers as the two shards and drop the budget steps. Withdraw the VER-73 row and §7.6's budget NOTE. Done when `tests/tier1` passes and the workflow parses as YAML.
 
 *Compaction checkpoint: after item 2; resume from this plan and `git log`.*

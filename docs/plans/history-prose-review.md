@@ -63,7 +63,7 @@ on 30 September 2026, why `v0.5.0` was reused, and how to read an old manifest's
 | `SPECIFICATION.md:197-230` | The §2.7 *Versioning* NOTE. About 20 of its 34 lines are the renumber story ("Until 30 September 2026 Phase 1 was released as v0.5…", "On 3 October… reused", "On 4 October… postponed") |
 | `.github/renumbered-tags.txt` | The old → new tag mapping, with a 10-line header narrating it |
 | `.github/workflows/release.yml:74-84` | Reads the mapping, so a renumbered tag skips the CITATION version check |
-| `.knowledge/08-validation-benchmarks.md:121-126` | "Re-scoped 30 September… renumbered v0.7 on 4 October" |
+| `.knowledge/08-validation-benchmarks/03-tier-3-comsol-differential-tests-hours.md` | "Re-scoped 30 September… renumbered v0.7 on 4 October" |
 | `docs/plans/phase-3-charge-pipeline.md:4` | "`v0.3.0-alpha.9`, formerly `v0.9.0-alpha.9`" (a delivered plan, see I) |
 
 **Depends on it.** Only `release.yml`, and only when a *retroactive* tag is re-released. All
@@ -108,15 +108,15 @@ Passages that keep the old, wrong text alive in order to say it was corrected:
 | `SPECIFICATION.md:255` | IF-05 NOTE "retired 24 September 2026": the CCP4 write side was dropped |
 | `SPECIFICATION.md:402` | QR-09 "Amended… from 3.10–3.14" |
 | `SPECIFICATION.md:703-715` | PHY-16 NOTE: "as first written, steps 4 and…", "first written as order `(w_i/r_i)²`" |
-| `.knowledge/07-software-stack.md:127` | "Superseded by the 3.11 floor" (a block about 3.10) |
-| `.knowledge/07-software-stack.md:159` | "The row above once claimed mmCIF as [tested], which was wrong" |
-| `.knowledge/09-comsol-reference-settings.md:22` | "This file previously recorded the ESI as 143 pages…" |
-| `.knowledge/00-index.md:129` | "(formerly open here)" |
+| `.knowledge/07-software-stack/02-structure-trajectory-and-density.md` | "Superseded by the 3.11 floor" (a block about 3.10) |
+| `.knowledge/07-software-stack/02-structure-trajectory-and-density.md` | "The row above once claimed mmCIF as [tested], which was wrong" |
+| `.knowledge/09-comsol-reference-settings/00-overview.md` | "This file previously recorded the ESI as 143 pages…" |
+| `.knowledge/index.md` | "(formerly open here)" |
 
 **Recommendation: rewrite** each to state only the current fact.
 
-**One exception to keep:** the five errata in `.knowledge/01-physics-epnpns.md`, and the
-Buchner-vs-Gavish note at `.knowledge/01:371` and `data/corrections/willems2020_nacl.yaml:133`. Those
+**One exception to keep:** the five errata in `.knowledge/01-physics-epnpns/index.md`, and the
+Buchner-vs-Gavish note at `.knowledge/01-physics-epnpns/08-errata-in-the-source-with-the-arithmetic.md` and `data/corrections/willems2020_nacl.yaml:133`. Those
 record errors in the *external* sources, and CLAUDE.md relies on them to stop people re-importing the
 wrong equations. They are not project history.
 
@@ -279,7 +279,7 @@ Edit this list and send it back to me:
 - [ ] L: change the skill rules (present tense; history to git, CHANGELOG, plans)
 - [ ] A: remove the renumbering record, `renumbered-tags.txt` and the `release.yml` branch
 - [ ] B: strip the spec amendment stamps: (a) entirely, or (b) keeping the decision ID
-- [ ] C: rewrite the "as first written" passages (the external-source errata in `.knowledge/01` stay)
+- [ ] C: rewrite the "as first written" passages (the external-source errata in `.knowledge/01-physics-epnpns/index.md` stay)
 - [ ] D: rewrite the before/since/until-WPn docstrings (pinned constants stay)
 - [ ] E: drop the calendar dates from measurement stamps in code and tests
 - [ ] F: `.knowledge/` supersession notes: now, or as part of the Phase 4 OKF bundle

@@ -719,7 +719,7 @@ WP29: VAL-06, Poisson against APBS, the fourth package of Phase 3 and the third 
   half the tolerance of it, and eight broken constructions of the maps must each exceed that.
 - Under `-m slow`: the recorded leg, with APBS's own `spl4` charge and `smol` surface from the PQR
   and our membrane imposed, compared per probe ring. Also a focused 0.05 nm grid, which measures
-  APBS's order at 1.6 (`.knowledge/07` §3). At Tier 3, recorded: the ClyA-AS ensemble from the
+  APBS's order at 1.6 (`.knowledge/07-software-stack/03-charge-and-electrostatics.md`). At Tier 3, recorded: the ClyA-AS ensemble from the
   archived PQRs (`tests/tier3/test_val06_archive.py`).
 - The test-only dependency group `apbs` (`apbs-binary` 3.4.1.1 on Linux x86_64 and macOS), a
   default group so that the gate runs VAL-06. It never reaches a wheel (CON-07).

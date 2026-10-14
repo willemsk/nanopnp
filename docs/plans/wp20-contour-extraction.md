@@ -50,7 +50,7 @@ unless they are fixed together.
      names stage 5.
   4. §5.3.2 row 4: the stage-4 artefact.
   5. §10 OPN-02 is closed and §9 RSK-06 retired, with the finding of [Design §1](#1-the-authors-script-read).
-- **Knowledge:** `.knowledge/04` §1.2 (new) records the script and its erratum; `.knowledge/07`
+- **Knowledge:** `.knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#12-the-authors-contour-script-read` (new) records the script and its erratum; `.knowledge/07-software-stack/index.md`
   §7 and the index's *Still open* item 3 are updated.
 - **Code:** `symmetry/reduce.py` (`ReducedMap.grids`); `density/radii.py` (`resolve_radii`,
   `KERNEL_RADII`); `structure/ensemble.py` (`AlignedEnsemble.read`); `mesh/profile.py`
@@ -171,7 +171,7 @@ uv run pytest -m tier3 tests/tier3/test_density_ensemble.py -v --log-cli-level=I
 > `test_stages.py` adds the missing-extra test for stage 4. The Tier-1 walk and artefact tests
 > use a synthetic C12 tube in place of `synthetic_c12`, whose sparse chains give no contour at
 > 0.25. `.claude/hooks/gate.sh run` passed on 26 September 2026. The measurements are in
-> `.knowledge/04` §1.3:
+> `.knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#13-stage-4-on-real-and-synthetic-inputs-measured`:
 >
 > - **2WCD, Tier 2:** the gate passes with 161 vertices, spacing 0.0727 nm, feature size 0.157 nm
 >   and a band of +0.062 to +0.908 nm. The prototype, on the author's copy, measured 157, 0.0725,
@@ -329,7 +329,7 @@ size, NUM-30's `h₁ = λ_D/5` is 0.035 nm at 3 M and 0.27 nm at 0.05 M. That re
   at every member, and conductances across concentrations would compare different pores.
 - **At 0.05 M the contour would need 0.27 nm spacing** and a 0.54 nm feature size. That erases the
   lumen's corrugation, which the thesis puts at about 0.25 nm in radius (a 6.0 nm mean diameter
-  against the 5.5 nm largest sphere, `.knowledge/04` §1).
+  against the 5.5 nm largest sphere, `.knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md`).
 
 The contour's own resolution is the map's, h. So `h_c = h`: 0.05 nm by default, which is also the
 reference model's pore-boundary element size (§5.2.2). A mesh whose wall size exceeds h is refined
@@ -413,4 +413,4 @@ argument must face, and it is why the two author questions above are addressed t
 
 **The lattice fingerprint.** In the delivered table, 58 % of the vertices have at least one
 coordinate on the 0.05 nm lattice, and 32 % have both. A subset of marching-squares vertices
-written at `%.2f` would have at least one on every vertex (`.knowledge/04` §1.2).
+written at `%.2f` would have at least one on every vertex (`.knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#12-the-authors-contour-script-read`).

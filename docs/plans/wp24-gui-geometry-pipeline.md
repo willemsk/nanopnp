@@ -73,7 +73,7 @@ Without the editor, the viewers do not meet criterion 4.
   - [WP15](wp15-live-convergence-and-viewer.md) D1, D2, D7–D10, and their Outcomes;
   - [WP21](wp21-cad-assembly-and-meshing.md) D5 and D14 (the region key; `inputs.profile`'s
     refusals);
-  - `.knowledge/07` §5.
+  - `.knowledge/07-software-stack/05-gui-and-packaging.md`.
 
 ### Decisions
 
@@ -89,7 +89,7 @@ Without the editor, the viewers do not meet criterion 4.
 | D8 | What the editor enforces | **On every edit:** `PoreProfile`'s own validators (finite, `r ≥ 0`, no repeated vertex, simple, non-zero area), reported naming the vertex. A document that would fail them cannot be saved. **On demand, and recorded without enforcing:** the §5.2.1 criteria (axis clearance, spacing, feature size, the radius-profile band). These are measured in a spawned child against the case's stored stage-1 and stage-3 artefacts, with thresholds taken from that measurement and never written in `gui/`. Stages 5 and 6 apply their own gates as always | A hand edit enters as a supplied profile, which the §5.2.1 NOTE gates only on validity, simplicity and topology. The same validator that loads the file checks it, so the two cannot disagree. The criteria stay visible, because silently accepting a contour inside the probe radius is the plausible wrong geometry |
 | D9 | Measuring without refusing | `geometry/contour.py` gains `measure(loop, *, spacing_nm, planes_nm, probe_nm) -> record`, which returns every criterion's value, threshold and (r, z). `gate` becomes `measure` plus a raise at the first failure. Its messages and its record are unchanged | One implementation of the criteria. VER-51's tests hold `gate` unchanged, and VER-55 holds `measure` equal to the stage-4 summary's `gate` record on that artefact's own loop |
 | D10 | Seeding after a refusal (B9) | If stage 4's gate refused the contour, the editor can start from `condition()` recomputed on the stored stage-3 map with the case's contour parameters. The recomputation runs in the spawned assess child. The editor shows the refusal's QR-12 diagnostic and marks its (r, z) | Author ruling, 29 September 2026. A refused gate writes no artefact (QR-12), so there is otherwise nothing to override. The source work's manual vertex editing is exactly this recovery |
-| D11 | Density views | <ul><li>**Stage 2:** the axial section of the 3D map at `y = 0`, over `x ∈ [−R, R]`, so the Cₙ asymmetry shows.</li><li>**Stage 3:** the mean, and both variances (FR-06, CON-04), selectable.</li><li>Density and mean share a fixed [0, 1] scale (VER-49's bounds). Each variance is shown on its own labelled scale.</li><li>Pixel centres sit at the grid's own node coordinates.</li><li>The loaded arrays are read off the Qt thread.</li></ul> | Placing bin j at its edge is the `pqr2grid` erratum (`.knowledge/04` §1.2). The display must not reintroduce it. [Design §2](#2-where-a-pixel-sits) |
+| D11 | Density views | <ul><li>**Stage 2:** the axial section of the 3D map at `y = 0`, over `x ∈ [−R, R]`, so the Cₙ asymmetry shows.</li><li>**Stage 3:** the mean, and both variances (FR-06, CON-04), selectable.</li><li>Density and mean share a fixed [0, 1] scale (VER-49's bounds). Each variance is shown on its own labelled scale.</li><li>Pixel centres sit at the grid's own node coordinates.</li><li>The loaded arrays are read off the Qt thread.</li></ul> | Placing bin j at its edge is the `pqr2grid` erratum (`.knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#12-the-authors-contour-script-read`). The display must not reintroduce it. [Design §2](#2-where-a-pixel-sits) |
 | D12 | Mesh view | The render child gains a mesh request. It draws the stage-6 MSH through `ngsolve.webgui`, by material, into a file under the run directory's `viewer/`. The artefact's gate summary is shown beside it: SICN, gamma, the worst element's location, and the wall-size gate | The pore wall is 0.05 nm against a 250 nm reservoir, and webgui's zoom already covers that span. One renderer path (WP15 D8–D10, D14) |
 | D13 | Drawing | Hand-stroked `QPainter` over a Qt-free transform, as the convergence plot is drawn. There is no new plotting dependency. The images are `QImage`s over RGBA bytes built in the view-model from a fixed perceptual lookup table | WP15 D7. The transform and hit-testing are asserted Qt-free |
 | D14 | Editor operations | Move a vertex (drag or typed coordinates), insert a vertex at an edge's midpoint, delete a vertex, undo and redo. There is no automatic smoothing or simplification | The pipeline's conditioning is stage 4's, keyed by its parameters. An editor that re-conditioned would be an unkeyed stage 4 |
@@ -121,7 +121,7 @@ In dependency order.
 7. `gui/render.py`: the mesh request (D12).
 8. `gui/widgets/geometry.py`, and `app.py`'s sixth tab (D13, D15).
 9. `gui/probe.py`, `packaging/nanopnp-probe.spec`, `packaging/LICENSES-BUNDLE.md`, and the
-   `bundle` job (D16, D17). Measure the collection that each payload needs. `.knowledge/07` §5
+   `bundle` job (D16, D17). Measure the collection that each payload needs. `.knowledge/07-software-stack/05-gui-and-packaging.md`
    gains what is learned, marked **[tested]**.
 10. `docs/guide/desktop.md`: the Geometry tab. `CHANGELOG.md` under `v0.3.0-alpha.8`. The
     specification rows listed under [Pointers](#pointers).
@@ -154,7 +154,7 @@ uv run pytest tests/tier2/test_gui_geometry_2wcd.py -v
 
 > **Outcome — delivered as decided; D1 to D18 hold, with the refinements below.** Every VER-55 row
 > above has its test, named `test_ver55_*`, in the file the table names. The Tier 1 widget tests
-> also pass on Linux here, under the `.knowledge/07` §5 GL shim; CI runs them only on Windows and
+> also pass on Linux here, under the `.knowledge/07-software-stack/05-gui-and-packaging.md` GL shim; CI runs them only on Windows and
 > macOS.
 
 > **Outcome — D1: `ArtefactHook` is public, and `case` reports too.** It joins `StageHook` and
@@ -208,7 +208,7 @@ uv run pytest tests/tier2/test_gui_geometry_2wcd.py -v
 > `shapely.geometry` are declared, as `PySide6.QtWidgets` already was, because they are what the
 > exercises import. Gmsh's library sits outside site-packages, like OCCT's, and is collected to the
 > bundle root; `import gmsh` succeeds without it, and only the first call fails. That is why each
-> payload is exercised. Collection sizes and the failure are in `.knowledge/07` §5
+> payload is exercised. Collection sizes and the failure are in `.knowledge/07-software-stack/05-gui-and-packaging.md`
 > ("The geometry payloads bundle through `collect_all`").
 
 > **Outcome — measured on 2WCD** (`tests/tier2/test_gui_geometry_2wcd.py`, netgen, default sizes,
@@ -270,7 +270,7 @@ orientation test pins the mapping.
   and therefore the glued region, are equal to the bit.
 - The mesh key is the recipe, which moves with the region key. The mesh **content hash** is a
   function of the geometry, which is identical, on one platform, because netgen is deterministic in
-  a process but not across platforms (`.knowledge/07` §4).
+  a process but not across platforms (`.knowledge/07-software-stack/04-geometry-meshing-and-io.md`).
 
 The oracle is therefore: key changed, content hash equal. That asserts that the edit's route adds
 nothing to the geometry. A 0.1 nm move at the constriction must change both hashes.

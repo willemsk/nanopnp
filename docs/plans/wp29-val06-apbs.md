@@ -11,7 +11,7 @@ identifiers here are pointers into it. The specification amendment this package 
 this plan's commit: a §7.4 NOTE on VAL-06 stating the legs' construction, the boundary treatment,
 the probe set, the metric and the tolerance with its argument. That is what the VAL-06 row means by
 "stated … before the comparison is run". The APBS facts the decisions rest on are measured and
-recorded in `.knowledge/07` §3 under *APBS 3.4.1 driven by maps*.
+recorded in `.knowledge/07-software-stack/03-charge-and-electrostatics.md` under *APBS 3.4.1 driven by maps*.
 
 ## Execution brief
 
@@ -23,13 +23,13 @@ past its target because the comparison's construction is the correctness decisio
 to D8 changes the number VAL-06 reports.
 
 **Read first.** VAL-06 and its new §7.4 NOTE; PHY-16 step 6 and its NOTEs; PHY-20's blend NOTE;
-PHY-21's NOTE on the electrostatic models; `.knowledge/07` §3; *Design* §1–§4 below.
+PHY-21's NOTE on the electrostatic models; `.knowledge/07-software-stack/03-charge-and-electrostatics.md`; *Design* §1–§4 below.
 
 ### Decisions
 
 | # | Decision | Choice | Why/source |
 |---|---|---|---|
-| D1 | The problem | `poisson` on the case's generated mesh and stage-7 deposit, `bias_V: 0`, `solid_permittivities {protein: 20, membrane: 3.2}`, fluid at `ε_r,f⁰`. APBS: `lpbe`, no `ion` line (zero ionic strength), `temp` = the case's. APBS's `kT/e` is our `φ̃ = φ/V_T`, compared without conversion | PHY-21 NOTE; `.knowledge/07` §3 |
+| D1 | The problem | `poisson` on the case's generated mesh and stage-7 deposit, `bias_V: 0`, `solid_permittivities {protein: 20, membrane: 3.2}`, fluid at `ε_r,f⁰`. APBS: `lpbe`, no `ion` line (zero ionic strength), `temp` = the case's. APBS's `kT/e` is our `φ̃ = φ/V_T`, compared without conversion | PHY-21 NOTE; `.knowledge/07-software-stack/03-charge-and-electrostatics.md` |
 | D2 | Box boundary | `bcfl map`: the APBS box's faces take **our** solution, sampled through `sample_at`. Both legs use it | *Design* §1: our far field cannot be posed in APBS, so the interior is compared |
 | D3 | Grid | A cube with spacing `h = 0.1` nm, dime 193 and `nlev 4`. A nested 0.2 nm grid (dime 97) gives the self-refinement estimate. The axis is a node line. The z origin puts the membrane's faces midway between fine planes. The box must hold all lattice charge at least 1 nm inside every face, or the run is refused naming the face and the coordinate | *Design* §2. Measured cost: *Design* §5 |
 | D4 | Charge map | The **stage-7 export lattice** (the sum the deposit projects) moved onto the nodes by hat weights: linear in z, and in the azimuth `M ≥ 16·2πr/h` equal-angle samples per ring spread bilinearly. In e Å⁻³. It conserves charge to round-off and keeps the first moments | *Design* §2. Point sampling aliases (VAL-15): hydrogens have `w` = 0.0112 nm |
@@ -41,7 +41,7 @@ PHY-21's NOTE on the electrostatic models; `.knowledge/07` §3; *Design* §1–�
 | D10 | Closed form | A Gaussian ring (`r_b` 1 nm, `z_b` 0.5 nm, `w` 0.1 nm) in a dielectric sphere (`a` 2 nm, ε 20) in water, grounded at `R` 20 nm. The exact potential is the three-region series of *Design* §4. APBS at 0.1 nm, with the box faces from the series, and our `P2` are each within ½ τ of it in D6's norms. Every *Design* §6 broken construction exceeds ½ τ in at least one norm | The phase plan's synthetic ring: localises an error to the driver or a solver |
 | D11 | Dependency | Group `apbs` = `apbs-binary==3.4.1.1; (sys_platform == 'linux' and platform_machine == 'x86_64') or sys_platform == 'darwin'`, in `default-groups` (CI's sync lines unchanged). Run through `apbs_binary.popen_apbs` (sets macOS's `DYLD_LIBRARY_PATH`), imported in the function; absent, refused naming the group | §8.2.4 D3; CON-07 (a group never reaches a wheel); the `py3-none` wheel serves 3.11–3.14 |
 | D12 | Required or skipped | `NANOPNP_REQUIRE_APBS=1` per leg on CI's Linux and macOS legs, where a missing binary fails; Windows skips visibly (`-rs`), naming the absent wheel | The WP23 D11 rule: a skip is not evidence |
-| D13 | Driver and IO | `validation/apbs.py`: typed inputs, a Pydantic `Val06Report` written as JSON. A vectorised OpenDX writer (`%.10e`, three per line); APBS's output read by GridDataFormats. The deck reads a one-atom, zero-charge PQR outside the box (APBS refuses a run without `mol`). A wall-clock limit kills APBS, naming the run | `.knowledge/07` §3. gridData's writer formats each of ~7 M values in Python |
+| D13 | Driver and IO | `validation/apbs.py`: typed inputs, a Pydantic `Val06Report` written as JSON. A vectorised OpenDX writer (`%.10e`, three per line); APBS's output read by GridDataFormats. The deck reads a one-atom, zero-charge PQR outside the box (APBS refuses a run without `mol`). A wall-clock limit kills APBS, naming the run | `.knowledge/07-software-stack/03-charge-and-electrostatics.md`. gridData's writer formats each of ~7 M values in Python |
 | D14 | Tiers | Tier 2: D10 and the gated 2WCD leg. `-m slow`: the 2WCD recorded leg, and a 0.05 nm focused check of ê_A's order. Tier 3, recorded: the archived ensemble (PQRs 50–99 via `inputs.pqr`), both legs | *Design* §5 |
 
 ### Work items
@@ -54,7 +54,7 @@ PHY-21's NOTE on the electrostatic models; `.knowledge/07` §3; *Design* §1–�
 4. `tests/tier2/test_val06_ring.py` (D10), then `tests/tier2/test_val06_2wcd.py` (D1–D8; the
    recorded leg under `-m slow`), then `tests/tier3/test_val06_archive.py` (D14).
 5. `SPECIFICATION.md`: the VAL-06 NOTE's measured outcome. `CHANGELOG.md` under `v0.4.0-alpha.4`.
-   `.knowledge/07` §3 for anything learnt. No public name is added.
+   `.knowledge/07-software-stack/03-charge-and-electrostatics.md` for anything learnt. No public name is added.
 
 ### Verification
 
@@ -72,7 +72,7 @@ then the full gate.
 ### Out of scope
 
 A produced χ and the exclusion shell are WP30's; D5 consumes χ when present. The GUI's charge views
-are WP31's, the guide WP32's. APBS at finite ionic strength is excluded (`.knowledge/07` §3). So
+are WP31's, the guide WP32's. APBS at finite ionic strength is excluded (`.knowledge/07-software-stack/03-charge-and-electrostatics.md`). So
 are VAL-16 and VAL-17 (v1.0), OPN-07 (no golden is compared here), and the coupled models' `r`
 weight (NUM-07 NOTE, open).
 
@@ -95,7 +95,7 @@ can be overruled without disturbing the rest of the plan:
 > **Outcome — VAL-06 passes on 2WCD, well inside its budget.** Agreement 0.41 %, 0.10 % and
 > 0.23 % (max, rms, axis) against 3 %, 1 % and 1.5 %. The budget is 1.20 %, 0.18 % and 0.59 %,
 > which is *Design* §4's 1.22 %, 0.18 % and 0.58 % reproduced. The charge visibility is 45 % against
-> D8's 10 %. The figures are in the §7.4 NOTE on VAL-06, and the run is in `.knowledge/07` §3
+> D8's 10 %. The figures are in the §7.4 NOTE on VAL-06, and the run is in `.knowledge/07-software-stack/03-charge-and-electrostatics.md`
 > (*APBS in the VAL-06 driver*). The leg's probe set has 569,541 probes, not the spike's 555,535,
 > on 44,985 elements rather than 44,987.
 
@@ -111,7 +111,7 @@ can be overruled without disturbing the rest of the plan:
 > temperature row reads 1.96 % rather than the predicted 3.8 %, because the faces hold our
 > potential. The "areal density read as volume" row is built as the lattice mass divided by
 > `2πr` in nm. A point-sampled `a = 2πrρ` would have been a units error at the scale of 10⁹ and
-> would localise nothing. Measured rows: `.knowledge/07` §3.
+> would localise nothing. Measured rows: `.knowledge/07-software-stack/03-charge-and-electrostatics.md`.
 
 > **Outcome — D13's peak memory comes from APBS's log, not the child's `ru_maxrss`.** On Linux,
 > `wait4`'s `ru_maxrss` includes the forked parent's pages: 1.42 GB under pytest for a 97³ run
@@ -210,7 +210,7 @@ The raster has 2.6 M points and took 16 s. Each map node of axis `a` lies at a g
 `h/2` along `a`. Its value is `8 / Σ_s 1/ε(x + u_s e_a)`, with `u_s = (s + ½)h/8 − h/2`. That is
 the harmonic mean along the edge, which makes the flux across an interface normal to the edge exact.
 
-On the dielectric sphere (`.knowledge/07` §3), the harmonic mean halves point sampling's fluid error
+On the dielectric sphere (`.knowledge/07-software-stack/03-charge-and-electrostatics.md`), the harmonic mean halves point sampling's fluid error
 at 0.1 nm (0.14 % against 0.25 %) and converges faster. An arithmetic mean over the dual face, taken
 first, made it worse, so D5 does not take one. The spike's per-plane loop took 38 s at 0.1 nm, and
 the implementation vectorises it over slabs.

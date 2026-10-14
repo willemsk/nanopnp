@@ -21,11 +21,11 @@ compares it with `markdown.extensions.toc.slugify` when that is importable. The 
 | Form | Rewritten to |
 |---|---|
 | `.knowledge/0N §x`, `.knowledge/0N section x`, `.knowledge/0N-slug.md §x`, `§x` between notes | The concept holding section x, plus the slug of the deepest heading that exists; a third-level address with no heading goes to the concept |
-| Line reference, `.knowledge/07-software-stack.md:127` | The concept holding that line of the old file, no line number; a line past the end of the file is listed |
-| Label, `.knowledge/04 G3` | The heading whose text carries the label; listed if none or several |
+| Line reference, `.knowledge/0N-slug.md:LINE` | The concept holding that line of the old file, no line number; a line past the end of the file is listed |
+| Label, `.knowledge/0N LABEL` | The heading whose text carries the label; listed if none or several |
 | Named section, "Tier-3 evidence" | The concept whose title matches; listed if several |
-| Whole file, `.knowledge/09.`, `.knowledge/01-physics-epnpns.md is normative` | The directory's `index.md`; bare `.knowledge/` the root `index.md` |
-| Relative Markdown link, `../../.knowledge/04-….md#x` | The relative path of the concept, with its anchor |
+| Whole file, `.knowledge/0N.`, `.knowledge/0N-slug.md is normative` | The directory's `index.md`; bare `.knowledge/` the root `index.md` |
+| Relative Markdown link, `../../.knowledge/0N-slug.md#x` | The relative path of the concept, with its anchor |
 | The GitHub URL in `.github/ISSUE_TEMPLATE/config.yml` | The blob URL of `.knowledge/index.md` |
 | Placeholders, `.knowledge/0N §x` (a letter, not a digit) | Left alone; the check ignores a placeholder in a code span or the constructed bundles of its own tests |
 

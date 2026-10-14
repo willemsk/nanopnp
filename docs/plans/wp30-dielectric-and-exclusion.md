@@ -89,7 +89,7 @@ D9 and D11.
 >   argument, at 0.62 of it at worst, and is also gated on every edge. The factor 1.05 keeps an
 >   edge near the default wall target, because netgen leaves an edge of 1.5 × its target unsplit
 >   and the wall-size gate refuses that. The §5.2.1 NOTE is amended in the same commit
->   (`.knowledge/06` §8.1.4). The electrolyte is also cut by the profile as well as by `O`, so a
+>   (`.knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md#814-a-geos-round-join-offset-then-step-6-is-not-within-a-chords-sagitta-of-the-offset`). The electrolyte is also cut by the profile as well as by `O`, so a
 >   hand-edited loop that does not contain the body reaches the naming gate.
 > - **D9: `GMSH_FIELD_RULES` is unchanged.** Adding an identifier to it would move every Gmsh key,
 >   shell-free ones included. Instead `domain_size` sizes `exclusion` at the wall target on both
@@ -102,7 +102,7 @@ D9 and D11.
 >   The recipe gains `exclusion_wall` on netgen only, because Gmsh already cuts at `⌈L/h⌉` and
 >   passed at every target. A spline surface and OCC's exact offset were measured and set aside.
 >   The first is not reproducible in the Gmsh backend's `geo` kernel. The second cannot be built
->   through netgen's binding when the dilation encloses a pocket (`.knowledge/06` §8.1.4).
+>   through netgen's binding when the dilation encloses a pocket (`.knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md#814-a-geos-round-join-offset-then-step-6-is-not-within-a-chords-sagitta-of-the-offset`).
 > - **D12: the declaration refusal of `δ` runs before the generated-mesh solids refusal**, so `pb`
 >   names the key rather than its missing solids.
 > - **D17 and *Design* §3: the analysis plane is 12 nm from the bilayer.** With the membrane on
@@ -110,7 +110,7 @@ D9 and D11.
 >   body, and the shell's Gauss law needs `∂²φ/∂z² = 0`, not only `∂φ/∂z = 0`. The tube is 30 nm
 >   long, with `centre_z_nm` = −12, and the fixed charge is a smooth band, because a sharp slab fails
 >   the consumer's quadrature gate (0.0073 against 1e-4). The result is 1.3e-4 against the 1 %
->   budget (`.knowledge/08` §2.1.1).
+>   budget (`.knowledge/08-validation-benchmarks/02-tier-2-analytic-benchmarks-minutes.md#211-gouychapmanstern-through-stage-5-gausss-law-across-a-cylindrical-shell`).
 >
 > **Outcome — measured** (2 October 2026; netgen, no stabilisation, `P2`).
 >
@@ -162,8 +162,8 @@ D9 and D11.
    - VER-52's naming expectations, which are unchanged at `a = 0`.
    - VER-31's slab, which gains the generated-shell variant.
 5. **Records.**
-   - `.knowledge/04` gains the 2WCD shell and `χ` measurements, marked [tested].
-   - `.knowledge/06` gains whatever GEOS buffer behaviour is found.
+   - `.knowledge/04-clya-geometry-and-charge/index.md` gains the 2WCD shell and `χ` measurements, marked [tested].
+   - `.knowledge/06-numerics-fem/index.md` gains whatever GEOS buffer behaviour is found.
    - Add Appendix A rows for VER-59, and update the FR-15 row.
    - `CHANGELOG.md` gets a section under `v0.4.0-alpha.5`.
    - Update the phase plan's WP30 Outcome and `current.md`.

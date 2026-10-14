@@ -8,7 +8,7 @@ categories reported only at high or critical severity)
 
 The core numerics check out. The reviewers re-derived the scaling, the sign conventions, the wall
 functions, the correction forms and the `1/r` integration orders, and found them consistent
-with `.knowledge/01`. The serious problems sit at the edges of the pipeline. The worst are two case
+with `.knowledge/01-physics-epnpns/index.md`. The serious problems sit at the edges of the pipeline. The worst are two case
 fields, `electrolyte.temperature_K` and `boundary_conditions.walls`, that are validated, hashed
 and recorded in the manifest but never reach the solver. A 310 K case, or a case asking for a
 slip wall, gets a plausible wrong answer and a manifest that claims otherwise. There are two

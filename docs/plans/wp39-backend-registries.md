@@ -137,7 +137,7 @@ check into a silent pass.
 6. `validation/modularity.py`'s `EXTENSION_POINTS` (D14), the YAML (`edges:`, both upward lists,
    header), and the acyclicity test (D10).
 7. The tests, VER-66's row and VER-61's clause, Appendix A's QR-14 pointer, the findings log and
-   the register, `.knowledge/07`'s Gmsh session facts, `CHANGELOG.md`, and the phase plan's
+   the register, `.knowledge/07-software-stack/index.md`'s Gmsh session facts, `CHANGELOG.md`, and the phase plan's
    Outcome.
 
 ### Verification
