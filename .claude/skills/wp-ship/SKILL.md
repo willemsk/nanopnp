@@ -113,5 +113,5 @@ Never poll with `sleep`, and report a missing subscription or scheduler as an au
 When CI is green and the PR is mergeable, tell the user in one message: the PR link, the checks
 that passed, what the review changed, anything left for them to decide, and the tag for the last
 commit on `main` after the merge (`CONTRIBUTING.md`). The merge and the tag are theirs. Cancel any
-outstanding fallback check-in, then stop. A later event with a new head, failure, conflict or
-actionable review restarts attention under `steward`.
+outstanding fallback check-in and unsubscribe from the PR's activity, so the merge does not wake a
+cold session, then stop. A later `/wp-ship` resumes: it subscribes again if the PR is still open.

@@ -66,7 +66,7 @@ and gives each `review-items.md` section a *Resolved* line.
 - [x] 7. 13d1cb3 `validation/geometry.py` (REV-59) and `examples/05-clya-reference/render_slurm.py` (REV-15).
 - [x] 8. 55ac548 `charge/pqr.py`, `structure/ensemble.py` (REV-43); `numerics/measures.py` and its callers (REV-49); `validation/runs.py`, `cli/__init__.py` (REV-51).
 - [x] 9. 9c32584 `tests/tier2/test_axis_weight_order.py` (REV-50).
-- [ ] 10. REV-24: the count, recorded in this plan's Outcomes and the row's ruling; the cache only if needed.
+- [x] 10. a801912 REV-24: the count, recorded in this plan's Outcomes and the row's ruling; the cache only if needed.
   > **Outcome — REV-24: no duplicate.** On `CYLINDRICAL_PORE_CASE` (epnp-ns, 0.1 M NaCl, Python 3.14, the netgen mesh of the fixture) one `run_case(upto="solve")` makes ten solves, 36 Newton iterates and 46 positivity checks, and `species_concentrations_SI` is called ten times: once per solve, shared by the positivity and packing gates. The expression is built once and evaluated per iterate, so the count per field per iterate is below one and nothing is removed. Guard: `tests/tier1/test_gate_builds.py`.
 
 - [ ] 11. `.claude/skills/wp-ship/SKILL.md` §6 and `.claude/skills/steward/SKILL.md` *Bounded wakes*: once CI is green and the PR mergeable, report once, unsubscribe and cancel the check-in, so a merge does not wake a cold session; `/wp-ship` resumes (author, 14 October 2026).

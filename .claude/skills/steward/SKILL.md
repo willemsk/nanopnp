@@ -31,6 +31,8 @@ transitions only; an event caused by your own checkpoint edit is not new work.
   check-run state, conflict or actionable review.
 - Stop fallbacks when green and mergeable, merged, closed or handed off; cancel the timer, or make
   a queued wake a no-op. If nothing changed, reload and rerun nothing.
+- Once CI is green and the PR mergeable, report once, unsubscribe from the PR and cancel the
+  check-in: a merge then wakes no session, and `/wp-ship` resumes the package.
 - If subscription or scheduling is unavailable, say so and hand off; never poll in a loop.
 
 Source context for a failure starts with the WP's Execution brief.
