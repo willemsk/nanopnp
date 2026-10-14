@@ -1,13 +1,4 @@
-"""VER-60 — the charge tab's view-models, on a tube that deposits two atoms in a second or two.
-
-The picture is the place a charge can look right and be wrong in sign, in frame
-or in integral (RSK-15), so each of the three is asserted against an oracle the
-view did not compute: the atoms' own model-frame (r, z) and signs, the record's
-``q_grid_e``, and the record's tolerances. The tube is ``tests/conftest.py``'s
-``charged_tube``: the parallelogram through ``inputs.profile``, an ``inputs.pqr``
-of a +1 e and a -2 e atom inside the body, walked through stage 7 at
-``size_scale`` 5.
-"""
+"""VER-60: the charge tab's view-models, on a tube that deposits two atoms."""
 
 from __future__ import annotations
 
@@ -42,7 +33,6 @@ from nanopnp.pipeline.run import (
 
 
 def _produced(result: RunResult, store: Store, name: str) -> Produced:
-    """Return the event the hook would have posted for one stage of a finished walk."""
     record = next(record for record in result.stages if record.name == name)
     return Produced(
         name=name,
@@ -55,7 +45,6 @@ def _produced(result: RunResult, store: Store, name: str) -> Produced:
 
 @pytest.fixture(scope="module")
 def tube(charged_tube, tmp_path_factory: pytest.TempPathFactory):
-    """Walk the one-frame tube through stage 7 once, into a store kept for the module."""
     work = tmp_path_factory.mktemp("tube")
     store = Store(work / "store")
     case = charged_tube.write(work / "case")
@@ -64,7 +53,6 @@ def tube(charged_tube, tmp_path_factory: pytest.TempPathFactory):
 
 @pytest.fixture(scope="module")
 def two_frames(charged_tube, tmp_path_factory: pytest.TempPathFactory):
-    """Walk the two-frame tube through stage 7 once."""
     work = tmp_path_factory.mktemp("frames")
     store = Store(work / "store")
     case = charged_tube.write(work / "case", frames=2)
@@ -72,23 +60,17 @@ def two_frames(charged_tube, tmp_path_factory: pytest.TempPathFactory):
 
 
 def _record(result: RunResult) -> dict[str, object]:
-    """Return stage 7's charge record."""
     record = result.artefacts["charge"].summary["charge"]
     assert isinstance(record, dict)
     return record
 
 
 def _model_frame(atom: tuple[str, float, float, float, float]) -> tuple[float, float]:
-    """Return an atom's (r, z) in nm; the tube's ``centre_z_nm`` is 0, so stage 1's frame is it."""
     _, x, y, z, _ = atom
     return math.hypot(x, y) / 10.0, z / 10.0
 
 
-# -- building --------------------------------------------------------------------
-
-
 def test_ver60_build_charge_is_offered_with_the_stages_the_walk_runs(tube) -> None:
-    """A depositing case walks both halves of stage 7; a case walking none is refused (D2)."""
     case, _, _ = tube
     document = load_case(case)
     assert build_offer(document).offered
@@ -101,16 +83,7 @@ def test_ver60_build_charge_is_offered_with_the_stages_the_walk_runs(tube) -> No
     assert "supplies neither inputs.charge nor inputs.eps_r" in offer.reason
 
 
-# -- the charge map --------------------------------------------------------------
-
-
 def test_ver60_each_atom_lands_in_its_own_pixel_with_its_sign(tube, charged_tube) -> None:
-    """The positive atom's pixel holds the maximum and the negative atom's the minimum (D4, D5).
-
-    The pixel is the one whose centre is nearest the atom's model-frame (r, z); the
-    top row is the largest z and r increases to the right. A picture that dropped
-    ``y``, swapped the axes, flipped z or negated the charge fails one of the four.
-    """
     _, store, result = tube
     view = load_charge(_produced(result, store, "charge"), block=1)
     assert view.charge is not None
@@ -131,11 +104,6 @@ def test_ver60_each_atom_lands_in_its_own_pixel_with_its_sign(tube, charged_tube
 
 @pytest.mark.parametrize("block", [1, 7])
 def test_ver60_the_picture_carries_the_record_s_charge(tube, block: int) -> None:
-    """``sum_p mean_p A_p`` is the record's ``q_grid_e`` to 1e-12 relative (D6, Design section 1).
-
-    At ``k`` = 7 the 781 x 1041 lattice leaves a partial last block on both axes,
-    so a reduction that dropped or double-counted the remainder fails here.
-    """
     _, _, result = tube
     lattice = stored_lattice(result.artefacts["charge"])
     assert lattice is not None
@@ -152,7 +120,6 @@ def test_ver60_the_picture_carries_the_record_s_charge(tube, block: int) -> None
 
 
 def test_ver60_the_default_block_leaves_at_most_the_pixel_limit(tube) -> None:
-    """``k`` is the smallest that leaves at most :data:`MAX_PIXELS` pixels along either axis."""
     _, _, result = tube
     lattice = stored_lattice(result.artefacts["charge"])
     assert lattice is not None
@@ -167,7 +134,6 @@ def test_ver60_the_default_block_leaves_at_most_the_pixel_limit(tube) -> None:
 
 
 def test_ver60_zero_is_the_centre_of_the_diverging_table(tube) -> None:
-    """Zero maps to the neutral middle entry, and the limit is the largest magnitude drawn (D8)."""
     _, _, result = tube
     lattice = stored_lattice(result.artefacts["charge"])
     assert lattice is not None
@@ -186,12 +152,10 @@ def test_ver60_zero_is_the_centre_of_the_diverging_table(tube) -> None:
 
 
 def test_ver60_the_recorded_worst_planes_are_marked_at_their_z(tube) -> None:
-    """Each marker row contains the z its record names, never a recomputed one (D9)."""
     _, store, result = tube
     plane = _record(result)["conservation"]["per_plane"]  # type: ignore[index]
     view = load_charge(_produced(result, store, "charge"))
     assert view.charge is not None
-    # A deposit and a sharp dielectric: the deployed pane offers the charge alone.
     assert view.quantities == ("charge",)
     picture = view.charge
     assert dict(picture.planes) == {
@@ -204,11 +168,7 @@ def test_ver60_the_recorded_worst_planes_are_marked_at_their_z(tube) -> None:
         assert abs(centre - z_nm) <= 0.5 * picture.image.spacing_nm[1] + 1e-12
 
 
-# -- the conservation report -----------------------------------------------------
-
-
 def test_ver60_every_number_of_the_conservation_view_is_the_record_s(tube) -> None:
-    """Each leg's value and tolerance, and each figure, equal the record's (D10)."""
     _, store, result = tube
     record = _record(result)
     report = record["conservation"]
@@ -237,7 +197,6 @@ def test_ver60_every_number_of_the_conservation_view_is_the_record_s(tube) -> No
 
 
 def test_ver60_a_doubled_tolerance_is_shown_doubled(tube) -> None:
-    """The tolerance comes from the record, never from ``CONSERVATION_TOL`` in ``gui/`` (D10)."""
     _, _, result = tube
     record = _record(result)
     report = dict(record["conservation"])  # type: ignore[call-overload]
@@ -254,7 +213,6 @@ def test_ver60_a_doubled_tolerance_is_shown_doubled(tube) -> None:
 
 
 def test_ver60_a_leg_not_run_is_shown_as_not_run_with_its_reason() -> None:
-    """A supplied field declaring no ``q_net_e`` has no producer leg, and is never shown as 0."""
     e = ELEMENTARY_CHARGE
     report = ConservationReport(
         q_net_C=None,
@@ -283,11 +241,7 @@ def test_ver60_a_leg_not_run_is_shown_as_not_run_with_its_reason() -> None:
     assert view.planes == (("worst plane (mesh)", report.worst_plane[0]),)
 
 
-# -- the protonation table -------------------------------------------------------
-
-
 def test_ver60_the_frame_selector_switches_the_charges_and_q_net(two_frames, charged_tube) -> None:
-    """Two ``MODEL`` frames that differ give two tables of rows and two ``Q_net`` (D11)."""
     _, store, result = two_frames
     view = load_protonation(_produced(result, store, "protonation"))
     assert view.frames == 2
@@ -296,7 +250,6 @@ def test_ver60_the_frame_selector_switches_the_charges_and_q_net(two_frames, cha
     assert view.q_net_e == (pytest.approx(sum(first)), pytest.approx(sum(second)))
     assert view.frame(0).q_net_e == pytest.approx(sum(first))
     assert view.frame(1).q_net_e == pytest.approx(sum(second))
-    # One residue carrying both atoms: its applied charge is each frame's sum.
     assert [row.applied_e for row in view.frame(0).rows] == [pytest.approx(sum(first))]
     assert [row.applied_e for row in view.frame(1).rows] == [pytest.approx(sum(second))]
     assert view.frame(0).rows[0].residue == "GLU 18"
@@ -308,7 +261,6 @@ def test_ver60_the_frame_selector_switches_the_charges_and_q_net(two_frames, cha
 
 
 def test_ver60_a_table_and_record_that_disagree_are_refused(two_frames) -> None:
-    """The unapplied states are read from the table and checked against the record (D11)."""
     _, store, result = two_frames
     view = load_protonation(_produced(result, store, "protonation"))
     forged = {**view.summary, "unapplied": [{"chain": "A", "residue": "GLU 18"}]}
@@ -316,11 +268,7 @@ def test_ver60_a_table_and_record_that_disagree_are_refused(two_frames) -> None:
         type(view).build(view.table, forged)
 
 
-# -- the shell ---------------------------------------------------------------------
-
-
 def test_ver60_a_generated_shell_s_mesh_lists_exclusion(charged_tube, tmp_path: Path) -> None:
-    """The Mesh view colours by material, so the ``exclusion`` shell is listed as one (D17)."""
     from nanopnp.gui.render import MeshRequest, render_mesh
 
     case = charged_tube.write(tmp_path / "case")

@@ -1,13 +1,4 @@
-"""VER-59, the shell: stage 5's ion-exclusion shell on a convex body (FR-15, FR-09, QR-12).
-
-The body is the parallelogram of ``tests/conftest.py``, in a 30 nm reservoir. It
-is convex, so its offset ``O`` is convex and the closing of step 2 fills
-nothing: the outer surface then lies within the exact offset on both sides, to
-the sagitta of a resampled chord inside and to 1e-6 nm outside (WP30 Outcomes,
-on *Design* section 2). The shell's construction is the section 5.2.1 NOTE on the
-ion-exclusion shell; its case refusals are the section 5.3.1 NOTE on the v2 keys
-that change a number.
-"""
+"""VER-59: stage 5's ion-exclusion shell on a convex body (FR-15, FR-09, QR-12)."""
 
 from __future__ import annotations
 
@@ -60,20 +51,17 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
 
 def eps_r0(document: CaseDocument) -> float:
-    """Return ``eps_r,f0`` read from the case's parameter file, as the sizing took it before D7."""
     return load_corrections(document.electrolyte.parameters).solvent.permittivity.eps_r0
 
 
 def wall_size(document: CaseDocument) -> WallSize:
-    """Return :func:`resolve_wall_size` at the parameter file's ``eps_r,f0``."""
     return resolve_wall_size(document, permittivity_0=eps_r0(document))
 
 
+# VER-31
 OFFSET_NM = 0.25
-"""``a``: ``a_Na/2`` of ``willems2020_nacl`` and VER-31's ``lambda_S`` (WP30 D15)."""
 
 H_C_NM = 0.05
-"""The contour's size target at the default density grid spacing."""
 
 CASE = """\
 schema: nanopnp/case/v0.5
@@ -91,18 +79,15 @@ numerics: {{mesh: {{size_scale: {scale}}}}}
 
 
 def case_text(profile: Path, *, charge: str = "", scale: float = 5.0) -> str:
-    """Return the coarse profile case, with an optional ``charge:`` line."""
     return CASE.format(path=profile, charge=charge, scale=scale)
 
 
 def _offset(a: float = OFFSET_NM) -> str:
-    """Return the ``charge:`` block setting the exclusion offset."""
     return f"charge: {{exclusion_offset_nm: {a}}}\n"
 
 
 @pytest.fixture(scope="module")
 def shelled(parallelogram_profile: Path, tmp_path_factory: pytest.TempPathFactory):
-    """Return the case, and its stage-5 and stage-6 artefacts, at ``a`` = 0.25 nm."""
     work = tmp_path_factory.mktemp("shell")
     case = loads_case(case_text(parallelogram_profile, charge=_offset()))
     region = RegionStage(workspace=work / "region").run(StageInputs(resolved=resolve(case)))
@@ -114,22 +99,16 @@ def shelled(parallelogram_profile: Path, tmp_path_factory: pytest.TempPathFactor
 
 @pytest.fixture(scope="module")
 def plain(parallelogram_profile: Path, tmp_path_factory: pytest.TempPathFactory):
-    """Return the shell-free stage-5 artefact of the same body."""
     work = tmp_path_factory.mktemp("plain")
     case = loads_case(case_text(parallelogram_profile))
     return RegionStage(workspace=work / "region").run(StageInputs(resolved=resolve(case)))
 
 
 def _record(artefact) -> RegionRecord:  # type: ignore[no-untyped-def]
-    """Return the record a stage-5 artefact carries."""
     return read_region(Path(artefact.payload["region"]))
 
 
-# -- the shell's geometry ----------------------------------------------------------
-
-
 def test_ver59_every_wall_node_lies_within_the_band_about_the_exact_offset(shelled) -> None:
-    """``[a - max(h_c^2/a, a/100), a + 1e-6]`` nm from the body, at every ``wall`` node."""
     case, region, mesh = shelled
     record = _record(region)
     data = deployed_mesh(resolve(case), mesh).data
@@ -146,7 +125,6 @@ def test_ver59_every_wall_node_lies_within_the_band_about_the_exact_offset(shell
 
 
 def test_ver59_the_shell_is_one_face_named_wall_outside_and_interface_within(shelled) -> None:
-    """One ``exclusion`` face; ``wall`` bounds it and the electrolyte only (D8)."""
     _, region, _ = shelled
     record = _record(region)
     shape = build_region(record)
@@ -166,12 +144,6 @@ def test_ver59_the_shell_is_one_face_named_wall_outside_and_interface_within(she
 def test_ver59_a_body_edge_left_facing_the_electrolyte_beside_a_shell_is_refused(
     shelled,
 ) -> None:
-    """A loop that leaves the body's foot on the membrane uncovered is refused, naming where.
-
-    Cut from the offset over ``z`` in ``[0.9, 1.7]`` outward of ``r = 5``: the
-    shell then starts at ``z = 1.7``, one face still, and the body's outer edge
-    between the membrane's upper face and there meets the electrolyte.
-    """
     from shapely.geometry import Polygon, box
 
     _, region, _ = shelled
@@ -191,7 +163,6 @@ def test_ver59_a_body_edge_left_facing_the_electrolyte_beside_a_shell_is_refused
 
 
 def test_ver59_the_membrane_chord_and_junction_are_the_shell_free_regions(shelled, plain) -> None:
-    """The shell is carved against an unchanged membrane (section 5.2.1 NOTE)."""
     with_shell, without = _record(shelled[1]), _record(plain)
     assert with_shell.membrane == without.membrane
     assert with_shell.junction_nm == without.junction_nm
@@ -205,7 +176,6 @@ def test_ver59_the_membrane_chord_and_junction_are_the_shell_free_regions(shelle
 
 
 def test_ver59_an_offset_closing_the_constriction_is_refused_naming_its_z() -> None:
-    """A body within ``a + h_c`` of the axis is refused, naming the z interval and the radius."""
     points = np.array([(0.25, -3.0), (2.0, -3.0), (2.0, 3.0), (0.25, 3.0)])
     with pytest.raises(RegionGateError) as raised:
         exclusion_shell(points, OFFSET_NM, H_C_NM, reservoir_radius_nm=30.0)
@@ -217,7 +187,6 @@ def test_ver59_an_offset_closing_the_constriction_is_refused_naming_its_z() -> N
 
 @pytest.mark.parametrize("vertex", [0, 1, 3])
 def test_ver59_a_non_finite_profile_coordinate_is_refused_naming_its_vertex(vertex: int) -> None:
-    """A NaN coordinate is a named gate failure (QR-12), not a GEOS or numpy error (REV-79)."""
     points = np.array([(3.0, -5.0), (3.0, 0.0), (3.0, 5.0), (4.5, 5.0), (4.5, -5.0)])
     points[vertex, 0] = np.nan
     with pytest.raises(RegionGateError) as raised:
@@ -230,11 +199,6 @@ def test_ver59_a_non_finite_profile_coordinate_is_refused_naming_its_vertex(vert
 def test_ver59_an_outer_surface_inside_the_bound_is_refused_naming_where(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The thickness bound is a gate: one chord per quarter circle sags 0.073 nm, and is refused.
-
-    The resampling of step 4 keeps every chord near ``1.25 h_c`` and the surface
-    within the bound by argument; the gate is what asserts it on every shell.
-    """
     from nanopnp.geometry import region
 
     monkeypatch.setattr(region, "EXCLUSION_QUAD_SEGS", 1)
@@ -248,7 +212,6 @@ def test_ver59_an_outer_surface_inside_the_bound_is_refused_naming_where(
 
 
 def test_ver59_a_necked_pocket_is_filled_and_recorded() -> None:
-    """A notch whose mouth is under ``2a`` wide encloses fluid no ion reaches: filled, recorded."""
     points = np.array(
         [
             (3.0, -3.0),
@@ -267,16 +230,10 @@ def test_ver59_a_necked_pocket_is_filled_and_recorded() -> None:
     )
     shell = exclusion_shell(points, OFFSET_NM, H_C_NM, reservoir_radius_nm=30.0)
     assert shell.holes.count == 1
-    # The pocket, 0.8 x 1.0 nm, less 0.25 nm on every side: 0.3 x 0.5 nm with
-    # rounded corners, so a little under 0.15 nm^2.
     assert 0.12 < shell.holes.area_nm2 < 0.15
     centre = shell.holes.centroids_nm[0]
-    # Symmetric in z about the mouth; nudged outward by the round joins at its lips.
     assert centre[1] == pytest.approx(2.3, abs=1e-9)
     assert 4.2 < centre[0] < 4.21
-
-
-# -- the case refusals ---------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -289,14 +246,12 @@ def test_ver59_a_necked_pocket_is_filled_and_recorded() -> None:
 def test_ver59_an_offset_at_most_twice_h_c_is_refused_naming_both_keys(
     parallelogram_profile: Path, charge: str, fragments: tuple[str, ...]
 ) -> None:
-    """``0 < a <= 2 h_c`` is narrower than the feature-size criterion admits (D11)."""
     with pytest.raises(CaseValidationError) as raised:
         resolve(loads_case(case_text(parallelogram_profile, charge=charge)))
     assert all(fragment in str(raised.value) for fragment in fragments), raised.value
 
 
 def test_ver59_the_keys_beside_a_supplied_mesh_or_without_a_profile_are_refused() -> None:
-    """A knob with no effect is refused naming both keys (D12)."""
     mesh_case = (
         "schema: nanopnp/case/v0.5\nname: supplied\n"
         "inputs:\n  mesh: {path: pore.msh, format: msh41}\n"
@@ -316,7 +271,6 @@ def test_ver59_the_keys_beside_a_supplied_mesh_or_without_a_profile_are_refused(
 def test_ver59_the_case_without_shapely_is_refused_naming_the_extra_and_the_key(
     parallelogram_profile: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    """The shell is built with Shapely, which is in ``structure`` (section 5.2.1 NOTE)."""
     monkeypatch.setitem(sys.modules, "shapely", None)
     case = loads_case(case_text(parallelogram_profile, charge=_offset()))
     with pytest.raises(MissingExtraError) as raised:
@@ -326,13 +280,9 @@ def test_ver59_the_case_without_shapely_is_refused_naming_the_extra_and_the_key(
     assert "charge.exclusion_offset_nm" in message
 
 
-# -- the record and the key ------------------------------------------------------------
-
-
 def test_ver59_the_record_round_trips_and_rebuilds_without_shapely(
     shelled, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Stage 6 rebuilds the shell from the record's loop, with no Shapely at all (D10)."""
     record = _record(shelled[1])
     again = read_region(write_region(record, tmp_path / "region.yaml"))
     assert again == record
@@ -345,7 +295,6 @@ def test_ver59_the_record_round_trips_and_rebuilds_without_shapely(
 def test_ver59_the_offset_keys_stage_5_and_6_only_when_it_is_non_zero(
     parallelogram_profile: Path, shelled, plain
 ) -> None:
-    """``exclusion`` enters the stage-5 parameters and the stage-6 recipe only with ``a > 0``."""
     _, region, mesh = shelled
     assert "exclusion" not in plain.parameters
     assert region.parameters["exclusion"] == {  # type: ignore[comparison-overlap]
@@ -373,7 +322,6 @@ def test_ver59_the_offset_keys_stage_5_and_6_only_when_it_is_non_zero(
         == "ceil(L/(1.1 wall_h)) equal segments"
     )
     assert "exclusion" in mesh.parameters["materials"]  # type: ignore[operator]
-    # Gmsh divides the ring's edges finely enough unaided, so its recipe has no rule.
     wall = wall_size(loads_case(case_text(parallelogram_profile, charge=_offset())))
     gmsh = sizing_parameters(wall, SIZES.scaled(wall.size_scale), "gmsh", exclusion=True)
     assert "exclusion_wall" not in gmsh
@@ -394,7 +342,6 @@ def test_ver59_the_offset_keys_stage_5_and_6_only_when_it_is_non_zero(
 def test_ver59_netgen_cuts_a_shell_wall_edge_into_equal_segments_of_at_most_1_1_h(
     length_nm: float, wall_h_nm: float, count: int, size_nm: float
 ) -> None:
-    """``n = ceil(L / 1.1 h)``; ``maxh`` is ``L/n``, or the target itself where ``n`` is 1."""
     assert wall_divisions(length_nm, wall_h_nm) == count
     assert divided_wall_size(length_nm, wall_h_nm) == pytest.approx(size_nm, rel=1e-12)
     assert length_nm / count <= EXCLUSION_WALL_DIVISION * wall_h_nm
@@ -403,12 +350,6 @@ def test_ver59_netgen_cuts_a_shell_wall_edge_into_equal_segments_of_at_most_1_1_
 def test_ver59_the_shell_meshes_at_a_wall_target_its_whole_edges_failed(
     parallelogram_profile: Path, tmp_path: Path
 ) -> None:
-    """At 3 M the ``auto`` target is 0.035 nm, 1.5 of whose ring edges netgen left whole.
-
-    The wall-size gate refused that mesh at a mean of 1.455 (``.knowledge/06``
-    section 8.1.4). Now every ``wall`` edge is cut into at least
-    :func:`wall_divisions` segments, and the mesh passes the gate.
-    """
     text = case_text(parallelogram_profile, charge=_offset(), scale=1.0)
     case = loads_case(text.replace("concentration_M: 1.0", "concentration_M: 3.0"))
     region = RegionStage(workspace=tmp_path / "region").run(StageInputs(resolved=resolve(case)))
@@ -419,14 +360,10 @@ def test_ver59_the_shell_meshes_at_a_wall_target_its_whole_edges_failed(
     assert target == pytest.approx(0.03505, abs=5e-5)
     shape = build_region(_record(region))
     expected = sum(
-        wall_divisions(float(edge.mass), target)
-        for edge in set(shape.edges)  # a glued edge is listed once per face it bounds
-        if edge.name == "wall"
+        wall_divisions(float(edge.mass), target) for edge in set(shape.edges) if edge.name == "wall"
     )
     data = deployed_mesh(resolve(case), mesh).data
     statistics = wall_statistics(data, target)
-    # At least the asked-for count: netgen may add a node, as it did once here
-    # at the 0.01 nm edge the membrane cuts off the ring, but never leaves fewer.
     assert expected <= statistics.count <= expected + 2
     assert statistics.mean_ratio <= EXCLUSION_WALL_DIVISION
 
@@ -434,12 +371,6 @@ def test_ver59_the_shell_meshes_at_a_wall_target_its_whole_edges_failed(
 def test_ver59_a_sweep_over_the_offset_severs_its_warm_starts(
     parallelogram_profile: Path, tmp_path: Path
 ) -> None:
-    """The offset moves the mesh, so each of its values is a cold root, and the plan says so.
-
-    A chain across it would be refused member by member at the solve, whose
-    warm start gates on the mesh hash (section 5.3.2); the transition moves only
-    a coefficient on one mesh, and keeps its chain.
-    """
     from nanopnp.sweep.plan import plan_from_document
 
     base = case_text(parallelogram_profile, charge=_offset(0.0))
@@ -463,7 +394,6 @@ def test_ver59_a_sweep_over_the_offset_severs_its_warm_starts(
 
 
 def test_ver59_the_gmsh_region_graph_reads_the_four_faces(shelled) -> None:
-    """WP23's graph reads the shelled region: four closed loops, counts and areas the record's."""
     record = _record(shelled[1])
     graph = region_graph(build_region(record), record)
     assert set(graph.faces) == {"electrolyte", "exclusion", "membrane", "protein"}
@@ -472,10 +402,10 @@ def test_ver59_the_gmsh_region_graph_reads_the_four_faces(shelled) -> None:
         assert graph.area(name) == pytest.approx(area, rel=1e-9)
 
 
+# FR-25
 def test_ver59_the_manifest_lists_the_switch_and_the_mesh_material_deviation(
     parallelogram_profile: Path, tmp_path: Path
 ) -> None:
-    """FR-25 with no new code: the switch, and ``exclusion`` on the mesh (D14)."""
     from nanopnp.io.store import Store
     from nanopnp.pipeline.run import run_case
 
@@ -494,7 +424,6 @@ def test_ver59_the_manifest_lists_the_switch_and_the_mesh_material_deviation(
 def test_ver59_derive_region_at_zero_offset_runs_none_of_the_shell(
     parallelogram_profile: Path, plain
 ) -> None:
-    """With ``a = 0`` none of the NOTE runs: the record is the shell-free one."""
     profile = load_profile(parallelogram_profile)
     record = derive_region(profile, MembraneSpec(), ReservoirSpec(radius_nm=30.0))
     assert record.exclusion is None

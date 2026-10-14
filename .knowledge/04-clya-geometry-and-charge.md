@@ -730,3 +730,7 @@ to ~25 %, as expected for a partly flattened profile. Treat both as loose target
 - **[tested]** `yaml.safe_dump` writes a NumPy NaN as `.nan`, and NaN passes every `> tol` gate; a NaN `q_net_e` once made three of five conservation legs NaN without any gate catching it. Source: `test_charge_fields.py` (`test_ver29_a_header_value_that_is_not_finite_is_refused`).
 - **[tested]** CCP4 is written through gridData's MRC writer (no `CCP4` registry entry) as `float32`, so that round trip is not bit-exact. Source: `test_charge_fields.py` (`test_ver29_a_grid_round_trips_through_opendx_and_ccp4`).
 - **[tested]** A charge field continued by its box's edge value over a 250 nm reservoir would make a charge sheet about a thousand times the grid's own footprint, hence zero padding outside the box. Source: `test_charge_fields.py` (`test_ver29_the_interpolant_is_zero_outside_the_grid_box`).
+
+## Tier-1 test evidence: the derived dielectric's transition (WP45 item 21)
+
+- **[tested]** On the parallelogram body of `tests/conftest.py`, the planar estimate of the derived `chi` transition's error at the gate is 0.156; the body's convex corners spread the step over more shell, and its foot on the membrane less. Source: `tests/tier1/test_derived_dielectric.py` (the gates test).

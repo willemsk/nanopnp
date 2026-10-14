@@ -1,12 +1,4 @@
-"""FR-27, IF-05 (WP41 D1) — a supplied field is in the model frame, and says so.
-
-Beside a case that generates its mesh, stage 5 moves the profile by
-``z <- z - geometry.membrane.centre_z_nm``, so the mesh is in the model frame; a
-supplied ``inputs.charge`` or ``inputs.eps_r`` is applied at the mesh's coordinates
-without a shift. Stage 7's export declares the frame it was written in, and a field
-declaring another frame than the case's is refused rather than applied off by the
-difference (REV-06; the section 5.3.1 NOTE on ``inputs.charge``, ``inputs.eps_r``).
-"""
+"""FR-27, IF-05: a supplied field is in the model frame, and says so."""
 
 from __future__ import annotations
 
@@ -50,7 +42,6 @@ FORMS = {
 
 
 def _document(tmp_path: Path, key: str, declared: float | None) -> Path:
-    """Write a field document for ``inputs.<key>``, declaring ``declared`` if given."""
     header: dict[str, object] = {
         "schema": "nanopnp/field/v0.5",
         "name": f"frame-probe-{key}",
@@ -65,7 +56,6 @@ def _document(tmp_path: Path, key: str, declared: float | None) -> Path:
 
 
 def _resolved(key: str, path: Path, *, centre_z_nm: float, generates_mesh: bool) -> object:
-    """Return the four attributes of a resolved case that reading a field consults."""
     supplied = SuppliedArtefact(path=path, format="field1")
     return SimpleNamespace(
         charge=supplied if key == "charge" else None,
@@ -76,7 +66,6 @@ def _resolved(key: str, path: Path, *, centre_z_nm: float, generates_mesh: bool)
 
 
 def test_fr27_a_field_document_declares_its_model_frame(tmp_path: Path) -> None:
-    """The header key is optional, a finite length in nm, and absent means undeclared."""
     from nanopnp.charge.fields import load_document
 
     assert load_document(_document(tmp_path, "charge", 2.5)).model_frame_centre_z_nm == 2.5
@@ -87,7 +76,6 @@ def test_fr27_a_field_document_declares_its_model_frame(tmp_path: Path) -> None:
 def test_fr27_a_field_declaring_another_frame_than_a_generated_mesh_is_refused(
     tmp_path: Path, key: str
 ) -> None:
-    """Declared 0 nm beside ``centre_z_nm = 2`` is refused, naming both and the offset."""
     from nanopnp.charge.fields import FieldDocumentError
     from nanopnp.charge.stage import read_fields
 
@@ -107,7 +95,6 @@ def test_fr27_a_field_declaring_another_frame_than_a_generated_mesh_is_refused(
 def test_fr27_a_matching_undeclared_or_supplied_mesh_frame_is_read(
     tmp_path: Path, key: str
 ) -> None:
-    """Each case that reads: the frames agree; nothing is declared; the mesh is supplied."""
     from nanopnp.charge.stage import read_fields
 
     for declared, generates_mesh in ((2.0, True), (None, True), (0.0, False)):
@@ -121,7 +108,6 @@ def test_fr27_a_matching_undeclared_or_supplied_mesh_frame_is_read(
 
 
 def test_fr27_stage_7_declares_the_frame_its_lattice_was_exported_in(tmp_path: Path) -> None:
-    """The export writes the shift its atoms were moved by, which a re-read checks."""
     import numpy as np
 
     from nanopnp.charge.fields import load_document

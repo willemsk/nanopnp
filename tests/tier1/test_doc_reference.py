@@ -1,12 +1,4 @@
-"""VER-45 — the generated reference pages cover exactly what they document (IF-02, IF-03).
-
-The case-file, command-line and exit-code references are rendered at build time
-from the live schema walk, argument parser and exit enumeration
-(:mod:`nanopnp.cli.reference`), so they cannot drift by hand. What can still go
-wrong is the renderer: a field it skips, a nested subcommand it never walks, an
-exit class it forgets. Each is asserted here in both directions, against the
-object the page claims to render.
-"""
+"""VER-45: the generated reference pages cover exactly what they document (IF-02, IF-03)."""
 
 from __future__ import annotations
 
@@ -29,7 +21,6 @@ from nanopnp.pipeline.checks import options_at
 
 
 def _rows(text: str) -> dict[str, list[str]]:
-    """Return each table row keyed by its first (back-quoted) cell."""
     rows: dict[str, list[str]] = {}
     for line in text.splitlines():
         match = re.match(r"^\| `([^`]+)` \|(.*)\|$", line)
@@ -41,7 +32,6 @@ def _rows(text: str) -> dict[str, list[str]]:
 
 
 def test_ver45_case_reference_lists_exactly_the_schema_walk() -> None:
-    """One row per ``case_fields()`` path, and no row for anything else."""
     rows = _rows(render_case_reference())
     paths = [reference.path for reference in case_fields()]
     assert set(rows) == set(paths)
@@ -49,7 +39,6 @@ def test_ver45_case_reference_lists_exactly_the_schema_walk() -> None:
 
 
 def test_ver45_case_reference_takes_default_and_options_from_the_schema() -> None:
-    """Required fields say so; a restricted field lists what ``options_at`` admits."""
     rows = _rows(render_case_reference())
     for reference in case_fields():
         _type, default, accepts, validated = rows[reference.path]
@@ -60,12 +49,8 @@ def test_ver45_case_reference_takes_default_and_options_from_the_schema() -> Non
         assert bool(validated) is (reference.path in SWITCH_PATHS), reference.path
 
 
+# FR-25
 def test_ver45_case_reference_shows_the_validated_default_apart_from_the_schema_default() -> None:
-    """A correction defaults to ``none`` in the schema and to the fitted file when validated.
-
-    The distinction a user most needs: a case naming no correction solves
-    classical PNP-NS, and the manifest records that as deviations (FR-25).
-    """
     rows = _rows(render_case_reference())
     _type, default, _accepts, validated = rows["electrolyte.corrections.diffusivity.model"]
     assert default == "none"
@@ -82,7 +67,6 @@ def _all_parsers(parser: argparse.ArgumentParser) -> list[argparse.ArgumentParse
 
 
 def test_ver45_cli_reference_covers_every_command_and_option() -> None:
-    """Every parser ``build_parser()`` defines has a section, and every option a row."""
     text = render_cli_reference()
     sections = re.split(r"^## `([^`]+)`$", text, flags=re.M)
     by_command = dict(zip(sections[1::2], sections[2::2], strict=True))
@@ -102,7 +86,6 @@ def test_ver45_cli_reference_covers_every_command_and_option() -> None:
 
 
 def test_ver45_exit_code_reference_is_the_enumeration() -> None:
-    """The class table, the exception map and the exclusions, each in both directions."""
     text = render_exit_codes()
     classes = {
         int(code): meaning

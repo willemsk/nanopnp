@@ -1,11 +1,4 @@
-"""VER-63: every findings log under ``docs/`` is well formed (section 8.2.7 G4; WP35 D17).
-
-Every real log must pass :func:`~nanopnp.validation.findings.check_log`, and the
-check is shown to refuse each defect it claims to: a log built here, valid but for
-one row, is refused naming that row, so the check cannot pass by accepting
-anything. Once a log's header says ``closed``, a row that is not terminal is
-refused, which is how Phase 4's close is asserted.
-"""
+"""VER-63: every findings log under docs/ is well formed (section 8.2.7 G4)."""
 
 from __future__ import annotations
 
@@ -42,15 +35,12 @@ findings:
 """
 
 ANOTHER = "[x](report.md#mod-02-another)"
-"""A finding cell linking to the second heading of :data:`REPORT`."""
 
 GOOD = "| MOD-01 | stages | high | open | — | [A finding](report.md#mod-01-a-finding) |"
-"""A valid open row, linking to a heading of :data:`REPORT`."""
 
 
 @pytest.fixture
 def repository(tmp_path: Path) -> Path:
-    """Return a repository holding a specification with section 8.2.7 G4, a plan and a report."""
     (tmp_path / "SPECIFICATION.md").write_text(
         "#### 8.2.7 Phase 4\n\n| # | Decision |\n|---|---|\n| G4 | Logs |\n\n### 8.3 Next\n\n"
         "| G9 | not in 8.2 |\n",
@@ -173,13 +163,11 @@ def test_ver63_a_log_status_other_than_open_or_closed_is_refused(repository: Pat
 
 
 def test_ver63_a_fixed_ruling_may_link_a_section_of_its_plan(repository: Path) -> None:
-    """A plan link with an anchor still names the plan; the anchor is not part of the file."""
     fixed = f"| MOD-02 | coupling | low | fixed | [WP36](../plans/wp36.md#outcome) | {ANOTHER} |"
     assert check_log(_log(repository, GOOD, fixed), repository) == ()
 
 
 def test_ver63_a_finding_linking_a_heading_of_the_log_itself_is_checked(repository: Path) -> None:
-    """``#anchor`` alone is a heading of the log: checked against it, never read as a directory."""
     own = "| MOD-02 | stages | high | open | — | [x](#log) |"
     assert check_log(_log(repository, GOOD, own), repository) == ()
     gone = "| MOD-02 | stages | high | open | — | [x](#nowhere) |"

@@ -1,12 +1,4 @@
-"""VER-08: the NUM-17 solver gates fire, and say what and where.
-
-The gates exist because the failure they catch is silent. A concentration that
-dips a fraction of a per cent below zero inside the double layer does not stop
-Newton; it reverses that species' contribution to the current and produces an
-answer that looks like a result. So these tests check two things of every gate:
-that it fires at all, and that the diagnostic names the offending quantity and
-its location, which is what QR-12 requires and what makes the abort useful.
-"""
+"""VER-08: the NUM-17 solver gates fire, and say what and where."""
 
 from __future__ import annotations
 
@@ -31,34 +23,29 @@ from nanopnp.numerics.gates import (
 )
 
 SLAB_WIDTH_NM = 4.0
-"""Width of the test slab, in nm."""
 
 
 @pytest.fixture
 def sampler() -> FieldSampler:
-    """Return a sampler over a small planar slab."""
     mesh = SlabGeometry(width_nm=SLAB_WIDTH_NM).generate(maxh_nm=0.5)
     return FieldSampler(mesh, coordinates=("x", "y"))
 
 
 def _space(sampler: FieldSampler) -> ngs.FESpace:
-    """Return a P2 space on the sampler's mesh."""
     return ngs.H1(sampler.mesh, order=2)
 
 
+# PHY-05
 def test_ver08_maximum_packing_matches_the_published_diameters() -> None:
-    """``a_i = 0.5 nm`` packs at 13.3 M and ``a_0 = 0.311 nm`` at 55.2 M (PHY-05)."""
     assert maximum_packing_M(ION_DIAMETER_NM) == pytest.approx(13.3, abs=0.05)
     assert maximum_packing_M(WATER_DIAMETER_NM) == pytest.approx(55.2, abs=0.05)
 
 
 def test_ver08_excluded_volume_is_avogadro_times_the_cube() -> None:
-    """``N_A a^3`` in m^3/mol, the conversion that makes ``Phi`` dimensionless."""
     assert excluded_volume_m3_per_mol(ION_DIAMETER_NM) == pytest.approx(7.528e-5, rel=1e-3)
 
 
 def test_ver08_positivity_gate_passes_on_a_physical_state(sampler: FieldSampler) -> None:
-    """A positive concentration everywhere raises nothing."""
     concentration = ngs.GridFunction(_space(sampler))
     concentration.Set(ngs.CF(1000.0))
     PositivityGate(sampler, {"c_Na": concentration}).check()
@@ -67,9 +54,8 @@ def test_ver08_positivity_gate_passes_on_a_physical_state(sampler: FieldSampler)
 def test_ver08_positivity_gate_names_the_species_and_the_location(
     sampler: FieldSampler,
 ) -> None:
-    """A negative concentration aborts, naming the species and where it went negative."""
     concentration = ngs.GridFunction(_space(sampler))
-    concentration.Set(1000.0 * (ngs.x - 3.0))  # negative for x < 3 nm
+    concentration.Set(1000.0 * (ngs.x - 3.0))
     gate = PositivityGate(sampler, {"c_Na": concentration})
 
     with pytest.raises(GateViolationError) as caught:
@@ -84,17 +70,8 @@ def test_ver08_positivity_gate_names_the_species_and_the_location(
 
 
 def test_ver08_positivity_gate_rejects_exactly_zero(sampler: FieldSampler) -> None:
-    """NUM-17 asks for ``min_i c_i > 0``, strictly: ``ln c`` is undefined at zero.
-
-    The field is the coordinate itself and not a ``GridFunction`` projection of
-    it. ``Set`` projects element-wise, so the wall value comes back as round-off
-    rather than zero (about -3e-16 on Linux and a positive value of the same size
-    on macOS and Windows) and the test would then assert the sign of that
-    round-off rather than the strictness of the gate. Evaluating the coefficient
-    function samples ``x = 0`` exactly on every platform.
-    """
     with pytest.raises(GateViolationError, match="positivity") as caught:
-        PositivityGate(sampler, {"c_Cl": ngs.x}).check()  # exactly zero on the wall
+        PositivityGate(sampler, {"c_Cl": ngs.x}).check()
 
     assert caught.value.value == 0.0
 
@@ -102,8 +79,7 @@ def test_ver08_positivity_gate_rejects_exactly_zero(sampler: FieldSampler) -> No
 def test_ver08_packing_gate_passes_at_a_realistic_concentration(
     sampler: FieldSampler,
 ) -> None:
-    """1 M NaCl packs to about 0.15, comfortably clear of the singularity."""
-    bulk = ngs.CF(1000.0)  # mol/m^3
+    bulk = ngs.CF(1000.0)
     gate = PackingFractionGate(sampler, {"c_Na": bulk, "c_Cl": bulk})
     gate.check()
     value, _ = sampler.maximum(gate.packing_fraction)
@@ -113,8 +89,7 @@ def test_ver08_packing_gate_passes_at_a_realistic_concentration(
 def test_ver08_packing_gate_fires_before_the_steric_singularity(
     sampler: FieldSampler,
 ) -> None:
-    """``Phi >= 1`` aborts: ``beta_i`` carries ``1/(1 - Phi)`` and is singular there."""
-    crowded = ngs.CF(7000.0)  # mol/m^3 each, Phi = 1.054
+    crowded = ngs.CF(7000.0)
     gate = PackingFractionGate(sampler, {"c_Na": crowded, "c_Cl": crowded})
 
     with pytest.raises(GateViolationError) as caught:
@@ -128,8 +103,7 @@ def test_ver08_packing_gate_fires_before_the_steric_singularity(
 def test_ver08_packing_gate_warns_before_it_aborts(
     sampler: FieldSampler, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """A run drifting towards the singularity leaves a trace before it stops."""
-    warm = ngs.CF(6000.0)  # Phi = 0.903, above the warning threshold, below 1
+    warm = ngs.CF(6000.0)
     gate = PackingFractionGate(sampler, {"c_Na": warm, "c_Cl": warm})
 
     with caplog.at_level(logging.WARNING, logger="nanopnp.numerics.gates"):
@@ -139,7 +113,6 @@ def test_ver08_packing_gate_warns_before_it_aborts(
 
 
 def test_ver08_packing_gate_sums_over_every_species(sampler: FieldSampler) -> None:
-    """The sum retains all species; collapsing it to one would halve ``Phi`` (PHY-05)."""
     bulk = ngs.CF(1000.0)
     one = PackingFractionGate(sampler, {"c_Na": bulk})
     two = PackingFractionGate(sampler, {"c_Na": bulk, "c_Cl": bulk})
@@ -151,7 +124,6 @@ def test_ver08_packing_gate_sums_over_every_species(sampler: FieldSampler) -> No
 def test_ver08_packing_gate_honours_a_species_specific_diameter(
     sampler: FieldSampler,
 ) -> None:
-    """Per-species diameters are supported; the ion default applies to the rest."""
     gate = PackingFractionGate(
         sampler,
         {"c_Na": ngs.CF(1000.0), "water": ngs.CF(1000.0)},
@@ -162,19 +134,17 @@ def test_ver08_packing_gate_honours_a_species_specific_diameter(
 
 
 def test_num17_increment_gate_caps_the_potential_step(sampler: FieldSampler) -> None:
-    """``||delta phi||_inf <= V_T``, which is 1 in the nondimensional variables."""
     increment = ngs.GridFunction(_space(sampler))
     increment.Set(ngs.CF(0.9))
     PotentialIncrementGate(sampler, increment).check()
 
-    increment.Set(0.5 * ngs.x)  # reaches 2 at x = 4 nm
+    increment.Set(0.5 * ngs.x)
     with pytest.raises(GateViolationError) as caught:
         PotentialIncrementGate(sampler, increment).check()
     assert caught.value.value == pytest.approx(2.0, rel=1e-6)
 
 
 def test_num17_increment_gate_catches_a_negative_overshoot(sampler: FieldSampler) -> None:
-    """The cap is on the magnitude: a large step down is as wrong as a large step up."""
     increment = ngs.GridFunction(_space(sampler))
     increment.Set(ngs.CF(-1.5))
     with pytest.raises(GateViolationError, match="increment"):
@@ -184,11 +154,6 @@ def test_num17_increment_gate_catches_a_negative_overshoot(sampler: FieldSampler
 def test_qr12_a_nan_anywhere_fails_the_packing_increment_and_wall_distance_gates(
     sampler: FieldSampler,
 ) -> None:
-    """``nan >= limit`` is False, so a NaN sample used to pass both gates.
-
-    The sampler's argmax lands on the NaN and returns it, so written as the
-    positivity gate is, ``not value < limit``, the gate fails and names where.
-    """
     space = _space(sampler)
     poisoned = ngs.GridFunction(space)
     poisoned.Set(ngs.CF(1000.0))
@@ -210,40 +175,29 @@ def test_qr12_a_nan_anywhere_fails_the_packing_increment_and_wall_distance_gates
 
 
 def test_sampler_covers_the_p2_nodal_set(sampler: FieldSampler) -> None:
-    """Vertices and edge midpoints are sampled, so a P2 extremum cannot hide.
-
-    A P2 field on a triangle is determined by its six nodal values; sampling all
-    of them plus the centroid is what makes the gate a statement about the
-    degrees of freedom rather than about a lucky quadrature point.
-    """
     mesh = sampler.mesh
     points = sampler.points
     assert len(points) >= mesh.nv
     assert points.shape[1] == 2
-    # The wall corner is a vertex and must appear exactly once, without a -0.0 twin.
     corners = [p for p in points if abs(p[0]) < 1e-12 and abs(p[1]) < 1e-12]
     assert len(corners) == 1
 
 
 def test_ver08_packing_gate_refuses_an_empty_species_mapping(sampler: FieldSampler) -> None:
-    """A gate with nothing to sum asserts nothing; it is a configuration error, not a pass."""
     with pytest.raises(ValueError, match="at least one species"):
         PackingFractionGate(sampler, {})
 
 
 def test_sampler_refuses_a_vector_expression(sampler: FieldSampler) -> None:
-    """Keeping only the first component would gate one component and pass the others."""
     with pytest.raises(ValueError, match="must be scalar"):
         sampler.minimum(ngs.CF((ngs.x, ngs.y)))
 
 
 def test_sampler_locates_its_points_once(sampler: FieldSampler) -> None:
-    """The point location is cached: the gates re-evaluate at fixed points every step."""
     assert sampler.located is sampler.located
 
 
 def test_check_all_stops_at_the_first_violation(sampler: FieldSampler) -> None:
-    """Gates run in order and the first failure is the one reported."""
     negative = ngs.GridFunction(_space(sampler))
     negative.Set(ngs.CF(-1.0))
     gates = [
