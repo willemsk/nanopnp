@@ -66,7 +66,7 @@ vertices, and step 6 removes none of them. No pocket closes, so no hole is fille
 
 | Quantity | Value |
 |---|---|
-| Deepest ring edge from the body | 0.24689 nm, against the gated 0.24 nm (`.knowledge/06` §8.1.4) |
+| Deepest ring edge from the body | 0.24689 nm, against the gated 0.24 nm (`.knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md#814-a-geos-round-join-offset-then-step-6-is-not-within-a-chords-sagitta-of-the-offset`) |
 | Farthest ring vertex | 0.29891 nm: grooves the `2h_c` closing filled |
 | `wall` nodes of the default-size mesh | [0.24753, 0.28177] nm from the body; 8.1 % of 605 beyond `a + 10⁻⁶` |
 | Areas (nm²) | shell 7.885, protein 28.109 (unchanged by the shell) |

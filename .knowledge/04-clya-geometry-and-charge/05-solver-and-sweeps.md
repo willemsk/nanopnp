@@ -7,7 +7,7 @@ title: 5. Solver and sweeps
 
 Stated: **COMSOL Multiphysics v5.4** (`epnpns.tex` L234-235). Everything else — PARDISO direct
 solver, damped Newton with a lower-bounded variable damping factor — is author correspondence, not
-the thesis; see `01-physics-epnpns.md` §7. No tolerances, no continuation/ramping scheme, no initial
+the thesis; see `.knowledge/01-physics-epnpns/07-implementation-notes-carried-forward.md`. No tolerances, no continuation/ramping scheme, no initial
 guess, and no sweep ordering are recorded.
 
 What the *outputs* imply about the sweep: `c_bulk` spans **0.005 to 5 M** and `V_bias` spans

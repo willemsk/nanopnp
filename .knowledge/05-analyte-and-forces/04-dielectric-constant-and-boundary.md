@@ -5,7 +5,7 @@ title: 3. Dielectric constant and boundary conditions
 
 ## 3. Dielectric constant and boundary conditions
 
-| Quantity | Trapping / APBS (`trapping.tex §methods`) | ePNP-NS (`01-physics-epnpns.md`) |
+| Quantity | Trapping / APBS (`trapping.tex §methods`) | ePNP-NS (`.knowledge/01-physics-epnpns/index.md`) |
 |---|---|---|
 | Solute (protein) ε_r | **10** (cites Li 2013) | **20** (ε_r,p, cites Li 2013) |
 | Solvent ε_r | 78.15 | 78.15 × ε_r,f^c(⟨c⟩) |
@@ -17,6 +17,6 @@ config value.
 
 **Analyte boundary conditions: not specified anywhere in the thesis**, because no analyte appeared
 in the transport model. The only BCs given are pore + membrane (`n·J_i = 0`, `u = 0`, ε jump;
-`01-physics-epnpns.md §2`). Reusing those three on an analyte surface is an *inference* — mark it
+`.knowledge/01-physics-epnpns/02-governing-equations.md`). Reusing those three on an analyte surface is an *inference* — mark it
 as such in code.
 

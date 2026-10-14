@@ -11,7 +11,7 @@ The oracle tier, available because the author retains a COMSOL licence.
 > is against the paper's *published* current–voltage relationships and in-pore averages (VAL-16,
 > VAL-17), which need no licence. The field comparison below is kept, but not required. What a
 > published-results comparison cannot do is localise: see the ablation paragraph below, and
-> `04-clya-geometry-and-charge.md` §6.5, for the part of localisation it can recover.
+> `.knowledge/04-clya-geometry-and-charge/06-validation-targets.md#65-correction-ablation-targets-t-sectransportcomparison_corrections`, for the part of localisation it can recover.
 
 For a frozen set of cases spanning the envelope, compare field-by-field against exported COMSOL
 solutions — `φ`, `c_i`, `u`, `p` sampled on a common probe grid — plus every scalar QoI.

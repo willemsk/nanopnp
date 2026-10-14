@@ -10,7 +10,7 @@ COMSOL for this exact system using **PARDISO direct + Newton with a lower-bounde
 factor**. That is direct empirical evidence and outranks the general literature warning.
 *Confirmed from the model report:* Fully Coupled, PARDISO (pivoting perturbation 1e-13), initial
 damping 0.2, **minimum damping 0.01**, recovery damping 0.2, max 100 iterations, relative tolerance
-1e-6, sparsity pattern reused. Continuation on `V_bias`. → `09-comsol-reference-settings.md` §B.
+1e-6, sparsity pattern reused. Continuation on `V_bias`. → `.knowledge/09-comsol-reference-settings/03-solver-3-4.md`.
 
 Implement:
 1. Damped Newton, damping factor adapted on residual reduction, with a **lower bound** (COMSOL's
@@ -30,7 +30,7 @@ Implement:
   Newton *at high surface charge with constant properties*.
 - *PB initial guess.* Initialise from the Poisson–Boltzmann solution rather than
   `φ=0, u=0, c_i=c₀`. Specifically cures the high-surface-charge failure mode. **Note:** because
-  ePNP-NS violates the Einstein relation (see `02-electrokinetics-background.md`), PB is an
+  ePNP-NS violates the Einstein relation (see `.knowledge/02-electrokinetics-background/index.md`), PB is an
   approximate initialiser here, not the exact zero-bias limit.
 
 **The convergence criterion must not be the residual alone.** A relative test measured against the

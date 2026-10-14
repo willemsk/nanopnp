@@ -23,7 +23,7 @@ title: 8. Gaps and ambiguities (questions for the author)
   (`pqr2grid` binning at L = 15 nm, then a hand edit that moved vertices; §1.2, §1.4) puts ±1 %
   out of reach. The author's tolerances are in the `SPECIFICATION.md` §7.4 NOTE on VAL-05.
 - **G4 — `q_i/(2 pi r_i)` vs `/(2 pi r)`.** The prose (T L404-408) divides by the **atom's** radial
-  position `r_i`; the implementation (COMSOL, KB 01 §5) divides by the **field point's** `r`. These
+  position `r_i`; the implementation (COMSOL, `.knowledge/01-physics-epnpns/05-fixed-charge-from-structure.md`) divides by the **field point's** `r`. These
   differ within the Gaussian's support and diverge differently near the axis. The COMSOL form is what
   produced -72.9 e, so implement that; but the discrepancy should be confirmed.
 - **G5 — CLOSED [tested], §3.1.** The file stores the sum *without* `e`, in `e/m^2`: its planar

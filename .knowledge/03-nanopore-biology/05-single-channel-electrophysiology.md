@@ -20,7 +20,7 @@ Key observables [§"Ionic current spectroscopy", `fig:nanopores_concept`]:
   ions/s. FraC comparison at +50 mV, 1 M NaCl: WtFraC 1.91 ± 0.17 nS, ReFraC 1.19 ± 0.12 nS — a single charge
   reversal at the constriction changes G by 38%.
 - **I–V curve** — current versus applied bias, swept with a pulse protocol. Nonlinearity/asymmetry is
-  rectification (see 02 §7). ePNP-NS was validated against I–V curves over −200…+200 mV and 0.05–3 M NaCl.
+  rectification (see `.knowledge/02-electrokinetics-background/07-ionic-current-rectification.md`). ePNP-NS was validated against I–V curves over −200…+200 mV and 0.05–3 M NaCl.
 - **Current blockade** — an analyte entering the pore transiently reduces the current to a **blocked-pore**
   level. Typical residual currents are **10–95% of `I_open`**; **dwell times** 10 µs–100 ms for DNA/protein
   translocation, seconds to minutes for trapped proteins. The **fractional residual current** (blocked/open)

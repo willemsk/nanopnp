@@ -22,7 +22,7 @@ coli* (also called HlyE), first crystallised by Mueller et al. 2009 [§`sec:np:c
   | Simulation model (transport.tex) | 6 nm | 10 nm | 3.3 nm | 4 nm | 14 nm |
 
   Use the **simulation values** when reproducing published results; the geometry actually used comes from the
-  25% contour of a radially averaged atomic density map — see `04-clya-geometry-and-charge.md` for the exact
+  25% contour of a radially averaged atomic density map — see `.knowledge/04-clya-geometry-and-charge/index.md` for the exact
   axial extents, charge clusters and bias sign convention.
 - **Charge:** net **−60 e at pH 7.5**, most of it lining the interior. Consequences: negative potential
   throughout lumen and constriction, **cation selectivity**, a positively charged EDL, and therefore a strong

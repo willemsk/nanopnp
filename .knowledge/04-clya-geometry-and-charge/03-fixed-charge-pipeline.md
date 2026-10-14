@@ -25,7 +25,7 @@ with `sigma = 0.93` in the density map.
 Discretisation and use: gridded at **0.005 nm** spacing over the domain of `rhoq_pore`, precomputed,
 loaded into COMSOL as a **2D linear interpolation function**, and converted to a pseudo-3D volumetric
 density by dividing by the **local circumference 2 pi r** of each element, **applied across all
-computational domains** (T L418-429). Axis guard, verbatim COMSOL (see `01-physics-epnpns.md` §5):
+computational domains** (T L418-429). Axis guard, verbatim COMSOL (see `.knowledge/01-physics-epnpns/05-fixed-charge-from-structure.md`):
 
 ```
 scd_pore = if(r < 0.01[nm], 0, e_const * rhoq_pore(r,z) / (2*pi*r))     [C m^-3]
@@ -96,7 +96,7 @@ and on the fixed 44,316-element mesh, raising the integration order instead (ext
 i.e. order 8 -> 37) gives -71.289538, -71.289538, -71.957178, -72.212549, -71.800760, -72.053253,
 -71.965410 e — oscillating at the 1e-3 to 1e-2 level and never settling. (The first two are
 identical because `Measures.bonus_order` takes `max(extra, 3)` on a singular form, so `extra=3` *is*
-the assembly order; see `06-numerics-fem.md`.)
+the assembly order; see `.knowledge/06-numerics-fem/index.md`.)
 
 **The cause is the field's own structure.** Along the densest `z` the table changes sign **49
 times**, with extrema a **median 0.035 nm** apart — an order below the finest element the reference

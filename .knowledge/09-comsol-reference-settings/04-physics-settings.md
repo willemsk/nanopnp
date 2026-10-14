@@ -49,7 +49,7 @@ The internal definitions of `tds.streamline`, `tds.crosswind`, `spf.streamlinens
 but unused. **[verified]**
 
 **Consequence.** The published currents were computed **with** consistent stabilisation in both the
-ion transport and the flow. The open question in `06-numerics-fem.md` §4 is settled against our
+ion transport and the flow. The open question in `.knowledge/06-numerics-fem/04-stabilisation.md` is settled against our
 current policy. Note also that the flow uses **P1+P1** (equal-order) elements, which are LBB-unstable
 without stabilisation — for the Navier–Stokes part the stabilisation is *load-bearing*, not cosmetic.
 
@@ -109,7 +109,7 @@ Wall-distance factors (`wdf`), whole model:
 | `wdf.a` | 3.36096 |
 | `wdf.r0` | 0.14716 |
 
-`0.62e1` = **6.2 nm⁻¹**, with **`+0.01`** inside the exponent. Confirms index item 1 exactly.
+`0.62e1` = **6.2 nm⁻¹**, with **`+0.01`** inside the exponent. Confirms trap 1 of `.knowledge/00-orientation/02-the-five-things-most-likely-to-trip-you.md` exactly.
 **[verified]**
 
 Concentration factors (`cdf`), whole model:
@@ -127,7 +127,7 @@ Concentration factors (`cdf`), whole model:
 | `cdf.epsr_c` | `if(enable_cdf_epsr == 0, 1, 1 - (1 - epsr_ms/epsr0)*(coth((3*epsr_alpha*cdf.dcav)/(epsr0 - epsr_ms)) - (epsr0 - epsr_ms)/(3*epsr_alpha*cdf.dcav)))` |
 
 The clamp `cmax = 5.3 M` caps every concentration correction; `cdf.dcav` is the **average ion
-concentration**, confirming index ruling 3. **[verified]**
+concentration**, confirming ruling 3 of `.knowledge/00-orientation/05-author-rulings-2026-08-these-override.md`. **[verified]**
 
 Assembled local properties:
 
@@ -145,7 +145,7 @@ Assembled local properties:
 
 `l0_i = (e_const^2*N_A_const)/(k_B_const*T_system)*d0_i` — mobility is derived from the
 infinite-dilution diffusivity by Einstein, then the *independent* concentration fit `cdf.L_i`
-breaks the relation at finite `c`. Consistent with index item 4.
+breaks the relation at finite `c`. Consistent with trap 4 of `.knowledge/00-orientation/02-the-five-things-most-likely-to-trip-you.md`.
 
 ### C.5 Parameters (§1.1)
 
@@ -228,7 +228,7 @@ during Newton iterations.
 | Item | Value |
 |---|---|
 | Body Force (§2.5.8) | `spf.Fr = es.Er*scd_ions`, `spf.Fz = es.Ez*scd_ions` |
-| Dielectric-gradient force | **Absent** — confirms index item 3. **[verified]** |
+| Dielectric-gradient force | **Absent** — confirms trap 3 of `.knowledge/00-orientation/02-the-five-things-most-likely-to-trip-you.md`. **[verified]** |
 | Density Continuity (§2.5.9) | weak contribution `(u*d(spf.rho, r) + w*d(spf.rho, z))*test(p)` |
 | Multiphysics | Potential Coupling 1 (es → tds); Flow Coupling 1 (spf → tds) |
 | Ground | Boundaries 196, 198 |
@@ -263,7 +263,7 @@ during Newton iterations.
 
 `tds.ntflux_i = tds.bndFlux_i = if(r>0.001/sqrt(sqrt(mean(emetric2))), -0.5*dflux_spatial(c_i)/(pi*r), NaN)`
 — i.e. the **variational/reaction boundary flux**, not a cross-section integral of the CG flux.
-This matches the rule in `CLAUDE.md` and `06-numerics-fem.md` §7. The evaluation boundary is
+This matches the rule in `CLAUDE.md` and `.knowledge/06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md`. The evaluation boundary is
 **NOT IN REPORT**. **[verified]**
 
 Pore averages use `is_inside_pore`, `is_inside_pore_bulk` (`wdf.wd > 0.5 nm`) and

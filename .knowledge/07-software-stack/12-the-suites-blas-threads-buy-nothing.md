@@ -13,14 +13,14 @@ oversubscribe the cores and the suite gets *slower* (7m20s, 26 min of user time)
 `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS` and `MKL_NUM_THREADS` all set to 1 it takes 3m19s. CI and
 the commit gate therefore run `-n auto --dist loadfile` with the three pinned, and the long pole is
 `tests/tier2/test_stabilised_mode.py`, whose module fixture (146 s) cannot be split across workers
-(`.knowledge/06-numerics-fem.md` §4.3.3).
+(`.knowledge/06-numerics-fem/04-stabilisation.md#433-on-a-stable-element-pair-the-flow-terms-cost-an-order-and-20-the-time`).
 
 Re-measured on 30 September 2026, four cores, 1504 tests in the default selection (tiers 1 and 2,
 `not slow`, the GUI file apart). Before the changes below: **353 s wall, 1147 s of test time**. The
 long pole was still `test_stabilised_mode.py` at 259 s, and six Tier-2 files each walked stages 2 and
 3 of the prepared 2WCD (19.7 s and 12.2 s). Two changes, neither touching a weak form or a tolerance:
 
-- the MMS sources are built with shared subexpressions (`06-numerics-fem.md` §4.3.3), which took
+- the MMS sources are built with shared subexpressions (`.knowledge/06-numerics-fem/04-stabilisation.md#433-on-a-stable-element-pair-the-flow-terms-cost-an-order-and-20-the-time`), which took
   that module from 259 s to 60 s;
 - `tests/conftest.py`'s `seeded_2wcd` computes 2WCD's stages 1 to 3 once per session, under a
   `FileLock` in a directory every worker shares, and copies those artefacts into each test's own

@@ -75,15 +75,15 @@ On the **full coupled axisymmetric system** with `r`-weighted forms. **The only 
 
 ### 2.8 Analyte force benchmarks
 The thesis's trapping work used equilibrium APBS on a bead model with a 1D analytic rate model,
-with no stress-tensor integrals and no force profile (see `05-analyte-and-forces.md` §0–§9). The
-only published force profile is Angew. Chem. 2022 (`05` §10), which gives main-text targets
-(`05` §10.6) but no code or field data. Verify against analytics first, then those targets:
+with no stress-tensor integrals and no force profile (see `.knowledge/05-analyte-and-forces/01-read-this-first-the-acs-nano-2019-work.md`–§9). The
+only published force profile is Angew. Chem. 2022 (`.knowledge/05-analyte-and-forces/11-correction-continuum-force-computation.md`), which gives main-text targets
+(`.knowledge/05-analyte-and-forces/11-correction-continuum-force-computation.md#106-validation-targets-plyab-hb`) but no code or field data. Verify against analytics first, then those targets:
 
 - Stokes drag on a sphere: `F = 6πηaU` (and the axisymmetric-tube correction for confinement).
 - Maxwell stress on a dielectric sphere in a uniform field — closed form available.
 - Electrophoretic mobility limits: Hückel (`λ_D ≫ a`) `μ_e = 2εζ/3η`; Smoluchowski
   (`λ_D ≪ a`) `μ_e = εζ/η`.
-- Domain-form vs surface-form force must agree (`06-numerics-fem.md` §7).
+- Domain-form vs surface-form force must agree (`.knowledge/06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md`).
 
 ---
 

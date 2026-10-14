@@ -22,7 +22,7 @@ title: 8. Mesh resolution and adaptivity
   report that **does** contain a Mesh section (§2.7), Solver Configurations for both studies
   (§3.2, §4.3) and a "Mesh quality" results section (§5.4). Those numbers exist; they have not yet
   been extracted (`WebFetch` truncates the PDF at ~p. 66 of 143). Still no convergence study.
-  → `09-comsol-reference-settings.md`.
+  → `.knowledge/09-comsol-reference-settings/index.md`.
 
 ### Measured: the reference region meshes to a third of COMSOL's element count **[tested]** {#measured-the-reference-region-meshes-to-a-third-of-comsols-element-count}
 

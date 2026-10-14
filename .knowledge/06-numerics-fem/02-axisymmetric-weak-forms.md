@@ -29,7 +29,7 @@ Verified algebra: `2η ε_θθ(u) ε_θθ(v) = 2η u_r v_r / r²`, and multiplyi
 correctness bug** producing plausible but wrong flow fields.
 
 > The published model uses the **variable-density** Axelsson formulation (three equations — see
-> `01-physics-epnpns.md` §2.3), not the constant-density Stokes above. Implement the variable-
+> `.knowledge/01-physics-epnpns/02-governing-equations.md#23-navierstokes-variable-density-and-viscosity`), not the constant-density Stokes above. Implement the variable-
 > density system as the default to match the validated model, and constant-density Stokes as a
 > flag. The `r`-weighting and hoop term apply identically.
 

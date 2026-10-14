@@ -21,5 +21,5 @@ Ordered by expected effect on the ionic-current QoI.
 | 10 | **Nonlinear strategy** | fully coupled, damping 0.2 → min 0.01, ≤ 100 iterations, rel. tol. 1e-6 | Same converged state; different paths are fine as long as the tolerance matches |
 | 11 | **Continuation** | ramp `V_bias`, reuse previous solution | Determines which branch is found at high bias / low salt |
 | 12 | **Current extraction** | variational boundary flux, integration order 4 | Cross-section integrals of the CG flux disagree at the percent level |
-| 13 | **Steric flux weak form** | as printed in C.6, `α_i = k_i/(1 − Σ c_j v_j)` | Sign and prefactor as given; index item 2 |
+| 13 | **Steric flux weak form** | as printed in C.6, `α_i = k_i/(1 − Σ c_j v_j)` | Sign and prefactor as given; trap 2 of `.knowledge/00-orientation/02-the-five-things-most-likely-to-trip-you.md` |
 

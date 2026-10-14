@@ -21,7 +21,7 @@ doing what they should.
 
 Detailed numeric targets — transport numbers, peak radial potentials, pore-averaged ion ratios,
 energy barriers, EOF velocities, pressure hotspots, and the correction-ablation percentages — are
-tabulated in `04-clya-geometry-and-charge.md` §6.
+tabulated in `.knowledge/04-clya-geometry-and-charge/06-validation-targets.md`.
 
 > **Caveat on all Tier-4 targets.** The published results carry no discretisation error bar: the
 > thesis reports no element counts, no mesh convergence study, no solver tolerances. Small

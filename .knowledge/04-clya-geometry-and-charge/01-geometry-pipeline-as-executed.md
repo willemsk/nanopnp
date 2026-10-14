@@ -205,7 +205,7 @@ series resistor. It is the `G ∝ r²` sensitivity weighted by where the resista
   the Gmsh backend the same region meshes to 49,617 triangles, minimum SICN 0.6805 and gamma 0.5749
   (WP23 D13). The reference COMSOL mesh has 120,917 elements,
   minimum quality 0.6378 and mean 0.9765 by a measure its report does not state
-  (`09-comsol-reference-settings.md`). WP21's 44,688 triangles and 0.7111 were at its *trans*-tip
+  (`.knowledge/09-comsol-reference-settings/index.md`). WP21's 44,688 triangles and 0.7111 were at its *trans*-tip
   registration, which places the bilayer 0.056 nm higher.
 - **The Cₙ variance (FR-06)**, from stage 3 in the stage-1 frame: the largest Cₙ variance is 0.204 at
   (r, z) = (5.40, 12.95) nm, the *cis* rim, and the largest non-Cₙ variance 0.0095 at (1.65, 3.10) nm,
@@ -247,7 +247,7 @@ MD frame (G9). It uses the same planes and metric as §1.4.
   constriction, nine times 2WCD's 0.0095. The raw variance peaks at 0.186 at (4.60, 0.65) nm.
 - **Timing, on the author's machine.** Stage 1 took 9.2 s. Stage 2 took 596.6 s, 11.9 s a frame on
   a 339 × 293 × 293 grid at 0.05 nm. Stages 3 to 5 took 13.7, 3.3 and 1.5 s. Stage 6 took 12.3 s
-  cold and 4.9 s warm, and Gmsh 2.2 s. The whole file ran in 12 min 54 s. `07-software-stack.md`
+  cold and 4.9 s warm, and Gmsh 2.2 s. The whole file ran in 12 min 54 s. `.knowledge/07-software-stack/index.md`
   §2 has the development container's 980.6 s for stage 2.
 
 ---

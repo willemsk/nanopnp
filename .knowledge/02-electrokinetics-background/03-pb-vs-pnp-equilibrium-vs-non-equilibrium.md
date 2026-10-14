@@ -6,7 +6,7 @@ title: 3. PB vs PNP — equilibrium vs non-equilibrium
 ## 3. PB vs PNP — equilibrium vs non-equilibrium
 
 PB has no diffusion coefficients and cannot represent flux under bias; PNP(-NS) adds dynamics and PB is its
-zero-flux limit. Setting `J_i = 0`, `u = 0` in the NP flux (01 §2.2, no steric term):
+zero-flux limit. Setting `J_i = 0`, `u = 0` in the NP flux (`.knowledge/01-physics-epnpns/02-governing-equations.md#22-size-modified-nernstplanck`, no steric term):
 
 ```
 D_i*grad(c_i) + z_i*mu_i*c_i*grad(phi) = 0   =>   c_i = c_i0 * exp( -z_i*phi / (D_i/mu_i) )
