@@ -359,14 +359,39 @@ def _read_npz(path: Path) -> RadialGrid:
                 f"{path.name!r} is an npz archive without {', '.join(missing)}; a nanopnp grid "
                 "carries r_nm, z_nm and values"
             )
-        return RadialGrid.from_axes(archive["r_nm"], archive["z_nm"], archive["values"])
+        from_axes = RadialGrid.from_axes(archive["r_nm"], archive["z_nm"], archive["values"])
+        if "origin_nm" not in archive.files or "spacing_nm" not in archive.files:
+            return from_axes
+        stated = RadialGrid(
+            origin_nm=(float(archive["origin_nm"][0]), float(archive["origin_nm"][1])),
+            spacing_nm=(float(archive["spacing_nm"][0]), float(archive["spacing_nm"][1])),
+            values=from_axes.values,
+        )
+        for name, axis, mine in (
+            ("r", archive["r_nm"], stated.r_nm),
+            ("z", archive["z_nm"], stated.z_nm),
+        ):
+            deviation = float(np.max(np.abs(axis - mine)))
+            if not deviation <= UNIFORM_TOL_NM:
+                raise GridFormatError(
+                    f"{path.name!r} states an origin and spacing that its {name} axis does not "
+                    f"follow, by up to {deviation:.3g} nm"
+                )
+        return stated
 
 
 def _write_npz(grid: RadialGrid, path: Path) -> Path:
     import numpy as np
 
     written = path if path.suffix.lower() == ".npz" else path.with_name(f"{path.name}.npz")
-    np.savez(written, r_nm=grid.r_nm, z_nm=grid.z_nm, values=grid.values)
+    np.savez(
+        written,
+        r_nm=grid.r_nm,
+        z_nm=grid.z_nm,
+        origin_nm=np.asarray(grid.origin_nm, dtype=np.float64),
+        spacing_nm=np.asarray(grid.spacing_nm, dtype=np.float64),
+        values=grid.values,
+    )
     return written
 
 

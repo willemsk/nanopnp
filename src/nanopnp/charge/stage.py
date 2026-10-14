@@ -968,12 +968,6 @@ class FieldStage:
             progress=None if progress is None else (lambda f, m: progress(0.05 + 0.5 * f, m)),
         )
         written = write_grid(lattice.grid, directory / CHARGE_GRID_FILE, format="npz")
-        # The .npz carries the axes, not the origin and spacing, and reads back with
-        # the z spacing off in its last bits. Deposit and record the grid as stored,
-        # so a run served this lattice from the store deposits the same grid, and the
-        # digest recorded is the one the file (and its re-read through inputs.charge)
-        # carries.
-        lattice = replace(lattice, grid=read_grid(written, format="npz"))
         produced: Artefact = ChargeGridArtefact(
             parameters=key.parameters,
             protonation_hash=protonation.hash,
