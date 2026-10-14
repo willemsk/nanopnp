@@ -6,7 +6,7 @@ Run before every build, and never committed (WP16 D4, D5)::
 
 Five kinds of page, all derived:
 
-- **The model.** ``SPECIFICATION.md`` and every Markdown file of the ``.knowledge/`` bundle,
+- **The model.** ``SPECIFICATION.md`` and every Markdown file of the ``knowledge/`` bundle,
   copied verbatim. The model is documented by rendering its normative records, never by restating
   their equations (``SPECIFICATION.md`` section 8.1): restated summaries of this
   model drift and get copied wrong.
@@ -23,7 +23,7 @@ Only links are touched in the copies. A relative link to another copied page is
 pointed at its copy, and one to any other repository file is pointed at the file on
 GitHub, so that the strict build proves every link resolves. This is a separate step
 rather than an MkDocs hook so that the configuration stays readable by Zensical
-(``.knowledge/07-software-stack/13-documentation-tooling-mkdocs-material.md``).
+(``knowledge/07-software-stack/13-documentation-tooling-mkdocs-material.md``).
 """
 
 from __future__ import annotations
@@ -66,7 +66,7 @@ def _copies() -> dict[Path, Path]:
         ROOT / "SPECIFICATION.md": OUTPUT / "model" / "specification.md",
         ROOT / "CHANGELOG.md": OUTPUT / "project" / "changelog.md",
     }
-    bundle = ROOT / ".knowledge"
+    bundle = ROOT / "knowledge"
     for source in sorted(bundle.rglob("*.md")):
         pages[source] = OUTPUT / "model" / "knowledge" / source.relative_to(bundle)
     for source in sorted((ROOT / "examples").glob("*/README.md")):

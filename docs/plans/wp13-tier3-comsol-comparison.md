@@ -42,7 +42,7 @@ the second is not this package's to achieve. Tier 3 stays recorded, not gated (�
 | Need | Read |
 |---|---|
 | What Tier 3 is and what it accepts | `SPECIFICATION.md` §7.4, and the §7.1 NOTE on `$NANOPNP_REFERENCE_DATA` |
-| What must be matched for like-for-like | `.knowledge/09-comsol-reference-settings/04-physics-settings.md#c2-discretisation-order-per-field`, §C.10, §E, §F |
+| What must be matched for like-for-like | `knowledge/09-comsol-reference-settings/04-physics-settings.md#c2-discretisation-order-per-field`, §C.10, §E, §F |
 | The QoIs and their signs | `SPECIFICATION.md` §6.7 (NUM-23…NUM-27), in particular the NOTE on sign |
 | What the stabilised mode costs the current | `wp12-reference-stabilised-mode.md`, Outcomes in Design §3 and §4; the phase plan's "Inherited by WP13" paragraphs |
 | The reference geometry and its mesh | `wp8-mesh-ingestion-quality-reference.md`; `data/geometry/clya_reference_profile.yaml` |
@@ -60,7 +60,7 @@ the second is not this package's to achieve. Tier 3 stays recorded, not gated (�
 | Probe grid ownership | **Ours**, a `nanopnp/probe/v1` document of named tensor-product patches, checked in beside the frozen cases, content-hashed into every golden manifest | Phase plan decision "Tier-3 comparison surface". COMSOL interpolates onto our grid, so the comparison does not depend on COMSOL's mesh and a re-export cannot silently move the sample points |
 | Transpose protection | **Every patch asserts `n_r ≠ n_z`** at construction, with the message naming the `%Data` row order | `%Data` rows are `[i_z, i_r]`. On a square patch a transposed read is silently plausible and wrong everywhere; a non-square patch turns it into a shape error. Cheapest gate in the package |
 | Domain masking | Each field's probe set is the points inside its `definedon` materials **whose four `±margin_nm` neighbours are also inside** (default `margin_nm = 0.05`, the reference's own wall element size). The golden's NaN set must agree; disagreement **aborts**, naming the worst point and its distance | NGSolve returns **0**, silently, outside `definedon`; a `c_i` norm taken over the membrane is then dominated by fabricated zeros and reads as agreement. The margin keeps the mask off the boundary-resolution lottery, so a residual disagreement is a real geometry difference — the WP8 unmapped-group gate, one layer out |
-| Units and sign contract | The manifest **must** declare, per field, the COMSOL expression and its unit, and for the current the **evaluation boundary** and which electrode it references. A golden missing any of them is **refused**, naming what is missing | `.knowledge/09-comsol-reference-settings/07-differences-that-cannot-be-removed.md` records that the evaluation boundary is NOT IN REPORT, so it can only come from the author. A `mol/L` export is a factor 1000 and would present as a physics failure; a `trans`-referenced current negates every conductance (§6.7 NOTE). The loader converts to the §6.7 convention and **records the flip in the report** |
+| Units and sign contract | The manifest **must** declare, per field, the COMSOL expression and its unit, and for the current the **evaluation boundary** and which electrode it references. A golden missing any of them is **refused**, naming what is missing | `knowledge/09-comsol-reference-settings/07-differences-that-cannot-be-removed.md` records that the evaluation boundary is NOT IN REPORT, so it can only come from the author. A `mol/L` export is a factor 1000 and would present as a physics failure; a `trans`-referenced current negates every conductance (§6.7 NOTE). The loader converts to the §6.7 convention and **records the flip in the report** |
 | Field norms | Per field, three numbers: `rel_L2_r` (the *r*-weighted axisymmetric relative L², the VAL-01 quantity), `rel_l2` (unweighted, the axis diagnostic), and `max_abs_rel` **with its (r, z)** | The `r` weight vanishes on axis, which is exactly where the `1/r` forms and NUM-06 fail. Gating on `rel_L2_r` alone would hide the failure mode these forms are most prone to. The located maximum is QR-12's "naming the quantity and its location" |
 | Pressure gauge | `p` is compared **gauge-free**: the *r*-weighted mean is removed from both fields and the norm is taken against `‖g − ⟨g⟩‖`; the removed constant is reported | COMSOL's pressure gauge is not ours and is not in the report. Comparing `p` raw makes a gauge offset read as a 100 % discrepancy, which looks like a flow defect and is not one |
 | Attribution ladder | **Four rungs**, not three: `none`+P2/P1 → `supg`+P2/P1 → `reference`+P2/P1 → `reference`+P1/P1 | Amends the phase plan's three-rung decision, on WP12's inherited finding that `reference` on a Taylor–Hood pair converges at **0.98** where `supg` converges at **2.01**. Without the `supg` rung the middle delta conflates the transport stabilisation with a first-order flow operator and attributes nothing. `supg.permits_equal_order` is `False`, so that rung is P2/P1 by construction. Derivation: §Design 1 |
@@ -91,7 +91,7 @@ the second is not this package's to achieve. Tier 3 stays recorded, not gated (�
 > and case hashes across the four rungs and the retained point count per field, which is what
 > actually does the job. The algebra is pinned by
 > `tests/tier1/test_attribution.py::test_val01_the_identity_cannot_see_a_stale_golden`, so the
-> claim is not reintroduced; the reasoning is in `.knowledge/08-validation-benchmarks/index.md`,
+> claim is not reintroduced; the reasoning is in `knowledge/08-validation-benchmarks/index.md`,
 > "The telescoping identity catches a slip, not a stale golden".
 
 ### Work items
@@ -121,7 +121,7 @@ Every test names the requirement it discharges. Command for the gate:
 | Test file | Tier | Identifiers | Assertion and oracle | Tolerance source |
 |---|---|---|---|---|
 | `tests/tier1/test_probe_grid.py::test_val01_probe_patch_refuses_square_grid` | 1 | VAL-01, QR-12 | A patch with `n_r == n_z` aborts, naming the `%Data` row order | Exact (structural) |
-| `tests/tier1/test_probe_grid.py::test_val01_probe_mask_excludes_points_within_margin` | 1 | VAL-01 | On the WP8 reference mesh, no retained `c_i` probe point lies within `margin_nm` of a non-electrolyte material; the dropped count is recorded in the document | `margin_nm = 0.05`, the reference's wall element size (`.knowledge/09-comsol-reference-settings/02-mesh-27.md#a2-size-nodes`) |
+| `tests/tier1/test_probe_grid.py::test_val01_probe_mask_excludes_points_within_margin` | 1 | VAL-01 | On the WP8 reference mesh, no retained `c_i` probe point lies within `margin_nm` of a non-electrolyte material; the dropped count is recorded in the document | `margin_nm = 0.05`, the reference's wall element size (`knowledge/09-comsol-reference-settings/02-mesh-27.md#a2-size-nodes`) |
 | `tests/tier1/test_comsol_golden.py::test_val03_golden_refuses_undeclared_units_and_sign` | 1 | VAL-03, QR-12 | A manifest missing the unit, the evaluation boundary or the sign reference is refused, naming what is missing; a `mol/L` declaration is refused rather than silently scaled | Exact (structural) |
 | `tests/tier1/test_comsol_golden.py::test_val03_grid_table_round_trips_through_npz` | 1 | VAL-03 | A `%Grid` table written and re-ingested reproduces its array bit-for-bit and its hashes | `0` (bitwise) |
 | `tests/tier1/test_comsol_golden.py::test_val03_trans_referenced_current_is_flipped_and_recorded` | 1 | VAL-03, NUM-24 | A golden declaring `trans` comes back with the §6.7 sign and the report says the flip happened | Exact |
@@ -191,7 +191,7 @@ None blocking. Three the author answers **at export time**, not before implement
 refuses a golden that leaves any of them unstated, which is the point:
 
 1. **The evaluation boundary COMSOL used for `tds.ntflux_i`**, and which electrode the reported
-   current references. NOT IN REPORT (`.knowledge/09-comsol-reference-settings/07-differences-that-cannot-be-removed.md`); only the author can supply it.
+   current references. NOT IN REPORT (`knowledge/09-comsol-reference-settings/07-differences-that-cannot-be-removed.md`); only the author can supply it.
 2. **Whether the model exports `p`**, and its gauge. If it does not, the pressure comparison is
    recorded as unavailable rather than skipped silently.
 3. **Whether `$NANOPNP_REFERENCE_DATA` can be made available to the nightly runner.** If not, Tier 3
@@ -229,7 +229,7 @@ rule rather than by the bare point test — the number that says the margin is d
 
 The four-rung ladder against a self-golden on the VER-11 benchmark pore (708 elements, 0.5 M,
 +50 mV, −0.05 C/m², validated ePNP-NS with the flow on, `Δ_resid = 0` by construction) runs in
-**75 s** and is tabulated in `.knowledge/08-validation-benchmarks/index.md`, "Measured: the attribution
+**75 s** and is tabulated in `knowledge/08-validation-benchmarks/index.md`, "Measured: the attribution
 ladder on the VER-11 benchmark pore". The headline: `Δ_transport` carries 88 % of the potential's
 distance and 0.3 % of `velocity_r`'s, while `Δ_flow` carries 90 % of `velocity_r`'s. A three-rung
 ladder would have reported one number that is 88 % transport stabilisation for one field and 90 %
@@ -260,7 +260,7 @@ Both made in the commit that adds this plan.
 > criterion now requires the archive to *declare*, per field, its source expression and unit, and
 > for the current its evaluation boundary and which electrode it references, a golden leaving any
 > of those unstated being refused rather than interpreted — the evaluation boundary is NOT IN
-> REPORT (`.knowledge/09-comsol-reference-settings/07-differences-that-cannot-be-removed.md`), so it can only come from the author and a build that guessed would
+> REPORT (`knowledge/09-comsol-reference-settings/07-differences-that-cannot-be-removed.md`), so it can only come from the author and a build that guessed would
 > guess again on every nightly run. And a new NOTE fixes the comparison surface: the probe grid is
 > ours and content-hashed into every golden, the mask carries the `±0.05 nm` margin and aborts on a
 > residual disagreement rather than intersecting, **the VAL-01 quantity is the `r`-weighted
@@ -296,7 +296,7 @@ in the norm of §2 below. The four configurations, in the order a reader should 
 | 0 | `none` | P2 / P1 | Our production default (NUM-11). Taylor–Hood, unstabilised |
 | 1 | `supg` | P2 / P1 | Transport stabilisation only. `supg.permits_equal_order` is `False`, so this rung *cannot* be run at equal order |
 | 2 | `reference` | P2 / P1 | Transport **and** flow GLS, on an inf-sup-stable pair |
-| 3 | `reference` | P1 / P1 | The reference's own discretisation (`.knowledge/09-comsol-reference-settings/04-physics-settings.md#c2-discretisation-order-per-field`, §E rows 1, 2, 4) |
+| 3 | `reference` | P1 / P1 | The reference's own discretisation (`knowledge/09-comsol-reference-settings/04-physics-settings.md#c2-discretisation-order-per-field`, §E rows 1, 2, 4) |
 
 and the reported deltas
 
@@ -416,8 +416,8 @@ A `Golden` is refused, by name, unless its manifest carries all of:
 | `case_hash` | WP7's content hash of the frozen case. A golden compared against a different case is the most expensive kind of wrong answer, and nothing else detects it |
 | `probe_hash` | The probe document's content hash. An edited probe grid silently moves the sample points, which is the failure the phase plan chose *our* grid to prevent |
 | `refinement` — `published` or `refined_1` | VAL-04's two levels. Mixing them into one `Δ_ref` inverts its meaning |
-| per field: `expression`, `unit` | The expected set is `V` [V], `cpos`/`cneg` [mol/m³], `u`/`w` [m/s], `p` [Pa] (`.knowledge/09-comsol-reference-settings/04-physics-settings.md#c2-discretisation-order-per-field`, §C.10). A `mol/L` export is a factor 1000; scaled silently it reads as a 99.9 % discrepancy, which looks like a physics failure and is a units failure |
-| `current_boundary`, `current_sign_reference` | NOT IN REPORT (`.knowledge/09-comsol-reference-settings/07-differences-that-cannot-be-removed.md`): only the author knows. §6.7's NOTE fixes our convention — positive current flows trans → cis, referenced to the grounded cis electrode — and records that an earlier revision carrying the opposite sign negated every conductance. A `trans`-referenced golden is flipped on load and **the flip is printed in the report**, because a silent sign convention is how a rectification ratio comes out reciprocal |
+| per field: `expression`, `unit` | The expected set is `V` [V], `cpos`/`cneg` [mol/m³], `u`/`w` [m/s], `p` [Pa] (`knowledge/09-comsol-reference-settings/04-physics-settings.md#c2-discretisation-order-per-field`, §C.10). A `mol/L` export is a factor 1000; scaled silently it reads as a 99.9 % discrepancy, which looks like a physics failure and is a units failure |
+| `current_boundary`, `current_sign_reference` | NOT IN REPORT (`knowledge/09-comsol-reference-settings/07-differences-that-cannot-be-removed.md`): only the author knows. §6.7's NOTE fixes our convention — positive current flows trans → cis, referenced to the grounded cis electrode — and records that an earlier revision carrying the opposite sign negated every conductance. A `trans`-referenced golden is flipped on load and **the flip is printed in the report**, because a silent sign convention is how a rectification ratio comes out reciprocal |
 
 The mask agreement is the fourth refusal and the one that is not about metadata. COMSOL's grid
 export writes `NaN` outside the solved domain; ours is the set of points inside the field's
@@ -425,7 +425,7 @@ export writes `NaN` outside the solved domain; ours is the set of points inside 
 them tests the geometry — but only if the comparison is not a coin flip on points that sit within
 an element of the boundary. Hence the margin: a point is retained for field `f` only if it and its
 four `±margin_nm` neighbours all lie in `f`'s materials, with `margin_nm = 0.05` by default, the
-reference model's own maximum element size on the pore wall (`.knowledge/09-comsol-reference-settings/02-mesh-27.md#a2-size-nodes`). With the margin
+reference model's own maximum element size on the pore wall (`knowledge/09-comsol-reference-settings/02-mesh-27.md#a2-size-nodes`). With the margin
 in place a residual mask disagreement is a real difference between our reference geometry and the
 one the export was made from, and it aborts naming the worst point's `(r, z)` and its distance from
 the nearest retained point of the other mask.

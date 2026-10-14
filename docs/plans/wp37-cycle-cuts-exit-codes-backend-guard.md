@@ -84,7 +84,7 @@ in D4.
 
 In dependency order. Each move is one commit that edits `modularity-layering.yaml` (VER-61)
 and updates every import, `monkeypatch`/`mock.patch` string, docstring cross-reference, test and
-`.knowledge/06-numerics-fem/index.md` path it touches. Mechanical (Sonnet; `.claude/model-policy.md`), except D5's split,
+`knowledge/06-numerics-fem/index.md` path it touches. Mechanical (Sonnet; `.claude/model-policy.md`), except D5's split,
 which needs a reading of WP30's χ code (Opus).
 
 1. `numerics/` (D3): new `__init__.py`; move the four modules; update the exit table's strings.

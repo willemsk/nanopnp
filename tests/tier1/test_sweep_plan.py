@@ -539,7 +539,7 @@ def test_ver36_the_reference_sweep_parses_and_enumerates_the_section_8_3_grid(
     root = plan.point(0)
     assert root.wave == 0
     # +5 mV, not 0 V: at zero bias NUM-26's relative check divides by a vanishing scale
-    # (.knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md).
+    # (knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md).
     # 17 opposite pairs and one unpaired value keep 3,675 points.
     assert root.assignments["boundary_conditions.bias_V"] == 0.005
     assert root.assignments["electrolyte.concentration_M"] == 0.05

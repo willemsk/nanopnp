@@ -161,7 +161,7 @@ the membrane spans z ∈ [−1.4, +1.4] nm, giving a band of [−1.12, +1.12] nm
 > The derivation reproduces `lumen_band(geometry, fraction=0.8)` exactly when the band is computed
 > from the geometry object, but the *meshed* membrane's z-extent comes back as
 > `[-3.0, 3.000000000000001]` on `CylindricalPoreGeometry(2, 6, 10)`: an OCC-generated extent is one
-> ulp off the number the geometry was given (`.knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md#813-an-occ-generated-extent-is-one-ulp-off-the-number-the-geometry-was-given`). The assertion
+> ulp off the number the geometry was given (`knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md#813-an-occ-generated-extent-is-one-ulp-off-the-number-the-geometry-was-given`). The assertion
 > is therefore exact against the geometry and to round-off against the mesh, which is the honest
 > pair — asserting exactness against the mesh would have been a tolerance met by luck on this
 > geometry and failing on the next.
@@ -297,7 +297,7 @@ ndof is silently a different function, and there is no residual it would fail to
 > Route agreement on the *restored* solution is the oracle for the reassembled operator, and it is
 > not free: with the wall corrections on, the NUM-24 and NUM-25 routes disagree by **4.0 × 10⁻¹** on
 > the 124-element mesh, by 9.6 × 10⁻⁵ at 257 elements and by 1.6 × 10⁻⁶ at 793. That is resolution of
-> the 6.2 nm⁻¹ wall function, not extraction error — `.knowledge/06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md#711-measured-with-the-wall-corrections-on-route-agreement-is-a-mesh-statement`. The
+> the 6.2 nm⁻¹ wall function, not extraction error — `knowledge/06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md#711-measured-with-the-wall-corrections-on-route-agreement-is-a-mesh-statement`. The
 > Tier-1 test therefore asserts NUM-26 on the 257-element mesh and does its wiring check on the
 > cheaper one. **This sizes the WP10 QoI-stage tests too:** a mesh chosen for a classical solve will
 > fail `check_routes` with corrections on.
@@ -525,7 +525,7 @@ The route-agreement tolerance is NUM-26's `1 × 10⁻³`, unchanged from WP5.
 > **negative** diffusivity and mobility factor there. It does not move the numbers above, the corner
 > being a single quadrature neighbourhood, but it is a wrong sign in a correction and belongs to
 > whichever package owns the distance field's boundary behaviour. Written up in
-> `.knowledge/06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md#711-measured-with-the-wall-corrections-on-route-agreement-is-a-mesh-statement`.
+> `knowledge/06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md#711-measured-with-the-wall-corrections-on-route-agreement-is-a-mesh-statement`.
 
 ## Out of scope
 

@@ -21,7 +21,7 @@ not agreement. §7.4 makes the 1 % field / 0.5 % QoI targets conditional on two 
 this package builds the first of them: the reference ran **with** consistent stabilisation in both
 the transport and the flow interfaces, on **P1+P1** velocity and pressure, so an unstabilised
 Taylor–Hood solve is a different discretisation of the same PDE and per-cent-level disagreement is
-an implementation difference rather than a defect (`.knowledge/09-comsol-reference-settings/04-physics-settings.md#c1-stabilisation-resolved-it-was-on-in-both-interfaces`,
+an implementation difference rather than a defect (`knowledge/09-comsol-reference-settings/04-physics-settings.md#c1-stabilisation-resolved-it-was-on-in-both-interfaces`,
 RSK-18, closed). Until the matching mode exists, WP13 has one number against a golden and no way to
 say what fraction of it is the stabilisation.
 
@@ -61,10 +61,10 @@ it, and it is the term WP13's `Δ_stab` is made of.
 | What `reference` does on a Taylor–Hood pair | Assembles the flow stabilisation anyway | The phase plan's attribution ladder is `none`+P2/P1 → `reference`+P2/P1 → `reference`+P1/P1, so the middle configuration must be "the whole stabilisation, the stable pair". The flow terms are consistent (§Design), so on a stable pair they are asymptotically inert rather than wrong, and the measurement of *how* inert is one of this package's outputs |
 | The advective velocity | `b̃_i = z_i μ̃_i ∇φ̃ + D̃_i β̃_i − Pe ũ` — migration, the steric drift and convection, the whole non-diffusive part of the PHY-04 flux bracket | `species_flux` already assembles the bracket term by term in exactly this order (`nernst_planck.py:260-277`); taking `b̃_i` as the migration term alone would stabilise an operator the solver does not solve, and the steric drift is the term that diverges when its sign is wrong |
 | `τ` for the streamline term | `τ_i = (h_K / 2‖b̃_i‖)·ψ(Pe_K)`, `ψ(q) = min(q, 1)`, `Pe_K = ‖b̃_i‖ h_K/(2 D̃_i)` | The form §6.4.1 already names, from Chaudhry, Comer, Aksimentiev & Olson (*Commun. Comput. Phys.* **15**, 93, 2014) — the same paper that reports the spurious negative concentrations near charged nanopore walls this mode is supposed to remove. Choosing a different `ψ` would put a numerics constant in Python that the specification already fixes |
-| `h_K` | `ngsolve.specialcf.mesh_size`, **measured** to be exactly `sqrt(2|K|)` on triangles — 2.4 × 10⁻¹⁵ relative over 14 elements, which is the leg length of the right isoceles triangle of the same area and 0.931 × the side of the equilateral one | A direction-dependent streamline length `h_b = 2/Σ_a\|b̂·∇N_a\|` needs per-element basis gradients NGSolve does not expose as a coefficient function. The isotropic measure is standard, the 7 % gap to the edge length sits inside the tuning constant, and pinning the definition by measurement rather than by assumption is what keeps `τ` reproducible when NGSolve changes. Recorded in `.knowledge/06-numerics-fem/index.md` as **[tested]** |
+| `h_K` | `ngsolve.specialcf.mesh_size`, **measured** to be exactly `sqrt(2|K|)` on triangles — 2.4 × 10⁻¹⁵ relative over 14 elements, which is the leg length of the right isoceles triangle of the same area and 0.931 × the side of the equilateral one | A direction-dependent streamline length `h_b = 2/Σ_a\|b̂·∇N_a\|` needs per-element basis gradients NGSolve does not expose as a coefficient function. The isotropic measure is standard, the 7 % gap to the edge length sits inside the tuning constant, and pinning the definition by measurement rather than by assumption is what keeps `τ` reproducible when NGSolve changes. Recorded in `knowledge/06-numerics-fem/index.md` as **[tested]** |
 | What "Approximate residual" means here | **Every second derivative of a trial field is dropped**, leaving `R̃_i = b̃_i·∇c̃_i − s̃_i`, with `s̃_i` the manufactured or case source when one is present | It is the setting the reference ran (NUM-14's table) and COMSOL does not export what it means, so it is defined here rather than guessed. Dropping the *whole* divergence rather than the half that survives keeps the residual a pure advective residual, which is what `τ` was derived for, and it is what makes the term free of `1/r` — see §Design |
 | The consequence of that, faced rather than hidden | The streamline term is **inconsistent by construction**: on the exact solution `R̃_i = −∇·(D̃∇c̃) + axis terms ≠ 0`. §Design derives that the added error is `O(h²)` in L², so the stabilised MMS rate is **predicted to fall from 3 to 2**, and a rate below 2 is a defect in the term rather than a property of the scheme | This is the load-bearing prediction of the package. A plan that said "MMS still converges" would have the implementer chase a phantom bug for a day when it converges at 2. The phase plan already asked for "a measured rate" rather than an asserted one; this says what to expect and what would falsify it |
-| The crosswind term | A Do Carmo–Galeão-*type* term, written out in §Design: `Σ_K ν_K ∫_K (P_b ∇c̃_i)·∇w r dr dz`, `P_b = I − b̂⊗b̂`, `ν_K = max(0, C_cw h_K ‖R̃_i‖ / (2‖∇c̃_i‖) − D̃_i)`, `C_cw = 1` | `.knowledge/09-comsol-reference-settings/07-differences-that-cannot-be-removed.md`: COMSOL's `tds.crosswind` is **not exported**, so bit-for-bit matching is impossible and the term is an irreducible systematic in any comparison. What is reproducible is the *family* — residual-scaled, acting across the streamline, switching itself off where the solution is smooth — and the arithmetic that follows from it, which §Design carries |
+| The crosswind term | A Do Carmo–Galeão-*type* term, written out in §Design: `Σ_K ν_K ∫_K (P_b ∇c̃_i)·∇w r dr dz`, `P_b = I − b̂⊗b̂`, `ν_K = max(0, C_cw h_K ‖R̃_i‖ / (2‖∇c̃_i‖) − D̃_i)`, `C_cw = 1` | `knowledge/09-comsol-reference-settings/07-differences-that-cannot-be-removed.md`: COMSOL's `tds.crosswind` is **not exported**, so bit-for-bit matching is impossible and the term is an irreducible systematic in any comparison. What is reproducible is the *family* — residual-scaled, acting across the streamline, switching itself off where the solution is smooth — and the arithmetic that follows from it, which §Design carries |
 | The crosswind switches itself off | Exactly. `‖R̃_i‖ = ‖b̃_i·∇c̃_i‖ ≤ ‖b̃_i‖‖∇c̃_i‖`, so `ν_K ≤ D̃_i (C_cw Pe_K − 1)` and **`ν_K ≡ 0` wherever `C_cw·Pe_K ≤ 1`** | With `C_cw = 1` the crosswind term is a no-op on every mesh that satisfies NUM-30, and it activates on exactly the elements where NUM-12's warning fires. One trigger, two consequences: the order-6 quadrature of NUM-15 is paid only where it buys something, and "the crosswind contributed nothing on this mesh" becomes a reportable measurement rather than an assumption |
 | Which mesh verifies the crosswind, then | A deliberately coarse one, `Pe_K > 1`, where **plain Galerkin trips the NUM-17 positivity gate and `reference` does not** | A term that is identically zero on every test mesh is untested. This is also the only assertion in the package that shows the stabilisation doing what stabilisation is *for*, and it is the exact failure Chaudhry et al. report — the one §6.4.1 cites |
 | The flow stabilisation | One GLS term with the test operator `(Re ρ̃ (ũ·∇)v + ∇q)` against the approximate momentum residual `R̃_m = ∇p̃ + Re ρ̃(ũ·∇)ũ − f̃ − s̃_u`, parameter `τ_m = [(2Re ρ̃‖ũ‖/h_K)² + (4η̃/h_K²)²]^{−1/2}`; plus a grad-div term `τ_c ∫ (d̂iv v)(d̂iv ũ) r`, `τ_c = Re ρ̃‖ũ‖h_K/2` | GLS carries momentum-SUPG and PSPG in one term with one parameter — less code than two terms, and the `∇q·∇p̃` piece it contains is precisely what makes the equal-order pair legal (NUM-03). At `Re = 6 × 10⁻⁴` the convective branch of `τ_m` is five orders below the viscous one and `τ_c ≈ 9 × 10⁻⁶` (§Design): both are numerically inert here and are assembled anyway, so the mode is not silently specific to this Reynolds number |
@@ -228,7 +228,7 @@ it is the one that says the two discretisations are discretisations of the same 
 > floor, which deliberately has no ceiling, passed it. The deliberate-mistake test is therefore
 > asserted on the term's *footprint* against the unstabilised error on the same mesh, which separates
 > by a factor of 24 to 212 and does not depend on which way the rate moves. Recorded in
-> `.knowledge/06-numerics-fem/04-stabilisation.md#434-a-stabilisation-residual-missing-its-source-switches-the-term-off`; VER-42 gains the clause.
+> `knowledge/06-numerics-fem/04-stabilisation.md#434-a-stabilisation-residual-missing-its-source-switches-the-term-off`; VER-42 gains the clause.
 
 ### 4. The flow terms at `Re = 6 × 10⁻⁴`
 
@@ -290,7 +290,7 @@ irrespective of that.
 > element pair while the manifest recorded one word, which is worse than the cost. What changes is
 > what is claimed: the middle rung of the §7.4 attribution ladder is first-order accurate, and the
 > `Δ_stab` measured there is the flow pair's rather than the transport term's. Recorded in
-> `.knowledge/06-numerics-fem/04-stabilisation.md#433-on-a-stable-element-pair-the-flow-terms-cost-an-order-and-20-the-time`; NUM-14 gains the bullet and VER-42 the clause.
+> `knowledge/06-numerics-fem/04-stabilisation.md#433-on-a-stable-element-pair-the-flow-terms-cost-an-order-and-20-the-time`; NUM-14 gains the bullet and VER-42 the clause.
 
 ### 5. The current identity, written out
 
@@ -318,7 +318,7 @@ from one run.
 on a 14-element unstructured mesh of the unit square to a maximum relative deviation of
 2.4 × 10⁻¹⁵. For the equilateral triangle of side `a` that is `a√(√3/2) = 0.9306 a`, so the measure
 sits 7 % below the edge length — inside the tuning constant, and constant across element shapes to
-within the shape factor. This goes into `.knowledge/06-numerics-fem/02-axisymmetric-weak-forms.md` as **[tested]**, because
+within the shape factor. This goes into `knowledge/06-numerics-fem/02-axisymmetric-weak-forms.md` as **[tested]**, because
 every `τ` in this package is defined against it and a silent change to NGSolve's convention would
 retune the whole mode with no diagnostic.
 
@@ -366,7 +366,7 @@ retune the whole mode with no diagnostic.
 | `src/nanopnp/io/defaults.py` | Nothing moves: `numerics.stabilisation` is already a diffable path with validated default `none`, so `supg` and `reference` register as deviations for free | FR-25, §5.3.3 |
 | `src/nanopnp/io/manifest.py` | `stabilisation_group` gains the mode's `parameters` and `provenance`, and the per-species `stabilisation_current_A` and `max_cell_peclet` | FR-25, NUM-13, §5.3.3 |
 | `src/nanopnp/post/qoi.py` | `indicator_currents` adds `S_i(c̃; ψ)`; `stabilisation_currents()` reports the contribution per species; `RouteAgreement` unchanged | NUM-24, NUM-26, QR-04 |
-| `.knowledge/06-numerics-fem/index.md` | §2: `specialcf.mesh_size = sqrt(2|K|)` **[tested]**. §4: the mode as built, the `Pe_h²` ratio, the crosswind's `C_cw Pe_K ≤ 1` switch-off, and the `Re = 6 × 10⁻⁴` flow arithmetic **[verified]** | — |
+| `knowledge/06-numerics-fem/index.md` | §2: `specialcf.mesh_size = sqrt(2|K|)` **[tested]**. §4: the mode as built, the `Pe_h²` ratio, the crosswind's `C_cw Pe_K ≤ 1` switch-off, and the `Re = 6 × 10⁻⁴` flow arithmetic **[verified]** | — |
 | `SPECIFICATION.md` | The seven amendments below, in this commit | NUM-03, NUM-12, NUM-14, NUM-15, NUM-24, NUM-26, §5.3.1, §7.2, §7.3 |
 
 > **Outcome — five rows landed somewhere other than where this table put them.**
@@ -471,7 +471,7 @@ because the quantity it bounds is a *separation* that the implementation should 
   rate 3, at the cost of no longer matching NUM-14's "Approximate residual". It is a second
   registered mode when somebody wants it, and the registry is why that costs no restructuring.
 - **Bit-for-bit agreement with COMSOL's `tds.streamline`, `tds.crosswind`, `spf.streamlinens` and
-  `spf.crosswindns`.** Not exported, therefore not reachable; `.knowledge/09-comsol-reference-settings/07-differences-that-cannot-be-removed.md` names this an
+  `spf.crosswindns`.** Not exported, therefore not reachable; `knowledge/09-comsol-reference-settings/07-differences-that-cannot-be-removed.md` names this an
   irreducible systematic bounded only by mesh refinement, and §Design's `O(h²)` convergence of the
   two currents is how this package bounds it.
 - **Isotropic (inconsistent) diffusion and pseudo-time stepping.** The reference had the first off

@@ -22,7 +22,7 @@ BODY = "## 1. Thing\n\n### 1.1 Detail\n\nText.\n"
 
 @pytest.fixture
 def repository(tmp_path: Path) -> Path:
-    root = tmp_path / ".knowledge"
+    root = tmp_path / "knowledge"
     (root / "01-a").mkdir(parents=True)
     (root / "index.md").write_text(
         '---\nokf_version: "0.2"\n---\n\n# Notes\n\n* [A](01-a/index.md) - the first\n',
@@ -49,13 +49,13 @@ def repository(tmp_path: Path) -> Path:
 def _concept(
     repository: Path, name: str, body: str, kind: str = "Physics", extra: str = ""
 ) -> Path:
-    path = repository / ".knowledge" / "01-a" / name
+    path = repository / "knowledge" / "01-a" / name
     path.write_text(HEADER.format(kind=kind, extra=extra) + body, encoding="utf-8")
     return path
 
 
 def _check(repository: Path, ceiling: int = 0, files: tuple[Path, ...] = ()) -> list[str]:
-    root = repository / ".knowledge"
+    root = repository / "knowledge"
     found = okf.check_bundle(root, repository / "tests", repository / "uv.lock", ceiling, files)
     return [str(f) for f in found]
 
@@ -71,9 +71,9 @@ def test_ver68_a_valid_bundle_has_no_finding(repository: Path) -> None:
 
 
 def test_ver68_concept_without_type_or_frontmatter_is_refused(repository: Path) -> None:
-    (repository / ".knowledge/01-a/02-bare.md").write_text("## 2. Bare\n", encoding="utf-8")
-    (repository / ".knowledge/01-a/03-empty.md").write_text("---\ntype: ''\n---\n", "utf-8")
-    (repository / ".knowledge/01-a/index.md").write_text(
+    (repository / "knowledge/01-a/02-bare.md").write_text("## 2. Bare\n", encoding="utf-8")
+    (repository / "knowledge/01-a/03-empty.md").write_text("---\ntype: ''\n---\n", "utf-8")
+    (repository / "knowledge/01-a/index.md").write_text(
         "# A\n\n* [T](01-thing.md)\n* [B](02-bare.md)\n* [E](03-empty.md)\n", "utf-8"
     )
     found = _check(repository)
@@ -87,16 +87,16 @@ def test_ver68_type_outside_the_list_is_refused(repository: Path) -> None:
 
 
 def test_ver68_undeclared_okf_version_is_refused(repository: Path) -> None:
-    (repository / ".knowledge/index.md").write_text("# Notes\n\n* [A](01-a/index.md)\n", "utf-8")
+    (repository / "knowledge/index.md").write_text("# Notes\n\n* [A](01-a/index.md)\n", "utf-8")
     assert any("index.md:1: okf_version must be declared" in f for f in _check(repository))
-    (repository / ".knowledge/index.md").write_text(
+    (repository / "knowledge/index.md").write_text(
         '---\nokf_version: "0.1"\n---\n\n* [A](01-a/index.md)\n', "utf-8"
     )
     assert any("okf_version must be '0.2'" in f for f in _check(repository))
 
 
 def test_ver68_root_index_missing_a_directory_is_refused(repository: Path) -> None:
-    (repository / ".knowledge/02-b").mkdir()
+    (repository / "knowledge/02-b").mkdir()
     found = _check(repository)
     assert any("does not list the directory 02-b" in f for f in found)
 
@@ -108,7 +108,7 @@ def test_ver68_directory_index_missing_a_concept_is_refused(repository: Path) ->
 
 
 def test_ver68_log_out_of_form_is_refused(repository: Path) -> None:
-    log = repository / ".knowledge/log.md"
+    log = repository / "knowledge/log.md"
     log.write_text("# Log\n\n## 2026-10-12\n* old\n\n## 2026-10-14\n* new\n", "utf-8")
     assert any("newest first" in f for f in _check(repository))
     log.write_text("# Log\n\n## yesterday\n* x\n", "utf-8")
@@ -130,32 +130,30 @@ def test_ver68_citation_to_missing_concept_or_heading_is_refused(repository: Pat
     good = _file(
         repository,
         "good.md",
-        "See `.knowledge/01-a/01-thing.md#11-detail`, `.knowledge/` and "
-        "[x](../.knowledge/01-a/index.md).\n",
+        "See `knowledge/01-a/01-thing.md#11-detail`, `knowledge/` and "
+        "[x](../knowledge/01-a/index.md).\n",
     )
     assert _check(repository, files=(good,)) == []
     bad = _file(
         repository,
         "bad.md",
-        "A `.knowledge/01-a/09-gone.md` and `.knowledge/01-a/01-thing.md#nowhere`.\n",
+        "A `knowledge/01-a/09-gone.md` and `knowledge/01-a/01-thing.md#nowhere`.\n",
     )
     found = _check(repository, files=(bad,))
-    assert any("bad.md:1: '.knowledge/01-a/09-gone.md' reaches no concept" in f for f in found)
+    assert any("bad.md:1: 'knowledge/01-a/09-gone.md' reaches no concept" in f for f in found)
     assert any("reaches no heading" in f for f in found)
 
 
 def test_ver68_legacy_section_form_is_refused(repository: Path) -> None:
-    legacy = _file(
-        repository, "legacy.md", "See `.knowledge/06` §2.2 and .knowledge/04 section 3.\n"
-    )
+    legacy = _file(repository, "legacy.md", "See `knowledge/06` §2.2 and knowledge/04 section 3.\n")
     found = _check(repository, files=(legacy,))
     assert sum("legacy section form" in f for f in found) == 2
 
 
 def test_ver68_placeholder_in_a_code_span_passes(repository: Path) -> None:
-    code = _file(repository, "code.md", "The form is `.knowledge/0N §x`.\n")
+    code = _file(repository, "code.md", "The form is `knowledge/0N §x`.\n")
     assert _check(repository, files=(code,)) == []
-    prose = _file(repository, "prose.md", "The form is .knowledge/0N here.\n")
+    prose = _file(repository, "prose.md", "The form is knowledge/0N here.\n")
     assert any("reaches no concept" in f for f in _check(repository, files=(prose,)))
 
 
@@ -165,10 +163,10 @@ def test_ver68_explicit_ids_and_repeats_give_anchors(repository: Path) -> None:
     ok = _file(
         repository,
         "ok.md",
-        ".knowledge/01-a/01-thing.md#11-detail .knowledge/01-a/01-thing.md#repeat_1\n",
+        "knowledge/01-a/01-thing.md#11-detail knowledge/01-a/01-thing.md#repeat_1\n",
     )
     pending = {"01-a/01-thing.md": {"tested_pending": 1, "verified_unsourced": 0}}
-    (repository / ".knowledge/pending.yaml").write_text(yaml.safe_dump(pending), "utf-8")
+    (repository / "knowledge/pending.yaml").write_text(yaml.safe_dump(pending), "utf-8")
     assert _check(repository, ceiling=1, files=(ok,)) == []
 
 
@@ -209,7 +207,7 @@ def test_ver68_class_test_name_resolves(repository: Path) -> None:
         extra="verified:\n  - {by: 'process:tests/tier1/test_x.py::TestC::test_two', at: x}\n",
     )
     pending = {"01-a/01-thing.md": {"tested_pending": 1, "verified_unsourced": 0}}
-    (repository / ".knowledge/pending.yaml").write_text(yaml.safe_dump(pending), "utf-8")
+    (repository / "knowledge/pending.yaml").write_text(yaml.safe_dump(pending), "utf-8")
     assert _check(repository, ceiling=1) == []
 
 
@@ -217,7 +215,7 @@ def test_ver68_verified_set_must_equal_inline_tests_arithmetic_and_ruling(reposi
     test = "tests/tier1/test_x.py::test_one"
     body = BODY + f"\nA [tested: {test}] claim and an [verified] sum.\n"
     unsourced = {"01-a/01-thing.md": {"tested_pending": 0, "verified_unsourced": 1}}
-    (repository / ".knowledge/pending.yaml").write_text(yaml.safe_dump(unsourced), "utf-8")
+    (repository / "knowledge/pending.yaml").write_text(yaml.safe_dump(unsourced), "utf-8")
     extra = (
         f"verified:\n  - {{by: 'process:{test}', at: x}}\n  - {{by: 'process:arithmetic', at: x}}\n"
     )
@@ -260,12 +258,12 @@ def test_ver68_pending_count_must_equal_the_committed_list(repository: Path) -> 
     _concept(repository, "01-thing.md", BODY + "\nA [tested: pending] claim.\n")
     assert any("committed None, files hold" in f for f in _check(repository, ceiling=5))
     entry = {"tested_pending": 1, "verified_unsourced": 0}
-    (repository / ".knowledge/pending.yaml").write_text(
+    (repository / "knowledge/pending.yaml").write_text(
         yaml.safe_dump({"01-a/01-thing.md": entry}), "utf-8"
     )
     assert _check(repository, ceiling=5) == []
     entry["tested_pending"] = 2
-    (repository / ".knowledge/pending.yaml").write_text(
+    (repository / "knowledge/pending.yaml").write_text(
         yaml.safe_dump({"01-a/01-thing.md": entry}), "utf-8"
     )
     assert any("committed {'tested_pending': 2" in f for f in _check(repository, ceiling=5))
@@ -274,7 +272,7 @@ def test_ver68_pending_count_must_equal_the_committed_list(repository: Path) -> 
 def test_ver68_pending_total_above_the_ceiling_is_refused(repository: Path) -> None:
     _concept(repository, "01-thing.md", BODY + "\nA [tested: pending] claim.\n")
     entry = {"tested_pending": 1, "verified_unsourced": 0}
-    (repository / ".knowledge/pending.yaml").write_text(
+    (repository / "knowledge/pending.yaml").write_text(
         yaml.safe_dump({"01-a/01-thing.md": entry}), "utf-8"
     )
     assert _check(repository, ceiling=1) == []
@@ -286,7 +284,7 @@ def test_ver68_repository_citations_all_resolve() -> None:
         pytest.skip("a git checkout is needed to list the tracked files")
     own = okf.REPOSITORY / "tests/tier1/test_okf_bundle.py"
     files = [file for file in okf.tracked_files(okf.REPOSITORY) if file != own]
-    found = okf.check_citations(okf.REPOSITORY / ".knowledge", files, okf.REPOSITORY)
+    found = okf.check_citations(okf.REPOSITORY / "knowledge", files, okf.REPOSITORY)
     assert not found, "\n".join(str(finding) for finding in found)
 
 
@@ -299,7 +297,7 @@ def test_ver68_the_bundle_conforms() -> None:
     own = okf.REPOSITORY / "tests/tier1/test_okf_bundle.py"
     files = [file for file in okf.tracked_files(okf.REPOSITORY) if file != own]
     found = okf.check_bundle(
-        okf.REPOSITORY / ".knowledge",
+        okf.REPOSITORY / "knowledge",
         okf.REPOSITORY / "tests",
         okf.REPOSITORY / "uv.lock",
         CEILING,
@@ -310,7 +308,7 @@ def test_ver68_the_bundle_conforms() -> None:
 
 def test_ver68_every_heading_id_matches_the_docs_build() -> None:
     markdown = pytest.importorskip("markdown")
-    root = okf.REPOSITORY / ".knowledge"
+    root = okf.REPOSITORY / "knowledge"
     for path in sorted(root.rglob("*.md")):
         parsed = okf.parse_concept(path)
         if not isinstance(parsed, okf.Concept):
@@ -329,7 +327,7 @@ def test_ver68_frontmatter_that_is_open_unparsed_or_no_mapping_is_refused(
         ("03-broken.md", "---\n: : [\n---\n"),
         ("04-list.md", "---\n- Physics\n---\n"),
     ):
-        (repository / ".knowledge/01-a" / name).write_text(text, encoding="utf-8")
+        (repository / "knowledge/01-a" / name).write_text(text, encoding="utf-8")
     found = _check(repository)
     assert any("02-open.md:1: frontmatter block is not closed" in f for f in found)
     assert any("03-broken.md:1: frontmatter does not parse" in f for f in found)
@@ -339,7 +337,7 @@ def test_ver68_frontmatter_that_is_open_unparsed_or_no_mapping_is_refused(
 def test_ver68_missing_root_index_directory_index_log_or_pending_is_refused(
     repository: Path,
 ) -> None:
-    root = repository / ".knowledge"
+    root = repository / "knowledge"
     (root / "01-a" / "index.md").unlink()
     (root / "log.md").write_text("no title\n", encoding="utf-8")
     (root / "pending.yaml").unlink()
@@ -355,6 +353,6 @@ def test_ver68_citation_of_a_directory_or_an_index_heading_resolves(repository: 
     cites = _file(
         repository,
         "cites.md",
-        "See `.knowledge/01-a` and `.knowledge/01-a/index.md#a`.\n",
+        "See `knowledge/01-a` and `knowledge/01-a/index.md#a`.\n",
     )
     assert _check(repository, files=(cites,)) == []

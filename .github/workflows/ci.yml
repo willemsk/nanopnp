@@ -51,7 +51,7 @@ env:
   # pytest runs as `-n auto --dist loadfile` with one BLAS thread per worker.
   # Serially the BLAS threads buy no wall time on this suite; under xdist they
   # oversubscribe the cores: 6m10s serial, 7m20s unpinned, 3m19s pinned on
-  # four cores (.knowledge/07-software-stack/index.md). The commit gate does the same.
+  # four cores (knowledge/07-software-stack/index.md). The commit gate does the same.
   # tests/tier1/test_gui_widgets.py is the exception and runs serially, alone,
   # on the desktop runners where it runs at all (on ubuntu PySide6 does not
   # import and the module skips itself). It waits on a real QtWebEngine page by
@@ -65,7 +65,7 @@ env:
   # differences in the structure -> contour stages move a PDB-derived mesh, so
   # the hosted fleet's AVX-512 and AVX2 machines would deploy different meshes.
   # Capped, every x86-64 leg deploys the mesh of VER-62's reference environment
-  # (src/nanopnp/validation/stability.py; .knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md#815-within-one-build-a-deployed-walks-quantities-repeat-bit-for-bit). Names a
+  # (src/nanopnp/validation/stability.py; knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md#815-within-one-build-a-deployed-walks-quantities-repeat-bit-for-bit). Names a
   # platform does not dispatch are ignored, so the arm64 legs are unaffected.
   NPY_DISABLE_CPU_FEATURES: "X86_V4 AVX512_ICL AVX512_SPR"
   # Every pytest call below passes -rs, so each skip is listed with its reason:
@@ -80,7 +80,7 @@ env:
   # wheel and skips them by name (WP29 D12, the WP23 D11 rule).
   NANOPNP_REQUIRE_APBS: "1"
   # The packages the gmsh wheel loads at import; it raises OSError without them
-  # (.knowledge/07-software-stack/04-geometry-meshing-and-io.md; WP23 D11). Installed through a
+  # (knowledge/07-software-stack/04-geometry-meshing-and-io.md; WP23 D11). Installed through a
   # cache, so a warm runner skips apt.
   GMSH_APT_PACKAGES: libglu1-mesa libxft2 libxinerama1 libxcursor1
 

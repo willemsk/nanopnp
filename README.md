@@ -127,7 +127,7 @@ model pages render the specification and the knowledge base verbatim.
 |---|---|
 | [`SPECIFICATION.md`](SPECIFICATION.md) | Requirements, physics, design, numerics and V&V plan |
 | [`CHANGELOG.md`](CHANGELOG.md) | Every tagged version, and what each work package delivered |
-| [`.knowledge/`](.knowledge/index.md) | Verified knowledge base: physics, numerics, biology, tooling |
+| [`knowledge/`](knowledge/index.md) | Verified knowledge base: physics, numerics, biology, tooling |
 | [`examples/`](examples) | Five worked examples, each executed by a test |
 | [`docs/`](docs) | The documentation site's sources (`mkdocs.yml` at the root) |
 | [`data/corrections/`](data/corrections) | Fitted correction parameters, one file per electrolyte |

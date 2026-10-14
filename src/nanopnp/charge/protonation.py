@@ -112,7 +112,7 @@ A flip turns an amide or an imidazole ring through 180 degrees about the bond to
 it, and the group is not symmetric about that bond, so a flipped atom lands
 0.13-0.40 Å from every atom it was given: on 2WCD at pH 7.5, 140 heavy atoms, in
 44 asparagines, 92 glutamines and one histidine, and no other atom moved
-(``.knowledge/07-software-stack/03-charge-and-electrostatics.md``, measured). They are not held to
+(``knowledge/07-software-stack/03-charge-and-electrostatics.md``, measured). They are not held to
 the registration tolerance; the rest of each residue fixes where it is.
 """
 

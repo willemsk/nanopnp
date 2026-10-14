@@ -12,7 +12,7 @@ here are pointers into it. The spec amendments this package needs are made in th
 FR-13 (it still named the annular-volume construction that §8.2.4 D2 replaced), a PHY-16 NOTE on the
 deposition as run, a §4.4 NOTE on the producer path's conservation report, the §5.3.1 NOTE on
 `charge.smearing`, the §5.3.2 row for stage 7 and RSK-08's mitigation. The kernel's lattice
-measurements they rest on are in `.knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md#33-the-closed-form-kernel-on-the-0005-nm-lattice`.
+measurements they rest on are in `knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md#33-the-closed-form-kernel-on-the-0005-nm-lattice`.
 
 ## Execution brief
 
@@ -25,7 +25,7 @@ brief runs past its target because the consumers of a produced charge (D9) and t
 (D14) change with it; deferring either leaves a `structure:` case solving uncharged.
 
 **Read first.** PHY-16 to PHY-19 and the §4.4 NOTEs; §5.3.1 NOTE on `charge.smearing`;
-`.knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md`–§3.3; `.knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md#811-mesh-integral-error-on-a-sub-element-scale-field-converges-in-neither-h-nor-order`.
+`knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md`–§3.3; `knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md#811-mesh-integral-error-on-a-sub-element-scale-field-converges-in-neither-h-nor-order`.
 
 ### Decisions
 
@@ -34,7 +34,7 @@ brief runs past its target because the consumers of a produced charge (D9) and t
 | D1 | Kernel | PHY-16 step 5 with `scipy.special.i0e`, `w_i = sharpness · R_i`; `q_i = 0` skipped; a square patch of half-width `6 w_i` (tail `1 − erf(6)² = 4.3 × 10⁻¹⁷`), renormalised on the lattice to `q_i / n_frames` | PHY-18; *Design* §1 |
 | D2 | Export lattice | Areal `2πr ρ̄` (C m⁻²) as a `RadialGrid` at `grid_spacing_nm`, a node on `r = 0`, box = atoms ± `6 w_max` snapped outward. **Model frame**: `to_model_frame` with `centre_z_nm` on a generated mesh, no shift on a supplied one. One sparse product of the separable factors per frame. Spacing > `½ min w_i` refused naming the atom | PHY-16 step 6; stage 5's frame; *Design* §1 |
 | D3 | Deposition space | Discontinuous `P_k`, **`k` = the potential's order** (2 by default), scaled monomials about each centroid; moments by the lattice trapezoid rule, each node in one element (lowest index on a shared edge) | Galerkin-exact source, *Design* §2 |
-| D4 | Placement | Every element of every material, as the reference (`.knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md`). Refused: node mass outside every element > 10⁻¹² of the largest, naming (r, z); under half of `Σ\|q_i\|` centred in solids, naming the share and the shift. Shares recorded | A mesh hole or a frame mismatch would otherwise move charge silently |
+| D4 | Placement | Every element of every material, as the reference (`knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md`). Refused: node mass outside every element > 10⁻¹² of the largest, naming (r, z); under half of `Σ\|q_i\|` centred in solids, naming the share and the shift. Shares recorded | A mesh hole or a frame mismatch would otherwise move charge silently |
 | D5 | Transfer | Payload: coefficients (`elements × basis`), `k`, element-geometry digest. `charge/` sets an NGSolve `L2(order=k)` GridFunction (NGSolve imported in the function) behind `ChargeField`'s interface (`volume_density_C_m3`, `assemble`). `MeshData` order = NGSolve's, asserted; another digest refused naming both | QR-13 |
 | D6 | Report | Producer leg: export integral against `Q_net` (frame mean). Consumer leg: `Measures.integrate` of the deployed field at the solve's order. Quadrature and ring as today. Per plane the **source atoms** are the reference, in closed form, under `½ erfc((z − p)/s)`, `s = 0.5` nm, 12 planes over the atoms' z-extent; grid and mesh each gated at 10⁻³ against it. The re-read guard deficit is recorded | PHY-19, VER-02; *Design* §3 |
 | D7 | Keys | `nanopnp/charge-grid/v1`, keyed on protonation, sharpness, spacing, truncation, frame shift and kernel id, not the mesh. The stage-7 `FieldsArtefact` gains inputs `protonation`, `charge_grid`; `fields.charge` records `source: deposited` and `k`; `gates` add planes and `s`. `charge` joins `STORE_STAGES`. Payload `charge.yaml` (`field1`, `q_net_e`, `axis_cutoff_nm: 0.01`), `charge.npz`, `deposit.npz` | §5.3.2; a `size_scale` sweep re-deposits, never re-sums |
@@ -98,7 +98,7 @@ of half the absolute charge; D14's uncharged geometry comparison.
 > the far field's 1.6/0.8/0.4 nm. The arc is now 0.02 nm at every level (`ARC_NM`). The atom on the
 > axis then showed a second floor, its lattice end correction kept in its shape after
 > renormalisation (`O(H²/w²)`), so the benchmark's lattice is `w/100` = 0.0025 nm
-> (`.knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md#33-the-closed-form-kernel-on-the-0005-nm-lattice`, `.knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md#83-convergence-and-solver-facts`). Measured on near-atom meshes of 0.2, 0.1 and
+> (`knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md#33-the-closed-form-kernel-on-the-0005-nm-lattice`, `knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md#83-convergence-and-solver-facts`). Measured on near-atom meshes of 0.2, 0.1 and
 > 0.05 nm, `w = 0.25` nm, `poisson`: rates `P2` 2.90 and 2.99 and `P0` 1.95 and 2.03 at `r_i = 0`;
 > `P2` 3.17 and 3.00 and `P0` 2.19 and 1.95 at `r_i = 1.5` nm. The finest `P2` errors are
 > 1.7 × 10⁻⁵ and 5.1 × 10⁻⁶, `P0`'s 2.0 × 10⁻⁴ at `r_i = 1.5`; the on-axis error there is
@@ -107,7 +107,7 @@ of half the absolute charge; D14's uncharged geometry comparison.
 
 > **Outcome — *Design* §3's estimate holds: the per-plane check's own error falls as `h³`.** The
 > worst mesh plane on the cylindrical test pore is 3.15 × 10⁻³ at `maxh` 1 nm, and 2.3 × 10⁻⁴,
-> 7.8 × 10⁻⁶ and 1.7 × 10⁻⁷ at 0.5, 0.25 and 0.125 nm (`.knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md#33-the-closed-form-kernel-on-the-0005-nm-lattice`). So the Tier 1
+> 7.8 × 10⁻⁶ and 1.7 × 10⁻⁷ at 0.5, 0.25 and 0.125 nm (`knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md#33-the-closed-form-kernel-on-the-0005-nm-lattice`). So the Tier 1
 > producer fixture meshes at 0.5 nm, and the re-deposit test goes from `P2` to `P3`, because `P1`
 > on 0.5 nm elements fails the gate by the check's error (4 × 10⁻³), as §3 predicts.
 
@@ -130,7 +130,7 @@ of half the absolute charge; D14's uncharged geometry comparison.
 > six times margin; `I_Na` 3.19 × 10⁻¹¹ A and `I_Cl` 3.12 × 10⁻¹¹ A at +50 mV, 0.15 M; stage 7 in
 > 7.6 s and the solve in 14.4 s. Cost (`-m slow`, fresh process): stage 7 cold on 2WCD 9.0 s (sum
 > 2.7, deposit 5.5, gates 0.4) and 0.92 GB; 50 frames sum in 119.8 s, 2.40 s per frame, at 0.96 GB,
-> inside *Design* §6's 60 s and 2 GB per frame. Details in `.knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md#33-the-closed-form-kernel-on-the-0005-nm-lattice`.
+> inside *Design* §6's 60 s and 2 GB per frame. Details in `knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md#33-the-closed-form-kernel-on-the-0005-nm-lattice`.
 
 > **Outcome — Tier 3 not run, and its frozen-case legs as written.** The archive is not under
 > `$NANOPNP_REFERENCE_DATA` here, so `tests/tier3/test_charge_archive.py` skips. Its construction
@@ -165,7 +165,7 @@ frame it is one sparse product `A Bᵀ`, with `A` of shape (`n_z × atoms`) and 
 (`n_r × atoms`). The atom's lattice sum is also separable, `(Σ_z τ_z Z_i)(Σ_r τ_r 2πr R_i) h²`, so
 renormalising costs a patch's side, not its area.
 
-Measured on the trapezoid lattice at `h = 0.005` nm (`.knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md#33-the-closed-form-kernel-on-the-0005-nm-lattice`):
+Measured on the trapezoid lattice at `h = 0.005` nm (`knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md#33-the-closed-form-kernel-on-the-0005-nm-lattice`):
 
 - Off the axis the sum is exact to 10⁻¹⁵, down to the CHARMM polar hydrogen's `w = 0.0112` nm,
   because the trapezoid rule on a Gaussian errs by `~2 exp(−π²w²/h²) = 10⁻²¹`.

@@ -103,7 +103,7 @@ _THREE_ATOMS = (
 # that is not a file from rcsb.org.
 FRAGMENT = "2wcd-a-18-26"
 
-# Q_net per pH (.knowledge/07-software-stack/03-charge-and-electrostatics.md): three acids and both
+# Q_net per pH (knowledge/07-software-stack/03-charge-and-electrostatics.md): three acids and both
 # termini, neutral at pH 2 and three
 # carboxylates charged at pH 8; only PROPKA moves them, so equal charges mean nothing titrated.
 FRAGMENT_Q_NET_E: dict[float, float] = {2.0: 0.0, 8.0: -3.0}

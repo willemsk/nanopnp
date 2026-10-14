@@ -124,7 +124,7 @@ Seven things are true of the codebase today, at `a774b20`, and they shape every 
   - two `numerics.nonlinear` values are refused as "v0.2".
 - **The knowledge base is ten flat files**: 5,682 lines, 88 `##` sections, 193 `[tested]` and 53
   `[verified]` markers, cited about 470 times outside itself. `docs/scripts/generate.py` globs
-  `.knowledge/*.md` without recursing.
+  `knowledge/*.md` without recursing.
 - **The suite collects 1,764 tests by default and 1,861 in all.** Collection takes 12 s. The
   `extended` walks already compute the numbers a stability golden needs.
 
@@ -597,7 +597,7 @@ covers:
 - **the plain summaries** (J9): `## In brief` in `/phase-plan`, `/wp-plan` and `/wp-implement`,
   and in the pull-request body they write;
 - **the clauses J2 to J9 amend**: §7.6's table and NOTEs, with its new budget NOTE; `CLAUDE.md`'s
-  *Setup* and *Commands*; and `.knowledge/07-software-stack/index.md`'s gate timings.
+  *Setup* and *Commands*; and `knowledge/07-software-stack/index.md`'s gate timings.
 
 Proposed **VER-73**, the loop's budgets: CI's duration report holds each selection within its
 recorded budget plus the argued margin. Its oracle is a budget recorded below the measured
@@ -667,7 +667,7 @@ behaviour, and plans a session can afford. Tag `v0.5.0-alpha.10`. It does:
   sections and plan-time planned tests, and mark compaction checkpoints; a test checks the cap on
   plans from WP44 on;
 - **clauses** (L2, L3): §7.6's table and NOTEs, Appendix A, `CLAUDE.md`, `CONTRIBUTING.md` and
-  `.knowledge/07-software-stack/12-the-suites-blas-threads-buy-nothing.md`, in step.
+  `knowledge/07-software-stack/12-the-suites-blas-threads-buy-nothing.md`, in step.
 
 REV-80 and REV-81 close by removal. Its numbers are reported against these predictions, none
 enforced: commit hook about 90 s on 4 cores; push gate 8 to 9 minutes; pull-request critical path
@@ -680,7 +680,7 @@ under 6 minutes. A miss is reported with its cause and the author rules (L8). It
 > `same_tree.py` proved every commit changes no instruction. Every public function, class and method
 > keeps a condensed docstring (L4 as amended after item 19); tests keep none. VER-75 (a) and (b) are
 > `test_prose_share.py`, ceilings 11.62 % and 3.14 %. 33 fresh workers, one redo, no escalation (L9).
-> Facts found nowhere else moved to `.knowledge/`. The review's REV-93 to REV-97 are fixed, REV-91 deferred and REV-92 declined (§8.2.11 L10).
+> Facts found nowhere else moved to `knowledge/`. The review's REV-93 to REV-97 are fixed, REV-91 deferred and REV-92 declined (§8.2.11 L10).
 
 *Added, 13 October 2026.* Tag `v0.5.0-alpha.11`. The rule itself (`python.md`, `pyproject.toml`'s docstring
 rules, `CONTRIBUTING.md`) is WP44's. The tree, one commit per subpackage, by per-module agent
@@ -746,20 +746,20 @@ Opus. No new identifier.
 
 ### WP47 — The OKF bundle and its checks (§8.2.7 G12; VER-68)
 
-> **Delivered, 14 October 2026** ([plan](wp47-okf-bundle.md)). `.knowledge/` is a bundle of 121 concepts
+> **Delivered, 14 October 2026** ([plan](wp47-okf-bundle.md)). `knowledge/` is a bundle of 121 concepts
 > in ten directories: a header on each (a closed list of 15 types, sources, `generated`, `verified`),
 > an `index.md` per directory, `log.md` and `pending.yaml`. VER-68 is `test_okf_bundle.py` over
 > `validation/okf.py`: each refusal on a constructed bundle, the real tree, every tracked address,
 > and the heading ids against the docs build. 72 claims name a test; 358 are pending, the ceiling
 > (311 `[tested: pending]`, 47 `[verified]` without a source). Live constraints: a durable fact is a
-> concept with a log line; a Markdown file that cites `.knowledge/` runs the tests (`prose-only.sh`);
+> concept with a log line; a Markdown file that cites `knowledge/` runs the tests (`prose-only.sh`);
 > a heading carrying a marker has an explicit id. REV-103 is open for WP48.
 
 
 It waits on the refactors (G5). F6 and the input note's K1 to K11 bind this package. It covers:
 
 - the bundle: one concept per `##`, in a directory per file;
-- every `.knowledge/0N §x` citation, history included, rewritten to a bundle path;
+- every `knowledge/0N §x` citation, history included, rewritten to a bundle path;
 - the six checks of the input note as one Tier-1 test, which carries G3's committed list of
   unbacked claims. Executable `[verified]` claims join that list (G8).
 

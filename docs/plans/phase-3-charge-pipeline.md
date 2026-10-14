@@ -36,7 +36,7 @@ Five things are true of the codebase today and shape every package below.
 - **A `structure:` case solves uncharged today.** `io/run.py` `selected_stages` drops stage 7 when
   no field is supplied, and the manifest records the fields as not run. That is honest, but it is
   not the validated model. After WP28 a `structure:` case walks through the producer by default.
-- **The consumer path aliases** (VAL-15, the §4.4 NOTE, `.knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md#32-the-references-125-is-the-consumers-and-it-is-aliasing`). The delivered ClyA
+- **The consumer path aliases** (VAL-15, the §4.4 NOTE, `knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md#32-the-references-125-is-the-consumers-and-it-is-aliasing`). The delivered ClyA
   table is conserved to 4.7 × 10⁻¹² by its producer, but its integral on our reference mesh is off
   by 9.9 × 10⁻³. That does not converge in h or in quadrature order, because the field's structure is
   below element scale. The §4.4 NOTE names the remedy: deposit onto the finite-element space.
@@ -57,7 +57,7 @@ reopens narrowly, because the bundle gains PDB2PQR's data files.
 
 Deliberately excluded: structure *preparation* (mutations, missing residues, PDBFixer), as in
 Phase 2, with OPN-04 staying the author's; ML pKa predictors (PDB2PQR's `--titration-state-method`
-accepts `propka` only, `.knowledge/07-software-stack/03-charge-and-electrostatics.md`); charge regulation (post-1.0); the analyte's charge
+accepts `propka` only, `knowledge/07-software-stack/03-charge-and-electrostatics.md`); charge regulation (post-1.0); the analyte's charge
 (FR-21, v1.0); Tier 4 (Phase 4).
 
 ## Design decisions
@@ -76,7 +76,7 @@ decisions table.
 | Radii | The PQR's radius column sets the charge kernel (PHY-16 step 4). The density kernel keeps the CHARMM table of `data/radii/` (WP19). WP27 asserts that the two agree on every heavy atom of 2WCD, and records any difference | PHY-16 names the PQR's `R_i`. The CHARMM table is transcribed from the same `CHARMM.DAT`, so a disagreement is a defect to find, not to average |
 | Dielectric and exclusion (§8.2.4 D5) | With both keys at 0, the default, the dielectric is the mesh's material split, which is the validated model. A non-zero `dielectric_transition_nm` builds `χ` from the stage-3 mean. A non-zero `exclusion_offset_nm` makes stage 5 offset the body contour outward and mesh the shell as `exclusion`. Both are deviations, recorded under FR-25 | FR-15 and the PHY-20 NOTEs. The mesh vocabulary and VER-30 already define `exclusion`, so what is new is producing it |
 | APBS (§8.2.4 D3) | `apbs-binary` (3.4.1.1; wheels for Linux x86_64 and macOS, none for Windows) goes in a test-only dependency group, never an extra. It is required on the CI legs where its wheel exists and skipped visibly on Windows | A test-only binary is not on the end-user path (CON-07). A skip is not evidence, so the Linux and macOS legs must run it (the WP23 D11 rule) |
-| VAL-06's two legs (§8.2.4 D3) | **Gated:** APBS solves Poisson at zero ionic strength on our assembled charge and `χ`, revolved into 3D maps and read with `READ charge` and `READ diel`, so the comparison isolates our axisymmetric FE solve. **Recorded:** APBS from the PQR with its own `spl4` charge and `smol` surface, which measures the azimuthal averaging (CON-04) | Zero ionic strength follows `.knowledge/07-software-stack/03-charge-and-electrostatics.md`, where the `spl2`/`spl4` surfaces are unreliable at finite ionic strength. The tolerance and the treatment of APBS's box boundary are WP29's, argued from the two discretisations |
+| VAL-06's two legs (§8.2.4 D3) | **Gated:** APBS solves Poisson at zero ionic strength on our assembled charge and `χ`, revolved into 3D maps and read with `READ charge` and `READ diel`, so the comparison isolates our axisymmetric FE solve. **Recorded:** APBS from the PQR with its own `spl4` charge and `smol` surface, which measures the azimuthal averaging (CON-04) | Zero ionic strength follows `knowledge/07-software-stack/03-charge-and-electrostatics.md`, where the `spl2`/`spl4` surfaces are unreliable at finite ionic strength. The tolerance and the treatment of APBS's box boundary are WP29's, argued from the two discretisations |
 | The electrostatic models on the pore | `poisson` accepts solid materials, `physics.solid_permittivities`, a fixed charge and `χ`, which it needs for VAL-06. `pb` and `pb-linear` stay as they are. The change is made through the FR-20 interface, as a declared capability rather than a new branch | §5.5 names `poisson` the APBS cross-check target. PHY-24 is untouched |
 | FR-20 first | The interface package comes first. Every model declares its field set, material and boundary vocabulary, the inputs it accepts (fixed charge, `χ`, solids) and its solve strategy. The `COUPLED_MODELS` and `isinstance` branches outside `physics/` read those declarations instead | It is cheapest while there are six models and no producer. It also unblocks `poisson` for VAL-06 without a seventh special case |
 | The phase gate's input | VER-01, VER-02 and VAL-06 are gated on 2WCD at Tier 2. The ensemble runs the same checks at Tier 3, recorded, together with the end-to-end charged comparison against the reference | Unlike VAL-05, these are properties of the implementation rather than reproductions of the reference, so the public structure is enough to gate them. Reproducing the paper's numbers is Phase 4: at Tier 3 against the published results (VAL-16, VAL-17; §8.2.4 D6) and at Tier 4 against experiment |
@@ -149,7 +149,7 @@ frame, then runs PDB2PQR through its Python API with PHY-16 step 3's flags at `c
 `charge.forcefield`. It emits a per-frame atom table (identity, coordinates, charge, radius) with
 `Q_net` per frame and the protonation state of every titratable residue. It is cached per frame,
 and the PROPKA warnings about homo-oligomer chains are surfaced rather than swallowed
-(`.knowledge/07-software-stack/03-charge-and-electrostatics.md`). `inputs.pqr` is lifted from `_UNCONSUMED_INPUTS` and reads a single- or
+(`knowledge/07-software-stack/03-charge-and-electrostatics.md`). `inputs.pqr` is lifted from `_UNCONSUMED_INPUTS` and reads a single- or
 multi-MODEL PQR (§8.2.4 D4). `charge.forcefield` becomes an option set, validated against what
 PDB2PQR accepts. `charge.titration: none` keeps the force field's standard states. Discharges FR-12,
 and adds to IF-03, FR-27 and QR-12. Adds **VER-57**: on small peptides, the charges and `Q_net` are
@@ -159,7 +159,7 @@ residue; a multi-MODEL PQR round-trips; a frame count or atom-table mismatch bet
 the ensemble is refused naming the frame; the PQR radii agree with the CHARMM table on every heavy
 atom of 2WCD (Tier 2); the stage is listed without importing PDB2PQR. **Tier 3, recorded:** DCD
 frames 48–97 through our driver against the author's archived PQRs 50–99, as per-residue state
-agreement and `Q_net` per frame, against the −72 e of `.knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md#31-the-delivered-table-measured`.
+agreement and `Q_net` per frame, against the −72 e of `knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md#31-the-delivered-table-measured`.
 
 > **Delivered, 1 October 2026** ([plan](wp27-protonation.md), to be tagged `v0.4.0-alpha.2`). The
 > `protonation` stage (stage 7, before `charge`) drives PDB2PQR and PROPKA per frame, cached per
@@ -315,7 +315,7 @@ VER-55 to the charge views, with the view-models importing no Qt.
 > (`tests/tier1/test_gui_charge.py`, `test_gui_charge_protonation.py`, `test_gui_probe.py`,
 > `test_gui_render.py`, `test_gui_widgets.py`; `tests/tier2/test_charge_2wcd.py`). The 2WCD
 > picture carries −60 e to 10⁻¹². **Live for later packages:** the colour range is set in
-> webgui's `gui_settings` as well as the scene, and has not been watched drawing (`.knowledge/07-software-stack/index.md`
+> webgui's `gui_settings` as well as the scene, and has not been watched drawing (`knowledge/07-software-stack/index.md`
 > §5); stage 7's summary records wall-clock seconds, so no two charged runs share a manifest hash.
 
 ### WP32 — Documentation increment 3
@@ -373,7 +373,7 @@ stays cold, and nothing gated is left ungated. The baseline is 1,420 s of serial
 > ClyA reference mesh is built once; D9 was corrected so VER-34's round trip keeps a live state.
 > One product change: planning the §8.3 sweep takes 7.0 s rather than 12.3 s (D12). No assertion
 > or tolerance moved. **Live for later packages:** the seeds' keys and `Seed2WCD` in
-> `tests/conftest.py`; `.knowledge/07-software-stack/12-the-suites-blas-threads-buy-nothing.md`.
+> `tests/conftest.py`; `knowledge/07-software-stack/12-the-suites-blas-threads-buy-nothing.md`.
 
 ### WP34 — Phase 3 closed: the open items resolved, and the end-of-phase report
 
@@ -482,7 +482,7 @@ executed README (VER-46) in the gate.
 | VER-01, 2WCD, P2 on the 44,987-element default-size mesh | `Q_net` −60.000000000 e on the lattice and the mesh. Producer leg 1.6 × 10⁻¹⁴, consumer 3.8 × 10⁻¹⁴, quadrature 8.5 × 10⁻¹⁵. Ring and axis guard 0 e. Solid share 0.977 against the 0.5 floor. Beside VAL-15's 9.9 × 10⁻³ from the delivered table on the reference mesh | `test_charge_2wcd.py` |
 | VER-02, 2WCD, 12 planes at s = 0.5 nm | Worst lattice 1.1 × 10⁻¹³ at z = 8.004 nm, worst mesh 4.0 × 10⁻⁶ at z = 9.087 nm | same |
 | VER-01/02 at `size_scale` 4, charged walk (6,185 elements) | Legs 1.6 × 10⁻¹⁴ and 2.9 × 10⁻¹⁴, worst plane 1.6 × 10⁻⁴ on the mesh. The charged `pnp` solve at +50 mV, 0.15 M gives 3.19 × 10⁻¹¹ A Na⁺ and 3.12 × 10⁻¹¹ A Cl⁻ | `test_pipeline_2wcd.py` |
-| `Q_net`, 2WCD at pH 7.5, CHARMM, PROPKA | −60 e, one frame. All 54,084 radii are CHARMM's table's. 12 terminal oxygens are added, and 138 of 744 flippable atoms are flipped (worst 0.40 Å). LYS 8's N-terminus pKa is 7.48–7.50 on every chain, so it is unapplied at pH 7.5, as is CYS 285. −60 e is the 2WCD construct, not the archived ClyA-AS −72 e (`.knowledge/index.md` ruling 8) | `test_protonation_2wcd.py` |
+| `Q_net`, 2WCD at pH 7.5, CHARMM, PROPKA | −60 e, one frame. All 54,084 radii are CHARMM's table's. 12 terminal oxygens are added, and 138 of 744 flippable atoms are flipped (worst 0.40 Å). LYS 8's N-terminus pKa is 7.48–7.50 on every chain, so it is unapplied at pH 7.5, as is CYS 285. −60 e is the 2WCD construct, not the archived ClyA-AS −72 e (`knowledge/index.md` ruling 8) | `test_protonation_2wcd.py` |
 | VAL-06, gated leg (2WCD, P2 against APBS) | max 0.41 %, rms 0.10 %, axis 0.23 %, against 3 %, 1 % and 1.5 %. Refinement budget max 1.2 %, rms 0.18 %, axis 0.59 %, within half of each. The largest difference is −0.080 kT/e at (1.80, 0.25) nm, where ours is −17.79 kT/e | `test_val06_2wcd.py` |
 | VAL-06, recorded leg | The ring mean against ours: max 0.157, rms 0.067, axis 0.136. The ring spread, which is the size of the azimuthal averaging: max 0.465, rms 0.041. APBS converges at order 1.64 in max and 1.61 in rms on a grid focused to 0.05 nm | same |
 | VER-58, the element order WP28 chose (P2) | On axis, `r_i` = 0: L² rates 2.90 and 2.99 at P2, against 1.95 and 2.03 at P0. Off axis, `r_i` = 1.5 nm: 3.17 and 3.00 at P2, 2.19 and 1.95 at P0. An unresolved atom, 1 nm away on 0.1 nm elements: 1.2 × 10⁻⁵ at P2, 6.4 × 10⁻³ at P0 | `test_charge_potential_{axis,off_axis}.py` |

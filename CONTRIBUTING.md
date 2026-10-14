@@ -101,7 +101,7 @@ push. Tests must not reach the network and must not need a COMSOL licence.
 
 ## Physics
 
-Read [`.knowledge/index.md`](.knowledge/index.md) before changing anything physical. It is the
+Read [`knowledge/index.md`](knowledge/index.md) before changing anything physical. It is the
 normative reference for the model and documents five errata in the published sources, with the
 arithmetic.
 

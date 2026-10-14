@@ -225,7 +225,7 @@ about ``floor(L / wall_h + 0.4)`` segments [tested], so a wall target a little
 under ``L``, or under ``L/2``, leaves segments up to 1.6 times it, and the
 wall-size gate's 1.15 refuses the mesh. On 2WCD at ``a`` = 0.25 nm it did so at
 0.045, 0.04, 0.035 and 0.0225 nm, which ``auto`` reaches between about 1.5 and
-1.9 M and at 3 M, while 0.05, 0.03 and 0.0272 nm passed (``.knowledge/06-numerics-fem/index.md``
+1.9 M and at 3 M, while 0.05, 0.03 and 0.0272 nm passed (``knowledge/06-numerics-fem/index.md``
 section 8.1.4). Setting each such edge's ``maxh`` to ``L/n`` makes the count
 ``n`` whatever netgen's rounding, so the segments average at most 1.1 times
 the target, under the gate's 1.15. Netgen's optimisation moves nodes along an

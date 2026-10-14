@@ -30,7 +30,7 @@ schema: nanopnp/probe/v0.5
 name: clya-reference
 
 # The reference model's own maximum element size on the pore wall
-# (.knowledge/09-comsol-reference-settings/02-mesh-27.md#a2-size-nodes, size node `size5`).
+# (knowledge/09-comsol-reference-settings/02-mesh-27.md#a2-size-nodes, size node `size5`).
 margin_nm: 0.05
 
 patches:

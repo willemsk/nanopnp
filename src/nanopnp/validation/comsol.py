@@ -309,7 +309,7 @@ class GoldenManifest(_Strict):
             "model_file": "the .mph archived beside this golden",
             "export_date": "when the export was taken",
             "current_boundary": "the boundary tds.ntflux_i was evaluated on. It is NOT IN REPORT "
-            "(.knowledge/09-comsol-reference-settings/07-differences-that-cannot-be-removed.md), "
+            "(knowledge/09-comsol-reference-settings/07-differences-that-cannot-be-removed.md), "
             "so only the author can supply it",
         }
         missing = [name for name in why if not str(getattr(self, name)).strip()]

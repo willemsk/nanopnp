@@ -35,10 +35,10 @@ Each category below gives where it lives, an example, what depends on it, and a 
 |---|---|---|---|---|
 | A | Version renumbering record | ~45 lines in 5 files, plus `.github/renumbered-tags.txt` | `release.yml` reads the mapping file | **Remove** (one small CI edit) |
 | B | Amendment stamps in the specification | 165 inline `(**added/amended DATE**, WPn)` tags | Nothing mechanical | **Remove** the dates; keep the decision IDs if wanted |
-| C | "As first written…" corrections of record | ~8 passages (spec, `.knowledge/`) | Nothing | **Rewrite** |
+| C | "As first written…" corrections of record | ~8 passages (spec, `knowledge/`) | Nothing | **Rewrite** |
 | D | "Before / since / until WPn" in code and tests | 9 in `src/`, 13 in `tests/` | 2 are pinned constants | **Rewrite**, except the pinned constants |
 | E | Dated measurement stamps in code and tests | 16 in `src/`, 11 in `tests/` | Nothing | **Drop the date**, keep the source and the version |
-| F | Dated stamps and supersession notes in `.knowledge/` | ~80 dates, ~10 supersession notes | CLAUDE.md requires a source for each [tested] fact | **Keep the version-bound dates; rewrite the supersession notes** |
+| F | Dated stamps and supersession notes in `knowledge/` | ~80 dates, ~10 supersession notes | CLAUDE.md requires a source for each [tested] fact | **Keep the version-bound dates; rewrite the supersession notes** |
 | G | User-facing docs with dated history | ~8 lines in 4 files | Nothing | **Rewrite** |
 | H | Decision logs: spec §8.2.1–§8.2.6 and closed OPN items in §10 | 185 + ~40 lines | Cited by ID (E2, F1, D7…) across spec, code and plans | **Keep for now**; collapse at v1.0 |
 | I | Delivered WP plans and code-review reports | 30 plans (~11k lines), 3 reviews (2.2k lines) | ~450 `WPn Dm` citations in `src/`; CLAUDE.md numbers reviews | **Keep**; optionally move delivered plans to `docs/plans/archive/` |
@@ -63,7 +63,7 @@ on 30 September 2026, why `v0.5.0` was reused, and how to read an old manifest's
 | `SPECIFICATION.md:197-230` | The §2.7 *Versioning* NOTE. About 20 of its 34 lines are the renumber story ("Until 30 September 2026 Phase 1 was released as v0.5…", "On 3 October… reused", "On 4 October… postponed") |
 | `.github/renumbered-tags.txt` | The old → new tag mapping, with a 10-line header narrating it |
 | `.github/workflows/release.yml:74-84` | Reads the mapping, so a renumbered tag skips the CITATION version check |
-| `.knowledge/08-validation-benchmarks/03-tier-3-comsol-differential-tests-hours.md` | "Re-scoped 30 September… renumbered v0.7 on 4 October" |
+| `knowledge/08-validation-benchmarks/03-tier-3-comsol-differential-tests-hours.md` | "Re-scoped 30 September… renumbered v0.7 on 4 October" |
 | `docs/plans/phase-3-charge-pipeline.md:4` | "`v0.3.0-alpha.9`, formerly `v0.9.0-alpha.9`" (a delivered plan, see I) |
 
 **Depends on it.** Only `release.yml`, and only when a *retroactive* tag is re-released. All
@@ -108,15 +108,15 @@ Passages that keep the old, wrong text alive in order to say it was corrected:
 | `SPECIFICATION.md:255` | IF-05 NOTE "retired 24 September 2026": the CCP4 write side was dropped |
 | `SPECIFICATION.md:402` | QR-09 "Amended… from 3.10–3.14" |
 | `SPECIFICATION.md:703-715` | PHY-16 NOTE: "as first written, steps 4 and…", "first written as order `(w_i/r_i)²`" |
-| `.knowledge/07-software-stack/02-structure-trajectory-and-density.md` | "Superseded by the 3.11 floor" (a block about 3.10) |
-| `.knowledge/07-software-stack/02-structure-trajectory-and-density.md` | "The row above once claimed mmCIF as [tested], which was wrong" |
-| `.knowledge/09-comsol-reference-settings/00-overview.md` | "This file previously recorded the ESI as 143 pages…" |
-| `.knowledge/index.md` | "(formerly open here)" |
+| `knowledge/07-software-stack/02-structure-trajectory-and-density.md` | "Superseded by the 3.11 floor" (a block about 3.10) |
+| `knowledge/07-software-stack/02-structure-trajectory-and-density.md` | "The row above once claimed mmCIF as [tested], which was wrong" |
+| `knowledge/09-comsol-reference-settings/00-overview.md` | "This file previously recorded the ESI as 143 pages…" |
+| `knowledge/index.md` | "(formerly open here)" |
 
 **Recommendation: rewrite** each to state only the current fact.
 
-**One exception to keep:** the five errata in `.knowledge/01-physics-epnpns/index.md`, and the
-Buchner-vs-Gavish note at `.knowledge/01-physics-epnpns/08-errata-in-the-source-with-the-arithmetic.md` and `data/corrections/willems2020_nacl.yaml:133`. Those
+**One exception to keep:** the five errata in `knowledge/01-physics-epnpns/index.md`, and the
+Buchner-vs-Gavish note at `knowledge/01-physics-epnpns/08-errata-in-the-source-with-the-arithmetic.md` and `data/corrections/willems2020_nacl.yaml:133`. Those
 record errors in the *external* sources, and CLAUDE.md relies on them to stop people re-importing the
 wrong equations. They are not project history.
 
@@ -164,7 +164,7 @@ Leave them.
 the latest" and "on 2WCD chain A" are what make a measurement checkable. The calendar date adds
 nothing. Low priority.
 
-## F. `.knowledge/`
+## F. `knowledge/`
 
 About 80 dated stamps, mostly in `07-software-stack.md` (50) and `04-clya-geometry-and-charge.md`
 (19). Most read "Measured 21 September 2026, PySide6 6.11.2…" or "[tested], 1 October 2026 (WP27)".
@@ -279,10 +279,10 @@ Edit this list and send it back to me:
 - [ ] L: change the skill rules (present tense; history to git, CHANGELOG, plans)
 - [ ] A: remove the renumbering record, `renumbered-tags.txt` and the `release.yml` branch
 - [ ] B: strip the spec amendment stamps: (a) entirely, or (b) keeping the decision ID
-- [ ] C: rewrite the "as first written" passages (the external-source errata in `.knowledge/01-physics-epnpns/index.md` stay)
+- [ ] C: rewrite the "as first written" passages (the external-source errata in `knowledge/01-physics-epnpns/index.md` stay)
 - [ ] D: rewrite the before/since/until-WPn docstrings (pinned constants stay)
 - [ ] E: drop the calendar dates from measurement stamps in code and tests
-- [ ] F: `.knowledge/` supersession notes: now, or as part of the Phase 4 OKF bundle
+- [ ] F: `knowledge/` supersession notes: now, or as part of the Phase 4 OKF bundle
 - [ ] G: rewrite the dated history in the user docs
 - [ ] H: keep §8.2 / §10 in place, or move them to `docs/decisions.md`
 - [ ] I: keep delivered plans in place, or move them to `docs/plans/archive/`

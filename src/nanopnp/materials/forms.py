@@ -27,7 +27,7 @@ __all__ = [
 ]
 
 # Where coth(x) - 1/x and x/3 are equally accurate:
-# .knowledge/01-physics-epnpns/07-implementation-notes-carried-forward.md.
+# knowledge/01-physics-epnpns/07-implementation-notes-carried-forward.md.
 _LANGEVIN_SERIES_CUTOFF = 3e-4
 
 

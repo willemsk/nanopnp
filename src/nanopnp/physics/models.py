@@ -1373,7 +1373,7 @@ class ElectrostaticModel(_SingleFieldModel):
 
 
 # NGSolve's order estimate does not see the r weight;
-# .knowledge/06-numerics-fem/02-axisymmetric-weak-forms.md#22-quadrature-verified-experimentally.
+# knowledge/06-numerics-fem/02-axisymmetric-weak-forms.md#22-quadrature-verified-experimentally.
 RADIAL_WEIGHT_ORDER = 1
 
 

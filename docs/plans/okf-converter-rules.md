@@ -20,14 +20,14 @@ compares it with `markdown.extensions.toc.slugify` when that is importable. The 
 
 | Form | Rewritten to |
 |---|---|
-| `.knowledge/0N §x`, `.knowledge/0N section x`, `.knowledge/0N-slug.md §x`, `§x` between notes | The concept holding section x, plus the slug of the deepest heading that exists; a third-level address with no heading goes to the concept |
-| Line reference, `.knowledge/0N-slug.md:LINE` | The concept holding that line of the old file, no line number; a line past the end of the file is listed |
-| Label, `.knowledge/0N LABEL` | The heading whose text carries the label; listed if none or several |
+| `knowledge/0N §x`, `knowledge/0N section x`, `knowledge/0N-slug.md §x`, `§x` between notes | The concept holding section x, plus the slug of the deepest heading that exists; a third-level address with no heading goes to the concept |
+| Line reference, `knowledge/0N-slug.md:LINE` | The concept holding that line of the old file, no line number; a line past the end of the file is listed |
+| Label, `knowledge/0N LABEL` | The heading whose text carries the label; listed if none or several |
 | Named section, "Tier-3 evidence" | The concept whose title matches; listed if several |
-| Whole file, `.knowledge/0N.`, `.knowledge/0N-slug.md is normative` | The directory's `index.md`; bare `.knowledge/` the root `index.md` |
-| Relative Markdown link, `../../.knowledge/0N-slug.md#x` | The relative path of the concept, with its anchor |
-| The GitHub URL in `.github/ISSUE_TEMPLATE/config.yml` | The blob URL of `.knowledge/index.md` |
-| Placeholders, `.knowledge/0N §x` (a letter, not a digit) | Left alone; the check ignores a placeholder in a code span or the constructed bundles of its own tests |
+| Whole file, `knowledge/0N.`, `knowledge/0N-slug.md is normative` | The directory's `index.md`; bare `knowledge/` the root `index.md` |
+| Relative Markdown link, `../../knowledge/0N-slug.md#x` | The relative path of the concept, with its anchor |
+| The GitHub URL in `.github/ISSUE_TEMPLATE/config.yml` | The blob URL of `knowledge/index.md` |
+| Placeholders, `knowledge/0N §x` (a letter, not a digit) | Left alone; the check ignores a placeholder in a code span or the constructed bundles of its own tests |
 
 Everything the converter cannot place is written to a list for Sonnet or the author. Nothing is
 guessed. A wrong target passes the check, which proves existence and not intent, so the list is read
@@ -44,7 +44,7 @@ by a person before item 3 is committed.
 - A `[verified]` claim whose arithmetic can be executed becomes `[tested: pending]` (G8). One that is a
   reading of a source or a conversion of a printed figure stays `[verified]` and needs a footnote to
   one of the four sources; where the sentence names none, it is counted as `verified_unsourced`.
-- `.knowledge/pending.yaml` holds, per concept path, `tested_pending` and `verified_unsourced`. The
+- `knowledge/pending.yaml` holds, per concept path, `tested_pending` and `verified_unsourced`. The
   check demands equality with the files. Its ceiling is a constant in `test_okf_bundle.py`, set at
   item 6 to the total measured then, and lowered by edit as WP48 backs claims. About 180 lines of the
   notes already name a test; where the named test exists in the trees the claim becomes
@@ -55,8 +55,8 @@ by a person before item 3 is committed.
 
 ## 4. Gate and CI
 
-- `.github/scripts/prose-only.sh` treats a path as not prose if it is under `.knowledge/`, or is
-  Markdown whose text contains `.knowledge/` (read if the file exists; a deleted path stays prose).
+- `.github/scripts/prose-only.sh` treats a path as not prose if it is under `knowledge/`, or is
+  Markdown whose text contains `knowledge/` (read if the file exists; a deleted path stays prose).
   A prose-only edit that adds a bad citation therefore runs VER-68, in the commit hook and in CI's
   `changes` job. A case for each goes into `tests/tier1/test_workflow_hooks.py`.
 - Item order and the commit hook: a commit touching only Markdown runs ruff alone unless the rule

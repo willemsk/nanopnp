@@ -18,7 +18,7 @@
 #               the agent, skill, rule and plan pages whose frontmatter, tools,
 #               paths and plan caps tests/tier1/test_plan_shape.py
 #               reads (REV-84). A change to only these runs the tests in full.
-#   .knowledge/ and any Markdown whose text contains `.knowledge/`
+#   knowledge/ and any Markdown whose text contains `knowledge/`
 #               the bundle, and the files citing it, whose addresses
 #               tests/tier1/test_okf_bundle.py resolves (VER-68). A deleted path
 #               is read as prose, since there is no text to read.
@@ -36,8 +36,8 @@ while IFS= read -r path; do
         *findings.md) exit 1 ;;
         .claude/agents/* | .claude/skills/* | .claude/rules/* | docs/plans/*) exit 1 ;;
         SPECIFICATION.md | docs/project/modularity.md | docs/project/review-items.md) exit 1 ;;
-        .knowledge/*) exit 1 ;;
-        *.md) [[ -f $path ]] && grep -q '\.knowledge/' -- "$path" && exit 1 ;;
+        knowledge/*) exit 1 ;;
+        *.md) [[ -f $path ]] && grep -qE '(^|[^[:alnum:]_./-])knowledge/' -- "$path" && exit 1 ;;
         *) exit 1 ;;
     esac
 done

@@ -23,7 +23,7 @@ __all__ = [
 
 MESH_LENGTH_UNIT_NM = 1.0
 
-# f^w_D is within 1 % of 1 beyond 0.75 nm (.knowledge/01-physics-epnpns/index.md).
+# f^w_D is within 1 % of 1 beyond 0.75 nm (knowledge/01-physics-epnpns/index.md).
 # 0.0 would be the wall value.
 SATURATED_WALL_DISTANCE_NM = 3.0
 

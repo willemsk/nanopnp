@@ -137,7 +137,7 @@ fields:
   velocity_z:  {expression: w,    unit: m/s}
   pressure:    {expression: p,    unit: Pa}
 
-# NOT IN REPORT (.knowledge/09-comsol-reference-settings/07-differences-that-cannot-be-removed.md). Only you know these two, and the
+# NOT IN REPORT (knowledge/09-comsol-reference-settings/07-differences-that-cannot-be-removed.md). Only you know these two, and the
 # ingest refuses a manifest that leaves either blank.
 current_boundary: "the cis reservoir cap, boundary 196"
 current_sign_reference: cis     # or trans -- see below

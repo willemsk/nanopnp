@@ -327,7 +327,7 @@ cd "$root" || exit 0
 export UV_LOCKED=1
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
 # As CI: cap NumPy's SIMD dispatch at X86_V3, the VER-62 reference environment,
-# so an AVX-512 machine deploys the mesh CI does (.knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md#815-within-one-build-a-deployed-walks-quantities-repeat-bit-for-bit).
+# so an AVX-512 machine deploys the mesh CI does (knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md#815-within-one-build-a-deployed-walks-quantities-repeat-bit-for-bit).
 export NPY_DISABLE_CPU_FEATURES="X86_V4 AVX512_ICL AVX512_SPR"
 
 # The tree the working copy would commit as with `git add -A`, built in a
@@ -459,7 +459,7 @@ else
     done <<<"$changed_paths"
 fi
 $gmsh_required && export NANOPNP_REQUIRE_GMSH=1
-gmsh_remedy="Gmsh's wheel loads X and GL libraries at import (.knowledge/07-software-stack/04-geometry-meshing-and-io.md).
+gmsh_remedy="Gmsh's wheel loads X and GL libraries at import (knowledge/07-software-stack/04-geometry-meshing-and-io.md).
 On Debian or Ubuntu: apt-get install -y --no-install-recommends libglu1-mesa libxft2 libxinerama1 libxcursor1"
 
 fail() {

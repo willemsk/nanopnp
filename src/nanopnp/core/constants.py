@@ -17,7 +17,7 @@ GAS_CONSTANT: Final = BOLTZMANN * AVOGADRO
 
 VACUUM_PERMITTIVITY: Final = 8.8541878128e-12
 
-# The source work's 25 ± 1 °C (.knowledge/01-physics-epnpns/06-reference-case.md).
+# The source work's 25 ± 1 °C (knowledge/01-physics-epnpns/06-reference-case.md).
 REFERENCE_TEMPERATURE_K: Final = 298.15
 
 

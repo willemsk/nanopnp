@@ -35,7 +35,7 @@ Do not push a tree you have not gated: start `.claude/hooks/gate.sh run` with Ba
 `run_in_background` and push when it passes; never poll. The push guard refuses any other tree.
 
 Also confirm: `git status` clean; every `VER-`/`VAL-` the plan claimed has a test named for it;
-`SPECIFICATION.md`, `.knowledge/` and the Outcome annotations are committed; `CHANGELOG.md` has the
+`SPECIFICATION.md`, `knowledge/` and the Outcome annotations are committed; `CHANGELOG.md` has the
 package's section (`CONTRIBUTING.md`, *Versions and releases*). If the branch is `main` or equals
 `origin/main`, stop and ask. If it is behind `main`, merge `main` in and re-gate.
 

@@ -23,7 +23,7 @@ REFERENCE_DIFFUSIVITY_M2_S: Final = 1.334e-9
 
 REFERENCE_VISCOSITY_PA_S: Final = 0.890e-3
 
-# eps_r,f0 after Gavish 2016 (.knowledge/01-physics-epnpns/03-the-corrections.md); the P0 of the
+# eps_r,f0 after Gavish 2016 (knowledge/01-physics-epnpns/03-the-corrections.md); the P0 of the
 # permittivity correction in willems2020_nacl.yaml, and physics.pb's alias.
 REFERENCE_PERMITTIVITY: Final = 78.15
 

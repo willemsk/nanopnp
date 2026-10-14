@@ -166,7 +166,7 @@ CLAMPED_PORE = CylindricalPoreGeometry(
 
 ADMISSIBLE_WALL_H_NM = 0.35
 # Regime change of SPECIFICATION.md NUM-34; measured on
-# .knowledge/06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md.
+# knowledge/06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md.
 INADMISSIBLE_WALL_H_NM = 1.0
 
 

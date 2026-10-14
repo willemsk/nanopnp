@@ -32,7 +32,7 @@ __all__ = [
 PROBE_SCHEMA = "nanopnp/probe/v0.5"
 
 # The reference's own wall element size
-# (.knowledge/09-comsol-reference-settings/02-mesh-27.md#a2-size-nodes).
+# (knowledge/09-comsol-reference-settings/02-mesh-27.md#a2-size-nodes).
 DEFAULT_MARGIN_NM = 0.05
 
 COMSOL_LENGTH_SCALE_M = 1e-9
