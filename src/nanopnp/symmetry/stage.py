@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 import logging
-import tempfile
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from nanopnp.core.hashing import Canonicalisable
-from nanopnp.core.paths import store_root
 from nanopnp.core.stages import (
     CancelToken,
     Progress,
@@ -21,14 +19,13 @@ from nanopnp.density.map import PAYLOAD_NAME as DENSITY_PAYLOAD
 from nanopnp.density.map import DensityMap
 from nanopnp.io.artefact import ReducedArtefact
 from nanopnp.io.case import UnsupportedCaseSection
+from nanopnp.io.workspace import scratch_directory
 from nanopnp.symmetry.reduce import DETREND, HARMONICS, PAYLOAD_NAME, reduce_map
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.io.artefact import StageInputs
 
 logger = logging.getLogger(__name__)
-
-WORKSPACE_DIRNAME = "tmp"
 
 
 def reduction_parameters(inputs: StageInputs) -> dict[str, Canonicalisable]:
@@ -89,11 +86,7 @@ class SymmetryStage:
         reduced = reduce_map(source, n, progress=progress, cancel=cancel)
         maximum = reduced.header["maximum"]
         logger.info("reduction: C%d over %d bins; maxima %s", n, len(reduced.r_nm), maximum)
-        directory = self._workspace
-        if directory is None:
-            root = store_root() / WORKSPACE_DIRNAME
-            root.mkdir(parents=True, exist_ok=True)
-            directory = Path(tempfile.mkdtemp(prefix="symmetry-", dir=root))
+        directory = scratch_directory(self._workspace, "symmetry")
         path = reduced.write(directory / f"{PAYLOAD_NAME}.npz")
         report(progress, 1.0, "reduction written")
         return ReducedArtefact(

@@ -269,7 +269,7 @@ SI-expression building is still duplicated was not checked.
 **Measured.** A library caller invoking `QoIStage` or `ReportStage` with no upstream `solve` sends
 its scratch to the process-default store root.
 
-**Resolves it.** WP46, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
+**Resolved.** WP46 D4: `io/workspace.py` `scratch_directory` refuses a stage constructed without `workspace`, naming the argument; the stage writes into the workspace it was given.
 
 ### REV-26 — stabilisation_parameters returns an empty mapping off the coupled model
 
@@ -530,7 +530,7 @@ name and both modules (VER-45).
 
 **Measured.** Some stages fall back to `mkdtemp` for scratch rather than the store's workspace.
 
-**Resolves it.** WP46, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
+**Resolved.** WP46 D4: the ten per-stage fallbacks and their `WORKSPACE_DIRNAME` copies are removed; `pipeline/run.py`'s store scratch, `cli/export.py`'s staging and the shell's probe stay.
 
 ### REV-56 — The geometry editor's simplicity check runs on the Qt thread
 

@@ -4,14 +4,12 @@ from __future__ import annotations
 
 import logging
 import math
-import tempfile
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from nanopnp.core.hashing import Canonicalisable, file_hash
-from nanopnp.core.paths import store_root
 from nanopnp.core.stages import (
     CancelToken,
     Progress,
@@ -23,6 +21,7 @@ from nanopnp.core.stages import (
 from nanopnp.io.artefact import StructureArtefact
 from nanopnp.io.case import UnsupportedCaseSection
 from nanopnp.io.resolved import ResolvedStructure
+from nanopnp.io.workspace import scratch_directory
 from nanopnp.structure.axis import (
     ANGLE_TOLERANCE_DEG,
     ORIENTATION_LIMIT_DEG,
@@ -53,8 +52,6 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.io.artefact import StageInputs
 
 logger = logging.getLogger(__name__)
-
-WORKSPACE_DIRNAME = "tmp"
 
 
 def _structure(inputs: StageInputs) -> ResolvedStructure:
@@ -321,11 +318,7 @@ class StructureStage:
         structure = _structure(inputs)
         parameters = structure_parameters(structure)
         alignment = align(structure, parameters=parameters, progress=progress, cancel=cancel)
-        directory = self._workspace
-        if directory is None:
-            root = store_root() / WORKSPACE_DIRNAME
-            root.mkdir(parents=True, exist_ok=True)
-            directory = Path(tempfile.mkdtemp(prefix="structure-", dir=root))
+        directory = scratch_directory(self._workspace, "structure")
         path = alignment.ensemble.write(directory / f"{PAYLOAD_NAME}.npz")
         summary = {**alignment.ensemble.header, "payload_digest": alignment.ensemble.digest()}
         return StructureArtefact(

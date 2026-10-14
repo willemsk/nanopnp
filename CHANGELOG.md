@@ -19,6 +19,16 @@ Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before t
 version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
 
+## [0.5.0-alpha.12] - 2026-10-14
+
+WP46: the small fixes (`SPECIFICATION.md` §8.2.9 I2).
+
+**Breaking.** A stage that writes a payload and is constructed without `workspace=` raises
+`MissingWorkspaceError` naming the argument; it no longer picks a directory under the default store
+root (REV-25, REV-55). A caller that built `MeshStage()` or any other stage by hand passes
+`workspace=<directory>`; a run through `run_case` or the CLI already does. Stored stage-6 keys change
+once, so an existing store re-meshes once (REV-16).
+
 ## [0.5.0-alpha.11] - 2026-10-14
 
 WP45: the prose strip (`SPECIFICATION.md` §8.2.11 L4 amended, L5, L9, L10; VER-75). Docstrings and

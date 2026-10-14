@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import tempfile
 import time
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -64,7 +63,6 @@ from nanopnp.charge.protonation import PAYLOAD_NAME as PROTONATION_PAYLOAD
 from nanopnp.charge.protonation import ProtonationTable
 from nanopnp.core.constants import ELEMENTARY_CHARGE
 from nanopnp.core.hashing import Canonicalisable, file_hash
-from nanopnp.core.paths import store_root
 from nanopnp.core.stages import (
     CancelToken,
     Progress,
@@ -85,6 +83,7 @@ from nanopnp.io.artefact import Artefact, ChargeGridArtefact, FieldsArtefact, St
 from nanopnp.io.case import UnsupportedCaseSection, stored_artefact_refused
 from nanopnp.io.defaults import ContributedDeviation
 from nanopnp.io.store import atomic_write_bytes
+from nanopnp.io.workspace import scratch_directory
 from nanopnp.mesh.ingest import IngestedMesh, MeshStage, deployed_mesh
 from nanopnp.numerics.measures import AXISYMMETRIC, Measures
 
@@ -99,7 +98,6 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
 logger = logging.getLogger(__name__)
 
-WORKSPACE_DIRNAME = "tmp"
 """Directory under the store root the archival native copies are written to."""
 
 CHARGE_PAYLOAD = "charge"
@@ -1007,12 +1005,7 @@ class FieldStage:
         return resolved, ingested, mesh
 
     def _directory(self) -> Path:
-        if self._workspace is not None:
-            self._workspace.mkdir(parents=True, exist_ok=True)
-            return self._workspace
-        root = store_root() / WORKSPACE_DIRNAME
-        root.mkdir(parents=True, exist_ok=True)
-        return Path(tempfile.mkdtemp(prefix="fields-", dir=root))
+        return scratch_directory(self._workspace, "fields")
 
     def _write(self, fields: ResolvedFields) -> dict[str, Path]:
         directory = self._directory()

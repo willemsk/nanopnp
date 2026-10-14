@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import tempfile
 from collections.abc import Iterable
 from dataclasses import dataclass
 from functools import cached_property
@@ -11,7 +10,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from nanopnp.core.hashing import file_hash
-from nanopnp.core.paths import store_root
 from nanopnp.core.stages import (
     CancelToken,
     Progress,
@@ -29,6 +27,7 @@ from nanopnp.io.vocabulary import (
     VELOCITY,
     VELOCITY_AXIS,
 )
+from nanopnp.io.workspace import scratch_directory
 from nanopnp.mesh.adapter import MeshData, detect_format, read, write_msh41
 from nanopnp.mesh.primitives import (
     ELECTROLYTE_DOMAINS,
@@ -44,7 +43,6 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
 logger = logging.getLogger(__name__)
 
-WORKSPACE_DIRNAME = "tmp"
 """Directory under the store root the archival MSH copy is written to."""
 
 MATERIAL_VOCABULARY: tuple[str, ...] = (
@@ -638,7 +636,7 @@ class MeshStage:
         check_cancelled(cancel, "meshing the region")
         report(progress, 0.0, "meshing the region")
         record = read_region(inputs.require("region").payload[PAYLOAD_NAME])
-        generated = generate(record, resolved, self._directory("generate-"))
+        generated = generate(record, resolved, self._directory())
         found = (set(generated.ingested.data.materials), set(generated.ingested.data.boundaries))
         wanted = (set(record.face_areas_nm2), set(record.edge_counts))
         if found != wanted:
@@ -678,14 +676,8 @@ class MeshStage:
         )
 
     def _write(self, ingested: IngestedMesh) -> dict[str, Path]:
-        directory = self._directory("mesh-")
+        directory = self._directory()
         return {MESH_PAYLOAD: write_msh41(ingested.data, directory / "mesh.msh")}
 
-    def _directory(self, prefix: str) -> Path:
-        directory = self._workspace
-        if directory is None:
-            root = store_root() / WORKSPACE_DIRNAME
-            root.mkdir(parents=True, exist_ok=True)
-            directory = Path(tempfile.mkdtemp(prefix=prefix, dir=root))
-        directory.mkdir(parents=True, exist_ok=True)
-        return directory
+    def _directory(self) -> Path:
+        return scratch_directory(self._workspace, "mesh")
